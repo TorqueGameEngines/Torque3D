@@ -451,13 +451,18 @@ void ProximityMine::processTick( const Move* move )
             SimpleQueryList sql;
             getContainer()->findObjects( triggerBox, sTriggerCollisionMask,
                SimpleQueryList::insertionCallback, &sql );
+			bool freindInZone = false;
             for ( S32 i = 0; i < sql.mList.size(); i++ )
             {
                // Detect movement in the trigger area
                if ( ( sql.mList[i] == mOwner && !mDataBlock->triggerOnOwner ) ||
                     sql.mList[i]->getVelocity().len() < mDataBlock->triggerSpeed )
                   continue;
-
+			   ShapeBase *shape = dynamic_cast<ShapeBase*>(sql.mList[i]);
+			   if (shape)
+				   if (shape->mTeamId == this->mTeamId) freindInZone = true;
+			   if (!freindInZone)
+			   {
                // Mine has been triggered
                mShapeInstance->destroyThread( mAnimThread );
                mAnimThread = NULL;
@@ -475,6 +480,7 @@ void ProximityMine::processTick( const Move* move )
                if ( isServerObject() )
                   mDataBlock->onTriggered_callback( this, sql.mList[0] );
             }
+			}
             break;
          }
 

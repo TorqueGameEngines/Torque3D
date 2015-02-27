@@ -380,6 +380,7 @@ static void _scanCallback( SceneObject* object, void* data )
    ShapeBase* shape = dynamic_cast<ShapeBase*>(object);
    if (shape && shape->getDamageState() == ShapeBase::Enabled)
    {
+       if ((shape->mTeamId == 0)||(shape->mTeamId == turret->mTeamId)) return;
       Point3F targetPos = shape->getBoxCenter();
 
       // Put target position into the scan node's space

@@ -874,6 +874,10 @@ protected:
    /// @name Physical Properties
    /// @{
 
+
+   public:
+   F32 mTeamId;
+   protected:
    F32 mEnergy;                     ///< Current enery level.
    F32 mRechargeRate;               ///< Energy recharge rate (in units/tick).
 

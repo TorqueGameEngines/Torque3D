@@ -173,7 +173,7 @@ bool Rigid::resolveCollision(const Point3F& p, const Point3F &normal, Rigid* rig
 
    applyImpulse(r1,impulse);
    impulse.neg();
-   applyImpulse(r2,impulse);
+   rigid->applyImpulse(r2,impulse);
    return true;
 }
 

@@ -189,7 +189,6 @@ class Vehicle : public RigidShape
 
    CollisionList mCollisionList;
    CollisionList mContacts;
-   Rigid mRigid;
    ShapeBaseConvex mConvex;
    S32 restCount;
 

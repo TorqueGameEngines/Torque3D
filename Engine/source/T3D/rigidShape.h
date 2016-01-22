@@ -188,7 +188,6 @@ class RigidShape: public ShapeBase
 
    CollisionList mCollisionList;
    CollisionList mContacts;
-   Rigid mRigid;
    ShapeBaseConvex mConvex;
    S32 restCount;
 
@@ -233,6 +232,7 @@ class RigidShape: public ShapeBase
 public:
    // Test code...
    static ClippedPolyList* sPolyList;
+   Rigid mRigid;
 
    //
    RigidShape();

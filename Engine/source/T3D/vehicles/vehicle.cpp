@@ -782,14 +782,6 @@ bool Vehicle::onAdd()
 void Vehicle::onRemove()
 {
    U32 i=0;
-   for( i=0; i<VehicleData::VC_NUM_DUST_EMITTERS; i++ )
-   {
-      if( mDustEmitterList[i] )
-      {
-         mDustEmitterList[i]->deleteWhenEmpty();
-         mDustEmitterList[i] = NULL;
-      }
-   }
 
    for( i=0; i<VehicleData::VC_NUM_DAMAGE_EMITTERS; i++ )
    {
@@ -797,15 +789,6 @@ void Vehicle::onRemove()
       {
          mDamageEmitterList[i]->deleteWhenEmpty();
          mDamageEmitterList[i] = NULL;
-      }
-   }
-
-   for( i=0; i<VehicleData::VC_NUM_SPLASH_EMITTERS; i++ )
-   {
-      if( mSplashEmitterList[i] )
-      {
-         mSplashEmitterList[i]->deleteWhenEmpty();
-         mSplashEmitterList[i] = NULL;
       }
    }
 
@@ -822,7 +805,7 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
-   Parent::processTick(move);
+   ShapeBase::processTick(move);
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks)
@@ -867,7 +850,9 @@ void Vehicle::processTick(const Move* move)
       // Update the physics based on the integration rate
       S32 count = mDataBlock->integration;
       --mWorkingQueryBoxCountDown;
-      updateWorkingCollisionSet(getCollisionMask());
+
+      if (!mDisableMove)
+         updateWorkingCollisionSet(getCollisionMask());
       for (U32 i = 0; i < count; i++)
          updatePos(TickSec / count);
 
@@ -887,7 +872,7 @@ void Vehicle::interpolateTick(F32 dt)
 {
    PROFILE_SCOPE( Vehicle_InterpolateTick );
 
-   Parent::interpolateTick(dt);
+   ShapeBase::interpolateTick(dt);
 
    if(dt == 0.0f)
       setRenderPosition(mDelta.pos, mDelta.rot[1]);
@@ -909,13 +894,6 @@ void Vehicle::advanceTime(F32 dt)
 
    updateLiftoffDust( dt );
    updateDamageSmoke( dt );
-   updateFroth(dt);
-
-   // Update 3rd person camera offset.  Camera update is done
-   // here as it's a client side only animation.
-   mCameraOffset -=
-      (mCameraOffset * mDataBlock->cameraDecay +
-      mRigid.linVelocity * mDataBlock->cameraLag) * dt;
 }
 
 
@@ -1199,7 +1177,8 @@ void Vehicle::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mRigid.atRest) {
+   if (!mRigid.atRest && !mDisableMove)
+   {
       collided = updateCollision(dt);
 
       // Now that all the forces have been processed, lets
@@ -1220,7 +1199,7 @@ void Vehicle::updatePos(F32 dt)
    }
 
    // Integrate forward
-   if (!mRigid.atRest)
+   if (!mRigid.atRest && !mDisableMove)
       mRigid.integrate(dt);
 
    // Deal with client and server scripting, sounds, etc.

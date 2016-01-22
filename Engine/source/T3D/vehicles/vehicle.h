@@ -24,13 +24,7 @@
 #define _VEHICLE_H_
 
 #ifndef _SHAPEBASE_H_
-#include "T3D/shapeBase.h"
-#endif
-#ifndef _RIGID_H_
-#include "T3D/rigid.h"
-#endif
-#ifndef _BOXCONVEX_H_
-#include "collision/boxConvex.h"
+#include "T3D/rigidShape.h"
 #endif
 
 class ParticleEmitter;
@@ -41,9 +35,9 @@ class Vehicle;
 
 //----------------------------------------------------------------------------
 
-struct VehicleData: public ShapeBaseData
+struct VehicleData : public RigidShapeData
 {
-   typedef ShapeBaseData Parent;
+   typedef RigidShapeData Parent;
 
    struct Body {
       enum Sounds {
@@ -143,19 +137,14 @@ struct VehicleData: public ShapeBaseData
 
 //----------------------------------------------------------------------------
 
-class Vehicle: public ShapeBase
+class Vehicle : public RigidShape
 {
-   typedef ShapeBase Parent;
+   typedef RigidShape Parent;
 
   protected:
    enum CollisionFaceFlags {
       BodyCollision =  0x1,
       WheelCollision = 0x2,
-   };
-   enum MaskBits {
-      PositionMask = Parent::NextFreeMask << 0,
-      EnergyMask   = Parent::NextFreeMask << 1,
-      NextFreeMask = Parent::NextFreeMask << 2
    };
 
    struct StateDelta {

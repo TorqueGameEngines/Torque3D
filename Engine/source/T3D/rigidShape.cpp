@@ -1210,44 +1210,39 @@ on standard collision resolution formulas.
 bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList)
 {
    // Apply impulses to resolve collision
-   bool colliding, collided = false;
-
-   do 
+   bool collided = false;
+   for (S32 i = 0; i < cList.getCount(); i++)
    {
-      colliding = false;
-      for (S32 i = 0; i < cList.getCount(); i++) 
+      Collision& c = cList[i];
+      if (c.distance < mDataBlock->collisionTol)
       {
-         Collision& c = cList[i];
-         if (c.distance < mDataBlock->collisionTol) 
+         // Velocity into surface
+         Point3F v, r;
+         ns.getOriginVector(c.point, &r);
+         ns.getVelocity(r, &v);
+         F32 vn = mDot(v, c.normal);
+
+         // Only interested in velocities greater than sContactTol,
+         // velocities less than that will be dealt with as contacts
+         // "constraints".
+         if (vn < -mDataBlock->contactTol)
          {
-            // Velocity into surface
-            Point3F v,r;
-            ns.getOriginVector(c.point,&r);
-            ns.getVelocity(r,&v);
-            F32 vn = mDot(v,c.normal);
 
-            // Only interested in velocities greater than sContactTol,
-            // velocities less than that will be dealt with as contacts
-            // "constraints".
-            if (vn < -mDataBlock->contactTol) 
+            // Apply impulses to the rigid body to keep it from
+            // penetrating the surface.
+            ns.resolveCollision(cList[i].point,
+               cList[i].normal);
+            collided = true;
+
+            // Keep track of objects we collide with
+            if (!isGhost() && c.object->getTypeMask() & ShapeBaseObjectType)
             {
-
-               // Apply impulses to the rigid body to keep it from
-               // penetrating the surface.
-               ns.resolveCollision(cList[i].point,
-                  cList[i].normal);
-               colliding = collided  = true;
-
-               // Keep track of objects we collide with
-               if (!isGhost() && c.object->getTypeMask() & ShapeBaseObjectType) 
-               {
-                  ShapeBase* col = static_cast<ShapeBase*>(c.object);
-                  queueCollision(col,v - col->getVelocity());
-               }
+               ShapeBase* col = static_cast<ShapeBase*>(c.object);
+               queueCollision(col, v - col->getVelocity());
             }
          }
       }
-   } while (colliding);
+   }
 
    return collided;
 }
@@ -1264,7 +1259,7 @@ bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
    Point3F t,p(0,0,0),l(0,0,0);
    for (S32 i = 0; i < cList.getCount(); i++) 
    {
-      Collision& c = cList[i];
+      const Collision& c = cList[i];
       if (c.distance < mDataBlock->collisionTol) 
       {
 

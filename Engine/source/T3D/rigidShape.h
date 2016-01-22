@@ -146,11 +146,6 @@ class RigidShape: public ShapeBase
    SimObjectPtr<ParticleEmitter> mDustTrailEmitter;
 
   protected:
-   enum CollisionFaceFlags 
-   {
-      BodyCollision =  BIT(0),
-      WheelCollision = BIT(1),
-   };
    enum MaskBits {
       PositionMask   = Parent::NextFreeMask << 0,
       EnergyMask     = Parent::NextFreeMask << 1,

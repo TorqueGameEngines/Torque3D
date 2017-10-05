@@ -81,6 +81,8 @@ public:
 
    MaterialFeatureData mFeatureData;
 
+   Vector<CustomShaderFeatureData*> mCustomShaderFeatureData;
+
    bool mGlow;
 
    Material::BlendOp mBlendOp;

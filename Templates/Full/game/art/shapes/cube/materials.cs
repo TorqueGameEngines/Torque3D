@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 //--- cube.dae MATERIALS BEGIN ---
-singleton Material(cube_GridMaterial)
+/*singleton Material(cube_GridMaterial)
 {
 	mapTo = "GridMaterial";
 
@@ -38,7 +38,34 @@ singleton Material(cube_GridMaterial)
 	doubleSided = false;
 	translucent = false;
 	translucentBlendOp = "None";
+};*/
+
+singleton CustomShaderFeatureData(FlatColorFeature)
+{
+   
+};
+
+singleton Material(cube_GridMaterial)
+{
+   mapTo = "GridMaterial";
+   
+   CustomShaderFeature[0] = FlatColorFeature;
 };
 
 //--- cube.dae MATERIALS END ---
 
+//Voodoo!
+function FlatColorFeature::processVert(%this)
+{
+   
+}
+
+function FlatColorFeature::processPixelHLSL(%this)
+{
+   %this.writeLine("    float bobsyeruncle = 15.915;");
+}
+
+function FlatColorFeature::setTextureResources(%this)
+{
+   
+}

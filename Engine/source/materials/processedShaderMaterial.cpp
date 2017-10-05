@@ -654,7 +654,7 @@ bool ProcessedShaderMaterial::_addPass( ShaderRenderPassData &rpd,
 
    // Generate shader
    GFXShader::setLogging( true, true );
-   rpd.shader = SHADERGEN->getShader( rpd.mFeatureData, mVertexFormat, &mUserMacros, samplers );
+   rpd.shader = SHADERGEN->getShader( rpd.mFeatureData, mMaterial->mCustomShaderFeatures, mVertexFormat, &mUserMacros, samplers );
    if( !rpd.shader )
       return false;
    rpd.shaderHandles.init( rpd.shader );   

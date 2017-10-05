@@ -483,6 +483,9 @@ void Material::initPersistFields()
 
    endGroup( "Behavioral" );
 
+   addProtectedField("customShaderFeature", TypeRealString, NULL, &protectedSetCustomShaderFeature, &defaultProtectedGetFn,
+	   "Do not modify, for internal use.", AbstractClassRep::FIELD_HideInInspectors);
+
    Parent::initPersistFields();
 }
 
@@ -498,6 +501,19 @@ bool Material::writeField( StringTableEntry fieldname, const char *value )
       return false;
 
    return Parent::writeField( fieldname, value );
+}
+
+bool Material::protectedSetCustomShaderFeature(void *object, const char *index, const char *data)
+{
+	Material *material = static_cast< Material* >(object);
+
+	CustomShaderFeatureData* customFeature;
+	if (!Sim::findObject(data, customFeature))
+		return false;
+
+	material->mCustomShaderFeatures.push_back(customFeature);
+
+	return false;
 }
 
 bool Material::onAdd()

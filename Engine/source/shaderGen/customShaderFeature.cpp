@@ -84,6 +84,11 @@ void CustomShaderFeatureData::onRemove()
 }
 
 //Shadergen setup functions
+void CustomShaderFeatureData::addVariable(String name, String type, String defaultValue)
+{
+	mFeatureHLSL->addVariable(name, type, defaultValue);
+}
+
 void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef *argv)
 {
 	/*mOnObject = onObject;
@@ -126,16 +131,15 @@ void CustomShaderFeatureData::setTexData(Material::StageData &stageDat,
 	mFeatureHLSL.setTexData(stageDat, fd, passData, texIndex);
 }*/
 
-/*DefineEngineMethod(CustomShaderFeatureData, newVar, void, (String name, String type), ("", ""),	"")
+DefineEngineMethod(CustomShaderFeatureData, addVariable, void, (String name, String type, String defaultValue), ("", "", ""),	"")
 {
-	object->newVar(name, type);
-}*/
+	object->addVariable(name, type, defaultValue);
+}
 
 ConsoleMethod(CustomShaderFeatureData, writeLine, void, 3, 0, "( string format, string args... ) Dynamically call a method on an object.\n"
 	"@param method Name of method to call.\n"
 	"@param args Zero or more arguments for the method.\n"
 	"@return The result of the method call.")
 {
-	argv[1] = argv[2];
-	object->writeLine(argv[1], argc - 1, argv + 1);
+	object->writeLine(argv[2], argc - 3, argv + 3);
 }

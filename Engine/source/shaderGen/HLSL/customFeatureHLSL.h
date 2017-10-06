@@ -64,5 +64,6 @@ public:
 		return mOwner->getName();
 	}
 
+	void addVariable(String name, String type, String defaultValue);
 	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
 };

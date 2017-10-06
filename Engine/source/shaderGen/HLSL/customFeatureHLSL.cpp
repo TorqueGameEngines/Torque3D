@@ -206,8 +206,69 @@ void CustomFeatureHLSL::setTexData(Material::StageData &stageDat,
 		Con::executef(mOwner, "setTextureData");
 }
 
+void CustomFeatureHLSL::addVariable(String name, String type, String defaultValue)
+{
+	//do the var/arg fetching here
+	Var *newVar = (Var*)LangElement::find(name.c_str());
+	if (!newVar)
+	{
+		newVar = new Var(name, type);
+		LangElement *newVarDecl = new DecOp(newVar);
+
+		if (!defaultValue.isEmpty())
+		{
+			char declareStatement[128];
+			dSprintf(declareStatement, 128, "   @ = %s;\n", defaultValue.c_str());
+
+			meta->addStatement(new GenOp(declareStatement, newVarDecl));
+		}
+		else
+		{
+			meta->addStatement(new GenOp("   @;\n", newVarDecl));
+		}
+	}
+}
+
 void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef *argv)
 {
 	//do the var/arg fetching here
-	meta->addStatement(new GenOp(format + "\n"/*, colorAccuDecl, accuMapTex, accuMap, inTex, accuScale*/));
+	Vector<Var*> varList;
+
+	for (U32 i = 0; i < argc; i++)
+	{
+		String varName = argv[i].getStringValue();
+		Var *newVar = (Var*)LangElement::find(varName.c_str());
+		if (!newVar)
+		{
+			//couldn't find that variable, bail out
+			Con::errorf("CustomShaderFeature::writeLine: unable to find variable %s, meaning it was not declared before being used!", argv[i].getStringValue());
+			return;
+		}
+
+		varList.push_back(newVar);
+	}
+
+	//not happy about it, but do a trampoline here to pass along the args
+
+	switch (varList.size())
+	{
+	case 0:
+		meta->addStatement(new GenOp(format + "\n"));
+		break;
+	case 1:
+		meta->addStatement(new GenOp(format + "\n", varList[0]));
+		break;
+	case 2:
+		meta->addStatement(new GenOp(format + "\n", varList[0], varList[1]));
+		break;
+	case 3:
+		meta->addStatement(new GenOp(format + "\n", varList[0], varList[1], varList[2]));
+		break;
+	case 4:
+		meta->addStatement(new GenOp(format + "\n", varList[0], varList[1], varList[2], varList[3]));
+		break;
+	case 5:
+		meta->addStatement(new GenOp(format + "\n", varList[0], varList[1], varList[2], varList[3], varList[4]));
+		break;
+	}
 }

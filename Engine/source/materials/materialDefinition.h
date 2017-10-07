@@ -386,6 +386,7 @@ public:
    virtual bool writeField( StringTableEntry fieldname, const char *value );
 
    static bool protectedSetCustomShaderFeature(void *object, const char *index, const char *data);
+   static bool protectedSetCustomShaderFeatureUniforms(void *object, const char *index, const char *data);
 
    //
    // ConsoleObject interface

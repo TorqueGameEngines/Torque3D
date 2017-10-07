@@ -37,6 +37,41 @@ class Frustum;
 class LightQuery;
 class TSShape;
 
+struct CustomShaderBindingData
+{
+	enum UniformType
+	{
+		Float = 0,
+		Float2,
+		Float3,
+		Float4,
+		Texture2D,
+		Texture3D,
+		Cubemap,
+		Matrix2x2,
+		Matrix2x3,
+		Matrix2x4,
+		Matrix3x2,
+		Matrix3x3,
+		Matrix3x4,
+		Matrix4x2,
+		Matrix4x3,
+		Matrix4x4
+	};
+
+	String targetedUniformName;
+
+	//ShaderConstHandles shaderConstHandle;
+
+	UniformType type;
+
+	void* data; //for numeric data
+
+	//Image stuff
+	GFXTexHandle texture;
+	GFXSamplerStateDesc samplerState;
+};
+
 /// A simple class for passing render state through the pre-render pipeline.
 ///
 /// @section TSRenderState_intro Introduction
@@ -115,10 +150,10 @@ protected:
    /// Count of matrices in the mNodeTransforms list
    U32 mNodeTransformCount;
 
+   //Custom Shader data
+   Vector<CustomShaderBindingData> mCustomShaderData;
+
 public:
-
-   
-
    TSRenderState();
    TSRenderState( const TSRenderState &state );
 

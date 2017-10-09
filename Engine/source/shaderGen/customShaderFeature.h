@@ -59,6 +59,10 @@ public:
 
 	//shadergen setup
 	void addVariable(String name, String type, String defaultValue);
+	void addUniform(String name, String type, String defaultValue, U32 arraySize);
+	void addSampler(String name, String type, U32 arraySize);
+	void addTexture(String name, String type, String samplerState, U32 arraySize);
+
 	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
 
 	//shader generation

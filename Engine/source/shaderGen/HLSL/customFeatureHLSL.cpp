@@ -206,25 +206,104 @@ void CustomFeatureHLSL::setTexData(Material::StageData &stageDat,
 		Con::executef(mOwner, "setTextureData");
 }
 
+void CustomFeatureHLSL::addUniform(String name, String type, String defaultValue, U32 arraySize)
+{
+	//do the var/arg fetching here
+	Var *newVar = (Var*)LangElement::find(name.c_str());
+	if (!newVar)
+	{
+		VarHolder newVarHolder(name, type, "");
+		newVarHolder.arraySize = arraySize;
+		newVarHolder.sampler = false;
+		newVarHolder.uniform = true;
+		newVarHolder.constSortPos = cspPrimitive;
+
+		mVars.push_back(newVarHolder);
+	}
+}
+
+void CustomFeatureHLSL::addSampler(String name, String type, U32 arraySize)
+{
+	//do the var/arg fetching here
+	Var *newVar = (Var*)LangElement::find(name.c_str());
+	if (!newVar)
+	{
+		//As far as I know, it's always SamplerState regardless of the texture's type
+		VarHolder newVarHolder(name, "SamplerState", "");
+		newVarHolder.arraySize = arraySize;
+		newVarHolder.sampler = true;
+		newVarHolder.uniform = true;
+		newVarHolder.constNum = Var::getTexUnitNum();     // used as texture unit num here
+
+		mVars.push_back(newVarHolder);
+	}
+}
+
+void CustomFeatureHLSL::addTexture(String name, String type, String samplerState, U32 arraySize)
+{
+	//do the var/arg fetching here
+	Var *newVar = (Var*)LangElement::find(name.c_str());
+	if (!newVar)
+	{
+		//go find our sampler state var
+		U32 constNum = 0;
+
+		Var *samplerStateVar = (Var*)LangElement::find(samplerState.c_str());
+		if (!samplerStateVar)
+		{
+			//check our holder vars
+			bool foundHolder = false;
+			for (U32 v = 0; v < mVars.size(); v++)
+			{
+				if (mVars[v].varName == samplerState)
+				{
+					constNum = mVars[v].constNum;
+					foundHolder = true;
+					break;
+				}
+			}
+
+			if (!foundHolder)
+			{
+				Con::errorf("CustomShaderFeature::addTexture: Unable to find texture's sampler state!");
+				return;
+			}
+		}
+		else
+		{
+			constNum = samplerStateVar->constNum;
+		}
+
+		VarHolder newVarHolder(name, type, "");
+		newVarHolder.arraySize = arraySize;
+		newVarHolder.texture = true;
+		newVarHolder.uniform = true;
+		newVarHolder.constNum = constNum;     // used as texture unit num here
+
+		mVars.push_back(newVarHolder);
+	}
+}
+
 void CustomFeatureHLSL::addVariable(String name, String type, String defaultValue)
 {
 	//do the var/arg fetching here
 	Var *newVar = (Var*)LangElement::find(name.c_str());
 	if (!newVar)
 	{
-		newVar = new Var(name, type);
-		LangElement *newVarDecl = new DecOp(newVar);
-
 		if (!defaultValue.isEmpty())
 		{
 			char declareStatement[128];
 			dSprintf(declareStatement, 128, "   @ = %s;\n", defaultValue.c_str());
 
+			newVar = new Var(name, type);
+			LangElement *newVarDecl = new DecOp(newVar);
 			meta->addStatement(new GenOp(declareStatement, newVarDecl));
 		}
 		else
 		{
-			meta->addStatement(new GenOp("   @;\n", newVarDecl));
+			VarHolder newVarHolder(name, type, defaultValue);
+
+			mVars.push_back(newVarHolder);
 		}
 	}
 }
@@ -233,6 +312,7 @@ void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef *argv
 {
 	//do the var/arg fetching here
 	Vector<Var*> varList;
+	bool declarationStatement = false;
 
 	for (U32 i = 0; i < argc; i++)
 	{
@@ -240,9 +320,43 @@ void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef *argv
 		Var *newVar = (Var*)LangElement::find(varName.c_str());
 		if (!newVar)
 		{
-			//couldn't find that variable, bail out
-			Con::errorf("CustomShaderFeature::writeLine: unable to find variable %s, meaning it was not declared before being used!", argv[i].getStringValue());
-			return;
+			//ok, check our existing var holders, see if we just haven't utilized it yet
+			for (U32 v = 0; v < mVars.size(); v++)
+			{
+				if (mVars[v].varName == varName)
+				{
+					Var* newDeclVar = new Var(mVars[v].varName, mVars[v].type);
+
+					newDeclVar->arraySize = mVars[v].arraySize;
+					newDeclVar->uniform = mVars[v].uniform;
+					newDeclVar->sampler = mVars[v].sampler;
+					newDeclVar->texture = mVars[v].texture;
+					newDeclVar->constNum = mVars[v].constNum;
+					newDeclVar->constSortPos = mVars[v].constSortPos;
+
+					if (!newDeclVar->uniform)
+					{
+						LangElement *newVarDecl = new DecOp(newDeclVar);
+						newVar = (Var*)newVarDecl;
+
+						declarationStatement = true;
+					}
+					else
+					{
+						newVar = newDeclVar;
+					}
+
+					mVars.erase(v);
+					break;
+				}
+			}
+
+			if (!newVar)
+			{
+				//couldn't find that variable, bail out
+				Con::errorf("CustomShaderFeature::writeLine: unable to find variable %s, meaning it was not declared before being used!", argv[i].getStringValue());
+				return;
+			}
 		}
 
 		varList.push_back(newVar);

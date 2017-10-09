@@ -27,6 +27,42 @@ class CustomFeatureHLSL : public ShaderFeatureHLSL
 {
 	friend class CustomShaderFeatureData;
 
+	struct VarHolder
+	{
+		String varName;
+		String defaultValue;
+		String type;
+		bool uniform;
+		bool sampler;
+		bool texture;
+		U32 constNum;
+		ConstantSortPosition constSortPos;
+		U32 arraySize;
+
+		VarHolder() :
+			varName(""),
+			type(""),
+			defaultValue(""),
+			uniform(false), 
+			sampler(false), 
+			texture(false),
+			constNum(0), 
+			arraySize(0),
+			constSortPos(cspUninit)
+		{
+		}
+
+		VarHolder(String _varName,String _type, String _defaultValue) :
+			uniform(false), sampler(false), texture(false), constNum(0), arraySize(0), constSortPos(cspUninit)
+		{
+			varName = _varName;
+			type = _type;
+			defaultValue = _defaultValue;
+		}
+	};
+
+	Vector<VarHolder> mVars;
+
 public:
 	CustomShaderFeatureData* mOwner;
 
@@ -64,6 +100,9 @@ public:
 		return mOwner->getName();
 	}
 
+	void addUniform(String name, String type, String defaultValue, U32 arraySize = 0);
 	void addVariable(String name, String type, String defaultValue);
+	void addSampler(String name, String type, U32 arraySize = 0);
+	void addTexture(String name, String type, String samplerState, U32 arraySize);
 	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
 };

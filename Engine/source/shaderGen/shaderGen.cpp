@@ -285,6 +285,31 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
       }
    }
 
+   //Handle if we have any custom features
+   if (!mCustomFeaturesData.empty())
+   {
+	   for (U32 i = 0; i < mCustomFeaturesData.size(); ++i)
+	   {
+		   mCustomFeaturesData[i]->mFeatureHLSL->processVert(mComponents, mFeatureData);
+
+		   String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
+		   mOutput->addStatement(new GenOp(line));
+
+		   if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
+			   mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
+		   //ShaderFeatureHLSL feature = mCustomFeaturesData[i]->mHLSLFeature;
+		   //feature->setProcessIndex(index);
+
+		   /*feature->processPixMacros(macros, mFeatureData);
+
+		   feature->setInstancingFormat(&mInstancingFormat);
+		   feature->processPix(mComponents, mFeatureData);*/
+
+		   mCustomFeaturesData[i]->mFeatureHLSL->reset();
+		   mOutput->addStatement(new GenOp("   \r\n"));
+	   }
+   }
+
    ShaderConnector *connect = dynamic_cast<ShaderConnector *>( mComponents[C_CONNECTOR] );
    connect->sortVars();
 }

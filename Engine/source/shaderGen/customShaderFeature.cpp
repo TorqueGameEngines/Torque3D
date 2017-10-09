@@ -89,6 +89,21 @@ void CustomShaderFeatureData::addVariable(String name, String type, String defau
 	mFeatureHLSL->addVariable(name, type, defaultValue);
 }
 
+void CustomShaderFeatureData::addUniform(String name, String type, String defaultValue, U32 arraySize)
+{
+	mFeatureHLSL->addUniform(name, type, defaultValue, arraySize);
+}
+
+void CustomShaderFeatureData::addSampler(String name, String type, U32 arraySize)
+{
+	mFeatureHLSL->addSampler(name, type, arraySize);
+}
+
+void CustomShaderFeatureData::addTexture(String name, String type, String samplerState, U32 arraySize)
+{
+	mFeatureHLSL->addTexture(name, type, samplerState, arraySize);
+}
+
 void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef *argv)
 {
 	/*mOnObject = onObject;
@@ -134,6 +149,21 @@ void CustomShaderFeatureData::setTexData(Material::StageData &stageDat,
 DefineEngineMethod(CustomShaderFeatureData, addVariable, void, (String name, String type, String defaultValue), ("", "", ""),	"")
 {
 	object->addVariable(name, type, defaultValue);
+}
+
+DefineEngineMethod(CustomShaderFeatureData, addUniform, void, (String name, String type, String defaultValue, U32 arraySize), ("", "", "", 0), "")
+{
+	object->addUniform(name, type, defaultValue, arraySize);
+}
+
+DefineEngineMethod(CustomShaderFeatureData, addSampler, void, (String name, U32 arraySize), ("", 0), "")
+{
+	object->addSampler(name, "", arraySize);
+}
+
+DefineEngineMethod(CustomShaderFeatureData, addTexture, void, (String name, String type, String samplerState, U32 arraySize), ("", "", 0), "")
+{
+	object->addTexture(name, type, samplerState, arraySize);
 }
 
 ConsoleMethod(CustomShaderFeatureData, writeLine, void, 3, 0, "( string format, string args... ) Dynamically call a method on an object.\n"

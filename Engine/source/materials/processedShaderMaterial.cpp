@@ -41,6 +41,8 @@
 #include "gfx/util/screenspace.h"
 #include "math/util/matrixSet.h"
 
+#include "ts/tsRenderState.h"
+
 // We need to include customMaterialDefinition for ShaderConstHandles::init
 #include "materials/customMaterialDefinition.h"
 
@@ -116,6 +118,21 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/ 
 
    // Deferred Shading
    mMatInfoFlagsSC = shader->getShaderConstHandle(ShaderGenVars::matInfoFlags);
+}
+
+void CustomFeatureShaderConstHandles::init(GFXShader *shader, Vector<CustomShaderFeatureData*> customFeatureData)
+{
+	for (U32 f = 0; f < customFeatureData.size(); ++f)
+	{
+		for (U32 i = 0; i < customFeatureData[f]->mAddedShaderConstants.size(); ++i)
+		{
+			handleData newSC;
+			newSC.handle = shader->getShaderConstHandle(customFeatureData[f]->mAddedShaderConstants[i]);
+			newSC.handleName = customFeatureData[f]->mAddedShaderConstants[i];
+
+			mHandles.push_back(newSC);
+		}
+	}
 }
 
 ///
@@ -658,6 +675,9 @@ bool ProcessedShaderMaterial::_addPass( ShaderRenderPassData &rpd,
    if( !rpd.shader )
       return false;
    rpd.shaderHandles.init( rpd.shader );   
+
+   //Store our customShaderFeature handles
+   rpd.customFeatureShaderHandles.init(rpd.shader, mMaterial->mCustomShaderFeatures);
 
    // If a pass glows, we glow
    if( rpd.mGlow )
@@ -1296,6 +1316,20 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
    ShaderRenderPassData *rpd = _getRPD( pass );
    for ( U32 i=0; i < rpd->featureShaderHandles.size(); i++ )
       rpd->featureShaderHandles[i]->setConsts( state, sgData, shaderConsts );
+
+   for (U32 i = 0; i < sgData.customShaderData.size(); i++)
+   {
+	   //roll through and try setting our data!
+	   for (U32 h = 0; h < rpd->customFeatureShaderHandles.mHandles.size(); ++h)
+	   {
+		   if (rpd->customFeatureShaderHandles.mHandles[h].handleName == sgData.customShaderData[i]->getHandleName())
+		   {
+				if(sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float)
+					shaderConsts->setSafe(rpd->customFeatureShaderHandles.mHandles[h].handle, sgData.customShaderData[i]->getFloat());
+				break;
+		   }
+	   }
+   }
 
    LIGHTMGR->setLightInfo( this, mMaterial, sgData, state, pass, shaderConsts );
 }

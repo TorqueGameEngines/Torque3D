@@ -36,6 +36,8 @@ class CustomShaderFeatureData : public SimObject
 public:
 	CustomFeatureHLSL* mFeatureHLSL;
 
+	Vector<StringTableEntry> mAddedShaderConstants;
+
 public:
 	CustomShaderFeatureData();
 	virtual ~CustomShaderFeatureData();

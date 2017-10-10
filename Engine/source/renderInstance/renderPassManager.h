@@ -49,6 +49,8 @@ struct RenderInst;
 class MatrixSet;
 class GFXPrimitiveBufferHandle;
 
+class CustomShaderBindingData;
+
 /// A RenderInstType hash value.
 typedef U32 RenderInstTypeHash;
 
@@ -381,6 +383,9 @@ struct MeshRenderInst : public RenderInst
    const char *meshName;
    const char *objectName;
 #endif
+
+   //Custom Shader data
+   Vector<CustomShaderBindingData*> mCustomShaderData;
 
    void clear();
 };

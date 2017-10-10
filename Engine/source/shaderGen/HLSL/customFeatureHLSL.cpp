@@ -219,6 +219,8 @@ void CustomFeatureHLSL::addUniform(String name, String type, String defaultValue
 		newVarHolder.constSortPos = cspPrimitive;
 
 		mVars.push_back(newVarHolder);
+
+		mOwner->mAddedShaderConstants.push_back(StringTable->insert(name.c_str()));
 	}
 }
 
@@ -236,6 +238,8 @@ void CustomFeatureHLSL::addSampler(String name, String type, U32 arraySize)
 		newVarHolder.constNum = Var::getTexUnitNum();     // used as texture unit num here
 
 		mVars.push_back(newVarHolder);
+
+		mOwner->mAddedShaderConstants.push_back(StringTable->insert(name.c_str()));
 	}
 }
 
@@ -281,6 +285,8 @@ void CustomFeatureHLSL::addTexture(String name, String type, String samplerState
 		newVarHolder.constNum = constNum;     // used as texture unit num here
 
 		mVars.push_back(newVarHolder);
+
+		mOwner->mAddedShaderConstants.push_back(StringTable->insert(name.c_str()));
 	}
 }
 

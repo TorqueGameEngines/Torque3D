@@ -39,6 +39,7 @@ class TSShape;
 
 struct CustomShaderBindingData
 {
+public:
 	enum UniformType
 	{
 		Float = 0,
@@ -58,18 +59,59 @@ struct CustomShaderBindingData
 		Matrix4x3,
 		Matrix4x4
 	};
-
-	String targetedUniformName;
+private:
+	StringTableEntry targetedUniformName;
 
 	//ShaderConstHandles shaderConstHandle;
 
 	UniformType type;
 
-	void* data; //for numeric data
+	F32 mFloat;
+	Point2F mFloat2;
+	Point3F mFloat3;
+	Point4F mFloat4;
 
 	//Image stuff
 	GFXTexHandle texture;
 	GFXSamplerStateDesc samplerState;
+
+public:
+	void setFloat(StringTableEntry shaderConstName, F32 f)
+	{
+		targetedUniformName = shaderConstName;
+		mFloat = f;
+		type = Float;
+	}
+	F32 getFloat() { return mFloat; }
+
+	void setFloat2(StringTableEntry shaderConstName, Point2F f)
+	{
+		targetedUniformName = shaderConstName;
+		mFloat2 = f;
+		type = Float2;
+	}
+
+	void setFloat3(StringTableEntry shaderConstName, Point3F f)
+	{
+		targetedUniformName = shaderConstName;
+		mFloat3 = f;
+		type = Float3;
+	}
+
+	void setFloat4(StringTableEntry shaderConstName, Point4F f)
+	{
+		targetedUniformName = shaderConstName;
+		mFloat4 = f;
+		type = Float4;
+	}
+
+	StringTableEntry getHandleName() {
+		return targetedUniformName;
+	}
+
+	UniformType getType() {
+		return type;
+	}
 };
 
 /// A simple class for passing render state through the pre-render pipeline.
@@ -151,7 +193,7 @@ protected:
    U32 mNodeTransformCount;
 
    //Custom Shader data
-   Vector<CustomShaderBindingData> mCustomShaderData;
+   Vector<CustomShaderBindingData*> mCustomShaderData;
 
 public:
    TSRenderState();
@@ -199,6 +241,15 @@ public:
    ///@see mAccuTex
    void setAccuTex( GFXTextureObject* query ) { mAccuTex = query; }
    GFXTextureObject* getAccuTex() const { return mAccuTex; }
+
+   void addCustomShaderBinding(CustomShaderBindingData* data)
+   {
+	   mCustomShaderData.push_back(data);
+   }
+   Vector<CustomShaderBindingData*> getCustomShaderBinding() const 
+   { 
+	   return mCustomShaderData; 
+   }
 
    ///@ see mNodeTransforms, mNodeTransformCount
    void setNodeTransforms(MatrixF *list, U32 count) { mNodeTransforms = list; mNodeTransformCount = count; }

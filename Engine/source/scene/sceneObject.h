@@ -54,7 +54,9 @@
 #ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
 #endif
-
+#ifndef _TSRENDERDATA_H_
+#include "ts/tsRenderState.h"
+#endif
 
 class SceneManager;
 class SceneRenderState;

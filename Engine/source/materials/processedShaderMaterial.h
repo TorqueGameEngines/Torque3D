@@ -97,6 +97,21 @@ public:
    GFXShaderConstHandle* mNodeTransforms;
 
    void init( GFXShader* shader, CustomMaterial* mat = NULL );
+   
+};
+
+class CustomFeatureShaderConstHandles
+{
+public:
+	struct handleData
+	{
+		StringTableEntry handleName;
+		GFXShaderConstHandle* handle;
+	};
+
+	Vector<handleData> mHandles;
+
+	void init(GFXShader *shader, Vector<CustomShaderFeatureData*> customFeatureData);
 };
 
 class ShaderRenderPassData : public RenderPassData
@@ -109,6 +124,7 @@ public:
 
    GFXShaderRef         shader;
    ShaderConstHandles   shaderHandles;
+   CustomFeatureShaderConstHandles   customFeatureShaderHandles;
    Vector<ShaderFeatureConstHandles*> featureShaderHandles;
 
    virtual void reset();

@@ -305,7 +305,9 @@ bool TSStatic::onAdd()
       mCubeReflector.unregisterReflector();
 
       if ( reflectorDesc )
-         mCubeReflector.registerReflector( this, reflectorDesc );      
+         mCubeReflector.registerReflector( this, reflectorDesc ); 
+
+	  strudelCSB = new CustomShaderBindingData();
    }
 
    _updateShouldTick();
@@ -626,6 +628,11 @@ void TSStatic::prepRenderImage( SceneRenderState* state )
 
    // Acculumation
    rdata.setAccuTex(mAccuTex);
+
+   //Various arbitrary shader render bits to add
+   strudelCSB->setFloat("strudel", 0.25);
+
+   rdata.addCustomShaderBinding(strudelCSB);
 
    // If we have submesh culling enabled then prepare
    // the object space frustum to pass to the shape.

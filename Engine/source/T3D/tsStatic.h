@@ -236,6 +236,8 @@ public:
 
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
 
+   CustomShaderBindingData* strudelCSB;
+
 };
 
 typedef TSStatic::MeshType TSMeshType;

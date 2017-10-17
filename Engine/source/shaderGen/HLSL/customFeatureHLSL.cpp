@@ -45,14 +45,22 @@ void CustomFeatureHLSL::processVert(Vector<ShaderComponent*> &componentList,
 
 	output = meta;*/
 
+	meta = new MultiLine;
+
+	mFeatureData = fd;
+
 	if (mOwner->isMethod("processVertHLSL"))
 		Con::executef(mOwner, "processVertHLSL");
+
+	output = meta;
 }
 
 void CustomFeatureHLSL::processPix(Vector<ShaderComponent*> &componentList,
 	const MaterialFeatureData &fd)
 {
 	meta = new MultiLine;
+
+	mFeatureData = fd;
 	
 	/*MultiLine *meta = new MultiLine;
 
@@ -216,7 +224,7 @@ void CustomFeatureHLSL::addUniform(String name, String type, String defaultValue
 		newVarHolder.arraySize = arraySize;
 		newVarHolder.sampler = false;
 		newVarHolder.uniform = true;
-		newVarHolder.constSortPos = cspPrimitive;
+		newVarHolder.constSortPos = cspPotentialPrimitive;
 
 		mVars.push_back(newVarHolder);
 
@@ -391,4 +399,16 @@ void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef *argv
 		meta->addStatement(new GenOp(format + "\n", varList[0], varList[1], varList[2], varList[3], varList[4]));
 		break;
 	}
+}
+
+bool CustomFeatureHLSL::hasFeature(String name)
+{
+	for (U32 i = 0; i < mFeatureData.materialFeatures.getCount(); i++)
+	{
+		String featureName = mFeatureData.materialFeatures.getAt(i).getName();
+		if (name == featureName)
+			return true;
+	}
+
+	return false;
 }

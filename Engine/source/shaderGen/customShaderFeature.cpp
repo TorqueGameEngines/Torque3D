@@ -104,6 +104,11 @@ void CustomShaderFeatureData::addTexture(String name, String type, String sample
 	mFeatureHLSL->addTexture(name, type, samplerState, arraySize);
 }
 
+bool CustomShaderFeatureData::hasFeature(String name)
+{
+	return mFeatureHLSL->hasFeature(name);
+}
+
 void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef *argv)
 {
 	/*mOnObject = onObject;
@@ -172,4 +177,9 @@ ConsoleMethod(CustomShaderFeatureData, writeLine, void, 3, 0, "( string format, 
 	"@return The result of the method call.")
 {
 	object->writeLine(argv[2], argc - 3, argv + 3);
+}
+
+DefineEngineMethod(CustomShaderFeatureData, hasFeature, bool, (String name), (""), "")
+{
+	return object->hasFeature(name);
 }

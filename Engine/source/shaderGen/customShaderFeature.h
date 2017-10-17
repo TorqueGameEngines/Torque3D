@@ -65,6 +65,8 @@ public:
 	void addSampler(String name, String type, U32 arraySize);
 	void addTexture(String name, String type, String samplerState, U32 arraySize);
 
+	bool hasFeature(String name);
+
 	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
 
 	//shader generation

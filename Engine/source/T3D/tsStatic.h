@@ -191,6 +191,8 @@ protected:
 
    PhysicsBody *mPhysicsRep;
 
+   LinearColorF mOverrideColor;
+
    // Debug stuff
    F32 mRenderNormalScalar;
    S32 mForceDetail;
@@ -235,8 +237,6 @@ public:
    const Vector<S32>& getCollisionDetails() const { return mCollisionDetails; }
 
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
-
-   CustomShaderBindingData* strudelCSB;
 
 };
 

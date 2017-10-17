@@ -151,28 +151,35 @@ S32 FN_CDECL RenderBinManager::cmpKeyFunc(const void* p1, const void* p2)
    return ( test1 == 0 ) ? S32(mse1->key2) - S32(mse2->key2) : test1;
 }
 
-void RenderBinManager::setupSGData( MeshRenderInst *ri, SceneData &data )
+void RenderBinManager::setupSGData(MeshRenderInst *ri, SceneData &data)
 {
-   PROFILE_SCOPE( RenderBinManager_setupSGData );
+	PROFILE_SCOPE(RenderBinManager_setupSGData);
 
-   // NOTE: We do not reset or clear the scene state 
-   // here as the caller has initialized non-RI members 
-   // himself and we must preserve them.
-   //
-   // It also saves a bunch of CPU as this is called for
-   // every MeshRenderInst in every pass. 
+	// NOTE: We do not reset or clear the scene state 
+	// here as the caller has initialized non-RI members 
+	// himself and we must preserve them.
+	//
+	// It also saves a bunch of CPU as this is called for
+	// every MeshRenderInst in every pass. 
 
-   dMemcpy( data.lights, ri->lights, sizeof( data.lights ) );
-   data.objTrans     = ri->objectToWorld;
-   data.backBuffTex  = ri->backBuffTex;
-   data.cubemap      = ri->cubemap;
-   data.miscTex      = ri->miscTex;
-   data.reflectTex   = ri->reflectTex;
-   data.accuTex      = ri->accuTex;
-   data.lightmap     = ri->lightmap;
-   data.visibility   = ri->visibility;
-   data.materialHint = ri->materialHint;
-   data.customShaderData = ri->mCustomShaderData;
+	dMemcpy(data.lights, ri->lights, sizeof(data.lights));
+	data.objTrans = ri->objectToWorld;
+	data.backBuffTex = ri->backBuffTex;
+	data.cubemap = ri->cubemap;
+	data.miscTex = ri->miscTex;
+	data.reflectTex = ri->reflectTex;
+	data.accuTex = ri->accuTex;
+	data.lightmap = ri->lightmap;
+	data.visibility = ri->visibility;
+	data.materialHint = ri->materialHint;
+
+	data.customShaderData.clear();
+	for (U32 i = 0; i < ri->mCustomShaderData.size(); i++)
+	{
+		data.customShaderData.push_back(&ri->mCustomShaderData[i]);
+	}
+
+    bool bl = true;
 }
 
 DefineEngineMethod( RenderBinManager, getBinType, const char*, (),,

@@ -90,21 +90,24 @@ public:
 		mFloat2 = f;
 		type = Float2;
 	}
-
+	Point2F getFloat2() { return mFloat2; }
+	
 	void setFloat3(StringTableEntry shaderConstName, Point3F f)
 	{
 		targetedUniformName = shaderConstName;
 		mFloat3 = f;
 		type = Float3;
 	}
-
+	Point3F getFloat3() { return mFloat3; }
+	
 	void setFloat4(StringTableEntry shaderConstName, Point4F f)
 	{
 		targetedUniformName = shaderConstName;
 		mFloat4 = f;
 		type = Float4;
 	}
-
+	Point4F getFloat4() { return mFloat4; }
+	
 	StringTableEntry getHandleName() {
 		return targetedUniformName;
 	}
@@ -193,7 +196,7 @@ protected:
    U32 mNodeTransformCount;
 
    //Custom Shader data
-   Vector<CustomShaderBindingData*> mCustomShaderData;
+   Vector<CustomShaderBindingData> mCustomShaderData;
 
 public:
    TSRenderState();
@@ -242,11 +245,11 @@ public:
    void setAccuTex( GFXTextureObject* query ) { mAccuTex = query; }
    GFXTextureObject* getAccuTex() const { return mAccuTex; }
 
-   void addCustomShaderBinding(CustomShaderBindingData* data)
+   void addCustomShaderBinding(CustomShaderBindingData data)
    {
 	   mCustomShaderData.push_back(data);
    }
-   Vector<CustomShaderBindingData*> getCustomShaderBinding() const 
+   Vector<CustomShaderBindingData> getCustomShaderBinding() const 
    { 
 	   return mCustomShaderData; 
    }

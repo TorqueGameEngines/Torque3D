@@ -385,7 +385,7 @@ struct MeshRenderInst : public RenderInst
 #endif
 
    //Custom Shader data
-   Vector<CustomShaderBindingData*> mCustomShaderData;
+   Vector<CustomShaderBindingData> mCustomShaderData;
 
    void clear();
 };

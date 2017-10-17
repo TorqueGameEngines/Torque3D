@@ -66,6 +66,8 @@ class CustomFeatureHLSL : public ShaderFeatureHLSL
 public:
 	CustomShaderFeatureData* mOwner;
 
+	MaterialFeatureData mFeatureData;
+
 protected:
 	MultiLine *meta;
 
@@ -99,6 +101,8 @@ public:
 	{
 		return mOwner->getName();
 	}
+
+	bool hasFeature(String name);
 
 	void addUniform(String name, String type, String defaultValue, U32 arraySize = 0);
 	void addVariable(String name, String type, String defaultValue);

@@ -124,6 +124,8 @@ TSStatic::TSStatic()
 
    mCollisionType = CollisionMesh;
    mDecalType = CollisionMesh;
+
+   mOverrideColor = LinearColorF::BLACK;
 }
 
 TSStatic::~TSStatic()
@@ -186,6 +188,9 @@ void TSStatic::initPersistFields()
          "with large complex shapes like buildings which contain many submeshes." );
       addField( "originSort",    TypeBool,   Offset( mUseOriginSort, TSStatic ), 
          "Enables translucent sorting of the TSStatic by its origin instead of the bounds." );
+
+	  addField("overrideColor", TypeColorF, Offset(mOverrideColor, TSStatic),
+		  "@brief The skin applied to the shape.\n\n");
 
    endGroup("Rendering");
 
@@ -306,8 +311,6 @@ bool TSStatic::onAdd()
 
       if ( reflectorDesc )
          mCubeReflector.registerReflector( this, reflectorDesc ); 
-
-	  strudelCSB = new CustomShaderBindingData();
    }
 
    _updateShouldTick();
@@ -630,7 +633,8 @@ void TSStatic::prepRenderImage( SceneRenderState* state )
    rdata.setAccuTex(mAccuTex);
 
    //Various arbitrary shader render bits to add
-   strudelCSB->setFloat("strudel", 0.25);
+   CustomShaderBindingData strudelCSB;
+   strudelCSB.setFloat4(StringTable->insert("overrideColor"), mOverrideColor);
 
    rdata.addCustomShaderBinding(strudelCSB);
 
@@ -800,6 +804,8 @@ U32 TSStatic::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    {
       stream->writeRangedU32( reflectorDesc->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
    }
+
+   stream->write(mOverrideColor);
    return retMask;
 }
 
@@ -886,6 +892,8 @@ void TSStatic::unpackUpdate(NetConnection *con, BitStream *stream)
    {
       cubeDescId = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );
    }
+
+   stream->read(&mOverrideColor);
 
    if ( isProperlyAdded() )
       _updateShouldTick();

@@ -1322,10 +1322,18 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
 	   //roll through and try setting our data!
 	   for (U32 h = 0; h < rpd->customFeatureShaderHandles.mHandles.size(); ++h)
 	   {
+		   StringTableEntry handleName = sgData.customShaderData[i]->getHandleName();
+		   StringTableEntry rpdHandleName = rpd->customFeatureShaderHandles.mHandles[h].handleName;
 		   if (rpd->customFeatureShaderHandles.mHandles[h].handleName == sgData.customShaderData[i]->getHandleName())
 		   {
 				if(sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float)
 					shaderConsts->setSafe(rpd->customFeatureShaderHandles.mHandles[h].handle, sgData.customShaderData[i]->getFloat());
+				else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float2)
+					shaderConsts->setSafe(rpd->customFeatureShaderHandles.mHandles[h].handle, sgData.customShaderData[i]->getFloat2());
+				else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float3)
+					shaderConsts->setSafe(rpd->customFeatureShaderHandles.mHandles[h].handle, sgData.customShaderData[i]->getFloat3());
+				else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float4)
+					shaderConsts->setSafe(rpd->customFeatureShaderHandles.mHandles[h].handle, sgData.customShaderData[i]->getFloat4());
 				break;
 		   }
 	   }

@@ -431,6 +431,10 @@ void RenderDeferredMgr::render( SceneRenderState *state )
                mat->setNodeTransforms(passRI->mNodeTransforms, passRI->mNodeTransformCount);
             }
 
+			//-JR
+			//push along any overriden fields that are instance-specific as well
+			//mat->setCustomShaderHandles()
+
             // If we're instanced then don't render yet.
             if ( mat->isInstanced() )
             {

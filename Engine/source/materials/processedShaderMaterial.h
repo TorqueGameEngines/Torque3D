@@ -29,6 +29,9 @@
 #ifndef _GFXSHADER_H_
 #include "gfx/gfxShader.h"
 #endif
+#ifndef CUSTOMSHADERBINDINGDATA_H
+#include "materials/customShaderBindingData.h"
+#endif
 
 class GenericConstBufferLayout;
 class ShaderData;
@@ -140,6 +143,7 @@ public:
    virtual void setTextureStages(SceneRenderState *, const SceneData &sgData, U32 pass );
    virtual void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state, const U32 pass);
    virtual void setNodeTransforms(const MatrixF *address, const U32 numTransforms, const U32 pass);
+   virtual void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass);
    virtual void setSceneInfo(SceneRenderState *, const SceneData& sgData, U32 pass);
    virtual void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer); 
    virtual bool stepInstance();

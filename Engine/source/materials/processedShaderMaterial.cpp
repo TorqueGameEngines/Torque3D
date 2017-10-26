@@ -1300,6 +1300,46 @@ void ProcessedShaderMaterial::setNodeTransforms(const MatrixF *transforms, const
    }
 }
 
+void ProcessedShaderMaterial::setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass)
+{
+	PROFILE_SCOPE(ProcessedShaderMaterial_setCustomShaderData);
+
+	GFXShaderConstBuffer* shaderConsts = _getShaderConstBuffer(pass);
+	ShaderConstHandles* handles = _getShaderConstHandles(pass);
+
+	for (U32 i = 0; i < shaderData.size(); i++)
+	{
+		for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
+		{
+			StringTableEntry handleName = shaderData[i].getHandleName();
+			bool tmp = true;
+		}
+		//roll through and try setting our data!
+		for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
+		{
+			StringTableEntry handleName = shaderData[i].getHandleName();
+			StringTableEntry rpdHandleName = handles->mCustomHandles[h].handleName;
+			if (handles->mCustomHandles[h].handleName == shaderData[i].getHandleName())
+			{
+				if (handles->mCustomHandles[h].handle->isValid())
+				{
+					CustomShaderBindingData::UniformType type = shaderData[i].getType();
+
+					if (type == CustomShaderBindingData::Float)
+						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat());
+					else if (type == CustomShaderBindingData::Float2)
+						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat2());
+					else if (type == CustomShaderBindingData::Float3)
+						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat3());
+					else if (type == CustomShaderBindingData::Float4)
+						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat4());
+					break;
+				}
+			}
+		}
+	}
+}
+
 void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const SceneData& sgData, U32 pass)
 {
    PROFILE_SCOPE( ProcessedShaderMaterial_setSceneInfo );
@@ -1337,7 +1377,7 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
    for ( U32 i=0; i < rpd->featureShaderHandles.size(); i++ )
       rpd->featureShaderHandles[i]->setConsts( state, sgData, shaderConsts );
 
-   for (U32 i = 0; i < sgData.customShaderData.size(); i++)
+   /*for (U32 i = 0; i < sgData.customShaderData.size(); i++)
    {
 	   //roll through and try setting our data!
 	   for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
@@ -1360,7 +1400,7 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
 			   }
 		   }
 	   }
-   }
+   }*/
 
    LIGHTMGR->setLightInfo( this, mMaterial, sgData, state, pass, shaderConsts );
 }

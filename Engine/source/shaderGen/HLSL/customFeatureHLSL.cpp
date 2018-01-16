@@ -48,6 +48,9 @@ void CustomFeatureHLSL::processVert(Vector<ShaderComponent*> &componentList,
 	meta = new MultiLine;
 
 	mFeatureData = fd;
+	mComponentList = componentList;
+
+	mOutputState = VertexOutput;
 
 	if (mOwner->isMethod("processVertHLSL"))
 		Con::executef(mOwner, "processVertHLSL");
@@ -61,6 +64,9 @@ void CustomFeatureHLSL::processPix(Vector<ShaderComponent*> &componentList,
 	meta = new MultiLine;
 
 	mFeatureData = fd;
+	mComponentList = componentList;
+
+	mOutputState = PixelOutput;
 	
 	/*MultiLine *meta = new MultiLine;
 
@@ -320,6 +326,54 @@ void CustomFeatureHLSL::addVariable(String name, String type, String defaultValu
 			mVars.push_back(newVarHolder);
 		}
 	}
+}
+
+void CustomFeatureHLSL::addConnector(String name, String elementName, String type)
+{
+	// grab connector texcoord register
+	ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>(mComponentList[C_CONNECTOR]);
+
+	//Get element
+	S32 element = -1;
+
+	if (elementName == String("RT_POSITION"))
+		element = RT_POSITION;
+	else if (elementName == String("RT_NORMAL"))
+		element = RT_NORMAL;
+	else if (elementName == String("RT_BINORMAL"))
+		element = RT_BINORMAL;
+	else if (elementName == String("RT_TANGENT"))
+		element = RT_TANGENT;
+	else if (elementName == String("RT_TANGENTW"))
+		element = RT_TANGENTW;
+	else if (elementName == String("RT_COLOR"))
+		element = RT_COLOR;
+	else if (elementName == String("RT_TEXCOORD"))
+		element = RT_TEXCOORD;
+	else if (elementName == String("RT_VPOS"))
+		element = RT_VPOS;
+	else if (elementName == String("RT_SVPOSITION"))
+		element = RT_SVPOSITION;
+	else if (elementName == String("RT_BLENDINDICES"))
+		element = RT_BLENDINDICES;
+	else if (elementName == String("RT_BLENDWEIGHT"))
+		element = RT_BLENDWEIGHT;
+
+	if (element == -1)
+	{
+		Con::errorf("CustomShaderFeatureHLSL::addConnector - Invalid element type %s", elementName.c_str());
+		return;
+	}
+
+	Var *connector = connectComp->getElement((RegisterType)element);
+	connector->setName(name);
+
+	if (mOutputState == VertexOutput)
+		connector->setStructName("OUT");
+	else if(mOutputState == PixelOutput)
+		connector->setStructName("IN");
+
+	connector->setType(type);
 }
 
 void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef *argv)

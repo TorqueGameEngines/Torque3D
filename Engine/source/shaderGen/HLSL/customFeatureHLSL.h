@@ -63,9 +63,19 @@ class CustomFeatureHLSL : public ShaderFeatureHLSL
 
 	Vector<VarHolder> mVars;
 
+	enum outputState
+	{
+		NoOutput,
+		VertexOutput,
+		PixelOutput
+	};
+
+	outputState mOutputState;
+
 public:
 	CustomShaderFeatureData* mOwner;
 
+	Vector<ShaderComponent*> mComponentList;
 	MaterialFeatureData mFeatureData;
 
 protected:
@@ -108,5 +118,6 @@ public:
 	void addVariable(String name, String type, String defaultValue);
 	void addSampler(String name, String type, U32 arraySize = 0);
 	void addTexture(String name, String type, String samplerState, U32 arraySize);
+	void addConnector(String name, String elementName, String type);
 	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
 };

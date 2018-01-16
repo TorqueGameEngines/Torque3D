@@ -104,6 +104,11 @@ void CustomShaderFeatureData::addTexture(String name, String type, String sample
 	mFeatureHLSL->addTexture(name, type, samplerState, arraySize);
 }
 
+void CustomShaderFeatureData::addConnector(String name, String elementName, String type)
+{
+	mFeatureHLSL->addConnector(name, elementName, type);
+}
+
 bool CustomShaderFeatureData::hasFeature(String name)
 {
 	return mFeatureHLSL->hasFeature(name);

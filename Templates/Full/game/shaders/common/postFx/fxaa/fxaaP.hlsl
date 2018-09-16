@@ -23,11 +23,9 @@
 #include "../../shaderModel.hlsl"
 
 #define FXAA_PC 1
-#if (TORQUE_SM <= 30)
-#define FXAA_HLSL_3 1
-#elif TORQUE_SM < 49
+#if TORQUE_SM == 40
 #define FXAA_HLSL_4 1
-#elif TORQUE_SM >=50
+#elif TORQUE_SM > 40
 #define FXAA_HLSL_5 1
 #endif
 #define FXAA_QUALITY__PRESET 12
@@ -48,9 +46,7 @@ uniform float2 oneOverTargetSize;
 
 float4 main( VertToPix IN ) : TORQUE_TARGET0
 {
-#if (TORQUE_SM >= 10 && TORQUE_SM <=30)
-   FxaaTex tex = colorTex;
-#elif TORQUE_SM >=40
+#if TORQUE_SM >=40
    FxaaTex tex;
    tex.smpl = colorTex;
    tex.tex = texture_colorTex;

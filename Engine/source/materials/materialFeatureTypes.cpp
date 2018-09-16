@@ -43,6 +43,7 @@ ImplementFeatureType( MFT_DetailMap, MFG_Texture, 4.0f, true );
 ImplementFeatureType( MFT_DiffuseColor, MFG_Texture, 5.0f, true );
 ImplementFeatureType( MFT_DiffuseVertColor, MFG_Texture, 6.0f, true );
 ImplementFeatureType( MFT_AlphaTest, MFG_Texture, 7.0f, true );
+ImplementFeatureType(MFT_InvertSmoothness, U32(-1), -1, true);
 ImplementFeatureType( MFT_SpecularMap, MFG_Texture, 8.0f, true );
 ImplementFeatureType( MFT_NormalMap, MFG_Texture, 9.0f, true );
 ImplementFeatureType( MFT_DetailNormalMap, MFG_Texture, 10.0f, true );
@@ -51,14 +52,15 @@ ImplementFeatureType( MFT_Imposter, U32(-1), -1, true );
 ImplementFeatureType( MFT_AccuMap, MFG_PreLighting, 2.0f, true );
 
 ImplementFeatureType( MFT_RTLighting, MFG_Lighting, 2.0f, true );
-ImplementFeatureType( MFT_SubSurface, MFG_Lighting, 3.0f, true );
-ImplementFeatureType( MFT_LightMap, MFG_Lighting, 4.0f, true );
-ImplementFeatureType( MFT_ToneMap, MFG_Lighting, 5.0f, true );
-ImplementFeatureType( MFT_VertLitTone, MFG_Lighting, 6.0f, false );
-ImplementFeatureType( MFT_VertLit, MFG_Lighting, 7.0f, true );
-ImplementFeatureType( MFT_PixSpecular, MFG_Lighting, 9.0f, true );
+ImplementFeatureType( MFT_LightMap, MFG_Lighting, 3.0f, true );
+ImplementFeatureType( MFT_ToneMap, MFG_Lighting, 4.0f, true );
+ImplementFeatureType( MFT_VertLitTone, MFG_Lighting, 5.0f, false );
+ImplementFeatureType( MFT_PixSpecular, MFG_Lighting, 6.0f, true );
+ImplementFeatureType( MFT_StaticCubemap, U32(-1), -1.0, true );
+ImplementFeatureType( MFT_CubeMap, MFG_Lighting, 7.0f, true );
+ImplementFeatureType( MFT_SubSurface, MFG_Lighting, 8.0f, true );
+ImplementFeatureType( MFT_VertLit, MFG_Lighting, 9.0f, true );
 ImplementFeatureType( MFT_MinnaertShading, MFG_Lighting, 10.0f, true );
-ImplementFeatureType( MFT_CubeMap, MFG_Lighting, 11.0f, true );
 
 ImplementFeatureType( MFT_GlowMask, MFG_PostLighting, 1.0f, true );
 ImplementFeatureType( MFT_Visibility, MFG_PostLighting, 2.0f, true );
@@ -99,8 +101,6 @@ ImplementFeatureType( MFT_ImposterVert, MFG_PreTransform, 1.0, false );
 // Deferred Shading
 ImplementFeatureType( MFT_isDeferred, U32(-1), -1, true );
 ImplementFeatureType( MFT_SkyBox, MFG_Transform, 1.0f, false );
-ImplementFeatureType( MFT_DeferredEmptySpec, MFG_Texture, 8.01f, false );
-
 ImplementFeatureType( MFT_DeferredSpecMap, MFG_Texture, 8.2f, false );
 ImplementFeatureType( MFT_DeferredSpecVars, MFG_Texture, 8.5f, false );
 ImplementFeatureType( MFT_DeferredMatInfoFlags, MFG_Texture, 8.7f, false );

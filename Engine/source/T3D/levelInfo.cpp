@@ -97,7 +97,7 @@ LevelInfo::LevelInfo()
 
    mNetFlags.set( ScopeAlways | Ghostable );
 
-   mAdvancedLightmapSupport = false;
+   mAdvancedLightmapSupport = true;
    mAccuTextureName = "";
    mAccuTexture = NULL;
 
@@ -163,8 +163,8 @@ void LevelInfo::initPersistFields()
       addField( "ambientLightBlendCurve", TypeEaseF, Offset( mAmbientLightBlendCurve, LevelInfo ),
          "Interpolation curve to use for blending from one ambient light color to a different one." );
 
-      addField( "advancedLightmapSupport", TypeBool, Offset( mAdvancedLightmapSupport, LevelInfo ),
-         "Enable expanded support for mixing static and dynamic lighting (more costly)" );
+      //addField( "advancedLightmapSupport", TypeBool, Offset( mAdvancedLightmapSupport, LevelInfo ),
+      //   "Enable expanded support for mixing static and dynamic lighting (more costly)" );
 
       addProtectedField("AccuTexture", TypeStringFilename, Offset(mAccuTextureName, LevelInfo),
          &_setLevelAccuTexture, &defaultProtectedGetFn, "Accumulation texture.");

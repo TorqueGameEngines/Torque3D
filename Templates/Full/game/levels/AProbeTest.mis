@@ -1,0 +1,276 @@
+//--- OBJECT WRITE BEGIN ---
+new SimGroup(MissionGroup) {
+   canSave = "1";
+   canSaveDynamicFields = "1";
+      cdTrack = "2";
+      CTF_scoreLimit = "5";
+      enabled = "1";
+      musicTrack = "lush";
+
+   new LevelInfo(theLevelInfo) {
+      nearClip = "0.1";
+      visibleDistance = "1000";
+      visibleGhostDistance = "0";
+      decalBias = "0.0015";
+      fogColor = "0.6 0.6 0.7 1";
+      fogDensity = "0";
+      fogDensityOffset = "700";
+      fogAtmosphereHeight = "0";
+      canvasClearColor = "0 0 0 255";
+      ambientLightBlendPhase = "1";
+      ambientLightBlendCurve = "0 0 -1 -1";
+      soundAmbience = "AudioAmbienceDefault";
+      soundDistanceModel = "Linear";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         desc0 = "A blank level for testing reflection probes";
+         enabled = "1";
+         levelName = "A Probe Test";
+   };
+   new SkyBox(theSky) {
+      Material = "DesertSkyMat";
+      drawBottom = "0";
+      fogBandHeight = "0";
+      position = "0 0 0";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+   };
+   new Sun(theSun) {
+      azimuth = "290";
+      elevation = "50";
+      color = "1 1 1 1";
+      ambient = "0.473532 0.473532 0.473532 1";
+      brightness = "1";
+      castShadows = "1";
+      staticRefreshFreq = "250";
+      dynamicRefreshFreq = "8";
+      coronaEnabled = "1";
+      coronaScale = "0.5";
+      coronaTint = "1 1 1 1";
+      coronaUseLightColor = "1";
+      flareScale = "1";
+      attenuationRatio = "0 1 1";
+      shadowType = "PSSM";
+      texSize = "1024";
+      overDarkFactor = "3000 1500 750 250";
+      shadowDistance = "100";
+      shadowSoftness = "0.25";
+      numSplits = "4";
+      logWeight = "0.9";
+      fadeStartDistance = "0";
+      lastSplitTerrainOnly = "0";
+      representedInLightmap = "0";
+      shadowDarkenColor = "0 0 0 -1";
+      includeLightmappedGeometryInShadow = "0";
+      position = "0 0 0";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         bias = "0.1";
+         Blur = "1";
+         enabled = "1";
+         height = "1024";
+         lightBleedFactor = "0.8";
+         minVariance = "0";
+         pointShadowType = "PointShadowType_Paraboloid";
+         shadowBox = "-100 -100 -100 100 100 100";
+         splitFadeDistances = "1 1 1 1";
+         width = "3072";
+   };
+   new SimGroup(PlayerDropPoints) {
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         enabled = "1";
+
+      new SpawnSphere() {
+         autoSpawn = "0";
+         spawnTransform = "0";
+         radius = "5";
+         sphereWeight = "1";
+         indoorWeight = "1";
+         outdoorWeight = "1";
+         isAIControlled = "0";
+         dataBlock = "SpawnSphereMarker";
+         position = "0 0 2";
+         rotation = "1 0 0 0";
+         scale = "1 1 1";
+         hidden = "1";
+         canSave = "1";
+         canSaveDynamicFields = "1";
+            enabled = "1";
+            homingCount = "0";
+            lockCount = "0";
+      };
+   };
+   new GroundPlane() {
+      squareSize = "128";
+      scaleU = "25";
+      scaleV = "25";
+      Material = "Grid512_Grey_Mat";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         enabled = "1";
+         position = "0 0 0";
+         rotation = "1 0 0 0";
+         scale = "1 1 1";
+   };
+   new ReflectionProbe() {
+      enabled = "1";
+      ProbeShape = "Sphere";
+      radius = "10";
+      Intensity = "1";
+      IndirectLightMode = "Ambient Color";
+      IndirectLight = "1 1 1 1";
+      ReflectionMode = "Baked Cubemap";
+      reflectionPath = "levels/probeTest/probes/";
+      Bake = "0";
+      position = "0 0.559989 4.53387";
+      rotation = "1 0 0 0";
+      scale = "5 5 5";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "8072e1be-2846-11e7-9f56-abd46b190c60";
+         GroundColor = "0.8 0.7 0.5 1";
+         SkyColor = "0.5 0.5 1 1";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Orange_Mat";
+      position = "0.487092 0.454657 9.4951";
+      rotation = "1 0 0 0";
+      scale = "10 10 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Red_Mat";
+      position = "0.470302 5.50317 5";
+      rotation = "1 0 0 0";
+      scale = "10 1 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Green_Mat";
+      position = "5.02238 0.0512025 5";
+      rotation = "1 0 0 0";
+      scale = "1 10 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Grey_Mat";
+      position = "0.631523 -1.77695 1.00151";
+      rotation = "1 0 0 0";
+      scale = "2 2 2";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Blue_Mat";
+      position = "0.470302 -5.04199 5";
+      rotation = "1 0 0 0";
+      scale = "10 1 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Grey_Mat";
+      position = "2.62512 2.62766 2.00332";
+      rotation = "1 0 0 0";
+      scale = "2 2 4";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Grey_Mat";
+      position = "0.487092 0.454657 -0.477887";
+      rotation = "1 0 0 0";
+      scale = "10 10 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.5";
+      surface = "0 1 0 0 0 0 -0.5";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
+      surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
+   };
+   new PointLight() {
+      radius = "10";
+      isEnabled = "1";
+      color = "0.887923 1 0.008023 1";
+      brightness = "1";
+      castShadows = "0";
+      staticRefreshFreq = "250";
+      dynamicRefreshFreq = "8";
+      priority = "1";
+      animate = "1";
+      animationPeriod = "1";
+      animationPhase = "1";
+      flareScale = "1";
+      attenuationRatio = "0 1 1";
+      shadowType = "DualParaboloidSinglePass";
+      texSize = "512";
+      overDarkFactor = "2000 1000 500 100";
+      shadowDistance = "400";
+      shadowSoftness = "0.15";
+      numSplits = "1";
+      logWeight = "0.91";
+      fadeStartDistance = "0";
+      lastSplitTerrainOnly = "0";
+      representedInLightmap = "0";
+      shadowDarkenColor = "0 0 0 -1";
+      includeLightmappedGeometryInShadow = "0";
+      position = "0 0.555882 4.56352";
+      rotation = "1 0 0 0";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+   };
+};
+//--- OBJECT WRITE END ---

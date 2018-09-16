@@ -69,16 +69,4 @@ public:
    
    virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const { return ShaderFeature::RenderTarget2; }
 };
-
-class DeferredEmptySpecHLSL : public ShaderFeatureHLSL
-{
-public:
-   virtual String getName() { return "Deferred Shading: Empty Specular"; }
-
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-      const MaterialFeatureData &fd );
-   
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const { return ShaderFeature::RenderTarget2; }
-};
-
 #endif

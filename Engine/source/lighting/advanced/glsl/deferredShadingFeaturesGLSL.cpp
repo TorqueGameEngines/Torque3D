@@ -62,10 +62,24 @@ void DeferredSpecMapGLSL::processPix( Vector<ShaderComponent*> &componentList, c
    specularMap->uniform = true;
    specularMap->sampler = true;
    specularMap->constNum = Var::getTexUnitNum();
-   //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   meta->addStatement(new GenOp("   @.b = dot(tex2D(@, @).rgb, vec3(0.3, 0.59, 0.11));\r\n", material, specularMap, texCoord));
-   meta->addStatement(new GenOp("   @.a = tex2D(@, @).a;\r\n", material, specularMap, texCoord));
+   LangElement *texOp = new GenOp( "tex2D(@, @)", specularMap, texCoord );
+
+   Var *specularColor = (Var*)LangElement::find("specularColor");
+   if (!specularColor) specularColor = new Var("specularColor", "vec4");
+   Var *metalness = (Var*)LangElement::find("metalness");
+   if (!metalness) metalness = new Var("metalness", "float");
+   Var *smoothness = (Var*)LangElement::find("smoothness");
+   if (!smoothness) smoothness = new Var("smoothness", "float");
+
+   meta->addStatement(new GenOp("   @ = @.r;\r\n", new DecOp(smoothness), texOp));
+      meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(metalness), texOp));
+
+   if (fd.features[MFT_InvertSmoothness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+
+   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(specularColor), texOp));
+
+   meta->addStatement(new GenOp("   @.bga = vec3(@,@.g,@);\r\n", material, smoothness, specularColor, metalness));
    output = meta;
 }
 
@@ -145,44 +159,20 @@ void DeferredSpecVarsGLSL::processPix( Vector<ShaderComponent*> &componentList, 
       material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
       material->setStructName("OUT");
    }
+   
+   Var *metalness = new Var("metalness", "float");
+   metalness->uniform = true;
+   metalness->constSortPos = cspPotentialPrimitive;
 
-   Var *specStrength = new Var;
-   specStrength->setType( "float" );
-   specStrength->setName( "specularStrength" );
-   specStrength->uniform = true;
-   specStrength->constSortPos = cspPotentialPrimitive;
+   Var *smoothness = new Var("smoothness", "float");
+   smoothness->uniform = true;
+   smoothness->constSortPos = cspPotentialPrimitive;
 
-   Var *specPower = new Var;
-   specPower->setType("float");
-   specPower->setName("specularPower");
-   specPower->uniform = true;
-   specPower->constSortPos = cspPotentialPrimitive;
-
-   MultiLine *meta = new MultiLine;
-   //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   meta->addStatement(new GenOp("   @.a = @/128;\r\n", material, specPower));
-   meta->addStatement(new GenOp("   @.b = @/5;\r\n", material, specStrength));
-   output = meta;
-}
-
-// Black -> Blue and Alpha of Color Buffer (representing no specular)
-void DeferredEmptySpecGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
-{    
-   // search for material var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   if ( !material )
-   {
-      // create material var
-      material = new Var;
-      material->setType( "vec4" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName("OUT");
-   }
-
-   MultiLine * meta = new MultiLine;
-   //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   meta->addStatement(new GenOp("   @.ba = vec2(0.0);\r\n", material));
+	MultiLine *meta = new MultiLine;
+    meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
+    meta->addStatement(new GenOp("   @.b = @;\r\n", material, smoothness));
+    if (fd.features[MFT_InvertSmoothness])
+       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+    meta->addStatement(new GenOp("   @.a = @;\r\n", material, metalness));
    output = meta;
 }

@@ -167,22 +167,13 @@ float2 parallaxOffsetDxtnm(TORQUE_SAMPLER2D(texMap), float2 texCoord, float3 neg
    return offset;
 }
 
-
-/// The maximum value for 16bit per component integer HDR encoding.
-static const float HDR_RGB16_MAX = 100.0;
-
 /// The maximum value for 10bit per component integer HDR encoding.
 static const float HDR_RGB10_MAX = 4.0;
 
 /// Encodes an HDR color for storage into a target.
 float3 hdrEncode( float3 sample )
 {
-   #if defined( TORQUE_HDR_RGB16 )
-
-      return sample / HDR_RGB16_MAX;
-
-   #elif defined( TORQUE_HDR_RGB10 ) 
-
+   #if defined( TORQUE_HDR_RGB10 )
       return sample / HDR_RGB10_MAX;
 
    #else
@@ -202,12 +193,7 @@ float4 hdrEncode( float4 sample )
 /// Decodes an HDR color from a target.
 float3 hdrDecode( float3 sample )
 {
-   #if defined( TORQUE_HDR_RGB16 )
-
-      return sample * HDR_RGB16_MAX;
-
-   #elif defined( TORQUE_HDR_RGB10 )
-
+   #if defined( TORQUE_HDR_RGB10 )
       return sample * HDR_RGB10_MAX;
 
    #else
@@ -286,37 +272,6 @@ bool getFlag(float flags, int num)
    return (fmod(process, pow(2, squareNum)) >= squareNum); 
 }
 
-// #define TORQUE_STOCK_GAMMA
-#ifdef TORQUE_STOCK_GAMMA
-// Sample in linear space. Decodes gamma.
-float4 toLinear(float4 tex)
-{
-   return tex;
-}
-// Encodes gamma.
-float4 toGamma(float4 tex)
-{
-   return tex;
-}
-float3 toLinear(float3 tex)
-{
-   return tex;
-}
-// Encodes gamma.
-float3 toGamma(float3 tex)
-{
-   return tex;
-}
-float3 toLinear(float3 tex)
-{
-   return tex;
-}
-// Encodes gamma.
-float3 toLinear(float3 tex)
-{
-   return tex;
-}
-#else
 // Sample in linear space. Decodes gamma.
 float4 toLinear(float4 tex)
 {
@@ -337,6 +292,22 @@ float3 toGamma(float3 tex)
 {
    return pow(abs(tex.rgb), 1.0/2.2);
 }
-#endif //
 
+//
+float3 PBRFresnel(float3 albedo, float3 indirect, float metalness, float fresnel)
+{
+   float3 diffuseColor = albedo - (albedo * metalness);
+   float3 reflectColor = lerp(indirect*albedo, indirect, fresnel);
+
+   return diffuseColor + reflectColor;
+}
+
+float3 simpleFresnel(float3 diffuseColor, float3 reflectColor, float metalness, float angle, float bias, float power)
+{
+   float fresnelTerm = bias + (1.0 - bias) * pow(abs(1.0 - max(angle, 0)), power);
+
+   fresnelTerm *= metalness;
+
+   return lerp(diffuseColor, reflectColor, fresnelTerm);
+}
 #endif // _TORQUE_HLSL_

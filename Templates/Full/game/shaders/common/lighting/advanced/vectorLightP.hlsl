@@ -38,7 +38,7 @@ TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
 TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 3);
 uniform float4 rtParams3;
 #endif
-//register 4?
+
 TORQUE_UNIFORM_SAMPLER2D(lightBuffer, 5);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 6);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 7);
@@ -194,12 +194,13 @@ float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
 
 float4 main( FarFrustumQuadConnectP IN ) : TORQUE_TARGET0
 {
-   // Emissive.
-   float4 matInfo = TORQUE_TEX2D( matInfoBuffer, IN.uv0 );   
-   bool emissive = getFlag( matInfo.r, 0 );
-   if ( emissive )
+   // Matinfo flags
+   float4 matInfo = TORQUE_TEX2D( matInfoBuffer, IN.uv0 );
+   //early out if emissive
+   bool emissive = getFlag(matInfo.r, 0);
+   if (emissive)
    {
-       return float4(1.0, 1.0, 1.0, 0.0);
+      return float4(0.0, 0.0, 0.0, 0.0);
    }
    
    float4 colorSample = TORQUE_TEX2D( colorBuffer, IN.uv0 );
@@ -289,30 +290,20 @@ float4 main( FarFrustumQuadConnectP IN ) : TORQUE_TARGET0
 
    #endif // !NO_SHADOW
 
-   // Specular term
-   float specular = AL_CalcSpecular(   -lightDirection, 
-                                       normal, 
-                                       normalize(-IN.vsEyeRay) ) * lightBrightness * shadowed;
-                                    
-   float Sat_NL_Att = saturate( dotNL * shadowed ) * lightBrightness;
-   float3 lightColorOut = lightMapParams.rgb * lightColor.rgb;
+   // Specular term   
+   float3 viewSpacePos = IN.vsEyeRay * depth;
+   float4 real_specular = EvalBDRF( float3( 1.0, 1.0, 1.0 ),
+                                    lightColor.rgb,
+                                    normalize( -lightDirection ),
+                                    viewSpacePos,
+                                    normal,
+                                    1.0-matInfo.b,
+                                    matInfo.a );
+   float3 lightColorOut = real_specular.rgb * lightBrightness * shadowed;
    
-   float4 addToResult = (lightAmbient * (1 - ambientCameraFactor)) + ( lightAmbient * ambientCameraFactor * saturate(dot(normalize(-IN.vsEyeRay), normal)) );
-
-   // TODO: This needs to be removed when lightmapping is disabled
-   // as its extra work per-pixel on dynamic lit scenes.
-   //
-   // Special lightmapping pass.
-   if ( lightMapParams.a < 0.0 )
-   {
-      // This disables shadows on the backsides of objects.
-      shadowed = dotNL < 0.0f ? 1.0f : shadowed;
-
-      Sat_NL_Att = 1.0f;
-      lightColorOut = shadowed;
-      specular *= lightBrightness;
-      addToResult = ( 1.0 - shadowed ) * abs(lightMapParams);
-   }
+   float Sat_NL_Att = saturate( dotNL * shadowed ) * lightBrightness;
+   float Sat_NdotV = saturate(dot(normalize(-IN.vsEyeRay), normal));
+   float4 addToResult = ( lightAmbient * (1 - ambientCameraFactor)) + ( lightAmbient * ambientCameraFactor * Sat_NdotV );
 
    // Sample the AO texture.      
    #ifdef USE_SSAO_MASK
@@ -323,6 +314,6 @@ float4 main( FarFrustumQuadConnectP IN ) : TORQUE_TARGET0
    #ifdef PSSM_DEBUG_RENDER
       lightColorOut = debugColor;
    #endif
-
-   return AL_DeferredOutput(lightColorOut+subsurface*(1.0-Sat_NL_Att), colorSample.rgb, matInfo, addToResult, specular, Sat_NL_Att);
+   
+   return float4(matInfo.g*(lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
 }

@@ -377,6 +377,10 @@ bool TSStatic::_createShape()
    resetWorldBox();
 
    mShapeInstance = new TSShapeInstance( mShape, isClientObject() );
+   if (isClientObject())
+   {
+      mShapeInstance->cloneMaterialList();
+   }
 
    if (isClientObject())
       mShapeInstance->cloneMaterialList();

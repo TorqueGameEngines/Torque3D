@@ -148,17 +148,23 @@ void SpecularMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const
    specularMapTex->uniform = true;
    specularMapTex->texture = true;
    specularMapTex->constNum = specularMap->constNum;
+   LangElement *texOp = new GenOp("@.Sample(@, @)", specularMapTex, specularMap, texCoord);
 
-   LangElement *texOp = NULL;
 
-   if (specularMapTex)
-      texOp = new GenOp("@.Sample(@, @)", specularMapTex, specularMap, texCoord);
-   else
-      texOp = new GenOp("tex2D(@, @)", specularMap, texCoord);
+   Var *specularColor = new Var( "specularColor", "float4" );
+   Var *metalness = (Var*)LangElement::find("metalness");
+   if (!metalness) metalness = new Var("metalness", "float");
+   Var *smoothness = (Var*)LangElement::find("smoothness");
+   if (!smoothness) smoothness = new Var("smoothness", "float");
+   MultiLine * meta = new MultiLine;
 
-   Var *specularColor = new Var("specularColor", "float4");
+   meta->addStatement(new GenOp("   @ = @.r;\r\n", new DecOp(smoothness), texOp));
+   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(metalness), texOp));
 
-   output = new GenOp("   @ = @;\r\n", new DecOp(specularColor), texOp);
+   if (fd.features[MFT_InvertSmoothness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(specularColor), texOp));
+   output = meta;
 }
 
 ShaderFeature::Resources SpecularMapHLSL::getResources( const MaterialFeatureData &fd )

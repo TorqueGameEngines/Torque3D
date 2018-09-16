@@ -36,7 +36,7 @@
 extern bool gEditingMission;
 
 
-bool SceneCullingState::smDisableTerrainOcclusion = false;
+bool SceneCullingState::smDisableTerrainOcclusion = true;
 bool SceneCullingState::smDisableZoneCulling = false;
 U32 SceneCullingState::smMaxOccludersPerZone = 4;
 F32 SceneCullingState::smOccluderMinWidthPercentage = 0.1f;

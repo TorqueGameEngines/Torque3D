@@ -56,8 +56,8 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/ 
    mTexMatSC = shader->getShaderConstHandle(ShaderGenVars::texMat);
    mToneMapTexSC = shader->getShaderConstHandle(ShaderGenVars::toneMap);
    mSpecularColorSC = shader->getShaderConstHandle(ShaderGenVars::specularColor);
-   mSpecularPowerSC = shader->getShaderConstHandle(ShaderGenVars::specularPower);
-   mSpecularStrengthSC = shader->getShaderConstHandle(ShaderGenVars::specularStrength);
+   mSmoothnessSC = shader->getShaderConstHandle(ShaderGenVars::smoothness);
+   mMetalnessSC = shader->getShaderConstHandle(ShaderGenVars::metalness);
    mAccuScaleSC = shader->getShaderConstHandle("$accuScale");
    mAccuDirectionSC = shader->getShaderConstHandle("$accuDirection");
    mAccuStrengthSC = shader->getShaderConstHandle("$accuStrength");
@@ -299,6 +299,8 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
 
    // First we add all the features which the 
    // material has defined.
+   if (mMaterial->mInvertSmoothness[stageNum])
+      fd.features.addFeature(MFT_InvertSmoothness);
 
    if ( mMaterial->isTranslucent() )
    {
@@ -335,7 +337,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    if (  features.hasFeature( MFT_UseInstancing ) &&
          mMaxStages == 1 &&
          !mMaterial->mGlow[0] &&
-         !mMaterial->mDynamicCubemap &&
          shaderVersion >= 3.0f )
       fd.features.addFeature( MFT_UseInstancing );
 
@@ -363,6 +364,7 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
 
    if (features.hasFeature(MFT_SkyBox))
    {
+      fd.features.addFeature(MFT_StaticCubemap);
       fd.features.addFeature(MFT_CubeMap);
       fd.features.addFeature(MFT_SkyBox);
    }
@@ -1090,9 +1092,8 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
    if ( !shaderConsts->wasLost() )
       return;
 
-   shaderConsts->setSafe(handles->mSpecularColorSC, mMaterial->mSpecular[stageNum]);   
-   shaderConsts->setSafe(handles->mSpecularPowerSC, mMaterial->mSpecularPower[stageNum]);
-   shaderConsts->setSafe(handles->mSpecularStrengthSC, mMaterial->mSpecularStrength[stageNum]);
+   shaderConsts->setSafe(handles->mSmoothnessSC, mMaterial->mSmoothness[stageNum]);
+   shaderConsts->setSafe(handles->mMetalnessSC, mMaterial->mMetalness[stageNum]);
 
    shaderConsts->setSafe(handles->mParallaxInfoSC, mMaterial->mParallaxScale[stageNum]);   
    shaderConsts->setSafe(handles->mMinnaertConstantSC, mMaterial->mMinnaertConstant[stageNum]);
@@ -1262,21 +1263,25 @@ void ProcessedShaderMaterial::setNodeTransforms(const MatrixF *transforms, const
 
 void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const SceneData& sgData, U32 pass)
 {
-   PROFILE_SCOPE( ProcessedShaderMaterial_setSceneInfo );
+   PROFILE_SCOPE(ProcessedShaderMaterial_setSceneInfo);
 
    GFXShaderConstBuffer* shaderConsts = _getShaderConstBuffer(pass);
    ShaderConstHandles* handles = _getShaderConstHandles(pass);
 
    // Set cubemap stuff here (it's convenient!)
    const Point3F &eyePosWorld = state->getCameraPosition();
-   if ( handles->mCubeEyePosSC->isValid() )
+   if (_hasCubemap(pass) || mMaterial->mDynamicCubemap)
    {
-      if(_hasCubemap(pass) || mMaterial->mDynamicCubemap)
+      if (handles->mCubeEyePosSC->isValid())
       {
          Point3F cubeEyePos = eyePosWorld - sgData.objTrans->getPosition();
-         shaderConsts->set(handles->mCubeEyePosSC, cubeEyePos);      
+         shaderConsts->set(handles->mCubeEyePosSC, cubeEyePos);
       }
    }
+   if (sgData.cubemap)
+      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipMapLevels());
+   else
+      shaderConsts->setSafe(handles->mCubeMipsSC, 1.0f);
 
    shaderConsts->setSafe(handles->mVisiblitySC, sgData.visibility);
 

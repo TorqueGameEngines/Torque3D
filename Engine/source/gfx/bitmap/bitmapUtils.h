@@ -30,6 +30,7 @@
 extern void (*bitmapExtrude5551)(const void *srcMip, void *mip, U32 height, U32 width);
 extern void (*bitmapExtrudeRGB)(const void *srcMip, void *mip, U32 height, U32 width);
 extern void (*bitmapExtrudeRGBA)(const void *srcMip, void *mip, U32 height, U32 width);
+extern void(*bitmapExtrudeFPRGBA)(const void *srcMip, void *mip, U32 height, U32 width);
 extern void (*bitmapConvertRGB_to_5551)(U8 *src, U32 pixels);
 extern void (*bitmapConvertRGB_to_1555)(U8 *src, U32 pixels);
 extern void (*bitmapConvertRGB_to_RGBX)( U8 **src, U32 pixels );

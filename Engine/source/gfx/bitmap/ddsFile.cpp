@@ -294,7 +294,34 @@ bool DDSFile::readHeader(Stream &s)
          mFlags.set(CompressedData);
       else
       {
-         mBytesPerPixel = header.ddspf.bpp / 8;
+         switch (header.ddspf.fourCC)
+         {
+         case 36: // D3DFMT_A16B16G16R16
+            mBytesPerPixel = 8;
+            break;
+         case 110: // D3DFMT_Q16W16V16U16
+            mBytesPerPixel = 8;
+            break;
+         case 111: // D3DFMT_R16F
+            mBytesPerPixel = 2;
+            break;
+         case 112: // D3DFMT_G16R16F
+            mBytesPerPixel = 4;
+            break;
+         case 113: // D3DFMT_A16B16G16R16F
+            mBytesPerPixel = 8;
+            break;
+         case 114: // D3DFMT_R32F
+            mBytesPerPixel = 4;
+            break;
+         case 115: // D3DFMT_G32R32F
+            mBytesPerPixel = 8;
+            break;
+         case 116: // D3DFMT_A32B32G32R32F
+            mBytesPerPixel = 16;
+            break;
+         }
+
          mFlags.set(RGBData);
       }
    }

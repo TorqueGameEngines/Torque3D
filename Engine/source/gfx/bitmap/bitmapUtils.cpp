@@ -174,9 +174,57 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWi
    }
 }
 
+void bitmapExtrudeFPRGBA_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
+{
+   const U16 *src = (const U16 *)srcMip;
+   U16 *dst = (U16 *)mip;
+   U32 stride = srcHeight != 1 ? (srcWidth) * 8 : 0;
+
+   U32 width = srcWidth >> 1;
+   U32 height = srcHeight >> 1;
+   if (width == 0) width = 1;
+   if (height == 0) height = 1;
+
+   if (srcWidth != 1)
+   {
+      for (U32 y = 0; y < height; y++)
+      {
+         for (U32 x = 0; x < width; x++)
+         {
+            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
+            src++;
+            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
+            src++;
+            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
+            src++;
+            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
+            src += 5;
+         }
+         src += stride;   // skip
+      }
+   }
+   else
+   {
+      for (U32 y = 0; y < height; y++)
+      {
+         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
+         src++;
+         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
+         src++;
+         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
+         src++;
+         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
+         src += 5;
+
+         src += stride;   // skip
+      }
+   }
+}
+
 void (*bitmapExtrude5551)(const void *srcMip, void *mip, U32 height, U32 width) = bitmapExtrude5551_c;
 void (*bitmapExtrudeRGB)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeRGB_c;
 void (*bitmapExtrudeRGBA)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeRGBA_c;
+void (*bitmapExtrudeFPRGBA)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeFPRGBA_c;
 
 
 //--------------------------------------------------------------------------

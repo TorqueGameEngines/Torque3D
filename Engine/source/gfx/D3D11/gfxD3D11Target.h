@@ -51,7 +51,7 @@ class GFXD3D11TextureTarget : public GFXTextureTarget
 
 public:
 
-   GFXD3D11TextureTarget();
+   GFXD3D11TextureTarget(bool genMips);
    ~GFXD3D11TextureTarget();
 
    // Public interface.

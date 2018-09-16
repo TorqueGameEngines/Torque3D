@@ -124,3 +124,10 @@ bool GFXCubemapHandle::set( const String &cubemapDDS )
 
    return isValid();
 }
+
+const String GFXCubemapArray::describeSelf() const
+{
+   // We've got nothing
+   return String();
+}
+

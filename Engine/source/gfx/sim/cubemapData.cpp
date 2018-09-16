@@ -112,7 +112,7 @@ void CubemapData::createMap()
           {
              if (!mCubeFaceFile[i].isEmpty())
              {
-                if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
+                if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureSRGBProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
                 {
                    Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeFaceFile[i].c_str());
                    initSuccess = false;
@@ -164,12 +164,25 @@ void CubemapData::updateFaces()
 	}
 }
 
+void CubemapData::setCubemapFile(FileName newCubemapFile)
+{
+   mCubeMapFile = newCubemapFile;
+}
+
 void CubemapData::setCubeFaceFile(U32 index, FileName newFaceFile)
 {
    if (index >= 6)
       return;
 
    mCubeFaceFile[index] = newFaceFile;
+}
+
+void CubemapData::setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture)
+{
+   if (index >= 6)
+      return;
+
+   mCubeFace[index] = newFaceTexture;
 }
 
 DefineEngineMethod( CubemapData, updateFaces, void, (),,

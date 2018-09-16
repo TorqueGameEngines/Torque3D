@@ -45,7 +45,7 @@ class _GFXGLTextureTargetImpl;
 class GFXGLTextureTarget : public GFXTextureTarget
 {
 public:
-   GFXGLTextureTarget();
+   GFXGLTextureTarget(bool genMips);
    virtual ~GFXGLTextureTarget();
 
    virtual const Point2I getSize();

@@ -449,7 +449,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    DXGI_SWAP_CHAIN_DESC d3dpp = setupPresentParams(mode, winHwnd);
 
    // TODO support at least feature level 10 to match GL
-   D3D_FEATURE_LEVEL pFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+   D3D_FEATURE_LEVEL pFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1 };
    U32 nFeatureCount = ARRAYSIZE(pFeatureLevels);
    D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_HARDWARE;// use D3D_DRIVER_TYPE_REFERENCE for reference device
    // create a device, device context and swap chain using the information in the d3dpp struct
@@ -689,9 +689,9 @@ GFXWindowTarget * GFXD3D11Device::allocWindowTarget(PlatformWindow *window)
    return gdwt;
 }
 
-GFXTextureTarget* GFXD3D11Device::allocRenderToTextureTarget()
+GFXTextureTarget* GFXD3D11Device::allocRenderToTextureTarget(bool genMips)
 {
-   GFXD3D11TextureTarget *targ = new GFXD3D11TextureTarget();
+   GFXD3D11TextureTarget *targ = new GFXD3D11TextureTarget(genMips);
    targ->registerResourceWithDevice(this);
 
    return targ;
@@ -961,6 +961,25 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
 
    SAFE_RELEASE(rtView);
    SAFE_RELEASE(dsView);
+}
+
+void GFXD3D11Device::clearColorAttachment(const U32 attachment, const LinearColorF& color)
+{
+   GFXD3D11TextureTarget *pTarget = static_cast<GFXD3D11TextureTarget*>(mCurrentRT.getPointer());
+   ID3D11RenderTargetView* rtView = NULL;
+
+   if (!pTarget)
+   {
+      rtView = mDeviceBackBufferView;// we are using the default backbuffer
+   }
+   else
+   {
+      //attachment + 1 to skip past DepthStencil which is first in the list
+      rtView = static_cast<ID3D11RenderTargetView*>(pTarget->mTargetViews[attachment + 1]);
+   }
+
+   const FLOAT clearColor[4] = { color.red, color.green, color.blue, color.alpha };
+   mD3DDeviceContext->ClearRenderTargetView(rtView, clearColor);
 }
 
 void GFXD3D11Device::endSceneInternal() 
@@ -1835,6 +1854,13 @@ GFXCubemap * GFXD3D11Device::createCubemap()
    GFXD3D11Cubemap* cube = new GFXD3D11Cubemap();
    cube->registerResourceWithDevice(this);
    return cube;
+}
+
+GFXCubemapArray * GFXD3D11Device::createCubemapArray()
+{
+   GFXD3D11CubemapArray* cubeArray = new GFXD3D11CubemapArray();
+   cubeArray->registerResourceWithDevice(this);
+   return cubeArray;
 }
 
 // Debug events

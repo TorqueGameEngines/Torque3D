@@ -81,6 +81,7 @@ public:
    virtual U32 getTotalVideoMemory();
 
    virtual GFXCubemap * createCubemap();
+   virtual GFXCubemapArray *createCubemapArray() { return NULL; } //TODO: implement
 
    virtual F32 getFillConventionOffset() const { return 0.0f; }
 
@@ -91,7 +92,7 @@ public:
    /// @{
 
    ///
-   virtual GFXTextureTarget *allocRenderToTextureTarget();
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true);
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window);
    virtual void _updateRenderTargets();
 
@@ -117,6 +118,7 @@ public:
    virtual GFXShader* createShader();
       
    virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil );
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color);
    virtual bool beginSceneInternal();
    virtual void endSceneInternal();
 

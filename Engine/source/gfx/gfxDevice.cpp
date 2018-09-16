@@ -131,6 +131,8 @@ GFXDevice::GFXDevice()
       mNewTexture[i] = NULL;
       mCurrentCubemap[i] = NULL;
       mNewCubemap[i] = NULL;
+      mCurrentCubemapArray[i] = NULL;
+      mNewCubemapArray[i] = NULL;
       mTexType[i] = GFXTDT_Normal;
 
       mTextureMatrix[i].identity();
@@ -262,6 +264,8 @@ GFXDevice::~GFXDevice()
       mNewTexture[i] = NULL;
       mCurrentCubemap[i] = NULL;
       mNewCubemap[i] = NULL;
+      mCurrentCubemapArray[i] = NULL;
+      mNewCubemapArray[i] = NULL;
    }
 
    mCurrentRT = NULL;
@@ -398,6 +402,15 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
                      setTextureInternal(i, NULL);
                }
                break;
+            case GFXTDT_CubeArray:
+            {
+               mCurrentCubemapArray[i] = mNewCubemapArray[i];
+               if (mCurrentCubemapArray[i])
+                  mCurrentCubemapArray[i]->setToTexUnit(i);
+               else
+                  setTextureInternal(i, NULL);
+            }
+            break;
             default:
                AssertFatal(false, "Unknown texture type!");
                break;
@@ -537,6 +550,15 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
                   setTextureInternal(i, NULL);
             }
             break;
+         case GFXTDT_CubeArray:
+         {
+            mCurrentCubemapArray[i] = mNewCubemapArray[i];
+            if (mCurrentCubemapArray[i])
+               mCurrentCubemapArray[i]->setToTexUnit(i);
+            else
+               setTextureInternal(i, NULL);
+         }
+         break;
          default:
             AssertFatal(false, "Unknown texture type!");
             break;
@@ -777,30 +799,60 @@ void GFXDevice::setTexture( U32 stage, GFXTextureObject *texture )
    // Clear out the cubemaps
    mNewCubemap[stage] = NULL;
    mCurrentCubemap[stage] = NULL;
+   mNewCubemapArray[stage] = NULL;
+   mCurrentCubemapArray[stage] = NULL;
 }
 
 //-----------------------------------------------------------------------------
 // Set cube texture
 //-----------------------------------------------------------------------------
-void GFXDevice::setCubeTexture( U32 stage, GFXCubemap *texture )
+void GFXDevice::setCubeTexture( U32 stage, GFXCubemap *cubemap )
 {
    AssertFatal(stage < getNumSamplers(), "GFXDevice::setTexture - out of range stage!");
 
    if (  mTexType[stage] == GFXTDT_Cube &&
-         (  ( mTextureDirty[stage] && mNewCubemap[stage].getPointer() == texture ) ||
-            ( !mTextureDirty[stage] && mCurrentCubemap[stage].getPointer() == texture ) ) )
+         (  ( mTextureDirty[stage] && mNewCubemap[stage].getPointer() == cubemap) ||
+            ( !mTextureDirty[stage] && mCurrentCubemap[stage].getPointer() == cubemap) ) )
       return;
 
    mStateDirty = true;
    mTexturesDirty = true;
    mTextureDirty[stage] = true;
 
-   mNewCubemap[stage] = texture;
+   mNewCubemap[stage] = cubemap;
    mTexType[stage] = GFXTDT_Cube;
 
-   // Clear out the normal textures
+   // Clear out textures
    mNewTexture[stage] = NULL;
    mCurrentTexture[stage] = NULL;
+   mNewCubemapArray[stage] = NULL;
+   mCurrentCubemapArray[stage] = NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Set cube texture array
+//-----------------------------------------------------------------------------
+void GFXDevice::setCubeArrayTexture(U32 stage, GFXCubemapArray *cubemapArray)
+{
+   AssertFatal(stage < getNumSamplers(), "GFXDevice::setTexture - out of range stage!");
+
+   if (mTexType[stage] == GFXTDT_CubeArray &&
+      ((mTextureDirty[stage] && mNewCubemapArray[stage].getPointer() == cubemapArray) ||
+      (!mTextureDirty[stage] && mCurrentCubemapArray[stage].getPointer() == cubemapArray)))
+      return;
+
+   mStateDirty = true;
+   mTexturesDirty = true;
+   mTextureDirty[stage] = true;
+
+   mNewCubemapArray[stage] = cubemapArray;
+   mTexType[stage] = GFXTDT_CubeArray;
+
+   // Clear out textures
+   mNewTexture[stage] = NULL;
+   mCurrentTexture[stage] = NULL;
+   mNewCubemap[stage] = NULL;
+   mCurrentCubemap[stage] = NULL;
 }
 
 //------------------------------------------------------------------------------

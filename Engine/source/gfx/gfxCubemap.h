@@ -59,8 +59,8 @@ public:
    /// Create a static cubemap from a DDS cubemap file.
    virtual void initStatic( DDSFile *dds ) = 0;
 
-   ///
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8 ) = 0;
+   ///create dynamic cubemap. mipLevels 0 is auto create mips, otherwise the value is how many mip levels you wish the cubemap to have
+   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0 ) = 0;
 
    void initNormalize(U32 size);
       
@@ -98,6 +98,48 @@ public:
    /// Releases the texture handle.
    void free() { StrongObjectRef::set( NULL ); }
 };
+
+/// Cubemap array
+class GFXCubemapArray : public StrongRefBase, public GFXResource
+{
+   friend class GFXDevice;
+   friend class GFXTextureManager;
+
+protected:
+   // should only be called by GFXDevice
+   virtual void setToTexUnit( U32 tuNum ) = 0;
+   /// number of cubemaps in the array
+   U32 mNumCubemaps;
+   U32 mSize;
+   U32 mMipMapLevels;
+   GFXFormat mFormat;
+
+public:
+
+   virtual ~GFXCubemapArray() {};
+
+   virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount) = 0;
+   /// Return number of textures in the array
+   const U32 getNumCubemaps() const { return mNumCubemaps; }
+   /// Get the number of mip maps
+   const U32 getMipMapLevels() const { return mMipMapLevels; }
+   /// Returns the size of the faces.
+   const U32 getSize() const { return mSize; }
+
+   virtual const String describeSelf() const;
+};
+
+/// A reference counted handle to a cubemap array resource.
+class GFXCubemapArrayHandle : public StrongRefPtr<GFXCubemapArray>
+{
+public:
+   GFXCubemapArrayHandle() {}
+   GFXCubemapArrayHandle(GFXCubemapArray *cubemapArray) { StrongRefPtr<GFXCubemapArray>::set(cubemapArray); }
+
+   /// Releases the texture handle.
+   void free() { StrongObjectRef::set(NULL); }
+};
+
 
 
 #endif // GFXCUBEMAP

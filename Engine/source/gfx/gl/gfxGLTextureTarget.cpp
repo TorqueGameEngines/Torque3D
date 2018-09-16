@@ -136,6 +136,7 @@ class _GFXGLTextureTargetFBOImpl : public _GFXGLTextureTargetImpl
 {
 public:
    GLuint mFramebuffer;
+   bool mGenMips;
    
    _GFXGLTextureTargetFBOImpl(GFXGLTextureTarget* target);
    virtual ~_GFXGLTextureTargetFBOImpl();
@@ -147,6 +148,7 @@ public:
 
 _GFXGLTextureTargetFBOImpl::_GFXGLTextureTargetFBOImpl(GFXGLTextureTarget* target)
 {
+   mGenMips = target->isGenMipsEnabled();
    mTarget = target;
    glGenFramebuffers(1, &mFramebuffer);
 }
@@ -245,6 +247,9 @@ void _GFXGLTextureTargetFBOImpl::finish()
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
    GFXGL->getOpenglCache()->setCacheBinded(GL_FRAMEBUFFER, 0);
 
+   if (!mGenMips)
+      return;
+
    for(int i = 0; i < GFXGL->getNumRenderTargets(); ++i)
    {   
       _GFXGLTargetDesc* color = mTarget->getTargetDesc( static_cast<GFXTextureTarget::RenderSlot>(GFXTextureTarget::Color0+i ) );
@@ -263,8 +268,9 @@ void _GFXGLTextureTargetFBOImpl::finish()
 }
 
 // Actual GFXGLTextureTarget interface
-GFXGLTextureTarget::GFXGLTextureTarget() : mCopyFboSrc(0), mCopyFboDst(0)
+GFXGLTextureTarget::GFXGLTextureTarget(bool genMips) : mCopyFboSrc(0), mCopyFboDst(0)
 {
+   mGenMips = genMips;
    for(U32 i=0; i<MaxRenderSlotId; i++)
       mTargets[i] = NULL;
    

@@ -39,7 +39,7 @@ public:
 
    virtual void initStatic( GFXTexHandle *faces );
    virtual void initStatic( DDSFile *dds );
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8 );
+   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0);
    virtual U32 getSize() const { return mWidth; }
    virtual GFXFormat getFormat() const { return mFaceFormat; }
 

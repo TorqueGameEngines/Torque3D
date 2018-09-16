@@ -196,6 +196,12 @@ public:
    /// 
    /// By default, this method will resolve all color targets.
    virtual void resolve()=0;
+
+   /// Returns true if the automatic generation of mip maps is enabled
+   inline bool isGenMipsEnabled() const { return mGenMips; }
+
+protected:
+   bool mGenMips;
 };
 
 typedef StrongRefPtr<GFXTarget> GFXTargetRef;

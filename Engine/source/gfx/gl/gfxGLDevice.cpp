@@ -495,6 +495,12 @@ void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil
       glStencilMask(desc->stencilWriteMask);
 }
 
+void GFXGLDevice::clearColorAttachment(const U32 attachment, const LinearColorF& color)
+{
+   const GLfloat clearColor[4] = { color.red, color.green, color.blue, color.alpha };
+   glClearBufferfv(GL_COLOR, attachment, clearColor);
+}
+
 // Given a primitive type and a number of primitives, return the number of indexes/vertexes used.
 inline GLsizei GFXGLDevice::primCountToIndexCount(GFXPrimitiveType primType, U32 primitiveCount)
 {
@@ -749,9 +755,9 @@ void GFXGLDevice::setStateBlockInternal(GFXStateBlock* block, bool force)
 
 //------------------------------------------------------------------------------
 
-GFXTextureTarget * GFXGLDevice::allocRenderToTextureTarget()
+GFXTextureTarget * GFXGLDevice::allocRenderToTextureTarget(bool genMips)
 {
-   GFXGLTextureTarget *targ = new GFXGLTextureTarget();
+   GFXGLTextureTarget *targ = new GFXGLTextureTarget(genMips);
    targ->registerResourceWithDevice(this);
    return targ;
 }

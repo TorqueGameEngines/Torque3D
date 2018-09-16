@@ -181,7 +181,7 @@ void GFXGLCubemap::initStatic( DDSFile *dds )
    }
 }
 
-void GFXGLCubemap::initDynamic(U32 texSize, GFXFormat faceFormat)
+void GFXGLCubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLevels)
 {
    mDynamicTexSize = texSize;
    mFaceFormat = faceFormat;

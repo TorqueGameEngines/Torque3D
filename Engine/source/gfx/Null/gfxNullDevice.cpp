@@ -151,12 +151,27 @@ private:
 public:
    virtual void initStatic( GFXTexHandle *faces ) { };
    virtual void initStatic( DDSFile *dds ) { };
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8 ) { };
+   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0) { };
    virtual U32 getSize() const { return 0; }
    virtual GFXFormat getFormat() const { return GFXFormatR8G8B8A8; }
 
    virtual ~GFXNullCubemap(){};
 
+   virtual void zombify() {}
+   virtual void resurrect() {}
+};
+
+class GFXNullCubemapArray : public GFXCubemapArray
+{
+   friend class GFXDevice;
+private:
+   // should only be called by GFXDevice
+   virtual void setToTexUnit(U32 tuNum) { };
+
+public:
+   virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount) { };
+
+   virtual ~GFXNullCubemapArray() {};
    virtual void zombify() {}
    virtual void resurrect() {}
 };
@@ -293,6 +308,11 @@ GFXPrimitiveBuffer *GFXNullDevice::allocPrimitiveBuffer( U32 numIndices,
 GFXCubemap* GFXNullDevice::createCubemap()
 { 
    return new GFXNullCubemap(); 
+};
+
+GFXCubemapArray* GFXNullDevice::createCubemapArray()
+{
+   return new GFXNullCubemapArray();
 };
 
 void GFXNullDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )

@@ -285,6 +285,7 @@ protected:
 
    /// Loads the texture located at _getTexturePath(filename) and gives it the specified profile
    GFXTexHandle _createTexture( const char *filename, GFXTextureProfile *profile );
+   GFXTexHandle _createCompositeTexture(const char *filenameR, const char *filenameG, const char *filenameB, const char *filenameA, U32 inputKey[4], GFXTextureProfile *profile);
 
    /// @name State blocks
    ///

@@ -356,12 +356,12 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
    {
       FeatureSet features;
       features.addFeature( MFT_VertTransform );
+      features.addFeature( MFT_TerrainBaseMap );
 
       if ( deferredMat )
       {
          features.addFeature( MFT_EyeSpaceDepthOut );
          features.addFeature( MFT_DeferredConditioner );
-         features.addFeature( MFT_DeferredTerrainBaseMap );
          features.addFeature(MFT_isDeferred);
 
          if ( advancedLightmapSupport )
@@ -369,7 +369,6 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
       }
       else
       {
-         features.addFeature( MFT_TerrainBaseMap );
          features.addFeature( MFT_RTLighting );
 
          // The HDR feature is always added... it will compile out
@@ -389,7 +388,7 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
 
       // The additional passes need to be lerp blended into the
       // target to maintain the results of the previous passes.
-      if ( !firstPass )
+      if (!firstPass && deferredMat)
          features.addFeature( MFT_TerrainAdditive );
 
       normalMaps.clear();
@@ -417,14 +416,12 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
          if (  !(mat->getMacroSize() <= 0 || mat->getMacroDistance() <= 0 || mat->getMacroMap().isEmpty() ) )
          {
             if(deferredMat)
-               features.addFeature( MFT_DeferredTerrainMacroMap, featureIndex );
-            else
+               features.addFeature(MFT_isDeferred, featureIndex);
 	         features.addFeature( MFT_TerrainMacroMap, featureIndex );
          }
 
          if(deferredMat)
-             features.addFeature( MFT_DeferredTerrainDetailMap, featureIndex );
-         else
+            features.addFeature(MFT_isDeferred, featureIndex);
          features.addFeature( MFT_TerrainDetailMap, featureIndex );
 
          pass->materials.push_back( (*materials)[i] );
@@ -840,7 +837,7 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
          pass.lightParamsConst->isValid() )
    {
       if ( !mLightInfoTarget )
-         mLightInfoTarget = NamedTexTarget::find( "lightinfo" );
+         mLightInfoTarget = NamedTexTarget::find( "directLighting" );
 
       GFXTextureObject *texObject = mLightInfoTarget->getTexture();
       

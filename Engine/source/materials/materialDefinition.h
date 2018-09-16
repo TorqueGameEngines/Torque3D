@@ -213,7 +213,15 @@ public:
    FileName mDetailMapFilename[MAX_STAGES];
    FileName mNormalMapFilename[MAX_STAGES];
 
+   bool     mIsSRGb[MAX_STAGES];
+   bool     mInvertSmoothness[MAX_STAGES];
    FileName mSpecularMapFilename[MAX_STAGES];
+   FileName mRoughMapFilename[MAX_STAGES];
+   F32      mSmoothnessChan[MAX_STAGES];
+   FileName mAOMapFilename[MAX_STAGES];
+   F32      mAOChan[MAX_STAGES];
+   FileName mMetalMapFilename[MAX_STAGES];
+   F32      mMetalChan[MAX_STAGES];
 
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
@@ -226,11 +234,10 @@ public:
    /// or if it has a texture it is multiplied against 
    /// the diffuse texture color.
    LinearColorF mDiffuse[MAX_STAGES];
+   
+   F32 mSmoothness[MAX_STAGES];
+   F32 mMetalness[MAX_STAGES];
 
-   LinearColorF mSpecular[MAX_STAGES];
-
-   F32 mSpecularPower[MAX_STAGES];
-   F32 mSpecularStrength[MAX_STAGES];
    bool mPixelSpecular[MAX_STAGES];
 
    bool mVertLit[MAX_STAGES];

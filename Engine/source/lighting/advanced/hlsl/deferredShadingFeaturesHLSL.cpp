@@ -69,20 +69,23 @@ void DeferredSpecMapHLSL::processPix( Vector<ShaderComponent*> &componentList, c
    specularMapTex->uniform = true;
    specularMapTex->texture = true;
    specularMapTex->constNum = specularMap->constNum;
-
-   //matinfo.g slot reserved for AO later
-   Var* specColor = new Var;
-   specColor->setName("specColor");
-   specColor->setType("float4");
-   LangElement *specColorElem = new DecOp(specColor);
-
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   //sample specular map
-   meta->addStatement(new GenOp("   @ = @.Sample(@, @);\r\n", specColorElem, specularMapTex, specularMap, texCoord));
+   LangElement *texOp = new GenOp("   @.Sample(@, @)", specularMapTex, specularMap, texCoord);
    
-   meta->addStatement(new GenOp("   @.b = dot(@.rgb, float3(0.3, 0.59, 0.11));\r\n", material, specColor));
-   meta->addStatement(new GenOp("   @.a = @.a;\r\n", material, specColor));
+   Var *specularColor = (Var*)LangElement::find("specularColor");
+   if (!specularColor) specularColor = new Var("specularColor", "float4");
+   Var *metalness = (Var*)LangElement::find("metalness");
+   if (!metalness) metalness = new Var("metalness", "float");
+   Var *smoothness = (Var*)LangElement::find("smoothness");
+   if (!smoothness) smoothness = new Var("smoothness", "float");
 
+   meta->addStatement(new GenOp("   @ = @.r;\r\n", new DecOp(smoothness), texOp));
+   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(metalness), texOp));
+
+   if (fd.features[MFT_InvertSmoothness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+
+   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(specularColor), texOp));
+   meta->addStatement(new GenOp("   @.bga = float3(@,@.g,@);\r\n", material, smoothness, specularColor, metalness));
    output = meta;
 }
 
@@ -159,43 +162,20 @@ void DeferredSpecVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, 
       material->setStructName( "OUT" );
    }
 
-   Var *specStrength = new Var;
-   specStrength->setType( "float" );
-   specStrength->setName( "specularStrength" );
-   specStrength->uniform = true;
-   specStrength->constSortPos = cspPotentialPrimitive;
+   Var *metalness = new Var("metalness", "float");
+   metalness->uniform = true;
+   metalness->constSortPos = cspPotentialPrimitive;
 
-   Var *specPower = new Var;
-   specPower->setType( "float" );
-   specPower->setName( "specularPower" );
-   specPower->uniform = true;
-   specPower->constSortPos = cspPotentialPrimitive;
+   Var *smoothness = new Var("smoothness", "float");
+   smoothness->uniform = true;
+   smoothness->constSortPos = cspPotentialPrimitive;
 
    MultiLine * meta = new MultiLine;
    //matinfo.g slot reserved for AO later
    meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   meta->addStatement(new GenOp("   @.a = @/128;\r\n", material, specPower));
-   meta->addStatement(new GenOp("   @.b = @/5;\r\n", material, specStrength));
-   output = meta;
-}
-
-// Black -> Blue and Alpha of matinfo Buffer (representing no specular), White->G (representing No AO)
-void DeferredEmptySpecHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
-{
-   // search for material var
-   Var *material = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-   if (!material)
-   {
-       // create color var
-      material = new Var;
-      material->setType("fragout");
-      material->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      material->setStructName("OUT");
-   }
-
-   MultiLine * meta = new MultiLine;
-   //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   meta->addStatement(new GenOp("   @.ba = 0.0;\r\n", material));
+   meta->addStatement(new GenOp("   @.b = @;\r\n", material, smoothness));
+   if (fd.features[MFT_InvertSmoothness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+   meta->addStatement(new GenOp("   @.a = @;\r\n", material, metalness));
    output = meta;
 }

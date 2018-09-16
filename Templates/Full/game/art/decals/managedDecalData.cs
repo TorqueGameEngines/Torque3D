@@ -28,6 +28,7 @@ datablock DecalData(ScorchBigDecal)
    Material = "DECAL_scorch";
    size = "5.0";
    lifeSpan = "50000";
+   textureCoordCount = "0";
 };
 
 datablock DecalData(ScorchRXDecal)

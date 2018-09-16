@@ -132,9 +132,9 @@ namespace
       desc.setCullMode(GFXCullNone);
       desc.setZReadWrite(false);
       desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
-      GFX->setStateBlockByDesc( desc );
 
       GFX->setupGenericShaders();
+      GFX->setStateBlockByDesc( desc );      
       GFX->drawPrimitive( GFXTriangleStrip, 0, 2 );
    }
 }

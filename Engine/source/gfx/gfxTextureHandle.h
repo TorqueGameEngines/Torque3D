@@ -46,6 +46,10 @@ public:
    GFXTexHandle( const String &texName, GFXTextureProfile *profile, const String &desc );
    bool set( const String &texName, GFXTextureProfile *profile, const String &desc );
 
+   // load composite
+   GFXTexHandle(const String &texNameR, const String &texNameG, const String &texNameB, const String &texNameA, U32 inputKey[4], GFXTextureProfile *profile, const String &desc);
+   bool set( const String &texNameR, const String &texNameG, const String &texNameB, const String &texNameA, U32 inputKey[4], GFXTextureProfile *profile, const String &desc );
+
    // register texture
    GFXTexHandle( GBitmap *bmp, GFXTextureProfile *profile, bool deleteBmp, const String &desc );
    bool set( GBitmap *bmp, GFXTextureProfile *profile, bool deleteBmp, const String &desc );

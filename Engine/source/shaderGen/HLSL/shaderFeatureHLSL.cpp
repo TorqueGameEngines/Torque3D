@@ -1842,12 +1842,12 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
           meta->addStatement(new GenOp("   @ = @.Sample( @, @ );\r\n", colorDecl, glowMapTex, newMap, inTex));
       }
    }
-   else
+   if (!glossColor)
    {
       if (fd.features[MFT_isDeferred])
          glossColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1));
-      if (!glossColor)
-         glossColor = (Var*)LangElement::find("specularColor");
+      //if (!glossColor)
+         //glossColor = (Var*)LangElement::find("specularColor"); 
       if (!glossColor)
          glossColor = (Var*)LangElement::find("diffuseColor");
       if (!glossColor)
@@ -1876,6 +1876,12 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
    cubeMapTex->texture = true;
    cubeMapTex->constNum = cubeMap->constNum;
 
+   Var *cubeMips = new Var;
+   cubeMips->setType("float");
+   cubeMips->setName("cubeMips");
+   cubeMips->uniform = true;
+   cubeMips->constSortPos = cspPotentialPrimitive;
+
    // TODO: Restore the lighting attenuation here!
    Var *attn = NULL;
    //if ( fd.materialFeatures[MFT_DynamicLight] )
@@ -1886,32 +1892,19 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
       
    LangElement *texCube = NULL;
    Var* matinfo = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   //first try and grab the gbuffer
-   if (fd.features[MFT_isDeferred] && matinfo)
-   {
-       // Cube LOD level = (1.0 - Roughness) * 8
-       // mip_levle =  min((1.0 - u_glossiness)*11.0 + 1.0, 8.0)
-       //LangElement *texCube = new GenOp( "texCUBElod( @, float4(@, min((1.0 - (@ / 128.0)) * 11.0 + 1.0, 8.0)) )", cubeMap, reflectVec, specPower );
+   Var *smoothness = (Var*)LangElement::find("smoothness");
 
-      if (fd.features[MFT_DeferredSpecMap])
-      {
-         texCube = new GenOp("@.SampleLevel( @, @, @.a*5)", cubeMapTex, cubeMap, reflectVec, matinfo);
-      }
-      else
-      {
-         texCube = new GenOp("@.SampleLevel( @, @, (1.0-@.a)*6 )", cubeMapTex, cubeMap, reflectVec, matinfo);
-      }
-   }
-   else
+   if (smoothness) //try to grab smoothness directly
    {
-      if (glossColor) //failing that, rtry and find color data
-      {
-         texCube = new GenOp("@.SampleLevel( @, @, @.a*5)", cubeMapTex, cubeMap, reflectVec, glossColor);
-      }
-      else //failing *that*, just draw the cubemap
-      {
-         texCube = new GenOp("@.Sample( @, @ )", cubeMapTex, cubeMap, reflectVec);
-      }
+      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min((1.0 - @)*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, smoothness, cubeMips, cubeMips);
+   }
+   else if (glossColor)//failing that, try and find color data
+   {
+      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min((1.0 - @.b)*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, glossColor, cubeMips, cubeMips);
+   }
+   else //failing *that*, just draw the cubemap
+   {
+      texCube = new GenOp("@.Sample( @, @ )", cubeMapTex, cubeMap, reflectVec);
    }
 
    LangElement *lerpVal = NULL;
@@ -1941,13 +1934,35 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
       else
          blendOp = Material::Mul;
    }
+   
+   Var* targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
    if (fd.features[MFT_isDeferred])
    {
-      Var* targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1));
-      meta->addStatement(new GenOp("   @.rgb = lerp( @.rgb, (@).rgb, (@.b));\r\n", targ, targ, texCube, lerpVal));
+       //metalness: black(0) = color, white(1) = reflection
+       if (fd.features[MFT_ToneMap])
+          meta->addStatement(new GenOp("   @ *= @;\r\n", targ, texCube));
+       else
+          meta->addStatement(new GenOp("   @ = @;\r\n", targ, texCube));
    }
    else
-       meta->addStatement( new GenOp( "   @;\r\n", assignColor( texCube, blendOp, lerpVal ) ) );         
+   {
+      meta->addStatement(new GenOp("   //forward lit cubemapping\r\n"));
+      targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+      
+      Var *metalness = (Var*)LangElement::find("metalness");
+      if (metalness)
+      {
+         Var *dColor = new Var("dColor", "float3");
+         Var *reflectColor = new Var("reflectColor", "float3");
+         meta->addStatement(new GenOp("   @ = @.rgb - (@.rgb * @);\r\n", new DecOp(dColor), targ, targ, metalness));
+         meta->addStatement(new GenOp("   @ = @.rgb*(@).rgb*@;\r\n", new DecOp(reflectColor), targ, texCube, metalness));
+         meta->addStatement(new GenOp("   @.rgb = @+@;\r\n", targ, dColor, reflectColor));
+      }
+      else if (lerpVal)
+         meta->addStatement(new GenOp("   @ *= float4(@.rgb*@.a, @.a);\r\n", targ, texCube, lerpVal, targ));
+      else
+         meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", targ, texCube));
+   }
    output = meta;
 }
 
@@ -2177,18 +2192,30 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    Var *lightSpotFalloff  = new Var( "inLightSpotFalloff", "float4" );
    lightSpotFalloff->uniform = true;
    lightSpotFalloff->constSortPos = cspPotentialPrimitive;
-
-   Var *specularPower  = new Var( "specularPower", "float" );
-   specularPower->uniform = true;
-   specularPower->constSortPos = cspPotentialPrimitive;
-
-   Var *specularColor = (Var*)LangElement::find( "specularColor" );
-   if ( !specularColor )
+   
+   Var *smoothness = (Var*)LangElement::find("smoothness");
+   if (!fd.features[MFT_SpecularMap])
    {
-      specularColor  = new Var( "specularColor", "float4" );
-      specularColor->uniform = true;
-      specularColor->constSortPos = cspPotentialPrimitive;
+      if (!smoothness)
+      {
+         smoothness = new Var("smoothness", "float");
+         smoothness->uniform = true;
+         smoothness->constSortPos = cspPotentialPrimitive;
+      }
    }
+
+   Var *metalness = (Var*)LangElement::find("metalness");
+   if (!fd.features[MFT_SpecularMap])
+   {
+      if (!metalness)
+      {
+         metalness = new Var("metalness", "float");
+         metalness->uniform = true;
+         metalness->constSortPos = cspPotentialPrimitive;
+      }
+   }
+
+   Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *ambient  = new Var( "ambient", "float4" );
    ambient->uniform = true;
@@ -2196,10 +2223,10 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    // Calculate the diffuse shading and specular powers.
    meta->addStatement( new GenOp( "   compute4Lights( @, @, @, @,\r\n"
-                                  "      @, @, @, @, @, @, @, @,\r\n"
+                                  "      @, @, @, @, @, @, @, @, @,\r\n"
                                   "      @, @ );\r\n", 
       wsView, wsPosition, wsNormal, lightMask,
-      inLightPos, inLightInvRadiusSq, inLightColor, inLightSpotDir, inLightSpotAngle, lightSpotFalloff, specularPower, specularColor,
+      inLightPos, inLightInvRadiusSq, inLightColor, inLightSpotDir, inLightSpotAngle, lightSpotFalloff, smoothness, metalness, albedo,
       rtShading, specular ) );
 
    // Apply the lighting to the diffuse color.

@@ -122,8 +122,10 @@ DeclareFeatureType( MFT_ToneMap );
 DeclareFeatureType( MFT_VertLit );
 DeclareFeatureType( MFT_VertLitTone );
 
+DeclareFeatureType( MFT_StaticCubemap );
 DeclareFeatureType( MFT_CubeMap );
 DeclareFeatureType( MFT_PixSpecular );
+DeclareFeatureType( MFT_InvertSmoothness );
 DeclareFeatureType( MFT_SpecularMap );
 DeclareFeatureType( MFT_GlossMap );
 
@@ -189,5 +191,4 @@ DeclareFeatureType( MFT_SkyBox );
 DeclareFeatureType( MFT_DeferredSpecMap );
 DeclareFeatureType( MFT_DeferredSpecVars );
 DeclareFeatureType( MFT_DeferredMatInfoFlags );
-DeclareFeatureType( MFT_DeferredEmptySpec );
 #endif // _MATERIALFEATURETYPES_H_

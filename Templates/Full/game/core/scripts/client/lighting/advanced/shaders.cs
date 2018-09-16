@@ -86,11 +86,11 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["ssaoMask"] = "#ssaoMask";  
-   sampler["lightBuffer"] = "#lightinfo";
+   sampler["lightBuffer"] = "#indirectLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "lightinfo";
+   target = "directLighting";
    
    pixVersion = 3.0;
 };
@@ -163,11 +163,11 @@ new CustomMaterial( AL_PointLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
-   sampler["lightBuffer"] = "#lightinfo";
+   sampler["lightBuffer"] = "#indirectLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "lightinfo";
+   target = "directLighting";
    
    pixVersion = 3.0;
 };
@@ -202,11 +202,11 @@ new CustomMaterial( AL_SpotLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
-   sampler["lightBuffer"] = "#lightinfo";
+   sampler["lightBuffer"] = "#indirectLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "lightinfo";
+   target = "directLighting";
    
    pixVersion = 3.0;
 };
@@ -269,7 +269,7 @@ new CustomMaterial( AL_ParticlePointLightMaterial )
    stateBlock = AL_ConvexLightState;
    
    sampler["deferredBuffer"] = "#deferred";
-   target = "lightinfo";
+   target = "directLighting";
    
    pixVersion = 3.0;
 };

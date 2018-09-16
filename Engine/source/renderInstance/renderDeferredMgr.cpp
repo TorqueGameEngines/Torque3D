@@ -56,6 +56,7 @@ const String RenderDeferredMgr::BufferName("deferred");
 const RenderInstType RenderDeferredMgr::RIT_Deferred("Deferred");
 const String RenderDeferredMgr::ColorBufferName("color");
 const String RenderDeferredMgr::MatInfoBufferName("matinfo");
+const String RenderDeferredMgr::LightMapBufferName("indirectLighting");
 
 IMPLEMENT_CONOBJECT(RenderDeferredMgr);
 
@@ -101,6 +102,7 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    mNamedTarget.registerWithName( BufferName );
    mColorTarget.registerWithName( ColorBufferName );
    mMatInfoTarget.registerWithName( MatInfoBufferName );
+   mLightMapTarget.registerWithName( LightMapBufferName );
 
    mClearGBufferShader = NULL;
 
@@ -113,6 +115,7 @@ RenderDeferredMgr::~RenderDeferredMgr()
 
    mColorTarget.release();
    mMatInfoTarget.release();
+   mLightMapTarget.release();
    _unregisterFeatures();
    SAFE_DELETE( mDeferredMatInstance );
 }
@@ -136,6 +139,7 @@ bool RenderDeferredMgr::setTargetSize(const Point2I &newTargetSize)
    mNamedTarget.setViewport( GFX->getViewport() );
    mColorTarget.setViewport( GFX->getViewport() );
    mMatInfoTarget.setViewport( GFX->getViewport() );
+   mLightMapTarget.setViewport( GFX->getViewport() );
    return ret;
 }
 
@@ -182,32 +186,18 @@ bool RenderDeferredMgr::_updateTargets()
          mTargetChain[i]->attachTexture(GFXTextureTarget::Color2, mMatInfoTarget.getTexture());
    }
 
-   GFX->finalizeReset();
-
-   // Attach the light info buffer as a second render target, if there is
-   // lightmapped geometry in the scene.
-   AdvancedLightBinManager *lightBin;
-   if (  Sim::findObject( "AL_LightBinMgr", lightBin ) &&
-         lightBin->MRTLightmapsDuringDeferred() &&
-         lightBin->isProperlyAdded() )
+   if (mLightMapTex.getFormat() != mTargetFormat || mLightMapTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
    {
-      // Update the size of the light bin target here. This will call _updateTargets
-      // on the light bin
-      ret &= lightBin->setTargetSize( mTargetSize );
-      if ( ret )
-      {
-         // Sanity check
-         AssertFatal(lightBin->getTargetChainLength() == mTargetChainLength, "Target chain length mismatch");
+      mLightMapTarget.release();
+      mLightMapTex.set(mTargetSize.x, mTargetSize.y, mTargetFormat,
+         &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
+         1, GFXTextureManager::AA_MATCH_BACKBUFFER);
+      mLightMapTarget.setTexture(mLightMapTex);
 
-         // Attach light info buffer to Color1 for each target in the chain
-         for ( U32 i = 0; i < mTargetChainLength; i++ )
-         {
-            GFXTexHandle lightInfoTex = lightBin->getTargetTexture(0, i);
-            mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, lightInfoTex);
-         }
-      }
+      for (U32 i = 0; i < mTargetChainLength; i++)
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, mLightMapTarget.getTexture());
    }
-
+   GFX->finalizeReset();
    _initShaders();
 
    return ret;
@@ -255,10 +245,6 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
 
    if (matInst)
    {
-      // Skip decals if they don't have normal maps.
-      if (isDecalMeshInst && !matInst->hasNormalMap())
-         return;
-
       // If its a custom material and it refracts... skip it.
       if (matInst->isCustomMaterial() &&
          static_cast<CustomMaterial*>(matInst->getMaterial())->mRefract)
@@ -631,19 +617,18 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
       newFeatures.addFeature(MFT_DiffuseMap);
    }
    newFeatures.addFeature( MFT_DiffuseColor );
+   
+   if (mMaterial->mInvertSmoothness[stageNum])
+      newFeatures.addFeature(MFT_InvertSmoothness);
 
    // Deferred Shading : Specular
    if( mStages[stageNum].getTex( MFT_SpecularMap ) )
    {
        newFeatures.addFeature( MFT_DeferredSpecMap );
    }
-   else if ( mMaterial->mPixelSpecular[stageNum] )
-   {
-       newFeatures.addFeature( MFT_DeferredSpecVars );
-   }
    else
-       newFeatures.addFeature(MFT_DeferredEmptySpec);
-   
+       newFeatures.addFeature( MFT_DeferredSpecVars );
+
    // Deferred Shading : Material Info Flags
    newFeatures.addFeature( MFT_DeferredMatInfoFlags );
 
@@ -751,7 +736,19 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    if ( stageNum < 1 && 
          (  (  mMaterial->mCubemapData && mMaterial->mCubemapData->mCubemap ) ||
                mMaterial->mDynamicCubemap ) )
-   newFeatures.addFeature( MFT_CubeMap );
+   {
+      if (!mMaterial->mDynamicCubemap)
+         fd.features.addFeature(MFT_StaticCubemap);
+      newFeatures.addFeature( MFT_CubeMap );
+   }
+   if (mMaterial->mVertLit[stageNum])
+      newFeatures.addFeature(MFT_VertLit);
+
+   if (mMaterial->mMinnaertConstant[stageNum] > 0.0f)
+      newFeatures.addFeature(MFT_MinnaertShading);
+
+   if (mMaterial->mSubSurface[stageNum])
+      newFeatures.addFeature(MFT_SubSurface);
    
 #endif
 
@@ -1057,25 +1054,26 @@ Var* LinearEyeDepthConditioner::printMethodHeader( MethodType methodType, const 
          bufferSample->setType("float4");
       DecOp *bufferSampleDecl = new DecOp(bufferSample);
 
-      meta->addStatement( new GenOp( "@(@, @)\r\n", methodDecl, deferredSamplerDecl, screenUVDecl ) );
+      if (deferredTex)
+         meta->addStatement(new GenOp("@(@, @, @)\r\n", methodDecl, deferredSamplerDecl, deferredTexDecl, screenUVDecl));
+      else
+         meta->addStatement(new GenOp("@(@, @)\r\n", methodDecl, deferredSamplerDecl, screenUVDecl));
 
-      meta->addStatement( new GenOp( "{\r\n" ) );
+      meta->addStatement(new GenOp("{\r\n"));
 
-      meta->addStatement( new GenOp( "   // Sampler g-buffer\r\n" ) );
+      meta->addStatement(new GenOp("   // Sampler g-buffer\r\n"));
 
       // The linear depth target has no mipmaps, so use tex2dlod when
       // possible so that the shader compiler can optimize.
-      meta->addStatement( new GenOp( "   #if TORQUE_SM >= 30\r\n" ) );
       if (GFX->getAdapterType() == OpenGL)
-         meta->addStatement( new GenOp( "    @ = textureLod(@, @, 0); \r\n", bufferSampleDecl, deferredSampler, screenUV) );
+         meta->addStatement(new GenOp("@ = texture2DLod(@, @, 0); \r\n", bufferSampleDecl, deferredSampler, screenUV));
       else
-         meta->addStatement( new GenOp( "      @ = tex2Dlod(@, float4(@,0,0));\r\n", bufferSampleDecl, deferredSampler, screenUV ) );
-      meta->addStatement( new GenOp( "   #else\r\n" ) );
-      if (GFX->getAdapterType() == OpenGL)
-         meta->addStatement( new GenOp( "    @ = texture(@, @);\r\n", bufferSampleDecl, deferredSampler, screenUV) );
-      else
-         meta->addStatement( new GenOp( "      @ = tex2D(@, @);\r\n", bufferSampleDecl, deferredSampler, screenUV ) );
-      meta->addStatement( new GenOp( "   #endif\r\n\r\n" ) );
+      {
+         if (deferredTex)
+            meta->addStatement(new GenOp("@ = @.SampleLevel(@, @, 0);\r\n", bufferSampleDecl, deferredTex, deferredSampler, screenUV));
+         else
+            meta->addStatement(new GenOp("@ = tex2Dlod(@, float4(@,0,0));\r\n", bufferSampleDecl, deferredSampler, screenUV));
+      }
 
       // We don't use this way of passing var's around, so this should cause a crash
       // if something uses this improperly
@@ -1116,8 +1114,6 @@ void RenderDeferredMgr::_initShaders()
 
    // Set up shader constants.
    mShaderConsts = mClearGBufferShader->allocConstBuffer();
-   mSpecularStrengthSC = mClearGBufferShader->getShaderConstHandle( "$specularStrength" );
-   mSpecularPowerSC = mClearGBufferShader->getShaderConstHandle( "$specularPower" );
 }
 
 void RenderDeferredMgr::clearBuffers()

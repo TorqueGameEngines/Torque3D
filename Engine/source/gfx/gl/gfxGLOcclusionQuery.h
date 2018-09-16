@@ -44,6 +44,7 @@ public:
    
 private:
    U32 mQuery;
+   bool mTesting;
 };
 
 #endif // _GFX_GL_OCCLUSIONQUERY_H_

@@ -44,9 +44,11 @@ public:
    String                     diffuseMap;
    String                     normalMap;
    String                     specularMap;
-   LinearColorF                     diffuseColor;
-   LinearColorF                     specularColor;
-   F32                        specularPower;
+
+   LinearColorF               diffuseColor;
+   LinearColorF               specularColor;
+   F32                        smoothness;
+   F32                        metalness;
    bool                       doubleSided;
 
    ColladaAppMaterial(const char* matName);

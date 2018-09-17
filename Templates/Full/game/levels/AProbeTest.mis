@@ -28,7 +28,7 @@ new SimGroup(MissionGroup) {
          levelName = "A Probe Test";
    };
    new SkyBox(theSky) {
-      Material = "DesertSkyMat";
+      Material = "sky_day_hdr";
       drawBottom = "0";
       fogBandHeight = "0";
       position = "0 0 0";
@@ -37,48 +37,16 @@ new SimGroup(MissionGroup) {
       canSave = "1";
       canSaveDynamicFields = "1";
    };
-   new Sun(theSun) {
-      azimuth = "290";
-      elevation = "50";
-      color = "1 1 1 1";
-      ambient = "0.473532 0.473532 0.473532 1";
-      brightness = "1";
-      castShadows = "1";
-      staticRefreshFreq = "250";
-      dynamicRefreshFreq = "8";
-      coronaEnabled = "1";
-      coronaScale = "0.5";
-      coronaTint = "1 1 1 1";
-      coronaUseLightColor = "1";
-      flareScale = "1";
-      attenuationRatio = "0 1 1";
-      shadowType = "PSSM";
-      texSize = "1024";
-      overDarkFactor = "3000 1500 750 250";
-      shadowDistance = "100";
-      shadowSoftness = "0.25";
-      numSplits = "4";
-      logWeight = "0.9";
-      fadeStartDistance = "0";
-      lastSplitTerrainOnly = "0";
-      representedInLightmap = "0";
-      shadowDarkenColor = "0 0 0 -1";
-      includeLightmappedGeometryInShadow = "0";
+   new Skylight() {
+      enabled = "1";
+      StaticCubemap = "sky_day_hdr_cubemap";
       position = "0 0 0";
       rotation = "1 0 0 0";
       scale = "1 1 1";
       canSave = "1";
       canSaveDynamicFields = "1";
-         bias = "0.1";
-         Blur = "1";
-         enabled = "1";
-         height = "1024";
-         lightBleedFactor = "0.8";
-         minVariance = "0";
-         pointShadowType = "PointShadowType_Paraboloid";
-         shadowBox = "-100 -100 -100 100 100 100";
-         splitFadeDistances = "1 1 1 1";
-         width = "3072";
+      persistentId = "e4c73467-4089-11e8-b478-cd227cd60b8b";
+         reflectionPath = "levels/AProbeTest/probes/";
    };
    new SimGroup(PlayerDropPoints) {
       canSave = "1";
@@ -117,13 +85,46 @@ new SimGroup(MissionGroup) {
          rotation = "1 0 0 0";
          scale = "1 1 1";
    };
+   new Sun() {
+      azimuth = "200";
+      elevation = "20";
+      color = "0.8 0.8 0.8 1";
+      ambient = "0.2 0.2 0.2 1";
+      brightness = "1";
+      castShadows = "1";
+      staticRefreshFreq = "250";
+      dynamicRefreshFreq = "8";
+      coronaEnabled = "1";
+      coronaMaterial = "Corona_Mat";
+      coronaScale = "0.5";
+      coronaTint = "1 1 1 1";
+      coronaUseLightColor = "1";
+      flareType = "SunFlareExample";
+      flareScale = "1";
+      attenuationRatio = "0 1 1";
+      shadowType = "PSSM";
+      texSize = "512";
+      overDarkFactor = "2000 1000 500 100";
+      shadowDistance = "400";
+      shadowSoftness = "0.15";
+      numSplits = "4";
+      logWeight = "0.91";
+      fadeStartDistance = "0";
+      lastSplitTerrainOnly = "0";
+      representedInLightmap = "0";
+      shadowDarkenColor = "0 0 0 -1";
+      includeLightmappedGeometryInShadow = "0";
+      position = "35.7492 65.5507 -15.5377";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         direction = "1 1 -1";
+   };
    new ReflectionProbe() {
-      enabled = "1";
+      enabled = "0";
       ProbeShape = "Sphere";
       radius = "10";
-      Intensity = "1";
-      IndirectLightMode = "Ambient Color";
-      IndirectLight = "1 1 1 1";
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/probeTest/probes/";
       Bake = "0";
@@ -134,6 +135,9 @@ new SimGroup(MissionGroup) {
       canSaveDynamicFields = "1";
       persistentId = "8072e1be-2846-11e7-9f56-abd46b190c60";
          GroundColor = "0.8 0.7 0.5 1";
+         IndirectLight = "1 1 1 1";
+         IndirectLightMode = "Spherical Harmonics";
+         Intensity = "1";
          SkyColor = "0.5 0.5 1 1";
    };
    new ConvexShape() {
@@ -243,7 +247,7 @@ new SimGroup(MissionGroup) {
    };
    new PointLight() {
       radius = "10";
-      isEnabled = "1";
+      isEnabled = "0";
       color = "0.887923 1 0.008023 1";
       brightness = "1";
       castShadows = "0";
@@ -271,6 +275,25 @@ new SimGroup(MissionGroup) {
       rotation = "1 0 0 0";
       canSave = "1";
       canSaveDynamicFields = "1";
+   };
+   new ReflectionProbe() {
+      enabled = "0";
+      ProbeShape = "Box";
+      radius = "10";
+      ReflectionMode = "Baked Cubemap";
+      reflectionPath = "levels/probeTest/probes/";
+      Bake = "0";
+      position = "15.4549 0.559989 4.53387";
+      rotation = "1 0 0 0";
+      scale = "5 5 5";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "4ec88e62-4e8f-11e8-ae68-993c6bb8eb5b";
+         GroundColor = "0.8 0.7 0.5 1";
+         IndirectLight = "1 1 1 1";
+         IndirectLightMode = "Spherical Harmonics";
+         Intensity = "1";
+         SkyColor = "0.5 0.5 1 1";
    };
 };
 //--- OBJECT WRITE END ---

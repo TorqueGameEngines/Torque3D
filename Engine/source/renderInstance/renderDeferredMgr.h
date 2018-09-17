@@ -92,6 +92,9 @@ protected:
 
    DeferredMatInstance *mDeferredMatInstance;
 
+   ///
+   Vector< MainSortElem > mProbeElementList;
+
    virtual void _registerFeatures();
    virtual void _unregisterFeatures();
    virtual bool _updateTargets();

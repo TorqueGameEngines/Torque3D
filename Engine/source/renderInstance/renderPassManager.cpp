@@ -61,6 +61,7 @@ const RenderInstType RenderPassManager::RIT_Custom("Custom");
 const RenderInstType RenderPassManager::RIT_Particle("Particle");
 const RenderInstType RenderPassManager::RIT_Occluder("Occluder");
 const RenderInstType RenderPassManager::RIT_Editor("Editor");
+const RenderInstType RenderPassManager::RIT_Probes("Probes");
 
 
 //*****************************************************************************
@@ -102,6 +103,11 @@ void OccluderRenderInst::clear()
    dMemset( this, 0, sizeof(OccluderRenderInst) );
 }
 
+void ProbeRenderInst::clear()
+{
+   dMemset(this, 0, sizeof(ProbeRenderInst));
+   //mCubemap);
+}
 
 IMPLEMENT_CONOBJECT(RenderPassManager);
 

@@ -336,4 +336,20 @@ vec3 toGamma(vec3 tex)
 }
 #endif //
 
+vec3 PBRFresnel(vec3 albedo, vec3 indirect, float metalness, float fresnel)
+{
+   vec3 diffuseColor = albedo - (albedo * metalness);
+   vec3 reflectColor = mix(indirect*albedo, indirect, fresnel);
+
+   return diffuseColor + reflectColor;
+}
+
+vec3 simpleFresnel(vec3 diffuseColor, vec3 reflectColor, float metalness, float angle, float bias, float power)
+{
+   float fresnelTerm = bias + (1.0 - bias) * pow(abs(1.0 - max(angle, 0)), power);
+
+   fresnelTerm *= metalness;
+
+   return mix(diffuseColor, reflectColor, fresnelTerm);
+}
 #endif // _TORQUE_GLSL_

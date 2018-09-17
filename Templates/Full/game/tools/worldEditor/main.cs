@@ -43,6 +43,7 @@ function initializeWorldEditor()
    exec("./gui/AddFMODProjectDlg.ed.gui");
    exec("./gui/SelectObjectsWindow.ed.gui");
    exec("./gui/ProceduralTerrainPainterGui.gui" );
+   exec("./gui/probeBakeDlg.gui" );
    
    // Load Scripts.
    exec("./scripts/menus.ed.cs");
@@ -61,6 +62,7 @@ function initializeWorldEditor()
    exec("./scripts/ManageSFXParametersWindow.ed.cs");
    exec("./scripts/AddFMODProjectDlg.ed.cs");
    exec("./scripts/SelectObjectsWindow.ed.cs");
+   exec("./scripts/probeBake.ed.cs");
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));
@@ -115,10 +117,11 @@ function initializeWorldEditor()
    EVisibility.addOption( "Debug Render: Light Frustums", "$Light::renderLightFrustums", "" );
    EVisibility.addOption( "Debug Render: Bounding Boxes", "$Scene::renderBoundingBoxes", "" );
    EVisibility.addOption( "Debug Render: Physics World", "$PhysicsWorld::render", "togglePhysicsDebugViz" );
+   EVisibility.addOption( "Debug Render: Reflection Probes", "$Light::renderReflectionProbes", "" );
+   EVisibility.addOption( "Debug Render: Probe Previews", "$Light::renderPreviewProbes", "" );
    EVisibility.addOption( "AL: Disable Shadows", "$Shadows::disable", "" );   
-   EVisibility.addOption( "AL: Light Color Viz", "$AL_LightColorVisualizeVar", "toggleLightColorViz" );
-   EVisibility.addOption( "AL: Environment Light", "$AL_LightMapShaderVar", "toggleLightMapViz" );
-   EVisibility.addOption( "AL: Light Specular Viz", "$AL_LightSpecularVisualizeVar", "toggleLightSpecularViz" );
+   EVisibility.addOption( "AL: Diffuse Lighting Viz", "$AL_LightColorVisualizeVar", "toggleLightColorViz" );
+   EVisibility.addOption( "AL: Specular Lighting Viz", "$AL_LightSpecularVisualizeVar", "toggleLightSpecularViz" );
    EVisibility.addOption( "AL: Normals Viz", "$AL_NormalsVisualizeVar", "toggleNormalsViz" );
    EVisibility.addOption( "AL: Depth Viz", "$AL_DepthVisualizeVar", "toggleDepthViz" );
    EVisibility.addOption( "AL: Color Buffer", "$AL_ColorBufferShaderVar", "toggleColorBufferViz" );

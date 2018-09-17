@@ -136,48 +136,58 @@ uniform float2 lightAttenuation;
 uniform float3x3 viewToLightProj;
 uniform float3x3 dynamicViewToLightProj;
 
-float4 main( ConvexConnectP IN ) : TORQUE_TARGET0
-{   
+struct PS_OUTPUT
+{
+   float4 diffuse: TORQUE_TARGET0;
+   float4 spec: TORQUE_TARGET1;
+};
+
+PS_OUTPUT main(ConvexConnectP IN)
+{
+   PS_OUTPUT Output = (PS_OUTPUT)0;
+
    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w;
-   float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
-   
+   float2 uvScene = getUVFromSSPos(ssPos, rtParams0);
+
    // Matinfo flags
-   float4 matInfo = TORQUE_TEX2D( matInfoBuffer, uvScene ); 
+   float4 matInfo = TORQUE_TEX2D(matInfoBuffer, uvScene);
    //early out if emissive
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-       return float4(0.0, 0.0, 0.0, 0.0);
+      //return float4(0.0, 0.0, 0.0, 0.0);
+      return Output;
    }
-   float4 colorSample = TORQUE_TEX2D( colorBuffer, uvScene );
-   float3 subsurface = float3(0.0,0.0,0.0); 
-   if (getFlag( matInfo.r, 1 ))
+
+   float4 colorSample = TORQUE_TEX2D(colorBuffer, uvScene);
+   float3 subsurface = float3(0.0, 0.0, 0.0);
+   if (getFlag(matInfo.r, 1))
    {
       subsurface = colorSample.rgb;
-      if (colorSample.r>colorSample.g)
+      if (colorSample.r > colorSample.g)
          subsurface = float3(0.772549, 0.337255, 0.262745);
 	  else
          subsurface = float3(0.337255, 0.772549, 0.262745);
 	}
    
    // Sample/unpack the normal/z data
-   float4 deferredSample = TORQUE_DEFERRED_UNCONDITION( deferredBuffer, uvScene );
+   float4 deferredSample = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
    float3 normal = deferredSample.rgb;
    float depth = deferredSample.a;
    
    // Eye ray - Eye -> Pixel
-   float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
+   float3 eyeRay = getDistanceVectorToPlane(-vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane);
    float3 viewSpacePos = eyeRay * depth;
       
    // Build light vec, get length, clip pixel if needed
    float3 lightVec = lightPosition - viewSpacePos;
-   float lenLightV = length( lightVec );
-   clip( lightRange - lenLightV );
+   float lenLightV = length(lightVec);
+   clip(lightRange - lenLightV);
 
    // Get the attenuated falloff.
-   float atten = attenuate( lightColor, lightAttenuation, lenLightV );
-   clip( atten - 1e-6 );
+   float atten = attenuate(lightColor, lightAttenuation, lenLightV);
+   clip(atten - 1e-6);
 
    // Normalize lightVec
    lightVec /= lenLightV;
@@ -187,97 +197,93 @@ float4 main( ConvexConnectP IN ) : TORQUE_TARGET0
    float nDotL = dot( lightVec, normal );
    //DB_CLIP( nDotL < 0 );
 
-   #ifdef NO_SHADOW
-   
-      float shadowed = 1.0;
-      	
-   #else
+#ifdef NO_SHADOW
 
-      // Get a linear depth from the light source.
-      float distToLight = lenLightV / lightRange;      
+   float shadowed = 1.0;
 
-      #ifdef SHADOW_CUBE
-              
-         // TODO: We need to fix shadow cube to handle soft shadows!
-         float occ = TORQUE_TEXCUBE( shadowMap, mul( viewToLightProj, -lightVec ) ).r;
-         float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
-         
-      #else
+#else
 
-         // Static
-         float2 shadowCoord = decodeShadowCoord( mul( viewToLightProj, -lightVec ) ).xy;
-         float static_shadowed = softShadow_filter( TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-                                             ssPos.xy,
-                                             shadowCoord,
-                                             shadowSoftness,
-                                             distToLight,
-                                             nDotL,
-                                             lightParams.y );
+   // Get a linear depth from the light source.
+   float distToLight = lenLightV / lightRange;
 
-         // Dynamic
-         float2 dynamicShadowCoord = decodeShadowCoord( mul( dynamicViewToLightProj, -lightVec ) ).xy;
-         float dynamic_shadowed = softShadow_filter( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
-                                             ssPos.xy,
-                                             dynamicShadowCoord,
-                                             shadowSoftness,
-                                             distToLight,
-                                             nDotL,
-                                             lightParams.y );
+#ifdef SHADOW_CUBE
 
-         float shadowed = min(static_shadowed, dynamic_shadowed);
+   // TODO: We need to fix shadow cube to handle soft shadows!
+   float occ = TORQUE_TEXCUBE(shadowMap, mul(viewToLightProj, -lightVec)).r;
+   float shadowed = saturate(exp(lightParams.y * (occ - distToLight)));
 
-      #endif
+#else
 
-   #endif // !NO_SHADOW
-   
+   // Static
+   float2 shadowCoord = decodeShadowCoord(mul(viewToLightProj, -lightVec)).xy;
+   float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap),
+      ssPos.xy,
+      shadowCoord,
+      shadowSoftness,
+      distToLight,
+      nDotL,
+      lightParams.y);
+
+   // Dynamic
+   float2 dynamicShadowCoord = decodeShadowCoord(mul(dynamicViewToLightProj, -lightVec)).xy;
+   float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
+      ssPos.xy,
+      dynamicShadowCoord,
+      shadowSoftness,
+      distToLight,
+      nDotL,
+      lightParams.y);
+
+   float shadowed = min(static_shadowed, dynamic_shadowed);
+
+#endif
+
+#endif // !NO_SHADOW
+
    float3 lightcol = lightColor.rgb;
-   #ifdef USE_COOKIE_TEX
+#ifdef USE_COOKIE_TEX
 
-      // Lookup the cookie sample.
-      float4 cookie = TORQUE_TEXCUBE( cookieMap, mul( viewToLightProj, -lightVec ) );
+   // Lookup the cookie sample.
+   float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(viewToLightProj, -lightVec));
 
-      // Multiply the light with the cookie tex.
-      lightcol *= cookie.rgb;
+   // Multiply the light with the cookie tex.
+   lightcol *= cookie.rgb;
 
-      // Use a maximum channel luminance to attenuate 
-      // the lighting else we get specular in the dark
-      // regions of the cookie texture.
-      atten *= max( cookie.r, max( cookie.g, cookie.b ) );
+   // Use a maximum channel luminance to attenuate 
+   // the lighting else we get specular in the dark
+   // regions of the cookie texture.
+   atten *= max(cookie.r, max(cookie.g, cookie.b));
 
-   #endif
+#endif
 
    // NOTE: Do not clip on fully shadowed pixels as it would
    // cause the hardware occlusion query to disable the shadow.
 
-   // Specular term
-   float specular = 0;
-   
-   float4 real_specular = EvalBDRF( float3( 1.0, 1.0, 1.0 ),
-                                    lightcol,
-                                    lightVec,
-                                    viewSpacePos,
-                                    normal,
-                                    1.0-matInfo.b,
-                                    matInfo.a );
-   float3 lightColorOut = real_specular.rgb * lightBrightness * shadowed* atten;
-   //lightColorOut /= colorSample.rgb;
-   float Sat_NL_Att = saturate( nDotL * atten * shadowed ) * lightBrightness;
-   float4 addToResult = 0.0;
-    
-   // TODO: This needs to be removed when lightmapping is disabled
-   // as its extra work per-pixel on dynamic lit scenes.
-   //
-   // Special lightmapping pass.
-   if ( lightMapParams.a < 0.0 )
-   {
-      // This disables shadows on the backsides of objects.
-      shadowed = nDotL < 0.0f ? 1.0f : shadowed;
+   float3 l = lightVec;// normalize(-lightDirection);
+   float3 v = eyeRay;// normalize(eyePosWorld - worldPos.xyz);
 
-      Sat_NL_Att = 1.0f;
-      shadowed = lerp( 1.0f, shadowed, atten );
-      lightColorOut = shadowed;
-      specular *= lightBrightness;
-      addToResult = ( 1.0 - shadowed ) * abs(lightMapParams);
-   }     
-   return float4((lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
+   float3 h = normalize(v + l);
+   float dotNLa = clamp(dot(normal, l), 0.0, 1.0);
+   float dotNVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotNHa = clamp(dot(normal, h), 0.0, 1.0);
+   float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotLHa = clamp(dot(l, h), 0.0, 1.0);
+
+   float roughness = matInfo.g;
+   float metalness = matInfo.b;
+
+   //diffuse
+   float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
+   float3 diffuse = float3(disDiff, disDiff, disDiff) / M_PI_F;// alternative: (lightColor * dotNL) / Pi;
+                                                               //specular
+   float3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
+
+   
+   if (nDotL<0) shadowed = 0;
+   float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
+   //output
+   Output.diffuse = float4(diffuse * lightBrightness*shadowed, Sat_NL_Att);
+   Output.spec = float4(specular * lightBrightness*shadowed, Sat_NL_Att);
+
+   return Output;
 }

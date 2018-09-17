@@ -86,11 +86,11 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["ssaoMask"] = "#ssaoMask";  
-   sampler["lightBuffer"] = "#indirectLighting";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "directLighting";
+   target = "diffuseLighting";
    
    pixVersion = 3.0;
 };
@@ -163,11 +163,11 @@ new CustomMaterial( AL_PointLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
-   sampler["lightBuffer"] = "#indirectLighting";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "directLighting";
+   target = "diffuseLighting";
    
    pixVersion = 3.0;
 };
@@ -202,11 +202,11 @@ new CustomMaterial( AL_SpotLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
-   sampler["lightBuffer"] = "#indirectLighting";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "directLighting";
+   target = "diffuseLighting";
    
    pixVersion = 3.0;
 };
@@ -269,7 +269,124 @@ new CustomMaterial( AL_ParticlePointLightMaterial )
    stateBlock = AL_ConvexLightState;
    
    sampler["deferredBuffer"] = "#deferred";
-   target = "directLighting";
+   target = "diffuseLighting";
+   
+   pixVersion = 3.0;
+};
+
+//Reflection probe Specular
+new ShaderData( ReflectionProbeShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeP.glsl";
+
+   samplerNames[0] = "$deferredBuffer";
+   samplerNames[1] = "$matInfoBuffer";
+   
+   pixVersion = 3.0;
+};
+
+// Convex-geometry light states
+new GFXStateBlockData( AL_ProbeState )
+{
+   blendDefined = true;
+   blendEnable = true;
+   blendSrc = GFXBlendOne;
+   blendDest = GFXBlendOne;
+   blendOp = GFXBlendOpAdd;
+   
+   zDefined = true;
+   zEnable = true;
+   zWriteEnable = false;
+   zFunc = GFXCmpGreaterEqual;
+
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampPoint;  // G-buffer
+   mSamplerNames[0] = "deferredBuffer";
+   samplerStates[1] = SamplerClampLinear;  // Shadow Map (Do not use linear, these are perspective projections)
+   mSamplerNames[1] = "matInfoBuffer";
+   
+   cullDefined = true;
+   cullMode = GFXCullCW;
+   
+   stencilDefined = true;
+   stencilEnable = true;
+   stencilFailOp = GFXStencilOpKeep;
+   stencilZFailOp = GFXStencilOpKeep;
+   stencilPassOp = GFXStencilOpKeep;
+   stencilFunc = GFXCmpLess;
+   stencilRef = 0;
+};
+
+new CustomMaterial( ReflectionProbeMaterial )
+{
+   shader = ReflectionProbeShader;
+   stateBlock = AL_ProbeState;
+   
+   sampler["deferredBuffer"] = "#deferred";
+   sampler["matInfoBuffer"] = "#matinfo";
+   
+   pixVersion = 3.0;
+};
+
+//Skylight
+new ShaderData( IrradianceShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/irradianceP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/irradianceP.glsl";
+   
+   pixVersion = 3.0;
+};
+
+new ShaderData( PrefiterCubemapShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/prefilterP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/prefilterP.glsl";
+   
+   pixVersion = 3.0;
+};
+
+new ShaderData( BRDFLookupShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/brdfLookupP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/brdfLookupP.glsl";
+   
+   pixVersion = 3.0;
+};
+
+new ShaderData( SklyightShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/skylightP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/skylightP.glsl";
+
+   samplerNames[0] = "$deferredBuffer";
+   samplerNames[1] = "$matInfoBuffer";
+   
+   pixVersion = 3.0;
+};
+
+new CustomMaterial( SklyightMaterial )
+{
+   shader = SklyightShader;
+   stateBlock = AL_ProbeState;
+   
+   sampler["deferredBuffer"] = "#deferred";
+   sampler["matInfoBuffer"] = "#matinfo";
    
    pixVersion = 3.0;
 };

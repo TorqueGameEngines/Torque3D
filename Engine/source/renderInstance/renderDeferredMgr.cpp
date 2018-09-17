@@ -56,7 +56,7 @@ const String RenderDeferredMgr::BufferName("deferred");
 const RenderInstType RenderDeferredMgr::RIT_Deferred("Deferred");
 const String RenderDeferredMgr::ColorBufferName("color");
 const String RenderDeferredMgr::MatInfoBufferName("matinfo");
-const String RenderDeferredMgr::LightMapBufferName("indirectLighting");
+const String RenderDeferredMgr::LightMapBufferName("diffuseLighting");
 
 IMPLEMENT_CONOBJECT(RenderDeferredMgr);
 
@@ -92,6 +92,7 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    notifyType( RenderPassManager::RIT_Mesh );
    notifyType( RenderPassManager::RIT_Terrain );
    notifyType( RenderPassManager::RIT_Object );
+   notifyType( RenderPassManager::RIT_Probes );
 
    // We want a full-resolution buffer
    mTargetSizeType = RenderTexTargetBinManager::WindowSize;
@@ -186,10 +187,10 @@ bool RenderDeferredMgr::_updateTargets()
          mTargetChain[i]->attachTexture(GFXTextureTarget::Color2, mMatInfoTarget.getTexture());
    }
 
-   if (mLightMapTex.getFormat() != mTargetFormat || mLightMapTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
+   if (mLightMapTex.getFormat() != GFXFormatR16G16B16A16F || mLightMapTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
    {
       mLightMapTarget.release();
-      mLightMapTex.set(mTargetSize.x, mTargetSize.y, mTargetFormat,
+      mLightMapTex.set(mTargetSize.x, mTargetSize.y, GFXFormatR16G16B16A16F,
          &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
          1, GFXTextureManager::AA_MATCH_BACKBUFFER);
       mLightMapTarget.setTexture(mLightMapTex);
@@ -238,6 +239,8 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
 
    const bool isTerrainInst = inst->type == RenderPassManager::RIT_Terrain;
 
+   const bool isProbeInst = inst->type == RenderPassManager::RIT_Probes;
+
    // Get the material if its a mesh.
    BaseMatInstance* matInst = NULL;
    if ( isMeshInst || isDecalMeshInst )
@@ -262,6 +265,8 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
       elementList = &mElementList;
    else if ( isTerrainInst )
       elementList = &mTerrainElementList;
+   else if (isProbeInst)
+      elementList = &mProbeElementList;
    else
       elementList = &mObjectElementList;
 
@@ -294,6 +299,7 @@ void RenderDeferredMgr::sort()
 void RenderDeferredMgr::clear()
 {
    Parent::clear();
+   mProbeElementList.clear();
    mTerrainElementList.clear();
    mObjectElementList.clear();
 }

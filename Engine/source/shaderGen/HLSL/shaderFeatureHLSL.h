@@ -672,4 +672,30 @@ public:
    virtual String getName() { return "Hardware Skinning"; }
 };
 
+/// Reflection Probes
+class ReflectionProbeFeatHLSL : public ShaderFeatureHLSL
+{
+protected:
+   ShaderIncludeDependency mDep;
+
+public:
+   ReflectionProbeFeatHLSL();
+
+   virtual void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd);
+
+   virtual Resources getResources(const MaterialFeatureData &fd);
+
+   // Sets textures and texture flags for current pass
+   virtual void setTexData(Material::StageData &stageDat,
+      const MaterialFeatureData &fd,
+      RenderPassData &passData,
+      U32 &texIndex);
+
+   virtual String getName()
+   {
+      return "Reflection Probes";
+   }
+};
+
 #endif // _SHADERGEN_HLSL_SHADERFEATUREHLSL_H_

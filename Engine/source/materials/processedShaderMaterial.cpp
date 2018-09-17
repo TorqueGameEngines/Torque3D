@@ -41,6 +41,8 @@
 #include "gfx/util/screenspace.h"
 #include "math/util/matrixSet.h"
 
+#include "lighting/probeManager.h"
+
 // We need to include customMaterialDefinition for ShaderConstHandles::init
 #include "materials/customMaterialDefinition.h"
 
@@ -343,10 +345,16 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    if ( mMaterial->mAlphaTest )
       fd.features.addFeature( MFT_AlphaTest );
 
-   if ( mMaterial->mEmissive[stageNum] )
-      fd.features.addFeature( MFT_IsEmissive );
+   if (mMaterial->mEmissive[stageNum])
+   {
+      fd.features.addFeature(MFT_IsEmissive);
+   }
    else
-      fd.features.addFeature( MFT_RTLighting );
+   {
+      fd.features.addFeature(MFT_RTLighting);
+	  if (mMaterial->isTranslucent())
+		  fd.features.addFeature(MFT_ReflectionProbes);
+   }
 
    if ( mMaterial->mAnimFlags[stageNum] )
       fd.features.addFeature( MFT_TexAnim );  
@@ -357,7 +365,7 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    // cubemaps only available on stage 0 for now - bramage   
    if ( stageNum < 1 && mMaterial->isTranslucent() &&
          (  (  mMaterial->mCubemapData && mMaterial->mCubemapData->mCubemap ) ||
-               mMaterial->mDynamicCubemap ) )
+               mMaterial->mDynamicCubemap ) && !features.hasFeature(MFT_ReflectionProbes))
    {
        fd.features.addFeature( MFT_CubeMap );
    }
@@ -367,6 +375,8 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
       fd.features.addFeature(MFT_StaticCubemap);
       fd.features.addFeature(MFT_CubeMap);
       fd.features.addFeature(MFT_SkyBox);
+
+      fd.features.removeFeature(MFT_ReflectionProbes);
    }
    fd.features.addFeature( MFT_Visibility );
 
@@ -1296,13 +1306,15 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
       shaderConsts->set(handles->mEyePosSC, eyepos);   
    }
 
-   shaderConsts->setSafe(handles->mEyeMatSC, state->getCameraTransform());   
+   shaderConsts->setSafe(handles->mEyeMatSC, state->getCameraTransform());
 
-   ShaderRenderPassData *rpd = _getRPD( pass );
-   for ( U32 i=0; i < rpd->featureShaderHandles.size(); i++ )
-      rpd->featureShaderHandles[i]->setConsts( state, sgData, shaderConsts );
+   ShaderRenderPassData *rpd = _getRPD(pass);
+   for (U32 i = 0; i < rpd->featureShaderHandles.size(); i++)
+      rpd->featureShaderHandles[i]->setConsts(state, sgData, shaderConsts);
 
-   LIGHTMGR->setLightInfo( this, mMaterial, sgData, state, pass, shaderConsts );
+   LIGHTMGR->setLightInfo(this, mMaterial, sgData, state, pass, shaderConsts);
+
+   PROBEMGR->setProbeInfo(this, mMaterial, sgData, state, pass, shaderConsts);
 }
 
 void ProcessedShaderMaterial::setBuffers( GFXVertexBufferHandleBase *vertBuffer, GFXPrimitiveBufferHandle *primBuffer )

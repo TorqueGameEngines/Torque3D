@@ -62,6 +62,8 @@ ImplementFeatureType( MFT_SubSurface, MFG_Lighting, 8.0f, true );
 ImplementFeatureType( MFT_VertLit, MFG_Lighting, 9.0f, true );
 ImplementFeatureType( MFT_MinnaertShading, MFG_Lighting, 10.0f, true );
 
+ImplementFeatureType(MFT_ReflectionProbes, MFG_Lighting, 11.0f, true);
+
 ImplementFeatureType( MFT_GlowMask, MFG_PostLighting, 1.0f, true );
 ImplementFeatureType( MFT_Visibility, MFG_PostLighting, 2.0f, true );
 ImplementFeatureType( MFT_Fog, MFG_PostProcess, 3.0f, true );

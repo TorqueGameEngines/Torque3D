@@ -151,6 +151,7 @@ new TerrainMaterial()
    detailBrightness = "1";
    Enabled = "1";
    diffuseSize = "400";
+   compositeMap = "art/terrains/Example/snowtop";
 };
 
 // ----------------------------------------------------------------------------

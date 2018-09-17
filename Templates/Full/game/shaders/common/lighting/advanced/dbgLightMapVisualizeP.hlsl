@@ -23,11 +23,11 @@
 #include "shadergen:/autogenConditioners.h"
 #include "../../postfx/postFx.hlsl"
 
-TORQUE_UNIFORM_SAMPLER2D(indirectLightingBuffer,0);
+TORQUE_UNIFORM_SAMPLER2D(specularLightingBuffer,0);
 
 
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 {
-	float4 directlighting = float4(TORQUE_TEX2D( indirectLightingBuffer, IN.uv0 ).rgb,1.0);
-   return directlighting;
+	float4 diffuseLighting = float4(TORQUE_TEX2D( specularLightingBuffer, IN.uv0 ).rgb,1.0);
+   return diffuseLighting;
 }

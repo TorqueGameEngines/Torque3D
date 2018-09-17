@@ -48,6 +48,29 @@ uniform float Contrast;
 
 out vec4 OUT_col;
 
+// uncharted 2 tonemapper see: http://filmicgames.com/archives/75
+vec3 Uncharted2Tonemap(vec3 x)
+{
+   const float A = 0.15;
+   const float B = 0.50;
+   const float C = 0.10;
+   const float D = 0.20;
+   const float E = 0.02;
+   const float F = 0.30;
+   return ((x*(A*x + C*B) + D*E) / (x*(A*x + B) + D*F)) - E / F;
+}
+
+vec3 tonemap(vec3 c)
+{
+   const float W = 11.2;
+   float ExposureBias = 2.0f;
+   float ExposureAdjust = 1.5f;
+   c *= ExposureAdjust;
+   vec3 curr = Uncharted2Tonemap(ExposureBias*c);
+   vec3 whiteScale = 1.0f / Uncharted2Tonemap(vec3(W,W,W));
+   return curr*whiteScale;
+}
+
 void main()
 {
    vec4 _sample = hdrDecode( texture( sceneTex, IN_uv0 ) );
@@ -76,17 +99,6 @@ void main()
 
    // Add the bloom effect.
    _sample += g_fBloomScale * bloom;
-   
-   // Map the high range of color values into a range appropriate for
-   // display, taking into account the user's adaptation level, 
-   // white point, and selected value for for middle gray.
-   if ( g_fEnableToneMapping > 0.0f )
-   {
-      float Lp = (g_fMiddleGray / (adaptedLum + 0.0001)) * hdrLuminance( _sample.rgb );
-      //float toneScalar = ( Lp * ( 1.0 + ( Lp / ( g_fWhiteCutoff ) ) ) ) / ( 1.0 + Lp );
-	  float toneScalar = Lp;
-      _sample.rgb = mix( _sample.rgb, _sample.rgb * toneScalar, g_fEnableToneMapping );
-   }
 
    // Apply the color correction.
    _sample.r = texture( colorCorrectionTex, _sample.r ).r;

@@ -40,9 +40,10 @@
 #include "gfx/gfxDebugEvent.h"
 #include "math/util/matrixSet.h"
 #include "console/consoleTypes.h"
+#include "gfx/gfxTextureManager.h"
 
-const RenderInstType AdvancedLightBinManager::RIT_LightInfo( "directLighting" );
-const String AdvancedLightBinManager::smBufferName( "directLighting" );
+const RenderInstType AdvancedLightBinManager::RIT_LightInfo( "specularLighting" );
+const String AdvancedLightBinManager::smBufferName( "specularLighting" );
 
 ShadowFilterMode AdvancedLightBinManager::smShadowFilterMode = ShadowFilterMode_SoftShadowHighQuality;
 bool AdvancedLightBinManager::smPSSMDebugRender = false;
@@ -176,6 +177,26 @@ bool AdvancedLightBinManager::setTargetSize(const Point2I &newTargetSize)
 
    // We require the viewport to match the default.
    mNamedTarget.setViewport( GFX->getViewport() );
+
+   return ret;
+}
+
+bool AdvancedLightBinManager::_updateTargets()
+{
+   PROFILE_SCOPE(AdvancedLightBinManager_updateTargets);
+
+   bool ret = Parent::_updateTargets();
+
+   mDiffuseLightingTarget = NamedTexTarget::find("diffuseLighting");
+   if (mDiffuseLightingTarget.isValid())
+   {
+      mDiffuseLightingTex = mDiffuseLightingTarget->getTexture();
+
+      for (U32 i = 0; i < mTargetChainLength; i++)
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color1, mDiffuseLightingTex);
+   }
+
+   GFX->finalizeReset();
 
    return ret;
 }

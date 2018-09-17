@@ -80,6 +80,15 @@ struct ShaderGenVars
    const static String specularColor;
    const static String smoothness;
    const static String metalness;
+
+   //Reflection Probes
+   const static String probePosition;
+   const static String probeRadius;
+   const static String probeBoxMin;
+   const static String probeBoxMax;
+   const static String probeLocalPos;
+   const static String probeIsSphere;
+   const static String probeCubemap;
    
    // Textures
    const static String fogMap;

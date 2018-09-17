@@ -129,6 +129,8 @@ DeclareFeatureType( MFT_InvertSmoothness );
 DeclareFeatureType( MFT_SpecularMap );
 DeclareFeatureType( MFT_GlossMap );
 
+DeclareFeatureType( MFT_ReflectionProbes );
+
 /// This feature is only used to detect alpha transparency
 /// and does not have any code associtated with it. 
 DeclareFeatureType( MFT_IsTranslucent );

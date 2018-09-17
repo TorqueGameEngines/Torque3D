@@ -55,15 +55,16 @@ float3 Uncharted2Tonemap(const float3 x)
    return ((x*(A*x + C*B) + D*E) / (x*(A*x + B) + D*F)) - E / F;
 }
 
-float3 tonemap(float3 c)
+float3 tonemap(float3 color)
 {
    const float W = 11.2;
    float ExposureBias = 2.0f;
-   float ExposureAdjust = 1.5f;
-   c *= ExposureAdjust;
-   float3 curr = Uncharted2Tonemap(ExposureBias*c);
-   float3 whiteScale = 1.0f / Uncharted2Tonemap(W);
-   return curr*whiteScale;
+   //float ExposureAdjust = 1.5f;
+   //c *= ExposureAdjust;
+   color = Uncharted2Tonemap(ExposureBias*color);
+   color = color * (1.0f / Uncharted2Tonemap(W));
+
+   return color;
 }
 
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
@@ -99,6 +100,8 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    sample.r = TORQUE_TEX1D( colorCorrectionTex, sample.r ).r;
    sample.g = TORQUE_TEX1D( colorCorrectionTex, sample.g ).g;
    sample.b = TORQUE_TEX1D( colorCorrectionTex, sample.b ).b;
+
+   sample = float4(tonemap(sample.rgb),1);
 
    return sample;
 }

@@ -24,12 +24,12 @@
 #include "shadergen:/autogenConditioners.h"
 
 in vec2 uv0;
-uniform sampler2D directLightingBuffer;
+uniform sampler2D diffuseLightingBuffer;
 
 out vec4 OUT_col;
 
 void main()
 {
-   vec4 directLighting = vec4(texture( directLightingBuffer, uv0 ).rgb,1.0);
-   OUT_col = directLighting;
+   vec4 diffuseLighting = vec4(texture( diffuseLightingBuffer, uv0 ).rgb,1.0);
+   OUT_col = diffuseLighting;
 }

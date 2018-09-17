@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 // Copyright (c) 2012 GarageGames, LLC
-//
+// Portions Copyright Zefiros
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
@@ -38,11 +38,139 @@ uniform vec4 inLightColor[4];
 
 uniform vec4 ambient;
 #define ambientCameraFactor 0.3
-uniform float specularPower;
-uniform vec4 specularColor;
+uniform float smoothness;
+uniform float metalness;
+uniform vec4 albedo;
 
 #endif // !TORQUE_SHADERGEN
 
+
+vec3 F_schlick( in vec3 f0, in vec3 f90, in float u )
+{
+	//
+    //  F( v, h ) =  F0 + ( 1.0 - F0 ) *  pow( 1.0f - HdotV,  5.0f )
+    //
+    //
+    //  where 
+    //
+    //  F0 = BaseColor * nDotL
+    //
+    //  Dielectric materials always have a range of 0.02 < F0 < 0.05 , use a stock value of 0.04 ( roughly plastics )
+    //
+
+	return f0 + ( f90 - f0 ) * pow( 1.0f - u ,  5.0f );
+}
+
+float Fr_DisneyDiffuse ( float NdotV , float NdotL , float LdotH , float linearRoughness )
+{
+	float energyBias = mix (0 , 0.5 , linearRoughness );
+	float energyFactor = mix (1.0 , 1.0 / 1.51 , linearRoughness );
+	float fd90 = energyBias + 2.0 * LdotH * LdotH * linearRoughness ;
+	vec3 f0 = vec3 ( 1.0f , 1.0f , 1.0f );
+	float lightScatter = F_schlick( f0 , vec3(fd90), NdotL ).r;
+	float viewScatter = F_schlick(f0 , vec3(fd90), NdotV ).r;
+
+	return lightScatter * viewScatter * energyFactor ;
+}
+
+float SmithGGX( float NdotL, float NdotV, float alpha )
+{
+    //
+    // G( L, V, h ) = G( L ) G( V )
+    //
+    //                    nDotL
+    // G( L ) = _________________________
+    //             nDotL ( 1 - k ) + k
+    //
+    //         
+    //                     NdotV
+    // G( V ) = _________________________
+    //             NdotV ( 1 - k ) + k
+    //
+    //
+    //               pow( ( Roughness + 1 ), 2)
+    //  , Where  k = __________________________     ( unreal 4 )
+    //                          8
+    //
+	
+	float alphaSqr = alpha * alpha;
+
+	//float GGX_V = NdotL * sqrt ( ( - NdotV * alphaSqr + NdotV ) * NdotV + alphaSqr );
+	//float GGX_L = NdotV * sqrt ( ( - NdotL * alphaSqr + NdotL ) * NdotL + alphaSqr );
+	
+	float GGX_V = NdotL + sqrt ( ( - NdotV * alphaSqr + NdotV ) * NdotV + alphaSqr );
+	float GGX_L = NdotV + sqrt ( ( - NdotL * alphaSqr + NdotL ) * NdotL + alphaSqr );
+	
+	return 1.0/( GGX_V + GGX_L ); 
+	//return 0.5f / ( GGX_V + GGX_L ); 
+}
+
+float D_GGX( float NdotH , float alpha )
+{
+    //
+    // or GGX ( disney / unreal 4 )
+    //
+    //  alpha = pow( roughness, 2 );
+    //
+    //                                    pow( alpha, 2 )
+    //  D( h ) = ________________________________________________________________      
+    //           PI pow( pow( NdotH , 2 ) ( pow( alpha, 2 ) - 1 ) + 1 ), 2 )
+    //
+
+	float alphaSqr = alpha*alpha;
+	float f = ( NdotH * alphaSqr - NdotH ) * NdotH + 1;
+	return alphaSqr / ( M_PI_F * (f * f) );
+}
+
+vec4 EvalBDRF( vec3 baseColor, vec3 lightColor, vec3 toLight, vec3 position, vec3 normal,  float roughness, float metallic )
+{
+	//
+    //  Microfacet Specular Cook-Torrance
+    //
+    //                D( h ) F( v, h ) G( l, v, h )
+    //    f( l, v ) = ____________________________
+    //                 4 ( dot( n, l ) dot( n, v )
+    //                 
+    //
+
+	vec3 L = normalize( toLight );
+	vec3 V = normalize( -position );
+	vec3 H = normalize( L + V );
+	vec3 N = normal;
+	
+	float NdotV = abs( dot( N, V ) ) + 1e-5f;
+	float NdotH = saturate( dot( N, H ) );
+	float NdotL = saturate( dot( N, L ) );
+	float LdotH = saturate( dot( L, H ) );
+	
+	float VdotH = saturate( dot( V, H ) );
+
+	if ( NdotL == 0 ) 
+		return vec4( 0.0f, 0.0f, 0.0f, 0.0f ); 
+	
+	float alpha = roughness;
+	float visLinAlpha = alpha * alpha;
+	
+	vec3 f0 = baseColor;
+	float  metal = metallic;
+	
+	vec3 F_conductor= F_schlick( f0, vec3( 1.0, 1.0, 1.0 ), VdotH );
+	vec3 F_dielec   = F_schlick( vec3( 0.04, 0.04, 0.04 ), vec3( 1.0, 1.0, 1.0 ), VdotH );
+	float  Vis        = SmithGGX( NdotL, NdotV, visLinAlpha );
+	float  D          = D_GGX( NdotH, visLinAlpha );
+	
+	vec3 Fr_dielec    = D * F_dielec * Vis; 
+	vec3 Fr_conductor = D * F_conductor * Vis; 
+	
+	vec3 Fd = vec3(Fr_DisneyDiffuse( NdotV , NdotL , LdotH , visLinAlpha ) / M_PI_F);
+    vec3 specular = ( 1.0f - metal ) * Fr_dielec + metal * Fr_conductor;
+	vec3 diffuse  = ( 1.0f - metal ) * Fd * f0;
+   
+    vec3 ret = ( diffuse + specular + lightColor) * vec3(NdotL);
+	
+	float FR = saturate(length(specular));
+	return vec4(ret,FR);
+}
 
 void compute4Lights( vec3 wsView, 
                      vec3 wsPosition, 
@@ -57,8 +185,9 @@ void compute4Lights( vec3 wsView,
                         vec4 inLightSpotDir[3],
                         vec4 inLightSpotAngle,
                         vec4 inLightSpotFalloff,
-                        float specularPower,
-                        vec4 specularColor,
+                        float smoothness,
+                        float metalness,
+                        vec4 albedo,
 
                      #endif // TORQUE_SHADERGEN
                      
@@ -81,9 +210,6 @@ void compute4Lights( vec3 wsView,
    for ( i = 0; i < 3; i++ )
       lightVectors[i] = wsPosition[i] - inLightPos[i];
 
-   vec4 squareDists = vec4(0);
-   for ( i = 0; i < 3; i++ )
-      squareDists += lightVectors[i] * lightVectors[i];
 
    // Accumulate the dot product between the light 
    // vector and the normal.
@@ -99,40 +225,12 @@ void compute4Lights( vec3 wsView,
    vec4 nDotL = vec4(0);
    for ( i = 0; i < 3; i++ )
       nDotL += lightVectors[i] * -wsNormal[i];
-
-   vec4 rDotL = vec4(0);
-   #ifndef TORQUE_BL_NOSPECULAR
-
-      // We're using the Phong specular reflection model
-      // here where traditionally Torque has used Blinn-Phong
-      // which has proven to be more accurate to real materials.
-      //
-      // We do so because its cheaper as do not need to 
-      // calculate the half angle for all 4 lights.
-      //   
-      // Advanced Lighting still uses Blinn-Phong, but the
-      // specular reconstruction it does looks fairly similar
-      // to this.
-      //
-      vec3 R = reflect( wsView, -wsNormal );
-
-      for ( i = 0; i < 3; i++ )
-         rDotL += lightVectors[i] * R[i];
-
-   #endif
  
-   // Normalize the dots.
-   //
-   // Notice we're using the half type here to get a
-   // much faster sqrt via the rsq_pp instruction at 
-   // the loss of some precision.
-   //
-   // Unless we have some extremely large point lights
-   // i don't believe the precision loss will matter.
-   //
+   vec4 squareDists = vec4(0);
+   for ( i = 0; i < 3; i++ )
+      squareDists += lightVectors[i] * lightVectors[i];
    half4 correction = half4(inversesqrt( squareDists ));
    nDotL = saturate( nDotL * correction );
-   rDotL = clamp( rDotL * correction, 0.00001, 1.0 );
 
    // First calculate a simple point light linear 
    // attenuation factor.
@@ -157,93 +255,18 @@ void compute4Lights( vec3 wsView,
 
    #endif
 
-   // Finally apply the shadow masking on the attenuation.
-   atten *= shadowMask;
-
    // Get the final light intensity.
    vec4 intensity = nDotL * atten;
-
-   // Combine the light colors for output.
-   outDiffuse = vec4(0);
-   for ( i = 0; i < 4; i++ )
-      outDiffuse += intensity[i] * inLightColor[i];
-
-   // Output the specular power.
-   vec4 specularIntensity = pow( rDotL, vec4(specularPower) ) * atten;
    
-   // Apply the per-light specular attenuation.
-   vec4 specular = vec4(0,0,0,1);
+   // Combine the light colors for output.
+   vec4 lightColor = vec4(0);
    for ( i = 0; i < 4; i++ )
-      specular += vec4( inLightColor[i].rgb * inLightColor[i].a * specularIntensity[i], 1 );
-
-   // Add the final specular intensity values together
-   // using a single dot product operation then get the
-   // final specular lighting color.
-   outSpecular = specularColor * specular;
-}
-
-
-// This value is used in AL as a constant power to raise specular values
-// to, before storing them into the light info buffer. The per-material 
-// specular value is then computer by using the integer identity of 
-// exponentiation: 
-//
-//    (a^m)^n = a^(m*n)
-//
-//       or
-//
-//    (specular^constSpecular)^(matSpecular/constSpecular) = specular^(matSpecular*constSpecular)   
-//
-#define AL_ConstantSpecularPower 12.0f
-
-/// The specular calculation used in Advanced Lighting.
-///
-///   @param toLight    Normalized vector representing direction from the pixel 
-///                     being lit, to the light source, in world space.
-///
-///   @param normal  Normalized surface normal.
-///   
-///   @param toEye   The normalized vector representing direction from the pixel 
-///                  being lit to the camera.
-///
-float AL_CalcSpecular( vec3 toLight, vec3 normal, vec3 toEye )
-{
-   // (R.V)^c
-   float specVal = dot( normalize( -reflect( toLight, normal ) ), toEye );
-
-   // Return the specular factor.
-   return pow( max( specVal, 0.00001f ), AL_ConstantSpecularPower );
-}
-
-/// The output for Deferred Lighting
-///
-///   @param toLight    Normalized vector representing direction from the pixel 
-///                     being lit, to the light source, in world space.
-///
-///   @param normal  Normalized surface normal.
-///   
-///   @param toEye   The normalized vector representing direction from the pixel 
-///                  being lit to the camera.
-///
-vec4 AL_DeferredOutput(
-      vec3   lightColor,
-      vec3   diffuseColor,
-      vec4   matInfo,
-      vec4   ambient,
-      float specular,
-      float shadowAttenuation)
-{
-   vec3 specularColor = vec3(specular);
-   bool metalness = getFlag(matInfo.r, 3);
-   if ( metalness )
-   {
-       specularColor = 0.04 * (1 - specular) + diffuseColor * specular;
-   }
-
-   //specular = color * map * spec^gloss
-   float specularOut = (specularColor * matInfo.b * min(pow(max(specular,1.0f), max((matInfo.a / AL_ConstantSpecularPower),1.0f)),matInfo.a)).r;
+      lightColor += intensity[i] * inLightColor[i];
       
-   lightColor *= vec3(shadowAttenuation);
-   lightColor += ambient.rgb;
-   return vec4(lightColor.rgb, specularOut); 
+   vec3 toLight = vec3(0);
+   for ( i = 0; i < 3; i++ )
+      toLight += lightVectors[i].rgb;
+      
+   outDiffuse = vec4(albedo.rgb*(1.0-metalness),albedo.a);
+   outSpecular = EvalBDRF( vec3( 1.0, 1.0, 1.0 ), lightColor.rgb, toLight, wsPosition, wsNormal, smoothness, metalness );
 }

@@ -63,6 +63,7 @@ void AdvancedLightingFeatures::registerFeatures( const GFXFormat &deferredTarget
       FEATUREMGR->registerFeature(MFT_PixSpecular, new DeferredPixelSpecularGLSL());
       FEATUREMGR->registerFeature(MFT_MinnaertShading, new DeferredMinnaertGLSL());
       FEATUREMGR->registerFeature(MFT_SubSurface, new DeferredSubSurfaceGLSL());
+      FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatGLSL);
 #endif
    }
    else
@@ -75,6 +76,7 @@ void AdvancedLightingFeatures::registerFeatures( const GFXFormat &deferredTarget
       FEATUREMGR->registerFeature(MFT_PixSpecular, new DeferredPixelSpecularHLSL());
       FEATUREMGR->registerFeature(MFT_MinnaertShading, new DeferredMinnaertHLSL());
       FEATUREMGR->registerFeature(MFT_SubSurface, new DeferredSubSurfaceHLSL());
+      FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatHLSL);
 #endif
    }
 

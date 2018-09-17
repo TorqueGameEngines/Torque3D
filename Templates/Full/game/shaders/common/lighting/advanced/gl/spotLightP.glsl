@@ -80,12 +80,13 @@ void main()
    vec3 ssPos = IN_ssPos.xyz / IN_ssPos.w;
    vec2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
 
-   // Emissive.
+   // Matinfo flags
    vec4 matInfo = texture( matInfoBuffer, uvScene );   
+   //early out if emissive
    bool emissive = getFlag( matInfo.r, 0 );
    if ( emissive )
    {
-       OUT_col = vec4(0.0, 0.0, 0.0, 0.0);
+      OUT_col = vec4(0.0, 0.0, 0.0, 0.0);
 	   return;
    }
    
@@ -182,12 +183,19 @@ void main()
    // cause the hardware occlusion query to disable the shadow.
 
    // Specular term
-   float specular = AL_CalcSpecular(   -lightToPxlVec, 
-                                       normal, 
-                                       normalize( -eyeRay ) ) * lightBrightness * atten * shadowed;
+   float specular = 0;
 
+   vec3 lightVec = lightPosition - viewSpacePos;
+   vec4 real_specular = EvalBDRF( colorSample.rgb,
+                                    lightcol,
+                                    lightVec,
+                                    viewSpacePos,
+                                    normal,
+                                    1.05-matInfo.b*0.9, //slightly compress roughness to allow for non-baked lighting
+                                    matInfo.a );
+   vec3 lightColorOut = real_specular.rgb * lightBrightness * shadowed* atten;
+   
    float Sat_NL_Att = saturate( nDotL * atten * shadowed ) * lightBrightness;
-   vec3 lightColorOut = lightMapParams.rgb * lightcol;
    vec4 addToResult = vec4(0.0);
 
    // TODO: This needs to be removed when lightmapping is disabled
@@ -206,5 +214,5 @@ void main()
       addToResult = ( 1.0 - shadowed ) * abs(lightMapParams);
    }
 
-   OUT_col = AL_DeferredOutput(lightColorOut+subsurface*(1.0-Sat_NL_Att), colorSample.rgb, matInfo, addToResult, specular, Sat_NL_Att);
+   OUT_col = vec4((lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
 }

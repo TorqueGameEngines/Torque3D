@@ -64,7 +64,7 @@ singleton CustomMaterial( BL_ProjectedShadowMaterial )
 function onActivateBasicLM()
 {
    // If HDR is enabled... enable the special format token.
-   if ( $platform !$= "macos" && HDRPostFx.isEnabled )
+   if ( HDRPostFx.isEnabled )
       AL_FormatToken.enable();
       
    // Create render pass for projected shadow.

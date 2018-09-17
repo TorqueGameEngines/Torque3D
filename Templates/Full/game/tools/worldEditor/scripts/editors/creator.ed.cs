@@ -55,6 +55,10 @@ function EWCreatorWindow::init( %this )
       
       %this.registerMissionObject( "PointLight",          "Point Light" );
       %this.registerMissionObject( "SpotLight",           "Spot Light" );
+      
+      %this.registerMissionObject( "ReflectionProbe",       "Reflection Probe" );
+      %this.registerMissionObject( "Skylight",       "Skylight" );
+      
       %this.registerMissionObject( "GroundCover",         "Ground Cover" );
       %this.registerMissionObject( "TerrainBlock",        "Terrain Block" );
       %this.registerMissionObject( "GroundPlane",         "Ground Plane" );

@@ -61,3 +61,21 @@ function EditorLightingMenu::onMenuSelect( %this )
    //%selSize = EWorldEditor.getSelectionSize();
    %this.enableItem( 1, true /*%selSize == 1*/ );   
 }
+
+function updateReflectionProbes()
+{
+   /*%probeIds = parseMissionGroupForIds("ReflectionProbe", "");
+   %probeCount = getWordCount(%probeIds);
+   
+   for(%i=0; %i < %probeCount; %i++)
+   {
+      %probe = getWord(%probeIds, %i);
+      
+      %path = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
+      %probe.bake(%path, 64);
+   }
+   
+   EWorldEditor.isDirty = true;*/
+   
+   Canvas.pushDialog(ProbeBakeDlg);
+}

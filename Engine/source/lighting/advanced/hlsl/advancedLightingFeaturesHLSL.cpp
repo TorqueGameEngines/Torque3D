@@ -99,7 +99,7 @@ void DeferredRTLightingFeatHLSL::processPix( Vector<ShaderComponent*> &component
    uvScene->setName("uvScene");
    LangElement *uvSceneDecl = new DecOp(uvScene);
 
-   String rtParamName = String::ToString("rtParams%s", "directLightingBuffer");
+   String rtParamName = String::ToString("rtParams%s", "diffuseLightingBuffer");
    Var *rtParams = (Var*)LangElement::find(rtParamName);
    if (!rtParams)
    {
@@ -215,7 +215,7 @@ void DeferredRTLightingFeatHLSL::setTexData( Material::StageData &stageDat,
       mLastTexIndex = texIndex;
 
       passData.mTexType[ texIndex ] = Material::TexTarget;
-      passData.mSamplerNames[ texIndex ]= "directLightingBuffer";
+      passData.mSamplerNames[ texIndex ]= "diffuseLightingBuffer";
       passData.mTexSlot[ texIndex++ ].texTarget = texTarget;
    }
 }

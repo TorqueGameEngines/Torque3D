@@ -192,23 +192,24 @@ float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
                                  dot( finalMask, overDarkPSSM ) ) );
 };
 
-float4 main( FarFrustumQuadConnectP IN ) : TORQUE_TARGET0
+struct PS_OUTPUT
 {
+    float4 spec: TORQUE_TARGET0;
+    float4 diffuse: TORQUE_TARGET1;
+};
+
+PS_OUTPUT main(FarFrustumQuadConnectP IN)
+{
+   PS_OUTPUT Output = (PS_OUTPUT)0;
    // Matinfo flags
-   float4 matInfo = TORQUE_TEX2D( matInfoBuffer, IN.uv0 );
-   //early out if emissive
-   bool emissive = getFlag(matInfo.r, 0);
-   if (emissive)
-   {
-      return float4(0.0, 0.0, 0.0, 0.0);
-   }
-   
-   float4 colorSample = TORQUE_TEX2D( colorBuffer, IN.uv0 );
-   float3 subsurface = float3(0.0,0.0,0.0); 
-   if (getFlag( matInfo.r, 1 ))
+   float4 matInfo = TORQUE_TEX2D(matInfoBuffer, IN.uv0);
+
+   float4 colorSample = TORQUE_TEX2D(colorBuffer, IN.uv0);
+   float3 subsurface = float3(0.0, 0.0, 0.0);
+   if (getFlag(matInfo.r, 1))
    {
       subsurface = colorSample.rgb;
-      if (colorSample.r>colorSample.g)
+      if (colorSample.r > colorSample.g)
          subsurface = float3(0.772549, 0.337255, 0.262745);
 	  else
          subsurface = float3(0.337255, 0.772549, 0.262745);
@@ -224,96 +225,97 @@ float4 main( FarFrustumQuadConnectP IN ) : TORQUE_TARGET0
    // Get the light attenuation.
    float dotNL = dot(-lightDirection, normal);
 
-   #ifdef PSSM_DEBUG_RENDER
-      float3 debugColor = float3(0,0,0);
-   #endif
+#ifdef PSSM_DEBUG_RENDER
+   float3 debugColor = float3(0, 0, 0);
+#endif
+
+#ifdef NO_SHADOW
+
+   // Fully unshadowed.
+   float shadowed = 1.0;
+
+#ifdef PSSM_DEBUG_RENDER
+   debugColor = float3(1.0, 1.0, 1.0);
+#endif
+
+#else
+
+   float4 static_shadowed_colors = AL_VectorLightShadowCast(TORQUE_SAMPLER2D_MAKEARG(shadowMap),
+      IN.uv0.xy,
+      worldToLightProj,
+      worldPos,
+      scaleX, scaleY,
+      offsetX, offsetY,
+      farPlaneScalePSSM,
+      atlasXOffset, atlasYOffset,
+      atlasScale,
+      shadowSoftness,
+      dotNL,
+      overDarkPSSM);
+   float4 dynamic_shadowed_colors = AL_VectorLightShadowCast(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
+      IN.uv0.xy,
+      dynamicWorldToLightProj,
+      worldPos,
+      dynamicScaleX, dynamicScaleY,
+      dynamicOffsetX, dynamicOffsetY,
+      dynamicFarPlaneScalePSSM,
+      atlasXOffset, atlasYOffset,
+      atlasScale,
+      shadowSoftness,
+      dotNL,
+      overDarkPSSM);
+
+   float static_shadowed = static_shadowed_colors.a;
+   float dynamic_shadowed = dynamic_shadowed_colors.a;
+
+#ifdef PSSM_DEBUG_RENDER
+   debugColor = static_shadowed_colors.rgb*0.5 + dynamic_shadowed_colors.rgb*0.5;
+#endif
+
+   // Fade out the shadow at the end of the range.
+   float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * depth);
+   float fadeOutAmt = (zDist.x - fadeStartLength.x) * fadeStartLength.y;
+
+   static_shadowed = lerp(static_shadowed, 1.0, saturate(fadeOutAmt));
+   dynamic_shadowed = lerp(dynamic_shadowed, 1.0, saturate(fadeOutAmt));
+
+   // temp for debugging. uncomment one or the other.
+   //float shadowed = static_shadowed;
+   //float shadowed = dynamic_shadowed;
+   float shadowed = min(static_shadowed, dynamic_shadowed);
+
+#ifdef PSSM_DEBUG_RENDER
+   if (fadeOutAmt > 1.0)
+      debugColor = 1.0;
+#endif
+
+#endif // !NO_SHADOW
+
+   float3 l = normalize(-lightDirection);
+   float3 v = normalize(eyePosWorld - worldPos.xyz);
+
+   float3 h = normalize(v + l);
+   float dotNLa = clamp(dot(normal, l), 0.0, 1.0);
+   float dotNVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotNHa = clamp(dot(normal, h), 0.0, 1.0);
+   float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotLHa = clamp(dot(l, h), 0.0, 1.0);
+
+   float roughness = matInfo.g;
+   float metalness = matInfo.b;
+
+   //diffuse
+   //float dotNL = clamp(dot(normal,l), 0.0, 1.0);
+   float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
+   float3 diffuse = float3(disDiff, disDiff, disDiff) / M_PI_F;// alternative: (lightColor * dotNL) / Pi;
+   //specular
+   float3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
    
-   #ifdef NO_SHADOW
+   float finalShadowed = shadowed;
 
-      // Fully unshadowed.
-      float shadowed = 1.0;
+//output
+   Output.diffuse = float4(diffuse * (lightBrightness*shadowed), dotNLa);
+   Output.spec = float4(specular * (lightBrightness*shadowed), dotNLa);
 
-      #ifdef PSSM_DEBUG_RENDER
-         debugColor = float3(1.0,1.0,1.0);
-      #endif
-
-   #else
-      
-      float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-                                                        IN.uv0.xy,
-                                                        worldToLightProj,
-                                                        worldPos,
-                                                        scaleX, scaleY,
-                                                        offsetX, offsetY,
-                                                        farPlaneScalePSSM,
-                                                        atlasXOffset, atlasYOffset,
-                                                        atlasScale,
-                                                        shadowSoftness, 
-                                                        dotNL,
-                                                        overDarkPSSM);
-      float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
-                                                        IN.uv0.xy,
-                                                        dynamicWorldToLightProj,
-                                                        worldPos,
-                                                        dynamicScaleX, dynamicScaleY,
-                                                        dynamicOffsetX, dynamicOffsetY,
-                                                        dynamicFarPlaneScalePSSM,
-                                                        atlasXOffset, atlasYOffset,
-                                                        atlasScale,
-                                                        shadowSoftness, 
-                                                        dotNL,
-                                                        overDarkPSSM);
-      
-      float static_shadowed = static_shadowed_colors.a;
-      float dynamic_shadowed = dynamic_shadowed_colors.a;
-	  
-      #ifdef PSSM_DEBUG_RENDER
-	     debugColor = static_shadowed_colors.rgb*0.5+dynamic_shadowed_colors.rgb*0.5;
-      #endif
-  
-      // Fade out the shadow at the end of the range.
-      float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * depth);
-      float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
-
-      static_shadowed = lerp( static_shadowed, 1.0, saturate( fadeOutAmt ) );
-      dynamic_shadowed = lerp( dynamic_shadowed, 1.0, saturate( fadeOutAmt ) );
-
-      // temp for debugging. uncomment one or the other.
-      //float shadowed = static_shadowed;
-      //float shadowed = dynamic_shadowed;
-      float shadowed = min(static_shadowed, dynamic_shadowed);
-
-      #ifdef PSSM_DEBUG_RENDER
-         if ( fadeOutAmt > 1.0 )
-            debugColor = 1.0;
-      #endif
-
-   #endif // !NO_SHADOW
-
-   // Specular term   
-   float3 viewSpacePos = IN.vsEyeRay * depth;
-   float4 real_specular = EvalBDRF( float3( 1.0, 1.0, 1.0 ),
-                                    lightColor.rgb,
-                                    normalize( -lightDirection ),
-                                    viewSpacePos,
-                                    normal,
-                                    1.0-matInfo.b,
-                                    matInfo.a );
-   float3 lightColorOut = real_specular.rgb * lightBrightness * shadowed;
-   
-   float Sat_NL_Att = saturate( dotNL * shadowed ) * lightBrightness;
-   float Sat_NdotV = saturate(dot(normalize(-IN.vsEyeRay), normal));
-   float4 addToResult = ( lightAmbient * (1 - ambientCameraFactor)) + ( lightAmbient * ambientCameraFactor * Sat_NdotV );
-
-   // Sample the AO texture.      
-   #ifdef USE_SSAO_MASK
-      float ao = 1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams3 ) ).r;
-      addToResult *= ao;
-   #endif
-
-   #ifdef PSSM_DEBUG_RENDER
-      lightColorOut = debugColor;
-   #endif
-   
-   return float4(matInfo.g*(lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
+   return Output;
 }

@@ -37,6 +37,18 @@
 #ifndef _SCENEMANAGER_H_
 #include "scene/sceneManager.h"
 #endif
+#ifndef _SCENEMANAGER_H_
+#include "scene/sceneManager.h"
+#endif
+#ifndef _CUBEMAPDATA_H_
+#include "gfx/sim/cubemapData.h"
+#endif
+#ifndef _GFXPRIMITIVEBUFFER_H_
+#include "gfx/gfxPrimitiveBuffer.h"
+#endif
+#ifndef PROBEMANAGER_H
+#include "lighting/probeManager.h"
+#endif
 
 class SceneRenderState;
 class ISceneObject;
@@ -48,6 +60,7 @@ class LightInfo;
 struct RenderInst;
 class MatrixSet;
 class GFXPrimitiveBufferHandle;
+class CubemapData;
 
 /// A RenderInstType hash value.
 typedef U32 RenderInstTypeHash;
@@ -118,6 +131,7 @@ public:
    static const RenderInstType RIT_Particle;
    static const RenderInstType RIT_Occluder;
    static const RenderInstType RIT_Editor;
+   static const RenderInstType RIT_Probes;
 
 public:
 
@@ -459,6 +473,87 @@ struct OccluderRenderInst : public RenderInst
 
    /// Render a sphere or a box.
    bool isSphere;
+
+   void clear();
+};
+
+struct ProbeRenderInst : public RenderInst
+{
+   LinearColorF mAmbient;
+
+   MatrixF mTransform;
+
+   F32 mRadius;
+   F32 mIntensity;
+
+   Box3F mBounds;
+
+   GFXCubemapHandle *mCubemap;
+
+   GFXCubemapHandle *mIrradianceCubemap;
+
+   GFXTexHandle *mBRDFTexture;
+
+   /// The priority of this light used for
+   /// light and shadow scoring.
+   F32 mPriority;
+
+   /// A temporary which holds the score used
+   /// when prioritizing lights for rendering.
+   F32 mScore;
+
+   bool mIsSkylight;
+
+   /// Whether to render debugging visualizations
+   /// for this light.
+   bool mDebugRender;
+
+   GFXPrimitiveBufferHandle primBuffer;
+   GFXVertexBufferHandle<GFXVertexPC> vertBuffer;
+   U32 numPrims;
+   U32 numVerts;
+   Vector< U32 > numIndicesForPoly;
+
+   ProbeInfo::ProbeShapeType mProbeShapeType;
+
+   //Spherical Harmonics data
+   LinearColorF mSHTerms[9];
+   F32 mSHConstants[5];
+
+public:
+
+   ProbeRenderInst();
+   ~ProbeRenderInst();
+
+   // Copies data passed in from light
+   void set(const ProbeRenderInst *probeInfo);
+   void set(const ProbeInfo *probeInfo);
+
+   // Accessors
+   const MatrixF& getTransform() const { return mTransform; }
+   void setTransform(const MatrixF &xfm) { mTransform = xfm; }
+
+   Point3F getPosition() const { return mTransform.getPosition(); }
+   void setPosition(const Point3F &pos) { mTransform.setPosition(pos); }
+
+   VectorF getDirection() const { return mTransform.getForwardVector(); }
+   void setDirection(const VectorF &val);
+
+   const LinearColorF& getAmbient() const { return mAmbient; }
+   void setAmbient(const LinearColorF &val) { mAmbient = val; }
+
+   void setPriority(F32 priority) { mPriority = priority; }
+   F32 getPriority() const { return mPriority; }
+
+   void setScore(F32 score) { mScore = score; }
+   F32 getScore() const { return mScore; }
+
+   bool isDebugRenderingEnabled() const { return mDebugRender; }
+   void enableDebugRendering(bool value) { mDebugRender = value; }
+
+   // Builds the world to light view projection used for
+   // shadow texture and cookie lookups.
+   void getWorldToLightProj(MatrixF *outMatrix) const;
 
    void clear();
 };

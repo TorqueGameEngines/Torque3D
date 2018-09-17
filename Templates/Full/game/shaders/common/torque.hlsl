@@ -310,4 +310,38 @@ float3 simpleFresnel(float3 diffuseColor, float3 reflectColor, float metalness, 
 
    return lerp(diffuseColor, reflectColor, fresnelTerm);
 }
+
+//hlsl version of the glsl funcion mod - note hlsl fmod is different
+#define mod(x,y) (x-y*floor(x/y))
+
+//get direction for a cube face
+float3 getCubeDir(int face, float2 uv)
+{
+	float2 debiased = uv * 2.0f - 1.0f;
+
+	float3 dir = 0;
+
+	switch (face)
+	{
+		case 0: dir = float3(1, -debiased.y, -debiased.x); 
+			break;
+
+		case 1: dir = float3(-1, -debiased.y, debiased.x); 
+			break;
+
+		case 2: dir = float3(debiased.x, 1, debiased.y); 
+			break;
+
+		case 3: dir = float3(debiased.x, -1, -debiased.y); 
+			break;
+
+		case 4: dir = float3(debiased.x, -debiased.y, 1); 
+			break;
+
+		case 5: dir = float3(-debiased.x, -debiased.y, -1); 
+			break;
+	};
+
+	return normalize(dir);
+}
 #endif // _TORQUE_HLSL_

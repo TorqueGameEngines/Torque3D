@@ -49,6 +49,7 @@ namespace
       FEATUREMGR->registerFeature( MFT_TerrainLightMap, new TerrainLightMapFeatHLSL );
       FEATUREMGR->registerFeature( MFT_TerrainSideProject, new NamedFeatureHLSL( "Terrain Side Projection" ) );
       FEATUREMGR->registerFeature( MFT_TerrainAdditive, new TerrainAdditiveFeatHLSL );  
+      FEATUREMGR->registerFeature( MFT_TerrainCompositeMap, new TerrainCompositeMapFeatHLSL );
       FEATUREMGR->registerFeature( MFT_DeferredTerrainBlankInfoMap, new TerrainBlankInfoMapFeatHLSL );
    }
 };
@@ -138,6 +139,24 @@ Var* TerrainFeatHLSL::_getNormalMapTex()
    }
 
    return normalMap;
+}
+
+Var* TerrainFeatHLSL::_getCompositeMapTex()
+{
+   String name(String::ToString("compositeMap%d", getProcessIndex()));
+   Var *compositeMap = (Var*)LangElement::find(name);
+
+   if (!compositeMap)
+   {
+      compositeMap = new Var;
+      compositeMap->setType("SamplerState");
+      compositeMap->setName(name);
+      compositeMap->uniform = true;
+      compositeMap->sampler = true;
+      compositeMap->constNum = Var::getTexUnitNum();
+   }
+
+   return compositeMap;
 }
 
 Var* TerrainFeatHLSL::_getDetailIdStrengthParallax()
@@ -1116,6 +1135,183 @@ void TerrainAdditiveFeatHLSL::processPix( Vector<ShaderComponent*> &componentLis
 
 //standard matInfo map contains data of the form .r = bitflags, .g = (will contain AO), 
 //.b = specular strength, a= spec power. 
+
+void TerrainCompositeMapFeatHLSL::processVert(Vector<ShaderComponent*> &componentList,
+   const MaterialFeatureData &fd)
+{
+   const S32 detailIndex = getProcessIndex();
+
+   // Grab incoming texture coords... the base map feature
+   // made sure this was created.
+   Var *inTex = (Var*)LangElement::find("texCoord");
+   AssertFatal(inTex, "The texture coord is missing!");
+
+   // Grab the input position.
+   Var *inPos = (Var*)LangElement::find("inPosition");
+   if (!inPos)
+      inPos = (Var*)LangElement::find("position");
+
+   // Get the object space eye position.
+   Var *eyePos = _getUniformVar("eyePos", "float3", cspPotentialPrimitive);
+
+   MultiLine *meta = new MultiLine;
+
+   // If we have parallax mapping then make sure we've sent
+   // the negative view vector to the pixel shader.
+   if (fd.features.hasFeature(MFT_TerrainParallaxMap) &&
+      !LangElement::find("outNegViewTS"))
+   {
+      // Get the object to tangent transform which
+      // will consume 3 output registers.
+      Var *objToTangentSpace = getOutObjToTangentSpace(componentList, meta, fd);
+
+      // Now use a single output register to send the negative
+      // view vector in tangent space to the pixel shader.
+      ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>(componentList[C_CONNECTOR]);
+      Var *outNegViewTS = connectComp->getElement(RT_TEXCOORD);
+      outNegViewTS->setName("outNegViewTS");
+      outNegViewTS->setStructName("OUT");
+      outNegViewTS->setType("float3");
+      meta->addStatement(new GenOp("   @ = mul( @, float3( @ - @.xyz ) );\r\n",
+         outNegViewTS, objToTangentSpace, eyePos, inPos));
+   }
+
+   // Get the distance from the eye to this vertex.
+   Var *dist = (Var*)LangElement::find("dist");
+   if (!dist)
+   {
+      dist = new Var;
+      dist->setType("float");
+      dist->setName("dist");
+
+      meta->addStatement(new GenOp("   @ = distance( @.xyz, @ );\r\n",
+         new DecOp(dist), inPos, eyePos));
+   }
+
+   // grab connector texcoord register
+   ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>(componentList[C_CONNECTOR]);
+   Var *outTex = (Var*)LangElement::find(String::ToString("detCoord%d", detailIndex));
+   if (outTex == NULL)
+   {
+      outTex = connectComp->getElement(RT_TEXCOORD);
+      outTex->setName(String::ToString("detCoord%d", detailIndex));
+      outTex->setStructName("OUT");
+      outTex->setType("float4");
+   }
+   // Get the detail scale and fade info.
+   Var *detScaleAndFade = (Var*)LangElement::find(String::ToString("detailScaleAndFade%d", detailIndex));
+   if (detScaleAndFade == NULL)
+   {
+      detScaleAndFade->setType("float4");
+      detScaleAndFade->setName(String::ToString("detailScaleAndFade%d", detailIndex));
+      detScaleAndFade->uniform = true;
+      detScaleAndFade->constSortPos = cspPotentialPrimitive;
+   }
+
+   // Setup the detail coord.
+   //
+   // NOTE: You see here we scale the texture coord by 'xyx'
+   // to generate the detail coord.  This y is here because
+   // its scale is flipped to correct for the non negative y
+   // in texCoord.
+   //
+   // See TerrainBaseMapFeatHLSL::processVert().
+   //
+   meta->addStatement(new GenOp("   @.xyz = @ * @.xyx;\r\n", outTex, inTex, detScaleAndFade));
+
+   // And sneak the detail fade thru the w detailCoord.
+   meta->addStatement(new GenOp("   @.w = clamp( ( @.z - @ ) * @.w, 0.0, 1.0 );\r\n",
+      outTex, detScaleAndFade, dist, detScaleAndFade));
+
+   output = meta;
+}
+
+U32 TerrainCompositeMapFeatHLSL::getOutputTargets(const MaterialFeatureData &fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::RenderTarget1;
+}
+
+void TerrainCompositeMapFeatHLSL::processPix(Vector<ShaderComponent*> &componentList,
+   const MaterialFeatureData &fd)
+{
+   /// Get the texture coord.
+   Var *inDet = _getInDetailCoord(componentList);
+   Var *inTex = getVertTexCoord("texCoord");
+
+   const S32 compositeIndex = getProcessIndex();
+   Var *compositeMap = _getCompositeMapTex();
+   // Sample the normal map.
+   //
+   // We take two normal samples and lerp between them for
+   // side projection layers... else a single sample.
+   LangElement *texOp;
+   String name(String::ToString("compositeMapTex%d", getProcessIndex()));
+   Var *compositeMapTex = (Var*)LangElement::find(name);
+   if (!compositeMapTex)
+   {
+      compositeMapTex = new Var;
+      compositeMapTex->setName(String::ToString("compositeMapTex%d", getProcessIndex()));
+      compositeMapTex->setType("Texture2D");
+      compositeMapTex->uniform = true;
+      compositeMapTex->texture = true;
+      compositeMapTex->constNum = compositeMap->constNum;
+   }
+   if (fd.features.hasFeature(MFT_TerrainSideProject, compositeIndex))
+   {
+      texOp = new GenOp("lerp( @.Sample( @, @.yz ), @.Sample( @, @.xz ), @.z )",
+         compositeMapTex, compositeMap, inDet, compositeMapTex, compositeMap, inDet, inTex);
+   }
+   else
+      texOp = new GenOp("@.Sample(@, @.xy)", compositeMapTex, compositeMap, inDet);
+
+   // search for material var
+   Var *material;
+   OutputTarget targ = RenderTarget1;
+   if (fd.features[MFT_isDeferred])
+   {
+      targ = RenderTarget2;
+   }
+   material = (Var*)LangElement::find(getOutputTargetVarName(targ));
+
+   MultiLine * meta = new MultiLine;
+   if (!material)
+   {
+      // create color var
+      material = new Var;
+      material->setType("fragout");
+      material->setName(getOutputTargetVarName(targ));
+      material->setStructName("OUT");
+   }
+
+   Var *detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));
+   AssertFatal(detailBlend, "The detail blend is missing!");
+
+   String matinfoName(String::ToString("matinfoCol%d", compositeIndex));
+   Var *matinfoCol = new Var(matinfoName, "float3");
+   
+   Var *priorComp = (Var*)LangElement::find(String::ToString("matinfoCol%d", compositeIndex - 1));
+   if (priorComp)
+   {
+      meta->addStatement(new GenOp("   @ = @.grb*@;\r\n", new DecOp(matinfoCol), texOp, detailBlend));
+      meta->addStatement(new GenOp("   @.gba += @;\r\n", material, matinfoCol));
+   }
+   else
+   {
+      meta->addStatement(new GenOp("   @ = lerp(float3(1,0,0),@.grb,@);\r\n", new DecOp(matinfoCol), texOp, detailBlend));
+      meta->addStatement(new GenOp("   @ = float4(0.0,@);\r\n", material, matinfoCol));
+   }
+
+
+   output = meta;
+}
+
+ShaderFeature::Resources TerrainCompositeMapFeatHLSL::getResources(const MaterialFeatureData &fd)
+{
+   Resources res;
+   res.numTex = 1;
+   return res;
+}
+
 //here, it's merely a cutout for now, so that lightmapping (target3) doesn't get mangled.
 //we'll most likely revisit that later. possibly several ways...
 

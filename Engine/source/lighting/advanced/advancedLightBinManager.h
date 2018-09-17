@@ -90,6 +90,9 @@ public:
    // registered buffer name
    static const String smBufferName;
 
+   NamedTexTargetRef mDiffuseLightingTarget;
+   GFXTexHandle      mDiffuseLightingTex;
+
    /// The shadow filter mode to use on shadowed light materials.
    static ShadowFilterMode smShadowFilterMode;
 
@@ -128,6 +131,7 @@ public:
    bool MRTLightmapsDuringDeferred() const { return mMRTLightmapsDuringDeferred; }
    void MRTLightmapsDuringDeferred(bool val);
 
+   bool _updateTargets();
 
    typedef Signal<void(SceneRenderState *, AdvancedLightBinManager *)> RenderSignal;
    static RenderSignal &getRenderSignal();

@@ -97,6 +97,7 @@ void TerrainMaterial::initPersistFields()
    addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
 
+   addField("compositeMap", TypeStringFilename, Offset(mCompositeMap, TerrainMaterial), "Composite map for the material");
    Parent::initPersistFields();
 
    // Gotta call this at least once or it won't get created!

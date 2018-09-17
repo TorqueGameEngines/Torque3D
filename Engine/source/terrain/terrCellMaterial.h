@@ -77,6 +77,9 @@ protected:
       GFXShaderConstHandle *normalTexConst;
       GFXTexHandle normalTex;
 
+      GFXShaderConstHandle *compositeTexConst;
+      GFXTexHandle compositeTex;
+
       GFXShaderConstHandle *detailInfoVConst;
       GFXShaderConstHandle *detailInfoPConst;
 

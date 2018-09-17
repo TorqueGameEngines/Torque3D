@@ -51,8 +51,12 @@ singleton Material( Grid512_ForestGreenLines_Mat )
 singleton Material( Grid512_Green_Mat )
 {
    mapTo = "Grid512_Green_Mat";
-   diffuseMap[0] = "512_green";
+   diffuseMap[0] = "core/art/grids/512_green";
    materialTag0 = "TestMaterial";
+   smoothness[0] = "1";
+   metalness[0] = "1";
+   translucent = "0";
+   translucentBlendOp = "Add";
 };
 
 singleton Material( Grid512_Grey_Mat )
@@ -65,8 +69,10 @@ singleton Material( Grid512_Grey_Mat )
 singleton Material( Grid512_GreyBase_Mat )
 {
    mapTo = "Grid512_GreyBase_Mat";
-   diffuseMap[0] = "512_grey_base";
+   diffuseMap[0] = "core/art/grids/512_grey_base";
    materialTag0 = "TestMaterial";
+   smoothness[0] = "1";
+   metalness[0] = "1";
 };
 
 singleton Material( Grid512_Orange_Mat )

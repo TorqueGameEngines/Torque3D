@@ -25,9 +25,9 @@
 #include "shaders/common/torque.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(colorBufferTex,0);
-TORQUE_UNIFORM_SAMPLER2D(directLightingBuffer,1);
+TORQUE_UNIFORM_SAMPLER2D(diffuseLightingBuffer,1);
 TORQUE_UNIFORM_SAMPLER2D(matInfoTex,2);
-TORQUE_UNIFORM_SAMPLER2D(indirectLightingBuffer,3);
+TORQUE_UNIFORM_SAMPLER2D(specularLightingBuffer,3);
 TORQUE_UNIFORM_SAMPLER2D(deferredTex,4);
 
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
@@ -37,25 +37,27 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    if (depth>0.9999)
       return float4(0,0,0,0);
 
-   float3 colorBuffer = TORQUE_TEX2D( colorBufferTex, IN.uv0 ).rgb; //albedo
+   float3 albedo = TORQUE_TEX2D( colorBufferTex, IN.uv0 ).rgb; //albedo
    float4 matInfo = TORQUE_TEX2D(matInfoTex, IN.uv0); //flags|smoothness|ao|metallic
 
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-      return float4(colorBuffer, 1.0);
+      return float4(albedo, 1.0);
    }
 	  
-   float4 directLighting = TORQUE_TEX2D( directLightingBuffer, IN.uv0 ); //shadowmap*specular
-   float3 indirectLighting = TORQUE_TEX2D( indirectLightingBuffer, IN.uv0 ).rgb; //environment mapping*lightmaps
+   float4 diffuse = TORQUE_TEX2D( diffuseLightingBuffer, IN.uv0 ); //shadowmap*specular
+   float4 specular = TORQUE_TEX2D( specularLightingBuffer, IN.uv0 ); //environment mapping*lightmaps
+   
    float metalness = matInfo.a;
-	  
-   float frez = directLighting.a;
    
-   float3 diffuseColor = colorBuffer - (colorBuffer * metalness);
-   float3 reflectColor = indirectLighting*colorBuffer;
-   colorBuffer = diffuseColor+lerp(reflectColor,indirectLighting,frez);
-   colorBuffer *= max(directLighting.rgb,float3(0,0,0));
+   float3 diffuseColor = albedo - (albedo * metalness);
+   float3 specularColor = lerp(float3(0.04,0.04,0.04), albedo, metalness);
+
+   float3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
+
+   //albedo = diffuseColor+lerp(reflectColor,indiffuseLighting,frez);
+   //albedo *= max(diffuseLighting.rgb,float3(0,0,0));
    
-   return hdrEncode( float4(colorBuffer.rgb, 1.0) );
+   return float4(light.rgb, 1.0);
 }

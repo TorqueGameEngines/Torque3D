@@ -16,7 +16,6 @@ new SimGroup(MissionGroup) {
       canvasClearColor = "0 0 0 255";
       ambientLightBlendPhase = "1";
       ambientLightBlendCurve = "0 0 -1 -1";
-      LevelEnvMap = "DesertSkyCubemap";
       soundAmbience = "AudioAmbienceDefault";
       soundDistanceModel = "Linear";
       canSave = "1";
@@ -33,6 +32,7 @@ new SimGroup(MissionGroup) {
       baseTexFormat = "DDS";
       lightMapSize = "256";
       screenError = "16";
+      ignoreZodiacs = "0";
       position = "-1024 -1024 179.978";
       rotation = "1 0 0 0";
       canSave = "1";
@@ -67,8 +67,8 @@ new SimGroup(MissionGroup) {
       playAmbient = "1";
       meshCulling = "0";
       originSort = "0";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "1";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -76,6 +76,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "9.42739 27.7428 241.767";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -133,8 +137,8 @@ new SimGroup(MissionGroup) {
       playAmbient = "1";
       meshCulling = "0";
       originSort = "0";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "1";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -142,6 +146,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "17.8995 16.1596 241.136";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -158,27 +166,18 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 1.29457 -0.42643 0.5";
       surface = "0 1 0 0 1.29457 -0.42643 -0.5";
-      surface = "0.707107 0 0 0.707107 1.29457 5.75621 0";
-      surface = "0 0.707107 -0.707107 0 1.29457 -6.60907 -4.54747e-013";
-      surface = "0.5 0.5 -0.5 0.5 -3.35148 -0.42643 -1.28542e-008";
-      surface = "0.5 -0.5 0.5 0.5 5.94063 -0.42643 -1.28542e-008";
-   };
-   new EnvVolume() {
-      AreaEnvMap = "MipCubemap";
-      cubeReflectorDesc = "DefaultCubeDesc";
-      position = "8.21068 19.3464 241.855";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
+      surface = "0.707107 0 0 0.707106 1.29457 5.75621 0";
+      surface = "0 0.707107 -0.707107 0 1.29457 -6.60907 -4.54747e-13";
+      surface = "0.5 0.5 -0.5 0.5 -3.35148 -0.42643 -1.28542e-08";
+      surface = "0.5 -0.5 0.5 0.5 5.94063 -0.42643 -1.28542e-08";
    };
    new TSStatic() {
       shapeName = "art/shapes/textures/PBRTEST2.dae";
       playAmbient = "1";
       meshCulling = "0";
       originSort = "0";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "1";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -186,6 +185,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "5.60579 18.8689 241.462";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -198,8 +201,8 @@ new SimGroup(MissionGroup) {
       meshCulling = "0";
       originSort = "0";
       cubeReflectorDesc = "DefaultCubeDesc";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "1";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -207,6 +210,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "22.1653 4.41543 241.364";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -218,8 +225,8 @@ new SimGroup(MissionGroup) {
       playAmbient = "1";
       meshCulling = "0";
       originSort = "0";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "1";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -227,6 +234,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "15.72 5.9186 241.191";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -246,8 +257,8 @@ new SimGroup(MissionGroup) {
       playAmbient = "1";
       meshCulling = "0";
       originSort = "0";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "0";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -255,6 +266,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "12.8895 -2.18239 238.765";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -266,8 +281,8 @@ new SimGroup(MissionGroup) {
       playAmbient = "1";
       meshCulling = "0";
       originSort = "0";
-      collisionType = "Collision Mesh";
-      decalType = "Collision Mesh";
+      CollisionType = "Collision Mesh";
+      DecalType = "Collision Mesh";
       allowPlayerStep = "0";
       alphaFadeEnable = "0";
       alphaFadeStart = "100";
@@ -275,6 +290,10 @@ new SimGroup(MissionGroup) {
       alphaFadeInverse = "0";
       renderNormals = "0";
       forceDetail = "-1";
+      ignoreZodiacs = "0";
+      useGradientRange = "0";
+      gradientRange = "0 180";
+      invertGradientRange = "0";
       position = "10.406 10.0939 240.551";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -300,9 +319,6 @@ new SimGroup(MissionGroup) {
       enabled = "1";
       ProbeShape = "Sphere";
       radius = "10";
-      Intensity = "1";
-      IndirectLightMode = "Ambient Color";
-      IndirectLight = "1 1 1 1";
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/empty terrain/";
       Bake = "0";
@@ -312,14 +328,14 @@ new SimGroup(MissionGroup) {
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "fc28816f-65a6-11e7-b9a1-b6f5317ad553";
+         IndirectLight = "1 1 1 1";
+         IndirectLightMode = "Ambient Color";
+         Intensity = "1";
    };
    new ReflectionProbe() {
       enabled = "1";
       ProbeShape = "Sphere";
       radius = "10";
-      Intensity = "1";
-      IndirectLightMode = "Ambient Color";
-      IndirectLight = "1 1 1 1";
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/empty terrain/";
       Bake = "0";
@@ -329,6 +345,20 @@ new SimGroup(MissionGroup) {
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "10bb5f41-65a7-11e7-b9a1-b6f5317ad553";
+         IndirectLight = "1 1 1 1";
+         IndirectLightMode = "Ambient Color";
+         Intensity = "1";
+   };
+   new Skylight() {
+      enabled = "1";
+      StaticCubemap = "HdrSkyCubemap";
+      position = "16.4688 10.5898 241.399";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "de646cc8-4f49-11e8-8a25-ec48d38e6b49";
+         reflectionPath = "levels/Empty Terrain/probes/";
    };
 };
 //--- OBJECT WRITE END ---

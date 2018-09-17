@@ -68,6 +68,15 @@ const String ShaderGenVars::specularColor("$specularColor");
 const String ShaderGenVars::smoothness("$smoothness");
 const String ShaderGenVars::metalness("$metalness");
 
+//Reflection Probes
+const String ShaderGenVars::probePosition("$inProbePos");
+const String ShaderGenVars::probeRadius("$inProbeRadius");
+const String ShaderGenVars::probeBoxMin("$inProbeBoxMin");
+const String ShaderGenVars::probeBoxMax("$inProbeBoxMax");
+const String ShaderGenVars::probeLocalPos("$inProbeLocalPos");
+const String ShaderGenVars::probeIsSphere("$inProbeIsSphere");
+const String ShaderGenVars::probeCubemap("$inProbeCubemap");
+
 // These are ignored by the D3D layers.
 const String ShaderGenVars::fogMap("$fogMap");
 const String ShaderGenVars::dlightMap("$dlightMap");

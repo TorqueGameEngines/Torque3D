@@ -42,26 +42,29 @@ void main()
       return;
    }
    
-   vec3 colorBuffer = texture( colorBufferTex, uv0 ).rgb; //albedo
+   vec3 albedo = texture( colorBufferTex, uv0 ).rgb; //albedo
    vec4 matInfo = texture( matInfoTex, uv0 ); //flags|smoothness|ao|metallic
+
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-      OUT_col = float4(colorBuffer, 1.0);
+      OUT_col = float4(albedo, 1.0);
 	  return;
    }
    
-   vec4 diffuseLighting = texture( diffuseLightingBuffer, uv0 ); //shadowmap*specular
-   
-   vec3 specularLighting = texture( specularLightingBuffer, uv0 ).rgb; //environment mapping*lightmaps
+   vec4 diffuse = texture( diffuseLightingBuffer, uv0 ); //shadowmap*specular
+   vec4 specular = texture( specularLightingBuffer, uv0 ); //environment mapping*lightmaps
+
    float metalness = matInfo.a;
-      
-   float frez = diffuseLighting.a;
    
-   vec3 diffuseColor = colorBuffer - (colorBuffer * metalness);
-   vec3 reflectColor = specularLighting*colorBuffer;
-   colorBuffer = diffuseColor+lerp(reflectColor,specularLighting,frez);
-   colorBuffer *= max(diffuseLighting.rgb,vec3(0,0,0)); 
+   vec3 diffuseColor = albedo - (albedo * metalness);
+   vec3 specularColor = lerp(float3(0.04,0.04,0.04), albedo, metalness);
+
+   vec3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
+
+   //albedo = diffuseColor+lerp(reflectColor,indiffuseLighting,frez);
+   //albedo *= max(diffuseLighting.rgb,vec3(0,0,0)); 
    
-   OUT_col =  hdrEncode(vec4(colorBuffer,1.0));
+   //OUT_col =  hdrEncode(vec4(colorBuffer,1.0));
+   OUT_col = hdrEncode(vec4(light, 1.0));
 }

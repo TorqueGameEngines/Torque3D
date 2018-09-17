@@ -86,13 +86,13 @@ float3 ImportanceSampleGGX(float2 Xi, float3 N)
 	return normalize(sampleVec);
 }
 
-float3 prefilterEnvMap(float3 R)
+float4 prefilterEnvMap(float3 R)
 {
     int sampleCount = resolution*2;
 	float3 N = R;
 	float3 V = R;
 	float totalWeight = 0.0;
-	float3 prefilteredColor = float3(0.0, 0.0, 0.0);
+	float4 prefilteredColor = float4(0.0, 0.0, 0.0, 0.0);
 
 	for (int i = 0; i < sampleCount; ++i)
 	{
@@ -114,7 +114,7 @@ float3 prefilterEnvMap(float3 R)
 
 				float mipLevel = roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
 
-				prefilteredColor += TORQUE_TEXCUBELOD(environmentMap, float4(L, mipLevel)).rgb * NdotL;				
+				prefilteredColor += TORQUE_TEXCUBELOD(environmentMap, float4(L, mipLevel)) * NdotL;				
 
 				totalWeight += NdotL;
 			}
@@ -126,5 +126,5 @@ float3 prefilterEnvMap(float3 R)
 float4 main(ConnectData IN) : TORQUE_TARGET0
 {
 	float3 N = getCubeDir(face, IN.uv);
-	return float4(prefilterEnvMap(N), 1.0);
+	return prefilterEnvMap(N);
 }

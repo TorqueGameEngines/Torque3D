@@ -107,6 +107,7 @@ protected:
 
       MaterialParameterHandle *useCubemap;
       MaterialParameterHandle *cubemap;
+	  MaterialParameterHandle *cubeMips;
 
       MaterialParameterHandle *eyePosWorld;
       MaterialParameterHandle *bbMin;

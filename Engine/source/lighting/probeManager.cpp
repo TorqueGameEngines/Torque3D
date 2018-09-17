@@ -55,7 +55,8 @@ ProbeInfo::ProbeInfo()
    mIrradianceCubemap(NULL),
    mBRDFTexture(NULL),
    mRadius(1.0f),
-   mIntensity(1.0f)
+   mIntensity(1.0f),
+   mProbePosOffset(0,0,0)
 {
    for (U32 i = 0; i < 5; ++i)
    {

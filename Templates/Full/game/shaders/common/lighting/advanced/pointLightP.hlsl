@@ -156,7 +156,6 @@ PS_OUTPUT main(ConvexConnectP IN)
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-      //return float4(0.0, 0.0, 0.0, 0.0);
       return Output;
    }
 
@@ -274,16 +273,16 @@ PS_OUTPUT main(ConvexConnectP IN)
 
    //diffuse
    float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
-   float3 diffuse = float3(disDiff, disDiff, disDiff) / M_PI_F;// alternative: (lightColor * dotNL) / Pi;
-                                                               //specular
+   float3 diffuse = float3(disDiff, disDiff, disDiff) / M_PI_F;
+   //specular
    float3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
 
    
    if (nDotL<0) shadowed = 0;
    float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
    //output
-   Output.diffuse = float4(diffuse * lightBrightness*shadowed, Sat_NL_Att);
-   Output.spec = float4(specular * lightBrightness*shadowed, Sat_NL_Att);
+   Output.diffuse = float4(diffuse * lightBrightness, Sat_NL_Att*shadowed);
+   Output.spec = float4(specular * lightBrightness, Sat_NL_Att*shadowed);
 
    return Output;
 }

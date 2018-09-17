@@ -23,8 +23,8 @@
 #ifndef SKYLIGHT_H
 #define SKYLIGHT_H
 
-#ifndef _SCENEOBJECT_H_
-#include "scene/sceneObject.h"
+#ifndef REFLECTIONPROBE_H
+#include "T3D/lighting/reflectionProbe.h"
 #endif
 #ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
@@ -57,83 +57,14 @@ class BaseMatInstance;
 // actual setup and rendering for you.
 //-----------------------------------------------------------------------------
 
-class Skylight : public SceneObject
+class Skylight : public ReflectionProbe
 {
-   typedef SceneObject Parent;
-
-public:
-
-   enum IndrectLightingModeType
-   {
-      NoIndirect = 0,            
-      AmbientColor = 1, 
-      SphericalHarmonics = 2
-   };
-
-   enum ReflectionModeType
-   {
-      StaticCubemap = 1,
-      BakedCubemap = 2
-   };
+   typedef ReflectionProbe Parent;
 
 private:
 
-   // Networking masks
-   // We need to implement a mask specifically to handle
-   // updating our transform from the server object to its
-   // client-side "ghost". We also need to implement a
-   // maks for handling editor updates to our properties
-   // (like material).
-   enum MaskBits
-   {
-      TransformMask = Parent::NextFreeMask << 0,
-      UpdateMask = Parent::NextFreeMask << 1,
-      EnabledMask = Parent::NextFreeMask << 2,
-      CubemapMask = Parent::NextFreeMask << 3,
-      ModeMask = Parent::NextFreeMask << 4,
-      RadiusMask = Parent::NextFreeMask << 5,
-      ShapeTypeMask = Parent::NextFreeMask << 6,
-      BakeInfoMask = Parent::NextFreeMask << 7,
-      NextFreeMask = Parent::NextFreeMask << 8
-   };
-
-   bool mBake;
-   bool mEnabled;
-   bool mDirty;
-
-   Resource<TSShape> mEditorShape;
-   TSShapeInstance* mEditorShapeInst;
-
-   //--------------------------------------------------------------------------
-   // Rendering variables
-   //--------------------------------------------------------------------------
-   ProbeInfo* mProbeInfo;
-
-   //Reflection Contribution stuff
-   ReflectionModeType mReflectionModeType;
-
-   String mCubemapName;
-   CubemapData *mCubemap;
-
-   String mReflectionPath;
-   String mProbeUniqueID;
-
-   //Debug rendering
+    //Debug rendering
    static bool smRenderSkylights;
-   static bool smRenderPreviewProbes;
-
-   //irridiance resources
-   GFXCubemapHandle mIrridianceMap;
-
-   //prefilter resources
-   GFXCubemapHandle mPrefilterMap;
-   U32 mPrefilterMipLevels;
-   U32 mPrefilterSize;
-
-   //brdflookup resources - shares the texture target with the prefilter
-   GFXTexHandle mBrdfTexture;
-
-   bool mResourcesCreated;
 
 public:
    Skylight();
@@ -155,9 +86,6 @@ public:
    // Allows the object to update its editable settings
    // from the server object to the client
    virtual void inspectPostApply();
-
-   static bool _setEnabled(void *object, const char *index, const char *data);
-   static bool _doBake(void *object, const char *index, const char *data);
 
    // Handle when we are added to the scene and removed from the scene
    bool onAdd();
@@ -181,32 +109,12 @@ public:
    // minimizing texture, state, and shader switching by grouping objects that
    // use the same Materials.
    //--------------------------------------------------------------------------
-
-   // Create the geometry for rendering
-   void createGeometry();
-
-   bool createClientResources();
-
-   // Get the Material instance
-   void updateMaterial();
-
-   void generateTextures();
-
    void updateProbeParams();
 
    // This is the function that allows this object to submit itself for rendering
    void prepRenderImage(SceneRenderState *state);
 
    void setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat);
-
-    //Baking
-   void bake(String outputPath, S32 resolution);
 };
-
-typedef Skylight::IndrectLightingModeType SkylightIndrectLightingModeEnum;
-DefineEnumType(SkylightIndrectLightingModeEnum);
-
-typedef Skylight::ReflectionModeType SkylightReflectionModeEnum;
-DefineEnumType(SkylightReflectionModeEnum);
 
 #endif // _Skylight_H_

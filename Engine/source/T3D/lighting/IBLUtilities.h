@@ -3,9 +3,14 @@
 namespace IBLUtilities
 {
    void GenerateIrradianceMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut);
+   void GenerateAndSaveIrradianceMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut);
 
    void GeneratePrefilterMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut);
+   void GenerateAndSavePrefilterMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut);
 
+   void SaveCubeMap(String outputPath, GFXCubemapHandle &cubemap);
+
+   GFXTexHandle GenerateAndSaveBRDFTexture(String outputPath, S32 resolution);
    void GenerateBRDFTexture(GFXTexHandle &textureOut);
 
    void bakeReflection(String outputPath, S32 resolution);

@@ -54,6 +54,24 @@ new ShaderData( AL_DeferredShader )
    pixVersion = 2.0;
 };
 
+new GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
+{        
+   blendEnable = false; 
+   
+   separateAlphaBlendDefined = true;
+   separateAlphaBlendEnable = true;
+   separateAlphaBlendSrc = GFXBlendSrcAlpha;
+   separateAlphaBlendDest = GFXBlendDestAlpha;
+   separateAlphaBlendOp = GFXBlendOpMin;
+   
+   samplersDefined = true;
+   samplerStates[0] = SamplerWrapLinear;
+   samplerStates[1] = SamplerWrapLinear;
+   samplerStates[2] = SamplerWrapLinear;
+   samplerStates[3] = SamplerWrapLinear;
+   samplerStates[4] = SamplerWrapLinear;
+};
+
 new ShaderData( AL_ProbeShader )
 {
    DXVertexShaderFile = "shaders/common/postFx/postFxV.hlsl";
@@ -76,7 +94,7 @@ singleton PostEffect( AL_PreCapture )
    renderTime = "PFXBeforeBin";
    renderBin = "ProbeBin";
    shader = AL_ProbeShader;
-   stateBlock = AL_DeferredShadingState;
+   stateBlock = AL_DeferredCaptureState;
    texture[0] = "#color";
    texture[1] = "#diffuseLighting";
    texture[2] = "#matinfo";

@@ -490,6 +490,7 @@ RenderProbeMgr::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String 
    useCubemap = matInstance->getMaterialParameterHandle("$useCubemap");
 
    cubemap = matInstance->getMaterialParameterHandle("$cubeMap");
+   cubeMips = matInstance->getMaterialParameterHandle("$cubeMips");
 
    eyePosWorld = matInstance->getMaterialParameterHandle("$eyePosWorld");
    bbMin = matInstance->getMaterialParameterHandle("$bbMin");
@@ -545,7 +546,7 @@ void RenderProbeMgr::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRen
 
    matParams->setSafe(radius, probeInfo->mRadius);
 
-   Point3F probePos = probeInfo->getPosition();
+   Point3F probePos = probeInfo->getPosition() + probeInfo->mProbePosOffset;
    //worldViewOnly.mulP(probeInfo->getPosition(), &probePos);
    matParams->setSafe(probeWSPos, probePos);
 
@@ -606,6 +607,10 @@ void RenderProbeMgr::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRen
       GFX->setTexture(4, NULL);
    }
 
+   if(probeInfo->mCubemap->isValid())
+      matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(),2.0f));
+   else
+      matParams->setSafe(cubeMips, F32(0.0));
 
    matParams->setSafe(eyePosWorld, renderState->getCameraPosition());
    matParams->setSafe(bbMin, probeInfo->mBounds.minExtents);
@@ -659,7 +664,7 @@ bool ReflectProbeMatInstance::setupPass(SceneRenderState *state, const SceneData
 	   desc.setZReadWrite(false);
 	   desc.zWriteEnable = false;
 	   desc.setCullMode(GFXCullNone);
-	   desc.setBlend(true, GFXBlendOne, GFXBlendOne);
+	   desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendOne);
 	   mProjectionState = GFX->createStateBlock(desc);
    }
    // Now override stateblock with our own

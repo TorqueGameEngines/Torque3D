@@ -3,6 +3,8 @@
 #include "gfx/gfxTextureManager.h"
 #include "gfx/gfxTransformSaver.h"
 #include "gfx/bitmap/cubemapSaver.h"
+#include "core/stream/fileStream.h"
+#include "gfx/bitmap/imageUtils.h"
 
 namespace IBLUtilities
 {
@@ -56,6 +58,44 @@ namespace IBLUtilities
       GFX->popActiveRenderTarget();
    }
 
+   void GenerateAndSaveIrradianceMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut)
+   {
+      if (outputPath.isEmpty())
+      {
+         Con::errorf("IBLUtilities::GenerateAndSaveIrradianceMap - Cannot save to an empty path!");
+         return;
+      }
+
+      GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
+
+      IBLUtilities::GenerateIrradianceMap(renderTarget, cubemap, cubemapOut);
+
+      //Write it out
+      CubemapSaver::save(cubemapOut, outputPath);
+
+      if (!Platform::isFile(outputPath))
+      {
+         Con::errorf("IBLUtilities::GenerateAndSaveIrradianceMap - Failed to properly save out the baked irradiance!");
+      }
+   }
+
+   void SaveCubeMap(String outputPath, GFXCubemapHandle &cubemap)
+   {
+      if (outputPath.isEmpty())
+      {
+         Con::errorf("IBLUtilities::SaveCubeMap - Cannot save to an empty path!");
+         return;
+      }
+
+      //Write it out
+      CubemapSaver::save(cubemap, outputPath);
+
+      if (!Platform::isFile(outputPath))
+      {
+         Con::errorf("IBLUtilities::SaveCubeMap - Failed to properly save out the baked irradiance!");
+      }
+   }
+
    void GeneratePrefilterMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut)
    {
       GFXTransformSaver saver;
@@ -73,8 +113,8 @@ namespace IBLUtilities
       GFXShaderConstHandle* prefilterFaceSC = prefilterShader->getShaderConstHandle("$face");
       GFXShaderConstHandle* prefilterRoughnessSC = prefilterShader->getShaderConstHandle("$roughness");
       GFXShaderConstHandle* prefilterMipSizeSC = prefilterShader->getShaderConstHandle("$mipSize");
-	  GFXShaderConstHandle* prefilterResolutionSC = prefilterShader->getShaderConstHandle("$resolution");
-	  
+      GFXShaderConstHandle* prefilterResolutionSC = prefilterShader->getShaderConstHandle("$resolution");
+
       GFX->pushActiveRenderTarget();
       GFX->setShader(prefilterShader);
       GFX->setShaderConstBuffer(prefilterConsts);
@@ -82,10 +122,13 @@ namespace IBLUtilities
 
       U32 prefilterSize = cubemapOut->getSize();
 
+      U32 resolutionSize = prefilterSize;
+
       for (U32 face = 0; face < 6; face++)
       {
          prefilterConsts->setSafe(prefilterFaceSC, (S32)face);
-		 prefilterConsts->setSafe(prefilterResolutionSC, renderTarget->getSize().x);
+         prefilterConsts->setSafe(prefilterResolutionSC, (S32)resolutionSize);
+
          for (U32 mip = 0; mip < mipLevels; mip++)
          {
             S32 mipSize = prefilterSize >> mip;
@@ -103,6 +146,27 @@ namespace IBLUtilities
       }
 
       GFX->popActiveRenderTarget();
+   }
+
+   void GenerateAndSavePrefilterMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut)
+   {
+      if (outputPath.isEmpty())
+      {
+         Con::errorf("IBLUtilities::GenerateAndSavePrefilterMap - Cannot save to an empty path!");
+         return;
+      }
+
+      GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
+
+      IBLUtilities::GeneratePrefilterMap(renderTarget, cubemap, mipLevels, cubemapOut);
+
+      //Write it out
+      CubemapSaver::save(cubemapOut, outputPath);
+
+      if (!Platform::isFile(outputPath))
+      {
+         Con::errorf("IBLUtilities::GenerateAndSavePrefilterMap - Failed to properly save out the baked irradiance!");
+      }
    }
 
    void GenerateBRDFTexture(GFXTexHandle &textureOut)
@@ -131,6 +195,33 @@ namespace IBLUtilities
       renderTarget->resolve();
 
       GFX->popActiveRenderTarget();
+   }
+
+   GFXTexHandle GenerateAndSaveBRDFTexture(String outputPath, S32 resolution)
+   {
+      GFXTexHandle brdfTexture = TEXMGR->createTexture(resolution, resolution, GFXFormatR8G8B8A8, &GFXRenderTargetProfile, 1, 0);
+      GenerateBRDFTexture(brdfTexture);
+
+      FileStream fs;
+      if (fs.open(outputPath, Torque::FS::File::Write))
+      {
+         // Read back the render target, dxt compress it, and write it to disk.
+         GBitmap brdfBmp(brdfTexture.getHeight(), brdfTexture.getWidth(), false, GFXFormatR8G8B8A8);
+         brdfTexture.copyToBmp(&brdfBmp);
+
+         brdfBmp.extrudeMipLevels();
+
+         DDSFile *brdfDDS = DDSFile::createDDSFileFromGBitmap(&brdfBmp);
+         ImageUtil::ddsCompress(brdfDDS, GFXFormatBC1);
+
+         // Write result to file stream
+         brdfDDS->write(fs);
+
+         delete brdfDDS;
+      }
+      fs.close();
+
+      return brdfTexture;
    }
 
    void bakeReflection(String outputPath, S32 resolution)
@@ -464,7 +555,7 @@ namespace IBLUtilities
       }
 
       //If we fail to parse the cubemap for whatever reason, we really can't continue
-      if (!CubemapSaver::getBitmaps(cubemap, GFXFormatR8G8B8, cubeFaceBitmaps))
+      if (!CubemapSaver::getBitmaps(cubemap, GFXFormatR8G8B8A8, cubeFaceBitmaps))
          return;
 
       //Set up our constants
@@ -571,3 +662,9 @@ namespace IBLUtilities
       return angle;
    }
 };
+
+DefineEngineFunction(GenerateBRDFTexture, bool, (String outputPath, S32 resolution), ("", 256),
+   "@brief returns true if control object is inside the fog\n\n.")
+{
+   return IBLUtilities::GenerateAndSaveBRDFTexture(outputPath, resolution);
+}

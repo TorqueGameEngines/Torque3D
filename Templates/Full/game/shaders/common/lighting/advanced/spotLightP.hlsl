@@ -73,8 +73,15 @@ uniform float4x4 dynamicViewToLightProj;
 uniform float2 lightAttenuation;
 uniform float shadowSoftness;
 
-float4 main(   ConvexConnectP IN ) : TORQUE_TARGET0
+struct PS_OUTPUT
+{
+   float4 diffuse: TORQUE_TARGET0;
+   float4 spec: TORQUE_TARGET1;
+};
+
+PS_OUTPUT main(   ConvexConnectP IN ) : TORQUE_TARGET0
 {   
+   PS_OUTPUT Output = (PS_OUTPUT)0;
    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w;
    float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
@@ -85,7 +92,7 @@ float4 main(   ConvexConnectP IN ) : TORQUE_TARGET0
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-       return float4(0.0, 0.0, 0.0, 0.0);
+      return Output;
    }
 
    float4 colorSample = TORQUE_TEX2D( colorBuffer, uvScene );
@@ -181,36 +188,31 @@ float4 main(   ConvexConnectP IN ) : TORQUE_TARGET0
    // NOTE: Do not clip on fully shadowed pixels as it would
    // cause the hardware occlusion query to disable the shadow.
 
-   // Specular term
-   float specular = 0;
+   float3 l = normalize(-lightDirection);
+   float3 v = eyeRay;// normalize(eyePosWorld - worldPos.xyz);
 
-   float3 lightVec = lightPosition - viewSpacePos;
-   float4 real_specular = EvalBDRF( float3( 1.0, 1.0, 1.0 ),
-                                    lightcol,
-                                    lightVec,
-                                    viewSpacePos,
-                                    normal,
-                                    1.0-matInfo.b,
-                                    matInfo.a );
-   float3 lightColorOut = real_specular.rgb * lightBrightness * shadowed* atten;
+   float3 h = normalize(v + l);
+   float dotNLa = clamp(dot(normal, l), 0.0, 1.0);
+   float dotNVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotNHa = clamp(dot(normal, h), 0.0, 1.0);
+   float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotLHa = clamp(dot(l, h), 0.0, 1.0);
+
+   float roughness = matInfo.g;
+   float metalness = matInfo.b;
+
+   //diffuse
+   float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
+   float3 diffuse = float3(disDiff, disDiff, disDiff) / M_PI_F;
+   //specular
+   float3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
+
    
-   float Sat_NL_Att = saturate( nDotL * atten * shadowed ) * lightBrightness;
-   float4 addToResult = 0.0;
+   if (nDotL<0) shadowed = 0;
+   float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
+   //output
+   Output.diffuse = float4(diffuse * lightBrightness, Sat_NL_Att*shadowed);
+   Output.spec = float4(specular * lightBrightness, Sat_NL_Att*shadowed);
 
-   // TODO: This needs to be removed when lightmapping is disabled
-   // as its extra work per-pixel on dynamic lit scenes.
-   //
-   // Special lightmapping pass.
-   if ( lightMapParams.a < 0.0 )
-   {
-      // This disables shadows on the backsides of objects.
-      shadowed = nDotL < 0.0f ? 1.0f : shadowed;
-
-      Sat_NL_Att = 1.0f;
-      shadowed = lerp( 1.0f, shadowed, atten );
-      lightColorOut = shadowed;
-      specular *= lightBrightness;
-      addToResult = ( 1.0 - shadowed ) * abs(lightMapParams);
-   }
-   return float4((lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
+   return Output;
 }

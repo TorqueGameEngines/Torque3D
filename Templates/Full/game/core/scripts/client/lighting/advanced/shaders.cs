@@ -26,7 +26,7 @@ new GFXStateBlockData( AL_VectorLightState )
 {
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendOne;
+   blendSrc = GFXBlendSrcAlpha;
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
    
@@ -102,7 +102,7 @@ new GFXStateBlockData( AL_ConvexLightState )
 {
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendOne;
+   blendSrc = GFXBlendSrcAlpha;
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
    
@@ -294,7 +294,7 @@ new GFXStateBlockData( AL_ProbeState )
 {
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendOne;
+   blendSrc = GFXBlendSrcAlpha;
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
    

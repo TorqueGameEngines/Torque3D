@@ -62,9 +62,5 @@ void main()
 
    vec3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
 
-   //albedo = diffuseColor+lerp(reflectColor,indiffuseLighting,frez);
-   //albedo *= max(diffuseLighting.rgb,vec3(0,0,0)); 
-   
-   //OUT_col =  hdrEncode(vec4(colorBuffer,1.0));
    OUT_col = hdrEncode(vec4(light, 1.0));
 }

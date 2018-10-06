@@ -352,4 +352,35 @@ vec3 simpleFresnel(vec3 diffuseColor, vec3 reflectColor, float metalness, float 
 
    return mix(diffuseColor, reflectColor, fresnelTerm);
 }
+
+//get direction for a cube face
+vec3 getCubeDir(int face, vec2 uv)
+{
+	vec2 debiased = uv * 2.0f - 1.0f;
+
+	vec3 dir = vec3(0);
+
+	switch (face)
+	{
+		case 0: dir = vec3(1, -debiased.y, -debiased.x); 
+			break;
+
+		case 1: dir = vec3(-1, -debiased.y, debiased.x); 
+			break;
+
+		case 2: dir = vec3(debiased.x, 1, debiased.y); 
+			break;
+
+		case 3: dir = vec3(debiased.x, -1, -debiased.y); 
+			break;
+
+		case 4: dir = vec3(debiased.x, -debiased.y, 1); 
+			break;
+
+		case 5: dir = vec3(-debiased.x, -debiased.y, -1); 
+			break;
+	};
+
+	return normalize(dir);
+}
 #endif // _TORQUE_GLSL_

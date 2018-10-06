@@ -131,6 +131,7 @@ uniform vec4 lightParams;
 uniform float shadowSoftness;
 
 out vec4 OUT_col;
+out vec4 OUT_col1;
 
 void main()               
 {   
@@ -145,6 +146,7 @@ void main()
    if ( emissive )
    {
        OUT_col = vec4(0.0, 0.0, 0.0, 0.0);
+       OUT_col1 = vec4(0.0, 0.0, 0.0, 0.0);
 	   return;
    }
 
@@ -241,39 +243,32 @@ void main()
       atten *= max( cookie.r, max( cookie.g, cookie.b ) );
 
    #endif
-
    // NOTE: Do not clip on fully shadowed pixels as it would
    // cause the hardware occlusion query to disable the shadow.
 
-   // Specular term
-   float specular = 0;
-   vec4 real_specular = EvalBDRF( colorSample.rgb,
-                                    lightcol,
-                                    lightVec,
-                                    viewSpacePos,
-                                    normal,
-                                    1.05-matInfo.b*0.9, //slightly compress roughness to allow for non-baked lighting
-                                    matInfo.a );
-   vec3 lightColorOut = real_specular.rgb * lightBrightness * shadowed* atten;
+   vec3 l = lightVec;// normalize(-lightDirection);
+   vec3 v = eyeRay;// normalize(eyePosWorld - worldPos.xyz);
 
-   float Sat_NL_Att = saturate( nDotL * atten * shadowed ) * lightBrightness;
-   vec4 addToResult = vec4(0.0);
-    
-   // TODO: This needs to be removed when lightmapping is disabled
-   // as its extra work per-pixel on dynamic lit scenes.
-   //
-   // Special lightmapping pass.
-   if ( lightMapParams.a < 0.0 )
-   {
-      // This disables shadows on the backsides of objects.
-      shadowed = nDotL < 0.0f ? 1.0f : shadowed;
+   vec3 h = normalize(v + l);
+   float dotNLa = clamp(dot(normal, l), 0.0, 1.0);
+   float dotNVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotNHa = clamp(dot(normal, h), 0.0, 1.0);
+   float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotLHa = clamp(dot(l, h), 0.0, 1.0);
 
-      Sat_NL_Att = 1.0f;
-      shadowed = mix( 1.0f, shadowed, atten );
-      lightColorOut = vec3(shadowed);
-      specular *= lightBrightness;
-      addToResult = ( 1.0 - shadowed ) * abs(lightMapParams);
-   }
+   float roughness = matInfo.g;
+   float metalness = matInfo.b;
 
-   OUT_col = vec4((lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
+   //diffuse
+   float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
+   vec3 diffuse = vec3(disDiff, disDiff, disDiff) / M_PI_F;
+   //specular
+   vec3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
+
+   
+   if (nDotL<0) shadowed = 0;
+   float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
+   //output
+   OUT_col = float4(diffuse * lightBrightness, Sat_NL_Att*shadowed);
+   OUT_col1 = float4(specular * lightBrightness, Sat_NL_Att*shadowed);
 }

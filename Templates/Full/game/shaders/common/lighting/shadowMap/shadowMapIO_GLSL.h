@@ -24,16 +24,16 @@
 
 #define pkDepthBitShft 65536.0
 #define pkDepthChanMax 256.0
-#define bias -0.5/255.0
-#define coeff 0.9999991
-//#define coeff 1.0
+#define gbias -0.5/255.0
+#define gcoeff 0.9999991
+//#define gcoeff 1.0
 
 vec4 encodeShadowMap( float depth )
 {
 #if defined(SM_Fmt_R8G8B8A8)   
-   return frac( vec4(1.0, 255.0, 65025.0, 160581375.0) * depth ) + vec4(bias);
+   return frac( vec4(1.0, 255.0, 65025.0, 160581375.0) * depth ) + vec4(gbias);
 
-   //float4 packedValue = frac((depth / coeff) * float4(16777216.0, 65536.0, 256.0, 1.0));
+   //float4 packedValue = frac((depth / gcoeff) * float4(16777216.0, 65536.0, 256.0, 1.0));
    //return (packedValue - packedValue.xxyz * float4(0, 1.0 / 256, 1.0 / 256, 1.0 / 256));
 #else
    return vec4(depth);

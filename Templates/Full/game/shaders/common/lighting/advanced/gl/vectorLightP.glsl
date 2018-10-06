@@ -191,17 +191,11 @@ vec4 AL_VectorLightShadowCast( sampler2D _sourceshadowMap,
 }
 
 out vec4 OUT_col;
+out vec4 OUT_col1;
 void main()             
 {
    // Matinfo flags
-   float4 matInfo = texture( matInfoBuffer, uv0 );   
-   //early out if emissive
-   bool emissive = getFlag( matInfo.r, 0 );
-   if ( emissive )
-   {
-      OUT_col = vec4(0.0, 0.0, 0.0, 0.0);
-       return;
-   }
+   float4 matInfo = texture( matInfoBuffer, uv0 ); 
    
    vec4 colorSample = texture( colorBuffer, uv0 );
    vec3 subsurface = vec3(0.0,0.0,0.0); 
@@ -290,30 +284,29 @@ void main()
 
    #endif // !NO_SHADOW
 
-   // Specular term   
-   vec3 viewSpacePos = vsEyeRay * depth;
-   vec4 real_specular = EvalBDRF( colorSample.rgb,
-                                    lightColor.rgb,
-                                    normalize( -lightDirection ),
-                                    viewSpacePos,
-                                    normal,
-                                    1.0-matInfo.b,
-                                    matInfo.a );
-   vec3 lightColorOut = real_specular.rgb * lightBrightness * shadowed;
+   vec3 l = normalize(-lightDirection);
+   vec3 v = normalize(eyePosWorld - worldPos.xyz);
+
+   vec3 h = normalize(v + l);
+   float dotNLa = clamp(dot(normal, l), 0.0, 1.0);
+   float dotNVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotNHa = clamp(dot(normal, h), 0.0, 1.0);
+   float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
+   float dotLHa = clamp(dot(l, h), 0.0, 1.0);
+
+   float roughness = matInfo.g;
+   float metalness = matInfo.b;
+
+   //diffuse
+   //float dotNL = clamp(dot(normal,l), 0.0, 1.0);
+   float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
+   vec3 diffuse = vec3(disDiff, disDiff, disDiff) / M_PI_F;// alternative: (lightColor * dotNL) / Pi;
+   //specular
+   vec3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
    
-   float Sat_NL_Att = saturate( dotNL * shadowed ) * lightBrightness;
-   float Sat_NdotV = saturate(dot(normalize(-vsEyeRay), normal));   
-   vec4 addToResult = ( lightAmbient * (1 - ambientCameraFactor)) + ( lightAmbient * ambientCameraFactor * Sat_NdotV );
+   float finalShadowed = shadowed;
 
-   // Sample the AO texture.      
-   #ifdef USE_SSAO_MASK
-      float ao = 1.0 - texture( ssaoMask, viewportCoordToRenderTarget( uv0.xy, rtParams3 ) ).r;
-      addToResult *= ao;
-   #endif
-
-   #ifdef PSSM_DEBUG_RENDER
-      lightColorOut = debugColor;
-   #endif
-
-   OUT_col = vec4(matInfo.g*(lightColorOut*Sat_NL_Att+subsurface*(1.0-Sat_NL_Att)+addToResult.rgb),real_specular.a);
+//output
+   OUT_col = float4(diffuse * (lightBrightness), dotNLa*shadowed);
+   OUT_col1 = float4(specular * (lightBrightness), dotNLa*shadowed);
 }

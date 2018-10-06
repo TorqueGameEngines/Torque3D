@@ -270,3 +270,40 @@ void compute4Lights( vec3 wsView,
    outDiffuse = vec4(albedo.rgb*(1.0-metalness),albedo.a);
    outSpecular = EvalBDRF( vec3( 1.0, 1.0, 1.0 ), lightColor.rgb, toLight, wsPosition, wsNormal, smoothness, metalness );
 }
+
+float G1V(float dotNV, float k)
+{
+	return 1.0f/(dotNV*(1.0f-k)+k);
+}
+
+vec3 directSpecular(vec3 N, vec3 V, vec3 L, float roughness, float F0)
+{
+	float alpha = roughness*roughness;
+
+	//TODO don't need to calculate all this again timmy!!!!!!
+    vec3 H = normalize(V + L);
+    float dotNL = clamp(dot(N,L), 0.0, 1.0);
+    float dotNV = clamp(dot(N,V), 0.0, 1.0);
+    float dotNH = clamp(dot(N,H), 0.0, 1.0);
+	float dotHV = clamp(dot(H,V), 0.0, 1.0);
+	float dotLH = clamp(dot(L,H), 0.0, 1.0);
+
+	float F, D, vis;
+
+	// D
+	float alphaSqr = alpha*alpha;
+	float pi = 3.14159f;
+	float denom = dotNH * dotNH *(alphaSqr-1.0) + 1.0f;
+	D = alphaSqr/(pi * denom * denom);
+
+	// F
+	float dotLH5 = pow(1.0f-dotLH,5);
+	F = F0 + (1.0-F0)*(dotLH5);
+
+	// V
+	float k = alpha/2.0f;
+	vis = G1V(dotNL,k)*G1V(dotNV,k);
+
+	float specular = dotNL * D * F * vis;
+	return vec3(specular,specular,specular);
+}

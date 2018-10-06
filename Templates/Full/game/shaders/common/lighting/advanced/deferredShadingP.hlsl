@@ -55,9 +55,6 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    float3 specularColor = lerp(float3(0.04,0.04,0.04), albedo, metalness);
 
    float3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
-
-   //albedo = diffuseColor+lerp(reflectColor,indiffuseLighting,frez);
-   //albedo *= max(diffuseLighting.rgb,float3(0,0,0));
    
    return float4(light.rgb, 1.0);
 }

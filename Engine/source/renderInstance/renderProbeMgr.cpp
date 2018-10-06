@@ -617,7 +617,7 @@ void RenderProbeMgr::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRen
    matParams->setSafe(bbMax, probeInfo->mBounds.maxExtents);
 
    matParams->setSafe(useSphereMode, probeInfo->mProbeShapeType == ProbeInfo::Sphere ? 1.0f : 0.0f);
-
+   
    //SH Terms
    //static AlignedArray<Point3F> shTermsArray(9, sizeof(Point3F));
    //dMemset(shTermsArray.getBuffer(), 0, shTermsArray.getBufferSize());

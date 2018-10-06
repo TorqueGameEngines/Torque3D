@@ -21,11 +21,13 @@
 //-----------------------------------------------------------------------------
 
 #include "../../../gl/hlslCompat.glsl"
-out vec2 uv;
+out vec2 uv0;
 
 void main()
 {
-    uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
-    gl_Position = vec4(uv * vec2(2.0f, -2.0f) + vec2(-1.0f, 1.0f), 0.0f, 1.0f);
-    correctSSP(gl_Position);
+    float x = float((gl_VertexID & 1) << 2)-1.0;
+    float y = float((gl_VertexID & 2) << 1)-1.0;
+    gl_Position = vec4(x, y, 0, 1);
+    uv0.x = (x+1.0)*0.5;
+    uv0.y = (y+1.0)*0.5;
 }

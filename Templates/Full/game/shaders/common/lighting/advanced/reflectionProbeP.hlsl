@@ -30,6 +30,7 @@ uniform float  radius;
 uniform float2 attenuation;
 
 uniform float4x4 invViewMat;
+uniform float4x4 worldToObj;
 
 uniform float3 eyePosWorld;
 uniform float3 bbMin;
@@ -128,10 +129,14 @@ float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float rad, floa
 {
     float3 boxMin = probePos-(float3(0.5,0.5,0.5)*rad);
 	float3 boxMax = probePos+(float3(0.5,0.5,0.5)*rad);
+   
+    //rotated boxes
+	float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
+   
 	//Try to clip anything that falls outside our box as well
-	//TODO: Make it support rotated boxes as well
-	if(surfPosWS.x > boxMax.x || surfPosWS.y > boxMax.y || surfPosWS.z > boxMax.z ||
-		surfPosWS.x < boxMin.x || surfPosWS.y < boxMin.y || surfPosWS.z < boxMin.z)
+	//was surfPosWS
+	if(surfPosLS.x > boxMax.x || surfPosLS.y > boxMax.y || surfPosLS.z > boxMax.z ||
+		surfPosLS.x < boxMin.x || surfPosLS.y < boxMin.y || surfPosLS.z < boxMin.z)
 		return -1;
 		
 	float blendVal = 1;

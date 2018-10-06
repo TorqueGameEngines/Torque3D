@@ -31,6 +31,10 @@ uniform sampler2D matInfoTex;
 uniform sampler2D specularLightingBuffer;
 uniform sampler2D deferredTex;
 
+uniform float radius;
+uniform vec2 targetSize;
+uniform int captureRez;
+
 out vec4 OUT_col;
 
 void main()
@@ -38,22 +42,27 @@ void main()
    float depth = deferredUncondition( deferredTex, uv0 ).w;
    if (depth>0.9999)
    {
-      OUT_col = vec4(0.0);
+      discard;
       return;
    }
-   
    vec3 colorBuffer = texture( colorBufferTex, uv0 ).rgb; //albedo
-   vec4 matInfo = texture( matInfoTex, uv0 ); //flags|smoothness|ao|metallic
+   vec4 matInfo = texture(matInfoTex, uv0); //flags|smoothness|ao|metallic
+
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-      OUT_col = float4(colorBuffer, 1.0);
-	  return;
+     OUT_col = vec4(colorBuffer, 1.0);
+     return;
    }
-   
+	  
    vec4 diffuseLighting = texture( diffuseLightingBuffer, uv0 ); //shadowmap*specular
+   colorBuffer *= diffuseLighting.rgb;
+   vec2 relUV = uv0*targetSize/captureRez;
    
-   colorBuffer *= max(diffuseLighting.rgb,vec3(0,0,0)); 
+   //we use a 1k depth range in the capture frustum. 
+   //reduce that a bit to get something resembling depth fidelity out of 8 bits
+   depth*=2000/radius;
    
-   OUT_col =  hdrEncode(vec4(colorBuffer,1.0));
+   float rLen = length(vec3(relUV,depth)-vec3(0.5,0.5,0));
+   OUT_col = hdrEncode( vec4(colorBuffer,rLen));
 }

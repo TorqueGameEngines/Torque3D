@@ -22,16 +22,16 @@
 
 #include "../../../gl/torque.glsl"
 
-in vec2 uv;
+in vec2 uv0;
 uniform int face;
 
 uniform samplerCube environmentMap;
 
-out vec4 outColor;
+out vec4 OUT_col;
 
 void main()
 {
-    vec3 N = getCubeDir(face, uv);
+    vec3 N = getCubeDir(face, uv0);
     vec3 irradiance = vec3(0.0);
     
     // tangent space calculation from origin point
@@ -56,5 +56,5 @@ void main()
     }
     irradiance = M_PI_F * irradiance * (1.0 / float(nrSamples));
     
-    outColor =  vec4(irradiance, 1.0);
+    OUT_col =  vec4(irradiance, 1.0);
 }

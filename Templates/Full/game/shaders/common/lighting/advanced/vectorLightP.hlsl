@@ -203,7 +203,11 @@ PS_OUTPUT main(FarFrustumQuadConnectP IN)
    PS_OUTPUT Output = (PS_OUTPUT)0;
    // Matinfo flags
    float4 matInfo = TORQUE_TEX2D(matInfoBuffer, IN.uv0);
-
+   bool emissive = getFlag( matInfo.r, 0 );
+   if (emissive)
+   {
+      return Output;
+   }
    float4 colorSample = TORQUE_TEX2D(colorBuffer, IN.uv0);
    float3 subsurface = float3(0.0, 0.0, 0.0);
    if (getFlag(matInfo.r, 1))

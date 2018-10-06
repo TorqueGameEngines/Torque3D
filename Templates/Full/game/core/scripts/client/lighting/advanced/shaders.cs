@@ -285,6 +285,9 @@ new ShaderData( ReflectionProbeShader )
 
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$matInfoBuffer";
+   samplerNames[2] = "$cubeMap";
+   samplerNames[3] = "$irradianceCubemap";
+   samplerNames[4] = "$BRDFTexture";
    
    pixVersion = 3.0;
 };
@@ -307,7 +310,11 @@ new GFXStateBlockData( AL_ProbeState )
    samplerStates[0] = SamplerClampPoint;  // G-buffer
    mSamplerNames[0] = "deferredBuffer";
    samplerStates[1] = SamplerClampLinear;  // Shadow Map (Do not use linear, these are perspective projections)
-   mSamplerNames[1] = "matInfoBuffer";
+   mSamplerNames[1] = "matInfoBuffer";   
+
+   mSamplerNames[2] = "cubeMap";
+   mSamplerNames[3] = "irradianceCubemap";
+   mSamplerNames[4] = "BRDFTexture";
    
    cullDefined = true;
    cullMode = GFXCullCW;
@@ -341,6 +348,8 @@ new ShaderData( IrradianceShader )
    OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/irradianceP.glsl";
    
+   samplerNames[0] = "$environmentMap";
+   
    pixVersion = 3.0;
 };
 
@@ -351,6 +360,8 @@ new ShaderData( PrefiterCubemapShader )
 
    OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/prefilterP.glsl";
+   
+   samplerNames[0] = "$environmentMap";
    
    pixVersion = 3.0;
 };
@@ -376,6 +387,9 @@ new ShaderData( SklyightShader )
 
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$matInfoBuffer";
+   samplerNames[2] = "$cubeMap";
+   samplerNames[3] = "$irradianceCubemap";
+   samplerNames[4] = "$BRDFTexture";
    
    pixVersion = 3.0;
 };

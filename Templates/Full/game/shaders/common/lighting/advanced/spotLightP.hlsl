@@ -79,7 +79,7 @@ struct PS_OUTPUT
    float4 spec: TORQUE_TARGET1;
 };
 
-PS_OUTPUT main(   ConvexConnectP IN ) : TORQUE_TARGET0
+PS_OUTPUT main(   ConvexConnectP IN )
 {   
    PS_OUTPUT Output = (PS_OUTPUT)0;
    // Compute scene UV

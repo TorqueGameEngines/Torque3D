@@ -109,9 +109,9 @@ protected:
    //--------------------------------------------------------------------------
    // Rendering variables
    //--------------------------------------------------------------------------
-   ProbeInfo::ProbeShapeType mProbeShapeType;
+   ProbeRenderInst::ProbeShapeType mProbeShapeType;
 
-   ProbeInfo* mProbeInfo;
+   ProbeRenderInst* mProbeInfo;
 
    //Indirect Lighting Contribution stuff
    IndrectLightingModeType mIndrectLightingModeType;
@@ -154,7 +154,6 @@ protected:
    U32 mSpherePrimitiveCount;
 
    //Debug rendering
-   static bool smRenderReflectionProbes;
    static bool smRenderPreviewProbes;
 
    U32 mDynamicLastBakeMS;
@@ -221,7 +220,7 @@ public:
    // Get the Material instance
    void updateMaterial();
 
-   void updateProbeParams();
+   virtual void updateProbeParams();
 
    bool createClientResources();
    void generateTextures();
@@ -241,7 +240,7 @@ public:
    void bake(String outputPath, S32 resolution);
 };
 
-typedef ProbeInfo::ProbeShapeType ReflectProbeType;
+typedef ProbeRenderInst::ProbeShapeType ReflectProbeType;
 DefineEnumType(ReflectProbeType);
 
 typedef ReflectionProbe::IndrectLightingModeType IndrectLightingModeEnum;

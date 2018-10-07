@@ -125,24 +125,20 @@ float defineSphereSpaceInfluence(float3 centroidPosVS, float rad, float2 atten, 
     return saturate( nDotL * attn );
 }
 
-float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float rad, float2 atten) //atten currently unused
+float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float3 boxMin, float3 boxMax, float2 atten)
 {
-    float3 boxMin = probePos-(float3(0.5,0.5,0.5)*rad);
-	float3 boxMax = probePos+(float3(0.5,0.5,0.5)*rad);
-   
-    //rotated boxes
-	float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
-   
-	//Try to clip anything that falls outside our box as well
-	//was surfPosWS
-	if(surfPosLS.x > boxMax.x || surfPosLS.y > boxMax.y || surfPosLS.z > boxMax.z ||
-		surfPosLS.x < boxMin.x || surfPosLS.y < boxMin.y || surfPosLS.z < boxMin.z)
-		return -1;
-		
-	float blendVal = 1;
-	//float3 atten = min(boxMax-surfPosWS,surfPosWS-boxMin);
-	//blendVal = min(min(atten.x,atten.y),atten.z);
-	return blendVal;
+    float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
+
+    float3 lsBoxMin = mul(worldToObj, float4(boxMin,1)).xyz;
+    float3 lsBoxMax = mul(worldToObj, float4(boxMax,1)).xyz;
+
+    float boxOuterRange = length(lsBoxMax - lsBoxMin);
+    float boxInnerRange = boxOuterRange / 3.5;
+
+    float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
+    localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
+
+    return max(localDir.x, max(localDir.y, localDir.z));
 }
 
 float defineDepthInfluence(float3 probePosWS, float3 surfPosWS, TORQUE_SAMPLERCUBE(radianceCube))
@@ -196,7 +192,15 @@ PS_OUTPUT main( ConvexConnectP IN )
     }
     else
     {
-	   blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius*2, attenuation);
+       if(worldPos.x > bbMax.x || worldPos.y > bbMax.y || worldPos.z > bbMax.z ||
+          worldPos.x < bbMin.x || worldPos.y < bbMin.y || worldPos.z < bbMin.z)
+	      clip(-1);
+
+	   blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, bbMin, bbMax, attenuation);
+
+      //flip it around
+      blendVal *= -1;
+       //blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius*2, attenuation);
     }
 	clip(blendVal);
 	

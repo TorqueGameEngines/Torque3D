@@ -32,6 +32,12 @@ singleton Material( Grid512_Blue_Mat )
    mapTo = "Grid512_Blue_Mat";
    diffuseMap[0] = "512_blue";
    materialTag0 = "TestMaterial";
+   smoothness[0] = "1";
+   metalness[0] = "0.803922";
+   translucent = "1";
+   translucentBlendOp = "Add";
+   diffuseColor[0] = "1 1 1 1";
+   effectColor[1] = "InvisibleBlack";
 };
 
 singleton Material( Grid512_ForestGreen_Mat )

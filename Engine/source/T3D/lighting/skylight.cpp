@@ -150,12 +150,9 @@ void Skylight::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 void Skylight::updateProbeParams()
 {
-   if (mProbeInfo == nullptr)
-      return;
-
    Parent::updateProbeParams();
 
-   mProbeInfo->mProbeShapeType = ProbeInfo::Sphere;
+   mProbeInfo->mProbeShapeType = ProbeRenderInst::Sphere;
 
    mProbeInfo->setPosition(getPosition());
 
@@ -199,7 +196,7 @@ void Skylight::prepRenderImage(SceneRenderState *state)
    // Get a handy pointer to our RenderPassmanager
    //RenderPassManager *renderPass = state->getRenderPass();
 
-   PROBEMGR->registerSkylight(mProbeInfo, this);
+   //PROBEMGR->registerSkylight(mProbeInfo, this);
 
    if (Skylight::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
    {

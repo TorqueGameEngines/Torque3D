@@ -46,7 +46,7 @@ S32 QSORT_CALLBACK AscendingReflectProbeInfluence(const void* a, const void* b)
    PROFILE_SCOPE(AdvancedLightBinManager_AscendingReflectProbeInfluence);
 
    // Fetch asset definitions.
-   const ProbeRenderInst* pReflectProbeA = static_cast<ProbeRenderInst*>(((RenderBinManager::MainSortElem*)(a))->inst);
+   /*const ProbeRenderInst* pReflectProbeA = static_cast<ProbeRenderInst*>(((RenderBinManager::MainSortElem*)(a))->inst);
    const ProbeRenderInst* pReflectProbeB = static_cast<ProbeRenderInst*>(((RenderBinManager::MainSortElem*)(b))->inst);
 
    // Sort.
@@ -59,22 +59,18 @@ S32 QSORT_CALLBACK AscendingReflectProbeInfluence(const void* a, const void* b)
    if (pReflectProbeA->mScore > pReflectProbeB->mScore)
 	   return 1;
    else if (pReflectProbeA->mScore < pReflectProbeB->mScore)
-	   return -1;
+	   return -1;*/
    return  0;
 }
 
 RenderProbeMgr::RenderProbeMgr()
 : RenderBinManager(RenderPassManager::RIT_Probes, 1.0f, 1.0f)
 {
-   mReflectProbeMaterial = nullptr;
-   mSkylightMaterial = nullptr;
 }
 
 RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder)
  : RenderBinManager(riType, renderOrder, processAddOrder)
 {  
-   mReflectProbeMaterial = nullptr;
-   mSkylightMaterial = nullptr;
 }
 
 void RenderProbeMgr::initPersistFields()
@@ -85,12 +81,12 @@ void RenderProbeMgr::initPersistFields()
 void RenderProbeMgr::addElement(RenderInst *inst)
 {
    // If this instance is translucent handle it in RenderTranslucentMgr
-   if (inst->translucentSort)
+   //if (inst->translucentSort)
       return;
 
    //AssertFatal(inst->defaultKey != 0, "RenderMeshMgr::addElement() - Got null sort key... did you forget to set it?");
 
-   internalAddElement(inst);
+   /*internalAddElement(inst);
 
    ProbeRenderInst* probeInst = static_cast<ProbeRenderInst*>(inst);
 
@@ -104,141 +100,13 @@ void RenderProbeMgr::addElement(RenderInst *inst)
          addSphereReflectionProbe(probeInst);
       else
          addConvexReflectionProbe(probeInst);
-   }
+   }*/
 }
 
 //remove
 //Con::setIntVariable("lightMetrics::activeReflectionProbes", mReflectProbeBin.size());
 //Con::setIntVariable("lightMetrics::culledReflectProbes", 0/*mNumLightsCulled*/);
 //
-
-GFXVertexBufferHandle<GFXVertexPC> RenderProbeMgr::getSphereMesh(U32 &outNumPrimitives, GFXPrimitiveBufferHandle &outPrimitives)
-{
-   static SphereMesh sSphereMesh;
-
-   if (mSphereGeometry.isNull())
-   {
-      const SphereMesh::TriangleMesh * sphereMesh = sSphereMesh.getMesh(3);
-      S32 numPoly = sphereMesh->numPoly;
-      mSpherePrimitiveCount = 0;
-      mSphereGeometry.set(GFX, numPoly * 3, GFXBufferTypeStatic);
-      mSphereGeometry.lock();
-      S32 vertexIndex = 0;
-
-      for (S32 i = 0; i<numPoly; i++)
-      {
-         mSpherePrimitiveCount++;
-
-         mSphereGeometry[vertexIndex].point = sphereMesh->poly[i].pnt[0];
-         mSphereGeometry[vertexIndex].color = ColorI::WHITE;
-         vertexIndex++;
-
-         mSphereGeometry[vertexIndex].point = sphereMesh->poly[i].pnt[1];
-         mSphereGeometry[vertexIndex].color = ColorI::WHITE;
-         vertexIndex++;
-
-         mSphereGeometry[vertexIndex].point = sphereMesh->poly[i].pnt[2];
-         mSphereGeometry[vertexIndex].color = ColorI::WHITE;
-         vertexIndex++;
-      }
-      mSphereGeometry.unlock();
-   }
-
-   outNumPrimitives = mSpherePrimitiveCount;
-   outPrimitives = NULL; // For now
-   return mSphereGeometry;
-}
-
-void RenderProbeMgr::addSkylightProbe(ProbeRenderInst *probeInfo)
-{
-   probeInfo->vertBuffer = getSphereMesh(probeInfo->numPrims, probeInfo->primBuffer);
-
-   if (!mSkylightMaterial)
-      mSkylightMaterial = _getSkylightMaterial();
-}
-
-void RenderProbeMgr::addSphereReflectionProbe(ProbeRenderInst *probeInfo)
-{
-   probeInfo->vertBuffer = getSphereMesh(probeInfo->numPrims, probeInfo->primBuffer);
-
-   if (!mReflectProbeMaterial)
-      mReflectProbeMaterial = _getReflectProbeMaterial();
-}
-
-void RenderProbeMgr::addConvexReflectionProbe(ProbeRenderInst *probeInfo)
-{
-   static const Point3F cubePoints[8] =
-   {
-      Point3F(1, -1, -1), Point3F(1, -1,  1), Point3F(1,  1, -1), Point3F(1,  1,  1),
-      Point3F(-1, -1, -1), Point3F(-1,  1, -1), Point3F(-1, -1,  1), Point3F(-1,  1,  1)
-   };
-
-   /*static const Point3F cubeNormals[6] =
-   {
-      Point3F(1,  0,  0), Point3F(-1,  0,  0), Point3F(0,  1,  0),
-      Point3F(0, -1,  0), Point3F(0,  0,  1), Point3F(0,  0, -1)
-   };*/
-
-   /*static const Point2F cubeTexCoords[4] =
-   {
-      Point2F(0,  0), Point2F(0, -1),
-      Point2F(1,  0), Point2F(1, -1)
-   };*/
-
-   static const U32 cubeFaces[36][3] =
-   {
-      { 3, 0, 3 },{ 0, 0, 0 },{ 1, 0, 1 },
-      { 2, 0, 2 },{ 0, 0, 0 },{ 3, 0, 3 },
-      { 7, 1, 1 },{ 4, 1, 2 },{ 5, 1, 0 },
-      { 6, 1, 3 },{ 4, 1, 2 },{ 7, 1, 1 },
-      { 3, 2, 1 },{ 5, 2, 2 },{ 2, 2, 0 },
-      { 7, 2, 3 },{ 5, 2, 2 },{ 3, 2, 1 },
-      { 1, 3, 3 },{ 4, 3, 0 },{ 6, 3, 1 },
-      { 0, 3, 2 },{ 4, 3, 0 },{ 1, 3, 3 },
-      { 3, 4, 3 },{ 6, 4, 0 },{ 7, 4, 1 },
-      { 1, 4, 2 },{ 6, 4, 0 },{ 3, 4, 3 },
-      { 2, 5, 1 },{ 4, 5, 2 },{ 0, 5, 0 },
-      { 5, 5, 3 },{ 4, 5, 2 },{ 2, 5, 1 }
-   };
-
-   // Fill the vertex buffer
-   GFXVertexPC *pVert = NULL;
-
-   probeInfo->numVerts = 36;
-
-   probeInfo->vertBuffer.set(GFX, 36, GFXBufferTypeStatic);
-   pVert = probeInfo->vertBuffer.lock();
-
-   Point3F halfSize = Point3F(probeInfo->mRadius, probeInfo->mRadius, probeInfo->mRadius);
-
-   for (U32 i = 0; i < 36; i++)
-   {
-      const U32& vdx = cubeFaces[i][0];
-      pVert[i].point = cubePoints[vdx] * halfSize;
-   }
-
-   probeInfo->vertBuffer.unlock();
-
-   // Fill the primitive buffer
-   U16 *pIdx = NULL;
-
-   probeInfo->primBuffer.set(GFX, 36, 12, GFXBufferTypeStatic);
-
-   probeInfo->primBuffer.lock(&pIdx);
-
-   for (U16 i = 0; i < 36; i++)
-      pIdx[i] = i;
-
-   probeInfo->primBuffer.unlock();
-
-   probeInfo->numPrims = 12;
-
-   if (!mReflectProbeMaterial)
-      mReflectProbeMaterial = _getReflectProbeMaterial();
-   //
-
-  // mReflectProbeBin.push_back(pEntry);
-}
 
 void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
 {
@@ -298,18 +166,22 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
    //inverseViewMatrix = MatrixF::Identity;
 
    // Parameters calculated, assign them to the materials
-   if (mSkylightMaterial != nullptr && mSkylightMaterial->matInstance != nullptr)
+   ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
+
+   if (skylightMat != nullptr && skylightMat->matInstance != nullptr)
    {
-      mSkylightMaterial->setViewParameters(frustum.getNearDist(),
+      skylightMat->setViewParameters(frustum.getNearDist(),
          frustum.getFarDist(),
          frustum.getPosition(),
          farPlane,
          vsFarPlane, inverseViewMatrix);
    }
 
-   if (mReflectProbeMaterial != nullptr && mReflectProbeMaterial->matInstance != nullptr)
+   ProbeManager::ReflectProbeMaterialInfo* reflProbeMat = PROBEMGR->getReflectProbeMaterial();
+
+   if (reflProbeMat != nullptr && reflProbeMat->matInstance != nullptr)
    {
-      mReflectProbeMaterial->setViewParameters(frustum.getNearDist(),
+      reflProbeMat->setViewParameters(frustum.getNearDist(),
          frustum.getFarDist(),
          frustum.getPosition(),
          farPlane,
@@ -325,7 +197,10 @@ void RenderProbeMgr::render( SceneRenderState *state )
    PROFILE_SCOPE(RenderProbeMgr_render);
 
    // Early out if nothing to draw.
-   if(!mElementList.size())
+   if (!ProbeRenderInst::all.size())
+      return;
+
+   if (!ProbeManager::smRenderReflectionProbes)
       return;
 
    GFXTransformSaver saver;
@@ -344,6 +219,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
    if (probeLightingTargetRef.isNull())
       return;
+
+   //Do a quick pass to update our probes if they're dirty
+   PROBEMGR->updateDirtyProbes();
 
    probeLightingTargetRef->attachTexture(GFXTextureTarget::Color0, diffuseLightingTarget->getTexture());
    probeLightingTargetRef->attachTexture(GFXTextureTarget::Color1, specularLightingTarget->getTexture());
@@ -369,22 +247,28 @@ void RenderProbeMgr::render( SceneRenderState *state )
    _setupPerFrameParameters(state);
 
    //Order the probes by size, biggest to smallest
-   dQsort(mElementList.address(), mElementList.size(), sizeof(const MainSortElem), AscendingReflectProbeInfluence);
+   //dQsort(mElementList.address(), mElementList.size(), sizeof(const MainSortElem), AscendingReflectProbeInfluence);
 
    //Specular
    PROFILE_START(RenderProbeManager_ReflectProbeRender);
 
-   for (U32 i = 0; i<mElementList.size(); i++)
+   ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
+   ProbeManager::ReflectProbeMaterialInfo* reflProbeMat = PROBEMGR->getReflectProbeMaterial();
+
+   for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
    {
-      ProbeRenderInst *curEntry = static_cast<ProbeRenderInst*>(mElementList[i].inst);
+      ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
+
+      if (!curEntry->mIsEnabled)
+         continue;
 
       if (curEntry->numPrims == 0)
          continue;
 
-      if (curEntry->mIsSkylight && (!mSkylightMaterial || !mSkylightMaterial->matInstance))
+      if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
          continue;
 
-      if (!curEntry->mIsSkylight && (!mReflectProbeMaterial || !mReflectProbeMaterial->matInstance))
+      if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
          break;
 
       //Setup
@@ -392,7 +276,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
       if (!curEntry->mIsSkylight)
       {
-         if (curEntry->mProbeShapeType == ProbeInfo::Sphere)
+         if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
             probeTrans.scale(curEntry->mRadius * 1.01f);
       }
       else
@@ -403,9 +287,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
       sgData.objTrans = &probeTrans;
 
       if(curEntry->mIsSkylight)
-         mSkylightMaterial->setSkylightParameters(curEntry, state, worldToCameraXfm);
+         skylightMat->setProbeParameters(curEntry, state, worldToCameraXfm);
       else
-         mReflectProbeMaterial->setProbeParameters(curEntry, state, worldToCameraXfm);
+         reflProbeMat->setProbeParameters(curEntry, state, worldToCameraXfm);
 
       // Set geometry
       GFX->setVertexBuffer(curEntry->vertBuffer);
@@ -413,24 +297,24 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
       if (curEntry->mIsSkylight)
       {
-         while (mSkylightMaterial->matInstance->setupPass(state, sgData))
+         while (skylightMat->matInstance->setupPass(state, sgData))
          {
             // Set transforms
             matrixSet.setWorld(*sgData.objTrans);
-            mSkylightMaterial->matInstance->setTransforms(matrixSet, state);
-            mSkylightMaterial->matInstance->setSceneInfo(state, sgData);
+            skylightMat->matInstance->setTransforms(matrixSet, state);
+            skylightMat->matInstance->setSceneInfo(state, sgData);
 
             GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
          }
       }
       else
       {
-         while (mReflectProbeMaterial->matInstance->setupPass(state, sgData))
+         while (reflProbeMat->matInstance->setupPass(state, sgData))
          {
             // Set transforms
             matrixSet.setWorld(*sgData.objTrans);
-            mReflectProbeMaterial->matInstance->setTransforms(matrixSet, state);
-            mReflectProbeMaterial->matInstance->setSceneInfo(state, sgData);
+            reflProbeMat->matInstance->setTransforms(matrixSet, state);
+            reflProbeMat->matInstance->setSceneInfo(state, sgData);
 
             GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
          }
@@ -440,7 +324,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    probeLightingTargetRef->resolve();
    GFX->popActiveRenderTarget();
 
-   PROBEMGR->unregisterAllProbes();
+   //PROBEMGR->unregisterAllProbes();
    PROFILE_END();
 
    GFX->setVertexBuffer(NULL);
@@ -448,514 +332,4 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
    // Fire off a signal to let others know that light-bin rendering is ending now
    //getRenderSignal().trigger(state, this);
-}
-
-//
-RenderProbeMgr::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String &matName,
-   const GFXVertexFormat *vertexFormat)
-   : matInstance(NULL),
-   zNearFarInvNearFar(NULL),
-   farPlane(NULL),
-   vsFarPlane(NULL),
-   negFarPlaneDotEye(NULL),
-   probeWSPos(NULL),
-   attenuation(NULL),
-   radius(NULL),
-   invViewMat(NULL)
-{
-   Material *mat = MATMGR->getMaterialDefinitionByName(matName);
-   if (!mat)
-      return;
-
-   matInstance = new ReflectProbeMatInstance(*mat);
-
-   const Vector<GFXShaderMacro> &macros = Vector<GFXShaderMacro>();
-
-   for (U32 i = 0; i < macros.size(); i++)
-      matInstance->addShaderMacro(macros[i].name, macros[i].value);
-
-   matInstance->init(MATMGR->getDefaultFeatures(), vertexFormat);
-
-   attenuation = matInstance->getMaterialParameterHandle("$attenuation");
-   radius = matInstance->getMaterialParameterHandle("$radius");
-   probeLSPos = matInstance->getMaterialParameterHandle("$probeLSPos");
-   probeWSPos = matInstance->getMaterialParameterHandle("$probeWSPos");
-   farPlane = matInstance->getMaterialParameterHandle("$farPlane");
-   vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
-   negFarPlaneDotEye = matInstance->getMaterialParameterHandle("$negFarPlaneDotEye");
-   zNearFarInvNearFar = matInstance->getMaterialParameterHandle("$zNearFarInvNearFar");
-
-   invViewMat = matInstance->getMaterialParameterHandle("$invViewMat");
-
-   useCubemap = matInstance->getMaterialParameterHandle("$useCubemap");
-
-   cubemap = matInstance->getMaterialParameterHandle("$cubeMap");
-   cubeMips = matInstance->getMaterialParameterHandle("$cubeMips");
-
-   eyePosWorld = matInstance->getMaterialParameterHandle("$eyePosWorld");
-   bbMin = matInstance->getMaterialParameterHandle("$bbMin");
-   bbMax = matInstance->getMaterialParameterHandle("$bbMax");
-
-   useSphereMode = matInstance->getMaterialParameterHandle("$useSphereMode");
-
-   for(U32 i=0; i < 9; i++)
-      shTerms[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHTerms%d",i));
-
-   for (U32 i = 0; i < 5; i++)
-      shConsts[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHConsts%d", i));
-}
-
-RenderProbeMgr::ReflectProbeMaterialInfo::~ReflectProbeMaterialInfo()
-{
-   SAFE_DELETE(matInstance);
-}
-
-void RenderProbeMgr::ReflectProbeMaterialInfo::setViewParameters(const F32 _zNear,
-   const F32 _zFar,
-   const Point3F &_eyePos,
-   const PlaneF &_farPlane,
-   const PlaneF &_vsFarPlane, const MatrixF &_inverseViewMatrix)
-{
-   MaterialParameters *matParams = matInstance->getMaterialParameters();
-
-   matParams->setSafe(farPlane, *((const Point4F *)&_farPlane));
-
-   matParams->setSafe(vsFarPlane, *((const Point4F *)&_vsFarPlane));
-
-   if (negFarPlaneDotEye->isValid())
-   {
-      // -dot( farPlane, eyePos )
-      const F32 negFarPlaneDotEyeVal = -(mDot(*((const Point3F *)&_farPlane), _eyePos) + _farPlane.d);
-      matParams->set(negFarPlaneDotEye, negFarPlaneDotEyeVal);
-   }
-
-   matParams->setSafe(zNearFarInvNearFar, Point4F(_zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar));
-
-   matParams->setSafe(invViewMat, _inverseViewMatrix);
-
-   Point4F frPlane = *((const Point4F *)&_farPlane);
-   Point4F vsFrPlane = *((const Point4F *)&_vsFarPlane);
-   Point4F nearFarInvNearFar = Point4F(_zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar);
-   const F32 negFarPlaneDotEyeVal = -(mDot(*((const Point3F *)&_farPlane), _eyePos) + _farPlane.d);
-}
-
-void RenderProbeMgr::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRenderInst *probeInfo, const SceneRenderState* renderState, const MatrixF &worldViewOnly)
-{
-   //Set up the params
-   MaterialParameters *matParams = matInstance->getMaterialParameters();
-
-   matParams->setSafe(radius, probeInfo->mRadius);
-
-   Point3F probePos = probeInfo->getPosition() + probeInfo->mProbePosOffset;
-   //worldViewOnly.mulP(probeInfo->getPosition(), &probePos);
-   matParams->setSafe(probeWSPos, probePos);
-
-   worldViewOnly.mulP(probeInfo->getPosition(), &probePos);
-   matParams->setSafe(probeLSPos, probePos);
-
-   // Get the attenuation falloff ratio and normalize it.
-   Point3F attenRatio = Point3F(0.0f, 1.0f, 1.0f);
-   F32 total = attenRatio.x + attenRatio.y + attenRatio.z;
-   if (total > 0.0f)
-      attenRatio /= total;
-
-   F32 radius = probeInfo->mRadius;
-
-   Point2F attenParams((1.0f / radius) * attenRatio.y,
-      (1.0f / (radius * radius)) * attenRatio.z);
-
-   matParams->setSafe(attenuation, attenParams);
-
-   NamedTexTarget* deferredTexTarget = NamedTexTarget::find("deferred");
-
-   GFXTextureObject *deferredTexObject = deferredTexTarget->getTexture();
-   if (!deferredTexObject) return;
-
-   GFX->setTexture(0, deferredTexObject);
-
-   NamedTexTarget* matInfoTexTarget = NamedTexTarget::find("matinfo");
-
-   GFXTextureObject *matInfoTexObject = matInfoTexTarget->getTexture();
-   if (!matInfoTexObject) return;
-
-   GFX->setTexture(1, matInfoTexObject);
-
-   if (probeInfo->mCubemap && !probeInfo->mCubemap->isNull())
-   {
-      GFX->setCubeTexture(2, probeInfo->mCubemap->getPointer());
-   }
-   else
-   {
-      GFX->setCubeTexture(2, NULL);
-   }
-
-   if (probeInfo->mIrradianceCubemap && !probeInfo->mIrradianceCubemap->isNull())
-   {
-      GFX->setCubeTexture(3, probeInfo->mIrradianceCubemap->getPointer());
-   }
-   else
-   {
-      GFX->setCubeTexture(3, NULL);
-   }
-
-   if (probeInfo->mBRDFTexture && !probeInfo->mBRDFTexture->isNull())
-   {
-      GFX->setTexture(4, probeInfo->mBRDFTexture->getPointer());
-   }
-   else
-   {
-      GFX->setTexture(4, NULL);
-   }
-
-   if(probeInfo->mCubemap->isValid())
-      matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(),2.0f));
-   else
-      matParams->setSafe(cubeMips, F32(0.0));
-
-   matParams->setSafe(eyePosWorld, renderState->getCameraPosition());
-   matParams->setSafe(bbMin, probeInfo->mBounds.minExtents);
-   matParams->setSafe(bbMax, probeInfo->mBounds.maxExtents);
-
-   matParams->setSafe(useSphereMode, probeInfo->mProbeShapeType == ProbeInfo::Sphere ? 1.0f : 0.0f);
-   
-   //SH Terms
-   //static AlignedArray<Point3F> shTermsArray(9, sizeof(Point3F));
-   //dMemset(shTermsArray.getBuffer(), 0, shTermsArray.getBufferSize());
-
-   for (U32 i = 0; i < 9; i++)
-   {
-      matParams->setSafe(shTerms[i], probeInfo->mSHTerms[i]);
-   }
-
-   for (U32 i = 0; i < 5; i++)
-   {
-      matParams->setSafe(shConsts[i], probeInfo->mSHConstants[i]);
-   }
-}
-
-
-bool ReflectProbeMatInstance::init(const FeatureSet &features, const GFXVertexFormat *vertexFormat)
-{
-   bool success = Parent::init(features, vertexFormat);
-
-   // If the initialization failed don't continue.
-   if (!success || !mProcessedMaterial || mProcessedMaterial->getNumPasses() == 0)
-      return false;
-   return true;
-}
-
-bool ReflectProbeMatInstance::setupPass(SceneRenderState *state, const SceneData &sgData)
-{
-   // Go no further if the material failed to initialize properly.
-   if (!mProcessedMaterial ||
-      mProcessedMaterial->getNumPasses() == 0)
-      return false;
-   
-   bool bRetVal = Parent::setupPass(state, sgData);;
-
-   AssertFatal(mProcessedMaterial->getNumPasses() > 0, "No passes created! Ohnoes");
-   const RenderPassData *rpd = mProcessedMaterial->getPass(0);
-   AssertFatal(rpd, "No render pass data!");
-   AssertFatal(rpd->mRenderStates[0], "No render state 0!");
-   
-   if (!mProjectionState)
-   {
-	   GFXStateBlockDesc desc;
-	   desc.setZReadWrite(false);
-	   desc.zWriteEnable = false;
-	   desc.setCullMode(GFXCullNone);
-	   desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendOne);
-	   mProjectionState = GFX->createStateBlock(desc);
-   }
-   // Now override stateblock with our own
-   GFX->setStateBlock(mProjectionState);
-
-   return bRetVal;
-}
-
-RenderProbeMgr::ReflectProbeMaterialInfo* RenderProbeMgr::_getReflectProbeMaterial()
-{
-   PROFILE_SCOPE(AdvancedLightBinManager_getReflectProbeMaterial);
-
-   //ReflectProbeMaterialInfo *info = NULL;
-
-   if (!mReflectProbeMaterial)
-
-      // Now create the material info object.
-      mReflectProbeMaterial = new ReflectProbeMaterialInfo("ReflectionProbeMaterial",
-         getGFXVertexFormat<GFXVertexPC>());
-
-   return mReflectProbeMaterial;
-}
-
-//
-RenderProbeMgr::SkylightMaterialInfo::SkylightMaterialInfo(const String &matName,
-   const GFXVertexFormat *vertexFormat)
-   : matInstance(NULL),
-   zNearFarInvNearFar(NULL),
-   farPlane(NULL),
-   vsFarPlane(NULL),
-   negFarPlaneDotEye(NULL),
-   invViewMat(NULL)
-{
-   Material *mat = MATMGR->getMaterialDefinitionByName(matName);
-   if (!mat)
-      return;
-
-   matInstance = new SkylightMatInstance(*mat);
-
-   const Vector<GFXShaderMacro> &macros = Vector<GFXShaderMacro>();
-
-   for (U32 i = 0; i < macros.size(); i++)
-      matInstance->addShaderMacro(macros[i].name, macros[i].value);
-
-   matInstance->init(MATMGR->getDefaultFeatures(), vertexFormat);
-
-   farPlane = matInstance->getMaterialParameterHandle("$farPlane");
-   vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
-   negFarPlaneDotEye = matInstance->getMaterialParameterHandle("$negFarPlaneDotEye");
-   zNearFarInvNearFar = matInstance->getMaterialParameterHandle("$zNearFarInvNearFar");
-
-   invViewMat = matInstance->getMaterialParameterHandle("$invViewMat");
-
-   useCubemap = matInstance->getMaterialParameterHandle("$useCubemap");
-   cubemap = matInstance->getMaterialParameterHandle("$cubeMap");
-
-   eyePosWorld = matInstance->getMaterialParameterHandle("$eyePosWorld");
-
-   for (U32 i = 0; i < 9; i++)
-      shTerms[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHTerms%d", i));
-
-   for (U32 i = 0; i < 5; i++)
-      shConsts[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHConsts%d", i));
-}
-
-RenderProbeMgr::SkylightMaterialInfo::~SkylightMaterialInfo()
-{
-   SAFE_DELETE(matInstance);
-}
-
-void RenderProbeMgr::SkylightMaterialInfo::setViewParameters(const F32 _zNear,
-   const F32 _zFar,
-   const Point3F &_eyePos,
-   const PlaneF &_farPlane,
-   const PlaneF &_vsFarPlane, const MatrixF &_inverseViewMatrix)
-{
-   MaterialParameters *matParams = matInstance->getMaterialParameters();
-
-   matParams->setSafe(farPlane, *((const Point4F *)&_farPlane));
-
-   matParams->setSafe(vsFarPlane, *((const Point4F *)&_vsFarPlane));
-
-   if (negFarPlaneDotEye->isValid())
-   {
-      // -dot( farPlane, eyePos )
-      const F32 negFarPlaneDotEyeVal = -(mDot(*((const Point3F *)&_farPlane), _eyePos) + _farPlane.d);
-      matParams->set(negFarPlaneDotEye, negFarPlaneDotEyeVal);
-   }
-
-   matParams->setSafe(zNearFarInvNearFar, Point4F(_zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar));
-
-   matParams->setSafe(invViewMat, _inverseViewMatrix);
-
-   Point4F frPlane = *((const Point4F *)&_farPlane);
-   Point4F vsFrPlane = *((const Point4F *)&_vsFarPlane);
-   Point4F nearFarInvNearFar = Point4F(_zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar);
-   const F32 negFarPlaneDotEyeVal = -(mDot(*((const Point3F *)&_farPlane), _eyePos) + _farPlane.d);
-}
-
-void RenderProbeMgr::SkylightMaterialInfo::setSkylightParameters(const ProbeRenderInst *probeInfo, const SceneRenderState* renderState, const MatrixF &worldViewOnly)
-{
-   //Set up the params
-   MaterialParameters *matParams = matInstance->getMaterialParameters();
-
-   NamedTexTarget* deferredTexTarget = NamedTexTarget::find("deferred");
-
-   GFXTextureObject *deferredTexObject = deferredTexTarget->getTexture();
-   if (!deferredTexObject) return;
-
-   GFX->setTexture(0, deferredTexObject);
-
-   NamedTexTarget* matInfoTexTarget = NamedTexTarget::find("matinfo");
-
-   GFXTextureObject *matInfoTexObject = matInfoTexTarget->getTexture();
-   if (!matInfoTexObject) return;
-
-   GFX->setTexture(1, matInfoTexObject);
-
-   if (probeInfo->mCubemap && !probeInfo->mCubemap->isNull())
-   {
-      GFX->setCubeTexture(2, probeInfo->mCubemap->getPointer());
-   }
-   else
-   {
-      GFX->setCubeTexture(2, NULL);
-   }
-
-   if (probeInfo->mIrradianceCubemap && !probeInfo->mIrradianceCubemap->isNull())
-   {
-      GFX->setCubeTexture(3, probeInfo->mIrradianceCubemap->getPointer());
-   }
-   else
-   {
-      GFX->setCubeTexture(3, NULL);
-   }
-
-   if (probeInfo->mBRDFTexture && !probeInfo->mBRDFTexture->isNull())
-   {
-      GFX->setTexture(4, probeInfo->mBRDFTexture->getPointer());
-   }
-   else
-   {
-      GFX->setTexture(4, NULL);
-   }
-
-   matParams->setSafe(eyePosWorld, renderState->getCameraPosition());
-
-   for (U32 i = 0; i < 9; i++)
-   {
-      matParams->setSafe(shTerms[i], probeInfo->mSHTerms[i]);
-   }
-
-   for (U32 i = 0; i < 5; i++)
-   {
-      matParams->setSafe(shConsts[i], probeInfo->mSHConstants[i]);
-   }
-}
-
-
-bool SkylightMatInstance::init(const FeatureSet &features, const GFXVertexFormat *vertexFormat)
-{
-   bool success = Parent::init(features, vertexFormat);
-
-   // If the initialization failed don't continue.
-   if (!success || !mProcessedMaterial || mProcessedMaterial->getNumPasses() == 0)
-      return false;
-
-   return true;
-}
-
-bool SkylightMatInstance::setupPass(SceneRenderState *state, const SceneData &sgData)
-{
-   // Go no further if the material failed to initialize properly.
-   if (!mProcessedMaterial ||
-      mProcessedMaterial->getNumPasses() == 0)
-      return false;
-
-   bool bRetVal = Parent::setupPass(state, sgData);;
-
-   AssertFatal(mProcessedMaterial->getNumPasses() > 0, "No passes created! Ohnoes");
-   const RenderPassData *rpd = mProcessedMaterial->getPass(0);
-   AssertFatal(rpd, "No render pass data!");
-   AssertFatal(rpd->mRenderStates[0], "No render state 0!");
-
-   if (!mProjectionState)
-   {
-	  GFXStateBlockDesc desc;
-	  desc.setZReadWrite(false);
-	  desc.zWriteEnable = false;
-	  desc.setCullMode(GFXCullNone);
-	  desc.setBlend(true, GFXBlendOne, GFXBlendOne);
-      mProjectionState = GFX->createStateBlock(desc);
-   }
-   // Now override stateblock with our own
-   GFX->setStateBlock(mProjectionState);
-
-   return bRetVal;
-}
-
-RenderProbeMgr::SkylightMaterialInfo* RenderProbeMgr::_getSkylightMaterial()
-{
-   PROFILE_SCOPE(AdvancedLightBinManager_getSkylightMaterial);
-
-   //ReflectProbeMaterialInfo *info = NULL;
-
-   if (!mSkylightMaterial)
-
-      // Now create the material info object.
-      mSkylightMaterial = new SkylightMaterialInfo("SklyightMaterial",
-         getGFXVertexFormat<GFXVertexPC>());
-
-   return mSkylightMaterial;
-}
-
-//
-//
-ProbeRenderInst::ProbeRenderInst()
-   : mTransform(true),
-   mAmbient(0.0f, 0.0f, 0.0f, 1.0f),
-   mPriority(1.0f),
-   mScore(0.0f),
-   mDebugRender(false),
-   mCubemap(NULL),
-   mRadius(1.0f),
-   mIntensity(1.0f)
-{
-}
-
-ProbeRenderInst::~ProbeRenderInst()
-{
-   SAFE_DELETE(mCubemap);
-}
-
-void ProbeRenderInst::set(const ProbeRenderInst *probeInfo)
-{
-   mTransform = probeInfo->mTransform;
-   mAmbient = probeInfo->mAmbient;
-   mCubemap = probeInfo->mCubemap;
-   mIrradianceCubemap = probeInfo->mIrradianceCubemap;
-   mBRDFTexture = probeInfo->mBRDFTexture;
-   mRadius = probeInfo->mRadius;
-   mIntensity = probeInfo->mIntensity;
-   mProbeShapeType = probeInfo->mProbeShapeType;
-   numPrims = probeInfo->numPrims;
-   numVerts = probeInfo->numVerts;
-   numIndicesForPoly = probeInfo->numIndicesForPoly;
-   mBounds = probeInfo->mBounds;
-   mScore = probeInfo->mScore;
-   mIsSkylight = probeInfo->mIsSkylight;
-
-   for (U32 i = 0; i < 9; i++)
-   {
-      mSHTerms[i] = probeInfo->mSHTerms[i];
-   }
-
-   for (U32 i = 0; i < 5; i++)
-   {
-      mSHConstants[i] = probeInfo->mSHConstants[i];
-   }
-}
-
-void ProbeRenderInst::set(const ProbeInfo *probeInfo)
-{
-   mTransform = probeInfo->mTransform;
-   mAmbient = probeInfo->mAmbient;
-   mCubemap = probeInfo->mCubemap;
-   mIrradianceCubemap = probeInfo->mIrradianceCubemap;
-   mBRDFTexture = probeInfo->mBRDFTexture;
-   mRadius = probeInfo->mRadius;
-   mIntensity = probeInfo->mIntensity;
-   mProbeShapeType = probeInfo->mProbeShapeType;
-   numPrims = probeInfo->numPrims;
-   numVerts = probeInfo->numVerts;
-   numIndicesForPoly = probeInfo->numIndicesForPoly;
-   mBounds = probeInfo->mBounds;
-   mScore = probeInfo->mScore;
-   mIsSkylight = probeInfo->mIsSkylight;
-
-   for (U32 i = 0; i < 9; i++)
-   {
-      mSHTerms[i] = probeInfo->mSHTerms[i];
-   }
-
-   for (U32 i = 0; i < 5; i++)
-   {
-      mSHConstants[i] = probeInfo->mSHConstants[i];
-   }
-}
-
-void ProbeRenderInst::getWorldToLightProj(MatrixF *outMatrix) const
-{
-   *outMatrix = getTransform();
-   outMatrix->inverse();
 }

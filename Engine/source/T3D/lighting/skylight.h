@@ -109,7 +109,7 @@ public:
    // minimizing texture, state, and shader switching by grouping objects that
    // use the same Materials.
    //--------------------------------------------------------------------------
-   void updateProbeParams();
+   virtual void updateProbeParams();
 
    // This is the function that allows this object to submit itself for rendering
    void prepRenderImage(SceneRenderState *state);

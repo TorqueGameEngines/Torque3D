@@ -345,6 +345,9 @@ void ProbeManager::_update4ProbeConsts(   const SceneData &sgData,
          if (!probe)
             continue;
 
+         if (!probe->mIsEnabled)
+            continue;
+
          // The light positions and spot directions are 
          // in SoA order to make optimal use of the GPU.
          const Point3F &probePos = probe->getPosition();

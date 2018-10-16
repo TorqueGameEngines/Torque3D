@@ -470,7 +470,7 @@ void ReflectionProbe::updateProbeParams()
 
    mProbeInfo->mProbeShapeType = mProbeShapeType;
 
-   //mProbeInfo->mTransform = getWorldTransform();
+   mProbeInfo->mTransform = getWorldTransform();
    mProbeInfo->setPosition(getPosition());
 
    //Point3F pos = mProbeInfo->mTransform.getPosition();

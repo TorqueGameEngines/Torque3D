@@ -125,20 +125,22 @@ float defineSphereSpaceInfluence(float3 centroidPosVS, float rad, float2 atten, 
     return saturate( nDotL * attn );
 }
 
-float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float3 boxMin, float3 boxMax, float2 atten)
+float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float radius, float atten)
 {
     float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
 
-    float3 lsBoxMin = mul(worldToObj, float4(boxMin,1)).xyz;
-    float3 lsBoxMax = mul(worldToObj, float4(boxMax,1)).xyz;
+    float3 boxMinLS = probePos-(float3(1,1,1)*radius);
+    float3 boxMaxLS = probePos+(float3(1,1,1)*radius);
 
-    float boxOuterRange = length(lsBoxMax - lsBoxMin);
-    float boxInnerRange = boxOuterRange / 3.5;
+    float boxOuterRange = length(boxMaxLS - boxMinLS);
+    float boxInnerRange = boxOuterRange / atten;
 
     float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
     localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
 
-    return max(localDir.x, max(localDir.y, localDir.z));
+    float influenceVal =  max(localDir.x, max(localDir.y, localDir.z)) * -1;
+
+    return influenceVal;
 }
 
 float defineDepthInfluence(float3 probePosWS, float3 surfPosWS, TORQUE_SAMPLERCUBE(radianceCube))
@@ -192,15 +194,8 @@ PS_OUTPUT main( ConvexConnectP IN )
     }
     else
     {
-       if(worldPos.x > bbMax.x || worldPos.y > bbMax.y || worldPos.z > bbMax.z ||
-          worldPos.x < bbMin.x || worldPos.y < bbMin.y || worldPos.z < bbMin.z)
-	      clip(-1);
-
-	   blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, bbMin, bbMax, attenuation);
-
-      //flip it around
-      blendVal *= -1;
-       //blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius*2, attenuation);
+       float tempAttenVal = 3.5;
+	   blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius, tempAttenVal);
     }
 	clip(blendVal);
 	

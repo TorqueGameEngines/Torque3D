@@ -117,20 +117,22 @@ float defineSphereSpaceInfluence(vec3 centroidPosVS, float rad, vec2 atten, vec3
     return saturate( nDotL * attn );
 }
 
-float defineBoxSpaceInfluence(vec3 surfPosWS, vec3 probePos, float rad, vec2 atten) //atten currently unused
+float defineBoxSpaceInfluence(vec3 surfPosWS, vec3 probePos, float radius, float atten)
 {
     vec3 surfPosLS = mul( worldToObj, vec4(surfPosWS,1.0)).xyz;
 
-    vec3 lsBoxMin = mul(worldToObj, vec4(boxMin,1)).xyz;
-    vec3 lsBoxMax = mul(worldToObj, vec4(boxMax,1)).xyz;
+    vec3 boxMinLS = probePos-(vec3(1,1,1)*radius);
+    vec3 boxMaxLS = probePos+(vec3(1,1,1)*radius);
 
     float boxOuterRange = length(lsBoxMax - lsBoxMin);
-    float boxInnerRange = boxOuterRange / 3.5;
+    float boxInnerRange = boxOuterRange / atten;
 
     vec3 localDir = vec3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
     localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
 
-    return max(localDir.x, max(localDir.y, localDir.z));
+    float influenceVal =  max(localDir.x, max(localDir.y, localDir.z)) * -1;
+
+    return influenceVal;
 }
 
 float defineDepthInfluence(vec3 probePosWS, vec3 surfPosWS, samplerCube radianceCube)
@@ -190,18 +192,8 @@ void main()
     }
     else
     {
-        if(worldPos.x > bbMax.x || worldPos.y > bbMax.y || worldPos.z > bbMax.z ||
-          worldPos.x < bbMin.x || worldPos.y < bbMin.y || worldPos.z < bbMin.z)
-        {
-            OUT_col = vec4(0.0);
-            OUT_col1 = vec4(0.0);
-            return;
-        }
-
-	    blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, bbMin, bbMax, attenuation);
-
-        //flip it around
-        blendVal *= -1;
+        float tempAttenVal = 3.5;
+	    blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius, tempAttenVal);
     }
 	if (blendVal<0)
 	{

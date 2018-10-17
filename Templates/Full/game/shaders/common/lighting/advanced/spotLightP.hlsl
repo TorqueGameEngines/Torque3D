@@ -198,8 +198,8 @@ PS_OUTPUT main(   ConvexConnectP IN )
    float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
    float dotLHa = clamp(dot(l, h), 0.0, 1.0);
 
-   float roughness = matInfo.g;
-   float metalness = matInfo.b;
+   float roughness = 1.0001-matInfo.b;
+   float metalness = matInfo.a;
 
    //diffuse
    float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);

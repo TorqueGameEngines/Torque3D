@@ -210,4 +210,7 @@ void main()
 	vec3 surfToEye = normalize(worldPos.xyz-eyePosWorld.xyz);
 	OUT_col = vec4(iblBoxDiffuse(wsNormal, worldPos, irradianceCubemap, probeWSPos, bbMin, bbMax), blendVal);
 	OUT_col1 = vec4(iblBoxSpecular(wsNormal, worldPos, 1.0 - matInfo.b, surfToEye, BRDFTexture, cubeMap, probeWSPos, bbMin, bbMax), blendVal);
+   
+	OUT_col *= matInfo.g;
+	OUT_col1 *= matInfo.g;
 }

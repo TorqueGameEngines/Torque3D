@@ -82,4 +82,6 @@ void main()
 
     OUT_col = vec4(irradiance.rgb, 1);
     OUT_col1 = vec4(specular.rgb, 1);
+	OUT_col *= matInfo.g;
+	OUT_col1 *= matInfo.g;
 }

@@ -207,6 +207,7 @@ PS_OUTPUT main( ConvexConnectP IN )
 	float3 surfToEye = normalize(worldPos.xyz-eyePosWorld.xyz);
 	Output.diffuse = float4(iblBoxDiffuse(wsNormal, worldPos, TORQUE_SAMPLERCUBE_MAKEARG(irradianceCubemap), probeWSPos, bbMin, bbMax), blendVal);
 	Output.spec = float4(iblBoxSpecular(wsNormal, worldPos, 1.0 - matInfo.b, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax), blendVal);
-
+	Output.diffuse *= matInfo.g;
+	Output.spec *= matInfo.g;
 	return Output;
 }

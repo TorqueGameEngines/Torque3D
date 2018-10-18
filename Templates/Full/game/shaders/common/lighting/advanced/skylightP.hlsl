@@ -139,7 +139,8 @@ PS_OUTPUT main( ConvexConnectP IN )
 
     Output.diffuse = float4(irradiance.rgb, 1);
     Output.spec = float4(specular.rgb, 1);
-
+	Output.diffuse *= matInfo.g;
+	Output.spec *= matInfo.g;
     return Output;
 
 }

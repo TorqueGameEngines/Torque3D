@@ -71,19 +71,16 @@ ProbeRenderInst::ProbeRenderInst() : SystemInterface(),
 
 ProbeRenderInst::~ProbeRenderInst()
 {
-   if (mCubemap && !mCubemap->isNull())
+   if (mCubemap && mCubemap->isValid())
    {
-      mCubemap->getPointer()->destroySelf();
       mCubemap->free();
    }
-   if (mIrradianceCubemap && !mIrradianceCubemap->isNull())
+   if (mIrradianceCubemap && mIrradianceCubemap->isValid())
    {
-      mIrradianceCubemap->getPointer()->destroySelf();
       mIrradianceCubemap->free();
    }
-   if (mBRDFTexture && !mBRDFTexture->isNull())
+   if (mBRDFTexture && mBRDFTexture->isValid())
    {
-      mBRDFTexture->getPointer()->destroySelf();
       mBRDFTexture->free();
    }
 }

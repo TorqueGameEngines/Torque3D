@@ -146,7 +146,7 @@ void CubemapData::updateFaces()
       {
          if (!mCubeFaceFile[i].isEmpty())
          {
-            if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
+            if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureSRGBProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
             {
                initSuccess = false;
                Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeFaceFile[i].c_str());

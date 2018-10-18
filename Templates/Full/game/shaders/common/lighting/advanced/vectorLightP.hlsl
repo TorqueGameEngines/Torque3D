@@ -286,7 +286,7 @@ PS_OUTPUT main(FarFrustumQuadConnectP IN)
    // temp for debugging. uncomment one or the other.
    //float shadowed = static_shadowed;
    //float shadowed = dynamic_shadowed;
-   float shadowed = min(static_shadowed, dynamic_shadowed);
+   float shadowed = min(static_shadowed, dynamic_shadowed)*matInfo.g;
 
 #ifdef PSSM_DEBUG_RENDER
    if (fadeOutAmt > 1.0)

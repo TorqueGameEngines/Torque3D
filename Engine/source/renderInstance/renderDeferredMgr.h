@@ -103,20 +103,13 @@ protected:
    bool _lightManagerActivate(bool active);
 
    // Deferred Shading
-   GFXVertexBufferHandle<GFXVertexPC>  mClearGBufferVerts;
-   GFXShaderRef                        mClearGBufferShader;
-   GFXStateBlockRef                    mStateblock;
    NamedTexTarget                      mColorTarget;
    NamedTexTarget                      mMatInfoTarget;
    NamedTexTarget                      mLightMapTarget;
    GFXTexHandle                        mColorTex;
    GFXTexHandle                        mMatInfoTex;
-   GFXTexHandle                        mLightMapTex;
-   GFXShaderConstBufferRef             mShaderConsts; 
+   GFXTexHandle                        mLightMapTex; 
 
-public:
-   void clearBuffers();
-   void _initShaders();
 };
 
 //------------------------------------------------------------------------------

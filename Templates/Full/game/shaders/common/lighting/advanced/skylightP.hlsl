@@ -136,11 +136,12 @@ PS_OUTPUT main( ConvexConnectP IN )
 
     float3 specular = iblSpecular(wsEyeRay, wsNormal, roughness);
 
+	float blendVal = 0.0001;
 
-    Output.diffuse = float4(irradiance.rgb, 1);
-    Output.spec = float4(specular.rgb, 1);
-	Output.diffuse *= matInfo.g;
-	Output.spec *= matInfo.g;
+    Output.diffuse = float4(irradiance.rgb, blendVal);
+    Output.spec = float4(specular.rgb, blendVal);
+	Output.diffuse.rgb *= matInfo.g;
+	Output.spec.rgb *= matInfo.g;
     return Output;
 
 }

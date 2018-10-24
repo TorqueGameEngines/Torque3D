@@ -92,7 +92,7 @@ new ShaderData( AL_ProbeShader )
 singleton PostEffect( AL_PreCapture )
 {
    renderTime = "PFXBeforeBin";
-   renderBin = "ProbeBin";
+   renderBin = "EditorBin";
    shader = AL_ProbeShader;
    stateBlock = AL_DeferredCaptureState;
    texture[0] = "#color";
@@ -108,7 +108,7 @@ singleton PostEffect( AL_PreCapture )
 singleton PostEffect( AL_DeferredShading )
 {
    renderTime = "PFXAfterBin";
-   renderBin = "ProbeBin";
+   renderBin = "BeginBin";
    shader = AL_DeferredShader;
    stateBlock = AL_DeferredShadingState;
    texture[0] = "#color";

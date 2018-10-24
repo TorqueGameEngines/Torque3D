@@ -773,7 +773,7 @@ bool ReflectProbeMatInstance::setupPass(SceneRenderState *state, const SceneData
 		desc.setZReadWrite(false);
 		desc.zWriteEnable = false;
 		desc.setCullMode(GFXCullNone);
-		desc.setBlend(true, GFXBlendOne, GFXBlendOne);
+		desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendDestAlpha, GFXBlendOpMax);
 		mProjectionState = GFX->createStateBlock(desc);
 	}
 	// Now override stateblock with our own

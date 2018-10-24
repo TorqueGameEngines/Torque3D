@@ -31,6 +31,8 @@
 #include "math/mPolyhedron.impl.h"
 #include "gfx/gfxTransformSaver.h"
 
+#include "gfx/gfxDebugEvent.h"
+
 IMPLEMENT_CONOBJECT(RenderProbeMgr);
 
 ConsoleDocClass( RenderProbeMgr, 
@@ -204,6 +206,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
       return;
 
    GFXTransformSaver saver;
+
+   GFXDEBUGEVENT_SCOPE(RenderProbeMgr_render, ColorI::WHITE);
 
    NamedTexTargetRef diffuseLightingTarget = NamedTexTarget::find("diffuseLighting");
 

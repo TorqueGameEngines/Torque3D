@@ -33,22 +33,31 @@ TORQUE_UNIFORM_SAMPLER2D(deferredTex,4);
 uniform float radius;
 uniform float2 targetSize;
 uniform int captureRez;
-float4 main( PFXVertToPix IN) : TORQUE_TARGET0
+float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 {        
    float depth = TORQUE_DEFERRED_UNCONDITION( deferredTex, IN.uv0 ).w;
+
    if (depth>0.9999)
-      clip(-1);
-   float3 colorBuffer = TORQUE_TEX2D( colorBufferTex, IN.uv0 ).rgb; //albedo
+      return float4(0,0,0,0);
+
+   float3 albedo = TORQUE_TEX2D( colorBufferTex, IN.uv0 ).rgb; //albedo
    float4 matInfo = TORQUE_TEX2D(matInfoTex, IN.uv0); //flags|smoothness|ao|metallic
 
    bool emissive = getFlag(matInfo.r, 0);
    if (emissive)
    {
-      return float4(colorBuffer, 1.0);
+      return float4(albedo, 1.0);
    }
 	  
-   float4 diffuseLighting = TORQUE_TEX2D( diffuseLightingBuffer, IN.uv0 ); //shadowmap*specular
-   colorBuffer *= diffuseLighting.rgb;
+   float4 diffuse = TORQUE_TEX2D( diffuseLightingBuffer, IN.uv0 ); //shadowmap*specular
+   float4 specular = TORQUE_TEX2D( specularLightingBuffer, IN.uv0 ); //environment mapping*lightmaps
+   
+   float metalness = matInfo.a;
+   
+   float3 diffuseColor = albedo - (albedo * metalness);
+   float3 specularColor = lerp(float3(0.04,0.04,0.04), albedo, metalness);
+
+   float3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
    float2 relUV = IN.uv0*targetSize/captureRez;
    
    //we use a 1k depth range in the capture frustum. 
@@ -56,5 +65,5 @@ float4 main( PFXVertToPix IN) : TORQUE_TARGET0
    depth*=2000/radius;
    
    float rLen = length(float3(relUV,depth)-float3(0.5,0.5,0));
-   return hdrEncode( float4(colorBuffer,rLen));
+   return hdrEncode( float4(light,rLen));
 }

@@ -952,7 +952,7 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
    {
       for (U32 i = 0; i < 5; i++)
       {
-         if(rtView[i])
+         if (rtView[i])
             mD3DDeviceContext->ClearRenderTargetView(rtView[i], clearColor);
       }
    }
@@ -968,7 +968,6 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
 
    for (U32 i = 0; i < 5; i++)
       SAFE_RELEASE(rtView[i]);
-
    SAFE_RELEASE(dsView);
 }
 

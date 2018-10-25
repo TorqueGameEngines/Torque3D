@@ -211,8 +211,8 @@ PS_OUTPUT main(   ConvexConnectP IN )
    if (nDotL<0) shadowed = 0;
    float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
    //output
-   Output.diffuse = float4(diffuse * lightBrightness, Sat_NL_Att*shadowed);
-   Output.spec = float4(specular * lightBrightness, Sat_NL_Att*shadowed);
+   Output.diffuse = float4(diffuse * lightBrightness*Sat_NL_Att*shadowed,1.0);
+   Output.spec = float4(specular * lightBrightness*Sat_NL_Att*shadowed,1.0);
 
    return Output;
 }

@@ -269,6 +269,6 @@ void main()
    if (nDotL<0) shadowed = 0;
    float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
    //output
-   OUT_col = float4(diffuse * lightBrightness, Sat_NL_Att*shadowed);
-   OUT_col1 = float4(specular * lightBrightness, Sat_NL_Att*shadowed);
+   OUT_col = float4(diffuse * lightBrightness*Sat_NL_Att*shadowed,1.0);
+   OUT_col1 = float4(specular * lightBrightness*Sat_NL_Att*shadowed,1.0);
 }

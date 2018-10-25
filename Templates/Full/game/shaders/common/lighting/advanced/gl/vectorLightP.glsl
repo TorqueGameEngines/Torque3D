@@ -307,6 +307,6 @@ void main()
    float finalShadowed = shadowed;
 
 //output
-   OUT_col = float4(diffuse * (lightBrightness), dotNLa*shadowed);
-   OUT_col1 = float4(specular * (lightBrightness), dotNLa*shadowed);
+   OUT_col = float4(diffuse * (lightBrightness)*dotNLa*shadowed,1.0);
+   OUT_col1 = float4(specular * (lightBrightness)*dotNLa*shadowed,1.0);
 }

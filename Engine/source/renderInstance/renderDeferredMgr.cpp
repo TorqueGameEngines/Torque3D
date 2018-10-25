@@ -105,8 +105,6 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    mMatInfoTarget.registerWithName( MatInfoBufferName );
    mLightMapTarget.registerWithName( LightMapBufferName );
 
-   mClearGBufferShader = NULL;
-
    _registerFeatures();
 }
 
@@ -199,7 +197,6 @@ bool RenderDeferredMgr::_updateTargets()
          mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, mLightMapTarget.getTexture());
    }
    GFX->finalizeReset();
-   _initShaders();
 
    return ret;
 }
@@ -323,8 +320,12 @@ void RenderDeferredMgr::render( SceneRenderState *state )
    // Tell the superclass we're about to render
    const bool isRenderingToTarget = _onPreRender(state);
 
-   // Clear all z-buffer, and g-buffer.
-   clearBuffers();
+   // Clear z-buffer and g-buffer.
+   GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
+   GFX->clearColorAttachment(0, LinearColorF::ONE);
+   GFX->clearColorAttachment(1, LinearColorF::ZERO);
+   GFX->clearColorAttachment(2, LinearColorF::ZERO);
+   GFX->clearColorAttachment(3, LinearColorF::ZERO);
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
@@ -1087,79 +1088,4 @@ Var* LinearEyeDepthConditioner::printMethodHeader( MethodType methodType, const 
    }
 
    return retVal;
-}
-
-void RenderDeferredMgr::_initShaders()
-{
-   if ( mClearGBufferShader ) return;
-
-   // Find ShaderData
-   ShaderData *shaderData;
-   mClearGBufferShader = Sim::findObject( "ClearGBufferShader", shaderData ) ? shaderData->getShader() : NULL;
-   if ( !mClearGBufferShader )
-      Con::errorf( "RenderDeferredMgr::_initShaders - could not find ClearGBufferShader" );
-
-   // Create StateBlocks
-   GFXStateBlockDesc desc;
-   desc.setCullMode( GFXCullNone );
-   desc.setBlend( false );
-   desc.setZReadWrite( false, false );
-   desc.samplersDefined = true;
-   for (int i = 0; i < TEXTURE_STAGE_COUNT; i++)
-   {
-       desc.samplers[i].addressModeU = GFXAddressWrap;
-       desc.samplers[i].addressModeV = GFXAddressWrap;
-       desc.samplers[i].addressModeW = GFXAddressWrap;
-       desc.samplers[i].magFilter = GFXTextureFilterLinear;
-       desc.samplers[i].minFilter = GFXTextureFilterLinear;
-       desc.samplers[i].mipFilter = GFXTextureFilterLinear;
-       desc.samplers[i].textureColorOp = GFXTOPModulate;
-   }
-
-   mStateblock = GFX->createStateBlock( desc );   
-
-   // Set up shader constants.
-   mShaderConsts = mClearGBufferShader->allocConstBuffer();
-}
-
-void RenderDeferredMgr::clearBuffers()
-{
-   // Clear z-buffer.
-   GFX->clear( GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
-
-   if ( !mClearGBufferShader )
-      return;
-
-   GFXTransformSaver saver;
-
-   // Clear the g-buffer.
-   RectI box(-1, -1, 3, 3);
-   GFX->setWorldMatrix( MatrixF::Identity );
-   GFX->setViewMatrix( MatrixF::Identity );
-   GFX->setProjectionMatrix( MatrixF::Identity );
-
-   GFX->setShader(mClearGBufferShader);
-   GFX->setStateBlock(mStateblock);
-
-   Point2F nw(-0.5,-0.5);
-   Point2F ne(0.5,-0.5);
-
-   GFXVertexBufferHandle<GFXVertexPC> verts(GFX, 4, GFXBufferTypeVolatile);
-   verts.lock();
-
-   F32 ulOffset = 0.5f - GFX->getFillConventionOffset();
-   
-   Point2F upperLeft(-1.0, -1.0);
-   Point2F lowerRight(1.0, 1.0);
-
-   verts[0].point.set( upperLeft.x+nw.x+ulOffset, upperLeft.y+nw.y+ulOffset, 0.0f );
-   verts[1].point.set( lowerRight.x+ne.x, upperLeft.y+ne.y+ulOffset, 0.0f );
-   verts[2].point.set( upperLeft.x-ne.x+ulOffset, lowerRight.y-ne.y, 0.0f );
-   verts[3].point.set( lowerRight.x-nw.x, lowerRight.y-nw.y, 0.0f );
-
-   verts.unlock();
-
-   GFX->setVertexBuffer( verts );
-   GFX->drawPrimitive( GFXTriangleStrip, 0, 2 );
-   GFX->setShader(NULL);
 }

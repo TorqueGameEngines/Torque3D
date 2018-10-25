@@ -26,13 +26,20 @@ new GFXStateBlockData( AL_VectorLightState )
 {
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendSrcAlpha;
+   blendSrc = GFXBlendOne;
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
    
+   colorWriteDefined = true;
+   colorWriteRed = true;
+   colorWriteBlue = true;
+   colorWriteGreen = true;
+   colorWriteAlpha = false; //disable alpha write
+   
    zDefined = true;
    zEnable = false;
-   zWriteEnable = false;
+   zWriteEnable = true;
+   zFunc = GFXCmpGreater;
 
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;  // G-buffer
@@ -49,12 +56,7 @@ new GFXStateBlockData( AL_VectorLightState )
    cullMode = GFXCullNone;
    
    stencilDefined = true;
-   stencilEnable = true;
-   stencilFailOp = GFXStencilOpKeep;
-   stencilZFailOp = GFXStencilOpKeep;
-   stencilPassOp = GFXStencilOpKeep;
-   stencilFunc = GFXCmpLess;
-   stencilRef = 0;
+   stencilEnable = false;
 };
 
 // Vector Light Material
@@ -102,14 +104,20 @@ new GFXStateBlockData( AL_ConvexLightState )
 {
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendSrcAlpha;
+   blendSrc = GFXBlendOne;
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
+   
+   colorWriteDefined = true;
+   colorWriteRed = true;
+   colorWriteBlue = true;
+   colorWriteGreen = true;
+   colorWriteAlpha = false; //disable alpha write
    
    zDefined = true;
    zEnable = true;
    zWriteEnable = false;
-   zFunc = GFXCmpGreaterEqual;
+   zFunc = GFXCmpGreater;
 
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;  // G-buffer
@@ -125,12 +133,7 @@ new GFXStateBlockData( AL_ConvexLightState )
    cullMode = GFXCullCW;
    
    stencilDefined = true;
-   stencilEnable = true;
-   stencilFailOp = GFXStencilOpKeep;
-   stencilZFailOp = GFXStencilOpKeep;
-   stencilPassOp = GFXStencilOpKeep;
-   stencilFunc = GFXCmpLess;
-   stencilRef = 0;
+   stencilEnable = false;
 };
 
 // Point Light Material
@@ -297,9 +300,15 @@ new GFXStateBlockData( AL_ProbeState )
 {
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendSrcAlpha;
+   blendSrc = GFXBlendSrcAlpha; //TODO change this to GFXBlendOne once probes are done in one pass!
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
+   
+   colorWriteDefined = true;
+   colorWriteRed = true;
+   colorWriteBlue = true;
+   colorWriteGreen = true;
+   colorWriteAlpha = true;
    
    zDefined = true;
    zEnable = true;

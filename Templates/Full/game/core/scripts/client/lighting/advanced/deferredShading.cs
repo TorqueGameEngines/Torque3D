@@ -1,14 +1,3 @@
-singleton ShaderData( ClearGBufferShader )
-{
-   DXVertexShaderFile = "shaders/common/lighting/advanced/deferredClearGBufferV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/deferredClearGBufferP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/postFx/gl/postFxV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/deferredClearGBufferP.glsl";
-
-   pixVersion = 2.0;   
-};
-
 singleton ShaderData( DeferredColorShader )
 {
    DXVertexShaderFile = "shaders/common/postFx/postFxV.hlsl";

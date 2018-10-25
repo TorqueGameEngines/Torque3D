@@ -940,15 +940,22 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
 
    UINT depthstencilFlag = 0;
 
-   ID3D11RenderTargetView* rtView = NULL;
+   //TODO: current support is 5 render targets, clean this up
+   ID3D11RenderTargetView* rtView[5] = { NULL };
    ID3D11DepthStencilView* dsView = NULL;
 
-   mD3DDeviceContext->OMGetRenderTargets(1, &rtView, &dsView);
+   mD3DDeviceContext->OMGetRenderTargets(5, rtView, &dsView);
 
    const FLOAT clearColor[4] = { color.red, color.green, color.blue, color.alpha };
 
    if (flags & GFXClearTarget && rtView)
-      mD3DDeviceContext->ClearRenderTargetView(rtView, clearColor);
+   {
+      for (U32 i = 0; i < 5; i++)
+      {
+         if (rtView[i])
+            mD3DDeviceContext->ClearRenderTargetView(rtView[i], clearColor);
+      }
+   }
 
    if (flags & GFXClearZBuffer)
       depthstencilFlag |= D3D11_CLEAR_DEPTH;
@@ -959,7 +966,8 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
    if (depthstencilFlag && dsView)
       mD3DDeviceContext->ClearDepthStencilView(dsView, depthstencilFlag, z, stencil);
 
-   SAFE_RELEASE(rtView);
+   for (U32 i = 0; i < 5; i++)
+      SAFE_RELEASE(rtView[i]);
    SAFE_RELEASE(dsView);
 }
 

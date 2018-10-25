@@ -227,13 +227,13 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //Do a quick pass to update our probes if they're dirty
    PROBEMGR->updateDirtyProbes();
 
-   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color0, diffuseLightingTarget->getTexture());
-   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color1, specularLightingTarget->getTexture());
+   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color0, specularLightingTarget->getTexture());
+   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color1, diffuseLightingTarget->getTexture());
 
    GFX->pushActiveRenderTarget();
    GFX->setActiveRenderTarget(probeLightingTargetRef);
 
-   GFX->setViewport(diffuseLightingTarget->getViewport());
+   GFX->setViewport(specularLightingTarget->getViewport());
    //GFX->setViewport(specularLightingTarget->getViewport());
 
    // Restore transforms

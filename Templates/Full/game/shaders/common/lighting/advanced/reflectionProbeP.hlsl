@@ -98,8 +98,8 @@ float3 iblBoxSpecular(float3 normal,
 
 struct PS_OUTPUT
 {
-    float4 diffuse: TORQUE_TARGET0;
-    float4 spec: TORQUE_TARGET1;
+    float4 diffuse: TORQUE_TARGET1;
+    float4 spec: TORQUE_TARGET0;
 };
 
 float defineSphereSpaceInfluence(float3 centroidPosVS, float rad, float2 atten, float3 surfPosVS, float3 norm)

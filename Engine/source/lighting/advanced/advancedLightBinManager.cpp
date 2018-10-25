@@ -116,20 +116,19 @@ ConsoleDocClass( AdvancedLightBinManager,
 AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = NULL */, 
                                                  ShadowMapManager *sm /* = NULL */, 
                                                  GFXFormat lightBufferFormat /* = GFXFormatR8G8B8A8 */ )
-   :  RenderTexTargetBinManager( RIT_LightInfo, 1.0f, 1.0f, lightBufferFormat ), 
+   :  RenderBinManager( RIT_LightInfo, 1.0f, 1.0f ), 
       mNumLightsCulled(0), 
       mLightManager(lm), 
       mShadowManager(sm),
       mConditioner(NULL)
 {
    // Create an RGB conditioner
-   mConditioner = new AdvancedLightBufferConditioner( getTargetFormat(), 
-                                                      AdvancedLightBufferConditioner::RGB );
-   mNamedTarget.setConditioner( mConditioner ); 
-   mNamedTarget.registerWithName( smBufferName );
+   NamedTexTarget* specLightTarg = NamedTexTarget::find(RenderDeferredMgr::SpecularLightBufferName);
 
-   // We want a full-resolution buffer
-   mTargetSizeType = RenderTexTargetBinManager::WindowSize;
+   mConditioner = new AdvancedLightBufferConditioner(lightBufferFormat,
+                                                      AdvancedLightBufferConditioner::RGB );
+
+   specLightTarg->setConditioner( mConditioner );
 
    mMRTLightmapsDuringDeferred = true;
 
@@ -173,17 +172,18 @@ void AdvancedLightBinManager::consoleInit()
 
 bool AdvancedLightBinManager::setTargetSize(const Point2I &newTargetSize)
 {
-   bool ret = Parent::setTargetSize( newTargetSize );
+   /*bool ret = Parent::setTargetSize( newTargetSize );
 
    // We require the viewport to match the default.
    mNamedTarget.setViewport( GFX->getViewport() );
 
-   return ret;
+   return ret;*/
+   return true;
 }
 
 bool AdvancedLightBinManager::_updateTargets()
 {
-   PROFILE_SCOPE(AdvancedLightBinManager_updateTargets);
+  /* PROFILE_SCOPE(AdvancedLightBinManager_updateTargets);
 
    bool ret = Parent::_updateTargets();
 
@@ -198,7 +198,8 @@ bool AdvancedLightBinManager::_updateTargets()
 
    GFX->finalizeReset();
 
-   return ret;
+   return ret;*/
+   return true;
 }
 
 void AdvancedLightBinManager::addLight( LightInfo *light )
@@ -270,10 +271,36 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    GFXDEBUGEVENT_SCOPE( AdvancedLightBinManager_Render, ColorI::RED );
 
    // Tell the superclass we're about to render
-   if ( !_onPreRender( state ) )
+   //if ( !_onPreRender( state ) )
+   //   return;
+
+   //GFX->clear(GFXClearTarget, ColorI(0, 0, 0, 0), 1.0f, 0);
+
+   NamedTexTargetRef diffuseLightingTarget = NamedTexTarget::find("diffuseLighting");
+
+   if (diffuseLightingTarget.isNull())
       return;
 
-   GFX->clear(GFXClearTarget, ColorI(0, 0, 0, 0), 1.0f, 0);
+   NamedTexTargetRef specularLightingTarget = NamedTexTarget::find("specularLighting");
+
+   if (specularLightingTarget.isNull())
+      return;
+
+   GFXTextureTargetRef lightingTargetRef = GFX->allocRenderToTextureTarget();
+
+   if (lightingTargetRef.isNull())
+      return;
+
+   //Do a quick pass to update our probes if they're dirty
+   PROBEMGR->updateDirtyProbes();
+
+   lightingTargetRef->attachTexture(GFXTextureTarget::Color0, specularLightingTarget->getTexture());
+   lightingTargetRef->attachTexture(GFXTextureTarget::Color1, diffuseLightingTarget->getTexture());
+
+   GFX->pushActiveRenderTarget();
+   GFX->setActiveRenderTarget(lightingTargetRef);
+
+   GFX->setViewport(specularLightingTarget->getViewport());
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
@@ -387,7 +414,9 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    getRenderSignal().trigger(state, this);
 
    // Finish up the rendering
-   _onPostRender();
+   //_onPostRender();
+   lightingTargetRef->resolve();
+   GFX->popActiveRenderTarget();
 }
 
 AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMaterial(   LightInfo::Type lightType, 

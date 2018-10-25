@@ -78,9 +78,9 @@ public:
    bool mSpecialLight;
 };
 
-class AdvancedLightBinManager : public RenderTexTargetBinManager
+class AdvancedLightBinManager : public RenderBinManager
 {
-   typedef RenderTexTargetBinManager Parent;
+   typedef RenderBinManager Parent;
 
 public:
 

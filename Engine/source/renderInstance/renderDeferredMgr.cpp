@@ -56,7 +56,8 @@ const String RenderDeferredMgr::BufferName("deferred");
 const RenderInstType RenderDeferredMgr::RIT_Deferred("Deferred");
 const String RenderDeferredMgr::ColorBufferName("color");
 const String RenderDeferredMgr::MatInfoBufferName("matinfo");
-const String RenderDeferredMgr::LightMapBufferName("diffuseLighting");
+const String RenderDeferredMgr::DiffuseLightBufferName("diffuseLighting");
+const String RenderDeferredMgr::SpecularLightBufferName("specularLighting");
 
 IMPLEMENT_CONOBJECT(RenderDeferredMgr);
 
@@ -103,7 +104,8 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    mNamedTarget.registerWithName( BufferName );
    mColorTarget.registerWithName( ColorBufferName );
    mMatInfoTarget.registerWithName( MatInfoBufferName );
-   mLightMapTarget.registerWithName( LightMapBufferName );
+   mDiffuseLightTarget.registerWithName( DiffuseLightBufferName );
+   mSpecularLightTarget.registerWithName(SpecularLightBufferName);
 
    mClearGBufferShader = NULL;
 
@@ -116,7 +118,8 @@ RenderDeferredMgr::~RenderDeferredMgr()
 
    mColorTarget.release();
    mMatInfoTarget.release();
-   mLightMapTarget.release();
+   mDiffuseLightTarget.release();
+   mSpecularLightTarget.release();
    _unregisterFeatures();
    SAFE_DELETE( mDeferredMatInstance );
 }
@@ -140,7 +143,8 @@ bool RenderDeferredMgr::setTargetSize(const Point2I &newTargetSize)
    mNamedTarget.setViewport( GFX->getViewport() );
    mColorTarget.setViewport( GFX->getViewport() );
    mMatInfoTarget.setViewport( GFX->getViewport() );
-   mLightMapTarget.setViewport( GFX->getViewport() );
+   mDiffuseLightTarget.setViewport( GFX->getViewport() );
+   mSpecularLightTarget.setViewport(GFX->getViewport());
    return ret;
 }
 
@@ -187,16 +191,28 @@ bool RenderDeferredMgr::_updateTargets()
          mTargetChain[i]->attachTexture(GFXTextureTarget::Color2, mMatInfoTarget.getTexture());
    }
 
-   if (mLightMapTex.getFormat() != GFXFormatR16G16B16A16F || mLightMapTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
+   if (mDiffuseLightTex.getFormat() != GFXFormatR16G16B16A16F || mDiffuseLightTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
    {
-      mLightMapTarget.release();
-      mLightMapTex.set(mTargetSize.x, mTargetSize.y, GFXFormatR16G16B16A16F,
+      mDiffuseLightTarget.release();
+      mDiffuseLightTex.set(mTargetSize.x, mTargetSize.y, GFXFormatR16G16B16A16F,
          &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
          1, GFXTextureManager::AA_MATCH_BACKBUFFER);
-      mLightMapTarget.setTexture(mLightMapTex);
+      mDiffuseLightTarget.setTexture(mDiffuseLightTex);
 
       for (U32 i = 0; i < mTargetChainLength; i++)
-         mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, mLightMapTarget.getTexture());
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, mDiffuseLightTarget.getTexture());
+   }
+
+   if (mSpecularLightTex.getFormat() != GFXFormatR16G16B16A16F || mSpecularLightTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
+   {
+      mSpecularLightTarget.release();
+      mSpecularLightTex.set(mTargetSize.x, mTargetSize.y, GFXFormatR16G16B16A16F,
+         &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
+         1, GFXTextureManager::AA_MATCH_BACKBUFFER);
+      mSpecularLightTarget.setTexture(mSpecularLightTex);
+
+      for (U32 i = 0; i < mTargetChainLength; i++)
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color4, mSpecularLightTarget.getTexture());
    }
    GFX->finalizeReset();
    _initShaders();
@@ -323,8 +339,12 @@ void RenderDeferredMgr::render( SceneRenderState *state )
    // Tell the superclass we're about to render
    const bool isRenderingToTarget = _onPreRender(state);
 
-   // Clear all z-buffer, and g-buffer.
-   clearBuffers();
+   // Clear z-buffer and g-buffer.
+   GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
+   GFX->clearColorAttachment(0, LinearColorF::ONE);
+   GFX->clearColorAttachment(1, LinearColorF::ZERO);
+   GFX->clearColorAttachment(2, LinearColorF::ZERO);
+   GFX->clearColorAttachment(3, LinearColorF::ZERO);
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();

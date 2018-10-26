@@ -92,8 +92,8 @@ float3 iblSpecular(float3 v, float3 n, float roughness)
 
 struct PS_OUTPUT
 {
-    float4 diffuse: TORQUE_TARGET0;
-    float4 spec: TORQUE_TARGET1;
+    float4 spec: TORQUE_TARGET0;
+    float4 diffuse: TORQUE_TARGET1;
 };
 
 PS_OUTPUT main( ConvexConnectP IN )

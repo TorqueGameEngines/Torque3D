@@ -128,6 +128,9 @@ protected:
    GFXCubemapHandle  mDynamicCubemap;
    bool mUseCubemap;
 
+   ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
+   bool mUseHDRCaptures;
+
    //irridiance resources
    CubemapData *mIrridianceMap;
 

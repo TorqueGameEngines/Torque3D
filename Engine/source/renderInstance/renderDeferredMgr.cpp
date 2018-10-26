@@ -337,11 +337,12 @@ void RenderDeferredMgr::render( SceneRenderState *state )
    const bool isRenderingToTarget = _onPreRender(state);
 
    // Clear z-buffer and g-buffer.
-   GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
-   GFX->clearColorAttachment(0, LinearColorF::ONE);
-   GFX->clearColorAttachment(1, LinearColorF::ZERO);
-   GFX->clearColorAttachment(2, LinearColorF::ZERO);
-   GFX->clearColorAttachment(3, LinearColorF::ZERO);
+   GFX->clear(GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
+   GFX->clearColorAttachment(0, LinearColorF::ONE);//normdepth
+   GFX->clearColorAttachment(1, LinearColorF::ZERO);//albedo
+   GFX->clearColorAttachment(2, LinearColorF::ZERO);//matinfo
+   GFX->clearColorAttachment(3, LinearColorF::ZERO);//diffuse
+   GFX->clearColorAttachment(4, LinearColorF::ZERO);//specular
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();

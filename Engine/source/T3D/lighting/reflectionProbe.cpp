@@ -838,7 +838,7 @@ String ReflectionProbe::getIrradianceMapPath()
    return fileName;
 }
 
-void ReflectionProbe::bake(String outputPath, S32 resolution)
+void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithProbes)
 {
    GFXDEBUGEVENT_SCOPE(ReflectionProbe_Bake, ColorI::WHITE);
 
@@ -846,7 +846,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution)
 
    U32 startMSTime = Platform::getRealMilliseconds();
 
-   PostEffect *preCapture = dynamic_cast<PostEffect*>(Sim::findObject("AL_PreCapture"));
+   /*PostEffect *preCapture = dynamic_cast<PostEffect*>(Sim::findObject("AL_PreCapture"));
    PostEffect *deferredShading = dynamic_cast<PostEffect*>(Sim::findObject("AL_DeferredShading"));
    if (preCapture)
    {
@@ -855,7 +855,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution)
 	   preCapture->enable();
    }
    if (deferredShading)
-      deferredShading->disable();
+      deferredShading->disable();*/
 
    GFXCubemapHandle sceneCaptureCubemap;
 
@@ -904,8 +904,12 @@ void ReflectionProbe::bake(String outputPath, S32 resolution)
    //gEditingMission = false;
 
    //Set this to true to use the prior method where it goes through the SPT_Reflect path for the bake
+
    bool probeRenderState = ProbeManager::smRenderReflectionProbes;
-   ProbeManager::smRenderReflectionProbes = false;
+
+   if (!renderWithProbes)
+      ProbeManager::smRenderReflectionProbes = false;
+
    for (U32 i = 0; i < 6; ++i)
    {
       GFXTexHandle blendTex;
@@ -1023,13 +1027,15 @@ void ReflectionProbe::bake(String outputPath, S32 resolution)
       Con::errorf("ReflectionProbe::bake() - Didn't generate a valid scene capture cubemap, unable to generate prefilter and irradiance maps!");
    }
 
-   ProbeManager::smRenderReflectionProbes = probeRenderState;
+   if(!renderWithProbes)
+      ProbeManager::smRenderReflectionProbes = probeRenderState;
+
    setMaskBits(-1);
 
-   if (preCapture)
+   /*if (preCapture)
       preCapture->disable();
    if (deferredShading)
-      deferredShading->enable();
+      deferredShading->enable();*/
 
    U32 endMSTime = Platform::getRealMilliseconds();
    F32 diffTime = F32(endMSTime - startMSTime);
@@ -1037,14 +1043,14 @@ void ReflectionProbe::bake(String outputPath, S32 resolution)
    Con::warnf("ReflectionProbe::bake() - Finished bake! Took %g milliseconds", diffTime);
 }
 
-DefineEngineMethod(ReflectionProbe, Bake, void, (String outputPath, S32 resolution), ("", 256),
+DefineEngineMethod(ReflectionProbe, Bake, void, (String outputPath, S32 resolution, bool renderWithProbes), ("", 64, false),
    "@brief returns true if control object is inside the fog\n\n.")
 {
    ReflectionProbe *clientProbe = (ReflectionProbe*)object->getClientObject();
 
    if (clientProbe)
    {
-      clientProbe->bake(outputPath, resolution);
+      clientProbe->bake(outputPath, resolution, renderWithProbes);
    }
    //object->bake(outputPath, resolution);
 }

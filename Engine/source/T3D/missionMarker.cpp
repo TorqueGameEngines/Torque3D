@@ -82,7 +82,7 @@ ConsoleDocClass( MissionMarker,
 
 MissionMarker::MissionMarker()
 {
-   mTypeMask |= StaticObjectType;
+   mTypeMask |= StaticObjectType | MarkerObjectType;
    mDataBlock = 0;
    mAddedToScene = false;
    mNetFlags.set(Ghostable | ScopeAlways);

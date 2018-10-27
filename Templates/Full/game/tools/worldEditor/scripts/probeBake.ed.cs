@@ -28,15 +28,21 @@ function ProbeBakeDlg_RunBake::onClick(%this)
    %currentProgressValue = 0;
    
    ProbeBakeDlg_Progress.setValue(%currentProgressValue);
+   Canvas.repaint();
    
    for(%iter=0; %iter < %numIter; %iter++)
    {
+      %renderWithProbes = false;
+      
+      if(%iter != 0)
+         %renderWithProbes = true;
+         
       for(%i=0; %i < %probeCount; %i++)
       {
          %probe = getWord(%probeIds, %i);
          
          %path = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
-         %probe.bake(%path, %resolution);
+         %probe.bake(%path, %resolution, %renderWithProbes);
          
          %currentProgressValue += %progressStep;
          ProbeBakeDlg_Progress.setValue(%currentProgressValue);

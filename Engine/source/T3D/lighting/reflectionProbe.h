@@ -240,7 +240,7 @@ public:
    //Baking
    String getPrefilterMapPath();
    String getIrradianceMapPath();
-   void bake(String outputPath, S32 resolution);
+   void bake(String outputPath, S32 resolution, bool renderWithProbes = false);
 };
 
 typedef ProbeRenderInst::ProbeShapeType ReflectProbeType;

@@ -231,9 +231,6 @@ public:
 		// -dot( farPlane, eyePos )
 		MaterialParameterHandle *negFarPlaneDotEye;
 
-		// Inverse View matrix
-		MaterialParameterHandle *invViewMat;
-
 		// Light Parameters
 		MaterialParameterHandle *probeLSPos;
 		MaterialParameterHandle *probeWSPos;
@@ -262,8 +259,7 @@ public:
 			const F32 zFar,
 			const Point3F &eyePos,
 			const PlaneF &farPlane,
-			const PlaneF &_vsFarPlane,
-			const MatrixF &_inverseViewMatrix);
+			const PlaneF &_vsFarPlane);
 
 		void setProbeParameters(const ProbeRenderInst *probe, const SceneRenderState* renderState, const MatrixF &worldViewOnly);
 	};

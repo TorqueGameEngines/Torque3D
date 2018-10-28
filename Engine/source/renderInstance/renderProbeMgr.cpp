@@ -159,13 +159,9 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
    matrixSet.restoreSceneViewProjection();
 
-   const MatrixF &worldToCameraXfm = matrixSet.getWorldToCamera();
+   const MatrixF &worldToCameraXfm = matrixSet.getCameraToWorld();
 
    MatrixF inverseViewMatrix = worldToCameraXfm;
-   //inverseViewMatrix.fullInverse();
-   //inverseViewMatrix.transpose();
-
-   //inverseViewMatrix = MatrixF::Identity;
 
    // Parameters calculated, assign them to the materials
    ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
@@ -176,7 +172,7 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
          frustum.getFarDist(),
          frustum.getPosition(),
          farPlane,
-         vsFarPlane, inverseViewMatrix);
+         vsFarPlane);
    }
 
    ProbeManager::ReflectProbeMaterialInfo* reflProbeMat = PROBEMGR->getReflectProbeMaterial();
@@ -187,7 +183,7 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
          frustum.getFarDist(),
          frustum.getPosition(),
          farPlane,
-         vsFarPlane, inverseViewMatrix);
+         vsFarPlane);
    }
 }
 

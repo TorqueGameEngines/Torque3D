@@ -35,6 +35,7 @@ struct ShaderGenVars
    const static String modelview;
    const static String worldViewOnly;
    const static String worldToCamera;
+   const static String cameraToWorld;
    const static String worldToObj;
    const static String viewToObj;
    const static String cubeTrans;

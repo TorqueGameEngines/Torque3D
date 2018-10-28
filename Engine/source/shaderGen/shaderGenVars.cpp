@@ -26,6 +26,7 @@
 const String ShaderGenVars::modelview("$modelview");
 const String ShaderGenVars::worldViewOnly("$worldViewOnly");
 const String ShaderGenVars::worldToCamera("$worldToCamera");
+const String ShaderGenVars::cameraToWorld("$cameraToWorld");
 const String ShaderGenVars::worldToObj("$worldToObj");
 const String ShaderGenVars::viewToObj("$viewToObj");
 const String ShaderGenVars::cubeTrans("$cubeTrans");

@@ -62,6 +62,7 @@ public:
    GFXShaderConstHandle* mModelViewProjSC;
    GFXShaderConstHandle* mWorldViewOnlySC;     
    GFXShaderConstHandle* mWorldToCameraSC;
+   GFXShaderConstHandle* mCameraToWorldSC;
    GFXShaderConstHandle* mWorldToObjSC;         
    GFXShaderConstHandle* mViewToObjSC;         
    GFXShaderConstHandle* mCubeTransSC;

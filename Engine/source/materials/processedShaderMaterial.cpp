@@ -75,6 +75,7 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/ 
    mModelViewProjSC = shader->getShaderConstHandle(ShaderGenVars::modelview);
    mWorldViewOnlySC = shader->getShaderConstHandle(ShaderGenVars::worldViewOnly);
    mWorldToCameraSC = shader->getShaderConstHandle(ShaderGenVars::worldToCamera);
+   mCameraToWorldSC = shader->getShaderConstHandle(ShaderGenVars::cameraToWorld);
    mWorldToObjSC = shader->getShaderConstHandle(ShaderGenVars::worldToObj);
    mViewToObjSC = shader->getShaderConstHandle(ShaderGenVars::viewToObj);
    mCubeTransSC = shader->getShaderConstHandle(ShaderGenVars::cubeTrans);
@@ -1239,6 +1240,8 @@ void ProcessedShaderMaterial::setTransforms(const MatrixSet &matrixSet, SceneRen
       shaderConsts->set( handles->mWorldToObjSC, matrixSet.getWorldToObject() );
    if ( handles->mWorldToCameraSC->isValid() )
       shaderConsts->set( handles->mWorldToCameraSC, matrixSet.getWorldToCamera() );
+   if (handles->mCameraToWorldSC->isValid())
+      shaderConsts->set(handles->mCameraToWorldSC, matrixSet.getCameraToWorld());
    if ( handles->mWorldViewOnlySC->isValid() )
       shaderConsts->set( handles->mWorldViewOnlySC, matrixSet.getObjectToCamera() );
    if ( handles->mViewToObjSC->isValid() )

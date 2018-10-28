@@ -29,8 +29,8 @@ uniform float4 vsFarPlane;
 uniform float  radius;
 uniform float2 attenuation;
 
-uniform float4x4 invViewMat;
 uniform float4x4 worldToObj;
+uniform float4x4 cameraToWorld;
 
 uniform float3 eyePosWorld;
 uniform float3 bbMin;
@@ -175,27 +175,26 @@ PS_OUTPUT main( ConvexConnectP IN )
           clip(-1);
 
     // Need world-space normal.
-    float3 wsNormal = mul(float4(normal, 1), invViewMat).rgb;
+    float3 wsNormal = mul(cameraToWorld, float4(normal, 0)).xyz;
 
-    float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
-    float3 viewSpacePos = eyeRay * depth;
+    float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
+    float3 vsPos = vsEyeRay * depth;
 
-    float3 wsEyeRay = mul(float4(eyeRay, 1), invViewMat).rgb;
-
-    // Use eye ray to get ws pos
-    float3 worldPos = float3(eyePosWorld + wsEyeRay * depth);
+    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
+    // calculate world space position
+    float3 wsPos = float3(eyePosWorld + wsEyeRay * depth);
 		  
     float blendVal = 1.0;
 	
 	//clip bounds and (TODO properly: set falloff)
 	if(useSphereMode)
     {
-        blendVal = defineSphereSpaceInfluence(probeLSPos, radius, attenuation, viewSpacePos, normal);
+        blendVal = defineSphereSpaceInfluence(probeLSPos, radius, attenuation, vsPos, normal);
     }
     else
     {
        float tempAttenVal = 3.5;
-	   blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius, tempAttenVal);
+	   blendVal = defineBoxSpaceInfluence(wsPos, probeWSPos, radius, tempAttenVal);
     }
 	clip(blendVal);
 	
@@ -204,9 +203,9 @@ PS_OUTPUT main( ConvexConnectP IN )
 		
 	
 	//render into the bound space defined above
-	float3 surfToEye = normalize(worldPos.xyz-eyePosWorld.xyz);
-	Output.diffuse = float4(iblBoxDiffuse(wsNormal, worldPos, TORQUE_SAMPLERCUBE_MAKEARG(irradianceCubemap), probeWSPos, bbMin, bbMax), blendVal);
-	Output.spec = float4(iblBoxSpecular(wsNormal, worldPos, 1.0 - matInfo.b, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax), blendVal);
+	float3 surfToEye = normalize(wsPos - eyePosWorld);
+	Output.diffuse = float4(iblBoxDiffuse(wsNormal, wsPos, TORQUE_SAMPLERCUBE_MAKEARG(irradianceCubemap), probeWSPos, bbMin, bbMax), blendVal);
+	Output.spec = float4(iblBoxSpecular(wsNormal, wsPos, 1.0 - matInfo.b, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax), blendVal);
 	Output.diffuse.rgb *= matInfo.g;
 	Output.spec.rgb *= matInfo.g;
 	return Output;

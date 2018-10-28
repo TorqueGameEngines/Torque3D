@@ -794,7 +794,6 @@ ProbeManager::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String &m
 	probeWSPos(NULL),
 	attenuation(NULL),
 	radius(NULL),
-	invViewMat(NULL),
    cubeMips(NULL)
 {
 	Material *mat = MATMGR->getMaterialDefinitionByName(matName);
@@ -818,8 +817,6 @@ ProbeManager::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String &m
 	vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
 	negFarPlaneDotEye = matInstance->getMaterialParameterHandle("$negFarPlaneDotEye");
 	zNearFarInvNearFar = matInstance->getMaterialParameterHandle("$zNearFarInvNearFar");
-
-	invViewMat = matInstance->getMaterialParameterHandle("$invViewMat");
 
 	useCubemap = matInstance->getMaterialParameterHandle("$useCubemap");
 
@@ -848,7 +845,7 @@ void ProbeManager::ReflectProbeMaterialInfo::setViewParameters(const F32 _zNear,
 	const F32 _zFar,
 	const Point3F &_eyePos,
 	const PlaneF &_farPlane,
-	const PlaneF &_vsFarPlane, const MatrixF &_inverseViewMatrix)
+	const PlaneF &_vsFarPlane)
 {
 	MaterialParameters *matParams = matInstance->getMaterialParameters();
 
@@ -864,8 +861,6 @@ void ProbeManager::ReflectProbeMaterialInfo::setViewParameters(const F32 _zNear,
 	}
 
 	matParams->setSafe(zNearFarInvNearFar, Point4F(_zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar));
-
-	matParams->setSafe(invViewMat, _inverseViewMatrix);
 
 	Point4F frPlane = *((const Point4F *)&_farPlane);
 	Point4F vsFrPlane = *((const Point4F *)&_vsFarPlane);
@@ -893,10 +888,10 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
 	if (total > 0.0f)
 		attenRatio /= total;
 
-	F32 radius = probeInfo->mRadius;
+	F32 probeRadius = probeInfo->mRadius;
 
-	Point2F attenParams((1.0f / radius) * attenRatio.y,
-		(1.0f / (radius * radius)) * attenRatio.z);
+	Point2F attenParams((1.0f / probeRadius) * attenRatio.y,
+		(1.0f / (probeRadius * probeRadius)) * attenRatio.z);
 
 	matParams->setSafe(attenuation, attenParams);
 
@@ -995,8 +990,6 @@ ProbeManager::SkylightMaterialInfo::SkylightMaterialInfo(const String &matName,
 	vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
 	negFarPlaneDotEye = matInstance->getMaterialParameterHandle("$negFarPlaneDotEye");
 	zNearFarInvNearFar = matInstance->getMaterialParameterHandle("$zNearFarInvNearFar");
-
-	invViewMat = matInstance->getMaterialParameterHandle("$invViewMat");
 
 	useCubemap = matInstance->getMaterialParameterHandle("$useCubemap");
 	cubemap = matInstance->getMaterialParameterHandle("$cubeMap");

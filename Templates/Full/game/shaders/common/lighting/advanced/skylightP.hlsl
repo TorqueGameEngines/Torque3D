@@ -24,7 +24,7 @@ uniform float4 rtParams0;
 
 uniform float4 vsFarPlane;
 
-uniform float4x4 invViewMat;
+uniform float4x4 cameraToWorld;
 
 uniform float3 eyePosWorld;
 
@@ -117,20 +117,20 @@ PS_OUTPUT main( ConvexConnectP IN )
         return Output; 
 
     // Need world-space normal.
-    float3 wsNormal = mul(float4(normal, 1), invViewMat).rgb;
+    float3 wsNormal = mul(cameraToWorld, float4(normal, 0)).xyz;
 
-    float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
+    float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
+    float3 vsPos = vsEyeRay * depth;
 
-    float3 wsEyeRay = mul(float4(eyeRay, 1), invViewMat).rgb;
+    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
+    // calculate world space position
+    float3 wsPos = float3(eyePosWorld + wsEyeRay * depth);
 
-    // Use eye ray to get ws pos
-    float3 worldPos = float3(eyePosWorld + wsEyeRay * depth);
-
-    float3 reflectionVec = reflect(IN.wsEyeDir, float4(wsNormal,1)).xyz;
+    float3 reflectionVec = reflect(IN.wsEyeDir, float4(wsNormal,0)).xyz;
 
     float roughness = 1 - matInfo.b;
 
-    float3 v = normalize(eyePosWorld - worldPos);
+    float3 v = normalize(eyePosWorld - wsPos);
 
     float3 irradiance = TORQUE_TEXCUBE(irradianceCubemap, wsNormal).rgb;
 

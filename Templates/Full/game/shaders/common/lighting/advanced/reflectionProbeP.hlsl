@@ -163,16 +163,15 @@ PS_OUTPUT main( ConvexConnectP IN )
     float3 ssPos = IN.ssPos.xyz / IN.ssPos.w; 
 
     float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
-
-    // Matinfo flags
-    float4 matInfo = TORQUE_TEX2D( matInfoBuffer, uvScene ); 
-
     // Sample/unpack the normal/z data
     float4 deferredSample = TORQUE_DEFERRED_UNCONDITION( deferredBuffer, uvScene );
     float3 normal = deferredSample.rgb;
     float depth = deferredSample.a;
     if (depth>0.9999)
           clip(-1);
+    
+    // Matinfo flags
+    float4 matInfo = TORQUE_TEX2D( matInfoBuffer, uvScene ); 
 
     // Need world-space normal.
     float3 wsNormal = mul(cameraToWorld, float4(normal, 0)).xyz;
@@ -206,7 +205,5 @@ PS_OUTPUT main( ConvexConnectP IN )
 	float3 surfToEye = normalize(wsPos - eyePosWorld);
 	Output.diffuse = float4(iblBoxDiffuse(wsNormal, wsPos, TORQUE_SAMPLERCUBE_MAKEARG(irradianceCubemap), probeWSPos, bbMin, bbMax), blendVal);
 	Output.spec = float4(iblBoxSpecular(wsNormal, wsPos, 1.0 - matInfo.b, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax), blendVal);
-	Output.diffuse.rgb *= matInfo.g;
-	Output.spec.rgb *= matInfo.g;
 	return Output;
 }

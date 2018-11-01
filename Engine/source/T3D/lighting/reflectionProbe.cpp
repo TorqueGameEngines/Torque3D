@@ -616,7 +616,7 @@ bool ReflectionProbe::createClientResources()
    //brdf lookup resources
    //make the brdf lookup texture the same size as the prefilter texture
    
-   String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/brdfTexture.DDS");
+   String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/brdfTexture.dds");
 
    mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);// TEXMGR->createTexture(mPrefilterSize, mPrefilterSize, GFXFormatR16G16B16A16F, &GFXRenderTargetProfile, 1, 0);
 

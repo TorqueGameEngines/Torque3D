@@ -386,7 +386,7 @@ new ShaderData( BRDFLookupShader )
    pixVersion = 3.0;
 };
 
-new ShaderData( SklyightShader )
+new ShaderData( SkyLightShader )
 {
    DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
    DXPixelShaderFile  = "shaders/common/lighting/advanced/skylightP.hlsl";
@@ -396,6 +396,7 @@ new ShaderData( SklyightShader )
 
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$matInfoBuffer";
+   samplerNames[2] = "$colorBuffer";
    samplerNames[2] = "$cubeMap";
    samplerNames[3] = "$irradianceCubemap";
    samplerNames[4] = "$BRDFTexture";
@@ -403,13 +404,14 @@ new ShaderData( SklyightShader )
    pixVersion = 3.0;
 };
 
-new CustomMaterial( SklyightMaterial )
+new CustomMaterial( SkyLightMaterial )
 {
-   shader = SklyightShader;
+   shader = SkyLightShader;
    stateBlock = AL_ProbeState;
    
    sampler["deferredBuffer"] = "#deferred";
    sampler["matInfoBuffer"] = "#matinfo";
+   sampler["colorBuffer"] = "#color";
    
    pixVersion = 3.0;
 };

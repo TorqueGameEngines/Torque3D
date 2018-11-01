@@ -142,6 +142,7 @@ protected:
    GFXShaderConstHandle *mAccumTimeSC;
    GFXShaderConstHandle *mDeltaTimeSC;
    GFXShaderConstHandle *mInvCameraMatSC;
+   GFXShaderConstHandle *mMatCameraToWorldSC;
 
    bool mAllowReflectPass;
 

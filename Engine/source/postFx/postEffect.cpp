@@ -309,7 +309,8 @@ PostEffect::PostEffect()
       mCameraForwardSC( NULL ),
       mAccumTimeSC( NULL ),
       mDeltaTimeSC( NULL ),
-      mInvCameraMatSC( NULL )
+      mInvCameraMatSC( NULL ),
+      mMatCameraToWorldSC( NULL)
 {
    dMemset( mTexSRGB, 0, sizeof(bool) * NumTextures);
    dMemset( mActiveTextures, 0, sizeof( GFXTextureObject* ) * NumTextures );
@@ -615,6 +616,8 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       mDeltaTimeSC = mShader->getShaderConstHandle( "$deltaTime" );
 
       mInvCameraMatSC = mShader->getShaderConstHandle( "$invCameraMat" );
+
+      mMatCameraToWorldSC = mShader->getShaderConstHandle("$cameraToWorld");
    }
 
    // Set up shader constants for source image size
@@ -747,6 +750,13 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       Point3F ambientColor( sunlight.red, sunlight.green, sunlight.blue );
 
       mShaderConsts->set( mAmbientColorSC, ambientColor );
+   }
+
+   if (mMatCameraToWorldSC->isValid())
+   {
+      MatrixF tempMat = thisFrame.worldToCamera;
+      tempMat.inverse();
+      mShaderConsts->set(mMatCameraToWorldSC, tempMat);
    }
 
    mShaderConsts->setSafe( mAccumTimeSC, MATMGR->getTotalTime() );

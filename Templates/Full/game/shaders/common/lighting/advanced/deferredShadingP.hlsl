@@ -20,9 +20,9 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../../shaderModelAutoGen.hlsl"
 #include "../../postfx/postFx.hlsl"
 #include "shaders/common/torque.hlsl"
+#include "shaders/common/lighting.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(colorBufferTex,0);
 TORQUE_UNIFORM_SAMPLER2D(diffuseLightingBuffer,1);
@@ -30,31 +30,23 @@ TORQUE_UNIFORM_SAMPLER2D(matInfoTex,2);
 TORQUE_UNIFORM_SAMPLER2D(specularLightingBuffer,3);
 TORQUE_UNIFORM_SAMPLER2D(deferredTex,4);
 
+uniform float4x4 cameraToWorld;
+uniform float3 eyePosWorld;
+
+//TODO add in emission
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
-{        
-   float depth = TORQUE_DEFERRED_UNCONDITION( deferredTex, IN.uv0 ).w;
-
-   if (depth>0.9999)
+{
+   //create surface
+   Surface surface = CreateSurface( TORQUE_SAMPLER2D_MAKEARG(deferredTex), TORQUE_SAMPLER2D_MAKEARG(colorBufferTex),TORQUE_SAMPLER2D_MAKEARG(matInfoTex),
+                                    IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
+   //sky check
+   if (surface.depth>0.9999)
       return float4(0,0,0,0);
-
-   float3 albedo = TORQUE_TEX2D( colorBufferTex, IN.uv0 ).rgb; //albedo
-   float4 matInfo = TORQUE_TEX2D(matInfoTex, IN.uv0); //flags|smoothness|ao|metallic
-
-   bool emissive = getFlag(matInfo.r, 0);
-   if (emissive)
-   {
-      return float4(albedo, 1.0);
-   }
 	  
-   float4 diffuse = TORQUE_TEX2D( diffuseLightingBuffer, IN.uv0 ); //shadowmap*specular
-   float4 specular = TORQUE_TEX2D( specularLightingBuffer, IN.uv0 ); //environment mapping*lightmaps
-   
-   float metalness = matInfo.a;
-   
-   float3 diffuseColor = albedo - (albedo * metalness);
-   float3 specularColor = lerp(float3(0.04,0.04,0.04), albedo, metalness);
+   float4 diffuse = TORQUE_TEX2DLOD( diffuseLightingBuffer, float4(IN.uv0,0,0)); 
+   float4 specular = TORQUE_TEX2DLOD( specularLightingBuffer, float4(IN.uv0,0,0));
 
-   float3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
+   float3 sceneColor = (surface.albedo * diffuse.rgb) + (surface.F * specular.rgb) * surface.ao;
    
-   return float4(light.rgb, 1.0);
+   return float4(sceneColor.rgb, 1.0);
 }

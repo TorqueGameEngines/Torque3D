@@ -397,9 +397,9 @@ new ShaderData( SkyLightShader )
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$matInfoBuffer";
    samplerNames[2] = "$colorBuffer";
-   samplerNames[2] = "$cubeMap";
-   samplerNames[3] = "$irradianceCubemap";
-   samplerNames[4] = "$BRDFTexture";
+   samplerNames[3] = "$cubeMap";
+   samplerNames[4] = "$irradianceCubemap";
+   samplerNames[5] = "$BRDFTexture";
    
    pixVersion = 3.0;
 };

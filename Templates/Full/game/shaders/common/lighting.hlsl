@@ -112,11 +112,10 @@ struct Surface
 	}
 };
 
-inline Surface CreateSurface(TORQUE_SAMPLER2D(gbufferTex0), TORQUE_SAMPLER2D(gbufferTex1), TORQUE_SAMPLER2D(gbufferTex2), in float2 uv, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
+inline Surface CreateSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TORQUE_SAMPLER2D(gbufferTex2), in float2 uv, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
 {
 	Surface surface;
 
-   float4 gbuffer0 = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(gbufferTex0), uv);
    float4 gbuffer1 = TORQUE_TEX2DLOD(gbufferTex1, float4(uv,0,0));
    float4 gbuffer2 = TORQUE_TEX2DLOD(gbufferTex2, float4(uv,0,0));
 

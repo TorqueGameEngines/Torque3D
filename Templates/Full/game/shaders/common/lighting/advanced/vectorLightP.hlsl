@@ -186,9 +186,14 @@ float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
 LightTargetOutput main(FarFrustumQuadConnectP IN)
 {
    LightTargetOutput Output = (LightTargetOutput)0;
-
+   
+   //sky and editor background check
+   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), IN.uv0);
+   if (normDepth.w>0.9999)
+      return Output;
+   
    //create surface
-   Surface surface = CreateSurface( TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
    //create surface to light    
    float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;                             
@@ -196,7 +201,7 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
 
    //light color might be changed by PSSM_DEBUG_RENDER
    float3 lightingColor = lightColor.rgb;
-
+   
    #ifdef NO_SHADOW
       float shadow = 1.0;
    #else
@@ -229,7 +234,7 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
       #endif
 
    #endif //NO_SHADOW
-
+   
    //get directional light contribution   
    LightResult result = GetDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
    //output

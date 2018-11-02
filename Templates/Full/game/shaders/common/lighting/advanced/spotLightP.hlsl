@@ -175,8 +175,8 @@ LightTargetOutput main(   ConvexConnectP IN )
    LightResult result = GetDirectionalLight(surface, surfaceToLight, lightColor.rgb, lightBrightness, shadowed);
       
    //output
-   Output.diffuse = float4(result.diffuse, 0);
-   Output.spec = float4(result.spec, 0);
+   Output.diffuse = float4(result.diffuse*atten, 0);
+   Output.spec = float4(result.spec*atten, 0);
    
    return Output;
 }

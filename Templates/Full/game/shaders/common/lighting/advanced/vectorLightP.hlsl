@@ -39,7 +39,6 @@ TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 3);
 uniform float4 rtParams3;
 #endif
 
-TORQUE_UNIFORM_SAMPLER2D(lightBuffer, 5);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 6);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 7);
 

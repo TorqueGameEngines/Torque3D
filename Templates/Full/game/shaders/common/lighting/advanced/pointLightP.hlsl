@@ -154,14 +154,7 @@ LightTargetOutput main(   ConvexConnectP IN )
       
    // Eye ray - Eye -> Pixel
    float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
-   float3 viewSpacePos = eyeRay * normDepth.w;
-   
-   //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    uvScene, eyePosWorld, eyeRay, cameraToWorld);   
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-      return Output;      
+   float3 viewSpacePos = eyeRay * normDepth.w;   
    
    // Build light vec, get length, clip pixel if needed
    float3 lightVec = lightPosition - viewSpacePos;
@@ -175,6 +168,12 @@ LightTargetOutput main(   ConvexConnectP IN )
    // Normalize lightVec
    lightVec /= lenLightV;
    
+   //create surface
+   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+                                    uvScene, eyePosWorld, eyeRay, cameraToWorld);   
+   //early out if emissive
+   if (getFlag(surface.matFlag, 0))
+      return Output;
    
    // If we can do dynamic branching then avoid wasting
    // fillrate on pixels that are backfacing to the light.

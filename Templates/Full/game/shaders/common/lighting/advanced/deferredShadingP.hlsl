@@ -36,12 +36,14 @@ uniform float3 eyePosWorld;
 //TODO add in emission
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 {
-   //create surface
-   Surface surface = CreateSurface( TORQUE_SAMPLER2D_MAKEARG(deferredTex), TORQUE_SAMPLER2D_MAKEARG(colorBufferTex),TORQUE_SAMPLER2D_MAKEARG(matInfoTex),
-                                    IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
-   //sky check
-   if (surface.depth>0.9999)
+   //sky and editor background check
+   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredTex), IN.uv0);
+   if (normDepth.a>0.9999)
       return float4(0,0,0,0);
+   
+   //create surface
+   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBufferTex),TORQUE_SAMPLER2D_MAKEARG(matInfoTex),
+                                    IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
 	  
    float4 diffuse = TORQUE_TEX2DLOD( diffuseLightingBuffer, float4(IN.uv0,0,0)); 
    float4 specular = TORQUE_TEX2DLOD( specularLightingBuffer, float4(IN.uv0,0,0));

@@ -45,14 +45,15 @@ LightTargetOutput main( ConvexConnectP IN )
    //eye ray WS/LS
    float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
-
-   //create surface
-   Surface surface = CreateSurface( TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
-
-   //sky check
-   if (surface.depth>0.9999)
+   
+   //sky and editor background check
+   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), uvScene);
+   if (normDepth.a>0.9999)
       return Output;
+   
+   //create surface
+   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
    float3 diffuse = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).rgb;
    float3 specular = iblSpecular(wsEyeRay, surface.N, surface.roughness);

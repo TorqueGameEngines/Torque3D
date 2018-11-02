@@ -89,18 +89,7 @@ LightTargetOutput main(   ConvexConnectP IN )
    // Eye ray - Eye -> Pixel
    float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
    float3 viewSpacePos = eyeRay * normDepth.w;
-   
-   //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    uvScene, eyePosWorld, eyeRay, cameraToWorld);   
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-      return Output;
-	   
-   //create surface to light    
-   float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;
-   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -wsLightDir);
-   
+      
    // Build light vec, get length, clip pixel if needed
    float3 lightToPxlVec = viewSpacePos - lightPosition;
    float lenLightV = length( lightToPxlVec );
@@ -115,6 +104,17 @@ LightTargetOutput main(   ConvexConnectP IN )
    atten *= ( cosAlpha - lightSpotParams.x ) / lightSpotParams.y;
    clip( atten - 1e-6 );
    atten = saturate( atten );
+   
+   //create surface
+   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+                                    uvScene, eyePosWorld, eyeRay, cameraToWorld);   
+   //early out if emissive
+   if (getFlag(surface.matFlag, 0))
+      return Output;
+	   
+   //create surface to light    
+   float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;
+   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -wsLightDir);
    
    float nDotL = dot( normDepth.xyz, -lightToPxlVec );
 

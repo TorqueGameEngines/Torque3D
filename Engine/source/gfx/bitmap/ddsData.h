@@ -619,6 +619,7 @@ namespace dds
          //float
          case D3DFMT_R16F:          return GFXFormatR16F;
          case D3DFMT_R32F:          return GFXFormatR32F;
+         case D3DFMT_G16R16F:       return GFXFormatR16G16F;
          case D3DFMT_A16B16G16R16F: return GFXFormatR16G16B16A16F;
          case D3DFMT_A32B32G32R32F: return GFXFormatR32G32B32A32F;
          //compressed
@@ -655,6 +656,7 @@ namespace dds
          //float
          case DXGI_FORMAT_R16_FLOAT:            return GFXFormatR16F;
          case DXGI_FORMAT_R32_FLOAT:            return GFXFormatR32F;
+         case DXGI_FORMAT_R16G16_FLOAT:         return GFXFormatR16G16F;
          case DXGI_FORMAT_R16G16B16A16_FLOAT:   return GFXFormatR16G16B16A16F;
          case DXGI_FORMAT_R32G32B32A32_FLOAT:   return GFXFormatR32G32B32A32F;
          //compressed
@@ -731,6 +733,7 @@ namespace dds
          case D3DFMT_ATI2: return GFXFormatBC5;
          case D3DFMT_A16B16G16R16F: return GFXFormatR16G16B16A16F;
          case D3DFMT_A32B32G32R32F: return GFXFormatR32G32B32A32F;
+         case D3DFMT_G16R16F: return GFXFormatR16G16F;
          default:
          {
             Con::errorf("dds::getGFXFormatFourcc: unknown format");

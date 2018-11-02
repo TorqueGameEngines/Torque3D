@@ -592,7 +592,7 @@ ProbeManager::SkylightMaterialInfo* ProbeManager::getSkylightMaterial()
 	if (!mSkylightMaterial)
 
 		// Now create the material info object.
-		mSkylightMaterial = new SkylightMaterialInfo("SklyightMaterial",
+		mSkylightMaterial = new SkylightMaterialInfo("SkyLightMaterial",
 			getGFXVertexFormat<GFXVertexPC>());
 
 	return mSkylightMaterial;
@@ -896,62 +896,35 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
 	matParams->setSafe(attenuation, attenParams);
 
 	NamedTexTarget* deferredTexTarget = NamedTexTarget::find("deferred");
+   NamedTexTarget* matInfoTexTarget = NamedTexTarget::find("matinfo");
+   NamedTexTarget* colorTexTarget = NamedTexTarget::find("color");
 
-	GFXTextureObject *deferredTexObject = deferredTexTarget->getTexture();
-	if (!deferredTexObject) return;
+   if (!deferredTexTarget || !matInfoTexTarget || !colorTexTarget)
+   {
+      Con::errorf("ProbeManager::ReflectProbeMaterialInfo::setProbeParameters: Could not retrieve gbuffer");
+      return;
+   }
 
-	GFX->setTexture(0, deferredTexObject);
+   //set textures
+   GFX->setTexture(0, deferredTexTarget->getTexture());
+	GFX->setTexture(1, matInfoTexTarget->getTexture());
+   GFX->setTexture(2, colorTexTarget->getTexture());
+   GFX->setCubeTexture(3, probeInfo->mCubemap->getPointer());
+   GFX->setCubeTexture(4, probeInfo->mIrradianceCubemap->getPointer());
+   GFX->setTexture(5, probeInfo->mBRDFTexture->getPointer());
 
-	NamedTexTarget* matInfoTexTarget = NamedTexTarget::find("matinfo");
-
-	GFXTextureObject *matInfoTexObject = matInfoTexTarget->getTexture();
-	if (!matInfoTexObject) return;
-
-	GFX->setTexture(1, matInfoTexObject);
-
-	if (probeInfo->mCubemap && !probeInfo->mCubemap->isNull())
-	{
-		GFX->setCubeTexture(2, probeInfo->mCubemap->getPointer());
-	}
-	else
-	{
-		GFX->setCubeTexture(2, NULL);
-	}
-
-	if (probeInfo->mIrradianceCubemap && !probeInfo->mIrradianceCubemap->isNull())
-	{
-		GFX->setCubeTexture(3, probeInfo->mIrradianceCubemap->getPointer());
-	}
-	else
-	{
-		GFX->setCubeTexture(3, NULL);
-	}
-
-	if (probeInfo->mBRDFTexture && !probeInfo->mBRDFTexture->isNull())
-	{
-		GFX->setTexture(4, probeInfo->mBRDFTexture->getPointer());
-	}
-	else
-	{
-		GFX->setTexture(4, NULL);
-	}
-
-   if (probeInfo->mCubemap->isValid())
-      matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(), 2.0f));
-   else
-      matParams->setSafe(cubeMips, F32(0.0));
-
+   //set material params
+   matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(), 2.0f));
 	matParams->setSafe(eyePosWorld, renderState->getCameraPosition());
 	matParams->setSafe(bbMin, probeInfo->mBounds.minExtents);
 	matParams->setSafe(bbMax, probeInfo->mBounds.maxExtents);
-
 	matParams->setSafe(useSphereMode, probeInfo->mProbeShapeType == ProbeRenderInst::Sphere ? 1.0f : 0.0f);
 
 	//SH Terms
 	//static AlignedArray<Point3F> shTermsArray(9, sizeof(Point3F));
 	//dMemset(shTermsArray.getBuffer(), 0, shTermsArray.getBufferSize());
 
-	for (U32 i = 0; i < 9; i++)
+	/*for (U32 i = 0; i < 9; i++)
 	{
 		matParams->setSafe(shTerms[i], probeInfo->mSHTerms[i]);
 	}
@@ -959,7 +932,7 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
 	for (U32 i = 0; i < 5; i++)
 	{
 		matParams->setSafe(shConsts[i], probeInfo->mSHConstants[i]);
-	}
+	}*/
 
    const MatrixF worldToObjectXfm = probeInfo->mTransform;
    MaterialParameterHandle *worldToObjMat = matInstance->getMaterialParameterHandle("$worldToObj");
@@ -996,11 +969,11 @@ ProbeManager::SkylightMaterialInfo::SkylightMaterialInfo(const String &matName,
 
 	eyePosWorld = matInstance->getMaterialParameterHandle("$eyePosWorld");
 
-	for (U32 i = 0; i < 9; i++)
+	/*for (U32 i = 0; i < 9; i++)
 		shTerms[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHTerms%d", i));
 
 	for (U32 i = 0; i < 5; i++)
-		shConsts[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHConsts%d", i));
+		shConsts[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHConsts%d", i));*/
 }
 
 ProbeManager::SkylightMaterialInfo::~SkylightMaterialInfo()

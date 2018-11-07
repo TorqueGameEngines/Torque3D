@@ -15,9 +15,10 @@ struct ConvexConnectP
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 1);
-TORQUE_UNIFORM_SAMPLERCUBE(cubeMap, 2);
-TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemap, 3);
-TORQUE_UNIFORM_SAMPLER2D(BRDFTexture, 4);
+TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 2);
+TORQUE_UNIFORM_SAMPLERCUBE(cubeMap, 3);
+TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemap, 4);
+TORQUE_UNIFORM_SAMPLER2D(BRDFTexture, 5);
 uniform float cubeMips;
 
 uniform float4 rtParams0;

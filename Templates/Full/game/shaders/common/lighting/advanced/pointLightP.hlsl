@@ -154,7 +154,7 @@ LightTargetOutput main(   ConvexConnectP IN )
       
    // Eye ray - Eye -> Pixel
    float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
-   float3 viewSpacePos = eyeRay * normDepth.w;   
+   float3 viewSpacePos = eyeRay * normDepth.w;
    
    // Build light vec, get length, clip pixel if needed
    float3 lightVec = lightPosition - viewSpacePos;
@@ -179,8 +179,9 @@ LightTargetOutput main(   ConvexConnectP IN )
    // fillrate on pixels that are backfacing to the light.
    float nDotL = dot( lightVec, normDepth.xyz );
    //DB_CLIP( nDotL < 0 );
-   //create surface to light
-   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, dot( lightVec, normDepth.xyz ));
+   //create surface to light 
+   float3 wsLightDir = mul(cameraToWorld, float4(lightVec,0)).xyz;
+   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, wsLightDir);//lightPosition - viewSpacePos);
 
 #ifdef NO_SHADOW
 
@@ -206,7 +207,7 @@ LightTargetOutput main(   ConvexConnectP IN )
       shadowCoord,
       shadowSoftness,
       distToLight,
-      nDotL,
+      surfaceToLight.NdotL,
       lightParams.y);
 
    // Dynamic
@@ -216,7 +217,7 @@ LightTargetOutput main(   ConvexConnectP IN )
       dynamicShadowCoord,
       shadowSoftness,
       distToLight,
-      nDotL,
+      surfaceToLight.NdotL,
       lightParams.y);
 
    float shadowed = min(static_shadowed, dynamic_shadowed);

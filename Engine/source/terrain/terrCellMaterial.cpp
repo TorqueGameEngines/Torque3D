@@ -641,7 +641,6 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
 		  matInfo->compositeTex.set(matInfo->mat->getCompositeMap(),
 			  &GFXStaticTextureProfile, "TerrainCellMaterial::_createPass() - CompositeMap");
 		  const S32 sampler = matInfo->compositeTexConst->getSamplerRegister();
-		  Con::errorf("sampler=%i", sampler);
 
 		  desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
 		  desc.samplers[sampler].magFilter = GFXTextureFilterLinear;

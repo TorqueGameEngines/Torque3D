@@ -771,7 +771,7 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
 	  const MatrixF worldToObjectXfm = getTransform();
 
       Box3F cube(-Point3F(mRadius, mRadius, mRadius),Point3F(mRadius, mRadius, mRadius));
-	  Box3F wb = getObjBox();
+	  Box3F wb = getWorldBox();
       cube.setCenter(getPosition()+mProbePosOffset);
 	  wb.setCenter(getPosition() + mProbePosOffset);
       draw->drawCube(desc, cube, color, &worldToObjectXfm);

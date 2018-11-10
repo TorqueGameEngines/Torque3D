@@ -934,9 +934,9 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
 		matParams->setSafe(shConsts[i], probeInfo->mSHConstants[i]);
 	}*/
 
-   const MatrixF worldToObjectXfm = probeInfo->mTransform;
-   MaterialParameterHandle *worldToObjMat = matInstance->getMaterialParameterHandle("$worldToObj");
-   matParams->setSafe(worldToObjMat, worldToObjectXfm);
+   //const MatrixF worldToObjectXfm = probeInfo->mTransform;
+   //MaterialParameterHandle *worldToObjMat = matInstance->getMaterialParameterHandle("$worldToObj");
+   //matParams->setSafe(worldToObjMat, worldToObjectXfm);
 }
 
 //

@@ -117,7 +117,7 @@ ReflectionProbe::ReflectionProbe()
    mRadius = 10;
 
    mUseCubemap = false;
-   mUseHDRCaptures = true;
+   mUseHDRCaptures = false;
 
    mStaticCubemap = NULL;
    mReflectionPath = "";

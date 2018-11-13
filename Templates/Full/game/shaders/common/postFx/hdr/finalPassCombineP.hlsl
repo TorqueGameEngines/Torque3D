@@ -101,7 +101,17 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    sample.g = TORQUE_TEX1D( colorCorrectionTex, sample.g ).g;
    sample.b = TORQUE_TEX1D( colorCorrectionTex, sample.b ).b;
 
-   sample = float4(tonemap(sample.rgb),1);
+   // Apply contrast
+   sample.rgb = ((sample.rgb - 0.5f) * Contrast) + 0.5f;
+
+   // Apply brightness
+   //sample.rgb += Brightness;
+
+   //tonemapping - TODO fix up eye adaptation
+   if ( g_fEnableToneMapping > 0.0f )
+   {
+      sample.rgb = tonemap(sample.rgb);
+   }
 
    return sample;
 }

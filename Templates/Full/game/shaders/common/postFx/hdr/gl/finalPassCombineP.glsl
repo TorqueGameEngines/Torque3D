@@ -38,7 +38,7 @@ uniform float g_fMiddleGray;
 uniform float g_fWhiteCutoff;
 
 uniform float g_fEnableBlueShift;
-uniform vec3 g_fBlueShiftColor; 
+uniform vec3 g_fBlueShiftColor;
 
 uniform float g_fBloomScale;
 
@@ -92,7 +92,7 @@ void main()
       // Lerp between current color and blue, desaturated copy
       vec3 rodColor = dot( _sample.rgb, LUMINANCE_VECTOR ) * g_fBlueShiftColor;
       _sample.rgb = mix( _sample.rgb, rodColor, coef );
-	  
+
       rodColor = dot( bloom.rgb, LUMINANCE_VECTOR ) * g_fBlueShiftColor;
       bloom.rgb = mix( bloom.rgb, rodColor, coef );
    }
@@ -104,6 +104,18 @@ void main()
    _sample.r = texture( colorCorrectionTex, _sample.r ).r;
    _sample.g = texture( colorCorrectionTex, _sample.g ).g;
    _sample.b = texture( colorCorrectionTex, _sample.b ).b;
+
+   // Apply contrast
+   _sample.rgb = ((_sample.rgb - 0.5f) * Contrast) + 0.5f;
+
+   // Apply brightness
+   //_sample.rgb += Brightness;
+
+   //tonemapping - TODO fix up eye adaptation
+   if ( g_fEnableToneMapping > 0.0f )
+   {
+      _sample.rgb = tonemap(_sample.rgb);
+   }
 
    OUT_col = _sample;
 }

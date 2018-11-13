@@ -110,8 +110,12 @@ LightTargetOutput main(   ConvexConnectP IN )
                                     uvScene, eyePosWorld, eyeRay, cameraToWorld);   
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
+   {   
+      Output.diffuse = surface.baseColor;
+      Output.spec = surface.baseColor;
       return Output;
-	   
+	}
+   
    //create surface to light    
    float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;
    SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -wsLightDir);

@@ -134,7 +134,7 @@ float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
       #ifdef NO_SHADOW
          debugColor = float3(1.0,1.0,1.0);
       #endif
-
+	  
       #ifdef PSSM_DEBUG_RENDER
          if ( finalMask.x > 0 )
             debugColor += float3( 1, 0, 0 );
@@ -194,6 +194,15 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
    //create surface
    Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
+                                    
+   //early out if emissive
+   if (getFlag(surface.matFlag, 0))
+   {   
+      Output.diffuse = surface.baseColor;
+      Output.spec = surface.baseColor;
+      return Output;
+	}
+   
    //create surface to light    
    float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;                             
    SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -wsLightDir);
@@ -215,6 +224,7 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
 
       float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, dynamicWorldToLightProj, surface.P, dynamicScaleX,
                                                               dynamicScaleY, dynamicOffsetX, dynamicOffsetY, dynamicFarPlaneScalePSSM, surfaceToLight.NdotL);
+
       float static_shadowed = static_shadowed_colors.a;
       float dynamic_shadowed = dynamic_shadowed_colors.a;
 	  

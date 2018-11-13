@@ -173,7 +173,11 @@ LightTargetOutput main(   ConvexConnectP IN )
                                     uvScene, eyePosWorld, eyeRay, cameraToWorld);   
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
+   {   
+      Output.diffuse = surface.baseColor;
+      Output.spec = surface.baseColor;
       return Output;
+	}
    
    // If we can do dynamic branching then avoid wasting
    // fillrate on pixels that are backfacing to the light.

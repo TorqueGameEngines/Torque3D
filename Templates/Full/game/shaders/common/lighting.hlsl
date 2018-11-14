@@ -104,7 +104,7 @@ struct Surface
 		NdotV = abs(dot(N, V)) + 1e-5f; // avoid artifact
 
 		albedo = baseColor.rgb * (1.0 - metalness);
-		f0 = lerp(float3_splat(0.04), baseColor.rgb, metalness);
+		f0 = lerp(0.04.xxx, baseColor.rgb, metalness);
 
 		R = -reflect(V, N);
 		float f90 = saturate(50.0 * dot(f0, 0.33));
@@ -114,7 +114,7 @@ struct Surface
 
 inline Surface CreateSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TORQUE_SAMPLER2D(gbufferTex2), in float2 uv, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
 {
-	Surface surface;
+	Surface surface = (Surface)0;
 
    float4 gbuffer1 = TORQUE_TEX2DLOD(gbufferTex1, float4(uv,0,0));
    float4 gbuffer2 = TORQUE_TEX2DLOD(gbufferTex2, float4(uv,0,0));
@@ -125,7 +125,7 @@ inline Surface CreateSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = gbuffer1;
    const float minRoughness=1e-4;
-	surface.roughness = clamp(1.0 - gbuffer2.b, minRoughness, 1.0); //torque uses smoothness so we convert to roughness. Should really clamp during gbuffer pass though
+	surface.roughness = clamp(1.0 - gbuffer2.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
 	surface.roughness_brdf = surface.roughness * surface.roughness;
 	surface.metalness = gbuffer2.a;
    surface.ao = gbuffer2.g;
@@ -146,8 +146,7 @@ struct SurfaceToLight
 
 inline SurfaceToLight CreateSurfaceToLight(in Surface surface, in float3 L)
 {
-	SurfaceToLight surfaceToLight;
-
+	SurfaceToLight surfaceToLight = (SurfaceToLight)0;
 	surfaceToLight.L = normalize(L);
 	surfaceToLight.H = normalize(surface.V + surfaceToLight.L);
 	surfaceToLight.NdotL = saturate(dot(surfaceToLight.L, surface.N));
@@ -169,7 +168,7 @@ float3 BRDF_GetSpecular(in Surface surface, in SurfaceToLight surfaceToLight)
 
 float BRDF_GetDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
 {
-   //getting some banding with disney method, using lambert instead - todo do some futher testing
+   //getting some banding with disney method, using lambert instead - todo futher testing
 	float Fd = 1.0 / M_PI_F;//Fr_DisneyDiffuse(surface.NdotV, surfaceToLight.NdotL, surfaceToLight.HdotV, surface.roughness) / M_PI_F;
 	return Fd;
 }
@@ -182,8 +181,28 @@ struct LightResult
 
 inline LightResult GetDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-   LightResult result;
+   LightResult result = (LightResult)0;
    float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity;
+   result.diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+   result.spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+
+   result.diffuse = max(0.0f, result.diffuse);
+   result.spec = max(0.0f, result.spec);
+
+   return result;
+}
+
+inline LightResult GetPointLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity,float distToLight, float radius, float shadow)
+{
+   LightResult result = (LightResult)0;
+
+   // Distance attenuation from Epic Games' paper
+   float distanceByRadius = 1.0f - pow((distToLight / radius), 4);
+   float clamped = pow(clamp(distanceByRadius, 0.0f, 1.0f), 2.0f);
+   float attenuation = clamped / (sqr(distToLight) + 1.0f);
+
+   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+
    result.diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    result.spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 

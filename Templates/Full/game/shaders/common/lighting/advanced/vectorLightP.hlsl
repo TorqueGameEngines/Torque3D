@@ -203,9 +203,8 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
       return Output;
 	}
    
-   //create surface to light    
-   float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;                             
-   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -wsLightDir);
+   //create surface to light                           
+   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -lightDirection);
 
    //light color might be changed by PSSM_DEBUG_RENDER
    float3 lightingColor = lightColor.rgb;

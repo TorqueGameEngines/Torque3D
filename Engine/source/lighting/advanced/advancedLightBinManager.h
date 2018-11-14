@@ -184,7 +184,7 @@ protected:
                               const PlaneF &farPlane,
                               const PlaneF &_vsFarPlane );
 
-      void setLightParameters( const LightInfo *light, const SceneRenderState* renderState, const MatrixF &worldViewOnly );
+      void setLightParameters( const LightInfo *light, const SceneRenderState* renderState );
    };
 
 protected:

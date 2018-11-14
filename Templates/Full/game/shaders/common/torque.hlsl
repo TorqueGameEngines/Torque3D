@@ -346,6 +346,4 @@ float3 getCubeDir(int face, float2 uv)
 }
 
 #define sqr(a)		((a)*(a))
-#define float4_splat(a) float4(a,a,a,a)
-#define float3_splat(a) float3(a,a,a)
 #endif // _TORQUE_HLSL_

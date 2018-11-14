@@ -337,7 +337,7 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
 
       // Set up SG data
       setupSGData( sgData, state, sunLight );
-      vectorMatInfo->setLightParameters( sunLight, state, worldToCameraXfm );
+      vectorMatInfo->setLightParameters( sunLight, state );
 
       // Set light holds the active shadow map.       
       mShadowManager->setLightShadowMapForLight( sunLight );
@@ -375,7 +375,7 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
       GFXDEBUGEVENT_SCOPE( AdvancedLightBinManager_Render_Light, ColorI::RED );
 
       setupSGData( sgData, state, curLightInfo );
-      curLightMat->setLightParameters( curLightInfo, state, worldToCameraXfm );
+      curLightMat->setLightParameters( curLightInfo, state );
       mShadowManager->setLightShadowMap( curEntry.shadowMap );
       mShadowManager->setLightDynamicShadowMap( curEntry.dynamicShadowMap );
 
@@ -703,7 +703,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setViewParameters(  const F32 _
    matParams->setSafe( zNearFarInvNearFar, Point4F( _zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar ) );
 }
 
-void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const LightInfo *lightInfo, const SceneRenderState* renderState, const MatrixF &worldViewOnly )
+void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const LightInfo *lightInfo, const SceneRenderState* renderState )
 {
    MaterialParameters *matParams = matInstance->getMaterialParameters();
 
@@ -728,9 +728,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    {
    case LightInfo::Vector:
       {
-         VectorF lightDir = lightInfo->getDirection();
-         worldViewOnly.mulV(lightDir);
-         lightDir.normalize();
+         const VectorF lightDir = lightInfo->getDirection();
          matParams->setSafe( lightDirection, lightDir );
 
          // Set small number for alpha since it represents existing specular in
@@ -769,8 +767,6 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          matParams->setSafe( lightSpotParams, spotParams );
 
          VectorF lightDir = lightInfo->getDirection();
-         worldViewOnly.mulV(lightDir);
-         lightDir.normalize();
          matParams->setSafe( lightDirection, lightDir );
       }
       // Fall through
@@ -779,10 +775,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    {
       const F32 radius = lightInfo->getRange().x;
       matParams->setSafe( lightRange, radius );
-
-      Point3F lightPos;
-      worldViewOnly.mulP(lightInfo->getPosition(), &lightPos);
-      matParams->setSafe( lightPosition, lightPos );
+      matParams->setSafe( lightPosition, lightInfo->getPosition());
 
       // Get the attenuation falloff ratio and normalize it.
       Point3F attenRatio = lightInfo->getExtended<ShadowMapParams>()->attenuationRatio;

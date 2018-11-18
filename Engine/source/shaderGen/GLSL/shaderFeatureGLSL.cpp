@@ -1659,7 +1659,10 @@ void VertPositionGLSL::processVert( Vector<ShaderComponent*> &componentList,
    
    meta->addStatement( new GenOp( "   @ = tMul(@, vec4(@.xyz,1));\r\n", 
        outPosition, modelview, inPosition ) );   
-   
+   if (fd.materialFeatures[MFT_SkyBox])
+   {
+	   meta->addStatement(new GenOp("   @ = @.xyww;\r\n", outPosition, outPosition));
+   }
 	output = meta;
 }
 

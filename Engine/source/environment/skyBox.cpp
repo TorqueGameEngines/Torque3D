@@ -602,6 +602,7 @@ void SkyBox::_initMaterial()
    desc.setCullMode( GFXCullNone );
    desc.setBlend( true );
    desc.setZReadWrite( true, false );
+   desc.zFunc = GFXCmpLessEqual;
    mMatInstance->addStateBlockDesc( desc );
 
    // Also disable lighting on the skybox material by default.

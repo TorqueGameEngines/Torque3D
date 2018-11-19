@@ -201,6 +201,15 @@ ProbeRenderInst* ProbeManager::createProbeInfo(ProbeRenderInst* probe /* = NULL 
    return outProbe;
 }
 
+void ProbeManager::registerProbe(U32 probeIdx)
+{
+   //Mostly for consolidation, but also lets us sanity check or prep any other data we need for rendering this in one place at time of flagging for render
+   if (probeIdx >= ProbeRenderInst::all.size())
+      return;
+
+   mRegisteredProbes.push_back_unique(probeIdx);
+}
+
 /*void ProbeManager::initLightFields()
 {
    ProbeManagerMap &ProbeManagers = _getProbeManagers();

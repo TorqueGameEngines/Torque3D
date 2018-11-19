@@ -198,6 +198,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
    if (!ProbeRenderInst::all.size())
       return;
 
+   if (PROBEMGR->mRegisteredProbes.empty())
+      return;
+
    if (!ProbeManager::smRenderReflectionProbes)
       return;
 
@@ -255,9 +258,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
    ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
    ProbeManager::ReflectProbeMaterialInfo* reflProbeMat = PROBEMGR->getReflectProbeMaterial();
 
-   for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
+   for (U32 i = 0; i < PROBEMGR->mRegisteredProbes.size(); i++)
    {
-      ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
+      ProbeRenderInst* curEntry = ProbeRenderInst::all[PROBEMGR->mRegisteredProbes[i]];
 
       if (!curEntry->mIsEnabled)
          continue;
@@ -320,6 +323,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
          }
       }
    }
+
+   //And clean us up
+   PROBEMGR->mRegisteredProbes.clear();
 
    probeLightingTargetRef->resolve();
    GFX->popActiveRenderTarget();

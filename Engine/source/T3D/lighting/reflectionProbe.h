@@ -112,6 +112,7 @@ protected:
    ProbeRenderInst::ProbeShapeType mProbeShapeType;
 
    ProbeRenderInst* mProbeInfo;
+   U32 mProbeInfoIdx;
 
    //Indirect Lighting Contribution stuff
    IndrectLightingModeType mIndrectLightingModeType;

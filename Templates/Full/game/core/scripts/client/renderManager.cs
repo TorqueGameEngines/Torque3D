@@ -61,6 +61,8 @@ function initRenderManager()
    DiffuseRenderPassManager.addManager( new RenderMeshMgr(DecalRoadBin)    { bintype = "DecalRoad"; renderOrder = 0.8; processAddOrder = 0.8; } );
    DiffuseRenderPassManager.addManager( new RenderMeshMgr(DecalBin)        { bintype = "Decal"; renderOrder = 0.81; processAddOrder = 0.81; } );
    DiffuseRenderPassManager.addManager( new RenderOcclusionMgr(OccluderBin){ bintype = "Occluder"; renderOrder = 0.9; processAddOrder = 0.9; } );
+   // Render the sky last
+   DiffuseRenderPassManager.addManager( new RenderObjectMgr(SkyBin) { bintype = "Sky"; renderOrder = 1.95; processAddOrder = 1.95; } );
      
    // We now render translucent objects that should handle
    // their own fogging and lighting.
@@ -77,8 +79,6 @@ function initRenderManager()
    
    // Note that the GlowPostFx is triggered after this bin.
    DiffuseRenderPassManager.addManager( new RenderGlowMgr(GlowBin) { renderOrder = 1.5; processAddOrder = 1.5; } );
-   // Render the sky last
-   DiffuseRenderPassManager.addManager( new RenderObjectMgr(SkyBin) { bintype = "Sky"; renderOrder = 1.55; processAddOrder = 1.55; } );
    
    // We render any editor stuff from this bin.  Note that the HDR is
    // completed before this bin to keep editor elements from tone mapping.   

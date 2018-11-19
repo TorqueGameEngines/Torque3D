@@ -277,12 +277,16 @@ public:
       SpecialProbeTypesCount
    };
 
+   Vector<U32> mRegisteredProbes;
+
    ProbeManager();
 
    ~ProbeManager();
 
    /// 
    static ProbeRenderInst* createProbeInfo(ProbeRenderInst* light = NULL);
+
+   void registerProbe(U32 probeIdx);
 
    /// The light manager activation signal.
    static Signal<void(const char*,bool)> smActivateSignal;

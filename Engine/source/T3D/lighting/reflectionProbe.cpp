@@ -142,6 +142,8 @@ ReflectionProbe::ReflectionProbe()
 
    mProbePosOffset = Point3F::Zero;
    mEditPosOffset = false;
+
+   mProbeInfoIdx = -1;
 }
 
 ReflectionProbe::~ReflectionProbe()
@@ -461,6 +463,7 @@ void ReflectionProbe::updateProbeParams()
    if (mProbeInfo == nullptr)
    {
       mProbeInfo = new ProbeRenderInst();
+      mProbeInfoIdx = ProbeRenderInst::all.size() - 1;
       mProbeInfo->mIsEnabled = false;
    }
 
@@ -666,7 +669,7 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
    mProbeInfo->mScore *= mMax(mAbs(mDot(vect, state->getCameraTransform().getForwardVector())),0.001f);
 
    //Register
-   //PROBEMGR->registerProbe(mProbeInfo, this);
+   PROBEMGR->registerProbe(mProbeInfoIdx);
 
    if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
    {

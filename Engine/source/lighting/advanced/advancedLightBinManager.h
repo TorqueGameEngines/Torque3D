@@ -230,8 +230,6 @@ protected:
    ///
    void _onShadowFilterChanged();
 
-   AdvancedLightBufferConditioner *mConditioner;
-
    typedef GFXVertexPNTT FarFrustumQuadVert; 
    GFXVertexBufferHandle<FarFrustumQuadVert> mFarFrustumQuadVerts;
 

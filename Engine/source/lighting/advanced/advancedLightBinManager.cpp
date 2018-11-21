@@ -119,17 +119,8 @@ AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = 
    :  RenderBinManager( RIT_LightInfo, 1.0f, 1.0f ), 
       mNumLightsCulled(0), 
       mLightManager(lm), 
-      mShadowManager(sm),
-      mConditioner(NULL)
+      mShadowManager(sm)
 {
-   // Create an RGB conditioner
-   NamedTexTarget* specLightTarg = NamedTexTarget::find(RenderDeferredMgr::SpecularLightBufferName);
-
-   mConditioner = new AdvancedLightBufferConditioner(lightBufferFormat,
-                                                      AdvancedLightBufferConditioner::RGB );
-
-   specLightTarg->setConditioner( mConditioner );
-
    mMRTLightmapsDuringDeferred = true;
 
    Con::NotifyDelegate callback( this, &AdvancedLightBinManager::_deleteLightMaterials );
@@ -142,8 +133,6 @@ AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = 
 AdvancedLightBinManager::~AdvancedLightBinManager()
 {
    _deleteLightMaterials();
-
-   SAFE_DELETE(mConditioner);
 
    Con::NotifyDelegate callback( this, &AdvancedLightBinManager::_deleteLightMaterials );
    Con::removeVariableNotify( "$pref::shadows::filterMode", callback );
@@ -274,16 +263,8 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    //if ( !_onPreRender( state ) )
    //   return;
 
-   //GFX->clear(GFXClearTarget, ColorI(0, 0, 0, 0), 1.0f, 0);
-
-   NamedTexTargetRef diffuseLightingTarget = NamedTexTarget::find("diffuseLighting");
-
-   if (diffuseLightingTarget.isNull())
-      return;
-
-   NamedTexTargetRef specularLightingTarget = NamedTexTarget::find("specularLighting");
-
-   if (specularLightingTarget.isNull())
+   NamedTexTargetRef sceneColorTargetRef = NamedTexTarget::find("AL_FormatToken");
+   if (sceneColorTargetRef.isNull())
       return;
 
    GFXTextureTargetRef lightingTargetRef = GFX->allocRenderToTextureTarget();
@@ -294,13 +275,12 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    //Do a quick pass to update our probes if they're dirty
    PROBEMGR->updateDirtyProbes();
 
-   lightingTargetRef->attachTexture(GFXTextureTarget::Color0, specularLightingTarget->getTexture());
-   lightingTargetRef->attachTexture(GFXTextureTarget::Color1, diffuseLightingTarget->getTexture());
+   lightingTargetRef->attachTexture(GFXTextureTarget::Color0, sceneColorTargetRef->getTexture());
 
    GFX->pushActiveRenderTarget();
    GFX->setActiveRenderTarget(lightingTargetRef);
 
-   GFX->setViewport(specularLightingTarget->getViewport());
+   GFX->setViewport(sceneColorTargetRef->getViewport());
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
@@ -415,7 +395,6 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
 
    // Finish up the rendering
    //_onPostRender();
-   lightingTargetRef->resolve();
    GFX->popActiveRenderTarget();
 }
 
@@ -765,9 +744,8 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
                               0.0f );
 
          matParams->setSafe( lightSpotParams, spotParams );
-
-         VectorF lightDir = lightInfo->getDirection();
-         matParams->setSafe( lightDirection, lightDir );
+         matParams->setSafe( lightDirection, lightInfo->getDirection());
+         matParams->setSafe( lightPosition, lightInfo->getPosition());
       }
       // Fall through
 

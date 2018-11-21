@@ -169,6 +169,7 @@ protected:
    F32 mMaxDrawDistance;
 
    bool mResourcesCreated;
+   U32 mCaptureMask;
 
 public:
    ReflectionProbe();
@@ -242,6 +243,8 @@ public:
    String getPrefilterMapPath();
    String getIrradianceMapPath();
    void bake(String outputPath, S32 resolution, bool renderWithProbes = false);
+
+   const U32 getProbeInfoIndex() { return mProbeInfoIdx; }
 };
 
 typedef ProbeRenderInst::ProbeShapeType ReflectProbeType;

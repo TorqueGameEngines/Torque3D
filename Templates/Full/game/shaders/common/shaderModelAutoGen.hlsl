@@ -28,22 +28,6 @@
 
 // Portability helpers for autogenConditioners
 
-//todo deprecate this function
 #define TORQUE_DEFERRED_UNCONDITION(tex, coords) deferredUncondition(tex, texture_##tex, coords)
-
-inline float4 UnpackDepthNormal(TORQUE_SAMPLER2D(tex), float2 screenUVVar)
-{
-   // Sampler g-buffer
-   float4 bufferSample = TORQUE_TEX2DLOD(tex,float4(screenUVVar,0,0));
-   // g-buffer unconditioner: float4(normal.X, normal.Y, depth Hi, depth Lo)
-   float2 _inpXY = bufferSample.xy;
-   float _xySQ = dot(_inpXY, _inpXY);
-   float4 _gbUnconditionedInput = float4( sqrt(half(1.0 - (_xySQ / 4.0))) * _inpXY, -1.0 + (_xySQ / 2.0), bufferSample.a).xzyw;
-   
-   // Decode depth
-   _gbUnconditionedInput.w = dot( bufferSample.zw, float2(1.0, 1.0/65535.0));
-
-   return _gbUnconditionedInput;
-}
 
 #endif //_TORQUE_SHADERMODEL_AUTOGEN_

@@ -45,12 +45,22 @@ uniform float4 albedo;
 
 #endif // !TORQUE_SHADERGEN
 
-//deferred lighting output
-struct LightTargetOutput
+inline float3 getDistanceVectorToPlane( float3 origin, float3 direction, float4 plane )
 {
-    float4 spec: TORQUE_TARGET0;
-    float4 diffuse: TORQUE_TARGET1;
-};
+   float denum = dot( plane.xyz, direction.xyz );
+   float num = dot( plane, float4( origin, 1.0 ) );
+   float t = -num / denum;
+
+   return direction.xyz * t;
+}
+
+inline float3 getDistanceVectorToPlane( float negFarPlaneDotEye, float3 direction, float4 plane )
+{
+   float denum = dot( plane.xyz, direction.xyz );
+   float t = negFarPlaneDotEye / denum;
+
+   return direction.xyz * t;
+}
 
 //TODO fix compute 4 lights
 void compute4Lights( float3 wsView, 
@@ -121,7 +131,7 @@ inline Surface CreateSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 
    surface.depth = gbuffer0.a;
 	surface.P = wsEyePos + wsEyeRay * surface.depth;
-	surface.N = mul(invView, float4(gbuffer0.xyz,0)).xyz;
+	surface.N = mul(invView, float4(gbuffer0.xyz,0)).xyz; //TODO move t3d to use WS normals
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = gbuffer1;
    const float minRoughness=1e-4;
@@ -166,48 +176,56 @@ float3 BRDF_GetSpecular(in Surface surface, in SurfaceToLight surfaceToLight)
 	return Fr;
 }
 
-float BRDF_GetDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
+float3 BRDF_GetDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
 {
    //getting some banding with disney method, using lambert instead - todo futher testing
-	float Fd = 1.0 / M_PI_F;//Fr_DisneyDiffuse(surface.NdotV, surfaceToLight.NdotL, surfaceToLight.HdotV, surface.roughness) / M_PI_F;
-	return Fd;
+	float Fd = 1.0 / M_PI_F;
+   //energy conservation - remove this if reverting back to disney method
+   float3 kD = 1.0.xxx - surface.F;
+	kD *= 1.0 - surface.metalness;
+   float3 diffuse = kD * surface.baseColor.rgb * Fd;
+	return diffuse;
 }
 
-struct LightResult
+// inverse square falloff from Epic Games' paper
+float Attenuate(float distToLight, float radius)
 {
-   float3 diffuse;
-   float3 spec;
-};
-
-inline LightResult GetDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
-{
-   LightResult result = (LightResult)0;
-   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity;
-   result.diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-   result.spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
-
-   result.diffuse = max(0.0f, result.diffuse);
-   result.spec = max(0.0f, result.spec);
-
-   return result;
-}
-
-inline LightResult GetPointLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity,float distToLight, float radius, float shadow)
-{
-   LightResult result = (LightResult)0;
-
-   // Distance attenuation from Epic Games' paper
    float distanceByRadius = 1.0f - pow((distToLight / radius), 4);
    float clamped = pow(clamp(distanceByRadius, 0.0f, 1.0f), 2.0f);
-   float attenuation = clamped / (sqr(distToLight) + 1.0f);
+   return clamped / (sqr(distToLight) + 1.0f);
+}
+
+inline float3 GetDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
+{
+   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity;
+   float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+   float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+
+   float3 final = max(0.0f, diffuse + spec * surface.ao);
+   return final;
+}
+
+inline float3 GetPointLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity,float distToLight, float radius, float shadow)
+{
+   float attenuation = Attenuate(distToLight,radius);
 
    float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
 
-   result.diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-   result.spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+   float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+   float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   result.diffuse = max(0.0f, result.diffuse);
-   result.spec = max(0.0f, result.spec);
+   float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
+   return final;
+}
 
-   return result;
+inline float3 GetSpotLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity,float distToLight, float radius, float shadow)
+{
+   float attenuation = Attenuate(distToLight,radius);
+   //attenuation *= ( cosAlpha - lightSpotParams.x ) / lightSpotParams.y;
+   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+   float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+   float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+
+   float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
+   return final;
 }

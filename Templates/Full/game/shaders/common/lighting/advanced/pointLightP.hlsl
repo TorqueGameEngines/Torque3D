@@ -23,7 +23,6 @@
 #include "../../shaderModelAutoGen.hlsl"
 
 #include "farFrustumQuad.hlsl"
-#include "lightingUtils.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
 #include "softShadow.hlsl"
@@ -88,7 +87,9 @@ TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
       // this value was found via experementation
       // NOTE: this is wrong, it only biases in one direction, not towards the uv 
       // center ( 0.5 0.5 ).
-      //shadowCoord.xy *= 0.997;
+      float offsetVal = 0.95;
+      shadowCoord.xy *= offsetVal;
+      shadowCoord.xy += (1.0-offsetVal).xx / 2.0;
 
       #ifndef SHADOW_PARABOLOID
 
@@ -139,18 +140,14 @@ uniform float3x3 dynamicViewToLightProj;
 uniform float3 eyePosWorld;
 uniform float4x4 cameraToWorld;
 
-LightTargetOutput main(   ConvexConnectP IN )
+float4 main(   ConvexConnectP IN ) : SV_TARGET
 {   
-   LightTargetOutput Output = (LightTargetOutput)0;
-
    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w;
    float2 uvScene = getUVFromSSPos(ssPos, rtParams0);
 
-   //sky and editor background check
-   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), uvScene);
-   if (normDepth.w>0.9999)
-      return Output;
+   //unpack normal and linear depth 
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
       
    //eye ray WS/VS
    float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
@@ -163,15 +160,12 @@ LightTargetOutput main(   ConvexConnectP IN )
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
-      Output.diffuse = surface.baseColor;
-      Output.spec = surface.baseColor;
-      return Output;
+      return 0.0.xxxx;
 	}
 
-   //create surface to light 
    float3 L = lightPosition - surface.P;
    float dist = length(L);
-   LightResult result = (LightResult)0;
+   float3 result = 0.0.xxx;
    [branch]
 	if (dist < lightRange)
 	{     
@@ -215,10 +209,10 @@ LightTargetOutput main(   ConvexConnectP IN )
    #endif // !NO_SHADOW
    
       float3 lightcol = lightColor.rgb;
-   /*#ifdef USE_COOKIE_TEX
+   #ifdef USE_COOKIE_TEX
 
       // Lookup the cookie sample.
-      float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(viewToLightProj, -surfaceToLight.L));
+      float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
 
       // Multiply the light with the cookie tex.
       lightcol *= cookie.rgb;
@@ -228,15 +222,11 @@ LightTargetOutput main(   ConvexConnectP IN )
       // regions of the cookie texture.
       atten *= max(cookie.r, max(cookie.g, cookie.b));
 
-   #endif*/
+   #endif
 
       //get point light contribution   
       result = GetPointLight(surface, surfaceToLight, lightcol, lightBrightness, dist, lightRange, shadowed);
    }
       
-   //output
-   Output.diffuse = float4(result.diffuse, 0);
-   Output.spec = float4(result.spec, 0);
-   
-   return Output;
+   return float4(result, 0);
 }

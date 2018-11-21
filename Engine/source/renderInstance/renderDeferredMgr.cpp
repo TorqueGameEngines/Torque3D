@@ -56,8 +56,6 @@ const String RenderDeferredMgr::BufferName("deferred");
 const RenderInstType RenderDeferredMgr::RIT_Deferred("Deferred");
 const String RenderDeferredMgr::ColorBufferName("color");
 const String RenderDeferredMgr::MatInfoBufferName("matinfo");
-const String RenderDeferredMgr::DiffuseLightBufferName("diffuseLighting");
-const String RenderDeferredMgr::SpecularLightBufferName("specularLighting");
 
 IMPLEMENT_CONOBJECT(RenderDeferredMgr);
 
@@ -104,8 +102,6 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    mNamedTarget.registerWithName( BufferName );
    mColorTarget.registerWithName( ColorBufferName );
    mMatInfoTarget.registerWithName( MatInfoBufferName );
-   mDiffuseLightTarget.registerWithName( DiffuseLightBufferName );
-   mSpecularLightTarget.registerWithName(SpecularLightBufferName);
 
    _registerFeatures();
 }
@@ -116,8 +112,6 @@ RenderDeferredMgr::~RenderDeferredMgr()
 
    mColorTarget.release();
    mMatInfoTarget.release();
-   mDiffuseLightTarget.release();
-   mSpecularLightTarget.release();
    _unregisterFeatures();
    SAFE_DELETE( mDeferredMatInstance );
 }
@@ -141,8 +135,6 @@ bool RenderDeferredMgr::setTargetSize(const Point2I &newTargetSize)
    mNamedTarget.setViewport( GFX->getViewport() );
    mColorTarget.setViewport( GFX->getViewport() );
    mMatInfoTarget.setViewport( GFX->getViewport() );
-   mDiffuseLightTarget.setViewport( GFX->getViewport() );
-   mSpecularLightTarget.setViewport(GFX->getViewport());
    return ret;
 }
 
@@ -183,35 +175,25 @@ bool RenderDeferredMgr::_updateTargets()
       mMatInfoTex.set(mTargetSize.x, mTargetSize.y, matInfoFormat,
          &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
          1, GFXTextureManager::AA_MATCH_BACKBUFFER);
-         mMatInfoTarget.setTexture(mMatInfoTex);
+      mMatInfoTarget.setTexture(mMatInfoTex);
  
       for (U32 i = 0; i < mTargetChainLength; i++)
          mTargetChain[i]->attachTexture(GFXTextureTarget::Color2, mMatInfoTarget.getTexture());
    }
 
-   if (mDiffuseLightTex.getFormat() != GFXFormatR16G16B16A16F || mDiffuseLightTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
+   //scene color target
+   NamedTexTargetRef sceneColorTargetRef = NamedTexTarget::find("AL_FormatToken");
+   if (sceneColorTargetRef.isValid())
    {
-      mDiffuseLightTarget.release();
-      mDiffuseLightTex.set(mTargetSize.x, mTargetSize.y, GFXFormatR16G16B16A16F,
-         &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
-         1, GFXTextureManager::AA_MATCH_BACKBUFFER);
-      mDiffuseLightTarget.setTexture(mDiffuseLightTex);
-
       for (U32 i = 0; i < mTargetChainLength; i++)
-         mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, mDiffuseLightTarget.getTexture());
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, sceneColorTargetRef->getTexture(0));
+   }
+   else
+   {
+      Con::errorf("RenderDeferredMgr: Could not find AL_FormatToken");
+      return false;
    }
 
-   if (mSpecularLightTex.getFormat() != GFXFormatR16G16B16A16F || mSpecularLightTex.getWidthHeight() != mTargetSize || GFX->recentlyReset())
-   {
-      mSpecularLightTarget.release();
-      mSpecularLightTex.set(mTargetSize.x, mTargetSize.y, GFXFormatR16G16B16A16F,
-         &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
-         1, GFXTextureManager::AA_MATCH_BACKBUFFER);
-      mSpecularLightTarget.setTexture(mSpecularLightTex);
-
-      for (U32 i = 0; i < mTargetChainLength; i++)
-         mTargetChain[i]->attachTexture(GFXTextureTarget::Color4, mSpecularLightTarget.getTexture());
-   }
    GFX->finalizeReset();
 
    return ret;
@@ -337,12 +319,11 @@ void RenderDeferredMgr::render( SceneRenderState *state )
    const bool isRenderingToTarget = _onPreRender(state);
 
    // Clear z-buffer and g-buffer.
-   GFX->clear(GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
+   GFX->clear(GFXClearZBuffer | GFXClearStencil, LinearColorF::ZERO, 1.0f, 0);
    GFX->clearColorAttachment(0, LinearColorF::ONE);//normdepth
    GFX->clearColorAttachment(1, LinearColorF::ZERO);//albedo
    GFX->clearColorAttachment(2, LinearColorF::ZERO);//matinfo
-   GFX->clearColorAttachment(3, LinearColorF::ZERO);//diffuse
-   GFX->clearColorAttachment(4, LinearColorF::ZERO);//specular
+   //AL_FormatToken is cleared by it's own class
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
@@ -358,7 +339,7 @@ void RenderDeferredMgr::render( SceneRenderState *state )
       mDeferredMatInstance->setTransforms(matrixSet, state);
    }
 
-   // Signal start of pre-pass
+   // Signal start of deferred
    getRenderSignal().trigger( state, this, true );
    
    // First do a loop and render all the terrain... these are 
@@ -751,8 +732,11 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
       }
       else
       {
-         // If this object isn't lightmapped, add a zero-output feature to it
-         newFeatures.addFeature( MFT_RenderTarget3_Zero );
+         // If this object isn't lightmapped or emissive, add a zero-output feature for render target 3
+         if (fd.features.hasFeature(MFT_IsEmissive))
+            newFeatures.addFeature(MFT_DeferredEmissive);
+         else
+            newFeatures.addFeature( MFT_RenderTarget3_Zero );
       }
    }
 

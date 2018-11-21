@@ -26,7 +26,6 @@
 #include "farFrustumQuad.hlsl"
 #include "../../torque.hlsl"
 #include "../../lighting.hlsl"
-#include "lightingUtils.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
 #include "softShadow.hlsl"
 
@@ -182,15 +181,11 @@ float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
 };
 
 
-LightTargetOutput main(FarFrustumQuadConnectP IN)
+float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
 {
-   LightTargetOutput Output = (LightTargetOutput)0;
-   
-   //sky and editor background check
-   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), IN.uv0);
-   if (normDepth.w>0.9999)
-      return Output;
-   
+   //unpack normal and linear depth  
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0);
+  
    //create surface
    Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
@@ -198,9 +193,7 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
-      Output.diffuse = surface.baseColor;
-      Output.spec = surface.baseColor;
-      return Output;
+      return 0.0.xxxx;
 	}
    
    //create surface to light                           
@@ -217,7 +210,7 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      //there must be a better way of doing this, two shadowcast lookups = very yucky!
+      //there must be a more effecient way of doing this, two shadowcast lookups = very yucky!
       float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
@@ -244,10 +237,7 @@ LightTargetOutput main(FarFrustumQuadConnectP IN)
    #endif //NO_SHADOW
    
    //get directional light contribution   
-   LightResult result = GetDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
-   //output
-   Output.diffuse = float4(result.diffuse, 0);
-   Output.spec = float4(result.spec, 0);
+   float3 result = GetDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
 
-   return Output;
+   return float4(result, 0);
 }

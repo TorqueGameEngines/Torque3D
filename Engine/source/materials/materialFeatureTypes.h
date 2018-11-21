@@ -193,4 +193,5 @@ DeclareFeatureType( MFT_SkyBox );
 DeclareFeatureType( MFT_DeferredSpecMap );
 DeclareFeatureType( MFT_DeferredSpecVars );
 DeclareFeatureType( MFT_DeferredMatInfoFlags );
+DeclareFeatureType( MFT_DeferredEmissive );
 #endif // _MATERIALFEATURETYPES_H_

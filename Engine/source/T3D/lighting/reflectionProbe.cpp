@@ -144,6 +144,8 @@ ReflectionProbe::ReflectionProbe()
    mEditPosOffset = false;
 
    mProbeInfoIdx = -1;
+
+   mCaptureMask = REFLECTION_PROBE_CAPTURE_TYPEMASK;
 }
 
 ReflectionProbe::~ReflectionProbe()
@@ -620,9 +622,9 @@ bool ReflectionProbe::createClientResources()
    //brdf lookup resources
    //make the brdf lookup texture the same size as the prefilter texture
    
-   String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/brdfTexture.dds");
+   String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/pbr/brdfTexture.dds");
 
-   mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);// TEXMGR->createTexture(mPrefilterSize, mPrefilterSize, GFXFormatR16G16B16A16F, &GFXRenderTargetProfile, 1, 0);
+   mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);
 
    if (!mBrdfTexture)
    {
@@ -978,7 +980,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, nearPlane);
       Frustum frustum(false, left, right, top, bottom, nearPlane, farDist);
 
-      renderFrame(&baseTarget, matView, frustum, StaticObjectType | StaticShapeObjectType & EDITOR_RENDER_TYPEMASK, gCanvasClearColor);
+      renderFrame(&baseTarget, matView, frustum, mCaptureMask & EDITOR_RENDER_TYPEMASK, gCanvasClearColor);
 
       baseTarget->resolve();
    }

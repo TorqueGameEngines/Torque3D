@@ -561,7 +561,7 @@ const String GFXD3D11ShaderConstBuffer::describeSelf() const
       GenericConstBufferLayout::ParamDesc pd;
       mVertexConstBufferLayout->getDesc(i, pd);
 
-      ret += String::ToString("      Constant name: %s", pd.name);
+      ret += String::ToString("      Constant name: %s", pd.name.c_str());
    }
 
    return ret;

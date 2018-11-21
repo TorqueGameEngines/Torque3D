@@ -1,7 +1,6 @@
 #include "../../shaderModelAutoGen.hlsl"
 
 #include "farFrustumQuad.hlsl"
-#include "lightingUtils.hlsl"
 #include "../../lighting.hlsl"
 #include "../../torque.hlsl"
 
@@ -25,19 +24,16 @@ uniform float4 vsFarPlane;
 uniform float4x4 cameraToWorld;
 uniform float3 eyePosWorld;
 
-float3 iblSpecular(float3 v, float3 n, float roughness)
+float3 iblSpecular(in Surface surface, float3 F)
 {
-	float3 R = reflect(v, n); 
 	const float MAX_REFLECTION_LOD = 4.0;
-	float3 prefilteredColor = TORQUE_TEXCUBELOD(cubeMap, float4(R, roughness * MAX_REFLECTION_LOD)).rgb;
-	float2 envBRDF  = TORQUE_TEX2D(BRDFTexture, float2(max(dot(n, v), 0.0), roughness)).rg;
-	return prefilteredColor * (envBRDF.x + envBRDF.y);
+	float3 prefilteredColor = TORQUE_TEXCUBELOD(cubeMap, float4(surface.R, surface.roughness * MAX_REFLECTION_LOD)).rgb;
+	float2 envBRDF  = TORQUE_TEX2D(BRDFTexture, float2(surface.NdotV, surface.roughness)).rg;
+	return prefilteredColor * (F * envBRDF.x + envBRDF.y);
 }
 
-LightTargetOutput main( ConvexConnectP IN )
+float4 main( ConvexConnectP IN ) : SV_TARGET
 { 
-   LightTargetOutput Output = (LightTargetOutput)0;
-
    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w; 
    float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
@@ -46,22 +42,23 @@ LightTargetOutput main( ConvexConnectP IN )
    float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
    
-   //sky and editor background check
-   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), uvScene);
-   if (normDepth.a>0.9999)
-      return Output;
+   //unpack normal and linear depth 
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
    
    //create surface
    Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
-   float3 diffuse = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).rgb;
-   float3 specular = iblSpecular(wsEyeRay, surface.N, surface.roughness);
+   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+   float3 irradiance = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).rgb;
+   float3 specular = iblSpecular(surface, F);
+   //energy conservation
+	float3 kD = 1.0.xxx - F;
+	kD *= 1.0 - surface.metalness;
+   //final diffuse color
+   float3 diffuse = kD * irradiance * surface.baseColor.rgb;
 
-	float blendVal = 0.0001;// ?????
+	float blendVal = 0.0001;
 
-   Output.diffuse = float4(diffuse, blendVal);
-   Output.spec = float4(specular, blendVal);
-   return Output;
-
+   return float4(diffuse + specular * surface.ao, blendVal);
 }

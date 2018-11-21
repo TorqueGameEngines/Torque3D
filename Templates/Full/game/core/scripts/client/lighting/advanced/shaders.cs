@@ -73,8 +73,9 @@ new ShaderData( AL_VectorLightShader )
    samplerNames[2] = "$dynamicShadowMap";
    samplerNames[3] = "$ssaoMask";
    samplerNames[4] = "$gTapRotationTex";
-   samplerNames[5] = "$colorBuffer";
-   samplerNames[6] = "$matInfoBuffer";  
+   samplerNames[5] = "$lightBuffer";
+   samplerNames[6] = "$colorBuffer";
+   samplerNames[7] = "$matInfoBuffer";  
    pixVersion = 3.0;
 };
 
@@ -86,7 +87,8 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["deferredBuffer"] = "#deferred";
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
-   sampler["ssaoMask"] = "#ssaoMask";
+   sampler["ssaoMask"] = "#ssaoMask";  
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
@@ -148,8 +150,9 @@ new ShaderData( AL_PointLightShader )
    samplerNames[2] = "$dynamicShadowMap";
    samplerNames[3] = "$cookieMap";
    samplerNames[4] = "$gTapRotationTex";
-   samplerNames[5] = "$colorBuffer";
-   samplerNames[6] = "$matInfoBuffer";
+   samplerNames[5] = "$lightBuffer";
+   samplerNames[6] = "$colorBuffer";
+   samplerNames[7] = "$matInfoBuffer";
    
    pixVersion = 3.0;
 };
@@ -163,6 +166,7 @@ new CustomMaterial( AL_PointLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
@@ -185,8 +189,9 @@ new ShaderData( AL_SpotLightShader )
    samplerNames[2] = "$dynamicShadowMap";
    samplerNames[3] = "$cookieMap";
    samplerNames[4] = "$gTapRotationTex";
-   samplerNames[5] = "$colorBuffer";
-   samplerNames[6] = "$matInfoBuffer";
+   samplerNames[5] = "$lightBuffer";
+   samplerNames[6] = "$colorBuffer";
+   samplerNames[7] = "$matInfoBuffer";
    
    pixVersion = 3.0;
 };
@@ -200,6 +205,7 @@ new CustomMaterial( AL_SpotLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    

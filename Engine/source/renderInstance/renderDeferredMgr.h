@@ -46,8 +46,6 @@ public:
    // andremwac: Deferred Rendering
    static const String ColorBufferName;
    static const String MatInfoBufferName;
-   static const String DiffuseLightBufferName;
-   static const String SpecularLightBufferName;
 
    // Generic Deferred Render Instance Type
    static const RenderInstType RIT_Deferred;
@@ -106,8 +104,6 @@ protected:
    // Deferred Shading
    NamedTexTarget                      mColorTarget;
    NamedTexTarget                      mMatInfoTarget;
-   NamedTexTarget                      mDiffuseLightTarget;
-   NamedTexTarget                      mSpecularLightTarget;
    GFXTexHandle                        mColorTex;
    GFXTexHandle                        mMatInfoTex;
    GFXTexHandle                        mDiffuseLightTex;

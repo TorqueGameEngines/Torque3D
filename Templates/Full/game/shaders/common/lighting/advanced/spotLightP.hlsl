@@ -24,7 +24,6 @@
 #include "../../shaderModelAutoGen.hlsl"
 
 #include "farFrustumQuad.hlsl"
-#include "lightingUtils.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
 #include "softShadow.hlsl"
@@ -64,123 +63,57 @@ uniform float3 lightDirection;
 uniform float4 lightSpotParams;
 uniform float4 lightMapParams;
 uniform float4 vsFarPlane;
-uniform float4x4 viewToLightProj;
+uniform float4x4 worldToLightProj;
 uniform float4 lightParams;
-uniform float4x4 dynamicViewToLightProj;
 
-uniform float2 lightAttenuation;
 uniform float shadowSoftness;
-
 uniform float3 eyePosWorld;
+
 uniform float4x4 cameraToWorld;
 
-LightTargetOutput main(   ConvexConnectP IN )
+float4 main(   ConvexConnectP IN ) : SV_TARGET
 {   
-   LightTargetOutput Output = (LightTargetOutput)0;
    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w;
-   float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
-      
-   //sky and editor background check
-   float4 normDepth = UnpackDepthNormal(TORQUE_SAMPLER2D_MAKEARG(deferredBuffer), uvScene);
-   if (normDepth.a>0.9999)
-      return Output;
-      
-   // Eye ray - Eye -> Pixel
-   float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
-   float3 viewSpacePos = eyeRay * normDepth.w;
-      
-   // Build light vec, get length, clip pixel if needed
-   float3 lightToPxlVec = viewSpacePos - lightPosition;
-   float lenLightV = length( lightToPxlVec );
-   lightToPxlVec /= lenLightV;
+   float2 uvScene = getUVFromSSPos(ssPos, rtParams0);
 
-   //lightDirection = float3( -lightDirection.xy, lightDirection.z ); //float3( 0, 0, -1 );
-   float cosAlpha = dot( lightDirection, lightToPxlVec );   
-   clip( cosAlpha - lightSpotParams.x );
-   clip( lightRange - lenLightV );
+   //unpack normal and linear depth 
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
+      
+   //eye ray WS/VS
+   float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
+   float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
 
-   float atten = attenuate( lightColor, lightAttenuation, lenLightV );
-   atten *= ( cosAlpha - lightSpotParams.x ) / lightSpotParams.y;
-   clip( atten - 1e-6 );
-   atten = saturate( atten );
-   
    //create surface
    Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    uvScene, eyePosWorld, eyeRay, cameraToWorld);   
+                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
+
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
-      Output.diffuse = surface.baseColor;
-      Output.spec = surface.baseColor;
-      return Output;
+      return 0.0.xxxx;
 	}
+ 
+   float3 L = lightPosition - surface.P;
+   float dist = length(L);
+   float3 result = 0.0.xxx;
+   [branch]
+	if (dist < lightRange)
+	{     
+      float distToLight = dist / lightRange;
+      float spotFactor = dot(L, lightDirection);
+		float spotCutOff = lightSpotParams.x;
+      [branch]
+		//if (spotFactor > spotCutOff)
+		{
+			SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, L); 
+         float shadowed = 1.0;
+         float3 lightcol = lightColor.rgb;
+         //get spot light contribution   
+         result = GetSpotLight(surface, surfaceToLight, lightcol, lightBrightness, dist, lightRange, shadowed);
+         //result = float3(1.0,0,0);
+      }
+   }
    
-   //create surface to light    
-   float3 wsLightDir = mul(cameraToWorld, float4(lightDirection,0)).xyz;
-   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -wsLightDir);
-   
-   float nDotL = dot( normDepth.xyz, -lightToPxlVec );
-
-   // Get the shadow texture coordinate
-   float4 pxlPosLightProj = mul( viewToLightProj, float4( viewSpacePos, 1 ) );
-   float2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
-   shadowCoord.y = 1.0f - shadowCoord.y;
-
-   // Get the dynamic shadow texture coordinate
-   float4 dynpxlPosLightProj = mul( dynamicViewToLightProj, float4( viewSpacePos, 1 ) );
-   float2 dynshadowCoord = ( ( dynpxlPosLightProj.xy / dynpxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
-   dynshadowCoord.y = 1.0f - dynshadowCoord.y;
-   
-   #ifdef NO_SHADOW
-   
-      float shadowed = 1.0;
-      	
-   #else
-
-      // Get a linear depth from the light source.
-      float distToLight = pxlPosLightProj.z / lightRange;
-
-      float static_shadowed = softShadow_filter( TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-                                          ssPos.xy,
-                                          shadowCoord,
-                                          shadowSoftness,
-                                          distToLight,
-                                          nDotL,
-                                          lightParams.y );
-                                          
-      float dynamic_shadowed = softShadow_filter( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
-                                          ssPos.xy,
-                                          dynshadowCoord,
-                                          shadowSoftness,
-                                          distToLight,
-                                          nDotL,
-                                          lightParams.y );
-      float shadowed = min(static_shadowed, dynamic_shadowed);
-   #endif // !NO_SHADOW
-   
-   float3 lightcol = lightColor.rgb;
-   #ifdef USE_COOKIE_TEX
-
-      // Lookup the cookie sample.
-      float4 cookie = TORQUE_TEX2D( cookieMap, shadowCoord );
-
-      // Multiply the light with the cookie tex.
-      lightcol *= cookie.rgb;
-
-      // Use a maximum channel luminance to attenuate 
-      // the lighting else we get specular in the dark
-      // regions of the cookie texture.
-      atten *= max( cookie.r, max( cookie.g, cookie.b ) );
-
-   #endif
-
-   //get directional light contribution   
-   LightResult result = GetDirectionalLight(surface, surfaceToLight, lightColor.rgb, lightBrightness, shadowed);
-      
-   //output
-   Output.diffuse = float4(result.diffuse*atten, 0);
-   Output.spec = float4(result.spec*atten, 0);
-   
-   return Output;
+   return float4(result, 0);
 }

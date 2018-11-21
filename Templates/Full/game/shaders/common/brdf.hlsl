@@ -25,7 +25,8 @@
 #include "./torque.hlsl"
 
 // BRDF from Frostbite presentation:
-// Moving Frostbite to Physically Based Rendering// S´ebastien Lagarde - Electronic Arts Frostbite
+// Moving Frostbite to Physically Based Rendering
+// S´ebastien Lagarde - Electronic Arts Frostbite
 // Charles de Rousiers - Electronic Arts Frostbite
 // SIGGRAPH 2014
 

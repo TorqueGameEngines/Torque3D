@@ -62,7 +62,7 @@ function initRenderManager()
    DiffuseRenderPassManager.addManager( new RenderMeshMgr(DecalBin)        { bintype = "Decal"; renderOrder = 0.81; processAddOrder = 0.81; } );
    DiffuseRenderPassManager.addManager( new RenderOcclusionMgr(OccluderBin){ bintype = "Occluder"; renderOrder = 0.9; processAddOrder = 0.9; } );
    // Render the sky last
-   DiffuseRenderPassManager.addManager( new RenderObjectMgr(SkyBin) { bintype = "Sky"; renderOrder = 1.95; processAddOrder = 1.95; } );
+   DiffuseRenderPassManager.addManager( new RenderObjectMgr(SkyBin) { bintype = "Sky"; renderOrder = 0.95; processAddOrder = 0.95; } );
      
    // We now render translucent objects that should handle
    // their own fogging and lighting.

@@ -78,7 +78,7 @@ ConsoleDocClass(Skylight,
 //-----------------------------------------------------------------------------
 Skylight::Skylight() : ReflectionProbe()
 {
-
+   mCaptureMask = SKYLIGHT_CAPTURE_TYPEMASK;
 }
 
 Skylight::~Skylight()

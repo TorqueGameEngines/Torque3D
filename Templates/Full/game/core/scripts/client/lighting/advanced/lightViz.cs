@@ -67,7 +67,7 @@ singleton PostEffect( AL_DepthVisualize )
    shader = AL_DepthVisualizeShader;
    stateBlock = AL_DefaultVisualizeState;
    texture[0] = "#deferred";
-   texture[1] = "depthviz";   
+   texture[1] = "core/scripts/client/lighting/advanced/depthviz";   
    target = "$backBuffer";
    renderPriority = 9999;
 };
@@ -75,11 +75,7 @@ singleton PostEffect( AL_DepthVisualize )
 function AL_DepthVisualize::onEnabled( %this )
 {
    AL_NormalsVisualize.disable();
-   AL_LightColorVisualize.disable();
-   AL_LightSpecularVisualize.disable();
    $AL_NormalsVisualizeVar = false;
-   $AL_LightColorVisualizeVar = false;
-   $AL_LightSpecularVisualizeVar = false;
    
    return true;
 }
@@ -130,83 +126,7 @@ singleton PostEffect( AL_NormalsVisualize )
 function AL_NormalsVisualize::onEnabled( %this )
 {
    AL_DepthVisualize.disable();
-   AL_LightColorVisualize.disable();
-   AL_LightSpecularVisualize.disable();
-   $AL_DepthVisualizeVar = false;
-   $AL_LightColorVisualizeVar = false;
-   $AL_LightSpecularVisualizeVar = false;
-   
-   return true;
-}
-
-
-
-new ShaderData( AL_LightColorVisualizeShader )
-{
-   DXVertexShaderFile = "shaders/common/postFx/postFxV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/dbgLightColorVisualizeP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/postFx/gl/postFxV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/dbgLightColorVisualizeP.glsl";
-   
-   samplerNames[0] = "diffuseLightingBuffer";
-   
-   pixVersion = 2.0;
-};
-
-singleton PostEffect( AL_LightColorVisualize )
-{   
-   shader = AL_LightColorVisualizeShader;
-   stateBlock = AL_DefaultVisualizeState;
-   texture[0] = "#diffuseLighting";
-   target = "$backBuffer";
-   renderPriority = 9999;
-};
-
-function AL_LightColorVisualize::onEnabled( %this )
-{
-   AL_NormalsVisualize.disable();
-   AL_DepthVisualize.disable();
-   AL_LightSpecularVisualize.disable();
-   $AL_NormalsVisualizeVar = false;
-   $AL_DepthVisualizeVar = false;
-   $AL_LightSpecularVisualizeVar = false;   
-   
-   return true;
-}
-
-
-new ShaderData( AL_LightSpecularVisualizeShader )
-{
-   DXVertexShaderFile = "shaders/common/postFx/postFxV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/dbgLightSpecularVisualizeP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/postFx/gl/postFxV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/dbgLightSpecularVisualizeP.glsl";
-   
-   samplerNames[0] = "diffuseLightingBuffer";
-   
-   pixVersion = 2.0;
-};
-
-singleton PostEffect( AL_LightSpecularVisualize )
-{   
-   shader = AL_LightColorVisualizeShader;
-   stateBlock = AL_DefaultVisualizeState;
-   texture[0] = "#specularLighting";
-   target = "$backBuffer";
-   renderPriority = 9999;
-};
-
-function AL_LightSpecularVisualize::onEnabled( %this )
-{
-   AL_NormalsVisualize.disable();
-   AL_DepthVisualize.disable();
-   AL_LightColorVisualize.disable();
-   $AL_NormalsVisualizeVar = false;
-   $AL_DepthVisualizeVar = false;
-   $AL_LightColorVisualizeVar = false;   
-   
+   $AL_DepthVisualizeVar = false;   
    return true;
 }
 
@@ -236,48 +156,6 @@ function toggleGlowViz( %enable )
       AL_GlowVisualize.enable();
    else if ( !%enable )
       AL_GlowVisualize.disable();
-}
-
-/// Toggles the visualization of the AL normals buffer.
-function toggleNormalsViz( %enable )
-{
-   if ( %enable $= "" )
-   {
-      $AL_NormalsVisualizeVar = AL_NormalsVisualize.isEnabled() ? false : true;
-      AL_NormalsVisualize.toggle();
-   }
-   else if ( %enable )
-      AL_NormalsVisualize.enable();
-   else if ( !%enable )
-      AL_NormalsVisualize.disable();   
-}
-
-/// Toggles the visualization of the AL lighting color buffer.
-function toggleLightColorViz( %enable )
-{   
-   if ( %enable $= "" )
-   {
-      $AL_LightColorVisualizeVar = AL_LightColorVisualize.isEnabled() ? false : true;
-      AL_LightColorVisualize.toggle();
-   }
-   else if ( %enable )
-      AL_LightColorVisualize.enable();
-   else if ( !%enable )
-      AL_LightColorVisualize.disable();    
-}
-
-/// Toggles the visualization of the AL lighting specular power buffer.
-function toggleLightSpecularViz( %enable )
-{   
-   if ( %enable $= "" )
-   {
-      $AL_LightSpecularVisualizeVar = AL_LightSpecularVisualize.isEnabled() ? false : true;
-      AL_LightSpecularVisualize.toggle();
-   }
-   else if ( %enable )
-      AL_LightSpecularVisualize.enable();
-   else if ( !%enable )
-      AL_LightSpecularVisualize.disable();    
 }
 
 function toggleBackbufferViz( %enable )

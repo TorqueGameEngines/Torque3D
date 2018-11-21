@@ -179,3 +179,25 @@ void DeferredSpecVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, 
    meta->addStatement(new GenOp("   @.a = @;\r\n", material, metalness));
    output = meta;
 }
+
+//deferred emissive
+void DeferredEmissiveHLSL::processPix(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
+{
+   //for now emission just uses the diffuse color, we could plug in a separate texture for emission at some stage
+   Var *diffuseTargetVar = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1));
+   if (!diffuseTargetVar)
+      return; //oh dear something is not right, maybe we should just write 0's instead
+
+   // search for scene color target var
+   Var *sceneColorVar = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+   if (!sceneColorVar)
+   {
+      // create scene color target var
+      sceneColorVar = new Var;
+      sceneColorVar->setType("fragout");
+      sceneColorVar->setName(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+      sceneColorVar->setStructName("OUT");
+   }
+
+   output = new GenOp("@ = float4(@.rgb,0);", sceneColorVar, diffuseTargetVar);
+}

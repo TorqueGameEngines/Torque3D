@@ -38,12 +38,14 @@
 #include "gfx/D3D11/screenshotD3D11.h"
 #include "materials/shaderData.h"
 #include "shaderGen/shaderGen.h"
+#include <d3d9.h> //d3dperf
 
 #ifdef TORQUE_DEBUG
 #include "d3d11sdklayers.h"
 #endif
 
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3d9.lib") //d3dperf
 #pragma comment(lib, "d3d11.lib")
 
 class GFXPCD3D11RegisterDevice
@@ -90,9 +92,6 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mAdapterIndex = index;
    mD3DDevice = NULL;
    mD3DDeviceContext = NULL;
-   mD3DDevice1 = NULL;
-   mD3DDeviceContext1 = NULL;
-   mUserAnnotation = NULL;
    mVolatileVB = NULL;
 
    mCurrentPB = NULL;
@@ -126,7 +125,6 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mCurrentConstBuffer = NULL;
 
    mOcclusionQuerySupported = false;
-   mCbufferPartialSupported = false;
 
    mDebugLayers = false;
 
@@ -166,8 +164,6 @@ GFXD3D11Device::~GFXD3D11Device()
    SAFE_RELEASE(mDeviceBackBufferView);
    SAFE_RELEASE(mDeviceDepthStencil);
    SAFE_RELEASE(mDeviceBackbuffer);
-   SAFE_RELEASE(mUserAnnotation);
-   SAFE_RELEASE(mD3DDeviceContext1);
    SAFE_RELEASE(mD3DDeviceContext);
 
    SAFE_DELETE(mCardProfiler);
@@ -185,7 +181,6 @@ GFXD3D11Device::~GFXD3D11Device()
 #endif
 
    SAFE_RELEASE(mSwapChain);
-   SAFE_RELEASE(mD3DDevice1);
    SAFE_RELEASE(mD3DDevice);
 }
 
@@ -439,6 +434,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    AssertFatal(window, "GFXD3D11Device::init - must specify a window!");
 
    HWND winHwnd = (HWND)window->getSystemWindow( PlatformWindow::WindowSystem_Windows );
+   SetFocus(winHwnd);
 
    UINT createDeviceFlags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef TORQUE_DEBUG
@@ -488,26 +484,6 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
       AssertFatal(false, "GFXD3D11Device::init - D3D11CreateDeviceAndSwapChain failed!");
       #endif
    }
-
-   // Grab DX 11.1 device and context if available and also ID3DUserDefinedAnnotation
-   hres = mD3DDevice->QueryInterface(__uuidof(ID3D11Device1), reinterpret_cast<void**>(&mD3DDevice1));
-   if (SUCCEEDED(hres))
-   {
-      //11.1 context
-      mD3DDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&mD3DDeviceContext1));
-      // ID3DUserDefinedAnnotation
-      mD3DDeviceContext->QueryInterface(IID_PPV_ARGS(&mUserAnnotation));
-      //Check what is supported, windows 7 supports very little from 11.1
-      D3D11_FEATURE_DATA_D3D11_OPTIONS options;
-      mD3DDevice1->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS, &options,
-         sizeof(D3D11_FEATURE_DATA_D3D11_OPTIONS));
-
-      //Cbuffer partial updates
-      if (options.ConstantBufferOffsetting && options.ConstantBufferPartialUpdate)
-         mCbufferPartialSupported = true;
-   }
-
-
 
    //set the fullscreen state here if we need to
    if(mode.fullScreen)
@@ -1875,28 +1851,27 @@ GFXCubemapArray * GFXD3D11Device::createCubemapArray()
 //------------------------------------------------------------------------------
 void GFXD3D11Device::enterDebugEvent(ColorI color, const char *name)
 {
-   if (mUserAnnotation)
-   {
-      WCHAR  eventName[260];
-      MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
-      mUserAnnotation->BeginEvent(eventName);
-   }
+   // BJGFIX
+   WCHAR  eventName[260];
+   MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
+
+   D3DPERF_BeginEvent(D3DCOLOR_ARGB(color.alpha, color.red, color.green, color.blue),
+      (LPCWSTR)&eventName);
 }
 
 //------------------------------------------------------------------------------
 void GFXD3D11Device::leaveDebugEvent()
 {
-   if (mUserAnnotation)
-      mUserAnnotation->EndEvent();
+   D3DPERF_EndEvent();
 }
 
 //------------------------------------------------------------------------------
 void GFXD3D11Device::setDebugMarker(ColorI color, const char *name)
 {
-   if (mUserAnnotation)
-   {
-      WCHAR  eventName[260];
-      MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
-      mUserAnnotation->SetMarker(eventName);
-   }
+   // BJGFIX
+   WCHAR  eventName[260];
+   MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
+
+   D3DPERF_SetMarker(D3DCOLOR_ARGB(color.alpha, color.red, color.green, color.blue),
+      (LPCWSTR)&eventName);
 }

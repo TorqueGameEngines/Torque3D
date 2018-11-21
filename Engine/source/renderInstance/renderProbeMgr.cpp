@@ -156,12 +156,6 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
    PlaneF farPlane(wsFrustumPoints[Frustum::FarBottomLeft], wsFrustumPoints[Frustum::FarTopLeft], wsFrustumPoints[Frustum::FarTopRight]);
    PlaneF vsFarPlane(verts[0].normal, verts[1].normal, verts[2].normal);
 
-   MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
-   matrixSet.restoreSceneViewProjection();
-
-   const MatrixF &worldToCameraXfm = matrixSet.getCameraToWorld();
-
-   MatrixF inverseViewMatrix = worldToCameraXfm;
 
    // Parameters calculated, assign them to the materials
    ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
@@ -198,9 +192,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
    if (!ProbeRenderInst::all.size())
       return;
 
-   if (PROBEMGR->mRegisteredProbes.empty())
-      return;
-
    if (!ProbeManager::smRenderReflectionProbes)
       return;
 
@@ -208,14 +199,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_render, ColorI::WHITE);
 
-   NamedTexTargetRef diffuseLightingTarget = NamedTexTarget::find("diffuseLighting");
-
-   if (diffuseLightingTarget.isNull())
-      return;
-
-   NamedTexTargetRef specularLightingTarget = NamedTexTarget::find("specularLighting");
-
-   if (specularLightingTarget.isNull())
+   NamedTexTargetRef sceneColorTargetRef = NamedTexTarget::find("AL_FormatToken");
+   if (sceneColorTargetRef.isNull())
       return;
 
    GFXTextureTargetRef probeLightingTargetRef = GFX->allocRenderToTextureTarget();
@@ -226,14 +211,12 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //Do a quick pass to update our probes if they're dirty
    PROBEMGR->updateDirtyProbes();
 
-   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color0, specularLightingTarget->getTexture());
-   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color1, diffuseLightingTarget->getTexture());
+   probeLightingTargetRef->attachTexture(GFXTextureTarget::Color0, sceneColorTargetRef->getTexture(0));
 
    GFX->pushActiveRenderTarget();
    GFX->setActiveRenderTarget(probeLightingTargetRef);
 
-   GFX->setViewport(specularLightingTarget->getViewport());
-   //GFX->setViewport(specularLightingTarget->getViewport());
+   GFX->setViewport(sceneColorTargetRef->getViewport());
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
@@ -258,9 +241,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
    ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
    ProbeManager::ReflectProbeMaterialInfo* reflProbeMat = PROBEMGR->getReflectProbeMaterial();
 
-   for (U32 i = 0; i < PROBEMGR->mRegisteredProbes.size(); i++)
+   for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
    {
-      ProbeRenderInst* curEntry = ProbeRenderInst::all[PROBEMGR->mRegisteredProbes[i]];
+      ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
       if (!curEntry->mIsEnabled)
          continue;
@@ -324,10 +307,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
       }
    }
 
-   //And clean us up
-   PROBEMGR->mRegisteredProbes.clear();
-
-   probeLightingTargetRef->resolve();
    GFX->popActiveRenderTarget();
 
    //PROBEMGR->unregisterAllProbes();

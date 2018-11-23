@@ -23,7 +23,7 @@
 #ifndef _GFXD3D11DEVICE_H_
 #define _GFXD3D11DEVICE_H_
 
-#include <d3d11.h>
+#include <d3d11_1.h>
 
 #include "platform/tmm_off.h"
 #include "platformWin32/platformWin32.h"

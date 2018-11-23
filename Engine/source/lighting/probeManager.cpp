@@ -99,6 +99,7 @@ void ProbeRenderInst::set(const ProbeRenderInst *probeInfo)
    numVerts = probeInfo->numVerts;
    numIndicesForPoly = probeInfo->numIndicesForPoly;
    mBounds = probeInfo->mBounds;
+   mIsSkylight = probeInfo->mIsSkylight;
 
    for (U32 i = 0; i < 9; i++)
    {
@@ -764,12 +765,8 @@ bool ReflectProbeMatInstance::init(const FeatureSet &features, const GFXVertexFo
 
 bool ReflectProbeMatInstance::setupPass(SceneRenderState *state, const SceneData &sgData)
 {
-	// Go no further if the material failed to initialize properly.
-	if (!mProcessedMaterial ||
-		mProcessedMaterial->getNumPasses() == 0)
+	if (!Parent::setupPass(state, sgData)) 
 		return false;
-
-	bool bRetVal = Parent::setupPass(state, sgData);;
 
 	AssertFatal(mProcessedMaterial->getNumPasses() > 0, "No passes created! Ohnoes");
 	const RenderPassData *rpd = mProcessedMaterial->getPass(0);
@@ -788,9 +785,34 @@ bool ReflectProbeMatInstance::setupPass(SceneRenderState *state, const SceneData
 	// Now override stateblock with our own
 	GFX->setStateBlock(mProjectionState);
 
-	return bRetVal;
+	return true;
 }
 
+bool SkylightMatInstance::setupPass(SceneRenderState *state, const SceneData &sgData)
+{
+	if (!Parent::setupPass(state, sgData))
+		return false;
+
+	AssertFatal(mProcessedMaterial->getNumPasses() > 0, "No passes created! Ohnoes");
+	const RenderPassData *rpd = mProcessedMaterial->getPass(0);
+	AssertFatal(rpd, "No render pass data!");
+	AssertFatal(rpd->mRenderStates[0], "No render state 0!");
+
+	if (!mProjectionState)
+	{
+		GFXStateBlockDesc desc;
+		desc.setZReadWrite(false);
+		desc.zWriteEnable = false;
+		desc.setCullMode(GFXCullNone);
+		desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendDestAlpha, GFXBlendOpMax);
+		//desc.setBlend(false);
+		mProjectionState = GFX->createStateBlock(desc);
+	}
+	// Now override stateblock with our own
+	GFX->setStateBlock(mProjectionState);
+
+	return true;
+}
 //
 //
 ProbeManager::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String &matName,

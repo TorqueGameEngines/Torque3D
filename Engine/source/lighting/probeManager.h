@@ -208,8 +208,12 @@ class SkylightMatInstance : public ReflectProbeMatInstance
 {
 	typedef ReflectProbeMatInstance Parent;
 
+protected:
+	GFXStateBlockRef mProjectionState;
+
 public:
 	SkylightMatInstance(Material &mat) : Parent(mat) {}
+	virtual bool setupPass(SceneRenderState *state, const SceneData &sgData);
 };
 
 class ProbeManager

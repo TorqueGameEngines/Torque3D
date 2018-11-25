@@ -500,6 +500,7 @@ void ReflectionProbe::updateProbeParams()
    mProbeInfo->mProbePosOffset = mProbePosOffset;
 
    mProbeInfo->mDirty = true;
+   mProbeInfo->mScore = mMaxDrawDistance;
 }
 
 void ReflectionProbe::updateMaterial()
@@ -650,7 +651,10 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 
    //Culling distance. Can be adjusted for performance options considerations via the scalar
    if (dist > mMaxDrawDistance * Con::getFloatVariable("$pref::GI::ProbeDrawDistScale", 1.0))
-      return;
+   {
+	   mProbeInfo->mScore = mMaxDrawDistance;
+	   return;
+   }
 
    if (mReflectionModeType == DynamicCubemap && mRefreshRateMS < (Platform::getRealMilliseconds() - mDynamicLastBakeMS))
    {

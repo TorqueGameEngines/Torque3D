@@ -48,21 +48,10 @@ S32 QSORT_CALLBACK AscendingReflectProbeInfluence(const void* a, const void* b)
    PROFILE_SCOPE(AdvancedLightBinManager_AscendingReflectProbeInfluence);
 
    // Fetch asset definitions.
-   /*const ProbeRenderInst* pReflectProbeA = static_cast<ProbeRenderInst*>(((RenderBinManager::MainSortElem*)(a))->inst);
-   const ProbeRenderInst* pReflectProbeB = static_cast<ProbeRenderInst*>(((RenderBinManager::MainSortElem*)(b))->inst);
-
-   // Sort.
-   //First, immediate check on if either is a skylight. Skylight always gets the highest priority
-   //if (pReflectProbeA->mIsSkylight)
-   //   return 1;
-   //else if (pReflectProbeB->mIsSkylight)
-   //   return -1;
-   //No? then sort by score
-   if (pReflectProbeA->mScore > pReflectProbeB->mScore)
-	   return 1;
-   else if (pReflectProbeA->mScore < pReflectProbeB->mScore)
-	   return -1;*/
-   return  0;
+   const ProbeRenderInst* pReflectProbeA = (ProbeRenderInst*)a;
+   const ProbeRenderInst* pReflectProbeB = (ProbeRenderInst*)b;
+   //sort by score
+   return  pReflectProbeA->mScore - pReflectProbeB->mScore;
 }
 
 RenderProbeMgr::RenderProbeMgr()
@@ -233,7 +222,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    _setupPerFrameParameters(state);
 
    //Order the probes by size, biggest to smallest
-   //dQsort(mElementList.address(), mElementList.size(), sizeof(const MainSortElem), AscendingReflectProbeInfluence);
+   dQsort(ProbeRenderInst::all.address(), ProbeRenderInst::all.size(), sizeof(const ProbeRenderInst*), AscendingReflectProbeInfluence);
 
    //Specular
    PROFILE_START(RenderProbeManager_ReflectProbeRender);

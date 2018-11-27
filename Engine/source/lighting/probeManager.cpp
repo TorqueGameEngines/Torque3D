@@ -100,6 +100,7 @@ void ProbeRenderInst::set(const ProbeRenderInst *probeInfo)
    numIndicesForPoly = probeInfo->numIndicesForPoly;
    mBounds = probeInfo->mBounds;
    mIsSkylight = probeInfo->mIsSkylight;
+   mScore = probeInfo->mScore;
 
    for (U32 i = 0; i < 9; i++)
    {

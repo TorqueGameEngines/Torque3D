@@ -60,5 +60,5 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
 
 	float blendVal = 0.0001;
 
-   return float4(diffuse + specular * surface.ao, blendVal);
+   return float4(diffuse + specular * surface.ao, 0);
 }

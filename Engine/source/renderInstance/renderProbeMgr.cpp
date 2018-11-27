@@ -48,8 +48,8 @@ S32 QSORT_CALLBACK AscendingReflectProbeInfluence(const void* a, const void* b)
    PROFILE_SCOPE(AdvancedLightBinManager_AscendingReflectProbeInfluence);
 
    // Fetch asset definitions.
-   const ProbeRenderInst* pReflectProbeA = (ProbeRenderInst*)a;
-   const ProbeRenderInst* pReflectProbeB = (ProbeRenderInst*)b;
+   const ProbeRenderInst* pReflectProbeA = (*(ProbeRenderInst**)a);
+   const ProbeRenderInst* pReflectProbeB = (*(ProbeRenderInst**)b);
    //sort by score
    return  pReflectProbeA->mScore - pReflectProbeB->mScore;
 }

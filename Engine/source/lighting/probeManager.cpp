@@ -780,7 +780,7 @@ bool ReflectProbeMatInstance::setupPass(SceneRenderState *state, const SceneData
 		desc.setZReadWrite(false);
 		desc.zWriteEnable = false;
 		desc.setCullMode(GFXCullNone);
-		desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendDestAlpha, GFXBlendOpMax);
+		desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvDestAlpha, GFXBlendOpAdd);
 		mProjectionState = GFX->createStateBlock(desc);
 	}
 	// Now override stateblock with our own
@@ -805,7 +805,7 @@ bool SkylightMatInstance::setupPass(SceneRenderState *state, const SceneData &sg
 		desc.setZReadWrite(false);
 		desc.zWriteEnable = false;
 		desc.setCullMode(GFXCullNone);
-		desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendDestAlpha, GFXBlendOpMax);
+		desc.setBlend(true, GFXBlendOne, GFXBlendZero, GFXBlendOpAdd);
 		//desc.setBlend(false);
 		mProjectionState = GFX->createStateBlock(desc);
 	}

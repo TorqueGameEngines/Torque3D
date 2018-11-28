@@ -111,10 +111,21 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);		  
-
-   float tempAttenVal = 3.5;
-   float blendVal = defineBoxSpaceInfluence(surface.P, probeWSPos, radius, tempAttenVal);
-	clip(blendVal);
+	float blendVal = 1.0;
+	if(useSphereMode)
+	{
+		float3 L = probeWSPos - surface.P;
+		blendVal = getDistanceAtt(L, radius);
+		if (length(L)>radius)
+			blendVal = -1;
+		
+	}
+	else
+	{
+		float tempAttenVal = 3.5;
+		blendVal = defineBoxSpaceInfluence(surface.P, probeWSPos, radius, tempAttenVal);
+	}
+   clip(blendVal);
 	
 
 	//render into the bound space defined above

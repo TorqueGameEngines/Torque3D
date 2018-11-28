@@ -165,7 +165,7 @@ void GFXGLCubemap::initStatic( DDSFile *dds )
       }
 
       // convert to Z up
-      const U32 faceIndex = _zUpFaceIndex(i);
+      const U32 faceIndex = zUpFaceIndex(i);
 
       // Now loop thru the mip levels!
       for (U32 mip = 0; mip < mMipMapLevels; ++mip)

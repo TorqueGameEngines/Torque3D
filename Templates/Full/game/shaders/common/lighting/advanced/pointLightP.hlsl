@@ -36,7 +36,6 @@ struct ConvexConnectP
    float4 vsEyeDir : TEXCOORD2;
 };
 
-
 #ifdef USE_COOKIE_TEX
 
 /// The texture for cookie rendering.
@@ -130,12 +129,11 @@ uniform float4 lightMapParams;
 uniform float4 vsFarPlane;
 uniform float4 lightParams;
 
-uniform float  lightRange;
+uniform float lightRange;
+uniform float lightInvSqrRange;
 uniform float shadowSoftness;
 uniform float4x4 worldToCamera;
-uniform float3x3 viewToLightProj;
 uniform float3x3 worldToLightProj;
-uniform float3x3 dynamicViewToLightProj;
 
 uniform float3 eyePosWorld;
 uniform float4x4 cameraToWorld;
@@ -154,7 +152,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
 
    //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
    //early out if emissive
@@ -165,12 +163,12 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
    float3 L = lightPosition - surface.P;
    float dist = length(L);
-   float3 result = 0.0.xxx;
+   float3 lighting = 0.0.xxx;
    [branch]
-	if (dist < lightRange)
+	if(dist < lightRange)
 	{     
       float distToLight = dist / lightRange;
-      SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, L);
+      SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
 
    #ifdef NO_SHADOW
       float shadowed = 1.0;
@@ -183,50 +181,29 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
 
    #else
-      // Static
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-         ssPos.xy,
-         shadowCoord,
-         shadowSoftness,
-         distToLight,
-         surfaceToLight.NdotL,
-         lightParams.y);
-
-      // Dynamic
-      float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
-         ssPos.xy,
-         shadowCoord,
-         shadowSoftness,
-         distToLight,
-         surfaceToLight.NdotL,
-         lightParams.y);
-
+      float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       float shadowed = min(static_shadowed, dynamic_shadowed);
-
    #endif
    
    #endif // !NO_SHADOW
    
-      float3 lightcol = lightColor.rgb;
+      float3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
-
       // Lookup the cookie sample.
       float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
-
       // Multiply the light with the cookie tex.
-      lightcol *= cookie.rgb;
-
+      lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
       // the lighting else we get specular in the dark
       // regions of the cookie texture.
-      atten *= max(cookie.r, max(cookie.g, cookie.b));
-
+      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
    #endif
 
-      //get point light contribution   
-      result = GetPointLight(surface, surfaceToLight, lightcol, lightBrightness, dist, lightRange, shadowed);
+      //get punctual light contribution   
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
    }
       
-   return float4(result, 0);
+   return float4(lighting, 0);
 }

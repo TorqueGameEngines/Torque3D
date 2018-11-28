@@ -47,8 +47,6 @@ protected:
    /// Sets the cubemap file path.
    void _setPath( const String &path ) { mPath = path; }
 
-   /// Get Z up face index of the cubemap. DDS files will be stored Y up
-   U32 _zUpFaceIndex(const U32 index);
 
    U32 mMipMapLevels;
 public:
@@ -81,6 +79,9 @@ public:
 
    /// Get the number of mip maps
    const U32 getMipMapLevels() const { return mMipMapLevels; }
+
+   /// Get Z up face index of the cubemap. DDS files will be stored Y up
+   static U32 zUpFaceIndex(const U32 index);
 };
 
 

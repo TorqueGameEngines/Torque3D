@@ -36,7 +36,6 @@
 #include "core/fileObject.h"
 #include "core/resourceManager.h"
 #include "console/simPersistId.h"
-#include <string>
 #include "T3D/gameFunctions.h"
 #include "postFx/postEffect.h"
 #include "renderInstance/renderProbeMgr.h"
@@ -620,16 +619,13 @@ bool ReflectionProbe::createClientResources()
          Con::errorf("ReflectionProbe::createClientResources() - Unable to load baked prefilter map at %s", getPrefilterMapPath().c_str());
    }
 
-   //brdf lookup resources
-   //make the brdf lookup texture the same size as the prefilter texture
-   
+   //brdf lookup texture   
    String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/pbr/brdfTexture.dds");
-
    mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);
 
    if (!mBrdfTexture)
    {
-      mBrdfTexture = IBLUtilities::GenerateAndSaveBRDFTexture(brdfPath, 512);
+      return false;
    }
 
    mResourcesCreated = true;
@@ -652,8 +648,8 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
    //Culling distance. Can be adjusted for performance options considerations via the scalar
    if (dist > mMaxDrawDistance * Con::getFloatVariable("$pref::GI::ProbeDrawDistScale", 1.0))
    {
-	   mProbeInfo->mScore = mMaxDrawDistance;
-	   return;
+      mProbeInfo->mScore = mMaxDrawDistance;
+      return;
    }
 
    if (mReflectionModeType == DynamicCubemap && mRefreshRateMS < (Platform::getRealMilliseconds() - mDynamicLastBakeMS))
@@ -685,7 +681,7 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
       Point3F cameraOffset;
       getRenderTransform().getColumn(3, &cameraOffset);
       cameraOffset -= state->getDiffuseCameraPosition();
-      F32 dist = cameraOffset.len();
+      dist = cameraOffset.len();
       if (dist < 0.01f)
          dist = 0.01f;
 
@@ -832,7 +828,7 @@ String ReflectionProbe::getPrefilterMapPath()
    }
 
    char fileName[256];
-   dSprintf(fileName, 256, "%s%s_Prefilter.DDS", mReflectionPath.c_str(), mProbeUniqueID.c_str());
+   dSprintf(fileName, 256, "%s%s_Prefilter.dds", mReflectionPath.c_str(), mProbeUniqueID.c_str());
 
    return fileName;
 }
@@ -846,7 +842,7 @@ String ReflectionProbe::getIrradianceMapPath()
    }
 
    char fileName[256];
-   dSprintf(fileName, 256, "%s%s_Irradiance.DDS", mReflectionPath.c_str(), mProbeUniqueID.c_str());
+   dSprintf(fileName, 256, "%s%s_Irradiance.dds", mReflectionPath.c_str(), mProbeUniqueID.c_str());
 
    return fileName;
 }

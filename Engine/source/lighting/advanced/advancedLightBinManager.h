@@ -165,10 +165,9 @@ protected:
       MaterialParameterHandle *lightDirection;
       MaterialParameterHandle *lightColor;
       MaterialParameterHandle *lightBrightness;
-      MaterialParameterHandle *lightAttenuation;
       MaterialParameterHandle *lightRange;
+      MaterialParameterHandle *lightInvSqrRange;
       MaterialParameterHandle *lightAmbient;
-      MaterialParameterHandle *lightTrilight;
       MaterialParameterHandle *lightSpotParams;
 
       LightMaterialInfo(   const String &matName, 

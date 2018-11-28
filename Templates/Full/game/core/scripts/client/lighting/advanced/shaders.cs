@@ -92,7 +92,7 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "diffuseLighting";
+   target = "AL_FormatToken";
    
    pixVersion = 3.0;
 };
@@ -170,7 +170,7 @@ new CustomMaterial( AL_PointLightMaterial )
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "diffuseLighting";
+   target = "AL_FormatToken";
    
    pixVersion = 3.0;
 };
@@ -209,7 +209,7 @@ new CustomMaterial( AL_SpotLightMaterial )
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "diffuseLighting";
+   target = "AL_FormatToken";
    
    pixVersion = 3.0;
 };
@@ -371,17 +371,6 @@ new ShaderData( PrefiterCubemapShader )
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/prefilterP.glsl";
    
    samplerNames[0] = "$environmentMap";
-   
-   pixVersion = 3.0;
-};
-
-new ShaderData( BRDFLookupShader )
-{
-   DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/brdfLookupP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/brdfLookupP.glsl";
    
    pixVersion = 3.0;
 };

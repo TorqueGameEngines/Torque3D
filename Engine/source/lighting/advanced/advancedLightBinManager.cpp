@@ -286,8 +286,6 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
    matrixSet.restoreSceneViewProjection();
 
-   const MatrixF &worldToCameraXfm = matrixSet.getWorldToCamera();
-
    // Set up the SG Data
    SceneData sgData;
    sgData.init( state );
@@ -528,17 +526,6 @@ void AdvancedLightBinManager::_setupPerFrameParameters( const SceneRenderState *
                                           farPlane, 
                                           vsFarPlane);
    }
-
-   MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
-   //matrixSet.restoreSceneViewProjection();
-
-   const MatrixF &worldToCameraXfm = matrixSet.getWorldToCamera();
-
-   MatrixF inverseViewMatrix = worldToCameraXfm;
-   //inverseViewMatrix.fullInverse();
-   //inverseViewMatrix.transpose();
-
-   //MatrixF inverseViewMatrix = MatrixF::Identity;
 }
 
 void AdvancedLightBinManager::setupSGData( SceneData &data, const SceneRenderState* state, LightInfo *light )
@@ -623,10 +610,9 @@ AdvancedLightBinManager::LightMaterialInfo::LightMaterialInfo( const String &mat
    lightPosition(NULL), 
    lightDirection(NULL), 
    lightColor(NULL), 
-   lightAttenuation(NULL),
-   lightRange(NULL), 
-   lightAmbient(NULL), 
-   lightTrilight(NULL), 
+   lightRange(NULL),
+   lightInvSqrRange(NULL),
+   lightAmbient(NULL),
    lightSpotParams(NULL)
 {   
    Material *mat = MATMGR->getMaterialDefinitionByName( matName );
@@ -642,10 +628,9 @@ AdvancedLightBinManager::LightMaterialInfo::LightMaterialInfo( const String &mat
 
    lightDirection = matInstance->getMaterialParameterHandle("$lightDirection");
    lightAmbient = matInstance->getMaterialParameterHandle("$lightAmbient");
-   lightTrilight = matInstance->getMaterialParameterHandle("$lightTrilight");
    lightSpotParams = matInstance->getMaterialParameterHandle("$lightSpotParams");
-   lightAttenuation = matInstance->getMaterialParameterHandle("$lightAttenuation");
    lightRange = matInstance->getMaterialParameterHandle("$lightRange");
+   lightInvSqrRange = matInstance->getMaterialParameterHandle("$lightInvSqrRange");
    lightPosition = matInstance->getMaterialParameterHandle("$lightPosition");
    farPlane = matInstance->getMaterialParameterHandle("$farPlane");
    vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
@@ -686,87 +671,47 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
 {
    MaterialParameters *matParams = matInstance->getMaterialParameters();
 
-   // Set color in the right format, set alpha to the luminance value for the color.
-   LinearColorF col = lightInfo->getColor();
-
-   // TODO: The specularity control of the light
-   // is being scaled by the overall lumiance.
-   //
-   // Not sure if this may be the source of our
-   // bad specularity results maybe?
-   //
-
-   const Point3F colorToLumiance( 0.3576f, 0.7152f, 0.1192f );
-   F32 lumiance = mDot(*((const Point3F *)&lightInfo->getColor()), colorToLumiance );
-   col.alpha *= lumiance;
-
-   matParams->setSafe( lightColor, col );
+   matParams->setSafe( lightColor, lightInfo->getColor() );
    matParams->setSafe( lightBrightness, lightInfo->getBrightness() );
 
    switch( lightInfo->getType() )
    {
    case LightInfo::Vector:
       {
-         const VectorF lightDir = lightInfo->getDirection();
-         matParams->setSafe( lightDirection, lightDir );
-
-         // Set small number for alpha since it represents existing specular in
-         // the vector light. This prevents a divide by zero.
-         LinearColorF ambientColor = renderState->getAmbientLightColor();
-         ambientColor.alpha = 0.00001f;
-         matParams->setSafe( lightAmbient, ambientColor );
-
-         // If no alt color is specified, set it to the average of
-         // the ambient and main color to avoid artifacts.
-         //
-         // TODO: Trilight disabled until we properly implement it
-         // in the light info!
-         //
-         //LinearColorF lightAlt = lightInfo->getAltColor();
-         LinearColorF lightAlt( LinearColorF::BLACK ); // = lightInfo->getAltColor();
-         if ( lightAlt.red == 0.0f && lightAlt.green == 0.0f && lightAlt.blue == 0.0f )
-            lightAlt = (lightInfo->getColor() + renderState->getAmbientLightColor()) / 2.0f;
-
-         LinearColorF trilightColor = lightAlt;
-         matParams->setSafe(lightTrilight, trilightColor);
+         matParams->setSafe( lightDirection, lightInfo->getDirection());
+         matParams->setSafe( lightAmbient, renderState->getAmbientLightColor());
       }
       break;
 
    case LightInfo::Spot:
       {
          const F32 outerCone = lightInfo->getOuterConeAngle();
-         const F32 innerCone = getMin( lightInfo->getInnerConeAngle(), outerCone );
-         const F32 outerCos = mCos( mDegToRad( outerCone / 2.0f ) );
-         const F32 innerCos = mCos( mDegToRad( innerCone / 2.0f ) );
-         Point4F spotParams(  outerCos, 
-                              innerCos - outerCos, 
-                              mCos( mDegToRad( outerCone ) ), 
-                              0.0f );
+         const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone);
+         const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
+         const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
+         Point2F spotParams(outerCos,innerCos - outerCos); 
 
          matParams->setSafe( lightSpotParams, spotParams );
          matParams->setSafe( lightDirection, lightInfo->getDirection());
          matParams->setSafe( lightPosition, lightInfo->getPosition());
+
+         const F32 radius = lightInfo->getRange().x;
+         const F32 invSqrRadius = 1.0f / mSquared(radius);
+         matParams->setSafe(lightRange, radius);
+         matParams->setSafe(lightInvSqrRange, invSqrRadius);
       }
-      // Fall through
+      break;
 
    case LightInfo::Point:
-   {
-      const F32 radius = lightInfo->getRange().x;
-      matParams->setSafe( lightRange, radius );
-      matParams->setSafe( lightPosition, lightInfo->getPosition());
+      {
+         matParams->setSafe(lightPosition, lightInfo->getPosition());
 
-      // Get the attenuation falloff ratio and normalize it.
-      Point3F attenRatio = lightInfo->getExtended<ShadowMapParams>()->attenuationRatio;
-      F32 total = attenRatio.x + attenRatio.y + attenRatio.z;
-      if ( total > 0.0f )
-         attenRatio /= total;
-
-      Point2F attenParams( ( 1.0f / radius ) * attenRatio.y,
-                           ( 1.0f / ( radius * radius ) ) * attenRatio.z );
-
-      matParams->setSafe( lightAttenuation, attenParams );
+         const F32 radius = lightInfo->getRange().x;
+         const F32 invSqrRadius = 1.0f / (radius * radius);
+         matParams->setSafe( lightRange, radius);
+         matParams->setSafe( lightInvSqrRange, invSqrRadius);  
+      }
       break;
-   }
 
    default:
       AssertFatal( false, "Bad light type!" );

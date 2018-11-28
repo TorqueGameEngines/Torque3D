@@ -79,31 +79,6 @@ float3 iblBoxSpecular(float3 normal, float3 wsPos, float roughness, float3 surfT
    return radiance;
 }
 
-/*
-float defineSphereSpaceInfluence(float3 centroidPosVS, float rad, float2 atten, float3 surfPosVS, float3 norm)
-{
-    // Build light vec, get length, clip pixel if needed
-    float3 lightVec = centroidPosVS - surfPosVS;
-    float lenLightV = length( lightVec );
-    if (( rad - lenLightV )<0)
-		return -1;
-
-    // Get the attenuated falloff.
-    float attn = attenuate( float4(1,1,1,1), atten, lenLightV );
-    if ((attn - 1e-6)<0)
-		return -1;
-
-    // Normalize lightVec
-    lightVec = lightVec /= lenLightV;
-
-    // If we can do dynamic branching then avoid wasting
-    // fillrate on pixels that are backfacing to the light.
-    float nDotL = abs(dot( lightVec, norm ));
-
-    return saturate( nDotL * attn );
-}
-*/
-
 float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float radius, float atten)
 {
     float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
@@ -120,18 +95,6 @@ float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float radius, f
     return max(localDir.x, max(localDir.y, localDir.z)) * -1;
 }
 
-float defineDepthInfluence(float3 probePosWS, float3 surfPosWS, TORQUE_SAMPLERCUBE(radianceCube))
-{
-	//TODO properly: filter out pixels projected uppon by probes behind walls by looking up the depth stored in the probes cubemap alpha
-	//and comparing legths
-	float3 probeToSurf = probePosWS-surfPosWS;
-			
-	float depthRef = TORQUE_TEXCUBELOD(cubeMap, float4(-probeToSurf,0)).a*radius;
-	float dist = length( probeToSurf );
-
-	return depthRef-dist;
-}
-
 float4 main( ConvexConnectP IN ) : SV_TARGET
 { 
    // Compute scene UV
@@ -146,16 +109,14 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
    
    //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);		  
 
    float tempAttenVal = 3.5;
    float blendVal = defineBoxSpaceInfluence(surface.P, probeWSPos, radius, tempAttenVal);
 	clip(blendVal);
 	
-	//flip me on to have probes filter by depth
-	//clip(defineDepthInfluence(probeWSPos, worldPos, TORQUE_SAMPLERCUBE_MAKEARG(cubeMap)));		
-	
+
 	//render into the bound space defined above
 	float3 surfToEye = normalize(surface.P - eyePosWorld);
 	float3 irradiance = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).xyz;

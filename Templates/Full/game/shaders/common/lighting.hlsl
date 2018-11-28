@@ -122,7 +122,7 @@ struct Surface
 	}
 };
 
-inline Surface CreateSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TORQUE_SAMPLER2D(gbufferTex2), in float2 uv, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
+inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TORQUE_SAMPLER2D(gbufferTex2), in float2 uv, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
 {
 	Surface surface = (Surface)0;
 
@@ -148,15 +148,17 @@ inline Surface CreateSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 struct SurfaceToLight
 {
 	float3 L;				// surface to light vector
+   float3 Lu;				// un-normalized surface to light vector
 	float3 H;				// half-vector between view vector and light vector
 	float NdotL;			// cos(angle between N and L)
 	float HdotV;			// cos(angle between H and V) = HdotL = cos(angle between H and L)
 	float NdotH;			// cos(angle between N and H)
 };
 
-inline SurfaceToLight CreateSurfaceToLight(in Surface surface, in float3 L)
+inline SurfaceToLight createSurfaceToLight(in Surface surface, in float3 L)
 {
 	SurfaceToLight surfaceToLight = (SurfaceToLight)0;
+   surfaceToLight.Lu = L;
 	surfaceToLight.L = normalize(L);
 	surfaceToLight.H = normalize(surface.V + surfaceToLight.L);
 	surfaceToLight.NdotL = saturate(dot(surfaceToLight.L, surface.N));
@@ -187,15 +189,32 @@ float3 BRDF_GetDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
 	return diffuse;
 }
 
-// inverse square falloff from Epic Games' paper
-float Attenuate(float distToLight, float radius)
+//attenuations functions from "moving frostbite to pbr paper"
+//https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+float smoothDistanceAtt ( float squaredDistance , float invSqrAttRadius )
 {
-   float distanceByRadius = 1.0f - pow((distToLight / radius), 4);
-   float clamped = pow(clamp(distanceByRadius, 0.0f, 1.0f), 2.0f);
-   return clamped / (sqr(distToLight) + 1.0f);
+   float factor = squaredDistance * invSqrAttRadius ;
+   float smoothFactor = saturate (1.0f - factor * factor );
+   return sqr(smoothFactor);
 }
 
-inline float3 GetDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
+float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
+{
+   float sqrDist = dot ( unormalizedLightVector , unormalizedLightVector );
+   float attenuation = 1.0 / (max ( sqrDist , 0.01*0.01) );
+   attenuation *= smoothDistanceAtt ( sqrDist , invSqrAttRadius );
+   return attenuation;
+}
+
+ float getSpotAngleAtt( float3 normalizedLightVector , float3 lightDir , float2 lightSpotParams )
+ {
+   float cd = dot ( lightDir , normalizedLightVector );
+   float attenuation = saturate ( ( cd - lightSpotParams.x ) / lightSpotParams.y );
+   // smooth the transition
+   return sqr(attenuation);
+}
+
+inline float3 getDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
    float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity;
    float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
@@ -205,24 +224,11 @@ inline float3 GetDirectionalLight(in Surface surface, in SurfaceToLight surfaceT
    return final;
 }
 
-inline float3 GetPointLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity,float distToLight, float radius, float shadow)
+inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
-   float attenuation = Attenuate(distToLight,radius);
-
+   float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
    float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
 
-   float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-   float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
-
-   float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
-   return final;
-}
-
-inline float3 GetSpotLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity,float distToLight, float radius, float shadow)
-{
-   float attenuation = Attenuate(distToLight,radius);
-   //attenuation *= ( cosAlpha - lightSpotParams.x ) / lightSpotParams.y;
-   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
    float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 

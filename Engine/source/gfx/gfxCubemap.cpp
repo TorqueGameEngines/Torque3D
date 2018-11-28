@@ -35,7 +35,7 @@ GFXCubemap::~GFXCubemap()
       TEXMGR->releaseCubemap( this );
 }
 
-U32 GFXCubemap::_zUpFaceIndex(const U32 index)
+U32 GFXCubemap::zUpFaceIndex(const U32 index)
 {
    switch (index)
    {

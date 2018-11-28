@@ -79,7 +79,6 @@ uniform float4 dynamicFarPlaneScalePSSM;
 
 float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
                                 float2 texCoord,
-                                float4x4 worldToLightProj,
                                 float3 worldPos,
                                 float4 scaleX,
                                 float4 scaleY,
@@ -187,7 +186,7 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0);
   
    //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
                                     
    //early out if emissive
@@ -197,7 +196,7 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
 	}
    
    //create surface to light                           
-   SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, -lightDirection);
+   SurfaceToLight surfaceToLight = createSurfaceToLight(surface, -lightDirection);
 
    //light color might be changed by PSSM_DEBUG_RENDER
    float3 lightingColor = lightColor.rgb;
@@ -210,11 +209,10 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      //there must be a more effecient way of doing this, two shadowcast lookups = very yucky!
-      float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+      float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
-      float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, dynamicWorldToLightProj, surface.P, dynamicScaleX,
+      float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, surface.P, dynamicScaleX,
                                                               dynamicScaleY, dynamicOffsetX, dynamicOffsetY, dynamicFarPlaneScalePSSM, surfaceToLight.NdotL);
 
       float static_shadowed = static_shadowed_colors.a;
@@ -237,7 +235,7 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
    #endif //NO_SHADOW
    
    //get directional light contribution   
-   float3 result = GetDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
+   float3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
 
-   return float4(result, 0);
+   return float4(lighting, 0);
 }

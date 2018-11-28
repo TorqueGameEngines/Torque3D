@@ -57,10 +57,11 @@ uniform float3 lightPosition;
 
 uniform float4 lightColor;
 
-uniform float  lightRange;
+uniform float lightRange;
+uniform float lightInvSqrRange;
 uniform float3 lightDirection;
 
-uniform float4 lightSpotParams;
+uniform float2 lightSpotParams;
 uniform float4 lightMapParams;
 uniform float4 vsFarPlane;
 uniform float4x4 worldToLightProj;
@@ -70,6 +71,7 @@ uniform float shadowSoftness;
 uniform float3 eyePosWorld;
 
 uniform float4x4 cameraToWorld;
+uniform float4x4 worldToCamera;
 
 float4 main(   ConvexConnectP IN ) : SV_TARGET
 {   
@@ -85,7 +87,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
 
    //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
    //early out if emissive
@@ -93,27 +95,45 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    {   
       return 0.0.xxxx;
 	}
- 
+
    float3 L = lightPosition - surface.P;
    float dist = length(L);
-   float3 result = 0.0.xxx;
+   float3 lighting = 0.0.xxx;
    [branch]
-	if (dist < lightRange)
+	if(dist < lightRange)
 	{     
-      float distToLight = dist / lightRange;
-      float spotFactor = dot(L, lightDirection);
-		float spotCutOff = lightSpotParams.x;
-      [branch]
-		//if (spotFactor > spotCutOff)
-		{
-			SurfaceToLight surfaceToLight = CreateSurfaceToLight(surface, L); 
-         float shadowed = 1.0;
-         float3 lightcol = lightColor.rgb;
-         //get spot light contribution   
-         result = GetSpotLight(surface, surfaceToLight, lightcol, lightBrightness, dist, lightRange, shadowed);
-         //result = float3(1.0,0,0);
-      }
+      SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
+      #ifdef NO_SHADOW   
+         float shadowed = 1.0;      	
+      #else
+         // Get the shadow texture coordinate
+         float4 pxlPosLightProj = mul( worldToLightProj, float4( surface.P, 1 ) );
+         float2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
+         shadowCoord.y = 1.0f - shadowCoord.y;
+         //distance to light in shadow map space
+         float distToLight = pxlPosLightProj.z / lightRange;
+         float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float shadowed = min(static_shadowed, dynamic_shadowed);
+      #endif      
+
+      float3 lightCol = lightColor.rgb;
+   #ifdef USE_COOKIE_TEX
+      // Lookup the cookie sample.
+      float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
+      // Multiply the light with the cookie tex.
+      lightCol *= cookie.rgb;
+      // Use a maximum channel luminance to attenuate 
+      // the lighting else we get specular in the dark
+      // regions of the cookie texture.
+      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
+   #endif
+
+      //get Punctual light contribution   
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      //get spot angle attenuation
+      lighting *= getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
    }
    
-   return float4(result, 0);
+   return float4(lighting, 0);
 }

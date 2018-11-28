@@ -65,6 +65,7 @@ uniform float2 lightSpotParams;
 uniform float4 lightMapParams;
 uniform float4 vsFarPlane;
 uniform float4x4 worldToLightProj;
+uniform float4x4 dynamicWorldToLightProj;
 uniform float4 lightParams;
 
 uniform float shadowSoftness;
@@ -110,10 +111,16 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
          float4 pxlPosLightProj = mul( worldToLightProj, float4( surface.P, 1 ) );
          float2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
          shadowCoord.y = 1.0f - shadowCoord.y;
+
+         float4 dynPxlPosLightProj = mul( dynamicWorldToLightProj, float4( surface.P, 1 ) );
+         float2 dynShadowCoord = ( ( dynPxlPosLightProj.xy / dynPxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
+         dynShadowCoord.y = 1.0f - dynShadowCoord.y;
+
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
+         float dynDistToLight = dynPxlPosLightProj.z / lightRange;
          float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-         float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, dynShadowCoord, shadowSoftness, dynDistToLight, surfaceToLight.NdotL, lightParams.y);
          float shadowed = min(static_shadowed, dynamic_shadowed);
       #endif      
 

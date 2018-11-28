@@ -115,10 +115,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
 	if(useSphereMode)
 	{
 		float3 L = probeWSPos - surface.P;
-		blendVal = getDistanceAtt(L, radius);
-		if (length(L)>radius)
-			blendVal = -1;
-		
+		blendVal = 1.0-length(L)/radius;		
 	}
 	else
 	{

@@ -185,8 +185,7 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
 
    AssertFatal(bmp->getWidth() == getWidth(), "GFXD3D11TextureObject::copyToBmp - source/dest width does not match");
    AssertFatal(bmp->getHeight() == getHeight(), "GFXD3D11TextureObject::copyToBmp - source/dest height does not match");
-   const U32 width = getWidth();
-   const U32 height = getHeight();
+   const U32 mipLevels = getMipLevels();
 
    bmp->setHasTransparency(mHasTransparency);
 
@@ -221,51 +220,57 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    //copy the classes texture to the staging texture
    D3D11DEVICECONTEXT->CopyResource(pStagingTexture, mD3DTexture);
 
-   //map the staging resource
-   D3D11_MAPPED_SUBRESOURCE mappedRes;
-   hr = D3D11DEVICECONTEXT->Map(pStagingTexture, 0, D3D11_MAP_READ, 0, &mappedRes);
-   if (FAILED(hr))
+   for (U32 mip = 0; mip < mipLevels; mip++)
    {
-      //cleanup
-      SAFE_RELEASE(pStagingTexture);
-      Con::errorf("GFXD3D11TextureObject::copyToBmp - Failed to map staging texture");
-      return false;
-   }
-
-   // set pointers
-   const U8* srcPtr = (U8*)mappedRes.pData;
-   U8* destPtr = bmp->getWritableBits();
-
-   // we will want to skip over any D3D cache data in the source texture
-   const S32 sourceCacheSize = mappedRes.RowPitch - width * sourceBytesPerPixel;
-   AssertFatal(sourceCacheSize >= 0, "GFXD3D11TextureObject::copyToBmp - cache size is less than zero?");
-
-   // copy data into bitmap
-   for (U32 row = 0; row < height; ++row)
-   {
-      for (U32 col = 0; col < width; ++col)
+      const U32 width = bmp->getWidth(mip);
+      const U32 height = bmp->getHeight(mip);
+      //map the staging resource
+      D3D11_MAPPED_SUBRESOURCE mappedRes;
+      const U32 subResource = D3D11CalcSubresource(mip, 0, mipLevels);
+      hr = D3D11DEVICECONTEXT->Map(pStagingTexture, subResource, D3D11_MAP_READ, 0, &mappedRes);
+      if (FAILED(hr))
       {
-         destPtr[0] = srcPtr[2]; // red
-         destPtr[1] = srcPtr[1]; // green
-         destPtr[2] = srcPtr[0]; // blue 
-         if (destBytesPerPixel == 4)
-            destPtr[3] = srcPtr[3]; // alpha
-
-         // go to next pixel in src
-         srcPtr += sourceBytesPerPixel;
-
-         // go to next pixel in dest
-         destPtr += destBytesPerPixel;
+         //cleanup
+         SAFE_RELEASE(pStagingTexture);
+         Con::errorf("GFXD3D11TextureObject::copyToBmp - Failed to map staging texture");
+         return false;
       }
-      // skip past the cache data for this row (if any)
-      srcPtr += sourceCacheSize;
+
+      // set pointers
+      const U8* srcPtr = (U8*)mappedRes.pData;
+      U8* destPtr = bmp->getWritableBits(mip);
+
+      // we will want to skip over any D3D cache data in the source texture
+      const S32 sourceCacheSize = mappedRes.RowPitch - width * sourceBytesPerPixel;
+      AssertFatal(sourceCacheSize >= 0, "GFXD3D11TextureObject::copyToBmp - cache size is less than zero?");
+
+      // copy data into bitmap
+      for (U32 row = 0; row < height; ++row)
+      {
+         for (U32 col = 0; col < width; ++col)
+         {
+            destPtr[0] = srcPtr[2]; // red
+            destPtr[1] = srcPtr[1]; // green
+            destPtr[2] = srcPtr[0]; // blue 
+            if (destBytesPerPixel == 4)
+               destPtr[3] = srcPtr[3]; // alpha
+
+            // go to next pixel in src
+            srcPtr += sourceBytesPerPixel;
+
+            // go to next pixel in dest
+            destPtr += destBytesPerPixel;
+         }
+         // skip past the cache data for this row (if any)
+         srcPtr += sourceCacheSize;
+      }
+
+      // assert if we stomped or underran memory
+      AssertFatal(U32(destPtr - bmp->getWritableBits(mip)) == width * height * destBytesPerPixel, "GFXD3D11TextureObject::copyToBmp - memory error");
+      AssertFatal(U32(srcPtr - (U8*)mappedRes.pData) == height * mappedRes.RowPitch, "GFXD3D11TextureObject::copyToBmp - memory error");
+
+      D3D11DEVICECONTEXT->Unmap(pStagingTexture, subResource);
    }
-
-   // assert if we stomped or underran memory
-   AssertFatal(U32(destPtr - bmp->getWritableBits()) == width * height * destBytesPerPixel, "GFXD3D11TextureObject::copyToBmp - memory error");
-   AssertFatal(U32(srcPtr - (U8*)mappedRes.pData) == height * mappedRes.RowPitch, "GFXD3D11TextureObject::copyToBmp - memory error");
-
-   D3D11DEVICECONTEXT->Unmap(pStagingTexture, 0);
 
    SAFE_RELEASE(pStagingTexture);
    PROFILE_END();

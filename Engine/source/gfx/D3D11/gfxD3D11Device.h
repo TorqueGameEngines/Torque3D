@@ -239,6 +239,11 @@ public:
    virtual U32  getNumRenderTargets() const { return 8; }
    // }
 
+   // Copy methods
+   // {
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face);
+   // }
+
    // Misc rendering control
    // {
    virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil );

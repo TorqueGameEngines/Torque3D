@@ -46,7 +46,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
    
    //create surface
-   Surface surface = CreateSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
@@ -57,8 +57,6 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
 	kD *= 1.0 - surface.metalness;
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-
-	float blendVal = 0.0001;
 
    return float4(diffuse + specular * surface.ao, 0);
 }

@@ -177,7 +177,7 @@ void GFXD3D11Cubemap::initStatic(DDSFile *dds)
 			continue;
 
       // convert to Z up
-      const U32 faceIndex = _zUpFaceIndex(currentFace);
+      const U32 faceIndex = zUpFaceIndex(currentFace);
 
 		for(U32 currentMip = 0; currentMip < mMipMapLevels; currentMip++)
 		{

@@ -826,6 +826,13 @@ public:
  
    //-----------------------------------------------------------------------------
 
+   /// @name Copying methods
+   /// @{
+
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) = 0;
+
+   /// @}
+
    /// @name Rendering methods
    /// @{
 

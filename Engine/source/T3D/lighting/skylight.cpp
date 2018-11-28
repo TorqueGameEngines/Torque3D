@@ -36,7 +36,6 @@
 #include "core/fileObject.h"
 #include "core/resourceManager.h"
 #include "console/simPersistId.h"
-#include <string>
 #include "T3D/gameFunctions.h"
 #include "postFx/postEffect.h"
 #include "renderInstance/renderProbeMgr.h"
@@ -182,9 +181,6 @@ void Skylight::prepRenderImage(SceneRenderState *state)
 {
    if (!mEnabled || !Skylight::smRenderSkylights)
       return;
-
-   Point3F distVec = getPosition() - state->getCameraPosition();
-   F32 dist = distVec.len();
 
    //special hook-in for skylights
    Point3F camPos = state->getCameraPosition();

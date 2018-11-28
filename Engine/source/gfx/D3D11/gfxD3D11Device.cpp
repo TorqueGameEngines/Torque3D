@@ -909,6 +909,25 @@ void GFXD3D11Device::setShaderConstBufferInternal(GFXShaderConstBuffer* buffer)
 
 //-----------------------------------------------------------------------------
 
+void GFXD3D11Device::copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face)
+{
+   AssertFatal(pDst, "GFXD3D11Device::copyResource: Destination texture is null");
+   AssertFatal(pSrc, "GFXD3D11Device::copyResource: Source cubemap is null");
+
+   GFXD3D11TextureObject *pD3DDst = static_cast<GFXD3D11TextureObject*>(pDst);
+   GFXD3D11Cubemap *pD3DSrc = static_cast<GFXD3D11Cubemap*>(pSrc);
+
+   const U32 mipLevels = pD3DSrc->getMipMapLevels();
+   for (U32 mip = 0; mip < mipLevels; mip++)
+   {
+      const U32 srcSubResource = D3D11CalcSubresource(mip, face, mipLevels);
+      const U32 dstSubResource = D3D11CalcSubresource(mip, 0, mipLevels);
+      mD3DDeviceContext->CopySubresourceRegion(pD3DDst->get2DTex(), dstSubResource, 0, 0, 0, pD3DSrc->get2DTex(), srcSubResource, NULL);
+   }
+}
+
+//-----------------------------------------------------------------------------
+
 void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)
 {
    // Make sure we have flushed our render target state.

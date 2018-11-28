@@ -1,3 +1,26 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+#include "T3D/lighting/IBLUtilities.h"
 #include "console/engineAPI.h"
 #include "materials/shaderData.h"
 #include "gfx/gfxTextureManager.h"
@@ -167,62 +190,7 @@ namespace IBLUtilities
       {
          Con::errorf("IBLUtilities::GenerateAndSavePrefilterMap - Failed to properly save out the baked irradiance!");
       }
-   }
-
-   void GenerateBRDFTexture(GFXTexHandle &textureOut)
-   {
-      GFXTransformSaver saver;
-
-      ShaderData *brdfShaderData;
-      GFXShaderRef brdfShader = Sim::findObject("BRDFLookupShader", brdfShaderData) ? brdfShaderData->getShader() : NULL;
-      if (!brdfShader)
-      {
-         Con::errorf("IBLUtilities::GenerateBRDFTexture() - could not find BRDFLookupShader");
-         return;
-      }
-
-      U32 textureSize = textureOut->getWidth();
-
-      GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget();
-      GFX->pushActiveRenderTarget();
-
-      GFX->setShader(brdfShader);
-      renderTarget->attachTexture(GFXTextureTarget::Color0, textureOut);
-      GFX->setActiveRenderTarget(renderTarget);//potential bug here with the viewport not updating with the new size
-      GFX->setViewport(RectI(0, 0, textureSize, textureSize));//see above comment
-      GFX->clear(GFXClearTarget, LinearColorF::BLUE, 1.0f, 0);
-      GFX->drawPrimitive(GFXTriangleList, 0, 3);
-      renderTarget->resolve();
-
-      GFX->popActiveRenderTarget();
-   }
-
-   GFXTexHandle GenerateAndSaveBRDFTexture(String outputPath, S32 resolution)
-   {
-      GFXTexHandle brdfTexture = TEXMGR->createTexture(resolution, resolution, GFXFormatR8G8B8A8, &GFXRenderTargetProfile, 1, 0);
-      GenerateBRDFTexture(brdfTexture);
-
-      FileStream fs;
-      if (fs.open(outputPath, Torque::FS::File::Write))
-      {
-         // Read back the render target, dxt compress it, and write it to disk.
-         GBitmap brdfBmp(brdfTexture.getHeight(), brdfTexture.getWidth(), false, GFXFormatR8G8B8A8);
-         brdfTexture.copyToBmp(&brdfBmp);
-
-         brdfBmp.extrudeMipLevels();
-
-         DDSFile *brdfDDS = DDSFile::createDDSFileFromGBitmap(&brdfBmp);
-         ImageUtil::ddsCompress(brdfDDS, GFXFormatBC1);
-
-         // Write result to file stream
-         brdfDDS->write(fs);
-
-         delete brdfDDS;
-      }
-      fs.close();
-
-      return brdfTexture;
-   }
+   }   
 
    void bakeReflection(String outputPath, S32 resolution)
    {
@@ -662,9 +630,3 @@ namespace IBLUtilities
       return angle;
    }
 };
-
-DefineEngineFunction(GenerateBRDFTexture, bool, (String outputPath, S32 resolution), ("", 256),
-   "@brief returns true if control object is inside the fog\n\n.")
-{
-   return IBLUtilities::GenerateAndSaveBRDFTexture(outputPath, resolution);
-}

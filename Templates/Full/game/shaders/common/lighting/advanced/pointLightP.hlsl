@@ -134,6 +134,7 @@ uniform float lightInvSqrRange;
 uniform float shadowSoftness;
 uniform float4x4 worldToCamera;
 uniform float3x3 worldToLightProj;
+uniform float3x3 dynamicWorldToLightProj;
 
 uniform float3 eyePosWorld;
 uniform float4x4 cameraToWorld;
@@ -182,8 +183,9 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
    #else
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
+      float2 dynShadowCoord = decodeShadowCoord( mul( dynamicWorldToLightProj, -surfaceToLight.L ) ).xy;
       float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-      float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, dynShadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       float shadowed = min(static_shadowed, dynamic_shadowed);
    #endif
    

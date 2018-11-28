@@ -79,6 +79,7 @@ uniform float4 dynamicFarPlaneScalePSSM;
 
 float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
                                 float2 texCoord,
+                                float4x4 worldToLightProj,
                                 float3 worldPos,
                                 float4 scaleX,
                                 float4 scaleY,
@@ -209,10 +210,10 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, surface.P, scaleX, scaleY, offsetX, offsetY,
+      float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
-      float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, surface.P, dynamicScaleX,
+      float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, dynamicWorldToLightProj, surface.P, dynamicScaleX,
                                                               dynamicScaleY, dynamicOffsetX, dynamicOffsetY, dynamicFarPlaneScalePSSM, surfaceToLight.NdotL);
 
       float static_shadowed = static_shadowed_colors.a;

@@ -115,16 +115,17 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
 	if(useSphereMode)
 	{
 		float3 L = probeWSPos - surface.P;
-		blendVal = 1.0-length(L)/radius;		
+		blendVal = 1.0-length(L)/radius;
+		clip(blendVal);		
 	}
 	else
 	{
 		float tempAttenVal = 3.5;
 		blendVal = defineBoxSpaceInfluence(surface.P, probeWSPos, radius, tempAttenVal);
+		clip(blendVal);
+		float compression = 0.05;
+		blendVal=(1.0-compression)+blendVal*compression;
 	}
-   clip(blendVal);
-	
-
 	//render into the bound space defined above
 	float3 surfToEye = normalize(surface.P - eyePosWorld);
 	float3 irradiance = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).xyz;

@@ -234,14 +234,15 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       #endif
 
    #endif //NO_SHADOW
-   float3 ao = float3(1,1,1);
+   float ao = 1;
    // Sample the AO texture.
    #ifdef USE_SSAO_MASK
       ao = 1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams3 ) ).r;
    #endif
    
    //get directional light contribution   
-   float3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow+ao);
+   surface.ao *= ao;
+   float3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
 
    return float4(lighting, 0);
 }

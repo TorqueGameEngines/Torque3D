@@ -222,7 +222,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    _setupPerFrameParameters(state);
 
    //Order the probes by size, biggest to smallest
-   dQsort(ProbeRenderInst::all.address(), ProbeRenderInst::all.size(), sizeof(const ProbeRenderInst*), AscendingReflectProbeInfluence);
+   //dQsort(ProbeRenderInst::all.address(), ProbeRenderInst::all.size(), sizeof(const ProbeRenderInst*), AscendingReflectProbeInfluence);
 
    //Specular
    PROFILE_START(RenderProbeManager_ReflectProbeRender);
@@ -232,68 +232,85 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
    for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
    {
-      ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
+	   ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
-      if (!curEntry->mIsEnabled)
-         continue;
+	   if (!curEntry->mIsEnabled)
+		   continue;
 
-      if (curEntry->numPrims == 0)
-         continue;
+	   if (curEntry->numPrims == 0)
+		   continue;
 
-      if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
-         continue;
+	   if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
+		   continue;
 
-      if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
-         break;
+	   if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
+		   break;
 
-      //Setup
-      MatrixF probeTrans = curEntry->getTransform();
+	   if (curEntry->mIsSkylight)
+	   {
+		   //Setup
+		   MatrixF probeTrans = curEntry->getTransform();
 
-      if (!curEntry->mIsSkylight)
-      {
-         if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
-            probeTrans.scale(curEntry->mRadius * 1.01f);
-      }
-      else
-      {
-         probeTrans.scale(10); //force it to be big enough to surround the camera
-      }
+		   // Set geometry
+		   GFX->setVertexBuffer(curEntry->vertBuffer);
+		   GFX->setPrimitiveBuffer(curEntry->primBuffer);
+		   probeTrans.scale(10); //force it to be big enough to surround the camera
+		   sgData.objTrans = &probeTrans;
+		   skylightMat->setProbeParameters(curEntry, state, worldToCameraXfm);
 
-      sgData.objTrans = &probeTrans;
+		   while (skylightMat->matInstance->setupPass(state, sgData))
+		   {
+			   // Set transforms
+			   matrixSet.setWorld(*sgData.objTrans);
+			   skylightMat->matInstance->setTransforms(matrixSet, state);
+			   skylightMat->matInstance->setSceneInfo(state, sgData);
 
-      if(curEntry->mIsSkylight)
-         skylightMat->setProbeParameters(curEntry, state, worldToCameraXfm);
-      else
-         reflProbeMat->setProbeParameters(curEntry, state, worldToCameraXfm);
+			   GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
+		   }
+	   }
+   }
 
-      // Set geometry
-      GFX->setVertexBuffer(curEntry->vertBuffer);
-      GFX->setPrimitiveBuffer(curEntry->primBuffer);
+   for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
+   {
+	   ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
-      if (curEntry->mIsSkylight)
-      {
-         while (skylightMat->matInstance->setupPass(state, sgData))
-         {
-            // Set transforms
-            matrixSet.setWorld(*sgData.objTrans);
-            skylightMat->matInstance->setTransforms(matrixSet, state);
-            skylightMat->matInstance->setSceneInfo(state, sgData);
+	   if (!curEntry->mIsEnabled)
+		   continue;
 
-            GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
-         }
-      }
-      else
-      {
-         while (reflProbeMat->matInstance->setupPass(state, sgData))
-         {
-            // Set transforms
-            matrixSet.setWorld(*sgData.objTrans);
-            reflProbeMat->matInstance->setTransforms(matrixSet, state);
-            reflProbeMat->matInstance->setSceneInfo(state, sgData);
+	   if (curEntry->numPrims == 0)
+		   continue;
 
-            GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
-         }
-      }
+	   if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
+		   continue;
+
+	   if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
+		   break;
+
+	   //Setup
+	   MatrixF probeTrans = curEntry->getTransform();
+	   
+	   if (!curEntry->mIsSkylight)
+	   {
+		   if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
+			   probeTrans.scale(curEntry->mRadius * 1.01f);
+
+		   sgData.objTrans = &probeTrans;
+
+		   reflProbeMat->setProbeParameters(curEntry, state, worldToCameraXfm);
+
+		   // Set geometry
+		   GFX->setVertexBuffer(curEntry->vertBuffer);
+		   GFX->setPrimitiveBuffer(curEntry->primBuffer);
+		   while (reflProbeMat->matInstance->setupPass(state, sgData))
+		   {
+			   // Set transforms
+			   matrixSet.setWorld(*sgData.objTrans);
+			   reflProbeMat->matInstance->setTransforms(matrixSet, state);
+			   reflProbeMat->matInstance->setSceneInfo(state, sgData);
+
+			   GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
+		   }
+	   }
    }
 
    GFX->popActiveRenderTarget();

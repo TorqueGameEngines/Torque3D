@@ -980,8 +980,10 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, nearPlane);
       Frustum frustum(false, left, right, top, bottom, nearPlane, farDist);
 
+	  F32 detailAdjustBackup = TSShapeInstance::smDetailAdjust;
+	  TSShapeInstance::smDetailAdjust *= getNextPow2(resolution);
       renderFrame(&baseTarget, matView, frustum, mCaptureMask & EDITOR_RENDER_TYPEMASK, gCanvasClearColor);
-
+	  TSShapeInstance::smDetailAdjust = detailAdjustBackup;
       baseTarget->resolve();
    }
 

@@ -422,7 +422,7 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx )
    reflectRenderState.setDiffuseCameraTransform( params.query->headMatrix );
 
    // render scene
-   LIGHTMGR->registerGlobalLights( &reflectRenderState.getCullingFrustum(), false );
+   LIGHTMGR->registerGlobalLights( &reflectRenderState.getCullingFrustum(), false, false );
    gClientSceneGraph->renderSceneNoLights( &reflectRenderState, mDesc->objectTypeMask );
    LIGHTMGR->unregisterAllLights();
 

@@ -134,7 +134,7 @@ public:
    virtual void registerLocalLight( LightInfo *light );
    virtual void unregisterLocalLight( LightInfo *light );
 
-   virtual void registerGlobalLights( const Frustum *frustum, bool staticlighting );
+   virtual void registerGlobalLights( const Frustum *frustum, bool staticlighting, bool cullSceneLights = true );
    virtual void unregisterAllLights();
 
    /// Returns all unsorted and un-scored lights (both global and local).

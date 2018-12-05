@@ -379,6 +379,9 @@ void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, co
    case GFXFormatR5G6B5:
    case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
       break;
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
+      break;
    default:
       AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
       break;
@@ -450,6 +453,13 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
       {
          for(U32 i = 1; i < mNumMipLevels; i++)
             bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+         break;
+      }
+
+      case GFXFormatR16G16B16A16F:
+      {
+         for (U32 i = 1; i < mNumMipLevels; i++)
+            bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
          break;
       }
       

@@ -177,8 +177,8 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    // check format limitations
    // at the moment we only support RGBA for the source (other 4 byte formats should
    // be easy to add though)
-   AssertFatal(mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB, "copyToBmp: invalid format");
-   if (mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB)
+   AssertFatal(mFormat == GFXFormatR16G16B16A16F || mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB, "copyToBmp: invalid format");
+   if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB)
       return false;
 
    PROFILE_START(GFXD3D11TextureObject_copyToBmp);
@@ -190,11 +190,18 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    bmp->setHasTransparency(mHasTransparency);
 
    // set some constants
-   const U32 sourceBytesPerPixel = 4;
+   U32 sourceBytesPerPixel = 4;
    U32 destBytesPerPixel = 0;
 
    const GFXFormat fmt = bmp->getFormat();
-   if (fmt == GFXFormatR8G8B8A8 || fmt == GFXFormatR8G8B8A8_LINEAR_FORCE || fmt == GFXFormatR8G8B8A8_SRGB)
+   bool fp16 = false;//is rgba16f format?
+   if (fmt == GFXFormatR16G16B16A16F)
+   {
+      destBytesPerPixel = 8;
+      sourceBytesPerPixel = 8;
+      fp16 = true;
+   }
+   else if (fmt == GFXFormatR8G8B8A8 || fmt == GFXFormatR8G8B8A8_LINEAR_FORCE || fmt == GFXFormatR8G8B8A8_SRGB)
       destBytesPerPixel = 4;
    else if(bmp->getFormat() == GFXFormatR8G8B8)
       destBytesPerPixel = 3;
@@ -249,11 +256,19 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
       {
          for (U32 col = 0; col < width; ++col)
          {
-            destPtr[0] = srcPtr[2]; // red
-            destPtr[1] = srcPtr[1]; // green
-            destPtr[2] = srcPtr[0]; // blue 
-            if (destBytesPerPixel == 4)
-               destPtr[3] = srcPtr[3]; // alpha
+            //we can just copy data straight in with RGBA16F format
+            if (fp16)
+            {
+               dMemcpy(destPtr, srcPtr, sizeof(U16) * 4);
+            }
+            else
+            {            
+               destPtr[0] = srcPtr[2]; // red
+               destPtr[1] = srcPtr[1]; // green
+               destPtr[2] = srcPtr[0]; // blue 
+               if (destBytesPerPixel == 4)
+                  destPtr[3] = srcPtr[3]; // alpha
+            }
 
             // go to next pixel in src
             srcPtr += sourceBytesPerPixel;

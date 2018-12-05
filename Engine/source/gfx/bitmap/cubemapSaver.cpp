@@ -52,6 +52,7 @@ namespace CubemapSaver
       GFXFormat targetFmt = pCubemap->getFormat();
       //setup render targets
       GFXTexHandle pTextures[CubeFaces];
+
       for (U32 face = 0; face < CubeFaces; face++)
       {
          pTextures[face].set(faceSize, faceSize, targetFmt,
@@ -75,9 +76,6 @@ namespace CubemapSaver
             Con::errorf("CubemapSaver: cubemap number %u failed to copy", i);
             error = true;
          }
-         //gen mip maps if there are none
-         if(!hasMips)
-            pBitmaps[i]->extrudeMipLevels();
       }
 
       if (!error)
@@ -85,8 +83,8 @@ namespace CubemapSaver
          DDSFile *pDds = DDSFile::createDDSCubemapFileFromGBitmaps(pBitmaps);
          if (pDds)
          {
-            // non compressed format needs swizzling
-            if (!compressedFormat)
+            // compressed and floating point don't need swizzling
+            if (!compressedFormat && targetFmt != GFXFormatR16G16B16A16F)
                ImageUtil::swizzleDDS(pDds, Swizzles::bgra);
 
             if(compressedFormat)

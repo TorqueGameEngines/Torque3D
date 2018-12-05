@@ -272,7 +272,7 @@ bool DDSFile::readHeader(Stream &s)
          mFlags.set(CompressedData);
       else
       {
-         mBytesPerPixel = header.ddspf.bpp / 8;
+         mBytesPerPixel = dds::getBitsPerPixel(dx10header.dxgiFormat) / 8;
          mFlags.set(RGBData);
       }
 
@@ -397,8 +397,8 @@ bool DDSFile::read(Stream &s, U32 dropMipCount)
          }
 
          // Load all the mips.
-         for(S32 l=0; l<mMipMapCount; l++)
-            mSurfaces[i]->readNextMip(this, s, mHeight, mWidth, l, l < dropMipCount );
+         for(S32 mip=0; mip<mMipMapCount; mip++)
+            mSurfaces[i]->readNextMip(this, s, mHeight, mWidth, mip, mip < dropMipCount );
       }
 
    }
@@ -483,6 +483,8 @@ bool DDSFile::writeHeader( Stream &s )
    {
       surfaceFlags |= DDS_SURFACE_FLAGS_CUBEMAP;
       cubemapFlags |= DDS_CUBEMAP_ALLFACES;
+      if (hasDx10Header)
+         dx10header.miscFlag = dds::D3D10_RESOURCE_MISC_TEXTURECUBE;
    }
 
    //volume texture
@@ -739,9 +741,10 @@ DDSFile *DDSFile::createDDSCubemapFileFromGBitmaps(GBitmap **gbmps)
    //all cubemaps have the same dimensions and formats
    GBitmap *pBitmap = gbmps[0];
 
-   if (pBitmap->getFormat() != GFXFormatR8G8B8A8)
+   GFXFormat fmt = pBitmap->getFormat();
+   if (fmt != GFXFormatR8G8B8A8 && fmt != GFXFormatR16G16B16A16F)
    {
-      Con::errorf("createDDSCubemapFileFromGBitmaps: Only GFXFormatR8G8B8A8 supported for now");
+      Con::errorf("createDDSCubemapFileFromGBitmaps: unsupported format");
       return NULL;
    }
 

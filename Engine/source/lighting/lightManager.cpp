@@ -198,7 +198,7 @@ void LightManager::setSpecialLight( LightManager::SpecialLightTypesEnum type, Li
    registerGlobalLight( light, NULL );
 }
 
-void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLighting, bool cullSceneLights)
+void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLighting, bool enableZoneLightCulling)
 {
    PROFILE_SCOPE( LightManager_RegisterGlobalLights );
 
@@ -226,7 +226,7 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
    {
       // Cull the lights using the frustum.
       getSceneManager()->getContainer()->findObjectList( *frustum, lightMask, &activeLights );
-	  if (cullSceneLights)
+	  if (enableZoneLightCulling)
 	  {
 		  for (U32 i = 0; i < activeLights.size(); ++i)
 		  {

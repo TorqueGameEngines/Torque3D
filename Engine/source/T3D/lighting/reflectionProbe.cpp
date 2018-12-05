@@ -116,7 +116,7 @@ ReflectionProbe::ReflectionProbe()
    mRadius = 10;
 
    mUseCubemap = false;
-   mUseHDRCaptures = false;
+   mUseHDRCaptures = true;
 
    mStaticCubemap = NULL;
    mReflectionPath = "";
@@ -584,18 +584,16 @@ bool ReflectionProbe::createClientResources()
       mIrridianceMap->createMap();
    }
 
-   if (!mUseHDRCaptures)
-   {
-      String irrPath = getIrradianceMapPath();
-      if (Platform::isFile(irrPath))
-      {
-         mIrridianceMap->setCubemapFile(FileName(irrPath));
-         mIrridianceMap->updateFaces();
-      }
 
-      if (mIrridianceMap->mCubemap.isNull())
-         Con::errorf("ReflectionProbe::createClientResources() - Unable to load baked irradiance map at %s", getIrradianceMapPath().c_str());
+   String irrPath = getIrradianceMapPath();
+   if (Platform::isFile(irrPath))
+   {
+      mIrridianceMap->setCubemapFile(FileName(irrPath));
+      mIrridianceMap->updateFaces();
    }
+
+   if (mIrridianceMap->mCubemap.isNull())
+      Con::errorf("ReflectionProbe::createClientResources() - Unable to load baked irradiance map at %s", getIrradianceMapPath().c_str());
 
    //
    if (!mPrefilterMap)
@@ -606,18 +604,15 @@ bool ReflectionProbe::createClientResources()
       mPrefilterMap->createMap();
    }
 
-   if (!mUseHDRCaptures)
+   String prefilPath = getPrefilterMapPath();
+   if (Platform::isFile(prefilPath))
    {
-      String prefilPath = getPrefilterMapPath();
-      if (Platform::isFile(prefilPath))
-      {
-         mPrefilterMap->setCubemapFile(FileName(prefilPath));
-         mPrefilterMap->updateFaces();
-      }
-
-      if (mPrefilterMap->mCubemap.isNull())
-         Con::errorf("ReflectionProbe::createClientResources() - Unable to load baked prefilter map at %s", getPrefilterMapPath().c_str());
+      mPrefilterMap->setCubemapFile(FileName(prefilPath));
+      mPrefilterMap->updateFaces();
    }
+
+   if (mPrefilterMap->mCubemap.isNull())
+      Con::errorf("ReflectionProbe::createClientResources() - Unable to load baked prefilter map at %s", getPrefilterMapPath().c_str());
 
    //brdf lookup texture   
    String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/pbr/brdfTexture.dds");
@@ -776,11 +771,11 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
 	  const MatrixF worldToObjectXfm = getTransform();
 
       Box3F cube(-Point3F(mRadius, mRadius, mRadius),Point3F(mRadius, mRadius, mRadius));
-	  Box3F wb = getWorldBox();
+      Box3F wb = getWorldBox();
       cube.setCenter(getPosition()+mProbePosOffset);
-	  wb.setCenter(getPosition() + mProbePosOffset);
+      wb.setCenter(getPosition() + mProbePosOffset);
       draw->drawCube(desc, cube, color, &worldToObjectXfm);
-	  draw->drawCube(desc, wb, color, &worldToObjectXfm);
+      draw->drawCube(desc, wb, color, &worldToObjectXfm);
    }
 }
 
@@ -874,7 +869,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       mDynamicCubemap = GFX->createCubemap();
 
       if(mUseHDRCaptures)
-         mDynamicCubemap->initDynamic(resolution, GFXFormatR16G16B16A16);
+         mDynamicCubemap->initDynamic(resolution, GFXFormatR16G16B16A16F);
       else
          mDynamicCubemap->initDynamic(resolution, GFXFormatB8G8R8A8);
 
@@ -922,7 +917,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
    for (U32 i = 0; i < 6; ++i)
    {
       GFXTexHandle blendTex;
-      blendTex.set(resolution, resolution, GFXFormatR16G16B16A16, &GFXRenderTargetProfile, "");
+      blendTex.set(resolution, resolution, GFXFormatR16G16B16A16F, &GFXRenderTargetProfile, "");
 
       GFXTextureTargetRef baseTarget = GFX->allocRenderToTextureTarget();
 
@@ -980,10 +975,11 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, nearPlane);
       Frustum frustum(false, left, right, top, bottom, nearPlane, farDist);
 
-	  F32 detailAdjustBackup = TSShapeInstance::smDetailAdjust;
-	  TSShapeInstance::smDetailAdjust *= getNextPow2(resolution);
+      F32 detailAdjustBackup = TSShapeInstance::smDetailAdjust;
+      TSShapeInstance::smDetailAdjust *= getNextPow2(resolution);
       renderFrame(&baseTarget, matView, frustum, mCaptureMask & EDITOR_RENDER_TYPEMASK, gCanvasClearColor);
-	  TSShapeInstance::smDetailAdjust = detailAdjustBackup;
+      TSShapeInstance::smDetailAdjust = detailAdjustBackup;
+
       baseTarget->resolve();
    }
 
@@ -1009,8 +1005,8 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       //Prep it with whatever resolution we've dictated for our bake
       if (mUseHDRCaptures)
       {
-         mIrridianceMap->mCubemap->initDynamic(resolution, GFXFormatR16G16B16A16);
-         mPrefilterMap->mCubemap->initDynamic(resolution, GFXFormatR16G16B16A16);
+         mIrridianceMap->mCubemap->initDynamic(resolution, GFXFormatR16G16B16A16F);
+         mPrefilterMap->mCubemap->initDynamic(resolution, GFXFormatR16G16B16A16F);
       }
       else
       {
@@ -1026,12 +1022,8 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       IBLUtilities::GenerateIrradianceMap(renderTarget, sceneCaptureCubemap, mIrridianceMap->mCubemap);
       IBLUtilities::GeneratePrefilterMap(renderTarget, sceneCaptureCubemap, mPrefilterMipLevels, mPrefilterMap->mCubemap);
 
-      //We can't save HDR captures at the moment
-      if (!mUseHDRCaptures)
-      {
-         IBLUtilities::SaveCubeMap(getIrradianceMapPath(), mIrridianceMap->mCubemap);
-         IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);
-      }
+      IBLUtilities::SaveCubeMap(getIrradianceMapPath(), mIrridianceMap->mCubemap);
+      IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);
    }
    else
    {

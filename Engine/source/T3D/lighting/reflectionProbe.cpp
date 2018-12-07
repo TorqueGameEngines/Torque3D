@@ -301,6 +301,26 @@ void ReflectionProbe::onRemove()
    Parent::onRemove();
 }
 
+void ReflectionProbe::deleteObject()
+{
+   //we're deleting it?
+   //Then we need to clear out the processed cubemaps(if we have them)
+
+   String prefilPath = getPrefilterMapPath();
+   if (Platform::isFile(prefilPath))
+   {
+      Platform::fileDelete(prefilPath);
+   }
+
+   String irrPath = getIrradianceMapPath();
+   if (Platform::isFile(irrPath))
+   {
+      Platform::fileDelete(irrPath);
+   }
+
+   Parent::deleteObject();
+}
+
 void ReflectionProbe::setTransform(const MatrixF & mat)
 {
    // Let SceneObject handle all of the matrix manipulation
@@ -424,7 +444,13 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
    {
       mUseCubemap = stream->readFlag();
 
+      String newCubemapName;
       stream->read(&mCubemapName);
+
+      //if (newCubemapName != mCubemapName)
+      {
+         processStaticCubemap();
+      }
 
       isMaterialDirty = true;
    }
@@ -502,6 +528,42 @@ void ReflectionProbe::updateProbeParams()
    mProbeInfo->mScore = mMaxDrawDistance;
 }
 
+void ReflectionProbe::processStaticCubemap()
+{
+   createClientResources();
+
+   Sim::findObject(mCubemapName, mStaticCubemap);
+
+   if (!mStaticCubemap)
+   {
+      Con::errorf("ReflectionProbe::updateMaterial() - unable to find static cubemap file!");
+      return;
+   }
+
+   if (mStaticCubemap->mCubemap == nullptr)
+   {
+      mStaticCubemap->createMap();
+      mStaticCubemap->updateFaces();
+   }
+
+   String prefilPath = getPrefilterMapPath();
+   String irrPath = getIrradianceMapPath();
+
+   //if (!Platform::isFile(irrPath) || !Platform::isFile(prefilPath))
+   {
+      GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
+
+      /*IBLUtilities::GenerateIrradianceMap(renderTarget, mStaticCubemap->mCubemap, mIrridianceMap->mCubemap);
+      IBLUtilities::GeneratePrefilterMap(renderTarget, mStaticCubemap->mCubemap, mPrefilterMipLevels, mPrefilterMap->mCubemap);
+
+      IBLUtilities::SaveCubeMap(getIrradianceMapPath(), mIrridianceMap->mCubemap);
+      IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);*/
+   }
+
+   mProbeInfo->mCubemap = &mPrefilterMap->mCubemap;
+   mProbeInfo->mIrradianceCubemap = &mIrridianceMap->mCubemap;
+}
+
 void ReflectionProbe::updateMaterial()
 {
    createClientResources();
@@ -518,52 +580,16 @@ void ReflectionProbe::updateMaterial()
          {
             mProbeInfo->mIrradianceCubemap = &mIrridianceMap->mCubemap;
          }
-         if (mBrdfTexture.isValid())
-         {
-            mProbeInfo->mBRDFTexture = &mBrdfTexture;
-         }
-      }
-      else if (mReflectionModeType == StaticCubemap && !mCubemapName.isEmpty())
-      {
-         Sim::findObject(mCubemapName, mStaticCubemap);
-
-         if (!mStaticCubemap)
-         {
-            Con::errorf("ReflectionProbe::updateMaterial() - unable to find static cubemap file!");
-            return;
-         }
-
-         if (mStaticCubemap->mCubemap == nullptr)
-         {
-            mStaticCubemap->createMap();
-            mStaticCubemap->updateFaces();
-         }
-
-         //GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
-
-         //IBLUtilities::GenerateIrradianceMap(renderTarget, mStaticCubemap->mCubemap, mIrridianceMap->mCubemap);
-         //IBLUtilities::GeneratePrefilterMap(renderTarget, mStaticCubemap->mCubemap, mPrefilterMipLevels, mPrefilterMap->mCubemap);
-
-         mProbeInfo->mCubemap = &mStaticCubemap->mCubemap;
-         mProbeInfo->mIrradianceCubemap = &mStaticCubemap->mCubemap;
-
-         /*if (mPrefilterMap != nullptr && mPrefilterMap->mCubemap.isValid())
-         {
-            mProbeInfo->mCubemap = &mPrefilterMap->mCubemap;
-         }
-         if (mIrridianceMap != nullptr && mIrridianceMap->mCubemap.isValid())
-         {
-            mProbeInfo->mIrradianceCubemap = &mIrridianceMap->mCubemap;
-         }*/
-         if (mBrdfTexture.isValid())
-         {
-            mProbeInfo->mBRDFTexture = &mBrdfTexture;
-         }
       }
    }
    else if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
    {
       mProbeInfo->mCubemap = &mDynamicCubemap;
+   }
+
+   if (mBrdfTexture.isValid())
+   {
+      mProbeInfo->mBRDFTexture = &mBrdfTexture;
    }
 
    //Make us ready to render
@@ -583,7 +609,6 @@ bool ReflectionProbe::createClientResources()
 
       mIrridianceMap->createMap();
    }
-
 
    String irrPath = getIrradianceMapPath();
    if (Platform::isFile(irrPath))

@@ -941,34 +941,31 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
    GFX->setTexture(0, deferredTexTarget->getTexture());
 	GFX->setTexture(1, matInfoTexTarget->getTexture());
    GFX->setTexture(2, colorTexTarget->getTexture());
-   GFX->setCubeTexture(3, probeInfo->mCubemap->getPointer());
-   GFX->setCubeTexture(4, probeInfo->mIrradianceCubemap->getPointer());
+
+   //Add some safety catches in the event the cubemaps aren't fully initialized yet
+   if (probeInfo->mCubemap == nullptr || probeInfo->mCubemap->isNull())
+   {
+      GFX->setCubeTexture(3, nullptr);
+      matParams->setSafe(cubeMips, 2.0f);
+   }
+   else
+   {
+      GFX->setCubeTexture(3, probeInfo->mCubemap->getPointer());
+      matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(), 2.0f));
+   }
+
+   if (probeInfo->mIrradianceCubemap == nullptr || probeInfo->mIrradianceCubemap->isNull())
+      GFX->setCubeTexture(4, nullptr);
+   else
+      GFX->setCubeTexture(4, probeInfo->mIrradianceCubemap->getPointer());
+
    GFX->setTexture(5, probeInfo->mBRDFTexture->getPointer());
 
    //set material params
-   matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(), 2.0f));
 	matParams->setSafe(eyePosWorld, renderState->getCameraPosition());
 	matParams->setSafe(bbMin, probeInfo->mBounds.minExtents);
 	matParams->setSafe(bbMax, probeInfo->mBounds.maxExtents);
 	matParams->setSafe(useSphereMode, probeInfo->mProbeShapeType == ProbeRenderInst::Sphere ? 1.0f : 0.0f);
-
-	//SH Terms
-	//static AlignedArray<Point3F> shTermsArray(9, sizeof(Point3F));
-	//dMemset(shTermsArray.getBuffer(), 0, shTermsArray.getBufferSize());
-
-	/*for (U32 i = 0; i < 9; i++)
-	{
-		matParams->setSafe(shTerms[i], probeInfo->mSHTerms[i]);
-	}
-
-	for (U32 i = 0; i < 5; i++)
-	{
-		matParams->setSafe(shConsts[i], probeInfo->mSHConstants[i]);
-	}*/
-
-   //const MatrixF worldToObjectXfm = probeInfo->mTransform;
-   //MaterialParameterHandle *worldToObjMat = matInstance->getMaterialParameterHandle("$worldToObj");
-   //matParams->setSafe(worldToObjMat, worldToObjectXfm);
 }
 
 //

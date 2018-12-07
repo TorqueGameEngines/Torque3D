@@ -225,18 +225,20 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
    else
    {
       // Cull the lights using the frustum.
-      getSceneManager()->getContainer()->findObjectList( *frustum, lightMask, &activeLights );
-	  if (enableZoneLightCulling)
-	  {
-		  for (U32 i = 0; i < activeLights.size(); ++i)
-		  {
-			  if (!getSceneManager()->mRenderedObjectsList.contains(activeLights[i]))
-			  {
-				  activeLights.erase(i);
-				  --i;
-			  }
-		  }
-	  }
+      getSceneManager()->getContainer()->findObjectList(*frustum, lightMask, &activeLights);
+
+      if (enableZoneLightCulling)
+      {
+         for (U32 i = 0; i < activeLights.size(); ++i)
+         {
+            if (!getSceneManager()->mRenderedObjectsList.contains(activeLights[i]))
+            {
+               activeLights.erase(i);
+               --i;
+            }
+         }
+      }
+
       // Store the culling position for sun placement
       // later... see setSpecialLight.
       mCullPos = frustum->getPosition();
@@ -246,10 +248,10 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
       // the shape bounds and can often get culled.
 
       GameConnection *conn = GameConnection::getConnectionToServer();
-      if ( conn->getControlObject() )
+      if (conn->getControlObject())
       {
          GameBase *conObject = conn->getControlObject();
-         activeLights.push_back_unique( conObject );
+         activeLights.push_back_unique(conObject);
       }
    }
 

@@ -383,4 +383,6 @@ vec3 getCubeDir(int face, vec2 uv)
 
 	return normalize(dir);
 }
+
+#define sqr(a)		((a)*(a))
 #endif // _TORQUE_GLSL_

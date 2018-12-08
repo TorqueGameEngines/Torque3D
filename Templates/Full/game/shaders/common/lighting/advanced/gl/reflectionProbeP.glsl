@@ -2,10 +2,9 @@
 #include "shadergen:/autogenConditioners.h"
 
 #include "farFrustumQuad.glsl"
-#include "lightingUtils.glsl"
 #include "../../../gl/lighting.glsl"
 #include "../../../gl/torque.glsl"
-#line 8
+#line 7
 
 in vec4 pos;
 in vec4 wsEyeDir;
@@ -13,6 +12,7 @@ in vec4 ssPos;
 in vec4 vsEyeDir;
 
 uniform sampler2D deferredBuffer;
+uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
 uniform samplerCube cubeMap;
 uniform samplerCube irradianceCubemap;
@@ -28,7 +28,8 @@ uniform vec4 vsFarPlane;
 uniform float radius;
 uniform vec2 attenuation;
 
-uniform mat4x4 invViewMat;
+uniform mat4 worldToObj;
+uniform mat4 cameraToWorld;
 
 uniform vec3 eyePosWorld;
 uniform vec3 bbMin;
@@ -53,24 +54,7 @@ vec3 boxProject(vec3 wsPosition, vec3 reflectDir, vec3 boxWSPos, vec3 boxMin, ve
     return posonbox - boxWSPos;
 }
 
-vec3 iblBoxDiffuse(vec3 normal,
-					vec3 wsPos, 
-                    samplerCube irradianceCube, 
-                    vec3 boxPos,
-                    vec3 boxMin,
-                    vec3 boxMax)
-{
-    // Irradiance (Diffuse)
-    vec3 cubeN = normalize(normal);
-    vec3 irradiance = texture(irradianceCube, cubeN).xyz;
-
-    return irradiance;
-}
-
-vec3 iblBoxSpecular(vec3 normal,
-					vec3 wsPos, 
-					float roughness,
-                    vec3 surfToEye, 
+vec3 iblBoxSpecular(vec3 normal, vec3 wsPos, float roughness, vec3 surfToEye,
                     sampler2D brdfTexture, 
                     samplerCube radianceCube,
                     vec3 boxPos,
@@ -80,7 +64,7 @@ vec3 iblBoxSpecular(vec3 normal,
     float ndotv = clamp(dot(normal, surfToEye), 0.0, 1.0);
 
     // BRDF
-    vec2 brdf = texture(brdfTexture, vec2(roughness, ndotv)).xy;
+    vec2 brdf = textureLod(brdfTexture, vec2(roughness, ndotv),0).xy;
 
     // Radiance (Specular)
 	float maxmip = pow(cubeMips+1,2);
@@ -94,123 +78,65 @@ vec3 iblBoxSpecular(vec3 normal,
     return radiance;
 }
 
-float defineSphereSpaceInfluence(vec3 centroidPosVS, float rad, vec2 atten, vec3 surfPosVS, vec3 norm)
-{
-    // Build light vec, get length, clip pixel if needed
-    vec3 lightVec = centroidPosVS - surfPosVS;
-    float lenLightV = length( lightVec );
-    if (( rad - lenLightV )<0)
-		return -1;
-
-    // Get the attenuated falloff.
-    float attn = attenuate( vec4(1,1,1,1), atten, lenLightV );
-    if ((attn - 1e-6)<0)
-		return -1;
-
-    // Normalize lightVec
-    lightVec = lightVec /= lenLightV;
-
-    // If we can do dynamic branching then avoid wasting
-    // fillrate on pixels that are backfacing to the light.
-    float nDotL = abs(dot( lightVec, norm ));
-
-    return saturate( nDotL * attn );
-}
-
 float defineBoxSpaceInfluence(vec3 surfPosWS, vec3 probePos, float radius, float atten)
 {
-    vec3 surfPosLS = mul( worldToObj, vec4(surfPosWS,1.0)).xyz;
+    vec3 surfPosLS = tMul( worldToObj, vec4(surfPosWS,1.0)).xyz;
 
     vec3 boxMinLS = probePos-(vec3(1,1,1)*radius);
     vec3 boxMaxLS = probePos+(vec3(1,1,1)*radius);
 
-    float boxOuterRange = length(lsBoxMax - lsBoxMin);
+    float boxOuterRange = length(boxMaxLS - boxMinLS);
     float boxInnerRange = boxOuterRange / atten;
 
     vec3 localDir = vec3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
     localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
 
-    float influenceVal =  max(localDir.x, max(localDir.y, localDir.z)) * -1;
-
-    return influenceVal;
+    return max(localDir.x, max(localDir.y, localDir.z)) * -1;
 }
-
-float defineDepthInfluence(vec3 probePosWS, vec3 surfPosWS, samplerCube radianceCube)
-{
-	//TODO properly: filter out pixels projected uppon by probes behind walls by looking up the depth stored in the probes cubemap alpha
-	//and comparing legths
-	vec3 probeToSurf = probePosWS-surfPosWS;
-			
-	float depthRef = texture(cubeMap, -probeToSurf,0).a*radius;
-	float dist = length( probeToSurf );
-
-	return depthRef-dist;
-}
-
 out vec4 OUT_col;
-out vec4 OUT_col1;
 
 void main()
 {   
 
     // Compute scene UV
-    vec3 ssPos = ssPos.xyz / ssPos.w; 
+    vec2 uvScene = getUVFromSSPos( ssPos.xyz/ssPos.w, rtParams0 );
 
-    vec2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
-
-    // Matinfo flags
-    vec4 matInfo = texture( matInfoBuffer, uvScene ); 
-
-    // Sample/unpack the normal/z data
-    vec4 deferredSample = deferredUncondition( deferredBuffer, uvScene );
-    vec3 normal = deferredSample.rgb;
-    float depth = deferredSample.a;
-    if (depth>0.9999)
-    {
-      OUT_col = vec4(0.0);
-      OUT_col1 = vec4(0.0);
-      return;
-    }
-
-    // Need world-space normal.
-    vec3 wsNormal = tMul(vec4(normal, 1), invViewMat).rgb;
-
-    vec3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, vsEyeDir.xyz, vsFarPlane );
-    vec3 viewSpacePos = eyeRay * depth;
-
-    vec3 wsEyeRay = tMul(vec4(eyeRay, 1), invViewMat).rgb;
-
-    // Use eye ray to get ws pos
-    vec3 worldPos = vec3(eyePosWorld + wsEyeRay * depth);
-		  
+   //eye ray WS/LS
+   vec3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, vsEyeDir.xyz, vsFarPlane );
+   vec3 wsEyeRay = tMul(cameraToWorld, vec4(vsEyeRay, 0)).xyz;
+   
+   //unpack normal and linear depth 
+   vec4 normDepth = deferredUncondition(deferredBuffer, uvScene);
+   
+   //create surface
+   Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
+                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);		  
     float blendVal = 1.0;
-	
-	//clip bounds and (TODO properly: set falloff)
 	if(useSphereMode>0)
     {
-        blendVal = defineSphereSpaceInfluence(probeLSPos, radius, attenuation, viewSpacePos, normal);
+		vec3 L = probeWSPos - surface.P;
+		blendVal = 1.0-length(L)/radius;
+		clip(blendVal);		
     }
     else
     {
         float tempAttenVal = 3.5;
-	    blendVal = defineBoxSpaceInfluence(worldPos, probeWSPos, radius, tempAttenVal);
-    }
-	if (blendVal<0)
-	{
-      OUT_col = vec4(0.0);
-      OUT_col1 = vec4(0.0);
-      return;
+		blendVal = defineBoxSpaceInfluence(surface.P, probeWSPos, radius, tempAttenVal);
+		clip(blendVal);
+		float compression = 0.05;
+		blendVal=(1.0-compression)+blendVal*compression;
 	}
-      
-	//flip me on to have probes filter by depth
-	//clip(defineDepthInfluence(probeWSPos, worldPos, cubeMap));
-		
-	
 	//render into the bound space defined above
-	vec3 surfToEye = normalize(worldPos.xyz-eyePosWorld.xyz);
-	OUT_col = vec4(iblBoxDiffuse(wsNormal, worldPos, irradianceCubemap, probeWSPos, bbMin, bbMax), blendVal);
-	OUT_col1 = vec4(iblBoxSpecular(wsNormal, worldPos, 1.0 - matInfo.b, surfToEye, BRDFTexture, cubeMap, probeWSPos, bbMin, bbMax), blendVal);
+	vec3 surfToEye = normalize(surface.P - eyePosWorld);
+	vec3 irradiance = textureLod(irradianceCubemap, surface.N,0).xyz;
+	vec3 specular = iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, BRDFTexture, cubeMap, probeWSPos, bbMin, bbMax);
+   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+   specular *= F;
+   //energy conservation
+	vec3 kD = vec3(1.0) - F;
+	kD *= 1.0 - surface.metalness;
+   //final diffuse color
+   vec3 diffuse = kD * irradiance * surface.baseColor.rgb;
    
-	OUT_col *= matInfo.g;
-	OUT_col1 *= matInfo.g;
+   OUT_col = vec4(diffuse + specular * surface.ao, blendVal);
 }

@@ -87,6 +87,8 @@ public:
    virtual void solvePanelConstraints(Point2I newDragPos, GuiContainer * firstPanel, GuiContainer * secondPanel, const RectI& clientRect);
    virtual Point2I getMinExtent() const;   
 
+   void setSplitPoint(Point2I splitPoint);
+
 protected:
 
    S32         mFixedPanel; 

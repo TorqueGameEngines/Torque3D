@@ -1,0 +1,8 @@
+<ModuleDefinition
+	ModuleId="ToolsModule"
+	VersionId="1"
+	Description="Module that implements the tools and editor suite."
+	ScriptFile="Tools.cs"
+	CreateFunction="onCreate"
+	DestroyFunction="onDestroy"
+	Group="Tools"/>

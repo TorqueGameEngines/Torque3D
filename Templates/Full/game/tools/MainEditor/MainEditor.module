@@ -1,0 +1,9 @@
+<ModuleDefinition
+	ModuleId="MainEditor"
+	VersionId="1"
+	Description="Tool that can be used to view/edit an object."
+	ScriptFile="MainEditor.cs"
+	CreateFunction="onCreate"
+	DestroyFunction="onDestroy"
+	Group="Tools">
+</ModuleDefinition>

@@ -287,10 +287,11 @@ new ShaderData( ReflectionProbeShader )
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeP.glsl";
 
    samplerNames[0] = "$deferredBuffer";
-   samplerNames[1] = "$matInfoBuffer";
-   samplerNames[2] = "$cubeMap";
-   samplerNames[3] = "$irradianceCubemap";
-   samplerNames[4] = "$BRDFTexture";
+   samplerNames[1] = "$colorBuffer";
+   samplerNames[2] = "$matInfoBuffer";
+   samplerNames[3] = "$cubeMap";
+   samplerNames[4] = "$irradianceCubemap";
+   samplerNames[5] = "$BRDFTexture";
    
    pixVersion = 3.0;
 };
@@ -318,12 +319,14 @@ new GFXStateBlockData( AL_ProbeState )
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;  // G-buffer
    mSamplerNames[0] = "deferredBuffer";
-   samplerStates[1] = SamplerClampLinear;  // Shadow Map (Do not use linear, these are perspective projections)
-   mSamplerNames[1] = "matInfoBuffer";   
+   samplerStates[1] = SamplerClampLinear;
+   mSamplerNames[1] = "colorBuffer";   
+   samplerStates[2] = SamplerClampLinear;
+   mSamplerNames[2] = "matInfoBuffer";   
 
-   mSamplerNames[2] = "cubeMap";
-   mSamplerNames[3] = "irradianceCubemap";
-   mSamplerNames[4] = "BRDFTexture";
+   mSamplerNames[3] = "cubeMap";
+   mSamplerNames[4] = "irradianceCubemap";
+   mSamplerNames[5] = "BRDFTexture";
    
    cullDefined = true;
    cullMode = GFXCullCW;

@@ -27,7 +27,7 @@
 #include "../../../gl/lighting.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
 #include "softShadow.glsl"
-
+#line 30
 in vec4 hpos;
 in vec2 uv0;
 in vec3 wsEyeRay;
@@ -103,7 +103,7 @@ vec4 AL_VectorLightShadowCast( sampler2D _sourceShadowMap,
       // for all of the splits and then check if its valid.  
       vec4 shadowCoordX = baseShadowCoord.xxxx;
       vec4 shadowCoordY = baseShadowCoord.yyyy;
-      vec4 farPlaneDists = distToLight.xxxx;      
+      vec4 farPlaneDists = vec4(distToLight);      
       shadowCoordX *= _scaleX;
       shadowCoordY *= _scaleY;
       shadowCoordX += _offsetX;
@@ -170,10 +170,10 @@ vec4 AL_VectorLightShadowCast( sampler2D _sourceShadowMap,
 
       // Move around inside of atlas 
       vec2 aOffset;
-      aOffset.x = dot(finalMask, _atlasXOffset);
-      aOffset.y = dot(finalMask, _atlasYOffset);
+      aOffset.x = dot(finalMask, atlasXOffset);
+      aOffset.y = dot(finalMask, atlasYOffset);
 
-      shadowCoord *= _atlasScale;
+      shadowCoord *= atlasScale;
       shadowCoord += aOffset;
               
       // Each split has a different far plane, take this into account.
@@ -184,17 +184,17 @@ vec4 AL_VectorLightShadowCast( sampler2D _sourceShadowMap,
                   softShadow_filter(  _sourceShadowMap,
                   _texCoord,
                   shadowCoord,
-                  farPlaneScale * _shadowSoftness,
+                  farPlaneScale * shadowSoftness,
                   distToLight,
                   _dotNL,
-                  dot( finalMask, _overDarkPSSM ) ) );
+                  dot( finalMask, overDarkPSSM ) ) );
 }
 
 out vec4 OUT_col;
 void main()             
 {
    //unpack normal and linear depth  
-   vec4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uv0);
+   vec4 normDepth = deferredUncondition(deferredBuffer, uv0);
   
    //create surface
    Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
@@ -203,7 +203,8 @@ void main()
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {
-      return 0.0.xxxx;
+      OUT_col = vec4(0);
+	  return;
 	}
 	
    //create surface to light                           
@@ -217,13 +218,13 @@ void main()
    #else
 
       // Fade out the shadow at the end of the range.
-      vec4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
+      vec4 zDist = vec4(zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      vec4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+      vec4 static_shadowed_colors = AL_VectorLightShadowCast( shadowMap, uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
-      vec4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), uv0.xy, dynamicWorldToLightProj, surface.P, dynamicScaleX,
+      vec4 dynamic_shadowed_colors = AL_VectorLightShadowCast( dynamicShadowMap, uv0.xy, dynamicWorldToLightProj, surface.P, dynamicScaleX,
                                                               dynamicScaleY, dynamicOffsetX, dynamicOffsetY, dynamicFarPlaneScalePSSM, surfaceToLight.NdotL);
 
       float static_shadowed = static_shadowed_colors.a;
@@ -252,5 +253,5 @@ void main()
    //get directional light contribution   
    vec3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
 
-   return vec4(lighting, 0);
+   OUT_col = vec4(lighting, 0);
 }

@@ -24,7 +24,7 @@
 #include "farFrustumQuad.glsl"
 #include "../../../gl/torque.glsl"
 #include "../../../gl/lighting.glsl"
-#line 6
+#line 27
 
 in vec4 pos;
 in vec4 wsEyeDir;

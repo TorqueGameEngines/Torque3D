@@ -22,7 +22,6 @@
 
 #include "../../../gl/hlslCompat.glsl"
 #include "farFrustumQuad.glsl"
-#include "lightingUtils.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
 #include "shadergen:/autogenConditioners.h"
 #include "softShadow.glsl"
@@ -34,11 +33,6 @@ in vec4 ssPos;
 in vec4 vsEyeDir;
 in vec4 color;
 
-#define IN_wsEyeDir wsEyeDir
-#define IN_ssPos ssPos
-#define IN_vsEyeDir vsEyeDir
-#define IN_color color
-
 #ifdef USE_COOKIE_TEX
 
 /// The texture for cookie rendering.
@@ -49,164 +43,99 @@ uniform sampler2D cookieMap;
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
 uniform sampler2D dynamicShadowMap;
-
-uniform sampler2D lightBuffer;
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
 
 uniform vec4 rtParams0;
 
+uniform float  lightBrightness;
 uniform vec3 lightPosition;
 uniform vec4 lightColor;
-uniform float  lightBrightness;
+
 uniform float  lightRange;
-uniform vec2 lightAttenuation;
+uniform float lightInvSqrRange;
 uniform vec3 lightDirection;
-uniform vec4 lightSpotParams;
+uniform vec2 lightSpotParams;
 uniform vec4 lightMapParams;
 
 uniform vec4 vsFarPlane;
-uniform mat4 viewToLightProj;
-uniform mat4 dynamicViewToLightProj;
-
+uniform mat4 worldToLightProj;
+uniform mat4 dynamicWorldToLightProj;
 uniform vec4 lightParams;
 uniform float shadowSoftness;
+uniform vec3 eyePosWorld;
+
+uniform mat4 cameraToWorld;
+uniform mat4 worldToCamera;
 
 out vec4 OUT_col;
-out vec4 OUT_col1;
-
 void main()
 {   
    // Compute scene UV
-   vec3 ssPos = IN_ssPos.xyz / IN_ssPos.w;
-   vec2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
+   vec2 uvScene = getUVFromSSPos(ssPos.xyz/ssPos.w, rtParams0);
 
-   // Matinfo flags
-   vec4 matInfo = texture( matInfoBuffer, uvScene );   
+   //unpack normal and linear depth 
+   vec4 normDepth = deferredUncondition(deferredBuffer, uvScene);
+      
+   //eye ray WS/VS
+   vec3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, vsEyeDir.xyz, vsFarPlane );
+   vec3 wsEyeRay = tMul(cameraToWorld, vec4(vsEyeRay, 0)).xyz;
+
+   //create surface
+   Surface surface = createSurface( normDepth, colorBuffer,matInfoBuffer,
+                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
+
    //early out if emissive
-   bool emissive = getFlag( matInfo.r, 0 );
-   if ( emissive )
+   if (getFlag(surface.matFlag, 0))
    {
-      OUT_col = vec4(0.0, 0.0, 0.0, 0.0);
-      OUT_col1 = vec4(0.0, 0.0, 0.0, 0.0);
+      OUT_col = vec4(0.0);
 	   return;
    }
    
-   vec4 colorSample = texture( colorBuffer, uvScene );
-   vec3 subsurface = vec3(0.0,0.0,0.0); 
-   if (getFlag( matInfo.r, 1 ))
+   vec3 L = lightPosition - surface.P;
+   float dist = length(L);
+   vec3 lighting = vec3(0.0);
+	if(dist < lightRange)
    {
-      subsurface = colorSample.rgb;
-      if (colorSample.r>colorSample.g)
-         subsurface = vec3(0.772549, 0.337255, 0.262745);
-	  else
-         subsurface = vec3(0.337255, 0.772549, 0.262745);
-	}
-	
-   // Sample/unpack the normal/z data
-   vec4 deferredSample = deferredUncondition( deferredBuffer, uvScene );
-   vec3 normal = deferredSample.rgb;
-   float depth = deferredSample.a;
-   
-   // Eye ray - Eye -> Pixel
-   vec3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN_vsEyeDir.xyz, vsFarPlane );
-   vec3 viewSpacePos = eyeRay * depth;
-      
-   // Build light vec, get length, clip pixel if needed
-   vec3 lightToPxlVec = viewSpacePos - lightPosition;
-   float lenLightV = length( lightToPxlVec );
-   lightToPxlVec /= lenLightV;
-
-   //lightDirection = vec3( -lightDirection.xy, lightDirection.z ); //vec3( 0, 0, -1 );
-   float cosAlpha = dot( lightDirection, lightToPxlVec );   
-   clip( cosAlpha - lightSpotParams.x );
-   clip( lightRange - lenLightV );
-
-   float atten = attenuate( lightColor, lightAttenuation, lenLightV );
-   atten *= ( cosAlpha - lightSpotParams.x ) / lightSpotParams.y;
-   clip( atten - 1e-6 );
-   atten = saturate( atten );
-   
-   float nDotL = dot( normal, -lightToPxlVec );
-
+      SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
+      #ifdef NO_SHADOW   
+         float shadowed = 1.0;      	
+      #else
    // Get the shadow texture coordinate
-   vec4 pxlPosLightProj = tMul( viewToLightProj, vec4( viewSpacePos, 1 ) );
+         vec4 pxlPosLightProj = tMul( worldToLightProj, vec4( surface.P, 1 ) );
    vec2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
    shadowCoord.y = 1.0f - shadowCoord.y;
 
-   // Get the dynamic shadow texture coordinate
-   vec4 dynpxlPosLightProj = tMul( dynamicViewToLightProj, vec4( viewSpacePos, 1 ) );
-   vec2 dynshadowCoord = ( ( dynpxlPosLightProj.xy / dynpxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
-   dynshadowCoord.y = 1.0f - dynshadowCoord.y;
-   #ifdef NO_SHADOW
-   
-      float shadowed = 1.0;
-      	
-   #else
+         vec4 dynPxlPosLightProj = tMul( dynamicWorldToLightProj, vec4( surface.P, 1 ) );
+         vec2 dynShadowCoord = ( ( dynPxlPosLightProj.xy / dynPxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
+         dynShadowCoord.y = 1.0f - dynShadowCoord.y;
 
-      // Get a linear depth from the light source.
+         //distance to light in shadow map space
       float distToLight = pxlPosLightProj.z / lightRange;
-
-      float static_shadowed = softShadow_filter( shadowMap,
-                                          ssPos.xy,
-                                          shadowCoord,
-                                          shadowSoftness,
-                                          distToLight,
-                                          nDotL,
-                                          lightParams.y );
-
-      float dynamic_shadowed = softShadow_filter( dynamicShadowMap,
-                                          ssPos.xy,
-                                          dynshadowCoord,
-                                          shadowSoftness,
-                                          distToLight,
-                                          nDotL,
-                                          lightParams.y );
+         float dynDistToLight = dynPxlPosLightProj.z / lightRange;
+         float static_shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float dynamic_shadowed = softShadow_filter(dynamicShadowMap, ssPos.xy/ssPos.w, dynShadowCoord, shadowSoftness, dynDistToLight, surfaceToLight.NdotL, lightParams.y);
       float shadowed = min(static_shadowed, dynamic_shadowed);
-   #endif // !NO_SHADOW
+      #endif      
    
-   vec3 lightcol = lightColor.rgb;
+      vec3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
 
       // Lookup the cookie sample.
-      vec4 cookie = texture( cookieMap, shadowCoord );
-
+      vec4 cookie = texture(cookieMap, tMul(worldToLightProj, -surfaceToLight.L));
       // Multiply the light with the cookie tex.
-      lightcol *= cookie.rgb;
-
+      lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
       // the lighting else we get specular in the dark
       // regions of the cookie texture.
-      atten *= max( cookie.r, max( cookie.g, cookie.b ) );
-
+      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
    #endif
 
-   // NOTE: Do not clip on fully shadowed pixels as it would
-   // cause the hardware occlusion query to disable the shadow.
+      //get Punctual light contribution   
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      //get spot angle attenuation
+      lighting *= getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+   }
 
-   vec3 l = normalize(-lightDirection);
-   vec3 v = eyeRay;// normalize(eyePosWorld - worldPos.xyz);
-
-   vec3 h = normalize(v + l);
-   float dotNLa = clamp(dot(normal, l), 0.0, 1.0);
-   float dotNVa = clamp(dot(normal, v), 0.0, 1.0);
-   float dotNHa = clamp(dot(normal, h), 0.0, 1.0);
-   float dotHVa = clamp(dot(normal, v), 0.0, 1.0);
-   float dotLHa = clamp(dot(l, h), 0.0, 1.0);
-
-   float roughness = 1.0001-matInfo.b;
-   float metalness = matInfo.a;
-
-   //diffuse
-   float disDiff = Fr_DisneyDiffuse(dotNVa, dotNLa, dotLHa, roughness);
-   vec3 diffuse = vec3(disDiff, disDiff, disDiff) / M_PI_F;
-   //specular
-   vec3 specular = directSpecular(normal, v, l, roughness, 1.0) * lightColor.rgb;
-
-   
-   if (nDotL<0) shadowed = 0;
-   float Sat_NL_Att = saturate( nDotL * shadowed ) * lightBrightness;
-   //output
-   OUT_col = float4(diffuse * lightBrightness*Sat_NL_Att*shadowed,1.0);
-   OUT_col1 = float4(specular * lightBrightness*Sat_NL_Att*shadowed,1.0);
+   OUT_col = vec4(lighting, 0);
 }

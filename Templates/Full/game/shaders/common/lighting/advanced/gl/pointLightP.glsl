@@ -180,8 +180,8 @@ void main()
       #else
       vec2 shadowCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
       vec2 dynShadowCoord = decodeShadowCoord( tMul( dynamicWorldToLightProj, -surfaceToLight.L ) ).xy;
-      float static_shadowed = softShadow_filter(shadowMap, ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-      float dynamic_shadowed = softShadow_filter(dynamicShadowMap, ssPos.xy, dynShadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float static_shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float dynamic_shadowed = softShadow_filter(dynamicShadowMap, ssPos.xy/ssPos.w, dynShadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
          float shadowed = min(static_shadowed, dynamic_shadowed);
       #endif
 

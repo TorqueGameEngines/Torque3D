@@ -22,7 +22,7 @@
 
 #ifndef _TORQUE_GLSL_
 #define _TORQUE_GLSL_
-
+#line 25
 
 float M_HALFPI_F   = 1.57079632679489661923;
 float M_PI_F       = 3.14159265358979323846;

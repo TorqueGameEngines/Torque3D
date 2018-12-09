@@ -23,7 +23,7 @@
 #include "./torque.glsl"
 #include "./brdf.glsl"
 #ifndef TORQUE_SHADERGEN
-
+#line 26
 // These are the uniforms used by most lighting shaders.
 
 uniform vec4 inLightPos[3];

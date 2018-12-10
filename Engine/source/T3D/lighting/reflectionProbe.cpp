@@ -301,7 +301,7 @@ void ReflectionProbe::onRemove()
    Parent::onRemove();
 }
 
-void ReflectionProbe::deleteObject()
+void ReflectionProbe::handleDeleteAction()
 {
    //we're deleting it?
    //Then we need to clear out the processed cubemaps(if we have them)
@@ -318,7 +318,7 @@ void ReflectionProbe::deleteObject()
       Platform::fileDelete(irrPath);
    }
 
-   Parent::deleteObject();
+   Parent::handleDeleteAction();
 }
 
 void ReflectionProbe::setTransform(const MatrixF & mat)
@@ -440,6 +440,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
       isMaterialDirty = true;
    }
 
+   updateProbeParams();
+
    if (stream->readFlag())  // CubemapMask
    {
       mUseCubemap = stream->readFlag();
@@ -454,8 +456,6 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       isMaterialDirty = true;
    }
-
-   updateProbeParams();
 
    if (isMaterialDirty)
    {
@@ -530,6 +530,9 @@ void ReflectionProbe::updateProbeParams()
 
 void ReflectionProbe::processStaticCubemap()
 {
+   if (mReflectionModeType != StaticCubemap)
+      return;
+
    createClientResources();
 
    Sim::findObject(mCubemapName, mStaticCubemap);
@@ -549,15 +552,26 @@ void ReflectionProbe::processStaticCubemap()
    String prefilPath = getPrefilterMapPath();
    String irrPath = getIrradianceMapPath();
 
+   if (mUseHDRCaptures)
+   {
+      mIrridianceMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR16G16B16A16F);
+      mPrefilterMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR16G16B16A16F);
+   }
+   else
+   {
+      mIrridianceMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR8G8B8A8);
+      mPrefilterMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR8G8B8A8);
+   }
+
    //if (!Platform::isFile(irrPath) || !Platform::isFile(prefilPath))
    {
       GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
 
-      /*IBLUtilities::GenerateIrradianceMap(renderTarget, mStaticCubemap->mCubemap, mIrridianceMap->mCubemap);
+      IBLUtilities::GenerateIrradianceMap(renderTarget, mStaticCubemap->mCubemap, mIrridianceMap->mCubemap);
       IBLUtilities::GeneratePrefilterMap(renderTarget, mStaticCubemap->mCubemap, mPrefilterMipLevels, mPrefilterMap->mCubemap);
 
       IBLUtilities::SaveCubeMap(getIrradianceMapPath(), mIrridianceMap->mCubemap);
-      IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);*/
+      IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);
    }
 
    mProbeInfo->mCubemap = &mPrefilterMap->mCubemap;

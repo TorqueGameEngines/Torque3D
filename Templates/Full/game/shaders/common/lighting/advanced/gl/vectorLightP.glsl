@@ -247,7 +247,7 @@ void main()
    #endif //NO_SHADOW
    // Sample the AO texture.      
    #ifdef USE_SSAO_MASK
-      surface.ao *= 1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( uv0.xy, rtParams3 ) ).r;
+      surface.ao *= 1.0 - texture( ssaoMask, viewportCoordToRenderTarget( uv0.xy, rtParams3 ) ).r;
    #endif
 
    //get directional light contribution   

@@ -41,6 +41,7 @@ out vec2 texCoord;
 void main()
 {  
    gl_Position = tMul(modelview, IN_pos);
+   gl_Position.z = gl_Position.w;
    
    vec2 uv = IN_uv0;
    uv += texOffset;

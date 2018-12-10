@@ -200,7 +200,7 @@ public:
    bool onAdd();
    void onRemove();
 
-   virtual void deleteObject();
+   virtual void handleDeleteAction();
 
    // Override this so that we can dirty the network flag when it is called
    void setTransform(const MatrixF &mat);

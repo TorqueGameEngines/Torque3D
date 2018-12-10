@@ -744,10 +744,13 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       void unregisterObject();
 
       /// Unregister, mark as deleted, and free the object.
-      virtual void deleteObject();
+      void deleteObject();
 
       /// Performs a safe delayed delete of the object using a sim event.
       void safeDeleteObject();
+
+      /// Special-case deletion behaviors, largely intended for cleanup in particular cases where it wouldn't happen automatically(like cleanup of associated files)
+      virtual void handleDeleteAction() {}
 
       /// @}
 

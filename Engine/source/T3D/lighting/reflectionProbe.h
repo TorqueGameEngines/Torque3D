@@ -200,6 +200,8 @@ public:
    bool onAdd();
    void onRemove();
 
+   virtual void handleDeleteAction();
+
    // Override this so that we can dirty the network flag when it is called
    void setTransform(const MatrixF &mat);
 
@@ -229,6 +231,8 @@ public:
 
    bool createClientResources();
    void generateTextures();
+
+   void processStaticCubemap();
 
    // This is the function that allows this object to submit itself for rendering
    void prepRenderImage(SceneRenderState *state);

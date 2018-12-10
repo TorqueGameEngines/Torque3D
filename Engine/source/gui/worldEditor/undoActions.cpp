@@ -155,6 +155,9 @@ void MEDeleteUndoAction::deleteObject( SimObject *object )
    if ( group )
       state.groupId = group->getId();
 
+   //Do any special handling of delete actions the object may do
+   object->handleDeleteAction();
+
    // Now delete the object.
    object->deleteObject();
 }

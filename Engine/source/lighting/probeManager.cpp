@@ -939,8 +939,8 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
 
    //set textures
    GFX->setTexture(0, deferredTexTarget->getTexture());
-	GFX->setTexture(1, matInfoTexTarget->getTexture());
-   GFX->setTexture(2, colorTexTarget->getTexture());
+   GFX->setTexture(1, colorTexTarget->getTexture());
+   GFX->setTexture(2, matInfoTexTarget->getTexture());
 
    //Add some safety catches in the event the cubemaps aren't fully initialized yet
    if (probeInfo->mCubemap == nullptr || probeInfo->mCubemap->isNull())

@@ -998,7 +998,7 @@ public:
 
 static GFXGLRegisterDevice pGLRegisterDevice;
 
-ConsoleFunction(cycleResources, void, 1, 1, "")
+DefineEngineFunction(cycleResources, void, (),, "")
 {
    static_cast<GFXGLDevice*>(GFX)->zombify();
    static_cast<GFXGLDevice*>(GFX)->resurrect();

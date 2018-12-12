@@ -641,7 +641,7 @@ BaseMatInstance* SkyBox::_getMaterialInstance()
    return mMatInstance;
 }
 
-DefineConsoleMethod( SkyBox, postApply, void, (), , "")
+DefineEngineMethod( SkyBox, postApply, void, (), , "")
 {
 	object->inspectPostApply();
 }

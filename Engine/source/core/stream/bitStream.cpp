@@ -140,7 +140,7 @@ class HuffmanProcessor
 
    static HuffmanProcessor g_huffProcessor;
 
-   bool readHuffBuffer(BitStream* pStream, char* out_pBuffer);
+   bool readHuffBuffer(BitStream* pStream, char* out_pBuffer, S32 maxLen);
    bool writeHuffBuffer(BitStream* pStream, const char* out_pBuffer, S32 maxLen);
 };
 
@@ -488,24 +488,51 @@ void BitStream::readAffineTransform(MatrixF* matrix)
 
 void BitStream::writeQuat( const QuatF& quat, U32 bitCount )
 {
-   writeSignedFloat( quat.x, bitCount );
-   writeSignedFloat( quat.y, bitCount );
-   writeSignedFloat( quat.z, bitCount );
-   writeFlag( quat.w < 0.0f );
+   F32 quatVals[4] = { quat.x, quat.y, quat.z, quat.w };
+   bool flipQuat = (quatVals[0] < 0);
+   F32 maxVal = mFabs(quatVals[0]);
+   S32 idxMax = 0;
+
+   for (S32 i = 1; i < 4; ++i)
+   {
+      if (mFabs(quatVals[i]) > maxVal)
+      {
+         idxMax = i;
+         maxVal = mFabs(quatVals[i]);
+         flipQuat = (quatVals[i] < 0);
+      }
+   }
+   writeInt(idxMax, 2);
+
+   for (S32 i = 0; i < 4; ++i)
+   {
+      if (i == idxMax)
+         continue;
+      F32 curValue = (flipQuat ? -quatVals[i] : quatVals[i]) * (F32) M_SQRT2;
+      writeSignedFloat( curValue, bitCount );
+   }
 }
 
 void BitStream::readQuat( QuatF *outQuat, U32 bitCount )
 {
-   outQuat->x = readSignedFloat( bitCount );
-   outQuat->y = readSignedFloat( bitCount );
-   outQuat->z = readSignedFloat( bitCount );
+   F32 quatVals[4];
+   F32 sum = 0.0f;
 
-   outQuat->w = mSqrt( 1.0 - getMin(   mSquared( outQuat->x ) + 
-                                       mSquared( outQuat->y ) + 
-                                       mSquared( outQuat->z ),
-                                       1.0f ) );
-   if ( readFlag() )
-      outQuat->w = -outQuat->w;
+   S32 idxMax = readInt( 2 );
+   for (S32 i = 0; i < 4; ++i)
+   {
+      if (i == idxMax)
+         continue;
+      quatVals[i] = readSignedFloat( bitCount ) * M_SQRTHALF_F;
+      sum += quatVals[i] * quatVals[i];
+   }
+
+   if (sum > 1.0f)
+      quatVals[idxMax] = 1.0f;
+   else
+      quatVals[idxMax] = mSqrt(1.0f - sum);
+
+   outQuat->set(quatVals[0], quatVals[1], quatVals[2], quatVals[3]);
 }
 
 void BitStream::writeBits( const BitVector &bitvec )
@@ -667,12 +694,12 @@ void BitStream::readString(char buf[256])
       if(readFlag())
       {
          S32 offset = readInt(8);
-         HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, stringBuffer + offset);
+         HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, stringBuffer + offset, 256 - offset);
          dStrcpy(buf, stringBuffer, 256);
          return;
       }
    }
-   HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, buf);
+   HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, buf, 256);
    if(stringBuffer)
       dStrcpy(stringBuffer, buf, 256);
 }
@@ -812,13 +839,16 @@ S16 HuffmanProcessor::determineIndex(HuffWrap& rWrap)
    }
 }
 
-bool HuffmanProcessor::readHuffBuffer(BitStream* pStream, char* out_pBuffer)
+bool HuffmanProcessor::readHuffBuffer(BitStream* pStream, char* out_pBuffer, S32 maxLen=256)
 {
    if (m_tablesBuilt == false)
       buildTables();
 
    if (pStream->readFlag()) {
       S32 len = pStream->readInt(8);
+      if (len >= maxLen) {
+         len = maxLen;
+      }
       for (S32 i = 0; i < len; i++) {
          S32 index = 0;
          while (true) {
@@ -839,6 +869,9 @@ bool HuffmanProcessor::readHuffBuffer(BitStream* pStream, char* out_pBuffer)
    } else {
       // Uncompressed string...
       U32 len = pStream->readInt(8);
+      if (len >= maxLen) {
+         len = maxLen;
+      }
       pStream->read(len, out_pBuffer);
       out_pBuffer[len] = '\0';
       return true;

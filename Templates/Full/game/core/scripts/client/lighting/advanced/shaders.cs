@@ -407,3 +407,32 @@ new CustomMaterial( SkyLightMaterial )
    
    pixVersion = 3.0;
 };
+
+new ShaderData( ReflectionProbeArrayShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
+
+   samplerNames[0] = "$deferredBuffer";
+   samplerNames[1] = "$colorBuffer";
+   samplerNames[2] = "$matInfoBuffer";
+   samplerNames[3] = "$cubeMap";
+   samplerNames[4] = "$irradianceCubemap";
+   samplerNames[5] = "$BRDFTexture";
+   
+   pixVersion = 3.0;
+};
+
+new CustomMaterial( ReflectionProbeArrayMaterial )
+{
+   shader = ReflectionProbeArrayShader;
+   stateBlock = AL_ProbeState;
+   
+   sampler["deferredBuffer"] = "#deferred";
+   sampler["matInfoBuffer"] = "#matinfo";
+   
+   pixVersion = 3.0;
+};

@@ -129,7 +129,8 @@ ProbeShaderConstants::ProbeShaderConstants()
    mProbeBoxMaxSC(NULL),
    mProbeIsSphereSC(NULL),
    mProbeLocalPosSC(NULL),
-   mProbeCubemapSC(NULL)
+   mProbeCubemapSC(NULL),
+   mProbeCountSC(NULL)
 {
 }
 
@@ -163,6 +164,7 @@ void ProbeShaderConstants::init(GFXShader* shader)
    mProbeIsSphereSC = shader->getShaderConstHandle(ShaderGenVars::probeIsSphere);
    mProbeLocalPosSC = shader->getShaderConstHandle(ShaderGenVars::probeLocalPos);
    mProbeCubemapSC = shader->getShaderConstHandle(ShaderGenVars::probeCubemap);
+   mProbeCountSC = shader->getShaderConstHandle(ShaderGenVars::probeCount);
 
    mInit = true;
 }
@@ -182,6 +184,7 @@ ProbeManager::ProbeManager()
 
    mSkylightMaterial = nullptr;
    mReflectProbeMaterial = nullptr;
+   mReflectProbeArrayMaterial = nullptr;
 }
 
 ProbeManager::~ProbeManager() 
@@ -624,6 +627,22 @@ ProbeManager::ReflectProbeMaterialInfo* ProbeManager::getReflectProbeMaterial()
 	return mReflectProbeMaterial;
 }
 
+ProbeManager::ReflectionProbeArrayMaterialInfo* ProbeManager::getReflectProbeArrayMaterial()
+{
+   PROFILE_SCOPE(AdvancedLightBinManager_getReflectProbeArrayMaterial);
+
+   //ReflectProbeMaterialInfo *info = NULL;
+
+   if (!mReflectProbeArrayMaterial)
+   {
+      // Now create the material info object.
+      mReflectProbeArrayMaterial = new ReflectionProbeArrayMaterialInfo("ReflectionProbeArrayMaterial",
+         getGFXVertexFormat<GFXVertexPC>());
+   }
+
+   return mReflectProbeArrayMaterial;
+}
+
 void ProbeManager::setupSkylightProbe(ProbeRenderInst *probeInfo)
 {
 	probeInfo->vertBuffer = getSphereMesh(probeInfo->numPrims, probeInfo->primBuffer);
@@ -756,11 +775,19 @@ GFXVertexBufferHandle<GFXVertexPC> ProbeManager::getSphereMesh(U32 &outNumPrimit
 //
 bool ReflectProbeMatInstance::init(const FeatureSet &features, const GFXVertexFormat *vertexFormat)
 {
+   mShaderMat = nullptr;
+
 	bool success = Parent::init(features, vertexFormat);
 
 	// If the initialization failed don't continue.
 	if (!success || !mProcessedMaterial || mProcessedMaterial->getNumPasses() == 0)
 		return false;
+
+   mShaderMat = static_cast<ProcessedShaderMaterial*>(getShaderMaterial());
+   mShaderMat->init(features, vertexFormat, mFeaturesDelegate);
+
+   //mShaderMat->setMaterialParameters(mDefaultParameters, 0);
+
 	return true;
 }
 
@@ -814,6 +841,41 @@ bool SkylightMatInstance::setupPass(SceneRenderState *state, const SceneData &sg
 
 	return true;
 }
+
+bool ReflectProbeArrayMatInstance::init(const FeatureSet &features, const GFXVertexFormat *vertexFormat)
+{
+   bool success = Parent::init(features, vertexFormat);
+
+   // If the initialization failed don't continue.
+   if (!success || !mProcessedMaterial || mProcessedMaterial->getNumPasses() == 0)
+      return false;
+   return true;
+}
+
+bool ReflectProbeArrayMatInstance::setupPass(SceneRenderState *state, const SceneData &sgData)
+{
+   if (!Parent::setupPass(state, sgData))
+      return false;
+
+   AssertFatal(mProcessedMaterial->getNumPasses() > 0, "No passes created! Ohnoes");
+   const RenderPassData *rpd = mProcessedMaterial->getPass(0);
+   AssertFatal(rpd, "No render pass data!");
+   AssertFatal(rpd->mRenderStates[0], "No render state 0!");
+
+   if (!mProjectionState)
+   {
+      GFXStateBlockDesc desc;
+      desc.setZReadWrite(false);
+      desc.zWriteEnable = false;
+      desc.setCullMode(GFXCullNone);
+      desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvDestAlpha, GFXBlendOpAdd);
+      mProjectionState = GFX->createStateBlock(desc);
+   }
+   // Now override stateblock with our own
+   GFX->setStateBlock(mProjectionState);
+
+   return true;
+}
 //
 //
 ProbeManager::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String &matName,
@@ -860,6 +922,8 @@ ProbeManager::ReflectProbeMaterialInfo::ReflectProbeMaterialInfo(const String &m
 	bbMax = matInstance->getMaterialParameterHandle("$bbMax");
 
 	useSphereMode = matInstance->getMaterialParameterHandle("$useSphereMode");
+
+   probeCount = matInstance->getMaterialParameterHandle("$numProbes");
 
 	for (U32 i = 0; i < 9; i++)
 		shTerms[i] = matInstance->getMaterialParameterHandle(String::ToString("$SHTerms%d", i));
@@ -1008,6 +1072,41 @@ ProbeManager::SkylightMaterialInfo::SkylightMaterialInfo(const String &matName,
 ProbeManager::SkylightMaterialInfo::~SkylightMaterialInfo()
 {
 	SAFE_DELETE(matInstance);
+}
+
+//
+//
+ProbeManager::ReflectionProbeArrayMaterialInfo::ReflectionProbeArrayMaterialInfo(const String &matName,
+   const GFXVertexFormat *vertexFormat)
+   : ReflectProbeMaterialInfo(matName, vertexFormat)
+{
+   Material *mat = MATMGR->getMaterialDefinitionByName(matName);
+   if (!mat)
+      return;
+
+   matInstance = new ReflectProbeArrayMatInstance(*mat);
+
+   const Vector<GFXShaderMacro> &macros = Vector<GFXShaderMacro>();
+
+   for (U32 i = 0; i < macros.size(); i++)
+      matInstance->addShaderMacro(macros[i].name, macros[i].value);
+
+   matInstance->init(MATMGR->getDefaultFeatures(), vertexFormat);
+
+   farPlane = matInstance->getMaterialParameterHandle("$farPlane");
+   vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
+   negFarPlaneDotEye = matInstance->getMaterialParameterHandle("$negFarPlaneDotEye");
+   zNearFarInvNearFar = matInstance->getMaterialParameterHandle("$zNearFarInvNearFar");
+
+   useCubemap = matInstance->getMaterialParameterHandle("$useCubemap");
+   cubemap = matInstance->getMaterialParameterHandle("$cubeMap");
+
+   eyePosWorld = matInstance->getMaterialParameterHandle("$eyePosWorld");
+}
+
+ProbeManager::ReflectionProbeArrayMaterialInfo::~ReflectionProbeArrayMaterialInfo()
+{
+   SAFE_DELETE(matInstance);
 }
 
 /*bool ProbeManager::lightScene( const char* callback, const char* param )

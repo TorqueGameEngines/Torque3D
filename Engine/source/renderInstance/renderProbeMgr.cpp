@@ -33,6 +33,8 @@
 
 #include "gfx/gfxDebugEvent.h"
 
+#include "materials/shaderData.h"
+
 IMPLEMENT_CONOBJECT(RenderProbeMgr);
 
 ConsoleDocClass( RenderProbeMgr, 
@@ -116,34 +118,43 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
 
    // Now build the quad for drawing full-screen vector light
    // passes.... this is a volatile VB and updates every frame.
-   FarFrustumQuadVert verts[4];
+   GFXVertexPC verts[4];
    {
       verts[0].point.set(wsFrustumPoints[Frustum::FarTopLeft] - cameraPos);
-      invCam.mulP(wsFrustumPoints[Frustum::FarTopLeft], &verts[0].normal);
-      verts[0].texCoord.set(-1.0, 1.0);
-      verts[0].tangent.set(wsFrustumPoints[Frustum::FarTopLeft] - cameraOffsetPos);
+      //invCam.mulP(wsFrustumPoints[Frustum::FarTopLeft], &verts[0].normal);
+      //verts[0].texCoord.set(-1.0, 1.0);
+      //verts[0].tangent.set(wsFrustumPoints[Frustum::FarTopLeft] - cameraOffsetPos);
 
       verts[1].point.set(wsFrustumPoints[Frustum::FarTopRight] - cameraPos);
-      invCam.mulP(wsFrustumPoints[Frustum::FarTopRight], &verts[1].normal);
-      verts[1].texCoord.set(1.0, 1.0);
-      verts[1].tangent.set(wsFrustumPoints[Frustum::FarTopRight] - cameraOffsetPos);
+     // invCam.mulP(wsFrustumPoints[Frustum::FarTopRight], &verts[1].normal);
+      //verts[1].texCoord.set(1.0, 1.0);
+      //verts[1].tangent.set(wsFrustumPoints[Frustum::FarTopRight] - cameraOffsetPos);
 
       verts[2].point.set(wsFrustumPoints[Frustum::FarBottomLeft] - cameraPos);
-      invCam.mulP(wsFrustumPoints[Frustum::FarBottomLeft], &verts[2].normal);
-      verts[2].texCoord.set(-1.0, -1.0);
-      verts[2].tangent.set(wsFrustumPoints[Frustum::FarBottomLeft] - cameraOffsetPos);
+      //invCam.mulP(wsFrustumPoints[Frustum::FarBottomLeft], &verts[2].normal);
+     // verts[2].texCoord.set(-1.0, -1.0);
+     // verts[2].tangent.set(wsFrustumPoints[Frustum::FarBottomLeft] - cameraOffsetPos);
 
       verts[3].point.set(wsFrustumPoints[Frustum::FarBottomRight] - cameraPos);
-      invCam.mulP(wsFrustumPoints[Frustum::FarBottomRight], &verts[3].normal);
-      verts[3].texCoord.set(1.0, -1.0);
-      verts[3].tangent.set(wsFrustumPoints[Frustum::FarBottomRight] - cameraOffsetPos);
+     // invCam.mulP(wsFrustumPoints[Frustum::FarBottomRight], &verts[3].normal);
+    //  verts[3].texCoord.set(1.0, -1.0);
+    //  verts[3].tangent.set(wsFrustumPoints[Frustum::FarBottomRight] - cameraOffsetPos);
    }
+
+   Point3F norms[4];
+   {
+      invCam.mulP(wsFrustumPoints[Frustum::FarTopLeft], &norms[0]);
+      invCam.mulP(wsFrustumPoints[Frustum::FarTopRight], &norms[1]);
+      invCam.mulP(wsFrustumPoints[Frustum::FarBottomLeft], &norms[2]);
+      invCam.mulP(wsFrustumPoints[Frustum::FarBottomRight], &norms[3]);
+   }
+
    mFarFrustumQuadVerts.set(GFX, 4);
    dMemcpy(mFarFrustumQuadVerts.lock(), verts, sizeof(verts));
    mFarFrustumQuadVerts.unlock();
 
    PlaneF farPlane(wsFrustumPoints[Frustum::FarBottomLeft], wsFrustumPoints[Frustum::FarTopLeft], wsFrustumPoints[Frustum::FarTopRight]);
-   PlaneF vsFarPlane(verts[0].normal, verts[1].normal, verts[2].normal);
+   PlaneF vsFarPlane(norms[0], norms[1], norms[2]);
 
 
    // Parameters calculated, assign them to the materials
@@ -163,6 +174,17 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
    if (reflProbeMat != nullptr && reflProbeMat->matInstance != nullptr)
    {
       reflProbeMat->setViewParameters(frustum.getNearDist(),
+         frustum.getFarDist(),
+         frustum.getPosition(),
+         farPlane,
+         vsFarPlane);
+   }
+
+   ProbeManager::ReflectionProbeArrayMaterialInfo* reflProbeArrayMat = PROBEMGR->getReflectProbeArrayMaterial();
+
+   if (reflProbeArrayMat != nullptr && reflProbeArrayMat->matInstance != nullptr)
+   {
+      reflProbeArrayMat->setViewParameters(frustum.getNearDist(),
          frustum.getFarDist(),
          frustum.getPosition(),
          farPlane,
@@ -230,7 +252,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    ProbeManager::SkylightMaterialInfo* skylightMat = PROBEMGR->getSkylightMaterial();
    ProbeManager::ReflectProbeMaterialInfo* reflProbeMat = PROBEMGR->getReflectProbeMaterial();
 
-   for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
+   /*for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
    {
 	   ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
@@ -268,54 +290,155 @@ void RenderProbeMgr::render( SceneRenderState *state )
 			   GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
 		   }
 	   }
+   }*/
+
+   //Array rendering
+   static U32 MAXPROBECOUNT = 50;
+
+   U32 probeCount = PROBEMGR->mRegisteredProbes.size();
+
+   if (probeCount != 0)
+   {
+      AlignedArray<Point3F> probePositions(MAXPROBECOUNT, sizeof(Point3F));
+      dMemset(probePositions.getBuffer(), 0, probePositions.getBufferSize());
+
+      if (reflProbeMat && reflProbeMat->matInstance)
+      {
+         MaterialParameters *matParams = reflProbeMat->matInstance->getMaterialParameters();
+
+         MaterialParameterHandle *numProbesSC = reflProbeMat->matInstance->getMaterialParameterHandle("$numProbes");
+         matParams->setSafe(numProbesSC, (float)probeCount);
+
+         //ProcessedShaderMaterial* processedMat = reflProbeMat->matInstance->getProcessedShaderMaterial();
+         //GFXShaderConstBuffer* shaderConsts = processedMat->_getShaderConstBuffer(0);
+
+         //ProbeShaderConstants *psc = PROBEMGR->getProbeShaderConstants(shaderConsts);
+
+         MaterialParameterHandle *probePositionSC = reflProbeMat->matInstance->getMaterialParameterHandle("$inProbePosArray");
+
+         U32 effectiveProbeCount = 0;
+
+         for (U32 i = 0; i < probeCount; i++)
+         {
+            if (effectiveProbeCount >= MAXPROBECOUNT)
+               break;
+
+            ProbeRenderInst* curEntry = ProbeRenderInst::all[PROBEMGR->mRegisteredProbes[i]];
+
+            /*if (!curEntry->mIsEnabled)
+               continue;
+
+            if (curEntry->numPrims == 0)
+               continue;
+
+            if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
+               continue;
+
+            if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
+               break;*/
+
+               //Setup
+            const Point3F &probePos = curEntry->getPosition();
+            probePositions[i].x = probePos.x;
+            probePositions[i].y = probePos.y;
+            probePositions[i].z = probePos.z;
+
+            Point3F test = probePositions[i];
+
+            MatrixF probeTrans = curEntry->getTransform();
+
+            if (!curEntry->mIsSkylight)
+            {
+               //if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
+              //    probeTrans.scale(curEntry->mRadius * 1.01f);
+
+               sgData.objTrans = &probeTrans;
+
+               reflProbeMat->setProbeParameters(curEntry, state, worldToCameraXfm);
+            }
+
+            effectiveProbeCount++;
+         }
+
+         if (effectiveProbeCount != 0)
+         {
+            Con::printf("Probe aligned position count: %i", probeCount);
+
+            for (U32 p = 0; p < probeCount; p++)
+            {
+               Point3F prb = probePositions[p];
+
+               Con::printf("Probe %i aligned position is: %g %g %g", p, prb.x, prb.y, prb.z);
+
+               bool tasadfh = true;
+            }
+
+            matParams->set(probePositionSC, probePositions);
+
+            // Set geometry
+            GFX->setVertexBuffer(mFarFrustumQuadVerts);
+            GFX->setPrimitiveBuffer(NULL);
+
+            while (reflProbeMat->matInstance->setupPass(state, sgData))
+            {
+               // Set transforms
+               matrixSet.setWorld(*sgData.objTrans);
+               reflProbeMat->matInstance->setTransforms(matrixSet, state);
+               reflProbeMat->matInstance->setSceneInfo(state, sgData);
+
+               GFX->drawPrimitive(GFXTriangleStrip, 0, 2);
+            }
+         }
+      }
    }
+   //
+   //
+   /*ProbeManager::ReflectionProbeArrayMaterialInfo* reflProbeArrayMat = PROBEMGR->getReflectProbeArrayMaterial();
 
    for (U32 i = 0; i < ProbeRenderInst::all.size(); i++)
    {
-	   ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
+      if (i > 0)
+         return;
 
-	   if (!curEntry->mIsEnabled)
-		   continue;
+      ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
-	   if (curEntry->numPrims == 0)
-		   continue;
+      if (!reflProbeArrayMat || !reflProbeArrayMat->matInstance)
+         break;
 
-	   if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
-		   continue;
+      //Setup
+      //MatrixF probeTrans = curEntry->getTransform();
 
-	   if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
-		   break;
+      //if (!curEntry->mIsSkylight)
+      {
+         //if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
+         //   probeTrans.scale(curEntry->mRadius * 1.01f);
 
-	   //Setup
-	   MatrixF probeTrans = curEntry->getTransform();
-	   
-	   if (!curEntry->mIsSkylight)
-	   {
-		   if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
-			   probeTrans.scale(curEntry->mRadius * 1.01f);
+         //sgData.objTrans = &state-;
 
-		   sgData.objTrans = &probeTrans;
+         reflProbeArrayMat->setProbeParameters(curEntry, state, worldToCameraXfm);
 
-		   reflProbeMat->setProbeParameters(curEntry, state, worldToCameraXfm);
+         // Set geometry
+         GFX->setVertexBuffer(mFarFrustumQuadVerts);
+         GFX->setPrimitiveBuffer(NULL);
+         while (reflProbeArrayMat->matInstance->setupPass(state, sgData))
+         {
+            // Set transforms
+            //matrixSet.setWorld(*sgData.objTrans);
+            reflProbeArrayMat->matInstance->setTransforms(matrixSet, state);
+            reflProbeArrayMat->matInstance->setSceneInfo(state, sgData);
 
-		   // Set geometry
-		   GFX->setVertexBuffer(curEntry->vertBuffer);
-		   GFX->setPrimitiveBuffer(curEntry->primBuffer);
-		   while (reflProbeMat->matInstance->setupPass(state, sgData))
-		   {
-			   // Set transforms
-			   matrixSet.setWorld(*sgData.objTrans);
-			   reflProbeMat->matInstance->setTransforms(matrixSet, state);
-			   reflProbeMat->matInstance->setSceneInfo(state, sgData);
-
-			   GFX->drawPrimitive(GFXTriangleList, 0, curEntry->numPrims);
-		   }
-	   }
-   }
+            GFX->drawPrimitive(GFXTriangleStrip, 0, 2);
+         }
+      }
+   }*/
+   //
+   //
 
    GFX->popActiveRenderTarget();
 
    //PROBEMGR->unregisterAllProbes();
+   PROBEMGR->mRegisteredProbes.clear();
+
    PROFILE_END();
 
    GFX->setVertexBuffer(NULL);

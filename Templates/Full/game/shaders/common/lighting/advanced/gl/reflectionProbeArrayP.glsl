@@ -19,50 +19,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#ifndef RENDER_PROBE_MGR_H
-#define RENDER_PROBE_MGR_H
 
-#ifndef _RENDERBINMANAGER_H_
-#include "renderInstance/renderBinManager.h"
-#endif
-#ifndef _MATINSTANCE_H_
-#include "materials/matInstance.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
-#include "materials/matTextureTarget.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
-#include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
-#include "gfx/gfxVertexBuffer.h"
-#endif
+#include "../../torque.hlsl"
 
-#include "postFx/postEffectCommon.h"
-
-//**************************************************************************
-// RenderObjectMgr
-//**************************************************************************
-class RenderProbeMgr : public RenderBinManager
+struct ConnectData
 {
-   typedef RenderBinManager Parent;
-
-protected:
-
-   GFXVertexBufferHandle<GFXVertexPC> mFarFrustumQuadVerts;
-
-public:
-   RenderProbeMgr();
-   RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
-
-   // RenderBinMgr
-   void _setupPerFrameParameters(const SceneRenderState *state);
-   virtual void addElement(RenderInst *inst);
-   virtual void render(SceneRenderState * state);
-
-   // ConsoleObject
-   static void initPersistFields();
-   DECLARE_CONOBJECT(RenderProbeMgr);
+    float4 hpos    : TORQUE_POSITION;
+    float2 uv      : TEXCOORD;
 };
 
-#endif // RENDER_PROBE_MGR_H
+uniform int face;
+
+TORQUE_UNIFORM_SAMPLERCUBE(environmentMap, 0);
+
+float4 main(ConnectData IN) : TORQUE_TARGET0
+{
+    float3 N = getCubeDir(face,IN.uv);
+    float3 irradiance = 0;
+    
+    // tangent space calculation from origin point
+    float3 up    = float3(0.0, 0.0, 1.0);
+    float3 right = cross(up, N);
+    up           = cross(N, right);
+       
+    float sampleDelta = 0.025;
+    int nrSamples = 0;
+    for(float phi = 0.0; phi < M_2PI_F; phi += sampleDelta)
+    {
+        for(float theta = 0.0; theta < M_HALFPI_F; theta += sampleDelta)
+        {
+            // spherical to cartesian (in tangent space)
+            float3 tangentSample = float3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+            // tangent space to world
+            float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N; 
+
+            irradiance += TORQUE_TEXCUBE(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            nrSamples++;
+        }
+    }
+    irradiance = M_PI_F * irradiance * (1.0 / float(nrSamples));
+    
+    return float4(irradiance, 1.0);
+}

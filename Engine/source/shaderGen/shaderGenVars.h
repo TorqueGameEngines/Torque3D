@@ -90,6 +90,7 @@ struct ShaderGenVars
    const static String probeLocalPos;
    const static String probeIsSphere;
    const static String probeCubemap;
+   const static String probeCount;
    
    // Textures
    const static String fogMap;

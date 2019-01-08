@@ -266,9 +266,11 @@ protected:
    void _setPrimaryLightConst(const LightInfo* light, const MatrixF& objTrans, const U32 stageNum);
 
    /// This is here to deal with the differences between ProcessedCustomMaterials and ProcessedShaderMaterials.
+public:
    virtual GFXShaderConstBuffer* _getShaderConstBuffer(const U32 pass);
    virtual ShaderConstHandles* _getShaderConstHandles(const U32 pass);
 
+protected:
    ///
    virtual void _initMaterialParameters();
 

@@ -77,6 +77,7 @@ const String ShaderGenVars::probeBoxMax("$inProbeBoxMax");
 const String ShaderGenVars::probeLocalPos("$inProbeLocalPos");
 const String ShaderGenVars::probeIsSphere("$inProbeIsSphere");
 const String ShaderGenVars::probeCubemap("$inProbeCubemap");
+const String ShaderGenVars::probeCount("$numProbes");
 
 // These are ignored by the D3D layers.
 const String ShaderGenVars::fogMap("$fogMap");

@@ -56,6 +56,8 @@
 
 #include "core/util/SystemInterfaceList.h"
 
+#include "materials/processedShaderMaterial.h"
+
 class SimObject;
 class ProbeManager;
 class Material;
@@ -177,6 +179,7 @@ struct ProbeShaderConstants
    GFXShaderConstHandle *mProbeIsSphereSC;
    GFXShaderConstHandle *mProbeLocalPosSC;
    GFXShaderConstHandle *mProbeCubemapSC;
+   GFXShaderConstHandle *mProbeCountSC;
 
    ProbeShaderConstants();
    ~ProbeShaderConstants();
@@ -197,11 +200,15 @@ protected:
 
 	GFXStateBlockRef mProjectionState;
 
+   ProcessedShaderMaterial* mShaderMat;
+
 public:
 	ReflectProbeMatInstance(Material &mat) : Parent(mat), mProbeParamsSC(NULL), mInternalPass(false), mProjectionState(NULL) {}
 
 	virtual bool init(const FeatureSet &features, const GFXVertexFormat *vertexFormat);
 	virtual bool setupPass(SceneRenderState *state, const SceneData &sgData);
+
+   ProcessedShaderMaterial* getProcessedShaderMaterial() { return mShaderMat; }
 };
 
 class SkylightMatInstance : public ReflectProbeMatInstance
@@ -214,6 +221,22 @@ protected:
 public:
 	SkylightMatInstance(Material &mat) : Parent(mat) {}
 	virtual bool setupPass(SceneRenderState *state, const SceneData &sgData);
+};
+
+class ReflectProbeArrayMatInstance : public MatInstance
+{
+   typedef MatInstance Parent;
+protected:
+   MaterialParameterHandle * mProbeParamsSC;
+   bool mInternalPass;
+
+   GFXStateBlockRef mProjectionState;
+
+public:
+   ReflectProbeArrayMatInstance(Material &mat) : Parent(mat), mProbeParamsSC(NULL), mInternalPass(false), mProjectionState(NULL) {}
+
+   virtual bool init(const FeatureSet &features, const GFXVertexFormat *vertexFormat);
+   virtual bool setupPass(SceneRenderState *state, const SceneData &sgData);
 };
 
 class ProbeManager
@@ -254,6 +277,8 @@ public:
 		MaterialParameterHandle *shTerms[9];
 		MaterialParameterHandle *shConsts[5];
 
+      MaterialParameterHandle *probeCount;
+
 		ReflectProbeMaterialInfo(const String &matName, const GFXVertexFormat *vertexFormat);
 
 		virtual ~ReflectProbeMaterialInfo();
@@ -274,6 +299,15 @@ public:
 
 		virtual ~SkylightMaterialInfo();
 	};
+
+   struct ReflectionProbeArrayMaterialInfo : public ReflectProbeMaterialInfo
+   {
+      ReflectionProbeArrayMaterialInfo(const String &matName, const GFXVertexFormat *vertexFormat);
+
+      ReflectProbeArrayMatInstance *matInstance;
+
+      virtual ~ReflectionProbeArrayMaterialInfo();
+   };
 
    enum SpecialProbeTypesEnum
    {
@@ -353,6 +387,7 @@ public:
 
    ReflectProbeMaterialInfo* getReflectProbeMaterial();
    SkylightMaterialInfo* getSkylightMaterial();
+   ReflectionProbeArrayMaterialInfo* getReflectProbeArrayMaterial();
 
 protected:
 
@@ -414,6 +449,8 @@ protected:
    ReflectProbeMaterialInfo* mReflectProbeMaterial;
 
    SkylightMaterialInfo* mSkylightMaterial;
+
+   ReflectionProbeArrayMaterialInfo* mReflectProbeArrayMaterial;
 
    GFXVertexBufferHandle<GFXVertexPC> getSphereMesh(U32 &outNumPrimitives, GFXPrimitiveBufferHandle &outPrimitives);;
 };

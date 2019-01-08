@@ -38,14 +38,6 @@ uniform float3 bbMax;
 
 uniform float useSphereMode;
 
-#define MAX_PROBES 50
-
-uniform float numProbes;
-uniform float3 inProbePosArray[MAX_PROBES];
-
-// Box Projected IBL Lighting
-// Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
-// and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 float3 boxProject(float3 wsPosition, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax)
 { 
    float3 nrdir = reflectDir;
@@ -62,7 +54,7 @@ float3 boxProject(float3 wsPosition, float3 reflectDir, float3 boxWSPos, float3 
 
 float3 iblBoxSpecular(float3 normal, float3 wsPos, float roughness, float3 surfToEye,
                      TORQUE_SAMPLER2D(brdfTexture), 
-                    TORQUE_SAMPLERCUBE(radianceCube),
+                    //TORQUE_SAMPLERCUBE(radianceCube),
                     float3 boxPos,
                     float3 boxMin,
                     float3 boxMax)
@@ -79,30 +71,14 @@ float3 iblBoxSpecular(float3 normal, float3 wsPos, float roughness, float3 surfT
    float3 cubeR = normalize(r);
    cubeR = boxProject(wsPos, cubeR, boxPos, boxMin, boxMax);
 	
-   float3 radiance = TORQUE_TEXCUBELOD(radianceCube, float4(cubeR, lod)).xyz * (brdf.x + brdf.y);
+   float3 radiance = float3(1,1,1);//TORQUE_TEXCUBELOD(radianceCube, float4(cubeR, lod)).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
 
-float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float radius, float atten)
+float4 main(ConvexConnectP IN) : SV_TARGET
 {
-    float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
-
-    float3 boxMinLS = probePos-(float3(1,1,1)*radius);
-    float3 boxMaxLS = probePos+(float3(1,1,1)*radius);
-
-    float boxOuterRange = length(boxMaxLS - boxMinLS);
-    float boxInnerRange = boxOuterRange / atten;
-
-    float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
-    localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
-
-    return max(localDir.x, max(localDir.y, localDir.z)) * -1;
-}
-
-float4 main( ConvexConnectP IN ) : SV_TARGET
-{ 
-   // Compute scene UV
+    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w; 
    float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
 
@@ -117,42 +93,20 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);		  
 	float blendVal = 1.0;
-	/*if(useSphereMode)
-	{
-		float3 L = probeWSPos - surface.P;
+
+    [unroll]
+    for(float i=0; i < 10; i++)
+    {
+        float3 probeWSPos = float3(i * 1.1, 0, 2);
+        float3 L = probeWSPos - surface.P;
 		blendVal = 1.0-length(L)/radius;
 		clip(blendVal);		
-	}
-	else
-	{
-		float tempAttenVal = 3.5;
-		blendVal = defineBoxSpaceInfluence(surface.P, probeWSPos, radius, tempAttenVal);
-		clip(blendVal);
-		float compression = 0.05;
-		blendVal=(1.0-compression)+blendVal*compression;
-	}*/
-
-    float3 surfToEye = normalize(surface.P - eyePosWorld);
-    float3 irradiance = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).xyz;
-	float3 specular = iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax);
-
-    int i;
-    for(i=0; i < numProbes; i++)
-    {
-        float3 probeWS = inProbePosArray[i];
-
-        float3 L = probeWS - surface.P;
-		blendVal = 1.0-length(L)/radius;
-		//clip(blendVal);	
-
-        irradiance = float3(blendVal,blendVal,blendVal);
-        specular = irradiance;
     }
 
-	//render into the bound space defined above
-	//
-	//float3 irradiance = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).xyz;
-	//float3 specular = iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax);
+    //render into the bound space defined above
+	float3 surfToEye = normalize(surface.P - eyePosWorld);
+	float3 irradiance = float3(1,0,0);//TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).xyz;
+	float3 specular = iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture)/*, TORQUE_SAMPLERCUBE_MAKEARG(cubeMap)*/, probeWSPos, bbMin, bbMax);
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
    specular *= F;
    //energy conservation
@@ -162,4 +116,37 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
 
    return float4(diffuse + specular * surface.ao, blendVal);
+
+    /*float3 N = getCubeDir(face,IN.uv);
+    float3 irradiance = 0;
+    
+    // tangent space calculation from origin point
+    float3 up    = float3(0.0, 0.0, 1.0);
+    float3 right = cross(up, N);
+    up           = cross(N, right);
+       
+    float sampleDelta = 0.025;
+    int nrSamples = 0;
+    for(float phi = 0.0; phi < M_2PI_F; phi += sampleDelta)
+    {
+        for(float theta = 0.0; theta < M_HALFPI_F; theta += sampleDelta)
+        {
+            // spherical to cartesian (in tangent space)
+            float3 tangentSample = float3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+            // tangent space to world
+            float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N; 
+
+            irradiance += TORQUE_TEXCUBE(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            nrSamples++;
+        }
+    }
+    irradiance = M_PI_F * irradiance * (1.0 / float(nrSamples));
+    
+    return float4(irradiance, 1.0);*/
+
+    //return float4(1,0,0,1);
+
+    //float4 texCoord = float4( 1,0,0, 1 );    
+
+    //return texCoord;
 }

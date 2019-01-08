@@ -347,7 +347,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
             MatrixF probeTrans = curEntry->getTransform();
 
-            if (!curEntry->mIsSkylight)
+            //if (!curEntry->mIsSkylight)
             {
                //if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
               //    probeTrans.scale(curEntry->mRadius * 1.01f);
@@ -362,13 +362,13 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
          if (effectiveProbeCount != 0)
          {
-            Con::printf("Probe aligned position count: %i", probeCount);
+            //Con::printf("Probe aligned position count: %i", probeCount);
 
             for (U32 p = 0; p < probeCount; p++)
             {
                Point3F prb = probePositions[p];
 
-               Con::printf("Probe %i aligned position is: %g %g %g", p, prb.x, prb.y, prb.z);
+               //Con::printf("Probe %i aligned position is: %g %g %g", p, prb.x, prb.y, prb.z);
 
                bool tasadfh = true;
             }

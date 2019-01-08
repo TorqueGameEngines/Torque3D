@@ -137,18 +137,24 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
 	float3 specular = iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap), probeWSPos, bbMin, bbMax);
 
     int i;
+	irradiance = float3(0,0,0);
+	float blendSum = 0.00001;
     for(i=0; i < numProbes; i++)
     {
         float3 probeWS = inProbePosArray[i];
 
         float3 L = probeWS - surface.P;
 		blendVal = 1.0-length(L)/radius;
-		//clip(blendVal);	
+		blendVal = max(0,blendVal);
 
-        irradiance = float3(blendVal,blendVal,blendVal);
+        irradiance += float3(blendVal,blendVal,blendVal);
         specular = irradiance;
+		blendSum += blendVal;
     }
-
+	//irradiance /= blendSum;
+	//specular /= blendSum;
+	blendSum /= numProbes;
+	
 	//render into the bound space defined above
 	//
 	//float3 irradiance = TORQUE_TEXCUBELOD(irradianceCubemap, float4(surface.N,0)).xyz;
@@ -161,5 +167,5 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
 
-   return float4(diffuse + specular * surface.ao, blendVal);
+   return float4(diffuse + specular * surface.ao, blendSum);
 }

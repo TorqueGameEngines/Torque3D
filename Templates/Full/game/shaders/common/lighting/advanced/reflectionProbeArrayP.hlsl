@@ -26,8 +26,8 @@ uniform float cubeMips;
 #define MAX_PROBES 50
 
 uniform float numProbes;
-TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMap[MAX_PROBES], 3);
-TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemap[MAX_PROBES], 4);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMap, 3);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemap, 4);
 uniform float3    inProbePosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float3    bbMinArray[MAX_PROBES];
@@ -57,15 +57,15 @@ float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
    cubeN.z *=-1;
-   return TORQUE_TEXCUBELOD(irradianceCubemap[id], float4(cubeN,0)).xyz;
+   return TORQUE_TEXCUBEARRAYLOD(irradianceCubemap,cubeN,id,0).xyz;
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
 {
-   float ndotv = clamp(dot(normal, surfToEye), 0.0, 1.0);
+   float ndotv = clamp(dot(surface.N, surfToEye), 0.0, 1.0);
 
     // BRDF
-   float2 brdf = TORQUE_TEX2DLOD(brdfTexture, float4(roughness, ndotv,0.0,0.0)).xy;
+   float2 brdf = TORQUE_TEX2DLOD(brdfTexture, float4(surface.roughness, ndotv,0.0,0.0)).xy;
 
     // Radiance (Specular)
    float lod = surface.roughness*cubeMips;
@@ -73,7 +73,7 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float3 cubeR = normalize(r);
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
 	
-   float3 radiance = TORQUE_TEXCUBELOD(cubeMap[id], float4(cubeR, lod)).xyz * (brdf.x + brdf.y);
+   float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMap,cubeR,id,lod).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
@@ -102,11 +102,11 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
    
    //unpack normal and linear depth 
-   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0);
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0.xy);
    
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    IN.uv0, eyePosWorld, wsEyeRay, cameraToWorld);	
+                                    IN.uv0.xy, eyePosWorld, wsEyeRay, cameraToWorld);	
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
@@ -173,9 +173,9 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    {
       irradiance += blendVal[i]*iblBoxDiffuse(surface,i);
       
-      specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture));
+      specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
    }
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-	return float4(diffuse + specular * surface.ao, blendVal);
+	return float4(diffuse + specular * surface.ao, blendSum);
 }

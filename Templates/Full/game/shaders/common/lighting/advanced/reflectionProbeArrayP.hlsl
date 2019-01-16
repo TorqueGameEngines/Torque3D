@@ -27,7 +27,7 @@ uniform float cubeMips;
 
 uniform float numProbes;
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMap[MAX_PROBES], 3);
-TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemap[MAX_PROBES] 4);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemap[MAX_PROBES], 4);
 uniform float3    inProbePosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float3    bbMinArray[MAX_PROBES];
@@ -124,8 +124,6 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    float3 surfToEye = normalize(surface.P - eyePosWorld);
 
    int i;
-   float3 irradiance = float3(0,0,0);
-   float3 specular = float3(0,0,0);
 	float blendSum = 0;
 	float invBlendSum = 0;
       
@@ -169,7 +167,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    }
 
    float invBlendSumWeighted = 1.0f / blendSum;
-   for (int i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; ++i)
    {
       blendVal[i] *= invBlendSumWeighted;
    }
@@ -180,7 +178,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    //energy conservation
    float3 kD = 1.0.xxx - F;
    kD *= 1.0 - surface.metalness;
-   for (int i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; ++i)
    {
       irradiance += blendVal[i]*iblBoxDiffuse(surface,TORQUE_SAMPLERCUBE_MAKEARG(irradianceCubemap[i]), inProbePosArray[i], bbMinArray[i], bbMaxArray[i]);
       specular += blendVal[i]*F*iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap[i]), inProbePosArray[i], bbMinArray[i], bbMaxArray[i]);

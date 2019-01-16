@@ -53,23 +53,14 @@ float3 boxProject(float3 wsPosition, float3 reflectDir, float3 boxWSPos, float3 
    return posonbox - boxWSPos;
 }
 
-float3 iblBoxDiffuse( Surface     surface, 
-                     TORQUE_SAMPLERCUBE(irradianceCube), 
-                     float3        boxPos,
-                     float3        boxMin,
-                     float3        boxMax)
+float3 iblBoxDiffuse( Surface surface, int id)
 {
-   float3 cubeN = boxProject(surface.P, surface.N, boxPos, boxMin, boxMax);
+   float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
    cubeN.z *=-1;
-   return TORQUE_TEXCUBELOD(irradianceCube, float4(cubeN,0)).xyz;
+   return TORQUE_TEXCUBELOD(irradianceCubemap[id], float4(cubeN,0)).xyz;
 }
 
-float3 iblBoxSpecular(float3 normal, float3 wsPos, float roughness, float3 surfToEye,
-                     TORQUE_SAMPLER2D(brdfTexture), 
-                     TORQUE_SAMPLERCUBE(radianceCube),
-                     float3 boxPos,
-                     float3 boxMin,
-                     float3 boxMax)
+float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
 {
    float ndotv = clamp(dot(normal, surfToEye), 0.0, 1.0);
 
@@ -77,25 +68,26 @@ float3 iblBoxSpecular(float3 normal, float3 wsPos, float roughness, float3 surfT
    float2 brdf = TORQUE_TEX2DLOD(brdfTexture, float4(roughness, ndotv,0.0,0.0)).xy;
 
     // Radiance (Specular)
-   float lod = roughness*cubeMips;
-   float3 r = reflect(surfToEye, normal);
+   float lod = surface.roughness*cubeMips;
+   float3 r = reflect(surfToEye, surface.N);
    float3 cubeR = normalize(r);
-   cubeR = boxProject(wsPos, cubeR, boxPos, boxMin, boxMax);
+   cubeR = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
 	
-   float3 radiance = TORQUE_TEXCUBELOD(radianceCube, float4(cubeR, lod)).xyz * (brdf.x + brdf.y);
+   float3 radiance = TORQUE_TEXCUBELOD(cubeMap[id], float4(cubeR, lod)).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
 
-float defineBoxSpaceInfluence(float3 surfPosWS, float3 probePos, float4x4 worldToObj, float radius, float atten)
+float defineBoxSpaceInfluence(Surface surface, int id)
 {
-    float3 surfPosLS = mul( worldToObj, float4(surfPosWS,1.0)).xyz;
+    float tempAttenVal = 3.5; //replace with per probe atten
+    float3 surfPosLS = mul( worldToObjArray[id], float4(surface.P,1.0)).xyz;
 
-    float3 boxMinLS = probePos-(float3(1,1,1)*radius);
-    float3 boxMaxLS = probePos+(float3(1,1,1)*radius);
+    float3 boxMinLS = inProbePosArray[id]-(float3(1,1,1)*radius[id]);
+    float3 boxMaxLS = inProbePosArray[id]+(float3(1,1,1)*radius[id]);
 
     float boxOuterRange = length(boxMaxLS - boxMinLS);
-    float boxInnerRange = boxOuterRange / atten;
+    float boxInnerRange = boxOuterRange / tempAttenVal;
 
     float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
     localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
@@ -140,8 +132,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
       }
       else
       {
-         float tempAttenVal = 3.5;
-         blendVal[i] = defineBoxSpaceInfluence(surface.P, inProbePosArray[i], worldToObjArray[i], radius[i], tempAttenVal);
+         blendVal[i] = defineBoxSpaceInfluence(surface, i);
          blendVal[i] = max(0,blendVal[i]);		
       }
 		blendSum += blendVal[i];
@@ -180,8 +171,9 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      irradiance += blendVal[i]*iblBoxDiffuse(surface,TORQUE_SAMPLERCUBE_MAKEARG(irradianceCubemap[i]), inProbePosArray[i], bbMinArray[i], bbMaxArray[i]);
-      specular += blendVal[i]*F*iblBoxSpecular(surface.N, surface.P, surface.roughness, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), TORQUE_SAMPLERCUBE_MAKEARG(cubeMap[i]), inProbePosArray[i], bbMinArray[i], bbMaxArray[i]);
+      irradiance += blendVal[i]*iblBoxDiffuse(surface,i);
+      
+      specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture));
    }
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;

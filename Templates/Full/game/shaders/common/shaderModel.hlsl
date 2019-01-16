@@ -51,6 +51,7 @@
 // The mipmap LOD is specified in coord.w
 #define TORQUE_TEX2DLOD(tex,coords) texture_##tex.SampleLevel(tex,coords.xy,coords.w)
 #define TORQUE_TEXCUBELOD(tex,coords) texture_##tex.SampleLevel(tex,coords.xyz,coords.w)
+#define TORQUE_TEXCUBEARRAYLOD(tex,coords,id,lod) texture_##tex.SampleLevel(tex,float4(coords.xyz,id),lod)
 // Tex2d comparison
 #define TORQUE_TEX2DCMP(tex,coords,compare) texture_##tex.SampleCmpLevelZero(tex,coords,compare)
 

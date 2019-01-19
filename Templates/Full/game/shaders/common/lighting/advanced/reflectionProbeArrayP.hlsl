@@ -4,10 +4,18 @@
 #include "../../lighting.hlsl"
 #include "../../torque.hlsl"
 
-struct ConvexConnectP
+/*struct ConvexConnectP
 {
    float4 pos : TORQUE_POSITION;
    float4 uv0 : TEXCOORD1;
+   float4 vsEyeDir : TEXCOORD2;
+};*/
+
+struct ConvexConnectP
+{
+   float4 pos : TORQUE_POSITION;
+   float4 wsEyeDir : TEXCOORD0;
+   float4 ssPos : TEXCOORD1;
    float4 vsEyeDir : TEXCOORD2;
 };
 
@@ -57,7 +65,8 @@ float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
    cubeN.z *=-1;
-   return TORQUE_TEXCUBEARRAYLOD(irradianceCubemap,cubeN,id,0).xyz;
+   //return TORQUE_TEXCUBEARRAYLOD(irradianceCubemap,cubeN,id,0).xyz;
+   return float3(1,1,1);
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
@@ -73,7 +82,8 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float3 cubeR = normalize(r);
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
 	
-   float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMap,cubeR,id,lod).xyz * (brdf.x + brdf.y);
+   //float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMap,cubeR,id,lod).xyz * (brdf.x + brdf.y);
+   float3 radiance = float3(1,1,1);
     
    return radiance;
 }
@@ -97,16 +107,20 @@ float defineBoxSpaceInfluence(Surface surface, int id)
 
 float4 main( ConvexConnectP IN ) : SV_TARGET
 {
+    // Compute scene UV
+   float3 ssPos = IN.ssPos.xyz / IN.ssPos.w; 
+   float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
+
    //eye ray WS/LS
    float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
    float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
    
    //unpack normal and linear depth 
-   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0.xy);
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
    
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    IN.uv0.xy, eyePosWorld, wsEyeRay, cameraToWorld);	
+                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);	
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
@@ -121,22 +135,22 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
       
    for(i=0; i < numProbes; i++)
    {
-      float3 probeWS = inProbePosArray[i];
-      float3 L = probeWS - surface.P;
+        float3 probeWS = inProbePosArray[i];
+        float3 L = probeWS - surface.P;
       
-      if(useSphereMode[i])
-      {
-         float3 L = inProbePosArray[i] - surface.P;
-         blendVal[i] = 1.0-length(L)/radius[i];
-         blendVal[i] = max(0,blendVal[i]);
-      }
-      else
-      {
-         blendVal[i] = defineBoxSpaceInfluence(surface, i);
-         blendVal[i] = max(0,blendVal[i]);		
-      }
+        if(useSphereMode[i])
+        {
+            float3 L = inProbePosArray[i] - surface.P;
+            blendVal[i] = 1.0-length(L)/radius[i];
+            blendVal[i] = max(0,blendVal[i]);
+        }
+        else
+        {
+            blendVal[i] = defineBoxSpaceInfluence(surface, i);
+            blendVal[i] = max(0,blendVal[i]);		
+        }
 		blendSum += blendVal[i];
-      invBlendSum +=(1.0f - blendVal[i]);
+        invBlendSum +=(1.0f - blendVal[i]);
    }
 	
    // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
@@ -166,6 +180,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
    float3 irradiance = float3(0,0,0);
    float3 specular = float3(0,0,0);
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+   
    //energy conservation
    float3 kD = 1.0.xxx - F;
    kD *= 1.0 - surface.metalness;

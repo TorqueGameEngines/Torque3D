@@ -295,12 +295,28 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //Array rendering
    static U32 MAXPROBECOUNT = 50;
 
-   U32 probeCount = PROBEMGR->mRegisteredProbes.size();
+   U32 probeCount = ProbeRenderInst::all.size();
 
    if (probeCount != 0)
    {
+      MatrixF trans = MatrixF::Identity;
+      sgData.objTrans = &trans;
+
       AlignedArray<Point3F> probePositions(MAXPROBECOUNT, sizeof(Point3F));
+      Vector<MatrixF> probeWorldToObj;
+      AlignedArray<Point3F> probeBBMin(MAXPROBECOUNT, sizeof(Point3F));
+      AlignedArray<Point3F> probeBBMax(MAXPROBECOUNT, sizeof(Point3F));
+      AlignedArray<float> probeUseSphereMode(MAXPROBECOUNT, sizeof(float));
+      AlignedArray<float> probeRadius(MAXPROBECOUNT, sizeof(float));
+      AlignedArray<float> probeAttenuation(MAXPROBECOUNT, sizeof(float));
+
       dMemset(probePositions.getBuffer(), 0, probePositions.getBufferSize());
+      probeWorldToObj.setSize(MAXPROBECOUNT);
+      dMemset(probeBBMin.getBuffer(), 0, probeBBMin.getBufferSize());
+      dMemset(probeBBMax.getBuffer(), 0, probeBBMax.getBufferSize());
+      dMemset(probeUseSphereMode.getBuffer(), 0, probeUseSphereMode.getBufferSize());
+      dMemset(probeRadius.getBuffer(), 0, probeRadius.getBufferSize());
+      dMemset(probeAttenuation.getBuffer(), 0, probeAttenuation.getBufferSize());
 
       if (reflProbeMat && reflProbeMat->matInstance)
       {
@@ -309,12 +325,13 @@ void RenderProbeMgr::render( SceneRenderState *state )
          MaterialParameterHandle *numProbesSC = reflProbeMat->matInstance->getMaterialParameterHandle("$numProbes");
          matParams->setSafe(numProbesSC, (float)probeCount);
 
-         //ProcessedShaderMaterial* processedMat = reflProbeMat->matInstance->getProcessedShaderMaterial();
-         //GFXShaderConstBuffer* shaderConsts = processedMat->_getShaderConstBuffer(0);
-
-         //ProbeShaderConstants *psc = PROBEMGR->getProbeShaderConstants(shaderConsts);
-
          MaterialParameterHandle *probePositionSC = reflProbeMat->matInstance->getMaterialParameterHandle("$inProbePosArray");
+         MaterialParameterHandle *probeWorldToObjSC = reflProbeMat->matInstance->getMaterialParameterHandle("$worldToObjArray");
+         MaterialParameterHandle *probeBBMinSC = reflProbeMat->matInstance->getMaterialParameterHandle("$bbMinArrayy");
+         MaterialParameterHandle *probeBBMaxSC = reflProbeMat->matInstance->getMaterialParameterHandle("$bbMaxArray");
+         MaterialParameterHandle *probeUseSphereModeSC = reflProbeMat->matInstance->getMaterialParameterHandle("$useSphereMode");
+         MaterialParameterHandle *probeRadiusSC = reflProbeMat->matInstance->getMaterialParameterHandle("$radius");
+         MaterialParameterHandle *probeAttenuationSC = reflProbeMat->matInstance->getMaterialParameterHandle("$attenuation");
 
          U32 effectiveProbeCount = 0;
 
@@ -323,57 +340,34 @@ void RenderProbeMgr::render( SceneRenderState *state )
             if (effectiveProbeCount >= MAXPROBECOUNT)
                break;
 
-            ProbeRenderInst* curEntry = ProbeRenderInst::all[PROBEMGR->mRegisteredProbes[i]];
+            ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
-            /*if (!curEntry->mIsEnabled)
-               continue;
-
-            if (curEntry->numPrims == 0)
-               continue;
-
-            if (curEntry->mIsSkylight && (!skylightMat || !skylightMat->matInstance))
-               continue;
-
-            if (!curEntry->mIsSkylight && (!reflProbeMat || !reflProbeMat->matInstance))
-               break;*/
-
-               //Setup
+            //Setup
             const Point3F &probePos = curEntry->getPosition();
-            probePositions[i].x = probePos.x;
-            probePositions[i].y = probePos.y;
-            probePositions[i].z = probePos.z;
+            probePositions[i] = probePos + curEntry->mProbePosOffset;
 
-            Point3F test = probePositions[i];
+            probeWorldToObj[i] = curEntry->getTransform();
 
-            MatrixF probeTrans = curEntry->getTransform();
+            probeBBMin[i] = curEntry->mBounds.minExtents;
+            probeBBMax[i] = curEntry->mBounds.maxExtents;
 
-            //if (!curEntry->mIsSkylight)
-            {
-               //if (curEntry->mProbeShapeType == ProbeRenderInst::Sphere)
-              //    probeTrans.scale(curEntry->mRadius * 1.01f);
+            probeUseSphereMode[i] = curEntry->mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0;
 
-               sgData.objTrans = &probeTrans;
-
-               reflProbeMat->setProbeParameters(curEntry, state, worldToCameraXfm);
-            }
+            probeRadius[i] = curEntry->mRadius;
+            probeAttenuation[i] = 1;
 
             effectiveProbeCount++;
          }
 
          if (effectiveProbeCount != 0)
          {
-            //Con::printf("Probe aligned position count: %i", probeCount);
-
-            for (U32 p = 0; p < probeCount; p++)
-            {
-               Point3F prb = probePositions[p];
-
-               //Con::printf("Probe %i aligned position is: %g %g %g", p, prb.x, prb.y, prb.z);
-
-               bool tasadfh = true;
-            }
-
             matParams->set(probePositionSC, probePositions);
+            matParams->set(probeWorldToObjSC, probeWorldToObj.address(), probeWorldToObj.size());
+            matParams->set(probeBBMinSC, probeBBMin);
+            matParams->set(probeBBMaxSC, probeBBMax);
+            matParams->set(probeUseSphereModeSC, probeUseSphereMode);
+            matParams->set(probeRadiusSC, probeRadius);
+            matParams->set(probeAttenuationSC, probeAttenuation);
 
             // Set geometry
             GFX->setVertexBuffer(mFarFrustumQuadVerts);
@@ -437,7 +431,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    GFX->popActiveRenderTarget();
 
    //PROBEMGR->unregisterAllProbes();
-   PROBEMGR->mRegisteredProbes.clear();
+   //PROBEMGR->mRegisteredProbes.clear();
 
    PROFILE_END();
 

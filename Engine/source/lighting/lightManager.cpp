@@ -309,7 +309,7 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
                                           GFXShaderConstHandle *lightInvRadiusSqSC,
                                           GFXShaderConstHandle *lightSpotDirSC,
                                           GFXShaderConstHandle *lightSpotAngleSC,
-                                GFXShaderConstHandle *lightSpotFalloffSC,
+                                          GFXShaderConstHandle *lightSpotFalloffSC,
                                           GFXShaderConstBuffer *shaderConsts )
 {
    PROFILE_SCOPE( LightManager_Update4LightConsts );
@@ -324,12 +324,12 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
    {
       PROFILE_SCOPE( LightManager_Update4LightConsts_setLights );
 
-         static AlignedArray<Point4F> lightPositions( 3, sizeof( Point4F ) );
-         static AlignedArray<Point4F> lightSpotDirs( 3, sizeof( Point4F ) );
+      static AlignedArray<Point4F> lightPositions( 3, sizeof( Point4F ) );
+      static AlignedArray<Point4F> lightSpotDirs( 3, sizeof( Point4F ) );
       static AlignedArray<Point4F> lightColors( 4, sizeof( Point4F ) );
       static Point4F lightInvRadiusSq;
       static Point4F lightSpotAngle;
-     static Point4F lightSpotFalloff;
+      static Point4F lightSpotFalloff;
       F32 range;
       
       // Need to clear the buffers so that we don't leak

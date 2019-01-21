@@ -318,12 +318,14 @@ void RenderProbeMgr::render( SceneRenderState *state )
       dMemset(probeRadius.getBuffer(), 0, probeRadius.getBufferSize());
       dMemset(probeAttenuation.getBuffer(), 0, probeAttenuation.getBufferSize());
 
+      Vector<GFXCubemapHandle> cubeMaps;
+      Vector<GFXCubemapHandle> irradMaps;
+
       if (reflProbeMat && reflProbeMat->matInstance)
       {
          MaterialParameters *matParams = reflProbeMat->matInstance->getMaterialParameters();
 
          MaterialParameterHandle *numProbesSC = reflProbeMat->matInstance->getMaterialParameterHandle("$numProbes");
-         matParams->setSafe(numProbesSC, (float)probeCount);
 
          MaterialParameterHandle *probePositionSC = reflProbeMat->matInstance->getMaterialParameterHandle("$inProbePosArray");
          MaterialParameterHandle *probeWorldToObjSC = reflProbeMat->matInstance->getMaterialParameterHandle("$worldToObjArray");
@@ -332,6 +334,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
          MaterialParameterHandle *probeUseSphereModeSC = reflProbeMat->matInstance->getMaterialParameterHandle("$useSphereMode");
          MaterialParameterHandle *probeRadiusSC = reflProbeMat->matInstance->getMaterialParameterHandle("$radius");
          MaterialParameterHandle *probeAttenuationSC = reflProbeMat->matInstance->getMaterialParameterHandle("$attenuation");
+
+         MaterialParameterHandle *probeCubemapArraySC = reflProbeMat->matInstance->getMaterialParameterHandle("$cubeMap");
+         MaterialParameterHandle *probeIrradianceArraySC = reflProbeMat->matInstance->getMaterialParameterHandle("$irradianceCubemap");
 
          U32 effectiveProbeCount = 0;
 
@@ -342,11 +347,20 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
             ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
 
+            if (!curEntry->mIsEnabled)
+               continue;
+
+            if (curEntry->mCubemap.isNull() || curEntry->mIrradianceCubemap.isNull())
+               continue;
+
             //Setup
             const Point3F &probePos = curEntry->getPosition();
             probePositions[i] = probePos + curEntry->mProbePosOffset;
 
-            probeWorldToObj[i] = curEntry->getTransform();
+            MatrixF trans = curEntry->getTransform();
+            trans.inverse();
+
+            probeWorldToObj[i] = trans;
 
             probeBBMin[i] = curEntry->mBounds.minExtents;
             probeBBMax[i] = curEntry->mBounds.maxExtents;
@@ -356,11 +370,28 @@ void RenderProbeMgr::render( SceneRenderState *state )
             probeRadius[i] = curEntry->mRadius;
             probeAttenuation[i] = 1;
 
+            cubeMaps.push_back(curEntry->mCubemap);
+            irradMaps.push_back(curEntry->mIrradianceCubemap);
+
             effectiveProbeCount++;
          }
 
          if (effectiveProbeCount != 0)
          {
+            matParams->setSafe(numProbesSC, (float)effectiveProbeCount);
+
+            GFXCubemapArrayHandle mCubemapArray;
+            mCubemapArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
+
+            GFXCubemapArrayHandle mIrradArray;
+            mIrradArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
+
+            mCubemapArray->initStatic(cubeMaps.address(), cubeMaps.size());
+            mIrradArray->initStatic(irradMaps.address(), irradMaps.size());
+
+            GFX->setCubeArrayTexture(3, mCubemapArray);
+            GFX->setCubeArrayTexture(4, mIrradArray);
+
             matParams->set(probePositionSC, probePositions);
             matParams->set(probeWorldToObjSC, probeWorldToObj.address(), probeWorldToObj.size());
             matParams->set(probeBBMinSC, probeBBMin);

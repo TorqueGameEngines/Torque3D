@@ -574,8 +574,8 @@ void ReflectionProbe::processStaticCubemap()
       IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);
    }
 
-   mProbeInfo->mCubemap = &mPrefilterMap->mCubemap;
-   mProbeInfo->mIrradianceCubemap = &mIrridianceMap->mCubemap;
+   mProbeInfo->mCubemap = mPrefilterMap->mCubemap;
+   mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
 }
 
 void ReflectionProbe::updateMaterial()
@@ -588,17 +588,17 @@ void ReflectionProbe::updateMaterial()
       {
          if (mPrefilterMap != nullptr && mPrefilterMap->mCubemap.isValid())
          {
-            mProbeInfo->mCubemap = &mPrefilterMap->mCubemap;
+            mProbeInfo->mCubemap = mPrefilterMap->mCubemap;
          }
          if (mIrridianceMap != nullptr && mIrridianceMap->mCubemap.isValid())
          {
-            mProbeInfo->mIrradianceCubemap = &mIrridianceMap->mCubemap;
+            mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
          }
       }
    }
    else if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
    {
-      mProbeInfo->mCubemap = &mDynamicCubemap;
+      mProbeInfo->mCubemap = mDynamicCubemap;
    }
 
    if (mBrdfTexture.isValid())

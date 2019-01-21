@@ -71,13 +71,13 @@ ProbeRenderInst::ProbeRenderInst() : SystemInterface(),
 
 ProbeRenderInst::~ProbeRenderInst()
 {
-   if (mCubemap && mCubemap->isValid())
+   if (mCubemap && mCubemap.isValid())
    {
-      mCubemap->free();
+      mCubemap.free();
    }
-   if (mIrradianceCubemap && mIrradianceCubemap->isValid())
+   if (mIrradianceCubemap && mIrradianceCubemap.isValid())
    {
-      mIrradianceCubemap->free();
+      mIrradianceCubemap.free();
    }
    if (mBRDFTexture && mBRDFTexture->isValid())
    {
@@ -387,12 +387,12 @@ void ProbeManager::_update4ProbeConsts(   const SceneData &sgData,
          probeLocalPositions[i].y = localProbePos.y;
          probeLocalPositions[i].z = localProbePos.z;
 
-         if (probe->mCubemap && !probe->mCubemap->isNull())
+         if (probe->mCubemap && !probe->mCubemap.isNull())
          {
             S32 samplerReg = probeCubemapSC->getSamplerRegister();
 
             if(samplerReg != -1)
-               GFX->setCubeTexture(samplerReg + i, probe->mCubemap->getPointer());
+               GFX->setCubeTexture(samplerReg + i, probe->mCubemap.getPointer());
          }
       }
 
@@ -410,9 +410,9 @@ void ProbeManager::_update4ProbeConsts(   const SceneData &sgData,
    }
    else
    {
-      /*if (probe->mCubemap && !probe->mCubemap->isNull())
+      /*if (probe->mCubemap && !probe->mCubemap.isNull())
       {
-         GFX->setCubeTexture(1, probe->mCubemap->getPointer());
+         GFX->setCubeTexture(1, probe->mCubemap.getPointer());
       }*/
       if (probeCubemapSC->isValid())
       {
@@ -1007,21 +1007,21 @@ void ProbeManager::ReflectProbeMaterialInfo::setProbeParameters(const ProbeRende
    GFX->setTexture(2, matInfoTexTarget->getTexture());
 
    //Add some safety catches in the event the cubemaps aren't fully initialized yet
-   if (probeInfo->mCubemap == nullptr || probeInfo->mCubemap->isNull())
+   if (probeInfo->mCubemap == nullptr || probeInfo->mCubemap.isNull())
    {
       GFX->setCubeTexture(3, nullptr);
       matParams->setSafe(cubeMips, 2.0f);
    }
    else
    {
-      GFX->setCubeTexture(3, probeInfo->mCubemap->getPointer());
-      matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap->getPointer()->getMipMapLevels(), 2.0f));
+      GFX->setCubeTexture(3, probeInfo->mCubemap.getPointer());
+      matParams->setSafe(cubeMips, mPow(probeInfo->mCubemap.getPointer()->getMipMapLevels(), 2.0f));
    }
 
-   if (probeInfo->mIrradianceCubemap == nullptr || probeInfo->mIrradianceCubemap->isNull())
+   if (probeInfo->mIrradianceCubemap == nullptr || probeInfo->mIrradianceCubemap.isNull())
       GFX->setCubeTexture(4, nullptr);
    else
-      GFX->setCubeTexture(4, probeInfo->mIrradianceCubemap->getPointer());
+      GFX->setCubeTexture(4, probeInfo->mIrradianceCubemap.getPointer());
 
    GFX->setTexture(5, probeInfo->mBRDFTexture->getPointer());
 

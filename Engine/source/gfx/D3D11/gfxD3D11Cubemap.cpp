@@ -31,7 +31,6 @@ GFXD3D11Cubemap::GFXD3D11Cubemap() : mTexture(NULL), mSRView(NULL), mDSView(NULL
 	mDynamic = false;
    mAutoGenMips = false;
 	mFaceFormat = GFXFormatR8G8B8A8;
-
    for (U32 i = 0; i < CubeFaces; i++)
 	{
       for(U32 j=0; j < MaxMipMaps; j++)
@@ -142,7 +141,7 @@ void GFXD3D11Cubemap::initStatic(GFXTexHandle *faces)
       mSRView->GetDesc(&viewDesc);
       mMipMapLevels = viewDesc.TextureCube.MipLevels;
    }
-
+   mInitialized = true;
 }
 
 void GFXD3D11Cubemap::initStatic(DDSFile *dds)
@@ -209,6 +208,7 @@ void GFXD3D11Cubemap::initStatic(DDSFile *dds)
 	{
 		AssertFatal(false, "GFXD3D11Cubemap::initStatic(DDSFile *dds) - CreateTexture2D call failure");
 	}
+   mInitialized = true;
 }
 
 void GFXD3D11Cubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLevels)
@@ -331,7 +331,7 @@ void GFXD3D11Cubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLeve
 	}
 
    SAFE_RELEASE(depthTex);
-
+   mInitialized = true;
 }
 
 //-----------------------------------------------------------------------------

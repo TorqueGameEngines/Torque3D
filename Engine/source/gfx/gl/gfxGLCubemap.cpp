@@ -126,6 +126,7 @@ void GFXGLCubemap::initStatic(GFXTexHandle* faces)
       glGenTextures(1, &mCubemap);
       fillCubeTextures(faces);
    }
+   mInitialized = true;
 }
 
 void GFXGLCubemap::initStatic( DDSFile *dds )
@@ -179,6 +180,7 @@ void GFXGLCubemap::initStatic( DDSFile *dds )
                GFXGLTextureFormat[mFaceFormat], GFXGLTextureType[mFaceFormat], dds->mSurfaces[i]->mMips[mip]);
       }
    }
+   mInitialized = true;
 }
 
 void GFXGLCubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLevels)
@@ -220,6 +222,7 @@ void GFXGLCubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLevels)
 
     if( !isCompressed )
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    mInitialized = true;
 }
 
 void GFXGLCubemap::zombify()

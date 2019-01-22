@@ -423,10 +423,10 @@ new CustomMaterial( SkyLightMaterial )
 
 new ShaderData( ReflectionProbeArrayShader )
 {
-   DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
+   DXVertexShaderFile = "shaders/common/lighting/advanced/reflectionProbeArrayV.hlsl";
    DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
 
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/reflectionProbeArrayV.glsl";
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
 
    samplerNames[0] = "$deferredBuffer";

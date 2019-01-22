@@ -353,6 +353,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
             if (curEntry->mCubemap.isNull() || curEntry->mIrradianceCubemap.isNull())
                continue;
 
+            if (!curEntry->mCubemap->isInitialised())
+               continue;
+
             //Setup
             const Point3F &probePos = curEntry->getPosition();
             probePositions[i] = probePos + curEntry->mProbePosOffset;

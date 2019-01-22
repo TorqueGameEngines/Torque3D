@@ -26,6 +26,13 @@
 #include "gfx/gfxTextureManager.h"
 
 
+GFXCubemap::GFXCubemap()
+{
+   mPath = "";
+   mMipMapLevels = 0;
+   mInitialized = false;
+}
+
 GFXCubemap::~GFXCubemap()
 {
    // If we're not dynamic and we were loaded from a

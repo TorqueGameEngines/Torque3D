@@ -49,6 +49,7 @@ protected:
 
 
    U32 mMipMapLevels;
+   bool mInitialized;
 public:
 
    /// Create a static cubemap from a list of 6 face textures.
@@ -61,7 +62,7 @@ public:
    virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0 ) = 0;
 
    void initNormalize(U32 size);
-      
+   GFXCubemap();
    virtual ~GFXCubemap();
 
    /// Returns the size of the faces.
@@ -82,6 +83,7 @@ public:
 
    /// Get Z up face index of the cubemap. DDS files will be stored Y up
    static U32 zUpFaceIndex(const U32 index);
+   bool isInitialised() { return mInitialized; }
 };
 
 

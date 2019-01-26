@@ -41,7 +41,7 @@
 #include "gfx/util/screenspace.h"
 #include "math/util/matrixSet.h"
 
-#include "lighting/probeManager.h"
+#include "renderInstance/renderProbeMgr.h"
 
 // We need to include customMaterialDefinition for ShaderConstHandles::init
 #include "materials/customMaterialDefinition.h"

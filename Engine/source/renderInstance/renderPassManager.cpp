@@ -103,14 +103,7 @@ void OccluderRenderInst::clear()
    dMemset( this, 0, sizeof(OccluderRenderInst) );
 }
 
-void ProbeRenderInst::clear()
-{
-   dMemset(this, 0, sizeof(ProbeRenderInst));
-   //mCubemap);
-}
-
 IMPLEMENT_CONOBJECT(RenderPassManager);
-
 
 ConsoleDocClass( RenderPassManager, 
    "@brief A grouping of render bin managers which forms a render pass.\n\n"

@@ -39,7 +39,7 @@
 #include "T3D/gameFunctions.h"
 #include "postFx/postEffect.h"
 #include "renderInstance/renderProbeMgr.h"
-#include "lighting/probeManager.h"
+#include "renderInstance/renderProbeMgr.h"
 
 #include "math/util/sphereMesh.h"
 #include "materials/materialManager.h"

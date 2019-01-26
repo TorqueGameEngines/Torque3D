@@ -46,9 +46,6 @@
 #ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
-#ifndef PROBEMANAGER_H
-#include "lighting/probeManager.h"
-#endif
 
 class SceneRenderState;
 class ISceneObject;

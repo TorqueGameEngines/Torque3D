@@ -273,7 +273,7 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
       return;
 
    //Do a quick pass to update our probes if they're dirty
-   PROBEMGR->updateDirtyProbes();
+   //PROBEMGR->updateDirtyProbes();
 
    lightingTargetRef->attachTexture(GFXTextureTarget::Color0, sceneColorTargetRef->getTexture());
 

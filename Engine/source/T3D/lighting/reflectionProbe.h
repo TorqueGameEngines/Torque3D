@@ -41,8 +41,8 @@
 #include "renderInstance/renderPassManager.h"
 #endif
 
-#ifndef PROBEMANAGER_H
-#include "lighting/probeManager.h"
+#ifndef RENDER_PROBE_MGR_H
+#include "renderInstance/renderProbeMgr.h"
 #endif
 
 class BaseMatInstance;

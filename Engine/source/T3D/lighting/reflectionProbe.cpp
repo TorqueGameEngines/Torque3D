@@ -39,7 +39,7 @@
 #include "T3D/gameFunctions.h"
 #include "postFx/postEffect.h"
 #include "renderInstance/renderProbeMgr.h"
-#include "lighting/probeManager.h"
+#include "renderInstance/renderProbeMgr.h"
 
 #include "math/util/sphereMesh.h"
 #include "materials/materialManager.h"
@@ -190,7 +190,7 @@ void ReflectionProbe::initPersistFields()
          &_doBake, &defaultProtectedGetFn, "Regenerate Voxel Grid", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
    endGroup("Reflection");
 
-   Con::addVariable("$Light::renderReflectionProbes", TypeBool, &ProbeManager::smRenderReflectionProbes,
+   Con::addVariable("$Light::renderReflectionProbes", TypeBool, &RenderProbeMgr::smRenderReflectionProbes,
       "Toggles rendering of light frustums when the light is selected in the editor.\n\n"
       "@note Only works for shadow mapped lights.\n\n"
       "@ingroup Lighting");
@@ -590,15 +590,30 @@ void ReflectionProbe::updateMaterial()
          {
             mProbeInfo->mCubemap = mPrefilterMap->mCubemap;
          }
+         else
+         {
+            mEnabled = false;
+         }
          if (mIrridianceMap != nullptr && mIrridianceMap->mCubemap.isValid())
          {
             mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
          }
+         else
+         {
+            mEnabled = false;
+         }
       }
    }
-   else if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
+   else
    {
-      mProbeInfo->mCubemap = mDynamicCubemap;
+      if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
+      {
+         mProbeInfo->mCubemap = mDynamicCubemap;
+      }
+      else
+      {
+         mEnabled = false;
+      }
    }
 
    if (mBrdfTexture.isValid())
@@ -673,7 +688,7 @@ void ReflectionProbe::generateTextures()
 
 void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 {
-   if (!mEnabled || !ProbeManager::smRenderReflectionProbes)
+   if (!mEnabled || !RenderProbeMgr::smRenderReflectionProbes)
       return;
 
    Point3F distVec = getRenderPosition() - state->getCameraPosition();
@@ -787,7 +802,7 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
    SceneRenderState *state,
    BaseMatInstance *overrideMat)
 {
-   if (!ProbeManager::smRenderReflectionProbes)
+   if (!RenderProbeMgr::smRenderReflectionProbes)
       return;
 
    GFXDrawUtil *draw = GFX->getDrawUtil();
@@ -948,10 +963,10 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
 
    //Set this to true to use the prior method where it goes through the SPT_Reflect path for the bake
 
-   bool probeRenderState = ProbeManager::smRenderReflectionProbes;
+   bool probeRenderState = RenderProbeMgr::smRenderReflectionProbes;
 
    if (!renderWithProbes)
-      ProbeManager::smRenderReflectionProbes = false;
+      RenderProbeMgr::smRenderReflectionProbes = false;
 
    for (U32 i = 0; i < 6; ++i)
    {
@@ -1070,7 +1085,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
    }
 
    if(!renderWithProbes)
-      ProbeManager::smRenderReflectionProbes = probeRenderState;
+      RenderProbeMgr::smRenderReflectionProbes = probeRenderState;
 
    setMaskBits(-1);
 

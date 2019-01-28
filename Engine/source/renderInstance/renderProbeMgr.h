@@ -280,6 +280,7 @@ protected:
       GFXShaderConstHandle *probeLocalPosSC,
       GFXShaderConstBuffer *shaderConsts);
 
+      GFXTextureObject * mBrdfTexture;
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);

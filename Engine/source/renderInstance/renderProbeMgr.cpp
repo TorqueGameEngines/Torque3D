@@ -35,6 +35,7 @@
 #include "shaderGen/shaderGenVars.h"
 #include "materials/shaderData.h"
 
+#include "gfx/gfxTextureManager.h"
 IMPLEMENT_CONOBJECT(RenderProbeMgr);
 
 ConsoleDocClass( RenderProbeMgr, 
@@ -243,6 +244,8 @@ RenderProbeMgr::RenderProbeMgr()
    mLastShader(nullptr),
    mLastConstants(nullptr)
 {
+   String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/pbr/brdfTexture.dds");
+   mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);
 }
 
 RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder)
@@ -786,6 +789,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
             GFX->setCubeArrayTexture(3, mCubemapArray);
             GFX->setCubeArrayTexture(4, mIrradArray);
+            GFX->setTexture(5, mBrdfTexture);
 
             matParams->set(probePositionSC, probePositions);
             matParams->set(probeWorldToObjSC, probeWorldToObj.address(), probeWorldToObj.size());

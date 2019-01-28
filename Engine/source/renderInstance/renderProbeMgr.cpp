@@ -721,7 +721,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
          MaterialParameterHandle *probePositionSC = reflProbeMat->matInstance->getMaterialParameterHandle("$inProbePosArray");
          MaterialParameterHandle *probeWorldToObjSC = reflProbeMat->matInstance->getMaterialParameterHandle("$worldToObjArray");
-         MaterialParameterHandle *probeBBMinSC = reflProbeMat->matInstance->getMaterialParameterHandle("$bbMinArrayy");
+         MaterialParameterHandle *probeBBMinSC = reflProbeMat->matInstance->getMaterialParameterHandle("$bbMinArray");
          MaterialParameterHandle *probeBBMaxSC = reflProbeMat->matInstance->getMaterialParameterHandle("$bbMaxArray");
          MaterialParameterHandle *probeUseSphereModeSC = reflProbeMat->matInstance->getMaterialParameterHandle("$useSphereMode");
          MaterialParameterHandle *probeRadiusSC = reflProbeMat->matInstance->getMaterialParameterHandle("$radius");

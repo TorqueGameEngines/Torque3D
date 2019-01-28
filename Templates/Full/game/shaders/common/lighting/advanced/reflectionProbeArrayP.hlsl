@@ -65,8 +65,7 @@ float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
    cubeN.z *=-1;
-   //return TORQUE_TEXCUBEARRAYLOD(irradianceCubemap,cubeN,id,0).xyz;
-   return float3(1,1,1);
+   return TORQUE_TEXCUBEARRAYLOD(irradianceCubemap,cubeN,id,0).xyz;
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
@@ -82,8 +81,7 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float3 cubeR = normalize(r);
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
 	
-   //float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMap,cubeR,id,lod).xyz * (brdf.x + brdf.y);
-   float3 radiance = float3(1,1,1);
+   float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMap,cubeR,lod,id).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
@@ -150,7 +148,7 @@ float4 main( ConvexConnectP IN ) : SV_TARGET
             blendVal[i] = max(0,blendVal[i]);		
         }
 		blendSum += blendVal[i];
-        invBlendSum +=(1.0f - blendVal[i]);
+      invBlendSum +=(1.0f - blendVal[i]);
    }
 	
    // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.

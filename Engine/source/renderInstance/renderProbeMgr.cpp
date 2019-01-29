@@ -741,7 +741,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
                break;
 
             ProbeRenderInst* curEntry = ProbeRenderInst::all[i];
-
             if (!curEntry->mIsEnabled)
                continue;
 
@@ -750,6 +749,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
             if (!curEntry->mCubemap->isInitialised())
                continue;
+
 
             //Setup
             const Point3F &probePos = curEntry->getPosition();
@@ -787,9 +787,22 @@ void RenderProbeMgr::render( SceneRenderState *state )
             mCubemapArray->initStatic(cubeMaps.address(), cubeMaps.size());
             mIrradArray->initStatic(irradMaps.address(), irradMaps.size());
 
-            GFX->setCubeArrayTexture(3, mCubemapArray);
-            GFX->setCubeArrayTexture(4, mIrradArray);
-            GFX->setTexture(5, mBrdfTexture);
+            NamedTexTarget *deferredTarget = NamedTexTarget::find(RenderDeferredMgr::BufferName);
+            if (deferredTarget)
+               GFX->setTexture(0, deferredTarget->getTexture());
+
+            NamedTexTarget *colorTarget = NamedTexTarget::find(RenderDeferredMgr::ColorBufferName);
+            if (colorTarget)
+               GFX->setTexture(1, colorTarget->getTexture());
+
+            NamedTexTarget *matinfoTarget = NamedTexTarget::find(RenderDeferredMgr::MatInfoBufferName);
+            if (matinfoTarget)
+               GFX->setTexture(2, matinfoTarget->getTexture());
+
+            GFX->setTexture(3, mBrdfTexture);
+
+            GFX->setCubeArrayTexture(4, mCubemapArray);
+            GFX->setCubeArrayTexture(5, mIrradArray);
 
             matParams->set(probePositionSC, probePositions);
             matParams->set(probeWorldToObjSC, probeWorldToObj.address(), probeWorldToObj.size());

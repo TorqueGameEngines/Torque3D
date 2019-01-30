@@ -729,10 +729,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
          MaterialParameterHandle *probeUseSphereModeSC = reflProbeMat->matInstance->getMaterialParameterHandle("$useSphereMode");
          MaterialParameterHandle *probeRadiusSC = reflProbeMat->matInstance->getMaterialParameterHandle("$radius");
          MaterialParameterHandle *probeAttenuationSC = reflProbeMat->matInstance->getMaterialParameterHandle("$attenuation");
-
-         MaterialParameterHandle *probeCubemapArraySC = reflProbeMat->matInstance->getMaterialParameterHandle("$cubeMap");
-         MaterialParameterHandle *probeIrradianceArraySC = reflProbeMat->matInstance->getMaterialParameterHandle("$irradianceCubemap");
-
+         
          U32 effectiveProbeCount = 0;
 
          for (U32 i = 0; i < probeCount; i++)
@@ -790,16 +787,28 @@ void RenderProbeMgr::render( SceneRenderState *state )
             NamedTexTarget *deferredTarget = NamedTexTarget::find(RenderDeferredMgr::BufferName);
             if (deferredTarget)
                GFX->setTexture(0, deferredTarget->getTexture());
+            else
+               GFX->setTexture(0, NULL);
 
             NamedTexTarget *colorTarget = NamedTexTarget::find(RenderDeferredMgr::ColorBufferName);
             if (colorTarget)
                GFX->setTexture(1, colorTarget->getTexture());
+            else
+               GFX->setTexture(1, NULL);
 
             NamedTexTarget *matinfoTarget = NamedTexTarget::find(RenderDeferredMgr::MatInfoBufferName);
             if (matinfoTarget)
                GFX->setTexture(2, matinfoTarget->getTexture());
+            else
+               GFX->setTexture(2, NULL);
 
-            GFX->setTexture(3, mBrdfTexture);
+            if (mBrdfTexture)
+            {
+               GFX->setTexture(3, mBrdfTexture);
+            }
+            else
+               GFX->setTexture(3, NULL);
+
 
             GFX->setCubeArrayTexture(4, mCubemapArray);
             GFX->setCubeArrayTexture(5, mIrradArray);

@@ -34,8 +34,8 @@ uniform float cubeMips;
 #define MAX_PROBES 50
 
 uniform float numProbes;
-TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMap, 4);
-TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemap, 5);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 uniform float3    inProbePosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float3    bbMinArray[MAX_PROBES];
@@ -65,8 +65,7 @@ float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
    cubeN.z *=-1;
-   //return TORQUE_TEXCUBEARRAYLOD(irradianceCubemap,cubeN,id,0).xyz;
-   return float3(1,1,1);
+   return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
@@ -82,8 +81,7 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float3 cubeR = normalize(r);
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
 	
-   //float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMap,cubeR,id,lod).xyz * (brdf.x + brdf.y);
-   float3 radiance = float3(1,1,1);
+   float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }

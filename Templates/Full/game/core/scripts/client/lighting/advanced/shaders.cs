@@ -293,7 +293,7 @@ new ShaderData( ReflectionProbeShader )
    samplerNames[4] = "$irradianceCubemap";
    samplerNames[5] = "$BRDFTexture";*/
    
-   DXVertexShaderFile = "shaders/common/lighting/advanced/reflectionProbeArrayV.hlsl";
+   DXVertexShaderFile = "shaders/common/lighting/advanced/farFrustumQuadV.hlsl";
    DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
 
    OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/reflectionProbeArrayV.glsl";
@@ -302,9 +302,9 @@ new ShaderData( ReflectionProbeShader )
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$colorBuffer";
    samplerNames[2] = "$matInfoBuffer";
-   samplerNames[3] = "$cubeMap";
-   samplerNames[4] = "$irradianceCubemap";
-   samplerNames[5] = "$BRDFTexture";
+   samplerNames[3] = "$BRDFTexture";
+   samplerNames[4] = "$cubeMap";
+   samplerNames[5] = "$irradianceCubemap";
    
    pixVersion = 3.0;
 };

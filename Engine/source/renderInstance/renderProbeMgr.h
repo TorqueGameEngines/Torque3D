@@ -265,7 +265,8 @@ protected:
    /// The current active light manager.
    static RenderProbeMgr *smProbeManager;
 
-   GFXVertexBufferHandle<GFXVertexPC> mFarFrustumQuadVerts;
+   typedef GFXVertexPNTT FarFrustumQuadVert;
+   GFXVertexBufferHandle<FarFrustumQuadVert> mFarFrustumQuadVerts;
 
    /// This helper function sets the shader constansts
    /// for the stock 4 light forward lighting code.

@@ -293,10 +293,10 @@ new ShaderData( ReflectionProbeShader )
    samplerNames[4] = "$irradianceCubemap";
    samplerNames[5] = "$BRDFTexture";*/
    
-   DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
+   DXVertexShaderFile = "shaders/common/lighting/advanced/reflectionProbeArrayV.hlsl";
    DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
 
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/reflectionProbeArrayV.glsl";
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
 
    samplerNames[0] = "$deferredBuffer";
@@ -337,9 +337,9 @@ new GFXStateBlockData( AL_ProbeState )
    samplerStates[2] = SamplerClampLinear;
    mSamplerNames[2] = "matInfoBuffer";   
 
-   mSamplerNames[3] = "cubeMap";
-   mSamplerNames[4] = "irradianceCubemap";
-   mSamplerNames[5] = "BRDFTexture";
+   mSamplerNames[3] = "BRDFTexture";
+   mSamplerNames[4] = "cubeMap";
+   mSamplerNames[5] = "irradianceCubemap";
    
    cullDefined = true;
    cullMode = GFXCullCW;
@@ -432,9 +432,9 @@ new ShaderData( ReflectionProbeArrayShader )
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$colorBuffer";
    samplerNames[2] = "$matInfoBuffer";
-   samplerNames[3] = "$cubeMap";
-   samplerNames[4] = "$irradianceCubemap";
-   samplerNames[5] = "$BRDFTexture";
+   samplerNames[3] = "$BRDFTexture";
+   samplerNames[4] = "$cubeMap";
+   samplerNames[5] = "$irradianceCubemap";
    
    pixVersion = 3.0;
 };
@@ -445,7 +445,9 @@ new CustomMaterial( ReflectionProbeArrayMaterial )
    stateBlock = AL_ProbeState;
    
    sampler["deferredBuffer"] = "#deferred";
+   sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
+   sampler["BRDFTexture"] = "core/art/pbr/brdfTexture.dds";
    
    pixVersion = 3.0;
 };

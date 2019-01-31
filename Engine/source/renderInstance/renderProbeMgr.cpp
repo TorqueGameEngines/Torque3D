@@ -679,7 +679,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    }*/
 
    //Array rendering
-   static U32 MAXPROBECOUNT = 50;
+   static U32 MAXPROBECOUNT = 1;// 50;
 
    U32 probeCount = ProbeRenderInst::all.size();
 
@@ -688,7 +688,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
       MatrixF trans = MatrixF::Identity;
       sgData.objTrans = &trans;
 
-      AlignedArray<Point3F> probePositions(MAXPROBECOUNT, sizeof(Point3F));
+      /*AlignedArray<Point3F> probePositions(MAXPROBECOUNT, sizeof(Point3F));
       Vector<MatrixF> probeWorldToObj;
       AlignedArray<Point3F> probeBBMin(MAXPROBECOUNT, sizeof(Point3F));
       AlignedArray<Point3F> probeBBMax(MAXPROBECOUNT, sizeof(Point3F));
@@ -705,7 +705,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
       dMemset(probeAttenuation.getBuffer(), 0, probeAttenuation.getBufferSize());
 
       Vector<GFXCubemapHandle> cubeMaps;
-      Vector<GFXCubemapHandle> irradMaps;
+      Vector<GFXCubemapHandle> irradMaps;*/
 
       if (reflProbeMat && reflProbeMat->matInstance)
       {
@@ -721,7 +721,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
          MaterialParameterHandle *probeRadiusSC = reflProbeMat->matInstance->getMaterialParameterHandle("$radius");
          MaterialParameterHandle *probeAttenuationSC = reflProbeMat->matInstance->getMaterialParameterHandle("$attenuation");
          
-         U32 effectiveProbeCount = 0;
+         /*U32 effectiveProbeCount = 0;
 
          for (U32 i = 0; i < probeCount; i++)
          {
@@ -763,17 +763,17 @@ void RenderProbeMgr::render( SceneRenderState *state )
          }
 
          if (effectiveProbeCount != 0)
-         {
-            matParams->setSafe(numProbesSC, (float)effectiveProbeCount);
+         {*/
+            //matParams->setSafe(numProbesSC, (float)effectiveProbeCount);
 
-            GFXCubemapArrayHandle mCubemapArray;
+            /*GFXCubemapArrayHandle mCubemapArray;
             mCubemapArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
             GFXCubemapArrayHandle mIrradArray;
             mIrradArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
             mCubemapArray->initStatic(cubeMaps.address(), cubeMaps.size());
-            mIrradArray->initStatic(irradMaps.address(), irradMaps.size());
+            mIrradArray->initStatic(irradMaps.address(), irradMaps.size());*/
 
             NamedTexTarget *deferredTarget = NamedTexTarget::find(RenderDeferredMgr::BufferName);
             if (deferredTarget)
@@ -801,11 +801,27 @@ void RenderProbeMgr::render( SceneRenderState *state )
                GFX->setTexture(3, NULL);
 
 
-            GFX->setCubeArrayTexture(4, mCubemapArray);
-            GFX->setCubeArrayTexture(5, mIrradArray);
+            //GFX->setCubeArrayTexture(4, mCubemapArray);
+            //GFX->setCubeArrayTexture(5, mIrradArray);
 
-            matParams->set(probePositionSC, probePositions);
-            matParams->set(probeWorldToObjSC, probeWorldToObj.address(), probeWorldToObj.size());
+            ProbeRenderInst* curEntry = ProbeRenderInst::all[0];
+
+            Point3F probePosition = curEntry->getPosition();
+
+            MatrixF probeWorldToObj = curEntry->getTransform();
+            probeWorldToObj.inverse();
+
+            Point3F probeBBMin = curEntry->mBounds.minExtents;
+            Point3F probeBBMax = curEntry->mBounds.maxExtents;
+            float probeUseSphereMode = 0;
+            float probeRadius = curEntry->mRadius;
+            float probeAttenuation = 1;
+
+            GFX->setCubeTexture(4, curEntry->mCubemap);
+            GFX->setCubeTexture(5, curEntry->mIrradianceCubemap);
+
+            matParams->set(probePositionSC, probePosition);
+            matParams->set(probeWorldToObjSC, probeWorldToObj);
             matParams->set(probeBBMinSC, probeBBMin);
             matParams->set(probeBBMaxSC, probeBBMax);
             matParams->set(probeUseSphereModeSC, probeUseSphereMode);
@@ -825,7 +841,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
                GFX->drawPrimitive(GFXTriangleStrip, 0, 2);
             }
-         }
+         //}
       }
    }
    //

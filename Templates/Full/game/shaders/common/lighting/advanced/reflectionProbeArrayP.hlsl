@@ -4,13 +4,6 @@
 #include "../../lighting.hlsl"
 #include "../../torque.hlsl"
 
-struct ConvexConnectP
-{
-   float4 pos : TORQUE_POSITION;
-   float4 uv0 : TEXCOORD1;
-   float4 vsEyeDir : TEXCOORD2;
-};
-
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 1);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 2);
@@ -95,22 +88,15 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     return max(localDir.x, max(localDir.y, localDir.z)) * -1;
 }
 
-float4 main( ConvexConnectP IN ) : SV_TARGET
+float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
 {
-    // Compute scene UV
-   //float3 ssPos = IN.ssPos.xyz / IN.ssPos.w; 
-   //float2 IN.uv0 = getUVFromSSPos( ssPos, rtParams0 );
-
-   //eye ray WS/LS
-   float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
-   float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
-   
    //unpack normal and linear depth 
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0.xy);
    
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    IN.uv0.xy, eyePosWorld, wsEyeRay, cameraToWorld);	
+                                    IN.uv0.xy, eyePosWorld, IN.wsEyeRay, cameraToWorld);
+
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   

@@ -16,18 +16,18 @@ uniform float3 eyePosWorld;
 
 //cubemap arrays require all the same size. so shared mips# value
 uniform float cubeMips;
-#define MAX_PROBES 1 //50
+#define MAX_PROBES 50
 
 uniform float numProbes;
 TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
-uniform float3    inProbePosArray;
-uniform float4x4  worldToObjArray;
-uniform float3    bbMinArray;
-uniform float3    bbMaxArray;
-uniform float     useSphereMode;
-uniform float     radius;
-uniform float2    attenuation;
+uniform float4    inProbePosArray[MAX_PROBES];
+uniform float4x4  worldToObjArray[MAX_PROBES];
+uniform float4    bbMinArray[MAX_PROBES];
+uniform float4    bbMaxArray[MAX_PROBES];
+uniform float     useSphereMode[MAX_PROBES];
+uniform float     radius[MAX_PROBES];
+uniform float2    attenuation[MAX_PROBES];
 
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
@@ -46,14 +46,14 @@ float3 boxProject(float3 wsPosition, float3 reflectDir, float3 boxWSPos, float3 
    return posonbox - boxWSPos;
 }
 
-float3 iblBoxDiffuse( Surface surface)
+float3 iblBoxDiffuse( Surface surface, int id)
 {
-   float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray, bbMinArray, bbMaxArray);
+   float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
    return TORQUE_TEXCUBELOD(irradianceCubemapAR,float4(cubeN,0)).xyz;
 }
 
-float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture))
+float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
 {
    float ndotv = clamp(dot(surface.N, surfToEye), 0.0, 1.0);
 
@@ -64,20 +64,20 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float lod = surface.roughness*cubeMips;
    float3 r = reflect(surfToEye, surface.N);
    float3 cubeR = normalize(r);
-   cubeR = boxProject(surface.P, surface.N, inProbePosArray, bbMinArray, bbMaxArray);
+   cubeR = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 	
    float3 radiance = TORQUE_TEXCUBELOD(cubeMapAR,float4(cubeR,lod)).xyz * (brdf.x + brdf.y);
 
    return radiance;
 }
 
-float defineBoxSpaceInfluence(Surface surface)
+float defineBoxSpaceInfluence(Surface surface, int id)
 {
     float tempAttenVal = 3.5; //replace with per probe atten
-    float3 surfPosLS = mul( worldToObjArray, float4(surface.P,1.0)).xyz;
+    float3 surfPosLS = mul( worldToObjArray[id], float4(surface.P,1.0)).xyz;
 
-    float3 boxMinLS = inProbePosArray-(float3(1,1,1)*radius);
-    float3 boxMaxLS = inProbePosArray+(float3(1,1,1)*radius);
+    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0]);
+    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0]);
 
     float boxOuterRange = length(boxMaxLS - boxMinLS);
     float boxInnerRange = boxOuterRange / tempAttenVal;
@@ -102,62 +102,52 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
    {   
       discard;
    }                                    
-	float blendVal;
+	
+   float blendVal[MAX_PROBES];
    float3 surfToEye = normalize(surface.P - eyePosWorld);
 
-   int i;
-	float blendSum = 0;
-	float invBlendSum = 0;
+   int i = 0;
+   float blendSum = 0;
+   float invBlendSum = 0;
       
-   /*for(i=0; i < numProbes; i++)
+   for(i=0; i < numProbes; i++)
    {
-        float3 probeWS = inProbePosArray[i];
+        float3 probeWS = inProbePosArray[i].xyz;
         float3 L = probeWS - surface.P;
       
-        if(useSphereMode[i])
+        /*if(useSphereMode[i])
         {
-            float3 L = inProbePosArray[i] - surface.P;
+            float3 L = inProbePosArray[i].xyz - surface.P;
             blendVal[i] = 1.0-length(L)/radius[i];
             blendVal[i] = max(0,blendVal[i]);
         }
         else
-        {
+        {*/
             blendVal[i] = defineBoxSpaceInfluence(surface, i);
             blendVal[i] = max(0,blendVal[i]);		
-        }
+        //}
 		blendSum += blendVal[i];
         invBlendSum +=(1.0f - blendVal[i]);
-   }*/
-
-    if(useSphereMode)
-    {
-        float3 L = inProbePosArray - surface.P;
-        blendVal = 1.0-length(L)/radius;
-        blendVal = max(0,blendVal);
-    }
-    else
-    {
-        blendVal = defineBoxSpaceInfluence(surface);
-        blendVal = max(0,blendVal);		
-    }
+   }
 	
    // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
    // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
    // respect constraint B.
    // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
    // and respect constraint A.
-   /*for(i=0; i < numProbes; i++)
+   for(i=0; i < numProbes; i++)
    {
       blendVal[i] = (1.0f - ( blendVal[i] / blendSum)) / (numProbes - 1);
       blendVal[i] *= ((1.0f - blendVal[i]) / invBlendSum);
       blendSum += blendVal[i];
-   }*/
+   }
 
-   //float asdasg = defineBoxSpaceInfluence(surface, 0);
-   //return float4(asdasg,asdasg,asdasg,1);
+   float finalSum = blendSum;
+
+   //return float4(finalSum,finalSum,finalSum, 1);
 
     // Normalize blendVal
-   /*if (blendSum == 0.0f) // Possible with custom weight
+   if (blendSum == 0.0f) // Possible with custom weight
    {
       blendSum = 1.0f;
    }
@@ -166,7 +156,7 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
    for (i = 0; i < numProbes; ++i)
    {
       blendVal[i] *= invBlendSumWeighted;
-   }*/
+   }
     
    float3 irradiance = float3(0,0,0);
    float3 specular = float3(0,0,0);
@@ -175,12 +165,12 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
    //energy conservation
    float3 kD = 1.0.xxx - F;
    kD *= 1.0 - surface.metalness;
-   //for (i = 0; i < numProbes; ++i)
-   //{
-      irradiance = blendVal*iblBoxDiffuse(surface);
+   for (i = 0; i < numProbes; ++i)
+   {
+      irradiance += blendVal[i]*iblBoxDiffuse(surface,i);
       
-      specular = blendVal*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture));
-   //}
+      specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
+   }
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
 	float4 finalColor = float4(diffuse + specular * surface.ao, 1);

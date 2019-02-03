@@ -296,7 +296,7 @@ new ShaderData( ReflectionProbeShader )
    DXVertexShaderFile = "shaders/common/lighting/advanced/farFrustumQuadV.hlsl";
    DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
 
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/reflectionProbeArrayV.glsl";
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/farFrustumQuadV.glsl";
    OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
 
    samplerNames[0] = "$deferredBuffer";

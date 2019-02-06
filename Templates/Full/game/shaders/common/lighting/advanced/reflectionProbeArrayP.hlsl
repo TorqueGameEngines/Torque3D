@@ -21,10 +21,10 @@ uniform float cubeMips;
 uniform float numProbes;
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
-uniform float3    inProbePosArray[MAX_PROBES];
+uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
-uniform float3    bbMinArray[MAX_PROBES];
-uniform float3    bbMaxArray[MAX_PROBES];
+uniform float4    bbMinArray[MAX_PROBES];
+uniform float4    bbMaxArray[MAX_PROBES];
 uniform float     useSphereMode[MAX_PROBES];
 uniform float     radius[MAX_PROBES];
 uniform float2    attenuation[MAX_PROBES];
@@ -48,7 +48,7 @@ float3 boxProject(float3 wsPosition, float3 reflectDir, float3 boxWSPos, float3 
 
 float3 iblBoxDiffuse( Surface surface, int id)
 {
-   float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
+   float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
    return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
 }
@@ -64,7 +64,7 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float lod = surface.roughness*cubeMips;
    float3 r = reflect(surfToEye, surface.N);
    float3 cubeR = normalize(r);
-   cubeR = boxProject(surface.P, surface.N, inProbePosArray[id], bbMinArray[id], bbMaxArray[id]);
+   cubeR = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 	
    float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
     
@@ -76,8 +76,8 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     float tempAttenVal = 3.5; //replace with per probe atten
     float3 surfPosLS = mul( worldToObjArray[id], float4(surface.P,1.0)).xyz;
 
-    float3 boxMinLS = inProbePosArray[id]-(float3(1,1,1)*radius[id]);
-    float3 boxMaxLS = inProbePosArray[id]+(float3(1,1,1)*radius[id]);
+    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0]);
+    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0]);
 
     float boxOuterRange = length(boxMaxLS - boxMinLS);
     float boxInnerRange = boxOuterRange / tempAttenVal;
@@ -105,18 +105,18 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
 	float blendVal[MAX_PROBES];
    float3 surfToEye = normalize(surface.P - eyePosWorld);
 
-   int i;
+   int i = 0;
 	float blendSum = 0;
 	float invBlendSum = 0;
       
    for(i=0; i < numProbes; i++)
    {
-        float3 probeWS = inProbePosArray[i];
+        float3 probeWS = inProbePosArray[i].xyz;
         float3 L = probeWS - surface.P;
       
         if(useSphereMode[i])
         {
-            float3 L = inProbePosArray[i] - surface.P;
+            float3 L = inProbePosArray[i].xyz - surface.P;
             blendVal[i] = 1.0-length(L)/radius[i];
             blendVal[i] = max(0,blendVal[i]);
         }

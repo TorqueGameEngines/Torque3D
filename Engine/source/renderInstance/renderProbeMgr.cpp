@@ -246,6 +246,36 @@ RenderProbeMgr::RenderProbeMgr()
 {
    String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/pbr/brdfTexture.dds");
    mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);
+
+   probePositions.setSize(MAXPROBECOUNT);
+   probePositions.fill(Point3F::Zero);
+
+   probeWorldToObj.setSize(MAXPROBECOUNT);
+   probeWorldToObj.fill(MatrixF::Identity);
+
+   probeBBMin.setSize(MAXPROBECOUNT);
+   probeBBMin.fill(Point3F::Zero);
+
+   probeBBMax.setSize(MAXPROBECOUNT);
+   probeBBMax.fill(Point3F::Zero);
+
+   probeUseSphereMode.setSize(MAXPROBECOUNT);
+   probeUseSphereMode.fill(0.0f);
+
+   probeRadius.setSize(MAXPROBECOUNT);
+   probeRadius.fill(0.0f);
+
+   probeAttenuation.setSize(MAXPROBECOUNT);
+   probeAttenuation.fill(0.0f);
+
+   cubeMaps.setSize(MAXPROBECOUNT);
+   cubeMaps.fill(NULL);
+
+   irradMaps.setSize(MAXPROBECOUNT);
+   irradMaps.fill(NULL);
+
+   GFXCubemapArrayHandle mCubemapArray;
+   GFXCubemapArrayHandle mIrradArray;
 }
 
 RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder)
@@ -662,44 +692,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
       return;
    MatrixF trans = MatrixF::Identity;
    sgData.objTrans = &trans;
-
-   Vector<Point3F> probePositions;
-   Vector<MatrixF> probeWorldToObj;
-   Vector<Point3F> probeBBMin;
-   Vector<Point3F> probeBBMax;
-   Vector<float> probeUseSphereMode;
-   Vector<float> probeRadius;
-   Vector<float> probeAttenuation;
-   Vector<GFXCubemapHandle> cubeMaps;
-   Vector<GFXCubemapHandle> irradMaps;
-
-   probePositions.setSize(MAXPROBECOUNT);
-   probePositions.fill(Point3F::Zero);
-
-   probeWorldToObj.setSize(MAXPROBECOUNT);
-   probeWorldToObj.fill(MatrixF::Identity);
-
-   probeBBMin.setSize(MAXPROBECOUNT);
-   probeBBMin.fill(Point3F::Zero);
-
-   probeBBMax.setSize(MAXPROBECOUNT);
-   probeBBMax.fill(Point3F::Zero);
-
-   probeUseSphereMode.setSize(MAXPROBECOUNT);
-   probeUseSphereMode.fill(0.0f);
-
-   probeRadius.setSize(MAXPROBECOUNT);
-   probeRadius.fill(0.0f);
-
-   probeAttenuation.setSize(MAXPROBECOUNT);
-   probeAttenuation.fill(0.0f);
-
-   cubeMaps.setSize(MAXPROBECOUNT);
-   cubeMaps.fill(NULL);
-
-   irradMaps.setSize(MAXPROBECOUNT);
-   irradMaps.fill(NULL);
-
+   
    U32 effectiveProbeCount = 0;
 
    for (U32 i = 0; i < probeCount; i++)
@@ -748,10 +741,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
       U32 count = effectiveProbeCount;
       matParams->setSafe(numProbesSC, (float)effectiveProbeCount);
 
-      GFXCubemapArrayHandle mCubemapArray;
       mCubemapArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
-
-      GFXCubemapArrayHandle mIrradArray;
       mIrradArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
       mCubemapArray->initStatic(cubeMaps.address(), count);

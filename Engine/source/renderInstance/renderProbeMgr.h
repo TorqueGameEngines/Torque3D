@@ -48,6 +48,8 @@
 #include "postFx/postEffectCommon.h"
 #endif
 
+static U32 MAXPROBECOUNT = 50;
+
 struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
 {
    LinearColorF mAmbient;
@@ -282,6 +284,21 @@ protected:
       GFXShaderConstBuffer *shaderConsts);
 
       GFXTextureObject * mBrdfTexture;
+
+      //Array rendering
+
+      Vector<Point3F> probePositions;
+      Vector<MatrixF> probeWorldToObj;
+      Vector<Point3F> probeBBMin;
+      Vector<Point3F> probeBBMax;
+      Vector<float> probeUseSphereMode;
+      Vector<float> probeRadius;
+      Vector<float> probeAttenuation;
+      Vector<GFXCubemapHandle> cubeMaps;
+      Vector<GFXCubemapHandle> irradMaps;
+
+      GFXCubemapArrayHandle mCubemapArray;
+      GFXCubemapArrayHandle mIrradArray;
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);

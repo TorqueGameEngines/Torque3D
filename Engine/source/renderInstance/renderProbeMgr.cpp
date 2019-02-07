@@ -273,9 +273,6 @@ RenderProbeMgr::RenderProbeMgr()
 
    irradMaps.setSize(MAXPROBECOUNT);
    irradMaps.fill(NULL);
-
-   GFXCubemapArrayHandle mCubemapArray;
-   GFXCubemapArrayHandle mIrradArray;
 }
 
 RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder)
@@ -684,8 +681,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
    MaterialParameterHandle *probeAttenuationSC = reflProbeMat->matInstance->getMaterialParameterHandle("$attenuation");
 
    //Array rendering
-   static U32 MAXPROBECOUNT = 50;
-
    U32 probeCount = ProbeRenderInst::all.size();
 
    if (probeCount == 0)

@@ -770,7 +770,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
       GFX->setCubeArrayTexture(4, mCubemapArray);
       GFX->setCubeArrayTexture(5, mIrradArray);
-      
+      count = MAXPROBECOUNT;
       //Final packing
       AlignedArray<Point4F> _probePositions(count, sizeof(Point4F), (U8*)probePositions.address(), false);
       AlignedArray<Point4F> _probeBBMin(count, sizeof(Point4F), (U8*)probeBBMin.address(), false);

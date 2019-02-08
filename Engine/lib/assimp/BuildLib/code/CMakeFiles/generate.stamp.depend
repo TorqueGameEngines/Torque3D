@@ -1,0 +1,5 @@
+# CMake generation dependency list for this directory.
+F:/assimp/BLD/Engine/lib/assimp/code/CMakeLists.txt
+F:/assimp/BLD/Engine/lib/assimp/cmake-modules/FindRT.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/FindPackageMessage.cmake

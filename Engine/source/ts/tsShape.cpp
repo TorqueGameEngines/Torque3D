@@ -41,6 +41,10 @@
 extern TSShape* loadColladaShape(const Torque::Path &path);
 #endif
 
+#ifdef TORQUE_ASSIMP
+extern TSShape* assimpLoadShape(const Torque::Path &path);
+#endif
+
 /// most recent version -- this is the version we write
 S32 TSShape::smVersion = 28;
 /// the version currently being read...valid only during a read
@@ -2163,9 +2167,23 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
    }
    else
    {
-      Con::errorf( "Resource<TSShape>::create - '%s' has an unknown file format", path.getFullPath().c_str() );
-      delete ret;
-      return NULL;
+      //Con::errorf( "Resource<TSShape>::create - '%s' has an unknown file format", path.getFullPath().c_str() );
+      //delete ret;
+      //return NULL;
+
+      // andrewmac: Open Asset Import Library
+#ifdef TORQUE_ASSIMP
+      ret = assimpLoadShape(path);
+      readSuccess = (ret != NULL);
+#endif
+
+      // andrewmac : I could have used another conditional macro but I think this is suffice:
+      if (!readSuccess)
+      {
+         Con::errorf("Resource<TSShape>::create - '%s' has an unknown file format", path.getFullPath().c_str());
+         delete ret;
+         return NULL;
+      }
    }
 
    if( !readSuccess )

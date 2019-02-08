@@ -1,0 +1,42 @@
+# CMake generation dependency list for this directory.
+F:/assimp/BLD/Engine/lib/assimp/CMakeLists.txt
+F:/assimp/BLD/Engine/lib/assimp/BuildLib/CMakeFiles/3.10.2/CMakeSystem.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeSystemSpecificInitialize.cmake
+F:/assimp/BLD/Engine/lib/assimp/BuildLib/CMakeFiles/3.10.2/CMakeCCompiler.cmake
+F:/assimp/BLD/Engine/lib/assimp/BuildLib/CMakeFiles/3.10.2/CMakeCXXCompiler.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeSystemSpecificInformation.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeGenericSystem.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Platform/Windows.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Platform/WindowsPaths.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeCInformation.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Platform/Windows-MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Platform/Windows-MSVC.cmake
+F:/assimp/BLD/Engine/lib/assimp/BuildLib/CMakeFiles/3.10.2/CMakeRCCompiler.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeRCInformation.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeCommonLanguageInclude.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeCXXInformation.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Compiler/MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Platform/Windows-MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/Platform/Windows-MSVC.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CMakeCommonLanguageInclude.cmake
+F:/assimp/BLD/Engine/lib/assimp/revision.h.in
+F:/assimp/BLD/Engine/lib/assimp/include/assimp/config.h.in
+F:/assimp/BLD/Engine/lib/assimp/cmake-modules/FindPkgMacros.cmake
+F:/assimp/BLD/Engine/lib/assimp/cmake-modules/PrecompiledHeader.cmake
+F:/assimp/BLD/Engine/lib/assimp/cmake-modules/cmake_uninstall.cmake.in
+F:/assimp/BLD/Engine/lib/assimp/assimp-config.cmake.in
+F:/assimp/BLD/Engine/lib/assimp/assimpTargets.cmake.in
+F:/assimp/BLD/Engine/lib/assimp/assimpTargets-debug.cmake.in
+F:/assimp/BLD/Engine/lib/assimp/assimpTargets-release.cmake.in
+F:/assimp/BLD/Engine/lib/assimp/assimp-config-version.cmake.in
+F:/assimp/BLD/Engine/lib/assimp/cmake-modules/FindDirectX.cmake
+F:/assimp/BLD/Engine/lib/assimp/cmake-modules/FindPkgMacros.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CheckIncludeFile.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CheckTypeSize.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CheckIncludeFile.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CheckIncludeFileCXX.cmake
+C:/Program Files/CMake/share/cmake-3.10/Modules/CheckFunctionExists.cmake
+F:/assimp/BLD/Engine/lib/assimp/assimp.pc.in

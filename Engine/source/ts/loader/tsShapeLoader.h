@@ -57,6 +57,7 @@ public:
    static void addFormat(String name, String extension);
    static String getFormatExtensions();
    static String getFormatFilters();
+   static bool isSupportedFormat(String extension);
 
 public:
    enum eLoadPhases

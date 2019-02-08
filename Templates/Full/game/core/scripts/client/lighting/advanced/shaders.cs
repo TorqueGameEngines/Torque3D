@@ -451,3 +451,61 @@ new CustomMaterial( ReflectionProbeArrayMaterial )
    
    pixVersion = 3.0;
 };
+
+//
+//
+singleton ShaderData( PFX_ReflectionProbeArray )
+{
+   DXVertexShaderFile   = "shaders/common/postFx/postFxV.hlsl";
+   DXPixelShaderFile    = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
+
+   //OGLVertexShaderFile  = "shaders/common/postFx/gl//postFxV.glsl";
+   //OGLPixelShaderFile   = "shaders/common/postFx/gl/passthruP.glsl";
+
+   //samplerNames[0] = "$inputTex";
+   
+   samplerNames[0] = "$deferredBuffer";
+   samplerNames[1] = "$colorBuffer";
+   samplerNames[2] = "$matInfoBuffer";
+   samplerNames[3] = "$BRDFTexture";
+   samplerNames[4] = "$cubeMap";
+   samplerNames[5] = "$irradianceCubemap";
+
+   pixVersion = 2.0;
+};  
+
+singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
+{  
+   zDefined = true;
+   zEnable = false;
+   zWriteEnable = false;
+
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+};
+
+singleton PostEffect( reflectionProbeArrayPostFX )
+{
+   // Do not allow the selection effect to work in reflection 
+   // passes by default so we don't do the extra drawing.
+   //allowReflectPass = false;
+                  
+   renderTime = "PFXAfterDiffuse";
+   renderBin = "ProbeBin";
+   renderPriority = 1;
+   isEnabled = true;
+
+   shader = PFX_ReflectionProbeArray;
+   stateBlock = PFX_ReflectionProbeArrayStateBlock;
+   //texture[0] = "#highlight";
+   //texture[1] = "$backBuffer";
+
+   texture[0] = "$deferredBuffer";
+   texture[1] = "$colorBuffer";
+   texture[2] = "$matInfoBuffer";
+   texture[3] = "$BRDFTexture";
+   texture[4] = "$cubeMap";
+   texture[5] = "$irradianceCubemap";   
+   
+   target = "$backBuffer";
+};

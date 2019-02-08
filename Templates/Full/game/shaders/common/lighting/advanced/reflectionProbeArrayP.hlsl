@@ -1,8 +1,6 @@
-#include "../../shaderModelAutoGen.hlsl"
+#include "../postFx.hlsl"
 
-#include "farFrustumQuad.hlsl"
 #include "../../lighting.hlsl"
-#include "../../torque.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 1);
@@ -19,6 +17,8 @@ uniform float cubeMips;
 #define MAX_PROBES 50
 
 uniform float numProbes;
+//TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
+//TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
 uniform float4    inProbePosArray[MAX_PROBES];
@@ -50,6 +50,7 @@ float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
+   //return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
    return TORQUE_TEXCUBELOD(irradianceCubemapAR,float4(cubeN,0)).xyz;
 }
 
@@ -66,8 +67,9 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float3 cubeR = normalize(r);
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 	
+   //float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
    float3 radiance = TORQUE_TEXCUBELOD(cubeMapAR,float4(cubeR,lod)).xyz * (brdf.x + brdf.y);
-
+    
    return radiance;
 }
 
@@ -88,7 +90,7 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     return max(localDir.x, max(localDir.y, localDir.z)) * -1;
 }
 
-float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
+float4 main( PFXVertToPix IN ) : SV_TARGET
 {
    //unpack normal and linear depth 
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0.xy);

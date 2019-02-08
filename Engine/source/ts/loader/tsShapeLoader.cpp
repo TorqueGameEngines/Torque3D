@@ -1325,6 +1325,17 @@ String TSShapeLoader::getFormatFilters()
    return output.end();
 }
 
+bool TSShapeLoader::isSupportedFormat(String extension)
+{
+   String extLower = String::ToLower(extension);
+   for (U32 n = 0; n < smFormats.size(); ++n)
+   {
+      if (smFormats[n].mExtension.equal(extLower))
+         return true;
+   }
+   return false;
+}
+
 DefineEngineFunction( getFormatExtensions, const char*, ( ),, 
   "Returns a list of supported shape format extensions separated by tabs."
   "Example output: *.dsq TAB *.dae TAB")
@@ -1337,4 +1348,9 @@ DefineEngineFunction( getFormatFilters, const char*, ( ),,
   "Example output: DSQ Files|*.dsq|COLLADA Files|*.dae|")
 {
    return Con::getReturnBuffer(TSShapeLoader::getFormatFilters());
+}
+
+DefineEngineFunction(isSupportedFormat, bool, (const char* extension), , "")
+{
+   return TSShapeLoader::isSupportedFormat(extension);
 }

@@ -675,7 +675,7 @@ function EWCreatorWindow::addShapeIcon( %this, %datablock )
    %shapePath = ( %datablock.shapeFile !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
    
    %createCmd = "EWCreatorWindow.createObject( \\\"" @ %cmd @ "\\\" );";
-   %ctrl.altCommand = "ColladaImportDlg.showDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );";
+   %ctrl.altCommand = "showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );";
 
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
    %ctrl.text = %name;
@@ -701,7 +701,7 @@ function EWCreatorWindow::addStaticIcon( %this, %fullPath )
           "Last Modified: " @ fileModifiedTime( %fullPath );
 
    %createCmd = "EWCreatorWindow.createStatic( \\\"" @ %fullPath @ "\\\" );";
-   %ctrl.altCommand = "ColladaImportDlg.showDialog( \"" @ %fullPath @ "\", \"" @ %createCmd @ "\" );";
+   %ctrl.altCommand = "showImportDialog( \"" @ %fullPath @ "\", \"" @ %createCmd @ "\" );";
 
    %ctrl.iconBitmap = ( ( %ext $= ".dts" ) ? EditorIconRegistry::findIconByClassName( "TSStatic" ) : "tools/gui/images/iconCollada" );
    %ctrl.text = %file;

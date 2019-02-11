@@ -1434,6 +1434,11 @@ void PostEffect::_checkRequirements()
    // properly, we can find all the input textures,
    // and its formats are supported.
 
+   if (mShaderName == String("PFX_ReflectionProbeArray") || getName() == StringTable->insert("reflectionProbeArrayPostFX"))
+   {
+      bool derp = true;
+   }
+
    mIsValid = false;
    mUpdateShader = false;
    mShader = NULL;
@@ -1473,9 +1478,11 @@ void PostEffect::_checkRequirements()
       if ( texFilename.isNotEmpty() && texFilename[0] == '#' )
       {
          NamedTexTarget *namedTarget = NamedTexTarget::find( texFilename.c_str() + 1 );
-         if ( !namedTarget )
+         if (!namedTarget)
+         {
             return;
-
+         }
+            
          // Grab the macros for shader initialization.
          namedTarget->getShaderMacros( &macros );
       }

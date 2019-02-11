@@ -500,12 +500,12 @@ singleton PostEffect( reflectionProbeArrayPostFX )
    //texture[0] = "#highlight";
    //texture[1] = "$backBuffer";
 
-   texture[0] = "$deferredBuffer";
-   texture[1] = "$colorBuffer";
-   texture[2] = "$matInfoBuffer";
+   texture[0] = "#deferred";
+   texture[1] = "#color";
+   texture[2] = "#matinfo";
    texture[3] = "$BRDFTexture";
    texture[4] = "$cubeMap";
    texture[5] = "$irradianceCubemap";   
    
-   target = "$backBuffer";
+   target = "AL_FormatToken";
 };

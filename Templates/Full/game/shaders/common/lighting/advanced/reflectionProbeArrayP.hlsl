@@ -1,5 +1,6 @@
-#include "../postFx.hlsl"
-
+#include "../../postFx/postFx.hlsl"
+#include "../../shaderModel.hlsl"
+#include "../../shaderModelAutoGen.hlsl"
 #include "../../lighting.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
@@ -146,6 +147,9 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
 
    float finalSum = blendSum;
 
+    return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
+    //return float4(surface.N,1);
+   //return float4(1,1,1, 1);
    //return float4(finalSum,finalSum,finalSum, 1);
 
     // Normalize blendVal

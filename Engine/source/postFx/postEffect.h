@@ -353,6 +353,10 @@ public:
    bool isOneFrameOnly() { return mOneFrameOnly; }   
 
    F32 getAspectRatio() const;
+
+   GFXShaderRef getShader() { return mShader; }
+   Vector<GFXShaderMacro>* getShaderMacros() { return &mShaderMacros; }
+   GFXShaderConstBufferRef getShaderConstBuffer() { return mShaderConsts; }
    
 
    enum PostEffectRequirements

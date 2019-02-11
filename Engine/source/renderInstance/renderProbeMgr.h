@@ -268,12 +268,22 @@ class RenderProbeMgr : public RenderBinManager
 
    ReflectProbeMaterialInfo* mReflectProbeMaterial;
 
+   GFXShaderConstHandle *numProbesSC;
+   GFXShaderConstHandle *probePositionSC;
+   GFXShaderConstHandle *probeWorldToObjSC;
+   GFXShaderConstHandle *probeBBMinSC;
+   GFXShaderConstHandle *probeBBMaxSC;
+   GFXShaderConstHandle *probeUseSphereModeSC;
+   GFXShaderConstHandle *probeRadiusSC;
+   GFXShaderConstHandle *probeAttenuationSC;
+
    /// The scene graph the light manager is associated with.
-   SceneManager *mSceneManager;
+   //SceneManager *mSceneManager;
 
    ProbeConstantMap mConstantLookup;
    GFXShaderRef mLastShader;
-   ProbeShaderConstants* mLastConstants;
+   GFXShaderConstBufferRef mLastConstants;
+   ProbeShaderConstants* mLastForwardConstants;
 
    //
    //
@@ -306,7 +316,7 @@ protected:
       GFXTextureObject * mBrdfTexture;
 
       //Array rendering
-
+      U32 mEffectiveProbeCount;
       Vector<Point3F> probePositions;
       Vector<MatrixF> probeWorldToObj;
       Vector<Point3F> probeBBMin;
@@ -316,6 +326,13 @@ protected:
       Vector<float> probeAttenuation;
       Vector<GFXCubemapHandle> cubeMaps;
       Vector<GFXCubemapHandle> irradMaps;
+
+      AlignedArray<Point4F> mProbePositions;
+      AlignedArray<Point4F> mProbeBBMin;
+      AlignedArray<Point4F> mProbeBBMax;
+      AlignedArray<float> mProbeUseSphereMode;
+      AlignedArray<float> mProbeRadius;
+      AlignedArray<float> mProbeAttenuation;
 
       GFXCubemapArrayHandle mCubemapArray;
       GFXCubemapArrayHandle mIrradArray;
@@ -348,10 +365,7 @@ public:
 
    void registerProbe(U32 probeIdx);
 
-   // Returns the scene manager passed at activation.
-   SceneManager* getSceneManager() { return mSceneManager; }
-
-   void setSceneManager(SceneManager* sceneManager) { mSceneManager = sceneManager; }
+   void unregisterProbe(U32 probeIdx);
 
    /// Debug rendering
    static bool smRenderReflectionProbes;
@@ -363,15 +377,7 @@ RenderProbeMgr* RenderProbeMgr::getProbeManager()
    {
       RenderProbeMgr* probeManager = new RenderProbeMgr();
 
-      if (gClientSceneGraph != nullptr)
-      {
-         probeManager->setSceneManager(gClientSceneGraph);
-         smProbeManager = probeManager;
-      }
-      else
-      {
-         delete probeManager;
-      }
+      smProbeManager = probeManager;
    }
 
    return smProbeManager;

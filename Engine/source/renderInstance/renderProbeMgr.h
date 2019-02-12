@@ -233,17 +233,6 @@ class RenderProbeMgr : public RenderBinManager
 
       MaterialParameterHandle *probeCount;
 
-      //
-      MaterialParameterHandle *numProbesSC;
-
-      MaterialParameterHandle *probePositionSC;
-      MaterialParameterHandle *probeWorldToObjSC;
-      MaterialParameterHandle *probeBBMinSC;
-      MaterialParameterHandle *probeBBMaxSC;
-      MaterialParameterHandle *probeUseSphereModeSC;
-      MaterialParameterHandle *probeRadiusSC;
-      MaterialParameterHandle *probeAttenuationSC;
-
       ReflectProbeMaterialInfo(const String &matName, const GFXVertexFormat *vertexFormat);
 
       virtual ~ReflectProbeMaterialInfo();
@@ -317,13 +306,13 @@ protected:
 
       //Array rendering
       U32 mEffectiveProbeCount;
-      Vector<Point3F> probePositions;
+      Vector<Point4F> probePositions;
       Vector<MatrixF> probeWorldToObj;
-      Vector<Point3F> probeBBMin;
-      Vector<Point3F> probeBBMax;
-      Vector<float> probeUseSphereMode;
-      Vector<float> probeRadius;
-      Vector<float> probeAttenuation;
+      Vector<Point4F> probeBBMin;
+      Vector<Point4F> probeBBMax;
+      Vector<Point4F> probeUseSphereMode;
+      Vector<Point4F> probeRadius;
+      Vector<Point4F> probeAttenuation;
       Vector<GFXCubemapHandle> cubeMaps;
       Vector<GFXCubemapHandle> irradMaps;
 

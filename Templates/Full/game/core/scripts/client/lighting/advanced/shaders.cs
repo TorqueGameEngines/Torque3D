@@ -503,9 +503,9 @@ singleton PostEffect( reflectionProbeArrayPostFX )
    texture[0] = "#deferred";
    texture[1] = "#color";
    texture[2] = "#matinfo";
-   texture[3] = "$BRDFTexture";
-   texture[4] = "$cubeMap";
-   texture[5] = "$irradianceCubemap";   
+   texture[3] = "core/art/pbr/brdfTexture.dds";
+   //texture[4] = "$cubeMap";
+   //texture[5] = "$irradianceCubemap";   
    
    target = "AL_FormatToken";
 };

@@ -18,17 +18,17 @@ uniform float cubeMips;
 #define MAX_PROBES 50
 
 uniform float numProbes;
-//TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
-//TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
-TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
-TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
+TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
+//TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
+//TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
 uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float4    bbMinArray[MAX_PROBES];
 uniform float4    bbMaxArray[MAX_PROBES];
-uniform float     useSphereMode[MAX_PROBES];
-uniform float     radius[MAX_PROBES];
-uniform float2    attenuation[MAX_PROBES];
+uniform float4     useSphereMode[MAX_PROBES];
+uniform float4     radius[MAX_PROBES];
+uniform float4    attenuation[MAX_PROBES];
 
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
@@ -51,8 +51,8 @@ float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
-   //return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
-   return TORQUE_TEXCUBELOD(irradianceCubemapAR,float4(cubeN,0)).xyz;
+   return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
+   //return TORQUE_TEXCUBELOD(irradianceCubemapAR,float4(cubeN,0)).xyz;
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
@@ -68,8 +68,8 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    float3 cubeR = normalize(r);
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 	
-   //float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
-   float3 radiance = TORQUE_TEXCUBELOD(cubeMapAR,float4(cubeR,lod)).xyz * (brdf.x + brdf.y);
+   float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
+   //float3 radiance = TORQUE_TEXCUBELOD(cubeMapAR,float4(cubeR,lod)).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
@@ -79,8 +79,8 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     float tempAttenVal = 3.5; //replace with per probe atten
     float3 surfPosLS = mul( worldToObjArray[id], float4(surface.P,1.0)).xyz;
 
-    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0]);
-    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0]);
+    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0].x);
+    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0].x);
 
     float boxOuterRange = length(boxMaxLS - boxMinLS);
     float boxInnerRange = boxOuterRange / tempAttenVal;
@@ -147,7 +147,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
 
    float finalSum = blendSum;
 
-    return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
+    //return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
     //return float4(surface.N,1);
    //return float4(1,1,1, 1);
    //return float4(finalSum,finalSum,finalSum, 1);
@@ -155,7 +155,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
     // Normalize blendVal
    if (blendSum == 0.0f) // Possible with custom weight
    {
-      blendSum = 1.0f;
+      //blendSum = 1.0f;
    }
 
    float invBlendSumWeighted = 1.0f / blendSum;

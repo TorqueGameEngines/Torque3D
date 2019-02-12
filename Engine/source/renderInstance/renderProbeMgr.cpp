@@ -249,33 +249,6 @@ RenderProbeMgr::RenderProbeMgr()
    String brdfPath = Con::getVariable("$Core::BRDFTexture", "core/art/pbr/brdfTexture.dds");
    mBrdfTexture = TEXMGR->createTexture(brdfPath, &GFXTexturePersistentProfile);
 
-   probePositions.setSize(MAXPROBECOUNT);
-   probePositions.fill(Point3F::Zero);
-
-   probeWorldToObj.setSize(MAXPROBECOUNT);
-   probeWorldToObj.fill(MatrixF::Identity);
-
-   probeBBMin.setSize(MAXPROBECOUNT);
-   probeBBMin.fill(Point3F::Zero);
-
-   probeBBMax.setSize(MAXPROBECOUNT);
-   probeBBMax.fill(Point3F::Zero);
-
-   probeUseSphereMode.setSize(MAXPROBECOUNT);
-   probeUseSphereMode.fill(0.0f);
-
-   probeRadius.setSize(MAXPROBECOUNT);
-   probeRadius.fill(0.0f);
-
-   probeAttenuation.setSize(MAXPROBECOUNT);
-   probeAttenuation.fill(0.0f);
-
-   cubeMaps.setSize(MAXPROBECOUNT);
-   cubeMaps.fill(NULL);
-
-   irradMaps.setSize(MAXPROBECOUNT);
-   irradMaps.fill(NULL);
-
    mEffectiveProbeCount = 0;
 
    mProbeArrayEffect = nullptr;
@@ -363,27 +336,21 @@ PostEffect* RenderProbeMgr::getProbeArrayEffect()
 
 void RenderProbeMgr::_setupStaticParameters()
 {
-   mLastShader = mProbeArrayEffect->getShader();
-
-   if (mLastShader == nullptr)
-      return;
-
-   mLastConstants = mLastShader->allocConstBuffer();
-
-   numProbesSC = mLastShader->getShaderConstHandle("$numProbes");
-
-   probePositionSC = mLastShader->getShaderConstHandle("$inProbePosArray");
-   probeWorldToObjSC = mLastShader->getShaderConstHandle("$worldToObjArray");
-   probeBBMinSC = mLastShader->getShaderConstHandle("$bbMinArray");
-   probeBBMaxSC = mLastShader->getShaderConstHandle("$bbMaxArray");
-   probeUseSphereModeSC = mLastShader->getShaderConstHandle("$useSphereMode");
-   probeRadiusSC = mLastShader->getShaderConstHandle("$radius");
-   probeAttenuationSC = mLastShader->getShaderConstHandle("$attenuation");
-
    //Array rendering
    U32 probeCount = ProbeRenderInst::all.size();
 
    mEffectiveProbeCount = 0;
+
+   probePositions.setSize(MAXPROBECOUNT);
+   probeWorldToObj.setSize(MAXPROBECOUNT);
+   probeBBMin.setSize(MAXPROBECOUNT);
+   probeBBMax.setSize(MAXPROBECOUNT);
+   probeUseSphereMode.setSize(MAXPROBECOUNT);
+   probeRadius.setSize(MAXPROBECOUNT);
+   probeAttenuation.setSize(MAXPROBECOUNT);
+
+   cubeMaps.setSize(MAXPROBECOUNT);
+   irradMaps.setSize(MAXPROBECOUNT);
 
    for (U32 i = 0; i < probeCount; i++)
    {
@@ -415,10 +382,10 @@ void RenderProbeMgr::_setupStaticParameters()
       probeBBMin[i] = curEntry->mBounds.minExtents;
       probeBBMax[i] = curEntry->mBounds.maxExtents;
 
-      probeUseSphereMode[i] = curEntry->mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0;
+      probeUseSphereMode[i] = Point4F(curEntry->mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0, 0,0,0);
 
-      probeRadius[i] = curEntry->mRadius;
-      probeAttenuation[i] = 1;
+      probeRadius[i] = Point4F(curEntry->mRadius,0,0,0);
+      probeAttenuation[i] = Point4F(1, 0, 0, 0);
 
       cubeMaps[i] = curEntry->mCubemap;
       irradMaps[i] = curEntry->mIrradianceCubemap;
@@ -433,44 +400,6 @@ void RenderProbeMgr::_setupStaticParameters()
 
       mCubemapArray->initStatic(cubeMaps.address(), mEffectiveProbeCount);
       mIrradArray->initStatic(irradMaps.address(), mEffectiveProbeCount);
-
-      /*NamedTexTarget *deferredTarget = NamedTexTarget::find(RenderDeferredMgr::BufferName);
-      if (deferredTarget)
-         GFX->setTexture(0, deferredTarget->getTexture());
-      else
-         GFX->setTexture(0, NULL);
-
-      NamedTexTarget *colorTarget = NamedTexTarget::find(RenderDeferredMgr::ColorBufferName);
-      if (colorTarget)
-         GFX->setTexture(1, colorTarget->getTexture());
-      else
-         GFX->setTexture(1, NULL);
-
-      NamedTexTarget *matinfoTarget = NamedTexTarget::find(RenderDeferredMgr::MatInfoBufferName);
-      if (matinfoTarget)
-         GFX->setTexture(2, matinfoTarget->getTexture());
-      else
-         GFX->setTexture(2, NULL);
-
-      if (mBrdfTexture)
-      {
-         GFX->setTexture(3, mBrdfTexture);
-      }
-      else
-         GFX->setTexture(3, NULL);*/
-
-      //GFX->setCubeArrayTexture(4, mCubemapArray);
-      //GFX->setCubeArrayTexture(5, mIrradArray);
-
-      ProbeRenderInst* curEntry = ProbeRenderInst::all[0];
-      //count = MAXPROBECOUNT;
-      //Final packing
-      mProbePositions = AlignedArray<Point4F>(mEffectiveProbeCount, sizeof(Point4F), (U8*)probePositions.address(), false);
-      mProbeBBMin = AlignedArray<Point4F>(mEffectiveProbeCount, sizeof(Point4F), (U8*)probeBBMin.address(), false);
-      mProbeBBMax = AlignedArray<Point4F>(mEffectiveProbeCount, sizeof(Point4F), (U8*)probeBBMax.address(), false);
-      mProbeUseSphereMode = AlignedArray<float>(mEffectiveProbeCount, sizeof(float), (U8*)probeUseSphereMode.address(), false);
-      mProbeRadius = AlignedArray<float>(mEffectiveProbeCount, sizeof(float), (U8*)probeRadius.address(), false);
-      mProbeAttenuation = AlignedArray<float>(mEffectiveProbeCount, sizeof(float), (U8*)probeAttenuation.address(), false);
    }
 }
 
@@ -788,7 +717,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
    // If this is a non-diffuse pass or we have no objects to
    // render then tell the effect to skip rendering.
-   if (!state->isDiffusePass()/* || binSize == 0*/|| !numProbesSC || !numProbesSC->isValid())
+   if (!state->isDiffusePass()/* || binSize == 0*/)
    {
       getProbeArrayEffect()->setSkip(true);
       return;
@@ -821,30 +750,29 @@ void RenderProbeMgr::render( SceneRenderState *state )
       else
          GFX->setTexture(2, NULL);*/
 
-      if (mBrdfTexture)
+      /*if (mBrdfTexture)
       {
          GFX->setTexture(3, mBrdfTexture);
       }
       else
-         GFX->setTexture(3, NULL);
+         GFX->setTexture(3, NULL);*/
 
-      GFX->setCubeArrayTexture(4, mCubemapArray);
-      GFX->setCubeArrayTexture(5, mIrradArray);
+      //GFX->setCubeArrayTexture(4, mCubemapArray);
+      //GFX->setCubeArrayTexture(5, mIrradArray);
+      mProbeArrayEffect->setCubemapArrayTexture(4, mCubemapArray);
+      mProbeArrayEffect->setCubemapArrayTexture(5, mIrradArray);
 
-      if (numProbesSC->isValid())
-      {
-         mLastConstants->set(numProbesSC, (float)mEffectiveProbeCount);
-
-         mLastConstants->set(probePositionSC, mProbePositions);
-
-         mLastConstants->set(probePositionSC, mProbePositions);
-         mLastConstants->set(probeWorldToObjSC, probeWorldToObj.address(), mEffectiveProbeCount);
-         mLastConstants->set(probeBBMinSC, mProbeBBMin);
-         mLastConstants->set(probeBBMaxSC, mProbeBBMax);
-         mLastConstants->set(probeUseSphereModeSC, mProbeUseSphereMode);
-         mLastConstants->set(probeRadiusSC, mProbeRadius);
-         mLastConstants->set(probeAttenuationSC, mProbeAttenuation);
-      }
+      U32 mips = ProbeRenderInst::all[0]->mCubemap.getPointer()->getMipMapLevels();
+      mProbeArrayEffect->setShaderConst("$cubeMips", (float)mips);
+      
+      mProbeArrayEffect->setShaderConst("$numProbes", (float)mEffectiveProbeCount);
+      mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositions);
+      mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObj);
+      mProbeArrayEffect->setShaderConst("$bbMinArray", probeBBMin);
+      mProbeArrayEffect->setShaderConst("$bbMaxArray", probeBBMax);
+      mProbeArrayEffect->setShaderConst("$useSphereMode", probeUseSphereMode);
+      mProbeArrayEffect->setShaderConst("$radius", probeRadius);
+      mProbeArrayEffect->setShaderConst("$attenuation", probeAttenuation);
    }
 
    // Finish up.

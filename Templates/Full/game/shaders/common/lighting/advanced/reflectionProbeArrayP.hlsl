@@ -155,7 +155,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
     // Normalize blendVal
    if (blendSum == 0.0f) // Possible with custom weight
    {
-      //blendSum = 1.0f;
+      blendSum = 1.0f;
    }
 
    float invBlendSumWeighted = 1.0f / blendSum;
@@ -173,7 +173,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      irradiance += blendVal[i]*iblBoxDiffuse(surface,i);
+      irradiance += float3(blendVal[i],blendVal[i],blendVal[i])/*blendVal[i]*iblBoxDiffuse(surface,i)*/;
       
       specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
    }

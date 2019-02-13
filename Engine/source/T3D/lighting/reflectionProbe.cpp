@@ -53,6 +53,8 @@
 
 #include "scene/reflector.h"
 
+#include "T3D/gameTSCtrl.h"
+
 extern bool gEditingMission;
 extern ColorI gCanvasClearColor;
 bool ReflectionProbe::smRenderPreviewProbes = true;
@@ -463,6 +465,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
    {
       updateMaterial();
    }
+
+   PROBEMGR->updateProbes();
 }
 
 void ReflectionProbe::createGeometry()
@@ -914,7 +918,7 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
 
    if (mReflectionModeType == DynamicCubemap && mDynamicCubemap.isNull())
    {
-      //mCubemap->createMap();
+	   //this is wholely reundant when we actually use the proper dynamic cube reflector
       mDynamicCubemap = GFX->createCubemap();
 
       if(mUseHDRCaptures)
@@ -938,13 +942,6 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
          Con::errorf("ReflectionProbe::bake() - Unable to bake our captures because probe doesn't have a unique ID set");
          return;
       }
-
-      sceneCaptureCubemap = GFX->createCubemap();
-
-      if (mUseHDRCaptures)
-         sceneCaptureCubemap->initDynamic(resolution, GFXFormatR16G16B16A16F);
-      else
-         sceneCaptureCubemap->initDynamic(resolution, GFXFormatR8G8B8A8);
    }
 
    bool validCubemap = true;
@@ -953,21 +950,31 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
    // it for child control rendering below.
    GFXTransformSaver saver;
 
-   //bool saveEditingMission = gEditingMission;
-   //gEditingMission = false;
-
-   //Set this to true to use the prior method where it goes through the SPT_Reflect path for the bake
-
    bool probeRenderState = RenderProbeMgr::smRenderReflectionProbes;
 
    if (!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = false;
 
+   F32 farPlane = 1000.0f;
+
+   ReflectorDesc reflDesc;
+   reflDesc.texSize = resolution;
+   reflDesc.farDist = farPlane;
+   reflDesc.detailAdjust = 1;
+   reflDesc.objectTypeMask = -1;
+
    CubeReflector cubeRefl;
+   cubeRefl.registerReflector(this, &reflDesc);
+
    ReflectParams reflParams;
 
    //need to get the query somehow. Likely do some sort of get function to fetch from the guiTSControl that's active
    CameraQuery query; //need to get the last cameraQuery
+   query.fov = 90; //90 degree slices for each of the 6 sides
+   query.nearPlane = 0.1f;
+   query.farPlane = farPlane;
+   query.headMatrix = MatrixF();
+   query.cameraMatrix = getTransform();
 
    Frustum culler;
    culler.set(false,
@@ -979,11 +986,13 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
 
    S32 stereoTarget = GFX->getCurrentStereoTarget();
 
+   Point2I maxRes(2048, 2048); //basically a boundary so we don't go over this and break stuff
+
    reflParams.culler = culler;
    reflParams.eyeId = stereoTarget;
    reflParams.query = &query;
    reflParams.startOfUpdateMs = startMSTime;
-   reflParams.viewportExtent = Point2I(resolution, resolution);
+   reflParams.viewportExtent = maxRes;
 
    cubeRefl.updateReflection(reflParams);
 
@@ -1006,9 +1015,6 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
          mPrefilterMap->mCubemap->initDynamic(resolution, GFXFormatR8G8B8A8);
       }
 
-      //IBLUtilities::GenerateAndSaveIrradianceMap(getIrradianceMapPath(), resolution, sceneCaptureCubemap, mIrridianceMap->mCubemap);
-      //IBLUtilities::GenerateAndSavePrefilterMap(getPrefilterMapPath(), resolution, sceneCaptureCubemap, mPrefilterMipLevels, mPrefilterMap->mCubemap);
-
       GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
 
       IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), mIrridianceMap->mCubemap);
@@ -1025,7 +1031,9 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
    if(!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = probeRenderState;
 
-   setMaskBits(-1);
+   setMaskBits(CubemapMask);
+
+   cubeRefl.unregisterReflector();
 
    U32 endMSTime = Platform::getRealMilliseconds();
    F32 diffTime = F32(endMSTime - startMSTime);

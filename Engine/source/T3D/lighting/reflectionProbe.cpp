@@ -51,6 +51,8 @@
 #include "gfx/gfxTextureManager.h"
 #include "T3D/lighting/IBLUtilities.h"
 
+#include "scene/reflector.h"
+
 extern bool gEditingMission;
 extern ColorI gCanvasClearColor;
 bool ReflectionProbe::smRenderPreviewProbes = true;
@@ -584,6 +586,8 @@ void ReflectionProbe::updateMaterial()
 
    if (mReflectionModeType != DynamicCubemap)
    {
+      mProbeInfo->mCubeReflector.unregisterReflector();
+
       if ((mReflectionModeType == BakedCubemap) && !mProbeUniqueID.isEmpty())
       {
          if (mPrefilterMap != nullptr && mPrefilterMap->mCubemap.isValid())
@@ -609,6 +613,8 @@ void ReflectionProbe::updateMaterial()
       if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
       {
          mProbeInfo->mCubemap = mDynamicCubemap;
+
+         mProbeInfo->mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
       }
       else
       {
@@ -904,17 +910,6 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
 
    U32 startMSTime = Platform::getRealMilliseconds();
 
-   /*PostEffect *preCapture = dynamic_cast<PostEffect*>(Sim::findObject("AL_PreCapture"));
-   PostEffect *deferredShading = dynamic_cast<PostEffect*>(Sim::findObject("AL_DeferredShading"));
-   if (preCapture)
-   {
-	   preCapture->setShaderConst("$radius",String::ToString(mRadius));
-	   preCapture->setShaderConst("$captureRez", String::ToString(F32(resolution)));
-	   preCapture->enable();
-   }
-   if (deferredShading)
-      deferredShading->disable();*/
-
    GFXCubemapHandle sceneCaptureCubemap;
 
    if (mReflectionModeType == DynamicCubemap && mDynamicCubemap.isNull())
@@ -968,91 +963,34 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
    if (!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = false;
 
-   for (U32 i = 0; i < 6; ++i)
-   {
-      GFXTexHandle blendTex;
-      blendTex.set(resolution, resolution, GFXFormatR16G16B16A16F, &GFXRenderTargetProfile, "");
+   CubeReflector cubeRefl;
+   ReflectParams reflParams;
 
-      GFXTextureTargetRef baseTarget = GFX->allocRenderToTextureTarget();
+   //need to get the query somehow. Likely do some sort of get function to fetch from the guiTSControl that's active
+   CameraQuery query; //need to get the last cameraQuery
 
-      GFX->clearTextureStateImmediate(0);
-      
-      baseTarget->attachTexture(GFXTextureTarget::Color0, sceneCaptureCubemap, i);
+   Frustum culler;
+   culler.set(false,
+      query.fov,
+      (F32)resolution / (F32)resolution,
+      query.nearPlane,
+      query.farPlane,
+      query.cameraMatrix);
 
-      // Standard view that will be overridden below.
-      VectorF vLookatPt(0.0f, 0.0f, 0.0f), vUpVec(0.0f, 0.0f, 0.0f), vRight(0.0f, 0.0f, 0.0f);
+   S32 stereoTarget = GFX->getCurrentStereoTarget();
 
-      switch (i)
-      {
-         case 0: // D3DCUBEMAP_FACE_POSITIVE_X:
-            vLookatPt = VectorF(1.0f, 0.0f, 0.0f);
-            vUpVec = VectorF(0.0f, 1.0f, 0.0f);
-            break;
-         case 1: // D3DCUBEMAP_FACE_NEGATIVE_X:
-            vLookatPt = VectorF(-1.0f, 0.0f, 0.0f);
-            vUpVec = VectorF(0.0f, 1.0f, 0.0f);
-            break;
-         case 2: // D3DCUBEMAP_FACE_POSITIVE_Y:
-            vLookatPt = VectorF(0.0f, 1.0f, 0.0f);
-            vUpVec = VectorF(0.0f, 0.0f, -1.0f);
-            break;
-         case 3: // D3DCUBEMAP_FACE_NEGATIVE_Y:
-            vLookatPt = VectorF(0.0f, -1.0f, 0.0f);
-            vUpVec = VectorF(0.0f, 0.0f, 1.0f);
-            break;
-         case 4: // D3DCUBEMAP_FACE_POSITIVE_Z:
-            vLookatPt = VectorF(0.0f, 0.0f, 1.0f);
-            vUpVec = VectorF(0.0f, 1.0f, 0.0f);
-            break;
-         case 5: // D3DCUBEMAP_FACE_NEGATIVE_Z:
-            vLookatPt = VectorF(0.0f, 0.0f, -1.0f);
-            vUpVec = VectorF(0.0f, 1.0f, 0.0f);
-            break;
-      }
+   reflParams.culler = culler;
+   reflParams.eyeId = stereoTarget;
+   reflParams.query = &query;
+   reflParams.startOfUpdateMs = startMSTime;
+   reflParams.viewportExtent = Point2I(resolution, resolution);
 
-      // create camera matrix
-      VectorF cross = mCross(vUpVec, vLookatPt);
-      cross.normalizeSafe();
-
-      MatrixF matView(true);
-      matView.setColumn(0, cross);
-      matView.setColumn(1, vLookatPt);
-      matView.setColumn(2, vUpVec);
-      matView.setPosition(getPosition()+mProbePosOffset);
-      matView.inverse();
-
-      // set projection to 90 degrees vertical and horizontal
-      F32 left, right, top, bottom;
-      F32 nearPlane = 0.01f;
-      F32 farDist = 1000.f;
-
-      MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, nearPlane);
-      Frustum frustum(false, left, right, top, bottom, nearPlane, farDist);
-
-      F32 detailAdjustBackup = TSShapeInstance::smDetailAdjust;
-      TSShapeInstance::smDetailAdjust *= getNextPow2(resolution);
-      renderFrame(&baseTarget, matView, frustum, mCaptureMask & EDITOR_RENDER_TYPEMASK, gCanvasClearColor);
-      TSShapeInstance::smDetailAdjust = detailAdjustBackup;
-
-      baseTarget->resolve();
-   }
-
-   if (sceneCaptureCubemap.isValid())
-   {
-      validCubemap = true;
-      mDirty = false;
-   }
-   else
-   {
-      validCubemap = false;
-   }
+   cubeRefl.updateReflection(reflParams);
 
    //Now, save out the maps
    //create irridiance cubemap
-   if (validCubemap)
+   if (cubeRefl.getCubemap())
    {
-      bool se = isServerObject();
-
       //Just to ensure we're prepped for the generation
       createClientResources();
 
@@ -1073,8 +1011,8 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
 
       GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
 
-      IBLUtilities::GenerateIrradianceMap(renderTarget, sceneCaptureCubemap, mIrridianceMap->mCubemap);
-      IBLUtilities::GeneratePrefilterMap(renderTarget, sceneCaptureCubemap, mPrefilterMipLevels, mPrefilterMap->mCubemap);
+      IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), mIrridianceMap->mCubemap);
+      IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), mPrefilterMipLevels, mPrefilterMap->mCubemap);
 
       IBLUtilities::SaveCubeMap(getIrradianceMapPath(), mIrridianceMap->mCubemap);
       IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);
@@ -1088,11 +1026,6 @@ void ReflectionProbe::bake(String outputPath, S32 resolution, bool renderWithPro
       RenderProbeMgr::smRenderReflectionProbes = probeRenderState;
 
    setMaskBits(-1);
-
-   /*if (preCapture)
-      preCapture->disable();
-   if (deferredShading)
-      deferredShading->enable();*/
 
    U32 endMSTime = Platform::getRealMilliseconds();
    F32 diffTime = F32(endMSTime - startMSTime);

@@ -47,7 +47,6 @@
 
 class BaseMatInstance;
 
-
 //-----------------------------------------------------------------------------
 // This class implements a basic SceneObject that can exist in the world at a
 // 3D position and render itself. There are several valid ways to render an
@@ -128,6 +127,10 @@ protected:
    CubemapData *mStaticCubemap;
    GFXCubemapHandle  mDynamicCubemap;
    bool mUseCubemap;
+
+   String cubeDescName;
+   U32 cubeDescId;
+   ReflectorDesc *reflectorDesc;
 
    ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
    bool mUseHDRCaptures;

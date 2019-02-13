@@ -476,9 +476,9 @@ singleton ShaderData( PFX_ReflectionProbeArray )
 
 singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
 {  
-   zDefined = true;
-   zEnable = false;
-   zWriteEnable = false;
+   //zDefined = true;
+   //zEnable = false;
+   //zWriteEnable = false;
 
    samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
@@ -490,9 +490,9 @@ singleton PostEffect( reflectionProbeArrayPostFX )
    // passes by default so we don't do the extra drawing.
    //allowReflectPass = false;
                   
-   renderTime = "PFXAfterDiffuse";
+   renderTime = "PFXAfterBin";
    renderBin = "ProbeBin";
-   renderPriority = 1;
+   renderPriority = 9999;
    isEnabled = true;
 
    shader = PFX_ReflectionProbeArray;

@@ -134,7 +134,7 @@ new SimGroup(MissionGroup) {
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/probeTest/probes/";
       Bake = "0";
-      position = "0 0.0825528 2.18272";
+      position = "0 0.280415 4.80432";
       rotation = "1 0 0 0";
       scale = "5 5 5";
       canSave = "1";
@@ -156,7 +156,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -171,7 +171,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -186,7 +186,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -201,7 +201,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -216,7 +216,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -231,7 +231,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -246,7 +246,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -321,7 +321,7 @@ new SimGroup(MissionGroup) {
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/probeTest/probes/";
       Bake = "0";
-      position = "-8.24487 0.0825528 2.5031";
+      position = "-9.34007 0.48281 2.5031";
       rotation = "1 0 0 0";
       scale = "5 5 5";
       canSave = "1";
@@ -341,7 +341,7 @@ new SimGroup(MissionGroup) {
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/probeTest/probes/";
       Bake = "0";
-      position = "-8.24487 3.18253 2.18272";
+      position = "-10.1924 8.78742 2.18272";
       rotation = "1 0 0 0";
       scale = "5 5 5";
       canSave = "1";
@@ -354,14 +354,14 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new ReflectionProbe() {
-      enabled = "1";
+      enabled = "0";
       ProbeShape = "Box";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
       reflectionPath = "levels/probeTest/probes/";
       Bake = "0";
-      position = "-8.24487 -3.37372 2.18272";
+      position = "8.24487 -3.37372 2.18272";
       rotation = "1 0 0 0";
       scale = "5 5 5";
       canSave = "1";

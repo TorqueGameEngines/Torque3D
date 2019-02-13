@@ -48,6 +48,10 @@
 #include "postFx/postEffectCommon.h"
 #endif
 
+#ifndef _REFLECTOR_H_
+#include "scene/reflector.h"
+#endif
+
 static U32 MAXPROBECOUNT = 50;
 
 class PostEffect;
@@ -303,47 +307,46 @@ protected:
       GFXShaderConstHandle *probeLocalPosSC,
       GFXShaderConstBuffer *shaderConsts);
 
-      GFXTextureObject * mBrdfTexture;
+    GFXTextureObject * mBrdfTexture;
 
-      //Array rendering
-      U32 mEffectiveProbeCount;
-      Vector<Point4F> probePositions;
-      Vector<MatrixF> probeWorldToObj;
-      Vector<Point4F> probeBBMin;
-      Vector<Point4F> probeBBMax;
-      Vector<Point4F> probeUseSphereMode;
-      Vector<Point4F> probeRadius;
-      Vector<Point4F> probeAttenuation;
-      Vector<GFXCubemapHandle> cubeMaps;
-      Vector<GFXCubemapHandle> irradMaps;
+    //Array rendering
+    U32 mEffectiveProbeCount;
+	S32 mMipCount;
+    Vector<Point4F> probePositions;
+    Vector<MatrixF> probeWorldToObj;
+    Vector<Point4F> probeBBMin;
+    Vector<Point4F> probeBBMax;
+    Vector<Point4F> probeUseSphereMode;
+    Vector<Point4F> probeRadius;
+    Vector<Point4F> probeAttenuation;
+    Vector<GFXCubemapHandle> cubeMaps;
+    Vector<GFXCubemapHandle> irradMaps;
 
-      AlignedArray<Point4F> mProbePositions;
-      AlignedArray<Point4F> mProbeBBMin;
-      AlignedArray<Point4F> mProbeBBMax;
-      AlignedArray<float> mProbeUseSphereMode;
-      AlignedArray<float> mProbeRadius;
-      AlignedArray<float> mProbeAttenuation;
+    AlignedArray<Point4F> mProbePositions;
+    AlignedArray<Point4F> mProbeBBMin;
+    AlignedArray<Point4F> mProbeBBMax;
+    AlignedArray<float> mProbeUseSphereMode;
+    AlignedArray<float> mProbeRadius;
+    AlignedArray<float> mProbeAttenuation;
 
-      GFXCubemapArrayHandle mCubemapArray;
-      GFXCubemapArrayHandle mIrradArray;
+    GFXCubemapArrayHandle mCubemapArray;
+    GFXCubemapArrayHandle mIrradArray;
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
 
    // RenderBinMgr
+   void updateProbes();
+
+protected:
    void _setupStaticParameters();
    void _setupPerFrameParameters(const SceneRenderState *state);
    virtual void addElement(RenderInst *inst);
    virtual void render(SceneRenderState * state);
 
-   virtual void setProbeInfo(ProcessedMaterial *pmat,
-      const Material *mat,
-      const SceneData &sgData,
-      const SceneRenderState *state,
-      U32 pass,
-      GFXShaderConstBuffer *shaderConsts);
    ProbeShaderConstants* getProbeShaderConstants(GFXShaderConstBuffer* buffer);
 
+public:
    // ConsoleObject
    static void initPersistFields();
    DECLARE_CONOBJECT(RenderProbeMgr);
@@ -356,6 +359,13 @@ public:
    void registerProbe(U32 probeIdx);
 
    void unregisterProbe(U32 probeIdx);
+
+   virtual void setProbeInfo(ProcessedMaterial *pmat,
+	   const Material *mat,
+	   const SceneData &sgData,
+	   const SceneRenderState *state,
+	   U32 pass,
+	   GFXShaderConstBuffer *shaderConsts);
 
    /// Debug rendering
    static bool smRenderReflectionProbes;

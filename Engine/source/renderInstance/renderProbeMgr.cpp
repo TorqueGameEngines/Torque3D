@@ -267,12 +267,6 @@ RenderProbeMgr::RenderProbeMgr()
 
    probeAttenuation.setSize(MAXPROBECOUNT);
    probeAttenuation.fill(0.0f);
-
-   cubeMaps.setSize(MAXPROBECOUNT);
-   cubeMaps.fill(NULL);
-
-   irradMaps.setSize(MAXPROBECOUNT);
-   irradMaps.fill(NULL);
 }
 
 RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder)
@@ -705,6 +699,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
       if (!curEntry->mCubemap->isInitialised())
          continue;
 
+      if (!curEntry->mIrradianceCubemap->isInitialised())
+         continue;
+
       if (curEntry->mIsSkylight)
          continue;
 
@@ -725,22 +722,21 @@ void RenderProbeMgr::render( SceneRenderState *state )
       probeRadius[i] = curEntry->mRadius;
       probeAttenuation[i] = 1;
 
-      cubeMaps[i] = curEntry->mCubemap;
-      irradMaps[i] = curEntry->mIrradianceCubemap;
+      cubeMaps.push_back(curEntry->mCubemap);
+      irradMaps.push_back(curEntry->mIrradianceCubemap);
 
       effectiveProbeCount++;
    }
 
    if (effectiveProbeCount != 0)
    {
-      U32 count = effectiveProbeCount;
       matParams->setSafe(numProbesSC, (float)effectiveProbeCount);
 
       mCubemapArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
       mIrradArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
-      mCubemapArray->initStatic(cubeMaps.address(), count);
-      mIrradArray->initStatic(irradMaps.address(), count);
+      mCubemapArray->initStatic(cubeMaps.address(), cubeMaps.size());
+      mIrradArray->initStatic(irradMaps.address(), irradMaps.size());
 
       NamedTexTarget *deferredTarget = NamedTexTarget::find(RenderDeferredMgr::BufferName);
       if (deferredTarget)
@@ -770,17 +766,16 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
       GFX->setCubeArrayTexture(4, mCubemapArray);
       GFX->setCubeArrayTexture(5, mIrradArray);
-      count = MAXPROBECOUNT;
       //Final packing
-      AlignedArray<Point4F> _probePositions(count, sizeof(Point4F), (U8*)probePositions.address(), false);
-      AlignedArray<Point4F> _probeBBMin(count, sizeof(Point4F), (U8*)probeBBMin.address(), false);
-      AlignedArray<Point4F> _probeBBMax(count, sizeof(Point4F), (U8*)probeBBMax.address(), false);
-      AlignedArray<float> _probeUseSphereMode(count, sizeof(float), (U8*)probeUseSphereMode.address(), false);
-      AlignedArray<float> _probeRadius(count, sizeof(float), (U8*)probeRadius.address(), false);
-      AlignedArray<float> _probeAttenuation(count, sizeof(float), (U8*)probeAttenuation.address(), false);
+      AlignedArray<Point4F> _probePositions(MAXPROBECOUNT, sizeof(Point4F), (U8*)probePositions.address(), false);
+      AlignedArray<Point4F> _probeBBMin(MAXPROBECOUNT, sizeof(Point4F), (U8*)probeBBMin.address(), false);
+      AlignedArray<Point4F> _probeBBMax(MAXPROBECOUNT, sizeof(Point4F), (U8*)probeBBMax.address(), false);
+      AlignedArray<float> _probeUseSphereMode(MAXPROBECOUNT, sizeof(float), (U8*)probeUseSphereMode.address(), false);
+      AlignedArray<float> _probeRadius(MAXPROBECOUNT, sizeof(float), (U8*)probeRadius.address(), false);
+      AlignedArray<float> _probeAttenuation(MAXPROBECOUNT, sizeof(float), (U8*)probeAttenuation.address(), false);
 
       matParams->set(probePositionSC, _probePositions);
-      matParams->set(probeWorldToObjSC, probeWorldToObj.address(), count);
+      matParams->set(probeWorldToObjSC, probeWorldToObj.address(), MAXPROBECOUNT);
       matParams->set(probeBBMinSC, _probeBBMin);
       matParams->set(probeBBMaxSC, _probeBBMax);
       matParams->set(probeUseSphereModeSC, _probeUseSphereMode);

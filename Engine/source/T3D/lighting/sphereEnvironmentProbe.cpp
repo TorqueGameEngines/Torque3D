@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "T3D/lighting/Skylight.h"
+#include "T3D/lighting/sphereEnvironmentProbe.h"
 #include "math/mathIO.h"
 #include "scene/sceneRenderState.h"
 #include "console/consoleTypes.h"
@@ -57,11 +57,10 @@
 
 extern bool gEditingMission;
 extern ColorI gCanvasClearColor;
-bool Skylight::smRenderSkylights = true;
 
-IMPLEMENT_CO_NETOBJECT_V1(Skylight);
+IMPLEMENT_CO_NETOBJECT_V1(SphereEnvironmentProbe);
 
-ConsoleDocClass(Skylight,
+ConsoleDocClass(SphereEnvironmentProbe,
    "@brief An example scene object which renders a mesh.\n\n"
    "This class implements a basic SceneObject that can exist in the world at a "
    "3D position and render itself. There are several valid ways to render an "
@@ -75,25 +74,25 @@ ConsoleDocClass(Skylight,
 //-----------------------------------------------------------------------------
 // Object setup and teardown
 //-----------------------------------------------------------------------------
-Skylight::Skylight() : ReflectionProbe()
+SphereEnvironmentProbe::SphereEnvironmentProbe() : ReflectionProbe()
 {
-   mCaptureMask = SKYLIGHT_CAPTURE_TYPEMASK;
+   mCaptureMask = REFLECTION_PROBE_CAPTURE_TYPEMASK;
 }
 
-Skylight::~Skylight()
+SphereEnvironmentProbe::~SphereEnvironmentProbe()
 {
 }
 
 //-----------------------------------------------------------------------------
 // Object Editing
 //-----------------------------------------------------------------------------
-void Skylight::initPersistFields()
+void SphereEnvironmentProbe::initPersistFields()
 {
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 }
 
-void Skylight::inspectPostApply()
+void SphereEnvironmentProbe::inspectPostApply()
 {
    Parent::inspectPostApply();
 
@@ -104,7 +103,7 @@ void Skylight::inspectPostApply()
    setMaskBits(-1);
 }
 
-bool Skylight::onAdd()
+bool SphereEnvironmentProbe::onAdd()
 {
    if (!Parent::onAdd())
       return false;
@@ -112,12 +111,12 @@ bool Skylight::onAdd()
    return true;
 }
 
-void Skylight::onRemove()
+void SphereEnvironmentProbe::onRemove()
 {
    Parent::onRemove();
 }
 
-void Skylight::setTransform(const MatrixF & mat)
+void SphereEnvironmentProbe::setTransform(const MatrixF & mat)
 {
    // Let SceneObject handle all of the matrix manipulation
    Parent::setTransform(mat);
@@ -129,7 +128,7 @@ void Skylight::setTransform(const MatrixF & mat)
    setMaskBits(TransformMask);
 }
 
-U32 Skylight::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
+U32 SphereEnvironmentProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
 {
    // Allow the Parent to get a crack at writing its info
    U32 retMask = Parent::packUpdate(conn, mask, stream);
@@ -137,7 +136,7 @@ U32 Skylight::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    return retMask;
 }
 
-void Skylight::unpackUpdate(NetConnection *conn, BitStream *stream)
+void SphereEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 {
    // Let the Parent read any info it sent
    Parent::unpackUpdate(conn, stream);
@@ -147,52 +146,25 @@ void Skylight::unpackUpdate(NetConnection *conn, BitStream *stream)
 // Object Rendering
 //-----------------------------------------------------------------------------
 
-void Skylight::updateProbeParams()
+void SphereEnvironmentProbe::updateProbeParams()
 {
    Parent::updateProbeParams();
 
    mProbeInfo->mProbeShapeType = ProbeRenderInst::Sphere;
-
-   mProbeInfo->setPosition(getPosition());
-
-   // Skip our transform... it just dirties mask bits.
-   Parent::setTransform(mObjToWorld);
-
-   resetWorldBox();
-
-   F32 visDist = gClientSceneGraph->getVisibleDistance();
-   Box3F skylightBounds = Box3F(visDist * 2);
-
-   skylightBounds.setCenter(Point3F::Zero);
-
-   mProbeInfo->setPosition(Point3F::Zero);
-
-   mProbeInfo->mBounds = skylightBounds;
-
-   setGlobalBounds();
-
-   mProbeInfo->mIsSkylight = true; 
-   mProbeInfo->mScore = -1.0f; //sky comes first
 }
 
-void Skylight::prepRenderImage(SceneRenderState *state)
+void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)
 {
-   if (!mEnabled || !Skylight::smRenderSkylights)
+   if (!mEnabled || !ReflectionProbe::smRenderPreviewProbes)
       return;
 
-   //special hook-in for skylights
+   //special hook-in for SphereEnvironmentProbes
    Point3F camPos = state->getCameraPosition();
    mProbeInfo->mBounds.setCenter(camPos);
 
    mProbeInfo->setPosition(camPos);
 
-   //Submit our probe to actually do the probe action
-   // Get a handy pointer to our RenderPassmanager
-   //RenderPassManager *renderPass = state->getRenderPass();
-
-   //PROBEMGR->registerSkylight(mProbeInfo, this);
-
-   if (Skylight::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
+   if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
    {
       GFXTransformSaver saver;
 
@@ -254,13 +226,7 @@ void Skylight::prepRenderImage(SceneRenderState *state)
    }
 }
 
-void Skylight::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)
+void SphereEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)
 {
    Parent::setPreviewMatParameters(renderState, mat);
-}
-
-DefineEngineMethod(Skylight, postApply, void, (), ,
-   "A utility method for forcing a network update.\n")
-{
-   object->inspectPostApply();
 }

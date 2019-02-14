@@ -277,94 +277,7 @@ new CustomMaterial( AL_ParticlePointLightMaterial )
    pixVersion = 3.0;
 };
 
-//Reflection probe Specular
-new ShaderData( ReflectionProbeShader )
-{
-   /*DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeP.glsl";
-
-   samplerNames[0] = "$deferredBuffer";
-   samplerNames[1] = "$colorBuffer";
-   samplerNames[2] = "$matInfoBuffer";
-   samplerNames[3] = "$cubeMap";
-   samplerNames[4] = "$irradianceCubemap";
-   samplerNames[5] = "$BRDFTexture";*/
-   
-   DXVertexShaderFile = "shaders/common/lighting/advanced/farFrustumQuadV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/farFrustumQuadV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
-
-   samplerNames[0] = "$deferredBuffer";
-   samplerNames[1] = "$colorBuffer";
-   samplerNames[2] = "$matInfoBuffer";
-   samplerNames[3] = "$BRDFTexture";
-   samplerNames[4] = "$cubeMap";
-   samplerNames[5] = "$irradianceCubemap";
-   
-   pixVersion = 3.0;
-};
-
-// Convex-geometry light states
-new GFXStateBlockData( AL_ProbeState )
-{
-   blendDefined = true;
-   blendEnable = true;
-   blendSrc = GFXBlendSrcAlpha; //TODO change this to GFXBlendOne once probes are done in one pass!
-   blendDest = GFXBlendOne;
-   blendOp = GFXBlendOpAdd;
-   
-   colorWriteDefined = true;
-   colorWriteRed = true;
-   colorWriteBlue = true;
-   colorWriteGreen = true;
-   colorWriteAlpha = true;
-   
-   zDefined = true;
-   zEnable = true;
-   zWriteEnable = false;
-   zFunc = GFXCmpGreaterEqual;
-
-   samplersDefined = true;
-   samplerStates[0] = SamplerClampPoint;  // G-buffer
-   mSamplerNames[0] = "deferredBuffer";
-   samplerStates[1] = SamplerClampLinear;
-   mSamplerNames[1] = "colorBuffer";   
-   samplerStates[2] = SamplerClampLinear;
-   mSamplerNames[2] = "matInfoBuffer";   
-
-   mSamplerNames[3] = "BRDFTexture";
-   mSamplerNames[4] = "cubeMap";
-   mSamplerNames[5] = "irradianceCubemap";
-   
-   cullDefined = true;
-   cullMode = GFXCullCW;
-   
-   stencilDefined = true;
-   stencilEnable = true;
-   stencilFailOp = GFXStencilOpKeep;
-   stencilZFailOp = GFXStencilOpKeep;
-   stencilPassOp = GFXStencilOpKeep;
-   stencilFunc = GFXCmpLess;
-   stencilRef = 0;
-};
-
-new CustomMaterial( ReflectionProbeMaterial )
-{
-   shader = ReflectionProbeShader;
-   stateBlock = AL_ProbeState;
-   
-   sampler["deferredBuffer"] = "#deferred";
-   sampler["matInfoBuffer"] = "#matinfo";
-   
-   pixVersion = 3.0;
-};
-
-//Skylight
+//Probe Processing
 new ShaderData( IrradianceShader )
 {
    DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
@@ -391,68 +304,6 @@ new ShaderData( PrefiterCubemapShader )
    pixVersion = 3.0;
 };
 
-new ShaderData( SkyLightShader )
-{
-   DXVertexShaderFile = "shaders/common/lighting/advanced/convexGeometryV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/skylightP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/convexGeometryV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/skylightP.glsl";
-
-   samplerNames[0] = "$deferredBuffer";
-   samplerNames[1] = "$matInfoBuffer";
-   samplerNames[2] = "$colorBuffer";
-   samplerNames[3] = "$cubeMap";
-   samplerNames[4] = "$irradianceCubemap";
-   samplerNames[5] = "$BRDFTexture";
-   
-   pixVersion = 3.0;
-};
-
-new CustomMaterial( SkyLightMaterial )
-{
-   shader = SkyLightShader;
-   stateBlock = AL_ProbeState;
-   
-   sampler["deferredBuffer"] = "#deferred";
-   sampler["matInfoBuffer"] = "#matinfo";
-   sampler["colorBuffer"] = "#color";
-   
-   pixVersion = 3.0;
-};
-
-new ShaderData( ReflectionProbeArrayShader )
-{
-   DXVertexShaderFile = "shaders/common/lighting/advanced/reflectionProbeArrayV.hlsl";
-   DXPixelShaderFile  = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
-
-   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/reflectionProbeArrayV.glsl";
-   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
-
-   samplerNames[0] = "$deferredBuffer";
-   samplerNames[1] = "$colorBuffer";
-   samplerNames[2] = "$matInfoBuffer";
-   samplerNames[3] = "$BRDFTexture";
-   samplerNames[4] = "$cubeMap";
-   samplerNames[5] = "$irradianceCubemap";
-   
-   pixVersion = 3.0;
-};
-
-new CustomMaterial( ReflectionProbeArrayMaterial )
-{
-   shader = ReflectionProbeArrayShader;
-   stateBlock = AL_ProbeState;
-   
-   sampler["deferredBuffer"] = "#deferred";
-   sampler["colorBuffer"] = "#color";
-   sampler["matInfoBuffer"] = "#matinfo";
-   sampler["BRDFTexture"] = "core/art/pbr/brdfTexture.dds";
-   
-   pixVersion = 3.0;
-};
-
-//
 //
 singleton ShaderData( PFX_ReflectionProbeArray )
 {
@@ -461,8 +312,6 @@ singleton ShaderData( PFX_ReflectionProbeArray )
 
    //OGLVertexShaderFile  = "shaders/common/postFx/gl//postFxV.glsl";
    //OGLPixelShaderFile   = "shaders/common/postFx/gl/passthruP.glsl";
-
-   //samplerNames[0] = "$inputTex";
    
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$colorBuffer";
@@ -476,10 +325,6 @@ singleton ShaderData( PFX_ReflectionProbeArray )
 
 singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
 {  
-   //zDefined = true;
-   //zEnable = false;
-   //zWriteEnable = false;
-
    samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
 };
@@ -497,15 +342,11 @@ singleton PostEffect( reflectionProbeArrayPostFX )
 
    shader = PFX_ReflectionProbeArray;
    stateBlock = PFX_ReflectionProbeArrayStateBlock;
-   //texture[0] = "#highlight";
-   //texture[1] = "$backBuffer";
 
    texture[0] = "#deferred";
    texture[1] = "#color";
    texture[2] = "#matinfo";
    texture[3] = "core/art/pbr/brdfTexture.dds";
-   //texture[4] = "$cubeMap";
-   //texture[5] = "$irradianceCubemap";   
    
    target = "AL_FormatToken";
 };

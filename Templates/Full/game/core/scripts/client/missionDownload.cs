@@ -89,6 +89,7 @@ function clientCmdMissionStartPhase3(%seq,%missionName)
    echo ("*** Phase 3: Mission Lighting");
    $MSeq = %seq;
    $Client::MissionFile = %missionName;
+   $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
 
    // Need to light the mission before we are ready.
    // The sceneLightingComplete function will complete the handshake 

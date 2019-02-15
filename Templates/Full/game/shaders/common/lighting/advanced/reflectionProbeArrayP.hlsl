@@ -173,7 +173,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      irradiance += float3(blendVal[i],blendVal[i],blendVal[i])/*blendVal[i]*iblBoxDiffuse(surface,i)*/;
+      irradiance += blendVal[i]*iblBoxDiffuse(surface,i);
       
       specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
    }

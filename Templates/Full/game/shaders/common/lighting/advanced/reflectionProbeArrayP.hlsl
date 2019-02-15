@@ -115,22 +115,22 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       
    for(i=0; i < numProbes; i++)
    {
-        float3 probeWS = inProbePosArray[i].xyz;
-        float3 L = probeWS - surface.P;
+      float3 probeWS = inProbePosArray[i].xyz;
+      float3 L = probeWS - surface.P;
       
-        /*if(useSphereMode[i])
-        {
-            float3 L = inProbePosArray[i].xyz - surface.P;
-            blendVal[i] = 1.0-length(L)/radius[i];
-            blendVal[i] = max(0,blendVal[i]);
-        }
-        else
-        {*/
-            blendVal[i] = defineBoxSpaceInfluence(surface, i);
-            blendVal[i] = max(0,blendVal[i]);		
-        //}
+      if(useSphereMode[i].r)
+      {
+          float3 L = inProbePosArray[i].xyz - surface.P;
+          blendVal[i] = 1.0-length(L)/radius[i];
+          blendVal[i] = max(0,blendVal[i]);
+      }
+      else
+      {
+          blendVal[i] = defineBoxSpaceInfluence(surface, i);
+          blendVal[i] = max(0,blendVal[i]);		
+      }
 		blendSum += blendVal[i];
-        invBlendSum +=(1.0f - blendVal[i]);
+      invBlendSum +=(1.0f - blendVal[i]);
    }
 	
    // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.

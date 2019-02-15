@@ -20,11 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef REFLECTIONPROBE_H
-#define REFLECTIONPROBE_H
+#ifndef BOX_ENVIRONMENT_PROBE_H
+#define BOX_ENVIRONMENT_PROBE_H
 
-#ifndef _SCENEOBJECT_H_
-#include "scene/sceneObject.h"
+#ifndef REFLECTIONPROBE_H
+#include "T3D/lighting/reflectionProbe.h"
 #endif
 #ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
@@ -41,11 +41,8 @@
 #include "renderInstance/renderPassManager.h"
 #endif
 
-#ifndef RENDER_PROBE_MGR_H
-#include "renderInstance/renderProbeMgr.h"
-#endif
-
 class BaseMatInstance;
+
 
 //-----------------------------------------------------------------------------
 // This class implements a basic SceneObject that can exist in the world at a
@@ -56,118 +53,22 @@ class BaseMatInstance;
 // actual setup and rendering for you.
 //-----------------------------------------------------------------------------
 
-class ReflectionProbe : public SceneObject
+class BoxEnvironmentProbe : public ReflectionProbe
 {
-   typedef SceneObject Parent;
-   friend class RenderProbeMgr;
+   typedef ReflectionProbe Parent;
 
-public:
+private:
 
-   enum ReflectionModeType
-   {
-      NoReflection = 0,
-      StaticCubemap = 1,
-      BakedCubemap = 2,
-      DynamicCubemap = 5,
-   };
-
-protected:
-
-   // Networking masks
-   // We need to implement a mask specifically to handle
-   // updating our transform from the server object to its
-   // client-side "ghost". We also need to implement a
-   // maks for handling editor updates to our properties
-   // (like material).
-   enum MaskBits
-   {
-      TransformMask = Parent::NextFreeMask << 0,
-      UpdateMask = Parent::NextFreeMask << 1,
-      EnabledMask = Parent::NextFreeMask << 2,
-      CubemapMask = Parent::NextFreeMask << 3,
-      ModeMask = Parent::NextFreeMask << 4,
-      RadiusMask = Parent::NextFreeMask << 5,
-      ShapeTypeMask = Parent::NextFreeMask << 6,
-      BakeInfoMask = Parent::NextFreeMask << 7,
-      NextFreeMask = Parent::NextFreeMask << 8
-   };
-
-   bool mBake;
-   bool mEnabled;
-   bool mDirty;
-
-   Resource<TSShape> mEditorShape;
-   TSShapeInstance* mEditorShapeInst;
-
-   //--------------------------------------------------------------------------
-   // Rendering variables
-   //--------------------------------------------------------------------------
-   ProbeRenderInst::ProbeShapeType mProbeShapeType;
-
-   ProbeRenderInst* mProbeInfo;
-   U32 mProbeInfoIdx;
-
-   //Reflection Contribution stuff
-   ReflectionModeType mReflectionModeType;
-
-   F32 mRadius;
-   Point3F mProbePosOffset;
-   bool mEditPosOffset;
-
-   String mCubemapName;
-   CubemapData *mStaticCubemap;
-   GFXCubemapHandle  mDynamicCubemap;
-   bool mUseCubemap;
-
-   String cubeDescName;
-   U32 cubeDescId;
-   ReflectorDesc *reflectorDesc;
-
-   ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
-   bool mUseHDRCaptures;
-
-   //irridiance resources
-   CubemapData *mIrridianceMap;
-
-   //prefilter resources
-   CubemapData *mPrefilterMap;
-   U32 mPrefilterMipLevels;
-   U32 mPrefilterSize;
-
-   String mProbeUniqueID;
-
-   // Define our vertex format here so we don't have to
-   // change it in multiple spots later
-   typedef GFXVertexPNTTB VertexType;
-
-   // The GFX vertex and primitive buffers
-   GFXVertexBufferHandle< VertexType > mVertexBuffer;
-   GFXPrimitiveBufferHandle            mPrimitiveBuffer;
-
-   U32 mSphereVertCount;
-   U32 mSpherePrimitiveCount;
-
-   //Debug rendering
+    //Debug rendering
    static bool smRenderPreviewProbes;
 
-   U32 mDynamicLastBakeMS;
-   U32 mRefreshRateMS;
-
-   GBitmap* mCubeFaceBitmaps[6];
-   U32 mCubemapResolution;
-
-   F32 mMaxDrawDistance;
-
-   bool mResourcesCreated;
-   U32 mCaptureMask;
-
 public:
-   ReflectionProbe();
-   virtual ~ReflectionProbe();
+   BoxEnvironmentProbe();
+   virtual ~BoxEnvironmentProbe();
 
    // Declare this object as a ConsoleObject so that we can
    // instantiate it into the world and network it
-   DECLARE_CONOBJECT(ReflectionProbe);
+   DECLARE_CONOBJECT(BoxEnvironmentProbe);
 
    //--------------------------------------------------------------------------
    // Object Editing
@@ -182,15 +83,9 @@ public:
    // from the server object to the client
    virtual void inspectPostApply();
 
-   static bool _setEnabled(void *object, const char *index, const char *data);
-   static bool _doBake(void *object, const char *index, const char *data);
-   static bool _toggleEditPosOffset(void *object, const char *index, const char *data);
-
    // Handle when we are added to the scene and removed from the scene
    bool onAdd();
    void onRemove();
-
-   virtual void handleDeleteAction();
 
    // Override this so that we can dirty the network flag when it is called
    void setTransform(const MatrixF &mat);
@@ -210,41 +105,12 @@ public:
    // minimizing texture, state, and shader switching by grouping objects that
    // use the same Materials.
    //--------------------------------------------------------------------------
-
-   // Create the geometry for rendering
-   void createGeometry();
-
-   // Get the Material instance
-   void updateMaterial();
-
    virtual void updateProbeParams();
-
-   bool createClientResources();
-   void generateTextures();
-
-   void processStaticCubemap();
 
    // This is the function that allows this object to submit itself for rendering
    void prepRenderImage(SceneRenderState *state);
 
-   void _onRenderViz(ObjectRenderInst *ri,
-      SceneRenderState *state,
-      BaseMatInstance *overrideMat);
-
    void setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat);
-
-   //Baking
-   String getPrefilterMapPath();
-   String getIrradianceMapPath();
-   void bake();
-
-   const U32 getProbeInfoIndex() { return mProbeInfoIdx; }
 };
 
-typedef ProbeRenderInst::ProbeShapeType ReflectProbeType;
-DefineEnumType(ReflectProbeType);
-
-typedef ReflectionProbe::ReflectionModeType ReflectionModeEnum;
-DefineEnumType(ReflectionModeEnum);
-
-#endif // _ReflectionProbe_H_
+#endif // BOX_ENVIRONMENT_PROBE_H

@@ -114,14 +114,11 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float invBlendSum = 0;
       
    for(i=0; i < numProbes; i++)
-   {
-      float3 probeWS = inProbePosArray[i].xyz;
-      float3 L = probeWS - surface.P;
-      
+   {      
       if(useSphereMode[i].r)
       {
           float3 L = inProbePosArray[i].xyz - surface.P;
-          blendVal[i] = 1.0-length(L)/radius[i];
+          blendVal[i] = 1.0-length(L)/radius[i].r;
           blendVal[i] = max(0,blendVal[i]);
       }
       else
@@ -179,7 +176,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-	float4 finalColor = float4(diffuse + specular * surface.ao, 1);
+	float4 finalColor = float4(diffuse + specular * surface.ao, blendSum);
 
     return finalColor;
 }

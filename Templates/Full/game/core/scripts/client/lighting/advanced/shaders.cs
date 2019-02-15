@@ -327,6 +327,12 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
 {  
    samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
+   
+   blendDefined = true;
+   blendEnable = true;
+   blendSrc = GFXBlendSrcAlpha;
+   blendDest = GFXBlendInvSrcAlpha;
+   blendOp = GFXBlendOpAdd;
 };
 
 singleton PostEffect( reflectionProbeArrayPostFX )

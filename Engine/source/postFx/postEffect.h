@@ -41,6 +41,9 @@
 #ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
 #endif
+#ifndef _GFXCUBEMAP_H_
+#include "gfx/gfxCubemap.h"
+#endif
 #ifndef _GFXTARGET_H_
 #include "gfx/gfxTarget.h"
 #endif
@@ -88,7 +91,16 @@ protected:
    FileName mTexFilename[NumTextures];
    bool mTexSRGB[NumTextures];
 
+   enum
+   {
+      NormalTextureType = 0,
+      CubemapType,
+      CubemapArrayType,
+   } mTextureType[NumTextures];
+
    GFXTexHandle mTextures[NumTextures];
+   GFXCubemapHandle mCubemapTextures[NumTextures];
+   GFXCubemapArrayHandle mCubemapArrayTextures[NumTextures];
 
    NamedTexTarget mNamedTarget;
    NamedTexTarget mNamedTargetDepthStencil; 
@@ -210,7 +222,52 @@ protected:
          set( val );
       }
 
+      EffectConst(const String &name, const F32 &val)
+         : mName(name),
+         mHandle(NULL),
+         mDirty(true)
+      {
+         set(val);
+      }
+
+      EffectConst(const String &name, const Point4F &val)
+         : mName(name),
+         mHandle(NULL),
+         mDirty(true)
+      {
+         set(val);
+      }
+
+      EffectConst(const String &name, const MatrixF &val)
+         : mName(name),
+         mHandle(NULL),
+         mDirty(true)
+      {
+         set(val);
+      }
+
+      EffectConst(const String &name, const Vector<Point4F> &val)
+         : mName(name),
+         mHandle(NULL),
+         mDirty(true)
+      {
+         set(val);
+      }
+
+      EffectConst(const String &name, const Vector<MatrixF> &val)
+         : mName(name),
+         mHandle(NULL),
+         mDirty(true)
+      {
+         set(val);
+      }
+
       void set( const String &newVal );
+      void set(const F32 &newVal);
+      void set(const Point4F &newVal);
+      void set(const MatrixF &newVal);
+      void set(const Vector<Point4F> &newVal);
+      void set(const Vector<MatrixF> &newVal);
 
       void setToBuffer( GFXShaderConstBufferRef buff );
 
@@ -219,6 +276,23 @@ protected:
       GFXShaderConstHandle *mHandle;
 
       String mStringVal;
+
+      F32     mFloatVal;
+      Point4F mPointVal;
+      MatrixF mMatrixVal;
+
+      Vector<Point4F> mPointArrayVal;
+      Vector<MatrixF> mMatrixArrayVal;
+
+      enum
+      {
+         StringType,
+         FloatType,
+         PointType,
+         MatrixType,
+         PointArrayType,
+         MatrixArrayType
+      } mValueType;
 
       bool mDirty;
    };
@@ -245,6 +319,9 @@ protected:
 
    ///
    virtual void _setupTexture( U32 slot, GFXTexHandle &inputTex, const RectI *inTexViewport );
+   virtual void _setupCubemapTexture(U32 stage, GFXCubemapHandle &inputTex);
+   virtual void _setupCubemapArrayTexture(U32 slot, GFXCubemapArrayHandle &inputTex);
+
 
    /// Protected set method for toggling the enabled state.
    static bool _setIsEnabled( void *object, const char *index, const char *data );
@@ -339,6 +416,8 @@ public:
    F32 getPriority() const { return mRenderPriority; }
 
    void setTexture( U32 index, const String &filePath );
+   void setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHandle);
+   void setCubemapArrayTexture(U32 index, const GFXCubemapArrayHandle &cubemapArrayHandle);
 
    void setShaderMacro( const String &name, const String &value = String::EmptyString );
    bool removeShaderMacro( const String &name );
@@ -346,6 +425,11 @@ public:
 
    ///
    void setShaderConst( const String &name, const String &val );   
+   void setShaderConst(const String &name, const F32 &val);
+   void setShaderConst(const String &name, const Point4F &val);
+   void setShaderConst(const String &name, const MatrixF &val);
+   void setShaderConst(const String &name, const Vector<Point4F> &val);
+   void setShaderConst(const String &name, const Vector<MatrixF> &val);
 
    void setOnThisFrame( bool enabled ) { mOnThisFrame = enabled; }
    bool isOnThisFrame() { return mOnThisFrame; }
@@ -353,6 +437,10 @@ public:
    bool isOneFrameOnly() { return mOneFrameOnly; }   
 
    F32 getAspectRatio() const;
+
+   GFXShaderRef getShader() { return mShader; }
+   Vector<GFXShaderMacro>* getShaderMacros() { return &mShaderMacros; }
+   GFXShaderConstBufferRef getShaderConstBuffer() { return mShaderConsts; }
    
 
    enum PostEffectRequirements

@@ -48,27 +48,32 @@
 #include "postFx/postEffectCommon.h"
 #endif
 
+#ifndef _REFLECTOR_H_
+#include "scene/reflector.h"
+#endif
+
 static U32 MAXPROBECOUNT = 50;
+
+class PostEffect;
+class ReflectionProbe;
 
 struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
 {
-   LinearColorF mAmbient;
-
    MatrixF mTransform;
 
    F32 mRadius;
-   F32 mIntensity;
 
    bool mDirty;
 
    Box3F mBounds;
+   Point3F mPosition;
    Point3F mProbePosOffset;
 
    GFXCubemapHandle mCubemap;
-
    GFXCubemapHandle mIrradianceCubemap;
 
-   GFXTexHandle *mBRDFTexture;
+   //Utilized in dynamic reflections
+   CubeReflector mCubeReflector;
 
    /// The priority of this light used for
    /// light and shadow scoring.
@@ -80,16 +85,6 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
 
    bool mIsSkylight;
 
-   /// Whether to render debugging visualizations
-   /// for this light.
-   bool mDebugRender;
-
-   GFXPrimitiveBufferHandle primBuffer;
-   GFXVertexBufferHandle<GFXVertexPC> vertBuffer;
-   U32 numPrims;
-   U32 numVerts;
-   Vector< U32 > numIndicesForPoly;
-
    enum ProbeShapeType
    {
       Sphere = 0,            ///< Sphere shaped
@@ -97,10 +92,6 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
    };
 
    ProbeShapeType mProbeShapeType;
-
-   //Spherical Harmonics data
-   LinearColorF mSHTerms[9];
-   F32 mSHConstants[5];
 
 public:
 
@@ -114,27 +105,17 @@ public:
    const MatrixF& getTransform() const { return mTransform; }
    void setTransform(const MatrixF &xfm) { mTransform = xfm; }
 
-   Point3F getPosition() const { return mTransform.getPosition(); }
-   void setPosition(const Point3F &pos) { mTransform.setPosition(pos); }
+   Point3F getPosition() const { return mPosition; }
+   void setPosition(const Point3F &pos) { mPosition = pos; }
 
    VectorF getDirection() const { return mTransform.getForwardVector(); }
    void setDirection(const VectorF &val);
-
-   const LinearColorF& getAmbient() const { return mAmbient; }
-   void setAmbient(const LinearColorF &val) { mAmbient = val; }
 
    void setPriority(F32 priority) { mPriority = priority; }
    F32 getPriority() const { return mPriority; }
 
    void setScore(F32 score) { mScore = score; }
    F32 getScore() const { return mScore; }
-
-   bool isDebugRenderingEnabled() const { return mDebugRender; }
-   void enableDebugRendering(bool value) { mDebugRender = value; }
-
-   // Builds the world to light view projection used for
-   // shadow texture and cookie lookups.
-   void getWorldToLightProj(MatrixF *outMatrix) const;
 
    void clear();
 };
@@ -167,26 +148,6 @@ struct ProbeShaderConstants
 
 typedef Map<GFXShader*, ProbeShaderConstants*> ProbeConstantMap;
 
-class ReflectProbeMatInstance : public MatInstance
-{
-   typedef MatInstance Parent;
-protected:
-   MaterialParameterHandle * mProbeParamsSC;
-   bool mInternalPass;
-
-   GFXStateBlockRef mProjectionState;
-
-   ProcessedShaderMaterial* mShaderMat;
-
-public:
-   ReflectProbeMatInstance(Material &mat) : Parent(mat), mProbeParamsSC(NULL), mInternalPass(false), mProjectionState(NULL) {}
-
-   virtual bool init(const FeatureSet &features, const GFXVertexFormat *vertexFormat);
-   virtual bool setupPass(SceneRenderState *state, const SceneData &sgData);
-
-   ProcessedShaderMaterial* getProcessedShaderMaterial() { return mShaderMat; }
-};
-
 //**************************************************************************
 // RenderObjectMgr
 //**************************************************************************
@@ -194,81 +155,52 @@ class RenderProbeMgr : public RenderBinManager
 {
    typedef RenderBinManager Parent;
 
-   struct ReflectProbeMaterialInfo
-   {
-      ReflectProbeMatInstance *matInstance;
-
-      // { zNear, zFar, 1/zNear, 1/zFar }
-      MaterialParameterHandle *zNearFarInvNearFar;
-
-      // Far frustum plane (World Space)
-      MaterialParameterHandle *farPlane;
-
-      // Far frustum plane (View Space)
-      MaterialParameterHandle *vsFarPlane;
-
-      // -dot( farPlane, eyePos )
-      MaterialParameterHandle *negFarPlaneDotEye;
-
-      // Light Parameters
-      MaterialParameterHandle *probeLSPos;
-      MaterialParameterHandle *probeWSPos;
-      MaterialParameterHandle *attenuation;
-      MaterialParameterHandle *radius;
-
-      MaterialParameterHandle *useCubemap;
-      MaterialParameterHandle *cubemap;
-      MaterialParameterHandle *cubeMips;
-
-      MaterialParameterHandle *eyePosWorld;
-      MaterialParameterHandle *bbMin;
-      MaterialParameterHandle *bbMax;
-
-      MaterialParameterHandle *useSphereMode;
-
-      MaterialParameterHandle *shTerms[9];
-      MaterialParameterHandle *shConsts[5];
-
-      MaterialParameterHandle *probeCount;
-
-      ReflectProbeMaterialInfo(const String &matName, const GFXVertexFormat *vertexFormat);
-
-      virtual ~ReflectProbeMaterialInfo();
-
-
-      void setViewParameters(const F32 zNear,
-         const F32 zFar,
-         const Point3F &eyePos,
-         const PlaneF &farPlane,
-         const PlaneF &_vsFarPlane);
-
-      void setProbeParameters(const ProbeRenderInst *probe, const SceneRenderState* renderState, const MatrixF &worldViewOnly);
-   };
-
-   enum SpecialProbeTypesEnum
-   {
-      SkylightProbeType,
-      SpecialProbeTypesCount
-   };
-
    Vector<U32> mRegisteredProbes;
 
-   ReflectProbeMaterialInfo* mReflectProbeMaterial;
+   //Array rendering
+   U32 mEffectiveProbeCount;
+   S32 mMipCount;
+   Vector<Point4F> probePositionsData;
+   Vector<MatrixF> probeWorldToObjData;
+   Vector<Point4F> probeBBMinData;
+   Vector<Point4F> probeBBMaxData;
+   Vector<Point4F> probeUseSphereModeData;
+   Vector<Point4F> probeRadiusData;
+   Vector<Point4F> probeAttenuationData;
+   Vector<GFXCubemapHandle> cubeMaps;
+   Vector<GFXCubemapHandle> irradMaps;
 
-   /// The scene graph the light manager is associated with.
-   SceneManager *mSceneManager;
+   AlignedArray<Point4F> mProbePositions;
+   AlignedArray<Point4F> mProbeBBMin;
+   AlignedArray<Point4F> mProbeBBMax;
+   AlignedArray<float> mProbeUseSphereMode;
+   AlignedArray<float> mProbeRadius;
+   AlignedArray<float> mProbeAttenuation;
 
+   GFXCubemapArrayHandle mCubemapArray;
+   GFXCubemapArrayHandle mIrradArray;
+
+   //Utilized in forward rendering
    ProbeConstantMap mConstantLookup;
    GFXShaderRef mLastShader;
    ProbeShaderConstants* mLastConstants;
 
-protected:
+   //
+   SimObjectPtr<PostEffect> mProbeArrayEffect;
 
+public:
+   RenderProbeMgr();
+   RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
+
+   virtual void onRemove();
+
+   // ConsoleObject
+   static void initPersistFields();
+   DECLARE_CONOBJECT(RenderProbeMgr);
+
+protected:
    /// The current active light manager.
    static RenderProbeMgr *smProbeManager;
-
-   typedef GFXVertexPNTT FarFrustumQuadVert;
-   GFXVertexBufferHandle<FarFrustumQuadVert> mFarFrustumQuadVerts;
 
    /// This helper function sets the shader constansts
    /// for the stock 4 light forward lighting code.
@@ -283,57 +215,37 @@ protected:
       GFXShaderConstHandle *probeLocalPosSC,
       GFXShaderConstBuffer *shaderConsts);
 
-      GFXTextureObject * mBrdfTexture;
-
-      //Array rendering
-
-      Vector<Point3F> probePositions;
-      Vector<MatrixF> probeWorldToObj;
-      Vector<Point3F> probeBBMin;
-      Vector<Point3F> probeBBMax;
-      Vector<float> probeUseSphereMode;
-      Vector<float> probeRadius;
-      Vector<float> probeAttenuation;
-      Vector<GFXCubemapHandle> cubeMaps;
-      Vector<GFXCubemapHandle> irradMaps;
-
-      GFXCubemapArrayHandle mCubemapArray;
-      GFXCubemapArrayHandle mIrradArray;
-public:
-   RenderProbeMgr();
-   RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
-
-   // RenderBinMgr
+   void _setupStaticParameters();
    void _setupPerFrameParameters(const SceneRenderState *state);
    virtual void addElement(RenderInst *inst);
    virtual void render(SceneRenderState * state);
 
-   virtual void setProbeInfo(ProcessedMaterial *pmat,
-      const Material *mat,
-      const SceneData &sgData,
-      const SceneRenderState *state,
-      U32 pass,
-      GFXShaderConstBuffer *shaderConsts);
    ProbeShaderConstants* getProbeShaderConstants(GFXShaderConstBuffer* buffer);
 
-   // ConsoleObject
-   static void initPersistFields();
-   DECLARE_CONOBJECT(RenderProbeMgr);
+   PostEffect* getProbeArrayEffect();
+
+public:
+   // RenderBinMgr
+   void updateProbes();
 
    /// Returns the active LM.
    static inline RenderProbeMgr* getProbeManager();
 
-   ReflectProbeMaterialInfo* getReflectProbeMaterial();
-
    void registerProbe(U32 probeIdx);
+   void unregisterProbe(U32 probeIdx);
 
-   // Returns the scene manager passed at activation.
-   SceneManager* getSceneManager() { return mSceneManager; }
-
-   void setSceneManager(SceneManager* sceneManager) { mSceneManager = sceneManager; }
+   virtual void setProbeInfo(ProcessedMaterial *pmat,
+	   const Material *mat,
+	   const SceneData &sgData,
+	   const SceneRenderState *state,
+	   U32 pass,
+	   GFXShaderConstBuffer *shaderConsts);
 
    /// Debug rendering
    static bool smRenderReflectionProbes;
+
+   void bakeProbe(ReflectionProbe *probeInfo);
+   void bakeProbes();
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()
@@ -342,15 +254,7 @@ RenderProbeMgr* RenderProbeMgr::getProbeManager()
    {
       RenderProbeMgr* probeManager = new RenderProbeMgr();
 
-      if (gClientSceneGraph != nullptr)
-      {
-         probeManager->setSceneManager(gClientSceneGraph);
-         smProbeManager = probeManager;
-      }
-      else
-      {
-         delete probeManager;
-      }
+      smProbeManager = probeManager;
    }
 
    return smProbeManager;

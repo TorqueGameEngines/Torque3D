@@ -16,14 +16,16 @@ function ProbeBakeDlg::onWake(%this)
 
 function ProbeBakeDlg_RunBake::onClick(%this)
 {
-   %probeIds = parseMissionGroupForIds("ReflectionProbe", "");
+   %boxProbeIds = parseMissionGroupForIds("BoxEnvironmentProbe", "");
+   %sphereProbeIds = parseMissionGroupForIds("SphereEnvironmentProbe", "");
    %skylightIds = parseMissionGroupForIds("Skylight", "");
    
+   %probeIds = rtrim(ltrim(%boxProbeIds SPC %sphereProbeIds));
    %probeIds = rtrim(ltrim(%probeIds SPC %skylightIds));
    %probeCount = getWordCount(%probeIds);
    
    %numIter = ProbeBakeDlg_NumIterTxt.getText();
-   %resolution = ProbeBakeDlg_ProbeResList.getText();
+   $pref::ReflectionProbes::BakeResolution = ProbeBakeDlg_ProbeResList.getText();
    %progressStep = 100 / (%numIter * %probeCount);
    %currentProgressValue = 0;
    
@@ -32,17 +34,17 @@ function ProbeBakeDlg_RunBake::onClick(%this)
    
    for(%iter=0; %iter < %numIter; %iter++)
    {
-      %renderWithProbes = false;
+      $pref::ReflectionProbes::RenderWithProbes = false;
       
       if(%iter != 0)
-         %renderWithProbes = true;
+         $pref::ReflectionProbes::RenderWithProbes = true;
          
       for(%i=0; %i < %probeCount; %i++)
       {
          %probe = getWord(%probeIds, %i);
          
-         %path = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
-         %probe.bake(%path, %resolution, %renderWithProbes);
+         $pref::ReflectionProbes::CurrentLevelPath = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
+         ProbeBin.bakeProbe(%probe);
          
          %currentProgressValue += %progressStep;
          ProbeBakeDlg_Progress.setValue(%currentProgressValue);

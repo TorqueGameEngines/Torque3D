@@ -1,8 +1,7 @@
+#include "../../postFx/postFx.hlsl"
+#include "../../shaderModel.hlsl"
 #include "../../shaderModelAutoGen.hlsl"
-
-#include "farFrustumQuad.hlsl"
 #include "../../lighting.hlsl"
-#include "../../torque.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 1);
@@ -21,13 +20,15 @@ uniform float cubeMips;
 uniform float numProbes;
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
+//TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
+//TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
 uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float4    bbMinArray[MAX_PROBES];
 uniform float4    bbMaxArray[MAX_PROBES];
-uniform float     useSphereMode[MAX_PROBES];
-uniform float     radius[MAX_PROBES];
-uniform float2    attenuation[MAX_PROBES];
+uniform float4     useSphereMode[MAX_PROBES];
+uniform float4     radius[MAX_PROBES];
+uniform float4    attenuation[MAX_PROBES];
 
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
@@ -51,6 +52,7 @@ float3 iblBoxDiffuse( Surface surface, int id)
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
    return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
+   //return TORQUE_TEXCUBELOD(irradianceCubemapAR,float4(cubeN,0)).xyz;
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
@@ -67,6 +69,7 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 	
    float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
+   //float3 radiance = TORQUE_TEXCUBELOD(cubeMapAR,float4(cubeR,lod)).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
@@ -76,8 +79,8 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     float tempAttenVal = 3.5; //replace with per probe atten
     float3 surfPosLS = mul( worldToObjArray[id], float4(surface.P,1.0)).xyz;
 
-    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0]);
-    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0]);
+    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0].x);
+    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0].x);
 
     float boxOuterRange = length(boxMaxLS - boxMinLS);
     float boxInnerRange = boxOuterRange / tempAttenVal;
@@ -88,11 +91,11 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     return max(localDir.x, max(localDir.y, localDir.z)) * -1;
 }
 
-float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
+float4 main( PFXVertToPix IN ) : SV_TARGET
 {
    //unpack normal and linear depth 
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0.xy);
-   
+
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0.xy, eyePosWorld, IN.wsEyeRay, cameraToWorld);
@@ -102,29 +105,30 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
    {   
       discard;
    }                                    
-	float blendVal[MAX_PROBES];
+	
+   float blendVal[MAX_PROBES];
    float3 surfToEye = normalize(surface.P - eyePosWorld);
 
    int i = 0;
-	float blendSum = 0;
-	float invBlendSum = 0;
+   float blendSum = 0;
+   float invBlendSum = 0;
       
    for(i=0; i < numProbes; i++)
    {
         float3 probeWS = inProbePosArray[i].xyz;
         float3 L = probeWS - surface.P;
       
-        if(useSphereMode[i])
+        /*if(useSphereMode[i])
         {
             float3 L = inProbePosArray[i].xyz - surface.P;
             blendVal[i] = 1.0-length(L)/radius[i];
             blendVal[i] = max(0,blendVal[i]);
         }
         else
-        {
+        {*/
             blendVal[i] = defineBoxSpaceInfluence(surface, i);
             blendVal[i] = max(0,blendVal[i]);		
-        }
+        //}
 		blendSum += blendVal[i];
         invBlendSum +=(1.0f - blendVal[i]);
    }
@@ -140,6 +144,13 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
       blendVal[i] *= ((1.0f - blendVal[i]) / invBlendSum);
       blendSum += blendVal[i];
    }
+
+   float finalSum = blendSum;
+
+    //return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
+    //return float4(surface.N,1);
+   //return float4(1,1,1, 1);
+   //return float4(finalSum,finalSum,finalSum, 1);
 
     // Normalize blendVal
    if (blendSum == 0.0f) // Possible with custom weight
@@ -162,11 +173,13 @@ float4 main( FarFrustumQuadConnectP IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      irradiance += blendVal[i]*iblBoxDiffuse(surface,i);
+      irradiance += float3(blendVal[i],blendVal[i],blendVal[i])/*blendVal[i]*iblBoxDiffuse(surface,i)*/;
       
       specular += blendVal[i]*F*iblBoxSpecular(surface, surfToEye, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
    }
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-	return float4(diffuse + specular * surface.ao, blendSum);
+	float4 finalColor = float4(diffuse + specular * surface.ao, 1);
+
+    return finalColor;
 }

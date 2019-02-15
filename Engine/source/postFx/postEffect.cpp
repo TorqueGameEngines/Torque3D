@@ -170,6 +170,57 @@ void PostEffect::EffectConst::set( const String &newVal )
 
    mStringVal = newVal;
    mDirty = true;
+   mValueType = StringType;
+}
+
+void PostEffect::EffectConst::set(const F32 &newVal)
+{
+   if (mFloatVal == newVal)
+      return;
+
+   mFloatVal = newVal;
+   mDirty = true;
+   mValueType = FloatType;
+}
+
+void PostEffect::EffectConst::set(const Point4F &newVal)
+{
+   if (mPointVal == newVal)
+      return;
+
+   mPointVal = newVal;
+   mDirty = true;
+   mValueType = PointType;
+}
+
+void PostEffect::EffectConst::set(const MatrixF &newVal)
+{
+   if (mMatrixVal == newVal)
+      return;
+
+   mMatrixVal = newVal;
+   mDirty = true;
+   mValueType = MatrixType;
+}
+
+void PostEffect::EffectConst::set(const Vector<Point4F> &newVal)
+{
+   //if (mPointArrayVal == newVal)
+   //   return;
+
+   mPointArrayVal = newVal;
+   mDirty = true;
+   mValueType = PointArrayType;
+}
+
+void PostEffect::EffectConst::set(const Vector<MatrixF> &newVal)
+{
+   //if (mMatrixArrayVal == newVal)
+   //   return;
+
+   mMatrixArrayVal = newVal;
+   mDirty = true;
+   mValueType = MatrixArrayType;
 }
 
 void PostEffect::EffectConst::setToBuffer( GFXShaderConstBufferRef buff )
@@ -194,71 +245,179 @@ void PostEffect::EffectConst::setToBuffer( GFXShaderConstBufferRef buff )
    // Expand to other types as necessary.
    U32 arraySize = mHandle->getArraySize();
 
-   const char *strVal = mStringVal.c_str();
+   if (mValueType == StringType)
+   {
+      const char *strVal = mStringVal.c_str();
 
-   if ( type == GFXSCT_Int )
-   {
-      S32 val;
-      Con::setData( TypeS32, &val, 0, 1, &strVal );
-      buff->set( mHandle, val );
-   }
-   else if ( type == GFXSCT_Float )
-   {
-      F32 val;
-      Con::setData( TypeF32, &val, 0, 1, &strVal );
-      buff->set( mHandle, val );
-   }
-   else if ( type == GFXSCT_Float2 )
-   {
-      Point2F val;
-      Con::setData( TypePoint2F, &val, 0, 1, &strVal );
-      buff->set( mHandle, val );
-   }
-   else if ( type == GFXSCT_Float3 )
-   {
-      Point3F val;
-      Con::setData( TypePoint3F, &val, 0, 1, &strVal );
-      buff->set( mHandle, val );
-   }
-   else if ( type == GFXSCT_Float4 )
-   {
-      Point4F val;
-
-      if ( arraySize > 1 )
+      if (type == GFXSCT_Int)
       {
-         // Do array setup!
-         //U32 unitCount = StringUnit::getUnitCount( strVal, "\t" );
-         //AssertFatal( unitCount == arraySize, "" );
+         S32 val;
+         Con::setData(TypeS32, &val, 0, 1, &strVal);
+         buff->set(mHandle, val);
+      }
+      else if (type == GFXSCT_Float)
+      {
+         F32 val;
+         Con::setData(TypeF32, &val, 0, 1, &strVal);
+         buff->set(mHandle, val);
+      }
+      else if (type == GFXSCT_Float2)
+      {
+         Point2F val;
+         Con::setData(TypePoint2F, &val, 0, 1, &strVal);
+         buff->set(mHandle, val);
+      }
+      else if (type == GFXSCT_Float3)
+      {
+         Point3F val;
+         Con::setData(TypePoint3F, &val, 0, 1, &strVal);
+         buff->set(mHandle, val);
+      }
+      else if (type == GFXSCT_Float4)
+      {
+         Point4F val;
 
-         String tmpString;
-         Vector<Point4F> valArray;
-
-         for ( U32 i = 0; i < arraySize; i++ )
+         if (arraySize > 1)
          {
-            tmpString = StringUnit::getUnit( strVal, i, "\t" );
-            valArray.increment();
-            const char *tmpCStr = tmpString.c_str();
+            // Do array setup!
+            //U32 unitCount = StringUnit::getUnitCount( strVal, "\t" );
+            //AssertFatal( unitCount == arraySize, "" );
 
-            Con::setData( TypePoint4F, &valArray.last(), 0, 1, &tmpCStr );
+            String tmpString;
+            Vector<Point4F> valArray;
+
+            for (U32 i = 0; i < arraySize; i++)
+            {
+               tmpString = StringUnit::getUnit(strVal, i, "\t");
+               valArray.increment();
+               const char *tmpCStr = tmpString.c_str();
+
+               Con::setData(TypePoint4F, &valArray.last(), 0, 1, &tmpCStr);
+            }
+
+            AlignedArray<Point4F> rectData(valArray.size(), sizeof(Point4F), (U8*)valArray.address(), false);
+            buff->set(mHandle, rectData);
          }
-
-         AlignedArray<Point4F> rectData( valArray.size(), sizeof( Point4F ), (U8*)valArray.address(), false );
-         buff->set( mHandle, rectData );
+         else
+         {
+            // Do regular setup.
+            Con::setData(TypePoint4F, &val, 0, 1, &strVal);
+            buff->set(mHandle, val);
+         }
       }
       else
       {
-         // Do regular setup.
-         Con::setData( TypePoint4F, &val, 0, 1, &strVal );
-         buff->set( mHandle, val );
+#if TORQUE_DEBUG
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
+#endif
       }
    }
-   else
+   else if (mValueType == FloatType)
    {
+      if (type == GFXSCT_Float)
+      {
+         buff->set(mHandle, mFloatVal);
+      }
+      else
+      {
 #if TORQUE_DEBUG
-      const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
-      Con::errorf(err);
-      GFXAssertFatal(0,err);
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
 #endif
+      }
+   }
+   else if (mValueType == PointType)
+   {
+      if (type == GFXSCT_Float2)
+      {
+         buff->set(mHandle, Point2F(mPointVal.x, mPointVal.y));
+      }
+      else if (type == GFXSCT_Float3)
+      {
+         buff->set(mHandle, Point3F(mPointVal.x, mPointVal.y, mPointVal.z));
+      }
+      else if (type == GFXSCT_Float4)
+      {
+         buff->set(mHandle, mPointVal);
+      }
+      else
+      {
+#if TORQUE_DEBUG
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
+#endif
+      }
+   }
+   else if (mValueType == MatrixType)
+   {
+      if (type == GFXSCT_Float4x4)
+      {
+         buff->set(mHandle, mMatrixVal);
+      }
+      else
+      {
+   #if TORQUE_DEBUG
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
+   #endif
+      }
+   }
+   else if (mValueType == PointArrayType)
+   {
+      if (type == GFXSCT_Float4)
+      {
+         if (arraySize != mPointArrayVal.size())
+         {
+         #if TORQUE_DEBUG
+            const char* err = avar("PostEffect::EffectConst::setToBuffer PointArrayType, attempted to feed an array that does not match the uniform array's size!");
+            Con::errorf(err);
+            GFXAssertFatal(0, err);
+         #endif
+            return;
+         }
+
+         AlignedArray<Point4F> alignedVal = AlignedArray<Point4F>(arraySize, sizeof(Point4F), (U8*)mPointArrayVal.address(), false);
+
+         buff->set(mHandle, alignedVal);
+      }
+      else
+      {
+   #if TORQUE_DEBUG
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
+   #endif
+      }
+   }
+   else if (mValueType == MatrixArrayType)
+   {
+      if (type == GFXSCT_Float4x4)
+      {
+         if (arraySize != mMatrixArrayVal.size())
+         {
+   #if TORQUE_DEBUG
+            const char* err = avar("PostEffect::EffectConst::setToBuffer MatrixArrayType, attempted to feed an array that does not match the uniform array's size!");
+            Con::errorf(err);
+            GFXAssertFatal(0, err);
+   #endif
+            return;
+         }
+
+         buff->set(mHandle, mMatrixArrayVal.address(), arraySize);
+      }
+      else
+      {
+   #if TORQUE_DEBUG
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
+   #endif
+      }
    }
 }
 
@@ -413,6 +572,8 @@ bool PostEffect::onAdd()
    // Find additional textures
    for( S32 i = 0; i < NumTextures; i++ )
    {
+      mTextureType[i] = NormalTextureType;
+
       String texFilename = mTexFilename[i];
 
       // Skip empty stages or ones with variable or target names.
@@ -915,6 +1076,11 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       setShaderConsts_callback();
    }   
 
+   if (mShaderName == String("PFX_ReflectionProbeArray") || getName() == StringTable->insert("reflectionProbeArrayPostFX"))
+   {
+      bool derp = true;
+   }
+
    EffectConstTable::Iterator iter = mEffectConsts.begin();
    for ( ; iter != mEffectConsts.end(); iter++ )
       iter->value->setToBuffer( mShaderConsts );
@@ -970,6 +1136,30 @@ void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *
 
    if ( theTex.isValid() )
       GFX->setTexture( stage, theTex );
+}
+
+void PostEffect::_setupCubemapTexture(U32 stage, GFXCubemapHandle &inputTex)
+{
+   RectI viewport = GFX->getViewport();
+
+   mActiveTextures[stage] = nullptr;
+   mActiveNamedTarget[stage] = nullptr;
+   mActiveTextureViewport[stage] = viewport;
+
+   if (inputTex.isValid())
+      GFX->setCubeTexture(stage, inputTex);
+}
+
+void PostEffect::_setupCubemapArrayTexture(U32 stage, GFXCubemapArrayHandle &inputTex)
+{
+   RectI viewport = GFX->getViewport();
+
+   mActiveTextures[stage] = nullptr;
+   mActiveNamedTarget[stage] = nullptr;
+   mActiveTextureViewport[stage] = viewport;
+
+   if (inputTex.isValid())
+      GFX->setCubeArrayTexture(stage, inputTex);
 }
 
 void PostEffect::_setupTransforms()
@@ -1188,8 +1378,15 @@ void PostEffect::process(  const SceneRenderState *state,
    GFXTransformSaver saver;
 
    // Set the textures.
-   for ( U32 i = 0; i < NumTextures; i++ )
-      _setupTexture( i, inOutTex, inTexViewport );
+   for (U32 i = 0; i < NumTextures; i++)
+   {
+      if (mTextureType[i] == NormalTextureType)
+         _setupTexture(i, inOutTex, inTexViewport);
+      else if (mTextureType[i] == CubemapType)
+         _setupCubemapTexture(i, mCubemapTextures[i]);
+      else if (mTextureType[i] == CubemapArrayType)
+         _setupCubemapArrayTexture(i, mCubemapArrayTextures[i]);
+   }
 
    _setupStateBlock( state ) ;
    _setupTransforms();
@@ -1406,6 +1603,38 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
 
     // Try to load the texture.
     mTextures[index].set( texFilePath, &PostFxTextureProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+
+    mTextureType[index] = NormalTextureType;
+}
+
+void PostEffect::setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHandle)
+{
+   // Set the new texture name.
+   mCubemapTextures[index].free();
+
+   // Skip empty stages or ones with variable or target names.
+   if (cubemapHandle.isNull())
+      return;
+
+   // Try to load the texture.
+   mCubemapTextures[index] = cubemapHandle;
+
+   mTextureType[index] = CubemapType;
+}
+
+void PostEffect::setCubemapArrayTexture(U32 index, const GFXCubemapArrayHandle &cubemapArrayHandle)
+{
+   // Set the new texture name.
+   mCubemapArrayTextures[index].free();
+
+   // Skip empty stages or ones with variable or target names.
+   if (cubemapArrayHandle.isNull())
+      return;
+
+   // Try to load the texture.
+   mCubemapArrayTextures[index] = cubemapArrayHandle;
+
+   mTextureType[index] = CubemapArrayType;
 }
 
 void PostEffect::setShaderConst( const String &name, const String &val )
@@ -1422,6 +1651,76 @@ void PostEffect::setShaderConst( const String &name, const String &val )
    iter->value->set( val );
 }
 
+void PostEffect::setShaderConst(const String &name, const F32 &val)
+{
+   PROFILE_SCOPE(PostEffect_SetShaderConst_Float);
+
+   EffectConstTable::Iterator iter = mEffectConsts.find(name);
+   if (iter == mEffectConsts.end())
+   {
+      EffectConst *newConst = new EffectConst(name, val);
+      iter = mEffectConsts.insertUnique(name, newConst);
+   }
+
+   iter->value->set(val);
+}
+
+void PostEffect::setShaderConst(const String &name, const Point4F &val)
+{
+   PROFILE_SCOPE(PostEffect_SetShaderConst_Point);
+
+   EffectConstTable::Iterator iter = mEffectConsts.find(name);
+   if (iter == mEffectConsts.end())
+   {
+      EffectConst *newConst = new EffectConst(name, val);
+      iter = mEffectConsts.insertUnique(name, newConst);
+   }
+
+   iter->value->set(val);
+}
+
+void PostEffect::setShaderConst(const String &name, const MatrixF &val)
+{
+   PROFILE_SCOPE(PostEffect_SetShaderConst_Matrix);
+
+   EffectConstTable::Iterator iter = mEffectConsts.find(name);
+   if (iter == mEffectConsts.end())
+   {
+      EffectConst *newConst = new EffectConst(name, val);
+      iter = mEffectConsts.insertUnique(name, newConst);
+   }
+
+   iter->value->set(val);
+}
+
+void PostEffect::setShaderConst(const String &name, const Vector<Point4F> &val)
+{
+   PROFILE_SCOPE(PostEffect_SetShaderConst_PointArray);
+
+   EffectConstTable::Iterator iter = mEffectConsts.find(name);
+   if (iter == mEffectConsts.end())
+   {
+      EffectConst *newConst = new EffectConst(name, val);
+      iter = mEffectConsts.insertUnique(name, newConst);
+   }
+
+   iter->value->set(val);
+}
+
+void PostEffect::setShaderConst(const String &name, const Vector<MatrixF> &val)
+{
+   PROFILE_SCOPE(PostEffect_SetShaderConst_MatrixArray);
+
+   EffectConstTable::Iterator iter = mEffectConsts.find(name);
+   if (iter == mEffectConsts.end())
+   {
+      EffectConst *newConst = new EffectConst(name, val);
+      iter = mEffectConsts.insertUnique(name, newConst);
+   }
+
+   iter->value->set(val);
+}
+
 F32 PostEffect::getAspectRatio() const
 {
    const Point2I &rtSize = GFX->getActiveRenderTarget()->getSize();
@@ -1433,6 +1732,11 @@ void PostEffect::_checkRequirements()
    // This meets requirements if its shader loads
    // properly, we can find all the input textures,
    // and its formats are supported.
+
+   if (mShaderName == String("PFX_ReflectionProbeArray") || getName() == StringTable->insert("reflectionProbeArrayPostFX"))
+   {
+      bool derp = true;
+   }
 
    mIsValid = false;
    mUpdateShader = false;
@@ -1468,16 +1772,21 @@ void PostEffect::_checkRequirements()
    // they exist... else we're invalid.
    for ( U32 i=0; i < NumTextures; i++ )
    {
-      const String &texFilename = mTexFilename[i];
-
-      if ( texFilename.isNotEmpty() && texFilename[0] == '#' )
+      if (mTextureType[i] == NormalTextureType)
       {
-         NamedTexTarget *namedTarget = NamedTexTarget::find( texFilename.c_str() + 1 );
-         if ( !namedTarget )
-            return;
+         const String &texFilename = mTexFilename[i];
 
-         // Grab the macros for shader initialization.
-         namedTarget->getShaderMacros( &macros );
+         if (texFilename.isNotEmpty() && texFilename[0] == '#')
+         {
+            NamedTexTarget *namedTarget = NamedTexTarget::find(texFilename.c_str() + 1);
+            if (!namedTarget)
+            {
+               return;
+            }
+
+            // Grab the macros for shader initialization.
+            namedTarget->getShaderMacros(&macros);
+         }
       }
    }
 

@@ -353,6 +353,26 @@ singleton PostEffect( reflectionProbeArrayPostFX )
    texture[1] = "#color";
    texture[2] = "#matinfo";
    texture[3] = "core/art/pbr/brdfTexture.dds";
+   targetClearColor = "0 0 0 0";
+   targetClear = PFXTargetClear_OnDraw;
+   targetFormat = "GFXFormatR16G16B16A16F";
+   target = "#iblBuffer";
    
-   target = "AL_FormatToken";
+};
+singleton PostEffect( IBLFlipPostFX )
+{
+   // Do not allow the selection effect to work in reflection 
+   // passes by default so we don't do the extra drawing.
+   //allowReflectPass = false;
+                  
+   renderTime = "PFXAfterBin";
+   renderBin = "ProbeBin";
+   renderPriority = 9998;
+   isEnabled = true;
+
+   shader = PFX_PassthruShader;
+   stateBlock = PFX_DefaultStateBlock;
+
+   texture[0] = "#iblBuffer";
+   targetFormat = AL_FormatToken.format;
 };

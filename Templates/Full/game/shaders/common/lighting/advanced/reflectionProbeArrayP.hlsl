@@ -52,7 +52,6 @@ float3 iblBoxDiffuse( Surface surface, int id)
    float3 cubeN = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
    return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
-   //return TORQUE_TEXCUBELOD(irradianceCubemapAR,float4(cubeN,0)).xyz;
 }
 
 float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTexture), int id)
@@ -69,7 +68,6 @@ float3 iblBoxSpecular(Surface surface, float3 surfToEye, TORQUE_SAMPLER2D(brdfTe
    cubeR = boxProject(surface.P, surface.N, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 	
    float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
-   //float3 radiance = TORQUE_TEXCUBELOD(cubeMapAR,float4(cubeR,lod)).xyz * (brdf.x + brdf.y);
     
    return radiance;
 }
@@ -79,8 +77,8 @@ float defineBoxSpaceInfluence(Surface surface, int id)
     float tempAttenVal = 3.5; //replace with per probe atten
     float3 surfPosLS = mul( worldToObjArray[id], float4(surface.P,1.0)).xyz;
 
-    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[0].x);
-    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[0].x);
+    float3 boxMinLS = inProbePosArray[id].xyz-(float3(1,1,1)*radius[id].x);
+    float3 boxMaxLS = inProbePosArray[id].xyz+(float3(1,1,1)*radius[id].x);
 
     float boxOuterRange = length(boxMaxLS - boxMinLS);
     float boxInnerRange = boxOuterRange / tempAttenVal;

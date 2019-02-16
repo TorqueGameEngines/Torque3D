@@ -158,12 +158,6 @@ void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)
    if (!mEnabled || !ReflectionProbe::smRenderPreviewProbes)
       return;
 
-   //special hook-in for SphereEnvironmentProbes
-   Point3F camPos = state->getCameraPosition();
-   mProbeInfo->mBounds.setCenter(camPos);
-
-   mProbeInfo->setPosition(camPos);
-
    if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
    {
       GFXTransformSaver saver;

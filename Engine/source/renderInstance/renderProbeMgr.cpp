@@ -230,7 +230,7 @@ void RenderProbeMgr::registerProbe(U32 probeIdx)
    mRegisteredProbes.push_back_unique(probeIdx);
 
    //rebuild our probe data
-   //_setupStaticParameters();
+   _setupStaticParameters();
 }
 
 void RenderProbeMgr::unregisterProbe(U32 probeIdx)
@@ -242,7 +242,7 @@ void RenderProbeMgr::unregisterProbe(U32 probeIdx)
    mRegisteredProbes.remove(probeIdx);
 
    //rebuild our probe data
-   //_setupStaticParameters();
+   _setupStaticParameters();
 }
 
 //
@@ -283,21 +283,20 @@ void RenderProbeMgr::_setupStaticParameters()
       probeWorldToObjData.setSize(MAXPROBECOUNT);
       probeBBMinData.setSize(MAXPROBECOUNT);
       probeBBMaxData.setSize(MAXPROBECOUNT);
-      probeUseSphereModeData.setSize(MAXPROBECOUNT);
-      probeRadiusData.setSize(MAXPROBECOUNT);
-      probeAttenuationData.setSize(MAXPROBECOUNT);
+      probeConfigData.setSize(MAXPROBECOUNT);
    }
 
    probePositionsData.fill(Point4F::Zero);
    probeWorldToObjData.fill(MatrixF::Identity);
    probeBBMinData.fill(Point4F::Zero);
    probeBBMaxData.fill(Point4F::Zero);
-   probeUseSphereModeData.fill(Point4F::Zero);
-   probeRadiusData.fill(Point4F::Zero);
-   probeAttenuationData.fill(Point4F::Zero);
+   probeConfigData.fill(Point4F::Zero);
 
    cubeMaps.clear();
    irradMaps.clear();
+
+   //This should probably ultimately be a per-probe value, but for now, global for testing/adjustability
+   F32 attenuation = Con::getFloatVariable("$pref::ReflectionProbes::AttenuationStrength", 3.5);
 
    for (U32 i = 0; i < probeCount; i++)
    {
@@ -320,7 +319,7 @@ void RenderProbeMgr::_setupStaticParameters()
       if (curEntry.mIsSkylight)
          continue;
 
-	  mMipCount = curEntry.mCubemap.getPointer()->getMipMapLevels();
+	   mMipCount = curEntry.mCubemap.getPointer()->getMipMapLevels();
 
       //Setup
       Point3F probePos = curEntry.getPosition() + curEntry.mProbePosOffset;
@@ -331,10 +330,10 @@ void RenderProbeMgr::_setupStaticParameters()
       probeBBMinData[mEffectiveProbeCount] = Point4F(curEntry.mBounds.minExtents.x, curEntry.mBounds.minExtents.y, curEntry.mBounds.minExtents.z, 0);
       probeBBMaxData[mEffectiveProbeCount] = Point4F(curEntry.mBounds.maxExtents.x, curEntry.mBounds.maxExtents.y, curEntry.mBounds.maxExtents.z, 0);
 
-      probeUseSphereModeData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0, 0,0,0);
-
-      probeRadiusData[mEffectiveProbeCount] = Point4F(curEntry.mRadius,0,0,0);
-      probeAttenuationData[mEffectiveProbeCount] = Point4F(1, 0, 0, 0);
+      probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0, 
+         curEntry.mRadius,
+         attenuation,
+         1);
 
       cubeMaps.push_back(curEntry.mCubemap);
       irradMaps.push_back(curEntry.mIrradianceCubemap);
@@ -423,7 +422,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       static AlignedArray<Point3F> probeLocalPositions(4, sizeof(Point3F));
       static AlignedArray<F32> probeIsSphere(4, sizeof(F32));
       //static AlignedArray<CubemapData> probeCubemap(4, sizeof(CubemapData));
-      F32 range;
+      //F32 range;
 
       // Need to clear the buffers so that we don't leak
       // lights from previous passes or have NaNs.
@@ -437,7 +436,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
 
       matSet.restoreSceneViewProjection();
 
-      const MatrixF &worldToCameraXfm = matSet.getWorldToCamera();
+      //const MatrixF &worldToCameraXfm = matSet.getWorldToCamera();
 
       // Gather the data for the first 4 probes.
       /*const ProbeRenderInst *probe;
@@ -586,7 +585,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    if (getProbeArrayEffect() == nullptr)
       return;
 
-   updateProbes();
+   //updateProbes();
 
    // Early out if nothing to draw.
    if (!ProbeRenderInst::all.size() || !RenderProbeMgr::smRenderReflectionProbes || mEffectiveProbeCount == 0
@@ -605,12 +604,42 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //_setupPerFrameParameters(state);
    
    //Array rendering
-   U32 probeCount = ProbeRenderInst::all.size();
+   //U32 probeCount = ProbeRenderInst::all.size();
 
    if (mEffectiveProbeCount != 0)
    {
       mProbeArrayEffect->setCubemapArrayTexture(4, mCubemapArray);
       mProbeArrayEffect->setCubemapArrayTexture(5, mIrradArray);
+
+      String useDebugAtten = Con::getVariable("$Probes::showAttenuation", "0");
+      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_ATTENUATION", useDebugAtten);
+
+      String useDebugSpecCubemap = Con::getVariable("$Probes::showSpecularCubemaps", "0");
+      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_SPECCUBEMAP", useDebugSpecCubemap);
+
+      String useDebugDiffuseCubemap = Con::getVariable("$Probes::showDiffuseCubemaps", "0");
+      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_DIFFCUBEMAP", useDebugDiffuseCubemap);
+
+      String useDebugContrib = Con::getVariable("$Probes::showProbeContrib", "0");
+      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_CONTRIB", useDebugContrib);
+
+      if (useDebugContrib == String("1"))
+      {
+         MRandomLCG RandomGen;
+         RandomGen.setSeed(mEffectiveProbeCount);
+
+         //also set up some colors
+         Vector<Point4F> contribColors;
+
+         contribColors.setSize(MAXPROBECOUNT);
+
+         for (U32 i = 0; i < mEffectiveProbeCount; i++)
+         {
+            contribColors[i] = Point4F(RandomGen.randF(0, 1), RandomGen.randF(0, 1), RandomGen.randF(0, 1),1);
+         }
+
+         mProbeArrayEffect->setShaderConst("$probeContribColors", contribColors);
+      }
 
       mProbeArrayEffect->setShaderConst("$cubeMips", (float)mMipCount);
       
@@ -619,9 +648,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
       mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);
       mProbeArrayEffect->setShaderConst("$bbMinArray", probeBBMinData);
       mProbeArrayEffect->setShaderConst("$bbMaxArray", probeBBMaxData);
-      mProbeArrayEffect->setShaderConst("$useSphereMode", probeUseSphereModeData);
-      mProbeArrayEffect->setShaderConst("$radius", probeRadiusData);
-      mProbeArrayEffect->setShaderConst("$attenuation", probeAttenuationData);
+      mProbeArrayEffect->setShaderConst("$probeConfigData", probeConfigData);
    }
 
    // Make sure the effect is gonna render.

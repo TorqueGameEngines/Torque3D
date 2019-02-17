@@ -164,9 +164,7 @@ class RenderProbeMgr : public RenderBinManager
    Vector<MatrixF> probeWorldToObjData;
    Vector<Point4F> probeBBMinData;
    Vector<Point4F> probeBBMaxData;
-   Vector<Point4F> probeUseSphereModeData;
-   Vector<Point4F> probeRadiusData;
-   Vector<Point4F> probeAttenuationData;
+   Vector<Point4F> probeConfigData;
    Vector<GFXCubemapHandle> cubeMaps;
    Vector<GFXCubemapHandle> irradMaps;
 

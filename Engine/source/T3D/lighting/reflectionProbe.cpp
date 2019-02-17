@@ -272,6 +272,8 @@ bool ReflectionProbe::onAdd()
    {
       createGeometry();
       updateProbeParams();
+
+      PROBEMGR->registerProbe(mProbeInfoIdx);
    }
   
    setMaskBits(-1);
@@ -281,6 +283,10 @@ bool ReflectionProbe::onAdd()
 
 void ReflectionProbe::onRemove()
 {
+   if (isClientObject())
+   {
+      PROBEMGR->unregisterProbe(mProbeInfoIdx);
+   }
    // Remove this object from the scene
    removeFromScene();
 
@@ -441,7 +447,7 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
       updateMaterial();
    }
 
-   //PROBEMGR->updateProbes();
+   PROBEMGR->updateProbes();
 }
 
 void ReflectionProbe::createGeometry()
@@ -597,6 +603,8 @@ void ReflectionProbe::updateMaterial()
       mProbeInfo->mIsEnabled = true;
    else
       mProbeInfo->mIsEnabled = false;
+
+   PROBEMGR->updateProbes();
 }
 
 bool ReflectionProbe::createClientResources()
@@ -682,7 +690,7 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
    mProbeInfo->mScore *= mMax(mAbs(mDot(vect, state->getCameraTransform().getForwardVector())),0.001f);
 
    //Register
-   PROBEMGR->registerProbe(mProbeInfoIdx);
+   //PROBEMGR->registerProbe(mProbeInfoIdx);
 
    if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
    {

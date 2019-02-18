@@ -112,6 +112,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    int i = 0;
 
    float blendVal[MAX_PROBES];
+   float blendFactor[MAX_PROBES];
    float blendSum = 0;
    float invBlendSum = 0;
 
@@ -121,13 +122,12 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       {
          float3 L = inProbePosArray[i].xyz - surface.P;
          blendVal[i] = 1.0 - length(L) / probeConfigData[i].g;
-         blendVal[i] = max(0, blendVal[i]);
       }
       else
       {
          blendVal[i] = defineBoxSpaceInfluence(surface, i);
-         blendVal[i] = max(0, blendVal[i]);
       }
+      blendVal[i] = saturate(blendVal[i]);
       blendSum += blendVal[i];
       invBlendSum += (1.0f - blendVal[i]);
    }
@@ -138,14 +138,12 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
    // and respect constraint A.
 
-   //This is what's cross-contaminating between probe's influence areas. 
-   //Need to review this logic before we utilize it again
-   /*for (i = 0; i < numProbes; i++)
+   for (i = 0; i < numProbes; i++)
    {
-      blendVal[i] = (1.0f - (blendVal[i] / blendSum)) / (numProbes - 1);
-      blendVal[i] *= ((1.0f - blendVal[i]) / invBlendSum);
+      blendFactor[i] = ((1.0f -blendVal[i] / blendSum)) / (numProbes - 1);
+      blendFactor[i] *= ((1.0f -blendVal[i]) / invBlendSum);
       blendSum += blendVal[i];
-   }*/
+   }
 
    // Normalize blendVal
 #if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
@@ -158,10 +156,10 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float invBlendSumWeighted = 1.0f / blendSum;
    for (i = 0; i < numProbes; ++i)
    {
-      blendVal[i] *= invBlendSumWeighted;
+      blendFactor[i] *= invBlendSumWeighted;
    }
 
-   //return float4(blendVal[0], blendVal[0], blendVal[0], 1);
+   //return float4(blendFactor[0], blendFactor[0], blendFactor[0], 1);
    
 #if DEBUGVIZ_ATTENUATION == 1
    return float4(blendSum, blendSum, blendSum, 1);
@@ -172,10 +170,10 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 finalContribColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      if (blendVal[i] == 0)
+      if (blendFactor[i] == 0)
          continue;
 
-      finalContribColor += blendVal[i] * probeContribColors[i].rgb;
+      finalContribColor += blendFactor[i] * probeContribColors[i].rgb;
    }
 
    return float4(finalContribColor, 1);

@@ -132,7 +132,7 @@ new SimGroup(MissionGroup) {
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
       Bake = "0";
-      position = "-0.0194688 0 4";
+      position = "-0.0194688 0.139717 4.10014";
       rotation = "1 0 0 0";
       scale = "5 5 5";
       canSave = "1";
@@ -147,7 +147,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -166,7 +166,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -185,7 +185,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -204,7 +204,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -223,7 +223,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -242,7 +242,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -261,7 +261,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -280,7 +280,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -299,7 +299,7 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "1";
+      enabled = "0";
       radius = "5";
       posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
@@ -327,7 +327,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -342,7 +342,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -357,7 +357,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -372,7 +372,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -387,7 +387,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -402,7 +402,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -417,7 +417,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";

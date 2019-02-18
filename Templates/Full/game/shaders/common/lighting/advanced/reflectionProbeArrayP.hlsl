@@ -114,6 +114,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float blendVal[MAX_PROBES];
    float blendFactor[MAX_PROBES];
    float blendSum = 0;
+   float blendFacSum = 0;
    float invBlendSum = 0;
 
    for (i = 0; i < numProbes; i++)
@@ -142,18 +143,18 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    {
       blendFactor[i] = ((1.0f -blendVal[i] / blendSum)) / (numProbes - 1);
       blendFactor[i] *= ((1.0f -blendVal[i]) / invBlendSum);
-      blendSum += blendVal[i];
+      blendFacSum += blendFactor[i];
    }
 
    // Normalize blendVal
 #if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
-   if (blendSum == 0.0f) // Possible with custom weight
+   if (blendFacSum == 0.0f) // Possible with custom weight
    {
-      blendSum = 1.0f;
+      blendFacSum = 1.0f;
    }
 #endif
 
-   float invBlendSumWeighted = 1.0f / blendSum;
+   float invBlendSumWeighted = 1.0f / blendFacSum;
    for (i = 0; i < numProbes; ++i)
    {
       blendFactor[i] *= invBlendSumWeighted;
@@ -162,7 +163,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    //return float4(blendFactor[0], blendFactor[0], blendFactor[0], 1);
    
 #if DEBUGVIZ_ATTENUATION == 1
-   return float4(blendSum, blendSum, blendSum, 1);
+   return float4(blendFacSum, blendFacSum, blendFacSum, 1);
 #endif
 
 #if DEBUGVIZ_CONTRIB == 1
@@ -190,17 +191,17 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      if (blendVal[i] == 0)
+      if (blendFactor[i] == 0)
          continue;
 
-      irradiance += blendVal[i]*iblBoxDiffuse(surface, i);
+      irradiance += blendFactor[i]*iblBoxDiffuse(surface, i);
       
-      specular += blendVal[i]*F*iblBoxSpecular(surface, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
+      specular += blendFactor[i]*F*iblBoxSpecular(surface, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
    }
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-	float4 finalColor = float4(diffuse + specular * surface.ao, blendSum);
+	float4 finalColor = float4(diffuse + specular * surface.ao, blendFacSum);
 
     return finalColor;
 
@@ -208,7 +209,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendVal[i] * iblBoxSpecular(surface, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), i);
+      cubeColor += blendFactor[i] * iblBoxSpecular(surface, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture), i);
    }
 
    return float4(cubeColor,1);
@@ -216,7 +217,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendVal[i] * iblBoxDiffuse(surface, i);
+      cubeColor += blendFactor[i] * iblBoxDiffuse(surface, i);
    }
 
    return float4(cubeColor, 1);

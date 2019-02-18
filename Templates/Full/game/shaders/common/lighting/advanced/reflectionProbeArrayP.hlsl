@@ -65,9 +65,14 @@ float3 iblBoxSpecular(Surface surface, TORQUE_SAMPLER2D(brdfTexture), int id)
    float2 brdf = TORQUE_TEX2DLOD(brdfTexture, float4(surface.roughness, surface.NdotV,0.0,0.0)).xy;
 
     // Radiance (Specular)
+#if DEBUGVIZ_SPECCUBEMAP == 0
    float lod = surface.roughness*cubeMips;
+#elif DEBUGVIZ_SPECCUBEMAP == 1
+   float lod = 0;
+#endif
+
    float3 cubeR = boxProject(surface.P, surface.V, surface.R, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
-	
+
    float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
     
    return radiance;
@@ -102,7 +107,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    if (getFlag(surface.matFlag, 0))
    {   
       discard;
-   }      
+   }     
 
    int i = 0;
 
@@ -143,10 +148,12 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }*/
 
    // Normalize blendVal
+#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
    if (blendSum == 0.0f) // Possible with custom weight
    {
       blendSum = 1.0f;
    }
+#endif
 
    float invBlendSumWeighted = 1.0f / blendSum;
    for (i = 0; i < numProbes; ++i)
@@ -168,7 +175,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       if (blendVal[i] == 0)
          continue;
 
-      finalContribColor += blendSum * probeContribColors[i].rgb;
+      finalContribColor += blendVal[i] * probeContribColors[i].rgb;
    }
 
    return float4(finalContribColor, 1);

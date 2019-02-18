@@ -325,14 +325,20 @@ singleton ShaderData( PFX_ReflectionProbeArray )
 
 singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
 {  
-   samplersDefined = true;
-   samplerStates[0] = SamplerClampLinear;
-   
+   alphaDefined = true;
+   alphaTestEnable = true;
+   alphaTestRef = 1;
+   alphaTestFunc = GFXCmpGreaterEqual;
+         
+   // Do a one to one blend.
    blendDefined = true;
    blendEnable = true;
-   blendSrc = GFXBlendSrcAlpha;
-   blendDest = GFXBlendInvSrcAlpha;
-   blendOp = GFXBlendOpAdd;
+   blendSrc = GFXBlendOne;
+   blendDest = GFXBlendOne;
+   
+   zDefined = true;
+   zEnable = false;
+   zWriteEnable = false;
 };
 
 singleton PostEffect( reflectionProbeArrayPostFX )
@@ -353,10 +359,7 @@ singleton PostEffect( reflectionProbeArrayPostFX )
    texture[1] = "#color";
    texture[2] = "#matinfo";
    texture[3] = "core/art/pbr/brdfTexture.dds";
-   targetClearColor = "0 0 0 0";
-   targetClear = PFXTargetClear_OnDraw;
-   targetFormat = "GFXFormatR16G16B16A16F";
-   target = "#iblBuffer";
+   target = "AL_FormatToken";
    
 };
 singleton PostEffect( IBLFlipPostFX )

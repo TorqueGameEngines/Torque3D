@@ -47,7 +47,7 @@ function initRenderManager()
    };
    DiffuseRenderPassManager.addManager( new RenderPassStateBin() { renderOrder = 0.001; stateToken = AL_FormatToken; } );     
   
-   DiffuseRenderPassManager.addManager( new RenderProbeMgr(ProbeBin)       { bintype = "Probes"; renderOrder = 0.019; processAddOrder = 0.02; } );
+   DiffuseRenderPassManager.addManager( new RenderProbeMgr(ProbeBin)       { bintype = "Probes"; renderOrder = 0.019; processAddOrder = 0.019; } );
    //DiffuseRenderPassManager.addManager( new RenderVistaMgr()             { bintype = "Vista"; renderOrder = 0.15; processAddOrder = 0.15; } );
    
    DiffuseRenderPassManager.addManager( new RenderObjectMgr(BeginBin)      { bintype = "Begin"; renderOrder = 0.2; processAddOrder = 0.2; } );

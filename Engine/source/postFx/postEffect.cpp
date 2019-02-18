@@ -1733,11 +1733,6 @@ void PostEffect::_checkRequirements()
    // properly, we can find all the input textures,
    // and its formats are supported.
 
-   if (mShaderName == String("PFX_ReflectionProbeArray") || getName() == StringTable->insert("reflectionProbeArrayPostFX"))
-   {
-      bool derp = true;
-   }
-
    mIsValid = false;
    mUpdateShader = false;
    mShader = NULL;

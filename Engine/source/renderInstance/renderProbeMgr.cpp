@@ -44,6 +44,8 @@
 //For our cameraQuery setup
 #include "T3D/gameTSCtrl.h"
 
+#define TORQUE_GFX_VISUAL_DEBUG //renderdoc debugging
+
 IMPLEMENT_CONOBJECT(RenderProbeMgr);
 
 ConsoleDocClass( RenderProbeMgr, 

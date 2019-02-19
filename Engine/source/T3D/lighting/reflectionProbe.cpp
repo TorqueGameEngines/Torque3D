@@ -106,6 +106,7 @@ ReflectionProbe::ReflectionProbe()
    mDirty = false;
 
    mRadius = 10;
+   mProbeRefScale = Point3F::One*10;
 
    mUseCubemap = false;
    mUseHDRCaptures = true;
@@ -130,7 +131,7 @@ ReflectionProbe::ReflectionProbe()
    mPrefilterMap = nullptr;
    mIrridianceMap = nullptr;
 
-   mProbePosOffset = Point3F::Zero;
+   mProbeRefOffset = Point3F::Zero;
    mEditPosOffset = false;
 
    mProbeInfoIdx = -1;
@@ -160,13 +161,14 @@ void ReflectionProbe::initPersistFields()
          &_setEnabled, &defaultProtectedGetFn, "Regenerate Voxel Grid");
 
      addField("radius", TypeF32, Offset(mRadius, ReflectionProbe), "The name of the material used to render the mesh.");
-	  addField("posOffset", TypePoint3F, Offset(mProbePosOffset, ReflectionProbe), "");
 
      //addProtectedField("EditPosOffset", TypeBool, Offset(mEditPosOffset, ReflectionProbe),
      //   &_toggleEditPosOffset, &defaultProtectedGetFn, "Toggle Edit Pos Offset Mode", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
    endGroup("Rendering");
 
    addGroup("Reflection");
+	   addField("refOffset", TypePoint3F, Offset(mProbeRefOffset, ReflectionProbe), "");
+      addField("refScale", TypePoint3F, Offset(mProbeRefScale, ReflectionProbe), "");
       addField("ReflectionMode", TypeReflectionModeEnum, Offset(mReflectionModeType, ReflectionProbe),
          "The type of mesh data to use for collision queries.");
 
@@ -319,7 +321,7 @@ void ReflectionProbe::setTransform(const MatrixF & mat)
    if (!mEditPosOffset)
       Parent::setTransform(mat);
    else
-      mProbePosOffset = mat.getPosition();
+      mProbeRefOffset = mat.getPosition();
 
    mDirty = true;
 
@@ -338,7 +340,8 @@ U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream
    {
       mathWrite(*stream, getTransform());
       mathWrite(*stream, getScale());
-      mathWrite(*stream, mProbePosOffset);
+      mathWrite(*stream, mProbeRefOffset);
+      mathWrite(*stream, mProbeRefScale);
    }
 
    if (stream->writeFlag(mask & ShapeTypeMask))
@@ -387,7 +390,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       setTransform(mObjToWorld);
 
-      mathRead(*stream, &mProbePosOffset);
+      mathRead(*stream, &mProbeRefOffset);
+      mathRead(*stream, &mProbeRefScale);      
    }
 
    if (stream->readFlag())  // ShapeTypeMask
@@ -487,7 +491,6 @@ void ReflectionProbe::updateProbeParams()
    mProbeInfo->mTransform = getWorldTransform();
 
    mProbeInfo->mPosition = getPosition();
-
    mObjScale.set(mRadius, mRadius, mRadius);
 
    // Skip our transform... it just dirties mask bits.
@@ -500,7 +503,8 @@ void ReflectionProbe::updateProbeParams()
 
    mProbeInfo->mIsSkylight = false;
 
-   mProbeInfo->mProbePosOffset = mProbePosOffset;
+   mProbeInfo->mProbeRefOffset = mProbeRefOffset;
+   mProbeInfo->mProbeRefScale = mProbeRefScale;
 
    mProbeInfo->mDirty = true;
    mProbeInfo->mScore = mMaxDrawDistance;
@@ -742,7 +746,7 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
       mat.scale(Point3F(1, 1, 1));
       
       Point3F centerPos = mat.getPosition();
-      centerPos += mProbePosOffset;
+      centerPos += mProbeRefOffset;
       mat.setPosition(centerPos);
 
       GFX->setWorldMatrix(mat);
@@ -786,21 +790,23 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
    ColorI color = ColorI::WHITE;
    color.alpha = 25;
 
+   const MatrixF worldToObjectXfm = getTransform();
    if (mProbeShapeType == ProbeRenderInst::Sphere)
    {
       draw->drawSphere(desc, mRadius, getPosition(), color);
    }
    else
    {
-	  const MatrixF worldToObjectXfm = getTransform();
-
-      Box3F cube(-Point3F(mRadius, mRadius, mRadius),Point3F(mRadius, mRadius, mRadius));
-      Box3F wb = getWorldBox();
-      cube.setCenter(getPosition()+mProbePosOffset);
-      wb.setCenter(getPosition() + mProbePosOffset);
-      draw->drawCube(desc, cube, color, &worldToObjectXfm);
-      draw->drawCube(desc, wb, color, &worldToObjectXfm);
+      Box3F projCube(-Point3F(mRadius, mRadius, mRadius),Point3F(mRadius, mRadius, mRadius));
+      projCube.setCenter(getPosition());
+      draw->drawCube(desc, projCube, color, &worldToObjectXfm);
    }
+   Box3F refCube = getWorldBox();
+   refCube.set(mProbeRefScale);
+   refCube.setCenter(getPosition() + mProbeRefOffset);
+   color = ColorI::BLUE;
+   color.alpha = 25;
+   draw->drawCube(desc, refCube, color, &worldToObjectXfm);
 }
 
 void ReflectionProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)

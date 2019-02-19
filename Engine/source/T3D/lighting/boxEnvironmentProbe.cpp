@@ -217,6 +217,10 @@ void BoxEnvironmentProbe::prepRenderImage(SceneRenderState *state)
    const bool isSelectedInEditor = (gEditingMission && isSelected());
    if (isSelectedInEditor)
    {
+      ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
+      ri->renderDelegate.bind(this, &ReflectionProbe::_onRenderViz);
+      ri->type = RenderPassManager::RIT_Editor;
+      state->getRenderPass()->addInst(ri);
    }
 }
 

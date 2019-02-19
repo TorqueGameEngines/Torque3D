@@ -142,9 +142,17 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
 
    for (i = 0; i < numProbes; i++)
    {
-      blendFactor[i] = ((1.0f -blendVal[i] / blendSum)) / (numProbes - 1);
-      blendFactor[i] *= ((1.0f -blendVal[i]) / invBlendSum);
-      blendFacSum += blendFactor[i];
+      if (numProbes>1)
+      {
+         blendFactor[i] = ((1.0f -blendVal[i] / blendSum)) / (numProbes - 1);
+         blendFactor[i] *= ((1.0f -blendVal[i]) / invBlendSum);
+         blendFacSum += blendFactor[i];
+      }
+      else
+      {
+         blendFactor[i] = blendVal[i];
+         blendFacSum = blendVal[i];
+      }
    }
 
    // Normalize blendVal

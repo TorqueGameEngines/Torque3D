@@ -56,7 +56,6 @@ float3 boxProject(float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 
 float3 iblBoxDiffuse( Surface surface, int id)
 {
    float3 cubeN = boxProject(surface.P, surface.V, surface.R, inRefPosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
-   cubeN.z *=-1;
    return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
 }
 

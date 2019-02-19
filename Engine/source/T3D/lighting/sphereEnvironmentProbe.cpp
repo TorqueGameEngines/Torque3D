@@ -77,6 +77,7 @@ ConsoleDocClass(SphereEnvironmentProbe,
 SphereEnvironmentProbe::SphereEnvironmentProbe() : ReflectionProbe()
 {
    mCaptureMask = REFLECTION_PROBE_CAPTURE_TYPEMASK;
+   mProbeShapeType = ProbeRenderInst::Sphere;
 }
 
 SphereEnvironmentProbe::~SphereEnvironmentProbe()

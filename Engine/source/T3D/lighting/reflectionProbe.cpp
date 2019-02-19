@@ -743,12 +743,6 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 
       // Set the world matrix to the objects render transform
       MatrixF mat = getRenderTransform();
-      mat.scale(Point3F(1, 1, 1));
-      
-      Point3F centerPos = mat.getPosition();
-      centerPos += mProbeRefOffset;
-      mat.setPosition(centerPos);
-
       GFX->setWorldMatrix(mat);
 
       // Animate the the shape
@@ -785,10 +779,9 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
    desc.setZReadWrite(true, false);
    desc.setCullMode(GFXCullNone);
    desc.setBlend(true);
-
+   desc.fillMode = GFXFillWireframe;
    // Base the sphere color on the light color.
-   ColorI color = ColorI::WHITE;
-   color.alpha = 25;
+   ColorI color = ColorI(255, 0, 255, 63);
 
    const MatrixF worldToObjectXfm = getTransform();
    if (mProbeShapeType == ProbeRenderInst::Sphere)
@@ -801,11 +794,9 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
       projCube.setCenter(getPosition());
       draw->drawCube(desc, projCube, color, &worldToObjectXfm);
    }
-   Box3F refCube = getWorldBox();
-   refCube.set(mProbeRefScale);
-   refCube.setCenter(getPosition() + mProbeRefOffset);
-   color = ColorI::BLUE;
-   color.alpha = 25;
+   Box3F refCube = Box3F(-mProbeRefScale/2, mProbeRefScale/2);
+   refCube.setCenter(getPosition()+mProbeRefOffset);
+   color = ColorI(0, 255, 255, 63);
    draw->drawCube(desc, refCube, color, &worldToObjectXfm);
 }
 

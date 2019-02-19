@@ -77,6 +77,7 @@ ConsoleDocClass(BoxEnvironmentProbe,
 BoxEnvironmentProbe::BoxEnvironmentProbe() : ReflectionProbe()
 {
    mCaptureMask = REFLECTION_PROBE_CAPTURE_TYPEMASK;
+   mProbeShapeType = ProbeRenderInst::Box;
 }
 
 BoxEnvironmentProbe::~BoxEnvironmentProbe()

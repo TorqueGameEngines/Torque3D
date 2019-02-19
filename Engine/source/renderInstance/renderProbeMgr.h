@@ -67,7 +67,8 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
 
    Box3F mBounds;
    Point3F mPosition;
-   Point3F mProbePosOffset;
+   Point3F mProbeRefOffset;
+   Point3F mProbeRefScale;
 
    GFXCubemapHandle mCubemap;
    GFXCubemapHandle mIrradianceCubemap;
@@ -161,6 +162,7 @@ class RenderProbeMgr : public RenderBinManager
    U32 mEffectiveProbeCount;
    S32 mMipCount;
    Vector<Point4F> probePositionsData;
+   Vector<Point4F> probeRefPositionsData;
    Vector<MatrixF> probeWorldToObjData;
    Vector<Point4F> probeBBMinData;
    Vector<Point4F> probeBBMaxData;

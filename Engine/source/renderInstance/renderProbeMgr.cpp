@@ -81,7 +81,8 @@ ProbeRenderInst::ProbeRenderInst() : SystemInterface(),
    mCubemap(NULL),
    mIrradianceCubemap(NULL),
    mRadius(1.0f),
-   mProbePosOffset(0, 0, 0)
+   mProbeRefOffset(0, 0, 0),
+   mProbeRefScale(1,1,1)
 {
 }
 
@@ -282,6 +283,7 @@ void RenderProbeMgr::_setupStaticParameters()
    if (probePositionsData.size() != MAXPROBECOUNT)
    {
       probePositionsData.setSize(MAXPROBECOUNT);
+      probeRefPositionsData.setSize(MAXPROBECOUNT);
       probeWorldToObjData.setSize(MAXPROBECOUNT);
       probeBBMinData.setSize(MAXPROBECOUNT);
       probeBBMaxData.setSize(MAXPROBECOUNT);
@@ -289,6 +291,7 @@ void RenderProbeMgr::_setupStaticParameters()
    }
 
    probePositionsData.fill(Point4F::Zero);
+   probeRefPositionsData.fill(Point4F::Zero);
    probeWorldToObjData.fill(MatrixF::Identity);
    probeBBMinData.fill(Point4F::Zero);
    probeBBMaxData.fill(Point4F::Zero);
@@ -324,13 +327,16 @@ void RenderProbeMgr::_setupStaticParameters()
 	   mMipCount = curEntry.mCubemap.getPointer()->getMipMapLevels();
 
       //Setup
-      Point3F probePos = curEntry.getPosition() + curEntry.mProbePosOffset;
+      Point3F probePos = curEntry.getPosition();
+      Point3F refPos = curEntry.getPosition() +curEntry.mProbeRefOffset;
       probePositionsData[mEffectiveProbeCount] = Point4F(probePos.x, probePos.y, probePos.z,0);
+      probeRefPositionsData[mEffectiveProbeCount] = Point4F(refPos.x, refPos.y, refPos.z, 0);
 
       probeWorldToObjData[mEffectiveProbeCount] = curEntry.getTransform();
-
-      probeBBMinData[mEffectiveProbeCount] = Point4F(curEntry.mBounds.minExtents.x, curEntry.mBounds.minExtents.y, curEntry.mBounds.minExtents.z, 0);
-      probeBBMaxData[mEffectiveProbeCount] = Point4F(curEntry.mBounds.maxExtents.x, curEntry.mBounds.maxExtents.y, curEntry.mBounds.maxExtents.z, 0);
+      Point3F bbMin = refPos - curEntry.mProbeRefScale;
+      Point3F bbMax = refPos + curEntry.mProbeRefScale;
+      probeBBMinData[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
+      probeBBMaxData[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);
 
       probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0, 
          curEntry.mRadius,
@@ -647,6 +653,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
       
       mProbeArrayEffect->setShaderConst("$numProbes", (float)mEffectiveProbeCount);
       mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositionsData);
+      mProbeArrayEffect->setShaderConst("$inRefPosArray", probeRefPositionsData);
       mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);
       mProbeArrayEffect->setShaderConst("$bbMinArray", probeBBMinData);
       mProbeArrayEffect->setShaderConst("$bbMaxArray", probeBBMaxData);

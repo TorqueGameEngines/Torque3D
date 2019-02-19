@@ -111,7 +111,8 @@ protected:
    ReflectionModeType mReflectionModeType;
 
    F32 mRadius;
-   Point3F mProbePosOffset;
+   Point3F mProbeRefOffset;
+   Point3F mProbeRefScale;
    bool mEditPosOffset;
 
    String mCubemapName;

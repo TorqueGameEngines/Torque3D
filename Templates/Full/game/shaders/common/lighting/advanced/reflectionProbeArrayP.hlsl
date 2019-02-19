@@ -23,10 +23,11 @@ TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 //TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
 //TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
 uniform float4    inProbePosArray[MAX_PROBES];
+uniform float4    inRefPosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float4    bbMinArray[MAX_PROBES];
 uniform float4    bbMaxArray[MAX_PROBES];
-uniform float4     probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
+uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 
 #if DEBUGVIZ_CONTRIB
 uniform float4    probeContribColors[MAX_PROBES];
@@ -54,7 +55,7 @@ float3 boxProject(float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 
 
 float3 iblBoxDiffuse( Surface surface, int id)
 {
-   float3 cubeN = boxProject(surface.P, surface.V, surface.R, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
+   float3 cubeN = boxProject(surface.P, surface.V, surface.R, inRefPosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
    cubeN.z *=-1;
    return TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR,cubeN,id,0).xyz;
 }
@@ -71,7 +72,7 @@ float3 iblBoxSpecular(Surface surface, TORQUE_SAMPLER2D(brdfTexture), int id)
    float lod = 0;
 #endif
 
-   float3 cubeR = boxProject(surface.P, surface.V, surface.R, inProbePosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
+   float3 cubeR = boxProject(surface.P, surface.V, surface.R, inRefPosArray[id].xyz, bbMinArray[id].xyz, bbMaxArray[id].xyz);
 
    float3 radiance = TORQUE_TEXCUBEARRAYLOD(cubeMapAR,cubeR,id,lod).xyz * (brdf.x + brdf.y);
     

@@ -188,12 +188,24 @@ RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 proce
 {  
 }
 
+RenderProbeMgr::~RenderProbeMgr()
+{
+   mLastShader = NULL;
+   mLastConstants = NULL;
+
+   for (ProbeConstantMap::Iterator i = mConstantLookup.begin(); i != mConstantLookup.end(); i++)
+   {
+      if (i->value)
+         SAFE_DELETE(i->value);
+   }
+   mConstantLookup.clear();
+}
+
 void RenderProbeMgr::onRemove()
 {
-   SAFE_DELETE(mLastConstants);
-
    Parent::onRemove();
 }
+
 void RenderProbeMgr::initPersistFields()
 {
    Parent::initPersistFields();

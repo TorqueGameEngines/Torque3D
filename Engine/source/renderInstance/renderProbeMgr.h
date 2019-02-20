@@ -191,7 +191,7 @@ class RenderProbeMgr : public RenderBinManager
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
-
+   virtual ~RenderProbeMgr();
    virtual void onRemove();
 
    // ConsoleObject

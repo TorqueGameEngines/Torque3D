@@ -655,7 +655,15 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
          for (U32 i = 0; i < mEffectiveProbeCount; i++)
          {
-            contribColors[i] = Point4F(RandomGen.randF(0, 1), RandomGen.randF(0, 1), RandomGen.randF(0, 1),1);
+            //we're going to cheat here a little for consistent debugging behavior. The first 3 probes will always have R G and then B for their colors, every other will be random
+            if (i == 0)
+               contribColors[i] = Point4F(1, 0, 0, 1);
+            else if (i == 1)
+               contribColors[i] = Point4F(0, 1, 0, 1);
+            else if (i == 2)
+               contribColors[i] = Point4F(0, 0, 1, 1);
+            else
+               contribColors[i] = Point4F(RandomGen.randF(0, 1), RandomGen.randF(0, 1), RandomGen.randF(0, 1),1);
          }
 
          mProbeArrayEffect->setShaderConst("$probeContribColors", contribColors);

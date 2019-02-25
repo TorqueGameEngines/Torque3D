@@ -20,8 +20,7 @@ uniform float cubeMips;
 uniform float numProbes;
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(cubeMapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
-//TORQUE_UNIFORM_SAMPLERCUBE(cubeMapAR, 4);
-//TORQUE_UNIFORM_SAMPLERCUBE(irradianceCubemapAR, 5);
+
 uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4    inRefPosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
@@ -30,21 +29,8 @@ uniform float4    bbMaxArray[MAX_PROBES];
 uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 
 #if DEBUGVIZ_CONTRIB
-uniform float4    probeContribColors[MAX_PROBES];
+uniform float4    probeContribColors[MAX_PROBES]; 
 #endif
-
-struct ProbeData
-{
-   float3 wsPosition;
-   float radius;
-   float3 boxExtents;
-   float attenuation;
-   float4x4 worldToLocal;
-   uint cubemapIdx;
-   uint type; //box = 0, sphere = 1
-   float contribution;
-   float pad;
-};
 
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
@@ -67,52 +53,23 @@ struct ProbeData
    return posonbox - boxWSPos;
 }*/
 
-float3 defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay, out float contribution)
+
+float3 iblBoxDiffuse( Surface surface, ProbeData probe)
 {
-   contribution = 0;
-   return float3(0, 0, 0);
-}
+   float3 dir = boxProject(surface, probe);
 
-float3 defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay, out float contribution)
-{
-   float3 lsPos = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
-   float3 lsDir = mul(probe.worldToLocal, float4(wsEyeRay, 0)).xyz;
-
-   float3 lsInvDir = float3(1 / lsDir.x, 1 / lsDir.y, 1 / lsDir.z);
-
-   float3 intersectsMax = lsInvDir - lsPos * lsInvDir;
-   float3 intersectsMin = -lsInvDir - lsPos * lsInvDir;
-
-   float3 positiveIntersections = max(intersectsMax, intersectsMin);
-   float intersectDist = min(positiveIntersections.x, min(positiveIntersections.y, positiveIntersections.z));
-
-   float3 wsIntersectPosition = surface.P + intersectDist * wsEyeRay;
-   float3 lookupDir = wsIntersectPosition - probe.wsPosition;
-
-   float3 reducedExtents = probe.boxExtents - float3(probe.attenuation, probe.attenuation, probe.attenuation);
-
-   float distToBox = length(max(max(-reducedExtents - (lsPos * probe.boxExtents), 0), (lsPos * probe.boxExtents) - reducedExtents));
-
-   float normalizedDistance = distToBox / 50; //50 is a random BS number. was probe.attenuation
-
-   float t = saturate(3.3333 - 3.3333 * normalizedDistance);
-   contribution = t * t * (3.0 - 2.0 * t);
-
-   return lookupDir;
-}
-
-float4 iblBoxDiffuse( Surface surface, ProbeData probe, float3 dir)
-{
    float lod = surface.roughness*cubeMips;
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.cubemapIdx, lod).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx, lod).xyz;
 
-   return float4(color * probe.contribution, ceil(probe.contribution));
+   return color;
 }
 
-float4 iblBoxSpecular(Surface surface, ProbeData probe, float3 dir)
+float3 iblBoxSpecular(Surface surface, ProbeData probe)
 {
     // BRDF
    float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV,0.0,0.0)).xy;
+
+   float3 dir = boxProject(surface, probe);
 
     // Radiance (Specular)
 #if DEBUGVIZ_SPECCUBEMAP == 0
@@ -121,9 +78,9 @@ float4 iblBoxSpecular(Surface surface, ProbeData probe, float3 dir)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.cubemapIdx, lod).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
 
-   return float4(color * probe.contribution, 1);
+   return color;
 }
 
 float4 main( PFXVertToPix IN ) : SV_TARGET
@@ -142,66 +99,79 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }     
 
    int i = 0;
+   float blendVal[MAX_PROBES];
+   float blendFactor[MAX_PROBES];
+   float blendSum = 0;
+   float blendFacSum = 0;
+   float invBlendSum = 0;
 
-   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-
-   //energy conservation
-   float3 kD = 1.0.xxx - F;
-   kD *= 1.0 - surface.metalness;
-
-   float4 irradiance = float4(0, 0, 0, 0);
-   float4 specular = float4(0, 0, 0, 0);
-
-   float contributingProbeCount = 1;
-
-   float contribSum = 0;
-
-#if DEBUGVIZ_CONTRIB == 1
-   float contribVal[MAX_PROBES];
-#endif
+   //Set up our struct data
+   ProbeData probes[MAX_PROBES];
 
    //Process prooooobes
    for (i = 0; i < numProbes; ++i)
    {
-      ProbeData probe;
+      probes[i].wsPosition = inProbePosArray[i].xyz;
+      probes[i].radius = probeConfigData[i].g;
+      probes[i].boxMin = bbMinArray[i].xyz;
+      probes[i].boxMax = bbMaxArray[i].xyz;
+      probes[i].refPosition = inRefPosArray[i].xyz;
+      probes[i].attenuation = probeConfigData[i].b;
+      probes[i].worldToLocal = worldToObjArray[i];
+      probes[i].probeIdx = i;
+      probes[i].type = probeConfigData[i].r;
+      probes[i].contribution = 0;
 
-      probe.wsPosition = inProbePosArray[i].xyz;
-      probe.radius = probeConfigData[i].g;
-      probe.boxExtents = length(bbMaxArray[i].xyz - bbMinArray[i].xyz);
-      probe.attenuation = probeConfigData[i].b;
-      probe.worldToLocal = worldToObjArray[i];
-      probe.cubemapIdx = i;
-      probe.type = probeConfigData[i].r;
-      probe.contribution = 0;
-
-      if (probe.type == 0) //box
+      if (probes[i].type == 0) //box
       {
-         float3 reflDir = defineBoxSpaceInfluence(surface, probe, IN.wsEyeRay, probe.contribution);
+         blendVal[i] = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+      }
+      else
+      {
+         blendVal[i] = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+      }
 
-         float4 irr = iblBoxDiffuse(surface, probe, reflDir);
+      blendVal[i] = saturate(blendVal[i]);
+      blendSum += blendVal[i];
+      invBlendSum += (1.0f - blendVal[i]);
+   }
 
-         float3 spec = iblBoxSpecular(surface, probe, reflDir).rgb * F;
-
-         irradiance += irr;
-         specular += float4(spec,1);
-
-         contributingProbeCount += irr.a; //if we have any contribution to this pixel, our a should be at a 1, which we'll ultimately utilize to average the total
-
-         contribSum += probe.contribution;
-
-#if DEBUGVIZ_CONTRIB == 1
-         contribVal[i] = probe.contribution;
-#endif
+   // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
+   // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
+   // respect constraint B.
+   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
+   // and respect constraint A.
+   for (i = 0; i < numProbes; i++)
+   {
+      if (numProbes>1)
+      {
+         blendFactor[i] = ((1.0f - blendVal[i] / blendSum)) / (numProbes - 1);
+         blendFactor[i] *= ((1.0f - blendVal[i]) / invBlendSum);
+         blendFacSum += blendFactor[i];
+      }
+      else
+      {
+         blendFactor[i] = blendVal[i];
+         blendFacSum = blendVal[i];
       }
    }
 
-   //Average these bad boys out
-   //irradiance /= contributingProbeCount;
-   //specular /= contributingProbeCount;
+   // Normalize blendVal
+#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
+   if (blendFacSum == 0.0f) // Possible with custom weight
+   {
+      blendFacSum = 1.0f;
+   }
+#endif
 
+   float invBlendSumWeighted = 1.0f / blendFacSum;
+   for (i = 0; i < numProbes; ++i)
+   {
+      blendFactor[i] *= invBlendSumWeighted;
+   }
    
 #if DEBUGVIZ_ATTENUATION == 1
-   return float4(contribSum, contribSum, contribSum, 1);
+   return float4(blendFacSum, blendFacSum, blendFacSum, 1);
 #endif
 
 #if DEBUGVIZ_CONTRIB == 1
@@ -209,37 +179,55 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 finalContribColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      if (contribVal[i] == 0)
+      if (blendFactor[i] == 0)
          continue;
 
-      finalContribColor += contribVal[i] * probeContribColors[i].rgb;
+      finalContribColor += blendFactor[i] * probeContribColors[i].rgb;
    }
 
    return float4(finalContribColor, 1);
 #endif
 
 #if DEBUGVIZ_SPECCUBEMAP == 0 && DEBUGVIZ_DIFFCUBEMAP == 0
-    
-   
-   /*for (i = 0; i < numProbes; ++i)
+
+   float3 irradiance = float3(0, 0, 0);
+   float3 specular = float3(0, 0, 0);
+   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+
+   //energy conservation
+   float3 kD = 1.0.xxx - F;
+   kD *= 1.0 - surface.metalness;
+   for (i = 0; i < numProbes; ++i)
    {
       if (blendVal[i] == 0)
          continue;
 
-      irradiance += blendVal[i]*iblBoxDiffuse(surface, i);
+      irradiance += blendFactor[i]*iblBoxDiffuse(surface, probes[i]);
       
-      specular += blendVal[i]*F*iblBoxSpecular(surface, TORQUE_SAMPLER2D_MAKEARG(BRDFTexture),i);
-   }*/
+      specular += blendFactor[i]*F*iblBoxSpecular(surface, probes[i]);
+   }
 
    //final diffuse color
-   float3 diffuse = kD * irradiance.rgb * surface.baseColor.rgb;
-	float4 finalColor = float4(diffuse + specular.rgb * surface.ao, contribSum);
+   float3 diffuse = kD * irradiance * surface.baseColor.rgb;
+   float4 finalColor = float4(diffuse + specular * surface.ao, blendFacSum);
 
    return finalColor;
 
 #elif DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0
-   return float4(specular.rgb, 1);
+   float3 cubeColor = float3(0, 0, 0);
+   for (i = 0; i < numProbes; ++i)
+   {
+      cubeColor += blendFactor[i] * iblBoxSpecular(surface, probes[i]);
+   }
+
+   return float4(cubeColor, 1);
 #elif DEBUGVIZ_DIFFCUBEMAP == 1
-   return float4(irradiance.rgb, 1);
+   float3 cubeColor = float3(0, 0, 0);
+   for (i = 0; i < numProbes; ++i)
+   {
+      cubeColor += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
+   }
+
+   return float4(cubeColor, 1);
 #endif
 }

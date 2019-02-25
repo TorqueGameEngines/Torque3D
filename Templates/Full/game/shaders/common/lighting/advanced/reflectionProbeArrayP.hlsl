@@ -32,56 +32,90 @@ uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 uniform float4    probeContribColors[MAX_PROBES]; 
 #endif
 
-// Box Projected IBL Lighting
-// Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
-// and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
-/*float3 boxProject(float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax)
-{ 
-   float3 positionLS = mul(worldToObjArray[id], float4(wsEyeRay, 1.0)).xyz;
-   //float3 rayLS = mul(worldToObjArray[id], float4(wsEyeRay, 1.0)).xyz;
-   //float3 reflCameraLS = mul(worldToObjArray[id], float4(reflectDir), 1.0)).xyz;
-
-   float3 nrdir = reflectDir;
-	float3 offset = wsPosition;
-   float3 plane1vec = (boxMax - offset) / nrdir;
-   float3 plane2vec = (boxMin - offset) / nrdir;
-	
-	float3 furthestPlane = max(plane1vec, plane2vec);
-	float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
-   float3 posonbox = offset + nrdir * dist;
-
-   return posonbox - boxWSPos;
-}*/
-
-
-float3 iblBoxDiffuse( Surface surface, ProbeData probe)
+//Probe IBL stuff
+struct ProbeData
 {
-   float3 dir = boxProject(surface, probe);
+   float3 wsPosition;
+   float radius;
+   float3 boxMin;
+   float3 boxMax;
+   float attenuation;
+   float4x4 worldToLocal;
+   uint probeIdx;
+   uint type; //box = 0, sphere = 1
+   float contribution;
+   float3 refPosition;
+   float3 pad;   
+   
+   inline void defineSphereSpaceInfluence(Surface surface, float3 wsEyeRay)
+   {
+      float3 L = wsPosition.xyz - surface.P;
+      contribution = 1.0 - length(L) / radius;
+   }
 
-   float lod = surface.roughness*cubeMips;
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx, lod).xyz;
+   inline void defineBoxSpaceInfluence(Surface surface, float3 wsEyeRay)
+   {
+      float3 surfPosLS = mul(worldToLocal, float4(surface.P, 1.0)).xyz;
 
-   return color;
-}
+      float3 boxMinLS = wsPosition.xyz - (float3(1, 1, 1)*radius);
+      float3 boxMaxLS = wsPosition.xyz + (float3(1, 1, 1)*radius);
 
-float3 iblBoxSpecular(Surface surface, ProbeData probe)
-{
-    // BRDF
-   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV,0.0,0.0)).xy;
+      float boxOuterRange = length(boxMaxLS - boxMinLS);
+      float boxInnerRange = boxOuterRange / attenuation;
 
-   float3 dir = boxProject(surface, probe);
+      float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
+      localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
 
-    // Radiance (Specular)
-#if DEBUGVIZ_SPECCUBEMAP == 0
-   float lod = surface.roughness*cubeMips;
-#elif DEBUGVIZ_SPECCUBEMAP == 1
-   float lod = 0;
-#endif
+      contribution = max(localDir.x, max(localDir.y, localDir.z)) * -1;
+   }   
+   
+   // Box Projected IBL Lighting
+   // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
+   // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
+   inline float3 boxProject(Surface surface) //float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax
+   {
+      float3 nrdir = surface.R;
+      float3 offset = surface.P;
+      float3 plane1vec = (boxMax - offset) / nrdir;
+      float3 plane2vec = (boxMin - offset) / nrdir;
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
+      float3 furthestPlane = max(plane1vec, plane2vec);
+      float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
+      float3 posonbox = offset + nrdir * dist;
 
-   return color;
-}
+      return posonbox - refPosition;
+   }
+   
+   float3 iblBoxDiffuse( Surface surface)
+   {
+      float3 dir = boxProject(surface);
+
+      float lod = surface.roughness*cubeMips;
+      float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probeIdx, lod).xyz;
+
+      return color;
+   }
+
+   float3 iblBoxSpecular(Surface surface)
+   {
+      // BRDF
+      float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV,0.0,0.0)).xy;
+
+      float3 dir = boxProject(surface);
+
+      // Radiance (Specular)
+   #if DEBUGVIZ_SPECCUBEMAP == 0
+      float lod = surface.roughness*cubeMips;
+   #elif DEBUGVIZ_SPECCUBEMAP == 1
+      float lod = 0;
+   #endif
+
+      float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probeIdx, lod).xyz * (brdf.x + brdf.y);
+
+      return color;
+   }
+};
+
 
 float4 main( PFXVertToPix IN ) : SV_TARGET
 {
@@ -99,7 +133,6 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }     
 
    int i = 0;
-   float blendVal[MAX_PROBES];
    float blendFactor[MAX_PROBES];
    float blendSum = 0;
    float blendFacSum = 0;
@@ -124,16 +157,16 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
 
       if (probes[i].type == 0) //box
       {
-         blendVal[i] = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+         probes[i].defineBoxSpaceInfluence(surface, IN.wsEyeRay);
       }
       else
       {
-         blendVal[i] = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+         probes[i].defineSphereSpaceInfluence(surface,IN.wsEyeRay);
       }
 
-      blendVal[i] = saturate(blendVal[i]);
-      blendSum += blendVal[i];
-      invBlendSum += (1.0f - blendVal[i]);
+      probes[i].contribution = saturate(probes[i].contribution);
+      blendSum += probes[i].contribution;
+      invBlendSum += (1.0f - probes[i].contribution);
    }
 
    // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
@@ -145,14 +178,14 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    {
       if (numProbes>1)
       {
-         blendFactor[i] = ((1.0f - blendVal[i] / blendSum)) / (numProbes - 1);
-         blendFactor[i] *= ((1.0f - blendVal[i]) / invBlendSum);
+         blendFactor[i] = ((1.0f - probes[i].contribution / blendSum)) / (numProbes - 1);
+         blendFactor[i] *= ((1.0f - probes[i].contribution) / invBlendSum);
          blendFacSum += blendFactor[i];
       }
       else
       {
-         blendFactor[i] = blendVal[i];
-         blendFacSum = blendVal[i];
+         blendFactor[i] = probes[i].contribution;
+         blendFacSum = probes[i].contribution;
       }
    }
 
@@ -199,12 +232,12 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      if (blendVal[i] == 0)
+      if (probes[i].contribution == 0)
          continue;
 
-      irradiance += blendFactor[i]*iblBoxDiffuse(surface, probes[i]);
+      irradiance += blendFactor[i]*probes[i].iblBoxDiffuse(surface);
       
-      specular += blendFactor[i]*F*iblBoxSpecular(surface, probes[i]);
+      specular += blendFactor[i]*F*probes[i].iblBoxSpecular(surface);
    }
 
    //final diffuse color
@@ -217,7 +250,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendFactor[i] * iblBoxSpecular(surface, probes[i]);
+      cubeColor += blendFactor[i] * probes[i].iblBoxSpecular(surface);
    }
 
    return float4(cubeColor, 1);
@@ -225,7 +258,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
+      cubeColor += blendFactor[i] * probes[i].iblBoxDiffuse(surface);
    }
 
    return float4(cubeColor, 1);

@@ -235,3 +235,90 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
    float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
    return final;
 }
+
+//Probe IBL stuff
+struct ProbeData
+{
+   float3 wsPosition;
+   float radius;
+   float3 boxMin;
+   float3 boxMax;
+   float attenuation;
+   float4x4 worldToLocal;
+   uint probeIdx;
+   uint type; //box = 0, sphere = 1
+   float contribution;
+   float3 refPosition;
+   float3 pad;
+};
+
+// Box Projected IBL Lighting
+// Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
+// and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
+float3 boxProject(Surface surface, ProbeData probe) //float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax
+{
+   //float3 rayLS = mul(worldToObjArray[id], float4(wsEyeRay, 1.0)).xyz;
+   //float3 reflCameraLS = mul(worldToObjArray[id], float4(reflectDir), 1.0)).xyz;
+
+   float3 nrdir = surface.R;
+   float3 offset = surface.P;
+   float3 plane1vec = (probe.boxMax - offset) / nrdir;
+   float3 plane2vec = (probe.boxMin - offset) / nrdir;
+
+   float3 furthestPlane = max(plane1vec, plane2vec);
+   float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
+   float3 posonbox = offset + nrdir * dist;
+
+   return posonbox - probe.refPosition;
+}
+
+float defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+{
+   float3 L = probe.wsPosition.xyz - surface.P;
+   return 1.0 - length(L) / probe.radius;
+}
+
+float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+{
+   /*float3 lsPos = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
+   float3 lsDir = mul(probe.worldToLocal, float4(wsEyeRay, 0)).xyz;
+
+   float3 lsInvDir = rcp(lsDir);
+
+   float3 intersectsMax = lsInvDir - lsPos * lsInvDir;
+   float3 intersectsMin = -lsInvDir - lsPos * lsInvDir;
+
+   float3 positiveIntersections = max(intersectsMax, intersectsMin);
+   float intersectDist = min(positiveIntersections.x, min(positiveIntersections.y, positiveIntersections.z));
+
+   float3 wsIntersectPosition = surface.P + intersectDist * wsEyeRay;
+   float3 lookupDir = wsIntersectPosition - probe.wsPosition;
+
+   //replace this mess with a second pair of minmaxes
+   float atten = probe.radius - probe.radius*probe.attenuation / 2;
+   float rad = probe.radius * 2;
+   float3 atten3 = float3(atten, atten, atten); // atten as a % of box
+   float3 reducedExtents = float3(rad, rad, rad) - atten3;
+
+   float distToBox = getDistBoxToPoint(lsPos*probe.boxExtents, float3(rad, rad, rad));
+
+   float normalizedDistance = distToBox / length(rad);
+
+   float t = saturate(3.3333 - 3.3333 * normalizedDistance);
+   contribution = t * t * (3.0 - 2.0 * t);
+
+   return lookupDir;*/
+
+   float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
+
+   float3 boxMinLS = probe.wsPosition.xyz - (float3(1, 1, 1)*probe.radius);
+   float3 boxMaxLS = probe.wsPosition.xyz + (float3(1, 1, 1)*probe.radius);
+
+   float boxOuterRange = length(boxMaxLS - boxMinLS);
+   float boxInnerRange = boxOuterRange / probe.attenuation;
+
+   float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
+   localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
+
+   return max(localDir.x, max(localDir.y, localDir.z)) * -1;
+}

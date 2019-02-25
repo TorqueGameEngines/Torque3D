@@ -74,7 +74,7 @@ struct ProbeData
    // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
    inline float3 boxProject(Surface surface) //float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax
    {
-      float3 nrdir = surface.R;
+      float3 nrdir = normalize(surface.R);
       float3 offset = surface.P;
       float3 plane1vec = (boxMax - offset) / nrdir;
       float3 plane2vec = (boxMin - offset) / nrdir;
@@ -86,17 +86,19 @@ struct ProbeData
       return posonbox - refPosition;
    }
    
-   float3 iblBoxDiffuse( Surface surface)
+   inline float3 iblBoxDiffuse( Surface surface)
    {
       float3 dir = boxProject(surface);
 
       float lod = surface.roughness*cubeMips;
       float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probeIdx, lod).xyz;
-
-      return color;
+      if (contribution>0)
+         return color*contribution;
+      else
+         return float3(0,0,0);
    }
 
-   float3 iblBoxSpecular(Surface surface)
+   inline float3 iblBoxSpecular(Surface surface)
    {
       // BRDF
       float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV,0.0,0.0)).xy;
@@ -112,7 +114,15 @@ struct ProbeData
 
       float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probeIdx, lod).xyz * (brdf.x + brdf.y);
 
-      return color;
+      if (contribution>0)
+         return color*contribution;
+      else
+         return float3(0,0,0);
+   }
+   
+   inline void reweight(float bias)
+   {
+      contribution = bias;
    }
 };
 
@@ -163,8 +173,8 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       {
          probes[i].defineSphereSpaceInfluence(surface,IN.wsEyeRay);
       }
-
-      probes[i].contribution = saturate(probes[i].contribution);
+      if (probes[i].contribution>1||probes[i].contribution<0)
+         probes[i].contribution = 0;
       blendSum += probes[i].contribution;
       invBlendSum += (1.0f - probes[i].contribution);
    }
@@ -178,8 +188,8 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    {
       if (numProbes>1)
       {
-         blendFactor[i] = ((1.0f - probes[i].contribution / blendSum)) / (numProbes - 1);
-         blendFactor[i] *= ((1.0f - probes[i].contribution) / invBlendSum);
+         blendFactor[i] = (( probes[i].contribution / blendSum)) / (numProbes - 1);
+         blendFactor[i] *= (( probes[i].contribution) / invBlendSum);
          blendFacSum += blendFactor[i];
       }
       else
@@ -190,21 +200,24 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }
 
    // Normalize blendVal
-#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
    if (blendFacSum == 0.0f) // Possible with custom weight
    {
       blendFacSum = 1.0f;
    }
-#endif
 
    float invBlendSumWeighted = 1.0f / blendFacSum;
    for (i = 0; i < numProbes; ++i)
    {
       blendFactor[i] *= invBlendSumWeighted;
+      probes[i].reweight(blendFactor[i]);
    }
-   
 #if DEBUGVIZ_ATTENUATION == 1
-   return float4(blendFacSum, blendFacSum, blendFacSum, 1);
+   float attenVis = 0;
+   for (i = 0; i < numProbes; ++i)
+   {
+      attenVis += probes[i].contribution;
+   }
+   return float4(attenVis, attenVis, attenVis, 1);
 #endif
 
 #if DEBUGVIZ_CONTRIB == 1
@@ -212,10 +225,10 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 finalContribColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      if (blendFactor[i] == 0)
+      if (probes[i].contribution == 0)
          continue;
 
-      finalContribColor += blendFactor[i] * probeContribColors[i].rgb;
+      finalContribColor += probes[i].contribution * probeContribColors[i].rgb;
    }
 
    return float4(finalContribColor, 1);
@@ -235,9 +248,9 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       if (probes[i].contribution == 0)
          continue;
 
-      irradiance += blendFactor[i]*probes[i].iblBoxDiffuse(surface);
+      irradiance += probes[i].iblBoxDiffuse(surface);
       
-      specular += blendFactor[i]*F*probes[i].iblBoxSpecular(surface);
+      specular += F*probes[i].iblBoxSpecular(surface);
    }
 
    //final diffuse color
@@ -250,7 +263,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendFactor[i] * probes[i].iblBoxSpecular(surface);
+      cubeColor += probes[i].iblBoxSpecular(surface);
    }
 
    return float4(cubeColor, 1);
@@ -258,7 +271,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendFactor[i] * probes[i].iblBoxDiffuse(surface);
+      cubeColor += probes[i].iblBoxDiffuse(surface);
    }
 
    return float4(cubeColor, 1);

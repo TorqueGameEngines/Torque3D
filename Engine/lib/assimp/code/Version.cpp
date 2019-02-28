@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -50,7 +49,7 @@ static const unsigned int MajorVersion = 4;
 static const unsigned int MinorVersion = 1;
 
 // --------------------------------------------------------------------------------
-// Legal information string - don't remove this.
+// Legal information string - dont't remove this.
 static const char* LEGAL_INFORMATION =
 
 "Open Asset Import Library (Assimp).\n"
@@ -112,27 +111,22 @@ ASSIMP_API unsigned int aiGetVersionRevision() {
     return GitVersion;
 }
 
-ASSIMP_API const char *aiGetBranchName() {
-    return GitBranch;
-}
-
 // ------------------------------------------------------------------------------------------------
 ASSIMP_API aiScene::aiScene()
 : mFlags(0)
-, mRootNode(nullptr)
+, mRootNode(NULL)
 , mNumMeshes(0)
-, mMeshes(nullptr)
+, mMeshes(NULL)
 , mNumMaterials(0)
-, mMaterials(nullptr)
+, mMaterials(NULL)
 , mNumAnimations(0)
-, mAnimations(nullptr)
+, mAnimations(NULL)
 , mNumTextures(0)
-, mTextures(nullptr)
+, mTextures(NULL)
 , mNumLights(0)
-, mLights(nullptr)
+, mLights(NULL)
 , mNumCameras(0)
-, mCameras(nullptr)
-, mMetaData(nullptr)
+, mCameras(NULL)
 , mPrivate(new Assimp::ScenePrivateData()) {
 	// empty
 }
@@ -150,11 +144,9 @@ ASSIMP_API aiScene::~aiScene() {
             delete mMeshes[a];
     delete [] mMeshes;
 
-    if (mNumMaterials && mMaterials) {
-        for (unsigned int a = 0; a < mNumMaterials; ++a ) {
-            delete mMaterials[ a ];
-        }
-    }
+    if (mNumMaterials && mMaterials)
+        for( unsigned int a = 0; a < mNumMaterials; a++)
+            delete mMaterials[a];
     delete [] mMaterials;
 
     if (mNumAnimations && mAnimations)
@@ -176,9 +168,6 @@ ASSIMP_API aiScene::~aiScene() {
         for( unsigned int a = 0; a < mNumCameras; a++)
             delete mCameras[a];
     delete [] mCameras;
-
-    aiMetadata::Dealloc(mMetaData);
-    mMetaData = nullptr;
 
     delete static_cast<Assimp::ScenePrivateData*>( mPrivate );
 }

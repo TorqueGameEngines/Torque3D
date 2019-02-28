@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -67,7 +66,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef ASSIMP_API
 #   include <memory>
 #   include <assimp/DefaultIOSystem.h>
-#   include <assimp/ByteSwapper.h>
+#   include "ByteSwapper.h"
 #else
 #   include <memory>
 #   define AI_SWAP4(p)
@@ -170,7 +169,7 @@ namespace glTF
     #define AI_GLB_MAGIC_NUMBER "glTF"
 
     #ifdef ASSIMP_API
-        #include <assimp/Compiler/pushpack1.h>
+        #include "./../include/assimp/Compiler/pushpack1.h"
     #endif
 
     //! For the KHR_binary_glTF extension (binary .glb file)
@@ -185,7 +184,7 @@ namespace glTF
     } PACK_STRUCT;
 
     #ifdef ASSIMP_API
-        #include <assimp/Compiler/poppack1.h>
+        #include "./../include/assimp/Compiler/poppack1.h"
     #endif
 
 
@@ -381,7 +380,7 @@ namespace glTF
     };
 
 
-    //! Base class for all glTF top-level objects
+    //! Base classe for all glTF top-level objects
     struct Object
     {
         std::string id;   //!< The globally unique ID used to reference this object
@@ -650,7 +649,7 @@ namespace glTF
         int width, height;
 
     private:
-        std::unique_ptr<uint8_t[]> mData;
+        uint8_t* mData;
         size_t mDataLength;
 
     public:
@@ -665,7 +664,7 @@ namespace glTF
             { return mDataLength; }
 
         inline const uint8_t* GetData() const
-            { return mData.get(); }
+            { return mData; }
 
         inline uint8_t* StealData();
 

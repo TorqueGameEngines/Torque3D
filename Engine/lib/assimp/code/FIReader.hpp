@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -63,7 +62,6 @@ namespace Assimp {
 
 struct FIValue {
     virtual const std::string &toString() const = 0;
-    virtual ~FIValue() {}
 };
 
 struct FIStringValue: public FIValue {
@@ -123,7 +121,6 @@ struct FICDATAValue: public FIStringValue {
 
 struct FIDecoder {
     virtual std::shared_ptr<const FIValue> decode(const uint8_t *data, size_t len) = 0;
-    virtual ~FIDecoder() {}
 };
 
 struct FIQName {

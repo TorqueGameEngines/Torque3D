@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -1000,7 +999,8 @@ typedef std::multimap<uint64_t, const Connection*> ConnectionMap;
 
 /** DOM class for global document settings, a single instance per document can
  *  be accessed via Document.Globals(). */
-class FileGlobalSettings {
+class FileGlobalSettings
+{
 public:
     FileGlobalSettings(const Document& doc, std::shared_ptr<const PropertyTable> props);
     ~FileGlobalSettings();
@@ -1022,8 +1022,8 @@ public:
     fbx_simple_property(CoordAxisSign, int, 1)
     fbx_simple_property(OriginalUpAxis, int, 0)
     fbx_simple_property(OriginalUpAxisSign, int, 1)
-    fbx_simple_property(UnitScaleFactor, float, 1)
-    fbx_simple_property(OriginalUnitScaleFactor, float, 1)
+    fbx_simple_property(UnitScaleFactor, double, 1)
+    fbx_simple_property(OriginalUnitScaleFactor, double, 1)
     fbx_simple_property(AmbientColor, aiVector3D, aiVector3D(0,0,0))
     fbx_simple_property(DefaultCamera, std::string, "")
 

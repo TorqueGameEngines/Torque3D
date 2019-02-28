@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -61,10 +60,14 @@ namespace Assimp    {
  *  and removes the whole graph. The output is a list of meshes, one for
  *  each material.
 */
-class ASSIMP_API PretransformVertices : public BaseProcess {
+class ASSIMP_API PretransformVertices : public BaseProcess
+{
 public:
+
     PretransformVertices ();
     ~PretransformVertices ();
+
+public:
 
     // -------------------------------------------------------------------
     // Check whether step is active
@@ -77,6 +80,7 @@ public:
     // -------------------------------------------------------------------
     // Setup import settings
     void SetupProperties(const Importer* pImp);
+
 
     // -------------------------------------------------------------------
     /** @brief Toggle the 'keep hierarchy' option
@@ -95,6 +99,7 @@ public:
     }
 
 private:
+
     // -------------------------------------------------------------------
     // Count the number of nodes
     unsigned int CountNodes( aiNode* pcNode );
@@ -155,7 +160,6 @@ private:
     bool configNormalize;
     bool configTransform;
     aiMatrix4x4 configTransformation;
-    bool mConfigPointCloud;
 };
 
 } // end of namespace Assimp

@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -50,7 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/DefaultLogger.hpp>
 
 #include <limits>
-#include <assimp/TinyFormatter.h>
+#include "TinyFormatter.h"
 
 using namespace Assimp;
 using namespace Assimp::Formatter;
@@ -88,7 +87,7 @@ void SplitByBoneCountProcess::SetupProperties(const Importer* pImp)
 // Executes the post processing step on the given imported data.
 void SplitByBoneCountProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("SplitByBoneCountProcess begin");
+    DefaultLogger::get()->debug("SplitByBoneCountProcess begin");
 
     // early out
     bool isNecessary = false;
@@ -98,7 +97,7 @@ void SplitByBoneCountProcess::Execute( aiScene* pScene)
 
     if( !isNecessary )
     {
-        ASSIMP_LOG_DEBUG( format() << "SplitByBoneCountProcess early-out: no meshes with more than " << mMaxBoneCount << " bones." );
+        DefaultLogger::get()->debug( format() << "SplitByBoneCountProcess early-out: no meshes with more than " << mMaxBoneCount << " bones." );
         return;
     }
 
@@ -146,7 +145,7 @@ void SplitByBoneCountProcess::Execute( aiScene* pScene)
     // recurse through all nodes and translate the node's mesh indices to fit the new mesh array
     UpdateNode( pScene->mRootNode);
 
-    ASSIMP_LOG_DEBUG( format() << "SplitByBoneCountProcess end: split " << mSubMeshIndices.size() << " meshes into " << meshes.size() << " submeshes." );
+    DefaultLogger::get()->debug( format() << "SplitByBoneCountProcess end: split " << mSubMeshIndices.size() << " meshes into " << meshes.size() << " submeshes." );
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -393,7 +392,7 @@ void SplitByBoneCountProcess::UpdateNode( aiNode* pNode) const
             newMeshList.insert( newMeshList.end(), replaceMeshes.begin(), replaceMeshes.end());
         }
 
-        delete [] pNode->mMeshes;
+        delete pNode->mMeshes;
         pNode->mNumMeshes = static_cast<unsigned int>(newMeshList.size());
         pNode->mMeshes = new unsigned int[pNode->mNumMeshes];
         std::copy( newMeshList.begin(), newMeshList.end(), pNode->mMeshes);

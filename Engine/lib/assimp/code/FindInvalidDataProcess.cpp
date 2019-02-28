@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -51,9 +50,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // internal headers
 #include "FindInvalidDataProcess.h"
 #include "ProcessHelper.h"
-#include <assimp/Macros.h>
-#include <assimp/Exceptional.h>
-#include <assimp/qnan.h>
+#include "Macros.h"
+#include "Exceptional.h"
+#include "qnan.h"
 
 using namespace Assimp;
 
@@ -118,7 +117,7 @@ void UpdateMeshReferences(aiNode* node, const std::vector<unsigned int>& meshMap
 // Executes the post processing step on the given imported data.
 void FindInvalidDataProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("FindInvalidDataProcess begin");
+    DefaultLogger::get()->debug("FindInvalidDataProcess begin");
 
     bool out = false;
     std::vector<unsigned int> meshMapping(pScene->mNumMeshes);
@@ -163,10 +162,9 @@ void FindInvalidDataProcess::Execute( aiScene* pScene)
             pScene->mNumMeshes = real;
         }
 
-        ASSIMP_LOG_INFO("FindInvalidDataProcess finished. Found issues ...");
-    } else {
-        ASSIMP_LOG_DEBUG("FindInvalidDataProcess finished. Everything seems to be OK.");
+        DefaultLogger::get()->info("FindInvalidDataProcess finished. Found issues ...");
     }
+    else DefaultLogger::get()->debug("FindInvalidDataProcess finished. Everything seems to be OK.");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -213,7 +211,8 @@ inline bool ProcessArray(T*& in, unsigned int num,const char* name,
 {
     const char* err = ValidateArrayContents(in,num,dirtyMask,mayBeIdentical,mayBeZero);
     if (err)    {
-        ASSIMP_LOG_ERROR_F( "FindInvalidDataProcess fails on mesh ", name, ": ", err);
+        DefaultLogger::get()->error(std::string("FindInvalidDataProcess fails on mesh ") + name + ": " + err);
+
         delete[] in;
         in = NULL;
         return true;
@@ -332,7 +331,7 @@ void FindInvalidDataProcess::ProcessAnimationChannel (aiNodeAnim* anim)
         i = 1;
     }
     if (1 == i)
-        ASSIMP_LOG_WARN("Simplified dummy tracks with just one key");
+        DefaultLogger::get()->warn("Simplified dummy tracks with just one key");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -354,7 +353,7 @@ int FindInvalidDataProcess::ProcessMesh (aiMesh* pMesh)
 
     // Process vertex positions
     if (pMesh->mVertices && ProcessArray(pMesh->mVertices, pMesh->mNumVertices, "positions", dirtyMask)) {
-        ASSIMP_LOG_ERROR("Deleting mesh: Unable to continue without vertex positions");
+        DefaultLogger::get()->error("Deleting mesh: Unable to continue without vertex positions");
 
         return 2;
     }

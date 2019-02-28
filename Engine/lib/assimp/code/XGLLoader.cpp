@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -47,11 +46,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_XGL_IMPORTER
 
 #include "XGLLoader.h"
-#include <assimp/ParsingUtils.h>
-#include <assimp/fast_atof.h>
+#include "ParsingUtils.h"
+#include "fast_atof.h"
 
-#include <assimp/StreamReader.h>
-#include <assimp/MemoryIOWrapper.h>
+#include "StreamReader.h"
+#include "MemoryIOWrapper.h"
 #include <assimp/mesh.h>
 #include <assimp/scene.h>
 #include <assimp/importerdesc.h>
@@ -71,6 +70,17 @@ using namespace irr::io;
 #   endif
 #endif
 
+
+// scopeguard for a malloc'ed buffer
+struct free_it
+{
+    free_it(void* free) : free(free) {}
+    ~free_it() {
+        ::free(this->free);
+    }
+
+    void* free;
+};
 
 namespace Assimp { // this has to be in here because LogFunctions is in ::Assimp
     template<> const char* LogFunctions<XGLImporter>::Prefix()
@@ -144,7 +154,8 @@ void XGLImporter::InternReadFile( const std::string& pFile,
     aiScene* pScene, IOSystem* pIOHandler)
 {
 #ifndef ASSIMP_BUILD_NO_COMPRESSED_XGL
-    std::vector<Bytef> uncompressed;
+    Bytef* dest = NULL;
+    free_it free_it_really(dest);
 #endif
 
     m_scene = pScene;
@@ -180,7 +191,6 @@ void XGLImporter::InternReadFile( const std::string& pFile,
 
         size_t total = 0l;
 
-        // TODO: be smarter about this, decompress directly into heap buffer
         // and decompress the data .... do 1k chunks in the hope that we won't kill the stack
     #define MYBLOCK 1024
         Bytef block[MYBLOCK];
@@ -195,8 +205,8 @@ void XGLImporter::InternReadFile( const std::string& pFile,
             }
             const size_t have = MYBLOCK - zstream.avail_out;
             total += have;
-            uncompressed.resize(total);
-            memcpy(uncompressed.data() + total - have,block,have);
+            dest = reinterpret_cast<Bytef*>( realloc(dest,total) );
+            memcpy(dest + total - have,block,have);
         }
         while (ret != Z_STREAM_END);
 
@@ -204,7 +214,7 @@ void XGLImporter::InternReadFile( const std::string& pFile,
         inflateEnd(&zstream);
 
         // replace the input stream with a memory stream
-        stream.reset(new MemoryIOStream(reinterpret_cast<uint8_t*>(uncompressed.data()),total));
+        stream.reset(new MemoryIOStream(reinterpret_cast<uint8_t*>(dest),total));
 #endif
     }
 
@@ -498,7 +508,7 @@ aiMatrix4x4 XGLImporter::ReadTrafo()
     right = forward ^ up;
     if (std::fabs(up * forward) > 1e-4) {
         // this is definitely wrong - a degenerate coordinate space ruins everything
-        // so substitute identity transform.
+        // so subtitute identity transform.
         LogError("<forward> and <up> vectors in <transform> are skewing, ignoring trafo");
         return m;
     }
@@ -894,14 +904,12 @@ aiVector2D XGLImporter::ReadVec2()
     }
     const char* s = m_reader->getNodeData();
 
-    ai_real v[2];
-	for(int i = 0; i < 2; ++i) {
+    for(int i = 0; i < 2; ++i) {
         if(!SkipSpaces(&s)) {
             LogError("unexpected EOL, failed to parse vec2");
             return vec;
         }
-		
-        v[i] = fast_atof(&s);
+        vec[i] = fast_atof(&s);
 
         SkipSpaces(&s);
         if (i != 1 && *s != ',') {
@@ -910,8 +918,6 @@ aiVector2D XGLImporter::ReadVec2()
         }
         ++s;
     }
-	vec.x = v[0];
-	vec.y = v[1];
 
     return vec;
 }

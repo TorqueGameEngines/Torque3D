@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -68,9 +67,10 @@ namespace Assimp
 //   Multi elements - No.
 //   Red, Greed, Blue and Alpha (transparency) component of a color in sRGB space, values ranging from 0 to 1. The
 //   values can be specified as constants, or as a formula depending on the coordinates.
-void AMFImporter::ParseNode_Color() {
-    std::string profile;
-    CAMFImporter_NodeElement* ne;
+void AMFImporter::ParseNode_Color()
+{
+std::string profile;
+CAMFImporter_NodeElement* ne;
 
 	// Read attributes for node <color>.
 	MACRO_ATTRREAD_LOOPBEG;
@@ -97,19 +97,15 @@ void AMFImporter::ParseNode_Color() {
 		MACRO_NODECHECK_LOOPEND("color");
 		ParseHelper_Node_Exit();
 		// check that all components was defined
-        if (!(read_flag[0] && read_flag[1] && read_flag[2])) {
-            throw DeadlyImportError("Not all color components are defined.");
-        }
+		if(!(read_flag[0] && read_flag[1] && read_flag[2])) throw DeadlyImportError("Not all color components are defined.");
+		// check if <a> is absent. Then manualy add "a == 1".
+		if(!read_flag[3]) als.Color.a = 1;
 
-        // check if <a> is absent. Then manually add "a == 1".
-        if (!read_flag[3]) {
-            als.Color.a = 1;
-        }
-	}
+	}// if(!mReader->isEmptyElement())
 	else
 	{
 		mNodeElement_Cur->Child.push_back(ne);// Add element to child list of current element
-	}
+	}// if(!mReader->isEmptyElement()) else
 
 	als.Composed = false;
 	mNodeElement_List.push_back(ne);// and to node element list because its a new object in graph.
@@ -122,9 +118,10 @@ void AMFImporter::ParseNode_Color() {
 // An available material.
 // Multi elements - Yes.
 // Parent element - <amf>.
-void AMFImporter::ParseNode_Material() {
-    std::string id;
-    CAMFImporter_NodeElement* ne;
+void AMFImporter::ParseNode_Material()
+{
+std::string id;
+CAMFImporter_NodeElement* ne;
 
 	// Read attributes for node <color>.
 	MACRO_ATTRREAD_LOOPBEG;
@@ -133,11 +130,9 @@ void AMFImporter::ParseNode_Material() {
 
 	// create new object.
 	ne = new CAMFImporter_NodeElement_Material(mNodeElement_Cur);
-
-    // and assign read data
+	// and assign read data
 	((CAMFImporter_NodeElement_Material*)ne)->ID = id;
-
-    // Check for child nodes
+	// Check for child nodes
 	if(!mReader->isEmptyElement())
 	{
 		bool col_read = false;
@@ -158,11 +153,11 @@ void AMFImporter::ParseNode_Material() {
 			if(XML_CheckNode_NameEqual("metadata")) { ParseNode_Metadata(); continue; }
 		MACRO_NODECHECK_LOOPEND("material");
 		ParseHelper_Node_Exit();
-	}
+	}// if(!mReader->isEmptyElement())
 	else
 	{
 		mNodeElement_Cur->Child.push_back(ne);// Add element to child list of current element
-	}
+	}// if(!mReader->isEmptyElement()) else
 
 	mNodeElement_List.push_back(ne);// and to node element list because its a new object in graph.
 }
@@ -185,13 +180,14 @@ void AMFImporter::ParseNode_Material() {
 // Parent element - <amf>.
 void AMFImporter::ParseNode_Texture()
 {
-    std::string id;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    uint32_t depth = 1;
-    std::string type;
-    bool tiled = false;
-    std::string enc64_data;
+std::string id;
+uint32_t width = 0;
+uint32_t height = 0;
+uint32_t depth = 1;
+std::string type;
+bool tiled = false;
+std::string enc64_data;
+CAMFImporter_NodeElement* ne;
 
 	// Read attributes for node <color>.
 	MACRO_ATTRREAD_LOOPBEG;
@@ -204,34 +200,20 @@ void AMFImporter::ParseNode_Texture()
 	MACRO_ATTRREAD_LOOPEND;
 
 	// create new texture object.
-    CAMFImporter_NodeElement *ne = new CAMFImporter_NodeElement_Texture(mNodeElement_Cur);
+	ne = new CAMFImporter_NodeElement_Texture(mNodeElement_Cur);
 
 	CAMFImporter_NodeElement_Texture& als = *((CAMFImporter_NodeElement_Texture*)ne);// alias for convenience
 
 	// Check for child nodes
-    if (!mReader->isEmptyElement()) {
-        XML_ReadNode_GetVal_AsString(enc64_data);
-    }
+	if(!mReader->isEmptyElement()) XML_ReadNode_GetVal_AsString(enc64_data);
 
 	// check that all components was defined
-    if (id.empty()) {
-        throw DeadlyImportError("ID for texture must be defined.");
-    }
-    if (width < 1) {
-        Throw_IncorrectAttrValue("width");
-    }
-    if (height < 1) {
-        Throw_IncorrectAttrValue("height");
-    }
-    if (depth < 1) {
-        Throw_IncorrectAttrValue("depth");
-    }
-    if (type != "grayscale") {
-        Throw_IncorrectAttrValue("type");
-    }
-    if (enc64_data.empty()) {
-        throw DeadlyImportError("Texture data not defined.");
-    }
+	if(id.empty()) throw DeadlyImportError("ID for texture must be defined.");
+	if(width < 1) Throw_IncorrectAttrValue("width");
+	if(height < 1) Throw_IncorrectAttrValue("height");
+	if(depth < 1) Throw_IncorrectAttrValue("depth");
+	if(type != "grayscale") Throw_IncorrectAttrValue("type");
+	if(enc64_data.empty()) throw DeadlyImportError("Texture data not defined.");
 	// copy data
 	als.ID = id;
 	als.Width = width;
@@ -239,11 +221,8 @@ void AMFImporter::ParseNode_Texture()
 	als.Depth = depth;
 	als.Tiled = tiled;
 	ParseHelper_Decode_Base64(enc64_data, als.Data);
-
-    // check data size
-    if ((width * height * depth) != als.Data.size()) {
-        throw DeadlyImportError("Texture has incorrect data size.");
-    }
+	// check data size
+	if((width * height * depth) != als.Data.size()) throw DeadlyImportError("Texture has incorrect data size.");
 
 	mNodeElement_Cur->Child.push_back(ne);// Add element to child list of current element
 	mNodeElement_List.push_back(ne);// and to node element list because its a new object in graph.
@@ -263,8 +242,10 @@ void AMFImporter::ParseNode_Texture()
 //   <utex1>, <utex2>, <utex3>, <vtex1>, <vtex2>, <vtex3>. Old name: <u1>, <u2>, <u3>, <v1>, <v2>, <v3>.
 //   Multi elements - No.
 //   Texture coordinates for every vertex of triangle.
-void AMFImporter::ParseNode_TexMap(const bool pUseOldName) {
-    std::string rtexid, gtexid, btexid, atexid;
+void AMFImporter::ParseNode_TexMap(const bool pUseOldName)
+{
+std::string rtexid, gtexid, btexid, atexid;
+CAMFImporter_NodeElement* ne;
 
 	// Read attributes for node <color>.
 	MACRO_ATTRREAD_LOOPBEG;
@@ -275,7 +256,7 @@ void AMFImporter::ParseNode_TexMap(const bool pUseOldName) {
 	MACRO_ATTRREAD_LOOPEND;
 
 	// create new texture coordinates object.
-    CAMFImporter_NodeElement *ne = new CAMFImporter_NodeElement_TexMap(mNodeElement_Cur);
+	ne = new CAMFImporter_NodeElement_TexMap(mNodeElement_Cur);
 
 	CAMFImporter_NodeElement_TexMap& als = *((CAMFImporter_NodeElement_TexMap*)ne);// alias for convenience
 	// check data

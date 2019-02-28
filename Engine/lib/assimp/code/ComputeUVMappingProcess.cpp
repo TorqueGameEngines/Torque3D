@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -45,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ComputeUVMappingProcess.h"
 #include "ProcessHelper.h"
-#include <assimp/Exceptional.h>
+#include "Exceptional.h"
 
 using namespace Assimp;
 
@@ -99,7 +98,7 @@ inline unsigned int FindEmptyUVChannel (aiMesh* mesh)
     for (unsigned int m = 0; m < AI_MAX_NUMBER_OF_TEXTURECOORDS;++m)
         if (!mesh->mTextureCoords[m])return m;
 
-    ASSIMP_LOG_ERROR("Unable to compute UV coordinates, no free UV slot found");
+    DefaultLogger::get()->error("Unable to compute UV coordinates, no free UV slot found");
     return UINT_MAX;
 }
 
@@ -384,13 +383,13 @@ void ComputeUVMappingProcess::ComputePlaneMapping(aiMesh* mesh,const aiVector3D&
 // ------------------------------------------------------------------------------------------------
 void ComputeUVMappingProcess::ComputeBoxMapping( aiMesh*, aiVector3D* )
 {
-    ASSIMP_LOG_ERROR("Mapping type currently not implemented");
+    DefaultLogger::get()->error("Mapping type currently not implemented");
 }
 
 // ------------------------------------------------------------------------------------------------
 void ComputeUVMappingProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("GenUVCoordsProcess begin");
+    DefaultLogger::get()->debug("GenUVCoordsProcess begin");
     char buffer[1024];
 
     if (pScene->mFlags & AI_SCENE_FLAGS_NON_VERBOSE_FORMAT)
@@ -418,7 +417,7 @@ void ComputeUVMappingProcess::Execute( aiScene* pScene)
                             TextureTypeToString((aiTextureType)prop->mSemantic),prop->mIndex,
                             MappingTypeToString(mapping));
 
-                        ASSIMP_LOG_INFO(buffer);
+                        DefaultLogger::get()->info(buffer);
                     }
 
                     if (aiTextureMapping_OTHER == mapping)
@@ -485,7 +484,7 @@ void ComputeUVMappingProcess::Execute( aiScene* pScene)
                             }
                             if (m && idx != outIdx)
                             {
-                                ASSIMP_LOG_WARN("UV index mismatch. Not all meshes assigned to "
+                                DefaultLogger::get()->warn("UV index mismatch. Not all meshes assigned to "
                                     "this material have equal numbers of UV channels. The UV index stored in  "
                                     "the material structure does therefore not apply for all meshes. ");
                             }
@@ -502,5 +501,5 @@ void ComputeUVMappingProcess::Execute( aiScene* pScene)
             }
         }
     }
-    ASSIMP_LOG_DEBUG("GenUVCoordsProcess finished");
+    DefaultLogger::get()->debug("GenUVCoordsProcess finished");
 }

@@ -4,8 +4,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -45,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_COLLADALOADER_H_INC
 #define AI_COLLADALOADER_H_INC
 
-#include <assimp/BaseImporter.h>
+#include "BaseImporter.h"
 #include "ColladaParser.h"
 
 struct aiNode;
@@ -248,7 +247,6 @@ protected:
 
     bool noSkeletonMesh;
     bool ignoreUpDirection;
-    bool useColladaName;
 
     /** Used by FindNameForNode() to generate unique node names */
     unsigned int mNodeNameCounter;

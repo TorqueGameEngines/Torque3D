@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -119,7 +118,7 @@ void UpdateMeshIndices(aiNode* node, unsigned int* lookup)
 // Executes the post processing step on the given imported data.
 void FindInstancesProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("FindInstancesProcess begin");
+    DefaultLogger::get()->debug("FindInstancesProcess begin");
     if (pScene->mNumMeshes) {
 
         // use a pseudo hash for all meshes in the scene to quickly find
@@ -267,11 +266,13 @@ void FindInstancesProcess::Execute( aiScene* pScene)
 
             // write to log
             if (!DefaultLogger::isNullLogger()) {
-                ASSIMP_LOG_INFO_F( "FindInstancesProcess finished. Found ", (pScene->mNumMeshes - numMeshesOut), " instances" );
+
+                char buffer[512];
+                ::ai_snprintf(buffer,512,"FindInstancesProcess finished. Found %i instances",pScene->mNumMeshes-numMeshesOut);
+                DefaultLogger::get()->info(buffer);
             }
             pScene->mNumMeshes = numMeshesOut;
-        } else {
-            ASSIMP_LOG_DEBUG("FindInstancesProcess finished. No instanced meshes found");
         }
+        else DefaultLogger::get()->debug("FindInstancesProcess finished. No instanced meshes found");
     }
 }

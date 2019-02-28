@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -115,16 +114,12 @@ public:
         }
     };
 
-    /**
-     *  @brief  The class constructor.
-     */
-    Exporter();
 
-    /**
-    *  @brief  The class destructor.
-    */
+public:
+    Exporter();
     ~Exporter();
 
+public:
     // -------------------------------------------------------------------
     /** Supplies a custom IO handler to the exporter to use to open and
      * access files.
@@ -176,10 +171,8 @@ public:
     *   Any IO handlers set via #SetIOHandler are ignored here.
     * @note Use aiCopyScene() to get a modifiable copy of a previously
     *   imported scene. */
-    const aiExportDataBlob* ExportToBlob(const aiScene* pScene, const char* pFormatId,
-        unsigned int pPreprocessing = 0u, const ExportProperties* = nullptr);
-    const aiExportDataBlob* ExportToBlob(  const aiScene* pScene, const std::string& pFormatId,
-        unsigned int pPreprocessing = 0u, const ExportProperties* pProperties = nullptr);
+    const aiExportDataBlob* ExportToBlob(const aiScene* pScene, const char* pFormatId, unsigned int pPreprocessing = 0u, const ExportProperties* = NULL);
+    const aiExportDataBlob* ExportToBlob(  const aiScene* pScene, const std::string& pFormatId, unsigned int pPreprocessing = 0u, const ExportProperties* pProperties = NULL);
 
     // -------------------------------------------------------------------
     /** Convenience function to export directly to a file. Use
@@ -214,10 +207,8 @@ public:
      * @return AI_SUCCESS if everything was fine.
      * @note Use aiCopyScene() to get a modifiable copy of a previously
      *   imported scene.*/
-    aiReturn Export( const aiScene* pScene, const char* pFormatId, const char* pPath,
-        unsigned int pPreprocessing = 0u, const ExportProperties* pProperties = nullptr);
-    aiReturn Export( const aiScene* pScene, const std::string& pFormatId, const std::string& pPath,
-        unsigned int pPreprocessing = 0u, const ExportProperties* pProperties = nullptr);
+    aiReturn Export( const aiScene* pScene, const char* pFormatId, const char* pPath, unsigned int pPreprocessing = 0u, const ExportProperties* pProperties = NULL);
+    aiReturn Export( const aiScene* pScene, const std::string& pFormatId, const std::string& pPath,  unsigned int pPreprocessing = 0u, const ExportProperties* pProperties = NULL);
 
     // -------------------------------------------------------------------
     /** Returns an error description of an error that occurred in #Export

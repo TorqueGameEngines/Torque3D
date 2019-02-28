@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -43,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ASSIMP_Q3BSPFILEDATA_H_INC
 
 #include <vector>
-#include <string.h>
+#include <string.h> //memset
 #include <string>
 
 namespace Assimp {
@@ -77,21 +76,25 @@ struct sQ3BSPHeader {
 };
 
 /// Describes an entry.
-struct sQ3BSPLump {
+struct sQ3BSPLump
+{
     int iOffset;    ///< Offset from start pointer of file
     int iSize;      ///< Size of part
 };
 
-struct vec2f {
+struct vec2f
+{
     float x,y;
 };
 
-struct vec3f {
+struct vec3f
+{
     float x, y, z;
 };
 
 /// Vertex of a Q3 level
-struct sQ3BSPVertex {
+struct sQ3BSPVertex
+{
     vec3f vPosition;    ///< Position of vertex
     vec2f vTexCoord;    ///< (u,v) Texturecoordinate of detailtexture
     vec2f vLightmap;    ///< (u,v) Texturecoordinate of lightmap
@@ -100,7 +103,8 @@ struct sQ3BSPVertex {
 };
 
 /// A face in bsp format info
-struct sQ3BSPFace {
+struct sQ3BSPFace
+{
     int iTextureID;                 ///< Index in texture array
     int iEffect;                    ///< Index in effect array (-1 = no effect)
     int iType;                      ///< 1=Polygon, 2=Patch, 3=Mesh, 4=Billboard

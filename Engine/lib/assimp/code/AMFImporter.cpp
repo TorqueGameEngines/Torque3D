@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -52,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AMFImporter.hpp"
 #include "AMFImporter_Macro.hpp"
 
-#include <assimp/fast_atof.h>
+#include "fast_atof.h"
 #include <assimp/DefaultIOSystem.h>
 
 // Header files, stdlib.
@@ -230,7 +229,7 @@ casu_cres:
 	if(!skipped_before[sk_idx])
 	{
 		skipped_before[sk_idx] = true;
-        ASSIMP_LOG_WARN_F("Skipping node \"", nn, "\" in ", pParentNodeName, ".");
+		LogWarning("Skipping node \"" + nn + "\" in " + pParentNodeName + ".");
 	}
 }
 

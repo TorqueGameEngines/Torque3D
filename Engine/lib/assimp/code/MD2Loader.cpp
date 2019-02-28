@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -46,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file Implementation of the MD2 importer class */
 #include "MD2Loader.h"
-#include <assimp/ByteSwapper.h>
+#include "ByteSwapper.h"
 #include "MD2NormalTable.h" // shouldn't be included by other units
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp>
@@ -83,7 +82,7 @@ void MD2::LookupNormalIndex(uint8_t iNormalIndex,aiVector3D& vOut)
 {
     // make sure the normal index has a valid value
     if (iNormalIndex >= ARRAYSIZE(g_avNormals)) {
-        ASSIMP_LOG_WARN("Index overflow in Quake II normal vector list");
+        DefaultLogger::get()->warn("Index overflow in Quake II normal vector list");
         iNormalIndex = ARRAYSIZE(g_avNormals) - 1;
     }
     vOut = *((const aiVector3D*)(&g_avNormals[iNormalIndex]));
@@ -161,7 +160,7 @@ void MD2Importer::ValidateHeader( )
 
     // check file format version
     if (m_pcHeader->version != 8)
-        ASSIMP_LOG_WARN( "Unsupported md2 file version. Continuing happily ...");
+        DefaultLogger::get()->warn( "Unsupported md2 file version. Continuing happily ...");
 
     // check some values whether they are valid
     if (0 == m_pcHeader->numFrames)
@@ -203,11 +202,11 @@ void MD2Importer::ValidateHeader( )
     }
 
     if (m_pcHeader->numSkins > AI_MD2_MAX_SKINS)
-        ASSIMP_LOG_WARN("The model contains more skins than Quake 2 supports");
+        DefaultLogger::get()->warn("The model contains more skins than Quake 2 supports");
     if ( m_pcHeader->numFrames > AI_MD2_MAX_FRAMES)
-        ASSIMP_LOG_WARN("The model contains more frames than Quake 2 supports");
+        DefaultLogger::get()->warn("The model contains more frames than Quake 2 supports");
     if (m_pcHeader->numVertices > AI_MD2_MAX_VERTS)
-        ASSIMP_LOG_WARN("The model contains more vertices than Quake 2 supports");
+        DefaultLogger::get()->warn("The model contains more vertices than Quake 2 supports");
 
     if (m_pcHeader->numFrames <= configFrameID )
         throw DeadlyImportError("The requested frame is not existing the file");
@@ -352,7 +351,7 @@ void MD2Importer::InternReadFile( const std::string& pFile,
             pcHelper->AddProperty(&szString,AI_MATKEY_TEXTURE_DIFFUSE(0));
         }
         else{
-            ASSIMP_LOG_WARN("Texture file name has zero length. It will be skipped.");
+            DefaultLogger::get()->warn("Texture file name has zero length. It will be skipped.");
         }
     }
     else    {
@@ -390,11 +389,11 @@ void MD2Importer::InternReadFile( const std::string& pFile,
         // check whether the skin width or height are zero (this would
         // cause a division through zero)
         if (!m_pcHeader->skinWidth) {
-            ASSIMP_LOG_ERROR("MD2: No valid skin width given");
+            DefaultLogger::get()->error("MD2: No valid skin width given");
         }
         else fDivisorU = (float)m_pcHeader->skinWidth;
         if (!m_pcHeader->skinHeight){
-            ASSIMP_LOG_ERROR("MD2: No valid skin height given");
+            DefaultLogger::get()->error("MD2: No valid skin height given");
         }
         else fDivisorV = (float)m_pcHeader->skinHeight;
     }
@@ -412,7 +411,7 @@ void MD2Importer::InternReadFile( const std::string& pFile,
             // validate vertex indices
             unsigned int iIndex = (unsigned int)pcTriangles[i].vertexIndices[c];
             if (iIndex >= m_pcHeader->numVertices)  {
-                ASSIMP_LOG_ERROR("MD2: Vertex index is outside the allowed range");
+                DefaultLogger::get()->error("MD2: Vertex index is outside the allowed range");
                 iIndex = m_pcHeader->numVertices-1;
             }
 
@@ -440,7 +439,7 @@ void MD2Importer::InternReadFile( const std::string& pFile,
                 // validate texture coordinates
                 iIndex = pcTriangles[i].textureIndices[c];
                 if (iIndex >= m_pcHeader->numTexCoords) {
-                    ASSIMP_LOG_ERROR("MD2: UV index is outside the allowed range");
+                    DefaultLogger::get()->error("MD2: UV index is outside the allowed range");
                     iIndex = m_pcHeader->numTexCoords-1;
                 }
 

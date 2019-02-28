@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -137,12 +136,7 @@ public:
      * If this Importer owns a scene it won't be copied.
      * Call ReadFile() to start the import process.
      */
-    Importer(const Importer& other)=delete;
-
-    // -------------------------------------------------------------------
-    /** Assignment operator has been deleted
-     */
-    Importer &operator=(const Importer &) = delete;
+    Importer(const Importer& other);
 
     // -------------------------------------------------------------------
     /** Destructor. The object kept ownership of the imported data,

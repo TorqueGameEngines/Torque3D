@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -145,7 +144,7 @@ bool UpdateNodeGraph(aiNode* node,std::list<aiNode*>& childsOfParent,bool root)
 // Executes the post processing step on the given imported data.
 void RemoveVCProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("RemoveVCProcess begin");
+    DefaultLogger::get()->debug("RemoveVCProcess begin");
     bool bHas = false; //,bMasked = false;
 
     mScene = pScene;
@@ -224,18 +223,15 @@ void RemoveVCProcess::Execute( aiScene* pScene)
     if (!pScene->mNumMeshes || !pScene->mNumMaterials)
     {
         pScene->mFlags |= AI_SCENE_FLAGS_INCOMPLETE;
-        ASSIMP_LOG_DEBUG("Setting AI_SCENE_FLAGS_INCOMPLETE flag");
+        DefaultLogger::get()->debug("Setting AI_SCENE_FLAGS_INCOMPLETE flag");
 
         // If we have no meshes anymore we should also clear another flag ...
         if (!pScene->mNumMeshes)
             pScene->mFlags &= ~AI_SCENE_FLAGS_NON_VERBOSE_FORMAT;
     }
 
-    if (bHas) {
-        ASSIMP_LOG_INFO("RemoveVCProcess finished. Data structure cleanup has been done.");
-    } else {
-        ASSIMP_LOG_DEBUG("RemoveVCProcess finished. Nothing to be done ...");
-    }
+    if (bHas)DefaultLogger::get()->info("RemoveVCProcess finished. Data structure cleanup has been done.");
+    else DefaultLogger::get()->debug("RemoveVCProcess finished. Nothing to be done ...");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -245,7 +241,7 @@ void RemoveVCProcess::SetupProperties(const Importer* pImp)
     configDeleteFlags = pImp->GetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,0x0);
     if (!configDeleteFlags)
     {
-        ASSIMP_LOG_WARN("RemoveVCProcess: AI_CONFIG_PP_RVC_FLAGS is zero.");
+        DefaultLogger::get()->warn("RemoveVCProcess: AI_CONFIG_PP_RVC_FLAGS is zero.");
     }
 }
 

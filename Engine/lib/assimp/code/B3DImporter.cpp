@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -52,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "B3DImporter.h"
 #include "TextureTransform.h"
 #include "ConvertToLHProcess.h"
-#include <assimp/StringUtils.h>
+#include "StringUtils.h"
 #include <memory>
 #include <assimp/IOSystem.hpp>
 #include <assimp/anim.h>
@@ -94,6 +93,7 @@ void DeleteAllBarePointers(std::vector<T>& x)
 
 B3DImporter::~B3DImporter()
 {
+    DeleteAllBarePointers(_animations);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -267,21 +267,6 @@ T *B3DImporter::to_array( const vector<T> &v ){
     return p;
 }
 
-
-// ------------------------------------------------------------------------------------------------
-template<class T>
-T **unique_to_array( vector<std::unique_ptr<T> > &v ){
-    if( v.empty() ) {
-        return 0;
-    }
-    T **p = new T*[ v.size() ];
-    for( size_t i = 0; i < v.size(); ++i ){
-        p[i] = v[i].release();
-    }
-    return p;
-}
-
-
 // ------------------------------------------------------------------------------------------------
 void B3DImporter::ReadTEXS(){
     while( ChunkSize() ){
@@ -310,7 +295,8 @@ void B3DImporter::ReadBRUS(){
         /*int blend=**/ReadInt();
         int fx=ReadInt();
 
-        std::unique_ptr<aiMaterial> mat(new aiMaterial);
+        aiMaterial *mat=new aiMaterial;
+        _materials.push_back( mat );
 
         // Name
         aiString ainame( name );
@@ -347,7 +333,6 @@ void B3DImporter::ReadBRUS(){
                 mat->AddProperty( &texname,AI_MATKEY_TEXTURE_DIFFUSE(0) );
             }
         }
-        _materials.emplace_back( std::move(mat) );
     }
 }
 
@@ -401,7 +386,8 @@ void B3DImporter::ReadTRIS( int v0 ){
         Fail( "Bad material id" );
     }
 
-    std::unique_ptr<aiMesh> mesh(new aiMesh);
+    aiMesh *mesh=new aiMesh;
+    _meshes.push_back( mesh );
 
     mesh->mMaterialIndex=matid;
     mesh->mNumFaces=0;
@@ -429,8 +415,6 @@ void B3DImporter::ReadTRIS( int v0 ){
         ++mesh->mNumFaces;
         ++face;
     }
-
-    _meshes.emplace_back( std::move(mesh) );
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -516,11 +500,11 @@ void B3DImporter::ReadANIM(){
     int frames=ReadInt();
     float fps=ReadFloat();
 
-    std::unique_ptr<aiAnimation> anim(new aiAnimation);
+    aiAnimation *anim=new aiAnimation;
+    _animations.push_back( anim );
 
     anim->mDuration=frames;
     anim->mTicksPerSecond=fps;
-    _animations.emplace_back( std::move(anim) );
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -547,7 +531,7 @@ aiNode *B3DImporter::ReadNODE( aiNode *parent ){
     node->mParent=parent;
     node->mTransformation=tform;
 
-    std::unique_ptr<aiNodeAnim> nodeAnim;
+    aiNodeAnim *nodeAnim=0;
     vector<unsigned> meshes;
     vector<aiNode*> children;
 
@@ -565,19 +549,16 @@ aiNode *B3DImporter::ReadNODE( aiNode *parent ){
             ReadANIM();
         }else if( t=="KEYS" ){
             if( !nodeAnim ){
-                nodeAnim.reset(new aiNodeAnim);
+                nodeAnim=new aiNodeAnim;
+                _nodeAnims.push_back( nodeAnim );
                 nodeAnim->mNodeName=node->mName;
             }
-            ReadKEYS( nodeAnim.get() );
+            ReadKEYS( nodeAnim );
         }else if( t=="NODE" ){
             aiNode *child=ReadNODE( node );
             children.push_back( child );
         }
         ExitChunk();
-    }
-
-    if (nodeAnim) {
-        _nodeAnims.emplace_back( std::move(nodeAnim) );
     }
 
     node->mNumMeshes= static_cast<unsigned int>(meshes.size());
@@ -605,6 +586,7 @@ void B3DImporter::ReadBB3D( aiScene *scene ){
 
     _nodeAnims.clear();
 
+    DeleteAllBarePointers(_animations);
     _animations.clear();
 
     string t=ReadChunk();
@@ -614,7 +596,7 @@ void B3DImporter::ReadBB3D( aiScene *scene ){
         if (!DefaultLogger::isNullLogger()) {
             char dmp[128];
             ai_snprintf(dmp, 128, "B3D file format version: %i",version);
-            ASSIMP_LOG_INFO(dmp);
+            DefaultLogger::get()->info(dmp);
         }
 
         while( ChunkSize() ){
@@ -640,7 +622,7 @@ void B3DImporter::ReadBB3D( aiScene *scene ){
         aiNode *node=_nodes[i];
 
         for( size_t j=0;j<node->mNumMeshes;++j ){
-            aiMesh *mesh = _meshes[node->mMeshes[j]].get();
+            aiMesh *mesh=_meshes[node->mMeshes[j]];
 
             int n_tris=mesh->mNumFaces;
             int n_verts=mesh->mNumVertices=n_tris * 3;
@@ -703,28 +685,27 @@ void B3DImporter::ReadBB3D( aiScene *scene ){
 
     //nodes
     scene->mRootNode=_nodes[0];
-    _nodes.clear();  // node ownership now belongs to scene
 
     //material
     if( !_materials.size() ){
-        _materials.emplace_back( std::unique_ptr<aiMaterial>(new aiMaterial) );
+        _materials.push_back( new aiMaterial );
     }
     scene->mNumMaterials= static_cast<unsigned int>(_materials.size());
-    scene->mMaterials = unique_to_array( _materials );
+    scene->mMaterials=to_array( _materials );
 
     //meshes
     scene->mNumMeshes= static_cast<unsigned int>(_meshes.size());
-    scene->mMeshes = unique_to_array( _meshes );
+    scene->mMeshes=to_array( _meshes );
 
     //animations
     if( _animations.size()==1 && _nodeAnims.size() ){
 
-        aiAnimation *anim = _animations.back().get();
+        aiAnimation *anim=_animations.back();
         anim->mNumChannels=static_cast<unsigned int>(_nodeAnims.size());
-        anim->mChannels = unique_to_array( _nodeAnims );
+        anim->mChannels=to_array( _nodeAnims );
 
         scene->mNumAnimations=static_cast<unsigned int>(_animations.size());
-        scene->mAnimations=unique_to_array( _animations );
+        scene->mAnimations=to_array( _animations );
     }
 
     // convert to RH

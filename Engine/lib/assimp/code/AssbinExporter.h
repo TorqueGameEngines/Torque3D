@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -46,13 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_ASSBINEXPORTER_H_INC
 #define AI_ASSBINEXPORTER_H_INC
 
-#include <assimp/defs.h>
-
 // nothing really needed here - reserved for future use like properties
-namespace Assimp {
 
-void ASSIMP_API ExportSceneAssbin(const char* pFile, IOSystem* pIOSystem, const aiScene* pScene, const ExportProperties* /*pProperties*/);
-
-}
-
-#endif // AI_ASSBINEXPORTER_H_INC
+#endif

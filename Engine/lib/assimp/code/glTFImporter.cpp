@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -43,8 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_GLTF_IMPORTER
 
 #include "glTFImporter.h"
-#include <assimp/StringComparison.h>
-#include <assimp/StringUtils.h>
+#include "StringComparison.h"
+#include "StringUtils.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -99,14 +98,14 @@ const aiImporterDesc* glTFImporter::GetInfo() const
     return &desc;
 }
 
-bool glTFImporter::CanRead(const std::string& pFile, IOSystem* pIOHandler, bool /* checkSig */) const
+bool glTFImporter::CanRead(const std::string& pFile, IOSystem* pIOHandler, bool checkSig) const
 {
     const std::string &extension = GetExtension(pFile);
 
     if (extension != "gltf" && extension != "glb")
         return false;
 
-    if (pIOHandler) {
+    if (checkSig && pIOHandler) {
         glTF::Asset asset(pIOHandler);
         try {
             asset.Load(pFile, extension == "glb");
@@ -194,16 +193,9 @@ void glTFImporter::ImportMaterials(glTF::Asset& r)
             aimat->AddProperty(&str, AI_MATKEY_NAME);
         }
 
-        SetMaterialColorProperty(embeddedTexIdxs, r, mat.ambient,  aimat, aiTextureType_AMBIENT,  AI_MATKEY_COLOR_AMBIENT );
-        SetMaterialColorProperty(embeddedTexIdxs, r, mat.diffuse,  aimat, aiTextureType_DIFFUSE,  AI_MATKEY_COLOR_DIFFUSE );
+        SetMaterialColorProperty(embeddedTexIdxs, r, mat.diffuse, aimat, aiTextureType_DIFFUSE, AI_MATKEY_COLOR_DIFFUSE);
         SetMaterialColorProperty(embeddedTexIdxs, r, mat.specular, aimat, aiTextureType_SPECULAR, AI_MATKEY_COLOR_SPECULAR);
-        SetMaterialColorProperty(embeddedTexIdxs, r, mat.emission, aimat, aiTextureType_EMISSIVE, AI_MATKEY_COLOR_EMISSIVE);
-
-        aimat->AddProperty(&mat.doubleSided, 1, AI_MATKEY_TWOSIDED);
-
-        if (mat.transparent && (mat.transparency != 1.0f)) {
-            aimat->AddProperty(&mat.transparency, 1, AI_MATKEY_OPACITY);
-        }
+        SetMaterialColorProperty(embeddedTexIdxs, r, mat.ambient, aimat, aiTextureType_AMBIENT, AI_MATKEY_COLOR_AMBIENT);
 
         if (mat.shininess > 0.f) {
             aimat->AddProperty(&mat.shininess, 1, AI_MATKEY_SHININESS);
@@ -351,10 +343,10 @@ void glTFImporter::ImportMeshes(glTF::Asset& r)
             }
 
 
-            aiFace* faces = 0;
-            unsigned int nFaces = 0;
-
             if (prim.indices) {
+				aiFace* faces = 0;
+                unsigned int nFaces = 0;
+
                 unsigned int count = prim.indices->count;
 
                 Accessor::Indexer data = prim.indices->GetIndexer();
@@ -419,78 +411,14 @@ void glTFImporter::ImportMeshes(glTF::Asset& r)
                         }
                         break;
                 }
-            }
-            else { // no indices provided so directly generate from counts
 
-                // use the already determined count as it includes checks 
-                unsigned int count = aim->mNumVertices;
-
-                switch (prim.mode) {
-                case PrimitiveMode_POINTS: {
-                    nFaces = count;
-                    faces = new aiFace[nFaces];
-                    for (unsigned int i = 0; i < count; ++i) {
-                        SetFace(faces[i], i);
-                    }
-                    break;
-                }
-
-                case PrimitiveMode_LINES: {
-                    nFaces = count / 2;
-                    faces = new aiFace[nFaces];
-                    for (unsigned int i = 0; i < count; i += 2) {
-                        SetFace(faces[i / 2], i, i + 1);
-                    }
-                    break;
-                }
-
-                case PrimitiveMode_LINE_LOOP:
-                case PrimitiveMode_LINE_STRIP: {
-                    nFaces = count - ((prim.mode == PrimitiveMode_LINE_STRIP) ? 1 : 0);
-                    faces = new aiFace[nFaces];
-                    SetFace(faces[0], 0, 1);
-                    for (unsigned int i = 2; i < count; ++i) {
-                        SetFace(faces[i - 1], faces[i - 2].mIndices[1], i);
-                    }
-                    if (prim.mode == PrimitiveMode_LINE_LOOP) { // close the loop
-                        SetFace(faces[count - 1], faces[count - 2].mIndices[1], faces[0].mIndices[0]);
-                    }
-                    break;
-                }
-
-                case PrimitiveMode_TRIANGLES: {
-                    nFaces = count / 3;
-                    faces = new aiFace[nFaces];
-                    for (unsigned int i = 0; i < count; i += 3) {
-                        SetFace(faces[i / 3], i, i + 1, i + 2);
-                    }
-                    break;
-                }
-                case PrimitiveMode_TRIANGLE_STRIP: {
-                    nFaces = count - 2;
-                    faces = new aiFace[nFaces];
-                    SetFace(faces[0], 0, 1, 2);
-                    for (unsigned int i = 3; i < count; ++i) {
-                        SetFace(faces[i - 2], faces[i - 1].mIndices[1], faces[i - 1].mIndices[2], i);
-                    }
-                    break;
-                }
-                case PrimitiveMode_TRIANGLE_FAN:
-                    nFaces = count - 2;
-                    faces = new aiFace[nFaces];
-                    SetFace(faces[0], 0, 1, 2);
-                    for (unsigned int i = 3; i < count; ++i) {
-                        SetFace(faces[i - 2], faces[0].mIndices[0], faces[i - 1].mIndices[2], i);
-                    }
-                    break;
+                if (faces) {
+                    aim->mFaces = faces;
+                    aim->mNumFaces = nFaces;
+                    ai_assert(CheckValidFacesIndices(faces, nFaces, aim->mNumVertices));
                 }
             }
 
-            if (faces) {
-                aim->mFaces = faces;
-                aim->mNumFaces = nFaces;
-                ai_assert(CheckValidFacesIndices(faces, nFaces, aim->mNumVertices));
-            }
 
             if (prim.material) {
                 aim->mMaterialIndex = prim.material.GetIndex();
@@ -688,7 +616,7 @@ void glTFImporter::ImportEmbeddedTextures(glTF::Asset& r)
 
     // Add the embedded textures
     for (size_t i = 0; i < r.images.Size(); ++i) {
-        Image &img = r.images[i];
+        Image img = r.images[i];
         if (!img.HasData()) continue;
 
         int idx = mScene->mNumTextures++;
@@ -739,6 +667,11 @@ void glTFImporter::InternReadFile(const std::string& pFile, aiScene* pScene, IOS
     ImportLights(asset);
 
     ImportNodes(asset);
+
+    // TODO: it does not split the loaded vertices, should it?
+    //pScene->mFlags |= AI_SCENE_FLAGS_NON_VERBOSE_FORMAT;
+	MakeVerboseFormatProcess process;
+    process.Execute(pScene);
 
 
     if (pScene->mNumMeshes == 0) {

@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -45,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_AI_BASEPROCESS_H
 
 #include <map>
-#include <assimp/GenericProperty.h>
+#include "GenericProperty.h"
 
 struct aiScene;
 
@@ -211,15 +210,19 @@ private:
  * should be executed. If the function returns true, the class' Execute()
  * function is called subsequently.
  */
-class ASSIMP_API_WINONLY BaseProcess {
+class ASSIMP_API_WINONLY BaseProcess
+{
     friend class Importer;
 
 public:
+
     /** Constructor to be privately used by Importer */
-    BaseProcess() AI_NO_EXCEPT;
+    BaseProcess();
 
     /** Destructor, private as well */
     virtual ~BaseProcess();
+
+public:
 
     // -------------------------------------------------------------------
     /** Returns whether the processing step is present in the given flag.

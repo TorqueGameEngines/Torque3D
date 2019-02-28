@@ -5,7 +5,7 @@
 #ifndef AI_IFF_H_INCLUDED
 #define AI_IFF_H_INCLUDED
 
-#include <assimp/ByteSwapper.h>
+#include "ByteSwapper.h"
 
 namespace Assimp    {
 namespace IFF       {

@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -50,8 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // internal headers
 #include "OFFLoader.h"
-#include <assimp/ParsingUtils.h>
-#include <assimp/fast_atof.h>
+#include "ParsingUtils.h"
+#include "fast_atof.h"
 #include <memory>
 #include <assimp/IOSystem.hpp>
 #include <assimp/scene.h>
@@ -157,7 +156,7 @@ void OFFImporter::InternReadFile( const std::string& pFile,
     {
         if(!GetNextLine(buffer,line))
         {
-            ASSIMP_LOG_ERROR("OFF: The number of verts in the header is incorrect");
+            DefaultLogger::get()->error("OFF: The number of verts in the header is incorrect");
             break;
         }
         aiVector3D& v = tempPositions[i];
@@ -175,14 +174,14 @@ void OFFImporter::InternReadFile( const std::string& pFile,
     {
         if(!GetNextLine(buffer,line))
         {
-            ASSIMP_LOG_ERROR("OFF: The number of faces in the header is incorrect");
+            DefaultLogger::get()->error("OFF: The number of faces in the header is incorrect");
             break;
         }
         sz = line;SkipSpaces(&sz);
         faces->mNumIndices = strtoul10(sz,&sz);
         if(!(faces->mNumIndices) || faces->mNumIndices > 9)
         {
-            ASSIMP_LOG_ERROR("OFF: Faces with zero indices aren't allowed");
+            DefaultLogger::get()->error("OFF: Faces with zero indices aren't allowed");
             --mesh->mNumFaces;
             continue;
         }
@@ -217,7 +216,7 @@ void OFFImporter::InternReadFile( const std::string& pFile,
             idx = strtoul10(sz,&sz);
             if ((idx) >= numVertices)
             {
-                ASSIMP_LOG_ERROR("OFF: Vertex index is out of range");
+                DefaultLogger::get()->error("OFF: Vertex index is out of range");
                 idx = numVertices-1;
             }
             faces->mIndices[m] = p++;

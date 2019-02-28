@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -46,13 +45,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 
 #include <assimp/IOSystem.hpp>
-#include <assimp/irrXMLWrapper.h>
+#include "irrXMLWrapper.h"
 
 namespace Assimp {
 namespace D3MF {
 
-using XmlReader = irr::io::IrrXMLReader ;
-using XmlReaderPtr = std::shared_ptr<XmlReader> ;
+typedef irr::io::IrrXMLReader XmlReader;
+typedef std::shared_ptr<XmlReader> XmlReaderPtr;
 
 struct OpcPackageRelationship {
     std::string id;
@@ -64,11 +63,9 @@ class D3MFZipArchive;
 
 class D3MFOpcPackage {
 public:
-    D3MFOpcPackage( IOSystem* pIOHandler, const std::string& rFile );
+    D3MFOpcPackage(IOSystem* pIOHandler, const std::string& rFile);
     ~D3MFOpcPackage();
     IOStream* RootStream() const;
-    bool validate();
-    static bool isZipArchive( IOSystem* pIOHandler, const std::string& rFile );
 
 protected:
     std::string ReadPackageRootRelationship(IOStream* stream);
@@ -78,7 +75,7 @@ private:
     std::unique_ptr<D3MFZipArchive> mZipArchive;
 };
 
-} // Namespace D3MF
-} // Namespace Assimp
+}
+}
 
 #endif // D3MFOPCPACKAGE_H

@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -50,7 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/scene.h>
 
 #include "TextureTransform.h"
-#include <assimp/StringUtils.h>
+#include "StringUtils.h"
 
 using namespace Assimp;
 
@@ -88,7 +87,7 @@ void TextureTransformStep::PreProcessUVTransform(STransformVecInfo& info)
 {
     /*  This function tries to simplify the input UV transformation.
      *  That's very important as it allows us to reduce the number
-     *  of output UV channels. The order in which the transformations
+     *  of output UV channels. The oder in which the transformations
      *  are applied is - as always - scaling, rotation, translation.
      */
 
@@ -105,10 +104,12 @@ void TextureTransformStep::PreProcessUVTransform(STransformVecInfo& info)
     if (info.mRotation)
     {
         float out = info.mRotation;
-        if ((rounded = static_cast<int>((info.mRotation / static_cast<float>(AI_MATH_TWO_PI)))))
+        if ((rounded = (int)(info.mRotation / (float)AI_MATH_TWO_PI)))
         {
-            out -= rounded * static_cast<float>(AI_MATH_PI);
-            ASSIMP_LOG_INFO_F("Texture coordinate rotation ", info.mRotation, " can be simplified to ", out);
+            out -= rounded*(float)AI_MATH_PI;
+
+            ai_snprintf(szTemp, 512, "Texture coordinate rotation %f can be simplified to %f",info.mRotation,out);
+            DefaultLogger::get()->info(szTemp);
         }
 
         // Next step - convert negative rotation angles to positives
@@ -148,7 +149,7 @@ void TextureTransformStep::PreProcessUVTransform(STransformVecInfo& info)
             out = 1.f;
         }
         if (szTemp[0])      {
-            ASSIMP_LOG_INFO(szTemp);
+            DefaultLogger::get()->info(szTemp);
             info.mTranslation.x = out;
         }
     }
@@ -181,7 +182,7 @@ void TextureTransformStep::PreProcessUVTransform(STransformVecInfo& info)
             out = 1.f;
         }
         if (szTemp[0])  {
-            ASSIMP_LOG_INFO(szTemp);
+            DefaultLogger::get()->info(szTemp);
             info.mTranslation.y = out;
         }
     }
@@ -219,7 +220,7 @@ inline const char* MappingModeToChar(aiTextureMapMode map)
 // ------------------------------------------------------------------------------------------------
 void TextureTransformStep::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("TransformUVCoordsProcess begin");
+    DefaultLogger::get()->debug("TransformUVCoordsProcess begin");
 
 
     /*  We build a per-mesh list of texture transformations we'll need
@@ -329,7 +330,7 @@ void TextureTransformStep::Execute( aiScene* pScene)
                     }
 
                     if (mesh->mNumUVComponents[info.uvIndex] >= 3){
-                        ASSIMP_LOG_WARN("UV transformations on 3D mapping channels are not supported");
+                        DefaultLogger::get()->warn("UV transformations on 3D mapping channels are not supported");
                         continue;
                     }
 
@@ -414,7 +415,7 @@ void TextureTransformStep::Execute( aiScene* pScene)
                     ++it2;
 
                 if ((*it2).lockedPos != AI_TT_UV_IDX_LOCK_NONE) {
-                    ASSIMP_LOG_ERROR("Channel mismatch, can't compute all transformations properly [design bug]");
+                    DefaultLogger::get()->error("Channel mismatch, can't compute all transformations properly [design bug]");
                     continue;
                 }
 
@@ -447,8 +448,10 @@ void TextureTransformStep::Execute( aiScene* pScene)
         if (size > AI_MAX_NUMBER_OF_TEXTURECOORDS) {
 
             if (!DefaultLogger::isNullLogger()) {
-                ASSIMP_LOG_ERROR_F(static_cast<unsigned int>(trafo.size()), " UV channels required but just ", 
-                    AI_MAX_NUMBER_OF_TEXTURECOORDS, " available");
+                ::ai_snprintf(buffer,1024,"%u UV channels required but just %u available",
+                    static_cast<unsigned int>(trafo.size()),AI_MAX_NUMBER_OF_TEXTURECOORDS);
+
+                DefaultLogger::get()->error(buffer);
             }
             size = AI_MAX_NUMBER_OF_TEXTURECOORDS;
         }
@@ -483,7 +486,7 @@ void TextureTransformStep::Execute( aiScene* pScene)
                     MappingModeToChar ((*it).mapU),
                     MappingModeToChar ((*it).mapV));
 
-                ASSIMP_LOG_INFO(buffer);
+                DefaultLogger::get()->info(buffer);
             }
 
             // Check whether we need a new buffer here
@@ -556,10 +559,12 @@ void TextureTransformStep::Execute( aiScene* pScene)
     if (!DefaultLogger::isNullLogger()) {
 
         if (transformedChannels)    {
-            ASSIMP_LOG_INFO_F("TransformUVCoordsProcess end: ", outChannels, " output channels (in: ", inChannels, ", modified: ", transformedChannels,")");
-        } else {
-            ASSIMP_LOG_DEBUG("TransformUVCoordsProcess finished");
+            ::ai_snprintf(buffer,1024,"TransformUVCoordsProcess end: %u output channels (in: %u, modified: %u)",
+                outChannels,inChannels,transformedChannels);
+
+            DefaultLogger::get()->info(buffer);
         }
+        else DefaultLogger::get()->debug("TransformUVCoordsProcess finished");
     }
 }
 

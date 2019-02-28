@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -48,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_MD5LOADER_H_INCLUDED
 #define AI_MD5LOADER_H_INCLUDED
 
-#include <assimp/BaseImporter.h>
+#include "BaseImporter.h"
 #include "MD5Parser.h"
 
 #include <assimp/types.h>
@@ -146,7 +145,7 @@ protected:
 
     // -------------------------------------------------------------------
     /** Load the contents of a specific file into memory and
-     *  allocates a buffer to keep it.
+     *  alocates a buffer to keep it.
      *
      *  mBuffer is modified to point to this buffer.
      *  @param pFile File stream to be read

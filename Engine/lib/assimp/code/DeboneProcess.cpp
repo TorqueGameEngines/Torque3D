@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -91,7 +90,7 @@ void DeboneProcess::SetupProperties(const Importer* pImp)
 // Executes the post processing step on the given imported data.
 void DeboneProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("DeboneProcess begin");
+    DefaultLogger::get()->debug("DeboneProcess begin");
 
     if(!pScene->mNumMeshes) {
         return;
@@ -148,7 +147,9 @@ void DeboneProcess::Execute( aiScene* pScene)
                 }
 
                 if(!DefaultLogger::isNullLogger()) {
-                    ASSIMP_LOG_INFO_F("Removed %u bones. Input bones:", in - out, ". Output bones: ", out);
+                    char buffer[1024];
+                    ::ai_snprintf(buffer,1024,"Removed %u bones. Input bones: %u. Output bones: %u",in-out,in,out);
+                    DefaultLogger::get()->info(buffer);
                 }
 
                 // and destroy the source mesh. It should be completely contained inside the new submeshes
@@ -171,7 +172,7 @@ void DeboneProcess::Execute( aiScene* pScene)
         UpdateNode( pScene->mRootNode);
     }
 
-    ASSIMP_LOG_DEBUG("DeboneProcess end");
+    DefaultLogger::get()->debug("DeboneProcess end");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -207,7 +208,7 @@ bool DeboneProcess::ConsiderMesh(const aiMesh* pMesh)
                 if(vertexBones[vid]!=cUnowned)  {
                     if(vertexBones[vid]==i) //double entry
                     {
-                        ASSIMP_LOG_WARN("Encountered double entry in bone weights");
+                        DefaultLogger::get()->warn("Encountered double entry in bone weights");
                     }
                     else //TODO: track attraction in order to break tie
                     {
@@ -279,7 +280,7 @@ void DeboneProcess::SplitMesh( const aiMesh* pMesh, std::vector< std::pair< aiMe
                 if(vertexBones[vid]!=cUnowned)  {
                     if(vertexBones[vid]==i) //double entry
                     {
-                        ASSIMP_LOG_WARN("Encountered double entry in bone weights");
+                        //DefaultLogger::get()->warn("Encountered double entry in bone weights");
                     }
                     else //TODO: track attraction in order to break tie
                     {

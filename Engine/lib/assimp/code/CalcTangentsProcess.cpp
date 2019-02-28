@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -48,8 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // internal headers
 #include "CalcTangentsProcess.h"
 #include "ProcessHelper.h"
-#include <assimp/TinyFormatter.h>
-#include <assimp/qnan.h>
+#include "TinyFormatter.h"
+#include "qnan.h"
 
 using namespace Assimp;
 
@@ -95,7 +94,7 @@ void CalcTangentsProcess::Execute( aiScene* pScene)
 {
     ai_assert( NULL != pScene );
 
-    ASSIMP_LOG_DEBUG("CalcTangentsProcess begin");
+    DefaultLogger::get()->debug("CalcTangentsProcess begin");
 
     bool bHas = false;
     for ( unsigned int a = 0; a < pScene->mNumMeshes; a++ ) {
@@ -103,9 +102,9 @@ void CalcTangentsProcess::Execute( aiScene* pScene)
     }
 
     if ( bHas ) {
-        ASSIMP_LOG_INFO("CalcTangentsProcess finished. Tangents have been calculated");
+        DefaultLogger::get()->info("CalcTangentsProcess finished. Tangents have been calculated");
     } else {
-        ASSIMP_LOG_DEBUG("CalcTangentsProcess finished");
+        DefaultLogger::get()->debug("CalcTangentsProcess finished");
     }
 }
 
@@ -126,19 +125,19 @@ bool CalcTangentsProcess::ProcessMesh( aiMesh* pMesh, unsigned int meshIndex)
     // are undefined.
     if (!(pMesh->mPrimitiveTypes & (aiPrimitiveType_TRIANGLE | aiPrimitiveType_POLYGON)))
     {
-        ASSIMP_LOG_INFO("Tangents are undefined for line and point meshes");
+        DefaultLogger::get()->info("Tangents are undefined for line and point meshes");
         return false;
     }
 
     // what we can check, though, is if the mesh has normals and texture coordinates. That's a requirement
     if( pMesh->mNormals == NULL)
     {
-        ASSIMP_LOG_ERROR("Failed to compute tangents; need normals");
+        DefaultLogger::get()->error("Failed to compute tangents; need normals");
         return false;
     }
     if( configSourceUV >= AI_MAX_NUMBER_OF_TEXTURECOORDS || !pMesh->mTextureCoords[configSourceUV] )
     {
-        ASSIMP_LOG_ERROR((Formatter::format("Failed to compute tangents; need UV data in channel"),configSourceUV));
+        DefaultLogger::get()->error((Formatter::format("Failed to compute tangents; need UV data in channel"),configSourceUV));
         return false;
     }
 
@@ -190,7 +189,7 @@ bool CalcTangentsProcess::ProcessMesh( aiMesh* pMesh, unsigned int meshIndex)
         float tx = meshTex[p2].x - meshTex[p0].x, ty = meshTex[p2].y - meshTex[p0].y;
         float dirCorrection = (tx * sy - ty * sx) < 0.0f ? -1.0f : 1.0f;
         // when t1, t2, t3 in same position in UV space, just use default UV direction.
-        if (  sx * ty == sy * tx ) {
+        if ( 0 == sx && 0 ==sy && 0 == tx && 0 == ty ) {
             sx = 0.0; sy = 1.0;
             tx = 1.0; ty = 0.0;
         }

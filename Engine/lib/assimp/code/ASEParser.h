@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -53,8 +52,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_3DS_IMPORTER
 
 // for some helper routines like IsSpace()
-#include <assimp/ParsingUtils.h>
-#include <assimp/qnan.h>
+#include "ParsingUtils.h"
+#include "qnan.h"
 
 // ASE is quite similar to 3ds. We can reuse some structures
 #include "3DSLoader.h"
@@ -68,51 +67,9 @@ using namespace D3DS;
 /** Helper structure representing an ASE material */
 struct Material : public D3DS::Material
 {
-    //! Default constructor has been deleted
-    Material() = delete;
-
-    //! Constructor with explicit name
-    explicit Material(const std::string &name)
-    : D3DS::Material(name)
-    , pcInstance(NULL)
-    , bNeed (false) {
-        // empty
-    }
-
-    Material(const Material &other)            = default;
-    Material &operator=(const Material &other) = default;
-
-
-    //! Move constructor. This is explicitly written because MSVC doesn't support defaulting it
-    Material(Material &&other) AI_NO_EXCEPT
-    : D3DS::Material(std::move(other))
-    , avSubMaterials(std::move(other.avSubMaterials))
-    , pcInstance(std::move(other.pcInstance))
-    , bNeed(std::move(other.bNeed))
-    {
-        other.pcInstance = nullptr;
-    }
-
-
-    Material &operator=(Material &&other) AI_NO_EXCEPT {
-        if (this == &other) {
-            return *this;
-        }
-
-        D3DS::Material::operator=(std::move(other));
-
-        avSubMaterials = std::move(other.avSubMaterials);
-        pcInstance = std::move(other.pcInstance);
-        bNeed = std::move(other.bNeed);
-
-        other.pcInstance = nullptr;
-
-        return *this;
-    }
-
-
-    ~Material() {}
-
+    //! Default constructor
+    Material() : pcInstance(NULL), bNeed (false)
+    {}
 
     //! Contains all sub materials of this material
     std::vector<Material> avSubMaterials;
@@ -126,18 +83,27 @@ struct Material : public D3DS::Material
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent an ASE file face */
-struct Face : public FaceWithSmoothingGroup {
+struct Face : public FaceWithSmoothingGroup
+{
     //! Default constructor. Initializes everything with 0
-    Face() AI_NO_EXCEPT
-    : iMaterial(DEFAULT_MATINDEX)
-    , iFace(0) {
-        // empty
+    Face()
+    {
+        mColorIndices[0] = mColorIndices[1] = mColorIndices[2] = 0;
+        for (unsigned int i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS;++i)
+        {
+            amUVIndices[i][0] = amUVIndices[i][1] = amUVIndices[i][2] = 0;
+        }
+
+        iMaterial = DEFAULT_MATINDEX;
+        iFace = 0;
     }
 
     //! special value to indicate that no material index has
     //! been assigned to a face. The default material index
     //! will replace this value later.
     static const unsigned int DEFAULT_MATINDEX = 0xFFFFFFFF;
+
+
 
     //! Indices into each list of texture coordinates
     unsigned int amUVIndices[AI_MAX_NUMBER_OF_TEXTURECOORDS][3];
@@ -156,15 +122,23 @@ struct Face : public FaceWithSmoothingGroup {
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent an ASE file bone */
-struct Bone {
+struct Bone
+{
     //! Constructor
-    Bone() = delete;
+    Bone()
+    {
+        static int iCnt = 0;
+
+        // Generate a default name for the bone
+        char szTemp[128];
+        ::ai_snprintf(szTemp, 128, "UNNAMED_%i",iCnt++);
+        mName = szTemp;
+    }
 
     //! Construction from an existing name
     explicit Bone( const std::string& name)
-    : mName(name) {
-        // empty
-    }
+        :   mName   (name)
+    {}
 
     //! Name of the bone
     std::string mName;
@@ -172,22 +146,29 @@ struct Bone {
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent an ASE file bone vertex */
-struct BoneVertex {
+struct BoneVertex
+{
     //! Bone and corresponding vertex weight.
     //! -1 for unrequired bones ....
     std::vector<std::pair<int,float> > mBoneWeights;
+
+    //! Position of the bone vertex.
+    //! MUST be identical to the vertex position
+    //aiVector3D mPosition;
 };
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent an ASE file animation */
-struct Animation {
-    enum Type {
+struct Animation
+{
+    enum Type
+    {
         TRACK   = 0x0,
         BEZIER  = 0x1,
         TCB     = 0x2
     } mRotationType, mScalingType, mPositionType;
 
-    Animation() AI_NO_EXCEPT
+    Animation()
         :   mRotationType   (TRACK)
         ,   mScalingType    (TRACK)
         ,   mPositionType   (TRACK)
@@ -201,16 +182,19 @@ struct Animation {
 
     //! List of track scaling keyframes
     std::vector< aiVectorKey > akeyScaling;
+
 };
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent the inheritance information of an ASE node */
-struct InheritanceInfo {
+struct InheritanceInfo
+{
     //! Default constructor
-    InheritanceInfo() AI_NO_EXCEPT {
-        for ( size_t i=0; i<3; ++i ) {
+    InheritanceInfo()
+    {
+        // set the inheritance flag for all axes by default to true
+        for (unsigned int i = 0; i < 3;++i)
             abInheritPosition[i] = abInheritRotation[i] = abInheritScaling[i] = true;
-        }
     }
 
     //! Inherit the parent's position?, axis order is x,y,z
@@ -225,24 +209,25 @@ struct InheritanceInfo {
 
 // ---------------------------------------------------------------------------
 /** Represents an ASE file node. Base class for mesh, light and cameras */
-struct BaseNode {
-    enum Type {
-        Light, 
-        Camera, 
-        Mesh, 
-        Dummy
-    } mType;
+struct BaseNode
+{
+    enum Type {Light, Camera, Mesh, Dummy} mType;
 
-    //! Construction from an existing name
-    BaseNode(Type _mType, const std::string &name)
-    : mType         (_mType)
-    , mName         (name)
-    , mProcessed    (false) {
+    //! Constructor. Creates a default name for the node
+    explicit BaseNode(Type _mType)
+        : mType         (_mType)
+        , mProcessed    (false)
+    {
+        // generate a default name for the  node
+        static int iCnt = 0;
+        char szTemp[128]; // should be sufficiently large
+        ::ai_snprintf(szTemp, 128, "UNNAMED_%i",iCnt++);
+        mName = szTemp;
+
         // Set mTargetPosition to qnan
         const ai_real qnan = get_qnan();
         mTargetPosition.x = qnan;
     }
-
 
     //! Name of the mesh
     std::string mName;
@@ -273,21 +258,19 @@ struct BaseNode {
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent an ASE file mesh */
-struct Mesh : public MeshWithSmoothingGroups<ASE::Face>, public BaseNode {
-    //! Default constructor has been deleted
-    Mesh() = delete;
-
-    //! Construction from an existing name
-    explicit Mesh(const std::string &name)
-    : BaseNode( BaseNode::Mesh, name )
-    , mVertexColors()
-    , mBoneVertices()
-    , mBones()
-    , iMaterialIndex(Face::DEFAULT_MATINDEX)
-    , bSkip     (false) {
-        for (unsigned int c = 0; c < AI_MAX_NUMBER_OF_TEXTURECOORDS;++c) {
+struct Mesh : public MeshWithSmoothingGroups<ASE::Face>, public BaseNode
+{
+    //! Constructor.
+    Mesh()
+        : BaseNode  (BaseNode::Mesh)
+        , bSkip     (false)
+    {
+        // use 2 texture vertex components by default
+        for (unsigned int c = 0; c < AI_MAX_NUMBER_OF_TEXTURECOORDS;++c)
             this->mNumUVComponents[c] = 2;
-        }
+
+        // setup the default material index by default
+        iMaterialIndex = Face::DEFAULT_MATINDEX;
     }
 
     //! List of all texture coordinate sets
@@ -324,20 +307,16 @@ struct Light : public BaseNode
         DIRECTIONAL
     };
 
-    //! Default constructor has been deleted
-    Light() = delete;
-
-    //! Construction from an existing name
-    explicit Light(const std::string &name)
-    : BaseNode   (BaseNode::Light, name)
-    , mLightType (OMNI)
-    , mColor     (1.f,1.f,1.f)
-    , mIntensity (1.f) // light is white by default
-    , mAngle     (45.f)
-    , mFalloff   (0.f)
+    //! Constructor.
+    Light()
+        : BaseNode   (BaseNode::Light)
+        , mLightType (OMNI)
+        , mColor     (1.f,1.f,1.f)
+        , mIntensity (1.f) // light is white by default
+        , mAngle     (45.f)
+        , mFalloff   (0.f)
     {
     }
-
 
     LightType mLightType;
     aiColor3D mColor;
@@ -356,20 +335,15 @@ struct Camera : public BaseNode
         TARGET
     };
 
-    //! Default constructor has been deleted
-    Camera() = delete;
-
-
-    //! Construction from an existing name
-    explicit Camera(const std::string &name)
-    : BaseNode    (BaseNode::Camera, name)
-    , mFOV        (0.75f)   // in radians
-    , mNear       (0.1f)
-    , mFar        (1000.f)  // could be zero
-    , mCameraType (FREE)
+    //! Constructor
+    Camera()
+        : BaseNode    (BaseNode::Camera)
+        , mFOV        (0.75f)   // in radians
+        , mNear       (0.1f)
+        , mFar        (1000.f)  // could be zero
+        , mCameraType (FREE)
     {
     }
-
 
     ai_real mFOV, mNear, mFar;
     CameraType mCameraType;
@@ -377,11 +351,12 @@ struct Camera : public BaseNode
 
 // ---------------------------------------------------------------------------
 /** Helper structure to represent an ASE helper object (dummy) */
-struct Dummy : public BaseNode {
+struct Dummy : public BaseNode
+{
     //! Constructor
-    Dummy() AI_NO_EXCEPT
-    : BaseNode  (BaseNode::Dummy, "DUMMY") {
-        // empty
+    Dummy()
+        : BaseNode  (BaseNode::Dummy)
+    {
     }
 };
 
@@ -396,17 +371,18 @@ struct Dummy : public BaseNode {
 // -------------------------------------------------------------------------------
 /** \brief Class to parse ASE files
  */
-class Parser {
+class Parser
+{
+
 private:
-    Parser() AI_NO_EXCEPT {
-        // empty
-    }
+
+    Parser() {}
 
 public:
 
     // -------------------------------------------------------------------
     //! Construct a parser from a given input file which is
-    //! guaranteed to be terminated with zero.
+    //! guaranted to be terminated with zero.
     //! @param szFile Input file
     //! @param fileFormatDefault Assumed file format version. If the
     //!   file format is specified in the file the new value replaces

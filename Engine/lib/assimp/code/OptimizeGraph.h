@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -102,7 +101,7 @@ public:
     }
 
     // -------------------------------------------------------------------
-    /** @brief Remove a node from the list of locked nodes.
+    /** @brief Rmeove a node from the list of locked nodes.
      *  @param name Name to be unlocked
      */
     inline void RemoveLockedNode(std::string& name)

@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -61,6 +60,7 @@ http://themdcfile.planetwolfenstein.gamespy.com/MDC_File_Format.pdf
 namespace Assimp {
 namespace MDC {
 
+
 // to make it easier for us, we test the magic word against both "endianesses"
 #define AI_MDC_MAGIC_NUMBER_BE  AI_MAKE_MAGIC("CPDI")
 #define AI_MDC_MAGIC_NUMBER_LE  AI_MAKE_MAGIC("IDPC")
@@ -78,7 +78,8 @@ namespace MDC {
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC file's main header
  */
-struct Header {
+struct Header
+{
     uint32_t ulIdent ;
     uint32_t ulVersion ;
     char ucName [ AI_MDC_MAXQPATH ] ;
@@ -98,7 +99,8 @@ struct Header {
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC file's surface header
  */
-struct Surface {
+struct Surface
+{
     uint32_t ulIdent ;
     char ucName [ AI_MDC_MAXQPATH ] ;
     uint32_t ulFlags ;
@@ -115,22 +117,23 @@ struct Surface {
     uint32_t ulOffsetFrameBaseFrames ;
     uint32_t ulOffsetFrameCompFrames ;
     uint32_t ulOffsetEnd;
-    Surface() AI_NO_EXCEPT
-    : ulIdent()
-    , ulFlags()
-    , ulNumCompFrames()
-    , ulNumBaseFrames()
-    , ulNumShaders() 
-    , ulNumVertices()
-    , ulNumTriangles()
-    , ulOffsetTriangles()
-    , ulOffsetShaders()
-    , ulOffsetTexCoords()
-    , ulOffsetBaseVerts() 
-    , ulOffsetCompVerts()
-    , ulOffsetFrameBaseFrames()
-    , ulOffsetFrameCompFrames()
-    , ulOffsetEnd() {
+    Surface()
+        : ulIdent(),
+        ulFlags(),
+        ulNumCompFrames(),
+        ulNumBaseFrames(),
+        ulNumShaders(),
+        ulNumVertices(),
+        ulNumTriangles(),
+        ulOffsetTriangles(),
+        ulOffsetShaders(),
+        ulOffsetTexCoords(),
+        ulOffsetBaseVerts(),
+        ulOffsetCompVerts(),
+        ulOffsetFrameBaseFrames(),
+        ulOffsetFrameCompFrames(),
+        ulOffsetEnd()
+    {
         ucName[AI_MDC_MAXQPATH-1] = '\0';
     }
 } PACK_STRUCT;
@@ -138,7 +141,8 @@ struct Surface {
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC frame
  */
-struct Frame {
+struct Frame
+{
     //! bounding box minimum coords
     aiVector3D bboxMin ;
 
@@ -158,21 +162,24 @@ struct Frame {
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC triangle
  */
-struct Triangle {
+struct Triangle
+{
     uint32_t aiIndices[3];
 } PACK_STRUCT;
 
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC texture coordinate
  */
-struct TexturCoord {
+struct TexturCoord
+{
     float u,v;
 } PACK_STRUCT;
 
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC base vertex
  */
-struct BaseVertex {
+struct BaseVertex
+{
     int16_t x,y,z;
     uint16_t normal;
 } PACK_STRUCT;
@@ -180,19 +187,24 @@ struct BaseVertex {
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC compressed vertex
  */
-struct CompressedVertex {
+struct CompressedVertex
+{
     uint8_t xd,yd,zd,nd;
 } PACK_STRUCT;
+
 
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a MDC shader
  */
-struct Shader {
+struct Shader
+{
     char ucName [ AI_MDC_MAXQPATH ] ;
     uint32_t ulPath;
+
 } PACK_STRUCT;
 
 #include <assimp/Compiler/poppack1.h>
+
 
 // ---------------------------------------------------------------------------
 /** Build a floating point vertex from the compressed data in MDC files
@@ -202,7 +214,6 @@ void BuildVertex(const Frame& frame,
     const CompressedVertex& cvert,
     aiVector3D& vXYZOut,
     aiVector3D& vNorOut);
-}
-}
+}}
 
 #endif // !! AI_MDCFILEHELPER_H_INC

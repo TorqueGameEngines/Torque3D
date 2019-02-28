@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -50,8 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Header files, Assimp.
 #include <assimp/ai_assert.h>
-#include <assimp/StandardShapes.h>
-#include <assimp/StringUtils.h>
+#include "StandardShapes.h"
+#include "StringUtils.h"
 
 // Header files, stdlib.
 #include <algorithm>

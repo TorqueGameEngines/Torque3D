@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -50,14 +49,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/Importer.hpp>
 #include <assimp/importerdesc.h>
 #include <assimp/scene.h>
-#include <assimp/GenericProperty.h>
-#include <assimp/Exceptional.h>
-#include <assimp/BaseImporter.h>
 
+#include "GenericProperty.h"
 #include "CInterfaceIOWrapper.h"
 #include "Importer.h"
+#include "Exceptional.h"
 #include "ScenePrivate.h"
-
+#include "BaseImporter.h"
 #include <list>
 
 // ------------------------------------------------------------------------------------------------
@@ -108,6 +106,7 @@ namespace Assimp {
 static std::mutex gLogStreamMutex;
 #endif
 
+
 // ------------------------------------------------------------------------------------------------
 // Custom LogStream implementation for the C-API
 class LogToCallbackRedirector : public LogStream {
@@ -146,7 +145,7 @@ private:
 
 // ------------------------------------------------------------------------------------------------
 void ReportSceneNotFoundError() {
-    ASSIMP_LOG_ERROR("Unable to find the Assimp::Importer for this aiScene. "
+    DefaultLogger::get()->error("Unable to find the Assimp::Importer for this aiScene. "
         "The C-API does not accept scenes produced by the C++ API and vice versa");
 
     ai_assert(false);

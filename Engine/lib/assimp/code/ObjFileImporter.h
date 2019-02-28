@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -42,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OBJ_FILE_IMPORTER_H_INC
 #define OBJ_FILE_IMPORTER_H_INC
 
-#include <assimp/BaseImporter.h>
+#include "BaseImporter.h"
 #include <assimp/material.h>
 #include <vector>
 

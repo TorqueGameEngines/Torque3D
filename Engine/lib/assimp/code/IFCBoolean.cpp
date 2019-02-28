@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "IFCUtil.h"
 #include "PolyTools.h"
 #include "ProcessHelper.h"
-#include "Defines.h"
+#include <assimp/Defines.h>
 
 #include <iterator>
 #include <tuple>
@@ -109,7 +109,7 @@ void FilterPolygon(std::vector<IfcVector3>& resultpoly)
     }
 
     IfcVector3 vmin, vmax;
-    ArrayBounds(resultpoly.data(), resultpoly.size(), vmin, vmax);
+    ArrayBounds(resultpoly.data(), static_cast<unsigned int>(resultpoly.size()), vmin, vmax);
 
     // filter our IfcFloat points - those may happen if a point lies
     // directly on the intersection line or directly on the clipping plane
@@ -132,7 +132,7 @@ void WritePolygon(std::vector<IfcVector3>& resultpoly, TempMesh& result)
     if( resultpoly.size() > 2 )
     {
         result.verts.insert(result.verts.end(), resultpoly.begin(), resultpoly.end());
-        result.vertcnt.push_back(resultpoly.size());
+        result.vertcnt.push_back(static_cast<unsigned int>(resultpoly.size()));
     }
 }
 
@@ -272,7 +272,6 @@ bool IntersectsBoundaryProfile(const IfcVector3& e0, const IfcVector3& e1, const
         const IfcVector3& b0 = boundary[i];
         const IfcVector3& b1 = boundary[(i + 1) % bcount];
         IfcVector3 b = b1 - b0;
-        IfcFloat b_sqlen_inv = 1.0 / b.SquareLength();
 
         // segment-segment intersection
         // solve b0 + b*s = e0 + e*t for (s,t)
@@ -281,6 +280,7 @@ bool IntersectsBoundaryProfile(const IfcVector3& e0, const IfcVector3& e1, const
             // no solutions (parallel lines)
             continue;
         }
+        IfcFloat b_sqlen_inv = 1.0 / b.SquareLength();
 
         const IfcFloat x = b0.x - e0.x;
         const IfcFloat y = b0.y - e0.y;
@@ -381,7 +381,6 @@ bool PointInPoly(const IfcVector3& p, const std::vector<IfcVector3>& boundary)
     IntersectsBoundaryProfile(p, p + IfcVector3(0.6, -0.6, 0.0), boundary, true, intersected_boundary, true);
     votes += intersected_boundary.size() % 2;
 
-//  ai_assert(votes == 3 || votes == 0);
     return votes > 1;
 }
 
@@ -589,7 +588,7 @@ void ProcessPolygonalBoundedBooleanHalfSpaceDifference(const IfcPolygonalBounded
                 // to result mesh unchanged
                 if( !startedInside )
                 {
-                    outvertcnt.push_back(blackside.size());
+                    outvertcnt.push_back(static_cast<unsigned int>(blackside.size()));
                     outvert.insert(outvert.end(), blackside.begin(), blackside.end());
                     continue;
                 }

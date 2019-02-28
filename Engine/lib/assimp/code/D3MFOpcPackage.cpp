@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -43,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_3MF_IMPORTER
 
 #include "D3MFOpcPackage.h"
-#include <assimp/Exceptional.h>
+#include "Exceptional.h"
 
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
@@ -56,7 +55,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <algorithm>
 #include <cassert>
-#include <unzip.h>
+#include <contrib/unzip/unzip.h>
 #include "3MFXmlTags.h"
 
 namespace Assimp {
@@ -247,13 +246,13 @@ private:
 // ------------------------------------------------------------------------------------------------
 //  Constructor.
 D3MFZipArchive::D3MFZipArchive(IOSystem* pIOHandler, const std::string& rFile)
-: m_ZipFileHandle( nullptr )
+: m_ZipFileHandle(NULL)
 , m_ArchiveMap() {
     if (! rFile.empty()) {                
         zlib_filefunc_def mapping = IOSystem2Unzip::get(pIOHandler);            
 
         m_ZipFileHandle = unzOpen2(rFile.c_str(), &mapping);
-        if(m_ZipFileHandle != nullptr ) {
+        if(m_ZipFileHandle != NULL) {            
             mapArchive();
         }
     }
@@ -267,32 +266,32 @@ D3MFZipArchive::~D3MFZipArchive() {
     }
     m_ArchiveMap.clear();
 
-    if(m_ZipFileHandle != nullptr) {
+    if(m_ZipFileHandle != NULL) {
         unzClose(m_ZipFileHandle);
-        m_ZipFileHandle = nullptr;
+        m_ZipFileHandle = NULL;
     }
 }
 
 // ------------------------------------------------------------------------------------------------
 //  Returns true, if the archive is already open.
 bool D3MFZipArchive::isOpen() const {
-    return (m_ZipFileHandle != nullptr );
+    return (m_ZipFileHandle != NULL);
 }
 
 // ------------------------------------------------------------------------------------------------
 //  Returns true, if the filename is part of the archive.
 bool D3MFZipArchive::Exists(const char* pFile) const {
-    ai_assert(pFile != nullptr );
+    ai_assert(pFile != NULL);
 
-    if ( pFile == nullptr ) {
-        return false;
-    }
+    bool exist = false;
 
-    std::string filename(pFile);
-    std::map<std::string, ZipFile*>::const_iterator it = m_ArchiveMap.find(filename);
-    bool exist( false );
-    if(it != m_ArchiveMap.end()) {
-        exist = true;
+    if (pFile != NULL) {
+        std::string rFile(pFile);
+        std::map<std::string, ZipFile*>::const_iterator it = m_ArchiveMap.find(rFile);
+
+        if(it != m_ArchiveMap.end()) {
+            exist = true;
+        }
     }
 
     return exist;
@@ -434,8 +433,8 @@ public:
 
     std::vector<OpcPackageRelationshipPtr> m_relationShips;
 };
-
 // ------------------------------------------------------------------------------------------------
+
 D3MFOpcPackage::D3MFOpcPackage(IOSystem* pIOHandler, const std::string& rFile)
 : mRootStream(nullptr)
 , mZipArchive() {    
@@ -460,19 +459,28 @@ D3MFOpcPackage::D3MFOpcPackage(IOSystem* pIOHandler, const std::string& rFile)
             if ( rootFile.size() > 0 && rootFile[ 0 ] == '/' ) {
                 rootFile = rootFile.substr( 1 );
                 if ( rootFile[ 0 ] == '/' ) {
-                    // deal with zip-bug
+                    // deal with zipbug
                     rootFile = rootFile.substr( 1 );
                 }
             }
 
-            ASSIMP_LOG_DEBUG(rootFile);
+            DefaultLogger::get()->debug(rootFile);
 
             mRootStream = mZipArchive->Open(rootFile.c_str());
             ai_assert( mRootStream != nullptr );
             if ( nullptr == mRootStream ) {
-                throw DeadlyExportError( "Cannot open root-file in archive : " + rootFile );
+                throw DeadlyExportError( "Cannot open rootfile in archive : " + rootFile );
             }
 
+        //    const size_t size = zipArchive->FileSize();
+        //    m_Data.resize( size );
+
+        //    const size_t readSize = pMapFile->Read( &m_Data[0], sizeof( char ), size );
+        //    if ( readSize != size )
+        //    {
+        //        m_Data.clear();
+        //        return false;
+        //    }
             mZipArchive->Close( fileStream );
 
         } else if( file == D3MF::XmlTag::CONTENT_TYPES_ARCHIVE) {
@@ -489,25 +497,6 @@ IOStream* D3MFOpcPackage::RootStream() const {
     return mRootStream;
 }
 
-static const std::string ModelRef = "3D/3dmodel.model";
-
-bool D3MFOpcPackage::validate() {
-    if ( nullptr == mRootStream || nullptr == mZipArchive ) {
-        return false;
-    }
-
-    return mZipArchive->Exists( ModelRef.c_str() );
-}
-
-bool D3MFOpcPackage::isZipArchive( IOSystem* pIOHandler, const std::string& rFile ) {
-    D3MF::D3MFZipArchive ar( pIOHandler, rFile );
-    if ( !ar.isOpen() ) {
-        return false;
-    }
-
-    return true;
-}
-
 std::string D3MFOpcPackage::ReadPackageRootRelationship(IOStream* stream) {
     std::unique_ptr<CIrrXML_IOStreamReader> xmlStream(new CIrrXML_IOStreamReader(stream));
     std::unique_ptr<XmlReader> xml(irr::io::createIrrXMLReader(xmlStream.get()));
@@ -518,14 +507,14 @@ std::string D3MFOpcPackage::ReadPackageRootRelationship(IOStream* stream) {
         return rel->type == XmlTag::PACKAGE_START_PART_RELATIONSHIP_TYPE;
     });
 
-    if ( itr == reader.m_relationShips.end() ) {
-        throw DeadlyImportError( "Cannot find " + XmlTag::PACKAGE_START_PART_RELATIONSHIP_TYPE );
-    }
+    if(itr == reader.m_relationShips.end())
+        throw DeadlyImportError("Cannot find " + XmlTag::PACKAGE_START_PART_RELATIONSHIP_TYPE);
 
     return (*itr)->target;
 }
 
 } // Namespace D3MF
+
 } // Namespace Assimp
 
 #endif //ASSIMP_BUILD_NO_3MF_IMPORTER

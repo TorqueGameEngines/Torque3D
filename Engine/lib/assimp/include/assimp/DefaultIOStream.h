@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -69,7 +68,7 @@ class ASSIMP_API DefaultIOStream : public IOStream
 #endif // __ANDROID__
 
 protected:
-    DefaultIOStream() AI_NO_EXCEPT;
+    DefaultIOStream();
     DefaultIOStream(FILE* pFile, const std::string &strFilename);
 
 public:
@@ -111,25 +110,27 @@ private:
     FILE* mFile;
     //  Filename
     std::string mFilename;
+
     // Cached file size
     mutable size_t mCachedSize;
 };
 
 // ----------------------------------------------------------------------------------
-inline
-DefaultIOStream::DefaultIOStream() AI_NO_EXCEPT
-: mFile(nullptr)
-, mFilename("")
-, mCachedSize(SIZE_MAX) {
+inline DefaultIOStream::DefaultIOStream () :
+    mFile       (NULL),
+    mFilename   (""),
+    mCachedSize(SIZE_MAX)
+{
     // empty
 }
 
 // ----------------------------------------------------------------------------------
-inline
-DefaultIOStream::DefaultIOStream (FILE* pFile, const std::string &strFilename)
-: mFile(pFile)
-, mFilename(strFilename)
-, mCachedSize(SIZE_MAX) {
+inline DefaultIOStream::DefaultIOStream (FILE* pFile,
+        const std::string &strFilename) :
+    mFile(pFile),
+    mFilename(strFilename),
+    mCachedSize(SIZE_MAX)
+{
     // empty
 }
 // ----------------------------------------------------------------------------------

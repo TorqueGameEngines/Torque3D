@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -50,9 +49,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_CSM_IMPORTER
 
 #include "CSMLoader.h"
-#include <assimp/SkeletonMeshBuilder.h>
-#include <assimp/ParsingUtils.h>
-#include <assimp/fast_atof.h>
+#include "SkeletonMeshBuilder.h"
+#include "ParsingUtils.h"
+#include "fast_atof.h"
 #include <assimp/Importer.hpp>
 #include <memory>
 #include <assimp/IOSystem.hpp>
@@ -136,7 +135,7 @@ void CSMImporter::InternReadFile( const std::string& pFile,
     TextFileToBuffer(file.get(),mBuffer2);
     const char* buffer = &mBuffer2[0];
 
-    std::unique_ptr<aiAnimation> anim(new aiAnimation());
+    aiAnimation* anim = new aiAnimation();
     int first = 0, last = 0x00ffffff;
 
     // now process the file and look out for '$' sections
@@ -233,7 +232,7 @@ void CSMImporter::InternReadFile( const std::string& pFile,
 
                         if (TokenMatchI(buffer, "DROPOUT", 7))  {
                             // seems this is invalid marker data; at least the doc says it's possible
-                            ASSIMP_LOG_WARN("CSM: Encountered invalid marker data (DROPOUT)");
+                            DefaultLogger::get()->warn("CSM: Encountered invalid marker data (DROPOUT)");
                         }
                         else    {
                             aiVectorKey* sub = s->mPositionKeys + s->mNumPositionKeys;
@@ -294,8 +293,8 @@ void CSMImporter::InternReadFile( const std::string& pFile,
 
     // Store the one and only animation in the scene
     pScene->mAnimations    = new aiAnimation*[pScene->mNumAnimations=1];
+    pScene->mAnimations[0] = anim;
     anim->mName.Set("$CSM_MasterAnim");
-    pScene->mAnimations[0] = anim.release();
 
     // mark the scene as incomplete and run SkeletonMeshBuilder on it
     pScene->mFlags |= AI_SCENE_FLAGS_INCOMPLETE;

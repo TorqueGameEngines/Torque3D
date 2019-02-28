@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -49,12 +48,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_LWS_IMPORTER
 
 #include "LWSLoader.h"
-#include <assimp/ParsingUtils.h>
-#include <assimp/fast_atof.h>
+#include "ParsingUtils.h"
+#include "fast_atof.h"
 
 #include <assimp/SceneCombiner.h>
-#include <assimp/GenericProperty.h>
-#include <assimp/SkeletonMeshBuilder.h>
+#include "GenericProperty.h"
+#include "SkeletonMeshBuilder.h"
 #include "ConvertToLHProcess.h"
 #include "Importer.h"
 #include <assimp/DefaultLogger.hpp>
@@ -105,7 +104,7 @@ void LWS::Element::Parse (const char*& buffer)
 
         if (children.back().tokens[0] == "Plugin")
         {
-            ASSIMP_LOG_DEBUG("LWS: Skipping over plugin-specific data");
+            DefaultLogger::get()->debug("LWS: Skipping over plugin-specific data");
 
             // strange stuff inside Plugin/Endplugin blocks. Needn't
             // follow LWS syntax, so we skip over it
@@ -200,7 +199,7 @@ void LWSImporter::SetupProperties(const Importer* pImp)
 void LWSImporter::ReadEnvelope(const LWS::Element& dad, LWO::Envelope& fill )
 {
     if (dad.children.empty()) {
-        ASSIMP_LOG_ERROR("LWS: Envelope descriptions must not be empty");
+        DefaultLogger::get()->error("LWS: Envelope descriptions must not be empty");
         return;
     }
 
@@ -248,7 +247,7 @@ void LWSImporter::ReadEnvelope(const LWS::Element& dad, LWO::Envelope& fill )
                     num = 4;
                     break;
                 default:
-                    ASSIMP_LOG_ERROR("LWS: Unknown span type");
+                    DefaultLogger::get()->error("LWS: Unknown span type");
             }
             for (unsigned int i = 0; i < num;++i) {
                 SkipSpaces(&c);
@@ -305,7 +304,7 @@ void LWSImporter::ReadEnvelope_Old(
     return;
 
 unexpected_end:
-    ASSIMP_LOG_ERROR("LWS: Encountered unexpected end of file while parsing object motion");
+    DefaultLogger::get()->error("LWS: Encountered unexpected end of file while parsing object motion");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -352,7 +351,7 @@ void LWSImporter::BuildGraph(aiNode* nd, LWS::NodeDesc& src, std::vector<Attachm
         if (src.path.length() ) {
             obj = batch.GetImport(src.id);
             if (!obj) {
-                ASSIMP_LOG_ERROR("LWS: Failed to read external file " + src.path);
+                DefaultLogger::get()->error("LWS: Failed to read external file " + src.path);
             }
             else {
                 if (obj->mRootNode->mNumChildren == 1) {
@@ -410,7 +409,7 @@ void LWSImporter::BuildGraph(aiNode* nd, LWS::NodeDesc& src, std::vector<Attachm
         // name to attach light to node -> unique due to LWs indexing system
         lit->mName = nd->mName;
 
-        // determine light type and setup additional members
+        // detemine light type and setup additional members
         if (src.lightType == 2) { /* spot light */
 
             lit->mType = aiLightSource_SPOT;
@@ -551,7 +550,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
     // get file format version and print to log
     ++it;
     unsigned int version = strtoul10((*it).tokens[0].c_str());
-    ASSIMP_LOG_INFO("LWS file format version is " + (*it).tokens[0]);
+    DefaultLogger::get()->info("LWS file format version is " + (*it).tokens[0]);
     first = 0.;
     last  = 60.;
     fps   = 25.; /* seems to be a good default frame rate */
@@ -656,7 +655,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
                     d.number = cur_object++;
                     nodes.push_back(d);
                 }
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'Channel\'");
+                else DefaultLogger::get()->error("LWS: Unexpected keyword: \'Channel\'");
             }
 
             // important: index of channel
@@ -673,7 +672,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'Envelope': a single animation channel
         else if ((*it).tokens[0] == "Envelope") {
             if (nodes.empty() || nodes.back().channels.empty())
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'Envelope\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'Envelope\'");
             else {
                 ReadEnvelope((*it),nodes.back().channels.back());
             }
@@ -684,7 +683,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
             (*it).tokens[0] == "LightMotion")) {
 
             if (nodes.empty())
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'<Light|Object|Camera>Motion\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'<Light|Object|Camera>Motion\'");
             else {
                 ReadEnvelope_Old(it,root.children.end(),nodes.back(),version);
             }
@@ -692,7 +691,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'Pre/PostBehavior': pre/post animation behaviour for LWSC 2
         else if (version == 2 && (*it).tokens[0] == "Pre/PostBehavior") {
             if (nodes.empty())
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'Pre/PostBehavior'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'Pre/PostBehavior'");
             else {
                 for (std::list<LWO::Envelope>::iterator it = nodes.back().channels.begin(); it != nodes.back().channels.end(); ++it) {
                     // two ints per envelope
@@ -705,14 +704,14 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'ParentItem': specifies the parent of the current element
         else if ((*it).tokens[0] == "ParentItem") {
             if (nodes.empty())
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'ParentItem\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'ParentItem\'");
 
             else nodes.back().parent = strtoul16(c,&c);
         }
         // 'ParentObject': deprecated one for older formats
         else if (version < 3 && (*it).tokens[0] == "ParentObject") {
             if (nodes.empty())
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'ParentObject\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'ParentObject\'");
 
             else {
                 nodes.back().parent = strtoul10(c,&c) | (1u << 28u);
@@ -736,7 +735,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'CameraName': set name of currently active camera
         else if ((*it).tokens[0] == "CameraName") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::CAMERA)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'CameraName\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'CameraName\'");
 
             else nodes.back().name = c;
         }
@@ -758,14 +757,14 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'LightName': set name of currently active light
         else if ((*it).tokens[0] == "LightName") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightName\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightName\'");
 
             else nodes.back().name = c;
         }
         // 'LightIntensity': set intensity of currently active light
         else if ((*it).tokens[0] == "LightIntensity" || (*it).tokens[0] == "LgtIntensity" ) {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightIntensity\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightIntensity\'");
 
             else fast_atoreal_move<float>(c, nodes.back().lightIntensity );
 
@@ -773,7 +772,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'LightType': set type of currently active light
         else if ((*it).tokens[0] == "LightType") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightType\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightType\'");
 
             else nodes.back().lightType = strtoul10(c);
 
@@ -781,7 +780,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'LightFalloffType': set falloff type of currently active light
         else if ((*it).tokens[0] == "LightFalloffType") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightFalloffType\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightFalloffType\'");
 
             else nodes.back().lightFalloffType = strtoul10(c);
 
@@ -789,7 +788,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'LightConeAngle': set cone angle of currently active light
         else if ((*it).tokens[0] == "LightConeAngle") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightConeAngle\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightConeAngle\'");
 
             else nodes.back().lightConeAngle = fast_atof(c);
 
@@ -797,7 +796,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'LightEdgeAngle': set area where we're smoothing from min to max intensity
         else if ((*it).tokens[0] == "LightEdgeAngle") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightEdgeAngle\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightEdgeAngle\'");
 
             else nodes.back().lightEdgeAngle = fast_atof(c);
 
@@ -805,7 +804,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'LightColor': set color of currently active light
         else if ((*it).tokens[0] == "LightColor") {
             if (nodes.empty() || nodes.back().type != LWS::NodeDesc::LIGHT)
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'LightColor\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'LightColor\'");
 
             else {
                 c = fast_atoreal_move<float>(c, (float&) nodes.back().lightColor.r );
@@ -819,7 +818,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
         // 'PivotPosition': position of local transformation origin
         else if ((*it).tokens[0] == "PivotPosition" || (*it).tokens[0] == "PivotPoint") {
             if (nodes.empty())
-                ASSIMP_LOG_ERROR("LWS: Unexpected keyword: \'PivotPosition\'");
+                DefaultLogger::get()->error("LWS: Unexpected keyword: \'PivotPosition\'");
             else {
                 c = fast_atoreal_move<float>(c, (float&) nodes.back().pivotPos.x );
                 SkipSpaces(&c);
@@ -840,7 +839,7 @@ void LWSImporter::InternReadFile( const std::string& pFile, aiScene* pScene,
             if (dit != it && *it == (*dit).parent) {
                 if ((*dit).parent_resolved) {
                     // fixme: it's still possible to produce an overflow due to cross references ..
-                    ASSIMP_LOG_ERROR("LWS: Found cross reference in scene-graph");
+                    DefaultLogger::get()->error("LWS: Found cross reference in scenegraph");
                     continue;
                 }
 

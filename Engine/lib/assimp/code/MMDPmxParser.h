@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -88,7 +87,6 @@ namespace pmx
 	{
 	public:
 		virtual void Read(std::istream *stream, PmxSetting *setting) = 0;
-		virtual ~PmxVertexSkinning() {}
 	};
 
 	class PmxVertexSkinningBDEF1 : public PmxVertexSkinning

@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -46,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_GLTFEXPORTER_H_INC
 #define AI_GLTFEXPORTER_H_INC
 
-#ifndef ASSIMP_BUILD_NO_GLTF_EXPORTER
+#ifndef ASSIMP_BUILD_NO_GLTF_IMPORTER
 
 #include <assimp/types.h>
 #include <assimp/material.h>
@@ -114,6 +113,6 @@ namespace Assimp
 
 }
 
-#endif // ASSIMP_BUILD_NO_GLTF_EXPORTER
+#endif // ASSIMP_BUILD_NO_GLTF_IMPORTER
 
 #endif // AI_GLTFEXPORTER_H_INC

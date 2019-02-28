@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -45,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/DefaultIOSystem.h>
 #include <assimp/DefaultLogger.hpp>
 #include "MakeVerboseFormat.h"
-#include <assimp/StringComparison.h>
+#include "StringComparison.h"
 
 #include <openddlparser/OpenDDLParser.h>
 #include <assimp/scene.h>
@@ -221,8 +220,12 @@ static void propId2StdString( Property *prop, std::string &name, std::string &ke
 
 //------------------------------------------------------------------------------------------------
 OpenGEXImporter::VertexContainer::VertexContainer()
-: m_numColors( 0 )
+: m_numVerts( 0 )
+, m_vertices( nullptr )
+, m_numColors( 0 )
 , m_colors( nullptr )
+, m_numNormals( 0 )
+, m_normals( nullptr )
 , m_numUVComps()
 , m_textureCoords() {
     // empty
@@ -230,7 +233,9 @@ OpenGEXImporter::VertexContainer::VertexContainer()
 
 //------------------------------------------------------------------------------------------------
 OpenGEXImporter::VertexContainer::~VertexContainer() {
+    delete[] m_vertices;
     delete[] m_colors;
+    delete[] m_normals;
 
     for(auto &texcoords : m_textureCoords) {
         delete [] texcoords;
@@ -691,8 +696,7 @@ void OpenGEXImporter::handleTransformNode( ODDLParser::DDLNode *node, aiScene * 
 void OpenGEXImporter::handleMeshNode( ODDLParser::DDLNode *node, aiScene *pScene ) {
     m_currentMesh = new aiMesh;
     const size_t meshidx( m_meshCache.size() );
-    // ownership is transferred but a reference remains in m_currentMesh
-    m_meshCache.emplace_back( m_currentMesh );
+    m_meshCache.push_back( m_currentMesh );
 
     Property *prop = node->getProperties();
     if( nullptr != prop ) {
@@ -708,7 +712,7 @@ void OpenGEXImporter::handleMeshNode( ODDLParser::DDLNode *node, aiScene *pScene
             } else if ( "quads" == propKey ) {
                 m_currentMesh->mPrimitiveTypes |= aiPrimitiveType_POLYGON;
             } else {
-                ASSIMP_LOG_WARN_F( propKey, " is not supported primitive type." );
+                DefaultLogger::get()->warn( propKey + " is not supported primitive type." );
             }
         }
     }
@@ -731,22 +735,17 @@ enum MeshAttribute {
     TexCoord
 };
 
-static const std::string PosToken = "position";
-static const std::string ColToken = "color";
-static const std::string NormalToken = "normal";
-static const std::string TexCoordToken = "texcoord";
-
 //------------------------------------------------------------------------------------------------
 static MeshAttribute getAttributeByName( const char *attribName ) {
     ai_assert( nullptr != attribName  );
 
-    if ( 0 == strncmp( PosToken.c_str(), attribName, PosToken.size() ) ) {
+    if ( 0 == strncmp( "position", attribName, strlen( "position" ) ) ) {
         return Position;
-    } else if ( 0 == strncmp( ColToken.c_str(), attribName, ColToken.size() ) ) {
+    } else if ( 0 == strncmp( "color", attribName, strlen( "color" ) ) ) {
         return Color;
-    } else if( 0 == strncmp( NormalToken.c_str(), attribName, NormalToken.size() ) ) {
+    } else if( 0 == strncmp( "normal", attribName, strlen( "normal" ) ) ) {
         return Normal;
-    } else if( 0 == strncmp( TexCoordToken.c_str(), attribName, TexCoordToken.size() ) ) {
+    } else if( 0 == strncmp( "texcoord", attribName, strlen( "texcoord" ) ) ) {
         return TexCoord;
     }
 
@@ -779,22 +778,10 @@ static void fillColor4( aiColor4D *col4, Value *vals ) {
     Value *next( vals );
     col4->r = next->getFloat();
     next = next->m_next;
-    if (!next) {
-        throw DeadlyImportError( "OpenGEX: Not enough values to fill 4-element color, only 1" );
-    }
-
     col4->g = next->getFloat();
     next = next->m_next;
-    if (!next) {
-        throw DeadlyImportError( "OpenGEX: Not enough values to fill 4-element color, only 2" );
-    }
-
     col4->b = next->getFloat();
     next = next->m_next;
-    if (!next) {
-        throw DeadlyImportError( "OpenGEX: Not enough values to fill 4-element color, only 3" );
-    }
-
     col4->a = next->getFloat();
 }
 
@@ -857,15 +844,17 @@ void OpenGEXImporter::handleVertexArrayNode( ODDLParser::DDLNode *node, aiScene 
         const size_t numItems( countDataArrayListItems( vaList ) );
 
         if( Position == attribType ) {
-            m_currentVertices.m_vertices.resize( numItems );
-            copyVectorArray( numItems, vaList, m_currentVertices.m_vertices.data() );
+            m_currentVertices.m_numVerts = numItems;
+            m_currentVertices.m_vertices = new aiVector3D[ numItems ];
+            copyVectorArray( numItems, vaList, m_currentVertices.m_vertices );
         } else if ( Color == attribType ) {
             m_currentVertices.m_numColors = numItems;
             m_currentVertices.m_colors = new aiColor4D[ numItems ];
             copyColor4DArray( numItems, vaList, m_currentVertices.m_colors );
         } else if( Normal == attribType ) {
-            m_currentVertices.m_normals.resize( numItems );
-            copyVectorArray( numItems, vaList, m_currentVertices.m_normals.data() );
+            m_currentVertices.m_numNormals = numItems;
+            m_currentVertices.m_normals = new aiVector3D[ numItems ];
+            copyVectorArray( numItems, vaList, m_currentVertices.m_normals );
         } else if( TexCoord == attribType ) {
             m_currentVertices.m_numUVComps[ 0 ] = numItems;
             m_currentVertices.m_textureCoords[ 0 ] = new aiVector3D[ numItems ];
@@ -902,7 +891,7 @@ void OpenGEXImporter::handleIndexArrayNode( ODDLParser::DDLNode *node, aiScene *
         hasColors = true;
     }
     bool hasNormalCoords( false );
-    if ( !m_currentVertices.m_normals.empty() ) {
+    if ( m_currentVertices.m_numNormals > 0 ) {
         m_currentMesh->mNormals = new aiVector3D[ m_currentMesh->mNumVertices ];
         hasNormalCoords = true;
     }
@@ -920,7 +909,7 @@ void OpenGEXImporter::handleIndexArrayNode( ODDLParser::DDLNode *node, aiScene *
         Value *next( vaList->m_dataList );
         for( size_t indices = 0; indices < current.mNumIndices; indices++ ) {
             const int idx( next->getUnsignedInt32() );
-            ai_assert( static_cast<size_t>( idx ) <= m_currentVertices.m_vertices.size() );
+            ai_assert( static_cast<size_t>( idx ) <= m_currentVertices.m_numVerts );
             ai_assert( index < m_currentMesh->mNumVertices );
             aiVector3D &pos = ( m_currentVertices.m_vertices[ idx ] );
             m_currentMesh->mVertices[ index ].Set( pos.x, pos.y, pos.z );
@@ -1103,12 +1092,14 @@ void OpenGEXImporter::handleParamNode( ODDLParser::DDLNode *node, aiScene * /*pS
             return;
         }
         const float floatVal( val->getFloat() );
-        if ( 0 == ASSIMP_strincmp( "fov", prop->m_value->getString(), 3 ) ) {
-            m_currentCamera->mHorizontalFOV = floatVal;
-        } else if ( 0 == ASSIMP_strincmp( "near", prop->m_value->getString(), 4 ) ) {
-            m_currentCamera->mClipPlaneNear = floatVal;
-        } else if ( 0 == ASSIMP_strincmp( "far", prop->m_value->getString(), 3 ) ) {
-            m_currentCamera->mClipPlaneFar = floatVal;
+        if ( prop->m_value  != nullptr ) {
+            if ( 0 == ASSIMP_strincmp( "fov", prop->m_value->getString(), 3 ) ) {
+                m_currentCamera->mHorizontalFOV = floatVal;
+            } else if ( 0 == ASSIMP_strincmp( "near", prop->m_value->getString(), 3 ) ) {
+                m_currentCamera->mClipPlaneNear = floatVal;
+            } else if ( 0 == ASSIMP_strincmp( "far", prop->m_value->getString(), 3 ) ) {
+                m_currentCamera->mClipPlaneFar = floatVal;
+            }
         }
     }
 }
@@ -1141,9 +1132,7 @@ void OpenGEXImporter::copyMeshes( aiScene *pScene ) {
 
     pScene->mNumMeshes = static_cast<unsigned int>(m_meshCache.size());
     pScene->mMeshes = new aiMesh*[ pScene->mNumMeshes ];
-    for (unsigned int i = 0; i < pScene->mNumMeshes; i++) {
-        pScene->mMeshes[i] = m_meshCache[i].release();
-    }
+    std::copy( m_meshCache.begin(), m_meshCache.end(), pScene->mMeshes );
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1213,11 +1202,12 @@ void OpenGEXImporter::resolveReferences() {
                         if ( nullptr != m_currentMesh ) {
                             unsigned int matIdx = static_cast< unsigned int >( m_material2refMap[ name ] );
                             if ( m_currentMesh->mMaterialIndex != 0 ) {
-                                ASSIMP_LOG_WARN( "Override of material reference in current mesh by material reference." );
+                                DefaultLogger::get()->warn( "Override of material reference in current mesh by material reference." );
                             }
                             m_currentMesh->mMaterialIndex = matIdx;
                         }  else {
-                            ASSIMP_LOG_WARN( "Cannot resolve material reference, because no current mesh is there." );
+                            DefaultLogger::get()->warn( "Cannot resolve material reference, because no current mesh is there." );
+
                         }
                     }
                 }

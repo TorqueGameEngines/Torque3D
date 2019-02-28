@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -44,8 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  @brief Defines the CommentRemover utility class
  */
 
-#include <assimp/RemoveComments.h>
-#include <assimp/ParsingUtils.h>
+#include "RemoveComments.h"
+#include "ParsingUtils.h"
 
 namespace Assimp    {
 
@@ -67,10 +66,6 @@ void CommentRemover::RemoveLineComments(const char* szComment,
         if (!strncmp(szBuffer,szComment,len)) {
             while (!IsLineEnd(*szBuffer))
                 *szBuffer++ = chReplacement;
-
-            if (!*szBuffer) {
-                break;
-            }
         }
         ++szBuffer;
     }

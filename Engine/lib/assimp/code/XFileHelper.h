@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -55,33 +54,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/anim.h>
 #include <assimp/Defines.h>
 
-namespace Assimp {
-namespace XFile {
+namespace Assimp
+{
+namespace XFile
+{
 
 /** Helper structure representing a XFile mesh face */
-struct Face {
+struct Face
+{
     std::vector<unsigned int> mIndices;
 };
 
 /** Helper structure representing a texture filename inside a material and its potential source */
-struct TexEntry {
+struct TexEntry
+{
     std::string mName;
     bool mIsNormalMap; // true if the texname was specified in a NormalmapFilename tag
 
-    TexEntry() AI_NO_EXCEPT
-    : mName()
-    , mIsNormalMap(false) {
-        // empty
-    }
-    TexEntry(const std::string& pName, bool pIsNormalMap = false)
-    : mName(pName)
-    , mIsNormalMap(pIsNormalMap) {
-        // empty
-    }
+    TexEntry() { mIsNormalMap = false; }
+    TexEntry( const std::string& pName, bool pIsNormalMap = false)
+        : mName( pName), mIsNormalMap( pIsNormalMap)
+    { /* done */ }
 };
 
 /** Helper structure representing a XFile material */
-struct Material {
+struct Material
+{
     std::string mName;
     bool mIsReference; // if true, mName holds a name by which the actual material can be found in the material list
     aiColor4D mDiffuse;
@@ -89,18 +87,19 @@ struct Material {
     aiColor3D mSpecular;
     aiColor3D mEmissive;
     std::vector<TexEntry> mTextures;
+
     size_t sceneIndex; ///< the index under which it was stored in the scene's material list
 
-    Material() AI_NO_EXCEPT
-    : mIsReference(false)
-    , mSpecularExponent()
-    , sceneIndex(SIZE_MAX) {
-        // empty
-    }
+    Material()
+        : mIsReference(false),
+        mSpecularExponent(),
+        sceneIndex(SIZE_MAX)
+    {}
 };
 
 /** Helper structure to represent a bone weight */
-struct BoneWeight {
+struct BoneWeight
+{
     unsigned int mVertex;
     ai_real mWeight;
 };
@@ -114,7 +113,8 @@ struct Bone
 };
 
 /** Helper structure to represent an XFile mesh */
-struct Mesh {
+struct Mesh
+{
     std::string mName;
     std::vector<aiVector3D> mPositions;
     std::vector<Face> mPosFaces;
@@ -130,65 +130,38 @@ struct Mesh {
 
     std::vector<Bone> mBones;
 
-    explicit Mesh(const std::string &pName = "") AI_NO_EXCEPT
-    : mName( pName )
-    , mPositions()
-    , mPosFaces()
-    , mNormals()
-    , mNormFaces()
-    , mNumTextures(0)
-    , mTexCoords{}
-    , mNumColorSets(0)
-    , mColors{}
-    , mFaceMaterials()
-    , mMaterials()
-    , mBones() {
-        // empty
-    }
+    explicit Mesh(const std::string &pName = "") { mName = pName; mNumTextures = 0; mNumColorSets = 0; }
 };
 
 /** Helper structure to represent a XFile frame */
-struct Node {
+struct Node
+{
     std::string mName;
     aiMatrix4x4 mTrafoMatrix;
     Node* mParent;
     std::vector<Node*> mChildren;
     std::vector<Mesh*> mMeshes;
 
-    Node() AI_NO_EXCEPT
-    : mName()
-    , mTrafoMatrix()
-    , mParent(nullptr)
-    , mChildren()
-    , mMeshes() {
-        // empty
-    }
-    explicit Node( Node* pParent)
-    : mName()
-    , mTrafoMatrix()
-    , mParent(pParent)
-    , mChildren()
-    , mMeshes() {
-        // empty
-    }
-
-    ~Node() {
-        for (unsigned int a = 0; a < mChildren.size(); ++a ) {
+    Node() { mParent = NULL; }
+    explicit Node( Node* pParent) { mParent = pParent; }
+    ~Node()
+    {
+        for( unsigned int a = 0; a < mChildren.size(); a++)
             delete mChildren[a];
-        }
-        for (unsigned int a = 0; a < mMeshes.size(); ++a) {
+        for( unsigned int a = 0; a < mMeshes.size(); a++)
             delete mMeshes[a];
-        }
     }
 };
 
-struct MatrixKey {
+struct MatrixKey
+{
     double mTime;
     aiMatrix4x4 mMatrix;
 };
 
 /** Helper structure representing a single animated bone in a XFile */
-struct AnimBone {
+struct AnimBone
+{
     std::string mBoneName;
     std::vector<aiVectorKey> mPosKeys;  // either three separate key sequences for position, rotation, scaling
     std::vector<aiQuatKey> mRotKeys;
@@ -220,22 +193,14 @@ struct Scene
     std::vector<Animation*> mAnims;
     unsigned int mAnimTicksPerSecond;
 
-    Scene() AI_NO_EXCEPT
-    : mRootNode(nullptr)
-    , mGlobalMeshes()
-    , mGlobalMaterials()
-    , mAnimTicksPerSecond(0) {
-        // empty
-    }
-    ~Scene() {
+    Scene() { mRootNode = NULL; mAnimTicksPerSecond = 0; }
+    ~Scene()
+    {
         delete mRootNode;
-        mRootNode = nullptr;
-        for (unsigned int a = 0; a < mGlobalMeshes.size(); ++a ) {
+        for( unsigned int a = 0; a < mGlobalMeshes.size(); a++)
             delete mGlobalMeshes[a];
-        }
-        for (unsigned int a = 0; a < mAnims.size(); ++a ) {
+        for( unsigned int a = 0; a < mAnims.size(); a++)
             delete mAnims[a];
-        }
     }
 };
 

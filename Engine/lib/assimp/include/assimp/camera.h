@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -174,7 +173,7 @@ struct aiCamera
 
 #ifdef __cplusplus
 
-    aiCamera() AI_NO_EXCEPT
+    aiCamera()
         : mUp               (0.f,1.f,0.f)
         , mLookAt           (0.f,0.f,1.f)
         , mHorizontalFOV    (0.25f * (float)AI_MATH_PI)

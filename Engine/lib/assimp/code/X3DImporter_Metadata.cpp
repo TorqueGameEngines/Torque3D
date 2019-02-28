@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -79,7 +78,7 @@ namespace Assimp
 		if(!mReader->isEmptyElement()) \
 			ParseNode_Metadata(pNE, pMetaName);/* in that case node element will be added to child elements list of current node. */ \
 		else \
-			NodeElement_Cur->Child.push_back(pNE);/* else - add element to child list manually */ \
+			NodeElement_Cur->Child.push_back(pNE);/* else - add element to child list manualy */ \
 	 \
 		NodeElement_List.push_back(pNE);/* add new element to elements list. */ \
 	}/* if(!pUSE_Var.empty()) else */ \

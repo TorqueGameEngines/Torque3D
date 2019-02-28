@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -56,9 +55,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // internal headers
 #include "SIBImporter.h"
-#include <assimp/ByteSwapper.h>
-#include <assimp/StreamReader.h>
-#include <assimp/TinyFormatter.h>
+#include "ByteSwapper.h"
+#include "StreamReader.h"
+#include "TinyFormatter.h"
 //#include "../contrib/ConvertUTF/ConvertUTF.h"
 #include "../contrib/utf8cpp/source/utf8.h"
 #include <assimp/IOSystem.hpp>
@@ -150,7 +149,7 @@ static SIBChunk ReadChunk(StreamReaderLE* stream)
     chunk.Tag = stream->GetU4();
     chunk.Size = stream->GetU4();
     if (chunk.Size > stream->GetRemainingSizeToLimit())
-        ASSIMP_LOG_ERROR("SIB: Chunk overflow");
+        DefaultLogger::get()->error("SIB: Chunk overflow");
     ByteSwap::Swap4(&chunk.Tag);
     return chunk;
 }
@@ -173,7 +172,7 @@ static void UnknownChunk(StreamReaderLE* /*stream*/, const SIBChunk& chunk)
         static_cast<char>(chunk.Tag & 0xff), '\0'
     };
 
-    ASSIMP_LOG_WARN((Formatter::format(), "SIB: Skipping unknown '",temp,"' chunk."));
+    DefaultLogger::get()->warn((Formatter::format(), "SIB: Skipping unknown '",temp,"' chunk."));
 }
 
 // Reads a UTF-16LE string and returns it at UTF-8.
@@ -589,7 +588,7 @@ static void ReadShape(SIB* sib, StreamReaderLE* stream)
 
         if (mtl >= meshes.size())
         {
-            ASSIMP_LOG_ERROR("SIB: Face material index is invalid.");
+            DefaultLogger::get()->error("SIB: Face material index is invalid.");
             mtl = 0;
         }
 

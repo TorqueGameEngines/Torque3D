@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -60,7 +59,7 @@ class IOStream;
 namespace D3MF {
 
 #ifndef ASSIMP_BUILD_NO_EXPORT
-#ifndef ASSIMP_BUILD_NO_3MF_EXPORTER
+#ifndef ASSIMP_BUILD_NO3MF_EXPORTER
 
 struct OpcPackageRelationship;
 
@@ -76,12 +75,10 @@ public:
 
 protected:
     void writeHeader();
-    void writeMetaData();
-    void writeBaseMaterials();
     void writeObjects();
     void writeMesh( aiMesh *mesh );
     void writeVertex( const aiVector3D &pos );
-    void writeFaces( aiMesh *mesh, unsigned int matIdx );
+    void writeFaces( aiMesh *mesh );
     void writeBuild();
     void exportContentTyp( const std::string &filename );
     void writeModelToArchive( const std::string &folder, const std::string &modelName );
@@ -98,7 +95,7 @@ private:
     std::vector<OpcPackageRelationship*> mRelations;
 };
 
-#endif // ASSIMP_BUILD_NO_3MF_EXPORTER
+#endif // ASSIMP_BUILD_NO3MF_EXPORTER
 #endif // ASSIMP_BUILD_NO_EXPORT
 
 } // Namespace D3MF

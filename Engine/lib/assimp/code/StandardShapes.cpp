@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -47,8 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  http://geometrictools.com/Documentation/PlatonicSolids.pdf.
  */
 
-#include <assimp/StandardShapes.h>
-#include <assimp/StringComparison.h>
+#include "StandardShapes.h"
+#include "StringComparison.h"
 #include <stddef.h>
 #include <assimp/Defines.h>
 #include <assimp/mesh.h>
@@ -377,7 +376,7 @@ void StandardShapes::MakeSphere(unsigned int    tess,
     MakeIcosahedron(positions);
 
     // ... and subdivide it until the requested output
-    // tessellation is reached
+    // tesselation is reached
     for (unsigned int i = 0; i<tess;++i)
         Subdivide(positions);
 }

@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -52,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/IOSystem.hpp>
 #include <assimp/scene.h>
 #include <assimp/importerdesc.h>
-#include <assimp/StreamReader.h>
+#include "StreamReader.h"
 #include <map>
 
 using namespace Assimp;
@@ -130,18 +129,18 @@ void NDOImporter::InternReadFile( const std::string& pFile,
     unsigned int file_format = 12;
     if (!strncmp("1.0",head+6,3)) {
         file_format = 10;
-        ASSIMP_LOG_INFO("NDO file format is 1.0");
+        DefaultLogger::get()->info("NDO file format is 1.0");
     }
     else if (!strncmp("1.1",head+6,3)) {
         file_format = 11;
-        ASSIMP_LOG_INFO("NDO file format is 1.1");
+        DefaultLogger::get()->info("NDO file format is 1.1");
     }
     else if (!strncmp("1.2",head+6,3)) {
         file_format = 12;
-        ASSIMP_LOG_INFO("NDO file format is 1.2");
+        DefaultLogger::get()->info("NDO file format is 1.2");
     }
     else {
-        ASSIMP_LOG_WARN_F( "Unrecognized nendo file format version, continuing happily ... :", (head+6));
+        DefaultLogger::get()->warn(std::string("Unrecognized nendo file format version, continuing happily ... :") + (head+6));
     }
 
     reader.IncPtr(2); /* skip flags */

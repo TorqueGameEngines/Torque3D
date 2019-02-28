@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -159,9 +158,8 @@ void MDCImporter::ValidateHeader()
             "magic word found is " + std::string( szBuffer ));
     }
 
-    if (pcHeader->ulVersion != AI_MDC_VERSION) {
-        ASSIMP_LOG_WARN("Unsupported MDC file version (2 (AI_MDC_VERSION) was expected)");
-    }
+    if (pcHeader->ulVersion != AI_MDC_VERSION)
+        DefaultLogger::get()->warn("Unsupported MDC file version (2 (AI_MDC_VERSION) was expected)");
 
     if (pcHeader->ulOffsetBorderFrames + pcHeader->ulNumFrames * sizeof(MDC::Frame) > this->fileSize ||
         pcHeader->ulOffsetSurfaces + pcHeader->ulNumSurfaces * sizeof(MDC::Surface) > this->fileSize)
@@ -170,9 +168,8 @@ void MDCImporter::ValidateHeader()
             "and point to something behind the file.");
     }
 
-    if (this->configFrameID >= this->pcHeader->ulNumFrames) {
+    if (this->configFrameID >= this->pcHeader->ulNumFrames)
         throw DeadlyImportError("The requested frame is not available");
-    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -286,8 +283,9 @@ void MDCImporter::InternReadFile(
         pcMesh->mNumVertices = pcMesh->mNumFaces * 3;
 
         // store the name of the surface for use as node name.
-        pcMesh->mName.Set(std::string(pcSurface->ucName
-                                    , strnlen(pcSurface->ucName, AI_MDC_MAXQPATH - 1)));
+        // FIX: make sure there is a 0 termination
+        const_cast<char&>(pcSurface->ucName[AI_MDC_MAXQPATH-1]) = '\0';
+        pcMesh->mTextureCoords[3] = (aiVector3D*)pcSurface->ucName;
 
         // go to the first shader in the file. ignore the others.
         if (pcSurface->ulNumShaders)
@@ -296,8 +294,8 @@ void MDCImporter::InternReadFile(
             pcMesh->mMaterialIndex = (unsigned int)aszShaders.size();
 
             // create a new shader
-            aszShaders.push_back(std::string( pcShader->ucName, 
-                ::strnlen(pcShader->ucName, sizeof(pcShader->ucName)) ));
+            aszShaders.push_back(std::string( pcShader->ucName, std::min(
+                ::strlen(pcShader->ucName),sizeof(pcShader->ucName)) ));
         }
         // need to create a default material
         else if (UINT_MAX == iDefaultMatIndex)
@@ -390,7 +388,7 @@ void MDCImporter::InternReadFile(
                 uint32_t quak = pcTriangle->aiIndices[iIndex];
                 if (quak >= pcSurface->ulNumVertices)
                 {
-                    ASSIMP_LOG_ERROR("MDC vertex index is out of range");
+                    DefaultLogger::get()->error("MDC vertex index is out of range");
                     quak = pcSurface->ulNumVertices-1;
                 }
 
@@ -434,12 +432,10 @@ void MDCImporter::InternReadFile(
     else if (1 == pScene->mNumMeshes)
     {
         pScene->mRootNode = new aiNode();
-        if ( nullptr != pScene->mMeshes[0] ) {
-            pScene->mRootNode->mName = pScene->mMeshes[0]->mName;
-            pScene->mRootNode->mNumMeshes = 1;
-            pScene->mRootNode->mMeshes = new unsigned int[1];
-            pScene->mRootNode->mMeshes[0] = 0;
-        }
+        pScene->mRootNode->mName.Set(std::string((const char*)pScene->mMeshes[0]->mTextureCoords[3]));
+        pScene->mRootNode->mNumMeshes = 1;
+        pScene->mRootNode->mMeshes = new unsigned int[1];
+        pScene->mRootNode->mMeshes[0] = 0;
     }
     else
     {
@@ -451,12 +447,16 @@ void MDCImporter::InternReadFile(
         {
             aiNode* pcNode = pScene->mRootNode->mChildren[i] = new aiNode();
             pcNode->mParent = pScene->mRootNode;
-            pcNode->mName = pScene->mMeshes[i]->mName;
+            pcNode->mName.Set(std::string((const char*)pScene->mMeshes[i]->mTextureCoords[3]));
             pcNode->mNumMeshes = 1;
             pcNode->mMeshes = new unsigned int[1];
             pcNode->mMeshes[0] = i;
         }
     }
+
+    // make sure we invalidate the pointer to the mesh name
+    for (unsigned int i = 0; i < pScene->mNumMeshes;++i)
+        pScene->mMeshes[i]->mTextureCoords[3] = NULL;
 
     // create materials
     pScene->mNumMaterials = (unsigned int)aszShaders.size();

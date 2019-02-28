@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -50,8 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/DefaultLogger.hpp>
-#include <assimp/Exceptional.h>
-#include <assimp/qnan.h>
+#include "Exceptional.h"
+#include "qnan.h"
 
 
 using namespace Assimp;
@@ -72,15 +71,16 @@ GenFaceNormalsProcess::~GenFaceNormalsProcess()
 
 // ------------------------------------------------------------------------------------------------
 // Returns whether the processing step is present in the given flag field.
-bool GenFaceNormalsProcess::IsActive( unsigned int pFlags) const {
-    force_ = (pFlags & aiProcess_ForceGenNormals) != 0;
+bool GenFaceNormalsProcess::IsActive( unsigned int pFlags) const
+{
     return  (pFlags & aiProcess_GenNormals) != 0;
 }
 
 // ------------------------------------------------------------------------------------------------
 // Executes the post processing step on the given imported data.
-void GenFaceNormalsProcess::Execute( aiScene* pScene) {
-    ASSIMP_LOG_DEBUG("GenFaceNormalsProcess begin");
+void GenFaceNormalsProcess::Execute( aiScene* pScene)
+{
+    DefaultLogger::get()->debug("GenFaceNormalsProcess begin");
 
     if (pScene->mFlags & AI_SCENE_FLAGS_NON_VERBOSE_FORMAT) {
         throw DeadlyImportError("Post-processing order mismatch: expecting pseudo-indexed (\"verbose\") vertices here");
@@ -93,12 +93,11 @@ void GenFaceNormalsProcess::Execute( aiScene* pScene) {
         }
     }
     if (bHas)   {
-        ASSIMP_LOG_INFO("GenFaceNormalsProcess finished. "
+        DefaultLogger::get()->info("GenFaceNormalsProcess finished. "
             "Face normals have been calculated");
-    } else {
-        ASSIMP_LOG_DEBUG("GenFaceNormalsProcess finished. "
-            "Normals are already there");
     }
+    else DefaultLogger::get()->debug("GenFaceNormalsProcess finished. "
+        "Normals are already there");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -106,15 +105,14 @@ void GenFaceNormalsProcess::Execute( aiScene* pScene) {
 bool GenFaceNormalsProcess::GenMeshFaceNormals (aiMesh* pMesh)
 {
     if (NULL != pMesh->mNormals) {
-        if (force_) delete[] pMesh->mNormals;
-        else return false;
+        return false;
     }
 
     // If the mesh consists of lines and/or points but not of
     // triangles or higher-order polygons the normal vectors
     // are undefined.
     if (!(pMesh->mPrimitiveTypes & (aiPrimitiveType_TRIANGLE | aiPrimitiveType_POLYGON)))   {
-        ASSIMP_LOG_INFO("Normal vectors are undefined for line and point meshes");
+        DefaultLogger::get()->info("Normal vectors are undefined for line and point meshes");
         return false;
     }
 
@@ -136,7 +134,7 @@ bool GenFaceNormalsProcess::GenMeshFaceNormals (aiMesh* pMesh)
         const aiVector3D* pV1 = &pMesh->mVertices[face.mIndices[0]];
         const aiVector3D* pV2 = &pMesh->mVertices[face.mIndices[1]];
         const aiVector3D* pV3 = &pMesh->mVertices[face.mIndices[face.mNumIndices-1]];
-        const aiVector3D vNor = ((*pV2 - *pV1) ^ (*pV3 - *pV1)).NormalizeSafe();
+        const aiVector3D vNor = ((*pV2 - *pV1) ^ (*pV3 - *pV1)).Normalize();
 
         for (unsigned int i = 0;i < face.mNumIndices;++i) {
             pMesh->mNormals[face.mIndices[i]] = vNor;

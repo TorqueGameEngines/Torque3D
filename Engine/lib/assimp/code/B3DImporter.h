@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -48,9 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/types.h>
 #include <assimp/mesh.h>
 #include <assimp/material.h>
-#include <assimp/BaseImporter.h>
+#include "BaseImporter.h"
 
-#include <memory>
 #include <vector>
 
 struct aiNodeAnim;
@@ -118,15 +116,15 @@ private:
     std::vector<unsigned> _stack;
 
     std::vector<std::string> _textures;
-    std::vector<std::unique_ptr<aiMaterial> > _materials;
+    std::vector<aiMaterial*> _materials;
 
     int _vflags,_tcsets,_tcsize;
     std::vector<Vertex> _vertices;
 
     std::vector<aiNode*> _nodes;
-    std::vector<std::unique_ptr<aiMesh> > _meshes;
-    std::vector<std::unique_ptr<aiNodeAnim> > _nodeAnims;
-    std::vector<std::unique_ptr<aiAnimation> > _animations;
+    std::vector<aiMesh*> _meshes;
+    std::vector<aiNodeAnim*> _nodeAnims;
+    std::vector<aiAnimation*> _animations;
 };
 
 }

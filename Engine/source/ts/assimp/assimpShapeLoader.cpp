@@ -103,6 +103,7 @@ MODULE_BEGIN( AssimpShapeLoader )
       TSShapeLoader::addFormat("3D GameStudio (3DGS)", "mdl");
       TSShapeLoader::addFormat("3D GameStudio (3DGS) Terrain", "hmp");
       TSShapeLoader::addFormat("Izware Nendo", "ndo");
+	  TSShapeLoader::addFormat("gltf", "gltf");
    }
 MODULE_END;
 
@@ -337,7 +338,7 @@ TSShape* assimpLoadShape(const Torque::Path &path)
    return tss;
 }
 
-DefineConsoleFunction(GetShapeInfo, GuiTreeViewCtrl*, (String filePath), ,
+DefineEngineFunction(GetShapeInfo, GuiTreeViewCtrl*, (String filePath), ,
    "Returns a list of supported shape formats in filter form.\n"
    "Example output: DSQ Files|*.dsq|COLLADA Files|*.dae|")
 {

@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -78,8 +77,7 @@ public:
 
 
 private:
-    bool GenMeshFaceNormals(aiMesh* pcMesh);
-    mutable bool force_ = false;
+    bool GenMeshFaceNormals (aiMesh* pcMesh);
 };
 
 } // end of namespace Assimp

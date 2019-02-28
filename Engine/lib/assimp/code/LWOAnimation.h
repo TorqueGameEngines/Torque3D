@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -113,14 +112,14 @@ enum PrePostBehaviour
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a LWO animation keyframe
  */
-struct Key {
-    Key() AI_NO_EXCEPT 
-    : time()
-    , value()
-    , inter(IT_LINE)
-    , params() {
-        // empty
-    }
+struct Key
+{
+    Key()
+        : time(),
+        value(),
+        inter   (IT_LINE),
+        params()
+    {}
 
     //! Current time
     double time;
@@ -144,16 +143,17 @@ struct Key {
 // ---------------------------------------------------------------------------
 /** \brief Data structure for a LWO animation envelope
  */
-struct Envelope {
-    Envelope() AI_NO_EXCEPT
-    : index()
-    , type(EnvelopeType_Unknown)
-    , pre(PrePostBehaviour_Constant)
-    , post(PrePostBehaviour_Constant)
-    , old_first(0)
-    , old_last(0) {
-        // empty
-    }
+struct Envelope
+{
+    Envelope()
+        :   index()
+        ,   type    (EnvelopeType_Unknown)
+        ,   pre     (PrePostBehaviour_Constant)
+        ,   post    (PrePostBehaviour_Constant)
+
+        ,   old_first (0)
+        ,   old_last  (0)
+    {}
 
     //! Index of this envelope
     unsigned int index;
@@ -161,7 +161,7 @@ struct Envelope {
     //! Type of envelope
     EnvelopeType type;
 
-    //! Pre- and post-behavior
+    //! Pre and post-behaviour
     PrePostBehaviour pre,post;
 
     //! Keyframes for this envelope

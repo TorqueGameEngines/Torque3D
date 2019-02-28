@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -49,11 +48,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // tab width for logging columns
 #define ASSIMP_FBX_TAB_WIDTH 4
 
-#include <assimp/ParsingUtils.h>
+#include "ParsingUtils.h"
 
 #include "FBXTokenizer.h"
 #include "FBXUtil.h"
-#include <assimp/Exceptional.h>
+#include "Exceptional.h"
 
 namespace Assimp {
 namespace FBX {
@@ -77,10 +76,12 @@ Token::Token(const char* sbegin, const char* send, TokenType type, unsigned int 
     ai_assert(static_cast<size_t>(send-sbegin) > 0);
 }
 
+
 // ------------------------------------------------------------------------------------------------
 Token::~Token()
 {
 }
+
 
 namespace {
 

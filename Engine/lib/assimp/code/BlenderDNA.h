@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -47,8 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_AI_BLEND_DNA_H
 #define INCLUDED_AI_BLEND_DNA_H
 
-#include <assimp/BaseImporter.h>
-#include <assimp/StreamReader.h>
+#include "BaseImporter.h"
+#include "StreamReader.h"
 #include <assimp/DefaultLogger.hpp>
 #include <stdint.h>
 #include <memory>
@@ -205,7 +204,7 @@ enum ErrorPolicy {
 
 // -------------------------------------------------------------------------------
 /** Represents a data structure in a BLEND file. A Structure defines n fields
- *  and their locations and encodings the input stream. Usually, every
+ *  and their locatios and encodings the input stream. Usually, every
  *  Structure instance pertains to one equally-named data structure in the
  *  BlenderScene.h header. This class defines various utilities to map a
  *  binary `blob` read from the file to such a structure instance with
@@ -309,28 +308,6 @@ public:
     void ReadField(T& out, const char* name,
         const FileDatabase& db) const;
 
-    // --------------------------------------------------------
-    /**
-    *   @brief  field parsing for dynamic vectors
-    *   @param[in]  out vector of struct to be filled
-    *   @param[in]  name of field
-    *   @param[in]  db to access the file, dna, ...
-    *   @return true when read was successful
-    */
-    template <int error_policy, template <typename> class TOUT, typename T>
-    bool ReadFieldPtrVector(vector<TOUT<T>>&out, const char* name, const FileDatabase& db) const;
-
-    /**
-    *   @brief  parses raw customdata
-    *   @param[in]  out shared_ptr to be filled
-    *   @param[in]  cdtype customdata type to read
-    *   @param[in]  name of field ptr
-    *   @param[in]  db to access the file, dna, ...
-    *   @return true when read was successful
-    */
-    template <int error_policy>
-    bool ReadCustomDataPtr(std::shared_ptr<ElemBase>&out, int cdtype, const char* name, const FileDatabase& db) const;
-
 private:
 
     // --------------------------------------------------------
@@ -403,7 +380,7 @@ template <>  struct Structure :: _defaultInitializer<ErrorPolicy_Warn> {
 
     template <typename T>
     void operator ()(T& out, const char* reason = "<add reason>") {
-        ASSIMP_LOG_WARN(reason);
+        DefaultLogger::get()->warn(reason);
 
         // ... and let the show go on
         _defaultInitializer<0 /*ErrorPolicy_Igno*/>()(out);
@@ -685,7 +662,7 @@ public:
     /** Check whether a specific item is in the cache.
      *  @param s Data type of the item
      *  @param out Output pointer. Unchanged if the
-     *   cache doesn't know the item yet.
+     *   cache doens't know the item yet.
      *  @param ptr Item address to look for. */
     template <typename T> void get (
         const Structure& s,
@@ -824,17 +801,6 @@ private:
 
     FileDatabase& db;
 };
-
-/**
-*   @brief  read CustomData's data to ptr to mem
-*   @param[out] out memory ptr to set
-*   @param[in]  cdtype  to read
-*   @param[in]  cnt cnt of elements to read
-*   @param[in]  db to read elements from
-*   @return true when ok
-*/
-bool readCustomData(std::shared_ptr<ElemBase> &out, int cdtype, size_t cnt, const FileDatabase &db);
-
 
     } // end Blend
 } // end Assimp

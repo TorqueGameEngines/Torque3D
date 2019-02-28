@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -43,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file Implementation of BaseProcess */
 
-#include <assimp/BaseImporter.h>
+#include "BaseImporter.h"
 #include "BaseProcess.h"
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/scene.h>
@@ -53,7 +52,7 @@ using namespace Assimp;
 
 // ------------------------------------------------------------------------------------------------
 // Constructor to be privately used by Importer
-BaseProcess::BaseProcess() AI_NO_EXCEPT
+BaseProcess::BaseProcess()
 : shared()
 , progress()
 {
@@ -85,7 +84,7 @@ void BaseProcess::ExecuteOnScene( Importer* pImp)
 
         // extract error description
         pImp->Pimpl()->mErrorString = err.what();
-        ASSIMP_LOG_ERROR(pImp->Pimpl()->mErrorString);
+        DefaultLogger::get()->error(pImp->Pimpl()->mErrorString);
 
         // and kill the partially imported data
         delete pImp->Pimpl()->mScene;

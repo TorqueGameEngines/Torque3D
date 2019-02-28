@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -45,16 +44,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  @brief Implementation of BaseImporter
  */
 
-#include <assimp/BaseImporter.h>
-#include <assimp/ParsingUtils.h>
+#include "BaseImporter.h"
 #include "FileSystemFilter.h"
 #include "Importer.h"
-#include <assimp/ByteSwapper.h>
+#include "ByteSwapper.h"
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/importerdesc.h>
-
 #include <ios>
 #include <list>
 #include <memory>
@@ -65,25 +62,24 @@ using namespace Assimp;
 
 // ------------------------------------------------------------------------------------------------
 // Constructor to be privately used by Importer
-BaseImporter::BaseImporter() AI_NO_EXCEPT
-: m_progress() {
+BaseImporter::BaseImporter()
+: m_progress()
+{
     // nothing to do here
 }
 
 // ------------------------------------------------------------------------------------------------
 // Destructor, private as well
-BaseImporter::~BaseImporter() {
+BaseImporter::~BaseImporter()
+{
     // nothing to do here
 }
 
 // ------------------------------------------------------------------------------------------------
 // Imports the given file and returns the imported data.
-aiScene* BaseImporter::ReadFile(const Importer* pImp, const std::string& pFile, IOSystem* pIOHandler) {
+aiScene* BaseImporter::ReadFile(const Importer* pImp, const std::string& pFile, IOSystem* pIOHandler)
+{
     m_progress = pImp->GetProgressHandler();
-    if (nullptr == m_progress) {
-        return nullptr;
-    }
-
     ai_assert(m_progress);
 
     // Gather configuration properties for this run
@@ -103,8 +99,8 @@ aiScene* BaseImporter::ReadFile(const Importer* pImp, const std::string& pFile, 
     } catch( const std::exception& err )    {
         // extract error description
         m_ErrorText = err.what();
-        ASSIMP_LOG_ERROR(m_ErrorText);
-        return nullptr;
+        DefaultLogger::get()->error(m_ErrorText);
+        return NULL;
     }
 
     // return what we gathered from the import.
@@ -118,12 +114,13 @@ void BaseImporter::SetupProperties(const Importer* /*pImp*/)
 }
 
 // ------------------------------------------------------------------------------------------------
-void BaseImporter::GetExtensionList(std::set<std::string>& extensions) {
+void BaseImporter::GetExtensionList(std::set<std::string>& extensions)
+{
     const aiImporterDesc* desc = GetInfo();
-    ai_assert(desc != nullptr);
+    ai_assert(desc != NULL);
 
     const char* ext = desc->mFileExtensions;
-    ai_assert(ext != nullptr );
+    ai_assert(ext != NULL);
 
     const char* last = ext;
     do {
@@ -145,29 +142,31 @@ void BaseImporter::GetExtensionList(std::set<std::string>& extensions) {
     const char**        tokens,
     unsigned int        numTokens,
     unsigned int        searchBytes /* = 200 */,
-    bool                tokensSol /* false */,
-    bool                noAlphaBeforeTokens /* false */)
+    bool                tokensSol /* false */)
 {
-    ai_assert( nullptr != tokens );
+    ai_assert( NULL != tokens );
     ai_assert( 0 != numTokens );
     ai_assert( 0 != searchBytes);
 
-    if ( nullptr == pIOHandler ) {
+    if (!pIOHandler)
         return false;
-    }
 
     std::unique_ptr<IOStream> pStream (pIOHandler->Open(pFile));
     if (pStream.get() ) {
         // read 200 characters from the file
         std::unique_ptr<char[]> _buffer (new char[searchBytes+1 /* for the '\0' */]);
-        char *buffer( _buffer.get() );
-        const size_t read( pStream->Read(buffer,1,searchBytes) );
-        if( 0 == read ) {
+        char* buffer = _buffer.get();
+        if( NULL == buffer ) {
+            return false;
+        }
+
+        const size_t read = pStream->Read(buffer,1,searchBytes);
+        if( !read ) {
             return false;
         }
 
         for( size_t i = 0; i < read; ++i ) {
-            buffer[ i ] = static_cast<char>( ::tolower( buffer[ i ] ) );
+            buffer[ i ] = ::tolower( buffer[ i ] );
         }
 
         // It is not a proper handling of unicode files here ...
@@ -181,29 +180,16 @@ void BaseImporter::GetExtensionList(std::set<std::string>& extensions) {
         }
         *cur2 = '\0';
 
-        std::string token;
-        for (unsigned int i = 0; i < numTokens; ++i ) {
-            ai_assert( nullptr != tokens[i] );
-            const size_t len( strlen( tokens[ i ] ) );
-            token.clear();
-            const char *ptr( tokens[ i ] );
-            for ( size_t tokIdx = 0; tokIdx < len; ++tokIdx ) {
-                token.push_back( static_cast<char>( tolower( *ptr ) ) );
-                ++ptr;
-            }
-            const char* r = strstr( buffer, token.c_str() );
+        for (unsigned int i = 0; i < numTokens;++i) {
+            ai_assert(NULL != tokens[i]);
+            const char* r = strstr(buffer,tokens[i]);
             if( !r ) {
-                continue;
-            }
-            // We need to make sure that we didn't accidentially identify the end of another token as our token,
-            // e.g. in a previous version the "gltf " present in some gltf files was detected as "f "
-            if (noAlphaBeforeTokens && (r != buffer && isalpha(r[-1]))) {
                 continue;
             }
             // We got a match, either we don't care where it is, or it happens to
             // be in the beginning of the file / line
             if (!tokensSol || r == buffer || r[-1] == '\r' || r[-1] == '\n') {
-                ASSIMP_LOG_DEBUG_F( "Found positive match for header keyword: ", tokens[i] );
+                DefaultLogger::get()->debug(std::string("Found positive match for header keyword: ") + tokens[i]);
                 return true;
             }
         }
@@ -241,19 +227,16 @@ void BaseImporter::GetExtensionList(std::set<std::string>& extensions) {
 
 // ------------------------------------------------------------------------------------------------
 // Get file extension from path
-std::string BaseImporter::GetExtension( const std::string& file ) {
-    std::string::size_type pos = file.find_last_of('.');
+/*static*/ std::string BaseImporter::GetExtension (const std::string& pFile)
+{
+    std::string::size_type pos = pFile.find_last_of('.');
 
     // no file extension at all
-    if (pos == std::string::npos) {
+    if( pos == std::string::npos)
         return "";
-    }
 
-
-    // thanks to Andy Maloney for the hint
-    std::string ret = file.substr( pos + 1 );
-    std::transform( ret.begin(), ret.end(), ret.begin(), ToLower<char>);
-
+    std::string ret = pFile.substr(pos+1);
+    std::transform(ret.begin(),ret.end(),ret.begin(),::tolower); // thanks to Andy Maloney for the hint
     return ret;
 }
 
@@ -262,8 +245,7 @@ std::string BaseImporter::GetExtension( const std::string& file ) {
 /* static */ bool BaseImporter::CheckMagicToken(IOSystem* pIOHandler, const std::string& pFile,
     const void* _magic, unsigned int num, unsigned int offset, unsigned int size)
 {
-    ai_assert( size <= 16 );
-    ai_assert( _magic );
+    ai_assert(size <= 16 && _magic);
 
     if (!pIOHandler) {
         return false;
@@ -333,7 +315,7 @@ void BaseImporter::ConvertToUTF8(std::vector<char>& data)
 
     // UTF 8 with BOM
     if((uint8_t)data[0] == 0xEF && (uint8_t)data[1] == 0xBB && (uint8_t)data[2] == 0xBF) {
-        ASSIMP_LOG_DEBUG("Found UTF-8 BOM ...");
+        DefaultLogger::get()->debug("Found UTF-8 BOM ...");
 
         std::copy(data.begin()+3,data.end(),data.begin());
         data.resize(data.size()-3);
@@ -352,7 +334,7 @@ void BaseImporter::ConvertToUTF8(std::vector<char>& data)
 
     // UTF 32 LE with BOM
     if(*((uint32_t*)&data.front()) == 0x0000FFFE) {
-        ASSIMP_LOG_DEBUG("Found UTF-32 BOM ...");
+        DefaultLogger::get()->debug("Found UTF-32 BOM ...");
 
         std::vector<char> output;
         int *ptr = (int*)&data[ 0 ];
@@ -372,7 +354,7 @@ void BaseImporter::ConvertToUTF8(std::vector<char>& data)
 
     // UTF 16 LE with BOM
     if(*((uint16_t*)&data.front()) == 0xFEFF) {
-        ASSIMP_LOG_DEBUG("Found UTF-16 BOM ...");
+        DefaultLogger::get()->debug("Found UTF-16 BOM ...");
 
         std::vector<unsigned char> output;
         utf8::utf16to8(data.begin(), data.end(), back_inserter(output));
@@ -397,14 +379,16 @@ void BaseImporter::ConvertUTF8toISO8859_1(std::string& data)
                 data[j] = ((unsigned char) data[++i] + 0x40);
             } else {
                 std::stringstream stream;
+
                 stream << "UTF8 code " << std::hex << data[i] << data[i + 1] << " can not be converted into ISA-8859-1.";
-                ASSIMP_LOG_ERROR( stream.str() );
+
+                DefaultLogger::get()->error(stream.str());
 
                 data[j++] = data[i++];
                 data[j] = data[i];
             }
         } else {
-            ASSIMP_LOG_ERROR("UTF8 code but only one character remaining");
+            DefaultLogger::get()->error("UTF8 code but only one character remaining");
 
             data[j] = data[i];
         }
@@ -420,7 +404,7 @@ void BaseImporter::TextFileToBuffer(IOStream* stream,
     std::vector<char>& data,
     TextFileMode mode)
 {
-    ai_assert(nullptr != stream);
+    ai_assert(NULL != stream);
 
     const size_t fileSize = stream->FileSize();
     if (mode == FORBID_EMPTY) {
@@ -481,14 +465,14 @@ struct Assimp::BatchData {
     , pImporter( nullptr )
     , next_id(0xffff)
     , validate( validate ) {
-        ai_assert( nullptr != pIO );
+        ai_assert( NULL != pIO );
         
         pImporter = new Importer();
         pImporter->SetIOHandler( pIO );
     }
 
     ~BatchData() {
-        pImporter->SetIOHandler( nullptr ); /* get pointer back into our possession */
+        pImporter->SetIOHandler( NULL ); /* get pointer back into our possession */
         delete pImporter;
     }
 
@@ -514,8 +498,9 @@ struct Assimp::BatchData {
 typedef std::list<LoadRequest>::iterator LoadReqIt;
 
 // ------------------------------------------------------------------------------------------------
-BatchLoader::BatchLoader(IOSystem* pIO, bool validate ) {
-    ai_assert(nullptr != pIO);
+BatchLoader::BatchLoader(IOSystem* pIO, bool validate )
+{
+    ai_assert(NULL != pIO);
 
     m_data = new BatchData( pIO, validate );
 }
@@ -581,7 +566,7 @@ aiScene* BatchLoader::GetImport( unsigned int which )
             return sc;
         }
     }
-    return nullptr;
+    return NULL;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -604,13 +589,13 @@ void BatchLoader::LoadAll()
 
         if (!DefaultLogger::isNullLogger())
         {
-            ASSIMP_LOG_INFO("%%% BEGIN EXTERNAL FILE %%%");
-            ASSIMP_LOG_INFO_F("File: ", (*it).file);
+            DefaultLogger::get()->info("%%% BEGIN EXTERNAL FILE %%%");
+            DefaultLogger::get()->info("File: " + (*it).file);
         }
         m_data->pImporter->ReadFile((*it).file,pp);
         (*it).scene = m_data->pImporter->GetOrphanedScene();
         (*it).loaded = true;
 
-        ASSIMP_LOG_INFO("%%% END EXTERNAL FILE %%%");
+        DefaultLogger::get()->info("%%% END EXTERNAL FILE %%%");
     }
 }

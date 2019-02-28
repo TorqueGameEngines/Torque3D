@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -49,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PretransformVertices.h"
 #include "ProcessHelper.h"
 #include <assimp/SceneCombiner.h>
-#include <assimp/Exceptional.h>
+#include "Exceptional.h"
 
 using namespace Assimp;
 
@@ -60,17 +59,14 @@ using namespace Assimp;
 // ------------------------------------------------------------------------------------------------
 // Constructor to be privately used by Importer
 PretransformVertices::PretransformVertices()
-: configKeepHierarchy (false)
-, configNormalize(false)
-, configTransform(false)
-, configTransformation()
-, mConfigPointCloud( false ) {
-    // empty
+:   configKeepHierarchy (false), configNormalize(false), configTransform(false), configTransformation()
+{
 }
 
 // ------------------------------------------------------------------------------------------------
 // Destructor, private as well
-PretransformVertices::~PretransformVertices() {
+PretransformVertices::~PretransformVertices()
+{
     // nothing to do here
 }
 
@@ -92,8 +88,6 @@ void PretransformVertices::SetupProperties(const Importer* pImp)
     configTransform = (0 != pImp->GetPropertyInteger(AI_CONFIG_PP_PTV_ADD_ROOT_TRANSFORMATION,0));
 
     configTransformation = pImp->GetPropertyMatrix(AI_CONFIG_PP_PTV_ROOT_TRANSFORMATION, aiMatrix4x4());
-
-    mConfigPointCloud = pImp->GetPropertyBool(AI_CONFIG_EXPORT_POINT_CLOUDS);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -396,7 +390,7 @@ void PretransformVertices::BuildWCSMeshes(std::vector<aiMesh*>& out, aiMesh** in
             }
             if (node->mMeshes[i] < numIn) {
                 // Worst case. Need to operate on a full copy of the mesh
-                ASSIMP_LOG_INFO("PretransformVertices: Copying mesh due to mismatching transforms");
+                DefaultLogger::get()->info("PretransformVertices: Copying mesh due to mismatching transforms");
                 aiMesh* ntz;
 
                 const unsigned int tmp = mesh->mNumBones; //
@@ -446,7 +440,7 @@ void PretransformVertices::BuildMeshRefCountArray(aiNode* nd, unsigned int * ref
 // Executes the post processing step on the given imported data.
 void PretransformVertices::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("PretransformVerticesProcess begin");
+    DefaultLogger::get()->debug("PretransformVerticesProcess begin");
 
     // Return immediately if we have no meshes
     if (!pScene->mNumMeshes)
@@ -507,7 +501,9 @@ void PretransformVertices::Execute( aiScene* pScene)
             pScene->mMeshes[i]->mBones    = NULL;
             pScene->mMeshes[i]->mNumBones = 0;
         }
-    } else {
+    }
+    else {
+
         apcOutMeshes.reserve(pScene->mNumMaterials<<1u);
         std::list<unsigned int> aiVFormats;
 
@@ -559,8 +555,7 @@ void PretransformVertices::Execute( aiScene* pScene)
         }
 
         // If no meshes are referenced in the node graph it is possible that we get no output meshes.
-        if (apcOutMeshes.empty()) {
-            
+        if (apcOutMeshes.empty())   {
             throw DeadlyImportError("No output meshes: all meshes are orphaned and are not referenced by any nodes");
         }
         else
@@ -655,8 +650,7 @@ void PretransformVertices::Execute( aiScene* pScene)
             // generate mesh nodes
             for (unsigned int i = 0; i < pScene->mNumMeshes;++i,++nodes)
             {
-                aiNode* pcNode = new aiNode();
-                *nodes = pcNode;
+                aiNode* pcNode = *nodes = new aiNode();
                 pcNode->mParent = pScene->mRootNode;
                 pcNode->mName = pScene->mMeshes[i]->mName;
 
@@ -668,8 +662,7 @@ void PretransformVertices::Execute( aiScene* pScene)
             // generate light nodes
             for (unsigned int i = 0; i < pScene->mNumLights;++i,++nodes)
             {
-                aiNode* pcNode = new aiNode();
-                *nodes = pcNode;
+                aiNode* pcNode = *nodes = new aiNode();
                 pcNode->mParent = pScene->mRootNode;
                 pcNode->mName.length = ai_snprintf(pcNode->mName.data, MAXLEN, "light_%u",i);
                 pScene->mLights[i]->mName = pcNode->mName;
@@ -677,8 +670,7 @@ void PretransformVertices::Execute( aiScene* pScene)
             // generate camera nodes
             for (unsigned int i = 0; i < pScene->mNumCameras;++i,++nodes)
             {
-                aiNode* pcNode = new aiNode();
-                *nodes = pcNode;
+                aiNode* pcNode = *nodes = new aiNode();
                 pcNode->mParent = pScene->mRootNode;
                 pcNode->mName.length = ::ai_snprintf(pcNode->mName.data,MAXLEN,"cam_%u",i);
                 pScene->mCameras[i]->mName = pcNode->mName;
@@ -717,12 +709,22 @@ void PretransformVertices::Execute( aiScene* pScene)
     }
 
     // print statistics
-    if (!DefaultLogger::isNullLogger()) {
-        ASSIMP_LOG_DEBUG("PretransformVerticesProcess finished");
+    if (!DefaultLogger::isNullLogger())
+    {
+        char buffer[4096];
 
-        ASSIMP_LOG_INFO_F("Removed ", iOldNodes, " nodes and ", iOldAnimationChannels, " animation channels (", 
-            CountNodes(pScene->mRootNode) ," output nodes)" );
-        ASSIMP_LOG_INFO_F("Kept ", pScene->mNumLights, " lights and ", pScene->mNumCameras, " cameras." );
-        ASSIMP_LOG_INFO_F("Moved ", iOldMeshes, " meshes to WCS (number of output meshes: ", pScene->mNumMeshes, ")");
+        DefaultLogger::get()->debug("PretransformVerticesProcess finished");
+
+        ::ai_snprintf(buffer,4096,"Removed %u nodes and %u animation channels (%u output nodes)",
+            iOldNodes,iOldAnimationChannels,CountNodes(pScene->mRootNode));
+        DefaultLogger::get()->info(buffer);
+
+        ai_snprintf(buffer, 4096,"Kept %u lights and %u cameras",
+            pScene->mNumLights,pScene->mNumCameras);
+        DefaultLogger::get()->info(buffer);
+
+        ai_snprintf(buffer, 4096,"Moved %u meshes to WCS (number of output meshes: %u)",
+            iOldMeshes,pScene->mNumMeshes);
+        DefaultLogger::get()->info(buffer);
     }
 }

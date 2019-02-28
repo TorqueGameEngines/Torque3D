@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -46,9 +45,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_MD2LOADER_H_INCLUDED
 #define AI_MD2LOADER_H_INCLUDED
 
-#include <assimp/BaseImporter.h>
+#include "BaseImporter.h"
 #include <assimp/types.h>
-#include <assimp/ByteSwapper.h>
+#include "ByteSwapper.h"
 #include "MD2FileData.h"
 
 struct aiNode;

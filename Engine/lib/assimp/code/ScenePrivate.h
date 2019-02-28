@@ -2,8 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 All rights reserved.
 
@@ -42,21 +41,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file Stuff to deal with aiScene::mPrivate
  */
-#pragma once
 #ifndef AI_SCENEPRIVATE_H_INCLUDED
 #define AI_SCENEPRIVATE_H_INCLUDED
 
-#include <assimp/ai_assert.h>
 #include <assimp/scene.h>
 
-namespace Assimp {
+namespace Assimp    {
 
-// Forward declarations
 class Importer;
 
 struct ScenePrivateData {
-    //  The struct constructor.
-    ScenePrivateData() AI_NO_EXCEPT;
+
+    ScenePrivateData()
+        : mOrigImporter()
+        , mPPStepsApplied()
+        , mIsCopy()
+    {}
 
     // Importer that originally loaded the scene though the C-API
     // If set, this object is owned by this private data instance.
@@ -73,33 +73,15 @@ struct ScenePrivateData {
     bool mIsCopy;
 };
 
-inline
-ScenePrivateData::ScenePrivateData() AI_NO_EXCEPT
-: mOrigImporter( nullptr )
-, mPPStepsApplied( 0 )
-, mIsCopy( false ) {
-    // empty
-}
-
 // Access private data stored in the scene
-inline
-ScenePrivateData* ScenePriv(aiScene* in) {
-    ai_assert( nullptr != in );
-    if ( nullptr == in ) {
-        return nullptr;
-    }
+inline ScenePrivateData* ScenePriv(aiScene* in) {
     return static_cast<ScenePrivateData*>(in->mPrivate);
 }
 
-inline
-const ScenePrivateData* ScenePriv(const aiScene* in) {
-    ai_assert( nullptr != in );
-    if ( nullptr == in ) {
-        return nullptr;
-    }
+inline const ScenePrivateData* ScenePriv(const aiScene* in) {
     return static_cast<const ScenePrivateData*>(in->mPrivate);
 }
 
-} // Namespace Assimp
+}
 
-#endif // AI_SCENEPRIVATE_H_INCLUDED
+#endif

@@ -3,8 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
-
+Copyright (c) 2006-2017, assimp team
 
 
 All rights reserved.
@@ -47,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // internal headers
 
 #include "RemoveRedundantMaterials.h"
-#include <assimp/ParsingUtils.h>
+#include "ParsingUtils.h"
 #include "ProcessHelper.h"
 #include "MaterialSystem.h"
 #include <stdio.h>
@@ -87,7 +86,7 @@ void RemoveRedundantMatsProcess::SetupProperties(const Importer* pImp)
 // Executes the post processing step on the given imported data.
 void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
 {
-    ASSIMP_LOG_DEBUG("RemoveRedundantMatsProcess begin");
+    DefaultLogger::get()->debug("RemoveRedundantMatsProcess begin");
 
     unsigned int redundantRemoved = 0, unreferencedRemoved = 0;
     if (pScene->mNumMaterials)
@@ -122,7 +121,7 @@ void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
 
                         // Keep this material even if no mesh references it
                         abReferenced[i] = true;
-                        ASSIMP_LOG_DEBUG_F( "Found positive match in exclusion list: \'", name.data, "\'");
+                        DefaultLogger::get()->debug(std::string("Found positive match in exclusion list: \'") + name.data + "\'");
                     }
                 }
             }
@@ -211,11 +210,13 @@ void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
     }
     if (redundantRemoved == 0 && unreferencedRemoved == 0)
     {
-        ASSIMP_LOG_DEBUG("RemoveRedundantMatsProcess finished ");
+        DefaultLogger::get()->debug("RemoveRedundantMatsProcess finished ");
     }
     else
     {
-        ASSIMP_LOG_INFO_F("RemoveRedundantMatsProcess finished. Removed ", redundantRemoved, " redundant and ", 
-            unreferencedRemoved, " unused materials.");
+        char szBuffer[128]; // should be sufficiently large
+        ::ai_snprintf(szBuffer,128,"RemoveRedundantMatsProcess finished. Removed %u redundant and %u unused materials.",
+            redundantRemoved,unreferencedRemoved);
+        DefaultLogger::get()->info(szBuffer);
     }
 }

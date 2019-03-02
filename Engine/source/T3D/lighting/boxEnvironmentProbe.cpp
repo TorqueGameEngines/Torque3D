@@ -91,6 +91,8 @@ void BoxEnvironmentProbe::initPersistFields()
 {
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
+
+   removeField("radius");
 }
 
 void BoxEnvironmentProbe::inspectPostApply()
@@ -154,7 +156,7 @@ void BoxEnvironmentProbe::updateProbeParams()
    mProbeInfo->mProbeShapeType = ProbeRenderInst::Box;
 }
 
-void BoxEnvironmentProbe::prepRenderImage(SceneRenderState *state)
+/*void BoxEnvironmentProbe::prepRenderImage(SceneRenderState *state)
 {
    if (!mEnabled || !ReflectionProbe::smRenderPreviewProbes)
       return;
@@ -223,7 +225,7 @@ void BoxEnvironmentProbe::prepRenderImage(SceneRenderState *state)
       ri->type = RenderPassManager::RIT_Editor;
       state->getRenderPass()->addInst(ri);
    }
-}
+}*/
 
 void BoxEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)
 {

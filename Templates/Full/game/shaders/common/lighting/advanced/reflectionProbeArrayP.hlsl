@@ -53,6 +53,32 @@ uniform float4    probeContribColors[MAX_PROBES];
    return posonbox - boxWSPos;
 }*/
 
+float3 iblSkylightDiffuse(Surface surface, ProbeData probe)
+{
+   float lod = surface.roughness*cubeMips;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.N, probe.probeIdx, lod).xyz;
+
+   return color;
+}
+
+float3 iblSkylightSpecular(Surface surface, ProbeData probe)
+{
+   // BRDF
+   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
+
+   // Radiance (Specular)
+#if DEBUGVIZ_SPECCUBEMAP == 0
+   float lod = surface.roughness*cubeMips;
+#elif DEBUGVIZ_SPECCUBEMAP == 1
+   float lod = 0;
+#endif
+
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, surface.N, probe.probeIdx, 0).xyz * (brdf.x + brdf.y);
+   //float3 color = float3(1, 1, 1);
+
+   return color;
+}
+
 
 float3 iblBoxDiffuse( Surface surface, ProbeData probe)
 {
@@ -126,9 +152,14 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       {
          blendVal[i] = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
       }
-      else
+      else if (probes[i].type == 1) //sphere
       {
          blendVal[i] = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+      }
+      else //skylight
+      {
+         //
+         blendVal[i] = 1;
       }
 
       blendVal[i] = saturate(blendVal[i]);
@@ -202,9 +233,18 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       if (blendVal[i] == 0)
          continue;
 
-      irradiance += blendFactor[i]*iblBoxDiffuse(surface, probes[i]);
-      
-      specular += blendFactor[i]*F*iblBoxSpecular(surface, probes[i]);
+      if (probes[i].type == 2) //skylight
+      {
+         irradiance += blendFactor[i] * iblSkylightDiffuse(surface, probes[i]);
+
+         specular += blendFactor[i] * F * iblSkylightSpecular(surface, probes[i]);
+      }
+      else
+      {
+         irradiance += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
+
+         specular += blendFactor[i] * F*iblBoxSpecular(surface, probes[i]);
+      }
    }
 
    //final diffuse color
@@ -217,7 +257,14 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendFactor[i] * iblBoxSpecular(surface, probes[i]);
+      //if (probes[i].type == 2) //skylight
+      //{
+         cubeColor += blendFactor[i] * iblSkylightSpecular(surface, probes[i]);
+      /*}
+      else
+      {
+         cubeColor += blendFactor[i] * iblBoxSpecular(surface, probes[i]);
+      }*/
    }
 
    return float4(cubeColor, 1);
@@ -225,7 +272,14 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      cubeColor += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
+      //if (probes[i].type == 2) //skylight
+      //{
+         cubeColor += blendFactor[i] * iblSkylightDiffuse(surface, probes[i]);
+      /*}
+      else
+      {
+         cubeColor += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
+      }*/
    }
 
    return float4(cubeColor, 1);

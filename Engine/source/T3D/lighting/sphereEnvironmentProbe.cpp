@@ -91,6 +91,8 @@ void SphereEnvironmentProbe::initPersistFields()
 {
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
+
+   removeField("scale");
 }
 
 void SphereEnvironmentProbe::inspectPostApply()

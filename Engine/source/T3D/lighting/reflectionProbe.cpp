@@ -106,6 +106,7 @@ ReflectionProbe::ReflectionProbe()
    mDirty = false;
 
    mRadius = 10;
+   mObjScale = Point3F::One * 10;
    mProbeRefScale = Point3F::One*10;
 
    mUseCubemap = false;
@@ -159,17 +160,19 @@ void ReflectionProbe::initPersistFields()
    addGroup("Rendering");
       addProtectedField("enabled", TypeBool, Offset(mEnabled, ReflectionProbe),
          &_setEnabled, &defaultProtectedGetFn, "Regenerate Voxel Grid");
-
-     addField("radius", TypeF32, Offset(mRadius, ReflectionProbe), "The name of the material used to render the mesh.");
-
-     //addProtectedField("EditPosOffset", TypeBool, Offset(mEditPosOffset, ReflectionProbe),
-     //   &_toggleEditPosOffset, &defaultProtectedGetFn, "Toggle Edit Pos Offset Mode", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
    endGroup("Rendering");
 
    addGroup("Reflection");
+      addProtectedField("radius", TypeF32, Offset(mRadius, ReflectionProbe), &_setRadius, &defaultProtectedGetFn, 
+         "The name of the material used to render the mesh.");
+
+      addProtectedField("EditPosOffset", TypeBool, Offset(mEditPosOffset, ReflectionProbe),
+      &_toggleEditPosOffset, &defaultProtectedGetFn, "Toggle Edit Pos Offset Mode", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
+
 	   addField("refOffset", TypePoint3F, Offset(mProbeRefOffset, ReflectionProbe), "");
       addField("refScale", TypePoint3F, Offset(mProbeRefScale, ReflectionProbe), "");
-      addField("ReflectionMode", TypeReflectionModeEnum, Offset(mReflectionModeType, ReflectionProbe),
+
+      addProtectedField("ReflectionMode", TypeReflectionModeEnum, Offset(mReflectionModeType, ReflectionProbe), &_setReflectionMode, &defaultProtectedGetFn,
          "The type of mesh data to use for collision queries.");
 
       addField("StaticCubemap", TypeCubemapName, Offset(mCubemapName, ReflectionProbe), "Cubemap used instead of reflection texture if fullReflect is off.");
@@ -217,15 +220,7 @@ bool ReflectionProbe::_doBake(void *object, const char *index, const char *data)
 {
    ReflectionProbe* probe = reinterpret_cast< ReflectionProbe* >(object);
 
-   //if (probe->mDirty)
-   //   probe->bake(probe->mReflectionPath, 256);
-
-   ReflectionProbe *clientProbe = (ReflectionProbe*)probe->getClientObject();
-
-   if (clientProbe)
-   {
-      clientProbe->bake();
-   }
+   probe->bake();
 
    return false;
 }
@@ -236,10 +231,37 @@ bool ReflectionProbe::_toggleEditPosOffset(void *object, const char *index, cons
 
    probe->mEditPosOffset = !probe->mEditPosOffset;
 
-   //if (probe->mDirty)
-   //   probe->bake(probe->mReflectionPath, 256);
-
    return false;
+}
+
+bool ReflectionProbe::_setRadius(void *object, const char *index, const char *data)
+{
+   ReflectionProbe* probe = reinterpret_cast<ReflectionProbe*>(object);
+
+   if (probe->mProbeShapeType != ProbeRenderInst::Sphere)
+      return false;
+
+   probe->mObjScale = Point3F(probe->mRadius, probe->mRadius, probe->mRadius);
+   
+   return true;
+}
+
+bool ReflectionProbe::_setReflectionMode(void *object, const char *index, const char *data)
+{
+   ReflectionProbe* probe = reinterpret_cast<ReflectionProbe*>(object);
+
+   if (data == "Static Cubemap")
+   {
+      probe->mReflectionModeType = StaticCubemap;
+   }
+   else if (data == "Baked Cubemap")
+   {
+      //Clear our cubemap if we changed it to be baked, just for cleanliness
+      probe->mReflectionModeType = BakedCubemap;
+      probe->mCubemapName = "";
+   }
+
+   return true;
 }
 
 bool ReflectionProbe::onAdd()
@@ -249,9 +271,8 @@ bool ReflectionProbe::onAdd()
 
    mEditPosOffset = false;
 
-   mObjBox.minExtents.set(-1, -1, -1);
-   mObjBox.maxExtents.set(1, 1, 1);
-   //mObjScale.set(mRadius/2, mRadius/2, mRadius/2);
+   mObjBox.minExtents.set(-0.5, -0.5, -0.5);
+   mObjBox.maxExtents.set(0.5, 0.5, 0.5);
 
    // Skip our transform... it just dirties mask bits.
    Parent::setTransform(mObjToWorld);
@@ -266,7 +287,7 @@ bool ReflectionProbe::onAdd()
       if (!mPersistentId)
          mPersistentId = getOrCreatePersistentId();
 
-      mProbeUniqueID = std::to_string(mPersistentId->getUUID().getHash()).c_str();
+      mProbeUniqueID = String::ToString(mPersistentId->getUUID().getHash());
    }
 
    // Refresh this object's material (if any)
@@ -330,6 +351,49 @@ void ReflectionProbe::setTransform(const MatrixF & mat)
    setMaskBits(TransformMask);
 }
 
+const MatrixF& ReflectionProbe::getTransform() const 
+{ 
+   if (!mEditPosOffset)
+      return mObjToWorld; 
+   else
+   {
+      MatrixF transformMat = MatrixF::Identity;
+      transformMat.setPosition(mProbeRefOffset);
+
+      return transformMat;
+   }
+}
+
+void ReflectionProbe::setScale(const VectorF &scale)
+{
+   if (!mEditPosOffset)
+      Parent::setScale(scale);
+   else
+      mProbeRefScale = scale;
+
+   mDirty = true;
+
+   // Dirty our network mask so that the new transform gets
+   // transmitted to the client object
+   setMaskBits(TransformMask);
+}
+
+const VectorF& ReflectionProbe::getScale() const
+{ 
+   if (!mEditPosOffset)
+      return mObjScale;
+   else
+      return mProbeRefScale;
+}
+
+bool ReflectionProbe::writeField(StringTableEntry fieldname, const char *value)
+{
+   if (fieldname == StringTable->insert("Bake") || fieldname == StringTable->insert("EditPosOffset"))
+      return false;
+
+   return Parent::writeField(fieldname, value);
+}
+
 U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
 {
    // Allow the Parent to get a crack at writing its info
@@ -338,8 +402,9 @@ U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream
    // Write our transform information
    if (stream->writeFlag(mask & TransformMask))
    {
-      mathWrite(*stream, getTransform());
-      mathWrite(*stream, getScale());
+      stream->writeFlag(mEditPosOffset);
+      mathWrite(*stream, mObjToWorld);
+      mathWrite(*stream, mObjScale);
       mathWrite(*stream, mProbeRefOffset);
       mathWrite(*stream, mProbeRefScale);
    }
@@ -385,10 +450,13 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if (stream->readFlag())  // TransformMask
    {
+      mEditPosOffset = stream->readFlag();
       mathRead(*stream, &mObjToWorld);
       mathRead(*stream, &mObjScale);
 
-      setTransform(mObjToWorld);
+      Parent::setTransform(mObjToWorld);
+
+      resetWorldBox();
 
       mathRead(*stream, &mProbeRefOffset);
       mathRead(*stream, &mProbeRefScale);      
@@ -491,7 +559,9 @@ void ReflectionProbe::updateProbeParams()
    mProbeInfo->mTransform = getWorldTransform();
 
    mProbeInfo->mPosition = getPosition();
-   mObjScale.set(mRadius, mRadius, mRadius);
+
+   if(mProbeShapeType == ProbeRenderInst::Sphere)
+      mObjScale.set(mRadius, mRadius, mRadius);
 
    // Skip our transform... it just dirties mask bits.
    Parent::setTransform(mObjToWorld);
@@ -783,19 +853,24 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
    // Base the sphere color on the light color.
    ColorI color = ColorI(255, 0, 255, 63);
 
-   const MatrixF worldToObjectXfm = getTransform();
+   const MatrixF worldToObjectXfm = mObjToWorld;
    if (mProbeShapeType == ProbeRenderInst::Sphere)
    {
       draw->drawSphere(desc, mRadius, getPosition(), color);
    }
    else
    {
-      Box3F projCube(-Point3F(mRadius, mRadius, mRadius),Point3F(mRadius, mRadius, mRadius));
+      Point3F tscl = worldToObjectXfm.getScale();
+
+      Box3F projCube(-mObjScale/2, mObjScale / 2);
       projCube.setCenter(getPosition());
       draw->drawCube(desc, projCube, color, &worldToObjectXfm);
    }
-   Box3F refCube = Box3F(-mProbeRefScale/2, mProbeRefScale/2);
-   refCube.setCenter(getPosition()+mProbeRefOffset);
+
+   Point3F renderPos = getRenderTransform().getPosition();
+
+   Box3F refCube = Box3F(-mProbeRefScale / 2, mProbeRefScale / 2);
+   refCube.setCenter(renderPos + mProbeRefOffset);
    color = ColorI(0, 255, 255, 63);
    draw->drawCube(desc, refCube, color, &worldToObjectXfm);
 }

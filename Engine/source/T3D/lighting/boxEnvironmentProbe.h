@@ -108,7 +108,7 @@ public:
    virtual void updateProbeParams();
 
    // This is the function that allows this object to submit itself for rendering
-   void prepRenderImage(SceneRenderState *state);
+   //void prepRenderImage(SceneRenderState *state);
 
    void setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat);
 };

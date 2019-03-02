@@ -484,7 +484,7 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       const MatrixF& getWorldTransform() const { return mWorldToObj; }
 
       /// Returns the scale of the object
-      const VectorF& getScale() const { return mObjScale; }
+      virtual const VectorF& getScale() const { return mObjScale; }
 
       /// Returns the bounding box for this object in local coordinates.
       const Box3F& getObjBox() const { return mObjBox; }

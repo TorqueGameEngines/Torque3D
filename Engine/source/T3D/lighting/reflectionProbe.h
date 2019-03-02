@@ -186,6 +186,8 @@ public:
    static bool _setEnabled(void *object, const char *index, const char *data);
    static bool _doBake(void *object, const char *index, const char *data);
    static bool _toggleEditPosOffset(void *object, const char *index, const char *data);
+   static bool _setRadius(void *object, const char *index, const char *data);
+   static bool _setReflectionMode(void *object, const char *index, const char *data);
 
    // Handle when we are added to the scene and removed from the scene
    bool onAdd();
@@ -194,7 +196,12 @@ public:
    virtual void handleDeleteAction();
 
    // Override this so that we can dirty the network flag when it is called
-   void setTransform(const MatrixF &mat);
+   virtual void setTransform(const MatrixF &mat);
+   virtual const MatrixF& getTransform() const;
+   virtual void setScale(const VectorF &scale);
+   virtual const VectorF& getScale() const;
+
+   virtual bool writeField(StringTableEntry fieldname, const char *value);
 
    // This function handles sending the relevant data from the server
    // object to the client object

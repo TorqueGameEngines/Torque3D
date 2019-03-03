@@ -235,3 +235,5 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
    float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
    return final;
 }
+
+//Probe IBL stuff

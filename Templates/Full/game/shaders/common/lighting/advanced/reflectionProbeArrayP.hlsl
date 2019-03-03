@@ -32,26 +32,103 @@ uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 uniform float4    probeContribColors[MAX_PROBES]; 
 #endif
 
+//Probe IBL stuff
+struct ProbeData
+{
+   float3 wsPosition;
+   float radius;
+   float3 boxMin;
+   float3 boxMax;
+   float attenuation;
+   float4x4 worldToLocal;
+   uint probeIdx;
+   uint type; //box = 0, sphere = 1
+   float contribution;
+   float3 refPosition;
+   float3 pad;
+};
+
+float defineSkylightInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+{
+   //Ultimately this should be done to prioritize lastmost, and only contribute if nothing else has doneso yet
+   float contribution = 1.0;
+   return contribution;
+}
+
+float defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+{
+   float3 L = probe.wsPosition.xyz - surface.P;
+   float contribution = 1.0 - length(L) / probe.radius;
+   return contribution;
+}
+
+float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+{
+   float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
+
+   float3 boxMinLS = mul(probe.worldToLocal, float4(probe.boxMin, 1.0)).xyz;
+   float3 boxMaxLS = mul(probe.worldToLocal, float4(probe.boxMax, 1.0)).xyz;
+
+   float boxOuterRange = length(boxMaxLS - boxMinLS);
+   float boxInnerRange = boxOuterRange / probe.attenuation;
+
+   float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
+   localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
+
+   float contribution = max(localDir.x, max(localDir.y, localDir.z)) * -1;
+   return contribution;
+}
+
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
-/*float3 boxProject(float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax)
-{ 
-   float3 positionLS = mul(worldToObjArray[id], float4(wsEyeRay, 1.0)).xyz;
-   //float3 rayLS = mul(worldToObjArray[id], float4(wsEyeRay, 1.0)).xyz;
-   //float3 reflCameraLS = mul(worldToObjArray[id], float4(reflectDir), 1.0)).xyz;
+float3 boxProject(Surface surface, ProbeData probe) //float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax
+{
+   float3 nrdir = normalize(surface.R);
+   float3 offset = surface.P;
+   float3 plane1vec = (probe.boxMax - offset) / nrdir;
+   float3 plane2vec = (probe.boxMin - offset) / nrdir;
 
-   float3 nrdir = reflectDir;
-	float3 offset = wsPosition;
-   float3 plane1vec = (boxMax - offset) / nrdir;
-   float3 plane2vec = (boxMin - offset) / nrdir;
-	
-	float3 furthestPlane = max(plane1vec, plane2vec);
-	float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
+   float3 furthestPlane = max(plane1vec, plane2vec);
+   float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = offset + nrdir * dist;
 
-   return posonbox - boxWSPos;
-}*/
+   return posonbox - probe.refPosition;
+}
+
+float3 iblBoxDiffuse(Surface surface, ProbeData probe)
+{
+   float3 dir = boxProject(surface, probe);
+
+   float lod = surface.roughness*cubeMips;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx, lod).xyz;
+   if (probe.contribution>0)
+      return color*probe.contribution;
+   else
+      return float3(0, 0, 0);
+}
+
+float3 iblBoxSpecular(Surface surface, ProbeData probe)
+{
+   // BRDF
+   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
+
+   float3 dir = boxProject(surface, probe);
+
+   // Radiance (Specular)
+#if DEBUGVIZ_SPECCUBEMAP == 0
+   float lod = surface.roughness*cubeMips;
+#elif DEBUGVIZ_SPECCUBEMAP == 1
+   float lod = 0;
+#endif
+
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
+
+   if (probe.contribution>0)
+      return color*probe.contribution;
+   else
+      return float3(0, 0, 0);
+}
 
 float3 iblSkylightDiffuse(Surface surface, ProbeData probe)
 {
@@ -73,38 +150,7 @@ float3 iblSkylightSpecular(Surface surface, ProbeData probe)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, surface.N, probe.probeIdx, 0).xyz * (brdf.x + brdf.y);
-   //float3 color = float3(1, 1, 1);
-
-   return color;
-}
-
-
-float3 iblBoxDiffuse( Surface surface, ProbeData probe)
-{
-   float3 dir = boxProject(surface, probe);
-
-   float lod = surface.roughness*cubeMips;
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx, lod).xyz;
-
-   return color;
-}
-
-float3 iblBoxSpecular(Surface surface, ProbeData probe)
-{
-    // BRDF
-   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV,0.0,0.0)).xy;
-
-   float3 dir = boxProject(surface, probe);
-
-    // Radiance (Specular)
-#if DEBUGVIZ_SPECCUBEMAP == 0
-   float lod = surface.roughness*cubeMips;
-#elif DEBUGVIZ_SPECCUBEMAP == 1
-   float lod = 0;
-#endif
-
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, surface.N, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
 
    return color;
 }
@@ -125,7 +171,6 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }     
 
    int i = 0;
-   float blendVal[MAX_PROBES];
    float blendFactor[MAX_PROBES];
    float blendSum = 0;
    float blendFacSum = 0;
@@ -146,25 +191,27 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       probes[i].worldToLocal = worldToObjArray[i];
       probes[i].probeIdx = i;
       probes[i].type = probeConfigData[i].r;
-      probes[i].contribution = 0;
+      probes[i].contribution = 0; 
 
       if (probes[i].type == 0) //box
       {
-         blendVal[i] = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+         probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
       }
       else if (probes[i].type == 1) //sphere
       {
-         blendVal[i] = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+         probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
       }
       else //skylight
       {
          //
-         blendVal[i] = 1;
+         probes[i].contribution = defineSkylightInfluence(surface, probes[i], IN.wsEyeRay);
       }
 
-      blendVal[i] = saturate(blendVal[i]);
-      blendSum += blendVal[i];
-      invBlendSum += (1.0f - blendVal[i]);
+      if (probes[i].contribution>1 || probes[i].contribution<0)
+         probes[i].contribution = 0;
+
+      blendSum += probes[i].contribution;
+      invBlendSum += (1.0f - probes[i].contribution);
    }
 
    // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
@@ -176,14 +223,14 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    {
       if (numProbes>1)
       {
-         blendFactor[i] = ((1.0f - blendVal[i] / blendSum)) / (numProbes - 1);
-         blendFactor[i] *= ((1.0f - blendVal[i]) / invBlendSum);
+         blendFactor[i] = ((probes[i].contribution / blendSum)) / (numProbes - 1);
+         blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
          blendFacSum += blendFactor[i];
       }
       else
       {
-         blendFactor[i] = blendVal[i];
-         blendFacSum = blendVal[i];
+         blendFactor[i] = probes[i].contribution;
+         blendFacSum = probes[i].contribution;
       }
    }
 
@@ -199,10 +246,16 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    for (i = 0; i < numProbes; ++i)
    {
       blendFactor[i] *= invBlendSumWeighted;
+      probes[i].contribution = blendFactor[i];
    }
    
 #if DEBUGVIZ_ATTENUATION == 1
-   return float4(blendFacSum, blendFacSum, blendFacSum, 1);
+   float attenVis = 0;
+   for (i = 0; i < numProbes; ++i)
+   {
+      attenVis += probes[i].contribution;
+   }
+   return float4(attenVis, attenVis, attenVis, 1);
 #endif
 
 #if DEBUGVIZ_CONTRIB == 1
@@ -210,10 +263,10 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float3 finalContribColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      if (blendFactor[i] == 0)
+      if (probes[i].contribution == 0)
          continue;
 
-      finalContribColor += blendFactor[i] * probeContribColors[i].rgb;
+      finalContribColor += probes[i].contribution * probeContribColors[i].rgb;
    }
 
    return float4(finalContribColor, 1);
@@ -230,20 +283,18 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    kD *= 1.0 - surface.metalness;
    for (i = 0; i < numProbes; ++i)
    {
-      if (blendVal[i] == 0)
+      if (probes[i].contribution == 0)
          continue;
 
       if (probes[i].type == 2) //skylight
       {
-         irradiance += blendFactor[i] * iblSkylightDiffuse(surface, probes[i]);
-
-         specular += blendFactor[i] * F * iblSkylightSpecular(surface, probes[i]);
+         irradiance += iblSkylightDiffuse(surface, probes[i]);
+         specular += F*iblSkylightSpecular(surface, probes[i]);
       }
       else
       {
-         irradiance += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
-
-         specular += blendFactor[i] * F*iblBoxSpecular(surface, probes[i]);
+         irradiance += iblBoxDiffuse(surface, probes[i]);
+         specular += F*iblBoxSpecular(surface, probes[i]);
       }
    }
 
@@ -254,34 +305,38 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    return finalColor;
 
 #elif DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0
+
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      //if (probes[i].type == 2) //skylight
-      //{
-         cubeColor += blendFactor[i] * iblSkylightSpecular(surface, probes[i]);
-      /*}
+      if (probes[i].type == 2) //skylight
+      {
+         cubeColor += iblSkylightSpecular(surface, probes[i]);
+      }
       else
       {
-         cubeColor += blendFactor[i] * iblBoxSpecular(surface, probes[i]);
-      }*/
+         cubeColor += iblBoxSpecular(surface, probes[i]);
+      }
    }
 
    return float4(cubeColor, 1);
+
 #elif DEBUGVIZ_DIFFCUBEMAP == 1
+   
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      //if (probes[i].type == 2) //skylight
-      //{
-         cubeColor += blendFactor[i] * iblSkylightDiffuse(surface, probes[i]);
-      /*}
+      if (probes[i].type == 2) //skylight
+      {
+         cubeColor += iblSkylightDiffuse(surface, probes[i]);
+      }
       else
       {
-         cubeColor += blendFactor[i] * iblBoxDiffuse(surface, probes[i]);
-      }*/
+         cubeColor += iblBoxDiffuse(surface, probes[i]);
+      }
    }
 
    return float4(cubeColor, 1);
+
 #endif
 }

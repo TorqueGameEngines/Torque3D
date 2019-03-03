@@ -133,7 +133,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
 float3 iblSkylightDiffuse(Surface surface, ProbeData probe)
 {
    float lod = surface.roughness*cubeMips;
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.N, probe.probeIdx, lod).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, probe.probeIdx, lod).xyz;
 
    return color;
 }
@@ -150,7 +150,7 @@ float3 iblSkylightSpecular(Surface surface, ProbeData probe)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, surface.N, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, surface.R, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
 
    return color;
 }
@@ -175,7 +175,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float blendSum = 0;
    float blendFacSum = 0;
    float invBlendSum = 0;
-
+   int skyID = 0;
    //Set up our struct data
    ProbeData probes[MAX_PROBES];
 
@@ -204,7 +204,8 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       else //skylight
       {
          //
-         probes[i].contribution = defineSkylightInfluence(surface, probes[i], IN.wsEyeRay);
+         //probes[i].contribution = defineSkylightInfluence(surface, probes[i], IN.wsEyeRay);
+         skyID = i;
       }
 
       if (probes[i].contribution>1 || probes[i].contribution<0)
@@ -281,22 +282,22 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    //energy conservation
    float3 kD = 1.0.xxx - F;
    kD *= 1.0 - surface.metalness;
+   float contrib = 0;
    for (i = 0; i < numProbes; ++i)
    {
       if (probes[i].contribution == 0)
          continue;
 
-      if (probes[i].type == 2) //skylight
-      {
-         irradiance += iblSkylightDiffuse(surface, probes[i]);
-         specular += F*iblSkylightSpecular(surface, probes[i]);
-      }
-      else
+      if (probes[i].type < 2) //non-skylight
       {
          irradiance += iblBoxDiffuse(surface, probes[i]);
          specular += F*iblBoxSpecular(surface, probes[i]);
+         contrib +=probes[i].contribution;
       }
    }
+   contrib = saturate(contrib);
+   irradiance = lerp(iblSkylightDiffuse(surface, probes[skyID]),irradiance,contrib);
+   specular = lerp(F*iblSkylightSpecular(surface, probes[skyID]),specular,contrib);
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;

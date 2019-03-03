@@ -88,8 +88,9 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
 
    enum ProbeShapeType
    {
-      Sphere = 0,            ///< Sphere shaped
-      Box = 1,               ///< Box-based shape
+      Box = 0,            ///< Sphere shaped
+      Sphere = 1,               ///< Box-based shape
+      Skylight = 2
    };
 
    ProbeShapeType mProbeShapeType;

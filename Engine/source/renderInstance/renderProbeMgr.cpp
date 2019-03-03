@@ -333,8 +333,8 @@ void RenderProbeMgr::_setupStaticParameters()
       if (!curEntry.mIrradianceCubemap->isInitialised())
          continue;
 
-      if (curEntry.mIsSkylight)
-         continue;
+      //if (curEntry.mIsSkylight)
+      //   continue;
 
 	   mMipCount = curEntry.mCubemap.getPointer()->getMipMapLevels();
 
@@ -350,7 +350,7 @@ void RenderProbeMgr::_setupStaticParameters()
       probeBBMinData[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
       probeBBMaxData[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);
 
-      probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType == ProbeRenderInst::Sphere ? 1 : 0, 
+      probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType, 
          curEntry.mRadius,
          attenuation,
          1);
@@ -690,6 +690,8 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
 {
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_Bake, ColorI::WHITE);
 
+   bool serverObj = probe->isServerObject();
+
    Con::warnf("RenderProbeMgr::bakeProbe() - Beginning bake!");
    U32 startMSTime = Platform::getRealMilliseconds();
 
@@ -699,6 +701,9 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
    bool renderWithProbes = Con::getIntVariable("$pref::ReflectionProbes::RenderWithProbes", false);
 
    ReflectionProbe *clientProbe = static_cast<ReflectionProbe*>(probe->getClientObject());
+
+   if (clientProbe == nullptr)
+      return;
 
    String probePrefilterPath = clientProbe->getPrefilterMapPath();
    String probeIrradPath = clientProbe->getIrradianceMapPath();

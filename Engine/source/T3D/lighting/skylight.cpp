@@ -91,6 +91,12 @@ void Skylight::initPersistFields()
 {
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
+
+   removeField("radius");
+   removeField("scale");
+   removeField("EditPosOffset");
+   removeField("refOffset");
+   removeField("refScale");
 }
 
 void Skylight::inspectPostApply()
@@ -151,7 +157,7 @@ void Skylight::updateProbeParams()
 {
    Parent::updateProbeParams();
 
-   mProbeInfo->mProbeShapeType = ProbeRenderInst::Sphere;
+   mProbeInfo->mProbeShapeType = ProbeRenderInst::Skylight;
 
    mProbeInfo->setPosition(getPosition());
 

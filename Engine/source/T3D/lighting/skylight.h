@@ -43,7 +43,6 @@
 
 class BaseMatInstance;
 
-
 //-----------------------------------------------------------------------------
 // This class implements a basic SceneObject that can exist in the world at a
 // 3D position and render itself. There are several valid ways to render an

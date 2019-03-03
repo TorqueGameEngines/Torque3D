@@ -138,151 +138,11 @@ new SimGroup(MissionGroup) {
       persistentId = "8072e1be-2846-11e7-9f56-abd46b190c60";
    };
    new BoxEnvironmentProbe() {
-      enabled = "0";
+      enabled = "1";
       refOffset = "0 0 0";
       refScale = "10 10 10";
       ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "f281a5ff-1ae9-11e9-9c9a-df9135416cc7";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "e9c2eed2-1ae9-11e9-9c9a-df9135416cc7";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "f4db4dde-1ae9-11e9-9c9a-df9135416cc7";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "9b2db461-3291-11e9-8898-df29fd75d18c";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "9850277f-3291-11e9-8898-df29fd75d18c";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "9752cd1f-3291-11e9-8898-df29fd75d18c";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "9536f9d8-3291-11e9-8898-df29fd75d18c";
-         GroundColor = "0.8 0.7 0.5 1";
-         IndirectLight = "1 1 1 1";
-         IndirectLightMode = "Spherical Harmonics";
-         Intensity = "1";
-         posOffset = "0 0 0";
-         radius = "5";
-         reflectionPath = "levels/probeTest/probes/";
-         SkyColor = "0.5 0.5 1 1";
-   };
-   new BoxEnvironmentProbe() {
-      enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
+      position = "-9.53882 10.3135 4.01808";
       rotation = "1 0 0 0";
       scale = "10 10 10";
       canSave = "1";
@@ -298,16 +158,36 @@ new SimGroup(MissionGroup) {
          SkyColor = "0.5 0.5 1 1";
    };
    new BoxEnvironmentProbe() {
-      enabled = "0";
+      enabled = "1";
       refOffset = "0 0 0";
       refScale = "10 10 10";
       ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
+      position = "-9.33192 0 4.85356";
       rotation = "1 0 0 0";
       scale = "10 10 10";
       canSave = "1";
       canSaveDynamicFields = "1";
-      persistentId = "8856e1d2-3291-11e9-8898-df29fd75d18c";
+      persistentId = "f281a5ff-1ae9-11e9-9c9a-df9135416cc7";
+         GroundColor = "0.8 0.7 0.5 1";
+         IndirectLight = "1 1 1 1";
+         IndirectLightMode = "Spherical Harmonics";
+         Intensity = "1";
+         posOffset = "0 0 0";
+         radius = "5";
+         reflectionPath = "levels/probeTest/probes/";
+         SkyColor = "0.5 0.5 1 1";
+   };
+   new BoxEnvironmentProbe() {
+      enabled = "1";
+      refOffset = "0 0 0";
+      refScale = "10 10 10";
+      ReflectionMode = "Baked Cubemap";
+      position = "0 -10.0137 4.69386";
+      rotation = "1 0 0 0";
+      scale = "10 10 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "e9c2eed2-1ae9-11e9-9c9a-df9135416cc7";
          GroundColor = "0.8 0.7 0.5 1";
          IndirectLight = "1 1 1 1";
          IndirectLightMode = "Spherical Harmonics";
@@ -327,7 +207,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -342,7 +222,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -357,7 +237,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -372,7 +252,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -387,7 +267,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -402,7 +282,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707107 0 0.5 0";
+      surface = "0.707107 0 0 0.707106 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";
@@ -417,7 +297,7 @@ new SimGroup(MissionGroup) {
 
       surface = "0 0 0 1 0 0 0.5";
       surface = "0 1 0 0 0 0 -0.5";
-      surface = "0.707107 0 0 0.707106 0 0.5 0";
+      surface = "0.707107 0 0 0.707107 0 0.5 0";
       surface = "0 0.707107 -0.707107 0 0 -0.5 -2.84217e-14";
       surface = "0.5 0.5 -0.5 0.5 -0.5 0 -9.93411e-08";
       surface = "0.5 -0.5 0.5 0.5 0.5 0 -9.93411e-08";

@@ -82,17 +82,18 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
-float3 boxProject(Surface surface, ProbeData probe) //float3 wsPosition, float3 wsEyeRay, float3 reflectDir, float3 boxWSPos, float3 boxMin, float3 boxMax
+float3 boxProject(Surface surface, ProbeData probe)
 {
-   float3 nrdir = normalize(surface.R);
-   float3 offset = surface.P;
-   float3 plane1vec = (probe.boxMax - offset) / nrdir;
-   float3 plane2vec = (probe.boxMin - offset) / nrdir;
-
+   float3 RayLS = mul(probe.worldToLocal, float4(surface.R,0.0)).xyz;
+   float3 PositionLS = mul( probe.worldToLocal,  float4(surface.P,1.0));
+   
+   float3 unit = probe.boxMax-probe.boxMin;
+   float3 plane1vec  = (unit - PositionLS) / RayLS;
+   float3 plane2vec = (-unit - PositionLS) / RayLS;
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
-   float3 posonbox = offset + nrdir * dist;
-
+   float3 posonbox = surface.P + surface.R * dist;
+   
    return posonbox - probe.refPosition;
 }
 

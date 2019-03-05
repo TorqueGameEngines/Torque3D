@@ -3,7 +3,8 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2017, assimp team
+Copyright (c) 2006-2019, assimp team
+
 
 
 All rights reserved.
@@ -45,8 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ObjFileMtlImporter.h"
 #include "ObjTools.h"
 #include "ObjFileData.h"
-#include "ParsingUtils.h"
-#include "BaseImporter.h"
+#include <assimp/ParsingUtils.h>
+#include <assimp/BaseImporter.h>
 #include <assimp/DefaultIOSystem.h>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/material.h>
@@ -60,7 +61,7 @@ const std::string ObjFileParser::DEFAULT_MATERIAL = AI_DEFAULT_MATERIAL_NAME;
 ObjFileParser::ObjFileParser()
 : m_DataIt()
 , m_DataItEnd()
-, m_pModel( NULL )
+, m_pModel( nullptr )
 , m_uiLine( 0 )
 , m_pIO( nullptr )
 , m_progress( nullptr )
@@ -73,7 +74,7 @@ ObjFileParser::ObjFileParser( IOStreamBuffer<char> &streamBuffer, const std::str
                               const std::string &originalObjFileName) :
     m_DataIt(),
     m_DataItEnd(),
-    m_pModel(NULL),
+    m_pModel(nullptr),
     m_uiLine(0),
     m_pIO( io ),
     m_progress(progress),
@@ -82,7 +83,7 @@ ObjFileParser::ObjFileParser( IOStreamBuffer<char> &streamBuffer, const std::str
     std::fill_n(m_buffer,Buffersize,0);
 
     // Create the model instance to store all the data
-    m_pModel = new ObjFile::Model();
+    m_pModel.reset(new ObjFile::Model());
     m_pModel->m_ModelName = modelName;
 
     // create default material and store it
@@ -96,8 +97,6 @@ ObjFileParser::ObjFileParser( IOStreamBuffer<char> &streamBuffer, const std::str
 }
 
 ObjFileParser::~ObjFileParser() {
-    delete m_pModel;
-    m_pModel = NULL;
 }
 
 void ObjFileParser::setBuffer( std::vector<char> &buffer ) {
@@ -106,7 +105,7 @@ void ObjFileParser::setBuffer( std::vector<char> &buffer ) {
 }
 
 ObjFile::Model *ObjFileParser::GetModel() const {
-    return m_pModel;
+    return m_pModel.get();
 }
 
 void ObjFileParser::parseFile( IOStreamBuffer<char> &streamBuffer ) {
@@ -114,23 +113,22 @@ void ObjFileParser::parseFile( IOStreamBuffer<char> &streamBuffer ) {
     //const unsigned int updateProgressEveryBytes = 100 * 1024;
     unsigned int progressCounter = 0;
     const unsigned int bytesToProcess = static_cast<unsigned int>(streamBuffer.size());
-    const unsigned int progressTotal = 3 * bytesToProcess;
-    const unsigned int progressOffset = bytesToProcess;
+    const unsigned int progressTotal = bytesToProcess;
     unsigned int processed = 0;
     size_t lastFilePos( 0 );
 
     std::vector<char> buffer;
-    while ( streamBuffer.getNextDataLine( buffer, '\\' ) ) {
+    while ( streamBuffer.getNextDataLine( buffer, '\0' ) ) {
         m_DataIt = buffer.begin();
         m_DataItEnd = buffer.end();
 
         // Handle progress reporting
         const size_t filePos( streamBuffer.getFilePos() );
         if ( lastFilePos < filePos ) {
-            processed += static_cast<unsigned int>(filePos);
+            processed = static_cast<unsigned int>(filePos);
             lastFilePos = filePos;
             progressCounter++;
-            m_progress->UpdateFileRead( progressOffset + processed * 2, progressTotal );
+            m_progress->UpdateFileRead( processed, progressTotal );
         }
 
         // parse line
@@ -353,7 +351,8 @@ void ObjFileParser::getHomogeneousVector3( std::vector<aiVector3D> &point3d_arra
     copyNextWord( m_buffer, Buffersize );
     w = ( ai_real ) fast_atof( m_buffer );
 
-    ai_assert( w != 0 );
+    if (w == 0)
+      throw DeadlyImportError("OBJ: Invalid component in homogeneous vector (Division by zero)");
 
     point3d_array.push_back( aiVector3D( x/w, y/w, z/w ) );
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
@@ -426,7 +425,7 @@ void ObjFileParser::getFace( aiPrimitiveType type ) {
 
         if ( *m_DataIt =='/' ) {
             if (type == aiPrimitiveType_POINT) {
-                DefaultLogger::get()->error("Obj: Separator unexpected in point statement");
+                ASSIMP_LOG_ERROR("Obj: Separator unexpected in point statement");
             }
             if (iPos == 0) {
                 //if there are no texture coordinates in the file, but normals
@@ -478,8 +477,6 @@ void ObjFileParser::getFace( aiPrimitiveType type ) {
             } else {
                 //On error, std::atoi will return 0 which is not a valid value
                 delete face;
-                delete m_pModel;
-                m_pModel = nullptr;
                 throw DeadlyImportError("OBJ: Invalid face indice");
             }
 
@@ -488,7 +485,7 @@ void ObjFileParser::getFace( aiPrimitiveType type ) {
     }
 
     if ( face->m_vertices.empty() ) {
-        DefaultLogger::get()->error("Obj: Ignoring empty face");
+        ASSIMP_LOG_ERROR("Obj: Ignoring empty face");
         // skip line and clean up
         m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
         delete face;
@@ -558,7 +555,7 @@ void ObjFileParser::getMaterialDesc() {
 			// This may be the case if the material library is missing. We don't want to lose all
 			// materials if that happens, so create a new named material instead of discarding it
 			// completely.
-			DefaultLogger::get()->error("OBJ: failed to locate material " + strName + ", creating new material");
+            ASSIMP_LOG_ERROR("OBJ: failed to locate material " + strName + ", creating new material");
 			m_pModel->m_pCurrentMaterial = new ObjFile::Material();
 			m_pModel->m_pCurrentMaterial->MaterialName.Set(strName);
 			m_pModel->m_MaterialLib.push_back(strName);
@@ -605,7 +602,7 @@ void ObjFileParser::getMaterialLib() {
 
 	// Check if directive is valid.
     if ( 0 == strMatName.length() ) {
-        DefaultLogger::get()->warn( "OBJ: no name for material library specified." );
+        ASSIMP_LOG_WARN( "OBJ: no name for material library specified." );
         return;
     }
 
@@ -614,19 +611,20 @@ void ObjFileParser::getMaterialLib() {
         if ( '/' != *path.rbegin() ) {
           path += '/';
         }
-        absName = path + strMatName;
+        absName += path;
+        absName += strMatName;
     } else {
         absName = strMatName;
     }
-    IOStream *pFile = m_pIO->Open( absName );
 
-    if (!pFile ) {
-        DefaultLogger::get()->error("OBJ: Unable to locate material file " + strMatName);
+    IOStream *pFile = m_pIO->Open( absName );
+    if ( nullptr == pFile ) {
+        ASSIMP_LOG_ERROR("OBJ: Unable to locate material file " + strMatName);
         std::string strMatFallbackName = m_originalObjFileName.substr(0, m_originalObjFileName.length() - 3) + "mtl";
-        DefaultLogger::get()->info("OBJ: Opening fallback material file " + strMatFallbackName);
+        ASSIMP_LOG_INFO("OBJ: Opening fallback material file " + strMatFallbackName);
         pFile = m_pIO->Open(strMatFallbackName);
         if (!pFile) {
-            DefaultLogger::get()->error("OBJ: Unable to locate fallback material file " + strMatFallbackName);
+            ASSIMP_LOG_ERROR("OBJ: Unable to locate fallback material file " + strMatFallbackName);
             m_DataIt = skipLine<DataArrayIt>(m_DataIt, m_DataItEnd, m_uiLine);
             return;
         }
@@ -641,7 +639,7 @@ void ObjFileParser::getMaterialLib() {
     m_pIO->Close( pFile );
 
     // Importing the material library
-    ObjFileMtlImporter mtlImporter( buffer, strMatName, m_pModel );
+    ObjFileMtlImporter mtlImporter( buffer, strMatName, m_pModel.get() );
 }
 
 // -------------------------------------------------------------------
@@ -661,7 +659,7 @@ void ObjFileParser::getNewMaterial() {
     std::map<std::string, ObjFile::Material*>::iterator it = m_pModel->m_MaterialMap.find( strMat );
     if ( it == m_pModel->m_MaterialMap.end() ) {
         // Show a warning, if material was not found
-        DefaultLogger::get()->warn("OBJ: Unsupported material requested: " + strMat);
+        ASSIMP_LOG_WARN("OBJ: Unsupported material requested: " + strMat);
         m_pModel->m_pCurrentMaterial = m_pModel->m_pDefaultMaterial;
     } else {
         // Set new material
@@ -818,7 +816,7 @@ void ObjFileParser::createMesh( const std::string &meshName )
     }
     else
     {
-        DefaultLogger::get()->error("OBJ: No object detected to attach a new mesh instance.");
+        ASSIMP_LOG_ERROR("OBJ: No object detected to attach a new mesh instance.");
     }
 }
 
@@ -852,7 +850,7 @@ bool ObjFileParser::needsNewMesh( const std::string &materialName )
 void ObjFileParser::reportErrorTokenInFace()
 {
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
-    DefaultLogger::get()->error("OBJ: Not supported token in face description detected");
+    ASSIMP_LOG_ERROR("OBJ: Not supported token in face description detected");
 }
 
 // -------------------------------------------------------------------

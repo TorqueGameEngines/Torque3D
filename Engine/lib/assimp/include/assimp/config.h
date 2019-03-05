@@ -3,7 +3,8 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2017, assimp team
+Copyright (c) 2006-2018, assimp team
+
 
 All rights reserved.
 
@@ -497,6 +498,13 @@ enum aiComponent
 #define AI_CONFIG_PP_FID_ANIM_ACCURACY              \
     "PP_FID_ANIM_ACCURACY"
 
+// ---------------------------------------------------------------------------
+/** @brief Input parameter to the #aiProcess_FindInvalidData step:
+ *  Set to true to ignore texture coordinates. This may be useful if you have
+ *  to assign different kind of textures like one for the summer or one for the winter.
+ */
+#define AI_CONFIG_PP_FID_IGNORE_TEXTURECOORDS        \
+    "PP_FID_IGNORE_TEXTURECOORDS"
 
 // TransformUVCoords evaluates UV scalings
 #define AI_UVTRAFO_SCALING 0x1
@@ -642,13 +650,13 @@ enum aiComponent
     "IMPORT_FBX_OPTIMIZE_EMPTY_ANIMATION_CURVES"
 
 // ---------------------------------------------------------------------------
-/** @brief Set whether the fbx importer will search for embedded loaded textures, where no embedded texture data is provided.
+/** @brief Set whether the fbx importer will use the legacy embedded texture naming.
 *
 * The default value is false (0)
 * Property type: bool
 */
-#define AI_CONFIG_IMPORT_FBX_SEARCH_EMBEDDED_TEXTURES \
-	"IMPORT_FBX_SEARCH_EMBEDDED_TEXTURES"
+#define AI_CONFIG_IMPORT_FBX_EMBEDDED_TEXTURES_LEGACY_NAMING \
+	"AI_CONFIG_IMPORT_FBX_EMBEDDED_TEXTURES_LEGACY_NAMING"
 	
 // ---------------------------------------------------------------------------
 /** @brief  Set the vertex animation keyframe to be imported
@@ -672,6 +680,12 @@ enum aiComponent
 #define AI_CONFIG_IMPORT_SMD_KEYFRAME       "IMPORT_SMD_KEYFRAME"
 #define AI_CONFIG_IMPORT_UNREAL_KEYFRAME    "IMPORT_UNREAL_KEYFRAME"
 
+// ---------------------------------------------------------------------------
+/** Smd load multiple animations
+ *
+ *  Property type: bool. Default value: true.
+ */
+#define AI_CONFIG_IMPORT_SMD_LOAD_ANIMATION_LIST "IMPORT_SMD_LOAD_ANIMATION_LIST"
 
 // ---------------------------------------------------------------------------
 /** @brief  Configures the AC loader to collect all surfaces which have the
@@ -933,6 +947,16 @@ enum aiComponent
  */
 #define AI_CONFIG_IMPORT_COLLADA_IGNORE_UP_DIRECTION "IMPORT_COLLADA_IGNORE_UP_DIRECTION"
 
+// ---------------------------------------------------------------------------
+/** @brief Specifies whether the Collada loader should use Collada names as node names.
+ *
+ * If this property is set to true, the Collada names will be used as the
+ * node name. The default is to use the id tag (resp. sid tag, if no id tag is present)
+ * instead.
+ * Property type: Bool. Default value: false.
+ */
+#define AI_CONFIG_IMPORT_COLLADA_USE_COLLADA_NAMES "IMPORT_COLLADA_USE_COLLADA_NAMES"
+
 // ---------- All the Export defines ------------
 
 /** @brief Specifies the xfile use double for real values of float
@@ -941,6 +965,11 @@ enum aiComponent
  */
 
 #define AI_CONFIG_EXPORT_XFILE_64BIT "EXPORT_XFILE_64BIT"
+
+/**
+ *
+ */
+#define AI_CONFIG_EXPORT_POINT_CLOUDS "EXPORT_POINT_CLOUDS"
 
 /**
  *  @brief  Specifies a gobal key factor for scale, float value

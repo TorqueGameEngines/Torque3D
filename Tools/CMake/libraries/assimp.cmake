@@ -23,6 +23,7 @@
 project(assimp)
 
 addPath("${libDir}/assimp/code")
+addPath("${libDir}/assimp/code/Importer")
 addPath("${libDir}/assimp/contrib")
 
 addPath("${libDir}/assimp/contrib/clipper")
@@ -45,6 +46,7 @@ addDef(ASSIMP_BUILD_NO_OPENGEX_IMPORTER)
 addDef(ASSIMP_BUILD_NO_IRRMESH_IMPORTER)
 addDef(ASSIMP_BUILD_NO_IRR_IMPORTER)
 addDef(ASSIMP_BUILD_NO_OWN_ZLIB)
+addDef(ASSIMP_BUILD_NO_STEP_IMPORTER)
 
 addInclude(${libDir}/assimp)
 addInclude(${libDir}/assimp/include/)

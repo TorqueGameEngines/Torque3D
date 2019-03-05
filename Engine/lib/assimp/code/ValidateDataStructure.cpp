@@ -3,7 +3,8 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2017, assimp team
+Copyright (c) 2006-2019, assimp team
+
 
 
 All rights reserved.
@@ -49,8 +50,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // internal headers
 #include "ValidateDataStructure.h"
-#include "BaseImporter.h"
-#include "fast_atof.h"
+#include <assimp/BaseImporter.h>
+#include <assimp/fast_atof.h>
 #include "ProcessHelper.h"
 #include <memory>
 
@@ -105,7 +106,7 @@ void ValidateDSProcess::ReportWarning(const char* msg,...)
     ai_assert(iLen > 0);
 
     va_end(args);
-    DefaultLogger::get()->warn("Validation warning: " + std::string(szBuffer,iLen));
+    ASSIMP_LOG_WARN("Validation warning: " + std::string(szBuffer,iLen));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -179,23 +180,21 @@ inline void ValidateDSProcess::DoValidationEx(T** parray, unsigned int size,
 
 // ------------------------------------------------------------------------------------------------
 template <typename T>
-inline void ValidateDSProcess::DoValidationWithNameCheck(T** array,
-    unsigned int size, const char* firstName,
-    const char* secondName)
-{
+inline
+void ValidateDSProcess::DoValidationWithNameCheck(T** array, unsigned int size, const char* firstName, const char* secondName) {
     // validate all entries
     DoValidationEx(array,size,firstName,secondName);
 
-    for (unsigned int i = 0; i < size;++i)
-    {
+    for (unsigned int i = 0; i < size;++i) {
         int res = HasNameMatch(array[i]->mName,mScene->mRootNode);
-        if (!res)   {
+        if (0 == res)   {
+            const std::string name = static_cast<char*>(array[i]->mName.data);
             ReportError("aiScene::%s[%i] has no corresponding node in the scene graph (%s)",
-                firstName,i,array[i]->mName.data);
-        }
-        else if (1 != res)  {
+                firstName,i, name.c_str());
+        } else if (1 != res)  {
+            const std::string name = static_cast<char*>(array[i]->mName.data);
             ReportError("aiScene::%s[%i]: there are more than one nodes with %s as name",
-                firstName,i,array[i]->mName.data);
+                firstName,i, name.c_str());
         }
     }
 }
@@ -205,7 +204,7 @@ inline void ValidateDSProcess::DoValidationWithNameCheck(T** array,
 void ValidateDSProcess::Execute( aiScene* pScene)
 {
     this->mScene = pScene;
-    DefaultLogger::get()->debug("ValidateDataStructureProcess begin");
+    ASSIMP_LOG_DEBUG("ValidateDataStructureProcess begin");
 
     // validate the node graph of the scene
     Validate(pScene->mRootNode);
@@ -272,7 +271,7 @@ void ValidateDSProcess::Execute( aiScene* pScene)
     }
 
 //  if (!has)ReportError("The aiScene data structure is empty");
-    DefaultLogger::get()->debug("ValidateDataStructureProcess end");
+    ASSIMP_LOG_DEBUG("ValidateDataStructureProcess end");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -368,7 +367,7 @@ void ValidateDSProcess::Validate( const aiMesh* pMesh)
 
     // positions must always be there ...
     if (!pMesh->mNumVertices || (!pMesh->mVertices && !mScene->mFlags)) {
-        ReportError("The mesh contains no vertices");
+        ReportError("The mesh %s contains no vertices", pMesh->mName.C_Str());
     }
 
     if (pMesh->mNumVertices > AI_MAX_VERTICES) {
@@ -385,7 +384,7 @@ void ValidateDSProcess::Validate( const aiMesh* pMesh)
 
     // faces, too
     if (!pMesh->mNumFaces || (!pMesh->mFaces && !mScene->mFlags))   {
-        ReportError("Mesh contains no faces");
+        ReportError("Mesh %s contains no faces", pMesh->mName.C_Str());
     }
 
     // now check whether the face indexing layout is correct:
@@ -490,8 +489,12 @@ void ValidateDSProcess::Validate( const aiMesh* pMesh)
             {
                 if (pMesh->mBones[i]->mName == pMesh->mBones[a]->mName)
                 {
-                    ReportError("aiMesh::mBones[%i] has the same name as "
-                        "aiMesh::mBones[%i]",i,a);
+                    const char *name = "unknown";
+                    if (nullptr != pMesh->mBones[ i ]->mName.C_Str()) {
+                        name = pMesh->mBones[ i ]->mName.C_Str();
+                    }
+                    ReportError("aiMesh::mBones[%i], name = \"%s\" has the same name as "
+                        "aiMesh::mBones[%i]", i, name, a );
                 }
             }
         }
@@ -694,7 +697,7 @@ void ValidateDSProcess::Validate( const aiMaterial* pMaterial)
             if (prop->mDataLength < 5 || prop->mDataLength < 4 + (*reinterpret_cast<uint32_t*>(prop->mData)) + 1)   {
                 ReportError("aiMaterial::mProperties[%i].mDataLength is "
                     "too small to contain a string (%i, needed: %i)",
-                    i,prop->mDataLength,sizeof(aiString));
+                    i,prop->mDataLength,static_cast<int>(sizeof(aiString)));
             }
             if(prop->mData[prop->mDataLength-1]) {
                 ReportError("Missing null-terminator in string material property");
@@ -705,14 +708,14 @@ void ValidateDSProcess::Validate( const aiMaterial* pMaterial)
             if (prop->mDataLength < sizeof(float))  {
                 ReportError("aiMaterial::mProperties[%i].mDataLength is "
                     "too small to contain a float (%i, needed: %i)",
-                    i,prop->mDataLength,sizeof(float));
+                    i,prop->mDataLength, static_cast<int>(sizeof(float)));
             }
         }
         else if (aiPTI_Integer == prop->mType)  {
             if (prop->mDataLength < sizeof(int))    {
                 ReportError("aiMaterial::mProperties[%i].mDataLength is "
                     "too small to contain an integer (%i, needed: %i)",
-                    i,prop->mDataLength,sizeof(int));
+                    i,prop->mDataLength, static_cast<int>(sizeof(int)));
             }
         }
         // TODO: check whether there is a key with an unknown name ...
@@ -950,7 +953,7 @@ void ValidateDSProcess::Validate( const aiString* pString)
 {
     if (pString->length > MAXLEN)
     {
-        this->ReportError("aiString::length is too large (%i, maximum is %i)",
+        this->ReportError("aiString::length is too large (%i, maximum is %lu)",
             pString->length,MAXLEN);
     }
     const char* sz = pString->data;

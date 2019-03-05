@@ -85,7 +85,7 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 float3 boxProject(Surface surface, ProbeData probe)
 {
    float3 RayLS = mul(probe.worldToLocal, float4(surface.R,0.0)).xyz;
-   float3 PositionLS = mul( probe.worldToLocal,  float4(surface.P,1.0));
+   float3 PositionLS = mul( probe.worldToLocal,  float4(surface.P,1.0)).xyz;
    
    float3 unit = probe.boxMax-probe.boxMin;
    float3 plane1vec  = (unit - PositionLS) / RayLS;
@@ -93,7 +93,7 @@ float3 boxProject(Surface surface, ProbeData probe)
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = surface.P + surface.R * dist;
-   
+
    return posonbox - probe.refPosition;
 }
 

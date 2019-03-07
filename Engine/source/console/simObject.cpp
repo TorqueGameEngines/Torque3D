@@ -2841,6 +2841,10 @@ DefineEngineMethod( SimObject, getFieldValue, const char*, ( const char* fieldNa
    
    const char* arrayIndex = NULL;
    const U32 nameLen = dStrlen( fieldName );
+
+   if (nameLen == 0)
+      return "";
+
    if( fieldName[ nameLen - 1 ] == ']' )
    {
       const char* leftBracket = dStrchr( fieldName, '[' );

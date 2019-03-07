@@ -1,0 +1,434 @@
+//--- OBJECT WRITE BEGIN ---
+%guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
+   isContainer = "1";
+   Profile = "GuiDefaultProfile";
+   HorizSizing = "right";
+   VertSizing = "bottom";
+   position = "0 0";
+   Extent = "1024 768";
+   MinExtent = "8 8";
+   canSave = "1";
+   Visible = "1";
+   tooltipprofile = "GuiToolTipProfile";
+   hovertime = "1000";
+   canSaveDynamicFields = "0";
+
+   new GuiWindowCtrl(VerveEditorGroupBuilderWindow) {
+      resizeWidth = "0";
+      resizeHeight = "0";
+      canMove = "1";
+      canClose = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "50 50";
+      EdgeSnap = "1";
+      text = "Create Group";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
+      AnchorTop = "1";
+      AnchorBottom = "0";
+      AnchorLeft = "1";
+      AnchorRight = "0";
+      isContainer = "1";
+      Profile = "GuiWindowProfile";
+      HorizSizing = "center";
+      VertSizing = "center";
+      position = "268 181";
+      Extent = "280 178";
+      MinExtent = "256 8";
+      canSave = "1";
+      Visible = "1";
+      tooltipprofile = "GuiToolTipProfile";
+      hovertime = "1000";
+      canSaveDynamicFields = "0";
+
+      new GuiTextCtrl() {
+         text = "Label:";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "GuiTextProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "14 30";
+         Extent = "84 16";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "GuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextEditCtrl(VerveEditorGroupBuilderNameField) {
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+         passwordMask = "*";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "GuiTextEditProfile";
+         HorizSizing = "width";
+         VertSizing = "bottom";
+         position = "79 29";
+         Extent = "191 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "GuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiBitmapBorderCtrl() {
+         isContainer = "0";
+         Profile = "GuiGroupBorderProfile";
+         HorizSizing = "width";
+         VertSizing = "bottom";
+         position = "7 55";
+         Extent = "267 70";
+         MinExtent = "1 1";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "GuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+
+         new GuiStackControl(VerveEditorGroupBuilderFieldStack) {
+            StackingType = "Vertical";
+            HorizStacking = "Left to Right";
+            VertStacking = "Top to Bottom";
+            Padding = "2";
+            ChangeChildSizeToFit = "1";
+            ChangeChildPosition = "1";
+            isContainer = "1";
+            Profile = "GuiTransparentProfile";
+            HorizSizing = "width";
+            VertSizing = "height";
+            position = "3 3";
+            Extent = "261 20";
+            MinExtent = "8 8";
+            canSave = "1";
+            Visible = "1";
+            tooltipprofile = "GuiToolTipProfile";
+            hovertime = "1000";
+            canSaveDynamicFields = "0";
+
+            new GuiControl() {
+               isContainer = "1";
+               Profile = "GuiTransparentProfile";
+               HorizSizing = "right";
+               VertSizing = "bottom";
+               position = "0 0";
+               Extent = "261 20";
+               MinExtent = "8 2";
+               canSave = "1";
+               Visible = "1";
+               tooltipprofile = "GuiToolTipProfile";
+               hovertime = "1000";
+               canSaveDynamicFields = "0";
+
+               new GuiTextCtrl() {
+                  text = "Scene Object:";
+                  maxLength = "1024";
+                  Margin = "0 0 0 0";
+                  Padding = "0 0 0 0";
+                  AnchorTop = "1";
+                  AnchorBottom = "0";
+                  AnchorLeft = "1";
+                  AnchorRight = "0";
+                  isContainer = "0";
+                  Profile = "GuiTextProfile";
+                  HorizSizing = "right";
+                  VertSizing = "center";
+                  position = "4 1";
+                  Extent = "100 18";
+                  MinExtent = "8 2";
+                  canSave = "1";
+                  Visible = "1";
+                  tooltipprofile = "GuiToolTipProfile";
+                  hovertime = "1000";
+                  canSaveDynamicFields = "0";
+               };
+               new GuiPopUpMenuCtrl() {
+                  maxPopupHeight = "200";
+                  sbUsesNAColor = "0";
+                  reverseTextList = "0";
+                  bitmapBounds = "16 16";
+                  maxLength = "1024";
+                  Margin = "0 0 0 0";
+                  Padding = "0 0 0 0";
+                  AnchorTop = "1";
+                  AnchorBottom = "0";
+                  AnchorLeft = "1";
+                  AnchorRight = "0";
+                  isContainer = "0";
+                  Profile = "VEditorPopupMenuProfile";
+                  HorizSizing = "left";
+                  VertSizing = "center";
+                  position = "104 1";
+                  Extent = "156 18";
+                  MinExtent = "8 2";
+                  canSave = "1";
+                  Visible = "1";
+                  tooltipprofile = "GuiToolTipProfile";
+                  hovertime = "1000";
+                  internalName = "SceneObjectList";
+                  canSaveDynamicFields = "0";
+               };
+            };
+         };
+      };
+      new GuiButtonCtrl() {
+         text = "Create";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "GuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "top";
+         position = "66 139";
+         Extent = "96 24";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "VerveEditorGroupBuilderGUI._Build( VerveEditorGroupBuilderNameField.getText() );";
+         tooltipprofile = "GuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiButtonCtrl() {
+         text = "Cancel";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "GuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "top";
+         position = "174 139";
+         Extent = "96 24";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "VerveEditorGroupBuilderGUI.Close();";
+         tooltipprofile = "GuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+   };
+};
+//--- OBJECT WRITE END ---
+
+function VerveEditorGroupBuilderGUI::Build( %this, %groupType, %callbackMethod )
+{
+    if ( %callbackMethod $= "" )
+    {
+        return;
+    }
+    
+    // Store Info.
+    %this.GroupType      = %groupType;
+    %this.CallbackMethod = %callbackMethod;
+    
+    // Clear Text.
+    VerveEditorGroupBuilderNameField.setText( "" );
+    
+    // Clear Stack.
+    VerveEditorGroupBuilderFieldStack.clear();
+    
+    // Populate the Field Stack.
+    eval( %groupType @ "::PopulateBuildStack( 0, " @ VerveEditorGroupBuilderFieldStack @ ");" );
+    
+    // Display.
+    if($Verve::UseSeparateWindow)
+      VerveEditorWindow.pushDialog( %this );
+    else
+      Canvas.pushDialog( %this );
+    
+    
+    // Resize Everything.
+    %container            = VerveEditorGroupBuilderFieldStack.getParent();
+    %stackExtent          = VerveEditorGroupBuilderFieldStack.getExtent();
+    %stackPosition        = VerveEditorGroupBuilderFieldStack.getPosition();
+    %containerExtent      = %container.getExtent();
+    %containerHeight      = ( VerveEditorGroupBuilderFieldStack.getCount() > 0 ) ? getWord( %stackExtent, 1 ) + 2 * getWord( %stackPosition, 1 ) : 1;
+    %containerHeightDelta = %containerHeight - getWord( %containerExtent, 1 );
+    %container.setExtent( getWord( %containerExtent, 0 ), %containerHeight );
+    
+    %windowExtent = VerveEditorGroupBuilderWindow.getExtent();
+    VerveEditorGroupBuilderWindow.setExtent( getWord( %windowExtent, 0 ), getWord( %windowExtent, 1 ) + %containerHeightDelta );
+}
+
+function VerveEditorGroupBuilderGUI::Close( %this )
+{
+   if($Verve::UseSeparateWindow)
+      VerveEditorWindow.popDialog( %this );
+    else
+      Canvas.popDialog( %this );
+}
+
+function VerveEditorGroupBuilderGUI::_Build( %this, %groupLabel )
+{
+    if ( %groupLabel $= "" )
+    {
+        messageBox( "Warning", "You must provide a Valid Group Label.", "Ok" );
+        return;
+    }
+    
+    if ( %this.CallbackMethod $= "" )
+    {
+        // Close Dialog.
+        if($Verve::UseSeparateWindow)
+         VerveEditorWindow.popDialog( %this );
+       else
+         Canvas.popDialog( %this );
+        return;
+    }
+    
+    // Eval Method.
+    eval( %this.CallbackMethod @ "(" @ %this.GroupType @ "," @ %groupLabel @ ");" );
+    
+    // Clear.
+    %this.CallbackMethod = "";
+    
+    // Close Dialog.
+    if($Verve::UseSeparateWindow)
+      VerveEditorWindow.popDialog( %this );
+    else
+      Canvas.popDialog( %this );
+}
+
+//-----------------------------------------------------------------------------
+
+function VerveEditorGroupBuilderFieldStack::CreateObjectList( %this, %objectType, %internalName, %label )
+{
+    %container = new GuiControl()
+    {
+        Profile      = "GuiTransparentProfile";
+        
+        HorizSizing  = "right";
+        VertSizing   = "bottom";
+        Position     = "0 0";
+        Extent       = "261 20";
+    };
+    
+    %label = new GuiTextCtrl()
+    {
+        Profile      = "GuiTextProfile";
+        
+        HorizSizing  = "right";
+        VertSizing   = "center";
+        Position     = "4 1";
+        Extent       = "100 18";
+        
+        Text         = %label;
+    };
+    %container.add( %label );
+    
+    %listObject = new GuiPopUpMenuCtrl()
+    {
+        Class        = "VerveEditorGroupBuilderObjectList";
+        Profile      = "VEditorPopupMenuProfile";
+        
+        HorizSizing  = "left";
+        VertSizing   = "center";
+        Position     = "104 1";
+        Extent       = "156 18";
+        
+        InternalName = %internalName;
+    };
+    %container.add( %listObject );
+    
+    // Create NULL Entry.
+    %listObject.add( "", 0 );
+    
+    // Populate List.
+    %listObject.CheckGroup( MissionGroup, %objectType );
+    
+    // Sort the List.
+    %listObject.sort();
+    
+    %this.add( %container );
+    
+    return %listObject;
+}
+
+function VerveEditorGroupBuilderObjectList::CheckGroup( %this, %group, %objectType )
+{
+    // Populate List.
+    %groupSize = %group.getCount();
+    for ( %i = 0; %i < %groupSize; %i++ )
+    {
+        %groupObject = %group.getObject( %i );
+        if ( %groupObject.getName() $= "" )
+        {
+            continue;
+        }
+        
+        if ( %groupObject.isMemberOfClass( %objectType ) )
+        {
+            %this.add( %groupObject.getName(), %this.size() );
+        }
+        else if ( %groupObject.isMemberOfClass( "SimSet" ) )
+        {
+            %this.CheckGroup( %groupObject, %objectType );
+        }
+    }
+}
+
+function VerveEditorGroupBuilderFieldStack::CreateCheckbox( %this, %internalName, %label )
+{
+    %container = new GuiControl()
+    {
+        Profile      = "GuiTransparentProfile";
+        
+        HorizSizing  = "right";
+        VertSizing   = "bottom";
+        Position     = "0 0";
+        Extent       = "261 20";
+    };
+    
+    %label = new GuiTextCtrl()
+    {
+        Profile      = "GuiTextProfile";
+        
+        HorizSizing  = "right";
+        VertSizing   = "center";
+        Position     = "4 1";
+        Extent       = "100 18";
+        
+        Text         = %label;
+    };
+    %container.add( %label );
+    
+    %checkBox = new GuiCheckBoxCtrl()
+    {
+        Profile      = "GuiCheckboxProfile";
+        
+        HorizSizing  = "left";
+        VertSizing   = "center";
+        Position     = "104 1";
+        Extent       = "156 18";
+        
+        InternalName = %internalName;
+        
+        Text         = "";
+    };
+    %container.add( %checkBox );
+    
+    %this.add( %container );
+    
+    return %checkBox;
+}

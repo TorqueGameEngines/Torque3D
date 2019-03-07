@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<VerveControllerSequence Version="0.0.0a">
+    <VObject Type="VGroup">
+        <Properties>
+            <Label>EmptyGroup</Label>
+            <Enabled>1</Enabled>
+            <Reference />
+        </Properties>
+    </VObject>
+</VerveControllerSequence>

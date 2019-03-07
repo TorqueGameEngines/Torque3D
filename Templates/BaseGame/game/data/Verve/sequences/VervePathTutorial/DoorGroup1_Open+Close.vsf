@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<VerveControllerSequence Version="0.0.0a">
+    <Properties>
+        <Time>0</Time>
+        <Duration>1000</Duration>
+        <TimeScale>1</TimeScale>
+        <Loop>1</Loop>
+        <LoopBackwards>1</LoopBackwards>
+        <LoopDelay>500</LoopDelay>
+        <ResetOnCompletion>1</ResetOnCompletion>
+        <name>VerveEditorController</name>
+        <parentGroup>RootGroup</parentGroup>
+        <canSaveDynamicFields>1</canSaveDynamicFields>
+    </Properties>
+    <DataTable>
+        <DataItem Type="STATIC" Name="DoorGroup1_Right" Value="DoorShape1_Right" />
+        <DataItem Type="STATIC" Name="DoorGroup1_Left" Value="DoorShape1_Left" />
+        <DataItem Type="STATIC" Name="DoorGroup1_RightPath" Value="DoorPath_Right" />
+        <DataItem Type="STATIC" Name="DoorGroup1_LeftPath" Value="DoorPath_Left" />
+    </DataTable>
+    <VObject Type="VSceneObjectGroup">
+        <Properties>
+            <Enabled>1</Enabled>
+            <Label>DoorGroup1_Left</Label>
+            <Reference>DoorGroup1_Left</Reference>
+        </Properties>
+        <VObject Type="VMotionTrack">
+            <Properties>
+                <Enabled>1</Enabled>
+                <Label>MotionTrack</Label>
+                <Reference>DoorGroup1_LeftPath</Reference>
+                <OrientationMode>FREE</OrientationMode>
+                <OrientationData></OrientationData>
+                <Relative>1</Relative>
+            </Properties>
+            <VObject Type="VMotionEvent">
+                <Properties>
+                    <Enabled>1</Enabled>
+                    <Label>MotionEvent</Label>
+                    <TriggerTime>0</TriggerTime>
+                    <Duration>0</Duration>
+                </Properties>
+            </VObject>
+            <VObject Type="VMotionEvent">
+                <Properties>
+                    <Enabled>1</Enabled>
+                    <Label>MotionEvent</Label>
+                    <TriggerTime>1000</TriggerTime>
+                    <Duration>0</Duration>
+                </Properties>
+            </VObject>
+        </VObject>
+    </VObject>
+    <VObject Type="VSceneObjectGroup">
+        <Properties>
+            <Enabled>1</Enabled>
+            <Label>DoorGroup1_Right</Label>
+            <Reference>DoorGroup1_Right</Reference>
+        </Properties>
+        <VObject Type="VMotionTrack">
+            <Properties>
+                <Enabled>1</Enabled>
+                <Label>MotionTrack</Label>
+                <Reference>DoorGroup1_RightPath</Reference>
+                <OrientationMode>FREE</OrientationMode>
+                <OrientationData></OrientationData>
+                <Relative>1</Relative>
+            </Properties>
+            <VObject Type="VMotionEvent">
+                <Properties>
+                    <Enabled>1</Enabled>
+                    <Label>MotionEvent</Label>
+                    <TriggerTime>0</TriggerTime>
+                    <Duration>0</Duration>
+                </Properties>
+            </VObject>
+            <VObject Type="VMotionEvent">
+                <Properties>
+                    <Enabled>1</Enabled>
+                    <Label>MotionEvent</Label>
+                    <TriggerTime>1000</TriggerTime>
+                    <Duration>0</Duration>
+                </Properties>
+            </VObject>
+        </VObject>
+    </VObject>
+</VerveControllerSequence>

@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<VerveControllerSequence Version="0.0.0a">
+    <VObject Type="VDirectorGroup">
+        <Properties>
+            <Label>DirectorGroup</Label>
+            <Enabled>1</Enabled>
+            <Reference />
+        </Properties>
+        <VObject Type="VDirectorTrack">
+            <Properties>
+                <Label>DirectorTrack</Label>
+                <Enabled>1</Enabled>
+            </Properties>
+        </VObject>
+    </VObject>
+</VerveControllerSequence>

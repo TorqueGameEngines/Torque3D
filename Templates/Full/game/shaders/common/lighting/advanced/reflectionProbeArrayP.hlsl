@@ -177,6 +177,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    float blendFacSum = 0;
    float invBlendSum = 0;
    int skyID = 0;
+   float probehits = 0;
    //Set up our struct data
    ProbeData probes[MAX_PROBES];
 
@@ -197,10 +198,12 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       if (probes[i].type == 0) //box
       {
          probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+         probehits++;
       }
       else if (probes[i].type == 1) //sphere
       {
          probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+         probehits++;
       }
       else //skylight
       {
@@ -223,9 +226,9 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    // and respect constraint A.
    for (i = 0; i < numProbes; i++)
    {
-      if (numProbes>1)
+      if (probehits>1.0)
       {
-         blendFactor[i] = ((probes[i].contribution / blendSum)) / (numProbes - 1);
+         blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
          blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
          blendFacSum += blendFactor[i];
       }
@@ -243,14 +246,15 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       blendFacSum = 1.0f;
    }
 #endif
-
-   float invBlendSumWeighted = 1.0f / blendFacSum;
-   for (i = 0; i < numProbes; ++i)
+   if (probehits>1.0)
    {
-      blendFactor[i] *= invBlendSumWeighted;
-      probes[i].contribution = blendFactor[i];
+      float invBlendSumWeighted = 1.0f / blendFacSum;
+      for (i = 0; i < numProbes; ++i)
+      {
+         blendFactor[i] *= invBlendSumWeighted;
+         probes[i].contribution = blendFactor[i];
+      }
    }
-   
 #if DEBUGVIZ_ATTENUATION == 1
    float attenVis = 0;
    for (i = 0; i < numProbes; ++i)

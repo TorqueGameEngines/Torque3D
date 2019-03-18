@@ -69,11 +69,11 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
    float3 boxMinLS = mul(probe.worldToLocal, float4(probe.boxMin, 1.0)).xyz;
    float3 boxMaxLS = mul(probe.worldToLocal, float4(probe.boxMax, 1.0)).xyz;
 
-   float boxOuterRange = length(boxMaxLS - boxMinLS);
+   float boxOuterRange = 2;//length(boxMaxLS - boxMinLS);
    float boxInnerRange = boxOuterRange / probe.attenuation;
 
    float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
-   localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
+   localDir = (localDir - boxInnerRange) / max((boxOuterRange - boxInnerRange),0.0001);
 
    float contribution = max(localDir.x, max(localDir.y, localDir.z)) * -1;
    return contribution;

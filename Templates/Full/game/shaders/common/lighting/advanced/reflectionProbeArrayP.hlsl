@@ -62,21 +62,49 @@ float defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeR
    return contribution;
 }
 
+float getDistBoxToPoint(float3 pt, float3 extents)
+{
+      float3 d = max(max(-extents - pt, 0), pt - extents);
+      return length(d);
+}
+
 float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 {
    float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
 
-   float3 boxMinLS = mul(probe.worldToLocal, float4(probe.boxMin, 1.0)).xyz;
-   float3 boxMaxLS = mul(probe.worldToLocal, float4(probe.boxMax, 1.0)).xyz;
+   //float3 boxMinLS = mul(probe.worldToLocal, float4(probe.boxMin, 1.0)).xyz;
+   //float3 extents = mul(probe.worldToLocal, float4(probe.boxMax, 1.0)).xyz;
+   float3 extents = probe.boxMax;
 
-   float boxOuterRange = length(boxMaxLS - boxMinLS);
-   float boxInnerRange = boxOuterRange / probe.attenuation;
+   /*float3 boxOuterRange = boxMaxLS;
+   float3 boxInnerRange = boxOuterRange * 0.5;
 
    float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
    localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
 
-   float contribution = max(localDir.x, max(localDir.y, localDir.z)) * -1;
-   return contribution;
+   float contribution = max(localDir.x, max(localDir.y, localDir.z));
+   return contribution;*/
+
+   float transitionDistance = 0.9;
+
+   // Calculate contribution
+      //// Shrink the box so fade out happens within box extents
+      float3 reducedExtents = extents - float3(transitionDistance, transitionDistance, transitionDistance);
+      float distToBox = getDistBoxToPoint(surfPosLS * extents, reducedExtents);
+
+      float normalizedDistance = distToBox / transitionDistance;
+
+      // If closer than 70% to the probe radius, then full contribution is used.
+      // For the other 30% we smoothstep and return contribution lower than 1 so other
+      // reflection probes can be blended.			
+
+      // smoothstep from 1 to 0.7:
+      //   float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+      //   return t * t * (3.0 - 2.0 * t);
+
+      float t = saturate(3.3333 - 3.3333 * normalizedDistance);
+      float contribution = t * t * (3.0 - 2.0 * t);
+      return contribution;
 }
 
 // Box Projected IBL Lighting
@@ -87,9 +115,12 @@ float3 boxProject(Surface surface, ProbeData probe)
    float3 RayLS = mul(probe.worldToLocal, float4(surface.R,0.0)).xyz;
    float3 PositionLS = mul( probe.worldToLocal,  float4(surface.P,1.0)).xyz;
    
-   float3 unit = probe.boxMax-probe.boxMin;
-   float3 plane1vec  = (unit/2 - PositionLS) / RayLS;
-   float3 plane2vec = (-unit/2 - PositionLS) / RayLS;
+   //float3 invRayLS = rcp(RayLS);
+   float3 unit = float3(1,1,1);
+   float3 plane1vec  = (unit - PositionLS) / RayLS;
+   float3 plane2vec = (-unit - PositionLS) / RayLS;
+   //float3 plane1vec  = invRayLS - PositionLS * RayLS;
+   //float3 plane2vec = -invRayLS - PositionLS * RayLS;
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = surface.P + surface.R * dist;

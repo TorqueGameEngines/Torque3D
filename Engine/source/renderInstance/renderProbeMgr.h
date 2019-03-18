@@ -66,6 +66,7 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
    bool mDirty;
 
    Box3F mBounds;
+   Point3F mExtents;
    Point3F mPosition;
    Point3F mProbeRefOffset;
    Point3F mProbeRefScale;

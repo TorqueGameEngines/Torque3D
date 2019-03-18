@@ -344,7 +344,14 @@ void RenderProbeMgr::_setupStaticParameters()
       probePositionsData[mEffectiveProbeCount] = Point4F(probePos.x, probePos.y, probePos.z,0);
       probeRefPositionsData[mEffectiveProbeCount] = Point4F(refPos.x, refPos.y, refPos.z, 0);
 
-      probeWorldToObjData[mEffectiveProbeCount] = curEntry.getTransform();
+      Point3F projectScale=curEntry.mBounds.getExtents();
+      MatrixF transform = curEntry.getTransform();
+      transform.scale(projectScale);
+      //transform.setPosition(curEntry.getTransform().getPosition());
+      transform.fullInverse();
+      //transform.transpose(); 
+
+      probeWorldToObjData[mEffectiveProbeCount] = transform;// curEntry.getTransform();
       Point3F bbMin = refPos - curEntry.mProbeRefScale/2;
       Point3F bbMax = refPos + curEntry.mProbeRefScale/2;
       probeBBMinData[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);

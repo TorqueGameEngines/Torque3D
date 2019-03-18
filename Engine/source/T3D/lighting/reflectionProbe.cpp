@@ -556,12 +556,16 @@ void ReflectionProbe::updateProbeParams()
 
    mProbeInfo->mProbeShapeType = mProbeShapeType;
 
-   mProbeInfo->mTransform = getWorldTransform();
+   MatrixF transform = getTransform();
+   
 
    mProbeInfo->mPosition = getPosition();
 
-   if(mProbeShapeType == ProbeRenderInst::Sphere)
+   if (mProbeShapeType == ProbeRenderInst::Sphere)
       mObjScale.set(mRadius, mRadius, mRadius);
+
+   transform.scale(getScale());
+   mProbeInfo->mTransform = transform.inverse();
 
    // Skip our transform... it just dirties mask bits.
    Parent::setTransform(mObjToWorld);
@@ -569,6 +573,7 @@ void ReflectionProbe::updateProbeParams()
    resetWorldBox();
 
    mProbeInfo->mBounds = mWorldBox;
+   mProbeInfo->mExtents = getScale();
    mProbeInfo->mRadius = mRadius;
 
    mProbeInfo->mIsSkylight = false;

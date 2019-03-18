@@ -65,7 +65,7 @@ float defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeR
 float getDistBoxToPoint(float3 pt, float3 extents)
 {
       float3 d = max(max(-extents - pt, 0), pt - extents);
-      return length(d);
+      return max(max(d.x,d.y),d.z);
 }
 
 float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
@@ -74,7 +74,7 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 
    //float3 boxMinLS = mul(probe.worldToLocal, float4(probe.boxMin, 1.0)).xyz;
    //float3 extents = mul(probe.worldToLocal, float4(probe.boxMax, 1.0)).xyz;
-   float3 extents = probe.boxMax;
+   float3 extents = float3(1,1,1);//probe.boxMax;
 
    /*float3 boxOuterRange = boxMaxLS;
    float3 boxInnerRange = boxOuterRange * 0.5;
@@ -92,7 +92,7 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
       float3 reducedExtents = extents - float3(transitionDistance, transitionDistance, transitionDistance);
       float distToBox = getDistBoxToPoint(surfPosLS * extents, reducedExtents);
 
-      float normalizedDistance = distToBox / transitionDistance;
+      float normalizedDistance = distToBox / max(transitionDistance,0.0001);
 
       // If closer than 70% to the probe radius, then full contribution is used.
       // For the other 30% we smoothstep and return contribution lower than 1 so other

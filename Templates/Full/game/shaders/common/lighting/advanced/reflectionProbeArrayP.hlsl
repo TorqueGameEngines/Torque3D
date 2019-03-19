@@ -71,40 +71,11 @@ float getDistBoxToPoint(float3 pt, float3 extents)
 float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 {
    float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
-
-   //float3 boxMinLS = mul(probe.worldToLocal, float4(probe.boxMin, 1.0)).xyz;
-   //float3 extents = mul(probe.worldToLocal, float4(probe.boxMax, 1.0)).xyz;
-   float3 extents = float3(1,1,1);//probe.boxMax;
-
-   /*float3 boxOuterRange = boxMaxLS;
-   float3 boxInnerRange = boxOuterRange * 0.5;
-
-   float3 localDir = float3(abs(surfPosLS.x), abs(surfPosLS.y), abs(surfPosLS.z));
-   localDir = (localDir - boxInnerRange) / (boxOuterRange - boxInnerRange);
-
-   float contribution = max(localDir.x, max(localDir.y, localDir.z));
-   return contribution;*/
-
-   float transitionDistance = 0.9;
-
-   // Calculate contribution
-      //// Shrink the box so fade out happens within box extents
-      float3 reducedExtents = extents - float3(transitionDistance, transitionDistance, transitionDistance);
-      float distToBox = getDistBoxToPoint(surfPosLS * extents, reducedExtents);
-
-      float normalizedDistance = distToBox / max(transitionDistance,0.0001);
-
-      // If closer than 70% to the probe radius, then full contribution is used.
-      // For the other 30% we smoothstep and return contribution lower than 1 so other
-      // reflection probes can be blended.			
-
-      // smoothstep from 1 to 0.7:
-      //   float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-      //   return t * t * (3.0 - 2.0 * t);
-
-      float t = saturate(3.3333 - 3.3333 * normalizedDistance);
-      float contribution = t * t * (3.0 - 2.0 * t);
-      return contribution;
+   float probeattenuationvalue = 0.5; // feed meh
+   float atten = 1.0-probeattenuationvalue;
+   float baseVal = 0.25;
+   float dist = getDistBoxToPoint(surfPosLS,float3(baseVal,baseVal,baseVal));
+   return saturate(smoothstep(baseVal+0.0001,atten*baseVal,dist));
 }
 
 // Box Projected IBL Lighting
@@ -277,7 +248,9 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       blendFacSum = 1.0f;
    }
 #endif
-   if (probehits>1.0)
+    //use probehits for sharp cuts when singular, 
+    //blendSum when wanting blend on all edging
+   if (blendSum>1.0)
    {
       float invBlendSumWeighted = 1.0f / blendFacSum;
       for (i = 0; i < numProbes; ++i)

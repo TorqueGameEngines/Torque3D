@@ -86,12 +86,9 @@ float3 boxProject(Surface surface, ProbeData probe)
    float3 RayLS = mul(probe.worldToLocal, float4(surface.R,0.0)).xyz;
    float3 PositionLS = mul( probe.worldToLocal,  float4(surface.P,1.0)).xyz;
    
-   //float3 invRayLS = rcp(RayLS);
-   float3 unit = float3(1,1,1);
-   float3 plane1vec  = (unit - PositionLS) / RayLS;
-   float3 plane2vec = (-unit - PositionLS) / RayLS;
-   //float3 plane1vec  = invRayLS - PositionLS * RayLS;
-   //float3 plane2vec = -invRayLS - PositionLS * RayLS;
+   float3 unit = probe.boxMax-probe.boxMin;
+   float3 plane1vec  = (unit/2 - PositionLS) / RayLS;
+   float3 plane2vec = (-unit/2 - PositionLS) / RayLS;
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = surface.P + surface.R * dist;

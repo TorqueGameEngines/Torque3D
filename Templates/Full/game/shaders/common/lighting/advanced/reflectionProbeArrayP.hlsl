@@ -293,13 +293,13 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    {
       if (probes[i].contribution == 0)
          continue;
-
-      if (probes[i].type < 2) //non-skylight
-      {
-         irradiance += iblBoxDiffuse(surface, probes[i]);
-         specular += F*iblBoxSpecular(surface, probes[i]);
-         contrib +=probes[i].contribution;
-      }
+                  
+      if (probes[i].type == 2) //skip skylight
+         continue;
+         
+      irradiance += iblBoxDiffuse(surface, probes[i]);
+      specular += F*iblBoxSpecular(surface, probes[i]);
+      contrib +=probes[i].contribution;
    }
    contrib = saturate(contrib);
    irradiance = lerp(iblSkylightDiffuse(surface, probes[skyID]),irradiance,contrib);

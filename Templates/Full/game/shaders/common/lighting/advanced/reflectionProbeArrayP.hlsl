@@ -71,8 +71,7 @@ float getDistBoxToPoint(float3 pt, float3 extents)
 float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 {
    float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
-   float probeattenuationvalue = 0.5; // feed meh
-   float atten = 1.0-probeattenuationvalue;
+   float atten = probe.attenuation;
    float baseVal = 0.25;
    float dist = getDistBoxToPoint(surfPosLS,float3(baseVal,baseVal,baseVal));
    return saturate(smoothstep(baseVal+0.0001,atten*baseVal,dist));

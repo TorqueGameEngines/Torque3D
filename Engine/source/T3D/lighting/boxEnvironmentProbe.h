@@ -56,7 +56,7 @@ class BaseMatInstance;
 class BoxEnvironmentProbe : public ReflectionProbe
 {
    typedef ReflectionProbe Parent;
-
+   F32 mAtten;
 private:
 
     //Debug rendering

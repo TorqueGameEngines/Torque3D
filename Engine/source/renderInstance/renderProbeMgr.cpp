@@ -82,7 +82,8 @@ ProbeRenderInst::ProbeRenderInst() : SystemInterface(),
    mIrradianceCubemap(NULL),
    mRadius(1.0f),
    mProbeRefOffset(0, 0, 0),
-   mProbeRefScale(1,1,1)
+   mProbeRefScale(1,1,1),
+   mAtten(0.0)
 {
 }
 
@@ -108,6 +109,7 @@ void ProbeRenderInst::set(const ProbeRenderInst *probeInfo)
    mBounds = probeInfo->mBounds;
    mIsSkylight = probeInfo->mIsSkylight;
    mScore = probeInfo->mScore;
+   mAtten = probeInfo->mAtten;
 }
 
 //
@@ -312,9 +314,6 @@ void RenderProbeMgr::_setupStaticParameters()
    cubeMaps.clear();
    irradMaps.clear();
 
-   //This should probably ultimately be a per-probe value, but for now, global for testing/adjustability
-   F32 attenuation = Con::getFloatVariable("$pref::ReflectionProbes::AttenuationStrength", 3.5);
-
    for (U32 i = 0; i < probeCount; i++)
    {
       if (mEffectiveProbeCount >= MAXPROBECOUNT)
@@ -352,7 +351,7 @@ void RenderProbeMgr::_setupStaticParameters()
 
       probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType, 
          curEntry.mRadius,
-         attenuation,
+         curEntry.mAtten,
          1);
 
       cubeMaps.push_back(curEntry.mCubemap);

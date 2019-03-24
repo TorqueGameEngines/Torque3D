@@ -107,7 +107,7 @@ public:
    ///
    /// @param time           Time at which to generate the mesh data
    /// @param objectOffset   Transform to apply to the generated data (bounds transform)
-   void lockMesh(F32 time, const MatrixF& objectOffset);
+   void lockMesh(F32 time, const MatrixF& objOffset);
 
    /// Get the transform of this mesh at a certain time
    ///

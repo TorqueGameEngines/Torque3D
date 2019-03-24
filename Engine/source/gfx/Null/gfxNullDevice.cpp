@@ -169,8 +169,10 @@ private:
    virtual void setToTexUnit(U32 tuNum) { };
 
 public:
-   virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount) { };
-
+   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) { };
+   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) { };
+   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) { };
+   virtual void copyTo(GFXCubemapArray *pDstCubemap) { }
    virtual ~GFXNullCubemapArray() {};
    virtual void zombify() {}
    virtual void resurrect() {}

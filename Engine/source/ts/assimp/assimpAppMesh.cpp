@@ -59,7 +59,7 @@ MatrixF AssimpAppMesh::getMeshTransform(F32 time)
    return appNode->getNodeTransform(time);
 }
 
-void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objectOffset)
+void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 {
    // After this function, the following are expected to be populated:
    //     points, normals, uvs, primitives, indices
@@ -74,23 +74,21 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objectOffset)
    {
       // Points and Normals
       aiVector3D pt = mMeshData->mVertices[i];
-      aiVector3D nrm = mMeshData->mNormals[i];
+      aiVector3D nrm;
+      if (mMeshData->HasNormals())
+         nrm = mMeshData->mNormals[i];
+      else
+         nrm.Set(0, 0, 0);
 
       Point3F tmpVert;
       Point3F tmpNormal;
 
-      if (Con::getBoolVariable("$Assimp::SwapYZ", false))
-      {
-         tmpVert = Point3F(pt.x, pt.z, pt.y);
-         tmpNormal = Point3F(nrm.x, nrm.z, nrm.y);
-      }
-      else
-      {
-         tmpVert = Point3F(pt.x, pt.y, pt.z);
-         tmpNormal = Point3F(nrm.x, nrm.y, nrm.z);
-      }
+      tmpVert = Point3F(pt.x, pt.y, pt.z);
+      tmpNormal = Point3F(nrm.x, nrm.y, nrm.z);
+      //AssimpAppNode::convertPoint(tmpVert);
+      //AssimpAppNode::convertPoint(tmpNormal);
 
-      //objectOffset.mulP(tmpVert);
+      //objOffset.mulP(tmpVert);
 
       points.push_back(tmpVert);
 
@@ -214,20 +212,22 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objectOffset)
       String name = mMeshData->mBones[b]->mName.C_Str();
 
       MatrixF boneTransform;
+      boneTransform.setRow(0, Point4F(mMeshData->mBones[b]->mOffsetMatrix.a1, mMeshData->mBones[b]->mOffsetMatrix.a2, mMeshData->mBones[b]->mOffsetMatrix.a3, mMeshData->mBones[b]->mOffsetMatrix.a4));
+      boneTransform.setRow(1, Point4F(mMeshData->mBones[b]->mOffsetMatrix.b1, mMeshData->mBones[b]->mOffsetMatrix.b2, mMeshData->mBones[b]->mOffsetMatrix.b3, mMeshData->mBones[b]->mOffsetMatrix.b4));
+      boneTransform.setRow(2, Point4F(mMeshData->mBones[b]->mOffsetMatrix.c1, mMeshData->mBones[b]->mOffsetMatrix.c2, mMeshData->mBones[b]->mOffsetMatrix.c3, mMeshData->mBones[b]->mOffsetMatrix.c4));
+      boneTransform.setRow(3, Point4F(mMeshData->mBones[b]->mOffsetMatrix.d1, mMeshData->mBones[b]->mOffsetMatrix.d2, mMeshData->mBones[b]->mOffsetMatrix.d3, mMeshData->mBones[b]->mOffsetMatrix.d4));
 
-      for (U32 m = 0; m < 16; ++m)
-      {
-         boneTransform[m] = *mMeshData->mBones[b]->mOffsetMatrix[m];
-      }
-
-      //initialTransforms.push_back(boneTransform);
-      initialTransforms.push_back(MatrixF::Identity);
+      //boneTransform.inverse();
+      //AssimpAppNode::convertMat(boneTransform); // Will need a better animated reference shape to determine if this is needed.
+      //boneTransform.inverse();
+      initialTransforms.push_back(boneTransform);
 
       //Weights
       U32 numWeights = mMeshData->mBones[b]->mNumWeights;
 
       weight.setSize(numWeights);
       vertexIndex.setSize(numWeights);
+      boneIndex.setSize(numWeights);
 
       for (U32 w = 0; w < numWeights; ++w)
       {

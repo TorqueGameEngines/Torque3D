@@ -33,6 +33,10 @@
 #include "ts/collada/colladaExtensions.h"
 #endif
 
+#ifndef AI_TYPES_H_INC
+#include <assimp/types.h>
+#endif
+
 class AssimpAppNode : public AppNode
 {
    typedef AppNode Parent;
@@ -44,9 +48,16 @@ class AssimpAppNode : public AppNode
 
 protected:
 
-   const struct aiScene*      mScene;
-   const struct aiNode*       mNode;        ///< Pointer to the node in the Collada DOM
-   AssimpAppNode*             appParent;        ///< Parent node in Collada-space
+   const struct aiScene*   mScene;
+   const struct aiNode*    mNode;                  ///< Pointer to the assimp scene node
+   AssimpAppNode*          appParent;              ///< Parent node
+   MatrixF                 mNodeTransform;         ///< Scene node transform converted to TorqueSpace (filled for ALL nodes)
+
+   bool                    mInvertMeshes;          ///< True if this node's coordinate space is inverted (left handed)
+   F32                     mLastTransformTime;     ///< Time of the last transform lookup (getTransform)
+   MatrixF                 mLastTransform;         ///< Last transform lookup (getTransform) (Only Non-Dummy Nodes)
+   bool                    mDefaultTransformValid; ///< Flag indicating whether the defaultNodeTransform is valid
+   MatrixF                 mDefaultNodeTransform;  ///< Transform at DefaultTime (Only Non-Dummy Nodes)
 
 public:
 
@@ -93,6 +104,10 @@ public:
    MatrixF getNodeTransform(F32 time);
    bool animatesTransform(const AppSequence* appSeq);
    bool isParentRoot() { return (appParent == NULL); }
+
+   static void assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& outMat);
+   static void convertMat(MatrixF& outMat);
+   static void convertPoint(Point3F& outPoint);
 };
 
 #endif // _ASSIMP_APPNODE_H_

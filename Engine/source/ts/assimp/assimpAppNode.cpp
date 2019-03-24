@@ -32,6 +32,9 @@
 #include <assimp/types.h>
 
 AssimpAppNode::AssimpAppNode(const struct aiScene* scene, const struct aiNode* node, AssimpAppNode* parent)
+:  mInvertMeshes(false),
+   mLastTransformTime(TSShapeLoader::DefaultTime - 1),
+   mDefaultTransformValid(false)
 {
    mScene = scene;
    mNode = node;
@@ -45,7 +48,8 @@ AssimpAppNode::AssimpAppNode(const struct aiScene* scene, const struct aiNode* n
    }
 
    mParentName = dStrdup(parent ? parent->getName() : "ROOT");
-   Con::printf("[ASSIMP] Node Created: %s", mName);
+   assimpToTorqueMat(node->mTransformation, mNodeTransform);
+   Con::printf("[ASSIMP] Node Created: %s, Parent: %s", mName, mParentName);
 }
 
 // Get all child nodes
@@ -73,66 +77,27 @@ void AssimpAppNode::buildMeshList()
 
 MatrixF AssimpAppNode::getTransform(F32 time)
 {
-   // Translate from assimp matrix to torque matrix.
-   // They're both row major, I wish I could just cast
-   // but that doesn't seem to be an option.
+   // Check if we can use the last computed transform
+   if (time == mLastTransformTime)
+      return mLastTransform;
 
-   // Note: this should be cached, it doesn't change
-   //       at this level. This is base transform.
+   if (appParent) {
+      // Get parent node's transform
+      mLastTransform = appParent->getTransform(time);
+   }
+   else {
+      // no parent (ie. root level) => scale by global shape <unit>
+      mLastTransform.identity();
+      if (!isBounds())
+         convertMat(mLastTransform);
 
-   // Y and Z and optionally swapped.
-
-   MatrixF mat(false);
-   mat.setRow(0, Point4F((F32)mNode->mTransformation.a1,
-       (F32)mNode->mTransformation.a3,
-       (F32)mNode->mTransformation.a2,
-       (F32)mNode->mTransformation.a4)
-   );
-
-   // Check for Y Z Swap
-   if ( Con::getBoolVariable("$Assimp::SwapYZ", false) )
-   {
-      mat.setRow(1, Point4F((F32)mNode->mTransformation.c1,
-          (F32)mNode->mTransformation.c3,
-          (F32)mNode->mTransformation.c2,
-          (F32)mNode->mTransformation.c4)
-      );
-      mat.setRow(2, Point4F((F32)mNode->mTransformation.b1,
-          (F32)mNode->mTransformation.b3,
-          (F32)mNode->mTransformation.b2,
-          (F32)mNode->mTransformation.b4)
-      );
-   } 
-   else 
-   {
-      mat.setRow(1, Point4F((F32)mNode->mTransformation.b1,
-          (F32)mNode->mTransformation.b3,
-          (F32)mNode->mTransformation.b2,
-          (F32)mNode->mTransformation.b4)
-      );
-      mat.setRow(2, Point4F((F32)mNode->mTransformation.c1,
-          (F32)mNode->mTransformation.c3,
-          (F32)mNode->mTransformation.c2,
-          (F32)mNode->mTransformation.c4)
-      );
+      //mLastTransform.scale(ColladaUtils::getOptions().unit);
    }
 
-   mat.setRow(3, Point4F((F32)mNode->mTransformation.d1,
-       (F32)mNode->mTransformation.d3,
-       (F32)mNode->mTransformation.d2,
-       (F32)mNode->mTransformation.d4)
-   );
+   mLastTransform.mul(mNodeTransform);
+   mLastTransformTime = time;
 
-   // Node transformations are carried down the hiearchy
-   // so we need all of our parents transforms to make 
-   // this work.
-   /*if ( appParent != 0 )
-   {
-      MatrixF parentMat = appParent->getNodeTransform(time);
-      mat.mul(parentMat);
-   }*/
-
-   return mat;
+   return mLastTransform;
 }
 
 bool AssimpAppNode::animatesTransform(const AppSequence* appSeq)
@@ -143,5 +108,69 @@ bool AssimpAppNode::animatesTransform(const AppSequence* appSeq)
 /// Get the world transform of the node at the specified time
 MatrixF AssimpAppNode::getNodeTransform(F32 time)
 {
-   return getTransform(time);
+   // Avoid re-computing the default transform if possible
+   if (mDefaultTransformValid && time == TSShapeLoader::DefaultTime)
+   {
+      return mDefaultNodeTransform;
+   }
+   else
+   {
+      MatrixF nodeTransform = getTransform(time);
+
+      // Check for inverted node coordinate spaces => can happen when modelers
+      // use the 'mirror' tool in their 3d app. Shows up as negative <scale>
+      // transforms in the collada model.
+      if (m_matF_determinant(nodeTransform) < 0.0f)
+      {
+         // Mark this node as inverted so we can mirror mesh geometry, then
+         // de-invert the transform matrix
+         mInvertMeshes = true;
+         nodeTransform.scale(Point3F(1, 1, -1));
+      }
+
+      // Cache the default transform
+      if (time == TSShapeLoader::DefaultTime)
+      {
+         mDefaultTransformValid = true;
+         mDefaultNodeTransform = nodeTransform;
+      }
+
+      return nodeTransform;
+   }
+}
+
+void AssimpAppNode::assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& outMat)
+{
+   outMat.setRow(0, Point4F((F32)inAssimpMat.a1, (F32)inAssimpMat.a2,
+      (F32)inAssimpMat.a3, (F32)inAssimpMat.a4));
+
+   outMat.setRow(1, Point4F((F32)inAssimpMat.b1, (F32)inAssimpMat.b2,
+      (F32)inAssimpMat.b3, (F32)inAssimpMat.b4));
+
+   outMat.setRow(2, Point4F((F32)inAssimpMat.c1, (F32)inAssimpMat.c2,
+      (F32)inAssimpMat.c3, (F32)inAssimpMat.c4));
+
+   outMat.setRow(3, Point4F((F32)inAssimpMat.d1, (F32)inAssimpMat.d2,
+      (F32)inAssimpMat.d3, (F32)inAssimpMat.d4));
+}
+
+void AssimpAppNode::convertMat(MatrixF& outMat)
+{
+   if (Con::getBoolVariable("$Assimp::SwapYZ", false))
+   {
+      MatrixF rotMat(EulerF(-M_HALFPI_F, 0, 0));
+      Point3F pos = outMat.getPosition();
+      outMat.mulL(rotMat);
+      rotMat.mulP(pos);
+      outMat.setPosition(pos);
+   }
+}
+
+void AssimpAppNode::convertPoint(Point3F& outPoint)
+{
+   if (Con::getBoolVariable("$Assimp::SwapYZ", false))
+   {
+      MatrixF rotMat(EulerF(-M_HALFPI_F, 0, 0));
+      rotMat.mulP(outPoint);
+   }
 }

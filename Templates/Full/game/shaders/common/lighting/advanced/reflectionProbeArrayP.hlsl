@@ -99,8 +99,7 @@ float3 iblBoxDiffuse(Surface surface, ProbeData probe)
 {
    float3 dir = boxProject(surface, probe);
 
-   float lod = surface.roughness*cubeMips;
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx, lod).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx,0).xyz;
    if (probe.contribution>0)
       return color*probe.contribution;
    else
@@ -131,8 +130,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
 
 float3 iblSkylightDiffuse(Surface surface, ProbeData probe)
 {
-   float lod = surface.roughness*cubeMips;
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, probe.probeIdx, lod).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, probe.probeIdx, 0).xyz;
 
    return color;
 }

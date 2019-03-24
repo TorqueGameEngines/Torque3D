@@ -218,7 +218,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
       boneTransform.setRow(3, Point4F(mMeshData->mBones[b]->mOffsetMatrix.d1, mMeshData->mBones[b]->mOffsetMatrix.d2, mMeshData->mBones[b]->mOffsetMatrix.d3, mMeshData->mBones[b]->mOffsetMatrix.d4));
 
       //boneTransform.inverse();
-      //AssimpAppNode::convertMat(boneTransform); // Will need a better animated reference shape to determine if this is needed.
+      //AssimpAppNode::convertMat(boneTransform);
       //boneTransform.inverse();
       initialTransforms.push_back(boneTransform);
 
@@ -231,7 +231,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 
       for (U32 w = 0; w < numWeights; ++w)
       {
-         aiVertexWeight* aiWeight = mMeshData->mBones[b]->mWeights;
+         aiVertexWeight* aiWeight = &mMeshData->mBones[b]->mWeights[w];
 
          weight[w] = aiWeight->mWeight;
          vertexIndex[w] = aiWeight->mVertexId;

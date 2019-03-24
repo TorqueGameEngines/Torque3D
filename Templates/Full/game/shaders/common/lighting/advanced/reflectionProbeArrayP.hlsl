@@ -152,52 +152,6 @@ float3 iblSkylightSpecular(Surface surface, ProbeData probe)
    return color;
 }
 
-void blendProbes(ProbeData probes[MAX_PROBES], float blendSum, float probehits)
-{
-   int i = 0;
-   float blendFactor[MAX_PROBES];
-   float blendFacSum = 0;
-   // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
-   // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
-   // respect constraint B.
-   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
-   // and respect constraint A.
-   
-   for (i = 0; i < numProbes; i++)
-   {
-      if (probehits>1.0)
-      {
-         blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
-         blendFactor[i] *= ((probes[i].contribution) / (1.0-blendSum));
-         blendFacSum += blendFactor[i];
-      }
-      else
-      {
-         blendFactor[i] = probes[i].contribution;
-         blendFacSum = probes[i].contribution;
-      }
-   }
-
-   // Normalize blendVal
-#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
-   if (blendFacSum == 0.0f) // Possible with custom weight
-   {
-      blendFacSum = 1.0f;
-   }
-#endif
-    //use probehits for sharp cuts when singular, 
-    //blendSum when wanting blend on all edging
-   if (blendSum>1.0)
-   {
-      float invBlendSumWeighted = 1.0f / blendFacSum;
-      for (i = 0; i < numProbes; ++i)
-      {
-         blendFactor[i] *= invBlendSumWeighted;
-         probes[i].contribution = blendFactor[i];
-      }
-   }
-}
-
 float4 main( PFXVertToPix IN ) : SV_TARGET
 {
    //unpack normal and linear depth 
@@ -214,7 +168,10 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    }     
 
    int i = 0;
+   float blendFactor[MAX_PROBES];
    float blendSum = 0;
+   float blendFacSum = 0;
+   float invBlendSum = 0;
    int skyID = 0;
    float probehits = 0;
    //Set up our struct data
@@ -255,9 +212,47 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
          probes[i].contribution = 0;
 
       blendSum += probes[i].contribution;
+      invBlendSum += (1.0f - probes[i].contribution);
    }
-   blendProbes(probes, blendSum, probehits);
-   
+
+   // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
+   // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
+   // respect constraint B.
+   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
+   // and respect constraint A.
+   for (i = 0; i < numProbes; i++)
+   {
+      if (probehits>1.0)
+      {
+         blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
+         blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
+         blendFacSum += blendFactor[i];
+      }
+      else
+      {
+         blendFactor[i] = probes[i].contribution;
+         blendFacSum = probes[i].contribution;
+      }
+   }
+
+   // Normalize blendVal
+#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
+   if (blendFacSum == 0.0f) // Possible with custom weight
+   {
+      blendFacSum = 1.0f;
+   }
+#endif
+    //use probehits for sharp cuts when singular, 
+    //blendSum when wanting blend on all edging
+   if (blendSum>1.0)
+   {
+      float invBlendSumWeighted = 1.0f / blendFacSum;
+      for (i = 0; i < numProbes; ++i)
+      {
+         blendFactor[i] *= invBlendSumWeighted;
+         probes[i].contribution = blendFactor[i];
+      }
+   }
 #if DEBUGVIZ_ATTENUATION == 1
    float attenVis = 0;
    for (i = 0; i < numProbes; ++i)

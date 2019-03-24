@@ -48,6 +48,8 @@ public:
    virtual void zombify();
    virtual void resurrect();
 
+   virtual bool isInitialized() { return mTexture ? true : false; }
+
    // Get functions
    ID3D11ShaderResourceView* getSRView();
    ID3D11RenderTargetView* getRTView(U32 faceIdx, U32 mipIndex=0);
@@ -81,7 +83,10 @@ class GFXD3D11CubemapArray : public GFXCubemapArray
 public:
    GFXD3D11CubemapArray();
    virtual ~GFXD3D11CubemapArray();
-   virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
+   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
+   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format);
+   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot);
+   virtual void copyTo(GFXCubemapArray *pDstCubemap);
    virtual void setToTexUnit(U32 tuNum);
 
    ID3D11ShaderResourceView* getSRView() { return mSRView; }

@@ -631,7 +631,7 @@ void ReflectionProbe::processStaticCubemap()
       IBLUtilities::SaveCubeMap(getPrefilterMapPath(), mPrefilterMap->mCubemap);
    }
 
-   mProbeInfo->mCubemap = mPrefilterMap->mCubemap;
+   mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
    mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
 }
 
@@ -647,7 +647,7 @@ void ReflectionProbe::updateMaterial()
       {
          if (mPrefilterMap != nullptr && mPrefilterMap->mCubemap.isValid())
          {
-            mProbeInfo->mCubemap = mPrefilterMap->mCubemap;
+            mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
          }
          else
          {
@@ -667,7 +667,7 @@ void ReflectionProbe::updateMaterial()
    {
       if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
       {
-         mProbeInfo->mCubemap = mDynamicCubemap;
+         mProbeInfo->mPrefilterCubemap = mDynamicCubemap;
 
          mProbeInfo->mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
       }
@@ -684,6 +684,9 @@ void ReflectionProbe::updateMaterial()
       mProbeInfo->mIsEnabled = false;
 
    PROBEMGR->updateProbes();
+
+   if (mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
+      PROBEMGR->updateProbeTexture(mProbeInfo);
 }
 
 bool ReflectionProbe::createClientResources()

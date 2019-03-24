@@ -301,4 +301,9 @@ namespace ImageUtil
          return format;
       };
    }
+
+   U32 getMaxMipCount(const U32 width, const U32 height)
+   {
+      return mFloor(mLog2(mMax(width, height))) + 1;
+   }
 }

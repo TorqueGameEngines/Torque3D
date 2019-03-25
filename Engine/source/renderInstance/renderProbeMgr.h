@@ -72,7 +72,7 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
    Point3F mProbeRefScale;
    F32 mAtten;
 
-   GFXCubemapHandle mCubemap;
+   GFXCubemapHandle mPrefilterCubemap;
    GFXCubemapHandle mIrradianceCubemap;
 
    //Utilized in dynamic reflections
@@ -96,6 +96,8 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
    };
 
    ProbeShapeType mProbeShapeType;
+
+   U32 mCubemapIndex;
 
 public:
 
@@ -161,6 +163,18 @@ class RenderProbeMgr : public RenderBinManager
 
    Vector<U32> mRegisteredProbes;
 
+   //maximum number of allowed probes
+   static const U32 PROBE_MAX_COUNT = 250;
+   //maximum number of rendered probes per frame adjust as needed
+   static const U32 PROBE_MAX_FRAME = 8;
+   //number of slots to allocate at once in the cubemap array
+   static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 10;
+
+   static const U32 PROBE_IRRAD_SIZE = 64;
+   static const U32 PROBE_PREFILTER_SIZE = 64;
+   static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
+   static const U32 INVALID_CUBE_SLOT = U32_MAX;
+
    //Array rendering
    U32 mEffectiveProbeCount;
    S32 mMipCount;
@@ -173,6 +187,11 @@ class RenderProbeMgr : public RenderBinManager
    Vector<GFXCubemapHandle> cubeMaps;
    Vector<GFXCubemapHandle> irradMaps;
 
+   bool hasSkylight;
+   GFXCubemapHandle skylightIrradMap;
+   GFXCubemapHandle skylightPrefilterMap;
+   Point4F          skylightPos;
+
    AlignedArray<Point4F> mProbePositions;
    AlignedArray<Point4F> mProbeBBMin;
    AlignedArray<Point4F> mProbeBBMax;
@@ -180,8 +199,15 @@ class RenderProbeMgr : public RenderBinManager
    AlignedArray<float> mProbeRadius;
    AlignedArray<float> mProbeAttenuation;
 
-   GFXCubemapArrayHandle mCubemapArray;
-   GFXCubemapArrayHandle mIrradArray;
+   //number of cubemaps
+   U32 mCubeMapCount;
+   //number of cubemap slots allocated
+   U32 mCubeSlotCount;
+   //array of cubemap slots, due to the editor these may be mixed around as probes are added and deleted
+   bool mCubeMapSlots[PROBE_MAX_COUNT];
+
+   GFXCubemapArrayHandle mPrefilterArray;
+   GFXCubemapArrayHandle mIrradianceArray;
 
    //Utilized in forward rendering
    ProbeConstantMap mConstantLookup;
@@ -191,10 +217,14 @@ class RenderProbeMgr : public RenderBinManager
    //
    SimObjectPtr<PostEffect> mProbeArrayEffect;
 
+   //Default skylight, used for shape editors, etc
+   ProbeRenderInst* mDefaultSkyLight;
+
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
    virtual ~RenderProbeMgr();
+   virtual bool onAdd();
    virtual void onRemove();
 
    // ConsoleObject
@@ -219,6 +249,7 @@ protected:
       GFXShaderConstBuffer *shaderConsts);
 
    void _setupStaticParameters();
+   void updateProbeTexture(U32 probeIdx);
    void _setupPerFrameParameters(const SceneRenderState *state);
    virtual void addElement(RenderInst *inst);
    virtual void render(SceneRenderState * state);
@@ -230,6 +261,7 @@ protected:
 public:
    // RenderBinMgr
    void updateProbes();
+   void updateProbeTexture(ProbeRenderInst* probe);
 
    /// Returns the active LM.
    static inline RenderProbeMgr* getProbeManager();
@@ -249,6 +281,16 @@ public:
 
    void bakeProbe(ReflectionProbe *probeInfo);
    void bakeProbes();
+
+   U32 _findNextEmptyCubeSlot()
+   {
+      for (U32 i = 0; i < PROBE_MAX_COUNT; i++)
+      {
+         if (!mCubeMapSlots[i])
+            return i;
+      }
+      return INVALID_CUBE_SLOT;
+   }
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

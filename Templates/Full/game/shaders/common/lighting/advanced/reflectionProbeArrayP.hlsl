@@ -29,8 +29,12 @@ uniform float4    bbMaxArray[MAX_PROBES];
 uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 
 #if DEBUGVIZ_CONTRIB
-uniform float4    probeContribColors[MAX_PROBES]; 
+uniform float4    probeContribColors[MAX_PROBES];
 #endif
+
+TORQUE_UNIFORM_SAMPLERCUBE(skylightPrefilterMap, 6);
+TORQUE_UNIFORM_SAMPLERCUBE(skylightIrradMap, 7);
+uniform float hasSkylight;
 
 //Probe IBL stuff
 struct ProbeData
@@ -45,7 +49,8 @@ struct ProbeData
    uint type; //box = 0, sphere = 1
    float contribution;
    float3 refPosition;
-   float3 pad;
+   float cubemapIdx;
+   float2 pad;
 };
 
 float defineSkylightInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
@@ -64,8 +69,8 @@ float defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeR
 
 float getDistBoxToPoint(float3 pt, float3 extents)
 {
-      float3 d = max(max(-extents - pt, 0), pt - extents);
-      return max(max(d.x,d.y),d.z);
+   float3 d = max(max(-extents - pt, 0), pt - extents);
+   return max(max(d.x, d.y), d.z);
 }
 
 float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
@@ -73,8 +78,8 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
    float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
    float atten = 1.0-probe.attenuation;
    float baseVal = 0.25;
-   float dist = getDistBoxToPoint(surfPosLS,float3(baseVal,baseVal,baseVal));
-   return saturate(smoothstep(baseVal+0.0001,atten*baseVal,dist));
+   float dist = getDistBoxToPoint(surfPosLS, float3(baseVal, baseVal, baseVal));
+   return saturate(smoothstep(baseVal + 0.0001, atten*baseVal, dist));
 }
 
 // Box Projected IBL Lighting
@@ -82,12 +87,12 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 float3 boxProject(Surface surface, ProbeData probe)
 {
-   float3 RayLS = mul(probe.worldToLocal, float4(surface.R,0.0)).xyz;
-   float3 PositionLS = mul( probe.worldToLocal,  float4(surface.P,1.0)).xyz;
-   
-   float3 unit = probe.boxMax-probe.boxMin;
-   float3 plane1vec  = (unit/2 - PositionLS) / RayLS;
-   float3 plane2vec = (-unit/2 - PositionLS) / RayLS;
+   float3 RayLS = mul(probe.worldToLocal, float4(surface.R, 0.0)).xyz;
+   float3 PositionLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
+
+   float3 unit = probe.boxMax - probe.boxMin;
+   float3 plane1vec = (unit / 2 - PositionLS) / RayLS;
+   float3 plane2vec = (-unit / 2 - PositionLS) / RayLS;
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = surface.P + surface.R * dist;
@@ -99,7 +104,7 @@ float3 iblBoxDiffuse(Surface surface, ProbeData probe)
 {
    float3 dir = boxProject(surface, probe);
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx,0).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.cubemapIdx, 0).xyz;
    if (probe.contribution>0)
       return color;
    else
@@ -120,7 +125,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.cubemapIdx, lod).xyz * (brdf.x + brdf.y);
 
    if (probe.contribution>0)
       return color;
@@ -152,127 +157,164 @@ float3 iblSkylightSpecular(Surface surface, ProbeData probe)
    return color;
 }
 
-float4 main( PFXVertToPix IN ) : SV_TARGET
+float4 main(PFXVertToPix IN) : SV_TARGET
 {
    //unpack normal and linear depth 
    float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, IN.uv0.xy);
 
    //create surface
-   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
-                                    IN.uv0.xy, eyePosWorld, IN.wsEyeRay, cameraToWorld);
+   Surface surface = createSurface(normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+      IN.uv0.xy, eyePosWorld, IN.wsEyeRay, cameraToWorld);
 
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
-   {   
+   {
       discard;
-   }     
+   }
+
+   float alpha = 1;
 
    int i = 0;
    float blendFactor[MAX_PROBES];
    float blendSum = 0;
    float blendFacSum = 0;
    float invBlendSum = 0;
-   int skyID = 0;
    float probehits = 0;
    //Set up our struct data
    ProbeData probes[MAX_PROBES];
 
-   //Process prooooobes
-   for (i = 0; i < numProbes; ++i)
+   if (alpha > 0)
    {
-      probes[i].wsPosition = inProbePosArray[i].xyz;
-      probes[i].radius = probeConfigData[i].g;
-      probes[i].boxMin = bbMinArray[i].xyz;
-      probes[i].boxMax = bbMaxArray[i].xyz;
-      probes[i].refPosition = inRefPosArray[i].xyz;
-      probes[i].attenuation = probeConfigData[i].b;
-      probes[i].worldToLocal = worldToObjArray[i];
-      probes[i].probeIdx = i;
-      probes[i].type = probeConfigData[i].r;
-      probes[i].contribution = 0; 
-
-      if (probes[i].type == 0) //box
-      {
-         probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
-         probehits++;
-      }
-      else if (probes[i].type == 1) //sphere
-      {
-         probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
-         probehits++;
-      }
-      else //skylight
-      {
-         //
-         //probes[i].contribution = defineSkylightInfluence(surface, probes[i], IN.wsEyeRay);
-         skyID = i;
-      }
-
-      if (probes[i].contribution>1 || probes[i].contribution<0)
-         probes[i].contribution = 0;
-
-      blendSum += probes[i].contribution;
-      invBlendSum += (1.0f - probes[i].contribution);
-   }
-
-   // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
-   // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
-   // respect constraint B.
-   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
-   // and respect constraint A.
-   for (i = 0; i < numProbes; i++)
-   {
-      if (probehits>1.0)
-      {
-         blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
-         blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
-         blendFacSum += blendFactor[i];
-      }
-      else
-      {
-         blendFactor[i] = probes[i].contribution;
-         blendFacSum = probes[i].contribution;
-      }
-   }
-
-   // Normalize blendVal
-#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
-   if (blendFacSum == 0.0f) // Possible with custom weight
-   {
-      blendFacSum = 1.0f;
-   }
-#endif
-   if (blendSum>1.0)
-   {
-      float invBlendSumWeighted = 1.0f / blendFacSum;
+      //Process prooooobes
       for (i = 0; i < numProbes; ++i)
       {
-         blendFactor[i] *= invBlendSumWeighted;
-         probes[i].contribution = blendFactor[i];
+         probes[i].wsPosition = inProbePosArray[i].xyz;
+         probes[i].radius = probeConfigData[i].g;
+         probes[i].boxMin = bbMinArray[i].xyz;
+         probes[i].boxMax = bbMaxArray[i].xyz;
+         probes[i].refPosition = inRefPosArray[i].xyz;
+         probes[i].attenuation = probeConfigData[i].b;
+         probes[i].worldToLocal = worldToObjArray[i];
+         probes[i].probeIdx = i;
+         probes[i].cubemapIdx = probeConfigData[i].a;
+         probes[i].type = probeConfigData[i].r;
+         probes[i].contribution = 0;
+
+         if (probes[i].type == 0) //box
+         {
+            probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+            probehits++;
+         }
+         else if (probes[i].type == 1) //sphere
+         {
+            probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+            probehits++;
+         }
+
+         if (probes[i].contribution>1 || probes[i].contribution<0)
+            probes[i].contribution = 0;
+
+         blendSum += probes[i].contribution;
+         invBlendSum += (1.0f - probes[i].contribution);
+
+         alpha -= probes[i].contribution;
       }
-   }
+
+      // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
+      // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
+      // respect constraint B.
+      // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
+      // and respect constraint A.
+      for (i = 0; i < numProbes; i++)
+      {
+         if (probehits>1.0)
+         {
+            blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
+            blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
+            blendFacSum += blendFactor[i];
+         }
+         else
+         {
+            blendFactor[i] = probes[i].contribution;
+            blendFacSum = probes[i].contribution;
+         }
+      }
+
+
+      // Normalize blendVal
+#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
+      if (blendFacSum == 0.0f) // Possible with custom weight
+      {
+         blendFacSum = 1.0f;
+      }
+#endif
+
+      //use probehits for sharp cuts when singular, 
+      //blendSum when wanting blend on all edging
+      if (blendSum>1.0)
+      {
+         float invBlendSumWeighted = 1.0f / blendFacSum;
+         for (i = 0; i < numProbes; ++i)
+         {
+            blendFactor[i] *= invBlendSumWeighted;
+            probes[i].contribution = blendFactor[i];
+
+            alpha -= probes[i].contribution;
+         }
+      }
+
 #if DEBUGVIZ_ATTENUATION == 1
-   float attenVis = 0;
-   for (i = 0; i < numProbes; ++i)
-   {
+      /*float attenVis = 0;
+      for (i = 0; i < numProbes; ++i)
+      {
       attenVis += probes[i].contribution;
-   }
-   return float4(attenVis, attenVis, attenVis, 1);
+      }
+      return float4(attenVis, attenVis, attenVis, 1);*/
+      return float4(alpha, alpha, alpha, 1);
 #endif
 
 #if DEBUGVIZ_CONTRIB == 1
 
-   float3 finalContribColor = float3(0, 0, 0);
-   for (i = 0; i < numProbes; ++i)
-   {
-      if (probes[i].contribution == 0)
-         continue;
+      float3 finalContribColor = float3(0, 0, 0);
+      for (i = 0; i < numProbes; ++i)
+      {
+         if (probes[i].contribution == 0)
+            continue;
 
-      finalContribColor += probes[i].contribution * probeContribColors[i].rgb;
+         finalContribColor += probes[i].contribution * probeContribColors[i].rgb;
+      }
+
+      return float4(finalContribColor, 1);
+#endif
    }
 
-   return float4(finalContribColor, 1);
+   if (hasSkylight && alpha == 1)
+   {
+      float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
+      float lod = surface.roughness*cubeMips;
+#if DEBUGVIZ_SPECCUBEMAP == 0 && DEBUGVIZ_DIFFCUBEMAP == 0
+      float3 specular = TORQUE_TEXCUBELOD(skylightPrefilterMap, float4(surface.R, lod)).xyz * (brdf.x + brdf.y);
+      float3 irradiance = TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz;
+
+      float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+
+      //energy conservation
+      float3 kD = 1.0.xxx - F;
+      kD *= 1.0 - surface.metalness;
+
+      float3 diffuse = kD * irradiance * surface.baseColor.rgb;
+      float4 finalColor = float4(diffuse + specular * surface.ao, alpha);
+      return finalColor;
+#elif DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0
+      float3 specular = TORQUE_TEXCUBELOD(skylightPrefilterMap, float4(surface.R, lod)).xyz;
+      float4 finalColor = float4(specular, 1);
+      return finalColor;
+#elif DEBUGVIZ_DIFFCUBEMAP == 1
+      float3 irradiance = TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz;
+      float4 finalColor = float4(irradiance, 1);
+      return finalColor;
 #endif
+   }
 
 #if DEBUGVIZ_SPECCUBEMAP == 0 && DEBUGVIZ_DIFFCUBEMAP == 0
 
@@ -288,17 +330,15 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    {
       if (probes[i].contribution == 0)
          continue;
-                  
+
       if (probes[i].type == 2) //skip skylight
          continue;
-         
+
       irradiance += iblBoxDiffuse(surface, probes[i]);
       specular += F*iblBoxSpecular(surface, probes[i]);
-      contrib +=probes[i].contribution;
+      contrib += probes[i].contribution;
    }
-   
-   irradiance = lerp(iblSkylightDiffuse(surface, probes[skyID]),irradiance,contrib);
-   specular = lerp(F*iblSkylightSpecular(surface, probes[skyID]),specular,contrib);
+   contrib = saturate(contrib);
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
@@ -324,7 +364,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
    return float4(cubeColor, 1);
 
 #elif DEBUGVIZ_DIFFCUBEMAP == 1
-   
+
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {

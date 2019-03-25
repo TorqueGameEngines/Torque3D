@@ -49,7 +49,8 @@ struct ProbeData
    uint type; //box = 0, sphere = 1
    float contribution;
    float3 refPosition;
-   float3 pad;
+   float cubemapIdx;
+   float2 pad;
 };
 
 float defineSkylightInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
@@ -104,7 +105,7 @@ float3 iblBoxDiffuse(Surface surface, ProbeData probe)
 {
    float3 dir = boxProject(surface, probe);
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx, 0).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.cubemapIdx, 0).xyz;
    if (probe.contribution>0)
       return color*probe.contribution;
    else
@@ -125,7 +126,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.cubemapIdx, lod).xyz * (brdf.x + brdf.y);
 
    if (probe.contribution>0)
       return color*probe.contribution;
@@ -197,6 +198,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          probes[i].attenuation = probeConfigData[i].b;
          probes[i].worldToLocal = worldToObjArray[i];
          probes[i].probeIdx = i;
+         probes[i].cubemapIdx = probeConfigData[i].a;
          probes[i].type = probeConfigData[i].r;
          probes[i].contribution = 0;
 

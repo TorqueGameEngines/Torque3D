@@ -391,6 +391,7 @@ void RenderProbeMgr::_setupStaticParameters()
 
    cubeMaps.clear();
    irradMaps.clear();
+   Vector<U32> cubemapIdxes;
 
    if (probeCount != 0 && ProbeRenderInst::all[0]->mPrefilterCubemap != nullptr)
    {
@@ -420,15 +421,6 @@ void RenderProbeMgr::_setupStaticParameters()
          continue;
       }
 
-      //if (curEntry.mCubemap.isNull() || curEntry.mIrradianceCubemap.isNull())
-      //   continue;
-
-      //if (!curEntry.mCubemap->isInitialized())
-      //   continue;
-
-      //if (!curEntry.mIrradianceCubemap->isInitialized())
-      //   continue;
-
       //Setup
       Point3F probePos = curEntry.getPosition();
       Point3F refPos = curEntry.getPosition() +curEntry.mProbeRefOffset;
@@ -444,21 +436,40 @@ void RenderProbeMgr::_setupStaticParameters()
       probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType, 
          curEntry.mRadius,
          curEntry.mAtten,
-         1);
+         curEntry.mCubemapIndex);
 
-      //cubeMaps.push_back(curEntry.mCubemap);
-      //irradMaps.push_back(curEntry.mIrradianceCubemap);
+      cubeMaps.push_back(curEntry.mPrefilterCubemap);
+      irradMaps.push_back(curEntry.mIrradianceCubemap);
+
+      cubemapIdxes.push_back(i);
 
       mEffectiveProbeCount++;
    }
 
    if (mEffectiveProbeCount != 0)
    {
-      //mPrefilterArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
-      //mIrradianceArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
+      bool useOldWay = false;
+      if (useOldWay)
+      {
+         //old static way
+         mPrefilterArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
+         mIrradianceArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
-      //mPrefilterArray->initStatic(cubeMaps.address(), cubeMaps.size());
-      //mIrradianceArray->initStatic(irradMaps.address(), irradMaps.size());
+         mPrefilterArray->init(cubeMaps.address(), cubeMaps.size());
+         mIrradianceArray->init(irradMaps.address(), irradMaps.size());
+      }
+      else
+      {
+         //faked static way by doing it via update
+         for (U32 i = 0; i < cubemapIdxes.size(); i++)
+         {
+            U32 probeIdx = cubemapIdxes[i];
+
+            const U32 cubeIndex = ProbeRenderInst::all[probeIdx]->mCubemapIndex;
+            mIrradianceArray->updateTexture(irradMaps[i], cubeIndex);
+            mPrefilterArray->updateTexture(cubeMaps[i], cubeIndex);
+         }
+      }
    }
 }
 
@@ -740,7 +751,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
    {
       mProbeArrayEffect->setCubemapTexture(6, skylightPrefilterMap);
       mProbeArrayEffect->setCubemapTexture(7, skylightIrradMap);
-
    }
 
    if (mEffectiveProbeCount != 0)
@@ -908,6 +918,11 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
 
       IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
       IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
+
+      U32 endMSTime = Platform::getRealMilliseconds();
+      F32 diffTime = F32(endMSTime - startMSTime);
+      Con::warnf("RenderProbeMgr::bake() - Finished Capture! Took %g milliseconds", diffTime);
+      Con::warnf("RenderProbeMgr::bake() - Beginning save now!");
 
       IBLUtilities::SaveCubeMap(clientProbe->getIrradianceMapPath(), clientProbe->mIrridianceMap->mCubemap);
       IBLUtilities::SaveCubeMap(clientProbe->getPrefilterMapPath(), clientProbe->mPrefilterMap->mCubemap);

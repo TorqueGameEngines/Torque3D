@@ -513,6 +513,9 @@ void GFXD3D11CubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSiz
 void GFXD3D11CubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32 slot)
 {
    AssertFatal(slot <= mNumCubemaps, "GFXD3D11CubemapArray::updateTexture - trying to update a cubemap texture that is out of bounds!");
+   AssertFatal(mFormat == cubemap->getFormat(), "GFXD3D11CubemapArray::updateTexture - Destination format doesn't match");
+   AssertFatal(mSize == cubemap->getSize(), "GFXD3D11CubemapArray::updateTexture - Destination size doesn't match");
+   AssertFatal(mMipMapLevels == cubemap->getMipMapLevels(), "GFXD3D11CubemapArray::updateTexture - Destination mip levels doesn't match");
 
    GFXD3D11Cubemap *pCubeObj = static_cast<GFXD3D11Cubemap*>((GFXCubemap*)cubemap);
    ID3D11Resource *pDstRes = pCubeObj->get2DTex();
@@ -531,16 +534,10 @@ void GFXD3D11CubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const 
 void GFXD3D11CubemapArray::copyTo(GFXCubemapArray *pDstCubemap)
 {
    AssertFatal(pDstCubemap, "GFXD3D11CubemapArray::copyTo - Got null GFXCubemapArray");
-
-   const U32 dstCount = pDstCubemap->getNumCubemaps();
-   const GFXFormat dstFmt = pDstCubemap->getFormat();
-   const U32 dstSize = pDstCubemap->getSize();
-   const U32 dstMips = pDstCubemap->getMipMapLevels();
-
-   AssertFatal(dstCount > mNumCubemaps, "GFXD3D11CubemapArray::copyTo - Destination too small");
-   AssertFatal(dstFmt == mFormat, "GFXD3D11CubemapArray::copyTo - Destination format doesn't match");
-   AssertFatal(dstSize == mSize, "GFXD3D11CubemapArray::copyTo - Destination size doesn't match");
-   AssertFatal(dstMips == mMipMapLevels, "GFXD3D11CubemapArray::copyTo - Destination mip levels doesn't match");
+   AssertFatal(pDstCubemap->getNumCubemaps() > mNumCubemaps, "GFXD3D11CubemapArray::copyTo - Destination too small");
+   AssertFatal(pDstCubemap->getFormat() == mFormat, "GFXD3D11CubemapArray::copyTo - Destination format doesn't match");
+   AssertFatal(pDstCubemap->getSize() == mSize, "GFXD3D11CubemapArray::copyTo - Destination size doesn't match");
+   AssertFatal(pDstCubemap->getMipMapLevels() == mMipMapLevels, "GFXD3D11CubemapArray::copyTo - Destination mip levels doesn't match");
 
    GFXD3D11CubemapArray *pDstCube = static_cast<GFXD3D11CubemapArray*>(pDstCubemap);
    ID3D11Resource *pDstRes = pDstCube->get2DTex();
@@ -556,7 +553,6 @@ void GFXD3D11CubemapArray::copyTo(GFXCubemapArray *pDstCubemap)
          }
       }
    }
-
 }
 
 void GFXD3D11CubemapArray::setToTexUnit(U32 tuNum)

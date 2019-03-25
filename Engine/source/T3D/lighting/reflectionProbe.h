@@ -118,7 +118,6 @@ protected:
    String mCubemapName;
    CubemapData *mStaticCubemap;
    GFXCubemapHandle  mDynamicCubemap;
-   bool mUseCubemap;
 
    String cubeDescName;
    U32 cubeDescId;
@@ -223,12 +222,11 @@ public:
    void createGeometry();
 
    // Get the Material instance
-   void updateMaterial();
+   void updateCubemaps();
 
    virtual void updateProbeParams();
 
    bool createClientResources();
-   void generateTextures();
 
    void processStaticCubemap();
 

@@ -101,7 +101,7 @@ float3 iblBoxDiffuse(Surface surface, ProbeData probe)
 
    float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.probeIdx,0).xyz;
    if (probe.contribution>0)
-      return color*probe.contribution;
+      return color;
    else
       return float3(0, 0, 0);
 }
@@ -123,7 +123,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
    float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.probeIdx, lod).xyz * (brdf.x + brdf.y);
 
    if (probe.contribution>0)
-      return color*probe.contribution;
+      return color;
    else
       return float3(0, 0, 0);
 }
@@ -242,8 +242,6 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       blendFacSum = 1.0f;
    }
 #endif
-    //use probehits for sharp cuts when singular, 
-    //blendSum when wanting blend on all edging
    if (blendSum>1.0)
    {
       float invBlendSumWeighted = 1.0f / blendFacSum;
@@ -298,7 +296,7 @@ float4 main( PFXVertToPix IN ) : SV_TARGET
       specular += F*iblBoxSpecular(surface, probes[i]);
       contrib +=probes[i].contribution;
    }
-   contrib = saturate(contrib);
+   
    irradiance = lerp(iblSkylightDiffuse(surface, probes[skyID]),irradiance,contrib);
    specular = lerp(F*iblSkylightSpecular(surface, probes[skyID]),specular,contrib);
 

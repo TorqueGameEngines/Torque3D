@@ -170,9 +170,9 @@ class RenderProbeMgr : public RenderBinManager
    //number of slots to allocate at once in the cubemap array
    static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 10;
 
-   static const U32 PROBE_IRRAD_SIZE = 32;
-   static const U32 PROBE_PREFILTER_SIZE = 128;
-   static const GFXFormat PROBE_FORMAT = GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
+   static const U32 PROBE_IRRAD_SIZE = 64;
+   static const U32 PROBE_PREFILTER_SIZE = 64;
+   static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
    static const U32 INVALID_CUBE_SLOT = U32_MAX;
 
    //Array rendering

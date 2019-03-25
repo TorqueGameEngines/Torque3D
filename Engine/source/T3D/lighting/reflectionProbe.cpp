@@ -109,7 +109,6 @@ ReflectionProbe::ReflectionProbe()
    mObjScale = Point3F::One * 10;
    mProbeRefScale = Point3F::One*10;
 
-   mUseCubemap = false;
    mUseHDRCaptures = true;
 
    mStaticCubemap = NULL;
@@ -436,7 +435,6 @@ U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream
 
    if (stream->writeFlag(mask & CubemapMask))
    {
-      stream->writeFlag(mUseCubemap);
       stream->write(mCubemapName);
    }
 
@@ -497,12 +495,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
       isMaterialDirty = true;
    }
 
-   updateProbeParams();
-
    if (stream->readFlag())  // CubemapMask
    {
-      mUseCubemap = stream->readFlag();
-
       String newCubemapName;
       stream->read(&mCubemapName);
 
@@ -514,29 +508,9 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
       isMaterialDirty = true;
    }
 
-   if (isMaterialDirty)
+   if (mDirty)
    {
-      updateMaterial();
-   }
-
-   PROBEMGR->updateProbes();
-}
-
-void ReflectionProbe::createGeometry()
-{
-   // Clean up our previous shape
-   if (mEditorShapeInst)
-      SAFE_DELETE(mEditorShapeInst);
-   
-   mEditorShape = NULL;
-   
-   String shapeFile = "tools/resources/ReflectProbeSphere.dae";
-   
-   // Attempt to get the resource from the ResourceManager
-   mEditorShape = ResourceManager::get().load(shapeFile);
-   if (mEditorShape)
-   {
-      mEditorShapeInst = new TSShapeInstance(mEditorShape, isClientObject());
+      updateProbeParams();
    }
 }
 
@@ -552,13 +526,11 @@ void ReflectionProbe::updateProbeParams()
       mProbeInfo->mIsEnabled = false;
    }
 
-   updateMaterial();
+   updateCubemaps();
 
    mProbeInfo->mProbeShapeType = mProbeShapeType;
 
    MatrixF transform = getTransform();
-   
-
    mProbeInfo->mPosition = getPosition();
 
    if (mProbeShapeType == ProbeRenderInst::Sphere)
@@ -633,9 +605,12 @@ void ReflectionProbe::processStaticCubemap()
 
    mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
    mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
+
+   //Update the probe manager with our new texture!
+   //PROBEMGR->updateProbeTexture(mProbeInfo);
 }
 
-void ReflectionProbe::updateMaterial()
+void ReflectionProbe::updateCubemaps()
 {
    createClientResources();
 
@@ -685,8 +660,8 @@ void ReflectionProbe::updateMaterial()
 
    PROBEMGR->updateProbes();
 
-   if (mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
-      PROBEMGR->updateProbeTexture(mProbeInfo);
+   //if (mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
+   //   PROBEMGR->updateProbeTexture(mProbeInfo);
 }
 
 bool ReflectionProbe::createClientResources()
@@ -734,8 +709,66 @@ bool ReflectionProbe::createClientResources()
    return true;
 }
 
-void ReflectionProbe::generateTextures()
+String ReflectionProbe::getPrefilterMapPath()
 {
+   if (mProbeUniqueID.isEmpty())
+   {
+      Con::errorf("ReflectionProbe::getPrefilterMapPath() - We don't have a set output path or persistant id, so no valid path can be provided!");
+      return "";
+   }
+
+   String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
+
+   char fileName[256];
+   dSprintf(fileName, 256, "%s%s_Prefilter.dds", path.c_str(), mProbeUniqueID.c_str());
+
+   return fileName;
+}
+
+String ReflectionProbe::getIrradianceMapPath()
+{
+   if (mProbeUniqueID.isEmpty())
+   {
+      Con::errorf("ReflectionProbe::getIrradianceMapPath() - We don't have a set output path or persistant id, so no valid path can be provided!");
+      return "";
+   }
+
+   String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
+
+   char fileName[256];
+   dSprintf(fileName, 256, "%s%s_Irradiance.dds", path.c_str(), mProbeUniqueID.c_str());
+
+   return fileName;
+}
+
+void ReflectionProbe::bake()
+{
+   if (mReflectionModeType == DynamicCubemap)
+      return;
+
+   PROBEMGR->bakeProbe(this);
+
+   setMaskBits(CubemapMask);
+}
+//-----------------------------------------------------------------------------
+//Rendering of editing/debug stuff
+//-----------------------------------------------------------------------------
+void ReflectionProbe::createGeometry()
+{
+   // Clean up our previous shape
+   if (mEditorShapeInst)
+      SAFE_DELETE(mEditorShapeInst);
+
+   mEditorShape = NULL;
+
+   String shapeFile = "tools/resources/ReflectProbeSphere.dae";
+
+   // Attempt to get the resource from the ResourceManager
+   mEditorShape = ResourceManager::get().load(shapeFile);
+   if (mEditorShape)
+   {
+      mEditorShapeInst = new TSShapeInstance(mEditorShape, isClientObject());
+   }
 }
 
 void ReflectionProbe::prepRenderImage(SceneRenderState *state)
@@ -916,48 +949,6 @@ DefineEngineMethod(ReflectionProbe, postApply, void, (), ,
    "A utility method for forcing a network update.\n")
 {
    object->inspectPostApply();
-}
-
-String ReflectionProbe::getPrefilterMapPath()
-{
-   if (mProbeUniqueID.isEmpty())
-   {
-      Con::errorf("ReflectionProbe::getPrefilterMapPath() - We don't have a set output path or persistant id, so no valid path can be provided!");
-      return "";
-   }
-
-   String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
-
-   char fileName[256];
-   dSprintf(fileName, 256, "%s%s_Prefilter.dds", path.c_str(), mProbeUniqueID.c_str());
-
-   return fileName;
-}
-
-String ReflectionProbe::getIrradianceMapPath()
-{
-   if (mProbeUniqueID.isEmpty())
-   {
-      Con::errorf("ReflectionProbe::getIrradianceMapPath() - We don't have a set output path or persistant id, so no valid path can be provided!");
-      return "";
-   }
-
-   String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
-
-   char fileName[256];
-   dSprintf(fileName, 256, "%s%s_Irradiance.dds", path.c_str(), mProbeUniqueID.c_str());
-
-   return fileName;
-}
-
-void ReflectionProbe::bake()
-{
-   if (mReflectionModeType == DynamicCubemap)
-      return;
-
-   PROBEMGR->bakeProbe(this);
-
-   setMaskBits(CubemapMask);
 }
 
 DefineEngineMethod(ReflectionProbe, Bake, void, (), ,

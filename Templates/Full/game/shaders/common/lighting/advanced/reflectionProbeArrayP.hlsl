@@ -202,34 +202,30 @@ float4 main(PFXVertToPix IN) : SV_TARGET
             probehits++;
          }
 
-         if (probes[i].contribution>1 || probes[i].contribution<0)
-            probes[i].contribution = 0;
+         probes[i].contribution = max(probes[i].contribution,0);
 
          blendSum += probes[i].contribution;
          invBlendSum += (1.0f - probes[i].contribution);
-
-         alpha -= probes[i].contribution;
       }
-
       // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
 	   // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
 	   // respect constraint B.
 	   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
 	   // and respect constraint A.
-	   for (i = 0; i < numProbes; i++)
+      if (probehits>1.0)
 	   {
-	      if (probehits>1.0)
-	      {
-	         blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
+         for (i = 0; i < numProbes; i++)
+         {
+            blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
 	         blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
 	         blendFacSum += blendFactor[i];
 	      }
-	      else
-	      {
-	         blendFactor[i] = probes[i].contribution;
-	         blendFacSum = probes[i].contribution;
-	      }
 	   }
+	   else
+      {
+         blendFactor[i] = probes[i].contribution;
+         blendFacSum = probes[i].contribution;
+      }
 
 
       // Normalize blendVal

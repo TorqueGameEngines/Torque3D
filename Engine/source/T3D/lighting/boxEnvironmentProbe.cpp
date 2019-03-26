@@ -168,6 +168,10 @@ void BoxEnvironmentProbe::updateProbeParams()
 
    mProbeInfo->mProbeShapeType = ProbeRenderInst::Box;
    mProbeInfo->mAtten = mAtten;
+
+   PROBEMGR->updateProbes();
+
+   updateCubemaps();
 }
 
 void BoxEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)

@@ -294,8 +294,6 @@ bool ReflectionProbe::onAdd()
    {
       createGeometry();
       updateProbeParams();
-
-      PROBEMGR->registerProbe(mProbeInfoIdx);
    }
   
    setMaskBits(-1);
@@ -458,6 +456,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       mathRead(*stream, &mProbeRefOffset);
       mathRead(*stream, &mProbeRefScale);      
+
+      mDirty = true;
    }
 
    if (stream->readFlag())  // ShapeTypeMask
@@ -467,24 +467,30 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       mProbeShapeType = (ProbeRenderInst::ProbeShapeType)shapeType;
       createGeometry();
+
+      mDirty = true;
    }
 
    if (stream->readFlag())  // UpdateMask
    {
       stream->read(&mRadius);
+
+      mDirty = true;
    }
 
    if (stream->readFlag())  // BakeInfoMask
    {
       stream->read(&mProbeUniqueID);
+
+      mDirty = true;
    }
 
    if (stream->readFlag())  // EnabledMask
    {
       mEnabled = stream->readFlag();
-   }
 
-   bool isMaterialDirty = false;
+      mDirty = true;
+   }
 
    if (stream->readFlag())  // ModeMask
    {
@@ -492,7 +498,7 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
       stream->read(&reflectModeType);
       mReflectionModeType = (ReflectionModeType)reflectModeType;
 
-      isMaterialDirty = true;
+      mDirty = true;
    }
 
    if (stream->readFlag())  // CubemapMask
@@ -505,7 +511,7 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
          processStaticCubemap();
       }
 
-      isMaterialDirty = true;
+      mDirty = true;
    }
 
    if (mDirty)
@@ -524,9 +530,9 @@ void ReflectionProbe::updateProbeParams()
       mProbeInfo = new ProbeRenderInst();
       mProbeInfoIdx = ProbeRenderInst::all.size() - 1;
       mProbeInfo->mIsEnabled = false;
-   }
 
-   updateCubemaps();
+      PROBEMGR->registerProbe(mProbeInfoIdx);
+   }
 
    mProbeInfo->mProbeShapeType = mProbeShapeType;
 
@@ -607,7 +613,8 @@ void ReflectionProbe::processStaticCubemap()
    mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
 
    //Update the probe manager with our new texture!
-   //PROBEMGR->updateProbeTexture(mProbeInfo);
+   if(!mProbeInfo->mIsSkylight)
+      PROBEMGR->updateProbeTexture(mProbeInfo);
 }
 
 void ReflectionProbe::updateCubemaps()
@@ -658,10 +665,8 @@ void ReflectionProbe::updateCubemaps()
    else
       mProbeInfo->mIsEnabled = false;
 
-   PROBEMGR->updateProbes();
-
-   //if (mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
-   //   PROBEMGR->updateProbeTexture(mProbeInfo);
+   if (!mProbeInfo->mIsSkylight && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
+      PROBEMGR->updateProbeTexture(mProbeInfo);
 }
 
 bool ReflectionProbe::createClientResources()

@@ -154,6 +154,10 @@ void SphereEnvironmentProbe::updateProbeParams()
    Parent::updateProbeParams();
 
    mProbeInfo->mProbeShapeType = ProbeRenderInst::Sphere;
+
+   PROBEMGR->updateProbes();
+
+   updateCubemaps();
 }
 
 void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)

@@ -179,6 +179,10 @@ void Skylight::updateProbeParams()
 
    mProbeInfo->mIsSkylight = true; 
    mProbeInfo->mScore = -1.0f; //sky comes first
+
+   PROBEMGR->updateProbes();
+
+   updateCubemaps();
 }
 
 void Skylight::prepRenderImage(SceneRenderState *state)

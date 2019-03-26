@@ -84,7 +84,8 @@ ProbeRenderInst::ProbeRenderInst() : SystemInterface(),
    mProbeRefOffset(0, 0, 0),
    mProbeRefScale(1,1,1),
    mAtten(0.0),
-   mCubemapIndex(0)
+   mCubemapIndex(0),
+   mIsSkylight(false)
 {
 }
 
@@ -285,37 +286,42 @@ void RenderProbeMgr::registerProbe(U32 probeIdx)
 
    mRegisteredProbes.push_back_unique(probeIdx);
 
-   const U32 cubeIndex = _findNextEmptyCubeSlot();
-   if (cubeIndex == INVALID_CUBE_SLOT)
+   if (!ProbeRenderInst::all[probeIdx]->mIsSkylight)
    {
-      Con::warnf("RenderProbeMgr::addProbe: Invalid cubemap slot.");
-      return;
+      const U32 cubeIndex = _findNextEmptyCubeSlot();
+      if (cubeIndex == INVALID_CUBE_SLOT)
+      {
+         Con::warnf("RenderProbeMgr::addProbe: Invalid cubemap slot.");
+         return;
+      }
+
+      //check if we need to resize the cubemap array
+      if (cubeIndex >= mCubeSlotCount)
+      {
+         //alloc temp array handles
+         GFXCubemapArrayHandle irr = GFXCubemapArrayHandle(GFX->createCubemapArray());
+         GFXCubemapArrayHandle prefilter = GFXCubemapArrayHandle(GFX->createCubemapArray());
+
+         irr->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, PROBE_IRRAD_SIZE, PROBE_FORMAT);
+         prefilter->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, PROBE_PREFILTER_SIZE, PROBE_FORMAT);
+
+         mIrradianceArray->copyTo(irr);
+         mPrefilterArray->copyTo(prefilter);
+
+         //assign the temp handles to the new ones, this will destroy the old ones as well
+         mIrradianceArray = irr;
+         mPrefilterArray = prefilter;
+
+         mCubeSlotCount += PROBE_ARRAY_SLOT_BUFFER_SIZE;
+      }
+
+      ProbeRenderInst::all[probeIdx]->mCubemapIndex = cubeIndex;
+      //mark cubemap slot as taken
+      mCubeMapSlots[cubeIndex] = true;
+      mCubeMapCount++;
+
+      Con::warnf("RenderProbeMgr::registerProbe: Registered probe %u to cubeIndex %u", probeIdx, cubeIndex);
    }
-
-   //check if we need to resize the cubemap array
-   if (cubeIndex >= mCubeSlotCount)
-   {
-      //alloc temp array handles
-      GFXCubemapArrayHandle irr = GFXCubemapArrayHandle(GFX->createCubemapArray());
-      GFXCubemapArrayHandle prefilter = GFXCubemapArrayHandle(GFX->createCubemapArray());
-
-      irr->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, PROBE_IRRAD_SIZE, PROBE_FORMAT);
-      prefilter->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, PROBE_PREFILTER_SIZE, PROBE_FORMAT);
-
-      mIrradianceArray->copyTo(irr);
-      mPrefilterArray->copyTo(prefilter);
-
-      //assign the temp handles to the new ones, this will destroy the old ones as well
-      mIrradianceArray = irr;
-      mPrefilterArray = prefilter;
-
-      mCubeSlotCount += PROBE_ARRAY_SLOT_BUFFER_SIZE;
-   }
-
-   ProbeRenderInst::all[probeIdx]->mCubemapIndex = cubeIndex;
-   //mark cubemap slot as taken
-   mCubeMapSlots[cubeIndex] = true;
-   mCubeMapCount++;
 
    //rebuild our probe data
    _setupStaticParameters();
@@ -446,7 +452,7 @@ void RenderProbeMgr::_setupStaticParameters()
       mEffectiveProbeCount++;
    }
 
-   if (mEffectiveProbeCount != 0)
+   /*if (mEffectiveProbeCount != 0)
    {
       bool useOldWay = false;
       if (useOldWay)
@@ -470,11 +476,15 @@ void RenderProbeMgr::_setupStaticParameters()
             mPrefilterArray->updateTexture(cubeMaps[i], cubeIndex);
          }
       }
-   }
+   }*/
 }
 
 void RenderProbeMgr::updateProbeTexture(ProbeRenderInst* probe)
 {
+   //We don't stuff skylights into the array, so we can just skip out on this if it's a skylight
+   if (probe->mIsSkylight)
+      return;
+
    S32 probeIdx = ProbeRenderInst::all.find_next(probe);
 
    if (probeIdx != -1) //i mean, the opposite shouldn't even be possible
@@ -489,6 +499,9 @@ void RenderProbeMgr::updateProbeTexture(U32 probeIdx)
    const U32 cubeIndex = ProbeRenderInst::all[probeIdx]->mCubemapIndex;
    mIrradianceArray->updateTexture(ProbeRenderInst::all[probeIdx]->mIrradianceCubemap, cubeIndex);
    mPrefilterArray->updateTexture(ProbeRenderInst::all[probeIdx]->mPrefilterCubemap, cubeIndex);
+
+   Con::warnf("UpdatedProbeTexture - probeIdx: %u on cubeIndex %u, Irrad validity: %d, Prefilter validity: %d", probeIdx, cubeIndex, 
+      ProbeRenderInst::all[probeIdx]->mIrradianceCubemap->isInitialized(), ProbeRenderInst::all[probeIdx]->mPrefilterCubemap->isInitialized());
 }
 
 void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)

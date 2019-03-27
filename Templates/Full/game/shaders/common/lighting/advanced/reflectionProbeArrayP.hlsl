@@ -194,12 +194,14 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          if (probes[i].type == 0) //box
          {
             probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
-            probehits++;
+            if (probes[i].contribution>0.0)
+               probehits++;
          }
          else if (probes[i].type == 1) //sphere
          {
             probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
-            probehits++;
+            if (probes[i].contribution>0.0)
+               probehits++;
          }
 
          probes[i].contribution = max(probes[i].contribution,0);
@@ -212,21 +214,16 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 	   // respect constraint B.
 	   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
 	   // and respect constraint A.
+      
       if (probehits>1.0)
 	   {
          for (i = 0; i < numProbes; i++)
          {
-            blendFactor[i] = ((probes[i].contribution / blendSum)) / (probehits - 1);
+            blendFactor[i] = ((probes[i].contribution / blendSum)) / probehits;
 	         blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
+            blendFactor[i] = saturate(blendFactor[i]);
 	         blendFacSum += blendFactor[i];
 	      }
-	   }
-	   else
-      {
-         blendFactor[i] = probes[i].contribution;
-         blendFacSum = probes[i].contribution;
-      }
-
 
       // Normalize blendVal
 #if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
@@ -236,18 +233,17 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       }
 #endif
 
-	  if (probehits>1.0)
-		{
 		  float invBlendSumWeighted = 1.0f / blendFacSum;
 		  for (i = 0; i < numProbes; ++i)
 		  {
 		     blendFactor[i] *= invBlendSumWeighted;
-		     probes[i].contribution = saturate(blendFactor[i]);
-
-			alpha -= probes[i].contribution;
+		     probes[i].contribution *= blendFactor[i];
+           alpha -= probes[i].contribution;            
 		  }
-		}
-
+   }
+   else
+      alpha -= blendSum;
+      
 #if DEBUGVIZ_ATTENUATION == 1
       float attenVis = 0;
 		for (i = 0; i < numProbes; ++i)

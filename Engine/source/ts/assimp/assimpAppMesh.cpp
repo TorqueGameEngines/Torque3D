@@ -37,6 +37,15 @@ AssimpAppMesh::AssimpAppMesh(const struct aiMesh* mesh, AssimpAppNode* node)
    : mMeshData(mesh), appNode(node)
 {
    Con::printf("[ASSIMP] Mesh Created: %s", getName());
+
+   // See if it's a skinned mesh
+   mIsSkinMesh = false;
+   for (U32 b = 0; b < mesh->mNumBones; b++)
+      if (mMeshData->mBones[b]->mNumWeights > 0)
+      {
+         mIsSkinMesh = true;
+         break;
+      }
 }
 
 const char* AssimpAppMesh::getName(bool allowFixed)
@@ -64,7 +73,6 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    // After this function, the following are expected to be populated:
    //     points, normals, uvs, primitives, indices
    // There is also colors and uv2s but those don't seem to be required.
-
    points.reserve(mMeshData->mNumVertices);
    uvs.reserve(mMeshData->mNumVertices);
    normals.reserve(mMeshData->mNumVertices);
@@ -85,10 +93,8 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 
       tmpVert = Point3F(pt.x, pt.y, pt.z);
       tmpNormal = Point3F(nrm.x, nrm.y, nrm.z);
-      //AssimpAppNode::convertPoint(tmpVert);
-      //AssimpAppNode::convertPoint(tmpNormal);
 
-      //objOffset.mulP(tmpVert);
+      objOffset.mulP(tmpVert);
 
       points.push_back(tmpVert);
 
@@ -126,7 +132,6 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    }
 
    U32 numFaces = mMeshData->mNumFaces;
-   U32 primCount = 0;
    primitives.reserve(numFaces);
 
    //Fetch the number of indices
@@ -137,28 +142,6 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    }
 
    indices.reserve(indicesCount);
-
-   /*U32 idxCount = 0;
-
-   for (U32 j = 0; j<mModel->mMaterials.size(); j++)
-   {
-      MikuModel::Material &mat = mModel->mMaterials[j];
-      U32 nextIdxCount = idxCount + mat.numIndices;
-
-      primitives.increment();
-
-      TSDrawPrimitive& primitive = primitives.last();
-      primitive.start = indices.size();
-      primitive.matIndex = (TSDrawPrimitive::Triangles | TSDrawPrimitive::Indexed) | j;
-      primitive.numElements = mat.numIndices;
-
-      for (U32 i = idxCount; i<nextIdxCount; i++)
-      {
-         indices.push_back(mModel->mIndices[i]);
-      }
-
-      idxCount = nextIdxCount;
-   }*/
 
    for ( U32 n = 0; n < mMeshData->mNumFaces; ++n)
    {
@@ -191,11 +174,6 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
                indices.push_back(index);
             }
          }
-
-         // Load the indices in.
-         //indices.push_back(face->mIndices[0]);
-         //indices.push_back(face->mIndices[1]);
-         //indices.push_back(face->mIndices[2]);
       } 
       else 
       {
@@ -204,41 +182,67 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    }
 
    U32 boneCount = mMeshData->mNumBones;
-
    bones.setSize(boneCount);
+
+   // Count the total number of weights for all of the bones.
+   U32 totalWeights = 0;
+   U32 nonZeroWeights = 0;
+   for (U32 b = 0; b < boneCount; b++)
+      totalWeights += mMeshData->mBones[b]->mNumWeights;
+
+   // Assimp gives weights sorted by bone index. We need them in vertex order.
+   Vector<F32> tmpWeight;
+   Vector<S32> tmpBoneIndex;
+   Vector<S32> tmpVertexIndex;
+   tmpWeight.setSize(totalWeights);
+   tmpBoneIndex.setSize(totalWeights);
+   tmpVertexIndex.setSize(totalWeights);
 
    for (U32 b = 0; b < boneCount; b++)
    {
       String name = mMeshData->mBones[b]->mName.C_Str();
+      aiNode* nodePtr = AssimpAppNode::findChildNodeByName(mMeshData->mBones[b]->mName.C_Str(), appNode->mScene->mRootNode);
+      bones[b] = new AssimpAppNode(appNode->mScene, nodePtr);
 
       MatrixF boneTransform;
-      boneTransform.setRow(0, Point4F(mMeshData->mBones[b]->mOffsetMatrix.a1, mMeshData->mBones[b]->mOffsetMatrix.a2, mMeshData->mBones[b]->mOffsetMatrix.a3, mMeshData->mBones[b]->mOffsetMatrix.a4));
-      boneTransform.setRow(1, Point4F(mMeshData->mBones[b]->mOffsetMatrix.b1, mMeshData->mBones[b]->mOffsetMatrix.b2, mMeshData->mBones[b]->mOffsetMatrix.b3, mMeshData->mBones[b]->mOffsetMatrix.b4));
-      boneTransform.setRow(2, Point4F(mMeshData->mBones[b]->mOffsetMatrix.c1, mMeshData->mBones[b]->mOffsetMatrix.c2, mMeshData->mBones[b]->mOffsetMatrix.c3, mMeshData->mBones[b]->mOffsetMatrix.c4));
-      boneTransform.setRow(3, Point4F(mMeshData->mBones[b]->mOffsetMatrix.d1, mMeshData->mBones[b]->mOffsetMatrix.d2, mMeshData->mBones[b]->mOffsetMatrix.d3, mMeshData->mBones[b]->mOffsetMatrix.d4));
-
-      //boneTransform.inverse();
-      //AssimpAppNode::convertMat(boneTransform);
-      //boneTransform.inverse();
+      AssimpAppNode::assimpToTorqueMat(mMeshData->mBones[b]->mOffsetMatrix, boneTransform);
       initialTransforms.push_back(boneTransform);
 
       //Weights
       U32 numWeights = mMeshData->mBones[b]->mNumWeights;
 
-      weight.setSize(numWeights);
-      vertexIndex.setSize(numWeights);
-      boneIndex.setSize(numWeights);
-
       for (U32 w = 0; w < numWeights; ++w)
       {
          aiVertexWeight* aiWeight = &mMeshData->mBones[b]->mWeights[w];
 
-         weight[w] = aiWeight->mWeight;
-         vertexIndex[w] = aiWeight->mVertexId;
-         boneIndex[w] = b;
-         //vertWeight. = aiWeight->
+         if (aiWeight->mWeight > 0.0f)
+         {
+            tmpWeight[nonZeroWeights] = aiWeight->mWeight;
+            tmpVertexIndex[nonZeroWeights] = aiWeight->mVertexId;
+            tmpBoneIndex[nonZeroWeights] = b;
+            nonZeroWeights++;
+         }
       }
-      //= mNumWeights
+   }
+
+   weight.setSize(nonZeroWeights);
+   vertexIndex.setSize(nonZeroWeights);
+   boneIndex.setSize(nonZeroWeights);
+
+   // Copy the weights to our vectors in vertex order
+   U32 nextWeight = 0;
+   for (U32 i = 0; i < mMeshData->mNumVertices; i++)
+   {
+      for (U32 ind = 0; ind < nonZeroWeights; ind++)
+      {
+         if (tmpVertexIndex[ind] == i)
+         {
+            weight[nextWeight] = tmpWeight[ind];
+            vertexIndex[nextWeight] = tmpVertexIndex[ind];
+            boneIndex[nextWeight] = tmpBoneIndex[ind];
+            nextWeight++;
+         }
+      }
    }
 
    if ( noUVFound )
@@ -246,8 +250,8 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 }
 
 void AssimpAppMesh::lookupSkinData()
-{
-
+{  // This function is intentionally left blank. The skin data - bones, weights and indexes are
+   // processed in lockMesh() with the rest of the mesh data.
 }
 
 F32 AssimpAppMesh::getVisValue(F32 t)

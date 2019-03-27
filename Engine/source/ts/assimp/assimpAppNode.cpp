@@ -156,21 +156,51 @@ void AssimpAppNode::assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& o
 
 void AssimpAppNode::convertMat(MatrixF& outMat)
 {
-   if (Con::getBoolVariable("$Assimp::SwapYZ", false))
+   MatrixF rot(true);
+
+   // This is copied directly from ColladaUtils::convertTransform()
+   // ColladaUtils::getOptions().upAxis has been temporarily replaced with $Assimp::OverrideUpAxis for testing
+   // We need a plan for how the full set of assimp import options and settings is going to be managed.
+   switch (Con::getIntVariable("$Assimp::OverrideUpAxis", 2))
    {
-      MatrixF rotMat(EulerF(-M_HALFPI_F, 0, 0));
-      Point3F pos = outMat.getPosition();
-      outMat.mulL(rotMat);
-      rotMat.mulP(pos);
-      outMat.setPosition(pos);
+   case 0: //UPAXISTYPE_X_UP:
+      // rotate 90 around Y-axis, then 90 around Z-axis
+      rot(0, 0) = 0.0f;  rot(1, 0) = 1.0f;
+      rot(1, 1) = 0.0f;	rot(2, 1) = 1.0f;
+      rot(0, 2) = 1.0f;	rot(2, 2) = 0.0f;
+
+      // pre-multiply the transform by the rotation matrix
+      outMat.mulL(rot);
+      break;
+
+   case 1: //UPAXISTYPE_Y_UP:
+      // rotate 180 around Y-axis, then 90 around X-axis
+      rot(0, 0) = -1.0f;
+      rot(1, 1) = 0.0f;	rot(2, 1) = 1.0f;
+      rot(1, 2) = 1.0f;	rot(2, 2) = 0.0f;
+
+      // pre-multiply the transform by the rotation matrix
+      outMat.mulL(rot);
+      break;
+
+   case 2: //UPAXISTYPE_Z_UP:
+   default:
+      // nothing to do
+      break;
    }
 }
 
-void AssimpAppNode::convertPoint(Point3F& outPoint)
+aiNode* AssimpAppNode::findChildNodeByName(const char* nodeName, aiNode* rootNode)
 {
-   if (Con::getBoolVariable("$Assimp::SwapYZ", false))
+   aiNode* retNode = NULL;
+   if (strcmp(nodeName, rootNode->mName.C_Str()) == 0)
+      return rootNode;
+
+   for (U32 i = 0; i < rootNode->mNumChildren; ++i)
    {
-      MatrixF rotMat(EulerF(-M_HALFPI_F, 0, 0));
-      rotMat.mulP(outPoint);
+      retNode = findChildNodeByName(nodeName, rootNode->mChildren[i]);
+      if (retNode)
+         return retNode;
    }
+   return nullptr;
 }

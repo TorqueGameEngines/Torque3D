@@ -40,6 +40,7 @@ class AssimpAppMesh : public AppMesh
 protected:
    class AssimpAppNode* appNode;                     ///< Pointer to the node that owns this mesh
    const struct aiMesh* mMeshData;
+   bool mIsSkinMesh;
 
 public:
 
@@ -100,7 +101,7 @@ public:
    /// Return true if this mesh is a skin
    bool isSkin()
    {
-      return false;
+      return mIsSkinMesh;
    }
 
    /// Generate the vertex, normal and triangle data for the mesh.

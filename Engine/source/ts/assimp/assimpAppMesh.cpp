@@ -132,7 +132,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    }
 
    U32 numFaces = mMeshData->mNumFaces;
-   primitives.reserve(numFaces);
+   //primitives.reserve(numFaces);
 
    //Fetch the number of indices
    U32 indicesCount = 0;
@@ -143,19 +143,18 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 
    indices.reserve(indicesCount);
 
+   // Create TSMesh primitive
+   primitives.increment();
+   TSDrawPrimitive& primitive = primitives.last();
+   primitive.start = 0;
+   primitive.matIndex = (TSDrawPrimitive::Triangles | TSDrawPrimitive::Indexed) | (S32)mMeshData->mMaterialIndex;
+   primitive.numElements = indicesCount;
+
    for ( U32 n = 0; n < mMeshData->mNumFaces; ++n)
    {
       const struct aiFace* face = &mMeshData->mFaces[n];
       if ( face->mNumIndices == 3 )
       {
-         // Create TSMesh primitive
-         primitives.increment();
-         TSDrawPrimitive& primitive = primitives.last();
-         primitive.start = indices.size();
-         primitive.matIndex = (TSDrawPrimitive::Triangles | TSDrawPrimitive::Indexed) | (S32)mMeshData->mMaterialIndex;
-         //primitive.numElements = face->mNumIndices;//3;
-         primitive.numElements = 3;
-
          if (Con::getBoolVariable("$Assimp::FlipNormals", true))
          {
             U32 indexCount = face->mNumIndices;

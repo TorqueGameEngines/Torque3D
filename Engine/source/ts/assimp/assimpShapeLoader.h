@@ -34,7 +34,9 @@ class AssimpShapeLoader : public TSShapeLoader
 
 protected:
    const struct aiScene* mScene;
-  
+
+   virtual bool ignoreNode(const String& name);
+
 public:
    AssimpShapeLoader();
    ~AssimpShapeLoader();

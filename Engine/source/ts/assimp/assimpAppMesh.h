@@ -40,6 +40,7 @@ class AssimpAppMesh : public AppMesh
 protected:
    class AssimpAppNode* appNode;                     ///< Pointer to the node that owns this mesh
    const struct aiMesh* mMeshData;
+   bool mIsSkinMesh;
 
 public:
 
@@ -100,14 +101,14 @@ public:
    /// Return true if this mesh is a skin
    bool isSkin()
    {
-      return false;
+      return mIsSkinMesh;
    }
 
    /// Generate the vertex, normal and triangle data for the mesh.
    ///
    /// @param time           Time at which to generate the mesh data
    /// @param objectOffset   Transform to apply to the generated data (bounds transform)
-   void lockMesh(F32 time, const MatrixF& objectOffset);
+   void lockMesh(F32 time, const MatrixF& objOffset);
 
    /// Get the transform of this mesh at a certain time
    ///

@@ -103,7 +103,8 @@ MODULE_BEGIN( AssimpShapeLoader )
       TSShapeLoader::addFormat("3D GameStudio (3DGS)", "mdl");
       TSShapeLoader::addFormat("3D GameStudio (3DGS) Terrain", "hmp");
       TSShapeLoader::addFormat("Izware Nendo", "ndo");
-	  TSShapeLoader::addFormat("gltf", "gltf");
+      TSShapeLoader::addFormat("gltf", "gltf");
+      TSShapeLoader::addFormat("gltf binary", "glb");
    }
 MODULE_END;
 
@@ -146,7 +147,7 @@ void AssimpShapeLoader::enumerateScene()
        Con::getBoolVariable("$Assimp::OptimizeMeshes", false) ? aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph : 0 |
        0;
 
-   if(Con::getBoolVariable("$Assimp::Triangulate", false))
+   if(Con::getBoolVariable("$Assimp::Triangulate", true))
       ppsteps |= aiProcess_Triangulate;
 
    if (Con::getBoolVariable("$Assimp::OptimizeMeshes", false))
@@ -273,6 +274,15 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
       }
    }
 
+   return false;
+}
+
+bool AssimpShapeLoader::ignoreNode(const String& name)
+{
+   // Do not add AssimpFbx dummy nodes to the TSShape. See: Assimp::FBX::ImportSettings::preservePivots
+   // https://github.com/assimp/assimp/blob/master/code/FBXImportSettings.h#L116-L135
+   if (name.find("_$AssimpFbx$_") != String::NPos)
+      return true;
    return false;
 }
 

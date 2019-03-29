@@ -111,7 +111,7 @@ float3 iblBoxDiffuse(Surface surface, ProbeData probe)
 float3 iblBoxSpecular(Surface surface, ProbeData probe)
 {
    // BRDF
-   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
+   //float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
 
    float3 dir = boxProject(surface, probe);
 
@@ -122,7 +122,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.cubemapIdx, lod).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.cubemapIdx, lod).xyz;
    return color;
 }
 
@@ -135,7 +135,7 @@ float3 iblSkylightDiffuse(Surface surface)
 float3 iblSkylightSpecular(Surface surface)
 {
    // BRDF
-   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
+   //float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
 
    // Radiance (Specular)
 #if DEBUGVIZ_SPECCUBEMAP == 0
@@ -144,7 +144,7 @@ float3 iblSkylightSpecular(Surface surface)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBELOD(skylightPrefilterMap, float4(surface.R, lod)).xyz * (brdf.x + brdf.y);
+   float3 color = TORQUE_TEXCUBELOD(skylightPrefilterMap, float4(surface.R, lod)).xyz;
    return color;
 }
 
@@ -238,7 +238,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 		  {
 		     blendFactor[i] *= invBlendSumWeighted;
 		     probes[i].contribution *= blendFactor[i];
-           alpha -= probes[i].contribution;            
+           alpha -= probes[i].contribution;
 		  }
    }
    else
@@ -250,18 +250,16 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 		{
 		  attenVis += probes[i].contribution;
 		}
-		return float4(attenVis, attenVis, attenVis, 1);
+
+		//return float4(attenVis, attenVis, attenVis, 1);
+      return float4(blendSum, blendSum, blendSum, 1);
 #endif
 
 #if DEBUGVIZ_CONTRIB == 1
-
       float3 finalContribColor = float3(0, 0, 0);
       for (i = 0; i < numProbes; ++i)
       {
-         if (probes[i].contribution == 0)
-            continue;
-
-         finalContribColor += probes[i].contribution * probeContribColors[i].rgb;
+         finalContribColor += probes[i].contribution *probeContribColors[i].rgb;
       }
 
       return float4(finalContribColor, 1);
@@ -272,31 +270,34 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    float3 irradiance = float3(0, 0, 0);
    float3 specular = float3(0, 0, 0);
-   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
 
-   //energy conservation
-   float3 kD = 1.0.xxx - F;
-   kD *= 1.0 - surface.metalness;
    float contrib = 0;
    for (i = 0; i < numProbes; ++i)
    {
       if (probes[i].contribution == 0)
          continue;
 
-      if (probes[i].type == 2) //skip skylight
-         continue;
-
-      irradiance += iblBoxDiffuse(surface, probes[i])*probes[i].contribution;
-      specular += F*iblBoxSpecular(surface, probes[i])*probes[i].contribution;
+      irradiance += iblBoxDiffuse(surface, probes[i]) * probes[i].contribution;
+      specular += iblBoxSpecular(surface, probes[i]) * probes[i].contribution;
       contrib +=probes[i].contribution;
    }
-   //contrib = saturate(contrib);
-
+   
    if (hasSkylight && alpha != 0)
    {
       irradiance = lerp(irradiance, iblSkylightDiffuse(surface), alpha);
-      specular = lerp(specular, F*iblSkylightSpecular(surface), alpha);
+      specular = lerp(specular, iblSkylightSpecular(surface), alpha);
    }
+
+   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+
+   //energy conservation
+   float3 kD = 1.0.xxx - F;
+   kD *= 1.0 - surface.metalness;
+
+   //apply brdf
+   //Do it once to save on texture samples
+   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
+   specular *= brdf.x * F + brdf.y;
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;

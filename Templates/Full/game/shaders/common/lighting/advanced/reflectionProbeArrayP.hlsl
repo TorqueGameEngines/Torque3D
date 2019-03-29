@@ -60,7 +60,7 @@ float defineSkylightInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
    return contribution;
 }
 
-float defineSphereSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+float defineSphereSpaceInfluence(Surface surface, ProbeData probe)
 {
    float3 L = probe.wsPosition.xyz - surface.P;
    float contribution = 1.0 - length(L) / probe.radius;
@@ -73,7 +73,7 @@ float getDistBoxToPoint(float3 pt, float3 extents)
    return max(max(d.x, d.y), d.z);
 }
 
-float defineBoxSpaceInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
+float defineBoxSpaceInfluence(Surface surface, ProbeData probe)
 {
    float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
    float atten = 1.0-probe.attenuation;
@@ -193,13 +193,13 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
          if (probes[i].type == 0) //box
          {
-            probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+            probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i]);
             if (probes[i].contribution>0.0)
                probehits++;
          }
          else if (probes[i].type == 1) //sphere
          {
-            probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i], IN.wsEyeRay);
+            probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i]);
             if (probes[i].contribution>0.0)
                probehits++;
          }

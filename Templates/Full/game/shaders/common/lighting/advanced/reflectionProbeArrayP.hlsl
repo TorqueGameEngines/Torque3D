@@ -53,13 +53,6 @@ struct ProbeData
    float2 pad;
 };
 
-float defineSkylightInfluence(Surface surface, ProbeData probe, float3 wsEyeRay)
-{
-   //Ultimately this should be done to prioritize lastmost, and only contribute if nothing else has doneso yet
-   float contribution = 1.0;
-   return contribution;
-}
-
 float defineSphereSpaceInfluence(Surface surface, ProbeData probe)
 {
    float3 L = probe.wsPosition.xyz - surface.P;

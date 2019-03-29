@@ -37,26 +37,10 @@ TORQUE_UNIFORM_SAMPLERCUBE(skylightIrradMap, 7);
 uniform float hasSkylight;
 
 //Probe IBL stuff
-struct ProbeData
+float defineSphereSpaceInfluence(Surface surface, int ID)
 {
-   float3 wsPosition;
-   float radius;
-   float3 boxMin;
-   float3 boxMax;
-   float attenuation;
-   float4x4 worldToLocal;
-   uint probeIdx;
-   uint type; //box = 0, sphere = 1
-   float contribution;
-   float3 refPosition;
-   float cubemapIdx;
-   float2 pad;
-};
-
-float defineSphereSpaceInfluence(Surface surface, ProbeData probe)
-{
-   float3 L = probe.wsPosition.xyz - surface.P;
-   float contribution = 1.0 - length(L) / probe.radius;
+   float3 L = inProbePosArray[ID].xyz.xyz - surface.P;
+   float contribution = 1.0 - length(L) / probeConfigData[ID].g;
    return contribution;
 }
 
@@ -66,10 +50,10 @@ float getDistBoxToPoint(float3 pt, float3 extents)
    return max(max(d.x, d.y), d.z);
 }
 
-float defineBoxSpaceInfluence(Surface surface, ProbeData probe)
+float defineBoxSpaceInfluence(Surface surface, int ID)
 {
-   float3 surfPosLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
-   float atten = 1.0-probe.attenuation;
+   float3 surfPosLS = mul(worldToObjArray[ID], float4(surface.P, 1.0)).xyz;
+   float atten = 1.0-probeConfigData[ID].b;
    float baseVal = 0.25;
    float dist = getDistBoxToPoint(surfPosLS,float3(baseVal,baseVal,baseVal));
    return saturate(smoothstep(baseVal+0.0001,atten*baseVal,dist));
@@ -78,35 +62,35 @@ float defineBoxSpaceInfluence(Surface surface, ProbeData probe)
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
-float3 boxProject(Surface surface, ProbeData probe)
+float3 boxProject(Surface surface, int ID)
 {
-   float3 RayLS = mul(probe.worldToLocal, float4(surface.R, 0.0)).xyz;
-   float3 PositionLS = mul(probe.worldToLocal, float4(surface.P, 1.0)).xyz;
+   float3 RayLS = mul(worldToObjArray[ID], float4(surface.R, 0.0)).xyz;
+   float3 PositionLS = mul(worldToObjArray[ID], float4(surface.P, 1.0)).xyz;
 
-   float3 unit = probe.boxMax - probe.boxMin;
+   float3 unit = bbMaxArray[ID].xyz - bbMinArray[ID].xyz;
    float3 plane1vec = (unit / 2 - PositionLS) / RayLS;
    float3 plane2vec = (-unit / 2 - PositionLS) / RayLS;
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = surface.P + surface.R * dist;
 
-   return posonbox - probe.refPosition;
+   return posonbox - inRefPosArray[ID].xyz;
 }
 
-float3 iblBoxDiffuse(Surface surface, ProbeData probe)
+float3 iblBoxDiffuse(Surface surface, int ID)
 {
-   float3 dir = boxProject(surface, probe);
+   float3 dir = boxProject(surface, ID);
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probe.cubemapIdx, 0).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, probeConfigData[ID].a, 0).xyz;
    return color;
 }
 
-float3 iblBoxSpecular(Surface surface, ProbeData probe)
+float3 iblBoxSpecular(Surface surface, int ID)
 {
    // BRDF
    //float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
 
-   float3 dir = boxProject(surface, probe);
+   float3 dir = boxProject(surface, ID);
 
    // Radiance (Specular)
 #if DEBUGVIZ_SPECCUBEMAP == 0
@@ -115,7 +99,7 @@ float3 iblBoxSpecular(Surface surface, ProbeData probe)
    float lod = 0;
 #endif
 
-   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probe.cubemapIdx, lod).xyz;
+   float3 color = TORQUE_TEXCUBEARRAYLOD(cubeMapAR, dir, probeConfigData[ID].a, lod).xyz;
    return color;
 }
 
@@ -165,42 +149,31 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float invBlendSum = 0;
    float probehits = 0;
    //Set up our struct data
-   ProbeData probes[MAX_PROBES];
-
+   float contribution[MAX_PROBES];
    if (alpha > 0)
    {
       //Process prooooobes
       for (i = 0; i < numProbes; ++i)
       {
-         probes[i].wsPosition = inProbePosArray[i].xyz;
-         probes[i].radius = probeConfigData[i].g;
-         probes[i].boxMin = bbMinArray[i].xyz;
-         probes[i].boxMax = bbMaxArray[i].xyz;
-         probes[i].refPosition = inRefPosArray[i].xyz;
-         probes[i].attenuation = probeConfigData[i].b;
-         probes[i].worldToLocal = worldToObjArray[i];
-         probes[i].probeIdx = i;
-         probes[i].cubemapIdx = probeConfigData[i].a;
-         probes[i].type = probeConfigData[i].r;
-         probes[i].contribution = 0;
+         contribution[i] = 0;
 
-         if (probes[i].type == 0) //box
+         if (probeConfigData[i].r == 0) //box
          {
-            probes[i].contribution = defineBoxSpaceInfluence(surface, probes[i]);
-            if (probes[i].contribution>0.0)
+            contribution[i] = defineBoxSpaceInfluence(surface, i);
+            if (contribution[i]>0.0)
                probehits++;
          }
-         else if (probes[i].type == 1) //sphere
+         else if (probeConfigData[i].r == 1) //sphere
          {
-            probes[i].contribution = defineSphereSpaceInfluence(surface, probes[i]);
-            if (probes[i].contribution>0.0)
+            contribution[i] = defineSphereSpaceInfluence(surface, i);
+            if (contribution[i]>0.0)
                probehits++;
          }
 
-         probes[i].contribution = max(probes[i].contribution,0);
+         contribution[i] = max(contribution[i],0);
 
-         blendSum += probes[i].contribution;
-         invBlendSum += (1.0f - probes[i].contribution);
+         blendSum += contribution[i];
+         invBlendSum += (1.0f - contribution[i]);
       }
       // Weight0 = normalized NDF, inverted to have 1 at center, 0 at boundary.
 	   // And as we invert, we need to divide by Num-1 to stay normalized (else sum is > 1). 
@@ -212,8 +185,8 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 	   {
          for (i = 0; i < numProbes; i++)
          {
-            blendFactor[i] = ((probes[i].contribution / blendSum)) / probehits;
-	         blendFactor[i] *= ((probes[i].contribution) / invBlendSum);
+            blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
+	         blendFactor[i] *= ((contribution[i]) / invBlendSum);
             blendFactor[i] = saturate(blendFactor[i]);
 	         blendFacSum += blendFactor[i];
 	      }
@@ -230,8 +203,8 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 		  for (i = 0; i < numProbes; ++i)
 		  {
 		     blendFactor[i] *= invBlendSumWeighted;
-		     probes[i].contribution *= blendFactor[i];
-           alpha -= probes[i].contribution;
+		     contribution[i] *= blendFactor[i];
+           alpha -= contribution[i];
 		  }
    }
    else
@@ -241,7 +214,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       float attenVis = 0;
 		for (i = 0; i < numProbes; ++i)
 		{
-		  attenVis += probes[i].contribution;
+		  attenVis += contribution[i];
 		}
 
 		//return float4(attenVis, attenVis, attenVis, 1);
@@ -252,7 +225,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       float3 finalContribColor = float3(0, 0, 0);
       for (i = 0; i < numProbes; ++i)
       {
-         finalContribColor += probes[i].contribution *probeContribColors[i].rgb;
+         finalContribColor += contribution[i] *probeContribColors[i].rgb;
       }
 
       return float4(finalContribColor, 1);
@@ -267,12 +240,12 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float contrib = 0;
    for (i = 0; i < numProbes; ++i)
    {
-      if (probes[i].contribution == 0)
+      if (contribution[i] == 0)
          continue;
 
-      irradiance += iblBoxDiffuse(surface, probes[i]) * probes[i].contribution;
-      specular += iblBoxSpecular(surface, probes[i]) * probes[i].contribution;
-      contrib +=probes[i].contribution;
+      irradiance += iblBoxDiffuse(surface, i) * contribution[i];
+      specular += iblBoxSpecular(surface, i) * contribution[i];
+      contrib +=contribution[i];
    }
    
    if (hasSkylight && alpha != 0)
@@ -303,13 +276,13 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      if (probes[i].type == 2) //skylight
+      if (probeConfigData[i].r == 2) //skylight
       {
-         cubeColor += iblSkylightSpecular(surface, probes[i]);
+         cubeColor += iblSkylightSpecular(surface, i);
       }
       else
       {
-         cubeColor += iblBoxSpecular(surface, probes[i]);
+         cubeColor += iblBoxSpecular(surface, i);
       }
    }
 
@@ -320,13 +293,13 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float3 cubeColor = float3(0, 0, 0);
    for (i = 0; i < numProbes; ++i)
    {
-      if (probes[i].type == 2) //skylight
+      if (probeConfigData[i].r == 2) //skylight
       {
-         cubeColor += iblSkylightDiffuse(surface, probes[i]);
+         cubeColor += iblSkylightDiffuse(surface);
       }
       else
       {
-         cubeColor += iblBoxDiffuse(surface, probes[i]);
+         cubeColor += iblBoxDiffuse(surface);
       }
    }
 

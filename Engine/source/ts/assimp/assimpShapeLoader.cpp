@@ -147,6 +147,9 @@ void AssimpShapeLoader::enumerateScene()
        Con::getBoolVariable("$Assimp::OptimizeMeshes", false) ? aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph : 0 |
        0;
 
+   if(Con::getBoolVariable("$Assimp::FlipUVs", true))
+      ppsteps |= aiProcess_FlipUVs;
+
    if(Con::getBoolVariable("$Assimp::Triangulate", true))
       ppsteps |= aiProcess_Triangulate;
 

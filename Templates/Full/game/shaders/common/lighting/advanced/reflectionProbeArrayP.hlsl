@@ -297,7 +297,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    //apply brdf
    //Do it once to save on texture samples
    float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
-   specular *= brdf.x * F + brdf.y;
+   specular *= (brdf.x + brdf.y)* F;
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;

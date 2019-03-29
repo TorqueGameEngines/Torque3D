@@ -201,7 +201,10 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    {
       String name = mMeshData->mBones[b]->mName.C_Str();
       aiNode* nodePtr = AssimpAppNode::findChildNodeByName(mMeshData->mBones[b]->mName.C_Str(), appNode->mScene->mRootNode);
-      bones[b] = new AssimpAppNode(appNode->mScene, nodePtr);
+      if (!nodePtr)
+         bones[b] = new AssimpAppNode(appNode->mScene, appNode->mNode);
+      else
+         bones[b] = new AssimpAppNode(appNode->mScene, nodePtr);
 
       MatrixF boneTransform;
       AssimpAppNode::assimpToTorqueMat(mMeshData->mBones[b]->mOffsetMatrix, boneTransform);

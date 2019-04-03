@@ -3010,52 +3010,57 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    //Reflection Probe WIP
-   Var *inProbePos = new Var("inProbePos", "float3");
+   Var *inProbePos = new Var("inProbePosArray", "float4");
    inProbePos->arraySize = 4;
    inProbePos->uniform = true;
    inProbePos->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeRadius = new Var("inProbeRadius", "float");
+   Var *inProbeRadius = new Var("inRefPosArray", "float4");
    inProbeRadius->arraySize = 4;
    inProbeRadius->uniform = true;
    inProbeRadius->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeBoxMin = new Var("inProbeBoxMin", "float3");
+   Var *inProbeBoxMin = new Var("inProbeBoxMin", "float4");
    inProbeBoxMin->arraySize = 4;
    inProbeBoxMin->uniform = true;
    inProbeBoxMin->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeBoxMax = new Var("inProbeBoxMax", "float3");
+   Var *inProbeBoxMax = new Var("inProbeBoxMax", "float4");
    inProbeBoxMax->arraySize = 4;
    inProbeBoxMax->uniform = true;
    inProbeBoxMax->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeIsSphere = new Var("inProbeIsSphere", "float");
+   Var *inProbeIsSphere = new Var("probeConfigData", "float4");
    inProbeIsSphere->arraySize = 4;
    inProbeIsSphere->uniform = true;
    inProbeIsSphere->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeLocalPos = new Var("inProbeLocalPos", "float3");
-   inProbeLocalPos->arraySize = 4;
-   inProbeLocalPos->uniform = true;
-   inProbeLocalPos->constSortPos = cspPotentialPrimitive;
+   Var *worldToObjArray = new Var("worldToObjArray", "float4x4");
+   worldToObjArray->arraySize = 4;
+   worldToObjArray->uniform = true;
+   worldToObjArray->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeCubemap = new Var("inProbeCubemap", "SamplerState");
-   //inProbeCubemap->arraySize = 4;
-   inProbeCubemap->uniform = true;
-   inProbeCubemap->sampler = true;
-   inProbeCubemap->constNum = Var::getTexUnitNum();     // used as texture unit num here
+   Var *specularCubemapAR = new Var("specularCubemapAR", "SamplerState");
+   specularCubemapAR->uniform = true;
+   specularCubemapAR->sampler = true;
+   specularCubemapAR->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *inProbeCubemapTex = new Var("inProbeCubemapTex", "TextureCube");
-   //inProbeCubemapTex->arraySize = 4;
-   inProbeCubemapTex->uniform = true;
-   inProbeCubemapTex->texture = true;
-   inProbeCubemapTex->constNum = inProbeCubemap->constNum;
+   Var *specularCubemapARTex = new Var("specularCubemapARTex", "TextureCubeArray");
+   specularCubemapARTex->uniform = true;
+   specularCubemapARTex->texture = true;
+   specularCubemapARTex->constNum = specularCubemapAR->constNum;
 
-   //Var *nDotL = new Var("nDotL", "float3");
-   //meta->addStatement(new GenOp("   @ = abs(dot(@,@);\r\n", new DecOp(nDotL), wsView, wsNormal));
+   Var *irradianceCubemapAR = new Var("irradianceCubemapAR", "SamplerState");
+   irradianceCubemapAR->uniform = true;
+   irradianceCubemapAR->sampler = true;
+   irradianceCubemapAR->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *probeVec = new Var("probeVec", "float3");
+   Var *irradianceCubemapARTex = new Var("irradianceCubemapARTex", "TextureCubeArray");
+   irradianceCubemapARTex->uniform = true;
+   irradianceCubemapARTex->texture = true;
+   irradianceCubemapARTex->constNum = specularCubemapAR->constNum;
+
+   /*Var *probeVec = new Var("probeVec", "float3");
    meta->addStatement(new GenOp("   @ = @[0] - @;\r\n", new DecOp(probeVec), inProbePos, wsPosition));
 
    Var *nDotL = new Var("nDotL", "float");
@@ -3087,7 +3092,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    
   
    meta->addStatement(new GenOp("/*   if (dot( @, @ ) < 0.0f)\r\n", probeVec, wsNormal));
-   meta->addStatement(new GenOp("      clip(@);  */\r\n", fa));
+   meta->addStatement(new GenOp("      clip(@);  *//*\r\n", fa));
  
 
    meta->addStatement(new GenOp("      \r\n"));
@@ -3130,7 +3135,9 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    else
    {
       meta->addStatement(new GenOp("   @.rgb  = simpleFresnel(@.rgb, @, 0, @, @, @));\r\n", albedo, albedo, probeColor, angle, FRESNEL_BIAS, FRESNEL_POWER));
-   }
+   }*/
+
+   meta->addStatement(new GenOp("   @.rgb = float3(1,1,1);\r\n", albedo));
 
    output = meta;
 }

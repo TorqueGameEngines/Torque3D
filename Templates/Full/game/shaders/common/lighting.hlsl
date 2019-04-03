@@ -237,3 +237,42 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
 }
 
 //Probe IBL stuff
+float defineSphereSpaceInfluence(Surface surface, float3 wsProbePosition, float radius)
+{
+   float3 L = wsProbePosition.xyz - surface.P;
+   float contribution = 1.0 - length(L) / radius;
+   return contribution;
+}
+
+float getDistBoxToPoint(float3 pt, float3 extents)
+{
+   float3 d = max(max(-extents - pt, 0), pt - extents);
+   return max(max(d.x, d.y), d.z);
+}
+
+float defineBoxSpaceInfluence(Surface surface, float4x4 worldToObj, float attenuation)
+{
+   float3 surfPosLS = mul(worldToObj, float4(surface.P, 1.0)).xyz;
+   float atten = 1.0 - attenuation;
+   float baseVal = 0.25;
+   float dist = getDistBoxToPoint(surfPosLS, float3(baseVal, baseVal, baseVal));
+   return saturate(smoothstep(baseVal + 0.0001, atten*baseVal, dist));
+}
+
+// Box Projected IBL Lighting
+// Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
+// and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
+float3 boxProject(Surface surface, float4x4 worldToObj, float3 bbMin, float3 bbMax, float3 refPosition)
+{
+   float3 RayLS = mul(worldToObj, float4(surface.R, 0.0)).xyz;
+   float3 PositionLS = mul(worldToObj, float4(surface.P, 1.0)).xyz;
+
+   float3 unit = bbMax.xyz - bbMin.xyz;
+   float3 plane1vec = (unit / 2 - PositionLS) / RayLS;
+   float3 plane2vec = (-unit / 2 - PositionLS) / RayLS;
+   float3 furthestPlane = max(plane1vec, plane2vec);
+   float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
+   float3 posonbox = surface.P + surface.R * dist;
+
+   return posonbox - refPosition.xyz;
+}

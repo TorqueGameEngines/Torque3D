@@ -66,6 +66,8 @@
 //Cube
 #define TORQUE_SAMPLERCUBE(tex) TextureCube texture_##tex, SamplerState tex
 #define TORQUE_SAMPLERCUBE_MAKEARG(tex) texture_##tex, tex
+#define TORQUE_SAMPLERCUBEARRAY(tex) TextureCubeArray texture_##tex, SamplerState tex
+#define TORQUE_SAMPLERCUBEARRAY_MAKEARG(tex) texture_##tex, tex
 
 #endif // _TORQUE_SHADERMODEL_
 

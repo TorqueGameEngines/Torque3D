@@ -136,13 +136,18 @@ struct ProbeShaderConstants
 
    //Reflection Probes
    GFXShaderConstHandle *mProbePositionSC;
-   GFXShaderConstHandle *mProbeRadiusSC;
+   GFXShaderConstHandle *mProbeRefPosSC;
    GFXShaderConstHandle *mProbeBoxMinSC;
    GFXShaderConstHandle *mProbeBoxMaxSC;
-   GFXShaderConstHandle *mProbeIsSphereSC;
-   GFXShaderConstHandle *mProbeLocalPosSC;
-   GFXShaderConstHandle *mProbeCubemapSC;
+   GFXShaderConstHandle *mWorldToObjArraySC;
+   GFXShaderConstHandle *mProbeConfigDataSC;
+   GFXShaderConstHandle *mProbeSpecularCubemapSC;
+   GFXShaderConstHandle *mProbeIrradianceCubemapSC;
    GFXShaderConstHandle *mProbeCountSC;
+
+   GFXShaderConstHandle *mSkylightPrefilterMap;
+   GFXShaderConstHandle *mSkylightIrradMap;
+   GFXShaderConstHandle *mHasSkylight;
 
    ProbeShaderConstants();
    ~ProbeShaderConstants();
@@ -239,13 +244,7 @@ protected:
    /// for the stock 4 light forward lighting code.
    void _update4ProbeConsts(const SceneData &sgData,
       MatrixSet &matSet,
-      GFXShaderConstHandle *probePositionSC,
-      GFXShaderConstHandle *probeRadiusSC,
-      GFXShaderConstHandle *probeBoxMinSC,
-      GFXShaderConstHandle *probeBoxMaxSC,
-      GFXShaderConstHandle *probeCubemapSC,
-      GFXShaderConstHandle *probeIsSphereSC,
-      GFXShaderConstHandle *probeLocalPosSC,
+      ProbeShaderConstants *probeShaderConsts,
       GFXShaderConstBuffer *shaderConsts);
 
    void _setupStaticParameters();

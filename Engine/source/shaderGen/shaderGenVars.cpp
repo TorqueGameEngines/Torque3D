@@ -81,7 +81,7 @@ const String ShaderGenVars::irradianceCubemapAR("$irradianceCubemapAR");
 const String ShaderGenVars::probeCount("$numProbes");
 
 //Skylight
-const String ShaderGenVars::skylightPrefilterMap("$skylightPrefilterMap");
+const String ShaderGenVars::skylightPrefilterMap("$skylightSpecularMap");
 const String ShaderGenVars::skylightIrradMap("$skylightIrradMap");
 const String ShaderGenVars::hasSkylight("$hasSkylight");
 

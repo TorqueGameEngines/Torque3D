@@ -45,6 +45,9 @@ uniform float4 albedo;
 
 #endif // !TORQUE_SHADERGEN
 
+#define MAX_PROBES 50
+#define MAX_FORWARD_PROBES 4
+
 inline float3 getDistanceVectorToPlane( float3 origin, float3 direction, float4 plane )
 {
    float denum = dot( plane.xyz, direction.xyz );
@@ -145,6 +148,26 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	return surface;
 }
 
+inline Surface createForwardSurface(float4 baseColor, float4 normal, float4 pbrProperties, in float2 uv, in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
+{
+	Surface surface = (Surface)0;
+
+  surface.depth = 0;
+	surface.P = wsPosition;
+	surface.N = mul(invView, float4(normal.xyz,0)).xyz; //TODO move t3d to use WS normals
+	surface.V = normalize(wsEyePos - surface.P);
+	surface.baseColor = baseColor;
+  const float minRoughness=1e-4;
+	surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+	surface.roughness_brdf = surface.roughness * surface.roughness;
+	surface.metalness = pbrProperties.a;
+  surface.ao = pbrProperties.g;
+  surface.matFlag = pbrProperties.r;
+
+	surface.Update();
+	return surface;
+}
+
 struct SurfaceToLight
 {
 	float3 L;				// surface to light vector
@@ -237,9 +260,9 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
 }
 
 //Probe IBL stuff
-float defineSphereSpaceInfluence(Surface surface, float3 wsProbePosition, float radius)
+float defineSphereSpaceInfluence(float3 wsPosition, float3 wsProbePosition, float radius)
 {
-   float3 L = wsProbePosition.xyz - surface.P;
+   float3 L = wsProbePosition.xyz - wsPosition;
    float contribution = 1.0 - length(L) / radius;
    return contribution;
 }
@@ -250,9 +273,9 @@ float getDistBoxToPoint(float3 pt, float3 extents)
    return max(max(d.x, d.y), d.z);
 }
 
-float defineBoxSpaceInfluence(Surface surface, float4x4 worldToObj, float attenuation)
+float defineBoxSpaceInfluence(float3 wsPosition, float4x4 worldToObj, float attenuation)
 {
-   float3 surfPosLS = mul(worldToObj, float4(surface.P, 1.0)).xyz;
+   float3 surfPosLS = mul(worldToObj, float4(wsPosition, 1.0)).xyz;
    float atten = 1.0 - attenuation;
    float baseVal = 0.25;
    float dist = getDistBoxToPoint(surfPosLS, float3(baseVal, baseVal, baseVal));
@@ -262,17 +285,128 @@ float defineBoxSpaceInfluence(Surface surface, float4x4 worldToObj, float attenu
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
-float3 boxProject(Surface surface, float4x4 worldToObj, float3 bbMin, float3 bbMax, float3 refPosition)
+float3 boxProject(float3 wsPosition, float3 wsReflectVec, float4x4 worldToObj, float3 bbMin, float3 bbMax, float3 refPosition)
 {
-   float3 RayLS = mul(worldToObj, float4(surface.R, 0.0)).xyz;
-   float3 PositionLS = mul(worldToObj, float4(surface.P, 1.0)).xyz;
+   float3 RayLS = mul(worldToObj, float4(wsReflectVec, 0.0)).xyz;
+   float3 PositionLS = mul(worldToObj, float4(wsPosition, 1.0)).xyz;
 
    float3 unit = bbMax.xyz - bbMin.xyz;
    float3 plane1vec = (unit / 2 - PositionLS) / RayLS;
    float3 plane2vec = (-unit / 2 - PositionLS) / RayLS;
    float3 furthestPlane = max(plane1vec, plane2vec);
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
-   float3 posonbox = surface.P + surface.R * dist;
+   float3 posonbox = wsPosition + wsReflectVec * dist;
 
    return posonbox - refPosition.xyz;
+}
+
+float4 computeForwardProbes(Surface surface,
+    float cubeMips, float numProbes, float4x4 worldToObjArray[MAX_FORWARD_PROBES], float4 probeConfigData[MAX_FORWARD_PROBES], 
+    float4 inProbePosArray[MAX_FORWARD_PROBES], float4 bbMinArray[MAX_FORWARD_PROBES], float4 bbMaxArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
+    float hasSkylight, SamplerState skylightIrradMap, TextureCube skylightIrradMapTex, SamplerState skylightSpecularMap, TextureCube skylightSpecularMapTex,
+    SamplerState BRDFTexture, Texture2D BRDFTextureTex, SamplerState irradianceCubemapAR, TextureCubeArray irradianceCubemapARTex,
+    SamplerState specularCubemapAR, TextureCubeArray specularCubemapARTex)
+{
+  int i = 0;
+   float blendFactor[MAX_FORWARD_PROBES];
+   float blendSum = 0;
+   float blendFacSum = 0;
+   float invBlendSum = 0;
+   float probehits = 0;
+   //Set up our struct data
+   float contribution[MAX_FORWARD_PROBES];
+  for (i = 0; i < numProbes; ++i)
+  {
+      contribution[i] = 0;
+
+      if (probeConfigData[i].r == 0) //box
+      {
+         contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
+         if (contribution[i] > 0.0)
+            probehits++;
+      }
+      else if (probeConfigData[i].r == 1) //sphere
+      {
+         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
+         if (contribution[i] > 0.0)
+            probehits++;
+      }
+
+      contribution[i] = max(contribution[i], 0);
+
+      blendSum += contribution[i];
+      invBlendSum += (1.0f - contribution[i]);
+   }
+
+   if (probehits > 1.0)
+   {
+      for (i = 0; i < numProbes; i++)
+      {
+         blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
+         blendFactor[i] *= ((contribution[i]) / invBlendSum);
+         blendFactor[i] = saturate(blendFactor[i]);
+         blendFacSum += blendFactor[i];
+      }
+
+      // Normalize blendVal
+      if (blendFacSum == 0.0f) // Possible with custom weight
+      {
+         blendFacSum = 1.0f;
+      }
+
+      float invBlendSumWeighted = 1.0f / blendFacSum;
+      for (i = 0; i < numProbes; ++i)
+      {
+         blendFactor[i] *= invBlendSumWeighted;
+         contribution[i] *= blendFactor[i];
+         //alpha -= contribution[i];
+      }
+   }
+   //else
+   //   alpha -= blendSum;
+
+   float3 irradiance = float3(0, 0, 0);
+   float3 specular = float3(0, 0, 0);
+
+   // Radiance (Specular)
+   float lod = surface.roughness*cubeMips;
+
+   float alpha = 1;
+   for (i = 0; i < numProbes; ++i)
+   {
+      float contrib = contribution[i];
+      if (contrib != 0)
+      {
+         int cubemapIdx = probeConfigData[i].a;
+         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
+
+         irradiance += irradianceCubemapARTex.SampleLevel(irradianceCubemapAR,float4(dir,cubemapIdx),0).xyz * contrib;
+         specular += specularCubemapARTex.SampleLevel(specularCubemapAR,float4(dir,cubemapIdx),lod).xyz * contrib;
+         alpha -= contrib;
+      }
+   }
+
+   if (hasSkylight && alpha > 0.001)
+   {
+      irradiance += skylightIrradMapTex.SampleLevel(skylightIrradMap,surface.R,0).xyz * alpha;
+      specular += skylightSpecularMapTex.SampleLevel(skylightSpecularMap,surface.R,lod).xyz * alpha;
+   }
+
+   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+
+   //energy conservation
+   float3 kD = 1.0.xxx - F;
+   kD *= 1.0 - surface.metalness;
+
+   //apply brdf
+   //Do it once to save on texture samples
+   float2 brdf = BRDFTextureTex.SampleLevel(BRDFTexture,float2(surface.roughness, surface.NdotV),0).xy;
+   specular *= brdf.x * F + brdf.y;
+
+   //final diffuse color
+   float3 diffuse = kD * irradiance * surface.baseColor.rgb;
+   float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
+
+   finalColor = float4(irradiance.rgb,1);
+   return finalColor;
 }

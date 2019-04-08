@@ -145,7 +145,7 @@ struct ProbeShaderConstants
    GFXShaderConstHandle *mProbeIrradianceCubemapSC;
    GFXShaderConstHandle *mProbeCountSC;
 
-   GFXShaderConstHandle *mSkylightPrefilterMap;
+   GFXShaderConstHandle *mSkylightSpecularMap;
    GFXShaderConstHandle *mSkylightIrradMap;
    GFXShaderConstHandle *mHasSkylight;
 

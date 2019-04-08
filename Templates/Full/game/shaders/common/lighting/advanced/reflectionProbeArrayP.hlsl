@@ -15,7 +15,6 @@ uniform float3 eyePosWorld;
 
 //cubemap arrays require all the same size. so shared mips# value
 uniform float cubeMips;
-#define MAX_PROBES 50
 
 uniform float numProbes;
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(specularCubemapAR, 4);
@@ -32,7 +31,7 @@ uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 uniform float4    probeContribColors[MAX_PROBES];
 #endif
 
-TORQUE_UNIFORM_SAMPLERCUBE(skylightPrefilterMap, 6);
+TORQUE_UNIFORM_SAMPLERCUBE(skylightSpecularMap, 6);
 TORQUE_UNIFORM_SAMPLERCUBE(skylightIrradMap, 7);
 uniform float hasSkylight;
 
@@ -70,13 +69,13 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
          if (probeConfigData[i].r == 0) //box
          {
-            contribution[i] = defineBoxSpaceInfluence(surface, worldToObjArray[i], probeConfigData[i].b);
+            contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
             if (contribution[i]>0.0)
                probehits++;
          }
          else if (probeConfigData[i].r == 1) //sphere
          {
-            contribution[i] = defineSphereSpaceInfluence(surface, inProbePosArray[i].xyz, probeConfigData[i].g);
+            contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
             if (contribution[i]>0.0)
                probehits++;
          }
@@ -93,33 +92,33 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 	   // and respect constraint A.
       
       if (probehits>1.0)
-	   {
-         for (i = 0; i < numProbes; i++)
-         {
-            blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
-	         blendFactor[i] *= ((contribution[i]) / invBlendSum);
-            blendFactor[i] = saturate(blendFactor[i]);
-	         blendFacSum += blendFactor[i];
-	      }
+	{
+            for (i = 0; i < numProbes; i++)
+            {
+                  blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
+                  blendFactor[i] *= ((contribution[i]) / invBlendSum);
+                  blendFactor[i] = saturate(blendFactor[i]);
+                  blendFacSum += blendFactor[i];
+            }
 
       // Normalize blendVal
 #if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
-      if (blendFacSum == 0.0f) // Possible with custom weight
-      {
-         blendFacSum = 1.0f;
-      }
+            if (blendFacSum == 0.0f) // Possible with custom weight
+            {
+                  blendFacSum = 1.0f;
+            }
 #endif
 
-		  float invBlendSumWeighted = 1.0f / blendFacSum;
-		  for (i = 0; i < numProbes; ++i)
-		  {
-		     blendFactor[i] *= invBlendSumWeighted;
-		     contribution[i] *= blendFactor[i];
-           alpha -= contribution[i];
-		  }
-   }
-   else
-      alpha -= blendSum;
+            float invBlendSumWeighted = 1.0f / blendFacSum;
+            for (i = 0; i < numProbes; ++i)
+            {
+                  blendFactor[i] *= invBlendSumWeighted;
+                  contribution[i] *= blendFactor[i];
+                  alpha -= contribution[i];
+            }
+      }
+      else
+            alpha -= blendSum;
       
 #if DEBUGVIZ_ATTENUATION == 1
       float contribAlpha = 1;
@@ -164,7 +163,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       if (contrib != 0)
       {
          int cubemapIdx = probeConfigData[i].a;
-         float3 dir = boxProject(surface, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
+         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
@@ -175,7 +174,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    if (hasSkylight && alpha > 0.001)
    {
       irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz * alpha;
-      specular += TORQUE_TEXCUBELOD(skylightPrefilterMap, float4(surface.R, lod)).xyz * alpha;
+      specular += TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz * alpha;
    }
 
 #if DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0

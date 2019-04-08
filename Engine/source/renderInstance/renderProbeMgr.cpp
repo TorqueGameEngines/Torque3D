@@ -164,7 +164,7 @@ void ProbeShaderConstants::init(GFXShader* shader)
    mProbeIrradianceCubemapSC = shader->getShaderConstHandle(ShaderGenVars::irradianceCubemapAR);
    mProbeCountSC = shader->getShaderConstHandle(ShaderGenVars::probeCount);
 
-   mSkylightPrefilterMap = shader->getShaderConstHandle(ShaderGenVars::skylightPrefilterMap);
+   mSkylightSpecularMap = shader->getShaderConstHandle(ShaderGenVars::skylightPrefilterMap);
    mSkylightIrradMap = shader->getShaderConstHandle(ShaderGenVars::skylightIrradMap);
    mHasSkylight = shader->getShaderConstHandle(ShaderGenVars::hasSkylight);
 
@@ -568,28 +568,28 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
    {
       PROFILE_SCOPE(ProbeManager_Update4ProbeConsts_setProbes);
 
-      static AlignedArray<Point3F> probePositions(4, sizeof(Point3F));
-      static AlignedArray<F32> probeRadius(4, sizeof(F32));
-      static AlignedArray<Point3F> probeBoxMins(4, sizeof(Point3F));
-      static AlignedArray<Point3F> probeBoxMaxs(4, sizeof(Point3F));
-      static AlignedArray<Point3F> probeLocalPositions(4, sizeof(Point3F));
-      static AlignedArray<F32> probeIsSphere(4, sizeof(F32));
+      const U32 MAX_FORWARD_PROBES = 4;
+
+      static AlignedArray<Point4F> probePositionArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+      static AlignedArray<Point4F> probeBoxMinArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+      static AlignedArray<Point4F> probeBoxMaxArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+      static AlignedArray<Point4F> probeRefPositionArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+      static AlignedArray<Point4F> probeConfigArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+
+      Vector<MatrixF> probeWorldToObjArray;
+      probeWorldToObjArray.setSize(MAX_FORWARD_PROBES);
       //static AlignedArray<CubemapData> probeCubemap(4, sizeof(CubemapData));
       //F32 range;
 
       // Need to clear the buffers so that we don't leak
       // lights from previous passes or have NaNs.
-      dMemset(probePositions.getBuffer(), 0, probePositions.getBufferSize());
-      dMemset(probeRadius.getBuffer(), 0, probeRadius.getBufferSize());
-      dMemset(probeBoxMins.getBuffer(), 0, probeBoxMins.getBufferSize());
-      dMemset(probeBoxMaxs.getBuffer(), 0, probeBoxMaxs.getBufferSize());
-      dMemset(probeLocalPositions.getBuffer(), 0, probeLocalPositions.getBufferSize());
-      dMemset(probeIsSphere.getBuffer(), 0, probeRadius.getBufferSize());
-      //dMemset(probeCubemap.getBuffer(), 0, probeCubemap.getBufferSize());
+      dMemset(probePositionArray.getBuffer(), 0, probePositionArray.getBufferSize());
+      dMemset(probeBoxMinArray.getBuffer(), 0, probeBoxMinArray.getBufferSize());
+      dMemset(probeBoxMaxArray.getBuffer(), 0, probeBoxMaxArray.getBufferSize());
+      dMemset(probeRefPositionArray.getBuffer(), 0, probeRefPositionArray.getBufferSize());
+      dMemset(probeConfigArray.getBuffer(), 0, probeConfigArray.getBufferSize());
 
       matSet.restoreSceneViewProjection();
-
-      //const MatrixF &worldToCameraXfm = matSet.getWorldToCamera();
 
       // Gather the data for the first 4 probes.
       /*const ProbeRenderInst *probe;
@@ -649,26 +649,21 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       mEffectiveProbeCount = 0;
       mMipCount = 0;
 
-      if (probePositionsData.size() != MAXPROBECOUNT)
+      /*if (probePositionArray.size() != MAX_FORWARD_PROBES)
       {
-         probePositionsData.setSize(MAXPROBECOUNT);
-         probeRefPositionsData.setSize(MAXPROBECOUNT);
-         probeWorldToObjData.setSize(MAXPROBECOUNT);
-         probeBBMinData.setSize(MAXPROBECOUNT);
-         probeBBMaxData.setSize(MAXPROBECOUNT);
-         probeConfigData.setSize(MAXPROBECOUNT);
-      }
+         probePositionArray.setSize(MAX_FORWARD_PROBES);
+         probeBoxMinArray.setSize(MAX_FORWARD_PROBES);
+         probeBoxMaxArray.setSize(MAX_FORWARD_PROBES);
+         probeBoxMaxArray.setSize(MAX_FORWARD_PROBES);
+         probeRefPositionArray.setSize(MAX_FORWARD_PROBES);
+         probeConfigArray.setSize(MAX_FORWARD_PROBES);
 
-      probePositionsData.fill(Point4F::Zero);
-      probeRefPositionsData.fill(Point4F::Zero);
-      probeWorldToObjData.fill(MatrixF::Identity);
-      probeBBMinData.fill(Point4F::Zero);
-      probeBBMaxData.fill(Point4F::Zero);
-      probeConfigData.fill(Point4F::Zero);
+         probeWorldToObjArray.setSize(MAX_FORWARD_PROBES);
+      }*/
 
-      cubeMaps.clear();
-      irradMaps.clear();
-      Vector<U32> cubemapIdxes;
+      //cubeMaps.clear();
+      //irradMaps.clear();
+      //Vector<U32> cubemapIdxes;
 
       U32 effectiveProbeCount = 0;
       bool hasSkylight = false;
@@ -683,41 +678,51 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
 
          if (curEntry.mIsSkylight)
          {
-            GFX->setCubeTexture(probeShaderConsts->mSkylightPrefilterMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
-            GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
+            if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
+            {
+               U32 specSample = probeShaderConsts->mSkylightSpecularMap->getSamplerRegister();
+               U32 irradSample = probeShaderConsts->mSkylightIrradMap->getSamplerRegister();
 
-            shaderConsts->setSafe(probeShaderConsts->mHasSkylight, true);
-            hasSkylight = true;
-            continue;
+               GFX->setCubeTexture(probeShaderConsts->mSkylightSpecularMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
+               GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
+
+               shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 1.0f);
+               hasSkylight = true;
+               continue;
+            }
          }
-
-         //Setup
-         /*Point3F probePos = curEntry.getPosition();
-         Point3F refPos = curEntry.getPosition() + curEntry.mProbeRefOffset;
-         probePositionsData[mEffectiveProbeCount] = Point4F(probePos.x, probePos.y, probePos.z, 0);
-         probeRefPositionsData[mEffectiveProbeCount] = Point4F(refPos.x, refPos.y, refPos.z, 0);
-
-         probeWorldToObjData[mEffectiveProbeCount] = curEntry.getTransform();
-         Point3F bbMin = refPos - curEntry.mProbeRefScale / 2 * curEntry.getTransform().getScale();
-         Point3F bbMax = refPos + curEntry.mProbeRefScale / 2 * curEntry.getTransform().getScale();
-         probeBBMinData[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
-         probeBBMaxData[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);
-
-         probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
-            curEntry.mRadius,
-            curEntry.mAtten,
-            curEntry.mCubemapIndex);
-
-         cubeMaps.push_back(curEntry.mPrefilterCubemap);
-         irradMaps.push_back(curEntry.mIrradianceCubemap);
-
-         cubemapIdxes.push_back(i);*/
+         else
+         {
+            /*probePositions[effectiveProbeCount] = curEntry.getPosition();
+            probeRefPositions[effectiveProbeCount] = curEntry.mProbeRefOffset;
+            probeWorldToObj[effectiveProbeCount] = curEntry.getTransform();
+            probeBBMin[effectiveProbeCount] = curEntry.mBounds.minExtents;
+            probeBBMax[effectiveProbeCount] = curEntry.mBounds.maxExtents;
+            probeConfig[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
+               curEntry.mRadius,
+               curEntry.mAtten,
+               curEntry.mCubemapIndex);*/
+         }
 
          effectiveProbeCount++;
       }
 
+      shaderConsts->setSafe(probeShaderConsts->mProbeCountSC, (float)effectiveProbeCount);
+
+      shaderConsts->setSafe(probeShaderConsts->mProbePositionSC, probePositionArray);
+      shaderConsts->setSafe(probeShaderConsts->mProbeRefPosSC, probeRefPositionArray);
+
+      shaderConsts->set(probeShaderConsts->mWorldToObjArraySC, probeWorldToObjArray.address(), effectiveProbeCount, GFXSCT_Float4x4);
+
+      shaderConsts->setSafe(probeShaderConsts->mProbeBoxMinSC, probeBoxMinArray);
+      shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
+      shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
+
+      GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
+      GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
+
       if (!hasSkylight)
-         shaderConsts->setSafe(probeShaderConsts->mHasSkylight, false);
+         shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 0.0f);
    }
    /*else
    {
@@ -862,8 +867,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
 void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
 {
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_Bake, ColorI::WHITE);
-
-   bool serverObj = probe->isServerObject();
 
    Con::warnf("RenderProbeMgr::bakeProbe() - Beginning bake!");
    U32 startMSTime = Platform::getRealMilliseconds();

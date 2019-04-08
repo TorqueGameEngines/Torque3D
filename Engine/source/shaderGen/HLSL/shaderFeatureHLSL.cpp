@@ -2966,7 +2966,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    MultiLine *meta = new MultiLine;
 
    // Look for a wsNormal or grab it from the connector.
-   Var *wsNormal = (Var*)LangElement::find("wsNormal");
+   /*Var *wsNormal = (Var*)LangElement::find("wsNormal");
    if (!wsNormal)
    {
       wsNormal = connectComp->getElement(RT_TEXCOORD);
@@ -2983,62 +2983,68 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       // on older Geforce cards.
       //
       meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal));
-   }
+   }*/
 
    // Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition(componentList);
    Var *wsView = getWsView(wsPosition, meta);
    
-   Var *metalness = (Var*)LangElement::find("metalness");
-   Var *smoothness = (Var*)LangElement::find("smoothness");
-   if (!fd.features[MFT_SpecularMap])
-   {
-      if (!metalness)
-      {
-         metalness = new Var("metalness", "float");
-         metalness->uniform = true;
-         metalness->constSortPos = cspPotentialPrimitive;
-      }
-	  if (!smoothness)
-	  {
-		  smoothness = new Var("smoothness", "float");
-		  smoothness->uniform = true;
-		  smoothness->constSortPos = cspPotentialPrimitive;
-	  }
-   }
-
    Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    //Reflection Probe WIP
-   Var *inProbePos = new Var("inProbePosArray", "float4");
-   inProbePos->arraySize = 4;
-   inProbePos->uniform = true;
-   inProbePos->constSortPos = cspPotentialPrimitive;
+   U32 MAX_FORWARD_PROBES = 4;
 
-   Var *inProbeRadius = new Var("inRefPosArray", "float4");
-   inProbeRadius->arraySize = 4;
-   inProbeRadius->uniform = true;
-   inProbeRadius->constSortPos = cspPotentialPrimitive;
+   Var *numProbes = new Var("numProbes", "float");
+   numProbes->uniform = true;
+   numProbes->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeBoxMin = new Var("inProbeBoxMin", "float4");
-   inProbeBoxMin->arraySize = 4;
-   inProbeBoxMin->uniform = true;
-   inProbeBoxMin->constSortPos = cspPotentialPrimitive;
+   Var *cubeMips = new Var("cubeMips", "float");
+   cubeMips->uniform = true;
+   cubeMips->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeBoxMax = new Var("inProbeBoxMax", "float4");
-   inProbeBoxMax->arraySize = 4;
-   inProbeBoxMax->uniform = true;
-   inProbeBoxMax->constSortPos = cspPotentialPrimitive;
+   Var *hasSkylight = new Var("hasSkylight", "float");
+   hasSkylight->uniform = true;
+   hasSkylight->constSortPos = cspPotentialPrimitive;
 
-   Var *inProbeIsSphere = new Var("probeConfigData", "float4");
-   inProbeIsSphere->arraySize = 4;
-   inProbeIsSphere->uniform = true;
-   inProbeIsSphere->constSortPos = cspPotentialPrimitive;
+   Var *inProbePosArray = new Var("inProbePosArray", "float4");
+   inProbePosArray->arraySize = MAX_FORWARD_PROBES;
+   inProbePosArray->uniform = true;
+   inProbePosArray->constSortPos = cspPotentialPrimitive;
+
+   Var *inRefPosArray = new Var("inRefPosArray", "float4");
+   inRefPosArray->arraySize = MAX_FORWARD_PROBES;
+   inRefPosArray->uniform = true;
+   inRefPosArray->constSortPos = cspPotentialPrimitive;
+
+   Var *bbMinArray = new Var("inProbeBoxMin", "float4");
+   bbMinArray->arraySize = MAX_FORWARD_PROBES;
+   bbMinArray->uniform = true;
+   bbMinArray->constSortPos = cspPotentialPrimitive;
+
+   Var *bbMaxArray = new Var("inProbeBoxMax", "float4");
+   bbMaxArray->arraySize = MAX_FORWARD_PROBES;
+   bbMaxArray->uniform = true;
+   bbMaxArray->constSortPos = cspPotentialPrimitive;
+
+   Var *probeConfigData = new Var("probeConfigData", "float4");
+   probeConfigData->arraySize = MAX_FORWARD_PROBES;
+   probeConfigData->uniform = true;
+   probeConfigData->constSortPos = cspPotentialPrimitive;
 
    Var *worldToObjArray = new Var("worldToObjArray", "float4x4");
-   worldToObjArray->arraySize = 4;
+   worldToObjArray->arraySize = MAX_FORWARD_PROBES;
    worldToObjArray->uniform = true;
    worldToObjArray->constSortPos = cspPotentialPrimitive;
+
+   Var *BRDFTexture = new Var("BRDFTexture", "SamplerState");
+   BRDFTexture->uniform = true;
+   BRDFTexture->sampler = true;
+   BRDFTexture->constNum = Var::getTexUnitNum();     // used as texture unit num here
+
+   Var *BRDFTextureTex = new Var("BRDFTextureTex", "Texture2D");
+   BRDFTextureTex->uniform = true;
+   BRDFTextureTex->texture = true;
+   BRDFTextureTex->constNum = BRDFTexture->constNum;
 
    Var *specularCubemapAR = new Var("specularCubemapAR", "SamplerState");
    specularCubemapAR->uniform = true;
@@ -3058,7 +3064,27 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *irradianceCubemapARTex = new Var("irradianceCubemapARTex", "TextureCubeArray");
    irradianceCubemapARTex->uniform = true;
    irradianceCubemapARTex->texture = true;
-   irradianceCubemapARTex->constNum = specularCubemapAR->constNum;
+   irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
+
+   Var *skylightSpecularMap = new Var("skylightSpecularMap", "SamplerState");
+   skylightSpecularMap->uniform = true;
+   skylightSpecularMap->sampler = true;
+   skylightSpecularMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
+
+   Var *skylightSpecularMapTex = new Var("skylightSpecularMapTex", "TextureCube");
+   skylightSpecularMapTex->uniform = true;
+   skylightSpecularMapTex->texture = true;
+   skylightSpecularMapTex->constNum = skylightSpecularMap->constNum;
+
+   Var *skylightIrradMap = new Var("skylightIrradMap", "SamplerState");
+   skylightIrradMap->uniform = true;
+   skylightIrradMap->sampler = true;
+   skylightIrradMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
+
+   Var *skylightIrradMapTex = new Var("skylightIrradMapTex", "TextureCube");
+   skylightIrradMapTex->uniform = true;
+   skylightIrradMapTex->texture = true;
+   skylightIrradMapTex->constNum = skylightIrradMap->constNum;
 
    /*Var *probeVec = new Var("probeVec", "float3");
    meta->addStatement(new GenOp("   @ = @[0] - @;\r\n", new DecOp(probeVec), inProbePos, wsPosition));
@@ -3137,7 +3163,45 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       meta->addStatement(new GenOp("   @.rgb  = simpleFresnel(@.rgb, @, 0, @, @, @));\r\n", albedo, albedo, probeColor, angle, FRESNEL_BIAS, FRESNEL_POWER));
    }*/
 
-   meta->addStatement(new GenOp("   @.rgb = float3(1,1,1);\r\n", albedo));
+   Var *inTex = getInTexCoord("texCoord", "float2", componentList);
+   if (!inTex)
+      return;
+
+   Var *diffuseColor = (Var*)LangElement::find("diffuseColor");
+   if (!diffuseColor)
+      return;
+
+   Var *specularColor = (Var*)LangElement::find("specularColor");
+   if (!specularColor)
+      return;
+
+   Var *bumpNormal = (Var*)LangElement::find("bumpNormal");
+   if (!bumpNormal)
+      return;
+
+   Var *wsEyePos = (Var*)LangElement::find("eyePosWorld");
+
+   Var *worldToCamera = (Var*)LangElement::find("worldToCamera");
+   if (!worldToCamera)
+   {
+      worldToCamera = new Var;
+      worldToCamera->setType("float4x4");
+      worldToCamera->setName("worldToCamera");
+      worldToCamera->uniform = true;
+      worldToCamera->constSortPos = cspPass;
+   }
+
+   //Reflection vec
+   Var *surface = new Var("surface", "Surface");
+   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, specularColor,
+                     inTex, wsPosition, wsEyePos, wsView, worldToCamera));
+
+   meta->addStatement(new GenOp("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t@,@,@,@,@,\r\n\t\t@,@,@,@,@,@).rgb;\r\n", albedo,
+      surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
+      hasSkylight, skylightIrradMap, skylightIrradMapTex, skylightSpecularMap, skylightSpecularMapTex,
+      BRDFTexture, BRDFTextureTex, irradianceCubemapAR, irradianceCubemapARTex, specularCubemapAR, specularCubemapARTex));
+
+   //meta->addStatement(new GenOp("   @.rgb = @.roughness.xxx;\r\n", albedo, surface));
 
    output = meta;
 }

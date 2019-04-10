@@ -680,9 +680,6 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          {
             if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
             {
-               U32 specSample = probeShaderConsts->mSkylightSpecularMap->getSamplerRegister();
-               U32 irradSample = probeShaderConsts->mSkylightIrradMap->getSamplerRegister();
-
                GFX->setCubeTexture(probeShaderConsts->mSkylightSpecularMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
                GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
 
@@ -717,7 +714,6 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMinSC, probeBoxMinArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
-
       GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
       GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
 

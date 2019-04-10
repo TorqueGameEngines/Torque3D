@@ -3041,7 +3041,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    BRDFTexture->sampler = true;
    BRDFTexture->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *BRDFTextureTex = new Var("BRDFTextureTex", "Texture2D");
+   Var *BRDFTextureTex = new Var("texture_BRDFTexture", "Texture2D");
    BRDFTextureTex->uniform = true;
    BRDFTextureTex->texture = true;
    BRDFTextureTex->constNum = BRDFTexture->constNum;
@@ -3051,7 +3051,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    specularCubemapAR->sampler = true;
    specularCubemapAR->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *specularCubemapARTex = new Var("specularCubemapARTex", "TextureCubeArray");
+   Var *specularCubemapARTex = new Var("texture_specularCubemapAR", "TextureCubeArray");
    specularCubemapARTex->uniform = true;
    specularCubemapARTex->texture = true;
    specularCubemapARTex->constNum = specularCubemapAR->constNum;
@@ -3061,7 +3061,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    irradianceCubemapAR->sampler = true;
    irradianceCubemapAR->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *irradianceCubemapARTex = new Var("irradianceCubemapARTex", "TextureCubeArray");
+   Var *irradianceCubemapARTex = new Var("texture_irradianceCubemapAR", "TextureCubeArray");
    irradianceCubemapARTex->uniform = true;
    irradianceCubemapARTex->texture = true;
    irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
@@ -3071,7 +3071,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    skylightSpecularMap->sampler = true;
    skylightSpecularMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *skylightSpecularMapTex = new Var("skylightSpecularMapTex", "TextureCube");
+   Var *skylightSpecularMapTex = new Var("texture_skylightSpecularMap", "TextureCube");
    skylightSpecularMapTex->uniform = true;
    skylightSpecularMapTex->texture = true;
    skylightSpecularMapTex->constNum = skylightSpecularMap->constNum;
@@ -3081,88 +3081,11 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    skylightIrradMap->sampler = true;
    skylightIrradMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *skylightIrradMapTex = new Var("skylightIrradMapTex", "TextureCube");
+   Var *skylightIrradMapTex = new Var("texture_skylightIrradMap", "TextureCube");
    skylightIrradMapTex->uniform = true;
    skylightIrradMapTex->texture = true;
    skylightIrradMapTex->constNum = skylightIrradMap->constNum;
-
-   /*Var *probeVec = new Var("probeVec", "float3");
-   meta->addStatement(new GenOp("   @ = @[0] - @;\r\n", new DecOp(probeVec), inProbePos, wsPosition));
-
-   Var *nDotL = new Var("nDotL", "float");
-   meta->addStatement(new GenOp("   @ = abs(dot(@, @));\r\n", new DecOp(nDotL), probeVec, wsNormal));
-
-   meta->addStatement(new GenOp("      \r\n"));
-
-   Var *reflectDir = new Var("reflectDir", "float3");
-   meta->addStatement(new GenOp("   @ = reflect(-float4(@,0),float4(@,@)).xyz;\r\n", new DecOp(reflectDir), wsView, wsNormal, nDotL));
-
-   meta->addStatement(new GenOp("      \r\n"));
-
-   Var *nrDir = new Var("nrDir", "float3");
-   meta->addStatement(new GenOp("   @ = normalize(@);\r\n", new DecOp(nrDir), reflectDir));
-
-   Var *rbmax = new Var("rbmax", "float3");
-   meta->addStatement(new GenOp("   @ = (@[0] - @) / @;\r\n", new DecOp(rbmax), inProbeBoxMax, wsPosition, nrDir));
-
-   Var *rbmin = new Var("rbmin", "float3");
-   meta->addStatement(new GenOp("   @ = (@[0] - @) / @;\r\n", new DecOp(rbmin), inProbeBoxMin, wsPosition, nrDir));
-
-   Var *rbMinMax = new Var("rbMinMax", "float3");
-   meta->addStatement(new GenOp("   @ = (@ > 0.0) ? @ : @;\r\n", new DecOp(rbMinMax), nrDir, rbmax, rbmin));
-
-   meta->addStatement(new GenOp("      \r\n"));
-
-   Var *fa = new Var("fa", "float3");
-   meta->addStatement(new GenOp("   @ = min(min(@.x,@.y),@.z);\r\n", new DecOp(fa), rbMinMax, rbMinMax, rbMinMax));
    
-  
-   meta->addStatement(new GenOp("/*   if (dot( @, @ ) < 0.0f)\r\n", probeVec, wsNormal));
-   meta->addStatement(new GenOp("      clip(@);  *//*\r\n", fa));
- 
-
-   meta->addStatement(new GenOp("      \r\n"));
-
-   Var *posOnBox = new Var("posOnBox", "float3");
-   meta->addStatement(new GenOp("   @ = @ + @ * @;\r\n", new DecOp(posOnBox), wsPosition, nrDir, fa));
-   meta->addStatement(new GenOp("   @ = @ - @[0];\r\n", reflectDir, posOnBox, inProbePos));
-
-   meta->addStatement(new GenOp("      \r\n"));
-
-   Var *probeColor = new Var("wipProbeColor", "float3");
-
-   Var *probeMip = new Var("probeMip", "float");
-   meta->addStatement(new GenOp("   @ = min((1.0 - @)*11.0 + 1.0, 8.0);\r\n", new DecOp(probeMip), smoothness));
-   meta->addStatement(new GenOp("   @ = @.SampleLevel(@, @, @).rgb;\r\n", new DecOp(probeColor), inProbeCubemapTex, inProbeCubemap, reflectDir, probeMip));
-   //meta->addStatement(new GenOp("   @ = @.rgb;\r\n", new DecOp(probeColor), inProbeTestColor));
-
-   Var *FRESNEL_BIAS = new Var("FRESNEL_BIAS", "float");
-   meta->addStatement(new GenOp("   @  = 0.1;\r\n", new DecOp(FRESNEL_BIAS)));
-
-   Var *FRESNEL_POWER = new Var("FRESNEL_POWER", "float");
-   meta->addStatement(new GenOp("   @  = 1;\r\n", new DecOp(FRESNEL_POWER)));
-
-   Var *angle = new Var("angle", "float");
-   meta->addStatement(new GenOp("   @  = saturate(dot(@, @));\r\n", new DecOp(angle), wsView, wsNormal));
-   meta->addStatement(new GenOp("\r\n"));
-
-   if (metalness)
-   {
-      Var *dColor = new Var("difColor", "float3");
-      Var *reflectColor = new Var("reflctColor", "float3");
-
-      meta->addStatement(new GenOp("   @ = @.rgb - (@.rgb * @);\r\n", new DecOp(dColor), albedo, albedo, metalness));
-      meta->addStatement(new GenOp("   @ = @; //@.rgb*(@).rgb*@;\r\n", new DecOp(reflectColor), probeColor, albedo, probeColor, metalness));
-
-      meta->addStatement(new GenOp("   @.rgb  = simpleFresnel(@, @, @, @, @, @);\r\n", albedo, dColor, reflectColor, metalness, angle, FRESNEL_BIAS, FRESNEL_POWER));
-   }
-   //else if (lerpVal)
-   //   meta->addStatement(new GenOp("   @ *= float4(@.rgb*@.a, @.a);\r\n", targ, texCube, lerpVal, targ));
-   else
-   {
-      meta->addStatement(new GenOp("   @.rgb  = simpleFresnel(@.rgb, @, 0, @, @, @));\r\n", albedo, albedo, probeColor, angle, FRESNEL_BIAS, FRESNEL_POWER));
-   }*/
-
    Var *inTex = getInTexCoord("texCoord", "float2", componentList);
    if (!inTex)
       return;
@@ -3225,11 +3148,15 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *surface = new Var("surface", "Surface");
    meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
                      inTex, wsPosition, wsEyePos, wsView, worldToCamera));
-
-   meta->addStatement(new GenOp("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t@,@,@,@,@,\r\n\t\t@,@,@,@,@,@).rgb;\r\n", albedo,
-      surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
-      hasSkylight, skylightIrradMap, skylightIrradMapTex, skylightSpecularMap, skylightSpecularMapTex,
-      BRDFTexture, BRDFTextureTex, irradianceCubemapAR, irradianceCubemapARTex, specularCubemapAR, specularCubemapARTex));
+   String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
+   computeForwardProbes += String::String("TORQUE_SAMPLERCUBE_MAKEARG(@), TORQUE_SAMPLERCUBE_MAKEARG(@), \r\n\t\t");
+   computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
+      
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
+      hasSkylight, BRDFTexture, 
+      skylightIrradMap, skylightSpecularMap,
+      irradianceCubemapAR, specularCubemapAR));
 
    //meta->addStatement(new GenOp("   @.rgb = @.roughness.xxx;\r\n", albedo, surface));
 

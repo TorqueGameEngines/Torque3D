@@ -119,7 +119,6 @@ void ProbeRenderInst::set(const ProbeRenderInst *probeInfo)
 ProbeShaderConstants::ProbeShaderConstants()
    : mInit(false),
    mShader(NULL),
-   mProbeParamsSC(NULL),
    mProbePositionSC(NULL),
    mProbeRefPosSC(NULL),
    mProbeBoxMinSC(NULL),
@@ -127,7 +126,10 @@ ProbeShaderConstants::ProbeShaderConstants()
    mProbeConfigDataSC(NULL),
    mProbeSpecularCubemapSC(NULL),
    mProbeIrradianceCubemapSC(NULL),
-   mProbeCountSC(NULL)
+   mProbeCountSC(NULL),
+   mSkylightSpecularMap(NULL),
+   mSkylightIrradMap(NULL),
+   mHasSkylight(NULL)
 {
 }
 
@@ -150,9 +152,7 @@ void ProbeShaderConstants::init(GFXShader* shader)
       mShader = shader;
       mShader->getReloadSignal().notify(this, &ProbeShaderConstants::_onShaderReload);
    }
-
-   mProbeParamsSC = shader->getShaderConstHandle("$probeParams");
-
+   
    //Reflection Probes
    mProbePositionSC = shader->getShaderConstHandle(ShaderGenVars::probePosition);
    mProbeRefPosSC = shader->getShaderConstHandle(ShaderGenVars::probeRefPos);

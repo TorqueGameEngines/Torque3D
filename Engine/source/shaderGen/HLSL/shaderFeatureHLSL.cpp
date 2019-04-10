@@ -3129,7 +3129,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    {
 	   bumpNormal = new Var("bumpNormal", "float4");
 	   LangElement* colorDecl = new DecOp(bumpNormal);
-	   meta->addStatement(new GenOp("   @ = float4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identiry normal
+	   meta->addStatement(new GenOp("   @ = float4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identity normal
    }
 
    Var *wsEyePos = (Var*)LangElement::find("eyePosWorld");
@@ -3148,7 +3148,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *surface = new Var("surface", "Surface");
    meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
                      inTex, wsPosition, wsEyePos, wsView, worldToCamera));
-   String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   String computeForwardProbes = String::String("   @.rgb += computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBE_MAKEARG(@), TORQUE_SAMPLERCUBE_MAKEARG(@), \r\n\t\t");
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");

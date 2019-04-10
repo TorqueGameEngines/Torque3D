@@ -3177,22 +3177,34 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 	   meta->addStatement(new GenOp("   @ = float4(1.0,1.0,1.0,1.0);\r\n", colorDecl)); //default to flat white
    }
 
-   Var *specularColor = (Var*)LangElement::find("specularColor");
-   if (!specularColor)
+   Var *matinfo = (Var*)LangElement::find("specularColor");
+   if (!matinfo)
    {
-	   specularColor = new Var;
-	   specularColor->setType("float4");
-	   specularColor->setName("specularColor");
-	   LangElement* colorDecl = new DecOp(specularColor);
-	   meta->addStatement(new GenOp("   @ = float4(0.0,0.0,1.0,0.0);\r\n", colorDecl)); //default to no flag, no rough or metal, no ao darkening
+      Var* metalness = (Var*)LangElement::find("metalness");
+      if (!metalness)
+      {
+         metalness = new Var("metalness", "float");
+         metalness->uniform = true;
+         metalness->constSortPos = cspPotentialPrimitive;
+      }
+
+      Var* smoothness = (Var*)LangElement::find("smoothness");
+      if (!smoothness)
+      {
+         smoothness = new Var("smoothness", "float");
+         smoothness->uniform = true;
+         smoothness->constSortPos = cspPotentialPrimitive;
+      }
+
+      matinfo = new Var("specularColor", "float4");
+	   LangElement* colorDecl = new DecOp(matinfo);
+	   meta->addStatement(new GenOp("   @ = float4(0.0,@,1.0,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }
 
    Var *bumpNormal = (Var*)LangElement::find("bumpNormal");
    if (!bumpNormal)
    {
-	   bumpNormal = new Var;
-	   bumpNormal->setType("float4");
-	   bumpNormal->setName("bumpNormal");
+	   bumpNormal = new Var("bumpNormal", "float4");
 	   LangElement* colorDecl = new DecOp(bumpNormal);
 	   meta->addStatement(new GenOp("   @ = float4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identiry normal
    }
@@ -3211,7 +3223,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 
    //Reflection vec
    Var *surface = new Var("surface", "Surface");
-   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, specularColor,
+   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
                      inTex, wsPosition, wsEyePos, wsView, worldToCamera));
 
    meta->addStatement(new GenOp("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t@,@,@,@,@,\r\n\t\t@,@,@,@,@,@).rgb;\r\n", albedo,

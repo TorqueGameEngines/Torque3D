@@ -3169,15 +3169,33 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 
    Var *diffuseColor = (Var*)LangElement::find("diffuseColor");
    if (!diffuseColor)
-      return;
+   {
+	   diffuseColor = new Var;
+	   diffuseColor->setType("float4");
+	   diffuseColor->setName("diffuseColor");
+	   LangElement* colorDecl = new DecOp(diffuseColor);
+	   meta->addStatement(new GenOp("   @ = float4(1.0,1.0,1.0,1.0);\r\n", colorDecl)); //default to flat white
+   }
 
    Var *specularColor = (Var*)LangElement::find("specularColor");
    if (!specularColor)
-      return;
+   {
+	   specularColor = new Var;
+	   specularColor->setType("float4");
+	   specularColor->setName("specularColor");
+	   LangElement* colorDecl = new DecOp(specularColor);
+	   meta->addStatement(new GenOp("   @ = float4(0.0,0.0,1.0,0.0);\r\n", colorDecl)); //default to no flag, no rough or metal, no ao darkening
+   }
 
    Var *bumpNormal = (Var*)LangElement::find("bumpNormal");
    if (!bumpNormal)
-      return;
+   {
+	   bumpNormal = new Var;
+	   bumpNormal->setType("float4");
+	   bumpNormal->setName("bumpNormal");
+	   LangElement* colorDecl = new DecOp(bumpNormal);
+	   meta->addStatement(new GenOp("   @ = float4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identiry normal
+   }
 
    Var *wsEyePos = (Var*)LangElement::find("eyePosWorld");
 

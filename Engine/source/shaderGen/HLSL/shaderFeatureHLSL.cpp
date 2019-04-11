@@ -3167,11 +3167,8 @@ ShaderFeature::Resources ReflectionProbeFeatHLSL::getResources(const MaterialFea
 {
    Resources res;
 
-   //res.numTex = 4;
-   //res.numTexReg = 4;
-
-   res.numTex = 4;
-   res.numTexReg = 4;
+   res.numTex = 5;
+   res.numTexReg = 5;
 
    return res;
 }
@@ -3183,8 +3180,16 @@ void ReflectionProbeFeatHLSL::setTexData(Material::StageData &stageDat,
 {
    if (stageFeatures.features[MFT_ReflectionProbes])
    {
+      passData.mSamplerNames[texIndex] = "BRDFTexture";
+      passData.mTexType[texIndex++] = Material::Standard;
       // assuming here that it is a scenegraph cubemap
-      passData.mSamplerNames[texIndex] = "inProbeCubemap";
+      passData.mSamplerNames[texIndex] = "specularCubemapAR";
+      passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "irradianceCubemapAR";
+      passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "skylightSpecularMap";
+      passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "skylightIrradMap";
       passData.mTexType[texIndex++] = Material::SGCube;
    }
 }

@@ -31,6 +31,9 @@
 #include <assimp/postprocess.h>
 #include <assimp/types.h>
 
+bool AssimpAppMesh::fixedSizeEnabled = false;
+S32 AssimpAppMesh::fixedSize = 2;
+
 //------------------------------------------------------------------------------
 
 AssimpAppMesh::AssimpAppMesh(const struct aiMesh* mesh, AssimpAppNode* node)
@@ -59,8 +62,7 @@ const char* AssimpAppMesh::getName(bool allowFixed)
 
    // If all geometry is being fixed to the same size, append the size
    // to the name
-   //return allowFixed && fixedSizeEnabled ? avar("%s %d", nodeName, fixedSize) : nodeName;
-   return nodeName;
+   return allowFixed && fixedSizeEnabled ? avar("%s %d", nodeName, fixedSize) : nodeName;
 }
 
 MatrixF AssimpAppMesh::getMeshTransform(F32 time)
@@ -76,6 +78,8 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    points.reserve(mMeshData->mNumVertices);
    uvs.reserve(mMeshData->mNumVertices);
    normals.reserve(mMeshData->mNumVertices);
+
+   bool flipNormals = Con::getBoolVariable("$Assimp::FlipNormals", false);
 
    bool noUVFound = false;
    for (U32 i = 0; i<mMeshData->mNumVertices; i++)
@@ -93,6 +97,8 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 
       tmpVert = Point3F(pt.x, pt.y, pt.z);
       tmpNormal = Point3F(nrm.x, nrm.y, nrm.z);
+      if (flipNormals)
+         tmpNormal *= -1.0f;
 
       objOffset.mulP(tmpVert);
 
@@ -155,23 +161,11 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
       const struct aiFace* face = &mMeshData->mFaces[n];
       if ( face->mNumIndices == 3 )
       {
-         if (Con::getBoolVariable("$Assimp::FlipNormals", true))
+         U32 indexCount = face->mNumIndices;
+         for (U32 ind = 0; ind < indexCount; ind++)
          {
-            U32 indexCount = face->mNumIndices;
-            for (S32 ind = indexCount - 1; ind >= 0; ind--)
-            {
-               U32 index = face->mIndices[ind];
-               indices.push_back(index);
-            }
-         }
-         else
-         {
-            U32 indexCount = face->mNumIndices;
-            for (U32 ind = 0; ind < indexCount; ind++)
-            {
-               U32 index = face->mIndices[ind];
-               indices.push_back(index);
-            }
+            U32 index = face->mIndices[ind];
+            indices.push_back(index);
          }
       } 
       else 

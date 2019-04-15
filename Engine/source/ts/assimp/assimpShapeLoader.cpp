@@ -33,6 +33,7 @@
 
 #include "ts/assimp/assimpShapeLoader.h"
 #include "ts/assimp/assimpAppNode.h"
+#include "ts/assimp/assimpAppMesh.h"
 #include "ts/assimp/assimpAppMaterial.h"
 #include "ts/assimp/assimpAppSequence.h"
 
@@ -150,6 +151,9 @@ void AssimpShapeLoader::enumerateScene()
    if(Con::getBoolVariable("$Assimp::FlipUVs", true))
       ppsteps |= aiProcess_FlipUVs;
 
+   if(Con::getBoolVariable("$Assimp::FlipWindingOrder", true))
+      ppsteps |= aiProcess_FlipWindingOrder;
+
    if(Con::getBoolVariable("$Assimp::Triangulate", true))
       ppsteps |= aiProcess_Triangulate;
 
@@ -163,17 +167,21 @@ void AssimpShapeLoader::enumerateScene()
 
    aiPropertyStore* props = aiCreatePropertyStore();
 
-   aiSetImportPropertyInteger(props,   AI_CONFIG_IMPORT_TER_MAKE_UVS,         1);
-   aiSetImportPropertyInteger(props,   AI_CONFIG_PP_SBP_REMOVE,               (aiProcessPreset_TargetRealtime_Quality 
-                                                                                    | aiProcess_FlipWindingOrder | aiProcess_FlipUVs 
-                                                                                    | aiProcess_CalcTangentSpace
-                                                                                    | aiProcess_FixInfacingNormals) 
-                                                                                       & ~aiProcess_RemoveRedundantMaterials);
-   aiSetImportPropertyInteger(props,   AI_CONFIG_GLOB_MEASURE_TIME,           1);
-   aiSetImportPropertyFloat(props,     AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE,  80.f);
+   //aiSetImportPropertyInteger(props,   AI_CONFIG_IMPORT_TER_MAKE_UVS,         1);
+   //aiSetImportPropertyInteger(props,   AI_CONFIG_PP_SBP_REMOVE,               (aiProcessPreset_TargetRealtime_Quality 
+   //                                                                                 | aiProcess_FlipWindingOrder | aiProcess_FlipUVs 
+   //                                                                                 | aiProcess_CalcTangentSpace
+   //                                                                                 | aiProcess_FixInfacingNormals) 
+   //                                                                                    & ~aiProcess_RemoveRedundantMaterials);
+   //aiSetImportPropertyInteger(props,   AI_CONFIG_GLOB_MEASURE_TIME,           1);
+   //aiSetImportPropertyFloat(props,     AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE,  80.f);
    //aiSetImportPropertyInteger(props,AI_CONFIG_PP_PTV_KEEP_HIERARCHY,1);
 
-   //Assimp::Importer importer;
+   struct aiLogStream c;
+   c = aiGetPredefinedLogStream(aiDefaultLogStream_FILE, "assimp.log");
+   aiAttachLogStream(&c);
+   c = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+   aiAttachLogStream(&c);
 
    // Attempt to import with Assimp.
    //mScene = importer.ReadFile(shapePath.getFullPath().c_str(), (aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_CalcTangentSpace)
@@ -191,6 +199,9 @@ void AssimpShapeLoader::enumerateScene()
       // Load all the materials.
       for ( U32 i = 0; i < mScene->mNumMaterials; i++ )
          AppMesh::appMaterials.push_back(new AssimpAppMaterial(mScene->mMaterials[i]));
+
+      // Setup LOD checks
+      detectDetails();
 
       // Define the root node, and process down the chain.
       AssimpAppNode* node = new AssimpAppNode(mScene, mScene->mRootNode, 0);
@@ -216,6 +227,55 @@ void AssimpShapeLoader::processAnimations()
 
       AssimpAppSequence* newAssimpSeq = new AssimpAppSequence(mScene->mAnimations[n]);
       appSequences.push_back(newAssimpSeq);
+   }
+}
+
+void AssimpShapeLoader::computeBounds(Box3F& bounds)
+{
+   TSShapeLoader::computeBounds(bounds);
+
+   // Check if the model origin needs adjusting
+   bool adjustCenter = Con::getBoolVariable("$Assimp::adjustCenter", false); //ColladaUtils::getOptions().adjustCenter
+   bool adjustFloor = Con::getBoolVariable("$Assimp::adjustFloor", false); //ColladaUtils::getOptions().adjustFloor
+   if (bounds.isValidBox() && (adjustCenter || adjustFloor))
+   {
+      // Compute shape offset
+      Point3F shapeOffset = Point3F::Zero;
+      if (adjustCenter)
+      {
+         bounds.getCenter(&shapeOffset);
+         shapeOffset = -shapeOffset;
+      }
+      if (adjustFloor)
+         shapeOffset.z = -bounds.minExtents.z;
+
+      // Adjust bounds
+      bounds.minExtents += shapeOffset;
+      bounds.maxExtents += shapeOffset;
+
+      // Now adjust all positions for root level nodes (nodes with no parent)
+      for (S32 iNode = 0; iNode < shape->nodes.size(); iNode++)
+      {
+         if (!appNodes[iNode]->isParentRoot())
+            continue;
+
+         // Adjust default translation
+         shape->defaultTranslations[iNode] += shapeOffset;
+
+         // Adjust animated translations
+         for (S32 iSeq = 0; iSeq < shape->sequences.size(); iSeq++)
+         {
+            const TSShape::Sequence& seq = shape->sequences[iSeq];
+            if (seq.translationMatters.test(iNode))
+            {
+               for (S32 iFrame = 0; iFrame < seq.numKeyframes; iFrame++)
+               {
+                  S32 index = seq.baseTranslation + seq.translationMatters.count(iNode)*seq.numKeyframes + iFrame;
+                  shape->nodeTranslations[index] += shapeOffset;
+               }
+            }
+         }
+      }
    }
 }
 
@@ -287,6 +347,44 @@ bool AssimpShapeLoader::ignoreNode(const String& name)
    if (name.find("_$AssimpFbx$_") != String::NPos)
       return true;
    return false;
+}
+
+void AssimpShapeLoader::detectDetails()
+{
+   // Set LOD option
+   bool singleDetail = true;
+   switch (Con::getIntVariable("$Assimp::lodType", 0))
+   {
+   case ColladaUtils::ImportOptions::DetectDTS:
+      // Check for a baseXX->startXX hierarchy at the top-level, if we find
+      // one, use trailing numbers for LOD, otherwise use a single size
+      for (S32 iNode = 0; singleDetail && (iNode < mScene->mRootNode->mNumChildren); iNode++) {
+         aiNode* node = mScene->mRootNode->mChildren[iNode];
+         if (node && dStrStartsWith(node->mName.C_Str(), "base")) {
+            for (S32 iChild = 0; iChild < node->mNumChildren; iChild++) {
+               aiNode* child = node->mChildren[iChild];
+               if (child && dStrStartsWith(child->mName.C_Str(), "start")) {
+                  singleDetail = false;
+                  break;
+               }
+            }
+         }
+      }
+      break;
+
+   case ColladaUtils::ImportOptions::SingleSize:
+      singleDetail = true;
+      break;
+
+   case ColladaUtils::ImportOptions::TrailingNumber:
+      singleDetail = false;
+      break;
+
+   default:
+      break;
+   }
+
+   AssimpAppMesh::fixDetailSize(singleDetail, Con::getIntVariable("$Assimp::singleDetailSize", 2));
 }
 
 //-----------------------------------------------------------------------------
@@ -377,7 +475,7 @@ DefineEngineFunction(GetShapeInfo, GuiTreeViewCtrl*, (String filePath), ,
    //Details!
    for (U32 i = 0; i < shapeScene->mNumMeshes; i++)
    {
-      treeObj->insertItem(meshItem, String::ToString("%s", shapeScene->mMeshes[i]->mName));
+      treeObj->insertItem(meshItem, String::ToString("%s", shapeScene->mMeshes[i]->mName.C_Str()));
    }
 
    for (U32 i = 0; i < shapeScene->mNumMaterials; i++)

@@ -345,6 +345,8 @@ inline void Buffer::Read(Value& obj, Asset& r)
 inline bool Buffer::LoadFromStream(IOStream& stream, size_t length, size_t baseOffset)
 {
     byteLength = length ? length : stream.FileSize();
+    if ((byteLength + baseOffset) > stream.FileSize())
+       byteLength = stream.FileSize() - baseOffset;
 
     if (baseOffset) {
         stream.Seek(baseOffset, aiOrigin_SET);

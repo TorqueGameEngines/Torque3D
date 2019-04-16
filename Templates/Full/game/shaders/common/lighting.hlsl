@@ -303,9 +303,9 @@ float3 boxProject(float3 wsPosition, float3 wsReflectVec, float4x4 worldToObj, f
 float4 computeForwardProbes(Surface surface,
     float cubeMips, float numProbes, float4x4 worldToObjArray[MAX_FORWARD_PROBES], float4 probeConfigData[MAX_FORWARD_PROBES], 
     float4 inProbePosArray[MAX_FORWARD_PROBES], float4 bbMinArray[MAX_FORWARD_PROBES], float4 bbMaxArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
-    float hasSkylight, SamplerState skylightIrradMap, TextureCube skylightIrradMapTex, SamplerState skylightSpecularMap, TextureCube skylightSpecularMapTex,
-    SamplerState BRDFTexture, Texture2D BRDFTextureTex, SamplerState irradianceCubemapAR, TextureCubeArray irradianceCubemapARTex,
-    SamplerState specularCubemapAR, TextureCubeArray specularCubemapARTex)
+    float hasSkylight, TORQUE_SAMPLER2D(BRDFTexture), 
+	TORQUE_SAMPLERCUBE(skylightIrradMap), TORQUE_SAMPLERCUBE(skylightSpecularMap),
+	TORQUE_SAMPLERCUBEARRAY(irradianceCubemapAR), TORQUE_SAMPLERCUBEARRAY(specularCubemapAR))
 {
   int i = 0;
    float blendFactor[MAX_FORWARD_PROBES];
@@ -380,16 +380,16 @@ float4 computeForwardProbes(Surface surface,
          int cubemapIdx = probeConfigData[i].a;
          float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
 
-         irradiance += irradianceCubemapARTex.SampleLevel(irradianceCubemapAR,float4(dir,cubemapIdx),0).xyz * contrib;
-         specular += specularCubemapARTex.SampleLevel(specularCubemapAR,float4(dir,cubemapIdx),lod).xyz * contrib;
+         irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
+         specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
          alpha -= contrib;
       }
    }
 
    if (hasSkylight && alpha > 0.001)
    {
-      irradiance += skylightIrradMapTex.SampleLevel(skylightIrradMap,surface.R,0).xyz * alpha;
-      specular += skylightSpecularMapTex.SampleLevel(skylightSpecularMap,surface.R,lod).xyz * alpha;
+      irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz * alpha;
+      specular += TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz * alpha;
    }
 
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
@@ -400,13 +400,12 @@ float4 computeForwardProbes(Surface surface,
 
    //apply brdf
    //Do it once to save on texture samples
-   float2 brdf = BRDFTextureTex.SampleLevel(BRDFTexture,float2(surface.roughness, surface.NdotV),0).xy;
+   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture,float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
    specular *= brdf.x * F + brdf.y;
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
    float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
 
-   finalColor = float4(irradiance.rgb,1);
    return finalColor;
 }

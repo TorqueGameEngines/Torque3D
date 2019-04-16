@@ -119,7 +119,6 @@ void ProbeRenderInst::set(const ProbeRenderInst *probeInfo)
 ProbeShaderConstants::ProbeShaderConstants()
    : mInit(false),
    mShader(NULL),
-   mProbeParamsSC(NULL),
    mProbePositionSC(NULL),
    mProbeRefPosSC(NULL),
    mProbeBoxMinSC(NULL),
@@ -127,7 +126,10 @@ ProbeShaderConstants::ProbeShaderConstants()
    mProbeConfigDataSC(NULL),
    mProbeSpecularCubemapSC(NULL),
    mProbeIrradianceCubemapSC(NULL),
-   mProbeCountSC(NULL)
+   mProbeCountSC(NULL),
+   mSkylightSpecularMap(NULL),
+   mSkylightIrradMap(NULL),
+   mHasSkylight(NULL)
 {
 }
 
@@ -150,9 +152,7 @@ void ProbeShaderConstants::init(GFXShader* shader)
       mShader = shader;
       mShader->getReloadSignal().notify(this, &ProbeShaderConstants::_onShaderReload);
    }
-
-   mProbeParamsSC = shader->getShaderConstHandle("$probeParams");
-
+   
    //Reflection Probes
    mProbePositionSC = shader->getShaderConstHandle(ShaderGenVars::probePosition);
    mProbeRefPosSC = shader->getShaderConstHandle(ShaderGenVars::probeRefPos);
@@ -680,13 +680,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          {
             if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
             {
-               S32 specSample = probeShaderConsts->mSkylightSpecularMap->getSamplerRegister();
-               if (specSample != -1)
-                  GFX->setCubeTexture(specSample, curEntry.mPrefilterCubemap);
-
-               S32 irradSample = probeShaderConsts->mSkylightIrradMap->getSamplerRegister();
-               if (irradSample != -1)
-                  GFX->setCubeTexture(irradSample, curEntry.mIrradianceCubemap);
+               GFX->setCubeTexture(probeShaderConsts->mSkylightSpecularMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
+               GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
 
                shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 1.0f);
                hasSkylight = true;
@@ -719,14 +714,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMinSC, probeBoxMinArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
-
-      S32 specSample = probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister();
-      if (specSample != -1)
-         GFX->setCubeArrayTexture(specSample, mPrefilterArray);
-
-      S32 irradSample = probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister();
-      if (irradSample != -1)
-         GFX->setCubeArrayTexture(irradSample, mIrradianceArray);
+      GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
+      GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
 
       if (!hasSkylight)
          shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 0.0f);

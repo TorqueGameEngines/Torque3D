@@ -834,7 +834,7 @@ void GFXDevice::setCubeTexture( U32 stage, GFXCubemap *cubemap )
 //-----------------------------------------------------------------------------
 void GFXDevice::setCubeArrayTexture(U32 stage, GFXCubemapArray *cubemapArray)
 {
-   AssertFatal(stage < getNumSamplers(), "GFXDevice::setTexture - out of range stage!");
+   AssertFatal(stage < getNumSamplers(), avar("GFXDevice::setTexture - out of range stage! %i>%i", stage, getNumSamplers()));
 
    if (mTexType[stage] == GFXTDT_CubeArray &&
       ((mTextureDirty[stage] && mNewCubemapArray[stage].getPointer() == cubemapArray) ||

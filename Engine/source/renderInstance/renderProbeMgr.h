@@ -131,9 +131,7 @@ struct ProbeShaderConstants
    bool mInit;
 
    GFXShaderRef mShader;
-
-   GFXShaderConstHandle* mProbeParamsSC;
-
+   
    //Reflection Probes
    GFXShaderConstHandle *mProbePositionSC;
    GFXShaderConstHandle *mProbeRefPosSC;

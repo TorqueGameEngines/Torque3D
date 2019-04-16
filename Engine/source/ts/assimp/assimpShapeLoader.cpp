@@ -177,11 +177,15 @@ void AssimpShapeLoader::enumerateScene()
    //aiSetImportPropertyFloat(props,     AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE,  80.f);
    //aiSetImportPropertyInteger(props,AI_CONFIG_PP_PTV_KEEP_HIERARCHY,1);
 
-   struct aiLogStream c;
-   c = aiGetPredefinedLogStream(aiDefaultLogStream_FILE, "assimp.log");
-   aiAttachLogStream(&c);
-   c = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
-   aiAttachLogStream(&c);
+   struct aiLogStream shapeLog;
+   shapeLog = aiGetPredefinedLogStream(aiDefaultLogStream_FILE, "assimp.log");
+   aiAttachLogStream(&shapeLog);
+#ifdef TORQUE_DEBUG
+   aiEnableVerboseLogging(true);
+#endif
+
+   //c = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+   //aiAttachLogStream(&c);
 
    // Attempt to import with Assimp.
    //mScene = importer.ReadFile(shapePath.getFullPath().c_str(), (aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_CalcTangentSpace)
@@ -217,6 +221,8 @@ void AssimpShapeLoader::enumerateScene()
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import failed");
       Con::printf("[ASSIMP] Import Error: %s", aiGetErrorString());
    }
+
+   aiDetachLogStream(&shapeLog);
 }
 
 void AssimpShapeLoader::processAnimations()

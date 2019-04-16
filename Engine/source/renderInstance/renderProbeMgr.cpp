@@ -423,7 +423,7 @@ void RenderProbeMgr::_setupStaticParameters()
       if (!curEntry.mIsEnabled)
          continue;
 
-      if (curEntry.mIsSkylight)
+      if (curEntry.mProbeShapeType == ProbeRenderInst::ProbeShapeType::Skylight || curEntry.mIsSkylight)
       {
          skylightPos = curEntry.getPosition();
          skylightPrefilterMap = curEntry.mPrefilterCubemap;
@@ -680,11 +680,13 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          {
             if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
             {
-               U32 specSample = probeShaderConsts->mSkylightSpecularMap->getSamplerRegister();
-               U32 irradSample = probeShaderConsts->mSkylightIrradMap->getSamplerRegister();
+               S32 specSample = probeShaderConsts->mSkylightSpecularMap->getSamplerRegister();
+               if (specSample != -1)
+                  GFX->setCubeTexture(specSample, curEntry.mPrefilterCubemap);
 
-               GFX->setCubeTexture(probeShaderConsts->mSkylightSpecularMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
-               GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
+               S32 irradSample = probeShaderConsts->mSkylightIrradMap->getSamplerRegister();
+               if (irradSample != -1)
+                  GFX->setCubeTexture(irradSample, curEntry.mIrradianceCubemap);
 
                shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 1.0f);
                hasSkylight = true;
@@ -718,8 +720,13 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
 
-      GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
-      GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
+      S32 specSample = probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister();
+      if (specSample != -1)
+         GFX->setCubeArrayTexture(specSample, mPrefilterArray);
+
+      S32 irradSample = probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister();
+      if (irradSample != -1)
+         GFX->setCubeArrayTexture(irradSample, mIrradianceArray);
 
       if (!hasSkylight)
          shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 0.0f);
@@ -779,8 +786,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //updateProbes();
 
    // Early out if nothing to draw.
-   if (!ProbeRenderInst::all.size() || !RenderProbeMgr::smRenderReflectionProbes || !state->isDiffusePass() || (mEffectiveProbeCount == 0
-      || mCubeMapCount != 0 && !hasSkylight))
+   if (!RenderProbeMgr::smRenderReflectionProbes || !state->isDiffusePass() || (!ProbeRenderInst::all.size() || mEffectiveProbeCount == 0 || mCubeMapCount != 0 ) && !hasSkylight)
    {
       getProbeArrayEffect()->setSkip(true);
       return;
@@ -793,6 +799,19 @@ void RenderProbeMgr::render( SceneRenderState *state )
    // Initialize and set the per-frame parameters after getting
    // the vector light material as we use lazy creation.
    //_setupPerFrameParameters(state);
+
+      //Visualization
+   String useDebugAtten = Con::getVariable("$Probes::showAttenuation", "0");
+   mProbeArrayEffect->setShaderMacro("DEBUGVIZ_ATTENUATION", useDebugAtten);
+
+   String useDebugSpecCubemap = Con::getVariable("$Probes::showSpecularCubemaps", "0");
+   mProbeArrayEffect->setShaderMacro("DEBUGVIZ_SPECCUBEMAP", useDebugSpecCubemap);
+
+   String useDebugDiffuseCubemap = Con::getVariable("$Probes::showDiffuseCubemaps", "0");
+   mProbeArrayEffect->setShaderMacro("DEBUGVIZ_DIFFCUBEMAP", useDebugDiffuseCubemap);
+
+   String useDebugContrib = Con::getVariable("$Probes::showProbeContrib", "0");
+   mProbeArrayEffect->setShaderMacro("DEBUGVIZ_CONTRIB", useDebugContrib);
    
    //Array rendering
    //U32 probeCount = ProbeRenderInst::all.size();
@@ -804,22 +823,13 @@ void RenderProbeMgr::render( SceneRenderState *state )
       mProbeArrayEffect->setCubemapTexture(7, skylightIrradMap);
    }
 
+   mProbeArrayEffect->setShaderConst("$numProbes", (float)mEffectiveProbeCount);
+
+   mProbeArrayEffect->setShaderConst("$cubeMips", (float)mMipCount);
    if (mEffectiveProbeCount != 0)
    {
       mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);
       mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
-
-      String useDebugAtten = Con::getVariable("$Probes::showAttenuation", "0");
-      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_ATTENUATION", useDebugAtten);
-
-      String useDebugSpecCubemap = Con::getVariable("$Probes::showSpecularCubemaps", "0");
-      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_SPECCUBEMAP", useDebugSpecCubemap);
-
-      String useDebugDiffuseCubemap = Con::getVariable("$Probes::showDiffuseCubemaps", "0");
-      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_DIFFCUBEMAP", useDebugDiffuseCubemap);
-
-      String useDebugContrib = Con::getVariable("$Probes::showProbeContrib", "0");
-      mProbeArrayEffect->setShaderMacro("DEBUGVIZ_CONTRIB", useDebugContrib);
 
       if (useDebugContrib == String("1"))
       {
@@ -841,15 +851,12 @@ void RenderProbeMgr::render( SceneRenderState *state )
             else if (i == 2)
                contribColors[i] = Point4F(0, 0, 1, 1);
             else
-               contribColors[i] = Point4F(RandomGen.randF(0, 1), RandomGen.randF(0, 1), RandomGen.randF(0, 1),1);
+               contribColors[i] = Point4F(RandomGen.randF(0, 1), RandomGen.randF(0, 1), RandomGen.randF(0, 1), 1);
          }
 
          mProbeArrayEffect->setShaderConst("$probeContribColors", contribColors);
       }
-
-      mProbeArrayEffect->setShaderConst("$cubeMips", (float)mMipCount);
       
-      mProbeArrayEffect->setShaderConst("$numProbes", (float)mEffectiveProbeCount);
       mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositionsData);
       mProbeArrayEffect->setShaderConst("$inRefPosArray", probeRefPositionsData);
       mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);

@@ -36,6 +36,11 @@ singleton Material( Grid512_Blue_Mat )
    metalness[0] = "0.803922";
    translucent = "1";
    translucentBlendOp = "Add";
+   normalMap[0] = "art/pbr/floor/FloorEbony_normal.png";
+   invertSmoothness[0] = "1";
+   roughMap[0] = "art/pbr/floor/FloorEbony_rough.png";
+   aoMap[0] = "art/pbr/floor/FloorEbony_ao.png";
+   metalMap[0] = "art/pbr/floor/FloorEbony_metal.png";
 };
 
 singleton Material( Grid512_ForestGreen_Mat )

@@ -172,10 +172,10 @@ void GFXGLDevice::initGLState()
 #endif
 
    PlatformGL::setVSync(smDisableVSync ? 0 : 1);
-
+   
    //install vsync callback
-   Con::NotifyDelegate clbk(this, &GFXGLDevice::vsyncCallback);
-   Con::addVariableNotify("$pref::Video::disableVerticalSync", clbk);
+   Con::NotifyDelegate clbk( this, &GFXGLDevice::vsyncCallback );
+   Con::addVariableNotify( "$pref::Video::disableVerticalSync", clbk );
 
    //OpenGL 3 need a binded VAO for render
    GLuint vao;
@@ -240,6 +240,7 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
       mModelViewProjSC[i] = NULL;
 
    mOpenglStateCache = new GFXGLStateCache;
+
 }
 
 GFXGLDevice::~GFXGLDevice()
@@ -1021,7 +1022,7 @@ public:
 
 static GFXGLRegisterDevice pGLRegisterDevice;
 
-DefineEngineFunction(cycleResources, void, (),, "")
+ConsoleFunction(cycleResources, void, 1, 1, "")
 {
    static_cast<GFXGLDevice*>(GFX)->zombify();
    static_cast<GFXGLDevice*>(GFX)->resurrect();

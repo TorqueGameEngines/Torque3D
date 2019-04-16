@@ -310,15 +310,17 @@ singleton ShaderData( PFX_ReflectionProbeArray )
    DXVertexShaderFile   = "shaders/common/postFx/postFxV.hlsl";
    DXPixelShaderFile    = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
 
-   //OGLVertexShaderFile  = "shaders/common/postFx/gl//postFxV.glsl";
-   //OGLPixelShaderFile   = "shaders/common/postFx/gl/passthruP.glsl";
+   OGLVertexShaderFile  = "shaders/common/postFx/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
    
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$colorBuffer";
    samplerNames[2] = "$matInfoBuffer";
    samplerNames[3] = "$BRDFTexture";
-   samplerNames[4] = "$cubeMap";
-   samplerNames[5] = "$irradianceCubemap";
+   samplerNames[4] = "$specularCubemapAR";
+   samplerNames[5] = "$irradianceCubemapAR";
+   samplerNames[6] = "$skylightSpecularMap";
+   samplerNames[7] = "$skylightIrradMap";
 
    pixVersion = 2.0;
 };  

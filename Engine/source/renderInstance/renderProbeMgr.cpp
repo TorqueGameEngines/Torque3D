@@ -646,8 +646,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       //Array rendering
       U32 probeCount = ProbeRenderInst::all.size();
 
-      mEffectiveProbeCount = 0;
-      mMipCount = 0;
+      //mEffectiveProbeCount = 0;
+      //mMipCount = 0;
 
       /*if (probePositionArray.size() != MAX_FORWARD_PROBES)
       {

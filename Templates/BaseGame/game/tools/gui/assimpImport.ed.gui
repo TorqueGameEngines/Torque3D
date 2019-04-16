@@ -655,9 +655,6 @@ function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
    //Triangulate is a default(currently mandatory) behavior
    $Assimp::Triangulate = true;
 
-   //FlipWindingOrder assimp uses ccw, t3d uses cw. Is there any reason to expose this?
-   $Assimp::FlipWindingOrder = true;
-
    // $Assimp::FlipUVs will be needed for virtually all textured models
    $Assimp::FlipUVs = true;
 

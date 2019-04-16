@@ -1,1 +1,0 @@
-idiot me used glTexImage2D for the cubemap array code, obviously should be glTexImage3D

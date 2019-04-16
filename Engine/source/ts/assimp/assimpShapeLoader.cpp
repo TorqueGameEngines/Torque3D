@@ -151,7 +151,7 @@ void AssimpShapeLoader::enumerateScene()
    if(Con::getBoolVariable("$Assimp::FlipUVs", true))
       ppsteps |= aiProcess_FlipUVs;
 
-   if(Con::getBoolVariable("$Assimp::FlipWindingOrder", true))
+   if(Con::getBoolVariable("$Assimp::FlipWindingOrder", false))
       ppsteps |= aiProcess_FlipWindingOrder;
 
    if(Con::getBoolVariable("$Assimp::Triangulate", true))

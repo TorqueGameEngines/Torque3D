@@ -99,18 +99,17 @@ new SimGroup(MissionGroup) {
    };
    new Skylight(theSkyLight) {
       enabled = "1";
-      ProbeShape = "Box";
-      radius = "10";
-      posOffset = "0 0 0";
       ReflectionMode = "Baked Cubemap";
-      reflectionPath = "levels/Timmy Test/probes/";
-      Bake = "0";
-      position = "8.74661 10.1457 2.48852";
+      position = "8.74661 10.1457 2.94337";
       rotation = "1 0 0 0";
-      scale = "1 1 1";
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "247d7009-db8a-11e8-87b8-ed691a78e155";
+         posOffset = "0 0 0";
+         ProbeShape = "Box";
+         radius = "10";
+         reflectionPath = "levels/Timmy Test/probes/";
+         scale = "1 1 1";
    };
    new TSStatic() {
       shapeName = "art/shapes/material_ball/material_ball.dae";
@@ -350,6 +349,34 @@ new SimGroup(MissionGroup) {
       rotation = "1 0 0 0";
       canSave = "1";
       canSaveDynamicFields = "1";
+   };
+   new ConvexShape() {
+      Material = "Grid512_Blue_Mat";
+      position = "-6.41329 13.7734 2.12278";
+      rotation = "0 0 1 3.19212";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.384079";
+      surface = "0 1 0 0 0 0 -0.384079";
+      surface = "0.707107 0 0 0.707107 0 0.285194 0";
+      surface = "0 0.707107 -0.707107 0 0 -0.285194 -1.42109e-14";
+      surface = "0.5 0.5 -0.5 0.5 -0.758333 0 -1.07696e-07";
+      surface = "0.5 -0.5 0.5 0.5 0.758333 0 -1.07696e-07";
+   };
+   new BoxEnvironmentProbe() {
+      enabled = "0";
+      refOffset = "0 0 0";
+      refScale = "10 10 10";
+      ReflectionMode = "Baked Cubemap";
+      position = "-11.7544 15.2634 4.67576";
+      rotation = "1 0 0 0";
+      scale = "10 10 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "8c7e1f23-5f1c-11e9-8089-c88cdaba85a3";
+      attenuation = "1";
    };
 };
 //--- OBJECT WRITE END ---

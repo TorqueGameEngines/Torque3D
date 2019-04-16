@@ -30,9 +30,6 @@
 #include "core/resource.h"
 #endif
 
-const U32 CubeFaces = 6;
-const U32 MaxMipMaps = 13; //todo this needs a proper static value somewhere to sync up with other classes like GBitmap
-
 
 class GFXGLCubemap : public GFXCubemap
 {
@@ -99,11 +96,7 @@ class GFXGLCubemapArray : public GFXCubemapArray
 public:
    GFXGLCubemapArray();
    virtual ~GFXGLCubemapArray();
-   //virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
-   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
-   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format);
-   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot);
-   virtual void copyTo(GFXCubemapArray *pDstCubemap);
+   virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
    virtual void setToTexUnit(U32 tuNum);
 
    // GFXResource interface

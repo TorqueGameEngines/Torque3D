@@ -34,7 +34,6 @@
 
 #define CHECK_AARG(pos, name) static StringTableEntry attr_##name = StringTable->insert(#name); if (argName == attr_##name) { glBindAttribLocation(mProgram, pos, attr_##name); continue; }
 
-
 class GFXGLShaderConstHandle : public GFXShaderConstHandle
 {
    friend class GFXGLShader;
@@ -415,9 +414,9 @@ bool GFXGLShader::_init()
    // Don't initialize empty shaders.
    if ( mVertexFile.isEmpty() && mPixelFile.isEmpty() )
       return false;
-
+   
    clearShaders();
-
+   
    mProgram = glCreateProgram();
    
    // Set the macros and add the global ones.
@@ -439,15 +438,15 @@ bool GFXGLShader::_init()
    // Compile the vertex and pixel shaders if specified.
    if(!mVertexFile.isEmpty())
       compiledVertexShader = initShader(mVertexFile, true, macros);
-
+   
    macros.last().name = "TORQUE_PIXEL_SHADER";
    if(!mPixelFile.isEmpty())
       compiledPixelShader = initShader(mPixelFile, false, macros);
-      
+   
    // If either shader was present and failed to compile, bail.
    if(!compiledVertexShader || !compiledPixelShader)
       return false;
-  
+   
    // Link it!
    glLinkProgram( mProgram );
    
@@ -486,7 +485,7 @@ bool GFXGLShader::_init()
       CHECK_AARG(Torque::GL_VertexAttrib_TexCoord8,   vTexCoord8);
       CHECK_AARG(Torque::GL_VertexAttrib_TexCoord9,   vTexCoord9);
    }
-
+   
    //always have OUT_col
    glBindFragDataLocation(mProgram, 0, "OUT_col");
    // Check OUT_colN
@@ -497,7 +496,7 @@ bool GFXGLShader::_init()
       GLint location = glGetFragDataLocation(mProgram, buffer);
       if(location>0)
          glBindFragDataLocation(mProgram, i, buffer);
-
+      
    }
    
    // Link it again!
@@ -521,33 +520,34 @@ bool GFXGLShader::_init()
          {
             Con::errorf( "GFXGLShader::init - Error linking shader!" );
             Con::errorf( "Program %s / %s: %s",
-               mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), log);
+                        mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), log);
          }
       }
       else if ( smLogWarnings )
       {
          Con::warnf( "Program %s / %s: %s",
-            mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), log);
+                    mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), log);
       }
    }
-
-
+   
+   
    // If we failed to link, bail.
    if ( linkStatus == GL_FALSE )
       return false;
-
-   initConstantDescs();   
+   
+   initConstantDescs();
    initHandles();
    
-   // Notify Buffers we might have changed in size. 
-   // If this was our first init then we won't have any activeBuffers 
+   // Notify Buffers we might have changed in size.
+   // If this was our first init then we won't have any activeBuffers
    // to worry about unnecessarily calling.
    Vector<GFXShaderConstBuffer*>::iterator biter = mActiveBuffers.begin();
-   for ( ; biter != mActiveBuffers.end(); biter++ )   
+   for ( ; biter != mActiveBuffers.end(); biter++ )
       ((GFXGLShaderConstBuffer*)(*biter))->onShaderReload( this );
    
    return true;
 }
+
 
 void GFXGLShader::initConstantDescs()
 {
@@ -1022,7 +1022,7 @@ bool GFXGLShader::_loadShaderFromStream(  GLuint shader,
    const char *newLine = "\r\n";
    buffers.push_back( dStrdup( newLine ) );
    lengths.push_back( dStrlen( newLine ) );
-
+   
    // Now add all the macros.
    for( U32 i = 0; i < macros.size(); i++ )
    {

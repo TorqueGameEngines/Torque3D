@@ -631,32 +631,36 @@ function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
    %this.path = %shapePath;
    %this.cmd = %cmd;
 
-   // $Assimp::OverrideUpAxis value. Default is z-axis (no change to transforms)
    if ($Assimp::OverrideUpAxis $= "")
-      $Assimp::OverrideUpAxis = 2;
+   {  // First load, so set best-case defaults
+      $Assimp::OverrideUpAxis = 1; // y-axis is up in most test shapes
+      $Assimp::lodType = 0; // DetectDTS
+      $Assimp::singleDetailSize = "2";
+
+      // $Assimp::FlipUVs will be needed for virtually all textured models
+      $Assimp::FlipUVs = true;
+      $Assimp::FlipWindingOrder = true; // Makes winding order clock wise
+      $Assimp::FindDegenerates = true;
+      $Assimp::FindInvalidData = true;
+      $Assimp::JoinIdenticalVertices = true;
+   }
+
    %this-->upAxis.clear();
    %this-->upAxis.add("X_AXIS", 0);
    %this-->upAxis.add("Y_AXIS", 1);
    %this-->upAxis.add("Z_AXIS", 2);
    %this-->upAxis.setSelected($Assimp::OverrideUpAxis);
 
-   if ($Assimp::lodType $= "")
-      $Assimp::lodType = 0;
    %this-->lodType.clear();
    %this-->lodType.add("DetectDTS", 0);
    %this-->lodType.add("SingleSize", 1);
    %this-->lodType.add("TrailingNumber", 2);
    %this-->lodType.setSelected($Assimp::lodType);
 
-   if ($Assimp::singleDetailSize $= "")
-      $Assimp::singleDetailSize = "2";
    %this-->singleDetailSize.text = $Assimp::singleDetailSize;
 
    //Triangulate is a default(currently mandatory) behavior
    $Assimp::Triangulate = true;
-
-   // $Assimp::FlipUVs will be needed for virtually all textured models
-   $Assimp::FlipUVs = true;
 
    Canvas.pushDialog(%this);
 }

@@ -36,6 +36,7 @@
 #ifndef AI_TYPES_H_INC
 #include <assimp/types.h>
 #endif
+#include <assimp/scene.h>
 
 class AssimpAppNode : public AppNode
 {
@@ -43,6 +44,7 @@ class AssimpAppNode : public AppNode
    friend class AssimpAppMesh;
 
    MatrixF getTransform(F32 time);
+   void getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animSeq);
    void buildMeshList();
    void buildChildList();
 
@@ -66,6 +68,8 @@ public:
    {
       //
    }
+
+   static aiAnimation* sActiveSequence;
 
    //-----------------------------------------------------------------------
    const char *getName() { return mName; }

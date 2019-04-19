@@ -341,6 +341,17 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    zDefined = true;
    zEnable = false;
    zWriteEnable = false;
+   
+   
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampPoint;
+   samplerStates[1] = SamplerClampPoint;
+   samplerStates[2] = SamplerClampPoint;
+   samplerStates[3] = SamplerClampPoint;
+   samplerStates[4] = SamplerClampLinear;
+   samplerStates[5] = SamplerClampLinear;
+   samplerStates[6] = SamplerClampLinear;
+   samplerStates[7] = SamplerClampLinear;
 };
 
 singleton PostEffect( reflectionProbeArrayPostFX )

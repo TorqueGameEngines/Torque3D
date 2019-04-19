@@ -171,10 +171,10 @@ void main()
          float cubemapIdx = probeConfigData[i].a;
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
 
-         //irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
-         //specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
-         irradiance += vec3(1,1,1) * contrib;
-         specular += vec3(1,1,1) * contrib;
+         irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
+         specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
+         //irradiance += vec3(1,1,1) * contrib;
+         //specular += vec3(1,1,1) * contrib;
          alpha -= contrib;
       }
    }
@@ -201,7 +201,7 @@ void main()
 
    //apply brdf
    //Do it once to save on texture samples
-   vec2 brdf = texture(BRDFTexture, vec2(surface.roughness, surface.NdotV)).xy;
+   vec2 brdf = textureLod(BRDFTexture, vec2(surface.roughness, surface.NdotV),0).xy;
    specular *= brdf.x * F + brdf.y;
 
    //final diffuse color

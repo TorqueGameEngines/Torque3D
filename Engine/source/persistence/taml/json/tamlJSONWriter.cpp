@@ -100,12 +100,12 @@ void TamlJSONWriter::compileType( rapidjson::Document& document, rapidjson::Valu
     if ( pParentValue == NULL )
     {        
         // No, so add as document root value member.
-        pTypeValue = &((document.AddMember( elementName, *pTypeValue, allocator ).MemberEnd()-1)->value);
+        pTypeValue = &((document.AddMember(rapidjson::GenericStringRef<UTF8>(elementName), *pTypeValue, allocator ).MemberEnd()-1)->value);
     }
     else
     {
         // Yes, so add as a parent value member.
-        pTypeValue = &((pParentValue->AddMember( elementName, *pTypeValue, allocator ).MemberEnd()-1)->value);
+        pTypeValue = &((pParentValue->AddMember(rapidjson::GenericStringRef<UTF8>(elementName), *pTypeValue, allocator ).MemberEnd()-1)->value);
     }
 
     // Fetch reference Id.
@@ -117,7 +117,7 @@ void TamlJSONWriter::compileType( rapidjson::Document& document, rapidjson::Valu
         // Yes, so set reference Id.
         rapidjson::Value value;
         value.SetInt( referenceId );
-        pTypeValue->AddMember( tamlRefIdName, value, allocator );
+        pTypeValue->AddMember(rapidjson::GenericStringRef<UTF8>(tamlRefIdName), value, allocator );
     }
     // Do we have a reference to node?
     else if ( pTamlWriteNode->mRefToNode != NULL )
@@ -131,7 +131,7 @@ void TamlJSONWriter::compileType( rapidjson::Document& document, rapidjson::Valu
         // Set reference to Id.
         rapidjson::Value value;
         value.SetInt( referenceToId );
-        pTypeValue->AddMember( tamlRefToIdName, value, allocator );
+        pTypeValue->AddMember(rapidjson::GenericStringRef<UTF8>(tamlRefToIdName), value, allocator );
 
         // Finish because we're a reference to another object.
         return;
@@ -146,7 +146,7 @@ void TamlJSONWriter::compileType( rapidjson::Document& document, rapidjson::Valu
         // Yes, so set name.
         rapidjson::Value value;
         value.SetString( pObjectName, dStrlen(pObjectName), allocator );
-        pTypeValue->AddMember( tamlNamedObjectName, value, allocator );
+        pTypeValue->AddMember(rapidjson::GenericStringRef<UTF8>(tamlNamedObjectName), value, allocator );
     }
 
     // Compile field.
@@ -199,7 +199,7 @@ void TamlJSONWriter::compileFields( rapidjson::Document& document, rapidjson::Va
         // Set field attribute.
         rapidjson::Value value;
         value.SetString( pFieldValue->mpValue, dStrlen(pFieldValue->mpValue), allocator );
-        pTypeValue->AddMember( pFieldValue->mName, value, allocator );
+        pTypeValue->AddMember(rapidjson::GenericStringRef<UTF8>(pFieldValue->mName), value, allocator );
     }
 }
 
@@ -241,7 +241,7 @@ void TamlJSONWriter::compileCustom( rapidjson::Document& document, rapidjson::Va
         StringTableEntry elementNameEntry = StringTable->insert( extendedElementNameBuffer );
 
         rapidjson::Value elementValue(rapidjson::kObjectType);
-        rapidjson::Value* pElementValue = &((pTypeValue->AddMember( elementNameEntry, elementValue, allocator ).MemberEnd()-1)->value);
+        rapidjson::Value* pElementValue = &((pTypeValue->AddMember(rapidjson::GenericStringRef<UTF8>(elementNameEntry), elementValue, allocator ).MemberEnd()-1)->value);
 
         // Fetch node children.
         const TamlCustomNodeVector& nodeChildren = pCustomNode->getChildren();
@@ -307,14 +307,14 @@ void TamlJSONWriter::compileCustomNode( rapidjson::Document& document, rapidjson
 
         // Create custom value.
         rapidjson::Value customTextValue(rapidjson::kArrayType);
-        customTextValue.PushBack( pNodeText, allocator );
-        pParentValue->AddMember( nodeName, customTextValue, allocator );
+        customTextValue.PushBack(rapidjson::GenericStringRef<UTF8>(pNodeText), allocator );
+        pParentValue->AddMember(rapidjson::GenericStringRef<UTF8>(nodeName), customTextValue, allocator );
         return;
     }
 
     // Create custom value.
     rapidjson::Value customValue(rapidjson::kObjectType);
-    rapidjson::Value* pCustomValue = &((pParentValue->AddMember( nodeName, customValue, allocator ).MemberEnd()-1)->value);
+    rapidjson::Value* pCustomValue = &((pParentValue->AddMember(rapidjson::GenericStringRef<UTF8>(nodeName), customValue, allocator ).MemberEnd()-1)->value);
 
     // Iterate fields.
     for ( TamlCustomFieldVector::const_iterator fieldItr = fields.begin(); fieldItr != fields.end(); ++fieldItr )
@@ -325,7 +325,7 @@ void TamlJSONWriter::compileCustomNode( rapidjson::Document& document, rapidjson
         // Add a field.
         rapidjson::Value fieldValue;
         fieldValue.SetString( pField->getFieldValue(), dStrlen(pField->getFieldValue()), allocator );
-        pCustomValue->AddMember( pField->getFieldName(), fieldValue, allocator );
+        pCustomValue->AddMember(rapidjson::GenericStringRef<UTF8>(pField->getFieldName()), fieldValue, allocator );
     }
 
     // Fetch node children.

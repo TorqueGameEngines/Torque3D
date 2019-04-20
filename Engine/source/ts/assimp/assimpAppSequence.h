@@ -22,6 +22,9 @@
 
 class AssimpAppSequence : public AppSequence
 {
+   F32      seqStart;
+   F32      seqEnd;
+
 public:
 
    AssimpAppSequence(aiAnimation *a);
@@ -29,18 +32,18 @@ public:
 
    aiAnimation *mAnim;
 
-   virtual void setActive(bool active) { }
+   virtual void setActive(bool active);
 
    virtual S32 getNumTriggers() const { return 0; }
    virtual void getTrigger(S32 index, TSShape::Trigger& trigger) const { trigger.state = 0; }
 
    virtual const char* getName() const { return mAnim->mName.C_Str(); }
 
-   virtual F32 getStart() const;
-   virtual F32 getEnd() const;
+   F32 getStart() const { return seqStart; }
+   F32 getEnd() const { return seqEnd; }
+   void setEnd(F32 end) { seqEnd = end; }
 
    virtual U32 getFlags() const;
    virtual F32 getPriority() const;
    virtual F32 getBlendRefTime() const;
-
 };

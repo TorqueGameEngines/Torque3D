@@ -36,3 +36,4 @@ exec("./guiObjectInspector.ed.cs");
 exec("./uvEditor.ed.gui");
 exec("./objectSelection.ed.cs");
 exec("./postFxManager.gui");
+exec("./assimpImport.ed.gui");

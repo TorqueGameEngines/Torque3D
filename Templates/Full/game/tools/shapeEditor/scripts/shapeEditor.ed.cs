@@ -267,7 +267,7 @@ function ShapeEdSelectWindow::onSelect( %this, %path )
    else
    {
       %cmd = "ShapeEditor.selectShape( \"" @ %path @ "\", false );";
-      ColladaImportDlg.showDialog( %path, %cmd );
+      showImportDialog( %path, %cmd );
    }
 }
 

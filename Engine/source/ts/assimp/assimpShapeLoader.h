@@ -36,6 +36,7 @@ protected:
    const struct aiScene* mScene;
 
    virtual bool ignoreNode(const String& name);
+   void detectDetails();
 
 public:
    AssimpShapeLoader();
@@ -45,6 +46,8 @@ public:
    void enumerateScene();
    void updateMaterialsScript(const Torque::Path &path);
    void processAnimations();
+
+   void computeBounds(Box3F& bounds);
 
    static bool canLoadCachedDTS(const Torque::Path& path);
 };

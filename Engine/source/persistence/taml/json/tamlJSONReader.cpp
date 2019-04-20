@@ -399,7 +399,7 @@ inline void TamlJSONReader::parseCustomNode( rapidjson::Value::ConstMemberIterat
         if ( value.Size() == 1 )
         {
             // Yes, so parse the node text.
-            if ( parseStringValue( valueBuffer, sizeof(valueBuffer), value.Begin(), nodeName ) )
+            if ( parseStringValue( valueBuffer, sizeof(valueBuffer), *value.Begin(), nodeName ) )
             {
                 pChildNode->setNodeText( valueBuffer );
             }

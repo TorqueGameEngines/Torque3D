@@ -164,7 +164,7 @@ inline bool TamlJSONParser::parseType( rapidjson::Value::MemberIterator& memberI
         if ( propertyState.getPropertyValueDirty() )
         {
             // Yes, so update the attribute.
-            fieldValue.SetString( propertyState.getPropertyValue() );
+            fieldValue.SetString(rapidjson::GenericStringRef<UTF8>(propertyState.getPropertyValue()) );
 
             // Flag the document as dirty.
             mDocumentDirty = true;

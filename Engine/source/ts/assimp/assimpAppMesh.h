@@ -42,6 +42,9 @@ protected:
    const struct aiMesh* mMeshData;
    bool mIsSkinMesh;
 
+   static bool fixedSizeEnabled;                     ///< Set to true to fix the detail size to a particular value for all geometry
+   static S32 fixedSize;                             ///< The fixed detail size value for all geometry
+
 public:
 
    AssimpAppMesh(const struct aiMesh* mesh, AssimpAppNode* node);
@@ -54,8 +57,8 @@ public:
 
    static void fixDetailSize(bool fixed, S32 size=2)
    {
-      //fixedSizeEnabled = fixed;
-      //fixedSize = size;
+      fixedSizeEnabled = fixed;
+      fixedSize = size;
    }
 
    /// Get the name of this mesh

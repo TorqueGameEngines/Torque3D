@@ -106,7 +106,6 @@ enum ParseErrorCode {
 struct ParseResult {
     //!! Unspecified boolean type
     typedef bool (ParseResult::*BooleanType)() const;
-
 private:
    ParseErrorCode code_;
    size_t offset_;

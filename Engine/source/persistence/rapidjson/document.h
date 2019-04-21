@@ -2391,7 +2391,7 @@ public:
     ParseErrorCode GetParseError() const { return parseResult_.Code(); }
 
     //! Get the position of last parsing error in input, 0 otherwise.
-    size_t GetErrorOffset() const { return parseResult_.Offset(); }
+    size_t GetErrorOffset() const { return parseResult_._Offset(); }
 
     //! Implicit conversion to get the last parse result
 #ifndef __clang // -Wdocumentation

@@ -683,7 +683,7 @@ public:
     ParseErrorCode GetParseErrorCode() const { return parseResult_.Code(); }
 
     //! Get the position of last parsing error in input, 0 otherwise.
-    size_t GetErrorOffset() const { return parseResult_.Offset(); }
+    size_t GetErrorOffset() const { return parseResult_._Offset(); }
 
 protected:
     void SetParseError(ParseErrorCode code, size_t offset) { parseResult_.Set(code, offset); }

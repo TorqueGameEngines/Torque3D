@@ -39,6 +39,7 @@ public:
       BUFFER_INVALID = 0xffffffff   // file offsets must all be less than this
    };
 
+   typedef char Ch;    //!< Character type. Only support char.
 public:
    FileStream();                       // default constructor
    virtual ~FileStream();              // destructor
@@ -60,6 +61,8 @@ public:
    virtual void close();
 
    bool flush();
+   //rjson compatibility
+   bool Flush() { return flush(); }
    FileStream* clone() const;
 
 protected:

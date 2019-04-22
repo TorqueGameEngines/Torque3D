@@ -182,7 +182,8 @@ void ProbeShaderConstants::_onShaderReload()
 RenderProbeMgr::RenderProbeMgr()
 : RenderBinManager(RenderPassManager::RIT_Probes, 1.0f, 1.0f),
    mLastShader(nullptr),
-   mLastConstants(nullptr)
+   mLastConstants(nullptr),
+	mProbesDirty(false)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -372,7 +373,7 @@ PostEffect* RenderProbeMgr::getProbeArrayEffect()
 
 void RenderProbeMgr::updateProbes()
 {
-	_setupStaticParameters();
+	mProbesDirty = true;
 }
 
 void RenderProbeMgr::_setupStaticParameters()
@@ -457,31 +458,7 @@ void RenderProbeMgr::_setupStaticParameters()
       mEffectiveProbeCount++;
    }
 
-   /*if (mEffectiveProbeCount != 0)
-   {
-      bool useOldWay = false;
-      if (useOldWay)
-      {
-         //old static way
-         mPrefilterArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
-         mIrradianceArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
-
-         mPrefilterArray->init(cubeMaps.address(), cubeMaps.size());
-         mIrradianceArray->init(irradMaps.address(), irradMaps.size());
-      }
-      else
-      {
-         //faked static way by doing it via update
-         for (U32 i = 0; i < cubemapIdxes.size(); i++)
-         {
-            U32 probeIdx = cubemapIdxes[i];
-
-            const U32 cubeIndex = ProbeRenderInst::all[probeIdx]->mCubemapIndex;
-            mIrradianceArray->updateTexture(irradMaps[i], cubeIndex);
-            mPrefilterArray->updateTexture(cubeMaps[i], cubeIndex);
-         }
-      }
-   }*/
+   mProbesDirty = false;
 }
 
 void RenderProbeMgr::updateProbeTexture(ProbeRenderInst* probe)
@@ -772,7 +749,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
    if (getProbeArrayEffect() == nullptr)
       return;
 
-   //updateProbes();
+   if (mProbesDirty)
+	   _setupStaticParameters();
 
    // Early out if nothing to draw.
    if (!RenderProbeMgr::smRenderReflectionProbes || !state->isDiffusePass() || (!ProbeRenderInst::all.size() || mEffectiveProbeCount == 0 || mCubeMapCount != 0 ) && !hasSkylight)

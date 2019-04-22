@@ -166,6 +166,8 @@ class RenderProbeMgr : public RenderBinManager
 
    Vector<U32> mRegisteredProbes;
 
+   bool mProbesDirty;
+
    //maximum number of allowed probes
    static const U32 PROBE_MAX_COUNT = 250;
    //maximum number of rendered probes per frame adjust as needed

@@ -39,7 +39,7 @@ String AppMaterial::cleanString(const String& str)
    String cleanStr(str);
 
    // Replace invalid characters with underscores
-   const String badChars(" -,.+=*/[]");
+   const String badChars(" -,.+=*/[]%$~;:");
    for (String::SizeType i = 0; i < badChars.length(); i++)
       cleanStr.replace(badChars[i], '_');
 

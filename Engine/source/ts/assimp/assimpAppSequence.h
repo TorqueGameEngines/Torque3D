@@ -25,6 +25,7 @@ class AssimpAppSequence : public AppSequence
    String   mSequenceName;
    F32      seqStart;
    F32      seqEnd;
+   F32      mTimeMultiplier; // The factor needed to convert the sequence data timestamp to seconds
 
 public:
 

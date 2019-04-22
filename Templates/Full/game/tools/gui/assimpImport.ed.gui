@@ -394,6 +394,107 @@
       };
 
       new GuiTextCtrl() {
+         text = "Animation Timing:";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 311";
+         Extent = "85 16";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiPopUpMenuCtrl() {
+         maxPopupHeight = "200";
+         sbUsesNAColor = "0";
+         reverseTextList = "0";
+         bitmapBounds = "16 16";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiPopUpMenuProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "100 310";
+         Extent = "86 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Select the timing units used in the animation data.";
+         hovertime = "1000";
+         internalName = "animTiming";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextCtrl() {
+         text = "FPS:";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "200 311";
+         Extent = "20 16";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextEditCtrl() {
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+         passwordMask = "*";
+         text = "2";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextEditProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "225 310";
+         Extent = "26 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Frames per second for all animations when Animation Timing type is Frames (5 - 60)";
+         hovertime = "1000";
+         internalName = "animFPS";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiTextCtrl() {
          text = "LOD";
          maxLength = "1024";
          Margin = "0 0 0 0";
@@ -665,6 +766,10 @@ function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
       $Assimp::FindDegenerates = true;
       $Assimp::FindInvalidData = true;
       $Assimp::JoinIdenticalVertices = true;
+      $Assimp::FlipNormals = false;
+      
+      $Assimp::AnimTiming = 1; // Seconds
+      $Assimp::AnimFPS = 30;   // Framerate when timing is frames.
    }
 
    %this-->upAxis.clear();
@@ -678,8 +783,14 @@ function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
    %this-->lodType.add("SingleSize", 1);
    %this-->lodType.add("TrailingNumber", 2);
    %this-->lodType.setSelected($Assimp::lodType);
-
    %this-->singleDetailSize.text = $Assimp::singleDetailSize;
+
+   %this-->animTiming.clear();
+   %this-->animTiming.add("Frames", 0);
+   %this-->animTiming.add("Seconds", 1);
+   %this-->animTiming.add("Milliseconds", 1000);
+   %this-->animTiming.setSelected($Assimp::AnimTiming);
+   %this-->animFPS.text = $Assimp::AnimFPS;
 
    //Triangulate is a default(currently mandatory) behavior
    $Assimp::Triangulate = true;
@@ -702,6 +813,9 @@ function AssimpImportDlg::onOK(%this)
 
    $Assimp::lodType = %this-->lodType.getSelected();
    $Assimp::singleDetailSize = %this-->singleDetailSize.getText();
+
+   $Assimp::AnimTiming = %this-->animTiming.getSelected();
+   $Assimp::AnimFPS = %this-->animFPS.getText();
 
    // Load the shape (always from the DAE)
    $assimp::forceLoad = true;

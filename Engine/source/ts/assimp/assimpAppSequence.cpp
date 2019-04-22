@@ -20,19 +20,19 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
    if (mSequenceName.isEmpty())
       mSequenceName = "ambient";
 
-   // From: http://sir-kimmi.de/assimp/lib_html/data.html#anims
-   // An aiAnimation has a duration. The duration as well as all time stamps are given in ticks.
-   // To get the correct timing, all time stamp thus have to be divided by aiAnimation::mTicksPerSecond.
-   // Beware, though, that certain combinations of file format and exporter don't always store this
-   // information in the exported file. In this case, mTicksPerSecond is set to 0 to indicate the lack of knowledge.
    fps = (mAnim->mTicksPerSecond > 0) ? mAnim->mTicksPerSecond : 30.0f;
 
+   U32 maxKeys = 0;
    F32 maxEndTime = 0;
-   F32 minFrameTime = 1000.0f;
+   F32 minFrameTime = 100000.0f;
    // Detect the frame rate (minimum time between keyframes) and max sequence time
    for (U32 i = 0; i < mAnim->mNumChannels; ++i)
    {
       aiNodeAnim *nodeAnim = mAnim->mChannels[i];
+      maxKeys = getMax(maxKeys, nodeAnim->mNumPositionKeys);
+      maxKeys = getMax(maxKeys, nodeAnim->mNumRotationKeys);
+      maxKeys = getMax(maxKeys, nodeAnim->mNumScalingKeys);
+
       if (nodeAnim->mNumPositionKeys)
          maxEndTime = getMax(maxEndTime, (F32) nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys-1].mTime);
       if (nodeAnim->mNumRotationKeys)
@@ -57,9 +57,24 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
       }
    }
 
-   fps = (minFrameTime > 0.0f) ? 1.0f / minFrameTime : fps;
-   fps = mClamp(fps, TSShapeLoader::MinFrameRate, TSShapeLoader::MaxFrameRate);
-   seqEnd = maxEndTime;
+   S32 timeFactor = Con::getIntVariable("$Assimp::AnimTiming", 1);
+   S32 fpsRequest = Con::getIntVariable("$Assimp::AnimFPS", 30);
+   if (timeFactor == 0)
+   {  // Timing specified in frames
+      fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
+      maxKeys = getMax(maxKeys, (U32)maxEndTime);  // Keys won't be assigned for every frame.
+      seqEnd = maxKeys / fps;
+      mTimeMultiplier = 1.0f / fps;
+   }
+   else
+   {  // Timing specified in seconds or ms depending on format
+      timeFactor = mClamp(timeFactor, 1, 1000);
+      minFrameTime /= (F32)timeFactor;
+      maxEndTime /= (F32)timeFactor;
+      fps = (minFrameTime > 0.0f) ? 1.0f / minFrameTime : fps;
+      seqEnd = maxEndTime;
+      mTimeMultiplier = 1.0f / timeFactor;
+   }
 }
 
 AssimpAppSequence::~AssimpAppSequence()
@@ -69,7 +84,10 @@ AssimpAppSequence::~AssimpAppSequence()
 void AssimpAppSequence::setActive(bool active)
 {
    if (active)
+   {
       AssimpAppNode::sActiveSequence = mAnim;
+      AssimpAppNode::sTimeMultiplier = mTimeMultiplier;
+   }
    else
    {
       if (AssimpAppNode::sActiveSequence == mAnim)

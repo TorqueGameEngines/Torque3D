@@ -32,6 +32,7 @@
 #include <assimp/types.h>
 
 aiAnimation* AssimpAppNode::sActiveSequence = NULL;
+F32 AssimpAppNode::sTimeMultiplier = 1.0f;
 
 AssimpAppNode::AssimpAppNode(const struct aiScene* scene, const struct aiNode* node, AssimpAppNode* parent)
 :  mInvertMeshes(false),
@@ -132,7 +133,7 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             F32 lastT = 0.0;
             for (U32 key = 0; key < nodeAnim->mNumPositionKeys; ++key)
             {
-               F32 curT = (F32)nodeAnim->mPositionKeys[key].mTime;
+               F32 curT = sTimeMultiplier * (F32)nodeAnim->mPositionKeys[key].mTime;
                curPos.set(nodeAnim->mPositionKeys[key].mValue.x, nodeAnim->mPositionKeys[key].mValue.y, nodeAnim->mPositionKeys[key].mValue.z);
                if (curT > t)
                {
@@ -161,7 +162,7 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             F32 lastT = 0.0;
             for (U32 key = 0; key < nodeAnim->mNumRotationKeys; ++key)
             {
-               F32 curT = (F32)nodeAnim->mRotationKeys[key].mTime;
+               F32 curT = sTimeMultiplier * (F32)nodeAnim->mRotationKeys[key].mTime;
                curRot.set(nodeAnim->mRotationKeys[key].mValue.x, nodeAnim->mRotationKeys[key].mValue.y,
                   nodeAnim->mRotationKeys[key].mValue.z, nodeAnim->mRotationKeys[key].mValue.w);
                if (curT > t)
@@ -190,7 +191,7 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             F32 lastT = 0.0;
             for (U32 key = 0; key < nodeAnim->mNumScalingKeys; ++key)
             {
-               F32 curT = (F32)nodeAnim->mScalingKeys[key].mTime;
+               F32 curT = sTimeMultiplier * (F32)nodeAnim->mScalingKeys[key].mTime;
                curScale.set(nodeAnim->mScalingKeys[key].mValue.x, nodeAnim->mScalingKeys[key].mValue.y, nodeAnim->mScalingKeys[key].mValue.z);
                if (curT > t)
                {

@@ -26,6 +26,7 @@
 #ifndef _TSSHAPELOADER_H_
 #include "ts/loader/tsShapeLoader.h"
 #endif
+#include <assimp/texture.h>
 
 //-----------------------------------------------------------------------------
 class AssimpShapeLoader : public TSShapeLoader
@@ -37,6 +38,7 @@ protected:
 
    virtual bool ignoreNode(const String& name);
    void detectDetails();
+   void extractTexture(U32 index, aiTexture* pTex);
 
 public:
    AssimpShapeLoader();

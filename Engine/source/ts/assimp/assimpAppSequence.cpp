@@ -16,6 +16,10 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
    seqStart(0.0f),
    mAnim(a)
 {
+   mSequenceName = mAnim->mName.C_Str();
+   if (mSequenceName.isEmpty())
+      mSequenceName = "ambient";
+
    // From: http://sir-kimmi.de/assimp/lib_html/data.html#anims
    // An aiAnimation has a duration. The duration as well as all time stamps are given in ticks.
    // To get the correct timing, all time stamp thus have to be divided by aiAnimation::mTicksPerSecond.

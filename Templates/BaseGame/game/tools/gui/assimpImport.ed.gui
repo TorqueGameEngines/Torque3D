@@ -582,6 +582,28 @@
          canSaveDynamicFields = "0";
       };
 
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Force update materials.cs";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 150";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::ForceUpdateMats";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Forces update of materials.cs (even if Materials already exist)";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
       new GuiButtonCtrl() {
          text = "OK";
          groupNum = "-1";

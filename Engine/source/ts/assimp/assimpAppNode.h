@@ -70,6 +70,7 @@ public:
    }
 
    static aiAnimation* sActiveSequence;
+   static F32 sTimeMultiplier;
 
    //-----------------------------------------------------------------------
    const char *getName() { return mName; }

@@ -40,6 +40,10 @@ function clientCmdMissionStartPhase1(%seq, %missionName, %musicTrack)
    // These need to come after the cls.
    echo ("*** New Mission: " @ %missionName);
    echo ("*** Phase 1: Download Datablocks & Targets");
+   
+   $Client::MissionFile = %missionName;
+   $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
+   
    onMissionDownloadPhase1(%missionName, %musicTrack);
    commandToServer('MissionStartPhase1Ack', %seq);
 }
@@ -89,7 +93,6 @@ function clientCmdMissionStartPhase3(%seq,%missionName)
    echo ("*** Phase 3: Mission Lighting");
    $MSeq = %seq;
    $Client::MissionFile = %missionName;
-   $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
 
    // Need to light the mission before we are ready.
    // The sceneLightingComplete function will complete the handshake 

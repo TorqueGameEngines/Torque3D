@@ -261,13 +261,13 @@ function ShapeEdSelectWindow::onSelect( %this, %path )
    // Prompt user to save the old shape if it is dirty
    if ( ShapeEditor.isDirty() )
    {
-      %cmd = "ColladaImportDlg.showDialog( \"" @ %path @ "\", \"ShapeEditor.selectShape( \\\"" @ %path @ "\\\", ";
+      %cmd = "showImportDialog( \"" @ %path @ "\", \"ShapeEditor.selectShape( \\\"" @ %path @ "\\\", ";
       MessageBoxYesNoCancel( "Shape Modified", "Would you like to save your changes?", %cmd @ "true );\" );", %cmd @ "false );\" );" );
    }
    else
    {
       %cmd = "ShapeEditor.selectShape( \"" @ %path @ "\", false );";
-      ColladaImportDlg.showDialog( %path, %cmd );
+      showImportDialog( %path, %cmd );
    }
 }
 

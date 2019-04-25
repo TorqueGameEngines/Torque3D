@@ -19,6 +19,7 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
    mSequenceName = mAnim->mName.C_Str();
    if (mSequenceName.isEmpty())
       mSequenceName = "ambient";
+   Con::printf("\n[Assimp] Adding %s animation", mSequenceName.c_str());
 
    fps = (mAnim->mTicksPerSecond > 0) ? mAnim->mTicksPerSecond : 30.0f;
 
@@ -72,6 +73,7 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
       minFrameTime /= (F32)timeFactor;
       maxEndTime /= (F32)timeFactor;
       fps = (minFrameTime > 0.0f) ? 1.0f / minFrameTime : fps;
+      fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
       seqEnd = maxEndTime;
       mTimeMultiplier = 1.0f / timeFactor;
    }

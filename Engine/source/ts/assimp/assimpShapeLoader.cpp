@@ -329,8 +329,6 @@ void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
 /// Check if an up-to-date cached DTS is available for this DAE file
 bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
 {
-   return false;
-
    // Generate the cached filename
    Torque::Path cachedPath(path);
    cachedPath.setExtension("cached.dts");
@@ -339,13 +337,13 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
    FileTime cachedModifyTime;
    if (Platform::getFileTimes(cachedPath.getFullPath(), NULL, &cachedModifyTime))
    {
-      bool forceLoadDAE = Con::getBoolVariable("$assimp::forceLoad", false);
+      bool forceLoad = Con::getBoolVariable("$assimp::forceLoad", false);
 
       FileTime daeModifyTime;
       if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
-         (!forceLoadDAE && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
+         (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
       {
-         // DAE not found, or cached DTS is newer
+         // Original file not found, or cached DTS is newer
          return true;
       }
    }

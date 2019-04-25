@@ -135,13 +135,13 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             {
                F32 curT = sTimeMultiplier * (F32)nodeAnim->mPositionKeys[key].mTime;
                curPos.set(nodeAnim->mPositionKeys[key].mValue.x, nodeAnim->mPositionKeys[key].mValue.y, nodeAnim->mPositionKeys[key].mValue.z);
-               if (curT > t)
+               if ((curT > t) && (key > 0))
                {
                   F32 factor = (t - lastT) / (curT - lastT);
                   trans.interpolate(lastPos, curPos, factor);
                   break;
                }
-               else if ((curT == t) || (key == nodeAnim->mNumPositionKeys - 1))
+               else if ((curT >= t) || (key == nodeAnim->mNumPositionKeys - 1))
                {
                   trans = curPos;
                   break;
@@ -165,13 +165,13 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
                F32 curT = sTimeMultiplier * (F32)nodeAnim->mRotationKeys[key].mTime;
                curRot.set(nodeAnim->mRotationKeys[key].mValue.x, nodeAnim->mRotationKeys[key].mValue.y,
                   nodeAnim->mRotationKeys[key].mValue.z, nodeAnim->mRotationKeys[key].mValue.w);
-               if (curT > t)
+               if ((curT > t) && (key > 0))
                {
                   F32 factor = (t - lastT) / (curT - lastT);
                   rot.interpolate(lastRot, curRot, factor);
                   break;
                }
-               else if ((curT == t) || (key == nodeAnim->mNumRotationKeys - 1))
+               else if ((curT >= t) || (key == nodeAnim->mNumRotationKeys - 1))
                {
                   rot = curRot;
                   break;
@@ -193,13 +193,13 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             {
                F32 curT = sTimeMultiplier * (F32)nodeAnim->mScalingKeys[key].mTime;
                curScale.set(nodeAnim->mScalingKeys[key].mValue.x, nodeAnim->mScalingKeys[key].mValue.y, nodeAnim->mScalingKeys[key].mValue.z);
-               if (curT > t)
+               if ((curT > t) && (key > 0))
                {
                   F32 factor = (t - lastT) / (curT - lastT);
                   scale.interpolate(lastScale, curScale, factor);
                   break;
                }
-               else if ((curT == t) || (key == nodeAnim->mNumScalingKeys - 1))
+               else if ((curT >= t) || (key == nodeAnim->mNumScalingKeys - 1))
                {
                   scale = curScale;
                   break;

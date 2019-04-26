@@ -296,13 +296,18 @@ U8* GFXGLCubemap::getTextureData(U32 face, U32 mip)
       : (mWidth >> mip) * (mHeight >> mip) * bytesPerTexel;
 
    U8* data = new U8[dataSize];
-   PRESERVE_TEXTURE(GL_TEXTURE_CUBE_MAP);
+
+   for (U32 i = 0; i < dataSize; i++)
+   {
+      data[i] = 1;
+   }
+   /*PRESERVE_TEXTURE(GL_TEXTURE_CUBE_MAP);
    glBindTexture(GL_TEXTURE_CUBE_MAP, mCubemap);
 
    if (ImageUtil::isCompressedFormat(mFaceFormat))
       glGetCompressedTexImage(faceList[face], mip, data);
    else
-      glGetTexImage(faceList[face], mip, GFXGLTextureFormat[mFaceFormat], GFXGLTextureType[mFaceFormat], data);
+      glGetTexImage(faceList[face], mip, GFXGLTextureFormat[mFaceFormat], GFXGLTextureType[mFaceFormat], data);*/
 
    return data;
 }
@@ -343,6 +348,8 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+   glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, GFXGLTextureInternalFormat[mFormat], mSize, mSize, cubemapCount * 6, 0, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], NULL);
+
    for (U32 i = 0; i < cubemapCount; i++)
    {
       GFXGLCubemap* glTex = static_cast<GFXGLCubemap*>(cubemaps[i].getPointer());
@@ -381,12 +388,21 @@ void GFXGLCubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSize, 
    glGenTextures(1, &mCubemap);
    PRESERVE_CUBEMAP_ARRAY_TEXTURE();
    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, mCubemap);
+
+   for (U32 i = 0; i < mMipMapLevels; i++)
+   {
+      const U32 mipSize = getMax(U32(1), mSize >> i);
+      glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, i, GFXGLTextureInternalFormat[mFormat], mipSize, mipSize, cubemapCount * 6, 0, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], NULL);
+   }
+
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAX_LEVEL, mMipMapLevels - 1);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+   
 
    /*for (U32 i = 0; i < cubemapCount; i++)
    {
@@ -419,11 +435,10 @@ void GFXGLCubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32
 
    const bool isCompressed = ImageUtil::isCompressedFormat(mFormat);
 
-   GFXGLCubemap* glTex = static_cast<GFXGLCubemap*>(cubemap.getPointer());
+    GFXGLCubemap* glTex = static_cast<GFXGLCubemap*>(cubemap.getPointer());
    for (U32 face = 0; face < 6; face++)
    {
       for (U32 currentMip = 0; currentMip < mMipMapLevels; currentMip++)
-      //U32 currentMip = 0;
       {
          U8 *pixelData = glTex->getTextureData(face, currentMip);
          const U32 mipSize = getMax(U32(1), mSize >> currentMip);
@@ -434,11 +449,16 @@ void GFXGLCubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32
          }
          else
          {*/                                                      //TODO figure out xyzOffsets
-         glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, 0, mipSize, mipSize, slot * face, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
+         glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, mCubemap);
+         glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, slot * 6 + face, mipSize, mipSize, 1, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
+         glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
          //}
          delete[] pixelData;
       }
    }
+
+   bool tmp = true;
+   bool asdf = true;
 }
 
 void GFXGLCubemapArray::copyTo(GFXCubemapArray *pDstCubemap)
@@ -473,7 +493,7 @@ void GFXGLCubemapArray::copyTo(GFXCubemapArray *pDstCubemap)
             }
             else
             {*/                                                      //TODO figure out xyzOffsets
-            glCopyImageSubData(mCubemap, GL_TEXTURE_CUBE_MAP_ARRAY, cubeMap * face, 0, 0, 0, pDstCube->mCubemap, GL_TEXTURE_CUBE_MAP_ARRAY, cubeMap * face, 0, 0, 0, mipSize, mipSize, 6);
+            glCopyImageSubData(mCubemap, GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, cubeMap * face, pDstCube->mCubemap, GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, cubeMap * face, mipSize, mipSize, 6);
             //glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, mCubemap);
             //glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, 0, mipSize, mipSize, CubeFaces, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
             //}

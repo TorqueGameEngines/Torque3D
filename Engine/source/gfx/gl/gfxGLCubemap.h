@@ -46,6 +46,8 @@ public:
    virtual U32 getSize() const { return mWidth; }
    virtual GFXFormat getFormat() const { return mFaceFormat; }
 
+   virtual bool isInitialized() { return mCubemap != 0 ? true : false; }
+
    // Convenience methods for GFXGLTextureTarget
    U32 getWidth() { return mWidth; }
    U32 getHeight() { return mHeight; }

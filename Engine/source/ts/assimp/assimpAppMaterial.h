@@ -26,6 +26,7 @@
 #ifndef _APPMATERIAL_H_
 #include "ts/loader/appMaterial.h"
 #endif
+#include <assimp/scene.h>
 
 class Material;
 
@@ -34,18 +35,22 @@ class AssimpAppMaterial : public AppMaterial
    typedef AppMaterial Parent;
 
    String   name; 
-   LinearColorF   diffuseColor;
-   LinearColorF   specularColor;
-   F32      specularPower;
-   bool     doubleSided;
+   aiMaterial* mAIMat;
+
+#ifdef TORQUE_DEBUG
+   void enumerateMaterialProperties(aiMaterial* mtl);
+#endif
+   static String cleanTextureName(String& texName, String& shapeName);
+
 public:
 
    AssimpAppMaterial(const char* matName);
-   AssimpAppMaterial(const struct aiMaterial* mtl);
+   AssimpAppMaterial(aiMaterial* mtl);
    ~AssimpAppMaterial() { }
 
    String getName() const { return name; }
    Material* createMaterial(const Torque::Path& path) const;
+   void initMaterial(const Torque::Path& path, Material* mat) const;
 };
 
 #endif // _ASSIMP_APPMATERIAL_H_

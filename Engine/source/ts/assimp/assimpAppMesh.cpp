@@ -202,6 +202,15 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 
       MatrixF boneTransform;
       AssimpAppNode::assimpToTorqueMat(mMeshData->mBones[b]->mOffsetMatrix, boneTransform);
+      Point3F boneScale = boneTransform.getScale();
+      if (boneScale != Point3F::One)
+      {
+         Point3F scaleMult = Point3F::One / boneScale;
+         Point3F scalePos = boneTransform.getPosition();
+         boneTransform.scale(scaleMult);
+         scalePos /= scaleMult;
+         boneTransform.setPosition(scalePos);
+      }
       initialTransforms.push_back(boneTransform);
 
       //Weights
@@ -225,19 +234,31 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    vertexIndex.setSize(nonZeroWeights);
    boneIndex.setSize(nonZeroWeights);
 
-   // Copy the weights to our vectors in vertex order
+   // Copy the weights to our vectors in vertex order and
+   // normalize vertex weights (force weights for each vert to sum to 1)
    U32 nextWeight = 0;
-   for (U32 i = 0; i < mMeshData->mNumVertices; i++)
+   for (U32 i = 0; i < mMeshData->mNumVertices; ++i)
    {
-      for (U32 ind = 0; ind < nonZeroWeights; ind++)
+      U32 vertStart = nextWeight;
+      F32 invTotalWeight = 0;
+      for (U32 ind = 0; ind < nonZeroWeights; ++ind)
       {
          if (tmpVertexIndex[ind] == i)
          {
             weight[nextWeight] = tmpWeight[ind];
+            invTotalWeight += tmpWeight[ind];
             vertexIndex[nextWeight] = tmpVertexIndex[ind];
             boneIndex[nextWeight] = tmpBoneIndex[ind];
             nextWeight++;
          }
+      }
+
+      // Now normalize the vertex weights
+      if (invTotalWeight > 0.0)
+      {
+         invTotalWeight = 1.0f / invTotalWeight;
+         for (U32 ind = vertStart; ind < nextWeight; ++ind)
+            weight[ind] *= invTotalWeight;
       }
    }
 

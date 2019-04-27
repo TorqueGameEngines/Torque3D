@@ -22,8 +22,10 @@
 
 class AssimpAppSequence : public AppSequence
 {
+   String   mSequenceName;
    F32      seqStart;
    F32      seqEnd;
+   F32      mTimeMultiplier; // The factor needed to convert the sequence data timestamp to seconds
 
 public:
 
@@ -37,7 +39,7 @@ public:
    virtual S32 getNumTriggers() const { return 0; }
    virtual void getTrigger(S32 index, TSShape::Trigger& trigger) const { trigger.state = 0; }
 
-   virtual const char* getName() const { return mAnim->mName.C_Str(); }
+   virtual const char* getName() const { return mSequenceName.c_str(); }
 
    F32 getStart() const { return seqStart; }
    F32 getEnd() const { return seqEnd; }

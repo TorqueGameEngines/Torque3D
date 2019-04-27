@@ -822,8 +822,6 @@ aiNode* ImportNode(aiScene* pScene, glTF2::Asset& r, std::vector<unsigned int>& 
         if (node.skin) {
             for (int primitiveNo = 0; primitiveNo < count; ++primitiveNo) {
                 aiMesh* mesh = pScene->mMeshes[meshOffsets[mesh_idx]+primitiveNo];
-                mesh->mNumBones = static_cast<unsigned int>(node.skin->jointNames.size());
-                mesh->mBones = new aiBone*[mesh->mNumBones];
 
                 // GLTF and Assimp choose to store bone weights differently.
                 // GLTF has each vertex specify which bones influence the vertex.
@@ -834,39 +832,98 @@ aiNode* ImportNode(aiScene* pScene, glTF2::Asset& r, std::vector<unsigned int>& 
                 // both because it's somewhat slow and because, for many applications,
                 // we then need to reconvert the data back into the vertex-to-bone
                 // mapping which makes things doubly-slow.
-                std::vector<std::vector<aiVertexWeight>> weighting(mesh->mNumBones);
+
+                //T3D_CHANGE_BEGIN
+                // The following commented block has been completely replaced.
+                // Portions of the replacement code block have been taken from:
+                // https://github.com/ConfettiFX/The-Forge/blob/master/Common_3/ThirdParty/OpenSource/assimp/4.1.0/code/glTF2Importer.cpp#L823-L860
+                //std::vector<std::vector<aiVertexWeight>> weighting(mesh->mNumBones);
+                //BuildVertexWeightMapping(node.meshes[0]->primitives[primitiveNo], weighting);
+
+                //for (uint32_t i = 0; i < mesh->mNumBones; ++i) {
+                //    aiBone* bone = new aiBone();
+
+                //    Ref<Node> joint = node.skin->jointNames[i];
+                //    if (!joint->name.empty()) {
+                //      bone->mName = joint->name;
+                //    } else {
+                //      // Assimp expects each bone to have a unique name.
+                //      static const std::string kDefaultName = "bone_";
+                //      char postfix[10] = {0};
+                //      ASSIMP_itoa10(postfix, i);
+                //      bone->mName = (kDefaultName + postfix);
+                //    }
+                //    GetNodeTransform(bone->mOffsetMatrix, *joint);
+
+                //    std::vector<aiVertexWeight>& weights = weighting[i];
+
+                //    bone->mNumWeights = static_cast<uint32_t>(weights.size());
+                //    if (bone->mNumWeights > 0) {
+                //      bone->mWeights = new aiVertexWeight[bone->mNumWeights];
+                //      memcpy(bone->mWeights, weights.data(), bone->mNumWeights * sizeof(aiVertexWeight));
+                //    } else {
+                //      // Assimp expects all bones to have at least 1 weight.
+                //      bone->mWeights = new aiVertexWeight[1];
+                //      bone->mNumWeights = 1;
+                //      bone->mWeights->mVertexId = 0;
+                //      bone->mWeights->mWeight = 0.f;
+                //    }
+                //    mesh->mBones[i] = bone;
+
+                std::vector<std::vector<aiVertexWeight>> weighting(node.skin->jointNames.size());
                 BuildVertexWeightMapping(node.meshes[0]->primitives[primitiveNo], weighting);
 
-                for (uint32_t i = 0; i < mesh->mNumBones; ++i) {
-                    aiBone* bone = new aiBone();
-
-                    Ref<Node> joint = node.skin->jointNames[i];
-                    if (!joint->name.empty()) {
-                      bone->mName = joint->name;
-                    } else {
-                      // Assimp expects each bone to have a unique name.
-                      static const std::string kDefaultName = "bone_";
-                      char postfix[10] = {0};
-                      ASSIMP_itoa10(postfix, i);
-                      bone->mName = (kDefaultName + postfix);
-                    }
-                    GetNodeTransform(bone->mOffsetMatrix, *joint);
-
-                    std::vector<aiVertexWeight>& weights = weighting[i];
-
-                    bone->mNumWeights = static_cast<uint32_t>(weights.size());
-                    if (bone->mNumWeights > 0) {
-                      bone->mWeights = new aiVertexWeight[bone->mNumWeights];
-                      memcpy(bone->mWeights, weights.data(), bone->mNumWeights * sizeof(aiVertexWeight));
-                    } else {
-                      // Assimp expects all bones to have at least 1 weight.
-                      bone->mWeights = new aiVertexWeight[1];
-                      bone->mNumWeights = 1;
-                      bone->mWeights->mVertexId = 0;
-                      bone->mWeights->mWeight = 0.f;
-                    }
-                    mesh->mBones[i] = bone;
+                // CONFFX_BEGIN
+                // Assimp doesn't support bones with no weight. We have to count the
+                // number of bones that affect the mesh and limit it to just those bones.
+                int numBones = 0;
+                for (size_t i = 0; i < node.skin->jointNames.size(); ++i) {
+                    if (!weighting[i].empty())
+                        ++numBones;
                 }
+
+                mesh->mNumBones = numBones;
+                if (numBones > 0)
+                {
+                    mesh->mBones = new aiBone*[mesh->mNumBones];
+
+                    int j = 0;
+                    for (size_t i = 0; i < node.skin->jointNames.size(); ++i) {
+                        if (!weighting[i].empty())
+                        {
+                            aiBone* bone = new aiBone();
+
+                            Ref<Node> joint = node.skin->jointNames[i];
+                            bone->mName = joint->name.empty() ? joint->id : joint->name;
+
+                            // Get the inverseBindMatrix for the joint, grab the position out of row 4,
+                            // invert the matrix and put the position back as column 4.
+                            aiMatrix4x4 *tmpMat;
+                            uint8_t *matPtr = node.skin->inverseBindMatrices->GetPointer();
+                            tmpMat = (aiMatrix4x4*)matPtr;
+                            bone->mOffsetMatrix = tmpMat[i];
+                            aiVector3D tmpPos(bone->mOffsetMatrix.d1, bone->mOffsetMatrix.d2, bone->mOffsetMatrix.d3);
+                            bone->mOffsetMatrix.d1 = bone->mOffsetMatrix.d2 = bone->mOffsetMatrix.d3 = 0.0;
+                            bone->mOffsetMatrix.Inverse();
+                            bone->mOffsetMatrix.a4 = tmpPos.x;
+                            bone->mOffsetMatrix.b4 = tmpPos.y;
+                            bone->mOffsetMatrix.c4 = tmpPos.z;
+
+                            std::vector<aiVertexWeight>& weights = weighting[i];
+
+                            bone->mNumWeights = static_cast<uint32_t>(weights.size());
+                            if (bone->mNumWeights > 0) {
+                              bone->mWeights = new aiVertexWeight[bone->mNumWeights];
+                              memcpy(bone->mWeights, weights.data(), bone->mNumWeights * sizeof(aiVertexWeight));
+                            }
+                            mesh->mBones[j++] = bone;
+                        }
+                    }
+                }
+                else
+                    mesh->mBones = nullptr;
+                // CONFFX_END
+                //T3D_CHANGE_END
             }
         }
 
@@ -921,7 +978,10 @@ struct AnimationSamplers {
 aiNodeAnim* CreateNodeAnim(glTF2::Asset& r, Node& node, AnimationSamplers& samplers)
 {
     aiNodeAnim* anim = new aiNodeAnim();
-    anim->mNodeName = node.name;
+    //T3D_CHANGE_BEGIN
+    //anim->mNodeName = node.name;
+    anim->mNodeName = node.name.empty() ? node.id : node.name;
+    //T3D_CHANGE_END
 
     static const float kMillisecondsFromSeconds = 1000.f;
 
@@ -1042,15 +1102,27 @@ void glTF2Importer::ImportAnimations(glTF2::Asset& r)
 
         std::unordered_map<unsigned int, AnimationSamplers> samplers = GatherSamplers(anim);
 
-        ai_anim->mNumChannels = static_cast<uint32_t>(samplers.size());
+        //T3D_CHANGE_BEGIN
+        //ai_anim->mNumChannels = static_cast<uint32_t>(samplers.size());
+        //if (ai_anim->mNumChannels > 0) {
+        //    ai_anim->mChannels = new aiNodeAnim*[ai_anim->mNumChannels];
+        //    int j = 0;
+        //    for (auto& iter : samplers) {
+        //        ai_anim->mChannels[j] = CreateNodeAnim(r, r.nodes[iter.first], iter.second);
+        //        ++j;
+        //    }
+        //}
+
+        ai_anim->mNumChannels = r.skins.Size() > 0 ? r.skins[0].jointNames.size() : 0;
         if (ai_anim->mNumChannels > 0) {
             ai_anim->mChannels = new aiNodeAnim*[ai_anim->mNumChannels];
             int j = 0;
-            for (auto& iter : samplers) {
-                ai_anim->mChannels[j] = CreateNodeAnim(r, r.nodes[iter.first], iter.second);
+            for (auto& iter : r.skins[0].jointNames) {
+                ai_anim->mChannels[j] = CreateNodeAnim(r, *iter, samplers[iter.GetIndex()]);
                 ++j;
             }
         }
+        //T3D_CHANGE_END
 
         // Use the latest keyframe for the duration of the animation
         double maxDuration = 0;

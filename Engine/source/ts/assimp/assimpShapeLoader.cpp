@@ -200,6 +200,10 @@ void AssimpShapeLoader::enumerateScene()
       Con::printf("[ASSIMP] Mesh Count: %d", mScene->mNumMeshes);
       Con::printf("[ASSIMP] Material Count: %d", mScene->mNumMaterials);
 
+      // Extract embedded textures
+      for (U32 i = 0; i < mScene->mNumTextures; ++i)
+         extractTexture(i, mScene->mTextures[i]);
+
       // Load all the materials.
       for ( U32 i = 0; i < mScene->mNumMaterials; i++ )
          AppMesh::appMaterials.push_back(new AssimpAppMaterial(mScene->mMaterials[i]));
@@ -302,8 +306,11 @@ void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
          if ( Sim::findObject( MATMGR->getMapEntry( mat->getName() ), mappedMat ) )
          {
             // Only update existing materials if forced to
-            if ( ColladaUtils::getOptions().forceUpdateMaterials )
-               persistMgr.setDirty( mappedMat );
+            if (Con::getBoolVariable("$Assimp::ForceUpdateMats", false))
+            {
+               mat->initMaterial(scriptPath, mappedMat);
+               persistMgr.setDirty(mappedMat);
+            }
          }
          else
          {
@@ -322,8 +329,6 @@ void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
 /// Check if an up-to-date cached DTS is available for this DAE file
 bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
 {
-   return false;
-
    // Generate the cached filename
    Torque::Path cachedPath(path);
    cachedPath.setExtension("cached.dts");
@@ -332,13 +337,13 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
    FileTime cachedModifyTime;
    if (Platform::getFileTimes(cachedPath.getFullPath(), NULL, &cachedModifyTime))
    {
-      bool forceLoadDAE = Con::getBoolVariable("$assimp::forceLoad", false);
+      bool forceLoad = Con::getBoolVariable("$assimp::forceLoad", false);
 
       FileTime daeModifyTime;
       if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
-         (!forceLoadDAE && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
+         (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
       {
-         // DAE not found, or cached DTS is newer
+         // Original file not found, or cached DTS is newer
          return true;
       }
    }
@@ -391,6 +396,56 @@ void AssimpShapeLoader::detectDetails()
    }
 
    AssimpAppMesh::fixDetailSize(singleDetail, Con::getIntVariable("$Assimp::singleDetailSize", 2));
+}
+
+void AssimpShapeLoader::extractTexture(U32 index, aiTexture* pTex)
+{  // Cache an embedded texture to disk
+   updateProgress(Load_EnumerateScene, "Extracting Textures...", mScene->mNumTextures, index);
+   Con::printf("[Assimp] Extracting Texture %s, W: %d, H: %d, %d of %d, format hint: (%s)", pTex->mFilename.C_Str(),
+      pTex->mWidth, pTex->mHeight, index, mScene->mNumTextures, pTex->achFormatHint);
+
+   // Create the texture filename
+   String cleanFile = AppMaterial::cleanString(TSShapeLoader::getShapePath().getFileName());
+   String texName = String::ToString("%s_cachedTex%d", cleanFile.c_str(), index);
+   Torque::Path texPath = shapePath;
+   texPath.setFileName(texName);
+
+   if (pTex->mHeight == 0)
+   {  // Compressed format, write the data directly to disc
+      texPath.setExtension(pTex->achFormatHint);
+      FileStream *outputStream;
+      if ((outputStream = FileStream::createAndOpen(texPath.getFullPath(), Torque::FS::File::Write)) != NULL)
+      {
+         outputStream->setPosition(0);
+         outputStream->write(pTex->mWidth, pTex->pcData);
+         outputStream->close();
+         delete outputStream;
+      }
+   }
+   else
+   {  // Embedded pixel data, fill a bitmap and save it.
+      GFXTexHandle shapeTex;
+      shapeTex.set(pTex->mWidth, pTex->mHeight, GFXFormatR8G8B8A8_SRGB, &GFXDynamicTextureSRGBProfile,
+         String::ToString("AssimpShapeLoader (%s:%i)", __FILE__, __LINE__), 1, 0);
+      GFXLockedRect *rect = shapeTex.lock();
+
+      for (U32 y = 0; y < pTex->mHeight; ++y)
+      {
+         for (U32 x = 0; x < pTex->mWidth; ++x)
+         {
+            U32 targetIndex = (y * rect->pitch) + (x * 4);
+            U32 sourceIndex = ((y * pTex->mWidth) + x) * 4;
+            rect->bits[targetIndex] = pTex->pcData[sourceIndex].r;
+            rect->bits[targetIndex + 1] = pTex->pcData[sourceIndex].g;
+            rect->bits[targetIndex + 2] = pTex->pcData[sourceIndex].b;
+            rect->bits[targetIndex + 3] = pTex->pcData[sourceIndex].a;
+         }
+      }
+      shapeTex.unlock();
+
+      texPath.setExtension("png");
+      shapeTex->dumpToDisk("PNG", texPath.getFullPath());
+   }
 }
 
 //-----------------------------------------------------------------------------

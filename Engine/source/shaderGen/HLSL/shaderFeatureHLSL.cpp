@@ -2944,7 +2944,7 @@ void HardwareSkinningFeatureHLSL::processVert(   Vector<ShaderComponent*> &compo
 //****************************************************************************
 
 ReflectionProbeFeatHLSL::ReflectionProbeFeatHLSL()
-   : mDep(String(Con::getVariable("$Core::CommonShaderPath")) + String("/lighting.hlsl"))
+   : mDep(ShaderGen::smCommonShaderPath + String("/lighting.hlsl"))
 {
    addDependency(&mDep);
 }
@@ -2964,27 +2964,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>(componentList[C_CONNECTOR]);
 
    MultiLine *meta = new MultiLine;
-
-   // Look for a wsNormal or grab it from the connector.
-   /*Var *wsNormal = (Var*)LangElement::find("wsNormal");
-   if (!wsNormal)
-   {
-      wsNormal = connectComp->getElement(RT_TEXCOORD);
-      wsNormal->setName("wsNormal");
-      wsNormal->setStructName("IN");
-      wsNormal->setType("float3");
-
-      // If we loaded the normal its our responsibility
-      // to normalize it... the interpolators won't.
-      //
-      // Note we cast to half here to get partial precision
-      // optimized code which is an acceptable loss of
-      // precision for normals and performs much better
-      // on older Geforce cards.
-      //
-      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal));
-   }*/
-
+   
    // Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition(componentList);
    Var *wsView = getWsView(wsPosition, meta);

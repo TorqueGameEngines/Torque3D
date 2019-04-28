@@ -143,6 +143,26 @@ Surface createSurface(vec4 normDepth, sampler2D colorBuffer, sampler2D matInfoBu
 	return surface;
 }
 
+Surface createForwardSurface(vec4 baseColor, vec4 normal, vec4 pbrProperties, in vec2 uv, in vec3 wsPosition, in vec3 wsEyePos, in vec3 wsEyeRay, in mat4x4 invView)
+{
+	Surface surface;// = Surface();
+
+  surface.depth = 0;
+	surface.P = wsPosition;
+	surface.N = tMul(invView, vec4(normal.xyz,0)).xyz; //TODO move t3d to use WS normals
+	surface.V = normalize(wsEyePos - surface.P);
+	surface.baseColor = baseColor;
+  const float minRoughness=1e-4;
+	surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+	surface.roughness_brdf = surface.roughness * surface.roughness;
+	surface.metalness = pbrProperties.a;
+  surface.ao = pbrProperties.g;
+  surface.matFlag = pbrProperties.r;
+
+	surface.Update();
+	return surface;
+}
+
 struct SurfaceToLight
 {
 	vec3 L;				// surface to light vector
@@ -312,15 +332,13 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin,
    return posonbox - refPosition.xyz;
 }
 
-/*vec4 computeForwardProbes(Surface surface,
-    float cubeMips, float numProbes, mat4 worldToObjArray[MAX_FORWARD_PROBES], vec4 probeConfigData[MAX_FORWARD_PROBES], 
+vec4 computeForwardProbes(Surface surface,
+    float cubeMips, float numProbes, mat4x4 worldToObjArray[MAX_FORWARD_PROBES], vec4 probeConfigData[MAX_FORWARD_PROBES], 
     vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 bbMinArray[MAX_FORWARD_PROBES], vec4 bbMaxArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
-    float hasSkylight, samplerCube skylightIrradMap, samplerCube skylightSpecularMap,
-    sampler2D BRDFTexture, samplerCubeArray irradianceCubemapAR,
-    samplerCubeArray specularCubemapAR)
+    float hasSkylight, sampler2D BRDFTexture, 
+	samplerCube skylightIrradMap, samplerCube skylightSpecularMap,
+	samplerCubeArray irradianceCubemapAR, samplerCubeArray specularCubemapAR)
 {
-	return vec4(0,0,0,1);
-
   int i = 0;
    float blendFactor[MAX_FORWARD_PROBES];
    float blendSum = 0;
@@ -373,11 +391,8 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin,
       {
          blendFactor[i] *= invBlendSumWeighted;
          contribution[i] *= blendFactor[i];
-         //alpha -= contribution[i];
       }
    }
-   //else
-   //   alpha -= blendSum;
 
    vec3 irradiance = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
@@ -385,13 +400,14 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin,
    // Radiance (Specular)
    float lod = surface.roughness*cubeMips;
 
-   float alpha = 1;
+//1
+   float alpha = 1.0f;
    for (i = 0; i < numProbes; ++i)
    {
       float contrib = contribution[i];
       if (contrib != 0)
       {
-         int cubemapIdx = probeConfigData[i].a;
+         int cubemapIdx = int(probeConfigData[i].a);
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
@@ -409,12 +425,12 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin,
    vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
 
    //energy conservation
-   vec3 kD = 1.0.xxx - F;
+   vec3 kD = vec3(1.0,1.0,1.0) - F;
    kD *= 1.0 - surface.metalness;
 
    //apply brdf
    //Do it once to save on texture samples
-   vec2 brdf = texture(BRDFTexture, vec2(surface.roughness, surface.NdotV)).xy;
+   vec2 brdf = textureLod(BRDFTexture, vec2(surface.roughness, surface.NdotV),0).xy;
    specular *= brdf.x * F + brdf.y;
 
    //final diffuse color
@@ -423,4 +439,4 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin,
 
    finalColor = vec4(irradiance.rgb,1);
    return finalColor;
-}*/
+}

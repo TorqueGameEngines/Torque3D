@@ -118,11 +118,8 @@ void main()
             {
                   blendFactor[i] *= invBlendSumWeighted;
                   contribution[i] *= blendFactor[i];
-                  alpha -= contribution[i];
             }
       }
-      else
-            alpha -= blendSum;
       
 #if DEBUGVIZ_ATTENUATION == 1
       float contribAlpha = 1;

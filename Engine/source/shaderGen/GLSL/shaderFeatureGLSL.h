@@ -673,22 +673,22 @@ public:
 /// Reflection Probes
 class ReflectionProbeFeatGLSL : public ShaderFeatureGLSL
 {
+protected:
+   ShaderIncludeDependency mDep;
+
 public:
-   virtual void processVert(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd) {}
+   ReflectionProbeFeatGLSL();
+   
+   virtual void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
 
-   virtual void processPix(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd) {}
-
-   virtual Resources getResources(const MaterialFeatureData &fd) {
-      return Resources();
-   }
+   virtual Resources getResources(const MaterialFeatureData& fd);
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData(Material::StageData &stageDat,
-      const MaterialFeatureData &fd,
-      RenderPassData &passData,
-      U32 &texIndex) {}
+   virtual void setTexData(Material::StageData& stageDat,
+      const MaterialFeatureData& fd,
+      RenderPassData& passData,
+      U32& texIndex);
 
    virtual String getName()
    {

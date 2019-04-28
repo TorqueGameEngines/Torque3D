@@ -354,15 +354,15 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
 
             glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, mCubemap);
             const U32 mipSize = getMax(U32(1), mSize >> currentMip);
-            /*if (isCompressed)
+            if (isCompressed)
             {
                const U32 mipDataSize = getCompressedSurfaceSize(mFormat, mSize, mSize, currentMip);
-               glCompressedTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, GFXGLTextureInternalFormat[mFormat], mipSize, mipSize, 0, mipDataSize, pixelData);
+               glCompressedTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, GFXGLTextureInternalFormat[mFormat], 0, 0, i * 6 + face, 0, mipDataSize, pixelData);
             }
             else
-            {*/
-            glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, i * 6 + face, mipSize, mipSize, 1, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
-            //}
+            {
+               glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, i * 6 + face, mipSize, mipSize, 1, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
+            }
             glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 
             delete[] pixelData;
@@ -415,15 +415,15 @@ void GFXGLCubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32
 
          glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, mCubemap);
          const U32 mipSize = getMax(U32(1), mSize >> currentMip);
-         /*if (isCompressed)
+         if (isCompressed)
          {
             const U32 mipDataSize = getCompressedSurfaceSize(mFormat, mSize, mSize, currentMip);
-            glCompressedTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, GFXGLTextureInternalFormat[mFormat], mipSize, mipSize, 0, mipDataSize, pixelData);
+            glCompressedTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, GFXGLTextureInternalFormat[mFormat], 0, 0, slot * 6 + face, 0, mipDataSize, pixelData);
          }
          else
-         {*/                                           
+         {                                          
             glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, slot * 6 + face, mipSize, mipSize, 1, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
-         //}
+         }
          glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 
          delete[] pixelData;

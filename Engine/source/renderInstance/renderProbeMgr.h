@@ -152,6 +152,8 @@ struct ProbeShaderConstants
 
    void init(GFXShader* buffer);
 
+   bool isValid();
+
    void _onShaderReload();
 };
 

@@ -2870,3 +2870,214 @@ void HardwareSkinningFeatureGLSL::processVert(Vector<ShaderComponent*> &componen
 
    output = meta;
 }
+
+//****************************************************************************
+// ReflectionProbeFeatHLSL
+//****************************************************************************
+
+ReflectionProbeFeatGLSL::ReflectionProbeFeatGLSL()
+   : mDep(ShaderGen::smCommonShaderPath + String("/gl/lighting.glsl"))
+{
+   addDependency(&mDep);
+}
+void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList,
+   const MaterialFeatureData& fd)
+{
+   // Skip out on realtime lighting if we don't have a normal
+   // or we're doing some sort of baked lighting.
+   //
+   // TODO: We can totally detect for this in the material
+   // feature setup... we should move it out of here!
+   //
+   if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
+      return;
+
+   ShaderConnector * connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+
+   MultiLine * meta = new MultiLine;
+
+   // Now the wsPosition and wsView.
+   Var * wsPosition = getInWsPosition(componentList);
+   Var * wsView = getWsView(wsPosition, meta);
+
+   Var * albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+
+   //Reflection Probe WIP
+   U32 MAX_FORWARD_PROBES = 4;
+
+   Var * numProbes = new Var("numProbes", "float");
+   numProbes->uniform = true;
+   numProbes->constSortPos = cspPotentialPrimitive;
+
+   Var * cubeMips = new Var("cubeMips", "float");
+   cubeMips->uniform = true;
+   cubeMips->constSortPos = cspPotentialPrimitive;
+
+   Var * hasSkylight = new Var("hasSkylight", "float");
+   hasSkylight->uniform = true;
+   hasSkylight->constSortPos = cspPotentialPrimitive;
+
+   Var * inProbePosArray = new Var("inProbePosArray", "vec4");
+   inProbePosArray->arraySize = MAX_FORWARD_PROBES;
+   inProbePosArray->uniform = true;
+   inProbePosArray->constSortPos = cspPotentialPrimitive;
+
+   Var * inRefPosArray = new Var("inRefPosArray", "vec4");
+   inRefPosArray->arraySize = MAX_FORWARD_PROBES;
+   inRefPosArray->uniform = true;
+   inRefPosArray->constSortPos = cspPotentialPrimitive;
+
+   Var * bbMinArray = new Var("inProbeBoxMin", "vec4");
+   bbMinArray->arraySize = MAX_FORWARD_PROBES;
+   bbMinArray->uniform = true;
+   bbMinArray->constSortPos = cspPotentialPrimitive;
+
+   Var * bbMaxArray = new Var("inProbeBoxMax", "vec4");
+   bbMaxArray->arraySize = MAX_FORWARD_PROBES;
+   bbMaxArray->uniform = true;
+   bbMaxArray->constSortPos = cspPotentialPrimitive;
+
+   Var * probeConfigData = new Var("probeConfigData", "vec4");
+   probeConfigData->arraySize = MAX_FORWARD_PROBES;
+   probeConfigData->uniform = true;
+   probeConfigData->constSortPos = cspPotentialPrimitive;
+
+   Var * worldToObjArray = new Var("worldToObjArray", "mat4x4");
+   worldToObjArray->arraySize = MAX_FORWARD_PROBES;
+   worldToObjArray->uniform = true;
+   worldToObjArray->constSortPos = cspPotentialPrimitive;
+
+   // create texture var
+   Var* BRDFTexture = new Var;
+   BRDFTexture->setType("sampler2D");
+   BRDFTexture->setName("BRDFTexture");
+   BRDFTexture->uniform = true;
+   BRDFTexture->sampler = true;
+   BRDFTexture->constNum = Var::getTexUnitNum();     // used as texture unit num here
+   
+   Var * specularCubemapAR = new Var("specularCubemapAR", "samplerCubeArray");
+   specularCubemapAR->uniform = true;
+   specularCubemapAR->sampler = true;
+   specularCubemapAR->constNum = Var::getTexUnitNum();
+
+   Var * irradianceCubemapAR = new Var("irradianceCubemapAR", "samplerCubeArray");
+   irradianceCubemapAR->uniform = true;
+   irradianceCubemapAR->sampler = true;
+   irradianceCubemapAR->constNum = Var::getTexUnitNum();
+
+   Var * skylightSpecularMap = new Var("skylightSpecularMap", "samplerCube");
+   skylightSpecularMap->uniform = true;
+   skylightSpecularMap->sampler = true;
+   skylightSpecularMap->constNum = Var::getTexUnitNum();
+
+   Var * skylightIrradMap = new Var("skylightIrradMap", "samplerCube");
+   skylightIrradMap->uniform = true;
+   skylightIrradMap->sampler = true;
+   skylightIrradMap->constNum = Var::getTexUnitNum();
+
+
+   Var * inTex = getInTexCoord("texCoord", "vec2", componentList);
+   if (!inTex)
+      return;
+
+   Var * diffuseColor = (Var*)LangElement::find("diffuseColor");
+   if (!diffuseColor)
+   {
+      diffuseColor = new Var;
+      diffuseColor->setType("vec4");
+      diffuseColor->setName("diffuseColor");
+      LangElement* colorDecl = new DecOp(diffuseColor);
+      meta->addStatement(new GenOp("   @ = vec4(1.0,1.0,1.0,1.0);\r\n", colorDecl)); //default to flat white
+   }
+
+   Var* matinfo = (Var*)LangElement::find("specularColor");
+   if (!matinfo)
+   {
+      Var* metalness = (Var*)LangElement::find("metalness");
+      if (!metalness)
+      {
+         metalness = new Var("metalness", "float");
+         metalness->uniform = true;
+         metalness->constSortPos = cspPotentialPrimitive;
+      }
+
+      Var* smoothness = (Var*)LangElement::find("smoothness");
+      if (!smoothness)
+      {
+         smoothness = new Var("smoothness", "float");
+         smoothness->uniform = true;
+         smoothness->constSortPos = cspPotentialPrimitive;
+      }
+
+      matinfo = new Var("specularColor", "vec4");
+      LangElement* colorDecl = new DecOp(matinfo);
+      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
+   }
+
+   Var* bumpNormal = (Var*)LangElement::find("bumpNormal");
+   if (!bumpNormal)
+   {
+      bumpNormal = new Var("bumpNormal", "vec4");
+      LangElement* colorDecl = new DecOp(bumpNormal);
+      meta->addStatement(new GenOp("   @ = vec4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identity normal
+   }
+
+   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+
+   Var* worldToCamera = (Var*)LangElement::find("worldToCamera");
+   if (!worldToCamera)
+   {
+      worldToCamera = new Var;
+      worldToCamera->setType("mat4x4");
+      worldToCamera->setName("worldToCamera");
+      worldToCamera->uniform = true;
+      worldToCamera->constSortPos = cspPass;
+   }
+
+   //Reflection vec
+   Var* surface = new Var("surface", "Surface");
+   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
+      inTex, wsPosition, wsEyePos, wsView, worldToCamera));
+   String computeForwardProbes = String::String("   @.rgb += computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   computeForwardProbes += String::String("@,@,\r\n\t\t");
+   computeForwardProbes += String::String("@, @, \r\n\t\t");
+   computeForwardProbes += String::String("@,@).rgb; \r\n");
+
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
+      hasSkylight, BRDFTexture,
+      skylightIrradMap, skylightSpecularMap,
+      irradianceCubemapAR, specularCubemapAR));
+
+   output = meta;
+}
+
+ShaderFeature::Resources ReflectionProbeFeatGLSL::getResources(const MaterialFeatureData& fd)
+{
+   Resources res;
+
+   res.numTex = 5;
+   res.numTexReg = 5;
+
+   return res;
+}
+
+void ReflectionProbeFeatGLSL::setTexData(Material::StageData& stageDat,
+   const MaterialFeatureData& stageFeatures,
+   RenderPassData& passData,
+   U32& texIndex)
+{
+   if (stageFeatures.features[MFT_ReflectionProbes])
+   {
+      passData.mSamplerNames[texIndex] = "BRDFTexture";
+      passData.mTexType[texIndex++] = Material::Standard;
+      // assuming here that it is a scenegraph cubemap
+      passData.mSamplerNames[texIndex] = "specularCubemapAR";
+      passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "irradianceCubemapAR";
+      passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "skylightSpecularMap";
+      passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "skylightIrradMap";
+      passData.mTexType[texIndex++] = Material::SGCube;
+   }
+}

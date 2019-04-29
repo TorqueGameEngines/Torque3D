@@ -148,17 +148,18 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	return surface;
 }
 
-inline Surface createForwardSurface(float4 baseColor, float4 normal, float4 pbrProperties, in float2 uv, in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
+inline Surface createForwardSurface(float4 baseColor, float4 normal, float4 pbrProperties, in float2 uv, 
+                            in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay, in float3x3 worldToTangent)
 {
 	Surface surface = (Surface)0;
 
   surface.depth = 0;
 	surface.P = wsPosition;
-	surface.N = mul(invView, float4(normal.xyz,0)).xyz; //TODO move t3d to use WS normals
+	surface.N = normalize( mul( normal.xyz, worldToTangent ) );
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = baseColor;
   const float minRoughness=1e-4;
-	surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+	surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1); //t3d uses smoothness, so we convert to roughness.
 	surface.roughness_brdf = surface.roughness * surface.roughness;
 	surface.metalness = pbrProperties.a;
   surface.ao = pbrProperties.g;
@@ -372,7 +373,7 @@ float4 computeForwardProbes(Surface surface,
    float lod = surface.roughness*cubeMips;
 
    float alpha = 1;
-   for (i = 0; i < numProbes; ++i)
+   /*for (i = 0; i < numProbes; ++i)
    {
       float contrib = contribution[i];
       if (contrib != 0)
@@ -384,7 +385,7 @@ float4 computeForwardProbes(Surface surface,
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
          alpha -= contrib;
       }
-   }
+   }*/
 
    if (hasSkylight && alpha > 0.001)
    {
@@ -396,7 +397,7 @@ float4 computeForwardProbes(Surface surface,
 
    //energy conservation
    float3 kD = 1.0.xxx - F;
-   kD *= 1.0 - surface.metalness;
+   kD *= clamp(1.0 - surface.metalness, 0.1, 1);
 
    //apply brdf
    //Do it once to save on texture samples
@@ -407,5 +408,6 @@ float4 computeForwardProbes(Surface surface,
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
    float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
 
+   finalColor = float4(specular,1);
    return finalColor;
 }

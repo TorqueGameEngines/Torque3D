@@ -171,6 +171,19 @@ void ProbeShaderConstants::init(GFXShader* shader)
    mInit = true;
 }
 
+bool ProbeShaderConstants::isValid()
+{
+   if (mProbePositionSC->isValid() ||
+      mProbeConfigDataSC->isValid() ||
+      mProbeBoxMinSC->isValid() ||
+      mProbeBoxMaxSC->isValid() ||
+      mProbeSpecularCubemapSC->isValid() ||
+      mProbeIrradianceCubemapSC->isValid())
+      return true;
+
+   return false;
+}
+
 void ProbeShaderConstants::_onShaderReload()
 {
    if (mShader.isValid())
@@ -536,12 +549,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
    PROFILE_SCOPE(ProbeManager_Update4ProbeConsts);
 
    // Skip over gathering lights if we don't have to!
-   if (probeShaderConsts->mProbePositionSC->isValid() ||
-      probeShaderConsts->mProbeConfigDataSC->isValid() ||
-      probeShaderConsts->mProbeBoxMinSC->isValid() ||
-      probeShaderConsts->mProbeBoxMaxSC->isValid() ||
-      probeShaderConsts->mProbeSpecularCubemapSC->isValid() ||
-      probeShaderConsts->mProbeIrradianceCubemapSC->isValid()/* && (!ProbeRenderInst::all.empty())*/)
+   if (probeShaderConsts->isValid())
    {
       PROFILE_SCOPE(ProbeManager_Update4ProbeConsts_setProbes);
 
@@ -653,7 +661,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          if (!curEntry.mIsEnabled)
             continue;
 
-         if (curEntry.mIsSkylight)
+         /*if (curEntry.mIsSkylight)
          {
             if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
             {
@@ -664,8 +672,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
                hasSkylight = true;
                continue;
             }
-         }
-         else
+         }*/
+         if(!curEntry.mIsSkylight)
          {
             /*probePositions[effectiveProbeCount] = curEntry.getPosition();
             probeRefPositions[effectiveProbeCount] = curEntry.mProbeRefOffset;
@@ -693,6 +701,39 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
       //GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
       //GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
+
+      //if (!hasSkylight)
+      //   shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 0.0f);
+   }
+
+   //check for skylight action
+   if (probeShaderConsts->mHasSkylight->isValid()
+      && probeShaderConsts->mSkylightIrradMap->isValid() 
+      && probeShaderConsts->mSkylightSpecularMap->isValid())
+   {
+      //Array rendering
+      U32 probeCount = ProbeRenderInst::all.size();
+
+      bool hasSkylight = false;
+      for (U32 i = 0; i < probeCount; i++)
+      {
+         const ProbeRenderInst& curEntry = *ProbeRenderInst::all[i];
+         if (!curEntry.mIsEnabled)
+            continue;
+
+         if (curEntry.mIsSkylight)
+         {
+            if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
+            {
+               GFX->setCubeTexture(probeShaderConsts->mSkylightSpecularMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
+               GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
+
+               shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 1.0f);
+               hasSkylight = true;
+               break;
+            }
+         }
+      }
 
       if (!hasSkylight)
          shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 0.0f);

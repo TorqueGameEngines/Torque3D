@@ -2949,6 +2949,17 @@ ReflectionProbeFeatHLSL::ReflectionProbeFeatHLSL()
    addDependency(&mDep);
 }
 
+void ReflectionProbeFeatHLSL::processVert(Vector<ShaderComponent*>& componentList,
+   const MaterialFeatureData& fd)
+{
+   MultiLine* meta = new MultiLine;
+   output = meta;
+
+   // Also output the worldToTanget transform which
+   // we use to create the world space normal.
+   getOutWorldToTangent(componentList, meta, fd);
+}
+
 void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList,
    const MaterialFeatureData &fd)
 {
@@ -2969,8 +2980,6 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *wsPosition = getInWsPosition(componentList);
    Var *wsView = getWsView(wsPosition, meta);
    
-   Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
-
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 
@@ -3070,15 +3079,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    if (!inTex)
       return;
 
-   Var *diffuseColor = (Var*)LangElement::find("diffuseColor");
-   if (!diffuseColor)
-   {
-	   diffuseColor = new Var;
-	   diffuseColor->setType("float4");
-	   diffuseColor->setName("diffuseColor");
-	   LangElement* colorDecl = new DecOp(diffuseColor);
-	   meta->addStatement(new GenOp("   @ = float4(1.0,1.0,1.0,1.0);\r\n", colorDecl)); //default to flat white
-   }
+   Var *diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *matinfo = (Var*)LangElement::find("specularColor");
    if (!matinfo)
@@ -3114,30 +3115,18 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 
    Var *wsEyePos = (Var*)LangElement::find("eyePosWorld");
 
-   Var *worldToTangent = (Var*)LangElement::find("worldToTangent");
-   if (!worldToTangent)
-      return;
-
-   /*Var *worldToCamera = (Var*)LangElement::find("worldToCamera");
-   if (!worldToCamera)
-   {
-      worldToCamera = new Var;
-      worldToCamera->setType("float4x4");
-      worldToCamera->setName("worldToCamera");
-      worldToCamera->uniform = true;
-      worldToCamera->constSortPos = cspPass;
-   }*/
+   Var *worldToTangent = getInWorldToTangent(componentList);
 
    //Reflection vec
    Var *surface = new Var("surface", "Surface");
-   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
+   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,float3x3(@));\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
                      inTex, wsPosition, wsEyePos, wsView, worldToTangent));
    String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBE_MAKEARG(@), TORQUE_SAMPLERCUBE_MAKEARG(@), \r\n\t\t");
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
       
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), diffuseColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
       hasSkylight, BRDFTexture, 
       skylightIrradMap, skylightSpecularMap,
       irradianceCubemapAR, specularCubemapAR));

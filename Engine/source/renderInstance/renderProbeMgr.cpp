@@ -673,7 +673,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
                continue;
             }
          }*/
-         if(!curEntry.mIsSkylight)
+         if (!curEntry.mIsSkylight)
          {
             /*probePositions[effectiveProbeCount] = curEntry.getPosition();
             probeRefPositions[effectiveProbeCount] = curEntry.mProbeRefOffset;
@@ -707,8 +707,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
    }
 
    //check for skylight action
-   if (probeShaderConsts->mHasSkylight->isValid()
-      && probeShaderConsts->mSkylightIrradMap->isValid() 
+   if (probeShaderConsts->mSkylightIrradMap->isValid()
       && probeShaderConsts->mSkylightSpecularMap->isValid())
    {
       //Array rendering

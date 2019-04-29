@@ -3114,7 +3114,11 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 
    Var *wsEyePos = (Var*)LangElement::find("eyePosWorld");
 
-   Var *worldToCamera = (Var*)LangElement::find("worldToCamera");
+   Var *worldToTangent = (Var*)LangElement::find("worldToTangent");
+   if (!worldToTangent)
+      return;
+
+   /*Var *worldToCamera = (Var*)LangElement::find("worldToCamera");
    if (!worldToCamera)
    {
       worldToCamera = new Var;
@@ -3122,13 +3126,13 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       worldToCamera->setName("worldToCamera");
       worldToCamera->uniform = true;
       worldToCamera->constSortPos = cspPass;
-   }
+   }*/
 
    //Reflection vec
    Var *surface = new Var("surface", "Surface");
    meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
-                     inTex, wsPosition, wsEyePos, wsView, worldToCamera));
-   String computeForwardProbes = String::String("   @.rgb += computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+                     inTex, wsPosition, wsEyePos, wsView, worldToTangent));
+   String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBE_MAKEARG(@), TORQUE_SAMPLERCUBE_MAKEARG(@), \r\n\t\t");
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");

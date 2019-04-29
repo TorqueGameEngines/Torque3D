@@ -51,6 +51,7 @@ ImplementFeatureType( MFT_Imposter, U32(-1), -1, true );
 
 ImplementFeatureType( MFT_AccuMap, MFG_PreLighting, 2.0f, true );
 
+ImplementFeatureType(MFT_ReflectionProbes, MFG_Lighting, 1.0f, true);
 ImplementFeatureType( MFT_RTLighting, MFG_Lighting, 2.0f, true );
 ImplementFeatureType( MFT_LightMap, MFG_Lighting, 3.0f, true );
 ImplementFeatureType( MFT_ToneMap, MFG_Lighting, 4.0f, true );
@@ -62,7 +63,6 @@ ImplementFeatureType( MFT_SubSurface, MFG_Lighting, 8.0f, true );
 ImplementFeatureType( MFT_VertLit, MFG_Lighting, 9.0f, true );
 ImplementFeatureType( MFT_MinnaertShading, MFG_Lighting, 10.0f, true );
 
-ImplementFeatureType(MFT_ReflectionProbes, MFG_Lighting, 11.0f, true);
 
 ImplementFeatureType( MFT_GlowMask, MFG_PostLighting, 1.0f, true );
 ImplementFeatureType( MFT_Visibility, MFG_PostLighting, 2.0f, true );

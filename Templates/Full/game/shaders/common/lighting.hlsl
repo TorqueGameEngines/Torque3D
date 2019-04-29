@@ -360,11 +360,8 @@ float4 computeForwardProbes(Surface surface,
       {
          blendFactor[i] *= invBlendSumWeighted;
          contribution[i] *= blendFactor[i];
-         //alpha -= contribution[i];
       }
    }
-   //else
-   //   alpha -= blendSum;
 
    float3 irradiance = float3(0, 0, 0);
    float3 specular = float3(0, 0, 0);
@@ -387,11 +384,11 @@ float4 computeForwardProbes(Surface surface,
       }
    }*/
 
-   //if (hasSkylight && alpha > 0.001)
-   //{
+   if (hasSkylight && alpha > 0.001)
+   {
       irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz;
       specular = TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz;
-   //}
+   }
 
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
 
@@ -407,8 +404,6 @@ float4 computeForwardProbes(Surface surface,
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
    float4 finalColor = float4(diffuse + specular, 1.0);
-
-   //finalColor = float4(max(diffuse, specular),1);
 
    return finalColor;
 }

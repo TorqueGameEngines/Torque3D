@@ -387,27 +387,28 @@ float4 computeForwardProbes(Surface surface,
       }
    }*/
 
-   if (hasSkylight && alpha > 0.001)
-   {
-      irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz * alpha;
-      specular += TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz * alpha;
-   }
+   //if (hasSkylight && alpha > 0.001)
+   //{
+      irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz;
+      specular = TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz;
+   //}
 
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
 
    //energy conservation
    float3 kD = 1.0.xxx - F;
-   kD *= clamp(1.0 - surface.metalness, 0.1, 1);
+   kD *= clamp(1.0 - surface.metalness, 0.2, 1);
 
    //apply brdf
    //Do it once to save on texture samples
    float2 brdf = TORQUE_TEX2DLOD(BRDFTexture,float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
-   specular *= brdf.x * F + brdf.y;
+   //specular *= brdf.x * F + brdf.y;
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
+   float4 finalColor = float4(diffuse + specular, 1.0);
 
-   finalColor = float4(specular,1);
+   //finalColor = float4(max(diffuse, specular),1);
+
    return finalColor;
 }

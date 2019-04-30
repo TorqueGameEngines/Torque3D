@@ -1851,8 +1851,6 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
    {
       if (fd.features[MFT_isDeferred])
          glossColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1));
-      //if (!glossColor)
-         //glossColor = (Var*)LangElement::find("specularColor"); 
       if (!glossColor)
          glossColor = (Var*)LangElement::find("diffuseColor");
       if (!glossColor)
@@ -3081,7 +3079,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 
    Var *diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
-   Var *matinfo = (Var*)LangElement::find("specularColor");
+   Var *matinfo = (Var*)LangElement::find("PBRConfig");
    if (!matinfo)
    {
       Var* metalness = (Var*)LangElement::find("metalness");
@@ -3100,7 +3098,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
          smoothness->constSortPos = cspPotentialPrimitive;
       }
 
-      matinfo = new Var("specularColor", "float4");
+      matinfo = new Var("PBRConfig", "float4");
 	   LangElement* colorDecl = new DecOp(matinfo);
 	   meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }

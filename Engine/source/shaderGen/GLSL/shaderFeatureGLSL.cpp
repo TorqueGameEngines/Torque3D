@@ -2990,7 +2990,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
       meta->addStatement(new GenOp("   @ = vec4(1.0,1.0,1.0,1.0);\r\n", colorDecl)); //default to flat white
    }
 
-   Var* matinfo = (Var*)LangElement::find("specularColor");
+   Var* matinfo = (Var*)LangElement::find("PBRConfig");
    if (!matinfo)
    {
       Var* metalness = (Var*)LangElement::find("metalness");
@@ -3009,7 +3009,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
          smoothness->constSortPos = cspPotentialPrimitive;
       }
 
-      matinfo = new Var("specularColor", "vec4");
+      matinfo = new Var("PBRConfig", "vec4");
       LangElement* colorDecl = new DecOp(matinfo);
       meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }

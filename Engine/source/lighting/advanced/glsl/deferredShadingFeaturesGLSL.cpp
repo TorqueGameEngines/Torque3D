@@ -64,8 +64,8 @@ void DeferredSpecMapGLSL::processPix( Vector<ShaderComponent*> &componentList, c
    specularMap->constNum = Var::getTexUnitNum();
    LangElement *texOp = new GenOp( "tex2D(@, @)", specularMap, texCoord );
 
-   Var *specularColor = (Var*)LangElement::find("specularColor");
-   if (!specularColor) specularColor = new Var("specularColor", "vec4");
+   Var *pbrConfig = (Var*)LangElement::find("PBRConfig");
+   if (!pbrConfig) pbrConfig = new Var("PBRConfig", "vec4");
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
    Var *smoothness = (Var*)LangElement::find("smoothness");
@@ -77,9 +77,9 @@ void DeferredSpecMapGLSL::processPix( Vector<ShaderComponent*> &componentList, c
    if (fd.features[MFT_InvertSmoothness])
       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
 
-   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(specularColor), texOp));
+   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(pbrConfig), texOp));
 
-   meta->addStatement(new GenOp("   @.bga = vec3(@,@.g,@);\r\n", material, smoothness, specularColor, metalness));
+   meta->addStatement(new GenOp("   @.bga = vec3(@,@.g,@);\r\n", material, smoothness, pbrConfig, metalness));
    output = meta;
 }
 

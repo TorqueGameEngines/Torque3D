@@ -508,14 +508,14 @@ void DeferredPixelSpecularGLSL::processPix(  Vector<ShaderComponent*> &component
    specular->setName( "specular" );
    LangElement * specDecl = new DecOp( specular );
 
-   Var *specCol = (Var*)LangElement::find( "specularColor" );
-   if(specCol == NULL)
+   Var *pbrConfig = (Var*)LangElement::find( "pbrConfig" );
+   if(pbrConfig == NULL)
    {
-      specCol = new Var;
-      specCol->setType( "vec4" );
-      specCol->setName( "specularColor" );
-      specCol->uniform = true;
-      specCol->constSortPos = cspPotentialPrimitive;
+      pbrConfig = new Var;
+      pbrConfig->setType( "vec4" );
+      pbrConfig->setName( "pbrConfig" );
+      pbrConfig->uniform = true;
+      pbrConfig->constSortPos = cspPotentialPrimitive;
    }
 
    Var *smoothness = (Var*)LangElement::find("smoothness");
@@ -526,7 +526,7 @@ void DeferredPixelSpecularGLSL::processPix(  Vector<ShaderComponent*> &component
       // If the gloss map flag is set, than the specular power is in the alpha
       // channel of the specular map
       if (fd.features[MFT_GlossMap])
-         meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(smoothness), specCol));
+         meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(smoothness), pbrConfig));
       else
       {
          smoothness->uniform = true;
@@ -561,7 +561,7 @@ void DeferredPixelSpecularGLSL::processPix(  Vector<ShaderComponent*> &component
    		meta->addStatement( new GenOp( "   @ = pow( abs(@), max((@ / AL_ConstantSpecularPower),1.0f)) * @;\r\n", 
             specDecl, d_specular, smoothness, metalness));
 
-   LangElement *specMul = new GenOp( "vec4( @.rgb, 0 ) * @", specCol, specular );
+   LangElement *specMul = new GenOp( "vec4( @.rgb, 0 ) * @", pbrConfig, specular );
    LangElement *final = specMul;
 
    // We we have a normal map then mask the specular 

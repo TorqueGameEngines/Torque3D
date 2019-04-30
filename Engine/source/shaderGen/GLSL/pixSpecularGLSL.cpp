@@ -87,9 +87,9 @@ void PixelSpecularGLSL::processPix( Vector<ShaderComponent*> &componentList,
    // If we have a normal map then mask the specular 
    if ( fd.features[MFT_SpecularMap] )
    {
-      Var *specularColor = (Var*)LangElement::find( "specularColor" );
-      if (specularColor)
-         final = new GenOp( "@ * @", final, specularColor );
+      Var *pbrConfig = (Var*)LangElement::find( "PBRConfig" );
+      if (pbrConfig)
+         final = new GenOp( "@ * @", final, pbrConfig);
    }
    else if ( fd.features[MFT_NormalMap] && !fd.features[MFT_IsBC3nm] && !fd.features[MFT_IsBC5nm])
    {
@@ -139,7 +139,7 @@ void SpecularMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const
    specularMap->constNum = Var::getTexUnitNum();
    LangElement *texOp = new GenOp( "texture(@, @)", specularMap, texCoord );
 
-   Var *specularColor = new Var( "specularColor", "vec4" );
+   Var * pbrConfig = new Var( "PBRConfig", "vec4" );
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
    Var *smoothness = (Var*)LangElement::find("smoothness");
@@ -152,7 +152,7 @@ void SpecularMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const
    if (fd.features[MFT_InvertSmoothness])
       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
 
-   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(specularColor), texOp));
+   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(pbrConfig), texOp));
    output = meta;
 }
 

@@ -1,6 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-new SimGroup(MissionGroup) {
-   canSave = "1";
+new Scene(EmptyLevel) {
    canSaveDynamicFields = "1";
       enabled = "1";
 

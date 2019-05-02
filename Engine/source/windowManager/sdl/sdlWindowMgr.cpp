@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "windowManager/sdl/sdlWindowMgr.h"
+#include "platformSDL/sdlInputManager.h"
 #include "gfx/gfxDevice.h"
 #include "core/util/journal/process.h"
 #include "core/strings/unicode.h"
@@ -269,6 +270,13 @@ void PlatformWindowManagerSDL::_process()
    SDL_Event evt;
    while( SDL_PollEvent(&evt) )
    {      
+      if (evt.type >= SDL_JOYAXISMOTION && evt.type <= SDL_CONTROLLERDEVICEREMAPPED)
+      {
+         SDLInputManager* mgr = static_cast<SDLInputManager*>(Input::getManager());
+         if (mgr)
+            mgr->processEvent(evt);
+         continue;
+      }
       switch(evt.type)
       {
           case SDL_QUIT:
@@ -356,15 +364,16 @@ void PlatformWindowManagerSDL::_process()
 
          case(SDL_DROPCOMPLETE):
          {
-            if (!Con::isFunction("onDropEnd"))
-               break;
-
-            Con::executef("onDropEnd");
+            if (Con::isFunction("onDropEnd"))
+               Con::executef("onDropEnd");
+            break;
          }
 
          default:
          {
-            //Con::printf("Event: %d", evt.type);
+#ifdef TORQUE_DEBUG
+            Con::warnf("Unhandled SDL input event: 0x%04x", evt.type);
+#endif
          }
       }
    }
@@ -495,10 +504,12 @@ void InitWindowingSystem()
 
 AFTER_MODULE_INIT(gfx)
 {
+#if !defined(TORQUE_DEDICATED)
    int res = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS | SDL_INIT_NOPARACHUTE);
    AssertFatal(res != -1, avar("SDL error:%s", SDL_GetError()));
 
    // By default, SDL enables text input. We disable it on initialization, and
    // we will enable it whenever the time is right.
    SDL_StopTextInput();
+#endif
 }

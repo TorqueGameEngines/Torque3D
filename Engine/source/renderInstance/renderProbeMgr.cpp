@@ -127,6 +127,7 @@ ProbeShaderConstants::ProbeShaderConstants()
    mProbeSpecularCubemapSC(NULL),
    mProbeIrradianceCubemapSC(NULL),
    mProbeCountSC(NULL),
+   mBRDFTextureMap(NULL),
    mSkylightSpecularMap(NULL),
    mSkylightIrradMap(NULL),
    mHasSkylight(NULL)
@@ -163,6 +164,8 @@ void ProbeShaderConstants::init(GFXShader* shader)
    mProbeSpecularCubemapSC = shader->getShaderConstHandle(ShaderGenVars::specularCubemapAR);
    mProbeIrradianceCubemapSC = shader->getShaderConstHandle(ShaderGenVars::irradianceCubemapAR);
    mProbeCountSC = shader->getShaderConstHandle(ShaderGenVars::probeCount);
+
+   mBRDFTextureMap = shader->getShaderConstHandle(ShaderGenVars::BRDFTextureMap);
 
    mSkylightSpecularMap = shader->getShaderConstHandle(ShaderGenVars::skylightPrefilterMap);
    mSkylightIrradMap = shader->getShaderConstHandle(ShaderGenVars::skylightIrradMap);
@@ -654,7 +657,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       bool hasSkylight = false;
       for (U32 i = 0; i < probeCount; i++)
       {
-         if (effectiveProbeCount >= 4)
+         if (effectiveProbeCount >= MAX_FORWARD_PROBES)
             break;
 
          const ProbeRenderInst& curEntry = *ProbeRenderInst::all[i];
@@ -675,18 +678,18 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          }*/
          if (!curEntry.mIsSkylight)
          {
-            /*probePositions[effectiveProbeCount] = curEntry.getPosition();
-            probeRefPositions[effectiveProbeCount] = curEntry.mProbeRefOffset;
-            probeWorldToObj[effectiveProbeCount] = curEntry.getTransform();
-            probeBBMin[effectiveProbeCount] = curEntry.mBounds.minExtents;
-            probeBBMax[effectiveProbeCount] = curEntry.mBounds.maxExtents;
-            probeConfig[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
+            probePositionArray[effectiveProbeCount] = curEntry.getPosition();
+            probeRefPositionArray[effectiveProbeCount] = curEntry.mProbeRefOffset;
+            probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
+            probeBoxMinArray[effectiveProbeCount] = curEntry.mBounds.minExtents;
+            probeBoxMaxArray[effectiveProbeCount] = curEntry.mBounds.maxExtents;
+            probeConfigArray[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
                curEntry.mRadius,
                curEntry.mAtten,
-               curEntry.mCubemapIndex);*/
-         }
+               curEntry.mCubemapIndex);
 
-         effectiveProbeCount++;
+            effectiveProbeCount++;
+         }
       }
 
       shaderConsts->setSafe(probeShaderConsts->mProbeCountSC, (float)effectiveProbeCount);
@@ -699,11 +702,19 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMinSC, probeBoxMinArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
-      //GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
-      //GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
+      GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
+      GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
+   }
 
-      //if (!hasSkylight)
-      //   shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 0.0f);
+   if (probeShaderConsts->mBRDFTextureMap->isValid())
+   {
+      if (!mBRDFTexture.isValid())
+      {
+         //try to fetch it
+         mBRDFTexture.set("core/art/pbr/brdfTexture.dds", &GFXStaticTextureSRGBProfile, "BRDF Texture");
+      }
+
+      GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture.getPointer());
    }
 
    //check for skylight action

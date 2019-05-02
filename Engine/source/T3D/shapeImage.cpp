@@ -189,7 +189,7 @@ ShapeBaseImageData::ShapeBaseImageData()
    lightRadius = 10.f;
    lightBrightness = 1.0f;
 
-   shapeName = "core/art/shapes/noshape.dts";
+   shapeName = "core/shapes/noshape.dts";
    shapeNameFP = "";
    imageAnimPrefix = "";
    imageAnimPrefixFP = "";
@@ -1202,7 +1202,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
    }
 
    projectile = (stream->readFlag() ?
-                 (ProjectileData*)stream->readRangedU32(DataBlockObjectIdFirst,
+                 (ProjectileData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
                                                         DataBlockObjectIdLast) : 0);
 
    cloakable = stream->readFlag();
@@ -1340,7 +1340,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
 
          if (stream->readFlag())
          {
-            s.emitter = (ParticleEmitterData*) stream->readRangedU32(DataBlockObjectIdFirst,
+            s.emitter = (ParticleEmitterData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
                                                                      DataBlockObjectIdLast);
             stream->read(&s.emitterTime);
 

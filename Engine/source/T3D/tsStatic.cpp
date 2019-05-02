@@ -1135,7 +1135,6 @@ bool TSStatic::buildExportPolyList(ColladaUtils::ExportData* exportData, const B
    if (isServerObject() && getClientObject())
    {
       TSStatic* clientShape = dynamic_cast<TSStatic*>(getClientObject());
-      U32 numDetails = clientShape->mShapeInstance->getNumDetails() - 1;
 
       exportData->meshData.increment();
 

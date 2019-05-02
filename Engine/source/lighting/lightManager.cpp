@@ -226,8 +226,8 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
    {
       // Cull the lights using the frustum.
       getSceneManager()->getContainer()->findObjectList(*frustum, lightMask, &activeLights);
-
-      if (enableZoneLightCulling)
+      /*
+      for (U32 i = 0; i < activeLights.size(); ++i)
       {
          for (U32 i = 0; i < activeLights.size(); ++i)
          {
@@ -238,7 +238,7 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
             }
          }
       }
-
+      */
       // Store the culling position for sun placement
       // later... see setSpecialLight.
       mCullPos = frustum->getPosition();

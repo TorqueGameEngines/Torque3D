@@ -272,7 +272,7 @@ function EditorSaveMission()
    // now write the terrain and mission files out:
 
    if(EWorldEditor.isDirty || ETerrainEditor.isMissionDirty)
-      MissionGroup.save($Server::MissionFile);
+      getScene(0).save($Server::MissionFile);
    if(ETerrainEditor.isDirty)
    {
       // Find all of the terrain files
@@ -480,6 +480,21 @@ function EditorOpenMission(%filename)
       Editor.open();
    
       popInstantGroup();
+   }
+}
+
+function EditorOpenSceneAppend(%levelAsset)
+{
+   //Load the asset's level file
+   exec(%levelAsset.levelFile);
+   
+   //We'll assume the scene name and assetname are the same for now
+   %sceneName = %levelAsset.AssetName;
+   %scene = nameToID(%sceneName);
+   if(isObject(%scene))
+   {
+      //Append it to our scene heirarchy
+      $scenesRootGroup.add(%scene);
    }
 }
 
@@ -878,6 +893,64 @@ function EditorDropTypeMenu::setupDefaultState(%this)
    %this.checkRadioItem( 0, (%numItems - 1), %dropTypeIndex );
       
    Parent::setupDefaultState(%this);
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+function EditorSnapToMenu::onSelectItem(%this, %id, %text)
+{
+    EWorldEditor.SnapTo(%id);
+}
+
+function EditorSnapToMenu::setupDefaultState(%this)
+{
+    Parent::setupDefaultState(%this);
+}
+
+function WorldEditor::snapTo(%this, %id)
+{
+    if(%this.getSelectionSize() > 2)
+    {
+        error("Please select two objects before selecting a Snap To function.");
+        return;
+    }
+
+    %objTarget = %this.getSelectedObject(0);  
+    %objToSnap = %this.getSelectedObject(%this.getSelectionSize()-1);
+
+    switch$(%id)
+    {
+    case 0:
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 0, getWord(%objTarget.getTransform(), 0)));
+    case 1:
+        %objTargetXEdge = getWord(%objTarget.getTransform(), 0) + getWord(%objTarget.getObjectBox(), 0);
+        %objToSnapXEdge = %objTargetXEdge - getWord(%objToSnap.getObjectBox(), 3);
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 0, %objToSnapXEdge));
+    case 2:
+        %objTargetXEdge = getWord(%objTarget.getTransform(), 0) + getWord(%objTarget.getObjectBox(), 3);
+        %objToSnapXEdge = %objTargetXEdge - getWord(%objToSnap.getObjectBox(), 0);
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 0, %objToSnapXEdge));
+    case 3:    
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 1, getWord(%objTarget.getTransform(), 1)));    
+    case 4:    
+        %objTargetXEdge = getWord(%objTarget.getTransform(), 1) + getWord(%objTarget.getObjectBox(), 1);    
+        %objToSnapXEdge = %objTargetXEdge - getWord(%objToSnap.getObjectBox(), 4);    
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 1, %objToSnapXEdge));    
+    case 5:    
+        %objTargetXEdge = getWord(%objTarget.getTransform(), 1) + getWord(%objTarget.getObjectBox(), 4);    
+        %objToSnapXEdge = %objTargetXEdge - getWord(%objToSnap.getObjectBox(), 1);    
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 1, %objToSnapXEdge));    
+    case 6:    
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 2, getWord(%objTarget.getTransform(), 2)));    
+    case 7:    
+        %objTargetXEdge = getWord(%objTarget.getTransform(), 2) + getWord(%objTarget.getObjectBox(), 2);    
+        %objToSnapXEdge = %objTargetXEdge - getWord(%objToSnap.getObjectBox(), 5);    
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 2, %objToSnapXEdge));    
+    case 8:    
+        %objTargetXEdge = getWord(%objTarget.getTransform(), 2) + getWord(%objTarget.getObjectBox(), 5);    
+        %objToSnapXEdge = %objTargetXEdge - getWord(%objToSnap.getObjectBox(), 2);    
+        %objToSnap.setTransform(setWord(%objToSnap.getTransform(), 2, %objToSnapXEdge));    
+    }    
 }
 
 //////////////////////////////////////////////////////////////////////////

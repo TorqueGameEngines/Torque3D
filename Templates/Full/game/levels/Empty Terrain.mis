@@ -1,7 +1,10 @@
 //--- OBJECT WRITE BEGIN ---
-new SimGroup(MissionGroup) {
+new Scene(EmptyTerrainLevel) {
    canSave = "1";
    canSaveDynamicFields = "1";
+   isSubscene = "0";
+   isEditing = "0";
+   isDirty = "0";
       enabled = "1";
 
    new LevelInfo(theLevelInfo) {
@@ -37,6 +40,8 @@ new SimGroup(MissionGroup) {
       rotation = "1 0 0 0";
       canSave = "1";
       canSaveDynamicFields = "1";
+         scale = "1 1 1";
+         tile = "0";
    };
    new SimGroup(PlayerDropPoints) {
       canSave = "1";
@@ -163,7 +168,6 @@ new SimGroup(MissionGroup) {
       scale = "1 1 1";
       canSave = "1";
       canSaveDynamicFields = "1";
-
       surface = "0 0 0 1 1.29457 -0.42643 0.5";
       surface = "0 1 0 0 1.29457 -0.42643 -0.5";
       surface = "0.707107 0 0 0.707106 1.29457 5.75621 0";

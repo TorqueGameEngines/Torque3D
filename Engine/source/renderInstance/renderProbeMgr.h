@@ -143,6 +143,8 @@ struct ProbeShaderConstants
    GFXShaderConstHandle *mProbeIrradianceCubemapSC;
    GFXShaderConstHandle *mProbeCountSC;
 
+   GFXShaderConstHandle *mBRDFTextureMap;
+
    GFXShaderConstHandle *mSkylightSpecularMap;
    GFXShaderConstHandle *mSkylightIrradMap;
    GFXShaderConstHandle *mHasSkylight;
@@ -226,6 +228,8 @@ class RenderProbeMgr : public RenderBinManager
 
    //Default skylight, used for shape editors, etc
    ProbeRenderInst* mDefaultSkyLight;
+
+   GFXTexHandle mBRDFTexture;
 
 public:
    RenderProbeMgr();

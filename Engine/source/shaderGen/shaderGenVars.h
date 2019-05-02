@@ -93,6 +93,8 @@ struct ShaderGenVars
    const static String irradianceCubemapAR;
    const static String probeCount;
 
+   const static String BRDFTextureMap;
+
    //Skylight
    const static String skylightPrefilterMap;
    const static String skylightIrradMap;

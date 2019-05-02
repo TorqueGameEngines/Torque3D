@@ -80,6 +80,8 @@ const String ShaderGenVars::specularCubemapAR("$specularCubemapAR");
 const String ShaderGenVars::irradianceCubemapAR("$irradianceCubemapAR");
 const String ShaderGenVars::probeCount("$numProbes");
 
+const String ShaderGenVars::BRDFTextureMap("$BRDFTexture");
+
 //Skylight
 const String ShaderGenVars::skylightPrefilterMap("$skylightSpecularMap");
 const String ShaderGenVars::skylightIrradMap("$skylightIrradMap");

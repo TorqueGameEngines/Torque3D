@@ -653,12 +653,14 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       //irradMaps.clear();
       //Vector<U32> cubemapIdxes;
 
+      S8 bestPickProbes[4] = { -1,-1,-1,-1 };
+
       U32 effectiveProbeCount = 0;
       bool hasSkylight = false;
       for (U32 i = 0; i < probeCount; i++)
       {
-         if (effectiveProbeCount >= MAX_FORWARD_PROBES)
-            break;
+         //if (effectiveProbeCount >= MAX_FORWARD_PROBES)
+         //   break;
 
          const ProbeRenderInst& curEntry = *ProbeRenderInst::all[i];
          if (!curEntry.mIsEnabled)
@@ -678,18 +680,41 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          }*/
          if (!curEntry.mIsSkylight)
          {
-            probePositionArray[effectiveProbeCount] = curEntry.getPosition();
-            probeRefPositionArray[effectiveProbeCount] = curEntry.mProbeRefOffset;
-            probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
-            probeBoxMinArray[effectiveProbeCount] = curEntry.mBounds.minExtents;
-            probeBoxMaxArray[effectiveProbeCount] = curEntry.mBounds.maxExtents;
-            probeConfigArray[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
-               curEntry.mRadius,
-               curEntry.mAtten,
-               curEntry.mCubemapIndex);
+            F32 dist = Point3F(sgData.objTrans->getPosition() - curEntry.getPosition()).len();
 
-            effectiveProbeCount++;
+            if (dist > curEntry.mRadius || dist > curEntry.mExtents.len())
+               continue;
+
+            if(bestPickProbes[0] == -1 || (Point3F(sgData.objTrans->getPosition() - ProbeRenderInst::all[bestPickProbes[0]]->mPosition).len() > dist))
+               bestPickProbes[0] = i;
+            else if (bestPickProbes[1] == -1 || (Point3F(sgData.objTrans->getPosition() - ProbeRenderInst::all[bestPickProbes[1]]->mPosition).len() > dist))
+               bestPickProbes[1] = i;
+            else if (bestPickProbes[2] == -1 || (Point3F(sgData.objTrans->getPosition() - ProbeRenderInst::all[bestPickProbes[2]]->mPosition).len() > dist))
+               bestPickProbes[2] = i;
+            else if (bestPickProbes[3] == -1 || (Point3F(sgData.objTrans->getPosition() - ProbeRenderInst::all[bestPickProbes[3]]->mPosition).len() > dist))
+               bestPickProbes[3] = i;
          }
+      }
+
+      //Grab our best probe picks
+      for (U32 i = 0; i < 4; i++)
+      {
+         if (bestPickProbes[i] == -1)
+            continue;
+
+         const ProbeRenderInst& curEntry = *ProbeRenderInst::all[bestPickProbes[i]];
+
+         probePositionArray[effectiveProbeCount] = curEntry.getPosition();
+         probeRefPositionArray[effectiveProbeCount] = curEntry.mProbeRefOffset;
+         probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
+         probeBoxMinArray[effectiveProbeCount] = curEntry.mBounds.minExtents;
+         probeBoxMaxArray[effectiveProbeCount] = curEntry.mBounds.maxExtents;
+         probeConfigArray[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
+            curEntry.mRadius,
+            curEntry.mAtten,
+            curEntry.mCubemapIndex);
+
+         effectiveProbeCount++;
       }
 
       shaderConsts->setSafe(probeShaderConsts->mProbeCountSC, (float)effectiveProbeCount);

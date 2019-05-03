@@ -281,8 +281,8 @@ void GenericConstBuffer::assertUnassignedConstants( const char *shaderName )
       mLayout->getDesc( i, pd );
 
       // Assert on the unassigned constant.
-      AssertFatal( false, avar( "The '%s' shader constant in shader '%s' was unassigned!",
-         pd.name.c_str(), shaderName ) );
+      //AssertFatal( false, avar( "The '%s' shader constant in shader '%s' was unassigned!",
+      //   pd.name.c_str(), shaderName ) );
    }
 }
 

@@ -370,7 +370,7 @@ float4 computeForwardProbes(Surface surface,
    float lod = surface.roughness*cubeMips;
 
    float alpha = 1;
-   /*for (i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; ++i)
    {
       float contrib = contribution[i];
       if (contrib != 0)
@@ -382,7 +382,7 @@ float4 computeForwardProbes(Surface surface,
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
          alpha -= contrib;
       }
-   }*/
+   }
 
    if (hasSkylight && alpha > 0.001)
    {
@@ -394,16 +394,16 @@ float4 computeForwardProbes(Surface surface,
 
    //energy conservation
    float3 kD = 1.0.xxx - F;
-   kD *= clamp(1.0 - surface.metalness, 0.2, 1);
+   kD *= 1.0 - surface.metalness;
 
    //apply brdf
    //Do it once to save on texture samples
    float2 brdf = TORQUE_TEX2DLOD(BRDFTexture,float4(surface.roughness, surface.NdotV, 0.0, 0.0)).xy;
-   //specular *= brdf.x * F + brdf.y;
+   specular *= brdf.x * F + brdf.y;
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse + specular, 1.0);
+   float4 finalColor = float4(diffuse + specular, 1); 
 
    return finalColor;
 }

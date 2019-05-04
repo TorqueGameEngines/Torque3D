@@ -1,0 +1,824 @@
+//--- OBJECT WRITE BEGIN ---
+%guiContent = new GuiControl(AssimpImportDlg,EditorGuiGroup) {
+   isContainer = "1";
+   Profile = "ToolsGuiDefaultProfile";
+   HorizSizing = "width";
+   VertSizing = "height";
+   position = "0 0";
+   Extent = "1024 768";
+   MinExtent = "8 2";
+   canSave = "1";
+   Visible = "1";
+   tooltipprofile = "ToolsGuiToolTipProfile";
+   hovertime = "1000";
+   canSaveDynamicFields = "0";
+
+   new GuiWindowCtrl() {
+      resizeWidth = "0";
+      resizeHeight = "0";
+      canMove = "1";
+      canClose = "1";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "50 50";
+      closeCommand = "Canvas.popDialog(AssimpImportDlg);";
+      EdgeSnap = "1";
+      text = "Open Asset Import Library";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
+      AnchorTop = "1";
+      AnchorBottom = "0";
+      AnchorLeft = "1";
+      AnchorRight = "0";
+      isContainer = "1";
+      Profile = "ToolsGuiWindowProfile";
+      HorizSizing = "center";
+      VertSizing = "center";
+      position = "254 136";
+      Extent = "416 390";
+      MinExtent = "8 8";
+      canSave = "1";
+      Visible = "1";
+      Accelerator = "escape";
+      tooltipprofile = "ToolsGuiToolTipProfile";
+      hovertime = "1000";
+      internalName = "window";
+      canSaveDynamicFields = "0";
+      
+      new GuiTextCtrl() {
+         text = "Up Axis";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 31";
+         Extent = "40 16";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiPopUpMenuCtrl() {
+         maxPopupHeight = "200";
+         sbUsesNAColor = "0";
+         reverseTextList = "0";
+         bitmapBounds = "16 16";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiPopUpMenuProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "56 30";
+         Extent = "66 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         internalName = "upAxis";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Convert To Left Handed";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 50";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::ConvertToLeftHanded";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Converts the model to left-handed";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Triangulate";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 70";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Active = "0";
+         variable = "$Assimp::Triangulate";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Triangulate polygons with more than 3 edges.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Calculate Tangent Space";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 90";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::CalcTangentSpace";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Calculate tangents and bitangents, if possible.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Validate Data Structure";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 110";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::ValidateDataStructure";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Perform a full validation of the loader's output.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Improve Cache Locality";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 130";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::ImproveCacheLocality";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Improve the cache locality of the output vertices.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+         
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Remove Redundant Materials";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 150";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::RemoveRedundantMaterials";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Removes redundant materials.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Find Degenerates";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 170";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::FindDegenerates";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Remove degenerated polygons from the import.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Find Invalid Data";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 190";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::FindInvalidData";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detect invalid model data, such as invalid normal vectors.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Generate UV Coordinates";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 210";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::GenUVCoords";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Convert spherical, cylindrical, box and planar mapping to proper UVs.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Transform UV Coordinates";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 230";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::TransformUVCoords";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Preprocess UV transformations (scaling, translation ...)";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Flip UV Coordinates";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 250";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::FlipUVs";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "This step flips all UV coordinates along the y-axis and adjusts material settings and bitangents accordingly.\nAssimp uses TL(0,0):BR(1,1). T3D uses TL(0,1):BR(1,0). This will be needed for most textured models.";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Find Instances";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 270";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::FindInstances";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "search for instanced meshes and remove them by references to one master.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Limit Bone Weights";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 290";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::LimitBoneWeights";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Limit bone weights to 4 per vertex.";
+         hovertime = "1000";
+         internalName = "overrideScale";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiTextCtrl() {
+         text = "Animation Timing:";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "10 311";
+         Extent = "85 16";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiPopUpMenuCtrl() {
+         maxPopupHeight = "200";
+         sbUsesNAColor = "0";
+         reverseTextList = "0";
+         bitmapBounds = "16 16";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiPopUpMenuProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "100 310";
+         Extent = "86 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Select the timing units used in the animation data.";
+         hovertime = "1000";
+         internalName = "animTiming";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextCtrl() {
+         text = "FPS:";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "200 311";
+         Extent = "20 16";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextEditCtrl() {
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+         passwordMask = "*";
+         text = "2";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextEditProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "225 310";
+         Extent = "26 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Frames per second for all animations when Animation Timing type is Frames (5 - 60)";
+         hovertime = "1000";
+         internalName = "animFPS";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiTextCtrl() {
+         text = "LOD";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 31";
+         Extent = "22 16";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiPopUpMenuCtrl() {
+         maxPopupHeight = "200";
+         sbUsesNAColor = "0";
+         reverseTextList = "0";
+         bitmapBounds = "16 16";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiPopUpMenuProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "238 30";
+         Extent = "92 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Method used to determine LOD for meshes in the model";
+         hovertime = "1000";
+         internalName = "lodType";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextEditCtrl() {
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+         passwordMask = "*";
+         text = "2";
+         maxLength = "1024";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiTextEditProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "338 30";
+         Extent = "49 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detail size for all meshes in this model (when LOD type is SingleSize)";
+         hovertime = "1000";
+         internalName = "singleDetailSize";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Center Model";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 50";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::adjustCenter";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Translates model so the origin is at the center";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Floor Model";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 70";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::adjustFloor";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Translates model so the origin is at the bottom";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Join Identical Vertices";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 90";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::JoinIdenticalVertices";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Identifies and joins identical vertex data sets within all imported meshes.";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Flip Winding Order";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 110";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::FlipWindingOrder";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "This step adjusts the output face winding order to be clockwise. The default face winding order is counter clockwise.";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Invert Normals";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 130";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::FlipNormals";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Reverse the normal vector direction for all normals.";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiCheckBoxCtrl() {
+         useInactiveState = "0";
+         text = " Force update materials.cs";
+         groupNum = "-1";
+         buttonType = "ToggleButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiCheckBoxProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "210 150";
+         Extent = "200 13";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         variable = "$Assimp::ForceUpdateMats";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Forces update of materials.cs (even if Materials already exist)";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+
+      new GuiButtonCtrl() {
+         text = "OK";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "120 348";
+         Extent = "86 22";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "AssimpImportDlg.onOK();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Load the COLLADA model";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+      new GuiButtonCtrl() {
+         text = "Cancel";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "220 348";
+         Extent = "86 22";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "AssimpImportDlg.onCancel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Exit without loading the COLLADA model";
+         hovertime = "1000";
+         canSaveDynamicFields = "0";
+      };
+   };
+};
+//--- OBJECT WRITE END ---
+
+function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
+{
+   %this.path = %shapePath;
+   %this.cmd = %cmd;
+
+   if ($Assimp::OverrideUpAxis $= "")
+   {  // First load, so set best-case defaults
+      $Assimp::OverrideUpAxis = 1; // y-axis is up in most test shapes
+      $Assimp::lodType = 0; // DetectDTS
+      $Assimp::singleDetailSize = "2";
+
+      // $Assimp::FlipUVs will be needed for virtually all textured models
+      $Assimp::FlipUVs = true;
+      $Assimp::FlipWindingOrder = true; // Makes winding order clock wise
+      $Assimp::FindDegenerates = true;
+      $Assimp::FindInvalidData = true;
+      $Assimp::JoinIdenticalVertices = true;
+      $Assimp::FlipNormals = false;
+      
+      $Assimp::AnimTiming = 1; // Seconds
+      $Assimp::AnimFPS = 30;   // Framerate when timing is frames.
+   }
+
+   %this-->upAxis.clear();
+   %this-->upAxis.add("X_AXIS", 0);
+   %this-->upAxis.add("Y_AXIS", 1);
+   %this-->upAxis.add("Z_AXIS", 2);
+   %this-->upAxis.setSelected($Assimp::OverrideUpAxis);
+
+   %this-->lodType.clear();
+   %this-->lodType.add("DetectDTS", 0);
+   %this-->lodType.add("SingleSize", 1);
+   %this-->lodType.add("TrailingNumber", 2);
+   %this-->lodType.setSelected($Assimp::lodType);
+   %this-->singleDetailSize.text = $Assimp::singleDetailSize;
+
+   %this-->animTiming.clear();
+   %this-->animTiming.add("Frames", 0);
+   %this-->animTiming.add("Seconds", 1);
+   %this-->animTiming.add("Milliseconds", 1000);
+   %this-->animTiming.setSelected($Assimp::AnimTiming);
+   %this-->animFPS.text = $Assimp::AnimFPS;
+
+   //Triangulate is a default(currently mandatory) behavior
+   $Assimp::Triangulate = true;
+
+   Canvas.pushDialog(%this);
+}
+
+function AssimpImportDlg::onCancel(%this)
+{
+   Canvas.popDialog(%this);
+   ColladaImportTreeView.clear();
+}
+
+function AssimpImportDlg::onOK(%this)
+{
+   Canvas.popDialog(%this);
+   ColladaImportTreeView.clear();
+
+   $Assimp::OverrideUpAxis = %this-->upAxis.getSelected();
+
+   $Assimp::lodType = %this-->lodType.getSelected();
+   $Assimp::singleDetailSize = %this-->singleDetailSize.getText();
+
+   $Assimp::AnimTiming = %this-->animTiming.getSelected();
+   $Assimp::AnimFPS = %this-->animFPS.getText();
+
+   // Load the shape (always from the DAE)
+   $assimp::forceLoad = true;
+   eval(%this.cmd);
+   $assimp::forceLoad = true;
+}

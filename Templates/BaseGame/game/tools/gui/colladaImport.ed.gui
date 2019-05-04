@@ -1751,3 +1751,21 @@ function convertColladaModels(%pattern)
 
    $collada::forceLoadDAE = false;
 }
+
+function showImportDialog(%shapePath, %cmd)
+{
+   %this.path = %shapePath;
+   %this.cmd = %cmd;
+
+   if ( fileExt(%shapePath) $= ".dts" || fileExt(%shapePath) $= ".dsq" 
+      || fileExt(%shapePath) $= ".dae" || fileExt(%shapePath) $= ".kmz" )
+   {
+      // Regular Load
+      ColladaImportDlg.showDialog(%shapePath, %cmd);
+   } else if ( isSupportedFormat(stripChars(fileExt(%shapePath), ".")) )
+   {
+      // Assimp Load
+      if ( isObject(AssimpImportDlg) )
+         AssimpImportDlg.showDialog(%shapePath, %cmd);
+   }
+}

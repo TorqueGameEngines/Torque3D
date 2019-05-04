@@ -30,7 +30,9 @@
 
 using namespace ColladaUtils;
 
-String cleanString(const String& str)
+#ifndef TORQUE_ASSIMP
+
+String AppMaterial::cleanString(const String& str)
 {
    String cleanStr(str);
 
@@ -45,6 +47,8 @@ String cleanString(const String& str)
 
    return cleanStr;
 }
+
+#endif // !TORQUE_ASSIMP
 
 //------------------------------------------------------------------------------
 

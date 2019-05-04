@@ -207,7 +207,7 @@ public:
    //Components
    virtual bool deferAddingComponents() const { return true; }
 
-   void notifyComponents(String signalFunction, String argA, String argB, String argC, String argD, String argE);
+   void notifyComponents(String signalFunction, String argA, String argB="", String argC = "", String argD = "", String argE = "");
 
    template <class T>
    T* getComponent();
@@ -286,8 +286,9 @@ public:
    MatrixF getWorldToObj() { return mWorldToObj; }
    MatrixF getObjToWorld() { return mObjToWorld; }
 
-   DECLARE_CONOBJECT(Entity);
+   StateDelta getNetworkDelta() { return mDelta; }
 
+   DECLARE_CONOBJECT(Entity);
 };
 
 template <class T>

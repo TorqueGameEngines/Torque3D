@@ -3102,23 +3102,33 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 	   LangElement* colorDecl = new DecOp(matinfo);
 	   meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }
+   
+   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+   Var* worldToTangent = getInWorldToTangent(componentList);
 
-   Var *bumpNormal = (Var*)LangElement::find("bumpNormal");
-   if (!bumpNormal)
+   Var* wsNormal = (Var*)LangElement::find("wsNormal");
+   if (!wsNormal)
    {
-	   bumpNormal = new Var("bumpNormal", "float4");
-	   LangElement* colorDecl = new DecOp(bumpNormal);
-	   meta->addStatement(new GenOp("   @ = float4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identity normal
+      wsNormal = connectComp->getElement(RT_TEXCOORD);
+      wsNormal->setName("wsNormal");
+      wsNormal->setStructName("IN");
+      wsNormal->setType("float3");
+
+      // If we loaded the normal its our responsibility
+      // to normalize it... the interpolators won't.
+      //
+      // Note we cast to half here to get partial precision
+      // optimized code which is an acceptable loss of
+      // precision for normals and performs much better
+      // on older Geforce cards.
+      //
+      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal));
    }
 
-   Var *wsEyePos = (Var*)LangElement::find("eyePosWorld");
-
-   Var *worldToTangent = getInWorldToTangent(componentList);
-
    //Reflection vec
-   Var *surface = new Var("surface", "Surface");
-   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,float3x3(@));\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
-                     inTex, wsPosition, wsEyePos, wsView, worldToTangent));
+   Var* surface = new Var("surface", "Surface");
+   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, wsNormal, matinfo,
+      inTex, wsPosition, wsEyePos, wsView));
    String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBE_MAKEARG(@), TORQUE_SAMPLERCUBE_MAKEARG(@), \r\n\t\t");

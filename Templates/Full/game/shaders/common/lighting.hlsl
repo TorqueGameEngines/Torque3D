@@ -404,6 +404,6 @@ float4 computeForwardProbes(Surface surface,
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
    float4 finalColor = float4(diffuse + specular, 1); 
-
+//finalColor.rgb += abs(surface.N);
    return finalColor;
 }

@@ -579,79 +579,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
 
       matSet.restoreSceneViewProjection();
 
-      // Gather the data for the first 4 probes.
-      /*const ProbeRenderInst *probe;
-      for (U32 i = 0; i < 4; i++)
-      {
-         if (i >= ProbeRenderInst::all.size())
-            break;
-
-         probe = ProbeRenderInst::all[i];
-
-         if (!probe)
-            continue;
-
-         if (!probe->mIsEnabled)
-            continue;
-
-         // The light positions and spot directions are
-         // in SoA order to make optimal use of the GPU.
-         const Point3F &probePos = probe->getPosition();
-         probePositions[i].x = probePos.x;
-         probePositions[i].y = probePos.y;
-         probePositions[i].z = probePos.z;
-
-         probeRadius[i] = probe->mRadius;
-
-         const Point3F &minExt = probe->mBounds.minExtents;
-         probeBoxMins[i].x = minExt.x;
-         probeBoxMins[i].y = minExt.y;
-         probeBoxMins[i].z = minExt.z;
-
-         const Point3F &maxExt = probe->mBounds.maxExtents;
-         probeBoxMaxs[i].x = maxExt.x;
-         probeBoxMaxs[i].y = maxExt.y;
-         probeBoxMaxs[i].z = maxExt.z;
-
-         probeIsSphere[i] = probe->mProbeShapeType == ProbeRenderInst::Sphere ? 1.0 : 0.0;
-
-         Point3F localProbePos;
-         worldToCameraXfm.mulP(probe->getPosition(), &localProbePos);
-
-         probeLocalPositions[i].x = localProbePos.x;
-         probeLocalPositions[i].y = localProbePos.y;
-         probeLocalPositions[i].z = localProbePos.z;
-
-         if (probe->mCubemap && !probe->mCubemap.isNull())
-         {
-            S32 samplerReg = probeCubemapSC->getSamplerRegister();
-
-            if (samplerReg != -1)
-               GFX->setCubeTexture(samplerReg + i, probe->mCubemap.getPointer());
-         }
-      }*/
-
       //Array rendering
       U32 probeCount = ProbeRenderInst::all.size();
-
-      //mEffectiveProbeCount = 0;
-      //mMipCount = 0;
-
-      /*if (probePositionArray.size() != MAX_FORWARD_PROBES)
-      {
-         probePositionArray.setSize(MAX_FORWARD_PROBES);
-         probeBoxMinArray.setSize(MAX_FORWARD_PROBES);
-         probeBoxMaxArray.setSize(MAX_FORWARD_PROBES);
-         probeBoxMaxArray.setSize(MAX_FORWARD_PROBES);
-         probeRefPositionArray.setSize(MAX_FORWARD_PROBES);
-         probeConfigArray.setSize(MAX_FORWARD_PROBES);
-
-         probeWorldToObjArray.setSize(MAX_FORWARD_PROBES);
-      }*/
-
-      //cubeMaps.clear();
-      //irradMaps.clear();
-      //Vector<U32> cubemapIdxes;
 
       S8 bestPickProbes[4] = { -1,-1,-1,-1 };
 
@@ -666,18 +595,6 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          if (!curEntry.mIsEnabled)
             continue;
 
-         /*if (curEntry.mIsSkylight)
-         {
-            if (curEntry.mPrefilterCubemap.isValid() && curEntry.mPrefilterCubemap.isValid())
-            {
-               GFX->setCubeTexture(probeShaderConsts->mSkylightSpecularMap->getSamplerRegister(), curEntry.mPrefilterCubemap);
-               GFX->setCubeTexture(probeShaderConsts->mSkylightIrradMap->getSamplerRegister(), curEntry.mIrradianceCubemap);
-
-               shaderConsts->setSafe(probeShaderConsts->mHasSkylight, 1.0f);
-               hasSkylight = true;
-               continue;
-            }
-         }*/
          if (!curEntry.mIsSkylight)
          {
             F32 dist = Point3F(sgData.objTrans->getPosition() - curEntry.getPosition()).len();
@@ -707,6 +624,15 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          probePositionArray[effectiveProbeCount] = curEntry.getPosition();
          probeRefPositionArray[effectiveProbeCount] = curEntry.mProbeRefOffset;
          probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
+
+         probeWorldToObjData[mEffectiveProbeCount] = curEntry.getTransform();
+         /*
+         Point3F refPos = curEntry.getPosition() + curEntry.mProbeRefOffset;
+         Point3F bbMin = refPos - curEntry.mProbeRefScale / 2 * curEntry.getTransform().getScale();
+         Point3F bbMax = refPos + curEntry.mProbeRefScale / 2 * curEntry.getTransform().getScale();
+
+         probeBoxMinArray[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
+         probeBoxMaxArray[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);*/
          probeBoxMinArray[effectiveProbeCount] = curEntry.mBounds.minExtents;
          probeBoxMaxArray[effectiveProbeCount] = curEntry.mBounds.maxExtents;
          probeConfigArray[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,

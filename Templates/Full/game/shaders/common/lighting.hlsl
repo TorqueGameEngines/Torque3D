@@ -148,14 +148,14 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	return surface;
 }
 
-inline Surface createForwardSurface(float4 baseColor, float4 normal, float4 pbrProperties, in float2 uv, 
-                            in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay, in float3x3 worldToTangent)
+inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrProperties, in float2 uv, 
+                            in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay)
 {
 	Surface surface = (Surface)0;
 
   surface.depth = 0;
 	surface.P = wsPosition;
-	surface.N = normalize( mul( normal.xyz, worldToTangent ) );
+	surface.N = normal;
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = baseColor;
   const float minRoughness=1e-4;

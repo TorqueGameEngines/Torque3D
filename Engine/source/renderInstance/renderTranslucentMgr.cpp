@@ -64,7 +64,7 @@ void RenderTranslucentMgr::setupSGData(MeshRenderInst *ri, SceneData &data )
 
    // We do not support these in the translucent bin.
    data.backBuffTex = NULL;
-   data.cubemap = NULL;   
+   //data.cubemap = NULL;   
    data.lightmap = NULL;
 }
 
@@ -142,6 +142,13 @@ void RenderTranslucentMgr::render( SceneRenderState *state )
       return;
 
    GFXDEBUGEVENT_SCOPE(RenderTranslucentMgr_Render, ColorI::BLUE);
+
+   // init loop data
+   GFXTextureObject *lastLM = NULL;
+   GFXCubemap *lastCubemap = NULL;
+   GFXTextureObject *lastReflectTex = NULL;
+   GFXTextureObject *lastMiscTex = NULL;
+   GFXTextureObject *lastAccuTex = NULL;
 
    // Find the particle render manager (if we don't have it)
    if(mParticleRenderMgr == NULL)
@@ -262,6 +269,43 @@ void RenderTranslucentMgr::render( SceneRenderState *state )
 
                   continue;
                }
+
+               bool dirty = false;
+
+               // set the lightmaps if different
+               if (passRI->lightmap && passRI->lightmap != lastLM)
+               {
+                  sgData.lightmap = passRI->lightmap;
+                  lastLM = passRI->lightmap;
+                  dirty = true;
+               }
+
+               // set the cubemap if different.
+               if (passRI->cubemap != lastCubemap)
+               {
+                  sgData.cubemap = passRI->cubemap;
+                  lastCubemap = passRI->cubemap;
+                  dirty = true;
+               }
+
+               if (passRI->reflectTex != lastReflectTex)
+               {
+                  sgData.reflectTex = passRI->reflectTex;
+                  lastReflectTex = passRI->reflectTex;
+                  dirty = true;
+               }
+
+               // Update accumulation texture if it changed.
+               // Note: accumulation texture can be NULL, and must be updated.
+               if (passRI->accuTex != lastAccuTex)
+               {
+                  sgData.accuTex = passRI->accuTex;
+                  lastAccuTex = lastAccuTex;
+                  dirty = true;
+               }
+
+               if (dirty)
+                  mat->setTextureStages(state, sgData);
 
                // Setup the vertex and index buffers.
                mat->setBuffers( passRI->vertBuff, passRI->primBuff );

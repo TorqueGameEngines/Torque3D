@@ -102,28 +102,6 @@ public:
 };
 
 
-/// Generates specular highlights in the forward pass 
-/// from the light deferred buffer.
-class DeferredPixelSpecularHLSL : public PixelSpecularHLSL
-{
-   typedef PixelSpecularHLSL Parent;
-
-public:
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
-
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
-
-   virtual Resources getResources( const MaterialFeatureData &fd );
-
-   virtual String getName()
-   {
-      return "Pixel Specular [Deferred]";
-   }
-};
-
-
 ///
 class DeferredMinnaertHLSL : public ShaderFeatureHLSL
 {

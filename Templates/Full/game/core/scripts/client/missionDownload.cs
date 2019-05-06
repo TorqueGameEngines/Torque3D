@@ -40,6 +40,10 @@ function clientCmdMissionStartPhase1(%seq, %missionName, %musicTrack)
    // These need to come after the cls.
    echo ("*** New Mission: " @ %missionName);
    echo ("*** Phase 1: Download Datablocks & Targets");
+   
+   $Client::MissionFile = %missionName;
+   $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
+   
    onMissionDownloadPhase1(%missionName, %musicTrack);
    commandToServer('MissionStartPhase1Ack', %seq);
 }

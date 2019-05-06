@@ -39,9 +39,6 @@
 #define D3D11 static_cast<GFXD3D11Device*>(GFX)
 #define D3D11DEVICE D3D11->getDevice()
 #define D3D11DEVICECONTEXT D3D11->getDeviceContext()
-// DX 11.1 - always check these are not NULL, dodgy support with win 7
-#define D3D11DEVICE1 D3D11->getDevice1()
-#define D3D11DEVICECONTEXT1 D3D11->getDeviceContext1()
 
 class PlatformWindow;
 class GFXD3D11ShaderConstBuffer;
@@ -71,7 +68,7 @@ private:
    virtual void enumerateVideoModes();
 
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window);
-   virtual GFXTextureTarget *allocRenderToTextureTarget();
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true);
 
    virtual void enterDebugEvent(ColorI color, const char *name);
    virtual void leaveDebugEvent();
@@ -129,10 +126,6 @@ protected:
    IDXGISwapChain *mSwapChain;
    ID3D11Device* mD3DDevice;
    ID3D11DeviceContext* mD3DDeviceContext;
-   // DX 11.1
-   ID3D11Device1* mD3DDevice1;
-   ID3D11DeviceContext1* mD3DDeviceContext1;
-   ID3DUserDefinedAnnotation* mUserAnnotation;
 
    GFXShaderRef mGenericShader[GS_COUNT];
    GFXShaderConstBufferRef mGenericShaderBuffer[GS_COUNT];
@@ -153,7 +146,6 @@ protected:
    DXGI_SAMPLE_DESC mMultisampleDesc;
 
    bool mOcclusionQuerySupported;
-   bool mCbufferPartialSupported;
 
    U32 mDrawInstancesCount;   
 
@@ -237,6 +229,7 @@ public:
    U32 getAdaterIndex() const { return mAdapterIndex; }
 
    virtual GFXCubemap *createCubemap();
+   virtual GFXCubemapArray *createCubemapArray();
 
    virtual F32  getPixelShaderVersion() const { return mPixVersion; }
    virtual void setPixelShaderVersion( F32 version ){ mPixVersion = version;} 
@@ -246,9 +239,16 @@ public:
    virtual U32  getNumRenderTargets() const { return 8; }
    // }
 
+   // Copy methods
+   // {
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face);
+   // }
+
    // Misc rendering control
    // {
    virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil );
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color);
+
    virtual bool beginSceneInternal();
    virtual void endSceneInternal();
 
@@ -297,9 +297,6 @@ public:
    ID3D11DeviceContext* getDeviceContext(){ return mD3DDeviceContext; }
    ID3D11Device* getDevice(){ return mD3DDevice; }
    IDXGISwapChain* getSwapChain() { return mSwapChain; }
-   //DX 11.1
-   ID3D11DeviceContext1* getDeviceContext1() { return mD3DDeviceContext1; }
-   ID3D11Device1* getDevice1() { return mD3DDevice1; }
 
    /// Reset
    void reset( DXGI_SWAP_CHAIN_DESC &d3dpp );
@@ -325,7 +322,7 @@ public:
 
    // grab the sampler map
    const SamplerMap &getSamplersMap() const { return mSamplersMap; }
-   SamplerMap &getSamplersMap() { return mSamplersMap; }
+   SamplerMap &getSamplersMap(){ return mSamplersMap; }
 };
 
 #endif

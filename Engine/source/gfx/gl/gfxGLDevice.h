@@ -39,6 +39,7 @@ class GFXGLVertexBuffer;
 class GFXGLPrimitiveBuffer;
 class GFXGLTextureTarget;
 class GFXGLCubemap;
+class GFXGLCubemapArray;
 class GFXGLStateCache;
 class GFXGLVertexDecl;
 
@@ -81,6 +82,7 @@ public:
    virtual U32 getTotalVideoMemory();
 
    virtual GFXCubemap * createCubemap();
+   virtual GFXCubemapArray *createCubemapArray();
 
    virtual F32 getFillConventionOffset() const { return 0.0f; }
 
@@ -91,7 +93,7 @@ public:
    /// @{
 
    ///
-   virtual GFXTextureTarget *allocRenderToTextureTarget();
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true);
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window);
    virtual void _updateRenderTargets();
 
@@ -115,8 +117,10 @@ public:
    virtual U32 getNumRenderTargets() const;
 
    virtual GFXShader* createShader();
-      
+   //TODO: implement me!
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) {};
    virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil );
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color);
    virtual bool beginSceneInternal();
    virtual void endSceneInternal();
 
@@ -167,7 +171,8 @@ protected:
    virtual void setShaderConstBufferInternal(GFXShaderConstBuffer* buffer);
 
    virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject*texture);
-   virtual void setCubemapInternal(U32 cubemap, const GFXGLCubemap* texture);
+   virtual void setCubemapInternal(U32 textureUnit, const GFXGLCubemap* texture);
+   virtual void setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArray* texture);
 
    virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable);
    virtual void setLightMaterialInternal(const GFXLightMaterial mat);
@@ -204,11 +209,12 @@ private:
    
    friend class GFXGLTextureObject;
    friend class GFXGLCubemap;
+   friend class GFXGLCubemapArray;
    friend class GFXGLWindowTarget;
    friend class GFXGLPrimitiveBuffer;
    friend class GFXGLVertexBuffer;
 
-   static GFXAdapter::CreateDeviceInstanceDelegate mCreateDeviceInstance; 
+   static GFXAdapter::CreateDeviceInstanceDelegate mCreateDeviceInstance;
 
    U32 mAdapterIndex;
    

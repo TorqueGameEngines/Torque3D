@@ -60,9 +60,9 @@ void AdvancedLightingFeatures::registerFeatures( const GFXFormat &deferredTarget
       FEATUREMGR->registerFeature(MFT_DeferredConditioner, cond);
       FEATUREMGR->registerFeature(MFT_RTLighting, new DeferredRTLightingFeatGLSL());
       FEATUREMGR->registerFeature(MFT_NormalMap, new DeferredBumpFeatGLSL());
-      FEATUREMGR->registerFeature(MFT_PixSpecular, new DeferredPixelSpecularGLSL());
       FEATUREMGR->registerFeature(MFT_MinnaertShading, new DeferredMinnaertGLSL());
       FEATUREMGR->registerFeature(MFT_SubSurface, new DeferredSubSurfaceGLSL());
+      FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatGLSL);
 #endif
    }
    else
@@ -72,9 +72,9 @@ void AdvancedLightingFeatures::registerFeatures( const GFXFormat &deferredTarget
       FEATUREMGR->registerFeature(MFT_DeferredConditioner, cond);
       FEATUREMGR->registerFeature(MFT_RTLighting, new DeferredRTLightingFeatHLSL());
       FEATUREMGR->registerFeature(MFT_NormalMap, new DeferredBumpFeatHLSL());
-      FEATUREMGR->registerFeature(MFT_PixSpecular, new DeferredPixelSpecularHLSL());
       FEATUREMGR->registerFeature(MFT_MinnaertShading, new DeferredMinnaertHLSL());
       FEATUREMGR->registerFeature(MFT_SubSurface, new DeferredSubSurfaceHLSL());
+      FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatHLSL);
 #endif
    }
 
@@ -94,7 +94,6 @@ void AdvancedLightingFeatures::unregisterFeatures()
    FEATUREMGR->unregisterFeature(MFT_DeferredConditioner);
    FEATUREMGR->unregisterFeature(MFT_RTLighting);
    FEATUREMGR->unregisterFeature(MFT_NormalMap);
-   FEATUREMGR->unregisterFeature(MFT_PixSpecular);
    FEATUREMGR->unregisterFeature(MFT_MinnaertShading);
    FEATUREMGR->unregisterFeature(MFT_SubSurface);
 

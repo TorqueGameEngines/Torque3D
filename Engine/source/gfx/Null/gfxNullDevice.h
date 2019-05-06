@@ -129,12 +129,13 @@ protected:
 
 public:
    virtual GFXCubemap * createCubemap();
+   virtual GFXCubemapArray *createCubemapArray();
 
    virtual F32 getFillConventionOffset() const { return 0.0f; };
 
    ///@}
 
-   virtual GFXTextureTarget *allocRenderToTextureTarget(){return NULL;};
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips=true){return NULL;};
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window)
    {
       return new GFXNullWindowTarget();
@@ -149,8 +150,9 @@ public:
 
    virtual GFXShader* createShader() { return NULL; };
 
-
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) { };
    virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil ) { };
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color) { };
    virtual bool beginSceneInternal() { return true; };
    virtual void endSceneInternal() { };
 

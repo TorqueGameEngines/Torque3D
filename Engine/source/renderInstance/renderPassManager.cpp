@@ -61,6 +61,7 @@ const RenderInstType RenderPassManager::RIT_Custom("Custom");
 const RenderInstType RenderPassManager::RIT_Particle("Particle");
 const RenderInstType RenderPassManager::RIT_Occluder("Occluder");
 const RenderInstType RenderPassManager::RIT_Editor("Editor");
+const RenderInstType RenderPassManager::RIT_Probes("Probes");
 
 
 //*****************************************************************************
@@ -102,9 +103,7 @@ void OccluderRenderInst::clear()
    dMemset( this, 0, sizeof(OccluderRenderInst) );
 }
 
-
 IMPLEMENT_CONOBJECT(RenderPassManager);
-
 
 ConsoleDocClass( RenderPassManager, 
    "@brief A grouping of render bin managers which forms a render pass.\n\n"

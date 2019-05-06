@@ -26,6 +26,13 @@
 #include "gfx/gfxTextureManager.h"
 
 
+GFXCubemap::GFXCubemap()
+{
+   mPath = "";
+   mMipMapLevels = 0;
+   mInitialized = false;
+}
+
 GFXCubemap::~GFXCubemap()
 {
    // If we're not dynamic and we were loaded from a
@@ -35,7 +42,7 @@ GFXCubemap::~GFXCubemap()
       TEXMGR->releaseCubemap( this );
 }
 
-U32 GFXCubemap::_zUpFaceIndex(const U32 index)
+U32 GFXCubemap::zUpFaceIndex(const U32 index)
 {
    switch (index)
    {
@@ -124,3 +131,10 @@ bool GFXCubemapHandle::set( const String &cubemapDDS )
 
    return isValid();
 }
+
+const String GFXCubemapArray::describeSelf() const
+{
+   // We've got nothing
+   return String();
+}
+

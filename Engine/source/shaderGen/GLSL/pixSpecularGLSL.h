@@ -27,32 +27,6 @@
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #endif
 
-
-/// A per-pixel specular feature.
-class PixelSpecularGLSL : public ShaderFeatureGLSL
-{
-protected:
-
-   ShaderIncludeDependency mDep;
-
-public:
-
-   PixelSpecularGLSL();
-
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
-
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
-
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   
-   virtual String getName()
-   {
-      return "Pixel Specular";
-   }
-};
-
 /// A texture source for the PixSpecular feature
 class SpecularMapGLSL : public ShaderFeatureGLSL
 {

@@ -294,6 +294,28 @@ function TerrainMaterialDlg::changeNormal( %this )
 
 //-----------------------------------------------------------------------------
 
+function TerrainMaterialDlg::changecomposite( %this )
+{
+   %ctrl = %this-->compositeTexCtrl;
+   %file = %ctrl.bitmap;
+   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
+      %file = "";
+
+   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );  
+   if( %file $= "" )
+   {
+      if( %ctrl.bitmap !$= "" )
+         %file = %ctrl.bitmap;
+      else
+         %file = "tools/materialEditor/gui/unknownImage";
+   }
+   
+   %file = makeRelativePath( %file, getMainDotCsDir() );
+   %ctrl.setBitmap( %file );  
+}
+
+//-----------------------------------------------------------------------------
+
 function TerrainMaterialDlg::newMat( %this )
 {
    // Create a unique material name.
@@ -394,7 +416,12 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
          %this-->normTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
       }else{
          %this-->normTexCtrl.setBitmap( %mat.normalMap ); 
-      }
+      }	  
+      if (%mat.compositeMap $= ""){
+         %this-->compositeTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
+      }else{
+         %this-->compositeTexCtrl.setBitmap( %mat.compositeMap );
+      }	  
       %this-->detSizeCtrl.setText( %mat.detailSize );
       %this-->baseSizeCtrl.setText( %mat.diffuseSize );
       %this-->detStrengthCtrl.setText( %mat.detailStrength );
@@ -448,6 +475,11 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    }else{
       %newMacro = %this-->macroTexCtrl.bitmap;  
    }
+   if (%this-->compositeTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+      %newComposite = "";
+   }else{
+      %newComposite = %this-->compositeTexCtrl.bitmap;  
+   }
    %detailSize = %this-->detSizeCtrl.getText();      
    %diffuseSize = %this-->baseSizeCtrl.getText();     
    %detailStrength = %this-->detStrengthCtrl.getText();
@@ -466,6 +498,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.diffuseMap $= %newDiffuse &&
          %mat.normalMap $= %newNormal &&
          %mat.detailMap $= %newDetail &&
+         %mat.compositeMap $= %newComposite &&
          %mat.macroMap $= %newMacro &&
          %mat.detailSize == %detailSize &&
          %mat.diffuseSize == %diffuseSize &&
@@ -497,7 +530,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    }
    
    %mat.diffuseMap = %newDiffuse;    
-   %mat.normalMap = %newNormal;    
+   %mat.normalMap = %newNormal;
+   %mat.compositeMap = %newComposite;
    %mat.detailMap = %newDetail;    
    %mat.macroMap = %newMacro;
    %mat.detailSize = %detailSize;  
@@ -544,6 +578,7 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          diffuseMap = %mat.diffuseMap;
          normalMap = %mat.normalMap;
          detailMap = %mat.detailMap;
+         compositeMap = %mat.compositeMap;
          macroMap = %mat.macroMap;
          detailSize = %mat.detailSize;
          diffuseSize = %mat.diffuseSize;
@@ -578,6 +613,7 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.diffuseMap = %obj.diffuseMap;
       %mat.normalMap = %obj.normalMap;
       %mat.detailMap = %obj.detailMap;
+      %mat.compositeMap = %obj.compositeMap;
       %mat.macroMap = %obj.macroMap;
       %mat.detailSize = %obj.detailSize;
       %mat.diffuseSize = %obj.diffuseSize;

@@ -37,6 +37,15 @@
 #ifndef _SCENEMANAGER_H_
 #include "scene/sceneManager.h"
 #endif
+#ifndef _SCENEMANAGER_H_
+#include "scene/sceneManager.h"
+#endif
+#ifndef _CUBEMAPDATA_H_
+#include "gfx/sim/cubemapData.h"
+#endif
+#ifndef _GFXPRIMITIVEBUFFER_H_
+#include "gfx/gfxPrimitiveBuffer.h"
+#endif
 
 class SceneRenderState;
 class ISceneObject;
@@ -48,6 +57,7 @@ class LightInfo;
 struct RenderInst;
 class MatrixSet;
 class GFXPrimitiveBufferHandle;
+class CubemapData;
 
 /// A RenderInstType hash value.
 typedef U32 RenderInstTypeHash;
@@ -118,6 +128,7 @@ public:
    static const RenderInstType RIT_Particle;
    static const RenderInstType RIT_Occluder;
    static const RenderInstType RIT_Editor;
+   static const RenderInstType RIT_Probes;
 
 public:
 

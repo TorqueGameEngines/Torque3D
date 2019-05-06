@@ -175,6 +175,13 @@ inline F32 mMax(const F32 x, const F32 y)
    return y;
 }
 
+inline F32 mMin(const F32 x, const F32 y)
+{
+   if (x < y)
+      return x;
+   return y;
+}
+
 inline F32 mFloor(const F32 val)
 {
    return (F32) floor(val);

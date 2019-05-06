@@ -214,12 +214,13 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4018")
     # warning C4244: 'initializing' : conversion from 'XXX' to 'XXX', possible loss of data
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4244")
-
-    if( TORQUE_CPU_X64 )
-        link_directories($ENV{DXSDK_DIR}/Lib/x64)
-    else()
-        link_directories($ENV{DXSDK_DIR}/Lib/x86)
-    endif()
+	if(TORQUE_SFX_DirectX) 
+		if( TORQUE_CPU_X64 )
+			link_directories($ENV{DXSDK_DIR}/Lib/x64)
+		else()
+			link_directories($ENV{DXSDK_DIR}/Lib/x86)
+		endif()
+	endif()
 endif()
 
 # build types
@@ -336,6 +337,7 @@ addPath("${srcDir}/T3D/decal")
 addPath("${srcDir}/T3D/sfx")
 addPath("${srcDir}/T3D/gameBase")
 addPath("${srcDir}/T3D/turret")
+addPath("${srcDir}/T3D/lighting")
 addPathRec("${srcDir}/T3D/components/")
 addPathRec("${srcDir}/T3D/systems")
 
@@ -826,11 +828,6 @@ endif()
 if(UNIX AND NOT APPLE)
 	addInclude("/usr/include/freetype2/freetype")
 	addInclude("/usr/include/freetype2")
-endif()
-
-# external things
-if(WIN32)
-    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES $ENV{DXSDK_DIR}/Include)
 endif()
 
 if(MSVC)

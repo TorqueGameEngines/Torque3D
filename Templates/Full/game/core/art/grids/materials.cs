@@ -30,8 +30,17 @@ singleton Material( Grid512_Black_Mat )
 singleton Material( Grid512_Blue_Mat )
 {
    mapTo = "Grid512_Blue_Mat";
-   diffuseMap[0] = "512_blue";
+   diffuseMap[0] = "core/art/grids/512_blue";
    materialTag0 = "TestMaterial";
+   smoothness[0] = "1";
+   metalness[0] = "0.803922";
+   translucent = "1";
+   translucentBlendOp = "Add";
+   normalMap[0] = "art/pbr/floor/FloorEbony_normal.png";
+   invertSmoothness[0] = "1";
+   roughMap[0] = "art/pbr/floor/FloorEbony_rough.png";
+   aoMap[0] = "art/pbr/floor/FloorEbony_ao.png";
+   metalMap[0] = "art/pbr/floor/FloorEbony_metal.png";
 };
 
 singleton Material( Grid512_ForestGreen_Mat )
@@ -51,22 +60,28 @@ singleton Material( Grid512_ForestGreenLines_Mat )
 singleton Material( Grid512_Green_Mat )
 {
    mapTo = "Grid512_Green_Mat";
-   diffuseMap[0] = "512_green";
+   diffuseMap[0] = "core/art/grids/512_green";
    materialTag0 = "TestMaterial";
+   smoothness[0] = "1";
+   metalness[0] = "1";
+   translucent = "0";
+   translucentBlendOp = "Add";
 };
 
 singleton Material( Grid512_Grey_Mat )
 {
    mapTo = "Grid512_Grey_Mat";
-   diffuseMap[0] = "512_grey";
+   diffuseMap[0] = "core/art/grids/512_grey";
    materialTag0 = "TestMaterial";
 };
 
 singleton Material( Grid512_GreyBase_Mat )
 {
    mapTo = "Grid512_GreyBase_Mat";
-   diffuseMap[0] = "512_grey_base";
+   diffuseMap[0] = "core/art/grids/512_grey_base";
    materialTag0 = "TestMaterial";
+   smoothness[0] = "1";
+   metalness[0] = "1";
 };
 
 singleton Material( Grid512_Orange_Mat )

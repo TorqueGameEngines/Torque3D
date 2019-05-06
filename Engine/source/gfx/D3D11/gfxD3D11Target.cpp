@@ -28,7 +28,7 @@
 #include "gfx/gfxStringEnumTranslate.h"
 #include "windowManager/win32/win32Window.h"
 
-GFXD3D11TextureTarget::GFXD3D11TextureTarget() 
+GFXD3D11TextureTarget::GFXD3D11TextureTarget(bool genMips) 
    :  mTargetSize( Point2I::Zero ),
       mTargetFormat( GFXFormatR8G8B8A8 )
 {
@@ -39,6 +39,8 @@ GFXD3D11TextureTarget::GFXD3D11TextureTarget()
       mTargetViews[i] = NULL;
       mTargetSRViews[i] = NULL;
    }
+
+   mGenMips = genMips;
 }
 
 GFXD3D11TextureTarget::~GFXD3D11TextureTarget()
@@ -215,7 +217,7 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXCubemap *tex, U32
 
    mTargets[slot] = cube->get2DTex();
    mTargets[slot]->AddRef();
-   mTargetViews[slot] = cube->getRTView(face);
+   mTargetViews[slot] = cube->getRTView(face, mipLevel);
    mTargetViews[slot]->AddRef();
    mTargetSRViews[slot] = cube->getSRView();
    mTargetSRViews[slot]->AddRef();
@@ -262,6 +264,9 @@ void GFXD3D11TextureTarget::activate()
 
 void GFXD3D11TextureTarget::deactivate()
 {
+   if (!mGenMips)
+      return;
+
    //re-gen mip maps
    for (U32 i = 0; i < 6; i++)
    {
@@ -347,7 +352,23 @@ GFXFormat GFXD3D11WindowTarget::getFormat()
 
 bool GFXD3D11WindowTarget::present()
 {
-   return (D3D11->getSwapChain()->Present(!D3D11->smDisableVSync, 0) == S_OK);
+   HRESULT hr = D3D11->getSwapChain()->Present(!D3D11->smDisableVSync, 0);
+   if (hr == DXGI_ERROR_DEVICE_REMOVED)
+   {
+      HRESULT result = D3D11->getDevice()->GetDeviceRemovedReason();
+      if (result == DXGI_ERROR_DEVICE_HUNG)
+         AssertFatal(false,"DXGI_ERROR_DEVICE_HUNG");
+      else if (result == DXGI_ERROR_DEVICE_REMOVED)
+         AssertFatal(false, "DXGI_ERROR_DEVICE_REMOVED");
+      else if (result == DXGI_ERROR_DEVICE_RESET)
+         AssertFatal(false, "DXGI_ERROR_DEVICE_RESET");
+      else if (result == DXGI_ERROR_DRIVER_INTERNAL_ERROR)
+         AssertFatal(false, "DXGI_ERROR_DRIVER_INTERNAL_ERROR");
+      else if (result == DXGI_ERROR_INVALID_CALL)
+         AssertFatal(false, "DXGI_ERROR_INVALID_CALL");
+   }
+
+   return (hr == S_OK);
 }
 
 void GFXD3D11WindowTarget::setImplicitSwapChain()
@@ -370,7 +391,6 @@ void GFXD3D11WindowTarget::resetMode()
    mSize = Point2I(mPresentationParams.BufferDesc.Width, mPresentationParams.BufferDesc.Height);
 
    mWindow->setSuppressReset(false);
-   GFX->beginReset();
 }
 
 void GFXD3D11WindowTarget::zombify()

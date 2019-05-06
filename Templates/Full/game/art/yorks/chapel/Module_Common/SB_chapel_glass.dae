@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.0">
+	<asset>
+		<contributor>
+			<author></author>
+			<authoring_tool>3DI PreLight</authoring_tool>
+			<comments></comments>
+		</contributor>
+		<created>10/13/2010 16:47</created>
+		<modified>10/13/2010 16:47</modified>
+		<revision></revision>
+		<title></title>
+		<subject></subject>
+		<keywords></keywords>
+		<unit meter="1"/>
+		<up_axis>Z_UP</up_axis>
+	</asset>
+	<library_images>
+	</library_images>
+	<library_materials>
+		<material id="chapel_Module_Common_SB_chapel_glass-Material0" name="chapel_Module_Common_SB_chapel_glass-Material0">
+			<instance_effect url="#chapel_Module_Common_SB_chapel_glass-fx0"/>
+		</material>
+	</library_materials>
+	<library_effects>
+		<effect id="chapel_Module_Common_SB_chapel_glass-fx0" name="chapel_Module_Common_SB_chapel_glass-fx0">
+			<profile_COMMON>
+				<technique sid="standard">
+					<phong>
+						<diffuse>
+						</diffuse>
+					</phong>
+				</technique>
+			</profile_COMMON>
+		</effect>
+	</library_effects>
+	<library_geometries>
+		<geometry id="chapel_Module_Common_SB_chapel_glass-lib" name="chapel_Module_Common_SB_chapel_glassMesh">
+			<mesh>
+				<source id="chapel_Module_Common_SB_chapel_glass-Position">
+					<float_array id="chapel_Module_Common_SB_chapel_glass-Position-array" count="222">
+						10.6 1.9 6.2
+						10.6 2.4 5.6
+						10.6 1.4 5.6
+						10.6 2.6 5
+						10.6 1.2 5
+						10.6 1.2 2.1
+						10.6 2.6 2.1
+						10.6 -2.7 2.1
+						10.6 -2.7 5
+						10.6 -1.3 5
+						10.6 -1.3 2.1
+						10.6 -1.5 5.6
+						10.6 -2.5 5.6
+						10.6 -2 6.2
+						10.7 0 8.2
+						10.7 0 7.3
+						10.7 -0.6 7.9
+						10.7 0.6 7.9
+						10.7 0.9 7.3
+						10.7 0.6 6.7
+						10.7 0 6.4
+						10.7 -0.6 6.7
+						10.7 -0.9 7.3
+						-4.8 5 6.2
+						-5.3 5 5.6
+						-4.3 5 5.6
+						-5.5 5 5
+						-4.1 5 5
+						-4.1 5 2.1
+						-5.5 5 2.1
+						-10.6 0.5 5.6
+						-10.6 0 6.2
+						-10.6 -0.5 5.6
+						-10.6 -0.7 5
+						-10.6 0.7 5
+						-10.6 -0.7 2.1
+						-10.6 0.7 2.1
+						-10.6 0.7 5
+						-10.6 0.7 2.1
+						-10.6 -0.7 2.1
+						-10.6 -0.7 5
+						-10.6 -0.5 5.6
+						-10.6 0.5 5.6
+						-10.6 0 6.2
+						-4.1 5 2.1
+						-5.5 5 2.1
+						-5.5 5 5
+						-4.1 5 5
+						-5.3 5 5.6
+						-4.3 5 5.6
+						-4.8 5 6.2
+						10.7 -0.6 7.9
+						10.7 -0.9 7.3
+						10.7 0 7.3
+						10.7 -0.6 6.7
+						10.7 0 6.4
+						10.7 0.6 6.7
+						10.7 0.9 7.3
+						10.7 0.6 7.9
+						10.7 0 8.2
+						10.6 -2 6.2
+						10.6 -2.5 5.6
+						10.6 -1.5 5.6
+						10.6 -2.7 5
+						10.6 -1.3 5
+						10.6 -2.7 2.1
+						10.6 -1.3 2.1
+						10.6 1.2 2.1
+						10.6 2.6 2.1
+						10.6 2.6 5
+						10.6 1.2 5
+						10.6 2.4 5.6
+						10.6 1.4 5.6
+						10.6 1.9 6.2
+					</float_array>
+					<technique_common>
+						<accessor source="#chapel_Module_Common_SB_chapel_glass-Position-array" count="74" stride="3">
+							<param name="X" type="float"/>
+							<param name="Y" type="float"/>
+							<param name="Z" type="float"/>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="chapel_Module_Common_SB_chapel_glass-Normal">
+					<float_array id="chapel_Module_Common_SB_chapel_glass-Normal-array" count="222">
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						0 -1 0
+						0 -1 0
+						0 -1 0
+						0 -1 0
+						0 -1 0
+						0 -1 0
+						0 -1 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						-1 0 0
+						0 1 0
+						0 1 0
+						0 1 0
+						0 1 0
+						0 1 0
+						0 1 0
+						0 1 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+						1 0 0
+					</float_array>
+					<technique_common>
+						<accessor source="#chapel_Module_Common_SB_chapel_glass-Normal-array" count="74" stride="3">
+							<param name="X" type="float"/>
+							<param name="Y" type="float"/>
+							<param name="Z" type="float"/>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="chapel_Module_Common_SB_chapel_glass-TEXCOORD">
+					<float_array id="chapel_Module_Common_SB_chapel_glass-TEXCOORD-array" count="148">
+						0.1952 0.8838
+						0.0912 0.7589
+						0.2992 0.7589
+						0.0495 0.6341
+						0.3409 0.6341
+						0.3409 0.0306
+						0.0495 0.0306
+						0.9649 0.0306
+						0.9649 0.6341
+						0.6736 0.6341
+						0.6736 0.0306
+						0.7152 0.7589
+						0.9233 0.7589
+						0.8193 0.8838
+						0.5076 0.9805
+						0.5076 0.7932
+						0.6324 0.918
+						0.3827 0.918
+						0.3203 0.7932
+						0.3827 0.6683
+						0.5076 0.6059
+						0.6324 0.6683
+						0.6948 0.7932
+						0.1952 0.8838
+						0.2992 0.7589
+						0.0912 0.7589
+						0.3409 0.6341
+						0.0495 0.6341
+						0.0495 0.0306
+						0.3409 0.0306
+						0.7152 0.7589
+						0.8193 0.8838
+						0.9233 0.7589
+						0.9649 0.6341
+						0.6736 0.6341
+						0.9649 0.0306
+						0.6736 0.0306
+						0.6736 0.6341
+						0.6736 0.0306
+						0.9649 0.0306
+						0.9649 0.6341
+						0.9233 0.7589
+						0.7152 0.7589
+						0.8193 0.8838
+						0.0495 0.0306
+						0.3409 0.0306
+						0.3409 0.6341
+						0.0495 0.6341
+						0.2992 0.7589
+						0.0912 0.7589
+						0.1952 0.8838
+						0.6324 0.918
+						0.6948 0.7932
+						0.5076 0.7932
+						0.6324 0.6683
+						0.5076 0.6059
+						0.3827 0.6683
+						0.3203 0.7932
+						0.3827 0.918
+						0.5076 0.9805
+						0.8193 0.8838
+						0.9233 0.7589
+						0.7152 0.7589
+						0.9649 0.6341
+						0.6736 0.6341
+						0.9649 0.0306
+						0.6736 0.0306
+						0.3409 0.0306
+						0.0495 0.0306
+						0.0495 0.6341
+						0.3409 0.6341
+						0.0912 0.7589
+						0.2992 0.7589
+						0.1952 0.8838
+					</float_array>
+					<technique_common>
+						<accessor source="#chapel_Module_Common_SB_chapel_glass-TEXCOORD-array" count="74" stride="2">
+							<param name="S" type="float"/>
+							<param name="T" type="float"/>
+						</accessor>
+					</technique_common>
+				</source>
+				<vertices id="chapel_Module_Common_SB_chapel_glass-Vertex">
+					<input semantic="POSITION" source="#chapel_Module_Common_SB_chapel_glass-Position"/>
+				</vertices>
+				<triangles material="chapel_Module_Common_SB_chapel_glass-Material0" count="56">
+					<input semantic="VERTEX" offset="0" source="#chapel_Module_Common_SB_chapel_glass-Vertex"/>
+					<input semantic="NORMAL" offset="1" source="#chapel_Module_Common_SB_chapel_glass-Normal"/>
+					<input semantic="TEXCOORD" offset="2" set="0" source="#chapel_Module_Common_SB_chapel_glass-TEXCOORD"/>
+					<p>
+						0 0 0 1 1 1 2 2 2 
+						1 1 1 3 3 3 4 4 4 
+						4 4 4 2 2 2 1 1 1 
+						5 5 5 4 4 4 3 3 3 
+						3 3 3 6 6 6 5 5 5 
+						7 7 7 8 8 8 9 9 9 
+						9 9 9 10 10 10 7 7 7 
+						11 11 11 9 9 9 8 8 8 
+						8 8 8 12 12 12 11 11 11 
+						13 13 13 11 11 11 12 12 12 
+						14 14 14 15 15 15 16 16 16 
+						17 17 17 15 15 15 14 14 14 
+						18 18 18 15 15 15 17 17 17 
+						19 19 19 15 15 15 18 18 18 
+						20 20 20 15 15 15 19 19 19 
+						21 21 21 15 15 15 20 20 20 
+						22 22 22 15 15 15 21 21 21 
+						16 16 16 15 15 15 22 22 22 
+						23 23 23 24 24 24 25 25 25 
+						24 24 24 26 26 26 27 27 27 
+						27 27 27 25 25 25 24 24 24 
+						28 28 28 27 27 27 26 26 26 
+						26 26 26 29 29 29 28 28 28 
+						30 30 30 31 31 31 32 32 32 
+						33 33 33 34 34 34 30 30 30 
+						30 30 30 32 32 32 33 33 33 
+						34 34 34 33 33 33 35 35 35 
+						35 35 35 36 36 36 34 34 34 
+						37 37 37 38 38 38 39 39 39 
+						39 39 39 40 40 40 37 37 37 
+						40 40 40 41 41 41 42 42 42 
+						42 42 42 37 37 37 40 40 40 
+						42 42 42 41 41 41 43 43 43 
+						44 44 44 45 45 45 46 46 46 
+						46 46 46 47 47 47 44 44 44 
+						48 48 48 49 49 49 47 47 47 
+						47 47 47 46 46 46 48 48 48 
+						50 50 50 49 49 49 48 48 48 
+						51 51 51 52 52 52 53 53 53 
+						52 52 52 54 54 54 53 53 53 
+						54 54 54 55 55 55 53 53 53 
+						55 55 55 56 56 56 53 53 53 
+						56 56 56 57 57 57 53 53 53 
+						57 57 57 58 58 58 53 53 53 
+						58 58 58 59 59 59 53 53 53 
+						59 59 59 51 51 51 53 53 53 
+						60 60 60 61 61 61 62 62 62 
+						62 62 62 61 61 61 63 63 63 
+						63 63 63 64 64 64 62 62 62 
+						65 65 65 66 66 66 64 64 64 
+						64 64 64 63 63 63 65 65 65 
+						67 67 67 68 68 68 69 69 69 
+						69 69 69 70 70 70 67 67 67 
+						71 71 71 72 72 72 70 70 70 
+						70 70 70 69 69 69 71 71 71 
+						73 73 73 72 72 72 71 71 71 
+					</p>
+				</triangles>
+			</mesh>
+		</geometry>
+	</library_geometries>
+	<library_visual_scenes>
+		<visual_scene id="RootNode" name="RootNode">
+			<node id="chapel_Module_Common_SB_chapel_glass" name="chapel_Module_Common_SB_chapel_glass">
+				<instance_geometry url="#chapel_Module_Common_SB_chapel_glass-lib">
+					<bind_material>
+						<technique_common>
+							<instance_material symbol="chapel_Module_Common_SB_chapel_glass-Material0" target="#chapel_Module_Common_SB_chapel_glass-Material0"/>
+						</technique_common>
+					</bind_material>
+				</instance_geometry>
+			</node>
+		</visual_scene>
+	</library_visual_scenes>
+	<scene>
+		<instance_visual_scene url="#RootNode"/>
+	</scene>
+</COLLADA>

@@ -30,9 +30,16 @@ new GFXStateBlockData( AL_VectorLightState )
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
    
+   colorWriteDefined = true;
+   colorWriteRed = true;
+   colorWriteBlue = true;
+   colorWriteGreen = true;
+   colorWriteAlpha = false; //disable alpha write
+   
    zDefined = true;
    zEnable = false;
-   zWriteEnable = false;
+   zWriteEnable = true;
+   zFunc = GFXCmpGreater;
 
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;  // G-buffer
@@ -49,12 +56,7 @@ new GFXStateBlockData( AL_VectorLightState )
    cullMode = GFXCullNone;
    
    stencilDefined = true;
-   stencilEnable = true;
-   stencilFailOp = GFXStencilOpKeep;
-   stencilZFailOp = GFXStencilOpKeep;
-   stencilPassOp = GFXStencilOpKeep;
-   stencilFunc = GFXCmpLess;
-   stencilRef = 0;
+   stencilEnable = false;
 };
 
 // Vector Light Material
@@ -86,11 +88,11 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["ssaoMask"] = "#ssaoMask";  
-   sampler["lightBuffer"] = "#lightinfo";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "lightinfo";
+   target = "AL_FormatToken";
    
    pixVersion = 3.0;
 };
@@ -106,10 +108,16 @@ new GFXStateBlockData( AL_ConvexLightState )
    blendDest = GFXBlendOne;
    blendOp = GFXBlendOpAdd;
    
+   colorWriteDefined = true;
+   colorWriteRed = true;
+   colorWriteBlue = true;
+   colorWriteGreen = true;
+   colorWriteAlpha = false; //disable alpha write
+   
    zDefined = true;
    zEnable = true;
    zWriteEnable = false;
-   zFunc = GFXCmpGreaterEqual;
+   zFunc = GFXCmpGreater;
 
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;  // G-buffer
@@ -125,12 +133,7 @@ new GFXStateBlockData( AL_ConvexLightState )
    cullMode = GFXCullCW;
    
    stencilDefined = true;
-   stencilEnable = true;
-   stencilFailOp = GFXStencilOpKeep;
-   stencilZFailOp = GFXStencilOpKeep;
-   stencilPassOp = GFXStencilOpKeep;
-   stencilFunc = GFXCmpLess;
-   stencilRef = 0;
+   stencilEnable = false;
 };
 
 // Point Light Material
@@ -163,11 +166,11 @@ new CustomMaterial( AL_PointLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
-   sampler["lightBuffer"] = "#lightinfo";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "lightinfo";
+   target = "AL_FormatToken";
    
    pixVersion = 3.0;
 };
@@ -202,11 +205,11 @@ new CustomMaterial( AL_SpotLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
    sampler["cookieMap"] = "$dynamiclightmask";
-   sampler["lightBuffer"] = "#lightinfo";
+   sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
    
-   target = "lightinfo";
+   target = "AL_FormatToken";
    
    pixVersion = 3.0;
 };
@@ -269,7 +272,104 @@ new CustomMaterial( AL_ParticlePointLightMaterial )
    stateBlock = AL_ConvexLightState;
    
    sampler["deferredBuffer"] = "#deferred";
-   target = "lightinfo";
+   target = "diffuseLighting";
    
    pixVersion = 3.0;
+};
+
+//Probe Processing
+new ShaderData( IrradianceShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/irradianceP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/irradianceP.glsl";
+   
+   samplerNames[0] = "$environmentMap";
+   
+   pixVersion = 3.0;
+};
+
+new ShaderData( PrefiterCubemapShader )
+{
+   DXVertexShaderFile = "shaders/common/lighting/advanced/cubemapV.hlsl";
+   DXPixelShaderFile  = "shaders/common/lighting/advanced/prefilterP.hlsl";
+
+   OGLVertexShaderFile = "shaders/common/lighting/advanced/gl/cubemapV.glsl";
+   OGLPixelShaderFile  = "shaders/common/lighting/advanced/gl/prefilterP.glsl";
+   
+   samplerNames[0] = "$environmentMap";
+   
+   pixVersion = 3.0;
+};
+
+//
+singleton ShaderData( PFX_ReflectionProbeArray )
+{
+   DXVertexShaderFile   = "shaders/common/postFx/postFxV.hlsl";
+   DXPixelShaderFile    = "shaders/common/lighting/advanced/reflectionProbeArrayP.hlsl";
+
+   OGLVertexShaderFile  = "shaders/common/postFx/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "shaders/common/lighting/advanced/gl/reflectionProbeArrayP.glsl";
+   
+   samplerNames[0] = "$deferredBuffer";
+   samplerNames[1] = "$colorBuffer";
+   samplerNames[2] = "$matInfoBuffer";
+   samplerNames[3] = "$BRDFTexture";
+   samplerNames[4] = "$specularCubemapAR";
+   samplerNames[5] = "$irradianceCubemapAR";
+   samplerNames[6] = "$skylightSpecularMap";
+   samplerNames[7] = "$skylightIrradMap";
+
+   pixVersion = 2.0;
+};  
+
+singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
+{  
+   alphaDefined = true;
+   alphaTestEnable = true;
+   alphaTestRef = 1;
+   alphaTestFunc = GFXCmpGreaterEqual;
+         
+   // Do a one to one blend.
+   blendDefined = true;
+   blendEnable = true;
+   blendSrc = GFXBlendOne;
+   blendDest = GFXBlendOne;
+   
+   zDefined = true;
+   zEnable = false;
+   zWriteEnable = false;
+   
+   
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampPoint;
+   samplerStates[1] = SamplerClampPoint;
+   samplerStates[2] = SamplerClampPoint;
+   samplerStates[3] = SamplerClampPoint;
+   samplerStates[4] = SamplerClampLinear;
+   samplerStates[5] = SamplerClampLinear;
+   samplerStates[6] = SamplerClampLinear;
+   samplerStates[7] = SamplerClampLinear;
+};
+
+singleton PostEffect( reflectionProbeArrayPostFX )
+{
+   // Do not allow the selection effect to work in reflection 
+   // passes by default so we don't do the extra drawing.
+   //allowReflectPass = false;
+                  
+   renderTime = "PFXAfterBin";
+   renderBin = "ProbeBin";
+   renderPriority = 9999;
+   isEnabled = true;
+
+   shader = PFX_ReflectionProbeArray;
+   stateBlock = PFX_ReflectionProbeArrayStateBlock;
+
+   texture[0] = "#deferred";
+   texture[1] = "#color";
+   texture[2] = "#matinfo";
+   texture[3] = "core/art/pbr/brdfTexture.dds";   
 };

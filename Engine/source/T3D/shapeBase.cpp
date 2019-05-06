@@ -1176,6 +1176,13 @@ void ShapeBase::onRemove()
       for (S32 i = 0; i < MaxSoundThreads; i++)
          stopAudio(i);
 
+   // Accumulation and environment mapping
+   if (isClientObject() && mShapeInstance)
+   {
+      if (mShapeInstance->hasAccumulation())
+         AccumulationVolume::removeObject(this);
+   }
+
    if ( isClientObject() )   
    {
       mCubeReflector.unregisterReflector();
@@ -3722,6 +3729,18 @@ void ShapeBase::setCurrentWaterObject( WaterObject *obj )
       clearNotify( mCurrentWaterObject );
 
    mCurrentWaterObject = obj;
+}
+
+void ShapeBase::setTransform(const MatrixF & mat)
+{
+	Parent::setTransform(mat);
+
+	// Accumulation and environment mapping
+	if (isClientObject() && mShapeInstance)
+	{
+		if (mShapeInstance->hasAccumulation())
+			AccumulationVolume::updateObject(this);
+	}
 }
 
 void ShapeBase::notifyCollisionCallbacks(SceneObject* obj, const VectorF& vel)

@@ -311,7 +311,6 @@ float4 main( ConnectData IN ) : TORQUE_TARGET0
    
    // Calculate the water "base" color based on depth.
    float4 waterBaseColor = baseColor * TORQUE_TEX1D( depthGradMap, saturate( delta / depthGradMax ) );
-   waterBaseColor = waterBaseColor;
       
    // Modulate baseColor by the ambientColor.
    waterBaseColor *= float4( ambientColor.rgb, 1 );     

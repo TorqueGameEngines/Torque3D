@@ -215,7 +215,7 @@ void PlatformWindowSDL::_setFullscreen(const bool fullscreen)
    if(fullscreen && !mOffscreenRender)
    {
       Con::printf("PlatformWindowSDL::setFullscreen (full) enter");
-      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
+      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN_DESKTOP);
    }
    else
    {

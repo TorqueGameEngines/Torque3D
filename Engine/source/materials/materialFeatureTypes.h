@@ -122,10 +122,13 @@ DeclareFeatureType( MFT_ToneMap );
 DeclareFeatureType( MFT_VertLit );
 DeclareFeatureType( MFT_VertLitTone );
 
+DeclareFeatureType( MFT_StaticCubemap );
 DeclareFeatureType( MFT_CubeMap );
-DeclareFeatureType( MFT_PixSpecular );
+DeclareFeatureType( MFT_InvertSmoothness );
 DeclareFeatureType( MFT_SpecularMap );
 DeclareFeatureType( MFT_GlossMap );
+
+DeclareFeatureType( MFT_ReflectionProbes );
 
 /// This feature is only used to detect alpha transparency
 /// and does not have any code associtated with it. 
@@ -189,5 +192,5 @@ DeclareFeatureType( MFT_SkyBox );
 DeclareFeatureType( MFT_DeferredSpecMap );
 DeclareFeatureType( MFT_DeferredSpecVars );
 DeclareFeatureType( MFT_DeferredMatInfoFlags );
-DeclareFeatureType( MFT_DeferredEmptySpec );
+DeclareFeatureType( MFT_DeferredEmissive );
 #endif // _MATERIALFEATURETYPES_H_

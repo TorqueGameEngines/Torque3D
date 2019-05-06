@@ -34,7 +34,7 @@ class GFXD3D11OcclusionQuery : public GFXOcclusionQuery
 {
 private:
    mutable ID3D11Query *mQuery;
-
+   bool mTesting;
 #ifdef TORQUE_GATHER_METRICS
    U32 mBeginFrame;
    U32 mTimeSinceEnd;

@@ -78,9 +78,9 @@ public:
    bool mSpecialLight;
 };
 
-class AdvancedLightBinManager : public RenderTexTargetBinManager
+class AdvancedLightBinManager : public RenderBinManager
 {
-   typedef RenderTexTargetBinManager Parent;
+   typedef RenderBinManager Parent;
 
 public:
 
@@ -89,6 +89,9 @@ public:
    
    // registered buffer name
    static const String smBufferName;
+
+   NamedTexTargetRef mDiffuseLightingTarget;
+   GFXTexHandle      mDiffuseLightingTex;
 
    /// The shadow filter mode to use on shadowed light materials.
    static ShadowFilterMode smShadowFilterMode;
@@ -128,6 +131,7 @@ public:
    bool MRTLightmapsDuringDeferred() const { return mMRTLightmapsDuringDeferred; }
    void MRTLightmapsDuringDeferred(bool val);
 
+   bool _updateTargets();
 
    typedef Signal<void(SceneRenderState *, AdvancedLightBinManager *)> RenderSignal;
    static RenderSignal &getRenderSignal();
@@ -161,10 +165,9 @@ protected:
       MaterialParameterHandle *lightDirection;
       MaterialParameterHandle *lightColor;
       MaterialParameterHandle *lightBrightness;
-      MaterialParameterHandle *lightAttenuation;
       MaterialParameterHandle *lightRange;
+      MaterialParameterHandle *lightInvSqrRange;
       MaterialParameterHandle *lightAmbient;
-      MaterialParameterHandle *lightTrilight;
       MaterialParameterHandle *lightSpotParams;
 
       LightMaterialInfo(   const String &matName, 
@@ -180,7 +183,7 @@ protected:
                               const PlaneF &farPlane,
                               const PlaneF &_vsFarPlane );
 
-      void setLightParameters( const LightInfo *light, const SceneRenderState* renderState, const MatrixF &worldViewOnly );
+      void setLightParameters( const LightInfo *light, const SceneRenderState* renderState );
    };
 
 protected:
@@ -225,8 +228,6 @@ protected:
 
    ///
    void _onShadowFilterChanged();
-
-   AdvancedLightBufferConditioner *mConditioner;
 
    typedef GFXVertexPNTT FarFrustumQuadVert; 
    GFXVertexBufferHandle<FarFrustumQuadVert> mFarFrustumQuadVerts;

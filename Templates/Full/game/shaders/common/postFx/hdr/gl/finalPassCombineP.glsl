@@ -38,7 +38,7 @@ uniform float g_fMiddleGray;
 uniform float g_fWhiteCutoff;
 
 uniform float g_fEnableBlueShift;
-uniform vec3 g_fBlueShiftColor; 
+uniform vec3 g_fBlueShiftColor;
 
 uniform float g_fBloomScale;
 
@@ -47,6 +47,29 @@ uniform float Brightness;
 uniform float Contrast;
 
 out vec4 OUT_col;
+
+// uncharted 2 tonemapper see: http://filmicgames.com/archives/75
+vec3 Uncharted2Tonemap(vec3 x)
+{
+   const float A = 0.15;
+   const float B = 0.50;
+   const float C = 0.10;
+   const float D = 0.20;
+   const float E = 0.02;
+   const float F = 0.30;
+   return ((x*(A*x + C*B) + D*E) / (x*(A*x + B) + D*F)) - E / F;
+}
+
+vec3 tonemap(vec3 c)
+{
+   const float W = 11.2;
+   float ExposureBias = 2.0f;
+   float ExposureAdjust = 1.5f;
+   c *= ExposureAdjust;
+   vec3 curr = Uncharted2Tonemap(ExposureBias*c);
+   vec3 whiteScale = 1.0f / Uncharted2Tonemap(vec3(W,W,W));
+   return curr*whiteScale;
+}
 
 void main()
 {
@@ -69,29 +92,30 @@ void main()
       // Lerp between current color and blue, desaturated copy
       vec3 rodColor = dot( _sample.rgb, LUMINANCE_VECTOR ) * g_fBlueShiftColor;
       _sample.rgb = mix( _sample.rgb, rodColor, coef );
-	  
+
       rodColor = dot( bloom.rgb, LUMINANCE_VECTOR ) * g_fBlueShiftColor;
       bloom.rgb = mix( bloom.rgb, rodColor, coef );
    }
 
    // Add the bloom effect.
    _sample += g_fBloomScale * bloom;
-   
-   // Map the high range of color values into a range appropriate for
-   // display, taking into account the user's adaptation level, 
-   // white point, and selected value for for middle gray.
-   if ( g_fEnableToneMapping > 0.0f )
-   {
-      float Lp = (g_fMiddleGray / (adaptedLum + 0.0001)) * hdrLuminance( _sample.rgb );
-      //float toneScalar = ( Lp * ( 1.0 + ( Lp / ( g_fWhiteCutoff ) ) ) ) / ( 1.0 + Lp );
-	  float toneScalar = Lp;
-      _sample.rgb = mix( _sample.rgb, _sample.rgb * toneScalar, g_fEnableToneMapping );
-   }
 
    // Apply the color correction.
    _sample.r = texture( colorCorrectionTex, _sample.r ).r;
    _sample.g = texture( colorCorrectionTex, _sample.g ).g;
    _sample.b = texture( colorCorrectionTex, _sample.b ).b;
+
+   // Apply contrast
+   _sample.rgb = ((_sample.rgb - 0.5f) * Contrast) + 0.5f;
+
+   // Apply brightness
+   //_sample.rgb += Brightness;
+
+   //tonemapping - TODO fix up eye adaptation
+   if ( g_fEnableToneMapping > 0.0f )
+   {
+      _sample.rgb = tonemap(_sample.rgb);
+   }
 
    OUT_col = _sample;
 }

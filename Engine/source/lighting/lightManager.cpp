@@ -198,7 +198,7 @@ void LightManager::setSpecialLight( LightManager::SpecialLightTypesEnum type, Li
    registerGlobalLight( light, NULL );
 }
 
-void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLighting )
+void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLighting, bool enableZoneLightCulling)
 {
    PROFILE_SCOPE( LightManager_RegisterGlobalLights );
 
@@ -225,14 +225,17 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
    else
    {
       // Cull the lights using the frustum.
-      getSceneManager()->getContainer()->findObjectList( *frustum, lightMask, &activeLights );
+      getSceneManager()->getContainer()->findObjectList(*frustum, lightMask, &activeLights);
       /*
       for (U32 i = 0; i < activeLights.size(); ++i)
       {
-         if (!getSceneManager()->mRenderedObjectsList.contains(activeLights[i]))
+         for (U32 i = 0; i < activeLights.size(); ++i)
          {
-            activeLights.erase(i);
-            --i;
+            if (!getSceneManager()->mRenderedObjectsList.contains(activeLights[i]))
+            {
+               activeLights.erase(i);
+               --i;
+            }
          }
       }
       */
@@ -245,10 +248,10 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
       // the shape bounds and can often get culled.
 
       GameConnection *conn = GameConnection::getConnectionToServer();
-      if ( conn->getControlObject() )
+      if (conn->getControlObject())
       {
          GameBase *conObject = conn->getControlObject();
-         activeLights.push_back_unique( conObject );
+         activeLights.push_back_unique(conObject);
       }
    }
 
@@ -306,7 +309,7 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
                                           GFXShaderConstHandle *lightInvRadiusSqSC,
                                           GFXShaderConstHandle *lightSpotDirSC,
                                           GFXShaderConstHandle *lightSpotAngleSC,
-                                GFXShaderConstHandle *lightSpotFalloffSC,
+                                          GFXShaderConstHandle *lightSpotFalloffSC,
                                           GFXShaderConstBuffer *shaderConsts )
 {
    PROFILE_SCOPE( LightManager_Update4LightConsts );
@@ -321,12 +324,12 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
    {
       PROFILE_SCOPE( LightManager_Update4LightConsts_setLights );
 
-         static AlignedArray<Point4F> lightPositions( 3, sizeof( Point4F ) );
-         static AlignedArray<Point4F> lightSpotDirs( 3, sizeof( Point4F ) );
+      static AlignedArray<Point4F> lightPositions( 3, sizeof( Point4F ) );
+      static AlignedArray<Point4F> lightSpotDirs( 3, sizeof( Point4F ) );
       static AlignedArray<Point4F> lightColors( 4, sizeof( Point4F ) );
       static Point4F lightInvRadiusSq;
       static Point4F lightSpotAngle;
-     static Point4F lightSpotFalloff;
+      static Point4F lightSpotFalloff;
       F32 range;
       
       // Need to clear the buffers so that we don't leak

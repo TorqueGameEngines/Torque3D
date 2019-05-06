@@ -216,7 +216,10 @@ enum SceneObjectTypeMasks : U32
    ///
    /// @note Terrains have their own means for rendering inside interior zones.
    OUTDOOR_OBJECT_TYPEMASK = (   TerrainObjectType |
-                                 EnvironmentObjectType )
+                                 EnvironmentObjectType ),
+
+   SKYLIGHT_CAPTURE_TYPEMASK = (EnvironmentObjectType),
+   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType)
 };
 
 #endif

@@ -43,6 +43,30 @@ uniform float g_fOneOverGamma;
 uniform float Brightness;
 uniform float Contrast;
 
+// uncharted 2 tonemapper see: http://filmicgames.com/archives/75
+float3 Uncharted2Tonemap(const float3 x)
+{
+   const float A = 0.15;
+   const float B = 0.50;
+   const float C = 0.10;
+   const float D = 0.20;
+   const float E = 0.02;
+   const float F = 0.30;
+   return ((x*(A*x + C*B) + D*E) / (x*(A*x + B) + D*F)) - E / F;
+}
+
+float3 tonemap(float3 color)
+{
+   const float W = 11.2;
+   float ExposureBias = 2.0f;
+   //float ExposureAdjust = 1.5f;
+   //c *= ExposureAdjust;
+   color = Uncharted2Tonemap(ExposureBias*color);
+   color = color * (1.0f / Uncharted2Tonemap(W));
+
+   return color;
+}
+
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 {
    float4 sample = hdrDecode( TORQUE_TEX2D( sceneTex, IN.uv0 ) );
@@ -71,22 +95,23 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 
    // Add the bloom effect.
    sample += g_fBloomScale * bloom;
-   
-   // Map the high range of color values into a range appropriate for
-   // display, taking into account the user's adaptation level, 
-   // white point, and selected value for for middle gray.
-   if ( g_fEnableToneMapping > 0.0f )
-   {
-      float Lp = (g_fMiddleGray / (adaptedLum + 0.0001)) * hdrLuminance( sample.rgb );
-      //float toneScalar = ( Lp * ( 1.0 + ( Lp / ( g_fWhiteCutoff ) ) ) ) / ( 1.0 + Lp );
-	  float toneScalar = Lp;
-      sample.rgb = lerp( sample.rgb, sample.rgb * toneScalar, g_fEnableToneMapping );
-   }
 
    // Apply the color correction.
    sample.r = TORQUE_TEX1D( colorCorrectionTex, sample.r ).r;
    sample.g = TORQUE_TEX1D( colorCorrectionTex, sample.g ).g;
    sample.b = TORQUE_TEX1D( colorCorrectionTex, sample.b ).b;
+
+   // Apply contrast
+   sample.rgb = ((sample.rgb - 0.5f) * Contrast) + 0.5f;
+
+   // Apply brightness
+   //sample.rgb += Brightness;
+
+   //tonemapping - TODO fix up eye adaptation
+   if ( g_fEnableToneMapping > 0.0f )
+   {
+      sample.rgb = tonemap(sample.rgb);
+   }
 
    return sample;
 }

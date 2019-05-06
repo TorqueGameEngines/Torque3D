@@ -40,6 +40,7 @@
 #include "console/propertyParsing.h"
 #include "gfx/util/screenspace.h"
 #include "scene/reflectionManager.h"
+#include "renderInstance/renderProbeMgr.h"
 
 
 ProcessedCustomMaterial::ProcessedCustomMaterial(Material &mat)
@@ -321,6 +322,10 @@ bool ProcessedCustomMaterial::setupPass( SceneRenderState *state, const SceneDat
    LightManager* lm = state ? LIGHTMGR : NULL;
    if (lm)
       lm->setLightInfo(this, NULL, sgData, state, pass, shaderConsts);
+
+   RenderProbeMgr* pm = state ? PROBEMGR : NULL;
+   if (pm)
+      pm->setProbeInfo(this, NULL, sgData, state, pass, shaderConsts);
 
    shaderConsts->setSafe(rpd->shaderHandles.mAccumTimeSC, MATMGR->getTotalTime());   
 

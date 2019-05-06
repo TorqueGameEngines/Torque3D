@@ -167,7 +167,7 @@ void BasicLightManager::activate( SceneManager *sceneManager )
          FEATUREMGR->registerFeature( MFT_ToneMap, new TonemapFeatGLSL );
          FEATUREMGR->registerFeature( MFT_NormalMap, new BumpFeatGLSL );
          FEATUREMGR->registerFeature( MFT_RTLighting, new RTLightingFeatGLSL );
-         FEATUREMGR->registerFeature( MFT_PixSpecular, new PixelSpecularGLSL );
+         FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatGLSL);
       #endif
    }
    else
@@ -177,7 +177,7 @@ void BasicLightManager::activate( SceneManager *sceneManager )
          FEATUREMGR->registerFeature( MFT_ToneMap, new TonemapFeatHLSL );
          FEATUREMGR->registerFeature( MFT_NormalMap, new BumpFeatHLSL );
          FEATUREMGR->registerFeature( MFT_RTLighting, new RTLightingFeatHLSL );
-         FEATUREMGR->registerFeature( MFT_PixSpecular, new PixelSpecularHLSL );
+         FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatHLSL);
       #endif
    }
 

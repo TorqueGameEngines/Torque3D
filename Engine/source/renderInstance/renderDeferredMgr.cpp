@@ -91,6 +91,7 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    notifyType( RenderPassManager::RIT_Mesh );
    notifyType( RenderPassManager::RIT_Terrain );
    notifyType( RenderPassManager::RIT_Object );
+   notifyType( RenderPassManager::RIT_Probes );
 
    // We want a full-resolution buffer
    mTargetSizeType = RenderTexTargetBinManager::WindowSize;
@@ -101,8 +102,6 @@ RenderDeferredMgr::RenderDeferredMgr( bool gatherDepth,
    mNamedTarget.registerWithName( BufferName );
    mColorTarget.registerWithName( ColorBufferName );
    mMatInfoTarget.registerWithName( MatInfoBufferName );
-
-   mClearGBufferShader = NULL;
 
    _registerFeatures();
 }
@@ -176,39 +175,26 @@ bool RenderDeferredMgr::_updateTargets()
       mMatInfoTex.set(mTargetSize.x, mTargetSize.y, matInfoFormat,
          &GFXRenderTargetProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
          1, GFXTextureManager::AA_MATCH_BACKBUFFER);
-         mMatInfoTarget.setTexture(mMatInfoTex);
+      mMatInfoTarget.setTexture(mMatInfoTex);
  
       for (U32 i = 0; i < mTargetChainLength; i++)
          mTargetChain[i]->attachTexture(GFXTextureTarget::Color2, mMatInfoTarget.getTexture());
    }
 
-   GFX->finalizeReset();
-
-   // Attach the light info buffer as a second render target, if there is
-   // lightmapped geometry in the scene.
-   AdvancedLightBinManager *lightBin;
-   if (  Sim::findObject( "AL_LightBinMgr", lightBin ) &&
-         lightBin->MRTLightmapsDuringDeferred() &&
-         lightBin->isProperlyAdded() )
+   //scene color target
+   NamedTexTargetRef sceneColorTargetRef = NamedTexTarget::find("AL_FormatToken");
+   if (sceneColorTargetRef.isValid())
    {
-      // Update the size of the light bin target here. This will call _updateTargets
-      // on the light bin
-      ret &= lightBin->setTargetSize( mTargetSize );
-      if ( ret )
-      {
-         // Sanity check
-         AssertFatal(lightBin->getTargetChainLength() == mTargetChainLength, "Target chain length mismatch");
-
-         // Attach light info buffer to Color1 for each target in the chain
-         for ( U32 i = 0; i < mTargetChainLength; i++ )
-         {
-            GFXTexHandle lightInfoTex = lightBin->getTargetTexture(0, i);
-            mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, lightInfoTex);
-         }
-      }
+      for (U32 i = 0; i < mTargetChainLength; i++)
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color3, sceneColorTargetRef->getTexture(0));
+   }
+   else
+   {
+      Con::errorf("RenderDeferredMgr: Could not find AL_FormatToken");
+      return false;
    }
 
-   _initShaders();
+   GFX->finalizeReset();
 
    return ret;
 }
@@ -248,6 +234,8 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
 
    const bool isTerrainInst = inst->type == RenderPassManager::RIT_Terrain;
 
+   const bool isProbeInst = inst->type == RenderPassManager::RIT_Probes;
+
    // Get the material if its a mesh.
    BaseMatInstance* matInst = NULL;
    if ( isMeshInst || isDecalMeshInst )
@@ -255,10 +243,6 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
 
    if (matInst)
    {
-      // Skip decals if they don't have normal maps.
-      if (isDecalMeshInst && !matInst->hasNormalMap())
-         return;
-
       // If its a custom material and it refracts... skip it.
       if (matInst->isCustomMaterial() &&
          static_cast<CustomMaterial*>(matInst->getMaterial())->mRefract)
@@ -276,6 +260,8 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
       elementList = &mElementList;
    else if ( isTerrainInst )
       elementList = &mTerrainElementList;
+   else if (isProbeInst)
+      elementList = &mProbeElementList;
    else
       elementList = &mObjectElementList;
 
@@ -308,6 +294,7 @@ void RenderDeferredMgr::sort()
 void RenderDeferredMgr::clear()
 {
    Parent::clear();
+   mProbeElementList.clear();
    mTerrainElementList.clear();
    mObjectElementList.clear();
 }
@@ -331,8 +318,12 @@ void RenderDeferredMgr::render( SceneRenderState *state )
    // Tell the superclass we're about to render
    const bool isRenderingToTarget = _onPreRender(state);
 
-   // Clear all z-buffer, and g-buffer.
-   clearBuffers();
+   // Clear z-buffer and g-buffer.
+   GFX->clear(GFXClearZBuffer | GFXClearStencil, LinearColorF::ZERO, 1.0f, 0);
+   GFX->clearColorAttachment(0, LinearColorF::ONE);//normdepth
+   GFX->clearColorAttachment(1, LinearColorF::ZERO);//albedo
+   GFX->clearColorAttachment(2, LinearColorF::ZERO);//matinfo
+   //AL_FormatToken is cleared by it's own class
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
@@ -348,7 +339,7 @@ void RenderDeferredMgr::render( SceneRenderState *state )
       mDeferredMatInstance->setTransforms(matrixSet, state);
    }
 
-   // Signal start of pre-pass
+   // Signal start of deferred
    getRenderSignal().trigger( state, this, true );
    
    // First do a loop and render all the terrain... these are 
@@ -631,19 +622,18 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
       newFeatures.addFeature(MFT_DiffuseMap);
    }
    newFeatures.addFeature( MFT_DiffuseColor );
+   
+   if (mMaterial->mInvertSmoothness[stageNum])
+      newFeatures.addFeature(MFT_InvertSmoothness);
 
    // Deferred Shading : Specular
    if( mStages[stageNum].getTex( MFT_SpecularMap ) )
    {
        newFeatures.addFeature( MFT_DeferredSpecMap );
    }
-   else if ( mMaterial->mPixelSpecular[stageNum] )
-   {
-       newFeatures.addFeature( MFT_DeferredSpecVars );
-   }
    else
-       newFeatures.addFeature(MFT_DeferredEmptySpec);
-   
+       newFeatures.addFeature( MFT_DeferredSpecVars );
+
    // Deferred Shading : Material Info Flags
    newFeatures.addFeature( MFT_DeferredMatInfoFlags );
 
@@ -742,8 +732,11 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
       }
       else
       {
-         // If this object isn't lightmapped, add a zero-output feature to it
-         newFeatures.addFeature( MFT_RenderTarget3_Zero );
+         // If this object isn't lightmapped or emissive, add a zero-output feature for render target 3
+         if (fd.features.hasFeature(MFT_IsEmissive))
+            newFeatures.addFeature(MFT_DeferredEmissive);
+         else
+            newFeatures.addFeature( MFT_RenderTarget3_Zero );
       }
    }
 
@@ -751,7 +744,19 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    if ( stageNum < 1 && 
          (  (  mMaterial->mCubemapData && mMaterial->mCubemapData->mCubemap ) ||
                mMaterial->mDynamicCubemap ) )
-   newFeatures.addFeature( MFT_CubeMap );
+   {
+      if (!mMaterial->mDynamicCubemap)
+         fd.features.addFeature(MFT_StaticCubemap);
+      newFeatures.addFeature( MFT_CubeMap );
+   }
+   if (mMaterial->mVertLit[stageNum])
+      newFeatures.addFeature(MFT_VertLit);
+
+   if (mMaterial->mMinnaertConstant[stageNum] > 0.0f)
+      newFeatures.addFeature(MFT_MinnaertShading);
+
+   if (mMaterial->mSubSurface[stageNum])
+      newFeatures.addFeature(MFT_SubSurface);
    
 #endif
 
@@ -789,11 +794,7 @@ U32 ProcessedDeferredMaterial::getNumStages()
       // stage is active.
       if ( mStages[i].hasValidTex() )
          stageActive = true;
-
-      // If this stage has specular lighting, it's active
-      if ( mMaterial->mPixelSpecular[i] )
-         stageActive = true;
-
+      
       // If this stage has diffuse color, it's active
       if (  mMaterial->mDiffuse[i].alpha > 0 &&
             mMaterial->mDiffuse[i] != LinearColorF::WHITE )
@@ -1057,25 +1058,26 @@ Var* LinearEyeDepthConditioner::printMethodHeader( MethodType methodType, const 
          bufferSample->setType("float4");
       DecOp *bufferSampleDecl = new DecOp(bufferSample);
 
-      meta->addStatement( new GenOp( "@(@, @)\r\n", methodDecl, deferredSamplerDecl, screenUVDecl ) );
+      if (deferredTex)
+         meta->addStatement(new GenOp("@(@, @, @)\r\n", methodDecl, deferredSamplerDecl, deferredTexDecl, screenUVDecl));
+      else
+         meta->addStatement(new GenOp("@(@, @)\r\n", methodDecl, deferredSamplerDecl, screenUVDecl));
 
-      meta->addStatement( new GenOp( "{\r\n" ) );
+      meta->addStatement(new GenOp("{\r\n"));
 
-      meta->addStatement( new GenOp( "   // Sampler g-buffer\r\n" ) );
+      meta->addStatement(new GenOp("   // Sampler g-buffer\r\n"));
 
       // The linear depth target has no mipmaps, so use tex2dlod when
       // possible so that the shader compiler can optimize.
-      meta->addStatement( new GenOp( "   #if TORQUE_SM >= 30\r\n" ) );
       if (GFX->getAdapterType() == OpenGL)
-         meta->addStatement( new GenOp( "    @ = textureLod(@, @, 0); \r\n", bufferSampleDecl, deferredSampler, screenUV) );
+         meta->addStatement(new GenOp("@ = texture2DLod(@, @, 0); \r\n", bufferSampleDecl, deferredSampler, screenUV));
       else
-         meta->addStatement( new GenOp( "      @ = tex2Dlod(@, float4(@,0,0));\r\n", bufferSampleDecl, deferredSampler, screenUV ) );
-      meta->addStatement( new GenOp( "   #else\r\n" ) );
-      if (GFX->getAdapterType() == OpenGL)
-         meta->addStatement( new GenOp( "    @ = texture(@, @);\r\n", bufferSampleDecl, deferredSampler, screenUV) );
-      else
-         meta->addStatement( new GenOp( "      @ = tex2D(@, @);\r\n", bufferSampleDecl, deferredSampler, screenUV ) );
-      meta->addStatement( new GenOp( "   #endif\r\n\r\n" ) );
+      {
+         if (deferredTex)
+            meta->addStatement(new GenOp("@ = @.SampleLevel(@, @, 0);\r\n", bufferSampleDecl, deferredTex, deferredSampler, screenUV));
+         else
+            meta->addStatement(new GenOp("@ = tex2Dlod(@, float4(@,0,0));\r\n", bufferSampleDecl, deferredSampler, screenUV));
+      }
 
       // We don't use this way of passing var's around, so this should cause a crash
       // if something uses this improperly
@@ -1083,81 +1085,4 @@ Var* LinearEyeDepthConditioner::printMethodHeader( MethodType methodType, const 
    }
 
    return retVal;
-}
-
-void RenderDeferredMgr::_initShaders()
-{
-   if ( mClearGBufferShader ) return;
-
-   // Find ShaderData
-   ShaderData *shaderData;
-   mClearGBufferShader = Sim::findObject( "ClearGBufferShader", shaderData ) ? shaderData->getShader() : NULL;
-   if ( !mClearGBufferShader )
-      Con::errorf( "RenderDeferredMgr::_initShaders - could not find ClearGBufferShader" );
-
-   // Create StateBlocks
-   GFXStateBlockDesc desc;
-   desc.setCullMode( GFXCullNone );
-   desc.setBlend( false );
-   desc.setZReadWrite( false, false );
-   desc.samplersDefined = true;
-   for (int i = 0; i < TEXTURE_STAGE_COUNT; i++)
-   {
-       desc.samplers[i].addressModeU = GFXAddressWrap;
-       desc.samplers[i].addressModeV = GFXAddressWrap;
-       desc.samplers[i].addressModeW = GFXAddressWrap;
-       desc.samplers[i].magFilter = GFXTextureFilterLinear;
-       desc.samplers[i].minFilter = GFXTextureFilterLinear;
-       desc.samplers[i].mipFilter = GFXTextureFilterLinear;
-       desc.samplers[i].textureColorOp = GFXTOPModulate;
-   }
-
-   mStateblock = GFX->createStateBlock( desc );   
-
-   // Set up shader constants.
-   mShaderConsts = mClearGBufferShader->allocConstBuffer();
-   mSpecularStrengthSC = mClearGBufferShader->getShaderConstHandle( "$specularStrength" );
-   mSpecularPowerSC = mClearGBufferShader->getShaderConstHandle( "$specularPower" );
-}
-
-void RenderDeferredMgr::clearBuffers()
-{
-   // Clear z-buffer.
-   GFX->clear( GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI::ZERO, 1.0f, 0);
-
-   if ( !mClearGBufferShader )
-      return;
-
-   GFXTransformSaver saver;
-
-   // Clear the g-buffer.
-   RectI box(-1, -1, 3, 3);
-   GFX->setWorldMatrix( MatrixF::Identity );
-   GFX->setViewMatrix( MatrixF::Identity );
-   GFX->setProjectionMatrix( MatrixF::Identity );
-
-   GFX->setShader(mClearGBufferShader);
-   GFX->setStateBlock(mStateblock);
-
-   Point2F nw(-0.5,-0.5);
-   Point2F ne(0.5,-0.5);
-
-   GFXVertexBufferHandle<GFXVertexPC> verts(GFX, 4, GFXBufferTypeVolatile);
-   verts.lock();
-
-   F32 ulOffset = 0.5f - GFX->getFillConventionOffset();
-   
-   Point2F upperLeft(-1.0, -1.0);
-   Point2F lowerRight(1.0, 1.0);
-
-   verts[0].point.set( upperLeft.x+nw.x+ulOffset, upperLeft.y+nw.y+ulOffset, 0.0f );
-   verts[1].point.set( lowerRight.x+ne.x, upperLeft.y+ne.y+ulOffset, 0.0f );
-   verts[2].point.set( upperLeft.x-ne.x+ulOffset, lowerRight.y-ne.y, 0.0f );
-   verts[3].point.set( lowerRight.x-nw.x, lowerRight.y-nw.y, 0.0f );
-
-   verts.unlock();
-
-   GFX->setVertexBuffer( verts );
-   GFX->drawPrimitive( GFXTriangleStrip, 0, 2 );
-   GFX->setShader(NULL);
 }

@@ -49,6 +49,9 @@ protected:
    ///
    FileName mDetailMap;
 
+   ///
+   FileName mCompositeMap;
+   
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
    /// detail and normal maps.
@@ -102,6 +105,8 @@ public:
    const String& getDetailMap() const { return mDetailMap; }
 
    const String& getMacroMap() const { return mMacroMap; }
+
+   const String& getCompositeMap() const { return mCompositeMap; }
 
    F32 getDetailSize() const { return mDetailSize; }
 

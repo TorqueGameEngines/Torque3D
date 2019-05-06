@@ -35,6 +35,7 @@ struct ShaderGenVars
    const static String modelview;
    const static String worldViewOnly;
    const static String worldToCamera;
+   const static String cameraToWorld;
    const static String worldToObj;
    const static String viewToObj;
    const static String cubeTrans;
@@ -78,8 +79,26 @@ struct ShaderGenVars
    const static String lightSpotAngle;
    const static String lightSpotFalloff;
    const static String specularColor;
-   const static String specularPower;
-   const static String specularStrength;
+   const static String smoothness;
+   const static String metalness;
+
+   //Reflection Probes
+   const static String probePosition;
+   const static String probeRefPos;
+   const static String probeBoxMin;
+   const static String probeBoxMax;
+   const static String worldToObjArray;
+   const static String probeConfigData;
+   const static String specularCubemapAR;
+   const static String irradianceCubemapAR;
+   const static String probeCount;
+
+   const static String BRDFTextureMap;
+
+   //Skylight
+   const static String skylightPrefilterMap;
+   const static String skylightIrradMap;
+   const static String hasSkylight;
    
    // Textures
    const static String fogMap;

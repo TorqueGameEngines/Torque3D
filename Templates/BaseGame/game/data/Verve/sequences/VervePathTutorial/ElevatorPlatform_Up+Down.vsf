@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<VerveControllerSequence Version="0.0.0a">
+    <Properties>
+        <Time>0</Time>
+        <Duration>5000</Duration>
+        <TimeScale>1</TimeScale>
+        <Loop>0</Loop>
+        <LoopBackwards>0</LoopBackwards>
+        <LoopCount>-1</LoopCount>
+        <LoopDelay>0</LoopDelay>
+        <ResetOnCompletion>0</ResetOnCompletion>
+        <name>VerveEditorController</name>
+        <parentGroup>RootGroup</parentGroup>
+        <canSaveDynamicFields>1</canSaveDynamicFields>
+    </Properties>
+    <DataTable>
+        <DataItem Type="STATIC" Name="ElevatorPlatformGroup" Value="ElevatorPlatformShape" />
+        <DataItem Type="STATIC" Name="ElevatorPlatformGroupPath" Value="ElevatorPlatformPath" />
+    </DataTable>
+    <VObject Type="VSceneObjectGroup">
+        <Properties>
+            <Enabled>1</Enabled>
+            <Label>ElevatorPlatformGroup</Label>
+            <Reference>ElevatorPlatformGroup</Reference>
+        </Properties>
+        <VObject Type="VMotionTrack">
+            <Properties>
+                <Enabled>1</Enabled>
+                <Label>MotionTrack</Label>
+                <Reference>ElevatorPlatformGroupPath</Reference>
+                <OrientationMode>FREE</OrientationMode>
+                <OrientationData></OrientationData>
+                <Relative>0</Relative>
+            </Properties>
+            <VObject Type="VMotionEvent">
+                <Properties>
+                    <Enabled>1</Enabled>
+                    <Label>MotionEvent</Label>
+                    <TriggerTime>0</TriggerTime>
+                    <Duration>0</Duration>
+                </Properties>
+            </VObject>
+            <VObject Type="VMotionEvent">
+                <Properties>
+                    <Enabled>1</Enabled>
+                    <Label>MotionEvent</Label>
+                    <TriggerTime>5000</TriggerTime>
+                    <Duration>0</Duration>
+                </Properties>
+            </VObject>
+        </VObject>
+    </VObject>
+</VerveControllerSequence>

@@ -65,3 +65,10 @@ exec("./vehicles/cheetahCar.cs");
 
 // Physics objects
 exec("./physics.cs");
+
+if(isFile("./verve/VerveActorData.cs"))
+{
+	// Load Verve Data.
+	exec("./verve/VerveActorData.cs");
+	exec("./verve/VervePathTutorialData.cs");
+}

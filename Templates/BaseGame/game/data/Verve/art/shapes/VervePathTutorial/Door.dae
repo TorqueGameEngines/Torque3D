@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.0">
+    <asset>
+        <contributor>
+            <author />
+            <authoring_tool>Torque 3D 2009 Interior Exporter</authoring_tool>
+            <comments />
+        </contributor>
+        <created>8/09/2009 2:52:45 PM</created>
+        <modified>8/09/2009 2:52:45 PM</modified>
+        <revision />
+        <title />
+        <subject />
+        <keywords />
+        <unit meter="1.000000" />
+        <up_axis>Z_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="PILLAR128X128G-Diffuse" name="PILLAR128X128G-Diffuse">
+            <init_from>file://PILLAR128X128G.png</init_from>
+        </image>
+        <image id="FULL128X128G-Diffuse" name="FULL128X128G-Diffuse">
+            <init_from>file://FULL128X128G.png</init_from>
+        </image>
+        <image id="BLACK-Diffuse" name="BLACK-Diffuse">
+            <init_from>file://BLACK.png</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="PILLAR128X128G" name="PILLAR128X128G">
+            <instance_effect url="#PILLAR128X128G-fx" />
+        </material>
+        <material id="FULL128X128G" name="FULL128X128G">
+            <instance_effect url="#FULL128X128G-fx" />
+        </material>
+        <material id="BLACK" name="BLACK">
+            <instance_effect url="#BLACK-fx" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="PILLAR128X128G-fx" name="PILLAR128X128G-fx">
+            <profile_COMMON>
+                <technique sid="standard">
+                    <phong>
+                        <diffuse>
+                            <texture texture="PILLAR128X128G-Diffuse" texcoord="CHANNEL0">
+                                <extra>
+                                    <technique profile="MAYA">
+                                        <wrapU sid="wrapU0">TRUE</wrapU>
+                                        <wrapV sid="wrapV0">TRUE</wrapV>
+                                        <blend_mode>ADD</blend_mode>
+                                    </technique>
+                                </extra>
+                            </texture>
+                        </diffuse>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="FULL128X128G-fx" name="FULL128X128G-fx">
+            <profile_COMMON>
+                <technique sid="standard">
+                    <phong>
+                        <diffuse>
+                            <texture texture="FULL128X128G-Diffuse" texcoord="CHANNEL0">
+                                <extra>
+                                    <technique profile="MAYA">
+                                        <wrapU sid="wrapU0">TRUE</wrapU>
+                                        <wrapV sid="wrapV0">TRUE</wrapV>
+                                        <blend_mode>ADD</blend_mode>
+                                    </technique>
+                                </extra>
+                            </texture>
+                        </diffuse>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="BLACK-fx" name="BLACK-fx">
+            <profile_COMMON>
+                <technique sid="standard">
+                    <phong>
+                        <diffuse>
+                            <texture texture="BLACK-Diffuse" texcoord="CHANNEL0">
+                                <extra>
+                                    <technique profile="MAYA">
+                                        <wrapU sid="wrapU0">TRUE</wrapU>
+                                        <wrapV sid="wrapV0">TRUE</wrapV>
+                                        <blend_mode>ADD</blend_mode>
+                                    </technique>
+                                </extra>
+                            </texture>
+                        </diffuse>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Door-lib" name="DoorMesh">
+            <mesh>
+                <source id="Door-Position">
+                    <float_array id="Door-Position-array" count="24">
+                        2.0000 -0.2500 -2.0000
+                        2.0000 -0.2500 2.0000
+                        2.0000 0.2500 -2.0000
+                        2.0000 0.2500 2.0000
+                        -2.0000 -0.2500 -2.0000
+                        -2.0000 0.2500 -2.0000
+                        -2.0000 -0.2500 2.0000
+                        -2.0000 0.2500 2.0000
+                    </float_array>
+                    <technique_common>
+                        <accessor source="#Door-Position-array" count="8" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Door-Normal">
+                    <float_array id="Door-Normal-array" count="18">
+                        1.0000 -0.0000 -0.0000
+                        -1.0000 -0.0000 -0.0000
+                        -0.0000 1.0000 -0.0000
+                        -0.0000 -1.0000 -0.0000
+                        -0.0000 -0.0000 1.0000
+                        -0.0000 -0.0000 -1.0000
+                    </float_array>
+                    <technique_common>
+                        <accessor source="#Door-Normal-array" count="6" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Door-UV0">
+                    <float_array id="Door-UV0-array" count="28">
+                        5.7500 0.0000
+                        5.7500 1.0000
+                        6.0000 0.0000
+                        6.0000 1.0000
+                        -5.7500 0.0000
+                        -6.0000 0.0000
+                        -5.7500 1.0000
+                        -6.0000 1.0000
+                        1.0000 0.0000
+                        0.0000 0.0000
+                        1.0000 1.0000
+                        0.0000 1.0000
+                        8.0000 0.0000
+                        8.0000 1.0000
+                    </float_array>
+                    <technique_common>
+                        <accessor source="#Door-UV0-array" count="14" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Door-Vertex">
+                    <input semantic="POSITION" source="#Door-Position" />
+                </vertices>
+                <triangles material="PILLAR128X128G" count="4">
+                    <input semantic="VERTEX" offset="0" source="#Door-Vertex" />
+                    <input semantic="NORMAL" offset="1" source="#Door-Normal" />
+                    <input semantic="TEXCOORD" offset="2" set="0" source="#Door-UV0" />
+                    <p>
+                        3 0 3 1 0 1 0 0 0
+                        2 0 2 3 0 3 0 0 0
+                        7 1 7 5 1 5 4 1 4
+                        6 1 6 7 1 7 4 1 4
+                    </p>
+                </triangles>
+                <triangles material="FULL128X128G" count="4">
+                    <input semantic="VERTEX" offset="0" source="#Door-Vertex" />
+                    <input semantic="NORMAL" offset="1" source="#Door-Normal" />
+                    <input semantic="TEXCOORD" offset="2" set="0" source="#Door-UV0" />
+                    <p>
+                        3 2 11 2 2 9 5 2 8
+                        7 2 10 3 2 11 5 2 8
+                        1 3 10 6 3 11 4 3 9
+                        0 3 8 1 3 10 4 3 9
+                    </p>
+                </triangles>
+                <triangles material="BLACK" count="4">
+                    <input semantic="VERTEX" offset="0" source="#Door-Vertex" />
+                    <input semantic="NORMAL" offset="1" source="#Door-Normal" />
+                    <input semantic="TEXCOORD" offset="2" set="0" source="#Door-UV0" />
+                    <p>
+                        3 4 13 7 4 11 6 4 9
+                        1 4 12 3 4 13 6 4 9
+                        2 5 11 0 5 9 4 5 12
+                        5 5 13 2 5 11 4 5 12
+                    </p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="RootNode" name="RootNode">
+            <node id="Door" name="Door">
+                <instance_geometry url="#Door-lib">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="PILLAR128X128G" target="#PILLAR128X128G" />
+                            <instance_material symbol="FULL128X128G" target="#FULL128X128G" />
+                            <instance_material symbol="BLACK" target="#BLACK" />
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#RootNode" />
+    </scene>
+</COLLADA>

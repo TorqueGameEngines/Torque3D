@@ -237,9 +237,7 @@ public:
    
    F32 mSmoothness[MAX_STAGES];
    F32 mMetalness[MAX_STAGES];
-
-   bool mPixelSpecular[MAX_STAGES];
-
+   
    bool mVertLit[MAX_STAGES];
    
    /// If true for a stage, vertex colors are multiplied

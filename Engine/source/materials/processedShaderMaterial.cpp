@@ -267,11 +267,7 @@ U32 ProcessedShaderMaterial::getNumStages()
       // stage is active.
       if ( mStages[i].hasValidTex() )
          stageActive = true;
-
-      // If this stage has specular lighting, it's active
-      if ( mMaterial->mPixelSpecular[i] )
-         stageActive = true;
-
+      
       // If this stage has diffuse color, it's active
       if (  mMaterial->mDiffuse[i].alpha > 0 &&
             mMaterial->mDiffuse[i] != LinearColorF::WHITE )
@@ -424,12 +420,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
       if (  mMaterial->mParallaxScale[stageNum] > 0.0f &&
          fd.features[ MFT_NormalMap ] )
          fd.features.addFeature( MFT_Parallax );
-
-      // If not parallax then allow per-pixel specular if
-      // we have real time lighting enabled.
-      else if (   fd.features[MFT_RTLighting] && 
-                  mMaterial->mPixelSpecular[stageNum] )
-         fd.features.addFeature( MFT_PixSpecular );
    }
 
    // Without realtime lighting and on lower end 
@@ -441,8 +431,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    // have per-pixel specular enabled.
    if( fd.features[ MFT_SpecularMap ] )
    {
-      fd.features.addFeature( MFT_PixSpecular );
-
       // Check for an alpha channel on the specular map. If it has one (and it
       // has values less than 255) than the artist has put the gloss map into
       // the alpha channel.

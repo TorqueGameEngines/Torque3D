@@ -56,7 +56,6 @@ ImplementFeatureType( MFT_RTLighting, MFG_Lighting, 2.0f, true );
 ImplementFeatureType( MFT_LightMap, MFG_Lighting, 3.0f, true );
 ImplementFeatureType( MFT_ToneMap, MFG_Lighting, 4.0f, true );
 ImplementFeatureType( MFT_VertLitTone, MFG_Lighting, 5.0f, false );
-ImplementFeatureType( MFT_PixSpecular, MFG_Lighting, 6.0f, true );
 ImplementFeatureType( MFT_StaticCubemap, U32(-1), -1.0, true );
 ImplementFeatureType( MFT_CubeMap, MFG_Lighting, 7.0f, true );
 ImplementFeatureType( MFT_SubSurface, MFG_Lighting, 8.0f, true );

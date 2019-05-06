@@ -419,7 +419,7 @@ void DeferredBumpFeatHLSL::processPix( Vector<ShaderComponent*> &componentList,
       Parent::processPix( componentList, fd );
       return;
    }
-   else if ( fd.features[MFT_PixSpecular] && !fd.features[MFT_SpecularMap] )
+   else if (!fd.features[MFT_SpecularMap] )
    {
       Var *bumpSample = (Var *)LangElement::find( "bumpSample" );
       if( bumpSample == NULL )
@@ -496,8 +496,7 @@ void DeferredBumpFeatHLSL::setTexData( Material::StageData &stageDat,
       }
    }
    else if (  !fd.features[MFT_Parallax] && !fd.features[MFT_SpecularMap] &&
-         ( fd.features[MFT_DeferredConditioner] ||
-           fd.features[MFT_PixSpecular] ) )
+         ( fd.features[MFT_DeferredConditioner]) )
    {
       passData.mTexType[ texIndex ] = Material::Bump;
       passData.mSamplerNames[ texIndex ] = "bumpMap";
@@ -512,115 +511,6 @@ void DeferredBumpFeatHLSL::setTexData( Material::StageData &stageDat,
       }
    }
 }
-
-
-void DeferredPixelSpecularHLSL::processVert( Vector<ShaderComponent*> &componentList, 
-                                             const MaterialFeatureData &fd )
-{
-   if( !fd.features[MFT_isDeferred] || !fd.features[MFT_RTLighting] )
-   {
-      Parent::processVert( componentList, fd );
-      return;
-   }
-   output = NULL;
-}
-
-void DeferredPixelSpecularHLSL::processPix(  Vector<ShaderComponent*> &componentList, 
-                                             const MaterialFeatureData &fd )
-{
-   if( !fd.features[MFT_isDeferred] || !fd.features[MFT_RTLighting] )
-   {
-      Parent::processPix( componentList, fd );
-      return;
-   }
-
-   MultiLine *meta = new MultiLine;
-
-   Var *specular = new Var;
-   specular->setType( "float" );
-   specular->setName( "specular" );
-   LangElement * specDecl = new DecOp( specular );
-
-   Var *pbrConfig = (Var*)LangElement::find( "pbrConfig" );
-   if(pbrConfig == NULL)
-   {
-      pbrConfig = new Var;
-      pbrConfig->setType( "float4" );
-      pbrConfig->setName( "pbrConfig" );
-      pbrConfig->uniform = true;
-      pbrConfig->constSortPos = cspPotentialPrimitive;
-   }
-
-   Var *smoothness = (Var*)LangElement::find("smoothness");
-   if (!smoothness)
-   {
-      smoothness = new Var("smoothness", "float");
-
-      // If the gloss map flag is set, than the specular power is in the alpha
-      // channel of the specular map
-      if (fd.features[MFT_GlossMap])
-         meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(smoothness), pbrConfig));
-      else
-      {
-         smoothness->uniform = true;
-         smoothness->constSortPos = cspPotentialPrimitive;
-      }
-   }
-
-   Var *metalness = (Var*)LangElement::find("metalness");
-   if (!metalness)
-   {
-       metalness = new Var("metalness", "float");
-       metalness->uniform = true;
-       metalness->constSortPos = cspPotentialPrimitive;
-   }
-
-   Var *lightInfoSamp = (Var *)LangElement::find( "lightInfoSample" );
-   Var *d_specular = (Var*)LangElement::find( "d_specular" );
-   Var *d_NL_Att = (Var*)LangElement::find( "d_NL_Att" );
-
-   AssertFatal( lightInfoSamp && d_specular && d_NL_Att,
-      "DeferredPixelSpecularHLSL::processPix - Something hosed the deferred features!" );
-
-   if (fd.features[ MFT_AccuMap ])
-   {
-      // change specularity where the accu texture is applied
-      Var *accuPlc = (Var*) LangElement::find( "plc" );
-      Var *accuSpecular = (Var*)LangElement::find( "accuSpecular" );
-      if(accuPlc != NULL && accuSpecular != NULL)
-         //d_specular = clamp(lerp( d_specular, accuSpecular * d_specular, plc.a), 0, 1)
-         meta->addStatement( new GenOp( "   @ = clamp( lerp( @, @ * @, @.a), 0, 1);\r\n", d_specular, d_specular, accuSpecular, d_specular, accuPlc ) );
-   }
-	  
-   // (a^m)^n = a^(m*n)
-   meta->addStatement( new GenOp( "   @ = pow( abs(@), max((@ / AL_ConstantSpecularPower),1.0f)) * @;\r\n", 
-       specDecl, d_specular, smoothness, metalness));
-
-   LangElement *specMul = new GenOp( "float4( @.rgb, 0 ) * @", pbrConfig, specular );
-   LangElement *final = specMul;
-
-   // We we have a normal map then mask the specular 
-   if( !fd.features[MFT_SpecularMap] && fd.features[MFT_NormalMap] )
-   {
-      Var *bumpSample = (Var*)LangElement::find( "bumpSample" );
-      final = new GenOp( "@ * @.a", final, bumpSample );
-   }
-
-   // add to color
-   meta->addStatement( new GenOp( "   @;\r\n", assignColor( final, Material::Add ) ) );
-
-   output = meta;
-}
-
-ShaderFeature::Resources DeferredPixelSpecularHLSL::getResources( const MaterialFeatureData &fd )
-{
-   if( !fd.features[MFT_isDeferred] || !fd.features[MFT_RTLighting] )
-      return Parent::getResources( fd );
-
-   Resources res; 
-   return res;
-}
-
 
 ShaderFeature::Resources DeferredMinnaertHLSL::getResources( const MaterialFeatureData &fd )
 {

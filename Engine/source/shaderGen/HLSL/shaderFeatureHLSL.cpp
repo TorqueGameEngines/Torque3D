@@ -2952,7 +2952,6 @@ void ReflectionProbeFeatHLSL::processVert(Vector<ShaderComponent*>& componentLis
 {
    MultiLine* meta = new MultiLine;
    output = meta;
-
    // Also output the worldToTanget transform which
    // we use to create the world space normal.
    getOutWorldToTangent(componentList, meta, fd);

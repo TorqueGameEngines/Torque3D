@@ -28,8 +28,10 @@ singleton Material(Cheetah_Main)
    specularPower[0] = "10";
    translucentBlendOp = "None";
    normalMap[0] = "art/shapes/Cheetah/Cheetah_N";
-   specularMap[0] = "art/shapes/Cheetah/Cheetah_S";
    castDynamicShadows = true;
+   diffuseColor[3] = "1 1 1 1";
+   specular0 = "0.9 0.9 0.9 1";
+   specularPower0 = "10";
 };
 
 singleton Material(Cheetah_TailLights)

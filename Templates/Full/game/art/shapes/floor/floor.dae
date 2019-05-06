@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>rexti</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.6;  Revision: 65</authoring_tool>
+      <source_data>file:///C:/Users/rexti/Desktop/mesh/floor/floor.max</source_data>
+    </contributor>
+    <created>2018-10-30T22:45:39</created>
+    <modified>2018-10-30T22:45:39</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="floor_mat">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.933 0.774 0.374 1</color>
+            </ambient>
+            <diffuse>
+              <color>0.933 0.774 0.374 1</color>
+            </diffuse>
+            <specular>
+              <color>0.933 0.774 0.374 1</color>
+            </specular>
+            <shininess>
+              <float>92</float>
+            </shininess>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="floor_mat-material" name="floor_mat">
+      <instance_effect url="#floor_mat"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-floor_geom" name="floor_geom">
+      <mesh>
+        <source id="geom-floor_geom-positions">
+          <float_array id="geom-floor_geom-positions-array" count="243">-0.762 -0.762 0 -0.5715 -0.762 0 -0.381 -0.762 0 -0.1905 -0.762 0 0 -0.762 0 0.1905 -0.762 0 0.381 -0.762 0 0.5715 -0.762 0 0.762 -0.762 0 -0.762 -0.5715 0 -0.5715 -0.5715 0 -0.381 -0.5715 0 -0.1905 -0.5715 0 0 -0.5715 0 0.1905 -0.5715 0 0.381 -0.5715 0 0.5715 -0.5715 0 0.762 -0.5715 0 -0.762 -0.381 0 -0.5715 -0.381 0 -0.381 -0.381 0 -0.1905 -0.381 0 0 -0.381 0 0.1905 -0.381 0 0.381 -0.381 0 0.5715 -0.381 0 0.762 -0.381 0 -0.762 -0.1905 0 -0.5715 -0.1905 0 -0.381 -0.1905 0 -0.1905 -0.1905 0 0 -0.1905 0 0.1905 -0.1905 0 0.381 -0.1905 0 0.5715 -0.1905 0 0.762 -0.1905 0 -0.762 0 0 -0.5715 0 0 -0.381 0 0 -0.1905 0 0 0 0 0 0.1905 0 0 0.381 0 0 0.5715 0 0 0.762 0 0 -0.762 0.1905 0 -0.5715 0.1905 0 -0.381 0.1905 0 -0.1905 0.1905 0 0 0.1905 0 0.1905 0.1905 0 0.381 0.1905 0 0.5715 0.1905 0 0.762 0.1905 0 -0.762 0.381 0 -0.5715 0.381 0 -0.381 0.381 0 -0.1905 0.381 0 0 0.381 0 0.1905 0.381 0 0.381 0.381 0 0.5715 0.381 0 0.762 0.381 0 -0.762 0.5715 0 -0.5715 0.5715 0 -0.381 0.5715 0 -0.1905 0.5715 0 0 0.5715 0 0.1905 0.5715 0 0.381 0.5715 0 0.5715 0.5715 0 0.762 0.5715 0 -0.762 0.762 0 -0.5715 0.762 0 -0.381 0.762 0 -0.1905 0.762 0 0 0.762 0 0.1905 0.762 0 0.381 0.762 0 0.5715 0.762 0 0.762 0.762 0</float_array>
+          <technique_common>
+            <accessor source="#geom-floor_geom-positions-array" count="81" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-floor_geom-normals">
+          <float_array id="geom-floor_geom-normals-array" count="243">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9999999 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9999999 0 0 0.9999999 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9999999 0 0 0.9999999 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9999999 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9999999 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#geom-floor_geom-normals-array" count="81" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-floor_geom-map1">
+          <float_array id="geom-floor_geom-map1-array" count="243">0 0 0 0.625 0 0 1.25 0 0 1.875 0 0 2.5 0 0 3.125 0 0 3.75 0 0 4.375 0 0 5 0 0 0 0.625 0 0.625 0.625 0 1.25 0.625 0 1.875 0.625 0 2.5 0.625 0 3.125 0.625 0 3.75 0.625 0 4.375 0.625 0 5 0.625 0 0 1.25 0 0.625 1.25 0 1.25 1.25 0 1.875 1.25 0 2.5 1.25 0 3.125 1.25 0 3.75 1.25 0 4.375 1.25 0 5 1.25 0 0 1.875 0 0.625 1.875 0 1.25 1.875 0 1.875 1.875 0 2.5 1.875 0 3.125 1.875 0 3.75 1.875 0 4.375 1.875 0 5 1.875 0 0 2.5 0 0.625 2.5 0 1.25 2.5 0 1.875 2.5 0 2.5 2.5 0 3.125 2.5 0 3.75 2.5 0 4.375 2.5 0 5 2.5 0 0 3.125 0 0.625 3.125 0 1.25 3.125 0 1.875 3.125 0 2.5 3.125 0 3.125 3.125 0 3.75 3.125 0 4.375 3.125 0 5 3.125 0 0 3.75 0 0.625 3.75 0 1.25 3.75 0 1.875 3.75 0 2.5 3.75 0 3.125 3.75 0 3.75 3.75 0 4.375 3.75 0 5 3.75 0 0 4.375 0 0.625 4.375 0 1.25 4.375 0 1.875 4.375 0 2.5 4.375 0 3.125 4.375 0 3.75 4.375 0 4.375 4.375 0 5 4.375 0 0 5 0 0.625 5 0 1.25 5 0 1.875 5 0 2.5 5 0 3.125 5 0 3.75 5 0 4.375 5 0 5 5 0</float_array>
+          <technique_common>
+            <accessor source="#geom-floor_geom-map1-array" count="81" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-floor_geom-map1-textangents">
+          <float_array id="geom-floor_geom-map1-textangents-array" count="243">1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0</float_array>
+          <technique_common>
+            <accessor source="#geom-floor_geom-map1-textangents-array" count="81" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-floor_geom-map1-texbinormals">
+          <float_array id="geom-floor_geom-map1-texbinormals-array" count="243">0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0</float_array>
+          <technique_common>
+            <accessor source="#geom-floor_geom-map1-texbinormals-array" count="81" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-floor_geom-vertices">
+          <input semantic="POSITION" source="#geom-floor_geom-positions"/>
+        </vertices>
+        <triangles material="floor_mat" count="128">
+          <input semantic="VERTEX" source="#geom-floor_geom-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-floor_geom-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-floor_geom-map1" offset="2" set="0"/>
+          <input semantic="TEXTANGENT" source="#geom-floor_geom-map1-textangents" offset="3" set="1"/>
+          <input semantic="TEXBINORMAL" source="#geom-floor_geom-map1-texbinormals" offset="3" set="1"/>
+          <p>0 0 0 0 1 1 1 1 10 2 10 2 10 2 10 2 9 3 9 3 0 0 0 0 1 1 1 1 2 4 2 4 11 5 11 5 11 5 11 5 10 2 10 2 1 1 1 1 2 4 2 4 3 6 3 6 12 7 12 7 12 7 12 7 11 5 11 5 2 4 2 4 3 6 3 6 4 8 4 8 13 9 13 9 13 9 13 9 12 7 12 7 3 6 3 6 4 8 4 8 5 10 5 10 14 11 14 11 14 11 14 11 13 9 13 9 4 8 4 8 5 10 5 10 6 12 6 12 15 13 15 13 15 13 15 13 14 11 14 11 5 10 5 10 6 12 6 12 7 14 7 14 16 15 16 15 16 15 16 15 15 13 15 13 6 12 6 12 7 14 7 14 8 16 8 16 17 17 17 17 17 17 17 17 16 15 16 15 7 14 7 14 9 3 9 3 10 2 10 2 19 18 19 18 19 18 19 18 18 19 18 19 9 3 9 3 10 2 10 2 11 5 11 5 20 20 20 20 20 20 20 20 19 18 19 18 10 2 10 2 11 5 11 5 12 7 12 7 21 21 21 21 21 21 21 21 20 20 20 20 11 5 11 5 12 7 12 7 13 9 13 9 22 22 22 22 22 22 22 22 21 21 21 21 12 7 12 7 13 9 13 9 14 11 14 11 23 23 23 23 23 23 23 23 22 22 22 22 13 9 13 9 14 11 14 11 15 13 15 13 24 24 24 24 24 24 24 24 23 23 23 23 14 11 14 11 15 13 15 13 16 15 16 15 25 25 25 25 25 25 25 25 24 24 24 24 15 13 15 13 16 15 16 15 17 17 17 17 26 26 26 26 26 26 26 26 25 25 25 25 16 15 16 15 18 19 18 19 19 18 19 18 28 27 28 27 28 27 28 27 27 28 27 28 18 19 18 19 19 18 19 18 20 20 20 20 29 29 29 29 29 29 29 29 28 27 28 27 19 18 19 18 20 20 20 20 21 21 21 21 30 30 30 30 30 30 30 30 29 29 29 29 20 20 20 20 21 21 21 21 22 22 22 22 31 31 31 31 31 31 31 31 30 30 30 30 21 21 21 21 22 22 22 22 23 23 23 23 32 32 32 32 32 32 32 32 31 31 31 31 22 22 22 22 23 23 23 23 24 24 24 24 33 33 33 33 33 33 33 33 32 32 32 32 23 23 23 23 24 24 24 24 25 25 25 25 34 34 34 34 34 34 34 34 33 33 33 33 24 24 24 24 25 25 25 25 26 26 26 26 35 35 35 35 35 35 35 35 34 34 34 34 25 25 25 25 27 28 27 28 28 27 28 27 37 36 37 36 37 36 37 36 36 37 36 37 27 28 27 28 28 27 28 27 29 29 29 29 38 38 38 38 38 38 38 38 37 36 37 36 28 27 28 27 29 29 29 29 30 30 30 30 39 39 39 39 39 39 39 39 38 38 38 38 29 29 29 29 30 30 30 30 31 31 31 31 40 40 40 40 40 40 40 40 39 39 39 39 30 30 30 30 31 31 31 31 32 32 32 32 41 41 41 41 41 41 41 41 40 40 40 40 31 31 31 31 32 32 32 32 33 33 33 33 42 42 42 42 42 42 42 42 41 41 41 41 32 32 32 32 33 33 33 33 34 34 34 34 43 43 43 43 43 43 43 43 42 42 42 42 33 33 33 33 34 34 34 34 35 35 35 35 44 44 44 44 44 44 44 44 43 43 43 43 34 34 34 34 36 37 36 37 37 36 37 36 46 45 46 45 46 45 46 45 45 46 45 46 36 37 36 37 37 36 37 36 38 38 38 38 47 47 47 47 47 47 47 47 46 45 46 45 37 36 37 36 38 38 38 38 39 39 39 39 48 48 48 48 48 48 48 48 47 47 47 47 38 38 38 38 39 39 39 39 40 40 40 40 49 49 49 49 49 49 49 49 48 48 48 48 39 39 39 39 40 40 40 40 41 41 41 41 50 50 50 50 50 50 50 50 49 49 49 49 40 40 40 40 41 41 41 41 42 42 42 42 51 51 51 51 51 51 51 51 50 50 50 50 41 41 41 41 42 42 42 42 43 43 43 43 52 52 52 52 52 52 52 52 51 51 51 51 42 42 42 42 43 43 43 43 44 44 44 44 53 53 53 53 53 53 53 53 52 52 52 52 43 43 43 43 45 46 45 46 46 45 46 45 55 54 55 54 55 54 55 54 54 55 54 55 45 46 45 46 46 45 46 45 47 47 47 47 56 56 56 56 56 56 56 56 55 54 55 54 46 45 46 45 47 47 47 47 48 48 48 48 57 57 57 57 57 57 57 57 56 56 56 56 47 47 47 47 48 48 48 48 49 49 49 49 58 58 58 58 58 58 58 58 57 57 57 57 48 48 48 48 49 49 49 49 50 50 50 50 59 59 59 59 59 59 59 59 58 58 58 58 49 49 49 49 50 50 50 50 51 51 51 51 60 60 60 60 60 60 60 60 59 59 59 59 50 50 50 50 51 51 51 51 52 52 52 52 61 61 61 61 61 61 61 61 60 60 60 60 51 51 51 51 52 52 52 52 53 53 53 53 62 62 62 62 62 62 62 62 61 61 61 61 52 52 52 52 54 55 54 55 55 54 55 54 64 63 64 63 64 63 64 63 63 64 63 64 54 55 54 55 55 54 55 54 56 56 56 56 65 65 65 65 65 65 65 65 64 63 64 63 55 54 55 54 56 56 56 56 57 57 57 57 66 66 66 66 66 66 66 66 65 65 65 65 56 56 56 56 57 57 57 57 58 58 58 58 67 67 67 67 67 67 67 67 66 66 66 66 57 57 57 57 58 58 58 58 59 59 59 59 68 68 68 68 68 68 68 68 67 67 67 67 58 58 58 58 59 59 59 59 60 60 60 60 69 69 69 69 69 69 69 69 68 68 68 68 59 59 59 59 60 60 60 60 61 61 61 61 70 70 70 70 70 70 70 70 69 69 69 69 60 60 60 60 61 61 61 61 62 62 62 62 71 71 71 71 71 71 71 71 70 70 70 70 61 61 61 61 63 64 63 64 64 63 64 63 73 72 73 72 73 72 73 72 72 73 72 73 63 64 63 64 64 63 64 63 65 65 65 65 74 74 74 74 74 74 74 74 73 72 73 72 64 63 64 63 65 65 65 65 66 66 66 66 75 75 75 75 75 75 75 75 74 74 74 74 65 65 65 65 66 66 66 66 67 67 67 67 76 76 76 76 76 76 76 76 75 75 75 75 66 66 66 66 67 67 67 67 68 68 68 68 77 77 77 77 77 77 77 77 76 76 76 76 67 67 67 67 68 68 68 68 69 69 69 69 78 78 78 78 78 78 78 78 77 77 77 77 68 68 68 68 69 69 69 69 70 70 70 70 79 79 79 79 79 79 79 79 78 78 78 78 69 69 69 69 70 70 70 70 71 71 71 71 80 80 80 80 80 80 80 80 79 79 79 79 70 70 70 70</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-floor_geom" name="floor_geom">
+        <translate>0.003635618 0.049337 0</translate>
+        <scale>10 10 10</scale>
+        <instance_geometry url="#geom-floor_geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="floor_mat" target="#floor_mat-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADA">
+            <cast_shadows sid="cast_shadows" type="bool">1</cast_shadows>
+            <receive_shadows sid="receive_shadows" type="bool">1</receive_shadows>
+            <primary_visibility sid="primary_visibility" type="bool">1</primary_visibility>
+            <secondary_visibility sid="secondary_visibility" type="bool">1</secondary_visibility>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

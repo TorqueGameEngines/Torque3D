@@ -45,7 +45,9 @@ public:
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
    Var* _getNormalMapTex();
-   
+
+   Var* _getCompositeMapTex();
+
    static Var* _getUniformVar( const char *name, const char *type, ConstantSortPosition csp );
    
    Var* _getDetailIdStrengthParallax();
@@ -158,6 +160,22 @@ public:
                             const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Additive"; }
+};
+
+class TerrainCompositeMapFeatGLSL : public TerrainFeatGLSL
+{
+public:
+
+	virtual void processVert(Vector<ShaderComponent*> &componentList,
+		const MaterialFeatureData &fd);
+
+	virtual void processPix(Vector<ShaderComponent*> &componentList,
+		const MaterialFeatureData &fd);
+
+	virtual Resources getResources(const MaterialFeatureData &fd);
+
+	virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
+	virtual String getName() { return "Composite Matinfo map"; }
 };
 
 class TerrainBlankInfoMapFeatGLSL : public ShaderFeatureGLSL

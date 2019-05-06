@@ -45,13 +45,10 @@ function initRenderManager()
       // provided in $inTex
       resolveEffect = "AL_FormatCopy";
    };
-   DiffuseRenderPassManager.addManager( new RenderPassStateBin() { renderOrder = 0.001; stateToken = AL_FormatToken; } );
-     
-   // We really need to fix the sky to render after all the 
-   // meshes... but that causes issues in reflections.
-   DiffuseRenderPassManager.addManager( new RenderObjectMgr(SkyBin) { bintype = "Sky"; renderOrder = 0.1; processAddOrder = 0.1; } );
-   
-   //DiffuseRenderPassManager.addManager( new RenderVistaMgr()               { bintype = "Vista"; renderOrder = 0.15; processAddOrder = 0.15; } );
+   DiffuseRenderPassManager.addManager( new RenderPassStateBin() { renderOrder = 0.001; stateToken = AL_FormatToken; } );     
+  
+   DiffuseRenderPassManager.addManager( new RenderProbeMgr(ProbeBin)       { bintype = "Probes"; renderOrder = 0.019; processAddOrder = 0.019; } );
+   //DiffuseRenderPassManager.addManager( new RenderVistaMgr()             { bintype = "Vista"; renderOrder = 0.15; processAddOrder = 0.15; } );
    
    DiffuseRenderPassManager.addManager( new RenderObjectMgr(BeginBin)      { bintype = "Begin"; renderOrder = 0.2; processAddOrder = 0.2; } );
    // Normal mesh rendering.
@@ -64,6 +61,8 @@ function initRenderManager()
    DiffuseRenderPassManager.addManager( new RenderMeshMgr(DecalRoadBin)    { bintype = "DecalRoad"; renderOrder = 0.8; processAddOrder = 0.8; } );
    DiffuseRenderPassManager.addManager( new RenderMeshMgr(DecalBin)        { bintype = "Decal"; renderOrder = 0.81; processAddOrder = 0.81; } );
    DiffuseRenderPassManager.addManager( new RenderOcclusionMgr(OccluderBin){ bintype = "Occluder"; renderOrder = 0.9; processAddOrder = 0.9; } );
+   // Render the sky last
+   DiffuseRenderPassManager.addManager( new RenderObjectMgr(SkyBin) { bintype = "Sky"; renderOrder = 0.95; processAddOrder = 0.95; } );
      
    // We now render translucent objects that should handle
    // their own fogging and lighting.

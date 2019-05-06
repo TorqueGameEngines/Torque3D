@@ -195,7 +195,7 @@ void SceneManager::renderScene( SceneRenderState* renderState, U32 objectMask, S
    // Get the lights for rendering the scene.
 
    PROFILE_START( SceneGraph_registerLights );
-      LIGHTMGR->registerGlobalLights( &renderState->getCullingFrustum(), false );
+      LIGHTMGR->registerGlobalLights( &renderState->getCullingFrustum(), false, renderState->isDiffusePass());
    PROFILE_END();
 
    // If its a diffuse pass, update the current ambient light level.

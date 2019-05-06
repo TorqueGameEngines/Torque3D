@@ -52,6 +52,11 @@ GFXTexHandle::GFXTexHandle( const String &texName, GFXTextureProfile *profile, c
    set( texName, profile, desc );
 }
 
+GFXTexHandle::GFXTexHandle(const String &texNameR, const String &texNameG, const String &texNameB, const String &texNameA, U32 inputKey[4], GFXTextureProfile *profile, const String &desc)
+{
+   set(texNameR, texNameG, texNameB, texNameA, inputKey, profile, desc);
+}
+
 bool GFXTexHandle::set( const String &texName, GFXTextureProfile *profile, const String &desc )
 {
    // Clear the existing texture first, so that
@@ -61,6 +66,24 @@ bool GFXTexHandle::set( const String &texName, GFXTextureProfile *profile, const
    // Create and set the new texture.
    AssertFatal( texName.isNotEmpty(), "Texture name is empty" );
    StrongObjectRef::set( TEXMGR->createTexture( texName, profile ) );
+   
+   #ifdef TORQUE_DEBUG
+      if ( getPointer() )
+         getPointer()->mDebugDescription = desc;
+   #endif
+   
+   return isValid();
+}
+
+bool GFXTexHandle::set(const String &texNameR, const String &texNameG, const String &texNameB, const String &texNameA, U32 inputKey[4], GFXTextureProfile *profile, const String &desc)
+{
+   // Clear the existing texture first, so that
+   // its memory is free for the new allocation.
+   free();
+   
+   // Create and set the new texture.
+   AssertFatal( texNameR.isNotEmpty(), "Texture name is empty" );
+   StrongObjectRef::set( TEXMGR->createCompositeTexture( texNameR, texNameG, texNameB, texNameA, inputKey, profile ) );
    
    #ifdef TORQUE_DEBUG
       if ( getPointer() )

@@ -29,6 +29,9 @@
 #ifndef _GFXENUMS_H_
 #include "gfx/gfxEnums.h"
 #endif
+#ifndef _MMATHFN_H_
+#include "math/mMathFn.h"
+#endif
 
 struct DDSFile;
 
@@ -57,6 +60,8 @@ namespace ImageUtil
 
    //convert to sRGB format
    GFXFormat toSRGBFormat(const GFXFormat format);
+
+   U32 getMaxMipCount(const U32 width, const U32 height);
 };
 
 #endif

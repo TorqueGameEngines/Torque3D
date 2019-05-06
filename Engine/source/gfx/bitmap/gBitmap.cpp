@@ -297,12 +297,16 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
      case GFXFormatR8G8B8X8:
      case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
       break;
+	 case GFXFormatL16:
      case GFXFormatR5G6B5:
      case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
       break;
-     default:
-      AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
-      break;
+     case GFXFormatR16G16B16A16F:
+      case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
+         break;
+      default:
+         AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
+         break;
    }
 
    // Set up the mip levels, if necessary...
@@ -371,8 +375,12 @@ void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, co
    case GFXFormatR8G8B8X8:
    case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
       break;
+   case GFXFormatL16:
    case GFXFormatR5G6B5:
    case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
+      break;
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
       break;
    default:
       AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
@@ -445,6 +453,13 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
       {
          for(U32 i = 1; i < mNumMipLevels; i++)
             bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+         break;
+      }
+
+      case GFXFormatR16G16B16A16F:
+      {
+         for (U32 i = 1; i < mNumMipLevels; i++)
+            bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
          break;
       }
       
@@ -679,6 +694,7 @@ bool GBitmap::checkForTransparency()
    {
       // Non-transparent formats
       case GFXFormatL8:
+	  case GFXFormatL16:
       case GFXFormatR8G8B8:
       case GFXFormatR5G6B5:
          break;
@@ -754,7 +770,8 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor) const
      case GFXFormatL8:
       rColor.set( *pLoc, *pLoc, *pLoc, *pLoc );
       break;
-
+	 case GFXFormatL16:
+		 rColor.set(U8(U16((pLoc[0] << 8) + pLoc[2])), 0, 0, 0);
      case GFXFormatR8G8B8:
      case GFXFormatR8G8B8X8:
         rColor.set( pLoc[0], pLoc[1], pLoc[2], 255 );
@@ -802,6 +819,10 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
      case GFXFormatL8:
       *pLoc = rColor.alpha;
       break;
+
+	 case GFXFormatL16:
+		 dMemcpy(pLoc, &rColor, 2 * sizeof(U8));
+		 break;
 
      case GFXFormatR8G8B8:
       dMemcpy( pLoc, &rColor, 3 * sizeof( U8 ) );
@@ -1122,6 +1143,7 @@ bool GBitmap::read(Stream& io_rStream)
       break;
      case GFXFormatR8G8B8A8:       mBytesPerPixel = 4;
       break;
+	 case GFXFormatL16:
      case GFXFormatR5G6B5:
      case GFXFormatR5G5B5A1:    mBytesPerPixel = 2;
       break;

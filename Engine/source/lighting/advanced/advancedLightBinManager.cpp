@@ -40,9 +40,10 @@
 #include "gfx/gfxDebugEvent.h"
 #include "math/util/matrixSet.h"
 #include "console/consoleTypes.h"
+#include "gfx/gfxTextureManager.h"
 
-const RenderInstType AdvancedLightBinManager::RIT_LightInfo( "LightInfo" );
-const String AdvancedLightBinManager::smBufferName( "lightinfo" );
+const RenderInstType AdvancedLightBinManager::RIT_LightInfo( "specularLighting" );
+const String AdvancedLightBinManager::smBufferName( "specularLighting" );
 
 ShadowFilterMode AdvancedLightBinManager::smShadowFilterMode = ShadowFilterMode_SoftShadowHighQuality;
 bool AdvancedLightBinManager::smPSSMDebugRender = false;
@@ -115,22 +116,12 @@ ConsoleDocClass( AdvancedLightBinManager,
 AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = NULL */, 
                                                  ShadowMapManager *sm /* = NULL */, 
                                                  GFXFormat lightBufferFormat /* = GFXFormatR8G8B8A8 */ )
-   :  RenderTexTargetBinManager( RIT_LightInfo, 1.0f, 1.0f, lightBufferFormat ), 
+   :  RenderBinManager( RIT_LightInfo, 1.0f, 1.0f ), 
       mNumLightsCulled(0), 
       mLightManager(lm), 
-      mShadowManager(sm),
-      mConditioner(NULL)
+      mShadowManager(sm)
 {
-   // Create an RGB conditioner
-   mConditioner = new AdvancedLightBufferConditioner( getTargetFormat(), 
-                                                      AdvancedLightBufferConditioner::RGB );
-   mNamedTarget.setConditioner( mConditioner ); 
-   mNamedTarget.registerWithName( smBufferName );
-
-   // We want a full-resolution buffer
-   mTargetSizeType = RenderTexTargetBinManager::WindowSize;
-
-   mMRTLightmapsDuringDeferred = false;
+   mMRTLightmapsDuringDeferred = true;
 
    Con::NotifyDelegate callback( this, &AdvancedLightBinManager::_deleteLightMaterials );
    Con::addVariableNotify( "$pref::Shadows::filterMode", callback );
@@ -142,8 +133,6 @@ AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = 
 AdvancedLightBinManager::~AdvancedLightBinManager()
 {
    _deleteLightMaterials();
-
-   SAFE_DELETE(mConditioner);
 
    Con::NotifyDelegate callback( this, &AdvancedLightBinManager::_deleteLightMaterials );
    Con::removeVariableNotify( "$pref::shadows::filterMode", callback );
@@ -172,12 +161,34 @@ void AdvancedLightBinManager::consoleInit()
 
 bool AdvancedLightBinManager::setTargetSize(const Point2I &newTargetSize)
 {
-   bool ret = Parent::setTargetSize( newTargetSize );
+   /*bool ret = Parent::setTargetSize( newTargetSize );
 
    // We require the viewport to match the default.
    mNamedTarget.setViewport( GFX->getViewport() );
 
-   return ret;
+   return ret;*/
+   return true;
+}
+
+bool AdvancedLightBinManager::_updateTargets()
+{
+  /* PROFILE_SCOPE(AdvancedLightBinManager_updateTargets);
+
+   bool ret = Parent::_updateTargets();
+
+   mDiffuseLightingTarget = NamedTexTarget::find("diffuseLighting");
+   if (mDiffuseLightingTarget.isValid())
+   {
+      mDiffuseLightingTex = mDiffuseLightingTarget->getTexture();
+
+      for (U32 i = 0; i < mTargetChainLength; i++)
+         mTargetChain[i]->attachTexture(GFXTextureTarget::Color1, mDiffuseLightingTex);
+   }
+
+   GFX->finalizeReset();
+
+   return ret;*/
+   return true;
 }
 
 void AdvancedLightBinManager::addLight( LightInfo *light )
@@ -249,18 +260,31 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    GFXDEBUGEVENT_SCOPE( AdvancedLightBinManager_Render, ColorI::RED );
 
    // Tell the superclass we're about to render
-   if ( !_onPreRender( state ) )
+   //if ( !_onPreRender( state ) )
+   //   return;
+
+   NamedTexTargetRef sceneColorTargetRef = NamedTexTarget::find("AL_FormatToken");
+   if (sceneColorTargetRef.isNull())
       return;
 
-   // Clear as long as there isn't MRT population of light buffer with lightmap data
-   if ( !MRTLightmapsDuringDeferred() )
-      GFX->clear(GFXClearTarget, ColorI(0, 0, 0, 0), 1.0f, 0);
+   GFXTextureTargetRef lightingTargetRef = GFX->allocRenderToTextureTarget();
+
+   if (lightingTargetRef.isNull())
+      return;
+
+   //Do a quick pass to update our probes if they're dirty
+   //PROBEMGR->updateDirtyProbes();
+
+   lightingTargetRef->attachTexture(GFXTextureTarget::Color0, sceneColorTargetRef->getTexture());
+
+   GFX->pushActiveRenderTarget();
+   GFX->setActiveRenderTarget(lightingTargetRef);
+
+   GFX->setViewport(sceneColorTargetRef->getViewport());
 
    // Restore transforms
    MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
    matrixSet.restoreSceneViewProjection();
-
-   const MatrixF &worldToCameraXfm = matrixSet.getWorldToCamera();
 
    // Set up the SG Data
    SceneData sgData;
@@ -291,7 +315,7 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
 
       // Set up SG data
       setupSGData( sgData, state, sunLight );
-      vectorMatInfo->setLightParameters( sunLight, state, worldToCameraXfm );
+      vectorMatInfo->setLightParameters( sunLight, state );
 
       // Set light holds the active shadow map.       
       mShadowManager->setLightShadowMapForLight( sunLight );
@@ -329,7 +353,7 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
       GFXDEBUGEVENT_SCOPE( AdvancedLightBinManager_Render_Light, ColorI::RED );
 
       setupSGData( sgData, state, curLightInfo );
-      curLightMat->setLightParameters( curLightInfo, state, worldToCameraXfm );
+      curLightMat->setLightParameters( curLightInfo, state );
       mShadowManager->setLightShadowMap( curEntry.shadowMap );
       mShadowManager->setLightDynamicShadowMap( curEntry.dynamicShadowMap );
 
@@ -368,7 +392,8 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    getRenderSignal().trigger(state, this);
 
    // Finish up the rendering
-   _onPostRender();
+   //_onPostRender();
+   GFX->popActiveRenderTarget();
 }
 
 AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMaterial(   LightInfo::Type lightType, 
@@ -501,17 +526,6 @@ void AdvancedLightBinManager::_setupPerFrameParameters( const SceneRenderState *
                                           farPlane, 
                                           vsFarPlane);
    }
-
-   MatrixSet &matrixSet = getRenderPass()->getMatrixSet();
-   //matrixSet.restoreSceneViewProjection();
-
-   const MatrixF &worldToCameraXfm = matrixSet.getWorldToCamera();
-
-   MatrixF inverseViewMatrix = worldToCameraXfm;
-   //inverseViewMatrix.fullInverse();
-   //inverseViewMatrix.transpose();
-
-   //MatrixF inverseViewMatrix = MatrixF::Identity;
 }
 
 void AdvancedLightBinManager::setupSGData( SceneData &data, const SceneRenderState* state, LightInfo *light )
@@ -596,10 +610,9 @@ AdvancedLightBinManager::LightMaterialInfo::LightMaterialInfo( const String &mat
    lightPosition(NULL), 
    lightDirection(NULL), 
    lightColor(NULL), 
-   lightAttenuation(NULL),
-   lightRange(NULL), 
-   lightAmbient(NULL), 
-   lightTrilight(NULL), 
+   lightRange(NULL),
+   lightInvSqrRange(NULL),
+   lightAmbient(NULL),
    lightSpotParams(NULL)
 {   
    Material *mat = MATMGR->getMaterialDefinitionByName( matName );
@@ -615,10 +628,9 @@ AdvancedLightBinManager::LightMaterialInfo::LightMaterialInfo( const String &mat
 
    lightDirection = matInstance->getMaterialParameterHandle("$lightDirection");
    lightAmbient = matInstance->getMaterialParameterHandle("$lightAmbient");
-   lightTrilight = matInstance->getMaterialParameterHandle("$lightTrilight");
    lightSpotParams = matInstance->getMaterialParameterHandle("$lightSpotParams");
-   lightAttenuation = matInstance->getMaterialParameterHandle("$lightAttenuation");
    lightRange = matInstance->getMaterialParameterHandle("$lightRange");
+   lightInvSqrRange = matInstance->getMaterialParameterHandle("$lightInvSqrRange");
    lightPosition = matInstance->getMaterialParameterHandle("$lightPosition");
    farPlane = matInstance->getMaterialParameterHandle("$farPlane");
    vsFarPlane = matInstance->getMaterialParameterHandle("$vsFarPlane");
@@ -655,99 +667,51 @@ void AdvancedLightBinManager::LightMaterialInfo::setViewParameters(  const F32 _
    matParams->setSafe( zNearFarInvNearFar, Point4F( _zNear, _zFar, 1.0f / _zNear, 1.0f / _zFar ) );
 }
 
-void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const LightInfo *lightInfo, const SceneRenderState* renderState, const MatrixF &worldViewOnly )
+void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const LightInfo *lightInfo, const SceneRenderState* renderState )
 {
    MaterialParameters *matParams = matInstance->getMaterialParameters();
 
-   // Set color in the right format, set alpha to the luminance value for the color.
-   LinearColorF col = lightInfo->getColor();
-
-   // TODO: The specularity control of the light
-   // is being scaled by the overall lumiance.
-   //
-   // Not sure if this may be the source of our
-   // bad specularity results maybe?
-   //
-
-   const Point3F colorToLumiance( 0.3576f, 0.7152f, 0.1192f );
-   F32 lumiance = mDot(*((const Point3F *)&lightInfo->getColor()), colorToLumiance );
-   col.alpha *= lumiance;
-
-   matParams->setSafe( lightColor, col );
+   matParams->setSafe( lightColor, lightInfo->getColor() );
    matParams->setSafe( lightBrightness, lightInfo->getBrightness() );
 
    switch( lightInfo->getType() )
    {
    case LightInfo::Vector:
       {
-         VectorF lightDir = lightInfo->getDirection();
-         worldViewOnly.mulV(lightDir);
-         lightDir.normalize();
-         matParams->setSafe( lightDirection, lightDir );
-
-         // Set small number for alpha since it represents existing specular in
-         // the vector light. This prevents a divide by zero.
-         LinearColorF ambientColor = renderState->getAmbientLightColor();
-         ambientColor.alpha = 0.00001f;
-         matParams->setSafe( lightAmbient, ambientColor );
-
-         // If no alt color is specified, set it to the average of
-         // the ambient and main color to avoid artifacts.
-         //
-         // TODO: Trilight disabled until we properly implement it
-         // in the light info!
-         //
-         //LinearColorF lightAlt = lightInfo->getAltColor();
-         LinearColorF lightAlt( LinearColorF::BLACK ); // = lightInfo->getAltColor();
-         if ( lightAlt.red == 0.0f && lightAlt.green == 0.0f && lightAlt.blue == 0.0f )
-            lightAlt = (lightInfo->getColor() + renderState->getAmbientLightColor()) / 2.0f;
-
-         LinearColorF trilightColor = lightAlt;
-         matParams->setSafe(lightTrilight, trilightColor);
+         matParams->setSafe( lightDirection, lightInfo->getDirection());
+         matParams->setSafe( lightAmbient, renderState->getAmbientLightColor());
       }
       break;
 
    case LightInfo::Spot:
       {
          const F32 outerCone = lightInfo->getOuterConeAngle();
-         const F32 innerCone = getMin( lightInfo->getInnerConeAngle(), outerCone );
-         const F32 outerCos = mCos( mDegToRad( outerCone / 2.0f ) );
-         const F32 innerCos = mCos( mDegToRad( innerCone / 2.0f ) );
-         Point4F spotParams(  outerCos, 
-                              innerCos - outerCos, 
-                              mCos( mDegToRad( outerCone ) ), 
-                              0.0f );
+         const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone);
+         const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
+         const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
+         Point2F spotParams(outerCos,innerCos - outerCos); 
 
          matParams->setSafe( lightSpotParams, spotParams );
+         matParams->setSafe( lightDirection, lightInfo->getDirection());
+         matParams->setSafe( lightPosition, lightInfo->getPosition());
 
-         VectorF lightDir = lightInfo->getDirection();
-         worldViewOnly.mulV(lightDir);
-         lightDir.normalize();
-         matParams->setSafe( lightDirection, lightDir );
+         const F32 radius = lightInfo->getRange().x;
+         const F32 invSqrRadius = 1.0f / mSquared(radius);
+         matParams->setSafe(lightRange, radius);
+         matParams->setSafe(lightInvSqrRange, invSqrRadius);
       }
-      // Fall through
+      break;
 
    case LightInfo::Point:
-   {
-      const F32 radius = lightInfo->getRange().x;
-      matParams->setSafe( lightRange, radius );
+      {
+         matParams->setSafe(lightPosition, lightInfo->getPosition());
 
-      Point3F lightPos;
-      worldViewOnly.mulP(lightInfo->getPosition(), &lightPos);
-      matParams->setSafe( lightPosition, lightPos );
-
-      // Get the attenuation falloff ratio and normalize it.
-      Point3F attenRatio = lightInfo->getExtended<ShadowMapParams>()->attenuationRatio;
-      F32 total = attenRatio.x + attenRatio.y + attenRatio.z;
-      if ( total > 0.0f )
-         attenRatio /= total;
-
-      Point2F attenParams( ( 1.0f / radius ) * attenRatio.y,
-                           ( 1.0f / ( radius * radius ) ) * attenRatio.z );
-
-      matParams->setSafe( lightAttenuation, attenParams );
+         const F32 radius = lightInfo->getRange().x;
+         const F32 invSqrRadius = 1.0f / (radius * radius);
+         matParams->setSafe( lightRange, radius);
+         matParams->setSafe( lightInvSqrRange, invSqrRadius);  
+      }
       break;
-   }
 
    default:
       AssertFatal( false, "Bad light type!" );

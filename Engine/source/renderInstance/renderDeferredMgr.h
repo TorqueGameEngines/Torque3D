@@ -91,6 +91,9 @@ protected:
 
    DeferredMatInstance *mDeferredMatInstance;
 
+   ///
+   Vector< MainSortElem > mProbeElementList;
+
    virtual void _registerFeatures();
    virtual void _unregisterFeatures();
    virtual bool _updateTargets();
@@ -99,20 +102,13 @@ protected:
    bool _lightManagerActivate(bool active);
 
    // Deferred Shading
-   GFXVertexBufferHandle<GFXVertexPC>  mClearGBufferVerts;
-   GFXShaderRef                        mClearGBufferShader;
-   GFXStateBlockRef                    mStateblock;
    NamedTexTarget                      mColorTarget;
    NamedTexTarget                      mMatInfoTarget;
    GFXTexHandle                        mColorTex;
    GFXTexHandle                        mMatInfoTex;
-   GFXShaderConstBufferRef             mShaderConsts;
-   GFXShaderConstHandle                *mSpecularStrengthSC;  
-   GFXShaderConstHandle                *mSpecularPowerSC;
-
-public:
-   void clearBuffers();
-   void _initShaders();
+   GFXTexHandle                        mDiffuseLightTex;
+   GFXTexHandle                        mSpecularLightTex;
+   GFXShaderConstBufferRef             mShaderConsts; 
 };
 
 //------------------------------------------------------------------------------

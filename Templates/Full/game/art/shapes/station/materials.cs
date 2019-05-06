@@ -24,14 +24,11 @@ new Material(Structure_wall)
 {
    mapTo = "building01walls";
    diffuseMap[0] = "art/shapes/station/building01walls";
-   //emissive[0] = true;
-};
-
-
-new Material(Structure_grid)
-{
-   mapTo = "grid";
-   diffuseMap[0] = "art/shapes/station/grid";
+   normalMap[0] = "art/shapes/station/building01walls_n.dds";
+   specularMap[0] = "art/shapes/station/building01walls_c.dds";
+   effectColor[0] = "InvisibleBlack";
+   materialTag0 = "Miscellaneous";
+   pixelSpecular0 = "0";
    //emissive[0] = true;
 };
 
@@ -40,6 +37,20 @@ new Material(Structure_plate)
 {
    mapTo = "plate";
    diffuseMap[0] = "art/shapes/station/plate";
+   normalMap[0] = "art/shapes/station/plate_n.dds";
+   specularMap[0] = "art/shapes/station/plate_c.dds";
+   pixelSpecular0 = "0";
+   materialTag0 = "Miscellaneous";
+   //emissive[0] = true;
+};
+
+
+new Material(Structure_grid)
+{
+   mapTo = "grid";
+   diffuseMap[0] = "art/shapes/station/grid";
+   normalMap[0] = "art/shapes/station/grid_n.dds";
+   specularMap[0] = "art/shapes/station/grid_c.dds";
    //emissive[0] = true;
 };
 

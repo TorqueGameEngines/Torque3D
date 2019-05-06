@@ -240,7 +240,7 @@ static bool sReadPNG(Stream &stream, GBitmap *bitmap)
       png_set_expand(png_ptr);
 
       if (bit_depth == 16)
-         format = GFXFormatR5G6B5;
+         format = GFXFormatL16;
       else
          format = GFXFormatA8;
    }
@@ -276,7 +276,7 @@ static bool sReadPNG(Stream &stream, GBitmap *bitmap)
       AssertFatal(rowBytes == width * 4,
          "Error, our rowbytes are incorrect for this transform... (4)");
    }
-   else if (format == GFXFormatR5G6B5) 
+   else if (format == GFXFormatL16)
    {
       AssertFatal(rowBytes == width * 2,
          "Error, our rowbytes are incorrect for this transform... (2)");

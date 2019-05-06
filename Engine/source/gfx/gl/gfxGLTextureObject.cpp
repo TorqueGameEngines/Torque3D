@@ -149,14 +149,9 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    // check format limitations
    // at the moment we only support RGBA for the source (other 4 byte formats should
    // be easy to add though)
-   AssertFatal(mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_SRGB , "GFXGLTextureObject::copyToBmp - invalid format");
-   AssertFatal(bmp->getFormat() == GFXFormatR8G8B8A8 || bmp->getFormat() == GFXFormatR8G8B8 || bmp->getFormat() == GFXFormatR8G8B8A8_SRGB, "GFXGLTextureObject::copyToBmp - invalid format");
-   
-   if(mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_SRGB)
-      return false;
-
-   if(bmp->getFormat() != GFXFormatR8G8B8A8 && bmp->getFormat() != GFXFormatR8G8B8 && bmp->getFormat() != GFXFormatR8G8B8A8_SRGB )
-      return false;
+   AssertFatal(mFormat == GFXFormatR16G16B16A16F || mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB, "copyToBmp: invalid format");
+   if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB)
+	   return false;
 
    AssertFatal(bmp->getWidth() == getWidth(), "GFXGLTextureObject::copyToBmp - invalid size");
    AssertFatal(bmp->getHeight() == getHeight(), "GFXGLTextureObject::copyToBmp - invalid size");
@@ -168,11 +163,6 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
 
    U8 dstBytesPerPixel = GFXFormat_getByteSize( bmp->getFormat() );
    U8 srcBytesPerPixel = GFXFormat_getByteSize( mFormat );
-   if(dstBytesPerPixel == srcBytesPerPixel)
-   {
-      glGetTexImage(mBinding, 0, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], bmp->getWritableBits());
-      return true;
-   }
 
    FrameAllocatorMarker mem;
    
@@ -183,16 +173,23 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    glGetTexImage(mBinding, 0, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], orig);
    
    PROFILE_START(GFXGLTextureObject_copyToBmp_pixCopy);
-   for(int i = 0; i < srcPixelCount; ++i)
+   if (mFormat == GFXFormatR16G16B16A16F)
    {
-      dest[0] = orig[0];
-      dest[1] = orig[1];
-      dest[2] = orig[2];
-      if(dstBytesPerPixel == 4)
-         dest[3] = orig[3];
+	   dMemcpy(dest, orig, sizeof(U16) * 4);
+   }
+   else
+   {
+	   for (int i = 0; i < srcPixelCount; ++i)
+	   {
+		   dest[0] = orig[0];
+		   dest[1] = orig[1];
+		   dest[2] = orig[2];
+		   if (dstBytesPerPixel == 4)
+			   dest[3] = orig[3];
 
-      orig += srcBytesPerPixel;
-      dest += dstBytesPerPixel;
+		   orig += srcBytesPerPixel;
+		   dest += dstBytesPerPixel;
+	   }
    }
    PROFILE_END();
 

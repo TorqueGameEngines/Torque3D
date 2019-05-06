@@ -1842,7 +1842,7 @@ public:
    virtual WaterObject* getCurrentWaterObject();
 
    void setCurrentWaterObject( WaterObject *obj );
-
+   void setTransform(const MatrixF & mat);
    virtual F32 getMass() const { return mMass; }
 
    /// @name Network

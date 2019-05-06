@@ -84,8 +84,6 @@ MaterialManager::MaterialManager()
    Con::NotifyDelegate callabck2( this, &MaterialManager::_onDisableMaterialFeature );
    Con::setVariable( "$pref::Video::disableNormalMapping", "false" );
    Con::addVariableNotify( "$pref::Video::disableNormalMapping", callabck2 );
-   Con::setVariable( "$pref::Video::disablePixSpecular", "false" );
-   Con::addVariableNotify( "$pref::Video::disablePixSpecular", callabck2 );
    Con::setVariable( "$pref::Video::disableCubemapping", "false" );
    Con::addVariableNotify( "$pref::Video::disableCubemapping", callabck2 );
    Con::setVariable( "$pref::Video::disableParallaxMapping", "false" );
@@ -416,12 +414,6 @@ void MaterialManager::recalcFeaturesFromPrefs()
 
    mExclusionFeatures.setFeature(   MFT_NormalMap, 
                                     Con::getBoolVariable( "$pref::Video::disableNormalMapping", false ) );
-
-   mExclusionFeatures.setFeature(   MFT_SpecularMap,
-                                    Con::getBoolVariable( "$pref::Video::disablePixSpecular", false ) );
-
-   mExclusionFeatures.setFeature(   MFT_PixSpecular,
-                                    Con::getBoolVariable( "$pref::Video::disablePixSpecular", false ) );
 
    mExclusionFeatures.setFeature(   MFT_CubeMap, 
                                     Con::getBoolVariable( "$pref::Video::disableCubemapping", false ) );

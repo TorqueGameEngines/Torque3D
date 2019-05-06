@@ -221,6 +221,11 @@ inline Point4F Point4F::operator /(F32 t) const
    return Point4F( x * f, y * f, z * f, w * f );
 }
 
+inline F32 mDot(const Point4F &p1, const Point4F &p2)
+{
+   return (p1.x*p2.x + p1.y*p2.y + p1.z*p2.z + p1.w*p2.w);
+}
+
 //------------------------------------------------------------------------------
 //-------------------------------------- Point4F
 

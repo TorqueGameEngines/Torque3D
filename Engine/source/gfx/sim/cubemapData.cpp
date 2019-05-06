@@ -34,6 +34,7 @@
 #include "scene/sceneManager.h"
 #include "console/engineAPI.h"
 #include "math/mathUtils.h"
+#include "gfx/bitmap/cubemapSaver.h"
 
 IMPLEMENT_CONOBJECT( CubemapData );
 
@@ -111,7 +112,7 @@ void CubemapData::createMap()
           {
              if (!mCubeFaceFile[i].isEmpty())
              {
-                if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
+                if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureSRGBProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
                 {
                    Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeFaceFile[i].c_str());
                    initSuccess = false;
@@ -145,7 +146,7 @@ void CubemapData::updateFaces()
       {
          if (!mCubeFaceFile[i].isEmpty())
          {
-            if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
+            if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureSRGBProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
             {
                initSuccess = false;
                Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeFaceFile[i].c_str());
@@ -163,12 +164,25 @@ void CubemapData::updateFaces()
 	}
 }
 
+void CubemapData::setCubemapFile(FileName newCubemapFile)
+{
+   mCubeMapFile = newCubemapFile;
+}
+
 void CubemapData::setCubeFaceFile(U32 index, FileName newFaceFile)
 {
    if (index >= 6)
       return;
 
    mCubeFaceFile[index] = newFaceFile;
+}
+
+void CubemapData::setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture)
+{
+   if (index >= 6)
+      return;
+
+   mCubeFace[index] = newFaceTexture;
 }
 
 DefineEngineMethod( CubemapData, updateFaces, void, (),,
@@ -182,4 +196,19 @@ DefineEngineMethod( CubemapData, getFilename, const char*, (),,
    "defined.  This is used by the material editor." )
 {
    return object->getFilename();
+}
+
+DefineEngineMethod(CubemapData, save, void, (const char* filename, const GFXFormat format), ("", GFXFormatBC1),
+	"Returns the script filename of where the CubemapData object was "
+	"defined.  This is used by the material editor.")
+{
+	if (filename == "")
+      filename = object->getName();
+
+   //add dds extension if needed
+   String finalName = String(filename);
+   if(!finalName.endsWith(".dds") || !finalName.endsWith(".DDS"))
+      finalName += String(".dds");
+
+   CubemapSaver::save(object->mCubemap, finalName, format);
 }

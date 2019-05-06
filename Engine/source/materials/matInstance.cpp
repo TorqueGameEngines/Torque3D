@@ -583,6 +583,7 @@ void MatInstance::dumpShaderInfo() const
 
    Con::printf( "Material Info for object %s - %s", mMaterial->getName(), mMaterial->mMapTo.c_str() );
 
+
    if ( mProcessedMaterial == NULL )
    {
       Con::printf( "  [no processed material!]" );

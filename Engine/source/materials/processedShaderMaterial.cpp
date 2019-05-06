@@ -41,6 +41,8 @@
 #include "gfx/util/screenspace.h"
 #include "math/util/matrixSet.h"
 
+#include "renderInstance/renderProbeMgr.h"
+
 // We need to include customMaterialDefinition for ShaderConstHandles::init
 #include "materials/customMaterialDefinition.h"
 
@@ -56,8 +58,8 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/ 
    mTexMatSC = shader->getShaderConstHandle(ShaderGenVars::texMat);
    mToneMapTexSC = shader->getShaderConstHandle(ShaderGenVars::toneMap);
    mSpecularColorSC = shader->getShaderConstHandle(ShaderGenVars::specularColor);
-   mSpecularPowerSC = shader->getShaderConstHandle(ShaderGenVars::specularPower);
-   mSpecularStrengthSC = shader->getShaderConstHandle(ShaderGenVars::specularStrength);
+   mSmoothnessSC = shader->getShaderConstHandle(ShaderGenVars::smoothness);
+   mMetalnessSC = shader->getShaderConstHandle(ShaderGenVars::metalness);
    mAccuScaleSC = shader->getShaderConstHandle("$accuScale");
    mAccuDirectionSC = shader->getShaderConstHandle("$accuDirection");
    mAccuStrengthSC = shader->getShaderConstHandle("$accuStrength");
@@ -73,6 +75,7 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/ 
    mModelViewProjSC = shader->getShaderConstHandle(ShaderGenVars::modelview);
    mWorldViewOnlySC = shader->getShaderConstHandle(ShaderGenVars::worldViewOnly);
    mWorldToCameraSC = shader->getShaderConstHandle(ShaderGenVars::worldToCamera);
+   mCameraToWorldSC = shader->getShaderConstHandle(ShaderGenVars::cameraToWorld);
    mWorldToObjSC = shader->getShaderConstHandle(ShaderGenVars::worldToObj);
    mViewToObjSC = shader->getShaderConstHandle(ShaderGenVars::viewToObj);
    mCubeTransSC = shader->getShaderConstHandle(ShaderGenVars::cubeTrans);
@@ -264,11 +267,7 @@ U32 ProcessedShaderMaterial::getNumStages()
       // stage is active.
       if ( mStages[i].hasValidTex() )
          stageActive = true;
-
-      // If this stage has specular lighting, it's active
-      if ( mMaterial->mPixelSpecular[i] )
-         stageActive = true;
-
+      
       // If this stage has diffuse color, it's active
       if (  mMaterial->mDiffuse[i].alpha > 0 &&
             mMaterial->mDiffuse[i] != LinearColorF::WHITE )
@@ -299,6 +298,8 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
 
    // First we add all the features which the 
    // material has defined.
+   if (mMaterial->mInvertSmoothness[stageNum])
+      fd.features.addFeature(MFT_InvertSmoothness);
 
    if ( mMaterial->isTranslucent() )
    {
@@ -335,17 +336,22 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    if (  features.hasFeature( MFT_UseInstancing ) &&
          mMaxStages == 1 &&
          !mMaterial->mGlow[0] &&
-         !mMaterial->mDynamicCubemap &&
          shaderVersion >= 3.0f )
       fd.features.addFeature( MFT_UseInstancing );
 
    if ( mMaterial->mAlphaTest )
       fd.features.addFeature( MFT_AlphaTest );
 
-   if ( mMaterial->mEmissive[stageNum] )
-      fd.features.addFeature( MFT_IsEmissive );
+   if (mMaterial->mEmissive[stageNum])
+   {
+      fd.features.addFeature(MFT_IsEmissive);
+   }
    else
-      fd.features.addFeature( MFT_RTLighting );
+   {
+      fd.features.addFeature(MFT_RTLighting);
+	  if (mMaterial->isTranslucent())
+		  fd.features.addFeature(MFT_ReflectionProbes);
+   }
 
    if ( mMaterial->mAnimFlags[stageNum] )
       fd.features.addFeature( MFT_TexAnim );  
@@ -356,15 +362,18 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    // cubemaps only available on stage 0 for now - bramage   
    if ( stageNum < 1 && mMaterial->isTranslucent() &&
          (  (  mMaterial->mCubemapData && mMaterial->mCubemapData->mCubemap ) ||
-               mMaterial->mDynamicCubemap ) )
+               mMaterial->mDynamicCubemap ) && !features.hasFeature(MFT_ReflectionProbes))
    {
        fd.features.addFeature( MFT_CubeMap );
    }
 
    if (features.hasFeature(MFT_SkyBox))
    {
+      fd.features.addFeature(MFT_StaticCubemap);
       fd.features.addFeature(MFT_CubeMap);
       fd.features.addFeature(MFT_SkyBox);
+
+      fd.features.removeFeature(MFT_ReflectionProbes);
    }
    fd.features.addFeature( MFT_Visibility );
 
@@ -411,12 +420,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
       if (  mMaterial->mParallaxScale[stageNum] > 0.0f &&
          fd.features[ MFT_NormalMap ] )
          fd.features.addFeature( MFT_Parallax );
-
-      // If not parallax then allow per-pixel specular if
-      // we have real time lighting enabled.
-      else if (   fd.features[MFT_RTLighting] && 
-                  mMaterial->mPixelSpecular[stageNum] )
-         fd.features.addFeature( MFT_PixSpecular );
    }
 
    // Without realtime lighting and on lower end 
@@ -428,8 +431,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    // have per-pixel specular enabled.
    if( fd.features[ MFT_SpecularMap ] )
    {
-      fd.features.addFeature( MFT_PixSpecular );
-
       // Check for an alpha channel on the specular map. If it has one (and it
       // has values less than 255) than the artist has put the gloss map into
       // the alpha channel.
@@ -1090,9 +1091,8 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
    if ( !shaderConsts->wasLost() )
       return;
 
-   shaderConsts->setSafe(handles->mSpecularColorSC, mMaterial->mSpecular[stageNum]);   
-   shaderConsts->setSafe(handles->mSpecularPowerSC, mMaterial->mSpecularPower[stageNum]);
-   shaderConsts->setSafe(handles->mSpecularStrengthSC, mMaterial->mSpecularStrength[stageNum]);
+   shaderConsts->setSafe(handles->mSmoothnessSC, mMaterial->mSmoothness[stageNum]);
+   shaderConsts->setSafe(handles->mMetalnessSC, mMaterial->mMetalness[stageNum]);
 
    shaderConsts->setSafe(handles->mParallaxInfoSC, mMaterial->mParallaxScale[stageNum]);   
    shaderConsts->setSafe(handles->mMinnaertConstantSC, mMaterial->mMinnaertConstant[stageNum]);
@@ -1228,6 +1228,8 @@ void ProcessedShaderMaterial::setTransforms(const MatrixSet &matrixSet, SceneRen
       shaderConsts->set( handles->mWorldToObjSC, matrixSet.getWorldToObject() );
    if ( handles->mWorldToCameraSC->isValid() )
       shaderConsts->set( handles->mWorldToCameraSC, matrixSet.getWorldToCamera() );
+   if (handles->mCameraToWorldSC->isValid())
+      shaderConsts->set(handles->mCameraToWorldSC, matrixSet.getCameraToWorld());
    if ( handles->mWorldViewOnlySC->isValid() )
       shaderConsts->set( handles->mWorldViewOnlySC, matrixSet.getObjectToCamera() );
    if ( handles->mViewToObjSC->isValid() )
@@ -1262,21 +1264,25 @@ void ProcessedShaderMaterial::setNodeTransforms(const MatrixF *transforms, const
 
 void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const SceneData& sgData, U32 pass)
 {
-   PROFILE_SCOPE( ProcessedShaderMaterial_setSceneInfo );
+   PROFILE_SCOPE(ProcessedShaderMaterial_setSceneInfo);
 
    GFXShaderConstBuffer* shaderConsts = _getShaderConstBuffer(pass);
    ShaderConstHandles* handles = _getShaderConstHandles(pass);
 
    // Set cubemap stuff here (it's convenient!)
    const Point3F &eyePosWorld = state->getCameraPosition();
-   if ( handles->mCubeEyePosSC->isValid() )
+   if (_hasCubemap(pass) || mMaterial->mDynamicCubemap)
    {
-      if(_hasCubemap(pass) || mMaterial->mDynamicCubemap)
+      if (handles->mCubeEyePosSC->isValid())
       {
          Point3F cubeEyePos = eyePosWorld - sgData.objTrans->getPosition();
-         shaderConsts->set(handles->mCubeEyePosSC, cubeEyePos);      
+         shaderConsts->set(handles->mCubeEyePosSC, cubeEyePos);
       }
    }
+   if (sgData.cubemap)
+      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipMapLevels());
+   else
+      shaderConsts->setSafe(handles->mCubeMipsSC, 1.0f);
 
    shaderConsts->setSafe(handles->mVisiblitySC, sgData.visibility);
 
@@ -1291,13 +1297,15 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
       shaderConsts->set(handles->mEyePosSC, eyepos);   
    }
 
-   shaderConsts->setSafe(handles->mEyeMatSC, state->getCameraTransform());   
+   shaderConsts->setSafe(handles->mEyeMatSC, state->getCameraTransform());
 
-   ShaderRenderPassData *rpd = _getRPD( pass );
-   for ( U32 i=0; i < rpd->featureShaderHandles.size(); i++ )
-      rpd->featureShaderHandles[i]->setConsts( state, sgData, shaderConsts );
+   ShaderRenderPassData *rpd = _getRPD(pass);
+   for (U32 i = 0; i < rpd->featureShaderHandles.size(); i++)
+      rpd->featureShaderHandles[i]->setConsts(state, sgData, shaderConsts);
 
-   LIGHTMGR->setLightInfo( this, mMaterial, sgData, state, pass, shaderConsts );
+   LIGHTMGR->setLightInfo(this, mMaterial, sgData, state, pass, shaderConsts);
+
+   PROBEMGR->setProbeInfo(this, mMaterial, sgData, state, pass, shaderConsts);
 }
 
 void ProcessedShaderMaterial::setBuffers( GFXVertexBufferHandleBase *vertBuffer, GFXPrimitiveBufferHandle *primBuffer )

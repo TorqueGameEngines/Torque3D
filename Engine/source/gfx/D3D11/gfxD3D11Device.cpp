@@ -38,12 +38,14 @@
 #include "gfx/D3D11/screenshotD3D11.h"
 #include "materials/shaderData.h"
 #include "shaderGen/shaderGen.h"
+#include <d3d9.h> //d3dperf
 
 #ifdef TORQUE_DEBUG
 #include "d3d11sdklayers.h"
 #endif
 
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3d9.lib") //d3dperf
 #pragma comment(lib, "d3d11.lib")
 
 class GFXPCD3D11RegisterDevice
@@ -90,9 +92,6 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mAdapterIndex = index;
    mD3DDevice = NULL;
    mD3DDeviceContext = NULL;
-   mD3DDevice1 = NULL;
-   mD3DDeviceContext1 = NULL;
-   mUserAnnotation = NULL;
    mVolatileVB = NULL;
 
    mCurrentPB = NULL;
@@ -126,7 +125,6 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mCurrentConstBuffer = NULL;
 
    mOcclusionQuerySupported = false;
-   mCbufferPartialSupported = false;
 
    mDebugLayers = false;
 
@@ -166,8 +164,6 @@ GFXD3D11Device::~GFXD3D11Device()
    SAFE_RELEASE(mDeviceBackBufferView);
    SAFE_RELEASE(mDeviceDepthStencil);
    SAFE_RELEASE(mDeviceBackbuffer);
-   SAFE_RELEASE(mUserAnnotation);
-   SAFE_RELEASE(mD3DDeviceContext1);
    SAFE_RELEASE(mD3DDeviceContext);
 
    SAFE_DELETE(mCardProfiler);
@@ -185,7 +181,6 @@ GFXD3D11Device::~GFXD3D11Device()
 #endif
 
    SAFE_RELEASE(mSwapChain);
-   SAFE_RELEASE(mD3DDevice1);
    SAFE_RELEASE(mD3DDevice);
 }
 
@@ -439,6 +434,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    AssertFatal(window, "GFXD3D11Device::init - must specify a window!");
 
    HWND winHwnd = (HWND)window->getSystemWindow( PlatformWindow::WindowSystem_Windows );
+   SetFocus(winHwnd);
 
    UINT createDeviceFlags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef TORQUE_DEBUG
@@ -449,7 +445,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    DXGI_SWAP_CHAIN_DESC d3dpp = setupPresentParams(mode, winHwnd);
 
    // TODO support at least feature level 10 to match GL
-   D3D_FEATURE_LEVEL pFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+   D3D_FEATURE_LEVEL pFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1 };
    U32 nFeatureCount = ARRAYSIZE(pFeatureLevels);
    D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_HARDWARE;// use D3D_DRIVER_TYPE_REFERENCE for reference device
    // create a device, device context and swap chain using the information in the d3dpp struct
@@ -488,26 +484,6 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
       AssertFatal(false, "GFXD3D11Device::init - D3D11CreateDeviceAndSwapChain failed!");
       #endif
    }
-
-   // Grab DX 11.1 device and context if available and also ID3DUserDefinedAnnotation
-   hres = mD3DDevice->QueryInterface(__uuidof(ID3D11Device1), reinterpret_cast<void**>(&mD3DDevice1));
-   if (SUCCEEDED(hres))
-   {
-      //11.1 context
-      mD3DDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&mD3DDeviceContext1));
-      // ID3DUserDefinedAnnotation
-      mD3DDeviceContext->QueryInterface(IID_PPV_ARGS(&mUserAnnotation));
-      //Check what is supported, windows 7 supports very little from 11.1
-      D3D11_FEATURE_DATA_D3D11_OPTIONS options;
-      mD3DDevice1->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS, &options,
-         sizeof(D3D11_FEATURE_DATA_D3D11_OPTIONS));
-
-      //Cbuffer partial updates
-      if (options.ConstantBufferOffsetting && options.ConstantBufferPartialUpdate)
-         mCbufferPartialSupported = true;
-   }
-
-
 
    //set the fullscreen state here if we need to
    if(mode.fullScreen)
@@ -689,9 +665,9 @@ GFXWindowTarget * GFXD3D11Device::allocWindowTarget(PlatformWindow *window)
    return gdwt;
 }
 
-GFXTextureTarget* GFXD3D11Device::allocRenderToTextureTarget()
+GFXTextureTarget* GFXD3D11Device::allocRenderToTextureTarget(bool genMips)
 {
-   GFXD3D11TextureTarget *targ = new GFXD3D11TextureTarget();
+   GFXD3D11TextureTarget *targ = new GFXD3D11TextureTarget(genMips);
    targ->registerResourceWithDevice(this);
 
    return targ;
@@ -933,6 +909,25 @@ void GFXD3D11Device::setShaderConstBufferInternal(GFXShaderConstBuffer* buffer)
 
 //-----------------------------------------------------------------------------
 
+void GFXD3D11Device::copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face)
+{
+   AssertFatal(pDst, "GFXD3D11Device::copyResource: Destination texture is null");
+   AssertFatal(pSrc, "GFXD3D11Device::copyResource: Source cubemap is null");
+
+   GFXD3D11TextureObject *pD3DDst = static_cast<GFXD3D11TextureObject*>(pDst);
+   GFXD3D11Cubemap *pD3DSrc = static_cast<GFXD3D11Cubemap*>(pSrc);
+
+   const U32 mipLevels = pD3DSrc->getMipMapLevels();
+   for (U32 mip = 0; mip < mipLevels; mip++)
+   {
+      const U32 srcSubResource = D3D11CalcSubresource(mip, face, mipLevels);
+      const U32 dstSubResource = D3D11CalcSubresource(mip, 0, mipLevels);
+      mD3DDeviceContext->CopySubresourceRegion(pD3DDst->get2DTex(), dstSubResource, 0, 0, 0, pD3DSrc->get2DTex(), srcSubResource, NULL);
+   }
+}
+
+//-----------------------------------------------------------------------------
+
 void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)
 {
    // Make sure we have flushed our render target state.
@@ -940,15 +935,22 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
 
    UINT depthstencilFlag = 0;
 
-   ID3D11RenderTargetView* rtView = NULL;
+   //TODO: current support is 5 render targets, clean this up
+   ID3D11RenderTargetView* rtView[5] = { NULL };
    ID3D11DepthStencilView* dsView = NULL;
 
-   mD3DDeviceContext->OMGetRenderTargets(1, &rtView, &dsView);
+   mD3DDeviceContext->OMGetRenderTargets(5, rtView, &dsView);
 
    const FLOAT clearColor[4] = { color.red, color.green, color.blue, color.alpha };
 
    if (flags & GFXClearTarget && rtView)
-      mD3DDeviceContext->ClearRenderTargetView(rtView, clearColor);
+   {
+      for (U32 i = 0; i < 5; i++)
+      {
+         if (rtView[i])
+            mD3DDeviceContext->ClearRenderTargetView(rtView[i], clearColor);
+      }
+   }
 
    if (flags & GFXClearZBuffer)
       depthstencilFlag |= D3D11_CLEAR_DEPTH;
@@ -959,8 +961,28 @@ void GFXD3D11Device::clear(U32 flags, const LinearColorF& color, F32 z, U32 sten
    if (depthstencilFlag && dsView)
       mD3DDeviceContext->ClearDepthStencilView(dsView, depthstencilFlag, z, stencil);
 
-   SAFE_RELEASE(rtView);
+   for (U32 i = 0; i < 5; i++)
+      SAFE_RELEASE(rtView[i]);
    SAFE_RELEASE(dsView);
+}
+
+void GFXD3D11Device::clearColorAttachment(const U32 attachment, const LinearColorF& color)
+{
+   GFXD3D11TextureTarget *pTarget = static_cast<GFXD3D11TextureTarget*>(mCurrentRT.getPointer());
+   ID3D11RenderTargetView* rtView = NULL;
+
+   if (!pTarget)
+   {
+      rtView = mDeviceBackBufferView;// we are using the default backbuffer
+   }
+   else
+   {
+      //attachment + 1 to skip past DepthStencil which is first in the list
+      rtView = static_cast<ID3D11RenderTargetView*>(pTarget->mTargetViews[attachment + 1]);
+   }
+
+   const FLOAT clearColor[4] = { color.red, color.green, color.blue, color.alpha };
+   mD3DDeviceContext->ClearRenderTargetView(rtView, clearColor);
 }
 
 void GFXD3D11Device::endSceneInternal() 
@@ -1837,32 +1859,38 @@ GFXCubemap * GFXD3D11Device::createCubemap()
    return cube;
 }
 
+GFXCubemapArray * GFXD3D11Device::createCubemapArray()
+{
+   GFXD3D11CubemapArray* cubeArray = new GFXD3D11CubemapArray();
+   cubeArray->registerResourceWithDevice(this);
+   return cubeArray;
+}
+
 // Debug events
 //------------------------------------------------------------------------------
 void GFXD3D11Device::enterDebugEvent(ColorI color, const char *name)
 {
-   if (mUserAnnotation)
-   {
-      WCHAR  eventName[260];
-      MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
-      mUserAnnotation->BeginEvent(eventName);
-   }
+   // BJGFIX
+   WCHAR  eventName[260];
+   MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
+
+   D3DPERF_BeginEvent(D3DCOLOR_ARGB(color.alpha, color.red, color.green, color.blue),
+      (LPCWSTR)&eventName);
 }
 
 //------------------------------------------------------------------------------
 void GFXD3D11Device::leaveDebugEvent()
 {
-   if (mUserAnnotation)
-      mUserAnnotation->EndEvent();
+   D3DPERF_EndEvent();
 }
 
 //------------------------------------------------------------------------------
 void GFXD3D11Device::setDebugMarker(ColorI color, const char *name)
 {
-   if (mUserAnnotation)
-   {
-      WCHAR  eventName[260];
-      MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
-      mUserAnnotation->SetMarker(eventName);
-   }
+   // BJGFIX
+   WCHAR  eventName[260];
+   MultiByteToWideChar(CP_ACP, 0, name, -1, eventName, 260);
+
+   D3DPERF_SetMarker(D3DCOLOR_ARGB(color.alpha, color.red, color.green, color.blue),
+      (LPCWSTR)&eventName);
 }

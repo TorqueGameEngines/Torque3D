@@ -20,9 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef TORQUE_OS_XENON
+
 #include "platformWin32/platformWin32.h"
-#endif
 #include "platform/threads/thread.h"
 #include "platform/threads/semaphore.h"
 #include "platform/platformIntrinsics.h"

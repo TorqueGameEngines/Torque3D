@@ -222,15 +222,12 @@ void RenderFormatToken::_updateTargets()
          if( !mTargetColorTexture[i] || mTargetColorTexture[i].getFormat() != mColorFormat 
             || mTargetColorTexture[i].getWidthHeight() != rtSize)
          {
-         mTargetColorTexture[i].set( rtSize.x, rtSize.y, mColorFormat, 
-            &GFXRenderTargetSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
-            1, mTargetAALevel );
-         mTargetChain[i]->attachTexture( GFXTextureTarget::Color0, mTargetColorTexture[i] );
-      }
-      }
-
-
-      
+            mTargetColorTexture[i].set( rtSize.x, rtSize.y, mColorFormat, 
+                  &GFXRenderTargetSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
+                  1, mTargetAALevel );
+            mTargetChain[i]->attachTexture( GFXTextureTarget::Color0, mTargetColorTexture[i] );
+         }
+      }      
 
       // Update depth target
       if(mDepthFormat != GFXFormat_COUNT)
@@ -239,15 +236,16 @@ void RenderFormatToken::_updateTargets()
          if( !mTargetDepthStencilTexture[i] || mTargetDepthStencilTexture[i].getFormat() != mColorFormat 
             || mTargetDepthStencilTexture[i].getWidthHeight() != rtSize)
          {
-         mTargetDepthStencilTexture[i].set( rtSize.x, rtSize.y, mDepthFormat, 
-            &GFXZTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
-            1, mTargetAALevel );
+            mTargetDepthStencilTexture[i].set( rtSize.x, rtSize.y, mDepthFormat, 
+                  &GFXZTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
+                  1, mTargetAALevel );
             mTargetChain[i]->attachTexture( GFXTextureTarget::DepthStencil, mTargetDepthStencilTexture[i] );
          }
-      }
-
-     
+      }     
    }
+
+   //set the texture for now as the first color target texture
+   mTarget.setTexture(mTargetColorTexture[0]);
 }
 
 void RenderFormatToken::_teardownTargets()

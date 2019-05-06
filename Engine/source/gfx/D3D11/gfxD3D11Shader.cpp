@@ -561,7 +561,7 @@ const String GFXD3D11ShaderConstBuffer::describeSelf() const
       GenericConstBufferLayout::ParamDesc pd;
       mVertexConstBufferLayout->getDesc(i, pd);
 
-      ret += String::ToString("      Constant name: %s", pd.name);
+      ret += String::ToString("      Constant name: %s", pd.name.c_str());
    }
 
    return ret;
@@ -1384,7 +1384,8 @@ void GFXD3D11Shader::_buildSamplerShaderConstantHandles( Vector<GFXShaderConstDe
       const GFXShaderConstDesc &desc = *iter;
 
       AssertFatal(   desc.constType == GFXSCT_Sampler || 
-                     desc.constType == GFXSCT_SamplerCube, 
+                     desc.constType == GFXSCT_SamplerCube || 
+                     desc.constType == GFXSCT_SamplerCubeArray,
                      "GFXD3D11Shader::_buildSamplerShaderConstantHandles - Invalid samplerDescription type!" );
 
       GFXD3D11ShaderConstHandle *handle;

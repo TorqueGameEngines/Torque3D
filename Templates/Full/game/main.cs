@@ -49,7 +49,10 @@ function createCanvas(%windowTitle)
    
    // Set the window title
    if (isObject(Canvas))
-      Canvas.setWindowTitle(getEngineName() @ " - " @ $appName);
+   {
+      %renderer = GFXCardProfilerAPI::getRenderer();
+      Canvas.setWindowTitle(getEngineName() @ " - " @ $appName @ " - " @ %renderer);
+   }
    
    return true;
 }

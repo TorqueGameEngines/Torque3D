@@ -1,6 +1,6 @@
 #pragma once
 #include "scene/sceneRenderState.h"
-#include "T3D/systems/componentSystem.h"
+#include "core/util/SystemInterfaceList.h"
 #include "ts/tsShape.h"
 #include "ts/tsShapeInstance.h"
 #include "T3D/assets/ShapeAsset.h"

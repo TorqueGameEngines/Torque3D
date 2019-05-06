@@ -80,6 +80,7 @@ static U32 shaderConstTypeSize(GFXShaderConstType type)
    case GFXSCT_Int:
    case GFXSCT_Sampler:
    case GFXSCT_SamplerCube:
+   case GFXSCT_SamplerCubeArray:
       return 4;
    case GFXSCT_Float2:
    case GFXSCT_Int2:
@@ -625,6 +626,9 @@ void GFXGLShader::initConstantDescs()
          case GL_SAMPLER_CUBE:
             desc.constType = GFXSCT_SamplerCube;
             break;
+         case GL_SAMPLER_CUBE_MAP_ARRAY:
+            desc.constType = GFXSCT_SamplerCubeArray;
+            break;
          default:
             AssertFatal(false, "GFXGLShader::initConstantDescs - unrecognized uniform type");
             // If we don't recognize the constant don't add its description.
@@ -656,7 +660,7 @@ void GFXGLShader::initHandles()
 
       HandleMap::Iterator handle = mHandles.find(desc.name);
       S32 sampler = -1;
-      if(desc.constType == GFXSCT_Sampler || desc.constType == GFXSCT_SamplerCube)
+      if(desc.constType == GFXSCT_Sampler || desc.constType == GFXSCT_SamplerCube || desc.constType == GFXSCT_SamplerCubeArray)
       {
          S32 idx = mSamplerNamesOrdered.find_next(desc.name);
          AssertFatal(idx != -1, "");
@@ -699,7 +703,7 @@ void GFXGLShader::initHandles()
    for (HandleMap::Iterator iter = mHandles.begin(); iter != mHandles.end(); ++iter)
    {
       GFXGLShaderConstHandle* handle = iter->value;
-      if(handle->isValid() && (handle->getType() == GFXSCT_Sampler || handle->getType() == GFXSCT_SamplerCube))
+      if(handle->isValid() && (handle->getType() == GFXSCT_Sampler || handle->getType() == GFXSCT_SamplerCube || handle->getType() == GFXSCT_SamplerCubeArray))
       {
          // Set sampler number on our program.
          glUniform1i(handle->mLocation, handle->mSamplerNum);
@@ -831,6 +835,7 @@ void GFXGLShader::setConstantsFromBuffer(GFXGLShaderConstBuffer* buffer)
          case GFXSCT_Int:
          case GFXSCT_Sampler:
          case GFXSCT_SamplerCube:
+         case GFXSCT_SamplerCubeArray:
             glUniform1iv(handle->mLocation, handle->mDesc.arraySize, (GLint*)(mConstBuffer + handle->mOffset));
             break;
          case GFXSCT_Int2:

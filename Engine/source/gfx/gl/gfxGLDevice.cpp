@@ -448,6 +448,13 @@ GFXCubemap* GFXGLDevice::createCubemap()
    return cube; 
 };
 
+GFXCubemapArray *GFXGLDevice::createCubemapArray()
+{
+   GFXGLCubemapArray* cubeArray = new GFXGLCubemapArray();
+   cubeArray->registerResourceWithDevice(this);
+   return cubeArray;
+}
+
 void GFXGLDevice::endSceneInternal() 
 {
    // nothing to do for opengl
@@ -493,6 +500,12 @@ void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil
 
    if(!writeAllStencil)
       glStencilMask(desc->stencilWriteMask);
+}
+
+void GFXGLDevice::clearColorAttachment(const U32 attachment, const LinearColorF& color)
+{
+   const GLfloat clearColor[4] = { color.red, color.green, color.blue, color.alpha };
+   glClearBufferfv(GL_COLOR, attachment, clearColor);
 }
 
 // Given a primitive type and a number of primitives, return the number of indexes/vertexes used.
@@ -669,6 +682,22 @@ void GFXGLDevice::setCubemapInternal(U32 textureUnit, const GFXGLCubemap* textur
    }
 }
 
+void GFXGLDevice::setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArray* texture)
+{
+   if (texture)
+   {
+      mActiveTextureType[textureUnit] = GL_TEXTURE_CUBE_MAP_ARRAY;
+      texture->bind(textureUnit);
+   }
+   else if (mActiveTextureType[textureUnit] != GL_ZERO)
+   {
+      glActiveTexture(GL_TEXTURE0 + textureUnit);
+      glBindTexture(mActiveTextureType[textureUnit], 0);
+      getOpenglCache()->setCacheBindedTex(textureUnit, mActiveTextureType[textureUnit], 0);
+      mActiveTextureType[textureUnit] = GL_ZERO;
+   }
+}
+
 void GFXGLDevice::setMatrix( GFXMatrixType mtype, const MatrixF &mat )
 {
    // ONLY NEEDED ON FFP
@@ -749,9 +778,9 @@ void GFXGLDevice::setStateBlockInternal(GFXStateBlock* block, bool force)
 
 //------------------------------------------------------------------------------
 
-GFXTextureTarget * GFXGLDevice::allocRenderToTextureTarget()
+GFXTextureTarget * GFXGLDevice::allocRenderToTextureTarget(bool genMips)
 {
-   GFXGLTextureTarget *targ = new GFXGLTextureTarget();
+   GFXGLTextureTarget *targ = new GFXGLTextureTarget(genMips);
    targ->registerResourceWithDevice(this);
    return targ;
 }

@@ -26,8 +26,9 @@
 #include "../../../gl/torque.glsl"
 
 uniform sampler2D colorBufferTex;
-uniform sampler2D lightDeferredTex;
+uniform sampler2D diffuseLightingBuffer;
 uniform sampler2D matInfoTex;
+uniform sampler2D specularLightingBuffer;
 uniform sampler2D deferredTex;
 
 out vec4 OUT_col;
@@ -40,20 +41,26 @@ void main()
       OUT_col = vec4(0.0);
       return;
    }
-   vec4 lightBuffer = texture( lightDeferredTex, uv0 );
-   vec4 colorBuffer = texture( colorBufferTex, uv0 );
-   vec4 matInfo = texture( matInfoTex, uv0 );
-   float specular = clamp(lightBuffer.a,0.0,1.0);
+   
+   vec3 albedo = texture( colorBufferTex, uv0 ).rgb; //albedo
+   vec4 matInfo = texture( matInfoTex, uv0 ); //flags|smoothness|ao|metallic
 
-   // Diffuse Color Altered by Metalness
-   bool metalness = getFlag(matInfo.r, 3);
-   if ( metalness )
+   bool emissive = getFlag(matInfo.r, 0);
+   if (emissive)
    {
-      colorBuffer *= (1.0 - colorBuffer.a);
+      OUT_col = float4(albedo, 1.0);
+	  return;
    }
+   
+   vec4 diffuse = texture( diffuseLightingBuffer, uv0 ); //shadowmap*specular
+   vec4 specular = texture( specularLightingBuffer, uv0 ); //environment mapping*lightmaps
 
-   colorBuffer += vec4(specular, specular, specular, 1.0);
-   colorBuffer *= vec4(lightBuffer.rgb, 1.0);
+   float metalness = matInfo.a;
+   
+   vec3 diffuseColor = albedo - (albedo * metalness);
+   vec3 specularColor = lerp(float3(0.04,0.04,0.04), albedo, metalness);
 
-   OUT_col = hdrEncode( vec4(colorBuffer.rgb, 1.0) );
+   vec3 light = (diffuseColor * diffuse.rgb) + (specularColor * specular.rgb);
+
+   OUT_col = hdrEncode(vec4(light, 1.0));
 }

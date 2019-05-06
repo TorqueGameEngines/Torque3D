@@ -497,13 +497,16 @@ protected:
    enum TexDirtyType
    {
       GFXTDT_Normal,
-      GFXTDT_Cube
+      GFXTDT_Cube,
+      GFXTDT_CubeArray
    };
    
    GFXTexHandle mCurrentTexture[TEXTURE_STAGE_COUNT];
    GFXTexHandle mNewTexture[TEXTURE_STAGE_COUNT];
    GFXCubemapHandle mCurrentCubemap[TEXTURE_STAGE_COUNT];
    GFXCubemapHandle mNewCubemap[TEXTURE_STAGE_COUNT];
+   GFXCubemapArrayHandle mCurrentCubemapArray[TEXTURE_STAGE_COUNT];
+   GFXCubemapArrayHandle mNewCubemapArray[TEXTURE_STAGE_COUNT];
 
    TexDirtyType   mTexType[TEXTURE_STAGE_COUNT];
    bool           mTextureDirty[TEXTURE_STAGE_COUNT];
@@ -753,6 +756,7 @@ protected:
 
 public:   
    virtual GFXCubemap * createCubemap() = 0;
+   virtual GFXCubemapArray *createCubemapArray() = 0;
 
    inline GFXTextureManager *getTextureManager()
    {
@@ -778,7 +782,7 @@ public:
 
    /// Allocate a target for doing render to texture operations, with no
    /// depth/stencil buffer.
-   virtual GFXTextureTarget *allocRenderToTextureTarget()=0;
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true) = 0;
 
    /// Allocate a target for a given window.
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window)=0;
@@ -809,7 +813,6 @@ public:
    virtual U32 getNumRenderTargets() const = 0;
 
    virtual void setShader( GFXShader *shader, bool force = false ) {}
-   virtual void disableShaders( bool force = false ) {} // TODO Remove when T3D 4.0
 
    /// Set the buffer! (Actual set happens on the next draw call, just like textures, state blocks, etc)
    void setShaderConstBuffer(GFXShaderConstBuffer* buffer);
@@ -823,11 +826,19 @@ public:
  
    //-----------------------------------------------------------------------------
 
+   /// @name Copying methods
+   /// @{
+
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) = 0;
+
+   /// @}
+
    /// @name Rendering methods
    /// @{
 
    ///
    virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil ) = 0;
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color) = 0;
    virtual bool beginScene();
    virtual void endScene();
    virtual void beginField();
@@ -938,8 +949,9 @@ public:
    /// @{
 
    ///
-   void setTexture(U32 stage, GFXTextureObject*texture);
+   void setTexture(U32 stage, GFXTextureObject *texture);
    void setCubeTexture( U32 stage, GFXCubemap *cubemap );
+   void setCubeArrayTexture( U32 stage, GFXCubemapArray *cubemapArray);
    inline GFXTextureObject* getCurrentTexture( U32 stage ) { return mCurrentTexture[stage]; }
 
    /// @}

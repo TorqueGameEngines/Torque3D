@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.0">
+    <asset>
+        <contributor>
+            <author />
+            <authoring_tool>Torque 3D 2009 Interior Exporter</authoring_tool>
+            <comments />
+        </contributor>
+        <created>12/09/2009 9:50:04 AM</created>
+        <modified>12/09/2009 9:50:04 AM</modified>
+        <revision />
+        <title />
+        <subject />
+        <keywords />
+        <unit meter="1.000000" />
+        <up_axis>Z_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="DemoRoomLrg_PILLAR128X128G-Diffuse" name="DemoRoomLrg_PILLAR128X128G-Diffuse">
+            <init_from>file://PILLAR128X128G.png</init_from>
+        </image>
+        <image id="DemoRoomLrg_FULL128X128G-Diffuse" name="DemoRoomLrg_FULL128X128G-Diffuse">
+            <init_from>file://FULL128X128G.png</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="DemoRoomLrg_PILLAR128X128G" name="DemoRoomLrg_PILLAR128X128G">
+            <instance_effect url="#DemoRoomLrg_PILLAR128X128G-fx" />
+        </material>
+        <material id="DemoRoomLrg_FULL128X128G" name="DemoRoomLrg_FULL128X128G">
+            <instance_effect url="#DemoRoomLrg_FULL128X128G-fx" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="DemoRoomLrg_PILLAR128X128G-fx" name="DemoRoomLrg_PILLAR128X128G-fx">
+            <profile_COMMON>
+                <technique sid="standard">
+                    <phong>
+                        <diffuse>
+                            <texture texture="DemoRoomLrg_PILLAR128X128G-Diffuse" texcoord="CHANNEL0">
+                                <extra>
+                                    <technique profile="MAYA">
+                                        <wrapU sid="wrapU0">TRUE</wrapU>
+                                        <wrapV sid="wrapV0">TRUE</wrapV>
+                                        <blend_mode>ADD</blend_mode>
+                                    </technique>
+                                </extra>
+                            </texture>
+                        </diffuse>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="DemoRoomLrg_FULL128X128G-fx" name="DemoRoomLrg_FULL128X128G-fx">
+            <profile_COMMON>
+                <technique sid="standard">
+                    <phong>
+                        <diffuse>
+                            <texture texture="DemoRoomLrg_FULL128X128G-Diffuse" texcoord="CHANNEL0">
+                                <extra>
+                                    <technique profile="MAYA">
+                                        <wrapU sid="wrapU0">TRUE</wrapU>
+                                        <wrapV sid="wrapV0">TRUE</wrapV>
+                                        <blend_mode>ADD</blend_mode>
+                                    </technique>
+                                </extra>
+                            </texture>
+                        </diffuse>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="ElevatorPlatform_5c1b8cbb-lib" name="ElevatorPlatform_5c1b8cbbMesh">
+            <mesh>
+                <source id="ElevatorPlatform_5c1b8cbb-Position">
+                    <float_array id="ElevatorPlatform_5c1b8cbb-Position-array" count="24">
+                        2.0000 -1.7500 -0.2500
+                        2.0000 -1.7500 0.2500
+                        2.0000 1.7500 -0.2500
+                        2.0000 1.7500 0.2500
+                        -2.0000 -1.7500 -0.2500
+                        -2.0000 1.7500 -0.2500
+                        -2.0000 -1.7500 0.2500
+                        -2.0000 1.7500 0.2500
+                    </float_array>
+                    <technique_common>
+                        <accessor source="#ElevatorPlatform_5c1b8cbb-Position-array" count="8" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="ElevatorPlatform_5c1b8cbb-Normal">
+                    <float_array id="ElevatorPlatform_5c1b8cbb-Normal-array" count="18">
+                        1.0000 -0.0000 -0.0000
+                        -1.0000 -0.0000 -0.0000
+                        -0.0000 1.0000 -0.0000
+                        -0.0000 -1.0000 -0.0000
+                        -0.0000 -0.0000 1.0000
+                        -0.0000 -0.0000 -1.0000
+                    </float_array>
+                    <technique_common>
+                        <accessor source="#ElevatorPlatform_5c1b8cbb-Normal-array" count="6" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="ElevatorPlatform_5c1b8cbb-UV0">
+                    <float_array id="ElevatorPlatform_5c1b8cbb-UV0-array" count="16">
+                        3.2500 -1.0000
+                        3.0000 -1.0000
+                        3.2500 0.0000
+                        3.0000 0.0000
+                        0.0000 -1.0000
+                        0.0000 0.0000
+                        1.0000 -1.0000
+                        1.0000 0.0000
+                    </float_array>
+                    <technique_common>
+                        <accessor source="#ElevatorPlatform_5c1b8cbb-UV0-array" count="8" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="ElevatorPlatform_5c1b8cbb-Vertex">
+                    <input semantic="POSITION" source="#ElevatorPlatform_5c1b8cbb-Position" />
+                </vertices>
+                <triangles material="DemoRoomLrg_PILLAR128X128G" count="8">
+                    <input semantic="VERTEX" offset="0" source="#ElevatorPlatform_5c1b8cbb-Vertex" />
+                    <input semantic="NORMAL" offset="1" source="#ElevatorPlatform_5c1b8cbb-Normal" />
+                    <input semantic="TEXCOORD" offset="2" set="0" source="#ElevatorPlatform_5c1b8cbb-UV0" />
+                    <p>
+                        3 0 3 1 0 1 0 0 0
+                        2 0 2 3 0 3 0 0 0
+                        7 1 1 5 1 0 4 1 2
+                        6 1 3 7 1 1 4 1 2
+                        3 2 1 2 2 0 5 2 2
+                        7 2 3 3 2 1 5 2 2
+                        1 3 3 6 3 1 4 3 0
+                        0 3 2 1 3 3 4 3 0
+                    </p>
+                </triangles>
+                <triangles material="DemoRoomLrg_FULL128X128G" count="4">
+                    <input semantic="VERTEX" offset="0" source="#ElevatorPlatform_5c1b8cbb-Vertex" />
+                    <input semantic="NORMAL" offset="1" source="#ElevatorPlatform_5c1b8cbb-Normal" />
+                    <input semantic="TEXCOORD" offset="2" set="0" source="#ElevatorPlatform_5c1b8cbb-UV0" />
+                    <p>
+                        3 4 7 7 4 5 6 4 4
+                        1 4 6 3 4 7 6 4 4
+                        2 5 5 0 5 4 4 5 6
+                        5 5 7 2 5 5 4 5 6
+                    </p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="RootNode" name="RootNode">
+            <node id="ElevatorPlatform_5c1b8cbb" name="ElevatorPlatform_5c1b8cbb">
+                <instance_geometry url="#ElevatorPlatform_5c1b8cbb-lib">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="DemoRoomLrg_PILLAR128X128G" target="#DemoRoomLrg_PILLAR128X128G" />
+                            <instance_material symbol="DemoRoomLrg_FULL128X128G" target="#DemoRoomLrg_FULL128X128G" />
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#RootNode" />
+    </scene>
+</COLLADA>

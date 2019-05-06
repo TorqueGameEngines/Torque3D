@@ -1,0 +1,72 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+%guiContent = new GuiControl(VPathEditorToolbar)
+{
+    canSaveDynamicFields = "0";
+    internalName = "VPathEditorToolbar";
+    Enabled = "1";
+    isContainer = "1";
+    Profile = "GuiDefaultProfile";
+    HorizSizing = "right";
+    VertSizing = "bottom";
+    Position = "306 0";
+    Extent = "800 32";
+    MinExtent = "8 2";
+    canSave = "1";
+    Visible = "0";
+    hovertime = "1000";
+    canMove = "0";
+    canClose = "0";
+    canMinimize = "0";
+    canMaximize = "0";
+    resizeWidth = "0";
+    resizeHeight = "0";
+    EdgeSnap = "0";
+    text ="";
+    
+    new GuiTextCtrl()
+    {
+        internalName = "ToolbarLabel";
+        profile = "GuiTextProfile";
+        horizSizing = "right";
+        vertSizing = "bottom";
+        position = "2 7";
+        extent = "77 16";
+        minExtent = "8 8";
+        visible = "1";
+        text = " VPath Settings";
+        maxLength = "255";
+        helpTag = "0";
+    };
+   
+    new GuiPopUpMenuCtrl(VPathEditorToolbarPathTypeMenu)
+    {
+        canSaveDynamicFields = "0";
+        internalName = "PathTypeMenu";
+        Enabled = "1";
+        isContainer = "0";
+        Profile = "GuiPopUpMenuProfile";
+        HorizSizing = "right";
+        VertSizing = "bottom";
+        Position = "85 7";
+        Extent = "70 18";
+        MinExtent = "8 2";
+        canSave = "1";
+        Visible = "1";
+        hovertime = "1000";
+        Margin = "0 0 0 0";
+        Padding = "0 0 0 0";
+        AnchorTop = "1";
+        AnchorBottom = "0";
+        AnchorLeft = "1";
+        AnchorRight = "0";
+        maxLength = "1024";
+        maxPopupHeight = "200";
+        sbUsesNAColor = "0";
+        reverseTextList = "0";
+        bitmapBounds = "16 16";
+    };
+};

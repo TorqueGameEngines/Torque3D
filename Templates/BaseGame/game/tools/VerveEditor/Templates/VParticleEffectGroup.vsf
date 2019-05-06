@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<VerveControllerSequence Version="0.0.0a">
+    <VObject Type="VParticleEffectGroup">
+        <Properties>
+            <Label>ParticleEffectGroup</Label>
+            <Enabled>1</Enabled>
+            <Reference />
+        </Properties>
+        <VObject Type="VParticleEffectToggleTrack">
+            <Properties>
+                <Label>ToggleTrack</Label>
+                <Enabled>1</Enabled>
+		<Reference />
+            </Properties>
+        </VObject>
+    </VObject>
+</VerveControllerSequence>

@@ -137,6 +137,8 @@ void GameObjectAsset::initializeAsset()
 
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
+
+   mTAMLFile = expandAssetFilePath(mTAMLFile);
 }
 
 void GameObjectAsset::onAssetRefresh()
@@ -146,6 +148,8 @@ void GameObjectAsset::onAssetRefresh()
 
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
+
+   mTAMLFile = expandAssetFilePath(mTAMLFile);
 }
 
 void GameObjectAsset::setScriptFile(const char* pScriptFile)
@@ -161,7 +165,7 @@ void GameObjectAsset::setScriptFile(const char* pScriptFile)
       return;
 
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mScriptFile = expandAssetFilePath(pScriptFile);
 
    // Refresh the asset.
    refreshAsset();
@@ -177,11 +181,11 @@ void GameObjectAsset::setTAMLFile(const char* pTAMLFile)
    pTAMLFile = StringTable->insert(pTAMLFile);
 
    // Ignore no change,
-   if (pTAMLFile == mScriptFile)
+   if (pTAMLFile == mTAMLFile)
       return;
 
    // Update.
-   mTAMLFile = getOwned() ? expandAssetFilePath(pTAMLFile) : StringTable->insert(pTAMLFile);
+   mTAMLFile = expandAssetFilePath(pTAMLFile);
 
    // Refresh the asset.
    refreshAsset();

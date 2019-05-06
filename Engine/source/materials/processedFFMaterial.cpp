@@ -136,11 +136,7 @@ U32 ProcessedFFMaterial::getNumStages()
       // stage is active.
       if ( mStages[i].hasValidTex() )
          stageActive = true;
-
-      // If this stage has specular lighting, it's active
-      if (  mMaterial->mPixelSpecular[i] )
-         stageActive = true;
-
+      
       // If we have a Material that is vertex lit
       // then it may not have a texture
       if( mMaterial->mVertLit[i] )

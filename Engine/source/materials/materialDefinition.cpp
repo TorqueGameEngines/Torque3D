@@ -120,8 +120,7 @@ Material::Material()
       mSmoothness[i] = 0.0f;
       mMetalness[i] = 0.0f;
 
-      mPixelSpecular[i] = false;
-	  mIsSRGb[i] = false;
+	   mIsSRGb[i] = false;
       mInvertSmoothness[i] = false;
 
       mSmoothnessChan[i] = 0;

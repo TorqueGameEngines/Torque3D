@@ -794,11 +794,7 @@ U32 ProcessedDeferredMaterial::getNumStages()
       // stage is active.
       if ( mStages[i].hasValidTex() )
          stageActive = true;
-
-      // If this stage has specular lighting, it's active
-      if ( mMaterial->mPixelSpecular[i] )
-         stageActive = true;
-
+      
       // If this stage has diffuse color, it's active
       if (  mMaterial->mDiffuse[i].alpha > 0 &&
             mMaterial->mDiffuse[i] != LinearColorF::WHITE )

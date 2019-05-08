@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Cube"
+    fileName="@assetFile=Cube.fbx"
+    isNewShape="1"
+    materialSlot0="@Asset=StaticShapeTest:Grid_512_orange"
+    originalFilePath="E:/Gamedev/T3DMIT/clangtest/My Projects/T3DPreview4_0/art/StarterContent/Cube.fbx"
+    VersionId="1" />

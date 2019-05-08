@@ -5,6 +5,8 @@ function Core_Rendering::onCreate(%this)
    $Core::UnAvailableTexturePath = "core/rendering/images/unavailable";
    $Core::WarningTexturePath = "core/rendering/images/warnMat";
    $Core::CommonShaderPath = "core/rendering/shaders";
+   $Core::DefaultIrradianceCubemap = "core/rendering/images/default_irradiance.dds";
+   $Core::DefaultPrefilterCubemap = "core/rendering/images/default_prefilter.dds";
    
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");

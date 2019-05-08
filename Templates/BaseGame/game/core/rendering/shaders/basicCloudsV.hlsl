@@ -46,7 +46,7 @@ ConnectData main( CloudVert IN )
    ConnectData OUT;
 
    OUT.hpos = mul(modelview, float4(IN.pos,1.0));
-
+   OUT.hpos.z = OUT.hpos.w;
    float2 uv = IN.uv0;
    uv += texOffset;
    uv *= texScale;

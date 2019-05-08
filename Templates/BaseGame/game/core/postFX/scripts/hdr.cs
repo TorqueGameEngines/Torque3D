@@ -170,7 +170,6 @@ singleton ShaderData( HDR_CombineShader )
    samplerNames[1] = "$luminanceTex";
    samplerNames[2] = "$bloomTex";
    samplerNames[3] = "$colorCorrectionTex";
-   samplerNames[4] = "deferredTex";
    
    pixVersion = 3.0;
 };
@@ -295,7 +294,7 @@ function HDRPostFX::onEnabled( %this )
    
    // Change the format of the offscreen surface
    // to an HDR compatible format.
-   AL_FormatToken.format = %format;
+   %this.previousFormat = AL_FormatToken.format;
    setReflectFormat( %format );
    
    // Reset the light manager which will ensure the new
@@ -312,7 +311,7 @@ function HDRPostFX::onDisabled( %this )
    GammaPostFX.enable();
    
    // Restore the non-HDR offscreen surface format.
-   %format = getBestHDRFormat();
+   %format = %this.previousFormat;
    AL_FormatToken.format = %format;
    setReflectFormat( %format );
    

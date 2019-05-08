@@ -199,7 +199,8 @@ RenderProbeMgr::RenderProbeMgr()
 : RenderBinManager(RenderPassManager::RIT_Probes, 1.0f, 1.0f),
    mLastShader(nullptr),
    mLastConstants(nullptr),
-	mProbesDirty(false)
+	mProbesDirty(false),
+   hasSkylight(false)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -250,13 +251,17 @@ bool RenderProbeMgr::onAdd()
    //create our own default default skylight
    mDefaultSkyLight = new ProbeRenderInst;
    mDefaultSkyLight->mProbeShapeType = ProbeRenderInst::Skylight;
-   if (!mDefaultSkyLight->mIrradianceCubemap.set("core/art/pbr/default_irradiance.dds"))
+   mDefaultSkyLight->mIsEnabled = false;
+
+   String defaultIrradMapPath = GFXTextureManager::getDefaultIrradianceCubemapPath();
+   if (!mDefaultSkyLight->mIrradianceCubemap.set(defaultIrradMapPath))
    {
       Con::errorf("RenderProbeMgr::onAdd: Failed to load default irradiance cubemap");
       return false;
    }
 
-   if (!mDefaultSkyLight->mPrefilterCubemap.set("core/art/pbr/default_prefilter.dds"))
+   String defaultPrefilterPath = GFXTextureManager::getDefaultPrefilterCubemapPath();
+   if (!mDefaultSkyLight->mPrefilterCubemap.set(defaultPrefilterPath))
    {
       Con::errorf("RenderProbeMgr::onAdd: Failed to load default prefilter cubemap");
       return false;
@@ -825,14 +830,14 @@ void RenderProbeMgr::render( SceneRenderState *state )
 
          mProbeArrayEffect->setShaderConst("$probeContribColors", contribColors);
       }
-      
-      mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositionsData);
-      mProbeArrayEffect->setShaderConst("$inRefPosArray", probeRefPositionsData);
-      mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);
-      mProbeArrayEffect->setShaderConst("$bbMinArray", probeBBMinData);
-      mProbeArrayEffect->setShaderConst("$bbMaxArray", probeBBMaxData);
-      mProbeArrayEffect->setShaderConst("$probeConfigData", probeConfigData);
    }
+
+   mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositionsData);
+   mProbeArrayEffect->setShaderConst("$inRefPosArray", probeRefPositionsData);
+   mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);
+   mProbeArrayEffect->setShaderConst("$bbMinArray", probeBBMinData);
+   mProbeArrayEffect->setShaderConst("$bbMaxArray", probeBBMaxData);
+   mProbeArrayEffect->setShaderConst("$probeConfigData", probeConfigData);
 
    // Make sure the effect is gonna render.
    getProbeArrayEffect()->setSkip(false);

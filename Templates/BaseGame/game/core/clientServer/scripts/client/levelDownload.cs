@@ -44,6 +44,9 @@ function clientCmdMissionStartPhase1(%seq, %missionName)
    echo ("*** New Mission: " @ %missionName);
    echo ("*** Phase 1: Download Datablocks & Targets");
    
+   $Client::MissionFile = %missionName;
+   $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
+   
    //Prep the postFX stuff
    // Load the post effect presets for this mission.
    %path = filePath( %missionName ) @ "/" @ fileBase( %missionName ) @ $PostFXManager::fileExtension;

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_orange_ALBEDO"
+    imageFile="@assetFile=Grid_512_orange.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/T3DMIT/clangtest/Templates/Full/game/core/art/grids/Grid_512_orange.png"
+    VersionId="1" />

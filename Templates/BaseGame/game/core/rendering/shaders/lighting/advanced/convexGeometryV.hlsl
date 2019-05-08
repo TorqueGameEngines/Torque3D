@@ -37,11 +37,12 @@ struct ConvexConnectV
    float4 vsEyeDir : TEXCOORD2;
 };
 
-ConvexConnectV main( VertData IN,
-                     uniform float4x4 modelview,
-                     uniform float4x4 objTrans,
-                     uniform float4x4 worldViewOnly,
-                     uniform float3 eyePosWorld )
+uniform float4x4 modelview;
+uniform float4x4 objTrans;
+uniform float4x4 worldViewOnly;
+uniform float3 eyePosWorld;
+
+ConvexConnectV main( VertData IN )
 {
    ConvexConnectV OUT;
 

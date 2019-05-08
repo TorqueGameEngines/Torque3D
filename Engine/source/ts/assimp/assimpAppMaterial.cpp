@@ -210,10 +210,10 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
          mat->mSpecularMapFilename[0] = cleanTextureName(torquePath, cleanFile);
    }
 
-   LinearColorF specularColor(1.0f, 1.0f, 1.0f, 1.0f);
+   /*LinearColorF specularColor(1.0f, 1.0f, 1.0f, 1.0f);
    if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_COLOR_SPECULAR, read_color))
       specularColor.set(read_color.r, read_color.g, read_color.b, opacity);
-   mat->mSpecular[0] = specularColor;
+   mat->mMetalness[0] = specularColor;
 
    // Specular Power
    F32 specularPower = 1.0f;
@@ -223,7 +223,7 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
    // Specular
    F32 specularStrength = 0.0f;
    if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_SHININESS, specularStrength))
-      mat->mSpecularStrength[0] = specularStrength;
+      mat->mSpecularStrength[0] = specularStrength;*/
 #endif
 
    // Double-Sided

@@ -22,7 +22,7 @@
 
 #ifndef _TORQUE_GLSL_
 #define _TORQUE_GLSL_
-
+#line 25
 
 float M_HALFPI_F   = 1.57079632679489661923;
 float M_PI_F       = 3.14159265358979323846;
@@ -336,4 +336,53 @@ vec3 toGamma(vec3 tex)
 }
 #endif //
 
+vec3 PBRFresnel(vec3 albedo, vec3 indirect, float metalness, float fresnel)
+{
+   vec3 diffuseColor = albedo - (albedo * metalness);
+   vec3 reflectColor = mix(indirect*albedo, indirect, fresnel);
+
+   return diffuseColor + reflectColor;
+}
+
+vec3 simpleFresnel(vec3 diffuseColor, vec3 reflectColor, float metalness, float angle, float bias, float power)
+{
+   float fresnelTerm = bias + (1.0 - bias) * pow(abs(1.0 - max(angle, 0)), power);
+
+   fresnelTerm *= metalness;
+
+   return mix(diffuseColor, reflectColor, fresnelTerm);
+}
+
+//get direction for a cube face
+vec3 getCubeDir(int face, vec2 uv)
+{
+	vec2 debiased = uv * 2.0f - 1.0f;
+
+	vec3 dir = vec3(0);
+
+	switch (face)
+	{
+		case 0: dir = vec3(1, -debiased.y, -debiased.x); 
+			break;
+
+		case 1: dir = vec3(-1, -debiased.y, debiased.x); 
+			break;
+
+		case 2: dir = vec3(debiased.x, 1, debiased.y); 
+			break;
+
+		case 3: dir = vec3(debiased.x, -1, -debiased.y); 
+			break;
+
+		case 4: dir = vec3(debiased.x, -debiased.y, 1); 
+			break;
+
+		case 5: dir = vec3(-debiased.x, -debiased.y, -1); 
+			break;
+	};
+
+	return normalize(dir);
+}
+
+#define sqr(a)		((a)*(a))
 #endif // _TORQUE_GLSL_

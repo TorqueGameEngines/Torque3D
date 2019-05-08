@@ -1,0 +1,8 @@
+<LevelAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PbrMatTestLevel"
+    LevelFile="PbrMatTest.mis"
+    LevelName="PBR Mat Test"
+    LevelDescription="A scene that demonstrates various PBR materials"
+    VersionId="1" />

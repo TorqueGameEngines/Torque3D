@@ -1,0 +1,9 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_Orange"
+    scriptFile="@assetFile=data/StaticShapeTest/materials/Grid_512_orange.cs"
+    materialDefinitionName="Grid_512_Orange"
+    originalFilePath="E:/Gamedev/T3DMIT/clangtest/Templates/Full/game/core/art/grids/Grid_512_orange.png"
+    shaderGraph="data/StaticShapeTest/materials/Grid_512_orange.sgf"
+    VersionId="1" />

@@ -1,0 +1,25 @@
+<ModuleDefinition
+    canSave="true"
+    canSaveDynamicFields="true"
+    ModuleId="StaticShapeTest"
+    VersionId="1"
+    Group="Game"
+    scriptFile="StaticShapeTest.cs"
+    CreateFunction="onCreate"
+    DestroyFunction="onDestroy">
+    <DeclaredAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        Extension="asset.taml"
+        Recurse="true" />
+    <AutoloadAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        AssetType="ComponentAsset"
+        Recurse="true" />
+    <AutoloadAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        AssetType="GUIAsset"
+        Recurse="true" />
+</ModuleDefinition>

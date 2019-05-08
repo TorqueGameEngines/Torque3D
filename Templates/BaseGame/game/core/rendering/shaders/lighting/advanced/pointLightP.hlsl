@@ -23,7 +23,6 @@
 #include "../../shaderModelAutoGen.hlsl"
 
 #include "farFrustumQuad.hlsl"
-#include "lightingUtils.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
 #include "softShadow.hlsl"
@@ -36,7 +35,6 @@ struct ConvexConnectP
    float4 ssPos : TEXCOORD1;
    float4 vsEyeDir : TEXCOORD2;
 };
-
 
 #ifdef USE_COOKIE_TEX
 
@@ -88,7 +86,9 @@ TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
       // this value was found via experementation
       // NOTE: this is wrong, it only biases in one direction, not towards the uv 
       // center ( 0.5 0.5 ).
-      //shadowCoord.xy *= 0.997;
+      float offsetVal = 0.95;
+      shadowCoord.xy *= offsetVal;
+      shadowCoord.xy += (1.0-offsetVal).xx / 2.0;
 
       #ifndef SHADOW_PARABOLOID
 
@@ -129,149 +129,83 @@ uniform float4 lightMapParams;
 uniform float4 vsFarPlane;
 uniform float4 lightParams;
 
-uniform float  lightRange;
+uniform float lightRange;
+uniform float lightInvSqrRange;
 uniform float shadowSoftness;
-uniform float2 lightAttenuation;
+uniform float4x4 worldToCamera;
+uniform float3x3 worldToLightProj;
+uniform float3x3 dynamicWorldToLightProj;
 
-uniform float3x3 viewToLightProj;
-uniform float3x3 dynamicViewToLightProj;
+uniform float3 eyePosWorld;
+uniform float4x4 cameraToWorld;
 
-float4 main( ConvexConnectP IN ) : TORQUE_TARGET0
+float4 main(   ConvexConnectP IN ) : SV_TARGET
 {   
    // Compute scene UV
    float3 ssPos = IN.ssPos.xyz / IN.ssPos.w;
-   float2 uvScene = getUVFromSSPos( ssPos, rtParams0 );
-   
-   // Emissive.
-   float4 matInfo = TORQUE_TEX2D( matInfoBuffer, uvScene );   
-   bool emissive = getFlag( matInfo.r, 0 );
-   if ( emissive )
-   {
-       return float4(0.0, 0.0, 0.0, 0.0);
-   }
-   float4 colorSample = TORQUE_TEX2D( colorBuffer, uvScene );
-   float3 subsurface = float3(0.0,0.0,0.0); 
-   if (getFlag( matInfo.r, 1 ))
-   {
-      subsurface = colorSample.rgb;
-      if (colorSample.r>colorSample.g)
-         subsurface = float3(0.772549, 0.337255, 0.262745);
-	  else
-         subsurface = float3(0.337255, 0.772549, 0.262745);
-	}
-   
-   // Sample/unpack the normal/z data
-   float4 deferredSample = TORQUE_DEFERRED_UNCONDITION( deferredBuffer, uvScene );
-   float3 normal = deferredSample.rgb;
-   float depth = deferredSample.a;
-   
-   // Eye ray - Eye -> Pixel
-   float3 eyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
-   float3 viewSpacePos = eyeRay * depth;
+   float2 uvScene = getUVFromSSPos(ssPos, rtParams0);
+
+   //unpack normal and linear depth 
+   float4 normDepth = TORQUE_DEFERRED_UNCONDITION(deferredBuffer, uvScene);
       
-   // Build light vec, get length, clip pixel if needed
-   float3 lightVec = lightPosition - viewSpacePos;
-   float lenLightV = length( lightVec );
-   clip( lightRange - lenLightV );
+   //eye ray WS/VS
+   float3 vsEyeRay = getDistanceVectorToPlane( -vsFarPlane.w, IN.vsEyeDir.xyz, vsFarPlane );
+   float3 wsEyeRay = mul(cameraToWorld, float4(vsEyeRay, 0)).xyz;
 
-   // Get the attenuated falloff.
-   float atten = attenuate( lightColor, lightAttenuation, lenLightV );
-   clip( atten - 1e-6 );
+   //create surface
+   Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
+                                    uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
-   // Normalize lightVec
-   lightVec /= lenLightV;
-   
-   // If we can do dynamic branching then avoid wasting
-   // fillrate on pixels that are backfacing to the light.
-   float nDotL = dot( lightVec, normal );
-   //DB_CLIP( nDotL < 0 );
+   //early out if emissive
+   if (getFlag(surface.matFlag, 0))
+   {   
+      return 0.0.xxxx;
+	}
+
+   float3 L = lightPosition - surface.P;
+   float dist = length(L);
+   float3 lighting = 0.0.xxx;
+   [branch]
+	if(dist < lightRange)
+	{     
+      float distToLight = dist / lightRange;
+      SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
 
    #ifdef NO_SHADOW
-   
       float shadowed = 1.0;
-      	
    #else
 
-      // Get a linear depth from the light source.
-      float distToLight = lenLightV / lightRange;      
+   #ifdef SHADOW_CUBE
 
-      #ifdef SHADOW_CUBE
-              
-         // TODO: We need to fix shadow cube to handle soft shadows!
-         float occ = TORQUE_TEXCUBE( shadowMap, mul( viewToLightProj, -lightVec ) ).r;
-         float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
-         
-      #else
+      // TODO: We need to fix shadow cube to handle soft shadows!
+      float occ = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
+      float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
 
-         // Static
-         float2 shadowCoord = decodeShadowCoord( mul( viewToLightProj, -lightVec ) ).xy;
-         float static_shadowed = softShadow_filter( TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-                                             ssPos.xy,
-                                             shadowCoord,
-                                             shadowSoftness,
-                                             distToLight,
-                                             nDotL,
-                                             lightParams.y );
-
-         // Dynamic
-         float2 dynamicShadowCoord = decodeShadowCoord( mul( dynamicViewToLightProj, -lightVec ) ).xy;
-         float dynamic_shadowed = softShadow_filter( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap),
-                                             ssPos.xy,
-                                             dynamicShadowCoord,
-                                             shadowSoftness,
-                                             distToLight,
-                                             nDotL,
-                                             lightParams.y );
-
-         float shadowed = min(static_shadowed, dynamic_shadowed);
-
-      #endif
-
+   #else
+      float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
+      float2 dynShadowCoord = decodeShadowCoord( mul( dynamicWorldToLightProj, -surfaceToLight.L ) ).xy;
+      float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, dynShadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float shadowed = min(static_shadowed, dynamic_shadowed);
+   #endif
+   
    #endif // !NO_SHADOW
    
-   float3 lightcol = lightColor.rgb;
+      float3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
-
       // Lookup the cookie sample.
-      float4 cookie = TORQUE_TEXCUBE( cookieMap, mul( viewToLightProj, -lightVec ) );
-
+      float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
       // Multiply the light with the cookie tex.
-      lightcol *= cookie.rgb;
-
+      lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
       // the lighting else we get specular in the dark
       // regions of the cookie texture.
-      atten *= max( cookie.r, max( cookie.g, cookie.b ) );
-
+      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
    #endif
 
-   // NOTE: Do not clip on fully shadowed pixels as it would
-   // cause the hardware occlusion query to disable the shadow.
-
-   // Specular term
-   float specular = AL_CalcSpecular(   lightVec, 
-                                       normal, 
-                                       normalize( -eyeRay ) ) * lightBrightness * atten * shadowed;
-
-   float Sat_NL_Att = saturate( nDotL * atten * shadowed ) * lightBrightness;
-   float3 lightColorOut = lightMapParams.rgb * lightcol;
-   float4 addToResult = 0.0;
-    
-   // TODO: This needs to be removed when lightmapping is disabled
-   // as its extra work per-pixel on dynamic lit scenes.
-   //
-   // Special lightmapping pass.
-   if ( lightMapParams.a < 0.0 )
-   {
-      // This disables shadows on the backsides of objects.
-      shadowed = nDotL < 0.0f ? 1.0f : shadowed;
-
-      Sat_NL_Att = 1.0f;
-      shadowed = lerp( 1.0f, shadowed, atten );
-      lightColorOut = shadowed;
-      specular *= lightBrightness;
-      addToResult = ( 1.0 - shadowed ) * abs(lightMapParams);
+      //get punctual light contribution   
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
    }
-
-   return AL_DeferredOutput(lightColorOut+subsurface*(1.0-Sat_NL_Att), colorSample.rgb, matInfo, addToResult, specular, Sat_NL_Att);
+      
+   return float4(lighting, 0);
 }

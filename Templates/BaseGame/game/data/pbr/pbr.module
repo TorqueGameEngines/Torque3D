@@ -1,0 +1,14 @@
+<ModuleDefinition
+	ModuleId="pbr"
+	VersionId="1"
+	Description="Module with some demonstration PBR objects/materials."
+	ScriptFile="pbr.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game">
+	<DeclaredAssets
+           canSave="true"
+           canSaveDynamicFields="true"
+           Extension="asset.taml"
+           Recurse="true" />
+</ModuleDefinition>

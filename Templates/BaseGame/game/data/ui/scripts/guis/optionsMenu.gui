@@ -1,7 +1,7 @@
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiControl(OptionsMenu) {
    position = "0 0";
-   extent = "1280 720";
+   extent = "1024 768";
    minExtent = "8 2";
    horizSizing = "right";
    vertSizing = "bottom";
@@ -60,11 +60,11 @@
       canSaveDynamicFields = "0";
    };
    new GuiControl() {
-      position = "51 118";
+      position = "139 118";
       extent = "700 518";
       minExtent = "8 2";
-      horizSizing = "right";
-      vertSizing = "bottom";
+      horizSizing = "center";
+      vertSizing = "center";
       profile = "GuiDefaultProfile";
       visible = "1";
       active = "1";
@@ -81,12 +81,11 @@
          horizSizing = "right";
          vertSizing = "center";
          profile = "GuiDefaultProfile";
-         visible = "0";
+         visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "1";
-         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
 
@@ -310,6 +309,7 @@
 
             new GuiBitmapCtrl() {
                bitmap = "data/ui/art/hudfill.png";
+               color = "255 255 255 255";
                wrap = "0";
                position = "0 0";
                extent = "700 450";
@@ -357,6 +357,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 20";
@@ -439,7 +440,7 @@
                      sbUsesNAColor = "0";
                      reverseTextList = "0";
                      bitmapBounds = "16 16";
-                     text = "NVIDIA GeForce GTX 950 (D3D9)";
+                     text = "NVIDIA GeForce GT 745M (D3D11)";
                      maxLength = "1024";
                      margin = "0 0 0 0";
                      padding = "0 0 0 0";
@@ -495,6 +496,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 20";
@@ -577,7 +579,7 @@
                      sbUsesNAColor = "0";
                      reverseTextList = "0";
                      bitmapBounds = "16 16";
-                     text = "1280 x 720  (16:9)";
+                     text = "1366 x 768  (16:9)";
                      maxLength = "1024";
                      margin = "0 0 0 0";
                      padding = "0 0 0 0";
@@ -824,7 +826,7 @@
                      range = "65 90";
                      ticks = "25";
                      snap = "1";
-                     value = "90";
+                     value = "74.6154";
                      position = "190 0";
                      extent = "209 20";
                      minExtent = "8 2";
@@ -841,7 +843,7 @@
                      canSaveDynamicFields = "0";
                   };
                   new GuiTextCtrl() {
-                     text = "90";
+                     text = "74.6154";
                      maxLength = "1024";
                      margin = "0 0 0 0";
                      padding = "0 0 0 0";
@@ -1009,6 +1011,7 @@
 
             new GuiBitmapCtrl() {
                bitmap = "data/ui/art/hudfill.png";
+               color = "255 255 255 255";
                wrap = "0";
                position = "0 0";
                extent = "700 450";
@@ -1047,6 +1050,7 @@
 
                new GuiBitmapCtrl() {
                   bitmap = "data/ui/art/hudfill.png";
+                  color = "255 255 255 255";
                   wrap = "0";
                   position = "0 0";
                   extent = "700 20";
@@ -1145,6 +1149,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "350 20";
@@ -1410,6 +1415,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "350 20";
@@ -1817,6 +1823,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "350 20";
@@ -2567,6 +2574,7 @@
 
             new GuiBitmapCtrl() {
                bitmap = "data/ui/art/ScreenBrightness_Dark.png";
+               color = "255 255 255 255";
                wrap = "0";
                position = "0 100";
                extent = "350 200";
@@ -2584,6 +2592,7 @@
             };
             new GuiBitmapCtrl() {
                bitmap = "data/ui/art/ScreenBrightness_Light.png";
+               color = "255 255 255 255";
                wrap = "0";
                position = "350 100";
                extent = "350 200";
@@ -2754,11 +2763,12 @@
          horizSizing = "right";
          vertSizing = "center";
          profile = "GuiDefaultProfile";
-         visible = "1";
+         visible = "0";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "1";
+         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
 
@@ -2863,6 +2873,7 @@
 
                new GuiBitmapCtrl() {
                   bitmap = "data/ui/art/hudfill.png";
+                  color = "255 255 255 255";
                   wrap = "0";
                   position = "0 0";
                   extent = "700 20";
@@ -3004,6 +3015,547 @@
                      isContainer = "1";
                      canSave = "1";
                      canSaveDynamicFields = "0";
+
+                     new GuiContainer() {
+                        margin = "0 0 0 0";
+                        padding = "0 0 0 0";
+                        anchorTop = "1";
+                        anchorBottom = "0";
+                        anchorLeft = "1";
+                        anchorRight = "0";
+                        position = "0 0";
+                        extent = "700 35";
+                        minExtent = "8 2";
+                        horizSizing = "right";
+                        vertSizing = "bottom";
+                        profile = "GuiDefaultProfile";
+                        visible = "1";
+                        active = "1";
+                        tooltipProfile = "GuiToolTipProfile";
+                        hovertime = "1000";
+                        isContainer = "1";
+                        class = "GraphicsMenuSetting";
+                        canSave = "1";
+                        canSaveDynamicFields = "0";
+
+                        new GuiBitmapCtrl() {
+                           bitmap = "data/ui/art/hudfill.png";
+                           color = "255 255 255 255";
+                           wrap = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "0";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiTextCtrl() {
+                           text = "Forward";
+                           maxLength = "1024";
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiMenuButtonProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           internalName = "nameText";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiContainer() {
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "550 0";
+                           extent = "150 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+
+                           new GuiButtonCtrl() {
+                              text = "w, up";
+                              groupNum = "-1";
+                              buttonType = "PushButton";
+                              useMouseEvents = "1";
+                              position = "0 0";
+                              extent = "150 35";
+                              minExtent = "8 8";
+                              horizSizing = "relative";
+                              vertSizing = "bottom";
+                              profile = "GuiMenuButtonProfile";
+                              visible = "1";
+                              active = "1";
+                              tooltipProfile = "GuiToolTipProfile";
+                              hovertime = "1000";
+                              isContainer = "0";
+                              internalName = "rebindButton";
+                              class = "ControlsMenuRebindButton";
+                              canSave = "1";
+                              canSaveDynamicFields = "0";
+                           };
+                        };
+                     };
+                     new GuiContainer() {
+                        margin = "0 0 0 0";
+                        padding = "0 0 0 0";
+                        anchorTop = "1";
+                        anchorBottom = "0";
+                        anchorLeft = "1";
+                        anchorRight = "0";
+                        position = "0 35";
+                        extent = "700 35";
+                        minExtent = "8 2";
+                        horizSizing = "right";
+                        vertSizing = "bottom";
+                        profile = "GuiDefaultProfile";
+                        visible = "1";
+                        active = "1";
+                        tooltipProfile = "GuiToolTipProfile";
+                        hovertime = "1000";
+                        isContainer = "1";
+                        class = "GraphicsMenuSetting";
+                        canSave = "1";
+                        canSaveDynamicFields = "0";
+
+                        new GuiBitmapCtrl() {
+                           bitmap = "data/ui/art/hudfill.png";
+                           color = "255 255 255 255";
+                           wrap = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "0";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiTextCtrl() {
+                           text = "Backward";
+                           maxLength = "1024";
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiMenuButtonProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           internalName = "nameText";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiContainer() {
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "550 0";
+                           extent = "150 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+
+                           new GuiButtonCtrl() {
+                              text = "s, down";
+                              groupNum = "-1";
+                              buttonType = "PushButton";
+                              useMouseEvents = "1";
+                              position = "0 0";
+                              extent = "150 35";
+                              minExtent = "8 8";
+                              horizSizing = "relative";
+                              vertSizing = "bottom";
+                              profile = "GuiMenuButtonProfile";
+                              visible = "1";
+                              active = "1";
+                              tooltipProfile = "GuiToolTipProfile";
+                              hovertime = "1000";
+                              isContainer = "0";
+                              internalName = "rebindButton";
+                              class = "ControlsMenuRebindButton";
+                              canSave = "1";
+                              canSaveDynamicFields = "0";
+                           };
+                        };
+                     };
+                     new GuiContainer() {
+                        margin = "0 0 0 0";
+                        padding = "0 0 0 0";
+                        anchorTop = "1";
+                        anchorBottom = "0";
+                        anchorLeft = "1";
+                        anchorRight = "0";
+                        position = "0 70";
+                        extent = "700 35";
+                        minExtent = "8 2";
+                        horizSizing = "right";
+                        vertSizing = "bottom";
+                        profile = "GuiDefaultProfile";
+                        visible = "1";
+                        active = "1";
+                        tooltipProfile = "GuiToolTipProfile";
+                        hovertime = "1000";
+                        isContainer = "1";
+                        class = "GraphicsMenuSetting";
+                        canSave = "1";
+                        canSaveDynamicFields = "0";
+
+                        new GuiBitmapCtrl() {
+                           bitmap = "data/ui/art/hudfill.png";
+                           color = "255 255 255 255";
+                           wrap = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "0";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiTextCtrl() {
+                           text = "Strafe Left";
+                           maxLength = "1024";
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiMenuButtonProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           internalName = "nameText";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiContainer() {
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "550 0";
+                           extent = "150 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+
+                           new GuiButtonCtrl() {
+                              text = "a, left";
+                              groupNum = "-1";
+                              buttonType = "PushButton";
+                              useMouseEvents = "1";
+                              position = "0 0";
+                              extent = "150 35";
+                              minExtent = "8 8";
+                              horizSizing = "relative";
+                              vertSizing = "bottom";
+                              profile = "GuiMenuButtonProfile";
+                              visible = "1";
+                              active = "1";
+                              tooltipProfile = "GuiToolTipProfile";
+                              hovertime = "1000";
+                              isContainer = "0";
+                              internalName = "rebindButton";
+                              class = "ControlsMenuRebindButton";
+                              canSave = "1";
+                              canSaveDynamicFields = "0";
+                           };
+                        };
+                     };
+                     new GuiContainer() {
+                        margin = "0 0 0 0";
+                        padding = "0 0 0 0";
+                        anchorTop = "1";
+                        anchorBottom = "0";
+                        anchorLeft = "1";
+                        anchorRight = "0";
+                        position = "0 105";
+                        extent = "700 35";
+                        minExtent = "8 2";
+                        horizSizing = "right";
+                        vertSizing = "bottom";
+                        profile = "GuiDefaultProfile";
+                        visible = "1";
+                        active = "1";
+                        tooltipProfile = "GuiToolTipProfile";
+                        hovertime = "1000";
+                        isContainer = "1";
+                        class = "GraphicsMenuSetting";
+                        canSave = "1";
+                        canSaveDynamicFields = "0";
+
+                        new GuiBitmapCtrl() {
+                           bitmap = "data/ui/art/hudfill.png";
+                           color = "255 255 255 255";
+                           wrap = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "0";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiTextCtrl() {
+                           text = "Strafe Right";
+                           maxLength = "1024";
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiMenuButtonProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           internalName = "nameText";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiContainer() {
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "550 0";
+                           extent = "150 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+
+                           new GuiButtonCtrl() {
+                              text = "d, right";
+                              groupNum = "-1";
+                              buttonType = "PushButton";
+                              useMouseEvents = "1";
+                              position = "0 0";
+                              extent = "150 35";
+                              minExtent = "8 8";
+                              horizSizing = "relative";
+                              vertSizing = "bottom";
+                              profile = "GuiMenuButtonProfile";
+                              visible = "1";
+                              active = "1";
+                              tooltipProfile = "GuiToolTipProfile";
+                              hovertime = "1000";
+                              isContainer = "0";
+                              internalName = "rebindButton";
+                              class = "ControlsMenuRebindButton";
+                              canSave = "1";
+                              canSaveDynamicFields = "0";
+                           };
+                        };
+                     };
+                     new GuiContainer() {
+                        margin = "0 0 0 0";
+                        padding = "0 0 0 0";
+                        anchorTop = "1";
+                        anchorBottom = "0";
+                        anchorLeft = "1";
+                        anchorRight = "0";
+                        position = "0 140";
+                        extent = "700 35";
+                        minExtent = "8 2";
+                        horizSizing = "right";
+                        vertSizing = "bottom";
+                        profile = "GuiDefaultProfile";
+                        visible = "1";
+                        active = "1";
+                        tooltipProfile = "GuiToolTipProfile";
+                        hovertime = "1000";
+                        isContainer = "1";
+                        class = "GraphicsMenuSetting";
+                        canSave = "1";
+                        canSaveDynamicFields = "0";
+
+                        new GuiBitmapCtrl() {
+                           bitmap = "data/ui/art/hudfill.png";
+                           color = "255 255 255 255";
+                           wrap = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "0";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiTextCtrl() {
+                           text = "Jump";
+                           maxLength = "1024";
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "0 0";
+                           extent = "550 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiMenuButtonProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           internalName = "nameText";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+                        };
+                        new GuiContainer() {
+                           margin = "0 0 0 0";
+                           padding = "0 0 0 0";
+                           anchorTop = "1";
+                           anchorBottom = "0";
+                           anchorLeft = "1";
+                           anchorRight = "0";
+                           position = "550 0";
+                           extent = "150 35";
+                           minExtent = "8 2";
+                           horizSizing = "right";
+                           vertSizing = "bottom";
+                           profile = "GuiDefaultProfile";
+                           visible = "1";
+                           active = "1";
+                           tooltipProfile = "GuiToolTipProfile";
+                           hovertime = "1000";
+                           isContainer = "1";
+                           canSave = "1";
+                           canSaveDynamicFields = "0";
+
+                           new GuiButtonCtrl() {
+                              text = "space";
+                              groupNum = "-1";
+                              buttonType = "PushButton";
+                              useMouseEvents = "1";
+                              position = "0 0";
+                              extent = "150 35";
+                              minExtent = "8 8";
+                              horizSizing = "relative";
+                              vertSizing = "bottom";
+                              profile = "GuiMenuButtonProfile";
+                              visible = "1";
+                              active = "1";
+                              tooltipProfile = "GuiToolTipProfile";
+                              hovertime = "1000";
+                              isContainer = "0";
+                              internalName = "rebindButton";
+                              class = "ControlsMenuRebindButton";
+                              canSave = "1";
+                              canSaveDynamicFields = "0";
+                           };
+                        };
+                     };
                   };
                };
             };
@@ -3032,6 +3584,7 @@
 
             new GuiBitmapCtrl() {
                bitmap = "data/ui/art/hudfill.png";
+               color = "255 255 255 255";
                wrap = "0";
                position = "0 0";
                extent = "700 460";
@@ -3535,6 +4088,7 @@
 
          new GuiBitmapCtrl() {
             bitmap = "data/ui/art/hudfill.png";
+            color = "255 255 255 255";
             wrap = "0";
             position = "0 0";
             extent = "700 450";
@@ -3573,6 +4127,7 @@
 
             new GuiBitmapCtrl() {
                bitmap = "data/ui/art/hudfill.png";
+               color = "255 255 255 255";
                wrap = "0";
                position = "0 0";
                extent = "700 35";
@@ -3684,6 +4239,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 35";
@@ -3722,6 +4278,7 @@
 
                      new GuiBitmapCtrl() {
                         bitmap = "data/ui/art/hudfill.png";
+                        color = "255 255 255 255";
                         wrap = "0";
                         position = "35 0";
                         extent = "180 35";
@@ -3851,6 +4408,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 35";
@@ -3889,6 +4447,7 @@
 
                      new GuiBitmapCtrl() {
                         bitmap = "data/ui/art/hudfill.png";
+                        color = "255 255 255 255";
                         wrap = "0";
                         position = "35 0";
                         extent = "180 35";
@@ -4017,6 +4576,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 35";
@@ -4055,6 +4615,7 @@
 
                      new GuiBitmapCtrl() {
                         bitmap = "data/ui/art/hudfill.png";
+                        color = "255 255 255 255";
                         wrap = "0";
                         position = "0 0";
                         extent = "250 35";
@@ -4165,6 +4726,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 35";
@@ -4203,6 +4765,7 @@
 
                      new GuiBitmapCtrl() {
                         bitmap = "data/ui/art/hudfill.png";
+                        color = "255 255 255 255";
                         wrap = "0";
                         position = "0 0";
                         extent = "250 35";
@@ -4313,6 +4876,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 35";
@@ -4351,6 +4915,7 @@
 
                      new GuiBitmapCtrl() {
                         bitmap = "data/ui/art/hudfill.png";
+                        color = "255 255 255 255";
                         wrap = "0";
                         position = "0 0";
                         extent = "250 35";
@@ -4461,6 +5026,7 @@
 
                   new GuiBitmapCtrl() {
                      bitmap = "data/ui/art/hudfill.png";
+                     color = "255 255 255 255";
                      wrap = "0";
                      position = "0 0";
                      extent = "450 35";
@@ -4499,6 +5065,7 @@
 
                      new GuiBitmapCtrl() {
                         bitmap = "data/ui/art/hudfill.png";
+                        color = "255 255 255 255";
                         wrap = "0";
                         position = "0 0";
                         extent = "250 35";

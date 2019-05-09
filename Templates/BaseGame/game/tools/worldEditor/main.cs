@@ -44,7 +44,6 @@ function initializeWorldEditor()
    exec("./gui/SelectObjectsWindow.ed.gui");
    exec("./gui/ProceduralTerrainPainterGui.gui" );
    exec("./gui/shadowViz.gui" );
-   exec("./gui/probeBakeDlg.gui" );
    
    // Load Scripts.
    exec("./scripts/menus.ed.cs");
@@ -67,7 +66,6 @@ function initializeWorldEditor()
    exec("./scripts/cameraCommands.ed.cs");
    exec("./scripts/lightViz.cs");
    exec("./scripts/shadowViz.cs");
-   exec("./scripts/probeBake.ed.cs");
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));
@@ -122,24 +120,16 @@ function initializeWorldEditor()
    EVisibility.addOption( "Debug Render: Light Frustums", "$Light::renderLightFrustums", "" );
    EVisibility.addOption( "Debug Render: Bounding Boxes", "$Scene::renderBoundingBoxes", "" );
    EVisibility.addOption( "Debug Render: Physics World", "$PhysicsWorld::render", "togglePhysicsDebugViz" );
-   EVisibility.addOption( "Debug Render: Reflection Probes", "$Light::renderReflectionProbes", "" );
-   EVisibility.addOption( "Debug Render: Probe Previews", "$Light::renderPreviewProbes", "" );
    EVisibility.addOption( "AL: Disable Shadows", "$Shadows::disable", "" );   
-   EVisibility.addOption( "AL: Diffuse Lighting Viz", "$AL_LightColorVisualizeVar", "toggleLightColorViz" );
-   EVisibility.addOption( "AL: Specular Lighting Viz", "$AL_LightSpecularVisualizeVar", "toggleLightSpecularViz" );
+   EVisibility.addOption( "AL: Light Color Viz", "$AL_LightColorVisualizeVar", "toggleLightColorViz" );
+   EVisibility.addOption( "AL: Light Specular Viz", "$AL_LightSpecularVisualizeVar", "toggleLightSpecularViz" );
    EVisibility.addOption( "AL: Normals Viz", "$AL_NormalsVisualizeVar", "toggleNormalsViz" );
    EVisibility.addOption( "AL: Depth Viz", "$AL_DepthVisualizeVar", "toggleDepthViz" );
    EVisibility.addOption( "AL: Color Buffer", "$AL_ColorBufferShaderVar", "toggleColorBufferViz" );
-   EVisibility.addOption( "AL: Spec Map(Rough)", "$AL_RoughMapShaderVar", "toggleRoughMapViz");
-   EVisibility.addOption( "AL: Spec Map(Metal)", "$AL_MetalMapShaderVar", "toggleMetalMapViz");
+   EVisibility.addOption( "AL: Spec Map", "$AL_SpecMapShaderVar", "toggleSpecMapViz");
    EVisibility.addOption( "AL: Backbuffer", "$AL_BackbufferVisualizeVar", "toggleBackbufferViz" );
    EVisibility.addOption( "AL: Glow Buffer", "$AL_GlowVisualizeVar", "toggleGlowViz" );
    EVisibility.addOption( "AL: PSSM Cascade Viz", "$AL::PSSMDebugRender", "" );
-   EVisibility.addOption( "Probes: Attenuation", "$Probes::showAttenuation", "" );   
-   EVisibility.addOption( "Probes: Specular Cubemaps", "$Probes::showSpecularCubemaps", "" );   
-   EVisibility.addOption( "Probes: Diffuse Cubemaps", "$Probes::showDiffuseCubemaps", "" );   
-   EVisibility.addOption( "Probes: Contribution", "$Probes::showProbeContrib", "" );   
-
    EVisibility.addOption( "Frustum Lock", "$Scene::lockCull", "" );
    EVisibility.addOption( "Disable Zone Culling", "$Scene::disableZoneCulling", "" );
    EVisibility.addOption( "Disable Terrain Occlusion", "$Scene::disableTerrainOcclusion", "" );

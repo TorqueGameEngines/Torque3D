@@ -61,8 +61,3 @@ function EditorLightingMenu::onMenuSelect( %this )
    //%selSize = EWorldEditor.getSelectionSize();
    %this.enableItem( 1, true /*%selSize == 1*/ );   
 }
-
-function updateReflectionProbes()
-{
-  Canvas.pushDialog(ProbeBakeDlg);
-}

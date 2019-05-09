@@ -5,7 +5,7 @@
 
 function InitializeVerveEditor()
 {
-   $Verve::UseSeparateWindow = false;
+   $Verve::UseSeparateWindow = true;
    
     // Preferences.
     exec( "./DefaultPrefs.cs" );

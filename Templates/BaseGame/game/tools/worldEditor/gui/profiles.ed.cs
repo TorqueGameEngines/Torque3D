@@ -35,8 +35,8 @@ singleton GuiControlProfile (EditorToolButtonProfile)
 
 singleton GuiControlProfile (EditorTextProfile)
 {
-   fontType = "Arial Bold";
-   fontColor = "0 0 0";
+   fontType = "Noto Sans Bold";
+   fontColor = "215 215 215";
    autoSizeWidth = true;
    autoSizeHeight = true;
    category = "Editor";
@@ -44,7 +44,7 @@ singleton GuiControlProfile (EditorTextProfile)
 
 singleton GuiControlProfile (EditorTextProfileWhite)
 {
-   fontType = "Arial Bold";
+   fontType = "Noto Sans Bold";
    fontColor = "255 255 255";
    autoSizeWidth = true;
    autoSizeHeight = true;
@@ -76,7 +76,7 @@ singleton GuiControlProfile (GuiEditorClassProfile)
    border = true;
    borderColor   = "0 0 0";
    borderColorHL = "127 127 127";
-   fontColor = "0 0 0";
+   fontColor = "215 215 215";
    fontColorHL = "50 50 50";
    fixedExtent = true;
    justify = "center";
@@ -108,7 +108,7 @@ singleton GuiControlProfile( EPainterBorderButtonProfile : ToolsGuiDefaultProfil
 singleton GuiControlProfile( EPainterDragDropProfile )
 {
    justify = "center";
-   fontColor = "0 0 0";
+   fontColor = "215 215 215";
    border = 0;
    textOffset = "0 0";   
    opaque = true;

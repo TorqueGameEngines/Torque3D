@@ -317,7 +317,7 @@
       HorizSizing = "width";
       VertSizing = "top";
       Position = "0 578";
-      Extent = "800 22";
+      Extent = "800 35";
       MinExtent = "8 8";
       canSave = "1";
       Visible = "1";
@@ -331,14 +331,12 @@
          Profile = "ToolsGuiTextProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
-         Position = "3 2";
+         Position = "10 8";
          Extent = "450 18";
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         Margin = "0 0 0 0";
-         Padding = "0 0 0 0";
          AnchorTop = "1";
          AnchorBottom = "0";
          AnchorLeft = "1";
@@ -352,7 +350,7 @@
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         position = "459 2";
+         position = "465 8";
          Extent = "2 18";
          MinExtent = "1 1";
          bitmap = "tools/gui/images/separator-h.png";
@@ -365,7 +363,7 @@
          Profile = "ToolsGuiTextProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         Position = "469 2";
+         Position = "485 8";
          Extent = "180 18";
          MinExtent = "8 8";
          canSave = "1";
@@ -377,7 +375,7 @@
          AnchorBottom = "0";
          AnchorLeft = "1";
          AnchorRight = "0";
-         text = "";
+         text = "Ready.";
          maxLength = "255";
       };
       
@@ -386,7 +384,7 @@
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         position = "659 2";
+         position = "645 8";
          Extent = "2 18";
          MinExtent = "1 1";
          bitmap = "tools/gui/images/separator-h.png";
@@ -399,7 +397,7 @@
          Profile = "ToolsGuiPopUpMenuProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         Position = "667 2";
+         Position = "665 8";
          Extent = "120 18";
          MinExtent = "8 8";
          canSave = "1";

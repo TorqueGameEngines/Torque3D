@@ -296,10 +296,12 @@ public:
 
    ID3D11DeviceContext* getDeviceContext(){ return mD3DDeviceContext; }
    ID3D11Device* getDevice(){ return mD3DDevice; }
-   IDXGISwapChain* getSwapChain() { return mSwapChain; }
+   //IDXGISwapChain* getSwapChain() { return mSwapChain; }
 
    /// Reset
-   void reset( DXGI_SWAP_CHAIN_DESC &d3dpp );
+   //void reset( DXGI_SWAP_CHAIN_DESC &d3dpp );
+   void beginReset();
+   void endReset(GFXD3D11WindowTarget* windowTarget);
 
    virtual void setupGenericShaders( GenericShaderType type  = GSColor );
 

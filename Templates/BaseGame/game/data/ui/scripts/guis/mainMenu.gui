@@ -2,11 +2,11 @@ exec( "tools/gui/profiles.ed.cs" );
 
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
-   bitmap = "data/ui/art/background-dark.png";
+   bitmap = "data/ui/art/BackgroundImage.png";
    useVariable = "0";
    tile = "0";
    position = "0 0";
-   extent = "1280 1024";
+   extent = "1024 768";
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
@@ -22,7 +22,7 @@ exec( "tools/gui/profiles.ed.cs" );
       isDecoy = "0";
 
    new GuiBitmapButtonCtrl(MainMenuAppLogo) {
-      bitmap = "data/ui/art/Torque-3D-logo-shortcut.png";
+      bitmap = "data/ui/art/Torque-3D-logo-shortcut";
       bitmapMode = "Stretched";
       autoFitExtents = "0";
       useModifiers = "0";
@@ -31,7 +31,7 @@ exec( "tools/gui/profiles.ed.cs" );
       groupNum = "-1";
       buttonType = "PushButton";
       useMouseEvents = "0";
-      position = "624 30";
+      position = "550 30";
       extent = "443 139";
       minExtent = "8 2";
       horizSizing = "left";
@@ -47,10 +47,10 @@ exec( "tools/gui/profiles.ed.cs" );
       canSaveDynamicFields = "1";
    };
    new GuiControl(MainMenuButtonContainer) {
-      position = "67 321";
+      position = "557 193";
       extent = "442 381";
       minExtent = "8 2";
-      horizSizing = "right";
+      horizSizing = "left";
       vertSizing = "center";
       profile = "GuiDefaultProfile";
       visible = "1";

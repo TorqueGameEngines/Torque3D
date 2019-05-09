@@ -19,16 +19,16 @@
       Enabled = "1";
       isContainer = "1";
       Profile = "ToolsGuiWindowProfile";
-      Position = firstWord($pref::Video::mode) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) -1;
-      Extent = "210 324";
-      MinExtent = "210 140";
+      Position = firstWord($pref::Video::mode) - 330
+         SPC getWord(EditorGuiToolbar.extent, 1) + 40;
+      Extent = "300 270";
+      MinExtent = "200 250";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
       canSave = "1";
       Visible = "1";
       hovertime = "1000";
-      Margin = "8 8 8 8";
+      Margin = "0 0 0 0";
       Padding = "0 0 0 0";
       AnchorTop = "1";
       AnchorBottom = "0";
@@ -38,7 +38,7 @@
       resizeHeight = "1";
       canMove = "1";
       canClose = "0";
-      canMinimize = "0";
+      canMinimize = "1";
       canMaximize = "0";
       minSize = "50 50";
       closeCommand = "EWTreeWindow.setVisible(false);";
@@ -58,7 +58,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         Margin = "3 2 3 3";
+         Margin = "0 0 0 0";
          Docking = "client";
          Padding = "0 0 0 0";
          AnchorTop = "1";
@@ -67,7 +67,7 @@
          AnchorRight = "0";
          TabPosition = "Top";
          TabMargin = "0";
-         MinTabWidth = "64";
+         MinTabWidth = "65";
          
          new GuiTabPageCtrl() {
             canSaveDynamicFields = "0";
@@ -92,8 +92,8 @@
             maxLength = "1024";
 
             new GuiTextEditCtrl( EditorTreeFilter ) {
-               position = "2 4";
-               extent = "175 18";
+               position = "5 6";
+               extent = "187 25";
                profile = "ToolsGuiTextEditProfile";
                horizSizing = "width";
                vertSizing = "bottom";
@@ -110,7 +110,7 @@
                Profile = "ToolsGuiDefaultProfile";
                HorizSizing = "left";
                VertSizing = "bottom";
-               position = "180 5";
+               position = "171 6";
                Extent = "17 17";
                MinExtent = "8 2";
                canSave = "1";
@@ -129,15 +129,15 @@
                Profile = "ToolsGuiScrollProfile";
                HorizSizing = "width";
                VertSizing = "height";
-               Position = "0 25";
-               Extent = "197 246";
+               Position = "5 29";
+               Extent = "187 238";
                MinExtent = "8 8";
                canSave = "1";
                Visible = "1";
                hovertime = "1000";
                willFirstRespond = "1";
                hScrollBar = "dynamic";
-               vScrollBar = "dynamic";
+               vScrollBar = "alwaysOn";
                lockHorizScroll = "false";
                lockVertScroll = "false";
                constantThumbHeight = "0";
@@ -148,18 +148,18 @@
                   Enabled = "1";
                   isContainer = "1";
                   Profile = "ToolsGuiTreeViewProfile";
-                  HorizSizing = "right";
+                  HorizSizing = "width";
                   VertSizing = "bottom";
-                  Position = "1 1";
-                  Extent = "193 21";
+                  Position = "0 0";
+                  Extent = "197 25";
                   MinExtent = "8 8";
                   canSave = "1";
                   Visible = "1";
                   hovertime = "1000";
                   tabSize = "16";
-                  textOffset = "2";
-                  fullRowSelect = "0";
-                  itemHeight = "21";
+                  textOffset = "5";
+                  fullRowSelect = "1";
+                  itemHeight = "25";
                   destroyTreeOnSleep = "1";
                   MouseDragging = "1";
                   MultipleSelections = "1";
@@ -219,7 +219,7 @@
             Profile = "ToolsGuiTabBorderProfile";
             HorizSizing = "width";
             VertSizing = "bottom";
-            position = "0 0";
+            position = "5 5";
             Extent = "198 271";
             MinExtent = "8 2";
             canSave = "0";
@@ -255,7 +255,7 @@
                tooltipprofile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                Margin = "0 0 0 0";
-               Padding = "4 4 4 4";
+               Padding = "0 0 0 0";
                AnchorTop = "1";
                AnchorBottom = "0";
                AnchorLeft = "1";
@@ -387,8 +387,8 @@
                   Profile = "ToolsGuiTabBookProfile";
                   HorizSizing = "width";
                   VertSizing = "bottom";
-                  Position = "6 4";
-                  Extent = "198 21";
+                  Position = "0 4";
+                  Extent = "201 25";
                   MinExtent = "8 2";
                   canSave = "1";
                   Visible = "1";
@@ -402,7 +402,7 @@
                   AnchorLeft = "1";
                   AnchorRight = "0";
                   TabPosition = "Top";
-                  TabMargin = "4";
+                  TabMargin = "0";
                   MinTabWidth = "49";
 
                   new GuiTabPageCtrl() {
@@ -509,7 +509,7 @@
          Profile = "ToolsGuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         Position = "157 26";
+         Position = "225 23";
          Extent = "16 16";
          MinExtent = "8 2";
          canSave = "1";
@@ -533,7 +533,7 @@
          Profile = "ToolsGuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         Position = "173 26";
+         Position = "250 23";
          Extent = "16 16";
          MinExtent = "8 2";
          canSave = "1";
@@ -557,7 +557,7 @@
          Profile = "ToolsGuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         Position = "189 26";
+         Position = "275 23";
          Extent = "16 16";
          MinExtent = "8 2";
          canSave = "1";

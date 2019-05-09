@@ -7,8 +7,8 @@ new GuiControlProfile( GuiMenuButtonProfile )
    fontType = "Arial Bold";
    fontColor = "240 240 240";
    fontColorHL = "0 0 0";
-   fontColorNA = "125 125 125";
-   //fontColorSEL ="0 0 0";
+   fontColorNA = "0 0 0";
+   fontColorSEL ="0 0 0";
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
@@ -45,7 +45,7 @@ new GuiControlProfile( GuiBlankMenuButtonProfile )
    border = false;
    fontSize = 18;
    fontType = "Arial Bold";
-   fontColor = "200 200 200";
+   fontColor = "220 220 220";
    fontColorHL = "255 255 255";
    fontColorNA = "200 200 200";
    //fontColorSEL ="0 0 0";

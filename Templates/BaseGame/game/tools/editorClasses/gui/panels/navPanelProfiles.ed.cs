@@ -68,6 +68,11 @@ singleton GuiControlProfile (menubarProfile : NavPanelProfile)
 {
    bitmap = "./menubar";
    category = "Editor";
+   
+   fillColor = "48 48 48";
+   fontColor = "215 215 215";
+   fontColorHL = "150 150 150";
+   borderColor = "34 34 34";
 };
 singleton GuiControlProfile (editorMenubarProfile : NavPanelProfile) 
 {

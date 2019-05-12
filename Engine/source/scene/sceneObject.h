@@ -59,6 +59,9 @@
 #ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
 #endif
+#ifndef _TSRENDERDATA_H_
+#include "ts/tsRenderState.h"
+#endif
 
 #ifndef _COLLADA_UTILS_H_
 #include "ts/collada/colladaUtils.h"

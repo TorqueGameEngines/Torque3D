@@ -21,7 +21,13 @@
 //-----------------------------------------------------------------------------
 
 //--- cube.dae MATERIALS BEGIN ---
-singleton Material(cube_GridMaterial)
+singleton CustomShaderFeatureData(FlatColorFeature)
+{
+   
+
+};
+
+/*singleton Material(cube_GridMaterial)
 {
 	mapTo = "GridMaterial";
 
@@ -41,7 +47,40 @@ singleton Material(cube_GridMaterial)
    specularPower0 = "0.415939";
    pixelSpecular0 = "0";
    specular0 = "0.9 0.9 0.9 1";
+
+   mapTo = "GridMaterial";
+   
+   CustomShaderFeature[0] = FlatColorFeature;
+   CustomShaderFeatureUniforms[FlatColorFeature,0] = "TestFloat";
 };
+
 
 //--- cube.dae MATERIALS END ---
 
+//Voodoo!
+function FlatColorFeature::processVertHLSL(%this)
+{
+   
+}
+
+function FlatColorFeature::processPixelHLSL(%this)
+{
+   %this.addUniform("strudel", "float2");
+   %this.addSampler("strudelMap");
+   %this.addTexture("strudelTex", "Texture2D", "strudelMap");
+   
+   %this.addVariable("bobsyeruncle", "float", 15.915);
+   %this.addVariable("chimmychanga", "float");
+   
+   %this.writeLine("   @ = @ * 2;", "chimmychanga", "bobsyeruncle");
+   %this.writeLine("   @ *= @.x;", "bobsyeruncle", "strudel");
+   %this.writeLine("   @ *= @.y;", "chimmychanga", "strudel");
+   
+   %this.addVariable("sprangle", "float4");
+   %this.writeLine("   @ = @.Sample(@,@);", "sprangle", "strudelTex", "strudelMap", "strudel");
+}
+
+function FlatColorFeature::setTextureResources(%this)
+{
+   
+}

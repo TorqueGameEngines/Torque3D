@@ -197,6 +197,8 @@ protected:
 
    PhysicsBody *mPhysicsRep;
 
+   LinearColorF mOverrideColor;
+
    // Debug stuff
    F32 mRenderNormalScalar;
    S32 mForceDetail;

@@ -203,6 +203,9 @@ void TSStatic::initPersistFields()
       addField( "originSort",    TypeBool,   Offset( mUseOriginSort, TSStatic ), 
          "Enables translucent sorting of the TSStatic by its origin instead of the bounds." );
 
+	  addField("overrideColor", TypeColorF, Offset(mOverrideColor, TSStatic),
+		  "@brief The skin applied to the shape.\n\n");
+
    endGroup("Rendering");
 
    addGroup( "Reflection" );
@@ -676,6 +679,12 @@ void TSStatic::prepRenderImage( SceneRenderState* state )
    // Acculumation
    rdata.setAccuTex(mAccuTex);
 
+   //Various arbitrary shader render bits to add
+   CustomShaderBindingData strudelCSB;
+   strudelCSB.setFloat4(StringTable->insert("overrideColor"), mOverrideColor);
+
+   rdata.addCustomShaderBinding(strudelCSB);
+
    // If we have submesh culling enabled then prepare
    // the object space frustum to pass to the shape.
    Frustum culler;
@@ -852,6 +861,8 @@ U32 TSStatic::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    {
       stream->writeRangedU32( reflectorDesc->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
    }
+
+   stream->write(mOverrideColor);
    return retMask;
 }
 
@@ -946,6 +957,8 @@ void TSStatic::unpackUpdate(NetConnection *con, BitStream *stream)
    {
       cubeDescId = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );
    }
+
+   stream->read(&mOverrideColor);
 
    if ( isProperlyAdded() )
       _updateShouldTick();

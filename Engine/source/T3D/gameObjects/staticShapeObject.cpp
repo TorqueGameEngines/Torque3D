@@ -7,7 +7,6 @@ StaticShapeObject::StaticShapeObject()
       mCollisionComponent(nullptr),
       mAnimationComponent(nullptr)
 {
-
 }
 StaticShapeObject::~StaticShapeObject()
 {

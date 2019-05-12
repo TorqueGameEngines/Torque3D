@@ -854,6 +854,11 @@ function WorldEditorPlugin::onActivated( %this )
    EWorldEditor.makeFirstResponder(true);
    EditorTree.open($scenesRootGroup,true);
    EWCreatorWindow.setNewObjectGroup(getScene(0));
+   
+   EditorTree.expandItem(1);
+   EditorTree.buildVisibleTree(true);
+   EditorTree.expandItem(2);
+   EditorTree.buildVisibleTree(true);
 
    EWorldEditor.syncGui();
 

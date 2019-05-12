@@ -3,9 +3,9 @@
 IMPLEMENT_CO_NETOBJECT_V1(AIPlayerObject);
 
 AIPlayerObject::AIPlayerObject()
-   : mAIControllerComponent(nullptr)
+   //: mAIControllerComponent(nullptr)
 {
-
+   mSuperClassName = StringTable->insert("Entity");
 }
 AIPlayerObject::~AIPlayerObject()
 {
@@ -21,7 +21,7 @@ bool AIPlayerObject::onAdd()
    if (!mDirtyGameObject)
    {
       //AI Controller
-      mAIControllerComponent = new AIControllerComponent();
+      /*mAIControllerComponent = new AIControllerComponent();
       if (!mAIControllerComponent->registerObject())
       {
          Con::errorf("PlayerObject::onAdd - unable to add mAIControllerComponent!");
@@ -30,7 +30,7 @@ bool AIPlayerObject::onAdd()
 
       mAIControllerComponent->setInternalName("aiControllerComponent");
 
-      addComponent(mAIControllerComponent);
+      addComponent(mAIControllerComponent);*/
    }
 
    return true;

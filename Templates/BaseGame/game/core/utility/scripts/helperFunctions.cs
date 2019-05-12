@@ -198,56 +198,6 @@ function getPrefpath()
 	return $prefPath;
 }
 
-function updateTSShapeLoadProgress(%progress, %msg)
-{
-   // Check if the loading GUI is visible and use that instead of the
-   // separate import progress GUI if possible
-  /* if ( isObject(LoadingGui) && LoadingGui.isAwake() )
-   {
-      // Save/Restore load progress at the start/end of the import process
-      if ( %progress == 0 )
-      {
-         ColladaImportProgress.savedProgress = LoadingProgress.getValue();
-         ColladaImportProgress.savedText = LoadingProgressTxt.getValue();
-
-         ColladaImportProgress.msgPrefix = "Importing " @ %msg;
-         %msg = "Reading file into memory...";
-      }
-      else if ( %progress == 1.0 )
-      {
-         LoadingProgress.setValue( ColladaImportProgress.savedProgress );
-         LoadingProgressTxt.setValue( ColladaImportProgress.savedText );
-      }
-
-      %msg = ColladaImportProgress.msgPrefix @ ": " @ %msg;
-
-      %progressCtrl = LoadingProgress;
-      %textCtrl = LoadingProgressTxt;
-   }
-   else
-   {
-      //it's probably the editors using it
-      if(isFunction("updateToolTSShapeLoadProgress"))
-      {
-         updateToolTSShapeLoadProgress(%progress, %msg);
-      }
-   }
-
-   // Update progress indicators
-   if (%progress == 0)
-   {
-      %progressCtrl.setValue(0.001);
-      %textCtrl.setText(%msg);
-   }
-   else if (%progress != 1.0)
-   {
-      %progressCtrl.setValue(%progress);
-      %textCtrl.setText(%msg);
-   }
-
-   Canvas.repaint(33);*/
-}
-
 /// A helper function which will return the ghosted client object
 /// from a server object when connected to a local server.
 function serverToClientObject( %serverObject )

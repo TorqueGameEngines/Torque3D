@@ -3,6 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="PlayerObject"
     gameObjectName="PlayerObject"
-    scriptFilePath="core/gameObjects/gameObjects/PlayerObject.cs"
-    TAMLFilePath="core/gameObjects/gameObjects/PlayerObject.taml"
+    scriptFile="PlayerObject.cs"
+    TAMLFile="PlayerObject.taml"
     description="A basic Player Object example." />

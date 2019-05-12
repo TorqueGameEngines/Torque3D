@@ -10,10 +10,10 @@
            canSave="true"
            canSaveDynamicFields="true"
            Extension="asset.taml"
-           Recurse="true" />
+           Recurse="true"/>
 	<AutoloadAssets
 	   canSave="true"
 	   canSaveDynamicFields="true"
 	   AssetType="GameObjectAsset"
-	   Recurse="true" />
+	   Recurse="true"/>
 </ModuleDefinition>

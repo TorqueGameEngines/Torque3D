@@ -85,9 +85,6 @@ private:
    StringTableEntry		      mGameObjectAssetId;
    AssetPtr<GameObjectAsset>  mGameObjectAsset;
 
-   //Marked if this entity is a GameObject and deliniates from the parent GO asset
-   bool mDirtyGameObject;
-
    ContainerQueryInfo containerInfo;
 
    bool mInitialized;
@@ -100,6 +97,8 @@ private:
    S32                       mLifetimeMS;
 
 protected:
+   //Marked if this entity is a GameObject and deliniates from the parent GO asset
+   bool mDirtyGameObject;
 
    virtual void   processTick(const Move* move);
    virtual void   advanceTime(F32 dt);

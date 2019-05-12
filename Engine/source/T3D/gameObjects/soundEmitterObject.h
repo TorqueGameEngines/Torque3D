@@ -1,7 +1,7 @@
 #pragma once
 
 #include "T3D/entity.h"
-#include "T3D/components/audio/soundComponent.h"
+#include "T3D/components/audio/SoundComponent.h"
 
 class SoundEmitterObject : public Entity
 {

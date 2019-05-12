@@ -5,10 +5,10 @@ IMPLEMENT_CO_NETOBJECT_V1(PlayerObject);
 PlayerObject::PlayerObject()
    :  mMeshComponent(nullptr),
       mCollisionComponent(nullptr),
-      mAnimationComponent(nullptr),
+      //mAnimationComponent(nullptr),
       mPhysicsComponent(nullptr)
 {
-
+   mSuperClassName = StringTable->insert("Entity");
 }
 PlayerObject::~PlayerObject()
 {
@@ -48,7 +48,7 @@ bool PlayerObject::onAdd()
       addComponent(mCollisionComponent);
 
       //Animation
-      mAnimationComponent = new ActionAnimationComponent();
+      /*mAnimationComponent = new ActionAnimationComponent();
       if (!mAnimationComponent->registerObject())
       {
          Con::errorf("PlayerObject::onAdd - unable to add ActionAnimationComponent!");
@@ -69,7 +69,7 @@ bool PlayerObject::onAdd()
 
       mArmAnimationComponent->setInternalName("armAnimationComponent");
 
-      addComponent(mArmAnimationComponent);
+      addComponent(mArmAnimationComponent);*/
 
       //Physics control
       mPhysicsComponent = new PlayerControllerComponent();

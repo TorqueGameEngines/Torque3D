@@ -3,9 +3,17 @@ singleton Material(Grid_512_Orange)
 {
    mapTo = "Grid_512_orange";
    diffuseColor[0] = "0.8 0.8 0.8 1";
-   diffuseMap[0] = "E:/Gamedev/T3DMIT/clangtest/Templates/Full/game/core/art/grids/Grid_512_orange.png";
+   diffuseMap[0] = "tools/base/images/512_orange.png";
    specular[0] = "0.8 0.8 0.8 1";
    specularPower[0] = "0.25";
    specularStrength[0] = "25";
-   translucentBlendOp = "None";
+   translucentBlendOp = "Add";
+   smoothness[0] = "0.941176";
+   metalness[0] = "1";
+   DiffuseMapAsset0 = "StaticShapeTest:Grid_512_orange_ALBEDO";
+   specularStrength0 = "25";
+   specular0 = "0.8 0.8 0.8 1";
+   specularPower0 = "0.25";
+   emissive[0] = "1";
+   translucent = "1";
 };

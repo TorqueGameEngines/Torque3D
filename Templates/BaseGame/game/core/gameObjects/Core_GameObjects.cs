@@ -1,4 +1,3 @@
-
 function Core_GameObjects::onCreate(%this)
 {
 }

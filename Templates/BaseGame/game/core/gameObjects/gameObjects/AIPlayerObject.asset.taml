@@ -3,6 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="AIPlayerObject"
     gameObjectName="AIPlayerObject"
-    scriptFilePath="core/gameObjects/gameObjects/AIPlayerObject.cs"
-    TAMLFilePath="core/gameObjects/gameObjects/AIPlayerObject.taml"
+    scriptFile="AIPlayerObject.cs"
+    TAMLFile="AIPlayerObject.taml"
     description="A basic AI Player Object example." />

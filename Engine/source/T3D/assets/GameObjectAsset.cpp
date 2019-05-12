@@ -40,6 +40,8 @@
 #include "assets/assetPtr.h"
 #endif
 
+#include "T3D/entity.h"
+
 // Debug Profiling.
 #include "platform/profiler.h"
 
@@ -133,12 +135,14 @@ void GameObjectAsset::copyTo(SimObject* object)
 void GameObjectAsset::initializeAsset()
 {
    //Ensure we have an expanded filepath
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   if (!Platform::isFullPath(mScriptFile))
+      mScriptFile = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptFile;
 
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 
-   mTAMLFile = expandAssetFilePath(mTAMLFile);
+   if (!Platform::isFullPath(mTAMLFile))
+      mTAMLFile = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLFile;
 }
 
 void GameObjectAsset::onAssetRefresh()
@@ -165,7 +169,7 @@ void GameObjectAsset::setScriptFile(const char* pScriptFile)
       return;
 
    // Update.
-   mScriptFile = expandAssetFilePath(pScriptFile);
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -185,7 +189,7 @@ void GameObjectAsset::setTAMLFile(const char* pTAMLFile)
       return;
 
    // Update.
-   mTAMLFile = expandAssetFilePath(pTAMLFile);
+   mTAMLFile = getOwned() ? expandAssetFilePath(pTAMLFile) : pTAMLFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -218,7 +222,12 @@ const char* GameObjectAsset::create()
    }
 
    //Flag it so we know where it came from
-   pSimObject->setDataField("GameObject", nullptr, getAssetId());
+   //Entity* e = dynamic_cast<Entity*>(pSimObject);
+   //e->_setGameObject(getAssetId());
+
+   StringTableEntry assetId = getAssetId();
+
+   pSimObject->setDataField(StringTable->insert("GameObject"), nullptr, getAssetId());
 
    return pSimObject->getIdString();
 }

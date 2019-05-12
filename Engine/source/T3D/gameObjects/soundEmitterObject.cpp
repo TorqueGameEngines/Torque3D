@@ -1,11 +1,11 @@
-#include "SoundEmitterObject.h"
+#include "soundEmitterObject.h"
 
 IMPLEMENT_CO_NETOBJECT_V1(SoundEmitterObject);
 
 SoundEmitterObject::SoundEmitterObject()
    :  mSoundComponent(nullptr)
 {
-
+   mSuperClassName = StringTable->insert("Entity");
 }
 SoundEmitterObject::~SoundEmitterObject()
 {

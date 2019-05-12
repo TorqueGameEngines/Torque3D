@@ -157,8 +157,7 @@ void Entity::initPersistFields()
    endGroup("Misc");
 
    addGroup("GameObject");
-   addProtectedField("GameObject", TypeGameObjectAssetPtr, Offset(mGameObjectAsset, Entity), &_setGameObject, &defaultProtectedGetFn,
-      "The asset Id used for the game object this entity is based on.");
+   addField("GameObject", TypeGameObjectAssetPtr, Offset(mGameObjectAsset, Entity), "The asset Id used for the game object this entity is based on.");
 
    addField("dirtyGameObject", TypeBool, Offset(mDirtyGameObject, Entity), "If this entity is a GameObject, it flags if this instance delinates from the template.", 
       AbstractClassRep::FieldFlags::FIELD_HideInInspectors);
@@ -246,7 +245,7 @@ bool Entity::onAdd()
    if (isServerObject())
    {
       setMaskBits(TransformMask);
-      setMaskBits(NamespaceMask);
+      //setMaskBits(NamespaceMask);
    }
    else
    {

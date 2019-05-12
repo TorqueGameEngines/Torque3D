@@ -1,13 +1,13 @@
 #pragma once
 #include "playerObject.h"
 
-#include "T3D/components/ai/aiControllerComponent.h"
+//#include "T3D/components/ai/aiControllerComponent.h"
 
 class AIPlayerObject : public PlayerObject
 {
    typedef PlayerObject Parent;
 
-   AIControllerComponent* mAIControllerComponent;
+   //AIControllerComponent* mAIControllerComponent;
 
 public:
    AIPlayerObject();

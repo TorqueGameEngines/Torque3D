@@ -32,6 +32,7 @@
 #include "core/module.h"
 
 #include "shaderGen/HLSL/customFeatureHLSL.h"
+#include "shaderGen/GLSL/customFeatureGLSL.h"
 
 MODULE_BEGIN( ShaderGen )
 
@@ -290,23 +291,32 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
    {
 	   for (U32 i = 0; i < mCustomFeaturesData.size(); ++i)
 	   {
-		   mCustomFeaturesData[i]->mFeatureHLSL->processVert(mComponents, mFeatureData);
+         if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+         {
+            mCustomFeaturesData[i]->mFeatureHLSL->processVert(mComponents, mFeatureData);
 
-		   String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
-		   mOutput->addStatement(new GenOp(line));
+            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
+            mOutput->addStatement(new GenOp(line));
 
-		   if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
-			   mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
-		   //ShaderFeatureHLSL feature = mCustomFeaturesData[i]->mHLSLFeature;
-		   //feature->setProcessIndex(index);
+            if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
+               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
 
-		   /*feature->processPixMacros(macros, mFeatureData);
+            mCustomFeaturesData[i]->mFeatureHLSL->reset();
+            mOutput->addStatement(new GenOp("   \r\n"));
+         }
+         else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+         {
+            mCustomFeaturesData[i]->mFeatureGLSL->processVert(mComponents, mFeatureData);
 
-		   feature->setInstancingFormat(&mInstancingFormat);
-		   feature->processPix(mComponents, mFeatureData);*/
+            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureGLSL->getName().c_str());
+            mOutput->addStatement(new GenOp(line));
 
-		   mCustomFeaturesData[i]->mFeatureHLSL->reset();
-		   mOutput->addStatement(new GenOp("   \r\n"));
+            if (mCustomFeaturesData[i]->mFeatureGLSL->getOutput())
+               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureGLSL->getOutput());
+
+            mCustomFeaturesData[i]->mFeatureGLSL->reset();
+            mOutput->addStatement(new GenOp("   \r\n"));
+         }
 	   }
    }
 
@@ -355,23 +365,32 @@ void ShaderGen::_processPixFeatures( Vector<GFXShaderMacro> &macros, bool macros
    {
 	   for (U32 i = 0; i < mCustomFeaturesData.size(); ++i)
 	   {
-		   mCustomFeaturesData[i]->mFeatureHLSL->processPix(mComponents, mFeatureData);
+         if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+         {
+            mCustomFeaturesData[i]->mFeatureHLSL->processPix(mComponents, mFeatureData);
 
-		   String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
-		   mOutput->addStatement(new GenOp(line));
+            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
+            mOutput->addStatement(new GenOp(line));
 
-		   if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
-			   mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
-		   //ShaderFeatureHLSL feature = mCustomFeaturesData[i]->mHLSLFeature;
-		   //feature->setProcessIndex(index);
+            if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
+               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
 
-		   /*feature->processPixMacros(macros, mFeatureData);
+            mCustomFeaturesData[i]->mFeatureHLSL->reset();
+            mOutput->addStatement(new GenOp("   \r\n"));
+         }
+         else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+         {
+            mCustomFeaturesData[i]->mFeatureGLSL->processPix(mComponents, mFeatureData);
 
-		   feature->setInstancingFormat(&mInstancingFormat);
-		   feature->processPix(mComponents, mFeatureData);*/
+            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureGLSL->getName().c_str());
+            mOutput->addStatement(new GenOp(line));
 
-		   mCustomFeaturesData[i]->mFeatureHLSL->reset();
-		   mOutput->addStatement(new GenOp("   \r\n"));
+            if (mCustomFeaturesData[i]->mFeatureGLSL->getOutput())
+               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureGLSL->getOutput());
+
+            mCustomFeaturesData[i]->mFeatureGLSL->reset();
+            mOutput->addStatement(new GenOp("   \r\n"));
+         }
 	   }
    }
    

@@ -36,7 +36,7 @@
 #include "sfx/sfxTypes.h"
 #include "core/util/safeDelete.h"
 #include "T3D/accumulationVolume.h"
-
+#include "gui/controls/guiTreeViewCtrl.h"
 
 IMPLEMENT_CONOBJECT( Material );
 
@@ -707,6 +707,12 @@ DefineEngineMethod( Material, dumpInstances, void, (),,
    "Dumps a formatted list of the currently allocated material instances for this material to the console." )
 {
    MATMGR->dumpMaterialInstances( object );
+}
+
+DefineEngineMethod(Material, getMaterialInstances, void, (GuiTreeViewCtrl* matTree), (nullAsType< GuiTreeViewCtrl*>()),
+   "Dumps a formatted list of the currently allocated material instances for this material to the console.")
+{
+   MATMGR->getMaterialInstances(object, matTree);
 }
 
 DefineEngineMethod( Material, getAnimFlags, const char*, (U32 id), , "" )

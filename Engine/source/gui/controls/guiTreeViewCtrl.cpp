@@ -832,6 +832,8 @@ GuiTreeViewCtrl::GuiTreeViewCtrl()
    mTexSelected      = NULL;
    
    mRenderTooltipDelegate.bind( this, &GuiTreeViewCtrl::renderTooltip );
+
+   mDoFilterChildren = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1122,7 +1124,7 @@ void GuiTreeViewCtrl::_expandObjectHierarchy( SimGroup* group )
 
 //------------------------------------------------------------------------------
 
-void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdate )
+void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdate, bool skipFlter )
 {
    if (!item || !mActive || !isVisible() || !mProfile  )
       return;
@@ -1145,7 +1147,7 @@ void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdat
 
    // If we have a filter pattern, sync the item's filtering status to it.
 
-   if( !getFilterText().isEmpty() )
+   if( !getFilterText().isEmpty() && !skipFlter)
    {
       // Determine the filtering status by looking for the filter
       // text in the item's display text.
@@ -1154,7 +1156,11 @@ void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdat
       item->getDisplayText( sizeof( displayText ), displayText );
       if( !dStristr( displayText, mFilterText ) )
       {
-         item->mState.set( Item::Filtered );
+         //Last check, see if we special-exception this item
+         if (!mItemFilterExceptionList.contains(item->mId))
+            item->mState.set(Item::Filtered);
+         else
+            item->mState.clear(Item::Filtered);
 
          // If it's not a parent, we're done.  Otherwise, there may be children
          // that are not filtered so we need to process them first.
@@ -1163,7 +1169,9 @@ void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdat
             return;
       }
       else
-         item->mState.clear( Item::Filtered );
+      {
+         item->mState.clear(Item::Filtered);
+      }
    }
    else
       item->mState.clear( Item::Filtered );
@@ -1217,7 +1225,10 @@ void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdat
          Item *pChildTemp = child;
          child = child->mNext;
 
-         _buildItem( pChildTemp, tabLevel + 1, bForceFullUpdate );
+         if (!mItemFilterExceptionList.contains(item->mId) && !mDoFilterChildren && !item->isFiltered())
+            _buildItem( pChildTemp, tabLevel + 1, bForceFullUpdate, true );
+         else
+            _buildItem(pChildTemp, tabLevel + 1, bForceFullUpdate, false);
       }
    }
 }
@@ -4775,6 +4786,18 @@ void GuiTreeViewCtrl::setFilterText( const String& text )
    mFlags.set( RebuildVisible );
 }
 
+void GuiTreeViewCtrl::setItemFilterException(U32 item, bool isExempted)
+{
+   if (isExempted)
+   {
+      mItemFilterExceptionList.push_back(item);
+   }
+   else
+   {
+      mItemFilterExceptionList.remove(item);
+   }
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -5574,6 +5597,25 @@ DefineEngineMethod( GuiTreeViewCtrl, setFilterText, void, ( const char* pattern 
    object->setFilterText( pattern );
 }
 
+DefineEngineMethod(GuiTreeViewCtrl, setFilterChildren, void, (bool doFilterChildren), (true),
+   "Set the pattern by which to filter items in the tree.  Only items in the tree whose text "
+   "matches this pattern are displayed.\n\n"
+   "@param pattern New pattern based on which visible items in the tree should be filtered.  If empty, all items become visible.\n\n"
+   "@see getFilterText\n"
+   "@see clearFilterText")
+{
+   object->setFilterChildren(doFilterChildren);
+}
+
+DefineEngineMethod(GuiTreeViewCtrl, setItemFilterException, void, (U32 item, bool isExempt), (0, true),
+   "Set the pattern by which to filter items in the tree.  Only items in the tree whose text "
+   "matches this pattern are displayed.\n\n"
+   "@param pattern New pattern based on which visible items in the tree should be filtered.  If empty, all items become visible.\n\n"
+   "@see getFilterText\n"
+   "@see clearFilterText")
+{
+   object->setItemFilterException(item, isExempt);
+}
 //-----------------------------------------------------------------------------
 
 DefineEngineMethod( GuiTreeViewCtrl, clearFilterText, void, (),,

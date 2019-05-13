@@ -1077,6 +1077,10 @@ singleton GuiControlProfile( GuiMenuBarProfile )
    fillcolorHL = "42 42 42";
    borderColor = "30 30 30 255";
    borderColorHL = "30 30 30 255";
+   fontColor = "215 215 215";
+   fontColorSEL = "43 107 206";
+   fontColorHL = "244 244 244";
+   fontColorNA = "100 100 100";
    border = 0;
    borderThickness = 1;
    opaque = true;

@@ -22,6 +22,7 @@
 
 #include "shadergen/CustomShaderFeature.h"
 #include "shaderGen/HLSL/customFeatureHLSL.h"
+#include "shaderGen/GLSL/customFeatureGLSL.h"
 
 #include "math/mathIO.h"
 #include "scene/sceneRenderState.h"
@@ -35,17 +36,17 @@
 IMPLEMENT_CONOBJECT(CustomShaderFeatureData);
 
 ConsoleDocClass(CustomShaderFeatureData,
-	"@brief An example scene object which renders using a callback.\n\n"
-	"This class implements a basic SceneObject that can exist in the world at a "
-	"3D position and render itself. Note that CustomShaderFeatureData handles its own "
-	"rendering by submitting itself as an ObjectRenderInst (see "
-	"renderInstance\renderPassmanager.h) along with a delegate for its render() "
-	"function. However, the preffered rendering method in the engine is to submit "
-	"a MeshRenderInst along with a Material, vertex buffer, primitive buffer, and "
-	"transform and allow the RenderMeshMgr handle the actual rendering. You can "
-	"see this implemented in RenderMeshExample.\n\n"
-	"See the C++ code for implementation details.\n\n"
-	"@ingroup Examples\n");
+   "@brief An example scene object which renders using a callback.\n\n"
+   "This class implements a basic SceneObject that can exist in the world at a "
+   "3D position and render itself. Note that CustomShaderFeatureData handles its own "
+   "rendering by submitting itself as an ObjectRenderInst (see "
+   "renderInstance\renderPassmanager.h) along with a delegate for its render() "
+   "function. However, the preffered rendering method in the engine is to submit "
+   "a MeshRenderInst along with a Material, vertex buffer, primitive buffer, and "
+   "transform and allow the RenderMeshMgr handle the actual rendering. You can "
+   "see this implemented in RenderMeshExample.\n\n"
+   "See the C++ code for implementation details.\n\n"
+   "@ingroup Examples\n");
 
 //-----------------------------------------------------------------------------
 // Object setup and teardown
@@ -63,128 +64,138 @@ CustomShaderFeatureData::~CustomShaderFeatureData()
 //-----------------------------------------------------------------------------
 void CustomShaderFeatureData::initPersistFields()
 {
-	// SceneObject already handles exposing the transform
-	Parent::initPersistFields();
+   // SceneObject already handles exposing the transform
+   Parent::initPersistFields();
 }
 
 bool CustomShaderFeatureData::onAdd()
 {
-	if (!Parent::onAdd())
-		return false;
+   if (!Parent::onAdd())
+      return false;
 
-	mFeatureHLSL = new CustomFeatureHLSL();
-	mFeatureHLSL->mOwner = this;
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+   {
+      mFeatureHLSL = new CustomFeatureHLSL();
+      mFeatureHLSL->mOwner = this;
+   }
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+   {
+      mFeatureGLSL = new CustomFeatureGLSL();
+      mFeatureGLSL->mOwner = this;
+   }
 
-	return true;
+   return true;
 }
 
 void CustomShaderFeatureData::onRemove()
 {
-	Parent::onRemove();
+   Parent::onRemove();
 }
 
 //Shadergen setup functions
 void CustomShaderFeatureData::addVariable(String name, String type, String defaultValue)
 {
-	mFeatureHLSL->addVariable(name, type, defaultValue);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->addVariable(name, type, defaultValue);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->addVariable(name, type, defaultValue);
 }
 
 void CustomShaderFeatureData::addUniform(String name, String type, String defaultValue, U32 arraySize)
 {
-	mFeatureHLSL->addUniform(name, type, defaultValue, arraySize);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->addUniform(name, type, defaultValue, arraySize);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->addUniform(name, type, defaultValue, arraySize);
 }
 
 void CustomShaderFeatureData::addSampler(String name, String type, U32 arraySize)
 {
-	mFeatureHLSL->addSampler(name, type, arraySize);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->addSampler(name, type, arraySize);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->addSampler(name, type, arraySize);
 }
 
 void CustomShaderFeatureData::addTexture(String name, String type, String samplerState, U32 arraySize)
 {
-	mFeatureHLSL->addTexture(name, type, samplerState, arraySize);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->addTexture(name, type, samplerState, arraySize);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->addTexture(name, type, samplerState, arraySize);
 }
 
-void CustomShaderFeatureData::addConnector(String name, String elementName, String type)
+void CustomShaderFeatureData::addConnector(String name, String type, String elementName)
 {
-	mFeatureHLSL->addConnector(name, elementName, type);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->addConnector(name, type, elementName);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->addConnector(name, type, elementName);
+}
+
+void CustomShaderFeatureData::addVertTexCoord(String name)
+{
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->addVertTexCoord(name);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->addVertTexCoord(name);
 }
 
 bool CustomShaderFeatureData::hasFeature(String name)
 {
-	return mFeatureHLSL->hasFeature(name);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      return mFeatureHLSL->hasFeature(name);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      return mFeatureGLSL->hasFeature(name);
 }
 
-void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef *argv)
+void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef* argv)
 {
-	/*mOnObject = onObject;
-	mArgc = argc;
-
-	mArgv = new ConsoleValueRef[argc];
-	for (int i = 0; i<argc; i++)
-	{
-		mArgv[i].value = new ConsoleValue();
-		mArgv[i].value->type = ConsoleValue::TypeInternalString;
-		mArgv[i].value->init();
-		if (argv)
-		{
-			mArgv[i].value->setStringValue((const char*)argv[i]);
-		}
-	}*/
-
-	mFeatureHLSL->writeLine(format, argc, argv);
+   if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
+      mFeatureHLSL->writeLine(format, argc, argv);
+   else if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
+      mFeatureGLSL->writeLine(format, argc, argv);
 }
 
-/*//Actual shader processing
-void CustomShaderFeatureData::processVert(Vector<ShaderComponent*> &componentList,
-	const MaterialFeatureData &fd)
+DefineEngineMethod(CustomShaderFeatureData, addVariable, void, (String name, String type, String defaultValue), ("", "", ""), "")
 {
-	mFeatureHLSL.processVert(componentList, fd);
-}
-
-void CustomShaderFeatureData::processPix(Vector<ShaderComponent*> &componentList,
-	const MaterialFeatureData &fd)
-{
-	mFeatureHLSL.processPix(componentList, fd);
-
-}
-
-void CustomShaderFeatureData::setTexData(Material::StageData &stageDat,
-	const MaterialFeatureData &fd,
-	RenderPassData &passData,
-	U32 &texIndex)
-{
-	mFeatureHLSL.setTexData(stageDat, fd, passData, texIndex);
-}*/
-
-DefineEngineMethod(CustomShaderFeatureData, addVariable, void, (String name, String type, String defaultValue), ("", "", ""),	"")
-{
-	object->addVariable(name, type, defaultValue);
+   object->addVariable(name, type, defaultValue);
 }
 
 DefineEngineMethod(CustomShaderFeatureData, addUniform, void, (String name, String type, String defaultValue, U32 arraySize), ("", "", "", 0), "")
 {
-	object->addUniform(name, type, defaultValue, arraySize);
+   object->addUniform(name, type, defaultValue, arraySize);
 }
 
 DefineEngineMethod(CustomShaderFeatureData, addSampler, void, (String name, U32 arraySize), ("", 0), "")
 {
-	object->addSampler(name, "", arraySize);
+   object->addSampler(name, "", arraySize);
 }
 
 DefineEngineMethod(CustomShaderFeatureData, addTexture, void, (String name, String type, String samplerState, U32 arraySize), ("", "", 0), "")
 {
-	object->addTexture(name, type, samplerState, arraySize);
+   object->addTexture(name, type, samplerState, arraySize);
 }
 
-ConsoleMethod(CustomShaderFeatureData, writeLine, void, 3, 0, "( string format, string args... ) Dynamically call a method on an object.\n"
-	"@param method Name of method to call.\n"
-	"@param args Zero or more arguments for the method.\n"
-	"@return The result of the method call.")
+DefineEngineMethod(CustomShaderFeatureData, addConnector, void, (String name, String type, String elementName), ("", "", ""), "")
 {
-	object->writeLine(argv[2], argc - 3, argv + 3);
+   object->addConnector(name, type, elementName);
+}
+
+DefineEngineMethod(CustomShaderFeatureData, addVertTexCoord, void, (String name), (""), "")
+{
+   object->addVertTexCoord(name);
+}
+
+DefineEngineStringlyVariadicMethod(CustomShaderFeatureData, writeLine, void, 3, 0, "( string format, string args... ) Dynamically call a method on an object.\n"
+   "@param method Name of method to call.\n"
+   "@param args Zero or more arguments for the method.\n"
+   "@return The result of the method call.")
+{
+   object->writeLine(argv[2], argc - 3, argv + 3);
 }
 
 DefineEngineMethod(CustomShaderFeatureData, hasFeature, bool, (String name), (""), "")
 {
-	return object->hasFeature(name);
+   return object->hasFeature(name);
 }

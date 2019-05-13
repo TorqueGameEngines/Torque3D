@@ -130,6 +130,13 @@ package Tools
       // resources can override, redefine, or add functionality.
       Tools::LoadResources( $Tools::resourcePath );
       
+      //Now, go through and load any tool-group modules
+      ModuleDatabase.setModuleExtension("module");
+      
+      //Any common tool modules
+      ModuleDatabase.scanModules( "tools", false );
+      ModuleDatabase.LoadGroup( "Tools" );
+      
       //$Scripts::ignoreDSOs = %toggle;
    }
    

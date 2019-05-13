@@ -66,6 +66,7 @@ struct GFXStateBlockDesc;
 class GFXVertexFormat;
 class MatrixSet;
 class ProcessedMaterial;
+class GuiTreeViewCtrl;
 
 ///
 class BaseMatInstance
@@ -225,6 +226,7 @@ public:
    virtual const GFXVertexFormat* getVertexFormat() const = 0;
 
    virtual void dumpShaderInfo() const = 0;
+   virtual void getShaderInfo(GuiTreeViewCtrl* tree, U32 item) const = 0;
 
    /// Fast test for use of normal maps in this material.
    bool hasNormalMap() const { return mHasNormalMaps; }

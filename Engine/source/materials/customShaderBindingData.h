@@ -77,6 +77,14 @@ public:
 	}
 	Point4F getFloat4() { return mFloat4; }
 
+   void setTexture2D(StringTableEntry shaderConstName, GFXTexHandle f)
+   {
+      targetedUniformName = shaderConstName;
+      texture = f;
+      type = Texture2D;
+   }
+   GFXTexHandle getTexture2D() { return texture; }
+
 	StringTableEntry getHandleName() {
 		return targetedUniformName;
 	}

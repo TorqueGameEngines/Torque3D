@@ -1211,31 +1211,6 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
       shaderConsts->set( handles->mAccuCoverageSC, mMaterial->mAccuCoverage[stageNum] );
    if( handles->mAccuSpecularSC->isValid() )
       shaderConsts->set( handles->mAccuSpecularSC, mMaterial->mAccuSpecular[stageNum] );
-
-	/*for (U32 i = 0; i < sgData.customShaderData.size(); i++)
-	{
-		//roll through and try setting our data!
-		for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
-		{
-			StringTableEntry handleName = sgData.customShaderData[i]->getHandleName();
-			StringTableEntry rpdHandleName = handles->mCustomHandles[h].handleName;
-			if (handles->mCustomHandles[h].handleName == sgData.customShaderData[i]->getHandleName())
-			{
-				if (handles->mCustomHandles[h].handle->isValid())
-				{
-					if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat());
-					else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float2)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat2());
-					else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float3)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat3());
-					else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float4)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat4());
-					break;
-}
-			}
-		}
-	}*/
 }
 
 bool ProcessedShaderMaterial::_hasCubemap(U32 pass)
@@ -1382,31 +1357,6 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
    ShaderRenderPassData *rpd = _getRPD(pass);
    for (U32 i = 0; i < rpd->featureShaderHandles.size(); i++)
       rpd->featureShaderHandles[i]->setConsts(state, sgData, shaderConsts);
-
-   /*for (U32 i = 0; i < sgData.customShaderData.size(); i++)
-   {
-	   //roll through and try setting our data!
-	   for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
-	   {
-		   StringTableEntry handleName = sgData.customShaderData[i]->getHandleName();
-		   StringTableEntry rpdHandleName = handles->mCustomHandles[h].handleName;
-		   if (handles->mCustomHandles[h].handleName == sgData.customShaderData[i]->getHandleName())
-		   {
-			   if (handles->mCustomHandles[h].handle->isValid())
-			   {
-				   if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float)
-					   shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat());
-				   else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float2)
-					   shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat2());
-				   else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float3)
-					   shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat3());
-				   else if (sgData.customShaderData[i]->getType() == CustomShaderBindingData::Float4)
-					   shaderConsts->setSafe(handles->mCustomHandles[h].handle, sgData.customShaderData[i]->getFloat4());
-				   break;
-			   }
-		   }
-	   }
-   }*/
 
    LIGHTMGR->setLightInfo(this, mMaterial, sgData, state, pass, shaderConsts);
 

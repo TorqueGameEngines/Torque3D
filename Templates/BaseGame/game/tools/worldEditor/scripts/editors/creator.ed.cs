@@ -55,6 +55,11 @@ function EWCreatorWindow::init( %this )
       
       %this.registerMissionObject( "PointLight",          "Point Light" );
       %this.registerMissionObject( "SpotLight",           "Spot Light" );
+      
+      %this.registerMissionObject( "BoxEnvironmentProbe",       "Box Environment Probe" );
+      %this.registerMissionObject( "SphereEnvironmentProbe",    "Sphere Environment Probe" );
+      %this.registerMissionObject( "Skylight",       "Skylight" );
+      
       %this.registerMissionObject( "GroundCover",         "Ground Cover" );
       %this.registerMissionObject( "TerrainBlock",        "Terrain Block" );
       %this.registerMissionObject( "GroundPlane",         "Ground Plane" );
@@ -85,6 +90,8 @@ function EWCreatorWindow::init( %this )
       %this.registerMissionObject( "SFXSpace",      "Sound Space" );
       %this.registerMissionObject( "OcclusionVolume", "Occlusion Volume" );
       %this.registerMissionObject( "AccumulationVolume", "Accumulation Volume" );
+      %this.registerMissionObject("NavMesh", "Navigation mesh");
+      %this.registerMissionObject("NavPath", "Path");
       %this.registerMissionObject( "Entity",       "Entity" );
       
    %this.endGroup();

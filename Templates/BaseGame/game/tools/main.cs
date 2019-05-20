@@ -153,7 +153,6 @@ package Tools
       popInstantGroup();
       $instantGroup = MissionCleanup;
       pushInstantGroup();
-      
    }
    
    function startToolTime(%tool)

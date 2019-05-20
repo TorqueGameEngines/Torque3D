@@ -99,7 +99,7 @@ function togglePanelLayout()
       }
       
       EditorTree.open($scenesRootGroup,true);
-      
+
       Editor_PropertiesPanel.add(EWInspectorWindow);
       EWInspectorWindow.resize(0,0, Editor_PropertiesPanel.extent.x, Editor_PropertiesPanel.extent.y);
       EWInspectorWindow.horizSizing = "width";

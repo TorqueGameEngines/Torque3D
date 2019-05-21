@@ -3694,29 +3694,40 @@ void ShapeBase::setSkinName(const char* name)
 
 void ShapeBase::reSkin()
 {
-   if ( isGhost() && mShapeInstance && mSkinNameHandle.isValidString() )
+   if (isGhost() && mShapeInstance)
    {
-	  mShapeInstance->resetMaterialList();
-      Vector<String> skins;
-      String(mSkinNameHandle.getString()).split( ";", skins );
-
-      for (S32 i = 0; i < skins.size(); i++)
+      if (mSkinNameHandle.isValidString())
       {
-         String oldSkin( mAppliedSkinName.c_str() );
-         String newSkin( skins[i] );
+         mShapeInstance->resetMaterialList();
+         Vector<String> skins;
+         String(mSkinNameHandle.getString()).split(";", skins);
 
-         // Check if the skin handle contains an explicit "old" base string. This
-         // allows all models to support skinning, even if they don't follow the 
-         // "base_xxx" material naming convention.
-         S32 split = newSkin.find( '=' );    // "old=new" format skin?
-         if ( split != String::NPos )
+         for (S32 i = 0; i < skins.size(); i++)
          {
-            oldSkin = newSkin.substr( 0, split );
-            newSkin = newSkin.erase( 0, split+1 );
-         }
+            String oldSkin(mAppliedSkinName.c_str());
+            String newSkin(skins[i]);
 
-         mShapeInstance->reSkin( newSkin, oldSkin );
-         mAppliedSkinName = newSkin;
+            // Check if the skin handle contains an explicit "old" base string. This
+            // allows all models to support skinning, even if they don't follow the 
+            // "base_xxx" material naming convention.
+            S32 split = newSkin.find('=');    // "old=new" format skin?
+            if (split != String::NPos)
+            {
+               oldSkin = newSkin.substr(0, split);
+               newSkin = newSkin.erase(0, split + 1);
+            }
+            else
+            {
+               oldSkin = "";
+            }
+            mShapeInstance->reSkin(newSkin, oldSkin);
+            mAppliedSkinName = newSkin;
+         }
+      }
+      else
+      {
+         mShapeInstance->reSkin("", mAppliedSkinName);
+         mAppliedSkinName = "";
       }
    }
 }

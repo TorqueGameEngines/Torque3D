@@ -44,6 +44,7 @@ function initializeWorldEditor()
    exec("./gui/SelectObjectsWindow.ed.gui");
    exec("./gui/ProceduralTerrainPainterGui.gui" );
    exec("./gui/shadowViz.gui" );
+   exec("./gui/probeBakeDlg.gui" );
    
    // Load Scripts.
    exec("./scripts/menus.ed.cs");
@@ -66,6 +67,7 @@ function initializeWorldEditor()
    exec("./scripts/cameraCommands.ed.cs");
    exec("./scripts/lightViz.cs");
    exec("./scripts/shadowViz.cs");
+   exec("./scripts/probeBake.ed.cs");
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));

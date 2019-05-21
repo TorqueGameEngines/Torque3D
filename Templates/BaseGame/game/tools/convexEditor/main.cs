@@ -35,13 +35,13 @@ function initializeConvexEditor()
    ConvexEditorOptionsWindow.setVisible( false );  
    ConvexEditorTreeWindow.setVisible( false ); 
    ConvexEditorToolbar.setVisible( false );
-   ConvexEditorOptionssWindow.setVisible( false );
+   ConvexEditorOptionsWindow.setVisible( false );
    
    EditorGui.add( ConvexEditorGui );
    EditorGui.add( ConvexEditorOptionsWindow );
    EditorGui.add( ConvexEditorTreeWindow );
    EditorGui.add( ConvexEditorToolbar );
-   EditorGui.add( ConvexEditorOptionssWindow );
+   EditorGui.add( ConvexEditorOptionsWindow );
       
    new ScriptObject( ConvexEditorPlugin )
    {
@@ -102,7 +102,7 @@ function ConvexEditorPlugin::onActivated( %this )
    EditorGui.bringToFront( ConvexEditorGui );
    ConvexEditorGui.setVisible( true );
    ConvexEditorToolbar.setVisible( true );
-   ConvexEditorOptionssWindow.setVisible( true );
+   ConvexEditorOptionsWindow.setVisible( true );
    ConvexEditorGui.makeFirstResponder( true ); 
    %this.map.push();   
    
@@ -137,7 +137,7 @@ function ConvexEditorPlugin::onDeactivated( %this )
    ConvexEditorGui.setVisible( false );
    ConvexEditorOptionsWindow.setVisible( false );
    ConvexEditorTreeWindow.setVisible( false );
-   ConvexEditorOptionssWindow.setVisible( false );
+   ConvexEditorOptionsWindow.setVisible( false );
    ConvexEditorToolbar.setVisible( false );
    %this.map.pop();
    

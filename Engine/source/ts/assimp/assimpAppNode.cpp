@@ -91,22 +91,30 @@ MatrixF AssimpAppNode::getTransform(F32 time)
    else {
       // no parent (ie. root level) => scale by global shape <unit>
       mLastTransform.identity();
+      mLastTransform.scale(ColladaUtils::getOptions().unit);
       if (!isBounds())
          convertMat(mLastTransform);
-
-      //mLastTransform.scale(ColladaUtils::getOptions().unit);
    }
 
    // If this node is animated in the active sequence, fetch the animated transform
+   MatrixF mat(true);
    if (sActiveSequence)
-   {
-      MatrixF mat(true);
       getAnimatedTransform(mat, time, sActiveSequence);
-      mLastTransform.mul(mat);
-   }
    else
-      mLastTransform.mul(mNodeTransform);
-   
+      mat = mNodeTransform;
+
+   // Remove node scaling?
+   Point3F nodeScale = mat.getScale();
+   if (nodeScale != Point3F::One && appParent && ColladaUtils::getOptions().ignoreNodeScale)
+   {
+      nodeScale.x = nodeScale.x ? (1.0f / nodeScale.x) : 0;
+      nodeScale.y = nodeScale.y ? (1.0f / nodeScale.y) : 0;
+      nodeScale.z = nodeScale.z ? (1.0f / nodeScale.z) : 0;
+      mat.scale(nodeScale);
+   }
+
+   mLastTransform.mul(mat);
+
    mLastTransformTime = time;
    return mLastTransform;
 }
@@ -280,12 +288,9 @@ void AssimpAppNode::convertMat(MatrixF& outMat)
 {
    MatrixF rot(true);
 
-   // This is copied directly from ColladaUtils::convertTransform()
-   // ColladaUtils::getOptions().upAxis has been temporarily replaced with $Assimp::OverrideUpAxis for testing
-   // We need a plan for how the full set of assimp import options and settings is going to be managed.
-   switch (Con::getIntVariable("$Assimp::OverrideUpAxis", 2))
+   switch (ColladaUtils::getOptions().upAxis)
    {
-   case 0: //UPAXISTYPE_X_UP:
+   case UPAXISTYPE_X_UP:
       // rotate 90 around Y-axis, then 90 around Z-axis
       rot(0, 0) = 0.0f;  rot(1, 0) = 1.0f;
       rot(1, 1) = 0.0f;	rot(2, 1) = 1.0f;
@@ -295,7 +300,7 @@ void AssimpAppNode::convertMat(MatrixF& outMat)
       outMat.mulL(rot);
       break;
 
-   case 1: //UPAXISTYPE_Y_UP:
+   case UPAXISTYPE_Y_UP:
       // rotate 180 around Y-axis, then 90 around X-axis
       rot(0, 0) = -1.0f;
       rot(1, 1) = 0.0f;	rot(2, 1) = 1.0f;
@@ -305,7 +310,7 @@ void AssimpAppNode::convertMat(MatrixF& outMat)
       outMat.mulL(rot);
       break;
 
-   case 2: //UPAXISTYPE_Z_UP:
+   case UPAXISTYPE_Z_UP:
    default:
       // nothing to do
       break;

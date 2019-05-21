@@ -39,6 +39,7 @@
 
 #include "core/util/tVector.h"
 #include "core/strings/findMatch.h"
+#include "core/strings/stringUnit.h"
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 #include "ts/tsShape.h"
@@ -133,29 +134,16 @@ void AssimpShapeLoader::enumerateScene()
 
    // Post-Processing
    unsigned int ppsteps = 
-       Con::getBoolVariable("$Assimp::ConvertToLeftHanded", false) ? aiProcess_ConvertToLeftHanded : 0 |
-       Con::getBoolVariable("$Assimp::CalcTangentSpace", false) ? aiProcess_CalcTangentSpace : 0 |
-       Con::getBoolVariable("$Assimp::JoinIdenticalVertices", false) ? aiProcess_JoinIdenticalVertices : 0 |
-       Con::getBoolVariable("$Assimp::ValidateDataStructure", false) ? aiProcess_ValidateDataStructure : 0 |
-       Con::getBoolVariable("$Assimp::ImproveCacheLocality", false) ? aiProcess_ImproveCacheLocality : 0 |
-       Con::getBoolVariable("$Assimp::RemoveRedundantMaterials", false) ? aiProcess_RemoveRedundantMaterials : 0 |
-       Con::getBoolVariable("$Assimp::FindDegenerates", false) ? aiProcess_FindDegenerates : 0 |
-       Con::getBoolVariable("$Assimp::FindInvalidData", false) ? aiProcess_FindInvalidData : 0 |
-       Con::getBoolVariable("$Assimp::GenUVCoords", false) ? aiProcess_GenUVCoords : 0 |
-       Con::getBoolVariable("$Assimp::TransformUVCoords", false) ? aiProcess_TransformUVCoords : 0 |
-       Con::getBoolVariable("$Assimp::FindInstances", false) ? aiProcess_FindInstances : 0 |
-       Con::getBoolVariable("$Assimp::LimitBoneWeights", false) ? aiProcess_LimitBoneWeights : 0 |
-       Con::getBoolVariable("$Assimp::OptimizeMeshes", false) ? aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph : 0 |
-       0;
-
-   if(Con::getBoolVariable("$Assimp::FlipUVs", true))
-      ppsteps |= aiProcess_FlipUVs;
-
-   if(Con::getBoolVariable("$Assimp::FlipWindingOrder", false))
-      ppsteps |= aiProcess_FlipWindingOrder;
-
-   if(Con::getBoolVariable("$Assimp::Triangulate", true))
-      ppsteps |= aiProcess_Triangulate;
+      (ColladaUtils::getOptions().convertLeftHanded ? aiProcess_MakeLeftHanded : 0) |
+      (ColladaUtils::getOptions().reverseWindingOrder ? aiProcess_FlipWindingOrder : 0) |
+      (ColladaUtils::getOptions().calcTangentSpace ? aiProcess_CalcTangentSpace : 0) |
+      (ColladaUtils::getOptions().joinIdenticalVerts ? aiProcess_JoinIdenticalVertices : 0) |
+      (ColladaUtils::getOptions().removeRedundantMats ? aiProcess_RemoveRedundantMaterials : 0) |
+      (ColladaUtils::getOptions().genUVCoords ? aiProcess_GenUVCoords : 0) |
+      (ColladaUtils::getOptions().transformUVCoords ? aiProcess_TransformUVCoords : 0) |
+      (ColladaUtils::getOptions().flipUVCoords ? aiProcess_FlipUVs : 0) |
+      (ColladaUtils::getOptions().findInstances ? aiProcess_FindInstances : 0) |
+      (ColladaUtils::getOptions().limitBoneWeights ? aiProcess_LimitBoneWeights : 0);
 
    if (Con::getBoolVariable("$Assimp::OptimizeMeshes", false))
       ppsteps |= aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph;
@@ -163,33 +151,20 @@ void AssimpShapeLoader::enumerateScene()
    if (Con::getBoolVariable("$Assimp::SplitLargeMeshes", false))
       ppsteps |= aiProcess_SplitLargeMeshes;
 
+   // Mandatory options
+   //ppsteps |= aiProcess_ValidateDataStructure | aiProcess_Triangulate | aiProcess_ImproveCacheLocality;
+   ppsteps |= aiProcess_Triangulate;
    //aiProcess_SortByPType              | // make 'clean' meshes which consist of a single typ of primitives
 
    aiPropertyStore* props = aiCreatePropertyStore();
 
-   //aiSetImportPropertyInteger(props,   AI_CONFIG_IMPORT_TER_MAKE_UVS,         1);
-   //aiSetImportPropertyInteger(props,   AI_CONFIG_PP_SBP_REMOVE,               (aiProcessPreset_TargetRealtime_Quality 
-   //                                                                                 | aiProcess_FlipWindingOrder | aiProcess_FlipUVs 
-   //                                                                                 | aiProcess_CalcTangentSpace
-   //                                                                                 | aiProcess_FixInfacingNormals) 
-   //                                                                                    & ~aiProcess_RemoveRedundantMaterials);
-   //aiSetImportPropertyInteger(props,   AI_CONFIG_GLOB_MEASURE_TIME,           1);
-   //aiSetImportPropertyFloat(props,     AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE,  80.f);
-   //aiSetImportPropertyInteger(props,AI_CONFIG_PP_PTV_KEEP_HIERARCHY,1);
-
-   struct aiLogStream shapeLog;
-   shapeLog = aiGetPredefinedLogStream(aiDefaultLogStream_FILE, "assimp.log");
+   struct aiLogStream shapeLog = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+   shapeLog.callback = assimpLogCallback;
+   shapeLog.user = 0;
    aiAttachLogStream(&shapeLog);
 #ifdef TORQUE_DEBUG
    aiEnableVerboseLogging(true);
 #endif
-
-   //c = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
-   //aiAttachLogStream(&c);
-
-   // Attempt to import with Assimp.
-   //mScene = importer.ReadFile(shapePath.getFullPath().c_str(), (aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_CalcTangentSpace)
-   //   & ~aiProcess_RemoveRedundantMaterials);
 
    mScene = (aiScene*)aiImportFileExWithProperties(shapePath.getFullPath().c_str(), ppsteps, NULL, props);
 
@@ -200,11 +175,38 @@ void AssimpShapeLoader::enumerateScene()
       Con::printf("[ASSIMP] Mesh Count: %d", mScene->mNumMeshes);
       Con::printf("[ASSIMP] Material Count: %d", mScene->mNumMaterials);
 
+      // Set import options (if they are not set to override)
+      if (ColladaUtils::getOptions().unit <= 0.0f)
+      {
+         F64 unit;
+         if (!getMetaDouble("UnitScaleFactor", unit))
+         {
+            F32 floatVal;
+            S32 intVal;
+            if (getMetaFloat("UnitScaleFactor", floatVal))
+               unit = (F64)floatVal;
+            else if (getMetaInt("UnitScaleFactor", intVal))
+               unit = (F64)intVal;
+            else
+               unit = 1.0;
+         }
+         ColladaUtils::getOptions().unit = (F32)unit;
+      }
+
+      if (ColladaUtils::getOptions().upAxis == UPAXISTYPE_COUNT)
+      {
+         S32 upAxis;
+         if (!getMetaInt("UpAxis", upAxis))
+            upAxis = UPAXISTYPE_Z_UP;
+         ColladaUtils::getOptions().upAxis = (domUpAxisType) upAxis;
+      }
+
       // Extract embedded textures
       for (U32 i = 0; i < mScene->mNumTextures; ++i)
          extractTexture(i, mScene->mTextures[i]);
 
       // Load all the materials.
+      AssimpAppMaterial::sDefaultMatNumber = 0;
       for ( U32 i = 0; i < mScene->mNumMaterials; i++ )
          AppMesh::appMaterials.push_back(new AssimpAppMaterial(mScene->mMaterials[i]));
 
@@ -245,8 +247,8 @@ void AssimpShapeLoader::computeBounds(Box3F& bounds)
    TSShapeLoader::computeBounds(bounds);
 
    // Check if the model origin needs adjusting
-   bool adjustCenter = Con::getBoolVariable("$Assimp::adjustCenter", false); //ColladaUtils::getOptions().adjustCenter
-   bool adjustFloor = Con::getBoolVariable("$Assimp::adjustFloor", false); //ColladaUtils::getOptions().adjustFloor
+   bool adjustCenter = ColladaUtils::getOptions().adjustCenter;
+   bool adjustFloor = ColladaUtils::getOptions().adjustFloor;
    if (bounds.isValidBox() && (adjustCenter || adjustFloor))
    {
       // Compute shape offset
@@ -289,6 +291,126 @@ void AssimpShapeLoader::computeBounds(Box3F& bounds)
    }
 }
 
+bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeViewCtrl* tree)
+{
+   Assimp::Importer importer;
+   Torque::Path path(sourceShapePath);
+   String cleanFile = AppMaterial::cleanString(path.getFileName());
+
+   // Attempt to import with Assimp.
+   const aiScene* shapeScene = importer.ReadFile(path.getFullPath().c_str(), (aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace)
+      & ~aiProcess_RemoveRedundantMaterials & ~aiProcess_GenSmoothNormals);
+
+   if (!shapeScene)
+      return false;
+   mScene = shapeScene;
+
+   // Initialize tree
+   tree->removeItem(0);
+   S32 meshItem = tree->insertItem(0, "Meshes", String::ToString("%i", shapeScene->mNumMeshes));
+   S32 matItem = tree->insertItem(0, "Materials", String::ToString("%i", shapeScene->mNumMaterials));
+   S32 animItem = tree->insertItem(0, "Animations", String::ToString("%i", shapeScene->mNumAnimations));
+   //S32 lightsItem = tree->insertItem(0, "Lights", String::ToString("%i", shapeScene->mNumLights));
+   //S32 texturesItem = tree->insertItem(0, "Textures", String::ToString("%i", shapeScene->mNumTextures));
+
+   //Details!
+   U32 numPolys = 0;
+   U32 numVerts = 0;
+   for (U32 i = 0; i < shapeScene->mNumMeshes; i++)
+   {
+      tree->insertItem(meshItem, String::ToString("%s", shapeScene->mMeshes[i]->mName.C_Str()));
+      numPolys += shapeScene->mMeshes[i]->mNumFaces;
+      numVerts += shapeScene->mMeshes[i]->mNumVertices;
+   }
+
+   U32 defaultMatNumber = 0;
+   for (U32 i = 0; i < shapeScene->mNumMaterials; i++)
+   {
+      aiMaterial* aiMat = shapeScene->mMaterials[i];
+
+      aiString matName;
+      aiMat->Get(AI_MATKEY_NAME, matName);
+      String name = matName.C_Str();
+      if (name.isEmpty())
+      {
+         name = AppMaterial::cleanString(path.getFileName());
+         name += "_defMat";
+         name += String::ToString("%d", defaultMatNumber);
+         defaultMatNumber++;
+      }
+
+      aiString texPath;
+      aiMat->GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0, &texPath);
+      String texName = texPath.C_Str();
+      if (texName.isEmpty())
+      {
+         aiColor3D read_color(1.f, 1.f, 1.f);
+         if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, read_color))
+            texName = String::ToString("Color: (%0.3f, %0.3f, %0.3f)", (F32)read_color.r, (F32)read_color.g, (F32)read_color.b);
+         else
+            texName = "No Texture";
+      }
+      else
+         texName = AssimpAppMaterial::cleanTextureName(texName, cleanFile, sourceShapePath, true);
+
+      tree->insertItem(matItem, String::ToString("%s", name.c_str()), String::ToString("%s", texName.c_str()));
+   }
+
+   for (U32 i = 0; i < shapeScene->mNumAnimations; i++)
+   {
+      String sequenceName = shapeScene->mAnimations[i]->mName.C_Str();
+      if (sequenceName.isEmpty())
+         sequenceName = "ambient";
+      tree->insertItem(animItem, sequenceName.c_str());
+   }
+
+   U32 numNodes = 0;
+   if (shapeScene->mRootNode)
+   {
+      S32 nodesItem = tree->insertItem(0, "Nodes", "");
+      addNodeToTree(nodesItem, shapeScene->mRootNode, tree, numNodes);
+      tree->setItemValue(nodesItem, String::ToString("%i", numNodes));
+   }
+
+   U32 numMetaTags = shapeScene->mMetaData ? shapeScene->mMetaData->mNumProperties : 0;
+   if (numMetaTags)
+      addMetaDataToTree(shapeScene->mMetaData, tree);
+
+   F64 unit;
+   if (!getMetaDouble("UnitScaleFactor", unit))
+      unit = 1.0f;
+
+   S32 upAxis;
+   if (!getMetaInt("UpAxis", upAxis))
+      upAxis = UPAXISTYPE_Z_UP;
+
+   /*for (U32 i = 0; i < shapeScene->mNumLights; i++)
+   {
+      treeObj->insertItem(lightsItem, String::ToString("%s", shapeScene->mLights[i]->mType));
+   }*/
+
+   // Store shape information in the tree control
+   tree->setDataField(StringTable->insert("_nodeCount"), 0, avar("%d", numNodes));
+   tree->setDataField(StringTable->insert("_meshCount"), 0, avar("%d", shapeScene->mNumMeshes));
+   tree->setDataField(StringTable->insert("_polygonCount"), 0, avar("%d", numPolys));
+   tree->setDataField(StringTable->insert("_materialCount"), 0, avar("%d", shapeScene->mNumMaterials));
+   tree->setDataField(StringTable->insert("_lightCount"), 0, avar("%d", shapeScene->mNumLights));
+   tree->setDataField(StringTable->insert("_animCount"), 0, avar("%d", shapeScene->mNumAnimations));
+   tree->setDataField(StringTable->insert("_textureCount"), 0, avar("%d", shapeScene->mNumTextures));
+   tree->setDataField(StringTable->insert("_vertCount"), 0, avar("%d", numVerts));
+   tree->setDataField(StringTable->insert("_metaTagCount"), 0, avar("%d", numMetaTags));
+   tree->setDataField(StringTable->insert("_unit"), 0, avar("%g", (F32)unit));
+
+   if (upAxis == UPAXISTYPE_X_UP)
+      tree->setDataField(StringTable->insert("_upAxis"), 0, "X_AXIS");
+   else if (upAxis == UPAXISTYPE_Y_UP)
+      tree->setDataField(StringTable->insert("_upAxis"), 0, "Y_AXIS");
+   else
+      tree->setDataField(StringTable->insert("_upAxis"), 0, "Z_AXIS");
+
+   return true;
+}
+
 void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
 {
    Torque::Path scriptPath(path);
@@ -306,7 +428,7 @@ void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
          if ( Sim::findObject( MATMGR->getMapEntry( mat->getName() ), mappedMat ) )
          {
             // Only update existing materials if forced to
-            if (Con::getBoolVariable("$Assimp::ForceUpdateMats", false))
+            if (ColladaUtils::getOptions().forceUpdateMaterials)
             {
                mat->initMaterial(scriptPath, mappedMat);
                persistMgr.setDirty(mappedMat);
@@ -351,20 +473,37 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
    return false;
 }
 
+void AssimpShapeLoader::assimpLogCallback(const char* message, char* user)
+{
+   Con::printf("[Assimp log message] %s", StringUnit::getUnit(message, 0, "\n"));
+}
+
 bool AssimpShapeLoader::ignoreNode(const String& name)
 {
    // Do not add AssimpFbx dummy nodes to the TSShape. See: Assimp::FBX::ImportSettings::preservePivots
    // https://github.com/assimp/assimp/blob/master/code/FBXImportSettings.h#L116-L135
    if (name.find("_$AssimpFbx$_") != String::NPos)
       return true;
-   return false;
+
+   if (FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().alwaysImport, name, false))
+      return false;
+
+   return FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().neverImport, name, false);
+}
+
+bool AssimpShapeLoader::ignoreMesh(const String& name)
+{
+   if (FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().alwaysImportMesh, name, false))
+      return false;
+   else
+      return FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().neverImportMesh, name, false);
 }
 
 void AssimpShapeLoader::detectDetails()
 {
    // Set LOD option
    bool singleDetail = true;
-   switch (Con::getIntVariable("$Assimp::lodType", 0))
+   switch (ColladaUtils::getOptions().lodType)
    {
    case ColladaUtils::ImportOptions::DetectDTS:
       // Check for a baseXX->startXX hierarchy at the top-level, if we find
@@ -395,7 +534,7 @@ void AssimpShapeLoader::detectDetails()
       break;
    }
 
-   AssimpAppMesh::fixDetailSize(singleDetail, Con::getIntVariable("$Assimp::singleDetailSize", 2));
+   AssimpAppMesh::fixDetailSize(singleDetail, ColladaUtils::getOptions().singleDetailSize);
 }
 
 void AssimpShapeLoader::extractTexture(U32 index, aiTexture* pTex)
@@ -448,6 +587,148 @@ void AssimpShapeLoader::extractTexture(U32 index, aiTexture* pTex)
    }
 }
 
+void AssimpShapeLoader::addNodeToTree(S32 parentItem, aiNode* node, GuiTreeViewCtrl* tree, U32& nodeCount)
+{
+   // Add this node
+   S32 nodeItem = parentItem;
+   String nodeName = node->mName.C_Str();
+   if (!ignoreNode(nodeName))
+   {
+      if (nodeName.isEmpty())
+         nodeName = "null";
+      nodeItem = tree->insertItem(parentItem, nodeName.c_str(), String::ToString("%i", node->mNumChildren));
+      nodeCount++;
+   }
+
+   // Add any child nodes
+   for (U32 n = 0; n < node->mNumChildren; ++n)
+      addNodeToTree(nodeItem, node->mChildren[n], tree, nodeCount);
+}
+
+void AssimpShapeLoader::addMetaDataToTree(const aiMetadata* metaData, GuiTreeViewCtrl* tree)
+{
+   S32 metaItem = tree->insertItem(0, "MetaData", String::ToString("%i", metaData->mNumProperties));
+
+   aiString valString;
+   aiVector3D valVec;
+
+   for (U32 n = 0; n < metaData->mNumProperties; ++n)
+   {
+      String keyStr = metaData->mKeys[n].C_Str();
+      keyStr += ": ";
+      switch (metaData->mValues[n].mType)
+      {
+      case AI_BOOL:
+         keyStr += ((bool)metaData->mValues[n].mData) ? "true" : "false";
+         break;
+      case AI_INT32:
+         keyStr += String::ToString(*((S32*)(metaData->mValues[n].mData)));
+         break;
+      case AI_UINT64:
+         keyStr += String::ToString("%I64u", *((U64*)metaData->mValues[n].mData));
+         break;
+      case AI_FLOAT:
+         keyStr += String::ToString(*((F32*)metaData->mValues[n].mData));
+         break;
+      case AI_DOUBLE:
+         keyStr += String::ToString(*((F64*)metaData->mValues[n].mData));
+         break;
+      case AI_AISTRING:
+         metaData->Get<aiString>(metaData->mKeys[n], valString);
+         keyStr += valString.C_Str();
+         break;
+      case AI_AIVECTOR3D:
+         metaData->Get<aiVector3D>(metaData->mKeys[n], valVec);
+         keyStr += String::ToString("%f, %f, %f", valVec.x, valVec.y, valVec.z);
+         break;
+      default:
+         break;
+      }
+
+      tree->insertItem(metaItem, keyStr.c_str(), String::ToString("%i", n));
+   }
+}
+
+bool AssimpShapeLoader::getMetabool(const char* key, bool& boolVal)
+{
+   if (!mScene || !mScene->mMetaData)
+      return false;
+
+   String keyStr = key;
+   for (U32 n = 0; n < mScene->mMetaData->mNumProperties; ++n)
+   {
+      if (keyStr.equal(mScene->mMetaData->mKeys[n].C_Str(), String::NoCase))
+      {
+         if (mScene->mMetaData->mValues[n].mType == AI_BOOL)
+         {
+            boolVal = (bool)mScene->mMetaData->mValues[n].mData;
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+bool AssimpShapeLoader::getMetaInt(const char* key, S32& intVal)
+{
+   if (!mScene || !mScene->mMetaData)
+      return false;
+
+   String keyStr = key;
+   for (U32 n = 0; n < mScene->mMetaData->mNumProperties; ++n)
+   {
+      if (keyStr.equal(mScene->mMetaData->mKeys[n].C_Str(), String::NoCase))
+      {
+         if (mScene->mMetaData->mValues[n].mType == AI_INT32)
+         {
+            intVal = *((S32*)(mScene->mMetaData->mValues[n].mData));
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+bool AssimpShapeLoader::getMetaFloat(const char* key, F32& floatVal)
+{
+   if (!mScene || !mScene->mMetaData)
+      return false;
+
+   String keyStr = key;
+   for (U32 n = 0; n < mScene->mMetaData->mNumProperties; ++n)
+   {
+      if (keyStr.equal(mScene->mMetaData->mKeys[n].C_Str(), String::NoCase))
+      {
+         if (mScene->mMetaData->mValues[n].mType == AI_FLOAT)
+         {
+            floatVal = *((F32*)mScene->mMetaData->mValues[n].mData);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+bool AssimpShapeLoader::getMetaDouble(const char* key, F64& doubleVal)
+{
+   if (!mScene || !mScene->mMetaData)
+      return false;
+
+   String keyStr = key;
+   for (U32 n = 0; n < mScene->mMetaData->mNumProperties; ++n)
+   {
+      if (keyStr.equal(mScene->mMetaData->mKeys[n].C_Str(), String::NoCase))
+      {
+         if (mScene->mMetaData->mValues[n].mType == AI_DOUBLE)
+         {
+            doubleVal = *((F64*)mScene->mMetaData->mValues[n].mData);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
 //-----------------------------------------------------------------------------
 /// This function is invoked by the resource manager based on file extension.
 TSShape* assimpLoadShape(const Torque::Path &path)
@@ -489,6 +770,14 @@ TSShape* assimpLoadShape(const Torque::Path &path)
       return NULL;
    }
 
+   // Allow TSShapeConstructor object to override properties
+   ColladaUtils::getOptions().reset();
+   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructor(path.getFullPath());
+   if (tscon)
+   {
+      ColladaUtils::getOptions() = tscon->mOptions;
+   }
+
    AssimpShapeLoader loader;
    TSShape* tss = loader.generateShape(path);
    if (tss)
@@ -510,57 +799,30 @@ TSShape* assimpLoadShape(const Torque::Path &path)
    return tss;
 }
 
-DefineEngineFunction(GetShapeInfo, GuiTreeViewCtrl*, (String filePath), ,
-   "Returns a list of supported shape formats in filter form.\n"
-   "Example output: DSQ Files|*.dsq|COLLADA Files|*.dae|")
+DefineEngineFunction(GetShapeInfo, bool, (const char* shapePath, const char* ctrl), ,
+   "(string shapePath, GuiTreeViewCtrl ctrl) Collect scene information from "
+   "a shape file and store it in a GuiTreeView control. This function is "
+   "used by the assimp import gui to show a preview of the scene contents "
+   "prior to import, and is probably not much use for anything else.\n"
+   "@param shapePath shape filename\n"
+   "@param ctrl GuiTreeView control to add elements to\n"
+   "@return true if successful, false otherwise\n"
+   "@ingroup Editors\n"
+   "@internal")
 {
-   Assimp::Importer importer;
-
-   GuiTreeViewCtrl* treeObj = new GuiTreeViewCtrl();
-   treeObj->registerObject();
-
-   Torque::Path path = Torque::Path(filePath);
-
-   // Attempt to import with Assimp.
-   const aiScene* shapeScene = importer.ReadFile(path.getFullPath().c_str(), (aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace)
-      & ~aiProcess_RemoveRedundantMaterials & ~aiProcess_GenSmoothNormals);
-
-   //Populate info
-   S32 meshItem = treeObj->insertItem(0, "Shape", String::ToString("%i", shapeScene->mNumMeshes));
-   S32 matItem = treeObj->insertItem(0, "Materials", String::ToString("%i", shapeScene->mNumMaterials));
-   S32 animItem = treeObj->insertItem(0, "Animations", String::ToString("%i", shapeScene->mNumAnimations));
-   S32 lightsItem = treeObj->insertItem(0, "Lights", String::ToString("%i", shapeScene->mNumLights));
-   S32 texturesItem = treeObj->insertItem(0, "Textures", String::ToString("%i", shapeScene->mNumTextures));
-   //S32 meshItem = ->insertItem(0, "Cameras", String::ToString("%s", shapeScene->mNumCameras));
-
-   //Details!
-   for (U32 i = 0; i < shapeScene->mNumMeshes; i++)
+   GuiTreeViewCtrl* tree;
+   if (!Sim::findObject(ctrl, tree))
    {
-      treeObj->insertItem(meshItem, String::ToString("%s", shapeScene->mMeshes[i]->mName.C_Str()));
+      Con::errorf("enumColladaScene::Could not find GuiTreeViewCtrl '%s'", ctrl);
+      return false;
    }
 
-   for (U32 i = 0; i < shapeScene->mNumMaterials; i++)
-   {
-      aiMaterial* aiMat = shapeScene->mMaterials[i];
+   // Check if a cached DTS is available => no need to import the source file
+   // if we can load the DTS instead
+   Torque::Path path(shapePath);
+   if (AssimpShapeLoader::canLoadCachedDTS(path))
+      return false;
 
-      aiString matName;
-      aiMat->Get(AI_MATKEY_NAME, matName);
-
-      aiString texPath;
-      aiMat->GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0, &texPath);
-
-      treeObj->insertItem(matItem, String::ToString("%s", matName.C_Str()), String::ToString("%s", texPath.C_Str()));
-   }
-
-   for (U32 i = 0; i < shapeScene->mNumAnimations; i++)
-   {
-      treeObj->insertItem(animItem, String::ToString("%s", shapeScene->mAnimations[i]->mName.C_Str()));
-   }
-
-   /*for (U32 i = 0; i < shapeScene->mNumLights; i++)
-   {
-      treeObj->insertItem(lightsItem, String::ToString("%s", shapeScene->mLights[i]->mType));
-   }*/
-
-   return treeObj;
+   AssimpShapeLoader loader;
+   return loader.fillGuiTreeView(shapePath, tree);
 }

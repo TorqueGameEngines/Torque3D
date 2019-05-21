@@ -27,12 +27,15 @@
 #include "ts/assimp/assimpAppMesh.h"
 #include "materials/materialManager.h"
 #include "ts/tsMaterialList.h"
+#include "core/stream/fileStream.h"
 
 // assimp include files. 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/types.h>
+
+U32 AssimpAppMaterial::sDefaultMatNumber = 0;
 
 String AppMaterial::cleanString(const String& str)
 {
@@ -52,7 +55,8 @@ String AppMaterial::cleanString(const String& str)
 
 AssimpAppMaterial::AssimpAppMaterial(const char* matName)
 {
-   name = matName;
+   name = ColladaUtils::getOptions().matNamePrefix;
+   name += matName;
 
    // Set some defaults
    flags |= TSMaterialList::S_Wrap;
@@ -67,9 +71,12 @@ AssimpAppMaterial::AssimpAppMaterial(aiMaterial* mtl) :
    name = matName.C_Str();
    if (name.isEmpty())
    {
-      name = cleanString(TSShapeLoader::getShapePath().getFileName());;
+      name = cleanString(TSShapeLoader::getShapePath().getFileName());
       name += "_defMat";
+      name += String::ToString("%d", sDefaultMatNumber);
+      sDefaultMatNumber++;
    }
+   name = ColladaUtils::getOptions().matNamePrefix + name;
    Con::printf("[ASSIMP] Loading Material: %s", name.c_str());
 #ifdef TORQUE_DEBUG
    enumerateMaterialProperties(mtl);
@@ -125,7 +132,7 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
          if (dStrcmp("MASK", opacityMode.C_Str()) == 0)
          {
             translucent = true;
-            blendOp = Material::LerpAlpha;
+            blendOp = Material::None;
 
             float cutoff;
             if (AI_SUCCESS == mAIMat->Get("$mat.gltf.alphaCutoff", 0, 0, cutoff))
@@ -134,10 +141,16 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
                mat->mAlphaTest = true;
             }
          }
-         else if (dStrcmp("OPAQUE", opacityMode.C_Str()) != 0)
+         else if (dStrcmp("BLEND", opacityMode.C_Str()) == 0)
          {
             translucent = true;
             blendOp = Material::LerpAlpha;
+            mat->mAlphaTest = false;
+         }
+         else
+         {  // OPAQUE
+            translucent = false;
+            blendOp = Material::LerpAlpha; // Make default so it doesn't get written to materials.cs
          }
       }
    }
@@ -157,14 +170,14 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->mDiffuseMapFilename[0] = cleanTextureName(torquePath, cleanFile);
+         mat->mDiffuseMapFilename[0] = cleanTextureName(torquePath, cleanFile, path, false);
    }
 
    if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), texName))
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->mNormalMapFilename[0] = cleanTextureName(torquePath, cleanFile);
+         mat->mNormalMapFilename[0] = cleanTextureName(torquePath, cleanFile, path, false);
    }
 
 #ifdef TORQUE_PBR_MATERIALS
@@ -177,27 +190,25 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
       if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_TEXTURE(aiTextureType_UNKNOWN, 0), texName))
          rmName = texName.C_Str();
 
-      //if (aoName.isNotEmpty() && (aoName == rmName))
-      //   mat->mOrmMapFilename[0] = cleanTextureName(aoName, cleanFile); // It's an ORM map
-      //else if (aoName.isNotEmpty() || rmName.isNotEmpty())
+      mat->mIsSRGb[0] = true;
       if (aoName.isNotEmpty() || rmName.isNotEmpty())
       {  // If we have either map, fill all three slots
          if (rmName.isNotEmpty())
          {
-            mat->mRoughMapFilename[0] = cleanTextureName(rmName, cleanFile); // Roughness
+            mat->mRoughMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // Roughness
             mat->mSmoothnessChan[0] = 1.0f;
             mat->mInvertSmoothness = (floatVal == 1.0f);
-            mat->mMetalMapFilename[0] = cleanTextureName(rmName, cleanFile); // Metallic
+            mat->mMetalMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // Metallic
             mat->mMetalChan[0] = 2.0f;
          }
          if (aoName.isNotEmpty())
          {
-            mat->mAOMapFilename[0] = cleanTextureName(aoName, cleanFile); // occlusion
+            mat->mAOMapFilename[0] = cleanTextureName(aoName, cleanFile, path, false); // occlusion
             mat->mAOChan[0] = 0.0f;
          }
          else
          {
-            mat->mAOMapFilename[0] = cleanTextureName(rmName, cleanFile); // occlusion
+            mat->mAOMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // occlusion
             mat->mAOChan[0] = 0.0f;
          }
       }
@@ -207,7 +218,7 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->mSpecularMapFilename[0] = cleanTextureName(torquePath, cleanFile);
+         mat->mSpecularMapFilename[0] = cleanTextureName(torquePath, cleanFile, path, false);
    }
 
    LinearColorF specularColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -234,22 +245,70 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
    mat->mDoubleSided = doubleSided;
 }
 
-String AssimpAppMaterial::cleanTextureName(String& texName, String& shapeName)
+String AssimpAppMaterial::cleanTextureName(String& texName, String& shapeName, const Torque::Path& path, bool nameOnly /*= false*/)
 {
+   Torque::Path foundPath;
    String cleanStr;
 
    if (texName[0] == '*')
-   {
+   {  // It's an embedded texture reference. Make the cached name and return
       cleanStr = shapeName;
       cleanStr += "_cachedTex";
       cleanStr += texName.substr(1);
+      return cleanStr;
+   }
+
+   // See if the file exists
+   bool fileFound = false;
+   String testPath = path.getPath();
+   testPath += '/';
+   testPath += texName;
+   testPath.replace('\\', '/');
+   fileFound = Torque::FS::IsFile(testPath);
+
+   cleanStr = texName;
+   cleanStr.replace('\\', '/');
+   if (fileFound)
+   {
+      if (cleanStr.equal(texName))
+         return cleanStr;
+      foundPath = testPath;
    }
    else
    {
-      cleanStr = texName;
-      cleanStr.replace('\\', '/');
+      // See if the file is in a sub-directory of the shape
+      Vector<String> foundFiles;
+      Torque::Path inPath(cleanStr);
+      String mainDotCsDir = Platform::getMainDotCsDir();
+      mainDotCsDir += "/";
+      S32 results = Torque::FS::FindByPattern(Torque::Path(mainDotCsDir + path.getPath() + "/"), inPath.getFullFileName(), true, foundFiles);
+      if (results == 0 || foundFiles.size() == 0) // Not under shape directory, try the full tree
+         results = Torque::FS::FindByPattern(Torque::Path(mainDotCsDir), inPath.getFullFileName(), true, foundFiles);
+
+      if (results > 0 && foundFiles.size() > 0)
+      {
+         fileFound = true;
+         foundPath = foundFiles[0];
+      }
    }
 
+   if (fileFound)
+   {
+      if (nameOnly)
+         cleanStr = foundPath.getFullFileName();
+      else
+      {  // Unless the file is in the same directory as the materials.cs (covered above)
+         // we need to set the full path from the root directory. If we use "subdirectory/file.ext",
+         // the material manager won't find the image file, but it will be found the next time the
+         // material is loaded from file. If we use "./subdirectory/file.ext", the image will be found
+         // now, but not the next time it's loaded from file...
+         S32 rootLength = dStrlen(Platform::getMainDotCsDir());
+         cleanStr = foundPath.getFullPathWithoutRoot().substr(rootLength-1);
+      }
+   }
+   else if (nameOnly)
+      cleanStr += " (Not Found)";
+ 
    return cleanStr;
 }
 

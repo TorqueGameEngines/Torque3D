@@ -71,6 +71,14 @@ ImplementEnumType( TSShapeConstructorLodType,
    { ColladaUtils::ImportOptions::TrailingNumber,  "TrailingNumber" },
 EndImplementEnumType;
 
+ImplementEnumType(TSShapeConstructorAnimType,
+   "\n\n"
+   "@ingroup TSShapeConstructor" )
+   { ColladaUtils::ImportOptions::FrameCount,      "Frames" },
+   { ColladaUtils::ImportOptions::Seconds,         "Seconds" },
+   { ColladaUtils::ImportOptions::Milliseconds,    "Milliseconds" },
+EndImplementEnumType;
+
 
 //-----------------------------------------------------------------------------
 
@@ -149,6 +157,21 @@ TSShapeConstructor::TSShapeConstructor()
    mOptions.adjustFloor = false;
    mOptions.forceUpdateMaterials = false;
    mOptions.useDiffuseNames = false;
+
+   mOptions.convertLeftHanded = false;
+   mOptions.calcTangentSpace = false;
+   mOptions.genUVCoords = false;
+   mOptions.transformUVCoords = false;
+   mOptions.flipUVCoords = true;
+   mOptions.findInstances = false;
+   mOptions.limitBoneWeights = false;
+   mOptions.joinIdenticalVerts = true;
+   mOptions.reverseWindingOrder = true;
+   mOptions.invertNormals = false;
+   mOptions.removeRedundantMats = true;
+   mOptions.animTiming = ColladaUtils::ImportOptions::Seconds;
+   mOptions.animFPS = 30;
+
    mShape = NULL;
 }
 
@@ -284,6 +307,35 @@ void TSShapeConstructor::initPersistFields()
       "Forces update of the materials.cs file in the same folder as the COLLADA "
       "(.dae) file, even if Materials already exist. No effect for DTS files.\n"
       "Normally only Materials that are not already defined are written to materials.cs." );
+
+   // Fields added for assimp options
+   addField( "convertLeftHanded", TypeBool, Offset(mOptions.convertLeftHanded, TSShapeConstructor),
+      "Convert to left handed coordinate system." );
+   addField( "calcTangentSpace", TypeBool, Offset(mOptions.calcTangentSpace, TSShapeConstructor),
+      "Calculate tangents and bitangents, if possible." );
+   addField( "genUVCoords", TypeBool, Offset(mOptions.genUVCoords, TSShapeConstructor),
+      "Convert spherical, cylindrical, box and planar mapping to proper UVs." );
+   addField( "transformUVCoords", TypeBool, Offset(mOptions.transformUVCoords, TSShapeConstructor),
+      "Preprocess UV transformations (scaling, translation ...)." );
+   addField( "flipUVCoords", TypeBool, Offset(mOptions.flipUVCoords, TSShapeConstructor),
+      "This step flips all UV coordinates along the y-axis and adjusts material settings and bitangents accordingly.\n"
+      "Assimp uses TL(0,0):BR(1,1). T3D uses TL(0,1):BR(1,0). This will be needed for most textured models." );
+   addField( "findInstances", TypeBool, Offset(mOptions.findInstances, TSShapeConstructor),
+      "Search for instanced meshes and remove them by references to one master." );
+   addField( "limitBoneWeights", TypeBool, Offset(mOptions.limitBoneWeights, TSShapeConstructor),
+      "Limit bone weights to 4 per vertex." );
+   addField( "joinIdenticalVerts", TypeBool, Offset(mOptions.joinIdenticalVerts, TSShapeConstructor),
+      "Identifies and joins identical vertex data sets within all imported meshes." );
+   addField( "reverseWindingOrder", TypeBool, Offset(mOptions.reverseWindingOrder, TSShapeConstructor),
+      "This step adjusts the output face winding order to be clockwise. The default assimp face winding order is counter clockwise." );
+   addField( "invertNormals", TypeBool, Offset(mOptions.invertNormals, TSShapeConstructor),
+      "Reverse the normal vector direction for all normals." );
+   addField( "removeRedundantMats", TypeBool, Offset(mOptions.removeRedundantMats, TSShapeConstructor),
+      "Removes redundant materials." );
+   addField( "animTiming", TYPEID< ColladaUtils::ImportOptions::eAnimTimingType >(), Offset(mOptions.animTiming, TSShapeConstructor),
+      "How to import timing data as frames, seconds or milliseconds." );
+   addField("animFPS", TypeS32, Offset(mOptions.animFPS, TSShapeConstructor),
+      "FPS value to use if timing is set in frames and the animations does not have an fps set.");
    endGroup( "Collada" );
 
    addGroup( "Sequences" );

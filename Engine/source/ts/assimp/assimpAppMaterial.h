@@ -40,7 +40,6 @@ class AssimpAppMaterial : public AppMaterial
 #ifdef TORQUE_DEBUG
    void enumerateMaterialProperties(aiMaterial* mtl);
 #endif
-   static String cleanTextureName(String& texName, String& shapeName);
 
 public:
 
@@ -51,6 +50,9 @@ public:
    String getName() const { return name; }
    Material* createMaterial(const Torque::Path& path) const;
    void initMaterial(const Torque::Path& path, Material* mat) const;
+
+   static String cleanTextureName(String& texName, String& shapeName, const Torque::Path& path, bool nameOnly = false);
+   static U32 sDefaultMatNumber;
 };
 
 #endif // _ASSIMP_APPMATERIAL_H_

@@ -58,8 +58,8 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
       }
    }
 
-   S32 timeFactor = Con::getIntVariable("$Assimp::AnimTiming", 1);
-   S32 fpsRequest = Con::getIntVariable("$Assimp::AnimFPS", 30);
+   S32 timeFactor = ColladaUtils::getOptions().animTiming;
+   S32 fpsRequest = ColladaUtils::getOptions().animFPS;
    if (timeFactor == 0)
    {  // Timing specified in frames
       fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
@@ -70,10 +70,7 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
    else
    {  // Timing specified in seconds or ms depending on format
       if (maxEndTime > 1000.0f || mAnim->mDuration > 1000.0f)
-      {
          timeFactor = 1000.0f;   // If it's more than 1000 seconds, assume it's ms.
-         Con::setIntVariable("$Assimp::AnimTiming", 1000);
-      }
 
       timeFactor = mClamp(timeFactor, 1, 1000);
       minFrameTime /= (F32)timeFactor;

@@ -489,14 +489,14 @@
          Profile = "ToolsGuiCheckBoxProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         Position = "135 27";
+         Position = "133 27";
          Extent = "72 13";
          Variable = "EWorldEditor.forceLoadDAE";
          Command = "EWorldEditor.forceLoadDAE = $ThisControl.getValue(); EditorSettings.setValue(\"forceLoadDAE\", EWorldEditor.forceLoadDAE);";
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Forces loading of DAE files (ignores cached.dts if present)";
          hovertime = "1000";
-         text = " Force DAE";
+         text = " Source Art";
       };
 
    };

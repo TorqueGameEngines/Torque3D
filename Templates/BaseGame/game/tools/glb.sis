@@ -1,0 +1,29 @@
+SISV1
+lodType	SingleSize
+singleDetailSize	2
+materialPrefix	
+alwaysImport	
+neverImport	
+alwaysImportMesh	
+neverImportMesh	
+upAxis	Y_AXIS
+scale	1
+animTiming	Milliseconds
+animFPS	30
+overrideUpAxis	1
+overrideScale	0
+ignoreNodeScale	0
+adjustCenter	0
+adjustFloor	0
+forceUpdateMaterials	0
+convertLeftHanded	0
+calcTangentSpace	0
+removeRedundantMats	1
+genUVCoords	0
+transformUVCoords	0
+flipUVCoords	1
+findInstances	0
+limitBoneWeights	0
+joinIdenticalVerts	1
+reverseWindingOrder	1
+invertNormals	0

@@ -1,4 +1,4 @@
-###Asset Import Library Usage Notes
+### Asset Import Library Usage Notes
 
 No single set of default values will be appropriate for all import formats and many do not provide any metadata to draw the information from, so Shape Import Settings (.sis) files have been added as a way to save and reuse import settings. You can create default settings for each shape file type that you will be importing by setting all of the values in the import options gui and selecting `Save Settings`. Save the file in the default settings location (game/tools, editable in EditorSettings) using the shape file extension as the file name i.e. fbx.sis, blend.sis, obj.sis. Default settings files have been provided for gltf files.
 

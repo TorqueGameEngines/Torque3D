@@ -28,6 +28,9 @@
 #endif
 #include <assimp/texture.h>
 
+class GuiTreeViewCtrl;
+struct aiNode;
+struct aiMetadata;
 //-----------------------------------------------------------------------------
 class AssimpShapeLoader : public TSShapeLoader
 {
@@ -37,8 +40,17 @@ protected:
    const struct aiScene* mScene;
 
    virtual bool ignoreNode(const String& name);
+   virtual bool ignoreMesh(const String& name);
    void detectDetails();
    void extractTexture(U32 index, aiTexture* pTex);
+
+private:
+   void addNodeToTree(S32 parentItem, aiNode* node, GuiTreeViewCtrl* tree, U32& nodeCount);
+   void addMetaDataToTree(const aiMetadata* metaData, GuiTreeViewCtrl* tree);
+   bool getMetabool(const char* key, bool& boolVal);
+   bool getMetaInt(const char* key, S32& intVal);
+   bool getMetaFloat(const char* key, F32& floatVal);
+   bool getMetaDouble(const char* key, F64& doubleVal);
 
 public:
    AssimpShapeLoader();
@@ -51,7 +63,10 @@ public:
 
    void computeBounds(Box3F& bounds);
 
+   bool fillGuiTreeView(const char* shapePath, GuiTreeViewCtrl* tree);
+
    static bool canLoadCachedDTS(const Torque::Path& path);
+   static void assimpLogCallback(const char* message, char* user);
 };
 
 #endif // _ASSIMP_SHAPELOADER_H_

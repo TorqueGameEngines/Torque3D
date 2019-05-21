@@ -328,9 +328,11 @@ public:
 
 typedef domUpAxisType TSShapeConstructorUpAxis;
 typedef ColladaUtils::ImportOptions::eLodType TSShapeConstructorLodType;
+typedef ColladaUtils::ImportOptions::eAnimTimingType TSShapeConstructorAnimType;
 
 DefineEnumType( TSShapeConstructorUpAxis );
 DefineEnumType(TSShapeConstructorLodType);
+DefineEnumType(TSShapeConstructorAnimType);
 
 class TSShapeConstructorMethodActionCallback
 {

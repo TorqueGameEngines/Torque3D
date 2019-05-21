@@ -1,4 +1,4 @@
-﻿/*
+/*
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
@@ -1047,6 +1047,9 @@ namespace glTF2
         {
             bool KHR_materials_pbrSpecularGlossiness;
             bool KHR_materials_unlit;
+            //T3D_CHANGE_BEGIN
+            bool KHR_draco_mesh_compression;
+            //T3D_CHANGE_END
 
         } extensionsUsed;
 

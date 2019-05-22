@@ -1953,7 +1953,7 @@ DefineEngineMethod( VPathEditor, setNodePosition, void, (Point3F position), (Poi
     object->popNodeEdit();
 }
 
-DefineEngineMethod( VPathEditor, setNodeRotation, void, (AngAxisF aa), (AngAxisF::AngAxisF()), "( pRotation )" )
+DefineEngineMethod( VPathEditor, setNodeRotation, void, (AngAxisF aa), (AngAxisF( Point3F( 0, 0, 1 ), 0)), "( pRotation )" )
 {
     // Valid Selection?
     if ( !object->isValidSelection() )

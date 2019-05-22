@@ -2942,7 +2942,7 @@ DefineEngineMethod( VPath, getPathObjectOffset, const char *, (SceneObject *scen
     if (sceneObject == nullptr)
     {
         Con::errorf( "VPath::getPathObjectOffset() - Invalid Target Object." );
-        return false;
+        return "";
     }
 
     // Fetch Object
@@ -3047,7 +3047,7 @@ DefineEngineMethod( VPath, getPathObjectOrientationMode, const char *, (SceneObj
     if (sceneObject == nullptr)
     {
         Con::errorf( "VPath::getPathObjectOrientationMode() - Invalid Target Object." );
-        return false;
+        return "";
     }
 
     // Fetch Object

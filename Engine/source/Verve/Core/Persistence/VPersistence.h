@@ -48,6 +48,8 @@ namespace VPersistence
 
     //-------------------------------------------------------------------------
 
+    template <class T> bool write( TiXmlElement *pElement, T *pObject );
+    
     template <class T> bool writeFile( const char* pFileName, T *pObject )
     {
         // Create Doc.
@@ -73,7 +75,6 @@ namespace VPersistence
         return xmlDocument.SaveFile( pFileName );
     };
 
-    template <class T> bool write( TiXmlElement *pElement, T *pObject );
     
     template <class T> bool writeProperties( TiXmlElement *pElement, T *pObject )
     {
@@ -141,7 +142,9 @@ namespace VPersistence
     }
 
     //-------------------------------------------------------------------------
-
+    
+    template <class T> bool read( TiXmlElement *pElement, T *pObject );
+    
     template <class T> bool readFile( const char* pFileName, T *pObject )
     {
         TiXmlDocument xmlDocument;
@@ -175,8 +178,6 @@ namespace VPersistence
         // Valid.
         return true;
     };
-
-    template <class T> bool read( TiXmlElement *pElement, T *pObject );
 
     template <class T> bool readProperties( TiXmlElement *pElement, T *pObject )
     {

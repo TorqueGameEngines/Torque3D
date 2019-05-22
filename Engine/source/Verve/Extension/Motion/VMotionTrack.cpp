@@ -238,7 +238,7 @@ void VMotionTrack::attachObject( void )
          && !getController()->getDataValue( mOrientationData, orientationDataValue ) )
     {
         // Sanity!
-        Con::warnf( "Unable to located the value for the given orientation data key, '%s'", mOrientationData );
+        Con::warnf( "Unable to located the value for the given orientation data key, '%s'", mOrientationData.c_str() );
         // Clear.
         orientationDataValue = String::EmptyString;
     }

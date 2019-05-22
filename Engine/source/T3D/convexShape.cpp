@@ -724,7 +724,7 @@ void ConvexShape::prepRenderImage( SceneRenderState *state )
 
       // We sort by the material then vertex buffer.
       ri->defaultKey = matInst->getStateHint();
-      ri->defaultKey2 = (U32)ri->vertBuff; // Not 64bit safe!
+      ri->defaultKey2 = (U32)(uintptr_t)ri->vertBuff; // Not 64bit safe!
 
       // Submit our RenderInst to the RenderPassManager
       state->getRenderPass()->addInst(ri);
@@ -776,7 +776,7 @@ void ConvexShape::buildConvex( const Box3F &box, Convex *convex )
 
 bool ConvexShape::buildPolyList( PolyListContext context, AbstractPolyList *plist, const Box3F &box, const SphereF &sphere )
 {
-   if ( mGeometry.points.empty() )	
+   if ( mGeometry.points.empty() )
       return false;
 
    // If we're exporting deal with that first.

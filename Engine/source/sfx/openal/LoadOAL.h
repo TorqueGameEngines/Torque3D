@@ -28,8 +28,11 @@
 #endif
 
 #if defined(TORQUE_OS_MAC)
-#  include <OpenAL/al.h>
-#  include <OpenAL/alc.h>
+#  include <AL/al.h>
+#  include <AL/alc.h>
+#  include <AL/alext.h>
+#  include <AL/efx.h>
+#  include <AL/efx-presets.h>
 #elif defined(TORQUE_OS_LINUX)
 #  include <AL/al.h>
 #  include <AL/alc.h>

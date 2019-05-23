@@ -132,7 +132,7 @@ void ShaderConstHandles::init( GFXShader *shader, Vector<CustomShaderFeatureData
 		   newSC.handleName = customFeatureData[f]->mAddedShaderConstants[i];
 
 		   mCustomHandles.push_back(newSC);
-}
+      }
    }
 }
 

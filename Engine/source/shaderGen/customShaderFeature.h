@@ -27,16 +27,24 @@
 #include "console/simObject.h"
 #endif
 
+#ifdef TORQUE_D3D11
 class CustomFeatureHLSL;
+#endif
+#ifdef TORQUE_OPENGL
 class CustomFeatureGLSL;
+#endif
 
 class CustomShaderFeatureData : public SimObject
 {
 	typedef SimObject Parent;
 
 public:
+#ifdef TORQUE_D3D11
 	CustomFeatureHLSL* mFeatureHLSL;
+#endif
+#ifdef TORQUE_OPENGL
    CustomFeatureGLSL* mFeatureGLSL;
+#endif
 
 	Vector<StringTableEntry> mAddedShaderConstants;
 
@@ -71,16 +79,6 @@ public:
 	bool hasFeature(String name);
 
 	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
-
-	//shader generation
-	/*void CustomShaderFeatureData::processVert(Vector<ShaderComponent*> &componentList,
-		const MaterialFeatureData &fd);
-	void CustomShaderFeatureData::processPix(Vector<ShaderComponent*> &componentList,
-		const MaterialFeatureData &fd);
-	void CustomShaderFeatureData::setTexData(Material::StageData &stageDat,
-		const MaterialFeatureData &fd,
-		RenderPassData &passData,
-		U32 &texIndex);*/
 };
 
 #endif

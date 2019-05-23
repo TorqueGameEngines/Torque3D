@@ -543,11 +543,6 @@ bool Material::protectedSetCustomShaderFeatureUniforms(void *object, const char 
 {
 	Material *material = static_cast< Material* >(object);
 
-	//CustomShaderFeatureData* customFeature;
-	//if (!Sim::findObject(data, customFeature))
-	//	return false;
-
-	//material->mCustomShaderFeatures.push_back(customFeature);
 	if (index != NULL)
 	{
 		char featureName[256] = { 0 };
@@ -555,8 +550,6 @@ bool Material::protectedSetCustomShaderFeatureUniforms(void *object, const char 
 		dSscanf(index, "%s_%i", featureName, id);
 
 		String uniformName = data;
-
-		bool tmp = true;
 	}
 
 	return false;

@@ -28,11 +28,9 @@
 #endif
 
 #if defined(TORQUE_OS_MAC)
-#  include <AL/al.h>
-#  include <AL/alc.h>
-#  include <AL/alext.h>
-#  include <AL/efx.h>
-#  include <AL/efx-presets.h>
+//#define AL_ALEXT_PROTOTYPES true
+#  include <OpenAL/al.h>
+#  include <OpenAL/alc.h>
 #elif defined(TORQUE_OS_LINUX)
 #  include <AL/al.h>
 #  include <AL/alc.h>
@@ -237,6 +235,8 @@ typedef struct
 	LPALCISEXTENSIONPRESENT		alcIsExtensionPresent;
 	LPALCGETPROCADDRESS			alcGetProcAddress;
 	LPALCGETENUMVALUE			   alcGetEnumValue;
+    
+#if defined(AL_ALEXT_PROTOTYPES)
    LPALGENEFFECTS				   alGenEffects;
    LPALDELETEEFFECTS			   alDeleteEffects;
    LPALISEFFECT				   alIsEffect;
@@ -260,6 +260,7 @@ typedef struct
    LPALGETAUXILIARYEFFECTSLOTIV			alGetAuxiliaryEffectSlotiv;
    LPALGETAUXILIARYEFFECTSLOTF			alGetAuxiliaryEffectSlotf;
    LPALGETAUXILIARYEFFECTSLOTFV			alGetAuxiliaryEffectSlotfv;
+#endif
 } OPENALFNTABLE, *LPOPENALFNTABLE;
 #endif
 

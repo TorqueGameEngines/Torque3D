@@ -61,9 +61,8 @@ mark_as_advanced(TORQUE_BASIC_LIGHTING)
 option(TORQUE_SFX_DirectX "DirectX Sound" OFF)
 mark_as_advanced(TORQUE_SFX_DirectX)
 option(TORQUE_SFX_OPENAL "OpenAL Sound" ON)
-
-if(TORQUE_SFX_OPENAL)
-
+#windows uses openal-soft
+if(WIN32)
     #disable a few things that are not required
     set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
     set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs" FORCE)
@@ -73,14 +72,15 @@ if(TORQUE_SFX_OPENAL)
     set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
     set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files" FORCE)
     set(ALSOFT_AMBDEC_PRESETS OFF CACHE BOOL "Install AmbDec presets" FORCE)
-
+    
     add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
+endif()
 
+if(TORQUE_SFX_OPENAL)
     #Hide some unnecessary fields as advanced
     mark_as_advanced(ALSOFT_AMBDEC_PRESETS)
     mark_as_advanced(ALSOFT_BACKEND_DSOUND)
     mark_as_advanced(ALSOFT_BACKEND_MMDEVAPI)
-    mark_as_advanced(ALSOFT_BUILD_ROUTER)
     mark_as_advanced(ALSOFT_BACKEND_WAVE)
     mark_as_advanced(ALSOFT_BACKEND_WINMM)
     mark_as_advanced(ALSOFT_CONFIG)
@@ -316,6 +316,7 @@ addPath("${srcDir}/scene")
 addPath("${srcDir}/scene/culling")
 addPath("${srcDir}/scene/zones")
 addPath("${srcDir}/scene/mixin")
+addPath("${srcDir}/shaderGen")
 addPath("${srcDir}/terrain")
 addPath("${srcDir}/environment")
 addPath("${srcDir}/forest")
@@ -401,7 +402,7 @@ if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
       endif()
    if(APPLE)
       addPath("${srcDir}/sfx/openal/mac")
-      addInclude("${libDir}/openal-soft/include")
+      addFramework("OpenAL")
     endif()
 endif()
 

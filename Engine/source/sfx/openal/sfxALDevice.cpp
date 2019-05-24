@@ -44,8 +44,10 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
    // $pref::SFX::frequency or $pref::SFX::bitrate!
    //check auxiliary device sends 4 and add them to the device
    ALint attribs[4] = { 0 };
+#if defined(AL_ALEXT_PROTOTYPES)
    ALCint iSends = 0;
    attribs[0] = ALC_MAX_AUXILIARY_SENDS;
+#endif
    attribs[1] = 4;
 
    mDevice = mOpenAL.alcOpenDevice( name );
@@ -56,8 +58,10 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 
       if( mContext ) 
          mOpenAL.alcMakeContextCurrent( mContext );
-      mOpenAL.alcGetIntegerv(mDevice, ALC_MAX_AUXILIARY_SENDS, 1, &iSends);
-      U32 err = mOpenAL.alcGetError( mDevice );
+#if defined(AL_ALEXT_PROTOTYPES)
+       mOpenAL.alcGetIntegerv(mDevice, ALC_MAX_AUXILIARY_SENDS, 1, &iSends);
+#endif
+       U32 err = mOpenAL.alcGetError( mDevice );
       
       if( err != ALC_NO_ERROR )
          Con::errorf( "SFXALDevice - Initialization Error: %s", mOpenAL.alcGetString( mDevice, err ) );
@@ -84,8 +88,10 @@ SFXALDevice::~SFXALDevice()
 {
    _releaseAllResources();
    ///cleanup our effects
+#if defined(AL_ALEXT_PROTOTYPES)
    mOpenAL.alDeleteAuxiliaryEffectSlots(4, effectSlot);
    mOpenAL.alDeleteEffects(2, effect);
+#endif
    ///cleanup of effects ends
    mOpenAL.alcMakeContextCurrent( NULL );
 	mOpenAL.alcDestroyContext( mContext );
@@ -155,7 +161,9 @@ void SFXALDevice::setListener( U32 index, const SFXListenerProperties& listener 
    mOpenAL.alListenerfv( AL_ORIENTATION, (const F32 *)&tupple[0] );
    ///Pass a unit size to openal, 1.0 assumes 1 meter to 1 game unit.
    ///Crucial for air absorbtion calculations.
+#if defined(AL_ALEXT_PROTOTYPES)
    mOpenAL.alListenerf(AL_METERS_PER_UNIT, 1.0f);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -218,6 +226,7 @@ void SFXALDevice::setRolloffFactor( F32 factor )
    mUserRolloffFactor = factor;
 }
 
+#if defined(AL_ALEXT_PROTOTYPES)
 void SFXALDevice::openSlots()
 {
    for (uLoop = 0; uLoop < 4; uLoop++)
@@ -323,3 +332,4 @@ void SFXALDevice::setReverb(const SFXReverbProperties& reverb)
    }
 
 }
+#endif

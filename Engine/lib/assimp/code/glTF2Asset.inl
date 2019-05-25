@@ -1360,6 +1360,14 @@ inline void Asset::Load(const std::string& pFile, bool isBinary)
     // Load the metadata
     asset.Read(doc);
     ReadExtensionsUsed(doc);
+    
+    //T3D_CHANGE_BEGIN
+    if (extensionsUsed.KHR_draco_mesh_compression)
+    {
+       ASSIMP_LOG_ERROR("GLTF: Draco mesh compression is not supported by Torque3D.");
+       throw DeadlyImportError("GLTF: Draco mesh compression is not supported by Torque3D.");
+    }
+    //T3D_CHANGE_END
 
     // Prepare the dictionaries
     for (size_t i = 0; i < mDicts.size(); ++i) {
@@ -1425,6 +1433,9 @@ inline void Asset::ReadExtensionsUsed(Document& doc)
 
     CHECK_EXT(KHR_materials_pbrSpecularGlossiness);
     CHECK_EXT(KHR_materials_unlit);
+    //T3D_CHANGE_BEGIN
+    CHECK_EXT(KHR_draco_mesh_compression);
+    //T3D_CHANGE_END
 
     #undef CHECK_EXT
 }

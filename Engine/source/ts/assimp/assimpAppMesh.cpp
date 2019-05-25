@@ -79,7 +79,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    uvs.reserve(mMeshData->mNumVertices);
    normals.reserve(mMeshData->mNumVertices);
 
-   bool flipNormals = Con::getBoolVariable("$Assimp::FlipNormals", false);
+   bool flipNormals = ColladaUtils::getOptions().invertNormals;
 
    bool noUVFound = false;
    for (U32 i = 0; i<mMeshData->mNumVertices; i++)
@@ -203,14 +203,17 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
       MatrixF boneTransform;
       AssimpAppNode::assimpToTorqueMat(mMeshData->mBones[b]->mOffsetMatrix, boneTransform);
       Point3F boneScale = boneTransform.getScale();
-      if (boneScale != Point3F::One)
+      Point3F bonePos = boneTransform.getPosition();
+      if (boneScale != Point3F::One && ColladaUtils::getOptions().ignoreNodeScale)
       {
          Point3F scaleMult = Point3F::One / boneScale;
-         Point3F scalePos = boneTransform.getPosition();
          boneTransform.scale(scaleMult);
-         scalePos /= scaleMult;
-         boneTransform.setPosition(scalePos);
+         bonePos /= scaleMult;
       }
+
+      bonePos *= ColladaUtils::getOptions().unit;
+      boneTransform.setPosition(bonePos);
+
       initialTransforms.push_back(boneTransform);
 
       //Weights

@@ -227,6 +227,9 @@ function ShapeEditor::saveChanges( %this )
 
 function ShapeEditor::findConstructor( %this, %path )
 {
+   if (!isObject(TSShapeConstructorGroup))
+      return -1;
+
    %count = TSShapeConstructorGroup.getCount();
    for ( %i = 0; %i < %count; %i++ )
    {

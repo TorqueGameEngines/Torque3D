@@ -439,6 +439,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
 		OutputDebugStringA("Failed to retrieve 'alcGetEnumValue' function address\n");
 		return AL_FALSE;
 	}
+#if defined(AL_ALEXT_PROTOTYPES)
    lpOALFnTable->alGenEffects = (LPALGENEFFECTS)GetProcAddress(g_hOpenALDLL, "alGenEffects");
    if (lpOALFnTable->alGenEffects == NULL)
    {
@@ -551,6 +552,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
       OutputDebugStringA("Failed to retrieve 'alGetAuxiliaryEffectSlotiv' function address\n");
    }
    lpOALFnTable->alSource3i = (LPALSOURCE3I)GetProcAddress(g_hOpenALDLL, "alSource3i");
+#endif
 	return AL_TRUE;
 }
 

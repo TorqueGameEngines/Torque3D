@@ -57,8 +57,6 @@ class LightInfo;
 struct RenderInst;
 class MatrixSet;
 class GFXPrimitiveBufferHandle;
-class CubemapData;
-
 class CustomShaderBindingData;
 
 /// A RenderInstType hash value.

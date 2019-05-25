@@ -434,8 +434,147 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
 		warn("Failed to retrieve 'alcGetEnumValue' function address\n");
 		return AL_FALSE;
 	}
-   
-   
+#if defined(AL_ALEXT_PROTOTYPES)
+    //efx
+    lpOALFnTable->alGenEffects = (LPALGENEFFECTS)alGenEffects;
+    if (lpOALFnTable->alGenEffects == NULL)
+    {
+        warn("Failed to retrieve 'alGenEffects' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alEffecti = (LPALEFFECTI)alEffecti;
+    if (lpOALFnTable->alEffecti == NULL)
+    {
+        warn("Failed to retrieve 'alEffecti' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alEffectiv = (LPALEFFECTIV)alEffectiv;
+    if (lpOALFnTable->alEffectiv == NULL)
+    {
+        warn("Failed to retrieve 'alEffectiv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alEffectf = (LPALEFFECTF)alEffectf;
+    if (lpOALFnTable->alEffectf == NULL)
+    {
+        warn("Failed to retrieve 'alEffectf' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alEffectfv = (LPALEFFECTFV)alEffectfv;
+    if (lpOALFnTable->alEffectfv == NULL)
+    {
+        warn("Failed to retrieve 'alEffectfv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetEffecti = (LPALGETEFFECTI)alGetEffecti;
+    if (lpOALFnTable->alGetEffecti == NULL)
+    {
+        warn("Failed to retrieve 'alGetEffecti' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetEffectiv = (LPALGETEFFECTIV)alGetEffectiv;
+    if (lpOALFnTable->alGetEffectiv == NULL)
+    {
+        warn("Failed to retrieve 'alGetEffectiv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetEffectf = (LPALGETEFFECTF)alGetEffectf;
+    if (lpOALFnTable->alGetEffectf == NULL)
+    {
+        warn("Failed to retrieve 'alGetEffectf' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetEffectfv = (LPALGETEFFECTFV)alGetEffectfv;
+    if (lpOALFnTable->alGetEffectfv == NULL)
+    {
+        warn("Failed to retrieve 'alGetEffectfv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alDeleteEffects = (LPALDELETEEFFECTS)alDeleteEffects;
+    if (lpOALFnTable->alDeleteEffects == NULL)
+    {
+        warn("Failed to retrieve 'alDeleteEffects' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alIsEffect = (LPALISEFFECT)alIsEffect;
+    if (lpOALFnTable->alIsEffect == NULL)
+    {
+        warn("Failed to retrieve 'alIsEffect' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alAuxiliaryEffectSlotf = (LPALAUXILIARYEFFECTSLOTF)alAuxiliaryEffectSlotf;
+    if (lpOALFnTable->alAuxiliaryEffectSlotf == NULL)
+    {
+        warn("Failed to retrieve 'alAuxiliaryEffectSlotf' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alAuxiliaryEffectSlotfv = (LPALAUXILIARYEFFECTSLOTFV)alAuxiliaryEffectSlotfv;
+    if (lpOALFnTable->alAuxiliaryEffectSlotfv == NULL)
+    {
+        warn("Failed to retrieve 'alAuxiliaryEffectSlotfv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alAuxiliaryEffectSloti = (LPALAUXILIARYEFFECTSLOTI)alAuxiliaryEffectSloti;
+    if (lpOALFnTable->alAuxiliaryEffectSloti == NULL)
+    {
+        warn("Failed to retrieve 'alAuxiliaryEffectSloti' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alAuxiliaryEffectSlotiv = (LPALAUXILIARYEFFECTSLOTIV)alAuxiliaryEffectSlotiv;
+    if (lpOALFnTable->alAuxiliaryEffectSlotiv == NULL)
+    {
+        warn("Failed to retrieve 'alAuxiliaryEffectSlotiv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alIsAuxiliaryEffectSlot = (LPALISAUXILIARYEFFECTSLOT)alIsAuxiliaryEffectSlot;
+    if (lpOALFnTable->alIsAuxiliaryEffectSlot == NULL)
+    {
+        warn("Failed to retrieve 'alIsAuxiliaryEffectSlot' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGenAuxiliaryEffectSlots = (LPALGENAUXILIARYEFFECTSLOTS)alGenAuxiliaryEffectSlots;
+    if (lpOALFnTable->alGenAuxiliaryEffectSlots == NULL)
+    {
+        warn("Failed to retrieve 'alGenAuxiliaryEffectSlots' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alDeleteAuxiliaryEffectSlots = (LPALDELETEAUXILIARYEFFECTSLOTS)alDeleteAuxiliaryEffectSlots;
+    if (lpOALFnTable->alDeleteAuxiliaryEffectSlots == NULL)
+    {
+        warn("Failed to retrieve 'alDeleteAuxiliaryEffectSlots' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetAuxiliaryEffectSlotf = (LPALGETAUXILIARYEFFECTSLOTF)alGetAuxiliaryEffectSlotf;
+    if (lpOALFnTable->alGetAuxiliaryEffectSlotf == NULL)
+    {
+        warn("Failed to retrieve 'alGetAuxiliaryEffectSlotf' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetAuxiliaryEffectSlotfv = (LPALGETAUXILIARYEFFECTSLOTFV)alGetAuxiliaryEffectSlotfv;
+    if (lpOALFnTable->alGetAuxiliaryEffectSlotfv == NULL)
+    {
+        warn("Failed to retrieve 'alGetAuxiliaryEffectSlotfv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetAuxiliaryEffectSloti = (LPALGETAUXILIARYEFFECTSLOTI)alGetAuxiliaryEffectSloti;
+    if (lpOALFnTable->alGetAuxiliaryEffectSloti == NULL)
+    {
+        warn("Failed to retrieve 'alGetAuxiliaryEffectSloti' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alGetAuxiliaryEffectSlotiv = (LPALGETAUXILIARYEFFECTSLOTIV)alGetAuxiliaryEffectSlotiv;
+    if (lpOALFnTable->alGetAuxiliaryEffectSlotiv == NULL)
+    {
+        warn("Failed to retrieve 'alGetAuxiliaryEffectSlotiv' function address\n");
+        return AL_FALSE;
+    }
+    lpOALFnTable->alSource3i = (LPALSOURCE3I)alSource3i;
+    if (lpOALFnTable->alSource3i == NULL)
+    {
+        warn("Failed to retrieve 'alSource3i' function address\n");
+        return AL_FALSE;
+    }
+#endif
 	return AL_TRUE;
 }
 

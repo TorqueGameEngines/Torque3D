@@ -447,6 +447,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
 		warn("Failed to retrieve 'alcGetEnumValue' function address\n");
 		return AL_FALSE;
 	}
+#if defined(AL_ALEXT_PROTOTYPES)
   //efx
     lpOALFnTable->alGenEffects = (LPALGENEFFECTS)dlsym(openal_library, "alGenEffects");
     if (lpOALFnTable->alGenEffects == NULL)
@@ -586,7 +587,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
        warn("Failed to retrieve 'alSource3i' function address\n");
        return AL_FALSE;
     }
-
+#endif
 	return AL_TRUE;
 }
 

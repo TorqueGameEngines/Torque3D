@@ -3038,10 +3038,10 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    Var* surface = new Var("surface", "Surface");
    meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
       inTex, wsPosition, wsEyePos, wsView, worldToCamera));
-   String computeForwardProbes = String::String("   @.rgb += computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
-   computeForwardProbes += String::String("@,@,\r\n\t\t");
-   computeForwardProbes += String::String("@, @, \r\n\t\t");
-   computeForwardProbes += String::String("@,@).rgb; \r\n");
+   String computeForwardProbes = String("   @.rgb += computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   computeForwardProbes += String("@,@,\r\n\t\t");
+   computeForwardProbes += String("@, @, \r\n\t\t");
+   computeForwardProbes += String("@,@).rgb; \r\n");
 
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
       hasSkylight, BRDFTexture,

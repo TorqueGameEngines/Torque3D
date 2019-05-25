@@ -108,20 +108,19 @@ struct Surface
 	vec3 albedo;			// diffuse light absorbtion value (rgb)
 	vec3 R;				// reflection vector
 	vec3 F;				// fresnel term computed from f0, N and V
-	void Update();
 };
 
-void Surface::Update()
+void updateSurface(inout Surface surface)
 {
-	NdotV = abs(dot(N, V)) + 1e-5f; // avoid artifact
+	surface.NdotV = abs(dot(surface.N, surface.V)) + 1e-5f; // avoid artifact
 
-	albedo = baseColor.rgb * (1.0 - metalness);
-	f0 = lerp(vec3(0.04), baseColor.rgb, metalness);
-	R = -reflect(V, N);
-	float f90 = saturate(50.0 * dot(f0, vec3(0.33,0.33,0.33)));
-	F = F_Schlick(f0, f90, NdotV);
+	surface.albedo = surface.baseColor.rgb * (1.0 - surface.metalness);
+	surface.f0 = lerp(vec3(0.04), surface.baseColor.rgb, surface.metalness);
+	surface.R = -reflect(surface.V, surface.N);
+	float f90 = saturate(50.0 * dot(surface.f0, vec3(0.33,0.33,0.33)));
+	surface.F = F_Schlick(surface.f0, f90, surface.NdotV);
 }
-	
+
 Surface createSurface(vec4 normDepth, sampler2D colorBuffer, sampler2D matInfoBuffer, in vec2 uv, in vec3 wsEyePos, in vec3 wsEyeRay, in mat4 invView)
 {
 	Surface surface;// = Surface();
@@ -139,7 +138,7 @@ Surface createSurface(vec4 normDepth, sampler2D colorBuffer, sampler2D matInfoBu
 	surface.metalness = gbuffer2.a;
 	surface.ao = gbuffer2.g;
 	surface.matFlag = gbuffer2.r;
-	surface.Update();
+    updateSurface(surface);
 	return surface;
 }
 
@@ -159,7 +158,7 @@ Surface createForwardSurface(vec4 baseColor, vec4 normal, vec4 pbrProperties, in
   surface.ao = pbrProperties.g;
   surface.matFlag = pbrProperties.r;
 
-	surface.Update();
+    updateSurface(surface);
 	return surface;
 }
 

@@ -1035,7 +1035,7 @@ void GuiTreeViewCtrl::_destroyTree()
    {
       Item *pFreeItem = mItems[ i ];
       if( pFreeItem != NULL )
-         delete pFreeItem;
+         _destroyItem(pFreeItem);
    }
 
    mItems.clear();
@@ -3145,328 +3145,7 @@ void GuiTreeViewCtrl::onMouseUp(const GuiEvent &event)
       
       // Reparent the items.
 
-      for (S32 i = 0; i <mSelectedItems.size();i++) 
-      {
-         newItem = newItem2;
-         Item * item = mSelectedItems[i];
-
-         if (mDebug) Con::printf("----------------------------");
-      
-         // clear old highlighting of the item
-         item->mState.clear(Item::MouseOverBmp | Item::MouseOverText );
-
-         // move the selected item to the newItem
-         Item* oldParent = item->mParent;
-         // Snag the current parent set if any for future reference
-         SimSet *parentSet = NULL;
-
-         if(oldParent->isInspectorData())
-            parentSet = dynamic_cast<SimSet*>(oldParent->getObject());
-         else 
-         {
-            // parent is probably script data so we search up the tree for a
-            // set to put our object in
-            Item * temp = oldParent;
-            while (temp) 
-            {
-               if (temp->isInspectorData())
-                  break;
-               temp = temp->mParent;
-            }
-            // found an ancestor who is an inspectorData
-            if (temp) 
-            {
-               if (temp->isInspectorData())
-                  parentSet = dynamic_cast<SimSet*>(temp->getObject());
-            }
-         }
-         
-         // unlink from the current position in the list
-         unlinkItem(item);
-
-         // update the parent's children
-
-         // check if we an only child
-         if (item->mParent->mChild == item)
-         {
-            if (item->mNext)
-               item->mParent->mChild = item->mNext;
-            else
-               item->mParent->mChild = NULL;
-         }
-
-         if (mDragMidPoint != NomDragMidPoint)
-         {
-
-            //if it is below an expanded tree, place as last item in the tree
-            //if it is below a parent who isn't expanded put below it
-
-            // position the item above or below another item
-            if (mDragMidPoint == AbovemDragMidPoint)
-            {
-               // easier to treat everything as "Below the mDragMidPoint" so make some adjustments
-               if (mDebug) Con::printf("adding item above mDragMidPoint");
-
-               // above the mid point of an item, so grab either the parent
-               // or the previous sibling
-
-               // does the item have a previous sibling?
-               if (newItem->mPrevious)
-               {
-                  newItem = newItem->mPrevious;
-
-                  if (mDebug) Con::printf("treating as if below an item that isn't expanded");
-
-                  // otherwise add below that item as a sibling
-                  item->mParent = newItem->mParent;
-                  item->mPrevious = newItem;
-                  item->mNext = newItem->mNext;
-                  if (newItem->mNext)
-                     newItem->mNext->mPrevious = item;
-                  newItem->mNext = item;                  
-               } 
-               else
-               {
-                  if (mDebug) Con::printf("treating as if adding below the parent of the item");
-
-                  // instead we add as the first item below the newItem's parent
-                  item->mParent = newItem->mParent;
-                  item->mNext = newItem;
-                  item->mPrevious = NULL;
-                  newItem->mPrevious = item;
-                  item->mParent->mChild = item;
-               }
-            }
-            else if (mDragMidPoint == BelowmDragMidPoint)
-            {
-               if ((newItem->isParent())&&(newItem->isExpanded()))
-               {
-                  if (mDebug) Con::printf("adding item to an expanded parent below the mDragMidPoint");
-
-                  item->mParent = newItem;
-
-                  // then add the new item as a child
-                  item->mNext = newItem->mChild;
-                  if (newItem->mChild)
-                     newItem->mChild->mPrevious = item;
-                  item->mParent->mChild = item;
-                  item->mPrevious = NULL;
-               }
-               else if ((!newItem->mNext)&&(newItem->mParent)&&(newItem->mParent->mParent)) 
-               {
-                  // add below it's parent.
-                  if (mDebug) Con::printf("adding below a tree");
-
-                  item->mParent = newItem->mParent->mParent;
-                  item->mNext = newItem->mParent->mNext;
-                  item->mPrevious = newItem->mParent;
-
-                  if (newItem->mParent->mNext)
-                     newItem->mParent->mNext->mPrevious = item;
-
-                  newItem->mParent->mNext = item;
-               }
-               else 
-               {
-                  // adding below item not as a child
-                  if (mDebug) Con::printf("adding item below the mDragMidPoint of an item");
-
-                  item->mParent = newItem->mParent;
-                  // otherwise the item is a sibling
-                  if (newItem->mNext)
-                     newItem->mNext->mPrevious = item;
-                  item->mNext = newItem->mNext;
-                  item->mPrevious = newItem;
-                  newItem->mNext = item;
-               }
-            }
-         }
-         // if we're not allowed to add to items, then try to add to the parent of the hit item.
-         // if we are, just add to the item we hit.
-         else 
-         {
-            if (mDebug) 
-            {
-               if (item->isInspectorData() && item->getObject())
-                  Con::printf("Item: %i",item->getObject()->getId());
-               if (newItem->isInspectorData() && newItem->getObject())
-                  Con::printf("Parent: %i",newItem->getObject()->getId());
-               Con::printf("dragged onto an item");
-            }
-            
-            // If the hit item is not a valid drag target,
-            // then try to add to the parent.
-            
-            if( !isValidDragTarget( newItem ) )
-            {
-                // add to the item's parent.
-               if(!newItem->mParent || !newItem->mParent->isParent())
-               {
-                  if(mDebug)
-                     Con::printf("could not find the parent of that item. dragging to an item is not allowed, kicking out.");
-                  mDragMidPoint = NomDragMidPoint;
-                  continue;
-               }
-               newItem = newItem->mParent;
-            }
-
-            // new parent is the item in the current cell
-            item->mParent = newItem;
-
-            // adjust children if any
-            if (newItem->mChild)
-            {
-               if (mDebug) Con::printf("not the first child");
-
-               // put it at the top of the list (easier to find if there are many children)
-               if (newItem->mChild)
-                  newItem->mChild->mPrevious = item;
-               item->mNext = newItem->mChild;
-               newItem->mChild = item;
-               item->mPrevious = NULL;
-            }
-            else 
-            {
-               if (mDebug) Con::printf("first child");
-
-               // only child
-               newItem->mChild = item;
-               item->mNext = NULL;
-               item->mPrevious = NULL;
-            }
-         }
-
-         // expand the item we added to, if it isn't expanded already
-         if( !item->mParent->mState.test( Item::Expanded ) )
-            setItemExpanded( item->mParent->mId, true );
-
-         //----------------------------------------------------------------
-         // handle objects
-
-         // Get our active SimObject if any
-         SimObject *simObj = NULL;
-         if(item->isInspectorData()) 
-         {
-            simObj = item->getObject();
-         }
-
-         // Remove from the old parentset
-         if((simObj && parentSet)&&(oldParent != item->mParent))
-         {
-            if (mDebug) Con::printf("removing item from old parentset");
-         
-            // hack to get around the way removeObject takes the last item of the set
-            // and moves it into the place of the object we removed
-            if (parentSet->size()>0)
-            {
-               SimObject *lastObject = parentSet->last();
-               parentSet->removeObject(simObj);
-               parentSet->reOrder(lastObject);
-            }
-            else
-            {
-               parentSet->removeObject(simObj);
-            }
-         }
-
-         // Snag the newparent set if any...
-         SimSet *newParentSet = NULL;
-
-         if(item->mParent->isInspectorData()) 
-         {
-            if (mDebug) Con::printf("getting a new parent set");
-
-            SimObject * tmpObj = item->mParent->getObject();
-            newParentSet = dynamic_cast<SimSet*>(tmpObj);
-         }
-         else
-         {
-            // parent is probably script data so we search up the tree for a
-            // set to put our object in
-            if (mDebug) Con::printf("oh nos my parent is script!");
-
-            Item * temp = item->mParent;
-            while (temp) 
-            {
-               if (temp->isInspectorData())
-                  break;
-               temp = temp->mParent;
-            }
-            
-            // found a ancestor who is an inspectorData
-            if (temp) 
-            {
-               if (temp->isInspectorData())
-                  newParentSet = dynamic_cast<SimSet*>(temp->getObject());
-            } 
-            else 
-            {
-               newParentSet = NULL;
-            }
-         }
-
-         if(simObj && newParentSet)
-         {
-            if (mDebug) Con::printf("simobj and new ParentSet");
-
-            if (oldParent != item->mParent)
-               newParentSet->addObject(simObj);
-
-            //order the objects in the simset according to their
-            //order in the tree view control
-            if(!item->mNext)
-            {
-               if( item->mPrevious )
-               {
-                  //bring to the end of the set
-                  SimObject *prevObject = item->mPrevious->getObject();
-                  if (prevObject && item->getObject()) 
-                  {
-                     newParentSet->reOrder(item->getObject(), prevObject);
-                  }
-               }
-            }
-            else
-            {
-               //reorder within the set
-               SimObject *nextObject = item->mNext->getObject();
-               if(nextObject && item->getObject())
-               {
-                  newParentSet->reOrder(item->getObject(), nextObject);
-               }
-            }
-         } 
-         else if (!simObj&&newParentSet) 
-         {
-            // our current item is script data. but it may have children who
-            // is inspector data who need an updated set
-            if (mDebug) Con::printf("no simobj but new parentSet");
-            if (item->mChild)
-               inspectorSearch(item->mChild, item, parentSet, newParentSet);
-
-         }
-         else if (simObj&&!newParentSet) 
-         {
-            if (mDebug) Con::printf("simobject and no new parent set");
-         }
-         else
-            if (mDebug) Con::printf("no simobject and no new parent set");
-
-         // Notify script.
-
-         if( item->isInspectorData() )
-            onReparent_callback(
-               item->getObject()->getId(),
-               oldParent->getObject()->getId(),
-               item->mParent->getObject()->getId()
-            );
-         else
-            onReparent_callback(
-               item->mId,
-               oldParent->mId,
-               item->mParent->mId
-            );
-      }
+      reparentItems(mSelectedItems, newItem2);
       
       onEndReparenting_callback();
 
@@ -4798,6 +4477,362 @@ void GuiTreeViewCtrl::setItemFilterException(U32 item, bool isExempted)
    }
 }
 
+void GuiTreeViewCtrl::reparentItems(Vector<Item*> selectedItems, Item* newParent)
+{
+   for (S32 i = 0; i < selectedItems.size(); i++)
+   {
+      Item* item = selectedItems[i];
+
+      if (mDebug)
+         Con::printf("----------------------------");
+
+      // clear old highlighting of the item
+      item->mState.clear(Item::MouseOverBmp | Item::MouseOverText);
+
+      // move the selected item to the newParent
+      Item * oldParent = item->mParent;
+      // Snag the current parent set if any for future reference
+      SimSet * parentSet = NULL;
+
+      if (oldParent != nullptr && oldParent->isInspectorData())
+      {
+         parentSet = dynamic_cast<SimSet*>(oldParent->getObject());
+      }
+      else
+      {
+         // parent is probably script data so we search up the tree for a
+         // set to put our object in
+         Item* temp = oldParent;
+         while (temp)
+         {
+            if (temp->isInspectorData())
+               break;
+            temp = temp->mParent;
+         }
+         // found an ancestor who is an inspectorData
+         if (temp)
+         {
+            if (temp->isInspectorData())
+               parentSet = dynamic_cast<SimSet*>(temp->getObject());
+         }
+      }
+
+      // unlink from the current position in the list
+      unlinkItem(item);
+
+      // update the parent's children
+
+      // check if we an only child
+      if (item->mParent->mChild == item)
+      {
+         if (item->mNext)
+            item->mParent->mChild = item->mNext;
+         else
+            item->mParent->mChild = NULL;
+      }
+
+      if (mDragMidPoint != NomDragMidPoint)
+      {
+
+         //if it is below an expanded tree, place as last item in the tree
+         //if it is below a parent who isn't expanded put below it
+
+         // position the item above or below another item
+         if (mDragMidPoint == AbovemDragMidPoint)
+         {
+            // easier to treat everything as "Below the mDragMidPoint" so make some adjustments
+            if (mDebug)
+               Con::printf("adding item above mDragMidPoint");
+
+            // above the mid point of an item, so grab either the parent
+            // or the previous sibling
+
+            // does the item have a previous sibling?
+            if (newParent->mPrevious)
+            {
+               newParent = newParent->mPrevious;
+
+               if (mDebug)
+                  Con::printf("treating as if below an item that isn't expanded");
+
+               // otherwise add below that item as a sibling
+               item->mParent = newParent->mParent;
+               item->mPrevious = newParent;
+               item->mNext = newParent->mNext;
+               if (newParent->mNext)
+                  newParent->mNext->mPrevious = item;
+               newParent->mNext = item;
+            }
+            else
+            {
+               if (mDebug)
+                  Con::printf("treating as if adding below the parent of the item");
+
+               // instead we add as the first item below the newParent's parent
+               item->mParent = newParent->mParent;
+               item->mNext = newParent;
+               item->mPrevious = NULL;
+               newParent->mPrevious = item;
+               item->mParent->mChild = item;
+            }
+         }
+         else if (mDragMidPoint == BelowmDragMidPoint)
+         {
+            if ((newParent->isParent()) && (newParent->isExpanded()))
+            {
+               if (mDebug)
+                  Con::printf("adding item to an expanded parent below the mDragMidPoint");
+
+               item->mParent = newParent;
+
+               // then add the new item as a child
+               item->mNext = newParent->mChild;
+               if (newParent->mChild)
+                  newParent->mChild->mPrevious = item;
+               item->mParent->mChild = item;
+               item->mPrevious = NULL;
+            }
+            else if ((!newParent->mNext) && (newParent->mParent) && (newParent->mParent->mParent))
+            {
+               // add below it's parent.
+               if (mDebug)
+                  Con::printf("adding below a tree");
+
+               item->mParent = newParent->mParent->mParent;
+               item->mNext = newParent->mParent->mNext;
+               item->mPrevious = newParent->mParent;
+
+               if (newParent->mParent->mNext)
+                  newParent->mParent->mNext->mPrevious = item;
+
+               newParent->mParent->mNext = item;
+            }
+            else
+            {
+               // adding below item not as a child
+               if (mDebug)
+                  Con::printf("adding item below the mDragMidPoint of an item");
+
+               item->mParent = newParent->mParent;
+               // otherwise the item is a sibling
+               if (newParent->mNext)
+                  newParent->mNext->mPrevious = item;
+               item->mNext = newParent->mNext;
+               item->mPrevious = newParent;
+               newParent->mNext = item;
+            }
+         }
+      }
+      // if we're not allowed to add to items, then try to add to the parent of the hit item.
+      // if we are, just add to the item we hit.
+      else
+      {
+         if (mDebug)
+         {
+            if (item->isInspectorData() && item->getObject())
+               Con::printf("Item: %i", item->getObject()->getId());
+            if (newParent->isInspectorData() && newParent->getObject())
+               Con::printf("Parent: %i", newParent->getObject()->getId());
+            Con::printf("dragged onto an item");
+         }
+
+         // If the hit item is not a valid drag target,
+         // then try to add to the parent.
+
+         if (!isValidDragTarget(newParent))
+         {
+            // add to the item's parent.
+            if (!newParent->mParent || !newParent->mParent->isParent())
+            {
+               if (mDebug)
+                  Con::printf("could not find the parent of that item. dragging to an item is not allowed, kicking out.");
+               mDragMidPoint = NomDragMidPoint;
+               continue;
+            }
+            newParent = newParent->mParent;
+         }
+
+         // new parent is the item in the current cell
+         item->mParent = newParent;
+
+         // adjust children if any
+         if (newParent->mChild)
+         {
+            if (mDebug) Con::printf("not the first child");
+
+            // put it at the top of the list (easier to find if there are many children)
+            if (newParent->mChild)
+               newParent->mChild->mPrevious = item;
+            item->mNext = newParent->mChild;
+            newParent->mChild = item;
+            item->mPrevious = NULL;
+         }
+         else
+         {
+            if (mDebug) Con::printf("first child");
+
+            // only child
+            newParent->mChild = item;
+            item->mNext = NULL;
+            item->mPrevious = NULL;
+         }
+      }
+
+      // expand the item we added to, if it isn't expanded already
+      if (!item->mParent->mState.test(Item::Expanded))
+         setItemExpanded(item->mParent->mId, true);
+
+      //----------------------------------------------------------------
+      // handle objects
+
+      // Get our active SimObject if any
+      SimObject* simObj = NULL;
+      if (item->isInspectorData())
+      {
+         simObj = item->getObject();
+      }
+
+      // Remove from the old parentset
+      if ((simObj && parentSet) && (oldParent != item->mParent))
+      {
+         if (mDebug)
+            Con::printf("removing item from old parentset");
+
+         // hack to get around the way removeObject takes the last item of the set
+         // and moves it into the place of the object we removed
+         if (parentSet->size() > 0)
+         {
+            SimObject* lastObject = parentSet->last();
+            parentSet->removeObject(simObj);
+            parentSet->reOrder(lastObject);
+         }
+         else
+         {
+            parentSet->removeObject(simObj);
+         }
+      }
+
+      // Snag the newparent set if any...
+      SimSet* newParentSet = NULL;
+
+      if (item->mParent->isInspectorData())
+      {
+         if (mDebug)
+            Con::printf("getting a new parent set");
+
+         SimObject* tmpObj = item->mParent->getObject();
+         newParentSet = dynamic_cast<SimSet*>(tmpObj);
+      }
+      else
+      {
+         // parent is probably script data so we search up the tree for a
+         // set to put our object in
+         if (mDebug)
+            Con::printf("oh nos my parent is script!");
+
+         Item* temp = item->mParent;
+         while (temp)
+         {
+            if (temp->isInspectorData())
+               break;
+            temp = temp->mParent;
+         }
+
+         // found a ancestor who is an inspectorData
+         if (temp)
+         {
+            if (temp->isInspectorData())
+               newParentSet = dynamic_cast<SimSet*>(temp->getObject());
+         }
+         else
+         {
+            newParentSet = NULL;
+         }
+      }
+
+      if (simObj && newParentSet)
+      {
+         if (mDebug)
+            Con::printf("simobj and new ParentSet");
+
+         if (oldParent != item->mParent)
+            newParentSet->addObject(simObj);
+
+         //order the objects in the simset according to their
+         //order in the tree view control
+         if (!item->mNext)
+         {
+            if (item->mPrevious)
+            {
+               //bring to the end of the set
+               SimObject* prevObject = item->mPrevious->getObject();
+               if (prevObject && item->getObject())
+               {
+                  newParentSet->reOrder(item->getObject(), prevObject);
+               }
+            }
+         }
+         else
+         {
+            //reorder within the set
+            SimObject* nextObject = item->mNext->getObject();
+            if (nextObject && item->getObject())
+            {
+               newParentSet->reOrder(item->getObject(), nextObject);
+            }
+         }
+      }
+      else if (!simObj && newParentSet)
+      {
+         // our current item is script data. but it may have children who
+         // is inspector data who need an updated set
+         if (mDebug)
+            Con::printf("no simobj but new parentSet");
+         if (item->mChild)
+            inspectorSearch(item->mChild, item, parentSet, newParentSet);
+
+      }
+      else if (simObj && !newParentSet)
+      {
+         if (mDebug)
+            Con::printf("simobject and no new parent set");
+      }
+      else
+         if (mDebug)
+            Con::printf("no simobject and no new parent set");
+
+      // Notify script.
+
+      if (item->isInspectorData())
+      {
+         if (item->getObject() && oldParent->getObject() && item->mParent->getObject())
+            onReparent_callback(
+               item->getObject()->getId(),
+               oldParent->getObject()->getId(),
+               item->mParent->getObject()->getId()
+            );
+      }
+      else
+      {
+         onReparent_callback(
+            item->mId,
+            oldParent->mId,
+            item->mParent->mId
+         );
+      }
+   }
+}
+
+S32 GuiTreeViewCtrl::getTabLevel(S32 itemId)
+{
+   Item* item = getItem(itemId);
+   if (item != nullptr)
+   {
+      return item->mTabLevel;
+   }
+
+   return 0;
+}
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -5632,4 +5667,43 @@ DefineEngineMethod(GuiTreeViewCtrl, getItemAtPosition, S32, (Point2I position), 
    "@return The id of the item under the position.")
 {
    return object->getItemAtPosition(position);
+}
+
+DefineEngineMethod(GuiTreeViewCtrl, reparentItem, void, (S32 itemId, S32 parentId), (0, 0),
+   "Check whether the given item is currently selected in the tree.\n\n"
+   "@param id Item/object ID.\n"
+   "@return True if the given item/object is currently selected in the tree.")
+{
+   if (itemId == parentId || itemId < 0 || parentId < 0)
+      return;
+
+   const Vector< GuiTreeViewCtrl::Item* > & selectedItems = object->getItems();
+   Vector<GuiTreeViewCtrl::Item*> items;
+   GuiTreeViewCtrl::Item * parent = nullptr;
+
+   for (S32 i = 0; i < selectedItems.size(); ++i)
+   {
+      if (selectedItems[i]->mId == itemId)
+      {
+         items.push_back(selectedItems[i]);
+      }
+
+      if (selectedItems[i]->mId == parentId)
+      {
+         parent = selectedItems[i];
+      }
+   }
+
+   if (!items.empty() && parent != nullptr)
+   {
+      object->reparentItems(items, parent);
+   }
+}
+
+DefineEngineMethod(GuiTreeViewCtrl, getTabLevel, S32, (S32 itemId), (0),
+   "Get the tree item at the passed in position.\n\n"
+   "@param position The position to check for what item is below it.\n"
+   "@return The id of the item under the position.")
+{
+   return object->getTabLevel(itemId);
 }

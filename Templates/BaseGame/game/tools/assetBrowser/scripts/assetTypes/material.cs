@@ -90,17 +90,15 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          %diffuseImageSuffix = ImportAssetWindow.parseImagePathSuffixes(%diffuseImagePath);
          
-         
-         
          if(ImportAssetWindow.activeImportConfig.UseDiffuseSuffixOnOriginImg == 1 && %diffuseImageSuffix $= "")
          {
             %diffuseToken = getToken(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",;", 0);
             
-            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %materialItemId, %filename @ %diffuseToken);
+            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %assetItem, %filename @ %diffuseToken);
          }
          else
          {
-            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %materialItemId);
+            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %assetItem);
          }
          
          %assetItem.diffuseImageAsset = %diffuseAsset;
@@ -141,7 +139,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
-            %normalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+            %normalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.normalImageAsset = %normalAsset;
          }
       }
@@ -160,7 +158,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             
             if(%foundFile)
             {
-               %specularAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+               %specularAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
                %assetItem.specularImageAsset = %specularAsset;
                break;  
             }
@@ -182,7 +180,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             
             if(%foundFile)
             {
-               %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+               %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
                %assetItem.metalImageAsset = %metalAsset;
                break;  
             }
@@ -204,7 +202,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             
             if(%foundFile)
             {
-               %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+               %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
                %assetItem.roughnessImageAsset = %roughnessAsset;
                break;  
             }
@@ -226,7 +224,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             
             if(%foundFile)
             {
-               %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+               %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
                %assetItem.SmoothnessImageAsset = %smoothnessAsset;
                break;  
             }
@@ -248,7 +246,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             
             if(%foundFile)
             {
-               %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+               %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
                %assetItem.AOImageAsset = %AOAsset;
                break;  
             }
@@ -270,7 +268,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             
             if(%foundFile)
             {
-               %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %materialItemId);
+               %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
                %assetItem.compositeImageAsset = %compositeAsset;
                break;  
             }

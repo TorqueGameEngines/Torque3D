@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="material_ball"
+    fileName="@assetFile=material_ball.dae"
+    isNewShape="1"
+    materialSlot0="@Asset=pbr:base_material_ball"
+    originalFilePath="E:/Gamedev/T3DMIT/Preview40Update/Torque3D/My Projects/Preview4_0/game/data/pbr/shapes/material_ball.dae"
+    VersionId="1" />

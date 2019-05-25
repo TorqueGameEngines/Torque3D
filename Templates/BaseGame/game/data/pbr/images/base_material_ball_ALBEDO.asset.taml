@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="base_material_ball_ALBEDO"
+    imageFile="@assetFile=base_material_ball"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/base_material_ball"
+    VersionId="1" />

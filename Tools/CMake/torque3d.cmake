@@ -866,6 +866,10 @@ if(TORQUE_TEMPLATE)
     message("Prepare Template(${TORQUE_TEMPLATE}) install...")
     file(GLOB_RECURSE INSTALL_FILES_AND_DIRS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/*")
 
+    IF( NOT TORQUE_D3D11)
+        list(REMOVE_ITEM INSTALL_FILES_AND_DIRS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/D3DCompiler_47.dll")
+    ENDIF()
+
     foreach(ITEM ${INSTALL_FILES_AND_DIRS})
         get_filename_component( dir ${ITEM} DIRECTORY )
         STRING(REGEX REPLACE "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/" "${TORQUE_APP_DIR}/" INSTALL_DIR ${dir})

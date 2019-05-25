@@ -485,6 +485,8 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       const Vector< Item* >& getSelectedItems() const { return mSelectedItems; }
       const Vector< S32 >& getSelected() const { return mSelected; }
 
+      const Vector< Item* >& getItems() const { return mItems; }
+
       bool isSelected(S32 itemId)
       {
          return isSelected( getItem( itemId ) );
@@ -579,6 +581,10 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
 
       /// Clear the current item filtering pattern.
       void clearFilterText() { setFilterText( String::EmptyString ); }
+
+      void reparentItems(Vector<Item*> selectedItems, Item* newParent);
+
+      S32 getTabLevel(S32 itemId);
 
       /// @}
 

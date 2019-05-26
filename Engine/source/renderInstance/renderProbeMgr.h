@@ -196,7 +196,7 @@ class RenderProbeMgr : public RenderBinManager
    Vector<GFXCubemapHandle> cubeMaps;
    Vector<GFXCubemapHandle> irradMaps;
 
-   bool hasSkylight;
+   bool mHasSkylight;
    GFXCubemapHandle skylightIrradMap;
    GFXCubemapHandle skylightPrefilterMap;
    Point4F          skylightPos;

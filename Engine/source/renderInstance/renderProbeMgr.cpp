@@ -200,7 +200,7 @@ RenderProbeMgr::RenderProbeMgr()
    mLastShader(nullptr),
    mLastConstants(nullptr),
 	mProbesDirty(false),
-   hasSkylight(false)
+   mHasSkylight(false)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -450,7 +450,7 @@ void RenderProbeMgr::_setupStaticParameters()
          skylightPos = curEntry.getPosition();
          skylightPrefilterMap = curEntry.mPrefilterCubemap;
          skylightIrradMap = curEntry.mIrradianceCubemap;
-         hasSkylight = true;
+         mHasSkylight = true;
          continue;
       }
 
@@ -590,7 +590,6 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       S8 bestPickProbes[4] = { -1,-1,-1,-1 };
 
       U32 effectiveProbeCount = 0;
-      bool hasSkylight = false;
       for (U32 i = 0; i < probeCount; i++)
       {
          //if (effectiveProbeCount >= MAX_FORWARD_PROBES)
@@ -663,17 +662,6 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
       if(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister() != -1)
          GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
-   }
-
-   if (probeShaderConsts->mBRDFTextureMap->isValid())
-   {
-      if (!mBRDFTexture.isValid())
-      {
-         //try to fetch it
-         mBRDFTexture.set("core/art/pbr/brdfTexture.dds", &GFXStaticTextureSRGBProfile, "BRDF Texture");
-      }
-
-      GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture.getPointer());
    }
 
    //check for skylight action
@@ -763,7 +751,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 	   _setupStaticParameters();
 
    // Early out if nothing to draw.
-   if (!RenderProbeMgr::smRenderReflectionProbes || !state->isDiffusePass() || (!ProbeRenderInst::all.size() || mEffectiveProbeCount == 0 || mCubeMapCount != 0 ) && !hasSkylight)
+   if (!RenderProbeMgr::smRenderReflectionProbes || !state->isDiffusePass() || (!ProbeRenderInst::all.size() || mEffectiveProbeCount == 0 || mCubeMapCount != 0 ) && !mHasSkylight)
    {
       getProbeArrayEffect()->setSkip(true);
       return;
@@ -793,8 +781,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //Array rendering
    //U32 probeCount = ProbeRenderInst::all.size();
 
-   mProbeArrayEffect->setShaderConst("$hasSkylight", (float)hasSkylight);
-   if (hasSkylight)
+   mProbeArrayEffect->setShaderConst("$hasSkylight", (float)mHasSkylight);
+   if (mHasSkylight)
    {
       mProbeArrayEffect->setCubemapTexture(6, skylightPrefilterMap);
       mProbeArrayEffect->setCubemapTexture(7, skylightIrradMap);

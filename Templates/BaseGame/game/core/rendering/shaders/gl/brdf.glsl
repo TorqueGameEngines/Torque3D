@@ -58,8 +58,8 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness)
 {
-	float energyBias = lerp(0, 0.5, linearRoughness);
-	float energyFactor = lerp(1.0, 1.0 / 1.51, linearRoughness);
+	float energyBias = lerp(0.0f, 0.5f, linearRoughness);
+	float energyFactor = lerp(1.0f, 1.0f / 1.51f, linearRoughness);
 	float fd90 = energyBias + 2.0 * LdotH*LdotH * linearRoughness;
 	vec3 f0 = vec3(1.0f, 1.0f, 1.0f);
 	float lightScatter = F_Schlick(f0, fd90, NdotL).r;

@@ -203,8 +203,6 @@ protected:
    F32 mRenderNormalScalar;
    S32 mForceDetail;
 
-   Vector<CustomShaderBindingData> mCustomShaderBinds;
-
 public:
 
    TSStatic();

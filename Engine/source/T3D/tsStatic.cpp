@@ -330,7 +330,7 @@ bool TSStatic::onAdd()
       mCubeReflector.unregisterReflector();
 
       if ( reflectorDesc )
-         mCubeReflector.registerReflector( this, reflectorDesc );      
+         mCubeReflector.registerReflector( this, reflectorDesc );
    }
 
    _updateShouldTick();
@@ -689,32 +689,6 @@ void TSStatic::prepRenderImage( SceneRenderState* state )
 
    // Acculumation
    rdata.setAccuTex(mAccuTex);
-
-   //Various arbitrary shader render bits to add
-   if (mCustomShaderBinds.empty())
-   {
-      CustomShaderBindingData minBnds;
-      minBnds.setFloat3(StringTable->insert("objectBoundsMin"), getWorldBox().minExtents);
-      mCustomShaderBinds.push_back(minBnds);
-
-      CustomShaderBindingData maxBnds;
-      maxBnds.setFloat3(StringTable->insert("objectBoundsMax"), getWorldBox().maxExtents);
-      mCustomShaderBinds.push_back(maxBnds);
-
-      CustomShaderBindingData colorMin;
-      colorMin.setFloat3(StringTable->insert("colorMin"), Point3F(1,0,0));
-      mCustomShaderBinds.push_back(colorMin);
-
-      CustomShaderBindingData colorMax;
-      colorMax.setFloat3(StringTable->insert("colorMax"), Point3F(0, 1, 0));
-      mCustomShaderBinds.push_back(colorMax);
-   }
-
-   if (!mCustomShaderBinds.empty())
-   {
-      for(U32 i=0; i < mCustomShaderBinds.size(); i++)
-         rdata.addCustomShaderBinding(mCustomShaderBinds[i]);
-   }
 
    // If we have submesh culling enabled then prepare
    // the object space frustum to pass to the shape.

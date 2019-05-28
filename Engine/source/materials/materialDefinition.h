@@ -45,6 +45,13 @@
 #include "shaderGen/customShaderFeature.h"
 #endif
 
+#ifndef IMAGE_ASSET_H
+#include "T3D/assets/ImageAsset.h"
+#endif
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif
+
 class CubemapData;
 class SFXTrack;
 struct SceneData;
@@ -203,6 +210,8 @@ public:
    // Data
    //-----------------------------------------------------------------------
    FileName mDiffuseMapFilename[MAX_STAGES];
+   StringTableEntry mDiffuseMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mDiffuseMapAsset[MAX_STAGES];
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    bool     mAccuEnabled[MAX_STAGES];
    F32      mAccuScale[MAX_STAGES];
@@ -211,24 +220,44 @@ public:
    F32      mAccuCoverage[MAX_STAGES];
    F32      mAccuSpecular[MAX_STAGES];
    FileName mOverlayMapFilename[MAX_STAGES];
+   StringTableEntry mOverlayMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mOverlayMapAsset[MAX_STAGES];
    FileName mLightMapFilename[MAX_STAGES];
+   StringTableEntry mLightMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mLightMapAsset[MAX_STAGES];
    FileName mToneMapFilename[MAX_STAGES];
+   StringTableEntry mToneMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mToneMapAsset[MAX_STAGES];
    FileName mDetailMapFilename[MAX_STAGES];
+   StringTableEntry mDetailMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mDetailMapAsset[MAX_STAGES];
    FileName mNormalMapFilename[MAX_STAGES];
+   StringTableEntry mNormalMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mNormalMapAsset[MAX_STAGES];
 
    bool     mIsSRGb[MAX_STAGES];
    bool     mInvertSmoothness[MAX_STAGES];
    FileName mSpecularMapFilename[MAX_STAGES];
+   StringTableEntry mSpecularMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mSpecularMapAsset[MAX_STAGES];
    FileName mRoughMapFilename[MAX_STAGES];
+   StringTableEntry mRoughMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mRoughMapAsset[MAX_STAGES];
    F32      mSmoothnessChan[MAX_STAGES];
    FileName mAOMapFilename[MAX_STAGES];
+   StringTableEntry mAOMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mAOMapAsset[MAX_STAGES];
    F32      mAOChan[MAX_STAGES];
    FileName mMetalMapFilename[MAX_STAGES];
+   StringTableEntry mMetalMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mMetalMapAsset[MAX_STAGES];
    F32      mMetalChan[MAX_STAGES];
 
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
    FileName mDetailNormalMapFilename[MAX_STAGES];
+   StringTableEntry mDetailNormalMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mDetailNormalMapAsset[MAX_STAGES];
 
    /// The strength scalar for the detail normal map.
    F32 mDetailNormalMapStrength[MAX_STAGES];   

@@ -116,6 +116,7 @@ Material::Material()
    {
       mDiffuse[i].set( 1.0f, 1.0f, 1.0f, 1.0f );
       mDiffuseMapSRGB[i] = true;
+      mDiffuseMapAsset[i] = StringTable->EmptyString();
 
       mSmoothness[i] = 0.0f;
       mMetalness[i] = 0.0f;
@@ -172,8 +173,10 @@ Material::Material()
       // Deferred Shading
       mMatInfoFlags[i] = 0.0f;
       mRoughMapFilename[i].clear();
+      mRoughMapAsset[i] = StringTable->EmptyString();
       mAOMapFilename[i].clear();
       mMetalMapFilename[i].clear();
+      mMetalMapAsset[i] = StringTable->EmptyString();
    }
 
    dMemset(mCellIndex, 0, sizeof(mCellIndex));
@@ -233,6 +236,9 @@ void Material::initPersistFields()
          "is present this is the material color." );
 
       addField("diffuseMap", TypeImageFilename, Offset(mDiffuseMapFilename, Material), MAX_STAGES,
+         "The diffuse color texture map." );
+
+      addField("diffuseMapAsset", TypeImageAssetPtr, Offset(mDiffuseMapAsset, Material), MAX_STAGES,
          "The diffuse color texture map." );
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
@@ -636,7 +642,7 @@ void Material::_mapMaterial()
    // If mapTo not defined in script, try to use the base texture name instead
    if( mMapTo.isEmpty() )
    {
-      if ( mDiffuseMapFilename[0].isEmpty() )
+      if ( mDiffuseMapFilename[0].isEmpty() && mDiffuseMapAsset->isNull())
          return;
 
       else
@@ -651,6 +657,10 @@ void Material::_mapMaterial()
             else
                // use everything after the last slash
                mMapTo = mDiffuseMapFilename[0].substr(slashPos+1, mDiffuseMapFilename[0].length() - slashPos - 1);
+         }
+         else if (!mDiffuseMapAsset->isNull())
+         {
+            mMapTo = mDiffuseMapAsset[0]->getImageFileName();
          }
       }
    }

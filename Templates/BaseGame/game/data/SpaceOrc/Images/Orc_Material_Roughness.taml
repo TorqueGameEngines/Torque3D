@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Orc_Material_Roughness"
+    imageFile="@assetFile=Orc_Material_Roughness.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/SpaceOrcMage/Orc_Material_Roughness.png"
+    VersionId="1" />

@@ -58,6 +58,87 @@ function OptionsMenu::onWake(%this)
     OptionsOKButton.hidden = false;
     OptionsCancelButton.hidden = false;
     OptionsDefaultsButton.hidden = false;
+    
+    OptionsMenu.tamlReader = new Taml();
+    
+    OptionsSettingStack.clear();
+   
+   %array = OptionsSettingStack;
+   %array.clear();
+   
+   %controllerMenuBtn = new GuiButtonCtrl(){
+      text = "Keyboard and Mouse";
+      profile = GuiMenuButtonProfile;
+      extent = %array.extent.x SPC "35";
+   };
+   
+   %displayMenuBtn = new GuiButtonCtrl(){
+      text = "Controller";
+      profile = GuiMenuButtonProfile;
+      extent = %array.extent.x SPC "35";
+   };
+   
+   %keyboardMenuBtn = new GuiButtonCtrl(){
+      text = "Display";
+      profile = GuiMenuButtonProfile;
+      extent = %array.extent.x SPC "35";
+   };
+   
+   %graphicsMenuBtn = new GuiButtonCtrl(){
+      text = "Graphics";
+      profile = GuiMenuButtonProfile;
+      extent = %array.extent.x SPC "35";
+   };
+   
+   %audioMenuBtn = new GuiButtonCtrl(){
+      text = "Audio";
+      profile = GuiMenuButtonProfile;
+      extent = %array.extent.x SPC "35";
+   };
+   
+   %gameplayMenuBtn = new GuiButtonCtrl(){
+      text = "Gameplay";
+      profile = GuiMenuButtonProfile;
+      extent = %array.extent.x SPC "35";
+   };
+   
+   %array.add(%keyboardMenuBtn);
+   %array.add(%controllerMenuBtn);
+   %array.add(%displayMenuBtn);
+   %array.add(%graphicsMenuBtn);
+   %array.add(%audioMenuBtn);
+   %array.add(%gameplayMenuBtn);
+   
+   //We programmatically set up our settings here so we can do some prepwork on the fields/controls
+   //Presets
+   /*OptionsMenu.addSettingOption(%array, "Preset", "High", ShadowQualityList, $pref::Video::Resolution);
+   
+   //AA
+   OptionsMenu.addSettingOption(%array, "AntiAliasing", "FXAA 4x", ShadowQualityList, $pref::Video::Resolution);
+   
+   //Lighting
+   OptionsMenu.addSettingOption(%array, "Shadow Quality", "High", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Shadow Caching", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Soft Shadows", "High", ShadowQualityList, $pref::Video::Resolution);
+   
+   //Models and Textures
+   OptionsMenu.addSettingOption(%array, "Level of Detail", "High", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Texture Quality", "High", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Material Quality", "High", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Terrain Detail", "High", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Decal Lifetime", "High", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Ground Clutter Density", "High", ShadowQualityList, $pref::Video::Resolution);
+   
+   //Effects
+   OptionsMenu.addSettingOption(%array, "HDR", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Parallax", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Ambient Occlusion", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Light Rays", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Depth of Field", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Vignetting", "On", ShadowQualityList, $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(%array, "Water Reflections", "On", ShadowQualityList, $pref::Video::Resolution);
+   
+   OptionsMenu.addSettingOption(%array, "Anisotropic Filtering", "16x", ShadowQualityList, $pref::Video::Resolution);*/
 }
 
 function OptionsMenuOKButton::onClick(%this)
@@ -139,53 +220,62 @@ function OptionsMenu::backOut(%this)
    }
 }
 
-function OptionsMenu::addSettingOption(%this, %arrayTarget)
+function OptionsMenu::addSettingOption(%this, %arrayTarget, %optionName, %defaultValue, %settingsGroup, %targetVar)
 {
-    %graphicsOption = OptionsMenu.tamlReader.read("data/ui/scripts/guis/graphicsMenuSettingsCtrl.taml");
+    %option = TAMLRead("data/ui/scripts/guis/graphicsMenuSettingsCtrl.taml");
+    
+    %option-->nameText.text = %optionName;
+    %option-->SettingText.text = %defaultValue;
+    %option.qualitySettingGroup = %settingsGroup;
+    %option.targetVar = %targetVar;
+    
+    %option.init();
 
-    %arrayTarget.add(%graphicsOption);
+    %arrayTarget.add(%option);
 
-    return %graphicsOption;
+    return %option;
 }
 
-function OptionsMenu::addSliderOption(%this, %arrayTarget, %range, %ticks, %variable, %value, %class)
+function OptionsMenu::addSliderOption(%this, %arrayTarget, %optionName, %variable, %range, %ticks,  %value, %class)
 {
-    %graphicsOption = OptionsMenu.tamlReader.read("data/ui/scripts/guis/graphicsMenuSettingsSlider.taml");
+    %option = TAMLRead("data/ui/scripts/guis/graphicsMenuSettingsSlider.taml");
+    
+    %option-->nameText.text = %optionName;
 
-    %arrayTarget.add(%graphicsOption);
+    %arrayTarget.add(%option);
     
     if(%range !$= "")
     {
-       %graphicsOption-->slider.range = %range;
+       %option-->slider.range = %range;
     }
     
     if(%ticks !$= "")
     {
-       %graphicsOption-->slider.ticks = %ticks;
+       %option-->slider.ticks = %ticks;
     }
     
     if(%variable !$= "")
     {
-       %graphicsOption-->slider.variable = %variable;
+       %option-->slider.variable = %variable;
     }
     
     if(%value !$= "")
     {
-       %graphicsOption-->slider.setValue(%value);
+       %option-->slider.setValue(%value);
     }
     
     if(%class !$= "")
     {
-       %graphicsOption-->slider.className = %class;
+       %option-->slider.className = %class;
     }
     else
-        %graphicsOption-->slider.className = OptionsMenuSlider;
+        %option-->slider.className = OptionsMenuSlider;
         
-    %graphicsOption-->slider.snap = true;
+    %option-->slider.snap = true;
     
-    %graphicsOption-->slider.onValueSet();
+    %option-->slider.onValueSet();
 
-    return %graphicsOption;
+    return %option;
 }
 
 function OptionsMenuSlider::onMouseDragged(%this)
@@ -206,6 +296,65 @@ function FOVOptionSlider::onMouseDragged(%this)
 function FOVOptionSlider::onValueSet(%this)
 {
    %this.getParent().getParent()-->valueText.setText(mRound(%this.value));
+}
+
+function OptionsMenuForwardSetting::onClick(%this)
+{
+   //we need to advance through the value list, unless it's the end, in which case we do nothing  
+   echo("Move forward in the list!");
+   
+   %settingCtrl = %this.getParent();
+   for ( %i=0; %i < %settingCtrl.qualitySettingGroup.getCount(); %i++ )
+   {
+      %level = %settingCtrl.qualitySettingGroup.getObject( %i );
+      
+      if(%settingCtrl.selectedLevel == %i)
+      {
+         //k, shift it  
+         if(%i == %settingCtrl.qualitySettingGroup.getCount() - 1)
+         {
+            //oh, we're at the end. Do nothing.
+            return;  
+         }
+         else
+         {
+            %newLevel = %settingCtrl.qualitySettingGroup.getObject( %i + 1 );
+            %settingCtrl-->SettingText.setText( %newLevel.displayName );
+            OptionsPreviewCtrl.bitmap = %newLevel.previewImage;
+            %settingCtrl.selectedLevel = %i + 1;
+            return;
+         }
+      }
+   }
+}
+
+function OptionsMenuBackSetting::onClick(%this)
+{
+   //we need to advance through the value list, unless it's the end, in which case we do nothing  
+   echo("Move back in the list!");
+   
+   %settingCtrl = %this.getParent();
+   for ( %i=0; %i < %settingCtrl.qualitySettingGroup.getCount(); %i++ )
+   {
+      %level = %settingCtrl.qualitySettingGroup.getObject( %i );
+      
+      if(%settingCtrl.selectedLevel == %i)
+      {
+         //k, shift it  
+         if(%i == 0)
+         {
+            //oh, we're at the end. Do nothing.
+            return;  
+         }
+         else
+         {
+            %newLevel = %settingCtrl.qualitySettingGroup.getObject( %i - 1 );
+            %settingCtrl-->SettingText.setText( %newLevel.displayName );
+            %settingCtrl.selectedLevel = %i - 1;
+            return;
+         }
+      }
+   }
 }
 
 /// Returns true if the current quality settings equal

@@ -409,6 +409,16 @@ void ProcessedMaterial::_setStageData()
             mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
          }
       }
+      else if (!mMaterial->mDiffuseMapAsset[i].isNull())
+      {
+         mStages[i].setTex(MFT_DiffuseMap, mMaterial->mDiffuseMapAsset[i]->getImage());
+         if (!mStages[i].getTex(MFT_DiffuseMap))
+         {
+            // Load a debug texture to make it clear to the user 
+            // that the texture for this stage was missing.
+            mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
+         }
+      }
 
       // OverlayMap
       if (mMaterial->mOverlayMapFilename[i].isNotEmpty())

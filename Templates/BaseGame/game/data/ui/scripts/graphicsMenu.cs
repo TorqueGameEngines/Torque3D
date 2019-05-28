@@ -372,7 +372,7 @@ function _makePrettyResString( %resString )
 function GraphicsMenuSetting::init( %this )
 {
    assert( isObject( %this ) );
-   assert( isObject( %this.qualitySettingGroup ) );
+   //assert( isObject( %this.qualitySettingGroup ) );
     
    // Fill it.
    %select = -1;

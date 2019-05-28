@@ -1,0 +1,9 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="player_mat"
+    scriptFile="@assetFile=player_mat.cs"
+    materialDefinitionName="player_mat"
+    imageMap0="@Asset=Kork:player_Albedo"
+    shaderGraph="data/Kork/materials/player.sgf"
+    VersionId="1" />

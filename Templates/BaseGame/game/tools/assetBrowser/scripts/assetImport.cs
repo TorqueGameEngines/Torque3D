@@ -71,10 +71,13 @@ function AssetBrowser::onBeginDropFiles( %this )
    %this.importAssetUnprocessedListArray.empty();
    %this.importAssetFinalListArray.empty();
    
+   ImportAssetWindow.assetHeirarchyChanged = false;
+   
    //prep the import control
    Canvas.pushDialog(AssetImportCtrl);
    AssetImportCtrl.setHidden(true);
    ImportAssetTree.clear();
+   ImportAssetTree.insertItem(0, "Importing Assets");
    AssetBrowser.unprocessedAssetsCount = 0;
 }
 
@@ -380,6 +383,12 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
          %shapeInfo = new GuiTreeViewCtrl();
          enumColladaForImport(%assetItem.filePath, %shapeInfo, false);  
       }
+      else if(%fileExt $= ".dts")
+      {
+         %shapeInfo = new GuiTreeViewCtrl();
+         %shapeInfo.insertItem(0, "Shape", 1);
+         %shapeInfo.insertItem(0, "Animations", 0);
+      }
       else
       {
          %shapeInfo = GetShapeInfo(%assetItem.filePath);
@@ -412,7 +421,7 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
    
    if(%parentAssetItem $= "")
    {
-      ImportAssetTree.insertObject(0, %assetItem);
+      ImportAssetTree.insertObject(1, %assetItem);
       
       //%assetItem.parentDepth = 0;
       //%this.importAssetNewListArray.add(%assetItem);
@@ -422,14 +431,6 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
    {
       %parentid = ImportAssetTree.findItemByObjectId(%parentAssetItem);
       ImportAssetTree.insertObject(%parentid, %assetItem);
-      
-      //%assetItem.parentDepth = %parentAssetItem.parentDepth + 1;  
-      //%parentIndex = %this.importAssetUnprocessedListArray.getIndexFromKey(%parentAssetItem);
-      
-      //%parentAssetItem.dependencies = %parentAssetItem.dependencies SPC %assetItem;
-      //trim(%parentAssetItem.dependencies);
-      
-      //%this.importAssetUnprocessedListArray.insert(%assetItem, "", %parentIndex + 1);
    }
    
    %this.unprocessedAssetsCount++;
@@ -669,7 +670,7 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
    {
       %assetItem = ImportAssetTree.getItemObject(%id);
       
-      if(%assetItem.processed == false)
+      if(isObject(%assetItem) && %assetItem.processed == false)
       {
          %assetConfigObj = ImportAssetWindow.activeImportConfig.clone();
          %assetConfigObj.assetIndex = %i;
@@ -794,10 +795,6 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
          %assetItem.processed = true;
       }
       
-      //AssetBrowser.importAssetUnprocessedListArray.erase(0);    
-      //Been processed, so add it to our final list
-      //AssetBrowser.importAssetFinalListArray.add(%assetItem);
-      
       if(ImportAssetTree.isParentItem(%id))
       {
          %childItem = ImportAssetTree.getChild(%id);
@@ -806,13 +803,25 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
          %this.processNewImportAssets(%childItem); 
       }
 
-      %id = ImportAssetTree.getNextSibling(%id);
+      //It's possible we restructured our asset heirarchy(generated assets being parents, etc
+      //If that's happened, we need to back out of the current processing and restart to ensure we catch everything
+      if(ImportAssetWindow.assetHeirarchyChanged)
+         %id = -1;  //breaks the loop
+      else
+         %id = ImportAssetTree.getNextSibling(%id);
    }
+   
+   //We have a forced break out of the loop, so lets check if it's because the heirarchy changed.
+   //If so, reprocess
+   /*if(%id == -1 && ImportAssetWindow.assetHeirarchyChanged)
+   {
+      ImportAssetWindow.refresh();
+   }*/
 }
 
 function ImportAssetWindow::findImportingAssetByName(%this, %assetName)
 {
-   %id = ImportAssetTree.getFirstRootItem();
+   %id = ImportAssetTree.getChild(1);
    
    return %this._findImportingAssetByName(%id, %assetName);
 }
@@ -823,9 +832,9 @@ function ImportAssetWindow::_findImportingAssetByName(%this, %id, %assetName)
    {
       %assetItem = ImportAssetTree.getItemObject(%id);
       
-      if(%assetItem.cleanAssetName $= %assetName)
+      if(isObject(%assetItem) && %assetItem.cleanAssetName $= %assetName)
       {
-         return %asset;
+         return %assetItem;
       }
       
       if(ImportAssetTree.isParentItem(%id))
@@ -1023,7 +1032,9 @@ function refreshImportAssetWindow()
 function ImportAssetWindow::refresh(%this)
 {
    //Go through and process any newly, unprocessed assets
-   %id = ImportAssetTree.getFirstRootItem();
+   %id = ImportAssetTree.getChild(1);
+   
+   ImportAssetWindow.assetHeirarchyChanged = false;
    
    %this.processNewImportAssets(%id);
    
@@ -1035,9 +1046,9 @@ function ImportAssetWindow::refresh(%this)
    {
       //We've processed them all, prep the assets for actual importing
       //Initial set of assets
-      %id = ImportAssetTree.getFirstRootItem();
+      %id = ImportAssetTree.getChild(1);
       
-      //recurse!
+     //recurse!
       %this.refreshChildItem(%id);   
    }
    else
@@ -1053,7 +1064,7 @@ function ImportAssetWindow::refreshChildItem(%this, %id)
    {
       %assetItem = ImportAssetTree.getItemObject(%id);
       
-      if(%assetItem.skip)
+      if(!isObject(%assetItem) || %assetItem.skip)
       {
          %id = ImportAssetTree.getNextSibling(%id);
          continue;  
@@ -1395,7 +1406,7 @@ function ImportAssetWindow::ImportAssets(%this)
       return;
    }
    
-   %id = ImportAssetTree.getFirstRootItem();
+   %id = ImportAssetTree.getChild(1);
    
    %this.doImportAssets(%id);
    
@@ -1412,7 +1423,7 @@ function ImportAssetWindow::doImportAssets(%this, %id)
    {
       %assetItem = ImportAssetTree.getItemObject(%id);
       
-      if(%assetItem.skip)
+      if(!isObject(%assetItem) || %assetItem.skip)
       {
          %id = ImportAssetTree.getNextSibling(%id);
          continue;  

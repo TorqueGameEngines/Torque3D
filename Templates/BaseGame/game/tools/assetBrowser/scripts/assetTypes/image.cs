@@ -17,7 +17,7 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
    
       //Check if our material already exists
       //First, lets double-check that we don't already have an
-      %materialAsset = AssetBrowser.doesAssetItemAlreadyExist(%noSuffixName);
+      %materialAsset = ImportAssetWindow.findImportingAssetByName(%noSuffixName);
       if(%materialAsset == 0)
       {
          %filePath = %assetItem.filePath;
@@ -32,8 +32,11 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
          %materialItemId = ImportAssetTree.findItemByObjectId(%materialAsset);
          
          %assetItem.parentId = %materialItemId;
+         %assetItem.parentAssetItem = %materialAsset;
          
          ImportAssetTree.reparentItem(%itemId, %materialItemId);
+         
+         ImportAssetWindow.assetHeirarchyChanged = true;
          
          ImportAssetTree.buildVisibleTree(true);
       }
@@ -134,8 +137,9 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = %assetDef.scriptFile;
    //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
    
-   if(isFile(%assetDef.imageFile))
-      %previewData.previewImage = %assetDef.imageFile;
+   %imageFilePath = %assetDef.getImageFilename();
+   if(isFile(%imageFilePath))
+      %previewData.previewImage = %imageFilePath;
    else
       %previewData.previewImage = "core/rendering/images/unavailable";
    

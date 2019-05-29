@@ -149,12 +149,12 @@ void ImageAsset::loadImage()
 
 void ImageAsset::initializeAsset()
 {
-   loadImage();
+   setImageFileName(mImageFileName);
 }
 
 void ImageAsset::onAssetRefresh()
 {
-   loadImage();
+   setImageFileName(mImageFileName);
 }
 
 void ImageAsset::setImageFileName(const char* pScriptFile)
@@ -162,16 +162,16 @@ void ImageAsset::setImageFileName(const char* pScriptFile)
    // Sanity!
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL image file.");
 
-   // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
-
-   // Ignore no change,
-   if (pScriptFile == mImageFileName)
-      return;
-
    // Update.
    mImageFileName = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
 
    // Refresh the asset.
-   refreshAsset();
+   loadImage();
+}
+
+DefineEngineMethod(ImageAsset, getImageFilename, const char*, (), ,
+   "Creates an instance of the given GameObject given the asset definition.\n"
+   "@return The GameObject entity created from the asset.")
+{
+   return object->getImageFileName();
 }

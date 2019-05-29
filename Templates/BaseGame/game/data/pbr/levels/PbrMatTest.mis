@@ -256,20 +256,48 @@ new Scene(PbrMatTestLevel) {
       canSave = "1";
       canSaveDynamicFields = "1";
    };
-   /*new ConvexShape() {
-      Material = "Grid_512_Orange";
-      position = "1.69488 -1.65352 0.772905";
-      rotation = "1 0 0 0";
+   new StaticShapeObject() {
       scale = "1 1 1";
       canSave = "1";
       canSaveDynamicFields = "1";
+      position = "-0.158338 -2.2037 0.5";
+      rotation = "0 -0 172.868";
+      LocalPosition = "0 0 0";
+      LocalRotation = "1 0 0 0";
+      lifetimeMS = "0";
+      GameObject = "Core_GameObjects:StaticShapeObject";
+      dirtyGameObject = "0";
 
-      surface = "0 0 0 1 0 0 0.272904 0 0 0 1 1 0 0 0";
-      surface = "0 1 0 0 0 0 -0.272904 0 0 0 1 1 0 0 0";
-      surface = "0.707107 0 0 0.707107 0 0.05 0 0 0 0 1 1 0 0 0";
-      surface = "0 0.707107 -0.707107 0 0 -0.05 0 0 0 0 1 1 0 0 0";
-      surface = "0.5 0.5 -0.5 0.5 -0.370958 0 0 0 0 0 1 1 0 0 0";
-      surface = "0.5 -0.5 0.5 0.5 0.370958 0 0 0 0 0 1 1 0 0 0";
-   };*/
+      new MeshComponent() {
+         componentType = "Render";
+         friendlyName = "Mesh Component";
+         description = "Causes the object to render a non-animating 3d shape using the file provided.";
+         networked = "1";
+         Enabled = "1";
+         internalName = "MeshComponent";
+         MeshAsset = "SpaceOrc:SpaceOrcMage";
+      };
+      new ShapeCollisionComponent() {
+         componentType = "Collision";
+         friendlyName = "Shape Collision";
+         description = "A stub component class that physics components should inherit from.";
+         networked = "0";
+         Enabled = "1";
+         internalName = "CollisionComponent";
+         CollisionType = "Collision Mesh";
+         LineOfSightType = "Collision Mesh";
+         DecalType = "Collision Mesh";
+         CollisionMeshPrefix = "Collision";
+         BlockCollisions = "1";
+      };
+      new AnimationComponent() {
+         componentType = "Animation";
+         friendlyName = "Animation(Component)";
+         description = "Allows a rendered mesh to be animated";
+         networked = "1";
+         Enabled = "1";
+         internalName = "AnimationComponent";
+      };
+   };
 };
 //--- OBJECT WRITE END ---

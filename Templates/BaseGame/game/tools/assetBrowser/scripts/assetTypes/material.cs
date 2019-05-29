@@ -314,7 +314,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetPath = "data/" @ %moduleName @ "/materials";
    %tamlpath = %assetPath @ "/" @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ "/" @ %assetName @ ".sgf";
-   %scriptPath = %assetPath @ "/" @ %assetName @ ".cs";
+   %scriptPath = %assetName @ ".cs";
    
    %newAsset = new MaterialAsset()
    {
@@ -363,7 +363,6 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       if(%assetItem.diffuseImageAsset !$= "")
       {
          %diffuseAssetPath = "data/" @ %moduleName @ "/Images/" @ fileName(%assetItem.diffuseImageAsset.filePath);
-         %file.writeline("   DiffuseMap[0] = \"" @ %diffuseAssetPath @"\";");
          %file.writeline("   DiffuseMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.diffuseImageAsset.assetName @"\";");
       }
       if(%assetItem.normalImageAsset)
@@ -434,6 +433,11 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    
    if(isFile(%assetDef.materialDefinitionName.diffuseMap[0]))
       %previewData.previewImage = %assetDef.materialDefinitionName.diffuseMap[0];
+   else if(%assetDef.materialDefinitionName.diffuseMapAsset[0] !$= "")
+   {
+      %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.diffuseMapAsset[0]);
+      %previewData.previewImage = %imgAsset.getImageFilename();
+   }
    else
       %previewData.previewImage = "tools/assetBrowser/art/materialIcon";
    

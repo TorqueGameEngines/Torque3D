@@ -1,0 +1,9 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Orc_Material"
+    scriptFile="@assetFile=Orc_Material.cs"
+    materialDefinitionName="Orc_Material"
+    imageMap0="@Asset=SpaceOrc:Orc_Material_BaseColor"
+    shaderGraph="data/SpaceOrc/materials/Orc_Material.sgf"
+    VersionId="1" />

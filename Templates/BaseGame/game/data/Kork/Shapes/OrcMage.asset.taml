@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="OrcMage"
+    fileName="@assetFile=OrcMage.dts"
+    isNewShape="1"
+    materialSlot0="@Asset=Kork:player_mat"
+    originalFilePath="E:/Gamedev/Art/TorqueCharacters/OrcMage/OrcMage.dts"
+    VersionId="1" />

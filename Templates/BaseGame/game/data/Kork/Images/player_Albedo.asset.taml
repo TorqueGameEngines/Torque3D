@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="player_Albedo"
+    imageFile="@assetFile=player_Albedo.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/TorqueCharacters/OrcMage/player_Albedo.png"
+    VersionId="1" />

@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SpaceOrcMage"
+    fileName="@assetFile=SpaceOrcMage.dts"
+    isNewShape="1"
+    materialSlot0="@Asset=SpaceOrc:Orc_Material"
+    originalFilePath="E:/Gamedev/Art/SpaceOrcMage/SpaceOrcMage.dts"
+    VersionId="1" />

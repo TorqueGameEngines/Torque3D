@@ -71,7 +71,7 @@ public:
 
    bool isValid() { return mIsValidImage; }
 
-   GFXTexHandle* getImage() { return &mImage; }
+   GFXTexHandle getImage() { return mImage; }
 
 protected:
    virtual void            initializeAsset(void);

@@ -4523,7 +4523,7 @@ void GuiTreeViewCtrl::reparentItems(Vector<Item*> selectedItems, Item* newParent
       // update the parent's children
 
       // check if we an only child
-      if (item->mParent->mChild == item)
+      if (item->mParent && item->mParent->mChild == item)
       {
          if (item->mNext)
             item->mParent->mChild = item->mNext;
@@ -4805,7 +4805,7 @@ void GuiTreeViewCtrl::reparentItems(Vector<Item*> selectedItems, Item* newParent
 
       if (item->isInspectorData())
       {
-         if (item->getObject() && oldParent->getObject() && item->mParent->getObject())
+         if (item->getObject() && (oldParent && oldParent->getObject()) && item->mParent->getObject())
             onReparent_callback(
                item->getObject()->getId(),
                oldParent->getObject()->getId(),

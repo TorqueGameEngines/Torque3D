@@ -121,12 +121,17 @@ void MaterialAsset::initializeAsset()
 
    compileShader();
 
+   if (!Platform::isFullPath(mScriptFile))
+      mScriptFile = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptFile;
+
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 
 void MaterialAsset::onAssetRefresh()
 {
+   mScriptFile = expandAssetFilePath(mScriptFile);
+
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 
@@ -151,12 +156,8 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
    // Fetch image file.
    pScriptFile = StringTable->insert(pScriptFile);
 
-   // Ignore no change,
-   if (pScriptFile == mScriptFile)
-      return;
-
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

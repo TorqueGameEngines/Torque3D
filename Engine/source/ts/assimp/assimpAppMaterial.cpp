@@ -19,7 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-//#define TORQUE_PBR_MATERIALS
+#define TORQUE_PBR_MATERIALS
 
 #include "platform/platform.h"
 #include "ts/loader/appSequence.h"
@@ -190,14 +190,13 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
       if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_TEXTURE(aiTextureType_UNKNOWN, 0), texName))
          rmName = texName.C_Str();
 
-      mat->mIsSRGb[0] = true;
       if (aoName.isNotEmpty() || rmName.isNotEmpty())
       {  // If we have either map, fill all three slots
          if (rmName.isNotEmpty())
          {
             mat->mRoughMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // Roughness
             mat->mSmoothnessChan[0] = 1.0f;
-            mat->mInvertSmoothness = (floatVal == 1.0f);
+            mat->mInvertSmoothness[0] = (floatVal == 1.0f);
             mat->mMetalMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // Metallic
             mat->mMetalChan[0] = 2.0f;
          }

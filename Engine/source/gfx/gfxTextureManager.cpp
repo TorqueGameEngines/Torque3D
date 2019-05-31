@@ -1131,6 +1131,13 @@ GFXTextureObject *GFXTextureManager::createCompositeTexture(GBitmap*bmp[4], U32 
       return NULL;
    }
 
+   GFXTextureObject* cacheHit = _lookupTexture(resourceName, profile);
+   if (cacheHit != NULL)
+   {
+      // Con::errorf("Cached texture '%s'", (resourceName.isNotEmpty() ? resourceName.c_str() : "unknown"));
+      return cacheHit;
+   }
+
    U8 rChan, gChan, bChan, aChan;
    GBitmap *outBitmap = new GBitmap();
    outBitmap->allocateBitmap(bmp[0]->getWidth(), bmp[0]->getHeight(),false, GFXFormatR8G8B8A8);
@@ -1160,19 +1167,14 @@ GFXTextureObject *GFXTextureManager::createCompositeTexture(GBitmap*bmp[4], U32 
       }
    }
 
-   GFXTextureObject *cacheHit = _lookupTexture(resourceName, profile);
-   if (cacheHit != NULL)
+   if (deleteBmp)
    {
-      // Con::errorf("Cached texture '%s'", (resourceName.isNotEmpty() ? resourceName.c_str() : "unknown"));
-	  if (deleteBmp)
-	  {
-		  delete outBitmap;
-		  delete[] bmp;
-	  }
-      return cacheHit;
+      delete[] bmp;
    }
 
-   return _createTexture(outBitmap, resourceName, profile, deleteBmp, NULL);
+   GFXTextureObject * ret= _createTexture(outBitmap, resourceName, profile, deleteBmp, NULL);
+   delete outBitmap;
+   return ret;
 }
 
 GFXTextureObject* GFXTextureManager::_findPooledTexure(  U32 width, 

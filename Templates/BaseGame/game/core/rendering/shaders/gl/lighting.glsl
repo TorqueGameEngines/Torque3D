@@ -115,7 +115,7 @@ void updateSurface(inout Surface surface)
 	surface.NdotV = abs(dot(surface.N, surface.V)) + 1e-5f; // avoid artifact
 
 	surface.albedo = surface.baseColor.rgb * (1.0 - surface.metalness);
-	surface.f0 = lerp(vec3(0.04), surface.baseColor.rgb, surface.metalness);
+	surface.f0 = lerp(vec3(0.04f), surface.baseColor.rgb, surface.metalness);
 	surface.R = -reflect(surface.V, surface.N);
 	float f90 = saturate(50.0 * dot(surface.f0, vec3(0.33,0.33,0.33)));
 	surface.F = F_Schlick(surface.f0, f90, surface.NdotV);

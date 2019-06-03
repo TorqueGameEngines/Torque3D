@@ -267,6 +267,13 @@ bool RenderProbeMgr::onAdd()
       return false;
    }
 
+   /*String brdfTexturePath = GFXTextureManager::getBRDFTexturePath();
+   if (!mBRDFTexture.set(brdfTexturePath, &GFXTexturePersistentSRGBProfile, "BRDFTexture"))
+   {
+      Con::errorf("RenderProbeMgr::onAdd: Failed to load BRDF Texture");
+      return false;
+   }*/   
+
    return true;
 }
 
@@ -554,6 +561,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
    ProbeShaderConstants *probeShaderConsts,
    GFXShaderConstBuffer *shaderConsts)
 {
+   return;
    PROFILE_SCOPE(ProbeManager_Update4ProbeConsts);
 
    // Skip over gathering lights if we don't have to!
@@ -658,6 +666,9 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
 
+      //if (mBRDFTexture.isValid())
+      //   GFX->setTexture(3, mBRDFTexture);
+
       if(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister() != -1)
          GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
       if(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister() != -1)
@@ -743,6 +754,7 @@ void RenderProbeMgr::setProbeInfo(ProcessedMaterial *pmat,
 //-----------------------------------------------------------------------------
 void RenderProbeMgr::render( SceneRenderState *state )
 {
+   return;
    //PROFILE_SCOPE(RenderProbeMgr_render);
    if (getProbeArrayEffect() == nullptr)
       return;
@@ -793,6 +805,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setShaderConst("$cubeMips", (float)mMipCount);
    if (mEffectiveProbeCount != 0)
    {
+      //mProbeArrayEffect->setTexture(3, mBRDFTexture);
       mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);
       mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
 

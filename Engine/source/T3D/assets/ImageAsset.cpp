@@ -47,14 +47,14 @@
 
 IMPLEMENT_CONOBJECT(ImageAsset);
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtr, ImageAsset, ASSET_ID_FIELD_PREFIX)
+ConsoleType(ImageAssetPtr, TypeImageAssetPtr, String, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
 ConsoleGetType(TypeImageAssetPtr)
 {
    // Fetch asset Id.
-   return (*((AssetPtr<ImageAsset>*)dptr)).getAssetId();
+   return *((StringTableEntry*)dptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -67,19 +67,11 @@ ConsoleSetType(TypeImageAssetPtr)
       // Yes, so fetch field value.
       const char* pFieldValue = argv[0];
 
-      // Fetch asset pointer.
-      AssetPtr<ImageAsset>* pAssetPtr = dynamic_cast<AssetPtr<ImageAsset>*>((AssetPtrBase*)(dptr));
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
 
-      // Is the asset pointer the correct type?
-      if (pAssetPtr == NULL)
-      {
-         // No, so fail.
-         //Con::warnf("(TypeImageAssetPtr) - Failed to set asset Id '%d'.", pFieldValue);
-         return;
-      }
-
-      // Set asset.
-      pAssetPtr->setAssetId(pFieldValue);
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
 
       return;
    }

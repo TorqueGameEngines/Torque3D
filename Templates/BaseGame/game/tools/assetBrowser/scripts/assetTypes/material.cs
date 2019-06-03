@@ -314,14 +314,14 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetPath = "data/" @ %moduleName @ "/materials";
    %tamlpath = %assetPath @ "/" @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ "/" @ %assetName @ ".sgf";
-   %scriptPath = %assetName @ ".cs";
+   %scriptPath = %assetPath @ "/" @ %assetName @ ".cs";
    
    %newAsset = new MaterialAsset()
    {
       assetName = %assetName;
       versionId = 1;
       shaderGraph = %sgfPath;
-      scriptFile = %scriptPath;
+      scriptFile = %assetName @ ".cs";
       originalFilePath = %filePath;
       materialDefinitionName = %assetName;
    };
@@ -430,6 +430,8 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
                                    @ "MaterialEditorGui.setActiveMaterial( "@%assetDef@".materialDefinitionName );"
                                    @ "EditorGui.setEditor(MaterialEditorPlugin); "
                                    @ "AssetBrowser.hideDialog();";
+   
+   %test = %assetDef.materialDefinitionName.diffuseMapAsset[0];
    
    if(isFile(%assetDef.materialDefinitionName.diffuseMap[0]))
       %previewData.previewImage = %assetDef.materialDefinitionName.diffuseMap[0];

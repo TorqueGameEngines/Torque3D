@@ -2121,7 +2121,7 @@ bool ModuleManager::registerModule( const char* pModulePath, const char* pModule
     pModuleDefinition->setSignature( formatBuffer );
 
     // Locked the module definition.
-    pModuleDefinition->setLocked( true );
+    pModuleDefinition->setModuleLocked( true );
 
     // Fetch modules definitions.
     ModuleDefinitionEntry* pDefinitions = findModuleId( moduleId );

@@ -1076,11 +1076,6 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       setShaderConsts_callback();
    }   
 
-   if (mShaderName == String("PFX_ReflectionProbeArray") || getName() == StringTable->insert("reflectionProbeArrayPostFX"))
-   {
-      bool derp = true;
-   }
-
    EffectConstTable::Iterator iter = mEffectConsts.begin();
    for ( ; iter != mEffectConsts.end(); iter++ )
       iter->value->setToBuffer( mShaderConsts );
@@ -1605,6 +1600,22 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
     mTextures[index].set( texFilePath, &PostFxTextureProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
 
     mTextureType[index] = NormalTextureType;
+}
+
+void PostEffect::setTexture(U32 index, const GFXTexHandle& texHandle)
+{
+   // Set the new texture name.
+   mTexFilename[index] = "";
+   mTextures[index].free();
+
+   // Skip empty stages or ones with variable or target names.
+   if (!texHandle.isValid())
+      return;
+
+   // Try to load the texture.
+   mTextures[index] = texHandle;
+
+   mTextureType[index] = NormalTextureType;
 }
 
 void PostEffect::setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHandle)

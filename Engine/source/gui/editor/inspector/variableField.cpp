@@ -27,6 +27,7 @@
 #include "gui/editor/guiInspector.h"
 #include "core/util/safeDelete.h"
 #include "gfx/gfxDrawUtil.h"
+#include "util/settings.h"
 
 //-----------------------------------------------------------------------------
 // GuiInspectorVariableField
@@ -104,7 +105,17 @@ void GuiInspectorVariableField::setData( const char* data, bool callbacks )
    {
       if (mOwnerObject != nullptr)
       {
-         mOwnerObject->setDataField(mVariableName, NULL, data);
+         //Special case: if our object is a Settings class, we'll assume that we're trying to get/set the fields via the Setting class's normal behavior
+         //otherwise, use fields as normal
+         Settings* setting = dynamic_cast<Settings*>(mOwnerObject);
+         if (setting)
+         {
+            setting->setValue(mVariableName, data);
+         }
+         else
+         {
+            mOwnerObject->setDataField(mVariableName, NULL, data);
+         }
       }
       else
       {
@@ -121,8 +132,16 @@ const char* GuiInspectorVariableField::getData( U32 inspectObjectIndex )
 {
    if ( !mCaption || mCaption[0] == 0 )
       return "";
-      
-   return Con::getVariable( mCaption );
+
+   Settings* setting = dynamic_cast<Settings*>(mOwnerObject);
+   if (setting)
+   {
+      return setting->value(mVariableName);
+   }
+   else
+   {
+      return Con::getVariable(mCaption);
+   }
 }
 
 void GuiInspectorVariableField::setValue( const char* newValue )

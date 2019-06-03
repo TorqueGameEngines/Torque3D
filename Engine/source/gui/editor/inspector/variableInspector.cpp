@@ -60,7 +60,10 @@ void GuiVariableInspector::loadVars( String searchStr )
 
 void GuiVariableInspector::update()
 {
-   clearGroups();
+   for (U32 g = 0; g < mGroups.size(); g++)
+   {
+      mGroups[g]->clearFields();
+   }
 
    for (U32 i = 0; i < mFields.size(); i++)
    {
@@ -149,6 +152,8 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
       fieldTypeMask = TypeF32;
    else if (newField.mFieldTypeName == StringTable->insert("vector"))
       fieldTypeMask = TypePoint3F;
+   else if (newField.mFieldTypeName == StringTable->insert("vector2"))
+      fieldTypeMask = TypePoint2F;
    //else if (fieldType == StringTable->insert("material"))
    //   fieldTypeMask = TypeMaterialName;
    else if (newField.mFieldTypeName == StringTable->insert("image"))

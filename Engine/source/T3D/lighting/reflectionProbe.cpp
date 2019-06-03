@@ -531,7 +531,7 @@ void ReflectionProbe::updateProbeParams()
       mProbeInfoIdx = ProbeRenderInst::all.size() - 1;
       mProbeInfo->mIsEnabled = false;
 
-      PROBEMGR->registerProbe(mProbeInfoIdx);
+      //PROBEMGR->registerProbe(mProbeInfoIdx);
    }
 
    mProbeInfo->mProbeShapeType = mProbeShapeType;

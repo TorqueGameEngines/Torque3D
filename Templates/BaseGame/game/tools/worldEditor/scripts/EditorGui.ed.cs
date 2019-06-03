@@ -141,8 +141,8 @@ function EditorGui::init(%this)
    // Editor Settings Window
    if( !isObject( %this-->EditorSettingsWindow ) )
    {
-      exec("~/worldEditor/gui/EditorSettingsWindow.ed.gui");
-      exec("~/worldEditor/scripts/editorSettingsWindow.ed.cs");
+      exec("tools/gui/EditorSettingsWindow.ed.gui");
+      exec("tools/gui/editorSettingsWindow.ed.cs");
       %this.add( ESettingsWindow );
       ESettingsWindow.setVisible(false);
       

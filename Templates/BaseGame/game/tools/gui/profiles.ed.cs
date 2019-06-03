@@ -37,8 +37,8 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    mouseOverSelected = false;
 
    // fill color
-   opaque = false;
-   fillColor = "48 48 48";
+   opaque = true;
+   fillColor = "50 50 50";
    fillColorHL = "91 101 116";
    fillColorSEL = "91 101 116";
    fillColorNA = "255 0 255 ";
@@ -154,11 +154,11 @@ new GuiControlProfile (ToolsGuiWindowProfile)
 {
    opaque = false;
    border = 1;
-   fillColor = "48 48 48";
-   fillColorHL = "42 42 42";
-   fillColorNA = "42 42 42";
-   fontColor = "215 215 215";
-   fontColorHL = "215 215 215";
+   fillColor = EditorSettings.value("WorldEditor/Theme/windowTitleBGColor");
+   fillColorHL = EditorSettings.value("WorldEditor/Theme/windowTitleBGHLColor");
+   fillColorNA = EditorSettings.value("WorldEditor/Theme/windowTitleBGNAColor");
+   fontColor = EditorSettings.value("WorldEditor/Theme/windowTitleFontColor");
+   fontColorHL = EditorSettings.value("WorldEditor/Theme/windowTitleFontHLColor");
    bevelColorHL = "255 255 255";
    bevelColorLL = "0 0 0";
    text = "untitled";
@@ -548,6 +548,12 @@ new GuiControlProfile( ToolsGuiPopUpMenuEditProfile : ToolsGuiPopUpMenuDefault )
 if( !isObject( ToolsGuiListBoxProfile ) )
 new GuiControlProfile( ToolsGuiListBoxProfile )
 {
+   fillColorHL = "100 100 100";
+   fillColorNA = "150 150 150";
+   fontColor = "215 215 215";
+   fontColorHL = "215 215 215";
+   fontColorNA = "50 50 50";
+   
    tab = true;
    canKeyFocus = true;
    category = "Tools";

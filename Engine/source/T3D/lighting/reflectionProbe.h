@@ -82,19 +82,15 @@ protected:
    enum MaskBits
    {
       TransformMask = Parent::NextFreeMask << 0,
-      UpdateMask = Parent::NextFreeMask << 1,
+      StaticDataMask = Parent::NextFreeMask << 1,
       EnabledMask = Parent::NextFreeMask << 2,
-      CubemapMask = Parent::NextFreeMask << 3,
-      ModeMask = Parent::NextFreeMask << 4,
-      RadiusMask = Parent::NextFreeMask << 5,
-      ShapeTypeMask = Parent::NextFreeMask << 6,
-      BakeInfoMask = Parent::NextFreeMask << 7,
-      NextFreeMask = Parent::NextFreeMask << 8
+      NextFreeMask = Parent::NextFreeMask << 3
    };
 
    bool mBake;
    bool mEnabled;
    bool mDirty;
+   bool mCubemapDirty;
 
    Resource<TSShape> mEditorShape;
    TSShapeInstance* mEditorShapeInst;
@@ -105,7 +101,6 @@ protected:
    ProbeRenderInst::ProbeShapeType mProbeShapeType;
 
    ProbeRenderInst* mProbeInfo;
-   U32 mProbeInfoIdx;
 
    //Reflection Contribution stuff
    ReflectionModeType mReflectionModeType;
@@ -221,13 +216,11 @@ public:
    // Create the geometry for rendering
    void createGeometry();
 
-   // Get the Material instance
-   void updateCubemaps();
-
    virtual void updateProbeParams();
 
    bool createClientResources();
 
+   void processDynamicCubemap();
    void processStaticCubemap();
 
    // This is the function that allows this object to submit itself for rendering
@@ -243,8 +236,6 @@ public:
    String getPrefilterMapPath();
    String getIrradianceMapPath();
    void bake();
-
-   const U32 getProbeInfoIndex() { return mProbeInfoIdx; }
 };
 
 typedef ProbeRenderInst::ProbeShapeType ReflectProbeType;

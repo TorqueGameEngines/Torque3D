@@ -191,8 +191,8 @@ public:
     inline void             increaseLoadCount( void )                           { ++mLoadCount; }
     inline void             reduceLoadCount( void )                             { --mLoadCount; }
     inline S32              getLoadCount( void ) const                          { return mLoadCount; }
-    inline void             setLocked( const bool status )                      { mLocked = status; }
-    inline bool             getLocked( void ) const                             { return mLocked; }
+    inline void             setModuleLocked( const bool status )                { mLocked = status; }
+    inline bool             getModuleLocked( void ) const                       { return mLocked; }
     inline ModuleManager*   getModuleManager( void ) const                      { return mpModuleManager; }
     bool                    save( void );
 

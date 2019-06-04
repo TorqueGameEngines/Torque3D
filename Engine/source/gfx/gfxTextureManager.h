@@ -77,6 +77,8 @@ public:
    static const String& getDefaultIrradianceCubemapPath() { return smDefaultIrradianceCubemapPath; }
    static const String& getDefaultPrefilterCubemapPath() { return smDefaultPrefilterCubemapPath; }
 
+   static const String& getBRDFTexturePath() { return smBRDFTexturePath; }
+
    /// Update width and height based on available resources.
    ///
    /// We provide a simple interface for managing texture memory usage. Specifically,
@@ -215,6 +217,7 @@ protected:
 
    static String smDefaultIrradianceCubemapPath;
    static String smDefaultPrefilterCubemapPath;
+   static String smBRDFTexturePath;
 
    GFXTextureObject *mListHead;
    GFXTextureObject *mListTail;

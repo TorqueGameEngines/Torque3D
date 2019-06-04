@@ -117,6 +117,7 @@ Material::Material()
       mDiffuse[i].set( 1.0f, 1.0f, 1.0f, 1.0f );
       mDiffuseMapSRGB[i] = true;
       mDiffuseMapAsset[i] = StringTable->EmptyString();
+      mDiffuseMapAssetId[i] = StringTable->EmptyString();
 
       mSmoothness[i] = 0.0f;
       mMetalness[i] = 0.0f;
@@ -238,7 +239,7 @@ void Material::initPersistFields()
       addField("diffuseMap", TypeImageFilename, Offset(mDiffuseMapFilename, Material), MAX_STAGES,
          "The diffuse color texture map." );
 
-      addField("diffuseMapAsset", TypeImageAssetPtr, Offset(mDiffuseMapAsset, Material), MAX_STAGES,
+      addField("diffuseMapAsset", TypeImageAssetPtr, Offset(mDiffuseMapAssetId, Material), MAX_STAGES,
          "The diffuse color texture map." );
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
@@ -584,6 +585,15 @@ bool Material::onAdd()
    String::SizeType  slash = scriptFile.find( '/', scriptFile.length(), String::Right );
    if ( slash != String::NPos )
       mPath = scriptFile.substr( 0, slash + 1 );
+
+   //bind any assets we have
+   for (U32 i = 0; i < MAX_STAGES; i++)
+   {
+      if (mDiffuseMapAssetId[i] != StringTable->EmptyString())
+      {
+         mDiffuseMapAsset[0] = mDiffuseMapAssetId[0];
+      }
+   }
 
    _mapMaterial();
 

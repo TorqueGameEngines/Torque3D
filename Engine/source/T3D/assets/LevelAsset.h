@@ -51,6 +51,8 @@ class LevelAsset : public AssetBase
    bool                    mIsSubLevel;
    StringTableEntry        mMainLevelAsset;
 
+   StringTableEntry        mGamemodeName;
+
 public:
    LevelAsset();
    virtual ~LevelAsset();

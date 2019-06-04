@@ -119,18 +119,6 @@ void SphereEnvironmentProbe::onRemove()
    Parent::onRemove();
 }
 
-void SphereEnvironmentProbe::setTransform(const MatrixF & mat)
-{
-   // Let SceneObject handle all of the matrix manipulation
-   Parent::setTransform(mat);
-
-   mDirty = true;
-
-   // Dirty our network mask so that the new transform gets
-   // transmitted to the client object
-   setMaskBits(TransformMask);
-}
-
 U32 SphereEnvironmentProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
 {
    // Allow the Parent to get a crack at writing its info
@@ -151,13 +139,8 @@ void SphereEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream
 
 void SphereEnvironmentProbe::updateProbeParams()
 {
+   mProbeShapeType = ProbeRenderInst::Sphere;
    Parent::updateProbeParams();
-
-   mProbeInfo->mProbeShapeType = ProbeRenderInst::Sphere;
-
-   PROBEMGR->updateProbes();
-
-   updateCubemaps();
 }
 
 void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)

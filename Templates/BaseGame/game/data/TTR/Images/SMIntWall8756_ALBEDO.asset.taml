@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMIntWall8756_ALBEDO"
+    imageFile="@assetFile=SMIntWall8756.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMIntWall8756.png"
+    VersionId="1" />

@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="met2"
+    scriptFile="@assetFile=met2.cs"
+    materialDefinitionName="met2"
+    imageMap0="@Asset=TTR:met2_ALBEDO"
+    originalFilePath="/met2"
+    shaderGraph="data/TTR/materials/met2.sgf"
+    VersionId="1" />

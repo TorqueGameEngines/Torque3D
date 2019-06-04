@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucratswas_ALBEDO"
+    imageFile="@assetFile=Ucratswas"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Ucratswas"
+    VersionId="1" />

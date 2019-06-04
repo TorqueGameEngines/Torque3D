@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucratswas"
+    scriptFile="@assetFile=Ucratswas.cs"
+    materialDefinitionName="Ucratswas"
+    imageMap0="@Asset=TTR:Ucratswas_ALBEDO"
+    originalFilePath="/Ucratswas"
+    shaderGraph="data/TTR/materials/Ucratswas.sgf"
+    VersionId="1" />

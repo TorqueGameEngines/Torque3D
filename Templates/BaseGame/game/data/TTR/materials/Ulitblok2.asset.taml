@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ulitblok2"
+    scriptFile="@assetFile=Ulitblok2.cs"
+    materialDefinitionName="Ulitblok2"
+    imageMap0="@Asset=TTR:Ulitblok2_ALBEDO"
+    originalFilePath="/Ulitblok2"
+    shaderGraph="data/TTR/materials/Ulitblok2.sgf"
+    VersionId="1" />

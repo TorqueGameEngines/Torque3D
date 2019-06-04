@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMIntWall8756"
+    scriptFile="@assetFile=SMIntWall8756.cs"
+    materialDefinitionName="SMIntWall8756"
+    imageMap0="@Asset=TTR:SMIntWall8756_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMIntWall8756.png"
+    shaderGraph="data/TTR/materials/SMIntWall8756.sgf"
+    VersionId="1" />

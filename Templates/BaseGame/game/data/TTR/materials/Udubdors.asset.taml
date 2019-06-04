@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Udubdors"
+    scriptFile="@assetFile=Udubdors.cs"
+    materialDefinitionName="Udubdors"
+    imageMap0="@Asset=TTR:Udubdors_ALBEDO"
+    originalFilePath="/Udubdors"
+    shaderGraph="data/TTR/materials/Udubdors.sgf"
+    VersionId="1" />

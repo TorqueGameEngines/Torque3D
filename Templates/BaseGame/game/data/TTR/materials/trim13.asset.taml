@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="trim13"
+    scriptFile="@assetFile=trim13.cs"
+    materialDefinitionName="trim13"
+    imageMap0="@Asset=TTR:trim13_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/trim13.png"
+    shaderGraph="data/TTR/materials/trim13.sgf"
+    VersionId="1" />

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gr42_ALBEDO"
+    imageFile="@assetFile=gr42.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr42.png"
+    VersionId="1" />

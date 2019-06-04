@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wood11"
+    scriptFile="@assetFile=wood11.cs"
+    materialDefinitionName="wood11"
+    imageMap0="@Asset=TTR:wood11_ALBEDO"
+    originalFilePath="/wood11"
+    shaderGraph="data/TTR/materials/wood11.sgf"
+    VersionId="1" />

@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMOldWood23"
+    scriptFile="@assetFile=SMOldWood23.cs"
+    materialDefinitionName="SMOldWood23"
+    imageMap0="@Asset=TTR:SMOldWood23_ALBEDO"
+    originalFilePath="/SMOldWood23"
+    shaderGraph="data/TTR/materials/SMOldWood23.sgf"
+    VersionId="1" />

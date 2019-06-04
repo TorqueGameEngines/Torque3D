@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wood11_ALBEDO"
+    imageFile="@assetFile=wood11"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/wood11"
+    VersionId="1" />

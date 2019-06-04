@@ -57,8 +57,10 @@ static U32 MAXPROBECOUNT = 50;
 class PostEffect;
 class ReflectionProbe;
 
-struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
+struct ProbeRenderInst
 {
+   bool mIsEnabled;
+
    MatrixF mTransform;
 
    F32 mRadius;
@@ -99,6 +101,8 @@ struct ProbeRenderInst : public SystemInterface<ProbeRenderInst>
 
    U32 mCubemapIndex;
 
+   U32 mProbeIdx;
+
 public:
 
    ProbeRenderInst();
@@ -124,6 +128,11 @@ public:
    F32 getScore() const { return mScore; }
 
    void clear();
+
+   inline bool ProbeRenderInst::operator ==(const ProbeRenderInst& b) const
+   {
+      return mProbeIdx == b.mProbeIdx;
+   }
 };
 
 struct ProbeShaderConstants
@@ -168,7 +177,7 @@ class RenderProbeMgr : public RenderBinManager
 {
    typedef RenderBinManager Parent;
 
-   Vector<U32> mRegisteredProbes;
+   Vector<ProbeRenderInst> mRegisteredProbes;
 
    bool mProbesDirty;
 
@@ -254,7 +263,6 @@ protected:
       GFXShaderConstBuffer *shaderConsts);
 
    void _setupStaticParameters();
-   void updateProbeTexture(U32 probeIdx);
    void _setupPerFrameParameters(const SceneRenderState *state);
    virtual void addElement(RenderInst *inst);
    virtual void render(SceneRenderState * state);
@@ -263,29 +271,6 @@ protected:
 
    PostEffect* getProbeArrayEffect();
 
-public:
-   // RenderBinMgr
-   void updateProbes();
-   void updateProbeTexture(ProbeRenderInst* probe);
-
-   /// Returns the active LM.
-   static inline RenderProbeMgr* getProbeManager();
-
-   void registerProbe(U32 probeIdx);
-   void unregisterProbe(U32 probeIdx);
-
-   virtual void setProbeInfo(ProcessedMaterial *pmat,
-	   const Material *mat,
-	   const SceneData &sgData,
-	   const SceneRenderState *state,
-	   U32 pass,
-	   GFXShaderConstBuffer *shaderConsts);
-
-   /// Debug rendering
-   static bool smRenderReflectionProbes;
-
-   void bakeProbe(ReflectionProbe *probeInfo);
-   void bakeProbes();
 
    U32 _findNextEmptyCubeSlot()
    {
@@ -296,6 +281,31 @@ public:
       }
       return INVALID_CUBE_SLOT;
    }
+
+public:
+   // RenderBinMgr
+   void updateProbes();
+
+   /// Returns the active LM.
+   static inline RenderProbeMgr* getProbeManager();
+
+   ProbeRenderInst* registerProbe(const bool& isSkylight);
+   void unregisterProbe(U32 probeIdx);
+
+   virtual void setProbeInfo(ProcessedMaterial *pmat,
+	   const Material *mat,
+	   const SceneData &sgData,
+	   const SceneRenderState *state,
+	   U32 pass,
+	   GFXShaderConstBuffer *shaderConsts);
+
+   void updateProbeTexture(U32 probeIdx);
+
+   /// Debug rendering
+   static bool smRenderReflectionProbes;
+
+   void bakeProbe(ReflectionProbe *probeInfo);
+   void bakeProbes();
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

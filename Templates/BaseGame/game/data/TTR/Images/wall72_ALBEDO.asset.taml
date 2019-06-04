@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wall72_ALBEDO"
+    imageFile="@assetFile=wall72"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/wall72"
+    VersionId="1" />

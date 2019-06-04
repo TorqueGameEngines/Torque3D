@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Upipes3"
+    scriptFile="@assetFile=Upipes3.cs"
+    materialDefinitionName="Upipes3"
+    imageMap0="@Asset=TTR:Upipes3_ALBEDO"
+    originalFilePath="/Upipes3"
+    shaderGraph="data/TTR/materials/Upipes3.sgf"
+    VersionId="1" />

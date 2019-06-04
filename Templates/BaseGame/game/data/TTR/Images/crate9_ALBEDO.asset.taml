@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="crate9_ALBEDO"
+    imageFile="@assetFile=crate9"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/crate9"
+    VersionId="1" />

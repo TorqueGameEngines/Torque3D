@@ -1,0 +1,183 @@
+//--- OBJECT WRITE BEGIN ---
+new Scene(DasBootLevel) {
+   canSave = "1";
+   canSaveDynamicFields = "1";
+   isSubscene = "0";
+   isEditing = "0";
+   isDirty = "0";
+      cdTrack = "2";
+      CTF_scoreLimit = "5";
+      Enabled = "1";
+      musicTrack = "lush";
+
+   new LevelInfo(TheLevelInfo) {
+      nearClip = "0.1";
+      visibleDistance = "1000";
+      visibleGhostDistance = "0";
+      decalBias = "0.0015";
+      fogColor = "0.6 0.6 0.7 1";
+      fogDensity = "0";
+      fogDensityOffset = "700";
+      fogAtmosphereHeight = "0";
+      canvasClearColor = "0 0 0 255";
+      ambientLightBlendPhase = "1";
+      ambientLightBlendCurve = "0 0 -1 -1";
+      soundAmbience = "AudioAmbienceDefault";
+      soundDistanceModel = "Linear";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         advancedLightmapSupport = "0";
+         desc0 = "A blank room template that acts as a starting point.";
+         Enabled = "1";
+         LevelName = "Blank Room Template";
+   };
+   new SkyBox(theSky) {
+      Material = "BlankSkyMat";
+      drawBottom = "0";
+      fogBandHeight = "0";
+      position = "0 0 0";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+   };
+   new Sun(theSun) {
+      azimuth = "230.396";
+      elevation = "45";
+      color = "0.968628 0.901961 0.901961 1";
+      ambient = "0.337255 0.533333 0.619608 1";
+      brightness = "1";
+      castShadows = "1";
+      staticRefreshFreq = "250";
+      dynamicRefreshFreq = "8";
+      coronaEnabled = "1";
+      coronaScale = "0.5";
+      coronaTint = "1 1 1 1";
+      coronaUseLightColor = "1";
+      flareScale = "1";
+      attenuationRatio = "0 1 1";
+      shadowType = "PSSM";
+      texSize = "1024";
+      overDarkFactor = "3000 1500 750 250";
+      shadowDistance = "200";
+      shadowSoftness = "0.25";
+      numSplits = "4";
+      logWeight = "0.9";
+      fadeStartDistance = "0";
+      lastSplitTerrainOnly = "0";
+      representedInLightmap = "0";
+      shadowDarkenColor = "0 0 0 -1";
+      includeLightmappedGeometryInShadow = "0";
+      position = "0 0 0";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         bias = "0.1";
+         Blur = "1";
+         Enabled = "1";
+         height = "1024";
+         lightBleedFactor = "0.8";
+         minVariance = "0";
+         pointShadowType = "PointShadowType_Paraboloid";
+         shadowBox = "-100 -100 -100 100 100 100";
+         splitFadeDistances = "1 1 1 1";
+         width = "3072";
+   };
+   new GroundPlane() {
+      squareSize = "128";
+      scaleU = "25";
+      scaleV = "25";
+      Material = "Grid_512_Grey";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         Enabled = "1";
+         position = "0 0 0";
+         rotation = "1 0 0 0";
+         scale = "1 1 1";
+   };
+   new StaticShapeObject() {
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      position = "-0.056073 1.69464 27.8882";
+      rotation = "0 -0 -0";
+      LocalPosition = "0 0 0";
+      LocalRotation = "1 0 0 0";
+      lifetimeMS = "0";
+      GameObject = "Core_GameObjects:StaticShapeObject";
+      dirtyGameObject = "0";
+
+      new MeshComponent() {
+         componentType = "Render";
+         friendlyName = "Mesh Component";
+         description = "Causes the object to render a non-animating 3d shape using the file provided.";
+         networked = "1";
+         Enabled = "1";
+         internalName = "MeshComponent";
+      };
+      new ShapeCollisionComponent() {
+         componentType = "Collision";
+         friendlyName = "Shape Collision";
+         description = "A stub component class that physics components should inherit from.";
+         networked = "0";
+         Enabled = "1";
+         internalName = "CollisionComponent";
+         CollisionType = "Collision Mesh";
+         LineOfSightType = "Collision Mesh";
+         DecalType = "Collision Mesh";
+         CollisionMeshPrefix = "Collision";
+         BlockCollisions = "1";
+      };
+      new AnimationComponent() {
+         componentType = "Animation";
+         friendlyName = "Animation(Component)";
+         description = "Allows a rendered mesh to be animated";
+         networked = "1";
+         Enabled = "1";
+         internalName = "AnimationComponent";
+      };
+      new MeshComponent() {
+         componentType = "Render";
+         friendlyName = "Mesh Component";
+         description = "Causes the object to render a non-animating 3d shape using the file provided.";
+         networked = "1";
+         Enabled = "1";
+         internalName = "MeshComponent";
+         MeshAsset = "TTR:Ucntrlos_ALBEDO";
+      };
+      new ShapeCollisionComponent() {
+         componentType = "Collision";
+         friendlyName = "Shape Collision";
+         description = "A stub component class that physics components should inherit from.";
+         networked = "0";
+         Enabled = "1";
+         internalName = "CollisionComponent";
+         CollisionType = "Collision Mesh";
+         LineOfSightType = "Collision Mesh";
+         DecalType = "Collision Mesh";
+         CollisionMeshPrefix = "Collision";
+         BlockCollisions = "1";
+      };
+      new AnimationComponent() {
+         componentType = "Animation";
+         friendlyName = "Animation(Component)";
+         description = "Allows a rendered mesh to be animated";
+         networked = "1";
+         Enabled = "1";
+         internalName = "AnimationComponent";
+      };
+   };
+   new Skylight() {
+      Enabled = "1";
+      ReflectionMode = "Baked Cubemap";
+      position = "15.7048 -86.4983 63.9716";
+      rotation = "1 0 0 0";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "8cf2bb0a-8413-11e9-a4b8-a6148a4455c2";
+         reflectionPath = "data/TTR/levels/DasBootLevel/probes/";
+   };
+};
+//--- OBJECT WRITE END ---
+

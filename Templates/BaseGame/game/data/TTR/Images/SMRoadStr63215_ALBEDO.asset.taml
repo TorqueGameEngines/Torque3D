@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMRoadStr63215_ALBEDO"
+    imageFile="@assetFile=SMRoadStr63215"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/SMRoadStr63215"
+    VersionId="1" />

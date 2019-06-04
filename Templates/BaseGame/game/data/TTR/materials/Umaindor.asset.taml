@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Umaindor"
+    scriptFile="@assetFile=Umaindor.cs"
+    materialDefinitionName="Umaindor"
+    imageMap0="@Asset=TTR:Umaindor_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Umaindor.png"
+    shaderGraph="data/TTR/materials/Umaindor.sgf"
+    VersionId="1" />

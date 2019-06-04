@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="WALL104"
+    scriptFile="@assetFile=WALL104.cs"
+    materialDefinitionName="WALL104"
+    imageMap0="@Asset=TTR:WALL104_ALBEDO"
+    originalFilePath="/WALL104"
+    shaderGraph="data/TTR/materials/WALL104.sgf"
+    VersionId="1" />

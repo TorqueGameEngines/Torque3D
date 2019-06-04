@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grass_ALBEDO"
+    imageFile="@assetFile=Grass"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Grass"
+    VersionId="1" />

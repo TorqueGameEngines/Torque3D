@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Utoilt"
+    scriptFile="@assetFile=Utoilt.cs"
+    materialDefinitionName="Utoilt"
+    imageMap0="@Asset=TTR:Utoilt_ALBEDO"
+    originalFilePath="/Utoilt"
+    shaderGraph="data/TTR/materials/Utoilt.sgf"
+    VersionId="1" />

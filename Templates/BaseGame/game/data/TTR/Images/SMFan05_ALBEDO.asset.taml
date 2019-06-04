@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMFan05_ALBEDO"
+    imageFile="@assetFile=SMFan05"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/SMFan05"
+    VersionId="1" />

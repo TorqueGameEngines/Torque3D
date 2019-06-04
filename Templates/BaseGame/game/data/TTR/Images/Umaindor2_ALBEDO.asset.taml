@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Umaindor2_ALBEDO"
+    imageFile="@assetFile=Umaindor2"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Umaindor2"
+    VersionId="1" />

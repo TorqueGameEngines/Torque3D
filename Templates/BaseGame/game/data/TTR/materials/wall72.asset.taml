@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wall72"
+    scriptFile="@assetFile=wall72.cs"
+    materialDefinitionName="wall72"
+    imageMap0="@Asset=TTR:wall72_ALBEDO"
+    originalFilePath="/wall72"
+    shaderGraph="data/TTR/materials/wall72.sgf"
+    VersionId="1" />

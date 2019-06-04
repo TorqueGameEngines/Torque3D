@@ -123,18 +123,6 @@ void Skylight::onRemove()
    Parent::onRemove();
 }
 
-void Skylight::setTransform(const MatrixF & mat)
-{
-   // Let SceneObject handle all of the matrix manipulation
-   Parent::setTransform(mat);
-
-   mDirty = true;
-
-   // Dirty our network mask so that the new transform gets
-   // transmitted to the client object
-   setMaskBits(TransformMask);
-}
-
 U32 Skylight::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
 {
    // Allow the Parent to get a crack at writing its info
@@ -155,34 +143,8 @@ void Skylight::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 void Skylight::updateProbeParams()
 {
+   mProbeShapeType = ProbeRenderInst::Skylight;
    Parent::updateProbeParams();
-
-   mProbeInfo->mProbeShapeType = ProbeRenderInst::Skylight;
-
-   mProbeInfo->setPosition(getPosition());
-
-   // Skip our transform... it just dirties mask bits.
-   Parent::setTransform(mObjToWorld);
-
-   resetWorldBox();
-
-   F32 visDist = gClientSceneGraph->getVisibleDistance();
-   Box3F skylightBounds = Box3F(visDist * 2);
-
-   skylightBounds.setCenter(Point3F::Zero);
-
-   mProbeInfo->setPosition(Point3F::Zero);
-
-   mProbeInfo->mBounds = skylightBounds;
-
-   setGlobalBounds();
-
-   mProbeInfo->mIsSkylight = true; 
-   mProbeInfo->mScore = -1.0f; //sky comes first
-
-   PROBEMGR->updateProbes();
-
-   updateCubemaps();
 }
 
 void Skylight::prepRenderImage(SceneRenderState *state)

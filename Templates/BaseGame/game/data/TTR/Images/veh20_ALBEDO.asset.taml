@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="veh20_ALBEDO"
+    imageFile="@assetFile=veh20"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/veh20"
+    VersionId="1" />

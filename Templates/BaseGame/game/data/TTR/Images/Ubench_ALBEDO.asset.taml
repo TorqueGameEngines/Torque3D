@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ubench_ALBEDO"
+    imageFile="@assetFile=Ubench"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Ubench"
+    VersionId="1" />

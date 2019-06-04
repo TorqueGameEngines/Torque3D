@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Uflorwood_ALBEDO"
+    imageFile="@assetFile=Uflorwood"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Uflorwood"
+    VersionId="1" />

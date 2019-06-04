@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMFan05"
+    scriptFile="@assetFile=SMFan05.cs"
+    materialDefinitionName="SMFan05"
+    imageMap0="@Asset=TTR:SMFan05_ALBEDO"
+    originalFilePath="/SMFan05"
+    shaderGraph="data/TTR/materials/SMFan05.sgf"
+    VersionId="1" />

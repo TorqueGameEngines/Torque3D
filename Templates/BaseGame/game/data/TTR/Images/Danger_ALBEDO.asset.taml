@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Danger_ALBEDO"
+    imageFile="@assetFile=Danger"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Danger"
+    VersionId="1" />

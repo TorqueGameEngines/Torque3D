@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wood5"
+    scriptFile="@assetFile=wood5.cs"
+    materialDefinitionName="wood5"
+    imageMap0="@Asset=TTR:wood5_ALBEDO"
+    originalFilePath="/wood5"
+    shaderGraph="data/TTR/materials/wood5.sgf"
+    VersionId="1" />

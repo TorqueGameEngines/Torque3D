@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="met19"
+    scriptFile="@assetFile=met19.cs"
+    materialDefinitionName="met19"
+    imageMap0="@Asset=TTR:met19_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met19.png"
+    shaderGraph="data/TTR/materials/met19.sgf"
+    VersionId="1" />

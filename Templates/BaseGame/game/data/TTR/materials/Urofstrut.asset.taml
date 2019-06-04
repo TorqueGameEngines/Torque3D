@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Urofstrut"
+    scriptFile="@assetFile=Urofstrut.cs"
+    materialDefinitionName="Urofstrut"
+    imageMap0="@Asset=TTR:Urofstrut_ALBEDO"
+    originalFilePath="/Urofstrut"
+    shaderGraph="data/TTR/materials/Urofstrut.sgf"
+    VersionId="1" />

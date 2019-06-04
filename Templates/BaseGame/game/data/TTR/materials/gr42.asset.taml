@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gr42"
+    scriptFile="@assetFile=gr42.cs"
+    materialDefinitionName="gr42"
+    imageMap0="@Asset=TTR:gr42_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr42.png"
+    shaderGraph="data/TTR/materials/gr42.sgf"
+    VersionId="1" />

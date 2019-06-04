@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Utoilt_ALBEDO"
+    imageFile="@assetFile=Utoilt"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Utoilt"
+    VersionId="1" />

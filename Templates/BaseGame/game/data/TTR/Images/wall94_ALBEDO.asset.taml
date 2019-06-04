@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wall94_ALBEDO"
+    imageFile="@assetFile=wall94.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wall94.png"
+    VersionId="1" />

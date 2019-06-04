@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Conc39"
+    scriptFile="@assetFile=Conc39.cs"
+    materialDefinitionName="Conc39"
+    imageMap0="@Asset=TTR:Conc39_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Conc39.png"
+    shaderGraph="data/TTR/materials/Conc39.sgf"
+    VersionId="1" />

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Urofstrut_ALBEDO"
+    imageFile="@assetFile=Urofstrut"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Urofstrut"
+    VersionId="1" />

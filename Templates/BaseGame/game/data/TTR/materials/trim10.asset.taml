@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="trim10"
+    scriptFile="@assetFile=trim10.cs"
+    materialDefinitionName="trim10"
+    imageMap0="@Asset=TTR:trim10_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/trim10.png"
+    shaderGraph="data/TTR/materials/trim10.sgf"
+    VersionId="1" />

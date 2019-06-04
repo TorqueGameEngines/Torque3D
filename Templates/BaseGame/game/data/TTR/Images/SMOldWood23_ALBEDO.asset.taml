@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMOldWood23_ALBEDO"
+    imageFile="@assetFile=SMOldWood23"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/SMOldWood23"
+    VersionId="1" />

@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wood4"
+    scriptFile="@assetFile=wood4.cs"
+    materialDefinitionName="wood4"
+    imageMap0="@Asset=TTR:wood4_ALBEDO"
+    originalFilePath="/wood4"
+    shaderGraph="data/TTR/materials/wood4.sgf"
+    VersionId="1" />

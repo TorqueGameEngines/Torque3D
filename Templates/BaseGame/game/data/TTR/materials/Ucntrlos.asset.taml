@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucntrlos"
+    scriptFile="@assetFile=Ucntrlos.cs"
+    materialDefinitionName="Ucntrlos"
+    imageMap0="@Asset=TTR:Ucntrlos_ALBEDO"
+    originalFilePath="/Ucntrlos"
+    shaderGraph="data/TTR/materials/Ucntrlos.sgf"
+    VersionId="1" />

@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="door9"
+    scriptFile="@assetFile=door9.cs"
+    materialDefinitionName="door9"
+    imageMap0="@Asset=TTR:door9_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/door9.png"
+    shaderGraph="data/TTR/materials/door9.sgf"
+    VersionId="1" />

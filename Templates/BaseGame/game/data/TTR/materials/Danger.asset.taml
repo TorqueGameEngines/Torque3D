@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Danger"
+    scriptFile="@assetFile=Danger.cs"
+    materialDefinitionName="Danger"
+    imageMap0="@Asset=TTR:Danger_ALBEDO"
+    originalFilePath="/Danger"
+    shaderGraph="data/TTR/materials/Danger.sgf"
+    VersionId="1" />

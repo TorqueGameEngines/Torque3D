@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMPOWWall35"
+    scriptFile="@assetFile=SMPOWWall35.cs"
+    materialDefinitionName="SMPOWWall35"
+    imageMap0="@Asset=TTR:SMPOWWall35_ALBEDO"
+    originalFilePath="/SMPOWWall35"
+    shaderGraph="data/TTR/materials/SMPOWWall35.sgf"
+    VersionId="1" />

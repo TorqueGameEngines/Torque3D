@@ -47,14 +47,14 @@
 
 IMPLEMENT_CONOBJECT(GUIAsset);
 
-ConsoleType(GUIAssetPtr, TypeGUIAssetPtr, GUIAsset, ASSET_ID_FIELD_PREFIX)
+ConsoleType(GUIAssetPtr, TypeGUIAssetPtr, String, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
 ConsoleGetType(TypeGUIAssetPtr)
 {
    // Fetch asset Id.
-   return (*((AssetPtr<GUIAsset>*)dptr)).getAssetId();
+   return *((StringTableEntry*)dptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -67,19 +67,11 @@ ConsoleSetType(TypeGUIAssetPtr)
       // Yes, so fetch field value.
       const char* pFieldValue = argv[0];
 
-      // Fetch asset pointer.
-      AssetPtr<GUIAsset>* pAssetPtr = dynamic_cast<AssetPtr<GUIAsset>*>((AssetPtrBase*)(dptr));
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
 
-      // Is the asset pointer the correct type?
-      if (pAssetPtr == NULL)
-      {
-         // No, so fail.
-         //Con::warnf("(TypeGUIAssetPtr) - Failed to set asset Id '%d'.", pFieldValue);
-         return;
-      }
-
-      // Set asset.
-      pAssetPtr->setAssetId(pFieldValue);
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
 
       return;
    }

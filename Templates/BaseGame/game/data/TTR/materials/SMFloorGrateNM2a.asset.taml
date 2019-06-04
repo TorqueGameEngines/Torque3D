@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMFloorGrateNM2a"
+    scriptFile="@assetFile=SMFloorGrateNM2a.cs"
+    materialDefinitionName="SMFloorGrateNM2a"
+    imageMap0="@Asset=TTR:SMFloorGrateNM2a_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMFloorGrateNM2a.png"
+    shaderGraph="data/TTR/materials/SMFloorGrateNM2a.sgf"
+    VersionId="1" />

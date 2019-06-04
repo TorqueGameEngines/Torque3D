@@ -122,24 +122,12 @@ void BoxEnvironmentProbe::onRemove()
    Parent::onRemove();
 }
 
-void BoxEnvironmentProbe::setTransform(const MatrixF & mat)
-{
-   // Let SceneObject handle all of the matrix manipulation
-   Parent::setTransform(mat);
-
-   mDirty = true;
-
-   // Dirty our network mask so that the new transform gets
-   // transmitted to the client object
-   setMaskBits(TransformMask);
-}
-
 U32 BoxEnvironmentProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
 {
    // Allow the Parent to get a crack at writing its info
    U32 retMask = Parent::packUpdate(conn, mask, stream);
 
-   if (stream->writeFlag(mask & UpdateMask))
+   if (stream->writeFlag(mask & StaticDataMask))
    {
       stream->write(mAtten);
    }
@@ -152,7 +140,7 @@ void BoxEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
    // Let the Parent read any info it sent
    Parent::unpackUpdate(conn, stream);
 
-   if (stream->readFlag())  // UpdateMask
+   if (stream->readFlag())  // StaticDataMask
    {
       stream->read(&mAtten);
    }
@@ -164,14 +152,8 @@ void BoxEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 void BoxEnvironmentProbe::updateProbeParams()
 {
-   Parent::updateProbeParams();
-
-   mProbeInfo->mProbeShapeType = ProbeRenderInst::Box;
+   mProbeShapeType = ProbeRenderInst::Box;
    mProbeInfo->mAtten = mAtten;
-
-   PROBEMGR->updateProbes();
-
-   updateCubemaps();
 }
 
 void BoxEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)

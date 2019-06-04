@@ -7,6 +7,7 @@ function Core_Rendering::onCreate(%this)
    $Core::CommonShaderPath = "core/rendering/shaders";
    $Core::DefaultIrradianceCubemap = "core/rendering/images/default_irradiance.dds";
    $Core::DefaultPrefilterCubemap = "core/rendering/images/default_prefilter.dds";
+   $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";
    
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");

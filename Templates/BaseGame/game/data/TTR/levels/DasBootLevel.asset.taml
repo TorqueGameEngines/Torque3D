@@ -1,0 +1,7 @@
+<LevelAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DasBootLevel"
+    LevelFile="@assetFile=DasBootLevel.mis"
+    LevelName="Das Boot"
+    VersionId="1" />

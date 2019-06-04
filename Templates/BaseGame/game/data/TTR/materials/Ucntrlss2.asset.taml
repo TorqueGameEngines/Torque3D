@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucntrlss2"
+    scriptFile="@assetFile=Ucntrlss2.cs"
+    materialDefinitionName="Ucntrlss2"
+    imageMap0="@Asset=TTR:Ucntrlss2_ALBEDO"
+    originalFilePath="/Ucntrlss2"
+    shaderGraph="data/TTR/materials/Ucntrlss2.sgf"
+    VersionId="1" />

@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Rock3"
+    scriptFile="@assetFile=Rock3.cs"
+    materialDefinitionName="Rock3"
+    imageMap0="@Asset=TTR:Rock3_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Rock3.png"
+    shaderGraph="data/TTR/materials/Rock3.sgf"
+    VersionId="1" />

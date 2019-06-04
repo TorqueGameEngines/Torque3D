@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Urstfnce"
+    scriptFile="@assetFile=Urstfnce.cs"
+    materialDefinitionName="Urstfnce"
+    imageMap0="@Asset=TTR:Urstfnce_ALBEDO"
+    originalFilePath="/Urstfnce"
+    shaderGraph="data/TTR/materials/Urstfnce.sgf"
+    VersionId="1" />

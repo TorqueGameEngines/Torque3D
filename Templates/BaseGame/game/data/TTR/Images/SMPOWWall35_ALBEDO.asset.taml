@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMPOWWall35_ALBEDO"
+    imageFile="@assetFile=SMPOWWall35"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/SMPOWWall35"
+    VersionId="1" />

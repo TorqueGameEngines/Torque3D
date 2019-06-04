@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Uflorwood"
+    scriptFile="@assetFile=Uflorwood.cs"
+    materialDefinitionName="Uflorwood"
+    imageMap0="@Asset=TTR:Uflorwood_ALBEDO"
+    originalFilePath="/Uflorwood"
+    shaderGraph="data/TTR/materials/Uflorwood.sgf"
+    VersionId="1" />

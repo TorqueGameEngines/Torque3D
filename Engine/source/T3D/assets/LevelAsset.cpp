@@ -47,14 +47,14 @@
 
 IMPLEMENT_CONOBJECT(LevelAsset);
 
-ConsoleType(LevelAssetPtr, TypeLevelAssetPtr, LevelAsset, ASSET_ID_FIELD_PREFIX)
+ConsoleType(LevelAssetPtr, TypeLevelAssetPtr, String, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
 ConsoleGetType(TypeLevelAssetPtr)
 {
    // Fetch asset Id.
-   return (*((AssetPtr<LevelAsset>*)dptr)).getAssetId();
+   return *((StringTableEntry*)dptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -67,19 +67,11 @@ ConsoleSetType(TypeLevelAssetPtr)
       // Yes, so fetch field value.
       const char* pFieldValue = argv[0];
 
-      // Fetch asset pointer.
-      AssetPtr<LevelAsset>* pAssetPtr = dynamic_cast<AssetPtr<LevelAsset>*>((AssetPtrBase*)(dptr));
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
 
-      // Is the asset pointer the correct type?
-      if (pAssetPtr == NULL)
-      {
-         // No, so fail.
-         //Con::warnf("(TypeLevelAssetPtr) - Failed to set asset Id '%d'.", pFieldValue);
-         return;
-      }
-
-      // Set asset.
-      pAssetPtr->setAssetId(pFieldValue);
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
 
       return;
    }
@@ -121,6 +113,9 @@ void LevelAsset::initPersistFields()
    addField("LevelName", TypeString, Offset(mLevelName, LevelAsset), "Human-friendly name for the level.");
    addProtectedField("PreviewImage", TypeAssetLooseFilePath, Offset(mPreviewImage, LevelAsset),
       &setPreviewImageFile, &getPreviewImageFile, "Path to the image used for selection preview.");
+
+   addField("isSubScene", TypeString, Offset(mIsSubLevel, LevelAsset), "Is this a sublevel to another Scene");
+   addField("gameModeName", TypeString, Offset(mGamemodeName, LevelAsset), "Name of the Game Mode to be used with this level");
 }
 
 //------------------------------------------------------------------------------

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Urstfnce_ALBEDO"
+    imageFile="@assetFile=Urstfnce"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Urstfnce"
+    VersionId="1" />

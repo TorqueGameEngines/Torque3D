@@ -49,9 +49,6 @@ package Tools
       //First, we want to ensure we don't inadvertently clean up our editor objects by leaving them in the MissionCleanup group, so lets change that real fast
       $instantGroup = "";
       pushInstantGroup();
-      
-      new Settings(EditorSettings) { file = "tools/settings.xml"; };
-      EditorSettings.read();
             
       echo( " % - Initializing Tools" );         
       

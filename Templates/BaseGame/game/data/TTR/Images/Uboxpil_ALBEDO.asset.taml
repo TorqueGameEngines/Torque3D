@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Uboxpil_ALBEDO"
+    imageFile="@assetFile=Uboxpil"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Uboxpil"
+    VersionId="1" />

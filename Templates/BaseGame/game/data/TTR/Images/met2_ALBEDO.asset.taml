@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="met2_ALBEDO"
+    imageFile="@assetFile=met2"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/met2"
+    VersionId="1" />

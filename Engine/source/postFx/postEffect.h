@@ -416,6 +416,7 @@ public:
    F32 getPriority() const { return mRenderPriority; }
 
    void setTexture( U32 index, const String &filePath );
+   void setTexture(U32 index, const GFXTexHandle& texHandle);
    void setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHandle);
    void setCubemapArrayTexture(U32 index, const GFXCubemapArrayHandle &cubemapArrayHandle);
 

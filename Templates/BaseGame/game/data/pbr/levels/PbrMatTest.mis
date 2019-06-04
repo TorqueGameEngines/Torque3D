@@ -256,7 +256,7 @@ new Scene(PbrMatTestLevel) {
       canSave = "1";
       canSaveDynamicFields = "1";
    };
-   new StaticShapeObject() {
+   /*new StaticShapeObject() {
       scale = "1 1 1";
       canSave = "1";
       canSaveDynamicFields = "1";
@@ -298,6 +298,6 @@ new Scene(PbrMatTestLevel) {
          Enabled = "1";
          internalName = "AnimationComponent";
       };
-   };
+   };*/
 };
 //--- OBJECT WRITE END ---

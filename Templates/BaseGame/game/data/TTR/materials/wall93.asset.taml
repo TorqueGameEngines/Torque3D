@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wall93"
+    scriptFile="@assetFile=wall93.cs"
+    materialDefinitionName="wall93"
+    imageMap0="@Asset=TTR:wall93_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wall93.png"
+    shaderGraph="data/TTR/materials/wall93.sgf"
+    VersionId="1" />

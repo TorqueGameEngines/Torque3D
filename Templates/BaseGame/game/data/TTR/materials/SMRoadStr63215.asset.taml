@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SMRoadStr63215"
+    scriptFile="@assetFile=SMRoadStr63215.cs"
+    materialDefinitionName="SMRoadStr63215"
+    imageMap0="@Asset=TTR:SMRoadStr63215_ALBEDO"
+    originalFilePath="/SMRoadStr63215"
+    shaderGraph="data/TTR/materials/SMRoadStr63215.sgf"
+    VersionId="1" />

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucntrlos_ALBEDO"
+    imageFile="@assetFile=Ucntrlos"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Ucntrlos"
+    VersionId="1" />

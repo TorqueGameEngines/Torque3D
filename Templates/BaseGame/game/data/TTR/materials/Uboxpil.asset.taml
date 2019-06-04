@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Uboxpil"
+    scriptFile="@assetFile=Uboxpil.cs"
+    materialDefinitionName="Uboxpil"
+    imageMap0="@Asset=TTR:Uboxpil_ALBEDO"
+    originalFilePath="/Uboxpil"
+    shaderGraph="data/TTR/materials/Uboxpil.sgf"
+    VersionId="1" />

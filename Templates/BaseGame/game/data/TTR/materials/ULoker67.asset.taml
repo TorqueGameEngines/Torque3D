@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ULoker67"
+    scriptFile="@assetFile=ULoker67.cs"
+    materialDefinitionName="ULoker67"
+    imageMap0="@Asset=TTR:ULoker67_ALBEDO"
+    originalFilePath="/ULoker67"
+    shaderGraph="data/TTR/materials/ULoker67.sgf"
+    VersionId="1" />

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ulitblok2_ALBEDO"
+    imageFile="@assetFile=Ulitblok2"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Ulitblok2"
+    VersionId="1" />

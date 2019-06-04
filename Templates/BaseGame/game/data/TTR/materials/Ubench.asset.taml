@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ubench"
+    scriptFile="@assetFile=Ubench.cs"
+    materialDefinitionName="Ubench"
+    imageMap0="@Asset=TTR:Ubench_ALBEDO"
+    originalFilePath="/Ubench"
+    shaderGraph="data/TTR/materials/Ubench.sgf"
+    VersionId="1" />

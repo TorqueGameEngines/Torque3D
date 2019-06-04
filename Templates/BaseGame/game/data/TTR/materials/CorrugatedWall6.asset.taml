@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CorrugatedWall6"
+    scriptFile="@assetFile=CorrugatedWall6.cs"
+    materialDefinitionName="CorrugatedWall6"
+    imageMap0="@Asset=TTR:CorrugatedWall6_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/CorrugatedWall6.png"
+    shaderGraph="data/TTR/materials/CorrugatedWall6.sgf"
+    VersionId="1" />

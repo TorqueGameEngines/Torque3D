@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucrate1cnew_ALBEDO"
+    imageFile="@assetFile=Ucrate1cnew"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Ucrate1cnew"
+    VersionId="1" />

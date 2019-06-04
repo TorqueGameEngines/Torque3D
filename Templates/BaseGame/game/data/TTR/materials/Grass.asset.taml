@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grass"
+    scriptFile="@assetFile=Grass.cs"
+    materialDefinitionName="Grass"
+    imageMap0="@Asset=TTR:Grass_ALBEDO"
+    originalFilePath="/Grass"
+    shaderGraph="data/TTR/materials/Grass.sgf"
+    VersionId="1" />

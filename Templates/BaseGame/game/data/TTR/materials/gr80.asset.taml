@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gr80"
+    scriptFile="@assetFile=gr80.cs"
+    materialDefinitionName="gr80"
+    imageMap0="@Asset=TTR:gr80_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr80.png"
+    shaderGraph="data/TTR/materials/gr80.sgf"
+    VersionId="1" />

@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucntrlss2_ALBEDO"
+    imageFile="@assetFile=Ucntrlss2"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Ucntrlss2"
+    VersionId="1" />

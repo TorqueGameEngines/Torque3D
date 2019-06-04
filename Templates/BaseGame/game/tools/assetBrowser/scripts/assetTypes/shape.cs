@@ -43,20 +43,29 @@ function AssetBrowser::editShapeAsset(%this, %assetDef)
 function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
 {
    %fileExt = fileExt(%assetItem.filePath);
-   if(%fileExt $= ".dae")
+   
+   if(!isObject(%assetItem.shapeInfo))
    {
       %shapeInfo = new GuiTreeViewCtrl();
-      enumColladaForImport(%assetItem.filePath, %shapeInfo, false);  
+      if(%fileExt $= ".dae")
+      {
+         enumColladaForImport(%assetItem.filePath, %shapeInfo, false);  
+      }
+      else if(%fileExt $= ".dts")
+      {
+         %shapeInfo.insertItem(0, "Shape", 1);
+         %shapeInfo.insertItem(0, "Animations", 0);
+      }
+      else
+      {
+         GetShapeInfo(%assetItem.filePath, %shapeInfo);
+      }
+      
+      %assetItem.shapeInfo = %shapeInfo;
    }
-   else
-   {
-      %shapeInfo = GetShapeInfo(%assetItem.filePath);
-   }
-   
-   %assetItem.shapeInfo = %shapeInfo;
 
-   %shapeItem = %assetItem.shapeInfo.findItemByName("Shape");
-   %shapeCount = %assetItem.shapeInfo.getItemValue(%shapeItem);
+   %shapeCount = %assetItem.shapeInfo._meshCount;
+   %shapeItem = %assetItem.shapeInfo.findItemByName("Meshes");
    
    %shapeId = ImportAssetTree.findItemByObjectId(%assetItem);
    
@@ -65,8 +74,8 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
       
    }
    
+   %animCount = %assetItem.shapeInfo._animCount;
    %animItem = %assetItem.shapeInfo.findItemByName("Animations");
-   %animCount = %assetItem.shapeInfo.getItemValue(%animItem);
    
    if(ImportAssetWindow.activeImportConfig.ImportAnimations == 1 && %animCount > 0)
    {
@@ -88,30 +97,29 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
       }*/
    }
    
+
+   %matCount = %assetItem.shapeInfo._materialCount;
    %matItem = %assetItem.shapeInfo.findItemByName("Materials");
-   %matCount = %assetItem.shapeInfo.getItemValue(%matItem);
    
    if(ImportAssetWindow.activeImportConfig.importMaterials == 1 && %matCount > 0)
    {
-      
-      
       %materialItem = %assetItem.shapeInfo.getChild(%matItem);
       
       %matName = %assetItem.shapeInfo.getItemText(%materialItem);
       
       %filePath = %assetItem.shapeInfo.getItemValue(%materialItem);
-      if(%filePath !$= "")
+      if(%filePath !$= "" && isFile(%filePath))
       {
-         AssetBrowser.addImportingAsset("Material", %filePath, %shapeId);
+         AssetBrowser.addImportingAsset("Material", %filePath, %assetItem);
       }
       else
       {
          //we need to try and find our material, since the shapeInfo wasn't able to find it automatically
          %filePath = findImageFile(filePath(%assetItem.filePath), %matName);
-         if(%filePath !$= "")
-            AssetBrowser.addImportingAsset("Material", %filePath, %shapeId);
+         if(%filePath !$= "" && isFile(%filePath))
+            AssetBrowser.addImportingAsset("Material", %filePath, %assetItem);
          else
-            AssetBrowser.addImportingAsset("Material", %matName, %shapeId);
+            AssetBrowser.addImportingAsset("Material", %matName, %assetItem);
       }
       
       %materialItem = %assetItem.shapeInfo.getNextSibling(%materialItem);
@@ -119,21 +127,21 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
       {
          %matName = %assetItem.shapeInfo.getItemText(%materialItem);
          %filePath = %assetItem.shapeInfo.getItemValue(%materialItem);
-         if(%filePath !$= "")
+         if(%filePath !$= "" && isFile(%filePath))
          {
-            AssetBrowser.addImportingAsset("Material", %filePath, %shapeId);
+            AssetBrowser.addImportingAsset("Material", %filePath, %assetItem);
          }
          else
          {
             //we need to try and find our material, since the shapeInfo wasn't able to find it automatically
             %filePath = findImageFile(filePath(%assetItem.filePath), %matName);
-            if(%filePath !$= "")
-               AssetBrowser.addImportingAsset("Material", %filePath, %shapeId);
+            if(%filePath !$= "" && isFile(%filePath))
+               AssetBrowser.addImportingAsset("Material", %filePath, %assetItem);
             else
-               AssetBrowser.addImportingAsset("Material", %matName, %shapeId);
+               AssetBrowser.addImportingAsset("Material", %matName, %assetItem);
          }
             
-         %materialItem = %shapeInfo.getNextSibling(%materialItem);
+         %materialItem = %assetItem.shapeInfo.getNextSibling(%materialItem);
       }
    }
 }

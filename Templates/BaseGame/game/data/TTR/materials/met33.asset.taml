@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="met33"
+    scriptFile="@assetFile=met33.cs"
+    materialDefinitionName="met33"
+    imageMap0="@Asset=TTR:met33_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met33.png"
+    shaderGraph="data/TTR/materials/met33.sgf"
+    VersionId="1" />

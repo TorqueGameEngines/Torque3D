@@ -82,9 +82,6 @@ public:
    bool onAdd();
    void onRemove();
 
-   // Override this so that we can dirty the network flag when it is called
-   void setTransform(const MatrixF &mat);
-
    // This function handles sending the relevant data from the server
    // object to the client object
    U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);

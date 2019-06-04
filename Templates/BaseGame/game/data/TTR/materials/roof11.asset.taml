@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="roof11"
+    scriptFile="@assetFile=roof11.cs"
+    materialDefinitionName="roof11"
+    imageMap0="@Asset=TTR:roof11_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/roof11.png"
+    shaderGraph="data/TTR/materials/roof11.sgf"
+    VersionId="1" />

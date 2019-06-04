@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Upipes3_ALBEDO"
+    imageFile="@assetFile=Upipes3"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Upipes3"
+    VersionId="1" />

@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="crate9"
+    scriptFile="@assetFile=crate9.cs"
+    materialDefinitionName="crate9"
+    imageMap0="@Asset=TTR:crate9_ALBEDO"
+    originalFilePath="/crate9"
+    shaderGraph="data/TTR/materials/crate9.sgf"
+    VersionId="1" />

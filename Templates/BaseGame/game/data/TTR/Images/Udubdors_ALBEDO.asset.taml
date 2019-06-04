@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Udubdors_ALBEDO"
+    imageFile="@assetFile=Udubdors"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/Udubdors"
+    VersionId="1" />

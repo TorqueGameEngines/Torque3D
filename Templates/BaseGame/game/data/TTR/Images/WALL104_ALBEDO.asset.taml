@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="WALL104_ALBEDO"
+    imageFile="@assetFile=WALL104"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="/WALL104"
+    VersionId="1" />

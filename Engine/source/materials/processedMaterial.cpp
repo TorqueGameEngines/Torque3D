@@ -409,7 +409,7 @@ void ProcessedMaterial::_setStageData()
             mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
          }
       }
-      else if (!mMaterial->mDiffuseMapAsset[i].isNull())
+      else if (mMaterial->mDiffuseMapAsset[i] && !mMaterial->mDiffuseMapAsset[i].isNull())
       {
          mStages[i].setTex(MFT_DiffuseMap, mMaterial->mDiffuseMapAsset[i]->getImage());
          if (!mStages[i].getTex(MFT_DiffuseMap))

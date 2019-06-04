@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="met32"
+    scriptFile="@assetFile=met32.cs"
+    materialDefinitionName="met32"
+    imageMap0="@Asset=TTR:met32_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met32.png"
+    shaderGraph="data/TTR/materials/met32.sgf"
+    VersionId="1" />

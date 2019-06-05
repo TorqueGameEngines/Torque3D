@@ -152,8 +152,13 @@ void BoxEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 void BoxEnvironmentProbe::updateProbeParams()
 {
+   if (!mProbeInfo)
+      return;
+
    mProbeShapeType = ProbeRenderInst::Box;
    mProbeInfo->mAtten = mAtten;
+
+   Parent::updateProbeParams();
 }
 
 void BoxEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)

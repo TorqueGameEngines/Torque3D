@@ -31,9 +31,8 @@ uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 uniform float4    probeContribColors[MAX_PROBES];
 #endif
 
-TORQUE_UNIFORM_SAMPLERCUBE(skylightSpecularMap, 6);
-TORQUE_UNIFORM_SAMPLERCUBE(skylightIrradMap, 7);
 uniform float hasSkylight;
+uniform float skylightCubemapIdx;
 
 float4 main(PFXVertToPix IN) : SV_TARGET
 {
@@ -173,8 +172,8 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    if (hasSkylight && alpha > 0.001)
    {
-      irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz * alpha;
-      specular += TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz * alpha;
+      irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz * alpha;
+      specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz * alpha;
    }
 
 #if DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0

@@ -2,7 +2,7 @@
 new Scene(PbrMatTestLevel) {
    canSave = "1";
    canSaveDynamicFields = "1";
-   isSubscene = "0";
+   isSubScene = "0";
    isEditing = "0";
    isDirty = "0";
       cdTrack = "2";
@@ -86,15 +86,15 @@ new Scene(PbrMatTestLevel) {
       surfaceTexture = "Floor_Material";
       surface = "0 0 0 1 0 0 0.5 1 0 0 1 1 0 1 1";
       surface = "0 1 0 0 0 0 -0.5 1 0 0 1 1 0 1 1";
-      surface = "0.707107 0 0 0.707106 0 4 0 1 0 0 1 1 0 1 1";
+      surface = "0.707107 0 0 0.707107 0 4 0 1 0 0 1 1 0 1 1";
       surface = "0 0.707107 -0.707107 0 0 -4 -2.27374e-13 1 0 0 1 1 0 1 1";
       surface = "0.5 0.5 -0.5 0.5 -4 0 -1.49012e-08 1 0 0 1 1 0 1 1";
       surface = "0.5 -0.5 0.5 0.5 4 0 -1.49012e-08 1 0 0 1 1 0 1 1";
    };
    new Skylight() {
-      Enabled = "1";
+      Enabled = "0";
       ReflectionMode = "Baked Cubemap";
-      position = "0 0 0";
+      position = "0 0 3.83134";
       rotation = "1 0 0 0";
       canSave = "1";
       canSaveDynamicFields = "1";
@@ -256,48 +256,18 @@ new Scene(PbrMatTestLevel) {
       canSave = "1";
       canSaveDynamicFields = "1";
    };
-   /*new StaticShapeObject() {
-      scale = "1 1 1";
+   new BoxEnvironmentProbe() {
+      Enabled = "0";
+      refOffset = "0 0 0";
+      refScale = "10 10 10";
+      ReflectionMode = "Baked Cubemap";
+      position = "-0.0289133 -0.122873 1.6924";
+      rotation = "1 0 0 0";
+      scale = "10 10 10";
       canSave = "1";
       canSaveDynamicFields = "1";
-      position = "-0.158338 -2.2037 0.5";
-      rotation = "0 -0 172.868";
-      LocalPosition = "0 0 0";
-      LocalRotation = "1 0 0 0";
-      lifetimeMS = "0";
-      GameObject = "Core_GameObjects:StaticShapeObject";
-      dirtyGameObject = "0";
-
-      new MeshComponent() {
-         componentType = "Render";
-         friendlyName = "Mesh Component";
-         description = "Causes the object to render a non-animating 3d shape using the file provided.";
-         networked = "1";
-         Enabled = "1";
-         internalName = "MeshComponent";
-         MeshAsset = "SpaceOrc:SpaceOrcMage";
-      };
-      new ShapeCollisionComponent() {
-         componentType = "Collision";
-         friendlyName = "Shape Collision";
-         description = "A stub component class that physics components should inherit from.";
-         networked = "0";
-         Enabled = "1";
-         internalName = "CollisionComponent";
-         CollisionType = "Collision Mesh";
-         LineOfSightType = "Collision Mesh";
-         DecalType = "Collision Mesh";
-         CollisionMeshPrefix = "Collision";
-         BlockCollisions = "1";
-      };
-      new AnimationComponent() {
-         componentType = "Animation";
-         friendlyName = "Animation(Component)";
-         description = "Allows a rendered mesh to be animated";
-         networked = "1";
-         Enabled = "1";
-         internalName = "AnimationComponent";
-      };
-   };*/
+      persistentId = "079c3eaf-874e-11e9-8bbc-bdd5fc1d7642";
+      attenuation = "1";
+   };
 };
 //--- OBJECT WRITE END ---

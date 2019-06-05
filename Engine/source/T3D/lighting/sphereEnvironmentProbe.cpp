@@ -139,6 +139,9 @@ void SphereEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream
 
 void SphereEnvironmentProbe::updateProbeParams()
 {
+   if (!mProbeInfo)
+      return;
+
    mProbeShapeType = ProbeRenderInst::Sphere;
    Parent::updateProbeParams();
 }

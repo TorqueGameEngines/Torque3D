@@ -143,10 +143,7 @@ ReflectionProbe::~ReflectionProbe()
    if (mEditorShapeInst)
       SAFE_DELETE(mEditorShapeInst);
 
-   if (mProbeInfo)
-      SAFE_DELETE(mProbeInfo);
-
-   if (mReflectionModeType != StaticCubemap && mStaticCubemap)
+   if (mReflectionModeType == StaticCubemap && mStaticCubemap)
       mStaticCubemap->deleteObject();
 }
 
@@ -209,7 +206,7 @@ bool ReflectionProbe::_setEnabled(void *object, const char *index, const char *d
    ReflectionProbe* probe = reinterpret_cast< ReflectionProbe* >(object);
 
    probe->mEnabled = dAtob(data);
-   probe->setMaskBits(-1);
+   probe->setMaskBits(EnabledMask);
 
    return true;
 }
@@ -219,6 +216,7 @@ bool ReflectionProbe::_doBake(void *object, const char *index, const char *data)
    ReflectionProbe* probe = reinterpret_cast< ReflectionProbe* >(object);
 
    probe->bake();
+   probe->setMaskBits(StaticDataMask);
 
    return false;
 }
@@ -240,6 +238,7 @@ bool ReflectionProbe::_setRadius(void *object, const char *index, const char *da
       return false;
 
    probe->mObjScale = Point3F(probe->mRadius, probe->mRadius, probe->mRadius);
+   probe->setMaskBits(StaticDataMask);
    
    return true;
 }
@@ -258,6 +257,8 @@ bool ReflectionProbe::_setReflectionMode(void *object, const char *index, const 
       probe->mReflectionModeType = BakedCubemap;
       probe->mCubemapName = "";
    }
+
+   probe->setMaskBits(StaticDataMask);
 
    return true;
 }
@@ -307,6 +308,7 @@ void ReflectionProbe::onRemove()
    if (isClientObject())
    {
       PROBEMGR->unregisterProbe(mProbeInfo->mProbeIdx);
+      mProbeInfo = nullptr;
    }
 
    // Remove this object from the scene
@@ -342,15 +344,17 @@ void ReflectionProbe::setTransform(const MatrixF & mat)
 {
    // Let SceneObject handle all of the matrix manipulation
    if (!mEditPosOffset)
+   {
       Parent::setTransform(mat);
+      setMaskBits(TransformMask);
+   }
    else
+   {
       mProbeRefOffset = mat.getPosition();
+      setMaskBits(StaticDataMask);
+   }
 
    mDirty = true;
-
-   // Dirty our network mask so that the new transform gets
-   // transmitted to the client object
-   setMaskBits(TransformMask);
 }
 
 const MatrixF& ReflectionProbe::getTransform() const 
@@ -369,15 +373,17 @@ const MatrixF& ReflectionProbe::getTransform() const
 void ReflectionProbe::setScale(const VectorF &scale)
 {
    if (!mEditPosOffset)
+   {
       Parent::setScale(scale);
+      setMaskBits(TransformMask);
+   }
    else
+   {
       mProbeRefScale = scale;
+      setMaskBits(StaticDataMask);
+   }
 
    mDirty = true;
-
-   // Dirty our network mask so that the new transform gets
-   // transmitted to the client object
-   setMaskBits(TransformMask);
 }
 
 const VectorF& ReflectionProbe::getScale() const
@@ -495,6 +501,8 @@ void ReflectionProbe::updateProbeParams()
    if (!mProbeInfo)
       return;
 
+   mProbeInfo->mIsEnabled = mEnabled;
+
    mProbeInfo->mProbeShapeType = mProbeShapeType;
 
    if (mProbeShapeType == ProbeRenderInst::Sphere)
@@ -553,6 +561,8 @@ void ReflectionProbe::updateProbeParams()
    {
       if (mReflectionModeType == StaticCubemap)
          processStaticCubemap();
+      else if (mReflectionModeType == BakedCubemap)
+         processBakedCubemap();
       else
          processDynamicCubemap();
    }
@@ -562,61 +572,16 @@ void ReflectionProbe::updateProbeParams()
 
 void ReflectionProbe::processDynamicCubemap()
 {
-   if (!mProbeInfo)
+   //if (!mProbeInfo)
       return;
 
    mEnabled = false;
 
-   if (mReflectionModeType != DynamicCubemap)
+   if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
    {
-      mProbeInfo->mCubeReflector.unregisterReflector();
+      mProbeInfo->mPrefilterCubemap = mDynamicCubemap;
 
-      if ((mReflectionModeType == BakedCubemap) && !mProbeUniqueID.isEmpty())
-      {
-         String irrPath = getIrradianceMapPath();
-         if (Platform::isFile(irrPath))
-         {
-            mIrridianceMap->setCubemapFile(FileName(irrPath));
-            //mIrridianceMap->updateFaces();
-         }
-
-         if (mIrridianceMap == nullptr || mIrridianceMap->mCubemap.isNull())
-         {
-            Con::errorf("ReflectionProbe::processDynamicCubemap() - Unable to load baked irradiance map at %s", getIrradianceMapPath().c_str());
-            return;
-         }
-
-         String prefilPath = getPrefilterMapPath();
-         if (Platform::isFile(prefilPath))
-         {
-            mPrefilterMap->setCubemapFile(FileName(prefilPath));
-            //mPrefilterMap->updateFaces();
-         }
-
-         if (mPrefilterMap == nullptr || mPrefilterMap->mCubemap.isNull())
-         {
-            Con::errorf("ReflectionProbe::processDynamicCubemap() - Unable to load baked prefilter map at %s", getPrefilterMapPath().c_str());
-            return;
-         }
-
-         //mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
-         //mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
-
-         mEnabled = true;
-      }
-   }
-   else
-   {
-      if (mReflectionModeType == DynamicCubemap && !mDynamicCubemap.isNull())
-      {
-         mProbeInfo->mPrefilterCubemap = mDynamicCubemap;
-
-         mProbeInfo->mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
-      }
-      else
-      {
-         mEnabled = false;
-      }
+      //mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
    }
 
    if (mEnabled)
@@ -629,12 +594,61 @@ void ReflectionProbe::processDynamicCubemap()
    //   PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
 }
 
+void ReflectionProbe::processBakedCubemap()
+{
+   if (!mProbeInfo)
+      return;
+
+   mProbeInfo->mIsEnabled = false;
+
+   if ((mReflectionModeType != BakedCubemap) || mProbeUniqueID.isEmpty())
+      return;
+
+   String irrPath = getIrradianceMapPath();
+   if (Platform::isFile(irrPath))
+   {
+      mIrridianceMap->setCubemapFile(FileName(irrPath));
+      mIrridianceMap->updateFaces();
+   }
+
+   if (mIrridianceMap == nullptr || mIrridianceMap->mCubemap.isNull())
+   {
+      Con::errorf("ReflectionProbe::processDynamicCubemap() - Unable to load baked irradiance map at %s", getIrradianceMapPath().c_str());
+      return;
+   }
+
+   String prefilPath = getPrefilterMapPath();
+   if (Platform::isFile(prefilPath))
+   {
+      mPrefilterMap->setCubemapFile(FileName(prefilPath));
+      mPrefilterMap->updateFaces();
+   }
+
+   if (mPrefilterMap == nullptr || mPrefilterMap->mCubemap.isNull())
+   {
+      Con::errorf("ReflectionProbe::processDynamicCubemap() - Unable to load baked prefilter map at %s", getPrefilterMapPath().c_str());
+      return;
+   }
+
+   mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
+   mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
+
+   if (mEnabled && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
+   {
+      mProbeInfo->mIsEnabled = true;
+
+      //Update the probe manager with our new texture!
+      if (!mProbeInfo->mIsSkylight)
+         PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+   }
+}
+
 void ReflectionProbe::processStaticCubemap()
 {
    if (!mProbeInfo)
       return;
 
-   mEnabled = false;
+   mProbeInfo->mIsEnabled = false;
 
    String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
 
@@ -709,17 +723,16 @@ void ReflectionProbe::processStaticCubemap()
    {
       mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
       mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
-      mEnabled = true;
    }
 
-   if (mEnabled)
+   if (mEnabled && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
+   {
       mProbeInfo->mIsEnabled = true;
-   else
-      mProbeInfo->mIsEnabled = false;
 
-   //Update the probe manager with our new texture!
-   if (!mProbeInfo->mIsSkylight && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
-      PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+      //Update the probe manager with our new texture!
+      if (!mProbeInfo->mIsSkylight)
+         PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+   }
 }
 
 bool ReflectionProbe::createClientResources()
@@ -791,7 +804,7 @@ String ReflectionProbe::getIrradianceMapPath()
 
 void ReflectionProbe::bake()
 {
-   if (mReflectionModeType == DynamicCubemap)
+   if (mReflectionModeType != BakedCubemap)
       return;
 
    PROBEMGR->bakeProbe(this);

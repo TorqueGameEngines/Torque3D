@@ -77,9 +77,6 @@ struct ProbeRenderInst
    GFXCubemapHandle mPrefilterCubemap;
    GFXCubemapHandle mIrradianceCubemap;
 
-   //Utilized in dynamic reflections
-   CubeReflector mCubeReflector;
-
    /// The priority of this light used for
    /// light and shadow scoring.
    F32 mPriority;

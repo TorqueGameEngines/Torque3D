@@ -118,6 +118,9 @@ protected:
    U32 cubeDescId;
    ReflectorDesc *reflectorDesc;
 
+   //Utilized in dynamic reflections
+   //CubeReflector mCubeReflector;
+
    ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
    bool mUseHDRCaptures;
 
@@ -221,6 +224,7 @@ public:
    bool createClientResources();
 
    void processDynamicCubemap();
+   void processBakedCubemap();
    void processStaticCubemap();
 
    // This is the function that allows this object to submit itself for rendering

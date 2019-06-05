@@ -143,6 +143,9 @@ void Skylight::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 void Skylight::updateProbeParams()
 {
+   if (!mProbeInfo)
+      return;
+
    mProbeShapeType = ProbeRenderInst::Skylight;
    Parent::updateProbeParams();
 }

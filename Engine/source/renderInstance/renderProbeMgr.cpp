@@ -415,6 +415,8 @@ void RenderProbeMgr::_setupStaticParameters()
    mEffectiveProbeCount = 0;
    mMipCount = 0;
 
+   mHasSkylight = false;
+
    if (probePositionsData.size() != MAXPROBECOUNT)
    {
       probePositionsData.setSize(MAXPROBECOUNT);

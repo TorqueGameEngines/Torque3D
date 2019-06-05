@@ -638,8 +638,7 @@ void ReflectionProbe::processBakedCubemap()
       mProbeInfo->mIsEnabled = true;
 
       //Update the probe manager with our new texture!
-      if (!mProbeInfo->mIsSkylight)
-         PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+      PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
    }
 }
 
@@ -730,8 +729,7 @@ void ReflectionProbe::processStaticCubemap()
       mProbeInfo->mIsEnabled = true;
 
       //Update the probe manager with our new texture!
-      if (!mProbeInfo->mIsSkylight)
-         PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+      PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
    }
 }
 
@@ -739,7 +737,7 @@ bool ReflectionProbe::createClientResources()
 {
    if (mProbeInfo == nullptr)
    {
-      mProbeInfo = PROBEMGR->registerProbe(mProbeShapeType == ProbeRenderInst::Skylight);
+      mProbeInfo = PROBEMGR->registerProbe();
       if (!mProbeInfo)
          return false;
 

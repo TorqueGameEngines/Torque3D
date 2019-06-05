@@ -199,13 +199,9 @@ class RenderProbeMgr : public RenderBinManager
    Vector<Point4F> probeBBMinData;
    Vector<Point4F> probeBBMaxData;
    Vector<Point4F> probeConfigData;
-   Vector<GFXCubemapHandle> cubeMaps;
-   Vector<GFXCubemapHandle> irradMaps;
 
-   bool mHasSkylight;
-   GFXCubemapHandle skylightIrradMap;
-   GFXCubemapHandle skylightPrefilterMap;
-   Point4F          skylightPos;
+   bool            mHasSkylight;
+   S32             mSkylightCubemapIdx;
 
    AlignedArray<Point4F> mProbePositions;
    AlignedArray<Point4F> mProbeBBMin;
@@ -286,7 +282,7 @@ public:
    /// Returns the active LM.
    static inline RenderProbeMgr* getProbeManager();
 
-   ProbeRenderInst* registerProbe(const bool& isSkylight);
+   ProbeRenderInst* registerProbe();
    void unregisterProbe(U32 probeIdx);
 
    virtual void setProbeInfo(ProcessedMaterial *pmat,

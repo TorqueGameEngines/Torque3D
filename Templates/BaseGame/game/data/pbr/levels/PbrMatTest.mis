@@ -92,7 +92,7 @@ new Scene(PbrMatTestLevel) {
       surface = "0.5 -0.5 0.5 0.5 4 0 -1.49012e-08 1 0 0 1 1 0 1 1";
    };
    new Skylight() {
-      Enabled = "0";
+      Enabled = "1";
       ReflectionMode = "Baked Cubemap";
       position = "0 0 3.83134";
       rotation = "1 0 0 0";
@@ -100,6 +100,19 @@ new Scene(PbrMatTestLevel) {
       canSaveDynamicFields = "1";
       persistentId = "658580df-7bda-11e9-9951-fcefa3e1cde4";
          reflectionPath = "data/pbr/levels/PbrMatTest/probes/";
+   };
+   new BoxEnvironmentProbe() {
+      Enabled = "1";
+      refOffset = "0 0 0";
+      refScale = "10 10 10";
+      ReflectionMode = "Baked Cubemap";
+      position = "-0.0289133 -0.122873 1.6924";
+      rotation = "1 0 0 0";
+      scale = "10 10 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "079c3eaf-874e-11e9-8bbc-bdd5fc1d7642";
+      attenuation = "1";
    };
    new TSStatic() {
       shapeName = "data/pbr/shapes/material_ball.dae";
@@ -255,19 +268,6 @@ new Scene(PbrMatTestLevel) {
       scale = "0.5 0.5 0.5";
       canSave = "1";
       canSaveDynamicFields = "1";
-   };
-   new BoxEnvironmentProbe() {
-      Enabled = "0";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "-0.0289133 -0.122873 1.6924";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "079c3eaf-874e-11e9-8bbc-bdd5fc1d7642";
-      attenuation = "1";
    };
 };
 //--- OBJECT WRITE END ---

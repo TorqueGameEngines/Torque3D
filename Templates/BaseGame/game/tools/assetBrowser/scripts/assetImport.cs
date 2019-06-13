@@ -497,6 +497,9 @@ function ImportAssetWindow::onWake(%this)
       return;
       
    $AssetBrowser::importConfigsFile = "tools/assetBrowser/assetImportConfigs.xml";
+   $AssetBrowser::currentImportConfig = "";
+   new Settings(AssetImportSettings) { file = $AssetBrowser::importConfigsFile; };
+   AssetImportSettings.read();
    
    %this.reloadImportOptionConfigs();
 }
@@ -510,17 +513,15 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
    if(%xmlDoc.loadFile($AssetBrowser::importConfigsFile))
    {
       //StateMachine element
-      %xmlDoc.pushFirstChildElement("AssetImportConfigs");
+      %xmlDoc.pushFirstChildElement("AssetImportSettings");
       
-      //Configs
+      //Config Groups
       %configCount = 0;
       while(%xmlDoc.pushChildElement(%configCount))
       {
-         %configObj = new ScriptObject(){};
-         
-         %configObj.Name = %xmlDoc.attribute("Name");
+         %configName = %xmlDoc.attribute("name");
 
-         %xmlDoc.pushFirstChildElement("Mesh");
+         /*%xmlDoc.pushFirstChildElement("Mesh");
             %configObj.ImportMesh = %xmlDoc.attribute("ImportMesh");
             %configObj.DoUpAxisOverride = %xmlDoc.attribute("DoUpAxisOverride");
             %configObj.UpAxisOverride = %xmlDoc.attribute("UpAxisOverride");
@@ -583,12 +584,12 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
             %configObj.VolumeAdjust = %xmlDoc.attribute("VolumeAdjust");
             %configObj.PitchAdjust = %xmlDoc.attribute("PitchAdjust");
             %configObj.Compressed = %xmlDoc.attribute("Compressed");
-         %xmlDoc.popElement();
+         %xmlDoc.popElement();*/
          
          %xmlDoc.popElement();
          %configCount++;
          
-         ImportAssetWindow.importConfigsList.add(%configObj);
+         ImportAssetWindow.importConfigsList.add(%configName);
       }
       
       %xmlDoc.popElement();
@@ -596,8 +597,8 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
    
    for(%i = 0; %i < ImportAssetWindow.importConfigsList.count(); %i++)
    {
-      %configObj = ImportAssetWindow.importConfigsList.getKey(%i);
-      ImportAssetConfigList.add(%configObj.Name);
+      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
+      ImportAssetConfigList.add(%configName);
    }
    
    %importConfigIdx = ImportAssetWindow.activeImportConfigIndex;
@@ -607,7 +608,7 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
    ImportAssetConfigList.setSelected(%importConfigIdx);
 }
 
-function ImportAssetWindow::setImportOptions(%this, %optionsObj)
+function ImportAssetWindow::setImportOptions(%this, %configName)
 {
    //Todo, editor + load from files for preconfigs
    

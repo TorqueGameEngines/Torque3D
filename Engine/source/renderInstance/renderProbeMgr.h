@@ -292,7 +292,7 @@ public:
 	   U32 pass,
 	   GFXShaderConstBuffer *shaderConsts);
 
-   void updateProbeTexture(U32 probeIdx);
+   void updateProbeTexture(ProbeRenderInst* probeInfo);
 
    /// Debug rendering
    static bool smRenderReflectionProbes;

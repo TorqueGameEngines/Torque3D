@@ -1360,7 +1360,7 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
 
    LIGHTMGR->setLightInfo(this, mMaterial, sgData, state, pass, shaderConsts);
 
-   PROBEMGR->setProbeInfo(this, mMaterial, sgData, state, pass, shaderConsts);
+   //PROBEMGR->setProbeInfo(this, mMaterial, sgData, state, pass, shaderConsts);
 }
 
 void ProcessedShaderMaterial::setBuffers( GFXVertexBufferHandleBase *vertBuffer, GFXPrimitiveBufferHandle *primBuffer )

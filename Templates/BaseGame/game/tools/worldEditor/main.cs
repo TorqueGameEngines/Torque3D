@@ -135,7 +135,12 @@ function initializeWorldEditor()
    EVisibility.addOption( "Frustum Lock", "$Scene::lockCull", "" );
    EVisibility.addOption( "Disable Zone Culling", "$Scene::disableZoneCulling", "" );
    EVisibility.addOption( "Disable Terrain Occlusion", "$Scene::disableTerrainOcclusion", "" );
-
+   
+   EVisibility.addOption( "Probes: Attenuation", "$Probes::showAttenuation", "" );   
+   EVisibility.addOption( "Probes: Specular Cubemaps", "$Probes::showSpecularCubemaps", "" );   
+   EVisibility.addOption( "Probes: Diffuse Cubemaps", "$Probes::showDiffuseCubemaps", "" );   
+   EVisibility.addOption( "Probes: Contribution", "$Probes::showProbeContrib", "" );
+   
    EVisibility.addOption( "Colorblindness: Protanopia", "$CBV_Protanopia", "toggleColorBlindnessViz" );
    EVisibility.addOption( "Colorblindness: Protanomaly", "$CBV_Protanomaly", "toggleColorBlindnessViz" );
    EVisibility.addOption( "Colorblindness: Deuteranopia", "$CBV_Deuteranopia", "toggleColorBlindnessViz" );

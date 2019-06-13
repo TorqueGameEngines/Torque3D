@@ -37,7 +37,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    mouseOverSelected = false;
 
    // fill color
-   opaque = true;
+   opaque = false;
    fillColor = "50 50 50";
    fillColorHL = "91 101 116";
    fillColorSEL = "91 101 116";

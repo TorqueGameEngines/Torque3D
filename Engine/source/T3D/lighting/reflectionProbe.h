@@ -151,9 +151,6 @@ protected:
    U32 mDynamicLastBakeMS;
    U32 mRefreshRateMS;
 
-   GBitmap* mCubeFaceBitmaps[6];
-   U32 mCubemapResolution;
-
    F32 mMaxDrawDistance;
 
    bool mResourcesCreated;

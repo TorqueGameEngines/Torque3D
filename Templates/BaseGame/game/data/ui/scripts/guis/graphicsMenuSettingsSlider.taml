@@ -89,7 +89,9 @@
             isContainer="false"
             internalName="slider"
             canSave="true"
-            canSaveDynamicFields="false" />
+            canSaveDynamicFields="false" 
+            renderTicks="false"
+            useFillBar="true" />
         <GuiTextCtrl
             text="5"
             maxLength="1024"

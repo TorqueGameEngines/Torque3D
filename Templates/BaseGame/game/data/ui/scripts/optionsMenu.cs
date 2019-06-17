@@ -66,34 +66,38 @@ function OptionsMenu::onWake(%this)
    %array = OptionsSettingStack;
    %array.clear();
    
-   %controllerMenuBtn = new GuiButtonCtrl(){
+   %keyboardMenuBtn = new GuiButtonCtrl(){
       text = "Keyboard and Mouse";
       profile = GuiMenuButtonProfile;
       extent = %array.extent.x SPC "35";
    };
    
-   %displayMenuBtn = new GuiButtonCtrl(){
+   %controllerMenuBtn = new GuiButtonCtrl(){
       text = "Controller";
       profile = GuiMenuButtonProfile;
       extent = %array.extent.x SPC "35";
+      command="DisplayMenu::loadSettings();";
    };
    
-   %keyboardMenuBtn = new GuiButtonCtrl(){
+   %displayMenuBtn = new GuiButtonCtrl(){
       text = "Display";
       profile = GuiMenuButtonProfile;
       extent = %array.extent.x SPC "35";
+      command="DisplayMenu::loadSettings();";
    };
    
    %graphicsMenuBtn = new GuiButtonCtrl(){
       text = "Graphics";
       profile = GuiMenuButtonProfile;
       extent = %array.extent.x SPC "35";
+      command="GraphicsMenu::loadSettings();";
    };
    
    %audioMenuBtn = new GuiButtonCtrl(){
       text = "Audio";
       profile = GuiMenuButtonProfile;
       extent = %array.extent.x SPC "35";
+      command="AudioMenu::loadSettings();";
    };
    
    %gameplayMenuBtn = new GuiButtonCtrl(){
@@ -236,7 +240,7 @@ function OptionsMenu::addSettingOption(%this, %arrayTarget, %optionName, %defaul
     return %option;
 }
 
-function OptionsMenu::addSliderOption(%this, %arrayTarget, %optionName, %variable, %range, %ticks,  %value, %class)
+function OptionsMenu::addSliderOption(%this, %arrayTarget, %optionName, %variable, %range, %ticks, %value, %class)
 {
     %option = TAMLRead("data/ui/scripts/guis/graphicsMenuSettingsSlider.taml");
     
@@ -619,4 +623,64 @@ function AudioMenuSoundDevice::onSelect( %this, %id, %text )
       error( "Unable to create SFX device: " @ $pref::SFX::provider 
                                              SPC $pref::SFX::device 
                                              SPC $pref::SFX::useHardware );                                             
+}
+
+//==============================================================================
+// DISPLAY MENU
+//==============================================================================
+function DisplayMenu::loadSettings()
+{
+   OptionsSettingStack.clear();
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Resolution", "1024 x 768", "", $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Full Screen", "Off", "", $pref::Video::FullScreen);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Refresh Rate", "60", "", $pref::Video::RefreshRate);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "VSync", "Off", "", $pref::Video::Vsync);
+   
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Field of View", $pref::Video::FOV, "65 120", 55, 75);
+   
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Brightness", $pref::Video::Brightness, "0 1", 10, 5);
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Contrast", $pref::Video::Contrast, "0 1", 10, 5);
+}
+
+//==============================================================================
+// GRAPHICS MENU
+//==============================================================================
+function GraphicsMenu::loadSettings()
+{
+   OptionsSettingStack.clear();
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Quality", "High", "", $pref::Video::Resolution);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Caching", "Off", "", $pref::Video::FullScreen);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Soft Shadows", "60", "", $pref::Video::RefreshRate);
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Model Detail", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Texture Detail", $pref::Video::FOV, "65 120", 55, 75);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Terrain Detail", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Decal Lifetime", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Ground Clutter Density", "Off", "", $pref::Video::Vsync);
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Material Quality", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "HDR", "Off", "", $pref::Video::Vsync);   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Parallax", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Ambient Occlusion", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Light Rays", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Depth of Field", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Vignetting", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Water Reflections", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Anti Aliasing", "Off", "", $pref::Video::Vsync);
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Anisotropic Filtering", "Off", "", $pref::Video::Vsync);
+}
+
+//==============================================================================
+// AUDIO MENU
+//==============================================================================
+function AudioMenu::loadSettings()
+{
+   OptionsSettingStack.clear();
+   
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Master Volume", $pref::Video::Brightness, "0 1", 10, 5);
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Menu Volume", $pref::Video::Brightness, "0 1", 10, 5);
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Effects Volume", $pref::Video::Brightness, "0 1", 10, 5);
+   OptionsMenu.addSliderOption(OptionsSettingStack, "Music Volume", $pref::Video::Brightness, "0 1", 10, 5);
 }

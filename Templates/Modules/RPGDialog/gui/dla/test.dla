@@ -1,0 +1,3 @@
+<QL1>GotoQuestion(2)<END><1>KillPlayer()<END><2>MoveTo("0 0 0")<END><3>TeleportPlayer("0 0 500")<END><4>TeleportPlayer("0 0 500")TeleportSender("0 0 600")<END><5>DamagePlayer(20)<END><6>GotoQuestion(3)<END><7>CloseDialog()<END>
+<1>RenameSender("Something Else")<END><2>GotoQuestion(1)<END><3>RenamePlayer("Something Else")<END>
+<1>ChangeStartQuestion(3)<END><2>ChangePortrait("unknown.png")<END><3>ChangePortraitAndGoto("unknown.png",3)<END><4>ChangeScript("test2",1)<END><5>ChangeScriptAndOpen("test2",1)<END><6>GotoQuestion(1)<END><7>ChangeStartQuestionAndOpen(1)<END>

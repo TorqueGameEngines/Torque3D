@@ -1,0 +1,9 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_Green"
+    scriptFile="data/TestGrids/materials/Grid_512_green.cs"
+    materialDefinitionName="Grid_512_Green"
+    imageMap0="@Asset=TestGrids:Grid_512_green_ALBEDO"
+    shaderGraph="data/TestGrids/materials/Grid_512_green.sgf"
+    VersionId="1" />

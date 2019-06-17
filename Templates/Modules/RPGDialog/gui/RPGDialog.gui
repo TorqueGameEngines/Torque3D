@@ -1,0 +1,156 @@
+new GuiControlProfile ("RPGDialogQuestionProfile")
+{
+   fontType = "Arial Bold";
+   fontSize = 16;
+   fontColor = "44 172 181";
+   fontColorLink = "255 96 96";
+   fontColorLinkHL = "0 0 255";
+   autoSizeWidth = true;
+   autoSizeHeight = true;
+};
+
+new GuiControlProfile ("RPGDialogAnswerProfile")
+{
+   fontType = "Arial Bold";
+   fontSize = 16;
+   fontColor = "44 172 181";
+   fontColorLink = "255 96 96";
+   fontColorLinkHL = "0 0 255";
+   autoSizeWidth = true;
+   autoSizeHeight = true;
+};
+
+new GuiControlProfile ("RPGDialogScrollProfile")
+{
+   opaque = false;
+   border = false;
+   borderColor = "0 255 0";
+   bitmap = "./demoScroll";
+   hasBitmapArray = true;
+};
+
+new GuiControlProfile ("RPGDialogBorderProfile")
+{
+   bitmap = "./chatHudBorderArray";
+   hasBitmapArray = true;
+   opaque = false;
+};
+
+//--- OBJECT WRITE BEGIN ---
+new GuiControl(RPGDialog) {
+   profile = "GuiModelessDialogProfile";
+   horizSizing = "width";
+   vertSizing = "height";
+   position = "0 0";
+   extent = "640 480";
+   minExtent = "8 8";
+   visible = "1";
+   helpTag = "0";
+
+   new GuiControl() {
+      profile = "GuiDefaultProfile";
+      horizSizing = "center";
+      vertSizing = "relative";
+      position = "120 260";
+      extent = "400 220";
+      minExtent = "8 8";
+      visible = "1";
+      helpTag = "0";
+
+      new GuiBitmapBorderCtrl(RPGDialogBorder) {
+         profile = "ChatHudBorderProfile";
+         horizSizing = "width";
+         vertSizing = "height";
+         position = "0 0";
+         extent = "400 220";
+         minExtent = "8 8";
+         visible = "1";
+         helpTag = "0";
+            useVariable = "0";
+            tile = "0";
+
+         new GuiBitmapCtrl(RPGDialogBackground) {
+            profile = "GuiDefaultProfile";
+            horizSizing = "width";
+            vertSizing = "height";
+            position = "8 8";
+            extent = "384 212";
+            minExtent = "8 8";
+            visible = "1";
+            helpTag = "0";
+            bitmap = "./hudfill.png";
+            wrap = "0";
+         };
+         new GuiScrollCtrl(RPGDialogScrollQuestion) {
+            profile = "RPGDialogScrollProfile";
+            horizSizing = "width";
+            vertSizing = "bottom";
+            position = "89 8";
+            extent = "303 94";
+            minExtent = "8 8";
+            visible = "1";
+            helpTag = "0";
+            willFirstRespond = "1";
+            hScrollBar = "alwaysOff";
+            vScrollBar = "dynamic";
+            constantThumbHeight = "0";
+            childMargin = "0 0";
+
+            new GuiMLTextCtrl(RPGDialogQuestion) {
+               profile = "RPGDialogQuestionProfile";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               position = "1 1";
+               extent = "283 16";
+               minExtent = "8 8";
+               visible = "1";
+               helpTag = "0";
+               lineSpacing = "0";
+               allowColorChars = "0";
+               maxChars = "-1";
+            };
+         };
+         new GuiScrollCtrl(RPGDialogScrollAnswer) {
+            profile = "RPGDialogScrollProfile";
+            horizSizing = "width";
+            vertSizing = "height";
+            position = "8 100";
+            extent = "384 110";
+            minExtent = "8 8";
+            visible = "1";
+            helpTag = "0";
+            willFirstRespond = "1";
+            hScrollBar = "alwaysOff";
+            vScrollBar = "dynamic";
+            constantThumbHeight = "0";
+            childMargin = "0 0";
+
+            new GuiMLTextCtrl(RPGDialogAnswer) {
+               profile = "RPGDialogAnswerProfile";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               position = "1 1";
+               extent = "364 14";
+               minExtent = "8 8";
+               visible = "0";
+               helpTag = "0";
+               lineSpacing = "2";
+               allowColorChars = "0";
+               maxChars = "-1";
+            };
+         };
+         new GuiBitmapCtrl(RPGDialogPortrait) {
+            profile = "GuiDefaultProfile";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            position = "8 8";
+            extent = "80 94";
+            minExtent = "8 2";
+            visible = "1";
+            helpTag = "0";
+            wrap = "0";
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

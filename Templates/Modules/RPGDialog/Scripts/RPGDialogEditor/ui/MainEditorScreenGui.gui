@@ -1,0 +1,265 @@
+//--- OBJECT WRITE BEGIN ---
+new GuiChunkedBitmapCtrl(MainEditorScreenGui) {
+   profile = "GuiContentProfile";
+   horizSizing = "width";
+   vertSizing = "height";
+   position = "0 0";
+   extent = "640 480";
+   minExtent = "8 8";
+   visible = "1";
+   helpTag = "0";
+   bitmap = "./background";
+   useVariable = "0";
+   tile = "0";
+
+   new GuiTextCtrl(TextScript) {
+      profile = "GuiTextProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "162 21";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Current Q. Script:";
+      maxLength = "255";
+   };
+   
+   new GuiTextCtrl(TextScript2) {
+      profile = "GuiTextProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "162 33";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Current A. Script:";
+      maxLength = "255";
+   };
+   
+   new GuiTextCtrl(TextQuestionNumber) {
+      profile = "GuiTextProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "162 208";
+      extent = "46 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Question: 0/0";
+      maxLength = "255";
+   };
+   new GuiButtonCtrl(NewScriptButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "85 52";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "New Script";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "initNewScript();";
+   };
+   new GuiButtonCtrl(LoadScriptButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "85 71";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Load Script...";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "getLoadFilename(\"*.dlq\", LoadScript);";
+   };
+   new GuiButtonCtrl(NextQuestionButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "610 212";
+      extent = "29 16";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Next";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "NextQuestion();";
+   };
+   new GuiButtonCtrl(PreviousQuestionButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "579 212";
+      extent = "29 16";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Prev.";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "PreviousQuestion();";
+   };
+
+   new GuiScrollCtrl(QuestionScroll) {
+      profile = "GuiScrollProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "160 50";
+      extent = "480 160";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      willFirstRespond = "1";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      constantThumbHeight = "0";
+      childMargin = "4 2";
+      
+      new GuiMLTextCtrl(QuestionText) {
+         profile = "GuiMLTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "4 2";
+         extent = "478 116";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         lineSpacing = "2";
+         allowColorChars = "1";
+         maxChars = "-1";
+      };
+   };
+   new GuiScrollCtrl(OptionsScroll) {
+      profile = "GuiScrollProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "10 250";
+      extent = "780 300";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      willFirstRespond = "1";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "alwaysOn";
+      constantThumbHeight = "0";
+      childMargin = "2 2";
+      
+      new GuiControl(OptionsControl) {
+         profile = "GuiDefaultProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "4 2";
+         extent = "770 290";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+      };
+   };
+   new GuiButtonCtrl(editQuestionButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "642 123";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Edit Question";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "EditQuestion();";
+   };
+   new GuiButtonCtrl(newQuestionButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "642 51";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "New Question";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "newQuestion();";
+   };
+   new GuiButtonCtrl(newAnswerButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "715 230";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "New Answer";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "newAnswer();";
+   };
+   new GuiButtonCtrl(DeleteQuestionButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "642 76";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Del. Question";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "if($RPGDialog::Questions>0) MessageBoxYesNo( \"Delete Question\", \"Do you really want to delete this question?\", \"deleteQuestion();\", \"\");";
+   };
+   new GuiButtonCtrl(QuitButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "85 192";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Quit";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "MessageBoxYesNo( \"Quit Editor\", \"Do you really want to quit the editor?\", \"if($GuiBeforeRPGDialogEditor==0)quit();else closeRPGDialogEditor();\", \"\");";
+   };
+   new GuiButtonCtrl(SaveScriptButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "85 103";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Save Script";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "SaveScript();";
+   };
+   new GuiButtonCtrl(SaveScriptAsButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "85 122";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Save As...";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "InitSaveAsPhase1();";
+   };
+
+};
+//--- OBJECT WRITE END ---

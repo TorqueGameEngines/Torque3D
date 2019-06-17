@@ -1703,7 +1703,7 @@ void PostEffect::setShaderConst(const String &name, const F32 &val)
 
 void PostEffect::setShaderConst(const String& name, const int& val)
 {
-   PROFILE_SCOPE(PostEffect_SetShaderConst_Float);
+   PROFILE_SCOPE(PostEffect_SetShaderConst_Int);
 
    EffectConstTable::Iterator iter = mEffectConsts.find(name);
    if (iter == mEffectConsts.end())

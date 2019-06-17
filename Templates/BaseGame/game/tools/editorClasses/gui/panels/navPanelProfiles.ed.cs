@@ -28,7 +28,6 @@ singleton GuiControlProfile (NavPanelProfile)
    category = "Editor";
 };
 
-
 singleton GuiControlProfile (NavPanel : NavPanelProfile) 
 {
    bitmap = "./navPanel";
@@ -62,55 +61,5 @@ singleton GuiControlProfile (NavPanelWhite : NavPanelProfile)
 singleton GuiControlProfile (NavPanelYellow : NavPanelProfile) 
 {
    bitmap = "./navPanel_yellow";
-   category = "Editor";
-};
-singleton GuiControlProfile (menubarProfile : NavPanelProfile) 
-{
-   bitmap = "./menubar";
-   category = "Editor";
-   
-   fillColor = "48 48 48";
-   fontColor = "215 215 215";
-   fontColorHL = "150 150 150";
-   borderColor = "34 34 34";
-};
-singleton GuiControlProfile (editorMenubarProfile : NavPanelProfile) 
-{
-   bitmap = "./editor-menubar";
-   category = "Editor";
-};
-singleton GuiControlProfile (editorMenu_wBorderProfile : NavPanelProfile) 
-{
-   bitmap = "./menu-fullborder";
-   category = "Editor";
-};
-singleton GuiControlProfile (inspectorStyleRolloutProfile : NavPanelProfile) 
-{
-   bitmap = "./inspector-style-rollout";
-   category = "Editor";
-};
-singleton GuiControlProfile (inspectorStyleRolloutListProfile : NavPanelProfile) 
-{
-   bitmap = "./inspector-style-rollout-list";
-   category = "Editor";
-};
-singleton GuiControlProfile (inspectorStyleRolloutDarkProfile : NavPanelProfile) 
-{
-   bitmap = "./inspector-style-rollout-dark";
-   category = "Editor";
-};
-singleton GuiControlProfile (inspectorStyleRolloutInnerProfile : NavPanelProfile) 
-{
-   bitmap = "./inspector-style-rollout_inner";
-   category = "Editor";
-};
-singleton GuiControlProfile (inspectorStyleRolloutNoHeaderProfile : NavPanelProfile)
-{
-   bitmap = "./inspector-style-rollout-noheader";
-   category = "Editor";
-};
-singleton GuiControlProfile (IconDropdownProfile : NavPanelProfile) 
-{
-   bitmap = "./icon-dropdownbar";
    category = "Editor";
 };

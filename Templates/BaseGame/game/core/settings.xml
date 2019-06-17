@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<ProjectSettings>
+    <Group name="AssetManagement">
+        <Group name="Modules">
+            <Setting name="coreModulePath">core/</Setting>
+        </Group>
+    </Group>
+    <Group name="Gameplay">
+        <Group name="GameModes">
+            <Setting name="defaultModeName">a</Setting>
+        </Group>
+    </Group>
+</ProjectSettings>

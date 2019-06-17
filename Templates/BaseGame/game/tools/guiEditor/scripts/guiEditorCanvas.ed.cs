@@ -72,7 +72,7 @@ function GuiEditCanvas::onCreateMenu(%this)
       extent = "1024 20";
       minExtent = "320 20";
       horizSizing = "width";
-      profile = "GuiMenuBarProfile";
+      profile = "ToolsGuiMenuBarProfile";
       
       new PopupMenu()
       {

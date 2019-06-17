@@ -23,7 +23,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "menubarProfile";
+      Profile = "ToolsMenubarProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
       Position = "0 0";
@@ -313,7 +313,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "menubarProfile";
+      Profile = "ToolsMenubarProfile";
       HorizSizing = "width";
       VertSizing = "top";
       Position = "0 578";

@@ -99,7 +99,7 @@
       };
       new GuiScrollCtrl(MBOKCancelDetailsScroll) {
          canSaveDynamicFields = "0";
-         Profile = "GuiScrollProfile";
+         Profile = "ToolsGuiScrollProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
          position = "8 115";

@@ -79,6 +79,7 @@
             canSave = "1";
             Visible = "1";
             tooltipprofile = "ToolsGuiToolTipProfile";
+            profile = "ToolsGuiScrollProfile";
             hovertime = "1000";
             Docking = "Client";
             Margin = "0 0 0 0";

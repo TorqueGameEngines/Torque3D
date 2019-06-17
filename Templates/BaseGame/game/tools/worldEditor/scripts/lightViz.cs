@@ -51,13 +51,11 @@ function toggleColorBufferViz( %enable )
    }
    else if ( %enable )
    {
-      AL_DeferredShading.disable();
       AL_ColorBufferVisualize.enable();
    }
    else if ( !%enable )
    {
       AL_ColorBufferVisualize.disable();    
-      AL_DeferredShading.enable();
    }
 }
 
@@ -360,12 +358,7 @@ function toggleBackbufferViz( %enable )
    if ( %enable $= "" )
    {
       $AL_BackbufferVisualizeVar = AL_DeferredShading.isEnabled() ? true : false;
-      AL_DeferredShading.toggle();
    }
-   else if ( %enable )
-      AL_DeferredShading.disable();
-   else if ( !%enable )
-      AL_DeferredShading.enable();    
 }
 
 function toggleColorBlindnessViz( %enable )

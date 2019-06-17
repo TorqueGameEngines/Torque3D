@@ -39,6 +39,7 @@ class GuiSliderCtrl : public GuiControl
 
       Point2F mRange;
       U32  mTicks;
+      bool mRenderTicks;
       bool mSnap;
       F32  mValue;
       RectI   mThumb;
@@ -51,6 +52,8 @@ class GuiSliderCtrl : public GuiControl
       bool mMouseOver;
       bool mMouseDragged;
       bool mHasTexture;
+      bool mUseFillBar;
+      ColorI mFillBarColor;
 
       enum
       {

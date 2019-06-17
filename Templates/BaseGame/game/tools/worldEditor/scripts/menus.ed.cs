@@ -116,7 +116,7 @@ function EditorGui::buildMenus(%this)
       extent = Canvas.extent.x SPC "20";
       minExtent = "320 20";
       horizSizing = "width";
-      profile = "GuiMenuBarProfile";
+      profile = "ToolsGuiMenuBarProfile";
    };
    
    // File Menu
@@ -185,11 +185,12 @@ function EditorGui::buildMenus(%this)
       Item[9] = "Select..." TAB "" TAB "EditorGui.toggleObjectSelectionsWindow();";
       item[10] = "-";
       item[11] = "Audio Parameters..." TAB "" TAB "EditorGui.toggleSFXParametersWindow();";
-      item[12] = "Editor Settings..." TAB "" TAB "ESettingsWindow.ToggleVisibility();";
-      item[13] = "Snap Options..." TAB "" TAB "ESnapOptions.ToggleVisibility();";
-      item[14] = "-";
-      item[15] = "Game Options..." TAB "" TAB "Canvas.pushDialog(optionsDlg);";
-      item[16] = "PostEffect Manager" TAB "" TAB "Canvas.pushDialog(PostFXManager);";
+      item[12] = "Editor Settings..." TAB "" TAB "ESettingsWindow.toggleEditorSettings();";
+      item[13] = "Game Settings..." TAB "" TAB "ESettingsWindow.toggleProjectSettings();";
+      item[14] = "Snap Options..." TAB "" TAB "ESnapOptions.ToggleVisibility();";
+      item[15] = "-";
+      item[16] = "Game Options..." TAB "" TAB "Canvas.pushDialog(optionsDlg);";
+      item[17] = "PostEffect Manager" TAB "" TAB "Canvas.pushDialog(PostFXManager);";
    };
    %this.menuBar.insert(%editMenu);
       

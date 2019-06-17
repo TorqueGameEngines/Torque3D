@@ -427,3 +427,10 @@ new GuiControlProfile(GuiMenuScrollProfile)
    hasBitmapArray = true;
    category = "Core";
 };
+
+singleton GuiControlProfile(SliderBitmapGUIProfile)
+{
+   bitmap = "data/ui/art/optionsMenuSliderBitmapArray.png";
+   hasBitmapArray = true;
+   opaque = false;
+};

@@ -85,7 +85,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "height";
-         profile = "GuiScrollProfile";
+         profile = "ToolsGuiScrollProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -243,7 +243,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "height";
-         profile = "GuiScrollProfile";
+         profile = "ToolsGuiScrollProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -574,7 +574,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "height";
-         profile = "GuiScrollProfile";
+         profile = "ToolsGuiScrollProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";

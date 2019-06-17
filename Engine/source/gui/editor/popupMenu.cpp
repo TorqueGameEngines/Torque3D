@@ -286,7 +286,7 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
    Sim::findObject("PopUpMenuControl", backgroundCtrl);
 
    GuiControlProfile* profile;
-   Sim::findObject("GuiMenubarProfile", profile);
+   Sim::findObject("ToolsGuiMenuBarProfile", profile);
 
    if (!profile)
       return;

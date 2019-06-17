@@ -230,6 +230,14 @@ protected:
          set(val);
       }
 
+      EffectConst(const String& name, const int& val)
+         : mName(name),
+         mHandle(NULL),
+         mDirty(true)
+      {
+         set(val);
+      }
+
       EffectConst(const String &name, const Point4F &val)
          : mName(name),
          mHandle(NULL),
@@ -264,6 +272,7 @@ protected:
 
       void set( const String &newVal );
       void set(const F32 &newVal);
+      void set(const int& newVal);
       void set(const Point4F &newVal);
       void set(const MatrixF &newVal);
       void set(const Vector<Point4F> &newVal);
@@ -277,6 +286,7 @@ protected:
 
       String mStringVal;
 
+      S32     mIntVal;
       F32     mFloatVal;
       Point4F mPointVal;
       MatrixF mMatrixVal;
@@ -287,6 +297,7 @@ protected:
       enum
       {
          StringType,
+         IntType,
          FloatType,
          PointType,
          MatrixType,
@@ -427,6 +438,7 @@ public:
    ///
    void setShaderConst( const String &name, const String &val );   
    void setShaderConst(const String &name, const F32 &val);
+   void setShaderConst(const String& name, const int& val);
    void setShaderConst(const String &name, const Point4F &val);
    void setShaderConst(const String &name, const MatrixF &val);
    void setShaderConst(const String &name, const Vector<Point4F> &val);

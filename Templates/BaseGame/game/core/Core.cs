@@ -27,6 +27,9 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_GameObjects" );
    ModuleDatabase.LoadExplicit( "Core_ClientServer" );
    
+   new Settings(ProjectSettings) { file = "core/settings.xml"; };
+   ProjectSettings.read();
+   
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
       exec( %prefPath @ "/clientPrefs.cs" );

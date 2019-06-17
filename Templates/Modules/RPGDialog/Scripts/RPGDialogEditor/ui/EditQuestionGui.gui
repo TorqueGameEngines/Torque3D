@@ -1,0 +1,161 @@
+new GuiChunkedBitmapCtrl(EditQuestionGui) {
+   profile = "GuiContentProfile";
+   horizSizing = "width";
+   vertSizing = "height";
+   position = "0 0";
+   extent = "640 480";
+   minExtent = "8 8";
+   visible = "1";
+   helpTag = "0";
+   bitmap = "./background";
+   useVariable = "0";
+   tile = "0";
+
+   new GuiScrollCtrl(QuestionEditScroll) {
+      profile = "GuiScrollProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "40 50";
+      extent = "480 500";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      willFirstRespond = "1";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      constantThumbHeight = "0";
+      childMargin = "2 2";
+
+      new GuiMLTextEditCtrl(QuestionEdit) {
+         profile = "GuiMLTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "0 2";
+         extent = "450 500";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         lineSpacing = "2";
+         allowColorChars = "1";
+         maxChars = "-1";
+      };
+   };
+   new GuiButtonCtrl(QuestionEditConfirmButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "523 530";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "OK";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "confirmQuestionEdit();";
+   };
+   new GuiButtonCtrl(QuestionEditCancelButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "598 530";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Cancel";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "cancelQuestionEdit();";
+   };
+   new GuiButtonCtrl(QuestionEditClearButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "673 530";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Clear";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "QuestionEdit.settext(\"\");QuestionEditSound.setValue(\"\");";
+   };
+   new GuiScrollCtrl(QuestionOptionsScroll) {
+      profile = "GuiScrollProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "521 83";
+      extent = "230 443";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      willFirstRespond = "1";
+      hScrollBar = "dynamic";
+      vScrollBar = "dynamic";
+      constantThumbHeight = "0";
+      childMargin = "2 2";
+
+      new GuiTextListCtrl(QuestionOptionsList) {
+         profile = "GuiTextListProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "0 0";
+         extent = "196 401";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         enumerate = "0";
+         resizeCell = "1";
+         columns = "0";
+         fitParentWidth = "0";
+         clipColumnText = "0";
+      };
+   };
+   new GuiTextCtrl() {
+      profile = "GuiTextProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "524 46";
+      extent = "50 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Sound Profile:";
+      maxLength = "255";
+   };
+   new GuiPopUpMenuCtrl(QuestionEditSound) {
+      profile = "GuiPopUpMenuProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "521 62";
+      extent = "135 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      maxLength = "255";
+      historySize = "0";
+      password = "0";
+      tabComplete = "0";
+      sinkAllKeyEvents = "0";
+      maxPopupHeight = "500";
+   };
+
+   new GuiButtonCtrl(QuestionEditRemoveSound) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "660 62";
+      extent = "90 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Remove Sound";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "QuestionEditSound.setValue(\"\");";
+   };
+
+
+};

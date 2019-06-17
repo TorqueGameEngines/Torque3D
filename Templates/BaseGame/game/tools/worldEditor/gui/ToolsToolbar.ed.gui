@@ -4,7 +4,7 @@
    Enabled = "0";
    internalName = "ToolsToolbar";
    isContainer = "1";
-   Profile = "editorMenubarProfile";
+   Profile = "ToolsMenubarProfile";
    HorizSizing = "right";
    VertSizing = "bottom";
    Position = "0 31";
@@ -20,7 +20,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "ToolsGuiDefaultProfile";
+      Profile = "ToolsMenubarProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
       position = "4 3";

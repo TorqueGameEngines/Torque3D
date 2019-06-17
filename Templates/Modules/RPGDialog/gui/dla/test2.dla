@@ -1,0 +1,1 @@
+<1>ChangeScript("test",1)<END><2>ChangeScriptAndOpen("test",3)<END><3>CloseDialog()<END>

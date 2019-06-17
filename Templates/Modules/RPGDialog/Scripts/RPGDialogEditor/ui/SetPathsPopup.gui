@@ -1,0 +1,169 @@
+//--- OBJECT WRITE BEGIN ---
+new GuiControl(SetPathsPopup) {
+   profile = "GuiDefaultProfile";
+   horizSizing = "center";
+   vertSizing = "center";
+   position = "0 0";
+   extent = "640 480";
+   minExtent = "8 2";
+   visible = "1";
+   helpTag = "0";
+
+   new GuiWindowCtrl() {
+      profile = "GuiWindowProfile";
+      horizSizing = "center";
+      vertSizing = "center";
+      position = "220 146";
+      extent = "200 228";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Paths";
+      maxLength = "255";
+      resizeWidth = "1";
+      resizeHeight = "1";
+      canMove = "0";
+      canClose = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "50 50";
+
+      new GuiTextCtrl() {
+         profile = "GuiTextProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 24";
+         extent = "67 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         text = "Main Mod Folder:";
+         maxLength = "255";
+      };
+      new GuiTextEditCtrl(MainMod) {
+         profile = "GuiTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 40";
+         extent = "160 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         maxLength = "255";
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+      };
+      new GuiTextCtrl() {
+         profile = "GuiTextProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 64";
+         extent = "101 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         text = "Question Script Path:";
+         maxLength = "255";
+      };
+      new GuiTextEditCtrl(QuestionScriptPath) {
+         profile = "GuiTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 80";
+         extent = "160 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         maxLength = "255";
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+      };
+      new GuiTextCtrl() {
+         profile = "GuiDefaultProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 104";
+         extent = "89 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         text = "Action Script Path:";
+         maxLength = "255";
+      };
+      new GuiTextEditCtrl(ActionScriptPath) {
+         profile = "GuiTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 120";
+         extent = "160 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         maxLength = "255";
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+      };
+      new GuiTextCtrl() {
+         profile = "GuiTextProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 144";
+         extent = "67 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         text = "Portraits Path:";
+         maxLength = "255";
+      };
+      new GuiTextEditCtrl(PortraitsPath) {
+         profile = "GuiTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 160";
+         extent = "160 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         maxLength = "255";
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+      };
+      new GuiButtonCtrl() {
+         profile = "GuiButtonProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "56 192";
+         extent = "40 16";
+         minExtent = "8 2";
+         visible = "1";
+         command = "SetPaths();";
+         helpTag = "0";
+         text = "Set";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+      new GuiButtonCtrl() {
+         profile = "GuiButtonProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "104 192";
+         extent = "40 16";
+         minExtent = "8 2";
+         visible = "1";
+         command = "Canvas.popDialog(SetPathsPopup);";
+         helpTag = "0";
+         text = "Cancel";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

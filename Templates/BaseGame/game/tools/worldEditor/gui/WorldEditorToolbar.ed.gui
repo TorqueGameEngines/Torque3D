@@ -4,7 +4,7 @@
    internalName = "WorldEditorToolbar";
    Enabled = "1";
    isContainer = "1";
-   Profile = "ToolsGuiDefaultProfile";
+   Profile = "ToolsMenubarProfile";
    HorizSizing = "right";
    VertSizing = "bottom";
    Position = "306 0";
@@ -21,7 +21,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "ToolsGuiDefaultProfile";
+      Profile = "ToolsMenubarProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
       Position = "0 3";
@@ -83,7 +83,7 @@
       
       new GuiControl(SnapToBar){
          isContainer = "1";
-         profile = "ToolsGuiDefaultProfile";
+         profile = "ToolsMenubarProfile";
          Position = "116 3";
          Extent = "123 27";
          Padding = "4";
@@ -296,7 +296,7 @@
       
       new GuiControl(ToggleButtonBar){
          isContainer = "1";
-         profile = "ToolsGuiDefaultProfile";
+         profile = "ToolsMenubarProfile";
          Position = "313 3";
          Extent = "65 27";
          
@@ -377,7 +377,7 @@
             
       new GuiControl(ToggleNodeBar){
          isContainer = "1";
-         profile = "ToolsGuiDefaultProfile";
+         profile = "ToolsMenubarProfile";
          Position = "386 3";
          Extent = "63 27";
          
@@ -441,7 +441,7 @@
             
       new GuiControl(PrefabBar){
          isContainer = "1";
-         profile = "ToolsGuiDefaultProfile";
+         profile = "ToolsMenubarProfile";
          Position = "386 3";
          Extent = "63 27";
          visible = true;

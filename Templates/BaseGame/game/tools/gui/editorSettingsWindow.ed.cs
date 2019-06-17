@@ -22,19 +22,31 @@
 
 function ESettingsWindow::startup( %this )
 {
+   new ArrayObject(EditorSettingsPageList);
+   new ArrayObject(GameSettingsPageList);
+   
+   %this.addEditorSettingsPage("Axis", "Axis Gizmo");
+   %this.addEditorSettingsPage("General", "General Settings");
+   %this.addEditorSettingsPage("Camera", "Camera Settings");
+   %this.addEditorSettingsPage("SceneEditor", "Scene Editor");
+   %this.addEditorSettingsPage("ShapeEditor", "Shape Editor");
+   %this.addEditorSettingsPage("NavEditor", "Navigation Editor");
+   %this.addEditorSettingsPage("Theme", "Theme");
+   
+   %this.addGameSettingsPage("GameGeneral", "General");
+   %this.addGameSettingsPage("Gameplay", "Gameplay");
+   %this.addGameSettingsPage("Paths", "Paths");
+   %this.addGameSettingsPage("UI", "UI");
+   %this.addGameSettingsPage("LevelDefaults", "Level Defaults");
+   %this.addGameSettingsPage("GameOptions", "Game Options");
+   %this.addGameSettingsPage("AssetManagement", "Asset Management");
+   
+   %this.mode = "Editor";
 }
 
 function ESettingsWindow::onWake( %this )
 {
-   new ArrayObject(SettingsPageList);
-   %this.addSettingsPage("Axis", "Axis Gizmo");
-   %this.addSettingsPage("General", "General Settings");
-   %this.addSettingsPage("Camera", "Camera Settings");
-   %this.addSettingsPage("SceneEditor", "Scene Editor");
-   %this.addSettingsPage("ShapeEditor", "Shape Editor");
-   %this.addSettingsPage("NavEditor", "Navigation Editor");
    
-   ESettingsWindowList.setSelectedById( 1 );
 }
 
 function ESettingsWindow::hideDialog( %this )
@@ -47,7 +59,6 @@ function ESettingsWindow::ToggleVisibility()
    if ( ESettingsWindow.visible  )
    {
       ESettingsWindow.setVisible(false);
-      EditorSettings.write();
    }
    else
    {
@@ -59,19 +70,50 @@ function ESettingsWindow::ToggleVisibility()
    ESettingsWindowList.setSelectedById( 1 );
 }
 
-/*function ESettingsWindow::addTabPage( %this, %page )
+function ESettingsWindow::toggleProjectSettings(%this)
 {
-   ESettingsWindowTabBook.add( %page );
-   ESettingsWindowList.addRow( ESettingsWindowTabBook.getSelectedPage(), %page.text );
-   ESettingsWindowList.sort(0);
-}*/
-
-function ESettingsWindow::addSettingsPage(%this, %settingsPageName, %settingsPageText)
-{
-   SettingsPageList.add(%settingsPageName, %settingsPageText);
+   %this.ToggleVisibility();
    
-   ESettingsWindowList.addRow( SettingsPageList.count(), %settingsPageText );
+   %count = GameSettingsPageList.count();
+   for(%i=0; %i < %count; %i++)
+   {
+      %settingsPageText = GameSettingsPageList.getValue(%i);
+      ESettingsWindowList.addRow( %i, %settingsPageText );
+   }
    ESettingsWindowList.sort(0);
+   
+   ESettingsWindowList.setSelectedById( 1 );
+   
+   %this.mode = "Project";
+   ESettingsWindow.text = "Game Project Settings";
+}
+
+function ESettingsWindow::toggleEditorSettings(%this)
+{
+   %this.ToggleVisibility();
+   
+   %count = EditorSettingsPageList.count();
+   for(%i=0; %i < %count; %i++)
+   {
+      %settingsPageText = EditorSettingsPageList.getValue(%i);
+      ESettingsWindowList.addRow( %i, %settingsPageText );
+   }
+   ESettingsWindowList.sort(0);
+   
+   ESettingsWindowList.setSelectedById( 1 );
+   
+   %this.mode = "Editor";
+   ESettingsWindow.text = "Editor Settings";
+}
+
+function ESettingsWindow::addEditorSettingsPage(%this, %settingsPageName, %settingsPageText)
+{
+   EditorSettingsPageList.add(%settingsPageName, %settingsPageText);
+}
+
+function ESettingsWindow::addGameSettingsPage(%this, %settingsPageName, %settingsPageText)
+{
+   GameSettingsPageList.add(%settingsPageName, %settingsPageText);
 }
 
 //-----------------------------------------------------------------------------
@@ -79,10 +121,49 @@ function ESettingsWindow::addSettingsPage(%this, %settingsPageName, %settingsPag
 function ESettingsWindowList::onSelect( %this, %id, %text )
 {
    SettingsInspector.clearFields();
-   %pageName = SettingsPageList.getKey(SettingsPageList.getIndexFromValue(%text));
+   
+   if(ESettingsWindow.mode $= "Editor")
+      %pageName = EditorSettingsPageList.getKey(EditorSettingsPageList.getIndexFromValue(%text));
+   else
+      %pageName = GameSettingsPageList.getKey(GameSettingsPageList.getIndexFromValue(%text));
+      
    eval("ESettingsWindow.get" @ %pageName @ "Settings();");
 }
 
+//Read/write field functions
+function SettingsInspector::addSettingsField(%this, %settingsFieldName, %labelText, %fieldType, %tooltip, %fieldData)
+{
+   %moddedSettingsFieldName = strreplace(%settingsFieldName, "/", "-");
+   
+   if(ESettingsWindow.mode $= "Editor")
+      %this.addCallbackField(%moddedSettingsFieldName, %labelText, %fieldType, "", EditorSettings.value(%settingsFieldName), %fieldData, "changeEditorSetting");
+   else
+      %this.addCallbackField(%moddedSettingsFieldName, %labelText, %fieldType, "", ProjectSettings.value(%settingsFieldName), %fieldData, "changeEditorSetting");
+}
+
+function SettingsInspector::changeEditorSetting(%this, %varName, %value)
+{
+   %varName = strreplace(%varName, "-", "/");
+   
+   echo("Set " @ %varName @ " to be " @ %value);  
+   
+   if(ESettingsWindow.mode $= "Editor")
+      EditorSettings.setValue(%varName, %value);
+   else
+      ProjectSettings.setValue(%varName, %value);
+   
+   //%id = ESettingsWindowList.getSelectedRow();
+   //ESettingsWindowList.setSelectedRow(%id);
+   
+   if(ESettingsWindow.mode $= "Editor")
+      %success = EditorSettings.write();
+   else
+      %success = ProjectSettings.write();
+}
+
+//
+// COMMON EDITOR SETTINGS
+//
 function ESettingsWindow::getAxisSettings(%this)
 {
    SettingsInspector.startGroup("Gizmo");
@@ -182,21 +263,89 @@ function ESettingsWindow::getShapeEditorSettings(%this)
    SettingsInspector.endGroup();
 }
 
-//Read/write field functions
-function SettingsInspector::addSettingsField(%this, %settingsFieldName, %labelText, %fieldType, %tooltip, %fieldData)
+function ESettingsWindow::getThemeSettings(%this)
 {
-   %moddedSettingsFieldName = strreplace(%settingsFieldName, "/", "-");
-   %this.addCallbackField(%moddedSettingsFieldName, %labelText, %fieldType, "", EditorSettings.value(%settingsFieldName), %fieldData, "changeEditorSetting");
-}
+   SettingsInspector.startGroup("Colors");
+   SettingsInspector.addSettingsField("Theme/headerColor", "Headerbar Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/windowBackgroundColor", "Window Background Color", "ColorI", "");
+   
+   SettingsInspector.addSettingsField("Theme/tabsColor", "Tabs Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/tabsHLColor", "Tabs Highlight Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/tabsSELColor", "Tabs Selected Color", "ColorI", "");
+   
+   SettingsInspector.addSettingsField("Theme/dividerDarkColor", "Divider Dark Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/dividerMidColor", "Divider Mid Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/dividerLightColor", "Divider Light Color", "ColorI", "");
+   
+   SettingsInspector.addSettingsField("Theme/headerTextColor", "Header Text Color", "ColorI", "");
+   
+   SettingsInspector.addSettingsField("Theme/fieldTextColor", "Field Text Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/fieldTextHLColor", "Field Text Highlight Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/fieldTextSELColor", "Field Text Selected Color", "ColorI", "");
+   
+   SettingsInspector.addSettingsField("Theme/fieldBGColor", "Field Background Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/fieldBGHLColor", "Field Background Highlight Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/fieldBGSELColor", "Field Background Selected Color", "ColorI", "");
+   
+   SettingsInspector.addSettingsField("Theme/tooltipBGColor", "Tooltip Background Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/tooltipTextColor", "Tooltip Text Highlight Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/tooltipDivColor", "Tooltip Divider Color", "ColorI", "");
+   SettingsInspector.endGroup();
+} 
+//
+// COMMON GAME SETTINGS
+//
+function ESettingsWindow::getGameGeneralSettings(%this)
+{
+   SettingsInspector.startGroup("General");
+   SettingsInspector.addSettingsField("General/ProjectName", "Project Name", "string", "");
+   SettingsInspector.endGroup();
+} 
 
-function SettingsInspector::changeEditorSetting(%this, %varName, %value)
+function ESettingsWindow::getPathsSettings(%this)
 {
-   %varName = strreplace(%varName, "-", "/");
+   SettingsInspector.startGroup("Paths");
+   SettingsInspector.addSettingsField("Paths/splashImagePath", "Splash Image", "filename", "");
+   SettingsInspector.addSettingsField("Paths/iconImagePath", "Icon Image", "filename", "");
+   SettingsInspector.addSettingsField("Paths/missingTexturePath", "Missing Texture Image", "filename", "");
+   SettingsInspector.addSettingsField("Paths/noMaterialPath", "No Material Image", "filename", "");
+   SettingsInspector.addSettingsField("Paths/errorMaterialMath", "Error Material Image", "filename", "");
+   SettingsInspector.endGroup();
+} 
+
+function ESettingsWindow::getUISettings(%this)
+{
+   SettingsInspector.startGroup("UI");
+   SettingsInspector.addSettingsField("UI/playGUIName", "Play GUI Name", "string", "");
+   SettingsInspector.addSettingsField("UI/mainMenuName", "Main Menu GUI Name", "string", "");
+   SettingsInspector.endGroup();
+} 
+
+function ESettingsWindow::getAssetManagementSettings(%this)
+{
+   SettingsInspector.startGroup("Modules");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/coreModulePath", "Core Module Path", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/gameDataModulePath", "Game Data Module Path", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/moduleExtension", "Module Extension", "string", "");
+   SettingsInspector.endGroup();
    
-   echo("Set " @ %varName @ " to be " @ %value);  
-   
-   EditorSettings.setValue(%varName, %value);
-   
-   %id = ESettingsWindowList.getSelectedRow();
-   ESettingsWindowList.setSelectedRow(%id);
-}
+   SettingsInspector.startGroup("Assets");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/assetExtension", "Asset Extension", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/datablockCaching", "Cache Datablocks", "bool", "");
+   //SettingsInspector.addSettingsField("AssetManagement/Assets/moduleExtension", "Module Extension", "string", "");
+   SettingsInspector.endGroup();
+} 
+
+function ESettingsWindow::getGameplaySettings(%this)
+{
+   SettingsInspector.startGroup("Game Modes");
+   SettingsInspector.addSettingsField("Gameplay/GameModes/defaultModeName", "Default Gamemode Name", "string", "");
+   SettingsInspector.endGroup();
+} 
+
+function ESettingsWindow::getGameOptionsSettings(%this)
+{
+   SettingsInspector.startGroup("Game Modes");
+   SettingsInspector.addSettingsField("Gameplay/GameModes/defaultModeName", "Default Gamemode Name", "string", "");
+   SettingsInspector.endGroup();
+} 

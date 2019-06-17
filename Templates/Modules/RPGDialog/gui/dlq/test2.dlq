@@ -1,0 +1,1 @@
+Hello <<PlayerName>>, I'm <<Name>>, and this is the test2 script. What do you want to do?<AnswerStart><a:RPGDialog ></a><BR><a:RPGDialog 1>Go back to the other script, please.</a><BR><a:RPGDialog 2>Change your script and open it on the 3rd question.</a><BR><a:RPGDialog 3>Nothing, see you later.</a><BR>

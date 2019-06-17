@@ -22,6 +22,7 @@
 if( !isObject( ToolsGuiDefaultNonModalProfile ) )
 new GuiControlProfile (ToolsGuiDefaultNonModalProfile : ToolsGuiDefaultProfile)
 {
+   opaque = false;
    modal = false;
 };
 

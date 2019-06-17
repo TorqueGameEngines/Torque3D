@@ -183,6 +183,16 @@ void PostEffect::EffectConst::set(const F32 &newVal)
    mValueType = FloatType;
 }
 
+void PostEffect::EffectConst::set(const int& newVal)
+{
+   if (mIntVal == newVal)
+      return;
+
+   mIntVal = newVal;
+   mDirty = true;
+   mValueType = IntType;
+}
+
 void PostEffect::EffectConst::set(const Point4F &newVal)
 {
    if (mPointVal == newVal)
@@ -319,6 +329,21 @@ void PostEffect::EffectConst::setToBuffer( GFXShaderConstBufferRef buff )
       if (type == GFXSCT_Float)
       {
          buff->set(mHandle, mFloatVal);
+      }
+      else
+      {
+#if TORQUE_DEBUG
+         const char* err = avar("PostEffect::EffectConst::setToBuffer $s type is not implemented", mName.c_str());
+         Con::errorf(err);
+         GFXAssertFatal(0, err);
+#endif
+      }
+   }
+   else if (mValueType == IntType)
+   {
+      if (type == GFXSCT_Int)
+      {
+         buff->set(mHandle, mIntVal);
       }
       else
       {
@@ -1670,6 +1695,20 @@ void PostEffect::setShaderConst(const String &name, const F32 &val)
    if (iter == mEffectConsts.end())
    {
       EffectConst *newConst = new EffectConst(name, val);
+      iter = mEffectConsts.insertUnique(name, newConst);
+   }
+
+   iter->value->set(val);
+}
+
+void PostEffect::setShaderConst(const String& name, const int& val)
+{
+   PROFILE_SCOPE(PostEffect_SetShaderConst_Int);
+
+   EffectConstTable::Iterator iter = mEffectConsts.find(name);
+   if (iter == mEffectConsts.end())
+   {
+      EffectConst* newConst = new EffectConst(name, val);
       iter = mEffectConsts.insertUnique(name, newConst);
    }
 

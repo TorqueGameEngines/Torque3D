@@ -1,0 +1,9 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_ForestGreen"
+    scriptFile="data/TestGrids/materials/Grid_512_forestgreen.cs"
+    materialDefinitionName="Grid_512_ForestGreen"
+    imageMap0="@Asset=TestGrids:Grid_512_forestgreen_ALBEDO"
+    shaderGraph="data/TestGrids/materials/Grid_512_forestgreen.sgf"
+    VersionId="1" />

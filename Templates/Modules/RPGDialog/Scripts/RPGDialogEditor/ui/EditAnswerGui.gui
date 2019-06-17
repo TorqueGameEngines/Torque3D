@@ -1,0 +1,131 @@
+new GuiChunkedBitmapCtrl(EditAnswerGui) {
+   profile = "GuiContentProfile";
+   horizSizing = "width";
+   vertSizing = "height";
+   position = "0 0";
+   extent = "640 480";
+   minExtent = "8 8";
+   visible = "1";
+   helpTag = "0";
+   bitmap = "./background";
+   useVariable = "0";
+   tile = "0";
+
+   new GuiScrollCtrl(AnswerEditScroll) {
+      profile = "GuiScrollProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "40 50";
+      extent = "480 500";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      willFirstRespond = "1";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      constantThumbHeight = "0";
+      childMargin = "2 2";
+
+      new GuiMLTextEditCtrl(AnswerEdit) {
+         profile = "GuiMLTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "0 2";
+         extent = "450 500";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         lineSpacing = "2";
+         allowColorChars = "1";
+         maxChars = "-1";
+      };
+   };
+   
+   new GuiTextEditCtrl(ActionEdit) {
+      profile = "GuiTextEditProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "40 20";
+      extent = "711 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      lineSpacing = "2";
+      allowColorChars = "0";
+      maxChars = "-1";
+   };
+   
+   new GuiButtonCtrl(AnswerEditConfirmButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "523 530";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "OK";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "confirmAnswerEdit();";
+   };
+   new GuiButtonCtrl(AnswerEditCancelButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "598 530";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Cancel";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "Canvas.setContent(MainEditorScreenGui);";
+   };
+   new GuiButtonCtrl(AnswerEditDeleteButton) {
+      profile = "GuiButtonProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "673 530";
+      extent = "73 18";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "Delete";
+      groupNum = "-1";
+      buttonType = "PushButton";
+      command = "MessageBoxYesNo( \"Delete Answer\", \"Do you really want to delete this answer?\", \"deleteAnswer(\"@$RPGDialog::EditAnswerNumber@\");\", \"\");";
+   };
+   new GuiScrollCtrl(ActionListScroll) {
+      profile = "GuiScrollProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "521 50";
+      extent = "230 476";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      willFirstRespond = "1";
+      hScrollBar = "dynamic";
+      vScrollBar = "dynamic";
+      constantThumbHeight = "0";
+      childMargin = "2 2";
+
+      new GuiTextListCtrl(ActionList) {
+         profile = "GuiTextListProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "0 0";
+         extent = "196 401";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         enumerate = "0";
+         resizeCell = "1";
+         columns = "0";
+         fitParentWidth = "0";
+         clipColumnText = "0";
+      };
+   };
+};

@@ -1,0 +1,9 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="512_forestgreen_lines"
+    scriptFile="data/TestGrids/materials/512_forestgreen_lines.cs"
+    materialDefinitionName="512_forestgreen_lines"
+    imageMap0="@Asset=TestGrids:512_forestgreen_lines_ALBEDO"
+    shaderGraph="data/TestGrids/materials/512_forestgreen_lines.sgf"
+    VersionId="1" />

@@ -1,0 +1,115 @@
+//--- OBJECT WRITE BEGIN ---
+new GuiControl(NewScriptPopup) {
+   profile = "GuiDefaultProfile";
+   horizSizing = "center";
+   vertSizing = "center";
+   position = "0 0";
+   extent = "640 480";
+   minExtent = "8 2";
+   visible = "1";
+   helpTag = "0";
+
+   new GuiWindowCtrl() {
+      profile = "GuiWindowProfile";
+      horizSizing = "center";
+      vertSizing = "center";
+      position = "220 146";
+      extent = "200 188";
+      minExtent = "8 2";
+      visible = "1";
+      helpTag = "0";
+      text = "New Dialog Script";
+      maxLength = "255";
+      resizeWidth = "1";
+      resizeHeight = "1";
+      canMove = "0";
+      canClose = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "50 50";
+
+      new GuiTextCtrl() {
+         profile = "GuiTextProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 28";
+         extent = "50 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         text = "Question Script:";
+         maxLength = "255";
+      };
+      new GuiTextEditCtrl(NewScriptQuestion) {
+         profile = "GuiTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 44";
+         extent = "160 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         maxLength = "255";
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+      };
+      new GuiTextCtrl() {
+         profile = "GuiTextProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 68";
+         extent = "30 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         text = "Action Script:";
+         maxLength = "255";
+      };
+      new GuiTextEditCtrl(NewScriptAction) {
+         profile = "GuiTextEditProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "20 84";
+         extent = "160 18";
+         minExtent = "8 2";
+         visible = "1";
+         helpTag = "0";
+         maxLength = "255";
+         historySize = "0";
+         password = "0";
+         tabComplete = "0";
+         sinkAllKeyEvents = "0";
+      };
+      new GuiButtonCtrl() {
+         profile = "GuiButtonProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "56 156";
+         extent = "40 16";
+         minExtent = "8 2";
+         visible = "1";
+         command = "NewScript();";
+         helpTag = "0";
+         text = "Create";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+      new GuiButtonCtrl() {
+         profile = "GuiButtonProfile";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         position = "104 156";
+         extent = "40 16";
+         minExtent = "8 2";
+         visible = "1";
+         command = "Canvas.popDialog(NewScriptPopup);";
+         helpTag = "0";
+         text = "Cancel";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

@@ -26,7 +26,7 @@
 #include "gfx/D3D11/gfxD3D11EnumTranslate.h"
 #include "gfx/bitmap/imageUtils.h"
 
-GFXD3D11Cubemap::GFXD3D11Cubemap() : mTexture(NULL), mSRView(NULL), mDSView(NULL)
+GFXD3D11Cubemap::GFXD3D11Cubemap() : mTexture(NULL), mSRView(NULL), mDSView(NULL), mTexSize(0)
 {
 	mDynamic = false;
    mAutoGenMips = false;

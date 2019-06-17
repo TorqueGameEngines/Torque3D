@@ -16,7 +16,8 @@ uniform float3 eyePosWorld;
 //cubemap arrays require all the same size. so shared mips# value
 uniform float cubeMips;
 
-uniform float numProbes;
+uniform int numProbes;
+
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(specularCubemapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 
@@ -31,9 +32,7 @@ uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 uniform float4    probeContribColors[MAX_PROBES];
 #endif
 
-TORQUE_UNIFORM_SAMPLERCUBE(skylightSpecularMap, 6);
-TORQUE_UNIFORM_SAMPLERCUBE(skylightIrradMap, 7);
-uniform float hasSkylight;
+uniform float skylightCubemapIdx;
 
 float4 main(PFXVertToPix IN) : SV_TARGET
 {
@@ -47,11 +46,12 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {
-      discard;
+      return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
    }
 
    float alpha = 1;
 
+#if SKYLIGHT_ONLY == 0
    int i = 0;
    float blendFactor[MAX_PROBES];
    float blendSum = 0;
@@ -60,8 +60,9 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float probehits = 0;
    //Set up our struct data
    float contribution[MAX_PROBES];
-   if (alpha > 0)
-   {
+
+   //if (alpha > 0)
+   //{
       //Process prooooobes
       for (i = 0; i < numProbes; ++i)
       {
@@ -79,6 +80,8 @@ float4 main(PFXVertToPix IN) : SV_TARGET
             if (contribution[i]>0.0)
                probehits++;
          }
+         else
+            continue;
 
          contribution[i] = max(contribution[i],0);
 
@@ -91,34 +94,32 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 	   // Weight1 = normalized inverted NDF, so we have 1 at center, 0 at boundary
 	   // and respect constraint A.
       
-      if (probehits>1.0)
-	{
-            for (i = 0; i < numProbes; i++)
-            {
-                  blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
-                  blendFactor[i] *= ((contribution[i]) / invBlendSum);
-                  blendFactor[i] = saturate(blendFactor[i]);
-                  blendFacSum += blendFactor[i];
-            }
+      if (probehits > 1.0)
+	  {
+         for (i = 0; i < numProbes; i++)
+         {
+               blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
+               blendFactor[i] *= ((contribution[i]) / invBlendSum);
+               blendFactor[i] = saturate(blendFactor[i]);
+               blendFacSum += blendFactor[i];
+         }
 
-      // Normalize blendVal
-#if DEBUGVIZ_ATTENUATION == 0 //this can likely be removed when we fix the above normalization behavior
-            if (blendFacSum == 0.0f) // Possible with custom weight
-            {
-                  blendFacSum = 1.0f;
-            }
-#endif
+         // Normalize blendVal
+         if (blendFacSum == 0.0f) // Possible with custom weight
+         {
+               blendFacSum = 1.0f;
+         }
 
-            float invBlendSumWeighted = 1.0f / blendFacSum;
-            for (i = 0; i < numProbes; ++i)
-            {
-                  blendFactor[i] *= invBlendSumWeighted;
-                  contribution[i] *= blendFactor[i];
-                  alpha -= contribution[i];
-            }
+         float invBlendSumWeighted = 1.0f / blendFacSum;
+         for (i = 0; i < numProbes; ++i)
+         {
+               blendFactor[i] *= invBlendSumWeighted;
+               contribution[i] *= blendFactor[i];
+               alpha -= contribution[i];
+         }
       }
       else
-            alpha -= blendSum;
+         alpha -= blendSum;
       
 #if DEBUGVIZ_ATTENUATION == 1
       float contribAlpha = 1;
@@ -140,11 +141,13 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       }
 
       //Skylight coloration for anything not covered by probes above
-      finalContribColor += float3(0.3, 0.3, 0.3) * contribAlpha;
+      if(skylightCubemapIdx != -1)
+         finalContribColor += float3(0.3, 0.3, 0.3) * contribAlpha;
 
       return float4(finalContribColor, 1);
 #endif
-   }
+   //}
+#endif
 
    float3 irradiance = float3(0, 0, 0);
    float3 specular = float3(0, 0, 0);
@@ -156,6 +159,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float lod = 0;
 #endif
 
+#if SKYLIGHT_ONLY == 0
    alpha = 1;
    for (i = 0; i < numProbes; ++i)
    {
@@ -170,11 +174,12 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          alpha -= contrib;
       }
    }
+#endif
 
-   if (hasSkylight && alpha > 0.001)
+   if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance += TORQUE_TEXCUBELOD(skylightIrradMap, float4(surface.R, 0)).xyz * alpha;
-      specular += TORQUE_TEXCUBELOD(skylightSpecularMap, float4(surface.R, lod)).xyz * alpha;
+      irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz * alpha;
+      specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz * alpha;
    }
 
 #if DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0
@@ -198,6 +203,5 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
    float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
 
-//finalColor.rgb += abs(surface.N);
    return finalColor;
 }

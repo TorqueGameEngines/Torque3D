@@ -89,7 +89,11 @@ ImplementEnumType(ReflectionModeEnum,
 //-----------------------------------------------------------------------------
 // Object setup and teardown
 //-----------------------------------------------------------------------------
-ReflectionProbe::ReflectionProbe()
+ReflectionProbe::ReflectionProbe() :
+   cubeDescId(0),
+   reflectorDesc(nullptr),
+   mSphereVertCount(0),
+   mSpherePrimitiveCount(0)
 {
    // Flag this object so that it will always
    // be sent across the network to clients
@@ -247,11 +251,11 @@ bool ReflectionProbe::_setReflectionMode(void *object, const char *index, const 
 {
    ReflectionProbe* probe = reinterpret_cast<ReflectionProbe*>(object);
 
-   if (data == "Static Cubemap")
+   if (!dStrcmp(data,"Static Cubemap"))
    {
       probe->mReflectionModeType = StaticCubemap;
    }
-   else if (data == "Baked Cubemap")
+   else if (!dStrcmp(data, "Baked Cubemap"))
    {
       //Clear our cubemap if we changed it to be baked, just for cleanliness
       probe->mReflectionModeType = BakedCubemap;
@@ -589,6 +593,8 @@ void ReflectionProbe::processDynamicCubemap()
    else
       mProbeInfo->mIsEnabled = false;
 
+   mCubemapDirty = false;
+
    //Update the probe manager with our new texture!
    //if (!mProbeInfo->mIsSkylight && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
    //   PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
@@ -637,9 +643,10 @@ void ReflectionProbe::processBakedCubemap()
    {
       mProbeInfo->mIsEnabled = true;
 
+      mCubemapDirty = false;
+
       //Update the probe manager with our new texture!
-      if (!mProbeInfo->mIsSkylight)
-         PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+      PROBEMGR->updateProbeTexture(mProbeInfo);
    }
 }
 
@@ -729,9 +736,10 @@ void ReflectionProbe::processStaticCubemap()
    {
       mProbeInfo->mIsEnabled = true;
 
+      mCubemapDirty = false;
+
       //Update the probe manager with our new texture!
-      if (!mProbeInfo->mIsSkylight)
-         PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+      PROBEMGR->updateProbeTexture(mProbeInfo);
    }
 }
 
@@ -739,7 +747,7 @@ bool ReflectionProbe::createClientResources()
 {
    if (mProbeInfo == nullptr)
    {
-      mProbeInfo = PROBEMGR->registerProbe(mProbeShapeType == ProbeRenderInst::Skylight);
+      mProbeInfo = PROBEMGR->registerProbe();
       if (!mProbeInfo)
          return false;
 

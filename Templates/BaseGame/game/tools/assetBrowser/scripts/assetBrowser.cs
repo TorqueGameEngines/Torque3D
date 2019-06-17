@@ -150,7 +150,7 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    AssetBrowser.fieldTargetObject = %targetObj;
    AssetBrowser.fieldTargetName = %fieldName;
 
-   Canvas.add(AssetBrowser);
+   Canvas.pushDialog(AssetBrowser);
    AssetBrowser.setVisible(1);
    AssetBrowserWindow.setVisible(1);
    AssetBrowserWindow.selectWindow();

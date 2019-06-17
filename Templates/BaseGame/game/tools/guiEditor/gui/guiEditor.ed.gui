@@ -58,7 +58,7 @@
             anchorLeft = "1";
             anchorRight = "0";
             isContainer = "1";
-            profile = "menubarProfile";
+            profile = "ToolsMenubarProfile";
             horizSizing = "right";
             vertSizing = "bottom";
             position = "0 0";
@@ -755,7 +755,7 @@
       };
       new GuiControl(GuiEditorSidebar) {
          isContainer = "1";
-         Profile = "menubarProfile";
+         Profile = "ToolsMenubarProfile";
          HorizSizing = "width";
          VertSizing = "height";
          position = "798 0";
@@ -1503,7 +1503,7 @@
       canSave = "1";
       visible = "1";
       isContainer = "1";
-      profile = "menubarProfile";
+      profile = "ToolsMenubarProfile";
       
       new GuiTextCtrl( GuiEditorStatusBar ) {
          profile = "ToolsGuiTextProfile";

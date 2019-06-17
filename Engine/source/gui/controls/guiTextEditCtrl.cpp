@@ -1246,7 +1246,7 @@ void GuiTextEditCtrl::onLoseFirstResponder()
 
    //execute the validate command
    if( mValidateCommand.isNotEmpty() )
-      evaluate( mValidateCommand );
+      evaluate( mValidateCommand.c_str() );
 
    onValidate_callback();
 

@@ -114,7 +114,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "menubarProfile";
+      Profile = "ToolsMenubarProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
       Position = "195 0";

@@ -89,6 +89,7 @@ IMPLEMENT_CALLBACK( GuiSliderCtrl, onMouseDragged, void, (), (),
 GuiSliderCtrl::GuiSliderCtrl()
    : mRange( 0., 1.f ),
      mTicks( 10 ),
+     mRenderTicks(true),
      mSnap( false ),
      mValue( 0.5f ),
      mThumbSize( 8, 20 ),
@@ -98,7 +99,9 @@ GuiSliderCtrl::GuiSliderCtrl()
      mDisplayValue( false ),
      mMouseOver( false ),
      mDepressed( false ),
-     mMouseDragged( false )
+     mMouseDragged( false ),
+     mUseFillBar(false),
+     mFillBarColor(ColorI(255,255,255))
 {
 }
 
@@ -117,6 +120,12 @@ void GuiSliderCtrl::initPersistFields()
       addProtectedField( "value", TypeF32, Offset( mValue, GuiSliderCtrl ),
          _setValue, defaultProtectedGetFn,
          "The value corresponding to the current slider position." );
+      addField("useFillBar", TypeBool, Offset(mUseFillBar, GuiSliderCtrl),
+         "Whether to render the tick marks.");
+      addField("fillBarColor", TypeColorI, Offset(mFillBarColor, GuiSliderCtrl),
+         "Whether to render the tick marks.");
+      addField("renderTicks", TypeBool, Offset(mRenderTicks, GuiSliderCtrl),
+         "Whether to render the tick marks.");
       
    endGroup( "Slider" );
 
@@ -365,9 +374,18 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    GFXDrawUtil* drawUtil = GFX->getDrawUtil();
 
+   if (mUseFillBar)
+   {
+
+      drawUtil->drawRectFill(RectI(offset.x, offset.y, getWidth() * mValue, getHeight()), mFillBarColor);
+
+      renderChildControls(offset, updateRect);
+      return;
+   }
+
    if( mHasTexture )
    {
-      if(mTicks > 0)
+      if(mTicks > 0 && mRenderTicks)
       {
          // TODO: tick marks should be positioned based on the bitmap dimensions.
          Point2I mid(ext.x, ext.y/2);
@@ -443,11 +461,14 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
          PrimBuild::vertex2i( pos.x + mid.x, pos.y + mid.y );
 
          // tick marks
-         for( U32 t = 0; t <= ( mTicks + 1 ); t++ )
+         if (mRenderTicks)
          {
-            S32 x = (S32)( F32( mid.x - 1 ) / F32( mTicks + 1 ) * F32( t ) );
-            PrimBuild::vertex2i( pos.x + x, pos.y + mid.y - mShiftPoint );
-            PrimBuild::vertex2i( pos.x + x, pos.y + mid.y + mShiftPoint );
+            for (U32 t = 0; t <= (mTicks + 1); t++)
+            {
+               S32 x = (S32)(F32(mid.x - 1) / F32(mTicks + 1) * F32(t));
+               PrimBuild::vertex2i(pos.x + x, pos.y + mid.y - mShiftPoint);
+               PrimBuild::vertex2i(pos.x + x, pos.y + mid.y + mShiftPoint);
+            }
          }
          PrimBuild::end();
    }
@@ -462,11 +483,14 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
          PrimBuild::vertex2i( pos.x + mid.x, pos.y + mid.y );
 
          // tick marks
-         for( U32 t = 0; t <= ( mTicks + 1 ); t++ )
+         if (mRenderTicks)
          {
-            S32 y = (S32)( F32( mid.y - 1 ) / F32( mTicks + 1 ) * F32( t ) );
-            PrimBuild::vertex2i( pos.x + mid.x - mShiftPoint, pos.y + y );
-            PrimBuild::vertex2i( pos.x + mid.x + mShiftPoint, pos.y + y );
+            for (U32 t = 0; t <= (mTicks + 1); t++)
+            {
+               S32 y = (S32)(F32(mid.y - 1) / F32(mTicks + 1) * F32(t));
+               PrimBuild::vertex2i(pos.x + mid.x - mShiftPoint, pos.y + y);
+               PrimBuild::vertex2i(pos.x + mid.x + mShiftPoint, pos.y + y);
+            }
          }
          PrimBuild::end();
       mDisplayValue = false;

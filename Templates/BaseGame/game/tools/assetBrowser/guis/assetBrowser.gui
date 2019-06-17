@@ -323,7 +323,7 @@
          minExtent = "64 64";
          horizSizing = "relative";
          vertSizing = "height";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiDefaultProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -345,7 +345,7 @@
             minExtent = "16 16";
             horizSizing = "right";
             vertSizing = "bottom";
-            profile = "GuiDefaultProfile";
+            profile = "ToolsGuiDefaultProfile";
             visible = "1";
             active = "1";
             tooltipProfile = "GuiToolTipProfile";
@@ -414,7 +414,7 @@
                   minExtent = "8 2";
                   horizSizing = "right";
                   vertSizing = "bottom";
-                  profile = "GuiDefaultProfile";
+                  profile = "ToolsGuiDefaultProfile";
                   visible = "1";
                   active = "1";
                   command = "AssetBrowser.showFilterPopup();";
@@ -530,7 +530,7 @@
             minExtent = "16 16";
             horizSizing = "right";
             vertSizing = "bottom";
-            profile = "GuiDefaultProfile";
+            profile = "ToolsGuiDefaultProfile";
             visible = "1";
             active = "1";
             tooltipProfile = "GuiToolTipProfile";
@@ -657,7 +657,7 @@
                   minExtent = "8 2";
                   horizSizing = "right";
                   vertSizing = "bottom";
-                  profile = "GuiDefaultProfile";
+                  profile = "ToolsGuiDefaultProfile";
                   visible = "1";
                   active = "1";
                   command = "AssetBrowser.toggleTagFilterPopup();";
@@ -798,7 +798,7 @@
                         minExtent = "8 2";
                         horizSizing = "right";
                         vertSizing = "bottom";
-                        profile = "GuiDefaultProfile";
+                        profile = "ToolsGuiDefaultProfile";
                         visible = "1";
                         active = "1";
                         tooltipProfile = "GuiToolTipProfile";

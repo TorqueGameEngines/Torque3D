@@ -41,17 +41,22 @@ void GFXCardProfiler::loadProfileScript(const char* aScriptName)
    void  *data = NULL;
    U32   dataSize = 0;
 
+   
    Torque::FS::ReadFile( scriptName.c_str(), data, dataSize, true );
 
    if(data == NULL)
    {
+#if TORQUE_DEBUG
       Con::warnf("      - No card profile %s exists", scriptName.c_str());
+#endif
       return;
    }
 
    const char  *script = static_cast<const char *>(data);
 
+#if TORQUE_DEBUG
    Con::printf("      - Loaded card profile %s", scriptName.c_str());
+#endif
 
    Con::evaluate(script, false, NULL);
    delete[] script;

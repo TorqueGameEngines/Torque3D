@@ -322,8 +322,6 @@ singleton ShaderData( PFX_ReflectionProbeArray )
    samplerNames[3] = "$BRDFTexture";
    samplerNames[4] = "$specularCubemapAR";
    samplerNames[5] = "$irradianceCubemapAR";
-   samplerNames[6] = "$skylightSpecularMap";
-   samplerNames[7] = "$skylightIrradMap";
 
    pixVersion = 2.0;
 };  
@@ -345,7 +343,6 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    zEnable = false;
    zWriteEnable = false;
    
-   
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;
    samplerStates[1] = SamplerClampPoint;
@@ -353,6 +350,4 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    samplerStates[3] = SamplerClampPoint;
    samplerStates[4] = SamplerClampLinear;
    samplerStates[5] = SamplerClampLinear;
-   samplerStates[6] = SamplerClampLinear;
-   samplerStates[7] = SamplerClampLinear;
 };

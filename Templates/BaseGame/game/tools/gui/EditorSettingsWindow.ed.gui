@@ -64,7 +64,7 @@
          minExtent = "64 64";
          horizSizing = "width";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiDefaultProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -86,7 +86,7 @@
             minExtent = "16 16";
             horizSizing = "right";
             vertSizing = "bottom";
-            profile = "GuiDefaultProfile";
+            profile = "ToolsGuiDefaultProfile";
             visible = "1";
             active = "1";
             tooltipProfile = "GuiToolTipProfile";

@@ -132,6 +132,8 @@ class GuiInspectorField : public GuiControl
 
       void setEditControl(GuiControl* editCtrl);
 
+      void setHeightOverride(bool useOverride, U32 heightOverride);
+
       virtual void setDocs(String docs) { mFieldDocs = docs; }
 
       /// Returns pointer to this InspectorField's edit ctrl.

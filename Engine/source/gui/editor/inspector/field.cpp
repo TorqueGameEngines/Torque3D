@@ -690,6 +690,28 @@ void GuiInspectorField::_setFieldDocs( StringTableEntry docs )
    }
 }
 
+void GuiInspectorField::setHeightOverride(bool useOverride, U32 heightOverride)
+{
+   mUseHeightOverride = useOverride;
+
+   if (useOverride)
+      mHeightOverride = heightOverride;
+
+   S32 fieldHeight = 18;
+
+   if (mUseHeightOverride)
+      fieldHeight = mHeightOverride;
+
+   RectI bnds = getBounds();
+   setBounds(bnds.point.x, bnds.point.y, bnds.extent.x, fieldHeight);
+
+   // Calculate Caption and EditCtrl Rects
+   updateRects();
+
+   // Force our editField to set it's value
+   updateValue();
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -747,6 +769,11 @@ DefineEngineMethod( GuiInspectorField, reset, void, (), , "() - Reset to default
 DefineEngineMethod(GuiInspectorField, setCaption, void, (String newCaption),, "() - Reset to default value.")
 {
    object->setCaption(StringTable->insert(newCaption.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorField, setHeightOverride, void, (bool useOverride, U32 heightOverride), , "")
+{
+   object->setHeightOverride(useOverride, heightOverride);
 }
 
 DefineEngineMethod(GuiInspectorField, setEditControl, void, (GuiControl* editCtrl), (nullAsType<GuiControl*>()), "() - Reset to default value.")

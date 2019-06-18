@@ -56,7 +56,7 @@ function ESettingsWindow::hideDialog( %this )
 
 function ESettingsWindow::ToggleVisibility()
 {
-   if ( ESettingsWindow.visible  )
+   if ( ESettingsWindow.visible )
    {
       ESettingsWindow.setVisible(false);
    }
@@ -65,6 +65,8 @@ function ESettingsWindow::ToggleVisibility()
       ESettingsWindow.setVisible(true);
       ESettingsWindow.selectWindow();
       ESettingsWindow.setCollapseGroup(false);
+      
+      ESettingsWindowList.clear();
    }
    
    ESettingsWindowList.setSelectedById( 1 );
@@ -82,10 +84,10 @@ function ESettingsWindow::toggleProjectSettings(%this)
    }
    ESettingsWindowList.sort(0);
    
-   ESettingsWindowList.setSelectedById( 1 );
-   
    %this.mode = "Project";
    ESettingsWindow.text = "Game Project Settings";
+   
+   ESettingsWindowList.setSelectedById( 1 );
 }
 
 function ESettingsWindow::toggleEditorSettings(%this)
@@ -100,10 +102,10 @@ function ESettingsWindow::toggleEditorSettings(%this)
    }
    ESettingsWindowList.sort(0);
    
-   ESettingsWindowList.setSelectedById( 1 );
-   
    %this.mode = "Editor";
    ESettingsWindow.text = "Editor Settings";
+   
+   ESettingsWindowList.setSelectedById( 1 );
 }
 
 function ESettingsWindow::addEditorSettingsPage(%this, %settingsPageName, %settingsPageText)
@@ -159,6 +161,77 @@ function SettingsInspector::changeEditorSetting(%this, %varName, %value)
       %success = EditorSettings.write();
    else
       %success = ProjectSettings.write();
+}
+
+function GuiInspectorVariableGroup::buildOptionsSettingField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %ownerObj)
+{
+   %extent = 200;
+   
+   %fieldCtrl = %this.createInspectorField();
+   
+   %fieldCtrl.setHeightOverride(true, 200);
+   
+   %extent = %this.stack.getExtent();
+   
+   %width = mRound(%extent/2);
+   %height = 20;
+   %inset = 10;
+   
+   %editControl = new GuiPopUpMenuCtrl() {
+      class = "guiInspectorListField";
+      maxPopupHeight = "200";
+      sbUsesNAColor = "0";
+      reverseTextList = "0";
+      bitmapBounds = "16 16";
+      maxLength = "1024";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
+      AnchorTop = "1";
+      AnchorBottom = "0";
+      AnchorLeft = "1";
+      AnchorRight = "0";
+      isContainer = "0";
+      Profile = "ToolsGuiPopUpMenuProfile";
+      HorizSizing = "right";
+      VertSizing = "bottom";
+      Position = %fieldCtrl.edit.position;
+      Extent = %fieldCtrl.edit.extent;
+      MinExtent = "8 2";
+      canSave = "1";
+      Visible = "1";
+      tooltipprofile = "ToolsGuiToolTipProfile";
+      tooltip = %tooltip;
+      text = %fieldDefaultVal;
+      hovertime = "1000";
+      ownerObject = %ownerObj;
+      fieldName = %fieldName;
+   };
+   
+   //set the field value
+   if(getSubStr(%this.fieldName, 0, 1) $= "$")
+   {
+      if(%fieldName $= "")
+         %editControl.setText(%fieldName);
+   }
+   else
+   {
+      //regular variable
+      %setCommand = %editControl @ ".setText(" @ %ownerObj @ "." @ %fieldName @ ");";
+      eval(%setCommand);
+   }
+   
+   %listCount = getTokenCount(%fieldDataVals, ",");
+   
+   for(%i=0; %i < %listCount; %i++)
+   {
+      %entryText = getToken(%fieldDataVals, ",", %i);
+      %editControl.add(%entryText); 
+   }
+
+   %fieldCtrl.setCaption(%fieldLabel);
+   %fieldCtrl.setEditControl(%editControl);
+
+   %this.addInspectorField(%fieldCtrl);
 }
 
 //
@@ -345,7 +418,7 @@ function ESettingsWindow::getGameplaySettings(%this)
 
 function ESettingsWindow::getGameOptionsSettings(%this)
 {
-   SettingsInspector.startGroup("Game Modes");
-   SettingsInspector.addSettingsField("Gameplay/GameModes/defaultModeName", "Default Gamemode Name", "string", "");
+   SettingsInspector.startGroup("Options Settings");
+   SettingsInspector.addSettingsField("Options/optionsList", "OptionsList", "OptionsSetting", "");
    SettingsInspector.endGroup();
 } 

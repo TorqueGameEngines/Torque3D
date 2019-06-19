@@ -358,7 +358,9 @@ ProbeRenderInst* RenderProbeMgr::registerProbe()
    mCubeMapSlots[cubeIndex] = true;
    mCubeMapCount++;
 
+#ifdef TORQUE_DEBUG
    Con::warnf("RenderProbeMgr::registerProbe: Registered probe %u to cubeIndex %u", newProbe.mProbeIdx, cubeIndex);
+#endif
 
    mProbesDirty = true;
 
@@ -495,8 +497,10 @@ void RenderProbeMgr::updateProbeTexture(ProbeRenderInst* probeInfo)
    mIrradianceArray->updateTexture(probeInfo->mIrradianceCubemap, cubeIndex);
    mPrefilterArray->updateTexture(probeInfo->mPrefilterCubemap, cubeIndex);
 
+#ifdef TORQUE_DEBUG
    Con::warnf("UpdatedProbeTexture - probeIdx: %u on cubeIndex %u, Irrad validity: %d, Prefilter validity: %d", probeInfo->mProbeIdx, cubeIndex,
       probeInfo->mIrradianceCubemap->isInitialized(), probeInfo->mPrefilterCubemap->isInitialized());
+#endif
 }
 
 void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)

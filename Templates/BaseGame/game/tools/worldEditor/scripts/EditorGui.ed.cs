@@ -147,7 +147,7 @@ function EditorGui::init(%this)
       ESettingsWindow.setVisible(false);
       
       // Start the standard settings tabs pages
-      exec( "~/worldEditor/gui/GeneralSettingsTab.ed.gui" );
+      /*exec( "~/worldEditor/gui/GeneralSettingsTab.ed.gui" );
       ESettingsWindow.addTabPage( EGeneralSettingsPage );
       exec("~/worldEditor/gui/ObjectEditorSettingsTab.ed.gui");
       ESettingsWindow.addTabPage( EObjectEditorSettingsPage );
@@ -156,7 +156,7 @@ function EditorGui::init(%this)
       exec("~/worldEditor/gui/TerrainEditorSettingsTab.ed.gui");
       ESettingsWindow.addTabPage( ETerrainEditorSettingsPage );
       exec("~/worldEditor/gui/CameraSettingsTab.ed.gui");
-      ESettingsWindow.addTabPage( ECameraSettingsPage );
+      ESettingsWindow.addTabPage( ECameraSettingsPage );*/
    }
 
    // Object Snap Options Window

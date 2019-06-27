@@ -14,11 +14,8 @@ singleton Material(Grid_512_Orange)
    specularStrength0 = "25";
    specular0 = "0.8 0.8 0.8 1";
    specularPower0 = "0.25";
-   emissive[0] = "1";
+   emissive[0] = "0";
    translucent = "1";
    normalMap[0] = "data/pbr/images/FloorEbony_normal.png";
    invertSmoothness[0] = "1";
-   roughMap[0] = "data/pbr/images/FloorEbony_rough.png";
-   aoMap[0] = "data/pbr/images/FloorEbony_ao.png";
-   metalMap[0] = "data/pbr/images/FloorEbony_metal.png";
 };

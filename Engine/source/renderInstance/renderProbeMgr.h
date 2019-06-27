@@ -151,9 +151,7 @@ struct ProbeShaderConstants
 
    GFXShaderConstHandle *mBRDFTextureMap;
 
-   GFXShaderConstHandle *mSkylightSpecularMap;
-   GFXShaderConstHandle *mSkylightIrradMap;
-   GFXShaderConstHandle *mHasSkylight;
+   GFXShaderConstHandle *mSkylightCubemapIdxSC;
 
    ProbeShaderConstants();
    ~ProbeShaderConstants();

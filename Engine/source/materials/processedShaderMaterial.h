@@ -40,7 +40,6 @@ class ShaderMaterialParameterHandle;
 class ShaderFeatureConstHandles;
 class CustomMaterial;
 
-
 class ShaderConstHandles
 {
 public:

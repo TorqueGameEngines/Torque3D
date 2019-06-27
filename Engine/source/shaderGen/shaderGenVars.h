@@ -96,9 +96,7 @@ struct ShaderGenVars
    const static String BRDFTextureMap;
 
    //Skylight
-   const static String skylightPrefilterMap;
-   const static String skylightIrradMap;
-   const static String hasSkylight;
+   const static String skylightCubemapIdx;
    
    // Textures
    const static String fogMap;

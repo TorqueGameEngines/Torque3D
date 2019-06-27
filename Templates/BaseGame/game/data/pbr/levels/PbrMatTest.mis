@@ -269,5 +269,51 @@ new Scene(PbrMatTestLevel) {
       canSave = "1";
       canSaveDynamicFields = "1";
    };
+   new ConvexShape() {
+      Material = "Grid_512_Orange";
+      position = "-0.957664 -2.14584 1.3379";
+      rotation = "1 0 0 0";
+      scale = "1 1 1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+
+      surface = "0 0 0 1 0 0 0.837898 0 0 0 1 1 0 1 1";
+      surface = "0 1 0 0 0 0 -0.837898 0 0 0 1 1 0 1 1";
+      surface = "0.707107 0 0 0.707106 0 0.847632 0 0 0 0 1 1 0 1 1";
+      surface = "0 0.707107 -0.707107 0 0 -0.847632 0 0 0 0 1 1 0 1 1";
+      surface = "0.5 0.5 -0.5 0.5 -0.412576 0 -1.53859e-07 0 0 0 1 1 0 1 1";
+      surface = "0.5 -0.5 0.5 0.5 0.412576 0 -1.53859e-07 0 0 0 1 1 0 1 1";
+   };
+   new PointLight() {
+      radius = "5";
+      isEnabled = "1";
+      color = "1 1 1 1";
+      brightness = "1";
+      castShadows = "0";
+      staticRefreshFreq = "250";
+      dynamicRefreshFreq = "8";
+      priority = "1";
+      animate = "1";
+      animationPeriod = "1";
+      animationPhase = "1";
+      flareScale = "1";
+      attenuationRatio = "0 1 1";
+      shadowType = "DualParaboloidSinglePass";
+      texSize = "512";
+      overDarkFactor = "2000 1000 500 100";
+      shadowDistance = "400";
+      shadowSoftness = "0.15";
+      numSplits = "1";
+      logWeight = "0.91";
+      fadeStartDistance = "0";
+      lastSplitTerrainOnly = "0";
+      representedInLightmap = "0";
+      shadowDarkenColor = "0 0 0 -1";
+      includeLightmappedGeometryInShadow = "0";
+      position = "-0.0881653 -2.35794 1.41582";
+      rotation = "1 0 0 0";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+   };
 };
 //--- OBJECT WRITE END ---

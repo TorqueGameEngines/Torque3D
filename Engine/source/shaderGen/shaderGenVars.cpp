@@ -83,9 +83,7 @@ const String ShaderGenVars::probeCount("$numProbes");
 const String ShaderGenVars::BRDFTextureMap("$BRDFTexture");
 
 //Skylight
-const String ShaderGenVars::skylightPrefilterMap("$skylightSpecularMap");
-const String ShaderGenVars::skylightIrradMap("$skylightIrradMap");
-const String ShaderGenVars::hasSkylight("$hasSkylight");
+const String ShaderGenVars::skylightCubemapIdx("$skylightCubemapIdx");
 
 // These are ignored by the D3D layers.
 const String ShaderGenVars::fogMap("$fogMap");

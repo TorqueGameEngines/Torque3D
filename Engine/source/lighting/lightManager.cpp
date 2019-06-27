@@ -380,11 +380,9 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
       shaderConsts->setSafe( lightDiffuseSC, lightColors );
       shaderConsts->setSafe( lightInvRadiusSqSC, lightInvRadiusSq );
 
-         shaderConsts->setSafe( lightSpotDirSC, lightSpotDirs );
-         shaderConsts->setSafe( lightSpotAngleSC, lightSpotAngle );
-       shaderConsts->setSafe( lightSpotFalloffSC, lightSpotFalloff );
-
-      
+      shaderConsts->setSafe( lightSpotDirSC, lightSpotDirs );
+      shaderConsts->setSafe( lightSpotAngleSC, lightSpotAngle );
+      shaderConsts->setSafe( lightSpotFalloffSC, lightSpotFalloff );
    }
 
    // Setup the ambient lighting from the first 

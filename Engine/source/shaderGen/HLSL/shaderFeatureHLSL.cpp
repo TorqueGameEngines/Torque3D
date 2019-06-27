@@ -2980,7 +2980,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 
-   Var *numProbes = new Var("numProbes", "float");
+   Var *numProbes = new Var("numProbes", "int");
    numProbes->uniform = true;
    numProbes->constSortPos = cspPotentialPrimitive;
 
@@ -2988,9 +2988,9 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    cubeMips->uniform = true;
    cubeMips->constSortPos = cspPotentialPrimitive;
 
-   Var *hasSkylight = new Var("hasSkylight", "float");
-   hasSkylight->uniform = true;
-   hasSkylight->constSortPos = cspPotentialPrimitive;
+   Var * skylightCubemapIdx = new Var("skylightCubemapIdx", "float");
+   skylightCubemapIdx->uniform = true;
+   skylightCubemapIdx->constSortPos = cspPotentialPrimitive;
 
    Var *inProbePosArray = new Var("inProbePosArray", "float4");
    inProbePosArray->arraySize = MAX_FORWARD_PROBES;
@@ -3051,26 +3051,6 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    irradianceCubemapARTex->uniform = true;
    irradianceCubemapARTex->texture = true;
    irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
-
-   Var *skylightSpecularMap = new Var("skylightSpecularMap", "SamplerState");
-   skylightSpecularMap->uniform = true;
-   skylightSpecularMap->sampler = true;
-   skylightSpecularMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
-
-   Var *skylightSpecularMapTex = new Var("texture_skylightSpecularMap", "TextureCube");
-   skylightSpecularMapTex->uniform = true;
-   skylightSpecularMapTex->texture = true;
-   skylightSpecularMapTex->constNum = skylightSpecularMap->constNum;
-
-   Var *skylightIrradMap = new Var("skylightIrradMap", "SamplerState");
-   skylightIrradMap->uniform = true;
-   skylightIrradMap->sampler = true;
-   skylightIrradMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
-
-   Var *skylightIrradMapTex = new Var("texture_skylightIrradMap", "TextureCube");
-   skylightIrradMapTex->uniform = true;
-   skylightIrradMapTex->texture = true;
-   skylightIrradMapTex->constNum = skylightIrradMap->constNum;
    
    Var *inTex = getInTexCoord("texCoord", "float2", componentList);
    if (!inTex)
@@ -3130,12 +3110,10 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       inTex, wsPosition, wsEyePos, wsView));
    String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
-   computeForwardProbes += String::String("TORQUE_SAMPLERCUBE_MAKEARG(@), TORQUE_SAMPLERCUBE_MAKEARG(@), \r\n\t\t");
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
       
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), diffuseColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
-      hasSkylight, BRDFTexture, 
-      skylightIrradMap, skylightSpecularMap,
+      skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
 
    //meta->addStatement(new GenOp("   @.rgb = @.roughness.xxx;\r\n", albedo, surface));
@@ -3147,8 +3125,8 @@ ShaderFeature::Resources ReflectionProbeFeatHLSL::getResources(const MaterialFea
 {
    Resources res;
 
-   res.numTex = 5;
-   res.numTexReg = 5;
+   res.numTex = 3;
+   res.numTexReg = 3;
 
    return res;
 }
@@ -3166,10 +3144,6 @@ void ReflectionProbeFeatHLSL::setTexData(Material::StageData &stageDat,
       passData.mSamplerNames[texIndex] = "specularCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
       passData.mSamplerNames[texIndex] = "irradianceCubemapAR";
-      passData.mTexType[texIndex++] = Material::SGCube;
-      passData.mSamplerNames[texIndex] = "skylightSpecularMap";
-      passData.mTexType[texIndex++] = Material::SGCube;
-      passData.mSamplerNames[texIndex] = "skylightIrradMap";
       passData.mTexType[texIndex++] = Material::SGCube;
    }
 }

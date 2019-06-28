@@ -24,8 +24,8 @@ TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4    inRefPosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
-uniform float4    bbMinArray[MAX_PROBES];
-uniform float4    bbMaxArray[MAX_PROBES];
+uniform float4    refBoxMinArray[MAX_PROBES];
+uniform float4    refBoxArray[MAX_PROBES];
 uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 
 #if DEBUGVIZ_CONTRIB
@@ -167,7 +167,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       if (contrib != 0)
       {
          int cubemapIdx = probeConfigData[i].a;
-         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
+         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;

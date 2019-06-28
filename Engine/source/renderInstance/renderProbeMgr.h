@@ -141,8 +141,8 @@ struct ProbeShaderConstants
    //Reflection Probes
    GFXShaderConstHandle *mProbePositionSC;
    GFXShaderConstHandle *mProbeRefPosSC;
-   GFXShaderConstHandle *mProbeBoxMinSC;
-   GFXShaderConstHandle *mProbeBoxMaxSC;
+   GFXShaderConstHandle *mRefBoxMinSC;
+   GFXShaderConstHandle *mRefBoxMaxSC;
    GFXShaderConstHandle *mWorldToObjArraySC;
    GFXShaderConstHandle *mProbeConfigDataSC;
    GFXShaderConstHandle *mProbeSpecularCubemapSC;
@@ -194,16 +194,16 @@ class RenderProbeMgr : public RenderBinManager
    Vector<Point4F> probePositionsData;
    Vector<Point4F> probeRefPositionsData;
    Vector<MatrixF> probeWorldToObjData;
-   Vector<Point4F> probeBBMinData;
-   Vector<Point4F> probeBBMaxData;
+   Vector<Point4F> refBoxMinData;
+   Vector<Point4F> refBoxMaxData;
    Vector<Point4F> probeConfigData;
 
    bool            mHasSkylight;
    S32             mSkylightCubemapIdx;
 
    AlignedArray<Point4F> mProbePositions;
-   AlignedArray<Point4F> mProbeBBMin;
-   AlignedArray<Point4F> mProbeBBMax;
+   AlignedArray<Point4F> mRefBoxMin;
+   AlignedArray<Point4F> mRefBoxMax;
    AlignedArray<float> mProbeUseSphereMode;
    AlignedArray<float> mProbeRadius;
    AlignedArray<float> mProbeAttenuation;

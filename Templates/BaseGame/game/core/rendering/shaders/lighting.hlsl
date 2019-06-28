@@ -444,8 +444,6 @@ float4 computeForwardProbes(Surface surface,
          if (contribution[i] > 0.0)
             probehits++;
       }
-      else
-         continue;
 
       contribution[i] = max(contribution[i], 0);
 
@@ -524,7 +522,7 @@ float4 computeForwardProbes(Surface surface,
       if (contrib != 0)
       {
          int cubemapIdx = probeConfigData[i].a;
-         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
+         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;

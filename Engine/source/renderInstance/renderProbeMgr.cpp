@@ -786,8 +786,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositionsData);
    mProbeArrayEffect->setShaderConst("$inRefPosArray", probeRefPositionsData);
    mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);
-   mProbeArrayEffect->setShaderConst("$bbMinArray", refBoxMinData);
-   mProbeArrayEffect->setShaderConst("$bbMaxArray", refBoxMaxData);
+   mProbeArrayEffect->setShaderConst("$refBoxMinArray", refBoxMinData);
+   mProbeArrayEffect->setShaderConst("$refBoxMaxArray", refBoxMaxData);
    mProbeArrayEffect->setShaderConst("$probeConfigData", probeConfigData);
 
    // Make sure the effect is gonna render.

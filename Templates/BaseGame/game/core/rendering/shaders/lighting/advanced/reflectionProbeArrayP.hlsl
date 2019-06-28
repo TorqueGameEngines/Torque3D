@@ -25,7 +25,7 @@ uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4    inRefPosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float4    refBoxMinArray[MAX_PROBES];
-uniform float4    refBoxArray[MAX_PROBES];
+uniform float4    refBoxMaxArray[MAX_PROBES];
 uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 
 #if DEBUGVIZ_CONTRIB
@@ -80,8 +80,6 @@ float4 main(PFXVertToPix IN) : SV_TARGET
             if (contribution[i]>0.0)
                probehits++;
          }
-         else
-            continue;
 
          contribution[i] = max(contribution[i],0);
 

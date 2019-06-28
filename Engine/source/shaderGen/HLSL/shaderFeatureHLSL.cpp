@@ -3002,12 +3002,12 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    inRefPosArray->uniform = true;
    inRefPosArray->constSortPos = cspPotentialPrimitive;
 
-   Var *bbMinArray = new Var("inProbeBoxMin", "float4");
+   Var *bbMinArray = new Var("inRefBoxMin", "float4");
    bbMinArray->arraySize = MAX_FORWARD_PROBES;
    bbMinArray->uniform = true;
    bbMinArray->constSortPos = cspPotentialPrimitive;
 
-   Var *bbMaxArray = new Var("inProbeBoxMax", "float4");
+   Var *bbMaxArray = new Var("inRefBoxMax", "float4");
    bbMaxArray->arraySize = MAX_FORWARD_PROBES;
    bbMaxArray->uniform = true;
    bbMaxArray->constSortPos = cspPotentialPrimitive;

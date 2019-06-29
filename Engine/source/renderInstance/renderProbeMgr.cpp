@@ -124,8 +124,8 @@ ProbeShaderConstants::ProbeShaderConstants()
    mShader(NULL),
    mProbePositionSC(NULL),
    mProbeRefPosSC(NULL),
-   mProbeBoxMinSC(NULL),
-   mProbeBoxMaxSC(NULL),
+   mRefBoxMinSC(NULL),
+   mRefBoxMaxSC(NULL),
    mProbeConfigDataSC(NULL),
    mProbeSpecularCubemapSC(NULL),
    mProbeIrradianceCubemapSC(NULL),
@@ -159,8 +159,8 @@ void ProbeShaderConstants::init(GFXShader* shader)
    //Reflection Probes
    mProbePositionSC = shader->getShaderConstHandle(ShaderGenVars::probePosition);
    mProbeRefPosSC = shader->getShaderConstHandle(ShaderGenVars::probeRefPos);
-   mProbeBoxMinSC = shader->getShaderConstHandle(ShaderGenVars::probeBoxMin);
-   mProbeBoxMaxSC = shader->getShaderConstHandle(ShaderGenVars::probeBoxMax);
+   mRefBoxMinSC = shader->getShaderConstHandle(ShaderGenVars::refBoxMin);
+   mRefBoxMaxSC = shader->getShaderConstHandle(ShaderGenVars::refBoxMax);
    mWorldToObjArraySC = shader->getShaderConstHandle(ShaderGenVars::worldToObjArray);
    mProbeConfigDataSC = shader->getShaderConstHandle(ShaderGenVars::probeConfigData);
    mProbeSpecularCubemapSC = shader->getShaderConstHandle(ShaderGenVars::specularCubemapAR);
@@ -178,8 +178,8 @@ bool ProbeShaderConstants::isValid()
 {
    if (mProbePositionSC->isValid() ||
       mProbeConfigDataSC->isValid() ||
-      mProbeBoxMinSC->isValid() ||
-      mProbeBoxMaxSC->isValid() ||
+      mRefBoxMinSC->isValid() ||
+      mRefBoxMaxSC->isValid() ||
       mProbeSpecularCubemapSC->isValid() ||
       mProbeIrradianceCubemapSC->isValid())
       return true;
@@ -422,16 +422,16 @@ void RenderProbeMgr::_setupStaticParameters()
       probePositionsData.setSize(MAXPROBECOUNT);
       probeRefPositionsData.setSize(MAXPROBECOUNT);
       probeWorldToObjData.setSize(MAXPROBECOUNT);
-      probeBBMinData.setSize(MAXPROBECOUNT);
-      probeBBMaxData.setSize(MAXPROBECOUNT);
+      refBoxMinData.setSize(MAXPROBECOUNT);
+      refBoxMaxData.setSize(MAXPROBECOUNT);
       probeConfigData.setSize(MAXPROBECOUNT);
    }
 
    probePositionsData.fill(Point4F::Zero);
    probeRefPositionsData.fill(Point4F::Zero);
    probeWorldToObjData.fill(MatrixF::Identity);
-   probeBBMinData.fill(Point4F::Zero);
-   probeBBMaxData.fill(Point4F::Zero);
+   refBoxMinData.fill(Point4F::Zero);
+   refBoxMaxData.fill(Point4F::Zero);
    probeConfigData.fill(Point4F(-1,0,0,0));
 
    for (U32 i = 0; i < probeCount; i++)
@@ -461,8 +461,8 @@ void RenderProbeMgr::_setupStaticParameters()
       probeWorldToObjData[mEffectiveProbeCount] = curEntry.getTransform();
       Point3F bbMin = refPos - curEntry.mProbeRefScale/2 * curEntry.getTransform().getScale();
       Point3F bbMax = refPos + curEntry.mProbeRefScale/2 * curEntry.getTransform().getScale();
-      probeBBMinData[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
-      probeBBMaxData[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);
+      refBoxMinData[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
+      refBoxMaxData[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);
 
       probeConfigData[mEffectiveProbeCount] = Point4F(curEntry.mProbeShapeType, 
          curEntry.mRadius,
@@ -561,8 +561,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       const U32 MAX_FORWARD_PROBES = 4;
 
       static AlignedArray<Point4F> probePositionArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-      static AlignedArray<Point4F> probeBoxMinArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-      static AlignedArray<Point4F> probeBoxMaxArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+      static AlignedArray<Point4F> refBoxMinArray(MAX_FORWARD_PROBES, sizeof(Point4F));
+      static AlignedArray<Point4F> refBoxMaxArray(MAX_FORWARD_PROBES, sizeof(Point4F));
       static AlignedArray<Point4F> probeRefPositionArray(MAX_FORWARD_PROBES, sizeof(Point4F));
       static AlignedArray<Point4F> probeConfigArray(MAX_FORWARD_PROBES, sizeof(Point4F));
 
@@ -574,8 +574,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       // Need to clear the buffers so that we don't leak
       // lights from previous passes or have NaNs.
       dMemset(probePositionArray.getBuffer(), 0, probePositionArray.getBufferSize());
-      dMemset(probeBoxMinArray.getBuffer(), 0, probeBoxMinArray.getBufferSize());
-      dMemset(probeBoxMaxArray.getBuffer(), 0, probeBoxMaxArray.getBufferSize());
+      dMemset(refBoxMinArray.getBuffer(), 0, refBoxMinArray.getBufferSize());
+      dMemset(refBoxMaxArray.getBuffer(), 0, refBoxMaxArray.getBufferSize());
       dMemset(probeRefPositionArray.getBuffer(), 0, probeRefPositionArray.getBufferSize());
       dMemset(probeConfigArray.getBuffer(), 0, probeConfigArray.getBufferSize());
 
@@ -632,15 +632,12 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          probeRefPositionArray[effectiveProbeCount] = curEntry.mProbeRefOffset;
          probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
 
-         /*
          Point3F refPos = curEntry.getPosition() + curEntry.mProbeRefOffset;
-         Point3F bbMin = refPos - curEntry.mProbeRefScale / 2 * curEntry.getTransform().getScale();
-         Point3F bbMax = refPos + curEntry.mProbeRefScale / 2 * curEntry.getTransform().getScale();
+         Point3F refBoxMin = refPos - curEntry.mProbeRefScale * curEntry.getTransform().getScale();
+         Point3F refBoxMax = refPos + curEntry.mProbeRefScale * curEntry.getTransform().getScale();
 
-         probeBoxMinArray[mEffectiveProbeCount] = Point4F(bbMin.x, bbMin.y, bbMin.z, 0);
-         probeBoxMaxArray[mEffectiveProbeCount] = Point4F(bbMax.x, bbMax.y, bbMax.z, 0);*/
-         probeBoxMinArray[effectiveProbeCount] = curEntry.mBounds.minExtents;
-         probeBoxMaxArray[effectiveProbeCount] = curEntry.mBounds.maxExtents;
+         refBoxMinArray[mEffectiveProbeCount] = Point4F(refBoxMin.x, refBoxMin.y, refBoxMin.z, 0);
+         refBoxMaxArray[mEffectiveProbeCount] = Point4F(refBoxMax.x, refBoxMax.y, refBoxMax.z, 0);
          probeConfigArray[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
             curEntry.mRadius,
             curEntry.mAtten,
@@ -657,8 +654,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       if(probeShaderConsts->isValid())
          shaderConsts->set(probeShaderConsts->mWorldToObjArraySC, probeWorldToObjArray.address(), effectiveProbeCount, GFXSCT_Float4x4);
 
-      shaderConsts->setSafe(probeShaderConsts->mProbeBoxMinSC, probeBoxMinArray);
-      shaderConsts->setSafe(probeShaderConsts->mProbeBoxMaxSC, probeBoxMaxArray);
+      shaderConsts->setSafe(probeShaderConsts->mRefBoxMinSC, refBoxMinArray);
+      shaderConsts->setSafe(probeShaderConsts->mRefBoxMaxSC, refBoxMaxArray);
       shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
 
       shaderConsts->setSafe(probeShaderConsts->mSkylightCubemapIdxSC, (float)skyLightIdx);
@@ -789,8 +786,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setShaderConst("$inProbePosArray", probePositionsData);
    mProbeArrayEffect->setShaderConst("$inRefPosArray", probeRefPositionsData);
    mProbeArrayEffect->setShaderConst("$worldToObjArray", probeWorldToObjData);
-   mProbeArrayEffect->setShaderConst("$bbMinArray", probeBBMinData);
-   mProbeArrayEffect->setShaderConst("$bbMaxArray", probeBBMaxData);
+   mProbeArrayEffect->setShaderConst("$refBoxMinArray", refBoxMinData);
+   mProbeArrayEffect->setShaderConst("$refBoxMaxArray", refBoxMaxData);
    mProbeArrayEffect->setShaderConst("$probeConfigData", probeConfigData);
 
    // Make sure the effect is gonna render.

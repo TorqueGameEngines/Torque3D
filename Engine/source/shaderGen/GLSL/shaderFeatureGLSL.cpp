@@ -2927,15 +2927,15 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    inRefPosArray->uniform = true;
    inRefPosArray->constSortPos = cspPotentialPrimitive;
 
-   Var * bbMinArray = new Var("inProbeBoxMin", "vec4");
-   bbMinArray->arraySize = MAX_FORWARD_PROBES;
-   bbMinArray->uniform = true;
-   bbMinArray->constSortPos = cspPotentialPrimitive;
+   Var * refBoxMinArray = new Var("inRefBoxMin", "vec4");
+   refBoxMinArray->arraySize = MAX_FORWARD_PROBES;
+   refBoxMinArray->uniform = true;
+   refBoxMinArray->constSortPos = cspPotentialPrimitive;
 
-   Var * bbMaxArray = new Var("inProbeBoxMax", "vec4");
-   bbMaxArray->arraySize = MAX_FORWARD_PROBES;
-   bbMaxArray->uniform = true;
-   bbMaxArray->constSortPos = cspPotentialPrimitive;
+   Var * refBoxMaxArray = new Var("inRefBoxMax", "vec4");
+   refBoxMaxArray->arraySize = MAX_FORWARD_PROBES;
+   refBoxMaxArray->uniform = true;
+   refBoxMaxArray->constSortPos = cspPotentialPrimitive;
 
    Var * probeConfigData = new Var("probeConfigData", "vec4");
    probeConfigData->arraySize = MAX_FORWARD_PROBES;
@@ -3043,7 +3043,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    computeForwardProbes += String("@, @, \r\n\t\t");
    computeForwardProbes += String("@,@).rgb; \r\n");
 
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, bbMinArray, bbMaxArray, inRefPosArray,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
       hasSkylight, BRDFTexture,
       skylightIrradMap, skylightSpecularMap,
       irradianceCubemapAR, specularCubemapAR));

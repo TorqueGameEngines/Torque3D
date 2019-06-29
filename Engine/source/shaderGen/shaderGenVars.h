@@ -85,8 +85,8 @@ struct ShaderGenVars
    //Reflection Probes
    const static String probePosition;
    const static String probeRefPos;
-   const static String probeBoxMin;
-   const static String probeBoxMax;
+   const static String refBoxMin;
+   const static String refBoxMax;
    const static String worldToObjArray;
    const static String probeConfigData;
    const static String specularCubemapAR;

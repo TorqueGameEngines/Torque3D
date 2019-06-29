@@ -1391,7 +1391,7 @@ void Entity::clearComponents(bool deleteComponents)
    {
       while (mComponents.size() > 0)
       {
-         Component* comp = mComponents.first();
+         Component* comp = mComponents.last();
 
          if (comp)
          {
@@ -1399,6 +1399,7 @@ void Entity::clearComponents(bool deleteComponents)
 
             comp->deleteObject();
          }
+         mComponents.pop_back();
       }
    }
 }

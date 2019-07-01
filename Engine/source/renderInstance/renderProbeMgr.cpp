@@ -317,10 +317,10 @@ void RenderProbeMgr::addElement(RenderInst *inst)
 
 ProbeRenderInst* RenderProbeMgr::registerProbe()
 {
-   ProbeRenderInst newProbe;
+   mRegisteredProbes.increment();
+   ProbeRenderInst* newProbe = &mRegisteredProbes.last();
 
-   mRegisteredProbes.push_back(newProbe);
-   newProbe.mProbeIdx = mRegisteredProbes.size();
+   newProbe->mProbeIdx = mRegisteredProbes.size() - 1;
 
    const U32 cubeIndex = _findNextEmptyCubeSlot();
    if (cubeIndex == INVALID_CUBE_SLOT)
@@ -349,18 +349,18 @@ ProbeRenderInst* RenderProbeMgr::registerProbe()
       mCubeSlotCount += PROBE_ARRAY_SLOT_BUFFER_SIZE;
    }
 
-   newProbe.mCubemapIndex = cubeIndex;
+   newProbe->mCubemapIndex = cubeIndex;
    //mark cubemap slot as taken
    mCubeMapSlots[cubeIndex] = true;
    mCubeMapCount++;
 
 #ifdef TORQUE_DEBUG
-   Con::warnf("RenderProbeMgr::registerProbe: Registered probe %u to cubeIndex %u", newProbe.mProbeIdx, cubeIndex);
+   Con::warnf("RenderProbeMgr::registerProbe: Registered probe %u to cubeIndex %u", newProbe->mProbeIdx, cubeIndex);
 #endif
 
    mProbesDirty = true;
 
-   return &mRegisteredProbes.last();
+   return newProbe;
 }
 
 void RenderProbeMgr::unregisterProbe(U32 probeIdx)
@@ -377,6 +377,12 @@ void RenderProbeMgr::unregisterProbe(U32 probeIdx)
    mCubeMapCount--;
 
    mRegisteredProbes.erase(probeIdx);
+
+   //recalculate all the probe's indicies just to be sure
+   for (U32 i = 0; i < mRegisteredProbes.size(); i++)
+   {
+      mRegisteredProbes[i].mProbeIdx == i;
+   }
 
    //rebuild our probe data
    mProbesDirty = true;
@@ -750,7 +756,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
 
    mProbeArrayEffect->setShaderConst("$numProbes", (S32)mEffectiveProbeCount);
-   mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", mSkylightCubemapIdx);
+   mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)mSkylightCubemapIdx);
 
    mProbeArrayEffect->setShaderConst("$cubeMips", (float)mMipCount);
 

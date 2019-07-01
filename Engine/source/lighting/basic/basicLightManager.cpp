@@ -304,10 +304,9 @@ BasicLightManager::LightingShaderConstants::LightingShaderConstants()
       mLightPosition( NULL ),
       mLightDiffuse( NULL ),
       mLightAmbient( NULL ),
-      mLightInvRadiusSq( NULL ),
+      mLightConfigDataSC( NULL ),
       mLightSpotDir( NULL ),
-      mLightSpotAngle( NULL ),
-	  mLightSpotFalloff( NULL )
+      mLightSpotParamsSC( NULL )
 {
 }
 
@@ -333,11 +332,10 @@ void BasicLightManager::LightingShaderConstants::init(GFXShader* shader)
 
    mLightPosition = shader->getShaderConstHandle( ShaderGenVars::lightPosition );
    mLightDiffuse = shader->getShaderConstHandle( ShaderGenVars::lightDiffuse);
-   mLightInvRadiusSq = shader->getShaderConstHandle( ShaderGenVars::lightInvRadiusSq );
+   mLightConfigDataSC = shader->getShaderConstHandle( ShaderGenVars::lightConfigData );
    mLightAmbient = shader->getShaderConstHandle( ShaderGenVars::lightAmbient );   
    mLightSpotDir = shader->getShaderConstHandle( ShaderGenVars::lightSpotDir );
-   mLightSpotAngle = shader->getShaderConstHandle( ShaderGenVars::lightSpotAngle );
-   mLightSpotFalloff = shader->getShaderConstHandle( ShaderGenVars::lightSpotFalloff );
+   mLightSpotParamsSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotParams );
 
    mInit = true;
 }
@@ -399,9 +397,8 @@ void BasicLightManager::setLightInfo(  ProcessedMaterial* pmat,
                         mLastConstants->mLightPosition,
                         mLastConstants->mLightDiffuse,
                         mLastConstants->mLightAmbient,
-                        mLastConstants->mLightInvRadiusSq,
+                        mLastConstants->mLightConfigDataSC,
                         mLastConstants->mLightSpotDir,
-                        mLastConstants->mLightSpotAngle,
-						mLastConstants->mLightSpotFalloff,
+                        mLastConstants->mLightSpotParamsSC,
                         shaderConsts );
 }

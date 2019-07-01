@@ -135,6 +135,8 @@ public:
                            bool useInstancing,
                            MultiLine *meta );
 
+   Var* getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta);
+
    // ShaderFeature
    Var* getVertTexCoord( const String &name );
    LangElement* setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat );

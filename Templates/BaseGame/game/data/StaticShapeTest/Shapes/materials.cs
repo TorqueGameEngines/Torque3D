@@ -7,8 +7,8 @@ singleton Material(Grid_512_Orange)
    specular[0] = "0.8 0.8 0.8 1";
    specularPower[0] = "0.25";
    specularStrength[0] = "25";
-   translucentBlendOp = "Add";
-   smoothness[0] = "0.941176";
+   translucentBlendOp = "LerpAlpha";
+   smoothness[0] = "1";
    metalness[0] = "1";
    DiffuseMapAsset0 = "StaticShapeTest:Grid_512_orange_ALBEDO";
    specularStrength0 = "25";

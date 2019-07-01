@@ -177,8 +177,7 @@ protected:
                                     GFXShaderConstHandle *lightAmbientSC,
                                     GFXShaderConstHandle *lightInvRadiusSqSC,
                                     GFXShaderConstHandle *lightSpotDirSC,
-                                    GFXShaderConstHandle *lightSpotAngleSC,
-									GFXShaderConstHandle *lightSpotFalloffSC,
+                                    GFXShaderConstHandle * lightSpotParamsSC,
                                     GFXShaderConstBuffer *shaderConsts );
 
    /// A dummy default light used when no lights

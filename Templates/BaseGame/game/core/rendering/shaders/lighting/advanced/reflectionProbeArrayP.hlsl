@@ -32,7 +32,7 @@ uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 uniform float4    probeContribColors[MAX_PROBES];
 #endif
 
-uniform float skylightCubemapIdx;
+uniform int skylightCubemapIdx;
 
 float4 main(PFXVertToPix IN) : SV_TARGET
 {
@@ -140,7 +140,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
       //Skylight coloration for anything not covered by probes above
       if(skylightCubemapIdx != -1)
-         finalContribColor += float3(0.3, 0.3, 0.3) * contribAlpha;
+         finalContribColor += float3(0, 1, 0) * contribAlpha;
 
       return float4(finalContribColor, 1);
 #endif

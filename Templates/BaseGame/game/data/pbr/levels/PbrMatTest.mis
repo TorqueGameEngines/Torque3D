@@ -101,19 +101,6 @@ new Scene(PbrMatTestLevel) {
       persistentId = "658580df-7bda-11e9-9951-fcefa3e1cde4";
          reflectionPath = "data/pbr/levels/PbrMatTest/probes/";
    };
-   new BoxEnvironmentProbe() {
-      Enabled = "1";
-      refOffset = "0 0 0";
-      refScale = "10 10 10";
-      ReflectionMode = "Baked Cubemap";
-      position = "-0.0289133 -0.122873 1.6924";
-      rotation = "1 0 0 0";
-      scale = "10 10 10";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "079c3eaf-874e-11e9-8bbc-bdd5fc1d7642";
-      attenuation = "1";
-   };
    new TSStatic() {
       shapeName = "data/pbr/shapes/material_ball.dae";
       playAmbient = "1";
@@ -284,6 +271,19 @@ new Scene(PbrMatTestLevel) {
       surface = "0.5 0.5 -0.5 0.5 -0.412576 0 -1.53859e-07 0 0 0 1 1 0 1 1";
       surface = "0.5 -0.5 0.5 0.5 0.412576 0 -1.53859e-07 0 0 0 1 1 0 1 1";
    };
+   new BoxEnvironmentProbe() {
+      Enabled = "1";
+      refOffset = "0 0 0";
+      refScale = "10 10 10";
+      ReflectionMode = "Baked Cubemap";
+      position = "-0.0463406 0.0380459 2.23039";
+      rotation = "1 0 0 0";
+      scale = "10 10 10";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "29579d61-9b0f-11e9-b718-be72e303d0f8";
+      attenuation = "1";
+   };
    new PointLight() {
       radius = "5";
       isEnabled = "1";
@@ -310,7 +310,7 @@ new Scene(PbrMatTestLevel) {
       representedInLightmap = "0";
       shadowDarkenColor = "0 0 0 -1";
       includeLightmappedGeometryInShadow = "0";
-      position = "-0.0881653 -2.35794 1.41582";
+      position = "0.110554 -2.2668 1.41582";
       rotation = "1 0 0 0";
       canSave = "1";
       canSaveDynamicFields = "1";

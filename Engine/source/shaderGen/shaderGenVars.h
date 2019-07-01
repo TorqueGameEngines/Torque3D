@@ -74,10 +74,9 @@ struct ShaderGenVars
    const static String lightPosition;
    const static String lightDiffuse;
    const static String lightAmbient;
-   const static String lightInvRadiusSq;
+   const static String lightConfigData;
    const static String lightSpotDir;
-   const static String lightSpotAngle;
-   const static String lightSpotFalloff;
+   const static String lightSpotParams;
    const static String specularColor;
    const static String smoothness;
    const static String metalness;

@@ -388,10 +388,9 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
                         lsc->mLightPositionSC,
                         lsc->mLightDiffuseSC,
                         lsc->mLightAmbientSC,
-                        lsc->mLightInvRadiusSqSC,
+                        lsc->mLightConfigDataSC,
                         lsc->mLightSpotDirSC,
-                        lsc->mLightSpotAngleSC,
-                        lsc->mLightSpotFalloffSC,
+                        lsc->mLightSpotParamsSC,
                         shaderConsts );
 
    // Static

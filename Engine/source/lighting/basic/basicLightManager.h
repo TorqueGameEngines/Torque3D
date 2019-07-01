@@ -88,10 +88,9 @@ protected:
       GFXShaderConstHandle *mLightPosition;
       GFXShaderConstHandle *mLightDiffuse;
       GFXShaderConstHandle *mLightAmbient;
-      GFXShaderConstHandle *mLightInvRadiusSq;
+      GFXShaderConstHandle *mLightConfigDataSC;
       GFXShaderConstHandle *mLightSpotDir;
-      GFXShaderConstHandle *mLightSpotAngle;
-	  GFXShaderConstHandle *mLightSpotFalloff;
+      GFXShaderConstHandle *mLightSpotParamsSC;
 
       LightingShaderConstants();
       ~LightingShaderConstants();

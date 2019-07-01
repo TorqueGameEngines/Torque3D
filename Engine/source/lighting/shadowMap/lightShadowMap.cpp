@@ -460,10 +460,8 @@ LightingShaderConstants::LightingShaderConstants()
       mLightPositionSC(NULL),
       mLightDiffuseSC(NULL), 
       mLightAmbientSC(NULL), 
-      mLightInvRadiusSqSC(NULL),
+      mLightConfigDataSC(NULL),
       mLightSpotDirSC(NULL),
-      mLightSpotAngleSC(NULL),
-      mLightSpotFalloffSC(NULL),
       mShadowMapSC(NULL), 
       mDynamicShadowMapSC(NULL), 
       mShadowMapSizeSC(NULL), 
@@ -524,10 +522,8 @@ void LightingShaderConstants::init(GFXShader* shader)
    mLightPositionSC = shader->getShaderConstHandle( ShaderGenVars::lightPosition );
    mLightDiffuseSC = shader->getShaderConstHandle( ShaderGenVars::lightDiffuse );
    mLightAmbientSC = shader->getShaderConstHandle( ShaderGenVars::lightAmbient );
-   mLightInvRadiusSqSC = shader->getShaderConstHandle( ShaderGenVars::lightInvRadiusSq );
+   mLightConfigDataSC = shader->getShaderConstHandle( ShaderGenVars::lightConfigData);
    mLightSpotDirSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotDir );
-   mLightSpotAngleSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotAngle );
-   mLightSpotFalloffSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotFalloff );
 
    mShadowMapSC = shader->getShaderConstHandle("$shadowMap");
    mDynamicShadowMapSC = shader->getShaderConstHandle("$dynamicShadowMap");

@@ -818,6 +818,74 @@ Var* ShaderFeatureHLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
    return outTex;
 }
 
+Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta)
+{
+   ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+
+   Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+
+   Var* matinfo = (Var*)LangElement::find("PBRConfig");
+   if (!matinfo)
+   {
+      Var* metalness = (Var*)LangElement::find("metalness");
+      if (!metalness)
+      {
+         metalness = new Var("metalness", "float");
+         metalness->uniform = true;
+         metalness->constSortPos = cspPotentialPrimitive;
+      }
+
+      Var* smoothness = (Var*)LangElement::find("smoothness");
+      if (!smoothness)
+      {
+         smoothness = new Var("smoothness", "float");
+         smoothness->uniform = true;
+         smoothness->constSortPos = cspPotentialPrimitive;
+      }
+
+      matinfo = new Var("PBRConfig", "float4");
+      LangElement* colorDecl = new DecOp(matinfo);
+      meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
+   }
+
+   Var* inTex = getInTexCoord("texCoord", "float2", componentList);
+   if (!inTex)
+      return nullptr;
+
+   Var* wsNormal = (Var*)LangElement::find("wsNormal");
+   if (!wsNormal)
+   {
+      wsNormal = connectComp->getElement(RT_TEXCOORD);
+      wsNormal->setName("wsNormal");
+      wsNormal->setStructName("IN");
+      wsNormal->setType("float3");
+
+      // If we loaded the normal its our responsibility
+      // to normalize it... the interpolators won't.
+      //
+      // Note we cast to half here to get partial precision
+      // optimized code which is an acceptable loss of
+      // precision for normals and performs much better
+      // on older Geforce cards.
+      //
+      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal));
+   }
+
+   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+   Var* wsPosition = getInWsPosition(componentList);
+   Var* wsView = getWsView(wsPosition, meta);
+
+   Var* surface = (Var*)LangElement::find("surface");
+
+   if (!surface)
+   {
+      surface = new Var("surface", "Surface");
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, wsNormal, matinfo,
+         inTex, wsPosition, wsEyePos, wsView));
+   }
+
+   return surface;
+}
 //****************************************************************************
 // Base Texture
 //****************************************************************************
@@ -2157,10 +2225,10 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    Var *wsView = getWsView( wsPosition, meta );
 
    // Create temporaries to hold results of lighting.
-   Var *rtShading = new Var( "rtShading", "float4" );
-   Var *specular = new Var( "specular", "float4" );
-   meta->addStatement( new GenOp( "   @; @;\r\n", 
-      new DecOp( rtShading ), new DecOp( specular ) ) );   
+   //Var *rtShading = new Var( "rtShading", "float4" );
+   //Var *specular = new Var( "specular", "float4" );
+   //meta->addStatement( new GenOp( "   @; @;\r\n", 
+  //    new DecOp( rtShading ), new DecOp( specular ) ) );   
 
    // Look for a light mask generated from a previous
    // feature (this is done for BL terrain lightmaps).
@@ -2171,12 +2239,13 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    // Get all the light constants.
    Var *inLightPos  = new Var( "inLightPos", "float4" );
    inLightPos->uniform = true;
-   inLightPos->arraySize = 3;
+   inLightPos->arraySize = 4;
    inLightPos->constSortPos = cspPotentialPrimitive;
 
-   Var *inLightInvRadiusSq  = new Var( "inLightInvRadiusSq", "float4" );
-   inLightInvRadiusSq->uniform = true;
-   inLightInvRadiusSq->constSortPos = cspPotentialPrimitive;
+   Var * inLightConfigData = new Var( "inLightConfigData", "float4" );
+   inLightConfigData->uniform = true;
+   inLightConfigData->arraySize = 4;
+   inLightConfigData->constSortPos = cspPotentialPrimitive;
 
    Var *inLightColor  = new Var( "inLightColor", "float4" );
    inLightColor->uniform = true;
@@ -2185,19 +2254,23 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    Var *inLightSpotDir  = new Var( "inLightSpotDir", "float4" );
    inLightSpotDir->uniform = true;
-   inLightSpotDir->arraySize = 3;
+   inLightSpotDir->arraySize = 4;
    inLightSpotDir->constSortPos = cspPotentialPrimitive;
 
-   Var *inLightSpotAngle  = new Var( "inLightSpotAngle", "float4" );
-   inLightSpotAngle->uniform = true;
-   inLightSpotAngle->constSortPos = cspPotentialPrimitive;
+   Var * lightSpotParams = new Var( "lightSpotParams", "float4" );
+   lightSpotParams->uniform = true;
+   lightSpotParams->arraySize = 4;
+   lightSpotParams->constSortPos = cspPotentialPrimitive;
 
-   Var *lightSpotFalloff  = new Var( "inLightSpotFalloff", "float4" );
-   lightSpotFalloff->uniform = true;
-   lightSpotFalloff->constSortPos = cspPotentialPrimitive;
+   Var* surface = getSurface(componentList, meta);
+   if (!surface)
+   {
+      Con::errorf("ShaderGen::RTLightingFeatHLSL()  - failed to generate surface!");
+      return;
+   }
    
    Var *smoothness = (Var*)LangElement::find("smoothness");
-   if (!fd.features[MFT_SpecularMap])
+   /*if (!fd.features[MFT_SpecularMap])
    {
       if (!smoothness)
       {
@@ -2205,10 +2278,10 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
          smoothness->uniform = true;
          smoothness->constSortPos = cspPotentialPrimitive;
       }
-   }
+   }*/
 
    Var *metalness = (Var*)LangElement::find("metalness");
-   if (!fd.features[MFT_SpecularMap])
+   /*if (!fd.features[MFT_SpecularMap])
    {
       if (!metalness)
       {
@@ -2216,7 +2289,7 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
          metalness->uniform = true;
          metalness->constSortPos = cspPotentialPrimitive;
       }
-   }
+   }*/
 
    Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
@@ -2225,16 +2298,24 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    ambient->constSortPos = cspPass;
 
    // Calculate the diffuse shading and specular powers.
-   meta->addStatement( new GenOp( "   compute4Lights( @, @, @, @,\r\n"
+   /*meta->addStatement( new GenOp( "   compute4Lights( @, @, @, @,\r\n"
                                   "      @, @, @, @, @, @, @, @, @,\r\n"
                                   "      @, @ );\r\n", 
       wsView, wsPosition, wsNormal, lightMask,
-      inLightPos, inLightInvRadiusSq, inLightColor, inLightSpotDir, inLightSpotAngle, lightSpotFalloff, smoothness, metalness, albedo,
+      inLightPos, inLightConfigData, inLightColor, inLightSpotDir, inLightSpotAngle, lightSpotFalloff, smoothness, metalness, albedo,
       rtShading, specular ) );
 
    // Apply the lighting to the diffuse color.
    LangElement *lighting = new GenOp( "float4( @.rgb + @.rgb, 1 )", rtShading, ambient );
-   meta->addStatement( new GenOp( "   @;\r\n", assignColor( lighting, Material::Mul ) ) );
+   meta->addStatement( new GenOp( "   @;\r\n", assignColor( lighting, Material::Mul ) ) );*/
+
+   Var* lighting = new Var("lighting", "float4");
+   meta->addStatement(new GenOp("   @ = compute4Lights( @, @, @, @,\r\n"
+      "      @, @, @);\r\n",
+      new DecOp(lighting), surface, lightMask, inLightPos, inLightConfigData, inLightColor, inLightSpotDir, lightSpotParams));
+
+   meta->addStatement(new GenOp("   @;\r\n", assignColor(lighting, Material::Add)));
+
    output = meta;  
 }
 
@@ -3051,6 +3132,14 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    irradianceCubemapARTex->uniform = true;
    irradianceCubemapARTex->texture = true;
    irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
+
+   Var* surface = getSurface(componentList, meta);
+
+   if (!surface)
+   {
+      Con::errorf("ShaderGen::ReflectionProbeFeatHLSL()  - failed to generate surface!");
+      return;
+   }
    
    Var *inTex = getInTexCoord("texCoord", "float2", componentList);
    if (!inTex)
@@ -3059,55 +3148,15 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *matinfo = (Var*)LangElement::find("PBRConfig");
-   if (!matinfo)
-   {
-      Var* metalness = (Var*)LangElement::find("metalness");
-      if (!metalness)
-      {
-         metalness = new Var("metalness", "float");
-         metalness->uniform = true;
-         metalness->constSortPos = cspPotentialPrimitive;
-      }
-
-      Var* smoothness = (Var*)LangElement::find("smoothness");
-      if (!smoothness)
-      {
-         smoothness = new Var("smoothness", "float");
-         smoothness->uniform = true;
-         smoothness->constSortPos = cspPotentialPrimitive;
-      }
-
-      matinfo = new Var("PBRConfig", "float4");
-	   LangElement* colorDecl = new DecOp(matinfo);
-	   meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
-   }
+   Var* metalness = (Var*)LangElement::find("metalness");
+   Var* smoothness = (Var*)LangElement::find("smoothness");
    
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
    Var* worldToTangent = getInWorldToTangent(componentList);
 
    Var* wsNormal = (Var*)LangElement::find("wsNormal");
-   if (!wsNormal)
-   {
-      wsNormal = connectComp->getElement(RT_TEXCOORD);
-      wsNormal->setName("wsNormal");
-      wsNormal->setStructName("IN");
-      wsNormal->setType("float3");
-
-      // If we loaded the normal its our responsibility
-      // to normalize it... the interpolators won't.
-      //
-      // Note we cast to half here to get partial precision
-      // optimized code which is an acceptable loss of
-      // precision for normals and performs much better
-      // on older Geforce cards.
-      //
-      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal));
-   }
 
    //Reflection vec
-   Var* surface = new Var("surface", "Surface");
-   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, wsNormal, matinfo,
-      inTex, wsPosition, wsEyePos, wsView));
    String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");

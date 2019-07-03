@@ -218,7 +218,7 @@ inline float3 getDirectionalLight(in Surface surface, in SurfaceToLight surfaceT
    float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   float3 final = max(0.0f, diffuse + spec * surface.ao);
+   float3 final = max(0.0f, diffuse + spec);
    return final;
 }
 
@@ -230,7 +230,7 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
    float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
+   float3 final = max(0.0f, diffuse + spec * surface.F);
    return final;
 }
 
@@ -462,7 +462,6 @@ float4 computeForwardProbes(Surface surface,
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
-
+   float4 finalColor = float4(diffuse* surface.ao + specular * surface.ao, 1.0);
    return finalColor;
 }

@@ -199,7 +199,6 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
-
+   float4 finalColor = float4(diffuse* surface.ao + specular * surface.ao, 1.0);
    return finalColor;
 }

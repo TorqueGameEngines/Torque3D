@@ -2270,45 +2270,15 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    }
    
    Var *smoothness = (Var*)LangElement::find("smoothness");
-   /*if (!fd.features[MFT_SpecularMap])
-   {
-      if (!smoothness)
-      {
-         smoothness = new Var("smoothness", "float");
-         smoothness->uniform = true;
-         smoothness->constSortPos = cspPotentialPrimitive;
-      }
-   }*/
 
    Var *metalness = (Var*)LangElement::find("metalness");
-   /*if (!fd.features[MFT_SpecularMap])
-   {
-      if (!metalness)
-      {
-         metalness = new Var("metalness", "float");
-         metalness->uniform = true;
-         metalness->constSortPos = cspPotentialPrimitive;
-      }
-   }*/
 
    Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *ambient  = new Var( "ambient", "float4" );
    ambient->uniform = true;
    ambient->constSortPos = cspPass;
-
-   // Calculate the diffuse shading and specular powers.
-   /*meta->addStatement( new GenOp( "   compute4Lights( @, @, @, @,\r\n"
-                                  "      @, @, @, @, @, @, @, @, @,\r\n"
-                                  "      @, @ );\r\n", 
-      wsView, wsPosition, wsNormal, lightMask,
-      inLightPos, inLightConfigData, inLightColor, inLightSpotDir, inLightSpotAngle, lightSpotFalloff, smoothness, metalness, albedo,
-      rtShading, specular ) );
-
-   // Apply the lighting to the diffuse color.
-   LangElement *lighting = new GenOp( "float4( @.rgb + @.rgb, 1 )", rtShading, ambient );
-   meta->addStatement( new GenOp( "   @;\r\n", assignColor( lighting, Material::Mul ) ) );*/
-
+   
    Var* lighting = new Var("lighting", "float4");
    meta->addStatement(new GenOp("   @ = compute4Lights( @, @, @, @,\r\n"
       "      @, @, @);\r\n",
@@ -3140,10 +3110,6 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       Con::errorf("ShaderGen::ReflectionProbeFeatHLSL()  - failed to generate surface!");
       return;
    }
-   
-   Var *inTex = getInTexCoord("texCoord", "float2", componentList);
-   if (!inTex)
-      return;
 
    Var *diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
@@ -3152,9 +3118,6 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var* smoothness = (Var*)LangElement::find("smoothness");
    
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
-   Var* worldToTangent = getInWorldToTangent(componentList);
-
-   Var* wsNormal = (Var*)LangElement::find("wsNormal");
 
    //Reflection vec
    String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");

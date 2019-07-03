@@ -818,7 +818,7 @@ Var* ShaderFeatureHLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
    return outTex;
 }
 
-Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta)
+Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta, const MaterialFeatureData& fd)
 {
    ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
 
@@ -853,22 +853,21 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       return nullptr;
 
    Var* wsNormal = (Var*)LangElement::find("wsNormal");
-   if (!wsNormal)
+   Var* normal = (Var*)LangElement::find("normal");
+   if (!normal)
    {
-      wsNormal = connectComp->getElement(RT_TEXCOORD);
-      wsNormal->setName("wsNormal");
-      wsNormal->setStructName("IN");
-      wsNormal->setType("float3");
-
-      // If we loaded the normal its our responsibility
-      // to normalize it... the interpolators won't.
-      //
-      // Note we cast to half here to get partial precision
-      // optimized code which is an acceptable loss of
-      // precision for normals and performs much better
-      // on older Geforce cards.
-      //
-      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal));
+      normal = new Var("normal", "float3");
+      meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
+      
+   }
+   if (!fd.features[MFT_NormalMap])
+   {
+      Var* worldToTangent = getInWorldToTangent(componentList);
+      meta->addStatement(new GenOp("  @ = normalize(mul(@,float3(0,0,1.0f)));\r\n\n", normal, worldToTangent));
+   }
+   else
+   {
+      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", normal, wsNormal));
    }
 
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
@@ -880,7 +879,7 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    if (!surface)
    {
       surface = new Var("surface", "Surface");
-      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, wsNormal, matinfo,
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
          inTex, wsPosition, wsEyePos, wsView));
    }
 
@@ -2119,6 +2118,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
    MultiLine *meta = new MultiLine;   
 
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
+   getOutWorldToTangent(componentList, meta, fd);
 
    // Special case for lighting imposters. We dont have a vert normal and may not
    // have a normal map. Generate and pass the normal data the pixel shader needs.
@@ -2200,36 +2200,10 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    MultiLine *meta = new MultiLine;
 
-   // Look for a wsNormal or grab it from the connector.
-   Var *wsNormal = (Var*)LangElement::find( "wsNormal" );
-   if ( !wsNormal )
-   {
-      wsNormal = connectComp->getElement( RT_TEXCOORD );
-      wsNormal->setName( "wsNormal" );
-      wsNormal->setStructName( "IN" );
-      wsNormal->setType( "float3" );
-
-      // If we loaded the normal its our responsibility
-      // to normalize it... the interpolators won't.
-      //
-      // Note we cast to half here to get partial precision
-      // optimized code which is an acceptable loss of
-      // precision for normals and performs much better
-      // on older Geforce cards.
-      //
-      meta->addStatement( new GenOp( "   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal ) );
-   }
-
    // Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition( componentList );
    Var *wsView = getWsView( wsPosition, meta );
-
-   // Create temporaries to hold results of lighting.
-   //Var *rtShading = new Var( "rtShading", "float4" );
-   //Var *specular = new Var( "specular", "float4" );
-   //meta->addStatement( new GenOp( "   @; @;\r\n", 
-  //    new DecOp( rtShading ), new DecOp( specular ) ) );   
-
+   
    // Look for a light mask generated from a previous
    // feature (this is done for BL terrain lightmaps).
    LangElement *lightMask = LangElement::find( "lightMask" );
@@ -2262,13 +2236,12 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    lightSpotParams->arraySize = 4;
    lightSpotParams->constSortPos = cspPotentialPrimitive;
 
-   Var* surface = getSurface(componentList, meta);
+   Var* surface = getSurface(componentList, meta, fd);
    if (!surface)
    {
       Con::errorf("ShaderGen::RTLightingFeatHLSL()  - failed to generate surface!");
       return;
-   }
-   
+   }   
    Var *smoothness = (Var*)LangElement::find("smoothness");
 
    Var *metalness = (Var*)LangElement::find("metalness");
@@ -3103,7 +3076,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    irradianceCubemapARTex->texture = true;
    irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
 
-   Var* surface = getSurface(componentList, meta);
+   Var* surface = getSurface(componentList, meta, fd);
 
    if (!surface)
    {

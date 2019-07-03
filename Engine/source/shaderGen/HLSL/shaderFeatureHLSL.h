@@ -135,7 +135,7 @@ public:
                            bool useInstancing,
                            MultiLine *meta );
 
-   Var* getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta);
+   Var* getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta, const MaterialFeatureData& fd);
 
    // ShaderFeature
    Var* getVertTexCoord( const String &name );

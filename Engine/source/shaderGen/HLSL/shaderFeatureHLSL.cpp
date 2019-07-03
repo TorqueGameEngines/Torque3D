@@ -2273,7 +2273,7 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    Var *metalness = (Var*)LangElement::find("metalness");
 
-   Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *ambient  = new Var( "ambient", "float4" );
    ambient->uniform = true;
@@ -2284,7 +2284,7 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
       "      @, @, @);\r\n",
       new DecOp(lighting), surface, lightMask, inLightPos, inLightConfigData, inLightColor, inLightSpotDir, lightSpotParams));
 
-   meta->addStatement(new GenOp("   @;\r\n", assignColor(lighting, Material::Add)));
+   meta->addStatement(new GenOp("   @.rgb += @.rgb;\r\n", curColor, lighting));
 
    output = meta;  
 }
@@ -3111,7 +3111,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       return;
    }
 
-   Var *diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *matinfo = (Var*)LangElement::find("PBRConfig");
    Var* metalness = (Var*)LangElement::find("metalness");
@@ -3124,7 +3124,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
       
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), diffuseColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), curColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
       skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
 

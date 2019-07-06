@@ -278,9 +278,9 @@ float4 compute4Lights( Surface surface,
             lighting *= getSpotAngleAtt(-surfaceToLight.L, inLightSpotDir[i].xyz, lightSpotParams[i].xy );
          }
       }
-
       finalLighting += lighting;
    }
+   finalLighting *= shadowMask.rgb;
 
    return float4(finalLighting,1);
 }
@@ -445,8 +445,8 @@ float4 computeForwardProbes(Surface surface,
 
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz * alpha;
-      specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz * alpha;
+      irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
+      specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
 
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);

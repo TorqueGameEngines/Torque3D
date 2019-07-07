@@ -6,19 +6,16 @@
 #include "AL/alext.h"
 #include "alMain.h"
 #include "alError.h"
+#include "alAuxEffectSlot.h"
 #include "ringbuffer.h"
 
 
-static int EventThread(void *arg)
+int EventThread(void *arg)
 {
     ALCcontext *context = arg;
+    bool quitnow = false;
 
-    /* Clear all pending posts on the semaphore. */
-    while(alsem_trywait(&context->EventSem) == althrd_success)
-    {
-    }
-
-    while(1)
+    while(!quitnow)
     {
         ALbitfieldSOFT enabledevts;
         AsyncEvent evt;
@@ -28,14 +25,24 @@ static int EventThread(void *arg)
             alsem_wait(&context->EventSem);
             continue;
         }
-        if(!evt.EnumType)
-            break;
 
         almtx_lock(&context->EventCbLock);
-        enabledevts = ATOMIC_LOAD(&context->EnabledEvts, almemory_order_acquire);
-        if(context->EventCb && (enabledevts&evt.EnumType) == evt.EnumType)
-            context->EventCb(evt.Type, evt.ObjectId, evt.Param, (ALsizei)strlen(evt.Message),
-                             evt.Message, context->EventParam);
+        do {
+            quitnow = evt.EnumType == EventType_KillThread;
+            if(quitnow) break;
+
+            if(evt.EnumType == EventType_ReleaseEffectState)
+            {
+                ALeffectState_DecRef(evt.u.EffectState);
+                continue;
+            }
+
+            enabledevts = ATOMIC_LOAD(&context->EnabledEvts, almemory_order_acquire);
+            if(context->EventCb && (enabledevts&evt.EnumType) == evt.EnumType)
+                context->EventCb(evt.u.user.type, evt.u.user.id, evt.u.user.param,
+                    (ALsizei)strlen(evt.u.user.msg), evt.u.user.msg, context->EventParam
+                );
+        } while(ll_ringbuffer_read(context->AsyncEvents, (char*)&evt, 1) != 0);
         almtx_unlock(&context->EventCbLock);
     }
     return 0;
@@ -46,7 +53,6 @@ AL_API void AL_APIENTRY alEventControlSOFT(ALsizei count, const ALenum *types, A
     ALCcontext *context;
     ALbitfieldSOFT enabledevts;
     ALbitfieldSOFT flags = 0;
-    bool isrunning;
     ALsizei i;
 
     context = GetContextRef();
@@ -74,13 +80,9 @@ AL_API void AL_APIENTRY alEventControlSOFT(ALsizei count, const ALenum *types, A
             SETERR_GOTO(context, AL_INVALID_ENUM, done, "Invalid event type 0x%04x", types[i]);
     }
 
-    almtx_lock(&context->EventThrdLock);
     if(enable)
     {
-        if(!context->AsyncEvents)
-            context->AsyncEvents = ll_ringbuffer_create(63, sizeof(AsyncEvent), false);
         enabledevts = ATOMIC_LOAD(&context->EnabledEvts, almemory_order_relaxed);
-        isrunning = !!enabledevts;
         while(ATOMIC_COMPARE_EXCHANGE_WEAK(&context->EnabledEvts, &enabledevts, enabledevts|flags,
                                            almemory_order_acq_rel, almemory_order_acquire) == 0)
         {
@@ -88,35 +90,20 @@ AL_API void AL_APIENTRY alEventControlSOFT(ALsizei count, const ALenum *types, A
              * just try again.
              */
         }
-        if(!isrunning && flags)
-            althrd_create(&context->EventThread, EventThread, context);
     }
     else
     {
         enabledevts = ATOMIC_LOAD(&context->EnabledEvts, almemory_order_relaxed);
-        isrunning = !!enabledevts;
         while(ATOMIC_COMPARE_EXCHANGE_WEAK(&context->EnabledEvts, &enabledevts, enabledevts&~flags,
                                            almemory_order_acq_rel, almemory_order_acquire) == 0)
         {
         }
-        if(isrunning && !(enabledevts&~flags))
-        {
-            static const AsyncEvent kill_evt = { 0 };
-            while(ll_ringbuffer_write(context->AsyncEvents, (const char*)&kill_evt, 1) == 0)
-                althrd_yield();
-            alsem_post(&context->EventSem);
-            althrd_join(context->EventThread, NULL);
-        }
-        else
-        {
-            /* Wait to ensure the event handler sees the changed flags before
-             * returning.
-             */
-            almtx_lock(&context->EventCbLock);
-            almtx_unlock(&context->EventCbLock);
-        }
+        /* Wait to ensure the event handler sees the changed flags before
+         * returning.
+         */
+        almtx_lock(&context->EventCbLock);
+        almtx_unlock(&context->EventCbLock);
     }
-    almtx_unlock(&context->EventThrdLock);
 
 done:
     ALCcontext_DecRef(context);

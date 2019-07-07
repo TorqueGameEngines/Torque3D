@@ -229,17 +229,16 @@ static inline bool SourceShouldUpdate(ALsource *source, ALCcontext *context)
 /** Can only be called while the mixer is locked! */
 static void SendStateChangeEvent(ALCcontext *context, ALuint id, ALenum state)
 {
+    AsyncEvent evt = ASYNC_EVENT(EventType_SourceStateChange);
     ALbitfieldSOFT enabledevt;
-    AsyncEvent evt;
 
     enabledevt = ATOMIC_LOAD(&context->EnabledEvts, almemory_order_acquire);
     if(!(enabledevt&EventType_SourceStateChange)) return;
 
-    evt.EnumType = EventType_SourceStateChange;
-    evt.Type = AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT;
-    evt.ObjectId = id;
-    evt.Param = state;
-    snprintf(evt.Message, sizeof(evt.Message), "Source ID %u state changed to %s", id,
+    evt.u.user.type = AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT;
+    evt.u.user.id = id;
+    evt.u.user.param = state;
+    snprintf(evt.u.user.msg, sizeof(evt.u.user.msg), "Source ID %u state changed to %s", id,
         (state==AL_INITIAL) ? "AL_INITIAL" :
         (state==AL_PLAYING) ? "AL_PLAYING" :
         (state==AL_PAUSED) ? "AL_PAUSED" :
@@ -1296,7 +1295,7 @@ static ALboolean GetSourcedv(ALsource *Source, ALCcontext *Context, SourceProp p
              */
             values[0] = GetSourceSecOffset(Source, Context, &srcclock);
             almtx_lock(&device->BackendLock);
-            clocktime = V0(device->Backend,getClockLatency)();
+            clocktime = GetClockLatency(device);
             almtx_unlock(&device->BackendLock);
             if(srcclock == (ALuint64)clocktime.ClockTime)
                 values[1] = (ALdouble)clocktime.Latency / 1000000000.0;
@@ -1560,7 +1559,7 @@ static ALboolean GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp
              */
             values[0] = GetSourceSampleOffset(Source, Context, &srcclock);
             almtx_lock(&device->BackendLock);
-            clocktime = V0(device->Backend,getClockLatency)();
+            clocktime = GetClockLatency(device);
             almtx_unlock(&device->BackendLock);
             if(srcclock == (ALuint64)clocktime.ClockTime)
                 values[1] = clocktime.Latency;
@@ -2773,6 +2772,121 @@ AL_API ALvoid AL_APIENTRY alSourceQueueBuffers(ALuint src, ALsizei nb, const ALu
         if(!buffer) continue;
 
         IncrementRef(&buffer->ref);
+
+        if(buffer->MappedAccess != 0 && !(buffer->MappedAccess&AL_MAP_PERSISTENT_BIT_SOFT))
+            SETERR_GOTO(context, AL_INVALID_OPERATION, buffer_error,
+                        "Queueing non-persistently mapped buffer %u", buffer->id);
+
+        if(BufferFmt == NULL)
+            BufferFmt = buffer;
+        else if(BufferFmt->Frequency != buffer->Frequency ||
+                BufferFmt->FmtChannels != buffer->FmtChannels ||
+                BufferFmt->OriginalType != buffer->OriginalType)
+        {
+            alSetError(context, AL_INVALID_OPERATION, "Queueing buffer with mismatched format");
+
+        buffer_error:
+            /* A buffer failed (invalid ID or format), so unlock and release
+             * each buffer we had. */
+            while(BufferListStart)
+            {
+                ALbufferlistitem *next = ATOMIC_LOAD(&BufferListStart->next,
+                                                     almemory_order_relaxed);
+                for(i = 0;i < BufferListStart->num_buffers;i++)
+                {
+                    if((buffer=BufferListStart->buffers[i]) != NULL)
+                        DecrementRef(&buffer->ref);
+                }
+                al_free(BufferListStart);
+                BufferListStart = next;
+            }
+            UnlockBufferList(device);
+            goto done;
+        }
+    }
+    /* All buffers good. */
+    UnlockBufferList(device);
+
+    /* Source is now streaming */
+    source->SourceType = AL_STREAMING;
+
+    if(!(BufferList=source->queue))
+        source->queue = BufferListStart;
+    else
+    {
+        ALbufferlistitem *next;
+        while((next=ATOMIC_LOAD(&BufferList->next, almemory_order_relaxed)) != NULL)
+            BufferList = next;
+        ATOMIC_STORE(&BufferList->next, BufferListStart, almemory_order_release);
+    }
+
+done:
+    UnlockSourceList(context);
+    ALCcontext_DecRef(context);
+}
+
+AL_API void AL_APIENTRY alSourceQueueBufferLayersSOFT(ALuint src, ALsizei nb, const ALuint *buffers)
+{
+    ALCdevice *device;
+    ALCcontext *context;
+    ALbufferlistitem *BufferListStart;
+    ALbufferlistitem *BufferList;
+    ALbuffer *BufferFmt = NULL;
+    ALsource *source;
+    ALsizei i;
+
+    if(nb == 0)
+        return;
+
+    context = GetContextRef();
+    if(!context) return;
+
+    device = context->Device;
+
+    LockSourceList(context);
+    if(!(nb >= 0 && nb < 16))
+        SETERR_GOTO(context, AL_INVALID_VALUE, done, "Queueing %d buffer layers", nb);
+    if((source=LookupSource(context, src)) == NULL)
+        SETERR_GOTO(context, AL_INVALID_NAME, done, "Invalid source ID %u", src);
+
+    if(source->SourceType == AL_STATIC)
+    {
+        /* Can't queue on a Static Source */
+        SETERR_GOTO(context, AL_INVALID_OPERATION, done, "Queueing onto static source %u", src);
+    }
+
+    /* Check for a valid Buffer, for its frequency and format */
+    BufferList = source->queue;
+    while(BufferList)
+    {
+        for(i = 0;i < BufferList->num_buffers;i++)
+        {
+            if((BufferFmt=BufferList->buffers[i]) != NULL)
+                break;
+        }
+        if(BufferFmt) break;
+        BufferList = ATOMIC_LOAD(&BufferList->next, almemory_order_relaxed);
+    }
+
+    LockBufferList(device);
+    BufferListStart = al_calloc(DEF_ALIGN, FAM_SIZE(ALbufferlistitem, buffers, nb));
+    BufferList = BufferListStart;
+    ATOMIC_INIT(&BufferList->next, NULL);
+    BufferList->max_samples = 0;
+    BufferList->num_buffers = 0;
+    for(i = 0;i < nb;i++)
+    {
+        ALbuffer *buffer = NULL;
+        if(buffers[i] && (buffer=LookupBuffer(device, buffers[i])) == NULL)
+            SETERR_GOTO(context, AL_INVALID_NAME, buffer_error, "Queueing invalid buffer ID %u",
+                        buffers[i]);
+
+        BufferList->buffers[BufferList->num_buffers++] = buffer;
+        if(!buffer) continue;
+
+        IncrementRef(&buffer->ref);
+
+        BufferList->max_samples = maxi(BufferList->max_samples, buffer->SampleLen);
 
         if(buffer->MappedAccess != 0 && !(buffer->MappedAccess&AL_MAP_PERSISTENT_BIT_SOFT))
             SETERR_GOTO(context, AL_INVALID_OPERATION, buffer_error,

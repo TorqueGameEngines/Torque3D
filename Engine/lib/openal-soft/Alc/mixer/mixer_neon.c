@@ -17,23 +17,25 @@ const ALfloat *Resample_lerp_Neon(const InterpState* UNUSED(state),
     const int32x4_t increment4 = vdupq_n_s32(increment*4);
     const float32x4_t fracOne4 = vdupq_n_f32(1.0f/FRACTIONONE);
     const int32x4_t fracMask4 = vdupq_n_s32(FRACTIONMASK);
-    alignas(16) ALint pos_[4];
-    alignas(16) ALsizei frac_[4];
-    int32x4_t pos4;
-    int32x4_t frac4;
-    ALsizei i;
+    alignas(16) ALsizei pos_[4], frac_[4];
+    int32x4_t pos4, frac4;
+    ALsizei todo, pos, i;
 
     ASSUME(numsamples > 0);
 
     InitiatePositionArrays(frac, increment, frac_, pos_, 4);
-
     frac4 = vld1q_s32(frac_);
     pos4 = vld1q_s32(pos_);
 
-    for(i = 0;numsamples-i > 3;i += 4)
+    todo = numsamples & ~3;
+    for(i = 0;i < todo;i += 4)
     {
-        const float32x4_t val1 = (float32x4_t){src[pos_[0]], src[pos_[1]], src[pos_[2]], src[pos_[3]]};
-        const float32x4_t val2 = (float32x4_t){src[pos_[0]+1], src[pos_[1]+1], src[pos_[2]+1], src[pos_[3]+1]};
+        const int pos0 = vgetq_lane_s32(pos4, 0);
+        const int pos1 = vgetq_lane_s32(pos4, 1);
+        const int pos2 = vgetq_lane_s32(pos4, 2);
+        const int pos3 = vgetq_lane_s32(pos4, 3);
+        const float32x4_t val1 = (float32x4_t){src[pos0], src[pos1], src[pos2], src[pos3]};
+        const float32x4_t val2 = (float32x4_t){src[pos0+1], src[pos1+1], src[pos2+1], src[pos3+1]};
 
         /* val1 + (val2-val1)*mu */
         const float32x4_t r0 = vsubq_f32(val2, val1);
@@ -45,25 +47,21 @@ const ALfloat *Resample_lerp_Neon(const InterpState* UNUSED(state),
         frac4 = vaddq_s32(frac4, increment4);
         pos4 = vaddq_s32(pos4, vshrq_n_s32(frac4, FRACTIONBITS));
         frac4 = vandq_s32(frac4, fracMask4);
-
-        vst1q_s32(pos_, pos4);
     }
 
-    if(i < numsamples)
-    {
-        /* NOTE: These four elements represent the position *after* the last
-         * four samples, so the lowest element is the next position to
-         * resample.
-         */
-        ALint pos = pos_[0];
-        frac = vgetq_lane_s32(frac4, 0);
-        do {
-            dst[i] = lerp(src[pos], src[pos+1], frac * (1.0f/FRACTIONONE));
+    /* NOTE: These four elements represent the position *after* the last four
+     * samples, so the lowest element is the next position to resample.
+     */
+    pos = vgetq_lane_s32(pos4, 0);
+    frac = vgetq_lane_s32(frac4, 0);
 
-            frac += increment;
-            pos  += frac>>FRACTIONBITS;
-            frac &= FRACTIONMASK;
-        } while(++i < numsamples);
+    for(;i < numsamples;++i)
+    {
+        dst[i] = lerp(src[pos], src[pos+1], frac * (1.0f/FRACTIONONE));
+
+        frac += increment;
+        pos  += frac>>FRACTIONBITS;
+        frac &= FRACTIONMASK;
     }
     return dst;
 }
@@ -83,7 +81,7 @@ const ALfloat *Resample_bsinc_Neon(const InterpState *state,
     ASSUME(m > 0);
     ASSUME(dstlen > 0);
 
-    src += state->bsinc.l;
+    src -= state->bsinc.l;
     for(i = 0;i < dstlen;i++)
     {
         // Calculate the phase index and factor.
@@ -101,16 +99,20 @@ const ALfloat *Resample_bsinc_Neon(const InterpState *state,
         // Apply the scale and phase interpolated filter.
         r4 = vdupq_n_f32(0.0f);
         {
+            const ALsizei count = m >> 2;
             const float32x4_t pf4 = vdupq_n_f32(pf);
-            for(j = 0;j < m;j+=4,fil++,scd++,phd++,spd++)
+
+            ASSUME(count > 0);
+
+            for(j = 0;j < count;j++)
             {
                 /* f = ((fil + sf*scd) + pf*(phd + sf*spd)) */
                 const float32x4_t f4 = vmlaq_f32(
-                    vmlaq_f32(*fil, sf4, *scd),
-                    pf4, vmlaq_f32(*phd, sf4, *spd)
+                    vmlaq_f32(fil[j], sf4, scd[j]),
+                    pf4, vmlaq_f32(phd[j], sf4, spd[j])
                 );
                 /* r += f*src */
-                r4 = vmlaq_f32(r4, f4, vld1q_f32(&src[j]));
+                r4 = vmlaq_f32(r4, f4, vld1q_f32(&src[j*4]));
             }
         }
         r4 = vaddq_f32(r4, vcombine_f32(vrev64_f32(vget_high_f32(r4)),
@@ -165,8 +167,7 @@ void Mix_Neon(const ALfloat *data, ALsizei OutChans, ALfloat (*restrict OutBuffe
               ALfloat *CurrentGains, const ALfloat *TargetGains, ALsizei Counter, ALsizei OutPos,
               ALsizei BufferSize)
 {
-    ALfloat gain, delta, step;
-    float32x4_t gain4;
+    const ALfloat delta = (Counter > 0) ? 1.0f/(ALfloat)Counter : 0.0f;
     ALsizei c;
 
     ASSUME(OutChans > 0);
@@ -174,47 +175,55 @@ void Mix_Neon(const ALfloat *data, ALsizei OutChans, ALfloat (*restrict OutBuffe
     data = ASSUME_ALIGNED(data, 16);
     OutBuffer = ASSUME_ALIGNED(OutBuffer, 16);
 
-    delta = (Counter > 0) ? 1.0f/(ALfloat)Counter : 0.0f;
-
     for(c = 0;c < OutChans;c++)
     {
         ALsizei pos = 0;
-        gain = CurrentGains[c];
-        step = (TargetGains[c] - gain) * delta;
-        if(fabsf(step) > FLT_EPSILON)
+        ALfloat gain = CurrentGains[c];
+        const ALfloat diff = TargetGains[c] - gain;
+
+        if(fabsf(diff) > FLT_EPSILON)
         {
             ALsizei minsize = mini(BufferSize, Counter);
+            const ALfloat step = diff * delta;
+            ALfloat step_count = 0.0f;
             /* Mix with applying gain steps in aligned multiples of 4. */
-            if(minsize-pos > 3)
+            if(LIKELY(minsize > 3))
             {
-                float32x4_t step4;
-                gain4 = vsetq_lane_f32(gain, gain4, 0);
-                gain4 = vsetq_lane_f32(gain + step, gain4, 1);
-                gain4 = vsetq_lane_f32(gain + step + step, gain4, 2);
-                gain4 = vsetq_lane_f32(gain + step + step + step, gain4, 3);
-                step4 = vdupq_n_f32(step + step + step + step);
+                const float32x4_t four4 = vdupq_n_f32(4.0f);
+                const float32x4_t step4 = vdupq_n_f32(step);
+                const float32x4_t gain4 = vdupq_n_f32(gain);
+                float32x4_t step_count4 = vsetq_lane_f32(0.0f,
+                    vsetq_lane_f32(1.0f,
+                    vsetq_lane_f32(2.0f,
+                    vsetq_lane_f32(3.0f, vdupq_n_f32(0.0f), 3),
+                    2), 1), 0
+                );
+                ALsizei todo = minsize >> 2;
+
                 do {
                     const float32x4_t val4 = vld1q_f32(&data[pos]);
                     float32x4_t dry4 = vld1q_f32(&OutBuffer[c][OutPos+pos]);
-                    dry4 = vmlaq_f32(dry4, val4, gain4);
-                    gain4 = vaddq_f32(gain4, step4);
+                    dry4 = vmlaq_f32(dry4, val4, vmlaq_f32(gain4, step4, step_count4));
+                    step_count4 = vaddq_f32(step_count4, four4);
                     vst1q_f32(&OutBuffer[c][OutPos+pos], dry4);
                     pos += 4;
-                } while(minsize-pos > 3);
-                /* NOTE: gain4 now represents the next four gains after the
-                 * last four mixed samples, so the lowest element represents
-                 * the next gain to apply.
+                } while(--todo);
+                /* NOTE: step_count4 now represents the next four counts after
+                 * the last four mixed samples, so the lowest element
+                 * represents the next step count to apply.
                  */
-                gain = vgetq_lane_f32(gain4, 0);
+                step_count = vgetq_lane_f32(step_count4, 0);
             }
             /* Mix with applying left over gain steps that aren't aligned multiples of 4. */
             for(;pos < minsize;pos++)
             {
-                OutBuffer[c][OutPos+pos] += data[pos]*gain;
-                gain += step;
+                OutBuffer[c][OutPos+pos] += data[pos]*(gain + step*step_count);
+                step_count += 1.0f;
             }
             if(pos == Counter)
                 gain = TargetGains[c];
+            else
+                gain += step*step_count;
             CurrentGains[c] = gain;
 
             /* Mix until pos is aligned with 4 or the mix is done. */
@@ -225,13 +234,17 @@ void Mix_Neon(const ALfloat *data, ALsizei OutChans, ALfloat (*restrict OutBuffe
 
         if(!(fabsf(gain) > GAIN_SILENCE_THRESHOLD))
             continue;
-        gain4 = vdupq_n_f32(gain);
-        for(;BufferSize-pos > 3;pos += 4)
+        if(LIKELY(BufferSize-pos > 3))
         {
-            const float32x4_t val4 = vld1q_f32(&data[pos]);
-            float32x4_t dry4 = vld1q_f32(&OutBuffer[c][OutPos+pos]);
-            dry4 = vmlaq_f32(dry4, val4, gain4);
-            vst1q_f32(&OutBuffer[c][OutPos+pos], dry4);
+            ALsizei todo = (BufferSize-pos) >> 2;
+            const float32x4_t gain4 = vdupq_n_f32(gain);
+            do {
+                const float32x4_t val4 = vld1q_f32(&data[pos]);
+                float32x4_t dry4 = vld1q_f32(&OutBuffer[c][OutPos+pos]);
+                dry4 = vmlaq_f32(dry4, val4, gain4);
+                vst1q_f32(&OutBuffer[c][OutPos+pos], dry4);
+                pos += 4;
+            } while(--todo);
         }
         for(;pos < BufferSize;pos++)
             OutBuffer[c][OutPos+pos] += data[pos]*gain;
@@ -240,28 +253,29 @@ void Mix_Neon(const ALfloat *data, ALsizei OutChans, ALfloat (*restrict OutBuffe
 
 void MixRow_Neon(ALfloat *OutBuffer, const ALfloat *Gains, const ALfloat (*restrict data)[BUFFERSIZE], ALsizei InChans, ALsizei InPos, ALsizei BufferSize)
 {
-    float32x4_t gain4;
     ALsizei c;
 
     ASSUME(InChans > 0);
     ASSUME(BufferSize > 0);
-    data = ASSUME_ALIGNED(data, 16);
-    OutBuffer = ASSUME_ALIGNED(OutBuffer, 16);
 
     for(c = 0;c < InChans;c++)
     {
         ALsizei pos = 0;
-        ALfloat gain = Gains[c];
+        const ALfloat gain = Gains[c];
         if(!(fabsf(gain) > GAIN_SILENCE_THRESHOLD))
             continue;
 
-        gain4 = vdupq_n_f32(gain);
-        for(;BufferSize-pos > 3;pos += 4)
+        if(LIKELY(BufferSize > 3))
         {
-            const float32x4_t val4 = vld1q_f32(&data[c][InPos+pos]);
-            float32x4_t dry4 = vld1q_f32(&OutBuffer[pos]);
-            dry4 = vmlaq_f32(dry4, val4, gain4);
-            vst1q_f32(&OutBuffer[pos], dry4);
+            ALsizei todo = BufferSize >> 2;
+            float32x4_t gain4 = vdupq_n_f32(gain);
+            do {
+                const float32x4_t val4 = vld1q_f32(&data[c][InPos+pos]);
+                float32x4_t dry4 = vld1q_f32(&OutBuffer[pos]);
+                dry4 = vmlaq_f32(dry4, val4, gain4);
+                vst1q_f32(&OutBuffer[pos], dry4);
+                pos += 4;
+            } while(--todo);
         }
         for(;pos < BufferSize;pos++)
             OutBuffer[pos] += data[c][InPos+pos]*gain;

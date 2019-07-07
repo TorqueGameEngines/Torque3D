@@ -38,12 +38,14 @@ extern inline ALboolean IsReverbEffect(ALenum type);
 const struct EffectList EffectList[EFFECTLIST_SIZE] = {
     { "eaxreverb",  EAXREVERB_EFFECT,  AL_EFFECT_EAXREVERB },
     { "reverb",     REVERB_EFFECT,     AL_EFFECT_REVERB },
+    { "autowah",    AUTOWAH_EFFECT,    AL_EFFECT_AUTOWAH },
     { "chorus",     CHORUS_EFFECT,     AL_EFFECT_CHORUS },
     { "compressor", COMPRESSOR_EFFECT, AL_EFFECT_COMPRESSOR },
     { "distortion", DISTORTION_EFFECT, AL_EFFECT_DISTORTION },
     { "echo",       ECHO_EFFECT,       AL_EFFECT_ECHO },
     { "equalizer",  EQUALIZER_EFFECT,  AL_EFFECT_EQUALIZER },
     { "flanger",    FLANGER_EFFECT,    AL_EFFECT_FLANGER },
+    { "fshifter",   FSHIFTER_EFFECT,   AL_EFFECT_FREQUENCY_SHIFTER },
     { "modulator",  MODULATOR_EFFECT,  AL_EFFECT_RING_MODULATOR },
     { "pshifter",   PSHIFTER_EFFECT,   AL_EFFECT_PITCH_SHIFTER },
     { "dedicated",  DEDICATED_EFFECT,  AL_EFFECT_DEDICATED_LOW_FREQUENCY_EFFECT },
@@ -533,6 +535,13 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Reverb.DecayHFLimit = AL_REVERB_DEFAULT_DECAY_HFLIMIT;
         effect->vtab = &ALreverb_vtable;
         break;
+    case AL_EFFECT_AUTOWAH:
+        effect->Props.Autowah.AttackTime = AL_AUTOWAH_DEFAULT_ATTACK_TIME;
+        effect->Props.Autowah.ReleaseTime = AL_AUTOWAH_DEFAULT_RELEASE_TIME;
+        effect->Props.Autowah.Resonance = AL_AUTOWAH_DEFAULT_RESONANCE;
+        effect->Props.Autowah.PeakGain = AL_AUTOWAH_DEFAULT_PEAK_GAIN;
+        effect->vtab = &ALautowah_vtable;
+        break;
     case AL_EFFECT_CHORUS:
         effect->Props.Chorus.Waveform = AL_CHORUS_DEFAULT_WAVEFORM;
         effect->Props.Chorus.Phase = AL_CHORUS_DEFAULT_PHASE;
@@ -583,6 +592,12 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Chorus.Feedback = AL_FLANGER_DEFAULT_FEEDBACK;
         effect->Props.Chorus.Delay = AL_FLANGER_DEFAULT_DELAY;
         effect->vtab = &ALflanger_vtable;
+        break;
+        case AL_EFFECT_FREQUENCY_SHIFTER:
+        effect->Props.Fshifter.Frequency      = AL_FREQUENCY_SHIFTER_DEFAULT_FREQUENCY;
+        effect->Props.Fshifter.LeftDirection  = AL_FREQUENCY_SHIFTER_DEFAULT_LEFT_DIRECTION;
+        effect->Props.Fshifter.RightDirection = AL_FREQUENCY_SHIFTER_DEFAULT_RIGHT_DIRECTION;
+        effect->vtab = &ALfshifter_vtable;
         break;
     case AL_EFFECT_RING_MODULATOR:
         effect->Props.Modulator.Frequency      = AL_RING_MODULATOR_DEFAULT_FREQUENCY;

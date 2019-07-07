@@ -48,12 +48,14 @@ static const struct {
     { AL_EFFECT_NULL, NullStateFactory_getFactory },
     { AL_EFFECT_EAXREVERB, ReverbStateFactory_getFactory },
     { AL_EFFECT_REVERB, ReverbStateFactory_getFactory },
+    { AL_EFFECT_AUTOWAH, AutowahStateFactory_getFactory },
     { AL_EFFECT_CHORUS, ChorusStateFactory_getFactory },
     { AL_EFFECT_COMPRESSOR, CompressorStateFactory_getFactory },
     { AL_EFFECT_DISTORTION, DistortionStateFactory_getFactory },
     { AL_EFFECT_ECHO, EchoStateFactory_getFactory },
     { AL_EFFECT_EQUALIZER, EqualizerStateFactory_getFactory },
     { AL_EFFECT_FLANGER, FlangerStateFactory_getFactory },
+    { AL_EFFECT_FREQUENCY_SHIFTER, FshifterStateFactory_getFactory },
     { AL_EFFECT_RING_MODULATOR, ModulatorStateFactory_getFactory },
     { AL_EFFECT_PITCH_SHIFTER, PshifterStateFactory_getFactory},
     { AL_EFFECT_DEDICATED_DIALOGUE, DedicatedStateFactory_getFactory },
@@ -120,12 +122,6 @@ AL_API ALvoid AL_APIENTRY alGenAuxiliaryEffectSlots(ALsizei n, ALuint *effectslo
 
     LockEffectSlotList(context);
     device = context->Device;
-    if(device->AuxiliaryEffectSlotMax - VECTOR_SIZE(context->EffectSlotList) < (ALuint)n)
-    {
-        UnlockEffectSlotList(context);
-        SETERR_GOTO(context, AL_OUT_OF_MEMORY, done, "Exceeding %u auxiliary effect slot limit",
-                    device->AuxiliaryEffectSlotMax);
-    }
     for(cur = 0;cur < n;cur++)
     {
         ALeffectslotPtr *iter = VECTOR_BEGIN(context->EffectSlotList);
@@ -140,6 +136,13 @@ AL_API ALvoid AL_APIENTRY alGenAuxiliaryEffectSlots(ALsizei n, ALuint *effectslo
         }
         if(iter == end)
         {
+            if(device->AuxiliaryEffectSlotMax == VECTOR_SIZE(context->EffectSlotList))
+            {
+                UnlockEffectSlotList(context);
+                alDeleteAuxiliaryEffectSlots(cur, effectslots);
+                SETERR_GOTO(context, AL_OUT_OF_MEMORY, done,
+                    "Exceeding %u auxiliary effect slot limit", device->AuxiliaryEffectSlotMax);
+            }
             VECTOR_PUSH_BACK(context->EffectSlotList, NULL);
             iter = &VECTOR_BACK(context->EffectSlotList);
         }
@@ -750,6 +753,9 @@ void UpdateEffectSlotProps(ALeffectslot *slot, ALCcontext *context)
         /* If there was an unused update container, put it back in the
          * freelist.
          */
+        if(props->State)
+            ALeffectState_DecRef(props->State);
+        props->State = NULL;
         ATOMIC_REPLACE_HEAD(struct ALeffectslotProps*, &context->FreeEffectslotProps, props);
     }
 

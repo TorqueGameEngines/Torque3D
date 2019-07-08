@@ -858,16 +858,15 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    {
       normal = new Var("normal", "float3");
       meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
-      
-   }
-   if (!fd.features[MFT_NormalMap])
-   {
-      Var* worldToTangent = getInWorldToTangent(componentList);
-      meta->addStatement(new GenOp("  @ = normalize(mul(@,float3(0,0,1.0f)));\r\n\n", normal, worldToTangent));
-   }
-   else
-   {
-      meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", normal, wsNormal));
+      if (!fd.features[MFT_NormalMap])
+      {
+         Var* worldToTangent = getInWorldToTangent(componentList);
+         meta->addStatement(new GenOp("  @ = normalize(mul(@,float3(0,0,1.0f)));\r\n\n", normal, worldToTangent));
+      }
+      else
+      {
+         meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", normal, wsNormal));
+      }      
    }
 
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");

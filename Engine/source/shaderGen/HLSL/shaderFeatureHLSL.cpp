@@ -405,11 +405,8 @@ Var* ShaderFeatureHLSL::getInTexCoord( const char *name,
       texCoord->setType( type );
    }
 
-   //AssertFatal( dStrcmp( type, (const char*)texCoord->type ) == 0, 
-   //   "ShaderFeatureHLSL::getInTexCoord - Type mismatch!" );
-
-   if (dStrcmp(type, (const char*)texCoord->type) != 0)
-      return nullptr;
+   AssertFatal( dStrcmp( type, (const char*)texCoord->type ) == 0, 
+      "ShaderFeatureHLSL::getInTexCoord - Type mismatch!" );
 
    return texCoord;
 }

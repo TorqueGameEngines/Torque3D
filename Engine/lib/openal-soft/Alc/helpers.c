@@ -125,7 +125,6 @@ extern inline ALuint NextPowerOf2(ALuint value);
 extern inline size_t RoundUp(size_t value, size_t r);
 extern inline ALint fastf2i(ALfloat f);
 extern inline int float2int(float f);
-extern inline float fast_roundf(float f);
 #ifndef __GNUC__
 #if defined(HAVE_BITSCANFORWARD64_INTRINSIC)
 extern inline int msvc64_ctz64(ALuint64 v);
@@ -223,32 +222,22 @@ void FillCPUCaps(int capfilter)
         ERR("Failed to open /proc/cpuinfo, cannot check for NEON support\n");
     else
     {
-        al_string features = AL_STRING_INIT_STATIC();
         char buf[256];
-
         while(fgets(buf, sizeof(buf), file) != NULL)
         {
+            size_t len;
+            char *str;
+
             if(strncmp(buf, "Features\t:", 10) != 0)
                 continue;
 
-            alstr_copy_cstr(&features, buf+10);
-            while(VECTOR_BACK(features) != '\n')
-            {
-                if(fgets(buf, sizeof(buf), file) == NULL)
-                    break;
-                alstr_append_cstr(&features, buf);
-            }
-            break;
-        }
-        fclose(file);
-        file = NULL;
+            len = strlen(buf);
+            while(len > 0 && isspace(buf[len-1]))
+                buf[--len] = 0;
 
-        if(!alstr_empty(features))
-        {
-            const char *str = alstr_get_cstr(features);
-            while(isspace(str[0])) ++str;
+            TRACE("Got features string:%s\n", buf+10);
 
-            TRACE("Got features string:%s\n", str);
+            str = buf;
             while((str=strstr(str, "neon")) != NULL)
             {
                 if(isspace(*(str-1)) && (str[4] == 0 || isspace(str[4])))
@@ -256,11 +245,13 @@ void FillCPUCaps(int capfilter)
                     caps |= CPU_CAP_NEON;
                     break;
                 }
-                ++str;
+                str++;
             }
+            break;
         }
 
-        alstr_reset(&features);
+        fclose(file);
+        file = NULL;
     }
 #endif
 
@@ -684,13 +675,13 @@ void GetProcBinary(al_string *path, al_string *fname)
     size_t pathlen;
 
 #ifdef __FreeBSD__
-    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
-    if(sysctl(mib, 4, NULL, &pathlen, NULL, 0) == -1)
-        WARN("Failed to sysctl kern.proc.pathname: %s\n", strerror(errno));
+    int mib[4] = { CTL_KERN, KERN_PROC_ARGS, getpid() };
+    if(sysctl(mib, 3, NULL, &pathlen, NULL, 0) == -1)
+        WARN("Failed to sysctl kern.procargs.%d: %s\n", mib[2], strerror(errno));
     else
     {
         pathname = malloc(pathlen + 1);
-        sysctl(mib, 4, (void*)pathname, &pathlen, NULL, 0);
+        sysctl(mib, 3, (void*)pathname, &pathlen, NULL, 0);
         pathname[pathlen] = 0;
     }
 #endif
@@ -1105,8 +1096,8 @@ void alstr_copy_range(al_string *str, const al_string_char_type *from, const al_
 void alstr_append_char(al_string *str, const al_string_char_type c)
 {
     size_t len = alstr_length(*str);
-    VECTOR_RESIZE(*str, len+1, len+2);
-    VECTOR_BACK(*str) = c;
+    VECTOR_RESIZE(*str, len, len+2);
+    VECTOR_PUSH_BACK(*str, c);
     VECTOR_ELEM(*str, len+1) = 0;
 }
 

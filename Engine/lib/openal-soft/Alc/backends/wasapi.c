@@ -1919,6 +1919,11 @@ ALCenum ALCwasapiCapture_captureSamples(ALCwasapiCapture *self, ALCvoid *buffer,
 }
 
 
+static inline void AppendAllDevicesList2(const DevMap *entry)
+{ AppendAllDevicesList(alstr_get_cstr(entry->name)); }
+static inline void AppendCaptureDeviceList2(const DevMap *entry)
+{ AppendCaptureDeviceList(alstr_get_cstr(entry->name)); }
+
 typedef struct ALCwasapiBackendFactory {
     DERIVE_FROM_TYPE(ALCbackendFactory);
 } ALCwasapiBackendFactory;
@@ -1927,7 +1932,7 @@ typedef struct ALCwasapiBackendFactory {
 static ALCboolean ALCwasapiBackendFactory_init(ALCwasapiBackendFactory *self);
 static void ALCwasapiBackendFactory_deinit(ALCwasapiBackendFactory *self);
 static ALCboolean ALCwasapiBackendFactory_querySupport(ALCwasapiBackendFactory *self, ALCbackend_Type type);
-static void ALCwasapiBackendFactory_probe(ALCwasapiBackendFactory *self, enum DevProbe type, al_string *outnames);
+static void ALCwasapiBackendFactory_probe(ALCwasapiBackendFactory *self, enum DevProbe type);
 static ALCbackend* ALCwasapiBackendFactory_createBackend(ALCwasapiBackendFactory *self, ALCdevice *device, ALCbackend_Type type);
 
 DEFINE_ALCBACKENDFACTORY_VTABLE(ALCwasapiBackendFactory);
@@ -1984,7 +1989,7 @@ static ALCboolean ALCwasapiBackendFactory_querySupport(ALCwasapiBackendFactory* 
     return ALC_FALSE;
 }
 
-static void ALCwasapiBackendFactory_probe(ALCwasapiBackendFactory* UNUSED(self), enum DevProbe type, al_string *outnames)
+static void ALCwasapiBackendFactory_probe(ALCwasapiBackendFactory* UNUSED(self), enum DevProbe type)
 {
     ThreadRequest req = { NULL, 0 };
 
@@ -1998,19 +2003,13 @@ static void ALCwasapiBackendFactory_probe(ALCwasapiBackendFactory* UNUSED(self),
             hr = WaitForResponse(&req);
         if(SUCCEEDED(hr)) switch(type)
         {
-#define APPEND_OUTNAME(e) do {                                                \
-    if(!alstr_empty((e)->name))                                               \
-        alstr_append_range(outnames, VECTOR_BEGIN((e)->name),                 \
-                           VECTOR_END((e)->name)+1);                          \
-} while(0)
         case ALL_DEVICE_PROBE:
-            VECTOR_FOR_EACH(const DevMap, PlaybackDevices, APPEND_OUTNAME);
+            VECTOR_FOR_EACH(const DevMap, PlaybackDevices, AppendAllDevicesList2);
             break;
 
         case CAPTURE_DEVICE_PROBE:
-            VECTOR_FOR_EACH(const DevMap, CaptureDevices, APPEND_OUTNAME);
+            VECTOR_FOR_EACH(const DevMap, CaptureDevices, AppendCaptureDeviceList2);
             break;
-#undef APPEND_OUTNAME
         }
         CloseHandle(req.FinishedEvt);
         req.FinishedEvt = NULL;

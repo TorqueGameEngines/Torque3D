@@ -145,6 +145,16 @@ static inline HrtfDirectMixerFunc SelectHrtfMixer(void)
 }
 
 
+/* Prior to VS2013, MSVC lacks the round() family of functions. */
+#if defined(_MSC_VER) && _MSC_VER < 1800
+static float roundf(float val)
+{
+    if(val < 0.0f)
+        return ceilf(val-0.5f);
+    return floorf(val+0.5f);
+}
+#endif
+
 /* This RNG method was created based on the math found in opusdec. It's quick,
  * and starting with a seed value of 22222, is suitable for generating
  * whitenoise.
@@ -211,31 +221,32 @@ void aluInit(void)
 
 static void SendSourceStoppedEvent(ALCcontext *context, ALuint id)
 {
-    AsyncEvent evt = ASYNC_EVENT(EventType_SourceStateChange);
     ALbitfieldSOFT enabledevt;
+    AsyncEvent evt;
     size_t strpos;
     ALuint scale;
 
     enabledevt = ATOMIC_LOAD(&context->EnabledEvts, almemory_order_acquire);
     if(!(enabledevt&EventType_SourceStateChange)) return;
 
-    evt.u.user.type = AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT;
-    evt.u.user.id = id;
-    evt.u.user.param = AL_STOPPED;
+    evt.EnumType = EventType_SourceStateChange;
+    evt.Type = AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT;
+    evt.ObjectId = id;
+    evt.Param = AL_STOPPED;
 
     /* Normally snprintf would be used, but this is called from the mixer and
      * that function's not real-time safe, so we have to construct it manually.
      */
-    strcpy(evt.u.user.msg, "Source ID "); strpos = 10;
+    strcpy(evt.Message, "Source ID "); strpos = 10;
     scale = 1000000000;
     while(scale > 0 && scale > id)
         scale /= 10;
     while(scale > 0)
     {
-        evt.u.user.msg[strpos++] = '0' + ((id/scale)%10);
+        evt.Message[strpos++] = '0' + ((id/scale)%10);
         scale /= 10;
     }
-    strcpy(evt.u.user.msg+strpos, " state changed to AL_STOPPED");
+    strcpy(evt.Message+strpos, " state changed to AL_STOPPED");
 
     if(ll_ringbuffer_write(context->AsyncEvents, (const char*)&evt, 1) == 1)
         alsem_post(&context->EventSem);
@@ -331,7 +342,9 @@ void aluSelectPostProcess(ALCdevice *device)
 }
 
 
-/* Prepares the interpolator for a given rate (determined by increment).
+/* Prepares the interpolator for a given rate (determined by increment).  A
+ * result of AL_FALSE indicates that the filter output will completely cut
+ * the input signal.
  *
  * With a bit of work, and a trade of memory for CPU cost, this could be
  * modified for use with an interpolated increment for buttery-smooth pitch
@@ -356,7 +369,7 @@ void BsincPrepare(const ALuint increment, BsincState *state, const BSincTable *t
 
     state->sf = sf;
     state->m = table->m[si];
-    state->l = (state->m/2) - 1;
+    state->l = -((state->m/2) - 1);
     state->filter = table->Tab + table->filterOffset[si];
 }
 
@@ -462,40 +475,12 @@ static bool CalcEffectSlotParams(ALeffectslot *slot, ALCcontext *context, bool f
             slot->Params.AirAbsorptionGainHF = 1.0f;
         }
 
+        /* Swap effect states. No need to play with the ref counts since they
+         * keep the same number of refs.
+         */
         state = props->State;
-
-        if(state == slot->Params.EffectState)
-        {
-            /* If the effect state is the same as current, we can decrement its
-             * count safely to remove it from the update object (it can't reach
-             * 0 refs since the current params also hold a reference).
-             */
-            DecrementRef(&state->Ref);
-            props->State = NULL;
-        }
-        else
-        {
-            /* Otherwise, replace it and send off the old one with a release
-             * event.
-             */
-            AsyncEvent evt = ASYNC_EVENT(EventType_ReleaseEffectState);
-            evt.u.EffectState = slot->Params.EffectState;
-
-            slot->Params.EffectState = state;
-            props->State = NULL;
-
-            if(LIKELY(ll_ringbuffer_write(context->AsyncEvents, (const char*)&evt, 1) != 0))
-                alsem_post(&context->EventSem);
-            else
-            {
-                /* If writing the event failed, the queue was probably full.
-                 * Store the old state in the property object where it can
-                 * eventually be cleaned up sometime later (not ideal, but
-                 * better than blocking or leaking).
-                 */
-                props->State = evt.u.EffectState;
-            }
-        }
+        props->State = slot->Params.EffectState;
+        slot->Params.EffectState = state;
 
         ATOMIC_REPLACE_HEAD(struct ALeffectslotProps*, &context->FreeEffectslotProps, props);
     }
@@ -671,26 +656,24 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
                 NfcFilterAdjust(&voice->Direct.Params[0].NFCtrlFilter, w0);
 
                 for(i = 0;i < MAX_AMBI_ORDER+1;i++)
-                    voice->Direct.ChannelsPerOrder[i] = Device->NumChannelsPerOrder[i];
+                    voice->Direct.ChannelsPerOrder[i] = Device->Dry.NumChannelsPerOrder[i];
                 voice->Flags |= VOICE_HAS_NFC;
             }
 
-            /* A scalar of 1.5 for plain stereo results in +/-60 degrees being
-             * moved to +/-90 degrees for direct right and left speaker
-             * responses.
-             */
-            CalcAngleCoeffs((Device->Render_Mode==StereoPair) ? ScaleAzimuthFront(Azi, 1.5f) : Azi,
-                            Elev, Spread, coeffs);
+            if(Device->Render_Mode == StereoPair)
+                CalcAnglePairwiseCoeffs(Azi, Elev, Spread, coeffs);
+            else
+                CalcAngleCoeffs(Azi, Elev, Spread, coeffs);
 
             /* NOTE: W needs to be scaled by sqrt(2) due to FuMa normalization. */
-            ComputePanGains(&Device->Dry, coeffs, DryGain*SQRTF_2,
+            ComputeDryPanGains(&Device->Dry, coeffs, DryGain*1.414213562f,
                                voice->Direct.Params[0].Gains.Target);
             for(i = 0;i < NumSends;i++)
             {
                 const ALeffectslot *Slot = SendSlots[i];
                 if(Slot)
-                    ComputePanningGainsBF(Slot->ChanMap, Slot->NumChannels, coeffs,
-                        WetGain[i]*SQRTF_2, voice->Send[i].Params[0].Gains.Target
+                    ComputePanningGainsBF(Slot->ChanMap, Slot->NumChannels,
+                        coeffs, WetGain[i]*1.414213562f, voice->Send[i].Params[0].Gains.Target
                     );
             }
         }
@@ -699,6 +682,8 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
             /* Local B-Format sources have their XYZ channels rotated according
              * to the orientation.
              */
+            const ALfloat sqrt_2 = sqrtf(2.0f);
+            const ALfloat sqrt_3 = sqrtf(3.0f);
             ALfloat N[3], V[3], U[3];
             aluMatrixf matrix;
 
@@ -741,25 +726,25 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
              * outputs on the columns.
              */
             aluMatrixfSet(&matrix,
-                // ACN0           ACN1           ACN2           ACN3
-                SQRTF_2,          0.0f,          0.0f,          0.0f, // Ambi W
-                   0.0f, -N[0]*SQRTF_3,  N[1]*SQRTF_3, -N[2]*SQRTF_3, // Ambi X
-                   0.0f,  U[0]*SQRTF_3, -U[1]*SQRTF_3,  U[2]*SQRTF_3, // Ambi Y
-                   0.0f, -V[0]*SQRTF_3,  V[1]*SQRTF_3, -V[2]*SQRTF_3  // Ambi Z
+                // ACN0         ACN1          ACN2          ACN3
+                sqrt_2,         0.0f,         0.0f,         0.0f, // Ambi W
+                  0.0f, -N[0]*sqrt_3,  N[1]*sqrt_3, -N[2]*sqrt_3, // Ambi X
+                  0.0f,  U[0]*sqrt_3, -U[1]*sqrt_3,  U[2]*sqrt_3, // Ambi Y
+                  0.0f, -V[0]*sqrt_3,  V[1]*sqrt_3, -V[2]*sqrt_3  // Ambi Z
             );
 
             voice->Direct.Buffer = Device->FOAOut.Buffer;
             voice->Direct.Channels = Device->FOAOut.NumChannels;
             for(c = 0;c < num_channels;c++)
-                ComputePanGains(&Device->FOAOut, matrix.m[c], DryGain,
-                                voice->Direct.Params[c].Gains.Target);
+                ComputeFirstOrderGains(&Device->FOAOut, matrix.m[c], DryGain,
+                                       voice->Direct.Params[c].Gains.Target);
             for(i = 0;i < NumSends;i++)
             {
                 const ALeffectslot *Slot = SendSlots[i];
                 if(Slot)
                 {
                     for(c = 0;c < num_channels;c++)
-                        ComputePanningGainsBF(Slot->ChanMap, Slot->NumChannels,
+                        ComputeFirstOrderGainsBF(Slot->ChanMap, Slot->NumChannels,
                             matrix.m[c], WetGain[i], voice->Send[i].Params[c].Gains.Target
                         );
                 }
@@ -915,15 +900,17 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
                     NfcFilterAdjust(&voice->Direct.Params[c].NFCtrlFilter, w0);
 
                 for(i = 0;i < MAX_AMBI_ORDER+1;i++)
-                    voice->Direct.ChannelsPerOrder[i] = Device->NumChannelsPerOrder[i];
+                    voice->Direct.ChannelsPerOrder[i] = Device->Dry.NumChannelsPerOrder[i];
                 voice->Flags |= VOICE_HAS_NFC;
             }
 
             /* Calculate the directional coefficients once, which apply to all
              * input channels.
              */
-            CalcAngleCoeffs((Device->Render_Mode==StereoPair) ? ScaleAzimuthFront(Azi, 1.5f) : Azi,
-                            Elev, Spread, coeffs);
+            if(Device->Render_Mode == StereoPair)
+                CalcAnglePairwiseCoeffs(Azi, Elev, Spread, coeffs);
+            else
+                CalcAngleCoeffs(Azi, Elev, Spread, coeffs);
 
             for(c = 0;c < num_channels;c++)
             {
@@ -938,8 +925,9 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
                     continue;
                 }
 
-                ComputePanGains(&Device->Dry, coeffs, DryGain * downmix_gain,
-                                voice->Direct.Params[c].Gains.Target);
+                ComputeDryPanGains(&Device->Dry,
+                    coeffs, DryGain * downmix_gain, voice->Direct.Params[c].Gains.Target
+                );
             }
 
             for(i = 0;i < NumSends;i++)
@@ -975,7 +963,7 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
                     NfcFilterAdjust(&voice->Direct.Params[c].NFCtrlFilter, w0);
 
                 for(i = 0;i < MAX_AMBI_ORDER+1;i++)
-                    voice->Direct.ChannelsPerOrder[i] = Device->NumChannelsPerOrder[i];
+                    voice->Direct.ChannelsPerOrder[i] = Device->Dry.NumChannelsPerOrder[i];
                 voice->Flags |= VOICE_HAS_NFC;
             }
 
@@ -994,14 +982,14 @@ static void CalcPanningAndFilters(ALvoice *voice, const ALfloat Azi, const ALflo
                     continue;
                 }
 
-                CalcAngleCoeffs(
-                    (Device->Render_Mode==StereoPair) ? ScaleAzimuthFront(chans[c].angle, 3.0f)
-                                                      : chans[c].angle,
-                    chans[c].elevation, Spread, coeffs
+                if(Device->Render_Mode == StereoPair)
+                    CalcAnglePairwiseCoeffs(chans[c].angle, chans[c].elevation, Spread, coeffs);
+                else
+                    CalcAngleCoeffs(chans[c].angle, chans[c].elevation, Spread, coeffs);
+                ComputeDryPanGains(&Device->Dry,
+                    coeffs, DryGain, voice->Direct.Params[c].Gains.Target
                 );
 
-                ComputePanGains(&Device->Dry, coeffs, DryGain,
-                                voice->Direct.Params[c].Gains.Target);
                 for(i = 0;i < NumSends;i++)
                 {
                     const ALeffectslot *Slot = SendSlots[i];
@@ -1634,7 +1622,7 @@ static void ApplyDistanceComp(ALfloat (*restrict Samples)[BUFFERSIZE], DistanceC
             continue;
         }
 
-        if(LIKELY(SamplesToDo >= base))
+        if(SamplesToDo >= base)
         {
             for(i = 0;i < base;i++)
                 Values[i] = distbuf[i];
@@ -1662,9 +1650,6 @@ static void ApplyDither(ALfloat (*restrict Samples)[BUFFERSIZE], ALuint *dither_
     ALuint seed = *dither_seed;
     ALsizei c, i;
 
-    ASSUME(numchans > 0);
-    ASSUME(SamplesToDo > 0);
-
     /* Dithering. Step 1, generate whitenoise (uniform distribution of random
      * values between -1 and +1). Step 2 is to add the noise to the samples,
      * before rounding and after scaling up to the desired quantization depth.
@@ -1678,7 +1663,7 @@ static void ApplyDither(ALfloat (*restrict Samples)[BUFFERSIZE], ALuint *dither_
             ALuint rng0 = dither_rng(&seed);
             ALuint rng1 = dither_rng(&seed);
             val += (ALfloat)(rng0*(1.0/UINT_MAX) - rng1*(1.0/UINT_MAX));
-            samples[i] = fast_roundf(val) * invscale;
+            samples[i] = fastf2i(val) * invscale;
         }
     }
     *dither_seed = seed;
@@ -1689,9 +1674,9 @@ static inline ALfloat Conv_ALfloat(ALfloat val)
 { return val; }
 static inline ALint Conv_ALint(ALfloat val)
 {
-    /* Floats have a 23-bit mantissa. There is an implied 1 bit in the mantissa
-     * along with the sign bit, giving 25 bits total, so [-16777216, +16777216]
-     * is the max value a normalized float can be scaled to before losing
+    /* Floats have a 23-bit mantissa. A bit of the exponent helps out along
+     * with the sign bit, giving 25 bits. So [-16777216, +16777216] is the max
+     * integer range normalized floats can be converted to before losing
      * precision.
      */
     return fastf2i(clampf(val*16777216.0f, -16777216.0f, 16777215.0f))<<7;
@@ -1717,10 +1702,6 @@ static void Write##A(const ALfloat (*restrict InBuffer)[BUFFERSIZE],          \
                      ALsizei numchans)                                        \
 {                                                                             \
     ALsizei i, j;                                                             \
-                                                                              \
-    ASSUME(numchans > 0);                                                     \
-    ASSUME(SamplesToDo > 0);                                                  \
-                                                                              \
     for(j = 0;j < numchans;j++)                                               \
     {                                                                         \
         const ALfloat *restrict in = ASSUME_ALIGNED(InBuffer[j], 16);         \
@@ -1838,7 +1819,8 @@ void aluMixData(ALCdevice *device, ALvoid *OutBuffer, ALsizei NumSamples)
                           SamplesToDo, device->RealOut.NumChannels);
 
         if(device->Limiter)
-            ApplyCompression(device->Limiter, SamplesToDo, device->RealOut.Buffer);
+            ApplyCompression(device->Limiter, device->RealOut.NumChannels, SamplesToDo,
+                             device->RealOut.Buffer);
 
         if(device->DitherDepth > 0.0f)
             ApplyDither(device->RealOut.Buffer, &device->DitherSeed, device->DitherDepth,
@@ -1851,16 +1833,27 @@ void aluMixData(ALCdevice *device, ALvoid *OutBuffer, ALsizei NumSamples)
 
             switch(device->FmtType)
             {
-#define HANDLE_WRITE(T, S) case T:                                            \
-    Write##S(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels); break;
-                HANDLE_WRITE(DevFmtByte, I8)
-                HANDLE_WRITE(DevFmtUByte, UI8)
-                HANDLE_WRITE(DevFmtShort, I16)
-                HANDLE_WRITE(DevFmtUShort, UI16)
-                HANDLE_WRITE(DevFmtInt, I32)
-                HANDLE_WRITE(DevFmtUInt, UI32)
-                HANDLE_WRITE(DevFmtFloat, F32)
-#undef HANDLE_WRITE
+                case DevFmtByte:
+                    WriteI8(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
+                case DevFmtUByte:
+                    WriteUI8(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
+                case DevFmtShort:
+                    WriteI16(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
+                case DevFmtUShort:
+                    WriteUI16(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
+                case DevFmtInt:
+                    WriteI32(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
+                case DevFmtUInt:
+                    WriteUI32(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
+                case DevFmtFloat:
+                    WriteF32(Buffer, OutBuffer, SamplesDone, SamplesToDo, Channels);
+                    break;
             }
         }
 
@@ -1872,24 +1865,35 @@ void aluMixData(ALCdevice *device, ALvoid *OutBuffer, ALsizei NumSamples)
 
 void aluHandleDisconnect(ALCdevice *device, const char *msg, ...)
 {
-    AsyncEvent evt = ASYNC_EVENT(EventType_Disconnected);
     ALCcontext *ctx;
+    AsyncEvent evt;
     va_list args;
     int msglen;
 
     if(!ATOMIC_EXCHANGE(&device->Connected, AL_FALSE, almemory_order_acq_rel))
         return;
 
-    evt.u.user.type = AL_EVENT_TYPE_DISCONNECTED_SOFT;
-    evt.u.user.id = 0;
-    evt.u.user.param = 0;
+    evt.EnumType = EventType_Disconnected;
+    evt.Type = AL_EVENT_TYPE_DISCONNECTED_SOFT;
+    evt.ObjectId = 0;
+    evt.Param = 0;
 
     va_start(args, msg);
-    msglen = vsnprintf(evt.u.user.msg, sizeof(evt.u.user.msg), msg, args);
+    msglen = vsnprintf(evt.Message, sizeof(evt.Message), msg, args);
     va_end(args);
 
-    if(msglen < 0 || (size_t)msglen >= sizeof(evt.u.user.msg))
-        evt.u.user.msg[sizeof(evt.u.user.msg)-1] = 0;
+    if(msglen < 0 || (size_t)msglen >= sizeof(evt.Message))
+    {
+        evt.Message[sizeof(evt.Message)-1] = 0;
+        msglen = (int)strlen(evt.Message);
+    }
+    if(msglen > 0)
+        msg = evt.Message;
+    else
+    {
+        msg = "<internal error constructing message>";
+        msglen = (int)strlen(msg);
+    }
 
     ctx = ATOMIC_LOAD_SEQ(&device->ContextList);
     while(ctx)

@@ -599,10 +599,6 @@ if( TORQUE_OPENGL )
     endif()
 endif()
 
-if(UNIX AND NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "-no-pie")
-endif()
-
 ###############################################################################
 ###############################################################################
 finishExecutable()

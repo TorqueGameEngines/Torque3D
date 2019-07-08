@@ -40,8 +40,6 @@ typedef struct ALmodulatorState {
     ALsizei index;
     ALsizei step;
 
-    alignas(16) ALfloat ModSamples[MAX_UPDATE_SAMPLES];
-
     struct {
         BiquadFilter Filter;
 
@@ -65,17 +63,22 @@ DEFINE_ALEFFECTSTATE_VTABLE(ALmodulatorState);
 
 static inline ALfloat Sin(ALsizei index)
 {
-    return sinf(index*(F_TAU/WAVEFORM_FRACONE) - F_PI)*0.5f + 0.5f;
+    return sinf((ALfloat)index * (F_TAU / WAVEFORM_FRACONE));
 }
 
 static inline ALfloat Saw(ALsizei index)
 {
-    return (ALfloat)index / WAVEFORM_FRACONE;
+    return (ALfloat)index*(2.0f/WAVEFORM_FRACONE) - 1.0f;
 }
 
 static inline ALfloat Square(ALsizei index)
 {
-    return (ALfloat)((index >> (WAVEFORM_FRACBITS - 1)) & 1);
+    return (ALfloat)(((index>>(WAVEFORM_FRACBITS-2))&2) - 1);
+}
+
+static inline ALfloat One(ALsizei UNUSED(index))
+{
+    return 1.0f;
 }
 
 #define DECL_TEMPLATE(func)                                                   \
@@ -94,6 +97,7 @@ static void Modulate##func(ALfloat *restrict dst, ALsizei index,              \
 DECL_TEMPLATE(Sin)
 DECL_TEMPLATE(Saw)
 DECL_TEMPLATE(Square)
+DECL_TEMPLATE(One)
 
 #undef DECL_TEMPLATE
 
@@ -127,47 +131,45 @@ static ALboolean ALmodulatorState_deviceUpdate(ALmodulatorState *state, ALCdevic
 static ALvoid ALmodulatorState_update(ALmodulatorState *state, const ALCcontext *context, const ALeffectslot *slot, const ALeffectProps *props)
 {
     const ALCdevice *device = context->Device;
-    ALfloat cw, a;
+    ALfloat f0norm;
     ALsizei i;
 
-    if(props->Modulator.Waveform == AL_RING_MODULATOR_SINUSOID)
+    state->step = fastf2i(props->Modulator.Frequency / (ALfloat)device->Frequency *
+                          WAVEFORM_FRACONE);
+    state->step = clampi(state->step, 0, WAVEFORM_FRACONE-1);
+
+    if(state->step == 0)
+        state->GetSamples = ModulateOne;
+    else if(props->Modulator.Waveform == AL_RING_MODULATOR_SINUSOID)
         state->GetSamples = ModulateSin;
     else if(props->Modulator.Waveform == AL_RING_MODULATOR_SAWTOOTH)
         state->GetSamples = ModulateSaw;
     else /*if(Slot->Params.EffectProps.Modulator.Waveform == AL_RING_MODULATOR_SQUARE)*/
         state->GetSamples = ModulateSquare;
 
-    state->step = float2int(props->Modulator.Frequency*WAVEFORM_FRACONE/device->Frequency + 0.5f);
-    state->step = clampi(state->step, 1, WAVEFORM_FRACONE-1);
-
-    /* Custom filter coeffs, which match the old version instead of a low-shelf. */
-    cw = cosf(F_TAU * props->Modulator.HighPassCutoff / device->Frequency);
-    a = (2.0f-cw) - sqrtf(powf(2.0f-cw, 2.0f) - 1.0f);
-
-    state->Chans[0].Filter.b0 = a;
-    state->Chans[0].Filter.b1 = -a;
-    state->Chans[0].Filter.b2 = 0.0f;
-    state->Chans[0].Filter.a1 = -a;
-    state->Chans[0].Filter.a2 = 0.0f;
+    f0norm = props->Modulator.HighPassCutoff / (ALfloat)device->Frequency;
+    f0norm = clampf(f0norm, 1.0f/512.0f, 0.49f);
+    /* Bandwidth value is constant in octaves. */
+    BiquadFilter_setParams(&state->Chans[0].Filter, BiquadType_HighPass, 1.0f,
+                           f0norm, calc_rcpQ_from_bandwidth(f0norm, 0.75f));
     for(i = 1;i < MAX_EFFECT_CHANNELS;i++)
         BiquadFilter_copyParams(&state->Chans[i].Filter, &state->Chans[0].Filter);
 
     STATIC_CAST(ALeffectState,state)->OutBuffer = device->FOAOut.Buffer;
     STATIC_CAST(ALeffectState,state)->OutChannels = device->FOAOut.NumChannels;
     for(i = 0;i < MAX_EFFECT_CHANNELS;i++)
-        ComputeFirstOrderGains(&device->FOAOut, IdentityMatrixf.m[i],
-                               slot->Params.Gain, state->Chans[i].TargetGains);
+        ComputePanGains(&device->FOAOut, IdentityMatrixf.m[i], slot->Params.Gain,
+                        state->Chans[i].TargetGains);
 }
 
 static ALvoid ALmodulatorState_process(ALmodulatorState *state, ALsizei SamplesToDo, const ALfloat (*restrict SamplesIn)[BUFFERSIZE], ALfloat (*restrict SamplesOut)[BUFFERSIZE], ALsizei NumChannels)
 {
-    ALfloat *restrict modsamples = ASSUME_ALIGNED(state->ModSamples, 16);
     const ALsizei step = state->step;
     ALsizei base;
 
     for(base = 0;base < SamplesToDo;)
     {
-        alignas(16) ALfloat temps[2][MAX_UPDATE_SAMPLES];
+        alignas(16) ALfloat modsamples[MAX_UPDATE_SAMPLES];
         ALsizei td = mini(MAX_UPDATE_SAMPLES, SamplesToDo-base);
         ALsizei c, i;
 
@@ -177,11 +179,13 @@ static ALvoid ALmodulatorState_process(ALmodulatorState *state, ALsizei SamplesT
 
         for(c = 0;c < MAX_EFFECT_CHANNELS;c++)
         {
-            BiquadFilter_process(&state->Chans[c].Filter, temps[0], &SamplesIn[c][base], td);
-            for(i = 0;i < td;i++)
-                temps[1][i] = temps[0][i] * modsamples[i];
+            alignas(16) ALfloat temps[MAX_UPDATE_SAMPLES];
 
-            MixSamples(temps[1], NumChannels, SamplesOut, state->Chans[c].CurrentGains,
+            BiquadFilter_process(&state->Chans[c].Filter, temps, &SamplesIn[c][base], td);
+            for(i = 0;i < td;i++)
+                temps[i] *= modsamples[i];
+
+            MixSamples(temps, NumChannels, SamplesOut, state->Chans[c].CurrentGains,
                        state->Chans[c].TargetGains, SamplesToDo-base, base, td);
         }
 

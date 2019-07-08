@@ -75,14 +75,14 @@ static struct BackendInfo BackendList[] = {
 #ifdef HAVE_COREAUDIO
     { "core", ALCcoreAudioBackendFactory_getFactory },
 #endif
-#ifdef HAVE_OSS
-    { "oss", ALCossBackendFactory_getFactory },
-#endif
 #ifdef HAVE_SOLARIS
     { "solaris", ALCsolarisBackendFactory_getFactory },
 #endif
 #ifdef HAVE_SNDIO
-    { "sndio", ALCsndioBackendFactory_getFactory },
+    { "sndio", SndioBackendFactory_getFactory },
+#endif
+#ifdef HAVE_OSS
+    { "oss", ALCossBackendFactory_getFactory },
 #endif
 #ifdef HAVE_QSA
     { "qsa", ALCqsaBackendFactory_getFactory },
@@ -550,14 +550,12 @@ static const struct {
     DECL(AL_EFFECT_ECHO),
     DECL(AL_EFFECT_FLANGER),
     DECL(AL_EFFECT_PITCH_SHIFTER),
-#if 0
     DECL(AL_EFFECT_FREQUENCY_SHIFTER),
+#if 0
     DECL(AL_EFFECT_VOCAL_MORPHER),
 #endif
     DECL(AL_EFFECT_RING_MODULATOR),
-#if 0
     DECL(AL_EFFECT_AUTOWAH),
-#endif
     DECL(AL_EFFECT_COMPRESSOR),
     DECL(AL_EFFECT_EQUALIZER),
     DECL(AL_EFFECT_DEDICATED_LOW_FREQUENCY_EFFECT),
@@ -632,6 +630,10 @@ static const struct {
     DECL(AL_FLANGER_FEEDBACK),
     DECL(AL_FLANGER_DELAY),
 
+    DECL(AL_FREQUENCY_SHIFTER_FREQUENCY),
+    DECL(AL_FREQUENCY_SHIFTER_LEFT_DIRECTION),
+    DECL(AL_FREQUENCY_SHIFTER_RIGHT_DIRECTION),
+
     DECL(AL_RING_MODULATOR_FREQUENCY),
     DECL(AL_RING_MODULATOR_HIGHPASS_CUTOFF),
     DECL(AL_RING_MODULATOR_WAVEFORM),
@@ -653,6 +655,11 @@ static const struct {
     DECL(AL_EQUALIZER_HIGH_CUTOFF),
 
     DECL(AL_DEDICATED_GAIN),
+
+    DECL(AL_AUTOWAH_ATTACK_TIME),
+    DECL(AL_AUTOWAH_RELEASE_TIME),
+    DECL(AL_AUTOWAH_RESONANCE),
+    DECL(AL_AUTOWAH_PEAK_GAIN),
 
     DECL(AL_NUM_RESAMPLERS_SOFT),
     DECL(AL_DEFAULT_RESAMPLER_SOFT),
@@ -721,6 +728,7 @@ static const ALchar alExtList[] =
     "AL_SOFT_deferred_updates "
     "AL_SOFT_direct_channels "
     "AL_SOFTX_events "
+    "AL_SOFTX_filter_gain_ex "
     "AL_SOFT_gain_clamp_ex "
     "AL_SOFT_loop_points "
     "AL_SOFTX_map_buffer "
@@ -1157,75 +1165,6 @@ static void alc_initconfig(void)
 }
 #define DO_INITCONFIG() alcall_once(&alc_config_once, alc_initconfig)
 
-#ifdef __ANDROID__
-#include <jni.h>
-
-static JavaVM *gJavaVM;
-static pthread_key_t gJVMThreadKey;
-
-static void CleanupJNIEnv(void* UNUSED(ptr))
-{
-    JCALL0(gJavaVM,DetachCurrentThread)();
-}
-
-void *Android_GetJNIEnv(void)
-{
-    if(!gJavaVM)
-    {
-        WARN("gJavaVM is NULL!\n");
-        return NULL;
-    }
-
-    /* http://developer.android.com/guide/practices/jni.html
-     *
-     * All threads are Linux threads, scheduled by the kernel. They're usually
-     * started from managed code (using Thread.start), but they can also be
-     * created elsewhere and then attached to the JavaVM. For example, a thread
-     * started with pthread_create can be attached with the JNI
-     * AttachCurrentThread or AttachCurrentThreadAsDaemon functions. Until a
-     * thread is attached, it has no JNIEnv, and cannot make JNI calls.
-     * Attaching a natively-created thread causes a java.lang.Thread object to
-     * be constructed and added to the "main" ThreadGroup, making it visible to
-     * the debugger. Calling AttachCurrentThread on an already-attached thread
-     * is a no-op.
-     */
-    JNIEnv *env = pthread_getspecific(gJVMThreadKey);
-    if(!env)
-    {
-        int status = JCALL(gJavaVM,AttachCurrentThread)(&env, NULL);
-        if(status < 0)
-        {
-            ERR("Failed to attach current thread\n");
-            return NULL;
-        }
-        pthread_setspecific(gJVMThreadKey, env);
-    }
-    return env;
-}
-
-/* Automatically called by JNI. */
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void* UNUSED(reserved))
-{
-    void *env;
-    int err;
-
-    gJavaVM = jvm;
-    if(JCALL(gJavaVM,GetEnv)(&env, JNI_VERSION_1_4) != JNI_OK)
-    {
-        ERR("Failed to get JNIEnv with JNI_VERSION_1_4\n");
-        return JNI_ERR;
-    }
-
-    /* Create gJVMThreadKey so we can keep track of the JNIEnv assigned to each
-     * thread. The JNIEnv *must* be detached before the thread is destroyed.
-     */
-    if((err=pthread_key_create(&gJVMThreadKey, CleanupJNIEnv)) != 0)
-        ERR("pthread_key_create failed: %d\n", err);
-    pthread_setspecific(gJVMThreadKey, env);
-    return JNI_VERSION_1_4;
-}
-#endif
-
 
 /************************************************
  * Library deinitialization
@@ -1306,7 +1245,7 @@ static void ProbeDevices(al_string *list, struct BackendInfo *backendinfo, enum 
     if(backendinfo->getFactory)
     {
         ALCbackendFactory *factory = backendinfo->getFactory();
-        V(factory,probe)(type);
+        V(factory,probe)(type, list);
     }
 
     UnlockLists();
@@ -1315,17 +1254,6 @@ static void ProbeAllDevicesList(void)
 { ProbeDevices(&alcAllDevicesList, &PlaybackBackend, ALL_DEVICE_PROBE); }
 static void ProbeCaptureDeviceList(void)
 { ProbeDevices(&alcCaptureDeviceList, &CaptureBackend, CAPTURE_DEVICE_PROBE); }
-
-static void AppendDevice(const ALCchar *name, al_string *devnames)
-{
-    size_t len = strlen(name);
-    if(len > 0)
-        alstr_append_range(devnames, name, name+len+1);
-}
-void AppendAllDevicesList(const ALCchar *name)
-{ AppendDevice(name, &alcAllDevicesList); }
-void AppendCaptureDeviceList(const ALCchar *name)
-{ AppendDevice(name, &alcCaptureDeviceList); }
 
 
 /************************************************
@@ -1707,10 +1635,11 @@ static void alcSetError(ALCdevice *device, ALCenum errorCode)
 }
 
 
-struct Compressor *CreateDeviceLimiter(const ALCdevice *device)
+static struct Compressor *CreateDeviceLimiter(const ALCdevice *device, const ALfloat threshold)
 {
-    return CompressorInit(0.0f, 0.0f, AL_FALSE, AL_TRUE, 0.0f, 0.0f, 0.5f, 2.0f,
-                          0.0f, -3.0f, 3.0f, device->Frequency);
+    return CompressorInit(device->RealOut.NumChannels, device->Frequency,
+        AL_TRUE, AL_TRUE, AL_TRUE, AL_TRUE, AL_TRUE, 0.001f, 0.002f,
+        0.0f, 0.0f, threshold, INFINITY, 0.0f, 0.020f, 0.200f);
 }
 
 /* UpdateClockBase
@@ -1737,7 +1666,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
 {
     enum HrtfRequestMode hrtf_userreq = Hrtf_Default;
     enum HrtfRequestMode hrtf_appreq = Hrtf_Default;
-    ALCenum gainLimiter = device->Limiter ? ALC_TRUE : ALC_FALSE;
+    ALCenum gainLimiter = device->LimiterState;
     const ALsizei old_sends = device->NumAuxSends;
     ALsizei new_sends = device->NumAuxSends;
     enum DevFmtChannels oldChans;
@@ -2053,6 +1982,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
     device->RealOut.NumChannels = 0;
 
     UpdateClockBase(device);
+    device->FixedLatency = 0;
 
     device->DitherSeed = DITHER_RNG_SEED;
 
@@ -2213,9 +2143,12 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
                     break;
             }
         }
-        else if(depth > 24)
-            depth = 24;
-        device->DitherDepth = (depth > 0) ? powf(2.0f, (ALfloat)(depth-1)) : 0.0f;
+
+        if(depth > 0)
+        {
+            depth = clampi(depth, 2, 24);
+            device->DitherDepth = powf(2.0f, (ALfloat)(depth-1));
+        }
     }
     if(!(device->DitherDepth > 0.0f))
         TRACE("Dithering disabled\n");
@@ -2223,19 +2156,57 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
         TRACE("Dithering enabled (%g-bit, %g)\n", log2f(device->DitherDepth)+1.0f,
               device->DitherDepth);
 
+    device->LimiterState = gainLimiter;
     if(ConfigValueBool(alstr_get_cstr(device->DeviceName), NULL, "output-limiter", &val))
         gainLimiter = val ? ALC_TRUE : ALC_FALSE;
+
     /* Valid values for gainLimiter are ALC_DONT_CARE_SOFT, ALC_TRUE, and
-     * ALC_FALSE. We default to on, so ALC_DONT_CARE_SOFT is the same as
-     * ALC_TRUE.
+     * ALC_FALSE. For ALC_DONT_CARE_SOFT, use the limiter for integer-based
+     * output (where samples must be clamped), and don't for floating-point
+     * (which can take unclamped samples).
      */
+    if(gainLimiter == ALC_DONT_CARE_SOFT)
+    {
+        switch(device->FmtType)
+        {
+            case DevFmtByte:
+            case DevFmtUByte:
+            case DevFmtShort:
+            case DevFmtUShort:
+            case DevFmtInt:
+            case DevFmtUInt:
+                gainLimiter = ALC_TRUE;
+                break;
+            case DevFmtFloat:
+                gainLimiter = ALC_FALSE;
+                break;
+        }
+    }
     if(gainLimiter != ALC_FALSE)
     {
-        if(!device->Limiter || device->Frequency != GetCompressorSampleRate(device->Limiter))
+        ALfloat thrshld = 1.0f;
+        switch(device->FmtType)
         {
-            al_free(device->Limiter);
-            device->Limiter = CreateDeviceLimiter(device);
+            case DevFmtByte:
+            case DevFmtUByte:
+                thrshld = 127.0f / 128.0f;
+                break;
+            case DevFmtShort:
+            case DevFmtUShort:
+                thrshld = 32767.0f / 32768.0f;
+                break;
+            case DevFmtInt:
+            case DevFmtUInt:
+            case DevFmtFloat:
+                break;
         }
+        if(device->DitherDepth > 0.0f)
+            thrshld -= 1.0f / device->DitherDepth;
+
+        al_free(device->Limiter);
+        device->Limiter = CreateDeviceLimiter(device, log10f(thrshld) * 20.0f);
+        device->FixedLatency += (ALuint)(GetCompressorLookAhead(device->Limiter) *
+                                         DEVICE_CLOCK_RES / device->Frequency);
     }
     else
     {
@@ -2245,6 +2216,8 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
     TRACE("Output limiter %s\n", device->Limiter ? "enabled" : "disabled");
 
     aluSelectPostProcess(device);
+
+    TRACE("Fixed device latency: %uns\n", device->FixedLatency);
 
     /* Need to delay returning failure until replacement Send arrays have been
      * allocated with the appropriate size.
@@ -2400,11 +2373,13 @@ static void InitDevice(ALCdevice *device, enum DeviceType type)
     device->Flags = 0;
     device->Render_Mode = NormalRender;
     device->AvgSpeakerDist = 0.0f;
+    device->LimiterState = ALC_DONT_CARE_SOFT;
 
     ATOMIC_INIT(&device->ContextList, NULL);
 
     device->ClockBase = 0;
     device->SamplesDone = 0;
+    device->FixedLatency = 0;
 
     device->SourcesMax = 0;
     device->AuxiliaryEffectSlotMax = 0;
@@ -2638,7 +2613,6 @@ static ALvoid InitContext(ALCcontext *Context)
     Context->MetersPerUnit = AL_DEFAULT_METERS_PER_UNIT;
     ATOMIC_FLAG_TEST_AND_SET(&Context->PropsClean, almemory_order_relaxed);
     ATOMIC_INIT(&Context->DeferUpdates, AL_FALSE);
-    almtx_init(&Context->EventThrdLock, almtx_plain);
     alsem_init(&Context->EventSem, 0);
     Context->AsyncEvents = NULL;
     ATOMIC_INIT(&Context->EnabledEvts, 0);
@@ -2665,6 +2639,11 @@ static ALvoid InitContext(ALCcontext *Context)
                                           listener->Params.MetersPerUnit;
     listener->Params.SourceDistanceModel = Context->SourceDistanceModel;
     listener->Params.DistanceModel = Context->DistanceModel;
+
+
+    Context->AsyncEvents = ll_ringbuffer_create(63, sizeof(AsyncEvent), false);
+    if(althrd_create(&Context->EventThread, EventThread, Context) != althrd_success)
+        ERR("Failed to start event thread! Expect problems.\n");
 }
 
 
@@ -2773,17 +2752,7 @@ static void FreeContext(ALCcontext *context)
     }
     TRACE("Freed "SZFMT" listener property object%s\n", count, (count==1)?"":"s");
 
-    if(ATOMIC_EXCHANGE(&context->EnabledEvts, 0, almemory_order_acq_rel))
-    {
-        static const AsyncEvent kill_evt = { 0 };
-        while(ll_ringbuffer_write(context->AsyncEvents, (const char*)&kill_evt, 1) == 0)
-            althrd_yield();
-        alsem_post(&context->EventSem);
-        althrd_join(context->EventThread, NULL);
-    }
-
     almtx_destroy(&context->EventCbLock);
-    almtx_destroy(&context->EventThrdLock);
     alsem_destroy(&context->EventSem);
 
     ll_ringbuffer_free(context->AsyncEvents);
@@ -2807,6 +2776,7 @@ static void FreeContext(ALCcontext *context)
  */
 static bool ReleaseContext(ALCcontext *context, ALCdevice *device)
 {
+    static const AsyncEvent kill_evt = ASYNC_EVENT(EventType_KillThread);
     ALCcontext *origctx, *newhead;
     bool ret = true;
 
@@ -2838,6 +2808,16 @@ static bool ReleaseContext(ALCcontext *context, ALCdevice *device)
     else
         ret = !!newhead;
     V0(device->Backend,unlock)();
+
+    /* Make sure the context is finished and no longer processing in the mixer
+     * before sending the message queue kill event. The backend's lock does
+     * this, although waiting for a non-odd mix count would work too.
+     */
+
+    while(ll_ringbuffer_write(context->AsyncEvents, (const char*)&kill_evt, 1) == 0)
+        althrd_yield();
+    alsem_post(&context->EventSem);
+    althrd_join(context->EventThread, NULL);
 
     ALCcontext_DecRef(context);
     return ret;
@@ -3620,7 +3600,7 @@ ALC_API void ALC_APIENTRY alcGetInteger64vSOFT(ALCdevice *device, ALCenum pname,
                     values[i++] = ALC_OUTPUT_LIMITER_SOFT;
                     values[i++] = device->Limiter ? ALC_TRUE : ALC_FALSE;
 
-                    clock = V0(device->Backend,getClockLatency)();
+                    clock = GetClockLatency(device);
                     values[i++] = ALC_DEVICE_CLOCK_SOFT;
                     values[i++] = clock.ClockTime;
 
@@ -3646,7 +3626,7 @@ ALC_API void ALC_APIENTRY alcGetInteger64vSOFT(ALCdevice *device, ALCenum pname,
 
             case ALC_DEVICE_LATENCY_SOFT:
                 almtx_lock(&device->BackendLock);
-                clock = V0(device->Backend,getClockLatency)();
+                clock = GetClockLatency(device);
                 almtx_unlock(&device->BackendLock);
                 *values = clock.Latency;
                 break;
@@ -3657,7 +3637,7 @@ ALC_API void ALC_APIENTRY alcGetInteger64vSOFT(ALCdevice *device, ALCenum pname,
                 else
                 {
                     almtx_lock(&device->BackendLock);
-                    clock = V0(device->Backend,getClockLatency)();
+                    clock = GetClockLatency(device);
                     almtx_unlock(&device->BackendLock);
                     values[0] = clock.ClockTime;
                     values[1] = clock.Latency;
@@ -4073,6 +4053,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     device->IsHeadphones = AL_FALSE;
     device->AmbiLayout = AmbiLayout_Default;
     device->AmbiScale = AmbiNorm_Default;
+    device->LimiterState = ALC_TRUE;
     device->NumUpdates = 3;
     device->UpdateSize = 1024;
 
@@ -4210,8 +4191,6 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
         else
             ERR("Unsupported ambi-format: %s\n", fmt);
     }
-
-    device->Limiter = CreateDeviceLimiter(device);
 
     {
         ALCdevice *head = ATOMIC_LOAD_SEQ(&DeviceList);
@@ -4394,6 +4373,12 @@ ALC_API ALCboolean ALC_APIENTRY alcCaptureCloseDevice(ALCdevice *device)
     }
     UnlockLists();
 
+    almtx_lock(&device->BackendLock);
+    if((device->Flags&DEVICE_RUNNING))
+        V0(device->Backend,stop)();
+    device->Flags &= ~DEVICE_RUNNING;
+    almtx_unlock(&device->BackendLock);
+
     ALCdevice_DecRef(device);
 
     return ALC_TRUE;
@@ -4533,8 +4518,6 @@ ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceN
 
     // Open the "backend"
     V(device->Backend,open)("Loopback");
-
-    device->Limiter = CreateDeviceLimiter(device);
 
     {
         ALCdevice *head = ATOMIC_LOAD_SEQ(&DeviceList);

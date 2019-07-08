@@ -45,7 +45,7 @@
 static_assert((INT_MAX>>FRACTIONBITS)/MAX_PITCH > BUFFERSIZE,
               "MAX_PITCH and/or BUFFERSIZE are too large for FRACTIONBITS!");
 
-extern inline void InitiatePositionArrays(ALsizei frac, ALint increment, ALsizei *restrict frac_arr, ALint *restrict pos_arr, ALsizei size);
+extern inline void InitiatePositionArrays(ALsizei frac, ALint increment, ALsizei *restrict frac_arr, ALsizei *restrict pos_arr, ALsizei size);
 
 
 /* BSinc24 requires up to 23 extra samples before the current position, and 24 after. */
@@ -197,12 +197,11 @@ void aluInitMixer(void)
 static void SendAsyncEvent(ALCcontext *context, ALuint enumtype, ALenum type,
                            ALuint objid, ALuint param, const char *msg)
 {
-    AsyncEvent evt;
-    evt.EnumType = enumtype;
-    evt.Type = type;
-    evt.ObjectId = objid;
-    evt.Param = param;
-    strcpy(evt.Message, msg);
+    AsyncEvent evt = ASYNC_EVENT(enumtype);
+    evt.u.user.type = type;
+    evt.u.user.id = objid;
+    evt.u.user.param = param;
+    strcpy(evt.u.user.msg, msg);
     if(ll_ringbuffer_write(context->AsyncEvents, (const char*)&evt, 1) == 1)
         alsem_post(&context->EventSem);
 }
@@ -487,6 +486,7 @@ ALboolean MixSource(ALvoice *voice, ALuint SourceID, ALCcontext *Context, ALsize
                 while(tmpiter && SrcBufferSize > FilledAmt)
                 {
                     ALsizei SizeToDo = SrcBufferSize - FilledAmt;
+                    ALsizei CompLen = 0;
                     ALsizei i;
 
                     for(i = 0;i < tmpiter->num_buffers;i++)
@@ -499,23 +499,24 @@ ALboolean MixSource(ALvoice *voice, ALuint SourceID, ALCcontext *Context, ALsize
                             const ALubyte *Data = ALBuffer->data;
                             Data += (pos*NumChannels + chan)*SampleSize;
 
-                            DataSize = minu(SizeToDo, DataSize - pos);
+                            DataSize = mini(SizeToDo, DataSize - pos);
+                            CompLen = maxi(CompLen, DataSize);
+
                             LoadSamples(&SrcData[FilledAmt], Data, NumChannels,
                                         ALBuffer->FmtType, DataSize);
                         }
                     }
-                    if(pos > tmpiter->max_samples)
+                    if(UNLIKELY(!CompLen))
                         pos -= tmpiter->max_samples;
                     else
                     {
-                        FilledAmt += tmpiter->max_samples - pos;
+                        FilledAmt += CompLen;
+                        if(SrcBufferSize <= FilledAmt)
+                            break;
                         pos = 0;
                     }
-                    if(SrcBufferSize > FilledAmt)
-                    {
-                        tmpiter = ATOMIC_LOAD(&tmpiter->next, almemory_order_acquire);
-                        if(!tmpiter) tmpiter = BufferLoopItem;
-                    }
+                    tmpiter = ATOMIC_LOAD(&tmpiter->next, almemory_order_acquire);
+                    if(!tmpiter) tmpiter = BufferLoopItem;
                 }
             }
 
@@ -729,8 +730,10 @@ ALboolean MixSource(ALvoice *voice, ALuint SourceID, ALCcontext *Context, ALsize
             if(BufferListItem->max_samples > DataPosInt)
                 break;
 
+            DataPosInt -= BufferListItem->max_samples;
+
             buffers_done += BufferListItem->num_buffers;
-            BufferListItem = ATOMIC_LOAD(&BufferListItem->next, almemory_order_acquire);
+            BufferListItem = ATOMIC_LOAD(&BufferListItem->next, almemory_order_relaxed);
             if(!BufferListItem && !(BufferListItem=BufferLoopItem))
             {
                 isplaying = false;
@@ -738,8 +741,6 @@ ALboolean MixSource(ALvoice *voice, ALuint SourceID, ALCcontext *Context, ALsize
                 DataPosFrac = 0;
                 break;
             }
-
-            DataPosInt -= BufferListItem->max_samples;
         }
     } while(isplaying && OutPos < SamplesToDo);
 

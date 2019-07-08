@@ -126,7 +126,7 @@ public:
 
    void clear();
 
-   inline bool ProbeRenderInst::operator ==(const ProbeRenderInst& b) const
+   inline bool operator ==(const ProbeRenderInst& b) const
    {
       return mProbeIdx == b.mProbeIdx;
    }

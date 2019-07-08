@@ -206,6 +206,9 @@ static void ALCopenslPlayback_Destruct(ALCopenslPlayback* self)
     self->mEngineObj = NULL;
     self->mEngine = NULL;
 
+    ll_ringbuffer_free(self->mRing);
+    self->mRing = NULL;
+
     alsem_destroy(&self->mSem);
 
     ALCbackend_Destruct(STATIC_CAST(ALCbackend, self));
@@ -251,19 +254,16 @@ static int ALCopenslPlayback_mixerProc(void *arg)
         result = VCALL(self->mBufferQueueObj,GetInterface)(SL_IID_PLAY, &player);
         PRINTERR(result, "bufferQueue->GetInterface SL_IID_PLAY");
     }
-    if(SL_RESULT_SUCCESS != result)
-    {
-        ALCopenslPlayback_lock(self);
-        aluHandleDisconnect(device, "Failed to get playback buffer: 0x%08x", result);
-        ALCopenslPlayback_unlock(self);
-        return 1;
-    }
 
     ALCopenslPlayback_lock(self);
-    while(!ATOMIC_LOAD(&self->mKillNow, almemory_order_acquire) &&
+    if(SL_RESULT_SUCCESS != result)
+        aluHandleDisconnect(device, "Failed to get playback buffer: 0x%08x", result);
+
+    while(SL_RESULT_SUCCESS == result &&
+          !ATOMIC_LOAD(&self->mKillNow, almemory_order_acquire) &&
           ATOMIC_LOAD(&device->Connected, almemory_order_acquire))
     {
-        size_t todo, len0, len1;
+        size_t todo;
 
         if(ll_ringbuffer_write_space(self->mRing) == 0)
         {
@@ -292,34 +292,33 @@ static int ALCopenslPlayback_mixerProc(void *arg)
         }
 
         ll_ringbuffer_get_write_vector(self->mRing, data);
+
+        aluMixData(device, data[0].buf, data[0].len*device->UpdateSize);
+        if(data[1].len > 0)
+            aluMixData(device, data[1].buf, data[1].len*device->UpdateSize);
+
         todo = data[0].len+data[1].len;
+        ll_ringbuffer_write_advance(self->mRing, todo);
 
-        len0 = minu(todo, data[0].len);
-        len1 = minu(todo-len0, data[1].len);
-
-        aluMixData(device, data[0].buf, len0*device->UpdateSize);
-        for(size_t i = 0;i < len0;i++)
+        for(size_t i = 0;i < todo;i++)
         {
+            if(!data[0].len)
+            {
+                data[0] = data[1];
+                data[1].buf = NULL;
+                data[1].len = 0;
+            }
+
             result = VCALL(bufferQueue,Enqueue)(data[0].buf, device->UpdateSize*self->mFrameSize);
             PRINTERR(result, "bufferQueue->Enqueue");
-            if(SL_RESULT_SUCCESS == result)
-                ll_ringbuffer_write_advance(self->mRing, 1);
-
-            data[0].buf += device->UpdateSize*self->mFrameSize;
-        }
-
-        if(len1 > 0)
-        {
-            aluMixData(device, data[1].buf, len1*device->UpdateSize);
-            for(size_t i = 0;i < len1;i++)
+            if(SL_RESULT_SUCCESS != result)
             {
-                result = VCALL(bufferQueue,Enqueue)(data[1].buf, device->UpdateSize*self->mFrameSize);
-                PRINTERR(result, "bufferQueue->Enqueue");
-                if(SL_RESULT_SUCCESS == result)
-                    ll_ringbuffer_write_advance(self->mRing, 1);
-
-                data[1].buf += device->UpdateSize*self->mFrameSize;
+                aluHandleDisconnect(device, "Failed to queue audio: 0x%08x", result);
+                break;
             }
+
+            data[0].len--;
+            data[0].buf += device->UpdateSize*self->mFrameSize;
         }
     }
     ALCopenslPlayback_unlock(self);
@@ -392,19 +391,24 @@ static ALCboolean ALCopenslPlayback_reset(ALCopenslPlayback *self)
     SLInterfaceID ids[2];
     SLboolean reqs[2];
     SLresult result;
-    JNIEnv *env;
 
     if(self->mBufferQueueObj != NULL)
         VCALL0(self->mBufferQueueObj,Destroy)();
     self->mBufferQueueObj = NULL;
 
+    ll_ringbuffer_free(self->mRing);
+    self->mRing = NULL;
+
     sampleRate = device->Frequency;
-    if(!(device->Flags&DEVICE_FREQUENCY_REQUEST) && (env=Android_GetJNIEnv()) != NULL)
+#if 0
+    if(!(device->Flags&DEVICE_FREQUENCY_REQUEST))
     {
         /* FIXME: Disabled until I figure out how to get the Context needed for
          * the getSystemService call.
          */
-#if 0
+        JNIEnv *env = Android_GetJNIEnv();
+        jobject jctx = Android_GetContext();
+
         /* Get necessary stuff for using java.lang.Integer,
          * android.content.Context, and android.media.AudioManager.
          */
@@ -440,7 +444,7 @@ static ALCboolean ALCopenslPlayback_reset(ALCopenslPlayback *self)
         /* Now make the calls. */
         //AudioManager audMgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         strobj = JCALL(env,GetStaticObjectField)(ctx_cls, ctx_audsvc);
-        jobject audMgr = JCALL(env,CallObjectMethod)(ctx_cls, ctx_getSysSvc, strobj);
+        jobject audMgr = JCALL(env,CallObjectMethod)(jctx, ctx_getSysSvc, strobj);
         strchars = JCALL(env,GetStringUTFChars)(strobj, NULL);
         TRACE("Context.getSystemService(%s) = %p\n", strchars, audMgr);
         JCALL(env,ReleaseStringUTFChars)(strobj, strchars);
@@ -461,8 +465,8 @@ static ALCboolean ALCopenslPlayback_reset(ALCopenslPlayback *self)
 
         if(!sampleRate) sampleRate = device->Frequency;
         else sampleRate = maxu(sampleRate, MIN_OUTPUT_RATE);
-#endif
     }
+#endif
 
     if(sampleRate != device->Frequency)
     {
@@ -546,6 +550,18 @@ static ALCboolean ALCopenslPlayback_reset(ALCopenslPlayback *self)
         result = VCALL(self->mBufferQueueObj,Realize)(SL_BOOLEAN_FALSE);
         PRINTERR(result, "bufferQueue->Realize");
     }
+    if(SL_RESULT_SUCCESS == result)
+    {
+        self->mRing = ll_ringbuffer_create(device->NumUpdates,
+            self->mFrameSize*device->UpdateSize, true
+        );
+        if(!self->mRing)
+        {
+            ERR("Out of memory allocating ring buffer %ux%u %u\n", device->UpdateSize,
+                device->NumUpdates, self->mFrameSize);
+            result = SL_RESULT_MEMORY_FAILURE;
+        }
+    }
 
     if(SL_RESULT_SUCCESS != result)
     {
@@ -561,13 +577,10 @@ static ALCboolean ALCopenslPlayback_reset(ALCopenslPlayback *self)
 
 static ALCboolean ALCopenslPlayback_start(ALCopenslPlayback *self)
 {
-    ALCdevice *device = STATIC_CAST(ALCbackend,self)->mDevice;
     SLAndroidSimpleBufferQueueItf bufferQueue;
     SLresult result;
 
-    ll_ringbuffer_free(self->mRing);
-    self->mRing = ll_ringbuffer_create(device->NumUpdates, self->mFrameSize*device->UpdateSize,
-                                       true);
+    ll_ringbuffer_reset(self->mRing);
 
     result = VCALL(self->mBufferQueueObj,GetInterface)(SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
                                                        &bufferQueue);
@@ -634,9 +647,6 @@ static void ALCopenslPlayback_stop(ALCopenslPlayback *self)
         } while(SL_RESULT_SUCCESS == result && state.count > 0);
         PRINTERR(result, "bufferQueue->GetState");
     }
-
-    ll_ringbuffer_free(self->mRing);
-    self->mRing = NULL;
 }
 
 static ClockLatency ALCopenslPlayback_getClockLatency(ALCopenslPlayback *self)
@@ -713,9 +723,6 @@ static void ALCopenslCapture_Construct(ALCopenslCapture *self, ALCdevice *device
 
 static void ALCopenslCapture_Destruct(ALCopenslCapture *self)
 {
-    ll_ringbuffer_free(self->mRing);
-    self->mRing = NULL;
-
     if(self->mRecordObj != NULL)
         VCALL0(self->mRecordObj,Destroy)();
     self->mRecordObj = NULL;
@@ -724,6 +731,9 @@ static void ALCopenslCapture_Destruct(ALCopenslCapture *self)
         VCALL0(self->mEngineObj,Destroy)();
     self->mEngineObj = NULL;
     self->mEngine = NULL;
+
+    ll_ringbuffer_free(self->mRing);
+    self->mRing = NULL;
 
     ALCbackend_Destruct(STATIC_CAST(ALCbackend, self));
 }
@@ -843,8 +853,9 @@ static ALCenum ALCopenslCapture_open(ALCopenslCapture *self, const ALCchar *name
 
     if(SL_RESULT_SUCCESS == result)
     {
-        self->mRing = ll_ringbuffer_create(device->NumUpdates, device->UpdateSize*self->mFrameSize,
-                                           false);
+        self->mRing = ll_ringbuffer_create(device->NumUpdates,
+            device->UpdateSize*self->mFrameSize, false
+        );
 
         result = VCALL(self->mRecordObj,GetInterface)(SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
                                                       &bufferQueue);
@@ -941,14 +952,16 @@ static ALCenum ALCopenslCapture_captureSamples(ALCopenslCapture *self, ALCvoid *
     SLAndroidSimpleBufferQueueItf bufferQueue;
     ll_ringbuffer_data_t data[2];
     SLresult result;
-    size_t advance;
     ALCuint i;
+
+    result = VCALL(self->mRecordObj,GetInterface)(SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
+                                                  &bufferQueue);
+    PRINTERR(result, "recordObj->GetInterface");
 
     /* Read the desired samples from the ring buffer then advance its read
      * pointer.
      */
     ll_ringbuffer_get_read_vector(self->mRing, data);
-    advance = 0;
     for(i = 0;i < samples;)
     {
         ALCuint rem = minu(samples - i, device->UpdateSize - self->mSplOffset);
@@ -961,7 +974,11 @@ static ALCenum ALCopenslCapture_captureSamples(ALCopenslCapture *self, ALCvoid *
         {
             /* Finished a chunk, reset the offset and advance the read pointer. */
             self->mSplOffset = 0;
-            advance++;
+
+            ll_ringbuffer_read_advance(self->mRing, 1);
+            result = VCALL(bufferQueue,Enqueue)(data[0].buf, chunk_size);
+            PRINTERR(result, "bufferQueue->Enqueue");
+            if(SL_RESULT_SUCCESS != result) break;
 
             data[0].len--;
             if(!data[0].len)
@@ -971,24 +988,6 @@ static ALCenum ALCopenslCapture_captureSamples(ALCopenslCapture *self, ALCvoid *
         }
 
         i += rem;
-    }
-    ll_ringbuffer_read_advance(self->mRing, advance);
-
-    result = VCALL(self->mRecordObj,GetInterface)(SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
-                                                  &bufferQueue);
-    PRINTERR(result, "recordObj->GetInterface");
-
-    /* Enqueue any newly-writable chunks in the ring buffer. */
-    ll_ringbuffer_get_write_vector(self->mRing, data);
-    for(i = 0;i < data[0].len && SL_RESULT_SUCCESS == result;i++)
-    {
-        result = VCALL(bufferQueue,Enqueue)(data[0].buf + chunk_size*i, chunk_size);
-        PRINTERR(result, "bufferQueue->Enqueue");
-    }
-    for(i = 0;i < data[1].len && SL_RESULT_SUCCESS == result;i++)
-    {
-        result = VCALL(bufferQueue,Enqueue)(data[1].buf + chunk_size*i, chunk_size);
-        PRINTERR(result, "bufferQueue->Enqueue");
     }
 
     if(SL_RESULT_SUCCESS != result)
@@ -1030,16 +1029,13 @@ static ALCboolean ALCopenslBackendFactory_querySupport(ALCopenslBackendFactory* 
     return ALC_FALSE;
 }
 
-static void ALCopenslBackendFactory_probe(ALCopenslBackendFactory* UNUSED(self), enum DevProbe type)
+static void ALCopenslBackendFactory_probe(ALCopenslBackendFactory* UNUSED(self), enum DevProbe type, al_string *outnames)
 {
     switch(type)
     {
         case ALL_DEVICE_PROBE:
-            AppendAllDevicesList(opensl_device);
-            break;
-
         case CAPTURE_DEVICE_PROBE:
-            AppendAllDevicesList(opensl_device);
+            alstr_append_range(outnames, opensl_device, opensl_device+sizeof(opensl_device));
             break;
     }
 }

@@ -27,13 +27,6 @@
 #include "alu.h"
 
 
-#define AMP_ENVELOPE_MIN  0.5f
-#define AMP_ENVELOPE_MAX  2.0f
-
-#define ATTACK_TIME  0.1f /* 100ms to rise from min to max */
-#define RELEASE_TIME 0.2f /* 200ms to drop from max to min */
-
-
 typedef struct ALcompressorState {
     DERIVE_FROM_TYPE(ALeffectState);
 
@@ -42,9 +35,9 @@ typedef struct ALcompressorState {
 
     /* Effect parameters */
     ALboolean Enabled;
-    ALfloat AttackMult;
-    ALfloat ReleaseMult;
-    ALfloat EnvFollower;
+    ALfloat AttackRate;
+    ALfloat ReleaseRate;
+    ALfloat GainCtrl;
 } ALcompressorState;
 
 static ALvoid ALcompressorState_Destruct(ALcompressorState *state);
@@ -62,9 +55,9 @@ static void ALcompressorState_Construct(ALcompressorState *state)
     SET_VTABLE2(ALcompressorState, ALeffectState, state);
 
     state->Enabled = AL_TRUE;
-    state->AttackMult = 1.0f;
-    state->ReleaseMult = 1.0f;
-    state->EnvFollower = 1.0f;
+    state->AttackRate = 0.0f;
+    state->ReleaseRate = 0.0f;
+    state->GainCtrl = 1.0f;
 }
 
 static ALvoid ALcompressorState_Destruct(ALcompressorState *state)
@@ -74,17 +67,11 @@ static ALvoid ALcompressorState_Destruct(ALcompressorState *state)
 
 static ALboolean ALcompressorState_deviceUpdate(ALcompressorState *state, ALCdevice *device)
 {
-    /* Number of samples to do a full attack and release (non-integer sample
-     * counts are okay).
-     */
-    const ALfloat attackCount  = (ALfloat)device->Frequency * ATTACK_TIME;
-    const ALfloat releaseCount = (ALfloat)device->Frequency * RELEASE_TIME;
+    const ALfloat attackTime = device->Frequency * 0.2f; /* 200ms Attack */
+    const ALfloat releaseTime = device->Frequency * 0.4f; /* 400ms Release */
 
-    /* Calculate per-sample multipliers to attack and release at the desired
-     * rates.
-     */
-    state->AttackMult  = powf(AMP_ENVELOPE_MAX/AMP_ENVELOPE_MIN, 1.0f/attackCount);
-    state->ReleaseMult = powf(AMP_ENVELOPE_MIN/AMP_ENVELOPE_MAX, 1.0f/releaseCount);
+    state->AttackRate = 1.0f / attackTime;
+    state->ReleaseRate = 1.0f / releaseTime;
 
     return AL_TRUE;
 }
@@ -99,7 +86,8 @@ static ALvoid ALcompressorState_update(ALcompressorState *state, const ALCcontex
     STATIC_CAST(ALeffectState,state)->OutBuffer = device->FOAOut.Buffer;
     STATIC_CAST(ALeffectState,state)->OutChannels = device->FOAOut.NumChannels;
     for(i = 0;i < 4;i++)
-        ComputePanGains(&device->FOAOut, IdentityMatrixf.m[i], slot->Params.Gain, state->Gain[i]);
+        ComputeFirstOrderGains(&device->FOAOut, IdentityMatrixf.m[i],
+                               slot->Params.Gain, state->Gain[i]);
 }
 
 static ALvoid ALcompressorState_process(ALcompressorState *state, ALsizei SamplesToDo, const ALfloat (*restrict SamplesIn)[BUFFERSIZE], ALfloat (*restrict SamplesOut)[BUFFERSIZE], ALsizei NumChannels)
@@ -109,52 +97,71 @@ static ALvoid ALcompressorState_process(ALcompressorState *state, ALsizei Sample
 
     for(base = 0;base < SamplesToDo;)
     {
-        ALfloat gains[256];
-        ALsizei td = mini(256, SamplesToDo-base);
-        ALfloat env = state->EnvFollower;
+        ALfloat temps[64][4];
+        ALsizei td = mini(64, SamplesToDo-base);
 
-        /* Generate the per-sample gains from the signal envelope. */
+        /* Load samples into the temp buffer first. */
+        for(j = 0;j < 4;j++)
+        {
+            for(i = 0;i < td;i++)
+                temps[i][j] = SamplesIn[j][i+base];
+        }
+
         if(state->Enabled)
         {
-            for(i = 0;i < td;++i)
-            {
-                /* Clamp the absolute amplitude to the defined envelope limits,
-                 * then attack or release the envelope to reach it.
-                 */
-                ALfloat amplitude = clampf(fabsf(SamplesIn[0][base+i]),
-                                           AMP_ENVELOPE_MIN, AMP_ENVELOPE_MAX);
-                if(amplitude > env)
-                    env = minf(env*state->AttackMult, amplitude);
-                else if(amplitude < env)
-                    env = maxf(env*state->ReleaseMult, amplitude);
+            ALfloat gain = state->GainCtrl;
+            ALfloat output, amplitude;
 
-                /* Apply the reciprocal of the envelope to normalize the volume
-                 * (compress the dynamic range).
+            for(i = 0;i < td;i++)
+            {
+                /* Roughly calculate the maximum amplitude from the 4-channel
+                 * signal, and attack or release the gain control to reach it.
                  */
-                gains[i] = 1.0f / env;
+                amplitude = fabsf(temps[i][0]);
+                amplitude = maxf(amplitude + fabsf(temps[i][1]),
+                                 maxf(amplitude + fabsf(temps[i][2]),
+                                      amplitude + fabsf(temps[i][3])));
+                if(amplitude > gain)
+                    gain = minf(gain+state->AttackRate, amplitude);
+                else if(amplitude < gain)
+                    gain = maxf(gain-state->ReleaseRate, amplitude);
+
+                /* Apply the inverse of the gain control to normalize/compress
+                 * the volume. */
+                output = 1.0f / clampf(gain, 0.5f, 2.0f);
+                for(j = 0;j < 4;j++)
+                    temps[i][j] *= output;
             }
+
+            state->GainCtrl = gain;
         }
         else
         {
-            /* Same as above, except the amplitude is forced to 1. This helps
-             * ensure smooth gain changes when the compressor is turned on and
-             * off.
-             */
-            for(i = 0;i < td;++i)
+            ALfloat gain = state->GainCtrl;
+            ALfloat output, amplitude;
+
+            for(i = 0;i < td;i++)
             {
-                ALfloat amplitude = 1.0f;
-                if(amplitude > env)
-                    env = minf(env*state->AttackMult, amplitude);
-                else if(amplitude < env)
-                    env = maxf(env*state->ReleaseMult, amplitude);
+                /* Same as above, except the amplitude is forced to 1. This
+                 * helps ensure smooth gain changes when the compressor is
+                 * turned on and off.
+                 */
+                amplitude = 1.0f;
+                if(amplitude > gain)
+                    gain = minf(gain+state->AttackRate, amplitude);
+                else if(amplitude < gain)
+                    gain = maxf(gain-state->ReleaseRate, amplitude);
 
-                gains[i] = 1.0f / env;
+                output = 1.0f / clampf(gain, 0.5f, 2.0f);
+                for(j = 0;j < 4;j++)
+                    temps[i][j] *= output;
             }
-        }
-        state->EnvFollower = env;
 
-        /* Now compress the signal amplitude to output. */
-        for(j = 0;j < MAX_EFFECT_CHANNELS;j++)
+            state->GainCtrl = gain;
+        }
+
+        /* Now mix to the output. */
+        for(j = 0;j < 4;j++)
         {
             for(k = 0;k < NumChannels;k++)
             {
@@ -163,7 +170,7 @@ static ALvoid ALcompressorState_process(ALcompressorState *state, ALsizei Sample
                     continue;
 
                 for(i = 0;i < td;i++)
-                    SamplesOut[k][base+i] += SamplesIn[j][base+i] * gains[i] * gain;
+                    SamplesOut[k][base+i] += gain * temps[i][j];
             }
         }
 

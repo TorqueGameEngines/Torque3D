@@ -37,7 +37,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    mouseOverSelected = false;
 
    // fill color
-   opaque = false;
+   opaque = true;
    fillColor = EditorSettings.value("Theme/tabsColor");
    fillColorHL = EditorSettings.value("Theme/tabsGLColor");
    fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
@@ -452,7 +452,7 @@ new GuiControlProfile( ToolsGuiScrollProfile )
 if( !isObject( ToolsGuiOverlayProfile ) )
 new GuiControlProfile( ToolsGuiOverlayProfile )
 {
-   opaque = false;
+   opaque = true;
    fillColor = EditorSettings.value("Theme/windowBackgroundColor");
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextGLColor");
@@ -1111,7 +1111,6 @@ singleton GuiControlProfile( ToolsMenubarProfile : ToolsGuiDefaultProfile )
 {
    bitmap = "./menubar";
    category = "Editor";
-   opaque=true;
    
    fillColor = EditorSettings.value("Theme/headerColor");
    fontColor = EditorSettings.value("Theme/headerTextColor");

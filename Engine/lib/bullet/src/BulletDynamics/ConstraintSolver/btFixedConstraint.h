@@ -18,13 +18,16 @@ subject to the following restrictions:
 
 #include "btGeneric6DofSpring2Constraint.h"
 
-ATTRIBUTE_ALIGNED16(class)
-btFixedConstraint : public btGeneric6DofSpring2Constraint
-{
-public:
-	btFixedConstraint(btRigidBody & rbA, btRigidBody & rbB, const btTransform& frameInA, const btTransform& frameInB);
 
+ATTRIBUTE_ALIGNED16(class) btFixedConstraint : public btGeneric6DofSpring2Constraint
+{
+
+public:
+	btFixedConstraint(btRigidBody& rbA,btRigidBody& rbB, const btTransform& frameInA,const btTransform& frameInB);
+
+	
 	virtual ~btFixedConstraint();
+
 };
 
-#endif  //BT_FIXED_CONSTRAINT_H
+#endif //BT_FIXED_CONSTRAINT_H

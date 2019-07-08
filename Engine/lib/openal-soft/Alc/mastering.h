@@ -6,44 +6,52 @@
 /* For BUFFERSIZE. */
 #include "alMain.h"
 
-struct Compressor;
+typedef struct Compressor {
+    ALfloat PreGain;
+    ALfloat PostGain;
+    ALboolean SummedLink;
+    ALfloat AttackMin;
+    ALfloat AttackMax;
+    ALfloat ReleaseMin;
+    ALfloat ReleaseMax;
+    ALfloat Ratio;
+    ALfloat Threshold;
+    ALfloat Knee;
+    ALuint SampleRate;
 
-/* The compressor is initialized with the following settings:
+    ALuint RmsSum;
+    ALuint *RmsWindow;
+    ALsizei RmsIndex;
+    ALfloat Envelope[BUFFERSIZE];
+    ALfloat EnvLast;
+} Compressor;
+
+/* The compressor requires the following information for proper
+ * initialization:
  *
- *   NumChans       - Number of channels to process.
- *   SampleRate     - Sample rate to process.
- *   AutoKnee       - Whether to automate the knee width parameter.
- *   AutoAttack     - Whether to automate the attack time parameter.
- *   AutoRelease    - Whether to automate the release time parameter.
- *   AutoPostGain   - Whether to automate the make-up (post) gain parameter.
- *   AutoDeclip     - Whether to automate clipping reduction.  Ignored when
- *                    not automating make-up gain.
- *   LookAheadTime  - Look-ahead time (in seconds).
- *   HoldTime       - Peak hold-time (in seconds).
  *   PreGainDb      - Gain applied before detection (in dB).
- *   PostGainDb     - Make-up gain applied after compression (in dB).
+ *   PostGainDb     - Gain applied after compression (in dB).
+ *   SummedLink     - Whether to use summed (true) or maxed (false) linking.
+ *   RmsSensing     - Whether to use RMS (true) or Peak (false) sensing.
+ *   AttackTimeMin  - Minimum attack time (in seconds).
+ *   AttackTimeMax  - Maximum attack time.  Automates when min != max.
+ *   ReleaseTimeMin - Minimum release time (in seconds).
+ *   ReleaseTimeMax - Maximum release time.  Automates when min != max.
+ *   Ratio          - Compression ratio (x:1).  Set to 0 for true limiter.
  *   ThresholdDb    - Triggering threshold (in dB).
- *   Ratio          - Compression ratio (x:1).  Set to INFINIFTY for true
- *                    limiting.  Ignored when automating knee width.
- *   KneeDb         - Knee width (in dB).  Ignored when automating knee
- *                    width.
- *   AttackTimeMin  - Attack time (in seconds).  Acts as a maximum when
- *                    automating attack time.
- *   ReleaseTimeMin - Release time (in seconds).  Acts as a maximum when
- *                    automating release time.
+ *   KneeDb         - Knee width (below threshold; in dB).
+ *   SampleRate     - Sample rate to process.
  */
-struct Compressor* CompressorInit(const ALsizei NumChans, const ALuint SampleRate,
-    const ALboolean AutoKnee, const ALboolean AutoAttack,
-    const ALboolean AutoRelease, const ALboolean AutoPostGain,
-    const ALboolean AutoDeclip, const ALfloat LookAheadTime,
-    const ALfloat HoldTime, const ALfloat PreGainDb,
-    const ALfloat PostGainDb, const ALfloat ThresholdDb,
-    const ALfloat Ratio, const ALfloat KneeDb,
-    const ALfloat AttackTime, const ALfloat ReleaseTime);
+Compressor *CompressorInit(const ALfloat PreGainDb, const ALfloat PostGainDb,
+    const ALboolean SummedLink, const ALboolean RmsSensing, const ALfloat AttackTimeMin,
+    const ALfloat AttackTimeMax, const ALfloat ReleaseTimeMin, const ALfloat ReleaseTimeMax,
+    const ALfloat Ratio, const ALfloat ThresholdDb, const ALfloat KneeDb,
+    const ALuint SampleRate);
 
-void ApplyCompression(struct Compressor *Comp, const ALsizei SamplesToDo,
+void ApplyCompression(struct Compressor *Comp, const ALsizei NumChans, const ALsizei SamplesToDo,
                       ALfloat (*restrict OutBuffer)[BUFFERSIZE]);
 
-ALsizei GetCompressorLookAhead(const struct Compressor *Comp);
+inline ALuint GetCompressorSampleRate(const Compressor *Comp)
+{ return Comp->SampleRate; }
 
 #endif /* MASTERING_H */

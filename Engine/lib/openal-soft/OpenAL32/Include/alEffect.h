@@ -12,14 +12,12 @@ struct ALeffect;
 enum {
     EAXREVERB_EFFECT = 0,
     REVERB_EFFECT,
-    AUTOWAH_EFFECT,
     CHORUS_EFFECT,
     COMPRESSOR_EFFECT,
     DISTORTION_EFFECT,
     ECHO_EFFECT,
     EQUALIZER_EFFECT,
     FLANGER_EFFECT,
-    FSHIFTER_EFFECT,
     MODULATOR_EFFECT,
     PSHIFTER_EFFECT,
     DEDICATED_EFFECT,
@@ -35,7 +33,7 @@ struct EffectList {
     int type;
     ALenum val;
 };
-#define EFFECTLIST_SIZE 14
+#define EFFECTLIST_SIZE 12
 extern const struct EffectList EffectList[EFFECTLIST_SIZE];
 
 
@@ -61,14 +59,12 @@ const struct ALeffectVtable T##_vtable = {  \
 
 extern const struct ALeffectVtable ALeaxreverb_vtable;
 extern const struct ALeffectVtable ALreverb_vtable;
-extern const struct ALeffectVtable ALautowah_vtable;
 extern const struct ALeffectVtable ALchorus_vtable;
 extern const struct ALeffectVtable ALcompressor_vtable;
 extern const struct ALeffectVtable ALdistortion_vtable;
 extern const struct ALeffectVtable ALecho_vtable;
 extern const struct ALeffectVtable ALequalizer_vtable;
 extern const struct ALeffectVtable ALflanger_vtable;
-extern const struct ALeffectVtable ALfshifter_vtable;
 extern const struct ALeffectVtable ALmodulator_vtable;
 extern const struct ALeffectVtable ALnull_vtable;
 extern const struct ALeffectVtable ALpshifter_vtable;
@@ -104,13 +100,6 @@ typedef union ALeffectProps {
         ALfloat HFReference;
         ALfloat LFReference;
     } Reverb;
-
-    struct {
-        ALfloat AttackTime;
-        ALfloat ReleaseTime;
-        ALfloat Resonance;
-        ALfloat PeakGain;
-    } Autowah;
 
     struct {
         ALint Waveform;
@@ -155,12 +144,6 @@ typedef union ALeffectProps {
         ALfloat HighCutoff;
         ALfloat HighGain;
     } Equalizer;
-
-    struct {
-        ALfloat Frequency;
-        ALint LeftDirection;
-        ALint RightDirection;
-    } Fshifter;
 
     struct {
         ALfloat Frequency;

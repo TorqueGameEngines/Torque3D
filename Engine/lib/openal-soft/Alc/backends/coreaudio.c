@@ -28,6 +28,7 @@
 #include "alu.h"
 #include "ringbuffer.h"
 
+#include <CoreServices/CoreServices.h>
 #include <unistd.h>
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
@@ -111,11 +112,7 @@ static ALCenum ALCcoreAudioPlayback_open(ALCcoreAudioPlayback *self, const ALCch
 
     /* open the default output unit */
     desc.componentType = kAudioUnitType_Output;
-#if TARGET_OS_IOS
-    desc.componentSubType = kAudioUnitSubType_RemoteIO;
-#else
     desc.componentSubType = kAudioUnitSubType_DefaultOutput;
-#endif
     desc.componentManufacturer = kAudioUnitManufacturer_Apple;
     desc.componentFlags = 0;
     desc.componentFlagsMask = 0;
@@ -454,6 +451,7 @@ static ALCenum ALCcoreAudioCapture_open(ALCcoreAudioCapture *self, const ALCchar
     AudioStreamBasicDescription outputFormat;     // The AudioUnit output format
     AURenderCallbackStruct input;
     AudioComponentDescription desc;
+    AudioDeviceID inputDevice;
     UInt32 outputFrameCount;
     UInt32 propertySize;
     AudioObjectPropertyAddress propertyAddress;
@@ -467,11 +465,7 @@ static ALCenum ALCcoreAudioCapture_open(ALCcoreAudioCapture *self, const ALCchar
         return ALC_INVALID_VALUE;
 
     desc.componentType = kAudioUnitType_Output;
-#if TARGET_OS_IOS
-    desc.componentSubType = kAudioUnitSubType_RemoteIO;
-#else
     desc.componentSubType = kAudioUnitSubType_HALOutput;
-#endif
     desc.componentManufacturer = kAudioUnitManufacturer_Apple;
     desc.componentFlags = 0;
     desc.componentFlagsMask = 0;
@@ -510,9 +504,7 @@ static ALCenum ALCcoreAudioCapture_open(ALCcoreAudioCapture *self, const ALCchar
         goto error;
     }
 
-#if !TARGET_OS_IOS
     // Get the default input device
-    AudioDeviceID inputDevice = kAudioDeviceUnknown;
 
     propertySize = sizeof(AudioDeviceID);
     propertyAddress.mSelector = kAudioHardwarePropertyDefaultInputDevice;
@@ -525,6 +517,7 @@ static ALCenum ALCcoreAudioCapture_open(ALCcoreAudioCapture *self, const ALCchar
         ERR("AudioObjectGetPropertyData failed\n");
         goto error;
     }
+
     if(inputDevice == kAudioDeviceUnknown)
     {
         ERR("No input device found\n");
@@ -538,7 +531,6 @@ static ALCenum ALCcoreAudioCapture_open(ALCcoreAudioCapture *self, const ALCchar
         ERR("AudioUnitSetProperty failed\n");
         goto error;
     }
-#endif
 
     // set capture callback
     input.inputProc = ALCcoreAudioCapture_RecordProc;
@@ -760,7 +752,7 @@ ALCbackendFactory *ALCcoreAudioBackendFactory_getFactory(void);
 static ALCboolean ALCcoreAudioBackendFactory_init(ALCcoreAudioBackendFactory *self);
 static DECLARE_FORWARD(ALCcoreAudioBackendFactory, ALCbackendFactory, void, deinit)
 static ALCboolean ALCcoreAudioBackendFactory_querySupport(ALCcoreAudioBackendFactory *self, ALCbackend_Type type);
-static void ALCcoreAudioBackendFactory_probe(ALCcoreAudioBackendFactory *self, enum DevProbe type, al_string *outnames);
+static void ALCcoreAudioBackendFactory_probe(ALCcoreAudioBackendFactory *self, enum DevProbe type);
 static ALCbackend* ALCcoreAudioBackendFactory_createBackend(ALCcoreAudioBackendFactory *self, ALCdevice *device, ALCbackend_Type type);
 DEFINE_ALCBACKENDFACTORY_VTABLE(ALCcoreAudioBackendFactory);
 
@@ -784,13 +776,15 @@ static ALCboolean ALCcoreAudioBackendFactory_querySupport(ALCcoreAudioBackendFac
     return ALC_FALSE;
 }
 
-static void ALCcoreAudioBackendFactory_probe(ALCcoreAudioBackendFactory* UNUSED(self), enum DevProbe type, al_string *outnames)
+static void ALCcoreAudioBackendFactory_probe(ALCcoreAudioBackendFactory* UNUSED(self), enum DevProbe type)
 {
     switch(type)
     {
         case ALL_DEVICE_PROBE:
+            AppendAllDevicesList(ca_device);
+            break;
         case CAPTURE_DEVICE_PROBE:
-            alstr_append_range(outnames, ca_device, ca_device+sizeof(ca_device));
+            AppendCaptureDeviceList(ca_device);
             break;
     }
 }

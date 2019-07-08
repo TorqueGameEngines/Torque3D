@@ -102,8 +102,8 @@ IF(NOT LIBTYPE)
 ENDIF()
 
 SET(LIB_MAJOR_VERSION "1")
-SET(LIB_MINOR_VERSION "19")
-SET(LIB_REVISION "1")
+SET(LIB_MINOR_VERSION "18")
+SET(LIB_REVISION "2")
 SET(LIB_VERSION "${LIB_MAJOR_VERSION}.${LIB_MINOR_VERSION}.${LIB_REVISION}")
 
 SET(EXPORT_DECL "")
@@ -432,48 +432,6 @@ IF(HAVE_MFPU_NEON_SWITCH)
     SET(FPU_NEON_SWITCH "-mfpu=neon")
 ENDIF()
 
-SET(FPMATH_SET "0")
-IF(CMAKE_SIZEOF_VOID_P MATCHES "4")
-    IF(SSE_SWITCH OR MSVC)
-        OPTION(ALSOFT_ENABLE_SSE_CODEGEN "Enable SSE code generation instead of x87 for 32-bit targets." TRUE)
-    ENDIF()
-    IF(SSE2_SWITCH OR MSVC)
-        OPTION(ALSOFT_ENABLE_SSE2_CODEGEN "Enable SSE2 code generation instead of x87 for 32-bit targets." TRUE)
-    ENDIF()
-
-    IF(ALSOFT_ENABLE_SSE2_CODEGEN)
-        IF(SSE2_SWITCH)
-            CHECK_C_COMPILER_FLAG("${SSE2_SWITCH} -mfpmath=sse" HAVE_MFPMATH_SSE_2)
-            IF(HAVE_MFPMATH_SSE_2)
-                SET(C_FLAGS ${C_FLAGS} ${SSE2_SWITCH} -mfpmath=sse)
-                SET(FPMATH_SET 2)
-            ENDIF()
-        ELSEIF(MSVC)
-            CHECK_C_COMPILER_FLAG("/arch:SSE2" HAVE_ARCH_SSE2)
-            IF(HAVE_ARCH_SSE2)
-                SET(C_FLAGS ${C_FLAGS} "/arch:SSE2")
-                SET(FPMATH_SET 2)
-            ENDIF()
-        ENDIF()
-    ENDIF()
-    IF(ALSOFT_ENABLE_SSE_CODEGEN AND NOT FPMATH_SET)
-        IF(SSE_SWITCH)
-            CHECK_C_COMPILER_FLAG("${SSE_SWITCH} -mfpmath=sse" HAVE_MFPMATH_SSE)
-            IF(HAVE_MFPMATH_SSE)
-                SET(C_FLAGS ${C_FLAGS} ${SSE_SWITCH} -mfpmath=sse)
-                SET(FPMATH_SET 1)
-            ENDIF()
-        ELSEIF(MSVC)
-            CHECK_C_COMPILER_FLAG("/arch:SSE" HAVE_ARCH_SSE)
-            IF(HAVE_ARCH_SSE)
-                SET(C_FLAGS ${C_FLAGS} "/arch:SSE")
-                SET(FPMATH_SET 1)
-            ENDIF()
-        ENDIF()
-    ENDIF()
-ENDIF()
-
-
 CHECK_C_SOURCE_COMPILES("int foo(const char *str, ...) __attribute__((format(printf, 1, 2)));
                          int main() {return 0;}" HAVE_GCC_FORMAT)
 
@@ -554,7 +512,6 @@ CHECK_SYMBOL_EXISTS(lrintf math.h HAVE_LRINTF)
 CHECK_SYMBOL_EXISTS(modff  math.h HAVE_MODFF)
 CHECK_SYMBOL_EXISTS(log2f  math.h HAVE_LOG2F)
 CHECK_SYMBOL_EXISTS(cbrtf  math.h HAVE_CBRTF)
-CHECK_SYMBOL_EXISTS(copysignf math.h HAVE_COPYSIGNF)
 
 IF(HAVE_FLOAT_H)
     CHECK_SYMBOL_EXISTS(_controlfp float.h HAVE__CONTROLFP)
@@ -743,8 +700,6 @@ ENDIF()
 
 
 SET(COMMON_OBJS
-    common/alcomplex.c
-    common/alcomplex.h
     common/align.h
     common/almalloc.c
     common/almalloc.h
@@ -798,14 +753,12 @@ SET(ALC_OBJS
     Alc/mastering.h
     Alc/ringbuffer.c
     Alc/ringbuffer.h
-    Alc/effects/autowah.c
     Alc/effects/chorus.c
     Alc/effects/compressor.c
     Alc/effects/dedicated.c
     Alc/effects/distortion.c
     Alc/effects/echo.c
     Alc/effects/equalizer.c
-    Alc/effects/fshifter.c
     Alc/effects/modulator.c
     Alc/effects/null.c
     Alc/effects/pshifter.c
@@ -902,7 +855,7 @@ IF(ALSOFT_REQUIRE_SSE2 AND NOT HAVE_SSE2)
     MESSAGE(FATAL_ERROR "Failed to enable required SSE2 CPU extensions")
 ENDIF()
 
-OPTION(ALSOFT_REQUIRE_SSE3 "Require SSE3 support" OFF)
+OPTION(ALSOFT_REQUIRE_SSE2 "Require SSE3 support" OFF)
 CHECK_INCLUDE_FILE(pmmintrin.h HAVE_PMMINTRIN_H "${SSE3_SWITCH}")
 IF(HAVE_EMMINTRIN_H)
     OPTION(ALSOFT_CPUEXT_SSE3 "Enable SSE3 support" ON)
@@ -1302,7 +1255,7 @@ ADD_CUSTOM_TARGET(native-tools
     VERBATIM
 )
 
-option(ALSOFT_EMBED_HRTF_DATA "Embed the HRTF data files (increases library footprint)" ON)
+option(ALSOFT_EMBED_HRTF_DATA "Embed the HRTF data files (increases library footprint)" OFF)
 if(ALSOFT_EMBED_HRTF_DATA)
     MACRO(make_hrtf_header FILENAME VARNAME)
         SET(infile  "${OpenAL_SOURCE_DIR}/hrtf/${FILENAME}")
@@ -1515,10 +1468,6 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS "Building with support for CPU extensions:")
 MESSAGE(STATUS "    ${CPU_EXTS}")
 MESSAGE(STATUS "")
-IF(FPMATH_SET)
-    MESSAGE(STATUS "Building with SSE${FPMATH_SET} codegen")
-    MESSAGE(STATUS "")
-ENDIF()
 
 IF(WIN32)
     IF(NOT HAVE_DSOUND)
@@ -1746,8 +1695,7 @@ IF(ALSOFT_EXAMPLES)
                 PRIVATE ${SDL2_INCLUDE_DIR} ${FFMPEG_INCLUDE_DIRS})
             TARGET_COMPILE_OPTIONS(alffplay PRIVATE ${C_FLAGS})
             TARGET_LINK_LIBRARIES(alffplay
-                PRIVATE ${LINKER_FLAGS} ${SDL2_LIBRARY} ${FFMPEG_LIBRARIES} ex-common common
-                        OpenAL)
+                PRIVATE ${LINKER_FLAGS} ${SDL2_LIBRARY} ${FFMPEG_LIBRARIES} common OpenAL)
 
             IF(ALSOFT_INSTALL)
                 INSTALL(TARGETS alffplay

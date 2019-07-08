@@ -3,7 +3,6 @@
 
 #include "alMain.h"
 #include "threads.h"
-#include "alstring.h"
 
 
 #ifdef __cplusplus
@@ -116,7 +115,7 @@ struct ALCbackendFactoryVtable {
 
     ALCboolean (*const querySupport)(ALCbackendFactory *self, ALCbackend_Type type);
 
-    void (*const probe)(ALCbackendFactory *self, enum DevProbe type, al_string *outnames);
+    void (*const probe)(ALCbackendFactory *self, enum DevProbe type);
 
     ALCbackend* (*const createBackend)(ALCbackendFactory *self, ALCdevice *device, ALCbackend_Type type);
 };
@@ -125,7 +124,7 @@ struct ALCbackendFactoryVtable {
 DECLARE_THUNK(T, ALCbackendFactory, ALCboolean, init)                         \
 DECLARE_THUNK(T, ALCbackendFactory, void, deinit)                             \
 DECLARE_THUNK1(T, ALCbackendFactory, ALCboolean, querySupport, ALCbackend_Type) \
-DECLARE_THUNK2(T, ALCbackendFactory, void, probe, enum DevProbe, al_string*)  \
+DECLARE_THUNK1(T, ALCbackendFactory, void, probe, enum DevProbe)              \
 DECLARE_THUNK2(T, ALCbackendFactory, ALCbackend*, createBackend, ALCdevice*, ALCbackend_Type) \
                                                                               \
 static const struct ALCbackendFactoryVtable T##_ALCbackendFactory_vtable = {  \
@@ -143,7 +142,7 @@ ALCbackendFactory *ALCcoreAudioBackendFactory_getFactory(void);
 ALCbackendFactory *ALCossBackendFactory_getFactory(void);
 ALCbackendFactory *ALCjackBackendFactory_getFactory(void);
 ALCbackendFactory *ALCsolarisBackendFactory_getFactory(void);
-ALCbackendFactory *SndioBackendFactory_getFactory(void);
+ALCbackendFactory *ALCsndioBackendFactory_getFactory(void);
 ALCbackendFactory *ALCqsaBackendFactory_getFactory(void);
 ALCbackendFactory *ALCwasapiBackendFactory_getFactory(void);
 ALCbackendFactory *ALCdsoundBackendFactory_getFactory(void);
@@ -161,15 +160,6 @@ inline void ALCdevice_Lock(ALCdevice *device)
 
 inline void ALCdevice_Unlock(ALCdevice *device)
 { V0(device->Backend,unlock)(); }
-
-
-inline ClockLatency GetClockLatency(ALCdevice *device)
-{
-    ClockLatency ret = V0(device->Backend,getClockLatency)();
-    ret.Latency += device->FixedLatency;
-    return ret;
-}
-
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -786,7 +786,7 @@ ALCbackendFactory *ALCossBackendFactory_getFactory(void);
 static ALCboolean ALCossBackendFactory_init(ALCossBackendFactory *self);
 static void ALCossBackendFactory_deinit(ALCossBackendFactory *self);
 static ALCboolean ALCossBackendFactory_querySupport(ALCossBackendFactory *self, ALCbackend_Type type);
-static void ALCossBackendFactory_probe(ALCossBackendFactory *self, enum DevProbe type, al_string *outnames);
+static void ALCossBackendFactory_probe(ALCossBackendFactory *self, enum DevProbe type);
 static ALCbackend* ALCossBackendFactory_createBackend(ALCossBackendFactory *self, ALCdevice *device, ALCbackend_Type type);
 DEFINE_ALCBACKENDFACTORY_VTABLE(ALCossBackendFactory);
 
@@ -820,31 +820,40 @@ ALCboolean ALCossBackendFactory_querySupport(ALCossBackendFactory* UNUSED(self),
     return ALC_FALSE;
 }
 
-void ALCossBackendFactory_probe(ALCossBackendFactory* UNUSED(self), enum DevProbe type, al_string *outnames)
+void ALCossBackendFactory_probe(ALCossBackendFactory* UNUSED(self), enum DevProbe type)
 {
-    struct oss_device *cur = NULL;
+    struct oss_device *cur;
     switch(type)
     {
         case ALL_DEVICE_PROBE:
             ALCossListFree(&oss_playback);
             ALCossListPopulate(&oss_playback, DSP_CAP_OUTPUT);
             cur = &oss_playback;
+            while(cur != NULL)
+            {
+#ifdef HAVE_STAT
+                struct stat buf;
+                if(stat(cur->path, &buf) == 0)
+#endif
+                    AppendAllDevicesList(cur->handle);
+                cur = cur->next;
+            }
             break;
 
         case CAPTURE_DEVICE_PROBE:
             ALCossListFree(&oss_capture);
             ALCossListPopulate(&oss_capture, DSP_CAP_INPUT);
             cur = &oss_capture;
-            break;
-    }
-    while(cur != NULL)
-    {
+            while(cur != NULL)
+            {
 #ifdef HAVE_STAT
-        struct stat buf;
-        if(stat(cur->path, &buf) == 0)
+                struct stat buf;
+                if(stat(cur->path, &buf) == 0)
 #endif
-            alstr_append_range(outnames, cur->handle, cur->handle+strlen(cur->handle)+1);
-        cur = cur->next;
+                    AppendCaptureDeviceList(cur->handle);
+                cur = cur->next;
+            }
+            break;
     }
 }
 

@@ -817,7 +817,7 @@ void ReflectionProbe::bake()
 
    PROBEMGR->bakeProbe(this);
 
-   setMaskBits(StaticDataMask);
+   setMaskBits(-1);
 }
 
 //-----------------------------------------------------------------------------

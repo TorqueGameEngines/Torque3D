@@ -381,7 +381,7 @@ void RenderProbeMgr::unregisterProbe(U32 probeIdx)
    //recalculate all the probe's indicies just to be sure
    for (U32 i = 0; i < mRegisteredProbes.size(); i++)
    {
-      mRegisteredProbes[i].mProbeIdx == i;
+      mRegisteredProbes[i].mProbeIdx = i;
    }
 
    //rebuild our probe data
@@ -666,8 +666,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
 
       shaderConsts->setSafe(probeShaderConsts->mSkylightCubemapIdxSC, (float)skyLightIdx);
 
-      if (mBRDFTexture.isValid())
-         GFX->setTexture(2, mBRDFTexture);
+      if(probeShaderConsts->mBRDFTextureMap->getSamplerRegister() != -1 && mBRDFTexture.isValid())
+         GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture);
 
       if(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister() != -1)
          GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapSC->getSamplerRegister(), mPrefilterArray);
@@ -721,7 +721,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 	   _setupStaticParameters();
 
    // Early out if nothing to draw.
-   if (!RenderProbeMgr::smRenderReflectionProbes || !state->isDiffusePass() || (mEffectiveProbeCount == 0 && mSkylightCubemapIdx == -1))
+   if (!RenderProbeMgr::smRenderReflectionProbes || (!state->isDiffusePass() && !state->isReflectPass()) || (mEffectiveProbeCount == 0 && mSkylightCubemapIdx == -1))
    {
       getProbeArrayEffect()->setSkip(true);
       return;
@@ -926,6 +926,8 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
 
    U32 endMSTime = Platform::getRealMilliseconds();
    F32 diffTime = F32(endMSTime - startMSTime);
+
+   probe->setMaskBits(-1);
 
    Con::warnf("RenderProbeMgr::bake() - Finished bake! Took %g milliseconds", diffTime);
 }

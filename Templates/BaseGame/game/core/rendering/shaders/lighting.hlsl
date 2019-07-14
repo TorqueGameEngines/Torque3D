@@ -385,11 +385,8 @@ float4 computeForwardProbes(Surface surface,
       {
          blendFactor[i] *= invBlendSumWeighted;
          contribution[i] *= blendFactor[i];
-         alpha -= contribution[i];
       }
    }
-   else
-      alpha -= blendSum;
 
 #if DEBUGVIZ_ATTENUATION == 1
       float contribAlpha = 1;
@@ -432,7 +429,7 @@ float4 computeForwardProbes(Surface surface,
    for (i = 0; i < numProbes; ++i)
    {
       float contrib = contribution[i];
-      if (contrib != 0)
+      if (contrib > 0.0f)
       {
          int cubemapIdx = probeConfigData[i].a;
          float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);

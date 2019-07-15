@@ -53,6 +53,8 @@ function AssetBrowser::onWake(%this)
    %this.onlyShowModulesWithAssets = false;
    %this.treeFilterMode = "list";
    
+   %this.templateFilesPath = "tools/assetBrowser/scripts/templateFiles/";
+   
    //First, build our our list of active modules
    %modulesList = ModuleDatabase.findModules(true);
    

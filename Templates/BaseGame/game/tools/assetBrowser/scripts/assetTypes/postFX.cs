@@ -27,12 +27,32 @@ function AssetBrowser::createPostEffectAsset(%this)
 	
 	AssetBrowserFilterTree.onSelect(%smItem);
 	
-	%file = new FileObject();
+   %file = new FileObject();
+	%templateFile = new FileObject();
+	
+   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFile.cs.template";
    
-   if(%file.openForWrite(%scriptPath))
-	{
-		%file.close();
-	}
+   if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX script file!");
+   }
    
 	return %tamlpath;
 }

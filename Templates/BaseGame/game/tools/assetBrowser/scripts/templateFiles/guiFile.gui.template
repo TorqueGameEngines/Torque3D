@@ -1,0 +1,7 @@
+//--- OBJECT WRITE BEGIN ---
+%guiContent = new GuiControl(@@) 
+{
+    position = "0 0";
+	extent = "100 100";
+};
+//--- OBJECT WRITE END ---

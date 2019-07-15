@@ -126,12 +126,16 @@ void PostEffectAsset::copyTo(SimObject* object)
 
 void PostEffectAsset::initializeAsset()
 {
+   mScriptFile = expandAssetFilePath(mScriptFile);
+
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 
 void PostEffectAsset::onAssetRefresh()
 {
+   mScriptFile = expandAssetFilePath(mScriptFile);
+
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }

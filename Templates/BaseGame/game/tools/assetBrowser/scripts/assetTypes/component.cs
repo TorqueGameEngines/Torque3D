@@ -23,24 +23,31 @@ function AssetBrowser::createComponentAsset(%this)
    TamlWrite(%asset, %tamlpath);
    
    %file = new FileObject();
+	%templateFile = new FileObject();
 	
-	if(%file.openForWrite(%scriptPath))
-	{
-		//TODO: enable ability to auto-embed a header for copyright or whatnot
-	   %file.writeline("//onAdd is called when the component is created and then added to it's owner entity.\n");
-	   %file.writeline("//You would also add any script-defined component fields via addComponentField().\n");
-		%file.writeline("function " @ %assetName @ "::onAdd(%this)\n{\n\n}\n");
-		%file.writeline("//onAdd is called when the component is removed and deleted from it's owner entity.");
-		%file.writeline("function " @ %assetName @ "::onRemove(%this)\n{\n\n}\n");
-		%file.writeline("//onClientConnect is called any time a new client connects to the server.");
-		%file.writeline("function " @ %assetName @ "::onClientConnect(%this, %client)\n{\n\n}\n");
-		%file.writeline("//onClientDisconnect is called any time a client disconnects from the server.");
-		%file.writeline("function " @ %assetName @ "::onClientDisonnect(%this, %client)\n{\n\n}\n");
-		%file.writeline("//update is called when the component does an update tick.\n");
-		%file.writeline("function " @ %assetName @ "::Update(%this)\n{\n\n}\n");
-		
-		%file.close();
-	}
+   %templateCodeFilePath = %this.templateFilesPath @ "componentFile.cs.template";
+   
+   if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreateComponentAsset - Something went wrong and we couldn't write the Component script file!");
+   }
 	
 	Canvas.popDialog(AssetBrowser_newComponentAsset);
 	

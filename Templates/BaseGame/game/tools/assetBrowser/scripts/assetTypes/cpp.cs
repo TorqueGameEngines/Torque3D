@@ -41,15 +41,13 @@ function AssetBrowser::createCppAsset(%this)
 	
 	AssetBrowserFilterTree.onSelect(%smItem);
 	
-	%templateFilesPath = "tools/assetBrowser/scripts/templateFiles/";
-	
 	%file = new FileObject();
 	%templateFile = new FileObject();
 	
 	if(%assetType $= "CppStaticClassAsset")
 	{
-	   %cppTemplateCodeFilePath = %templateFilesPath @ "CppStaticClassFile.cpp";
-	   %cppTemplateHeaderFilePath = %templateFilesPath @ "CppStaticClassFile.h";
+	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppStaticClassFile.cpp";
+	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppStaticClassFile.h";
 	}
    
    if(%file.openForWrite(%codePath) && %templateFile.openForRead(%cppTemplateCodeFilePath))
@@ -103,7 +101,7 @@ function AssetBrowser::createCppAsset(%this)
 	   %file = new FileObject();
 	   %templateFile = new FileObject();
    
-      if(%file.openForWrite(%cppModuleFilePath) && %templateFile.openForRead(%templateFilesPath @ "CppModuleFile.cpp"))
+      if(%file.openForWrite(%cppModuleFilePath) && %templateFile.openForRead(%this.templateFilesPath @ "CppModuleFile.cpp"))
       {
          while( !%templateFile.isEOF() )
          {

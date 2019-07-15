@@ -20,27 +20,56 @@ function AssetBrowser::createGUIAsset(%this)
    TamlWrite(%asset, %tamlpath);
    
    %file = new FileObject();
+   %templateFile = new FileObject();
    
-   if(%file.openForWrite(%guipath))
-	{
-	   %file.writeline("//--- OBJECT WRITE BEGIN ---");
-		%file.writeline("%guiContent = new GuiControl(" @ %assetName @ ") {");
-		%file.writeline("   position = \"0 0\";");
-		%file.writeline("   extent = \"100 100\";");
-		%file.writeline("};");
-		%file.writeline("//--- OBJECT WRITE END ---");
-		
-		%file.close();
-	}
-	
-	if(%file.openForWrite(%scriptPath))
-	{
-		%file.writeline("function " @ %assetName @ "::onWake(%this)\n{\n\n}\n");
-		%file.writeline("function " @ %assetName @ "::onSleep(%this)\n{\n\n}\n");
-		
-		%file.close();
-	}
-	
+   %guiTemplateCodeFilePath = %this.templateFilesPath @ "guiFile.gui.template";
+   
+   if(%file.openForWrite(%guipath) && %templateFile.openForRead(%guiTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreateGUIAsset - Something went wrong and we couldn't write the GUI file!");
+   }
+   
+   %scriptTemplateCodeFilePath = %this.templateFilesPath @ "guiFile.cs.template";
+   
+   if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%scriptTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreateGUIAsset - Something went wrong and we couldn't write the GUI script file!");
+   }
+   
 	//load the gui
 	exec(%guipath);
 	exec(%scriptPath);

@@ -86,7 +86,7 @@ new Scene(PbrMatTestLevel) {
       surfaceTexture = "Floor_Material";
       surface = "0 0 0 1 0 0 0.5 1 0 0 1 1 0 1 1";
       surface = "0 1 0 0 0 0 -0.5 1 0 0 1 1 0 1 1";
-      surface = "0.707107 0 0 0.707107 0 4 0 1 0 0 1 1 0 1 1";
+      surface = "0.707107 0 0 0.707106 0 4 0 1 0 0 1 1 0 1 1";
       surface = "0 0.707107 -0.707107 0 0 -4 -2.27374e-13 1 0 0 1 1 0 1 1";
       surface = "0.5 0.5 -0.5 0.5 -4 0 -1.49012e-08 1 0 0 1 1 0 1 1";
       surface = "0.5 -0.5 0.5 0.5 4 0 -1.49012e-08 1 0 0 1 1 0 1 1";
@@ -266,7 +266,7 @@ new Scene(PbrMatTestLevel) {
 
       surface = "0 0 0 1 0 0 0.837898 0 0 0 1 1 0 1 1";
       surface = "0 1 0 0 0 0 -0.837898 0 0 0 1 1 0 1 1";
-      surface = "0.707107 0 0 0.707106 0 0.847632 0 0 0 0 1 1 0 1 1";
+      surface = "0.707107 0 0 0.707107 0 0.847632 0 0 0 0 1 1 0 1 1";
       surface = "0 0.707107 -0.707107 0 0 -0.847632 0 0 0 0 1 1 0 1 1";
       surface = "0.5 0.5 -0.5 0.5 -0.412576 0 -1.53859e-07 0 0 0 1 1 0 1 1";
       surface = "0.5 -0.5 0.5 0.5 0.412576 0 -1.53859e-07 0 0 0 1 1 0 1 1";
@@ -274,15 +274,15 @@ new Scene(PbrMatTestLevel) {
    new BoxEnvironmentProbe() {
       Enabled = "1";
       refOffset = "0 0 0";
-      refScale = "10 10 10";
+      refScale = "5 5 5";
       ReflectionMode = "Baked Cubemap";
-      position = "-0.0463406 0.0380459 2.23039";
+      position = "1.36811 -1.0083 2.23039";
       rotation = "1 0 0 0";
-      scale = "10 10 10";
+      scale = "5 5 5";
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "29579d61-9b0f-11e9-b718-be72e303d0f8";
-      attenuation = "1";
+      attenuation = "0";
    };
    new PointLight() {
       radius = "5";

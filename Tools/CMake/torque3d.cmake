@@ -72,6 +72,7 @@ if(WIN32)
     set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
     set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files" FORCE)
     set(ALSOFT_AMBDEC_PRESETS OFF CACHE BOOL "Install AmbDec presets" FORCE)
+    set(ALSOFT_EMBED_HRTF_DATA OFF CACHE BOOL "Embed the HRTF data (increases library footprint)" FORCE)
     
     add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
 endif()

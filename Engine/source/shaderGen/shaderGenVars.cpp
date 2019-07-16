@@ -71,8 +71,8 @@ const String ShaderGenVars::metalness("$metalness");
 //Reflection Probes
 const String ShaderGenVars::probePosition("$inProbePosArray");
 const String ShaderGenVars::probeRefPos("$inRefPosArray");
-const String ShaderGenVars::refBoxMin("$inProbeBoxMin");
-const String ShaderGenVars::refBoxMax("$inProbeBoxMax");
+const String ShaderGenVars::refBoxMin("$inRefBoxMin");
+const String ShaderGenVars::refBoxMax("$inRefBoxMax");
 const String ShaderGenVars::worldToObjArray("$worldToObjArray");
 const String ShaderGenVars::probeConfigData("$probeConfigData");
 const String ShaderGenVars::specularCubemapAR("$specularCubemapAR");

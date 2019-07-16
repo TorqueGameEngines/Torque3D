@@ -17,8 +17,12 @@ subject to the following restrictions:
 
 btTriangleCallback::~btTriangleCallback()
 {
+
 }
+
 
 btInternalTriangleIndexCallback::~btInternalTriangleIndexCallback()
 {
+
 }
+

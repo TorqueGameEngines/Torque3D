@@ -13,21 +13,24 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+
 #include "btCapsuleShape.h"
 
 #include "LinearMath/btQuaternion.h"
 
-btCapsuleShape::btCapsuleShape(btScalar radius, btScalar height) : btConvexInternalShape()
+btCapsuleShape::btCapsuleShape(btScalar radius, btScalar height) : btConvexInternalShape ()
 {
 	m_collisionMargin = radius;
 	m_shapeType = CAPSULE_SHAPE_PROXYTYPE;
 	m_upAxis = 1;
-	m_implicitShapeDimensions.setValue(radius, 0.5f * height, radius);
+	m_implicitShapeDimensions.setValue(radius,0.5f*height,radius);
 }
 
-btVector3 btCapsuleShape::localGetSupportingVertexWithoutMargin(const btVector3& vec0) const
+ 
+ btVector3	btCapsuleShape::localGetSupportingVertexWithoutMargin(const btVector3& vec0)const
 {
-	btVector3 supVec(0, 0, 0);
+
+	btVector3 supVec(0,0,0);
 
 	btScalar maxDot(btScalar(-BT_LARGE_FLOAT));
 
@@ -35,19 +38,20 @@ btVector3 btCapsuleShape::localGetSupportingVertexWithoutMargin(const btVector3&
 	btScalar lenSqr = vec.length2();
 	if (lenSqr < btScalar(0.0001))
 	{
-		vec.setValue(1, 0, 0);
-	}
-	else
+		vec.setValue(1,0,0);
+	} else
 	{
-		btScalar rlen = btScalar(1.) / btSqrt(lenSqr);
+		btScalar rlen = btScalar(1.) / btSqrt(lenSqr );
 		vec *= rlen;
 	}
 
 	btVector3 vtx;
 	btScalar newDot;
+	
+	
 
 	{
-		btVector3 pos(0, 0, 0);
+		btVector3 pos(0,0,0);
 		pos[getUpAxis()] = getHalfHeight();
 
 		vtx = pos;
@@ -59,7 +63,7 @@ btVector3 btCapsuleShape::localGetSupportingVertexWithoutMargin(const btVector3&
 		}
 	}
 	{
-		btVector3 pos(0, 0, 0);
+		btVector3 pos(0,0,0);
 		pos[getUpAxis()] = -getHalfHeight();
 
 		vtx = pos;
@@ -72,11 +76,15 @@ btVector3 btCapsuleShape::localGetSupportingVertexWithoutMargin(const btVector3&
 	}
 
 	return supVec;
+
 }
 
-void btCapsuleShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors, btVector3* supportVerticesOut, int numVectors) const
+ void	btCapsuleShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 {
-	for (int j = 0; j < numVectors; j++)
+
+	
+	
+	for (int j=0;j<numVectors;j++)
 	{
 		btScalar maxDot(btScalar(-BT_LARGE_FLOAT));
 		const btVector3& vec = vectors[j];
@@ -84,7 +92,7 @@ void btCapsuleShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btV
 		btVector3 vtx;
 		btScalar newDot;
 		{
-			btVector3 pos(0, 0, 0);
+			btVector3 pos(0,0,0);
 			pos[getUpAxis()] = getHalfHeight();
 			vtx = pos;
 			newDot = vec.dot(vtx);
@@ -95,7 +103,7 @@ void btCapsuleShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btV
 			}
 		}
 		{
-			btVector3 pos(0, 0, 0);
+			btVector3 pos(0,0,0);
 			pos[getUpAxis()] = -getHalfHeight();
 			vtx = pos;
 			newDot = vec.dot(vtx);
@@ -105,44 +113,57 @@ void btCapsuleShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btV
 				supportVerticesOut[j] = vtx;
 			}
 		}
+		
 	}
 }
 
-void btCapsuleShape::calculateLocalInertia(btScalar mass, btVector3& inertia) const
+
+void	btCapsuleShape::calculateLocalInertia(btScalar mass,btVector3& inertia) const
 {
 	//as an approximation, take the inertia of the box that bounds the spheres
 
 	btTransform ident;
 	ident.setIdentity();
 
+	
 	btScalar radius = getRadius();
 
-	btVector3 halfExtents(radius, radius, radius);
-	halfExtents[getUpAxis()] += getHalfHeight();
+	btVector3 halfExtents(radius,radius,radius);
+	halfExtents[getUpAxis()]+=getHalfHeight();
 
-	btScalar lx = btScalar(2.) * (halfExtents[0]);
-	btScalar ly = btScalar(2.) * (halfExtents[1]);
-	btScalar lz = btScalar(2.) * (halfExtents[2]);
-	const btScalar x2 = lx * lx;
-	const btScalar y2 = ly * ly;
-	const btScalar z2 = lz * lz;
+	btScalar lx=btScalar(2.)*(halfExtents[0]);
+	btScalar ly=btScalar(2.)*(halfExtents[1]);
+	btScalar lz=btScalar(2.)*(halfExtents[2]);
+	const btScalar x2 = lx*lx;
+	const btScalar y2 = ly*ly;
+	const btScalar z2 = lz*lz;
 	const btScalar scaledmass = mass * btScalar(.08333333);
 
-	inertia[0] = scaledmass * (y2 + z2);
-	inertia[1] = scaledmass * (x2 + z2);
-	inertia[2] = scaledmass * (x2 + y2);
+	inertia[0] = scaledmass * (y2+z2);
+	inertia[1] = scaledmass * (x2+z2);
+	inertia[2] = scaledmass * (x2+y2);
+
 }
 
-btCapsuleShapeX::btCapsuleShapeX(btScalar radius, btScalar height)
+btCapsuleShapeX::btCapsuleShapeX(btScalar radius,btScalar height)
 {
 	m_collisionMargin = radius;
 	m_upAxis = 0;
-	m_implicitShapeDimensions.setValue(0.5f * height, radius, radius);
+	m_implicitShapeDimensions.setValue(0.5f*height, radius,radius);
 }
 
-btCapsuleShapeZ::btCapsuleShapeZ(btScalar radius, btScalar height)
+
+
+
+
+
+btCapsuleShapeZ::btCapsuleShapeZ(btScalar radius,btScalar height)
 {
 	m_collisionMargin = radius;
 	m_upAxis = 2;
-	m_implicitShapeDimensions.setValue(radius, radius, 0.5f * height);
+	m_implicitShapeDimensions.setValue(radius,radius,0.5f*height);
 }
+
+
+
+

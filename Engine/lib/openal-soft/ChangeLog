@@ -1,24 +1,8 @@
-openal-soft-1.19.1:
-
-    Implemented capture support for the SoundIO backend.
-
-    Fixed source buffer queues potentially not playing properly when a queue
-    entry completes.
-
-    Fixed possible unexpected failures when generating auxiliary effect slots.
-
-    Fixed a crash with certain reverb or device settings.
-
-    Fixed OpenSL capture.
-
-    Improved output limiter response, better ensuring the sample amplitude is
-    clamped for output.
-
 openal-soft-1.19.0:
 
     Implemented the ALC_SOFT_device_clock extension.
 
-    Implemented the Pitch Shifter, Frequency Shifter, and Autowah effects.
+    Implemented the Pitch Shifter effect.
 
     Fixed compiling on FreeBSD systems that use freebsd-lib 9.1.
 
@@ -32,14 +16,11 @@ openal-soft-1.19.0:
     Increased the number of virtual channels for decoding Ambisonics to HRTF
     output.
 
-    Changed 32-bit x86 builds to use SSE2 math by default for performance.
-    Build-time options are available to use just SSE1 or x87 instead.
-
     Replaced the 4-point Sinc resampler with a more efficient cubic resampler.
 
     Renamed the MMDevAPI backend to WASAPI.
 
-    Added support for 24-bit, dual-ear HRTF data sets. The built-in data set
+    Added support fot 24-bit, dual-ear HRTF data sets. The built-in data set
     has been updated to 24-bit.
 
     Added a 24- to 48-point band-limited Sinc resampler.

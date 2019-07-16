@@ -38,10 +38,9 @@
 #include "bs2b.h"
 
 
-extern inline void CalcDirectionCoeffs(const ALfloat dir[3], ALfloat spread, ALfloat coeffs[MAX_AMBI_COEFFS]);
 extern inline void CalcAngleCoeffs(ALfloat azimuth, ALfloat elevation, ALfloat spread, ALfloat coeffs[MAX_AMBI_COEFFS]);
-extern inline float ScaleAzimuthFront(float azimuth, float scale);
-extern inline void ComputePanGains(const MixParams *dry, const ALfloat*restrict coeffs, ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS]);
+extern inline void ComputeDryPanGains(const DryMixParams *dry, const ALfloat coeffs[MAX_AMBI_COEFFS], ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS]);
+extern inline void ComputeFirstOrderGains(const BFMixParams *foa, const ALfloat mtx[4], ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS]);
 
 
 static const ALsizei FuMa2ACN[MAX_AMBI_COEFFS] = {
@@ -68,15 +67,19 @@ static const ALsizei ACN2ACN[MAX_AMBI_COEFFS] = {
 };
 
 
-void CalcAmbiCoeffs(const ALfloat y, const ALfloat z, const ALfloat x, const ALfloat spread,
-                    ALfloat coeffs[MAX_AMBI_COEFFS])
+void CalcDirectionCoeffs(const ALfloat dir[3], ALfloat spread, ALfloat coeffs[MAX_AMBI_COEFFS])
 {
+    /* Convert from OpenAL coords to Ambisonics. */
+    ALfloat x = -dir[2];
+    ALfloat y = -dir[0];
+    ALfloat z =  dir[1];
+
     /* Zeroth-order */
     coeffs[0]  = 1.0f; /* ACN 0 = 1 */
     /* First-order */
-    coeffs[1]  = SQRTF_3 * y; /* ACN 1 = sqrt(3) * Y */
-    coeffs[2]  = SQRTF_3 * z; /* ACN 2 = sqrt(3) * Z */
-    coeffs[3]  = SQRTF_3 * x; /* ACN 3 = sqrt(3) * X */
+    coeffs[1]  = 1.732050808f * y; /* ACN 1 = sqrt(3) * Y */
+    coeffs[2]  = 1.732050808f * z; /* ACN 2 = sqrt(3) * Z */
+    coeffs[3]  = 1.732050808f * x; /* ACN 3 = sqrt(3) * X */
     /* Second-order */
     coeffs[4]  = 3.872983346f * x * y;             /* ACN 4 = sqrt(15) * X * Y */
     coeffs[5]  = 3.872983346f * y * z;             /* ACN 5 = sqrt(15) * Y * Z */
@@ -150,8 +153,16 @@ void CalcAmbiCoeffs(const ALfloat y, const ALfloat z, const ALfloat x, const ALf
     }
 }
 
+void CalcAnglePairwiseCoeffs(ALfloat azimuth, ALfloat elevation, ALfloat spread, ALfloat coeffs[MAX_AMBI_COEFFS])
+{
+    ALfloat sign = (azimuth < 0.0f) ? -1.0f : 1.0f;
+    if(!(fabsf(azimuth) > F_PI_2))
+        azimuth = minf(fabsf(azimuth) * F_PI_2 / (F_PI/6.0f), F_PI_2) * sign;
+    CalcAngleCoeffs(azimuth, elevation, spread, coeffs);
+}
 
-void ComputePanningGainsMC(const ChannelConfig *chancoeffs, ALsizei numchans, ALsizei numcoeffs, const ALfloat*restrict coeffs, ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS])
+
+void ComputePanningGainsMC(const ChannelConfig *chancoeffs, ALsizei numchans, ALsizei numcoeffs, const ALfloat coeffs[MAX_AMBI_COEFFS], ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS])
 {
     ALsizei i, j;
 
@@ -166,12 +177,37 @@ void ComputePanningGainsMC(const ChannelConfig *chancoeffs, ALsizei numchans, AL
         gains[i] = 0.0f;
 }
 
-void ComputePanningGainsBF(const BFChannelConfig *chanmap, ALsizei numchans, const ALfloat*restrict coeffs, ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS])
+void ComputePanningGainsBF(const BFChannelConfig *chanmap, ALsizei numchans, const ALfloat coeffs[MAX_AMBI_COEFFS], ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS])
 {
     ALsizei i;
 
     for(i = 0;i < numchans;i++)
         gains[i] = chanmap[i].Scale * coeffs[chanmap[i].Index] * ingain;
+    for(;i < MAX_OUTPUT_CHANNELS;i++)
+        gains[i] = 0.0f;
+}
+
+void ComputeFirstOrderGainsMC(const ChannelConfig *chancoeffs, ALsizei numchans, const ALfloat mtx[4], ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS])
+{
+    ALsizei i, j;
+
+    for(i = 0;i < numchans;i++)
+    {
+        float gain = 0.0f;
+        for(j = 0;j < 4;j++)
+            gain += chancoeffs[i][j] * mtx[j];
+        gains[i] = clampf(gain, 0.0f, 1.0f) * ingain;
+    }
+    for(;i < MAX_OUTPUT_CHANNELS;i++)
+        gains[i] = 0.0f;
+}
+
+void ComputeFirstOrderGainsBF(const BFChannelConfig *chanmap, ALsizei numchans, const ALfloat mtx[4], ALfloat ingain, ALfloat gains[MAX_OUTPUT_CHANNELS])
+{
+    ALsizei i;
+
+    for(i = 0;i < numchans;i++)
+        gains[i] = chanmap[i].Scale * mtx[chanmap[i].Index] * ingain;
     for(;i < MAX_OUTPUT_CHANNELS;i++)
         gains[i] = 0.0f;
 }
@@ -392,12 +428,11 @@ static void InitNearFieldCtrl(ALCdevice *device, ALfloat ctrl_dist, ALsizei orde
          * be used when rendering to an ambisonic buffer.
          */
         device->AvgSpeakerDist = minf(ctrl_dist, 10.0f);
-        TRACE("Using near-field reference distance: %.2f meters\n", device->AvgSpeakerDist);
 
         for(i = 0;i < order+1;i++)
-            device->NumChannelsPerOrder[i] = chans_per_order[i];
+            device->Dry.NumChannelsPerOrder[i] = chans_per_order[i];
         for(;i < MAX_AMBI_ORDER+1;i++)
-            device->NumChannelsPerOrder[i] = 0;
+            device->Dry.NumChannelsPerOrder[i] = 0;
     }
 }
 
@@ -781,10 +816,10 @@ static void InitHrtfPanning(ALCdevice *device)
     /* NOTE: azimuth goes clockwise. */
     static const struct AngularPoint AmbiPoints[] = {
         { DEG2RAD( 90.0f), DEG2RAD(   0.0f) },
-        { DEG2RAD( 35.2643897f), DEG2RAD(  45.0f) },
-        { DEG2RAD( 35.2643897f), DEG2RAD( 135.0f) },
-        { DEG2RAD( 35.2643897f), DEG2RAD(-135.0f) },
-        { DEG2RAD( 35.2643897f), DEG2RAD( -45.0f) },
+        { DEG2RAD( 35.0f), DEG2RAD(  45.0f) },
+        { DEG2RAD( 35.0f), DEG2RAD( 135.0f) },
+        { DEG2RAD( 35.0f), DEG2RAD(-135.0f) },
+        { DEG2RAD( 35.0f), DEG2RAD( -45.0f) },
         { DEG2RAD(  0.0f), DEG2RAD(   0.0f) },
         { DEG2RAD(  0.0f), DEG2RAD(  45.0f) },
         { DEG2RAD(  0.0f), DEG2RAD(  90.0f) },
@@ -793,10 +828,10 @@ static void InitHrtfPanning(ALCdevice *device)
         { DEG2RAD(  0.0f), DEG2RAD(-135.0f) },
         { DEG2RAD(  0.0f), DEG2RAD( -90.0f) },
         { DEG2RAD(  0.0f), DEG2RAD( -45.0f) },
-        { DEG2RAD(-35.2643897f), DEG2RAD(  45.0f) },
-        { DEG2RAD(-35.2643897f), DEG2RAD( 135.0f) },
-        { DEG2RAD(-35.2643897f), DEG2RAD(-135.0f) },
-        { DEG2RAD(-35.2643897f), DEG2RAD( -45.0f) },
+        { DEG2RAD(-35.0f), DEG2RAD(  45.0f) },
+        { DEG2RAD(-35.0f), DEG2RAD( 135.0f) },
+        { DEG2RAD(-35.0f), DEG2RAD(-135.0f) },
+        { DEG2RAD(-35.0f), DEG2RAD( -45.0f) },
         { DEG2RAD(-90.0f), DEG2RAD(   0.0f) },
     };
     static const ALfloat AmbiMatrixFOA[][MAX_AMBI_COEFFS] = {
@@ -852,6 +887,7 @@ static void InitHrtfPanning(ALCdevice *device)
 
     static_assert(COUNTOF(AmbiPoints) == COUNTOF(AmbiMatrixFOA), "FOA Ambisonic HRTF mismatch");
     static_assert(COUNTOF(AmbiPoints) == COUNTOF(AmbiMatrixHOA), "HOA Ambisonic HRTF mismatch");
+    static_assert(COUNTOF(AmbiPoints) <= HRTF_AMBI_MAX_CHANNELS, "HRTF_AMBI_MAX_CHANNELS is too small");
 
     if(device->AmbiUp)
     {
@@ -942,7 +978,7 @@ void aluInitRenderer(ALCdevice *device, ALint hrtf_id, enum HrtfRequestMode hrtf
     device->Dry.CoeffCount = 0;
     device->Dry.NumChannels = 0;
     for(i = 0;i < MAX_AMBI_ORDER+1;i++)
-        device->NumChannelsPerOrder[i] = 0;
+        device->Dry.NumChannelsPerOrder[i] = 0;
 
     device->AvgSpeakerDist = 0.0f;
     memset(device->ChannelDelay, 0, sizeof(device->ChannelDelay));

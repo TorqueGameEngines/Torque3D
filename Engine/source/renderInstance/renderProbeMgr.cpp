@@ -639,8 +639,8 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
          probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
 
          Point3F refPos = curEntry.getPosition() + curEntry.mProbeRefOffset;
-         Point3F refBoxMin = refPos - curEntry.mProbeRefScale * curEntry.getTransform().getScale();
-         Point3F refBoxMax = refPos + curEntry.mProbeRefScale * curEntry.getTransform().getScale();
+         Point3F refBoxMin = refPos - curEntry.mProbeRefScale/2 * curEntry.getTransform().getScale();
+         Point3F refBoxMax = refPos + curEntry.mProbeRefScale/2 * curEntry.getTransform().getScale();
 
          refBoxMinArray[mEffectiveProbeCount] = Point4F(refBoxMin.x, refBoxMin.y, refBoxMin.z, 0);
          refBoxMaxArray[mEffectiveProbeCount] = Point4F(refBoxMax.x, refBoxMax.y, refBoxMax.z, 0);

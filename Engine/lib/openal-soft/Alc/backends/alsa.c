@@ -1153,17 +1153,10 @@ error2:
 
 static ALCboolean ALCcaptureAlsa_start(ALCcaptureAlsa *self)
 {
-    int err = snd_pcm_prepare(self->pcmHandle);
-    if(err < 0)
-        ERR("prepare failed: %s\n", snd_strerror(err));
-    else
-    {
-        err = snd_pcm_start(self->pcmHandle);
-        if(err < 0)
-            ERR("start failed: %s\n", snd_strerror(err));
-    }
+    int err = snd_pcm_start(self->pcmHandle);
     if(err < 0)
     {
+        ERR("start failed: %s\n", snd_strerror(err));
         aluHandleDisconnect(STATIC_CAST(ALCbackend, self)->mDevice, "Capture state failure: %s",
                             snd_strerror(err));
         return ALC_FALSE;
@@ -1375,6 +1368,11 @@ static ClockLatency ALCcaptureAlsa_getClockLatency(ALCcaptureAlsa *self)
 }
 
 
+static inline void AppendAllDevicesList2(const DevMap *entry)
+{ AppendAllDevicesList(alstr_get_cstr(entry->name)); }
+static inline void AppendCaptureDeviceList2(const DevMap *entry)
+{ AppendCaptureDeviceList(alstr_get_cstr(entry->name)); }
+
 typedef struct ALCalsaBackendFactory {
     DERIVE_FROM_TYPE(ALCbackendFactory);
 } ALCalsaBackendFactory;
@@ -1412,25 +1410,19 @@ static ALCboolean ALCalsaBackendFactory_querySupport(ALCalsaBackendFactory* UNUS
     return ALC_FALSE;
 }
 
-static void ALCalsaBackendFactory_probe(ALCalsaBackendFactory* UNUSED(self), enum DevProbe type, al_string *outnames)
+static void ALCalsaBackendFactory_probe(ALCalsaBackendFactory* UNUSED(self), enum DevProbe type)
 {
     switch(type)
     {
-#define APPEND_OUTNAME(i) do {                                                \
-    if(!alstr_empty((i)->name))                                               \
-        alstr_append_range(outnames, VECTOR_BEGIN((i)->name),                 \
-                           VECTOR_END((i)->name)+1);                          \
-} while(0)
         case ALL_DEVICE_PROBE:
             probe_devices(SND_PCM_STREAM_PLAYBACK, &PlaybackDevices);
-            VECTOR_FOR_EACH(const DevMap, PlaybackDevices, APPEND_OUTNAME);
+            VECTOR_FOR_EACH(const DevMap, PlaybackDevices, AppendAllDevicesList2);
             break;
 
         case CAPTURE_DEVICE_PROBE:
             probe_devices(SND_PCM_STREAM_CAPTURE, &CaptureDevices);
-            VECTOR_FOR_EACH(const DevMap, CaptureDevices, APPEND_OUTNAME);
+            VECTOR_FOR_EACH(const DevMap, CaptureDevices, AppendCaptureDeviceList2);
             break;
-#undef APPEND_OUTNAME
     }
 }
 

@@ -115,25 +115,15 @@ typedef ALuint64SOFT ALuint64;
 #endif
 #endif
 
-#ifndef I64
-#if defined(_MSC_VER)
-#define I64(x) ((ALint64)(x##i64))
-#elif SIZEOF_LONG == 8
-#define I64(x) ((ALint64)(x##l))
-#elif SIZEOF_LONG_LONG == 8
-#define I64(x) ((ALint64)(x##ll))
-#endif
-#endif
-
 /* Define a CTZ64 macro (count trailing zeros, for 64-bit integers). The result
  * is *UNDEFINED* if the value is 0.
  */
 #ifdef __GNUC__
 
 #if SIZEOF_LONG == 8
-#define CTZ64 __builtin_ctzl
+#define CTZ64(x) __builtin_ctzl(x)
 #else
-#define CTZ64 __builtin_ctzll
+#define CTZ64(x) __builtin_ctzll(x)
 #endif
 
 #elif defined(HAVE_BITSCANFORWARD64_INTRINSIC)
@@ -144,7 +134,7 @@ inline int msvc64_ctz64(ALuint64 v)
     _BitScanForward64(&idx, v);
     return (int)idx;
 }
-#define CTZ64 msvc64_ctz64
+#define CTZ64(x) msvc64_ctz64(x)
 
 #elif defined(HAVE_BITSCANFORWARD_INTRINSIC)
 
@@ -158,7 +148,7 @@ inline int msvc_ctz64(ALuint64 v)
     }
     return (int)idx;
 }
-#define CTZ64 msvc_ctz64
+#define CTZ64(x) msvc_ctz64(x)
 
 #else
 
@@ -181,18 +171,14 @@ inline int fallback_ctz64(ALuint64 value)
 {
     return fallback_popcnt64(~value & (value - 1));
 }
-#define CTZ64 fallback_ctz64
+#define CTZ64(x) fallback_ctz64(x)
 #endif
 
-#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)
-#define IS_LITTLE_ENDIAN (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-#else
 static const union {
     ALuint u;
     ALubyte b[sizeof(ALuint)];
 } EndianTest = { 1 };
 #define IS_LITTLE_ENDIAN (EndianTest.b[0] == 1)
-#endif
 
 #define COUNTOF(x) (sizeof(x) / sizeof(0[x]))
 
@@ -263,7 +249,7 @@ inline ALint fastf2i(ALfloat f)
 #ifdef __SSE_MATH__
     __asm__("cvtss2si %1, %0" : "=r"(i) : "x"(f));
 #else
-    __asm__ __volatile__("fistpl %0" : "=m"(i) : "t"(f) : "st");
+    __asm__("flds %1\n fistps %0" : "=m"(i) : "m"(f));
 #endif
     return i;
 
@@ -285,85 +271,8 @@ inline ALint fastf2i(ALfloat f)
 /* Converts float-to-int using standard behavior (truncation). */
 inline int float2int(float f)
 {
-#if ((defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__)) && \
-     !defined(__SSE_MATH__)) || (defined(_MSC_VER) && defined(_M_IX86_FP) && _M_IX86_FP == 0)
-    ALint sign, shift, mant;
-    union {
-        ALfloat f;
-        ALint i;
-    } conv;
-
-    conv.f = f;
-    sign = (conv.i>>31) | 1;
-    shift = ((conv.i>>23)&0xff) - (127+23);
-
-    /* Over/underflow */
-    if(UNLIKELY(shift >= 31 || shift < -23))
-        return 0;
-
-    mant = (conv.i&0x7fffff) | 0x800000;
-    if(LIKELY(shift < 0))
-        return (mant >> -shift) * sign;
-    return (mant << shift) * sign;
-
-#else
-
+    /* TODO: Make a more efficient method for x87. */
     return (ALint)f;
-#endif
-}
-
-/* Rounds a float to the nearest integral value, according to the current
- * rounding mode. This is essentially an inlined version of rintf, although
- * makes fewer promises (e.g. -0 or -0.25 rounded to 0 may result in +0).
- */
-inline float fast_roundf(float f)
-{
-#if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__)) && \
-    !defined(__SSE_MATH__)
-
-    float out;
-    __asm__ __volatile__("frndint" : "=t"(out) : "0"(f));
-    return out;
-
-#else
-
-    /* Integral limit, where sub-integral precision is not available for
-     * floats.
-     */
-    static const float ilim[2] = {
-         8388608.0f /*  0x1.0p+23 */,
-        -8388608.0f /* -0x1.0p+23 */
-    };
-    ALuint sign, expo;
-    union {
-        ALfloat f;
-        ALuint i;
-    } conv;
-
-    conv.f = f;
-    sign = (conv.i>>31)&0x01;
-    expo = (conv.i>>23)&0xff;
-
-    if(UNLIKELY(expo >= 150/*+23*/))
-    {
-        /* An exponent (base-2) of 23 or higher is incapable of sub-integral
-         * precision, so it's already an integral value. We don't need to worry
-         * about infinity or NaN here.
-         */
-        return f;
-    }
-    /* Adding the integral limit to the value (with a matching sign) forces a
-     * result that has no sub-integral precision, and is consequently forced to
-     * round to an integral value. Removing the integral limit then restores
-     * the initial value rounded to the integral. The compiler should not
-     * optimize this out because of non-associative rules on floating-point
-     * math (as long as you don't use -fassociative-math,
-     * -funsafe-math-optimizations, -ffast-math, or -Ofast, in which case this
-     * may break).
-     */
-    f += ilim[sign];
-    return f - ilim[sign];
-#endif
 }
 
 
@@ -582,7 +491,7 @@ typedef struct DistanceComp {
  */
 #define BUFFERSIZE 2048
 
-typedef struct MixParams {
+typedef struct DryMixParams {
     AmbiConfig Ambi;
     /* Number of coefficients in each Ambi.Coeffs to mix together (4 for first-
      * order, 9 for second-order, etc). If the count is 0, Ambi.Map is used
@@ -592,7 +501,17 @@ typedef struct MixParams {
 
     ALfloat (*Buffer)[BUFFERSIZE];
     ALsizei NumChannels;
-} MixParams;
+    ALsizei NumChannelsPerOrder[MAX_AMBI_ORDER+1];
+} DryMixParams;
+
+typedef struct BFMixParams {
+    AmbiConfig Ambi;
+    /* Will only be 4 or 0. */
+    ALsizei CoeffCount;
+
+    ALfloat (*Buffer)[BUFFERSIZE];
+    ALsizei NumChannels;
+} BFMixParams;
 
 typedef struct RealMixParams {
     enum Channel ChannelName[MAX_OUTPUT_CHANNELS];
@@ -621,8 +540,6 @@ struct ALCdevice_struct {
      */
     enum AmbiLayout AmbiLayout;
     enum AmbiNorm   AmbiScale;
-
-    ALCenum LimiterState;
 
     al_string DeviceName;
 
@@ -678,17 +595,15 @@ struct ALCdevice_struct {
 
     ALuint64 ClockBase;
     ALuint SamplesDone;
-    ALuint FixedLatency;
 
     /* Temp storage used for mixer processing. */
     alignas(16) ALfloat TempBuffer[4][BUFFERSIZE];
 
     /* The "dry" path corresponds to the main output. */
-    MixParams Dry;
-    ALsizei NumChannelsPerOrder[MAX_AMBI_ORDER+1];
+    DryMixParams Dry;
 
     /* First-order ambisonics output, to be upsampled to the dry buffer if different. */
-    MixParams FOAOut;
+    BFMixParams FOAOut;
 
     /* "Real" output, which will be written to the device buffer. May alias the
      * dry buffer.
@@ -753,35 +668,21 @@ struct ALCdevice_struct {
 
 
 enum {
-    /* End event thread processing. */
-    EventType_KillThread = 0,
-
-    /* User event types. */
     EventType_SourceStateChange = 1<<0,
     EventType_BufferCompleted   = 1<<1,
     EventType_Error             = 1<<2,
     EventType_Performance       = 1<<3,
     EventType_Deprecated        = 1<<4,
     EventType_Disconnected      = 1<<5,
-
-    /* Internal events. */
-    EventType_ReleaseEffectState = 65536,
 };
 
 typedef struct AsyncEvent {
     unsigned int EnumType;
-    union {
-        char dummy;
-        struct {
-            ALenum type;
-            ALuint id;
-            ALuint param;
-            ALchar msg[1008];
-        } user;
-        struct ALeffectState *EffectState;
-    } u;
+    ALenum Type;
+    ALuint ObjectId;
+    ALuint Param;
+    ALchar Message[1008];
 } AsyncEvent;
-#define ASYNC_EVENT(t) { t, { 0 } }
 
 struct ALCcontext_struct {
     RefCount ref;
@@ -834,6 +735,7 @@ struct ALCcontext_struct {
 
     ATOMIC(struct ALeffectslotArray*) ActiveAuxSlots;
 
+    almtx_t EventThrdLock;
     althrd_t EventThread;
     alsem_t EventSem;
     struct ll_ringbuffer *AsyncEvents;
@@ -862,6 +764,9 @@ void ALCcontext_DeferUpdates(ALCcontext *context);
 void ALCcontext_ProcessUpdates(ALCcontext *context);
 
 void AllocateVoices(ALCcontext *context, ALsizei num_voices, ALsizei old_sends);
+
+void AppendAllDevicesList(const ALCchar *name);
+void AppendCaptureDeviceList(const ALCchar *name);
 
 
 extern ALint RTPrioLevel;
@@ -906,9 +811,6 @@ inline void LockEffectSlotList(ALCcontext *context)
 { almtx_lock(&context->EffectSlotLock); }
 inline void UnlockEffectSlotList(ALCcontext *context)
 { almtx_unlock(&context->EffectSlotLock); }
-
-
-int EventThread(void *arg);
 
 
 vector_al_string SearchDataFiles(const char *match, const char *subdir);

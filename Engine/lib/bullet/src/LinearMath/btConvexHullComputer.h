@@ -23,56 +23,58 @@ subject to the following restrictions:
 /// Ole Kniemeyer, MAXON Computer GmbH
 class btConvexHullComputer
 {
-private:
-	btScalar compute(const void* coords, bool doubleCoords, int stride, int count, btScalar shrink, btScalar shrinkClamp);
-
-public:
-	class Edge
-	{
 	private:
-		int next;
-		int reverse;
-		int targetVertex;
-
-		friend class btConvexHullComputer;
+		btScalar compute(const void* coords, bool doubleCoords, int stride, int count, btScalar shrink, btScalar shrinkClamp);
 
 	public:
-		int getSourceVertex() const
+
+		class Edge
 		{
-			return (this + reverse)->targetVertex;
-		}
+			private:
+				int next;
+				int reverse;
+				int targetVertex;
 
-		int getTargetVertex() const
-		{
-			return targetVertex;
-		}
+				friend class btConvexHullComputer;
 
-		const Edge* getNextEdgeOfVertex() const  // clockwise list of all edges of a vertex
-		{
-			return this + next;
-		}
+			public:
+				int getSourceVertex() const
+				{
+					return (this + reverse)->targetVertex;
+				}
 
-		const Edge* getNextEdgeOfFace() const  // counter-clockwise list of all edges of a face
-		{
-			return (this + reverse)->getNextEdgeOfVertex();
-		}
+				int getTargetVertex() const
+				{
+					return targetVertex;
+				}
 
-		const Edge* getReverseEdge() const
-		{
-			return this + reverse;
-		}
-	};
+				const Edge* getNextEdgeOfVertex() const // clockwise list of all edges of a vertex
+				{
+					return this + next;
+				}
 
-	// Vertices of the output hull
-	btAlignedObjectArray<btVector3> vertices;
+				const Edge* getNextEdgeOfFace() const // counter-clockwise list of all edges of a face
+				{
+					return (this + reverse)->getNextEdgeOfVertex();
+				}
 
-	// Edges of the output hull
-	btAlignedObjectArray<Edge> edges;
+				const Edge* getReverseEdge() const
+				{
+					return this + reverse;
+				}
+		};
 
-	// Faces of the convex hull. Each entry is an index into the "edges" array pointing to an edge of the face. Faces are planar n-gons
-	btAlignedObjectArray<int> faces;
 
-	/*
+		// Vertices of the output hull
+		btAlignedObjectArray<btVector3> vertices;
+
+		// Edges of the output hull
+		btAlignedObjectArray<Edge> edges;
+
+		// Faces of the convex hull. Each entry is an index into the "edges" array pointing to an edge of the face. Faces are planar n-gons
+		btAlignedObjectArray<int> faces;
+
+		/*
 		Compute convex hull of "count" vertices stored in "coords". "stride" is the difference in bytes
 		between the addresses of consecutive vertices. If "shrink" is positive, the convex hull is shrunken
 		by that amount (each face is moved by "shrink" length units towards the center along its normal).
@@ -84,16 +86,18 @@ public:
 
 		The output convex hull can be found in the member variables "vertices", "edges", "faces".
 		*/
-	btScalar compute(const float* coords, int stride, int count, btScalar shrink, btScalar shrinkClamp)
-	{
-		return compute(coords, false, stride, count, shrink, shrinkClamp);
-	}
+		btScalar compute(const float* coords, int stride, int count, btScalar shrink, btScalar shrinkClamp)
+		{
+			return compute(coords, false, stride, count, shrink, shrinkClamp);
+		}
 
-	// same as above, but double precision
-	btScalar compute(const double* coords, int stride, int count, btScalar shrink, btScalar shrinkClamp)
-	{
-		return compute(coords, true, stride, count, shrink, shrinkClamp);
-	}
+		// same as above, but double precision
+		btScalar compute(const double* coords, int stride, int count, btScalar shrink, btScalar shrinkClamp)
+		{
+			return compute(coords, true, stride, count, shrink, shrinkClamp);
+		}
 };
 
-#endif  //BT_CONVEX_HULL_COMPUTER_H
+
+#endif //BT_CONVEX_HULL_COMPUTER_H
+

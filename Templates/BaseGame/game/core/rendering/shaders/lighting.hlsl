@@ -218,7 +218,7 @@ inline float3 getDirectionalLight(in Surface surface, in SurfaceToLight surfaceT
    float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   float3 final = max(0.0f, diffuse + spec * surface.ao);
+   float3 final = max(0.0f, diffuse + spec);
    return final;
 }
 
@@ -230,7 +230,7 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
    float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   float3 final = max(0.0f, diffuse + spec * surface.ao * surface.F);
+   float3 final = max(0.0f, diffuse + spec * surface.F);
    return final;
 }
 
@@ -278,9 +278,9 @@ float4 compute4Lights( Surface surface,
             lighting *= getSpotAngleAtt(-surfaceToLight.L, inLightSpotDir[i].xyz, lightSpotParams[i].xy );
          }
       }
-
       finalLighting += lighting;
    }
+   finalLighting *= shadowMask.rgb;
 
    return float4(finalLighting,1);
 }
@@ -385,11 +385,8 @@ float4 computeForwardProbes(Surface surface,
       {
          blendFactor[i] *= invBlendSumWeighted;
          contribution[i] *= blendFactor[i];
-         alpha -= contribution[i];
       }
    }
-   else
-      alpha -= blendSum;
 
 #if DEBUGVIZ_ATTENUATION == 1
       float contribAlpha = 1;
@@ -432,7 +429,7 @@ float4 computeForwardProbes(Surface surface,
    for (i = 0; i < numProbes; ++i)
    {
       float contrib = contribution[i];
-      if (contrib != 0)
+      if (contrib > 0.0f)
       {
          int cubemapIdx = probeConfigData[i].a;
          float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
@@ -445,8 +442,8 @@ float4 computeForwardProbes(Surface surface,
 
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz * alpha;
-      specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz * alpha;
+      irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
+      specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
 
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
@@ -462,7 +459,6 @@ float4 computeForwardProbes(Surface surface,
 
    //final diffuse color
    float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse + specular * surface.ao, 1.0);
-
+   float4 finalColor = float4(diffuse* surface.ao + specular * surface.ao, 1.0);
    return finalColor;
 }

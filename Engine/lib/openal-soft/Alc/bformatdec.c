@@ -438,7 +438,7 @@ void ambiup_reset(struct AmbiUpsampler *ambiup, const ALCdevice *device, ALfloat
         {
             ALfloat coeffs[MAX_AMBI_COEFFS] = { 0.0f };
             CalcDirectionCoeffs(Ambi3DPoints[k], 0.0f, coeffs);
-            ComputePanGains(&device->Dry, coeffs, 1.0f, encgains[k]);
+            ComputeDryPanGains(&device->Dry, coeffs, 1.0f, encgains[k]);
         }
 
         /* Combine the matrices that do the in->virt and virt->out conversions
@@ -450,11 +450,11 @@ void ambiup_reset(struct AmbiUpsampler *ambiup, const ALCdevice *device, ALfloat
         {
             for(j = 0;j < device->Dry.NumChannels;j++)
             {
-                ALdouble gain = 0.0;
+                ALfloat gain=0.0f;
                 for(k = 0;k < COUNTOF(Ambi3DDecoder);k++)
-                    gain += (ALdouble)Ambi3DDecoder[k][i] * encgains[k][j];
-                ambiup->Gains[i][j][HF_BAND] = (ALfloat)(gain * Ambi3DDecoderHFScale[i]);
-                ambiup->Gains[i][j][LF_BAND] = (ALfloat)gain;
+                    gain += Ambi3DDecoder[k][i] * encgains[k][j];
+                ambiup->Gains[i][j][HF_BAND] = gain * Ambi3DDecoderHFScale[i];
+                ambiup->Gains[i][j][LF_BAND] = gain;
             }
         }
     }

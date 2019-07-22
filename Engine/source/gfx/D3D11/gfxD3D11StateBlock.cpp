@@ -77,7 +77,7 @@ GFXD3D11StateBlock::GFXD3D11StateBlock(const GFXStateBlockDesc& desc)
 
    if (FAILED(hr))
    {
-      AssertFatal(false, "GFXD3D11StateBlock::GFXD3D11StateBlock - CreateBlendState call failure.");
+      AssertFatal(false, avar("GFXD3D11StateBlock::GFXD3D11StateBlock - CreateBlendState call failure: %s.", GFX->interpretDebugResult(hr)));
    }
 
    ZeroMemory(&mDepthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));

@@ -2235,6 +2235,22 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    lightSpotParams->arraySize = 4;
    lightSpotParams->constSortPos = cspPotentialPrimitive;
 
+   Var* hasVectorLight = new Var("hasVectorLight", "int");
+   hasVectorLight->uniform = true;
+   hasVectorLight->constSortPos = cspPotentialPrimitive;
+
+   Var* vectorLightDirection = new Var("vectorLightDirection", "float4");
+   vectorLightDirection->uniform = true;
+   vectorLightDirection->constSortPos = cspPotentialPrimitive;
+
+   Var* vectorLightColor = new Var("vectorLightColor", "float4");
+   vectorLightColor->uniform = true;
+   vectorLightColor->constSortPos = cspPotentialPrimitive;
+
+   Var* vectorLightBrightness = new Var("vectorLightBrightness", "float");
+   vectorLightBrightness->uniform = true;
+   vectorLightBrightness->constSortPos = cspPotentialPrimitive;
+
    Var* surface = getSurface(componentList, meta, fd);
    if (!surface)
    {
@@ -2253,8 +2269,9 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    
    Var* lighting = new Var("lighting", "float4");
    meta->addStatement(new GenOp("   @ = compute4Lights( @, @, @, @,\r\n"
-      "      @, @, @);\r\n",
-      new DecOp(lighting), surface, lightMask, inLightPos, inLightConfigData, inLightColor, inLightSpotDir, lightSpotParams));
+      "      @, @, @, @, @, @, @);\r\n",
+      new DecOp(lighting), surface, lightMask, inLightPos, inLightConfigData, inLightColor, inLightSpotDir, lightSpotParams,
+         hasVectorLight, vectorLightDirection, vectorLightColor, vectorLightBrightness));
 
    meta->addStatement(new GenOp("   @.rgb += @.rgb;\r\n", curColor, lighting));
 

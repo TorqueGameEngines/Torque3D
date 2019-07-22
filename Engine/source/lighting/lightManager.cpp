@@ -309,6 +309,10 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
                                           GFXShaderConstHandle *lightConfigDataSC,
                                           GFXShaderConstHandle *lightSpotDirSC,
                                           GFXShaderConstHandle *lightSpotParamsSC,
+                                          GFXShaderConstHandle* hasVectorLightSC,
+                                          GFXShaderConstHandle* vectorLightDirectionSC,
+                                          GFXShaderConstHandle* vectorLightColorSC,
+                                          GFXShaderConstHandle* vectorLightBrightnessSC,
                                           GFXShaderConstBuffer *shaderConsts )
 {
    PROFILE_SCOPE( LightManager_Update4LightConsts );
@@ -416,6 +420,11 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
       shaderConsts->setSafe(lightSpotDirSC, lightSpotDirs);
       shaderConsts->setSafe(lightConfigDataSC, lightConfigData);
       shaderConsts->setSafe(lightSpotParamsSC, lightSpotParams);
+
+      shaderConsts->setSafe(hasVectorLightSC, (int)hasVectorLight);
+      shaderConsts->setSafe(vectorLightDirectionSC, vectorLightDirection);
+      shaderConsts->setSafe(vectorLightColorSC, vectorLightColor);
+      shaderConsts->setSafe(vectorLightBrightnessSC, vectorLightBrightness);
 
       //================================================================
       //old setup

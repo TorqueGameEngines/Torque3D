@@ -178,6 +178,10 @@ protected:
                                     GFXShaderConstHandle *lightInvRadiusSqSC,
                                     GFXShaderConstHandle *lightSpotDirSC,
                                     GFXShaderConstHandle * lightSpotParamsSC,
+                                    GFXShaderConstHandle* hasVectorLightSC,
+                                    GFXShaderConstHandle* vectorLightDirectionSC,
+                                    GFXShaderConstHandle* vectorLightColorSC,
+                                    GFXShaderConstHandle* vectorLightBrightnessSC,
                                     GFXShaderConstBuffer *shaderConsts );
 
    /// A dummy default light used when no lights

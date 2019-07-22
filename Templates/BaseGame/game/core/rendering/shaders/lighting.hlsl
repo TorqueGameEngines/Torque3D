@@ -240,7 +240,11 @@ float4 compute4Lights( Surface surface,
                      float4 inLightConfigData[4],
                      float4 inLightColor[4],
                      float4 inLightSpotDir[4],
-                     float4 lightSpotParams[4] )
+                     float4 lightSpotParams[4],
+                     int hasVectorLight,
+                     float4 vectorLightDirection,
+                     float4 vectorLightingColor,
+                     float  vectorLightBrightness )
 {
    float3 finalLighting = 0.0.xxx;
 
@@ -280,6 +284,17 @@ float4 compute4Lights( Surface surface,
       }
       finalLighting += lighting;
    }
+
+   //Vector light
+   [branch]
+   if(hasVectorLight)
+   {
+      SurfaceToLight surfaceToVecLight = createSurfaceToLight(surface, -vectorLightDirection.xyz);
+
+      float3 vecLighting = getDirectionalLight(surface, surfaceToVecLight, vectorLightingColor.rgb, vectorLightBrightness, 1);
+      finalLighting += vecLighting;
+   }
+
    finalLighting *= shadowMask.rgb;
 
    return float4(finalLighting,1);

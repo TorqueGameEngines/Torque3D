@@ -848,10 +848,6 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }
 
-   Var* inTex = getInTexCoord("texCoord", "float2", componentList);
-   if (!inTex)
-      return nullptr;
-
    Var* wsNormal = (Var*)LangElement::find("wsNormal");
    Var* normal = (Var*)LangElement::find("normal");
    if (!normal)
@@ -878,8 +874,8 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    if (!surface)
    {
       surface = new Var("surface", "Surface");
-      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
-         inTex, wsPosition, wsEyePos, wsView));
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
+         wsPosition, wsEyePos, wsView));
    }
 
    return surface;

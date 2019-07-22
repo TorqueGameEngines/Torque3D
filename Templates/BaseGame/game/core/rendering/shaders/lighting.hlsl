@@ -122,8 +122,7 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	return surface;
 }
 
-inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrProperties, in float2 uv, 
-                            in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay)
+inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrProperties, in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay)
 {
 	Surface surface = (Surface)0;
 

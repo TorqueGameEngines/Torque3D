@@ -1764,3 +1764,76 @@ void GFXD3D11Device::setDebugMarker(ColorI color, const char *name)
    D3DPERF_SetMarker(D3DCOLOR_ARGB(color.alpha, color.red, color.green, color.blue),
       (LPCWSTR)&eventName);
 }
+
+const char* GFXD3D11Device::interpretDebugResult(long result)
+{
+   const char* error;
+
+   switch (result) {
+   case S_OK:
+      error = "S_OK";
+      break;
+   case S_FALSE:
+      error = "S_FALSE";
+      break;
+   //generics
+   case E_UNEXPECTED:
+      error = "E_UNEXPECTED";
+      break;      
+   case E_NOTIMPL:
+      error = "E_NOTIMPL";
+      break;
+   case E_OUTOFMEMORY:
+      error = "E_OUTOFMEMORY";
+      break;
+   case E_INVALIDARG:
+      error = "E_INVALIDARG";
+      break;
+   case E_NOINTERFACE:
+      error = "E_NOINTERFACE";
+      break;
+   case E_POINTER:
+      error = "E_POINTER";
+      break;
+   case E_HANDLE:
+      error = "E_HANDLE";
+      break;
+   case E_ABORT:
+      error = "E_ABORT";
+      break;
+   case E_FAIL:
+      error = "E_FAIL";
+      break;
+   case E_ACCESSDENIED:
+      error = "E_ACCESSDENIED";
+      break;
+
+   //graphics specific
+   case DXGI_ERROR_INVALID_CALL:
+      error = "DXGI_ERROR_INVALID_CALL";
+      break;
+   case DXGI_ERROR_WAS_STILL_DRAWING:
+      error = "DXGI_ERROR_WAS_STILL_DRAWING";
+      break;
+
+   //dx11 specific
+   case D3D11_ERROR_FILE_NOT_FOUND:
+      error = "D3D11_ERROR_FILE_NOT_FOUND";
+      break;
+   case D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS:
+      error = "D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS";
+      break;
+   case D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS:
+      error = "D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS";
+      break;
+   case D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD:
+      error = "D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD";
+      break;
+
+
+   default:
+      error = "UNKNOWN";
+      break;
+   }
+   return error;
+}

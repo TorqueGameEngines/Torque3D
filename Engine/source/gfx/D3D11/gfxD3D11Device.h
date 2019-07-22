@@ -255,7 +255,7 @@ public:
    virtual void setClipRect( const RectI &rect );
    virtual const RectI& getClipRect() const { return mClipRect; }
 
-   // }
+   // }   
 
 
    
@@ -325,6 +325,7 @@ public:
    // grab the sampler map
    const SamplerMap &getSamplersMap() const { return mSamplersMap; }
    SamplerMap &getSamplersMap(){ return mSamplersMap; }
+   const char* interpretDebugResult(long result);
 };
 
 #endif

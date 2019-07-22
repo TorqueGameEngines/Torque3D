@@ -92,6 +92,11 @@ protected:
       GFXShaderConstHandle *mLightSpotDir;
       GFXShaderConstHandle *mLightSpotParamsSC;
 
+      GFXShaderConstHandle* mHasVectorLightSC;
+      GFXShaderConstHandle* mVectorLightDirectionSC;
+      GFXShaderConstHandle* mVectorLightColorSC;
+      GFXShaderConstHandle* mVectorLightBrightnessSC;
+
       LightingShaderConstants();
       ~LightingShaderConstants();
 

@@ -306,7 +306,11 @@ BasicLightManager::LightingShaderConstants::LightingShaderConstants()
       mLightAmbient( NULL ),
       mLightConfigDataSC( NULL ),
       mLightSpotDir( NULL ),
-      mLightSpotParamsSC( NULL )
+      mLightSpotParamsSC( NULL ),
+      mHasVectorLightSC(NULL),
+      mVectorLightDirectionSC(NULL),
+      mVectorLightColorSC(NULL),
+      mVectorLightBrightnessSC(NULL)
 {
 }
 
@@ -336,6 +340,11 @@ void BasicLightManager::LightingShaderConstants::init(GFXShader* shader)
    mLightAmbient = shader->getShaderConstHandle( ShaderGenVars::lightAmbient );   
    mLightSpotDir = shader->getShaderConstHandle( ShaderGenVars::lightSpotDir );
    mLightSpotParamsSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotParams );
+
+   mHasVectorLightSC = shader->getShaderConstHandle(ShaderGenVars::hasVectorLight);
+   mVectorLightDirectionSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightDirection);
+   mVectorLightColorSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightColor);
+   mVectorLightBrightnessSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightBrightness);
 
    mInit = true;
 }
@@ -400,5 +409,9 @@ void BasicLightManager::setLightInfo(  ProcessedMaterial* pmat,
                         mLastConstants->mLightConfigDataSC,
                         mLastConstants->mLightSpotDir,
                         mLastConstants->mLightSpotParamsSC,
+                        mLastConstants->mHasVectorLightSC,
+                        mLastConstants->mVectorLightDirectionSC,
+                        mLastConstants->mVectorLightColorSC,
+                        mLastConstants->mVectorLightBrightnessSC,
                         shaderConsts );
 }

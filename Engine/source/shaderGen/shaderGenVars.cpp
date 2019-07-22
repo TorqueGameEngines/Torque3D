@@ -64,6 +64,12 @@ const String ShaderGenVars::lightAmbient("$ambient");
 const String ShaderGenVars::lightConfigData("$inLightConfigData");
 const String ShaderGenVars::lightSpotDir("$inLightSpotDir");
 const String ShaderGenVars::lightSpotParams("$lightSpotParams");
+
+const String ShaderGenVars::hasVectorLight("$hasVectorLight");
+const String ShaderGenVars::vectorLightDirection("$vectorLightDirection");
+const String ShaderGenVars::vectorLightColor("$vectorLightColor");
+const String ShaderGenVars::vectorLightBrightness("$vectorLightBrightness");
+
 const String ShaderGenVars::specularColor("$specularColor");
 const String ShaderGenVars::smoothness("$smoothness");
 const String ShaderGenVars::metalness("$metalness");

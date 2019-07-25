@@ -194,6 +194,8 @@ function onServerCreated()
    
    // Keep track of when the game started
    $Game::StartTime = $Sim::Time;
+
+   onServerCreatedAFX();
 }
 
 /// Shut down the server

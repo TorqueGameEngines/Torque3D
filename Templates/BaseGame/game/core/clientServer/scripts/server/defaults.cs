@@ -46,6 +46,9 @@ $Pref::Server::ConnectionError =
 // overrides pref::net::port for dedicated servers
 $Pref::Server::Port = 28000;
 
+$Pref::Server::EnableDatablockCache = true;
+$Pref::Server::DatablockCacheFilename = "core/clientServer/scripts/server/afx/cache/afx_datablock_cache.dbc";
+
 // If the password is set, clients must provide it in order
 // to connect to the server
 $Pref::Server::Password = "";

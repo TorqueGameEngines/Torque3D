@@ -86,6 +86,8 @@ function clientCmdMissionEnd( %seq )
 {
    if( $Client::missionRunning && $Client::missionSeq == %seq )
    {
+      afxEndMissionNotify();
+      
       clientEndMission();
       $Client::missionSeq = -1;
    }

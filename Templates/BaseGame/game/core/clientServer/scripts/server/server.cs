@@ -155,6 +155,17 @@ function createServer(%serverType, %level)
       if ($pref::Net::DisplayOnMaster !$= "Never" )
          schedule(0,0,startHeartbeat);
    }
+   
+   //Get our modules so we can exec any specific server-side loading/handling
+   %modulesList = ModuleDatabase.findModules(true);
+   for(%i=0; %i < getWordCount(%modulesList); %i++)
+   {
+      %module = getWord(%modulesList, %i);
+      if(%module.scopeSet.isMethod("onCreateServer"))
+      {
+         eval(%module.scopeSet @ ".onCreateServer();");
+      }
+   }
 
    // Let the game initialize some things now that the
    // the server has been created
@@ -228,6 +239,17 @@ function destroyServer()
 
    // Delete all the data blocks...
    deleteDataBlocks();
+   
+   //Get our modules so we can exec any specific server-side loading/handling
+   %modulesList = ModuleDatabase.findModules(true);
+   for(%i=0; %i < getWordCount(%modulesList); %i++)
+   {
+      %module = getWord(%modulesList, %i);
+      if(%module.scopeSet.isMethod("onDestroyServer"))
+      {
+         eval(%module.scopeSet @ ".onDestroyServer();");
+      }
+   }
    
    // Save any server settings
    %prefPath = getPrefpath();

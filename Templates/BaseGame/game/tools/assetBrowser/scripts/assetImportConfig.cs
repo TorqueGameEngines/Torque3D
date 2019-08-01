@@ -8,7 +8,6 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
    
    ImportAssetWindow.activeImportConfigIndex = %id;
    ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
-   //ImportAssetWindow.refresh();
    
    AssetBrowser.reloadImportingFiles();
 }
@@ -187,14 +186,25 @@ function ImportOptionsList::ImportMaterialsChanged(%this, %fieldName, %newValue,
    echo("CHANGED IF OUR IMPORTED MATERIALS WERE HAPPENING!");
 }
 
+function getAssetImportConfigValue(%fieldName, %defaultValue)
+{
+   if(ImportAssetWindow.activeImportConfig $= "")
+      return "";
+   
+   return AssetImportSettings.value(ImportAssetWindow.activeImportConfig @ "/" @ %fieldName, %defaultValue);
+}
+
 function ImportAssetConfigEditorWindow::populateConfigList(%this, %optionsObj)
 {
    AssetImportConfigName.setText(%optionsObj.Name);
    
-   ImportOptionsConfigList.clear();
+   ImportOptionsConfigList.clearFields();
    
    ImportOptionsConfigList.startGroup("Mesh");
-   ImportOptionsConfigList.addCallbackField("ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh", %optionsObj);
+   ImportOptionsConfigList.addSettingsField("Mesh/ImportMesh", "Import Mesh", "bool", "Should meshes be imported", "");
+   ImportOptionsConfigList.endGroup();
+   
+   /*ImportOptionsConfigList.addCallbackField("ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh", %optionsObj);
    ImportOptionsConfigList.addField("DoUpAxisOverride", "Do Up-axis Override", "bool", "", "0", "", %optionsObj);
    ImportOptionsConfigList.addField("UpAxisOverride", "Up-axis Override", "list", "", "Z_AXIS", "X_AXIS,Y_AXIS,Z_AXIS", %optionsObj);
    ImportOptionsConfigList.addField("DoScaleOverride", "Do Scale Override", "bool", "", "0", "", %optionsObj);
@@ -270,80 +280,80 @@ function ImportAssetConfigEditorWindow::populateConfigList(%this, %optionsObj)
    ImportOptionsConfigList.addField("VolumeAdjust", "Volume Adjustment", "float", "", "1.0", "", %optionsObj);
    ImportOptionsConfigList.addField("PitchAdjust", "Pitch Adjustment", "float", "", "1.0", "", %optionsObj);
    ImportOptionsConfigList.addField("Compressed", "Is Compressed", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();
+   ImportOptionsConfigList.endGroup();*/
 }
 
 function ImportAssetConfigEditorWindow::addNewConfig(%this)
 {
-   ImportAssetConfigEditorWindow.setVisible(1);
-   ImportAssetConfigEditorWindow.selectWindow();
+   ImportAssetNewConfigEditorWindow.setVisible(1);
+   ImportAssetNewConfigEditorWindow.selectWindow();
    
-   %optionsObj = new ScriptObject(){};
+   %configName = AssetImportConfigName.getText();
    
-   ImportAssetWindow.importConfigsList.add(%optionsObj); 
+   AssetImportSettings.beginGroup(%configName);
    
-   //Initial, blank configuration
-   %optionsObj.ImportMesh = true;
-   %optionsObj.DoUpAxisOverride = false;
-   %optionsObj.UpAxisOverride = "Z_AXIS";
-   %optionsObj.DoScaleOverride = false;
-   %optionsObj.ScaleOverride = 1.0;
-   %optionsObj.IgnoreNodeScale = false;
-   %optionsObj.AdjustCenter = false;
-   %optionsObj.AdjustFloor = false;
-   %optionsObj.CollapseSubmeshes = false;
-   %optionsObj.LODType = "TrailingNumber";
-   //%optionsObj.TrailingNumber = 2;
-   %optionsObj.ImportedNodes = "";
-   %optionsObj.IgnoreNodes = "";
-   %optionsObj.ImportMeshes = "";
-   %optionsObj.IgnoreMeshes = "";
+   //Meshes
+   AssetImportSettings.setValue("Meshes/ImportMesh", "1");
+   AssetImportSettings.setValue("Meshes/DoUpAxisOverride", "0");
+   AssetImportSettings.setValue("Meshes/UpAxisOverride", "Z_AXIS");
+   AssetImportSettings.setValue("Meshes/DoScaleOverride", "0");
+   AssetImportSettings.setValue("Meshes/ScaleOverride", "1.0");
+   AssetImportSettings.setValue("Meshes/IgnoreNodeScale", "0");
+   AssetImportSettings.setValue("Meshes/AdjustCenter", "0");
+   AssetImportSettings.setValue("Meshes/AdjustFloor", "0");
+   AssetImportSettings.setValue("Meshes/CollapseSubmeshes", "0");
+   AssetImportSettings.setValue("Meshes/LODType", "TrailingNumber");
+   AssetImportSettings.setValue("Meshes/ImportedNodes", "");
+   AssetImportSettings.setValue("Meshes/IgnoreNodes", "");
+   AssetImportSettings.setValue("Meshes/ImportMeshes", "");
+   AssetImportSettings.setValue("Meshes/IgnoreMeshes", "");
    
    //Materials
-   %optionsObj.ImportMaterials = true;
-   %optionsObj.IgnoreMaterials = "";
-   %optionsObj.CreateComposites = true;
-   %optionsObj.UseDiffuseSuffixOnOriginImg = true;
-   %optionsObj.UseExistingMaterials = true;
+   AssetImportSettings.setValue("Materials/ImportMaterials", "1");
+   AssetImportSettings.setValue("Materials/IgnoreMaterials", "");
+   AssetImportSettings.setValue("Materials/CreateComposites", "1");
+   AssetImportSettings.setValue("Materials/UseDiffuseSuffixOnOriginImage", "1");
+   AssetImportSettings.setValue("Materials/UseExistingMaterials", "1");
    
    //Animations
-   %optionsObj.ImportAnimations = true;
-   %optionsObj.SeparateAnimations = true;
-   %optionsObj.SeparateAnimationPrefix = "";
+   AssetImportSettings.setValue("Animations/ImportAnimations", "1");
+   AssetImportSettings.setValue("Animations/SeparateAnimations", "1");
+   AssetImportSettings.setValue("Animations/SeparateAnimationPrefix", "");
    
    //Collision
-   %optionsObj.GenerateCollisions = true;
-   %optionsObj.GenCollisionType = "CollisionMesh";
-   %optionsObj.CollisionMeshPrefix = "Col";
-   %optionsObj.GenerateLOSCollisions = true;
-   %optionsObj.GenLOSCollisionType = "CollisionMesh";
-   %optionsObj.LOSCollisionMeshPrefix = "LOS";
+   AssetImportSettings.setValue("Collision/GenerateCollisions", "1");
+   AssetImportSettings.setValue("Collision/GenCollisionType", "CollisionMesh");
+   AssetImportSettings.setValue("Collision/CollisionMeshPrefix", "Col");
+   AssetImportSettings.setValue("Collision/GenerateLOSCollisions", "1");
+   AssetImportSettings.setValue("Collision/GenLOSCollisionType", "CollisionMesh");
+   AssetImportSettings.setValue("Collision/LOSCollisionMeshPrefix", "LOS");
    
    //Images
-   %optionsObj.ImageType = "N/A";
-   %optionsObj.DiffuseTypeSuffixes = "_ALBEDO;_DIFFUSE;_ALB;_DIF;_COLOR;_COL;_BASECOLOR;_BASE_COLOR";
-   %optionsObj.NormalTypeSuffixes = "_NORMAL;_NORM";
-   %optionsObj.SpecularTypeSuffixes = "_SPECULAR;_SPEC";
-   %optionsObj.MetalnessTypeSuffixes = "_METAL;_MET;_METALNESS;_METALLIC";
-   %optionsObj.RoughnessTypeSuffixes = "_ROUGH;_ROUGHNESS";
-   %optionsObj.SmoothnessTypeSuffixes = "_SMOOTH;_SMOOTHNESS";
-   %optionsObj.AOTypeSuffixes = "_AO;_AMBIENT;_AMBIENTOCCLUSION";
-   %optionsObj.CompositeTypeSuffixes = "_COMP;_COMPOSITE";
-   %optionsObj.TextureFilteringMode = "Bilinear";
-   %optionsObj.UseMips = true;
-   %optionsObj.IsHDR = false;
-   %optionsObj.Scaling = 1.0;
-   %optionsObj.Compressed = true;
-   %optionsObj.GenerateMaterialOnImport = true;
-   %optionsObj.PopulateMaterialMaps = true;
+   AssetImportSettings.setValue("Images/ImageType", "N/A");
+   AssetImportSettings.setValue("Images/DiffuseTypeSuffixes", "_ALBEDO;_DIFFUSE;_ALB;_DIF;_COLOR;_COL;_BASECOLOR;_BASE_COLOR");
+   AssetImportSettings.setValue("Images/NormalTypeSuffixes", "_NORMAL;_NORM");
+   AssetImportSettings.setValue("Images/MetalnessTypeSuffixes", "_METAL;_MET;_METALNESS;_METALLIC");
+   AssetImportSettings.setValue("Images/RoughnessTypeSuffixes", "_ROUGH;_ROUGHNESS");
+   AssetImportSettings.setValue("Images/SmoothnessTypeSuffixes", "_SMOOTH;_SMOOTHNESS");
+   AssetImportSettings.setValue("Images/AOTypeSuffixes", "_AO;_AMBIENT;_AMBIENTOCCLUSION");
+   AssetImportSettings.setValue("Images/CompositeTypeSuffixes", "_COMP;_COMPOSITE");
+   AssetImportSettings.setValue("Images/TextureFilteringMode", "Bilinear");
+   AssetImportSettings.setValue("Images/UseMips", "1");
+   AssetImportSettings.setValue("Images/IsHDR", "0");
+   AssetImportSettings.setValue("Images/Scaling", "1.0");
+   AssetImportSettings.setValue("Images/Compressed", "1");
+   AssetImportSettings.setValue("Images/GenerateMaterialOnImport", "1");
+   AssetImportSettings.setValue("Images/PopulateMaterialMaps", "1");
    
    //Sounds
-   %optionsObj.VolumeAdjust = 1.0;
-   %optionsObj.PitchAdjust = 1.0;
-   %optionsObj.Compressed = false;
+   AssetImportSettings.setValue("Sounds/VolumeAdjust", "1.0");
+   AssetImportSettings.setValue("Sounds/PitchAdjust", "1.0");
+   AssetImportSettings.setValue("Sounds/Compressed", "0");
+   
+   AssetImportSettings.endGroup();
    
    //Hook in the UI
-   %this.populateConfigList(%optionsObj);
+   //%this.populateConfigList(%optionsObj);
 }
 
 function ImportAssetConfigEditorWindow::editConfig(%this)
@@ -364,95 +374,28 @@ function ImportAssetConfigEditorWindow::deleteConfig(%this)
 
 function ImportAssetConfigEditorWindow::saveAssetOptionsConfig(%this)
 {
-   %xmlDoc = new SimXMLDocument();
-   
-   %xmlDoc.pushNewElement("AssetImportConfigs");
-      
-      for(%i = 0; %i < ImportAssetWindow.importConfigsList.count(); %i++)
-      {
-         %configObj = ImportAssetWindow.importConfigsList.getKey(%i);         
-         
-         %xmlDoc.pushNewElement("Config");
-         
-         if(%configObj.Name $= "")
-            %configObj.Name = AssetImportConfigName.getText();
-            
-         %xmlDoc.setAttribute("Name", %configObj.Name); 
-         
-            %xmlDoc.pushNewElement("Mesh");
-               %xmlDoc.setAttribute("ImportMesh", %configObj.ImportMesh);
-               %xmlDoc.setAttribute("DoUpAxisOverride", %configObj.DoUpAxisOverride);
-               %xmlDoc.setAttribute("UpAxisOverride", %configObj.UpAxisOverride);
-               %xmlDoc.setAttribute("DoScaleOverride", %configObj.DoScaleOverride);
-               %xmlDoc.setAttribute("ScaleOverride", %configObj.ScaleOverride);
-               %xmlDoc.setAttribute("IgnoreNodeScale", %configObj.IgnoreNodeScale);
-               %xmlDoc.setAttribute("AdjustCenter", %configObj.AdjustCenter);
-               %xmlDoc.setAttribute("AdjustFloor", %configObj.AdjustFloor);
-               %xmlDoc.setAttribute("CollapseSubmeshes", %configObj.CollapseSubmeshes);         
-               %xmlDoc.setAttribute("LODType", %configObj.LODType);
-               %xmlDoc.setAttribute("ImportedNodes", %configObj.ImportedNodes);
-               %xmlDoc.setAttribute("IgnoreNodes", %configObj.IgnoreNodes);
-               %xmlDoc.setAttribute("ImportMeshes", %configObj.ImportMeshes);
-               %xmlDoc.setAttribute("IgnoreMeshes", %configObj.IgnoreMeshes);
-            %xmlDoc.popElement();
-            
-            %xmlDoc.pushNewElement("Materials");
-               %xmlDoc.setAttribute("ImportMaterials", %configObj.ImportMaterials);
-               %xmlDoc.setAttribute("IgnoreMaterials", %configObj.IgnoreMaterials);
-               %xmlDoc.setAttribute("CreateComposites", %configObj.CreateComposites);
-               %xmlDoc.setAttribute("UseDiffuseSuffixOnOriginImg", %configObj.UseDiffuseSuffixOnOriginImg);
-               %xmlDoc.setAttribute("UseExistingMaterials", %configObj.UseExistingMaterials);
-            %xmlDoc.popElement();
-            
-            %xmlDoc.pushNewElement("Animations");
-               %xmlDoc.setAttribute("ImportAnimations", %configObj.ImportAnimations);
-               %xmlDoc.setAttribute("SeparateAnimations", %configObj.SeparateAnimations);
-               %xmlDoc.setAttribute("SeparateAnimationPrefix", %configObj.SeparateAnimationPrefix);
-            %xmlDoc.popElement();
-            
-            %xmlDoc.pushNewElement("Collisions");
-               %xmlDoc.setAttribute("GenerateCollisions", %configObj.GenerateCollisions);
-               %xmlDoc.setAttribute("GenCollisionType", %configObj.GenCollisionType);
-               %xmlDoc.setAttribute("CollisionMeshPrefix", %configObj.CollisionMeshPrefix);
-               %xmlDoc.setAttribute("GenerateLOSCollisions", %configObj.GenerateLOSCollisions);
-               %xmlDoc.setAttribute("GenLOSCollisionType", %configObj.GenLOSCollisionType);
-               %xmlDoc.setAttribute("LOSCollisionMeshPrefix", %configObj.LOSCollisionMeshPrefix);
-            %xmlDoc.popElement();
-            
-            %xmlDoc.pushNewElement("Images");
-               %xmlDoc.setAttribute("ImageType", %configObj.ImageType);
-               %xmlDoc.setAttribute("DiffuseTypeSuffixes", %configObj.DiffuseTypeSuffixes);
-               %xmlDoc.setAttribute("NormalTypeSuffixes", %configObj.NormalTypeSuffixes);
-               %xmlDoc.setAttribute("SpecularTypeSuffixes", %configObj.SpecularTypeSuffixes);
-               %xmlDoc.setAttribute("MetalnessTypeSuffixes", %configObj.MetalnessTypeSuffixes);
-               %xmlDoc.setAttribute("RoughnessTypeSuffixes", %configObj.RoughnessTypeSuffixes);
-               %xmlDoc.setAttribute("SmoothnessTypeSuffixes", %configObj.SmoothnessTypeSuffixes);
-               %xmlDoc.setAttribute("AOTypeSuffixes", %configObj.AOTypeSuffixes);
-               %xmlDoc.setAttribute("CompositeTypeSuffixes", %configObj.CompositeTypeSuffixes);
-               %xmlDoc.setAttribute("TextureFilteringMode", %configObj.TextureFilteringMode);
-               %xmlDoc.setAttribute("UseMips", %configObj.UseMips);
-               %xmlDoc.setAttribute("IsHDR", %configObj.IsHDR);
-               %xmlDoc.setAttribute("Scaling", %configObj.Scaling);
-               %xmlDoc.setAttribute("Compressed", %configObj.Compressed);
-               %xmlDoc.setAttribute("GenerateMaterialOnImport", %configObj.GenerateMaterialOnImport);
-               %xmlDoc.setAttribute("PopulateMaterialMaps", %configObj.PopulateMaterialMaps);
-            %xmlDoc.popElement();
-            
-            %xmlDoc.pushNewElement("Sounds");
-               %xmlDoc.setAttribute("VolumeAdjust", %configObj.VolumeAdjust);
-               %xmlDoc.setAttribute("PitchAdjust", %configObj.PitchAdjust);
-               %xmlDoc.setAttribute("Compressed", %configObj.Compressed);
-            %xmlDoc.popElement();
-         
-         %xmlDoc.popElement();
-      }
-      
-   %xmlDoc.popElement();
-   
-   %xmlDoc.saveFile($AssetBrowser::importConfigsFile);
+   %success = AssetImportSettings.write();
    
    ImportAssetConfigEditorWindow.setVisible(0);
    ImportAssetWindow.reloadImportOptionConfigs();
+}
+
+function ImportOptionsConfigList::addSettingsField(%this, %settingsFieldName, %labelText, %fieldType, %tooltip, %fieldData)
+{
+   %moddedSettingsFieldName = strreplace(%settingsFieldName, "/", "-");
+   
+   %this.addCallbackField(%moddedSettingsFieldName, %labelText, %fieldType, "", AssetImportSettings.value(%settingsFieldName), %fieldData, "changeEditorSetting");
+}
+
+function ImportOptionsConfigList::changeEditorSetting(%this, %varName, %value)
+{
+   %varName = strreplace(%varName, "-", "/");
+   
+   echo("Set " @ %varName @ " to be " @ %value);  
+   
+   AssetImportSettings.setValue(%varName, %value);
+   
+   %success = AssetImportSettings.write();
 }
 
 function ImportOptionsConfigList::ToggleImportMesh(%this, %fieldName, %newValue, %ownerObject)

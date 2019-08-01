@@ -223,7 +223,6 @@ void GFXD3D11Cubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLeve
 
     mMipMapLevels = mipLevels;
 
-
    bool compressed = ImageUtil::isCompressedFormat(mFaceFormat);
 
    UINT bindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -397,10 +396,19 @@ void GFXD3D11CubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCou
    AssertFatal(cubemaps, "GFXD3D11CubemapArray::initStatic - Got null GFXCubemapHandle!");
    AssertFatal(*cubemaps, "GFXD3D11CubemapArray::initStatic - Got empty cubemap!");
 
+   U32 downscalePower = GFXTextureManager::smTextureReductionLevel;
+   U32 scaledSize = cubemaps[0]->getSize();
+
+   if (downscalePower != 0)
+   {
+      // Otherwise apply the appropriate scale...
+      scaledSize >>= downscalePower;
+   }
+
    //all cubemaps must be the same size,format and number of mipmaps. Grab the details from the first cubemap
-   mSize = cubemaps[0]->getSize();
+   mSize = scaledSize;
    mFormat = cubemaps[0]->getFormat();
-   mMipMapLevels = cubemaps[0]->getMipMapLevels();
+   mMipMapLevels = cubemaps[0]->getMipMapLevels() - downscalePower;
    mNumCubemaps = cubemapCount;
 
    //create texture object
@@ -467,8 +475,16 @@ void GFXD3D11CubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCou
 //Just allocate the cubemap array but we don't upload any data
 void GFXD3D11CubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format)
 {
-   mSize = cubemapFaceSize;
-   mMipMapLevels = ImageUtil::getMaxMipCount(cubemapFaceSize, cubemapFaceSize);
+   U32 downscalePower = GFXTextureManager::smTextureReductionLevel;
+   U32 scaledSize = cubemapFaceSize;
+
+   if (downscalePower != 0)
+   {
+      scaledSize >>= downscalePower;
+   }
+
+   mSize = scaledSize;
+   mMipMapLevels = ImageUtil::getMaxMipCount(cubemapFaceSize, cubemapFaceSize) - downscalePower;
    mNumCubemaps = cubemapCount;
    mFormat = format;
 
@@ -512,6 +528,9 @@ void GFXD3D11CubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSiz
 
 void GFXD3D11CubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32 slot)
 {
+   U32 cubeMapSz = cubemap->getSize();
+   U32 cubeMapSize = cubemap->getMipMapLevels();
+
    AssertFatal(slot <= mNumCubemaps, "GFXD3D11CubemapArray::updateTexture - trying to update a cubemap texture that is out of bounds!");
    AssertFatal(mFormat == cubemap->getFormat(), "GFXD3D11CubemapArray::updateTexture - Destination format doesn't match");
    AssertFatal(mSize == cubemap->getSize(), "GFXD3D11CubemapArray::updateTexture - Destination size doesn't match");

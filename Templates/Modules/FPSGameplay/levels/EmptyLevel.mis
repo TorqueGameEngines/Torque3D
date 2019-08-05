@@ -2,6 +2,7 @@
 new Scene(EmptyLevel) {
    canSave = "1";
    canSaveDynamicFields = "1";
+   gameModeName="DeathMatchGame";
       cdTrack = "2";
       CTF_scoreLimit = "5";
       enabled = "1";

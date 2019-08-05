@@ -194,8 +194,7 @@ public:
    /// Used to remove a cubemap from the cache.
    void releaseCubemap( GFXCubemap *cubemap );
 
-protected:
-
+public:
    /// The amount of texture mipmaps to skip when loading a
    /// texture that allows downscaling.
    ///
@@ -204,6 +203,8 @@ protected:
    /// @see GFXTextureProfile::PreserveSize
    /// 
    static S32 smTextureReductionLevel;
+
+protected:
 
    /// File path to the missing texture
    static String smMissingTexturePath;

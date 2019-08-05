@@ -14,8 +14,29 @@
 
 function pbr::create( %this )
 {
+   echo("LOADING PBR MODULE");
 }
 
 function pbr::destroy( %this )
 {
+}
+
+function pbr::onCreateServer(%this)
+{
+   error("WE HAVE CREATED THE SERVER STUFFS FOR THE PBR MODULE!");
+}
+
+function pbr::onDestroyServer(%this)
+{
+   error("WE HAVE DESTROYED THE SERVER STUFFS FOR THE PBR MODULE!");
+}
+
+function pbr::onCreateClient(%this)
+{
+   error("WE HAVE CREATED THE CLIENT STUFFS FOR THE PBR MODULE!");
+}
+
+function pbr::onDestroyClient(%this)
+{
+   error("WE HAVE DESTROYED THE CLIENT STUFFS FOR THE PBR MODULE!");
 }

@@ -39,6 +39,7 @@ function UI::create( %this )
    
    exec("./scripts/guis/profiler.gui");
    exec("./scripts/guis/netGraphGui.gui");
+   exec("./scripts/guis/RecordingsDlg.gui");
    exec("./scripts/guis/FileDialog.gui");
    exec("./scripts/guis/guiMusicPlayer.gui");
    exec("./scripts/guis/startupGui.gui");

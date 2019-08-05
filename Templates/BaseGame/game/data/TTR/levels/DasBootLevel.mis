@@ -115,6 +115,7 @@ new Scene(DasBootLevel) {
          networked = "1";
          Enabled = "1";
          internalName = "MeshComponent";
+         MeshAsset = "TTR:DasBoot";
       };
       new ShapeCollisionComponent() {
          componentType = "Collision";
@@ -137,46 +138,6 @@ new Scene(DasBootLevel) {
          Enabled = "1";
          internalName = "AnimationComponent";
       };
-      new MeshComponent() {
-         componentType = "Render";
-         friendlyName = "Mesh Component";
-         description = "Causes the object to render a non-animating 3d shape using the file provided.";
-         networked = "1";
-         Enabled = "1";
-         internalName = "MeshComponent";
-         MeshAsset = "TTR:Ucntrlos_ALBEDO";
-      };
-      new ShapeCollisionComponent() {
-         componentType = "Collision";
-         friendlyName = "Shape Collision";
-         description = "A stub component class that physics components should inherit from.";
-         networked = "0";
-         Enabled = "1";
-         internalName = "CollisionComponent";
-         CollisionType = "Collision Mesh";
-         LineOfSightType = "Collision Mesh";
-         DecalType = "Collision Mesh";
-         CollisionMeshPrefix = "Collision";
-         BlockCollisions = "1";
-      };
-      new AnimationComponent() {
-         componentType = "Animation";
-         friendlyName = "Animation(Component)";
-         description = "Allows a rendered mesh to be animated";
-         networked = "1";
-         Enabled = "1";
-         internalName = "AnimationComponent";
-      };
-   };
-   new Skylight() {
-      Enabled = "1";
-      ReflectionMode = "Baked Cubemap";
-      position = "15.7048 -86.4983 63.9716";
-      rotation = "1 0 0 0";
-      canSave = "1";
-      canSaveDynamicFields = "1";
-      persistentId = "8cf2bb0a-8413-11e9-a4b8-a6148a4455c2";
-         reflectionPath = "data/TTR/levels/DasBootLevel/probes/";
    };
 };
 //--- OBJECT WRITE END ---

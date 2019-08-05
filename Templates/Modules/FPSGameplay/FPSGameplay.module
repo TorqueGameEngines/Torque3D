@@ -3,8 +3,8 @@
 	VersionId="1"
 	Description="Starter module for FPS gameplay."
 	ScriptFile="FPSGameplay.cs"
-	CreateFunction="create"
-	DestroyFunction="destroy"
+	CreateFunction="onCreate"
+	DestroyFunction="onDestroy"
 	Group="Game"
     Dependencies="UI=1">
 	<DeclaredAssets

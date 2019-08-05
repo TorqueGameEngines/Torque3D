@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="EmptyTerrain"
-    FriendlyName="Empty Terrain"
-    LevelFile="data/FPSGameplay/levels/Empty Terrain.mis"
-    Description="A Empty level with terrain."
+    LevelName="Empty Terrain"
+    LevelFile="Empty Terrain.mis"
+    LevelDescription="A Empty level with terrain."
     VersionId="1" />

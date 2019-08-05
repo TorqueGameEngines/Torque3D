@@ -30,7 +30,7 @@
 //   - gameType = "Deathmatch";
 // If this information is missing then the GameCore will default to Deathmatch.
 // ----------------------------------------------------------------------------
-function DeathMatchGame::initGameVars(%game)
+function DeathMatchGame::initGameVars()
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> DeathMatchGame::initGameVars");
 
@@ -60,23 +60,23 @@ function DeathMatchGame::initGameVars(%game)
    $Game::defaultCameraSpawnGroups = "CameraSpawnPoints PlayerSpawnPoints PlayerDropPoints";
 
    // Set the gameplay parameters
-   %game.duration = 30 * 60;
-   %game.endgameScore = 20;
-   %game.endgamePause = 10;
-   %game.allowCycling = false;   // Is mission cycling allowed?
+   $Game::Duration = 30 * 60;
+   $Game::EndGameScore = 20;
+   $Game::EndGamePause = 10;
+   $Game::AllowCycling = false;  // Is mission cycling allowed?
 }
 
-function DeathMatchGame::onGameDurationEnd(%game)
+function DeathMatchGame::onGameDurationEnd()
 {
    // This "redirect" is here so that we can abort the game cycle if
    // the $Game::Duration variable has been cleared, without having
    // to have a function to cancel the schedule.
 
    if ($Game::Duration && !(EditorIsActive() && GuiEditorIsActive()))
-      Game.onGameDurationEnd();
+      DeathMatchGame::onGameDurationEnd();
 }
 
-function DeathMatchGame::onClientEnterGame(%this, %client)
+function DeathMatchGame::onClientEnterGame(%client)
 {
    // This function currently relies on some helper functions defined in
    // core/scripts/spawn.cs. For custom spawn behaviors one can either
@@ -110,7 +110,7 @@ function DeathMatchGame::onClientEnterGame(%this, %client)
    %client.RefreshWeaponHud(0, "", "");
 
    // Prepare the player object.
-   %this.preparePlayer(%client);
+   DeathMatchGame::preparePlayer(%client);
 
    // Inform the client of all the other clients
    %count = ClientGroup.getCount();
@@ -162,25 +162,26 @@ function DeathMatchGame::onClientEnterGame(%this, %client)
       %client.isSuperAdmin);
 }
 
-function DeathMatchGame::onClientLeaveGame(%this, %client)
+function DeathMatchGame::onClientLeaveGame(%client)
 {
    // Cleanup the camera
-   if (isObject(%this.camera))
-      %this.camera.delete();
+   if (isObject(%client.camera))
+      %client.camera.delete();
 
 }
 
 //-----------------------------------------------------------------------------
 // The server has started up so do some game start up
 //-----------------------------------------------------------------------------
-function DeathMatchGame::onMissionStart(%this)
+function DeathMatchGame::onMissionStart()
 {
    //set up the game and game variables
-   %this.initGameVars();
+   DeathMatchGame::initGameVars();
 
-   $Game::Duration = %this.duration;
-   $Game::EndGameScore = %this.endgameScore;
-   $Game::EndGamePause = %this.endgamePause;
+   $Game::Duration = 30 * 60;
+   $Game::EndGameScore = 20;
+   $Game::EndGamePause = 10;
+   $Game::AllowCycling = false;  // Is mission cycling allowed?
    
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::onStartGame");
    if ($Game::Running)
@@ -203,14 +204,14 @@ function DeathMatchGame::onMissionStart(%this)
 
    // Start the game timer
    if ($Game::Duration)
-      $Game::Schedule = %this.schedule($Game::Duration * 1000, "onGameDurationEnd");
+      $Game::Schedule = schedule($Game::Duration * 1000, "onGameDurationEnd");
       
    $Game::Running = true;
    
-   $Game = %this;
+   $Game = DeathMatchGame;
 }
 
-function DeathMatchGame::onMissionEnded(%this)
+function DeathMatchGame::onMissionEnded()
 {
    if (!$Game::Running)
    {
@@ -232,11 +233,11 @@ function DeathMatchGame::onMissionEnded(%this)
    $Game = "";
 }
 
-function DeathMatchGame::onMissionReset(%this)
+function DeathMatchGame::onMissionReset()
 {
    // Called by resetMission(), after all the temporary mission objects
    // have been deleted.
-    %this.initGameVars();
+   DeathMatchGame::initGameVars();
 
    $Game::Duration = %this.duration;
    $Game::EndGameScore = %this.endgameScore;
@@ -251,7 +252,7 @@ function DeathMatchGame::onMissionReset(%this)
 
 // Added this stage to creating a player so game types can override it easily.
 // This is a good place to initiate team selection.
-function DeathMatchGame::preparePlayer(%this, %client)
+function DeathMatchGame::preparePlayer(%client)
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::preparePlayer");
 
@@ -263,13 +264,13 @@ function DeathMatchGame::preparePlayer(%this, %client)
    %playerSpawnPoint = pickPlayerSpawnPoint($Game::DefaultPlayerSpawnGroups);
    // Spawn a camera for this client using the found %spawnPoint
    //%client.spawnPlayer(%playerSpawnPoint);
-   %this.spawnPlayer(%client, %playerSpawnPoint);
+   DeathMatchGame::spawnPlayer(%client, %playerSpawnPoint);
 
    // Starting equipment
-   %this.loadOut(%client.player);
+   DeathMatchGame::loadOut(%client.player);
 }
 
-function DeathMatchGame::loadOut(%game, %player)
+function DeathMatchGame::loadOut(%player)
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::loadOut");
 
@@ -328,7 +329,7 @@ function sendMsgClientKilled_Default( %msgType, %client, %sourceClient, %damLoc 
       messageAll( %msgType, '%1 gets nailed by %2!', %client.playerName, %sourceClient.playerName );
 }
 
-function DeathMatchGame::onDeath(%game, %client, %sourceObject, %sourceClient, %damageType, %damLoc)
+function DeathMatchGame::onDeath(%client, %sourceObject, %sourceClient, %damageType, %damLoc)
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::onDeath");
    
@@ -355,18 +356,18 @@ function DeathMatchGame::onDeath(%game, %client, %sourceObject, %sourceClient, %
    // Dole out points and check for win
    if (( %damageType $= "Suicide" || %sourceClient == %client ) && isObject(%sourceClient))
    {
-      %game.incDeaths( %client, 1, true );
-      %game.incScore( %client, -1, false );
+      DeathMatchGame::incDeaths( %client, 1, true );
+      DeathMatchGame::incScore( %client, -1, false );
    }
    else
    {
-      %game.incDeaths( %client, 1, false );
-      %game.incScore( %sourceClient, 1, true );
-      %game.incKills( %sourceClient, 1, false );
+      DeathMatchGame::incDeaths( %client, 1, false );
+      DeathMatchGame::incScore( %sourceClient, 1, true );
+      DeathMatchGame::incKills( %sourceClient, 1, false );
 
       // If the game may be ended by a client getting a particular score, check that now.
       if ( $Game::EndGameScore > 0 && %sourceClient.kills >= $Game::EndGameScore )
-         %game.cycleGame();
+         DeathMatchGame::cycleGame();
    }
 }
 
@@ -374,7 +375,7 @@ function DeathMatchGame::onDeath(%game, %client, %sourceObject, %sourceClient, %
 // Scoring
 // ----------------------------------------------------------------------------
 
-function DeathMatchGame::incKills(%game, %client, %kill, %dontMessageAll)
+function DeathMatchGame::incKills(%client, %kill, %dontMessageAll)
 {
    %client.kills += %kill;
    
@@ -382,7 +383,7 @@ function DeathMatchGame::incKills(%game, %client, %kill, %dontMessageAll)
       messageAll('MsgClientScoreChanged', "", %client.score, %client.kills, %client.deaths, %client);
 }
 
-function DeathMatchGame::incDeaths(%game, %client, %death, %dontMessageAll)
+function DeathMatchGame::incDeaths(%client, %death, %dontMessageAll)
 {
    %client.deaths += %death;
 
@@ -390,7 +391,7 @@ function DeathMatchGame::incDeaths(%game, %client, %death, %dontMessageAll)
       messageAll('MsgClientScoreChanged', "", %client.score, %client.kills, %client.deaths, %client);
 }
 
-function DeathMatchGame::incScore(%game, %client, %score, %dontMessageAll)
+function DeathMatchGame::incScore(%client, %score, %dontMessageAll)
 {
    %client.score += %score;
 
@@ -422,7 +423,7 @@ function DeathMatchGame::getTeamScore(%client)
 // Spawning
 // ----------------------------------------------------------------------------
 
-function DeathMatchGame::spawnPlayer(%game, %client, %spawnPoint, %noControl)
+function DeathMatchGame::spawnPlayer(%client, %spawnPoint, %noControl)
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::spawnPlayer");
 
@@ -465,7 +466,7 @@ function DeathMatchGame::spawnPlayer(%game, %client, %spawnPoint, %noControl)
       if (isObject(%player))
       {
          // Pick a location within the spawn sphere.
-         %spawnLocation = %game.pickPointInSpawnSphere(%player, %spawnPoint);
+         %spawnLocation = DeathMatchGame::pickPointInSpawnSphere(%player, %spawnPoint);
          %player.setTransform(%spawnLocation);
       }
       else
@@ -588,7 +589,7 @@ function DeathMatchGame::spawnPlayer(%game, %client, %spawnPoint, %noControl)
       %client.setControlObject(%control);
 }
 
-function DeathMatchGame::pickPointInSpawnSphere(%this, %objectToSpawn, %spawnSphere)
+function DeathMatchGame::pickPointInSpawnSphere(%objectToSpawn, %spawnSphere)
 {
    %SpawnLocationFound = false;
    %attemptsToSpawn = 0;
@@ -647,18 +648,18 @@ function DeathMatchGame::pickPointInSpawnSphere(%this, %objectToSpawn, %spawnSph
 // Observer
 // ----------------------------------------------------------------------------
 
-function DeathMatchGame::spawnObserver(%game, %client)
+function DeathMatchGame::spawnObserver(%client)
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::spawnObserver");
 
    // Position the camera on one of our observer spawn points
-   %client.camera.setTransform(%game.pickObserverSpawnPoint());
+   %client.camera.setTransform(DeathMatchGame::pickObserverSpawnPoint());
 
    // Set control to the camera
    %client.setControlObject(%client.camera);
 }
 
-function DeathMatchGame::pickObserverSpawnPoint(%game)
+function DeathMatchGame::pickObserverSpawnPoint()
 {
    //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::pickObserverSpawnPoint");
 

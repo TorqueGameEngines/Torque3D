@@ -6,6 +6,7 @@ function Core_Utility::onCreate(%this)
    exec("./scripts/helperFunctions.cs");
    exec("./scripts/gameObjectManagement.cs");
    exec("./scripts/persistanceManagement.cs");
+   exec("./scripts/module.cs");
 }
 
 function Core_Utility::onDestroy(%this)

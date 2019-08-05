@@ -107,15 +107,15 @@ function GuiEditorTreeView::onRightMouseDown( %this, %item, %pts, %obj )
          object = %obj;
       };
       
-      %popup.item[ 0 ] = "Rename" TAB "" TAB "GuiEditorTreeView.showItemRenameCtrl( GuiEditorTreeView.findItemByObjectId(" @ %popup.object @ ") );";
-      %popup.item[ 1 ] = "Delete" TAB "" TAB "GuiEditor.deleteControl(" @ %popup.object @ ");";
+      %popup.item[ 0 ] = "Rename" TAB "" TAB "GuiEditorTreeView.showItemRenameCtrl( GuiEditorTreeView.findItemByObjectId(" @ %obj @ ") );";
+      %popup.item[ 1 ] = "Delete" TAB "" TAB "GuiEditor.deleteControl(" @ %obj @ ");";
       %popup.item[ 2 ] = "-";
-      %popup.item[ 3 ] = "Locked" TAB "" TAB "%this.object.setLocked( !" @ %popup.object @ ".locked); GuiEditorTreeView.update();";
-      %popup.item[ 4 ] = "Hidden" TAB "" TAB "%this.object.setVisible( !" @ %popup.object @ ".isVisible() ); GuiEditorTreeView.update();";
+      %popup.item[ 3 ] = "Locked" TAB "" TAB %obj @ ".setLocked( !" @ %obj @ ".locked); GuiEditorTreeView.update();";
+      %popup.item[ 4 ] = "Hidden" TAB "" TAB %obj @ ".setVisible( !" @ %obj @ ".isVisible() ); GuiEditorTreeView.update();";
       %popup.item[ 5 ] = "-";
-      %popup.item[ 6 ] = "Add New Controls Here" TAB "" TAB "GuiEditor.setCurrentAddSet( " @ %popup.object @ ");";
-      %popup.item[ 7 ] = "Add Child Controls to Selection" TAB "" TAB "GuiEditor.selectAllControlsInSet( " @ %popup.object @ ", false );";
-      %popup.item[ 8 ] = "Remove Child Controls from Selection" TAB "" TAB "GuiEditor.selectAllControlsInSet( " @ %popup.object @ ", true );";
+      %popup.item[ 6 ] = "Add New Controls Here" TAB "" TAB "GuiEditor.setCurrentAddSet( " @ %obj @ ");";
+      %popup.item[ 7 ] = "Add Child Controls to Selection" TAB "" TAB "GuiEditor.selectAllControlsInSet( " @ %obj @ ", false );";
+      %popup.item[ 8 ] = "Remove Child Controls from Selection" TAB "" TAB "GuiEditor.selectAllControlsInSet( " @ %obj @ ", true );";
       
       %popup.checkItem( 3, %obj.locked );
       %popup.checkItem( 4, !%obj.isVisible() );

@@ -148,12 +148,38 @@ function serverCmdMissionStartPhase3Ack(%client, %seq)
       %entity.notify("onClientConnect", %client);
    }
    
-   //Have any special game-play handling here
-   if(theLevelInfo.isMethod("onClientEnterGame"))
+   %activeSceneCount = getSceneCount();
+   
+   %hasGameMode = 0;
+   for(%i=0; %i < %activeSceneCount; %i++)
    {
-      theLevelInfo.onClientEnterGame(%client);
+      if(getScene(%i).gameModeName !$= "")
+      {
+         //if the scene defines a game mode, go ahead and envoke it here
+         if(isMethod(getScene(%i).gameModeName, "onClientEnterGame"))
+         {
+            eval(getScene(%i).gameModeName @ "::onClientEnterGame(" @ %client @ ");" );
+            %hasGameMode = 1;
+         }
+      }
    }
-   else
+   
+   //if none of our scenes have gamemodes, we need to kick off a default
+   if(%hasGameMode == 0)
+   {
+      %defaultModeName = ProjectSettings.value("Gameplay/GameModes/defaultModeName");
+      if(%defaultModeName !$= "")
+      {
+         if(isMethod(%defaultModeName, "onClientEnterGame"))
+         {
+            eval(%defaultModeName @ "::onClientEnterGame(" @ %client @ ");" );
+            %hasGameMode = 1;
+         }
+      }
+   }
+   
+   //if that also failed, just spawn a camera
+   if(%hasGameMode == 0)
    {
       //No Game mode class for the level info, so just spawn a default camera
       // Set the control object to the default camera

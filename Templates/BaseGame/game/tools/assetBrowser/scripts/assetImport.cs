@@ -513,7 +513,7 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
    if(%xmlDoc.loadFile($AssetBrowser::importConfigsFile))
    {
       //StateMachine element
-      if(!%xmlDoc.pushFirstChildElement("AssetImportConfigs"))
+      if(!%xmlDoc.pushFirstChildElement("AssetImportSettings"))
       {
          error("Invalid Import Configs file");
          return;  
@@ -521,26 +521,21 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
       
       //Config Groups
       %configCount = 0;
-      while(%xmlDoc.pushChildElement(%configCount))
+      %hasGroup = %xmlDoc.pushFirstChildElement("Group");
+      while(%hasGroup)
       {
-         %configName = %xmlDoc.attribute("Name");
-        
-         %xmlDoc.popElement();
-         %configCount++;
+         %configName = %xmlDoc.attribute("name");
          
          ImportAssetWindow.importConfigsList.add(%configName);
+         ImportAssetConfigList.add(%configName);
+         
+         %hasGroup = %xmlDoc.nextSiblingElement("Group");
       }
-      
+
       %xmlDoc.popElement();
    }
    
-   ImportAssetWindow.importConfigsList.add(%configName);
-   
-   for(%i = 0; %i < ImportAssetWindow.importConfigsList.count(); %i++)
-   {
-      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
-      ImportAssetConfigList.add(%configName);
-   }
+   %xmlDoc.delete();
    
    %importConfigIdx = ImportAssetWindow.activeImportConfigIndex;
    if(%importConfigIdx $= "")
@@ -620,14 +615,14 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
       
       if(isObject(%assetItem) && %assetItem.processed == false)
       {
-         %assetConfigObj = ImportAssetWindow.activeImportConfig.clone();
-         %assetConfigObj.assetIndex = %i;
+         //%assetConfigObj = ImportAssetWindow.activeImportConfig.clone();
+         //%assetConfigObj.assetIndex = %i;
 
          //sanetize before modifying our asset name(suffix additions, etc)      
          if(%assetItem.assetName !$= %assetItem.cleanAssetName)
             %assetItem.assetName = %assetItem.cleanAssetName;
             
-         %assetConfigObj.assetName = %assetItem.assetName;
+         //%assetConfigObj.assetName = %assetItem.assetName;
          
          if(%assetItem.assetType $= "Model")
          {

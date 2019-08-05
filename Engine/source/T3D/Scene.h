@@ -35,6 +35,8 @@ class Scene : public NetObject, public virtual ITickable
 
    bool mIsDirty;
 
+   StringTableEntry mGameModeName;
+
 protected:
    static Scene * smRootScene;
 

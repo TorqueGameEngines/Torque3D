@@ -12,7 +12,17 @@
 // When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
 // connected to it via createAndConnectToLocalServer().
 
-function FPSGameplay::create( %this )
+function FPSGameplay::onCreate( %this )
+{
+   echo("Made it");   
+   
+}
+
+function FPSGameplay::onDestroy( %this )
+{
+}
+
+function FPSGameplay::initServer(%this)
 {
    //server scripts
    exec("./scripts/server/aiPlayer.cs");
@@ -39,8 +49,10 @@ function FPSGameplay::create( %this )
    exec("./scripts/server/VolumetricFog.cs");
    exec("./scripts/server/weapon.cs");
    exec("./scripts/server/physicsShape.cs");
-   
-   //add DBs
+}
+
+function FPSGameplay::onCreateServer(%this)
+{
    if(isObject(DatablockFilesList))
    {
       for( %file = findFirstFile( "data/FPSGameplay/scripts/datablocks/*.cs.dso" );
@@ -61,53 +73,50 @@ function FPSGameplay::create( %this )
          DatablockFilesList.add(%file);
       }
    }
-   
-   if(isObject(LevelFilesList))
-   {
-      for( %file = findFirstFile( "data/FPSGameplay/levels/*.mis" );
-      %file !$= "";
-      %file = findNextFile( "data/FPSGameplay/levels/*.mis" ))
-      {
-         LevelFilesList.add(%file);
-      }
-   }
-   
-   if (!$Server::Dedicated)
-   {
-      exec("data/FPSGameplay/scripts/client/gameProfiles.cs");
-      
-      //client scripts
-      $KeybindPath = "data/FPSGameplay/scripts/client/default.keybinds.cs";
-      exec($KeybindPath);
-      
-      %prefPath = getPrefpath();
-      if(isFile(%prefPath @ "/keybinds.cs"))
-         exec(%prefPath @ "/keybinds.cs");
-         
-      exec("data/FPSGameplay/scripts/client/inputCommands.cs");
-      
-      //guis
-      exec("./scripts/gui/chatHud.gui");
-      exec("./scripts/gui/playerList.gui");
-      exec("./scripts/gui/playGui.gui");
-      exec("./scripts/gui/hudlessGui.gui");
-      
-      exec("data/FPSGameplay/scripts/client/playGui.cs");
-      exec("data/FPSGameplay/scripts/client/hudlessGui.cs");
-      
-      exec("data/FPSGameplay/scripts/client/message.cs");
-      exec("data/FPSGameplay/scripts/client/chatHud.cs");
-      exec("data/FPSGameplay/scripts/client/clientCommands.cs");
-      exec("data/FPSGameplay/scripts/client/messageHud.cs");
-      exec("data/FPSGameplay/scripts/client/playerList.cs");
-      exec("data/FPSGameplay/scripts/client/centerPrint.cs");
-      exec("data/FPSGameplay/scripts/client/recordings.cs");
-      
-      exec("data/FPSGameplay/scripts/client/screenshot.cs");
-   }
 }
 
-function FPSGameplay::destroy( %this )
+function FPSGameplay::onDestroyServer(%this)
 {
+}
+
+function FPSGameplay::initClient(%this)
+{
+   exec("data/FPSGameplay/scripts/client/gameProfiles.cs");
+      
+   //client scripts
+   $KeybindPath = "data/FPSGameplay/scripts/client/default.keybinds.cs";
+   exec($KeybindPath);
    
+   %prefPath = getPrefpath();
+   if(isFile(%prefPath @ "/keybinds.cs"))
+      exec(%prefPath @ "/keybinds.cs");
+      
+   exec("data/FPSGameplay/scripts/client/inputCommands.cs");
+   
+   //guis
+   exec("./scripts/gui/chatHud.gui");
+   exec("./scripts/gui/playerList.gui");
+   exec("./scripts/gui/playGui.gui");
+   exec("./scripts/gui/hudlessGui.gui");
+   
+   exec("data/FPSGameplay/scripts/client/playGui.cs");
+   exec("data/FPSGameplay/scripts/client/hudlessGui.cs");
+   
+   exec("data/FPSGameplay/scripts/client/message.cs");
+   exec("data/FPSGameplay/scripts/client/chatHud.cs");
+   exec("data/FPSGameplay/scripts/client/clientCommands.cs");
+   exec("data/FPSGameplay/scripts/client/messageHud.cs");
+   exec("data/FPSGameplay/scripts/client/playerList.cs");
+   exec("data/FPSGameplay/scripts/client/centerPrint.cs");
+   exec("data/FPSGameplay/scripts/client/recordings.cs");
+   
+   exec("data/FPSGameplay/scripts/client/screenshot.cs");
+}
+
+function FPSGameplay::onCreateClient(%this)
+{
+}
+
+function FPSGameplay::onDestroyClient(%this)
+{
 }

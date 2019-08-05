@@ -1,7 +1,7 @@
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiControl(AssetImportCtrl) {
    position = "0 0";
-   extent = "1440 900";
+   extent = "1024 768";
    minExtent = "8 2";
    horizSizing = "right";
    vertSizing = "bottom";
@@ -296,7 +296,7 @@
       anchorBottom = "0";
       anchorLeft = "1";
       anchorRight = "0";
-      position = "140 98";
+      position = "145 133";
       extent = "733 502";
       minExtent = "48 92";
       horizSizing = "center";
@@ -625,9 +625,9 @@
       anchorBottom = "0";
       anchorLeft = "1";
       anchorRight = "0";
-      position = "524 332";
-      extent = "376 50";
-      minExtent = "48 92";
+      position = "348 332";
+      extent = "376 70";
+      minExtent = "48 70";
       horizSizing = "center";
       vertSizing = "center";
       profile = "ToolsGuiWindowProfile";
@@ -695,7 +695,7 @@
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         position = "301 27";
+         position = "301 45";
          extent = "64 22";
          minExtent = "8 2";
          horizSizing = "left";
@@ -703,7 +703,7 @@
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
-         command = "ImportAssetConfigEditorWindow.saveAssetOptionsConfig();";
+         command = "ImportAssetConfigEditorWindow.createNewImportConfig();";
          tooltipProfile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";

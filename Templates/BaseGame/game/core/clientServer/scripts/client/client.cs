@@ -20,6 +20,8 @@ function initClient()
       exec( %prefPath @ "/clientPrefs.cs" );
    else
       exec( "data/defaults.cs" );
+      
+   callOnModules("initClient");
 
    loadMaterials();
 

@@ -25,6 +25,9 @@ ModuleDatabase.LoadExplicit( "CoreModule" );
 ModuleDatabase.scanModules( "data", false );
 ModuleDatabase.LoadGroup( "Game" );
 
+//Finally, initialize the client/server structure
+ModuleDatabase.LoadExplicit( "Core_ClientServer" );
+
 if( !$isDedicated )
 {
    // Start rendering and stuff.

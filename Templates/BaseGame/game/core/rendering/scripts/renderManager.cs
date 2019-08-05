@@ -50,7 +50,6 @@ function initRenderManager()
      
    DiffuseRenderPassManager.addManager( new RenderProbeMgr(ProbeBin)       { bintype = "Probes"; renderOrder = 0.019; processAddOrder = 0.019; } );
    
-   //DiffuseRenderPassManager.addManager( new RenderVistaMgr()               { bintype = "Vista"; renderOrder = 0.15; processAddOrder = 0.15; } );
    
    DiffuseRenderPassManager.addManager( new RenderObjectMgr(BeginBin)      { bintype = "Begin"; renderOrder = 0.2; processAddOrder = 0.2; } );
    // Normal mesh rendering.
@@ -90,6 +89,15 @@ function initRenderManager()
                
    // Resolve format change token last.
    DiffuseRenderPassManager.addManager( new RenderPassStateBin(FinalBin)       { renderOrder = 1.7; stateToken = AL_FormatToken; } );
+
+   if(isObject(afxZodiacTerrainRenderer))
+   {
+      DiffuseRenderPassManager.addManager( new afxZodiacTerrainRenderer() { bintype = "TerrainZodiac"; renderOrder = 1.41; processAddOrder = 1.41; } );
+      DiffuseRenderPassManager.addManager( new afxZodiacPolysoupRenderer() { bintype = "PolysoupZodiac"; renderOrder = 1.42; processAddOrder = 1.42; } );
+      DiffuseRenderPassManager.addManager( new afxZodiacGroundPlaneRenderer() { bintype = "GroundPlaneZodiac"; renderOrder = 1.43; processAddOrder = 1.43; } );
+      DiffuseRenderPassManager.addManager( new afxZodiacMeshRoadRenderer() { bintype = "MeshRoadZodiac"; renderOrder = 1.44; processAddOrder = 1.44; } );
+      DiffuseRenderPassManager.addManager( new afxRenderHighlightMgr() { renderOrder = 1.55; processAddOrder = 1.55; } );  // for selection-highlighting
+   }
 }
 
 /// This is the Default PostFX state block. Put here to prevent any missing object  

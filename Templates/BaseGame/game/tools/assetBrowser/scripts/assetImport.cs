@@ -513,93 +513,29 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
    if(%xmlDoc.loadFile($AssetBrowser::importConfigsFile))
    {
       //StateMachine element
-      %xmlDoc.pushFirstChildElement("AssetImportSettings");
+      if(!%xmlDoc.pushFirstChildElement("AssetImportSettings"))
+      {
+         error("Invalid Import Configs file");
+         return;  
+      }
       
       //Config Groups
       %configCount = 0;
-      while(%xmlDoc.pushChildElement(%configCount))
+      %hasGroup = %xmlDoc.pushFirstChildElement("Group");
+      while(%hasGroup)
       {
          %configName = %xmlDoc.attribute("name");
-
-         /*%xmlDoc.pushFirstChildElement("Mesh");
-            %configObj.ImportMesh = %xmlDoc.attribute("ImportMesh");
-            %configObj.DoUpAxisOverride = %xmlDoc.attribute("DoUpAxisOverride");
-            %configObj.UpAxisOverride = %xmlDoc.attribute("UpAxisOverride");
-            %configObj.DoScaleOverride = %xmlDoc.attribute("DoScaleOverride");
-            %configObj.ScaleOverride = %xmlDoc.attribute("ScaleOverride");
-            %configObj.IgnoreNodeScale = %xmlDoc.attribute("IgnoreNodeScale");
-            %configObj.AdjustCenter = %xmlDoc.attribute("AdjustCenter");
-            %configObj.AdjustFloor = %xmlDoc.attribute("AdjustFloor");
-            %configObj.CollapseSubmeshes = %xmlDoc.attribute("CollapseSubmeshes");       
-            %configObj.LODType = %xmlDoc.attribute("LODType");
-            %configObj.ImportedNodes = %xmlDoc.attribute("ImportedNodes");
-            %configObj.IgnoreNodes = %xmlDoc.attribute("IgnoreNodes");
-            %configObj.ImportMeshes = %xmlDoc.attribute("ImportMeshes");
-            %configObj.IgnoreMeshes = %xmlDoc.attribute("IgnoreMeshes");
-         %xmlDoc.popElement();
-         
-         %xmlDoc.pushFirstChildElement("Materials");
-            %configObj.ImportMaterials = %xmlDoc.attribute("ImportMaterials");
-            %configObj.IgnoreMaterials = %xmlDoc.attribute("IgnoreMaterials");
-            %configObj.CreateComposites = %xmlDoc.attribute("CreateComposites");
-            %configObj.UseDiffuseSuffixOnOriginImg = %xmlDoc.attribute("UseDiffuseSuffixOnOriginImg");
-            %configObj.UseExistingMaterials = %xmlDoc.attribute("UseExistingMaterials");
-         %xmlDoc.popElement();
-         
-         %xmlDoc.pushFirstChildElement("Animations");
-            %configObj.ImportAnimations = %xmlDoc.attribute("ImportAnimations");
-            %configObj.SeparateAnimations = %xmlDoc.attribute("SeparateAnimations");
-            %configObj.SeparateAnimationPrefix = %xmlDoc.attribute("SeparateAnimationPrefix");
-         %xmlDoc.popElement();
-         
-         %xmlDoc.pushFirstChildElement("Collisions");
-            %configObj.GenerateCollisions = %xmlDoc.attribute("GenerateCollisions");
-            %configObj.GenCollisionType = %xmlDoc.attribute("GenCollisionType");
-            %configObj.CollisionMeshPrefix = %xmlDoc.attribute("CollisionMeshPrefix");
-            %configObj.GenerateLOSCollisions = %xmlDoc.attribute("GenerateLOSCollisions");
-            %configObj.GenLOSCollisionType = %xmlDoc.attribute("GenLOSCollisionType");
-            %configObj.LOSCollisionMeshPrefix = %xmlDoc.attribute("LOSCollisionMeshPrefix");
-         %xmlDoc.popElement();
-         
-         %xmlDoc.pushFirstChildElement("Images");
-            %configObj.ImageType = %xmlDoc.attribute("ImageType");
-            %configObj.DiffuseTypeSuffixes = %xmlDoc.attribute("DiffuseTypeSuffixes");
-            %configObj.NormalTypeSuffixes = %xmlDoc.attribute("NormalTypeSuffixes");
-            %configObj.SpecularTypeSuffixes = %xmlDoc.attribute("SpecularTypeSuffixes");
-            %configObj.MetalnessTypeSuffixes = %xmlDoc.attribute("MetalnessTypeSuffixes");
-            %configObj.RoughnessTypeSuffixes = %xmlDoc.attribute("RoughnessTypeSuffixes");
-            %configObj.SmoothnessTypeSuffixes = %xmlDoc.attribute("SmoothnessTypeSuffixes");
-            %configObj.AOTypeSuffixes = %xmlDoc.attribute("AOTypeSuffixes");
-            %configObj.CompositeTypeSuffixes = %xmlDoc.attribute("CompositeTypeSuffixes");
-            %configObj.TextureFilteringMode = %xmlDoc.attribute("TextureFilteringMode");
-            %configObj.UseMips = %xmlDoc.attribute("UseMips");
-            %configObj.IsHDR = %xmlDoc.attribute("IsHDR");
-            %configObj.Scaling = %xmlDoc.attribute("Scaling");
-            %configObj.Compressed = %xmlDoc.attribute("Compressed");
-            %configObj.GenerateMaterialOnImport = %xmlDoc.attribute("GenerateMaterialOnImport");
-            %configObj.PopulateMaterialMaps = %xmlDoc.attribute("PopulateMaterialMaps");
-         %xmlDoc.popElement();
-         
-         %xmlDoc.pushFirstChildElement("Sounds");
-            %configObj.VolumeAdjust = %xmlDoc.attribute("VolumeAdjust");
-            %configObj.PitchAdjust = %xmlDoc.attribute("PitchAdjust");
-            %configObj.Compressed = %xmlDoc.attribute("Compressed");
-         %xmlDoc.popElement();*/
-         
-         %xmlDoc.popElement();
-         %configCount++;
          
          ImportAssetWindow.importConfigsList.add(%configName);
+         ImportAssetConfigList.add(%configName);
+         
+         %hasGroup = %xmlDoc.nextSiblingElement("Group");
       }
-      
+
       %xmlDoc.popElement();
    }
    
-   for(%i = 0; %i < ImportAssetWindow.importConfigsList.count(); %i++)
-   {
-      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
-      ImportAssetConfigList.add(%configName);
-   }
+   %xmlDoc.delete();
    
    %importConfigIdx = ImportAssetWindow.activeImportConfigIndex;
    if(%importConfigIdx $= "")
@@ -679,14 +615,14 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
       
       if(isObject(%assetItem) && %assetItem.processed == false)
       {
-         %assetConfigObj = ImportAssetWindow.activeImportConfig.clone();
-         %assetConfigObj.assetIndex = %i;
+         //%assetConfigObj = ImportAssetWindow.activeImportConfig.clone();
+         //%assetConfigObj.assetIndex = %i;
 
          //sanetize before modifying our asset name(suffix additions, etc)      
          if(%assetItem.assetName !$= %assetItem.cleanAssetName)
             %assetItem.assetName = %assetItem.cleanAssetName;
             
-         %assetConfigObj.assetName = %assetItem.assetName;
+         //%assetConfigObj.assetName = %assetItem.assetName;
          
          if(%assetItem.assetType $= "Model")
          {
@@ -773,10 +709,10 @@ function ImportAssetWindow::_findImportingAssetByName(%this, %id, %assetName)
 function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
 {
    //diffuse
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/DiffuseTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Image/DiffuseTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -785,10 +721,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //normal
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.NormalTypeSuffixes, ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/NormalTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.NormalTypeSuffixes, ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Image/NormalTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -797,10 +733,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //roughness
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.RoughnessTypeSuffixes, ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/RoughnessTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.RoughnessTypeSuffixes, ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Image/RoughnessTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -809,10 +745,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //Ambient Occlusion
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.AOTypeSuffixes, ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/AOTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.AOTypeSuffixes, ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Image/AOTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -821,10 +757,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //metalness
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.MetalnessTypeSuffixes, ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/MetalnessTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.MetalnessTypeSuffixes, ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Image/MetalnessTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -833,10 +769,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //composite
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.CompositeTypeSuffixes, ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/CompositeTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.CompositeTypeSuffixes, ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Image/CompositeTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -845,7 +781,7 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //specular
-   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;");
+   /*%suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
       %suffixToken = getToken(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;", %sfx);
@@ -854,7 +790,7 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
          %assetItem.imageSuffixType = %suffixToken;
          return "specular";
       }
-   }
+   }*/
    
    return "";
 }

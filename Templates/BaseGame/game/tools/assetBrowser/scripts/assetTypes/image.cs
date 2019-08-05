@@ -1,6 +1,6 @@
 function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
 {
-   if(ImportAssetWindow.activeImportConfig.GenerateMaterialOnImport == 1 && %assetItem.parentAssetItem $= "")
+   if(getAssetImportConfigValue("Images/GenerateMaterialOnImport", "1") == 1 && %assetItem.parentAssetItem $= "")
    {
       //First, see if this already has a suffix of some sort based on our import config logic. Many content pipeline tools like substance automatically appends them
       %foundSuffixType = ImportAssetWindow.parseImageSuffixes(%assetItem);
@@ -45,21 +45,21 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
       //if we find these, we'll just populate into the original's material
       
       //If we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
-      if(ImportAssetWindow.activeImportConfig.UseDiffuseSuffixOnOriginImg == 1)
+      if(getAssetImportConfigValue("Images/UseDiffuseSuffixOnOriginImg", "1") == 1)
       {
          if(%foundSuffixType $= "")
          {
-            %diffuseToken = getToken(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",", 0);
+            %diffuseToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",", 0);
             %assetItem.AssetName = %assetItem.AssetName @ %diffuseToken;
             
-            if(ImportAssetWindow.activeImportConfig.PopulateMaterialMaps == 1)
+            if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
                %materialAsset.diffuseImageAsset = %assetItem;
          }
          else if(%foundSuffixType !$= "")
          {
             //otherwise, if we have some sort of suffix, we'll want to figure out if we've already got an existing material, and should append to it  
             
-            if(ImportAssetWindow.activeImportConfig.PopulateMaterialMaps == 1)
+            if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
             {
                if(%foundSuffixType $= "diffuse")
                   %materialAsset.diffuseImageAsset = %assetItem;

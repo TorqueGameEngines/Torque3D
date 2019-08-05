@@ -62,12 +62,12 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
    %fileExt = fileExt(%assetItem.filePath);
    
    //Check if we need to filter this material out or not
-   if(ImportAssetWindow.activeImportConfig.IgnoreMaterials !$= "")
+   if(getAssetImportConfigValue("Materials/IgnoreMaterials", "") !$= "")
    {
-      %ignoredMatNamesCount = getTokenCount(ImportAssetWindow.activeImportConfig.IgnoreMaterials, ",;");
+      %ignoredMatNamesCount = getTokenCount(getAssetImportConfigValue("Materials/IgnoreMaterials", ""), ",;");
       for(%i=0; %i < %ignoredMatNamesCount; %i++)
       {
-        %ignoreName = getToken(ImportAssetWindow.activeImportConfig.IgnoreMaterials, ".;", %i);
+        %ignoreName = getToken(getAssetImportConfigValue("Materials/IgnoreMaterials", ""), ",;", %i);
         
         if(strIsMatchExpr(%ignoreName, %fileName))
         {
@@ -78,7 +78,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
       }
    }
    
-   if(ImportAssetWindow.activeImportConfig.PopulateMaterialMaps == 1)
+   if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "") == 1)
    {
       %materialItemId = ImportAssetTree.findItemByObjectId(%assetItem);
       
@@ -90,9 +90,9 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          %diffuseImageSuffix = ImportAssetWindow.parseImagePathSuffixes(%diffuseImagePath);
          
-         if(ImportAssetWindow.activeImportConfig.UseDiffuseSuffixOnOriginImg == 1 && %diffuseImageSuffix $= "")
+         if(getAssetImportConfigValue("Images/UseDiffuseSuffixOnOriginImage", "1") == 1 && %diffuseImageSuffix $= "")
          {
-            %diffuseToken = getToken(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",;", 0);
+            %diffuseToken = getToken(getAssetImportConfigValue("Materials/DiffuseTypeSuffixes", ""), ",;", 0);
             
             %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %assetItem, %filename @ %diffuseToken);
          }
@@ -121,10 +121,10 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
                   %diffFileName = fileBase(%assetItem.diffuseImageAsset.filePath);
                   %diffFileExt = fileExt(%assetItem.diffuseImageAsset.filePath);
                   
-                  %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",;");
+                  %suffixCount = getTokenCount(getAssetImportConfigValue("Materials/DiffuseTypeSuffixes", ""), ",;");
                   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
                   {
-                     %suffixToken = getToken(ImportAssetWindow.activeImportConfig.DiffuseTypeSuffixes, ",;", %sfx);
+                     %suffixToken = getToken(getAssetImportConfigValue("Materials/DiffuseTypeSuffixes", ""), ",;", %sfx);
                      if(strIsMatchExpr("*"@%suffixToken, %diffFileName))
                      {
                         %diffFileName = strreplace(%diffFileName, %suffixToken, "");
@@ -143,7 +143,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             %assetItem.normalImageAsset = %normalAsset;
          }
       }
-      if(%assetItem.specularImageAsset $= "")
+      /*if(%assetItem.specularImageAsset $= "")
       {
          //Specular
          %listCount = getTokenCount(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;");
@@ -163,7 +163,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
                break;  
             }
          }
-      }
+      }*/
       
       if(%assetItem.metalImageAsset $= "")
       {

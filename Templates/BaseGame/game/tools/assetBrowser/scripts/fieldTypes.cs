@@ -90,7 +90,7 @@ function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabe
       if(%fieldName $= "")
          %editControl.setText(%fieldName);
    }
-   else
+   else if(isObject(%ownerObj))
    {
       //regular variable
       %setCommand = %editControl @ ".setText(" @ %ownerObj @ "." @ %fieldName @ ");";

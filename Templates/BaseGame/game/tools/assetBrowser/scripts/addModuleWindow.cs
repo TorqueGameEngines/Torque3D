@@ -75,6 +75,31 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
    
    //Now generate the script file for it
    %file = new FileObject();
+   %templateFile = new FileObject();
+   
+   %moduleTemplateCodeFilePath = AssetBrowser.templateFilesPath @ "module.cs.template";
+   
+   if(%file.openForWrite(%moduleScriptFilePath) && %templateFile.openForRead(%moduleTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %newModuleName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreateNewModule - Something went wrong and we couldn't write the script file!");
+   }
 	
 	if(%file.openForWrite(%moduleScriptFilePath))
 	{

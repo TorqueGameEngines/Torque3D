@@ -12,7 +12,7 @@ Scene::Scene() :
    mIsEditing(false),
    mIsDirty(false)
 {
-
+   mGameModeName = StringTable->EmptyString();
 }
 
 Scene::~Scene()
@@ -29,6 +29,10 @@ void Scene::initPersistFields()
    addField("isEditing", TypeBool, Offset(mIsEditing, Scene), "", AbstractClassRep::FIELD_HideInInspectors);
    addField("isDirty", TypeBool, Offset(mIsDirty, Scene), "", AbstractClassRep::FIELD_HideInInspectors);
    endGroup("Internal");
+
+   addGroup("Gameplay");
+   addField("gameModeName", TypeString, Offset(mGameModeName, Scene), "The name of the gamemode that this scene utilizes");
+   endGroup("Gameplay");
 }
 
 bool Scene::onAdd()
@@ -184,6 +188,13 @@ DefineEngineFunction(getScene, Scene*, (U32 sceneId), (0),
       return nullptr;
 
    return Scene::smSceneList[sceneId];
+}
+
+DefineEngineFunction(getSceneCount, S32, (),,
+   "Get the number of active Scene objects that are loaded.\n"
+   "@return The number of active scenes")
+{
+   return Scene::smSceneList.size();
 }
 
 DefineEngineFunction(getRootScene, S32, (), ,

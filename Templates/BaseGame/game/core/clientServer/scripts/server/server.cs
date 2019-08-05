@@ -52,6 +52,8 @@ function initServer()
 
    // Specify where the mission files are.
    $Server::MissionFileSpec = "data/levels/*.mis";
+   
+   callOnModules("initServer");
 }
 
 //-----------------------------------------------------------------------------
@@ -156,17 +158,8 @@ function createServer(%serverType, %level)
          schedule(0,0,startHeartbeat);
    }
    
-   //Get our modules so we can exec any specific server-side loading/handling
-   %modulesList = ModuleDatabase.findModules(true);
-   for(%i=0; %i < getWordCount(%modulesList); %i++)
-   {
-      %module = getWord(%modulesList, %i);
-      if(%module.scopeSet.isMethod("onCreateServer"))
-      {
-         eval(%module.scopeSet @ ".onCreateServer();");
-      }
-   }
-
+   callOnModules("onCreateServer", "Game");
+   
    // Let the game initialize some things now that the
    // the server has been created
    onServerCreated();
@@ -241,15 +234,7 @@ function destroyServer()
    deleteDataBlocks();
    
    //Get our modules so we can exec any specific server-side loading/handling
-   %modulesList = ModuleDatabase.findModules(true);
-   for(%i=0; %i < getWordCount(%modulesList); %i++)
-   {
-      %module = getWord(%modulesList, %i);
-      if(%module.scopeSet.isMethod("onDestroyServer"))
-      {
-         eval(%module.scopeSet @ ".onDestroyServer();");
-      }
-   }
+   callOnModules("onDestroyServer", "Game");
    
    // Save any server settings
    %prefPath = getPrefpath();
@@ -273,8 +258,35 @@ function onServerDestroyed()
    echo("*** ENDING MISSION");
    
    // Inform the game code we're done.
-   if(TheLevelInfo.isMethod("onMissionEnded"))
-      TheLevelInfo.onMissionEnded();
+   %activeSceneCount = getSceneCount();
+   
+   %hasGameMode = 0;
+   for(%i=0; %i < %activeSceneCount; %i++)
+   {
+      if(getScene(%i).gameModeName !$= "")
+      {
+         //if the scene defines a game mode, go ahead and envoke it here
+         if(isMethod(getScene(%i).gameModeName, "onMissionEnded"))
+         {
+            eval(getScene(%i).gameModeName @ "::onMissionEnded();" );
+            %hasGameMode = 1;
+         }
+      }
+   }
+   
+   //if none of our scenes have gamemodes, we need to kick off a default
+   if(%hasGameMode == 0)
+   {
+      %defaultModeName = ProjectSettings.value("Gameplay/GameModes/defaultModeName");
+      if(%defaultModeName !$= "")
+      {
+         if(isMethod(%defaultModeName, "onMissionEnded"))
+         {
+            eval(%defaultModeName @ "::onMissionEnded();" );
+            %hasGameMode = 1;
+         }
+      }
+   }
 
    // Inform the clients
    for( %clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++ ) {

@@ -5,9 +5,4 @@
             <Setting name="coreModulePath">core/</Setting>
         </Group>
     </Group>
-    <Group name="Gameplay">
-        <Group name="GameModes">
-            <Setting name="defaultModeName">a</Setting>
-        </Group>
-    </Group>
 </ProjectSettings>

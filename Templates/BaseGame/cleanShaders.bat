@@ -1,6 +1,6 @@
 REM Delete procedural shaders
 
-del /q /a:-R game\shaders\procedural\*.*
+del /q /a:-R game\data\shaderCache\*.*
 
 REM Delete dumped shader disassembly files
 

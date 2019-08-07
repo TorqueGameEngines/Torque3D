@@ -1,4 +1,4 @@
 #!/bin/sh
 
 cd "`dirname "$0"`"
-rm -rf game/shaders/procedural/*.*
+rm -rf game/data/shaderCache/*.*

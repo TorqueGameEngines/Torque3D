@@ -107,8 +107,9 @@ function createAndConnectToLocalServer( %serverType, %level )
          
       MessageBoxOK("Error starting local server!", "There was an error when trying to connect to the local server.");
       
-      if(isObject(MainMenuGui))
-         Canvas.setContent(MainMenuGui);
+      %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+      if (isObject( %mainMenuGUI ))
+         Canvas.setContent( %mainMenuGUI );
       
       return false;
    }

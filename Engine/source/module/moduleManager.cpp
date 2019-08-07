@@ -191,8 +191,6 @@ bool ModuleManager::scanModules( const char* pPath, const bool rootOnly )
         return false;
     }
 
-    Torque::FS::sgMountSystem;
-
     // Fetch extension length.
     const U32 extensionLength = dStrlen( mModuleExtension );
 

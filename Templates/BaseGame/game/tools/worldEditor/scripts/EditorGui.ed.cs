@@ -1965,7 +1965,8 @@ function EditorGui::handleEscape( %this )
       
    if ( !%result )
    {
-     Editor.close("PlayGui");
+      %playGUIName = ProjectSettings.value("UI/playGUIName");
+      Editor.close(%playGUIName);
    }
 }
 

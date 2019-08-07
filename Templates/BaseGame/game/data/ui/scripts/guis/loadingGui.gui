@@ -27,7 +27,7 @@
       profile = "GuiDefaultProfile";
       visible = "1";
       active = "1";
-      command = "disconnect();\nCanvas.setContent(MainMenuGui);";
+      command = "disconnect();\nCanvas.setContent(ProjectSettings.value(\"UI/mainMenuName\"));";
       accelerator = "escape";
       tooltipProfile = "GuiToolTipProfile";
       hovertime = "1000";

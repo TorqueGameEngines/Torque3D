@@ -45,8 +45,11 @@ function GameConnection::initialControlSet(%this)
    // first check if the editor is active
    if (!isToolBuild() || !isMethod("Editor", "checkActiveLoadDone") || !Editor::checkActiveLoadDone())
    {
-      if (isObject(PlayGui) && Canvas.getContent() != PlayGui.getId())
-         Canvas.setContent(PlayGui);
+      %playGUIName = ProjectSettings.value("UI/playGUIName");
+      Canvas.setContent(%playGUIName);
+      
+      if (isObject(%playGUIName) && Canvas.getContent() != %playGUIName.getId())
+         Canvas.setContent(%playGUIName);
    }
 }
 
@@ -117,8 +120,9 @@ function disconnectedCleanup()
    $sceneLighting::terminateLighting = true;
 
    // Back to the launch screen
-   if (isObject( MainMenuGui ))
-      Canvas.setContent( MainMenuGui );
+   %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+   if (isObject( %mainMenuGUI ))
+      Canvas.setContent( %mainMenuGUI );
 
    // Before we destroy the client physics world
    // make sure all ServerConnection objects are deleted.

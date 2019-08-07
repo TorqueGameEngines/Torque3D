@@ -66,7 +66,6 @@ function UI::create( %this )
    %dbList = new ArrayObject(LevelFilesList);
    
    loadStartup();
-   //Canvas.pushDialog(MainMenuGui);
 }
 
 function Game::destroy( %this )

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <ProjectSettings>
+    <Group name="UI">
+        <Setting name="mainMenuName">MainMenuGUI</Setting>
+        <Setting name="playGUIName">PlayGUI</Setting>
+    </Group>
     <Group name="AssetManagement">
         <Group name="Modules">
             <Setting name="coreModulePath">core/</Setting>

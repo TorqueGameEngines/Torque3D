@@ -414,7 +414,7 @@ function ESettingsWindow::getGameplaySettings(%this)
    SettingsInspector.startGroup("Game Modes");
    SettingsInspector.addSettingsField("Gameplay/GameModes/defaultModeName", "Default Gamemode Name", "string", "");
    SettingsInspector.endGroup();
-} 
+}
 
 function ESettingsWindow::getGameOptionsSettings(%this)
 {

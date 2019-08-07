@@ -132,7 +132,8 @@ function toggleEditor(%make)
             } 
             else 
             {
-               Editor.close("PlayGui");
+               %playGUIName = ProjectSettings.value("UI/playGUIName");
+               Editor.close(%playGUIName);
             }
          }
          else
@@ -191,8 +192,9 @@ package EditorDisconnectOverride
    {
       if ( isObject( Editor ) && Editor.isEditorEnabled() )
       {
-         if (isObject( MainMenuGui ))
-            Editor.close("MainMenuGui");
+         %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+         if (isObject( %mainMenuGUI ))
+            Editor.close( %mainMenuGUI );
       }
       
       Parent::disconnect();  

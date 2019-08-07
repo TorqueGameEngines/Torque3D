@@ -291,7 +291,8 @@ function fastLoadWorldEdit(%val)
             } 
             else 
             {
-               Editor.close("PlayGui");
+               %playGUIName = ProjectSettings.value("UI/playGUIName");
+               Editor.close(%playGUIName);
             }
          }
          else

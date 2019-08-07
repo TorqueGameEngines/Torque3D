@@ -88,7 +88,7 @@
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         Command = "Editor.close(\"PlayGui\");";
+         Command = "Editor.close(ProjectSettings.value(\"UI/playGUIName\"));";
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Play Game";
          hovertime = "1000";

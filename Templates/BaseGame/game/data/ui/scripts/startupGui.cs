@@ -144,7 +144,9 @@ function StartupGui::onDone(%this)
          //BlankGui.delete();
          //flushTextureCache();
          
-         Canvas.setContent(MainMenuGui);
+         %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+         if (isObject( %mainMenuGUI ))
+            Canvas.setContent( %mainMenuGUI );
       }
       else
       {

@@ -115,8 +115,9 @@ function EditorDoExitMission(%saveFirst)
       EditorClearDirty();
    }
 
-   if (isObject( MainMenuGui ))
-      Editor.close("MainMenuGui");
+   %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+   if (isObject( %mainMenuGUI ))
+      Editor.close( %mainMenuGUI );
 
    disconnect();
 }

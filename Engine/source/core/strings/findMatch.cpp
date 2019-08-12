@@ -100,6 +100,9 @@ inline bool IsCharMatch( char e, char s, bool caseSensitive )
 
 bool FindMatch::isMatch( const char *exp, const char *str, bool caseSensitive )
 {
+   if (str == NULL || exp == NULL) 
+      return false;
+
    while ( *str && ( *exp != '*' ) )
    {
       if ( !IsCharMatch( *exp++, *str++, caseSensitive ) )

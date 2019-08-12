@@ -428,7 +428,7 @@ public:
    virtual void enterDebugEvent(ColorI color, const char *name) = 0;
    virtual void leaveDebugEvent() = 0;
    virtual void setDebugMarker(ColorI color, const char *name) = 0;
-
+   virtual const char* interpretDebugResult(long result) { return "Not Implemented"; };
    /// @}
 
    /// @name Resource debug methods

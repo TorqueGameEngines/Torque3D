@@ -23,7 +23,7 @@
 #include "gui/editor/inspector/variableInspector.h"
 #include "console/engineAPI.h"
 
-GuiVariableInspector::GuiVariableInspector()
+GuiVariableInspector::GuiVariableInspector() : mAutoUpdate(true)
 {
 }
 
@@ -117,7 +117,7 @@ void GuiVariableInspector::endGroup()
 }
 
 void GuiVariableInspector::addField(const char* name, const char* label, const char* typeName, const char* description, 
-   const char* defaultValue, const char* dataValues, SimObject* ownerObj)
+   const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj)
 {
    VariableField newField;
    newField.mFieldName = StringTable->insert(name);
@@ -127,7 +127,7 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
    newField.mDefaultValue = StringTable->insert(defaultValue);
    newField.mDataValues = String(dataValues);
    newField.mGroup = mCurrentGroup;
-   newField.mSetCallbackName = StringTable->EmptyString();
+   newField.mSetCallbackName = StringTable->insert(callbackName);
    newField.mEnabled = true;
 
    newField.mOwnerObject = ownerObj;
@@ -184,18 +184,14 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
 
    mFields.push_back(newField);
 
-   update();
+   if(mAutoUpdate)
+      update();
 }
 
 void GuiVariableInspector::addCallbackField(const char* name, const char* label, const char* typeName, const char* description,
    const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj)
 {
-   addField(name, label, typeName, description, defaultValue, dataValues, ownerObj);
-
-   //Add the callback name
-   mFields.last().mSetCallbackName = StringTable->insert(callbackName);
-
-   update();
+   addField(name, label, typeName, description, defaultValue, dataValues, callbackName, ownerObj);
 }
 
 void GuiVariableInspector::clearFields()
@@ -238,7 +234,7 @@ DefineEngineMethod(GuiVariableInspector, addField, void, (const char* name, cons
    if (name == "" || typeName == "")
       return;
 
-   object->addField(name, label, typeName, description, defaultValue, dataValues, ownerObj);
+   object->addField(name, label, typeName, description, defaultValue, dataValues, "", ownerObj);
 }
 
 DefineEngineMethod(GuiVariableInspector, addCallbackField, void, (const char* name, const char* label, const char* typeName,
@@ -269,4 +265,9 @@ DefineEngineMethod(GuiVariableInspector, setFieldEnabled, void, (const char* fie
 DefineEngineMethod( GuiVariableInspector, loadVars, void, ( const char * searchString ), , "loadVars( searchString )" )
 {
    object->loadVars( searchString );
+}
+
+DefineEngineMethod(GuiVariableInspector, setAutoUpdate, void, (bool doAutoUpdate), (true), "setAutoUpdate( doAutoUpdate ) - Dictates if the inspector automatically updates when changes happen, or if it must be called manually")
+{
+   object->setAutoUpdate(doAutoUpdate);
 }

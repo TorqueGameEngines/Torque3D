@@ -3,14 +3,15 @@ function GuiVariableInspector::onInspectorFieldModified(%this, %targetObj, %fiel
    echo("FIELD CHANGED: " @ %fieldName @ " from " @ %oldValue @ " to " @ %newValue);
 }
 
-function GuiInspectorVariableGroup::onConstructField(%this, %fieldName, %fieldLabel, %fieldTypeName, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %ownerObj)
+function GuiInspectorVariableGroup::onConstructField(%this, %fieldName, %fieldLabel, %fieldTypeName, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
 {
+   %inspector = %this.getParent();
    %makeCommand = %this @ ".build" @ %fieldTypeName @ "Field(\""@ %fieldName @ "\",\"" @ %fieldLabel @ "\",\"" @ %fieldDesc @ "\",\"" @ 
-            %fieldDefaultVal @ "\",\"" @ %fieldDataVals @ "\",\"" @ %ownerObj @"\");";
+            %fieldDefaultVal @ "\",\"" @ %fieldDataVals @ "\",\"" @ %inspector @ "." @ %callbackName @ "\",\"" @ %ownerObj @"\");";
    eval(%makeCommand);
 }
 
-function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %ownerObj)
+function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
 {
    %extent = 200;
    
@@ -82,6 +83,7 @@ function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabe
       hovertime = "1000";
       ownerObject = %ownerObj;
       fieldName = %fieldName;
+      callbackName = %callbackName;
    };
    
    //set the field value
@@ -107,6 +109,8 @@ function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabe
 
    %fieldCtrl.setCaption(%fieldLabel);
    %fieldCtrl.setEditControl(%editControl);
+   
+   echo("GuiInspectorListField - " @ %editControl.getID() @ " - " @ %fieldName);
 
    %this.addInspectorField(%fieldCtrl);
 }
@@ -118,10 +122,15 @@ function guiInspectorListField::onSelect( %this, %id, %text )
       //ah, a global var, just do it straight, then
       %setCommand = %this.fieldName @ " = \"" @ %text @ "\";";
    }
-   else
+   else if(isObject(%this.ownerObj))
    {
       //regular variable
       %setCommand = %this.ownerObject @ "." @ %this.fieldName @ " = \"" @ %text @ "\";";
    }
+   else if(%this.callbackName !$= "")
+   {
+      %setCommand = %this.callbackName @ "(\"" @ %this.fieldName @ "\",\"" @ %text @"\");";
+   }
+   
    eval(%setCommand);
 }

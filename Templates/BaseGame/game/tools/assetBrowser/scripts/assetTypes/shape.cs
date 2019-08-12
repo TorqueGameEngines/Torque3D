@@ -69,7 +69,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
    
    %shapeId = ImportAssetTree.findItemByObjectId(%assetItem);
    
-   if(ImportAssetWindow.activeImportConfig.ImportMesh == 1 && %shapeCount > 0)
+   if(getAssetImportConfigValue("Meshes/ImportMesh", "1") == 1 && %shapeCount > 0)
    {
       
    }
@@ -77,7 +77,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
    %animCount = %assetItem.shapeInfo._animCount;
    %animItem = %assetItem.shapeInfo.findItemByName("Animations");
    
-   if(ImportAssetWindow.activeImportConfig.ImportAnimations == 1 && %animCount > 0)
+   if(getAssetImportConfigValue("Animations/ImportAnimations", "1") == 1 && %animCount > 0)
    {
       /*%animationItem = %assetItem.shapeInfo.getChild(%animItem);
       
@@ -101,7 +101,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
    %matCount = %assetItem.shapeInfo._materialCount;
    %matItem = %assetItem.shapeInfo.findItemByName("Materials");
    
-   if(ImportAssetWindow.activeImportConfig.importMaterials == 1 && %matCount > 0)
+   if(getAssetImportConfigValue("Materials/ImportMaterials", "1") == 1 && %matCount > 0)
    {
       %materialItem = %assetItem.shapeInfo.getChild(%matItem);
       
@@ -119,7 +119,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
          if(%filePath !$= "" && isFile(%filePath))
             AssetBrowser.addImportingAsset("Material", %filePath, %assetItem);
          else
-            AssetBrowser.addImportingAsset("Material", %matName, %assetItem);
+            AssetBrowser.addImportingAsset("Material", filePath(%assetItem.filePath) @ "/" @ %matName, %assetItem);
       }
       
       %materialItem = %assetItem.shapeInfo.getNextSibling(%materialItem);
@@ -138,7 +138,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
             if(%filePath !$= "" && isFile(%filePath))
                AssetBrowser.addImportingAsset("Material", %filePath, %assetItem);
             else
-               AssetBrowser.addImportingAsset("Material", %matName, %assetItem);
+               AssetBrowser.addImportingAsset("Material", filePath(%assetItem.filePath) @ "/" @ %matName, %assetItem);
          }
             
          %materialItem = %assetItem.shapeInfo.getNextSibling(%materialItem);
@@ -212,15 +212,16 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    //We'll update any relevent bits to the ShapeConstructor here
    $TSShapeConstructor::neverImportMat = "";
    
-   if(ImportAssetWindow.activeImportConfig.IgnoreMaterials !$= "")
+   if(getAssetImportConfigValue("Materials/IgnoreMaterials", "") !$= "")
    {
-      %ignoredMatNamesCount = getTokenCount(ImportAssetWindow.activeImportConfig.IgnoreMaterials, ",;");
+      %ignoreMaterialList = getAssetImportConfigValue("Materials/IgnoreMaterials", "");
+      %ignoredMatNamesCount = getTokenCount(%ignoreMaterialList, ",;");
       for(%i=0; %i < %ignoredMatNamesCount; %i++)
       {
          if(%i==0)
-            $TSShapeConstructor::neverImportMat = getToken(ImportAssetWindow.activeImportConfig.IgnoreMaterials, ",;", %i);
+            $TSShapeConstructor::neverImportMat = getToken(%ignoreMaterialList, ",;", %i);
          else
-            $TSShapeConstructor::neverImportMat = $TSShapeConstructor::neverImportMat TAB getToken(ImportAssetWindow.activeImportConfig.IgnoreMaterials, ",;", %i);
+            $TSShapeConstructor::neverImportMat = $TSShapeConstructor::neverImportMat TAB getToken(%ignoreMaterialList, ",;", %i);
       }
    }  
    

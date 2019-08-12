@@ -56,7 +56,9 @@ function StartSelectedDemo()
 
    if(ServerConnection.playDemo(%file))
    {
-      Canvas.setContent(PlayGui);
+      %playGUIName = ProjectSettings.value("UI/playGUIName");
+      Canvas.setContent(%playGUIName);
+      
       Canvas.popDialog(RecordingsDlg);
       ServerConnection.prepDemoPlayback();
    }
@@ -128,8 +130,9 @@ function demoPlaybackComplete()
    // handling functionality.
    clientEndMission();
 
-   if (isObject( MainMenuGui ))
-      Canvas.setContent( MainMenuGui );
+   %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+   if (isObject( %mainMenuGUI ))
+      Canvas.setContent( %mainMenuGUI );
 
    Canvas.pushDialog(RecordingsDlg);
 }

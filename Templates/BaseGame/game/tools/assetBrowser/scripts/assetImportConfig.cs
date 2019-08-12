@@ -17,8 +17,13 @@ function setupImportConfigSettingsList()
    if(!isObject(ImportAssetConfigSettingsList))
    {
       new ArrayObject(ImportAssetConfigSettingsList);
+      
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/DuplicatAutoResolution", "Duplicate Asset Auto-Resolution Action", "list", "", "AutoPrune", "None,AutoPrune,AutoRename");
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/WarningsAsErrors", "Warnings As Errors", "bool", "", "0", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/PreventImportWithErrors", "Prevent Import With Errors", "bool", "", "1", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/AutomaticallyPromptMissingFiles", "Automatically Prompt Missing Files", "bool", "", "0", "", "");
    
-      ImportAssetConfigSettingsList.addNewConfigSetting("Mesh/ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/DoUpAxisOverride", "Do Up-axis Override", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/UpAxisOverride", "Up-axis Override", "list", "", "Z_AXIS", "X_AXIS,Y_AXIS,Z_AXIS");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ScaleOverride", "Do Scale Override", "bool", "", "0", "");
@@ -85,61 +90,12 @@ function ImportAssetConfigSettingsList::addNewConfigSetting(%this, %settingName,
    %this.add(%settingName TAB %settingFieldLabel TAB %type TAB %tooltip, %defaultValue TAB %fieldData);
 }
 
-function ImportAssetOptionsWindow::findMissingFile(%this, %assetItem)
+//
+function ImportAssetConfigEditorWindow::close(%this)
 {
-   if(%assetItem.assetType $= "Model")
-      %filters = "Shape Files(*.dae, *.cached.dts)|*.dae;*.cached.dts";
-   else if(%assetItem.assetType $= "Image")
-      %filters = "Images Files(*.jpg,*.png,*.tga,*.bmp,*.dds)|*.jpg;*.png;*.tga;*.bmp;*.dds";
-      
-   %dlg = new OpenFileDialog()
-   {
-      Filters        = %filters;
-      DefaultPath    = $Pref::WorldEditor::LastPath;
-      DefaultFile    = "";
-      ChangePath     = true;
-      OverwritePrompt = true;
-      forceRelativePath = false;
-      fileName="";
-      //MultipleFiles = true;
-   };
-
-   %ret = %dlg.Execute();
-   
-   if ( %ret )
-   {
-      $Pref::WorldEditor::LastPath = filePath( %dlg.FileName );
-      %fullPath = %dlg.FileName;//makeRelativePath( %dlg.FileName, getMainDotCSDir() );
-   }   
-   
-   %dlg.delete();
-   
-   if ( !%ret )
-      return;
-      
-   %assetItem.filePath = %fullPath;
-   %assetItem.assetName = fileBase(%assetItem.filePath);
-   
-   if(%assetItem.assetType $= "Image")
-   {
-      //See if we have anything important to update for our material parent(if we have one)
-      %treeItem = ImportAssetTree.findItemByObjectId(%assetItem);
-      %parentItem = ImportAssetTree.getParentItem(%treeItem);
-      
-      if(%parentItem != 0)
-      {
-         %parentAssetItem = ImportAssetTree.getItemObject(%parentItem);
-         if(%parentAssetItem.assetType $= "Material")
-         {
-            AssetBrowser.prepareImportMaterialAsset(%parentAssetItem);              
-         }
-      }
-   }
-   
-   ImportAssetWindow.refresh();
+   %this.setVisible(0);
 }
 
-//
 function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
 {
    ImportAssetOptionsWindow.setVisible(1);
@@ -237,20 +193,10 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
    }
 }
 
-function ImportAssetOptionsWindow::deleteImportingAsset(%this, %assetItem)
-{
-   %item = ImportAssetTree.findItemByObjectId(%assetItem);
-   
-   ImportAssetTree.removeAllChildren(%item);
-   ImportAssetTree.removeItem(%item);
-
-   schedule(10, 0, "refreshImportAssetWindow");
-   //ImportAssetWindow.refresh();
-   ImportAssetOptionsWindow.setVisible(0);
-}
-
 function ImportAssetOptionsWindow::saveAssetOptions(%this)
 {
+   %success = AssetImportSettings.write();
+   
    ImportAssetWindow.refresh();
    ImportAssetOptionsWindow.setVisible(0);   
 }
@@ -276,7 +222,9 @@ function ImportAssetConfigEditorWindow::populateConfigList(%this, %configName)
    AssetImportConfigName.setText(%configName);
    
    ImportOptionsConfigList.clearFields();
+   ImportOptionsConfigList.setAutoUpdate(false); //we don't want to be updating every time we add a field in here
    
+   %this.populateConfigListByGroup("General");
    %this.populateConfigListByGroup("Meshes");
    %this.populateConfigListByGroup("Materials");
    %this.populateConfigListByGroup("Animations");
@@ -284,83 +232,7 @@ function ImportAssetConfigEditorWindow::populateConfigList(%this, %configName)
    %this.populateConfigListByGroup("Collision");
    %this.populateConfigListByGroup("Sound");
    
-   /*ImportOptionsConfigList.addCallbackField("ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh", %optionsObj);
-   ImportOptionsConfigList.addField("DoUpAxisOverride", "Do Up-axis Override", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("UpAxisOverride", "Up-axis Override", "list", "", "Z_AXIS", "X_AXIS,Y_AXIS,Z_AXIS", %optionsObj);
-   ImportOptionsConfigList.addField("DoScaleOverride", "Do Scale Override", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("ScaleOverride", "Scale Override", "float", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("IgnoreNodeScale", "Ignore Node Scale", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("AdjustCenter", "Adjust Center", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("AdjustFloor", "Adjust Floor", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("CollapseSubmeshes", "Collapse Submeshes", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("LODType", "LOD Type", "list", "", "TrailingNumber", "TrailingNumber,DetectDTS", %optionsObj);
-   //ImportOptionsConfigList.addField("TrailingNumber", "Trailing Number", "float", "", "2", "", %optionsObj, "Mesh");
-   ImportOptionsConfigList.addField("ImportedNodes", "Imported Nodes", "command", "", "", "", %optionsObj);
-   ImportOptionsConfigList.addField("IgnoreNodes", "Ignore Nodes", "command", "", "", "", %optionsObj);
-   ImportOptionsConfigList.addField("ImportMeshes", "Import Meshes", "command", "", "", "", %optionsObj);
-   ImportOptionsConfigList.addField("IgnoreMeshes", "Imported Meshes", "command", "", "", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();
-   
-   //Materials
-   ImportOptionsConfigList.startGroup("Material");
-   ImportOptionsConfigList.addField("ImportMaterials", "Import Materials", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("CreateComposites", "Create Composites", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("UseDiffuseSuffixOnOriginImg", "Use Diffuse Suffix for Origin Image", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("UseExistingMaterials", "Use Existing Materials", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("IgnoreMaterials", "Ignore Materials", "command", "", "", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();
-   
-   //Animations
-   ImportOptionsConfigList.startGroup("Animations");
-   ImportOptionsConfigList.addField("ImportAnimations", "Import Animations", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("SeparateAnimations", "Separate Animations", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("SeparateAnimationPrefix", "Separate Animation Prefix", "string", "", "", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();
-   
-   //Collision
-   ImportOptionsConfigList.startGroup("Collision");
-   ImportOptionsConfigList.addField("GenerateCollisions", "Generate Collisions", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("GenCollisionType", "Generate Collision Type", "list", "", "CollisionMesh", "CollisionMesh,ConvexHull", %optionsObj);
-   ImportOptionsConfigList.addField("CollisionMeshPrefix", "CollisionMesh Prefix", "string", "", "Col", "", %optionsObj);
-   ImportOptionsConfigList.addField("GenerateLOSCollisions", "Generate LOS Collisions", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("GenLOSCollisionType", "Generate LOS Collision Type", "list", "", "CollisionMesh", "CollisionMesh,ConvexHull", %optionsObj);
-   ImportOptionsConfigList.addField("LOSCollisionMeshPrefix", "LOS CollisionMesh Prefix", "string", "", "LOS", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();
-   
-   //Images
-   ImportOptionsConfigList.startGroup("Image");
-   ImportOptionsConfigList.addField("ImageType", "Image Type", "list", "", "N/A", "N/A,Diffuse,Normal,Specular,Metalness,Roughness,AO,Composite,GUI", %optionsObj);
-   ImportOptionsConfigList.addField("DiffuseTypeSuffixes", "Diffuse Type Suffixes", "command", "", "_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL", "", %optionsObj);
-   ImportOptionsConfigList.addField("NormalTypeSuffixes", "Normal Type Suffixes", "command", "", "_NORMAL,_NORM", "", %optionsObj);
-   
-   if(EditorSettings.lightingModel $= "Legacy")
-   {
-      ImportOptionsConfigList.addField("SpecularTypeSuffixes", "Specular Type Suffixes", "command", "", "_SPECULAR,_SPEC", "", %optionsObj);
-   }
-   else
-   {
-      ImportOptionsConfigList.addField("MetalnessTypeSuffixes", "Metalness Type Suffixes", "command", "", "_METAL,_MET,_METALNESS,_METALLIC", "", %optionsObj);
-      ImportOptionsConfigList.addField("RoughnessTypeSuffixes", "Roughness Type Suffixes", "command", "", "_ROUGH,_ROUGHNESS", "", %optionsObj);
-      ImportOptionsConfigList.addField("SmoothnessTypeSuffixes", "Smoothness Type Suffixes", "command", "", "_SMOOTH,_SMOOTHNESS", "", %optionsObj);
-      ImportOptionsConfigList.addField("AOTypeSuffixes", "AO Type Suffixes", "command", "", "_AO,_AMBIENT,_AMBIENTOCCLUSION", "", %optionsObj);
-      ImportOptionsConfigList.addField("CompositeTypeSuffixes", "Composite Type Suffixes", "command", "", "_COMP,_COMPOSITE", "", %optionsObj);
-   }
-   
-   ImportOptionsConfigList.addField("TextureFilteringMode", "Texture Filtering Mode", "list", "", "Bilinear", "None,Bilinear,Trilinear", %optionsObj);
-   ImportOptionsConfigList.addField("UseMips", "Use Mipmaps", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("IsHDR", "Is HDR", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.addField("Scaling", "Scaling", "float", "", "1.0", "", %optionsObj);
-   ImportOptionsConfigList.addField("Compressed", "Is Compressed", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("GenerateMaterialOnImport", "Generate Material On Import", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.addField("PopulateMaterialMaps", "Populate Material Maps", "bool", "", "1", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();
-   
-   //Sounds
-   ImportOptionsConfigList.startGroup("Sound");
-   ImportOptionsConfigList.addField("VolumeAdjust", "Volume Adjustment", "float", "", "1.0", "", %optionsObj);
-   ImportOptionsConfigList.addField("PitchAdjust", "Pitch Adjustment", "float", "", "1.0", "", %optionsObj);
-   ImportOptionsConfigList.addField("Compressed", "Is Compressed", "bool", "", "0", "", %optionsObj);
-   ImportOptionsConfigList.endGroup();*/
+   ImportOptionsConfigList.update();
 }
 
 function ImportAssetConfigEditorWindow::populateConfigListByGroup(%this, %groupName)
@@ -459,6 +331,21 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    //%this.populateConfigList(%optionsObj);
 }
 
+function ImportAssetConfigEditorWindow::setDefaultValuesByGroup(%this, %groupName)
+{
+   %configList = ImportAssetConfigSettingsList;
+   
+   for(%i=0; %i < %configList.count(); %i++)
+   {
+      %settingName = getField(%configList.getKey(%i),0);
+      if(startsWith(%settingName, %groupName @ "/"))
+      {
+         %defaultValue = getField(%configList.getValue(%i), 0);
+         AssetImportSettings.setValue(%settingName, %defaultValue);
+      }
+   }
+}
+
 function ImportAssetConfigEditorWindow::editConfig(%this)
 {
    //Ensure our list is set up
@@ -495,65 +382,13 @@ function ImportAssetConfigEditorWindow::createNewImportConfig(%this)
    
    AssetImportSettings.beginGroup(%configName);
    
-   for(%i=0; %i < %configList.count(); %i++)
-   {
-      %settingName = getField(%configList.getKey(%i),0);
-      if(startsWith(%settingName, "Meshes/"))
-      {
-         %defaultValue = getField(%configList.getValue(%i), 0);
-         AssetImportSettings.setValue(%settingName, %defaultValue);
-      }
-   }
-   
-   for(%i=0; %i < %configList.count(); %i++)
-   {
-      %settingName = getField(%configList.getKey(%i),0);
-      if(startsWith(%settingName, "Materials/"))
-      {
-         %defaultValue = getField(%configList.getValue(%i), 0);
-         AssetImportSettings.setValue(%settingName, %defaultValue);
-      }
-   }
-   
-   for(%i=0; %i < %configList.count(); %i++)
-   {
-      %settingName = getField(%configList.getKey(%i),0);
-      if(startsWith(%settingName, "Animations/"))
-      {
-         %defaultValue = getField(%configList.getValue(%i), 0);
-         AssetImportSettings.setValue(%settingName, %defaultValue);
-      }
-   }
-   
-   for(%i=0; %i < %configList.count(); %i++)
-   {
-      %settingName = getField(%configList.getKey(%i),0);
-      if(startsWith(%settingName, "Collision/"))
-      {
-         %defaultValue = getField(%configList.getValue(%i), 0);
-         AssetImportSettings.setValue(%settingName, %defaultValue);
-      }
-   }
-   
-   for(%i=0; %i < %configList.count(); %i++)
-   {
-      %settingName = getField(%configList.getKey(%i),0);
-      if(startsWith(%settingName, "Images/"))
-      {
-         %defaultValue = getField(%configList.getValue(%i), 0);
-         AssetImportSettings.setValue(%settingName, %defaultValue);
-      }
-   }
-
-   for(%i=0; %i < %configList.count(); %i++)
-   {
-      %settingName = getField(%configList.getKey(%i),0);
-      if(startsWith(%settingName, "Sounds/"))
-      {
-         %defaultValue = getField(%configList.getValue(%i), 0);
-         AssetImportSettings.setValue(%settingName, %defaultValue);
-      }
-   }
+   %this.setDefaultValuesByGroup("General");
+   %this.setDefaultValuesByGroup("Meshes");
+   %this.setDefaultValuesByGroup("Materials");
+   %this.setDefaultValuesByGroup("Animations");
+   %this.setDefaultValuesByGroup("Collision");
+   %this.setDefaultValuesByGroup("Images");
+   %this.setDefaultValuesByGroup("Sounds");
    
    AssetImportSettings.endGroup();
    
@@ -566,10 +401,13 @@ function ImportOptionsConfigList::addSettingsField(%this, %settingsFieldName, %l
 {
    %moddedSettingsFieldName = strreplace(%settingsFieldName, "/", "-");
    
-   %value = AssetImportSettings.value(%settingsFieldName);
+   %configGroup = AssetImportConfigName.getText();
+   
+   %value = AssetImportSettings.value(%configGroup @ "/" @ %settingsFieldName);
    if(%value $= "")
       %value = %fieldValue;
-   
+      
+   //%this.addCallbackField(%moddedSettingsFieldName, %labelText, %fieldType, "", %value, %fieldData, %this @ ".changeEditorSetting");
    %this.addCallbackField(%moddedSettingsFieldName, %labelText, %fieldType, "", %value, %fieldData, "changeEditorSetting");
 }
 
@@ -579,9 +417,11 @@ function ImportOptionsConfigList::changeEditorSetting(%this, %varName, %value)
    
    echo("Set " @ %varName @ " to be " @ %value);  
    
-   AssetImportSettings.setValue(%varName, %value);
+   %configGroup = AssetImportConfigName.getText();
    
-   %success = AssetImportSettings.write();
+   AssetImportSettings.setValue(%configGroup @ "/" @ %varName, %value);
+   
+   //%success = AssetImportSettings.write();
 }
 
 function ImportOptionsConfigList::ToggleImportMesh(%this, %fieldName, %newValue, %ownerObject)

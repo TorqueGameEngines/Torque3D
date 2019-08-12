@@ -54,6 +54,11 @@ function initServer()
    $Server::MissionFileSpec = "data/levels/*.mis";
    
    callOnModules("initServer");
+   
+   //Maybe this should be a pref for better per-project control
+   //But many physically based/gameplay things utilize materials being detected
+   //So we'll load on the server as well
+   loadModuleMaterials();
 }
 
 //-----------------------------------------------------------------------------

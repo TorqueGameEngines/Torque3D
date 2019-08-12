@@ -160,7 +160,7 @@ public:
    const U32 getNumVertexStreams() const { return mNumVertexStream; }
 
    bool glUseMap() const { return mUseGlMap; }   
-      
+   const char* interpretDebugResult(long result) { return "Not Implemented"; };
 protected:   
    /// Called by GFXDevice to create a device specific stateblock
    virtual GFXStateBlockRef createStateBlockInternal(const GFXStateBlockDesc& desc);

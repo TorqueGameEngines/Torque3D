@@ -53,17 +53,21 @@ public:
    void endGroup();
 
    void addField(const char* name, const char* label, const char* typeName, const char* description, 
-      const char* defaultValue, const char* dataValues, SimObject* ownerObj);
+      const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj);
    void addCallbackField(const char* name, const char* label, const char* typeName, const char* description,
       const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj);
    void setFieldEnabled(const char* name, bool enabled);
    void clearFields();
+
+   void setAutoUpdate(bool doAutoUpdate) { mAutoUpdate = doAutoUpdate; }
 
 protected:
    
    Vector<VariableField> mFields;
 
    String mCurrentGroup;
+
+   bool mAutoUpdate;
 
 };
 

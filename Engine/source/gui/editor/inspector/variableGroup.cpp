@@ -117,7 +117,7 @@ bool GuiInspectorVariableGroup::inspectGroup()
 
             Con::executef(this, "onConstructField", mFields[i]->mFieldName,
                mFields[i]->mFieldLabel, mFields[i]->mFieldTypeName, mFields[i]->mFieldDescription,
-               mFields[i]->mDefaultValue, mFields[i]->mDataValues, mFields[i]->mOwnerObject);
+               mFields[i]->mDefaultValue, mFields[i]->mDataValues, mFields[i]->mSetCallbackName, mFields[i]->mOwnerObject);
          }
          continue;
       }

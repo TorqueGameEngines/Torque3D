@@ -36,7 +36,10 @@ function HudlessPlayGui::onSleep(%this)
 function HudlessPlayGui::toggle(%this)
 {
    if (%this.isAwake())
-      Canvas.setContent(PlayGui);
+   {
+      %playGUIName = ProjectSettings.value("UI/playGUIName");
+      Canvas.setContent(%playGUIName);
+   }
    else
       Canvas.setContent(HudlessPlayGui);
 }

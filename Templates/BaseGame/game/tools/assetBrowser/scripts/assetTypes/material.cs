@@ -78,7 +78,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
       }
    }
    
-   if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "") == 1)
+   if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
    {
       %materialItemId = ImportAssetTree.findItemByObjectId(%assetItem);
       
@@ -92,9 +92,14 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(getAssetImportConfigValue("Images/UseDiffuseSuffixOnOriginImage", "1") == 1 && %diffuseImageSuffix $= "")
          {
-            %diffuseToken = getToken(getAssetImportConfigValue("Materials/DiffuseTypeSuffixes", ""), ",;", 0);
+            %diffuseTypeSuffixes = getAssetImportConfigValue("Images/DiffuseTypeSuffixes", "");
             
-            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %assetItem, %filename @ %diffuseToken);
+            %diffuseFilename = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %diffuseTypeSuffixes);
+            
+            if(%diffuseFilename !$= "")
+               %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseFilename, %assetItem, fileBase(%diffuseFilename));
+            else
+               %diffuseAsset = AssetBrowser.addImportingAsset("Image", %diffuseImagePath, %assetItem, %filename @ getToken(%diffuseTypeSuffixes, ",;", 0));
          }
          else
          {
@@ -107,35 +112,10 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
       //Now, iterate over our comma-delimited suffixes to see if we have any matches. We'll use the first match in each case, if any.
       if(%assetItem.normalImageAsset $= "")
       {
-         //First, normal map
-         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, ImportAssetWindow.activeImportConfig.NormalTypeSuffixes);
+         %normalTypeSuffixes = getAssetImportConfigValue("Images/NormalTypeSuffixes", "");
          
-         if(%targetFilePath $= "")
-         {
-            //Didn't find it for the presumed file path, so lets angle it from the diffuse map's texture name, if it has one
-            if(isObject(%assetItem.diffuseImageAsset))
-            {
-               if(isFile(%assetItem.diffuseImageAsset.filePath))
-               {
-                  %diffFileDir = filePath(%assetItem.diffuseImageAsset.filePath);
-                  %diffFileName = fileBase(%assetItem.diffuseImageAsset.filePath);
-                  %diffFileExt = fileExt(%assetItem.diffuseImageAsset.filePath);
-                  
-                  %suffixCount = getTokenCount(getAssetImportConfigValue("Materials/DiffuseTypeSuffixes", ""), ",;");
-                  for(%sfx = 0; %sfx < %suffixCount; %sfx++)
-                  {
-                     %suffixToken = getToken(getAssetImportConfigValue("Materials/DiffuseTypeSuffixes", ""), ",;", %sfx);
-                     if(strIsMatchExpr("*"@%suffixToken, %diffFileName))
-                     {
-                        %diffFileName = strreplace(%diffFileName, %suffixToken, "");
-                        break;
-                     }
-                  }
-                  
-                  %targetFilePath = %this.findMaterialMapFileWSuffix(%diffFileDir, %diffFileName, %diffFileExt, ImportAssetWindow.activeImportConfig.NormalTypeSuffixes);
-               }
-            }
-         }
+         //First, normal map
+         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %normalTypeSuffixes);
          
          if(%targetFilePath !$= "")
          {
@@ -167,136 +147,97 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
       
       if(%assetItem.metalImageAsset $= "")
       {
-         //Metal
-         %listCount = getTokenCount(ImportAssetWindow.activeImportConfig.MetalnessTypeSuffixes, ",;");
-   
-         %foundFile = 0;
-         for(%i=0; %i < %listCount; %i++)
+         %metalnessTypeSuffixes = getAssetImportConfigValue("Images/MetalnessTypeSuffixes", "");
+         
+         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %metalnessTypeSuffixes);
+         
+         if(%targetFilePath !$= "")
          {
-            %entryText = getToken(ImportAssetWindow.activeImportConfig.MetalnessTypeSuffixes, ",;", %i);
-            
-            %targetFilePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
-            %foundFile = isFile(%targetFilePath);
-            
-            if(%foundFile)
-            {
-               %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-               %assetItem.metalImageAsset = %metalAsset;
-               break;  
-            }
+            %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %assetItem.metalImageAsset = %metalAsset;
          }
       }
       
       if(%assetItem.roughnessImageAsset $= "")
       {
-         //Roughness
-         %listCount = getTokenCount(ImportAssetWindow.activeImportConfig.RoughnessTypeSuffixes, ",;");
-   
-         %foundFile = 0;
-         for(%i=0; %i < %listCount; %i++)
+         %roughnessTypeSuffixes = getAssetImportConfigValue("Images/RoughnessTypeSuffixes", "");
+         
+         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %roughnessTypeSuffixes);
+         
+         if(%targetFilePath !$= "")
          {
-            %entryText = getToken(ImportAssetWindow.activeImportConfig.RoughnessTypeSuffixes, ",;", %i);
-            
-            %targetFilePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
-            %foundFile = isFile(%targetFilePath);
-            
-            if(%foundFile)
-            {
-               %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-               %assetItem.roughnessImageAsset = %roughnessAsset;
-               break;  
-            }
+            %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %assetItem.roughnessImageAsset = %roughnessAsset;
          }
       }
       
       if(%assetItem.smoothnessImageAsset $= "")
       {
-         //Smoothness
-         %listCount = getTokenCount(ImportAssetWindow.activeImportConfig.SmoothnessTypeSuffixes, ",;");
-   
-         %foundFile = 0;
-         for(%i=0; %i < %listCount; %i++)
+         %smoothnessTypeSuffixes = getAssetImportConfigValue("Images/SmoothnessTypeSuffixes", "");
+         
+         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %smoothnessTypeSuffixes);
+         
+         if(%targetFilePath !$= "")
          {
-            %entryText = getToken(ImportAssetWindow.activeImportConfig.SmoothnessTypeSuffixes, ",;", %i);
-            
-            %targetFilePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
-            %foundFile = isFile(%targetFilePath);
-            
-            if(%foundFile)
-            {
-               %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-               %assetItem.SmoothnessImageAsset = %smoothnessAsset;
-               break;  
-            }
+            %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %assetItem.SmoothnessImageAsset = %smoothnessAsset;
          }
       }
       
       if(%assetItem.AOImageAsset $= "")
       {
-         //AO
-         %listCount = getTokenCount(ImportAssetWindow.activeImportConfig.AOTypeSuffixes, ",;");
-   
-         %foundFile = 0;
-         for(%i=0; %i < %listCount; %i++)
+         %aoTypeSuffixes = getAssetImportConfigValue("Images/AOTypeSuffixes", "");
+         
+         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %aoTypeSuffixes);
+         
+         if(%targetFilePath !$= "")
          {
-            %entryText = getToken(ImportAssetWindow.activeImportConfig.AOTypeSuffixes, ",;", %i);
-            
-            %targetFilePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
-            %foundFile = isFile(%targetFilePath);
-            
-            if(%foundFile)
-            {
-               %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-               %assetItem.AOImageAsset = %AOAsset;
-               break;  
-            }
+            %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %assetItem.AOImageAsset = %AOAsset;
          }
       }
       
       if(%assetItem.compositeImageAsset $= "")
       {
-         //Composite
-         %listCount = getTokenCount(ImportAssetWindow.activeImportConfig.CompositeTypeSuffixes, ",;");
-   
-         %foundFile = 0;
-         for(%i=0; %i < %listCount; %i++)
+         %compositeTypeSuffixes = getAssetImportConfigValue("Images/CompositeTypeSuffixes", "");
+         
+         %targetFilePath = %this.findMaterialMapFileWSuffix(%fileDir, %fileName, %fileExt, %compositeTypeSuffixes);
+         
+         if(%targetFilePath !$= "")
          {
-            %entryText = getToken(ImportAssetWindow.activeImportConfig.CompositeTypeSuffixes, ",;", %i);
-            
-            %targetFilePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
-            %foundFile = isFile(%targetFilePath);
-            
-            if(%foundFile)
-            {
-               %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-               %assetItem.compositeImageAsset = %compositeAsset;
-               break;  
-            }
+            %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %assetItem.compositeImageAsset = %compositeAsset;
          }
       }
    }
 }
 
-function AssetBrowser::findMaterialMapFileWSuffix(%this, %fileDir, %filename, %fileExt, %suffixList)
+function AssetBrowser::findMaterialMapFileWSuffix(%this, %fileDir, %filename, %fileExt, %suffixesList)
 {
-   //Now, iterate over our comma-delimited suffixes to see if we have any matches. We'll use the first match in each case, if any.
-   //First, normal map
-   %listCount = getTokenCount(%suffixList, ",;");
+   %listCount = getTokenCount(%suffixesList, ",;");
    
    %foundFile = 0;
+   %filePath = "";
    for(%i=0; %i < %listCount; %i++)
    {
-      %entryText = getToken(%suffixList, ",;", %i);
+      %entryText = getToken(%suffixesList, ",;", %i);
       
-      %targetFilePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
-      %foundFile = isFile(%targetFilePath);
+      if(%fileExt $= "")
+      {
+         %filePath = findFirstFile(%fileDir @ "/" @ %filename @ %entryText @ ".*");
+         %foundFile = isFile(%filePath);
+      }
+      else
+      {
+         %filePath = %fileDir @ "/" @ %filename @ %entryText @ %fileExt;
+         %foundFile = isFile(%filePath);
+      }
       
       if(%foundFile)
       {
-         return %targetFilePath;
-         break;  
+         return %filePath;
       }
-   }  
+   }
    
    return "";
 }

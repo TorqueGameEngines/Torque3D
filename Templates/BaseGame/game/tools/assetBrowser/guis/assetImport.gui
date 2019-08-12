@@ -127,7 +127,7 @@
       resizeWidth = "1";
       resizeHeight = "1";
       canMove = "1";
-      canClose = "0";
+      canClose = "1";
       canMinimize = "0";
       canMaximize = "0";
       canCollapse = "0";
@@ -152,6 +152,7 @@
       hidden = "1";
       canSave = "1";
       canSaveDynamicFields = "0";
+      closeCommand = "ImportAssetConfigEditorWindow.close();";
 
       new GuiTextCtrl() {
          text = "Configuration Name:";
@@ -614,7 +615,7 @@
       resizeWidth = "1";
       resizeHeight = "1";
       canMove = "1";
-      canClose = "0";
+      canClose = "1";
       canMinimize = "0";
       canMaximize = "0";
       canCollapse = "0";

@@ -325,6 +325,7 @@ public:
    // grab the sampler map
    const SamplerMap &getSamplersMap() const { return mSamplersMap; }
    SamplerMap &getSamplersMap(){ return mSamplersMap; }
+   const char* interpretDebugResult(long result);
 };
 
 #endif

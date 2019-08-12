@@ -45,7 +45,10 @@ function doScreenShotHudless(%val)
       schedule(10, 0, "doScreenShot", %val);
    }
    else
-      canvas.setContent(PlayGui);
+   {
+      %playGUIName = ProjectSettings.value("UI/playGUIName");
+      Canvas.setContent(%playGUIName);
+   }
 }
 
 $movementSpeed = 1; // m/s

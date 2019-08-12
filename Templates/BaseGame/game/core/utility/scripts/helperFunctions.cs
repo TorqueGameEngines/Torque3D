@@ -33,27 +33,8 @@ function isScriptFile(%path)
 
 function loadMaterials()
 {
-   // Load any materials files for which we only have DSOs.
-
-   for( %file = findFirstFile( "*/materials.cs.dso" );
-        %file !$= "";
-        %file = findNextFile( "*/materials.cs.dso" ))
-   {
-      // Only execute, if we don't have the source file.
-      %csFileName = getSubStr( %file, 0, strlen( %file ) - 4 );
-      if( !isFile( %csFileName ) )
-         exec( %csFileName );
-   }
-
-   // Load all source material files.
-
-   for( %file = findFirstFile( "*/materials.cs" );
-        %file !$= "";
-        %file = findNextFile( "*/materials.cs" ))
-   {
-      exec( %file );
-   }
-
+   loadModuleMaterials();
+   
    // Load all materials created by the material editor if
    // the folder exists
    if( IsDirectory( "materialEditor" ) )
@@ -251,7 +232,7 @@ function validateDatablockName(%name)
    %name = strreplace( %name, " ", "_" );
    
    // remove any other invalid characters
-   %invalidCharacters = "-+*/%$&§=()[].?\"#,;!~<>|°^{}";
+   %invalidCharacters = "-+*/%$&ï¿½=()[].?\"#,;!~<>|ï¿½^{}";
    %name = stripChars( %name, %invalidCharacters );
    
    if( %name $= "" )
@@ -621,4 +602,13 @@ function switchControlObject(%client, %newControlEntity)
 		return error("SwitchControlObject: Target controller has no conrol object behavior!");
 		
    %control.setConnectionControlObject(%client);
+}
+
+function populateAllFonts(%font)
+{
+   populateFontCacheRange(%font,14,0,65535);
+   populateFontCacheRange(%font,18,0,65535);
+   populateFontCacheRange(%font,24,0,65535);
+   populateFontCacheRange(%font,32,0,65535);
+   populateFontCacheRange(%font,36,0,65535);
 }

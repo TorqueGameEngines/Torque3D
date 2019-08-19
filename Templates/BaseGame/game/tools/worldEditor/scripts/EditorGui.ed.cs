@@ -1311,17 +1311,7 @@ function CameraTypesDropdownToggle()
 
 function VisibilityDropdownToggle()
 {
-   if ( EVisibility.visible  )
-   {
-      EVisibility.setVisible(false);
-      visibilityToggleBtn.setStateOn(0);
-   }
-   else
-   {
-      EVisibility.setVisible(true);
-      visibilityToggleBtn.setStateOn(1);
-      EVisibility.setExtent("200 540");
-   }
+   EditorVisibilityOptions.showPopup(Canvas);
 }
 
 function CameraTypesDropdownDecoy::onMouseLeave()

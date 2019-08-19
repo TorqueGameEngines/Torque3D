@@ -39,7 +39,7 @@
 #include "gfx/gfxVertexBuffer.h"
 #endif
 
-#include "core/util/SystemInterfaceList.h"
+#include "core/util/systemInterfaceList.h"
 
 #ifndef _MATERIALS_PROCESSEDSHADERMATERIAL_H_
 #include "materials/processedShaderMaterial.h"
@@ -126,7 +126,7 @@ public:
 
    void clear();
 
-   inline bool ProbeRenderInst::operator ==(const ProbeRenderInst& b) const
+   inline bool operator ==(const ProbeRenderInst& b) const
    {
       return mProbeIdx == b.mProbeIdx;
    }

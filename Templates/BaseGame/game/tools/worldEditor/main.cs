@@ -59,15 +59,16 @@ function initializeWorldEditor()
    exec("./scripts/editorRender.ed.cs");
    exec("./scripts/editorPlugin.ed.cs");
    exec("./scripts/EditorChooseLevelGui.ed.cs");
-   exec("./scripts/visibilityLayer.ed.cs");
    exec("./scripts/cameraBookmarks.ed.cs");
    exec("./scripts/ManageSFXParametersWindow.ed.cs");
    exec("./scripts/AddFMODProjectDlg.ed.cs");
    exec("./scripts/SelectObjectsWindow.ed.cs");
    exec("./scripts/cameraCommands.ed.cs");
-   exec("./scripts/lightViz.cs");
-   exec("./scripts/shadowViz.cs");
    exec("./scripts/probeBake.ed.cs");
+   exec("./scripts/visibility/visibilityLayer.ed.cs");
+   exec("./scripts/visibility/lightViz.cs");
+   exec("./scripts/visibility/shadowViz.cs");
+   exec("./scripts/visibility/miscViz.cs");
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));
@@ -106,8 +107,10 @@ function initializeWorldEditor()
       editorGui = EWorldEditor;
    };
    
+   setupEditorVisibilityMenu();
+   
    // Expose stock visibility/debug options.
-   EVisibility.addOption( "Render: Zones", "$Zone::isRenderable", "" );
+   /*EVisibility.addOption( "Render: Zones", "$Zone::isRenderable", "" );
    EVisibility.addOption( "Render: Portals", "$Portal::isRenderable", "" );
    EVisibility.addOption( "Render: Occlusion Volumes", "$OcclusionVolume::isRenderable", "" );
    EVisibility.addOption( "Render: Triggers", "$Trigger::renderTriggers", "" );
@@ -148,7 +151,7 @@ function initializeWorldEditor()
    EVisibility.addOption( "Colorblindness: Tritanopia", "$CBV_Tritanopia", "toggleColorBlindnessViz" );
    EVisibility.addOption( "Colorblindness: Tritanomaly", "$CBV_Tritanomaly", "toggleColorBlindnessViz" );
    EVisibility.addOption( "Colorblindness: Achromatopsia", "$CBV_Achromatopsia", "toggleColorBlindnessViz" );
-   EVisibility.addOption( "Colorblindness: Achromatomaly", "$CBV_Achromatomaly", "toggleColorBlindnessViz" );
+   EVisibility.addOption( "Colorblindness: Achromatomaly", "$CBV_Achromatomaly", "toggleColorBlindnessViz" );*/
 }
 
 function destroyWorldEditor()

@@ -271,5 +271,5 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
       //Inspector.refresh();
    }
    
-   EWorldEditor.isDirty= true;
+   EWorldEditor.isDirty = true;
 }

@@ -1008,20 +1008,34 @@ bool GFXGLShader::_loadShaderFromStream(  GLuint shader,
    Vector<U32> lengths;
    
    // The GLSL version declaration must go first!
-   const char *versionDecl = "#version 400\r\n";
-   buffers.push_back( dStrdup( versionDecl ) );
-   lengths.push_back( dStrlen( versionDecl ) );
-
-   if(GFXGL->mCapabilities.shaderModel5)
+   char* versionDecl = "#version 150\r\n";
+   if (!gglHasExtension(ARB_texture_cube_map_array))
    {
-      const char *extension = "#extension GL_ARB_gpu_shader5 : enable\r\n";
-      buffers.push_back( dStrdup( extension ) );
-      lengths.push_back( dStrlen( extension ) );
+      Con::errorf("ARB_texture_cube_map_array not found. attempting to use 4.0 core");
+      versionDecl = "#version 400\r\n";
+      buffers.push_back(dStrdup(versionDecl));
+      lengths.push_back(dStrlen(versionDecl));
+   }
+   else
+   {
+      Con::errorf("Attempting to use 3.2 core with ARB_texture_cube_map_array ");
+      buffers.push_back(dStrdup(versionDecl));
+      lengths.push_back(dStrlen(versionDecl));
+      const char* extension = "#extension GL_ARB_texture_cube_map_array : enable\r\n";
+      buffers.push_back(dStrdup(extension));
+      lengths.push_back(dStrlen(extension));
    }
 
-   const char *newLine = "\r\n";
-   buffers.push_back( dStrdup( newLine ) );
-   lengths.push_back( dStrlen( newLine ) );
+   if (GFXGL->mCapabilities.shaderModel5)
+   {
+      const char* extension = "#extension GL_ARB_gpu_shader5 : enable\r\n";
+      buffers.push_back(dStrdup(extension));
+      lengths.push_back(dStrlen(extension));
+   }
+
+   const char* newLine = "\r\n";
+   buffers.push_back(dStrdup(newLine));
+   lengths.push_back(dStrlen(newLine));
 
    // Now add all the macros.
    for( U32 i = 0; i < macros.size(); i++ )

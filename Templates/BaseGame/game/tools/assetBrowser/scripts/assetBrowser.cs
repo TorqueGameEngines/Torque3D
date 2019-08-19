@@ -1194,6 +1194,8 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
       %newEntity.position = %pos;
       %newEntity-->MeshComponent.MeshAsset = %module @ ":" @ %asset;
       
+      %newEntity.dirtyGameObject = true; //because if we're specifically setting the mesh asset, it's dirty
+      
       getScene(0).add(%newEntity);
       
       EWorldEditor.clearSelection();

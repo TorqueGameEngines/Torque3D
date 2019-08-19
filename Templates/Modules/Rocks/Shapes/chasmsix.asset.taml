@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="chasmsix"
+    fileName="@assetFile=chasmsix.DAE"
+    isNewShape="1"
+    materialSlot0="@Asset=Rocks:ColorEffectR225G198B87-material"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/chasmsix.DAE"
+    VersionId="1" />

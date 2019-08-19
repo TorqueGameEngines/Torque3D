@@ -4,7 +4,11 @@
     AssetName="SMIntWall8756"
     scriptFile="@assetFile=SMIntWall8756.cs"
     materialDefinitionName="SMIntWall8756"
-    imageMap0="@Asset=TTR:SMIntWall8756_ALBEDO"
+    imageMap0="@Asset=TTR:SMIntWall8756_baseColor"
+    imageMap1="@Asset=TTR:SMIntWall8756_NORMAL"
+    imageMap2="@Asset=TTR:SMIntWall8756_METALLIC"
+    imageMap3="@Asset=TTR:SMIntWall8756_ROUGHNESS"
+    imageMap4="@Asset=TTR:SMIntWall8756_AMBIENTOCCLUSION"
     originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMIntWall8756.png"
     shaderGraph="data/TTR/materials/SMIntWall8756.sgf"
     VersionId="1" />

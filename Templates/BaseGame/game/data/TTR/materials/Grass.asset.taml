@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Grass.cs"
     materialDefinitionName="Grass"
     imageMap0="@Asset=TTR:Grass_ALBEDO"
-    originalFilePath="/Grass"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Grass"
     shaderGraph="data/TTR/materials/Grass.sgf"
     VersionId="1" />

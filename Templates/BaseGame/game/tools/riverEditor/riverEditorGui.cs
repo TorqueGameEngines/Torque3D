@@ -76,9 +76,9 @@ function RiverEditorGui::createRiver( %this )
 
       baseColor = "45 108 171 255";
       
-      rippleTex = "art/water/ripple.dds";
-      foamTex = "art/water/foam";
-      depthGradientTex = "art/water/depthcolor_ramp";
+      rippleTex = "core/rendering/images/ripple.dds";
+      foamTex = "core/rendering/images/foam";
+      depthGradientTex = "core/rendering/images/depthcolor_ramp";
    };
    
    return %river;

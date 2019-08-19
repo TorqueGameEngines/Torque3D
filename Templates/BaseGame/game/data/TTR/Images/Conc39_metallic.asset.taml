@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Conc39_metallic"
+    imageFile="@assetFile=Conc39_metallic.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Conc39_metallic.png"
+    VersionId="1" />

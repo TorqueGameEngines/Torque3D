@@ -5,6 +5,6 @@
     scriptFile="@assetFile=ULoker67.cs"
     materialDefinitionName="ULoker67"
     imageMap0="@Asset=TTR:ULoker67_ALBEDO"
-    originalFilePath="/ULoker67"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/ULoker67"
     shaderGraph="data/TTR/materials/ULoker67.sgf"
     VersionId="1" />

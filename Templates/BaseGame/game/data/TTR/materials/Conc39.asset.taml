@@ -4,7 +4,11 @@
     AssetName="Conc39"
     scriptFile="@assetFile=Conc39.cs"
     materialDefinitionName="Conc39"
-    imageMap0="@Asset=TTR:Conc39_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Conc39.png"
+    imageMap0="@Asset=TTR:Conc39_baseColor"
+    imageMap1="@Asset=TTR:Conc39_normal"
+    imageMap2="@Asset=TTR:Conc39_metallic"
+    imageMap3="@Asset=TTR:Conc39_roughness"
+    imageMap4="@Asset=TTR:Conc39_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Conc39"
     shaderGraph="data/TTR/materials/Conc39.sgf"
     VersionId="1" />

@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Uboxpil.cs"
     materialDefinitionName="Uboxpil"
     imageMap0="@Asset=TTR:Uboxpil_ALBEDO"
-    originalFilePath="/Uboxpil"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Uboxpil"
     shaderGraph="data/TTR/materials/Uboxpil.sgf"
     VersionId="1" />

@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="chasmtwo"
+    fileName="@assetFile=chasmtwo.DAE"
+    isNewShape="1"
+    materialSlot0="@Asset=Rocks:ColorEffectR225G198B87-material"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/chasmtwo.DAE"
+    VersionId="1" />

@@ -4,7 +4,11 @@
     AssetName="door9"
     scriptFile="@assetFile=door9.cs"
     materialDefinitionName="door9"
-    imageMap0="@Asset=TTR:door9_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/door9.png"
+    imageMap0="@Asset=TTR:Door9_baseColor"
+    imageMap1="@Asset=TTR:Door9_normal"
+    imageMap2="@Asset=TTR:Door9_metallic"
+    imageMap3="@Asset=TTR:Door9_roughness"
+    imageMap4="@Asset=TTR:Door9_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/door9"
     shaderGraph="data/TTR/materials/door9.sgf"
     VersionId="1" />

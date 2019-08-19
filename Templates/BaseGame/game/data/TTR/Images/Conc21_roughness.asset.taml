@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Conc21_roughness"
+    imageFile="@assetFile=Conc21_roughness.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Conc21_roughness.png"
+    VersionId="1" />

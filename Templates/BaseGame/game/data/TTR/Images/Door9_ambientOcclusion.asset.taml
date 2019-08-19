@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Door9_ambientOcclusion"
+    imageFile="@assetFile=Door9_ambientOcclusion.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Door9_ambientOcclusion.png"
+    VersionId="1" />

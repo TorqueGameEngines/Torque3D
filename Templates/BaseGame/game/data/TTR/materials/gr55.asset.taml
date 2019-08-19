@@ -4,7 +4,11 @@
     AssetName="gr55"
     scriptFile="@assetFile=gr55.cs"
     materialDefinitionName="gr55"
-    imageMap0="@Asset=TTR:gr55_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr55.png"
+    imageMap0="@Asset=TTR:gr55_baseColor"
+    imageMap1="@Asset=TTR:gr55_normal"
+    imageMap2="@Asset=TTR:gr55_metallic"
+    imageMap3="@Asset=TTR:gr55_roughness"
+    imageMap4="@Asset=TTR:gr55_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr55"
     shaderGraph="data/TTR/materials/gr55.sgf"
     VersionId="1" />

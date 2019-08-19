@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Ucrate1cnew.cs"
     materialDefinitionName="Ucrate1cnew"
     imageMap0="@Asset=TTR:Ucrate1cnew_ALBEDO"
-    originalFilePath="/Ucrate1cnew"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Ucrate1cnew"
     shaderGraph="data/TTR/materials/Ucrate1cnew.sgf"
     VersionId="1" />

@@ -4,7 +4,11 @@
     AssetName="met32"
     scriptFile="@assetFile=met32.cs"
     materialDefinitionName="met32"
-    imageMap0="@Asset=TTR:met32_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met32.png"
+    imageMap0="@Asset=TTR:met32_baseColor"
+    imageMap1="@Asset=TTR:met32_normal"
+    imageMap2="@Asset=TTR:met32_metallic"
+    imageMap3="@Asset=TTR:met32_roughness"
+    imageMap4="@Asset=TTR:met32_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met32"
     shaderGraph="data/TTR/materials/met32.sgf"
     VersionId="1" />

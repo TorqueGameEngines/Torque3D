@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="trim10_metallic"
+    imageFile="@assetFile=trim10_metallic.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/trim10_metallic.png"
+    VersionId="1" />

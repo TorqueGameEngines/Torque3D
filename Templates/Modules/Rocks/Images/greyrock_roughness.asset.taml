@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="greyrock_roughness"
+    imageFile="@assetFile=greyrock_roughness.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/greyrock_roughness.png"
+    VersionId="1" />

@@ -4,7 +4,11 @@
     AssetName="wall95"
     scriptFile="@assetFile=wall95.cs"
     materialDefinitionName="wall95"
-    imageMap0="@Asset=TTR:wall95_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wall95.png"
+    imageMap0="@Asset=TTR:wall95_baseColor"
+    imageMap1="@Asset=TTR:wall95_normal"
+    imageMap2="@Asset=TTR:wall95_metallic"
+    imageMap3="@Asset=TTR:wall95_roughness"
+    imageMap4="@Asset=TTR:wall95_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wall95"
     shaderGraph="data/TTR/materials/wall95.sgf"
     VersionId="1" />

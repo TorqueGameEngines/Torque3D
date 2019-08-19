@@ -35,7 +35,7 @@
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 #include "core/resourceManager.h"
-#include "console/simPersistId.h"
+#include "console/simPersistID.h"
 #include "T3D/gameFunctions.h"
 #include "postFx/postEffect.h"
 #include "renderInstance/renderProbeMgr.h"

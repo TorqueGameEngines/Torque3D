@@ -4,7 +4,11 @@
     AssetName="trim10"
     scriptFile="@assetFile=trim10.cs"
     materialDefinitionName="trim10"
-    imageMap0="@Asset=TTR:trim10_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/trim10.png"
+    imageMap0="@Asset=TTR:trim10_baseColor"
+    imageMap1="@Asset=TTR:trim10_normal"
+    imageMap2="@Asset=TTR:trim10_metallic"
+    imageMap3="@Asset=TTR:trim10_roughness"
+    imageMap4="@Asset=TTR:trim10_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/trim10"
     shaderGraph="data/TTR/materials/trim10.sgf"
     VersionId="1" />

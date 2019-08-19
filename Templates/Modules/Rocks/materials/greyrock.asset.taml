@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="greyrock"
+    scriptFile="@assetFile=greyrock.cs"
+    materialDefinitionName="greyrock"
+    imageMap0="@Asset=Rocks:greyrock_diffuse"
+    imageMap1="@Asset=Rocks:greyrock_normal"
+    imageMap2="@Asset=Rocks:greyrock_metallic"
+    imageMap3="@Asset=Rocks:greyrock_roughness"
+    imageMap4="@Asset=Rocks:greyrock_ambientOcclusion"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/greyrock"
+    shaderGraph="data/Rocks/materials/greyrock.sgf"
+    VersionId="1" />

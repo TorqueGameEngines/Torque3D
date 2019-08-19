@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Utoilt.cs"
     materialDefinitionName="Utoilt"
     imageMap0="@Asset=TTR:Utoilt_ALBEDO"
-    originalFilePath="/Utoilt"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Utoilt"
     shaderGraph="data/TTR/materials/Utoilt.sgf"
     VersionId="1" />

@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Uflorwood.cs"
     materialDefinitionName="Uflorwood"
     imageMap0="@Asset=TTR:Uflorwood_ALBEDO"
-    originalFilePath="/Uflorwood"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Uflorwood"
     shaderGraph="data/TTR/materials/Uflorwood.sgf"
     VersionId="1" />

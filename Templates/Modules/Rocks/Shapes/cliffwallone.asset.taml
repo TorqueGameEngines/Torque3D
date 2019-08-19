@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cliffwallone"
+    fileName="@assetFile=cliffwallone.DAE"
+    isNewShape="1"
+    materialSlot0="@Asset=Rocks:ColorEffectR88G143B225-material"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/cliffwallone.DAE"
+    VersionId="1" />

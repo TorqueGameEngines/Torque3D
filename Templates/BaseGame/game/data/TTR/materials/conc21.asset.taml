@@ -4,7 +4,11 @@
     AssetName="conc21"
     scriptFile="@assetFile=conc21.cs"
     materialDefinitionName="conc21"
-    imageMap0="@Asset=TTR:conc21_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/conc21.png"
+    imageMap0="@Asset=TTR:Conc21_baseColor"
+    imageMap1="@Asset=TTR:Conc21_normal"
+    imageMap2="@Asset=TTR:Conc21_metallic"
+    imageMap3="@Asset=TTR:Conc21_roughness"
+    imageMap4="@Asset=TTR:Conc21_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/conc21"
     shaderGraph="data/TTR/materials/conc21.sgf"
     VersionId="1" />

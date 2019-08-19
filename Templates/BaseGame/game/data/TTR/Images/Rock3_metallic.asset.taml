@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Rock3_metallic"
+    imageFile="@assetFile=Rock3_metallic.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Rock3_metallic.png"
+    VersionId="1" />

@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Danger.cs"
     materialDefinitionName="Danger"
     imageMap0="@Asset=TTR:Danger_ALBEDO"
-    originalFilePath="/Danger"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Danger"
     shaderGraph="data/TTR/materials/Danger.sgf"
     VersionId="1" />

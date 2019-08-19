@@ -1,0 +1,10 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="chasmseven"
+    fileName="@assetFile=chasmseven.DAE"
+    isNewShape="1"
+    materialSlot0="@Asset=Rocks:ColorEffectR225G198B87-material"
+    materialSlot1="@Asset=Rocks:greyrock"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/chasmseven.DAE"
+    VersionId="1" />

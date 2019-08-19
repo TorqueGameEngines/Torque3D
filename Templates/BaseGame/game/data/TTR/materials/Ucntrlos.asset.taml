@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Ucntrlos.cs"
     materialDefinitionName="Ucntrlos"
     imageMap0="@Asset=TTR:Ucntrlos_ALBEDO"
-    originalFilePath="/Ucntrlos"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Ucntrlos"
     shaderGraph="data/TTR/materials/Ucntrlos.sgf"
     VersionId="1" />

@@ -4,7 +4,11 @@
     AssetName="met13"
     scriptFile="@assetFile=met13.cs"
     materialDefinitionName="met13"
-    imageMap0="@Asset=TTR:met13_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met13.png"
+    imageMap0="@Asset=TTR:met13_baseColor"
+    imageMap1="@Asset=TTR:met13_normal"
+    imageMap2="@Asset=TTR:met13_metallic"
+    imageMap3="@Asset=TTR:met13_roughness"
+    imageMap4="@Asset=TTR:met13_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met13"
     shaderGraph="data/TTR/materials/met13.sgf"
     VersionId="1" />

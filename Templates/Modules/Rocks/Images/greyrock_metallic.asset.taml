@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="greyrock_metallic"
+    imageFile="@assetFile=greyrock_metallic.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/greyrock_metallic.png"
+    VersionId="1" />

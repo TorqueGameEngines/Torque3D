@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="sky7"
+    scriptFile="@assetFile=sky7.cs"
+    materialDefinitionName="sky7"
+    imageMap0="@Asset=TTR:sky7_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/sky7"
+    shaderGraph="data/TTR/materials/sky7.sgf"
+    VersionId="1" />

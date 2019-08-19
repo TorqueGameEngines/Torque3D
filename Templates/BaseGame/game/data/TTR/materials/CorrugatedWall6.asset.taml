@@ -4,7 +4,11 @@
     AssetName="CorrugatedWall6"
     scriptFile="@assetFile=CorrugatedWall6.cs"
     materialDefinitionName="CorrugatedWall6"
-    imageMap0="@Asset=TTR:CorrugatedWall6_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/CorrugatedWall6.png"
+    imageMap0="@Asset=TTR:CorrugatedWall6_baseColor"
+    imageMap1="@Asset=TTR:CorrugatedWall6_normal"
+    imageMap2="@Asset=TTR:CorrugatedWall6_metallic"
+    imageMap3="@Asset=TTR:CorrugatedWall6_roughness"
+    imageMap4="@Asset=TTR:CorrugatedWall6_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/CorrugatedWall6"
     shaderGraph="data/TTR/materials/CorrugatedWall6.sgf"
     VersionId="1" />

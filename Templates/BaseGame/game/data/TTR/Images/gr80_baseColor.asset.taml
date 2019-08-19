@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gr80_baseColor"
+    imageFile="@assetFile=gr80_baseColor.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr80_baseColor.png"
+    VersionId="1" />

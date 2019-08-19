@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="greyrock_ambientOcclusion"
+    imageFile="@assetFile=greyrock_ambientOcclusion.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/greyrock_ambientOcclusion.png"
+    VersionId="1" />

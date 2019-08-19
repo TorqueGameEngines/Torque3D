@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Urstfnce.cs"
     materialDefinitionName="Urstfnce"
     imageMap0="@Asset=TTR:Urstfnce_ALBEDO"
-    originalFilePath="/Urstfnce"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Urstfnce"
     shaderGraph="data/TTR/materials/Urstfnce.sgf"
     VersionId="1" />

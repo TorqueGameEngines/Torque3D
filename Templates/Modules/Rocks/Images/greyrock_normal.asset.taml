@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="greyrock_normal"
+    imageFile="@assetFile=greyrock_normal.dds"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/greyrock_normal.dds"
+    VersionId="1" />

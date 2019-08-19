@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="sky9"
+    scriptFile="@assetFile=sky9.cs"
+    materialDefinitionName="sky9"
+    imageMap0="@Asset=TTR:sky9_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/sky9"
+    shaderGraph="data/TTR/materials/sky9.sgf"
+    VersionId="1" />

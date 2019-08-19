@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="chasmfour"
+    fileName="@assetFile=chasmfour.DAE"
+    isNewShape="1"
+    materialSlot0="@Asset=Rocks:ColorEffectR225G198B87-material"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/chasmfour.DAE"
+    VersionId="1" />

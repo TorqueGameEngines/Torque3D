@@ -4,7 +4,11 @@
     AssetName="roof11"
     scriptFile="@assetFile=roof11.cs"
     materialDefinitionName="roof11"
-    imageMap0="@Asset=TTR:roof11_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/roof11.png"
+    imageMap0="@Asset=TTR:Roof11_baseColor"
+    imageMap1="@Asset=TTR:Roof11_normal"
+    imageMap2="@Asset=TTR:Roof11_metallic"
+    imageMap3="@Asset=TTR:Roof11_roughness"
+    imageMap4="@Asset=TTR:Roof11_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/roof11"
     shaderGraph="data/TTR/materials/roof11.sgf"
     VersionId="1" />

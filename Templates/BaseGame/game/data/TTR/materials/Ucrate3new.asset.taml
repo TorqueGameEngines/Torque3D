@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucrate3new"
+    scriptFile="@assetFile=Ucrate3new.cs"
+    materialDefinitionName="Ucrate3new"
+    imageMap0="@Asset=TTR:Ucrate3new_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Ucrate3new"
+    shaderGraph="data/TTR/materials/Ucrate3new.sgf"
+    VersionId="1" />

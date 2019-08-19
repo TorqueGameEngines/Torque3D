@@ -5,6 +5,6 @@
     scriptFile="@assetFile=SMOldWood23.cs"
     materialDefinitionName="SMOldWood23"
     imageMap0="@Asset=TTR:SMOldWood23_ALBEDO"
-    originalFilePath="/SMOldWood23"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMOldWood23"
     shaderGraph="data/TTR/materials/SMOldWood23.sgf"
     VersionId="1" />

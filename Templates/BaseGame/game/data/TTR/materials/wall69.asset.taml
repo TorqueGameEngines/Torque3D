@@ -4,7 +4,11 @@
     AssetName="wall69"
     scriptFile="@assetFile=wall69.cs"
     materialDefinitionName="wall69"
-    imageMap0="@Asset=TTR:wall69_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wall69.png"
+    imageMap0="@Asset=TTR:wall69_baseColor"
+    imageMap1="@Asset=TTR:wall69_normal"
+    imageMap2="@Asset=TTR:wall69_metallic"
+    imageMap3="@Asset=TTR:wall69_roughness"
+    imageMap4="@Asset=TTR:wall69_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wall69"
     shaderGraph="data/TTR/materials/wall69.sgf"
     VersionId="1" />

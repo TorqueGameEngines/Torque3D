@@ -1,0 +1,9 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="chasmfive"
+    fileName="@assetFile=chasmfive.DAE"
+    isNewShape="1"
+    materialSlot0="@Asset=Rocks:greyrock"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/chasmfive.DAE"
+    VersionId="1" />

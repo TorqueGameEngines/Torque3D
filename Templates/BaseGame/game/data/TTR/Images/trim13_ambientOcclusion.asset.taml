@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="trim13_ambientOcclusion"
+    imageFile="@assetFile=trim13_ambientOcclusion.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/trim13_ambientOcclusion.png"
+    VersionId="1" />

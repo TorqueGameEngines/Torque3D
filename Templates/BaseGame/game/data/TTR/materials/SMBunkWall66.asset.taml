@@ -4,7 +4,11 @@
     AssetName="SMBunkWall66"
     scriptFile="@assetFile=SMBunkWall66.cs"
     materialDefinitionName="SMBunkWall66"
-    imageMap0="@Asset=TTR:SMBunkWall66_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMBunkWall66.png"
+    imageMap0="@Asset=TTR:SMBunkWall66_baseColor"
+    imageMap1="@Asset=TTR:SMBunkWall66_normal"
+    imageMap2="@Asset=TTR:SMBunkWall66_metallic"
+    imageMap3="@Asset=TTR:SMBunkWall66_roughness"
+    imageMap4="@Asset=TTR:SMBunkWall66_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMBunkWall66"
     shaderGraph="data/TTR/materials/SMBunkWall66.sgf"
     VersionId="1" />

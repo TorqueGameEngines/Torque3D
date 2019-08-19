@@ -4,7 +4,11 @@
     AssetName="misc43"
     scriptFile="@assetFile=misc43.cs"
     materialDefinitionName="misc43"
-    imageMap0="@Asset=TTR:misc43_ALBEDO"
-    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/misc43.png"
+    imageMap0="@Asset=TTR:misc43_baseColor"
+    imageMap1="@Asset=TTR:misc43_normal"
+    imageMap2="@Asset=TTR:misc43_metallic"
+    imageMap3="@Asset=TTR:misc43_roughness"
+    imageMap4="@Asset=TTR:misc43_ambientOcclusion"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/misc43"
     shaderGraph="data/TTR/materials/misc43.sgf"
     VersionId="1" />

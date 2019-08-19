@@ -1,5 +1,5 @@
 #pragma once
-#include "core/util/SystemInterfaceList.h"
+#include "core/util/systemInterfaceList.h"
 
 class UpdateSystemInterface : public SystemInterface<UpdateSystemInterface>
 {

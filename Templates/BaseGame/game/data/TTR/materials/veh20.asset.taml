@@ -5,6 +5,6 @@
     scriptFile="@assetFile=veh20.cs"
     materialDefinitionName="veh20"
     imageMap0="@Asset=TTR:veh20_ALBEDO"
-    originalFilePath="/veh20"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/veh20"
     shaderGraph="data/TTR/materials/veh20.sgf"
     VersionId="1" />

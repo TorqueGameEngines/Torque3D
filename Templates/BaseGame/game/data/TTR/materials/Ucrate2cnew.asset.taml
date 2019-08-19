@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Ucrate2cnew"
+    scriptFile="@assetFile=Ucrate2cnew.cs"
+    materialDefinitionName="Ucrate2cnew"
+    imageMap0="@Asset=TTR:Ucrate2cnew_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Ucrate2cnew"
+    shaderGraph="data/TTR/materials/Ucrate2cnew.sgf"
+    VersionId="1" />

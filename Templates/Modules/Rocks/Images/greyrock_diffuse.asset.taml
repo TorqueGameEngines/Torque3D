@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="greyrock_diffuse"
+    imageFile="@assetFile=greyrock_diffuse.dds"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/Art/Pacific/art/shapes/rocks/greyrock_diffuse.dds"
+    VersionId="1" />

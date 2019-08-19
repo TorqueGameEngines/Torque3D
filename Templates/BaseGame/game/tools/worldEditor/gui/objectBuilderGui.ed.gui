@@ -672,7 +672,7 @@ function ObjectBuilderGui::buildCloudLayer(%this)
 {
    OBObjectName.setValue( "" );      
    %this.objectClassName = "CloudLayer";
-   %this.addField( "texture", "TypeImageFilename", "Texture", "art/skies/clouds/clouds_normal_displacement" );   
+   %this.addField( "texture", "TypeImageFilename", "Texture", "core/rendering/images/clouds_normal_displacement" );   
 	%this.process();
 }
 
@@ -684,9 +684,9 @@ function ObjectBuilderGui::buildBasicClouds(%this)
 	
    // This is a trick... any fields added after process won't show
    // up as controls, but will be applied to the created object.
-   %this.addField( "texture[0]", "TypeImageFilename", "Texture", "art/skies/clouds/cloud1" );   
-   %this.addField( "texture[1]", "TypeImageFilename", "Texture", "art/skies/clouds/cloud2" );   
-   %this.addField( "texture[2]", "TypeImageFilename", "Texture", "art/skies/clouds/cloud3" );   	   
+   %this.addField( "texture[0]", "TypeImageFilename", "Texture", "core/rendering/images/cloud1" );   
+   %this.addField( "texture[1]", "TypeImageFilename", "Texture", "core/rendering/images/cloud2" );   
+   %this.addField( "texture[2]", "TypeImageFilename", "Texture", "core/rendering/images/cloud3" );   	   
 }
 
 function ObjectBuilderGui::checkExists( %this, %classname )
@@ -797,9 +797,9 @@ function ObjectBuilderGui::addWaterObjectFields(%this)
    %this.addField("waveSpeed[2]", "TypeFloat", "Wave Speed", "1");
    %this.addField("overallWaveMagnitude", "TypeFloat", "Overall Wave Magnitude", "1.0");
    
-   %this.addField("rippleTex", "TypeImageFilename", "Ripple Texture", "art/water/ripple" );
-   %this.addField("depthGradientTex", "TypeImageFilename", "Depth Gradient Texture", "art/water/depthcolor_ramp" );
-   %this.addField("foamTex", "TypeImageFilename", "Foam Texture", "art/water/foam" );
+   %this.addField("rippleTex", "TypeImageFilename", "Ripple Texture", "core/rendering/images/ripple" );
+   %this.addField("depthGradientTex", "TypeImageFilename", "Depth Gradient Texture", "core/rendering/images/depthcolor_ramp" );
+   %this.addField("foamTex", "TypeImageFilename", "Foam Texture", "core/rendering/images/foam" );
 }
 
 function ObjectBuilderGui::buildWaterBlock(%this)
@@ -1002,7 +1002,7 @@ function ObjectBuilderGui::buildVolumetricFog(%this)
 {
 	// Change this if you want to default to another Folder
 	// Otherwise every time you want to add a Fog you will go this.
-	%defShape = "/art/environment/Fog_Cube.dts";
+	%defShape = "core/rendering/shapes/Fog_Cube.DAE";
 	%this.lastPath=getMainDotCsDir() @ %defShape;
 	OBObjectName.setValue( "" );
 	%this.objectClassName = "VolumetricFog";

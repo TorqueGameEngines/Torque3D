@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gr53_baseColor"
+    imageFile="@assetFile=gr53_baseColor.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/gr53_baseColor.png"
+    VersionId="1" />

@@ -5,6 +5,6 @@
     scriptFile="@assetFile=SMPOWWall34.cs"
     materialDefinitionName="SMPOWWall34"
     imageMap0="@Asset=TTR:SMPOWWall34_ALBEDO"
-    originalFilePath="/SMPOWWall34"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/SMPOWWall34"
     shaderGraph="data/TTR/materials/SMPOWWall34.sgf"
     VersionId="1" />

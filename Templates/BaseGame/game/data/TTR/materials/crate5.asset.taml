@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="crate5"
+    scriptFile="@assetFile=crate5.cs"
+    materialDefinitionName="crate5"
+    imageMap0="@Asset=TTR:crate5_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/crate5"
+    shaderGraph="data/TTR/materials/crate5.sgf"
+    VersionId="1" />

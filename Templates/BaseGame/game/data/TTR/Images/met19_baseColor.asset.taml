@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="met19_baseColor"
+    imageFile="@assetFile=met19_baseColor.png"
+    useMips="true"
+    isHDRImage="false"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/met19_baseColor.png"
+    VersionId="1" />

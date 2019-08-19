@@ -5,6 +5,6 @@
     scriptFile="@assetFile=wood18.cs"
     materialDefinitionName="wood18"
     imageMap0="@Asset=TTR:wood18_ALBEDO"
-    originalFilePath="/wood18"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/wood18"
     shaderGraph="data/TTR/materials/wood18.sgf"
     VersionId="1" />

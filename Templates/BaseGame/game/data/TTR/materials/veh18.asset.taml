@@ -1,0 +1,10 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="veh18"
+    scriptFile="@assetFile=veh18.cs"
+    materialDefinitionName="veh18"
+    imageMap0="@Asset=TTR:veh18_ALBEDO"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/veh18"
+    shaderGraph="data/TTR/materials/veh18.sgf"
+    VersionId="1" />

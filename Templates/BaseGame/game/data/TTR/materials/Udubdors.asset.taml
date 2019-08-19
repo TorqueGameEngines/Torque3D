@@ -5,6 +5,6 @@
     scriptFile="@assetFile=Udubdors.cs"
     materialDefinitionName="Udubdors"
     imageMap0="@Asset=TTR:Udubdors_ALBEDO"
-    originalFilePath="/Udubdors"
+    originalFilePath="E:/Gamedev/TTR/TTRClassic/levels/Exported/Udubdors"
     shaderGraph="data/TTR/materials/Udubdors.sgf"
     VersionId="1" />

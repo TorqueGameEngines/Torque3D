@@ -132,11 +132,11 @@ void GFXGLDevice::initGLState()
 	// Set capability extensions.
    mCapabilities.anisotropicFiltering = mCardProfiler->queryProfile("GL_EXT_texture_filter_anisotropic");
    mCapabilities.bufferStorage = mCardProfiler->queryProfile("GL_ARB_buffer_storage");
-   mCapabilities.shaderModel5 = mCardProfiler->queryProfile("GL_ARB_gpu_shader5");
    mCapabilities.textureStorage = mCardProfiler->queryProfile("GL_ARB_texture_storage");
-   mCapabilities.samplerObjects = mCardProfiler->queryProfile("GL_ARB_sampler_objects");
    mCapabilities.copyImage = mCardProfiler->queryProfile("GL_ARB_copy_image");
    mCapabilities.vertexAttributeBinding = mCardProfiler->queryProfile("GL_ARB_vertex_attrib_binding");
+   mCapabilities.khrDebug = mCardProfiler->queryProfile("GL_KHR_debug");
+   mCapabilities.extDebugMarker = mCardProfiler->queryProfile("GL_EXT_debug_marker");
 
    String vendorStr = (const char*)glGetString( GL_VENDOR );
    if( vendorStr.find("NVIDIA", 0, String::NoCase | String::Left) != String::NPos)
@@ -686,7 +686,7 @@ void GFXGLDevice::setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArr
 {
    if (texture)
    {
-      mActiveTextureType[textureUnit] = GL_TEXTURE_CUBE_MAP_ARRAY;
+      mActiveTextureType[textureUnit] = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
       texture->bind(textureUnit);
    }
    else if (mActiveTextureType[textureUnit] != GL_ZERO)

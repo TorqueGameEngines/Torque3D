@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "shadergen/customShaderFeature.h"
+#include "shaderGen/customShaderFeature.h"
 
 #ifdef TORQUE_D3D11
 #include "shaderGen/HLSL/customFeatureHLSL.h"

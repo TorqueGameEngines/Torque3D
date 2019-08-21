@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "T3D/lighting/Skylight.h"
+#include "T3D/lighting/skylight.h"
 #include "math/mathIO.h"
 #include "scene/sceneRenderState.h"
 #include "console/consoleTypes.h"

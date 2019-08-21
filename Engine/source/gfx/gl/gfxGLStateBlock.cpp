@@ -39,9 +39,6 @@ GFXGLStateBlock::GFXGLStateBlock(const GFXStateBlockDesc& desc) :
    mDesc(desc),
    mCachedHashValue(desc.getHashValue())
 {
-    if( !GFXGL->mCapabilities.samplerObjects )
-      return;
-
    static Map<GFXSamplerStateDesc, U32> mSamplersMap;
 
    for(int i = 0; i < TEXTURE_STAGE_COUNT; ++i)
@@ -175,14 +172,10 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
 #undef CHECK_TOGGLE_STATE
 
    //sampler objects
-   if( GFXGL->mCapabilities.samplerObjects )
+   for (U32 i = 0; i < getMin(getOwningDevice()->getNumSamplers(), (U32) TEXTURE_STAGE_COUNT); i++)
    {
-      for (U32 i = 0; i < getMin(getOwningDevice()->getNumSamplers(), (U32) TEXTURE_STAGE_COUNT); i++)
-      {
-         if(!oldState || oldState->mSamplerObjects[i] != mSamplerObjects[i])
-            glBindSampler(i, mSamplerObjects[i] );
-      }
-   }    
-
+      if(!oldState || oldState->mSamplerObjects[i] != mSamplerObjects[i])
+         glBindSampler(i, mSamplerObjects[i] );
+   }
    // TODO: states added for detail blend   
 }

@@ -55,20 +55,20 @@ void GFXGLCardProfiler::setupCardCapabilities()
    setCapability("GL_ARB_buffer_storage", gglHasExtension(ARB_buffer_storage));
 #endif
 
-   // Check for shader model 5.0
-   setCapability("GL_ARB_gpu_shader5", gglHasExtension(ARB_gpu_shader5));
-
    // Check for texture storage
    setCapability("GL_ARB_texture_storage", gglHasExtension(ARB_texture_storage));
-
-   // Check for sampler objects
-   setCapability("GL_ARB_sampler_objects", gglHasExtension(ARB_sampler_objects));
 
    // Check for copy image support
    setCapability("GL_ARB_copy_image", gglHasExtension(ARB_copy_image));
 
    // Check for vertex attrib binding
-   setCapability("GL_ARB_vertex_attrib_binding", gglHasExtension(ARB_vertex_attrib_binding));    
+   setCapability("GL_ARB_vertex_attrib_binding", gglHasExtension(ARB_vertex_attrib_binding));
+
+   //check for KHR debug
+   setCapability("GL_KHR_debug", gglHasExtension(KHR_debug));
+   
+   //check for KHR debug
+   setCapability("GL_EXT_debug_marker", gglHasExtension(EXT_debug_marker));
 
 }
 

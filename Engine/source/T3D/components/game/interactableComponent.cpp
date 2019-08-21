@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "T3D/components/game/InteractableComponent.h"
+#include "T3D/components/game/interactableComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor

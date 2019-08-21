@@ -317,7 +317,7 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
          toAdd->mAvailableModes.push_back(vmAdd);
       }
 
-      //Check adapater can handle feature level 10
+      //Check adapater can handle feature level 10_!
       D3D_FEATURE_LEVEL deviceFeature;
       ID3D11Device *pTmpDevice = nullptr;
       // Create temp Direct3D11 device.
@@ -328,11 +328,11 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
       if (FAILED(hr))
          suitable = false;
 
-      if (deviceFeature < D3D_FEATURE_LEVEL_10_0)
+      if (deviceFeature < D3D_FEATURE_LEVEL_10_1)
          suitable = false;
 
-      //double check we support required bgra format for LEVEL_10_0 & LEVEL_10_1
-      if (deviceFeature == D3D_FEATURE_LEVEL_10_0 || deviceFeature == D3D_FEATURE_LEVEL_10_1)
+      //double check we support required bgra format for LEVEL_10_1
+      if (deviceFeature == D3D_FEATURE_LEVEL_10_1)
       {
          U32 formatSupported = 0;
          pTmpDevice->CheckFormatSupport(DXGI_FORMAT_B8G8R8A8_UNORM, &formatSupported);
@@ -516,12 +516,6 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
       mPixelShaderTarget = "ps_4_1";
       mPixVersion = 4.1f;
       mShaderModel = "41";
-      break;
-   case D3D_FEATURE_LEVEL_10_0:
-      mVertexShaderTarget = "vs_4_0";
-      mPixelShaderTarget = "ps_4_0";
-      mPixVersion = 4.0f;
-      mShaderModel = "40";
       break;
    default:
       AssertFatal(false, "GFXD3D11Device::init - We don't support this feature level");

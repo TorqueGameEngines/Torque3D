@@ -10,7 +10,7 @@
 #include "T3D/components/camera/cameraComponent.h"
 #include "T3D/components/camera/cameraOrbiterComponent.h"
 #include "T3D/components/game/controlObjectComponent.h"
-#include "T3D/components/audio/soundComponent.h"
+#include "T3D/components/audio/SoundComponent.h"
 #include "T3D/components/game/interactComponent.h"
 
 class PlayerObject : public Entity

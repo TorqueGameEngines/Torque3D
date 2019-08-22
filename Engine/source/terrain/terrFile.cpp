@@ -699,7 +699,7 @@ void TerrainFile::import(  const GBitmap &heightMap,
 
    // Convert the height map to heights.
    U16 *oBits = mHeightMap.address();
-   if ( heightMap.getFormat() == GFXFormatR5G6B5 )
+   if ( heightMap.getFormat() == GFXFormatL16)
    {
       const F32 toFixedPoint = ( 1.0f / (F32)U16_MAX ) * floatToFixed( heightScale );
       const U16 *iBits = (const U16*)heightMap.getBits();

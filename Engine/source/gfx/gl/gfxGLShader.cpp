@@ -626,7 +626,7 @@ void GFXGLShader::initConstantDescs()
          case GL_SAMPLER_CUBE:
             desc.constType = GFXSCT_SamplerCube;
             break;
-         case GL_SAMPLER_CUBE_MAP_ARRAY:
+         case GL_SAMPLER_CUBE_MAP_ARRAY_ARB:
             desc.constType = GFXSCT_SamplerCubeArray;
             break;
          default:
@@ -1008,30 +1008,18 @@ bool GFXGLShader::_loadShaderFromStream(  GLuint shader,
    Vector<U32> lengths;
    
    // The GLSL version declaration must go first!
-   char* versionDecl = "#version 150\r\n";
-   if (!gglHasExtension(ARB_texture_cube_map_array))
-   {
-      Con::errorf("ARB_texture_cube_map_array not found. attempting to use 4.0 core");
-      versionDecl = "#version 400\r\n";
-      buffers.push_back(dStrdup(versionDecl));
-      lengths.push_back(dStrlen(versionDecl));
-   }
-   else
-   {
-      Con::errorf("Attempting to use 3.2 core with ARB_texture_cube_map_array ");
-      buffers.push_back(dStrdup(versionDecl));
-      lengths.push_back(dStrlen(versionDecl));
-      const char* extension = "#extension GL_ARB_texture_cube_map_array : enable\r\n";
-      buffers.push_back(dStrdup(extension));
-      lengths.push_back(dStrlen(extension));
-   }
+   const char *versionDecl = "#version 330\n";
+   buffers.push_back( dStrdup( versionDecl ) );
+   lengths.push_back( dStrlen( versionDecl ) );
 
-   if (GFXGL->mCapabilities.shaderModel5)
-   {
-      const char* extension = "#extension GL_ARB_gpu_shader5 : enable\r\n";
-      buffers.push_back(dStrdup(extension));
-      lengths.push_back(dStrlen(extension));
-   }
+   //Required extensions. These are already checked when creating the GFX adapter, if we make it this far it's supported
+   const char* cubeArrayExt = "#extension GL_ARB_texture_cube_map_array : enable\n";
+   buffers.push_back(dStrdup(cubeArrayExt));
+   lengths.push_back(dStrlen(cubeArrayExt));
+
+   const char* gpuShader5Ext = "#extension GL_ARB_gpu_shader5 : enable\n";
+   buffers.push_back(dStrdup(gpuShader5Ext));
+   lengths.push_back(dStrlen(gpuShader5Ext));
 
    const char* newLine = "\r\n";
    buffers.push_back(dStrdup(newLine));

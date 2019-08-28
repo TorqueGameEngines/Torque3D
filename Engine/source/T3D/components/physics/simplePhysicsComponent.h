@@ -23,7 +23,7 @@
 #include "math/mBox.h"
 #endif
 #ifndef _ENTITY_H_
-#include "T3D/Entity.h"
+#include "T3D/entity.h"
 #endif
 #ifndef _CONVEX_H_
 #include "collision/convex.h"

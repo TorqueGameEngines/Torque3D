@@ -216,37 +216,6 @@ void GFXGLTextureObject::bind(U32 textureUnit)
    glActiveTexture(GL_TEXTURE0 + textureUnit);
    glBindTexture(mBinding, mHandle);
    GFXGL->getOpenglCache()->setCacheBindedTex(textureUnit, mBinding, mHandle);
-
-   if(GFXGL->mCapabilities.samplerObjects)
-	   return;
-  
-   GFXGLStateBlockRef sb = mGLDevice->getCurrentStateBlock();
-   AssertFatal(sb, "GFXGLTextureObject::bind - No active stateblock!");
-   if (!sb)
-      return;
-         
-   const GFXSamplerStateDesc ssd = sb->getDesc().samplers[textureUnit];
-
-   if(mNeedInitSamplerState)
-   {
-      initSamplerState(ssd);
-      return;
-   }
-
-   if(mSampler.minFilter != ssd.minFilter || mSampler.mipFilter != ssd.mipFilter)
-      glTexParameteri(mBinding, GL_TEXTURE_MIN_FILTER, minificationFilter(ssd.minFilter, ssd.mipFilter, mMipLevels));
-   if(mSampler.magFilter != ssd.magFilter)
-      glTexParameteri(mBinding, GL_TEXTURE_MAG_FILTER, GFXGLTextureFilter[ssd.magFilter]);
-   if(mSampler.addressModeU != ssd.addressModeU)
-      glTexParameteri(mBinding, GL_TEXTURE_WRAP_S, !mIsNPoT2 ? GFXGLTextureAddress[ssd.addressModeU] : GL_CLAMP_TO_EDGE);
-   if(mSampler.addressModeV != ssd.addressModeV)
-      glTexParameteri(mBinding, GL_TEXTURE_WRAP_T, !mIsNPoT2 ? GFXGLTextureAddress[ssd.addressModeV] : GL_CLAMP_TO_EDGE);
-   if(mBinding == GL_TEXTURE_3D && mSampler.addressModeW != ssd.addressModeW )
-      glTexParameteri(mBinding, GL_TEXTURE_WRAP_R, GFXGLTextureAddress[ssd.addressModeW]);
-   if(mSampler.maxAnisotropy != ssd.maxAnisotropy  && static_cast< GFXGLDevice* >( GFX )->supportsAnisotropic() )
-      glTexParameterf(mBinding, GL_TEXTURE_MAX_ANISOTROPY_EXT, ssd.maxAnisotropy);
-
-   mSampler = ssd;
 }
 
 U8* GFXGLTextureObject::getTextureData( U32 mip )

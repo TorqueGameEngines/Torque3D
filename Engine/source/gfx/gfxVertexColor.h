@@ -40,6 +40,7 @@ public:
 
    GFXVertexColor() : mPackedColorData( 0xFFFFFFFF ) {} // White with full alpha
    GFXVertexColor( const ColorI &color ) { set( color ); }
+   GFXVertexColor( const LinearColorF &color) { set(color); }
 
    void set( U8 red, U8 green, U8 blue, U8 alpha = 255 )
    {
@@ -57,7 +58,15 @@ public:
       mDeviceSwizzle->InPlace(&mPackedColorData, sizeof(mPackedColorData));
    }
 
+   void set(const LinearColorF &color)
+   {
+      mPackedColorData = color.getRGBAPack();
+      mDeviceSwizzle->InPlace(&mPackedColorData, sizeof(mPackedColorData));
+   }
+
    GFXVertexColor &operator=( const ColorI &color ) { set( color ); return *this; }
+   GFXVertexColor &operator=( const LinearColorF &color ) { set(color); return *this; }
+
    operator const U32 *() const { return &mPackedColorData; }
    const U32& getPackedColorData() const { return mPackedColorData; }
 

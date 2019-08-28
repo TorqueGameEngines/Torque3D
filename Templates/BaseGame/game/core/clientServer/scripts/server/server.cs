@@ -164,7 +164,8 @@ function createServer(%serverType, %level)
          schedule(0,0,startHeartbeat);
    }
    
-   callOnModules("onCreateServer", "Game");
+   callOnModules("onCreateGameServer", "Core");
+   callOnModules("onCreateGameServer", "Game");
    
    // Let the game initialize some things now that the
    // the server has been created
@@ -240,7 +241,7 @@ function destroyServer()
    deleteDataBlocks();
    
    //Get our modules so we can exec any specific server-side loading/handling
-   callOnModules("onDestroyServer", "Game");
+   callOnModules("onDestroyGameServer", "Game");
    
    // Save any server settings
    %prefPath = getPrefpath();

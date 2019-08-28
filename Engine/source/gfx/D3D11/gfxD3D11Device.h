@@ -255,7 +255,7 @@ public:
    virtual void setClipRect( const RectI &rect );
    virtual const RectI& getClipRect() const { return mClipRect; }
 
-   // }
+   // }   
 
 
    

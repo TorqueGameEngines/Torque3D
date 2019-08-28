@@ -1,5 +1,5 @@
 #include "../../../gl/hlslCompat.glsl"
-#include "../../../postFx/gl/postFx.glsl"
+#include "../../../postFX/gl/postFx.glsl"
 #include "../../../gl/torque.glsl"
 #include "shadergen:/autogenConditioners.h"
 #include "../../../gl/lighting.glsl"
@@ -55,6 +55,7 @@ void main()
 
    float alpha = 1;
 
+#ifdef SKYLIGHT_ONLY
 #if SKYLIGHT_ONLY == 0
    int i = 0;
    float blendFactor[MAX_PROBES];
@@ -154,6 +155,7 @@ void main()
 #endif
    //}
 #endif
+#endif //SKYLIGHT_ONLY
 
    vec3 irradiance = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
@@ -165,6 +167,7 @@ void main()
    float lod = 0;
 #endif
 
+#ifdef SKYLIGHT_ONLY
 #if SKYLIGHT_ONLY == 0
    alpha = 1;
    for (i = 0; i < numProbes; ++i)
@@ -172,7 +175,7 @@ void main()
       float contrib = contribution[i];
       if (contrib != 0)
       {
-         int cubemapIdx = probeConfigData[i].a;
+         float cubemapIdx = probeConfigData[i].a;
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
@@ -181,6 +184,7 @@ void main()
       }
    }
 #endif
+#endif //SKYLIGHT_ONLY
 
    if (skylightCubemapIdx != -1 && alpha > 0.001)
    {

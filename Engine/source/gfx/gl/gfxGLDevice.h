@@ -50,11 +50,11 @@ public:
    {
       bool anisotropicFiltering;
       bool bufferStorage;
-      bool shaderModel5;
       bool textureStorage;
-      bool samplerObjects;
       bool copyImage;
       bool vertexAttributeBinding;
+      bool khrDebug;
+      bool extDebugMarker;
    };
    GLCapabilities mCapabilities;
 

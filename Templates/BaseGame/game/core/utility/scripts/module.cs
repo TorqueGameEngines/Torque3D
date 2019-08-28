@@ -57,3 +57,38 @@ function loadModuleMaterials(%moduleGroup)
       }
    }
 }
+
+function SimSet::getModulePath(%scopeSet)
+{
+   %name = %scopeSet.getName();
+   %moduleDef = ModuleDatabase.findModule(%name);
+     
+   if(isObject(%moduleDef))
+      return %moduleDef.ModulePath;
+   
+   return "";
+}
+
+function SimSet::registerDatablock(%scopeSet, %datablockFilePath)
+{
+   %name = %scopeSet.getName();
+   %moduleDef = ModuleDatabase.findModule(%name);
+     
+   if(!isObject(%moduleDef))
+   {
+      error("Module::registerDatablock() - unable to find a module with the moduleID of " @ %name);
+      return;
+   }
+   
+   if(!isObject(DatablockFilesList))
+   {
+      error("Module::registerDatablock() - DatablockFilesList array object doesn't exist!");
+      return;
+   }
+   
+   %relativePath = makeRelativePath(%datablockFilePath);
+   
+   %fullPath = pathConcat(%moduleDef.ModulePath, %relativePath);
+   
+   DatablockFilesList.add(%fullPath);
+}

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2013 GarageGames, LLC
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -115,7 +115,7 @@ DefineEngineMethod(ModuleManager, unloadExplicit, bool, (const char* pModuleId),
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod(ModuleManager, findModule, String, (const char* pModuleId, U32 pVersionId), ("", 0),
+DefineEngineMethod(ModuleManager, findModule, String, (const char* pModuleId, U32 pVersionId), ("", 1),
    "Find the specific module Id optionally at the specified version Id.\n"
    "@param moduleId The module Id to find.\n"
    "@param versionId The version Id to find.\n"

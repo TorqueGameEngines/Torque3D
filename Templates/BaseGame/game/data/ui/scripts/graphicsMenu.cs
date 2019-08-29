@@ -1,16 +1,6 @@
 // =============================================================================
 // GRAPHICS MENU
 // =============================================================================
-//Mesh and Textures
-//
-function GraphicsMenu::onWake(%this)
-{
-   DisplaySettingsMenu.hidden = false;
-   GeneralGraphicsSettingsMenu.hidden = true;
-   
-   %this.refresh();
-}
-
 function GraphicsMenu::refresh(%this)
 {
    //
@@ -91,13 +81,6 @@ function GraphicsMenu::refresh(%this)
    GraphicsMenuLightRay.setStateOn($pref::PostFX::EnableLightRays);
 }
 
-function GraphicsMenuOKButton::onClick(%this)
-{
-    //save the settings and then back out
-    GraphicsMenu.apply();
-    OptionsMenu.backOut();
-}
-
 function GraphicsMenu::initResMenu( %this )
 {
    // Clear out previous values
@@ -135,39 +118,6 @@ function GraphicsMenu::initResMenu( %this )
    %resMenu.sort();
 }
 
-function GraphicsQualityPopup::init( %this, %qualityGroup )
-{
-   assert( isObject( %this ) );
-   assert( isObject( %qualityGroup ) );
-   
-   %this.qualityGroup = %qualityGroup;
-            
-   // Clear the existing content first.   
-   %this.clear();
-    
-   // Fill it.
-   %select = -1;
-   for ( %i=0; %i < %qualityGroup.getCount(); %i++ )
-   {
-      %level = %qualityGroup.getObject( %i );
-      if ( %level.isCurrent() )
-         %select = %i;
-         
-      %this.add( %level.displayName, %i );
-   }
-   
-   // Setup a default selection.
-   if ( %select == -1 )
-      %this.setText( "Custom" );
-   else
-      %this.setSelected( %select );      
-}
-
-function GraphicsQualityPopup::apply( %this )
-{
-   %levelName = %this.getText();
-   %this.qualityGroup.applySetting(%levelName);
-}
 //
 function GraphicsMenu::Autodetect(%this)
 {
@@ -368,95 +318,6 @@ function _makePrettyResString( %resString )
    return %outRes;   
 }
 
-//
-function GraphicsMenuSetting::init( %this )
-{
-   assert( isObject( %this ) );
-   //assert( isObject( %this.qualitySettingGroup ) );
-    
-   // Fill it.
-   %select = -1;
-   %selectedName = "";
-   for ( %i=0; %i < %this.qualitySettingGroup.getCount(); %i++ )
-   {
-      %level = %this.qualitySettingGroup.getObject( %i );
-      
-      %levelName = %level.displayName;
-      if ( %level.isCurrent() )
-      {
-         %select = %i;
-         %selectedName = %level.displayName;
-      }
-   }
-   
-   // Setup a default selection.
-   if ( %select == -1 )
-   {
-      %this-->SettingText.setText( "Custom" );
-      %this.selectedLevel = %this.qualitySettingGroup.getCount();
-   }
-   else
-   {
-      %this-->SettingText.setText(%selectedName);
-      %this.selectedLevel = %select;
-   }
-}
-
-function GraphicsQualityLevel::isCurrent( %this )
-{
-   // Test each pref to see if the current value
-   // equals our stored value.
-   
-   for ( %i=0; %i < %this.count(); %i++ )
-   {
-      %pref = %this.getKey( %i );
-      %value = %this.getValue( %i );
-      
-      if ( getVariable( %pref ) !$= %value )
-         return false;
-   }
-   
-   return true;
-}
-
-function GraphicsQualityLevel::apply( %this )
-{
-   for ( %i=0; %i < %this.count(); %i++ )
-   {
-      %pref = %this.getKey( %i );
-      %value = %this.getValue( %i );
-      setVariable( %pref, %value );
-   }
-   
-   // If we have an overloaded onApply method then
-   // call it now to finalize the changes.
-   if ( %this.isMethod( "onApply" ) )   
-      %this.onApply();
-   else
-   {
-      %group = %this.getGroup();      
-      if ( isObject( %group ) && %group.isMethod( "onApply" ) )
-         %group.onApply( %this );
-   }   
-}
-
-function GraphicsOptionsMenuGroup::applySetting(%this, %settingName)
-{
-   for(%i=0; %i < %this.getCount(); %i++)
-   {
-      %setting = %this.getObject(%i);
-      if(%setting.displayName $= %settingName)
-      {
-         for ( %s=0; %s < %setting.count(); %s++ )
-         {
-            %pref = %setting.getKey( %s );
-            %value = %setting.getValue( %s );
-            setVariable( %pref, %value );
-         }
-      }
-   }
-}
-
 function GraphicsMenu::apply(%this)
 {
    %newAdapter    = GraphicsMenuDriver.getText();
@@ -483,16 +344,16 @@ function GraphicsMenu::apply(%this)
          MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
    }
    
-   GraphicsMenuShadowQlty.apply();
-   GraphicsMenuSoftShadow.apply();
+   //Loop through the settings cache and actually apply the values
+   %cachedSettingCount = GraphicsSettingsCache.count();
    
-   GraphicsMenuModelDtl.apply();
-   GraphicsMenuTextureDtl.apply();
-   GraphicsMenuTerrainDtl.apply();
-   GraphicsMenuDecalLife.apply();
-   GraphicsMenuGroundClutter.apply();
-   
-   GraphicsMenuMaterialQlty.apply();
+   for(%i=0; %i < %cachedSettingCount; %i++)
+   {
+      %var = GraphicsSettingsCache.getKey(%i);  
+      %val = GraphicsSettingsCache.getValue(%i);
+      
+      setVariable(%var, %val);
+   }
    
    //Update Textures
    reloadTextures();
@@ -500,7 +361,7 @@ function GraphicsMenu::apply(%this)
    //Update lighting
    // Set the light manager.  This should do nothing 
    // if its already set or if its not compatible.   
-   setLightManager( $pref::lightManager );   
+   //setLightManager( $pref::lightManager );   
    
    PostFXManager.settingsEffectSetEnabled("SSAO", $pref::PostFX::EnableSSAO);
    PostFXManager.settingsEffectSetEnabled("HDR", $pref::PostFX::EnableHDR);
@@ -508,18 +369,12 @@ function GraphicsMenu::apply(%this)
    PostFXManager.settingsEffectSetEnabled("LightRays", $pref::PostFX::EnableLightRays);
    PostFXManager.settingsEffectSetEnabled("Vignette", $pref::PostFX::EnableVignette);
    
-   $pref::Video::disableParallaxMapping = !GraphicsMenuParallax.isStateOn();
-   
-   //water reflections
-   $pref::Water::disableTrueReflections = !GraphicsMenuWaterRefl.isStateOn();
-   
    //Update the display settings now
    $pref::Video::Resolution = getWords( Canvas.getMode( GraphicsMenuResolution.getSelected() ), $WORD::RES_X, $WORD::RES_Y );
    %newBpp        = 32; // ... its not 1997 anymore.
 	$pref::Video::FullScreen = GraphicsMenuFullScreen.isStateOn() ? "true" : "false";
 	$pref::Video::RefreshRate    = GraphicsMenuRefreshRate.getSelected();
 	$pref::Video::disableVerticalSync = !GraphicsMenuVSync.isStateOn();	
-	$pref::Video::AA = GraphicsMenuAA.getSelected();
 	
    if ( %newFullScreen $= "false" )
 	{
@@ -551,17 +406,699 @@ function GraphicsMenu::apply(%this)
       configureCanvas();
    }
    
-   // Check the anisotropic filtering.   
-   %level = GraphicsMenuAniso.getSelected();
-   if ( %level != $pref::Video::defaultAnisotropy )
-   {
-      if ( %testNeedApply )
-         return true;
-                                 
-      $pref::Video::defaultAnisotropy = %level;
-   }
-   
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+}
+
+function GraphicsMenu::loadSettings()
+{
+   OptionsMenu.currentMenu = "GraphicsMenu";
+   OptionsSettingStack.clear();
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Quality", "", "ShadowQuality");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Caching", "", "ShadowCaching");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Soft Shadows", "", "SoftShadow");
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Model Detail", "", "MeshQuality");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Texture Detail", "", "TextureQuality");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Terrain Detail", "", "TerrainQuality");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Decal Lifetime", "", "DecalLifetime");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Ground Clutter Density", "", "GroundCoverDensity");
+   
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Material Quality", "", "ShaderQuality");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Parallax", "", "ParallaxSetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Ambient Occlusion", "", "AmbientOcclusionSetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Light Rays", "", "LightRaysSetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Depth of Field", "", "DOFSetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Vignetting", "", "VignetteSetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Water Reflections", "", "WaterReflectionSetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Anti Aliasing", "", "AASetting");
+   OptionsMenu.addSettingOption(OptionsSettingStack, "Anisotropic Filtering", "", "AnisotropicFilteringSetting");
+   
+   if(!isObject(GraphicsSettingsCache))
+   {
+      new ArrayObject(GraphicsSettingsCache){};
+   }
+   
+   GraphicsSettingsCache.empty();
+}
+
+function GraphicsMenu::set(%var, %val)
+{
+   %ex = GraphicsSettingsCache.getIndexFromKey(%var);
+   if(%ex != -1)
+      GraphicsSettingsCache.erase(%ex);
+      
+   GraphicsSettingsCache.add(%var, %val);
+}
+
+//
+//
+//
+function MeshQuality::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::TS::detailAdjust", "1.5");
+         GraphicsMenu::set("$pref::TS::skipRenderDLs", "0");
+      case "Medium":
+         GraphicsMenu::set("$pref::TS::detailAdjust", "1.0");
+         GraphicsMenu::set("$pref::TS::skipRenderDLs", "0");
+      case "Low":
+         GraphicsMenu::set("$pref::TS::detailAdjust", "0.75");
+         GraphicsMenu::set("$pref::TS::skipRenderDLs", "0");
+      case "Lowest":
+         GraphicsMenu::set("$pref::TS::detailAdjust", "0.5");
+         GraphicsMenu::set("$pref::TS::skipRenderDLs", "0");
+      default:
+         GraphicsMenu::set("$pref::TS::detailAdjust", "1.0");
+         GraphicsMenu::set("$pref::TS::skipRenderDLs", "0");
+   }
+}
+
+function MeshQuality::get()
+{
+   if($pref::TS::detailAdjust == 1.5)
+      return "High";
+   else if($pref::TS::detailAdjust == 1.0)
+      return "Medium";
+   else if($pref::TS::detailAdjust == 0.75)
+      return "Low";
+   else if($pref::TS::detailAdjust == 0.5)
+      return "Lowest";
+   else
+      return "Custom";
+}
+
+function MeshQuality::getList()
+{
+   return "Lowest,Low,Medium,High";
+}
+
+//
+function TextureQuality::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::Video::textureReductionLevel", "0");
+         GraphicsMenu::set("$pref::Reflect::refractTexScale", "1.25");
+      case "Medium":
+         GraphicsMenu::set("$pref::Video::textureReductionLevel", "0");
+         GraphicsMenu::set("$pref::Reflect::refractTexScale", "1");
+      case "Low":
+         GraphicsMenu::set("$pref::Video::textureReductionLevel", "1");
+         GraphicsMenu::set("$pref::Reflect::refractTexScale", "0.75");
+      case "Lowest":
+         GraphicsMenu::set("$pref::Video::textureReductionLevel", "2");
+         GraphicsMenu::set("$pref::Reflect::refractTexScale", "0.5");
+      default:
+         GraphicsMenu::set("$pref::Video::textureReductionLevel", "0");
+         GraphicsMenu::set("$pref::Reflect::refractTexScale", "1");
+   }
+}
+
+function TextureQuality::get()
+{
+   if($pref::Video::textureReductionLevel == 0 && $pref::Reflect::refractTexScale == 1.25)
+      return "High";
+   else if($pref::Video::textureReductionLevel == 0 && $pref::Reflect::refractTexScale == 1)
+      return "Medium";
+   else if($pref::Video::textureReductionLevel == 1 && $pref::Reflect::refractTexScale == 0.75)
+      return "Low";
+   else if($pref::Video::textureReductionLevel == 2 && $pref::Reflect::refractTexScale == 0.5)
+      return "Lowest";
+   else
+      return "Custom";
+}
+
+function TextureQuality::getList()
+{
+   return "Lowest,Low,Medium,High";
+}
+
+//
+function GroundCoverDensity::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::GroundCover::densityScale", "1");
+      case "Medium":
+         GraphicsMenu::set("$pref::GroundCover::densityScale", "0.75");
+      case "Low":
+         GraphicsMenu::set("$pref::GroundCover::densityScale", "0.5");
+      case "Lowest":
+         GraphicsMenu::set("$pref::GroundCover::densityScale", "0.25");
+      default:
+         GraphicsMenu::set("$pref::GroundCover::densityScale", "0.75");
+   }
+}
+
+function GroundCoverDensity::get()
+{
+   if($pref::GroundCover::densityScale == 1)
+      return "High";
+   else if($pref::GroundCover::densityScale == 0.75)
+      return "Medium";
+   else if($pref::GroundCover::densityScale == 0.5)
+      return "Low";
+   else if($pref::GroundCover::densityScale == 0.25)
+      return "Lowest";
+   else
+      return "Custom";
+}
+
+function GroundCoverDensity::getList()
+{
+   return "Lowest,Low,Medium,High";
+}
+
+//
+function DecalLifetime::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::decalMgr::enabled", "true");
+         GraphicsMenu::set("$pref::Decals::lifeTimeScale", "1");
+      case "Medium":
+         GraphicsMenu::set("$pref::decalMgr::enabled", "true");
+         GraphicsMenu::set("$pref::Decals::lifeTimeScale", "0.5");
+      case "Low":
+         GraphicsMenu::set("$pref::decalMgr::enabled", "true");
+         GraphicsMenu::set("$pref::Decals::lifeTimeScale", "0.25");
+      case "None":
+         GraphicsMenu::set("$pref::decalMgr::enabled", "false");
+      default:
+         GraphicsMenu::set("$pref::decalMgr::enabled", "true");
+         GraphicsMenu::set("$pref::Decals::lifeTimeScale", "0.5");
+   }
+}
+
+function DecalLifetime::get()
+{
+   if($pref::decalMgr::enabled == true && $pref::Decals::lifeTimeScale == 1)
+      return "High";
+   else if($pref::decalMgr::enabled == true && $pref::Decals::lifeTimeScale == 0.5)
+      return "Medium";
+   else if($pref::decalMgr::enabled == true && $pref::Decals::lifeTimeScale == 0.25)
+      return "Low";
+   else if($pref::decalMgr::enabled == true )
+      return "None";
+   else
+      return "Custom";
+}
+
+function DecalLifetime::getList()
+{
+   return "None,Low,Medium,High";
+}
+
+//
+function TerrainQuality::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::Terrain::lodScale", "0.75");
+         GraphicsMenu::set("$pref::Terrain::detailScale", "1.5");
+      case "Medium":
+         GraphicsMenu::set("$pref::Terrain::lodScale", "1");
+         GraphicsMenu::set("$pref::Terrain::detailScale", "1");
+      case "Low":
+         GraphicsMenu::set("$pref::Terrain::lodScale", "1.5");
+         GraphicsMenu::set("$pref::Terrain::detailScale", "0.75");
+      case "Lowest":
+         GraphicsMenu::set("$pref::Terrain::lodScale", "2");
+         GraphicsMenu::set("$pref::Terrain::detailScale", "0.5");
+      default:
+         GraphicsMenu::set("$pref::decalMgr::enabled", "1");
+         GraphicsMenu::set("$pref::Decals::lifeTimeScale", "1");
+   }
+}
+
+function TerrainQuality::get()
+{
+   if($pref::Terrain::lodScale == 0.75 && $pref::Terrain::detailScale == 1.5)
+      return "High";
+   else if($pref::Terrain::lodScale == 1 && $pref::Terrain::detailScale == 1)
+      return "Medium";
+   else if($pref::Terrain::lodScale == 1.5 && $pref::Terrain::detailScale == 0.75)
+      return "Low";
+   else if($pref::Terrain::lodScale == 2 && $pref::Terrain::detailScale == 0.5)
+      return "Lowest";
+   else
+      return "Custom";
+}
+
+function TerrainQuality::getList()
+{
+   return "Lowest,Low,Medium,High";
+}
+
+//
+function ShadowQuality::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::Shadows::disable", "false");
+         GraphicsMenu::set("$pref::Shadows::textureScalar", "1.0");
+      case "Medium":
+         GraphicsMenu::set("$pref::Shadows::disable", "false");
+         GraphicsMenu::set("$pref::Shadows::textureScalar", "0.5");
+      case "Low":
+         GraphicsMenu::set("$pref::Shadows::disable", "false");
+         GraphicsMenu::set("$pref::Shadows::textureScalar", "0.25");
+      case "None":
+         GraphicsMenu::set("$pref::Shadows::disable", "true");
+         GraphicsMenu::set("$pref::Shadows::textureScalar", "0.5");
+      default:
+         GraphicsMenu::set("$pref::Shadows::disable", "false");
+         GraphicsMenu::set("$pref::Shadows::textureScalar", "0.5");
+   }
+}
+
+function ShadowQuality::get()
+{
+   if($pref::Shadows::disable == false && $pref::Shadows::textureScalar == 1.0)
+      return "High";
+   else if($pref::Shadows::disable == false && $pref::Shadows::textureScalar == 0.5)
+      return "Medium";
+   else if($pref::Shadows::disable == false && $pref::Shadows::textureScalar == 0.25)
+      return "Low";
+   else if($pref::Shadows::disable == true)
+      return "None";
+   else
+      return "Custom";
+}
+
+function ShadowQuality::getList()
+{
+   return "None,Low,Medium,High";
+}
+
+//
+function ShadowDistance::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "Highest":
+         GraphicsMenu::set("$pref::Shadows::drawDistance", "1.0");
+      case "High":
+         GraphicsMenu::set("$pref::Shadows::drawDistance", "0.75");
+      case "Medium":
+         GraphicsMenu::set("$pref::Shadows::drawDistance", "0.5");
+      case "Low":
+         GraphicsMenu::set("$pref::Shadows::drawDistance", "0.25");
+      default:
+         GraphicsMenu::set("$pref::Shadows::drawDistance", "0.5");
+   }
+}
+
+function ShadowDistance::get()
+{
+   if($pref::Shadows::drawDistance == 1.0)
+      return "Highest";
+   else if($pref::Shadows::drawDistance == 0.75)
+      return "High";
+   else if($pref::Shadows::drawDistance == 0.5)
+      return "Medium";
+   else if($pref::Shadows::drawDistance == 0.25)
+      return "Low";
+   else
+      return "Custom";
+}
+
+function ShadowDistance::getList()
+{
+   return "Low,Medium,High,Highest";
+}
+
+//
+function SoftShadow::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::Shadows::filterMode", "SoftShadowHighQuality");
+      case "Low":
+         GraphicsMenu::set("$pref::Shadows::filterMode", "SoftShadow");
+      case "Off":
+         GraphicsMenu::set("$pref::Shadows::filterMode", "None");
+      default:
+         GraphicsMenu::set("$pref::Shadows::filterMode", "SoftShadow");
+   }
+}
+
+function SoftShadow::get()
+{
+   if($pref::Shadows::filterMode $= "SoftShadowHighQuality")
+      return "High";
+   else if($pref::Shadows::filterMode $= "SoftShadow")
+      return "Low";
+   else if($pref::Shadows::filterMode $= "None")
+      return "Off";
+   else
+      return "Custom";
+}
+
+function SoftShadow::getList()
+{
+   return "Off,Low,High";
+}
+
+//
+function LightDistance::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::Lights::drawDistance", "1");
+      case "Medium":
+         GraphicsMenu::set("$pref::Lights::drawDistance", "0.75");
+      case "Low":
+         GraphicsMenu::set("$pref::Lights::drawDistance", "0.5");
+      case "Lowest":
+         GraphicsMenu::set("$pref::Lights::drawDistance", "0.25");
+      default:
+         GraphicsMenu::set("$pref::Lights::drawDistance", "0.75");
+   }
+}
+
+function LightDistance::get()
+{
+   if($pref::Lights::drawDistance == 1)
+      return "High";
+   else if($pref::Lights::drawDistance == 0.75)
+      return "Medium";
+   else if($pref::Lights::drawDistance == 0.5)
+      return "Low";
+   else if($pref::Lights::drawDistance == 0.25)
+      return "Lowest";
+   else
+      return "Custom";
+}
+
+function LightDistance::getList()
+{
+   return "Lowest,Low,Medium,High";
+}
+
+//
+function ShaderQuality::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "High":
+         GraphicsMenu::set("$pref::Video::disablePixSpecular", "false");
+         GraphicsMenu::set("$pref::Video::disableNormalmapping", "false");
+      case "Low":
+         GraphicsMenu::set("$pref::Video::disablePixSpecular", "true");
+         GraphicsMenu::set("$pref::Video::disableNormalmapping", "true");
+      default:
+         GraphicsMenu::set("$pref::Video::disablePixSpecular", "false");
+         GraphicsMenu::set("$pref::Video::disableNormalmapping", "false");
+   }
+}
+
+function ShaderQuality::get()
+{
+   if($pref::Video::disablePixSpecular == false || $pref::Video::disableNormalmapping == false)
+      return "High";
+   else if($pref::Video::disablePixSpecular == true || $pref::Video::disableNormalmapping == true)
+      return "Low";
+   else
+      return "Custom";
+}
+
+function ShaderQuality::getList()
+{
+   return "Low,High";
+}
+
+//
+function ShadowCaching::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::Shadows::useShadowCaching", "true");
+      case "Off":
+         GraphicsMenu::set("$pref::Shadows::useShadowCaching", "false");
+      default:
+         GraphicsMenu::set("$pref::Shadows::useShadowCaching", "true");
+   }
+}
+
+function ShadowCaching::get()
+{
+   if($pref::Shadows::useShadowCaching == true)
+      return "On";
+   else 
+      return "Off";
+}
+
+function ShadowCaching::getList()
+{
+   return "Off,On";
+}
+
+//
+function ParallaxSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::Video::disableParallaxMapping", "false");
+      case "Off":
+         GraphicsMenu::set("$pref::Video::disableParallaxMapping", "true");
+      default:
+         GraphicsMenu::set("$pref::Video::disableParallaxMapping", "false");
+   }
+}
+
+function ParallaxSetting::get()
+{
+   if($pref::Video::disableParallaxMapping == false)
+      return "On";
+   else 
+      return "Off";
+}
+
+function ParallaxSetting::getList()
+{
+   return "Off,On";
+}
+
+//
+function AmbientOcclusionSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::PostFX::EnableSSAO", "true");
+      case "Off":
+         GraphicsMenu::set("$pref::PostFX::EnableSSAO", "false");
+      default:
+         GraphicsMenu::set("$pref::PostFX::EnableSSAO", "true");
+   }
+}
+
+function AmbientOcclusionSetting::get()
+{
+   if($pref::PostFX::EnableSSAO == true)
+      return "On";
+   else 
+      return "Off";
+}
+
+function AmbientOcclusionSetting::getList()
+{
+   return "Off,On";
+}
+
+//
+function LightRaysSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::PostFX::EnableLightRays", "true");
+      case "Off":
+         GraphicsMenu::set("$pref::PostFX::EnableLightRays", "false");
+      default:
+         GraphicsMenu::set("$pref::PostFX::EnableLightRays", "true");
+   }
+}
+
+function LightRaysSetting::get()
+{
+   if($pref::PostFX::EnableLightRays == true)
+      return "On";
+   else 
+      return "Off";
+}
+
+function LightRaysSetting::getList()
+{
+   return "Off,On";
+}
+
+//
+function DOFSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::PostFX::EnableDOF", "true");
+      case "Off":
+         GraphicsMenu::set("$pref::PostFX::EnableDOF", "false");
+      default:
+         GraphicsMenu::set("$pref::PostFX::EnableDOF", "true");
+   }
+}
+
+function DOFSetting::get()
+{
+   if($pref::PostFX::EnableLightRays == true)
+      return "On";
+   else 
+      return "Off";
+}
+
+function DOFSetting::getList()
+{
+   return "Off,On";
+}
+
+//
+function WaterReflectionSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::Water::disableTrueReflections", "false");
+      case "Off":
+         GraphicsMenu::set("$pref::Water::disableTrueReflections", "true");
+      default:
+         GraphicsMenu::set("$pref::Water::disableTrueReflections", "false");
+   }
+}
+
+function WaterReflectionSetting::get()
+{
+   if($pref::Water::disableTrueReflections == false)
+      return "On";
+   else 
+      return "Off";
+}
+
+function WaterReflectionSetting::getList()
+{
+   return "Off,On";
+}
+
+//
+function VignetteSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "On":
+         GraphicsMenu::set("$pref::PostFX::EnableVignette", "true");
+      case "Off":
+         GraphicsMenu::set("$pref::PostFX::EnableVignette", "false");
+      default:
+         GraphicsMenu::set("$pref::PostFX::EnableVignette", "true");
+   }
+}
+
+function VignetteSetting::get()
+{
+   if($pref::PostFX::EnableVignette == true)
+      return "On";
+   else 
+      return "Off";
+}
+
+function VignetteSetting::getList()
+{
+   return "Off,On";
+}
+
+//
+function AASetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "4x":
+         GraphicsMenu::set("$pref::Video::AA", "4");
+      case "2x":
+         GraphicsMenu::set("$pref::Video::AA", "2");
+      case "1x":
+         GraphicsMenu::set("$pref::Video::AA", "1");
+      case "Off":
+         GraphicsMenu::set("$pref::Video::AA", "0");
+      default:
+         GraphicsMenu::set("$pref::Video::AA", "0");
+   }
+}
+
+function AASetting::get()
+{
+   if($pref::Video::AA == 4)
+      return "4x";
+   else if($pref::Video::AA == 2)
+      return "2x";
+   else if($pref::Video::AA == 1)
+      return "1x";
+   else if($pref::Video::AA == 0)
+      return "Off";
+   else
+      return "Custom";
+}
+
+function AASetting::getList()
+{
+   return "Off,1x,2x,4x";
+}
+
+//
+function AnisotropicFilteringSetting::set(%setting)
+{
+   switch$(%setting)
+   {
+      case "16x":
+         GraphicsMenu::set("$pref::Video::defaultAnisotropy", "16");
+      case "8x":
+         GraphicsMenu::set("$pref::Video::defaultAnisotropy", "8");
+      case "4x":
+         GraphicsMenu::set("$pref::Video::defaultAnisotropy", "4");
+      case "Off":
+         GraphicsMenu::set("$pref::Video::defaultAnisotropy", "0");
+      default:
+         GraphicsMenu::set("$pref::Video::defaultAnisotropy", "0");
+   }
+}
+
+function AnisotropicFilteringSetting::get()
+{
+   if($pref::Video::defaultAnisotropy == 16)
+      return "16x";
+   else if($pref::Video::defaultAnisotropy == 8)
+      return "8x";
+   else if($pref::Video::defaultAnisotropy == 4)
+      return "4x";
+   else if($pref::Video::defaultAnisotropy == 0)
+      return "Off";
+   else
+      return "Custom";
+}
+
+function AnisotropicFilteringSetting::getList()
+{
+   return "Off,4x,8x,16x";
 }

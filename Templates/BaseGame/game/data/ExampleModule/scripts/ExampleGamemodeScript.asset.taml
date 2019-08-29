@@ -1,0 +1,6 @@
+<ScriptAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ExampleGamemodeScript"
+    scriptFile="@assetFile=ExampleGamemodeScript.cs"
+    VersionId="1" />

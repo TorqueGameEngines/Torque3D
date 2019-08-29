@@ -19,56 +19,76 @@ function UI::create( %this )
    
    // Use our prefs to configure our Canvas/Window
    configureCanvas();
-   
+}
+
+function UI::destroy( %this )
+{
+}
+
+function UI::initServer(%this){}
+
+function UI::onCreateServer(%this){}
+
+function UI::onDestroyServer(%this){}
+
+function UI::initClient(%this)
+{
    //Load UI stuff
    //we need to load this because some of the menu profiles use the sounds here
-   exec("./scripts/datablocks/guiSounds.cs");
+   exec("./datablocks/guiSounds.cs");
    
    //Profiles
    exec("./scripts/profiles.cs");
    
    //Now gui files
-   exec("./scripts/guis/mainMenu.gui");
-   exec("./scripts/guis/chooseLevelDlg.gui");
-   exec("./scripts/guis/joinServerMenu.gui");
-   exec("./scripts/guis/loadingGui.gui");
-   exec("./scripts/guis/optionsMenu.gui");
-   exec("./scripts/guis/pauseMenu.gui");
-   exec("./scripts/guis/remapDlg.gui");
-   exec("./scripts/guis/remapConfirmDlg.gui");
+   exec("./guis/mainMenu.gui");
+   exec("./guis/mainMenu.cs");
    
-   exec("./scripts/guis/profiler.gui");
-   exec("./scripts/guis/netGraphGui.gui");
-   exec("./scripts/guis/RecordingsDlg.gui");
-   exec("./scripts/guis/FileDialog.gui");
-   exec("./scripts/guis/guiMusicPlayer.gui");
-   exec("./scripts/guis/startupGui.gui");
+   exec("./guis/chooseLevelDlg.gui");
+   exec("./guis/chooseLevelDlg.cs");
    
-   //Load gui companion scripts
-   exec("./scripts/chooseLevelDlg.cs");
+   exec("./guis/joinServerMenu.gui");
+   exec("./guis/joinServerMenu.cs");
+   
+   exec("./guis/loadingGui.gui");
+   
+   exec("./guis/optionsMenu.gui");
+   exec("./guis/optionsMenu.cs");
+   
+   exec("./guis/pauseMenu.gui");
+   exec("./guis/pauseMenu.cs");
+   
+   exec("./guis/remapDlg.gui");
+   exec("./guis/remapConfirmDlg.gui");
+   
+   exec("./guis/profiler.gui");
+   exec("./guis/profiler.cs");
+   
+   exec("./guis/netGraphGui.gui");
+   exec("./guis/RecordingsDlg.gui");
+   
+   //exec("./guis/FileDialog.gui");
+   //exec("./guis/FileDialog.cs");
+   
+   exec("./guis/guiMusicPlayer.gui");
+   exec("./guis/guiMusicPlayer.cs");
+   
+   exec("./guis/startupGui.gui");
+   exec("./guis/startupGui.cs");
+   
+   //Load scripts
    exec("./scripts/optionsList.cs");
-   exec("./scripts/optionsMenu.cs");
    exec("./scripts/graphicsMenu.cs");
    exec("./scripts/controlsMenu.cs");
-   exec("./scripts/chooseLevelDlg.cs");
-   exec("./scripts/mainMenu.cs");
-   exec("./scripts/joinServerMenu.cs");
-   exec("./scripts/pauseMenu.cs");
    exec("./scripts/messageBoxes.cs");
    exec("./scripts/help.cs");
    exec("./scripts/cursors.cs");
-   exec("./scripts/profiler.cs");
-   exec("./scripts/FileDialog.cs");
-   exec("./scripts/GuiTreeViewCtrl.cs");
-   exec("./scripts/guiMusicPlayer.cs");
-   exec("./scripts/startupGui.cs");
    
-   %dbList = new ArrayObject(LevelFilesList);
+   //exec("./scripts/GuiTreeViewCtrl.cs");
    
    loadStartup();
 }
 
-function Game::destroy( %this )
-{
-   
-}
+function UI::onCreateClientConnection(%this){}
+
+function UI::onDestroyClientConnection(%this){}

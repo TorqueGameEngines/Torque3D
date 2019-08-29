@@ -68,6 +68,7 @@ function initializeWorldEditor()
    exec("./scripts/visibility/visibilityLayer.ed.cs");
    exec("./scripts/visibility/lightViz.cs");
    exec("./scripts/visibility/shadowViz.cs");
+   exec("./scripts/visibility/probeViz.cs");
    exec("./scripts/visibility/miscViz.cs");
 
    // Load Custom Editors

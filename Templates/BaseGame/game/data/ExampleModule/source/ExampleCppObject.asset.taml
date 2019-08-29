@@ -1,0 +1,7 @@
+<CppAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ExampleCppObject"
+    codeFile="@assetFile=data/ExampleModule/source/ExampleCppObject.cpp"
+    headerFile="@assetFile=data/ExampleModule/source/ExampleCppObject.h"
+    VersionId="1" />

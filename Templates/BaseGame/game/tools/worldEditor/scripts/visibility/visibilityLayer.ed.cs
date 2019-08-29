@@ -91,26 +91,21 @@ function setupEditorVisibilityMenu()
       item[ 7 ] = "Show Sound Spaces" TAB "" TAB "$SFXSpace::isRenderable = !$SFXSpace::isRenderable;";
    };
    
-   EVisibility.addOption( "Debug Render: Player Collision", "$Player::renderCollision", "" );   
-   EVisibility.addOption( "Debug Render: Terrain", "TerrainBlock::debugRender", "" );
-   EVisibility.addOption( "Debug Render: Decals", "$Decals::debugRender", "" );
-   EVisibility.addOption( "Debug Render: Light Frustums", "$Light::renderLightFrustums", "" );
-   EVisibility.addOption( "Debug Render: Bounding Boxes", "$Scene::renderBoundingBoxes", "" );
-   EVisibility.addOption( "Debug Render: Physics World", "$PhysicsWorld::render", "togglePhysicsDebugViz" );
-   
    %debugRenderpopup = new PopupMenu(EVisibilityDebugRenderOptions)
    {
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Show Player Collision" TAB "" TAB "";
-      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "";
-      item[ 2 ] = "Show Decals Debug" TAB "" TAB "";
-      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "";
-      item[ 4 ] = "Show Physics World" TAB "" TAB "";
+      item[ 0 ] = "Show Player Collision" TAB "" TAB "$Player::renderCollision != $Player::renderCollision;";
+      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "$TerrainBlock::debugRender != $TerrainBlock::debugRender;";
+      item[ 2 ] = "Show Decals Debug" TAB "" TAB "$Decals::debugRender != $Decals::debugRender;";
+      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "$Scene::renderBoundingBoxes != $Scene::renderBoundingBoxes;";
+      item[ 4 ] = "Show Physics World" TAB "" TAB "$PhysicsWorld::render != $PhysicsWorld::render;";
       item[ 5 ] = "Show Player Collision" TAB "" TAB "";
       item[ 6 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
    };
+   
+   %probespopup.enableItem(6, false);
    
    //
    //Lighting stuff
@@ -119,21 +114,23 @@ function setupEditorVisibilityMenu()
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Lit" TAB "" TAB "";
-      item[ 1 ] = "Unlit" TAB "" TAB "";
-      item[ 2 ] = "No Shadows" TAB "" TAB "$Shadows::disable = !$Shadows::disable;";
-      item[ 3 ] = "Detail Lighting" TAB "" TAB "";
-      item[ 4 ] = "Lighting Only" TAB "" TAB "";
-      item[ 5 ] = "Reflections Only" TAB "" TAB "";
+      item[ 0 ] = "Lit" TAB "" TAB "setLightingMode(\"Lit\");";
+      item[ 1 ] = "Unlit" TAB "" TAB "setLightingMode(\"Unlit\");";
+      item[ 2 ] = "No Shadows" TAB "" TAB "setLightingMode(\"NoShadows\");";
+      item[ 3 ] = "Detail Lighting" TAB "" TAB "setLightingMode(\"DetailLighting\");";
+      item[ 4 ] = "Lighting Only" TAB "" TAB "setLightingMode(\"LightingOnly\");";
+      item[ 5 ] = "Reflections Only" TAB "" TAB "setLightingMode(\"ReflectionsOnly\");";
    };
+   
+   EVisibilityLightingModesOptions.checkItem(0, true);
    
    %lightspopup = new PopupMenu(EVisibilityLightsOptions)
    {
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Show Light Frustums" TAB "" TAB "$Light::renderLightFrustums = !$Light::renderLightFrustums;";
-      item[ 1 ] = "Show Shadowmap Cascades" TAB "" TAB "$AL::PSSMDebugRender = !$AL::PSSMDebugRender;";
+      item[ 0 ] = "Show Light Frustums" TAB "" TAB "toggleLightFrustumViz();";
+      item[ 1 ] = "Show Shadowmap Cascades" TAB "" TAB "togglePSSMDebugViz();";
       item[ 2 ] = "Show Specular Light" TAB "" TAB "";
       item[ 3 ] = "Show Diffuse Light" TAB "" TAB "";
    };
@@ -145,22 +142,14 @@ function setupEditorVisibilityMenu()
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Show Probe Attenuation" TAB "" TAB "toggleProbeVis(\"Attenuation\");";
-      item[ 1 ] = "Show Probe Contribution" TAB "" TAB "toggleProbeVis(\"Contribution\");";
-      item[ 2 ] = "Show Probe Specular Reflections" TAB "" TAB "toggleProbeVis(\"Specular\");";
-      item[ 3 ] = "Show Probe Diffuse Reflections" TAB "" TAB "toggleProbeVis(\"Diffuse\");";
+      item[ 0 ] = "Show Probe Attenuation" TAB "" TAB "toggleProbeViz(\"Attenuation\");";
+      item[ 1 ] = "Show Probe Contribution" TAB "" TAB "toggleProbeViz(\"Contribution\");";
+      item[ 2 ] = "Show Probe Specular Reflections Only" TAB "" TAB "toggleProbeViz(\"Specular\");";
+      item[ 3 ] = "Show Probe Diffuse Reflections Only" TAB "" TAB "toggleProbeViz(\"Diffuse\");";
       item[ 4 ] = "Enable Live Updates on Selected Probe" TAB "" TAB "";
    };
    
-   %lightingpopup = new PopupMenu(EVisibilityLightingOptions)
-   {
-      superClass = "MenuBuilder";
-      class = "EditorWorldMenu";
-      
-      item[ 0 ] = "Lighting Modes" TAB EVisibilityLightingModesOptions;
-      item[ 1 ] = "Lights" TAB EVisibilityLightsOptions;
-      item[ 2 ] = "Probes" TAB EVisibilityProbesOptions;
-   };
+   %probespopup.enableItem(4, false);
    
    //
    //Buffer Viz
@@ -185,8 +174,10 @@ function setupEditorVisibilityMenu()
       
       item[ 11 ] = "Fresnel" TAB "" TAB "toggleSurfacePropertiesViz(\"Fresnel\");";
       
-      item[ 12 ] = "Backbuffer" TAB "" TAB "toggleSurfacePropertiesViz(\"Backbuffer\");";
-      item[ 13 ] = "Glow" TAB "" TAB "toggleSurfacePropertiesViz(\"Glow\");";
+      item[ 12 ] = "Ambient Occlusion" TAB "" TAB "toggleSurfacePropertiesViz(\"SSAO\");";
+      
+      item[ 13 ] = "Backbuffer" TAB "" TAB "toggleSurfacePropertiesViz(\"Backbuffer\");";
+      item[ 14 ] = "Glow" TAB "" TAB "toggleSurfacePropertiesViz(\"Glow\");";
    };
    
    //
@@ -232,10 +223,12 @@ function setupEditorVisibilityMenu()
       item[ 7 ] = "Disable Zone Culling" TAB "" TAB "$Scene::disableZoneCulling = !$Scene::disableZoneCulling;";
       item[ 8 ] = "Disable Terrain Culling" TAB "" TAB "$Scene::disableTerrainOcclusion = !$Scene::disableTerrainOcclusion;";
       item[ 9 ] = "-" TAB "" TAB "";
-      item[ 10 ] = "Lighting" TAB EVisibilityLightingOptions;
-      item[ 11 ] = "Buffer Visualization" TAB EVisibilityBufferVizOptions;
-      item[ 12 ] = "-" TAB "" TAB "";
-      item[ 13 ] = "Class Visibility" TAB EVisibilityClassVizOptions;
+      item[ 10 ] = "Lighting Modes" TAB EVisibilityLightingModesOptions;
+      item[ 11 ] = "Lights" TAB EVisibilityLightsOptions;
+      item[ 12 ] = "Probes" TAB EVisibilityProbesOptions;
+      item[ 13 ] = "Buffer Visualization" TAB EVisibilityBufferVizOptions;
+      item[ 14 ] = "-" TAB "" TAB "";
+      item[ 15 ] = "Class Visibility" TAB EVisibilityClassVizOptions;
    };
 }
 
@@ -417,4 +410,17 @@ function togglePhysicsDebugViz( %enable )
    {
       physicsDebugDraw(%enable);
    }
+}
+
+function disableVisualizers()
+{
+   //Set lighting mode to lit
+   resetLightingMode();
+         
+   disableSurfacePropertiesViz();
+   disableColorblindnessViz();
+   disablePSSMDebugViz();
+   disableLightingOnlyViz();
+   disableReflectionsOnlyViz();
+   disableProbeViz();
 }

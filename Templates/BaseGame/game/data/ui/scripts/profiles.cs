@@ -12,7 +12,7 @@ new GuiControlProfile( GuiMenuButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "data/ui/art/menu-button";
+   bitmap = "data/ui/images/menu-button";
    hasBitmapArray = false;
    soundButtonDown = menuButtonPressed;
    soundButtonOver = menuButtonHover;
@@ -33,7 +33,7 @@ new GuiControlProfile( GuiHighlightMenuButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "data/ui/art/selector-button-highlight-only";
+   bitmap = "data/ui/images/selector-button-highlight-only";
    hasBitmapArray = false;
    category = "Core";
 };
@@ -52,7 +52,7 @@ new GuiControlProfile( GuiBlankMenuButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "data/ui/art/selector-button-blank";
+   bitmap = "data/ui/images/selector-button-blank";
    hasBitmapArray = false;
    soundButtonDown = menuButtonPressed;
    soundButtonOver = menuButtonHover;
@@ -96,7 +96,7 @@ new GuiControlProfile( GuiGroupBorderProfile )
    border = false;
    opaque = false;
    hasBitmapArray = true;
-   bitmap = "data/ui/art/group-border";
+   bitmap = "data/ui/images/group-border";
    category = "Core";
 };
 
@@ -106,7 +106,7 @@ new GuiControlProfile( GuiTabBorderProfile )
    border = false;
    opaque = false;
    hasBitmapArray = true;
-   bitmap = "data/ui/art/tab-border";
+   bitmap = "data/ui/images/tab-border";
    category = "Core";
 };
 
@@ -224,7 +224,7 @@ new GuiControlProfile( GuiPopupMenuItemBorder : GuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "data/ui/art/button";
+   bitmap = "data/ui/images/button";
    category = "Core";
 };
 
@@ -237,7 +237,7 @@ new GuiControlProfile( GuiPopUpMenuDefault : GuiDefaultProfile )
    border = 0;
    borderThickness = 0;
    fixedExtent = true;
-   bitmap = "data/ui/art/scrollBar";
+   bitmap = "data/ui/images/scrollBar";
    hasBitmapArray = true;
    profileForChildren = GuiPopupMenuItemBorder;
    fillColor = "242 241 240 ";//"255 255 255";//100
@@ -254,7 +254,7 @@ if( !isObject( GuiPopUpMenuProfile ) )
 new GuiControlProfile( GuiPopUpMenuProfile : GuiPopUpMenuDefault )
 {
    textOffset         = "6 4";
-   bitmap             = "data/ui/art/dropDown";
+   bitmap             = "data/ui/images/dropDown";
    hasBitmapArray     = true;
    border             = 1;
    profileForChildren = GuiPopUpMenuDefault;
@@ -272,7 +272,7 @@ new GuiControlProfile( GuiTabBookProfile )
    fontType = "Arial";
    fontSize = 14;
    justify = "center";
-   bitmap = "data/ui/art/tab";
+   bitmap = "data/ui/images/tab";
    tabWidth = 64;
    tabHeight = 24;
    tabPosition = "Top";
@@ -289,7 +289,7 @@ new GuiControlProfile( GuiTabPageProfile : GuiDefaultProfile )
    fontType = "Arial";
    fontSize = 10;
    justify = "center";
-   bitmap = "data/ui/art/tab";
+   bitmap = "data/ui/images/tab";
    opaque = false;
    fillColor = "240 239 238";
    category = "Core";
@@ -383,7 +383,7 @@ new GuiControlProfile( GuiRadioProfile )
    fontColor = "20 20 20";
    fontColorHL = "80 80 80";
    fixedExtent = true;
-   bitmap = "data/ui/art/radioButton";
+   bitmap = "data/ui/images/radioButton";
    hasBitmapArray = true;
    category = "Core";
 };
@@ -394,7 +394,7 @@ new GuiControlProfile( GuiRadioProfile )
 if( !isObject( GuiSliderProfile ) )
 new GuiControlProfile( GuiSliderProfile )
 {
-   bitmap = "data/ui/art/slider";
+   bitmap = "data/ui/images/slider";
    category = "Core";
 };
 
@@ -409,7 +409,7 @@ new GuiControlProfile(GuiMenuScrollProfile)
    fontColor = "200 200 200";
    fontColorHL = "250 250 250";
    border = true;
-   bitmap = "data/ui/art/scrollBar";
+   bitmap = "data/ui/images/scrollBar";
    hasBitmapArray = true;
    category = "Core";
 };
@@ -423,14 +423,14 @@ new GuiControlProfile(GuiMenuScrollProfile)
    fontColor = "0 0 0";
    fontColorHL = "150 150 150";
    border = true;
-   bitmap = "./images/scrollBar";
+   bitmap = "data/ui/images/scrollBar";
    hasBitmapArray = true;
    category = "Core";
 };
 
 singleton GuiControlProfile(SliderBitmapGUIProfile)
 {
-   bitmap = "data/ui/art/optionsMenuSliderBitmapArray.png";
+   bitmap = "data/ui/images/optionsMenuSliderBitmapArray.png";
    hasBitmapArray = true;
    opaque = false;
 };

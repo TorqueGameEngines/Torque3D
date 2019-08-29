@@ -361,3 +361,68 @@ function toggleBackbufferViz( %enable )
    }
 }
 
+//
+//
+//
+function setLightingMode(%mode)
+{
+   resetLightingMode();
+   
+   switch$ ( %mode )
+   {
+      case "Unlit":
+         $Shadows::disable = true;
+         $Light::renderReflectionProbes = false;
+         $Light::disableLights = true;
+         EVisibilityLightingModesOptions.checkItem(1, true);
+      case "NoShadows":
+         $Shadows::disable = true;
+         EVisibilityLightingModesOptions.checkItem(2, true);
+      case "DetailLighting":
+         //$Viz_ColorblindnessModeVar = "0";
+         EVisibilityLightingModesOptions.checkItem(3, true);
+      case "LightingOnly":
+         $Light::renderReflectionProbes = false;
+         EVisibilityLightingModesOptions.checkItem(4, true);
+      case "ReflectionsOnly":
+         $Light::disableLights = true;
+         EVisibilityLightingModesOptions.checkItem(5, true);
+   }
+}
+
+function resetLightingMode()
+{
+   for(%i=0; %i < 6; %i++)
+   {
+       EVisibilityLightingModesOptions.checkItem(%i, false);
+   }
+   
+   $Light::renderReflectionProbes = true;
+   $Light::disableLights = false;
+   $Shadows::disable = false;
+   EVisibilityLightingModesOptions.checkItem(0, true);
+}
+
+function togglePSSMDebugViz()
+{
+   disableVisualizers();
+   $AL::PSSMDebugRender = !$AL::PSSMDebugRender;  
+}
+
+function disablePSSMDebugViz()
+{
+   $AL::PSSMDebugRender = false;  
+   $Light::renderReflectionProbes = true;
+}
+
+//
+//
+function toggleLightFrustumViz()
+{
+   $Light::renderLightFrustums = !$Light::renderLightFrustums; 
+}
+
+function disableLightFrustumViz()
+{
+   $Light::renderLightFrustums = false;
+}

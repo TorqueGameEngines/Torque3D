@@ -242,6 +242,7 @@ function destroyServer()
    
    //Get our modules so we can exec any specific server-side loading/handling
    callOnModules("onDestroyGameServer", "Game");
+   callOnModules("onDestroyGameServer", "Core");
    
    // Save any server settings
    %prefPath = getPrefpath();

@@ -1,5 +1,7 @@
-function toggleProbeVis(%mode)
+function toggleProbeViz(%mode)
 {
+   setLightingMode("ReflectionsOnly");
+   
    $Probes::showAttenuation = 0;
    $Probes::showSpecularCubemaps = 0;
    $Probes::showDiffuseCubemaps = 0;
@@ -16,4 +18,10 @@ function toggleProbeVis(%mode)
       case "Diffuse":
          $Probes::showDiffuseCubemaps = 1;
    }
+}
+
+function disableProbeViz()
+{
+   setLightingMode("Lit");
+   toggleProbeViz(-1);
 }

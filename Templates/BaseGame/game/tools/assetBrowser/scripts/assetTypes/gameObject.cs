@@ -21,7 +21,8 @@ function AssetBrowser::editGameObjectAssetScript(%this, %assetDef)
 {
    %scriptFile = %assetDef.scriptFile;
    
-   EditorOpenFileInTorsion(makeFullPath(%scriptFile), 0);  
+   if(%scriptFile !$= "")
+      EditorOpenFileInTorsion(makeFullPath(%scriptFile), 0);  
 }
 
 function AssetBrowser::applyInstanceToGameObject(%this, %assetDef)

@@ -26,7 +26,7 @@ if($platform $= "macos")
    {
       hotSpot = "4 4";
       renderOffset = "0 0";
-      bitmapName = "~/art/gui/images/macCursor";
+      bitmapName = "data/ui/images/macCursor";
    };
 } 
 else 
@@ -35,6 +35,6 @@ else
    {
       hotSpot = "1 1";
       renderOffset = "0 0";
-      bitmapName = "~/art/gui/images/defaultCursor";
+      bitmapName = "data/ui/images/defaultCursor";
    };
 }

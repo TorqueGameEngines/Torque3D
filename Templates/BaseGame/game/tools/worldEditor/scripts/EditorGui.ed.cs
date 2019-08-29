@@ -579,7 +579,9 @@ function EditorGui::onSleep( %this )
    // Remove the editor's ActionMaps.
       
    EditorMap.pop();
-   MoveMap.pop();
+   
+   if(isObject(moveMap))
+      MoveMap.pop();
 
    // Notify the editor plugins that the editor will be closing.
    

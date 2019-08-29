@@ -118,7 +118,7 @@ function ControlsMenu::addKeybindOption(%this)
 {
     %tamlReader = new Taml();
    
-    %graphicsOption = %tamlReader.read("data/ui/scripts/guis/controlsMenuSetting.taml");
+    %graphicsOption = %tamlReader.read("data/ui/guis/controlsMenuSetting.taml");
 
     ControlsMenuOptionsArray.add(%graphicsOption);
 

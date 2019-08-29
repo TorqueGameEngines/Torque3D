@@ -140,6 +140,9 @@ function parseMissionGroupForIds( %className, %childGroup )
    else
       %currentGroup = %childGroup;
       
+   if(!isObject(%currentGroup))
+      return "";
+      
    for(%i = 0; %i < (%currentGroup).getCount(); %i++)
    {      
       if( (%currentGroup).getObject(%i).getClassName() $= %className )

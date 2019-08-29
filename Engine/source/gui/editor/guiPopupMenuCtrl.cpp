@@ -169,6 +169,12 @@ void GuiPopupMenuTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool s
       PrimBuild::vertex2i(left, bottom);
       PrimBuild::end();*/
    }
+
+   //check if we're checked
+   if (mPopup->mMenuItems[cell.y].mIsChecked)
+   {
+      GFX->getDrawUtil()->draw2DSquare(Point2F(offset.x + mCellSize.y / 2, offset.y + mCellSize.y / 2), 5);
+   }
 }
 
 bool GuiPopupMenuTextListCtrl::onKeyDown(const GuiEvent &event)

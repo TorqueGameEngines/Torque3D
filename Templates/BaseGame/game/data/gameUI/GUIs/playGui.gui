@@ -1,0 +1,50 @@
+//--- OBJECT WRITE BEGIN ---
+%guiContent = new GameTSCtrl(PlayGui) {
+      cameraZRot = "0";
+      forceFOV = "0";
+      reflectPriority = "1";
+      renderStyle = "standard";
+      margin = "0 0 0 0";
+      padding = "0 0 0 0";
+      anchorTop = "1";
+      anchorBottom = "0";
+      anchorLeft = "1";
+      anchorRight = "0";
+      position = "0 0";
+      extent = "1920 1080";
+      minExtent = "8 8";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      profile = "GuiDefaultProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "1";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         enabled = "1";
+         helpTag = "0";
+         noCursor = "1";
+
+   new GuiBitmapCtrl(LagIcon) {
+      bitmap = "data/ui/art/lagIcon.png";
+      color = "255 255 255 255";
+      wrap = "0";
+      position = "572 3";
+      extent = "32 32";
+      minExtent = "8 8";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      profile = "GuiDefaultProfile";
+      visible = "0";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "0";
+      hidden = "1";
+      canSave = "1";
+      canSaveDynamicFields = "0";
+   };
+};
+//--- OBJECT WRITE END ---

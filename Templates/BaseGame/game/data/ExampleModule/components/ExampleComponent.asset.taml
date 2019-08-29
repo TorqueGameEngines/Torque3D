@@ -1,0 +1,9 @@
+<ComponentAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ExampleComponent"
+    componentName="ExampleComponent"
+    componentClass="Component"
+    description="An example script component."
+    scriptFile="@assetFile=ExampleComponent.cs"
+    VersionId="1" />

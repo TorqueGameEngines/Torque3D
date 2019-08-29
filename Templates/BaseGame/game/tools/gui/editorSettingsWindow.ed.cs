@@ -147,6 +147,11 @@ function SettingsInspector::changeEditorSetting(%this, %varName, %value)
 {
    %varName = strreplace(%varName, "-", "/");
    
+   if(isFile(%value) || IsDirectory(%value))
+   {
+      %value = makeFullPath(%value);
+   }
+   
    echo("Set " @ %varName @ " to be " @ %value);  
    
    if(ESettingsWindow.mode $= "Editor")

@@ -31,7 +31,7 @@ function ExampleModule::onDestroy(%this)
 //Are called during the startup, shut down, and resetting of any and all active gamemodes, as informed by the loaded scenes
 //when the game server is processed.
 //These callbacks are activated in core/clientServer/scripts/server/levelLoad.cs
-function FPSGameplay::initServer(%this)
+function ExampleModule::initServer(%this)
 {
    //This script contains our ExampleGameMode logic
    exec("./scripts/ExampleGamemodeScript.cs");

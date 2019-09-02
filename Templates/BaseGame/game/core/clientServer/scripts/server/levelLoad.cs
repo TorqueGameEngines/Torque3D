@@ -137,33 +137,7 @@ function loadMissionStage2()
    // Go ahead and launch the game
    %activeSceneCount = getSceneCount();
    
-   %hasGameMode = 0;
-   for(%i=0; %i < %activeSceneCount; %i++)
-   {
-      if(getScene(%i).gameModeName !$= "")
-      {
-         //if the scene defines a game mode, go ahead and envoke it here
-         if(isMethod(getScene(%i).gameModeName, "onMissionStart"))
-         {
-            eval(getScene(%i).gameModeName @ "::onMissionStart();" );
-            %hasGameMode = 1;
-         }
-      }
-   }
-   
-   //if none of our scenes have gamemodes, we need to kick off a default
-   if(%hasGameMode == 0)
-   {
-      %defaultModeName = ProjectSettings.value("Gameplay/GameModes/defaultModeName");
-      if(%defaultModeName !$= "")
-      {
-         if(isMethod(%defaultModeName, "onMissionStart"))
-         {
-            eval(%defaultModeName @ "::onMissionStart();" );
-            %hasGameMode = 1;
-         }
-      }
-   }
+   %hasGameMode = callGamemodeFunction("onMissionStart");
 }
 
 function endMission()
@@ -176,33 +150,7 @@ function endMission()
    // Inform the game code we're done.
    %activeSceneCount = getSceneCount();
    
-   %hasGameMode = 0;
-   for(%i=0; %i < %activeSceneCount; %i++)
-   {
-      if(getScene(%i).gameModeName !$= "")
-      {
-         //if the scene defines a game mode, go ahead and envoke it here
-         if(isMethod(getScene(%i).gameModeName, "onMissionEnded"))
-         {
-            eval(getScene(%i).gameModeName @ "::onMissionEnded();" );
-            %hasGameMode = 1;
-         }
-      }
-   }
-   
-   //if none of our scenes have gamemodes, we need to kick off a default
-   if(%hasGameMode == 0)
-   {
-      %defaultModeName = ProjectSettings.value("Gameplay/GameModes/defaultModeName");
-      if(%defaultModeName !$= "")
-      {
-         if(isMethod(%defaultModeName, "onMissionEnded"))
-         {
-            eval(%defaultModeName @ "::onMissionEnded();" );
-            %hasGameMode = 1;
-         }
-      }
-   }
+   %hasGameMode = callGamemodeFunction("onMissionEnded");
 
    // Inform the clients
    for( %clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++ ) {
@@ -235,31 +183,5 @@ function resetMission()
    // Inform the game code we're resetting.
    %activeSceneCount = getSceneCount();
    
-   %hasGameMode = 0;
-   for(%i=0; %i < %activeSceneCount; %i++)
-   {
-      if(getScene(%i).gameModeName !$= "")
-      {
-         //if the scene defines a game mode, go ahead and envoke it here
-         if(isMethod(getScene(%i).gameModeName, "onMissionReset"))
-         {
-            eval(getScene(%i).gameModeName @ "::onMissionReset(" @ %client @ ");" );
-            %hasGameMode = 1;
-         }
-      }
-   }
-   
-   //if none of our scenes have gamemodes, we need to kick off a default
-   if(%hasGameMode == 0)
-   {
-      %defaultModeName = ProjectSettings.value("Gameplay/GameModes/defaultModeName");
-      if(%defaultModeName !$= "")
-      {
-         if(isMethod(%defaultModeName, "onMissionReset"))
-         {
-            eval(%defaultModeName @ "::onMissionReset(" @ %client @ ");" );
-            %hasGameMode = 1;
-         }
-      }
-   }
+   %hasGameMode = callGamemodeFunction("onMissionReset", %client);
 }

@@ -82,14 +82,10 @@ function ExampleGameMode::onGameDurationEnd()
       ExampleGameMode::onMissionEnded();
 }
 
-//This is called when a client enters the game server. It's used to spawn a player object
-//set up any client-specific properties such as saved configs, values, their name, etc
-//These callbacks are activated in core/clientServer/scripts/server/levelDownload.cs
-function ExampleGameMode::onClientEnterGame(%client)
+//This is called to actually spawn a control object for the player to utilize
+//A player character, spectator camera, etc.
+function ExampleGameMode::spawnControlObject(%client)
 {
-   //Set the player name based on the client's connection data
-   %client.setPlayerName(%client.connectData);
-
    //In this example, we just spawn a camera
    if (!isObject(%client.camera))
    {
@@ -116,6 +112,25 @@ function ExampleGameMode::onClientEnterGame(%client)
    }
 }
 
+//This is called when the client has initially established a connection to the game server
+//It's used for setting up anything ahead of time for the client, such as loading in client-passed
+//config stuffs, saved data or the like that should be handled BEFORE the client has actually entered
+//the game itself
+function ExampleGameMode::onClientConnect(%client)
+{
+}
+
+//This is called when a client enters the game server. It's used to spawn a player object
+//set up any client-specific properties such as saved configs, values, their name, etc
+//These callbacks are activated in core/clientServer/scripts/server/levelDownload.cs
+function ExampleGameMode::onClientEnterGame(%client)
+{
+   //Set the player name based on the client's connection data
+   %client.setPlayerName(%client.connectData);
+   
+   ExampleGameMode::spawnControlObject(%client);
+}
+
 //This is called when the player leaves the game server. It's used to clean up anything that
 //was spawned or setup for the client when it connected, in onClientEnterGame
 //These callbacks are activated in core/clientServer/scripts/server/levelDownload.cs
@@ -124,5 +139,12 @@ function ExampleGameMode::onClientLeaveGame(%client)
    // Cleanup the camera
    if (isObject(%client.camera))
       %client.camera.delete();
+}
 
+//This is called when the player has connected and finaly setup is done and control is handed
+//over to the client. It allows a point to special-case setting the client's canvas content
+//(Such as a gamemode-specific GUI) or setting up gamemode-specific keybinds/control schemes
+function ExampleGameMode::onInitialControlSet()
+{
+   
 }

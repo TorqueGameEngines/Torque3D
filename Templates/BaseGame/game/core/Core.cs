@@ -1,7 +1,6 @@
 
 function CoreModule::onCreate(%this)
 {
-   
    // ----------------------------------------------------------------------------
    // Initialize core sub system functionality such as audio, the Canvas, PostFX,
    // rendermanager, light managers, etc.

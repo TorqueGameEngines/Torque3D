@@ -12,24 +12,19 @@
 // When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
 // connected to it via createAndConnectToLocalServer().
 
-function UI::create( %this )
+function UI::onCreate( %this )
 {
-   if ($Server::Dedicated)
-      return;
-   
-   // Use our prefs to configure our Canvas/Window
-   configureCanvas();
 }
 
-function UI::destroy( %this )
+function UI::onDestroy( %this )
 {
 }
 
 function UI::initServer(%this){}
 
-function UI::onCreateServer(%this){}
+function UI::onCreateGameServer(%this){}
 
-function UI::onDestroyServer(%this){}
+function UI::onDestroyGameServer(%this){}
 
 function UI::initClient(%this)
 {

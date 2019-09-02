@@ -50,6 +50,9 @@ function GameConnection::initialControlSet(%this)
       
       if (isObject(%playGUIName) && Canvas.getContent() != %playGUIName.getId())
          Canvas.setContent(%playGUIName);
+         
+      //We allow the gamemodes to step in and override the canvas setting, or do any special input overrides here
+      %hasGameMode = callGamemodeFunction("onInitialControlSet");
    }
 }
 

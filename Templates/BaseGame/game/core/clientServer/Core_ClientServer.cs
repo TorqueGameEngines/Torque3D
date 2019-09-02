@@ -12,17 +12,17 @@
 // When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
 // connected to it via createAndConnectToLocalServer().
 
-function Core_ClientServer::create( %this )
+function Core_ClientServer::onCreate( %this )
 {
    echo("\n--------- Initializing Directory: scripts ---------");
    exec( "./scripts/client/client.cs" );
    exec( "./scripts/server/server.cs" );
 
    $Game::MainScene = getScene(0);
-
-   initServer();
    
-   %dbList = new ArrayObject(DatablockFilesList);
+   new ArrayObject(DatablockFilesList);
+   
+   $Game::firstTimeServerRun = true;
 
    // Start up in either client, or dedicated server mode
    if ($Server::Dedicated)
@@ -35,7 +35,7 @@ function Core_ClientServer::create( %this )
    }
 }
 
-function Core_ClientServer::destroy( %this )
+function Core_ClientServer::onDestroy( %this )
 {
    // Ensure that we are disconnected and/or the server is destroyed.
    // This prevents crashes due to the SceneGraph being deleted before

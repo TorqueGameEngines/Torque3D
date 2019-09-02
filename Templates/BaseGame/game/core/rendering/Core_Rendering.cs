@@ -21,3 +21,32 @@ function Core_Rendering::onCreate(%this)
 function Core_Rendering::onDestroy(%this)
 {
 }
+
+function Core_Rendering::initClient(%this)
+{
+   // Start rendering and stuff.
+   initRenderManager();
+   initLightingSystems("Advanced Lighting"); 
+
+   //load prefs
+   %prefPath = getPrefpath();
+   if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
+      exec( %prefPath @ "/clientPrefs.cs" );
+   else
+      exec("data/defaults.cs");
+   
+   configureCanvas();
+   
+   //Autodetect settings if it's our first time
+   if($pref::Video::autoDetect)
+      GraphicsMenu.Autodetect();
+
+   postFXInit();
+   
+   closeSplashWindow();
+   
+   // As we know at this point that the initial load is complete,
+   // we can hide any splash screen we have, and show the canvas.
+   // This keeps things looking nice, instead of having a blank window
+   Canvas.showWindow();
+}

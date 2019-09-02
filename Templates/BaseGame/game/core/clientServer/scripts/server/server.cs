@@ -126,6 +126,11 @@ function createAndConnectToLocalServer( %serverType, %level )
 /// Specify the level to load on the server
 function createServer(%serverType, %level)
 {
+   if($Game::firstTimeServerRun == true)
+   {
+      initServer();
+      $Game::firstTimeServerRun = false;
+   }
    // Increase the server session number.  This is used to make sure we're
    // working with the server session we think we are.
    $Server::Session++;
@@ -197,11 +202,7 @@ function onServerCreated()
 
    physicsStartSimulation("server");
    
-   %cnt = DatablockFilesList.count();
-
    loadDatablockFiles( DatablockFilesList, true );
-   
-   %cnt = DatablockFilesList.count();
    
    // Keep track of when the game started
    $Game::StartTime = $Sim::Time;

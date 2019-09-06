@@ -945,6 +945,30 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       mShaderConsts->set(mMatCameraToWorldSC, tempMat);
    }
 
+   if (mInvCameraTransSC->isValid())
+   {
+      MatrixF mat = state->getCameraTransform();
+      mat.fullInverse();
+      mShaderConsts->set(mInvCameraTransSC, mat, mInvCameraTransSC->getType());
+   }
+   //Projection Matrix
+   if (mMatCameraToScreenSC->isValid())
+   {
+
+      MatrixF tempMat = thisFrame.cameraToScreen;
+      mShaderConsts->set(mMatCameraToScreenSC, tempMat, mMatCameraToScreenSC->getType());
+   }
+
+
+   //Inverse Projection Matrix
+   if (mMatScreenToCameraSC->isValid())
+   {
+
+      MatrixF tempMat = thisFrame.cameraToScreen;
+      tempMat.fullInverse();
+
+      mShaderConsts->set(mMatScreenToCameraSC, tempMat, mMatScreenToCameraSC->getType());
+   }
    mShaderConsts->setSafe( mAccumTimeSC, MATMGR->getTotalTime() );
    mShaderConsts->setSafe( mDeltaTimeSC, MATMGR->getDeltaTime() );
 

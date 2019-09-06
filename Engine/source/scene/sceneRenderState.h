@@ -247,6 +247,8 @@ class SceneRenderState
 
       /// Return the project transform matrix.
       const MatrixF& getProjectionMatrix() const;
+      /// Return the inverse project transform matrix.
+      const MatrixF& getInvProjectionMatrix() const;
 
       /// Returns the actual camera position.
       /// @see getDiffuseCameraPosition

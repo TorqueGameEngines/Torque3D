@@ -494,7 +494,10 @@ PostEffect::PostEffect()
       mAccumTimeSC( NULL ),
       mDeltaTimeSC( NULL ),
       mInvCameraMatSC( NULL ),
-      mMatCameraToWorldSC( NULL)
+      mMatCameraToWorldSC( NULL),
+      mInvCameraTransSC(NULL),
+      mMatCameraToScreenSC(NULL),
+      mMatScreenToCameraSC(NULL)
 {
    dMemset( mTexSRGB, 0, sizeof(bool) * NumTextures);
    dMemset( mActiveTextures, 0, sizeof( GFXTextureObject* ) * NumTextures );
@@ -804,6 +807,10 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       mInvCameraMatSC = mShader->getShaderConstHandle( "$invCameraMat" );
 
       mMatCameraToWorldSC = mShader->getShaderConstHandle("$cameraToWorld");
+
+      mInvCameraTransSC = mShader->getShaderConstHandle("$invCameraTrans");
+      mMatCameraToScreenSC = mShader->getShaderConstHandle("$cameraToScreen");
+      mMatScreenToCameraSC = mShader->getShaderConstHandle("$screenToCamera");
    }
 
    // Set up shader constants for source image size

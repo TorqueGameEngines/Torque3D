@@ -426,3 +426,21 @@ function disableLightFrustumViz()
 {
    $Light::renderLightFrustums = false;
 }
+
+//Lighting Viz
+singleton Material( Viz_DetailLightingMat )
+{
+   diffuseColor[0] = "0.5 0.5 0.5 1";
+   
+   preload = true;
+};
+
+function toggleDetailLightingViz()
+{
+   if(!isObject(lightBizBin))
+      DiffuseRenderPassManager.addManager( new lightVisualizerBin(lightBizBin) { renderOrder = 1.5; processAddOrder = 1.5; } );
+      
+   lightBizBin.material = Viz_DetailLightingMat;
+   
+   //Then set the lighting bin flags for various modes here
+}

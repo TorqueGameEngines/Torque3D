@@ -125,6 +125,7 @@ GuiTextListCtrl::GuiTextListCtrl()
    mColumnOffsets.push_back(0);
    mFitParentWidth = true;
    mClipColumnText = false;
+   mRowHeightPadding = 2;
 }
 
 void GuiTextListCtrl::initPersistFields()
@@ -132,6 +133,7 @@ void GuiTextListCtrl::initPersistFields()
    addField("columns",                 TypeS32Vector, Offset(mColumnOffsets, GuiTextListCtrl), "A vector of column offsets.  The number of values determines the number of columns in the table.\n" );
    addField("fitParentWidth",          TypeBool, Offset(mFitParentWidth, GuiTextListCtrl), "If true, the width of this control will match the width of its parent.\n");
    addField("clipColumnText",          TypeBool, Offset(mClipColumnText, GuiTextListCtrl), "If true, text exceeding a column's given width will get clipped.\n" );
+   addField("rowHeightPadding", TypeS32, Offset(mRowHeightPadding, GuiTextListCtrl), "Sets how much padding to add to the row heights on top of the font height");
    Parent::initPersistFields();
 }
 
@@ -205,7 +207,7 @@ void GuiTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool selected, 
          else
             slen = dStrlen(text);
 
-         Point2I pos(offset.x + 4 + mColumnOffsets[index], offset.y);
+         Point2I pos(offset.x + 4 + mColumnOffsets[index], offset.y + mRowHeightPadding / 2);
 
          RectI saveClipRect;
          bool clipped = false;
@@ -368,7 +370,7 @@ void GuiTextListCtrl::setSize(Point2I newSize)
          mCellSize.x = maxWidth + 8;
       }
 
-      mCellSize.y = mFont->getHeight() + 2;
+      mCellSize.y = mFont->getHeight() + mRowHeightPadding;
    }
 
    Point2I newExtent( newSize.x * mCellSize.x + mHeaderDim.x, newSize.y * mCellSize.y + mHeaderDim.y );

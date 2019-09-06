@@ -49,7 +49,7 @@ $RemapCmd[$RemapCount] = "toggleCamera";
 $RemapGroup[$RemapCount] = "Miscellaneous";
 $RemapCount++;
 
-function ControlsMenu::onWake(%this)
+function ControlsMenu::loadSettings(%this)
 {
    ControlSetList.clear();
    ControlSetList.add( "Movement", "Movement" );
@@ -58,9 +58,9 @@ function ControlsMenu::onWake(%this)
    
    ControlSetList.setSelected( "Movement", false );
    
-   ControlsMenuOptionsArray.clear();
-   ControlsMenu.loadGroupKeybinds("Movement");
-   ControlsMenuOptionsArray.refresh();
+   OptionsSettingStack.clear();
+   loadGroupKeybinds("Movement");
+   //ControlsMenuOptionsArray.refresh();
 }
 
 function ControlSetList::onSelect( %this, %id, %text )
@@ -68,13 +68,13 @@ function ControlSetList::onSelect( %this, %id, %text )
    ControlsMenuOptionsArray.clear();
    
    if(%text $= "Movement")
-      ControlsMenu.loadGroupKeybinds("Movement");
+      loadGroupKeybinds("Movement");
    else if(%text $= "Combat")
-      ControlsMenu.loadGroupKeybinds("Combat");
+      loadGroupKeybinds("Combat");
    else if(%text $= "Miscellaneous")
-      ControlsMenu.loadGroupKeybinds("Miscellaneous");
+      loadGroupKeybinds("Miscellaneous");
 
-    ControlsMenuOptionsArray.refresh();
+    //ControlsMenuOptionsArray.refresh();
 }
 
 function ControlsMenuOKButton::onClick(%this)
@@ -94,7 +94,7 @@ function ControlsMenuDefaultsButton::onClick(%this)
    ControlsMenu.reload();
 }
 
-function ControlsMenu::loadGroupKeybinds(%this, %keybindGroup)
+function loadGroupKeybinds(%keybindGroup)
 {
    %optionIndex = 0;
    for(%i=0; %i < $RemapCount; %i++)
@@ -102,9 +102,9 @@ function ControlsMenu::loadGroupKeybinds(%this, %keybindGroup)
       //find and add all the keybinds for the particular group we're looking at
       if($RemapGroup[%i] $= %keybindGroup)
       {
-         %temp = %this.getKeybindString(%i);
+         %temp = getKeybindString(%i);
          
-         %option = %this.addKeybindOption();
+         %option = addKeybindOption();
          %option-->nameText.setText($RemapName[%i]);
          %option-->rebindButton.setText(%temp);
          %option-->rebindButton.keybindIndex = %i;
@@ -114,18 +114,18 @@ function ControlsMenu::loadGroupKeybinds(%this, %keybindGroup)
    }
 }
 
-function ControlsMenu::addKeybindOption(%this)
+function addKeybindOption()
 {
     %tamlReader = new Taml();
    
     %graphicsOption = %tamlReader.read("data/ui/guis/controlsMenuSetting.taml");
 
-    ControlsMenuOptionsArray.add(%graphicsOption);
+    OptionsSettingStack.add(%graphicsOption);
 
     return %graphicsOption;
 }
 
-function ControlsMenu::getKeybindString(%this, %index )
+function getKeybindString(%index )
 {
    %name       = $RemapName[%index];
    %cmd        = $RemapCmd[%index];
@@ -142,11 +142,11 @@ function ControlsMenu::getKeybindString(%this, %index )
       %device = getField( %temp, %i + 0 );
       %object = getField( %temp, %i + 1 );
       
-      %displayName = %this.getMapDisplayName( %device, %object );
+      %displayName = getMapDisplayName( %device, %object );
       
       if(%displayName !$= "")
       {
-         %tmpMapString = %this.getMapDisplayName( %device, %object );
+         %tmpMapString = getMapDisplayName( %device, %object );
          
          if(%mapString $= "")
          {
@@ -175,7 +175,7 @@ function ControlsMenu::redoMapping( %device, %action, %cmd, %oldIndex, %newIndex
 	%remapList.setRowById( %newIndex, buildFullMapString( %newIndex ) );
 }
 
-function ControlsMenu::getMapDisplayName( %this, %device, %action )
+function getMapDisplayName( %device, %action )
 {
 	if ( %device $= "keyboard" )
 		return( %action );		

@@ -296,6 +296,7 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
       mTextList = new GuiPopupMenuTextListCtrl();
       mTextList->registerObject();
       mTextList->setControlProfile(profile);
+      mTextList->mRowHeightPadding = 5;
 
       mTextList->mPopup = this;
       mTextList->mMenuBar = getMenuBarCtrl();

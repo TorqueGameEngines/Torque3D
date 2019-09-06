@@ -126,9 +126,10 @@ const char* ForcedMaterialMeshMgr::_getOverrideMat( void *object, const char *da
 bool ForcedMaterialMeshMgr::_setOverrideMat( void *object, const char *index, const char *data )
 {
    ForcedMaterialMeshMgr &mgr = *reinterpret_cast<ForcedMaterialMeshMgr *>( object );   
-   BaseMatInstance* material;
-   Sim::findObject( data, material );
-   mgr.setOverrideMaterial( material );
+   Material* material;
+   Sim::findObject(data, material);
+   mgr.mOverrideMaterial = material;
+
    return false;
 }
 

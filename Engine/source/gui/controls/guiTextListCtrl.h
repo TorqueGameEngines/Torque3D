@@ -56,6 +56,7 @@ class GuiTextListCtrl : public GuiArrayCtrl
 
    bool  mFitParentWidth;
    bool  mClipColumnText;
+   S32   mRowHeightPadding;
 
    U32 getRowWidth(Entry *row);
    bool cellSelected(Point2I cell);

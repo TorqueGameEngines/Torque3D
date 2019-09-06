@@ -303,3 +303,41 @@ function Viz_ColorBlindnessPFX::onEnabled( %this )
    
    return true;
 }
+
+
+//
+//Material Complexity Viz
+new ShaderData( Viz_MaterialComplexity )
+{
+   DXVertexShaderFile   = "./shaders/Viz_materialComplexityV.hlsl";
+   DXPixelShaderFile    = "./shaders/Viz_materialComplexityP.hlsl";
+ 
+   OGLVertexShaderFile   = "./shaders/basicRibbonShaderV.glsl";
+   OGLPixelShaderFile    = "./shaders/basicRibbonShaderP.glsl";
+ 
+   //samplerNames[0] = "$ribTex";
+ 
+   pixVersion = 2.0;
+};
+ 
+singleton CustomMaterial( Viz_MaterialComplexityMat )
+{
+   shader = Viz_MaterialComplexity;
+   version = 2.0;
+   
+   emissive[0] = true;
+   
+   doubleSided = true;
+   translucent = true;
+   
+   preload = true;
+};
+
+function toggleMatComplexityViz()
+{
+   if(!isObject(MatComplexityVizBin))
+      DiffuseRenderPassManager.addManager( new MaterailComplexityVisualizerBin(MatComplexityVizBin) { renderOrder = 1.55; processAddOrder = 1.55; } );
+      
+   MatComplexityVizBin.material = Viz_MaterialComplexityMat;
+   MatComplexityVizBin.maxComplexity = 10;
+}

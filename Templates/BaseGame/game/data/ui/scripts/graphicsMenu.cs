@@ -293,7 +293,7 @@ function GraphicsMenu::Autodetect_Apply(%this, %shaderVer, %intel, %videoMem )
    return "Graphics quality settings have been auto detected.";
 }
 
-function _makePrettyResString( %resString )
+function _makePrettyResString( %resString, %giveAspectRation )
 {
    %width = getWord( %resString, $WORD::RES_X );
    %height = getWord( %resString, $WORD::RES_Y );
@@ -312,7 +312,7 @@ function _makePrettyResString( %resString )
    }
    
    %outRes = %width @ " x " @ %height;
-   if ( %aspect !$= "" )
+   if ( %giveAspectRation && %aspect !$= "" )
       %outRes = %outRes @ "  (" @ %aspect @ ")";
       
    return %outRes;   
@@ -320,37 +320,19 @@ function _makePrettyResString( %resString )
 
 function GraphicsMenu::apply(%this)
 {
-   %newAdapter    = GraphicsMenuDriver.getText();
-	%numAdapters   = GFXInit::getAdapterCount();
-	%newDevice     = $pref::Video::displayDevice;
-							
-	for( %i = 0; %i < %numAdapters; %i ++ )
-	{
-	   if( GFXInit::getAdapterName( %i ) $= %newAdapter )
-	   {
-	      %newDevice = GFXInit::getAdapterType( %i );
-	      break;
-	   }
-	}
-	   
-   // Change the device.
-   if ( %newDevice !$= $pref::Video::displayDevice )
-   {
-      if ( %testNeedApply )
-         return true;
-         
-      $pref::Video::displayDevice = %newDevice;
-      if( %newAdapter !$= getDisplayDeviceInformation() )
-         MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
-   }
-   
    //Loop through the settings cache and actually apply the values
    %cachedSettingCount = GraphicsSettingsCache.count();
+   %canvasUpdate = false;
    
    for(%i=0; %i < %cachedSettingCount; %i++)
    {
       %var = GraphicsSettingsCache.getKey(%i);  
       %val = GraphicsSettingsCache.getValue(%i);
+      
+      if(%var $= "$pref::Video::AA")
+      {
+         %canvasUpdate = true;
+      }
       
       setVariable(%var, %val);
    }
@@ -368,41 +350,10 @@ function GraphicsMenu::apply(%this)
    PostFXManager.settingsEffectSetEnabled("DOF", $pref::PostFX::EnableDOF);
    PostFXManager.settingsEffectSetEnabled("LightRays", $pref::PostFX::EnableLightRays);
    PostFXManager.settingsEffectSetEnabled("Vignette", $pref::PostFX::EnableVignette);
-   
-   //Update the display settings now
-   $pref::Video::Resolution = getWords( Canvas.getMode( GraphicsMenuResolution.getSelected() ), $WORD::RES_X, $WORD::RES_Y );
-   %newBpp        = 32; // ... its not 1997 anymore.
-	$pref::Video::FullScreen = GraphicsMenuFullScreen.isStateOn() ? "true" : "false";
-	$pref::Video::RefreshRate    = GraphicsMenuRefreshRate.getSelected();
-	$pref::Video::disableVerticalSync = !GraphicsMenuVSync.isStateOn();	
-	
-   if ( %newFullScreen $= "false" )
-	{
-      // If we're in windowed mode switch the fullscreen check
-      // if the resolution is bigger than the desktop.
-      %deskRes    = getDesktopResolution();      
-      %deskResX   = getWord(%deskRes, $WORD::RES_X);
-      %deskResY   = getWord(%deskRes, $WORD::RES_Y);
-	   if (  getWord( %newRes, $WORD::RES_X ) > %deskResX || 
-	         getWord( %newRes, $WORD::RES_Y ) > %deskResY )
-      {
-         $pref::Video::FullScreen = "true";
-         GraphicsMenuFullScreen.setStateOn( true );
-      }
-	}
 
-   // Build the final mode string.
-	%newMode = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC %newBpp SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
-	
-   // Change the video mode.   
-   if (  %newMode !$= $pref::Video::mode || 
-         %newVsync != $pref::Video::disableVerticalSync )
+   if (  %canvasUpdate )
    {
-      if ( %testNeedApply )
-         return true;
-
-      $pref::Video::mode = %newMode;
-      $pref::Video::disableVerticalSync = %newVsync;      
+      // Change the video mode.   
       configureCanvas();
    }
    
@@ -435,11 +386,6 @@ function GraphicsMenu::loadSettings()
    OptionsMenu.addSettingOption(OptionsSettingStack, "Water Reflections", "", "WaterReflectionSetting");
    OptionsMenu.addSettingOption(OptionsSettingStack, "Anti Aliasing", "", "AASetting");
    OptionsMenu.addSettingOption(OptionsSettingStack, "Anisotropic Filtering", "", "AnisotropicFilteringSetting");
-   
-   if(!isObject(GraphicsSettingsCache))
-   {
-      new ArrayObject(GraphicsSettingsCache){};
-   }
    
    GraphicsSettingsCache.empty();
 }

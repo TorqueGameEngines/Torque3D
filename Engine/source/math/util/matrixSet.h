@@ -43,6 +43,7 @@ class MatrixSet
       ObjectToWorld = 0,   // World
       WorldToCamera,       // View
       CameraToScreen,      // Projection
+      ScreenToCamera,      // Projection^-1
       ObjectToScreen,      // World * View * Proj
       ObjectToCamera,      // World * View
       WorldToObject,       // World^-1
@@ -63,6 +64,7 @@ class MatrixSet
    MATRIX_SET_GET_VALUE(ObjectToWorld);
    MATRIX_SET_GET_VALUE(WorldToCamera);
    MATRIX_SET_GET_VALUE(CameraToScreen);
+   MATRIX_SET_GET_VALUE(ScreenToCamera);
    MATRIX_SET_GET_VALUE(ObjectToCamera);
    MATRIX_SET_GET_VALUE(WorldToObject);
    MATRIX_SET_GET_VALUE(CameraToWorld);
@@ -82,6 +84,8 @@ class MatrixSet
 
    MATRIX_SET_MULT_ASSIGN(WorldToScreen, ObjectToWorld, ObjectToScreen);
 
+   MATRIX_SET_IS_INVERSE_OF(ScreenToCamera, CameraToScreen);
+
 public:
    MatrixSet();
 
@@ -89,6 +93,7 @@ public:
    inline const MatrixF &getObjectToWorld() const { return mTransform[ObjectToWorld]; }
    inline const MatrixF &getWorldToCamera() const { return mTransform[WorldToCamera]; }
    inline const MatrixF &getCameraToScreen() const { return mTransform[CameraToScreen]; }
+   inline const MatrixF &getScreenToCamera() const { return mTransform[ScreenToCamera]; }
 
    // Delegate driven, lazy-evaluation accessors
    inline const MatrixF &getWorldToScreen() const { return mEvalDelegate[WorldToScreen](); }
@@ -131,6 +136,7 @@ public:
       mTransform[CameraToScreen] = projection;
       mEvalDelegate[ObjectToScreen].bind(this, &MatrixSet::MATRIX_SET_MULT_ASSIGN_FN(WorldToScreen, ObjectToWorld, ObjectToScreen));
       mEvalDelegate[WorldToScreen].bind(this, &MatrixSet::MATRIX_SET_MULT_ASSIGN_FN(CameraToScreen, WorldToCamera, WorldToScreen));
+      mEvalDelegate[ScreenToCamera].bind(this, &MatrixSet::MATRIX_SET_IS_INVERSE_OF_FN(ScreenToCamera, CameraToScreen));
    }
 
    void setSceneView(const MatrixF &view)

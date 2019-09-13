@@ -14,6 +14,7 @@
 
 function UI::onCreate( %this )
 {
+   %bool = true;
 }
 
 function UI::onDestroy( %this )
@@ -30,7 +31,7 @@ function UI::initClient(%this)
 {
    //Load UI stuff
    //we need to load this because some of the menu profiles use the sounds here
-   exec("./datablocks/guiSounds.cs");
+   //exec("./datablocks/guiSounds.cs");
    
    //Profiles
    exec("./scripts/profiles.cs");
@@ -80,6 +81,9 @@ function UI::initClient(%this)
    exec("./scripts/messageBoxes.cs");
    exec("./scripts/help.cs");
    exec("./scripts/cursors.cs");
+   
+   exec("./guis/menuGraphics.gui");
+   exec("./guis/menuGraphics.cs");
    
    //exec("./scripts/GuiTreeViewCtrl.cs");
    

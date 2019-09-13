@@ -46,6 +46,8 @@ function initializeWorldEditor()
    exec("./gui/shadowViz.gui" );
    exec("./gui/probeBakeDlg.gui" );
    
+   exec("tools/gui/cubemapEditor.gui" );
+   
    // Load Scripts.
    exec("./scripts/menus.ed.cs");
    exec("./scripts/menuHandlers.ed.cs");

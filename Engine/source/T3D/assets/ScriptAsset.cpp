@@ -123,6 +123,50 @@ void ScriptAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
+void ScriptAsset::initializeAsset()
+{
+   mScriptFile = expandAssetFilePath(mScriptFile);
+
+   if (Platform::isFile(mScriptFile))
+   {
+      //We're initialized properly, so we'll go ahead and kick along any dependencies we may have as well
+      AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
+
+      // Does the asset have any dependencies?
+      if (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end())
+      {
+         // Iterate all dependencies.
+         while (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end() && assetDependenciesItr->key == mpAssetDefinition->mAssetId)
+         {
+            AssetPtr<ScriptAsset> scriptAsset = assetDependenciesItr->value;
+
+            mScriptAssets.push_front(scriptAsset);
+
+            // Next dependency.
+            assetDependenciesItr++;
+         }
+      }
+
+      Con::executeFile(mScriptFile, false, false);
+   }
+}
+
+void ScriptAsset::onAssetRefresh()
+{
+   mScriptFile = expandAssetFilePath(mScriptFile);
+
+   if (Platform::isFile(mScriptFile))
+   {
+      //Refresh any dependencies we may have
+      for (U32 i = 0; i < mScriptAssets.size(); i++)
+      {
+         mScriptAssets[i]->onAssetRefresh();
+      }
+
+      Con::executeFile(mScriptFile, false, false);
+   }
+}
+
 void ScriptAsset::setScriptFile(const char* pScriptFile)
 {
    // Sanity!
@@ -144,6 +188,13 @@ void ScriptAsset::setScriptFile(const char* pScriptFile)
 
 bool ScriptAsset::execScript()
 {
+   AssetBase* handle = mpOwningAssetManager->acquireAsset<AssetBase>(getAssetId());
+
+   if (handle)
+      return true;
+
+   return false;
+
    if (Platform::isFile(mScriptFile))
    {
       return Con::executeFile(mScriptFile, false, false);

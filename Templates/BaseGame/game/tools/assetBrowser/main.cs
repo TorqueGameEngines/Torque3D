@@ -66,6 +66,7 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/shapeAnimation.cs"); 
    exec("./scripts/assetTypes/sound.cs"); 
    exec("./scripts/assetTypes/stateMachine.cs");   
+   exec("./scripts/assetTypes/cubemap.cs");  
      
    exec("./scripts/fieldTypes.cs");
    

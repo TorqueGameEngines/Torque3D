@@ -39,6 +39,10 @@
 #include "assets/assetFieldTypes.h"
 #endif
 
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif
+
 //-----------------------------------------------------------------------------
 class ScriptAsset : public AssetBase
 {
@@ -46,6 +50,8 @@ class ScriptAsset : public AssetBase
 
    StringTableEntry        mScriptFile;
    bool                    mIsServerSide;
+
+   Vector<AssetPtr<ScriptAsset>> mScriptAssets;
 
 public:
    ScriptAsset();
@@ -64,8 +70,8 @@ public:
    bool execScript();
 
 protected:
-   virtual void            initializeAsset(void) {}
-   virtual void            onAssetRefresh(void) {}
+   virtual void            initializeAsset(void);
+   virtual void            onAssetRefresh(void);
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<ScriptAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<ScriptAsset*>(obj)->getScriptFile(); }

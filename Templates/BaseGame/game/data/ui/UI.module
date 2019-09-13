@@ -6,4 +6,9 @@
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Game">
+	 <DeclaredAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        Extension="asset.taml"
+        Recurse="true" />
 </ModuleDefinition>

@@ -129,7 +129,7 @@ Surface createSurface(vec4 normDepth, sampler2D colorBuffer, sampler2D matInfoBu
 	vec4 gbuffer2 = texture(matInfoBuffer, uv);
 	surface.depth = normDepth.a;
 	surface.P = wsEyePos + wsEyeRay * surface.depth;
-	surface.N = tMul(invView, vec4(normDepth.xyz,0)).xyz; //TODO move t3d to use WS normals
+	surface.N = tMul(invView, vec4(normDepth.xyz,0)).xyz;
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = gbuffer1;
 	const float minRoughness=1e-4;
@@ -148,7 +148,7 @@ Surface createForwardSurface(vec4 baseColor, vec4 normal, vec4 pbrProperties, in
 
   surface.depth = 0;
 	surface.P = wsPosition;
-	surface.N = tMul(invView, vec4(normal.xyz,0)).xyz; //TODO move t3d to use WS normals
+	surface.N = tMul(invView, vec4(normal.xyz,0)).xyz;
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = baseColor;
   const float minRoughness=1e-4;

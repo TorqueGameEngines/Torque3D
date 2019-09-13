@@ -123,6 +123,8 @@ function loadMissionStage2()
    // Make the MissionCleanup group the place where all new objects will automatically be added.
    $instantGroup = MissionCleanup;
    
+   %hasGameMode = callGamemodeFunction("onCreateGame");
+   
    // Construct MOD paths
    pathOnMissionLoadDone();
 
@@ -135,8 +137,6 @@ function loadMissionStage2()
       ClientGroup.getObject(%clientIndex).loadMission();
 
    // Go ahead and launch the game
-   %activeSceneCount = getSceneCount();
-   
    %hasGameMode = callGamemodeFunction("onMissionStart");
 }
 
@@ -148,8 +148,6 @@ function endMission()
    echo("*** ENDING MISSION");
    
    // Inform the game code we're done.
-   %activeSceneCount = getSceneCount();
-   
    %hasGameMode = callGamemodeFunction("onMissionEnded");
 
    // Inform the clients
@@ -181,7 +179,5 @@ function resetMission()
    clearServerPaths();
    
    // Inform the game code we're resetting.
-   %activeSceneCount = getSceneCount();
-   
    %hasGameMode = callGamemodeFunction("onMissionReset", %client);
 }

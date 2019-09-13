@@ -381,6 +381,7 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
       statusInfo = "";
       skip = false;
       processed = false;
+      generatedAsset = false;
    };
 
    //little bit of interception here
@@ -423,6 +424,11 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
          %assetItem.delete();
          return 0;
       }
+   }
+   
+   if(%assetType $= "Material")
+   {
+      %assetItem.generatedAsset = true;  
    }
    
    if(%parentAssetItem $= "")
@@ -723,10 +729,10 @@ function ImportAssetWindow::_findImportingAssetByName(%this, %id, %assetName)
 function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
 {
    //diffuse
-   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/DiffuseTypeSuffixes", ""), ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(getAssetImportConfigValue("Image/DiffuseTypeSuffixes", ""), ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -735,10 +741,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //normal
-   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/NormalTypeSuffixes", ""), ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/NormalTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(getAssetImportConfigValue("Image/NormalTypeSuffixes", ""), ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Images/NormalTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -747,10 +753,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //roughness
-   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/RoughnessTypeSuffixes", ""), ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/RoughnessTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(getAssetImportConfigValue("Image/RoughnessTypeSuffixes", ""), ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Images/RoughnessTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -759,10 +765,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //Ambient Occlusion
-   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/AOTypeSuffixes", ""), ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/AOTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(getAssetImportConfigValue("Image/AOTypeSuffixes", ""), ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Images/AOTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -771,10 +777,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //metalness
-   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/MetalnessTypeSuffixes", ""), ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/MetalnessTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(getAssetImportConfigValue("Image/MetalnessTypeSuffixes", ""), ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Images/MetalnessTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -783,10 +789,10 @@ function ImportAssetWindow::parseImageSuffixes(%this, %assetItem)
    }
    
    //composite
-   %suffixCount = getTokenCount(getAssetImportConfigValue("Image/CompositeTypeSuffixes", ""), ",;");
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/CompositeTypeSuffixes", ""), ",;");
    for(%sfx = 0; %sfx < %suffixCount; %sfx++)
    {
-      %suffixToken = getToken(getAssetImportConfigValue("Image/CompositeTypeSuffixes", ""), ",;", %sfx);
+      %suffixToken = getToken(getAssetImportConfigValue("Images/CompositeTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
          %assetItem.imageSuffixType = %suffixToken;
@@ -1017,10 +1023,10 @@ function ImportAssetWindow::refreshChildItem(%this, %id)
       //Check if it's a generated type, like materials
       %inputPathProfile = ToolsGuiTextEditProfile;
       %generatedField = false;
-      if(%assetType $= "Material")
+      if(%assetItem.generatedAsset)
       {
-         %inputField = "(Generated)";
          %generatedField = true;
+         %inputField = "(Generated)";
       }
       else
       {
@@ -1251,7 +1257,7 @@ function ImportAssetWindow::validateAsset(%this, %id)
       }
          
       //Check if we were given a file path(so not generated) but somehow isn't a valid file
-      if(%assetItem.filePath !$= ""  && %assetItem.AssetType !$= "Material" && !isFile(%assetItem.filePath))
+      if(%assetItem.filePath !$= ""  && !%assetItem.generatedAsset && !isFile(%assetItem.filePath))
       {
          %hasIssues = true;  
          %assetItem.status = "error";

@@ -148,8 +148,6 @@ function serverCmdMissionStartPhase3Ack(%client, %seq)
       %entity.notify("onClientConnect", %client);
    }
    
-   %activeSceneCount = getSceneCount();
-   
    %hasGameMode = callGamemodeFunction("onClientEnterGame", %client);
    
    //if that also failed, just spawn a camera

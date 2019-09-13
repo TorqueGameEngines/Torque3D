@@ -1,0 +1,4 @@
+new ScriptObject(DummyObjectTestThing)
+{
+   
+};

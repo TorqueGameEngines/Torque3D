@@ -115,6 +115,8 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 10 ] = "Create Sound" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"SoundAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewSoundAsset(\"NewSound\", AssetBrowser.selectedModule);";
          item[ 11 ] = "-";
          item[ 12 ] = "Create Particle Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ParticleEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewParticleEffectAsset(\"NewParticleEffect\", AssetBrowser.selectedModule);";
+         item[ 13 ] = "-";
+         item[ 14 ] = "Create Cubemap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CubemapAsset\", AssetBrowser.selectedModule);";
       };
    }
    

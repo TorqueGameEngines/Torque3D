@@ -1,0 +1,454 @@
+%guiContent = new GuiControl(CubemapEditor) {
+   canSaveDynamicFields = "0";
+   Enabled = "1";
+   isContainer = "1";
+   Profile = "ToolsGuiDefaultProfile";
+   HorizSizing = "width";
+   VertSizing = "height";
+   Position = "0 0";
+   Extent = "800 600";
+   MinExtent = "8 2";
+   canSave = "1";
+   Visible = "1";
+   hovertime = "1000";
+   
+   new GuiWindowCtrl(CubemapEditorWindow) {
+      canSaveDynamicFields = "0";
+      Enabled = "1";
+      isContainer = "1";
+      Profile = "ToolsGuiWindowProfile";
+      HorizSizing = "center";
+      VertSizing = "center";
+      position = "200 257";
+      Extent = "478 248";
+      MinExtent = "478 248";
+      canSave = "1";
+      Visible = "1";
+      hovertime = "1000";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
+      AnchorTop = "1";
+      AnchorBottom = "0";
+      AnchorLeft = "1";
+      AnchorRight = "0";
+      resizeWidth = "0";
+      resizeHeight = "0";
+      canMove = "1";
+      canClose = "1";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "50 50";
+      EdgeSnap = "1";
+      closeCommand = "MaterialEditorGui.hideCubemapEditor(true);";
+      text = "Cubemap Editor";
+
+      new GuiTextCtrl(){
+         Profile = "ToolsGuiTextProfile";
+         position = "307 40";
+         Extent = "30 16";
+         text = "Name";
+      };
+      new GuiTextEditCtrl(CubemapEditor_Name) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiTextEditProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "338 40";
+         Extent = "131 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         text = "myCubemap 1";
+         maxLength = "1024";
+         AltCommand = "MaterialEditorGui.editCubemapName($ThisControl.getText());";
+      };
+      new GuiButtonCtrl(){
+         Profile = "ToolsGuiButtonProfile";
+         position = "339 216";
+         Extent = "74 24";
+         text = "Select";
+         command = "MaterialEditorGui.selectCubemap();"; // needs hookup use selected cubemap
+      };
+      new GuiButtonCtrl(){
+         Profile = "ToolsGuiButtonProfile";
+         position = "417 216";
+         Extent = "52 24";
+         text = "Cancel";
+         command = "MaterialEditorGui.hideCubemapEditor(true);"; // needs hookup Cancel
+      };
+      new GuiScrollCtrl(matEd_cubemapEd_availableCubemapScroller) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "1";
+         Profile = "ToolsGuiScrollProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "5 40";
+         Extent = "154 203";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         willFirstRespond = "1";
+         hScrollBar = "alwaysOff";
+         vScrollBar = "dynamic";
+         lockHorizScroll = "true";
+         lockVertScroll = "false";
+         constantThumbHeight = "0";
+         childMargin = "0 0";
+
+         new GuiListBoxCtrl(matEd_cubemapEd_availableCubemapList) {
+            canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiListBoxProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "2 2";
+            Extent = "128 2";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            hovertime = "1000";
+            AllowMultipleSelections = "0";
+            fitParentWidth = "1";
+         };
+      };
+      new GuiTextCtrl(){
+         Profile = "ToolsGuiTextProfile";
+         position = "6 22";
+         Extent = "67 16";
+         text = "Cubemaps";
+      };
+      // ------------------------------ Right X Positive ------------------------------------
+      new GuiBitmapCtrl(matEd_cubemapEd_XPos) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "299 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         bitmap = "tools/materialEditor/gui/unknownImage";
+         wrap = "0";
+      };
+      new GuiTextCtrl(matEd_cubeMapEd_xPosTxt) {
+         position = "304 110";
+         Extent = "57 10";
+         text = "+ X  Right";
+      };
+      new GuiBitmapButtonCtrl(matEd_cubeMapEd_updateXPOSImg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "299 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.editCubemapImage(\"0\", $ThisControl.bitmap );";
+         tooltipprofile = "ToolsGuiDefaultProfile";
+         ToolTip = "When using Static Cubemaps, select your CubeMap by clicking here.";
+         hovertime = "1000";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+      };
+      // ------------------------------ X Negitive ------------------------------------
+      new GuiBitmapCtrl(matEd_cubemapEd_XNeg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "167 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         bitmap = "tools/materialEditor/gui/unknownImage";
+         wrap = "0";
+      };
+      new GuiTextCtrl(matEd_cubeMapEd_xNegTxt) {
+         position = "171 110";
+         Extent = "57 10";
+         text = "- X  Left";
+      };
+      new GuiBitmapButtonCtrl(matEd_cubeMapEd_updateXNEGImg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "167 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.editCubemapImage(\"1\", $ThisControl.bitmap );";
+         tooltipprofile = "ToolsGuiDefaultProfile";
+         ToolTip = "When using Static Cubemaps, select your CubeMap by clicking here.";
+         hovertime = "1000";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+      };
+      // ------------------------------ Y Positive ------------------------------------
+      new GuiBitmapCtrl(matEd_cubemapEd_YPos) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "233 172";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         bitmap = "tools/materialEditor/gui/unknownImage";
+         wrap = "0";
+      };
+      new GuiTextCtrl(matEd_cubeMapEd_yPosTxt) {
+         position = "237 175";
+         Extent = "57 10";
+         text = "+ Y  Front";
+      };
+      new GuiBitmapButtonCtrl(matEd_cubeMapEd_updateYPOSImg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "233 172";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.editCubemapImage(\"3\", $ThisControl.bitmap );";
+         tooltipprofile = "ToolsGuiDefaultProfile";
+         ToolTip = "When using Static Cubemaps, select your CubeMap by clicking here.";
+         hovertime = "1000";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+      };
+      // ------------------------------ Y Negitive ------------------------------------
+      new GuiBitmapCtrl(matEd_cubemapEd_YNeG) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "233 40";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         bitmap = "tools/materialEditor/gui/unknownImage";
+         wrap = "0";
+      };
+      new GuiTextCtrl(matEd_cubeMapEd_yNegTxt) {
+         position = "237 44";
+         Extent = "57 10";
+         text = "- Y  Back";
+      };
+      new GuiBitmapButtonCtrl(matEd_cubeMapEd_updateYNegImg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "233 40";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.editCubemapImage(\"2\", $ThisControl.bitmap );";
+         tooltipprofile = "ToolsGuiDefaultProfile";
+         ToolTip = "When using Static Cubemaps, select your CubeMap by clicking here.";
+         hovertime = "1000";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+      };
+      // ------------------------------ Z Positive ------------------------------------
+      new GuiBitmapCtrl(matEd_cubemapEd_ZPos) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "233 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         bitmap = "tools/materialEditor/gui/unknownImage";
+         wrap = "0";
+      };
+      new GuiTextCtrl(matEd_cubeMapEd_zPosTxt) {
+         position = "237 110";
+         Extent = "57 10";
+         text = "+ Z  Top";
+      };
+      new GuiBitmapButtonCtrl(matEd_cubeMapEd_updateZPosImg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "233 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.editCubemapImage(\"4\", $ThisControl.bitmap );";
+         tooltipprofile = "ToolsGuiDefaultProfile";
+         ToolTip = "When using Static Cubemaps, select your CubeMap by clicking here.";
+         hovertime = "1000";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+      };
+      // ------------------------------ Z Negitive ------------------------------------
+      new GuiBitmapCtrl(matEd_cubemapEd_ZNeg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "365 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         bitmap = "tools/materialEditor/gui/unknownImage";
+         wrap = "0";
+      };
+      new GuiTextCtrl(matEd_cubeMapEd_zNegTxt) {
+         position = "369 110";
+         Extent = "57 10";
+         text = "- Z  Bottom";
+      };
+      new GuiBitmapButtonCtrl(matEd_cubeMapEd_updateZNegImg) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "365 106";
+         Extent = "64 64";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.editCubemapImage(\"5\", $ThisControl.bitmap );";
+         tooltipprofile = "ToolsGuiDefaultProfile";
+         ToolTip = "When using Static Cubemaps, select your CubeMap by clicking here.";
+         hovertime = "1000";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+      };
+
+       // Create New Cubemap
+      new GuiBitmapButtonCtrl() {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "top";
+         position = "128 23";
+         Extent = "17 17";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "matEd_addCubemapWindow.setVisible(1);"; // -------------- Needs Hookup Create New Cubemap
+         hovertime = "1000";
+         tooltip = "Create New Cubemap";
+         bitmap = "tools/gui/images/new";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl() {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "top";
+         position = "143 23";
+         Extent = "17 17";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.showDeleteCubemapDialog();"; // -------------- Needs Hookup Delete Cubemap
+         hovertime = "1000";
+         tooltip = "Delete Cubemap";
+         bitmap = "tools/gui/images/delete";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl() {
+         internalName = "saveCubemap";
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "top";
+         position = "106 23";
+         Extent = "17 17";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.showSaveCubemapDialog();"; // -------------- Needs Hookup Save Cubemap
+         hovertime = "1000";
+         tooltip = "Save Cubemap";
+         bitmap = "tools/gui/images/save-icon";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+   };
+};

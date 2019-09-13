@@ -51,12 +51,12 @@ $RemapCount++;
 
 function ControlsMenu::loadSettings(%this)
 {
-   ControlSetList.clear();
+   /*ControlSetList.clear();
    ControlSetList.add( "Movement", "Movement" );
    ControlSetList.add( "Combat", "Combat" );
-   ControlSetList.add( "Miscellaneous", "Miscellaneous" );
+   ControlSetList.add( "Miscellaneous", "Miscellaneous" );*/
    
-   ControlSetList.setSelected( "Movement", false );
+   //ControlSetList.setSelected( "Movement", false );
    
    OptionsSettingStack.clear();
    loadGroupKeybinds("Movement");
@@ -118,9 +118,10 @@ function addKeybindOption()
 {
     %tamlReader = new Taml();
    
-    %graphicsOption = %tamlReader.read("data/ui/guis/controlsMenuSetting.taml");
+    %controlOption = %tamlReader.read("data/ui/guis/controlsMenuSetting.taml");
+    %controlOption.extent.x = OptionsSettingStack.extent.x;
 
-    OptionsSettingStack.add(%graphicsOption);
+    OptionsSettingStack.add(%controlOption);
 
     return %graphicsOption;
 }

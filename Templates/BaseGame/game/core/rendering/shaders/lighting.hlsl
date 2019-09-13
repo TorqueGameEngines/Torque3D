@@ -108,7 +108,7 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 
    surface.depth = gbuffer0.a;
 	surface.P = wsEyePos + wsEyeRay * surface.depth;
-	surface.N = mul(invView, float4(gbuffer0.xyz,0)).xyz; //TODO move t3d to use WS normals
+	surface.N = mul(invView, float4(gbuffer0.xyz,0)).xyz;
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = gbuffer1;
    const float minRoughness=1e-4;

@@ -18,11 +18,17 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
       //Check if our material already exists
       //First, lets double-check that we don't already have an
       %materialAsset = ImportAssetWindow.findImportingAssetByName(%noSuffixName);
+      %cratedNewMaterial = false;
+      
       if(%materialAsset == 0)
       {
          %filePath = %assetItem.filePath;
          if(%filePath !$= "")
             %materialAsset = AssetBrowser.addImportingAsset("Material", "", "", %noSuffixName);
+            
+         %materialAsset.filePath = filePath(%assetItem.filePath) @ "/" @ %noSuffixName;
+            
+         %cratedNewMaterial = true;
       }
       
       if(isObject(%materialAsset))
@@ -45,51 +51,60 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
       //if we find these, we'll just populate into the original's material
       
       //If we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
-      if(getAssetImportConfigValue("Images/UseDiffuseSuffixOnOriginImg", "1") == 1)
+      if(%foundSuffixType $= "")
       {
-         if(%foundSuffixType $= "")
+         if(getAssetImportConfigValue("Images/UseDiffuseSuffixOnOriginImg", "1") == 1)
          {
-            %diffuseToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",", 0);
-            %assetItem.AssetName = %assetItem.AssetName @ %diffuseToken;
-            
-            if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
-               %materialAsset.diffuseImageAsset = %assetItem;
-         }
-         else if(%foundSuffixType !$= "")
-         {
-            //otherwise, if we have some sort of suffix, we'll want to figure out if we've already got an existing material, and should append to it  
-            
-            if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
+            if(%foundSuffixType $= "")
             {
-               if(%foundSuffixType $= "diffuse")
-                  %materialAsset.diffuseImageAsset = %assetItem;
-               else if(%foundSuffixType $= "normal")
-                  %materialAsset.normalImageAsset = %assetItem;
-               else if(%foundSuffixType $= "metalness")
-                  %materialAsset.metalnessImageAsset = %assetItem;
-               else if(%foundSuffixType $= "roughness")
-                  %materialAsset.roughnessImageAsset = %assetItem;
-                  else if(%foundSuffixType $= "specular")
-                  %materialAsset.specularImageAsset = %assetItem;
-               else if(%foundSuffixType $= "AO")
-                  %materialAsset.AOImageAsset = %assetItem;
-               else if(%foundSuffixType $= "composite")
-                  %materialAsset.compositeImageAsset = %assetItem;
+               %diffuseToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",", 0);
+               %assetItem.AssetName = %assetItem.AssetName @ %diffuseToken;
             }
          }
-      }
-      else
-      {
-         //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
-         //we'll give it a generic one
-         if(%materialAsset.assetName $= %assetItem.assetName)
+         else
          {
-            %assetItem.AssetName = %assetItem.AssetName @ "_image";
+            //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
+            //we'll give it a generic one
+            if(%materialAsset.assetName $= %assetItem.assetName)
+            {
+               %assetItem.AssetName = %assetItem.AssetName @ "_image";
+            }
+         }
+         
+         %foundSuffixType = "diffuse";
+      }
+      
+      if(%foundSuffixType !$= "")
+      {
+         //otherwise, if we have some sort of suffix, we'll want to figure out if we've already got an existing material, and should append to it  
+         
+         if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
+         {
+            if(%foundSuffixType $= "diffuse")
+               %materialAsset.diffuseImageAsset = %assetItem;
+            else if(%foundSuffixType $= "normal")
+               %materialAsset.normalImageAsset = %assetItem;
+            else if(%foundSuffixType $= "metalness")
+               %materialAsset.metalnessImageAsset = %assetItem;
+            else if(%foundSuffixType $= "roughness")
+               %materialAsset.roughnessImageAsset = %assetItem;
+               else if(%foundSuffixType $= "specular")
+               %materialAsset.specularImageAsset = %assetItem;
+            else if(%foundSuffixType $= "AO")
+               %materialAsset.AOImageAsset = %assetItem;
+            else if(%foundSuffixType $= "composite")
+               %materialAsset.compositeImageAsset = %assetItem;
          }
       }
       
-      %assetItem.processed = true;
+      //If we JUST created this material, we need to do a process pass on it to do any other setup for it
+      if(%cratedNewMaterial)
+      {
+         AssetBrowser.prepareImportMaterialAsset(%materialAsset);
+      }
    }
+   
+   %assetItem.processed = true;
 }
 
 function AssetBrowser::importImageAsset(%this, %assetItem)

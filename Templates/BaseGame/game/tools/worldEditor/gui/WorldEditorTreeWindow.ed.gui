@@ -289,7 +289,7 @@
                   lockHorizScroll = "false";
                   lockVertScroll = "true";
                   constantThumbHeight = "0";
-                  childMargin = "0 0";
+                  childMargin = "0 6";
 
                   new GuiDynamicCtrlArrayControl(CreatorIconArray) {
                      canSaveDynamicFields = "0";

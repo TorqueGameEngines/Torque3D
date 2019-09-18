@@ -1035,7 +1035,7 @@ void GuiTreeViewCtrl::_destroyTree()
    {
       Item *pFreeItem = mItems[ i ];
       if( pFreeItem != NULL )
-         _destroyItem(pFreeItem);
+         delete pFreeItem;
    }
 
    mItems.clear();

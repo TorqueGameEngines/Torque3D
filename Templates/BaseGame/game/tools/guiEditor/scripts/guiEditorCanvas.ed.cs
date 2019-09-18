@@ -31,7 +31,7 @@ function GuiEditCanvas::onAdd( %this )
 {
    // %this.setWindowTitle("Torque Gui Editor");
 
-   %this.onCreateMenu();
+   //%this.onCreateMenu();
 }
 
 //---------------------------------------------------------------------------------------------

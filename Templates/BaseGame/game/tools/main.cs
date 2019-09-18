@@ -120,17 +120,6 @@ package Tools
             call( %initializeFunction );
       }
       
-      //Now, go through and load any tool-group modules
-      ModuleDatabase.setModuleExtension("module");
-      
-      //Any common tool modules
-      ModuleDatabase.scanModules( "tools", false );
-      ModuleDatabase.LoadGroup( "Tool" );
-      
-      //Do any tools that come in with a gameplay package. These are usually specialized tools
-      //ModuleDatabase.scanModules( "data", false );
-      //ModuleDatabase.LoadGroup( "Tool" );
-
       // Popuplate the default SimObject icons that 
       // are used by the various editors.
       EditorIconRegistry::loadFromPath( "tools/classIcons/" );
@@ -150,6 +139,8 @@ package Tools
       popInstantGroup();
       $instantGroup = MissionCleanup;
       pushInstantGroup();
+      
+      $Tools::loaded = true;
    }
    
    function startToolTime(%tool)

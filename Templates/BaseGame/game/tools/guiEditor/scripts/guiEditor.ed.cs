@@ -74,22 +74,14 @@ function toggleGuiEditor( %make )
    {
       if( EditorIsActive() && !GuiEditor.toggleIntoEditorGui )
          toggleEditor( true );
-         
-      if( !isObject( GuiEditCanvas ) )
-         new GuiControl( GuiEditCanvas, EditorGuiGroup );
       
-      if( GuiEditorIsActive() )
+      if( $InGuiEditor || GuiEditorIsActive() )
       {
          GuiEditor.close();
       }
       else
       {
          GuiEditor.open();
-      
-         // Cancel the scheduled event to prevent
-         // the level from cycling after it's duration
-         // has elapsed.
-         cancel($Game::Schedule);
       }
       
       // Cancel the scheduled event to prevent
@@ -115,6 +107,9 @@ package GuiEditor_BlockDialogs
 
 function GuiEditor::open(%this)
 {
+   if( !isObject( GuiEditCanvas ) )
+      new GuiControl( GuiEditCanvas, EditorGuiGroup );
+            
    GuiEditCanvas.onCreateMenu();
 
    GuiEditContent(Canvas.getContent());

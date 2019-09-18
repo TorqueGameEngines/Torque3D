@@ -748,8 +748,10 @@ void RenderProbeMgr::render( SceneRenderState *state )
    String useDebugContrib = Con::getVariable("$Probes::showProbeContrib", "0");
    mProbeArrayEffect->setShaderMacro("DEBUGVIZ_CONTRIB", useDebugContrib);
 
-   if(mHasSkylight && mEffectiveProbeCount == 0)
+   if(mSkylightCubemapIdx != -1 && mEffectiveProbeCount == 0)
       mProbeArrayEffect->setShaderMacro("SKYLIGHT_ONLY", "1");
+   else
+      mProbeArrayEffect->setShaderMacro("SKYLIGHT_ONLY", "0");
    
    mProbeArrayEffect->setTexture(3, mBRDFTexture);
    mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);

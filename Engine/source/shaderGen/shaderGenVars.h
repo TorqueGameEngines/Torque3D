@@ -38,6 +38,9 @@ struct ShaderGenVars
    const static String cameraToWorld;
    const static String worldToObj;
    const static String viewToObj;
+   const static String invCameraTrans;
+   const static String cameraToScreen;
+   const static String screenToCamera;
    const static String cubeTrans;
    const static String cubeMips;
    const static String objTrans;

@@ -66,7 +66,10 @@ public:
    GFXShaderConstHandle* mWorldToCameraSC;
    GFXShaderConstHandle* mCameraToWorldSC;
    GFXShaderConstHandle* mWorldToObjSC;         
-   GFXShaderConstHandle* mViewToObjSC;         
+   GFXShaderConstHandle* mViewToObjSC;
+   GFXShaderConstHandle* mInvCameraTransSC;
+   GFXShaderConstHandle* mCameraToScreenSC;
+   GFXShaderConstHandle* mScreenToCameraSC;
    GFXShaderConstHandle* mCubeTransSC;
    GFXShaderConstHandle* mCubeMipsSC;
    GFXShaderConstHandle* mObjTransSC;

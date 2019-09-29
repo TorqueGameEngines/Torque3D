@@ -93,6 +93,11 @@ const MatrixF& SceneRenderState::getProjectionMatrix() const
    return getRenderPass()->getMatrixSet().getCameraToScreen();
 }
 
+const MatrixF& SceneRenderState::getInvProjectionMatrix() const
+{
+   return getRenderPass()->getMatrixSet().getScreenToCamera();
+}
+
 //-----------------------------------------------------------------------------
 
 void SceneRenderState::renderObjects( SceneObject** objects, U32 numObjects )

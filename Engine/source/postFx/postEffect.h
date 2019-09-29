@@ -155,6 +155,9 @@ protected:
    GFXShaderConstHandle *mDeltaTimeSC;
    GFXShaderConstHandle *mInvCameraMatSC;
    GFXShaderConstHandle *mMatCameraToWorldSC;
+   GFXShaderConstHandle *mInvCameraTransSC;
+   GFXShaderConstHandle *mMatCameraToScreenSC;
+   GFXShaderConstHandle *mMatScreenToCameraSC;
 
    bool mAllowReflectPass;
 

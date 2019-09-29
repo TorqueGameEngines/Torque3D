@@ -639,6 +639,12 @@ new GuiControlProfile( ToolsGuiTextPadProfile )
    // Deviate from the Default
    opaque=true;  
    fillColor = EditorSettings.value("Theme/windowBackgroundColor");   
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   
+   fontColor = EditorSettings.value("Theme/fieldTextColor");   
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");   
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");   
    border = 0;
    category = "Tools";
 };

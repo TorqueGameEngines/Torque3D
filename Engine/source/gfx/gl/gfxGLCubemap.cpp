@@ -326,17 +326,26 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
    AssertFatal(cubemaps, "GFXGLCubemapArray- Got null GFXCubemapHandle!");
    AssertFatal(*cubemaps, "GFXGLCubemapArray - Got empty cubemap!");
 
+   U32 downscalePower = GFXTextureManager::smTextureReductionLevel;
+   U32 scaledSize = cubemaps[0]->getSize();
+
+   if (downscalePower != 0)
+   {
+      // Otherwise apply the appropriate scale...
+      scaledSize >>= downscalePower;
+   }
+
    //all cubemaps must be the same size,format and number of mipmaps. Grab the details from the first cubemap
-   mSize = cubemaps[0]->getSize();
+   mSize = scaledSize;
    mFormat = cubemaps[0]->getFormat();
-   mMipMapLevels = cubemaps[0]->getMipMapLevels();
+   mMipMapLevels = cubemaps[0]->getMipMapLevels() - downscalePower;
    mNumCubemaps = cubemapCount;
    const bool isCompressed = ImageUtil::isCompressedFormat(mFormat);
 
    glGenTextures(1, &mCubemap);
    PRESERVE_CUBEMAP_ARRAY_TEXTURE();
    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, mCubemap);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAX_LEVEL, mMipMapLevels - 1);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAX_LEVEL, mMin(mMipMapLevels - 1, 1));
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -374,10 +383,19 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
 //Just allocate the cubemap array but we don't upload any data
 void GFXGLCubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format)
 {
+   U32 downscalePower = GFXTextureManager::smTextureReductionLevel;
+   U32 scaledSize = cubemapFaceSize;
+
+   if (downscalePower != 0)
+   {
+      // Otherwise apply the appropriate scale...
+      scaledSize >>= downscalePower;
+   }
+
    //all cubemaps must be the same size,format and number of mipmaps. Grab the details from the first cubemap
-   mSize = cubemapFaceSize;
+   mSize = scaledSize;
    mFormat = format;
-   mMipMapLevels = ImageUtil::getMaxMipCount(cubemapFaceSize, cubemapFaceSize);
+   mMipMapLevels = ImageUtil::getMaxMipCount(scaledSize, scaledSize);
    mNumCubemaps = cubemapCount;
    const bool isCompressed = ImageUtil::isCompressedFormat(mFormat);
 

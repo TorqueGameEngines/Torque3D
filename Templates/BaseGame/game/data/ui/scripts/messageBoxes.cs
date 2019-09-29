@@ -20,17 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-
-// Cleanup Dialog created by 'core'
-if( isObject( MessageBoxYesNoDlg ) )
-   MessageBoxYesNoDlg.delete();
-if( isObject( MessageBoxOKDlg ) )
-   MessageBoxOKDlg.delete();
-
-// Load Editor Dialogs
-exec("./guis/messageBoxOk.gui");
-exec("./guis/messageBoxYesNo.gui");
-
 // --------------------------------------------------------------------
 // Message Sound
 // --------------------------------------------------------------------

@@ -1,7 +1,7 @@
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiControl(ScriptEditorDlg,EditorGuiGroup) {
    isContainer = "1";
-   Profile = "ToolsGuiDefaultProfile";
+   Profile = "ToolsGuiDefaultNonModalProfile";
    HorizSizing = "width";
    VertSizing = "height";
    position = "0 0";

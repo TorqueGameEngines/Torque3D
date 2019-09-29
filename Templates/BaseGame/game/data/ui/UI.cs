@@ -72,6 +72,10 @@ function UI::initClient(%this)
    exec("./guis/startupGui.gui");
    exec("./guis/startupGui.cs");
    
+   // Load Editor Dialogs
+   exec("./guis/messageBoxOk.gui");
+   exec("./guis/messageBoxYesNo.gui");
+   
    //Load scripts
    exec("./scripts/optionsList.cs");
    exec("./scripts/displayMenu.cs");

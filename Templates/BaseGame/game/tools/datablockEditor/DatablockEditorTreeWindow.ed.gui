@@ -95,7 +95,7 @@
             new GuiTextEditCtrl( DatablockEditorTreeFilter ) {
                position = "2 4";
                extent = "180 18";
-               profile = "GuiTextEditProfile";
+               profile = "ToolsGuiTextEditProfile";
                horizSizing = "width";
                vertSizing = "bottom";
                class = "GuiTreeViewFilterText";

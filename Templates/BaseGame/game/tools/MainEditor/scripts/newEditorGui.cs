@@ -16,7 +16,7 @@ function NewEditorGui::AddWindow(%this)
       minExtent = "8 2";
       horizSizing = "width";
       vertSizing = "height";
-      profile = "GuiTabPageProfile";
+      profile = "ToolsGuiTabPageProfile";
       visible = "1";
       active = "1";
       tooltipProfile = "GuiToolTipProfile";

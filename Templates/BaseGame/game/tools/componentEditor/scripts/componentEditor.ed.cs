@@ -45,7 +45,7 @@ function GuiInspectorEntityGroup::createAddComponentList(%this)
 
    %componentList = new GuiPopUpMenuCtrlEx(QuickEditComponentList) 
    {
-      Profile = "GuiPopupMenuProfile";
+      Profile = "ToolsGuiPopupMenuProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
       position = "28 4";

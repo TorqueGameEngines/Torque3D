@@ -151,7 +151,7 @@
          AnchorLeft = "1";
          AnchorRight = "0";
          isContainer = "0";
-         Profile = "GuiTextEditProfile";
+         Profile = "ToolsGuiTextEditProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
          position = "4 23";

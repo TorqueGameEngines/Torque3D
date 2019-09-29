@@ -827,6 +827,73 @@ Var* ShaderFeatureGLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
 	return outTex;
 }
 
+Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta, const MaterialFeatureData& fd)
+{
+   ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+
+   /*Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+
+   Var* matinfo = (Var*)LangElement::find("PBRConfig");
+   if (!matinfo)
+   {
+      Var* metalness = (Var*)LangElement::find("metalness");
+      if (!metalness)
+      {
+         metalness = new Var("metalness", "float");
+         metalness->uniform = true;
+         metalness->constSortPos = cspPotentialPrimitive;
+      }
+
+      Var* smoothness = (Var*)LangElement::find("smoothness");
+      if (!smoothness)
+      {
+         smoothness = new Var("smoothness", "float");
+         smoothness->uniform = true;
+         smoothness->constSortPos = cspPotentialPrimitive;
+      }
+
+      matinfo = new Var("PBRConfig", "vec4");
+      LangElement* colorDecl = new DecOp(matinfo);
+      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
+   }
+
+   Var* wsNormal = (Var*)LangElement::find("wsNormal");
+   Var* normal = (Var*)LangElement::find("normal");
+   if (!normal)
+   {
+      normal = new Var("normal", "vec3");
+      meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
+      if (!fd.features[MFT_NormalMap])
+      {
+         Var* worldToTangent = getInWorldToTangent(componentList);
+         meta->addStatement(new GenOp("  @ = normalize(tMul(@,vec3(0,0,1.0f)));\r\n\n", normal, worldToTangent));
+      }
+      else
+      {
+         meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", normal, wsNormal));
+      }      
+   }
+
+   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+   Var* wsPosition = getInWsPosition(componentList);
+   Var* wsView = getWsView(wsPosition, meta);
+
+   Var* surface = (Var*)LangElement::find("surface");
+
+   if (!surface)
+   {
+      surface = new Var("surface", "Surface");
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
+         wsPosition, wsEyePos, wsView));
+   }*/
+
+   Var* surface = (Var*)LangElement::find("surface");
+   if (!surface)
+   {
+      surface = new Var("surface", "float");
+   }
+   return surface;
+}
 //****************************************************************************
 // Base Texture
 //****************************************************************************
@@ -2060,32 +2127,12 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    // TODO: We can totally detect for this in the material
    // feature setup... we should move it out of here!
    //
-   if ( fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit] )
+   //if ( fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit] )
       return;
   
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
 
    MultiLine *meta = new MultiLine;
-
-   // Look for a wsNormal or grab it from the connector.
-   Var *wsNormal = (Var*)LangElement::find( "wsNormal" );
-   if ( !wsNormal )
-   {
-      wsNormal = connectComp->getElement( RT_TEXCOORD );
-      wsNormal->setName( "wsNormal" );
-      wsNormal->setStructName( "IN" );
-      wsNormal->setType( "vec3" );
-
-      // If we loaded the normal its our responsibility
-      // to normalize it... the interpolators won't.
-      //
-      // Note we cast to half here to get partial precision
-      // optimized code which is an acceptable loss of
-      // precision for normals and performs much better
-      // on older Geforce cards.
-      //
-      meta->addStatement( new GenOp( "   @ = normalize( half3( @ ) );\r\n", wsNormal, wsNormal ) );
-   }
 
 	// Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition( componentList );
@@ -2106,12 +2153,13 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    // Get all the light constants.
    Var *inLightPos  = new Var( "inLightPos", "vec4" );
    inLightPos->uniform = true;
-   inLightPos->arraySize = 3;
+   inLightPos->arraySize = 4;
    inLightPos->constSortPos = cspPotentialPrimitive;
 
-   Var *inLightInvRadiusSq  = new Var( "inLightInvRadiusSq", "vec4" );
-   inLightInvRadiusSq->uniform = true;
-   inLightInvRadiusSq->constSortPos = cspPotentialPrimitive;
+   Var * inLightConfigData = new Var( "inLightConfigData", "vec4" );
+   inLightConfigData->uniform = true;
+   inLightConfigData->arraySize = 4;
+   inLightConfigData->constSortPos = cspPotentialPrimitive;
 
    Var *inLightColor  = new Var( "inLightColor", "vec4" );
    inLightColor->uniform = true;
@@ -2120,56 +2168,54 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    Var *inLightSpotDir  = new Var( "inLightSpotDir", "vec4" );
    inLightSpotDir->uniform = true;
-   inLightSpotDir->arraySize = 3;
+   inLightSpotDir->arraySize = 4;
    inLightSpotDir->constSortPos = cspPotentialPrimitive;
 
-   Var *inLightSpotAngle  = new Var( "inLightSpotAngle", "vec4" );
-   inLightSpotAngle->uniform = true;
-   inLightSpotAngle->constSortPos = cspPotentialPrimitive;
+   Var * lightSpotParams = new Var( "lightSpotParams", "vec4" );
+   lightSpotParams->uniform = true;
+   lightSpotParams->arraySize = 4;
+   lightSpotParams->constSortPos = cspPotentialPrimitive;
 
-   Var *lightSpotFalloff  = new Var( "inLightSpotFalloff", "vec4" );
-   lightSpotFalloff->uniform = true;
-   lightSpotFalloff->constSortPos = cspPotentialPrimitive;
+   Var* hasVectorLight = new Var("hasVectorLight", "int");
+   hasVectorLight->uniform = true;
+   hasVectorLight->constSortPos = cspPotentialPrimitive;
 
-   Var *smoothness = (Var*)LangElement::find("smoothness");
-   if (!fd.features[MFT_SpecularMap])
+   Var* vectorLightDirection = new Var("vectorLightDirection", "vec4");
+   vectorLightDirection->uniform = true;
+   vectorLightDirection->constSortPos = cspPotentialPrimitive;
+
+   Var* vectorLightColor = new Var("vectorLightColor", "vec4");
+   vectorLightColor->uniform = true;
+   vectorLightColor->constSortPos = cspPotentialPrimitive;
+
+   Var* vectorLightBrightness = new Var("vectorLightBrightness", "float");
+   vectorLightBrightness->uniform = true;
+   vectorLightBrightness->constSortPos = cspPotentialPrimitive;
+
+   Var* surface = getSurface(componentList, meta, fd);
+   if (!surface)
    {
-      if (!smoothness)
-      {
-         smoothness = new Var("smoothness", "float");
-         smoothness->uniform = true;
-         smoothness->constSortPos = cspPotentialPrimitive;
-      }
-   }
+      Con::errorf("ShaderGen::RTLightingFeatGLSL()  - failed to generate surface!");
+      return;
+   }   
+   Var *smoothness = (Var*)LangElement::find("smoothness");
 
    Var *metalness = (Var*)LangElement::find("metalness");
-   if (!fd.features[MFT_SpecularMap])
-   {
-      if (!metalness)
-      {
-         metalness = new Var("metalness", "float");
-         metalness->uniform = true;
-         metalness->constSortPos = cspPotentialPrimitive;
-      }
-   }
 
-   Var *albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var *ambient  = new Var( "ambient", "vec4" );
    ambient->uniform = true;
    ambient->constSortPos = cspPass;
+   
+   Var* lighting = new Var("lighting", "vec4");
+   meta->addStatement(new GenOp("   @ = compute4Lights( @, @, @, @,\r\n"
+      "      @, @, @, @, @, @, @);\r\n",
+      new DecOp(lighting), surface, lightMask, inLightPos, inLightConfigData, inLightColor, inLightSpotDir, lightSpotParams,
+         hasVectorLight, vectorLightDirection, vectorLightColor, vectorLightBrightness));
 
-   // Calculate the diffuse shading and specular powers.
-   meta->addStatement( new GenOp( "   compute4Lights( @, @, @, @,\r\n"
-                                  "      @, @, @, @, @, @, @, @, @,\r\n"
-                                  "      @, @ );\r\n", 
-      wsView, wsPosition, wsNormal, lightMask,
-      inLightPos, inLightInvRadiusSq, inLightColor, inLightSpotDir, inLightSpotAngle, lightSpotFalloff, smoothness, metalness, albedo,
-      rtShading, specular ) );
+   meta->addStatement(new GenOp("   @.rgb += @.rgb;\r\n", curColor, lighting));
 
-   // Apply the lighting to the diffuse color.
-   LangElement *lighting = new GenOp( "vec4( @.rgb + @.rgb, 1 )", rtShading, ambient );
-   meta->addStatement( new GenOp( "   @;\r\n", assignColor( lighting, Material::Mul ) ) );
    output = meta;  
 }
 
@@ -2872,7 +2918,7 @@ void HardwareSkinningFeatureGLSL::processVert(Vector<ShaderComponent*> &componen
 }
 
 //****************************************************************************
-// ReflectionProbeFeatHLSL
+// ReflectionProbeFeatGLSL
 //****************************************************************************
 
 ReflectionProbeFeatGLSL::ReflectionProbeFeatGLSL()
@@ -2880,6 +2926,17 @@ ReflectionProbeFeatGLSL::ReflectionProbeFeatGLSL()
 {
    addDependency(&mDep);
 }
+
+void ReflectionProbeFeatGLSL::processVert(Vector<ShaderComponent*>& componentList,
+   const MaterialFeatureData& fd)
+{
+   //MultiLine* meta = new MultiLine;
+   //output = meta;
+   // Also output the worldToTanget transform which
+   // we use to create the world space normal.
+   //getOutWorldToTangent(componentList, meta, fd);
+}
+
 void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList,
    const MaterialFeatureData& fd)
 {
@@ -2889,7 +2946,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    // TODO: We can totally detect for this in the material
    // feature setup... we should move it out of here!
    //
-   if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
+   //if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
       return;
 
    ShaderConnector * connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
@@ -2897,15 +2954,13 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    MultiLine * meta = new MultiLine;
 
    // Now the wsPosition and wsView.
-   Var * wsPosition = getInWsPosition(componentList);
-   Var * wsView = getWsView(wsPosition, meta);
-
-   Var * albedo = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
-
+   Var *wsPosition = getInWsPosition(componentList);
+   Var *wsView = getWsView(wsPosition, meta);
+   
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 
-   Var * numProbes = new Var("numProbes", "float");
+   Var * numProbes = new Var("numProbes", "int");
    numProbes->uniform = true;
    numProbes->constSortPos = cspPotentialPrimitive;
 
@@ -2913,9 +2968,9 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    cubeMips->uniform = true;
    cubeMips->constSortPos = cspPotentialPrimitive;
 
-   Var * hasSkylight = new Var("hasSkylight", "float");
-   hasSkylight->uniform = true;
-   hasSkylight->constSortPos = cspPotentialPrimitive;
+   Var * skylightCubemapIdx = new Var("skylightCubemapIdx", "float");
+   skylightCubemapIdx->uniform = true;
+   skylightCubemapIdx->constSortPos = cspPotentialPrimitive;
 
    Var * inProbePosArray = new Var("inProbePosArray", "vec4");
    inProbePosArray->arraySize = MAX_FORWARD_PROBES;
@@ -2942,7 +2997,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    probeConfigData->uniform = true;
    probeConfigData->constSortPos = cspPotentialPrimitive;
 
-   Var * worldToObjArray = new Var("worldToObjArray", "mat4x4");
+   Var * worldToObjArray = new Var("worldToObjArray", "mat4");
    worldToObjArray->arraySize = MAX_FORWARD_PROBES;
    worldToObjArray->uniform = true;
    worldToObjArray->constSortPos = cspPotentialPrimitive;
@@ -2965,87 +3020,29 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    irradianceCubemapAR->sampler = true;
    irradianceCubemapAR->constNum = Var::getTexUnitNum();
 
-   Var * skylightSpecularMap = new Var("skylightSpecularMap", "samplerCube");
-   skylightSpecularMap->uniform = true;
-   skylightSpecularMap->sampler = true;
-   skylightSpecularMap->constNum = Var::getTexUnitNum();
+   Var* surface = getSurface(componentList, meta, fd);
 
-   Var * skylightIrradMap = new Var("skylightIrradMap", "samplerCube");
-   skylightIrradMap->uniform = true;
-   skylightIrradMap->sampler = true;
-   skylightIrradMap->constNum = Var::getTexUnitNum();
-
-
-   Var * inTex = getInTexCoord("texCoord", "vec2", componentList);
-   if (!inTex)
+   if (!surface)
+   {
+      Con::errorf("ShaderGen::ReflectionProbeFeatGLSL()  - failed to generate surface!");
       return;
-
-   Var * diffuseColor = (Var*)LangElement::find("diffuseColor");
-   if (!diffuseColor)
-   {
-      diffuseColor = new Var;
-      diffuseColor->setType("vec4");
-      diffuseColor->setName("diffuseColor");
-      LangElement* colorDecl = new DecOp(diffuseColor);
-      meta->addStatement(new GenOp("   @ = vec4(1.0,1.0,1.0,1.0);\r\n", colorDecl)); //default to flat white
    }
 
-   Var* matinfo = (Var*)LangElement::find("PBRConfig");
-   if (!matinfo)
-   {
-      Var* metalness = (Var*)LangElement::find("metalness");
-      if (!metalness)
-      {
-         metalness = new Var("metalness", "float");
-         metalness->uniform = true;
-         metalness->constSortPos = cspPotentialPrimitive;
-      }
+   Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
-      Var* smoothness = (Var*)LangElement::find("smoothness");
-      if (!smoothness)
-      {
-         smoothness = new Var("smoothness", "float");
-         smoothness->uniform = true;
-         smoothness->constSortPos = cspPotentialPrimitive;
-      }
-
-      matinfo = new Var("PBRConfig", "vec4");
-      LangElement* colorDecl = new DecOp(matinfo);
-      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
-   }
-
-   Var* bumpNormal = (Var*)LangElement::find("bumpNormal");
-   if (!bumpNormal)
-   {
-      bumpNormal = new Var("bumpNormal", "vec4");
-      LangElement* colorDecl = new DecOp(bumpNormal);
-      meta->addStatement(new GenOp("   @ = vec4(1.0,0.0,0.0,0.0);\r\n", colorDecl)); //default to identity normal
-   }
-
+   Var *matinfo = (Var*)LangElement::find("PBRConfig");
+   Var* metalness = (Var*)LangElement::find("metalness");
+   Var* smoothness = (Var*)LangElement::find("smoothness");
+   
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
 
-   Var* worldToCamera = (Var*)LangElement::find("worldToCamera");
-   if (!worldToCamera)
-   {
-      worldToCamera = new Var;
-      worldToCamera->setType("mat4x4");
-      worldToCamera->setName("worldToCamera");
-      worldToCamera->uniform = true;
-      worldToCamera->constSortPos = cspPass;
-   }
-
    //Reflection vec
-   Var* surface = new Var("surface", "Surface");
-   meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, bumpNormal, matinfo,
-      inTex, wsPosition, wsEyePos, wsView, worldToCamera));
-   String computeForwardProbes = String("   @.rgb += computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   String computeForwardProbes = String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String("@,@,\r\n\t\t");
-   computeForwardProbes += String("@, @, \r\n\t\t");
    computeForwardProbes += String("@,@).rgb; \r\n");
 
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), albedo, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
-      hasSkylight, BRDFTexture,
-      skylightIrradMap, skylightSpecularMap,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), curColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
+      skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
 
    output = meta;
@@ -3055,8 +3052,8 @@ ShaderFeature::Resources ReflectionProbeFeatGLSL::getResources(const MaterialFea
 {
    Resources res;
 
-   res.numTex = 5;
-   res.numTexReg = 5;
+   res.numTex = 3;
+   res.numTexReg = 3;
 
    return res;
 }
@@ -3074,10 +3071,6 @@ void ReflectionProbeFeatGLSL::setTexData(Material::StageData& stageDat,
       passData.mSamplerNames[texIndex] = "specularCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
       passData.mSamplerNames[texIndex] = "irradianceCubemapAR";
-      passData.mTexType[texIndex++] = Material::SGCube;
-      passData.mSamplerNames[texIndex] = "skylightSpecularMap";
-      passData.mTexType[texIndex++] = Material::SGCube;
-      passData.mSamplerNames[texIndex] = "skylightIrradMap";
       passData.mTexType[texIndex++] = Material::SGCube;
    }
 }

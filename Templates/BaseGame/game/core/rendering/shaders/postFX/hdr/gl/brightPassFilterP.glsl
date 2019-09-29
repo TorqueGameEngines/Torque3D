@@ -23,7 +23,7 @@
 #include "../../../gl/torque.glsl"
 #include "../../../gl/hlslCompat.glsl"
 #include "shadergen:/autogenConditioners.h"
-#include "../../gl/postFX.glsl"
+#include "../../gl/postFx.glsl"
 
 uniform sampler2D inputTex ;
 uniform sampler2D luminanceTex  ;

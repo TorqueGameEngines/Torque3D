@@ -116,6 +116,32 @@ void GuiVariableInspector::endGroup()
    mCurrentGroup = "";
 }
 
+void GuiVariableInspector::setGroupExpanded(const char* groupName, bool isExpanded)
+{
+   String name = groupName;
+   for (U32 g = 0; g < mGroups.size(); g++)
+   {
+      if (mGroups[g]->getGroupName() == name)
+      {
+         if (isExpanded)
+            mGroups[g]->expand();
+         else
+            mGroups[g]->collapse();
+      }
+   }
+}
+
+void GuiVariableInspector::setGroupsExpanded(bool isExpanded)
+{
+   for (U32 g = 0; g < mGroups.size(); g++)
+   {
+      if (isExpanded)
+         mGroups[g]->expand();
+      else
+         mGroups[g]->collapse();
+   }
+}
+
 void GuiVariableInspector::addField(const char* name, const char* label, const char* typeName, const char* description, 
    const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj)
 {
@@ -226,6 +252,17 @@ DefineEngineMethod(GuiVariableInspector, endGroup, void, (),, "endGroup()")
 {
    object->endGroup();
 }
+
+DefineEngineMethod(GuiVariableInspector, setGroupExpanded, void, (const char* groupName, bool isExpanded), ("", false), "setGroupExpanded()")
+{
+   object->setGroupExpanded(groupName, isExpanded);
+}
+
+DefineEngineMethod(GuiVariableInspector, setGroupsExpanded, void, (bool isExpanded), (false), "setGroupsExpanded()")
+{
+   object->setGroupsExpanded(isExpanded);
+}
+
 
 DefineEngineMethod(GuiVariableInspector, addField, void, (const char* name, const char* label, const char* typeName, 
    const char* description, const char* defaultValue, const char* dataValues, SimObject* ownerObj),

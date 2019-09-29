@@ -13,7 +13,7 @@
 
    new GuiWindowCtrl(MBOKCancelDetailsFrame) {
       canSaveDynamicFields = "0";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "center";
       VertSizing = "center";
       position = "362 219";
@@ -34,7 +34,7 @@
 
       new GuiMLTextCtrl(MBOKCancelDetailsText) {
          canSaveDynamicFields = "0";
-         Profile = "GuiMLTextProfile";
+         Profile = "ToolsGuiMLTextProfile";
          HorizSizing = "center";
          VertSizing = "bottom";
          position = "32 39";
@@ -49,7 +49,7 @@
       };
       new GuiButtonCtrl() {
          canSaveDynamicFields = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "top";
          position = "158 273";
@@ -66,7 +66,7 @@
       };
       new GuiButtonCtrl() {
          canSaveDynamicFields = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "top";
          position = "30 273";
@@ -83,7 +83,7 @@
       };
       new GuiButtonCtrl(MBOKCancelDetailsButton) {
          canSaveDynamicFields = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "top";
          position = "9 302";
@@ -118,7 +118,7 @@
 
          new GuiMLTextCtrl(MBOKCancelDetailsInfoText) {
             canSaveDynamicFields = "0";
-            Profile = "GuiMLTextProfile";
+            Profile = "ToolsGuiMLTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             position = "2 2";

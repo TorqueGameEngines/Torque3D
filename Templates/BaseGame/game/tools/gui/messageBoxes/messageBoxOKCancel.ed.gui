@@ -10,7 +10,7 @@
    helpTag = "0";
 
    new GuiWindowCtrl(MBOKCancelFrame) {
-      profile = "GuiWindowProfile";
+      profile = "ToolsGuiWindowProfile";
       horizSizing = "center";
       vertSizing = "center";
       position = "170 175";
@@ -29,7 +29,7 @@
       text = "";
 
       new GuiMLTextCtrl(MBOKCancelText) {
-         profile = "GuiMLTextProfile";
+         profile = "ToolsGuiMLTextProfile";
          horizSizing = "center";
          vertSizing = "bottom";
          position = "8 34";
@@ -43,7 +43,7 @@
          
       };
       new GuiButtonCtrl() {
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "right";
          vertSizing = "top";
          position = "66 68";
@@ -57,7 +57,7 @@
          simpleStyle = "0";
       };
       new GuiButtonCtrl() {
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "right";
          vertSizing = "top";
          position = "156 68";

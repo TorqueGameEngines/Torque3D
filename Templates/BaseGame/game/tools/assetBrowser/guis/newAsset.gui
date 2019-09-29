@@ -99,7 +99,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextProfile";
+         profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -126,7 +126,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiPopupMenuProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -151,7 +151,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "Canvas.pushDialog(AssetBrowser_AddModule);\nAssetBrowser_addModuleWindow.selectWindow();";

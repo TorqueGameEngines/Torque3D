@@ -40,7 +40,7 @@
          anchorLeft = "1";
          anchorRight = "0";
          isContainer = "0";
-         profile = "GuiMLTextProfile";
+         profile = "ToolsGuiMLTextProfile";
          horizSizing = "center";
          vertSizing = "bottom";
          position = "9 26";
@@ -76,7 +76,7 @@
             anchorLeft = "1";
             anchorRight = "0";
             isContainer = "0";
-            profile = "GuiTextRightProfile";
+            profile = "ToolsGuiTextRightProfile";
             horizSizing = "right";
             vertSizing = "bottom";
             position = "5 5";
@@ -101,7 +101,7 @@
             anchorLeft = "1";
             anchorRight = "0";
             isContainer = "0";
-            profile = "GuiPopUpMenuProfile";
+            profile = "ToolsGuiPopUpMenuProfile";
             horizSizing = "width";
             vertSizing = "bottom";
             position = "115 5";
@@ -120,7 +120,7 @@
          buttonType = "PushButton";
          useMouseEvents = "0";
          isContainer = "0";
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "width";
          vertSizing = "top";
          position = "7 85";
@@ -140,7 +140,7 @@
          buttonType = "PushButton";
          useMouseEvents = "0";
          isContainer = "0";
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "left";
          vertSizing = "top";
          position = "170 85";

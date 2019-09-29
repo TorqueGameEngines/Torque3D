@@ -47,6 +47,7 @@ function initializeWorldEditor()
    exec("./gui/probeBakeDlg.gui" );
    
    exec("tools/gui/cubemapEditor.gui" );
+   exec("tools/gui/postFxEditor.gui" );
    
    // Load Scripts.
    exec("./scripts/menus.ed.cs");
@@ -72,6 +73,8 @@ function initializeWorldEditor()
    exec("./scripts/visibility/shadowViz.cs");
    exec("./scripts/visibility/probeViz.cs");
    exec("./scripts/visibility/miscViz.cs");
+   
+   exec("tools/gui/postFxEditor.cs" );
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));

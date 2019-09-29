@@ -520,7 +520,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiCheckBoxProfile";
+         profile = "ToolsGuiCheckBoxProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";

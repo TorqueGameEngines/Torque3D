@@ -73,7 +73,7 @@ MODULE_BEGIN( TSShapeInstance )
 
       Con::addVariable("$pref::TS::maxInstancingVerts", TypeS32, &TSMesh::smMaxInstancingVerts,
          "@brief Enables mesh instancing on non-skin meshes that have less that this count of verts.\n"
-         "The default value is 200.  Higher values can degrade performance.\n"
+         "The default value is 2000.  Higher values can degrade performance.\n"
          "@ingroup Rendering\n" );
    }
 

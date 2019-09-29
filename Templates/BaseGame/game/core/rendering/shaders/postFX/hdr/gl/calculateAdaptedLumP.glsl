@@ -22,7 +22,7 @@
 
 #include "../../../gl/hlslCompat.glsl"
 #include "shadergen:/autogenConditioners.h"
-#include "../../gl/postFX.glsl"
+#include "../../gl/postFx.glsl"
 
 uniform sampler2D currLum;
 uniform sampler2D lastAdaptedLum;

@@ -22,7 +22,7 @@
 
 #include "../../../gl/torque.glsl"
 #include "../../../gl/hlslCompat.glsl"
-#include "../../gl/postFX.glsl"
+#include "../../gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 uniform sampler2D sceneTex;

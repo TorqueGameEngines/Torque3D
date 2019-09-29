@@ -187,7 +187,7 @@
          horizSizing = "right";
          vertSizing = "bottom";
          fixedAspectRatio = "0";
-         profile = "GuiPopUpMenuProfile";
+         profile = "ToolsGuiPopUpMenuProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "ToolsGuiToolTipProfile";

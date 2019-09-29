@@ -2,12 +2,15 @@
 new Scene(EditorTemplateLevel) {
    canSave = "1";
    canSaveDynamicFields = "1";
+   isSubScene = "0";
+   isEditing = "0";
+   isDirty = "0";
       cdTrack = "2";
       CTF_scoreLimit = "5";
-      enabled = "1";
+      Enabled = "1";
       musicTrack = "lush";
 
-   new LevelInfo(TheLevelInfo) {
+   new LevelInfo(theLevelInfo) {
       nearClip = "0.1";
       visibleDistance = "1000";
       visibleGhostDistance = "0";
@@ -19,14 +22,14 @@ new Scene(EditorTemplateLevel) {
       canvasClearColor = "0 0 0 255";
       ambientLightBlendPhase = "1";
       ambientLightBlendCurve = "0 0 -1 -1";
-      advancedLightmapSupport = "0";
       soundAmbience = "AudioAmbienceDefault";
       soundDistanceModel = "Linear";
       canSave = "1";
       canSaveDynamicFields = "1";
+         advancedLightmapSupport = "0";
          desc0 = "A blank room template that acts as a starting point.";
-         enabled = "1";
-         levelName = "Blank Room Template";
+         Enabled = "1";
+         LevelName = "Blank Room Template";
    };
    new SkyBox(theSky) {
       Material = "BlankSkyMat";
@@ -54,7 +57,7 @@ new Scene(EditorTemplateLevel) {
       flareScale = "1";
       attenuationRatio = "0 1 1";
       shadowType = "PSSM";
-      texSize = "1024";
+      texSize = "2048";
       overDarkFactor = "3000 1500 750 250";
       shadowDistance = "200";
       shadowSoftness = "0.25";
@@ -72,7 +75,7 @@ new Scene(EditorTemplateLevel) {
       canSaveDynamicFields = "1";
          bias = "0.1";
          Blur = "1";
-         enabled = "1";
+         Enabled = "1";
          height = "1024";
          lightBleedFactor = "0.8";
          minVariance = "0";
@@ -88,10 +91,20 @@ new Scene(EditorTemplateLevel) {
       Material = "Grid_512_Grey";
       canSave = "1";
       canSaveDynamicFields = "1";
-         enabled = "1";
+         Enabled = "1";
          position = "0 0 0";
          rotation = "1 0 0 0";
          scale = "1 1 1";
+   };
+   new Skylight() {
+      Enabled = "1";
+      ReflectionMode = "Baked Cubemap";
+      position = "1.37009 -5.23561 46.5817";
+      rotation = "1 0 0 0";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+      persistentId = "d5eb3afb-dced-11e9-a423-bb0e346e3870";
+         reflectionPath = "tools/levels/BlankRoom/probes/";
    };
 };
 //--- OBJECT WRITE END ---

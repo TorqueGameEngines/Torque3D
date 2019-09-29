@@ -161,7 +161,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
    %resetButton = new GuiButtonCtrl() {
       canSaveDynamicFields = "0";
       className = "materialFieldBtn";
-      Profile = "GuiButtonProfile";
+      Profile = "ToolsGuiButtonProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
       Position = "100 75";
@@ -179,7 +179,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
    %editMatButton = new GuiButtonCtrl() {
       canSaveDynamicFields = "0";
       className = "materialFieldBtn";
-      Profile = "GuiButtonProfile";
+      Profile = "ToolsGuiButtonProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
       Position = %resetButton.position.x + (%extent * 0.3) + 6 SPC "75";

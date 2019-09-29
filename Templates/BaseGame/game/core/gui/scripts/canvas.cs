@@ -147,7 +147,7 @@ function configureCanvas()
       "--Refresh Rate : " @ %rate NL
       "--AA TypeXLevel : " @ %aa NL
       "--------------");
-
+      
    // Actually set the new video mode
    Canvas.setVideoMode(%resX, %resY, %fs, %bpp, %rate, %aa);
 

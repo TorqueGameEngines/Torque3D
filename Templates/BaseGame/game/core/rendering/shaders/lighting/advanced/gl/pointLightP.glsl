@@ -175,7 +175,7 @@ void main()
       #ifdef SHADOW_CUBE
               
          // TODO: We need to fix shadow cube to handle soft shadows!
-         float occ = texture( shadowMap, ttMul( worldToLightProj, -surfaceToLight.L ) ).r;
+         float occ = texture( shadowMap, tMul( worldToLightProj, -surfaceToLight.L ) ).r;
          float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
          
       #else
@@ -192,7 +192,7 @@ void main()
    #ifdef USE_COOKIE_TEX
 
       // Lookup the cookie sample.
-      vec4 cookie = texture(cookieMap, ttMul(worldToLightProj, -surfaceToLight.L));
+      vec4 cookie = texture(cookieMap, tMul(worldToLightProj, -surfaceToLight.L));
       // Multiply the light with the cookie tex.
       lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 

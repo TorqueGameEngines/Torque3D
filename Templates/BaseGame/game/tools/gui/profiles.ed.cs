@@ -275,6 +275,8 @@ new GuiControlProfile( ToolsGuiTextEditProfile )
    //borderColor = "100 100 100";
    fillColor = EditorSettings.value("Theme/fieldBGColor");
    fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
@@ -332,7 +334,7 @@ new GuiControlProfile( ToolsGuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-	bitmap = "./images/button";
+	bitmap = "tools/gui/images/button";
    hasBitmapArray = false;
    category = "Tools";
 };
@@ -503,10 +505,13 @@ new GuiControlProfile( ToolsGuiPopUpMenuDefault : ToolsGuiDefaultProfile )
    fillColor = EditorSettings.value("Theme/fieldBGColor");//"255 255 255";//100
    fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");//"91 101 116";
    fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");//"91 101 116";
+   
    // font color is black
    fontColor = EditorSettings.value("Theme/fieldTextColor");//"215 215 215";
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");//"215 215 215";
    fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");//"215 215 215";
+   fontColorNA = EditorSettings.value("Theme/fieldTextColor");//"215 215 215";
+   
    borderColor = EditorSettings.value("Theme/dividerDarkColor");
    category = "Tools";
 };
@@ -551,7 +556,7 @@ new GuiControlProfile( ToolsGuiListBoxProfile )
 {
    fillColorHL = EditorSettings.value("Theme/windowBackgroundColor");
    fillColorNA = EditorSettings.value("Theme/windowBackgroundColor");
-   fontColor = EditorSettings.value("Theme/headerTextColor");
+   fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    

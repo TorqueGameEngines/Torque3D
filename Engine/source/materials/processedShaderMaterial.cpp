@@ -80,6 +80,9 @@ void ShaderConstHandles::init( GFXShader *shader, Vector<CustomShaderFeatureData
    mCameraToWorldSC = shader->getShaderConstHandle(ShaderGenVars::cameraToWorld);
    mWorldToObjSC = shader->getShaderConstHandle(ShaderGenVars::worldToObj);
    mViewToObjSC = shader->getShaderConstHandle(ShaderGenVars::viewToObj);
+   mInvCameraTransSC = shader->getShaderConstHandle(ShaderGenVars::invCameraTrans);
+   mCameraToScreenSC = shader->getShaderConstHandle(ShaderGenVars::cameraToScreen);
+   mScreenToCameraSC = shader->getShaderConstHandle(ShaderGenVars::screenToCamera);
    mCubeTransSC = shader->getShaderConstHandle(ShaderGenVars::cubeTrans);
    mCubeMipsSC = shader->getShaderConstHandle(ShaderGenVars::cubeMips);
    mObjTransSC = shader->getShaderConstHandle(ShaderGenVars::objTrans);

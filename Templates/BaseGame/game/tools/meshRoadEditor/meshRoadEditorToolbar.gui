@@ -85,7 +85,7 @@
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "0";
-         Profile = "GuiDefalutProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
          Position = "89 3";

@@ -82,23 +82,40 @@ function AssetBrowser::editModuleInfo(%this)
    AssetBrowser.tempModule = new ModuleDefinition();
    AssetBrowser.tempModule.assignFieldsFrom(%moduleDef);
    
-   ModuleEditInspector.inspect(AssetBrowser.tempModule);  
    AssetBrowser_editModule.editedModuleId = AssetBrowser.selectedModule;
    AssetBrowser_editModule.editedModule = AssetBrowser.tempModule;
    
-   //remove some of the groups we don't need:
-   for(%i=0; %i < ModuleEditInspector.getCount(); %i++)
-   {
-      %caption = ModuleEditInspector.getObject(%i).caption;
-      
-      if(%caption $= "BuildId" || %caption $= "type" || %caption $= "Dependencies" || %caption $= "scriptFile" 
-         || %caption $= "AssetTagsManifest" || %caption $= "ScopeSet" || %caption $= "ModulePath" 
-         || %caption $= "ModuleFile" || %caption $= "ModuleFilePath" || %caption $= "ModuleScriptFilePath"  )
-      {
-         ModuleEditInspector.remove(ModuleEditInspector.getObject(%i));
-         %i--;
-      }
-   }
+    /// Module configuration.
+   ModuleEditInspector.startGroup("General");
+   ModuleEditInspector.addField("ModuleId", "ModuleId", "string", "", AssetBrowser.tempModule.ModuleId, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("VersionId", "VersionId", "string", "", AssetBrowser.tempModule.VersionId, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("BuildId", "BuildId", "string", "", AssetBrowser.tempModule.BuildId, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("enabled", "enabled", "bool", "", AssetBrowser.tempModule.enabled, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("Description", "Description", "command", "", AssetBrowser.tempModule.Description, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("Group", "Group", "string", "", AssetBrowser.tempModule.Group, "", AssetBrowser.tempModule);
+   ModuleEditInspector.endGroup();
+   
+   ModuleEditInspector.startGroup("Management");
+   ModuleEditInspector.addField("Synchronized", "Synchronized", "bool", "", AssetBrowser.tempModule.Synchronized, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("Deprecated", "Deprecated", "bool", "", AssetBrowser.tempModule.Deprecated, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("CriticalMerge", "CriticalMerge", "bool", "", AssetBrowser.tempModule.CriticalMerge, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("OverrideExistingObjects", "OverrideExistingObjects", "bool", "", AssetBrowser.tempModule.OverrideExistingObjects, "", AssetBrowser.tempModule);
+   ModuleEditInspector.endGroup();
+   
+   ModuleEditInspector.startGroup("Meta");
+   ModuleEditInspector.addField("Author", "Author", "string", "", AssetBrowser.tempModule.Author, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("Type", "Type", "string", "", AssetBrowser.tempModule.Type, "", AssetBrowser.tempModule);
+   ModuleEditInspector.endGroup();
+   
+   ModuleEditInspector.startGroup("Script");
+   ModuleEditInspector.addField("ScriptFile", "ScriptFile", "string", "", AssetBrowser.tempModule.ScriptFile, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("CreateFunction", "CreateFunction", "string", "", AssetBrowser.tempModule.CreateFunction, "", AssetBrowser.tempModule);
+   ModuleEditInspector.addField("DestroyFunction", "DestroyFunction", "string", "", AssetBrowser.tempModule.DestroyFunction, "", AssetBrowser.tempModule);
+   ModuleEditInspector.endGroup();
+   
+   ModuleEditInspector.startGroup("Dependencies");
+   ModuleEditInspector.addField("ModuleDependencies", "Module Dependencies", "ModuleDependenciesButton", "", "", "", AssetBrowser.tempModule);
+   ModuleEditInspector.endGroup();
 }
 
 function AssetBrowser::renameModule(%this)

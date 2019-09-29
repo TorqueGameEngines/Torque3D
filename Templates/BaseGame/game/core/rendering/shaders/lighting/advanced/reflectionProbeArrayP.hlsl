@@ -93,7 +93,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 	   // and respect constraint A.
       
       if (probehits > 1.0)
-	  {
+	   {
          for (i = 0; i < numProbes; i++)
          {
                blendFactor[i] = ((contribution[i] / blendSum)) / probehits;

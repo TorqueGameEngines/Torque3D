@@ -61,6 +61,8 @@ function SSAOPostFx::onAdd( %this )
 {  
    %this.wasVis = "Uninitialized";
    %this.quality = "Uninitialized";
+   
+   PostFXManager.registerPostEffect(%this);
 }
 
 function SSAOPostFx::preProcess( %this )
@@ -128,7 +130,87 @@ function SSAOPostFx::onDisabled( %this )
   $AL::UseSSAOMask = false;
 }
 
+function SSAOPostFx::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("SSAO - General");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::EnabledSSAO", "Enabled", "bool", "Low,Medium,High", $PostFXManager::PostFX::EnableSSAO, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::quality", "Quality", "list", "Low,Medium,High", $SSAOPostFx::quality, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::overallStrength", "Overall Strength", "float", "", $SSAOPostFx::overallStrength, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::blurDepthTol", "Blur (Softness)", "float", "", $SSAOPostFx::blurDepthTol, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::blurNormalTol", "Blur (Normal Maps)", "float", "", $SSAOPostFx::blurNormalTol, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("SSAO - Near");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::sRadius", "Radius", "list", "Low,Medium,High", $SSAOPostFx::sRadius, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::sStrength", "Strength", "float", "", $SSAOPostFx::sStrength, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::sDepthMin", "Depth Min", "float", "", $SSAOPostFx::sDepthMin, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::sDepthMax", "Depth Max", "float", "", $SSAOPostFx::sDepthMax, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::sNormalTol", "Normal Map Tolerance", "float", "", $SSAOPostFx::sNormalTol, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::sNormalPow", "Normal Map Power", "float", "", $SSAOPostFx::sNormalPow, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("SSAO - Far");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::lRadius", "Radius", "list", "Low,Medium,High", $SSAOPostFx::lRadius, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::lStrength", "Strength", "float", "", $SSAOPostFx::lStrength, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::lDepthMin", "Depth Min", "float", "", $SSAOPostFx::lDepthMin, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::lDepthMax", "Depth Max", "float", "", $SSAOPostFx::lDepthMax, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::lNormalTol", "Normal Map Tolerance", "float", "", $SSAOPostFx::lNormalTol, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::SSAO::lNormalPow", "Normal Map Power", "float", "", $SSAOPostFx::lNormalPow, "");
+   PostEffectEditorInspector.endGroup();
+}
 
+function SSAOPostFx::applyFromPreset(%this)
+{
+   //SSAO Settings
+   $PostFXManager::PostFX::EnableSSAO  = $PostFXManager::Settings::EnabledSSAO;
+   $SSAOPostFx::blurDepthTol           = $PostFXManager::Settings::SSAO::blurDepthTol;
+   $SSAOPostFx::blurNormalTol          = $PostFXManager::Settings::SSAO::blurNormalTol;
+   $SSAOPostFx::lDepthMax              = $PostFXManager::Settings::SSAO::lDepthMax;
+   $SSAOPostFx::lDepthMin              = $PostFXManager::Settings::SSAO::lDepthMin;
+   $SSAOPostFx::lDepthPow              = $PostFXManager::Settings::SSAO::lDepthPow;
+   $SSAOPostFx::lNormalPow             = $PostFXManager::Settings::SSAO::lNormalPow;
+   $SSAOPostFx::lNormalTol             = $PostFXManager::Settings::SSAO::lNormalTol;
+   $SSAOPostFx::lRadius                = $PostFXManager::Settings::SSAO::lRadius;
+   $SSAOPostFx::lStrength              = $PostFXManager::Settings::SSAO::lStrength;
+   $SSAOPostFx::overallStrength        = $PostFXManager::Settings::SSAO::overallStrength;
+   $SSAOPostFx::quality                = $PostFXManager::Settings::SSAO::quality;
+   $SSAOPostFx::sDepthMax              = $PostFXManager::Settings::SSAO::sDepthMax;
+   $SSAOPostFx::sDepthMin              = $PostFXManager::Settings::SSAO::sDepthMin;
+   $SSAOPostFx::sDepthPow              = $PostFXManager::Settings::SSAO::sDepthPow;
+   $SSAOPostFx::sNormalPow             = $PostFXManager::Settings::SSAO::sNormalPow;
+   $SSAOPostFx::sNormalTol             = $PostFXManager::Settings::SSAO::sNormalTol;
+   $SSAOPostFx::sRadius                = $PostFXManager::Settings::SSAO::sRadius;
+   $SSAOPostFx::sStrength              = $PostFXManager::Settings::SSAO::sStrength;  
+   
+   if($PostFXManager::PostFX::EnableSSAO)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function SSAOPostFx::settingsApply(%this)
+{
+   $PostFXManager::Settings::EnabledSSAO                   = $PostFXManager::PostFX::EnableSSAO ;
+   
+   $PostFXManager::Settings::SSAO::blurDepthTol             = $SSAOPostFx::blurDepthTol;
+   $PostFXManager::Settings::SSAO::blurNormalTol            = $SSAOPostFx::blurNormalTol;
+   $PostFXManager::Settings::SSAO::lDepthMax                = $SSAOPostFx::lDepthMax;
+   $PostFXManager::Settings::SSAO::lDepthMin                = $SSAOPostFx::lDepthMin;
+   $PostFXManager::Settings::SSAO::lDepthPow                = $SSAOPostFx::lDepthPow;
+   $PostFXManager::Settings::SSAO::lNormalPow               = $SSAOPostFx::lNormalPow;
+   $PostFXManager::Settings::SSAO::lNormalTol               = $SSAOPostFx::lNormalTol;
+   $PostFXManager::Settings::SSAO::lRadius                  = $SSAOPostFx::lRadius;
+   $PostFXManager::Settings::SSAO::lStrength                = $SSAOPostFx::lStrength;
+   $PostFXManager::Settings::SSAO::overallStrength          = $SSAOPostFx::overallStrength;
+   $PostFXManager::Settings::SSAO::quality                  = $SSAOPostFx::quality;
+   $PostFXManager::Settings::SSAO::sDepthMax                = $SSAOPostFx::sDepthMax;
+   $PostFXManager::Settings::SSAO::sDepthMin                = $SSAOPostFx::sDepthMin;
+   $PostFXManager::Settings::SSAO::sDepthPow                = $SSAOPostFx::sDepthPow;
+   $PostFXManager::Settings::SSAO::sNormalPow               = $SSAOPostFx::sNormalPow;
+   $PostFXManager::Settings::SSAO::sNormalTol               = $SSAOPostFx::sNormalTol;
+   $PostFXManager::Settings::SSAO::sRadius                  = $SSAOPostFx::sRadius;
+   $PostFXManager::Settings::SSAO::sStrength                = $SSAOPostFx::sStrength;
+}
 //-----------------------------------------------------------------------------
 // GFXStateBlockData / ShaderData
 //-----------------------------------------------------------------------------

@@ -9,6 +9,8 @@ function Core_Rendering::onCreate(%this)
    $Core::DefaultPrefilterCubemap = "core/rendering/images/default_prefilter.dds";
    $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";
    
+   $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
+   
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");
    exec("./scripts/gfxData/commonMaterialData.cs");

@@ -105,7 +105,7 @@
       internalName = "smoothSlope";  
       Enabled = "1";  
       isContainer = "0";  
-      Profile = "GuiButtonProfile";  
+      Profile = "ToolsGuiButtonProfile";  
       HorizSizing = "right";  
       VertSizing = "bottom";  
       position = "144 0";  

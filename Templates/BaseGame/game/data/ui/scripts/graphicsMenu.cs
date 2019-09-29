@@ -284,11 +284,11 @@ function GraphicsMenu::Autodetect_Apply(%this, %shaderVer, %intel, %videoMem )
    %this.apply();
    
    //force postFX updates
-   PostFXManager.settingsEffectSetEnabled("SSAO", $pref::PostFX::EnableSSAO);
-   PostFXManager.settingsEffectSetEnabled("HDR", $pref::PostFX::EnableHDR);
-   PostFXManager.settingsEffectSetEnabled("DOF", $pref::PostFX::EnableDOF);
-   PostFXManager.settingsEffectSetEnabled("LightRays", $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled("Vignette", $pref::PostFX::EnableVignette);
+   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
+   PostFXManager.settingsEffectSetEnabled(HDRPostFX, $pref::PostFX::EnableHDR);
+   PostFXManager.settingsEffectSetEnabled(DOFPostEffect, $pref::PostFX::EnableDOF);
+   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
+   PostFXManager.settingsEffectSetEnabled(VignettePostEffect, $pref::PostFX::EnableVignette);
    
    return "Graphics quality settings have been auto detected.";
 }
@@ -368,7 +368,7 @@ function GraphicsMenu::loadSettings()
    OptionsSettingStack.clear();
    
    OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Quality", "", "ShadowQuality");
-   OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Caching", "", "ShadowCaching");
+   //OptionsMenu.addSettingOption(OptionsSettingStack, "Shadow Caching", "", "ShadowCaching");
    OptionsMenu.addSettingOption(OptionsSettingStack, "Soft Shadows", "", "SoftShadow");
    
    OptionsMenu.addSettingOption(OptionsSettingStack, "Model Detail", "", "MeshQuality");

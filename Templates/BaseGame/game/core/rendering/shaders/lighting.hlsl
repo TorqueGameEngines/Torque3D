@@ -99,6 +99,8 @@ struct Surface
 	}
 };
 
+
+
 inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TORQUE_SAMPLER2D(gbufferTex2), in float2 uv, in float3 wsEyePos, in float3 wsEyeRay, in float4x4 invView)
 {
 	Surface surface = (Surface)0;
@@ -124,28 +126,28 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 
 inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrProperties, in float3 wsPosition, in float3 wsEyePos, in float3 wsEyeRay)
 {
-	Surface surface = (Surface)0;
+   Surface surface = (Surface)0;
 
-  surface.depth = 0;
-	surface.P = wsPosition;
-	surface.N = normal;
-	surface.V = normalize(wsEyePos - surface.P);
-	surface.baseColor = baseColor;
-  const float minRoughness=1e-4;
-	surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
-	surface.roughness_brdf = surface.roughness * surface.roughness;
-	surface.metalness = pbrProperties.a;
-  surface.ao = pbrProperties.g;
-  surface.matFlag = pbrProperties.r;
+   surface.depth = 0;
+   surface.P = wsPosition;
+   surface.N = normal;
+   surface.V = normalize(wsEyePos - surface.P);
+   surface.baseColor = baseColor;
+   const float minRoughness=1e-4;
+   surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+   surface.roughness_brdf = surface.roughness * surface.roughness;
+   surface.metalness = pbrProperties.a;
+   surface.ao = pbrProperties.g;
+   surface.matFlag = pbrProperties.r;
 
-	surface.Update();
-	return surface;
+   surface.Update();
+   return surface;
 }
 
 struct SurfaceToLight
 {
 	float3 L;				// surface to light vector
-   float3 Lu;				// un-normalized surface to light vector
+    float3 Lu;				// un-normalized surface to light vector
 	float3 H;				// half-vector between view vector and light vector
 	float NdotL;			// cos(angle between N and L)
 	float HdotV;			// cos(angle between H and V) = HdotL = cos(angle between H and L)
@@ -155,7 +157,7 @@ struct SurfaceToLight
 inline SurfaceToLight createSurfaceToLight(in Surface surface, in float3 L)
 {
 	SurfaceToLight surfaceToLight = (SurfaceToLight)0;
-   surfaceToLight.Lu = L;
+    surfaceToLight.Lu = L;
 	surfaceToLight.L = normalize(L);
 	surfaceToLight.H = normalize(surface.V + surfaceToLight.L);
 	surfaceToLight.NdotL = saturate(dot(surfaceToLight.L, surface.N));

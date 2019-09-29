@@ -29,6 +29,10 @@ $LightRayPostFX::decay = 1.0;
 $LightRayPostFX::exposure = 0.0005;
 $LightRayPostFX::resolutionScale = 1.0;
 
+function LightRayPostFX::onAdd( %this )
+{   
+   PostFXManager.registerPostEffect(%this);
+}
 
 singleton ShaderData( LightRayOccludeShader )
 {
@@ -67,7 +71,7 @@ singleton GFXStateBlockData( LightRayStateBlock : PFX_DefaultStateBlock )
 
 singleton PostEffect( LightRayPostFX )
 {
-   isEnabled = false;
+   //isEnabled = false;
    allowReflectPass = false;
         
    renderTime = "PFXBeforeBin";
@@ -107,4 +111,44 @@ function LightRayPostFX::setShaderConsts( %this )
    %pfx.setShaderConst( "$weight", $LightRayPostFX::weight );
    %pfx.setShaderConst( "$decay", $LightRayPostFX::decay );
    %pfx.setShaderConst( "$exposure", $LightRayPostFX::exposure );
+}
+
+function LightRayPostFX::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("Light Ray");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::EnableLightRays", "Enabled", "bool", "", $PostFXManager::PostFX::EnableLightRays, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::LightRays::brightScalar", "Brightness", "float", "", $LightRayPostFX::brightScalar, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::LightRays::numSamples", "Samples", "float", "", $LightRayPostFX::numSamples, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::LightRays::density", "Density", "float", "", $LightRayPostFX::density, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::LightRays::weight", "Weight", "float", "", $LightRayPostFX::weight, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::LightRays::decay", "Decay", "float", "", $LightRayPostFX::decay, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+function LightRayPostFX::applyFromPreset(%this)
+{
+   //Light rays settings
+   $PostFXManager::PostFX::EnableLightRays = $PostFXManager::Settings::EnableLightRays;
+   $LightRayPostFX::brightScalar           = $PostFXManager::Settings::LightRays::brightScalar;
+   
+   $LightRayPostFX::numSamples            = $PostFXManager::Settings::LightRays::numSamples;
+   $LightRayPostFX::density               = $PostFXManager::Settings::LightRays::density;
+   $LightRayPostFX::weight                = $PostFXManager::Settings::LightRays::weight;
+   $LightRayPostFX::decay                 = $PostFXManager::Settings::LightRays::decay;
+   
+   if($PostFXManager::PostFX::EnableLightRays)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function LightRayPostFX::settingsApply(%this)
+{
+   $PostFXManager::Settings::EnableLightRays                = $PostFXManager::PostFX::EnableLightRays;
+   $PostFXManager::Settings::LightRays::brightScalar        = $LightRayPostFX::brightScalar;
+   
+   $PostFXManager::Settings::LightRays::numSamples          = $LightRayPostFX::numSamples;
+   $PostFXManager::Settings::LightRays::density             = $LightRayPostFX::density;
+   $PostFXManager::Settings::LightRays::weight              = $LightRayPostFX::weight;
+   $PostFXManager::Settings::LightRays::decay               = $LightRayPostFX::decay;
 }

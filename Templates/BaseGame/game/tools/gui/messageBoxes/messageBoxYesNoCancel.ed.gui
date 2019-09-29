@@ -13,7 +13,7 @@
 
    new GuiWindowCtrl(MBYesNoCancelFrame) {
       canSaveDynamicFields = "0";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "center";
       VertSizing = "center";
       position = "250 235";
@@ -35,7 +35,7 @@
 
       new GuiMLTextCtrl(MBYesNoCancelText) {
          canSaveDynamicFields = "0";
-         Profile = "GuiMLTextProfile";
+         Profile = "ToolsGuiMLTextProfile";
          HorizSizing = "center";
          VertSizing = "bottom";
          position = "7 38";
@@ -50,7 +50,7 @@
       };
       new GuiButtonCtrl() {
          canSaveDynamicFields = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "top";
          position = "7 71";
@@ -67,7 +67,7 @@
       };
       new GuiButtonCtrl() {
          canSaveDynamicFields = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "top";
          position = "92 71";
@@ -83,7 +83,7 @@
       };
       new GuiButtonCtrl() {
          canSaveDynamicFields = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "right";
          VertSizing = "top";
          position = "213 71";

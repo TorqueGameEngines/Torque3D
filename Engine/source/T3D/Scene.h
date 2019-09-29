@@ -50,6 +50,7 @@ public:
 
    virtual bool onAdd();
    virtual void onRemove();
+   virtual void onPostAdd();
 
    virtual void interpolateTick(F32 delta);
    virtual void processTick();
@@ -67,7 +68,10 @@ public:
    void unpackUpdate(NetConnection *conn, BitStream *stream);
 
    //
-   Vector<SceneObject*> getObjectsByClass(String className);
+   Vector<SceneObject*> getObjectsByClass(String className, bool checkSubscenes);
+
+   template <class T>
+   Vector<T*> getObjectsByClass(bool checkSubscenes);
 
    static Scene *getRootScene() 
    { 
@@ -79,3 +83,42 @@ public:
 
    static Vector<Scene*> smSceneList;
 };
+
+
+template <class T>
+Vector<T*> Scene::getObjectsByClass(bool checkSubscenes)
+{
+   Vector<T*> foundObjects;
+
+   T* curObject;
+
+   //first, check ourself
+   for (U32 i = 0; i < mPermanentObjects.size(); i++)
+   {
+      curObject = dynamic_cast<T*>(mPermanentObjects[i]);
+      if (curObject)
+         foundObjects.push_back(curObject);
+   }
+
+   for (U32 i = 0; i < mDynamicObjects.size(); i++)
+   {
+      curObject = dynamic_cast<T*>(mDynamicObjects[i]);
+      if (curObject)
+         foundObjects.push_back(curObject);
+   }
+
+   if (checkSubscenes)
+   {
+      for (U32 i = 0; i < mSubScenes.size(); i++)
+      {
+         Vector<T*> appendList = mSubScenes[i]->getObjectsByClass<T>(true);
+
+         for (U32 a = 0; a < appendList.size(); a++)
+         {
+            foundObjects.push_back(appendList[a]);
+         }
+      }
+   }
+
+   return foundObjects;
+}

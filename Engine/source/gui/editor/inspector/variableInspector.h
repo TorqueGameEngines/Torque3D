@@ -51,6 +51,8 @@ public:
 
    void startGroup(const char* name);
    void endGroup();
+   void setGroupExpanded(const char* groupName, bool isExpanded);
+   void setGroupsExpanded(bool isExpanded);
 
    void addField(const char* name, const char* label, const char* typeName, const char* description, 
       const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj);

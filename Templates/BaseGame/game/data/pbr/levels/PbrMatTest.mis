@@ -276,7 +276,7 @@ new Scene(PbrMatTestLevel) {
       refOffset = "0 0 0";
       refScale = "5 5 5";
       ReflectionMode = "Baked Cubemap";
-      position = "1.38772 -1.0083 2.23039";
+      position = "0 0 1";
       rotation = "1 0 0 0";
       scale = "5 5 5";
       canSave = "1";

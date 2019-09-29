@@ -88,6 +88,7 @@ LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
    mLevelFile = StringTable->EmptyString();
    mPreviewImage = StringTable->EmptyString();
 
+   mGamemodeName = StringTable->EmptyString();
    mMainLevelAsset = StringTable->EmptyString();
 }
 
@@ -114,7 +115,7 @@ void LevelAsset::initPersistFields()
    addProtectedField("PreviewImage", TypeAssetLooseFilePath, Offset(mPreviewImage, LevelAsset),
       &setPreviewImageFile, &getPreviewImageFile, "Path to the image used for selection preview.");
 
-   addField("isSubScene", TypeString, Offset(mIsSubLevel, LevelAsset), "Is this a sublevel to another Scene");
+   addField("isSubScene", TypeBool, Offset(mIsSubLevel, LevelAsset), "Is this a sublevel to another Scene");
    addField("gameModeName", TypeString, Offset(mGamemodeName, LevelAsset), "Name of the Game Mode to be used with this level");
 }
 

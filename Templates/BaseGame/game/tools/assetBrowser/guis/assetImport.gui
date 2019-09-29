@@ -168,7 +168,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextProfile";
+         profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -195,7 +195,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "bottom";
-         profile = "GuiTextEditProfile";
+         profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -365,7 +365,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiDefaultProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -392,7 +392,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiPopupMenuProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -416,7 +416,7 @@
          minExtent = "8 2";
          horizSizing = "left";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "Canvas.pushDialog(AssetBrowser_addModule);\nAssetBrowser_addModuleWindow.selectWindow();";
@@ -441,7 +441,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextProfile";
+         profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -468,7 +468,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiPopupMenuProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -492,7 +492,7 @@
          minExtent = "8 2";
          horizSizing = "left";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "ImportAssetConfigEditorWindow.addNewConfig();";
@@ -518,7 +518,7 @@
          minExtent = "8 2";
          horizSizing = "left";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "ImportAssetConfigEditorWindow.editConfig();";
@@ -544,7 +544,7 @@
          minExtent = "8 2";
          horizSizing = "left";
          vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "ImportAssetConfigEditorWindow.deleteConfig();";
@@ -655,7 +655,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextProfile";
+         profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -682,7 +682,7 @@
          minExtent = "8 2";
          horizSizing = "width";
          vertSizing = "bottom";
-         profile = "GuiTextEditProfile";
+         profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";

@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "../../../gl/hlslCompat.glsl"
-#include "../../gl/postFX.glsl"
+#include "../../gl/postFx.glsl"
 
 // These are set by the game engine.  
 uniform sampler2D shrunkSampler;  // Output of DofDownsample()  

@@ -6,7 +6,6 @@
 //else.
 function ExampleModule::onCreate(%this)
 {
-   %bool = true;
 }
 
 //Similar to the create function, this is defined in thye module file, and called 
@@ -70,6 +69,8 @@ function ExampleModule::onDestroyGameServer(%this)
 function ExampleModule::initClient(%this)
 {
    AssetDatabase.acquireAsset("ExampleModule:exampleDatablock");
+   AssetDatabase.acquireAsset("ExampleModule:examplePostEffect");
+   AssetDatabase.acquireAsset("ExampleModule:exampleGUI");
    
    //client scripts
    //Here, we exec out keybind scripts so the player is able to move when they get into a game
@@ -91,7 +92,7 @@ function ExampleModule::initClient(%this)
 function ExampleModule::onCreateClientConnection(%this)
 {
    //This will push our keybind movemap onto the input stack, so we can control our camera in our ExampleGameMode
-   ExampleMoveMap.push();
+   //ExampleMoveMap.push();
 }
 
 //This is called when a client game session disconnects from a game server
@@ -103,5 +104,5 @@ function ExampleModule::onCreateClientConnection(%this)
 function ExampleModule::onDestroyClientConnection(%this)
 {
    //This will pop the keybind, cleaning it up from the input stack, as it no longer applies
-   ExampleMoveMap.pop();
+   //ExampleMoveMap.pop();
 }

@@ -90,9 +90,9 @@ function GraphicsDriverSetting::set(%setting)
 
 function GraphicsDriverSetting::get()
 {
-   if($pref::Video::displayDevice == "D3D11")
+   if($pref::Video::displayDevice $= "D3D11")
       return "D3D11";
-   else if($pref::Video::displayDevice == "OpenGL")
+   else if($pref::Video::displayDevice $= "OpenGL")
       return "OpenGL";
    else
       return "Unknown";
@@ -103,6 +103,7 @@ function GraphicsDriverSetting::getList()
    %returnsList = "";
    %buffer = getDisplayDeviceList();
    %deviceCount = getFieldCount( %buffer );   
+   %numAdapters = GFXInit::getAdapterCount();
    
    %count = 0;
    for(%i = 0; %i < %deviceCount; %i++)
@@ -112,10 +113,19 @@ function GraphicsDriverSetting::getList()
       if(%deviceDesc $= "GFX Null Device")
          continue;
          
+      for( %i = 0; %i < %numAdapters; %i ++ )
+      {
+         if( GFXInit::getAdapterName( %i ) $= %deviceDesc )
+         {
+            %deviceName = GFXInit::getAdapterType( %i );
+            break;
+         }
+      }
+         
       if(%count != 0)
-         %returnsList = %returnsList @ "," @ %deviceDesc;
+         %returnsList = %returnsList @ "," @ %deviceName;
       else
-         %returnsList = %deviceDesc;
+         %returnsList = %deviceName;
          
       %count++;
    }

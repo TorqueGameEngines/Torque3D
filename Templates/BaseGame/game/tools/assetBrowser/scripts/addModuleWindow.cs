@@ -57,18 +57,6 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
          Extension = "asset.taml";
          Recurse = true;
       };
-      
-      //Autoload the usual suspects
-      new AutoloadAssets()
-      {
-         AssetType = "ComponentAsset";
-         Recurse = true;
-      };
-      new AutoloadAssets()
-      {
-         AssetType = "GUIAsset";
-         Recurse = true;
-      };
    };
    
    TAMLWrite(%newModule, %moduleDefinitionFilePath); 
@@ -100,16 +88,6 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
       
       warnf("CreateNewModule - Something went wrong and we couldn't write the script file!");
    }
-	
-	if(%file.openForWrite(%moduleScriptFilePath))
-	{
-		%file.writeline("function " @ %newModuleName @ "::onCreate(%this)\n{\n\n}\n");
-		%file.writeline("function " @ %newModuleName @ "::onDestroy(%this)\n{\n\n}\n");
-		
-		//todo, pre-write any event functions of interest
-		
-		%file.close();
-	}
    
    //force a refresh of our modules list
    ModuleDatabase.ignoreLoadedGroups(true);

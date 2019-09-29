@@ -607,7 +607,7 @@
         new GuiTextEditCtrl(NodeTreeFilter) {  
             position = "2 4";  
             extent = "175 18";  
-            profile = "GuiTextEditProfile";  
+            profile = "ToolsGuiTextEditProfile";  
             horizSizing = "width";  
             vertSizing = "bottom";  
             class = "GuiTreeViewFilterText";  
@@ -619,7 +619,7 @@
             buttonType = "PushButton";  
             useMouseEvents = "0";  
             isContainer = "0";  
-            Profile = "GuiDefaultProfile";  
+            Profile = "ToolsGuiButtonProfile";  
             HorizSizing = "left";  
             VertSizing = "bottom";  
             position = "180 5";  

@@ -68,7 +68,10 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/stateMachine.cs");   
    exec("./scripts/assetTypes/cubemap.cs");  
      
-   exec("./scripts/fieldTypes.cs");
+   exec("./scripts/fieldTypes/fieldTypes.cs");
+   exec("./scripts/fieldTypes/listField.cs");
+   exec("./scripts/fieldTypes/moduleDependencies.cs");
+   exec("./scripts/fieldTypes/assetDependencies.cs");
    
    new ScriptObject( AssetBrowserPlugin )
    {

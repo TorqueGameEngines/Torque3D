@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="OrcMage"
-    fileName="@assetFile=OrcMage.dts"
+    fileName="@assetFile=D:/Gamedev/T3DMIT/T3DPreview4_0/Bugfixaroo/My Projects/Bugfixaroo/game/data/Kork/Shapes/OrcMage.dts"
     isNewShape="1"
     materialSlot0="@Asset=Kork:player_mat"
     originalFilePath="E:/Gamedev/Art/TorqueCharacters/OrcMage/OrcMage.dts"

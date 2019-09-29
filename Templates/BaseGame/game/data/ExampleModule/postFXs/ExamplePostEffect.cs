@@ -61,6 +61,12 @@ function ExamplePostEffect::preProcess( %this )
 {
 }
 
+function ExamplePostEffect::onAdd(%this)
+{
+   //Register the postFX with the manager
+   PostFXManager.registerPostEffect(%this);
+}
+
 function ExamplePostEffect::onEnabled( %this )
 {
    return true;
@@ -68,6 +74,35 @@ function ExamplePostEffect::onEnabled( %this )
 
 function ExamplePostEffect::onDisabled( %this )
 {
+}
+
+//This is used to populate the PostFXEditor's settings so the post FX can be edited
+//This is automatically polled for any postFX that has been registered(in our onAdd) and the settings
+//are thus exposed for editing
+function ExamplePostEffect::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("ExamplePostEffect - General");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::EnabledExamplePostEffect", "Enabled", "bool", "", $PostFXManager::PostFX::EnableExamplePostEffect, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+//This function pair(applyFromPreset and settingsApply) are done the way they are, with the separated variables
+//so that we can effectively store the 'settings' away from the live variables that the postFX's actually utilize
+//when rendering. This allows us to modify things but still leave room for reverting or temporarily applying them
+function ExamplePostEffect::applyFromPreset(%this)
+{
+   //ExamplePostEffect Settings
+   $PostFXManager::PostFX::EnableExamplePostEffect = $PostFXManager::Settings::EnabledExamplePostEffect;
+
+   if($PostFXManager::PostFX::EnableExamplePostEffect)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function ExamplePostEffect::settingsApply(%this)
+{
+   $PostFXManager::Settings::EnabledExamplePostEffect = $PostFXManager::PostFX::EnableExamplePostEffect;
 }
 
 singleton PostEffect( ExamplePostEffect )

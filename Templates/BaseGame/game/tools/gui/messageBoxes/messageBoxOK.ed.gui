@@ -10,7 +10,7 @@
    helpTag = "0";
 
    new GuiWindowCtrl(MBOKFrame) {
-      profile = "GuiWindowProfile";
+      profile = "ToolsGuiWindowProfile";
       horizSizing = "center";
       vertSizing = "center";
       position = "170 175";
@@ -29,7 +29,7 @@
       text = "";
 
       new GuiMLTextCtrl(MBOKText) {
-         profile = "GuiMLTextProfile";
+         profile = "ToolsGuiMLTextProfile";
          horizSizing = "center";
          vertSizing = "bottom";
          position = "9 35";
@@ -42,7 +42,7 @@
          maxChars = "-1";
       };
       new GuiButtonCtrl() {
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "right";
          vertSizing = "top";
          position = "111 75";

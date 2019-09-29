@@ -110,7 +110,7 @@ function StateMachineEditor::addField(%this, %stateName)
    %fieldList = new GuiPopUpMenuCtrlEx() 
    {
       class = "stateMachineFieldList";
-      Profile = "GuiPopupMenuProfile";
+      Profile = "ToolsGuiPopupMenuProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
       position = "0 1";
@@ -159,7 +159,7 @@ function stateMachineFieldList::onSelect(%this)
       %fieldCtrl = new GuiPopUpMenuCtrlEx() 
       {
          class = "stateMachineFieldList";
-         Profile = "GuiPopupMenuProfile";
+         Profile = "ToolsGuiPopupMenuProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
          position = "124 1";
@@ -171,7 +171,7 @@ function stateMachineFieldList::onSelect(%this)
       %fieldCtrl = new GuiPopUpMenuCtrlEx() 
       {
          class = "stateMachineFieldList";
-         Profile = "GuiPopupMenuProfile";
+         Profile = "ToolsGuiPopupMenuProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
          position = "124 1";

@@ -10,7 +10,7 @@
 	helpTag = "0";
 
 	new GuiWindowCtrl(MBYesNoFrame) {
-      profile = "GuiWindowProfile";
+      profile = "ToolsGuiWindowProfile";
       horizSizing = "center";
       vertSizing = "center";
       position = "170 175";
@@ -30,7 +30,7 @@
       closeCommand = "MessageCallback(MessageBoxYesNoDlg,MessageBoxYesNoDlg.noCallback);";
 
 		new GuiMLTextCtrl(MBYesNoText) {
-         profile = "GuiMLTextProfile";
+         profile = "ToolsGuiMLTextProfile";
          horizSizing = "center";
          vertSizing = "bottom";
          position = "11 38";
@@ -43,7 +43,7 @@
          maxChars = "-1";
 		};
 		new GuiButtonCtrl() {
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "right";
          vertSizing = "top";
          position = "70 68";
@@ -57,7 +57,7 @@
          simpleStyle = "0";
 		};
 		new GuiButtonCtrl() {
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          horizSizing = "right";
          vertSizing = "top";
          position = "167 68";

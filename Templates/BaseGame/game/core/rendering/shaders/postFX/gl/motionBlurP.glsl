@@ -23,7 +23,7 @@
 #include "../../gl/hlslCompat.glsl"
 #include "../../gl/torque.glsl"
 #include "shadergen:/autogenConditioners.h"
-#include "postFX.glsl"
+#include "postFx.glsl"
 
 #undef IN_uv0
 #define _IN_uv0 uv0

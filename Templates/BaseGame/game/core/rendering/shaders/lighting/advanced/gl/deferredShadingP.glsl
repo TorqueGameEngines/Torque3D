@@ -22,7 +22,7 @@
 
 #include "../../../gl/hlslCompat.glsl"
 #include "shadergen:/autogenConditioners.h"
-#include "../../../postFx/gl/postFX.glsl"
+#include "../../../postFx/gl/postFx.glsl"
 #include "../../../gl/torque.glsl"
 
 uniform sampler2D colorBufferTex;

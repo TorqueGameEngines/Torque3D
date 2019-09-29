@@ -40,7 +40,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
       Position = getWord($pref::Video::mode, 0) - 209
@@ -69,7 +69,7 @@
       text = "Navigation";
 
       new GuiButtonCtrl() {
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          buttonType = "PushButton";
          HorizSizing = "right";
          VertSizing = "bottom";
@@ -153,7 +153,7 @@
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
       Position = getWord($pref::Video::mode, 0) - 209 
@@ -192,7 +192,7 @@
          internalName = "ActionsBox";
          
          new GuiTextCtrl(){
-            Profile = "GuiDefaultProfile";
+            Profile = "ToolsGuiTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -206,7 +206,7 @@
             extent = "190 64";
             
             new GuiButtonCtrl() {
-               Profile = "GuiButtonProfile";
+               Profile = "ToolsGuiButtonProfile";
                buttonType = "PushButton";
                HorizSizing = "right";
                VertSizing = "bottom";
@@ -227,7 +227,7 @@
                   useMouseEvents = "0";
                   extent = "75 20";
                   minExtent = "8 2";
-                  profile = "GuiCheckBoxProfile";
+                  profile = "ToolsGuiCheckBoxProfile";
                   visible = "1";
                   active = "1";
                   variable = "NavEditorGui.backgroundBuild";
@@ -245,7 +245,7 @@
                   buttonType = "ToggleButton";
                   useMouseEvents = "0";
                   extent = "105 20";
-                  profile = "GuiCheckBoxProfile";
+                  profile = "ToolsGuiCheckBoxProfile";
                   visible = "1";
                   active = "1";
                   variable = "NavEditorGui.saveIntermediates";
@@ -264,7 +264,7 @@
                useMouseEvents = "0";
                extent = "150 20";
                minExtent = "8 2";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "1";
                variable = "NavEditorGui.playSoundWhenDone";
@@ -282,7 +282,7 @@
             extent = "190 64";
             
             new GuiButtonCtrl() {
-               Profile = "GuiButtonProfile";
+               Profile = "ToolsGuiButtonProfile";
                buttonType = "PushButton";
                HorizSizing = "right";
                VertSizing = "bottom";
@@ -298,7 +298,7 @@
             extent = "190 64";
             
             new GuiButtonCtrl() {
-               Profile = "GuiButtonProfile";
+               Profile = "ToolsGuiButtonProfile";
                buttonType = "PushButton";
                HorizSizing = "right";
                VertSizing = "bottom";
@@ -307,7 +307,7 @@
                command = "NavEditorGui.createCoverPoints();";
             };
             new GuiButtonCtrl() {
-               Profile = "GuiButtonProfile";
+               Profile = "ToolsGuiButtonProfile";
                buttonType = "PushButton";
                HorizSizing = "right";
                VertSizing = "bottom";
@@ -323,7 +323,7 @@
             extent = "190 64";
             
             new GuiButtonCtrl() {
-               Profile = "GuiButtonProfile";
+               Profile = "ToolsGuiButtonProfile";
                buttonType = "PushButton";
                HorizSizing = "right";
                VertSizing = "bottom";
@@ -339,7 +339,7 @@
             extent = "190 64";
             
             new GuiButtonCtrl() {
-               Profile = "GuiButtonProfile";
+               Profile = "ToolsGuiButtonProfile";
                buttonType = "PushButton";
                HorizSizing = "right";
                VertSizing = "bottom";
@@ -352,7 +352,7 @@
                Extent = "190 18";
 
                new GuiButtonCtrl() {
-                  Profile = "GuiButtonProfile";
+                  Profile = "ToolsGuiButtonProfile";
                   buttonType = "PushButton";
                   HorizSizing = "right";
                   VertSizing = "bottom";
@@ -362,7 +362,7 @@
                };
                new GuiButtonCtrl() {
                   position = "100 0";
-                  Profile = "GuiButtonProfile";
+                  Profile = "ToolsGuiButtonProfile";
                   buttonType = "PushButton";
                   HorizSizing = "right";
                   VertSizing = "bottom";
@@ -376,7 +376,7 @@
                Extent = "190 18";
 
                new GuiButtonCtrl() {
-                  Profile = "GuiButtonProfile";
+                  Profile = "ToolsGuiButtonProfile";
                   buttonType = "PushButton";
                   HorizSizing = "right";
                   VertSizing = "bottom";
@@ -386,7 +386,7 @@
                };
                new GuiButtonCtrl() {
                   position = "100 0";
-                  Profile = "GuiButtonProfile";
+                  Profile = "ToolsGuiButtonProfile";
                   buttonType = "PushButton";
                   HorizSizing = "right";
                   VertSizing = "bottom";
@@ -485,7 +485,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -505,7 +505,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -525,7 +525,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -545,7 +545,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -565,7 +565,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -585,7 +585,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -610,7 +610,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "1";
                tooltipProfile = "GuiToolTipProfile";
@@ -628,7 +628,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "1";
                tooltipProfile = "GuiToolTipProfile";
@@ -647,7 +647,7 @@
             
 			new GuiTextCtrl() {
                text = "Cover";
-               profile = "GuiTextProfile";
+               profile = "ToolsGuiTextProfile";
                extent = "180 20";
                minExtent = "8 2";
                visible = "1";
@@ -655,7 +655,7 @@
             new GuiTextEditCtrl() {
                internalName = "CoverRadius";
                text = "10";
-               profile = "GuiTextEditProfile";
+               profile = "ToolsGuiTextEditProfile";
                extent = "40 20";
                minExtent = "8 2";
                visible = "1";
@@ -665,7 +665,7 @@
             new GuiTextEditCtrl() {
                internalName = "CoverPosition";
                text = "LocalClientConnection.getControlObject().getPosition();";
-               profile = "GuiTextEditProfile";
+               profile = "ToolsGuiTextEditProfile";
                extent = "140 20";
                minExtent = "8 2";
                visible = "1";
@@ -674,7 +674,7 @@
             };
             new GuiTextCtrl() {
                text = "Follow";
-               profile = "GuiTextProfile";
+               profile = "ToolsuiTextProfile";
                extent = "180 20";
                minExtent = "8 2";
                visible = "1";
@@ -682,7 +682,7 @@
             new GuiTextEditCtrl() {
                internalName = "FollowRadius";
                text = "1";
-               profile = "GuiTextEditProfile";
+               profile = "ToolsGuiTextEditProfile";
                extent = "40 20";
                minExtent = "8 2";
                visible = "1";
@@ -692,7 +692,7 @@
             new GuiTextEditCtrl() {
                internalName = "FollowObject";
                text = "LocalClientConnection.player";
-               profile = "GuiTextEditProfile";
+               profile = "ToolsGuiTextEditProfile";
                extent = "140 20";
                minExtent = "8 2";
                visible = "1";
@@ -701,7 +701,7 @@
             };
             new GuiTextCtrl() {
                text = "Movement";
-               profile = "GuiTextProfile";
+               profile = "ToolsGuiTextProfile";
                extent = "180 20";
                minExtent = "8 2";
                visible = "1";
@@ -716,7 +716,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -736,7 +736,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -756,7 +756,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -776,7 +776,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -796,7 +796,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";
@@ -816,7 +816,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiCheckBoxProfile";
+               profile = "ToolsGuiCheckBoxProfile";
                visible = "1";
                active = "0";
                tooltipProfile = "GuiToolTipProfile";

@@ -112,7 +112,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiButtonProfile";
+         profile = "ToolsuiButtonProfile";
          visible = "1";
          active = "1";
          command = "AssetBrowser_editAsset.saveAsset();";
@@ -132,7 +132,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "Canvas.popDialog(AssetBrowser_editAsset);";

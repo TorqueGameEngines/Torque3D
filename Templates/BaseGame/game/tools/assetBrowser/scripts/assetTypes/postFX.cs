@@ -7,12 +7,16 @@ function AssetBrowser::createPostEffectAsset(%this)
    
    %tamlpath = %modulePath @ "/postFXs/" @ %assetName @ ".asset.taml";
    %scriptPath = %modulePath @ "/postFXs/" @ %assetName @ ".cs";
+   %hlslPath = %modulePath @ "/postFXs/" @ %assetName @ "P.hlsl";
+   %glslPath = %modulePath @ "/postFXs/" @ %assetName @ "P.glsl";
    
    %asset = new PostEffectAsset()
    {
       AssetName = %assetName;
       versionId = 1;
       scriptFile = %assetName @ ".cs";
+      hlslShader = %assetName @ "P.hlsl";
+      glslShader = %assetName @ "P.glsl";
    };
    
    TamlWrite(%asset, %tamlpath);
@@ -52,6 +56,56 @@ function AssetBrowser::createPostEffectAsset(%this)
       %templateFile.close();
       
       warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX script file!");
+   }
+   
+   //hlsl shader
+   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFileP.hlsl.template";
+   
+   if(%file.openForWrite(%hlslPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX hlsl file!");
+   }
+   
+   //glsl shader
+   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFileP.glsl.template";
+   
+   if(%file.openForWrite(%glslPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX glsl file!");
    }
    
 	return %tamlpath;

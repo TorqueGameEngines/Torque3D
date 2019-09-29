@@ -64,8 +64,8 @@
          position = "1 21";
          extent = "498 283";
          minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
+         horizSizing = "width";
+         vertSizing = "height";
          profile = "ToolsGuiScrollProfile";
          visible = "1";
          active = "1";
@@ -75,7 +75,7 @@
          canSave = "1";
          canSaveDynamicFields = "0";
 
-         new GuiInspector(ModuleEditInspector) {
+         new GuiVariableInspector(ModuleEditInspector) {
             dividerMargin = "5";
             showCustomFields = "1";
             stackingType = "Vertical";
@@ -90,8 +90,8 @@
             position = "1 1";
             extent = "481 101";
             minExtent = "16 16";
-            horizSizing = "right";
-            vertSizing = "bottom";
+            horizSizing = "width";
+            vertSizing = "height";
             profile = "GuiInspectorProfile";
             visible = "1";
             active = "1";
@@ -111,8 +111,8 @@
          extent = "45 22";
          minExtent = "8 2";
          horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "GuiButtonProfile";
+         vertSizing = "top";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "AssetBrowser_editModule.saveModule();";
@@ -131,8 +131,8 @@
          extent = "45 22";
          minExtent = "8 2";
          horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "GuiButtonProfile";
+         vertSizing = "top";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "Canvas.popDialog(AssetBrowser_editModule);";

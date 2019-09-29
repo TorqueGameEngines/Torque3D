@@ -2,9 +2,10 @@
 function Core_PostFX::onCreate(%this)
 {
    //
+   exec("./scripts/postFxManager.cs");
    exec("./scripts/postFx.cs");
-   /*exec("./scripts/postFxManager.gui.cs");
-   exec("./scripts/postFxManager.gui.settings.cs");
+   
+   /*exec("./scripts/postFxManager.gui.settings.cs");
    exec("./scripts/postFxManager.persistance.cs");
    
    exec("./scripts/default.postfxpreset.cs");

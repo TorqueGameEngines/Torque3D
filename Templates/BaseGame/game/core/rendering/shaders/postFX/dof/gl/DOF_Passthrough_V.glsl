@@ -22,7 +22,7 @@
 
 #include "../../../gl/hlslCompat.glsl"
 #include "../../../gl/torque.glsl"
-#include "../../gl/postFX.glsl"
+#include "../../gl/postFx.glsl"
 
 uniform vec4 rtParams0;
 uniform vec4 rtParams1;

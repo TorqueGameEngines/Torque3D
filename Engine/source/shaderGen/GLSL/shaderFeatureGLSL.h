@@ -134,6 +134,8 @@ public:
    Var* getInvWorldView( Vector<ShaderComponent*> &componentList,                                       
 								bool useInstancing,
 								MultiLine *meta );
+
+   Var* getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta, const MaterialFeatureData& fd);
 		
    // ShaderFeature
    Var* getVertTexCoord( const String &name );
@@ -678,6 +680,9 @@ protected:
 
 public:
    ReflectionProbeFeatGLSL();
+
+   virtual void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
    
    virtual void processPix(Vector<ShaderComponent*>& componentList,
       const MaterialFeatureData& fd);

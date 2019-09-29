@@ -68,7 +68,7 @@
       new GuiTextCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextProfile";  
+         Profile = "ToolsGuiTextProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "15 37";  
@@ -90,7 +90,7 @@
       new GuiTextCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextProfile";  
+         Profile = "ToolsGuiTextProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "59 37";  
@@ -112,7 +112,7 @@
       new GuiTextCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextProfile";  
+         Profile = "ToolsGuiTextProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "59 62";  
@@ -134,7 +134,7 @@
       new GuiTextEditCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextEditProfile";  
+         Profile = "ToolsGuiTextEditProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "97 35";  
@@ -161,7 +161,7 @@
       new GuiTextEditCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextEditProfile";  
+         Profile = "ToolsGuiTextEditProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "97 60";  
@@ -188,7 +188,7 @@
       new GuiTextCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextProfile";  
+         Profile = "ToolsGuiTextProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "15 101";  
@@ -210,7 +210,7 @@
       new GuiTextCtrl() {  
          canSaveDynamicFields = "0";  
          isContainer = "0";  
-         Profile = "GuiTextProfile";  
+         Profile = "ToolsGuiTextProfile";  
          HorizSizing = "right";  
          VertSizing = "bottom";  
          Position = "59 101";  
@@ -321,7 +321,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextProfile";
+         profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -349,7 +349,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextEditProfile";
+         profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
          variable = "$TPPCoverage";

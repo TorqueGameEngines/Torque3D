@@ -16,6 +16,9 @@ function CoreModule::onCreate(%this)
    // to find exactly which subsystems should be readied before kicking things off. 
    // ----------------------------------------------------------------------------
    
+   new Settings(ProjectSettings) { file = "core/settings.xml"; };
+   ProjectSettings.read();
+   
    ModuleDatabase.LoadExplicit( "Core_Rendering" );
    ModuleDatabase.LoadExplicit( "Core_Utility" );
    ModuleDatabase.LoadExplicit( "Core_GUI" );
@@ -24,9 +27,6 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_PostFX" );
    ModuleDatabase.LoadExplicit( "Core_Components" );
    ModuleDatabase.LoadExplicit( "Core_GameObjects" );
-   
-   new Settings(ProjectSettings) { file = "core/settings.xml"; };
-   ProjectSettings.read();
    
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs.cs" ) )

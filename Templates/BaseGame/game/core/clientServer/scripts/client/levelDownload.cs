@@ -54,6 +54,7 @@ function clientCmdMissionStartPhase1(%seq, %missionName)
    if ( isScriptFile( %path ) )
    {
       postFXManager::loadPresetHandler( %path ); 
+      $PostFXManager::currentPreset = %path;
    }
    else
    {
@@ -137,6 +138,18 @@ function sceneLightingComplete()
 {
    echo("Mission lighting done");
    $lightingMission = false;
+   
+   //Bake probes
+   %boxProbeIds = parseMissionGroupForIds("BoxEnvironmentProbe", "");
+   %sphereProbeIds = parseMissionGroupForIds("SphereEnvironmentProbe", "");
+   %skylightIds = parseMissionGroupForIds("Skylight", "");
+   
+   %probeIds = rtrim(ltrim(%boxProbeIds SPC %sphereProbeIds));
+   %probeIds = rtrim(ltrim(%probeIds SPC %skylightIds));
+   %probeCount = getWordCount(%probeIds);
+   
+   $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
+   ProbeBin.processProbes();
    
    onPhaseComplete("STARTING MISSION");
    

@@ -214,7 +214,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextProfile";
+               profile = "ToolsGuiTextProfile";
                visible = "1";
                active = "1";
                Clickable = "1";
@@ -252,7 +252,7 @@
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextProfile";
+               profile = "ToolsGuiTextProfile";
                visible = "1";
                active = "1";
                Clickable = "1";
@@ -572,7 +572,7 @@
                extent = "116 18";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfile";
+               profile = "ToolsGuiTextEditProfile";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Hex representation of Red, Green, Blue Color value.";
                command = "$thisControl.onKeyDown();";

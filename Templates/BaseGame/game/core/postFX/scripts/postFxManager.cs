@@ -20,6 +20,24 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+$PostFXManager::vebose = true;
+function postVerbose(%string)
+{
+   if($PostFXManager::vebose == true)
+   {
+      echo(%string);
+   }
+}
+
+if(!isObject(PostFXManager))
+{
+   new ArrayObject(PostFXManager){};  
+}
+
+function PostFXManager::registerPostEffect(%this, %postEffect)
+{
+   PostFXManager.add(%postEffect);
+}
 
 // Used to name the saved files.
 $PostFXManager::fileExtension = ".postfxpreset.cs";
@@ -30,6 +48,10 @@ $PostFXManager::fileFilter = "Post Effect Presets|*.postfxpreset.cs";
 // Enable / disable PostFX when loading presets or just apply the settings?
 $PostFXManager::forceEnableFromPresets = true;
 
+$PostFXManager::defaultPreset  = "./default.postfxpreset.cs";
+
+$PostFXManager::currentPreset = "";
+
 //Load a preset file from the disk, and apply the settings to the
 //controls. If bApplySettings is true - the actual values in the engine
 //will be changed to reflect the settings from the file.
@@ -37,6 +59,7 @@ function PostFXManager::loadPresetFile()
 {
    //Show the dialog and set the flag
    getLoadFilename($PostFXManager::fileFilter, "PostFXManager::loadPresetHandler");
+   $PostFXManager::currentPreset = $Tools::FileDialogs::LastFilePath();
 }
 
 function PostFXManager::loadPresetHandler( %filename )
@@ -48,7 +71,16 @@ function PostFXManager::loadPresetHandler( %filename )
       postVerbose("% - PostFX Manager - Executing " @ %filename);
       exec(%filename);
 
-      PostFXManager.settingsApplyFromPreset();      
+      %count = PostFXManager.Count();
+      for(%i=0; %i < %count; %i++)
+      {
+         %postEffect = PostFXManager.getKey(%i);  
+         
+         if(isObject(%postEffect) && %postEffect.isMethod("applyFromPreset"))
+         {     
+            %postEffect.applyFromPreset();
+         }
+      }
    }
 }
 
@@ -69,11 +101,39 @@ function PostFXManager::savePresetHandler( %filename )
    if(strStr(%filename, ".") == -1)
       %filename = %filename @ $PostFXManager::fileExtension;
                
-   //Apply the current settings to the preset
-   PostFXManager.settingsApplyAll();
+   %count = PostFXManager.Count();
+   for(%i=0; %i < %count; %i++)
+   {
+      %postEffect = PostFXManager.getKey(%i);  
+      
+      if(isObject(%postEffect) && %postEffect.isMethod("settingsApply"))
+      {     
+         %postEffect.settingsApply();
+      }
+   }
    
    export("$PostFXManager::Settings::*", %filename, false);
 
    postVerbose("% - PostFX Manager - Save complete. Preset saved at : " @ %filename);
 }
 
+function PostFXManager::settingsApplyDefaultPreset(%this)
+{
+   PostFXManager::loadPresetHandler($PostFXManager::defaultPreset);
+   $PostFXManager::currentPreset = $PostFXManager::defaultPreset;
+}
+
+function PostFXManager::settingsEffectSetEnabled(%this, %postEffect, %bEnable)
+{
+   // Apply the change
+   if ( %bEnable == true )
+   {
+      %postEffect.enable();
+      postVerbose("% - PostFX Manager - " @ %postEffect.getName() @ " enabled");
+   }
+   else
+   {
+      %postEffect.disable();
+      postVerbose("% - PostFX Manager - " @ %postEffect.getName() @ " disabled");
+   }
+}

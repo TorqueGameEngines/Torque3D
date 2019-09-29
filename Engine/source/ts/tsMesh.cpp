@@ -86,7 +86,7 @@ bool TSMesh::smUseEncodedNormals = false;
 
 const F32 TSMesh::VISIBILITY_EPSILON = 0.0001f;
 
-S32 TSMesh::smMaxInstancingVerts = 200;
+S32 TSMesh::smMaxInstancingVerts = 2000;
 MatrixF TSMesh::smDummyNodeTransform(1);
 
 // quick function to force object to face camera -- currently throws out roll :(

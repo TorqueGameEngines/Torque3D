@@ -760,6 +760,12 @@ GFXTextureObject *GFXTextureManager::createTexture( U32 width, U32 height, GFXFo
    GFXFormat checkFmt = format;
    _validateTexParams( localWidth, localHeight, profile, numMips, checkFmt );
 
+   //check to see if we've handled the mips just now, and if not, then handle them here
+   if (numMips == numMipLevels && (localWidth != width || localHeight != height))
+   {
+      numMips = mFloor(mLog2(mMax(localWidth, localHeight))) + 1;
+   }
+
 //   AssertFatal( checkFmt == format, "Anonymous texture didn't get the format it wanted." );
 
    GFXTextureObject *outTex = NULL;

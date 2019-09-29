@@ -23,7 +23,7 @@
       internalName = "WindowCtrl";
       canSaveDynamicFields = "0";
       isContainer = "1";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
       Position = "50 50";

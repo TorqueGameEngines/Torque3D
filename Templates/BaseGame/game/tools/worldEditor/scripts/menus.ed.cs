@@ -190,7 +190,7 @@ function EditorGui::buildMenus(%this)
       item[14] = "Snap Options..." TAB "" TAB "ESnapOptions.ToggleVisibility();";
       item[15] = "-";
       item[16] = "Game Options..." TAB "" TAB "Canvas.pushDialog(optionsDlg);";
-      item[17] = "PostEffect Manager" TAB "" TAB "Canvas.pushDialog(PostFXManager);";
+      item[17] = "PostEffect Manager" TAB "" TAB "Canvas.pushDialog(PostFXEditor);";
    };
    %this.menuBar.insert(%editMenu);
       

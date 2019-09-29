@@ -765,7 +765,7 @@
 					  minExtent = "8 2";
 					  horizSizing = "width";
 					  vertSizing = "bottom";
-					  profile = "GuiDefaultProfile";
+					  profile = "ToolsGuiButtonProfile";
 					  visible = "1";
 					  active = "1";
 					  tooltipProfile = "GuiToolTipProfile";
@@ -816,7 +816,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.saveCompositeMap();";
@@ -835,7 +835,7 @@
 					  minExtent = "8 2";
 					  horizSizing = "width";
 					  vertSizing = "bottom";
-					  profile = "GuiDefaultProfile";
+					  profile = "ToolsGuiButtonProfile";
 					  visible = "1";
 					  active = "1";
 					  tooltipProfile = "GuiToolTipProfile";
@@ -873,7 +873,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -897,7 +897,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiTextProfile";
+						 profile = "ToolsGuiTextProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -920,7 +920,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updateroughMap(1);";
@@ -945,7 +945,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "width";
 						 vertSizing = "bottom";
-						 profile = "GuiTextProfile";
+						 profile = "ToolsGuiTextProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -965,7 +965,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiButtonProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updateroughMap(1);";
@@ -989,7 +989,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updateroughMap(0);";
@@ -1009,7 +1009,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setRoughChan(0);";
@@ -1029,7 +1029,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setRoughChan(1);";
@@ -1049,7 +1049,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setRoughChan(2);";
@@ -1069,7 +1069,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setRoughChan(3);";
@@ -1109,7 +1109,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -1133,7 +1133,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiTextProfile";
+						 profile = "ToolsGuiTextProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -1156,7 +1156,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updateaoMap(1);";
@@ -1181,7 +1181,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "width";
 						 vertSizing = "bottom";
-						 profile = "GuiTextProfile";
+						 profile = "ToolsGuiTextProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -1201,7 +1201,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiButtonProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updateaoMap(1);";
@@ -1225,7 +1225,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updateaoMap(0);";
@@ -1245,7 +1245,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setAOChan(0);";
@@ -1265,7 +1265,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setAOChan(1);";
@@ -1285,7 +1285,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setAOChan(2);";
@@ -1305,7 +1305,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setAOChan(3);";
@@ -1345,7 +1345,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -1369,7 +1369,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiTextProfile";
+						 profile = "ToolsGuiTextProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -1392,7 +1392,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updatemetalMap(1);";
@@ -1417,7 +1417,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "width";
 						 vertSizing = "bottom";
-						 profile = "GuiTextProfile";
+						 profile = "ToolsGuiTextProfile";
 						 visible = "1";
 						 active = "1";
 						 tooltipProfile = "GuiToolTipProfile";
@@ -1437,7 +1437,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiButtonProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updatemetalMap(1);";
@@ -1461,7 +1461,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "left";
 						 vertSizing = "bottom";
-						 profile = "GuiDefaultProfile";
+						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.updatemetalMap(0);";
@@ -1481,7 +1481,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setMetalChan(0);";
@@ -1501,7 +1501,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setMetalChan(1);";
@@ -1521,7 +1521,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setMetalChan(2);";
@@ -1541,7 +1541,7 @@
 						 minExtent = "8 2";
 						 horizSizing = "right";
 						 vertSizing = "bottom";
-						 profile = "GuiRadioProfile";
+						 profile = "ToolsGuiRadioProfile";
 						 visible = "1";
 						 active = "1";
 						 command = "MaterialEditorGui.setMetalChan(3);";
@@ -2333,7 +2333,7 @@
                            canSaveDynamicFields = "0";
                            Enabled = "1";
                            isContainer = "0";
-                           Profile = "GuiTextRightProfile";
+                           Profile = "ToolsGuiTextRightProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "8 3";
@@ -2384,7 +2384,7 @@
                               internalName = "accuScaleTextEdit";
                               Enabled = "1";
                               isContainer = "0";
-                              Profile = "GuiTextEditProfile";
+                              Profile = "ToolsGuiTextEditProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "64 0";
@@ -2415,7 +2415,7 @@
                            canSaveDynamicFields = "0";
                            Enabled = "1";
                            isContainer = "0";
-                           Profile = "GuiTextRightProfile";
+                           Profile = "ToolsGuiTextRightProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "8 3";
@@ -2466,7 +2466,7 @@
                               internalName = "accuDirectionTextEdit";
                               Enabled = "1";
                               isContainer = "0";
-                              Profile = "GuiTextEditProfile";
+                              Profile = "ToolsGuiTextEditProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "64 0";
@@ -2496,7 +2496,7 @@
                            canSaveDynamicFields = "0";
                            Enabled = "1";
                            isContainer = "0";
-                           Profile = "GuiTextRightProfile";
+                           Profile = "ToolsGuiTextRightProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "8 3";
@@ -2547,7 +2547,7 @@
                               internalName = "accuStrengthTextEdit";
                               Enabled = "1";
                               isContainer = "0";
-                              Profile = "GuiTextEditProfile";
+                              Profile = "ToolsGuiTextEditProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "64 0";
@@ -2577,7 +2577,7 @@
                            canSaveDynamicFields = "0";
                            Enabled = "1";
                            isContainer = "0";
-                           Profile = "GuiTextRightProfile";
+                           Profile = "ToolsGuiTextRightProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "8 3";
@@ -2628,7 +2628,7 @@
                               internalName = "accuCoverageTextEdit";
                               Enabled = "1";
                               isContainer = "0";
-                              Profile = "GuiTextEditProfile";
+                              Profile = "ToolsGuiTextEditProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "64 0";
@@ -2658,7 +2658,7 @@
                            canSaveDynamicFields = "0";
                            Enabled = "1";
                            isContainer = "0";
-                           Profile = "GuiTextRightProfile";
+                           Profile = "ToolsGuiTextRightProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "8 3";
@@ -2709,7 +2709,7 @@
                               internalName = "accuSpecularTextEdit";
                               Enabled = "1";
                               isContainer = "0";
-                              Profile = "GuiTextEditProfile";
+                              Profile = "ToolsGuiTextEditProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "64 0";

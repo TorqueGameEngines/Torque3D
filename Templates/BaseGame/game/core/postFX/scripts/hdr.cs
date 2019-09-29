@@ -323,6 +323,80 @@ function HDRPostFX::onDisabled( %this )
    resetLightManager();
 }
 
+function HDRPostFX::onAdd( %this )
+{
+   PostFXManager.registerPostEffect(%this);
+   
+   //HDR should really be on at all times
+   %this.enable();
+   
+   $HDRPostFX::enableToneMapping = 1;
+}
+
+//This is used to populate the PostFXEditor's settings so the post FX can be edited
+//This is automatically polled for any postFX that has been registered(in our onAdd) and the settings
+//are thus exposed for editing
+function HDRPostFX::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("HDR - General");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::keyValue", "Key Value", "float", "", $HDRPostFX::keyValue, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::minLuminace", "Minimum Luminance", "float", "", $HDRPostFX::minLuminace, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::whiteCutoff", "White Cutoff", "float", "", $HDRPostFX::whiteCutoff, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::adaptRate", "Brightness Adapt Rate", "float", "", $HDRPostFX::adaptRate, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("HDR - Bloom");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::enableBloom", "Enable Bloom", "bool", "", $HDRPostFX::enableBloom, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::brightPassThreshold", "Bright Pass Threshold", "float", "", $HDRPostFX::brightPassThreshold, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::gaussMultiplier", "Blur Multiplier", "float", "", $HDRPostFX::gaussMultiplier, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::gaussMean", "Blur \"Mean\" Value", "float", "", $HDRPostFX::gaussMean, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::gaussStdDev", "Blur \"Std. Dev\" Value", "float", "", $HDRPostFX::gaussStdDev, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("HDR - Effects");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::enableBlueShift", "Enable Blue Shift", "bool", "", $HDRPostFX::enableBlueShift, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::HDR::blueShiftColor", "Blue Shift Color", "colorF", "", $HDRPostFX::blueShiftColor, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+//This function pair(applyFromPreset and settingsApply) are done the way they are, with the separated variables
+//so that we can effectively store the 'settings' away from the live variables that the postFX's actually utilize
+//when rendering. This allows us to modify things but still leave room for reverting or temporarily applying them
+function HDRPostFX::applyFromPreset(%this)
+{
+   //HDRPostFX Settings
+   $HDRPostFX::adaptRate               = $PostFXManager::Settings::HDR::adaptRate;
+   $HDRPostFX::blueShiftColor          = $PostFXManager::Settings::HDR::blueShiftColor;
+   $HDRPostFX::brightPassThreshold     = $PostFXManager::Settings::HDR::brightPassThreshold; 
+   $HDRPostFX::enableBloom             = $PostFXManager::Settings::HDR::enableBloom;
+   $HDRPostFX::enableBlueShift         = $PostFXManager::Settings::HDR::enableBlueShift;
+   $HDRPostFX::enableToneMapping       = $PostFXManager::Settings::HDR::enableToneMapping;
+   $HDRPostFX::gaussMean               = $PostFXManager::Settings::HDR::gaussMean;
+   $HDRPostFX::gaussMultiplier         = $PostFXManager::Settings::HDR::gaussMultiplier;
+   $HDRPostFX::gaussStdDev             = $PostFXManager::Settings::HDR::gaussStdDev;
+   $HDRPostFX::keyValue                = $PostFXManager::Settings::HDR::keyValue;
+   $HDRPostFX::minLuminace             = $PostFXManager::Settings::HDR::minLuminace;
+   $HDRPostFX::whiteCutoff             = $PostFXManager::Settings::HDR::whiteCutoff;
+   $HDRPostFX::colorCorrectionRamp     = $PostFXManager::Settings::ColorCorrectionRamp;
+}
+
+function HDRPostFX::settingsApply(%this)
+{
+   $PostFXManager::Settings::HDR::adaptRate                 = $HDRPostFX::adaptRate;
+   $PostFXManager::Settings::HDR::blueShiftColor            = $HDRPostFX::blueShiftColor;
+   $PostFXManager::Settings::HDR::brightPassThreshold       = $HDRPostFX::brightPassThreshold;
+   $PostFXManager::Settings::HDR::enableBloom               = $HDRPostFX::enableBloom;
+   $PostFXManager::Settings::HDR::enableBlueShift           = $HDRPostFX::enableBlueShift;
+   $PostFXManager::Settings::HDR::enableToneMapping         = $HDRPostFX::enableToneMapping;
+   $PostFXManager::Settings::HDR::gaussMean                 = $HDRPostFX::gaussMean;
+   $PostFXManager::Settings::HDR::gaussMultiplier           = $HDRPostFX::gaussMultiplier;
+   $PostFXManager::Settings::HDR::gaussStdDev               = $HDRPostFX::gaussStdDev;
+   $PostFXManager::Settings::HDR::keyValue                  = $HDRPostFX::keyValue;
+   $PostFXManager::Settings::HDR::minLuminace               = $HDRPostFX::minLuminace;
+   $PostFXManager::Settings::HDR::whiteCutoff               = $HDRPostFX::whiteCutoff;
+   $PostFXManager::Settings::ColorCorrectionRamp            = $HDRPostFX::colorCorrectionRamp;
+}
+
 singleton PostEffect( HDRPostFX )
 {
    isEnabled = false;

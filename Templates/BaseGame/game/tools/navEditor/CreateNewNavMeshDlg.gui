@@ -36,7 +36,7 @@
       minExtent = "8 2";
       horizSizing = "right";
       vertSizing = "bottom";
-      profile = "GuiWindowProfile";
+      profile = "ToolsGuiWindowProfile";
       visible = "1";
       active = "1";
       tooltipProfile = "GuiToolTipProfile";
@@ -59,7 +59,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextRightProfile";
+         profile = "ToolsGuiTextRightProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -87,7 +87,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextEditProfile";
+         profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -111,7 +111,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextRightProfile";
+         profile = "ToolsGuiTextRightProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -139,7 +139,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextEditProfile";
+         profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -163,7 +163,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextRightProfile";
+         profile = "ToolsGuiTextRightProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -191,7 +191,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiTextEditProfile";
+         profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -211,7 +211,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiCheckBoxProfile";
+         profile = "ToolsGuiCheckBoxProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -231,7 +231,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiCheckBoxProfile";
+         profile = "ToolsGuiCheckBoxProfile";
          visible = "1";
          active = "0";
          tooltipProfile = "GuiToolTipProfile";
@@ -251,7 +251,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "CreateNewNavMeshDlg.create();";
@@ -271,7 +271,7 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiButtonProfile";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "Canvas.popDialog(CreateNewNavMeshDlg);";

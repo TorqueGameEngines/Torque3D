@@ -47,6 +47,8 @@ uniform vec4 albedo;
 #define MAX_PROBES 50
 #define MAX_FORWARD_PROBES 4
 
+#define MAX_FORWARD_LIGHT 4
+
 vec3 getDistanceVectorToPlane( vec3 origin, vec3 direction, vec4 plane )
 {
    float denum = dot( plane.xyz, direction.xyz );
@@ -62,32 +64,6 @@ vec3 getDistanceVectorToPlane( float negFarPlaneDotEye, vec3 direction, vec4 pla
    float t = negFarPlaneDotEye / denum;
 
    return direction.xyz * t;
-}
-
-void compute4Lights( vec3 wsView, 
-                     vec3 wsPosition, 
-                     vec3 wsNormal,
-                     vec4 shadowMask,
-
-                     #ifdef TORQUE_SHADERGEN
-                     
-                        vec4 inLightPos[3],
-                        vec4 inLightInvRadiusSq,
-                        vec4 inLightColor[4],
-                        vec4 inLightSpotDir[3],
-                        vec4 inLightSpotAngle,
-                        vec4 inLightSpotFalloff,
-                        float smoothness,
-                        float metalness,
-                        vec4 albedo,
-
-                     #endif // TORQUE_SHADERGEN
-                     
-                     out vec4 outDiffuse,
-                     out vec4 outSpecular )
-{
-   outDiffuse = vec4(0,0,0,0);
-   outSpecular = vec4(0,0,0,0);
 }
 
 struct Surface
@@ -123,43 +99,43 @@ void updateSurface(inout Surface surface)
 
 Surface createSurface(vec4 normDepth, sampler2D colorBuffer, sampler2D matInfoBuffer, in vec2 uv, in vec3 wsEyePos, in vec3 wsEyeRay, in mat4 invView)
 {
-	Surface surface;// = Surface();
+   Surface surface;// = Surface();
 
-	vec4 gbuffer1 = texture(colorBuffer, uv);
-	vec4 gbuffer2 = texture(matInfoBuffer, uv);
-	surface.depth = normDepth.a;
-	surface.P = wsEyePos + wsEyeRay * surface.depth;
-	surface.N = tMul(invView, vec4(normDepth.xyz,0)).xyz;
-	surface.V = normalize(wsEyePos - surface.P);
-	surface.baseColor = gbuffer1;
-	const float minRoughness=1e-4;
-	surface.roughness = clamp(1.0 - gbuffer2.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
-	surface.roughness_brdf = surface.roughness * surface.roughness;
-	surface.metalness = gbuffer2.a;
-	surface.ao = gbuffer2.g;
-	surface.matFlag = gbuffer2.r;
-    updateSurface(surface);
-	return surface;
+   vec4 gbuffer1 = texture(colorBuffer, uv);
+   vec4 gbuffer2 = texture(matInfoBuffer, uv);
+   surface.depth = normDepth.a;
+   surface.P = wsEyePos + wsEyeRay * surface.depth;
+   surface.N = tMul(invView, vec4(normDepth.xyz,0)).xyz;
+   surface.V = normalize(wsEyePos - surface.P);
+   surface.baseColor = gbuffer1;
+   const float minRoughness=1e-4;
+   surface.roughness = clamp(1.0 - gbuffer2.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+   surface.roughness_brdf = surface.roughness * surface.roughness;
+   surface.metalness = gbuffer2.a;
+   surface.ao = gbuffer2.g;
+   surface.matFlag = gbuffer2.r;
+      updateSurface(surface);
+   return surface;
 }
 
-Surface createForwardSurface(vec4 baseColor, vec4 normal, vec4 pbrProperties, in vec2 uv, in vec3 wsPosition, in vec3 wsEyePos, in vec3 wsEyeRay, in mat4x4 invView)
+Surface createForwardSurface(vec4 baseColor, vec3 normal, vec4 pbrProperties, in vec3 wsPosition, in vec3 wsEyePos, in vec3 wsEyeRay)
 {
-	Surface surface;// = Surface();
+   Surface surface;// = Surface();
 
-  surface.depth = 0;
-	surface.P = wsPosition;
-	surface.N = tMul(invView, vec4(normal.xyz,0)).xyz;
-	surface.V = normalize(wsEyePos - surface.P);
-	surface.baseColor = baseColor;
-  const float minRoughness=1e-4;
-	surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
-	surface.roughness_brdf = surface.roughness * surface.roughness;
-	surface.metalness = pbrProperties.a;
-  surface.ao = pbrProperties.g;
-  surface.matFlag = pbrProperties.r;
+   surface.depth = 0;
+   surface.P = wsPosition;
+   surface.N = normal;
+   surface.V = normalize(wsEyePos - surface.P);
+   surface.baseColor = baseColor;
+   const float minRoughness=1e-4;
+   surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+   surface.roughness_brdf = surface.roughness * surface.roughness;
+   surface.metalness = pbrProperties.a;
+   surface.ao = pbrProperties.g;
+   surface.matFlag = pbrProperties.r;
 
-    updateSurface(surface);
-	return surface;
+   updateSurface(surface);
+   return surface;
 }
 
 struct SurfaceToLight
@@ -237,7 +213,7 @@ vec3 getDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, v
    vec3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    vec3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   vec3 final = max(vec3(0.0f), diffuse + spec * surface.ao);
+   vec3 final = max(vec3(0.0f), diffuse + spec);
    return final;
 }
 
@@ -249,45 +225,71 @@ vec3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLight, vec3
    vec3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
    vec3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-   vec3 final = max(vec3(0.0f), diffuse + spec * surface.ao * surface.F);
+   vec3 final = max(vec3(0.0f), diffuse + spec * surface.F);
    return final;
 }
 
-float G1V(float dotNV, float k)
+vec4 compute4Lights( Surface surface,
+                     vec4 shadowMask,
+                     vec4 inLightPos[4],
+                     vec4 inLightConfigData[4],
+                     vec4 inLightColor[4],
+                     vec4 inLightSpotDir[4],
+                     vec4 lightSpotParams[4],
+                     int hasVectorLight,
+                     vec4 vectorLightDirection,
+                     vec4 vectorLightingColor,
+                     float  vectorLightBrightness )
 {
-	return 1.0f/(dotNV*(1.0f-k)+k);
-}
+   vec3 finalLighting = vec3(0.0f);
 
-vec3 directSpecular(vec3 N, vec3 V, vec3 L, float roughness, float F0)
-{
-	float alpha = roughness*roughness;
+   int i;
+   for(i = 0; i < MAX_FORWARD_LIGHT; i++)
+   {
+      vec3 L = inLightPos[i].xyz - surface.P;
+      float dist = length(L);
+      float lightRange = inLightConfigData[i].z;
+      SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
+      float shadowed = 1.0;
 
-	//TODO don't need to calculate all this again timmy!!!!!!
-    vec3 H = normalize(V + L);
-    float dotNL = clamp(dot(N,L), 0.0, 1.0);
-    float dotNV = clamp(dot(N,V), 0.0, 1.0);
-    float dotNH = clamp(dot(N,H), 0.0, 1.0);
-	float dotHV = clamp(dot(H,V), 0.0, 1.0);
-	float dotLH = clamp(dot(L,H), 0.0, 1.0);
+      vec3 lightCol = inLightColor[i].rgb;
 
-	float F, D, vis;
+      float lightBrightness = inLightConfigData[i].y;
+      float lightInvSqrRange= inLightConfigData[i].a;
 
-	// D
-	float alphaSqr = alpha*alpha;
-	float pi = 3.14159f;
-	float denom = dotNH * dotNH *(alphaSqr-1.0) + 1.0f;
-	D = alphaSqr/(pi * denom * denom);
+      vec3 lighting = vec3(0.0f);
 
-	// F
-	float dotLH5 = pow(1.0f-dotLH,5);
-	F = F0 + (1.0-F0)*(dotLH5);
+      if(dist < lightRange)
+      { 
+         if(inLightConfigData[i].x == 0) //point
+         {
+            //get punctual light contribution   
+            lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+         }
+         else //spot
+         {
+               
+            //get Punctual light contribution   
+            lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+            //get spot angle attenuation
+            lighting *= getSpotAngleAtt(-surfaceToLight.L, inLightSpotDir[i].xyz, lightSpotParams[i].xy );
+         }
+      }
+      finalLighting += lighting;
+   }
 
-	// V
-	float k = alpha/2.0f;
-	vis = G1V(dotNL,k)*G1V(dotNV,k);
+   //Vector light
+   if(hasVectorLight == 1)
+   {
+      SurfaceToLight surfaceToVecLight = createSurfaceToLight(surface, -vectorLightDirection.xyz);
 
-	float specular = dotNL * D * F * vis;
-	return vec3(specular,specular,specular);
+      vec3 vecLighting = getDirectionalLight(surface, surfaceToVecLight, vectorLightingColor.rgb, vectorLightBrightness, 1);
+      finalLighting += vecLighting;
+   }
+
+   finalLighting *= shadowMask.rgb;
+
+   return vec4(finalLighting,1);
 }
 
 //Probe IBL stuff
@@ -316,12 +318,12 @@ float defineBoxSpaceInfluence(vec3 wsPosition, mat4 worldToObj, float attenuatio
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
-vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin, vec3 bbMax, vec3 refPosition)
+vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 refBoxMin, vec3 refBoxMax, vec3 refPosition)
 {
    vec3 RayLS = tMul(worldToObj, vec4(wsReflectVec, 0.0)).xyz;
    vec3 PositionLS = tMul(worldToObj, vec4(wsPosition, 1.0)).xyz;
 
-   vec3 unit = bbMax.xyz - bbMin.xyz;
+   vec3 unit = refBoxMax.xyz - refBoxMin.xyz;
    vec3 plane1vec = (unit / 2 - PositionLS) / RayLS;
    vec3 plane2vec = (-unit / 2 - PositionLS) / RayLS;
    vec3 furthestPlane = max(plane1vec, plane2vec);
@@ -333,12 +335,12 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 bbMin,
 
 vec4 computeForwardProbes(Surface surface,
     float cubeMips, float numProbes, mat4x4 worldToObjArray[MAX_FORWARD_PROBES], vec4 probeConfigData[MAX_FORWARD_PROBES], 
-    vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 bbMinArray[MAX_FORWARD_PROBES], vec4 bbMaxArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
-    float hasSkylight, sampler2D BRDFTexture, 
-	samplerCube skylightIrradMap, samplerCube skylightSpecularMap,
+    vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 refBoxMinArray[MAX_FORWARD_PROBES], vec4 refBoxMaxArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
+    float skylightCubemapIdx, sampler2D BRDFTexture, 
 	samplerCubeArray irradianceCubemapAR, samplerCubeArray specularCubemapAR)
 {
-  int i = 0;
+   int i = 0;
+   float alpha = 1;
    float blendFactor[MAX_FORWARD_PROBES];
    float blendSum = 0;
    float blendFacSum = 0;
@@ -399,15 +401,13 @@ vec4 computeForwardProbes(Surface surface,
    // Radiance (Specular)
    float lod = surface.roughness*cubeMips;
 
-//1
-   float alpha = 1.0f;
    for (i = 0; i < numProbes; ++i)
    {
       float contrib = contribution[i];
-      if (contrib != 0)
+      if (contrib > 0.0f)
       {
          int cubemapIdx = int(probeConfigData[i].a);
-         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], bbMinArray[i].xyz, bbMaxArray[i].xyz, inRefPosArray[i].xyz);
+         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
          specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
@@ -415,10 +415,10 @@ vec4 computeForwardProbes(Surface surface,
       }
    }
 
-   if (hasSkylight == 1 && alpha > 0.001)
+   if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance += textureLod(skylightIrradMap, surface.R, 0).xyz * alpha;
-      specular += textureLod(skylightSpecularMap, surface.R, lod).xyz * alpha;
+      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz, alpha);
+      specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz, alpha);
    }
 
    vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
@@ -429,13 +429,12 @@ vec4 computeForwardProbes(Surface surface,
 
    //apply brdf
    //Do it once to save on texture samples
-   vec2 brdf = textureLod(BRDFTexture, vec2(surface.roughness, surface.NdotV),0).xy;
+   vec2 brdf = textureLod(BRDFTexture, vec2(surface.roughness, 1.0-surface.NdotV),0).xy;
    specular *= brdf.x * F + brdf.y;
 
    //final diffuse color
    vec3 diffuse = kD * irradiance * surface.baseColor.rgb;
    vec4 finalColor = vec4(diffuse + specular * surface.ao, 1.0);
 
-   finalColor = vec4(irradiance.rgb,1);
    return finalColor;
 }

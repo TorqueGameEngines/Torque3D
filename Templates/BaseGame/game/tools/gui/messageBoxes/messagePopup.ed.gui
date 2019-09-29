@@ -10,7 +10,7 @@
    helpTag = "0";
 
    new GuiWindowCtrl(MessagePopFrame) {
-      profile = "GuiWindowProfile";
+      profile = "ToolsGuiWindowProfile";
       horizSizing = "center";
       vertSizing = "center";
       position = "170 175";
@@ -29,7 +29,7 @@
       minSize = "50 50";
 
       new GuiMLTextCtrl(MessagePopText) {
-         profile = "GuiMLTextProfile";
+         profile = "ToolsGuiMLTextProfile";
          horizSizing = "center";
          vertSizing = "bottom";
          position = "32 39";

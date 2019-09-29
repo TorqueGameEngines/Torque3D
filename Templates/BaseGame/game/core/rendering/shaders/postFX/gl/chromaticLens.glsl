@@ -20,10 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-// Based on 'Cubic Lens Distortion HLSL Shader' by François Tarlier
+// Based on 'Cubic Lens Distortion HLSL Shader' by Franï¿½ois Tarlier
 // www.francois-tarlier.com/blog/index.php/2009/11/cubic-lens-distortion-shader
 
-#include "./postFX.glsl"
+#include "./postFx.glsl"
 #include "../../gl/torque.glsl"
 #include "../../gl/hlslCompat.glsl"
 

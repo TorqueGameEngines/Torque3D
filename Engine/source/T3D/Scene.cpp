@@ -81,6 +81,12 @@ void Scene::onRemove()
    }*/
 }
 
+void Scene::onPostAdd()
+{
+   if (isMethod("onPostAdd"))
+      Con::executef(this, "onPostAdd");
+}
+
 void Scene::addObject(SimObject* object)
 {
    //Child scene
@@ -175,7 +181,7 @@ void Scene::unpackUpdate(NetConnection *conn, BitStream *stream)
 }
 
 //
-Vector<SceneObject*> Scene::getObjectsByClass(String className)
+Vector<SceneObject*> Scene::getObjectsByClass(String className, bool checkSubscenes)
 {
    return Vector<SceneObject*>();
 }

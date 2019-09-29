@@ -1,17 +1,5 @@
-function GuiVariableInspector::onInspectorFieldModified(%this, %targetObj, %fieldName, %index, %oldValue, %newValue)
-{
-   echo("FIELD CHANGED: " @ %fieldName @ " from " @ %oldValue @ " to " @ %newValue);
-}
 
-function GuiInspectorVariableGroup::onConstructField(%this, %fieldName, %fieldLabel, %fieldTypeName, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
-{
-   %inspector = %this.getParent();
-   %makeCommand = %this @ ".build" @ %fieldTypeName @ "Field(\""@ %fieldName @ "\",\"" @ %fieldLabel @ "\",\"" @ %fieldDesc @ "\",\"" @ 
-            %fieldDefaultVal @ "\",\"" @ %fieldDataVals @ "\",\"" @ %inspector @ "." @ %callbackName @ "\",\"" @ %ownerObj @"\");";
-   eval(%makeCommand);
-}
-
-function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+function GuiInspectorVariableGroup::buildAssetDependenciesField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
 {
    %extent = 200;
    
@@ -22,38 +10,6 @@ function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabe
    %width = mRound(%extent/2);
    %height = 20;
    %inset = 10;
-      
-   /*%container = new GuiControl() {
-      canSaveDynamicFields = "0";
-      Profile = "EditorContainerProfile";
-      HorizSizing = "right";
-      VertSizing = "bottom";
-      Position = "0 0";
-      Extent = %extent.x SPC %height;
-      MinExtent = "8 2";
-      canSave = "0";
-      Visible = "1";
-      hovertime = "100";
-      tooltip = %tooltip;
-      tooltipProfile = "EditorToolTipProfile";
-   };
-
-   %labelControl = new GuiTextCtrl() {
-      canSaveDynamicFields = "0";
-      Profile = "EditorFontHLBold";
-      HorizSizing = "right";
-      VertSizing = "bottom";
-      Position = %inset SPC "0";
-      Extent = %width + %inset SPC %height;
-      MinExtent = "8 2";
-      canSave = "0";
-      Visible = "1";
-      hovertime = "100";
-      tooltip = %tooltip;
-      tooltipProfile = "EditorToolTipProfile";
-      text = %fieldLabel;
-      maxLength = "1024";
-   };*/
    
    %editControl = new GuiPopUpMenuCtrl() {
       class = "guiInspectorListField";
@@ -110,7 +66,7 @@ function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabe
    %fieldCtrl.setCaption(%fieldLabel);
    %fieldCtrl.setEditControl(%editControl);
    
-   echo("GuiInspectorListField - " @ %editControl.getID() @ " - " @ %fieldName);
+   //echo("GuiInspectorListField - " @ %editControl.getID() @ " - " @ %fieldName);
 
    %this.addInspectorField(%fieldCtrl);
 }

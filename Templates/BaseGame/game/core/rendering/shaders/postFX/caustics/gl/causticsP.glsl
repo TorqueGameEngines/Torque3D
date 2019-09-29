@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "../../../gl/hlslCompat.glsl"
-#include "../../gl/postFX.glsl"
+#include "../../gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 uniform vec3    eyePosWorld;

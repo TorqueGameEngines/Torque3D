@@ -92,7 +92,7 @@ function ExampleModule::initClient(%this)
 function ExampleModule::onCreateClientConnection(%this)
 {
    //This will push our keybind movemap onto the input stack, so we can control our camera in our ExampleGameMode
-   //ExampleMoveMap.push();
+   ExampleMoveMap.push();
 }
 
 //This is called when a client game session disconnects from a game server
@@ -104,5 +104,5 @@ function ExampleModule::onCreateClientConnection(%this)
 function ExampleModule::onDestroyClientConnection(%this)
 {
    //This will pop the keybind, cleaning it up from the input stack, as it no longer applies
-   //ExampleMoveMap.pop();
+   ExampleMoveMap.pop();
 }

@@ -113,7 +113,8 @@ public:
    ///
    Var* addOutDetailTexCoord( Vector<ShaderComponent*> &componentList, 
                               MultiLine *meta,
-                              bool useTexAnim );
+                              bool useTexAnim,
+                              bool useFoliageTexCoord);
 
    ///
    Var* getObjTrans( Vector<ShaderComponent*> &componentList,                                       

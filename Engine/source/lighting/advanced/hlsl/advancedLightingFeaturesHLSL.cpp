@@ -245,10 +245,12 @@ void DeferredBumpFeatHLSL::processVert(   Vector<ShaderComponent*> &componentLis
                            componentList );
       }
 
+      const bool useFoliageTexCoord = fd.features[MFT_Foliage];
+
       if ( fd.features.hasFeature( MFT_DetailNormalMap ) )
             addOutDetailTexCoord( componentList, 
                                   meta,
-                                  useTexAnim );
+                                  useTexAnim, useFoliageTexCoord);
 
       output = meta;
    }

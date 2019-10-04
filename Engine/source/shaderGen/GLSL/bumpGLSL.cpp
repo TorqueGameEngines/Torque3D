@@ -46,10 +46,12 @@ void BumpFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
                      meta, 
                      componentList );
 
+   const bool useFoliageTexCoord = fd.features[MFT_Foliage];
+
 	if ( fd.features.hasFeature( MFT_DetailNormalMap ) )
       addOutDetailTexCoord( componentList, 
 										meta,
-										useTexAnim );
+										useTexAnim, useFoliageTexCoord);
 	
    // Also output the worldToTanget transform which
    // we use to create the world space normal.

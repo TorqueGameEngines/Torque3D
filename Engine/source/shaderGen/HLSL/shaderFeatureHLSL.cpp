@@ -769,7 +769,8 @@ Var* ShaderFeatureHLSL::getWsView( Var *wsPosition, MultiLine *meta )
 
 Var* ShaderFeatureHLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &componentList, 
                                                 MultiLine *meta,
-                                                bool useTexAnim )
+                                                bool useTexAnim,
+                                                bool useFoliageTexCoord)
 {
    // Check if its already added.
    Var *outTex = (Var*)LangElement::find( "detCoord" );
@@ -778,7 +779,11 @@ Var* ShaderFeatureHLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
 
    // Grab incoming texture coords.
    Var *inTex = getVertTexCoord( "texCoord" );
-   inTex->setType("float2");
+
+   if (useFoliageTexCoord)
+      inTex->setType("float4");
+   else
+      inTex->setType("float2");
 
    // create detail variable
    Var *detScale = new Var;
@@ -807,12 +812,12 @@ Var* ShaderFeatureHLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
          texMat->constSortPos = cspPass;   
       }
 
-      meta->addStatement(new GenOp("   @ = mul(@, float4(@,1,1)).xy * @;\r\n", outTex, texMat, inTex, detScale));
+      meta->addStatement(new GenOp("   @ = mul(@, float4(@.xy,1,1)).xy * @;\r\n", outTex, texMat, inTex, detScale));
    }
    else
    {
       // setup output to mul texCoord by detail scale
-      meta->addStatement( new GenOp( "   @ = @ * @;\r\n", outTex, inTex, detScale ) );
+      meta->addStatement( new GenOp( "   @ = @.xy * @;\r\n", outTex, inTex, detScale ) );
    }
 
    return outTex;
@@ -1652,7 +1657,7 @@ void DetailFeatHLSL::processVert(   Vector<ShaderComponent*> &componentList,
    MultiLine *meta = new MultiLine;
    addOutDetailTexCoord( componentList, 
                          meta,
-                         fd.features[MFT_TexAnim] );
+                         fd.features[MFT_TexAnim], fd.features[MFT_Foliage] );
    output = meta;
 }
 
@@ -2119,6 +2124,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
    // have a normal map. Generate and pass the normal data the pixel shader needs.
    if ( fd.features[MFT_ImposterVert] )
    {
+      
       if ( !fd.features[MFT_NormalMap] )
       {
          Var *eyePos = (Var*)LangElement::find( "eyePosWorld" );
@@ -2128,8 +2134,9 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
             eyePos->uniform = true;
             eyePos->constSortPos = cspPass;
          }
-          
-         Var *inPosition = (Var*)LangElement::find( "position" );
+
+         //Temporarily disabled while we figure out how to better handle normals without a normal map
+         /*Var *inPosition = (Var*)LangElement::find( "position" );
 
          Var *outNormal = connectComp->getElement( RT_TEXCOORD );
          outNormal->setName( "wsNormal" );
@@ -2137,7 +2144,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
          outNormal->setType( "float3" );
 
          // Transform the normal to world space.
-         meta->addStatement( new GenOp( "   @ = normalize( @ - @.xyz );\r\n", outNormal, eyePos, inPosition ) );
+         meta->addStatement( new GenOp( "   @ = normalize( @ - @.xyz );\r\n", outNormal, eyePos, inPosition ) );*/
       }
 
       addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
@@ -2160,7 +2167,8 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
 
    // If there isn't a normal map then we need to pass
    // the world space normal to the pixel shader ourselves.
-   if ( !fd.features[MFT_NormalMap] )
+   //Temporarily disabled while we figure out how to better handle normals without a normal map
+  /* if ( !fd.features[MFT_NormalMap] )
    {
       Var *outNormal = connectComp->getElement( RT_TEXCOORD );
       outNormal->setName( "wsNormal" );
@@ -2172,7 +2180,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
 
       // Transform the normal to world space.
       meta->addStatement( new GenOp( "   @ = mul( @, float4( normalize( @ ), 0.0 ) ).xyz;\r\n", outNormal, objTrans, inNormal ) );
-   }
+   }*/
 
    addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
 

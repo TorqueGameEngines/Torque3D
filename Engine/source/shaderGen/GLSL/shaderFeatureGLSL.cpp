@@ -777,7 +777,8 @@ Var* ShaderFeatureGLSL::getWsView( Var *wsPosition, MultiLine *meta )
 
 Var* ShaderFeatureGLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &componentList, 
 															MultiLine *meta,
-															bool useTexAnim )
+															bool useTexAnim,
+                                             bool useFoliageTexCoord)
 {
 	// Check if its already added.
 	Var *outTex = (Var*)LangElement::find( "detCoord" );
@@ -786,6 +787,9 @@ Var* ShaderFeatureGLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
 	
 	// Grab incoming texture coords.
 	Var *inTex = getVertTexCoord( "texCoord" );
+
+   if(useFoliageTexCoord)
+      inTex->setType("float4");
 	
 	// create detail variable
 	Var *detScale = new Var;
@@ -816,12 +820,12 @@ Var* ShaderFeatureGLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
 			texMat->constSortPos = cspPass;   
 		}
 		
-      meta->addStatement( new GenOp( "   @ = tMul(@, @).xy * @;\r\n", outTex, texMat, inTex, detScale ) );
+      meta->addStatement( new GenOp( "   @ = tMul(@.xy, @).xy * @;\r\n", outTex, texMat, inTex, detScale ) );
 	}
 	else
 	{
 		// setup output to mul texCoord by detail scale
-		meta->addStatement( new GenOp( "   @ = @ * @;\r\n", outTex, inTex, detScale ) );
+		meta->addStatement( new GenOp( "   @ = @.xy * @;\r\n", outTex, inTex, detScale ) );
 	}
 	
 	return outTex;
@@ -831,7 +835,7 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
 {
    ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
 
-   /*Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    Var* matinfo = (Var*)LangElement::find("PBRConfig");
    if (!matinfo)
@@ -875,6 +879,14 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    }
 
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+
+   if (!wsEyePos)
+   {
+      wsEyePos = new Var("eyePosWorld", "vec3");
+      wsEyePos->uniform = true;
+      wsEyePos->constSortPos = cspPass;
+   }
+
    Var* wsPosition = getInWsPosition(componentList);
    Var* wsView = getWsView(wsPosition, meta);
 
@@ -885,13 +897,13 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       surface = new Var("surface", "Surface");
       meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
          wsPosition, wsEyePos, wsView));
-   }*/
+   }
 
-   Var* surface = (Var*)LangElement::find("surface");
+   /*Var* surface = (Var*)LangElement::find("surface");
    if (!surface)
    {
       surface = new Var("surface", "float");
-   }
+   }*/
    return surface;
 }
 //****************************************************************************
@@ -1634,9 +1646,10 @@ void DetailFeatGLSL::processVert(   Vector<ShaderComponent*> &componentList,
                                     const MaterialFeatureData &fd )
 {
 	MultiLine *meta = new MultiLine;
+
 	addOutDetailTexCoord( componentList, 
 								meta,
-								fd.features[MFT_TexAnim] );
+								fd.features[MFT_TexAnim], fd.features[MFT_Foliage]);
 	output = meta;
 }
 
@@ -2067,8 +2080,9 @@ void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
             eyePos->uniform = true;
             eyePos->constSortPos = cspPass;
          }
-			
-         Var *inPosition = (Var*)LangElement::find( "position" );
+
+         //Temporarily disabled while we figure out how to better handle normals without a normal map
+         /*Var *inPosition = (Var*)LangElement::find( "position" );
 			
          Var *outNormal = connectComp->getElement( RT_TEXCOORD );
          outNormal->setName( "wsNormal" );
@@ -2076,7 +2090,7 @@ void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
          outNormal->setType( "vec3" );
 			
          // Transform the normal to world space.
-         meta->addStatement( new GenOp( "   @ = normalize( @ - @.xyz );\r\n", outNormal, eyePos, inPosition ) );
+         meta->addStatement( new GenOp( "   @ = normalize( @ - @.xyz );\r\n", outNormal, eyePos, inPosition ) );*/
       }
 		
       addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
@@ -2099,7 +2113,8 @@ void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
 	
    // If there isn't a normal map then we need to pass
    // the world space normal to the pixel shader ourselves.
-   if ( !fd.features[MFT_NormalMap] )
+   //Temporarily disabled while we figure out how to better handle normals without a normal map
+   /*if ( !fd.features[MFT_NormalMap] )
    {
       Var *outNormal = connectComp->getElement( RT_TEXCOORD );
       outNormal->setName( "wsNormal" );
@@ -2111,9 +2126,11 @@ void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
    
       // Transform the normal to world space.
       meta->addStatement( new GenOp( "   @ = tMul( @, vec4( normalize( @ ), 0.0 ) ).xyz;\r\n", outNormal, objTrans, inNormal ) );
-   }
+   }*/
 
 	addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
+
+   getOutWorldToTangent(componentList, meta, fd);
 	
    output = meta;
 }
@@ -2127,7 +2144,7 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    // TODO: We can totally detect for this in the material
    // feature setup... we should move it out of here!
    //
-   //if ( fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit] )
+   if ( fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit] )
       return;
   
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
@@ -2946,7 +2963,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    // TODO: We can totally detect for this in the material
    // feature setup... we should move it out of here!
    //
-   //if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
+   if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
       return;
 
    ShaderConnector * connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);

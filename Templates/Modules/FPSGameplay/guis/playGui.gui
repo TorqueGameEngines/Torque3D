@@ -26,7 +26,7 @@
       noCursor = "1";
 
    new GuiBitmapCtrl(CenterPrintDlg) {
-      bitmap = "data/UI/art/gui/hudfill.png";
+      bitmap = "data/UI/images/hudfill.png";
       wrap = "0";
       isContainer = "0";
       Profile = "CenterPrintProfile";
@@ -61,7 +61,7 @@
       };
    };
    new GuiBitmapCtrl(BottomPrintDlg) {
-      bitmap = "data/UI/art/gui/hudfill.png";
+      bitmap = "data/UI/images/hudfill.png";
       wrap = "0";
       isContainer = "0";
       Profile = "CenterPrintProfile";
@@ -96,7 +96,7 @@
       };
    };
    new GuiBitmapCtrl(LagIcon) {
-      bitmap = "data/UI/art/gui/lagIcon.png";
+      bitmap = "data/UI/images/lagIcon.png";
       wrap = "0";
       isContainer = "0";
       Profile = "GuiDefaultProfile";

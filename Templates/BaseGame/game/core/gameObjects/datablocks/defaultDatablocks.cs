@@ -141,3 +141,8 @@ datablock MissionMarkerData(CameraBookmarkMarker)
    category = "Misc";
    shapeFile = "core/gameObjects/shapes/camera.dts";
 };
+
+datablock CameraData(Observer)
+{
+   mode = "Observer";
+};

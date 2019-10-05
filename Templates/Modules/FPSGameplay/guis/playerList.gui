@@ -50,7 +50,7 @@
          Visible = "1";
          tooltipprofile = "GuiToolTipProfile";
          hovertime = "1000";
-         bitmap = "data/FPSGameplay/art/gui/hudfill.png";
+         bitmap = "data/UI/images/hudfill.png";
          wrap = "0";
 
          new GuiScrollCtrl() {

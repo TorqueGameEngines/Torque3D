@@ -3,6 +3,7 @@ new Scene(OutpostLevel) {
    canSave = "1";
    canSaveDynamicFields = "1";
       enabled = "1";
+      gameModeName="DeathMatchGame";
 
    new LevelInfo(theLevelInfo) {
       nearClip = "0.1";
@@ -20,7 +21,6 @@ new Scene(OutpostLevel) {
       soundDistanceModel = "Linear";
       canSave = "1";
       canSaveDynamicFields = "1";
-      class = "DeathMatchGame";
          desc = "A \'one of everything\' test level that demonstrates lots of stock classes.";
          levelName = "Outpost";
          preview = "data/FPSGameplay/levels/Outpost_preview";

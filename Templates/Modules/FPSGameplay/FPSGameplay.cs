@@ -14,8 +14,6 @@
 
 function FPSGameplay::onCreate( %this )
 {
-   echo("Made it");   
-   
 }
 
 function FPSGameplay::onDestroy( %this )
@@ -51,31 +49,44 @@ function FPSGameplay::initServer(%this)
    exec("./scripts/server/physicsShape.cs");
 }
 
-function FPSGameplay::onCreateServer(%this)
+function FPSGameplay::onCreateGameServer(%this)
 {
-   if(isObject(DatablockFilesList))
-   {
-      for( %file = findFirstFile( "data/FPSGameplay/scripts/datablocks/*.cs.dso" );
-      %file !$= "";
-      %file = findNextFile( "data/FPSGameplay/scripts/datablocks/*.cs.dso" ))
-      {
-         // Only execute, if we don't have the source file.
-         %csFileName = getSubStr( %file, 0, strlen( %file ) - 4 );
-         if( !isFile( %csFileName ) )
-            DatablockFilesList.add(%csFileName);
-      }
-      
-      // Load all source material files.
-      for( %file = findFirstFile( "data/FPSGameplay/scripts/datablocks/*.cs" );
-      %file !$= "";
-      %file = findNextFile( "data/FPSGameplay/scripts/datablocks/*.cs" ))
-      {
-         DatablockFilesList.add(%file);
-      }
-   }
+   %this.registerDatablock("./datablocks/audioProfiles.cs");
+   %this.registerDatablock("./datablocks/audioData.cs");
+   %this.registerDatablock("./datablocks/sounds.cs");
+   %this.registerDatablock("./datablocks/aiPlayer.cs");
+   %this.registerDatablock("./datablocks/brushes.cs");
+   %this.registerDatablock("./datablocks/environment.cs");
+   %this.registerDatablock("./datablocks/health.cs");   
+   %this.registerDatablock("./datablocks/lights.cs");
+   
+   %this.registerDatablock("./datablocks/managedDatablocks.cs");
+   %this.registerDatablock("./datablocks/managedDecalData.cs");
+   %this.registerDatablock("./datablocks/managedForestItemData.cs");
+   %this.registerDatablock("./datablocks/managedItemData.cs");
+   %this.registerDatablock("./datablocks/managedParticleData.cs");
+   %this.registerDatablock("./datablocks/managedParticleEmiterData.cs");
+   
+   %this.registerDatablock("./datablocks/markers.cs");
+   %this.registerDatablock("./datablocks/particles.cs");
+   %this.registerDatablock("./datablocks/physics.cs");
+   %this.registerDatablock("./datablocks/player.cs");
+   %this.registerDatablock("./datablocks/ribbons.cs");
+   %this.registerDatablock("./datablocks/rigidShape.cs");
+   %this.registerDatablock("./datablocks/teleporter.cs");
+   %this.registerDatablock("./datablocks/triggers.cs");
+   %this.registerDatablock("./datablocks/weapon.cs");
+   
+   %this.registerDatablock("./datablocks/vehicles/cheetahCar.cs");
+   
+   %this.registerDatablock("./datablocks/weapons/grenadefx.cs");
+   %this.registerDatablock("./datablocks/weapons/Lurker.cs");
+   %this.registerDatablock("./datablocks/weapons/ProxMine.cs");
+   %this.registerDatablock("./datablocks/weapons/Ryder.cs");
+   %this.registerDatablock("./datablocks/weapons/Turret.cs");
 }
 
-function FPSGameplay::onDestroyServer(%this)
+function FPSGameplay::onDestroyGameServer(%this)
 {
 }
 
@@ -83,21 +94,13 @@ function FPSGameplay::initClient(%this)
 {
    exec("data/FPSGameplay/scripts/client/gameProfiles.cs");
       
-   //client scripts
-   $KeybindPath = "data/FPSGameplay/scripts/client/default.keybinds.cs";
-   exec($KeybindPath);
-   
-   %prefPath = getPrefpath();
-   if(isFile(%prefPath @ "/keybinds.cs"))
-      exec(%prefPath @ "/keybinds.cs");
-      
    exec("data/FPSGameplay/scripts/client/inputCommands.cs");
    
    //guis
-   exec("./scripts/gui/chatHud.gui");
-   exec("./scripts/gui/playerList.gui");
-   exec("./scripts/gui/playGui.gui");
-   exec("./scripts/gui/hudlessGui.gui");
+   exec("./guis/chatHud.gui");
+   exec("./guis/playerList.gui");
+   exec("./guis/playGui.gui");
+   exec("./guis/hudlessGui.gui");
    
    exec("data/FPSGameplay/scripts/client/playGui.cs");
    exec("data/FPSGameplay/scripts/client/hudlessGui.cs");
@@ -113,10 +116,17 @@ function FPSGameplay::initClient(%this)
    exec("data/FPSGameplay/scripts/client/screenshot.cs");
 }
 
-function FPSGameplay::onCreateClient(%this)
+function FPSGameplay::onCreateClientConnection(%this)
 {
+   //client scripts
+   $KeybindPath = "data/FPSGameplay/scripts/client/default.keybinds.cs";
+   exec($KeybindPath);
+   
+   %prefPath = getPrefpath();
+   if(isFile(%prefPath @ "/keybinds.cs"))
+      exec(%prefPath @ "/keybinds.cs");
 }
 
-function FPSGameplay::onDestroyClient(%this)
+function FPSGameplay::onDestroyClientConnection(%this)
 {
 }

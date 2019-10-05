@@ -92,7 +92,7 @@ function ItemData::onThrow(%this, %user, %amount)
       rotation = "0 0 1 "@ (getRandom() * 360);
       count = %amount;
    };
-   MissionGroup.add(%obj);
+   getRootScene().addDynamicObject(%obj);
    %obj.schedulePop();
    return %obj;
 }

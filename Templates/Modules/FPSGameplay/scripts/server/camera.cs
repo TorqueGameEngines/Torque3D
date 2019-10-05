@@ -39,7 +39,7 @@ function Observer::onTrigger(%this,%obj,%trigger,%state)
 
       case "Corpse":
          // Viewing dead corpse, so we probably want to respawn.
-         $Game.preparePlayer(%client);
+         callGamemodeFunction("preparePlayer", %client);
 
          // Set the camera back into observer mode, since in
          // debug mode we like to switch to it.

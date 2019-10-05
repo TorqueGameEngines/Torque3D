@@ -150,7 +150,7 @@ function ExampleGameMode::onClientLeaveGame(%this, %client)
 //This is called when the player has connected and finaly setup is done and control is handed
 //over to the client. It allows a point to special-case setting the client's canvas content
 //(Such as a gamemode-specific GUI) or setting up gamemode-specific keybinds/control schemes
-function ExampleGameMode::onInitialControlSet()
+function ExampleGameMode::onInitialControlSet(%this)
 {
    
 }

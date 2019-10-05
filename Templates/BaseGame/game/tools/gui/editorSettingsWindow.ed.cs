@@ -118,6 +118,18 @@ function ESettingsWindow::addGameSettingsPage(%this, %settingsPageName, %setting
    GameSettingsPageList.add(%settingsPageName, %settingsPageText);
 }
 
+function ESettingsWindow::refresh(%this)
+{
+   if(ESettingsWindow.selectedPageId !$= "")
+   {
+      ESettingsWindowList.setSelectedById( ESettingsWindow.selectedPageId );  
+   }
+   else
+   {
+      ESettingsWindowList.setSelectedById( 1 );  
+   }
+}
+
 //-----------------------------------------------------------------------------
 
 function ESettingsWindowList::onSelect( %this, %id, %text )
@@ -130,6 +142,9 @@ function ESettingsWindowList::onSelect( %this, %id, %text )
       %pageName = GameSettingsPageList.getKey(GameSettingsPageList.getIndexFromValue(%text));
       
    eval("ESettingsWindow.get" @ %pageName @ "Settings();");
+   
+   ESettingsWindow.selectedPageId = %id;
+   ESettingsWindow.selectedPageText = %text;
 }
 
 //Read/write field functions
@@ -147,25 +162,30 @@ function SettingsInspector::changeEditorSetting(%this, %varName, %value)
 {
    %varName = strreplace(%varName, "-", "/");
    
-   if(isFile(%value) || IsDirectory(%value))
+   if(%value !$= "" && (fileExt(%value) !$= "" || IsDirectory(%value)))
    {
       %value = makeFullPath(%value);
    }
    
-   echo("Set " @ %varName @ " to be " @ %value);  
+   //echo("Set " @ %varName @ " to be " @ %value);  
+   
+   if(ESettingsWindow.mode $= "Editor")
+      %oldValue = EditorSettings.value(%varName);
+   else
+      %oldValue = ProjectSettings.value(%varName);
    
    if(ESettingsWindow.mode $= "Editor")
       EditorSettings.setValue(%varName, %value);
    else
       ProjectSettings.setValue(%varName, %value);
    
-   //%id = ESettingsWindowList.getSelectedRow();
-   //ESettingsWindowList.setSelectedRow(%id);
-   
    if(ESettingsWindow.mode $= "Editor")
       %success = EditorSettings.write();
    else
       %success = ProjectSettings.write();
+      
+   if(%oldValue !$= %value)
+      ESettingsWindow.refresh();
 }
 
 function GuiInspectorVariableGroup::buildOptionsSettingField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %ownerObj)

@@ -1,4 +1,4 @@
-function callGamemodeFunction(%gameModeFuncName, %data)
+function callGamemodeFunction(%gameModeFuncName, %arg0, %arg1, %arg2, %arg3, %arg4, %arg5, %arg6)
 {
    if(%data !$= "")
       %data = "\""@%data@"\"";
@@ -14,7 +14,7 @@ function callGamemodeFunction(%gameModeFuncName, %data)
          //if the scene defines a game mode, go ahead and envoke it here
          if(isObject(%gamemodeName) && %gamemodeName.isMethod(%gameModeFuncName))
          {
-            eval(%gamemodeName @ "."@%gameModeFuncName@"("@%data@");" );
+            eval(%gamemodeName @ "."@%gameModeFuncName@"(\""@%arg0@"\", \""@%arg1@"\", \""@%arg2@"\", \""@%arg3@"\", \""@%arg4@"\", \""@%arg5@"\", \""@%arg6@"\");" );
             %hasGameMode = 1;
          }
          else
@@ -22,7 +22,7 @@ function callGamemodeFunction(%gameModeFuncName, %data)
             //if we don't have an object, attempt the static call  
             if(isMethod(%gamemodeName, %gameModeFuncName))
             {
-               eval(%gamemodeName @ "::"@%gameModeFuncName@"("@%data@");" );
+               eval(%gamemodeName @ "::"@%gameModeFuncName@"(\""@%arg0@"\", \""@%arg1@"\", \""@%arg2@"\", \""@%arg3@"\", \""@%arg4@"\", \""@%arg5@"\", \""@%arg6@"\");" );
                %hasGameMode = 1;
             }
          }
@@ -37,14 +37,14 @@ function callGamemodeFunction(%gameModeFuncName, %data)
       {
          if(isObject(%defaultModeName) && %defaultModeName.isMethod(%gameModeFuncName))
          {
-            eval(%defaultModeName @ "."@%gameModeFuncName@"("@%data@");" );
+            eval(%defaultModeName @ "."@%gameModeFuncName@"(\""@%arg0@"\", \""@%arg1@"\", \""@%arg2@"\", \""@%arg3@"\", \""@%arg4@"\", \""@%arg5@"\", \""@%arg6@"\");" );
             %hasGameMode = 1;
          }
          else
          {
             if(isMethod(%defaultModeName, %gameModeFuncName))
             {
-               eval(%defaultModeName @ "::"@%gameModeFuncName@"("@%data@");" );
+               eval(%defaultModeName @ "::"@%gameModeFuncName@"(\""@%arg0@"\", \""@%arg1@"\", \""@%arg2@"\", \""@%arg3@"\", \""@%arg4@"\", \""@%arg5@"\", \""@%arg6@"\");" );
                %hasGameMode = 1;
             }  
          }

@@ -4,5 +4,5 @@
     AssetName="ExampleLevel"
     LevelFile="ExampleLevel.mis"
     LevelName="Example Level"
-    LevelDescription="An example level asset"
+    Description="An example level asset"
     VersionId="1" />

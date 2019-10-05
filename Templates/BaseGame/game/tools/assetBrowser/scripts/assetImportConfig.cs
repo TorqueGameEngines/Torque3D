@@ -419,9 +419,15 @@ function ImportOptionsConfigList::changeEditorSetting(%this, %varName, %value)
    
    %configGroup = AssetImportConfigName.getText();
    
+   %oldValue = AssetImportSettings.value(%configGroup @ "/" @ %varName, %value);
+   
    AssetImportSettings.setValue(%configGroup @ "/" @ %varName, %value);
    
-   //%success = AssetImportSettings.write();
+   if(%oldValue !$= %value)
+   {
+      %id = %this.getSelectedRow();
+      %this.setSelectedRow(%id);  
+   }
 }
 
 function ImportOptionsConfigList::ToggleImportMesh(%this, %fieldName, %newValue, %ownerObject)

@@ -131,7 +131,7 @@ function EditorOpenTorsionProject( %projectFile )
    {
       MessageBoxOK(
          "Torsion Not Found",
-         "Torsion not found at '" @ %torsionPath @ "'.  Please set the correct path in the preferences."
+         "Torsion not found at '" @ %torsionPath @ "'.  Please set the correct path in the Editor Settings."
       );
       return;
    }
@@ -170,7 +170,7 @@ function EditorOpenFileInTorsion( %file, %line )
    {
       MessageBoxOK(
          "Torsion Not Found",
-         "Torsion not found at '" @ %torsionPath @ "'.  Please set the correct path in the preferences."
+         "Torsion not found at '" @ %torsionPath @ "'.  Please set the correct path in the Editor Settings."
       );
       return;
    }

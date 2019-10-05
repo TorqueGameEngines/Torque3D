@@ -4,5 +4,5 @@
     AssetName="EmptyLevel"
     LevelName="EmptyLevel"
     LevelFile="EmptyLevel.mis"
-    LevelDescription="An empty room"
+    Description="An empty room"
     VersionId="1" />

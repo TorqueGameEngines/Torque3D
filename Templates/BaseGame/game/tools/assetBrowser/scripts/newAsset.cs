@@ -114,8 +114,9 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
    else if(%assetType $= "LevelAsset")
    {
       NewAssetPropertiesInspector.startGroup("Level");
-      NewAssetPropertiesInspector.addField("levelName", "Level Name", "String",  "Human-readable name of new level", "", "", %this.newAssetSettings);
+      NewAssetPropertiesInspector.addField("LevelName", "Level Name", "String",  "Human-readable name of new level", "", "", %this.newAssetSettings);
       NewAssetPropertiesInspector.addField("levelPreviewImage", "Level Preview Image", "Image",  "Preview Image for the level", "", "", %this.newAssetSettings);
+      
       NewAssetPropertiesInspector.endGroup();
    }
    else if(%assetType $= "ScriptAsset")

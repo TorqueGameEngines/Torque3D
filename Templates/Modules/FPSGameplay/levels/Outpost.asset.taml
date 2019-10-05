@@ -4,5 +4,5 @@
     AssetName="Outpost"
     LevelName="Outpost"
     LevelFile="Outpost.mis"
-    LevelDescription="Outpost level"
+    Description="Outpost level"
     VersionId="1" />

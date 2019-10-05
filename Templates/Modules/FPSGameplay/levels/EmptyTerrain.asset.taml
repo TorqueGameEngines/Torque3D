@@ -4,5 +4,5 @@
     AssetName="EmptyTerrain"
     LevelName="Empty Terrain"
     LevelFile="Empty Terrain.mis"
-    LevelDescription="A Empty level with terrain."
+    Description="A Empty level with terrain."
     VersionId="1" />

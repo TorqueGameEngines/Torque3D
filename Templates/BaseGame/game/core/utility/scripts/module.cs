@@ -26,7 +26,7 @@ function callOnModules(%functionName, %moduleGroup)
    }
    
    %execFilecount = ExecFilesList.count();
-   for (%i=0;%i<=%execFilecount;%i++)
+   for (%i=0;%i<%execFilecount;%i++)
    {
         %filename = ExecFilesList.getKey(%i);
         exec(%filename);
@@ -108,7 +108,7 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
    ///go through all entries
    %locked = false;
    %dbFilecount = DatablockFilesList.count();
-   for (%i=0;%i<=%dbFilecount;%i++)
+   for (%i=0;%i<%dbFilecount;%i++)
    {
         %check = DatablockFilesList.getKey(%i);
         //look for a substring match
@@ -162,7 +162,7 @@ function SimSet::unRegisterDatablock(%scopeSet, %datablockFilePath)
    ///go through all entries
    %locked = false;
    %dbFilecount = DatablockFilesList.count();
-   for (%i=0;%i<=%dbFilecount;%i++)
+   for (%i=0;%i<%dbFilecount;%i++)
    {
         %check = DatablockFilesList.getKey(%i);
         //look for a substring match
@@ -207,7 +207,7 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
    ///go through all entries
    %locked = false;
    %execFilecount = ExecFilesList.count();
-   for (%i=0;%i<=%execFilecount;%i++)
+   for (%i=0;%i<%execFilecount;%i++)
    {
         %check = ExecFilesList.getKey(%i);
         //look for a substring match
@@ -260,7 +260,7 @@ function SimSet::unQueueExec(%scopeSet, %execFilePath)
    ///go through all entries
    %locked = false;
    %execFilecount = ExecFilesList.count();
-   for (%i=0;%i<=%execFilecount;%i++)
+   for (%i=0;%i<%execFilecount;%i++)
    {
         %check = ExecFilesList.getKey(%i);
         //look for a substring match

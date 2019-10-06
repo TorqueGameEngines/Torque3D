@@ -1064,7 +1064,7 @@ function ImportAssetWindow::refreshChildItem(%this, %id)
          {
             position = %filePathBtnPos SPC "0";
             extent = %height SPC %height;
-            command = "ImportAssetOptionsWindow.findMissingFile(" @ %assetItem @ ");";
+            command = "ImportAssetWindow.findMissingFile(" @ %assetItem @ ");";
             text = "...";
             internalName = "InputPathButton";
             tooltip = %toolTip;

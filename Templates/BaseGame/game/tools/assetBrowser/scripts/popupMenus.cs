@@ -11,6 +11,8 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 0 ] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
          item[ 1 ] = "Refresh Module Dependencies" TAB "" TAB "AssetBrowser.RefreshModuleDependencies();";
       };
+      
+      AddNewModulePopup.enableItem(1, false);
    }
       
    if( !isObject( EditAssetPopup ) )
@@ -153,6 +155,8 @@ function AssetBrowser::buildPopupMenus(%this)
          item[4] = "Create Level" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewLevelAsset(\"NewLevel\", AssetBrowser.selectedModule);";
          item[5] = "-";
          item[6] = "Create C++ Asset" TAB AddNewCppAssetPopup;
+         item[7] = "-";
+         item[8] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
       
       };
    }

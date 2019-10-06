@@ -105,6 +105,7 @@ function setupEditorVisibilityMenu()
       item[ 6 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
    };
    
+   %probespopup.enableItem(5, false);
    %probespopup.enableItem(6, false);
    
    //
@@ -134,6 +135,9 @@ function setupEditorVisibilityMenu()
       item[ 2 ] = "Show Specular Light" TAB "" TAB "";
       item[ 3 ] = "Show Diffuse Light" TAB "" TAB "";
    };
+   
+   %lightspopup.enableItem(2, false);
+   %lightspopup.enableItem(3, false);
    
    //
    //Probes

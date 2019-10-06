@@ -16,9 +16,6 @@ function ToolsModule::onCreate(%this)
    // to find exactly which subsystems should be readied before kicking things off. 
    // ----------------------------------------------------------------------------
    
-   new Settings(EditorSettings) { file = "tools/settings.xml"; };
-   EditorSettings.read();
-   
    ModuleDatabase.LoadExplicit( "MainEditor" );
    ModuleDatabase.LoadExplicit( "Tools_ObjectViewer" );
 }

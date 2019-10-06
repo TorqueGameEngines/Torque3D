@@ -346,7 +346,7 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
       {
          aiColor3D read_color(1.f, 1.f, 1.f);
          if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, read_color))
-            texName = String::ToString("Color: (%0.3f, %0.3f, %0.3f)", (F32)read_color.r, (F32)read_color.g, (F32)read_color.b);
+            texName = String::ToString("Color: %0.3f %0.3f %0.3f", (F32)read_color.r, (F32)read_color.g, (F32)read_color.b); //formatted as words for easy parsing
          else
             texName = "No Texture";
       }

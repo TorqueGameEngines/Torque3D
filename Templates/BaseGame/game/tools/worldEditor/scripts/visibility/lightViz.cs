@@ -94,7 +94,7 @@ function toggleSpecMapViz( %enable )
       AL_SpecMapVisualize.disable();    
 }
 
-new GFXStateBlockData( AL_DepthVisualizeState )
+singleton GFXStateBlockData( AL_DepthVisualizeState )
 {
    zDefined = true;
    zEnable = false;
@@ -105,7 +105,7 @@ new GFXStateBlockData( AL_DepthVisualizeState )
    samplerStates[1] = SamplerClampLinear; // viz color lookup
 };
 
-new GFXStateBlockData( AL_DefaultVisualizeState )
+singleton GFXStateBlockData( AL_DefaultVisualizeState )
 {
    blendDefined = true;
    blendEnable = true;

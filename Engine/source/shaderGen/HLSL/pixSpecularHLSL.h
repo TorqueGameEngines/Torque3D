@@ -27,8 +27,8 @@
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
 #endif
 
-/// A texture source for the PixSpecular feature
-class SpecularMapHLSL : public ShaderFeatureHLSL
+/// A texture source for the PBRConfigMap feature
+class PBRConfigMapHLSL : public ShaderFeatureHLSL
 {
 
 public:
@@ -47,7 +47,7 @@ public:
 
    virtual String getName()
    {
-      return "Specular Map";
+      return "PBRConfig Map";
    }
 };
 

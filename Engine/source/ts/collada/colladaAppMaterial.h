@@ -43,7 +43,6 @@ public:
    // Settings extracted from the Collada file, and optionally saved to materials.cs
    String                     diffuseMap;
    String                     normalMap;
-   String                     specularMap;
 
    LinearColorF               diffuseColor;
    LinearColorF               specularColor;

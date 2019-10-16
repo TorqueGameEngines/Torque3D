@@ -56,20 +56,20 @@ void DeferredSpecMapHLSL::processPix( Vector<ShaderComponent*> &componentList, c
    }
 
    // create texture var
-   Var *specularMap = new Var;
-   specularMap->setType( "SamplerState" );
-   specularMap->setName( "specularMap" );
-   specularMap->uniform = true;
-   specularMap->sampler = true;
-   specularMap->constNum = Var::getTexUnitNum();
+   Var * pbrConfigMap = new Var;
+   pbrConfigMap->setType( "SamplerState" );
+   pbrConfigMap->setName( "PBRConfigMap" );
+   pbrConfigMap->uniform = true;
+   pbrConfigMap->sampler = true;
+   pbrConfigMap->constNum = Var::getTexUnitNum();
 
-   Var* specularMapTex = new Var;
-   specularMapTex->setName("specularMapTex");
-   specularMapTex->setType("Texture2D");
-   specularMapTex->uniform = true;
-   specularMapTex->texture = true;
-   specularMapTex->constNum = specularMap->constNum;
-   LangElement *texOp = new GenOp("   @.Sample(@, @)", specularMapTex, specularMap, texCoord);
+   Var* pbrConfigMapTex = new Var;
+   pbrConfigMapTex->setName("PBRConfigMapTex");
+   pbrConfigMapTex->setType("Texture2D");
+   pbrConfigMapTex->uniform = true;
+   pbrConfigMapTex->texture = true;
+   pbrConfigMapTex->constNum = pbrConfigMap->constNum;
+   LangElement *texOp = new GenOp("   @.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
    
    Var * pbrConfig = (Var*)LangElement::find("pbrConfig");
    if (!pbrConfig) pbrConfig = new Var("pbrConfig", "float4");
@@ -103,11 +103,11 @@ void DeferredSpecMapHLSL::setTexData(   Material::StageData &stageDat,
                                        RenderPassData &passData,
                                        U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex( MFT_SpecularMap );
+   GFXTextureObject *tex = stageDat.getTex(MFT_PBRConfigMap);
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "specularMap";
+      passData.mSamplerNames[ texIndex ] = "PBRConfigMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }

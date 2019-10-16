@@ -499,7 +499,6 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
 
          copySketchupTexture(path, mat->mDiffuseMapFilename[0]);
          copySketchupTexture(path, mat->mNormalMapFilename[0]);
-         copySketchupTexture(path, mat->mSpecularMapFilename[0]);
       }
    }
 

@@ -1304,7 +1304,7 @@ void LightmapFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
    lightMapTex->texture = true;
    lightMapTex->constNum = lightMap->constNum;
    
-   // argh, pixel specular should prob use this too
+   // argh, PBRConfigMap should prob use this too
    if( fd.features[MFT_NormalMap] )
    {
       Var *lmColor = new Var;

@@ -85,7 +85,7 @@ struct ShaderGenVars
    const static String vectorLightColor;
    const static String vectorLightBrightness;
 
-   const static String specularColor;
+   const static String pbrConfig;
    const static String smoothness;
    const static String metalness;
 

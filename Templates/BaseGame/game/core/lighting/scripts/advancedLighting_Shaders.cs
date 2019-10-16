@@ -22,7 +22,7 @@
 
 
 // Vector Light State
-new GFXStateBlockData( AL_VectorLightState )
+singleton GFXStateBlockData( AL_VectorLightState )
 {
    blendDefined = true;
    blendEnable = true;
@@ -102,7 +102,7 @@ new CustomMaterial( AL_VectorLightMaterial )
 //------------------------------------------------------------------------------
 
 // Convex-geometry light states
-new GFXStateBlockData( AL_ConvexLightState )
+singleton GFXStateBlockData( AL_ConvexLightState )
 {
    blendDefined = true;
    blendEnable = true;

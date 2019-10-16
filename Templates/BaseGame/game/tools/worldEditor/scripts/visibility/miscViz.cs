@@ -1,4 +1,4 @@
-new GFXStateBlockData( Viz_DefaultVisualizeState )
+singleton GFXStateBlockData( Viz_DefaultVisualizeState )
 {
    /*alphaDefined = true;
    alphaTestEnable = true;

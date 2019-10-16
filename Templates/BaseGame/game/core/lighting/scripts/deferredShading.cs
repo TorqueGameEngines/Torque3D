@@ -9,7 +9,7 @@ singleton ShaderData( DeferredColorShader )
    pixVersion = 2.0;   
 };
 
-new GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
+singleton GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
 {        
    blendEnable = false; 
    

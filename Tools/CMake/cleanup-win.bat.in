@@ -2,7 +2,7 @@
 
 :: Delete procedural shaders
 echo shaders
-del /q /a:-R shaders\procedural\*.*
+del /q /a:-R data\shaderCachel\*.*
 :: Delete dumped shader disassembly files
 for /R %%a IN (*._dis.txt) do IF EXIST "%%a._dis.txt" del "%%a._dis.txt"
 
@@ -38,10 +38,11 @@ IF EXIST "scripts\server\banlist.cs" del /s scripts\server\banlist.cs
 IF EXIST "scripts\server\prefs.cs" del /s scripts\server\prefs.cs
 IF EXIST "client\config.cs" del /s client\config.cs
 IF EXIST "config.cs" del /s config.cs
-IF EXIST "tools\settings.xml" del /s tools\settings.xml
+:: IF EXIST "tools\settings.xml" del /s tools\settings.xml
 IF EXIST "banlist.cs" del /s banlist.cs
 
 :: logs
 echo logs
 IF EXIST "torque3d.log" del /s torque3d.log
+IF EXIST "console.log" del /s console.log
 echo DONE!

@@ -29,7 +29,7 @@
 #include "gfx/gfxStructs.h"
 #include "shaderGen/shaderGen.h"
 
-void SpecularMapGLSL::processVert(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
+void PBRConfigMapGLSL::processVert(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
 {
    MultiLine *meta = new MultiLine;
 
@@ -43,19 +43,19 @@ void SpecularMapGLSL::processVert(Vector<ShaderComponent*> &componentList, const
    output = meta;
 }
 
-void SpecularMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void PBRConfigMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord( "texCoord", "vec2", componentList );
 
    // create texture var
-   Var *specularMap = new Var;
-   specularMap->setType( "sampler2D" );
-   specularMap->setName( "specularMap" );
-   specularMap->uniform = true;
-   specularMap->sampler = true;
-   specularMap->constNum = Var::getTexUnitNum();
-   LangElement *texOp = new GenOp( "texture(@, @)", specularMap, texCoord );
+   Var *pbrConfigMap = new Var;
+   pbrConfigMap->setType( "sampler2D" );
+   pbrConfigMap->setName( "PBRConfigMap" );
+   pbrConfigMap->uniform = true;
+   pbrConfigMap->sampler = true;
+   pbrConfigMap->constNum = Var::getTexUnitNum();
+   LangElement *texOp = new GenOp( "texture(@, @)", pbrConfigMap, texCoord );
 
    Var * pbrConfig = new Var( "PBRConfig", "vec4" );
    Var *metalness = (Var*)LangElement::find("metalness");
@@ -74,23 +74,23 @@ void SpecularMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const
    output = meta;
 }
 
-ShaderFeature::Resources SpecularMapGLSL::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources PBRConfigMapGLSL::getResources( const MaterialFeatureData &fd )
 {
    Resources res;
    res.numTex = 1;
    return res;
 }
 
-void SpecularMapGLSL::setTexData( Material::StageData &stageDat,
+void PBRConfigMapGLSL::setTexData( Material::StageData &stageDat,
                                  const MaterialFeatureData &fd,
                                  RenderPassData &passData,
                                  U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex( MFT_SpecularMap );
+   GFXTextureObject *tex = stageDat.getTex( MFT_PBRConfigMap );
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "specularMap";
+      passData.mSamplerNames[ texIndex ] = "PBRConfigMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }

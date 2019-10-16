@@ -28,7 +28,7 @@
 #endif
 
 /// A texture source for the PixSpecular feature
-class SpecularMapGLSL : public ShaderFeatureGLSL
+class PBRConfigMapGLSL : public ShaderFeatureGLSL
 {
 
 public:
@@ -47,7 +47,7 @@ public:
 
    virtual String getName()
    {
-      return "Specular Map";
+      return "PBRConfig Map";
    }
 };
 

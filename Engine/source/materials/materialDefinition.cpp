@@ -272,10 +272,10 @@ void Material::initPersistFields()
          "Used to scale the strength of the detail normal map when blended with the base normal map." );
       
       addField("smoothness", TypeF32, Offset(mSmoothness, Material), MAX_STAGES,
-         "The degree of smoothness when not using a specularMap." );
+         "The degree of smoothness when not using a PBRConfigMap." );
 
 		addField("metalness", TypeF32, Offset(mMetalness, Material), MAX_STAGES,
-         "The degree of Metalness when not using a specularMap." );
+         "The degree of Metalness when not using a PBRConfigMap." );
 
       addProtectedField( "accuEnabled", TYPEID< bool >(), Offset( mAccuEnabled, Material ),
             &_setAccuEnabled, &defaultProtectedGetFn, MAX_STAGES, "Accumulation texture." );
@@ -301,7 +301,7 @@ void Material::initPersistFields()
       addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, Material), MAX_STAGES,
          "Treat Smoothness as Roughness");
 
-      addField( "specularMap", TypeImageFilename, Offset(mSpecularMapFilename, Material), MAX_STAGES,
+      addField( "specularMap", TypeImageFilename, Offset(mPBRConfigMapFilename, Material), MAX_STAGES,
          "Prepacked specular map texture. The RGB channels of this texture provide per-pixel reference values for: "
          "smoothness (R), Ambient Occlusion (G), and metalness(B)");
 

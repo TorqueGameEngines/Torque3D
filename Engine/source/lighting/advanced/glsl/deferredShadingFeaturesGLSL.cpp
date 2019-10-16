@@ -56,13 +56,13 @@ void DeferredSpecMapGLSL::processPix( Vector<ShaderComponent*> &componentList, c
    }
 
    // create texture var
-   Var *specularMap = new Var;
-   specularMap->setType( "sampler2D" );
-   specularMap->setName( "specularMap" );
-   specularMap->uniform = true;
-   specularMap->sampler = true;
-   specularMap->constNum = Var::getTexUnitNum();
-   LangElement *texOp = new GenOp( "tex2D(@, @)", specularMap, texCoord );
+   Var *pbrConfigMap = new Var;
+   pbrConfigMap->setType( "sampler2D" );
+   pbrConfigMap->setName( "PBRConfigMap" );
+   pbrConfigMap->uniform = true;
+   pbrConfigMap->sampler = true;
+   pbrConfigMap->constNum = Var::getTexUnitNum();
+   LangElement *texOp = new GenOp( "tex2D(@, @)", pbrConfigMap, texCoord );
 
    Var *pbrConfig = (Var*)LangElement::find("PBRConfig");
    if (!pbrConfig) pbrConfig = new Var("PBRConfig", "vec4");
@@ -97,11 +97,11 @@ void DeferredSpecMapGLSL::setTexData(   Material::StageData &stageDat,
                                        RenderPassData &passData,
                                        U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex( MFT_SpecularMap );
+   GFXTextureObject *tex = stageDat.getTex(MFT_PBRConfigMap);
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "specularMap";
+      passData.mSamplerNames[ texIndex ] = "PBRConfigMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }

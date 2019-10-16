@@ -66,7 +66,7 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
 	FEATUREMGR->registerFeature( MFT_StaticCubemap, new NamedFeatureGLSL( "Static Cubemap" ) );
    FEATUREMGR->registerFeature( MFT_CubeMap, new ReflectCubeFeatGLSL );
    FEATUREMGR->registerFeature( MFT_InvertSmoothness, new NamedFeatureGLSL("Roughest = 1.0"));
-   FEATUREMGR->registerFeature( MFT_SpecularMap, new SpecularMapGLSL );
+   FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapGLSL );
    FEATUREMGR->registerFeature( MFT_AccuMap, new AccuTexFeatGLSL );
    FEATUREMGR->registerFeature( MFT_GlossMap, new NamedFeatureGLSL( "Gloss Map" ) );
    FEATUREMGR->registerFeature( MFT_IsTranslucent, new NamedFeatureGLSL( "Translucent" ) );

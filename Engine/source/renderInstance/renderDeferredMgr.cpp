@@ -635,7 +635,7 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
       newFeatures.addFeature(MFT_InvertSmoothness);
 
    // Deferred Shading : Specular
-   if( mStages[stageNum].getTex( MFT_SpecularMap ) )
+   if( mStages[stageNum].getTex( MFT_PBRConfigMap ) )
    {
        newFeatures.addFeature( MFT_DeferredSpecMap );
    }

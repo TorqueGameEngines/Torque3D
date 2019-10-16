@@ -29,7 +29,7 @@
 #include "gfx/gfxStructs.h"
 #include "shaderGen/shaderGen.h"
 
-void SpecularMapHLSL::processVert(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
+void PBRConfigMapHLSL::processVert(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
 {
    MultiLine *meta = new MultiLine;
 
@@ -43,26 +43,26 @@ void SpecularMapHLSL::processVert(Vector<ShaderComponent*> &componentList, const
    output = meta;
 }
 
-void SpecularMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord("texCoord", "float2", componentList);
 
    // create texture var
-   Var *specularMap = new Var;
-   specularMap->setType( "SamplerState" );
-   specularMap->setName( "specularMap" );
-   specularMap->uniform = true;
-   specularMap->sampler = true;
-   specularMap->constNum = Var::getTexUnitNum();
+   Var *pbrConfigMap = new Var;
+   pbrConfigMap->setType( "SamplerState" );
+   pbrConfigMap->setName( "PBRConfigMap" );
+   pbrConfigMap->uniform = true;
+   pbrConfigMap->sampler = true;
+   pbrConfigMap->constNum = Var::getTexUnitNum();
 
-   Var *specularMapTex = new Var;
-   specularMapTex->setName("specularMapTex");
-   specularMapTex->setType("Texture2D");
-   specularMapTex->uniform = true;
-   specularMapTex->texture = true;
-   specularMapTex->constNum = specularMap->constNum;
-   LangElement *texOp = new GenOp("@.Sample(@, @)", specularMapTex, specularMap, texCoord);
+   Var *pbrConfigMapTex = new Var;
+   pbrConfigMapTex->setName("PBRConfigMapTex");
+   pbrConfigMapTex->setType("Texture2D");
+   pbrConfigMapTex->uniform = true;
+   pbrConfigMapTex->texture = true;
+   pbrConfigMapTex->constNum = pbrConfigMap->constNum;
+   LangElement *texOp = new GenOp("@.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
 
 
    Var * pbrConfig = new Var( "PBRConfig", "float4" );
@@ -81,23 +81,23 @@ void SpecularMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const
    output = meta;
 }
 
-ShaderFeature::Resources SpecularMapHLSL::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources PBRConfigMapHLSL::getResources( const MaterialFeatureData &fd )
 {
    Resources res;
    res.numTex = 1;
    return res;
 }
 
-void SpecularMapHLSL::setTexData( Material::StageData &stageDat,
+void PBRConfigMapHLSL::setTexData( Material::StageData &stageDat,
                                  const MaterialFeatureData &fd,
                                  RenderPassData &passData,
                                  U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex( MFT_SpecularMap );
+   GFXTextureObject *tex = stageDat.getTex( MFT_PBRConfigMap );
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "specularMap";
+      passData.mSamplerNames[ texIndex ] = "PBRConfigMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }

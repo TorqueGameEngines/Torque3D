@@ -237,9 +237,9 @@ public:
 
    bool     mIsSRGb[MAX_STAGES];
    bool     mInvertSmoothness[MAX_STAGES];
-   FileName mSpecularMapFilename[MAX_STAGES];
-   StringTableEntry mSpecularMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mSpecularMapAsset[MAX_STAGES];
+   FileName mPBRConfigMapFilename[MAX_STAGES];
+   StringTableEntry mPBRConfigMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mPBRConfigMapAsset[MAX_STAGES];
    FileName mRoughMapFilename[MAX_STAGES];
    StringTableEntry mRoughMapAssetId[MAX_STAGES];
    AssetPtr<ImageAsset> mRoughMapAsset[MAX_STAGES];

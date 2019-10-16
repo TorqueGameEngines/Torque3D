@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-new ShaderData( AL_ShadowVisualizeShader )
+singleton shaderData( AL_ShadowVisualizeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/guiMaterialV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgShadowVisualizeP.hlsl";

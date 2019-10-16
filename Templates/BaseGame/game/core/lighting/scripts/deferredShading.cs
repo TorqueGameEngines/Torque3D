@@ -27,7 +27,7 @@ new GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
    samplerStates[4] = SamplerWrapLinear;
 };
 
-new ShaderData( AL_ProbeShader )
+singleton shaderData( AL_ProbeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/probeShadingP.hlsl";

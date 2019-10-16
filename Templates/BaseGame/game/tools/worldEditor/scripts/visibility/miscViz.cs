@@ -39,7 +39,7 @@ new GFXStateBlockData( Viz_DefaultVisualizeState )
    samplerStates[4] = SamplerClampLinear;  // depthviz
 };
 
-new ShaderData( Viz_TexelDensity )
+singleton shaderData( Viz_TexelDensity )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/Viz_TexelDensityP.hlsl";
@@ -79,7 +79,7 @@ function toggleTexelDensityViz( %enable )
 
 //
 //
-new ShaderData( Viz_SurfaceProperties )
+singleton shaderData( Viz_SurfaceProperties )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/Viz_SurfacePropertiesP.hlsl";
@@ -203,7 +203,7 @@ function Viz_SurfacePropertiesPFX::onEnabled( %this )
 //
 //
 //
-new ShaderData( Viz_ColorBlindness )
+singleton shaderData( Viz_ColorBlindness )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/Viz_ColorblindnessP.hlsl";
@@ -307,7 +307,7 @@ function Viz_ColorBlindnessPFX::onEnabled( %this )
 
 //
 //Material Complexity Viz
-new ShaderData( Viz_MaterialComplexity )
+singleton shaderData( Viz_MaterialComplexity )
 {
    DXVertexShaderFile   = "./shaders/Viz_materialComplexityV.hlsl";
    DXPixelShaderFile    = "./shaders/Viz_materialComplexityP.hlsl";

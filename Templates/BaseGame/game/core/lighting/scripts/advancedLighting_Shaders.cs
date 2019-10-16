@@ -61,7 +61,7 @@ new GFXStateBlockData( AL_VectorLightState )
 };
 
 // Vector Light Material
-new ShaderData( AL_VectorLightShader )
+singleton shaderData( AL_VectorLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/farFrustumQuadV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/vectorLightP.hlsl";
@@ -140,7 +140,7 @@ new GFXStateBlockData( AL_ConvexLightState )
 };
 
 // Point Light Material
-new ShaderData( AL_PointLightShader )
+singleton shaderData( AL_PointLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/convexGeometryV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/pointLightP.hlsl";
@@ -179,7 +179,7 @@ new CustomMaterial( AL_PointLightMaterial )
 };
 
 // Spot Light Material
-new ShaderData( AL_SpotLightShader )
+singleton shaderData( AL_SpotLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/convexGeometryV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/spotLightP.hlsl";
@@ -256,7 +256,7 @@ new Material( AL_DefaultShadowMaterial )
 };
 
 // Particle System Point Light Material
-new ShaderData( AL_ParticlePointLightShader )
+singleton shaderData( AL_ParticlePointLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/particlePointLightV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/particlePointLightP.hlsl";
@@ -281,7 +281,7 @@ new CustomMaterial( AL_ParticlePointLightMaterial )
 };
 
 //Probe Processing
-new ShaderData( IrradianceShader )
+singleton shaderData( IrradianceShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/cubemapV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/irradianceP.hlsl";
@@ -294,7 +294,7 @@ new ShaderData( IrradianceShader )
    pixVersion = 3.0;
 };
 
-new ShaderData( PrefiterCubemapShader )
+singleton shaderData( PrefiterCubemapShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/cubemapV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/prefilterP.hlsl";

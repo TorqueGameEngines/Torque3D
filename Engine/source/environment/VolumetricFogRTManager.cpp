@@ -109,7 +109,7 @@ VolumetricFogRTManager::~VolumetricFogRTManager()
 void VolumetricFogRTManager::onSceneRemove()
 {
    if (mIsInitialized)
-      mPlatformWindow->getScreenResChangeSignal().remove(this, &VolumetricFogRTManager::ResizeRT);
+      mPlatformWindow->resizeEvent.remove(this, &VolumetricFogRTManager::ResizeRT);
 }
    
 void VolumetricFogRTManager::onRemove()
@@ -148,7 +148,7 @@ bool VolumetricFogRTManager::Init()
    }
    
    mPlatformWindow = cv->getPlatformWindow();
-   mPlatformWindow->getScreenResChangeSignal().notify(this,&VolumetricFogRTManager::ResizeRT);
+   mPlatformWindow->resizeEvent.notify(this,&VolumetricFogRTManager::ResizeRT);
    
    if (mTargetScale < 1 || GFX->getAdapterType() == Direct3D11)
       mTargetScale = 1;
@@ -205,22 +205,17 @@ U32 VolumetricFogRTManager::DecFogObjects()
    return mNumFogObjects;
 }
    
-void VolumetricFogRTManager::ResizeRT(PlatformWindow* win,bool resize)
+void VolumetricFogRTManager::ResizeRT( WindowId did, S32 width, S32 height )
 {
-   mFogHasAnswered = 0;
    smVolumetricFogRTMResizeSignal.trigger(this, true);
 }
    
 void VolumetricFogRTManager::FogAnswered()
 {
-   mFogHasAnswered++;
-   if (mFogHasAnswered == mNumFogObjects)
-   {
-      if (Resize())
-         smVolumetricFogRTMResizeSignal.trigger(this, false);
-      else
-         Con::errorf("VolumetricFogRTManager::FogAnswered - Error resizing rendertargets!");
-   }
+   if (Resize())
+      smVolumetricFogRTMResizeSignal.trigger(this, false);
+   else
+      Con::errorf("VolumetricFogRTManager::FogAnswered - Error resizing rendertargets!");
 }
    
 bool VolumetricFogRTManager::Resize()
@@ -279,7 +274,6 @@ S32 VolumetricFogRTManager::setQuality(U32 Quality)
    
    mTargetScale = Quality;
    
-   mFogHasAnswered = 0;
    smVolumetricFogRTMResizeSignal.trigger(this, true);
    
    return mTargetScale;

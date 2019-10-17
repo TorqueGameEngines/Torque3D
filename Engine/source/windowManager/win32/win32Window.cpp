@@ -277,7 +277,7 @@ void Win32Window::setVideoMode( const GFXVideoMode &mode )
       mOwningManager->raiseCurtain();
 
    SetForegroundWindow( getHWND() );
-   getScreenResChangeSignal().trigger( this, true );
+   resizeEvent.trigger( this, true );
 }
 
 bool Win32Window::clearFullscreen()
@@ -806,7 +806,7 @@ LRESULT PASCAL Win32Window::WindowProc( HWND hWnd, UINT message, WPARAM wParam, 
 				window->getGFXTarget()->resetMode();
 			}
 
-         window->getScreenResChangeSignal().trigger(window, true);
+         window->resizeEvent.trigger(window, true);
 		}
 		return 0;
 

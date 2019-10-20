@@ -60,6 +60,8 @@ EditorSettings.endGroup();
 
 EditorSettings.beginGroup( "Tools" );
 EditorSettings.setDefaultValue(  "snapGround",              "0"               );
+EditorSettings.setDefaultValue(  "TerrainSnapOffsetZ",      "0"               );
+EditorSettings.setDefaultValue(  "OffsetZValue",            "0.01"             );
 EditorSettings.setDefaultValue(  "snapSoft",                "0"               );
 EditorSettings.setDefaultValue(  "snapSoftSize",            "2.0"             );
 EditorSettings.setDefaultValue(  "boundingBoxCollision",    "0"               );

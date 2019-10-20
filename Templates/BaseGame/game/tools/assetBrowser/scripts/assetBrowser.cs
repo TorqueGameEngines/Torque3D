@@ -44,14 +44,27 @@ function AssetBrowser::onWake(%this)
    if(!isObject(ImportAssetTree))
       new GuiTreeViewCtrl(ImportAssetTree);
       
+   if(!isObject(AssetBrowser_NavPrevHistoryList))
+   {
+      new ArrayObject(AssetBrowser_NavPrevHistoryList);
+   }
+   if(!isObject(AssetBrowser_NavForeHistoryList))
+   {
+      new ArrayObject(AssetBrowser_NavForeHistoryList);
+   }
+      
    %this.importingFilesArray = new ArrayObject();
    %this.importAssetUnprocessedListArray = new ArrayObject();
    %this.importAssetFinalListArray = new ArrayObject();
    
    %this.isReImportingAsset = false;
    %this.coreModulesFilter = false;
+   %this.toolsModulesFilter = false;
    %this.onlyShowModulesWithAssets = false;
    %this.treeFilterMode = "list";
+   
+   %this.folderPanelState = true;
+   %this.folderPanelSplit = 0;
    
    %this.templateFilesPath = "tools/assetBrowser/scripts/templateFiles/";
    
@@ -77,6 +90,8 @@ function AssetBrowser::onWake(%this)
          "You have no modules or content. Do you want to import a module from the template content?",
          "AssetBrowser.ImportTemplateModules();", "" );
    }
+   
+   %this.setPreviewSize(EditorSettings.value("Assets/Browser/previewTileSize", "small"));
 }
 
 //Filters
@@ -87,18 +102,60 @@ function AssetBrowser::showFilterPopup(%this)
 
 function AssetBrowser::viewCoreModulesFilter(%this)
 {
-   %this.coreModulesFilter = !%this.coreModulesFilter;
+   %oldVal = EditorSettings.value("Assets/Browser/showCoreModule", false);
+   %newVal = !%oldVal;
    
-   BrowserVisibilityPopup.checkItem(0,%this.coreModulesFilter);
+   BrowserVisibilityPopup.checkItem(0,%newVal);
+   
+   EditorSettings.setValue("Assets/Browser/showCoreModule", %newVal);
+    
+   AssetBrowser.loadFilters();
+}
+
+function AssetBrowser::viewToolsModulesFilter(%this)
+{
+   %oldVal = EditorSettings.value("Assets/Browser/showToolsModule", false);
+   %newVal = !%oldVal;
+   
+   BrowserVisibilityPopup.checkItem(1,%newVal);
+   
+   EditorSettings.setValue("Assets/Browser/showToolsModule", %newVal);
     
    AssetBrowser.loadFilters();
 }
 
 function AssetBrowser::viewPopulatedModulesFilter(%this)
 {
-   %this.onlyShowModulesWithAssets = !%this.onlyShowModulesWithAssets;
+   %oldVal = EditorSettings.value("Assets/Browser/showOnlyPopulatedModule", false);
+   %newVal = !%oldVal;
    
-   BrowserVisibilityPopup.checkItem(1,%this.onlyShowModulesWithAssets);
+   BrowserVisibilityPopup.checkItem(2,%newVal);
+   
+   EditorSettings.setValue("Assets/Browser/showOnlyPopulatedModule", %newVal);
+    
+   AssetBrowser.loadFilters();
+}
+
+function AssetBrowser::toggleShowingFolders(%this)
+{
+   %oldVal = EditorSettings.value("Assets/Browser/showFolders", false);
+   %newVal = !%oldVal;
+   
+   BrowserVisibilityPopup.checkItem(4,%newVal);
+   
+   EditorSettings.setValue("Assets/Browser/showFolders", %newVal);
+    
+   AssetBrowser.loadFilters();
+}
+
+function AssetBrowser::toggleShowingEmptyFolders(%this)
+{
+   %oldVal = EditorSettings.value("Assets/Browser/showEmptyFolders", false);
+   %newVal = !%oldVal;
+   
+   BrowserVisibilityPopup.checkItem(5,%newVal);
+   
+   EditorSettings.setValue("Assets/Browser/showEmptyFolders", %newVal);
     
    AssetBrowser.loadFilters();
 }
@@ -115,7 +172,12 @@ function AssetBrowser::viewTagsFilter(%this)
    AssetBrowser.loadFilters();
 }
 
-//Drag-Drop functionality
+function AssetBrowser::toggleAssetTypeFilter(%assetTypeIdx)
+{
+   %isChecked = AssetTypeListPopup.isItemChecked(%assetTypeIdx);
+   AssetTypeListPopup.checkItem(%assetTypeIdx, !%isChecked);
+}
+
 function AssetBrowser::selectAsset( %this, %asset )
 {
    if(AssetBrowser.selectCallback !$= "")
@@ -189,20 +251,43 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
       %this.previewData = new ScriptObject();      
    }
    
-   %assetDesc = AssetDatabase.acquireAsset(%asset);
-   %assetName = AssetDatabase.getAssetName(%asset);
+   AssetPreviewArray.empty();
+   
    %previewImage = "core/art/warnmat";
    
-   AssetPreviewArray.empty();
+   if(ModuleDatabase.findModule(%moduleName, 1) !$= "")
+   {
+      %assetDesc = AssetDatabase.acquireAsset(%asset);
+      %assetName = AssetDatabase.getAssetName(%asset);
+      %assetType = AssetDatabase.getAssetType(%asset);
+      
+   }
+   else
+   {
+      %fullPath = %moduleName !$= "" ? %moduleName @ "/" @ %asset : %asset;
+      %fullPath = strreplace(%fullPath, "/", "_");
+      
+      if(isObject(%fullPath))
+         %assetDesc = %fullPath;
+      else
+         %assetDesc = new ScriptObject(%fullPath);
+         
+      %assetDesc.dirPath = %moduleName;
+      %assetDesc.assetName = %asset;
+      %assetDesc.description = %moduleName @ "/" @ %asset;
+      %assetDesc.assetType = "Folder";
+      
+      %assetName = %asset;
+      %assetType = "Folder";
+   }
       
    // it may seem goofy why the checkbox can't be instanciated inside the container
    // reason being its because we need to store the checkbox ctrl in order to make changes
    // on it later in the function. 
-
-   %previewSize = "80 80";
-   %previewBounds = 20;
    
-   %assetType = AssetDatabase.getAssetType(%asset);
+   
+   %previewSize = %this.previewSize SPC %this.previewSize;
+   %previewBounds = 20;
    
    %container = new GuiControl(){
       profile = "ToolsGuiDefaultProfile";
@@ -310,6 +395,12 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
       %buildCommand = %this @ ".build" @ %assetType @ "Preview(" @ %assetDesc @ "," @ %this.previewData @ ");";
       eval(%buildCommand);
       
+      //debug dump
+      %tooltip = %this.previewData.tooltip;
+      %assetName = %this.previewData.assetName;
+      %previewImage = %this.previewData.previewImage;
+      %doubleClickCommand = %this.previewData.doubleClickCommand;
+      
       %previewButton = new GuiBitmapButtonCtrl()
       {
          className = "AssetPreviewControl";
@@ -376,23 +467,198 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
    %container.add(%previewNameCtrl);
    
    // add to the gui control array
-   AssetBrowser-->materialSelection.add(%container);
+   AssetBrowser-->assetList.add(%container);
    
    // add to the array object for reference later
    AssetPreviewArray.add( %previewButton, %this.previewData.previewImage );
+}
+
+//
+//
+function AssetPreviewButton::onClick(%this)
+{
+   echo("CLICKED AN ASSET PREVIEW BUTTON");
+}
+
+function AssetPreviewButton::onDoubleClick(%this)
+{
+   echo("DOUBLE CLICKED AN ASSET PREVIEW BUTTON");
+}
+//
+//
+
+function AssetBrowser::loadFolders(%this, %path, %parentId)
+{
+   //utilize home dir project setting here
+   %paths = getDirectoryList(%path);
+   for(%i=0; %i < getFieldCount(%paths); %i++)
+   {
+      %childPath = getField(%paths, %i);
+      
+      %folderCount = getTokenCount(%childPath, "/");
+      
+      for(%f=0; %f < %folderCount; %f++)
+      {
+         %folderName = getToken(%childPath, "/", %f);
+         
+         //we don't need to display the shadercache folder
+         if(%parentId == 1 && %folderName $= "shaderCache")
+            continue;
+         
+         %iconIdx = 1;
+         
+         if(ModuleDatabase.findModule(%folderName) !$= "")
+            %iconIdx = 0;
+         
+         %searchFoldersText = AssetBrowserFolderSearchFilter.getText();
+         if(%searchFoldersText !$= "Search Folders...")
+         {
+            if(strstr(strlwr(%folderName), strlwr(%searchFoldersText)) != -1)
+            {
+               %folderID = AssetBrowser-->filterTree.insertItem(%parentId, %folderName, %path, "", %iconIdx, %iconIdx);
+         
+            %this.loadFolders(%path @ "/" @ %folderName, %folderID);  
+            }
+         }
+         else
+         {
+            %folderID = AssetBrowser-->filterTree.insertItem(%parentId, %folderName, %path, "", %iconIdx, %iconIdx);
+         
+            %this.loadFolders(%path @ "/" @ %folderName, %folderID);
+         }
+      }
+   }
 }
 
 function AssetBrowser::loadFilters( %this )
 {
    AssetBrowser-->filterTree.clear();
 
-   AssetBrowser-->filterTree.buildIconTable(":tools/classIcons/prefab");
+   AssetBrowser-->filterTree.buildIconTable( "tools/classIcons/Prefab" @
+                                             ":tools/classIcons/SimSet");
+   
+   %dataItem = AssetBrowser-->filterTree.insertItem(0, "Data");
+   %this.loadFolders("Data", %dataItem);
+   
+   //If set to, show core
+   if(%this.coreModulesFilter)
+   {
+      %coreItem = AssetBrowser-->filterTree.insertItem(0, "Core");
+      %this.loadFolders("Core", %coreItem);
+   }
+   
+   //If set to, show tools
+   if(%this.toolsModulesFilter)
+   {
+      %toolsItem = AssetBrowser-->filterTree.insertItem(0, "Tools");
+      %this.loadFolders("Tools", %toolsItem);
+   }
 
-   AssetBrowser-->filterTree.insertItem(0, "Assets");
+   //AssetBrowser-->filterTree.insertItem(0, "Data");
+   
+   //get it alllll
+   /*%directoryDump = getDirectoryList("data", -1);
+   
+   %dirs = getFieldCount(%directoryDump);
+   
+   for(%i=0; %i < %dirs; %i++)
+   {
+      %folderName = getToken(%assetBasePath, "/", %f);
+
+      %folderID = AssetBrowser-->filterTree.findChildItemByName(%prevFolderID, %folderName);
+
+      if(%folderID == -1 || %folderID == 0)
+      {
+         %pathCache = "";
+         
+         for(%c=0; %c < %f; %c++)
+         {
+            %pathCache = %c == 0 ? getToken(%assetBasePath, "/", %c) : %pathCache @ "/" @ getToken(%assetBasePath, "/", %c);
+         }
+         
+         %folderID = AssetBrowser-->filterTree.insertItem(%prevFolderID, %folderName, %pathCache, "", 1, 1);
+      }
+   }*/
    
    AssetPreviewArray.empty();
    
-   if(%this.treeFilterMode $= "list")
+   /*%assetQuery = new AssetQuery();
+   %numAssetsFound = AssetDatabase.findAllAssets(%assetQuery);
+   
+   for( %i=0; %i < %numAssetsFound; %i++)
+   {
+       %assetId = %assetQuery.getAsset(%i);
+       
+       %assetPath = makeRelativePath(AssetDatabase.getAssetFilePath(%assetId));
+       
+       //clean up the path
+       %assetPath = strreplace(%assetPath, "\\\\", "\\");
+       %assetPath = strreplace(%assetPath, "\\", "\\");
+       %assetPath = strreplace(%assetPath, "//", "\\");
+       
+       %assetBasePath = filePath(%assetPath);
+       
+       %foldersCount = getTokenCount(%assetBasePath, "/");
+       
+       //Build our directory structure
+       %prevFolderID = 0;
+       for(%f=0; %f < %foldersCount; %f++)
+       {
+         %folderName = getToken(%assetBasePath, "/", %f);
+
+         %folderID = AssetBrowser-->filterTree.findChildItemByName(%prevFolderID, %folderName);
+
+         if(%folderID == -1 || %folderID == 0)
+         {
+            %pathCache = "";
+            
+            for(%c=0; %c < %f; %c++)
+            {
+               %pathCache = %c == 0 ? getToken(%assetBasePath, "/", %c) : %pathCache @ "/" @ getToken(%assetBasePath, "/", %c);
+            }
+            
+            %folderID = AssetBrowser-->filterTree.insertItem(%prevFolderID, %folderName, %pathCache, "", 1, 1);
+         }
+
+         %prevFolderID = %folderID;
+       }
+       
+      //first, get the asset's module, as our major categories
+      %module = AssetDatabase.getAssetModule(%assetId);
+      
+      %moduleName = %module.moduleId;
+      
+      %moduleGroup = %module.Group;
+      if((%moduleGroup $= "Core" || %moduleGroup $= "Tools") && !%this.coreModulesFilter)
+         continue;
+      
+      //first, see if this module Module is listed already
+      /*%moduleItemId = AssetBrowser-->filterTree.findItemByName(%moduleName);
+      
+      //if(%moduleItemId == 0)
+      //   %moduleItemId = AssetBrowser-->filterTree.insertItem(1, %moduleName, "", "", 1, 1);
+         
+      %assetType = AssetDatabase.getAssetCategory(%assetId);
+      
+      if(%assetType $= "")
+      {
+         %assetType = AssetDatabase.getAssetType(%assetId);
+         if(%assetType $= "")
+            %assetType = "Misc";
+      }
+      
+      if(AssetBrowser.assetTypeFilter !$= "" && AssetBrowser.assetTypeFilter !$= %assetType)
+         continue;
+      
+      %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%moduleItemId, %assetType);
+      
+      if(%assetTypeId == 0)
+         %assetTypeId = AssetBrowser-->filterTree.insertItem(%moduleItemId, %assetType);*/
+   //}
+
+   AssetBrowser-->filterTree.buildVisibleTree(true);
+   
+   /*if(%this.treeFilterMode $= "list")
    {
       //First, build our our list of active modules
       %modulesList = ModuleDatabase.findModules(true);
@@ -457,9 +723,9 @@ function AssetBrowser::loadFilters( %this )
    else if(%this.treeFilterMode $= "tags")
    {
       
-   }
+   }*/
    
-   %this.collapseTree();
+   //%this.collapseTree();
    
    //Remove any modules that have no assets if we have that filter on
    if(%this.onlyShowModulesWithAssets)
@@ -484,7 +750,12 @@ function AssetBrowser::loadFilters( %this )
       AssetBrowser.newModuleId = ""; 
    }
    
-   %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
+   %dataItem = AssetBrowser-->filterTree.findItemByName("Data");
+   AssetBrowser-->filterTree.expandItem(%dataItem);
+   
+   AssetBrowser.expandTreeToAddress(AssetBrowser.currentAddress);
+   
+   %selectedItem = AssetBrowser.getFolderTreeItemFromAddress(AssetBrowser.currentAddress);
    AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
    
    AssetBrowser-->filterTree.buildVisibleTree(); 
@@ -541,9 +812,12 @@ function AssetBrowser::createFilter( %this, %filter )
 
 function AssetBrowser::updateSelection( %this, %asset, %moduleName )
 {
-   // the material selector will visually update per material information
-   // after we move away from the material. eg: if we remove a field from the material,
-   // the empty checkbox will still be there until you move fro and to the material again
+   //If we're navigating a folder, just nav to it and be done
+   /*if(isDirectory(%moduleName))
+   {
+      AssetBrowser.navigateTo(%moduleName @ "/" @ %asset);
+      return;
+   }*/
    
    %isAssetBorder = 0;
    eval("%isAssetBorder = isObject(AssetBrowser-->"@%asset@"Border);");
@@ -786,11 +1060,14 @@ function AssetBrowser::reImportAsset(%this)
    }
 }
 
-//------------------------------------------------------------------------------
+//
+//
+// RMB context popups
 function AssetPreviewButton::onRightClick(%this)
 {
    AssetBrowser.selectedAssetPreview = %this.getParent();
    EditAssetPopup.assetId = %this.getParent().moduleName @ ":" @ %this.getParent().assetName;
+   EditAssetPopup.assetType = %this.getParent().assetType;
    %assetType = %this.getParent().assetType;
    
    //Do some enabling/disabling of options depending on asset type
@@ -813,121 +1090,21 @@ function AssetPreviewButton::onRightClick(%this)
    
    if(%assetType $= "LevelAsset")
       EditLevelAssetPopup.showPopup(Canvas);  
+   else if(%assetType $= "Folder")
+      EditFolderPopup.showPopup(Canvas);  
    else
       EditAssetPopup.showPopup(Canvas);  
+      
+   if(%assetType $= "Folder")
+   {
+      EditAssetPopup.assetId = %this.getParent().moduleName @ "/" @ %this.getParent().assetName;
+   }
 }
 
-function AssetListPanel::onRightMouseDown(%this)
+//function AssetListPanel::onRightMouseDown(%this)
+function AssetListPanelInputs::onRightMouseDown(%this)
 {
    AddNewAssetPopup.showPopup(Canvas);
-}
-
-//------------------------------------------------------------------------------
-function AssetBrowser::refreshPreviews(%this)
-{
-   AssetBrowserFilterTree.onSelect(AssetBrowser.selectedItem);
-}
-
-function AssetBrowserFilterTree::onSelect(%this, %itemId)
-{
-	if(%itemId == 1)
-		//can't select root
-		return;
-		
-   //Make sure we have an actual module selected!
-   %parentId = %this.getParentItem(%itemId);
-      
-   if(%parentId != 1)
-      AssetBrowser.selectedModule = %this.getItemText(%parentId);//looks like we have one of the categories selected, not the module. Nab the parent so we have the correct thing!
-   else
-      AssetBrowser.selectedModule = %this.getItemText(%itemId);
-      
-   AssetBrowser.selectedItem = %itemId;
-	
-	//alright, we have a module or sub-filter selected, so now build our asset list based on that filter!
-	echo("Asset Browser Filter Tree selected filter #:" @ %itemId);
-	
-	// manage schedule array properly
-   if(!isObject(MatEdScheduleArray))
-      new ArrayObject(MatEdScheduleArray);
-	
-	// if we select another list... delete all schedules that were created by 
-   // previous load
-   for( %i = 0; %i < MatEdScheduleArray.count(); %i++ )
-      cancel(MatEdScheduleArray.getKey(%i));
-	
-	// we have to empty out the list; so when we create new schedules, these dont linger
-   MatEdScheduleArray.empty();
-      
-   // we have to empty out the list; so when we create new guicontrols, these dont linger
-   AssetPreviewArray.empty();
-   AssetBrowser-->materialSelection.deleteAllObjects();
-   //AssetBrowser-->materialPreviewPagesStack.deleteAllObjects();
-
-   %assetArray = new ArrayObject();
-
-   //First, Query for our assets
-   %assetQuery = new AssetQuery();
-   %numAssetsFound = AssetDatabase.findAllAssets(%assetQuery);
-   
-	//module name per our selected filter:
-	%moduleItemId = %this.getParentItem(%itemId);
-	
-	//check if we've selected a Module
-	if(%moduleItemId == 1)
-	{
-	   %FilterModuleName = %this.getItemText(%itemId);
-	}
-	else
-	{
-	   %FilterModuleName = %this.getItemText(%moduleItemId);
-	}
-   
-    //now, we'll iterate through, and find the assets that are in this module, and this category
-    for( %i=0; %i < %numAssetsFound; %i++)
-    {
-	    %assetId = %assetQuery.getAsset(%i);
-		
-		//first, get the asset's module, as our major categories
-		%module = AssetDatabase.getAssetModule(%assetId);
-		
-		%moduleName = %module.moduleId;
-		
-		if(%FilterModuleName $= %moduleName)
-		{
-			//it's good, so test that the category is right!
-			%assetType = AssetDatabase.getAssetCategory(%assetId);
-			if(%assetType $= "")
-			{
-			   %assetType = AssetDatabase.getAssetType(%assetId);
-			}
-			
-			if(%this.getItemText(%itemId) $= %assetType || (%assetType $= "" && %this.getItemText(%itemId) $= "Misc")
-			   || %moduleItemId == 1)
-			{
-				//stop adding after previewsPerPage is hit
-				%assetName = AssetDatabase.getAssetName(%assetId);
-				
-				%searchText = AssetBrowserSearchFilter.getText();
-				if(%searchText !$= "\c2Filter...")
-				{
-					if(strstr(strlwr(%assetName), strlwr(%searchText)) != -1)
-						%assetArray.add( %moduleName, %assetId);
-				}
-				else
-				{
-					//got it.	
-					%assetArray.add( %moduleName, %assetId );
-				}
-			}
-		}
-   }
-
-	AssetBrowser.currentPreviewPage = 0;
-	AssetBrowser.totalPages = 1;
-	
-	for(%i=0; %i < %assetArray.count(); %i++)
-		AssetBrowser.buildPreviewArray( %assetArray.getValue(%i), %assetArray.getKey(%i) );
 }
 
 function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
@@ -973,7 +1150,166 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
 
 //
 //
-function AssetBrowserSearchFilterText::onWake( %this )
+//
+function AssetBrowser::showVisibiltyOptions(%this)
+{
+   BrowserVisibilityPopup.showPopup(Canvas);
+}
+
+function AssetBrowser::showFilterOptions(%this)
+{
+   
+}
+
+//
+//
+// Preview tile handling
+function AssetBrowser::setPreviewSize(%this, %size)
+{
+   AssetPreviewSizePopup.checkItem(0, false);
+   AssetPreviewSizePopup.checkItem(1, false);
+   AssetPreviewSizePopup.checkItem(2, false);
+   
+   %this.previewSize = 80; //default to small
+   
+   if(%size $= "Small")
+   {
+      %this.previewSize = 80;
+      AssetPreviewSizePopup.checkItem(0, true);
+   }
+   else if(%size $= "Medium")
+   {
+      %this.previewSize = 120;
+      AssetPreviewSizePopup.checkItem(1, true);
+   }
+   else if(%size $= "Large")
+   {
+      %this.previewSize = 160;
+      AssetPreviewSizePopup.checkItem(2, false);
+   }
+   
+   EditorSettings.setValue("Assets/Browser/previewTileSize", %size);
+      
+   %this.refreshPreviews();
+}
+
+function AssetBrowser::refreshPreviews(%this)
+{
+   AssetBrowserFilterTree.onSelect(AssetBrowser.selectedItem);
+}
+
+function AssetBrowserFilterTree::onSelect(%this, %itemId)
+{
+	if(%itemId == 1)
+		//can't select root
+		return;
+		
+   //Make sure we have an actual module selected!
+   %parentId = %this.getParentItem(%itemId);
+   
+   %breadcrumbPath = %this.getItemValue(%itemId);
+   if(%breadcrumbPath !$= "")
+      %breadcrumbPath = %breadcrumbPath @ "/" @ %this.getItemText(%itemId);
+   else
+      %breadcrumbPath = %this.getItemText(%itemId);
+      
+   AssetBrowser.navigateTo(%breadcrumbPath);
+}
+
+function AssetBrowser::rebuildAssetArray(%this)
+{
+   %breadcrumbPath = AssetBrowser.currentAddress;
+   
+   // we have to empty out the list; so when we create new guicontrols, these dont linger
+   AssetBrowser-->assetList.deleteAllObjects();
+   AssetPreviewArray.empty();
+
+   %assetArray = new ArrayObject();
+   
+   //First, Query for our assets
+   %assetQuery = new AssetQuery();
+   %numAssetsFound = AssetDatabase.findAllAssets(%assetQuery);
+  
+    //now, we'll iterate through, and find the assets that are in this module, and this category
+    for( %i=0; %i < %numAssetsFound; %i++)
+    {
+	    %assetId = %assetQuery.getAsset(%i);
+	    
+	    %assetPath = makeRelativePath(AssetDatabase.getAssetFilePath(%assetId));
+       %assetBasePath = filePath(%assetPath);
+       
+       //clean up the path
+       %assetBasePath = strreplace(%assetBasePath, "//", "/");
+       
+       if(%assetBasePath $= %breadcrumbPath)
+       {
+          //first, get the asset's module, as our major categories
+		    %module = AssetDatabase.getAssetModule(%assetId);
+		    %moduleName = %module.moduleId;
+		    
+		    //it's good, so test that the category is right!
+			%assetType = AssetDatabase.getAssetCategory(%assetId);
+			if(%assetType $= "")
+			{
+			   %assetType = AssetDatabase.getAssetType(%assetId);
+			}
+			
+			/*if(%this.getItemText(%itemId) $= %assetType || (%assetType $= "" && %this.getItemText(%itemId) $= "Misc")
+			   || %moduleItemId == 1)
+			{*/
+				//stop adding after previewsPerPage is hit
+				%assetName = AssetDatabase.getAssetName(%assetId);
+				
+				%searchText = AssetBrowserSearchFilter.getText();
+				if(%searchText !$= "Search Assets...")
+				{
+					if(strstr(strlwr(%assetName), strlwr(%searchText)) != -1)
+						%assetArray.add( %moduleName, %assetId);
+				}
+				else
+				{
+					//got it.	
+					%assetArray.add( %moduleName, %assetId );
+				}
+			//}
+       }
+   }
+   
+   //Add folders
+   if(EditorSettings.value("Assets/Browser/showFolders", true) == true)
+   {
+      %folders = getDirectoryList(%breadcrumbPath);
+      for(%f=0; %f < getFieldCount(%folders); %f++)
+      {
+         %folderName = getField(%folders, %f);
+         
+         %searchText = AssetBrowserSearchFilter.getText();
+         if(%searchText !$= "Search Assets...")
+         {
+            if(strstr(strlwr(%folderName), strlwr(%searchText)) != -1)
+                     %assetArray.add( %breadcrumbPath, %folderName );
+         }
+         else
+         {
+            //got it.	
+            %assetArray.add( %breadcrumbPath, %folderName );
+         }
+      }
+   }
+
+	AssetBrowser.currentPreviewPage = 0;
+	AssetBrowser.totalPages = 1;
+	
+	for(%i=0; %i < %assetArray.count(); %i++)
+		AssetBrowser.buildPreviewArray( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
+		
+   AssetBrowser_FooterText.text = %assetArray.count() @ " Assets";
+}
+
+//
+//
+// Search Filters
+function AssetBrowserSearchFilterTxt::onWake( %this )
 {
    /*%filter = %this.treeView.getFilterText();
    if( %filter $= "" )
@@ -982,45 +1318,175 @@ function AssetBrowserSearchFilterText::onWake( %this )
       %this.setText( %filter );*/
 }
 
-//------------------------------------------------------------------------------
-
-function AssetBrowserSearchFilterText::onGainFirstResponder( %this )
+function AssetBrowserSearchFilterTxt::onGainFirstResponder( %this )
 {
    %this.selectAllText();
 }
 
-//---------------------------------------------------------------------------------------------
-
 // When Enter is pressed in the filter text control, pass along the text of the control
 // as the treeview's filter.
-function AssetBrowserSearchFilterText::onReturn( %this )
+function AssetBrowserFolderSearchFilter::onReturn( %this )
 {
    %text = %this.getText();
    if( %text $= "" )
       %this.reset();
-   else
+   
+   AssetBrowser.loadFilters();
+}
+
+function AssetBrowserSearchFilter::onReturn( %this )
+{
+   %text = %this.getText();
+   if( %text $= "" )
+      %this.reset();
+   
+   AssetBrowser.rebuildAssetArray();
+}
+
+function AssetBrowserFolderSearchFilter::reset( %this )
+{
+   %this.setText( "Search Folders..." );
+   
+   AssetBrowser.loadFilters();
+}
+
+function AssetBrowserSearchFilter::reset( %this )
+{
+   %this.setText( "Search Assets..." );
+   
+   AssetBrowser.rebuildAssetArray();
+}
+
+function AssetBrowser_ClearFolderFilterBtn::onClick( %this )
+{
+   AssetBrowserFolderSearchFilter.reset();
+}
+
+function AssetBrowser_ClearAssetFilterBtn::onClick( %this )
+{
+   AssetBrowserSearchFilter.reset();
+}
+//
+//
+// Navigation
+function AssetBrowser::navigateTo(%this, %address, %historyNav)
+{
+   //Don't bother navigating if it's to the place we already are
+   if(AssetBrowser.currentAddress $= %address)
+      return;
+      
+   //clear the breadcrumb bar
+   AssetBrowser_BreadcrumbBar.clear();
+   
+   //break down the address
+   %folderCount = getTokenCount(%address, "/");
+      
+   %rebuiltPath = "";
+   for(%f=0; %f < %folderCount; %f++)
    {
-      //%this.treeView.setFilterText( %text );
-	  %curItem = AssetBrowserFilterTree.getSelectedItem();
-	  AssetBrowserFilterTree.onSelect(%curItem);
+      %folderName = getToken(%address, "/", %f);
+      
+      %rebuiltPath = %f == 0 ? %folderName : %rebuiltPath @ "/" @ %folderName;
+      
+      %folderNavButton = new GuiButtonCtrl()
+      {
+         profile = ToolsGuiButtonProfile;
+         text = %folderName;
+         command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";
+         extent = "100" SPC AssetBrowser_BreadcrumbBar.extent.y;
+      };
+      
+      AssetBrowser_BreadcrumbBar.add(%folderNavButton);
+      
+      if(%f != %folderCount-1)
+      {
+         %folderSpacerButton = new GuiBitmapButtonCtrl()
+         {
+            profile = ToolsGuiButtonProfile;
+            bitmap = "tools/gui/images/rightArrowWhite";
+            bitmapMode = "Centered";
+            extent = "25" SPC AssetBrowser_BreadcrumbBar.extent.y;
+            //command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";
+         };
+         
+         AssetBrowser_BreadcrumbBar.add(%folderSpacerButton);
+      }
    }
+
+   //find our folder tree and action on it tree
+   %folderId = AssetBrowser.getFolderTreeItemFromAddress(%address);
+   
+   %oldAddress = AssetBrowser.currentAddress;   
+   AssetBrowser.currentAddress = %address;
+   AssetBrowser.selectedItem = %folderId;
+   
+   AssetBrowser-->filterTree.clearSelection();
+   AssetBrowser-->filterTree.selectItem(%folderId);
+   
+   //remove any history records that are 'newer' than this one
+   if(%historyNav $= "")
+   {
+      AssetBrowser_NavForeHistoryList.empty();  
+      
+      if(%oldAddress !$= "") 
+         AssetBrowser_NavPrevHistoryList.push_front(%oldAddress);
+   }
+   
+   //refresh the nav buttons to display the history
+   %backButtonHistory = "";
+   for(%i=0; %i < AssetBrowser_NavPrevHistoryList.Count(); %i++)
+   {
+      %prevAddress = AssetBrowser_NavPrevHistoryList.getKey(%i);
+      %backButtonHistory = %i==0 ? %prevAddress @ "\n" : %backButtonHistory @ %prevAddress @ "\n";
+   }
+   
+   AssetBrowser_NavigateBackBtn.tooltip = %backButtonHistory;
+   
+   %foreButtonHistory = "";
+   for(%i=0; %i < AssetBrowser_NavForeHistoryList.Count(); %i++)
+   {
+      %prevAddress = AssetBrowser_NavForeHistoryList.getKey(%i);
+      %foreButtonHistory = %i==0 ? %prevAddress @ "\n" : %foreButtonHistory @ %prevAddress @ "\n";
+   }
+   
+   AssetBrowser_NavigateForwardBtn.tooltip = %foreButtonHistory;
+   
+   %module = AssetBrowser.getModuleFromAddress(%address);
+   if(%module !$= "")
+   {
+      //legit module, so set it as current target
+      AssetBrowser.SelectedModule = %module.moduleId;
+   }
+   
+   %this.rebuildAssetArray();
 }
 
-//---------------------------------------------------------------------------------------------
-
-function AssetBrowserSearchFilterText::reset( %this )
+function AssetBrowser::navigateHistoryForward(%this)
 {
-   %this.setText( "\c2Filter..." );
-   //%this.treeView.clearFilterText();
-   %curItem = AssetBrowserFilterTree.getSelectedItem();
-   AssetBrowserFilterTree.onSelect(%curItem);
+   if(AssetBrowser_NavForeHistoryList.count() == 0)
+      return;
+      
+   %newAddress = AssetBrowser_NavForeHistoryList.getKey(0);
+   %prevHistory = AssetBrowser.currentAddress;
+      
+   AssetBrowser_NavPrevHistoryList.push_front(%prevHistory);
+   AssetBrowser_NavForeHistoryList.pop_front();
+   
+   %this.navigateTo(%newAddress, true);
 }
 
-//---------------------------------------------------------------------------------------------
-
-function AssetBrowserSearchFilterText::onClick( %this )
+function AssetBrowser::navigateHistoryBack(%this)
 {
-   %this.textCtrl.reset();
+   if(AssetBrowser_NavPrevHistoryList.count() == 0)
+      return;
+      
+   %newAddress = AssetBrowser_NavPrevHistoryList.getKey(0);
+   %foreHistory = AssetBrowser.currentAddress;
+      
+   AssetBrowser_NavForeHistoryList.push_front(%foreHistory);
+   AssetBrowser_NavPrevHistoryList.pop_front();
+   
+   %this.navigateTo(%newAddress, true);
 }
 
 //
@@ -1054,8 +1520,114 @@ function AssetBrowser::reloadModules(%this)
    
    //ModuleDatabase.loadGroup("Game");
 }
-//
 
+function AssetBrowser::getModuleFromAddress(%this, %address)
+{
+   //break down the address
+   %folderCount = getTokenCount(%address, "/");
+      
+   for(%f=0; %f < %folderCount; %f++)
+   {
+      %folderName = getToken(%address, "/", %f);
+
+      %module = ModuleDatabase.findModule(%folderName);
+      if(%module !$= "")
+         return %module;
+   }
+   
+   return "";
+}
+
+//AssetBrowser.getFolderTreeItemFromAddress(AssetBrowser.currentAddress);
+function AssetBrowser::getFolderTreeItemFromAddress(%this, %address)
+{
+   //break down the address
+   %folderCount = getTokenCount(%address, "/");
+
+   %curItem = 0;
+   %rebuiltPath = "";
+   for(%f=0; %f < %folderCount; %f++)
+   {
+      %folderName = getToken(%address, "/", %f);
+      %curItem = AssetBrowser-->filterTree.findChildItemByName(%curItem, %folderName);
+   }
+   
+   return %curItem;
+}
+
+function AssetBrowser::expandTreeToAddress(%this, %address)
+{
+   //break down the address
+   %folderCount = getTokenCount(%address, "/");
+   AssetBrowser-->filterTree.expandItem(0);
+
+   %curItem = 0;
+   %rebuiltPath = "";
+   for(%f=0; %f < %folderCount; %f++)
+   {
+      %folderName = getToken(%address, "/", %f);
+      %curItem = AssetBrowser-->filterTree.findChildItemByName(%curItem, %folderName);
+      AssetBrowser-->filterTree.expandItem(%curItem);
+   }
+}
+//
+//
+//
+function AssetBrowser::createNewFolder(%this)
+{
+   %newFolderIdx = "";
+   %matched = true;
+   %newFolderPath = "";
+   while(%matched == true)
+   {
+      %newFolderPath = AssetBrowser.currentAddress @ "/NewFolder" @ %newFolderIdx;
+      if(!isDirectory(%newFolderPath))
+      {
+         %matched = false;
+      }
+      else
+      {
+         %newFolderIdx++;         
+      }
+   }
+   
+   //make a dummy file
+   %file = new FileObject();
+   %file.openForWrite(%newFolderPath @ "/test");
+   %file.close();
+   
+   fileDelete(%newFolderPath @ "/test");
+   
+   //refresh the directory
+   %this.loadFilters();
+   %this.rebuildAssetArray();
+}
+
+//
+//
+//
+function AssetBrowser::toggleFolderCollapseButton(%this)
+{
+   %this.folderPanelState = !%this.folderPanelState;
+   
+   //If we're collapsing
+   if(!%this.folderPanelState)
+   {
+      //Store the original
+      %this.folderPanelSplit = AssetBrowser_MainSplit.splitPoint.x;
+      
+      //collapse it
+      AssetBrowser_MainSplit.setSplitPoint(AssetBrowser_MainSplit.splitterSize SPC AssetBrowser_MainSplit.splitPoint.y);
+   }
+   else
+   {
+      //restore the original
+      AssetBrowser_MainSplit.setSplitPoint(%this.folderPanelSplit SPC AssetBrowser_MainSplit.splitPoint.y);
+   }  
+}
+//
+//
+// Drag n drop
 function AssetPreviewButton::onMouseDragged(%this)
 {
    %payload = new GuiBitmapButtonCtrl();

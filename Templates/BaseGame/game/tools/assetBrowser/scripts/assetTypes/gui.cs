@@ -5,9 +5,11 @@ function AssetBrowser::createGUIAsset(%this)
       
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
-   %tamlpath = %modulePath @ "/GUIs/" @ %assetName @ ".asset.taml";
-   %guipath = %modulePath @ "/GUIs/" @ %assetName @ ".gui";
-   %scriptPath = %modulePath @ "/GUIs/" @ %assetName @ ".cs";
+   %assetPath = AssetBrowser.currentAddress @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %guipath = %assetPath @ %assetName @ ".gui";
+   %scriptPath = %assetPath @ %assetName @ ".cs";
    
    %asset = new GUIAsset()
    {

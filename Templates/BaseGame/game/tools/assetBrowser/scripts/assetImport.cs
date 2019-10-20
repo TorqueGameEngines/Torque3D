@@ -85,6 +85,7 @@ function AssetBrowser::onBeginDropFiles( %this )
    //prep the import control
    Canvas.pushDialog(AssetImportCtrl);
    AssetImportCtrl.setHidden(true);
+
    ImportAssetTree.clear();
    ImportAssetTree.insertItem(0, "Importing Assets");
    AssetBrowser.unprocessedAssetsCount = 0;
@@ -161,136 +162,39 @@ function AssetBrowser::onDropZipFile(%this, %filePath)
    }
 }
 
-function AssetBrowser::onDropImageFile(%this, %filePath)
-{
-   if(!%this.isVisible())
-      return;
-      
-   // File Information madness
-   %fileName         = %filePath;
-   %fileOnlyName     = fileName( %fileName );
-   %fileBase         = validateDatablockName(fileBase( %fileName ) @ "ImageMap");
-   
-   // [neo, 5/17/2007 - #3117]
-   // Check if the file being dropped is already in data/images or a sub dir by checking if
-   // the file path up to length of check path is the same as check path.
-   %defaultPath = EditorSettings.value( "WorldEditor/defaultMaterialsPath" );
-
-   %checkPath    = expandFilename( "^"@%defaultPath );
-   %fileOnlyPath = expandFileName( %filePath ); //filePath( expandFileName( %filePath ) );
-   %fileBasePath = getSubStr( %fileOnlyPath, 0, strlen( %checkPath ) );
-   
-   if( %checkPath !$= %fileBasePath )
-   {
-      // No match so file is from outside images directory and we need to copy it in
-      %fileNewLocation = expandFilename("^"@%defaultPath) @ "/" @ fileBase( %fileName ) @ fileExt( %fileName );
-   
-      // Move to final location
-      if( !pathCopy( %filePath, %fileNewLocation ) )
-         return;
-   }
-   else 
-   {  
-      // Already in images path somewhere so just link to it
-      %fileNewLocation = %filePath;
-   }
-   
-   addResPath( filePath( %fileNewLocation ) );
-
-   %matName = fileBase( %fileName );
-      
-   // Create Material
-   %imap = new Material(%matName)
-   {
-	  mapTo = fileBase( %matName );
-	  diffuseMap[0] = %defaultPath @ "/" @ fileBase( %fileName ) @ fileExt( %fileName );
-   };
-   //%imap.setName( %fileBase );
-   //%imap.imageName = %fileNewLocation;
-   //%imap.imageMode = "FULL";
-   //%imap.filterPad = false;
-   //%imap.compile();
-
-   %diffusecheck = %imap.diffuseMap[0];
-         
-   // Bad Creation!
-   if( !isObject( %imap ) )
-      return;
-      
-   %this.addDatablock( %fileBase, false );
-}
-
-function AssetBrowser::onDropSoundFile(%this, %filePath)
-{
-   if(!%this.isVisible())
-      return;
-      
-   // File Information madness
-   %fileName         = %filePath;
-   %fileOnlyName     = fileName( %fileName );
-   %fileBase         = validateDatablockName(fileBase( %fileName ) @ "ImageMap");
-   
-   // [neo, 5/17/2007 - #3117]
-   // Check if the file being dropped is already in data/images or a sub dir by checking if
-   // the file path up to length of check path is the same as check path.
-   %defaultPath = EditorSettings.value( "WorldEditor/defaultMaterialsPath" );
-
-   %checkPath    = expandFilename( "^"@%defaultPath );
-   %fileOnlyPath = expandFileName( %filePath ); //filePath( expandFileName( %filePath ) );
-   %fileBasePath = getSubStr( %fileOnlyPath, 0, strlen( %checkPath ) );
-   
-   if( %checkPath !$= %fileBasePath )
-   {
-      // No match so file is from outside images directory and we need to copy it in
-      %fileNewLocation = expandFilename("^"@%defaultPath) @ "/" @ fileBase( %fileName ) @ fileExt( %fileName );
-   
-      // Move to final location
-      if( !pathCopy( %filePath, %fileNewLocation ) )
-         return;
-   }
-   else 
-   {  
-      // Already in images path somewhere so just link to it
-      %fileNewLocation = %filePath;
-   }
-   
-   addResPath( filePath( %fileNewLocation ) );
-
-   %matName = fileBase( %fileName );
-      
-   // Create Material
-   %imap = new Material(%matName)
-   {
-	  mapTo = fileBase( %matName );
-	  diffuseMap[0] = %defaultPath @ "/" @ fileBase( %fileName ) @ fileExt( %fileName );
-   };
-   //%imap.setName( %fileBase );
-   //%imap.imageName = %fileNewLocation;
-   //%imap.imageMode = "FULL";
-   //%imap.filterPad = false;
-   //%imap.compile();
-
-   %diffusecheck = %imap.diffuseMap[0];
-         
-   // Bad Creation!
-   if( !isObject( %imap ) )
-      return;
-      
-   %this.addDatablock( %fileBase, false );
-}
-
 function AssetBrowser::onEndDropFiles( %this )
 {
    if(!%this.isVisible())
       return;
-   
-   //we have assets to import, so go ahead and display the window for that now
-   AssetImportCtrl.setHidden(false);
-   ImportAssetWindow.visible = true;
-   //ImportAssetWindow.validateAssets();
+      
    ImportAssetWindow.refresh();
-   ImportAssetWindow.selectWindow();
    
+   %hasIssues = ImportAssetWindow.validateAssets();
+   
+   //If we have a valid config file set and we've set to auto-import, and we have no
+   //issues for importing, then go ahead and run the import immediately, don't
+   //bother showing the window.
+   //If any of these conditions fail, we'll display the import window so it can be handled
+   //by the user
+   if(ImportAssetWindow.importConfigsList.count() != 0 && 
+      EditorSettings.value("Assets/AssetImporDefaultConfig") !$= "" && 
+      EditorSettings.value("Assets/AutoImport", false) == true
+      && %hasIssues == false)
+   {
+      AssetImportCtrl.setHidden(true);
+      ImportAssetWindow.visible = false;
+      
+      //Go ahead and check if we have any issues, and if not, run the import!
+      ImportAssetWindow.ImportAssets();
+   }
+   else
+   {
+      //we have assets to import, so go ahead and display the window for that now
+      AssetImportCtrl.setHidden(false);
+      ImportAssetWindow.visible = true;
+      ImportAssetWindow.selectWindow();
+   }
+
    // Update object library
    GuiFormManager::SendContentMessage($LBCreateSiderBar, %this, "refreshAll 1");
    
@@ -503,9 +407,6 @@ function ImportAssetWindow::onWake(%this)
    //Lets refresh our list
    if(!ImportAssetWindow.isVisible())
       return;
-      
-   $AssetBrowser::importConfigsFile = "tools/assetBrowser/assetImportConfigs.xml";
-   $AssetBrowser::currentImportConfig = "";
    
    if(!isObject(AssetImportSettings))
    {
@@ -526,7 +427,11 @@ function ImportAssetWindow::onWake(%this)
 
 function ImportAssetWindow::reloadImportOptionConfigs(%this)
 {
-   ImportAssetWindow.importConfigsList = new ArrayObject();
+   if(!isObject(ImportAssetWindow.importConfigsList))
+      ImportAssetWindow.importConfigsList = new ArrayObject();
+   else
+      ImportAssetWindow.importConfigsList.empty();
+      
    ImportAssetConfigList.clear();
    
    %xmlDoc = new SimXMLDocument();
@@ -1168,10 +1073,12 @@ function ImportAssetWindow::validateAssets(%this)
    //Clear any status
    %this.resetAssetsValidationStatus();
    
+   ImportAssetWindow.importIssues = false;
+   
    %id = ImportAssetTree.getChild(1);
    %hasIssues = %this.validateAsset(%id);
    
-   if(%hasIssues)
+   if(ImportAssetWindow.importIssues == false)
       return false;
    else
       return true;
@@ -1179,6 +1086,7 @@ function ImportAssetWindow::validateAssets(%this)
 
 function ImportAssetWindow::validateAsset(%this, %id)
 {
+   
    %moduleName = ImportAssetModuleList.getText();
    
    while (%id > 0)
@@ -1229,21 +1137,17 @@ function ImportAssetWindow::validateAsset(%this, %id)
             {
                %foundCollision = true;
                
-               %assetItem.status = "Warning";
+               %assetItem.status = "error";
                %assetItem.statusType = "DuplicateAsset";
                %assetItem.statusInfo = "Duplicate asset names found with the target module!\nAsset \"" @ 
                   %assetItem.assetName @ "\" of type \"" @ %assetItem.assetType @ "\" has a matching name.\nPlease rename it and try again!";
                   
-               //Clean up our queries
-               %assetQuery.delete();
                break;
             }
          }
          
          if(%foundCollision == true)
          {
-            %hasIssues = true;
-            
             //yup, a collision, prompt for the change and bail out
             /*MessageBoxOK( "Error!", "Duplicate asset names found with the target module!\nAsset \"" @ 
                %assetItemA.assetName @ "\" of type \"" @ %assetItemA.assetType @ "\" has a matching name.\nPlease rename it and try again!");*/
@@ -1259,7 +1163,6 @@ function ImportAssetWindow::validateAsset(%this, %id)
       //Check if we were given a file path(so not generated) but somehow isn't a valid file
       if(%assetItem.filePath !$= ""  && !%assetItem.generatedAsset && !isFile(%assetItem.filePath))
       {
-         %hasIssues = true;  
          %assetItem.status = "error";
          %assetItem.statusType = "MissingFile";
          %assetItem.statusInfo = "Unable to find file to be imported. Please select asset file.";
@@ -1272,6 +1175,9 @@ function ImportAssetWindow::validateAsset(%this, %id)
             %assetItem.status = "error";
          }
       }
+      
+      if(%assetItem.status $= "error")
+         ImportAssetWindow.importIssues = true;
       
       if(ImportAssetTree.isParentItem(%id))
       {

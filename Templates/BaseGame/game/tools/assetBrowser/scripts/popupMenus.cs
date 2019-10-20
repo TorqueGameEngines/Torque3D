@@ -55,12 +55,28 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 5 ] = "-";
          Item[ 6 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
          item[ 7 ] = "-";
-         item[ 8 ] = "Re-Import Asset" TAB "" TAB "AssetBrowser.reImportAsset();";
-         item[ 9 ] = "-";
-         item[ 10 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
+         //item[ 8 ] = "Re-Import Asset" TAB "" TAB "AssetBrowser.reImportAsset();";
+         //item[ 9 ] = "-";
+         item[ 8 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
 
          jumpFileName = "";
          jumpLineNumber = "";
+      };
+   }
+   
+   if( !isObject( EditFolderPopup ) )
+   {
+      new PopupMenu( EditFolderPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+
+         item[ 0 ] = "Rename Folder" TAB "" TAB "AssetBrowser.renameAsset();";
+         item[ 1 ] = "-";
+         Item[ 2 ] = "Duplicate Folder" TAB "" TAB "AssetBrowser.duplicateAsset();";
+         item[ 3 ] = "-";
+         item[ 4 ] = "Delete Folder" TAB "" TAB "AssetBrowser.deleteAsset();";
       };
    }
    
@@ -148,15 +164,17 @@ function AssetBrowser::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          
-         item[0] = "Create Code Asset" TAB AddNewScriptAssetPopup;
+         item[0] = "Create Folder" TAB "" TAB "AssetBrowser.CreateNewFolder();";
          item[1] = "-";
-         item[2] = "Create Art Asset" TAB AddNewArtAssetPopup;
+         item[2] = "Create Code Asset" TAB AddNewScriptAssetPopup;
          item[3] = "-";
-         item[4] = "Create Level" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewLevelAsset(\"NewLevel\", AssetBrowser.selectedModule);";
+         item[4] = "Create Art Asset" TAB AddNewArtAssetPopup;
          item[5] = "-";
-         item[6] = "Create C++ Asset" TAB AddNewCppAssetPopup;
+         item[6] = "Create Level" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewLevelAsset(\"NewLevel\", AssetBrowser.selectedModule);";
          item[7] = "-";
-         item[8] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
+         item[8] = "Create C++ Asset" TAB AddNewCppAssetPopup;
+         item[9] = "-";
+         item[10] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
       
       };
    }
@@ -198,6 +216,38 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
+   //Asset Preview size presets
+   if( !isObject( AssetPreviewSizePopup ) )
+   {
+      new PopupMenu( AssetPreviewSizePopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         
+         item[ 0 ] = "Small" TAB "" TAB "AssetBrowser.setPreviewSize(\"Small\");";
+         item[ 1 ] = "Medium" TAB "" TAB "AssetBrowser.setPreviewSize(\"Medium\");";
+         Item[ 2 ] = "Large" TAB "" TAB "AssetBrowser.setPreviewSize(\"Large\");";
+      };
+      
+      AssetPreviewSizePopup.checkItem(0, true);
+   }
+   
+   if( !isObject( AssetTypeListPopup ) )
+   {
+      new PopupMenu( AssetTypeListPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+      };
+      
+      /*for(%i=0; %i < AssetFilterTypeList.Count(); %i++)
+      {
+         %assetTypeName = AssetFilterTypeList.getKey(%i);
+         AssetTypeListPopup.insertItem(%i, %assetTypeName, "", "AssetBrowser.toggleAssetTypeFilter(" @ %i @ ");");
+      }*/
+   }
+   
    //Browser visibility menu
    if( !isObject( BrowserVisibilityPopup ) )
    {
@@ -208,12 +258,25 @@ function AssetBrowser::buildPopupMenus(%this)
          //isPopup = true;
          
          item[ 0 ] = "Toggle Show Core Modules" TAB "" TAB "AssetBrowser.viewCoreModulesFilter();";
-         item[ 1 ] = "Toggle Only Show Modules with Assets" TAB "" TAB "AssetBrowser.viewPopulatedModulesFilter();";
-         Item[ 2 ] = "-";
-         item[ 3 ] = "Show Assets as list" TAB "" TAB "AssetBrowser.viewListFilter();";
-         Item[ 4 ] = "Show Assets with tags" TAB "" TAB "AssetBrowser.viewTagsFilter();";
+         item[ 1 ] = "Toggle Show Tools Modules" TAB "" TAB "AssetBrowser.viewToolsModulesFilter();";
+         item[ 2 ] = "Toggle Only Show Modules with Assets" TAB "" TAB "AssetBrowser.viewPopulatedModulesFilter();";
+         Item[ 3 ] = "-";
+         item[ 4 ] = "Show Folders" TAB "" TAB "AssetBrowser.toggleShowingFolders();";
+         item[ 5 ] = "Show Empty Folders" TAB "" TAB "AssetBrowser.toggleShowingEmptyFolders();";
+         item[ 6 ] = "-";
+         item[ 7 ] = "Filter by Asset Type" TAB AssetTypeListPopup;
+         item[ 8 ] = "-";
+         item[ 9 ] = "Enable Auto-refresh" TAB "" TAB "AssetBrowser.toggleAutorefresh();";
+         Item[ 10 ] = "-";
+         Item[ 11 ] = "Asset Preview Size" TAB AssetPreviewSizePopup;
       };
+      
+      BrowserVisibilityPopup.enableItem(5, false);
+      BrowserVisibilityPopup.enableItem(7, false);
+      BrowserVisibilityPopup.enableItem(9, false);
    }
+   
+   //
    
    //Import Legacy menus
    if( !isObject( ImportAssetsPopup ) )
@@ -266,6 +329,7 @@ function AssetBrowser::buildPopupMenus(%this)
       
       };
    }
+
 }
 
 function AddNewScriptAssetPopupMenu::onSelectItem(%this, %id, %text)

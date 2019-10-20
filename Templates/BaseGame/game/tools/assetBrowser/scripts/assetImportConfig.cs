@@ -9,7 +9,9 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
    ImportAssetWindow.activeImportConfigIndex = %id;
    ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
    
-   AssetBrowser.reloadImportingFiles();
+   //If we were trying to import anything, refresh it with the new config
+   if( AssetBrowser.importingFilesArray.count() != 0)
+      AssetBrowser.reloadImportingFiles();
 }
 
 function setupImportConfigSettingsList()
@@ -428,8 +430,9 @@ function ImportOptionsConfigList::changeEditorSetting(%this, %varName, %value)
    
    if(%oldValue !$= %value)
    {
-      %id = %this.getSelectedRow();
-      %this.setSelectedRow(%id);  
+      %scollPos = ImportAssetConfigEditorScroll.getScrollPosition();
+      ImportAssetConfigEditorWindow.populateConfigList(ImportAssetWindow.activeImportConfig); 
+      ImportAssetConfigEditorScroll.setScrollPosition(%scollPos.x, %scollPos.y);
    }
 }
 

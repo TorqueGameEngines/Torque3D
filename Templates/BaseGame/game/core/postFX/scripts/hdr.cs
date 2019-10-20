@@ -328,7 +328,7 @@ function HDRPostFX::onAdd( %this )
    PostFXManager.registerPostEffect(%this);
    
    //HDR should really be on at all times
-   %this.enable();
+   //%this.enable();
    
    $HDRPostFX::enableToneMapping = 1;
 }

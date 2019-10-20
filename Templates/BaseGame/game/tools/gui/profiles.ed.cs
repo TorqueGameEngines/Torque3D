@@ -1109,7 +1109,7 @@ singleton GuiControlProfile( ToolsGuiMenuBarProfile )
    fontColor = EditorSettings.value("Theme/headerTextColor");
    fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
-   fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
+   fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
    border = 0;
    borderThickness = 1;
    opaque = true;

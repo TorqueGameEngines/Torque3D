@@ -314,3 +314,76 @@ S32 PostEffectManager::_effectPrioritySort( PostEffect* const *e1, PostEffect* c
 
    return 0;
 }
+
+void PostEffectManager::dumpActivePostFX()
+{
+   EffectVector effects;
+
+   for (U32 i = 0; i < mEndOfFrameList.size(); i++)
+   {
+      PostEffect* effect = mEndOfFrameList[i];
+
+      if(effect->isEnabled())
+         effects.push_back(effect);
+   }
+
+   for (U32 i = 0; i < mAfterDiffuseList.size(); i++)
+   {
+      PostEffect* effect = mAfterDiffuseList[i];
+
+      if (effect->isEnabled())
+         effects.push_back(effect);
+   }
+
+
+   // Now check the bin maps.
+   EffectMap::Iterator mapIter = mAfterBinMap.begin();
+   for (; mapIter != mAfterBinMap.end(); mapIter++)
+   {
+      EffectVector& ef = mapIter->value;
+
+      for (U32 i = 0; i < ef.size(); i++)
+      {
+         PostEffect* effect = ef[i];
+
+         if (effect->isEnabled())
+            effects.push_back(effect);
+      }
+   }
+
+   mapIter = mBeforeBinMap.begin();
+   for (; mapIter != mBeforeBinMap.end(); mapIter++)
+   {
+      EffectVector& ef = mapIter->value;
+
+      for (U32 i = 0; i < ef.size(); i++)
+      {
+         PostEffect* effect = ef[i];
+
+         if (effect->isEnabled())
+            effects.push_back(effect);
+      }
+   }
+
+   // Resort the effects by priority.
+   effects.sort(&_effectPrioritySort);
+
+   Con::printf("PostEffectManager::dumpActivePostFX() - Beginning Dump");
+
+   for (U32 i = 0; i < effects.size(); i++)
+   {
+      PostEffect* effect = effects[i];
+
+      if (effect->isEnabled())
+      {
+         Con::printf("%s", effect->getName());
+      }
+   }
+
+   Con::printf("PostEffectManager::dumpActivePostFX() - Ending Dump");
+}
+
+DefineEngineFunction(dumpActivePostFX, void, (),, "")
+{
+   PFXMGR->dumpActivePostFX();
+}

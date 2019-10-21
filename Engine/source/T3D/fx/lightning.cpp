@@ -240,9 +240,15 @@ LightningData::LightningData()
 {
    strikeSound = NULL;
 
-   dMemset( strikeTextureNames, 0, sizeof( strikeTextureNames ) );
-   dMemset( strikeTextures, 0, sizeof( strikeTextures ) );
-   dMemset( thunderSounds, 0, sizeof( thunderSounds ) );
+   for (S32 i = 0; i < MaxThunders; i++)
+      thunderSounds[i] = NULL;
+
+   for (S32 i = 0; i < MaxTextures; i++)
+   {
+      strikeTextureNames[i] = NULL;
+      strikeTextures[i] = NULL;
+   }
+
    mNumStrikeTextures = 0;
 }
 
@@ -282,9 +288,10 @@ bool LightningData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   dQsort(thunderSounds, MaxThunders, sizeof(SFXTrack*), cmpSounds);
-   for (numThunders = 0; numThunders < MaxThunders && thunderSounds[numThunders] != NULL; numThunders++) {
-      //
+   //dQsort(thunderSounds, MaxThunders, sizeof(SFXTrack*), cmpSounds);
+
+   for (S32 i = 0; i < MaxThunders; i++) {
+	   if (thunderSounds[i]!= NULL) numThunders++;
    }
 
    if (server == false) 
@@ -321,14 +328,15 @@ void LightningData::packData(BitStream* stream)
 
    U32 i;
    for (i = 0; i < MaxThunders; i++)
-      sfxWrite( stream, thunderSounds[ i ] );
+   {
+      if (stream->writeFlag(thunderSounds[i]))
+         sfxWrite(stream, thunderSounds[i]);
+   }
 
    stream->writeInt(mNumStrikeTextures, 4);
 
-   for (i = 0; i < MaxTextures; i++) 
-   {
+   for (i = 0; i < MaxTextures; i++)
       stream->writeString(strikeTextureNames[i]);
-   }
 
    sfxWrite( stream, strikeSound );
 }
@@ -339,14 +347,17 @@ void LightningData::unpackData(BitStream* stream)
 
    U32 i;
    for (i = 0; i < MaxThunders; i++)
-      sfxRead( stream, &thunderSounds[ i ] );
+   {
+      if (stream->readFlag())
+         sfxRead(stream, &thunderSounds[i]);
+      else
+         thunderSounds[i] = NULL;
+   }
 
    mNumStrikeTextures = stream->readInt(4);
 
-   for (i = 0; i < MaxTextures; i++) 
-   {
+   for (i = 0; i < MaxTextures; i++)
       strikeTextureNames[i] = stream->readSTString();
-   }
 
    sfxRead( stream, &strikeSound );
 }

@@ -634,13 +634,13 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    if (mMaterial->mInvertSmoothness[stageNum])
       newFeatures.addFeature(MFT_InvertSmoothness);
 
-   // Deferred Shading : Specular
+   // Deferred Shading : PBR Config
    if( mStages[stageNum].getTex( MFT_PBRConfigMap ) )
    {
-       newFeatures.addFeature( MFT_DeferredSpecMap );
+       newFeatures.addFeature( MFT_PBRConfigMap );
    }
    else
-       newFeatures.addFeature( MFT_DeferredSpecVars );
+       newFeatures.addFeature( MFT_PBRConfigVars );
 
    // Deferred Shading : Material Info Flags
    newFeatures.addFeature( MFT_DeferredMatInfoFlags );

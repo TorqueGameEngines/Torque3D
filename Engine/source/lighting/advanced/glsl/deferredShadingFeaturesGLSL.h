@@ -25,13 +25,12 @@
 
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #include "shaderGen/GLSL/bumpGLSL.h"
-#include "shaderGen/GLSL/pixSpecularGLSL.h"
 
 // Specular Outputs
-class DeferredSpecMapGLSL : public ShaderFeatureGLSL
+class PBRConfigMapGLSL : public ShaderFeatureGLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: Specular Map"; }
+   virtual String getName() { return "Deferred Shading: PBR Config Map"; }
 
    virtual void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd );
@@ -59,10 +58,10 @@ public:
    virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const { return ShaderFeature::RenderTarget2; }
 };
 
-class DeferredSpecVarsGLSL : public ShaderFeatureGLSL
+class PBRConfigVarsGLSL : public ShaderFeatureGLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: Specular Explicit Numbers"; }
+   virtual String getName() { return "Deferred Shading: PBR Config Explicit Numbers"; }
 
    virtual void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd );

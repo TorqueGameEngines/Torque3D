@@ -477,7 +477,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_PBRConfigMap, _createTexture(mMaterial->mPBRConfigMapFilename[i], profile));
          if (!mStages[i].getTex(MFT_PBRConfigMap))
-            mMaterial->logError("Failed to load specular map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);
+            mMaterial->logError("Failed to load PBR Config map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);
       }
       else
       {
@@ -487,9 +487,9 @@ void ProcessedMaterial::_setStageData()
             inputKey[0] = mMaterial->mSmoothnessChan[i];
             inputKey[1] = mMaterial->mAOChan[i];
             inputKey[2] = mMaterial->mMetalChan[i];
-            inputKey[3] = NULL;
+            inputKey[3] = mMaterial->mGlowChan[i];
             mStages[i].setTex(MFT_PBRConfigMap, _createCompositeTexture(mMaterial->mRoughMapFilename[i], mMaterial->mAOMapFilename[i],
-               mMaterial->mMetalMapFilename[i], "",
+               mMaterial->mMetalMapFilename[i], mMaterial->mGlowMapFilename[i],
                inputKey, profile));
             if (!mStages[i].getTex(MFT_PBRConfigMap))
                mMaterial->logError("Failed to load specular map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);

@@ -614,6 +614,13 @@ function MaterialEditorGui::convertTextureFields(%this)
       %metalMap = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %metalMap);
       MaterialEditorGui.currentMaterial.metalMap[%metalI] = %metalMap;
    }
+   
+   for(%glowI = 0; %glowI < 4; %glowI++)
+   {
+      %glowMap = MaterialEditorGui.currentMaterial.glowMap[%glowI];      
+      %glowMap = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %glowMap);
+      MaterialEditorGui.currentMaterial.glowMap[%glowI] = %glowMap;
+   }
 }
 
 // still needs to be optimized further
@@ -943,6 +950,17 @@ function MaterialEditorGui::guiSync( %this, %material )
       MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap( (%material).metalMap[%layer] );
    }
    
+   if((%material).glowMap[%layer] $= "") 
+   {
+      MaterialEditorPropertiesWindow-->glowMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->glowMapDisplayBitmap.setBitmap( "tools/materialeditor/gui/unknownImage" );
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->glowMapNameText.setText( (%material).glowMap[%layer] );
+      MaterialEditorPropertiesWindow-->glowMapDisplayBitmap.setBitmap( (%material).glowMap[%layer] );
+   }
+   
    MaterialEditorPropertiesWindow-->accuScaleTextEdit.setText((%material).accuScale[%layer]);
    MaterialEditorPropertiesWindow-->accuScaleTextEdit.setText((%material).accuScale[%layer]);
    MaterialEditorPropertiesWindow-->accuDirectionTextEdit.setText((%material).accuDirection[%layer]);
@@ -964,6 +982,8 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->SmoothnessSlider.setValue((%material).Smoothness[%layer]);
    MaterialEditorPropertiesWindow-->MetalnessTextEdit.setText((%material).Metalness[%layer]);
    MaterialEditorPropertiesWindow-->MetalnessSlider.setValue((%material).Metalness[%layer]);
+   MaterialEditorPropertiesWindow-->glowMulTextEdit.setText((%material).glowMul[%layer]);
+   MaterialEditorPropertiesWindow-->glowMulSlider.setValue((%material).glowMul[%layer]);
    MaterialEditorPropertiesWindow-->glowCheckbox.setValue((%material).glow[%layer]);
    MaterialEditorPropertiesWindow-->emissiveCheckbox.setValue((%material).emissive[%layer]);
    MaterialEditorPropertiesWindow-->parallaxTextEdit.setText((%material).parallaxScale[%layer]);
@@ -1038,6 +1058,7 @@ function MaterialEditorGui::guiSync( %this, %material )
    %this.getRoughChan((%material).SmoothnessChan[%layer]);
    %this.getAOChan((%material).AOChan[%layer]);
    %this.getMetalChan((%material).metalChan[%layer]);
+   %this.getGlowChan((%material).glowChan[%layer]);
    %this.preventUndo = false;
 }
 
@@ -1057,6 +1078,11 @@ function MaterialEditorGui::getAOChan(%this, %channel)
 function MaterialEditorGui::getMetalChan(%this, %channel)
 {
 	%guiElement = metalChanBtn @ %channel;
+	%guiElement.setStateOn(true);
+}
+function MaterialEditorGui::getGlowChan(%this, %channel)
+{
+	%guiElement = glowChanBtn @ %channel;
 	%guiElement.setStateOn(true);
 }
 //=======================================
@@ -1349,6 +1375,34 @@ function MaterialEditorGui::updatemetalMap(%this,%action)
       MaterialEditorPropertiesWindow-->metalMapNameText.setText("None");
       MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap("tools/materialeditor/gui/unknownImage");
       MaterialEditorGui.updateActiveMaterial("metalMap[" @ %layer @ "]","");
+   }
+   
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
+}
+
+function MaterialEditorGui::updateGlowMap(%this,%action)
+{
+   %layer = MaterialEditorGui.currentLayer;
+   
+   if( %action )
+   {
+      %texture = MaterialEditorGui.openFile("texture");
+      if( %texture !$= "" )
+      {         
+         MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.setBitmap(%texture);
+      
+         %bitmap = MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.bitmap;
+         %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
+         MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.setBitmap(%bitmap);
+         MaterialEditorPropertiesWindow-->GlowMapNameText.setText(%bitmap);
+         MaterialEditorGui.updateActiveMaterial("glowMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
+      }
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->GlowMapNameText.setText("None");
+      MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.setBitmap("tools/materialeditor/gui/unknownImage");
+      MaterialEditorGui.updateActiveMaterial("glowMap[" @ %layer @ "]","");
    }
    
    MaterialEditorGui.guiSync( materialEd_previewMaterial );
@@ -2476,6 +2530,12 @@ function MaterialEditorGui::setMetalChan(%this, %value)
    MaterialEditorGui.guiSync( materialEd_previewMaterial );
 }
 
+function MaterialEditorGui::setGlowChan(%this, %value)
+{
+   MaterialEditorGui.updateActiveMaterial("glowChan[" @ MaterialEditorGui.currentLayer @ "]", %value);   
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
+}
+
 function MaterialEditorGui::saveCompositeMap(%this)
 {
     %saveAs = "";
@@ -2501,13 +2561,15 @@ function MaterialEditorGui::saveCompositeMap(%this)
     %roughMap = %material.roughMap[%layer];
     %aoMap = %material.aoMap[%layer];
     %metalMap = %material.metalMap[%layer];
+    %glowMap = %material.glowMap[%layer];
     
     %smooth = %material.SmoothnessChan[%layer];
     %ao = %material.AOChan[%layer];
     %metal = %material.metalChan[%layer];
+    %glow = %material.glowChan[%layer];
     
-    %channelKey = %smooth SPC %ao SPC %metal SPC 3;
+    %channelKey = %smooth SPC %ao SPC %metal SPC %glow;
     error("Storing: \"" @ %roughMap @"\" \""@  %aoMap @"\" \""@ %metalMap @"\" \""@ %channelKey @"\" \""@ %saveAs @"\"");
-    saveCompositeTexture(%roughMap,%aoMap,%metalMap,"",%channelKey, %saveAs);
+    saveCompositeTexture(%roughMap,%aoMap,%metalMap,%glowMap,%channelKey, %saveAs);
     %dlg.delete();
 }

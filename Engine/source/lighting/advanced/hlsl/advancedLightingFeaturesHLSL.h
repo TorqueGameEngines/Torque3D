@@ -25,7 +25,6 @@
 
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
 #include "shaderGen/HLSL/bumpHLSL.h"
-#include "shaderGen/HLSL/pixSpecularHLSL.h"
 
 class ConditionerMethodDependency;
 

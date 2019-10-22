@@ -253,6 +253,11 @@ public:
    AssetPtr<ImageAsset> mMetalMapAsset[MAX_STAGES];
    F32      mMetalChan[MAX_STAGES];
 
+   FileName mGlowMapFilename[MAX_STAGES];
+   StringTableEntry mGlowMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mGlowMapAsset[MAX_STAGES];
+   F32      mGlowChan[MAX_STAGES];
+   F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
    FileName mDetailNormalMapFilename[MAX_STAGES];
@@ -323,8 +328,6 @@ public:
    /// If the stage should use anisotropic filtering.
    bool mUseAnisotropic[MAX_STAGES];
 
-   // Deferred Shading: Metalness
-   bool mUseMetalness[MAX_STAGES];
 
    bool mDoubleSided;
 

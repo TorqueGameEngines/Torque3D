@@ -36,9 +36,7 @@
 // Deferred Shading Features
 //****************************************************************************
 
-// Specular Map -> Blue of Material Buffer ( greyscaled )
-// Gloss Map (Alpha Channel of Specular Map) -> Alpha ( Spec Power ) of Material Info Buffer.
-void DeferredSpecMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord( "texCoord", "float2", componentList );
@@ -71,8 +69,8 @@ void DeferredSpecMapHLSL::processPix( Vector<ShaderComponent*> &componentList, c
    pbrConfigMapTex->constNum = pbrConfigMap->constNum;
    LangElement *texOp = new GenOp("   @.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
    
-   Var * pbrConfig = (Var*)LangElement::find("pbrConfig");
-   if (!pbrConfig) pbrConfig = new Var("pbrConfig", "float4");
+   Var * pbrConfig = (Var*)LangElement::find("PBRConfig");
+   if (!pbrConfig) pbrConfig = new Var("PBRConfig", "float4");
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
    Var *smoothness = (Var*)LangElement::find("smoothness");
@@ -89,7 +87,7 @@ void DeferredSpecMapHLSL::processPix( Vector<ShaderComponent*> &componentList, c
    output = meta;
 }
 
-ShaderFeature::Resources DeferredSpecMapHLSL::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources PBRConfigMapHLSL::getResources( const MaterialFeatureData &fd )
 {
    Resources res; 
    res.numTex = 1;
@@ -98,7 +96,7 @@ ShaderFeature::Resources DeferredSpecMapHLSL::getResources( const MaterialFeatur
    return res;
 }
 
-void DeferredSpecMapHLSL::setTexData(   Material::StageData &stageDat,
+void PBRConfigMapHLSL::setTexData(   Material::StageData &stageDat,
                                        const MaterialFeatureData &fd,
                                        RenderPassData &passData,
                                        U32 &texIndex )
@@ -112,7 +110,7 @@ void DeferredSpecMapHLSL::setTexData(   Material::StageData &stageDat,
    }
 }
 
-void DeferredSpecMapHLSL::processVert( Vector<ShaderComponent*> &componentList, 
+void PBRConfigMapHLSL::processVert( Vector<ShaderComponent*> &componentList,
                                        const MaterialFeatureData &fd )
 {
    MultiLine *meta = new MultiLine;
@@ -149,7 +147,7 @@ void DeferredMatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentLi
 
 // Spec Strength -> Blue Channel of Material Info Buffer.
 // Spec Power -> Alpha Channel ( of Material Info Buffer.
-void DeferredSpecVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void PBRConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // search for material var
    Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );

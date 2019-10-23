@@ -35,22 +35,38 @@
 //****************************************************************************
 // Deferred Shading Features
 //****************************************************************************
+U32 PBRConfigMapHLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
+}
 
 void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord( "texCoord", "float2", componentList );
 
-   // search for color var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   MultiLine * meta = new MultiLine;
-   if ( !material )
+   MultiLine* meta = new MultiLine;
+   Var* pbrConfig;
+   if (fd.features[MFT_isDeferred])
    {
-      // create color var
-      material = new Var;
-      material->setType( "fragout" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName( "OUT" );
+      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!pbrConfig)
+      {
+         // create material var
+         pbrConfig = new Var;
+         pbrConfig->setType("fragout");
+         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         pbrConfig->setStructName("OUT");
+      }
+   }
+   else
+   {
+      pbrConfig = (Var*)LangElement::find("PBRConfig");
+      if (!pbrConfig)
+      {
+         pbrConfig = new Var("PBRConfig", "float4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+      }
    }
 
    // create texture var
@@ -69,8 +85,6 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    pbrConfigMapTex->constNum = pbrConfigMap->constNum;
    LangElement *texOp = new GenOp("   @.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
    
-   Var * pbrConfig = (Var*)LangElement::find("PBRConfig");
-   if (!pbrConfig) pbrConfig = new Var("PBRConfig", "float4");
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
    Var *smoothness = (Var*)LangElement::find("smoothness");
@@ -82,8 +96,9 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    if (fd.features[MFT_InvertSmoothness])
       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
 
-   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(pbrConfig), texOp));
-   meta->addStatement(new GenOp("   @.bga = float3(@,@.g,@);\r\n", material, smoothness, pbrConfig, metalness));
+   if (!fd.features[MFT_isDeferred])
+   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", pbrConfig, texOp));
+   meta->addStatement(new GenOp("   @.bga = float3(@,@.g,@);\r\n", pbrConfig, smoothness, pbrConfig, metalness));
    output = meta;
 }
 
@@ -126,14 +141,23 @@ void PBRConfigMapHLSL::processVert( Vector<ShaderComponent*> &componentList,
 void DeferredMatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // search for material var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   if ( !material )
+   Var* pbrConfig;
+   if (fd.features[MFT_isDeferred])
    {
-      // create material var
-      material = new Var;
-      material->setType( "fragout" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName( "OUT" );
+      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!pbrConfig)
+      {
+         // create material var
+         pbrConfig = new Var;
+         pbrConfig->setType("fragout");
+         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         pbrConfig->setStructName("OUT");
+      }
+   }
+   else
+   {
+      pbrConfig = (Var*)LangElement::find("PBRConfig");
+      if (!pbrConfig) pbrConfig = new Var("PBRConfig", "float4");
    }
 
    Var *matInfoFlags = new Var;
@@ -142,24 +166,36 @@ void DeferredMatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentLi
    matInfoFlags->uniform = true;
    matInfoFlags->constSortPos = cspPotentialPrimitive;
 
-   output = new GenOp( "   @.r = @;\r\n", material, matInfoFlags );
+   output = new GenOp( "   @.r = @;\r\n", pbrConfig, matInfoFlags );
 }
 
-// Spec Strength -> Blue Channel of Material Info Buffer.
-// Spec Power -> Alpha Channel ( of Material Info Buffer.
+U32 PBRConfigVarsHLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
+}
+
 void PBRConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
-   // search for material var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   if ( !material )
+   MultiLine* meta = new MultiLine;
+   Var* pbrConfig;
+   if (fd.features[MFT_isDeferred])
    {
-      // create material var
-      material = new Var;
-      material->setType( "fragout" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName( "OUT" );
+      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!pbrConfig)
+      {
+         // create material var
+         pbrConfig = new Var;
+         pbrConfig->setType("fragout");
+         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         pbrConfig->setStructName("OUT");
+      }
    }
-
+   else
+   {
+      pbrConfig = (Var*)LangElement::find("PBRConfig");
+      if (!pbrConfig) pbrConfig = new Var("PBRConfig", "float4");
+      meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+   }
    Var *metalness = new Var("metalness", "float");
    metalness->uniform = true;
    metalness->constSortPos = cspPotentialPrimitive;
@@ -168,13 +204,12 @@ void PBRConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, con
    smoothness->uniform = true;
    smoothness->constSortPos = cspPotentialPrimitive;
 
-   MultiLine * meta = new MultiLine;
    //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-   meta->addStatement(new GenOp("   @.b = @;\r\n", material, smoothness));
+   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", pbrConfig));
+   meta->addStatement(new GenOp("   @.b = @;\r\n", pbrConfig, smoothness));
    if (fd.features[MFT_InvertSmoothness])
       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
-   meta->addStatement(new GenOp("   @.a = @;\r\n", material, metalness));
+   meta->addStatement(new GenOp("   @.a = @;\r\n", pbrConfig, metalness));
    output = meta;
 }
 

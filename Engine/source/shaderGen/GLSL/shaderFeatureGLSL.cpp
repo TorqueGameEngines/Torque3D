@@ -837,8 +837,8 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
 
    Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
-   Var* matinfo = (Var*)LangElement::find("PBRConfig");
-   if (!matinfo)
+   Var* pbrConfig = (Var*)LangElement::find("PBRConfig");
+   if (!pbrConfig)
    {
       Var* metalness = (Var*)LangElement::find("metalness");
       if (!metalness)
@@ -856,9 +856,9 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
          smoothness->constSortPos = cspPotentialPrimitive;
       }
 
-      matinfo = new Var("PBRConfig", "vec4");
-      LangElement* colorDecl = new DecOp(matinfo);
-      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
+      pbrConfig = new Var("PBRConfig", "vec4");
+      LangElement* colorDecl = new DecOp(pbrConfig);
+      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct pbrConfig, no ao darkening
    }
 
    Var* wsNormal = (Var*)LangElement::find("wsNormal");
@@ -895,7 +895,7 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    if (!surface)
    {
       surface = new Var("surface", "Surface");
-      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, pbrConfig,
          wsPosition, wsEyePos, wsView));
    }
 
@@ -3046,13 +3046,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    }
 
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
-
-   Var *matinfo = (Var*)LangElement::find("PBRConfig");
-   Var* metalness = (Var*)LangElement::find("metalness");
-   Var* smoothness = (Var*)LangElement::find("smoothness");
-   
-   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
-
+      
    //Reflection vec
    String computeForwardProbes = String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String("@,@,\r\n\t\t");

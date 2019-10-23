@@ -439,7 +439,15 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
          fd.features[ MFT_NormalMap ] )
          fd.features.addFeature( MFT_Parallax );
    }
-   
+
+   // Deferred Shading : PBR Config
+   if (mStages[stageNum].getTex(MFT_PBRConfigMap))
+   {
+      fd.features.addFeature(MFT_PBRConfigMap);
+   }
+   else
+      fd.features.addFeature(MFT_PBRConfigVars);
+
    if( fd.features[ MFT_PBRConfigMap ] )
    {
       // Check for an alpha channel on the PBR Config map. If it has one (and it

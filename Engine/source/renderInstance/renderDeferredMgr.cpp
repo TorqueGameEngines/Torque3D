@@ -638,12 +638,14 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    if( mStages[stageNum].getTex( MFT_PBRConfigMap ) )
    {
        newFeatures.addFeature( MFT_PBRConfigMap );
+       if( mStages[stageNum].getTex( MFT_PBRConfigMap )->mHasTransparency )
+          newFeatures.addFeature( MFT_GlowMap );
    }
    else
        newFeatures.addFeature( MFT_PBRConfigVars );
 
    // Deferred Shading : Material Info Flags
-   newFeatures.addFeature( MFT_DeferredMatInfoFlags );
+   newFeatures.addFeature( MFT_MatInfoFlags );
 
    for ( U32 i=0; i < fd.features.getCount(); i++ )
    {

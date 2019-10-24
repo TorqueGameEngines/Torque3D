@@ -444,18 +444,14 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    if (mStages[stageNum].getTex(MFT_PBRConfigMap))
    {
       fd.features.addFeature(MFT_PBRConfigMap);
+      if (mStages[stageNum].getTex(MFT_PBRConfigMap)->mHasTransparency)
+         fd.features.addFeature(MFT_GlowMap);
    }
    else
       fd.features.addFeature(MFT_PBRConfigVars);
 
-   if( fd.features[ MFT_PBRConfigMap ] )
-   {
-      // Check for an alpha channel on the PBR Config map. If it has one (and it
-      // has values less than 255) than the artist has put the glow map into
-      // the alpha channel.
-      if( mStages[stageNum].getTex( MFT_PBRConfigMap )->mHasTransparency )
-         fd.features.addFeature( MFT_GlowMap );
-   }
+   // Deferred Shading : Material Info Flags
+   fd.features.addFeature(MFT_MatInfoFlags);
 
    if ( mMaterial->mAccuEnabled[stageNum] )
    {

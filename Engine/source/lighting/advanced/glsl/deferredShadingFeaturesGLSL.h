@@ -47,7 +47,7 @@ public:
                              const MaterialFeatureData &fd );
 };
 
-class DeferredMatInfoFlagsGLSL : public ShaderFeatureGLSL
+class MatInfoFlagsGLSL : public ShaderFeatureGLSL
 {
 public:
    virtual String getName() { return "Deferred Shading: Mat Info Flags"; }

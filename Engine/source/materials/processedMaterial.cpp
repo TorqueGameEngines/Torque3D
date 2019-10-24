@@ -492,7 +492,7 @@ void ProcessedMaterial::_setStageData()
                mMaterial->mMetalMapFilename[i], mMaterial->mGlowMapFilename[i],
                inputKey, profile));
             if (!mStages[i].getTex(MFT_PBRConfigMap))
-               mMaterial->logError("Failed to load specular map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);
+               mMaterial->logError("Failed to load PBR Config map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);
          }
       }
    }

@@ -104,7 +104,7 @@ void _initShaderGenHLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureHLSL( "Deferred Material" ) );
    FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapHLSL);
    FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsHLSL);
-   FEATUREMGR->registerFeature( MFT_DeferredMatInfoFlags, new DeferredMatInfoFlagsHLSL );
+   FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsHLSL );
    FEATUREMGR->registerFeature( MFT_DeferredEmissive, new DeferredEmissiveHLSL);
    FEATUREMGR->registerFeature( MFT_SkyBox,  new NamedFeatureHLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureHLSL );

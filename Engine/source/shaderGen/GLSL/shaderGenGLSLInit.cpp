@@ -102,7 +102,7 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureGLSL( "Deferred Material" ) );
    FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapGLSL );
    FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsGLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredMatInfoFlags, new DeferredMatInfoFlagsGLSL );
+   FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsGLSL );
    FEATUREMGR->registerFeature( MFT_SkyBox, new NamedFeatureGLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureGLSL );
 }

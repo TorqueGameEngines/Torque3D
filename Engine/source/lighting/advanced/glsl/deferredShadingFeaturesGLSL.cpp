@@ -117,7 +117,7 @@ void PBRConfigMapGLSL::processVert( Vector<ShaderComponent*> &componentList,
 }
 
 // Material Info Flags -> Red ( Flags ) of Material Info Buffer.
-void DeferredMatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void MatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
 	MultiLine *meta = new MultiLine;
 

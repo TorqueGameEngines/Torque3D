@@ -89,16 +89,20 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    if (!metalness) metalness = new Var("metalness", "float");
    Var *smoothness = (Var*)LangElement::find("smoothness");
    if (!smoothness) smoothness = new Var("smoothness", "float");
+   Var* ao = (Var*)LangElement::find("ao");
+   if (!ao) ao = new Var("ao", "float");
 
-   meta->addStatement(new GenOp("   @ = @.r;\r\n", new DecOp(smoothness), texOp));
-   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(metalness), texOp));
 
+   meta->addStatement(new GenOp("   @.bga = @.rgb;\r\n", pbrConfig, texOp));
+
+   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(smoothness), pbrConfig));
    if (fd.features[MFT_InvertSmoothness])
+   {
+      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", pbrConfig, pbrConfig));
       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
-
-   if (!fd.features[MFT_isDeferred])
-   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", pbrConfig, texOp));
-   meta->addStatement(new GenOp("   @.bga = float3(@,@.g,@);\r\n", pbrConfig, smoothness, pbrConfig, metalness));
+   }
+   meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), pbrConfig));
+   meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), pbrConfig));
    output = meta;
 }
 
@@ -137,8 +141,13 @@ void PBRConfigMapHLSL::processVert( Vector<ShaderComponent*> &componentList,
    output = meta;
 }
 
+U32 MatInfoFlagsHLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
+}
+
 // Material Info Flags -> Red ( Flags ) of Material Info Buffer.
-void DeferredMatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void MatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // search for material var
    Var* pbrConfig;

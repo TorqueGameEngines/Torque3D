@@ -59,13 +59,12 @@ class VolumetricFogRTManager : public SceneObject
       static S32 mTargetScale;
       bool mIsInitialized;
       U32 mNumFogObjects;
-      U32 mFogHasAnswered;
       U32 mWidth;
       U32 mHeight;
    
       void onRemove();
       void onSceneRemove();
-      void ResizeRT(PlatformWindow *win, bool resize);
+      void ResizeRT(WindowId did, S32 width, S32 height);
    
       static VolumetricFogRTMResizeSignal smVolumetricFogRTMResizeSignal;
 

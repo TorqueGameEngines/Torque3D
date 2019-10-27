@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-new GFXStateBlockData( ScatterSkySBData )
+singleton GFXStateBlockData( ScatterSkySBData )
 {
    cullMode = "GFXCullNone";
    

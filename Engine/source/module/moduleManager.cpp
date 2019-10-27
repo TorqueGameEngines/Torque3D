@@ -38,9 +38,16 @@
 #include "console/consoleTypes.h"
 #endif
 
+#ifndef _MODULE_DEFINITION_H
+#include "module/moduleDefinition.h"
+#endif
+
+#ifndef _STRINGFUNCTIONS_H_
+#include "core/strings/stringFunctions.h"
+#endif
+
 // Script bindings.
 #include "moduleManager_ScriptBinding.h"
-
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT( ModuleManager );
@@ -63,6 +70,25 @@ S32 QSORT_CALLBACK moduleDefinitionVersionIdSort( const void* a, const void* b )
 
    // We sort higher version Id first.
    return versionId1 > versionId2 ? -1 : versionId1 < versionId2 ? 1 : 0;
+}
+
+S32 QSORT_CALLBACK moduleDependencySort(const void* a, const void* b)
+{
+   // Fetch module definitions.
+   ModuleDefinition* pDefinition1 = *(ModuleDefinition * *)a;
+   ModuleDefinition* pDefinition2 = *(ModuleDefinition * *)b;
+
+   // Fetch version Ids.
+   ModuleDefinition::typeModuleDependencyVector moduleDependencies = pDefinition1->getDependencies();
+   bool foundDependant = false;
+   for (ModuleDefinition::typeModuleDependencyVector::const_iterator dependencyItr = moduleDependencies.begin(); dependencyItr != moduleDependencies.end(); ++dependencyItr)
+   {
+      if (dStrcmp(dependencyItr->mModuleId, pDefinition2->getModuleId())
+         && (dependencyItr->mVersionId == pDefinition2->getVersionId()))
+            foundDependant = true;
+   }
+
+   return foundDependant ? 1 : -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -1087,6 +1113,7 @@ void ModuleManager::findModules( const bool loadedOnly, typeConstModuleDefinitio
             moduleDefinitions.push_back( pModuleDefinition );
         }
     }
+    dQsort(moduleDefinitions.address(), moduleDefinitions.size(), sizeof(ModuleDefinition*), moduleDependencySort);
 }
 
 //-----------------------------------------------------------------------------

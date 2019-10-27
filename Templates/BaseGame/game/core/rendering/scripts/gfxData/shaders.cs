@@ -57,7 +57,7 @@ singleton ShaderData( OffscreenParticleCompositeShaderData )
 //-----------------------------------------------------------------------------
 // Planar Reflection
 //-----------------------------------------------------------------------------
-new ShaderData( ReflectBump )
+singleton shaderData( ReflectBump )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/planarReflectBumpV.hlsl";
    DXPixelShaderFile 	= $Core::CommonShaderPath @ "/planarReflectBumpP.hlsl";
@@ -72,7 +72,7 @@ new ShaderData( ReflectBump )
    pixVersion = 2.0;
 };
 
-new ShaderData( Reflect )
+singleton shaderData( Reflect )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/planarReflectV.hlsl";
    DXPixelShaderFile 	= $Core::CommonShaderPath @ "/planarReflectP.hlsl";
@@ -89,7 +89,7 @@ new ShaderData( Reflect )
 //-----------------------------------------------------------------------------
 // fxFoliageReplicator
 //-----------------------------------------------------------------------------
-new ShaderData( fxFoliageReplicatorShader )
+singleton shaderData( fxFoliageReplicatorShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/fxFoliageReplicatorV.hlsl";
    DXPixelShaderFile 	= $Core::CommonShaderPath @ "/fxFoliageReplicatorP.hlsl";

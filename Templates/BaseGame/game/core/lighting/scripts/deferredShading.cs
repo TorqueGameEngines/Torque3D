@@ -9,7 +9,7 @@ singleton ShaderData( DeferredColorShader )
    pixVersion = 2.0;   
 };
 
-new GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
+singleton GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
 {        
    blendEnable = false; 
    
@@ -27,7 +27,7 @@ new GFXStateBlockData( AL_DeferredCaptureState : PFX_DefaultStateBlock )
    samplerStates[4] = SamplerWrapLinear;
 };
 
-new ShaderData( AL_ProbeShader )
+singleton shaderData( AL_ProbeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/probeShadingP.hlsl";

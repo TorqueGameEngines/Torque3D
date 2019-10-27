@@ -367,7 +367,7 @@ function OptionsMenuBackSetting::onClick(%this)
       
       //advance by one
       %newSetting = getToken(%settingsList, ",", %currentSettingIdx);
-      eval(%settingCtrl.qualitySettingGroup@"::set("@%newSetting@");");
+      eval(%settingCtrl.qualitySettingGroup@"::set(\""@%newSetting@"\");");
       %settingCtrl-->SettingText.setText( %newSetting );
       
       if(%currentSettingIdx == %settingsListCount)

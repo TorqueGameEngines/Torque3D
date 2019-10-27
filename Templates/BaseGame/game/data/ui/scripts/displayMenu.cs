@@ -38,7 +38,14 @@ function DisplayMenu::apply(%this)
    }
       
    //Update the display settings now
-   $pref::Video::Resolution = getWord( $pref::Video::Resolution, 0 ) SPC getWord( $pref::Video::Resolution, 2 );
+   if (getWord( $pref::Video::Resolution, 2) == "")
+   {
+      $pref::Video::Resolution = getWord( $pref::Video::Resolution, 0 ) SPC getWord( $pref::Video::Resolution, 1 );
+   }
+   else
+   {
+      $pref::Video::Resolution = getWord( $pref::Video::Resolution, 0 ) SPC getWord( $pref::Video::Resolution, 2 );
+   }
 	
    /*if ( %newFullScreen $= "false" )
 	{

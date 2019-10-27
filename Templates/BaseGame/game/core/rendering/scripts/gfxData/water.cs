@@ -45,7 +45,7 @@ singleton ShaderData( WaterShader )
    pixVersion = 3.0;
 };
 
-new GFXSamplerStateData(WaterSampler)
+singleton GFXSamplerStateData(WaterSampler)
 {
    textureColorOp = GFXTOPModulate;
    addressModeU = GFXAddressWrap;

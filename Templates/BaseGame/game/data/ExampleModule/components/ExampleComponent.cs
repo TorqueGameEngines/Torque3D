@@ -4,7 +4,7 @@ function ExampleComponent::onAdd(%this)
 {
     
 }
-//onAdd is called when the component is removed and deleted from it's owner entity.
+//onRemove is called when the component is removed and deleted from it's owner entity.
 function ExampleComponent::onRemove(%this)
 {
     
@@ -15,7 +15,7 @@ function ExampleComponent::onClientConnect(%this, %client)
     
 }
 //onClientDisconnect is called any time a client disconnects from the server.
-function ExampleComponent::onClientDisonnect(%this, %client)
+function ExampleComponent::onClientDisconnect(%this, %client)
 {
 
 }

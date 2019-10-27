@@ -34,7 +34,7 @@ $sequence = 16;
 
 
 // Common stateblock definitions
-new GFXSamplerStateData(SamplerClampLinear)
+singleton GFXSamplerStateData(SamplerClampLinear)
 {
    textureColorOp = GFXTOPModulate;
    addressModeU = GFXAddressClamp;
@@ -45,7 +45,7 @@ new GFXSamplerStateData(SamplerClampLinear)
    mipFilter = GFXTextureFilterLinear;
 };
 
-new GFXSamplerStateData(SamplerClampPoint)
+singleton GFXSamplerStateData(SamplerClampPoint)
 {
    textureColorOp = GFXTOPModulate;
    addressModeU = GFXAddressClamp;
@@ -56,7 +56,7 @@ new GFXSamplerStateData(SamplerClampPoint)
    mipFilter = GFXTextureFilterPoint;
 };
 
-new GFXSamplerStateData(SamplerWrapLinear)
+singleton GFXSamplerStateData(SamplerWrapLinear)
 {
    textureColorOp = GFXTOPModulate;
    addressModeU = GFXTextureAddressWrap;
@@ -67,7 +67,7 @@ new GFXSamplerStateData(SamplerWrapLinear)
    mipFilter = GFXTextureFilterLinear;
 };
 
-new GFXSamplerStateData(SamplerWrapPoint)
+singleton GFXSamplerStateData(SamplerWrapPoint)
 {
    textureColorOp = GFXTOPModulate;
    addressModeU = GFXTextureAddressWrap;

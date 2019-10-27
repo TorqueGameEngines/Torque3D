@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 // Debug Shaders.
-new ShaderData( AL_ColorBufferShader )
+singleton shaderData( AL_ColorBufferShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgColorBufferP.hlsl";
@@ -59,7 +59,7 @@ function toggleColorBufferViz( %enable )
    }
 }
 
-new ShaderData( AL_SpecMapShader )
+singleton shaderData( AL_SpecMapShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgSpecMapVisualizeP.hlsl";
@@ -94,7 +94,7 @@ function toggleSpecMapViz( %enable )
       AL_SpecMapVisualize.disable();    
 }
 
-new GFXStateBlockData( AL_DepthVisualizeState )
+singleton GFXStateBlockData( AL_DepthVisualizeState )
 {
    zDefined = true;
    zEnable = false;
@@ -105,7 +105,7 @@ new GFXStateBlockData( AL_DepthVisualizeState )
    samplerStates[1] = SamplerClampLinear; // viz color lookup
 };
 
-new GFXStateBlockData( AL_DefaultVisualizeState )
+singleton GFXStateBlockData( AL_DefaultVisualizeState )
 {
    blendDefined = true;
    blendEnable = true;
@@ -121,7 +121,7 @@ new GFXStateBlockData( AL_DefaultVisualizeState )
    samplerStates[1] = SamplerClampLinear;  // depthviz
 };
 
-new ShaderData( AL_DepthVisualizeShader )
+singleton shaderData( AL_DepthVisualizeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgDepthVisualizeP.hlsl";
@@ -157,7 +157,7 @@ function AL_DepthVisualize::onEnabled( %this )
    return true;
 }
 
-new ShaderData( AL_GlowVisualizeShader )
+singleton shaderData( AL_GlowVisualizeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgGlowVisualizeP.hlsl";
@@ -178,7 +178,7 @@ singleton PostEffect( AL_GlowVisualize )
    renderPriority = 9999;
 };
 
-new ShaderData( AL_NormalsVisualizeShader )
+singleton shaderData( AL_NormalsVisualizeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgNormalVisualizeP.hlsl";
@@ -214,7 +214,7 @@ function AL_NormalsVisualize::onEnabled( %this )
 
 
 
-new ShaderData( AL_LightColorVisualizeShader )
+singleton shaderData( AL_LightColorVisualizeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgLightColorVisualizeP.hlsl";
@@ -249,7 +249,7 @@ function AL_LightColorVisualize::onEnabled( %this )
 }
 
 
-new ShaderData( AL_LightSpecularVisualizeShader )
+singleton shaderData( AL_LightSpecularVisualizeShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./shaders/dbgLightSpecularVisualizeP.hlsl";

@@ -385,14 +385,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
        fd.features.addFeature( MFT_CubeMap );
    }
 
-   if (features.hasFeature(MFT_SkyBox))
-   {
-      fd.features.addFeature(MFT_StaticCubemap);
-      fd.features.addFeature(MFT_CubeMap);
-      fd.features.addFeature(MFT_SkyBox);
-
-      fd.features.removeFeature(MFT_ReflectionProbes);
-   }
    fd.features.addFeature( MFT_Visibility );
 
    if (  lastStage && 
@@ -452,6 +444,17 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
 
    // Deferred Shading : Material Info Flags
    fd.features.addFeature(MFT_MatInfoFlags);
+
+   if (features.hasFeature(MFT_SkyBox))
+   {
+      fd.features.addFeature(MFT_StaticCubemap);
+      fd.features.addFeature(MFT_CubeMap);
+      fd.features.addFeature(MFT_SkyBox);
+
+      fd.features.removeFeature(MFT_ReflectionProbes);
+      fd.features.removeFeature(MFT_PBRConfigVars);
+      fd.features.removeFeature(MFT_MatInfoFlags);
+   }
 
    if ( mMaterial->mAccuEnabled[stageNum] )
    {

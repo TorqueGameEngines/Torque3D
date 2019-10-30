@@ -1892,7 +1892,7 @@
 					  };
 					  new GuiRadioCtrl(glowChanBtn0) {
 						 text = "R";
-						 groupNum = "3";
+						 groupNum = "4";
 						 buttonType = "RadioButton";
 						 useMouseEvents = "0";
 						 position = "100 5";
@@ -1912,7 +1912,7 @@
 					  };
 					  new GuiRadioCtrl(glowChanBtn1) {
 						 text = "G";
-						 groupNum = "3";
+						 groupNum = "4";
 						 buttonType = "RadioButton";
 						 useMouseEvents = "0";
 						 position = "121 5";
@@ -1932,7 +1932,7 @@
 					  };
 					  new GuiRadioCtrl(glowChanBtn2) {
 						 text = "B";
-						 groupNum = "3";
+						 groupNum = "4";
 						 buttonType = "RadioButton";
 						 useMouseEvents = "0";
 						 position = "142 5";
@@ -1952,7 +1952,7 @@
 					  };
 					  new GuiRadioCtrl(glowChanBtn3) {
 						 text = "A";
-						 groupNum = "3";
+						 groupNum = "4";
 						 buttonType = "RadioButton";
 						 useMouseEvents = "0";
 						 position = "163 5";

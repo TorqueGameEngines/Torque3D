@@ -76,6 +76,7 @@ const String ShaderGenVars::vectorLightBrightness("$vectorLightBrightness");
 const String ShaderGenVars::pbrConfig("$PBRConfig");
 const String ShaderGenVars::smoothness("$smoothness");
 const String ShaderGenVars::metalness("$metalness");
+const String ShaderGenVars::glowMul("$glowMul");
 
 //Reflection Probes
 const String ShaderGenVars::probePosition("$inProbePosArray");

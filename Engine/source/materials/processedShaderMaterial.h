@@ -49,6 +49,7 @@ public:
    GFXShaderConstHandle* mPBRConfigSC;
    GFXShaderConstHandle* mSmoothnessSC;
    GFXShaderConstHandle* mMetalnessSC;
+   GFXShaderConstHandle* mGlowMulSC;
    GFXShaderConstHandle* mParallaxInfoSC;
    GFXShaderConstHandle* mAccuScaleSC;
    GFXShaderConstHandle* mAccuDirectionSC;

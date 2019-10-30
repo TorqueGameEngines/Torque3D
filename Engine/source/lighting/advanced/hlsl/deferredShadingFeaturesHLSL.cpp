@@ -83,7 +83,7 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    pbrConfigMapTex->uniform = true;
    pbrConfigMapTex->texture = true;
    pbrConfigMapTex->constNum = pbrConfigMap->constNum;
-   LangElement *texOp = new GenOp("   @.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
+   LangElement *texOp = new GenOp("@.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
    
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
@@ -103,6 +103,21 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    }
    meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), pbrConfig));
    meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), pbrConfig));
+
+   if (fd.features[MFT_GlowMap])
+   {
+      Var* glowMul = new Var("glowMul", "float");
+      glowMul->uniform = true;
+      glowMul->constSortPos = cspPotentialPrimitive;
+
+      ShaderFeature::OutputTarget targ = ShaderFeature::DefaultTarget;
+      if (fd.features[MFT_isDeferred])
+         targ = ShaderFeature::RenderTarget1;
+
+      Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(targ));
+      if (diffuseColor)
+         meta->addStatement(new GenOp("   @.rgb += @.rgb*float3(@,@,@)*@.aaa;\r\n", diffuseColor, diffuseColor, glowMul, glowMul, glowMul, texOp));
+   }
    output = meta;
 }
 

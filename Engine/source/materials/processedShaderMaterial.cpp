@@ -62,6 +62,7 @@ void ShaderConstHandles::init( GFXShader *shader, Vector<CustomShaderFeatureData
    mPBRConfigSC = shader->getShaderConstHandle(ShaderGenVars::pbrConfig);
    mSmoothnessSC = shader->getShaderConstHandle(ShaderGenVars::smoothness);
    mMetalnessSC = shader->getShaderConstHandle(ShaderGenVars::metalness);
+   mGlowMulSC = shader->getShaderConstHandle(ShaderGenVars::glowMul);
    mAccuScaleSC = shader->getShaderConstHandle("$accuScale");
    mAccuDirectionSC = shader->getShaderConstHandle("$accuDirection");
    mAccuStrengthSC = shader->getShaderConstHandle("$accuStrength");
@@ -1111,6 +1112,7 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
 
    shaderConsts->setSafe(handles->mSmoothnessSC, mMaterial->mSmoothness[stageNum]);
    shaderConsts->setSafe(handles->mMetalnessSC, mMaterial->mMetalness[stageNum]);
+   shaderConsts->setSafe(handles->mGlowMulSC, mMaterial->mGlowMul[stageNum]);
 
    shaderConsts->setSafe(handles->mParallaxInfoSC, mMaterial->mParallaxScale[stageNum]);   
    shaderConsts->setSafe(handles->mMinnaertConstantSC, mMaterial->mMinnaertConstant[stageNum]);

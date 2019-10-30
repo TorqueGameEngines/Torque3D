@@ -128,7 +128,7 @@ Material::Material()
       mSmoothnessChan[i] = 0;
       mAOChan[i] = 1;
       mMetalChan[i] = 2;
-
+      mGlowChan[i] = 3;
       mAccuEnabled[i]   = false;
       mAccuScale[i]     = 1.0f;
       mAccuDirection[i] = 1.0f;

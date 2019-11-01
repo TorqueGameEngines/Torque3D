@@ -37,7 +37,7 @@
 //****************************************************************************
 U32 PBRConfigMapHLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
-   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget3 : ShaderFeature::DefaultTarget;
 }
 
 void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
@@ -110,13 +110,17 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
       glowMul->uniform = true;
       glowMul->constSortPos = cspPotentialPrimitive;
 
-      ShaderFeature::OutputTarget targ = ShaderFeature::DefaultTarget;
+      ShaderFeature::OutputTarget inTarg = ShaderFeature::DefaultTarget;
+      ShaderFeature::OutputTarget outTarg = ShaderFeature::DefaultTarget;
       if (fd.features[MFT_isDeferred])
-         targ = ShaderFeature::RenderTarget1;
+      {
+         inTarg = ShaderFeature::RenderTarget1;
+         outTarg = ShaderFeature::RenderTarget3;
+      }
+      Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(inTarg));
+      Var* emissionColor = (Var*)LangElement::find(getOutputTargetVarName(outTarg));
 
-      Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(targ));
-      if (diffuseColor)
-         meta->addStatement(new GenOp("   @.rgb += @.rgb*float3(@,@,@)*@.aaa;\r\n", diffuseColor, diffuseColor, glowMul, glowMul, glowMul, texOp));
+      meta->addStatement(new GenOp("   @.rgb += @.rgb*float3(@,@,@)*@.aaa;\r\n", emissionColor, diffuseColor, glowMul, glowMul, glowMul, texOp));
    }
    output = meta;
 }

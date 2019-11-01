@@ -48,9 +48,7 @@ singleton GFXStateBlockData( AL_VectorLightState )
    mSamplerNames[1] = "shadowMap";
    samplerStates[2] = SamplerClampPoint;  // Shadow Map (Do not change this to linear, as all cards can not filter equally.)
    mSamplerNames[2] = "dynamicShadowMap";
-   samplerStates[3] = SamplerClampLinear;  // SSAO Mask
-   mSamplerNames[3] = "ssaoMask";
-   samplerStates[4] = SamplerWrapPoint;   // Random Direction Map
+   samplerStates[3] = SamplerWrapPoint;   // Random Direction Map
    
    cullDefined = true;
    cullMode = GFXCullNone;
@@ -72,11 +70,10 @@ singleton shaderData( AL_VectorLightShader )
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$shadowMap";
    samplerNames[2] = "$dynamicShadowMap";
-   samplerNames[3] = "$ssaoMask";
-   samplerNames[4] = "$gTapRotationTex";
-   samplerNames[5] = "$lightBuffer";
-   samplerNames[6] = "$colorBuffer";
-   samplerNames[7] = "$matInfoBuffer";  
+   samplerNames[3] = "$gTapRotationTex";
+   samplerNames[4] = "$lightBuffer";
+   samplerNames[5] = "$colorBuffer";
+   samplerNames[6] = "$matInfoBuffer";  
    
    pixVersion = 3.0;
 };
@@ -89,7 +86,6 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["deferredBuffer"] = "#deferred";
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
-   sampler["ssaoMask"] = "#ssaoMask";  
    sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
@@ -322,6 +318,7 @@ singleton ShaderData( PFX_ReflectionProbeArray )
    samplerNames[3] = "$BRDFTexture";
    samplerNames[4] = "$specularCubemapAR";
    samplerNames[5] = "$irradianceCubemapAR";
+   samplerNames[6] = "$ssaoMask";
 
    pixVersion = 2.0;
 };  
@@ -350,4 +347,5 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    samplerStates[3] = SamplerClampPoint;
    samplerStates[4] = SamplerClampLinear;
    samplerStates[5] = SamplerClampLinear;
+   samplerStates[6] = SamplerClampPoint;
 };

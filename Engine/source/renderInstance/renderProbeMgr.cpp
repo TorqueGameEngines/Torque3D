@@ -30,7 +30,7 @@
 #include "renderInstance/renderDeferredMgr.h"
 #include "math/mPolyhedron.impl.h"
 #include "gfx/gfxTransformSaver.h"
-
+#include "lighting/advanced/advancedLightBinManager.h" //for ssao
 #include "gfx/gfxDebugEvent.h"
 #include "shaderGen/shaderGenVars.h"
 #include "materials/shaderData.h"
@@ -752,6 +752,24 @@ void RenderProbeMgr::render( SceneRenderState *state )
       mProbeArrayEffect->setShaderMacro("SKYLIGHT_ONLY", "1");
    else
       mProbeArrayEffect->setShaderMacro("SKYLIGHT_ONLY", "0");
+
+   //ssao mask
+   if (AdvancedLightBinManager::smUseSSAOMask)
+   {
+      //find ssaoMask
+      NamedTexTargetRef ssaoTarget = NamedTexTarget::find("ssaoMask");
+      GFXTextureObject* pTexObj = ssaoTarget->getTexture();
+      if (pTexObj)
+      {
+         mProbeArrayEffect->setShaderMacro("USE_SSAO_MASK");
+         mProbeArrayEffect->setTexture(6, pTexObj);
+         
+      }
+   }
+   else
+   {
+      mProbeArrayEffect->setTexture(6, NULL);
+   }
    
    mProbeArrayEffect->setTexture(3, mBRDFTexture);
    mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);

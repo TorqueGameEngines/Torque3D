@@ -24,6 +24,11 @@ uniform int numProbes;
 uniform samplerCubeArray specularCubemapAR;
 uniform samplerCubeArray irradianceCubemapAR;
 
+#ifdef USE_SSAO_MASK
+uniform sampler2D ssaoMask;
+uniform vec4 rtParams6;
+#endif
+
 uniform vec4    inProbePosArray[MAX_PROBES];
 uniform vec4    inRefPosArray[MAX_PROBES];
 uniform mat4    worldToObjArray[MAX_PROBES];
@@ -52,6 +57,12 @@ void main()
    {
       discard;
    }
+   
+   #ifdef USE_SSAO_MASK
+      float ssao = 1.0 - texture( ssaoMask, viewportCoordToRenderTarget( uv0.xy, rtParams6 ) ).r;
+      surface.ao = min(surface.ao, ssao);  
+   #endif
+
 
    float alpha = 1;
 
@@ -190,20 +201,19 @@ void main()
    return;
 #endif
 
-   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
 
    //energy conservation
-   vec3 kD = vec3(1,1,1) - F;
-   kD *= 1.0 - surface.metalness;
+   vec3 kD = 1.0f - surface.F;
+   kD *= 1.0f - surface.metalness;
 
-   //apply brdf
-   //Do it once to save on texture samples
-   vec2 brdf = textureLod(BRDFTexture, vec2(surface.roughness, surface.NdotV),0).xy;
-   specular *= brdf.x * F + brdf.y;
+   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
+   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   irradiance *= kD * surface.baseColor.rgb;
 
-   //final diffuse color
-   vec3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   vec4 finalColor = vec4(diffuse + specular * surface.ao, 1.0);
+   //AO
+   irradiance *= surface.ao;
+   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
 
-   OUT_col = finalColor;
+   OUT_col = vec4(irradiance + specular, 0);//alpha writes disabled
 }

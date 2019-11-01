@@ -37,11 +37,6 @@ uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
 uniform sampler2D dynamicShadowMap;
 
-#ifdef USE_SSAO_MASK
-uniform sampler2D ssaoMask ;
-uniform vec4 rtParams3;
-#endif
-
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;             
 uniform float  lightBrightness;
@@ -245,10 +240,6 @@ void main()
       #endif
 
    #endif //NO_SHADOW
-   // Sample the AO texture.      
-   #ifdef USE_SSAO_MASK
-      surface.ao *= 1.0 - texture( ssaoMask, viewportCoordToRenderTarget( uv0.xy, rtParams3 ) ).r;
-   #endif
 
    //get directional light contribution   
    vec3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);

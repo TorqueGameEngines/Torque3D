@@ -447,10 +447,6 @@ AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMa
       if ( smPSSMDebugRender )
          shadowMacros.push_back( GFXShaderMacro( "PSSM_DEBUG_RENDER" ) );
 
-      // If its a vector light see if we can enable SSAO.
-      if ( lightType == LightInfo::Vector && smUseSSAOMask )
-         shadowMacros.push_back( GFXShaderMacro( "USE_SSAO_MASK" ) );
-
       // Now create the material info object.
       info = new LightMaterialInfo( lightMatName, smLightMatVertex[ lightType ], shadowMacros );
    }

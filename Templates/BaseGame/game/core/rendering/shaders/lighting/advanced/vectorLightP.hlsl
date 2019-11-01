@@ -33,13 +33,8 @@ TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
 
-#ifdef USE_SSAO_MASK
-TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 3);
-uniform float4 rtParams3;
-#endif
-
-TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 6);
-TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 7);
+TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
+TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 6);
 
 uniform float  lightBrightness;
 uniform float3 lightDirection;
@@ -234,10 +229,6 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       #endif
 
    #endif //NO_SHADOW
-   // Sample the AO texture.
-   #ifdef USE_SSAO_MASK
-      surface.ao *= 1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams3 ) ).r;
-   #endif
    
    //get directional light contribution   
    float3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);

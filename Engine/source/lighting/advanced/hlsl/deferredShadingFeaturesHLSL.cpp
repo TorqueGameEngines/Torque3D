@@ -37,7 +37,7 @@
 //****************************************************************************
 U32 PBRConfigMapHLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
-   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget3 : ShaderFeature::DefaultTarget;
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
 void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
@@ -104,24 +104,6 @@ void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), pbrConfig));
    meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), pbrConfig));
 
-   if (fd.features[MFT_GlowMap])
-   {
-      Var* glowMul = new Var("glowMul", "float");
-      glowMul->uniform = true;
-      glowMul->constSortPos = cspPotentialPrimitive;
-
-      ShaderFeature::OutputTarget inTarg = ShaderFeature::DefaultTarget;
-      ShaderFeature::OutputTarget outTarg = ShaderFeature::DefaultTarget;
-      if (fd.features[MFT_isDeferred])
-      {
-         inTarg = ShaderFeature::RenderTarget1;
-         outTarg = ShaderFeature::RenderTarget3;
-      }
-      Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(inTarg));
-      Var* emissionColor = (Var*)LangElement::find(getOutputTargetVarName(outTarg));
-
-      meta->addStatement(new GenOp("   @.rgb += @.rgb*float3(@,@,@)*@.aaa;\r\n", emissionColor, diffuseColor, glowMul, glowMul, glowMul, texOp));
-   }
    output = meta;
 }
 
@@ -241,24 +223,80 @@ void PBRConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, con
    output = meta;
 }
 
-//deferred emissive
-void DeferredEmissiveHLSL::processPix(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
+U32 GlowMapHLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
-   //for now emission just uses the diffuse color, we could plug in a separate texture for emission at some stage
-   Var *diffuseTargetVar = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1));
-   if (!diffuseTargetVar)
-      return; //oh dear something is not right, maybe we should just write 0's instead
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget3 : ShaderFeature::DefaultTarget;
+}
 
-   // search for scene color target var
-   Var *sceneColorVar = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
-   if (!sceneColorVar)
+//deferred emissive
+void GlowMapHLSL::processPix(Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd)
+{
+   Var* texCoord = getInTexCoord("texCoord", "float2", componentList);
+
+   // create texture var
+   Var* glowMap = new Var;
+   glowMap->setType("SamplerState");
+   glowMap->setName("glowMap");
+   glowMap->uniform = true;
+   glowMap->sampler = true;
+   glowMap->constNum = Var::getTexUnitNum();
+
+   Var* glowMapTex = new Var;
+   glowMapTex->setName("glowMapTex");
+   glowMapTex->setType("Texture2D");
+   glowMapTex->uniform = true;
+   glowMapTex->texture = true;
+   glowMapTex->constNum = glowMap->constNum;
+   LangElement* texOp = new GenOp("@.Sample(@, @)", glowMapTex, glowMap, texCoord);
+
+   Var* glowMul = new Var("glowMul", "float");
+   glowMul->uniform = true;
+   glowMul->constSortPos = cspPotentialPrimitive;
+
+   Var *targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   if (fd.features[MFT_isDeferred])
    {
-      // create scene color target var
-      sceneColorVar = new Var;
-      sceneColorVar->setType("fragout");
-      sceneColorVar->setName(getOutputTargetVarName(ShaderFeature::RenderTarget3));
-      sceneColorVar->setStructName("OUT");
+      targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+      if (!targ)
+      {
+         // create scene color target var
+         targ = new Var;
+         targ->setType("fragout");
+         targ->setName(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+         targ->setStructName("OUT");
+         output = new GenOp("@ = float4(@.rgb*@,0);", targ, texOp, glowMul);
+      }
+      else
+      {
+         output = new GenOp("@ += float4(@.rgb*@,0);", targ, texOp, glowMul);
+      }
+   }
+   else
+   {
+      output = new GenOp("@ += float4(@.rgb*@,@.a);", targ, texOp, glowMul, targ);
    }
 
-   output = new GenOp("@ = float4(@.rgb,0);", sceneColorVar, diffuseTargetVar);
+}
+
+ShaderFeature::Resources GlowMapHLSL::getResources(const MaterialFeatureData& fd)
+{
+   Resources res;
+   res.numTex = 1;
+   res.numTexReg = 1;
+
+   return res;
+}
+
+void GlowMapHLSL::setTexData(Material::StageData& stageDat,
+   const MaterialFeatureData& fd,
+   RenderPassData& passData,
+   U32& texIndex)
+{
+   GFXTextureObject* tex = stageDat.getTex(MFT_GlowMap);
+   if (tex)
+   {
+      passData.mTexType[texIndex] = Material::Standard;
+      passData.mSamplerNames[texIndex] = "glowMap";
+      passData.mTexSlot[texIndex++].texObject = tex;
+   }
 }

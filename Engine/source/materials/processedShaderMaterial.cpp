@@ -437,8 +437,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    if (mStages[stageNum].getTex(MFT_PBRConfigMap))
    {
       fd.features.addFeature(MFT_PBRConfigMap);
-      if (mStages[stageNum].getTex(MFT_PBRConfigMap)->mHasTransparency)
-         fd.features.addFeature(MFT_GlowMap);
    }
    else
       fd.features.addFeature(MFT_PBRConfigVars);

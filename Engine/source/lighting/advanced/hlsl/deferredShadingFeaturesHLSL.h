@@ -70,15 +70,23 @@ public:
       const MaterialFeatureData &fd );
 };
 
-class DeferredEmissiveHLSL : public ShaderFeatureHLSL
+class GlowMapHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: Emissive"; }
+   virtual String getName() { return "Glow Map"; }
 
    virtual void processPix(Vector<ShaderComponent*> &componentList,
       const MaterialFeatureData &fd);
 
-   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const { return ShaderFeature::RenderTarget3; }
+   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
+
+   virtual Resources getResources(const MaterialFeatureData& fd);
+
+   // Sets textures and texture flags for current pass
+   virtual void setTexData(Material::StageData& stageDat,
+      const MaterialFeatureData& fd,
+      RenderPassData& passData,
+      U32& texIndex);
 };
 
 #endif

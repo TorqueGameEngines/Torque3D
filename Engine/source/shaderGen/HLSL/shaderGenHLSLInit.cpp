@@ -70,7 +70,6 @@ void _initShaderGenHLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_Visibility, new VisibilityFeatHLSL );
    FEATUREMGR->registerFeature( MFT_Fog, new FogFeatHLSL );
    FEATUREMGR->registerFeature( MFT_AccuMap, new AccuTexFeatHLSL );
-   FEATUREMGR->registerFeature( MFT_GlowMap, new NamedFeatureHLSL( "Glow Map" ) );
    FEATUREMGR->registerFeature( MFT_LightbufferMRT, new NamedFeatureHLSL( "Lightbuffer MRT" ) );
    FEATUREMGR->registerFeature( MFT_RenderTarget1_Zero, new RenderTargetZeroHLSL( ShaderFeature::RenderTarget1 ) );
    FEATUREMGR->registerFeature( MFT_RenderTarget2_Zero, new RenderTargetZeroHLSL( ShaderFeature::RenderTarget2 ) );
@@ -105,7 +104,7 @@ void _initShaderGenHLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapHLSL);
    FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsHLSL);
    FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsHLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredEmissive, new DeferredEmissiveHLSL);
+   FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapHLSL);
    FEATUREMGR->registerFeature( MFT_SkyBox,  new NamedFeatureHLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureHLSL );
 }

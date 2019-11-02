@@ -256,7 +256,6 @@ public:
    FileName mGlowMapFilename[MAX_STAGES];
    StringTableEntry mGlowMapAssetId[MAX_STAGES];
    AssetPtr<ImageAsset> mGlowMapAsset[MAX_STAGES];
-   F32      mGlowChan[MAX_STAGES];
    F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.

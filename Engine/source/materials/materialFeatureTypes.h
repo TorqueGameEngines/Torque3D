@@ -192,5 +192,4 @@ DeclareFeatureType( MFT_HardwareSkinning );
 DeclareFeatureType( MFT_isDeferred );
 DeclareFeatureType( MFT_SkyBox );
 DeclareFeatureType( MFT_MatInfoFlags );
-DeclareFeatureType( MFT_DeferredEmissive );
 #endif // _MATERIALFEATURETYPES_H_

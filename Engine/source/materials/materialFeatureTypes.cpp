@@ -47,7 +47,6 @@ ImplementFeatureType( MFT_InvertSmoothness, U32(-1), -1, true);
 ImplementFeatureType( MFT_PBRConfigMap, MFG_Texture, 8.0f, true);
 ImplementFeatureType( MFT_PBRConfigVars, MFG_Texture, 8.0f, true);
 ImplementFeatureType( MFT_MatInfoFlags, MFG_Texture, 9.0f, true);
-ImplementFeatureType( MFT_GlowMap, MFG_Texture, 10.0f, true );
 ImplementFeatureType( MFT_NormalMap, MFG_Texture, 11.0f, true );
 ImplementFeatureType( MFT_DetailNormalMap, MFG_Texture, 12.0f, true );
 ImplementFeatureType( MFT_Imposter, U32(-1), -1, true );
@@ -56,9 +55,10 @@ ImplementFeatureType( MFT_AccuMap, MFG_PreLighting, 2.0f, true );
 
 ImplementFeatureType(MFT_ReflectionProbes, MFG_Lighting, 1.0f, true);
 ImplementFeatureType( MFT_RTLighting, MFG_Lighting, 2.0f, true );
-ImplementFeatureType( MFT_LightMap, MFG_Lighting, 3.0f, true );
-ImplementFeatureType( MFT_ToneMap, MFG_Lighting, 4.0f, true );
-ImplementFeatureType( MFT_VertLitTone, MFG_Lighting, 5.0f, false );
+ImplementFeatureType( MFT_GlowMap, MFG_Lighting, 3.0f, true );
+ImplementFeatureType( MFT_LightMap, MFG_Lighting, 4.0f, true );
+ImplementFeatureType( MFT_ToneMap, MFG_Lighting, 5.0f, true );
+ImplementFeatureType( MFT_VertLitTone, MFG_Lighting, 6.0f, false );
 ImplementFeatureType( MFT_StaticCubemap, U32(-1), -1.0, true );
 ImplementFeatureType( MFT_CubeMap, MFG_Lighting, 7.0f, true );
 ImplementFeatureType( MFT_SubSurface, MFG_Lighting, 8.0f, true );
@@ -104,7 +104,5 @@ ImplementFeatureType( MFT_ImposterVert, MFG_PreTransform, 1.0, false );
 // Deferred Shading
 ImplementFeatureType( MFT_isDeferred, U32(-1), -1, true );
 ImplementFeatureType( MFT_SkyBox, MFG_Transform, 1.0f, false );
-ImplementFeatureType( MFT_DeferredEmissive, MFG_Texture, 8.9f, false);
-
 ImplementFeatureType( MFT_HardwareSkinning, MFG_Transform,-2.0, false );
 

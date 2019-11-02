@@ -644,6 +644,11 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    else
        newFeatures.addFeature( MFT_PBRConfigVars );
 
+   if (mStages[stageNum].getTex(MFT_GlowMap))
+   {
+      newFeatures.addFeature(MFT_GlowMap);
+   }
+
    // Deferred Shading : Material Info Flags
    newFeatures.addFeature( MFT_MatInfoFlags );
 
@@ -743,9 +748,7 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
       else
       {
          // If this object isn't lightmapped or emissive, add a zero-output feature for render target 3
-         if (fd.features.hasFeature(MFT_IsEmissive))
-            newFeatures.addFeature(MFT_DeferredEmissive);
-         else
+         if (!fd.features.hasFeature(MFT_IsEmissive)&&(!fd.features.hasFeature(MFT_GlowMap)))
             newFeatures.addFeature( MFT_RenderTarget3_Zero );
       }
    }

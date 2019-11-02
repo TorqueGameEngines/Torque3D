@@ -128,7 +128,7 @@ Material::Material()
       mSmoothnessChan[i] = 0;
       mAOChan[i] = 1;
       mMetalChan[i] = 2;
-      mGlowChan[i] = 3;
+
       mAccuEnabled[i]   = false;
       mAccuScale[i]     = 1.0f;
       mAccuDirection[i] = 1.0f;
@@ -325,8 +325,6 @@ void Material::initPersistFields()
 
       addField("glowMap", TypeImageFilename, Offset(mGlowMapFilename, Material), MAX_STAGES,
          "Metalness map. will be packed into the B channel of a packed 'specular' map");
-      addField("glowChan", TypeF32, Offset(mGlowChan, Material), MAX_STAGES,
-         "The input channel metalness maps use.");
       addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
          "The input channel metalness maps use.");
       addField("glow", TypeBool, Offset(mGlow, Material), MAX_STAGES,

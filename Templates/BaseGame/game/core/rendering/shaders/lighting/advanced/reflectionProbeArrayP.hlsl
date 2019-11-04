@@ -21,6 +21,11 @@ uniform int numProbes;
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(specularCubemapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 
+#ifdef USE_SSAO_MASK
+TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 6);
+uniform float4 rtParams6;
+#endif
+
 uniform float4    inProbePosArray[MAX_PROBES];
 uniform float4    inRefPosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
@@ -48,6 +53,11 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    {
       return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
    }
+
+   #ifdef USE_SSAO_MASK
+      float ssao =  1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams6 ) ).r;
+      surface.ao = min(surface.ao, ssao);  
+   #endif
 
    float alpha = 1;
 
@@ -182,19 +192,18 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    return float4(irradiance, 1);
 #endif
 
-   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-
    //energy conservation
-   float3 kD = 1.0.xxx - F;
-   kD *= 1.0 - surface.metalness;
+   float3 kD = 1.0f - surface.F;
+   kD *= 1.0f - surface.metalness;
 
-   //apply brdf
-   //Do it once to save on texture samples
-   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.roughness, 1.0-surface.NdotV, 0.0, 0.0)).xy;
-   specular *= brdf.x * F + brdf.y;
+   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
+   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   irradiance *= kD * surface.baseColor.rgb;
 
-   //final diffuse color
-   float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse* surface.ao + specular * surface.ao, 1.0);
-   return finalColor;
+   //AO
+   irradiance *= surface.ao;
+   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
+
+   return float4(irradiance + specular, 0);//alpha writes disabled
 }

@@ -85,6 +85,7 @@ struct Surface
 	float3 albedo;			// diffuse light absorbtion value (rgb)
 	float3 R;				// reflection vector
 	float3 F;				// fresnel term computed from f0, N and V
+   float f90;
 
 	inline void Update()
 	{
@@ -94,7 +95,7 @@ struct Surface
 		f0 = lerp(0.04.xxx, baseColor.rgb, metalness);
 
 		R = -reflect(V, N);
-		float f90 = saturate(50.0 * dot(f0, 0.33));
+		f90 = saturate(50.0 * dot(f0, 0.33));
 		F = F_Schlick(f0, f90, NdotV);
 	}
 };
@@ -233,6 +234,11 @@ inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLi
 
    float3 final = max(0.0f, diffuse + spec * surface.F);
    return final;
+}
+
+float computeSpecOcclusion( float NdotV , float AO , float roughness )
+{
+   return saturate (pow( abs(NdotV + AO) , exp2 ( -16.0f * roughness - 1.0f )) - 1.0f + AO );
 }
 
 float4 compute4Lights( Surface surface,
@@ -462,19 +468,18 @@ float4 computeForwardProbes(Surface surface,
       specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
 
-   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-
    //energy conservation
-   float3 kD = 1.0.xxx - F;
-   kD *= 1.0 - surface.metalness;
+   float3 kD = 1.0f - surface.F;
+   kD *= 1.0f - surface.metalness;
 
-   //apply brdf
-   //Do it once to save on texture samples
-   float2 brdf = TORQUE_TEX2DLOD(BRDFTexture,float4(surface.roughness, 1.0-surface.NdotV, 0.0, 0.0)).xy;
-   specular *= brdf.x * F + brdf.y;
+   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
+   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   irradiance *= kD * surface.baseColor.rgb;
 
-   //final diffuse color
-   float3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   float4 finalColor = float4(diffuse* surface.ao + specular * surface.ao, 1.0);
-   return finalColor;
+   //AO
+   irradiance *= surface.ao;
+   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
+
+   return float4(irradiance + specular, 0);//alpha writes disabled
 }

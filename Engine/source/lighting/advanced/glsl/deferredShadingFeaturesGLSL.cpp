@@ -236,7 +236,7 @@ U32 GlowMapGLSL::getOutputTargets(const MaterialFeatureData& fd) const
 //deferred emissive
 void GlowMapGLSL::processPix(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd)
 {
-   Var* texCoord = getInTexCoord("texCoord", "float2", componentList);
+   Var* texCoord = getInTexCoord("texCoord", "vec2", componentList);
 
    Var* glowMap = new Var;
    glowMap->setType("sampler2D");

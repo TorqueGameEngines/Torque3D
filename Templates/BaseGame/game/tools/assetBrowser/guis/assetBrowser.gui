@@ -314,7 +314,7 @@
          minExtent = "8 2";
          horizSizing = "left";
          vertSizing = "bottom";
-         profile = "ToolsGuiDefaultProfile";
+         profile = "ToolsGuiSolidDefaultProfile";
          visible = "1";
          active = "1";
          command = "AssetBrowser.showVisibiltyOptions();";
@@ -343,7 +343,7 @@
          minExtent = "64 64";
          horizSizing = "relative";
          vertSizing = "height";
-         profile = "ToolsGuiDefaultProfile";
+         profile = "ToolsGuiSolidDefaultProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -365,7 +365,7 @@
             minExtent = "0 0";
             horizSizing = "right";
             vertSizing = "bottom";
-            profile = "ToolsGuiDefaultProfile";
+            profile = "ToolsGuiSolidDefaultProfile";
             visible = "1";
             active = "1";
             tooltipProfile = "GuiToolTipProfile";
@@ -462,7 +462,7 @@
                minExtent = "8 2";
                horizSizing = "width";
                vertSizing = "height";
-               profile = "ToolsGuiDefaultProfile";
+               profile = "ToolsGuiSolidDefaultProfile";
                visible = "1";
                active = "1";
                tooltipProfile = "GuiToolTipProfile";
@@ -495,7 +495,7 @@
                   profile = "GuiEditorScrollProfile";
                   visible = "1";
                   active = "1";
-                  tooltipProfile = "ToolsGuiDefaultProfile";
+                  tooltipProfile = "ToolsGuiSolidDefaultProfile";
                   hovertime = "1000";
                   isContainer = "1";
                   canSave = "1";
@@ -554,7 +554,7 @@
             minExtent = "16 16";
             horizSizing = "right";
             vertSizing = "bottom";
-            profile = "ToolsGuiDefaultProfile";
+            profile = "ToolsGuiSolidDefaultProfile";
             visible = "1";
             active = "1";
             tooltipProfile = "GuiToolTipProfile";
@@ -629,7 +629,7 @@
                   minExtent = "8 2";
                   horizSizing = "left";
                   vertSizing = "bottom";
-                  profile = "ToolsGuiDefaultProfile";
+                  profile = "ToolsGuiSolidDefaultProfile";
                   visible = "1";
                   active = "1";
                   tooltipProfile = "GuiToolTipProfile";
@@ -654,7 +654,7 @@
                   minExtent = "8 2";
                   horizSizing = "right";
                   vertSizing = "bottom";
-                  profile = "ToolsGuiDefaultProfile";
+                  profile = "ToolsGuiSolidDefaultProfile";
                   visible = "1";
                   active = "1";
                   command = "AssetBrowser.toggleFolderCollapseButton();";
@@ -680,7 +680,7 @@
                   minExtent = "8 2";
                   horizSizing = "left";
                   vertSizing = "bottom";
-                  profile = "ToolsGuiDefaultProfile";
+                  profile = "ToolsGuiSolidDefaultProfile";
                   visible = "1";
                   active = "1";
                   command = "AssetBrowser.showFilterOptions();";
@@ -704,7 +704,7 @@
                minExtent = "8 2";
                horizSizing = "width";
                vertSizing = "height";
-               profile = "ToolsGuiDefaultProfile";
+               profile = "ToolsGuiSolidDefaultProfile";
                visible = "1";
                active = "1";
                tooltipProfile = "GuiToolTipProfile";
@@ -737,7 +737,7 @@
                   profile = "GuiEditorScrollProfile";
                   visible = "1";
                   active = "1";
-                  tooltipProfile = "ToolsGuiDefaultProfile";
+                  tooltipProfile = "ToolsGuiSolidDefaultProfile";
                   hovertime = "1000";
                   isContainer = "1";
                   canSave = "1";
@@ -825,7 +825,7 @@
                   minExtent = "8 2";
                   horizSizing = "width";
                   vertSizing = "height";
-                  profile = "ToolsGuiDefaultProfile";
+                  profile = "ToolsGuiSolidDefaultProfile";
                   visible = "1";
                   active = "1";
                   tooltipProfile = "GuiToolTipProfile";

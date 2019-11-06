@@ -280,7 +280,17 @@ function EditorSaveMission()
       initContainerTypeSearch($TypeMasks::TerrainObjectType);
 
       while ((%terrainObject = containerSearchNext()) != 0)
-         %terrainObject.save(%terrainObject.terrainFile);
+      {
+         if(%terrainObject.terrainAsset !$= "")
+         {
+            //we utilize a terrain asset, so we'll update our dependencies while we're at it
+            %terrainObject.saveAsset();
+         }
+         else
+         {
+            %terrainObject.save(%terrainObject.terrainFile);
+         }
+      }
    }
 
    ETerrainPersistMan.saveDirty();

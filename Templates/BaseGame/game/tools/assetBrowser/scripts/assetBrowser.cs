@@ -1124,27 +1124,8 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
       }
       else
       {
-         //get the parent, and thus our module
-         %moduleId = %this.getParentItem(%itemId);
-         
-         //set the module value for creation info
-         AssetBrowser.selectedModule = %this.getItemText(%moduleId);
-         
-         if(%this.getItemText(%itemId) $= "ComponentAsset")
-         {
-            AddNewComponentAssetPopup.showPopup(Canvas);
-            //Canvas.popDialog(AssetBrowser_newComponentAsset); 
-	         //AssetBrowser_newComponentAsset-->AssetBrowserModuleList.setText(AssetBrowser.selectedModule);
-         }
-         else if(%this.getItemText(%itemId) $= "ScriptAsset")
-         {
-            EditAssetCategoryPopup.showPopup(Canvas);
-         }
+         EditFolderPopup.showPopup(Canvas);
       }
-   }
-   else if( %this.getSelectedItemsCount() > 0 && %itemId == 1)
-   {
-      AddNewModulePopup.showPopup(Canvas); 
    }
 }
 
@@ -1253,6 +1234,9 @@ function AssetBrowser::rebuildAssetArray(%this)
 			{
 			   %assetType = AssetDatabase.getAssetType(%assetId);
 			}
+			
+			if(AssetBrowser.assetTypeFilter !$= "" && AssetBrowser.assetTypeFilter !$= %assetType)
+            continue;
 			
 			/*if(%this.getItemText(%itemId) $= %assetType || (%assetType $= "" && %this.getItemText(%itemId) $= "Misc")
 			   || %moduleItemId == 1)

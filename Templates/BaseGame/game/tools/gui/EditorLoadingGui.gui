@@ -20,7 +20,7 @@
       minExtent = "8 2";
       horizSizing = "center";
       vertSizing = "center";
-      profile = "ToolsGuiDefaultProfile";
+      profile = "ToolsGuiSolidDefaultProfile";
       visible = "1";
       active = "1";
       tooltipProfile = "ToolsGuiToolTipProfile";

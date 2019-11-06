@@ -40,6 +40,8 @@
 #include "assets/assetPtr.h"
 #endif
 
+#include "T3D/assets/TerrainMaterialAsset.h"
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(TerrainAsset);
@@ -89,7 +91,7 @@ ConsoleSetType(TypeTerrainAssetPtr)
 
 TerrainAsset::TerrainAsset()
 {
-   mTerrainFile = StringTable->EmptyString();
+   mTerrainFilePath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -106,8 +108,22 @@ void TerrainAsset::initPersistFields()
    Parent::initPersistFields();
 
    //addField("shaderGraph", TypeRealString, Offset(mShaderGraphFile, TerrainAsset), "");
-   addProtectedField("terrainFile", TypeAssetLooseFilePath, Offset(mTerrainFile, TerrainAsset),
-      &setTerrainFile, &getTerrainFile, "Path to the file containing the terrain data.");
+   addProtectedField("terrainFile", TypeAssetLooseFilePath, Offset(mTerrainFilePath, TerrainAsset),
+      &setTerrainFilePath, &getTerrainFilePath, "Path to the file containing the terrain data.");
+}
+
+void TerrainAsset::setDataField(StringTableEntry slotName, const char* array, const char* value)
+{
+   Parent::setDataField(slotName, array, value);
+
+   //Now, if it's a material slot of some fashion, set it up
+   StringTableEntry matSlotName = StringTable->insert("terrainMaterialAsset");
+   if (String(slotName).startsWith(matSlotName))
+   {
+      StringTableEntry matId = StringTable->insert(value);
+
+      mTerrMaterialAssetIds.push_back(matId);
+   }
 }
 
 void TerrainAsset::initializeAsset()
@@ -115,22 +131,20 @@ void TerrainAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   if (!Platform::isFullPath(mTerrainFile))
-      mTerrainFile = getOwned() ? expandAssetFilePath(mTerrainFile) : mTerrainFile;
+   if (!Platform::isFullPath(mTerrainFilePath))
+      mTerrainFilePath = getOwned() ? expandAssetFilePath(mTerrainFilePath) : mTerrainFilePath;
 
-   //if (Platform::isFile(mTerrainFile))
-   //   Con::executeFile(mScriptFile, false, false);
+   loadTerrain();
 }
 
 void TerrainAsset::onAssetRefresh()
 {
-   mTerrainFile = expandAssetFilePath(mTerrainFile);
+   mTerrainFilePath = expandAssetFilePath(mTerrainFilePath);
 
-   //if (Platform::isFile(mScriptFile))
-   //   Con::executeFile(mScriptFile, false, false);
+   loadTerrain();
 }
 
-void TerrainAsset::setTerrainFile(const char* pScriptFile)
+void TerrainAsset::setTerrainFilePath(const char* pScriptFile)
 {
    // Sanity!
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
@@ -139,10 +153,50 @@ void TerrainAsset::setTerrainFile(const char* pScriptFile)
    pScriptFile = StringTable->insert(pScriptFile);
 
    // Update.
-   mTerrainFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
+   mTerrainFilePath = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();
+}
+
+bool TerrainAsset::loadTerrain()
+{
+   mTerrMaterialAssets.clear();
+   mTerrMaterialAssetIds.clear();
+
+   //First, load any material, animation, etc assets we may be referencing in our asset
+   // Find any asset dependencies.
+   AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
+
+   // Does the asset have any dependencies?
+   if (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end())
+   {
+      // Iterate all dependencies.
+      while (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end() && assetDependenciesItr->key == mpAssetDefinition->mAssetId)
+      {
+         StringTableEntry assetType = mpOwningAssetManager->getAssetType(assetDependenciesItr->value);
+
+         if (assetType == StringTable->insert("TerrainMaterialAsset"))
+         {
+            mTerrMaterialAssetIds.push_front(assetDependenciesItr->value);
+
+            //Force the asset to become initialized if it hasn't been already
+            AssetPtr<TerrainMaterialAsset> matAsset = assetDependenciesItr->value;
+
+            mTerrMaterialAssets.push_front(matAsset);
+         }
+
+         // Next dependency.
+         assetDependenciesItr++;
+      }
+   }
+
+   mTerrainFile = ResourceManager::get().load(mTerrainFilePath);
+
+   if (mTerrainFile)
+      return true;
+
+   return false;
 }
 
 //------------------------------------------------------------------------------
@@ -190,7 +244,7 @@ GuiControl* GuiInspectorTypeTerrainAssetPtr::constructEditControl()
 
    TerrainAsset* matAsset = AssetDatabase.acquireAsset< TerrainAsset>(matAssetId);
 
-   TerrainMaterial* materialDef = nullptr;
+   //TerrainMaterial* materialDef = nullptr;
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
 
@@ -267,24 +321,4 @@ bool GuiInspectorTypeTerrainAssetPtr::updateRects()
    }
 
    return resized;
-}
-
-void GuiInspectorTypeTerrainAssetPtr::setMaterialAsset(String assetId)
-{
-   mTargetObject->setDataField(mCaption, "", assetId);
-
-   //force a refresh
-   SimObject* obj = mInspector->getInspectObject();
-   mInspector->inspectObject(obj);
-}
-
-DefineEngineMethod(GuiInspectorTypeTerrainAssetPtr, setMaterialAsset, void, (String assetId), (""),
-   "Gets a particular shape animation asset for this shape.\n"
-   "@param animation asset index.\n"
-   "@return Shape Animation Asset.\n")
-{
-   if (assetId == String::EmptyString)
-      return;
-
-   return object->setMaterialAsset(assetId);
 }

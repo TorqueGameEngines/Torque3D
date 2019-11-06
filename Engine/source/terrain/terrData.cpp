@@ -53,7 +53,7 @@
 #include "T3D/physics/physicsCollision.h"
 #include "console/engineAPI.h"
 
-#include "console/engineAPI.h"
+#include "T3D/assets/TerrainMaterialAsset.h"
 using namespace Torque;
 
 IMPLEMENT_CO_NETOBJECT_V1(TerrainBlock);
@@ -207,6 +207,9 @@ TerrainBlock::TerrainBlock()
    mNetFlags.set(Ghostable | ScopeAlways);
    mIgnoreZodiacs = false;
    zode_primBuffer = 0;
+
+   mTerrainAsset = StringTable->EmptyString();
+   mTerrainAssetId = StringTable->EmptyString();
 }
 
 
@@ -352,14 +355,118 @@ void TerrainBlock::setFile(const Resource<TerrainFile>& terr)
    mTerrFileName = terr.getPath();
 }
 
+bool TerrainBlock::setTerrainAsset(const StringTableEntry terrainAssetId)
+{
+   mTerrainAssetId = terrainAssetId;
+   mTerrainAsset = mTerrainAssetId;
+
+   if (mTerrainAsset.isNull())
+   {
+      Con::errorf("[TerrainBlock] Failed to load terrain asset.");
+      return false;
+   }
+
+   Resource<TerrainFile> file = mTerrainAsset->getTerrainResource();
+   if (!file)
+      return false;
+
+   mFile = file;
+   return true;
+}
+
 bool TerrainBlock::save(const char *filename)
 {
    return mFile->save(filename);
 }
 
+bool TerrainBlock::saveAsset()
+{
+   if (!mTerrainAsset.isNull() && mTerrainAsset->isAssetValid())
+   {
+      //first, clear out our old dependency references
+      /*SimFieldDictionary* fieldDictionary = mTerrainAsset->getFieldDictionary();
+      for (SimFieldDictionaryIterator itr(fieldDictionary); *itr; ++itr)
+      {
+         SimFieldDictionary::Entry* entry = *itr;
+
+         if (String(entry->slotName).startsWith("terrainMaterailAsset"))
+         {
+            //got one, so clear it's value
+            setDataField(entry->slotName, NULL, "");
+         }
+      }
+
+      AssetQuery* pAssetQuery = new AssetQuery();
+      AssetDatabase.findAssetType(pAssetQuery, "TerrainMaterialAsset");
+
+      TerrainBlock* clientTerr = static_cast<TerrainBlock*>(getClientObject());
+
+      U32 terrMatIdx = 0;
+      for (U32 i = 0; i < pAssetQuery->mAssetList.size(); i++)
+      {
+         //Acquire it so we can check it for matches
+         AssetPtr<TerrainMaterialAsset> terrMatAsset = pAssetQuery->mAssetList[i];
+
+         for (U32 m = 0; m < clientTerr->mFile->mMaterials.size(); m++)
+         {
+            StringTableEntry intMatName = clientTerr->mFile->mMaterials[m]->getInternalName();
+
+            StringTableEntry assetMatDefName = terrMatAsset->getMaterialDefinitionName();
+            if (assetMatDefName == intMatName)
+            {
+               //we have a match!
+               char depSlotName[30];
+               dSprintf(depSlotName, sizeof(depSlotName), "terrainMaterialAsset%d", terrMatIdx);
+
+               char depValue[255];
+               dSprintf(depValue, sizeof(depValue), "@Asset=%s", terrMatAsset.getAssetId());
+
+               setDataField(depSlotName, NULL, depValue);
+
+               terrMatIdx++;
+            }
+         }
+
+         terrMatAsset.clear();
+      }
+
+      pAssetQuery->destroySelf();
+
+      // Set the format mode.
+      Taml taml;
+
+      // Yes, so set it.
+      taml.setFormatMode(Taml::getFormatModeEnum("xml"));
+
+      // Turn-off auto-formatting.
+      taml.setAutoFormat(false);
+
+      // Read object.
+      bool success = taml.write(mTerrainAsset, AssetDatabase.getAssetFilePath(mTerrainAsset.getAssetId()));
+
+      if (!success)
+         return false;*/
+
+      return mFile->save(mTerrainAsset->getTerrainFilePath());
+   }
+
+   return false;
+}
+
 bool TerrainBlock::_setTerrainFile( void *obj, const char *index, const char *data )
 {
    static_cast<TerrainBlock*>( obj )->setFile( FileName( data ) );
+   return false;
+}
+
+bool TerrainBlock::_setTerrainAsset(void* obj, const char* index, const char* data)
+{
+   TerrainBlock* terr = static_cast<TerrainBlock*>(obj);// ->setFile(FileName(data));
+
+   terr->setTerrainAsset(StringTable->insert(data));
+   
+   terr->setMaskBits(FileMask | HeightMapChangeMask);
+
    return false;
 }
 
@@ -901,31 +1008,50 @@ bool TerrainBlock::onAdd()
    if(!Parent::onAdd())
       return false;
 
-   if ( mTerrFileName.isEmpty() )
+   Resource<TerrainFile> terr;
+
+   if (!mTerrainAsset.isNull())
    {
-      mTerrFileName = Con::getVariable( "$Client::MissionFile" );
-      String terrainDirectory( Con::getVariable( "$pref::Directories::Terrain" ) );
-      if ( terrainDirectory.isEmpty() )
+      terr = mTerrainAsset->getTerrainResource();
+
+      if (terr == NULL)
       {
-         terrainDirectory = "art/terrains/";
+         if (isClientObject())
+            NetConnection::setLastError("Unable to load terrain asset: %s", mTerrainAsset.getAssetId());
+         return false;
       }
-      mTerrFileName.replace("tools/levels/", terrainDirectory);
-      mTerrFileName.replace("levels/", terrainDirectory);
 
-      Vector<String> materials;
-      materials.push_back( "warning_material" );
-      TerrainFile::create( &mTerrFileName, 256, materials );
+      mFile = terr;
    }
-
-   Resource<TerrainFile> terr = ResourceManager::get().load( mTerrFileName );
-   if(terr == NULL)
+   else
    {
-      if(isClientObject())
-         NetConnection::setLastError("You are missing a file needed to play this mission: %s", mTerrFileName.c_str());
-      return false;
-   }
+      if (mTerrFileName.isEmpty())
+      {
+         mTerrFileName = Con::getVariable("$Client::MissionFile");
+         String terrainDirectory(Con::getVariable("$pref::Directories::Terrain"));
+         if (terrainDirectory.isEmpty())
+         {
+            terrainDirectory = "art/terrains/";
+         }
+         mTerrFileName.replace("tools/levels/", terrainDirectory);
+         mTerrFileName.replace("levels/", terrainDirectory);
 
-   setFile( terr );
+         Vector<String> materials;
+         materials.push_back("warning_material");
+         TerrainFile::create(&mTerrFileName, 256, materials);
+      }
+
+      terr = ResourceManager::get().load(mTerrFileName);
+
+      if (terr == NULL)
+      {
+         if (isClientObject())
+            NetConnection::setLastError("You are missing a file needed to play this mission: %s", mTerrFileName.c_str());
+         return false;
+      }
+
+      setFile(terr);
+   }
 
    if ( terr->mNeedsResaving )
    {
@@ -1130,6 +1256,10 @@ void TerrainBlock::initPersistFields()
          &TerrainBlock::_setTerrainFile, &defaultProtectedGetFn,
          "The source terrain data file." );
 
+      addProtectedField("terrainAsset", TypeTerrainAssetPtr, Offset(mTerrainAsset, TerrainBlock),
+         &TerrainBlock::_setTerrainAsset, &defaultProtectedGetFn,
+         "The source terrain data asset.");
+
    endGroup( "Media" );
 
    addGroup( "Misc" );
@@ -1190,6 +1320,7 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    if ( stream->writeFlag( mask & FileMask ) )
    {
       stream->write( mTerrFileName );
+      stream->writeString( mTerrainAssetId );
       stream->write( mCRC );
    }
 
@@ -1230,12 +1361,25 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
    {
       FileName terrFile;
       stream->read( &terrFile );
+      char buffer[256];
+      stream->readString(buffer);
+      StringTableEntry terrainAsset = StringTable->insert(buffer);
       stream->read( &mCRC );
 
-      if ( isProperlyAdded() )
-         setFile( terrFile );
+      if (terrainAsset != StringTable->EmptyString())
+      {
+         if (isProperlyAdded())
+            setTerrainAsset(StringTable->insert(terrFile.c_str()));
+         else
+            mTerrainAssetId = StringTable->insert(terrFile.c_str());
+      }
       else
-         mTerrFileName = terrFile;
+      {
+         if (isProperlyAdded())
+            setFile(terrFile);
+         else
+            mTerrFileName = terrFile;
+      }
    }
 
    if ( stream->readFlag() ) // SizeMask
@@ -1308,6 +1452,16 @@ DefineEngineMethod( TerrainBlock, save, bool, ( const char* fileName),,
    if (!ext || dStricmp(ext, ".ter") != 0)
       dStrcat(filename, ".ter", 256);
    return static_cast<TerrainBlock*>(object)->save(filename);
+}
+
+DefineEngineMethod(TerrainBlock, saveAsset, bool, (), ,
+   "@brief Saves the terrain block's terrain file to the specified file name.\n\n"
+
+   "@param fileName Name and path of file to save terrain data to.\n\n"
+
+   "@return True if file save was successful, false otherwise")
+{
+   return static_cast<TerrainBlock*>(object)->saveAsset();
 }
 
 //ConsoleMethod(TerrainBlock, save, bool, 3, 3, "(string fileName) - saves the terrain block's terrain file to the specified file name.")

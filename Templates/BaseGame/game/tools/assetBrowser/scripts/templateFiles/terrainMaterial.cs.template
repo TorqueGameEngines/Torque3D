@@ -1,0 +1,24 @@
+singleton Material(TerrainFX_@)
+{
+   mapTo = "@";
+   footstepSoundId = 0;
+   terrainMaterials = "1";
+   ShowDust = "1";
+   showFootprints = "1";
+   materialTag0 = "Terrain";
+   effectColor[0] = "0.42 0.42 0 1";
+   effectColor[1] = "0.42 0.42 0 1";
+   impactSoundId = "0";
+};
+
+new TerrainMaterial(@)
+{
+   internalName = "@";
+   diffuseMap = "";
+   detailMap = "";
+   detailSize = "10";
+   isManaged = "1";
+   detailBrightness = "1";
+   Enabled = "1";
+   diffuseSize = "200";
+};

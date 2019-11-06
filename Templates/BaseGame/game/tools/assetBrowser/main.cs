@@ -52,7 +52,7 @@ function initializeAssetBrowser()
       AssetFilterTypeList.add("ShapeAnimations");
       AssetFilterTypeList.add("Sounds");
       AssetFilterTypeList.add("StateMachines");
-      AssetFilterTypeList.add("Terrains");
+      AssetFilterTypeList.add("Terrain");
       AssetFilterTypeList.add("TerrainMaterials");
    }
    
@@ -94,6 +94,8 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/stateMachine.cs");   
    exec("./scripts/assetTypes/cubemap.cs");  
    exec("./scripts/assetTypes/folder.cs");  
+   exec("./scripts/assetTypes/terrain.cs");
+   exec("./scripts/assetTypes/terrainMaterial.cs");  
      
    exec("./scripts/fieldTypes/fieldTypes.cs");
    exec("./scripts/fieldTypes/listField.cs");

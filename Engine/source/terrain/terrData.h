@@ -50,7 +50,12 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
-
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+#ifndef TERRAINASSET_H
+#include "T3D/assets/TerrainAsset.h"
+#endif 
 
 class GBitmap;
 class TerrainBlock;
@@ -120,6 +125,9 @@ protected:
 
    ///
    FileName mTerrFileName;
+
+   AssetPtr<TerrainAsset> mTerrainAsset;
+   StringTableEntry mTerrainAssetId;
    
    /// The maximum detail distance found in the material list.
    F32 mMaxDetailDistance;
@@ -241,6 +249,7 @@ protected:
 
    // Protected fields
    static bool _setTerrainFile( void *obj, const char *index, const char *data );
+   static bool _setTerrainAsset(void* obj, const char* index, const char* data);
    static bool _setSquareSize( void *obj, const char *index, const char *data );
    static bool _setBaseTexSize(void *obj, const char *index, const char *data);
    static bool _setBaseTexFormat(void *obj, const char *index, const char *data);
@@ -418,7 +427,10 @@ public:
 
    void setFile(const Resource<TerrainFile>& file);
 
+   bool setTerrainAsset(const StringTableEntry terrainAssetId);
+
    bool save(const char* filename);
+   bool saveAsset();
 
    F32 getSquareSize() const { return mSquareSize; }
 

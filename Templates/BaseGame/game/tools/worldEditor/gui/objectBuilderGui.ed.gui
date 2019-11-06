@@ -228,6 +228,77 @@ function ObjectBuilderGui::gotFileName(%this, %name)
 }
 
 //------------------------------------------------------------------------------
+function ObjectBuilderGui::createTerrainAssetType(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::createTerrainAssetType: invalid field");
+      return;
+   }
+
+   //
+   if(%this.field[%index, text] $= "")
+      %name = %this.field[%index, name];
+   else
+      %name = %this.field[%index, text];
+
+   // 
+   %this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+
+   // 
+   %this.controls[%this.numControls] = new GuiButtonCtrl() {
+      HorizSizing = "width";
+      profile = "ToolsGuiButtonProfile";
+      extent = %this.fileButtonExtent;
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+      command = %this @ ".getTerrainAsset(" @ %index @ ");";
+   };
+
+   %val = %this.field[%index, value];
+   %this.controls[%this.numControls].setValue(fileBase(%val) @ fileExt(%val));
+
+   %this.numControls++;
+   %this.curYPos += %this.defaultFieldStep;
+}
+
+function ObjectBuilderGui::getTerrainAsset(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::getTerrainAsset: invalid field");
+      return;
+   }
+   
+   %val = %this.field[%index, ext];
+
+   //%path = filePath(%val);
+   //%ext = fileExt(%val);
+
+   %this.currentControl = %index;
+   AssetBrowser.showDialog("TerrainAsset", %this @ ".gotTerrainAsset", "", "", "");
+   //getLoadFilename( %val @ "|" @ %val, %this @ ".gotFileName", %this.lastPath );
+}
+
+function ObjectBuilderGui::gotTerrainAsset(%this, %name)
+{
+   %index = %this.currentControl;
+   
+   %this.field[%index, value] = %name;
+   %this.controls[%this.currentControl].setText(fileBase(%name) @ fileExt(%name));
+   
+   %this.lastPath = %name;
+   
+   // This doesn't work for button controls as getValue returns their state!
+   //%this.controls[%this.currentControl].setValue(%name);
+}
+//------------------------------------------------------------------------------
 
 function ObjectBuilderGui::createMaterialNameType(%this, %index)
 {
@@ -489,6 +560,9 @@ function ObjectBuilderGui::process(%this)
 
          case "TypeFile":
             %this.createFileType(%i);
+            
+         case "TypeTerrainAsset":
+            %this.createTerrainAssetType(%i);
 
          case "TypeMaterialName":
             %this.createMaterialNameType(%i);
@@ -830,6 +904,7 @@ function ObjectBuilderGui::buildTerrainBlock(%this)
    %this.createCallback = "ETerrainEditor.attachTerrain();";
 
    %this.addField("terrainFile", "TypeFile", "Terrain file", "", "*.ter");
+   %this.addField("terrainAsset", "TypeTerrainAsset", "Terrain Asset", "", "");
    %this.addField("squareSize", "TypeInt", "Square size", "8");
 
    %this.process();

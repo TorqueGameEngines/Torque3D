@@ -14,7 +14,8 @@ function AssetBrowser::buildPopupMenus(%this)
       
       AddNewModulePopup.enableItem(1, false);
    }
-      
+   
+     
    if( !isObject( EditAssetPopup ) )
    {
       new PopupMenu( EditAssetPopup )
@@ -64,22 +65,6 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
-   if( !isObject( EditFolderPopup ) )
-   {
-      new PopupMenu( EditFolderPopup )
-      {
-         superClass = "MenuBuilder";
-         class = "EditorWorldMenu";
-         //isPopup = true;
-
-         item[ 0 ] = "Rename Folder" TAB "" TAB "AssetBrowser.renameAsset();";
-         item[ 1 ] = "-";
-         Item[ 2 ] = "Duplicate Folder" TAB "" TAB "AssetBrowser.duplicateAsset();";
-         item[ 3 ] = "-";
-         item[ 4 ] = "Delete Folder" TAB "" TAB "AssetBrowser.deleteAsset();";
-      };
-   }
-   
    if( !isObject( AddNewComponentAssetPopup ) )
    {
       new PopupMenu( AddNewComponentAssetPopup )
@@ -121,20 +106,23 @@ function AssetBrowser::buildPopupMenus(%this)
          //isPopup = true;
 
          item[ 0 ] = "Create Material" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"MaterialAsset\", AssetBrowser.selectedModule);";//"createNewMaterialAsset(\"NewMaterial\", AssetBrowser.selectedModule);";
-         item[ 1 ] = "Create Image" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ImageAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
-         item[ 2 ] = "-";         
-         item[ 3 ] = "Create Shape" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"Shape\", AssetBrowser.selectedModule);";
-         item[ 4 ] = "Create Shape Animation" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAnimationAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewShapeAnimationAsset(\"NewShapeAnimation\", AssetBrowser.selectedModule);";
-         item[ 5 ] = "-";
-         item[ 6 ] = "Create GUI" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GUIAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewGUIAsset(\"NewGUI\", AssetBrowser.selectedModule);";
-         item[ 7 ] = "-";
-         item[ 8 ] = "Create Post Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"PostEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewPostEffectAsset(\"NewPostEffect\", AssetBrowser.selectedModule);";
-         item[ 9 ] = "-";
-         item[ 10 ] = "Create Sound" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"SoundAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewSoundAsset(\"NewSound\", AssetBrowser.selectedModule);";
-         item[ 11 ] = "-";
-         item[ 12 ] = "Create Particle Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ParticleEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewParticleEffectAsset(\"NewParticleEffect\", AssetBrowser.selectedModule);";
-         item[ 13 ] = "-";
-         item[ 14 ] = "Create Cubemap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CubemapAsset\", AssetBrowser.selectedModule);";
+         item[ 1 ] = "Create Terrain Material" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainMaterialAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
+         item[ 2 ] = "Create Image" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ImageAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
+         item[ 3 ] = "-";
+         item[ 4 ] = "Create Terrain Data" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule);";
+         item[ 5 ] = "-";         
+         item[ 6 ] = "Create Shape" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"Shape\", AssetBrowser.selectedModule);";
+         item[ 7 ] = "Create Shape Animation" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAnimationAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewShapeAnimationAsset(\"NewShapeAnimation\", AssetBrowser.selectedModule);";
+         item[ 8 ] = "-";
+         item[ 9 ] = "Create GUI" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GUIAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewGUIAsset(\"NewGUI\", AssetBrowser.selectedModule);";
+         item[ 10 ] = "-";
+         item[ 11 ] = "Create Post Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"PostEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewPostEffectAsset(\"NewPostEffect\", AssetBrowser.selectedModule);";
+         item[ 12 ] = "-";
+         item[ 13 ] = "Create Sound" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"SoundAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewSoundAsset(\"NewSound\", AssetBrowser.selectedModule);";
+         item[ 14 ] = "-";
+         item[ 15 ] = "Create Particle Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ParticleEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewParticleEffectAsset(\"NewParticleEffect\", AssetBrowser.selectedModule);";
+         item[ 16 ] = "-";
+         item[ 17 ] = "Create Cubemap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CubemapAsset\", AssetBrowser.selectedModule);";
       };
    }
    
@@ -199,10 +187,27 @@ function AssetBrowser::buildPopupMenus(%this)
    }
    
    //Some assets are not yet ready/implemented, so disable their creation here
-   AddNewArtAssetPopup.enableItem(3, false); //shape
-   AddNewArtAssetPopup.enableItem(4, false); //shape animation
-   AddNewArtAssetPopup.enableItem(10, false); //sound asset
-   AddNewArtAssetPopup.enableItem(12, false); //particle effect
+   AddNewArtAssetPopup.enableItem(6, false); //shape
+   AddNewArtAssetPopup.enableItem(7, false); //shape animation
+   AddNewArtAssetPopup.enableItem(13, false); //sound asset
+   AddNewArtAssetPopup.enableItem(15, false); //particle effect
+   
+   if( !isObject( EditFolderPopup ) )
+   {
+      new PopupMenu( EditFolderPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+
+         Item[ 0 ] = "Create in Folder" TAB AddNewAssetPopup;
+         item[ 1 ] = "-";
+         item[ 2 ] = "Rename Folder" TAB "" TAB "AssetBrowser.renameAsset();";
+         Item[ 3 ] = "Duplicate Folder" TAB "" TAB "AssetBrowser.duplicateAsset();";
+         item[ 4 ] = "-";
+         item[ 5 ] = "Delete Folder" TAB "" TAB "AssetBrowser.deleteAsset();";
+      };
+   }
    
    if( !isObject( EditAssetCategoryPopup ) )
    {

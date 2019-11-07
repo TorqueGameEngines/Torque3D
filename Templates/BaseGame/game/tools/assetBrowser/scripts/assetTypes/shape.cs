@@ -5,8 +5,10 @@ function AssetBrowser::createShapeAsset(%this)
       
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
-   %tamlpath = %modulePath @ "/shapes/" @ %assetName @ ".asset.taml";
-   %shapeFilePath = %modulePath @ "/shapes/" @ %assetName @ ".dae";
+   %assetPath = AssetBrowser.currentAddress @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %shapeFilePath = %assetPath @ %assetName @ ".dae";
    
    %asset = new ShapeAsset()
    {

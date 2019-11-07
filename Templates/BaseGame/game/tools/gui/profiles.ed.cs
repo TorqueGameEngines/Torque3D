@@ -37,7 +37,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    mouseOverSelected = false;
 
    // fill color
-   opaque = true;
+   opaque = false;
    fillColor = EditorSettings.value("Theme/tabsColor");
    fillColorHL = EditorSettings.value("Theme/tabsGLColor");
    fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
@@ -79,7 +79,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
 };
 
 if( !isObject( ToolsGuiSolidDefaultProfile ) )
-new GuiControlProfile (ToolsGuiSolidDefaultProfile)
+new GuiControlProfile (ToolsGuiSolidDefaultProfile : ToolsGuiDefaultProfile)
 {
    opaque = true;
    border = true;
@@ -1109,7 +1109,7 @@ singleton GuiControlProfile( ToolsGuiMenuBarProfile )
    fontColor = EditorSettings.value("Theme/headerTextColor");
    fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
-   fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
+   fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
    border = 0;
    borderThickness = 1;
    opaque = true;
@@ -1122,6 +1122,8 @@ singleton GuiControlProfile( ToolsMenubarProfile : ToolsGuiDefaultProfile )
 {
    bitmap = "./menubar";
    category = "Editor";
+   
+   opaque = true;
    
    fillColor = EditorSettings.value("Theme/headerColor");
    fontColor = EditorSettings.value("Theme/headerTextColor");

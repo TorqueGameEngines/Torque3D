@@ -353,7 +353,7 @@ void PlatformWindowManagerSDL::_process()
 
             char* fileName = evt.drop.file;
 
-            if (!Platform::isFile(fileName))
+            if (!Platform::isDirectory(fileName) && !Platform::isFile(fileName))
                break;
 
             Con::executef("onDropFile", StringTable->insert(fileName));

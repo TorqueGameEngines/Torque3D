@@ -38,8 +38,26 @@
 //----------------------------------------------------------------------------
 // Phase 1 
 //----------------------------------------------------------------------------
+$Pref::Server::EnableDatablockCache = true;
+$pref::Server::DatablockCacheFilename = "data/cache/server/datablock_cache_c.dbc";
 function GameConnection::loadMission(%this)
 {
+  %cache_crc = "";
+
+  if ($Pref::Server::EnableDatablockCache)
+  {
+    if (!isDatablockCacheSaved())
+    {
+      echo("<<<< saving server datablock cache >>>>");
+      %this.saveDatablockCache();
+    }
+
+    if (isFile($Pref::Server::DatablockCacheFilename))
+    {
+      %cache_crc = getDatablockCacheCRC();
+      echo("    <<<< sending CRC to client:" SPC %cache_crc SPC ">>>>");
+    }
+  }
    // Send over the information that will display the server info
    // when we learn it got there, we'll send the data blocks
    %this.currentPhase = 0;
@@ -50,10 +68,39 @@ function GameConnection::loadMission(%this)
    }
    else
    {
-      commandToClient(%this, 'MissionStartPhase1', $missionSequence, $Server::MissionFile);
+      commandToClient(%this, 'MissionStartPhase1', $missionSequence, $Server::MissionFile, %cache_crc);
          
       echo("*** Sending mission load to client: " @ $Server::MissionFile);
    }
+}
+
+function serverCmdMissionStartPhase1Ack_UseCache(%client, %seq)
+{
+  echo("<<<< client will load datablocks from a cache >>>>");
+  echo("    <<<< skipping datablock transmission >>>>");
+
+  // Make sure to ignore calls from a previous mission load
+  if (%seq != $missionSequence || !$MissionRunning)
+    return;
+  if (%client.currentPhase != 0)
+    return;
+  %client.currentPhase = 1;
+
+  // Start with the CRC
+  %client.setMissionCRC( $missionCRC );
+
+  %client.onBeginDatablockCacheLoad($missionSequence);
+}
+
+function GameConnection::onBeginDatablockCacheLoad( %this, %missionSequence )
+{
+   // Make sure to ignore calls from a previous mission load
+   if (%missionSequence != $missionSequence)
+      return;
+   if (%this.currentPhase != 1)
+      return;
+   %this.currentPhase = 1.5;
+   commandToClient(%this, 'MissionStartPhase1_LoadCache', $missionSequence, $Server::MissionFile);
 }
 
 function serverCmdMissionStartPhase1Ack(%client, %seq)
@@ -157,14 +204,6 @@ function serverCmdMissionStartPhase3Ack(%client, %seq)
       // Set the control object to the default camera
       if (!isObject(%client.camera))
       {
-         if(!isObject(Observer))
-         {
-            datablock CameraData(Observer)
-            {
-               mode = "Observer";
-            };  
-         }
-         
          //if (isDefined("$Game::DefaultCameraClass"))
             %client.camera = spawnObject("Camera", Observer);
       }

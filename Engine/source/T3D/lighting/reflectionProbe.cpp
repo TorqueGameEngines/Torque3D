@@ -963,7 +963,8 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
    desc.setZReadWrite(true, false);
    desc.setCullMode(GFXCullNone);
    desc.setBlend(true);
-   desc.fillMode = GFXFillWireframe;
+   //desc.fillMode = GFXFillWireframe;
+
    // Base the sphere color on the light color.
    ColorI color = ColorI(255, 0, 255, 63);
 

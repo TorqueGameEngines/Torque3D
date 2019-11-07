@@ -224,7 +224,7 @@
          canSave = "1";
          canSaveDynamicFields = "0";
       };
-      new GuiScrollCtrl() {
+      new GuiScrollCtrl(ImportAssetConfigEditorScroll) {
          willFirstRespond = "1";
          hScrollBar = "dynamic";
          vScrollBar = "dynamic";

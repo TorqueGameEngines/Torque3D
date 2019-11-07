@@ -284,6 +284,78 @@ void AssetBase::refreshAsset(void)
 
 //-----------------------------------------------------------------------------
 
+S32 AssetBase::getAssetDependencyFieldCount(const char* pFieldName)
+{
+   S32 matchedFieldCount = 0;
+   SimFieldDictionary* fieldDictionary = getFieldDictionary();
+   for (SimFieldDictionaryIterator itr(fieldDictionary); *itr; ++itr)
+   {
+      SimFieldDictionary::Entry* entry = *itr;
+
+      if (String(entry->slotName).startsWith(pFieldName))
+      {
+         matchedFieldCount++;
+      }
+   }
+
+   return matchedFieldCount;
+}
+
+//-----------------------------------------------------------------------------
+
+void AssetBase::clearAssetDependencyFields(const char* pFieldName)
+{
+   SimFieldDictionary* fieldDictionary = getFieldDictionary();
+   for (SimFieldDictionaryIterator itr(fieldDictionary); *itr; ++itr)
+   {
+      SimFieldDictionary::Entry* entry = *itr;
+
+      if (String(entry->slotName).startsWith(pFieldName))
+      {
+         setDataField(entry->slotName, NULL, "");
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+void AssetBase::addAssetDependencyField(const char* pFieldName, const char* pAssetId)
+{
+   U32 existingFieldCount = getAssetDependencyFieldCount(pFieldName);
+
+   //we have a match!
+   char depSlotName[50];
+   dSprintf(depSlotName, sizeof(depSlotName), "%s%d", pFieldName, existingFieldCount);
+
+   char depValue[255];
+   dSprintf(depValue, sizeof(depValue), "@Asset=%s", pAssetId);
+
+   setDataField(StringTable->insert(depSlotName), NULL, StringTable->insert(depValue));
+}
+
+//-----------------------------------------------------------------------------
+bool AssetBase::saveAsset()
+{
+   // Set the format mode.
+   Taml taml;
+
+   // Yes, so set it.
+   taml.setFormatMode(Taml::getFormatModeEnum("xml"));
+
+   // Turn-off auto-formatting.
+   taml.setAutoFormat(false);
+
+   // Read object.
+   bool success = taml.write(this, AssetDatabase.getAssetFilePath(getAssetId()));
+
+   if (!success)
+      return false;
+
+   return true;
+}
+
+//-----------------------------------------------------------------------------
+
 void AssetBase::acquireAssetReference(void)
 {
    // Acquired the acquired reference count.

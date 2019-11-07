@@ -132,6 +132,8 @@ public:
    
    // For ManagedSingleton.
    static const char* getSingletonName() { return "PostEffectManager"; }
+
+   void dumpActivePostFX();
 };
 
 /// Returns the PostEffectManager singleton.

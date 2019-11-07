@@ -76,7 +76,7 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 function AssetBrowser::renameAsset(%this)
 {
    //Find out what type it is
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   //%assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
    
    %curFirstResponder = AssetBrowser.getFirstResponder();
    
@@ -92,36 +92,56 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    //if the name is different to the asset's original name, rename it!
    if(%originalAssetName !$= %newName)
    {
-      %moduleName = AssetBrowser.selectedModule;
-      
-      //do a rename!
-      %success = AssetDatabase.renameDeclaredAsset(%moduleName @ ":" @ %originalAssetName, %moduleName @ ":" @ %newName);
-      
-      if(%success)
-         echo("AssetBrowser - renaming of asset " @ %moduleName @ ":" @ %originalAssetName @ " to " @ %moduleName @ ":" @ %newName @ " was a success.");
-      else 
-         echo("AssetBrowser - renaming of asset " @ %moduleName @ ":" @ %originalAssetName @ " to " @ %moduleName @ ":" @ %newName @ " was a failure.");
-      
-      if(%success)
+      if(EditAssetPopup.assetType !$= "Folder")
       {
-         %newAssetId = %moduleName @ ":" @ %newName;
-         %assetPath = AssetDatabase.getAssetFilePath(%newAssetId);
+         %moduleName = AssetBrowser.selectedModule;
          
-         //Rename any associated files as well
-         %assetDef = AssetDatabase.acquireAsset(%newAssetId);
-         %assetType = %assetDef.getClassName();
+         //do a rename!
+         %success = AssetDatabase.renameDeclaredAsset(%moduleName @ ":" @ %originalAssetName, %moduleName @ ":" @ %newName);
          
-         //rename the file to match
-         %path = filePath(%assetPath);
+         if(%success)
+            echo("AssetBrowser - renaming of asset " @ %moduleName @ ":" @ %originalAssetName @ " to " @ %moduleName @ ":" @ %newName @ " was a success.");
+         else 
+            echo("AssetBrowser - renaming of asset " @ %moduleName @ ":" @ %originalAssetName @ " to " @ %moduleName @ ":" @ %newName @ " was a failure.");
          
-         //Do the rename command
-         %buildCommand = %this @ ".rename" @ %assetType @ "(" @ %assetDef @ "," @ %newAssetId @ ");";
-         eval(%buildCommand);
+         if(%success)
+         {
+            %newAssetId = %moduleName @ ":" @ %newName;
+            %assetPath = AssetDatabase.getAssetFilePath(%newAssetId);
+            
+            //Rename any associated files as well
+            %assetDef = AssetDatabase.acquireAsset(%newAssetId);
+            %assetType = %assetDef.getClassName();
+            
+            //rename the file to match
+            %path = filePath(%assetPath);
+            
+            //Do the rename command
+            %buildCommand = %this @ ".rename" @ %assetType @ "(" @ %assetDef @ "," @ %newAssetId @ ");";
+            eval(%buildCommand);
+         }
+      }
+      else
+      {
+         %buildCommand = %this @ ".renameFolder(\"" @ EditAssetPopup.assetId @ "\",\"" @ %newName @ "\");";
+         eval(%buildCommand);      
       }
    }
    
    //Make sure everything is refreshed
    AssetBrowser.loadFilters();
+   
+   //Update the selection to immediately jump to the new asset
+   AssetBrowser-->filterTree.clearSelection();
+   %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
+   %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
+   
+   AssetBrowser-->filterTree.selectItem(%assetTypeId);
+   
+   %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
+   AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
+   
+   AssetBrowser-->filterTree.buildVisibleTree(); 
 }
 
 function AssetNameField::onReturn(%this)
@@ -130,6 +150,26 @@ function AssetNameField::onReturn(%this)
    %this.setActive(false);
    
    AssetBrowser.performRenameAsset(%this.originalAssetName, %this.getText());
+}
+
+//------------------------------------------------------------
+function AssetBrowser::moveAsset(%this, %destination)
+{
+   if(EditAssetPopup.assetType $= "Folder")
+   {
+      //Do any cleanup required given the type
+      if(%this.isMethod("moveFolder"))
+         eval(%this @ ".moveFolder("@EditAssetPopup.assetId@",\""@%destination@"\");");
+   }
+   else
+   {
+      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+      %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetType);
+      
+      //Do any cleanup required given the type
+      if(%this.isMethod("move"@%assetType))
+         eval(%this @ ".move"@%assetType@"("@%assetDef@");");
+   }
 }
 
 //------------------------------------------------------------
@@ -157,10 +197,10 @@ function AssetBrowser::duplicateAsset(%this, %targetModule)
 function AssetBrowser::deleteAsset(%this)
 {
    //Find out what type it is
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   %assetType = %assetDef.getClassName();
+   //%assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   //%assetType = %assetDef.getClassName();
    
-   MessageBoxOKCancel("Warning!", "This will delete the selected asset and the files associated to it, do you wish to continue?", 
+   MessageBoxOKCancel("Warning!", "This will delete the selected content and the files associated to it, do you wish to continue?", 
       "AssetBrowser.confirmDeleteAsset();", "");
 }
 
@@ -169,14 +209,23 @@ function AssetBrowser::confirmDeleteAsset(%this)
    %currentSelectedItem = AssetBrowserFilterTree.getSelectedItem();
    %currentItemParent = AssetBrowserFilterTree.getParentItem(%currentSelectedItem);
    
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetId);
-   
-   //Do any cleanup required given the type
-   if(%this.isMethod("delete"@%assetType))
-      eval(%this @ ".delete"@%assetType@"("@%assetDef@");");
-   
-   AssetDatabase.deleteAsset(EditAssetPopup.assetId, false);
+   if(EditAssetPopup.assetType $= "Folder")
+   {
+      //Do any cleanup required given the type
+      if(%this.isMethod("deleteFolder"))
+         eval(%this @ ".deleteFolder(\""@EditAssetPopup.assetId@"\");");
+   }
+   else
+   {
+      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+      %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetType);
+      
+      //Do any cleanup required given the type
+      if(%this.isMethod("delete"@%assetType))
+         eval(%this @ ".delete"@%assetType@"("@%assetDef@");");
+      
+      AssetDatabase.deleteAsset(EditAssetPopup.assetId, false);
+   }
 
    %this.loadFilters();
    

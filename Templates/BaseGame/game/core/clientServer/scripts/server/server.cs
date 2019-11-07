@@ -204,10 +204,11 @@ function onServerCreated()
    
    loadDatablockFiles( DatablockFilesList, true );
    
+   callOnModules("onServerScriptExec", "Core");
+   callOnModules("onServerScriptExec", "Game");   
+   
    // Keep track of when the game started
    $Game::StartTime = $Sim::Time;
-
-   onServerCreatedAFX();
 }
 
 /// Shut down the server
@@ -283,6 +284,9 @@ function onServerDestroyed()
    MissionCleanup.delete();
    
    clearServerPaths();
+   
+  if ($Pref::Server::EnableDatablockCache)
+    resetDatablockCache();
 }
 
 /// Guid list maintenance functions

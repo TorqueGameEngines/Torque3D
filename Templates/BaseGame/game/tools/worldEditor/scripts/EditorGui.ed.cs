@@ -1885,6 +1885,9 @@ function Editor::open(%this)
    Canvas.setContent(EditorGui);   
    $isFirstPersonVar = true;
    EditorGui.syncCameraGui();
+   
+   if(EditorSettings.value("WorldEditor/Layout/LayoutMode", "Classic") $= "Modern")
+      togglePanelLayout();
 }
 
 function Editor::close(%this, %gui)

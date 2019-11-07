@@ -32,6 +32,7 @@ function ESettingsWindow::startup( %this )
    %this.addEditorSettingsPage("ShapeEditor", "Shape Editor");
    %this.addEditorSettingsPage("NavEditor", "Navigation Editor");
    %this.addEditorSettingsPage("Theme", "Theme");
+   %this.addEditorSettingsPage("AssetEditing", "Asset Editing");
    
    %this.addGameSettingsPage("GameGeneral", "General");
    %this.addGameSettingsPage("Gameplay", "Gameplay");
@@ -185,7 +186,7 @@ function SettingsInspector::changeEditorSetting(%this, %varName, %value)
       %success = ProjectSettings.write();
       
    if(%oldValue !$= %value)
-      ESettingsWindow.refresh();
+      ESettingsWindow.schedule(15,"refresh");
 }
 
 function GuiInspectorVariableGroup::buildOptionsSettingField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %ownerObj)
@@ -292,6 +293,12 @@ function ESettingsWindow::getGeneralSettings(%this)
    SettingsInspector.addSettingsField("WorldEditor/Theme/windowTitleFontColor", "Window Title Text Color", "colorI", "");
    SettingsInspector.addSettingsField("WorldEditor/Theme/mainTextColor", "Main Text Color", "colorI", "");
    SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Layout");
+   SettingsInspector.addSettingsField("WorldEditor/Layout/LayoutMode", "Editor Layout Mode", "list", "This dictates which layout style the editor should use." @
+                                                                                                      "WARNING - Modern layout is highlight experimental." @
+                                                                                                      "Updating this requires a restart of the program", "Classic,Modern");
+   SettingsInspector.endGroup();
 }  
 
 function ESettingsWindow::getCameraSettings(%this)
@@ -380,6 +387,7 @@ function ESettingsWindow::getThemeSettings(%this)
    SettingsInspector.addSettingsField("Theme/fieldTextColor", "Field Text Color", "ColorI", "");
    SettingsInspector.addSettingsField("Theme/fieldTextHLColor", "Field Text Highlight Color", "ColorI", "");
    SettingsInspector.addSettingsField("Theme/fieldTextSELColor", "Field Text Selected Color", "ColorI", "");
+   SettingsInspector.addSettingsField("Theme/fieldTextNAColor", "Field Text N/A Color", "ColorI", "");
    
    SettingsInspector.addSettingsField("Theme/fieldBGColor", "Field Background Color", "ColorI", "");
    SettingsInspector.addSettingsField("Theme/fieldBGHLColor", "Field Background Highlight Color", "ColorI", "");
@@ -431,8 +439,37 @@ function ESettingsWindow::getAssetManagementSettings(%this)
    SettingsInspector.addSettingsField("AssetManagement/Assets/assetExtension", "Asset Extension", "string", "");
    SettingsInspector.addSettingsField("AssetManagement/Assets/datablockCaching", "Cache Datablocks", "bool", "");
    //SettingsInspector.addSettingsField("AssetManagement/Assets/moduleExtension", "Module Extension", "string", "");
+   
    SettingsInspector.endGroup();
 } 
+
+function ESettingsWindow::getAssetEditingSettings(%this)
+{
+   ImportAssetWindow::reloadImportOptionConfigs();
+   
+   for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
+   {
+      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
+      %formattedConfigList = %i == 0 ? %configName : %formattedConfigList @ "," @ %configName;
+   }
+   
+   SettingsInspector.startGroup("Assets Importing");
+   SettingsInspector.addSettingsField("Assets/AssetImporDefaultConfig", "Default Asset Import Config", "list", "", %formattedConfigList); 
+   SettingsInspector.addSettingsField("Assets/AutoImport", "Automatically Import using default config", "bool", "If on, the asset importing process" @
+                                                                                                                        "will attempt to automatically import any inbound assets"@
+                                                                                                                        "using the default config, without prompting the import window."@
+                                                                                                                        "The window will still display if any issues are detected", ""); 
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Asset Browser");
+   SettingsInspector.addSettingsField("Assets/Browser/showCoreModule", "Show Core Module in Asset Browser", "bool", ""); 
+   SettingsInspector.addSettingsField("Assets/Browser/showToolsModule", "Show Tools Module in Asset Browser", "bool", ""); 
+   SettingsInspector.addSettingsField("Assets/Browser/showOnlyPopulatedModule", "Show Only Modules with Assets in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/previewTileSize", "Asset Preview Tile Size", "bool", "");
+   SettingsInspector.endGroup();
+}
 
 function ESettingsWindow::getGameplaySettings(%this)
 {

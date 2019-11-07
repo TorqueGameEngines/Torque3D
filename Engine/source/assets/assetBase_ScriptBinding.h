@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2013 GarageGames, LLC
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,4 +38,32 @@ DefineEngineMethod(AssetBase, getAssetId, String, (), ,
    "@return The assets' Asset Id.\n")
 {
     return object->getAssetId();
+}
+
+DefineEngineMethod(AssetBase, getAssetDependencyFieldCount, S32, (const char* pFieldName), (""),
+   "Gets the assets' Asset Id.  This is only available if the asset was acquired from the asset manager.\n"
+   "@return The assets' Asset Id.\n")
+{
+   return object->getAssetDependencyFieldCount(pFieldName);
+}
+
+DefineEngineMethod(AssetBase, clearAssetDependencyFields, void, (const char* pFieldName), (""),
+   "Gets the assets' Asset Id.  This is only available if the asset was acquired from the asset manager.\n"
+   "@return The assets' Asset Id.\n")
+{
+   object->clearAssetDependencyFields(pFieldName);
+}
+
+DefineEngineMethod(AssetBase, addAssetDependencyField, void, (const char* pFieldName, const char* pAssetId), ("", ""),
+   "Gets the assets' Asset Id.  This is only available if the asset was acquired from the asset manager.\n"
+   "@return The assets' Asset Id.\n")
+{
+   object->addAssetDependencyField(pFieldName, pAssetId);
+}
+
+DefineEngineMethod(AssetBase, saveAsset, bool, (), ,
+   "Gets the assets' Asset Id.  This is only available if the asset was acquired from the asset manager.\n"
+   "@return The assets' Asset Id.\n")
+{
+   return object->saveAsset();
 }

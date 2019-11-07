@@ -370,7 +370,7 @@ bool TerrainBlock::setTerrainAsset(const StringTableEntry terrainAssetId)
    if (!file)
       return false;
 
-   mFile = file;
+   setFile(file);
    return true;
 }
 
@@ -383,25 +383,13 @@ bool TerrainBlock::saveAsset()
 {
    if (!mTerrainAsset.isNull() && mTerrainAsset->isAssetValid())
    {
-      //first, clear out our old dependency references
-      /*SimFieldDictionary* fieldDictionary = mTerrainAsset->getFieldDictionary();
-      for (SimFieldDictionaryIterator itr(fieldDictionary); *itr; ++itr)
-      {
-         SimFieldDictionary::Entry* entry = *itr;
-
-         if (String(entry->slotName).startsWith("terrainMaterailAsset"))
-         {
-            //got one, so clear it's value
-            setDataField(entry->slotName, NULL, "");
-         }
-      }
+      mTerrainAsset->clearAssetDependencyFields("terrainMaterailAsset");
 
       AssetQuery* pAssetQuery = new AssetQuery();
       AssetDatabase.findAssetType(pAssetQuery, "TerrainMaterialAsset");
 
       TerrainBlock* clientTerr = static_cast<TerrainBlock*>(getClientObject());
 
-      U32 terrMatIdx = 0;
       for (U32 i = 0; i < pAssetQuery->mAssetList.size(); i++)
       {
          //Acquire it so we can check it for matches
@@ -414,16 +402,7 @@ bool TerrainBlock::saveAsset()
             StringTableEntry assetMatDefName = terrMatAsset->getMaterialDefinitionName();
             if (assetMatDefName == intMatName)
             {
-               //we have a match!
-               char depSlotName[30];
-               dSprintf(depSlotName, sizeof(depSlotName), "terrainMaterialAsset%d", terrMatIdx);
-
-               char depValue[255];
-               dSprintf(depValue, sizeof(depValue), "@Asset=%s", terrMatAsset.getAssetId());
-
-               setDataField(depSlotName, NULL, depValue);
-
-               terrMatIdx++;
+               mTerrainAsset->addAssetDependencyField("terrainMaterailAsset", terrMatAsset.getAssetId());
             }
          }
 
@@ -432,20 +411,10 @@ bool TerrainBlock::saveAsset()
 
       pAssetQuery->destroySelf();
 
-      // Set the format mode.
-      Taml taml;
+      bool saveAssetSuccess = mTerrainAsset->saveAsset();
 
-      // Yes, so set it.
-      taml.setFormatMode(Taml::getFormatModeEnum("xml"));
-
-      // Turn-off auto-formatting.
-      taml.setAutoFormat(false);
-
-      // Read object.
-      bool success = taml.write(mTerrainAsset, AssetDatabase.getAssetFilePath(mTerrainAsset.getAssetId()));
-
-      if (!success)
-         return false;*/
+      if (!saveAssetSuccess)
+         return false;
 
       return mFile->save(mTerrainAsset->getTerrainFilePath());
    }
@@ -1251,14 +1220,14 @@ void TerrainBlock::setScale( const VectorF &scale )
 void TerrainBlock::initPersistFields()
 {
    addGroup( "Media" );
-      
-      addProtectedField( "terrainFile", TypeStringFilename, Offset( mTerrFileName, TerrainBlock ), 
-         &TerrainBlock::_setTerrainFile, &defaultProtectedGetFn,
-         "The source terrain data file." );
 
       addProtectedField("terrainAsset", TypeTerrainAssetPtr, Offset(mTerrainAsset, TerrainBlock),
          &TerrainBlock::_setTerrainAsset, &defaultProtectedGetFn,
          "The source terrain data asset.");
+
+      addProtectedField( "terrainFile", TypeStringFilename, Offset( mTerrFileName, TerrainBlock ), 
+         &TerrainBlock::_setTerrainFile, &defaultProtectedGetFn,
+         "The source terrain data file." );
 
    endGroup( "Media" );
 
@@ -1320,7 +1289,6 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    if ( stream->writeFlag( mask & FileMask ) )
    {
       stream->write( mTerrFileName );
-      stream->writeString( mTerrainAssetId );
       stream->write( mCRC );
    }
 
@@ -1361,25 +1329,12 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
    {
       FileName terrFile;
       stream->read( &terrFile );
-      char buffer[256];
-      stream->readString(buffer);
-      StringTableEntry terrainAsset = StringTable->insert(buffer);
       stream->read( &mCRC );
 
-      if (terrainAsset != StringTable->EmptyString())
-      {
-         if (isProperlyAdded())
-            setTerrainAsset(StringTable->insert(terrFile.c_str()));
-         else
-            mTerrainAssetId = StringTable->insert(terrFile.c_str());
-      }
+      if ( isProperlyAdded() )
+         setFile( terrFile );
       else
-      {
-         if (isProperlyAdded())
-            setFile(terrFile);
-         else
-            mTerrFileName = terrFile;
-      }
+         mTerrFileName = terrFile;
    }
 
    if ( stream->readFlag() ) // SizeMask

@@ -81,6 +81,7 @@ struct Surface
 
 	float NdotV;			// cos(angle between normal and view vector)
 	vec3 f0;				// fresnel value (rgb)
+    float f90;
 	vec3 albedo;			// diffuse light absorbtion value (rgb)
 	vec3 R;				// reflection vector
 	vec3 F;				// fresnel term computed from f0, N and V
@@ -93,8 +94,8 @@ void updateSurface(inout Surface surface)
 	surface.albedo = surface.baseColor.rgb * (1.0 - surface.metalness);
 	surface.f0 = lerp(vec3(0.04f), surface.baseColor.rgb, surface.metalness);
 	surface.R = -reflect(surface.V, surface.N);
-	float f90 = saturate(50.0 * dot(surface.f0, vec3(0.33,0.33,0.33)));
-	surface.F = F_Schlick(surface.f0, f90, surface.NdotV);
+	surface.f90 = saturate(50.0 * dot(surface.f0, vec3(0.33,0.33,0.33)));
+	surface.F = F_Schlick(surface.f0, surface.f90, surface.NdotV);
 }
 
 Surface createSurface(vec4 normDepth, sampler2D colorBuffer, sampler2D matInfoBuffer, in vec2 uv, in vec3 wsEyePos, in vec3 wsEyeRay, in mat4 invView)
@@ -227,6 +228,11 @@ vec3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLight, vec3
 
    vec3 final = max(vec3(0.0f), diffuse + spec * surface.F);
    return final;
+}
+
+float computeSpecOcclusion( float NdotV , float AO , float roughness )
+{
+   return saturate (pow( abs(NdotV + AO) , exp2 ( -16.0f * roughness - 1.0f )) - 1.0f + AO );
 }
 
 vec4 compute4Lights( Surface surface,
@@ -421,20 +427,18 @@ vec4 computeForwardProbes(Surface surface,
       specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz, alpha);
    }
 
-   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-
    //energy conservation
-   vec3 kD = vec3(1.0,1.0,1.0) - F;
-   kD *= 1.0 - surface.metalness;
+   vec3 kD = 1.0f - surface.F;
+   kD *= 1.0f - surface.metalness;
 
-   //apply brdf
-   //Do it once to save on texture samples
-   vec2 brdf = textureLod(BRDFTexture, vec2(surface.roughness, 1.0-surface.NdotV),0).xy;
-   specular *= brdf.x * F + brdf.y;
+   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
+   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   irradiance *= kD * surface.baseColor.rgb;
 
-   //final diffuse color
-   vec3 diffuse = kD * irradiance * surface.baseColor.rgb;
-   vec4 finalColor = vec4(diffuse + specular * surface.ao, 1.0);
+   //AO
+   irradiance *= surface.ao;
+   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
 
-   return finalColor;
+   return vec4(irradiance + specular, 0);//alpha writes disabled
 }

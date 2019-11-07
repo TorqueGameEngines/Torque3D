@@ -1,4 +1,4 @@
-new ShaderData( BasicRibbonShader )
+singleton ShaderData( BasicRibbonShader )
 {
    DXVertexShaderFile   = $Core::CommonShaderPath @ "/ribbons/basicRibbonShaderV.hlsl";
    DXPixelShaderFile    = $Core::CommonShaderPath @ "/ribbons/basicRibbonShaderP.hlsl";
@@ -26,7 +26,7 @@ singleton CustomMaterial( BasicRibbonMat )
    preload = true;
 };
 
-new ShaderData( TexturedRibbonShader )
+singleton ShaderData( TexturedRibbonShader )
 {
    DXVertexShaderFile   = $Core::CommonShaderPath @ "/ribbons/texRibbonShaderV.hlsl";
    DXPixelShaderFile    = $Core::CommonShaderPath @ "/ribbons/texRibbonShaderP.hlsl";

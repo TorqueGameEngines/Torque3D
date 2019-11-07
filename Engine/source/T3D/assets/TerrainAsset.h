@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 #ifndef TERRAINASSET_H
 #define TERRAINASSET_H
 
@@ -46,14 +47,23 @@
 #include "gui/editor/guiInspectorTypes.h"
 #endif
 
-#include "terrain/terrData.h"
+//#include "terrain/terrData.h"
+#include "assets/assetPtr.h"
+#include "terrain/terrFile.h"
+
+class TerrainMaterialAsset;
 
 //-----------------------------------------------------------------------------
 class TerrainAsset : public AssetBase
 {
    typedef AssetBase Parent;
 
-   StringTableEntry        mTerrainFile;
+   StringTableEntry        mTerrainFilePath;
+   Resource<TerrainFile>   mTerrainFile;
+
+   //Material assets we're dependent on and use
+   Vector<StringTableEntry> mTerrMaterialAssetIds;
+   Vector<AssetPtr<TerrainMaterialAsset>> mTerrMaterialAssets;
 
 public:
    TerrainAsset();
@@ -63,8 +73,14 @@ public:
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
-   void                    setTerrainFile(const char* pTerrainFile);
-   inline StringTableEntry getTerrainFile(void) const { return mTerrainFile; };
+   virtual void setDataField(StringTableEntry slotName, const char* array, const char* value);
+
+   void                    setTerrainFilePath(const char* pTerrainFile);
+   inline StringTableEntry getTerrainFilePath(void) const { return mTerrainFilePath; };
+
+   inline Resource<TerrainFile> getTerrainResource(void) const { return mTerrainFile; };
+
+   bool loadTerrain();
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(TerrainAsset);
@@ -73,8 +89,8 @@ protected:
    virtual void initializeAsset();
    virtual void onAssetRefresh(void);
 
-   static bool setTerrainFile(void *obj, const char *index, const char *data) { static_cast<TerrainAsset*>(obj)->setTerrainFile(data); return false; }
-   static const char* getTerrainFile(void* obj, const char* data) { return static_cast<TerrainAsset*>(obj)->getTerrainFile(); }
+   static bool setTerrainFilePath(void *obj, const char *index, const char *data) { static_cast<TerrainAsset*>(obj)->setTerrainFilePath(data); return false; }
+   static const char* getTerrainFilePath(void* obj, const char* data) { return static_cast<TerrainAsset*>(obj)->getTerrainFilePath(); }
 };
 
 DefineConsoleType(TypeTerrainAssetPtr, TerrainAsset)
@@ -96,7 +112,6 @@ public:
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
-   void setMaterialAsset(String assetId);
 };
 
 #endif // _ASSET_BASE_H_

@@ -360,6 +360,7 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       bool mDoFilterChildren;
 
       Vector<U32> mItemFilterExceptionList;
+      Vector<U32> mHiddenItemsList;
 
       /// If true, a trace of actions taken by the control is logged to the console.  Can
       /// be turned on with the setDebug() script method.
@@ -578,6 +579,8 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
 
       void setFilterChildren(bool doFilter) { mDoFilterChildren = doFilter; }
       void setItemFilterException(U32 item, bool isExempt);
+      void setItemHidden(U32 item, bool isHidden);
+      void clearHiddenItems() { mHiddenItemsList.clear(); }
 
       /// Clear the current item filtering pattern.
       void clearFilterText() { setFilterText( String::EmptyString ); }

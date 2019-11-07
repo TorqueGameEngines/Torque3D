@@ -3,10 +3,12 @@ function AssetBrowser::createScriptAsset(%this)
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;      
+   %assetName = AssetBrowser.newAssetSettings.assetName;  
    
-   %tamlpath = %modulePath @ "/scripts/" @ %assetName @ ".asset.taml";
-   %scriptPath = %modulePath @ "/scripts/" @ %assetName @ ".cs";
+   %assetPath = AssetBrowser.currentAddress @ "/";    
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %scriptPath = %assetPath @ %assetName @ ".cs";
    
    %asset = new ScriptAsset()
    {

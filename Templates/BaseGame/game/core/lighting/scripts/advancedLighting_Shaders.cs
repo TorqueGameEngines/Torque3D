@@ -22,7 +22,7 @@
 
 
 // Vector Light State
-new GFXStateBlockData( AL_VectorLightState )
+singleton GFXStateBlockData( AL_VectorLightState )
 {
    blendDefined = true;
    blendEnable = true;
@@ -48,9 +48,7 @@ new GFXStateBlockData( AL_VectorLightState )
    mSamplerNames[1] = "shadowMap";
    samplerStates[2] = SamplerClampPoint;  // Shadow Map (Do not change this to linear, as all cards can not filter equally.)
    mSamplerNames[2] = "dynamicShadowMap";
-   samplerStates[3] = SamplerClampLinear;  // SSAO Mask
-   mSamplerNames[3] = "ssaoMask";
-   samplerStates[4] = SamplerWrapPoint;   // Random Direction Map
+   samplerStates[3] = SamplerWrapPoint;   // Random Direction Map
    
    cullDefined = true;
    cullMode = GFXCullNone;
@@ -61,7 +59,7 @@ new GFXStateBlockData( AL_VectorLightState )
 };
 
 // Vector Light Material
-new ShaderData( AL_VectorLightShader )
+singleton shaderData( AL_VectorLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/farFrustumQuadV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/vectorLightP.hlsl";
@@ -72,11 +70,10 @@ new ShaderData( AL_VectorLightShader )
    samplerNames[0] = "$deferredBuffer";
    samplerNames[1] = "$shadowMap";
    samplerNames[2] = "$dynamicShadowMap";
-   samplerNames[3] = "$ssaoMask";
-   samplerNames[4] = "$gTapRotationTex";
-   samplerNames[5] = "$lightBuffer";
-   samplerNames[6] = "$colorBuffer";
-   samplerNames[7] = "$matInfoBuffer";  
+   samplerNames[3] = "$gTapRotationTex";
+   samplerNames[4] = "$lightBuffer";
+   samplerNames[5] = "$colorBuffer";
+   samplerNames[6] = "$matInfoBuffer";  
    
    pixVersion = 3.0;
 };
@@ -89,7 +86,6 @@ new CustomMaterial( AL_VectorLightMaterial )
    sampler["deferredBuffer"] = "#deferred";
    sampler["shadowMap"] = "$dynamiclight";
    sampler["dynamicShadowMap"] = "$dynamicShadowMap";
-   sampler["ssaoMask"] = "#ssaoMask";  
    sampler["lightBuffer"] = "#specularLighting";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
@@ -102,7 +98,7 @@ new CustomMaterial( AL_VectorLightMaterial )
 //------------------------------------------------------------------------------
 
 // Convex-geometry light states
-new GFXStateBlockData( AL_ConvexLightState )
+singleton GFXStateBlockData( AL_ConvexLightState )
 {
    blendDefined = true;
    blendEnable = true;
@@ -140,7 +136,7 @@ new GFXStateBlockData( AL_ConvexLightState )
 };
 
 // Point Light Material
-new ShaderData( AL_PointLightShader )
+singleton shaderData( AL_PointLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/convexGeometryV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/pointLightP.hlsl";
@@ -179,7 +175,7 @@ new CustomMaterial( AL_PointLightMaterial )
 };
 
 // Spot Light Material
-new ShaderData( AL_SpotLightShader )
+singleton shaderData( AL_SpotLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/convexGeometryV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/spotLightP.hlsl";
@@ -256,7 +252,7 @@ new Material( AL_DefaultShadowMaterial )
 };
 
 // Particle System Point Light Material
-new ShaderData( AL_ParticlePointLightShader )
+singleton shaderData( AL_ParticlePointLightShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/particlePointLightV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/particlePointLightP.hlsl";
@@ -281,7 +277,7 @@ new CustomMaterial( AL_ParticlePointLightMaterial )
 };
 
 //Probe Processing
-new ShaderData( IrradianceShader )
+singleton shaderData( IrradianceShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/cubemapV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/irradianceP.hlsl";
@@ -294,7 +290,7 @@ new ShaderData( IrradianceShader )
    pixVersion = 3.0;
 };
 
-new ShaderData( PrefiterCubemapShader )
+singleton shaderData( PrefiterCubemapShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/advanced/cubemapV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/prefilterP.hlsl";
@@ -322,6 +318,7 @@ singleton ShaderData( PFX_ReflectionProbeArray )
    samplerNames[3] = "$BRDFTexture";
    samplerNames[4] = "$specularCubemapAR";
    samplerNames[5] = "$irradianceCubemapAR";
+   samplerNames[6] = "$ssaoMask";
 
    pixVersion = 2.0;
 };  
@@ -350,4 +347,5 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    samplerStates[3] = SamplerClampPoint;
    samplerStates[4] = SamplerClampLinear;
    samplerStates[5] = SamplerClampLinear;
+   samplerStates[6] = SamplerClampPoint;
 };

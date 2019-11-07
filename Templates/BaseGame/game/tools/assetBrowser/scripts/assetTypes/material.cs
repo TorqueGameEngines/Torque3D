@@ -278,10 +278,10 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = "data/" @ %moduleName @ "/materials";
-   %tamlpath = %assetPath @ "/" @ %assetName @ ".asset.taml";
-   %sgfPath = %assetPath @ "/" @ %assetName @ ".sgf";
-   %scriptPath = %assetPath @ "/" @ %assetName @ ".cs";
+   %assetPath = AssetBrowser.currentAddress @ "/";
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %sgfPath = %assetPath @ %assetName @ ".sgf";
+   %scriptPath = %assetPath @ %assetName @ ".cs";
    
    %newAsset = new MaterialAsset()
    {

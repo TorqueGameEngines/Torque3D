@@ -187,7 +187,7 @@ Material::Material()
    dMemset(mCellLayout, 0, sizeof(mCellLayout));
    dMemset(mCellSize, 0, sizeof(mCellSize));
    dMemset(mNormalMapAtlas, 0, sizeof(mNormalMapAtlas));
-   dMemset(mUseAnisotropic, 0, sizeof(mUseAnisotropic));
+   dMemset(mUseAnisotropic, 1, sizeof(mUseAnisotropic));
 
    mImposterLimits = Point4F::Zero;
 

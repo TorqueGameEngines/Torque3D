@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-new ShaderData(BlurDepthShader)
+singleton shaderData(BlurDepthShader)
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/lighting/shadowMap/boxFilterV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/shadowMap/boxFilterP.hlsl";

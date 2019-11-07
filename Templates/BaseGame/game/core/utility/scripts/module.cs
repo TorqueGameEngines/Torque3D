@@ -1,5 +1,12 @@
+$traceModuleCalls=false;
+$reportModuleFileConflicts=true;
+if (!isObject(ExecFilesList))
+   new ArrayObject(ExecFilesList);
+  
 function callOnModules(%functionName, %moduleGroup)
 {
+   //clear per module group file execution chain
+   ExecFilesList.empty();
    //Get our modules so we can exec any specific client-side loading/handling
    %modulesList = ModuleDatabase.findModules(false);
    for(%i=0; %i < getWordCount(%modulesList); %i++)
@@ -16,7 +23,14 @@ function callOnModules(%functionName, %moduleGroup)
       {
          eval(%module.scopeSet @ "." @ %functionName @ "();");
       }
-   }   
+   }
+   
+   %execFilecount = ExecFilesList.count();
+   for (%i=0;%i<%execFilecount;%i++)
+   {
+        %filename = ExecFilesList.getKey(%i);
+        exec(%filename);
+   }
 }
 
 function loadModuleMaterials(%moduleGroup)
@@ -69,10 +83,12 @@ function SimSet::getModulePath(%scopeSet)
    return "";
 }
 
-function SimSet::registerDatablock(%scopeSet, %datablockFilePath)
+function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
 {
+   if ($traceModuleCalls)
+      warn("SimSet::registerDatablock");
    %name = %scopeSet.getName();
-   %moduleDef = ModuleDatabase.findModule(%name);
+   %moduleDef = ModuleDatabase.findModule(%name, 1);
      
    if(!isObject(%moduleDef))
    {
@@ -89,6 +105,176 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath)
    %relativePath = makeRelativePath(%datablockFilePath);
    
    %fullPath = pathConcat(%moduleDef.ModulePath, %relativePath);
+   ///go through all entries
+   %locked = false;
+   %dbFilecount = DatablockFilesList.count();
+   for (%i=0;%i<%dbFilecount;%i++)
+   {
+        %check = DatablockFilesList.getKey(%i);
+        //look for a substring match
+        %isMatch = strIsMatchExpr("*"@ %datablockFilePath,%check );
+        if (%isMatch)
+        {
+            //check if we're already locked in
+            //and kill off any duplicates
+            //do note that doing it in this order means setting exclusive twice
+            //allows one to override exclusive with exclusive
+            %locked = DatablockFilesList.getValue(%i);
+
+            if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
+                error("found" SPC %datablockFilePath SPC "duplicate file!");
+            if (!%locked || (%locked && %isExclusive))
+            {
+                DatablockFilesList.erase(%i);
+            }
+        }
+   }
+   //if we're not locked, or we are exclusive, go ahead and add it to the pile
+   //(ensures exclusives get re-added after that erasure)
+   if (!%locked || %isExclusive)
+       DatablockFilesList.add(%fullPath,%isExclusive);
+   if ($traceModuleCalls)
+      DatablockFilesList.echo();
+}
+
+function SimSet::unRegisterDatablock(%scopeSet, %datablockFilePath)
+{
+   if ($traceModuleCalls)
+      warn("SimSet::unRegisterDatablock");
+   %name = %scopeSet.getName();
+   %moduleDef = ModuleDatabase.findModule(%name, 1);
+     
+   if(!isObject(%moduleDef))
+   {
+      error("Module::unRegisterDatablock() - unable to find a module with the moduleID of " @ %name);
+      return;
+   }
    
-   DatablockFilesList.add(%fullPath);
+   if(!isObject(DatablockFilesList))
+   {
+      error("Module::unRegisterDatablock() - DatablockFilesList array object doesn't exist!");
+      return;
+   }
+   
+   %relativePath = makeRelativePath(%datablockFilePath);
+   
+   %fullPath = pathConcat(%moduleDef.ModulePath, %relativePath);
+   ///go through all entries
+   %locked = false;
+   %dbFilecount = DatablockFilesList.count();
+   for (%i=0;%i<%dbFilecount;%i++)
+   {
+        %check = DatablockFilesList.getKey(%i);
+        //look for a substring match
+        %isMatch = strIsMatchExpr("*"@ %datablockFilePath,%check );
+        if (%isMatch)
+        {
+            //check if we're already locked in. if not, kill it.
+            %locked = DatablockFilesList.getValue(%i);
+            if (!%locked)
+            {
+                DatablockFilesList.erase(%i);
+            }
+        }
+   }
+   if ($traceModuleCalls)
+      DatablockFilesList.echo();
+}
+
+function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
+{
+   if ($traceModuleCalls)
+      warn("SimSet::queueExec");
+   %name = %scopeSet.getName();
+   %moduleDef = ModuleDatabase.findModule(%name, 1);
+     
+   if(!isObject(%moduleDef))
+   {
+      error("Module::queueExec() - unable to find a module with the moduleID of " @ %name);
+      return;
+   }
+   
+   if(!isObject(ExecFilesList))
+   {
+      error("Module::queueExec() - ExecFilesList array object doesn't exist!");
+      return;
+   }
+   
+   if ($traceModuleCalls)
+      warn("module root path="@ makeRelativePath(%moduleDef.ModulePath));
+  
+   %fullPath = makeRelativePath(%moduleDef.ModulePath) @ %execFilePath;
+   ///go through all entries
+   %locked = false;
+   %execFilecount = ExecFilesList.count();
+   for (%i=0;%i<%execFilecount;%i++)
+   {
+        %check = ExecFilesList.getKey(%i);
+        //look for a substring match
+        %isMatch = strIsMatchExpr("*"@ %execFilePath,%check );
+        if (%isMatch)
+        {
+            //check if we're already locked in
+            //and kill off any duplicates
+            //do note that doing it in this order means setting exclusive twice
+            //allows one to override exclusive with exclusive
+            %locked = ExecFilesList.getValue(%i);
+            if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
+                error("found" SPC %execFilePath SPC "duplicate file!");
+            if (!%locked || (%locked && %isExclusive))
+            {
+                ExecFilesList.erase(%i);
+            }
+        }
+   }
+   //if we're not locked, or we are exclusive, go ahead and add it to the pile
+   //(ensures exclusives get re-added after that erasure)
+   if (!%locked || %isExclusive)
+       ExecFilesList.add(%fullPath,%isExclusive);
+   if ($traceModuleCalls)       
+      ExecFilesList.echo();
+}
+
+function SimSet::unQueueExec(%scopeSet, %execFilePath)
+{
+   if ($traceModuleCalls)
+      warn("SimSet::unRegisterDatablock");
+   %name = %scopeSet.getName();
+   %moduleDef = ModuleDatabase.findModule(%name, 1);
+     
+   if(!isObject(%moduleDef))
+   {
+      error("Module::unRegisterDatablock() - unable to find a module with the moduleID of " @ %name);
+      return;
+   }
+   
+   if(!isObject(ExecFilesList))
+   {
+      error("Module::unRegisterDatablock() - ExecFilesList array object doesn't exist!");
+      return;
+   }
+   
+   %relativePath = makeRelativePath(%execFilePath);
+   
+   %fullPath = pathConcat(%moduleDef.ModulePath, %relativePath);
+   ///go through all entries
+   %locked = false;
+   %execFilecount = ExecFilesList.count();
+   for (%i=0;%i<%execFilecount;%i++)
+   {
+        %check = ExecFilesList.getKey(%i);
+        //look for a substring match
+        %isMatch = strIsMatchExpr("*"@ %execFilePath,%check );
+        if (%isMatch)
+        {
+            //check if we're already locked in. if not, kill it.
+            %locked = ExecFilesList.getValue(%i);
+            if (!%locked)
+            {
+                ExecFilesList.erase(%i);
+            }
+        }
+   }
+   if ($traceModuleCalls)
+      ExecFilesList.echo();
 }

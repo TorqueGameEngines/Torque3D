@@ -1176,6 +1176,10 @@ void GuiTreeViewCtrl::_buildItem( Item* item, U32 tabLevel, bool bForceFullUpdat
    else
       item->mState.clear( Item::Filtered );
 
+   //If the item should be hidden from view, check now
+   if (mHiddenItemsList.contains(item->mId))
+      item->mState.set(Item::Filtered);
+
    // Is this the root item?
    const bool isRoot = item == mRoot;
 
@@ -4477,6 +4481,18 @@ void GuiTreeViewCtrl::setItemFilterException(U32 item, bool isExempted)
    }
 }
 
+void GuiTreeViewCtrl::setItemHidden(U32 item, bool isHidden)
+{
+   if (isHidden)
+   {
+      mHiddenItemsList.push_back(item);
+   }
+   else
+   {
+      mHiddenItemsList.remove(item);
+   }
+}
+
 void GuiTreeViewCtrl::reparentItems(Vector<Item*> selectedItems, Item* newParent)
 {
    for (S32 i = 0; i < selectedItems.size(); i++)
@@ -5650,6 +5666,26 @@ DefineEngineMethod(GuiTreeViewCtrl, setItemFilterException, void, (U32 item, boo
    "@see clearFilterText")
 {
    object->setItemFilterException(item, isExempt);
+}
+
+DefineEngineMethod(GuiTreeViewCtrl, setItemHidden, void, (U32 item, bool hidden), (0, true),
+   "Set the pattern by which to filter items in the tree.  Only items in the tree whose text "
+   "matches this pattern are displayed.\n\n"
+   "@param pattern New pattern based on which visible items in the tree should be filtered.  If empty, all items become visible.\n\n"
+   "@see getFilterText\n"
+   "@see clearFilterText")
+{
+   object->setItemHidden(item, hidden);
+}
+
+DefineEngineMethod(GuiTreeViewCtrl, clearHiddenItems, void, (),,
+   "Set the pattern by which to filter items in the tree.  Only items in the tree whose text "
+   "matches this pattern are displayed.\n\n"
+   "@param pattern New pattern based on which visible items in the tree should be filtered.  If empty, all items become visible.\n\n"
+   "@see getFilterText\n"
+   "@see clearFilterText")
+{
+   object->clearHiddenItems();
 }
 //-----------------------------------------------------------------------------
 

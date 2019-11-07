@@ -862,7 +862,10 @@ U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan)
 {
    ColorI pixelColor = ColorI(255,255,255,255);
    getColor(x, y, pixelColor);
-
+   if (mInternalFormat == GFXFormatL16)
+   {
+      chan = 0;
+   }
    switch (chan) {
    case 0: return pixelColor.red;
    case 1: return pixelColor.green;
@@ -1323,7 +1326,7 @@ U32 GBitmap::getSurfaceSize(const U32 mipLevel) const
    if (mInternalFormat >= GFXFormatBC1 && mInternalFormat <= GFXFormatBC3)
    {
       // From the directX docs:
-      // max(1, width ÷ 4) x max(1, height ÷ 4) x 8(DXT1) or 16(DXT2-5)
+      // max(1, width Ã· 4) x max(1, height Ã· 4) x 8(DXT1) or 16(DXT2-5)
 
       U32 sizeMultiple = 0;
 

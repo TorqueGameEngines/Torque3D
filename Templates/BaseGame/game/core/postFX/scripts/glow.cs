@@ -146,7 +146,7 @@ singleton PostEffect( VolFogGlowPostFx )
 	texture[0] = "$backbuffer";
 	target = "$outTex";
 	targetScale = "0.5 0.5";
-	isEnabled = true;
+	isEnabled = false;
 	// Blur vertically
 	new PostEffect()
 	{

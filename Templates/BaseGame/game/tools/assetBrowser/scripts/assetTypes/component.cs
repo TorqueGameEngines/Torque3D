@@ -76,7 +76,7 @@ function AssetBrowser::duplicateComponentAsset(%this, %assetId)
    
 }
 
-function AssetBrowser::renameGameObjectAsset(%this, %assetDef, %newAssetId, %originalName, %newName)
+function AssetBrowser::renameComponentAsset(%this, %assetDef, %newAssetId, %originalName, %newName)
 {
    %assetPath = AssetDatabase.getAssetFilePath(%newAssetId);
    

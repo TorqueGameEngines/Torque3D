@@ -1,9 +1,70 @@
 function AssetBrowser::createTerrainMaterialAsset(%this)
 {
+   %moduleName = AssetBrowser.newAssetSettings.moduleName;
+   %modulePath = "data/" @ %moduleName;
+      
+   %assetName = AssetBrowser.newAssetSettings.assetName;      
+   
+   %assetType = AssetBrowser.newAssetSettings.assetType;
+   %assetPath = AssetBrowser.currentAddress @ "/";    
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %scriptPath = %assetPath @ %assetName @ ".cs";
+   
+   %asset = new TerrainMaterialAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      scriptFile = %assetName @ ".cs";
+      materialDefinitionName = %assetName;
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+   
+   %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+
+	AssetBrowser.loadFilters();
+	
+	AssetBrowserFilterTree.onSelect(%smItem);
+	
+	%file = new FileObject();
+	%templateFile = new FileObject();
+	
+	%templateFilePath = %this.templateFilesPath @ "terrainMaterial.cs.template";
+   
+   if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@", %assetName );
+         
+         %file.writeline(%line);
+         //echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreateNewTerrainMaterialAsset - Something went wrong and we couldn't write thescript file!");
+   }
+   
+   //If we've got the terrain mat editor open, go ahead and update it all
+   TerrainMaterialDlg.onWake();
+   
+	return %tamlpath;
 }
 
 function AssetBrowser::editTerrainMaterialAsset(%this, %assetDef)
 {
+   TerrainMaterialDlg.show(0, 0, 0);
+   TerrainMaterialDlg.setActiveMaterial(%assetDef.assetName);
 }
 
 function AssetBrowser::duplicateTerrainMaterialAsset(%this, %assetDef, %targetModule)

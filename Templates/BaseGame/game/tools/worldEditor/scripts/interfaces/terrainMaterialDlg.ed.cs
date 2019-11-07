@@ -83,6 +83,20 @@ function TerrainMaterialDlg::onWake( %this )
    if( !isObject( TerrainMaterialDlgDeleteGroup ) )
       new SimGroup( TerrainMaterialDlgDeleteGroup );
       
+   //Run through and grab any TerrainMaterialAssets
+   %assetQuery = new AssetQuery();
+   AssetDatabase.findAssetType(%assetQuery, "TerrainMaterialAsset");
+        
+   %count = %assetQuery.getCount();
+      
+	for(%i=0; %i < %count; %i++)
+	{
+	   %assetId = %assetQuery.getAsset(%i);
+	   
+      AssetDatabase.acquireAsset(%assetId);
+	}	
+	%assetQuery.delete();	   
+      
    // Snapshot the materials.
    %this.snapshotMaterials();
 
@@ -293,11 +307,32 @@ function TerrainMaterialDlg::changeNormal( %this )
 }
 
 //-----------------------------------------------------------------------------
+function TerrainMaterialDlg::changePBRConfig( %this )
+{   
+   %ctrl = %this-->pbrConfigTexCtrl;
+   %file = %ctrl.bitmap;
+   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
+      %file = "";
+
+   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );  
+   if( %file $= "" )
+   {
+      if( %ctrl.bitmap !$= "" )
+         %file = %ctrl.bitmap;
+      else
+         %file = "tools/materialEditor/gui/unknownImage";
+   }
+
+   %file = makeRelativePath( %file, getMainDotCsDir() );
+   %ctrl.setBitmap( %file );   
+}
+
+//-----------------------------------------------------------------------------
 
 function TerrainMaterialDlg::newMat( %this )
 {
    // Create a unique material name.
-   %matName = getUniqueInternalName( "newMaterial", TerrainMaterialSet, true );
+   /*%matName = getUniqueInternalName( "newMaterial", TerrainMaterialSet, true );
 
    // Create the new material.
    %newMat = new TerrainMaterial()
@@ -308,12 +343,16 @@ function TerrainMaterialDlg::newMat( %this )
    %newMat.setFileName( "art/terrains/materials.cs" );
    
    // Mark it as dirty and to be saved in the default location.
-   ETerrainMaterialPersistMan.setDirty( %newMat, "art/terrains/materials.cs" );
-            
-   %matLibTree = %this-->matLibTree;
-   %matLibTree.buildVisibleTree( true );
-   %item = %matLibTree.findItemByObjectId( %newMat );
-   %matLibTree.selectItem( %item );   
+   ETerrainMaterialPersistMan.setDirty( %newMat, "art/terrains/materials.cs" );*/
+
+   %scene = getRootScene();
+   %path = filePath(%scene.getFilename());
+   %module = AssetBrowser.getModuleFromAddress(%path);
+   AssetBrowser.selectedModule = %module.moduleID;
+   
+   AssetBrowser.currentAddress = "data/" @ %module.moduleID;
+   
+   AssetBrowser.setupCreateNewAsset("TerrainMaterialAsset", AssetBrowser.selectedModule);
 }
 
 //-----------------------------------------------------------------------------
@@ -380,6 +419,11 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       }else{
          %this-->baseTexCtrl.setBitmap( %mat.diffuseMap ); 
       }
+      if (%mat.pbrConfigMap $= ""){
+         %this-->pbrConfigTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
+      }else{
+         %this-->pbrConfigTexCtrl.setBitmap( %mat.pbrConfigMap );
+      }
       if (%mat.detailMap $= ""){
          %this-->detailTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
       }else{
@@ -438,6 +482,11 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    }else{
       %newNormal = %this-->normTexCtrl.bitmap;  
    }
+   if (%this-->pbrConfigTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+      %newPBRConfig = "";
+   }else{
+      %newPBRConfig = %this-->pbrConfigTexCtrl.bitmap;  
+   }
    if (%this-->detailTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
       %newDetail = "";
    }else{
@@ -466,6 +515,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.diffuseMap $= %newDiffuse &&
          %mat.normalMap $= %newNormal &&
          %mat.detailMap $= %newDetail &&
+         %mat.pbrConfigMap $= %newPBRConfig &&
          %mat.macroMap $= %newMacro &&
          %mat.detailSize == %detailSize &&
          %mat.diffuseSize == %diffuseSize &&
@@ -497,7 +547,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    }
    
    %mat.diffuseMap = %newDiffuse;    
-   %mat.normalMap = %newNormal;    
+   %mat.normalMap = %newNormal;   
+   %mat.pbrConfigMap = %newPBRConfig; 
    %mat.detailMap = %newDetail;    
    %mat.macroMap = %newMacro;
    %mat.detailSize = %detailSize;  
@@ -543,6 +594,7 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          internalName = %mat.internalName;
          diffuseMap = %mat.diffuseMap;
          normalMap = %mat.normalMap;
+         pbrConfigMap = %mat.pbrConfigMap;
          detailMap = %mat.detailMap;
          macroMap = %mat.macroMap;
          detailSize = %mat.detailSize;
@@ -577,6 +629,7 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.setInternalName( %obj.internalName );
       %mat.diffuseMap = %obj.diffuseMap;
       %mat.normalMap = %obj.normalMap;
+      %mat.pbrConfigMap = %obj.pbrConfigMap;
       %mat.detailMap = %obj.detailMap;
       %mat.macroMap = %obj.macroMap;
       %mat.detailSize = %obj.detailSize;

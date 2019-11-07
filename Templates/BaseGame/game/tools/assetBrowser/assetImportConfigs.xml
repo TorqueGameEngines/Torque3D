@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <AssetImportSettings>
     <Group name="TestConfig">
-        <Group name="Meshes">
-            <Setting name="DoUpAxisOverride">0</Setting>
-            <Setting name="IgnoreNodeScale">0</Setting>
-            <Setting name="ScaleOverride">1</Setting>
-            <Setting name="CollapseSubmeshes">0</Setting>
-            <Setting name="AdjustCenter">0</Setting>
-            <Setting name="AdjustFloor">0</Setting>
-            <Setting name="UpAxisOverride">Z_AXIS</Setting>
-            <Setting name="LODType">TrailingNumber</Setting>
+        <Group name="Animations">
+            <Setting name="SeparateAnimations">1</Setting>
+            <Setting name="ImportAnimations">1</Setting>
         </Group>
         <Group name="Materials">
-            <Setting name="ImportMaterials">1</Setting>
-            <Setting name="CreateComposites">1</Setting>
-            <Setting name="UseDiffuseSuffixOnOriginImage">1</Setting>
-            <Setting name="UseExistingMaterials">1</Setting>
             <Setting name="IgnoreMaterials">ColorEffect*,</Setting>
+            <Setting name="UseExistingMaterials">1</Setting>
+            <Setting name="UseDiffuseSuffixOnOriginImage">1</Setting>
+            <Setting name="CreateComposites">1</Setting>
+            <Setting name="ImportMaterials">1</Setting>
+        </Group>
+        <Group name="Meshes">
+            <Setting name="AdjustFloor">0</Setting>
+            <Setting name="CollapseSubmeshes">0</Setting>
+            <Setting name="IgnoreNodeScale">0</Setting>
+            <Setting name="UpAxisOverride">Z_AXIS</Setting>
+            <Setting name="ScaleOverride">1</Setting>
+            <Setting name="LODType">TrailingNumber</Setting>
+            <Setting name="AdjustCenter">0</Setting>
+            <Setting name="DoUpAxisOverride">0</Setting>
         </Group>
         <Group name="Images">
-            <Setting name="AOTypeSuffixes">_AO,_AMBIENT,_AMBIENTOCCLUSION</Setting>
-            <Setting name="MetalnessTypeSuffixes">_METAL,_MET,_METALNESS,_METALLIC</Setting>
-            <Setting name="PopulateMaterialMaps">1</Setting>
-            <Setting name="UseMips">1</Setting>
-            <Setting name="Compressed">1</Setting>
-            <Setting name="TextureFilteringMode">Bilinear</Setting>
-            <Setting name="GenerateMaterialOnImport">1</Setting>
-            <Setting name="RoughnessTypeSuffixes">_ROUGH,_ROUGHNESS</Setting>
-            <Setting name="IsHDR">0</Setting>
             <Setting name="Scaling">1.0</Setting>
-            <Setting name="DiffuseTypeSuffixes">_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL,_baseColor,</Setting>
-            <Setting name="CompositeTypeSuffixes">_COMP,_COMPOSITE</Setting>
-            <Setting name="ImageType">N/A</Setting>
-            <Setting name="SmoothnessTypeSuffixes">_SMOOTH,_SMOOTHNESS</Setting>
+            <Setting name="UseMips">1</Setting>
+            <Setting name="TextureFilteringMode">Bilinear</Setting>
+            <Setting name="IsHDR">0</Setting>
+            <Setting name="MetalnessTypeSuffixes">_METAL,_MET,_METALNESS,_METALLIC</Setting>
             <Setting name="NormalTypeSuffixes">_NORMAL,_NORM</Setting>
+            <Setting name="AOTypeSuffixes">_AO,_AMBIENT,_AMBIENTOCCLUSION</Setting>
+            <Setting name="ImageType">N/A</Setting>
+            <Setting name="Compressed">1</Setting>
+            <Setting name="RoughnessTypeSuffixes">_ROUGH,_ROUGHNESS</Setting>
+            <Setting name="SmoothnessTypeSuffixes">_SMOOTH,_SMOOTHNESS</Setting>
+            <Setting name="DiffuseTypeSuffixes">_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL,_baseColor,_a,</Setting>
+            <Setting name="PopulateMaterialMaps">1</Setting>
+            <Setting name="GenerateMaterialOnImport">1</Setting>
+            <Setting name="CompositeTypeSuffixes">_COMP,_COMPOSITE</Setting>
         </Group>
         <Group name="Collision">
             <Setting name="GenerateLOSCollisions">1</Setting>
-            <Setting name="GenerateCollisions">1</Setting>
-            <Setting name="LOSCollisionMeshPrefix">LOS</Setting>
             <Setting name="CollisionMeshPrefix">Col</Setting>
             <Setting name="GenCollisionType">CollisionMesh</Setting>
+            <Setting name="GenerateCollisions">1</Setting>
+            <Setting name="LOSCollisionMeshPrefix">LOS</Setting>
             <Setting name="GenLOSCollisionType">CollisionMesh</Setting>
-        </Group>
-        <Group name="Animations">
-            <Setting name="ImportAnimations">1</Setting>
-            <Setting name="SeparateAnimations">1</Setting>
         </Group>
         <Group name="Sounds">
             <Setting name="PitchAdjust">1.0</Setting>
-            <Setting name="Compressed">0</Setting>
             <Setting name="VolumeAdjust">1.0</Setting>
+            <Setting name="Compressed">0</Setting>
         </Group>
         <Group name="General">
             <Setting name="DuplicatAutoResolution">AutoPrune</Setting>

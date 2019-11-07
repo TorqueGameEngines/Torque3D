@@ -164,7 +164,7 @@ function toggleEditor(%make)
 
 //------------------------------------------------------------------------------
 //  The editor action maps are defined in editor.bind.cs
-GlobalActionMap.bind(keyboard, "f11", toggleEditor);
+GlobalActionMap.bind(keyboard, "f11", fastLoadWorldEdit);
 
 
 // The scenario:

@@ -35,8 +35,6 @@ singleton ShaderData( PFX_PassthruShader )
 
 function postFXInit()
 {
-   exec("core/postFX/guis/postFxManager.gui");
-   
    //Load the core postFX files themselves
    if (!$Server::Dedicated)
    {

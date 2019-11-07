@@ -5,14 +5,20 @@ function AssetBrowser::createLevelAsset(%this)
    
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
-   %tamlpath = %modulePath @ "/levels/" @ %assetName @ ".asset.taml";
-   %levelPath = %modulePath @ "/levels/" @ %assetName @ ".mis";
+   %assetPath = AssetBrowser.currentAddress @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %levelPath = %assetPath @ %assetName @ ".mis";
    
    %asset = new LevelAsset()
    {
       AssetName = %assetName;
       versionId = 1;
       LevelFile = %assetName @ ".mis";
+      DecalsFile = %assetName @ ".mis.decals";
+      PostFXPresetFile = %assetName @ ".postfxpreset.cs";
+      ForestFile = %assetName @ ".forest";
+      NavmeshFile = %assetName @ ".nav";
       LevelName = AssetBrowser.newAssetSettings.levelName;
       AssetDescription = AssetBrowser.newAssetSettings.description;
       PreviewImage = AssetBrowser.newAssetSettings.levelPreviewImage;
@@ -24,6 +30,10 @@ function AssetBrowser::createLevelAsset(%this)
    {
       echo("Unable to copy template level file!");
    }
+   
+   //Generate the associated files
+   DecalManagerSave( %assetPath @ %asset.DecalsFile );
+   PostFXManager::savePresetHandler( %assetPath @ %asset.PostFXPresetFile );
 
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);

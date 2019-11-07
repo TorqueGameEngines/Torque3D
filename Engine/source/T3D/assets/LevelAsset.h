@@ -46,6 +46,10 @@ class LevelAsset : public AssetBase
 
    StringTableEntry        mLevelName;
    StringTableEntry        mLevelFile;
+   StringTableEntry        mPostFXPresetFile;
+   StringTableEntry        mDecalsFile;
+   StringTableEntry        mForestFile;
+   StringTableEntry        mNavmeshFile;
    StringTableEntry        mPreviewImage;
 
    bool                    mIsSubLevel;
@@ -66,6 +70,14 @@ public:
 
    void                    setLevelFile(const char* pImageFile);
    inline StringTableEntry getLevelFile(void) const { return mLevelFile; };
+   void                    setPostFXPresetFile(const char* pPostFXPresetFile);
+   inline StringTableEntry getPostFXPresetFile(void) const { return mPostFXPresetFile; };
+   void                    setDecalsFile(const char* pDecalsFile);
+   inline StringTableEntry getDecalsFile(void) const { return mDecalsFile; };
+   void                    setForestFile(const char* pForestFile);
+   inline StringTableEntry getForestFile(void) const { return mForestFile; };
+   void                    setNavmeshFile(const char* pNavmeshFile);
+   inline StringTableEntry getNavmeshFile(void) const { return mNavmeshFile; };
    void                    setImageFile(const char* pImageFile);
    inline StringTableEntry getImageFile(void) const { return mPreviewImage; };
 

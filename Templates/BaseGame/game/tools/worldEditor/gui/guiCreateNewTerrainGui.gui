@@ -299,6 +299,20 @@
 function CreateNewTerrainGui::onWake( %this )
 {   
    %this-->theName.setText( "" );
+   
+   //Run through and grab any TerrainMaterialAssets
+   %assetQuery = new AssetQuery();
+   AssetDatabase.findAssetType(%assetQuery, "TerrainMaterialAsset");
+        
+   %count = %assetQuery.getCount();
+      
+	for(%i=0; %i < %count; %i++)
+	{
+	   %assetId = %assetQuery.getAsset(%i);
+	   
+      AssetDatabase.acquireAsset(%assetId);
+	}	
+	%assetQuery.delete();		   
 
    %matList = %this-->theMaterialList;
    %matList.clear();
@@ -313,8 +327,8 @@ function CreateNewTerrainGui::onWake( %this )
    %rezList.add( "512", 512 );
    %rezList.add( "1024", 1024 );
    %rezList.add( "2048", 2048 );
-   //%rezList.add( "4096", 4096 );
-   %rezList.setSelected( 256 );
+   %rezList.add( "4096", 4096 );
+   %rezList.setSelected( 512 );
    
    %this-->flatRadio.setStateOn( true );
 }

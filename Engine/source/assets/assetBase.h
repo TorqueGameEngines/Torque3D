@@ -104,6 +104,12 @@ public:
 
    void                    refreshAsset(void);
 
+   S32 getAssetDependencyFieldCount(const char* pFieldName);
+   void clearAssetDependencyFields(const char* pFieldName);
+   void addAssetDependencyField(const char* pFieldName, const char* pAssetId);
+
+   bool saveAsset();
+
    /// Declare Console Object.
    DECLARE_CONOBJECT(AssetBase);
 

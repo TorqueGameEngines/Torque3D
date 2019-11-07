@@ -731,7 +731,7 @@
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "70 2";
-                           Extent = "57 16";
+                           Extent = "107 16";
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
@@ -772,7 +772,7 @@
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "specMapDisplayBitmap";
+                           internalName = "PBRConfigMapDisplayBitmap";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiDefaultProfile";
@@ -806,7 +806,7 @@
                            AnchorBottom = "0";
                            AnchorLeft = "1";
                            AnchorRight = "0";
-                           text = "Composite Map";
+                           text = "PBR Config Map";
                            maxLength = "1024";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -821,7 +821,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateSpecMap(1);";
+                           Command = "MaterialEditorGui.updatePBRConfigMap(1);";
                            tooltipprofile = "ToolsGuiDefaultProfile";
                            ToolTip = "Change the packed spec map for this layer. \n Smoothness (R), Ambient Occlusion (G), and Metalness(B))";
                            hovertime = "1000";
@@ -832,7 +832,7 @@
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "specMapNameText";
+                           internalName = "PBRConfigMapNameText";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiTextProfile";
@@ -861,7 +861,7 @@
                            position = "134 34";
                            Extent = "40 16";
                            buttonType = "PushButton";
-                           command="MaterialEditorGui.updateSpecMap(1);";
+                           command="MaterialEditorGui.updatePBRConfigMap(1);";
                         };
                         new GuiBitmapButtonCtrl() {
                            canSaveDynamicFields = "0";
@@ -875,7 +875,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateSpecMap(0);";
+                           Command = "MaterialEditorGui.updatePBRConfigMap(0);";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";

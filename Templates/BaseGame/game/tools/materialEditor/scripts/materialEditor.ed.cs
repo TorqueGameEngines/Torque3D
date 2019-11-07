@@ -589,9 +589,9 @@ function MaterialEditorGui::convertTextureFields(%this)
    
    for(%specI = 0; %specI < 4; %specI++)
    {
-      %specMap = MaterialEditorGui.currentMaterial.specularMap[%specI];      
-      %specMap = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %specMap);
-      MaterialEditorGui.currentMaterial.specularMap[%specI] = %specMap;
+      %PBRConfigMap = MaterialEditorGui.currentMaterial.PBRConfigMap[%specI];      
+      %PBRConfigMap = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %PBRConfigMap);
+      MaterialEditorGui.currentMaterial.PBRConfigMap[%specI] = %PBRConfigMap;
    }
    
    for(%roughI = 0; %roughI < 4; %roughI++)
@@ -906,15 +906,15 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->isSRGBCheckbox.setValue((%material).isSRGB[%layer]);
    MaterialEditorPropertiesWindow-->invertSmoothnessCheckbox.setValue((%material).invertSmoothness[%layer]);
       
-   if((%material).specularMap[%layer] $= "") 
+   if((%material).PBRConfigMap[%layer] $= "") 
    {
-      MaterialEditorPropertiesWindow-->specMapNameText.setText( "None" );
-      MaterialEditorPropertiesWindow-->specMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+      MaterialEditorPropertiesWindow-->PBRConfigMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->PBRConfigMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
    }
    else
    {
-      MaterialEditorPropertiesWindow-->specMapNameText.setText( (%material).specularMap[%layer] );
-      MaterialEditorPropertiesWindow-->specMapDisplayBitmap.setBitmap( (%material).specularMap[%layer] );
+      MaterialEditorPropertiesWindow-->PBRConfigMapNameText.setText( (%material).PBRConfigMap[%layer] );
+      MaterialEditorPropertiesWindow-->PBRConfigMapDisplayBitmap.setBitmap( (%material).PBRConfigMap[%layer] );
    }
    
    if((%material).roughMap[%layer] $= "") 
@@ -1266,7 +1266,7 @@ function MaterialEditorGui::updateDetailNormalStrength(%this,%newStrength)
    MaterialEditorGui.updateActiveMaterial("detailNormalMapStrength[" @ %layer @ "]", %detailStrength);
 }
 
-function MaterialEditorGui::updateSpecMap(%this,%action)
+function MaterialEditorGui::updatePBRConfigMap(%this,%action)
 {
    %layer = MaterialEditorGui.currentLayer;
    
@@ -1277,20 +1277,20 @@ function MaterialEditorGui::updateSpecMap(%this,%action)
       {
          MaterialEditorGui.updateActiveMaterial("pixelSpecular[" @ MaterialEditorGui.currentLayer @ "]", 0);
          
-         MaterialEditorPropertiesWindow-->specMapDisplayBitmap.setBitmap(%texture);
+         MaterialEditorPropertiesWindow-->PBRConfigMapDisplayBitmap.setBitmap(%texture);
       
-         %bitmap = MaterialEditorPropertiesWindow-->specMapDisplayBitmap.bitmap;
+         %bitmap = MaterialEditorPropertiesWindow-->PBRConfigMapDisplayBitmap.bitmap;
          %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
-         MaterialEditorPropertiesWindow-->specMapDisplayBitmap.setBitmap(%bitmap);
-         MaterialEditorPropertiesWindow-->specMapNameText.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial("specularMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
+         MaterialEditorPropertiesWindow-->PBRConfigMapDisplayBitmap.setBitmap(%bitmap);
+         MaterialEditorPropertiesWindow-->PBRConfigMapNameText.setText(%bitmap);
+         MaterialEditorGui.updateActiveMaterial("PBRConfigMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
       }
    }
    else
    {
-      MaterialEditorPropertiesWindow-->specMapNameText.setText("None");
-      MaterialEditorPropertiesWindow-->specMapDisplayBitmap.setBitmap("tools/materialEditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial("specularMap[" @ %layer @ "]","");
+      MaterialEditorPropertiesWindow-->PBRConfigMapNameText.setText("None");
+      MaterialEditorPropertiesWindow-->PBRConfigMapDisplayBitmap.setBitmap("tools/materialEditor/gui/unknownImage");
+      MaterialEditorGui.updateActiveMaterial("PBRConfigMap[" @ %layer @ "]","");
    }
    
    MaterialEditorGui.guiSync( materialEd_previewMaterial );

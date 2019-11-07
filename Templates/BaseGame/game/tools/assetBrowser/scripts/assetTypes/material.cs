@@ -385,10 +385,10 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
          %file.writeline("   AOMap[0] = \"" @ %assetItem.AOImageAsset.filePath @"\";");
          %file.writeline("   AOMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.AOImageAsset.assetName @"\";");
       }
-      if(%assetItem.compositeImageAsset)
+      if(%assetItem.PBRConfigMapImageAsset)
       {
-         %file.writeline("   CompositeMap[0] = \"" @ %assetItem.compositeImageAsset.filePath @"\";");
-         %file.writeline("   CompositeMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.compositeImageAsset.assetName @"\";");
+         %file.writeline("   PBRConfigMap[0] = \"" @ %assetItem.compositeImageAsset.filePath @"\";");
+         %file.writeline("   PBRConfigMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.compositeImageAsset.assetName @"\";");
       }
       %file.writeline("};");
       %file.writeline("//--- OBJECT WRITE END ---");

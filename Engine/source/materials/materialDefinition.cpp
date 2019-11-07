@@ -304,7 +304,7 @@ void Material::initPersistFields()
       addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, Material), MAX_STAGES,
          "Treat Smoothness as Roughness");
 
-      addField( "specularMap", TypeImageFilename, Offset(mPBRConfigMapFilename, Material), MAX_STAGES,
+      addField( "PBRConfigMap", TypeImageFilename, Offset(mPBRConfigMapFilename, Material), MAX_STAGES,
          "Prepacked specular map texture. The RGB channels of this texture provide per-pixel reference values for: "
          "smoothness (R), Ambient Occlusion (G), and metalness(B)");
 

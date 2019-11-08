@@ -745,10 +745,8 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
          newFeatures.addFeature( MFT_VertLit );
          newFeatures.addFeature( MFT_LightbufferMRT );
       }
-      else
+      else if (!fd.features.hasFeature(MFT_GlowMap))
       {
-         // If this object isn't lightmapped or emissive, add a zero-output feature for render target 3
-         if (!fd.features.hasFeature(MFT_IsEmissive)&&(!fd.features.hasFeature(MFT_GlowMap)))
             newFeatures.addFeature( MFT_RenderTarget3_Zero );
       }
    }

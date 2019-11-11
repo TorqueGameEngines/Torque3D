@@ -67,9 +67,18 @@ GFXD3D11StateBlock::GFXD3D11StateBlock(const GFXStateBlockDesc& desc)
    mBlendDesc.RenderTarget[0].DestBlend = GFXD3D11Blend[mDesc.blendDest];
    mBlendDesc.RenderTarget[0].SrcBlend = GFXD3D11Blend[mDesc.blendSrc];
    //alpha
-   mBlendDesc.RenderTarget[0].BlendOpAlpha = GFXD3D11BlendOp[mDesc.separateAlphaBlendEnable ? mDesc.separateAlphaBlendOp : mDesc.blendOp];
-   mBlendDesc.RenderTarget[0].SrcBlendAlpha = GFXD3D11Blend[mDesc.separateAlphaBlendEnable ? mDesc.separateAlphaBlendSrc : mDesc.blendSrc];
-   mBlendDesc.RenderTarget[0].DestBlendAlpha = GFXD3D11Blend[mDesc.separateAlphaBlendEnable ? mDesc.separateAlphaBlendDest : mDesc.blendDest];
+   if (mDesc.separateAlphaBlendEnable)
+   {
+      mBlendDesc.RenderTarget[0].BlendOpAlpha = GFXD3D11BlendOp[mDesc.separateAlphaBlendOp];
+      mBlendDesc.RenderTarget[0].SrcBlendAlpha = GFXD3D11Blend[mDesc.separateAlphaBlendSrc];
+      mBlendDesc.RenderTarget[0].DestBlendAlpha = GFXD3D11Blend[mDesc.separateAlphaBlendDest];
+   }
+   else
+   {
+      mBlendDesc.RenderTarget[0].BlendOpAlpha = mBlendDesc.RenderTarget[0].BlendOp;
+      mBlendDesc.RenderTarget[0].SrcBlendAlpha = GFXD3D11BlendAlpha[mDesc.blendSrc];
+      mBlendDesc.RenderTarget[0].DestBlendAlpha = GFXD3D11BlendAlpha[mDesc.blendDest];
+   }
    //target write mask
    mBlendDesc.RenderTarget[0].RenderTargetWriteMask = mColorMask;
 

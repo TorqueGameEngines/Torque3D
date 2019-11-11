@@ -28,18 +28,31 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/DoUpAxisOverride", "Do Up-axis Override", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/UpAxisOverride", "Up-axis Override", "list", "", "Z_AXIS", "X_AXIS,Y_AXIS,Z_AXIS");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ScaleOverride", "Do Scale Override", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/DoScaleOverride", "Do Scale Override", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ScaleOverride", "Scale Override", "float", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/IgnoreNodeScale", "Ignore Node Scale", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AdjustCenter", "Adjust Center", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AdjustFloor", "Adjust Floor", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/CollapseSubmeshes", "Collapse Submeshes", "bool", "", "0", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/LODType", "LOD Type", "list", "", "TrailingNumber", "TrailingNumber,DetectDTS");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/LODType", "LOD Type", "list", "", "TrailingNumber", "TrailingNumber,DetectDTS,SingleSize");
       //ImportAssetConfigSettingsList.addNewConfigSetting("TrailingNumber", "Trailing Number", "float", "", "2", "", "Mesh");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportedNodes", "Imported Nodes", "command", "", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/IgnoreNodes", "Ignore Nodes", "command", "", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMeshes", "Import Meshes", "command", "", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/IgnoreMeshes", "Imported Meshes", "command", "", "", "");
+      
+      //Assimp/Collada params
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/convertLeftHanded", "Convert To Left Hand", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/calcTangentSpace", "Calculate Tangent Space", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/removeRedundantMats", "Remove Redundant Materials", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/genUVCoords", "Generate UV Corrdinates", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/TransformUVs", "Transform UV Coordinates", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/flipUVCoords", "Flip UV Coordinates", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/findInstances", "Find Instances", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/limitBoneWeights", "Limit Bone Weights", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/JoinIdenticalVerts", "Join Identical Verts", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/reverseWindingOrder", "Flip Winding Order", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/invertNormals", "Invert Normals", "bool", "", "0", "");
       
       //Materials
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/ImportMaterials", "Import Materials", "bool", "", "1", "");
@@ -54,6 +67,8 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Animations/ImportAnimations", "Import Animations", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Animations/SeparateAnimations", "Separate Animations", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Animations/SeparateAnimationPrefix", "Separate Animation Prefix", "string", "", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Animations/animTiming", "Animation Timing", "list", "", "Seconds", "Frames,Seconds,Milliseconds");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Animations/animFPS", "Animation FPS", "float", "", "2", "");
       
       //Collision
       ImportAssetConfigSettingsList.addNewConfigSetting("Collision/GenerateCollisions", "Generate Collisions", "bool", "", "1", "");

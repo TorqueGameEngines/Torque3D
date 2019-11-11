@@ -96,11 +96,6 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/folder.cs");  
    exec("./scripts/assetTypes/terrain.cs");
    exec("./scripts/assetTypes/terrainMaterial.cs");  
-     
-   exec("./scripts/fieldTypes/fieldTypes.cs");
-   exec("./scripts/fieldTypes/listField.cs");
-   exec("./scripts/fieldTypes/moduleDependencies.cs");
-   exec("./scripts/fieldTypes/assetDependencies.cs");
    
    new ScriptObject( AssetBrowserPlugin )
    {

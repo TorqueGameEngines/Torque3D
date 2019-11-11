@@ -77,6 +77,9 @@ protected:
    ///
    F32 mParallaxScale;
 
+   bool mIsSRGB;
+   bool mInvertSmoothness;
+
 public:
 
    TerrainMaterial();

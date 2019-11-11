@@ -449,6 +449,9 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %this-->macroSizeCtrl.setText( %mat.macroSize );
       %this-->macroStrengthCtrl.setText( %mat.macroStrength );
       %this-->macroDistanceCtrl.setText( %mat.macroDistance );      
+      
+      %this-->isSRGB.setValue( %mat.isSRGB );
+      %this-->invertSmoothness.setValue( %mat.invertSmoothness );
             
       %this.activateMaterialCtrls( true );      
    }
@@ -508,6 +511,9 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %macroStrength = %this-->macroStrengthCtrl.getText();
    %macroDistance = %this-->macroDistanceCtrl.getText();   
    
+   %isSRGB = %this-->isSRGB.getValue(); 
+   %invertSmoothness = %this-->invertSmoothness.getValue(); 
+   
    // If no properties of this materials have changed,
    // return.
 
@@ -525,7 +531,9 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.macroSize == %macroSize &&
          %mat.macroStrength == %macroStrength &&
          %mat.macroDistance == %macroDistance &&         
-         %mat.parallaxScale == %parallaxScale )               
+         %mat.parallaxScale == %parallaxScale &&         
+         %mat.isSRGB == %isSRGB &&         
+         %mat.invertSmoothness == %invertSmoothness)               
       return;
       
    // Make sure the material name is unique.
@@ -560,6 +568,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %mat.macroDistance = %macroDistance;    
    %mat.useSideProjection = %useSideProjection;
    %mat.parallaxScale = %parallaxScale;
+   %mat.isSRGB = %isSRGB;
+   %mat.invertSmoothness = %invertSmoothness;
    
    // Mark the material as dirty and needing saving.
    
@@ -606,6 +616,8 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          macroDistance = %mat.macroDistance;
          useSideProjection = %mat.useSideProjection;
          parallaxScale = %mat.parallaxScale;
+         isSRGB = %mat.isSRGB;
+         invertSmoothness = %mat.invertSmoothness;
       };
    }
 }
@@ -641,6 +653,8 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.macroDistance = %obj.macroDistance;
       %mat.useSideProjection = %obj.useSideProjection;
       %mat.parallaxScale = %obj.parallaxScale;
+      %mat.isSRGB = %obj.isSRGB;
+      %mat.invertSmoothness = %obj.invertSmoothness;
    }
 }
 

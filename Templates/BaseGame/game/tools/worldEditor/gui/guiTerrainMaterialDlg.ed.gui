@@ -165,7 +165,7 @@
 
          new GuiBitmapCtrl() {
             bitmap = "core/art/gui/images/separator-v";
-            color = "255 255 255 255";
+            color = "White";
             wrap = "0";
             position = "1 0";
             extent = "183 2";
@@ -739,7 +739,7 @@
             anchorLeft = "1";
             anchorRight = "0";
             position = "6 184";
-            extent = "185 50";
+            extent = "185 64";
             minExtent = "8 2";
             horizSizing = "width";
             vertSizing = "bottom";
@@ -888,12 +888,52 @@
                canSave = "1";
                canSaveDynamicFields = "0";
             };
+            new GuiCheckBoxCtrl() {
+               text = " Is sRGB";
+               groupNum = "-1";
+               buttonType = "ToggleButton";
+               useMouseEvents = "0";
+               position = "55 32";
+               extent = "119 16";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiCheckBoxProfile";
+               visible = "1";
+               active = "1";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               hovertime = "1000";
+               isContainer = "0";
+               internalName = "isSRGb";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+            };
+            new GuiCheckBoxCtrl() {
+               text = " Invert Smoothness";
+               groupNum = "-1";
+               buttonType = "ToggleButton";
+               useMouseEvents = "0";
+               position = "55 48";
+               extent = "119 16";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiCheckBoxProfile";
+               visible = "1";
+               active = "1";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               hovertime = "1000";
+               isContainer = "0";
+               internalName = "invertSmoothness";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+            };
          };
          new GuiBitmapCtrl() {
             bitmap = "tools/gui/images/separator-v";
             color = "255 255 255 255";
             wrap = "0";
-            position = "6 238";
+            position = "6 254";
             extent = "175 2";
             minExtent = "8 2";
             horizSizing = "width";
@@ -914,7 +954,7 @@
             anchorBottom = "0";
             anchorLeft = "1";
             anchorRight = "0";
-            position = "6 245";
+            position = "6 261";
             extent = "185 72";
             minExtent = "8 2";
             horizSizing = "width";
@@ -1222,7 +1262,7 @@
             bitmap = "tools/gui/images/separator-v";
             color = "255 255 255 255";
             wrap = "0";
-            position = "6 320";
+            position = "6 336";
             extent = "175 2";
             minExtent = "8 2";
             horizSizing = "width";
@@ -1243,7 +1283,7 @@
             anchorBottom = "0";
             anchorLeft = "1";
             anchorRight = "0";
-            position = "6 327";
+            position = "6 343";
             extent = "185 72";
             minExtent = "8 2";
             horizSizing = "width";

@@ -799,7 +799,7 @@ TSShape* assimpLoadShape(const Torque::Path &path)
    return tss;
 }
 
-DefineEngineFunction(GetShapeInfo, bool, (const char* shapePath, const char* ctrl), ,
+DefineEngineFunction(GetShapeInfo, bool, (const char* shapePath, const char* ctrl, bool loadCachedDts), ("", "", true),
    "(string shapePath, GuiTreeViewCtrl ctrl) Collect scene information from "
    "a shape file and store it in a GuiTreeView control. This function is "
    "used by the assimp import gui to show a preview of the scene contents "
@@ -820,7 +820,7 @@ DefineEngineFunction(GetShapeInfo, bool, (const char* shapePath, const char* ctr
    // Check if a cached DTS is available => no need to import the source file
    // if we can load the DTS instead
    Torque::Path path(shapePath);
-   if (AssimpShapeLoader::canLoadCachedDTS(path))
+   if (loadCachedDts && AssimpShapeLoader::canLoadCachedDTS(path))
       return false;
 
    AssimpShapeLoader loader;

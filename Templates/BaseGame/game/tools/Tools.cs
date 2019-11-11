@@ -17,7 +17,7 @@ function ToolsModule::onCreate(%this)
    // ----------------------------------------------------------------------------
    
    ModuleDatabase.LoadExplicit( "MainEditor" );
-   ModuleDatabase.LoadExplicit( "Tools_ObjectViewer" );
+   //ModuleDatabase.LoadExplicit( "Tools_ObjectViewer" );
 }
 
 function ToolsModule::onDestroy(%this)

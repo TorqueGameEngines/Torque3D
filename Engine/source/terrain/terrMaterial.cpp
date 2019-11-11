@@ -65,7 +65,9 @@ TerrainMaterial::TerrainMaterial()
       mMacroSize( 200.0f ),
       mMacroStrength( 0.7f ),
       mMacroDistance( 500.0f ),
-      mParallaxScale( 0.0f )
+      mParallaxScale( 0.0f ),
+      mIsSRGB(false),
+      mInvertSmoothness(false)
 {
 }
 
@@ -97,7 +99,10 @@ void TerrainMaterial::initPersistFields()
    addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
 
-   addField("pbrConfigMap", TypeStringFilename, Offset(mCompositeMap, TerrainMaterial), "Composite map for the material");
+   addField("pbrConfigMap", TypeStringFilename, Offset(mCompositeMap, TerrainMaterial), "Composite map for the PBR Configuration of the material");
+   addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");
+   addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, TerrainMaterial), "Should the smoothness channel of the PBR Config map be inverted?");
+
    Parent::initPersistFields();
 
    // Gotta call this at least once or it won't get created!

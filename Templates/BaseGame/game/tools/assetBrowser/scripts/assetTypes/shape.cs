@@ -60,7 +60,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
       }
       else
       {
-         GetShapeInfo(%assetItem.filePath, %shapeInfo);
+         GetShapeInfo(%assetItem.filePath, %shapeInfo, false);
       }
       
       %assetItem.shapeInfo = %shapeInfo;
@@ -241,7 +241,33 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
          else
             $TSShapeConstructor::neverImportMat = $TSShapeConstructor::neverImportMat TAB getToken(%ignoreMaterialList, ",;", %i);
       }
-   }  
+   } 
+   
+   if(getAssetImportConfigValue("Materials/DoUpAxisOverride", "") $= "1")
+      %constructor.upAxis = getAssetImportConfigValue("Meshes/UpAxisOverride", "Z_AXIS");
+
+   %constructor.lodType = getAssetImportConfigValue("Meshes/LODType", "0");
+   //%constructor.singleDetailSize = getAssetImportConfigValue("Meshes/convertLeftHanded", "0");
+   %constructor.alwaysImport = getAssetImportConfigValue("Meshes/ImportedNodes", "");
+   %constructor.neverImport = getAssetImportConfigValue("Meshes/IgnoreNodes", "");
+   %constructor.alwaysImportMesh = getAssetImportConfigValue("Meshes/ImportMeshes", "");
+   %constructor.neverImportMesh = getAssetImportConfigValue("Meshes/IgnoreMeshes", "");   
+   %constructor.ignoreNodeScale = getAssetImportConfigValue("Meshes/IgnoreNodeScale", "0"); 
+   %constructor.adjustCenter = getAssetImportConfigValue("Meshes/AdjustCenter", "0");  
+   %constructor.adjustFloor = getAssetImportConfigValue("Meshes/AdjustFloor", "0");  
+   
+   %constructor.convertLeftHanded = getAssetImportConfigValue("Meshes/convertLeftHanded", "0");
+   %constructor.calcTangentSpace = getAssetImportConfigValue("Meshes/calcTangentSpace", "0");
+   %constructor.genUVCoords = getAssetImportConfigValue("Meshes/genUVCoords", "0");
+   %constructor.flipUVCoords = getAssetImportConfigValue("Meshes/flipUVCoords", "0");
+   %constructor.findInstances = getAssetImportConfigValue("Meshes/findInstances", "0");
+   %constructor.limitBoneWeights = getAssetImportConfigValue("Meshes/limitBoneWeights", "0");
+   %constructor.joinIdenticalVerts = getAssetImportConfigValue("Meshes/joinIdenticalVerts", "0");
+   %constructor.reverseWindingOrder = getAssetImportConfigValue("Meshes/reverseWindingOrder", "0");
+   %constructor.invertNormals = getAssetImportConfigValue("Meshes/invertNormals", "0");   
+   %constructor.removeRedundantMats = getAssetImportConfigValue("Meshes/removeRedundantMats", "0");
+   %constructor.animTiming = getAssetImportConfigValue("Animations/animTiming", "Seconds");
+   %constructor.animFPS = getAssetImportConfigValue("Animations/animFPS", "2");
    
    %constructor.neverImportMat = $TSShapeConstructor::neverImportMat;
    ShapeEditor.saveConstructor( %constructor );

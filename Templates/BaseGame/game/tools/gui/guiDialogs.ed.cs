@@ -36,3 +36,8 @@ exec("./uvEditor.ed.gui");
 exec("./objectSelection.ed.cs");
 exec("./postFxManager.gui");
 exec("./assimpImport.ed.gui");
+
+exec("./fieldTypes/assetDependencies.cs");
+exec("./fieldTypes/fieldTypes.cs");
+exec("./fieldTypes/listField.cs");
+exec("./fieldTypes/moduleDependencies.cs");

@@ -12,10 +12,14 @@
 //  22nd October 08 (Aramis_acg): Added temporary cast to double, added strtoul10_64
 //     to ensure long numbers are handled correctly
 // ------------------------------------------------------------------------------------
-#pragma once
 
+#pragma once
 #ifndef FAST_A_TO_F_H_INCLUDED
 #define FAST_A_TO_F_H_INCLUDED
+
+#ifdef __GNUC__
+#   pragma GCC system_header
+#endif
 
 #include <cmath>
 #include <limits>

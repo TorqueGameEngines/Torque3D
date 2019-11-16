@@ -259,7 +259,7 @@ void MacWindow::_disassociateCocoaWindow()
    mCocoaWindow = NULL;
 }
 
-void MacWindow::setVideoMode(const GFXVideoMode &mode)
+void MacWindow::_setVideoMode(const GFXVideoMode &mode)
 {
    mCurrentMode = mode;
    setSize(mCurrentMode.resolution);

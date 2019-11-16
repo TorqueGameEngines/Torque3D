@@ -156,7 +156,7 @@ void* PlatformWindowSDL::getSystemWindow(const WindowSystem system)
     return NULL;
 }
 
-void PlatformWindowSDL::setVideoMode( const GFXVideoMode &mode )
+void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
 {
    mVideoMode = mode;
    mSuppressReset = true;

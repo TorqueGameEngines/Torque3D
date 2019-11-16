@@ -511,7 +511,7 @@ public:
    virtual void* getPlatformDrawable() const = 0;
 protected:
    virtual void _setFullscreen(const bool fullScreen) {};
-   virtual void _setVideoMode(const GFXVideoMode &mode) {};
+   virtual void _setVideoMode(const GFXVideoMode &mode) = 0;
 };
 
 #endif

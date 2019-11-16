@@ -333,7 +333,7 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
       static AlignedArray<Point4F> lightSpotDirs(MAX_FORWARD_LIGHTS, sizeof(Point4F));
       static AlignedArray<Point4F> lightColors(MAX_FORWARD_LIGHTS, sizeof(Point4F));
       static AlignedArray<Point4F> lightConfigData(MAX_FORWARD_LIGHTS, sizeof(Point4F)); //type, brightness, range, invSqrRange : rgba
-      static AlignedArray<Point4F> lightSpotParams(MAX_FORWARD_LIGHTS, sizeof(Point4F));
+      static AlignedArray<Point2F> lightSpotParams(MAX_FORWARD_LIGHTS, sizeof(Point2F));
 
       dMemset(lightPositions.getBuffer(), 0, lightPositions.getBufferSize());
       dMemset(lightSpotDirs.getBuffer(), 0, lightSpotDirs.getBufferSize());

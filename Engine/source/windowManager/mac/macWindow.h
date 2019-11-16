@@ -42,7 +42,7 @@ public:
 
    virtual GFXDevice *getGFXDevice() { return mDevice; }
    virtual GFXWindowTarget *getGFXTarget() { return mTarget; }
-   virtual void setVideoMode(const GFXVideoMode &mode);
+   virtual void _setVideoMode(const GFXVideoMode &mode);
    virtual const GFXVideoMode &getVideoMode() { return mCurrentMode; }
    
    virtual WindowId getWindowId() { return mWindowId; }

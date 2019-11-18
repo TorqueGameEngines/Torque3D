@@ -1,9 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="512_forestgreen_lines_ALBEDO"
-    imageFile="data/TestGrids/Images/512_forestgreen_lines.png"
-    useMips="true"
-    isHDRImage="false"
-    originalFilePath="E:/Gamedev/T3DMIT/PRs/beatsme/Templates/Full/game/core/art/grids/512_forestgreen_lines.png"
-    VersionId="1" />

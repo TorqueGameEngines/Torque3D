@@ -37,7 +37,7 @@ D3D11_FILL_MODE GFXD3D11FillMode[GFXFill_COUNT];
 D3D11_PRIMITIVE_TOPOLOGY GFXD3D11PrimType[GFXPT_COUNT];
 D3D11_TEXTURE_ADDRESS_MODE GFXD3D11TextureAddress[GFXAddress_COUNT];
 DXGI_FORMAT GFXD3D11DeclType[GFXDeclType_COUNT];
-
+D3D11_BLEND GFXD3D11BlendAlpha[GFXBlend_COUNT];
 //------------------------------------------------------------------------------
 
 void GFXD3D11EnumTranslate::init()
@@ -102,6 +102,17 @@ void GFXD3D11EnumTranslate::init()
    GFXD3D11Blend[GFXBlendDestColor] = D3D11_BLEND_DEST_COLOR;
    GFXD3D11Blend[GFXBlendInvDestColor] = D3D11_BLEND_INV_DEST_COLOR;
    GFXD3D11Blend[GFXBlendSrcAlphaSat] = D3D11_BLEND_SRC_ALPHA_SAT;
+   GFXD3D11BlendAlpha[GFXBlendZero] = D3D11_BLEND_ZERO;
+   GFXD3D11BlendAlpha[GFXBlendOne] = D3D11_BLEND_ONE;
+   GFXD3D11BlendAlpha[GFXBlendSrcColor] = D3D11_BLEND_SRC_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendInvSrcColor] = D3D11_BLEND_INV_SRC_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendSrcAlpha] = D3D11_BLEND_SRC_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendInvSrcAlpha] = D3D11_BLEND_INV_SRC_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendDestAlpha] = D3D11_BLEND_DEST_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendInvDestAlpha] = D3D11_BLEND_INV_DEST_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendDestColor] = D3D11_BLEND_DEST_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendInvDestColor] = D3D11_BLEND_INV_DEST_ALPHA;
+   GFXD3D11BlendAlpha[GFXBlendSrcAlphaSat] = D3D11_BLEND_SRC_ALPHA_SAT;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
    GFXD3D11BlendOp[GFXBlendOpAdd] = D3D11_BLEND_OP_ADD;

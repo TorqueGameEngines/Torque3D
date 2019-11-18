@@ -324,7 +324,7 @@ function ESettingsWindow::getNavEditorSettings(%this)
    
    SettingsInspector.startGroup("Colors");
    SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Hover Spline", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Select Spline", "colorI", "");
+   SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Select Spline", "colorI", "");
    SettingsInspector.endGroup();
 }
 
@@ -348,9 +348,14 @@ function ESettingsWindow::getSceneEditorSettings(%this)
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Misc");
+   //SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Force Load DAE", "bool", "");
    SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Force Load DAE", "bool", "");
    SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterScalar", "Screen Center Scalar", "float", "");
    SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterMax", "Screen Center Max", "float", "");
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Layout");
+   SettingsInspector.addSettingsField("WorldEditor/forceSidebarToSide", "Force Sidebar Window(s) to side", "bool", "1");
    SettingsInspector.endGroup();
 }
 

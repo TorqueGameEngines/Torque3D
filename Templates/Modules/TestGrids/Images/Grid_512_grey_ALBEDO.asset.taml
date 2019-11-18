@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="Grid_512_grey_ALBEDO"
-    imageFile="data/TestGrids/Images/Grid_512_grey.png"
+    imageFile="@assetFile=Grid_512_grey.png"
     useMips="true"
     isHDRImage="false"
     originalFilePath="E:/Gamedev/T3DMIT/PRs/ExpandedAssetStuffs/Templates/Full/game/core/art/grids/Grid_512_grey.png"

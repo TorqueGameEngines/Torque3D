@@ -284,6 +284,18 @@ void EditTSCtrl::consoleInit()
 
 //------------------------------------------------------------------------------
 
+bool EditTSCtrl::resize(const Point2I& newPosition, const Point2I& newExtent)
+{
+   if (!Parent::resize(newPosition, newExtent))
+      return false;
+
+   // Notify the scripts
+   if (isMethod("onResize"))
+      Con::executef(this, "onResize", newPosition, newExtent);
+
+   return true;
+}
+//------------------------------------------------------------------------------
 void EditTSCtrl::make3DMouseEvent(Gui3DMouseEvent & gui3DMouseEvent, const GuiEvent & event)
 {
    (GuiEvent&)(gui3DMouseEvent) = event;

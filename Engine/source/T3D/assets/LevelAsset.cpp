@@ -94,6 +94,9 @@ LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
 
    mGamemodeName = StringTable->EmptyString();
    mMainLevelAsset = StringTable->EmptyString();
+
+   mEditorFile = StringTable->EmptyString();
+   mBakedSceneFile = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -127,6 +130,11 @@ void LevelAsset::initPersistFields()
       &setLevelFile, &getLevelFile, "Path to the Forest cache file.");
    addProtectedField("NavmeshFile", TypeAssetLooseFilePath, Offset(mNavmeshFile, LevelAsset),
       &setLevelFile, &getLevelFile, "Path to the navmesh file.");
+
+   addProtectedField("EditorFile", TypeAssetLooseFilePath, Offset(mEditorFile, LevelAsset),
+      &setEditorFile, &getEditorFile, "Path to the level file with objects that were removed as part of the baking process. Loaded when the editor is loaded for ease of editing.");
+   addProtectedField("BakedSceneFile", TypeAssetLooseFilePath, Offset(mBakedSceneFile, LevelAsset),
+      &setBakedSceneFile, &getBakedSceneFile, "Path to the level file with the objects generated as part of the baking process");
 
    addField("isSubScene", TypeBool, Offset(mIsSubLevel, LevelAsset), "Is this a sublevel to another Scene");
    addField("gameModeName", TypeString, Offset(mGamemodeName, LevelAsset), "Name of the Game Mode to be used with this level");
@@ -185,6 +193,44 @@ void LevelAsset::setImageFile(const char* pImageFile)
 
    // Update.
    mPreviewImage = getOwned() ? expandAssetFilePath(pImageFile) : StringTable->insert(pImageFile);
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void LevelAsset::setEditorFile(const char* pEditorFile)
+{
+   // Sanity!
+   AssertFatal(pEditorFile != NULL, "Cannot use a NULL level file.");
+
+   // Fetch image file.
+   pEditorFile = StringTable->insert(pEditorFile);
+
+   // Ignore no change,
+   if (pEditorFile == mEditorFile)
+      return;
+
+   // Update.
+   mEditorFile = getOwned() ? expandAssetFilePath(pEditorFile) : StringTable->insert(pEditorFile);
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void LevelAsset::setBakedSceneFile(const char* pBakedSceneFile)
+{
+   // Sanity!
+   AssertFatal(pBakedSceneFile != NULL, "Cannot use a NULL level file.");
+
+   // Fetch image file.
+   pBakedSceneFile = StringTable->insert(pBakedSceneFile);
+
+   // Ignore no change,
+   if (pBakedSceneFile == mBakedSceneFile)
+      return;
+
+   // Update.
+   mBakedSceneFile = getOwned() ? expandAssetFilePath(pBakedSceneFile) : StringTable->insert(pBakedSceneFile);
 
    // Refresh the asset.
    refreshAsset();

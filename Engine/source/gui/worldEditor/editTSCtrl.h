@@ -191,6 +191,8 @@ class EditTSCtrl : public GuiTSCtrl
 
       virtual bool isMiddleMouseDown() {return mMiddleMouseDown;}
 
+      virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
+
       S32 getDisplayType() const {return mDisplayType;}
       virtual void setDisplayType(S32 type);
       

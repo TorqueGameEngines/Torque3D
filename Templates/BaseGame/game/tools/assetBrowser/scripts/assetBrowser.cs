@@ -1109,6 +1109,7 @@ function AssetListPanelInputs::onRightMouseDown(%this)
 
 function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
 {
+   %count = %this.getSelectedItemsCount();
    if( %this.getSelectedItemsCount() > 0 && %itemId != 1)
    {
       //AddNewAssetPopup.showPopup(Canvas);  
@@ -1126,6 +1127,10 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
       {
          EditFolderPopup.showPopup(Canvas);
       }
+   }
+   else if(%itemId == 1)
+   {
+      AddNewModulePopup.showPopup(Canvas);
    }
 }
 
@@ -1743,14 +1748,20 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
    {
       echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
       
-      %staticShapeObjDef = AssetDatabase.acquireAsset("Core_GameObjects:StaticShapeObject");
+      /*%staticShapeObjDef = AssetDatabase.acquireAsset("Core_GameObjects:StaticShapeObject");
       
       %newEntity = %staticShapeObjDef.createObject();
       
       %newEntity.position = %pos;
       %newEntity-->MeshComponent.MeshAsset = %module @ ":" @ %asset;
       
-      %newEntity.dirtyGameObject = true; //because if we're specifically setting the mesh asset, it's dirty
+      %newEntity.dirtyGameObject = true; //because if we're specifically setting the mesh asset, it's dirty*/
+      
+      %newEntity = new TSStatic()
+      {
+         position = %pos;
+         shapeAsset = %module @ ":" @ %asset;
+      };
       
       getScene(0).add(%newEntity);
       

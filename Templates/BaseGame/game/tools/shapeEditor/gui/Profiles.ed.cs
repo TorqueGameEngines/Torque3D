@@ -34,8 +34,15 @@ singleton GuiControlProfile(GuiShapeEdScrollProfile : GuiEditorScrollProfile)
 
 singleton GuiControlProfile(GuiShapeEdTextListProfile : ToolsGuiTextListProfile)
 {
-   // Customise the not-active font used for the header row
-   fontColorNA = "75 75 75";
+   fontColor = EditorSettings.value("Theme/fieldTextColor");
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
+   fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
+   
+   fillColor = EditorSettings.value("Theme/fieldBGColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   
    category = "Editor";
 };
 

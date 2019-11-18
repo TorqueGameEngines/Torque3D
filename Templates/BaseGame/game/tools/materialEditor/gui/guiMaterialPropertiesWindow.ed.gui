@@ -2775,6 +2775,7 @@
                         HorizSizing = "width";
 						
                         new GuiTextCtrl() {
+                           profile = "ToolsGuiTextProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "9 4";
@@ -2783,6 +2784,7 @@
                         };                        
                         
                         new GuiTextCtrl() {
+                           profile = "ToolsGuiTextProfile";
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "9 26";
@@ -3201,6 +3203,7 @@
                            Extent = "135 20";
                            
                            new GuiTextCtrl(){ // u
+                              profile = "ToolsGuiTextProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "11 1";
@@ -3243,6 +3246,7 @@
                            Extent = "135 20";
                            
                            new GuiTextCtrl(){ // v
+                              profile = "ToolsGuiTextProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "11 1";
@@ -3317,6 +3321,7 @@
                            Extent = "187 20";
                            
                            new GuiTextCtrl(){ // Speed
+                              profile = "ToolsGuiTextProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "11 0";
@@ -3418,6 +3423,7 @@
                            Extent = "135 20";
                            
                            new GuiTextCtrl(){ // u
+                              profile = "ToolsGuiTextProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "11 1";
@@ -3458,6 +3464,7 @@
                            Extent = "135 20";
                            
                            new GuiTextCtrl(){ // v
+                              profile = "ToolsGuiTextProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "11 1";
@@ -3538,6 +3545,7 @@
                            Extent = "187 20";
                            
                            new GuiTextCtrl(){ // Speed
+                              profile = "ToolsGuiTextProfile";
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "11 0";

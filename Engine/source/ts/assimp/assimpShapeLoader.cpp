@@ -302,7 +302,10 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
       & ~aiProcess_RemoveRedundantMaterials & ~aiProcess_GenSmoothNormals);
 
    if (!shapeScene)
+   {
+      Con::printf("AssimpShapeLoader::fillGuiTreeView - Assimp Error: %s", importer.GetErrorString());
       return false;
+   }
    mScene = shapeScene;
 
    // Initialize tree

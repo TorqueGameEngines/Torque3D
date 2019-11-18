@@ -235,8 +235,12 @@ new GuiControlProfile (ToolsGuiAutoSizeTextProfile)
 if( !isObject( ToolsGuiMLTextProfile ) )
 new GuiControlProfile( ToolsGuiMLTextProfile )
 {
-   fontColorLink = "100 100 100";
-   fontColorLinkHL = "255 255 255";
+   fontColor = EditorSettings.value("Theme/fieldTextColor");
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
+   
+   fontColorLink = EditorSettings.value("Theme/fieldTextColor");
+   fontColorLinkHL = EditorSettings.value("Theme/fieldTextHLColor");
    autoSizeWidth = true;
    autoSizeHeight = true;  
    border = false;
@@ -744,6 +748,8 @@ singleton GuiControlProfile( GuiInspectorTextEditProfile )
    opaque = true;
    fillColor = EditorSettings.value("Theme/fieldBGColor");
    fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   fillColorNA = EditorSettings.value("Theme/fieldBGSELColor");
 
    // No Border (Rendered by field control)
    border = false;
@@ -756,7 +762,7 @@ singleton GuiControlProfile( GuiInspectorTextEditProfile )
    fontSize = 14;
 
    fontColor = EditorSettings.value("Theme/fieldTextColor");
-   fontColorSEL = EditorSettings.value("Theme/fieldTextHLColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextSELColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    category = "Editor";
@@ -798,6 +804,7 @@ singleton GuiControlProfile( GuiInspectorFieldProfile)
    opaque = true;
    fillColor = EditorSettings.value("Theme/fieldBGColor");
    fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    fillColorNA = EditorSettings.value("Theme/fieldBGSELColor");
 
    // border color
@@ -1203,6 +1210,7 @@ singleton GuiControlProfile (IconDropdownProfile)
 {
    border = -2;
    category = "Editor";
-   bitmap = "./icon-dropdownbar";
-   category = "Editor";
+   //bitmap = "./icon-dropdownbar";
+   
+   fillColor = "0 0 0";
 };

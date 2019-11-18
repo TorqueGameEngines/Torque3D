@@ -106,6 +106,11 @@ public:
    /// @note Only valid in single-object mode.
    void setName( StringTableEntry newName );
 
+   void addInspectorGroup(GuiInspectorGroup* group)
+   {
+      mGroups.push_back(group);
+   }
+
    /// Deletes all GuiInspectorGroups
    void clearGroups();   
 

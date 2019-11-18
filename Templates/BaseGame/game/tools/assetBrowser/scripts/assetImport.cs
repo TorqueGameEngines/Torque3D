@@ -289,7 +289,7 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
    };
 
    //little bit of interception here
-   if(%assetItem.assetType $= "Model")
+   /*if(%assetItem.assetType $= "Model")
    {
       %fileExt = fileExt(%assetItem.filePath);
       %shapeInfo = new GuiTreeViewCtrl();
@@ -328,7 +328,7 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
          %assetItem.delete();
          return 0;
       }
-   }
+   }*/
    
    if(%assetType $= "Material")
    {

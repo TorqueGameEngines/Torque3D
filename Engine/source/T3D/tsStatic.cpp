@@ -55,6 +55,8 @@
 #include "console/engineAPI.h"
 #include "T3D/accumulationVolume.h"
 
+#include "gui/editor/inspector/group.h"
+
 using namespace Torque;
 
 extern bool gEditingMission;
@@ -140,6 +142,9 @@ TSStatic::TSStatic()
 #ifdef TORQUE_AFX_ENABLED
    afxZodiacData::convertGradientRangeFromDegrees(mGradientRange, mGradientRangeUser);
 #endif
+
+   mShapeAsset = StringTable->EmptyString();
+   mShapeAssetId = StringTable->EmptyString();
 }
 
 TSStatic::~TSStatic()
@@ -161,6 +166,10 @@ EndImplementEnumType;
 void TSStatic::initPersistFields()
 {
    addGroup("Media");
+
+      addProtectedField("shapeAsset", TypeShapeAssetPtr, Offset(mShapeAsset, TSStatic),
+         &TSStatic::_setShapeAsset, &defaultProtectedGetFn,
+         "The source shape asset.");
 
       addField("shapeName",   TypeShapeFilename,  Offset( mShapeName, TSStatic ),
          "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic." );
@@ -248,6 +257,15 @@ void TSStatic::initPersistFields()
    addField("invertGradientRange",   TypeBool,       Offset(mInvertGradientRange, TSStatic));
    endGroup("AFX");
    Parent::initPersistFields();
+}
+
+bool TSStatic::_setShapeAsset(void* obj, const char* index, const char* data)
+{
+   TSStatic* ts = static_cast<TSStatic*>(obj);// ->setFile(FileName(data));
+
+   ts->setShapeAsset(StringTable->insert(data));
+
+   return false;
 }
 
 bool TSStatic::_setFieldSkin( void *object, const char *index, const char *data )
@@ -344,6 +362,14 @@ bool TSStatic::onAdd()
    return true;
 }
 
+bool TSStatic::setShapeAsset(const StringTableEntry shapeAssetId)
+{
+   mShapeAssetId = shapeAssetId;
+
+   _createShape();
+   return true;
+}
+
 bool TSStatic::_createShape()
 {
    // Cleanup before we create.
@@ -356,15 +382,37 @@ bool TSStatic::_createShape()
    mAmbientThread = NULL;
    mShape = NULL;
 
-   if (!mShapeName || mShapeName[0] == '\0') 
+   if (mShapeAssetId != StringTable->EmptyString())
    {
-      Con::errorf( "TSStatic::_createShape() - No shape name!" );
-      return false;
+      mShapeAsset = mShapeAssetId;
+
+      if (mShapeAsset.isNull())
+      {
+         Con::errorf("[TSStatic] Failed to load shape asset.");
+         return false;
+      }
+
+      mShape = mShapeAsset->getShapeResource();
+
+      if(!mShape)
+      {
+         Con::errorf("TSStatic::_createShape() - Shape Asset had no valid shape!");
+         return false;
+      }
+   }
+   else
+   {
+      if (!mShapeName || mShapeName[0] == '\0')
+      {
+         Con::errorf("TSStatic::_createShape() - No shape name!");
+         return false;
+      }
+
+      mShapeHash = _StringTable::hashString(mShapeName);
+
+      mShape = ResourceManager::get().load(mShapeName);
    }
 
-   mShapeHash = _StringTable::hashString(mShapeName);
-
-   mShape = ResourceManager::get().load(mShapeName);
    if ( bool(mShape) == false )
    {
       Con::errorf( "TSStatic::_createShape() - Unable to load shape: %s", mShapeName );
@@ -831,7 +879,9 @@ U32 TSStatic::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
    if (stream->writeFlag(mask & AdvancedStaticOptionsMask))
    {
+      stream->writeString(mShapeAssetId);
       stream->writeString(mShapeName);
+      
       stream->write((U32)mDecalType);
 
       stream->writeFlag(mAllowPlayerStep);
@@ -923,6 +973,10 @@ void TSStatic::unpackUpdate(NetConnection *con, BitStream *stream)
 
    if (stream->readFlag()) // AdvancedStaticOptionsMask
    {
+      char buffer[256];
+      stream->readString(buffer);
+      mShapeAssetId = StringTable->insert(buffer);
+
       mShapeName = stream->readSTString();
 
       stream->read((U32*)&mDecalType);
@@ -1408,6 +1462,62 @@ U32 TSStatic::getNumDetails()
 //These functions are duplicated in tsStatic and shapeBase.
 //They each function a little differently; but achieve the same purpose of gathering
 //target names/counts without polluting simObject.
+
+void TSStatic::onInspect(GuiInspector* inspector)
+{
+   //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
+   GuiInspectorGroup* tsStaticInspGroup = new GuiInspectorGroup("Shape", inspector);
+
+   tsStaticInspGroup->registerObject();
+   inspector->addInspectorGroup(tsStaticInspGroup);
+   inspector->addObject(tsStaticInspGroup);
+
+   //Do this on both the server and client
+   /*S32 materialCount = mShapeAsset->getShape()->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
+
+   if (isServerObject())
+   {
+      //we need to update the editor
+      for (U32 i = 0; i < mFields.size(); i++)
+      {
+         //find any with the materialslot title and clear them out
+         if (FindMatch::isMatch("MaterialSlot*", mFields[i].mFieldName, false))
+         {
+            setDataField(mFields[i].mFieldName, NULL, "");
+            mFields.erase(i);
+            continue;
+         }
+      }
+
+      //next, get a listing of our materials in the shape, and build our field list for them
+      char matFieldName[128];
+
+      if (materialCount > 0)
+         mComponentGroup = StringTable->insert("Materials");
+
+      for (U32 i = 0; i < materialCount; i++)
+      {
+         StringTableEntry materialname = StringTable->insert(mMeshAsset->getShape()->materialList->getMaterialName(i).c_str());
+
+         //Iterate through our assetList to find the compliant entry in our matList
+         for (U32 m = 0; m < mMeshAsset->getMaterialCount(); m++)
+         {
+            AssetPtr<MaterialAsset> matAsset = mMeshAsset->getMaterialAsset(m);
+
+            if (matAsset->getMaterialDefinitionName() == materialname)
+            {
+               dSprintf(matFieldName, 128, "MaterialSlot%d", i);
+
+               addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
+               break;
+            }
+         }
+      }
+
+      if (materialCount > 0)
+         mComponentGroup = "";
+   }*/
+}
 
 DefineEngineMethod( TSStatic, getTargetName, const char*, ( S32 index ),(0),
    "Get the name of the indexed shape material.\n"

@@ -118,6 +118,7 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
    %assetId = %moduleName@":"@%assetName;
    
    %assetPath = AssetBrowser.currentAddress @ "/";
+   
    %assetFullPath = %assetPath @ "/" @ fileName(%filePath);
    
    %newAsset = new ImageAsset()

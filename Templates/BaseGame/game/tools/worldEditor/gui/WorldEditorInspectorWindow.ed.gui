@@ -20,7 +20,7 @@
       isContainer = "1";
       Profile = "ToolsGuiWindowProfile";
       Position = getWord($pref::Video::mode, 0) - 330 SPC 
-         getWord(EditorGuiToolbar.extent, 1) + getWord(EWTreeWindow.extent, 1) + 40;
+      getWord(EditorGuiToolbar.extent, 1) + getWord(EWTreeWindow.extent, 1) + 40;
       Extent = "300 250";
       MinExtent = "200 150";
       HorizSizing = "windowRelative";

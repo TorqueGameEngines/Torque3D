@@ -174,7 +174,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = "data/" @ %moduleName @ "/Shapes";
+   %assetPath = AssetBrowser.currentAddress @ "/";
    %assetFullPath = %assetPath @ "/" @ fileName(%filePath);
    
    %newAsset = new ShapeAsset()

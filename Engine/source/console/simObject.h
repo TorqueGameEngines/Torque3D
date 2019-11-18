@@ -45,7 +45,7 @@ class Stream;
 class LightManager;
 class SimFieldDictionary;
 class SimPersistID;
-
+class GuiInspector;
 
 /// Base class for objects involved in the simulation.
 ///
@@ -646,6 +646,9 @@ class SimObject: public ConsoleObject, public TamlCallbacks
 
       /// Called when the editor is deactivated.
       virtual void onEditorDisable(){};
+
+      /// Called when the object is inspected via a GuiInspector control
+      virtual void onInspect(GuiInspector*) {};
 
       /// @}
 

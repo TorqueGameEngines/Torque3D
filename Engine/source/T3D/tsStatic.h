@@ -48,6 +48,13 @@
    #include "scene/reflector.h"
 #endif
 
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+#ifndef SHAPEASSET_H
+#include "T3D/assets/ShapeAsset.h"
+#endif 
+
 class TSShapeInstance;
 class TSThread;
 class TSStatic;
@@ -140,7 +147,9 @@ protected:
    bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere);
    bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
    void buildConvex(const Box3F& box, Convex* convex);
-   
+
+   bool setShapeAsset(const StringTableEntry shapeAssetId);
+
    bool _createShape();
    
    void _updatePhysics();
@@ -172,6 +181,9 @@ protected:
    Vector<S32> mCollisionDetails;
    Vector<S32> mLOSDetails;
    TSShapeInstance *mShapeInstance;
+
+   AssetPtr<ShapeAsset> mShapeAsset;
+   StringTableEntry mShapeAssetId;
 
    NetStringHandle   mSkinNameHandle;
    String            mAppliedSkinName;
@@ -210,6 +222,7 @@ public:
 
    DECLARE_CONOBJECT(TSStatic);
    static void initPersistFields();
+   static bool _setShapeAsset(void* obj, const char* index, const char* data);
    static bool _setFieldSkin( void *object, const char* index, const char* data );
    static const char *_getFieldSkin( void *object, const char *data );
 
@@ -245,6 +258,8 @@ public:
    const Vector<S32>& getCollisionDetails() const { return mCollisionDetails; }
 
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
+
+   virtual void onInspect(GuiInspector*);
 
 private:
    virtual void   onStaticModified(const char* slotName, const char*newValue = NULL);

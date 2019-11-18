@@ -347,6 +347,7 @@
                      };
                   };
                   new GuiCheckBoxCtrl() {
+                     profile = "ToolsGuiCheckBoxProfile";
                      text = "Snap to object bounding box";
                      groupNum = "1";
                      useMouseEvents = "0";
@@ -775,6 +776,7 @@
          };
       };
       new GuiCheckBoxCtrl() {
+            profile = "ToolsGuiCheckBoxProfile";
             text = "Grid Snapping";
             groupNum = "1";
             useMouseEvents = "0";
@@ -794,6 +796,7 @@
             canSaveDynamicFields = "0";
          };
       new GuiCheckBoxCtrl() {
+            profile = "ToolsGuiCheckBoxProfile";
             text = "Use Group Center";
             groupNum = "1";
             useMouseEvents = "0";

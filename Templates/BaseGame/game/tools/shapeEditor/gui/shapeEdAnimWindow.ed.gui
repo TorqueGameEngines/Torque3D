@@ -59,6 +59,7 @@
          hovertime = "1000";
 
          new GuiTextCtrl() {
+            Profile = "ToolsGuiTextProfile";
             HorizSizing = "left";
             VertSizing = "top";
             position = "740 19";

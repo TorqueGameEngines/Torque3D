@@ -589,6 +589,8 @@ void GuiInspector::refresh()
    mGroups.push_back(general);
    addObject(general);
 
+   mTargets.first()->onInspect(this);
+
    //Entity inspector group
    if (mTargets.first()->getClassRep()->isSubclassOf("Entity"))
    {
@@ -669,7 +671,7 @@ void GuiInspector::refresh()
                   #endif
                      
                   // The group ended up having no fields.  Remove it.
-				  newGroup->deleteObject();
+				      newGroup->deleteObject();
                }
                else
                {

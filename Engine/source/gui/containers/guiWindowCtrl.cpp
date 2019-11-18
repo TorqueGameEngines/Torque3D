@@ -31,7 +31,7 @@
 #include "gfx/gfxDevice.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gui/containers/guiRolloutCtrl.h"
-
+#include "gui/editor/guiMenuBar.h"
 
 IMPLEMENT_CONOBJECT( GuiWindowCtrl );
 
@@ -855,6 +855,18 @@ void GuiWindowCtrl::onMouseDragged(const GuiEvent &event)
          snapZone.point.y -= SnapDistance;
          snapZone.extent.x += SnapDistance + SnapDistance;
          snapZone.extent.y += SnapDistance + SnapDistance;
+
+         //check if we need to offset because of the menubar
+         U32 menuBarHeight = 0;
+         GuiCanvas* guiCanvas = getRoot();
+         if (guiCanvas)
+         {
+            GuiMenuBar* menuBar = dynamic_cast<GuiMenuBar*>(guiCanvas->getMenuBar());
+            if (menuBar)
+            {
+               menuBarHeight = menuBar->getHeight();
+            }
+         }
          
          // Build valid snap and window vectors to compare against
          Vector< GuiWindowCtrl* > windowList;
@@ -864,11 +876,15 @@ void GuiWindowCtrl::onMouseDragged(const GuiEvent &event)
          {            
             // Make sure the window is both horizontally and vertically
             // within the snap zone for this window.
-            if( !snapZone.overlaps( windowList[i]->getGlobalBounds() ) )
+            RectI windowBounds = windowList[i]->getGlobalBounds();
+            //offset position by menubar height
+            windowBounds.point.y -= menuBarHeight;
+
+            if( !snapZone.overlaps(windowBounds) )
                continue;
             
             // Build edges for snap detection
-            EdgeRectI snapRect( windowList[i]->getGlobalBounds(), mResizeMargin );
+            EdgeRectI snapRect(windowBounds, mResizeMargin );
 
             if( snapRect.right.position.x <= edges.left.position.x + SnapDistance &&
                snapRect.right.position.x >= edges.left.position.x - SnapDistance )

@@ -853,7 +853,7 @@
         canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "1";
-         Profile = "ToolsGuiTransparentProfile";
+         Profile = "ToolsGuiSolidDefaultProfile";
          HorizSizing = "width";
          VertSizing = "height";
          Position = "5 5";

@@ -15,7 +15,6 @@ function AssetBrowser::buildPopupMenus(%this)
       AddNewModulePopup.enableItem(1, false);
    }
    
-     
    if( !isObject( EditAssetPopup ) )
    {
       new PopupMenu( EditAssetPopup )

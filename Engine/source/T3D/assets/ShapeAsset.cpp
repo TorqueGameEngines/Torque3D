@@ -56,7 +56,8 @@ ConsoleType(assetIdString, TypeShapeAssetPtr, String, ASSET_ID_FIELD_PREFIX)
 ConsoleGetType(TypeShapeAssetPtr)
 {
    // Fetch asset Id.
-   return *((StringTableEntry*)dptr);
+   //return *((StringTableEntry*)dptr);
+   return (*((AssetPtr<ShapeAsset>*)dptr)).getAssetId();
 }
 
 //-----------------------------------------------------------------------------

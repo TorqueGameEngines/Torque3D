@@ -52,6 +52,9 @@ class LevelAsset : public AssetBase
    StringTableEntry        mNavmeshFile;
    StringTableEntry        mPreviewImage;
 
+   StringTableEntry        mEditorFile;
+   StringTableEntry        mBakedSceneFile;
+
    bool                    mIsSubLevel;
    StringTableEntry        mMainLevelAsset;
 
@@ -81,6 +84,11 @@ public:
    void                    setImageFile(const char* pImageFile);
    inline StringTableEntry getImageFile(void) const { return mPreviewImage; };
 
+   void                    setEditorFile(const char* pEditorFile);
+   inline StringTableEntry getEditorFile(void) const { return mEditorFile; };
+   void                    setBakedSceneFile(const char* pBakedSceneFile);
+   inline StringTableEntry getBakedSceneFile(void) const { return mBakedSceneFile; };
+
    SimObjectId load();
 
 protected:
@@ -88,6 +96,12 @@ protected:
    static const char* getLevelFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getLevelFile(); }
    static bool setPreviewImageFile(void *obj, const char *index, const char *data) { static_cast<LevelAsset*>(obj)->setImageFile(data); return false; }
    static const char* getPreviewImageFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getImageFile(); }
+
+   static bool setEditorFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setEditorFile(data); return false; }
+   static const char* getEditorFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getEditorFile(); }
+   static bool setBakedSceneFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setBakedSceneFile(data); return false; }
+   static const char* getBakedSceneFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getBakedSceneFile(); }
+
 
    virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void) {}

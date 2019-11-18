@@ -431,6 +431,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiTextCtrl() {
+                  Profile = "ToolsGuiTextProfile";
                   text = "Col Meshes";
                   position = "7 120";
                   extent = "56 16";
@@ -446,6 +447,7 @@
                   Variable = "ShapeEdShapeView.colMeshes";
                };
                new GuiTextCtrl() {
+                  Profile = "ToolsGuiTextProfile";
                   text = "Col Polys";
                   position = "108 120";
                   extent = "43 16";
@@ -1417,6 +1419,7 @@
             canSaveDynamicFields = "0";
             
             new GuiTextCtrl() {
+               Profile = "ToolsGuiTextProfile";
                text = "Fit Type";
                position = "5 5";
                extent = "41 16";
@@ -1434,6 +1437,7 @@
                internalName = "colType";
             };
             new GuiTextCtrl() {
+               Profile = "ToolsGuiTextProfile";
                text = "Fit Target";
                position = "5 25";
                extent = "45 16";

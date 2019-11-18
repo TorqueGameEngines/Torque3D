@@ -5,8 +5,10 @@ function AssetBrowser::createMaterialAsset(%this)
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
    
-   %tamlpath = %modulePath @ "/materials/" @ %assetName @ ".asset.taml";
-   %sgfPath = %modulePath @ "/materials/" @ %assetName @ ".sgf";
+   %assetPath = AssetBrowser.currentAddress @ "/";   
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %sgfPath = %assetPath @ %assetName @ ".sgf";
    
    %asset = new MaterialAsset()
    {
@@ -225,7 +227,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          %assetItem.AOImageAsset.skip = true;
          %assetItem.metalnessImageAsset.skip = true;
          
-         %compositeAssetPath = "data/" @ %assetItem.moduleName @ "/images";
+         %compositeAssetPath = AssetBrowser.currentAddress @ "/";
          %saveAsPath = %compositeAssetPath @ "/" @ %assetItem.assetName @ "_composite.png";
          %compositeAsset = AssetBrowser.addImportingAsset("Image", "", %assetItem, %assetItem.assetName @ "_composite");
          %compositeAsset.generatedAsset = true;
@@ -303,6 +305,12 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
         {
             %dependencyAssetItem = ImportAssetTree.getItemObject(%childId);
             
+            if(%dependencyAssetItem.skip)
+            {
+               %childId = ImportAssetTree.getNextSibling(%childId);
+               continue;
+            }
+            
             %depAssetType = %dependencyAssetItem.assetType;
             if(%depAssetType $= "Image")
             {
@@ -351,44 +359,45 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       
       if(%assetItem.diffuseImageAsset !$= "")
       {
-         %diffuseAssetPath = "data/" @ %moduleName @ "/Images/" @ fileName(%assetItem.diffuseImageAsset.filePath);
+         %diffuseAssetPath = %assetPath @ fileName(%assetItem.diffuseImageAsset.filePath);
+         %file.writeline("   DiffuseMap[0] = \"" @ %diffuseAssetPath @"\";");
          %file.writeline("   DiffuseMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.diffuseImageAsset.assetName @"\";");
       }
       if(%assetItem.normalImageAsset)
       {
-         %normalAssetPath = "data/" @ %moduleName @ "/Images/" @ fileName(%assetItem.normalImageAsset.filePath);
+         %normalAssetPath = %assetPath @ fileName(%assetItem.normalImageAsset.filePath);
          %file.writeline("   NormalMap[0] = \"" @ %normalAssetPath @"\";");
          %file.writeline("   NormalMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.normalImageAsset.assetName @"\";");
       }
-      /*if(%assetItem.specularImageAsset)
-      {
-         %file.writeline("   SpecularMap[0] = \"" @ %assetItem.specularImageAsset.filePath @"\";");
-         %file.writeline("   SpecularMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.specularImageAsset.assetName @"\";");
-      }*/
       if(%assetItem.roughnessImageAsset && %assetItem.roughnessImageAsset.skip == false)
       {
-         %file.writeline("   RoughMap[0] = \"" @ %assetItem.roughnessImageAsset.filePath @"\";");
+         %roughAssetPath = %assetPath @ fileName(%assetItem.roughnessImageAsset.filePath);
+         %file.writeline("   RoughMap[0] = \"" @ %roughAssetPath @"\";");
          %file.writeline("   RoughMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.roughnessImageAsset.assetName @"\";");
       }
       if(%assetItem.smoothnessImageAsset && %assetItem.smoothnessImageAsset.skip == false)
       {
-         %file.writeline("   SmoothnessMap[0] = \"" @ %assetItem.smoothnessImageAsset.filePath @"\";");
+         %smoothnessAssetPath = %assetPath @ fileName(%assetItem.smoothnessImageAsset.filePath);
+         %file.writeline("   SmoothnessMap[0] = \"" @ %smoothnessAssetPath @"\";");
          %file.writeline("   SmoothnessMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.smoothnessImageAsset.assetName @"\";");
       }
       if(%assetItem.metalnessImageAsset && %assetItem.metalnessImageAsset.skip == false)
       {
-         %file.writeline("   MetalMap[0] = \"" @ %assetItem.metalnessImageAsset.filePath @"\";");
+         %metalAssetPath = %assetPath @ fileName(%assetItem.metalnessImageAsset.filePath);
+         %file.writeline("   MetalMap[0] = \"" @ %metalAssetPath @"\";");
          %file.writeline("   MetalMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.metalnessImageAsset.assetName @"\";");
       }
       if(%assetItem.AOImageAsset && %assetItem.AOImageAsset.skip == false)
       {
-         %file.writeline("   AOMap[0] = \"" @ %assetItem.AOImageAsset.filePath @"\";");
+         %AOAssetPath = %assetPath @ fileName(%assetItem.AOImageAsset.filePath);
+         %file.writeline("   AOMap[0] = \"" @ %AOAssetPath @"\";");
          %file.writeline("   AOMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.AOImageAsset.assetName @"\";");
       }
       if(%assetItem.compositeImageAsset)
       {
-         %file.writeline("   CompositeMap[0] = \"" @ %assetItem.compositeImageAsset.filePath @"\";");
-         %file.writeline("   CompositeMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.compositeImageAsset.assetName @"\";");
+         %compAssetPath = %assetPath @ fileName(%assetItem.compositeImageAsset.filePath);
+         %file.writeline("   PBRConfigMap[0] = \"" @ %compAssetPath @"\";");
+         %file.writeline("   PBRConfigMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.compositeImageAsset.assetName @"\";");
       }
       %file.writeline("};");
       %file.writeline("//--- OBJECT WRITE END ---");

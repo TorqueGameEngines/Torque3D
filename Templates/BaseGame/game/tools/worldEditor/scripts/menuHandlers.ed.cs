@@ -225,7 +225,7 @@ function EditorNewLevel( %file )
    if( !$missionRunning )
    {
       activatePackage( "BootEditor" );
-      StartLevel( %file );
+      StartGame( %file );
    }
    else
       EditorOpenMission(%file);
@@ -356,15 +356,46 @@ function EditorOpenMission(%levelAsset)
    else
    {
       //If we got the actual assetdef, just roll with it
+      %levelAssetId = "";
       if(isObject(%levelAsset))
       {
          %assetDef = %levelAsset;
+         %levelAssetId = %assetDef.getAssetId();
       }
       else
       {
          //parse it out if its
          %assetDef = AssetDatabase.acquireAsset(%levelAsset);
+         %levelAssetId = %levelAsset;
       }
+      
+      EditorSettings.setValue("WorldEditor/lastEditedLevel", %levelAssetId);
+      
+      //update the recent levels list
+      %recentLevels = EditorSettings.value("WorldEditor/recentLevelsList");
+      %recentCount = getTokenCount(%recentLevels, ",");
+      
+      %updatedRecentList = %levelAssetId;
+      
+      %updatedRecentCount = 1;
+      for(%i=0; %i < %recentCount; %i++)
+      {
+         %recentEntry = getToken(%recentLevels, ",", %i);
+         
+         if(%levelAssetId $= %recentEntry)
+            continue;
+         
+         %updatedRecentList = %updatedRecentList @ "," @ %recentEntry;
+         
+         %updatedRecentCount++;
+         
+         if(%updatedRecentCount == 10)
+            break;
+      }
+      
+      EditorSettings.setValue("WorldEditor/recentLevelsList", %updatedRecentList);
+      
+      updateRecentLevelsListing();
       
       %filename = %assetDef.levelFile;
       
@@ -387,7 +418,7 @@ function EditorOpenMission(%levelAsset)
    if( !$missionRunning )
    {
       activatePackage( "BootEditor" );
-      StartLevel( %filename );
+      StartGame( %filename );
    }
    else
    {
@@ -571,6 +602,22 @@ function EditorUnmount()
    %obj.unmount();   
 }
 
+//------------------------------------------------------------------------
+function updateRecentLevelsListing()
+{
+   RecentLevelsPopupMenu.clearItems();
+   
+   %recentLevels = EditorSettings.value("WorldEditor/recentLevelsList");
+   %recentCount = getTokenCount(%recentLevels, ",");
+   
+   for(%i=0; %i < %recentCount; %i++)
+   {
+      %recentEntry = getToken(%recentLevels, ",", %i);
+      
+      RecentLevelsPopupMenu.insertItem(%i, %recentEntry, "", "schedule(1,0, \"EditorOpenMission\", " @ %recentEntry @ ");");
+   }
+}
+
 //////////////////////////////////////////////////////////////////////////
 // View Menu Handlers
 //////////////////////////////////////////////////////////////////////////
@@ -631,8 +678,6 @@ function EditorMenuEditPaste()
    if ( isObject( EditorGui.currentEditor ) )
       EditorGui.currentEditor.handlePaste();  
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////
 // Window Menu Handler

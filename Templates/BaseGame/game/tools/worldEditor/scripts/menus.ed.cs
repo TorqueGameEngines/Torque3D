@@ -119,6 +119,12 @@ function EditorGui::buildMenus(%this)
       profile = "ToolsGuiMenuBarProfile";
    };
    
+   %recentLevelsMenu = new PopupMenu(RecentLevelsPopupMenu)
+   {
+      superClass = "MenuBuilder";
+      class = "EditorFileMenu";
+   };
+   
    // File Menu
    %fileMenu = new PopupMenu()
    {
@@ -127,10 +133,11 @@ function EditorGui::buildMenus(%this)
 
       barTitle = "File";
    };
-   
 
    %fileMenu.appendItem("New Level" TAB "" TAB "schedule( 1, 0, \"EditorNewLevel\" );");
    %fileMenu.appendItem("Open Level..." TAB %cmdCtrl SPC "O" TAB "schedule( 1, 0, \"EditorOpenMission\" );");
+   %fileMenu.appendItem("Open Recent" TAB RecentLevelsPopupMenu);
+   %fileMenu.appendItem("-");
    %fileMenu.appendItem("Save Level" TAB %cmdCtrl SPC "S" TAB "EditorSaveMissionMenu();");
    %fileMenu.appendItem("Save Level As..." TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"EditorSaveMissionAs\");");
    %fileMenu.appendItem("-");
@@ -163,6 +170,9 @@ function EditorGui::buildMenus(%this)
    %fileMenu.appendItem("Quit" TAB %quitShortcut TAB "EditorQuitGame();");
 
    %this.menuBar.insert(%fileMenu);
+   
+   //Update the recent levels listing
+   updateRecentLevelsListing();
    
    // Edit Menu
    %editMenu = new PopupMenu()

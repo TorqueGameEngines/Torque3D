@@ -1439,21 +1439,21 @@ function EWorldEditorAlignPopup::onSelect(%this, %id, %text)
 
 function EWorldEditor::onResize(%this, %newPosition, %newExtent)
 {
-   //if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
-   //{
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   {
       %treePos = %this.extent.x - (%this.extent.x * 0.2) SPC EditorGuiToolbar.extent.y;
       %treeExt = %this.extent.x * 0.2 SPC (%this.extent.y * 0.5) - EditorGuiToolbar.extent.y - EditorGuiStatusBar.extent.y - 25;
       
       EWTreeWindow.resize(%treePos.x, %treePos.y, %treeExt.x, %treeExt.y);
-   //}
+   }
 
-   //if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
-   //{
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   {
       %inspPos = EWTreeWindow.position.x SPC EWTreeWindow.position.y + EWTreeWindow.extent.y;
       %inspExt = EWTreeWindow.extent.x SPC %this.extent.y - EWTreeWindow.extent.y - (EditorGuiStatusBar.extent.y * 2);
       
       EWInspectorWindow.resize(%inspPos.x, %inspPos.y, %inspExt.x, %inspExt.y);
-   //}
+   }
 }
 
 //-----------------------------------------------------------------------------

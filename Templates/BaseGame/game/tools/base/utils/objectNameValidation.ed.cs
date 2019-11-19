@@ -25,12 +25,12 @@ function Editor::validateObjectName( %name, %mustHaveName )
 {
    if( %mustHaveName && %name $= "" )
    {
-      MessageBoxOK( "Missing Object Name", "No name given for object.  Please enter a valid object name." );
+      ToolsMessageBoxOK( "Missing Object Name", "No name given for object.  Please enter a valid object name." );
       return false;
    }
    if( !isValidObjectName( %name ) )
    {
-      MessageBoxOK( "Invalid Object Name", "'" @ %name @ "' is not a valid object name." NL
+      ToolsMessageBoxOK( "Invalid Object Name", "'" @ %name @ "' is not a valid object name." NL
          "" NL
          "Please choose a name that begins with a letter or underscore and is otherwise comprised " @
          "exclusively of letters, digits, and/or underscores."
@@ -43,14 +43,14 @@ function Editor::validateObjectName( %name, %mustHaveName )
       if ( %filename $= "" )
          %filename = "an unknown file";
 
-      MessageBoxOK( "Invalid Object Name", "Object names must be unique, and there is an " @
+      ToolsMessageBoxOK( "Invalid Object Name", "Object names must be unique, and there is an " @
          "existing " @ %name.getClassName() @ " object with the name '" @ %name @ "' (defined " @
          "in " @ %filename @ ").  Please choose another name." );
       return false;
    }
    if( isClass( %name ) )
    {
-      MessageBoxOK( "Invalid Object Name", "'" @ %name @ "' is the name of an existing TorqueScript " @
+      ToolsMessageBoxOK( "Invalid Object Name", "'" @ %name @ "' is the name of an existing TorqueScript " @
          "class.  Please choose another name." );
       return false;
    }

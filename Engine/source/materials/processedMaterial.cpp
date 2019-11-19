@@ -134,6 +134,13 @@ void ProcessedMaterial::_setBlendState(Material::BlendOp blendOp, GFXStateBlockD
          desc.blendDest = GFXBlendInvSrcAlpha;
          break;
       }
+   case Material::Sub:
+      {
+         desc.blendOp = GFXBlendOpSubtract;
+         desc.blendSrc = GFXBlendOne;
+         desc.blendDest = GFXBlendOne;
+         break;
+      }
 
    default:
       {

@@ -330,6 +330,10 @@ function ESettingsWindow::getNavEditorSettings(%this)
 
 function ESettingsWindow::getSceneEditorSettings(%this)
 {
+   SettingsInspector.startGroup("Startup");
+   SettingsInspector.addSettingsField("WorldEditor/startupMode", "Startup Mode", "list", "", "Blank Level,Last Open Level");
+   SettingsInspector.endGroup();
+   
    SettingsInspector.startGroup("Render");
    SettingsInspector.addSettingsField("WorldEditor/Render/renderObjHandle", "Object Icons", "bool", "");
    SettingsInspector.addSettingsField("WorldEditor/Render/renderObjText", "Object Text", "bool", "");

@@ -282,9 +282,9 @@ new GuiControlProfile( ToolsGuiTextEditProfile )
    fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    
    fontColor = EditorSettings.value("Theme/fieldTextColor");
-   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
-   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
-   fontColorNA = "200 200 200";
+   fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   fontColorHL = EditorSettings.value("Theme/fieldTextSELColor");
+   fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    textOffset = "4 2";
    autoSizeWidth = false;
    autoSizeHeight = true;

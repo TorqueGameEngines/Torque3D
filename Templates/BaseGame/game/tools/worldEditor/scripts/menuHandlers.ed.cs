@@ -435,6 +435,9 @@ function EditorOpenMission(%levelAsset)
    
       popInstantGroup();
    }
+   
+   //If we've opened a valid level, clear the saveAs tag as it's not really applicable now
+   EditorGui.saveAs = false;
 }
 
 function EditorOpenSceneAppend(%levelAsset)
@@ -605,8 +608,6 @@ function EditorUnmount()
 //------------------------------------------------------------------------
 function updateRecentLevelsListing()
 {
-   RecentLevelsPopupMenu.clearItems();
-   
    %recentLevels = EditorSettings.value("WorldEditor/recentLevelsList");
    %recentCount = getTokenCount(%recentLevels, ",");
    
@@ -614,8 +615,11 @@ function updateRecentLevelsListing()
    {
       %recentEntry = getToken(%recentLevels, ",", %i);
       
-      RecentLevelsPopupMenu.insertItem(%i, %recentEntry, "", "schedule(1,0, \"EditorOpenMission\", " @ %recentEntry @ ");");
+      %command = "schedule(32,0, \"EditorOpenMission\", \"" @ %recentEntry @ "\");";
+      RecentLevelsPopupMenu.item[%i] = %recentEntry TAB "" TAB %command;
    }
+   
+   RecentLevelsPopupMenu.reloadItems();
 }
 
 //////////////////////////////////////////////////////////////////////////

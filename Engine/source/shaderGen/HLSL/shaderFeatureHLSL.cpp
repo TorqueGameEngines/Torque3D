@@ -767,6 +767,21 @@ Var* ShaderFeatureHLSL::getWsView( Var *wsPosition, MultiLine *meta )
    return wsView;
 }
 
+Var* ShaderFeatureHLSL::getInWorldNormal(Vector<ShaderComponent*>& componentList)
+{
+   Var* wsNormal = (Var*)LangElement::find("wsNormal");
+   if (!wsNormal)
+   {
+      ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+      wsNormal = connectComp->getElement(RT_TEXCOORD);
+      wsNormal->setName("wsNormal");
+      wsNormal->setStructName("IN");
+      wsNormal->setType("float3");
+   }
+
+   return wsNormal;
+}
+
 Var* ShaderFeatureHLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &componentList, 
                                                 MultiLine *meta,
                                                 bool useTexAnim,
@@ -853,20 +868,24 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }
 
-   Var* wsNormal = (Var*)LangElement::find("wsNormal");
    Var* normal = (Var*)LangElement::find("normal");
    if (!normal)
    {
       normal = new Var("normal", "float3");
       meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
+
+      Var* wsNormal = (Var*)LangElement::find("wsNormal");
+
       if (!fd.features[MFT_NormalMap])
       {
-         Var* worldToTangent = getInWorldToTangent(componentList);
-         meta->addStatement(new GenOp("  @ = normalize(mul(@,float3(0,0,1.0f)));\r\n\n", normal, worldToTangent));
+         if (!wsNormal)
+            wsNormal = getInWorldNormal(componentList);
+
+         meta->addStatement(new GenOp("  @ = normalize( @ );\r\n\n", normal, wsNormal));
       }
       else
       {
-         meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", normal, wsNormal));
+         meta->addStatement(new GenOp("   @ = normalize(  @ );\r\n", normal, wsNormal));
       }      
    }
 
@@ -2168,7 +2187,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
    // If there isn't a normal map then we need to pass
    // the world space normal to the pixel shader ourselves.
    //Temporarily disabled while we figure out how to better handle normals without a normal map
-  /* if ( !fd.features[MFT_NormalMap] )
+   if ( !fd.features[MFT_NormalMap] )
    {
       Var *outNormal = connectComp->getElement( RT_TEXCOORD );
       outNormal->setName( "wsNormal" );
@@ -2180,7 +2199,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
 
       // Transform the normal to world space.
       meta->addStatement( new GenOp( "   @ = mul( @, float4( normalize( @ ), 0.0 ) ).xyz;\r\n", outNormal, objTrans, inNormal ) );
-   }*/
+   }
 
    addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
 

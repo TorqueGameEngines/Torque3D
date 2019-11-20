@@ -275,24 +275,7 @@ function fastLoadWorldEdit(%val)
          // Flag saying, when level is chosen, launch it with the editor open.
          %defaultLevelFile = EditorSettings.value( "WorldEditor/newLevelFile" );
          
-         %startupMode = EditorSettings.value("WorldEditor/startupMode", "Blank Level");
-         if(%startupMode $= "Blank Level")
-         {
-            EditorNewLevel(%defaultLevelFile);
-         }
-         else if(%startupMode $= "Last Open Level")
-         {
-            %lastLevel = EditorSettings.value("WorldEditor/lastEditedLevel", "");
-            
-            if(%lastLevel $= "")
-            {
-               EditorNewLevel(%defaultLevelFile);
-            }
-            else
-            {
-               EditorOpenMission(%lastLevel);
-            }
-         }
+         EditorNewLevel(%defaultLevelFile);
       }
       else
       {

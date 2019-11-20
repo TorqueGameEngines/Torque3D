@@ -265,7 +265,7 @@ function sceneLightingComplete()
    %probeCount = getWordCount(%probeIds);
    
    $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
-   ProbeBin.processProbes();
+   //ProbeBin.processProbes();
    
    onPhaseComplete("STARTING MISSION");
    

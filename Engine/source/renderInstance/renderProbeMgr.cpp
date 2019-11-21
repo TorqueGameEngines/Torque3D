@@ -521,7 +521,7 @@ ProbeShaderConstants* RenderProbeMgr::getProbeShaderConstants(GFXShaderConstBuff
 
    // Check to see if this is the same shader, we'll get hit repeatedly by
    // the same one due to the render bin loops.
-   /*if (mLastShader.getPointer() != shader)
+   if (mLastShader.getPointer() != shader)
    {
       ProbeConstantMap::Iterator iter = mConstantLookup.find(shader);
       if (iter != mConstantLookup.end())
@@ -538,12 +538,15 @@ ProbeShaderConstants* RenderProbeMgr::getProbeShaderConstants(GFXShaderConstBuff
 
       // Set our new shader
       mLastShader = shader;
+   }
+
+   /*if (mLastConstants == nullptr)
+   {
+      ProbeShaderConstants* psc = new ProbeShaderConstants();
+      mConstantLookup[shader] = psc;
+
+      mLastConstants = psc;
    }*/
-
-   ProbeShaderConstants* psc = new ProbeShaderConstants();
-   mConstantLookup[shader] = psc;
-
-   mLastConstants = psc;
 
    // Make sure that our current lighting constants are initialized
    if (mLastConstants && !mLastConstants->mInit)

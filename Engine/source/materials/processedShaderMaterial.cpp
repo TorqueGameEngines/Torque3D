@@ -415,6 +415,11 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
          fd.features.addFeature( MFT_NormalMapAtlas );
    }
 
+   if (!fd.features.hasFeature(MFT_ForwardShading))
+   {
+      fd.features.removeFeature(MFT_DebugViz);
+   }
+
    // Grab other features like normal maps, base texture, etc.
    FeatureSet mergeFeatures;
    mStages[stageNum].getFeatureSet( &mergeFeatures );
@@ -512,6 +517,8 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    // if HDR is not enabled in the scene.
    //
    fd.features.addFeature( MFT_HDROut );
+
+   fd.features.addFeature(MFT_DebugViz);
 
    // If vertex color is enabled on the material's stage and
    // color is present in vertex format, add diffuse vertex

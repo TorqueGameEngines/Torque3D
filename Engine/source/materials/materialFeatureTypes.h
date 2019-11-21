@@ -153,6 +153,8 @@ DeclareFeatureType( MFT_Fog );
 /// dynamic range color into the correct HDR encoded format.
 DeclareFeatureType( MFT_HDROut );
 
+DeclareFeatureType( MFT_DebugViz );
+
 ///
 DeclareFeatureType( MFT_DeferredConditioner );
 DeclareFeatureType( MFT_InterlacedDeferred );

@@ -142,6 +142,13 @@ void ProcessedMaterial::_setBlendState(Material::BlendOp blendOp, GFXStateBlockD
          break;
       }
 
+   case Material::PreMult:
+   {
+      desc.blendSrc = GFXBlendOne;
+      desc.blendDest = GFXBlendInvSrcAlpha;
+      break;
+   }
+
    default:
       {
          // default to LerpAlpha

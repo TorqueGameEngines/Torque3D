@@ -110,7 +110,46 @@ singleton PostEffect( Viz_SurfacePropertiesPFX )
    
    target = "$backBuffer";
    renderPriority = 9999;
+   
+   renderTime = "PFXBeforeBin";
+   renderBin = "ObjTranslucentBin"; 
 };
+
+function toggleDebugVizMode( %mode )
+{
+   switch$ ( %mode )
+   {
+      case "All Materials":
+         $Viz_DisplayMode = "0";
+      case "Forward Materials Only":
+         $Viz_DisplayMode = "1";
+      case "Deferred Materials Only":
+         $Viz_DisplayMode = "2"; 
+      default:
+         $Viz_DisplayMode = "0";
+   }
+   
+   if($Viz_DisplayMode == 1)
+   {
+      Viz_SurfacePropertiesPFX.disable(); 
+   }
+   else
+   {
+      if($Viz_SurfacePropertiesModeVar != "" && $Viz_SurfacePropertiesModeVar != -1)
+         Viz_SurfacePropertiesPFX.enable(); 
+   }
+   
+   for(%i=0; %i < 3; %i++)
+   {
+      if(%i == $Viz_DisplayMode)
+         EBufferVizModeOptions.checkItem(%i, true);
+      else
+         EBufferVizModeOptions.checkItem(%i, false);
+   }
+   
+   //forces the forward materials to get dis viz properly
+   reInitMaterials();
+}
 
 /// Toggles the visualization of the AL lighting specular power buffer.
 function toggleSurfacePropertiesViz( %mode )
@@ -153,17 +192,24 @@ function toggleSurfacePropertiesViz( %mode )
          $Viz_SurfacePropertiesModeVar = "-1";
    }
    
-   //If the visualizer isn't enabled, we just flip it on
-   if(!Viz_SurfacePropertiesPFX.isEnabled())
+   if($Viz_DisplayMode == 1)
    {
-      Viz_SurfacePropertiesPFX.enable();  
+      Viz_SurfacePropertiesPFX.disable(); 
    }
-   else //if it's currently enabled, check if we clicked the same mode again. If so, disable. If not, just swap modes to the new one
+   else
    {
-      if(%previousMode == $Viz_SurfacePropertiesModeVar)
+      //If the visualizer isn't enabled, we just flip it on
+      if(!Viz_SurfacePropertiesPFX.isEnabled())
       {
-         $Viz_SurfacePropertiesModeVar = -1;
-         Viz_SurfacePropertiesPFX.disable(); 
+         Viz_SurfacePropertiesPFX.enable();  
+      }
+      else //if it's currently enabled, check if we clicked the same mode again. If so, disable. If not, just swap modes to the new one
+      {
+         if(%previousMode == $Viz_SurfacePropertiesModeVar)
+         {
+            $Viz_SurfacePropertiesModeVar = -1;
+            Viz_SurfacePropertiesPFX.disable(); 
+         }
       }
    }
    
@@ -174,6 +220,9 @@ function toggleSurfacePropertiesViz( %mode )
       else
          EVisibilityBufferVizOptions.checkItem(%i, false);
    }
+   
+   //forces the forward materials to get dis viz properly
+   reInitMaterials();
 }
 
 function Viz_SurfacePropertiesPFX::setShaderConsts(%this)

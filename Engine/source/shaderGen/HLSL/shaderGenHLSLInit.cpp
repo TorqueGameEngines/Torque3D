@@ -29,6 +29,7 @@
 #include "shaderGen/HLSL/bumpHLSL.h"
 #include "shaderGen/HLSL/pixSpecularHLSL.h"
 #include "shaderGen/HLSL/depthHLSL.h"
+#include "shaderGen/HLSL/debugVizFeatureHLSL.h"
 #include "shaderGen/HLSL/paraboloidHLSL.h"
 #include "materials/materialFeatureTypes.h"
 #include "core/module.h"
@@ -88,6 +89,8 @@ void _initShaderGenHLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_EyeSpaceDepthOut, new EyeSpaceDepthOutHLSL() );
 
    FEATUREMGR->registerFeature( MFT_HDROut, new HDROutHLSL );
+
+   FEATUREMGR->registerFeature( MFT_DebugViz, new DebugVizHLSL);
 
    FEATUREMGR->registerFeature( MFT_ParaboloidVertTransform, new ParaboloidVertTransformHLSL );
    FEATUREMGR->registerFeature( MFT_IsSinglePassParaboloid, new NamedFeatureHLSL( "Single Pass Paraboloid" ) );

@@ -111,6 +111,10 @@ LangElement* ShaderFeatureHLSL::assignColor( LangElement *elem,
          assign = new GenOp( "@ -= @", color, elem );
          break;
 
+      case Material::PreMult:
+         assign = new GenOp("@ *= @", color, elem);
+         break;
+
       case Material::Mul:
          assign = new GenOp( "@ *= @", color, elem );
          break;
@@ -2223,7 +2227,10 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    MultiLine *meta = new MultiLine;
 
    // Now the wsPosition and wsView.
+   Var* worldToTangent = getInWorldToTangent(componentList);
+   Var* wsNormal = getInWorldNormal(componentList);
    Var *wsPosition = getInWsPosition( componentList );
+   
    Var *wsView = getWsView( wsPosition, meta );
    
    // Look for a light mask generated from a previous
@@ -3037,7 +3044,9 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    MultiLine *meta = new MultiLine;
    
    // Now the wsPosition and wsView.
-   Var *wsPosition = getInWsPosition(componentList);
+   Var* worldToTangent = getInWorldToTangent(componentList);
+   Var *wsNormal = getInWorldNormal(componentList);
+   Var* wsPosition = getInWsPosition(componentList);
    Var *wsView = getWsView(wsPosition, meta);
    
    //Reflection Probe WIP

@@ -79,6 +79,7 @@ function MaterialEditorGui::open(%this)
    MaterialEditorPropertiesWindow-->blendingTypePopUp.add(AddAlpha,3);
    MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Sub,4);
    MaterialEditorPropertiesWindow-->blendingTypePopUp.add(LerpAlpha,5);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(PreMult,6);
    MaterialEditorPropertiesWindow-->blendingTypePopUp.setSelected( 0, false );
 
    //Reflection Types
@@ -786,6 +787,7 @@ function MaterialEditorGui::guiSync( %this, %material )
        case "AddAlpha": %selectedNum = 3;
             case "Sub": %selectedNum = 4;
       case "LerpAlpha": %selectedNum = 5;
+      case "PreMult": %selectedNum = 6;
    }
    MaterialEditorPropertiesWindow-->blendingTypePopUp.setSelected(%selectedNum);
    

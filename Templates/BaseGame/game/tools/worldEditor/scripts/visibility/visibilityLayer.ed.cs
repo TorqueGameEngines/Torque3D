@@ -155,6 +155,18 @@ function setupEditorVisibilityMenu()
    
    %probespopup.enableItem(4, false);
    
+   %bufferVizpopup = new PopupMenu(EBufferVizModeOptions)
+   {
+      superClass = "MenuBuilder";
+      class = "EditorWorldMenu";
+      
+      item[ 0 ] = "All Materials" TAB "" TAB "toggleDebugVizMode(\"All Materials\");";
+      item[ 1 ] = "Forward Materials Only" TAB "" TAB "toggleDebugVizMode(\"Forward Materials Only\");";
+      item[ 2 ] = "Deferred Materials Only" TAB "" TAB "toggleDebugVizMode(\"Deferred Materials Only\");";
+   };
+   
+   toggleDebugVizMode("All Materials");
+   
    //
    //Buffer Viz
    %bufferVizpopup = new PopupMenu(EVisibilityBufferVizOptions)
@@ -162,26 +174,28 @@ function setupEditorVisibilityMenu()
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Base Color" TAB "" TAB "toggleSurfacePropertiesViz(\"BaseColor\");";
-      item[ 1 ] = "Normals" TAB "" TAB "toggleSurfacePropertiesViz(\"Normal\");";
-      item[ 2 ] = "Material Ambient Occlusion" TAB "" TAB "toggleSurfacePropertiesViz(\"AO\");";
-      item[ 3 ] = "Roughness" TAB "" TAB "toggleSurfacePropertiesViz(\"Roughness\");";
-      item[ 4 ] = "Metalness" TAB "" TAB "toggleSurfacePropertiesViz(\"Metalness\");";
-      item[ 5 ] = "Depth" TAB "" TAB "toggleSurfacePropertiesViz(\"Depth\");";
+      item[ 0 ] = "Display Mode" TAB EBufferVizModeOptions;
       
-      item[ 6 ] = "Diffuse Color" TAB "" TAB "toggleSurfacePropertiesViz(\"DiffuseColor\");";
-      item[ 7 ] = "Specular Color" TAB "" TAB "toggleSurfacePropertiesViz(\"SpecularColor\");";
-      item[ 8 ] = "Material Flags" TAB "" TAB "toggleSurfacePropertiesViz(\"MatFlag\");";
+      item[ 1 ] = "Base Color" TAB "" TAB "toggleSurfacePropertiesViz(\"BaseColor\");";
+      item[ 2 ] = "Normals" TAB "" TAB "toggleSurfacePropertiesViz(\"Normal\");";
+      item[ 3 ] = "Material Ambient Occlusion" TAB "" TAB "toggleSurfacePropertiesViz(\"AO\");";
+      item[ 4 ] = "Roughness" TAB "" TAB "toggleSurfacePropertiesViz(\"Roughness\");";
+      item[ 5 ] = "Metalness" TAB "" TAB "toggleSurfacePropertiesViz(\"Metalness\");";
+      item[ 6 ] = "Depth" TAB "" TAB "toggleSurfacePropertiesViz(\"Depth\");";
       
-      item[ 9 ] = "World Position" TAB "" TAB "toggleSurfacePropertiesViz(\"WorldPos\");";
-      item[ 10 ] = "Reflection Vector" TAB "" TAB "toggleSurfacePropertiesViz(\"ReflectionVector\");";
+      item[ 7 ] = "Diffuse Color" TAB "" TAB "toggleSurfacePropertiesViz(\"DiffuseColor\");";
+      item[ 8 ] = "Specular Color" TAB "" TAB "toggleSurfacePropertiesViz(\"SpecularColor\");";
+      item[ 9 ] = "Material Flags" TAB "" TAB "toggleSurfacePropertiesViz(\"MatFlag\");";
       
-      item[ 11 ] = "Fresnel" TAB "" TAB "toggleSurfacePropertiesViz(\"Fresnel\");";
+      item[ 10 ] = "World Position" TAB "" TAB "toggleSurfacePropertiesViz(\"WorldPos\");";
+      item[ 11 ] = "Reflection Vector" TAB "" TAB "toggleSurfacePropertiesViz(\"ReflectionVector\");";
       
-      item[ 12 ] = "Ambient Occlusion" TAB "" TAB "toggleSurfacePropertiesViz(\"SSAO\");";
+      item[ 12 ] = "Fresnel" TAB "" TAB "toggleSurfacePropertiesViz(\"Fresnel\");";
       
-      item[ 13 ] = "Backbuffer" TAB "" TAB "toggleSurfacePropertiesViz(\"Backbuffer\");";
-      item[ 14 ] = "Glow" TAB "" TAB "toggleSurfacePropertiesViz(\"Glow\");";
+      item[ 13 ] = "Ambient Occlusion" TAB "" TAB "toggleSurfacePropertiesViz(\"SSAO\");";
+      
+      item[ 14 ] = "Backbuffer" TAB "" TAB "toggleSurfacePropertiesViz(\"Backbuffer\");";
+      item[ 15 ] = "Glow" TAB "" TAB "toggleSurfacePropertiesViz(\"Glow\");";
    };
    
    //

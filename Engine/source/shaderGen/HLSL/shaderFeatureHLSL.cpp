@@ -115,6 +115,10 @@ LangElement* ShaderFeatureHLSL::assignColor( LangElement *elem,
          assign = new GenOp( "@ *= @", color, elem );
          break;
 
+      case Material::PreMul:
+         assign = new GenOp("@.rgb = @.rgb + (@.rgb*(1.0-@.a))", color, elem, color, elem);
+         break;
+
       case Material::AddAlpha:
          assign = new GenOp( "@ += @ * @.a", color, elem, elem );
          break;

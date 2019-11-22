@@ -106,6 +106,7 @@ public:
    {
       None = 0,
       Mul,
+      PreMul,
       Add,
       AddAlpha,      // add modulated with alpha channel
       Sub,

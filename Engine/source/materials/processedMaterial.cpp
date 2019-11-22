@@ -128,6 +128,12 @@ void ProcessedMaterial::_setBlendState(Material::BlendOp blendOp, GFXStateBlockD
          desc.blendDest = GFXBlendInvSrcAlpha;
          break;
       }
+   case Material::PreMul:
+      {
+         desc.blendSrc = GFXBlendOne;
+         desc.blendDest = GFXBlendInvSrcAlpha;
+         break;
+      }
    case Material::LerpAlpha:
       {
          desc.blendSrc = GFXBlendSrcAlpha;

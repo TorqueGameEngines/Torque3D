@@ -112,7 +112,8 @@ LangElement* ShaderFeatureHLSL::assignColor( LangElement *elem,
          break;
 
       case Material::PreMult:
-         assign = new GenOp("@ *= @", color, elem);
+         //result = src.rgb + (dst.rgb * (1 - src.A))
+         assign = new GenOp("@.rgb = @.rgb + (@.rgb * (1 - @.a))", color, color, elem, color);
          break;
 
       case Material::Mul:
@@ -3141,15 +3142,21 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
 
    //Reflection vec
-   String computeForwardProbes = String::String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   Var* ibl = (Var*)LangElement::find("ibl");
+   if (!ibl)
+   {
+      ibl = new Var("ibl", "float3");
+   }
+
+   String computeForwardProbes = String::String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
       
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), curColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
       skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
 
-   //meta->addStatement(new GenOp("   @.rgb = @.roughness.xxx;\r\n", albedo, surface));
+   meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));
 
    output = meta;
 }

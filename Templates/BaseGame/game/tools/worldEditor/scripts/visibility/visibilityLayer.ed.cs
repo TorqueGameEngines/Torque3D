@@ -150,10 +150,9 @@ function setupEditorVisibilityMenu()
       item[ 1 ] = "Show Probe Contribution" TAB "" TAB "toggleProbeViz(\"Contribution\");";
       item[ 2 ] = "Show Probe Specular Reflections Only" TAB "" TAB "toggleProbeViz(\"Specular\");";
       item[ 3 ] = "Show Probe Diffuse Reflections Only" TAB "" TAB "toggleProbeViz(\"Diffuse\");";
-      item[ 4 ] = "Enable Live Updates on Selected Probe" TAB "" TAB "";
+      item[ 4 ] = "-";
+      item[ 5 ] = "Enable Live Updates on Selected Probe" TAB "" TAB "toggleProbeLiveUpdates();";
    };
-   
-   %probespopup.enableItem(4, false);
    
    %bufferVizpopup = new PopupMenu(EBufferVizModeOptions)
    {

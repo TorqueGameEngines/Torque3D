@@ -483,3 +483,156 @@ float4 computeForwardProbes(Surface surface,
 
    return float4(irradiance + specular, 0);//alpha writes disabled
 }
+
+float4 debugVizForwardProbes(Surface surface,
+    float cubeMips, int numProbes, float4x4 worldToObjArray[MAX_FORWARD_PROBES], float4 probeConfigData[MAX_FORWARD_PROBES], 
+    float4 inProbePosArray[MAX_FORWARD_PROBES], float4 refBoxMinArray[MAX_FORWARD_PROBES], float4 refBoxMaxArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
+    float skylightCubemapIdx, TORQUE_SAMPLER2D(BRDFTexture), 
+	 TORQUE_SAMPLERCUBEARRAY(irradianceCubemapAR), TORQUE_SAMPLERCUBEARRAY(specularCubemapAR), int showAtten, int showContrib, int showSpec, int showDiff)
+{
+   int i = 0;
+   float alpha = 1;
+   float blendFactor[MAX_FORWARD_PROBES];
+   float blendSum = 0;
+   float blendFacSum = 0;
+   float invBlendSum = 0;
+   float probehits = 0;
+   //Set up our struct data
+   float contribution[MAX_FORWARD_PROBES];
+  for (i = 0; i < numProbes; ++i)
+  {
+      contribution[i] = 0;
+
+      if (probeConfigData[i].r == 0) //box
+      {
+         contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
+         if (contribution[i] > 0.0)
+            probehits++;
+      }
+      else if (probeConfigData[i].r == 1) //sphere
+      {
+         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
+         if (contribution[i] > 0.0)
+            probehits++;
+      }
+
+      contribution[i] = max(contribution[i], 0);
+
+      blendSum += contribution[i];
+      invBlendSum += (1.0f - contribution[i]);
+   }
+
+   if (probehits > 1.0)
+   {
+      for (i = 0; i < numProbes; i++)
+      {
+         blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
+         blendFactor[i] *= ((contribution[i]) / invBlendSum);
+         blendFactor[i] = saturate(blendFactor[i]);
+         blendFacSum += blendFactor[i];
+      }
+
+      // Normalize blendVal
+      if (blendFacSum == 0.0f) // Possible with custom weight
+      {
+         blendFacSum = 1.0f;
+      }
+
+      float invBlendSumWeighted = 1.0f / blendFacSum;
+      for (i = 0; i < numProbes; ++i)
+      {
+         blendFactor[i] *= invBlendSumWeighted;
+         contribution[i] *= blendFactor[i];
+      }
+   }
+
+   if(showAtten == 1)
+   {
+      float contribAlpha = 1;
+      for (i = 0; i < numProbes; ++i)
+      {
+         contribAlpha -= contribution[i];
+      }
+
+      return float4(1 - contribAlpha, 1 - contribAlpha, 1 - contribAlpha, 1);
+   }
+
+   if(showContrib == 1)
+   {
+      float3 probeContribColors[4];
+      probeContribColors[0] = float3(1,0,0);
+      probeContribColors[1] = float3(0,1,0);
+      probeContribColors[2] = float3(0,0,1);
+      probeContribColors[3] = float3(1,1,0);
+
+      float3 finalContribColor = float3(0, 0, 0);
+      float contribAlpha = 1;
+      for (i = 0; i < numProbes; ++i)
+      {
+         finalContribColor += contribution[i] *probeContribColors[i].rgb;
+         contribAlpha -= contribution[i];
+      }
+
+      //Skylight coloration for anything not covered by probes above
+      if(skylightCubemapIdx != -1)
+         finalContribColor += float3(0.3, 0.3, 0.3) * contribAlpha;
+
+      return float4(finalContribColor, 1);
+   }
+
+   float3 irradiance = float3(0, 0, 0);
+   float3 specular = float3(0, 0, 0);
+
+   // Radiance (Specular)
+   float lod = surface.roughness*cubeMips;
+
+   if(showSpec == 1)
+   {
+      lod = 0;
+   }
+
+   for (i = 0; i < numProbes; ++i)
+   {
+      float contrib = contribution[i];
+      if (contrib > 0.0f)
+      {
+         int cubemapIdx = probeConfigData[i].a;
+         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
+
+         irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
+         specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
+         alpha -= contrib;
+      }
+   }
+
+   if(skylightCubemapIdx != -1 && alpha >= 0.001)
+   {
+      irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
+      specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
+   }
+
+   if(showSpec == 1)
+   {
+      return float4(specular, 0);
+   }
+
+   if(showDiff == 1)
+   {
+      return float4(irradiance, 0);
+   }
+
+   //energy conservation
+   float3 kD = 1.0f - surface.F;
+   kD *= 1.0f - surface.metalness;
+
+   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
+   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   irradiance *= kD * surface.baseColor.rgb;
+
+   //AO
+   irradiance *= surface.ao;
+   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
+
+   return float4(irradiance + specular, 0);//alpha writes disabled
+}

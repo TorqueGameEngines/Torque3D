@@ -200,6 +200,12 @@ void ReflectionProbe::inspectPostApply()
 
    mDirty = true;
 
+   bool liveUpdates = Con::getBoolVariable("$Probes::liveUpdates", false);
+   if (liveUpdates)
+   {
+      bake();
+   }
+
    // Flag the network mask to send the updates
    // to the client object
    setMaskBits(-1);

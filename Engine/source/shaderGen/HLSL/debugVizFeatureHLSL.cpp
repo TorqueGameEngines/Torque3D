@@ -24,18 +24,20 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
 {
    MultiLine* meta = new MultiLine;
    Var* surface = (Var*)LangElement::find("surface");
+   Var* color = (Var*)LangElement::find("col");
+
+   if (!surface)
+      return;
 
    //0 == display both forward and deferred viz, 1 = display forward only viz, 2 = display deferred only viz
    S32 vizDisplayMode = Con::getIntVariable("$Viz_DisplayMode", 0);
+   S32 surfaceVizMode = Con::getIntVariable("$Viz_SurfacePropertiesModeVar", -1);
 
-   if (surface && (vizDisplayMode == 0 || vizDisplayMode == 1))
+   if (surfaceVizMode != -1 && vizDisplayMode == 0 || vizDisplayMode == 1)
    {
-      Var* color = (Var*)LangElement::find("col");
       if (color)
       {
          Var* specularColor = (Var*)LangElement::find("specularColor");
-
-         S32 surfaceVizMode = Con::getIntVariable("$Viz_SurfacePropertiesModeVar", -1);
 
          switch (surfaceVizMode)
          {
@@ -100,7 +102,97 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
             break;
          };
       }
+
+      output = meta;
+      return;
    }
 
-   output = meta;
+   //if not that, try the probe viz
+   Var* ibl = (Var*)LangElement::find("ibl");
+   if (ibl && color)
+   {
+      const char* showAtten = Con::getVariable("$Probes::showAttenuation", "0");
+      const char* showContrib = Con::getVariable("$Probes::showProbeContrib", "0");
+      const char* showSpec = Con::getVariable("$Probes::showSpecularCubemaps", "0");
+      const char* showDiff = Con::getVariable("$Probes::showDiffuseCubemaps", "0");
+
+      if (showAtten == "0" && showContrib == "0" && showSpec == "0" && showDiff == "0")
+         return;
+
+      if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
+         return;
+
+      ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+
+      MultiLine* meta = new MultiLine;
+
+      // Now the wsPosition and wsView.
+      Var* worldToTangent = getInWorldToTangent(componentList);
+      Var* wsNormal = getInWorldNormal(componentList);
+      Var* wsPosition = getInWsPosition(componentList);
+      Var* wsView = getWsView(wsPosition, meta);
+
+      //Reflection Probe WIP
+      U32 MAX_FORWARD_PROBES = 4;
+
+      Var* numProbes = (Var*)LangElement::find("numProbes");
+      Var* cubeMips = (Var*)LangElement::find("cubeMips");
+      Var* skylightCubemapIdx = (Var*)LangElement::find("skylightCubemapIdx");
+      Var* inProbePosArray = (Var*)LangElement::find("inProbePosArray");
+      Var* inRefPosArray = (Var*)LangElement::find("inRefPosArray");
+      Var* refBoxMinArray = (Var*)LangElement::find("inRefBoxMin");
+      Var* refBoxMaxArray = (Var*)LangElement::find("inRefBoxMax");
+
+      Var* probeConfigData = (Var*)LangElement::find("probeConfigData");
+      Var* worldToObjArray = (Var*)LangElement::find("worldToObjArray");
+
+      Var* BRDFTexture = (Var*)LangElement::find("BRDFTexture");
+      Var* BRDFTextureTex = (Var*)LangElement::find("texture_BRDFTexture");
+
+      Var* specularCubemapAR = (Var*)LangElement::find("specularCubemapAR");
+      Var* specularCubemapARTex = (Var*)LangElement::find("texture_specularCubemapAR");
+
+      Var* irradianceCubemapAR = (Var*)LangElement::find("irradianceCubemapAR");
+      Var* irradianceCubemapARTex = (Var*)LangElement::find("texture_irradianceCubemapAR");
+
+      Var* matinfo = (Var*)LangElement::find("PBRConfig");
+      Var* metalness = (Var*)LangElement::find("metalness");
+      Var* smoothness = (Var*)LangElement::find("smoothness");
+
+      Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+
+      Var* ibl = (Var*)LangElement::find("ibl");
+
+      //Reflection vec
+      Var* showAttenVar = new Var("showAttenVar", "int");
+      char buf[64];
+      dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showAtten);
+      meta->addStatement(new GenOp(buf, new DecOp(showAttenVar)));
+
+      Var* showContribVar = new Var("showContribVar", "int");
+      dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showContrib);
+      meta->addStatement(new GenOp(buf, new DecOp(showContribVar)));
+
+      Var* showSpecVar = new Var("showSpecVar", "int");
+      dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showSpec);
+      meta->addStatement(new GenOp(buf, new DecOp(showSpecVar)));
+
+      Var* showDiffVar = new Var("showDiffVar", "int");
+      dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showDiff);
+      meta->addStatement(new GenOp(buf, new DecOp(showDiffVar)));
+
+      String computeForwardProbes = String::String("   @ = debugVizForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+      computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t");
+      computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@), @, @, @, @).rgb; \r\n");
+
+      meta->addStatement(new GenOp(computeForwardProbes.c_str(), ibl, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
+         skylightCubemapIdx, BRDFTexture,
+         irradianceCubemapAR, specularCubemapAR,
+         showAttenVar, showContribVar, showSpecVar, showDiffVar));
+
+      meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", color, ibl));
+
+      output = meta;
+      return;
+   }
 }

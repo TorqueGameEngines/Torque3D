@@ -849,8 +849,8 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
 
    Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
-   Var* matinfo = (Var*)LangElement::find("PBRConfig");
-   if (!matinfo)
+   Var* pbrConfig = (Var*)LangElement::find("PBRConfig");
+   if (!pbrConfig)
    {
       Var* metalness = (Var*)LangElement::find("metalness");
       if (!metalness)
@@ -868,8 +868,8 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
          smoothness->constSortPos = cspPotentialPrimitive;
       }
 
-      matinfo = new Var("PBRConfig", "float4");
-      LangElement* colorDecl = new DecOp(matinfo);
+      pbrConfig = new Var("PBRConfig", "float4");
+      LangElement* colorDecl = new DecOp(pbrConfig);
       meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
    }
 
@@ -903,7 +903,7 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    if (!surface)
    {
       surface = new Var("surface", "Surface");
-      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, matinfo,
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, pbrConfig,
          wsPosition, wsEyePos, wsView));
    }
 
@@ -1328,7 +1328,7 @@ void LightmapFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
    lightMapTex->texture = true;
    lightMapTex->constNum = lightMap->constNum;
    
-   // argh, pixel specular should prob use this too
+   // argh, PBRConfigMap should prob use this too
    if( fd.features[MFT_NormalMap] )
    {
       Var *lmColor = new Var;
@@ -3134,12 +3134,6 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    }
 
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
-
-   Var *matinfo = (Var*)LangElement::find("PBRConfig");
-   Var* metalness = (Var*)LangElement::find("metalness");
-   Var* smoothness = (Var*)LangElement::find("smoothness");
-   
-   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
 
    //Reflection vec
    Var* ibl = (Var*)LangElement::find("ibl");

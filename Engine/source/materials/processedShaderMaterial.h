@@ -46,9 +46,10 @@ public:
    GFXShaderConstHandle* mDiffuseColorSC;
    GFXShaderConstHandle* mToneMapTexSC;
    GFXShaderConstHandle* mTexMatSC;
-   GFXShaderConstHandle* mSpecularColorSC;
+   GFXShaderConstHandle* mPBRConfigSC;
    GFXShaderConstHandle* mSmoothnessSC;
    GFXShaderConstHandle* mMetalnessSC;
+   GFXShaderConstHandle* mGlowMulSC;
    GFXShaderConstHandle* mParallaxInfoSC;
    GFXShaderConstHandle* mAccuScaleSC;
    GFXShaderConstHandle* mAccuDirectionSC;

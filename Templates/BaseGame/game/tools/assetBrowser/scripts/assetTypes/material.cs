@@ -393,10 +393,9 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
          %file.writeline("   AOMap[0] = \"" @ %AOAssetPath @"\";");
          %file.writeline("   AOMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.AOImageAsset.assetName @"\";");
       }
-      if(%assetItem.compositeImageAsset)
+      if(%assetItem.PBRConfigMapImageAsset)
       {
-         %compAssetPath = %assetPath @ fileName(%assetItem.compositeImageAsset.filePath);
-         %file.writeline("   PBRConfigMap[0] = \"" @ %compAssetPath @"\";");
+         %file.writeline("   PBRConfigMap[0] = \"" @ %assetItem.compositeImageAsset.filePath @"\";");
          %file.writeline("   PBRConfigMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.compositeImageAsset.assetName @"\";");
       }
       %file.writeline("};");

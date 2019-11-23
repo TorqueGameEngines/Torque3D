@@ -238,9 +238,9 @@ public:
 
    bool     mIsSRGb[MAX_STAGES];
    bool     mInvertSmoothness[MAX_STAGES];
-   FileName mSpecularMapFilename[MAX_STAGES];
-   StringTableEntry mSpecularMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mSpecularMapAsset[MAX_STAGES];
+   FileName mPBRConfigMapFilename[MAX_STAGES];
+   StringTableEntry mPBRConfigMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mPBRConfigMapAsset[MAX_STAGES];
    FileName mRoughMapFilename[MAX_STAGES];
    StringTableEntry mRoughMapAssetId[MAX_STAGES];
    AssetPtr<ImageAsset> mRoughMapAsset[MAX_STAGES];
@@ -254,6 +254,10 @@ public:
    AssetPtr<ImageAsset> mMetalMapAsset[MAX_STAGES];
    F32      mMetalChan[MAX_STAGES];
 
+   FileName mGlowMapFilename[MAX_STAGES];
+   StringTableEntry mGlowMapAssetId[MAX_STAGES];
+   AssetPtr<ImageAsset> mGlowMapAsset[MAX_STAGES];
+   F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
    FileName mDetailNormalMapFilename[MAX_STAGES];
@@ -324,8 +328,6 @@ public:
    /// If the stage should use anisotropic filtering.
    bool mUseAnisotropic[MAX_STAGES];
 
-   // Deferred Shading: Metalness
-   bool mUseMetalness[MAX_STAGES];
 
    bool mDoubleSided;
 

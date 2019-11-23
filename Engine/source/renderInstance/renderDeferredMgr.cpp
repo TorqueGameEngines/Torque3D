@@ -634,16 +634,23 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    if (mMaterial->mInvertSmoothness[stageNum])
       newFeatures.addFeature(MFT_InvertSmoothness);
 
-   // Deferred Shading : Specular
-   if( mStages[stageNum].getTex( MFT_SpecularMap ) )
+   // Deferred Shading : PBR Config
+   if( mStages[stageNum].getTex( MFT_PBRConfigMap ) )
    {
-       newFeatures.addFeature( MFT_DeferredSpecMap );
+       newFeatures.addFeature( MFT_PBRConfigMap );
+       if( mStages[stageNum].getTex( MFT_PBRConfigMap )->mHasTransparency )
+          newFeatures.addFeature( MFT_GlowMap );
    }
    else
-       newFeatures.addFeature( MFT_DeferredSpecVars );
+       newFeatures.addFeature( MFT_PBRConfigVars );
+
+   if (mStages[stageNum].getTex(MFT_GlowMap))
+   {
+      newFeatures.addFeature(MFT_GlowMap);
+   }
 
    // Deferred Shading : Material Info Flags
-   newFeatures.addFeature( MFT_DeferredMatInfoFlags );
+   newFeatures.addFeature( MFT_MatInfoFlags );
 
    for ( U32 i=0; i < fd.features.getCount(); i++ )
    {
@@ -738,12 +745,8 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
          newFeatures.addFeature( MFT_VertLit );
          newFeatures.addFeature( MFT_LightbufferMRT );
       }
-      else
+      else if (!fd.features.hasFeature(MFT_GlowMap))
       {
-         // If this object isn't lightmapped or emissive, add a zero-output feature for render target 3
-         if (fd.features.hasFeature(MFT_IsEmissive))
-            newFeatures.addFeature(MFT_DeferredEmissive);
-         else
             newFeatures.addFeature( MFT_RenderTarget3_Zero );
       }
    }

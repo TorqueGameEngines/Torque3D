@@ -125,8 +125,10 @@ DeclareFeatureType( MFT_VertLitTone );
 DeclareFeatureType( MFT_StaticCubemap );
 DeclareFeatureType( MFT_CubeMap );
 DeclareFeatureType( MFT_InvertSmoothness );
-DeclareFeatureType( MFT_SpecularMap );
-DeclareFeatureType( MFT_GlossMap );
+DeclareFeatureType( MFT_PBRConfigMap );
+DeclareFeatureType( MFT_PBRConfigVars );
+
+DeclareFeatureType( MFT_GlowMap );
 
 DeclareFeatureType( MFT_ReflectionProbes );
 
@@ -191,8 +193,5 @@ DeclareFeatureType( MFT_HardwareSkinning );
 // Deferred Shading
 DeclareFeatureType( MFT_isDeferred );
 DeclareFeatureType( MFT_SkyBox );
-DeclareFeatureType( MFT_DeferredSpecMap );
-DeclareFeatureType( MFT_DeferredSpecVars );
-DeclareFeatureType( MFT_DeferredMatInfoFlags );
-DeclareFeatureType( MFT_DeferredEmissive );
+DeclareFeatureType( MFT_MatInfoFlags );
 #endif // _MATERIALFEATURETYPES_H_

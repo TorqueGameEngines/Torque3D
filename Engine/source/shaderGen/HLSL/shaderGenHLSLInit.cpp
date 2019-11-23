@@ -27,7 +27,6 @@
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
 #include "shaderGen/featureMgr.h"
 #include "shaderGen/HLSL/bumpHLSL.h"
-#include "shaderGen/HLSL/pixSpecularHLSL.h"
 #include "shaderGen/HLSL/depthHLSL.h"
 #include "shaderGen/HLSL/debugVizFeatureHLSL.h"
 #include "shaderGen/HLSL/paraboloidHLSL.h"
@@ -71,9 +70,7 @@ void _initShaderGenHLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_IsTranslucentZWrite, new NamedFeatureHLSL( "Translucent ZWrite" ) );
    FEATUREMGR->registerFeature( MFT_Visibility, new VisibilityFeatHLSL );
    FEATUREMGR->registerFeature( MFT_Fog, new FogFeatHLSL );
-   FEATUREMGR->registerFeature( MFT_SpecularMap, new SpecularMapHLSL );
    FEATUREMGR->registerFeature( MFT_AccuMap, new AccuTexFeatHLSL );
-   FEATUREMGR->registerFeature( MFT_GlossMap, new NamedFeatureHLSL( "Gloss Map" ) );
    FEATUREMGR->registerFeature( MFT_LightbufferMRT, new NamedFeatureHLSL( "Lightbuffer MRT" ) );
    FEATUREMGR->registerFeature( MFT_RenderTarget1_Zero, new RenderTargetZeroHLSL( ShaderFeature::RenderTarget1 ) );
    FEATUREMGR->registerFeature( MFT_RenderTarget2_Zero, new RenderTargetZeroHLSL( ShaderFeature::RenderTarget2 ) );
@@ -107,10 +104,10 @@ void _initShaderGenHLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_ImposterVert, new ImposterVertFeatureHLSL );
 
    FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureHLSL( "Deferred Material" ) );
-   FEATUREMGR->registerFeature( MFT_DeferredSpecMap, new DeferredSpecMapHLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredSpecVars, new DeferredSpecVarsHLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredMatInfoFlags, new DeferredMatInfoFlagsHLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredEmissive, new DeferredEmissiveHLSL);
+   FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapHLSL);
+   FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsHLSL);
+   FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsHLSL );
+   FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapHLSL);
    FEATUREMGR->registerFeature( MFT_SkyBox,  new NamedFeatureHLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureHLSL );
 }

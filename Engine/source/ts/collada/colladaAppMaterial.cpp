@@ -86,7 +86,6 @@ ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
    // Get the <profile_COMMON>, <diffuse> and <specular> elements
    const domProfile_COMMON* commonProfile = ColladaUtils::findEffectCommonProfile(effect);
    const domCommon_color_or_texture_type_complexType* domDiffuse = findEffectDiffuse(effect);
-   const domCommon_color_or_texture_type_complexType* domSpecular = findEffectSpecular(effect);
 
    // Wrap flags
    if (effectExt->wrapU)
@@ -158,7 +157,6 @@ ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
    // Get the paths for the various textures => Collada indirection at its finest!
    // <texture>.<newparam>.<sampler2D>.<source>.<newparam>.<surface>.<init_from>.<image>.<init_from>
    diffuseMap = getSamplerImagePath(effect, getTextureSampler(effect, domDiffuse));
-   specularMap = getSamplerImagePath(effect, getTextureSampler(effect, domSpecular));
    normalMap = getSamplerImagePath(effect, effectExt->bumpSampler);
 
    // Set the material name
@@ -218,7 +216,6 @@ Material *ColladaAppMaterial::createMaterial(const Torque::Path& path) const
 
    newMat->mDiffuseMapFilename[0] = diffuseMap;
    newMat->mNormalMapFilename[0] = normalMap;
-   newMat->mSpecularMapFilename[0] = specularMap;
 
    newMat->mDiffuse[0] = diffuseColor;
    newMat->mSmoothness[0] = smoothness;

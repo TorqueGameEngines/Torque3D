@@ -486,12 +486,12 @@ void ProcessedMaterial::_setStageData()
       if (mMaterial->mIsSRGb[i])
          profile = &GFXStaticTextureSRGBProfile;
 
-      // SpecularMap
-      if (mMaterial->mSpecularMapFilename[i].isNotEmpty())
+      // PBRConfig
+      if (mMaterial->mPBRConfigMapFilename[i].isNotEmpty())
       {
-         mStages[i].setTex(MFT_SpecularMap, _createTexture(mMaterial->mSpecularMapFilename[i], profile));
-         if (!mStages[i].getTex(MFT_SpecularMap))
-            mMaterial->logError("Failed to load specular map %s for stage %i", _getTexturePath(mMaterial->mSpecularMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_PBRConfigMap, _createTexture(mMaterial->mPBRConfigMapFilename[i], profile));
+         if (!mStages[i].getTex(MFT_PBRConfigMap))
+            mMaterial->logError("Failed to load PBR Config map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);
       }
       else
       {
@@ -501,13 +501,19 @@ void ProcessedMaterial::_setStageData()
             inputKey[0] = mMaterial->mSmoothnessChan[i];
             inputKey[1] = mMaterial->mAOChan[i];
             inputKey[2] = mMaterial->mMetalChan[i];
-            inputKey[3] = NULL;
-            mStages[i].setTex(MFT_SpecularMap, _createCompositeTexture(mMaterial->mRoughMapFilename[i], mMaterial->mAOMapFilename[i],
+            inputKey[3] = 0;
+            mStages[i].setTex(MFT_PBRConfigMap, _createCompositeTexture(mMaterial->mRoughMapFilename[i], mMaterial->mAOMapFilename[i],
                mMaterial->mMetalMapFilename[i], "",
                inputKey, profile));
-            if (!mStages[i].getTex(MFT_SpecularMap))
-               mMaterial->logError("Failed to load specular map %s for stage %i", _getTexturePath(mMaterial->mSpecularMapFilename[i]).c_str(), i);
+            if (!mStages[i].getTex(MFT_PBRConfigMap))
+               mMaterial->logError("Failed to load PBR Config map %s for stage %i", _getTexturePath(mMaterial->mPBRConfigMapFilename[i]).c_str(), i);
          }
+      }
+      if (mMaterial->mGlowMapFilename[i].isNotEmpty())
+      {
+         mStages[i].setTex(MFT_GlowMap, _createTexture(mMaterial->mGlowMapFilename[i], &GFXStaticTextureProfile));
+         if (!mStages[i].getTex(MFT_GlowMap))
+            mMaterial->logError("Failed to load glow map %s for stage %i", _getTexturePath(mMaterial->mGlowMapFilename[i]).c_str(), i);
       }
    }
 

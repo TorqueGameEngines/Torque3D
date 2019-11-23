@@ -27,7 +27,6 @@
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #include "shaderGen/featureMgr.h"
 #include "shaderGen/GLSL/bumpGLSL.h"
-#include "shaderGen/GLSL/pixSpecularGLSL.h"
 #include "shaderGen/GLSL/depthGLSL.h"
 #include "shaderGen/GLSL/paraboloidGLSL.h"
 #include "materials/materialFeatureTypes.h"
@@ -66,9 +65,7 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
 	FEATUREMGR->registerFeature( MFT_StaticCubemap, new NamedFeatureGLSL( "Static Cubemap" ) );
    FEATUREMGR->registerFeature( MFT_CubeMap, new ReflectCubeFeatGLSL );
    FEATUREMGR->registerFeature( MFT_InvertSmoothness, new NamedFeatureGLSL("Roughest = 1.0"));
-   FEATUREMGR->registerFeature( MFT_SpecularMap, new SpecularMapGLSL );
    FEATUREMGR->registerFeature( MFT_AccuMap, new AccuTexFeatGLSL );
-   FEATUREMGR->registerFeature( MFT_GlossMap, new NamedFeatureGLSL( "Gloss Map" ) );
    FEATUREMGR->registerFeature( MFT_IsTranslucent, new NamedFeatureGLSL( "Translucent" ) );
    FEATUREMGR->registerFeature( MFT_IsTranslucentZWrite, new NamedFeatureGLSL( "Translucent ZWrite" ) );
    FEATUREMGR->registerFeature( MFT_Visibility, new VisibilityFeatGLSL );
@@ -102,9 +99,10 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
 
    // Deferred Shading
    FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureGLSL( "Deferred Material" ) );
-   FEATUREMGR->registerFeature( MFT_DeferredSpecMap, new DeferredSpecMapGLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredSpecVars, new DeferredSpecVarsGLSL );
-   FEATUREMGR->registerFeature( MFT_DeferredMatInfoFlags, new DeferredMatInfoFlagsGLSL );
+   FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapGLSL );
+   FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsGLSL );
+   FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsGLSL );
+   FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapGLSL);
    FEATUREMGR->registerFeature( MFT_SkyBox, new NamedFeatureGLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureGLSL );
 }

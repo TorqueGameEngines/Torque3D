@@ -1298,14 +1298,12 @@ ShaderFeature::Resources TerrainCompositeMapFeatGLSL::getResources(const Materia
 }
 
 
-//here, it's merely a cutout for now, so that lightmapping (target3) doesn't get mangled.
-//we'll most likely revisit that later. possibly several ways...
-
 U32 TerrainBlankInfoMapFeatGLSL::getOutputTargets(const MaterialFeatureData &fd) const
 {
    return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::RenderTarget1;
 }
 
+// reminder, the matinfo buffer is flags, smooth, ao, metal
 void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
    const MaterialFeatureData &fd)
 {
@@ -1328,7 +1326,7 @@ void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
       material->setStructName("OUT");
    }
 
-   meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,0.0,0.0001);\r\n", material));
+   meta->addStatement(new GenOp("   @ = vec4(0.0,0.0,1.0,0);\r\n", material));
 
    output = meta;
 }

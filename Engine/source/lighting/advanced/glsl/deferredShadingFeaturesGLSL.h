@@ -25,13 +25,14 @@
 
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #include "shaderGen/GLSL/bumpGLSL.h"
-#include "shaderGen/GLSL/pixSpecularGLSL.h"
 
 // Specular Outputs
-class DeferredSpecMapGLSL : public ShaderFeatureGLSL
+class PBRConfigMapGLSL : public ShaderFeatureGLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: Specular Map"; }
+   virtual String getName() { return "Deferred Shading: PBR Config Map"; }
+
+   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
 
    virtual void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd );
@@ -48,26 +49,44 @@ public:
                              const MaterialFeatureData &fd );
 };
 
-class DeferredMatInfoFlagsGLSL : public ShaderFeatureGLSL
+class MatInfoFlagsGLSL : public ShaderFeatureGLSL
 {
 public:
    virtual String getName() { return "Deferred Shading: Mat Info Flags"; }
 
    virtual void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd );
-   
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const { return ShaderFeature::RenderTarget2; }
+
+   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
 };
 
-class DeferredSpecVarsGLSL : public ShaderFeatureGLSL
+class PBRConfigVarsGLSL : public ShaderFeatureGLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: Specular Explicit Numbers"; }
+   virtual String getName() { return "Deferred Shading: PBR Config Explicit Numbers"; }
+
+   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
 
    virtual void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd );
-   
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const { return ShaderFeature::RenderTarget2; }
 };
 
+class GlowMapGLSL : public ShaderFeatureGLSL
+{
+public:
+   virtual String getName() { return "Glow Map"; }
+
+   virtual void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
+
+   virtual Resources getResources(const MaterialFeatureData& fd);
+
+   // Sets textures and texture flags for current pass
+   virtual void setTexData(Material::StageData& stageDat,
+      const MaterialFeatureData& fd,
+      RenderPassData& passData,
+      U32& texIndex);
+};
 #endif

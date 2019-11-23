@@ -35,55 +35,72 @@
 //****************************************************************************
 // Deferred Shading Features
 //****************************************************************************
+U32 PBRConfigMapGLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
+}
 
-// Specular Map -> Blue of Material Buffer ( greyscaled )
-// Gloss Map (Alpha Channel of Specular Map) -> Alpha ( Spec Power ) of Material Info Buffer.
-void DeferredSpecMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void PBRConfigMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord( "texCoord", "vec2", componentList );
-
-   // search for color var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   MultiLine * meta = new MultiLine;
-   if ( !material )
+   
+   MultiLine* meta = new MultiLine;
+   Var* pbrConfig;
+   if (fd.features[MFT_isDeferred])
    {
-      // create color var
-      material = new Var;
-      material->setType( "vec4" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName("OUT");
+      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!pbrConfig)
+      {
+         // create material var
+         pbrConfig = new Var;
+         pbrConfig->setType("vec4");
+         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         pbrConfig->setStructName("OUT");
+      }
+   }
+   else
+   {
+      pbrConfig = (Var*)LangElement::find("PBRConfig");
+      if (!pbrConfig)
+      {
+         pbrConfig = new Var("PBRConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+      }
    }
 
    // create texture var
-   Var *specularMap = new Var;
-   specularMap->setType( "sampler2D" );
-   specularMap->setName( "specularMap" );
-   specularMap->uniform = true;
-   specularMap->sampler = true;
-   specularMap->constNum = Var::getTexUnitNum();
-   LangElement *texOp = new GenOp( "tex2D(@, @)", specularMap, texCoord );
+   Var *pbrConfigMap = new Var;
+   pbrConfigMap->setType( "sampler2D" );
+   pbrConfigMap->setName( "pbrConfigMap" );
+   pbrConfigMap->uniform = true;
+   pbrConfigMap->sampler = true;
+   pbrConfigMap->constNum = Var::getTexUnitNum();
+   LangElement *texOp = new GenOp( "tex2D(@, @)", pbrConfigMap, texCoord );
 
-   Var *pbrConfig = (Var*)LangElement::find("PBRConfig");
-   if (!pbrConfig) pbrConfig = new Var("PBRConfig", "vec4");
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
    Var *smoothness = (Var*)LangElement::find("smoothness");
    if (!smoothness) smoothness = new Var("smoothness", "float");
+   Var* ao = (Var*)LangElement::find("ao");
+   if (!ao) ao = new Var("ao", "float");
 
-   meta->addStatement(new GenOp("   @ = @.r;\r\n", new DecOp(smoothness), texOp));
-      meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(metalness), texOp));
 
+   meta->addStatement(new GenOp("   @.bga = @.rgb;\r\n", pbrConfig, texOp));
+
+   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(smoothness), pbrConfig));
    if (fd.features[MFT_InvertSmoothness])
+   {
+      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", pbrConfig, pbrConfig));
       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+   }
+   meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), pbrConfig));
+   meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), pbrConfig));
 
-   meta->addStatement(new GenOp("   @ = @.ggga;\r\n", new DecOp(pbrConfig), texOp));
-
-   meta->addStatement(new GenOp("   @.bga = vec3(@,@.g,@);\r\n", material, smoothness, pbrConfig, metalness));
    output = meta;
 }
 
-ShaderFeature::Resources DeferredSpecMapGLSL::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources PBRConfigMapGLSL::getResources( const MaterialFeatureData &fd )
 {
    Resources res; 
    res.numTex = 1;
@@ -92,21 +109,21 @@ ShaderFeature::Resources DeferredSpecMapGLSL::getResources( const MaterialFeatur
    return res;
 }
 
-void DeferredSpecMapGLSL::setTexData(   Material::StageData &stageDat,
+void PBRConfigMapGLSL::setTexData(   Material::StageData &stageDat,
                                        const MaterialFeatureData &fd,
                                        RenderPassData &passData,
                                        U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex( MFT_SpecularMap );
+   GFXTextureObject *tex = stageDat.getTex(MFT_PBRConfigMap);
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "specularMap";
+      passData.mSamplerNames[ texIndex ] = "pbrConfigMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }
 
-void DeferredSpecMapGLSL::processVert( Vector<ShaderComponent*> &componentList, 
+void PBRConfigMapGLSL::processVert( Vector<ShaderComponent*> &componentList,
                                        const MaterialFeatureData &fd )
 {
    MultiLine *meta = new MultiLine;
@@ -118,20 +135,37 @@ void DeferredSpecMapGLSL::processVert( Vector<ShaderComponent*> &componentList,
    output = meta;
 }
 
+U32 MatInfoFlagsGLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
+}
+
 // Material Info Flags -> Red ( Flags ) of Material Info Buffer.
-void DeferredMatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void MatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
 	MultiLine *meta = new MultiLine;
 
-   // search for material var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   if ( !material )
+   Var* pbrConfig;
+   if (fd.features[MFT_isDeferred])
    {
-      // create material var
-      material = new Var;
-      material->setType( "vec4" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName("OUT");
+      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!pbrConfig)
+      {
+         // create material var
+         pbrConfig = new Var;
+         pbrConfig->setType("vec4");
+         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         pbrConfig->setStructName("OUT");
+      }
+   }
+   else
+   {
+      pbrConfig = (Var*)LangElement::find("PBRConfig");
+      if (!pbrConfig)
+      {
+         pbrConfig = new Var("PBRConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+      }
    }
 
    Var *matInfoFlags = new Var;
@@ -140,39 +174,126 @@ void DeferredMatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentLi
    matInfoFlags->uniform = true;
    matInfoFlags->constSortPos = cspPotentialPrimitive;
 
-   meta->addStatement(output = new GenOp("   @.r = @;\r\n", material, matInfoFlags));
+   meta->addStatement(output = new GenOp("   @.r = @;\r\n", pbrConfig, matInfoFlags));
    output = meta;
+}
+
+U32 PBRConfigVarsGLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
 // Spec Strength -> Blue Channel of Material Info Buffer.
 // Spec Power -> Alpha Channel ( of Material Info Buffer.
-void DeferredSpecVarsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void PBRConfigVarsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
+   MultiLine* meta = new MultiLine;
 
-   // search for material var
-   Var *material = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   if ( !material )
+   Var* pbrConfig;
+   if (fd.features[MFT_isDeferred])
    {
-      // create material var
-      material = new Var;
-      material->setType( "vec4" );
-      material->setName( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-      material->setStructName("OUT");
+      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!pbrConfig)
+      {
+         // create material var
+         pbrConfig = new Var;
+         pbrConfig->setType("vec4");
+         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         pbrConfig->setStructName("OUT");
+      }
    }
-   
-   Var *metalness = new Var("metalness", "float");
+   else
+   {
+      pbrConfig = (Var*)LangElement::find("PBRConfig");
+      if (!pbrConfig)
+      {
+         pbrConfig = new Var("PBRConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+      }
+   }
+   Var* metalness = new Var("metalness", "float");
    metalness->uniform = true;
    metalness->constSortPos = cspPotentialPrimitive;
 
-   Var *smoothness = new Var("smoothness", "float");
+   Var* smoothness = new Var("smoothness", "float");
    smoothness->uniform = true;
    smoothness->constSortPos = cspPotentialPrimitive;
 
-	MultiLine *meta = new MultiLine;
-    meta->addStatement(new GenOp("   @.g = 1.0;\r\n", material));
-    meta->addStatement(new GenOp("   @.b = @;\r\n", material, smoothness));
-    if (fd.features[MFT_InvertSmoothness])
-       meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
-    meta->addStatement(new GenOp("   @.a = @;\r\n", material, metalness));
+   //matinfo.g slot reserved for AO later
+   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", pbrConfig));
+   meta->addStatement(new GenOp("   @.b = @;\r\n", pbrConfig, smoothness));
+   if (fd.features[MFT_InvertSmoothness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+   meta->addStatement(new GenOp("   @.a = @;\r\n", pbrConfig, metalness));
    output = meta;
+}
+
+U32 GlowMapGLSL::getOutputTargets(const MaterialFeatureData& fd) const
+{
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget3 : ShaderFeature::DefaultTarget;
+}
+
+//deferred emissive
+void GlowMapGLSL::processPix(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd)
+{
+   Var* texCoord = getInTexCoord("texCoord", "vec2", componentList);
+
+   Var* glowMap = new Var;
+   glowMap->setType("sampler2D");
+   glowMap->setName("glowMap");
+   glowMap->uniform = true;
+   glowMap->sampler = true;
+   glowMap->constNum = Var::getTexUnitNum();
+   LangElement* texOp = new GenOp("tex2D(@, @)", glowMap, texCoord);
+   
+   Var* glowMul = new Var("glowMul", "float");
+   glowMul->uniform = true;
+   glowMul->constSortPos = cspPotentialPrimitive;
+
+   Var* targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   if (fd.features[MFT_isDeferred])
+   {
+      targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+      if (!targ)
+      {
+         // create scene color target var
+         targ = new Var;
+         targ->setType("vec4");
+         targ->setName(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+         targ->setStructName("OUT");
+         output = new GenOp("@ = vec4(@.rgb*@,0);", targ, texOp, glowMul);
+      }
+      else
+      {
+         output = new GenOp("@ += vec4(@.rgb*@,0);", targ, texOp, glowMul);
+      }
+   }
+   else
+   {
+      output = new GenOp("@ += vec4(@.rgb*@,@.a);", targ, texOp, glowMul, targ);
+   }
+
+}
+
+ShaderFeature::Resources GlowMapGLSL::getResources(const MaterialFeatureData& fd)
+{
+   Resources res;
+   res.numTex = 1;
+   res.numTexReg = 1;
+
+   return res;
+}
+
+void GlowMapGLSL::setTexData(Material::StageData& stageDat,
+   const MaterialFeatureData& fd,
+   RenderPassData& passData,
+   U32& texIndex)
+{
+   GFXTextureObject* tex = stageDat.getTex(MFT_GlowMap);
+   if (tex)
+   {
+      passData.mTexType[texIndex] = Material::Standard;
+      passData.mSamplerNames[texIndex] = "glowMap";
+      passData.mTexSlot[texIndex++].texObject = tex;
+   }
 }

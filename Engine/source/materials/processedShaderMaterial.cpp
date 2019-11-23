@@ -59,9 +59,10 @@ void ShaderConstHandles::init( GFXShader *shader, Vector<CustomShaderFeatureData
    mDiffuseColorSC = shader->getShaderConstHandle("$diffuseMaterialColor");
    mTexMatSC = shader->getShaderConstHandle(ShaderGenVars::texMat);
    mToneMapTexSC = shader->getShaderConstHandle(ShaderGenVars::toneMap);
-   mSpecularColorSC = shader->getShaderConstHandle(ShaderGenVars::specularColor);
+   mPBRConfigSC = shader->getShaderConstHandle(ShaderGenVars::pbrConfig);
    mSmoothnessSC = shader->getShaderConstHandle(ShaderGenVars::smoothness);
    mMetalnessSC = shader->getShaderConstHandle(ShaderGenVars::metalness);
+   mGlowMulSC = shader->getShaderConstHandle(ShaderGenVars::glowMul);
    mAccuScaleSC = shader->getShaderConstHandle("$accuScale");
    mAccuDirectionSC = shader->getShaderConstHandle("$accuDirection");
    mAccuStrengthSC = shader->getShaderConstHandle("$accuStrength");
@@ -385,14 +386,6 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
        fd.features.addFeature( MFT_CubeMap );
    }
 
-   if (features.hasFeature(MFT_SkyBox))
-   {
-      fd.features.addFeature(MFT_StaticCubemap);
-      fd.features.addFeature(MFT_CubeMap);
-      fd.features.addFeature(MFT_SkyBox);
-
-      fd.features.removeFeature(MFT_ReflectionProbes);
-   }
    fd.features.addFeature( MFT_Visibility );
 
    if (  lastStage && 
@@ -445,20 +438,26 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
          fd.features.addFeature( MFT_Parallax );
    }
 
-   // Without realtime lighting and on lower end 
-   // shader models disable the specular map.
-   if (  !fd.features[ MFT_RTLighting ] || shaderVersion == 2.0 )
-      fd.features.removeFeature( MFT_SpecularMap );
-
-   // If we have a specular map then make sure we
-   // have per-pixel specular enabled.
-   if( fd.features[ MFT_SpecularMap ] )
+   // Deferred Shading : PBR Config
+   if (mStages[stageNum].getTex(MFT_PBRConfigMap))
    {
-      // Check for an alpha channel on the specular map. If it has one (and it
-      // has values less than 255) than the artist has put the gloss map into
-      // the alpha channel.
-      if( mStages[stageNum].getTex( MFT_SpecularMap )->mHasTransparency )
-         fd.features.addFeature( MFT_GlossMap );
+      fd.features.addFeature(MFT_PBRConfigMap);
+   }
+   else
+      fd.features.addFeature(MFT_PBRConfigVars);
+
+   // Deferred Shading : Material Info Flags
+   fd.features.addFeature(MFT_MatInfoFlags);
+
+   if (features.hasFeature(MFT_SkyBox))
+   {
+      fd.features.addFeature(MFT_StaticCubemap);
+      fd.features.addFeature(MFT_CubeMap);
+      fd.features.addFeature(MFT_SkyBox);
+
+      fd.features.removeFeature(MFT_ReflectionProbes);
+      fd.features.removeFeature(MFT_PBRConfigVars);
+      fd.features.removeFeature(MFT_MatInfoFlags);
    }
 
    if ( mMaterial->mAccuEnabled[stageNum] )
@@ -1118,6 +1117,7 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
 
    shaderConsts->setSafe(handles->mSmoothnessSC, mMaterial->mSmoothness[stageNum]);
    shaderConsts->setSafe(handles->mMetalnessSC, mMaterial->mMetalness[stageNum]);
+   shaderConsts->setSafe(handles->mGlowMulSC, mMaterial->mGlowMul[stageNum]);
 
    shaderConsts->setSafe(handles->mParallaxInfoSC, mMaterial->mParallaxScale[stageNum]);   
    shaderConsts->setSafe(handles->mMinnaertConstantSC, mMaterial->mMinnaertConstant[stageNum]);

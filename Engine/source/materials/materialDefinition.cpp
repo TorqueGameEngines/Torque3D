@@ -179,6 +179,9 @@ Material::Material()
       mAOMapFilename[i].clear();
       mMetalMapFilename[i].clear();
       mMetalMapAsset[i] = StringTable->EmptyString();
+      mGlowMapFilename[i].clear();
+      mGlowMapAsset[i] = StringTable->EmptyString();
+      mGlowMul[i] = 0.0f;
    }
 
    dMemset(mCellIndex, 0, sizeof(mCellIndex));
@@ -186,9 +189,6 @@ Material::Material()
    dMemset(mCellSize, 0, sizeof(mCellSize));
    dMemset(mNormalMapAtlas, 0, sizeof(mNormalMapAtlas));
    dMemset(mUseAnisotropic, 1, sizeof(mUseAnisotropic));
-
-   // Deferred Shading : Metalness
-   dMemset(mUseMetalness, 0, sizeof(mUseMetalness));
 
    mImposterLimits = Point4F::Zero;
 
@@ -273,10 +273,13 @@ void Material::initPersistFields()
          "Used to scale the strength of the detail normal map when blended with the base normal map." );
       
       addField("smoothness", TypeF32, Offset(mSmoothness, Material), MAX_STAGES,
-         "The degree of smoothness when not using a specularMap." );
+         "The degree of smoothness when not using a PBRConfigMap." );
 
 		addField("metalness", TypeF32, Offset(mMetalness, Material), MAX_STAGES,
-         "The degree of Metalness when not using a specularMap." );
+         "The degree of Metalness when not using a PBRConfigMap." );
+
+      addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
+         "glow mask multiplier");
 
       addProtectedField( "accuEnabled", TYPEID< bool >(), Offset( mAccuEnabled, Material ),
             &_setAccuEnabled, &defaultProtectedGetFn, MAX_STAGES, "Accumulation texture." );
@@ -302,7 +305,7 @@ void Material::initPersistFields()
       addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, Material), MAX_STAGES,
          "Treat Smoothness as Roughness");
 
-      addField( "specularMap", TypeImageFilename, Offset(mSpecularMapFilename, Material), MAX_STAGES,
+      addField( "PBRConfigMap", TypeImageFilename, Offset(mPBRConfigMapFilename, Material), MAX_STAGES,
          "Prepacked specular map texture. The RGB channels of this texture provide per-pixel reference values for: "
          "smoothness (R), Ambient Occlusion (G), and metalness(B)");
 
@@ -321,6 +324,12 @@ void Material::initPersistFields()
       addField("metalChan", TypeF32, Offset(mMetalChan, Material), MAX_STAGES,
          "The input channel metalness maps use.");
 
+      addField("glowMap", TypeImageFilename, Offset(mGlowMapFilename, Material), MAX_STAGES,
+         "Metalness map. will be packed into the B channel of a packed 'specular' map");
+      addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
+         "The input channel metalness maps use.");
+      addField("glow", TypeBool, Offset(mGlow, Material), MAX_STAGES,
+         "Enables rendering as glowing.");
 
       addField( "parallaxScale", TypeF32, Offset(mParallaxScale, Material), MAX_STAGES,
          "Enables parallax mapping and defines the scale factor for the parallax effect.  Typically "
@@ -346,9 +355,6 @@ void Material::initPersistFields()
 
       addField("subSurfaceRolloff", TypeF32, Offset(mSubSurfaceRolloff, Material), MAX_STAGES,
          "The 0 to 1 rolloff factor used in the subsurface scattering approximation." );
-
-      addField("glow", TypeBool, Offset(mGlow, Material), MAX_STAGES,
-         "Enables rendering this material to the glow buffer." );
 
       addField("emissive", TypeBool, Offset(mEmissive, Material), MAX_STAGES,
          "Enables emissive lighting for the material." );

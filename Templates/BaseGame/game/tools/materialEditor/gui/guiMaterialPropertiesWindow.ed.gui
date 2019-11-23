@@ -566,6 +566,132 @@
                      Visible = "1";
                      tooltipprofile = "ToolsGuiToolTipProfile";
                      hovertime = "1000";
+                     
+                     new GuiContainer(){
+                        profile = "ToolsGuiTransparentProfile";
+                        isContainer = "1";
+                        position = "0 0";
+                        Extent = "185 50";
+                        HorizSizing = "width";
+						
+                        new GuiTextCtrl() {
+                           HorizSizing = "right";
+                           VertSizing = "bottom";
+                           position = "9 4";
+                           Extent = "72 16";
+                           text = "Smoothness";
+                           Profile = "ToolsGuiTextProfile";
+                        };                        
+                        
+                        new GuiTextCtrl() {
+                           HorizSizing = "right";
+                           VertSizing = "bottom";
+                           position = "9 26";
+                           Extent = "72 16";
+                           text = "Metalness";
+                           Profile = "ToolsGuiTextProfile";
+                        };
+                        
+                        new GuiControl() {
+                           class = "AggregateControl";
+                           position = "91 4";
+                           Extent = "96 20";
+                           
+                           new GuiSliderCtrl() {
+                              canSaveDynamicFields = "0";
+                              internalName = "SmoothnessSlider";
+                              Enabled = "1";
+                              isContainer = "0";
+                              Profile = "ToolsGuiSliderProfile";
+                              HorizSizing = "right";
+                              VertSizing = "bottom";
+                              position = "0 1";
+                              Extent = "61 14";
+                              MinExtent = "8 2";
+                              canSave = "1";
+                              Visible = "1";
+                              Command = "MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
+                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
+                              tooltipprofile = "ToolsGuiDefaultProfile";
+                              ToolTip = "Sets Smoothness.";
+                              hovertime = "1000";
+                              range = "0 1";
+                              ticks = "0";
+                              value = "0";
+                           };
+                           new GuiTextEditCtrl() {
+                              canSaveDynamicFields = "0";
+                              internalName = "SmoothnessTextEdit";
+                              Enabled = "1";
+                              isContainer = "0";
+                              Profile = "ToolsGuiTextEditProfile";
+                              HorizSizing = "right";
+                              VertSizing = "bottom";
+                              position = "64 0";
+                              Extent = "29 18";
+                              MinExtent = "8 2";
+                              canSave = "1";
+                              Visible = "1";
+                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
+                              hovertime = "1000";
+                              AnchorTop = "1";
+                              AnchorBottom = "0";
+                              AnchorLeft = "1";
+                              AnchorRight = "0";
+                              text = "0";
+                           };
+                        };
+
+                        new GuiControl() {
+                           class = "AggregateControl";
+                           position = "91 26";
+                           Extent = "96 20";
+
+                           new GuiSliderCtrl() {
+                              canSaveDynamicFields = "0";
+                              internalName = "MetalnessSlider";
+                              Enabled = "1";
+                              isContainer = "0";
+                              Profile = "ToolsGuiSliderProfile";
+                              HorizSizing = "right";
+                              VertSizing = "bottom";
+                              position = "0 1";
+                              Extent = "61 14";
+                              MinExtent = "8 2";
+                              canSave = "1";
+                              Visible = "1";
+                              Command = "MaterialEditorGui.updateActiveMaterial(\"Metalness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
+                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Metalness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
+                              tooltipprofile = "ToolsGuiDefaultProfile";
+                              ToolTip = "Sets Metalness.";
+                              hovertime = "1000";
+                              range = "0 1";
+                              ticks = "0";
+                              value = "0";
+                           };
+                           new GuiTextEditCtrl() {
+                              canSaveDynamicFields = "0";
+                              internalName = "MetalnessTextEdit";
+                              Enabled = "1";
+                              isContainer = "0";
+                              Profile = "ToolsGuiTextEditProfile";
+                              HorizSizing = "right";
+                              VertSizing = "bottom";
+                              position = "64 0";
+                              Extent = "29 18";
+                              MinExtent = "8 2";
+                              canSave = "1";
+                              Visible = "1";
+                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Metalness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
+                              hovertime = "1000";
+                              AnchorTop = "1";
+                              AnchorBottom = "0";
+                              AnchorLeft = "1";
+                              AnchorRight = "0";
+                              text = "0";
+                           };
+                        };
+                     };
 					 
                      new GuiContainer(){ // spec Map options
                         profile="ToolsGuiDefaultProfile";
@@ -605,7 +731,7 @@
                            HorizSizing = "right";
                            VertSizing = "bottom";
                            position = "70 2";
-                           Extent = "57 16";
+                           Extent = "107 16";
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
@@ -646,7 +772,7 @@
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "specMapDisplayBitmap";
+                           internalName = "PBRConfigMapDisplayBitmap";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiDefaultProfile";
@@ -680,7 +806,7 @@
                            AnchorBottom = "0";
                            AnchorLeft = "1";
                            AnchorRight = "0";
-                           text = "Composite Map";
+                           text = "PBR Config Map";
                            maxLength = "1024";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -695,7 +821,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateSpecMap(1);";
+                           Command = "MaterialEditorGui.updatePBRConfigMap(1);";
                            tooltipprofile = "ToolsGuiDefaultProfile";
                            ToolTip = "Change the packed spec map for this layer. \n Smoothness (R), Ambient Occlusion (G), and Metalness(B))";
                            hovertime = "1000";
@@ -706,7 +832,7 @@
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "specMapNameText";
+                           internalName = "PBRConfigMapNameText";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiTextProfile";
@@ -735,7 +861,7 @@
                            position = "134 34";
                            Extent = "40 16";
                            buttonType = "PushButton";
-                           command="MaterialEditorGui.updateSpecMap(1);";
+                           command="MaterialEditorGui.updatePBRConfigMap(1);";
                         };
                         new GuiBitmapButtonCtrl() {
                            canSaveDynamicFields = "0";
@@ -749,7 +875,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateSpecMap(0);";
+                           Command = "MaterialEditorGui.updatePBRConfigMap(0);";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";
@@ -1551,6 +1677,236 @@
 						 canSave = "1";
 						 canSaveDynamicFields = "0";
 					  };
+				    };
+				   new GuiBitmapCtrl() {
+					  bitmap = "tools/gui/images/separator-v";
+					  wrap = "0";
+					  position = "6 75";
+					  extent = "175 2";
+					  minExtent = "8 2";
+					  horizSizing = "width";
+					  vertSizing = "bottom";
+					  profile = "ToolsGuiButtonProfile";
+					  visible = "1";
+					  active = "1";
+					  tooltipProfile = "GuiToolTipProfile";
+					  hovertime = "1000";
+					  isContainer = "0";
+					  canSave = "1";
+					  canSaveDynamicFields = "0";
+				   };
+				   new GuiContainer() {
+					  margin = "0 0 0 0";
+					  padding = "0 0 0 0";
+					  anchorTop = "1";
+					  anchorBottom = "0";
+					  anchorLeft = "1";
+					  anchorRight = "0";
+					  position = "6 364";
+					  extent = "185 67";
+					  minExtent = "8 2";
+					  horizSizing = "width";
+					  vertSizing = "bottom";
+					  profile = "GuiDefaultProfile";
+					  visible = "1";
+					  active = "1";
+					  tooltipProfile = "GuiToolTipProfile";
+					  hovertime = "1000";
+					  isContainer = "1";
+					  canSave = "1";
+					  canSaveDynamicFields = "0";
+					  new GuiBitmapCtrl() {
+						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 wrap = "0";
+						 position = "1 1";
+						 extent = "48 48";
+						 minExtent = "8 2";
+						 horizSizing = "right";
+						 vertSizing = "bottom";
+						 profile = "ToolsGuiButtonProfile";
+						 visible = "1";
+						 active = "1";
+						 tooltipProfile = "GuiToolTipProfile";
+						 hovertime = "1000";
+						 isContainer = "0";
+						 internalName = "glowMapDisplayBitmap";
+						 canSave = "1";
+						 canSaveDynamicFields = "0";
+					  };
+					  new GuiTextCtrl() {
+						 text = "glow";
+						 maxLength = "1024";
+						 margin = "0 0 0 0";
+						 padding = "0 0 0 0";
+						 anchorTop = "1";
+						 anchorBottom = "0";
+						 anchorLeft = "1";
+						 anchorRight = "0";
+						 position = "56 5";
+						 extent = "35 8";
+						 minExtent = "8 2";
+						 horizSizing = "right";
+						 vertSizing = "bottom";
+						 profile = "ToolsGuiTextProfile";
+						 visible = "1";
+						 active = "1";
+						 tooltipProfile = "GuiToolTipProfile";
+						 hovertime = "1000";
+						 isContainer = "0";
+						 canSave = "1";
+						 canSaveDynamicFields = "0";
+					  };
+					  new GuiBitmapButtonCtrl() {
+						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapMode = "Stretched";
+						 autoFitExtents = "0";
+						 useModifiers = "0";
+						 useStates = "1";
+						 groupNum = "-1";
+						 buttonType = "PushButton";
+						 useMouseEvents = "0";
+						 position = "1 1";
+						 extent = "48 48";
+						 minExtent = "8 2";
+						 horizSizing = "right";
+						 vertSizing = "bottom";
+						 profile = "ToolsGuiButtonProfile";
+						 visible = "1";
+						 active = "1";
+						 command = "MaterialEditorGui.updateglowMap(1);";
+						 tooltipProfile = "GuiToolTipProfile";
+						 tooltip = "Change the glowness Map for this layer.";
+						 hovertime = "1000";
+						 isContainer = "0";
+						 canSave = "1";
+						 canSaveDynamicFields = "0";
+					  };
+					  new GuiTextCtrl() {
+						 text = "None";
+						 maxLength = "1024";
+						 margin = "0 0 0 0";
+						 padding = "0 0 0 0";
+						 anchorTop = "1";
+						 anchorBottom = "0";
+						 anchorLeft = "1";
+						 anchorRight = "0";
+						 position = "56 17";
+						 extent = "143 17";
+						 minExtent = "8 2";
+						 horizSizing = "width";
+						 vertSizing = "bottom";
+						 profile = "ToolsGuiTextProfile";
+						 visible = "1";
+						 active = "1";
+						 tooltipProfile = "GuiToolTipProfile";
+						 hovertime = "1000";
+						 isContainer = "0";
+						 internalName = "glowMapNameText";
+						 canSave = "1";
+						 canSaveDynamicFields = "0";
+					  };
+					  new GuiButtonCtrl() {
+						 text = "Edit";
+						 groupNum = "-1";
+						 buttonType = "PushButton";
+						 useMouseEvents = "0";
+						 position = "134 34";
+						 extent = "40 16";
+						 minExtent = "8 2";
+						 horizSizing = "left";
+						 vertSizing = "bottom";
+						 profile = "ToolsGuiButtonProfile";
+						 visible = "1";
+						 active = "1";
+						 command = "MaterialEditorGui.updateglowMap(1);";
+						 tooltipProfile = "GuiToolTipProfile";
+						 hovertime = "1000";
+						 isContainer = "0";
+						 canSave = "1";
+						 canSaveDynamicFields = "0";
+					  };
+					  new GuiBitmapButtonCtrl() {
+						 bitmap = "tools/gui/images/delete";
+						 bitmapMode = "Stretched";
+						 autoFitExtents = "0";
+						 useModifiers = "0";
+						 useStates = "1";
+						 groupNum = "-1";
+						 buttonType = "PushButton";
+						 useMouseEvents = "0";
+						 position = "177 34";
+						 extent = "16 16";
+						 minExtent = "8 2";
+						 horizSizing = "left";
+						 vertSizing = "bottom";
+						 profile = "ToolsGuiButtonProfile";
+						 visible = "1";
+						 active = "1";
+						 command = "MaterialEditorGui.updateglowMap(0);";
+						 tooltipProfile = "GuiToolTipProfile";
+						 hovertime = "1000";
+						 isContainer = "0";
+						 canSave = "1";
+						 canSaveDynamicFields = "0";
+					  };
+                        new GuiTextCtrl() {
+                           HorizSizing = "right";
+                           VertSizing = "bottom";
+                           position = "9 48";
+                           Extent = "72 16";
+                           text = "GlowMul";
+                           Profile = "ToolsGuiTextProfile";
+                        };
+                        
+                        new GuiControl() {
+                           class = "AggregateControl";
+                           position = "91 48";
+                           Extent = "96 20";
+                           
+                           new GuiSliderCtrl() {
+                              canSaveDynamicFields = "0";
+                              internalName = "GlowMulSlider";
+                              Enabled = "1";
+                              isContainer = "0";
+                              Profile = "ToolsGuiSliderProfile";
+                              HorizSizing = "right";
+                              VertSizing = "bottom";
+                              position = "0 1";
+                              Extent = "61 14";
+                              MinExtent = "8 2";
+                              canSave = "1";
+                              Visible = "1";
+                              Command = "MaterialEditorGui.updateActiveMaterial(\"GlowMul[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
+                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"GlowMul[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
+                              tooltipprofile = "ToolsGuiDefaultProfile";
+                              ToolTip = "Sets GlowMul.";
+                              hovertime = "1000";
+                              range = "0 20";
+                              ticks = "0";
+                              value = "0";
+                           };
+                           new GuiTextEditCtrl() {
+                              canSaveDynamicFields = "0";
+                              internalName = "GlowMulTextEdit";
+                              Enabled = "1";
+                              isContainer = "0";
+                              Profile = "ToolsGuiTextEditProfile";
+                              HorizSizing = "right";
+                              VertSizing = "bottom";
+                              position = "64 0";
+                              Extent = "29 18";
+                              MinExtent = "8 2";
+                              canSave = "1";
+                              Visible = "1";
+                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"GlowMul[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
+                              hovertime = "1000";
+                              AnchorTop = "1";
+                              AnchorBottom = "0";
+                              AnchorLeft = "1";
+                              AnchorRight = "0";
+                              text = "0";
+                           };
+                        };
 				    };
 				  };
                };
@@ -2767,131 +3123,6 @@
                      tooltipprofile = "ToolsGuiToolTipProfile";
                      hovertime = "1000";
                   
-                     new GuiContainer(){ // specular
-                        profile = "ToolsGuiTransparentProfile";
-                        isContainer = "1";
-                        position = "0 0";
-                        Extent = "185 44";
-                        HorizSizing = "width";
-						
-                        new GuiTextCtrl() {
-                           profile = "ToolsGuiTextProfile";
-                           HorizSizing = "right";
-                           VertSizing = "bottom";
-                           position = "9 4";
-                           Extent = "72 16";
-                           text = "Smoothness";
-                        };                        
-                        
-                        new GuiTextCtrl() {
-                           profile = "ToolsGuiTextProfile";
-                           HorizSizing = "right";
-                           VertSizing = "bottom";
-                           position = "9 26";
-                           Extent = "72 16";
-                           text = "Metalness";
-                        };
-
-                        new GuiControl() {
-                           class = "AggregateControl";
-                           position = "91 4";
-                           Extent = "96 20";
-                           
-                           new GuiSliderCtrl() {
-                              canSaveDynamicFields = "0";
-                              internalName = "SmoothnessSlider";
-                              Enabled = "1";
-                              isContainer = "0";
-                              Profile = "ToolsGuiSliderProfile";
-                              HorizSizing = "right";
-                              VertSizing = "bottom";
-                              position = "0 1";
-                              Extent = "61 14";
-                              MinExtent = "8 2";
-                              canSave = "1";
-                              Visible = "1";
-                              Command = "MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
-                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
-                              tooltipprofile = "ToolsGuiDefaultProfile";
-                              ToolTip = "Sets Smoothness.";
-                              hovertime = "1000";
-                              range = "0 1";
-                              ticks = "0";
-                              value = "0";
-                           };
-                           new GuiTextEditCtrl() {
-                              canSaveDynamicFields = "0";
-                              internalName = "SmoothnessTextEdit";
-                              Enabled = "1";
-                              isContainer = "0";
-                              Profile = "ToolsGuiTextEditProfile";
-                              HorizSizing = "right";
-                              VertSizing = "bottom";
-                              position = "64 0";
-                              Extent = "29 18";
-                              MinExtent = "8 2";
-                              canSave = "1";
-                              Visible = "1";
-                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
-                              hovertime = "1000";
-                              AnchorTop = "1";
-                              AnchorBottom = "0";
-                              AnchorLeft = "1";
-                              AnchorRight = "0";
-                              text = "0";
-                           };
-                        };
-
-                        new GuiControl() {
-                           class = "AggregateControl";
-                           position = "91 26";
-                           Extent = "96 20";
-
-                           new GuiSliderCtrl() {
-                              canSaveDynamicFields = "0";
-                              internalName = "MetalnessSlider";
-                              Enabled = "1";
-                              isContainer = "0";
-                              Profile = "ToolsGuiSliderProfile";
-                              HorizSizing = "right";
-                              VertSizing = "bottom";
-                              position = "0 1";
-                              Extent = "61 14";
-                              MinExtent = "8 2";
-                              canSave = "1";
-                              Visible = "1";
-                              Command = "MaterialEditorGui.updateActiveMaterial(\"Metalness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
-                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Metalness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
-                              tooltipprofile = "ToolsGuiDefaultProfile";
-                              ToolTip = "Sets Metalness.";
-                              hovertime = "1000";
-                              range = "0 1";
-                              ticks = "0";
-                              value = "0";
-                           };
-                           new GuiTextEditCtrl() {
-                              canSaveDynamicFields = "0";
-                              internalName = "MetalnessTextEdit";
-                              Enabled = "1";
-                              isContainer = "0";
-                              Profile = "ToolsGuiTextEditProfile";
-                              HorizSizing = "right";
-                              VertSizing = "bottom";
-                              position = "64 0";
-                              Extent = "29 18";
-                              MinExtent = "8 2";
-                              canSave = "1";
-                              Visible = "1";
-                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Metalness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
-                              hovertime = "1000";
-                              AnchorTop = "1";
-                              AnchorBottom = "0";
-                              AnchorLeft = "1";
-                              AnchorRight = "0";
-                              text = "0";
-                           };
-                        };
-                     };
                      new GuiContainer(){ // glow emissive
                         profile = "ToolsGuiTransparentProfile";
                         isContainer = "1";

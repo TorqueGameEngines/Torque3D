@@ -74,12 +74,12 @@ function MaterialEditorGui::open(%this)
    //Blending Modes
    MaterialEditorPropertiesWindow-->blendingTypePopUp.clear();
    MaterialEditorPropertiesWindow-->blendingTypePopUp.add(None,0);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Mul,1);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Add,2);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(AddAlpha,3);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Sub,4);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(LerpAlpha,5);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(PreMult,6);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(preMul,1);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(LerpAlpha,2);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Mul,3);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Add,4);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(AddAlpha,5);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Sub,6);
    MaterialEditorPropertiesWindow-->blendingTypePopUp.setSelected( 0, false );
 
    //Reflection Types
@@ -785,16 +785,24 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->castShadows.setValue((%material).castShadows);
    MaterialEditorPropertiesWindow-->castDynamicShadows.setValue((%material).castDynamicShadows);
    MaterialEditorPropertiesWindow-->translucentCheckbox.setValue((%material).translucent);
+   /*
    
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(preMul,1);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(LerpAlpha,2);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Mul,3);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Add,4);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(AddAlpha,5);
+   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Sub,6);
+   */
    switch$((%material).translucentBlendOp)
    {
-           case "None": %selectedNum = 0;
-            case "Mul": %selectedNum = 1;
-            case "Add": %selectedNum = 2;
-       case "AddAlpha": %selectedNum = 3;
-            case "Sub": %selectedNum = 4;
-      case "LerpAlpha": %selectedNum = 5;
-      case "PreMult": %selectedNum = 6;
+        case "None": %selectedNum = 0;
+        case "preMul": %selectedNum = 1;
+        case "LerpAlpha": %selectedNum = 2;
+        case "Mul": %selectedNum = 3;
+        case "": %selectedNum = 4;
+        case "AddAlpha": %selectedNum = 5;
+        case "Sub": %selectedNum = 6;
    }
    MaterialEditorPropertiesWindow-->blendingTypePopUp.setSelected(%selectedNum);
    

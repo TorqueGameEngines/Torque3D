@@ -37,23 +37,24 @@ function initializeAssetBrowser()
    {
       new ArrayObject(AssetFilterTypeList);
 
+      AssetFilterTypeList.add("All");
       AssetFilterTypeList.add("Component");
       AssetFilterTypeList.add("Cpp");
       AssetFilterTypeList.add("Cubemap");
-      AssetFilterTypeList.add("GameObjects");
-      AssetFilterTypeList.add("GUIs");
-      AssetFilterTypeList.add("Images");
-      AssetFilterTypeList.add("Levels");
-      AssetFilterTypeList.add("Materials");
-      AssetFilterTypeList.add("Particles");
-      AssetFilterTypeList.add("PostFXs");
-      AssetFilterTypeList.add("Scripts");
-      AssetFilterTypeList.add("Shapes");
-      AssetFilterTypeList.add("ShapeAnimations");
-      AssetFilterTypeList.add("Sounds");
-      AssetFilterTypeList.add("StateMachines");
+      AssetFilterTypeList.add("GameObject");
+      AssetFilterTypeList.add("GUI");
+      AssetFilterTypeList.add("Image");
+      AssetFilterTypeList.add("Level");
+      AssetFilterTypeList.add("Material");
+      AssetFilterTypeList.add("Particle");
+      AssetFilterTypeList.add("PostFX");
+      AssetFilterTypeList.add("Script");
+      AssetFilterTypeList.add("Shape");
+      AssetFilterTypeList.add("ShapeAnimation");
+      AssetFilterTypeList.add("Sound");
+      AssetFilterTypeList.add("StateMachine");
       AssetFilterTypeList.add("Terrain");
-      AssetFilterTypeList.add("TerrainMaterials");
+      AssetFilterTypeList.add("TerrainMaterial");
    }
    
    exec("./guis/assetBrowser.gui");
@@ -66,6 +67,7 @@ function initializeAssetBrowser()
    exec("./guis/selectModule.gui");
    exec("./guis/editModule.gui");
    exec("./guis/importTemplateModules.gui");
+   exec("./guis/assetPreviewButtonsTemplate.gui");
 
    exec("./scripts/assetBrowser.cs");
    exec("./scripts/popupMenus.cs");

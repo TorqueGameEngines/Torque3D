@@ -164,6 +164,33 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
 }
 
+function AssetBrowser::moveImageAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   
+   if(%currentModule $= %targetModule)
+   {
+      //just move the files  
+      %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
+      %assetFilename = fileName(%assetPath);
+      
+      %newAssetPath = %destination @ "/" @ %assetFilename;
+      
+      %copiedSuccess = pathCopy(%assetPath, %destination @ "/" @ %assetFilename);
+      %deleteSuccess = fileDelete(%assetPath);
+      
+      %imagePath = %assetDef.imageFile;
+      %imageFilename = fileName(%imagePath);
+      
+      %copiedSuccess = pathCopy(%imagePath, %destination @ "/" @ %imageFilename);
+      %deleteSuccess = fileDelete(%imagePath);
+   }
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
 function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);

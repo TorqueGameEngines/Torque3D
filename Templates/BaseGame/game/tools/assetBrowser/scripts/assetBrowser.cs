@@ -172,10 +172,55 @@ function AssetBrowser::viewTagsFilter(%this)
    AssetBrowser.loadFilters();
 }
 
-function AssetBrowser::toggleAssetTypeFilter(%assetTypeIdx)
+function AssetBrowser::toggleAssetTypeFilter(%this, %assetTypeIdx)
 {
    %isChecked = AssetTypeListPopup.isItemChecked(%assetTypeIdx);
-   AssetTypeListPopup.checkItem(%assetTypeIdx, !%isChecked);
+   
+   //Clear existing filters
+   if(%assetTypeIdx == 0)
+   {
+      for(%i=0; %i < AssetFilterTypeList.Count() + 1; %i++)
+      {
+         AssetTypeListPopup.checkItem(%i, false);  
+      }
+      
+      AssetTypeListPopup.checkItem(0, true);
+   }
+   else
+   {
+      if(%isChecked)
+      {
+         %anyOtherFilters = false;
+         for(%i=1; %i < AssetFilterTypeList.Count() + 1; %i++)
+         {
+            if(%assetTypeIdx == %i)
+               continue;
+               
+            if(AssetTypeListPopup.isItemChecked(%i))
+            {
+               %anyOtherFilters = true;
+               break;  
+            }
+         }
+      }
+      
+      if(%isChecked && !%anyOtherFilters)
+      {
+         for(%i=0; %i < AssetFilterTypeList.Count() + 1; %i++)
+         {
+            AssetTypeListPopup.checkItem(%i, false);  
+         }
+      
+         AssetTypeListPopup.checkItem(0, true);
+      }
+      else
+      {
+         AssetTypeListPopup.checkItem(0, false);
+         AssetTypeListPopup.checkItem(%assetTypeIdx, !%isChecked);
+      }
+   }
+   
+   %this.rebuildAssetArray();
 }
 
 function AssetBrowser::selectAsset( %this, %asset )
@@ -218,6 +263,13 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    AssetBrowser.setVisible(1);
    AssetBrowserWindow.setVisible(1);
    AssetBrowserWindow.selectWindow();
+   
+   //If we're special-case filtering(like for selecting a given type), then ignore our normal
+   //visibility filter
+   if(%AssetTypeFilter !$= "")
+   {
+      AssetBrowser.toggleAssetTypeFilter(0);  
+   }
    
    if(%selectCallback $= "")
    {
@@ -268,6 +320,7 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
       %fullPath = strreplace(%fullPath, "/", "_");
       
       if(isObject(%fullPath))
+      
          %assetDesc = %fullPath;
       else
          %assetDesc = new ScriptObject(%fullPath);
@@ -280,194 +333,65 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
       %assetName = %asset;
       %assetType = "Folder";
    }
-      
-   // it may seem goofy why the checkbox can't be instanciated inside the container
-   // reason being its because we need to store the checkbox ctrl in order to make changes
-   // on it later in the function. 
-   
-   
+
    %previewSize = %this.previewSize SPC %this.previewSize;
    %previewBounds = 20;
    
-   %container = new GuiControl(){
-      profile = "ToolsGuiDefaultProfile";
-      Position = "0 0";
-      Extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
-      HorizSizing = "right";
-      VertSizing = "bottom";
-      isContainer = "1";
-      assetName = %assetName;
-      moduleName = %moduleName;
-      assetType = %assetType;
-   };
-
    %tooltip = %assetName;
    
    %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
    
    if(%assetType $= "ShapeAsset")
    {
-      %this.previewData.assetName = %assetDesc.assetName;
-      %this.previewData.assetPath = %assetDesc.scriptFile;
-      %this.previewData.doubleClickCommand = %doubleClickCommand;
-      
-      %this.previewData.previewImage = "tools/assetBrowser/art/componentIcon";
-      
-      %this.previewData.assetFriendlyName = %assetDesc.friendlyName;
-      %this.previewData.assetDesc = %assetDesc.description;
-      %this.previewData.tooltip = %assetDesc.friendlyName @ "\n" @ %assetDesc;
-   
-      %previewButton = new GuiObjectView()
-      {
-         className = "AssetPreviewControl";
-         internalName = %matName;
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Profile = "ToolsGuiDefaultProfile";
-         position = "7 4";
-         extent = %previewSize;
-         MinExtent = "8 8";
-         canSave = "1";
-         Visible = "1";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         hovertime = "1000";
-         Margin = "0 0 0 0";
-         Padding = "0 0 0 0";
-         AnchorTop = "1";
-         AnchorBottom = "0";
-         AnchorLeft = "1";
-         AnchorRight = "0";
-         renderMissionArea = "0";
-         GizmoProfile = "GlobalGizmoProfile";
-         cameraZRot = "0";
-         forceFOV = "0";
-         gridColor = "0 0 0 0";
-         renderNodes = "0";
-         renderObjBox = "0";
-         renderMounts = "0";
-         renderColMeshes = "0";
-         selectedNode = "-1";
-         sunDiffuse = "255 255 255 255";
-         sunAmbient = "180 180 180 255";
-         timeScale = "1.0";
-         fixedDetail = "0";
-         orbitNode = "0";
-         
-         new GuiBitmapButtonCtrl()
-         {
-            HorizSizing = "right";
-            VertSizing = "bottom";
-            profile = "ToolsGuiButtonProfile";
-            position = "0 0";
-            extent = %previewSize;
-            Variable = "";
-            buttonType = "ToggleButton";
-            bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
-            groupNum = "0";
-            text = "";
-         }; 
-      };
-      
-      %assetQuery = new AssetQuery();
-      %numAssetsFound = AssetDatabase.findAllAssets(%assetQuery);
-      
-      for( %i=0; %i < %numAssetsFound; %i++)
-      {
-          %assetId = %assetQuery.getAsset(%i);
-          %name = AssetDatabase.getAssetName(%assetId);
-          
-          if(%name $= %assetName)
-          {
-            %asset = AssetDatabase.acquireAsset(%assetId);
-            
-            %previewButton.setModel(%asset.fileName);
-            //%previewButton.refreshShape();
-            //%previewButton.currentDL = 0;
-            //%previewButton.fitToShape();
-            
-            break;
-          }
-      }
+      %previewButton = AssetPreviewButtonsTemplate-->ShapeAssetPreviewButton.deepClone();
    }
    else
    {
-      //Build out the preview
-      %buildCommand = %this @ ".build" @ %assetType @ "Preview(" @ %assetDesc @ "," @ %this.previewData @ ");";
-      eval(%buildCommand);
-      
-      //debug dump
-      %tooltip = %this.previewData.tooltip;
-      %assetName = %this.previewData.assetName;
-      %previewImage = %this.previewData.previewImage;
-      %doubleClickCommand = %this.previewData.doubleClickCommand;
-      
-      %previewButton = new GuiBitmapButtonCtrl()
-      {
-         className = "AssetPreviewControl";
-         internalName = %this.previewData.assetName;
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         profile = "ToolsGuiButtonProfile";
-         position = "10 4";
-         extent = %previewSize;
-         buttonType = "PushButton";
-         bitmap = %this.previewData.previewImage;
-         Command = "";
-         text = "";
-         useStates = false;
-         
-         new GuiBitmapButtonCtrl()
-         {
-               HorizSizing = "right";
-               VertSizing = "bottom";
-               profile = "ToolsGuiButtonProfile";
-               position = "0 0";
-               extent = %previewSize;
-               Variable = "";
-               buttonType = "toggleButton";
-               bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
-               groupNum = "0";
-               text = "";
-            }; 
-      }; 
+      %previewButton = AssetPreviewButtonsTemplate-->GeneralAssetPreviewButton.deepClone();
    }
    
-   %previewBorder = new GuiButtonCtrl(){
-         class = "AssetPreviewButton";
-         internalName = %this.previewData.assetName@"Border";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         profile = "ToolsGuiThumbHighlightButtonProfile";
-         position = "0 0";
-         extent = %previewSize.x + %previewBounds SPC %previewSize.y + 24;
-         Variable = "";
-         buttonType = "radioButton";
-         tooltip = %this.previewData.tooltip;
-         Command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );"; 
-		   altCommand = %this.previewData.doubleClickCommand;
-         groupNum = "0";
-         useMouseEvents = true;
-         text = "";
-         icon = %this.previewData.previewImage;
-   };
+   %previewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
+   %previewButton.assetName = %assetName;
+   %previewButton.moduleName = %moduleName;
+   %previewButton.assetType = %assetType;
    
-   %previewNameCtrl = new GuiTextEditCtrl(){
-         position = 0 SPC %previewSize.y + %previewBounds - 16;
-         profile = ToolsGuiTextEditCenterProfile;
-         extent = %previewSize.x + %previewBounds SPC 16;
-         text = %this.previewData.assetName;
-         originalAssetName = %this.previewData.assetName; //special internal field used in renaming assets
-         internalName = "AssetNameLabel";
-         class = "AssetNameField";
-         active = false;
-      };
+   //Build out the preview
+   %buildCommand = %this @ ".build" @ %assetType @ "Preview(" @ %assetDesc @ "," @ %this.previewData @ ");";
+   eval(%buildCommand);
    
-   %container.add(%previewButton);  
-   %container.add(%previewBorder); 
-   %container.add(%previewNameCtrl);
+   //debug dump
+   %tooltip = %this.previewData.tooltip;
+   %assetName = %this.previewData.assetName;
+   %previewImage = %this.previewData.previewImage;
+   %doubleClickCommand = %this.previewData.doubleClickCommand;
    
+   if(%assetType $= "ShapeAsset")
+   {
+      %previewButton-->shapeAssetView.setModel(%previewImage);
+      %previewButton-->shapeAssetView.extent = %previewSize;
+   }
+   else
+   {
+      %previewButton-->assetPreviewImage.bitmap = %this.previewData.previewImage;
+      %previewButton-->assetPreviewImage.extent = %previewSize;
+   }
+   
+   %previewButton-->AssetPreviewBorderButton.extent = %previewSize;
+   
+   //%previewButton-->AssetPreviewButton.internalName = %this.previewData.assetName@"Border";
+   %previewButton-->AssetPreviewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + 24;
+   %previewButton-->AssetPreviewButton.tooltip = %this.previewData.tooltip;
+   %previewButton-->AssetPreviewButton.Command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );";
+   %previewButton-->AssetPreviewButton.altCommand = %this.previewData.doubleClickCommand;
+   //%previewButton-->AssetPreviewButton.icon = %this.previewData.previewImage;
+   
+   %previewButton-->AssetNameLabel.position = 0 SPC %previewSize.y + %previewBounds - 16;
+   %previewButton-->AssetNameLabel.extent = %previewSize.x + %previewBounds SPC 16;
+   %previewButton-->AssetNameLabel.text = %this.previewData.assetName;
+   %previewButton-->AssetNameLabel.originalAssetName = %this.previewData.assetName;
+
    // add to the gui control array
-   AssetBrowser-->assetList.add(%container);
+   AssetBrowser-->assetList.add(%previewButton);
    
    // add to the array object for reference later
    AssetPreviewArray.add( %previewButton, %this.previewData.previewImage );
@@ -502,7 +426,7 @@ function AssetBrowser::loadFolders(%this, %path, %parentId)
          %folderName = getToken(%childPath, "/", %f);
          
          //we don't need to display the shadercache folder
-         if(%parentId == 1 && %folderName $= "shaderCache")
+         if(%parentId == 1 && (%folderName $= "shaderCache" || %folderName $= "cache"))
             continue;
          
          %iconIdx = 1;
@@ -1171,12 +1095,12 @@ function AssetBrowser::setPreviewSize(%this, %size)
    else if(%size $= "Large")
    {
       %this.previewSize = 160;
-      AssetPreviewSizePopup.checkItem(2, false);
+      AssetPreviewSizePopup.checkItem(2, true);
    }
    
    EditorSettings.setValue("Assets/Browser/previewTileSize", %size);
       
-   %this.refreshPreviews();
+   %this.rebuildAssetArray();
 }
 
 function AssetBrowser::refreshPreviews(%this)
@@ -1193,11 +1117,16 @@ function AssetBrowserFilterTree::onSelect(%this, %itemId)
    //Make sure we have an actual module selected!
    %parentId = %this.getParentItem(%itemId);
    
+   %name = %this.getItemText(%itemId);
+   
    %breadcrumbPath = %this.getItemValue(%itemId);
    if(%breadcrumbPath !$= "")
       %breadcrumbPath = %breadcrumbPath @ "/" @ %this.getItemText(%itemId);
    else
       %breadcrumbPath = %this.getItemText(%itemId);
+      
+   if(%breadcrumbPath $= "")
+      %breadcrumbPath = AssetBrowser.currentAddress;
       
    AssetBrowser.navigateTo(%breadcrumbPath);
 }
@@ -1215,6 +1144,8 @@ function AssetBrowser::rebuildAssetArray(%this)
    //First, Query for our assets
    %assetQuery = new AssetQuery();
    %numAssetsFound = AssetDatabase.findAllAssets(%assetQuery);
+
+   %finalAssetCount = 0;
   
     //now, we'll iterate through, and find the assets that are in this module, and this category
     for( %i=0; %i < %numAssetsFound; %i++)
@@ -1240,8 +1171,46 @@ function AssetBrowser::rebuildAssetArray(%this)
 			   %assetType = AssetDatabase.getAssetType(%assetId);
 			}
 			
-			if(AssetBrowser.assetTypeFilter !$= "" && AssetBrowser.assetTypeFilter !$= %assetType)
-            continue;
+			%validType = false;
+         
+         if(AssetBrowser.assetTypeFilter $= "")
+         {
+            if(AssetTypeListPopup.isItemChecked(0))
+            {
+               %validType = true;
+            }
+            else
+            {
+               for(%f=1; %f < AssetFilterTypeList.Count(); %f++)
+               {
+                  %isChecked = AssetTypeListPopup.isItemChecked(%f+1);  
+                  
+                  if(%isChecked)
+                  {
+                     %filterTypeName = AssetFilterTypeList.getKey(%f);
+                     
+                     if(%activeTypeFilterList $= "")
+                        %activeTypeFilterList = %filterTypeName;
+                     else
+                        %activeTypeFilterList = %activeTypeFilterList @ ", " @ %filterTypeName;
+                        
+                     if(%filterTypeName @ "Asset" $= %assetType)
+                     {
+                        %validType = true;
+                        break;  
+                     }
+                  }
+               }
+            }
+            
+            if(!%validType)
+               continue;
+         }
+         else
+         {
+            if(%assetType !$= AssetBrowser.assetTypeFilter)
+               continue;  
+         }
 			
 			/*if(%this.getItemText(%itemId) $= %assetType || (%assetType $= "" && %this.getItemText(%itemId) $= "Misc")
 			   || %moduleItemId == 1)
@@ -1253,12 +1222,20 @@ function AssetBrowser::rebuildAssetArray(%this)
 				if(%searchText !$= "Search Assets...")
 				{
 					if(strstr(strlwr(%assetName), strlwr(%searchText)) != -1)
+					{
 						%assetArray.add( %moduleName, %assetId);
+						
+						if(%assetType !$= "Folder")
+						   %finalAssetCount++;
+					}
 				}
 				else
 				{
 					//got it.	
 					%assetArray.add( %moduleName, %assetId );
+					
+					if(%assetType !$= "Folder")
+					   %finalAssetCount++;
 				}
 			//}
        }
@@ -1292,7 +1269,39 @@ function AssetBrowser::rebuildAssetArray(%this)
 	for(%i=0; %i < %assetArray.count(); %i++)
 		AssetBrowser.buildPreviewArray( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
 		
-   AssetBrowser_FooterText.text = %assetArray.count() @ " Assets";
+   AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";
+   
+   %activeTypeFilterList = "";
+   if(AssetBrowser.assetTypeFilter $= "")
+   {
+      if(!AssetTypeListPopup.isItemChecked(0))
+      {
+         for(%f=1; %f < AssetFilterTypeList.Count(); %f++)
+         {
+            %isChecked = AssetTypeListPopup.isItemChecked(%f+1);  
+            
+            if(%isChecked)
+            {
+               %filterTypeName = AssetFilterTypeList.getKey(%f);
+               
+               if(%activeTypeFilterList $= "")
+                  %activeTypeFilterList = %filterTypeName;
+               else
+                  %activeTypeFilterList = %activeTypeFilterList @ ", " @ %filterTypeName;
+            }
+         }
+      }
+      
+      if(!%validType)
+         continue;
+   }
+   else
+   {
+      %activeTypeFilterList = AssetBrowser.assetTypeFilter;
+   }
+   
+   if(%activeTypeFilterList !$= "")
+      AssetBrowser_FooterText.text = AssetBrowser_FooterText.text @ " | Active Type Filters: " @ %activeTypeFilterList;
 }
 
 //
@@ -1835,17 +1844,22 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    
    %parent = %this.getParentItem(%item);
    
-   if(%parent == 1)
+   if(%item != 1)
    {
-      //we're a module entry, cool
-      %targetModuleName = %this.getItemText(%item);
-      echo("DROPPED IT ON MODULE " @ %targetModuleName);   
+      //we're a folder entry, cool
+      %path = %this.getItemValue(%item) @ "/" @ %this.getItemText(%item);
+      echo("DROPPED IT ON PATH " @ %path);  
       
-      if(%moduleName !$= %targetModuleName)
+      if(%path !$= AssetBrowser.CurrentAddress)
       {
          //we're trying to move the asset to a different module!
-         MessageBoxYesNo( "Move Asset", "Do you wish to move asset " @ %assetName @ " to module " @ %targetModuleName @ "?", 
-               "AssetBrowser.moveAsset("@%assetName@", "@%targetModuleName@");", "");  
+         MessageBoxYesNo( "Move Asset", "Do you wish to move asset " @ %assetName @ " to " @ %path @ "?", 
+               "AssetBrowser.moveAsset(\""@ %moduleName @ ":" @ %assetName @"\", \""@%path@"\");", "");  
       }
    }
+}
+
+function AssetBrowserFilterTree::onDragDropped( %this )
+{
+   %asdgadfhg =true;
 }

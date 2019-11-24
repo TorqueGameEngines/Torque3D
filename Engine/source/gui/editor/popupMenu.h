@@ -83,6 +83,9 @@ protected:
 
    bool mIsSubmenu;
 
+   bool mRadioSelection; ///If true, we treat all the items in the same check group as a radio item, so we uncheck everything else in the group if an item is checked
+                         ///If false, then we don't clear other selections
+
    //This is the gui control that renders our popup
    GuiPopupMenuTextListCtrl *mTextList;
 

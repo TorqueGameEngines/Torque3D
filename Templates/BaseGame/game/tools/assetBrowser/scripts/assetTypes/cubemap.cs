@@ -60,7 +60,7 @@ function GuiInspectorTypeCubemapAssetPtr::onControlDropped( %this, %payload, %po
       %module = %payload.dragSourceControl.parentGroup.moduleName;
       %asset = %payload.dragSourceControl.parentGroup.assetName;
       
-      %targetComponent = %this.ComponentOwner;
+      %targetComponent = %this.object;
       %targetComponent.CubemapAsset = %module @ ":" @ %asset;
       
       //Inspector.refresh();

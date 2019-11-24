@@ -92,6 +92,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%diffuseTypeSuffixes, ",;") == 0 ? "_albedo" : getToken(%diffuseTypeSuffixes, ",;", 0);
             %diffuseAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.diffuseImageAsset = %diffuseAsset;
          }
       }
       
@@ -114,6 +115,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%normalTypeSuffixes, ",;") == 0 ? "_normal" : getToken(%normalTypeSuffixes, ",;", 0);
             %normalAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.normalImageAsset = %normalAsset;
          }
       }
       
@@ -134,6 +136,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%metalnessTypeSuffixes, ",;") == 0 ? "_metalness" : getToken(%metalnessTypeSuffixes, ",;", 0);
             %metalAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.metalImageAsset = %metalAsset;
          }
       }
       
@@ -154,6 +157,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%roughnessTypeSuffixes, ",;") == 0 ? "_roughness" : getToken(%roughnessTypeSuffixes, ",;", 0);
             %roughnessAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.roughnessImageAsset = %roughnessAsset;
          }
       }
       
@@ -174,6 +178,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%smoothnessTypeSuffixes, ",;") == 0 ? "_smoothness" : getToken(%smoothnessTypeSuffixes, ",;", 0);
             %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.SmoothnessImageAsset = %smoothnessAsset;
          }
       }
       
@@ -194,6 +199,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%aoTypeSuffixes, ",;") == 0 ? "_AO" : getToken(%aoTypeSuffixes, ",;", 0);
             %AOAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.AOImageAsset = %AOAsset;
          }
       }
       
@@ -214,6 +220,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             //the material name), then we go ahead and create a blank entry
             %suff = getTokenCount(%compositeTypeSuffixes, ",;") == 0 ? "_composite" : getToken(%compositeTypeSuffixes, ",;", 0);
             %compositeAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
+            %assetItem.compositeImageAsset = %compositeAsset;
          }
       }
       

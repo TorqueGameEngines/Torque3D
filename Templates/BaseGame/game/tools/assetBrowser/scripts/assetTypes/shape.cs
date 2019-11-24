@@ -175,7 +175,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    %assetId = %moduleName@":"@%assetName;
    
    %assetPath = AssetBrowser.currentAddress @ "/";
-   %assetFullPath = %assetPath @ "/" @ fileName(%filePath);
+   %assetFullPath = %assetPath @ fileName(%filePath);
    
    %newAsset = new ShapeAsset()
    {
@@ -213,7 +213,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
         }
    }
    
-   %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ "/" @ %assetName @ ".asset.taml"); 
+   %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ %assetName @ ".asset.taml"); 
    
    //and copy the file into the relevent directory
    %doOverwrite = !AssetBrowser.isAssetReImport;
@@ -245,6 +245,11 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    
    if(getAssetImportConfigValue("Materials/DoUpAxisOverride", "") $= "1")
       %constructor.upAxis = getAssetImportConfigValue("Meshes/UpAxisOverride", "Z_AXIS");
+      
+   if(getAssetImportConfigValue("Meshes/DoScaleOverride", "0") $= "1")
+      %constructor.unit = getAssetImportConfigValue("Meshes/ScaleOverride", "1");
+   else
+      %constructor.unit = -1;
 
    %constructor.lodType = getAssetImportConfigValue("Meshes/LODType", "0");
    //%constructor.singleDetailSize = getAssetImportConfigValue("Meshes/convertLeftHanded", "0");
@@ -287,9 +292,21 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    %moduleDef = ModuleDatabase.findModule(%moduleName,1);
          
    if(!AssetBrowser.isAssetReImport)
-      AssetDatabase.addDeclaredAsset(%moduleDef, %assetPath @ "/" @ %assetName @ ".asset.taml");
+      AssetDatabase.addDeclaredAsset(%moduleDef, %assetPath @ %assetName @ ".asset.taml");
    else
       AssetDatabase.refreshAsset(%assetId);
+}
+
+function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
+{
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.fileName;
+
+   %previewData.previewImage = fileName;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
 }
 
 function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )
@@ -304,12 +321,12 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
    
    if(%assetType $= "ShapeAsset")
    {
-      echo("DROPPED A SHAPE ON A SHAPE ASSET COMPONENT FIELD!");  
+      //echo("DROPPED A SHAPE ON A SHAPE ASSET COMPONENT FIELD!");  
       
       %module = %payload.dragSourceControl.parentGroup.moduleName;
       %asset = %payload.dragSourceControl.parentGroup.assetName;
       
-      %targetComponent = %this.ComponentOwner;
+      %targetComponent = %this.targetObject;
       %targetComponent.MeshAsset = %module @ ":" @ %asset;
       
       //Inspector.refresh();

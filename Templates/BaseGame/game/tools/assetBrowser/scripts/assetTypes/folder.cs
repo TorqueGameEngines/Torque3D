@@ -3,8 +3,7 @@ function AssetBrowser::buildFolderPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.dirPath;
    
-   //%previewData.previewImage = "tools/assetBrowser/art/folderIcon";
-   %previewData.previewImage = "tools/gui/images/folder";
+   %previewData.previewImage = "tools/assetBrowser/art/folderIcon";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
@@ -92,4 +91,6 @@ function AssetBrowser::moveFolder(%this, %folderPath, %newFolderPath)
    
    %copiedSuccess = pathCopy(%fullPath, %newFullPath @ "/" @ %newFolderName);
    %this.deleteFolder(%fullPath);
+   
+   //thrash the modules and reload them
 }

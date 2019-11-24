@@ -1344,6 +1344,7 @@ function EWorldEditor::setGridSnap( %this, %value )
 {
    %this.gridSnap = %value;
    GlobalGizmoProfile.snapToGrid = %value;
+   GlobalGizmoProfile.forceSnapRotations = %value;
    %this.syncGui();
 }
 

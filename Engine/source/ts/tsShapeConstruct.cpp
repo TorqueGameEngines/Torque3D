@@ -402,6 +402,12 @@ bool TSShapeConstructor::onAdd()
    if ( !Parent::onAdd() )
       return false;
 
+   static const U32 bufSize = 512;
+   char* buf = Con::getReturnBuffer(bufSize);
+   Platform::makeFullPathName(mShapePath, buf, bufSize, NULL);
+
+   mShapePath = buf;
+
    // Prevent multiple objects pointing at the same shape file
    TSShapeConstructor* tss = findShapeConstructor( mShapePath );
    if ( tss )

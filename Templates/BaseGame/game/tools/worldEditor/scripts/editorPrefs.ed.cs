@@ -131,6 +131,7 @@ EditorSettings.beginGroup( "Grid" );
 EditorSettings.setDefaultValue(  "gridColor",               "255 255 255 20"  );
 EditorSettings.setDefaultValue(  "gridSize",                "1 1 1"        );
 EditorSettings.setDefaultValue(  "snapToGrid",              "0"               ); //<-- Not currently used
+EditorSettings.setDefaultValue(  "forceSnapRotations",      "0"               ); //<-- Not currently used
 EditorSettings.setDefaultValue(  "renderPlane",             "0"               );
 EditorSettings.setDefaultValue(  "renderPlaneHashes",       "0"               );
 EditorSettings.setDefaultValue(  "planeDim",                "500"             );
@@ -276,6 +277,7 @@ function EditorGui::readWorldEditorSettings(%this)
    GlobalGizmoProfile.gridColor           = EditorSettings.value("gridColor");                  //$pref::WorldEditor::gridColor;
    GlobalGizmoProfile.gridSize            = EditorSettings.value("gridSize");                   //$pref::WorldEditor::gridSize;
    GlobalGizmoProfile.snapToGrid          = EditorSettings.value("snapToGrid");                 //$pref::WorldEditor::snapToGrid;
+   GlobalGizmoProfile.forceSnapRotations          = EditorSettings.value("forceSnapRotations"); //$pref::WorldEditor::forceSnapRotations;
    GlobalGizmoProfile.renderPlane         = EditorSettings.value("renderPlane");                //$pref::WorldEditor::renderPlane;
    GlobalGizmoProfile.renderPlaneHashes   = EditorSettings.value("renderPlaneHashes");          //$pref::WorldEditor::renderPlaneHashes;   
    GlobalGizmoProfile.planeDim            = EditorSettings.value("planeDim");                   //$pref::WorldEditor::planeDim;
@@ -371,6 +373,7 @@ function EditorGui::writeWorldEditorSettings(%this)
    EditorSettings.setValue( "gridColor",              GlobalGizmoProfile.gridColor );        //$Pref::WorldEditor::gridColor
    EditorSettings.setValue( "gridSize",               GlobalGizmoProfile.gridSize );         //$Pref::WorldEditor::gridSize
    EditorSettings.setValue( "snapToGrid",             GlobalGizmoProfile.snapToGrid );       //$Pref::WorldEditor::snapToGrid
+   EditorSettings.setValue( "forceSnapRotations",     GlobalGizmoProfile.forceSnapRotations );       //$Pref::WorldEditor::forceSnapRotations
    EditorSettings.setValue( "renderPlane",            GlobalGizmoProfile.renderPlane );      //$Pref::WorldEditor::renderPlane
    EditorSettings.setValue( "renderPlaneHashes",      GlobalGizmoProfile.renderPlaneHashes );//$Pref::WorldEditor::renderPlaneHashes
    EditorSettings.setValue( "planeDim",               GlobalGizmoProfile.planeDim );         //$Pref::WorldEditor::planeDim

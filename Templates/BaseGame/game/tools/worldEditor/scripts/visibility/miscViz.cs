@@ -216,9 +216,9 @@ function toggleSurfacePropertiesViz( %mode )
    for(%i=0; %i < 15; %i++)
    {
       if(%i == $Viz_SurfacePropertiesModeVar)
-         EVisibilityBufferVizOptions.checkItem(%i, true);
+         EVisibilityBufferVizOptions.checkItem(%i+1, true);
       else
-         EVisibilityBufferVizOptions.checkItem(%i, false);
+         EVisibilityBufferVizOptions.checkItem(%i+1, false);
    }
    
    //forces the forward materials to get dis viz properly

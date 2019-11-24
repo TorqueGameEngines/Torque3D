@@ -188,6 +188,7 @@ GizmoProfile::GizmoProfile()
    rotationSnap = 15.0f;
    allowSnapScale = true;
    scaleSnap = 0.1f;
+   forceSnapRotations = false;
 
    rotateScalar = 0.8f;
    scaleScalar = 0.8f;
@@ -246,6 +247,7 @@ void GizmoProfile::initPersistFields()
    addField( "rotationSnap",        TypeF32,    Offset(rotationSnap, GizmoProfile) );
    addField( "allowSnapScale",      TypeBool,   Offset(allowSnapScale, GizmoProfile) );
    addField( "scaleSnap",           TypeF32,    Offset(scaleSnap, GizmoProfile) );
+   addField( "forceSnapRotations",  TypeBool,   Offset(forceSnapRotations, GizmoProfile));
    addField( "renderWhenUsed",      TypeBool,   Offset(renderWhenUsed, GizmoProfile) );
    addField( "renderInfoText",      TypeBool,   Offset(renderInfoText, GizmoProfile) );
    addField( "renderPlane",         TypeBool,   Offset(renderPlane, GizmoProfile) );
@@ -1083,7 +1085,7 @@ void Gizmo::on3DMouseDragged( const Gui3DMouseEvent & event )
       angle *= 0.02f; // scale down to not require rotate scalar to be microscopic
 
       //
-      if( mProfile->allowSnapRotations && event.modifier & SI_SHIFT )
+      if((mProfile->forceSnapRotations && event.modifier | SI_SHIFT) || (mProfile->allowSnapRotations && event.modifier & SI_SHIFT ))
          angle = mDegToRad( _snapFloat( mRadToDeg( angle ), mProfile->rotationSnap ) );
 
       mDeltaAngle = angle - mLastAngle;

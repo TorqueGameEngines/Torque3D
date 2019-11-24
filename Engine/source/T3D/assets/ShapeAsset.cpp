@@ -367,10 +367,12 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %d, %s);", 
-      mInspector->getComponentGroupTargetId(), mCaption);
+      mInspector->getInspectObject()->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
-   setDataField(StringTable->insert("ComponentOwner"), NULL, String::ToString(mInspector->getComponentGroupTargetId()).c_str());
+   const char* id = mInspector->getInspectObject()->getIdString();
+
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 
    // Create "Open in ShapeEditor" button
    mShapeEdButton = new GuiBitmapButtonCtrl();

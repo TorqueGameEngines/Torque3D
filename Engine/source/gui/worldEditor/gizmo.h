@@ -108,6 +108,7 @@ public:
    bool allowSnapScale;
    F32 rotationSnap;
    bool allowSnapRotations;
+   bool forceSnapRotations;
 
    bool renderWhenUsed;
    bool renderInfoText;

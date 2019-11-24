@@ -153,7 +153,7 @@ function AssetNameField::onReturn(%this)
 }
 
 //------------------------------------------------------------
-function AssetBrowser::moveAsset(%this, %destination)
+function AssetBrowser::moveAsset(%this, %assetId, %destination)
 {
    if(EditAssetPopup.assetType $= "Folder")
    {
@@ -163,12 +163,15 @@ function AssetBrowser::moveAsset(%this, %destination)
    }
    else
    {
-      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-      %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetType);
+      %assetDef = AssetDatabase.acquireAsset(%assetId);
+      %assetType = AssetDatabase.getAssetType(%assetId);
       
       //Do any cleanup required given the type
       if(%this.isMethod("move"@%assetType))
-         eval(%this @ ".move"@%assetType@"("@%assetDef@");");
+      {
+         %command = %this @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %destination @ "\");";
+         eval(%this @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %destination @ "\");");
+      }
    }
 }
 

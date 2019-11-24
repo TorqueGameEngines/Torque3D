@@ -60,6 +60,8 @@ PopupMenu::PopupMenu()
 	mTextList = nullptr;
 
 	mIsSubmenu = false;
+
+   mRadioSelection = true;
 }
 
 PopupMenu::~PopupMenu()
@@ -83,6 +85,7 @@ void PopupMenu::initPersistFields()
    Parent::initPersistFields();
 
    addField("barTitle", TypeCaseString, Offset(mBarTitle, PopupMenu), "");
+   addField("radioSelection", TypeBool, Offset(mRadioSelection, PopupMenu), "");
 }
 
 //-----------------------------------------------------------------------------
@@ -225,7 +228,7 @@ void PopupMenu::checkItem(S32 pos, bool checked)
    if (mMenuItems.empty() || mMenuItems.size() < pos || pos < 0)
       return;
 
-   if (checked && mMenuItems[pos].mCheckGroup != -1)
+   if (checked && mMenuItems[pos].mCheckGroup != -1 && mRadioSelection)
    {
       // first, uncheck everything in the group:
       for (U32 i = 0; i < mMenuItems.size(); i++)

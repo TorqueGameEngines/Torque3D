@@ -104,24 +104,24 @@ function AssetBrowser::buildPopupMenus(%this)
          class = "EditorWorldMenu";
          //isPopup = true;
 
-         item[ 0 ] = "Create Material" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"MaterialAsset\", AssetBrowser.selectedModule);";//"createNewMaterialAsset(\"NewMaterial\", AssetBrowser.selectedModule);";
-         item[ 1 ] = "Create Terrain Material" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainMaterialAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
-         item[ 2 ] = "Create Image" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ImageAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
+         item[ 0 ] = "Material" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"MaterialAsset\", AssetBrowser.selectedModule);";//"createNewMaterialAsset(\"NewMaterial\", AssetBrowser.selectedModule);";
+         item[ 1 ] = "Terrain Material" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainMaterialAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
+         item[ 2 ] = "Image" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ImageAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewImageAsset(\"NewImage\", AssetBrowser.selectedModule);";
          item[ 3 ] = "-";
-         item[ 4 ] = "Create Terrain Data" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule);";
+         item[ 4 ] = "Terrain Data" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule);";
          item[ 5 ] = "-";         
-         item[ 6 ] = "Create Shape" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"Shape\", AssetBrowser.selectedModule);";
-         item[ 7 ] = "Create Shape Animation" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAnimationAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewShapeAnimationAsset(\"NewShapeAnimation\", AssetBrowser.selectedModule);";
+         item[ 6 ] = "Shape" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"Shape\", AssetBrowser.selectedModule);";
+         item[ 7 ] = "Shape Animation" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAnimationAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewShapeAnimationAsset(\"NewShapeAnimation\", AssetBrowser.selectedModule);";
          item[ 8 ] = "-";
-         item[ 9 ] = "Create GUI" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GUIAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewGUIAsset(\"NewGUI\", AssetBrowser.selectedModule);";
+         item[ 9 ] = "GUI" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GUIAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewGUIAsset(\"NewGUI\", AssetBrowser.selectedModule);";
          item[ 10 ] = "-";
-         item[ 11 ] = "Create Post Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"PostEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewPostEffectAsset(\"NewPostEffect\", AssetBrowser.selectedModule);";
+         item[ 11 ] = "Post Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"PostEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewPostEffectAsset(\"NewPostEffect\", AssetBrowser.selectedModule);";
          item[ 12 ] = "-";
-         item[ 13 ] = "Create Sound" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"SoundAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewSoundAsset(\"NewSound\", AssetBrowser.selectedModule);";
+         item[ 13 ] = "Sound" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"SoundAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewSoundAsset(\"NewSound\", AssetBrowser.selectedModule);";
          item[ 14 ] = "-";
-         item[ 15 ] = "Create Particle Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ParticleEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewParticleEffectAsset(\"NewParticleEffect\", AssetBrowser.selectedModule);";
+         item[ 15 ] = "Particle Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ParticleEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewParticleEffectAsset(\"NewParticleEffect\", AssetBrowser.selectedModule);";
          item[ 16 ] = "-";
-         item[ 17 ] = "Create Cubemap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CubemapAsset\", AssetBrowser.selectedModule);";
+         item[ 17 ] = "Cubemap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CubemapAsset\", AssetBrowser.selectedModule);";
       };
    }
    
@@ -139,7 +139,7 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 3 ] = "Create Component Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppComponentAsset\", AssetBrowser.selectedModule);";
          item[ 4 ] = "Create Script Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppScriptClass\", AssetBrowser.selectedModule);";*/
          
-         item[ 0 ] = "Create C++ Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
+         item[ 0 ] = "C++ Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
       };
       //%this.AddNewScriptAssetPopup.insertSubMenu(0, "Create Component", AddNewComponentAssetPopup);
    }
@@ -151,17 +151,17 @@ function AssetBrowser::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          
-         item[0] = "Create Folder" TAB "" TAB "AssetBrowser.CreateNewFolder();";
+         item[0] = "Folder" TAB "" TAB "AssetBrowser.CreateNewFolder();";
          item[1] = "-";
-         item[2] = "Create Code Asset" TAB AddNewScriptAssetPopup;
+         item[2] = "Code Asset" TAB AddNewScriptAssetPopup;
          item[3] = "-";
-         item[4] = "Create Art Asset" TAB AddNewArtAssetPopup;
+         item[4] = "Art Asset" TAB AddNewArtAssetPopup;
          item[5] = "-";
-         item[6] = "Create Level" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewLevelAsset(\"NewLevel\", AssetBrowser.selectedModule);";
+         item[6] = "Level" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewLevelAsset(\"NewLevel\", AssetBrowser.selectedModule);";
          item[7] = "-";
-         item[8] = "Create C++ Asset" TAB AddNewCppAssetPopup;
+         item[8] = "C++ Asset" TAB AddNewCppAssetPopup;
          item[9] = "-";
-         item[10] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
+         item[10] = "New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
       
       };
    }
@@ -174,7 +174,7 @@ function AssetBrowser::buildPopupMenus(%this)
          class = "EditorWorldMenu";
          //isPopup = true;
          
-         item[ 0 ] = "Create New Asset" TAB AddNewAssetPopup;
+         item[ 0 ] = "New Asset" TAB AddNewAssetPopup;
          item[ 1 ] = "Reload Module" TAB "" TAB "AssetBrowser.reloadModule();";
          Item[ 2 ] = "-";
          Item[ 3 ] = "Edit Module" TAB "" TAB "AssetBrowser.editModuleInfo();";
@@ -199,7 +199,7 @@ function AssetBrowser::buildPopupMenus(%this)
          class = "EditorWorldMenu";
          //isPopup = true;
 
-         Item[ 0 ] = "Create in Folder" TAB AddNewAssetPopup;
+         Item[ 0 ] = "Create" TAB AddNewAssetPopup;
          item[ 1 ] = "-";
          item[ 2 ] = "Rename Folder" TAB "" TAB "AssetBrowser.renameAsset();";
          Item[ 3 ] = "Duplicate Folder" TAB "" TAB "AssetBrowser.duplicateAsset();";
@@ -243,14 +243,21 @@ function AssetBrowser::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          //isPopup = true;
+         
+         radioSelection = false;
       };
       
-      /*for(%i=0; %i < AssetFilterTypeList.Count(); %i++)
+      AssetTypeListPopup.addItem(0, AssetFilterTypeList.getKey(0) TAB "" TAB "AssetBrowser.toggleAssetTypeFilter(" @ 0 @ ");");
+      AssetTypeListPopup.addItem(1, "-");
+      
+      for(%i=1; %i < AssetFilterTypeList.Count(); %i++)
       {
          %assetTypeName = AssetFilterTypeList.getKey(%i);
-         AssetTypeListPopup.insertItem(%i, %assetTypeName, "", "AssetBrowser.toggleAssetTypeFilter(" @ %i @ ");");
-      }*/
+         AssetTypeListPopup.addItem(%i+1, %assetTypeName TAB "" TAB "AssetBrowser.toggleAssetTypeFilter(" @ %i + 1 @ ");");
+      }
    }
+   
+   AssetBrowser.toggleAssetTypeFilter(0);  
    
    //Browser visibility menu
    if( !isObject( BrowserVisibilityPopup ) )
@@ -276,7 +283,6 @@ function AssetBrowser::buildPopupMenus(%this)
       };
       
       BrowserVisibilityPopup.enableItem(5, false);
-      BrowserVisibilityPopup.enableItem(7, false);
       BrowserVisibilityPopup.enableItem(9, false);
    }
    

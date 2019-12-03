@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GlowPostFX"
+    scriptFile="@assetFile=GlowPostFX.cs"
+    VersionId="1" />

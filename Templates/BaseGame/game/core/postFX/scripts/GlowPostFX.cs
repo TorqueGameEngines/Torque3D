@@ -60,7 +60,7 @@ singleton GFXStateBlockData( PFX_GlowCombineStateBlock : PFX_DefaultStateBlock )
 };
 
 
-singleton PostEffect( GlowPostFx )
+singleton PostEffect( GlowPostFX )
 {  
    // Do not allow the glow effect to work in reflection 
    // passes by default so we don't do the extra drawing.

@@ -99,10 +99,6 @@ CppAsset::CppAsset() : AssetBase()
 
 CppAsset::~CppAsset()
 {
-   // If the asset manager does not own the asset then we own the
-   // asset definition so delete it.
-   if (!getOwned())
-      delete mpAssetDefinition;
 }
 
 //-----------------------------------------------------------------------------

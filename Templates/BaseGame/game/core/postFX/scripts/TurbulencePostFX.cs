@@ -20,25 +20,38 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-exec("./fileDialogBase.ed.cs");
-exec("./openFileDialog.ed.cs");
-exec("./saveFileDialog.ed.cs");
-exec("./saveChangesMBDlg.ed.gui");
-exec("./simViewDlg.ed.gui");
-exec("./colorPicker.ed.gui");
-exec("./materialSelector.ed.gui");
-exec("./scriptEditorDlg.ed.gui");
-exec("./colladaImport.ed.gui");
-exec("./GuiEaseEditDlg.ed.gui");
-exec("./GuiEaseEditDlg.ed.cs");
-exec("./guiObjectInspector.ed.cs");
-exec("./uvEditor.ed.gui");
-exec("./objectSelection.ed.cs");
-exec("./postFxManager.gui");
-exec("./assimpImport.ed.gui");
+singleton GFXStateBlockData( PFX_TurbulenceStateBlock : PFX_DefaultStateBlock)  
+{  
+   zDefined = false;
+   zEnable = false;  
+   zWriteEnable = false;  
+        
+   samplersDefined = true;  
+   samplerStates[0] = SamplerClampLinear;
+};  
+  
+singleton ShaderData( PFX_TurbulenceShader )
+{   
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/turbulenceP.hlsl";
+           
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/gl/turbulenceP.glsl";
+           
+   samplerNames[0] = "$inputTex";
+   pixVersion = 3.0;
+};
 
-exec("./fieldTypes/assetDependencies.cs");
-exec("./fieldTypes/fieldTypes.cs");
-exec("./fieldTypes/listField.cs");
-exec("./fieldTypes/moduleDependencies.cs");
-exec("./fieldTypes/buttonField.cs");
+singleton PostEffect( TurbulencePostFX )  
+{  
+   isEnabled = false;    
+   allowReflectPass = true;  
+         
+   renderTime = "PFXAfterDiffuse";
+   renderBin = "GlowBin";
+   renderPriority = 0.5; // Render after the glows themselves
+     
+   shader = PFX_TurbulenceShader;  
+   stateBlock=PFX_TurbulenceStateBlock;
+   texture[0] = "$backBuffer";      
+ };

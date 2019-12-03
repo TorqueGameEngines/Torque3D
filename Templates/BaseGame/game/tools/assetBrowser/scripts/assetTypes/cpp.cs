@@ -3,11 +3,13 @@ function AssetBrowser::createCppAsset(%this)
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;      
+   %assetName = AssetBrowser.newAssetSettings.assetName;  
    
-   %tamlpath = %modulePath @ "/source/" @ %assetName @ ".asset.taml";
-   %codePath = %modulePath @ "/source/" @ %assetName @ ".cpp";
-   %headerPath = %modulePath @ "/source/" @ %assetName @ ".h";
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";     
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %codePath = %assetPath @ %assetName @ ".cpp";
+   %headerPath = %assetPath @ %assetName @ ".h";
    
    //Do the work here
    %assetType = AssetBrowser.newAssetSettings.assetType;
@@ -95,7 +97,7 @@ function AssetBrowser::createCppAsset(%this)
    }
 	
 	//Last, check that we have a C++ Module definition. If not, make one so anything important can be initialized on startup there
-	%cppModuleFilePath = %modulePath @ "/source/" @ %moduleName @ ".cpp";
+	%cppModuleFilePath = %modulePath @ "/" @ %moduleName @ ".cpp";
 	if(!isFile(%cppModuleFilePath))
 	{
 	   %file = new FileObject();

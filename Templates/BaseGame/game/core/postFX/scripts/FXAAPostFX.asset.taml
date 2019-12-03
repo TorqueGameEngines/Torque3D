@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="FXAAPostFX"
+    scriptFile="@assetFile=FXAAPostFX.cs"
+    VersionId="1" />

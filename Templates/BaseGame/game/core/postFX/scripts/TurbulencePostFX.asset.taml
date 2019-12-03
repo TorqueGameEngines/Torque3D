@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TurbulencePostFX"
+    scriptFile="@assetFile=TurbulencePostFX.cs"
+    VersionId="1" />

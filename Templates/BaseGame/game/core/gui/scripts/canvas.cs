@@ -157,6 +157,6 @@ function configureCanvas()
    // We need to parse the setting between AA modes, and then it's level
    // It's formatted as AATypexAALevel
    // So, FXAAx4 or MLAAx2
-   if ( isObject( FXAA_PostEffect ) )
-      FXAA_PostEffect.isEnabled = ( %aa > 0 ) ? true : false;
+   if ( isObject( FXAAPostFX ) )
+      FXAAPostFX.isEnabled = ( %aa > 0 ) ? true : false;
 }

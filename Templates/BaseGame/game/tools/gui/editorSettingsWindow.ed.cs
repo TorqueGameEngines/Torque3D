@@ -459,6 +459,8 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    }
    
    SettingsInspector.startGroup("Assets Importing");
+   SettingsInspector.addField("Edit Asset Configs", "Edit Asset Import Configs", "button", "Open Asset Import Config Editor", "", "Canvas.pushDialog(AssetImportConfigEditor);");
+   SettingsInspector.addSettingsField("Assets/AssetImporDefaultConfig", "Default Asset Import Config", "list", "", %formattedConfigList); 
    SettingsInspector.addSettingsField("Assets/AssetImporDefaultConfig", "Default Asset Import Config", "list", "", %formattedConfigList); 
    SettingsInspector.addSettingsField("Assets/AutoImport", "Automatically Import using default config", "bool", "If on, the asset importing process" @
                                                                                                                         "will attempt to automatically import any inbound assets"@

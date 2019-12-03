@@ -3,31 +3,22 @@ function PostFXEditor::onDialogPush( %this )
    //Apply the settings to the controls
    postVerbose("% - PostFX Editor - Loading GUI.");
    
-   %this.initialOpen = true;
    %this.refresh();
+   
+   ESettingsWindowList.setSelectedById( 1 );
 }
 
 function PostFXEditor::refresh(%this)
 {
-   PostEffectEditorInspector.clearFields();
-   
+   PostEffectEditorList.clear();
+
    %count = PostFXManager.Count();
    for(%i=0; %i < %count; %i++)
    {
       %postEffect = PostFXManager.getKey(%i);  
       
-      if(isObject(%postEffect) && %postEffect.isMethod("populatePostFXSettings"))
-      {
-         %postEffect.populatePostFXSettings();
-      }
+      PostEffectEditorList.addRow( %i, %postEffect.getName() );
    }
-   
-   //First time we open it this 'session', we'll go ahead and collapse the groups
-   //so it's not too visually busy
-   if(%this.initialOpen)
-      PostEffectEditorInspector.setGroupsExpanded(false);   
-      
-   %this.initialOpen = false;
 }
 
 function PostFXEditor::apply(%this)
@@ -47,4 +38,16 @@ function PostFXEditor::apply(%this)
 function PostFXEditor::revert(%this)
 {
    PostFXManager::loadPresetHandler($PostFXManager::currentPreset);
+}
+
+function PostEffectEditorList::onSelect( %this, %id, %text )
+{
+   PostEffectEditorInspector.clearFields();
+   
+   %postEffect = PostFXManager.getKey(%id);  
+      
+   if(isObject(%postEffect) && %postEffect.isMethod("populatePostFXSettings"))
+   {
+      %postEffect.populatePostFXSettings();
+   }
 }

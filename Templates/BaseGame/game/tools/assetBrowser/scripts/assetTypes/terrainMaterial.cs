@@ -6,7 +6,7 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    %assetName = AssetBrowser.newAssetSettings.assetName;      
    
    %assetType = AssetBrowser.newAssetSettings.assetType;
-   %assetPath = AssetBrowser.currentAddress @ "/";    
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %scriptPath = %assetPath @ %assetName @ ".cs";

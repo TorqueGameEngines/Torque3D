@@ -1,3 +1,45 @@
+function AssetBrowser::createNewFolder(%this)
+{
+   AssetBrowser_newFolderNameTxt.text = "NewFolder";
+   Canvas.pushDialog(AssetBrowser_newFolder);
+}
+
+function AssetBrowser::doCreateNewFolder(%this)
+{
+   %newFolderName = AssetBrowser_newFolderNameTxt.getText();
+   
+   if(%newFolderName $= "")
+      %newFolderName = "NewFolder";
+      
+   %newFolderIdx = "";
+   %matched = true;
+   %newFolderPath = "";
+   while(%matched == true)
+   {
+      %newFolderPath = AssetBrowser.dirHandler.currentAddress @ "/" @ %newFolderName @ %newFolderIdx;
+      if(!isDirectory(%newFolderPath))
+      {
+         %matched = false;
+      }
+      else
+      {
+         %newFolderIdx++;         
+      }
+   }
+   
+   //make a dummy file
+   %file = new FileObject();
+   %file.openForWrite(%newFolderPath @ "/test");
+   %file.close();
+   
+   fileDelete(%newFolderPath @ "/test");
+   
+   //refresh the directory
+   AssetBrowser.loadDirectories();
+   
+   %this.navigateTo(%newFolderPath);
+}
+
 function AssetBrowser::buildFolderPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
@@ -26,7 +68,7 @@ function AssetBrowser::renameFolder(%this, %folderPath, %newFolderName)
    //so, we nix any assets active for the module, do the delete action on the old folder, and then re-acquire our assets.
    //This will have the added benefit of updating paths for asset items
    
-   %module = AssetBrowser.getModuleFromAddress(AssetBrowser.currentAddress);
+   %module = AssetBrowser.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress);
    %moduleId = %module.ModuleId;
    
    AssetDatabase.removeDeclaredAssets(%moduleId);
@@ -41,7 +83,7 @@ function AssetBrowser::deleteFolder(%this, %folderPath)
 {
    doDeleteFolder(%folderPath);
    
-   %this.loadFilters();
+   %this.loadDirectories();
 }
 
 function doDeleteFolder(%folderPath)

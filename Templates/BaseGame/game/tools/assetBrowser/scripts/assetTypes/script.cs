@@ -5,7 +5,7 @@ function AssetBrowser::createScriptAsset(%this)
       
    %assetName = AssetBrowser.newAssetSettings.assetName;  
    
-   %assetPath = AssetBrowser.currentAddress @ "/";    
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %scriptPath = %assetPath @ %assetName @ ".cs";
@@ -21,13 +21,6 @@ function AssetBrowser::createScriptAsset(%this)
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
-
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "ScriptAsset");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
 	
 	%file = new FileObject();
    

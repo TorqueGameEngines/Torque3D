@@ -21,53 +21,6 @@
 //-----------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// Fog
-//------------------------------------------------------------------------------
-
-singleton ShaderData( FogPassShader )
-{   
-   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/fogP.hlsl";
-         
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/gl/fogP.glsl";
-            
-   samplerNames[0] = "$deferredTex";
-   
-   pixVersion = 2.0;
-};
-
-
-singleton GFXStateBlockData( FogPassStateBlock : PFX_DefaultStateBlock )
-{   
-   blendDefined = true;
-   blendEnable = true; 
-   blendSrc = GFXBlendSrcAlpha;
-   blendDest = GFXBlendInvSrcAlpha;
-};
-
-
-singleton PostEffect( FogPostFx )
-{   
-   // We forward render the reflection pass
-   // so it does its own fogging.
-   allowReflectPass = false;
-      
-   renderTime = "PFXBeforeBin";
-   renderBin = "ObjTranslucentBin";   
-   
-   shader = FogPassShader;
-   stateBlock = FogPassStateBlock;
-   texture[0] = "#deferred";
-   
-   renderPriority = 5;
-   
-   targetFormat = getBestHDRFormat();
-   isEnabled = true;
-};
-
-
-//------------------------------------------------------------------------------
 // UnderwaterFog
 //------------------------------------------------------------------------------
 
@@ -96,7 +49,7 @@ singleton GFXStateBlockData( UnderwaterFogPassStateBlock : PFX_DefaultStateBlock
 };
 
 
-singleton PostEffect( UnderwaterFogPostFx )
+singleton PostEffect( underWaterFogPostFX )
 {
    oneFrameOnly = true;
    onThisFrame = false;
@@ -120,16 +73,16 @@ singleton PostEffect( UnderwaterFogPostFx )
    isEnabled = true;
 };
 
-function UnderwaterFogPostFx::onEnabled( %this )
+function underWaterFogPostFX::onEnabled( %this )
 {
-   TurbulenceFx.enable();
+   TurbulencePostFX.enable();
    CausticsPFX.enable();
    return true;
 }
 
-function UnderwaterFogPostFx::onDisabled( %this )
+function underWaterFogPostFX::onDisabled( %this )
 {
-   TurbulenceFx.disable();
+   TurbulencePostFX.disable();
    CausticsPFX.disable();
    return false;
 }

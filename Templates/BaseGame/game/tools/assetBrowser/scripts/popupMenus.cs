@@ -340,6 +340,19 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
 
+   //
+   //
+   if( !isObject( ImportAssetActions ) )
+   {
+      %this.ImportAssetActions = new PopupMenu( ImportAssetActions )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         
+         item[0] = "Add asset" TAB "" TAB "ImportAssetWindow.addNewImportingAsset();";
+         item[1] = "Remove asset" TAB "" TAB "ImportAssetWindow.removeImportingAsset();";
+      };
+   }
 }
 
 function AddNewScriptAssetPopupMenu::onSelectItem(%this, %id, %text)

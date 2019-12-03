@@ -203,10 +203,10 @@ function AssetBrowser::onEndDropFiles( %this )
       MessageBoxOK( "Warning", "No base import config. Please create an import configuration set to simplify asset importing.");
    }
 }
-//
-//
-//
 
+//
+//
+//
 function AssetBrowser::reloadImportingFiles(%this)
 {
    //Effectively, we re-import the files we were trying to originally. We'd only usually do this in the event we change our import config
@@ -423,6 +423,17 @@ function ImportAssetWindow::onWake(%this)
    {
       %this.assetValidationList = new ArrayObject();
    }
+   
+   AssetImportCtrl-->NewAssetsTree.buildIconTable( ":tools/classIcons/TSStatic:tools/classIcons/TSStatic" @
+                                             ":tools/classIcons/material:tools/classIcons/material"@
+                                             ":tools/classIcons/GuiBitmapCtrl:tools/classIcons/GuiBitmapCtrl"@
+                                             ":tools/classIcons/SFXEmitter:tools/classIcons/SFXEmitter"@
+                                             ":tools/gui/images/iconWarn:tools/gui/images/iconWarn"@
+                                             ":tools/gui/images/iconError:tools/gui/images/iconError");
+   
+   AssetImportTargetAddress.text = AssetBrowser.dirHandler.currentAddress;
+   AssetImportTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
+   ImportAssetConfigList.setSelected(0);
 }
 
 function ImportAssetWindow::reloadImportOptionConfigs(%this)
@@ -466,69 +477,15 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
    if(%importConfigIdx $= "")
       %importConfigIdx = 0;
       
-   ImportAssetConfigList.setSelected(%importConfigIdx);
+   //ImportAssetConfigList.setSelected(%importConfigIdx);
 }
 
-function ImportAssetWindow::setImportOptions(%this, %configName)
+//
+function assetImportUpdatePath(%newPath)
 {
-   //Todo, editor + load from files for preconfigs
-   
-   //General
-   %optionsObj.treatWarningsAsErrors = false;
-   %optionsObj.ignoreDuplicateAssets = false;
-   
-   //Meshes
-   %optionsObj.ImportMesh = true;
-   %optionsObj.UpAxisOverride = "Z_AXIS";
-   %optionsObj.OverrideScale = 1.0;
-   %optionsObj.IgnoreNodeScale = false;
-   %optionsObj.AdjustCenter = false;
-   %optionsObj.AdjustFloor = false;
-   %optionsObj.CollapseSubmeshes = false;
-   %optionsObj.LODType = "TrailingNumber";
-   %optionsObj.TrailingNumber = 2;
-   %optionsObj.ImportedNodes = "";
-   %optionsObj.IgnoreNodes = "";
-   %optionsObj.ImportMeshes = "";
-   %optionsObj.IgnoreMeshes = "";
-   
-   //Materials
-   %optionsObj.ImportMaterials = true;
-   %optionsObj.CreateComposites = true;
-   
-   //Animations
-   %optionsObj.ImportAnimations = true;
-   %optionsObj.SeparateAnimations = true;
-   %optionsObj.SeparateAnimationPrefix = "";
-   
-   //Collision
-   %optionsObj.GenerateCollisions = true;
-   %optionsObj.GenCollisionType = "CollisionMesh";
-   %optionsObj.CollisionMeshPrefix = "Collision";
-   %optionsObj.GenerateLOSCollisions = true;
-   %optionsObj.GenLOSCollisionType = "CollisionMesh";
-   %optionsObj.LOSCollisionMeshPrefix = "LOS";
-   
-   //Images
-   %optionsObj.ImageType = "Diffuse";
-   %optionsObj.DiffuseTypeSuffixes = "_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL";
-   %optionsObj.NormalTypeSuffixes = "_NORMAL,_NORM";
-   %optionsObj.SpecularTypeSuffixes = "_SPECULAR,_SPEC";
-   %optionsObj.MetalnessTypeSuffixes = "_METAL,_MET,_METALNESS,_METALLIC";
-   %optionsObj.RoughnessTypeSuffixes = "_ROUGH,_ROUGHNESS";
-   %optionsObj.SmoothnessTypeSuffixes = "_SMOOTH,_SMOOTHNESS";
-   %optionsObj.AOTypeSuffixes = "_AO,_AMBIENT,_AMBIENTOCCLUSION";
-   %optionsObj.CompositeTypeSuffixes = "_COMP,_COMPOSITE";
-   %optionsObj.TextureFilteringMode = "Bilinear";
-   %optionsObj.UseMips = true;
-   %optionsObj.IsHDR = false;
-   %optionsObj.Scaling = 1.0;
-   %optionsObj.Compressed = true;
-   
-   //Sounds
-   %optionsObj.VolumeAdjust = 1.0;
-   %optionsObj.PitchAdjust = 1.0;
-   %optionsObj.Compressed = false;
+   AssetBrowser.navigateTo(%newPath);
+   AssetImportTargetAddress.text = %newPath;
+   AssetImportTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
 }
 
 //
@@ -818,11 +775,15 @@ function ImportAssetWindow::refresh(%this)
    
    %this.processNewImportAssets(%id);
    
-   %this.indentCount = 0;
+   %this.ImportingAssets = 0;
+   %this.FetchedAssets = 0;
+   %this.prunedDuplicateAssets = 0;
+   %this.autoRenamedAssets = 0;
    
    %this.validateAssets();
    
-   ImportingAssetList.clear();
+   AssetImportCtrl-->NewAssetsTree.clear();
+   AssetImportCtrl-->NewAssetsTree.insertItem(0, "Importing Assets");
    
    if(AssetBrowser.importAssetUnprocessedListArray.count() == 0)
    {
@@ -838,6 +799,31 @@ function ImportAssetWindow::refresh(%this)
       //Continue processing
       %this.refresh();  
    }
+   
+   AssetImportCtrl-->NewAssetsTree.buildVisibleTree(true);
+   
+   %ImportActionSummary = "";
+   
+   if(%this.ImportingAssets != 0)
+   {
+      %ImportActionSummary = %ImportActionSummary SPC %this.ImportingAssets @ " Imported|";
+   }
+   if(%this.FetchedAssets != 0)
+   {
+      %ImportActionSummary = %ImportActionSummary SPC %this.FetchedAssets @ " Fetched|";
+   }
+   if(%this.prunedDuplicateAssets != 0)
+   {
+      %ImportActionSummary = %ImportActionSummary SPC %this.prunedDuplicateAssets @ " Duplicates Pruned|";
+   }
+   if(%this.autoRenamedAssets != 0)
+   {
+      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Auto Renamed|";
+   }
+   
+   warn(%ImportActionSummary);
+   
+   AssetImportSummarization.Text = %ImportActionSummary;
 }
 
 function ImportAssetWindow::refreshChildItem(%this, %id)
@@ -859,43 +845,35 @@ function ImportAssetWindow::refreshChildItem(%this, %id)
       //Once validated, attempt any fixes for issues
       %this.resolveIssue(%assetItem);
       
-      //Make sure we size correctly
-      ImportingAssetList.extent.x = ImportingAssetList.getParent().extent.x - 15;
-      
       //create!
-      %width = mRound(mRound(ImportingAssetList.extent.x) / 2);
-      %height = 20;
-      %indent = %this.indentCount * 16;
       %toolTip = "";
-      
-      %iconPath = "tools/gui/images/iconInformation";
       %configCommand = "ImportAssetOptionsWindow.editImportSettings(" @ %assetItem @ ");";
       
       if(%assetType $= "Model" || %assetType $= "Animation" || %assetType $= "Image" || %assetType $= "Sound")
       {
          if(%assetItem.status $= "Error")
          {
-            %iconPath = "tools/gui/images/iconError";
+            %iconIdx = 11;
          }
          else if(%assetItem.status $= "Warning")
          {
-            %iconPath = "tools/gui/images/iconWarn";
+            %iconIdx = 9;
          }
          
          %configCommand = "ImportAssetOptionsWindow.fixIssues(" @ %assetItem @ ");";
             
-            if(%assetItem.statusType $= "DuplicateAsset" || %assetItem.statusType $= "DuplicateImportAsset")
-               %assetName = %assetItem.assetName @ " <Duplicate Asset>";
+         if(%assetItem.statusType $= "DuplicateAsset" || %assetItem.statusType $= "DuplicateImportAsset")
+            %assetName = %assetItem.assetName @ " <Duplicate Asset>";
       }
       else
       {
          if(%assetItem.status $= "Error")
          {
-            %iconPath = "tools/gui/images/iconError";
+            %iconIdx = 11;
          }
          else if(%assetItem.status $= "Warning")
          {
-            %iconPath = "tools/gui/images/iconWarn";
+            %iconIdx = 9;
          }
          
          %configCommand = "";//"ImportAssetOptionsWindow.fixIssues(" @ %assetItem @ ");";
@@ -905,128 +883,26 @@ function ImportAssetWindow::refreshChildItem(%this, %id)
       }
       
       %toolTip = %assetItem.statusInfo;
+      %parentItem = ImportAssetTree.getParentItem(%id);
       
-      %inputCellPos = %indent;
-      %inputCellWidth = (ImportingAssetList.extent.x * 0.3) - %indent;
-      
-      %filePathBtnPos = %inputCellPos + %inputCellWidth - %height;
-      
-      %assetNameCellPos = %inputCellPos + %inputCellWidth;
-      %assetNameCellWidth = ImportingAssetList.extent.x * 0.3;
-      
-      %assetTypeCellPos = %assetNameCellPos + %assetNameCellWidth;
-      %assetTypeCellWidth = ImportingAssetList.extent.x * 0.3;
-      
-      %configBtnPos = %assetTypeCellPos + %assetTypeCellWidth - (%height * 2);
-      %configBtnWidth = %height;
-      
-      %delBtnPos = %assetTypeCellPos + %assetTypeCellWidth - %height;
-      %delBtnWidth = %height;
-      
-      %inputField = %filePath;
-      
-      //Check if it's a generated type, like materials
-      %inputPathProfile = ToolsGuiTextEditProfile;
-      %generatedField = false;
-      if(%assetItem.generatedAsset)
+      if(%assetItem.status $= "")
       {
-         %generatedField = true;
-         %inputField = "(Generated)";
+         if(%assetType $= "Model")
+            %iconIdx = 1;
+         else if(%assetType $= "Material")
+            %iconIdx = 3;
+         else if(%assetType $= "Image")
+            %iconIdx = 5;
+         else if(%assetType $= "Sound")
+            %iconIdx = 7;
       }
-      else
-      {
-         //nope, so check that it's a valid file path. If not, flag it as such
-         if(%assetItem.status $= "Error")
-         {
-            if(!isFile(%filePath))
-            {
-               %inputField = "File not found!";
-               %inputPathProfile = ToolsGuiTextEditErrorProfile;
-            }
-         }
-      }
+         
+      AssetImportCtrl-->NewAssetsTree.insertItem(%parentItem, %assetName, %assetItem, "", %iconIdx, %iconIdx+1);
       
-      %importEntry = new GuiControl()
-      {
-         position = "0 0";
-         extent = ImportingAssetList.extent.x SPC %height;
-         horzSizing = "width";
-         vertSizing = "bottom";
-         
-         new GuiTextEditCtrl()
-         {
-            Text = %inputField; 
-            position = %inputCellPos SPC "0";
-            extent = %inputCellWidth SPC %height;
-            internalName = "InputPath";
-            active = false;
-            profile = %inputPathProfile;
-            horzSizing = "width";
-            vertSizing = "bottom";
-         };
-         
-         new GuiButtonCtrl()
-         {
-            position = %filePathBtnPos SPC "0";
-            extent = %height SPC %height;
-            command = "ImportAssetWindow.findMissingFile(" @ %assetItem @ ");";
-            text = "...";
-            internalName = "InputPathButton";
-            tooltip = %toolTip;
-            visible = !%generatedField;
-            horzSizing = "width";
-            vertSizing = "bottom";
-         };
-         
-         new GuiTextEditCtrl()
-         {
-           Text = %assetName; 
-           position = %assetNameCellPos SPC "0";
-           extent = %assetNameCellWidth SPC %height;
-           internalName = "AssetName";
-           horzSizing = "width";
-            vertSizing = "bottom";
-         };
-         
-         new GuiTextEditCtrl()
-         {
-           Text = %assetType; 
-           position = %assetTypeCellPos SPC "0";
-           extent = %assetTypeCellWidth SPC %height;
-           active = false;
-           internalName = "AssetType";
-           horzSizing = "width";
-            vertSizing = "bottom";
-         };
-         
-         new GuiBitmapButtonCtrl()
-         {
-            position = %configBtnPos SPC "0";
-            extent = %height SPC %height;
-            command = "ImportAssetWindow.importResolution(" @ %assetItem @ ");";
-            bitmap = %iconPath;
-            tooltip = %toolTip;
-            horzSizing = "width";
-            vertSizing = "bottom";
-         };
-         new GuiBitmapButtonCtrl()
-         {
-            position = %delBtnPos SPC "0";
-            extent = %height SPC %height;
-            command = "ImportAssetWindow.deleteImportingAsset(" @ %assetItem @ ");";
-            bitmap = "tools/gui/images/iconDelete";
-            horzSizing = "width";
-            vertSizing = "bottom";
-         };
-      };
-      
-      ImportingAssetList.add(%importEntry);
       AssetBrowser.importAssetFinalListArray.add(%assetItem);
       
       if(ImportAssetTree.isParentItem(%id))
       {
-         %this.indentCount++;  
-         
          %childItem = ImportAssetTree.getChild(%id);
          
          //recurse!
@@ -1035,11 +911,123 @@ function ImportAssetWindow::refreshChildItem(%this, %id)
 
       %id = ImportAssetTree.getNextSibling(%id);
    }
-   
-   %this.indentCount--;
 }
-//
 
+//
+function NewAssetsViewTree::onSelect(%this, %itemId)
+{
+	if(%itemId == 1)
+		//can't select root
+		return;
+		
+   %assetItem = %this.getItemValue(%itemId);
+   
+   AssetImportCtrl-->NewAssetsInspector.clearFields();
+   
+   AssetImportCtrl-->NewAssetsInspector.startGroup("General");
+   AssetImportCtrl-->NewAssetsInspector.addField("assetName", "Asset Name", "string", "", %assetItem.assetName, "", %assetItem);
+   AssetImportCtrl-->NewAssetsInspector.addField("assetType", "Asset Type", "string", "", %assetItem.assetType, "", %assetItem);
+   
+   if(!%assetItem.generatedAsset)
+      AssetImportCtrl-->NewAssetsInspector.addField("filePath", "File Path", "fileName", "", %assetItem.filePath, "", %assetItem);
+   
+   //AssetImportCtrl-->NewAssetsInspector.addField("assetName", "Asset Name", "string", "", %assetItem.assetName, "", %assetItem);
+   //AssetImportCtrl-->NewAssetsInspector.addField("assetName", "Asset Name", "string", "", %assetItem.assetName, "", %assetItem);
+   
+   AssetImportCtrl-->NewAssetsInspector.addField("status", "Status", "string", "", %assetItem.status, "", %assetItem);
+   AssetImportCtrl-->NewAssetsInspector.endGroup();
+   
+   AssetImportCtrl-->NewAssetsInspector.setFieldEnabled("assetType", false);
+   //AssetImportCtrl-->NewAssetsInspector.setFieldEnabled("status", false);
+   
+   /*moduleName = %moduleName;
+   dirty  = true;
+   parentAssetItem = %parentAssetItem;
+   status = "";
+   statusType = "";
+   statusInfo = "";
+   skip = false;
+   processed = false;
+   generatedAsset = false;*/
+}
+
+function NewAssetsViewTree::onRightMouseDown(%this, %itemId)
+{
+   ImportAssetActions.enableItem(1, true);
+   
+   if( %itemId != 1 && %itemId != -1)
+   {
+      ImportAssetActions.showPopup(Canvas);
+      ImportAssetActions.assetItem = %this.getItemValue(%itemId);
+      ImportAssetActions.itemId = %itemId;
+   }
+   else
+   {
+      ImportAssetActions.enableItem(1, false);
+      ImportAssetActions.showPopup(Canvas);
+   }
+}
+
+function NewAssetsPanelInputs::onRightMouseDown(%this)
+{
+   NewAssetsViewTree::onRightMouseDown(0, -1);
+}
+
+//
+function ImportAssetWindow::removeImportingAsset(%this)
+{
+   ImportAssetTree.removeAllChildren(ImportAssetActions.itemId);
+   ImportAssetTree.removeItem(ImportAssetActions.itemId);
+   
+   ImportAssetWindow.refresh();
+}
+
+function ImportAssetWindow::addNewImportingAsset(%this)
+{
+   %dlg = new OpenFileDialog()
+   {
+      Filters = "Shape Files(*.dae, *.cached.dts)|*.dae;*.cached.dts|Images Files(*.jpg,*.png,*.tga,*.bmp,*.dds)|*.jpg;*.png;*.tga;*.bmp;*.dds|Any Files (*.*)|*.*|";
+      DefaultFile = "";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+      forceRelativePath = false;
+   };
+      
+   if ( %dlg.Execute() )
+   {
+      %filePath = %dlg.FileName;
+   }
+   
+   %dlg.delete();
+   
+   //AssetBrowser.onDropFile( %path );
+   
+   %fileExt = fileExt( %filePath );
+   //add it to our array!
+   if(isImageFormat(%fileExt))
+      %type = "Image";
+   else if( isShapeFormat(%fileExt))
+      %type = "Model";
+   else if( isSoundFormat(%fileExt))
+      %type = "Sound";
+   else if( %fileExt $= ".cs" || %fileExt $= ".cs.dso" )
+      %type = "Script";
+   else if( %fileExt $= ".gui" || %fileExt $= ".gui.dso" )
+      %type = "GUI";
+      
+   AssetBrowser.addImportingAsset(%type, %filePath, ImportAssetActions.assetItem);
+      
+   //Used to keep tabs on what files we were trying to import, used mainly in the event of
+   //adjusting configs and needing to completely reprocess the import
+   //ensure we're not doubling-up on files by accident
+   if(%this.importingFilesArray.getIndexFromKey(%filePath) == -1)
+      %this.importingFilesArray.add(%filePath);
+         
+   AssetBrowser.onEndDropFiles();
+}
+
+//
 function ImportAssetWindow::importResolution(%this, %assetItem)
 {
    if(%assetItem.status !$= "Error" && %assetItem.status !$= "Warning")
@@ -1086,8 +1074,7 @@ function ImportAssetWindow::validateAssets(%this)
 
 function ImportAssetWindow::validateAsset(%this, %id)
 {
-   
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
    
    while (%id > 0)
    {
@@ -1201,7 +1188,7 @@ function ImportAssetWindow::resetAssetsValidationStatus(%this)
 
 function ImportAssetWindow::resetAssetValidationStatus(%this, %id)
 {
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
   
    %id = ImportAssetTree.getChild(%id);
    while (%id > 0)
@@ -1239,7 +1226,7 @@ function ImportAssetWindow::checkAssetsForCollision(%this, %assetItem)
 
 function ImportAssetWindow::checkAssetForCollision(%this, %assetItem, %id)
 {
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
   
    %id = ImportAssetTree.getChild(%id);
    while (%id > 0)
@@ -1288,7 +1275,7 @@ function ImportAssetWindow::deleteImportingAsset(%this, %assetItem)
 
    schedule(10, 0, "refreshImportAssetWindow");
    //ImportAssetWindow.refresh();
-   ImportAssetOptionsWindow.setVisible(0);
+   //ImportAssetOptionsWindow.setVisible(0);
 }
 
 //
@@ -1298,7 +1285,7 @@ function ImportAssetWindow::ImportAssets(%this)
    %assetCount = AssetBrowser.importAssetFinalListArray.count();
    
    //get the selected module data
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
    
    %module = ModuleDatabase.findModule(%moduleName, 1);
    
@@ -1313,8 +1300,7 @@ function ImportAssetWindow::ImportAssets(%this)
    %this.doImportAssets(%id);
    
    //force an update of any and all modules so we have an up-to-date asset list
-   AssetBrowser.loadFilters();
-   AssetBrowser.refreshPreviews();
+   AssetBrowser.refresh();
    Canvas.popDialog(AssetImportCtrl);
    AssetBrowser.isAssetReImport = false;
 }
@@ -1486,6 +1472,7 @@ function ImportAssetWindow::resolveIssue(%this, %assetItem)
       if(%resolutionAction $= "AutoPrune")
       {
          %this.deleteImportingAsset(%assetItem);
+         %this.prunedDuplicateAssets++;
       }
       else if(%resolutionAction $= "AutoRename")
       {
@@ -1501,6 +1488,8 @@ function ImportAssetWindow::resolveIssue(%this, %assetItem)
             %num++;
             %assetItem.assetName = %noNum @ %num; 
          }
+         
+         %this.autoRenamedAssets++;
       }
    }
    else if(%assetItem.statusType $= "MissingFile")

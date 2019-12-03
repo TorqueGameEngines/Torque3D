@@ -36,7 +36,12 @@ singleton ShaderData( VignetteShader )
    pixVersion = 2.0;
 };
 
-singleton PostEffect( VignettePostEffect )  
+function vignettePostFX::onAdd( %this )
+{   
+   PostFXManager.registerPostEffect(%this);
+}
+
+singleton PostEffect( vignettePostFX )  
 {  
    isEnabled         = false;
    allowReflectPass  = false;
@@ -48,8 +53,45 @@ singleton PostEffect( VignettePostEffect )
    renderPriority    = 10;
 };
 
-function VignettePostEffect::setShaderConsts(%this)
+function vignettePostFX::setShaderConsts(%this)
 {
    %this.setShaderConst("$Vmax", $VignettePostEffect::VMax);
    %this.setShaderConst("$Vmin", $VignettePostEffect::VMin);
+}
+
+function vignettePostFX::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("Vignette - General");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::EnableVignette", "Enabled", "bool", "", $PostFXManager::PostFX::EnableVignette, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::VignettePostEffect::VMin", "Vignette Min", "float", "", $VignettePostEffect::VMin, "");
+   PostEffectEditorInspector.addField("$PostFXManager::Settings::VignettePostEffect::VMax", "Vignette Max", "float", "", $VignettePostEffect::VMax, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+function vignettePostFX::applyFromPreset(%this)
+{
+   //Light rays settings
+   $PostFXManager::PostFX::EnableLightRays = $PostFXManager::Settings::EnableLightRays;
+   $LightRayPostFX::brightScalar           = $PostFXManager::Settings::LightRays::brightScalar;
+   
+   $LightRayPostFX::numSamples            = $PostFXManager::Settings::LightRays::numSamples;
+   $LightRayPostFX::density               = $PostFXManager::Settings::LightRays::density;
+   $LightRayPostFX::weight                = $PostFXManager::Settings::LightRays::weight;
+   $LightRayPostFX::decay                 = $PostFXManager::Settings::LightRays::decay;
+   
+   if($PostFXManager::PostFX::EnableVignette)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function vignettePostFX::settingsApply(%this)
+{
+   $PostFXManager::Settings::EnableLightRays                = $PostFXManager::PostFX::EnableLightRays;
+   $PostFXManager::Settings::LightRays::brightScalar        = $LightRayPostFX::brightScalar;
+   
+   $PostFXManager::Settings::LightRays::numSamples          = $LightRayPostFX::numSamples;
+   $PostFXManager::Settings::LightRays::density             = $LightRayPostFX::density;
+   $PostFXManager::Settings::LightRays::weight              = $LightRayPostFX::weight;
+   $PostFXManager::Settings::LightRays::decay               = $LightRayPostFX::decay;
 }

@@ -109,7 +109,7 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
 
 function AssetBrowser::importImageAsset(%this, %assetItem)
 {
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
    
    %assetType = %assetItem.AssetType;
    %filePath = %assetItem.filePath;
@@ -117,7 +117,7 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = AssetBrowser.currentAddress @ "/";
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    
    %assetFullPath = %assetPath @ "/" @ fileName(%filePath);
    

@@ -64,10 +64,13 @@ function initializeAssetBrowser()
    exec("./guis/newComponentAsset.gui");
    exec("./guis/editAsset.gui");
    exec("./guis/assetImport.gui");
+   exec("./guis/assetImportConfigEditor.gui");
    exec("./guis/selectModule.gui");
+   exec("./guis/selectPath.gui");
    exec("./guis/editModule.gui");
    exec("./guis/importTemplateModules.gui");
    exec("./guis/assetPreviewButtonsTemplate.gui");
+   exec("./guis/newFolder.gui");
 
    exec("./scripts/assetBrowser.cs");
    exec("./scripts/popupMenus.cs");
@@ -79,6 +82,9 @@ function initializeAssetBrowser()
    exec("./scripts/editAsset.cs");
    exec("./scripts/editModule.cs");   
    exec("./scripts/selectModule.cs");   
+   exec("./scripts/assetImportConfigEditor.cs");  
+   exec("./scripts/directoryHandling.cs");
+   exec("./scripts/selectPath.cs");
    
    //Processing for the different asset types
    exec("./scripts/assetTypes/component.cs"); 
@@ -107,6 +113,20 @@ function initializeAssetBrowser()
    Input::GetEventManager().subscribe( AssetBrowser, "BeginDropFiles" );
    Input::GetEventManager().subscribe( AssetBrowser, "DropFile" );
    Input::GetEventManager().subscribe( AssetBrowser, "EndDropFiles" );
+   
+   if(!isObject(AssetImportSettings))
+   {
+      new Settings(AssetImportSettings) 
+      { 
+         file = $AssetBrowser::importConfigsFile; 
+      };
+   }
+   AssetImportSettings.read();
+   
+   ImportAssetWindow.reloadImportOptionConfigs();
+   
+   if(!isObject(ImportAssetTree))
+      new GuiTreeViewCtrl(ImportAssetTree);
    
    AssetBrowser.buildPopupMenus();
 }

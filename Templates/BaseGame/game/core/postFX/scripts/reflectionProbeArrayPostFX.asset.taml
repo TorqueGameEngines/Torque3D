@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="reflectionProbeArrayPostFX"
+    scriptFile="@assetFile=reflectionProbeArrayPostFX.cs"
+    VersionId="1" />

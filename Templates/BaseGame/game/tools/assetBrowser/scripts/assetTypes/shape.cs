@@ -5,7 +5,7 @@ function AssetBrowser::createShapeAsset(%this)
       
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
-   %assetPath = AssetBrowser.currentAddress @ "/";
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %shapeFilePath = %assetPath @ %assetName @ ".dae";
@@ -40,6 +40,11 @@ function AssetBrowser::editShapeAsset(%this, %assetDef)
 {
    %this.hideDialog();
    ShapeEditorPlugin.openShapeAsset(%assetDef);    
+}
+
+function AssetBrowser::deleteShapeAsset(%this, %assetDef)
+{
+   
 }
 
 function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
@@ -166,7 +171,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
 
 function AssetBrowser::importShapeAsset(%this, %assetItem)
 {
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
    
    %assetType = %assetItem.AssetType;
    %filePath = %assetItem.filePath;
@@ -174,7 +179,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = AssetBrowser.currentAddress @ "/";
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    %assetFullPath = %assetPath @ fileName(%filePath);
    
    %newAsset = new ShapeAsset()
@@ -307,6 +312,28 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
+}
+
+function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
+{
+   //echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
+      
+   %assetId = %assetDef.getAssetId();
+      
+   %pos = EWCreatorWindow.getCreateObjectPosition();
+      
+   %newStatic = new TSStatic()
+   {
+      position = %pos;
+      shapeAsset = %assetId;
+   };
+   
+   getScene(0).add(%newStatic);
+   
+   EWorldEditor.clearSelection();
+   EWorldEditor.selectObject(%newStatic);
+   
+   EWorldEditor.isDirty = true;
 }
 
 function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )

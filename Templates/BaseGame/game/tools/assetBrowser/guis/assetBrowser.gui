@@ -20,18 +20,12 @@
       coreModulesFilter = "0";
       currentPreviewPage = "0";
       Enabled = "1";
-      importAssetFinalListArray = "20689";
-      ImportAssetResolutionsPopup = "18119";
-      importAssetUnprocessedListArray = "20688";
-      importingFilesArray = "20687";
-      isReImportingAsset = "0";
       navigationHistoryIdx = "0";
       onlyShowModulesWithAssets = "0";
       previewData = "19953";
       previewSize = "80";
       templateFilesPath = "tools/assetBrowser/scripts/templateFiles/";
       totalPages = "1";
-      treeFilterMode = "list";
 
    new GuiWindowCtrl(AssetBrowser_addFilterWindow) {
       text = "Create New Tag";

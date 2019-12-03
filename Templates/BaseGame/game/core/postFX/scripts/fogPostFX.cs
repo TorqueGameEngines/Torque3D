@@ -20,38 +20,48 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-singleton GFXStateBlockData( PFX_TurbulenceStateBlock : PFX_DefaultStateBlock)  
-{  
-   zDefined = false;
-   zEnable = false;  
-   zWriteEnable = false;  
-        
-   samplersDefined = true;  
-   samplerStates[0] = SamplerClampLinear;
-};  
-  
-singleton ShaderData( PFX_TurbulenceShader )
+//------------------------------------------------------------------------------
+// Fog
+//------------------------------------------------------------------------------
+
+singleton ShaderData( FogPassShader )
 {   
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/turbulenceP.hlsl";
-           
+   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/fogP.hlsl";
+         
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/gl/turbulenceP.glsl";
-           
-   samplerNames[0] = "$inputTex";
-   pixVersion = 3.0;
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/gl/fogP.glsl";
+            
+   samplerNames[0] = "$deferredTex";
+   
+   pixVersion = 2.0;
 };
 
-singleton PostEffect( TurbulenceFx )  
-{  
-   isEnabled = false;    
-   allowReflectPass = true;  
-         
-   renderTime = "PFXAfterDiffuse";
-   renderBin = "GlowBin";
-   renderPriority = 0.5; // Render after the glows themselves
-     
-   shader = PFX_TurbulenceShader;  
-   stateBlock=PFX_TurbulenceStateBlock;
-   texture[0] = "$backBuffer";      
- };
+
+singleton GFXStateBlockData( FogPassStateBlock : PFX_DefaultStateBlock )
+{   
+   blendDefined = true;
+   blendEnable = true; 
+   blendSrc = GFXBlendSrcAlpha;
+   blendDest = GFXBlendInvSrcAlpha;
+};
+
+
+singleton PostEffect( fogPostFX )
+{   
+   // We forward render the reflection pass
+   // so it does its own fogging.
+   allowReflectPass = false;
+      
+   renderTime = "PFXBeforeBin";
+   renderBin = "ObjTranslucentBin";   
+   
+   shader = FogPassShader;
+   stateBlock = FogPassStateBlock;
+   texture[0] = "#deferred";
+   
+   renderPriority = 5;
+   
+   targetFormat = getBestHDRFormat();
+   isEnabled = true;
+};

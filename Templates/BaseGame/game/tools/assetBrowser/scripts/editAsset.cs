@@ -68,7 +68,7 @@ function AssetBrowser::refreshAsset(%this, %assetId)
    }
    
    AssetDatabase.refreshAsset(%assetId);
-   AssetBrowser.refreshPreviews();
+   %this.refresh();
 }
 
 //------------------------------------------------------------
@@ -129,7 +129,7 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    }
    
    //Make sure everything is refreshed
-   AssetBrowser.loadFilters();
+   %this.refresh();
    
    //Update the selection to immediately jump to the new asset
    AssetBrowser-->filterTree.clearSelection();
@@ -173,6 +173,8 @@ function AssetBrowser::moveAsset(%this, %assetId, %destination)
          eval(%this @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %destination @ "\");");
       }
    }
+   
+   %this.refresh();
 }
 
 //------------------------------------------------------------
@@ -212,30 +214,30 @@ function AssetBrowser::confirmDeleteAsset(%this)
    %currentSelectedItem = AssetBrowserFilterTree.getSelectedItem();
    %currentItemParent = AssetBrowserFilterTree.getParentItem(%currentSelectedItem);
    
-   if(EditAssetPopup.assetType $= "Folder")
+   if(EditFolderPopup.visible)
    {
-      //Do any cleanup required given the type
+      if(EditFolderPopup.dirPath !$= "")
+         %folderPath = EditFolderPopup.dirPath;
+      else
+         %folderPath = AssetBrowserFilterTree.getItemValue(%currentSelectedItem) @ "/" @ AssetBrowserFilterTree.getItemText(%currentSelectedItem);
+         
       if(%this.isMethod("deleteFolder"))
-         eval(%this @ ".deleteFolder(\""@EditAssetPopup.assetId@"\");");
-   }
+         eval(%this @ ".deleteFolder(\""@%folderPath@"\");");
+   }   
    else
    {
       %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
       %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetType);
       
+      if(!isObject(%assetDef))
+         return;
+      
       //Do any cleanup required given the type
       if(%this.isMethod("delete"@%assetType))
          eval(%this @ ".delete"@%assetType@"("@%assetDef@");");
       
-      AssetDatabase.deleteAsset(EditAssetPopup.assetId, false);
+      AssetDatabase.deleteAsset(EditAssetPopup.assetId, true, false);
    }
 
-   %this.loadFilters();
-   
-   if(!AssetBrowserFilterTree.selectItem(%currentSelectedItem))
-   {
-      //if it failed, that means we deleted the last item in that category, and we need to do the parent  
-      AssetBrowserFilterTree.selectItem(%currentItemParent);
-      AssetBrowserFilterTree.expandItem(%currentItemParent);
-   }
+   %this.refresh();
 }

@@ -51,7 +51,7 @@ PopupMenu::PopupMenu()
 
 	mBarTitle = StringTable->EmptyString();
 	mBounds = RectI(0, 0, 64, 64);
-	mVisible = true;
+	mVisible = false;
 
 	mBitmapIndex = -1;
 	mDrawBitmapOnly = false;
@@ -86,6 +86,7 @@ void PopupMenu::initPersistFields()
 
    addField("barTitle", TypeCaseString, Offset(mBarTitle, PopupMenu), "");
    addField("radioSelection", TypeBool, Offset(mRadioSelection, PopupMenu), "");
+   addField("visible", TypeBool, Offset(mVisible, PopupMenu), "");
 }
 
 //-----------------------------------------------------------------------------
@@ -439,6 +440,8 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
 
 
    mTextList->setHidden(false);
+
+   mVisible = true;
 }
 
 void PopupMenu::hidePopup()
@@ -449,6 +452,8 @@ void PopupMenu::hidePopup()
    }
 
    hidePopupSubmenus();
+
+   mVisible = false;
 }
 
 void PopupMenu::hidePopupSubmenus()

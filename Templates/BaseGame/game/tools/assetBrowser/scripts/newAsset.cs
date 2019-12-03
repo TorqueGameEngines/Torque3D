@@ -184,8 +184,6 @@ function CreateNewAsset()
 	%moduleDef = ModuleDatabase.findModule(%moduleName,1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
 	
-	AssetBrowser.loadFilters();
-	
 	if(AssetBrowser_newAsset.callbackFunc !$= "")
 	{
       %callbackCommand = "" @ AssetBrowser_newAsset.callbackFunc @ "(\"" @ %moduleName @ ":" @ %assetName @ "\");";
@@ -193,7 +191,7 @@ function CreateNewAsset()
 	}
 	
 	//Update the selection to immediately jump to the new asset
-   AssetBrowser-->filterTree.clearSelection();
+   /*AssetBrowser-->filterTree.clearSelection();
    %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
    %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
    
@@ -202,7 +200,8 @@ function CreateNewAsset()
    %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
    AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
    
-   AssetBrowser-->filterTree.buildVisibleTree(); 
+   AssetBrowser-->filterTree.buildVisibleTree(); */
+   AssetBrowser.refresh();
 }
 
 function ParentComponentList::onWake(%this)

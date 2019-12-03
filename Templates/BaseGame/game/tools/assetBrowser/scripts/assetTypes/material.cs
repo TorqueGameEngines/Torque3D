@@ -5,7 +5,7 @@ function AssetBrowser::createMaterialAsset(%this)
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
    
-   %assetPath = AssetBrowser.currentAddress @ "/";   
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";   
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ %assetName @ ".sgf";
@@ -234,7 +234,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          %assetItem.AOImageAsset.skip = true;
          %assetItem.metalnessImageAsset.skip = true;
          
-         %compositeAssetPath = AssetBrowser.currentAddress @ "/";
+         %compositeAssetPath = AssetBrowser.dirHandler.currentAddress @ "/";
          %saveAsPath = %compositeAssetPath @ "/" @ %assetItem.assetName @ "_composite.png";
          %compositeAsset = AssetBrowser.addImportingAsset("Image", "", %assetItem, %assetItem.assetName @ "_composite");
          %compositeAsset.generatedAsset = true;
@@ -279,7 +279,7 @@ function AssetBrowser::findMaterialMapFileWSuffix(%this, %fileDir, %filename, %f
 
 function AssetBrowser::importMaterialAsset(%this, %assetItem)
 {
-   %moduleName = ImportAssetModuleList.getText();
+   %moduleName = AssetImportTargetModule.getText();
    
    %assetType = %assetItem.AssetType;
    %filePath = %assetItem.filePath;
@@ -287,7 +287,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = AssetBrowser.currentAddress @ "/";
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ %assetName @ ".sgf";
    %scriptPath = %assetPath @ %assetName @ ".cs";

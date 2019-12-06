@@ -154,6 +154,10 @@ SceneObject::SceneObject()
    mAccuTex = NULL;
    mSelectionFlags = 0;
    mPathfindingIgnore = false;
+
+   mGameObjectAssetId = StringTable->insert("");
+
+   mDirtyGameObject = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -611,6 +615,13 @@ void SceneObject::setHidden( bool hidden )
 
 void SceneObject::initPersistFields()
 {
+   addGroup("GameObject");
+   addField("GameObject", TypeGameObjectAssetPtr, Offset(mGameObjectAsset, SceneObject), "The asset Id used for the game object this entity is based on.");
+
+   addField("dirtyGameObject", TypeBool, Offset(mDirtyGameObject, SceneObject), "If this entity is a GameObject, it flags if this instance delinates from the template.",
+      AbstractClassRep::FieldFlags::FIELD_HideInInspectors);
+   endGroup("GameObject");
+
    addGroup( "Transform" );
 
       addProtectedField( "position", TypeMatrixPosition, Offset( mObjToWorld, SceneObject ),
@@ -652,6 +663,14 @@ void SceneObject::initPersistFields()
    endGroup( "Mounting" );
 
    Parent::initPersistFields();
+}
+
+bool SceneObject::_setGameObject(void* object, const char* index, const char* data)
+{
+   // Sanity!
+   AssertFatal(data != NULL, "Cannot use a NULL asset Id.");
+
+   return true; //rbI->setMeshAsset(data);
 }
 
 //-----------------------------------------------------------------------------

@@ -46,6 +46,13 @@
 #endif
    
 #include "gui/core/guiCanvas.h"
+
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+#ifndef SHAPEASSET_H
+#include "T3D/assets/ShapeAsset.h"
+#endif 
    
 class VolumetricFogRTManager;
    
@@ -136,6 +143,9 @@ class VolumetricFog : public SceneObject
       GFXPrimitiveBufferHandle mPB;
    
       // Fog volume data;
+      AssetPtr<ShapeAsset> mShapeAsset;
+      StringTableEntry mShapeAssetId;
+
       StringTableEntry mShapeName;
       ColorI mFogColor;
       F32 mFogDensity;
@@ -209,6 +219,8 @@ class VolumetricFog : public SceneObject
       void processTick(const Move *move);
       void _enterFog(ShapeBase *control);
       void _leaveFog(ShapeBase *control);
+
+      static bool _setShapeAsset(void* obj, const char* index, const char* data);
    
    public:
       // Public methods
@@ -234,6 +246,8 @@ class VolumetricFog : public SceneObject
       void setFogGlow(bool on_off, F32 strength);
       void setFogLightray(bool on_off, F32 strength);
       bool isInsideFog();
+
+      bool setShapeAsset(const StringTableEntry shapeAssetId);
    
       DECLARE_CONOBJECT(VolumetricFog);
    

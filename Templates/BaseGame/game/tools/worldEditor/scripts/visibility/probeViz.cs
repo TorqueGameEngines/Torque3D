@@ -31,6 +31,7 @@ function toggleProbeViz(%mode)
    else
    {
       setLightingMode("ReflectionsOnly");  
+      toggleLightViz(-1);
    }
          
    switch$(%mode)

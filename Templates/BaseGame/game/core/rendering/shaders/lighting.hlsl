@@ -189,6 +189,38 @@ float3 BRDF_GetDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
 	return diffuse;
 }
 
+float3 BRDF_GetDebugSpecular(in Surface surface, in SurfaceToLight surfaceToLight)
+{
+   float3 neutralColor = float3(0.5,0.5,0.5);
+
+   float3 f0 = lerp(0.04.xxx, neutralColor, surface.metalness);
+	float f90 = saturate(50.0 * dot(f0, 0.33));
+	float3 F = F_Schlick(f0, f90, surfaceToLight.HdotV);
+	float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.roughness_brdf);
+	float D = D_GGX(surfaceToLight.NdotH, surface.roughness_brdf);
+	float3 Fr = D * F * Vis / M_PI_F;
+	return Fr;
+}
+
+float3 BRDF_GetDebugDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
+{
+   float3 neutralColor = float3(0.5,0.5,0.5);
+
+   //getting some banding with disney method, using lambert instead - todo futher testing
+	float Fd = 1.0 / M_PI_F;
+
+   float3 f0 = lerp(0.04.xxx, neutralColor, surface.metalness);
+
+   float f90 = saturate(50.0 * dot(f0, 0.33));
+   float3 F = F_Schlick(f0, f90, surface.NdotV);
+
+   //energy conservation - remove this if reverting back to disney method
+   float3 kD = 1.0.xxx - F;
+	kD *= 1.0 - surface.metalness;
+   float3 diffuse = kD * neutralColor * Fd;
+	return diffuse;
+}
+
 //attenuations functions from "moving frostbite to pbr paper"
 //https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
 float smoothDistanceAtt ( float squaredDistance , float invSqrAttRadius )

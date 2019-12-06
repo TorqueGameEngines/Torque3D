@@ -135,6 +135,13 @@ mark_as_advanced(TORQUE_HIFI)
 option(TORQUE_EXTENDED_MOVE "Extended move support" OFF)
 mark_as_advanced(TORQUE_EXTENDED_MOVE)
 
+option(TORQUE_ALLOW_DIRECT_FILENAMES "Allows gameclasses to use direct filenames instead of assets" OFF)
+mark_as_advanced(TORQUE_ALLOW_DIRECT_FILENAMES)
+
+if(TORQUE_ALLOW_DIRECT_FILENAMES)
+    addDef(TORQUE_ALLOW_DIRECT_FILENAMES)
+endif()
+
 set(TORQUE_SDL ON) # we need sdl to do our platform interop
 
 if(WIN32)

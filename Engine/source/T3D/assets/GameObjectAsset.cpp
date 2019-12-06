@@ -262,8 +262,8 @@ GuiControl* GuiInspectorTypeGameObjectAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "%d.onClick(%s);", this->getId(), mCaption);
    mGameObjectEditButton->setField("Command", szBuffer);
 
-   mGameObjectEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
-   mGameObjectEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mGameObjectEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
+   mGameObjectEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "ToolsGuiToolTipProfile");
    mGameObjectEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
 
    const char* assetId = getData();

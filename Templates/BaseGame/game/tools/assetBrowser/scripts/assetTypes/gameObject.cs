@@ -123,6 +123,34 @@ function AssetBrowser::dragAndDropGameObjectAsset(%this, %assetDef, %dropTarget)
    }
 }
 
+function AssetBrowser::onGameObjectAssetEditorDropped(%this, %assetDef, %position)
+{
+   //echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
+
+   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %camPos = LocalClientConnection.camera.getPosition();
+   %rayResult = containerRayCast(%camPos, %targetPosition, -1);
+   
+   %pos = EWCreatorWindow.getCreateObjectPosition();
+
+   if(%rayResult != 0)
+   {
+      %pos = getWords(%rayResult, 1, 3);
+   }
+   
+   %gameObject = %assetDef.createObject(); 
+         
+   getScene(0).add(%gameObject);
+
+   %gameObject.position = %pos;
+   
+   EWorldEditor.clearSelection();
+   EWorldEditor.selectObject(%gameObject); 
+      
+   EWorldEditor.isDirty = true;
+   
+}
+
 function AssetBrowser::renameGameObjectAsset(%this, %assetDef, %newAssetId, %originalName, %newName)
 {
    %oldScriptFilePath = %assetDef.scriptFile;

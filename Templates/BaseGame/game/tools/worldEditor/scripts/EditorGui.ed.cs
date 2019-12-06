@@ -63,6 +63,7 @@ function EditorGui::init(%this)
          {
             EWTreeWindow.position = %this.extent.x - EWTreeWindow.Extent.x SPC EditorGuiToolbar.extent.y;
             EWTreeWindow.extent = EWTreeWindow.extent.x SPC %this.extent.y - EditorGuiToolbar.extent.y - EditorGuiStatusBar.extent.y - 25;
+            FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
          }
       }
    }
@@ -81,6 +82,7 @@ function EditorGui::init(%this)
          {
             EWInspectorWindow.position = EWTreeWindow.position.x SPC EWTreeWindow.extent.y;
             EWInspectorWindow.extent = EWTreeWindow.extent.x SPC EWTreeWindow.extent.y;
+            FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
          }
       }
    }   
@@ -1455,6 +1457,8 @@ function EWorldEditor::onResize(%this, %newPosition, %newExtent)
       
       EWInspectorWindow.resize(%inspPos.x, %inspPos.y, %inspExt.x, %inspExt.y);
    }
+   
+   FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
 }
 
 //-----------------------------------------------------------------------------

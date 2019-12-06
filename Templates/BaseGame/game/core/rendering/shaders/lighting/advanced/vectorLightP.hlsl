@@ -230,6 +230,31 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
 
    #endif //NO_SHADOW
    
+   #ifdef DIFFUSE_LIGHT_VIZ
+      float3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
+      float3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
+
+      float3 final = max(0.0f, diffuse);
+      return float4(final, 0);
+   #endif
+
+   #ifdef SPECULAR_LIGHT_VIZ
+      float3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
+      float3 spec = BRDF_GetDebugSpecular(surface, surfaceToLight) * factor;
+
+      float3 final = max(0.0f, factor);
+      return float4(final, 0);
+   #endif
+
+   #ifdef DETAIL_LIGHTING_VIZ
+      float3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
+      float3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
+      float3 spec = BRDF_GetDebugSpecular(surface,surfaceToLight) * factor;
+
+      float3 final = max(0.0f, diffuse + spec);
+      return float4(final,0);
+   #endif
+
    //get directional light contribution   
    float3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);
 

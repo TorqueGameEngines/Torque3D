@@ -67,6 +67,13 @@
 #include "ts/collada/colladaUtils.h"
 #endif
 
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+#ifndef GAME_OBJECT_ASSET_H
+#include "T3D/assets/GameObjectAsset.h"
+#endif
+
 class SceneManager;
 class SceneRenderState;
 class SceneTraversalState;
@@ -203,6 +210,12 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
 
       ///
       SimPersistID* mMountPID;
+
+      StringTableEntry		      mGameObjectAssetId;
+      AssetPtr<GameObjectAsset>  mGameObjectAsset;
+
+      //Marked if this entity is a GameObject and deliniates from the parent GO asset
+      bool mDirtyGameObject;
 
       /// @}
 
@@ -777,6 +790,8 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       virtual bool writeField( StringTableEntry fieldName, const char* value );
 
       static void initPersistFields();
+
+      static bool _setGameObject(void* object, const char* index, const char* data);
 
       DECLARE_CONOBJECT( SceneObject );
 

@@ -48,6 +48,9 @@ const String AdvancedLightBinManager::smBufferName( "specularLighting" );
 ShadowFilterMode AdvancedLightBinManager::smShadowFilterMode = ShadowFilterMode_SoftShadowHighQuality;
 bool AdvancedLightBinManager::smPSSMDebugRender = false;
 bool AdvancedLightBinManager::smUseSSAOMask = false;
+bool AdvancedLightBinManager::smDiffuseLightViz = false;
+bool AdvancedLightBinManager::smSpecularLightViz = false;
+bool AdvancedLightBinManager::smDetailLightingViz = false;
 
 ImplementEnumType( ShadowFilterMode,
    "The shadow filtering modes for Advanced Lighting shadows.\n"
@@ -127,6 +130,9 @@ AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = 
    Con::addVariableNotify( "$pref::Shadows::filterMode", callback );
    Con::addVariableNotify( "$AL::PSSMDebugRender", callback );
    Con::addVariableNotify( "$AL::UseSSAOMask", callback );
+   Con::addVariableNotify( "$AL::DiffuseLightViz", callback);
+   Con::addVariableNotify( "$AL::SpecularLightViz", callback);
+   Con::addVariableNotify( "$AL::DetailLightingViz", callback);
 }
 
 
@@ -137,7 +143,10 @@ AdvancedLightBinManager::~AdvancedLightBinManager()
    Con::NotifyDelegate callback( this, &AdvancedLightBinManager::_deleteLightMaterials );
    Con::removeVariableNotify( "$pref::shadows::filterMode", callback );
    Con::removeVariableNotify( "$AL::PSSMDebugRender", callback );
-   Con::removeVariableNotify( "$AL::UseSSAOMask", callback );  
+   Con::removeVariableNotify( "$AL::UseSSAOMask", callback );
+   Con::removeVariableNotify( "$AL::DiffuseLightViz", callback);
+   Con::removeVariableNotify( "$AL::SpecularLightViz", callback);
+   Con::removeVariableNotify( "$AL::DetailLightingViz", callback);
 }
 
 void AdvancedLightBinManager::consoleInit()
@@ -157,6 +166,18 @@ void AdvancedLightBinManager::consoleInit()
    Con::addVariable( "$AL::PSSMDebugRender", TypeBool, &smPSSMDebugRender,
       "Enables debug rendering of the PSSM shadows.\n"
       "@ingroup AdvancedLighting\n" );
+
+   Con::addVariable("$AL::DiffuseLightViz", TypeBool, &smDiffuseLightViz,
+      "Enables debug rendering of the PSSM shadows.\n"
+      "@ingroup AdvancedLighting\n");
+
+   Con::addVariable("$AL::SpecularLightViz", TypeBool, &smSpecularLightViz,
+      "Enables debug rendering of the PSSM shadows.\n"
+      "@ingroup AdvancedLighting\n");
+
+   Con::addVariable("$AL::DetailLightingViz", TypeBool, &smDetailLightingViz,
+      "Enables debug rendering of the PSSM shadows.\n"
+      "@ingroup AdvancedLighting\n");
 }
 
 bool AdvancedLightBinManager::setTargetSize(const Point2I &newTargetSize)
@@ -446,6 +467,13 @@ AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMa
       // Its safe to add the PSSM debug macro to all the materials.
       if ( smPSSMDebugRender )
          shadowMacros.push_back( GFXShaderMacro( "PSSM_DEBUG_RENDER" ) );
+
+      if( smDiffuseLightViz )
+         shadowMacros.push_back(GFXShaderMacro("DIFFUSE_LIGHT_VIZ"));
+      else if (smSpecularLightViz)
+         shadowMacros.push_back(GFXShaderMacro("SPECULAR_LIGHT_VIZ"));
+      else if (smDetailLightingViz)
+         shadowMacros.push_back(GFXShaderMacro("DETAIL_LIGHTING_VIZ"));
 
       // Now create the material info object.
       info = new LightMaterialInfo( lightMatName, smLightMatVertex[ lightType ], shadowMacros );

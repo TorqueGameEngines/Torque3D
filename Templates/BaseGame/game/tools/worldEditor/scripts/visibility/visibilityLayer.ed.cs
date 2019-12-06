@@ -132,12 +132,9 @@ function setupEditorVisibilityMenu()
       
       item[ 0 ] = "Show Light Frustums" TAB "" TAB "toggleLightFrustumViz();";
       item[ 1 ] = "Show Shadowmap Cascades" TAB "" TAB "togglePSSMDebugViz();";
-      item[ 2 ] = "Show Specular Light" TAB "" TAB "";
-      item[ 3 ] = "Show Diffuse Light" TAB "" TAB "";
+      item[ 2 ] = "Show Diffuse Light" TAB "" TAB "toggleLightViz(\"Diffuse\");";
+      item[ 3 ] = "Show Specular Light" TAB "" TAB "toggleLightViz(\"Specular\");";
    };
-   
-   %lightspopup.enableItem(2, false);
-   %lightspopup.enableItem(3, false);
    
    //
    //Probes

@@ -108,8 +108,9 @@ class TSStatic : public SceneObject
       TransformMask              = Parent::NextFreeMask << 0,
       AdvancedStaticOptionsMask  = Parent::NextFreeMask << 1,
       UpdateCollisionMask        = Parent::NextFreeMask << 2,
-      SkinMask                   = Parent::NextFreeFlag << 3,
-      NextFreeMask               = Parent::NextFreeMask << 4
+      SkinMask                   = Parent::NextFreeMask << 3,
+      MaterialMask               = Parent::NextFreeMask << 4,
+      NextFreeMask               = Parent::NextFreeMask << 5
    };
 
 public:
@@ -137,6 +138,16 @@ protected:
    F32  mAlphaFade;
    bool mInvertAlphaFade;
 
+   struct matMap
+   {
+      MaterialAsset* matAsset;
+      String assetId;
+      U32 slot;
+   };
+
+   Vector<matMap>  mChangingMaterials;
+   Vector<matMap>  mMaterials;
+
    bool onAdd();
    void onRemove();
 
@@ -162,6 +173,8 @@ protected:
    virtual void processTick( const Move *move );
    virtual void interpolateTick( F32 delta );   
    virtual void advanceTime( F32 dt );
+
+   virtual void onDynamicModified(const char* slotName, const char* newValue);
 
    /// Start or stop processing ticks depending on our state.
    void _updateShouldTick();
@@ -260,6 +273,8 @@ public:
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
 
    virtual void onInspect(GuiInspector*);
+
+   void updateMaterials();
 
 private:
    virtual void   onStaticModified(const char* slotName, const char*newValue = NULL);

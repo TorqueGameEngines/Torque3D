@@ -452,6 +452,32 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
 }
 
+function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)
+{
+   //echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
+   //first, see if we hit a static shape
+   %mask = $TypeMasks::StaticObjectType | $TypeMasks::StaticShapeObjectType | $TypeMasks::TerrainObjectType;
+   
+   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %camPos = LocalClientConnection.camera.getPosition();
+   %rayResult = materialRayCast(%camPos, %targetPosition, -1, 0, false);
+   
+   %validTarget = false;
+   if(%rayResult != 0)
+   {
+      %obj = getWord(%rayResult, 0);
+      if(%obj.isMemberOfClass("TSStatic"))
+      {
+         //oh, cool a valid target! 
+         %obj.materialSlot0 = %assetDef.getAssetId();
+         echo("MaterialSlot0 set to " @ %assetDef.getAssetId());
+      }
+   }
+
+   EWorldEditor.isDirty = true;
+   
+}
+
 function GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);

@@ -379,7 +379,7 @@ function setLightingMode(%mode)
          $Shadows::disable = true;
          EVisibilityLightingModesOptions.checkItem(2, true);
       case "DetailLighting":
-         //$Viz_ColorblindnessModeVar = "0";
+         $AL::DetailLightingViz = true;
          EVisibilityLightingModesOptions.checkItem(3, true);
       case "LightingOnly":
          $Light::renderReflectionProbes = false;
@@ -388,6 +388,8 @@ function setLightingMode(%mode)
          $Light::disableLights = true;
          EVisibilityLightingModesOptions.checkItem(5, true);
    }
+   
+   reInitMaterials();
 }
 
 function resetLightingMode()
@@ -400,6 +402,7 @@ function resetLightingMode()
    $Light::renderReflectionProbes = true;
    $Light::disableLights = false;
    $Shadows::disable = false;
+   $AL::DetailLightingViz = false;
    EVisibilityLightingModesOptions.checkItem(0, true);
 }
 
@@ -425,6 +428,48 @@ function toggleLightFrustumViz()
 function disableLightFrustumViz()
 {
    $Light::renderLightFrustums = false;
+}
+
+function toggleLightViz(%mode)
+{
+   setLightingMode("Lit");
+   
+   if($AL::DiffuseLightViz == 1)
+      %lastMode = "Diffuse";
+   else if($AL::SpecularLightViz == 1)
+      %lastMode = "Specular";
+   
+   $AL::DiffuseLightViz = 0;
+   $AL::SpecularLightViz = 0;
+   
+   EVisibilityLightsOptions.checkItem(2, false);
+   EVisibilityLightsOptions.checkItem(3, false);
+   
+   if(%mode $= %lastMode)
+   {
+      //forces the forward materials to get dis viz properly
+      reInitMaterials();
+   
+      return;
+   }
+         
+   switch$(%mode)
+   {
+      case "Diffuse":
+         $AL::DiffuseLightViz = 1;
+         EVisibilityLightsOptions.checkItem(2, true);
+      case "Specular":
+         $AL::SpecularLightViz = 1;
+         EVisibilityLightsOptions.checkItem(3, true);
+   }
+   
+   //forces the forward materials to get dis viz properly
+   reInitMaterials();
+}
+
+function disableLightViz()
+{
+   toggleLightViz(-1);
 }
 
 //Lighting Viz

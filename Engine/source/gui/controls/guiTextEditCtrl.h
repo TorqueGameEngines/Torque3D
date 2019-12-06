@@ -85,6 +85,9 @@ protected:
    bool                 mPasswordText;
    StringTableEntry     mPasswordMask;
 
+   S32                  mDoubleClickTimeMS;
+   S32                  mMouseUpTime;
+
    /// If set, any non-ESC key is handled here or not at all
    bool    mSinkAllKeyEvents;   
    UTF16   **mHistoryBuf;

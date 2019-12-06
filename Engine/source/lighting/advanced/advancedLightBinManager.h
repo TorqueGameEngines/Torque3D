@@ -103,6 +103,11 @@ public:
    /// light to compile in the SSAO mask.
    static bool smUseSSAOMask;
 
+   //Used to toggle the visualization of diffuse and specular light contribution
+   static bool smDiffuseLightViz;
+   static bool smSpecularLightViz;
+   static bool smDetailLightingViz;
+
    // Used for console init
    AdvancedLightBinManager( AdvancedLightManager *lm = NULL, 
                             ShadowMapManager *sm = NULL,

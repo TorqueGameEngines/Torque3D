@@ -126,7 +126,7 @@
          Profile = "GuiInspectorFieldInfoMLTextProfile";
          HorizSizing = "width";
          VertSizing = "top";
-         Position = "6 205";
+         Position = 5 SPC EWInspectorWindow.extent.y - 40;
          Extent = "197 35";
          MinExtent = "8 2";
          canSave = "1";

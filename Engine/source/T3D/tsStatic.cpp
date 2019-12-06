@@ -171,8 +171,10 @@ void TSStatic::initPersistFields()
          &TSStatic::_setShapeAsset, &defaultProtectedGetFn,
          "The source shape asset.");
 
+#ifdef TORQUE_ALLOW_DIRECT_FILENAMES
       addField("shapeName",   TypeShapeFilename,  Offset( mShapeName, TSStatic ),
          "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic." );
+#endif
 
       addProtectedField( "skin", TypeRealString, Offset( mAppliedSkinName, TSStatic ), &_setFieldSkin, &_getFieldSkin,
       "@brief The skin applied to the shape.\n\n"
@@ -289,7 +291,7 @@ void TSStatic::inspectPostApply()
 
    if(isServerObject()) 
    {
-      setMaskBits(AdvancedStaticOptionsMask);
+      setMaskBits(-1);
       prepCollision();
    }
 
@@ -463,7 +465,72 @@ bool TSStatic::_createShape()
       Sim::findObject( cubeDescId, reflectorDesc );
    }
 
+   //Set up the material slot vars for easy manipulation
+   S32 materialCount = mShape->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
+
+   if (isServerObject())
+   {
+      char matFieldName[128];
+
+      for (U32 i = 0; i < materialCount; i++)
+      {
+         StringTableEntry materialname = StringTable->insert(mShape->materialList->getMaterialName(i).c_str());
+
+         dSprintf(matFieldName, 128, "MaterialSlot%d", i);
+         StringTableEntry matFld = StringTable->insert(matFieldName);
+
+         setDataField(matFld, NULL, materialname);
+      }
+   }
+
    return true;
+}
+
+void TSStatic::onDynamicModified(const char* slotName, const char* newValue)
+{
+   bool isSrv = isServerObject();
+
+   if (FindMatch::isMatch("materialslot*", slotName, false))
+   {
+      if (!getShape())
+         return;
+
+      S32 slot = -1;
+      String outStr(String::GetTrailingNumber(slotName, slot));
+
+      if (slot == -1)
+         return;
+
+      //Safe to assume the inbound value for the material will be a MaterialAsset, so lets do a lookup on the name
+      MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(newValue);
+      if (!matAsset)
+         return;
+
+      bool found = false;
+      for (U32 i = 0; i < mChangingMaterials.size(); i++)
+      {
+         if (mChangingMaterials[i].slot == slot)
+         {
+            mChangingMaterials[i].matAsset = matAsset;
+            mChangingMaterials[i].assetId = newValue;
+            found = true;
+         }
+      }
+
+      if (!found)
+      {
+         matMap newMatMap;
+         newMatMap.slot = slot;
+         newMatMap.matAsset = matAsset;
+         newMatMap.assetId = newValue;
+
+         mChangingMaterials.push_back(newMatMap);
+      }
+
+      setMaskBits(MaterialMask);
+   }
+
+   Parent::onDynamicModified(slotName, newValue);
 }
 
 void TSStatic::prepCollision()
@@ -918,6 +985,22 @@ U32 TSStatic::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    }
 
    stream->write(mOverrideColor);
+
+   if (stream->writeFlag(mask & MaterialMask))
+   {
+      stream->writeInt(mChangingMaterials.size(), 16);
+
+      for (U32 i = 0; i < mChangingMaterials.size(); i++)
+      {
+         stream->writeInt(mChangingMaterials[i].slot, 16);
+
+         NetStringHandle matNameStr = mChangingMaterials[i].assetId.c_str();
+         con->packNetStringHandleU(stream, matNameStr);
+      }
+
+      mChangingMaterials.clear();
+   }
+
    return retMask;
 }
 
@@ -1018,6 +1101,26 @@ void TSStatic::unpackUpdate(NetConnection *con, BitStream *stream)
    }
 
    stream->read(&mOverrideColor);
+
+   if (stream->readFlag())
+   {
+      mChangingMaterials.clear();
+      U32 materialCount = stream->readInt(16);
+
+      for (U32 i = 0; i < materialCount; i++)
+      {
+         matMap newMatMap;
+         newMatMap.slot = stream->readInt(16);
+         newMatMap.assetId = String(con->unpackNetStringHandleU(stream).getString());
+
+         //do the lookup, now
+         newMatMap.matAsset = AssetDatabase.acquireAsset<MaterialAsset>(newMatMap.assetId);
+
+         mChangingMaterials.push_back(newMatMap);
+      }
+
+      updateMaterials();
+   }
 
    if ( isProperlyAdded() )
       _updateShouldTick();
@@ -1457,6 +1560,46 @@ U32 TSStatic::getNumDetails()
 	}
 	return 0;
 };
+
+void TSStatic::updateMaterials()
+{
+   if (mChangingMaterials.empty() || !mShape)
+      return;
+
+   TSMaterialList* pMatList = mShapeInstance->getMaterialList();
+
+   String path;
+   if (mShapeAsset->isAssetValid())
+      path = mShapeAsset->getShapeFilename();
+   else
+      path = mShapeName;
+
+   pMatList->setTextureLookupPath(path);
+
+   bool found = false;
+   const Vector<String>& materialNames = pMatList->getMaterialNameList();
+   for (S32 i = 0; i < materialNames.size(); i++)
+   {
+      if (found)
+         break;
+
+      for (U32 m = 0; m < mChangingMaterials.size(); m++)
+      {
+         if (mChangingMaterials[m].slot == i)
+         {
+            //Fetch the actual material asset
+            pMatList->renameMaterial(i, mChangingMaterials[m].matAsset->getMaterialDefinitionName());
+            found = true;
+            break;
+         }
+      }
+   }
+
+   mChangingMaterials.clear();
+
+   // Initialize the material instances
+   mShapeInstance->initMaterialList();
+}
 
 //------------------------------------------------------------------------
 //These functions are duplicated in tsStatic and shapeBase.

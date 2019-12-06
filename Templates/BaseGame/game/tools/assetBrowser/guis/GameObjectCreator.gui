@@ -59,7 +59,6 @@
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
-         command = "AssetBrowser_importAssetWindow.ImportAssets();";
          tooltipProfile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";

@@ -1654,4 +1654,57 @@ DefineEngineFunction( containerRayCast, const char*,
    return(returnBuffer);
 }
 
+DefineEngineFunction(materialRayCast, const char*,
+(Point3F start, Point3F end, U32 mask, SceneObject* pExempt, bool useClientContainer), (nullAsType<SceneObject*>(), false),
+"@brief Cast a ray from start to end, checking for collision against items matching mask.\n\n"
+
+"If pExempt is specified, then it is temporarily excluded from collision checks (For "
+"instance, you might want to exclude the player if said player was firing a weapon.)\n"
+
+"@param start An XYZ vector containing the tail position of the ray.\n"
+"@param end An XYZ vector containing the head position of the ray\n"
+"@param mask A bitmask corresponding to the type of objects to check for\n"
+"@param pExempt An optional ID for a single object that ignored for this raycast\n"
+"@param useClientContainer Optionally indicates the search should be within the "
+"client container.\n"
+
+"@returns A string containing either null, if nothing was struck, or these fields:\n"
+"<ul><li>The ID of the object that was struck.</li>"
+"<li>The x, y, z position that it was struck.</li>"
+"<li>The x, y, z of the normal of the face that was struck.</li>"
+"<li>The distance between the start point and the position we hit.</li></ul>"
+
+"@ingroup Game")
+{
+   if (pExempt)
+      pExempt->disableCollision();
+
+   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+
+   RayInfo rinfo;
+   S32 ret = 0;
+   if (pContainer->castRayRendered(start, end, mask, &rinfo) == true)
+      ret = rinfo.object->getId();
+
+   if (pExempt)
+      pExempt->enableCollision();
+
+   // add the hit position and normal?
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   if (ret)
+   {
+      dSprintf(returnBuffer, bufSize, "%d %g %g %g %g %g %g %g %g %g %s",
+         ret, rinfo.point.x, rinfo.point.y, rinfo.point.z,
+         rinfo.normal.x, rinfo.normal.y, rinfo.normal.z, rinfo.distance, rinfo.texCoord.x, rinfo.texCoord.y, rinfo.material ? rinfo.material->getMaterial()->getName() : "");
+   }
+   else
+   {
+      returnBuffer[0] = '0';
+      returnBuffer[1] = '\0';
+   }
+
+   return(returnBuffer);
+}
+
 ConsoleFunctionGroupEnd( Containers );

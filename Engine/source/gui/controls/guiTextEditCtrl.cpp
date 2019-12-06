@@ -138,6 +138,9 @@ GuiTextEditCtrl::GuiTextEditCtrl()
    mHistoryIndex = 0;
    mHistoryBuf = NULL;
 
+   mDoubleClickTimeMS = 50;
+   mMouseUpTime = 0;
+
 #if defined(__MACOSX__)
    UTF8  bullet[4] = { 0xE2, 0x80, 0xA2, 0 };
    
@@ -382,7 +385,7 @@ void GuiTextEditCtrl::onMouseDown( const GuiEvent &event )
 
    // If we have a double click, select all text.  Otherwise
    // act as before by clearing any selection.
-   bool doubleClick = (event.mouseClickCount > 1);
+   bool doubleClick = (event.mouseClickCount > 1 && Platform::getRealMilliseconds() - mMouseUpTime > mDoubleClickTimeMS);
    if(doubleClick)
    {
       selectAllText();
@@ -451,6 +454,8 @@ void GuiTextEditCtrl::onMouseUp(const GuiEvent &event)
    TORQUE_UNUSED(event);
    mDragHit = false;
    mScrollDir = 0;
+
+   mMouseUpTime = Platform::getRealMilliseconds();
    mouseUnlock();
 }
 

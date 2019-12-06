@@ -138,6 +138,9 @@ VolumetricFog::VolumetricFog()
    mTexTiles = 1.0f;
    mSpeed1.set(0.5f, 0.0f);
    mSpeed2.set(0.1f, 0.1f);
+
+   mShapeAsset = StringTable->EmptyString();
+   mShapeAssetId = StringTable->EmptyString();
 }
 
 VolumetricFog::~VolumetricFog()
@@ -165,8 +168,14 @@ VolumetricFog::~VolumetricFog()
 void VolumetricFog::initPersistFields()
 {
    addGroup("VolumetricFogData");
+   addProtectedField("shapeAsset", TypeShapeAssetPtr, Offset(mShapeAsset, VolumetricFog),
+      &VolumetricFog::_setShapeAsset, &defaultProtectedGetFn, "The source shape asset.");
+
+#ifdef TORQUE_ALLOW_DIRECT_FILENAMES
    addField("shapeName", TypeShapeFilename, Offset(mShapeName, VolumetricFog),
       "Path and filename of the model file (.DTS, .DAE) to use for this Volume.");
+#endif
+
    addField("FogColor", TypeColorI, Offset(mFogColor, VolumetricFog),
       "Fog color RGBA (Alpha is ignored)");
    addField("FogDensity", TypeF32, Offset(mFogDensity, VolumetricFog), 
@@ -210,6 +219,15 @@ void VolumetricFog::initPersistFields()
       "Modifier for LightRay PostFX when inside Fog.");
    endGroup("PostFX");
    Parent::initPersistFields();
+}
+
+bool VolumetricFog::_setShapeAsset(void* obj, const char* index, const char* data)
+{
+   VolumetricFog* fog = static_cast<VolumetricFog*>(obj);// ->setFile(FileName(data));
+
+   fog->setShapeAsset(StringTable->insert(data));
+
+   return false;
 }
 
 void VolumetricFog::inspectPostApply()
@@ -328,19 +346,49 @@ void VolumetricFog::handleResize(VolumetricFogRTManager *RTM, bool resize)
 // Loadshape extracted from TSMesh and TSShapeInstance
 //-----------------------------------------------------------------------------
 
+bool VolumetricFog::setShapeAsset(const StringTableEntry shapeAssetId)
+{
+   mShapeAssetId = shapeAssetId;
+
+   LoadShape();
+   return true;
+}
+
 bool VolumetricFog::LoadShape()
 {
    GFXPrimitiveType GFXdrawTypes[] = { GFXTriangleList, GFXTriangleStrip };
-   if (!mShapeName || mShapeName[0] == '\0')
-   {
-      Con::errorf("VolumetricFog::LoadShape() - No shape name! Volumetric Fog will not be rendered!");
-      return false;
-   }
-
-   // Load shape, server side only reads bounds and radius
 
    Resource<TSShape> mShape;
-   mShape = ResourceManager::get().load(mShapeName);
+   if (mShapeAssetId != StringTable->EmptyString())
+   {
+      mShapeAsset = mShapeAssetId;
+
+      if (mShapeAsset.isNull())
+      {
+         Con::errorf("[TSStatic] Failed to load shape asset.");
+         return false;
+      }
+
+      mShape = mShapeAsset->getShapeResource();
+
+      if (!mShape)
+      {
+         Con::errorf("TSStatic::_createShape() - Shape Asset had no valid shape!");
+         return false;
+      }
+   }
+   else
+   {
+      if (!mShapeName || mShapeName[0] == '\0')
+      {
+         Con::errorf("VolumetricFog::LoadShape() - No shape name! Volumetric Fog will not be rendered!");
+         return false;
+      }
+
+      // Load shape, server side only reads bounds and radius
+      mShape = ResourceManager::get().load(mShapeName);
+   }
+
    if (bool(mShape) == false)
    {
       Con::errorf("VolumetricFog::LoadShape() - Unable to load shape: %s", mShapeName);
@@ -551,15 +599,25 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    }
    if (stream->writeFlag(mask & FogShapeMask))
    {
+      stream->writeString(mShapeAssetId);
       stream->writeString(mShapeName);
       mathWrite(*stream, getTransform());
       mathWrite(*stream, getScale());
-      if (!mShapeName || mShapeName[0] == '\0')
-         return retMask;
+
       Resource<TSShape> mShape;
-      mShape = ResourceManager::get().load(mShapeName);
+
+      if (mShapeAssetId != StringTable->EmptyString())
+      {
+         mShape = mShape = mShapeAsset->getShapeResource();
+      }
+      else if (mShapeName && mShapeName[0] != '\0')
+      {
+         mShape = ResourceManager::get().load(mShapeName);
+      }
+
       if (bool(mShape) == false)
          return retMask;
+
       mObjBox = mShape->mBounds;
       mRadius = mShape->mRadius;
       resetWorldBox();
@@ -577,6 +635,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    VectorF scale;
    VectorF mOldScale = getScale();
    String oldTextureName = mTextureName;
+   StringTableEntry oldShapeAsset = mShapeAssetId;
    StringTableEntry oldShape = mShapeName;
 
    if (stream->readFlag())// Fog color
@@ -647,10 +706,14 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())//Fog shape
    {
+      char buffer[256];
+      stream->readString(buffer);
+      mShapeAssetId = StringTable->insert(buffer);
+
       mShapeName = stream->readSTString();
       mathRead(*stream, &mat);
       mathRead(*stream, &scale);
-      if (strcmp(oldShape, mShapeName) != 0)
+      if (strcmp(oldShapeAsset, mShapeAssetId) != 0 || strcmp(oldShape, mShapeName) != 0)
       {
          mIsVBDirty = true;
          mShapeLoaded = LoadShape();

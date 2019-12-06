@@ -307,7 +307,7 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.fileName;
 
-   %previewData.previewImage = fileName;
+   %previewData.previewImage = %assetDef.fileName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
@@ -317,11 +317,20 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
 function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
 {
    //echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
-      
-   %assetId = %assetDef.getAssetId();
-      
+
+   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %camPos = LocalClientConnection.camera.getPosition();
+   %rayResult = containerRayCast(%camPos, %targetPosition, -1);
+   
    %pos = EWCreatorWindow.getCreateObjectPosition();
-      
+
+   if(%rayResult != 0)
+   {
+      %pos = getWords(%rayResult, 1, 3);
+   }
+   
+   %assetId = %assetDef.getAssetId();
+   
    %newStatic = new TSStatic()
    {
       position = %pos;
@@ -332,8 +341,9 @@ function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
    
    EWorldEditor.clearSelection();
    EWorldEditor.selectObject(%newStatic);
-   
+      
    EWorldEditor.isDirty = true;
+   
 }
 
 function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )

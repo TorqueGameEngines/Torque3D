@@ -771,7 +771,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    }
    else
    {
-      mProbeArrayEffect->setTexture(6, NULL);
+      mProbeArrayEffect->setTexture(6, GFXTexHandle(NULL)); 
    }
    
    mProbeArrayEffect->setTexture(3, mBRDFTexture);

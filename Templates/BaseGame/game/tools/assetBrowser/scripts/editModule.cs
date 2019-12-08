@@ -134,11 +134,60 @@ function AssetBrowser::deleteModule(%this)
    
 }
 
-function AssetBrowser::RefreshModuleDependencies(%this)
+function AssetBrowser::RefreshModuleDependencies(%this, %moduleDef)
 {
    //Iterate through all our modules
    
    //then, iterate through the module's assets
    
    //if an asset has a module that isn't us, queue that into the dependencies list  
+   
+   //AssetBrowser.RefreshModuleDependencies(16823);
+   %modulePath = filePath(%moduleDef.ModuleFilePath);
+   
+   %filePattern = "*.cs" TAB "*.taml" TAB "*.mis";
+   
+   //First, wipe out any files inside the folder first
+   %file = makeFullPath(findFirstFileMultiExpr( %filePattern, true));
+   %fileObj = new FileObject();
+   
+   %modulesList = ModuleDatabase.findModules(false);
+   
+   new ArrayObject(moduleDepList);
+
+   while( %file !$= "" )
+   {      
+      if(startsWith(%file, %modulePath))
+      {
+         if(%fileObj.openForRead(%file))
+         {
+            while( !%fileObj.isEOF() )
+            {
+               %line = %fileObj.readLine();
+               
+               if(%line $= "")
+                  continue;
+               
+               for(%i=0; %i < getWordCount(%modulesList); %i++)
+               {
+                  %moduleName = getWord(%modulesList, %i).moduleID;
+                  
+                  //if(%moduleName $= %moduleDef.moduleID)
+                  //   continue;
+                     
+                  %hasMatch = strIsMatchExpr( "*"@%moduleName@":*", %line );
+                  
+                  if(%hasMatch)
+                  {
+                     moduleDepList.add(%moduleName);
+                  }
+               }
+            }
+         }
+      }
+      
+      %file = makeFullPath(findNextFileMultiExpr( %filePattern ));
+   }
+   
+   %fileObj.delete();
 }

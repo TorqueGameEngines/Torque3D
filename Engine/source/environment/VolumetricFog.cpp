@@ -171,10 +171,8 @@ void VolumetricFog::initPersistFields()
    addProtectedField("shapeAsset", TypeShapeAssetPtr, Offset(mShapeAsset, VolumetricFog),
       &VolumetricFog::_setShapeAsset, &defaultProtectedGetFn, "The source shape asset.");
 
-#ifdef TORQUE_ALLOW_DIRECT_FILENAMES
    addField("shapeName", TypeShapeFilename, Offset(mShapeName, VolumetricFog),
-      "Path and filename of the model file (.DTS, .DAE) to use for this Volume.");
-#endif
+      "Path and filename of the model file (.DTS, .DAE) to use for this Volume.", AbstractClassRep::FieldFlags::FIELD_HideInInspectors );
 
    addField("FogColor", TypeColorI, Offset(mFogColor, VolumetricFog),
       "Fog color RGBA (Alpha is ignored)");

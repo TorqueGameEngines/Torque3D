@@ -171,10 +171,8 @@ void TSStatic::initPersistFields()
          &TSStatic::_setShapeAsset, &defaultProtectedGetFn,
          "The source shape asset.");
 
-#ifdef TORQUE_ALLOW_DIRECT_FILENAMES
       addField("shapeName",   TypeShapeFilename,  Offset( mShapeName, TSStatic ),
-         "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic." );
-#endif
+         "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic.", AbstractClassRep::FieldFlags::FIELD_HideInInspectors );
 
       addProtectedField( "skin", TypeRealString, Offset( mAppliedSkinName, TSStatic ), &_setFieldSkin, &_getFieldSkin,
       "@brief The skin applied to the shape.\n\n"

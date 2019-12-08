@@ -241,3 +241,55 @@ function AssetBrowser::confirmDeleteAsset(%this)
 
    %this.refresh();
 }
+
+//------------------------------------------------------------
+function AssetBrowser::updateAssetReference(%this, %targetPath, %oldAssetId, %newAssetId)
+{
+   //assetbrowser.updateAssetReference("data/pbr/levels", "pbr:material_ball", "TreeTest:TestTree");
+   //this will go through every file in the game directory and swap the assetIDs to update the reference in the event something was renamed, or something was moved
+   //This is potentially disastrous and break a lot of things if done hapazardly, so be careful
+   %fullPath = makeFullPath(%targetPath);
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %fullPath @ "/*.*", true);
+   %fileObj = new FileObject();
+   
+   new ArrayObject(lineCache);
+
+   while( %file !$= "" )
+   {      
+      lineCache.empty();
+      
+      %fileModified = false;
+      if(%fileObj.openForRead(%file))
+      {
+         while( !%fileObj.isEOF() )
+         {
+            %unModLine = %fileObj.readLine();
+            %line = strreplace( %unModLine, %oldAssetId, %newAssetId );
+            
+            if(%unModLine !$= %line)
+               %fileModified = true;
+               
+            lineCache.add(%line);
+         }
+      }
+      
+      if(%fileModified && %fileObj.openForWrite(%file))
+      {
+         for(%i=0; %i<lineCache.count(); %i++)
+         {
+            %line = lineCache.getKey(%i);
+
+            %fileObj.writeline(%line);
+         }
+         
+         %fileObj.close();
+      }
+      
+      %file = findNextFileMultiExpr( %fullPath @ "/*.*" );
+   }
+   
+   lineCache.delete();
+   %fileObj.delete();
+}

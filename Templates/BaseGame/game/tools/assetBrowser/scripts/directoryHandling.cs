@@ -46,7 +46,7 @@ function directoryHandler::loadFolders(%this, %path, %parentId)
             {
                %folderID = %this.treeCtrl.insertItem(%parentId, %folderName, %path, "", %iconIdx, %iconIdx+1);
          
-            %this.loadFolders(%path @ "/" @ %folderName, %folderID);  
+               %this.loadFolders(%path @ "/" @ %folderName, %folderID);  
             }
          }
          else

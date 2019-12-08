@@ -135,4 +135,22 @@ function AssetBrowser::moveFolder(%this, %folderPath, %newFolderPath)
    %this.deleteFolder(%fullPath);
    
    //thrash the modules and reload them
+   %oldModule = %this.dirHandler.getModuleFromAddress(%folderPath);
+   %newModule = %this.dirHandler.getModuleFromAddress(%newFolderPath);
+   
+   //if we didn't move modules, then we don't need to do anything other than refresh the assets within it
+   if(%oldModule == %newModule)
+   {
+      //only do a refresh to update asset loose file paths
+      AssetDatabase.refreshAllAssets();
+   }
+   else
+   {
+      //they're different moduels now, so we gotta unload/reload both
+      ModuleDatabase.unloadExplicit(%oldModule.getModuleId());
+      ModuleDatabase.loadExplicit(%oldModule.getModuleId());
+      
+      ModuleDatabase.unloadExplicit(%newModule.getModuleId());
+      ModuleDatabase.loadExplicit(%newModule.getModuleId());
+   }
 }

@@ -181,7 +181,13 @@ function SettingsInspector::changeEditorSetting(%this, %varName, %value)
       ProjectSettings.setValue(%varName, %value);
    
    if(ESettingsWindow.mode $= "Editor")
+   {
       %success = EditorSettings.write();
+      
+      //Bit of a hack, but if we were editing the theme, reexec the profiles for GUI
+      if(ESettingsWindow.selectedPageText $= "Theme")
+         exec("tools/gui/profiles.ed.cs");
+   }
    else
       %success = ProjectSettings.write();
       

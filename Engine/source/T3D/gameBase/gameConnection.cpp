@@ -44,9 +44,6 @@
 #include "console/engineAPI.h"
 #include "math/mTransform.h"
 
-#include "T3D/entity.h"
-#include "T3D/components/coreInterfaces.h"
-
 #ifdef TORQUE_HIFI_NET
    #include "T3D/gameBase/hifi/hifiMoveList.h"
 #elif defined TORQUE_EXTENDED_MOVE
@@ -787,17 +784,7 @@ bool GameConnection::getControlCameraFov(F32 * fov)
    }
    if (cObj)
    {
-      if (Entity* ent = dynamic_cast<Entity*>(cObj))
-      {
-         if (CameraInterface* camInterface = ent->getComponent<CameraInterface>())
-         {
-            *fov = camInterface->getCameraFov();
-         }
-      }
-      else
-      {
-         *fov = cObj->getCameraFov();
-      }
+      *fov = cObj->getCameraFov();
 
       return(true);
    }
@@ -818,17 +805,7 @@ bool GameConnection::isValidControlCameraFov(F32 fov)
 
    if (cObj)
    {
-      if (Entity* ent = dynamic_cast<Entity*>(cObj))
-      {
-         if (CameraInterface* camInterface = ent->getComponent<CameraInterface>())
-         {
-            return camInterface->isValidCameraFov(fov);
-         }
-      }
-      else
-      {
-         return cObj->isValidCameraFov(fov);
-      }
+      return cObj->isValidCameraFov(fov);
    }
 
    return NULL;
@@ -847,24 +824,10 @@ bool GameConnection::setControlCameraFov(F32 fov)
    if (cObj)
    {
       F32 newFov = 90.f;
-      if (Entity* ent = dynamic_cast<Entity*>(cObj))
-      {
-         if (CameraInterface* camInterface = ent->getComponent<CameraInterface>())
-         {
-            camInterface->setCameraFov(mClampF(fov, MinCameraFov, MaxCameraFov));
-            newFov = camInterface->getCameraFov();
-         }
-         else
-         {
-            Con::errorf("Attempted to setControlCameraFov, but we don't have a camera!");
-         }
-      }
-      else
-      {
-         // allow shapebase to clamp fov to its datablock values
-         cObj->setCameraFov(mClampF(fov, MinCameraFov, MaxCameraFov));
-         newFov = cObj->getCameraFov();
-      }
+
+      // allow shapebase to clamp fov to its datablock values
+      cObj->setCameraFov(mClampF(fov, MinCameraFov, MaxCameraFov));
+      newFov = cObj->getCameraFov();
 
       // server fov of client has 1degree resolution
       if( S32(newFov) != S32(mCameraFov) || newFov != fov )

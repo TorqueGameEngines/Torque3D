@@ -197,7 +197,6 @@ protected:
    {
       LightInfo* lightInfo;
       LightShadowMap* shadowMap;
-      LightShadowMap* dynamicShadowMap;
       LightMaterialInfo* lightMaterial;
       GFXPrimitiveBuffer* primBuffer;
       GFXVertexBuffer* vertBuffer;

@@ -26,9 +26,6 @@
 #include "renderInstance/renderPassManager.h"
 #include "math/util/matrixSet.h"
 
-#include "T3D/components/render/renderComponentInterface.h"
-#include "T3D/components/component.h"
-
 //-----------------------------------------------------------------------------
 
 SceneRenderState::SceneRenderState( SceneManager* sceneManager,

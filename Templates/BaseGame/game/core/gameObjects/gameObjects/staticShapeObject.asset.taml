@@ -1,7 +1,0 @@
-<GameObjectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="StaticShapeObject"
-    gameObjectName="StaticShapeObject"
-    TAMLFile="staticShapeObject.taml"
-    description="A basic static shape example." />

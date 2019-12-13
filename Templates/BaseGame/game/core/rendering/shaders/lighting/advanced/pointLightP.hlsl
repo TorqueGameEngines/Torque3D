@@ -112,7 +112,6 @@ TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLERCUBE(shadowMap, 1);
 #else
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
-TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
 #endif
 
 TORQUE_UNIFORM_SAMPLER2D(lightBuffer, 5);
@@ -134,7 +133,6 @@ uniform float lightInvSqrRange;
 uniform float shadowSoftness;
 uniform float4x4 worldToCamera;
 uniform float3x3 worldToLightProj;
-uniform float3x3 dynamicWorldToLightProj;
 
 uniform float3 eyePosWorld;
 uniform float4x4 cameraToWorld;
@@ -183,10 +181,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
    #else
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float2 dynShadowCoord = decodeShadowCoord( mul( dynamicWorldToLightProj, -surfaceToLight.L ) ).xy;
-      float static_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-      float dynamic_shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, dynShadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-      float shadowed = min(static_shadowed, dynamic_shadowed);
+      float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
    #endif
    
    #endif // !NO_SHADOW

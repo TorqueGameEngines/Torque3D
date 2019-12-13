@@ -31,7 +31,6 @@
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
-TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
 
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 6);
@@ -64,13 +63,6 @@ uniform float4 scaleX;
 uniform float4 scaleY;
 uniform float4 offsetX;
 uniform float4 offsetY;
-// Dynamic Shadows
-uniform float4x4 dynamicWorldToLightProj;
-uniform float4 dynamicScaleX;
-uniform float4 dynamicScaleY;
-uniform float4 dynamicOffsetX;
-uniform float4 dynamicOffsetY;
-uniform float4 dynamicFarPlaneScalePSSM;
 
 float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
                                 float2 texCoord,
@@ -205,23 +197,16 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      float4 static_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+      float4 shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
-      float4 dynamic_shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, dynamicWorldToLightProj, surface.P, dynamicScaleX,
-                                                              dynamicScaleY, dynamicOffsetX, dynamicOffsetY, dynamicFarPlaneScalePSSM, surfaceToLight.NdotL);
-
-      float static_shadowed = static_shadowed_colors.a;
-      float dynamic_shadowed = dynamic_shadowed_colors.a;
+      float shadow = shadowed_colors.a;
 	  
       #ifdef PSSM_DEBUG_RENDER
-	     lightingColor = static_shadowed_colors.rgb*0.5+dynamic_shadowed_colors.rgb*0.5;
+	     lightingColor = shadowed_colors.rgb;
       #endif
 
-      static_shadowed = lerp( static_shadowed, 1.0, saturate( fadeOutAmt ) );
-      dynamic_shadowed = lerp( dynamic_shadowed, 1.0, saturate( fadeOutAmt ) );
-
-      float shadow = min(static_shadowed, dynamic_shadowed);
+      shadow = lerp( shadow, 1.0, saturate( fadeOutAmt ) );
 
       #ifdef PSSM_DEBUG_RENDER
          if ( fadeOutAmt > 1.0 )

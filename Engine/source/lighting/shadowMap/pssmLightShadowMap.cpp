@@ -445,20 +445,11 @@ void PSSMLightShadowMap::setShaderParameters(GFXShaderConstBuffer* params, Light
    }
 
    // These values change based on static/dynamic.
-   if ( mIsDynamic )
-   {
-      params->setSafe(lsc->mDynamicScaleXSC, sx);
-      params->setSafe(lsc->mDynamicScaleYSC, sy);
-      params->setSafe(lsc->mDynamicOffsetXSC, ox);
-      params->setSafe(lsc->mDynamicOffsetYSC, oy);
-      params->setSafe( lsc->mDynamicFarPlaneScalePSSM, mFarPlaneScalePSSM);
-   } else {
-      params->setSafe(lsc->mScaleXSC, sx);
-      params->setSafe(lsc->mScaleYSC, sy);
-      params->setSafe(lsc->mOffsetXSC, ox);
-      params->setSafe(lsc->mOffsetYSC, oy);
-      params->setSafe( lsc->mFarPlaneScalePSSM, mFarPlaneScalePSSM);
-   }
+   params->setSafe(lsc->mScaleXSC, sx);
+   params->setSafe(lsc->mScaleYSC, sy);
+   params->setSafe(lsc->mOffsetXSC, ox);
+   params->setSafe(lsc->mOffsetYSC, oy);
+   params->setSafe(lsc->mFarPlaneScalePSSM, mFarPlaneScalePSSM);
 
    params->setSafe(lsc->mAtlasXOffsetSC, aXOff);
    params->setSafe(lsc->mAtlasYOffsetSC, aYOff);

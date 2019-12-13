@@ -40,8 +40,6 @@
 #include "assets/assetPtr.h"
 #endif
 
-#include "T3D/entity.h"
-
 // Debug Profiling.
 #include "platform/profiler.h"
 

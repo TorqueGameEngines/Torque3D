@@ -96,7 +96,6 @@ struct LightingShaderConstants
    GFXShaderConstHandle* mVectorLightBrightnessSC;
 
    GFXShaderConstHandle* mShadowMapSC;
-   GFXShaderConstHandle* mDynamicShadowMapSC;
    GFXShaderConstHandle* mShadowMapSizeSC;
 
    GFXShaderConstHandle* mCookieMapSC;
@@ -122,15 +121,6 @@ struct LightingShaderConstants
    GFXShaderConstHandle* mOffsetXSC;
    GFXShaderConstHandle* mOffsetYSC;
    GFXShaderConstHandle* mFarPlaneScalePSSM;
-
-   // Dynamic Specific:   
-   GFXShaderConstHandle* mDynamicWorldToLightProjSC;
-   GFXShaderConstHandle* mDynamicViewToLightProjSC;
-   GFXShaderConstHandle* mDynamicScaleXSC;
-   GFXShaderConstHandle* mDynamicScaleYSC;
-   GFXShaderConstHandle* mDynamicOffsetXSC;
-   GFXShaderConstHandle* mDynamicOffsetYSC;
-   GFXShaderConstHandle* mDynamicFarPlaneScalePSSM;
 
    LightingShaderConstants();
    ~LightingShaderConstants();
@@ -165,10 +155,7 @@ public:
    virtual ~LightShadowMap();
 
    void render(   RenderPassManager* renderPass,
-                  const SceneRenderState *diffuseState,
-                  bool _dynamic, bool _forceUpdate);
-
-   U32 getLastUpdate() const { return mLastUpdate; }
+                  const SceneRenderState *diffuseState);
 
    //U32 getLastVisible() const { return mLastVisible; }
 
@@ -248,11 +235,6 @@ protected:
    /// be skipped if visible and within active range.
    bool mIsViewDependent;
 
-   /// The time this shadow was last updated.
-   U32 mLastUpdate;
-   PlatformTimer *mStaticRefreshTimer;
-   PlatformTimer *mDynamicRefreshTimer;
-
    /// The time this shadow was last culled and prioritized.
    U32 mLastCull;
 
@@ -280,13 +262,6 @@ protected:
    /// The callback used to get texture events.
    /// @see GFXTextureManager::addEventDelegate
    void _onTextureEvent( GFXTexCallbackCode code );  
-
-   bool mIsDynamic;
-public:
-
-   bool isDynamic() { return mIsDynamic; }
-   void setDynamic(bool value) { mIsDynamic = value; }
-
 };
 
 GFX_DeclareTextureProfile( ShadowMapProfile );
@@ -309,9 +284,9 @@ public:
    virtual void packUpdate( BitStream *stream ) const;
    virtual void unpackUpdate( BitStream *stream );
 
-   LightShadowMap* getShadowMap(bool _isDynamic = false) const { return _isDynamic ? mDynamicShadowMap : mShadowMap; }
+   LightShadowMap* getShadowMap() const { return mShadowMap; }
 
-   LightShadowMap* getOrCreateShadowMap(bool _isDynamic = false);
+   LightShadowMap* getOrCreateShadowMap();
 
    bool hasCookieTex() const { return cookie.isNotEmpty(); }
 
@@ -330,7 +305,6 @@ protected:
 
    ///
    LightShadowMap *mShadowMap;
-   LightShadowMap *mDynamicShadowMap;
    GFXOcclusionQuery* mQuery;
 
    LightInfo *mLight;
@@ -393,7 +367,6 @@ public:
    bool lastSplitTerrainOnly;
 
    /// @}
-   bool isDynamic;
 };
 
 #endif // _LIGHTSHADOWMAP_H_

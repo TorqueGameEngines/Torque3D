@@ -36,7 +36,6 @@
    #include "gui/editor/editorFunctions.h"
 #endif
 #include "console/engineAPI.h"
-#include "T3D/entity.h"
 
 IMPLEMENT_CONOBJECT(GuiTreeViewCtrl);
 
@@ -3479,22 +3478,6 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
       if( !item->isInspectorData() && item->mState.test(Item::VirtualParent) )
          onVirtualParentExpand(item);
       
-      //Slightly hacky, but I'm not sure of a better setup until we get major update to the editors
-      //We check if our object is an entity, and if it is, we call a 'onInspect' function.
-      //This function is pretty much a special notifier to the entity so if it has any behaviors that do special
-      //stuff in the editor, it can fire that up
-      if (item->isInspectorData())
-      {
-         Entity* e = dynamic_cast<Entity*>(item->getObject());
-		 if (e)
-		 {
-			 if (item->isExpanded())
-				 e->onInspect();
-			 else
-				 e->onEndInspect();
-         }
-      }
-      
       mFlags.set( RebuildVisible );
       scrollVisible(item);
    }
@@ -4309,11 +4292,6 @@ bool GuiTreeViewCtrl::onVirtualParentBuild(Item *item, bool bForceFullUpdate)
    
    // Go through our items and purge those that have disappeared from
    // the set.
-
-   //Entities will be a special case here, if we're an entity, skip this step
-   if (dynamic_cast<Entity*>(srcObj))
-      return true;
-   
    for( Item* ptr = item->mChild; ptr != NULL; )
    {
       Item* next = ptr->mNext;

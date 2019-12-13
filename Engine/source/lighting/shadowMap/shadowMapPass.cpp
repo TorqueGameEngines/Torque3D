@@ -79,15 +79,6 @@ ShadowMapPass::ShadowMapPass(LightManager* lightManager, ShadowMapManager* shado
    mShadowRPM->addManager( new RenderTerrainMgr( 0.5f, 0.5f )  );
    mShadowRPM->addManager( new RenderImposterMgr( 0.6f, 0.6f )  );
 
-   // Dynamic
-   mDynamicShadowRPM = new DynamicShadowRenderPassManager();
-   mDynamicShadowRPM->assignName( "DynamicShadowRenderPassManager" );
-   mDynamicShadowRPM->registerObject();
-   Sim::getRootGroup()->addObject( mDynamicShadowRPM );
-   mDynamicShadowRPM->addManager( new RenderMeshMgr(RenderPassManager::RIT_Mesh, 0.3f, 0.3f) );
-   mDynamicShadowRPM->addManager( new RenderTerrainMgr( 0.5f, 0.5f )  );
-   mDynamicShadowRPM->addManager( new RenderImposterMgr( 0.6f, 0.6f )  );
-
    mActiveLights = 0;
    mPrevCamPos = Point3F::Zero;
    mPrevCamRot = Point3F::Zero;
@@ -132,9 +123,6 @@ ShadowMapPass::~ShadowMapPass()
 
    if ( mShadowRPM )
       mShadowRPM->deleteObject();
-
-   if ( mDynamicShadowRPM )
-      mDynamicShadowRPM->deleteObject();
 }
 
 void ShadowMapPass::render(   SceneManager *sceneManager, 
@@ -165,7 +153,7 @@ void ShadowMapPass::render(   SceneManager *sceneManager,
    // First do a loop thru the lights setting up the shadow
    // info array for this pass.
    Vector<LightShadowMap*> shadowMaps;
-   shadowMaps.reserve( mActiveLights * 2 );
+   shadowMaps.reserve( mActiveLights );
    for ( U32 i = 0; i < mActiveLights; i++ )
    {
       ShadowMapParams *params = mLights[i]->getExtended<ShadowMapParams>();
@@ -176,7 +164,6 @@ void ShadowMapPass::render(   SceneManager *sceneManager,
       
       // --- Static Shadow Map ---
       LightShadowMap *lsm = params->getOrCreateShadowMap();
-      LightShadowMap *dlsm = params->getOrCreateShadowMap(true);
 
       // First check the visiblity query... if it wasn't 
       // visible skip it.
@@ -191,17 +178,6 @@ void ShadowMapPass::render(   SceneManager *sceneManager,
       lsm->updatePriority(diffuseState, currTime);
 
       shadowMaps.push_back(lsm);
-
-      // --- Dynamic Shadow Map ---
-
-      // Any shadow that is visible is counted as being 
-      // active regardless if we update it or not.
-      ++smActiveShadowMaps;
-
-      // Do a priority update for this shadow.
-      dlsm->updatePriority(diffuseState, currTime);
-
-      shadowMaps.push_back( dlsm );
    }
 
    // Now sort the shadow info by priority.
@@ -238,30 +214,17 @@ void ShadowMapPass::render(   SceneManager *sceneManager,
    mPrevCamFov = control->getCameraFov();
 
    // 2 Shadow Maps per Light. This may fail.
-   for ( U32 i = 0; i < shadowMaps.size(); i += 2 )
+   for ( U32 i = 0; i < shadowMaps.size(); i++ )
    {
 	   LightShadowMap *lsm = shadowMaps[i];
-	   LightShadowMap *dlsm = shadowMaps[i + 1];
-
       {
          GFXDEBUGEVENT_SCOPE( ShadowMapPass_Render_Shadow, ColorI::RED );
 
-		 mShadowManager->setLightShadowMap(lsm);
-         mShadowManager->setLightDynamicShadowMap( dlsm );
+		   mShadowManager->setLightShadowMap(lsm);
 
-         lsm->render(mShadowRPM, diffuseState, false, forceUpdate);
-         dlsm->render(mDynamicShadowRPM, diffuseState, true, forceUpdate);
+         lsm->render(mShadowRPM, diffuseState);
 
          ++smUpdatedShadowMaps;
-      }
-
-      // View dependent shadows or ones that are covering the entire
-      // screen are updated every frame no matter the time left in
-      // our shadow rendering budget.
-      if ( dlsm->isViewDependent() || dlsm->getLastScreenSize() >= 1.0f )
-      {
-         ++smNearShadowMaps;
-         continue;
       }
 
       // See if we're over our frame budget for shadow 
@@ -284,7 +247,6 @@ void ShadowMapPass::render(   SceneManager *sceneManager,
    // The NULL here is importaint as having it around
    // will cause extra work in AdvancedLightManager::setLightInfo().
    mShadowManager->setLightShadowMap( NULL );
-   mShadowManager->setLightDynamicShadowMap( NULL );
 }
 
 void ShadowRenderPassManager::addInst( RenderInst *inst )
@@ -298,29 +260,7 @@ void ShadowRenderPassManager::addInst( RenderInst *inst )
          return;
 
       const BaseMaterialDefinition *mat = meshRI->matInst->getMaterial();
-      if ( !mat->castsShadows() || mat->castsDynamicShadows() || mat->isTranslucent() )
-      {
-         // Do not add this instance, return here and avoid the default behavior
-         // of calling up to Parent::addInst()
-         return;
-      }
-   }
-
-   Parent::addInst(inst);
-}
-
-void DynamicShadowRenderPassManager::addInst( RenderInst *inst )
-{
-   PROFILE_SCOPE(DynamicShadowRenderPassManager_addInst);
-
-   if ( inst->type == RIT_Mesh )
-   {
-      MeshRenderInst *meshRI = static_cast<MeshRenderInst*>( inst );
-      if ( !meshRI->matInst )
-         return;
-
-      const BaseMaterialDefinition *mat = meshRI->matInst->getMaterial();
-      if ( !mat->castsShadows() || !mat->castsDynamicShadows() || mat->isTranslucent() )
+      if ( !mat->castsShadows() || mat->isTranslucent() )
       {
          // Do not add this instance, return here and avoid the default behavior
          // of calling up to Parent::addInst()

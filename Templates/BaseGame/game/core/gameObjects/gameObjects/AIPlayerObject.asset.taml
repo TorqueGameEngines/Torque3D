@@ -1,8 +1,0 @@
-<GameObjectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="AIPlayerObject"
-    gameObjectName="AIPlayerObject"
-    scriptFile="AIPlayerObject.cs"
-    TAMLFile="AIPlayerObject.taml"
-    description="A basic AI Player Object example." />

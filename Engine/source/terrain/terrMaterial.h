@@ -127,6 +127,10 @@ public:
 
    F32 getParallaxScale() const { return mParallaxScale; }
 
+   bool getIsSRGB() const { return mIsSRGB; }
+
+   bool getInvertSmoothness() const { return mInvertSmoothness; }
+
 };
 
 #endif // _TERRMATERIAL_H_

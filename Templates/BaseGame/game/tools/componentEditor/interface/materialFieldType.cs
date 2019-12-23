@@ -215,14 +215,14 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
       %matName = %currentMaterial.getInternalName();
       
       if( %materialDef.diffuseMap $= "")
-         %previewImage = "core/art/warnmat";
+         %previewImage = "core/rendering/images/warnmat";
       else
          %previewImage = %materialDef.diffuseMap;
    }
    else if( %materialDef.toneMap[0] $= "" && %materialDef.diffuseMap[0] $= "" && !isObject(%materialDef.cubemap) )
    {
       %matName = %materialDef.name;
-      %previewImage = "core/art/warnmat";
+      %previewImage = "core/rendering/images/warnmat";
    }
    else
    {

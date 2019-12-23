@@ -112,7 +112,7 @@
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
-         command = "SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, \"assetImportUpdatePath\");\nSelectAssetPath.selectWindow();";
+         command = "SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, \"assetImportUpdatePath\");\nSelectAssetPathWindow.selectWindow();";
          tooltipProfile = "GuiToolTipProfile";
          tooltip = "New Module";
          hovertime = "1000";
@@ -463,7 +463,7 @@
             };
          };
       };
-      new GuiButtonCtrl() {
+      new GuiButtonCtrl(DoAssetImportButton) {
          text = "Done";
          groupNum = "-1";
          buttonType = "PushButton";

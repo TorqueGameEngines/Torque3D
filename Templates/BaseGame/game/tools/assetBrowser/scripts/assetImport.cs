@@ -194,6 +194,15 @@ function AssetBrowser::onEndDropFiles( %this )
       ImportAssetWindow.visible = true;
       ImportAssetWindow.selectWindow();
    }
+   
+   if(%hasIssues && getAssetImportConfigValue("General/PreventImportWithErrors", "0") == 1)
+   {
+      DoAssetImportButton.enabled = false;  
+   }
+   else
+   {
+      DoAssetImportButton.enabled = true;  
+   }
 
    // Update object library
    GuiFormManager::SendContentMessage($LBCreateSiderBar, %this, "refreshAll 1");
@@ -506,11 +515,7 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
             
          //%assetConfigObj.assetName = %assetItem.assetName;
          
-         if(%assetItem.assetType $= "Model")
-         {
-            AssetBrowser.prepareImportShapeAsset(%assetItem);
-         }
-         else if(%assetItem.assetType $= "Animation")
+         if(%assetItem.assetType $= "Animation")
          {
             //if we don't have our own file, that means we're gunna be using our parent shape's file so reference that
             if(!isFile(%assetItem.filePath))
@@ -518,13 +523,11 @@ function ImportAssetWindow::processNewImportAssets(%this, %id)
                %assetItem.filePath = %assetItem.parentAssetItem.filePath;
             }
          }
-         else if(%assetItem.assetType $= "Material")
+         
+         if(AssetBrowser.isMethod("prepareImport" @ %assetItem.assetType))
          {
-            AssetBrowser.prepareImportMaterialAsset(%assetItem);
-         } 
-         else if(%assetItem.assetType $= "Image")
-         {
-            AssetBrowser.prepareImportImageAsset(%assetItem);
+            %command = AssetBrowser @ ".prepareImport" @ %assetItem.assetType @ "(" @ %assetItem @ ");";
+            eval(%command);
          }
          
          %assetItem.processed = true;

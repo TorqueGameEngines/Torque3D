@@ -129,6 +129,10 @@ function initializeAssetBrowser()
       new GuiTreeViewCtrl(ImportAssetTree);
    
    AssetBrowser.buildPopupMenus();
+   
+   //Force everything to initialize if other things need to reference it's behavior before we're displayed(usually other tools)
+   AssetBrowser.showDialog();
+   AssetBrowser.hideDialog();
 }
 
 function AssetBrowserPlugin::onWorldEditorStartup( %this )

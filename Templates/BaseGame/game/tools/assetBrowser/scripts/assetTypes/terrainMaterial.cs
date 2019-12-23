@@ -23,10 +23,12 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
-
-	AssetBrowser.loadFilters();
 	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetDatabase.acquireAsset("\"" @ %moduleName @ ":" @ %assetName @ "\"");
+
+	AssetBrowser.refresh();
+	
+	//AssetBrowserFilterTree.onSelect(%smItem);
 	
 	%file = new FileObject();
 	%templateFile = new FileObject();
@@ -95,7 +97,7 @@ function AssetBrowser::buildTerrainMaterialAssetPreview(%this, %assetDef, %previ
    %previewData.assetPath = "";
    %previewData.doubleClickCommand = "";
    
-   %previewData.previewImage = "tools/assetBrowser/art/gameObjectIcon";
+   %previewData.previewImage = "tools/assetBrowser/art/terrainMaterialIcon";
    
    %previewData.assetFriendlyName = %assetDef.gameObjectName;
    %previewData.assetDesc = %assetDef.description;

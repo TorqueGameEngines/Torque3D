@@ -40,7 +40,7 @@
       canSaveDynamicFields = "0";
    };
    new GuiBitmapCtrl() {
-      bitmap = "core/art/gui/images/separator-h.png";
+      bitmap = "core/gui/images/separator-h.png";
       wrap = "0";
       position = "90 3";
       extent = "2 26";

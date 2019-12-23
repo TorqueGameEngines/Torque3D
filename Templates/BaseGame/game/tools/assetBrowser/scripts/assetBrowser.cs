@@ -292,7 +292,6 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
       %assetDesc = AssetDatabase.acquireAsset(%asset);
       %assetName = AssetDatabase.getAssetName(%asset);
       %assetType = AssetDatabase.getAssetType(%asset);
-      
    }
    else
    {
@@ -344,6 +343,10 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
    %assetName = %this.previewData.assetName;
    %previewImage = %this.previewData.previewImage;
    %doubleClickCommand = %this.previewData.doubleClickCommand;
+   
+   %previewButton-->button.assetName = %assetName;
+   %previewButton-->button.moduleName = %moduleName;
+   %previewButton-->button.assetType = %assetType;
    
    if(%assetType $= "ShapeAsset")
    {
@@ -718,7 +721,7 @@ function AssetPreviewButton::onRightClick(%this)
       EditLevelAssetPopup.showPopup(Canvas);  
    else if(%assetType $= "Folder")
    {
-      EditFolderPopup.dirPath = %this.getParent().assetPath;
+      EditFolderPopup.dirPath = %this.getParent().moduleName @ "/" @ %this.getParent().assetName;
       EditFolderPopup.showPopup(Canvas);  
    }
    else
@@ -1246,8 +1249,11 @@ function AssetBrowser::toggleFolderCollapseButton(%this)
 function AssetPreviewButton::onMouseDragged(%this)
 {
    %payload = new GuiBitmapButtonCtrl();
-   %payload.assignFieldsFrom( %this );
-   %payload.className = "AssetPreviewControl";
+   //%payload.assignFieldsFrom( %this );
+   %payload.assetName = %this.assetName;
+   %payload.assetType = %this.assetType ;
+   %payload.moduleName = %this.moduleName;
+   %payload.class = "AssetPreviewControl";
    %payload.position = "0 0";
    %payload.dragSourceControl = %this;
    %payload.bitmap = %this.icon;
@@ -1318,7 +1324,6 @@ function AssetPreviewButton::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);
    
-   // Make sure this is a color swatch drag operation.
    if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
       return;
 
@@ -1327,22 +1332,43 @@ function AssetPreviewButton::onControlDropped( %this, %payload, %position )
 
    if( %payload.dragSourceControl == %this )
       return;
+      
+   %assetType = %payload.dragSourceControl.parentGroup.assetType;
+   %assetName = %payload.dragSourceControl.parentGroup.assetName;
+   %moduleName = %payload.dragSourceControl.parentGroup.moduleName;
+   
+   %targetAssetName = %this.assetName;
+   %targetAssetType = %this.assetType;
+   %targetModuleName = %this.moduleName;
 
-   // If a swatch button control is dropped onto this control,
-   // copy it's color.
-
-   if( %payload.isMemberOfClass( "AssetPreviewButton" ) )
+   if( %payload.dragSourceControl.class $= "AssetPreviewButton" && %targetAssetType $= "Folder")
    {
-      // If the swatch button is part of a color-type inspector field,
-      // remember the inspector field so we can later set the color
-      // through it.
-
-      if( %this.parentGroup.isMemberOfClass( "GuiInspectorTypeColorI" ) )
-         %this.parentGroup.apply( ColorFloatToInt( %payload.color ) );
-      else if( %this.parentGroup.isMemberOfClass( "GuiInspectorTypeColorF" ) )
-         %this.parentGroup.apply( %payload.color );
+      %destination = %targetModuleName @ "/" @ %targetAssetName;
+      
+      if(%assetType $= "Folder")
+      {
+         %originFolder = %moduleName @ "/" @ %assetName;
+         %destination = %destination @ "/" @ %assetName;
+         
+         //Do any cleanup required given the type
+         if(AssetBrowser.isMethod("moveFolder"))
+            eval(AssetBrowser @ ".moveFolder(\""@%originFolder@"\",\""@%destination@"\");");
+      }
       else
-         %this.setColor( %payload.color );
+      {
+         %assetId = %moduleName @ ":" @ %assetName;
+         %assetDef = AssetDatabase.acquireAsset(%assetId);
+         %assetType = AssetDatabase.getAssetType(%assetId);
+         
+         //Do any cleanup required given the type
+         if(AssetBrowser.isMethod("move"@%assetType))
+         {
+            %command = AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %destination @ "\");";
+            eval(AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %destination @ "\");");
+         }
+      }
+      
+      AssetBrowser.refresh();
    }
 }
 
@@ -1477,8 +1503,31 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
       if(%path !$= AssetBrowser.dirHandler.CurrentAddress)
       {
          //we're trying to move the asset to a different module!
-         MessageBoxYesNo( "Move Asset", "Do you wish to move asset " @ %assetName @ " to " @ %path @ "?", 
-               "AssetBrowser.moveAsset(\""@ %moduleName @ ":" @ %assetName @"\", \""@%path@"\");", "");  
+         //MessageBoxYesNo( "Move Asset", "Do you wish to move asset " @ %assetName @ " to " @ %path @ "?", 
+         //      "AssetBrowser.moveAsset(\""@ %moduleName @ ":" @ %assetName @"\", \""@%path@"\");", ""); 
+         
+         if(%assetType $= "Folder")
+         {
+            %originFolder = %moduleName @ "/" @ %assetName;
+            %path = %path @ "/" @ %assetName;
+            
+            //Do any cleanup required given the type
+            if(AssetBrowser.isMethod("moveFolder"))
+               eval(AssetBrowser @ ".moveFolder(\""@%originFolder@"\",\""@%path@"\");");
+         }
+         else
+         {
+            %assetId = %moduleName @ ":" @ %assetName;
+            %assetDef = AssetDatabase.acquireAsset(%assetId);
+            %assetType = AssetDatabase.getAssetType(%assetId);
+            
+            //Do any cleanup required given the type
+            if(AssetBrowser.isMethod("move"@%assetType))
+            {
+               %command = AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");";
+               eval(AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");");
+            }
+         }
       }
    }
 }

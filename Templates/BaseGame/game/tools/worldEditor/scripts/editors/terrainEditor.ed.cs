@@ -389,7 +389,9 @@ function TerrainEditorPlugin::setEditorFunction(%this)
    %terrainExists = parseMissionGroup( "TerrainBlock" );
 
    if( %terrainExists == false )
-      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain?", "Canvas.pushDialog(CreateNewTerrainGui);");
+      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain? No to Select Existing Terrain Block Asset", 
+         "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);",
+         "AssetBrowser.showDialog(\"TerrainAsset\", createTerrainBlock, \"\", \"\", \"\");");
 
    return %terrainExists;
 }
@@ -399,7 +401,9 @@ function TerrainPainterPlugin::setEditorFunction(%this, %overrideGroup)
    %terrainExists = parseMissionGroup( "TerrainBlock" );
 
    if( %terrainExists == false )
-      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain?", "Canvas.pushDialog(CreateNewTerrainGui);");
+      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain? No to Select Existing Terrain Block Asset", 
+         "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);",
+         "AssetBrowser.showDialog(\"TerrainAsset\", createTerrainBlock, \"\", \"\", \"\");");
 
    return %terrainExists;
 }

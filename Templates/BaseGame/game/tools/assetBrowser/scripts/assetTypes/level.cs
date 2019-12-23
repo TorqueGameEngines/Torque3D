@@ -1,3 +1,12 @@
+function AssetBrowser::setupCreateNewLevelAsset(%this)
+{
+   NewAssetPropertiesInspector.startGroup("Level");
+   NewAssetPropertiesInspector.addField("LevelName", "Level Name", "String",  "Human-readable name of new level", "", "", %this.newAssetSettings);
+   NewAssetPropertiesInspector.addField("levelPreviewImage", "Level Preview Image", "Image",  "Preview Image for the level", "", "", %this.newAssetSettings);
+
+   NewAssetPropertiesInspector.endGroup();
+}
+
 function AssetBrowser::createLevelAsset(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
@@ -36,9 +45,9 @@ function AssetBrowser::createLevelAsset(%this)
    PostFXManager::savePresetHandler( %assetPath @ %asset.PostFXPresetFile );
 
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
-	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	%addSuccess = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
+	AssetBrowser.refresh();
 	
 	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
 	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "Levels");

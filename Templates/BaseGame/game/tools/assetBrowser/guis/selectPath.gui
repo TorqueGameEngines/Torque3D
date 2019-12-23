@@ -14,7 +14,7 @@
    canSave = "1";
    canSaveDynamicFields = "1";
 
-   new GuiWindowCtrl() {
+   new GuiWindowCtrl(SelectAssetPathWindow) {
       text = "Select Path";
       resizeWidth = "1";
       resizeHeight = "1";

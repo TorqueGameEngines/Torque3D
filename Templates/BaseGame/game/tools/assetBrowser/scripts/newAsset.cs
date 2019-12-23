@@ -26,8 +26,9 @@ function CreateAssetButton::onClick(%this)
 
 function AssetBrowser_newAsset::onWake(%this)
 {
-   NewAssetModuleList.refresh();
-   //NewComponentParentClass.setText("Component");
+   NewAssetTargetAddress.text = AssetBrowser.dirHandler.currentAddress;
+   NewAssetTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
+
 }
 
 function AssetBrowser_newAssetWindow::onClose(%this)
@@ -75,11 +76,11 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
 {
    Canvas.pushDialog(AssetBrowser_newAsset);
    
-   AssetBrowser_newAssetWindow.text = "New" SPC %assetType SPC "Asset";
+   %shortAssetTypeName = strreplace(%assetType, "Asset", "");
+   
+   AssetBrowser_newAssetWindow.text = "New" SPC %shortAssetTypeName SPC "Asset";
    
    NewAssetPropertiesInspector.clearFields();
-   
-   NewAssetModuleList.setText(%moduleName);
    
    AssetBrowser_newAsset.callbackFunc = %callback;
    
@@ -92,39 +93,28 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
    %this.newAssetSettings.assetType = %assetType;
    %this.newAssetSettings.moduleName = %moduleName;
    
-   %shortAssetTypeName = strreplace(%assetType, "Asset", "");
-   
    NewAssetPropertiesInspector.startGroup("General");
    NewAssetPropertiesInspector.addField("assetName", "New Asset Name", "String",  "Name of the new asset", "New" @ %shortAssetTypeName, "", %this.newAssetSettings);
    //NewAssetPropertiesInspector.addField("AssetType", "New Asset Type", "List",  "Type of the new asset", %assetType, "Component,Image,Material,Shape,Sound,State Machine", %newAssetSettings);
    
    //NewAssetPropertiesInspector.addField("friendlyName", "Friendly Name", "String",  "Human-readable name of new asset", "", "", %this.newAssetSettings);
       
-   NewAssetPropertiesInspector.addField("description", "Description", "Command",  "Description of the new asset", "", "", %this.newAssetSettings);   
+   NewAssetPropertiesInspector.addCallbackField("description", "Description", "Command",  "Description of the new asset", "", "", "updateNewAssetField", %this.newAssetSettings);   
    NewAssetPropertiesInspector.endGroup();
    
-   if(%assetType $= "ComponentAsset")
+   if(%this.isMethod("setupCreateNew"@%assetType))
+   {
+      %command = %this @ ".setupCreateNew"@%assetType @"();";
+      eval(%command);
+   }
+   /*if(%assetType $= "ComponentAsset")
    {
       NewAssetPropertiesInspector.startGroup("Components");
       NewAssetPropertiesInspector.addField("parentClass", "New Asset Parent Class", "String",  "Name of the new asset's parent class", "Component", "", %this.newAssetSettings);
       NewAssetPropertiesInspector.addField("componentGroup", "Component Group", "String",  "Name of the group of components this component asset belongs to", "", "", %this.newAssetSettings);
       //NewAssetPropertiesInspector.addField("componentName", "Component Name", "String",  "Name of the new component", "", "", %this.newAssetSettings);
       NewAssetPropertiesInspector.endGroup();
-   }
-   else if(%assetType $= "LevelAsset")
-   {
-      NewAssetPropertiesInspector.startGroup("Level");
-      NewAssetPropertiesInspector.addField("LevelName", "Level Name", "String",  "Human-readable name of new level", "", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.addField("levelPreviewImage", "Level Preview Image", "Image",  "Preview Image for the level", "", "", %this.newAssetSettings);
-      
-      NewAssetPropertiesInspector.endGroup();
-   }
-   else if(%assetType $= "ScriptAsset")
-   {
-      NewAssetPropertiesInspector.startGroup("Script");
-      NewAssetPropertiesInspector.addField("isServerScript", "Is Server Script", "bool",  "Is this script used on the server?", "1", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.endGroup();
-   }
+   }*/
    //Special case, we only do this via internal means like baking
    /*else if(%assetType $= "ShapeAsset")
    {
@@ -147,6 +137,19 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
    }*/
 }
 
+function NewAssetPropertiesInspector::updateNewAssetField(%this)
+{
+   %this.schedule(32, "update");
+}
+
+function newAssetUpdatePath(%newPath)
+{
+   AssetBrowser.navigateTo(%newPath);
+   
+   NewAssetTargetAddress.text = %newPath;
+   NewAssetTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
+}
+
 //We do a quick validation that mandatory fields are filled in before passing along to the asset-type specific function
 function CreateNewAsset()
 {
@@ -159,7 +162,7 @@ function CreateNewAsset()
 	}
 	
 	//get the selected module data
-   %moduleName = NewAssetModuleList.getText();
+   %moduleName = NewAssetTargetModule.getText();
    
    if(%moduleName $= "")
 	{

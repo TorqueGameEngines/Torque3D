@@ -332,7 +332,8 @@ function EditorSaveMissionAs( %levelAsset )
       %missionName = %missionName @ ".mis";
       
    //Make sure we have a selected module so we can create our module
-   Canvas.pushDialog(AssetBrowser_selectModule);
+   //if(AssetBrowser.selectedModule $= "")
+   //   Canvas.pushDialog(
 }
 
 function EditorOpenMission(%levelAsset)

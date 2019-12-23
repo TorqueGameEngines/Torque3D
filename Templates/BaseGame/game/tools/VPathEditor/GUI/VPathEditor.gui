@@ -162,7 +162,7 @@ new VPathEditor(EVPathEditor) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "core/art/gui/images/new";
+         bitmap = "core/gui/images/new";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

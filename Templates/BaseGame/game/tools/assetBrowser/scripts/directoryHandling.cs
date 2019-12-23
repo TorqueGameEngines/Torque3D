@@ -205,3 +205,81 @@ function directoryHandler::expandTreeToAddress(%this, %address)
       %this.treeCtrl.expandItem(%curItem);
    }
 }
+
+function directoryHandler::createFolder(%this, %folderPath)
+{
+   //make a dummy file
+   %file = new FileObject();
+   %file.openForWrite(%folderPath @ "/test");
+   %file.close();
+   
+   fileDelete(%folderPath @ "/test");
+}
+
+function directoryHandler::deleteFolder(%this, %folderPath)
+{
+   %fullPath = makeFullPath(%folderPath);
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %fullPath @ "/*.*", true);
+
+   while( %file !$= "" )
+   {      
+      %success = fileDelete( %file );
+      
+      if(!%success)
+      {
+         error("doDeleteFolder - unable to delete file " @ %file);
+         return;         
+      }
+      
+      %file = findNextFileMultiExpr( %fullPath @ "/*.*" );
+   }
+   
+   //next, walk through and delete any subfolders that may be remaining
+   while(IsDirectory(%fullPath) && fileDelete(%fullPath) == 0)
+   {
+      //We couldn't delete the folder, so get a directory list and recurse through it, deleteing them as we go
+      %paths = getDirectoryList(%fullPath);
+      for(%i=0; %i < getFieldCount(%paths); %i++)
+      {
+         %childPath = getField(%paths, %i);
+         %this.deleteFolder(%fullPath @ "/" @ %childPath);
+      }
+   }  
+}
+
+function directoryHandler::copyFolder(%this, %fromFolder, %toFolder)
+{
+   if(!isDirectory(%toFolder))
+      %this.createFolder(%toFolder);
+      
+   %file = findFirstFileMultiExpr( %fromFolder @ "/*.*", false);
+
+   while( %file !$= "" )
+   {    
+      %copiedFile = strreplace(%file, %fromFolder, %toFolder);
+      
+      %copiedPath = filePath(%copiedFile);
+      
+      if(!isDirectory(%copiedPath))
+         createPath(%copiedPath);
+   
+      %success = pathCopy(%file, %copiedFile, false);
+      if(!%success)
+         error("copyProjectFolder() - failed to copy file: " @ %file);
+      
+      %file = findNextFileMultiExpr( %fullPath @ "/*.*" );
+   }
+   
+   //do sub directories
+   %paths = getDirectoryList(%fromFolder);
+   for(%i=0; %i < getFieldCount(%paths); %i++)
+   {
+      %childPath = getField(%paths, %i);
+         
+      %this.copyFolder(%fromFolder @ %childPath @ "/", %toFolder @ %childPath @ "/");
+   }
+      
+   return true;
+}

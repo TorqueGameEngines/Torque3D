@@ -1000,7 +1000,7 @@ bool TerrainBlock::onAdd()
          String terrainDirectory(Con::getVariable("$pref::Directories::Terrain"));
          if (terrainDirectory.isEmpty())
          {
-            terrainDirectory = "art/terrains/";
+            terrainDirectory = "data/terrains/";
          }
          mTerrFileName.replace("tools/levels/", terrainDirectory);
          mTerrFileName.replace("levels/", terrainDirectory);

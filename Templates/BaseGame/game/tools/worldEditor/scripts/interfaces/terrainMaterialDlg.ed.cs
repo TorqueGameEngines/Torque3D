@@ -347,7 +347,7 @@ function TerrainMaterialDlg::newMat( %this )
 
    %scene = getRootScene();
    %path = filePath(%scene.getFilename());
-   %module = AssetBrowser.getModuleFromAddress(%path);
+   %module = AssetBrowser.dirHandler.getModuleFromAddress(%path);
    AssetBrowser.selectedModule = %module.moduleID;
    
    AssetBrowser.dirHandler.currentAddress = "data/" @ %module.moduleID;
@@ -575,7 +575,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    
    %fileName = %mat.getFileName();
    if( %fileName $= "" )
-      %fileName = "art/terrains/materials.cs";
+      %fileName = "data/terrains/materials.cs";
       
    ETerrainMaterialPersistMan.setDirty( %mat, %fileName ); 
 }
@@ -663,7 +663,7 @@ function TerrainMaterialDlg::restoreMaterials( %this )
 function TerrainMaterialDlg::_selectTextureFileDialog( %this, %defaultFileName )
 {
    if( $Pref::TerrainEditor::LastPath $= "" )
-      $Pref::TerrainEditor::LastPath = "art/terrains";
+      $Pref::TerrainEditor::LastPath = "data/";
 
    %dlg = new OpenFileDialog()
    {

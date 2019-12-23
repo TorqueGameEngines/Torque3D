@@ -18,6 +18,7 @@ function Core_Rendering::onCreate(%this)
    exec("./scripts/gfxData/shaders.cs");
    exec("./scripts/gfxData/terrainBlock.cs");
    exec("./scripts/gfxData/water.cs");
+   exec("./scripts/gfxData/warningTerrainMat.cs");
 }
 
 function Core_Rendering::onDestroy(%this)

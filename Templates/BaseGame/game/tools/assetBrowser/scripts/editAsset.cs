@@ -83,8 +83,11 @@ function AssetBrowser::renameAsset(%this)
    if(%curFirstResponder != 0)
       %curFirstResponder.clearFirstResponder();
    
-   AssetBrowser.selectedAssetPreview-->AssetNameLabel.setActive(true);
-   AssetBrowser.selectedAssetPreview-->AssetNameLabel.setFirstResponder();
+   if(EditFolderPopup.visible == false)
+   {
+      AssetBrowser.selectedAssetPreview-->AssetNameLabel.setActive(true);
+      AssetBrowser.selectedAssetPreview-->AssetNameLabel.setFirstResponder();
+   }
 }
 
 function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
@@ -92,32 +95,17 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    //if the name is different to the asset's original name, rename it!
    if(%originalAssetName !$= %newName)
    {
+      %moduleName = AssetBrowser.selectedModule;
+      
       if(EditAssetPopup.assetType !$= "Folder")
       {
-         %moduleName = AssetBrowser.selectedModule;
-         
-         //do a rename!
-         %success = AssetDatabase.renameDeclaredAsset(%moduleName @ ":" @ %originalAssetName, %moduleName @ ":" @ %newName);
-         
-         if(%success)
-            echo("AssetBrowser - renaming of asset " @ %moduleName @ ":" @ %originalAssetName @ " to " @ %moduleName @ ":" @ %newName @ " was a success.");
-         else 
-            echo("AssetBrowser - renaming of asset " @ %moduleName @ ":" @ %originalAssetName @ " to " @ %moduleName @ ":" @ %newName @ " was a failure.");
-         
-         if(%success)
+         if(%this.isMethod("rename" @ EditAssetPopup.assetType))
          {
-            %newAssetId = %moduleName @ ":" @ %newName;
-            %assetPath = AssetDatabase.getAssetFilePath(%newAssetId);
-            
-            //Rename any associated files as well
-            %assetDef = AssetDatabase.acquireAsset(%newAssetId);
-            %assetType = %assetDef.getClassName();
-            
-            //rename the file to match
-            %path = filePath(%assetPath);
+            %oldAssetId = %moduleName @ ":" @ %originalAssetName;
+            %assetDef = AssetDatabase.acquireAsset(%oldAssetId);
             
             //Do the rename command
-            %buildCommand = %this @ ".rename" @ %assetType @ "(" @ %assetDef @ "," @ %newAssetId @ ");";
+            %buildCommand = %this @ ".rename" @ EditAssetPopup.assetType @ "(" @ %assetDef @ "," @ %newName @ ");";
             eval(%buildCommand);
          }
       }
@@ -159,7 +147,7 @@ function AssetBrowser::moveAsset(%this, %assetId, %destination)
    {
       //Do any cleanup required given the type
       if(%this.isMethod("moveFolder"))
-         eval(%this @ ".moveFolder("@EditAssetPopup.assetId@",\""@%destination@"\");");
+         eval(%this @ ".moveFolder("@%assetId@",\""@%destination@"\");");
    }
    else
    {

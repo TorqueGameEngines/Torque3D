@@ -25,7 +25,6 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_Lighting" );
    ModuleDatabase.LoadExplicit( "Core_SFX" );
    ModuleDatabase.LoadExplicit( "Core_PostFX" );
-   ModuleDatabase.LoadExplicit( "Core_Components" );
    ModuleDatabase.LoadExplicit( "Core_GameObjects" );
    
    %prefPath = getPrefpath();

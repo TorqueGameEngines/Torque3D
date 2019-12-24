@@ -85,27 +85,21 @@ LightShadowMap::LightShadowMap( LightInfo *light )
    :  mWorldToLightProj( true ),
       mTexSize( 0 ),
       mLight( light ),
-      mLastUpdate( 0 ),
       mLastShader( NULL ),
       mIsViewDependent( false ),
       mLastCull( 0 ),
       mLastScreenSize( 0.0f ),
-      mLastPriority( 0.0f ),
-      mIsDynamic( false )
+      mLastPriority( 0.0f )
 {
    GFXTextureManager::addEventDelegate( this, &LightShadowMap::_onTextureEvent );
 
    mTarget = GFX->allocRenderToTextureTarget();
    smShadowMaps.push_back( this );
-   mStaticRefreshTimer = PlatformTimer::create();
-   mDynamicRefreshTimer = PlatformTimer::create();
 }
 
 LightShadowMap::~LightShadowMap()
 {
    mTarget = NULL;
-   SAFE_DELETE(mStaticRefreshTimer);
-   SAFE_DELETE(mDynamicRefreshTimer);
 
    releaseTextures();
 
@@ -246,7 +240,6 @@ void LightShadowMap::releaseTextures()
 {
    mShadowMapTex = NULL;
    mDebugTarget.setTexture( NULL );
-   mLastUpdate = 0;
    smUsedShadowMaps.remove( this );
 }
 
@@ -268,7 +261,7 @@ GFXTextureObject* LightShadowMap::_getDepthTarget( U32 width, U32 height )
 
 bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* lsc )
 {
-   if ( currTexFlag == Material::DynamicLight && !isDynamic() )
+   if ( currTexFlag == Material::DynamicLight )
    {
       S32 reg = lsc->mShadowMapSC->getSamplerRegister();
 
@@ -276,16 +269,7 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
          GFX->setTexture( reg, mShadowMapTex);
 
       return true;
-   } else if ( currTexFlag == Material::DynamicShadowMap && isDynamic() )
-   {
-      S32 reg = lsc->mDynamicShadowMapSC->getSamplerRegister();
-
-      if ( reg != -1 )
-         GFX->setTexture( reg, mShadowMapTex);
-
-      return true;
-   }
-   else if ( currTexFlag == Material::DynamicLightMask )
+   } else if ( currTexFlag == Material::DynamicLightMask )
    {
       S32 reg = lsc->mCookieMapSC->getSamplerRegister();
    	if ( reg != -1 )
@@ -304,35 +288,16 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
    return false;
 }
 
-void LightShadowMap::render(RenderPassManager* renderPass,
-   const SceneRenderState *diffuseState,
-   bool _dynamic, bool _forceUpdate)
+void LightShadowMap::render(RenderPassManager* renderPass, const SceneRenderState *diffuseState)
 {
-   if (!_forceUpdate)
-   {
-      //  control how often shadow maps are refreshed
-      if (!_dynamic && (mStaticRefreshTimer->getElapsedMs() < getLightInfo()->getStaticRefreshFreq()))
-         return;
-   }
-    mStaticRefreshTimer->reset();
-
-    
-    if (_dynamic && (mDynamicRefreshTimer->getElapsedMs() < getLightInfo()->getDynamicRefreshFreq()))
-        return;
-    mDynamicRefreshTimer->reset();
-
    mDebugTarget.setTexture( NULL );
    _render( renderPass, diffuseState );
    mDebugTarget.setTexture( mShadowMapTex );
 
    // Add it to the used list unless we're been updated.
-   if ( !mLastUpdate )
-   {
-      AssertFatal( !smUsedShadowMaps.contains( this ), "LightShadowMap::render - Used shadow map inserted twice!" );
+   //AssertFatal( !smUsedShadowMaps.contains( this ), "LightShadowMap::render - Used shadow map inserted twice!" );
+   if(!smUsedShadowMaps.contains(this))
       smUsedShadowMaps.push_back( this );
-   }
-
-   mLastUpdate = Sim::getCurrentTime();
 }
 
 BaseMatInstance* LightShadowMap::getShadowMaterial( BaseMatInstance *inMat ) const
@@ -395,8 +360,6 @@ void LightShadowMap::updatePriority( const SceneRenderState *state, U32 currTime
       return;
    }
 
-   U32 timeSinceLastUpdate = currTimeMs - mLastUpdate;
-
    const Point3F &camPt = state->getCameraPosition();
    F32 range = mLight->getRange().x;
    F32 dist;
@@ -422,7 +385,6 @@ void LightShadowMap::updatePriority( const SceneRenderState *state, U32 currTime
 
    // Update the priority.
    mLastPriority = mPow( mLastScreenSize * 50.0f, 2.0f );   
-   mLastPriority += timeSinceLastUpdate;
    mLastPriority *= mLight->getPriority();
 }
 
@@ -466,7 +428,6 @@ LightingShaderConstants::LightingShaderConstants()
       mVectorLightColorSC(NULL),
       mVectorLightBrightnessSC(NULL),
       mShadowMapSC(NULL), 
-      mDynamicShadowMapSC(NULL), 
       mShadowMapSizeSC(NULL), 
       mCookieMapSC(NULL),
       mRandomDirsConst(NULL),
@@ -484,15 +445,7 @@ LightingShaderConstants::LightingShaderConstants()
       mScaleYSC(NULL),
       mOffsetXSC(NULL), 
       mOffsetYSC(NULL), 
-      mFarPlaneScalePSSM(NULL),
-
-      mDynamicWorldToLightProjSC(NULL),
-      mDynamicViewToLightProjSC(NULL),
-      mDynamicScaleXSC(NULL),
-      mDynamicScaleYSC(NULL),
-      mDynamicOffsetXSC(NULL),
-      mDynamicOffsetYSC(NULL),
-      mDynamicFarPlaneScalePSSM(NULL)
+      mFarPlaneScalePSSM(NULL)
 {
 }
 
@@ -534,7 +487,6 @@ void LightingShaderConstants::init(GFXShader* shader)
    mVectorLightBrightnessSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightBrightness);
 
    mShadowMapSC = shader->getShaderConstHandle("$shadowMap");
-   mDynamicShadowMapSC = shader->getShaderConstHandle("$dynamicShadowMap");
    mShadowMapSizeSC = shader->getShaderConstHandle("$shadowMapSize");
 
    mCookieMapSC = shader->getShaderConstHandle("$cookieMap");
@@ -555,14 +507,6 @@ void LightingShaderConstants::init(GFXShader* shader)
    mOffsetXSC = shader->getShaderConstHandle("$offsetX");
    mOffsetYSC = shader->getShaderConstHandle("$offsetY");
    mFarPlaneScalePSSM = shader->getShaderConstHandle("$farPlaneScalePSSM");
-
-   mDynamicWorldToLightProjSC = shader->getShaderConstHandle("$dynamicWorldToLightProj");
-   mDynamicViewToLightProjSC = shader->getShaderConstHandle("$dynamicViewToLightProj");
-   mDynamicScaleXSC = shader->getShaderConstHandle("$dynamicScaleX");
-   mDynamicScaleYSC = shader->getShaderConstHandle("$dynamicScaleY");
-   mDynamicOffsetXSC = shader->getShaderConstHandle("$dynamicOffsetX");
-   mDynamicOffsetYSC = shader->getShaderConstHandle("$dynamicOffsetY");
-   mDynamicFarPlaneScalePSSM = shader->getShaderConstHandle("$dynamicFarPlaneScalePSSM");
 
    mInit = true;
 }
@@ -585,9 +529,7 @@ LightInfoExType ShadowMapParams::Type( "" );
 
 ShadowMapParams::ShadowMapParams( LightInfo *light ) 
    :  mShadowMap( NULL ),
-      mLight( light ),
-      mDynamicShadowMap ( NULL ),
-      isDynamic ( true )
+      mLight( light )
 {
    attenuationRatio.set( 0.0f, 1.0f, 1.0f );
    shadowType = ShadowType_Spot;
@@ -608,7 +550,6 @@ ShadowMapParams::~ShadowMapParams()
 {
    SAFE_DELETE( mQuery );
    SAFE_DELETE( mShadowMap );
-   SAFE_DELETE( mDynamicShadowMap );
 }
 
 void ShadowMapParams::_validate()
@@ -665,12 +606,9 @@ void ShadowMapParams::_validate()
    texSize = mClamp( texSize, 32, maxTexSize );
 }
 
-LightShadowMap* ShadowMapParams::getOrCreateShadowMap(bool _isDynamic)
+LightShadowMap* ShadowMapParams::getOrCreateShadowMap()
 {
-	if (_isDynamic && mDynamicShadowMap)
-		return mDynamicShadowMap;
-
-	if (!_isDynamic && mShadowMap)
+	if (mShadowMap)
       return mShadowMap;
 
    if ( !mLight->getCastShadows() )
@@ -702,18 +640,8 @@ LightShadowMap* ShadowMapParams::getOrCreateShadowMap(bool _isDynamic)
          break;
    }
 
-   if ( _isDynamic )
-   {
-      newShadowMap->setDynamic( true );
-      mDynamicShadowMap = newShadowMap;
-      return mDynamicShadowMap;
-   }
-   else
-   {
-      newShadowMap->setDynamic(false);
-      mShadowMap = newShadowMap;
-      return mShadowMap;
-   }
+   mShadowMap = newShadowMap;
+   return mShadowMap;
 }
 
 GFXTextureObject* ShadowMapParams::getCookieTex()
@@ -788,7 +716,6 @@ void ShadowMapParams::unpackUpdate( BitStream *stream )
       // map so it can be reallocated on the next render.
       shadowType = newType;
       SAFE_DELETE( mShadowMap );
-      SAFE_DELETE( mDynamicShadowMap );
    }
 
    mathRead( *stream, &attenuationRatio );

@@ -1,9 +1,0 @@
-<ComponentAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="ControlObjectComponentAsset"
-    componentName="ControlObjectComponent"
-    componentClass="ControlObjectComponent"
-    friendlyName="Control Object"
-    componentType="Game"
-    description="Allows the component owner to be controlled by a client." />

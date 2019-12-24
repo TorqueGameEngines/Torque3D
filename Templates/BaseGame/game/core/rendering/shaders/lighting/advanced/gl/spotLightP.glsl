@@ -42,7 +42,6 @@ uniform sampler2D cookieMap;
 
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
-uniform sampler2D dynamicShadowMap;
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
 
@@ -60,7 +59,6 @@ uniform vec4 lightMapParams;
 
 uniform vec4 vsFarPlane;
 uniform mat4 worldToLightProj;
-uniform mat4 dynamicWorldToLightProj;
 uniform vec4 lightParams;
 uniform float shadowSoftness;
 uniform vec3 eyePosWorld;
@@ -101,21 +99,15 @@ void main()
       #ifdef NO_SHADOW   
          float shadowed = 1.0;      	
       #else
-   // Get the shadow texture coordinate
+         // Get the shadow texture coordinate
          vec4 pxlPosLightProj = tMul( worldToLightProj, vec4( surface.P, 1 ) );
-   vec2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
-   shadowCoord.y = 1.0f - shadowCoord.y;
-
-         vec4 dynPxlPosLightProj = tMul( dynamicWorldToLightProj, vec4( surface.P, 1 ) );
-         vec2 dynShadowCoord = ( ( dynPxlPosLightProj.xy / dynPxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
-         dynShadowCoord.y = 1.0f - dynShadowCoord.y;
+         vec2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
+         shadowCoord.y = 1.0f - shadowCoord.y;
 
          //distance to light in shadow map space
-      float distToLight = pxlPosLightProj.z / lightRange;
+         float distToLight = pxlPosLightProj.z / lightRange;
          float dynDistToLight = dynPxlPosLightProj.z / lightRange;
-         float static_shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-         float dynamic_shadowed = softShadow_filter(dynamicShadowMap, ssPos.xy/ssPos.w, dynShadowCoord, shadowSoftness, dynDistToLight, surfaceToLight.NdotL, lightParams.y);
-      float shadowed = min(static_shadowed, dynamic_shadowed);
+         float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       #endif      
    
       vec3 lightCol = lightColor.rgb;

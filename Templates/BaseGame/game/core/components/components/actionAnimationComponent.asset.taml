@@ -1,8 +1,0 @@
-<ComponentAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="ActionAnimationComponentAsset"
-    componentClass="ActionAnimationComponent"
-    friendlyName="Action Animation"
-    componentType="animation"
-    description="Allows a mesh component to be animated." />

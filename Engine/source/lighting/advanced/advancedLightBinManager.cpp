@@ -223,7 +223,6 @@ void AdvancedLightBinManager::addLight( LightInfo *light )
    // Find a shadow map for this light, if it has one
    ShadowMapParams *lsp = light->getExtended<ShadowMapParams>();
    LightShadowMap *lsm = lsp->getShadowMap();
-   LightShadowMap *dynamicShadowMap = lsp->getShadowMap(true);
 
    // Get the right shadow type.
    ShadowType shadowType = ShadowType_None;
@@ -236,7 +235,6 @@ void AdvancedLightBinManager::addLight( LightInfo *light )
    LightBinEntry lEntry;
    lEntry.lightInfo = light;
    lEntry.shadowMap = lsm;
-   lEntry.dynamicShadowMap = dynamicShadowMap;
    lEntry.lightMaterial = _getLightMaterial( lightType, shadowType, lsp->hasCookieTex() );
 
    if( lightType == LightInfo::Spot )
@@ -376,7 +374,6 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
       setupSGData( sgData, state, curLightInfo );
       curLightMat->setLightParameters( curLightInfo, state );
       mShadowManager->setLightShadowMap( curEntry.shadowMap );
-      mShadowManager->setLightDynamicShadowMap( curEntry.dynamicShadowMap );
 
       // Set geometry
       GFX->setVertexBuffer( curEntry.vertBuffer );
@@ -405,7 +402,6 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
 
    // Set NULL for active shadow map (so nothing gets confused)
    mShadowManager->setLightShadowMap(NULL);
-   mShadowManager->setLightDynamicShadowMap(NULL);
    GFX->setVertexBuffer( NULL );
    GFX->setPrimitiveBuffer( NULL );
 

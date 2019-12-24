@@ -32,8 +32,6 @@
 #include "platform/profiler.h"
 #include "console/consoleTypes.h"
 
-#include "T3D/components/coreInterfaces.h"
-#include "T3D/components/component.h"
 //----------------------------------------------------------------------------
 
 ProcessObject::ProcessObject()
@@ -273,11 +271,6 @@ void ProcessList::advanceObjects()
       pobj->plLinkBefore(&mHead);
       
       onTickObject(pobj);
-   }
-
-   for (U32 i = 0; i < UpdateInterface::all.size(); i++)
-   {
-      UpdateInterface::all[i]->processTick();
    }
 
    mTotalTicks++;

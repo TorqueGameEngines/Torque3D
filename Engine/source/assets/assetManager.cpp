@@ -58,9 +58,6 @@
 #include "assets/autoloadAssets.h"
 #endif
 
-#ifndef COMPONENTASSET_H
-#include "T3D/assets/ComponentAsset.h"
-#endif
 #ifndef GUI_ASSET_H
 #include "T3D/assets/GUIAsset.h"
 #endif
@@ -259,11 +256,7 @@ bool AssetManager::loadModuleAutoLoadAssets(ModuleDefinition* pModuleDefinition)
             //TODO: this is stupid and ugly, need to properly automagically parse the class for registration
             AssetBase* assetBase = nullptr;
 
-            if (assetDef->mAssetType == StringTable->insert("ComponentAsset"))
-            {
-               assetBase = mTaml.read<ComponentAsset>(assetDef->mAssetBaseFilePath);
-            }
-            else if (assetDef->mAssetType == StringTable->insert("GUIAsset"))
+            if (assetDef->mAssetType == StringTable->insert("GUIAsset"))
             {
                assetBase = mTaml.read<GUIAsset>(assetDef->mAssetBaseFilePath);
             }

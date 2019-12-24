@@ -1,8 +1,0 @@
-<GameObjectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="PlayerObject"
-    gameObjectName="PlayerObject"
-    scriptFile="PlayerObject.cs"
-    TAMLFile="PlayerObject.taml"
-    description="A basic Player Object example." />

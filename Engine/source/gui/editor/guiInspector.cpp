@@ -29,11 +29,6 @@
 #include "gui/containers/guiScrollCtrl.h"
 #include "gui/editor/inspector/customField.h"
 
-#include "gui/editor/inspector/entityGroup.h"
-#include "gui/editor/inspector/mountingGroup.h"
-#include "gui/editor/inspector/componentGroup.h"
-#include "T3D/components/component.h"
-
 IMPLEMENT_CONOBJECT(GuiInspector);
 
 ConsoleDocClass( GuiInspector,
@@ -590,60 +585,6 @@ void GuiInspector::refresh()
    addObject(general);
 
    mTargets.first()->onInspect(this);
-
-   //Entity inspector group
-   if (mTargets.first()->getClassRep()->isSubclassOf("Entity"))
-   {
-      //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
-      GuiInspectorGroup *gameObject = new GuiInspectorGroup("GameObject", this);
-
-      gameObject->registerObject();
-      mGroups.push_back(gameObject);
-      addObject(gameObject);
-
-      GuiInspectorEntityGroup *components = new GuiInspectorEntityGroup("Components", this);
-      if (components != NULL)
-      {
-         components->registerObject();
-         mGroups.push_back(components);
-         addObject(components);
-      }
-
-      Entity* selectedEntity = dynamic_cast<Entity*>(mTargets.first().getObject());
-
-      U32 compCount = selectedEntity->getComponentCount();
-      //Now, add the component groups
-      for (U32 c = 0; c < compCount; ++c)
-      {
-         Component* comp = selectedEntity->getComponent(c);
-         
-         String compName;
-         if (comp->getFriendlyName() != StringTable->EmptyString())
-            compName = comp->getFriendlyName();
-         else
-            compName = comp->getComponentName();
-
-         StringBuilder captionString;
-         captionString.format("%s [%i]", compName.c_str(), comp->getId());
-
-         GuiInspectorGroup *compGroup = new GuiInspectorComponentGroup(captionString.data(), this, comp);
-         if (compGroup != NULL)
-         {
-            compGroup->registerObject();
-            mGroups.push_back(compGroup);
-            addObject(compGroup);
-         }
-      }
-
-      //Mounting group override
-      GuiInspectorGroup *mounting = new GuiInspectorMountingGroup("Mounting", this);
-      if (mounting != NULL)
-      {
-         mounting->registerObject();
-         mGroups.push_back(mounting);
-         addObject(mounting);
-      }
-   }
 
    // Create the inspector groups for static fields.
 

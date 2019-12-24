@@ -26,8 +26,6 @@
 #include "gui/editor/inspector/dynamicField.h"
 #include "console/engineAPI.h"
 
-#include "T3D/components/component.h"
-
 IMPLEMENT_CONOBJECT(GuiInspectorDynamicGroup);
 
 ConsoleDocClass( GuiInspectorDynamicGroup,
@@ -124,15 +122,6 @@ bool GuiInspectorDynamicGroup::inspectGroup()
       SimFieldDictionary * fieldDictionary = target->getFieldDictionary();
       for(SimFieldDictionaryIterator ditr(fieldDictionary); *ditr; ++ditr)
       {
-         if (target->getClassRep()->isSubclassOf("Component"))
-         {
-            Component* compTarget = dynamic_cast<Component*>(target);
-
-            ComponentField* compField = compTarget->getComponentField((*ditr)->slotName);
-            if (compField)
-               continue;
-         }
-
          if( i == 0 )
          {
             flist.increment();

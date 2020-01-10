@@ -47,9 +47,6 @@ function AssetBrowser::onWake(%this)
    AssetBrowser-->filterTree.buildIconTable( ":tools/classIcons/Prefab:tools/classIcons/Prefab" @
                                              ":tools/classIcons/SimSet:tools/classIcons/SimSet");
       
-   %this.importingFilesArray = new ArrayObject();
-   %this.importAssetUnprocessedListArray = new ArrayObject();
-   %this.importAssetFinalListArray = new ArrayObject();
    %this.isReImportingAsset = false;
    
    %this.coreModulesFilter = false;

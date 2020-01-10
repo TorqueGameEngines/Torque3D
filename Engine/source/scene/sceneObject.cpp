@@ -955,7 +955,7 @@ void SceneObject::_updateZoningState() const
 
 //-----------------------------------------------------------------------------
 
-U32 SceneObject::_getCurrZone( const U32 index ) const
+U32 SceneObject::getCurrZone( const U32 index ) const
 {
    _updateZoningState();
 

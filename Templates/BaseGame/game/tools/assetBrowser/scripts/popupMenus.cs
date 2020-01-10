@@ -296,9 +296,9 @@ function AssetBrowser::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          
-         item[ 0 ] = "Import Legacy Game" TAB "" TAB "AssetBrowser.importLegacyGame();";
+         item[ 0 ] = "Import Project Loose Files" TAB "" TAB "AssetBrowser.importLegacyGame();";
          Item[ 1 ] = "-";
-         item[ 2 ] = "Import new assets" TAB "" TAB "AssetBrowser.importNewAssetFile();";
+         item[ 2 ] = "Import new assets" TAB "" TAB "Canvas.pushDialog(AssetImportCtrl);";
       };
    }
    
@@ -341,7 +341,27 @@ function AssetBrowser::buildPopupMenus(%this)
    }
 
    //
+   // Import Asset Actions
    //
+   if( !isObject( ImportAssetMaterialMaps ) )
+   {
+      %this.ImportAssetActions = new PopupMenu( ImportAssetMaterialMaps )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         
+         item[0] = "Add Color Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"Color\");";
+         item[1] = "Add Normal Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"Normal\");";
+         item[2] = "Add Composite Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"Composite\");";
+         item[3] = "Add Metalness Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"Metalness\");";
+         item[4] = "Add AO Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"AO\");";
+         item[5] = "Add Roughness Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"Roughness\");";
+         item[6] = "Add Glow Map" TAB "" TAB "ImportAssetWindow.addMaterialMap(\"Glow\");";
+         Item[7] = "-";
+         Item[8] = "Add Existing Image Asset" TAB "" TAB "ImportAssetWindow.addExistingImageAsset();";
+      };
+   }
+   
    if( !isObject( ImportAssetActions ) )
    {
       %this.ImportAssetActions = new PopupMenu( ImportAssetActions )
@@ -349,7 +369,8 @@ function AssetBrowser::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          
-         item[0] = "Add asset" TAB "" TAB "ImportAssetWindow.addNewImportingAsset();";
+         item[0] = "Add New Asset" TAB "" TAB "ImportAssetWindow.addNewImportingAsset();";
+         item[0] = "Add Reference to Existing Asset" TAB "" TAB "ImportAssetWindow.addRefExistingAsset();";
          item[1] = "Remove asset" TAB "" TAB "ImportAssetWindow.removeImportingAsset();";
       };
    }

@@ -24,7 +24,7 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
       {
          %filePath = %assetItem.filePath;
          if(%filePath !$= "")
-            %materialAsset = AssetBrowser.addImportingAsset("Material", "", "", %noSuffixName);
+            %materialAsset = AssetBrowser.addImportingAsset("MaterialAsset", "", "", %noSuffixName);
             
          %materialAsset.filePath = filePath(%assetItem.filePath) @ "/" @ %noSuffixName;
             
@@ -105,6 +105,15 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
    }
    
    %assetItem.processed = true;
+}
+
+function AssetBrowser::inspectImportingImageAsset(%this, %assetItem)
+{
+   AssetImportCtrl-->NewAssetsInspector.startGroup("Image");
+   AssetImportCtrl-->NewAssetsInspector.addField("ImageType", "Image Type", "list", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "GUI", 
+                                                      "Color,Normal,Composite,Roughness,AO,Metalness,Glow,GUI,Particle,Decal", %assetItem);
+                                                      
+   AssetImportCtrl-->NewAssetsInspector.endGroup();                                                
 }
 
 function AssetBrowser::importImageAsset(%this, %assetItem)

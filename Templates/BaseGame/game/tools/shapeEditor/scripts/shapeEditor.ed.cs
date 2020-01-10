@@ -805,8 +805,7 @@ function ShapeEdSeqNodeTabBook::onTabSelected( %this, %name, %index )
    {
       case "Seq":
          ShapeEdPropWindow-->newBtn.ToolTip = "Add new sequence";
-         //ShapeEdPropWindow-->newBtn.Command = "ShapeEdSequences.onAddSequence();"; 
-         ShapeEdPropWindow-->newBtn.Command = "AssetBrowser.showDialog(\"ShapeAnimationAsset\", \"onAddAnimationAssetShapeEditor\", \"\", \"\", \"\");"; 
+         ShapeEdPropWindow-->newBtn.Command = "ShapeEdSequences.onAddSequence();"; 
          ShapeEdPropWindow-->newBtn.setActive( true );
          ShapeEdPropWindow-->deleteBtn.ToolTip = "Delete selected sequence (cannot be undone)";
          ShapeEdPropWindow-->deleteBtn.Command = "ShapeEdSequences.onDeleteSequence();";
@@ -1651,7 +1650,8 @@ function ShapeEdSequences::onAddSequence( %this, %name )
    if ( %from $= "" )
    {
       // No sequence selected => open dialog to browse for one
-      getLoadFormatFilename( %this @ ".onAddSequenceFromBrowse", ShapeEdFromMenu.lastPath );
+      //getLoadFormatFilename( %this @ ".onAddSequenceFromBrowse", ShapeEdFromMenu.lastPath );
+      AssetBrowser.showDialog("ShapeAnimationAsset", "onAddAnimationAssetShapeEditor", "", "", "");
       return;
    }
    else

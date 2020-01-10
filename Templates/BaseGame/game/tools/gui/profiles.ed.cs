@@ -649,6 +649,8 @@ new GuiControlProfile( ToolsGuiTextPadProfile )
    fontColor = EditorSettings.value("Theme/fieldTextColor");   
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");   
    fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");   
+   
+   cursorColor = EditorSettings.value("Theme/fieldTextSELColor"); 
    border = 0;
    category = "Tools";
 };

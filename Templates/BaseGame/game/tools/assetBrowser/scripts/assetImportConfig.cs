@@ -2,15 +2,22 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
 {
    //Apply our settings to the assets
    echo("Changed our import config!");
-   AssetBrowser.importAssetUnprocessedListArray.empty();
-   AssetBrowser.importAssetUnprocessedListArray.duplicate(AssetBrowser.importAssetNewListArray);
-   AssetBrowser.importAssetFinalListArray.empty();
+   
+   if(ImportActivityLog.count() != 0)
+      ImportActivityLog.add("");
+      
+   ImportActivityLog.add("Asset Import Configs set to " @ %text);
+   ImportActivityLog.add("");
+   
+   ImportAssetWindow.importAssetUnprocessedListArray.empty();
+   ImportAssetWindow.importAssetUnprocessedListArray.duplicate(AssetBrowser.importAssetNewListArray);
+   ImportAssetWindow.importAssetFinalListArray.empty();
    
    ImportAssetWindow.activeImportConfigIndex = %id;
    ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
    
    //If we were trying to import anything, refresh it with the new config
-   if( AssetBrowser.importingFilesArray.count() != 0)
+   if( ImportAssetWindow.importingFilesArray.count() != 0)
       AssetBrowser.reloadImportingFiles();
 }
 
@@ -62,6 +69,7 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/IgnoreMaterials", "Ignore Materials", "command", "", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AlwaysPresentImageMaps", "Always Present Image Maps", "bool", 
                                                          "Wether to always display all normal material map fields, even if an image isn't detected.", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/PopulateMaterialMaps", "Populate Material Maps", "bool", "", "1", "");
       
       //Animations
       ImportAssetConfigSettingsList.addNewConfigSetting("Animations/ImportAnimations", "Import Animations", "bool", "", "1", "");
@@ -95,7 +103,6 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/Scaling", "Scaling", "float", "", "1.0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/Compressed", "Is Compressed", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/GenerateMaterialOnImport", "Generate Material On Import", "bool", "", "1", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Images/PopulateMaterialMaps", "Populate Material Maps", "bool", "", "1", "");
 
       //Sounds
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/VolumeAdjust", "Volume Adjustment", "float", "", "1.0", "");
@@ -131,7 +138,7 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
    ImportOptionsList.addField("AssetName", "Asset Name", "string", "", "NewAsset", "", %assetItem);
    ImportOptionsList.endGroup();
    
-   if(%assetType $= "Model")
+   if(%assetType $= "ShapeAsset")
    {
       //Get the shape info, so we know what we're doing with the mesh
       %shapeInfo = GetShapeInfo(%filePath);
@@ -168,13 +175,13 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
          ImportOptionsList.endGroup();
       }
    }
-   else if(%assetType $= "Material")
+   else if(%assetType $= "MaterialAsset")
    {
       ImportOptionsList.startGroup("Material");
       ImportOptionsList.addField("CreateComposites", "Create Composite Textures", "bool", "", "1", "", %assetConfigObj);
       ImportOptionsList.endGroup();
    }
-   else if(%assetType $= "Image")
+   else if(%assetType $= "ImageAsset")
    {
       ImportOptionsList.startGroup("Formatting");
       ImportOptionsList.addField("ImageType", "Image Type", "string", "", "Diffuse", "", %assetConfigObj);
@@ -199,7 +206,7 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
       ImportOptionsList.addField("IgnoreMaterials", "Ignore Importing Materials that fit these naming convention.", "command", "", "1", "", %optionsObj);
       ImportOptionsList.endGroup();
    }
-   else if(%assetType $= "Sound")
+   else if(%assetType $= "SoundAsset")
    {
       ImportOptionsList.startGroup("Adjustment");
       ImportOptionsList.addField("VolumeAdjust", "VolumeAdjustment", "float", "", "1.0", "", %assetConfigObj);
@@ -215,6 +222,12 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
 function ImportAssetOptionsWindow::saveAssetOptions(%this)
 {
    %success = AssetImportSettings.write();
+   
+   if(ImportActivityLog.count() != 0)
+      ImportActivityLog.add("");
+      
+   ImportActivityLog.add("Asset Import Configs saved, refreshing Import session");
+   ImportActivityLog.add("");
    
    ImportAssetWindow.refresh();
    ImportAssetOptionsWindow.setVisible(0);   
@@ -309,6 +322,7 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Materials/UseDiffuseSuffixOnOriginImage", "1");
    AssetImportSettings.setValue("Materials/UseExistingMaterials", "1");
    AssetImportSettings.setValue("Materials/AlwaysPresentImageMaps", "0");
+   AssetImportSettings.setValue("Materials/PopulateMaterialMaps", "1");
    
    //Animations
    AssetImportSettings.setValue("Animations/ImportAnimations", "1");
@@ -338,7 +352,6 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Images/Scaling", "1.0");
    AssetImportSettings.setValue("Images/Compressed", "1");
    AssetImportSettings.setValue("Images/GenerateMaterialOnImport", "1");
-   AssetImportSettings.setValue("Images/PopulateMaterialMaps", "1");
    
    //Sounds
    AssetImportSettings.setValue("Sounds/VolumeAdjust", "1.0");

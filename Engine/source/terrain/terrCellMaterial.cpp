@@ -445,6 +445,8 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
             features.addFeature(MFT_TerrainCompositeMap, featureIndex);
             features.removeFeature(MFT_DeferredTerrainBlankInfoMap);
          }
+         if (mat->getInvertSmoothness())
+            features.addFeature(MFT_InvertSmoothness);
 
          pass->materials.push_back( (*materials)[i] );
          normalMaps.increment();
@@ -640,8 +642,12 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
 	  matInfo->compositeTexConst = pass->shader->getShaderConstHandle(avar("$compositeMap%d", i));
 	  if (matInfo->compositeTexConst->isValid())
 	  {
+        GFXTextureProfile* profile = &GFXStaticTextureProfile;
+        if (matInfo->mat->getIsSRGB())
+           profile = &GFXStaticTextureSRGBProfile;
+
 		  matInfo->compositeTex.set(matInfo->mat->getCompositeMap(),
-			  &GFXStaticTextureProfile, "TerrainCellMaterial::_createPass() - CompositeMap");
+			  profile, "TerrainCellMaterial::_createPass() - CompositeMap");
 		  const S32 sampler = matInfo->compositeTexConst->getSamplerRegister();
 
 		  desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();

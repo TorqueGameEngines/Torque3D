@@ -242,8 +242,23 @@ function setupEditorVisibilityMenu()
       item[ 12 ] = "Probes" TAB EVisibilityProbesOptions;
       item[ 13 ] = "Buffer Visualization" TAB EVisibilityBufferVizOptions;
       item[ 14 ] = "-" TAB "" TAB "";
-      item[ 15 ] = "Class Visibility" TAB EVisibilityClassVizOptions;
+      item[ 15 ] = "Class Visibility" TAB "" TAB "Editor_VisibilityOptionsButton::onClick();";
    };
+}
+
+function Editor_VisibilityOptionsButton::onClick(%this)
+{
+   if ( EVisibility.visible  )
+   {
+      EVisibility.setVisible(false);
+      //visibilityToggleBtn.setStateOn(0);
+   }
+   else
+   {
+      EVisibility.setVisible(true);
+      //visibilityToggleBtn.setStateOn(1);
+      EVisibility.setExtent("200 540");
+   }  
 }
 
 function EVisibility::onWake( %this )

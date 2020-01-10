@@ -47,6 +47,8 @@ function AssetBrowser::editMaterialAsset(%this, %assetDef)
 
 function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
 {
+   ImportActivityLog.add("Preparing Shape for Import: " @ %assetItem.assetName);
+   
    //Iterate over to find appropriate images for
          
    //Fetch just the fileBase name
@@ -66,6 +68,9 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
         {
             //We fit the bill, ignore this material and skip it
             %assetItem.skip = true;
+            
+            ImportActivityLog.add(%assetItem.assetName @ " has been ignored due to config Materials/IgnoreMaterials settings");
+            
             return;  
         }
       }
@@ -73,6 +78,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
    
    if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
    {
+      ImportActivityLog.add("Attempting to Auto-Populate Material Maps");
+      
       %materialItemId = ImportAssetTree.findItemByObjectId(%assetItem);
       
       if(%assetItem.diffuseImageAsset $= "")
@@ -83,6 +90,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated Diffuse Map Image Asset via file: " @ %targetFilePath);
+            
             %diffuseAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.diffuseImageAsset = %diffuseAsset;
          }
@@ -106,6 +115,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated Normal Map Image Asset via file: " @ %targetFilePath);
+            
             %normalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.normalImageAsset = %normalAsset;
          }
@@ -127,6 +138,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated Metalness Map Image Asset via file: " @ %targetFilePath);
+            
             %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.metalImageAsset = %metalAsset;
          }
@@ -148,6 +161,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated Roughness Map Image Asset via file: " @ %targetFilePath);
+            
             %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.roughnessImageAsset = %roughnessAsset;
          }
@@ -169,6 +184,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated Smoothness Map Image Asset via file: " @ %targetFilePath);
+            
             %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.SmoothnessImageAsset = %smoothnessAsset;
          }
@@ -190,6 +207,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated AO Map Image Asset via file: " @ %targetFilePath);
+            
             %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.AOImageAsset = %AOAsset;
          }
@@ -211,6 +230,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          if(%targetFilePath !$= "")
          {
+            ImportActivityLog.add("Auto-Populated Composite Map Image Asset via file: " @ %targetFilePath);
+            
             %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.compositeImageAsset = %compositeAsset;
          }
@@ -236,6 +257,9 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          %compositeAssetPath = AssetBrowser.dirHandler.currentAddress @ "/";
          %saveAsPath = %compositeAssetPath @ "/" @ %assetItem.assetName @ "_composite.png";
+         
+         ImportActivityLog.add("Auto-Generated Composite Map from ORM maps");
+         
          %compositeAsset = AssetBrowser.addImportingAsset("Image", "", %assetItem, %assetItem.assetName @ "_composite");
          %compositeAsset.generatedAsset = true;
          %compositeAsset.filePath = %saveAsPath;

@@ -282,12 +282,6 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       ///   of the object is dirty, the list contents may be outdated.
       ZoneRef* _getZoneRefHead() const { return mZoneRefHead; }
       
-      /// Gets the number of zones containing this object.
-      U32 _getNumCurrZones() const { return mNumCurrZones; }
-
-      /// Returns the nth zone containing this object.
-      U32 _getCurrZone( const U32 index ) const;
-
       /// @}
 
       /// @name Transform and Collision Members
@@ -748,6 +742,12 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
 
       void setLightingPlugin( SceneObjectLightingPlugin* plugin ) { mLightPlugin = plugin; }
       SceneObjectLightingPlugin* getLightingPlugin() { return mLightPlugin; }
+
+      /// Gets the number of zones containing this object.
+      U32 getNumCurrZones() const { return mNumCurrZones; }
+
+      /// Returns the nth zone containing this object.
+      U32 getCurrZone(const U32 index) const;
 
       /// @}   
 

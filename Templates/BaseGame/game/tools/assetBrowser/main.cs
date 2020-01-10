@@ -38,23 +38,23 @@ function initializeAssetBrowser()
       new ArrayObject(AssetFilterTypeList);
 
       AssetFilterTypeList.add("All");
-      AssetFilterTypeList.add("Component");
-      AssetFilterTypeList.add("Cpp");
-      AssetFilterTypeList.add("Cubemap");
-      AssetFilterTypeList.add("GameObject");
-      AssetFilterTypeList.add("GUI");
-      AssetFilterTypeList.add("Image");
-      AssetFilterTypeList.add("Level");
-      AssetFilterTypeList.add("Material");
-      AssetFilterTypeList.add("Particle");
-      AssetFilterTypeList.add("PostFX");
-      AssetFilterTypeList.add("Script");
-      AssetFilterTypeList.add("Shape");
-      AssetFilterTypeList.add("ShapeAnimation");
-      AssetFilterTypeList.add("Sound");
-      AssetFilterTypeList.add("StateMachine");
-      AssetFilterTypeList.add("Terrain");
-      AssetFilterTypeList.add("TerrainMaterial");
+      AssetFilterTypeList.add("ComponentAsset");
+      AssetFilterTypeList.add("CppAsset");
+      AssetFilterTypeList.add("CubemapAsset");
+      AssetFilterTypeList.add("GameObjectAsset");
+      AssetFilterTypeList.add("GUIAsset");
+      AssetFilterTypeList.add("ImageAsset");
+      AssetFilterTypeList.add("LevelAsset");
+      AssetFilterTypeList.add("MaterialAsset");
+      AssetFilterTypeList.add("ParticleAsset");
+      AssetFilterTypeList.add("PostFXAsset");
+      AssetFilterTypeList.add("ScriptAsset");
+      AssetFilterTypeList.add("ShapeAsset");
+      AssetFilterTypeList.add("ShapeAnimationAsset");
+      AssetFilterTypeList.add("SoundAsset");
+      AssetFilterTypeList.add("StateMachineAsset");
+      AssetFilterTypeList.add("TerrainAsset");
+      AssetFilterTypeList.add("TerrainMaterialAsset");
    }
    
    exec("./guis/assetBrowser.gui");
@@ -71,6 +71,7 @@ function initializeAssetBrowser()
    exec("./guis/importTemplateModules.gui");
    exec("./guis/assetPreviewButtonsTemplate.gui");
    exec("./guis/newFolder.gui");
+   exec("./guis/assetImportLog.gui");
 
    exec("./scripts/assetBrowser.cs");
    exec("./scripts/popupMenus.cs");
@@ -127,6 +128,13 @@ function initializeAssetBrowser()
    
    if(!isObject(ImportAssetTree))
       new GuiTreeViewCtrl(ImportAssetTree);
+      
+   if(!isObject(ImportActivityLog))
+      new ArrayObject(ImportActivityLog);
+      
+   ImportAssetWindow.importingFilesArray = new ArrayObject();
+   ImportAssetWindow.importAssetUnprocessedListArray = new ArrayObject();
+   ImportAssetWindow.importAssetFinalListArray = new ArrayObject();
    
    AssetBrowser.buildPopupMenus();
    

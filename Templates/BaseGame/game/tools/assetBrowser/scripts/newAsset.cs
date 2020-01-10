@@ -48,19 +48,19 @@ function NewAssetTypeList::refresh(%this)
    
    //TODO: make this more automated
    //%this.add("GameObject", 0);
-   %this.add("Component", 0);
-   %this.add("Image", 1);
-   %this.add("Material", 2);
-   %this.add("Shape", 3);  
-   %this.add("Sound", 4);
-   %this.add("State Machine", 5);
+   %this.add("ComponentAsset", 0);
+   %this.add("ImageAsset", 1);
+   %this.add("MaterialAsset", 2);
+   %this.add("ShapeAsset", 3);  
+   %this.add("SoundAsset", 4);
+   %this.add("StateMachineAsset", 5);
 }
 
 function NewAssetTypeList::onSelected(%this)
 {
    %assetType = %this.getText();
    
-   if(%assetType $= "Component")
+   if(%assetType $= "ComponentAsset")
    {
       NewComponentAssetSettings.hidden = false;
    }

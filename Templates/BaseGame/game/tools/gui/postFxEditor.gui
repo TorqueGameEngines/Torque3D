@@ -239,7 +239,7 @@
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
-         command = "PostFXEditor.apply(); Canvas.popDialog(PostFXEditor);";
+         command = "PostFXEditor.apply();";
          tooltipProfile = "GuiToolTipProfile";
          tooltip = "Apply the settings and close this dialog";
          hovertime = "1000";

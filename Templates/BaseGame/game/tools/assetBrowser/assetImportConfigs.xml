@@ -6,6 +6,7 @@
             <Setting name="UseExistingMaterials">1</Setting>
             <Setting name="CreateComposites">1</Setting>
             <Setting name="UseDiffuseSuffixOnOriginImage">1</Setting>
+            <Setting name="PopulateMaterialMaps">1</Setting>
         </Group>
         <Group name="Meshes">
             <Setting name="DoScaleOverride">0</Setting>
@@ -34,7 +35,6 @@
             <Setting name="NormalTypeSuffixes">_NORMAL,_NORM</Setting>
             <Setting name="AOTypeSuffixes">_AO,_AMBIENT,_AMBIENTOCCLUSION</Setting>
             <Setting name="MetalnessTypeSuffixes">_METAL,_MET,_METALNESS,_METALLIC</Setting>
-            <Setting name="PopulateMaterialMaps">1</Setting>
             <Setting name="CompositeTypeSuffixes">_COMP,_COMPOSITE</Setting>
             <Setting name="RoughnessTypeSuffixes">_ROUGH,_ROUGHNESS</Setting>
             <Setting name="ImageType">N/A</Setting>

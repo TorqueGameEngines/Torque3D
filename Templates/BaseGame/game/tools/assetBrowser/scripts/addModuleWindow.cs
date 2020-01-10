@@ -96,8 +96,7 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
    ModuleDatabase.ignoreLoadedGroups(false);
    
    //force a reload of the Module lists
-   GameObjectModuleList.refresh();
-   ImportAssetModuleList.refresh();
+   AssetBrowser.refresh();
    
    AssetBrowser.newModuleId = %newModuleName;
    

@@ -1103,11 +1103,9 @@ void TerrainAdditiveFeatGLSL::processPix( Vector<ShaderComponent*> &componentLis
                                           const MaterialFeatureData &fd )
 {
    Var *color = NULL;
-   Var *normal = NULL;
    if (fd.features[MFT_isDeferred])
    {
        color = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget1) );
-       normal = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::DefaultTarget) );
    }
    else
       color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
@@ -1120,8 +1118,6 @@ void TerrainAdditiveFeatGLSL::processPix( Vector<ShaderComponent*> &componentLis
 
    meta->addStatement( new GenOp( "   clip( @ - 0.0001 );\r\n", blendTotal ) );
    meta->addStatement( new GenOp( "   @.a = @;\r\n", color, blendTotal ) );
-   if (normal)
-	   meta->addStatement(new GenOp("   @.a = @;\r\n", normal, blendTotal));
 
    output = meta;
 }
@@ -1249,22 +1245,22 @@ void TerrainCompositeMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
 		texOp = new GenOp("tex2D(@, @.xy)", compositeMap, inDet);
 
 	// search for material var
-	Var *material;
+	Var * pbrConfig;
 	OutputTarget targ = RenderTarget1;
 	if (fd.features[MFT_isDeferred])
 	{
 		targ = RenderTarget2;
 	}
-	material = (Var*)LangElement::find(getOutputTargetVarName(targ));
+   pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(targ));
 
 	MultiLine * meta = new MultiLine;
-	if (!material)
+	if (!pbrConfig)
 	{
 		// create color var
-		material = new Var;
-		material->setType("fragout");
-		material->setName(getOutputTargetVarName(targ));
-		material->setStructName("OUT");
+      pbrConfig = new Var;
+      pbrConfig->setType("fragout");
+      pbrConfig->setName(getOutputTargetVarName(targ));
+      pbrConfig->setStructName("OUT");
 	}
 
 	Var *detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));
@@ -1276,15 +1272,19 @@ void TerrainCompositeMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
 	Var *priorComp = (Var*)LangElement::find(String::ToString("matinfoCol%d", compositeIndex - 1));
 	if (priorComp)
 	{
-		meta->addStatement(new GenOp("   @ = @.grb*@;\r\n", new DecOp(matinfoCol), texOp, detailBlend));
-		meta->addStatement(new GenOp("   @.gba += @;\r\n", material, matinfoCol));
+		meta->addStatement(new GenOp("   @ = @.rgb*@;\r\n", new DecOp(matinfoCol), texOp, detailBlend));
+		meta->addStatement(new GenOp("   @.bga += @;\r\n", pbrConfig, matinfoCol));
 	}
 	else
 	{
-		meta->addStatement(new GenOp("   @ = lerp(vec3(1,0,0),@.grb,@);\r\n", new DecOp(matinfoCol), texOp, detailBlend));
-		meta->addStatement(new GenOp("   @ = vec4(0.0,@);\r\n", material, matinfoCol));
+		meta->addStatement(new GenOp("   @ = lerp(vec3(0,1,0),@.rgb,@);\r\n", new DecOp(matinfoCol), texOp, detailBlend));
+		meta->addStatement(new GenOp("   @ = vec4(0.0,@);\r\n", pbrConfig, matinfoCol));
 	}
 
+   if (!fd.features[MFT_InvertSmoothness])
+   {
+      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", pbrConfig, pbrConfig));
+   }
 
 	output = meta;
 }

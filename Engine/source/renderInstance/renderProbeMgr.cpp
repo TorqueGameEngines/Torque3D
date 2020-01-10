@@ -867,7 +867,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
    reflDesc.texSize = resolution;
    reflDesc.farDist = farPlane;
    reflDesc.detailAdjust = 1;
-   reflDesc.objectTypeMask = -1;
+   reflDesc.objectTypeMask = probe->mCaptureMask;
 
    CubeReflector cubeRefl;
    cubeRefl.registerReflector(probe, &reflDesc);

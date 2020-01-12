@@ -794,7 +794,7 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       static bool _setGameObject(void* object, const char* index, const char* data);
 
       DECLARE_CONOBJECT( SceneObject );
-
+	  DECLARE_CALLBACK(void, onInspectPostApply, (SceneObject* obj));
    private:
 
       SceneObject( const SceneObject& ); ///< @deprecated disallowed

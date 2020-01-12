@@ -120,7 +120,10 @@ static U32 sCollisionMoveMask =  TerrainObjectType       |
                                  PlayerObjectType        |
                                  StaticShapeObjectType   | 
                                  VehicleObjectType       |
-                                 PhysicalZoneObjectType;
+								 PhysicalZoneObjectType  |
+// PATHSHAPE
+								 PathShapeObjectType;
+// PATHSHAPE END
 
 static U32 sServerCollisionContactMask = sCollisionMoveMask |
                                          ItemObjectType     |
@@ -2206,6 +2209,9 @@ void Player::processTick(const Move* move)
          }
       }
    }
+// PATHSHAPE
+   if (!isGhost()) updateAttachment(); 
+// PATHSHAPE END
 }
 
 void Player::interpolateTick(F32 dt)
@@ -2239,6 +2245,9 @@ void Player::interpolateTick(F32 dt)
 
    updateLookAnimation(dt);
    mDelta.dt = dt;
+// PATHSHAPE
+   updateRenderChangesByParent();
+// PATHSHAPE END
 }
 
 void Player::advanceTime(F32 dt)
@@ -3658,7 +3667,10 @@ void Player::updateDeathOffsets()
 
 //----------------------------------------------------------------------------
 
-static const U32 sPlayerConformMask =  StaticShapeObjectType | StaticObjectType | TerrainObjectType;
+// PATHSHAPE
+static const U32 sPlayerConformMask =  StaticShapeObjectType | StaticObjectType |
+                                       TerrainObjectType | PathShapeObjectType;
+// PATHSHAPE END
 
 static void accel(F32& from, F32 to, F32 rate)
 {
@@ -4780,6 +4792,45 @@ bool Player::step(Point3F *pos,F32 *maxStep,F32 time)
    return false;
 }
 
+// PATHSHAPE
+// This Function does a ray cast down to see if a pathshape object is below
+// If so, it will attempt to attach to it.
+void Player::updateAttachment(){
+   Point3F rot, pos;
+    RayInfo rInfo;
+    MatrixF mat = getTransform();
+    mat.getColumn(3, &pos);
+    if (gServerContainer.castRay(Point3F(pos.x, pos.y, pos.z + 0.1f),
+        Point3F(pos.x, pos.y, pos.z - 1.0f ),
+        PathShapeObjectType, &rInfo))
+    {
+       if( rInfo.object->getTypeMask() & PathShapeObjectType) //Ramen
+       {
+          if (getParent() == NULL)
+          { // ONLY do this if we are not parented
+             //Con::printf("I'm on a pathshape object. Going to attempt attachment.");
+             ShapeBase* col = static_cast<ShapeBase*>(rInfo.object);
+             if (!isGhost())
+             {
+                this->attachToParent(col);
+             } 
+          }
+       }
+       else
+       {
+          //Con::printf("object %i",rInfo.object->getId());
+       }
+    }
+    else
+    {	 
+       if (getParent() !=NULL)
+       {
+          clearProcessAfter();
+          attachToParent(NULL);
+       }
+    }
+}
+// PATHSHAPE END
 
 //----------------------------------------------------------------------------
 inline Point3F createInterpPos(const Point3F& s, const Point3F& e, const F32 t, const F32 d)

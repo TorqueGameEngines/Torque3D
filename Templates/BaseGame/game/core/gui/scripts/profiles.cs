@@ -23,7 +23,7 @@
 // Set font cache path if it doesn't already exist.
 if($Gui::fontCacheDirectory $= "")
 {
-   $Gui::fontCacheDirectory = expandFilename("./fonts");
+   $Gui::fontCacheDirectory = expandFilename("data/cache/fonts");
 }
 
 // ----------------------------------------------------------------------------

@@ -28,6 +28,8 @@
 #include "scene/mixin/sceneAmbientSoundObject.impl.h"
 #include "scene/mixin/scenePolyhedralObject.impl.h"
 
+#include "gui/worldEditor/worldEditor.h"
+
 
 IMPLEMENT_CO_NETOBJECT_V1( Zone );
 
@@ -80,6 +82,62 @@ void Zone::consoleInit()
    getStaticClassRep()->mIsRenderEnabled = false;
 }
 
+void Zone::initPersistFields()
+{
+   addProtectedField("selectAll", TypeBool, Offset(mSelecting, Zone),
+      &_doSelect, &defaultProtectedGetFn, "Select all in this zone", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
+
+   Parent::initPersistFields();
+}
+
+
+bool Zone::_doSelect(void* object, const char* index, const char* data)
+{
+   Zone* zone = reinterpret_cast<Zone*>(object);
+
+   zone->selectWithin();
+
+   return false;
+}
+
+void Zone::selectWithin()
+{
+   SimpleQueryList sql;
+   //getContainer()->polyhedronFindObjects(getPolyhedron(), 0xFFFFFFFF, SimpleQueryList::insertionCallback, &sql);
+
+   //replace the above with this once we stort out how to look up the managed zoneID from the insatnce itself
+   Zone* zoneClient = (Zone*)getClientObject();
+   SceneZoneSpaceManager* zoneManager = zoneClient->getSceneManager()->getZoneManager();
+   if (zoneManager)
+   {
+      for (U32 zoneId = zoneClient->mZoneRangeStart; zoneId < zoneClient->mZoneRangeStart + zoneClient->mNumZones; ++zoneId)
+         for (SceneZoneSpaceManager::ZoneContentIterator iter(zoneManager, zoneId, false); iter.isValid(); ++iter)
+         {
+            SceneObject* obj = (SceneObject*)iter->getServerObject();
+            bool fullyEnclosed = true;
+
+            for (SceneObject::ObjectZonesIterator zoneIter(obj); zoneIter.isValid(); ++zoneIter)
+            {
+               if (*zoneIter != zoneId);
+                  fullyEnclosed = false;
+            }
+            if (fullyEnclosed)
+               sql.insertObject(obj);
+         }
+   }
+
+
+   WorldEditor* wedit;
+   if (Sim::findObject("EWorldEditor", wedit))
+   {
+      wedit->clearSelection();
+      wedit->selectObject(this);
+      for (SceneObject** i = sql.mList.begin(); i != sql.mList.end(); i++)
+      {
+         wedit->selectObject(*i);
+      }
+   }
+}
 //=============================================================================
 //    Console API.
 //=============================================================================
@@ -103,4 +161,10 @@ DefineEngineMethod( Zone, dumpZoneState, void, ( bool updateFirst ), ( true ),
       "objects are updated on demand, the zone contents can be outdated." )
 {
    object->dumpZoneState( updateFirst );
+}
+
+DefineEngineMethod(Zone, selectWithin, void, () ,,
+   "select a list of all objects assigned to the zone")
+{
+   object->selectWithin();
 }

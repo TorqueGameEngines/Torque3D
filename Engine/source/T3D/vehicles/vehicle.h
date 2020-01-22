@@ -24,13 +24,7 @@
 #define _VEHICLE_H_
 
 #ifndef _SHAPEBASE_H_
-#include "T3D/shapeBase.h"
-#endif
-#ifndef _RIGID_H_
-#include "T3D/rigid.h"
-#endif
-#ifndef _BOXCONVEX_H_
-#include "collision/boxConvex.h"
+#include "T3D/rigidShape.h"
 #endif
 
 class ParticleEmitter;
@@ -41,9 +35,9 @@ class Vehicle;
 
 //----------------------------------------------------------------------------
 
-struct VehicleData: public ShapeBaseData
+struct VehicleData : public RigidShapeData
 {
-   typedef ShapeBaseData Parent;
+   typedef RigidShapeData Parent;
 
    struct Body {
       enum Sounds {
@@ -146,19 +140,14 @@ struct VehicleData: public ShapeBaseData
 //----------------------------------------------------------------------------
 class PhysicsBody;
 
-class Vehicle: public ShapeBase
+class Vehicle : public RigidShape
 {
-   typedef ShapeBase Parent;
+   typedef RigidShape Parent;
 
   protected:
    enum CollisionFaceFlags {
       BodyCollision =  0x1,
       WheelCollision = 0x2,
-   };
-   enum MaskBits {
-      PositionMask = Parent::NextFreeMask << 0,
-      EnergyMask   = Parent::NextFreeMask << 1,
-      NextFreeMask = Parent::NextFreeMask << 2
    };
 
    struct StateDelta {
@@ -205,7 +194,6 @@ class Vehicle: public ShapeBase
 
    CollisionList mCollisionList;
    CollisionList mContacts;
-   Rigid mRigid;
    ShapeBaseConvex mConvex;
    S32 restCount;
 
@@ -217,9 +205,6 @@ class Vehicle: public ShapeBase
    virtual bool onNewDataBlock( GameBaseData *dptr, bool reload );
    void updatePos(F32 dt);
    bool updateCollision(F32 dt);
-   bool resolveCollision(Rigid& ns,CollisionList& cList);
-   bool resolveContacts(Rigid& ns,CollisionList& cList,F32 dt);
-   bool resolveDisplacement(Rigid& ns,CollisionState *state,F32 dt);
    bool findContacts(Rigid& ns,CollisionList& cList);
    void checkTriggers();
    static void findCallback(SceneObject* obj,void * key);

@@ -670,7 +670,6 @@ if (TORQUE_OPENGL)
    addLib(glad)
 endif()
 addLib(assimp)
-addLib(meshOptimizer)
 
 if(WIN32)
     # copy pasted from T3D build system, some might not be needed

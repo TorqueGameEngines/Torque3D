@@ -1,10 +1,31 @@
 //
+function AssetBrowser::ConvertFolderIntoModule(%this, %folderName)
+{
+   if(!isDirectory("data/" @ %folderName))
+      return;
+      
+   AssetBrowser_AddModule-->moduleName.text = %folderName;
+   AssetBrowser_addModuleWindow.callbackFunction = "AssetBrowser.loadDirectories();";
+   
+   AssetBrowser_addModuleWindow.CreateNewModule();
+}
+
 function AssetBrowser::CreateNewModule(%this)
 {
    Canvas.pushDialog(AssetBrowser_AddModule); 
    AssetBrowser_addModuleWindow.selectWindow();  
    
-   AssetBrowser_addModuleWindow.callbackFunction = "AssetBrowser.loadFilters();";
+   AssetBrowser_addModuleWindow.callbackFunction = "AssetBrowser.loadDirectories();";
+}
+
+function AssetBrowser::createNewEditorTool(%this)
+{
+   Canvas.pushDialog(AssetBrowser_AddModule); 
+   AssetBrowser_addModuleWindow.selectWindow(); 
+   
+   AssetBrowser_addModuleWindow.callbackFunction = "AssetBrowser.loadDirectories();";
+   
+   AssetBrowser_addModuleWindow.CreateNewModule();
 }
 
 function AssetBrowser_editModule::saveModule(%this)

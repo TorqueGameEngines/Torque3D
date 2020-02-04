@@ -63,6 +63,7 @@ class ShapeAsset : public AssetBase
 
 protected:
    StringTableEntry   mFileName;
+   StringTableEntry   mConstructorFileName;
    Resource<TSShape>	 mShape;
 
    //Material assets we're dependent on and use
@@ -124,11 +125,18 @@ public:
    void                    setShapeFile(const char* pScriptFile);
    inline StringTableEntry getShapeFile(void) const { return mFileName; };
 
+   void                    setShapeConstructorFile(const char* pScriptFile);
+   inline StringTableEntry getShapeConstructorFile(void) const { return mConstructorFileName; };
+
 protected:
    virtual void            onAssetRefresh(void);
 
    static bool setShapeFile(void *obj, const char *index, const char *data) { static_cast<ShapeAsset*>(obj)->setShapeFile(data); return false; }
    static const char* getShapeFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getShapeFile(); }
+
+   static bool setShapeConstructorFile(void* obj, const char* index, const char* data) { static_cast<ShapeAsset*>(obj)->setShapeConstructorFile(data); return false; }
+   static const char* getShapeConstructorFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getShapeConstructorFile(); }
+
 };
 
 DefineConsoleType(TypeShapeAssetPtr, S32)

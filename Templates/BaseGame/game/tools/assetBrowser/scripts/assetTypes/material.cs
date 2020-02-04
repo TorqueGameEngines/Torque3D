@@ -45,6 +45,43 @@ function AssetBrowser::editMaterialAsset(%this, %assetDef)
    AssetBrowser.hideDialog();
 }
 
+//Renames the asset
+function AssetBrowser::renameMaterialAsset(%this, %assetDef, %newAssetName)
+{
+   %newFilename = renameAssetLooseFile(%assetDef.scriptPath, %newAssetName);
+   
+   if(!%newFilename $= "")
+      return;
+      
+   %assetDef.scriptPath = %newFilename;
+   %assetDef.saveAsset();
+   
+   renameAssetFile(%assetDef, %newAssetName);
+}
+
+//Deletes the asset
+function AssetBrowser::deleteMaterialAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
+function AssetBrowser::moveMaterialAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.scriptPath, %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
 function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
 {
    ImportActivityLog.add("Preparing Shape for Import: " @ %assetItem.assetName);
@@ -95,14 +132,6 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             %diffuseAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.diffuseImageAsset = %diffuseAsset;
          }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%diffuseTypeSuffixes, ",;") == 0 ? "_albedo" : getToken(%diffuseTypeSuffixes, ",;", 0);
-            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
-            %assetItem.diffuseImageAsset = %diffuseAsset;
-         }
       }
       
       //Now, iterate over our comma-delimited suffixes to see if we have any matches. We'll use the first match in each case, if any.
@@ -120,14 +149,6 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             %normalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.normalImageAsset = %normalAsset;
          }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%normalTypeSuffixes, ",;") == 0 ? "_normal" : getToken(%normalTypeSuffixes, ",;", 0);
-            %normalAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
-            %assetItem.normalImageAsset = %normalAsset;
-         }
       }
       
       if(%assetItem.metalImageAsset $= "")
@@ -141,14 +162,6 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             ImportActivityLog.add("Auto-Populated Metalness Map Image Asset via file: " @ %targetFilePath);
             
             %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-            %assetItem.metalImageAsset = %metalAsset;
-         }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%metalnessTypeSuffixes, ",;") == 0 ? "_metalness" : getToken(%metalnessTypeSuffixes, ",;", 0);
-            %metalAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
             %assetItem.metalImageAsset = %metalAsset;
          }
       }
@@ -166,14 +179,6 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.roughnessImageAsset = %roughnessAsset;
          }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%roughnessTypeSuffixes, ",;") == 0 ? "_roughness" : getToken(%roughnessTypeSuffixes, ",;", 0);
-            %roughnessAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
-            %assetItem.roughnessImageAsset = %roughnessAsset;
-         }
       }
       
       if(%assetItem.smoothnessImageAsset $= "")
@@ -187,14 +192,6 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             ImportActivityLog.add("Auto-Populated Smoothness Map Image Asset via file: " @ %targetFilePath);
             
             %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
-            %assetItem.SmoothnessImageAsset = %smoothnessAsset;
-         }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%smoothnessTypeSuffixes, ",;") == 0 ? "_smoothness" : getToken(%smoothnessTypeSuffixes, ",;", 0);
-            %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
             %assetItem.SmoothnessImageAsset = %smoothnessAsset;
          }
       }
@@ -212,14 +209,6 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.AOImageAsset = %AOAsset;
          }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%aoTypeSuffixes, ",;") == 0 ? "_AO" : getToken(%aoTypeSuffixes, ",;", 0);
-            %AOAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
-            %assetItem.AOImageAsset = %AOAsset;
-         }
       }
       
       if(%assetItem.compositeImageAsset $= "")
@@ -235,21 +224,12 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
             %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
             %assetItem.compositeImageAsset = %compositeAsset;
          }
-         else if(getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 1)
-         {
-            //In the event we don't have this image asset, but we DO wish to always display the field(affording when names don't aline with
-            //the material name), then we go ahead and create a blank entry
-            %suff = getTokenCount(%compositeTypeSuffixes, ",;") == 0 ? "_composite" : getToken(%compositeTypeSuffixes, ",;", 0);
-            %compositeAsset = AssetBrowser.addImportingAsset("Image", %assetItem.AssetName @ %suff, %assetItem);
-            %assetItem.compositeImageAsset = %compositeAsset;
-         }
       }
       
       //If after the above we didn't find any, check to see if we should be generating one
       if(%assetItem.compositeImageAsset $= "" && 
          (%assetItem.roughnessImageAsset !$= "" || %assetItem.AOImageAsset !$= "" || %assetItem.metalnessImageAsset !$= "") &&
-         getAssetImportConfigValue("Materials/CreateComposites", "1") == 1 &&
-         getAssetImportConfigValue("Materials/AlwaysPresentImageMaps", "0") == 0)
+         getAssetImportConfigValue("Materials/CreateComposites", "1") == 1)
       {
          %assetItem.roughnessImageAsset.skip = true;
          %assetItem.AOImageAsset.skip = true;

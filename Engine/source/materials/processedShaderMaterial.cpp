@@ -336,8 +336,11 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
 
    // TODO: This sort of sucks... BL should somehow force this
    // feature on from the outside and not this way.
-   if ( dStrcmp( LIGHTMGR->getId(), "BLM" ) == 0 )
-      fd.features.addFeature( MFT_ForwardShading );
+   if (dStrcmp(LIGHTMGR->getId(), "BLM") == 0)
+   {
+      fd.features.addFeature(MFT_ForwardShading);
+      fd.features.addFeature(MFT_ReflectionProbes);
+   }
 
    // Disabling the InterlacedDeferred feature for now. It is not ready for prime-time
    // and it should not be triggered off of the DoubleSided parameter. [2/5/2010 Pat]

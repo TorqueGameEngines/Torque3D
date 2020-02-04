@@ -289,7 +289,6 @@ function ESettingsWindow::getAxisSettings(%this)
 function ESettingsWindow::getGeneralSettings(%this)
 {
    SettingsInspector.startGroup("Paths");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "New Level", "filename", "");
    SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Torsion Path", "filename", "");
    SettingsInspector.endGroup();
    
@@ -416,6 +415,7 @@ function ESettingsWindow::getGameGeneralSettings(%this)
 {
    SettingsInspector.startGroup("General");
    SettingsInspector.addSettingsField("General/ProjectName", "Project Name", "string", "");
+   SettingsInspector.addSettingsField("General/LightingMode", "Lighting Mode", "list", "Dictates the lighting mode the project uses", "Deferred,Forward");
    SettingsInspector.endGroup();
 } 
 

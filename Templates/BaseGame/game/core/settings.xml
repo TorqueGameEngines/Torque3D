@@ -9,4 +9,7 @@
             <Setting name="coreModulePath">core/</Setting>
         </Group>
     </Group>
+    <Group name="General">
+        <Setting name="LightingMode">Deferred</Setting>
+    </Group>
 </ProjectSettings>

@@ -131,8 +131,7 @@ void TerrainAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   if (!Platform::isFullPath(mTerrainFilePath))
-      mTerrainFilePath = getOwned() ? expandAssetFilePath(mTerrainFilePath) : mTerrainFilePath;
+   mTerrainFilePath = expandAssetFilePath(mTerrainFilePath);
 
    loadTerrain();
 }
@@ -153,7 +152,7 @@ void TerrainAsset::setTerrainFilePath(const char* pScriptFile)
    pScriptFile = StringTable->insert(pScriptFile);
 
    // Update.
-   mTerrainFilePath = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
+   mTerrainFilePath = pScriptFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -161,6 +160,9 @@ void TerrainAsset::setTerrainFilePath(const char* pScriptFile)
 
 bool TerrainAsset::loadTerrain()
 {
+   if (!Platform::isFile(mTerrainFilePath))
+      return false;
+
    mTerrMaterialAssets.clear();
    mTerrMaterialAssetIds.clear();
 

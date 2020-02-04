@@ -105,8 +105,8 @@ function setupEditorVisibilityMenu()
       item[ 6 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
    };
    
-   %probespopup.enableItem(5, false);
-   %probespopup.enableItem(6, false);
+   %debugRenderpopup.enableItem(5, false);
+   %debugRenderpopup.enableItem(6, false);
    
    //
    //Lighting stuff

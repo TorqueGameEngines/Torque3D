@@ -62,8 +62,13 @@ function GameConnection::onControlObjectChange(%this)
    
    // Reset the current FOV to match the new object
    // and turn off any current zoom.
-   resetCurrentFOV();
-   turnOffZoom();
+   $Player::CurrentFOV = ServerConnection.getControlCameraDefaultFov() / 2;
+   
+   ServerConnection.zoomed = false;
+   setFov(ServerConnection.getControlCameraDefaultFov());
+   
+   //resetCurrentFOV();
+   //turnOffZoom();
 }
 
 function GameConnection::onConnectionError(%this, %msg)

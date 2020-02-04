@@ -5,7 +5,7 @@
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
-   profile = "GuiDefaultProfile";
+   profile = "ToolsGuiDefaultNonModalProfile";
    visible = "1";
    active = "1";
    tooltipProfile = "GuiToolTipProfile";

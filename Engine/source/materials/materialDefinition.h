@@ -111,7 +111,6 @@ public:
       Sub,
       LerpAlpha,     // linear interpolation modulated with alpha channel
       ToneMap,
-      PreMult,
       NumBlendTypes
    };
 

@@ -20,6 +20,9 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+$MotionBlurPostFX::samples = 15;
+$MotionBlurPostFX::velocityMultiplier = 3000;
+
 singleton ShaderData( PFX_MotionBlurShader )  
 {     
    DXVertexShaderFile   = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";  //we use the bare-bones postFxV.hlsl
@@ -34,6 +37,11 @@ singleton ShaderData( PFX_MotionBlurShader )
    pixVersion = 3.0;  
 };  
 
+function MotionBlurFX::onAdd( %this )
+{
+   PostFXManager.registerPostEffect(%this);
+}
+
 singleton PostEffect(MotionBlurFX)  
 {
    isEnabled = false;
@@ -47,7 +55,17 @@ singleton PostEffect(MotionBlurFX)
    target = "$backBuffer";
 };
 
+function MotionBlurFX::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("General");
+   PostEffectEditorInspector.addField("isEnabled", "Enabled", "bool", "", MotionBlurFX.isEnabled, "", MotionBlurFX);
+   PostEffectEditorInspector.addField("$MotionBlurPostFX::velocityMultiplier", "Velocity Multiplier", "float", "", $MotionBlurPostFX::velocityMultiplier, "");
+   PostEffectEditorInspector.addField("$MotionBlurPostFX::samples", "Sample Count", "float", "", $MotionBlurPostFX::samples, "");
+   PostEffectEditorInspector.endGroup();
+}
+
 function MotionBlurFX::setShaderConsts(%this)
 {
-   %this.setShaderConst( "$velocityMultiplier", 3000 );
+   %this.setShaderConst( "$velocityMultiplier", $MotionBlurPostFX::velocityMultiplier );
+   %this.setShaderConst( "$samples", $MotionBlurPostFX::samples );
 }

@@ -82,7 +82,7 @@ function MeshRoadEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the Editor Settings window
    exec( "./meshRoadEditorSettingsTab.gui" );
-   ESettingsWindow.addTabPage( EMeshRoadEditorSettingsPage );
+   //ESettingsWindow.addTabPage( EMeshRoadEditorSettingsPage );
 }
 
 function MeshRoadEditorPlugin::onActivated( %this )

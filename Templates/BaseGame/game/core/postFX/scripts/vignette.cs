@@ -61,7 +61,7 @@ function vignettePostFX::setShaderConsts(%this)
 
 function vignettePostFX::populatePostFXSettings(%this)
 {
-   PostEffectEditorInspector.startGroup("Vignette - General");
+   PostEffectEditorInspector.startGroup("General");
    PostEffectEditorInspector.addField("$PostFXManager::Settings::EnableVignette", "Enabled", "bool", "", $PostFXManager::PostFX::EnableVignette, "");
    PostEffectEditorInspector.addField("$PostFXManager::Settings::VignettePostEffect::VMin", "Vignette Min", "float", "", $VignettePostEffect::VMin, "");
    PostEffectEditorInspector.addField("$PostFXManager::Settings::VignettePostEffect::VMax", "Vignette Max", "float", "", $VignettePostEffect::VMax, "");

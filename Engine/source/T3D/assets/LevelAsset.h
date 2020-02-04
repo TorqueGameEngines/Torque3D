@@ -102,6 +102,16 @@ protected:
    static bool setBakedSceneFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setBakedSceneFile(data); return false; }
    static const char* getBakedSceneFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getBakedSceneFile(); }
 
+   static bool setPostFXPresetFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setPostFXPresetFile(data); return false; }
+   static const char* getPostFXPresetFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getPostFXPresetFile(); }
+   static bool setDecalsFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setDecalsFile(data); return false; }
+   static const char* getDecalsFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getDecalsFile(); }
+
+   static bool setForestFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setForestFile(data); return false; }
+   static const char* getForestFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getForestFile(); }
+   static bool setNavmeshFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setNavmeshFile(data); return false; }
+   static const char* getNavmeshFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getNavmeshFile(); }
+
 
    virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void) {}

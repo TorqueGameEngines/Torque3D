@@ -413,6 +413,8 @@ function DOFPostEffect::onAdd( %this )
    %this.maxRange = 500;
    %this.nearSlope = -5.0;
    %this.farSlope = 5.0;
+   
+   PostFXManager.registerPostEffect(%this);
 }
 
 function DOFPostEffect::setLerpDist( %this, %d0, %d1, %d2 )
@@ -495,6 +497,12 @@ DOFPostEffect.add( DOFFinalPFX );
 //-----------------------------------------------------------------------------
 // Scripts
 //-----------------------------------------------------------------------------
+function DOFPostEffect::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("Depth of Field");
+   PostEffectEditorInspector.addField("isEnabled", "Enabled", "bool", "", DOFPostEffect.isEnabled, "", DOFPostEffect);
+   PostEffectEditorInspector.endGroup();
+}
 
 function DOFPostEffect::setShaderConsts( %this )
 {

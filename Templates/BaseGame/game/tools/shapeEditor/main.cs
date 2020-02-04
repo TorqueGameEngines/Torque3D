@@ -121,7 +121,7 @@ function ShapeEditorPlugin::onWorldEditorStartup(%this)
 
    // Add ourselves to the Editor Settings window
    exec( "./gui/ShapeEditorSettingsTab.gui" );
-   ESettingsWindow.addTabPage( EShapeEditorSettingsPage );
+   //ESettingsWindow.addTabPage( EShapeEditorSettingsPage );
 
    GuiWindowCtrl::attach(ShapeEdPropWindow, ShapeEdSelectWindow);
    ShapeEdAnimWindow.resize( -1, 526, 593, 53 );

@@ -63,7 +63,7 @@ public:
    inline StringTableEntry getStateMachineFile(void) const { return mStateMachineFile; };
 
 protected:
-   virtual void            initializeAsset(void) {}
+   virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void) {}
 
    static bool setStateMachineFile(void *obj, const char *index, const char *data) { static_cast<StateMachineAsset*>(obj)->setStateMachineFile(data); return false; }

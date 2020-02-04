@@ -35,10 +35,18 @@ function AssetBrowser::createLevelAsset(%this)
    
    TamlWrite(%asset, %tamlpath);
    
-   if(!pathCopy("tools/levels/BlankRoom.mis", %levelPath, false))
+   //Special-case where if we're doing a save-as action, it'll base on the current scene.
+   //Otherwise we're doing a basic create action, so just base it off our editor's default
+   if(EditorGui.saveAs)
+   {
+      getRootScene().save(%levelPath);
+   }
+   else if(!pathCopy("tools/levels/DefaultEditorLevel.mis", %levelPath, false))
    {
       echo("Unable to copy template level file!");
    }
+   
+   replaceInFile(%levelPath, "EditorTemplateLevel", %assetName);
    
    //Generate the associated files
    DecalManagerSave( %assetPath @ %asset.DecalsFile );
@@ -60,6 +68,45 @@ function AssetBrowser::createLevelAsset(%this)
 function AssetBrowser::editLevelAsset(%this, %assetDef)
 {
    schedule( 1, 0, "EditorOpenMission", %assetDef);
+}
+
+//Renames the asset
+function AssetBrowser::renameLevelAsset(%this, %assetDef, %newAssetName)
+{
+   %newFilename = renameAssetLooseFile(%assetDef.LevelFile, %newAssetName);
+   
+   if(!%newFilename $= "")
+      return;
+      
+   //TODO the other loose files
+      
+   %assetDef.LevelFile = %newFilename;
+   %assetDef.saveAsset();
+   
+   renameAssetFile(%assetDef, %newAssetName);
+}
+
+//Deletes the asset
+function AssetBrowser::deleteLevelAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
+function AssetBrowser::moveLevelAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.LevelFile, %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }
    
 function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)

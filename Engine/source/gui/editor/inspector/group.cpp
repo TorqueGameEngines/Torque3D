@@ -107,6 +107,7 @@ bool GuiInspectorGroup::createContent()
 
    // Prefer GuiTransperantProfile for the stack.
    mStack->setDataField( StringTable->insert("profile"), NULL, "GuiInspectorStackProfile" );
+   mStack->setInternalName(StringTable->insert("stack"));
    if( !mStack->registerObject() )
    {
       SAFE_DELETE( mStack );

@@ -66,6 +66,8 @@ singleton Material(Grid_512_Grey_Base)
 singleton Material(Grid_512_Orange)
 {
    diffuseMap[0] = "./512_orange.png";
+   translucent = "1";
+   translucentBlendOp = "PreMul";
 };
 
 singleton Material(Grid_512_Orange_Lines)

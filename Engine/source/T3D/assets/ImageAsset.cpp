@@ -141,7 +141,9 @@ void ImageAsset::loadImage()
 
 void ImageAsset::initializeAsset()
 {
-   setImageFileName(mImageFileName);
+   mImageFileName = expandAssetFilePath(mImageFileName);
+
+   loadImage();
 }
 
 void ImageAsset::onAssetRefresh()
@@ -155,10 +157,7 @@ void ImageAsset::setImageFileName(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL image file.");
 
    // Update.
-   mImageFileName = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
-
-   // Refresh the asset.
-   loadImage();
+   mImageFileName = StringTable->insert(pScriptFile);
 }
 
 DefineEngineMethod(ImageAsset, getImageFilename, const char*, (), ,

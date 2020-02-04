@@ -220,7 +220,9 @@ function EditorNewLevel( %file )
    }
 
    if( %file $= "" )
-      %file = EditorSettings.value( "WorldEditor/newLevelFile" );
+   {
+      %file = "tools/levels/DefaultEditorLevel.mis";
+   }
 
    if( !$missionRunning )
    {
@@ -233,6 +235,33 @@ function EditorNewLevel( %file )
    //EWorldEditor.isDirty = true;
    //ETerrainEditor.isDirty = true;
    EditorGui.saveAs = true;
+}
+
+function EditorSaveAsDefaultLevel()
+{
+   MessageBoxYesNo("Save as Default?", "This will save the currently active root scene as the default level the editor loads when it is opened. Continue?",
+      "doEditorSaveAsDefaultLevel();", "");
+}
+
+function doEditorSaveAsDefaultLevel()
+{
+   %success = getScene(0).save("tools/levels/DefaultEditorLevel.mis");
+}
+
+function EditorResetDefaultLevel()
+{
+   MessageBoxYesNo("Reset Default?", "This will reset the default level for the editor back to the original. Continue?",
+      "doEditorResetDefaultLevel();", "");
+}
+
+function doEditorResetDefaultLevel()
+{
+   %templatePath = makeFullPath("tools/levels/EditorTemplateLevel.mis");
+   %defaultPath = makeFullPath("tools/levels/DefaultEditorLevel.mis");
+   
+   %fileCopy = -1;
+   if(isFile(%templatePath) && isFile(%defaultPath))
+      %fileCopy = pathCopy(%templatePath, %defaultPath, false);
 }
 
 function EditorSaveMissionMenu()

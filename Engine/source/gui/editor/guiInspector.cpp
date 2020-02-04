@@ -584,8 +584,6 @@ void GuiInspector::refresh()
    mGroups.push_back(general);
    addObject(general);
 
-   mTargets.first()->onInspect(this);
-
    // Create the inspector groups for static fields.
 
    for( TargetVector::iterator iter = mTargets.begin(); iter != mTargets.end(); ++ iter )
@@ -623,6 +621,8 @@ void GuiInspector::refresh()
          }
       }
    }
+
+   mTargets.first()->onInspect(this);
 
    // Deal with dynamic fields
    if ( !isGroupFiltered( "Dynamic Fields" ) )

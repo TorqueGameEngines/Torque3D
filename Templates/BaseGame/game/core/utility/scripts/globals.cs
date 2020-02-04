@@ -69,7 +69,7 @@ $pref::Video::autoDetect = 1;
 
 // This is the path used by ShaderGen to cache procedural shaders.  If left
 // blank ShaderGen will only cache shaders to memory and not to disk.
-$shaderGen::cachePath = "data/shaderCache";
+$shaderGen::cachePath = "data/cache/shaderCache";
 
 // Uncomment to disable ShaderGen, useful when debugging
 //$ShaderGen::GenNewShaders = false;

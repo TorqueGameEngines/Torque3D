@@ -165,7 +165,7 @@ EndImplementEnumType;
 
 void TSStatic::initPersistFields()
 {
-   addGroup("Media");
+   addGroup("Shape");
 
       addProtectedField("shapeAsset", TypeShapeAssetPtr, Offset(mShapeAsset, TSStatic),
          &TSStatic::_setShapeAsset, &defaultProtectedGetFn,
@@ -174,6 +174,9 @@ void TSStatic::initPersistFields()
       addField("shapeName",   TypeShapeFilename,  Offset( mShapeName, TSStatic ),
          "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic.", AbstractClassRep::FieldFlags::FIELD_HideInInspectors );
 
+   endGroup("Shape");
+
+   addGroup("Materials");
       addProtectedField( "skin", TypeRealString, Offset( mAppliedSkinName, TSStatic ), &_setFieldSkin, &_getFieldSkin,
       "@brief The skin applied to the shape.\n\n"
 
@@ -199,9 +202,8 @@ void TSStatic::initPersistFields()
       "Material targets are only renamed if an existing Material maps to that "
       "name, or if there is a diffuse texture in the model folder with the same "
       "name as the new target.\n\n" );
-
-   endGroup("Media");
-
+   endGroup("Materials");
+   
    addGroup("Rendering");
 
       addField( "playAmbient",   TypeBool,   Offset( mPlayAmbient, TSStatic ),
@@ -1606,20 +1608,20 @@ void TSStatic::updateMaterials()
 
 void TSStatic::onInspect(GuiInspector* inspector)
 {
+   if (mShapeAsset == nullptr)
+      return;
+
    //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
-   GuiInspectorGroup* tsStaticInspGroup = new GuiInspectorGroup("Shape", inspector);
-
-   tsStaticInspGroup->registerObject();
-   inspector->addInspectorGroup(tsStaticInspGroup);
-   inspector->addObject(tsStaticInspGroup);
-
+   GuiInspectorGroup* materialGroup = inspector->findExistentGroup(StringTable->insert("Materials"));
+   GuiControl* stack = dynamic_cast<GuiControl*>(materialGroup->findObjectByInternalName(StringTable->insert("Stack")));
+   
    //Do this on both the server and client
-   /*S32 materialCount = mShapeAsset->getShape()->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
+   S32 materialCount = mShapeAsset->getShape()->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
 
    if (isServerObject())
    {
       //we need to update the editor
-      for (U32 i = 0; i < mFields.size(); i++)
+      /*for (U32 i = 0; i < mFields.size(); i++)
       {
          //find any with the materialslot title and clear them out
          if (FindMatch::isMatch("MaterialSlot*", mFields[i].mFieldName, false))
@@ -1628,36 +1630,66 @@ void TSStatic::onInspect(GuiInspector* inspector)
             mFields.erase(i);
             continue;
          }
-      }
+      }*/
 
       //next, get a listing of our materials in the shape, and build our field list for them
       char matFieldName[128];
 
-      if (materialCount > 0)
-         mComponentGroup = StringTable->insert("Materials");
-
       for (U32 i = 0; i < materialCount; i++)
       {
-         StringTableEntry materialname = StringTable->insert(mMeshAsset->getShape()->materialList->getMaterialName(i).c_str());
+         StringTableEntry materialname = StringTable->insert(mShapeAsset->getShape()->materialList->getMaterialName(i).c_str());
 
          //Iterate through our assetList to find the compliant entry in our matList
-         for (U32 m = 0; m < mMeshAsset->getMaterialCount(); m++)
+         for (U32 m = 0; m < mShapeAsset->getMaterialCount(); m++)
          {
-            AssetPtr<MaterialAsset> matAsset = mMeshAsset->getMaterialAsset(m);
+            AssetPtr<MaterialAsset> matAsset = mShapeAsset->getMaterialAsset(m);
 
             if (matAsset->getMaterialDefinitionName() == materialname)
             {
                dSprintf(matFieldName, 128, "MaterialSlot%d", i);
 
-               addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
+               //addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
+               //Con::executef(this, "onConstructComponentField", mTargetComponent, field->mFieldName);
+               Con::printf("Added material field for MaterialSlot %d", i);
+
+               GuiInspectorField* fieldGui = materialGroup->constructField(TypeMaterialAssetPtr);
+               fieldGui->init(inspector, materialGroup);
+
+               fieldGui->setSpecialEditField(true);
+               fieldGui->setTargetObject(this);
+
+               StringTableEntry fldnm = StringTable->insert(matFieldName);
+
+               fieldGui->setSpecialEditVariableName(fldnm);
+
+               fieldGui->setInspectorField(NULL, fldnm);
+               fieldGui->setDocs("");
+
+               if (fieldGui->registerObject())
+               {
+                  fieldGui->setValue(materialname);
+
+                  stack->addObject(fieldGui);
+               }
+               else
+               {
+                  SAFE_DELETE(fieldGui);
+               }
+
+               /*if (materialGroup->isMethod("onConstructField"))
+               {
+                  //ensure our stack variable is bound if we need it
+                  //Con::evaluatef("%d.stack = %d;", materialGroup->getId(), materialGroup->at(0)->getId());
+
+                  Con::executef(materialGroup, "onConstructField", matFieldName,
+                     matFieldName, "material", matFieldName,
+                     materialname, "", "", this);
+               }*/
                break;
             }
          }
       }
-
-      if (materialCount > 0)
-         mComponentGroup = "";
-   }*/
+   }
 }
 
 DefineEngineMethod( TSStatic, getTargetName, const char*, ( S32 index ),(0),

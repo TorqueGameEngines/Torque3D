@@ -100,6 +100,51 @@ function AssetBrowser::editGUIAsset(%this, %assetDef)
    GuiEditContent(%assetDef.assetName);  
 }
 
+//Renames the asset
+function AssetBrowser::renameGUIAsset(%this, %assetDef, %newAssetName)
+{
+   %newScriptLooseFilename = renameAssetLooseFile(%assetDef.scriptFile, %newAssetName);
+   
+   if(!%newScriptLooseFilename $= "")
+      return;
+      
+   %newGUILooseFilename = renameAssetLooseFile(%assetDef.guiFile, %newAssetName);
+   
+   if(!%newGUILooseFilename $= "")
+      return;
+      
+   %assetDef.scriptFile = %newScriptLooseFilename;
+   %assetDef.guiFile = %newGUILooseFilename;
+   %assetDef.saveAsset();
+   
+   renameAssetFile(%assetDef, %newAssetName);
+}
+
+//Deletes the asset
+function AssetBrowser::deleteGUIAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
+function AssetBrowser::moveGUIAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.guifile, %destination);
+   moveAssetLooseFile(%assetDef.scriptFile, %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
+
 function AssetBrowser::buildGUIAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;

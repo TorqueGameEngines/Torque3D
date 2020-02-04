@@ -92,7 +92,7 @@ function ConvexEditorPlugin::onWorldEditorStartup( %this )
    %this.popupMenu = ConvexActionsMenu;
    
    exec( "./convexEditorSettingsTab.ed.gui" );
-   ESettingsWindow.addTabPage( EConvexEditorSettingsPage );
+   //ESettingsWindow.addTabPage( EConvexEditorSettingsPage );
 }
 
 function ConvexEditorPlugin::onActivated( %this )

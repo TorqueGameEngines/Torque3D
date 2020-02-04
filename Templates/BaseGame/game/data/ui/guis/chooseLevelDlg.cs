@@ -73,9 +73,7 @@ function ChooseLevelDlg::onWake( %this )
    // if we are choosing a level to launch in the editor.
    if ( %this.launchInEditor )
    {
-      %file = EditorSettings.value( "WorldEditor/newLevelFile" );
-      if ( %file !$= "" )
-         %this.addMissionFile( %file );
+      %this.addMissionFile( "tools/levels/DefaultEditorLevel.mis" );
    }
 
    // Sort our list

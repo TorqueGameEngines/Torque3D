@@ -234,6 +234,31 @@ function AssetBrowser::renameGameObjectAsset(%this, %assetDef, %newAssetId, %ori
    TAMLWrite(%gameObj, %newGOFile);
 }
 
+//Deletes the asset
+function AssetBrowser::deleteGameObjectAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
+function AssetBrowser::moveGameObjectAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.scriptFile, %destination);
+   moveAssetLooseFile(%assetDef.TAMLFile, %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
+
 function AssetBrowser::buildGameObjectAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;

@@ -135,7 +135,7 @@ function toggleDebugVizMode( %mode )
    }
    else
    {
-      if($Viz_SurfacePropertiesModeVar != "" && $Viz_SurfacePropertiesModeVar != -1)
+      if($Viz_SurfacePropertiesModeVar !$= "" && $Viz_SurfacePropertiesModeVar != -1)
          Viz_SurfacePropertiesPFX.enable(); 
    }
    

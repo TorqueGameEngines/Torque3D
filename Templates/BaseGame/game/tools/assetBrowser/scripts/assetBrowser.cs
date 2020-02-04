@@ -68,7 +68,7 @@ function AssetBrowser::onWake(%this)
       %moduleName = getWord(%modulesList, %i).ModuleId;
       
       %moduleGroup = getWord(%modulesList, %i).Group;
-      if((%moduleGroup $= "Core" || %moduleGroup $= "Tools") && !%this.coreModulesFilter)
+      if((%moduleGroup $= "Core" && !%this.coreModulesFilter) || (%moduleGroup $= "Tools" && !%this.toolsModulesFilter))
          continue;
          
       %nonDefaultModuleCount++;
@@ -82,6 +82,8 @@ function AssetBrowser::onWake(%this)
    }
    
    %this.setPreviewSize(EditorSettings.value("Assets/Browser/previewTileSize", "small"));
+   
+   AssetBrowser.toggleAssetTypeFilter(0); 
 }
 
 //Filters
@@ -95,11 +97,13 @@ function AssetBrowser::viewCoreModulesFilter(%this)
    %oldVal = EditorSettings.value("Assets/Browser/showCoreModule", false);
    %newVal = !%oldVal;
    
+   %this.coreModulesFilter = %newVal;
+   
    BrowserVisibilityPopup.checkItem(0,%newVal);
    
    EditorSettings.setValue("Assets/Browser/showCoreModule", %newVal);
     
-   AssetBrowser.refresh();
+   AssetBrowser.loadDirectories();
 }
 
 function AssetBrowser::viewToolsModulesFilter(%this)
@@ -107,11 +111,13 @@ function AssetBrowser::viewToolsModulesFilter(%this)
    %oldVal = EditorSettings.value("Assets/Browser/showToolsModule", false);
    %newVal = !%oldVal;
    
+   %this.toolsModulesFilter = %newVal;
+   
    BrowserVisibilityPopup.checkItem(1,%newVal);
    
    EditorSettings.setValue("Assets/Browser/showToolsModule", %newVal);
     
-   AssetBrowser.refresh();
+   AssetBrowser.loadDirectories();
 }
 
 function AssetBrowser::viewPopulatedModulesFilter(%this)
@@ -123,7 +129,7 @@ function AssetBrowser::viewPopulatedModulesFilter(%this)
    
    EditorSettings.setValue("Assets/Browser/showOnlyPopulatedModule", %newVal);
     
-   AssetBrowser.refresh();
+   AssetBrowser.loadDirectories();
 }
 
 function AssetBrowser::toggleShowingFolders(%this)
@@ -135,7 +141,7 @@ function AssetBrowser::toggleShowingFolders(%this)
    
    EditorSettings.setValue("Assets/Browser/showFolders", %newVal);
     
-   AssetBrowser.refresh();
+   AssetBrowser.loadDirectories();
 }
 
 function AssetBrowser::toggleShowingEmptyFolders(%this)
@@ -273,7 +279,7 @@ function AssetBrowser::hideDialog( %this )
    Canvas.popDialog(AssetBrowser);
 }
 
-function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
+function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
 {
    if(!isObject(%this.previewData))
    {
@@ -284,7 +290,7 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
    
    %previewImage = "core/art/warnmat";
    
-   if(ModuleDatabase.findModule(%moduleName, 1) !$= "")
+   if(/*%moduleName !$= "" && */ModuleDatabase.findModule(%moduleName, 1) !$= "")
    {
       %assetDesc = AssetDatabase.acquireAsset(%asset);
       %assetName = AssetDatabase.getAssetName(%asset);
@@ -296,7 +302,6 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
       %fullPath = strreplace(%fullPath, "/", "_");
       
       if(isObject(%fullPath))
-      
          %assetDesc = %fullPath;
       else
          %assetDesc = new ScriptObject(%fullPath);
@@ -359,10 +364,10 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
    %previewButton-->AssetPreviewBorderButton.extent = %previewSize;
    
    //%previewButton-->AssetPreviewButton.internalName = %this.previewData.assetName@"Border";
-   %previewButton-->AssetPreviewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + 24;
-   %previewButton-->AssetPreviewButton.tooltip = %this.previewData.tooltip;
-   %previewButton-->AssetPreviewButton.Command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );";
-   %previewButton-->AssetPreviewButton.altCommand = %this.previewData.doubleClickCommand;
+   %previewButton-->Button.extent = %previewSize.x + %previewBounds SPC %previewSize.y + 24;
+   %previewButton-->Button.tooltip = %this.previewData.tooltip;
+   %previewButton-->Button.Command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );";
+   %previewButton-->Button.altCommand = %doubleClickCommand;
    //%previewButton-->AssetPreviewButton.icon = %this.previewData.previewImage;
    
    %previewButton-->AssetNameLabel.position = 0 SPC %previewSize.y + %previewBounds - 16;
@@ -379,11 +384,32 @@ function AssetBrowser::buildPreviewArray( %this, %asset, %moduleName )
 
 function AssetBrowser::refresh(%this)
 {
-   %this.navigateTo(%this.dirHandler.currentAddress);  
+   if(!%this.dirty)
+   {
+      %this.dirty = true;
+      
+      %this.schedule(1, "doRefresh");
+   }
+}
+
+function AssetBrowser::doRefresh(%this)
+{
+   if(%this.dirty)
+   {
+      %this.navigateTo(%this.dirHandler.currentAddress);  
+      
+      //Forces a clean collapse of the tree for any not-really-exposed items
+      %dataItem = AssetBrowser-->filterTree.findItemByName("Data");
+
+      AssetBrowser-->filterTree.expandItem(%dataItem, false);
+      AssetBrowser-->filterTree.expandItem(%dataItem);
+      
+      %this.dirty = false;
+   }
 }
 //
 //
-function AssetPreviewButton::onClick(%this)
+/*function AssetPreviewButton::onClick(%this)
 {
    echo("CLICKED AN ASSET PREVIEW BUTTON");
 }
@@ -391,7 +417,7 @@ function AssetPreviewButton::onClick(%this)
 function AssetPreviewButton::onDoubleClick(%this)
 {
    echo("DOUBLE CLICKED AN ASSET PREVIEW BUTTON");
-}
+}*/
 //
 //
 
@@ -399,21 +425,58 @@ function AssetBrowser::loadDirectories( %this )
 {
    AssetBrowser-->filterTree.clear();
    
-   %dataItem = AssetBrowser-->filterTree.insertItem(0, "Data");
+   %dataItem = AssetBrowser-->filterTree.insertItem(0, "Content");
+   
+   %dataItem = AssetBrowser-->filterTree.insertItem(1, "Data");
    %this.dirHandler.loadFolders("Data", %dataItem);
    
    //If set to, show core
    if(%this.coreModulesFilter)
    {
-      %coreItem = AssetBrowser-->filterTree.insertItem(0, "Core");
+      %coreItem = AssetBrowser-->filterTree.insertItem(1, "Core");
       %this.dirHandler.loadFolders("Core", %coreItem);
    }
    
    //If set to, show tools
    if(%this.toolsModulesFilter)
    {
-      %toolsItem = AssetBrowser-->filterTree.insertItem(0, "Tools");
+      %toolsItem = AssetBrowser-->filterTree.insertItem(1, "Tools");
       %this.dirHandler.loadFolders("Tools", %toolsItem);
+   }
+   
+   //Add Non-Asset Scripted Objects. Datablock, etc based
+   %category = getWord( %breadcrumbPath, 1 );                  
+   %dataGroup = "DataBlockGroup";
+   
+   if(%dataGroup.getCount() != 0)
+   {
+      %scriptedItem = AssetBrowser-->filterTree.insertItem(1, "Scripted");
+      
+      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
+      {
+         %obj = %dataGroup.getObject(%i);
+         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
+         
+         if ( %obj.category $= "" && %obj.category == 0 )
+            continue;
+         
+         //if ( %breadcrumbPath $= "" )
+         //{         
+            %catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
+            
+            if(%catItem == 0)
+               AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");
+            /*%ctrl = %this.findIconCtrl( %obj.category );
+            if ( %ctrl == -1 )
+            {
+               %this.addFolderIcon( %obj.category );
+            }*/
+         //}
+         /*else if ( %breadcrumbPath $= %obj.category )
+         {            
+            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
+         }*/
+      }
    }
    
    AssetPreviewArray.empty();
@@ -443,15 +506,15 @@ function AssetBrowser::loadDirectories( %this )
       AssetBrowser.newModuleId = ""; 
    }
    
-   %dataItem = AssetBrowser-->filterTree.findItemByName("Data");
-   AssetBrowser-->filterTree.expandItem(%dataItem);
+   //%dataItem = AssetBrowser-->filterTree.findItemByName("Data");
+   //AssetBrowser-->filterTree.expandItem(%dataItem);
    
    AssetBrowser.dirHandler.expandTreeToAddress(AssetBrowser.dirHandler.currentAddress);
    
    %selectedItem = AssetBrowser.dirHandler.getFolderTreeItemFromAddress(AssetBrowser.dirHandler.currentAddress);
    AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
    
-   AssetBrowser-->filterTree.buildVisibleTree(); 
+   AssetBrowser-->filterTree.buildVisibleTree(true); 
    
    AssetBrowser.refresh();
 }
@@ -739,18 +802,30 @@ function AssetListPanelInputs::onRightMouseDown(%this)
 function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
 {
    %count = %this.getSelectedItemsCount();
-   if( %this.getSelectedItemsCount() > 0 && %itemId != 1)
+   
+   %itemText = %this.getItemText(%itemId);
+   if( %this.getSelectedItemsCount() > 0 && (%itemText !$= "Data" && %itemText !$= "Core" && %itemText !$= "Tools"))
    {
       //AddNewAssetPopup.showPopup(Canvas);  
       
       //We have something clicked, so figure out if it's a sub-filter or a module filter, then push the correct
       //popup menu
-      if(%this.getParentItem(%itemId) == 1)
+      %parentItem = %this.getParentItem(%itemId);
+      if(%this.getItemText(%parentItem) $= "Data") //if it's a data module, continue
       {
-         //yep, module, push the all-inclusive popup  
-         EditModulePopup.showPopup(Canvas); 
-         //also set the module value for creation info
-         AssetBrowser.selectedModule = %this.getItemText(%itemId);
+         //find out if it's a folder or a module!
+         if(ModuleDatabase.findModule(%itemText))
+         {
+            //yep, module, push the all-inclusive popup  
+            EditModulePopup.showPopup(Canvas); 
+            //also set the module value for creation info
+            AssetBrowser.selectedModule = %itemText;
+         }
+         else
+         {
+            EditNonModulePopup.showPopup(Canvas);
+            EditNonModulePopup.targetFolder = %itemText;
+         }
       }
       else
       {
@@ -758,9 +833,13 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
          EditFolderPopup.assetType = "Folder";  
       }
    }
-   else if(%itemId == 1)
+   else if(%itemText $= "Data")
    {
       AddNewModulePopup.showPopup(Canvas);
+   }
+   else if(%itemText $= "Tools")
+   {
+      AddNewToolPopup.showPopup(Canvas);
    }
 }
 
@@ -839,6 +918,18 @@ function AssetBrowserFilterTree::onSelect(%this, %itemId)
 
 function AssetBrowser::rebuildAssetArray(%this)
 {
+   if(!%this.previewArrayDirty)
+   {
+      %this.previewArrayDirty = true;
+      %this.schedule(16, "doRebuildAssetArray");
+   }
+}
+
+function AssetBrowser::doRebuildAssetArray(%this)
+{
+   if(!%this.previewArrayDirty)
+      return;
+   
    %breadcrumbPath = AssetBrowser.dirHandler.currentAddress;
    
    // we have to empty out the list; so when we create new guicontrols, these dont linger
@@ -852,6 +943,9 @@ function AssetBrowser::rebuildAssetArray(%this)
    %numAssetsFound = AssetDatabase.findAllAssets(%assetQuery);
 
    %finalAssetCount = 0;
+   
+   %searchText = AssetBrowserSearchFilter.getText();
+   %searchFilterActive = %searchText !$= "Search Assets...";
   
     //now, we'll iterate through, and find the assets that are in this module, and this category
     for( %i=0; %i < %numAssetsFound; %i++)
@@ -864,7 +958,7 @@ function AssetBrowser::rebuildAssetArray(%this)
        //clean up the path
        %assetBasePath = strreplace(%assetBasePath, "//", "/");
        
-       if(%assetBasePath $= %breadcrumbPath)
+       if(%assetBasePath $= %breadcrumbPath || (%searchFilterActive && startsWith(%assetBasePath,%breadcrumbPath)))
        {
           //first, get the asset's module, as our major categories
 		    %module = AssetDatabase.getAssetModule(%assetId);
@@ -924,8 +1018,7 @@ function AssetBrowser::rebuildAssetArray(%this)
 				//stop adding after previewsPerPage is hit
 				%assetName = AssetDatabase.getAssetName(%assetId);
 				
-				%searchText = AssetBrowserSearchFilter.getText();
-				if(%searchText !$= "Search Assets...")
+				if(%searchFilterActive)
 				{
 					if(strstr(strlwr(%assetName), strlwr(%searchText)) != -1)
 					{
@@ -969,11 +1062,43 @@ function AssetBrowser::rebuildAssetArray(%this)
       }
    }
 
+   //Add Non-Asset Scripted Objects. Datablock, etc based
+   %category = getWord( %breadcrumbPath, 1 );                  
+   %dataGroup = "DataBlockGroup";
+   
+   if(%dataGroup.getCount() != 0)
+   {
+      %scriptedItem = AssetBrowser-->filterTree.findItemByName("Scripted");
+      
+      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
+      {
+         %obj = %dataGroup.getObject(%i);
+         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
+         
+         if ( %obj.category $= "" && %obj.category == 0 )
+            continue;
+         
+         /*if ( %breadcrumbPath $= "" )
+         {         
+            %ctrl = %this.findIconCtrl( %obj.category );
+            if ( %ctrl == -1 )
+            {
+               %this.addFolderIcon( %obj.category );
+            }    
+         }
+         else */
+         if ( %breadcrumbPath $= %obj.category )
+         {            
+            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
+         }
+      }
+   }
+      
 	AssetBrowser.currentPreviewPage = 0;
 	AssetBrowser.totalPages = 1;
 	
 	for(%i=0; %i < %assetArray.count(); %i++)
-		AssetBrowser.buildPreviewArray( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
+		AssetBrowser.buildAssetPreview( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
 		
    AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";
    
@@ -998,8 +1123,8 @@ function AssetBrowser::rebuildAssetArray(%this)
          }
       }
       
-      if(!%validType)
-         continue;
+      //if(!%validType)
+      //   continue;
    }
    else
    {
@@ -1008,6 +1133,8 @@ function AssetBrowser::rebuildAssetArray(%this)
    
    if(%activeTypeFilterList !$= "")
       AssetBrowser_FooterText.text = AssetBrowser_FooterText.text @ " | Active Type Filters: " @ %activeTypeFilterList;
+      
+   %this.previewArrayDirty = false;
 }
 
 //
@@ -1092,6 +1219,7 @@ function AssetBrowser::navigateTo(%this, %address, %historyNav)
    }
    
    %this.rebuildAssetArray();
+   %this.refresh();
 }
 
 function AssetBrowser::navigateHistoryForward(%this)

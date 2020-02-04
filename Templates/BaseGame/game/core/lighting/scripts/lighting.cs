@@ -40,7 +40,14 @@ function initLightingSystems(%manager)
       exec( %file );
       %file = findNextFile( %pattern );
    }*/
-
+   
+   %mode = ProjectSettings.value("General/LightingMode", "Deferred");
+   
+   if(%mode $= "Deferred")
+      %manager = "Advanced Lighting";
+   else if(%mode $= "Forward")
+      %manager = "Basic Lighting";
+      
    // Try the perfered one first.
    %success = setLightManager(%manager);
 

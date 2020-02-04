@@ -120,8 +120,7 @@ void TerrainMaterialAsset::initializeAsset()
 
    compileShader();
 
-   if (!Platform::isFullPath(mScriptFile))
-      mScriptFile = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptFile;
+   mScriptFile = expandAssetFilePath(mScriptFile);
 
    if (Platform::isFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
@@ -156,7 +155,7 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
    pScriptFile = StringTable->insert(pScriptFile);
 
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
+   mScriptFile = pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

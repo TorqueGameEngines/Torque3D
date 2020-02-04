@@ -13,7 +13,22 @@ function AssetBrowser::editAsset(%this, %assetDef)
    //Find out what type it is
    //If the passed-in definition param is blank, then we're likely called via a popup
    if(%assetDef $= "")
-      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   {
+      if(AssetDatabase.isDeclaredAsset(EditAssetPopup.assetId))
+      {
+         %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+      }
+      else
+      {
+         //if it's not a valid asset at all, then it's probably a folder
+         %folder = strreplace(EditAssetPopup.assetId, ":", "/");
+         if(isDirectory(%folder))
+         {
+            AssetBrowser.navigateTo(%folder);
+         }
+      }
+   }
+      
       
    %assetType = %assetDef.getClassName();
    
@@ -132,6 +147,51 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    AssetBrowser-->filterTree.buildVisibleTree(); 
 }
 
+function renameAssetFile(%assetDef, %newName)
+{
+   %assetId = %assetDef.getAssetID();
+   %module = AssetDatabase.getAssetModule(%assetId);
+   %moduleId = %module.moduleId;
+   
+   %assetPath = AssetDatabase.getAssetFilePath(%assetId);
+   
+   %newPath = filePath(%assetPath) @ "/" @ %newName @ ".asset.taml";
+   %copiedSuccess = pathCopy(%assetPath, %newPath);
+   
+   if(!%copiedSuccess)
+      return "";
+   
+   %deleteSuccess = fileDelete(%assetPath);
+   
+   if(!%deleteSuccess)
+      return "";
+      
+   //Remove the old declaration
+   AssetDatabase.removeDeclaredAsset(%assetId);
+   //Add with the new file
+   AssetDatabase.addDeclaredAsset(%module, %newPath);
+   
+   //Perform the rename in the file/system itself
+   AssetDatabase.renameDeclaredAsset(%assetId, %moduleId @ ":" @ %newName);
+}
+
+function renameAssetLooseFile(%file, %newName)
+{
+   %newPath = filePath(%file) @ "/" @ %newName @ fileExt(%file);
+   %copiedSuccess = pathCopy(%file, %newPath);
+   
+   if(!%copiedSuccess)
+      return "";
+   
+   %deleteSuccess = fileDelete(%file);
+   
+   if(!%deleteSuccess)
+      return "";
+   
+   return fileName(%newPath);
+}
+
+
 function AssetNameField::onReturn(%this)
 {
    %this.clearFirstResponder();
@@ -163,6 +223,39 @@ function AssetBrowser::moveAsset(%this, %assetId, %destination)
    }
    
    %this.refresh();
+}
+
+function moveAssetFile(%assetDef, %destinationPath)
+{
+   %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
+   %assetFilename = fileName(%assetPath);
+   
+   %newAssetPath = %destination @ "/" @ %assetFilename;
+   
+   %copiedSuccess = pathCopy(%assetPath, %destination @ "/" @ %assetFilename);
+   
+   if(!%copiedSuccess)
+      return "";
+      
+   %deleteSuccess = fileDelete(%assetPath);
+   
+   if(!%deleteSuccess)
+      return "";
+      
+   return %newAssetPath;
+}
+
+function moveAssetLooseFile(%file, %destinationPath)
+{
+   %filename = fileName(%file);
+   
+   %copiedSuccess = pathCopy(%file, %destinationPath @ "/" @ %filename);
+   
+   if(!%copiedSuccess)
+      return false;
+      
+   %deleteSuccess = fileDelete(%file);
+   return %deleteSuccess;
 }
 
 //------------------------------------------------------------

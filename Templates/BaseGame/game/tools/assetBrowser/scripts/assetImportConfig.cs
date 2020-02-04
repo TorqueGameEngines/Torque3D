@@ -67,8 +67,6 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseDiffuseSuffixOnOriginImage", "Use Diffuse Suffix for Origin Image", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseExistingMaterials", "Use Existing Materials", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/IgnoreMaterials", "Ignore Materials", "command", "", "", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AlwaysPresentImageMaps", "Always Present Image Maps", "bool", 
-                                                         "Wether to always display all normal material map fields, even if an image isn't detected.", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/PopulateMaterialMaps", "Populate Material Maps", "bool", "", "1", "");
       
       //Animations
@@ -321,7 +319,6 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Materials/CreateComposites", "1");
    AssetImportSettings.setValue("Materials/UseDiffuseSuffixOnOriginImage", "1");
    AssetImportSettings.setValue("Materials/UseExistingMaterials", "1");
-   AssetImportSettings.setValue("Materials/AlwaysPresentImageMaps", "0");
    AssetImportSettings.setValue("Materials/PopulateMaterialMaps", "1");
    
    //Animations

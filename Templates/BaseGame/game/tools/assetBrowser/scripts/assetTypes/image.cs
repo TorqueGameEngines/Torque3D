@@ -81,9 +81,11 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
          if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
          {
             if(%foundSuffixType $= "diffuse")
-               %materialAsset.diffuseImageAsset = %assetItem;
+               %assetItem.ImageType = "Diffuse";
+               //%materialAsset.diffuseImageAsset = %assetItem;
             else if(%foundSuffixType $= "normal")
-               %materialAsset.normalImageAsset = %assetItem;
+               %assetItem.ImageType = "Normal";
+               //%materialAsset.normalImageAsset = %assetItem;
             else if(%foundSuffixType $= "metalness")
                %materialAsset.metalnessImageAsset = %assetItem;
             else if(%foundSuffixType $= "roughness")
@@ -173,28 +175,38 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
 }
 
+//Renames the asset
+function AssetBrowser::renameImageAsset(%this, %assetDef, %newAssetName)
+{
+   %newFilename = renameAssetLooseFile(%assetDef.imageFile, %newAssetName);
+   
+   if(!%newFilename $= "")
+      return;
+
+   %assetDef.imageFile = %newFilename;
+   %assetDef.saveAsset();
+   
+   renameAssetFile(%assetDef, %newAssetName);
+}
+
+//Deletes the asset
+function AssetBrowser::deleteImageAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
 function AssetBrowser::moveImageAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
    %targetModule = AssetBrowser.getModuleFromAddress(%destination);
    
-   if(%currentModule $= %targetModule)
-   {
-      //just move the files  
-      %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
-      %assetFilename = fileName(%assetPath);
-      
-      %newAssetPath = %destination @ "/" @ %assetFilename;
-      
-      %copiedSuccess = pathCopy(%assetPath, %destination @ "/" @ %assetFilename);
-      %deleteSuccess = fileDelete(%assetPath);
-      
-      %imagePath = %assetDef.imageFile;
-      %imageFilename = fileName(%imagePath);
-      
-      %copiedSuccess = pathCopy(%imagePath, %destination @ "/" @ %imageFilename);
-      %deleteSuccess = fileDelete(%imagePath);
-   }
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.imageFile, %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);

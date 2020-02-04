@@ -50,7 +50,7 @@ function AssetBrowser::buildFolderPreview(%this, %assetDef, %previewData)
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = %assetDef.dirPath;
-   %previewData.doubleClickCommand = "AssetBrowser.navigateTo(\""@ %assetDef.dirPath @ "/" @ %assetDef.assetName @"\")";//browseTo %assetDef.dirPath / %assetDef.assetName
+   %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"navigateTo\",\""@ %assetDef.dirPath @ "/" @ %assetDef.assetName @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
 }
 
 function AssetBrowser::renameFolder(%this, %folderPath, %newFolderName)

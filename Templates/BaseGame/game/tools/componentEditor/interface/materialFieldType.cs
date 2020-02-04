@@ -1,12 +1,13 @@
-function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fieldName)
+function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %fieldDesc, 
+            %fieldDefaultVal, %fieldDataVals, %callback, %ownerObj)
 {
    %extent = 200;
 
-   %currentMaterial = %component.getFieldValue(%fieldName);
+   %currentMaterial = %ownerObj.getFieldValue(%fieldName);
 
    //if we don't have a new material set on this slot, just use the default
    if(%currentMaterial $= "" || %currentMaterial == 0)
-	  %currentMaterial = %material;
+	  %currentMaterial = %fieldDefaultVal;
       
    %container = new GuiControl() {
       canSaveDynamicFields = "0";
@@ -25,7 +26,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
 
    %labelControl = new GuiTextCtrl() {
       canSaveDynamicFields = "0";
-      Profile = "EditorFontHLBold";
+      Profile = "ToolsGuiTextBoldProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
       Position = "16 3";
@@ -53,7 +54,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
          position = "7 71";
          profile = "ToolsGuiTextCenterProfile";
          extent = "64 16";
-         text = %matName;
+         text = %currentMaterial;
       };
    };
    
@@ -96,7 +97,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
          extent = "72 88";
          Variable = "";
          buttonType = "toggleButton";
-         tooltip = %matName;
+         tooltip = %currentMaterial;
          groupNum = "0";
          text = "";
 		 Object = %component;
@@ -111,7 +112,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
    
    %mapToLabel = new GuiTextCtrl() {
       canSaveDynamicFields = "0";
-      Profile = "EditorFontHLBold";
+      Profile = "ToolsGuiTextBoldProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
       Position = "100 26";
@@ -130,7 +131,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
       class = "BehaviorEdTextField";
       internalName = %accessor @ "File";
       canSaveDynamicFields = "0";
-      Profile = "EditorTextEdit";
+      Profile = "ToolsGuiTextEditProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
       Position = "100 50";
@@ -262,7 +263,7 @@ function GuiInspectorComponentGroup::buildMaterialField(%this, %component, %fiel
    %previewButton.setBitmap(%previewImage);
    %previewButton.setText("");
    
-   %this.stack.add(%container);
+   %this-->stack.add(%container);
 }
 
 function materialFieldBtn::onClick(%this)

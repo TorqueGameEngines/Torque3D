@@ -221,7 +221,9 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
 
-   if (!Sim::findObject(matAsset->getMaterialDefinitionName(), materialDef))
+   StringTableEntry matDefName = matAsset ? matAsset->getMaterialDefinitionName() : matAssetId;
+
+   if (!Sim::findObject(matDefName, materialDef))
    {
       Con::errorf("GuiInspectorTypeMaterialAssetPtr::constructEditControl() - unable to find material in asset");
    }
@@ -244,7 +246,7 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    mMatPreviewButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
 
    StringBuilder strbld;
-   strbld.append(matAsset->getMaterialDefinitionName());
+   strbld.append(matDefName);
    strbld.append("\n");
    strbld.append("Open this file in the Material Editor");
 

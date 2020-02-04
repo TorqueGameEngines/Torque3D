@@ -88,6 +88,7 @@ ConsoleSetType(TypeShapeAssetPtr)
 ShapeAsset::ShapeAsset()
 {
    mFileName = StringTable->EmptyString();
+   mConstructorFileName = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -105,6 +106,8 @@ void ShapeAsset::initPersistFields()
 
    addProtectedField("fileName", TypeAssetLooseFilePath, Offset(mFileName, ShapeAsset),
       &setShapeFile, &getShapeFile, "Path to the shape file we want to render");
+   addProtectedField("constuctorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
+      &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
 }
 
 void ShapeAsset::setDataField(StringTableEntry slotName, const char *array, const char *value)
@@ -135,6 +138,8 @@ void ShapeAsset::initializeAsset()
    if (!Platform::isFullPath(mFileName))
       mFileName = getOwned() ? expandAssetFilePath(mFileName) : mFileName;
 
+   mConstructorFileName = expandAssetFilePath(mConstructorFileName);
+
    loadShape();
 }
 
@@ -151,6 +156,24 @@ void ShapeAsset::setShapeFile(const char* pShapeFile)
       return;
 
    mFileName = pShapeFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void ShapeAsset::setShapeConstructorFile(const char* pShapeConstructorFile)
+{
+   // Sanity!
+   AssertFatal(pShapeConstructorFile != NULL, "Cannot use a NULL shape constructor file.");
+
+   // Fetch image file.
+   pShapeConstructorFile = StringTable->insert(pShapeConstructorFile);
+
+   // Ignore no change,
+   if (pShapeConstructorFile == mConstructorFileName)
+      return;
+
+   mConstructorFileName = pShapeConstructorFile;
 
    // Refresh the asset.
    refreshAsset();

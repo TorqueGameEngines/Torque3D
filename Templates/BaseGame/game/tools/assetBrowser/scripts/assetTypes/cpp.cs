@@ -1,3 +1,16 @@
+function AssetBrowser::buildCppAssetPreview(%this, %assetDef, %previewData)
+{
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.codeFilePath;
+   %previewData.doubleClickCommand = "echo(\"Not yet implemented to edit C++ files from the editor\");";//"EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
+   
+   %previewData.previewImage = "tools/assetBrowser/art/cppIcon";
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   %previewData.tooltip = %assetDef.assetName;
+}
+
 function AssetBrowser::createCppAsset(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
@@ -129,15 +142,50 @@ function AssetBrowser::createCppAsset(%this)
 	return %tamlpath;
 }
 
-function AssetBrowser::buildCppAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::editCppAsset(%this, %assetDef)
 {
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.codeFilePath;
-   %previewData.doubleClickCommand = "echo(\"Not yet implemented to edit C++ files from the editor\");";//"EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
+}
+
+//Renames the asset
+function AssetBrowser::renameCppAsset(%this, %assetDef, %newAssetName)
+{
+   %newCodeLooseFilename = renameAssetLooseFile(%assetDef.codefile, %newAssetName);
    
-   %previewData.previewImage = "tools/assetBrowser/art/cppIcon";
+   if(!%newCodeLooseFilename $= "")
+      return;
+      
+   %newHeaderLooseFilename = renameAssetLooseFile(%assetDef.headerFile, %newAssetName);
    
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.assetName;
+   if(!%newHeaderLooseFilename $= "")
+      return;
+      
+   %assetDef.codefile = %newCodeLooseFilename;
+   %assetDef.headerFile = %newHeaderLooseFilename;
+   %assetDef.saveAsset();
+   
+   renameAssetFile(%assetDef, %newAssetName);
+}
+
+//Deletes the asset
+function AssetBrowser::deleteCppAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
+function AssetBrowser::moveCppAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.codeFile, %destination);
+   moveAssetLooseFile(%assetDef.headerFile, %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }

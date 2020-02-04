@@ -110,6 +110,8 @@ function AssetBrowser::onDropFile( %this, %filePath )
       %this.addImportingAsset("GUIAsset", %filePath);
    else if (%fileExt $= ".zip")
       %this.onDropZipFile(%filePath);
+   else if( %fileExt $= "")
+      %this.onDropFolder(%filePath);
       
    //Used to keep tabs on what files we were trying to import, used mainly in the event of
    //adjusting configs and needing to completely reprocess the import
@@ -119,6 +121,53 @@ function AssetBrowser::onDropFile( %this, %filePath )
 }
 
 function AssetBrowser::onDropZipFile(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+      
+   %zip = new ZipObject();
+   %zip.openArchive(%filePath);
+   %count = %zip.getFileEntryCount();
+   
+   echo("Dropped in a zip file with" SPC %count SPC "files inside!");
+   
+   for (%i = 0; %i < %count; %i++)
+   {
+      %fileEntry = %zip.getFileEntry(%i);
+      %fileFrom = getField(%fileEntry, 0);
+      
+      //First, we wanna scan to see if we have modules to contend with. If we do, we'll just plunk them in wholesale
+      //and not process their contents.
+      
+      //If not modules, it's likely an art pack or other mixed files, so we'll import them as normal
+      /*if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") )
+         %this.importAssetListArray.add("ImageAsset", %filePath);
+      else if( (%fileExt $= ".dae") || (%fileExt $= ".dts"))
+         %this.importAssetListArray.add("ShapeAsset", %filePath);
+      else if( (%fileExt $= ".ogg") || (%fileExt $= ".wav") || (%fileExt $= ".mp3"))
+         %this.importAssetListArray.add("SoundAsset", %filePath);
+      else if( (%fileExt $= ".gui") || (%fileExt $= ".gui.dso"))
+         %this.importAssetListArray.add("GUIAsset", %filePath);
+      //else if( (%fileExt $= ".cs") || (%fileExt $= ".dso"))
+      //   %this.importAssetListArray.add("Script", %filePath);
+      else if( (%fileExt $= ".mis"))
+         %this.importAssetListArray.add("LevelAsset", %filePath);*/
+         
+      // For now, if it's a .cs file, we'll assume it's a behavior.
+      //if (fileExt(%fileFrom) !$= ".cs")
+      //   continue;
+      
+      %fileTo = expandFilename("^tools/assetBrowser/importTemp/") @ %fileFrom;
+      %zip.extractFile(%fileFrom, %fileTo);
+      //exec(%fileTo);
+   }
+   
+   %zip.delete();
+   
+   //Next, we loop over the files and import them
+}
+
+function AssetBrowser::onDropFolder(%this, %filePath)
 {
    if(!%this.isVisible())
       return;
@@ -391,7 +440,10 @@ function ImportAssetWindow::onWake(%this)
    //Lets refresh our list
    if(!ImportAssetWindow.isVisible())
       return;
-   
+      
+   if(!isObject(%this.importTempDirHandler))
+      %this.importTempDirHandler = makedirectoryHandler(0, "", ""); 
+      
    if(!isObject(AssetImportSettings))
    {
       new Settings(AssetImportSettings) 
@@ -420,6 +472,8 @@ function ImportAssetWindow::onWake(%this)
    ImportAssetConfigList.setSelected(0);
    
    ImportActivityLog.empty();
+   
+   %this.refresh();
 }
 
 function ImportAssetWindow::reloadImportOptionConfigs(%this)
@@ -973,7 +1027,6 @@ function NewAssetsViewTree::onRightMouseDown(%this, %itemId)
    }
    else
    {
-      ImportAssetActions.enableItem(1, false);
       ImportAssetActions.showPopup(Canvas);
    }
 }
@@ -1509,6 +1562,8 @@ function ImportAssetWindow::Close(%this)
 {
    //Some cleanup
    ImportAssetWindow.importingFilesArray.empty();
+   
+   %this.importTempDirHandler.deleteFolder("tools/assetBrowser/importTemp/*/");
    
    Canvas.popDialog();  
 }

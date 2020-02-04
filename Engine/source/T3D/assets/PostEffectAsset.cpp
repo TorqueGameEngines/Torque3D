@@ -149,7 +149,7 @@ void PostEffectAsset::setScriptFile(const char* pScriptFile)
       return;
 
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mScriptFile = pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

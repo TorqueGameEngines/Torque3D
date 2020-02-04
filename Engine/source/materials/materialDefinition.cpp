@@ -86,8 +86,7 @@ ImplementEnumType( MaterialBlendOp,
    { Material::Add,          "Add", "Adds the color of the material to the frame buffer with full alpha for each pixel." },
    { Material::AddAlpha,     "AddAlpha", "The color is modulated by the alpha channel before being added to the frame buffer." },
    { Material::Sub,          "Sub", "Subtractive Blending. Reverses the color model, causing dark colors to have a stronger visual effect." },
-   { Material::LerpAlpha,    "LerpAlpha", "Linearly interpolates between Material color and frame buffer color based on alpha." },
-   { Material::PreMult, "PreMult", "" }
+   { Material::LerpAlpha,    "LerpAlpha", "Linearly interpolates between Material color and frame buffer color based on alpha." }
 EndImplementEnumType;
 
 ImplementEnumType( MaterialWaveType,

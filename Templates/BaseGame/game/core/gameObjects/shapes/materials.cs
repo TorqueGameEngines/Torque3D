@@ -27,11 +27,11 @@ singleton Material(OctahedronMat)
    diffuseMap[0] = "core/gameObjects/images/camera";
 
    translucent = "1";
-   translucentBlendOp = "LerpAlpha";
+   translucentBlendOp = "PreMul";
    emissive = "0";
    castShadows = "0";
 
-   colorMultiply[0] = "0 1 0 1";
+   diffuseColor[0] = "0 1 0 1";
 };
 
 //--- camera.dts MATERIALS BEGIN ---

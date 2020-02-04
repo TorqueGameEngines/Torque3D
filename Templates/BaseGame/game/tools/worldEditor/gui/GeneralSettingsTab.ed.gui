@@ -200,7 +200,7 @@
                         canSaveDynamicFields = "1";
                         class = "ESettingsWindowTextEdit";
                            editorSettingsRead = "EditorGui.readWorldEditorSettings();";
-                           editorSettingsValue = "WorldEditor/newLevelFile";
+                           editorSettingsValue = "";
                            editorSettingsWrite = "EditorGui.writeWorldEditorSettings();";
                      };
                   };

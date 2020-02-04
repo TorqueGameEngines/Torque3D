@@ -319,6 +319,35 @@ function shareValueSafeDelay(%source, %dest, %delayMs)
    schedule(%delayMs, 0, shareValueSafe, %source, %dest);
 }
 
+//------------------------------------------------------------------------------
+function replaceInFile(%fileName, %fromWord, %toWord)
+{
+   //Go through our scriptfile and replace the old namespace with the new
+   %editedFileContents = "";
+   
+   %file = new FileObject();
+   if ( %file.openForRead( %fileName ) ) 
+   {
+      while ( !%file.isEOF() ) 
+      {
+         %line = %file.readLine();
+         %line = trim( %line );
+         
+         %editedFileContents = %editedFileContents @ strreplace(%line, %fromWord, %toWord) @ "\n";
+      }
+      
+      %file.close();
+   }
+   
+   if(%editedFileContents !$= "")
+   {
+      %file.openForWrite(%fileName);
+      
+      %file.writeline(%editedFileContents);
+      
+      %file.close();
+   }
+}
 
 //------------------------------------------------------------------------------
 // An Aggregate Control is a plain GuiControl that contains other controls, 

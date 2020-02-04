@@ -185,6 +185,18 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
+   if( !isObject( EditNonModulePopup ) )
+   {
+      new PopupMenu( EditNonModulePopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+         
+         item[ 0 ] = "Turn Folder into Module" TAB "" TAB "AssetBrowser.ConvertFolderIntoModule();";
+      };
+   }
+   
    //Some assets are not yet ready/implemented, so disable their creation here
    AddNewArtAssetPopup.enableItem(6, false); //shape
    AddNewArtAssetPopup.enableItem(7, false); //shape animation
@@ -256,8 +268,6 @@ function AssetBrowser::buildPopupMenus(%this)
          AssetTypeListPopup.addItem(%i+1, %assetTypeName TAB "" TAB "AssetBrowser.toggleAssetTypeFilter(" @ %i + 1 @ ");");
       }
    }
-   
-   AssetBrowser.toggleAssetTypeFilter(0);  
    
    //Browser visibility menu
    if( !isObject( BrowserVisibilityPopup ) )
@@ -370,9 +380,26 @@ function AssetBrowser::buildPopupMenus(%this)
          class = "EditorWorldMenu";
          
          item[0] = "Add New Asset" TAB "" TAB "ImportAssetWindow.addNewImportingAsset();";
-         item[0] = "Add Reference to Existing Asset" TAB "" TAB "ImportAssetWindow.addRefExistingAsset();";
-         item[1] = "Remove asset" TAB "" TAB "ImportAssetWindow.removeImportingAsset();";
+         item[1] = "Import Existing File as Asset" TAB "" TAB "ImportAssetWindow.importExistingFile();";
+         item[2] = "-";
+         item[3] = "Add Reference to Existing Asset" TAB "" TAB "ImportAssetWindow.addRefExistingAsset();";
+         item[4] = "-";
+         item[5] = "Remove asset" TAB "" TAB "ImportAssetWindow.removeImportingAsset();";
       };
+   }
+   
+   if( !isObject( AddNewToolPopup ) )
+   {
+      new PopupMenu( AddNewToolPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         isPopup = true;
+         
+         item[ 0 ] = "Create New Editor Tool" TAB "" TAB "AssetBrowser.createNewEditorTool(AddNewToolPopup.targetFolder);";
+      };
+      
+      AddNewModulePopup.enableItem(1, false);
    }
 }
 

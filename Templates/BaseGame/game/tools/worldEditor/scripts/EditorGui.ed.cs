@@ -264,6 +264,8 @@ function EditorGui::init(%this)
       %obj = EditorPluginSet.getObject( %i );
       %obj.onWorldEditorStartup();      
    }
+   
+   callOnModules("onWorldEditorStartup", "Tools");
 
    // With everything loaded, start up the settings window
    ESettingsWindow.startup();
@@ -610,7 +612,7 @@ function EditorGui::onNewLevelLoaded( %this, %levelName )
 {
    %this.levelName = %levelName;
    %this.setupDefaultCameraSettings();
-   ECameraSettingsPage.init();
+   //ECameraSettingsPage.init();
    EditorCameraSpeedOptions.setupDefaultState();
    
    new ScriptObject( EditorMissionCleanup )

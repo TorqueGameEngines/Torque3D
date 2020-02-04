@@ -86,6 +86,14 @@ new GuiControlProfile (ToolsGuiSolidDefaultProfile : ToolsGuiDefaultProfile)
    category = "Tools";
 };
 
+if( !isObject( ToolsGuiDefaultNonModalProfile ) )
+new GuiControlProfile (ToolsGuiDefaultNonModalProfile : ToolsGuiDefaultProfile)
+{
+   opaque = false;
+   modal = false;
+   category = "Tools";
+};
+
 if( !isObject( ToolsGuiTransparentProfile ) )
 new GuiControlProfile (ToolsGuiTransparentProfile)
 {
@@ -192,6 +200,12 @@ new GuiControlProfile (ToolsGuiTextProfile)
    category = "Tools";
 };
 
+if( !isObject( ToolsGuiTextBoldProfile ) )
+new GuiControlProfile (ToolsGuiTextBoldProfile : ToolsGuiTextProfile)
+{
+   fontType = "Noto Sans Bold";
+};
+
 if( !isObject( ToolsGuiTextBoldCenterProfile ) )
 new GuiControlProfile (ToolsGuiTextBoldCenterProfile : ToolsGuiTextProfile)
 {
@@ -207,6 +221,13 @@ new GuiControlProfile (ToolsGuiTextRightProfile : ToolsGuiTextProfile)
 {
    justify = "right";
    category = "Tools";
+};
+
+if( !isObject( ToolsGuiTextBoldRightProfile ) )
+new GuiControlProfile (ToolsGuiTextBoldRightProfile : ToolsGuiTextRightProfile)
+{
+   fontType = "Noto Sans Bold";
+   fontSize = 16;
 };
 
 if( !isObject( ToolsGuiTextCenterProfile ) )

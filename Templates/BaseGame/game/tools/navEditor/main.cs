@@ -89,7 +89,7 @@ function NavEditorPlugin::onWorldEditorStartup(%this)
 
    // Add ourselves to the Editor Settings window.
    exec("./NavEditorSettingsTab.gui");
-   ESettingsWindow.addTabPage(ENavEditorSettingsPage);
+   //ESettingsWindow.addTabPage(ENavEditorSettingsPage);
    ENavEditorSettingsPage.init();
 
    // Add items to World Editor Creator

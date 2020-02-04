@@ -18,11 +18,15 @@ function makedirectoryHandler(%targetTree, %folderExclusionList, %searchFilter)
 
 function directoryHandler::loadFolders(%this, %path, %parentId)
 {
+   %modulesList = ModuleDatabase.findModules();
+   
    //utilize home dir project setting here
    %paths = getDirectoryList(%path);
    for(%i=0; %i < getFieldCount(%paths); %i++)
    {
       %childPath = getField(%paths, %i);
+      
+      %fullChildPath = makeFullPath(%path @ "/" @ %childPath);
       
       %folderCount = getTokenCount(%childPath, "/");
       
@@ -30,14 +34,28 @@ function directoryHandler::loadFolders(%this, %path, %parentId)
       {
          %folderName = getToken(%childPath, "/", %f);
          
+         %parentName = %this.treeCtrl.getItemText(%parentId);
+         
          //we don't need to display the shadercache folder
-         if(%parentId == 1 && (%folderName $= "shaderCache" || %folderName $= "cache"))
+         if(%parentName $= "Data" && (%folderName $= "shaderCache" || %folderName $= "cache"))
             continue;
          
          %iconIdx = 3;
          
-         if(ModuleDatabase.findModule(%folderName) !$= "")
-            %iconIdx = 1;
+         //Lets see if any modules match our current path)
+         for(%m=0; %m < getWordCount(%modulesList); %m++)
+         {
+            %moduleDef = getWord(%modulesList, %m);
+            
+            if(%moduleDef.modulePath $= %fullChildPath)
+            {
+               %iconIdx = 1;
+               break;
+            }
+         }
+         
+         //if(ModuleDatabase.findModule(%folderName) !$= "")
+         //   %iconIdx = 1;
          
          %searchFoldersText = %this.searchFilter;
          if(%searchFoldersText !$= "Search Folders...")
@@ -204,6 +222,8 @@ function directoryHandler::expandTreeToAddress(%this, %address)
       %curItem = %this.treeCtrl.findChildItemByName(%curItem, %folderName);
       %this.treeCtrl.expandItem(%curItem);
    }
+   
+   %this.treeCtrl.expandItem(0);
 }
 
 function directoryHandler::createFolder(%this, %folderPath)

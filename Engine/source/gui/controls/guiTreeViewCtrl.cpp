@@ -2435,15 +2435,17 @@ bool GuiTreeViewCtrl::setItemExpanded(S32 itemId, bool expand)
    if(item->isExpanded() == expand)
       return(true);
 
+   item->setExpanded(expand);
+
    // expand parents
    if(expand)
    {
-      while(item)
+      while (item)
       {
-         if(item->mState.test(Item::VirtualParent))
+         if (!item->isInspectorData() && item->mState.test(Item::VirtualParent))
             onVirtualParentExpand(item);
 
-         item->setExpanded(true);
+         scrollVisible(item);
          item = item->mParent;
       }
    }
@@ -2454,6 +2456,12 @@ bool GuiTreeViewCtrl::setItemExpanded(S32 itemId, bool expand)
 
       item->setExpanded(false);
    }
+
+   //if (!item->isInspectorData() && item->mState.test(Item::VirtualParent))
+   //   onVirtualParentExpand(item);
+
+   mFlags.set(RebuildVisible);
+
    return(true);
 }
 

@@ -106,7 +106,6 @@
          visible = "1";
          active = "1";
          command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );";
-         altCommand = "AssetBrowser.editAsset( 20540 );";
          tooltipProfile = "GuiToolTipProfile";
          tooltip = "\n20540";
          hovertime = "1000";
@@ -227,7 +226,6 @@
          visible = "1";
          active = "1";
          command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );";
-         altCommand = "20550.materialDefinitionName.reload(); $Tools::materialEditorList = \"\";EWorldEditor.clearSelection();MaterialEditorGui.currentObject = 0;MaterialEditorGui.currentMode = \"asset\";MaterialEditorGui.currentMaterial = 20550.materialDefinitionName;MaterialEditorGui.setActiveMaterial( 20550.materialDefinitionName );EditorGui.setEditor(MaterialEditorPlugin); AssetBrowser.hideDialog();";
          tooltipProfile = "GuiToolTipProfile";
          tooltip = "\n20550";
          hovertime = "1000";

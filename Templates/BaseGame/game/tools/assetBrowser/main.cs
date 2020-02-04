@@ -19,13 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-if( !isObject( ToolsGuiDefaultNonModalProfile ) )
-new GuiControlProfile (ToolsGuiDefaultNonModalProfile : ToolsGuiDefaultProfile)
-{
-   opaque = false;
-   modal = false;
-};
-
 function initializeAssetBrowser()
 {
    echo(" % - Initializing Asset Browser");  
@@ -147,4 +140,12 @@ function AssetBrowserPlugin::onWorldEditorStartup( %this )
 { 
    // Add ourselves to the toolbar.
    AssetBrowser.addToolbarButton();
+}
+
+function TSStatic::onConstructField(%this, %fieldName, %fieldLabel, %fieldTypeName, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %inspector = %this.getParent();
+   %makeCommand = %this @ ".build" @ %fieldTypeName @ "Field(\""@ %fieldName @ "\",\"" @ %fieldLabel @ "\",\"" @ %fieldDesc @ "\",\"" @ 
+            %fieldDefaultVal @ "\",\"" @ %fieldDataVals @ "\",\"" @ %inspector @ "." @ %callbackName @ "\",\"" @ %ownerObj @"\");";
+   eval(%makeCommand);
 }

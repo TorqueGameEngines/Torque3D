@@ -137,7 +137,7 @@ void CppAsset::setCppFile(const char* pCppFile)
       return;
 
    // Update.
-   mCodeFile = getOwned() ? expandAssetFilePath(pCppFile) : StringTable->insert(pCppFile);
+   mCodeFile = /*getOwned() ? expandAssetFilePath(pCppFile) : */StringTable->insert(pCppFile);
 
    // Refresh the asset.
    refreshAsset();
@@ -156,8 +156,15 @@ void CppAsset::setHeaderFile(const char* pHeaderFile)
       return;
 
    // Update.
-   mHeaderFile = getOwned() ? expandAssetFilePath(pHeaderFile) : StringTable->insert(pHeaderFile);
+   mHeaderFile = /*getOwned() ? expandAssetFilePath(pHeaderFile) :*/ StringTable->insert(pHeaderFile);
 
    // Refresh the asset.
    refreshAsset();
+}
+
+void CppAsset::initializeAsset()
+{
+   mCodeFile = expandAssetFilePath(mCodeFile);
+
+   mHeaderFile = expandAssetFilePath(mHeaderFile);
 }

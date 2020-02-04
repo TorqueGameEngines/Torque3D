@@ -139,6 +139,11 @@ void StateMachineAsset::setStateMachineFile(const char* pStateMachineFile)
    refreshAsset();
 }
 
+void StateMachineAsset::initializeAsset()
+{
+   mStateMachineFile = expandAssetFilePath(mStateMachineFile);
+}
+
 
 DefineEngineMethod(StateMachineAsset, notifyAssetChanged, void, (),,"")
 {

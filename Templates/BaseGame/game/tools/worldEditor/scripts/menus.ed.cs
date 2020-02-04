@@ -141,6 +141,9 @@ function EditorGui::buildMenus(%this)
    %fileMenu.appendItem("Save Level" TAB %cmdCtrl SPC "S" TAB "EditorSaveMissionMenu();");
    %fileMenu.appendItem("Save Level As..." TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"EditorSaveMissionAs\");");
    %fileMenu.appendItem("-");
+   %fileMenu.appendItem("Save Current Scene as Editor Default" TAB "" TAB "EditorSaveAsDefaultLevel();");
+   %fileMenu.appendItem("Reset Editor Default" TAB "" TAB "EditorResetDefaultLevel();");
+   %fileMenu.appendItem("-");
 
    if( $platform $= "windows" )
    {

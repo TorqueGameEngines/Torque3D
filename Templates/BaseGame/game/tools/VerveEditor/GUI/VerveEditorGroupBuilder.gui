@@ -355,7 +355,7 @@ function VerveEditorGroupBuilderFieldStack::CreateObjectList( %this, %objectType
     %listObject.add( "", 0 );
     
     // Populate List.
-    %listObject.CheckGroup( MissionGroup, %objectType );
+    %listObject.CheckGroup( getRootScene(), %objectType );
     
     // Sort the List.
     %listObject.sort();

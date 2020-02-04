@@ -2,6 +2,6 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="ExampleCppObject"
-    codeFile="@assetFile=data/ExampleModule/source/ExampleCppObject.cpp"
-    headerFile="@assetFile=data/ExampleModule/source/ExampleCppObject.h"
+    codeFile="@assetFile=ExampleCppObject.cpp"
+    headerFile="@assetFile=ExampleCppObject.h"
     VersionId="1" />

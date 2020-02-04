@@ -53,87 +53,41 @@ function AssetBrowser::onScriptAssetEditorDropped(%this, %assetDef, %position)
       return;
 }
 
+//Renames the asset
 function AssetBrowser::renameScriptAsset(%this, %assetDef, %newAssetName)
 {
-   %assetId = %assetDef.getAssetID();
+   %newFilename = renameAssetLooseFile(%assetDef.scriptFile, %newAssetName);
    
-   %module = AssetDatabase.getAssetModule(%assetId);
-   
-   %scriptPath = %assetDef.scriptFile;
-   %newScriptPath = filePath(%scriptPath) @ "/" @ %newAssetName @ fileExt(%scriptPath);
-   %copiedSuccess = pathCopy(%scriptPath, %newScriptPath);
-   
-   %looseFilepath = fileName(%newScriptPath);
-   
-   %assetDef.scriptFile = "\"@AssetFile=" @ %looseFilepath @ "\"";
+   if(!%newFilename $= "")
+      return;
+
+   %assetDef.scriptFile = %newFilename;
    %assetDef.saveAsset();
    
-   AssetDatabase.renameDeclaredAsset("\"" @ %module @ ":" @ %newAssetName @ "\"");
-   
-   //%assetFilePath = makeFullPath(AssetDatabase.getAssetFilePath(%assetId));
-   //%newAssetFilePath = %newFullPath @ "/" @ fileName(%assetFilePath);
-   //%copiedSuccess = pathCopy(%assetFilePath, %newAssetFilePath);
-   
-   fileDelete(%scriptPath);
-   
-   //ModuleDatabase.unloadExplicit(%module.getModuleId());
-   //ModuleDatabase.loadExplicit(%module.getModuleId());
+   renameAssetFile(%assetDef, %newAssetName);
 }
 
+//Deletes the asset
 function AssetBrowser::deleteScriptAsset(%this, %assetDef)
 {
-   %assetId = %assetDef.getAssetID();
-   
-   %module = AssetDatabase.getAssetModule(%assetId);
-   
-   %assetFilePath = makeFullPath(AssetDatabase.getAssetFilePath(%assetId));
-   %scriptPath = %assetDef.scriptFile;
-   
-   fileDelete(%assetFilePath);
-   fileDelete(%scriptPath);
-   
-   //they're different moduels now, so we gotta unload/reload both
-   ModuleDatabase.unloadExplicit(%module.getModuleId());
-   ModuleDatabase.unloadExplicit(%newModule.getModuleId());
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
 }
 
+//Moves the asset to a new path/module
 function AssetBrowser::moveScriptAsset(%this, %assetDef, %destination)
 {
-   %newFullPath = makeFullPath(%destination);
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
    
-   %assetId = %assetDef.getAssetID();
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
    
-   %module = AssetDatabase.getAssetModule(%assetId);
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.scriptFile, %destination);
    
-   %assetFilePath = makeFullPath(AssetDatabase.getAssetFilePath(%assetId));
-   %newAssetFilePath = %newFullPath @ "/" @ fileName(%assetFilePath);
-   %copiedSuccess = pathCopy(%assetFilePath, %newAssetFilePath);
-   
-   %scriptPath = %assetDef.scriptFile;
-   %newScriptPath = %newFullPath @ "/" @ fileName(%scriptPath);
-   %copiedSuccess = pathCopy(%scriptPath, %newScriptPath);
-   
-   fileDelete(%assetFilePath);
-   fileDelete(%scriptPath);
-   
-   //thrash the modules and reload them
-   %newModule = %this.dirHandler.getModuleFromAddress(%newFullPath);
-   
-   //if we didn't move modules, then we don't need to do anything other than refresh the assets within it
-   if(%module == %newModule)
-   {
-      //only do a refresh to update asset loose file paths
-      AssetDatabase.refreshAllAssets();
-   }
-   else
-   {
-      //they're different moduels now, so we gotta unload/reload both
-      ModuleDatabase.unloadExplicit(%module.getModuleId());
-      ModuleDatabase.loadExplicit(%module.getModuleId());
-      
-      ModuleDatabase.unloadExplicit(%newModule.getModuleId());
-      ModuleDatabase.loadExplicit(%newModule.getModuleId());
-   }
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }
 
 function AssetBrowser::buildScriptAssetPreview(%this, %assetDef, %previewData)

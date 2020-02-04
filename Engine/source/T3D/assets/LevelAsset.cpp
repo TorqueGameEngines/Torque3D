@@ -119,13 +119,13 @@ void LevelAsset::initPersistFields()
       &setPreviewImageFile, &getPreviewImageFile, "Path to the image used for selection preview.");
 
    addProtectedField("PostFXPresetFile", TypeAssetLooseFilePath, Offset(mPostFXPresetFile, LevelAsset),
-      &setLevelFile, &getLevelFile, "Path to the level's postFXPreset.");
+      &setPostFXPresetFile, &getPostFXPresetFile, "Path to the level's postFXPreset.");
    addProtectedField("DecalsFile", TypeAssetLooseFilePath, Offset(mDecalsFile, LevelAsset),
-      &setLevelFile, &getLevelFile, "Path to the decals cache file.");
+      &setDecalsFile, &getDecalsFile, "Path to the decals cache file.");
    addProtectedField("ForestFile", TypeAssetLooseFilePath, Offset(mForestFile, LevelAsset),
-      &setLevelFile, &getLevelFile, "Path to the Forest cache file.");
+      &setForestFile, &getForestFile, "Path to the Forest cache file.");
    addProtectedField("NavmeshFile", TypeAssetLooseFilePath, Offset(mNavmeshFile, LevelAsset),
-      &setLevelFile, &getLevelFile, "Path to the navmesh file.");
+      &setNavmeshFile, &getNavmeshFile, "Path to the navmesh file.");
 
    addProtectedField("EditorFile", TypeAssetLooseFilePath, Offset(mEditorFile, LevelAsset),
       &setEditorFile, &getEditorFile, "Path to the level file with objects that were removed as part of the baking process. Loaded when the editor is loaded for ease of editing.");
@@ -153,6 +153,10 @@ void LevelAsset::initializeAsset()
    // Ensure the image-file is expanded.
    mPreviewImage = expandAssetFilePath(mPreviewImage);
    mLevelFile = expandAssetFilePath(mLevelFile);
+   mPostFXPresetFile = expandAssetFilePath(mPostFXPresetFile);
+   mDecalsFile = expandAssetFilePath(mDecalsFile);
+   mForestFile = expandAssetFilePath(mForestFile);
+   mNavmeshFile = expandAssetFilePath(mNavmeshFile);
 }
 
 //
@@ -169,7 +173,7 @@ void LevelAsset::setLevelFile(const char* pLevelFile)
       return;
 
    // Update.
-   mLevelFile = getOwned() ? expandAssetFilePath(pLevelFile) : StringTable->insert(pLevelFile);
+   mLevelFile = pLevelFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -188,7 +192,7 @@ void LevelAsset::setImageFile(const char* pImageFile)
       return;
 
    // Update.
-   mPreviewImage = getOwned() ? expandAssetFilePath(pImageFile) : StringTable->insert(pImageFile);
+   mPreviewImage = pImageFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -207,7 +211,7 @@ void LevelAsset::setEditorFile(const char* pEditorFile)
       return;
 
    // Update.
-   mEditorFile = getOwned() ? expandAssetFilePath(pEditorFile) : StringTable->insert(pEditorFile);
+   mEditorFile = pEditorFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -226,7 +230,83 @@ void LevelAsset::setBakedSceneFile(const char* pBakedSceneFile)
       return;
 
    // Update.
-   mBakedSceneFile = getOwned() ? expandAssetFilePath(pBakedSceneFile) : StringTable->insert(pBakedSceneFile);
+   mBakedSceneFile = pBakedSceneFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void LevelAsset::setPostFXPresetFile(const char* pPostFXPresetFile)
+{
+   // Sanity!
+   AssertFatal(pPostFXPresetFile != NULL, "Cannot use a NULL postFX preset file.");
+
+   // Fetch file.
+   pPostFXPresetFile = StringTable->insert(pPostFXPresetFile);
+
+   // Ignore no change,
+   if (pPostFXPresetFile == mPostFXPresetFile)
+      return;
+
+   // Update.
+   mPostFXPresetFile = pPostFXPresetFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void LevelAsset::setDecalsFile(const char* pDecalsFile)
+{
+   // Sanity!
+   AssertFatal(pDecalsFile != NULL, "Cannot use a NULL decals file.");
+
+   // Fetch file.
+   pDecalsFile = StringTable->insert(pDecalsFile);
+
+   // Ignore no change,
+   if (pDecalsFile == mDecalsFile)
+      return;
+
+   // Update.
+   mDecalsFile = pDecalsFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void LevelAsset::setForestFile(const char* pForestFile)
+{
+   // Sanity!
+   AssertFatal(pForestFile != NULL, "Cannot use a NULL decals file.");
+
+   // Fetch file.
+   pForestFile = StringTable->insert(pForestFile);
+
+   // Ignore no change,
+   if (pForestFile == mForestFile)
+      return;
+
+   // Update.
+   mForestFile = pForestFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void LevelAsset::setNavmeshFile(const char* pNavmeshFile)
+{
+   // Sanity!
+   AssertFatal(pNavmeshFile != NULL, "Cannot use a NULL Navmesh file.");
+
+   // Fetch file.
+   pNavmeshFile = StringTable->insert(pNavmeshFile);
+
+   // Ignore no change,
+   if (pNavmeshFile == mNavmeshFile)
+      return;
+
+   // Update.
+   mNavmeshFile = pNavmeshFile;
 
    // Refresh the asset.
    refreshAsset();

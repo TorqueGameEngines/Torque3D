@@ -272,10 +272,7 @@ function fastLoadWorldEdit(%val)
          
       if( !$missionRunning )
       {
-         // Flag saying, when level is chosen, launch it with the editor open.
-         %defaultLevelFile = EditorSettings.value( "WorldEditor/newLevelFile" );
-         
-         EditorNewLevel(%defaultLevelFile);
+         EditorNewLevel("tools/levels/DefaultEditorLevel.mis");
       }
       else
       {

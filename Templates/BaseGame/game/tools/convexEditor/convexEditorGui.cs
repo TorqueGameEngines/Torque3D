@@ -145,19 +145,31 @@ function ConvexEditorMaterialBtn::onClick(%this)
 
 function ConvexEditorMaterialBtn::getMaterialName(%this)
 {
-   materialSelector.showDialog(%this @ ".gotMaterialName", "name");
+   AssetBrowser.showDialog("MaterialAsset", %this @ ".gotMaterialName", "", "", ""); 
+   //materialSelector.showDialog(%this @ ".gotMaterialName", "name");
 }
 
 function ConvexEditorMaterialBtn::gotMaterialName(%this, %name)
 {
+   %materialAsset = AssetDatabase.acquireAsset(%name);
+   
    //eval(%this.object @ "." @ %this.targetField @ " = " @ %name @ ";");
    //%this.object.changeMaterial(getTrailingNumber(%this.targetField), %name);
    //%this.object.inspectorApply();
-   %diffusemap = %name.diffuseMap[0];
+   %diffusemap = %materialAsset.materialDefinitionName.diffuseMap[0];
+   if(%diffusemap $= "")
+   {
+      %diffuseAsset = %materialAsset.materialDefinitionName.diffuseMapAsset[0];
+      if(%diffuseAsset !$= "")
+      {
+         %diffuseAssetDef = AssetDatabase.acquireAsset(%diffuseAsset);
+         %diffusemap = %diffuseAssetDef.imageFile;
+      }
+   }
 
    ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(%diffusemap);
 
-   ConvexEditorOptionsWindow.activeMaterial = %name;
+   ConvexEditorOptionsWindow.activeMaterial = %materialAsset.materialDefinitionName;
 }
 
 function ConvexEditorMaterialApplyBtn::onClick(%this)
@@ -198,19 +210,31 @@ function ConvexEditorDefaultMaterialBtn::onClick(%this)
 
 function ConvexEditorDefaultMaterialBtn::getMaterialName(%this)
 {
-   materialSelector.showDialog(%this @ ".gotMaterialName", "name");
+   //materialSelector.showDialog(%this @ ".gotMaterialName", "name");
+   AssetBrowser.showDialog("MaterialAsset", %this @ ".gotMaterialName", "", "", ""); 
 }
 
 function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
 {
+   %materialAsset = AssetDatabase.acquireAsset(%name);
+   
    //eval(%this.object @ "." @ %this.targetField @ " = " @ %name @ ";");
    //%this.object.changeMaterial(getTrailingNumber(%this.targetField), %name);
    //%this.object.inspectorApply();
-   %diffusemap = %name.diffuseMap[0];
+   %diffusemap = %materialAsset.materialDefinitionName.diffuseMap[0];
+   if(%diffusemap $= "")
+   {
+      %diffuseAsset = %materialAsset.materialDefinitionName.diffuseMapAsset[0];
+      if(%diffuseAsset !$= "")
+      {
+         %diffuseAssetDef = AssetDatabase.acquireAsset(%diffuseAsset);
+         %diffusemap = %diffuseAssetDef.imageFile;
+      }
+   }
 
    ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(%diffusemap);
 
-   ConvexEditorOptionsWindow.activeShape.material = %name;
+   ConvexEditorOptionsWindow.activeShape.material = %materialAsset.materialDefinitionName;
 
    ConvexEditorGui.updateShape();
 }

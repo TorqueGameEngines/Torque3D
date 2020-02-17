@@ -235,6 +235,7 @@ public:
 
    DECLARE_CONOBJECT(TSStatic);
    static void initPersistFields();
+   static bool _setShape(void* obj, const char* index, const char* data);
    static bool _setShapeAsset(void* obj, const char* index, const char* data);
    static bool _setFieldSkin( void *object, const char* index, const char* data );
    static const char *_getFieldSkin( void *object, const char *data );

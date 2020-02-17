@@ -1661,3 +1661,11 @@ function AssetBrowserFilterTree::onDragDropped( %this )
 {
    %asdgadfhg =true;
 }
+
+//
+//
+function AssetBrowser::importLooseFiles(%this)
+{
+   echo("Adding loose files at directory " @ %this.dirHandler.currentAddress);
+   LooseFileAuditWindow.showDialog(%this.dirHandler.currentAddress);  
+}

@@ -77,18 +77,8 @@ function AssetBrowser::onBeginDropFiles( %this )
       return;
       
    error("% DragDrop - Beginning files dropping.");
-   ImportAssetWindow.importAssetUnprocessedListArray.empty();
-   ImportAssetWindow.importAssetFinalListArray.empty();
-   
-   ImportAssetWindow.assetHeirarchyChanged = false;
-   
-   //prep the import control
-   Canvas.pushDialog(AssetImportCtrl);
-   AssetImportCtrl.setHidden(true);
-
-   ImportAssetTree.clear();
-   ImportAssetTree.insertItem(0, "Importing Assets");
-   AssetBrowser.unprocessedAssetsCount = 0;
+   if(!ImportAssetWindow.isAwake())
+      ImportAssetWindow.showDialog();
 }
 
 function AssetBrowser::onDropFile( %this, %filePath )
@@ -217,49 +207,6 @@ function AssetBrowser::onEndDropFiles( %this )
       return;
       
    ImportAssetWindow.refresh();
-   
-   %hasIssues = ImportAssetWindow.validateAssets();
-   
-   //If we have a valid config file set and we've set to auto-import, and we have no
-   //issues for importing, then go ahead and run the import immediately, don't
-   //bother showing the window.
-   //If any of these conditions fail, we'll display the import window so it can be handled
-   //by the user
-   if(ImportAssetWindow.importConfigsList.count() != 0 && 
-      EditorSettings.value("Assets/AssetImporDefaultConfig") !$= "" && 
-      EditorSettings.value("Assets/AutoImport", false) == true
-      && %hasIssues == false)
-   {
-      AssetImportCtrl.setHidden(true);
-      ImportAssetWindow.visible = false;
-      
-      //Go ahead and check if we have any issues, and if not, run the import!
-      ImportAssetWindow.ImportAssets();
-   }
-   else
-   {
-      //we have assets to import, so go ahead and display the window for that now
-      AssetImportCtrl.setHidden(false);
-      ImportAssetWindow.visible = true;
-      ImportAssetWindow.selectWindow();
-   }
-   
-   if(%hasIssues && getAssetImportConfigValue("General/PreventImportWithErrors", "0") == 1)
-   {
-      DoAssetImportButton.enabled = false;  
-   }
-   else
-   {
-      DoAssetImportButton.enabled = true;  
-   }
-
-   // Update object library
-   GuiFormManager::SendContentMessage($LBCreateSiderBar, %this, "refreshAll 1");
-   
-   if(ImportAssetWindow.importConfigsList.count() == 0)
-   {
-      MessageBoxOK( "Warning", "No base import config. Please create an import configuration set to simplify asset importing.");
-   }
 }
 
 //
@@ -384,6 +331,8 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
    
    ImportAssetWindow.assetValidationList.add(%assetItem);
    
+   ImportAssetWindow.refresh();
+   
    return %assetItem;
 }
 
@@ -433,6 +382,36 @@ function ImportAssetButton::onClick(%this)
 }
 //
 
+function ImportAssetWindow::showDialog(%this)
+{
+   ImportAssetWindow.importAssetUnprocessedListArray.empty();
+   ImportAssetWindow.importAssetFinalListArray.empty();
+   
+   ImportAssetWindow.assetHeirarchyChanged = false;
+   
+   //prep the import control
+   Canvas.pushDialog(AssetImportCtrl);
+   AssetImportCtrl.setHidden(true);
+
+   ImportAssetTree.clear();
+   ImportAssetTree.insertItem(0, "Importing Assets");
+   AssetBrowser.unprocessedAssetsCount = 0;
+   
+   %this.dirty = false;
+}
+
+function ImportAssetWindow::Close(%this)
+{
+   //Some cleanup
+   ImportAssetWindow.importingFilesArray.empty();
+   
+   %this.importTempDirHandler.deleteFolder("tools/assetBrowser/importTemp/*/");
+   
+   if(ImportAssetWindow.isAwake())
+      ImportAssetWindow.refresh();
+      
+   Canvas.popDialog();  
+}
 //
 function ImportAssetWindow::onWake(%this)
 {
@@ -801,6 +780,16 @@ function refreshImportAssetWindow()
 
 function ImportAssetWindow::refresh(%this)
 {
+   if(!%this.dirty)
+   {
+      %this.dirty = true;
+      
+      %this.schedule(16, "doRefresh");
+   }
+}
+
+function ImportAssetWindow::doRefresh(%this)
+{
    //Go through and process any newly, unprocessed assets
    %id = ImportAssetTree.getChild(1);
    
@@ -858,6 +847,51 @@ function ImportAssetWindow::refresh(%this)
    warn(%ImportActionSummary);
    
    AssetImportSummarization.Text = %ImportActionSummary;
+   
+   %hasIssues = ImportAssetWindow.validateAssets();
+   
+   //If we have a valid config file set and we've set to auto-import, and we have no
+   //issues for importing, then go ahead and run the import immediately, don't
+   //bother showing the window.
+   //If any of these conditions fail, we'll display the import window so it can be handled
+   //by the user
+   if(ImportAssetWindow.importConfigsList.count() != 0 && 
+      EditorSettings.value("Assets/AssetImporDefaultConfig") !$= "" && 
+      EditorSettings.value("Assets/AutoImport", false) == true
+      && %hasIssues == false)
+   {
+      AssetImportCtrl.setHidden(true);
+      ImportAssetWindow.visible = false;
+      
+      //Go ahead and check if we have any issues, and if not, run the import!
+      ImportAssetWindow.ImportAssets();
+   }
+   else
+   {
+      //we have assets to import, so go ahead and display the window for that now
+      AssetImportCtrl.setHidden(false);
+      ImportAssetWindow.visible = true;
+      ImportAssetWindow.selectWindow();
+   }
+   
+   if(%hasIssues && getAssetImportConfigValue("General/PreventImportWithErrors", "0") == 1)
+   {
+      DoAssetImportButton.enabled = false;  
+   }
+   else
+   {
+      DoAssetImportButton.enabled = true;  
+   }
+
+   // Update object library
+   GuiFormManager::SendContentMessage($LBCreateSiderBar, %this, "refreshAll 1");
+   
+   if(ImportAssetWindow.importConfigsList.count() == 0)
+   {
+      MessageBoxOK( "Warning", "No base import config. Please create an import configuration set to simplify asset importing.");
+   }
+   
+   %this.dirty = false;
 }
 
 function ImportAssetWindow::refreshChildItem(%this, %id)
@@ -1556,16 +1590,6 @@ function ImportAssetWindow::doImportAssets(%this, %id)
 
       %id = ImportAssetTree.getNextSibling(%id);
    }
-}
-
-function ImportAssetWindow::Close(%this)
-{
-   //Some cleanup
-   ImportAssetWindow.importingFilesArray.empty();
-   
-   %this.importTempDirHandler.deleteFolder("tools/assetBrowser/importTemp/*/");
-   
-   Canvas.popDialog();  
 }
 
 function ImportAssetWindow::resolveIssue(%this, %assetItem)

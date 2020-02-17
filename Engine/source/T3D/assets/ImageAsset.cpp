@@ -82,6 +82,24 @@ ConsoleSetType(TypeImageAssetPtr)
 
 //-----------------------------------------------------------------------------
 
+ImplementEnumType(ImageAssetType,
+   "Type of mesh data available in a shape.\n"
+   "@ingroup gameObjects")
+   { ImageAsset::Albedo,      "Albedo",      "" },
+   { ImageAsset::Normal,      "Normal",      "" },
+   { ImageAsset::Composite,   "Composite",   "" },
+   { ImageAsset::GUI,         "GUI",         "" },
+   { ImageAsset::Roughness,   "Roughness",   "" },
+   { ImageAsset::AO,          "AO",          "" },
+   { ImageAsset::Metalness,   "Metalness",   "" },
+   { ImageAsset::Glow,        "Glow",        "" },
+   { ImageAsset::Particle,    "Particle",    "" },
+   { ImageAsset::Decal,       "Decal",       "" },
+
+EndImplementEnumType;
+
+
+//-----------------------------------------------------------------------------
 ImageAsset::ImageAsset() : AssetBase(), mImage(nullptr), mUseMips(true), mIsHDRImage(false), mIsValidImage(false)
 {
    mImageFileName = StringTable->EmptyString();
@@ -105,6 +123,8 @@ void ImageAsset::initPersistFields()
 
    addField("useMips", TypeBool, Offset(mUseMips, ImageAsset), "Should the image use mips? (Currently unused).");
    addField("isHDRImage", TypeBool, Offset(mIsHDRImage, ImageAsset), "Is the image in an HDR format? (Currently unused)");
+
+   addField("imageType", TypeImageAssetType, Offset(mImageType, ImageAsset), "What the main use-case for the image is for.");
 }
 
 //------------------------------------------------------------------------------

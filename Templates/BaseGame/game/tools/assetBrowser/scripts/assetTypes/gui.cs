@@ -89,6 +89,20 @@ function AssetBrowser::createGUIAsset(%this)
 	return %tamlpath;  
 }
 
+function AssetBrowser::inspectImportingGUIAsset(%this, %assetItem)
+{
+   AssetImportCtrl-->NewAssetsInspector.startGroup("GUI");
+   
+   AssetImportCtrl-->NewAssetsInspector.addField("GUIFile", "GUI File Path", "filename", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "", 
+                                                      "", %assetItem);
+                                                      
+   //Make this a callback so that if it's set we can callback to a validator function
+   //This function(and others for other asset types) would check if the loosefile audit window is open, and if it is, remove the file from the list
+   AssetImportCtrl-->NewAssetsInspector.addField("ScriptFile", "Script File Path", "filename", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "", 
+                                                      "", %assetItem);                                                  
+   AssetImportCtrl-->NewAssetsInspector.endGroup();                                                
+}
+
 function AssetBrowser::editGUIAsset(%this, %assetDef)
 {
    if(!isObject(%assetDef.assetName))

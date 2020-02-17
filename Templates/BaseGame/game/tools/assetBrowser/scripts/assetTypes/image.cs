@@ -81,21 +81,19 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
          if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
          {
             if(%foundSuffixType $= "diffuse")
-               %assetItem.ImageType = "Diffuse";
-               //%materialAsset.diffuseImageAsset = %assetItem;
+               %assetItem.ImageType = "Abledo";
             else if(%foundSuffixType $= "normal")
                %assetItem.ImageType = "Normal";
-               //%materialAsset.normalImageAsset = %assetItem;
             else if(%foundSuffixType $= "metalness")
-               %materialAsset.metalnessImageAsset = %assetItem;
+               %assetItem.ImageType = "metalness";
             else if(%foundSuffixType $= "roughness")
-               %materialAsset.roughnessImageAsset = %assetItem;
-               else if(%foundSuffixType $= "specular")
-               %materialAsset.specularImageAsset = %assetItem;
+               %assetItem.ImageType = "roughness";
+            else if(%foundSuffixType $= "specular")
+               %assetItem.ImageType = "specular";
             else if(%foundSuffixType $= "AO")
-               %materialAsset.AOImageAsset = %assetItem;
+               %assetItem.ImageType = "AO";
             else if(%foundSuffixType $= "composite")
-               %materialAsset.compositeImageAsset = %assetItem;
+               %assetItem.ImageType = "composite";
          }
       }
       
@@ -113,7 +111,7 @@ function AssetBrowser::inspectImportingImageAsset(%this, %assetItem)
 {
    AssetImportCtrl-->NewAssetsInspector.startGroup("Image");
    AssetImportCtrl-->NewAssetsInspector.addField("ImageType", "Image Type", "list", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "GUI", 
-                                                      "Color,Normal,Composite,Roughness,AO,Metalness,Glow,GUI,Particle,Decal", %assetItem);
+                                                      "Albedo,Normal,Composite,Roughness,AO,Metalness,Glow,GUI,Particle,Decal", %assetItem);
                                                       
    AssetImportCtrl-->NewAssetsInspector.endGroup();                                                
 }

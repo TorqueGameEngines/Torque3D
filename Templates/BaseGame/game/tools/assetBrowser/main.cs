@@ -65,6 +65,7 @@ function initializeAssetBrowser()
    exec("./guis/assetPreviewButtonsTemplate.gui");
    exec("./guis/newFolder.gui");
    exec("./guis/assetImportLog.gui");
+   exec("./guis/looseFileAudit.gui");
 
    exec("./scripts/assetBrowser.cs");
    exec("./scripts/popupMenus.cs");
@@ -79,6 +80,7 @@ function initializeAssetBrowser()
    exec("./scripts/assetImportConfigEditor.cs");  
    exec("./scripts/directoryHandling.cs");
    exec("./scripts/selectPath.cs");
+   exec("./scripts/looseFileAudit.cs");
    
    //Processing for the different asset types
    exec("./scripts/assetTypes/component.cs"); 

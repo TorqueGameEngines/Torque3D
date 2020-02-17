@@ -203,6 +203,24 @@ DefineEngineFunction( enumColladaForImport, bool, (const char * shapePath, const
       }
    }
 
+   // Get images count
+   for (S32 i = 0; i < root->getLibrary_images_array().getCount(); i++)
+   {
+      const domLibrary_images* libraryImages = root->getLibrary_images_array()[i];
+
+      for (S32 j = 0; j < libraryImages->getImage_array().getCount(); j++)
+      {
+         domImage* img = libraryImages->getImage_array()[j];
+
+         S32 materialID = tree->findItemByName(_GetNameOrId(img));
+
+         if (materialID == 0)
+            continue;
+
+         tree->setItemValue(materialID, img->getInit_from()->getValue().str().c_str());
+      }
+   }
+
    // Get animation count
    for (S32 i = 0; i < root->getLibrary_animation_clips_array().getCount(); i++)
    {

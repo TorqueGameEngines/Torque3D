@@ -390,3 +390,49 @@ function toggleMatComplexityViz()
    MatComplexityVizBin.material = Viz_MaterialComplexityMat;
    MatComplexityVizBin.maxComplexity = 10;
 }
+
+//
+//
+function toggleVolumeViz(%vizName)
+{
+   if(%vizName $= "Zones")
+   {
+      $Zone::isRenderable = !$Zone::isRenderable;
+      EVisibilityVolumeOptions.checkItem(0, $Zone::isRenderable);
+   }
+   else if(%vizName $= "Portals")
+   {
+      $Portal::isRenderable = !$Portal::isRenderable;
+      EVisibilityVolumeOptions.checkItem(1, $Portal::isRenderable);
+   }
+   else if(%vizName $= "Occlusion")
+   {
+      $OcclusionVolume::isRenderable = !$OcclusionVolume::isRenderable;
+      EVisibilityVolumeOptions.checkItem(2, $OcclusionVolume::isRenderable);
+   }
+   else if(%vizName $= "Triggers")
+   {
+      $Trigger::renderTriggers = !$Trigger::renderTriggers;
+      EVisibilityVolumeOptions.checkItem(3, $Trigger::renderTriggers);
+   }
+   else if(%vizName $= "PhysicalZone")
+   {
+      $PhysicalZone::renderZones = !$PhysicalZone::renderZones;
+      EVisibilityVolumeOptions.checkItem(4, $PhysicalZone::renderZones);
+   }
+   else if(%vizName $= "SoundEmitters")
+   {
+      $SFXEmitter::renderEmitters = !$SFXEmitter::renderEmitters;
+      EVisibilityVolumeOptions.checkItem(5, $SFXEmitter::renderEmitters);
+   }
+   else if(%vizName $= "MissionArea")
+   {
+      EWorldEditor.renderMissionArea = !EWorldEditor.renderMissionArea;
+      EVisibilityVolumeOptions.checkItem(6, EWorldEditor.renderMissionArea);
+   }
+   else if(%vizName $= "SoundSpaces")
+   {
+      $SFXSpace::isRenderable = !$SFXSpace::isRenderable;
+      EVisibilityVolumeOptions.checkItem(7, $SFXSpace::isRenderable);
+   }
+}

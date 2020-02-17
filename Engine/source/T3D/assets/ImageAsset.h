@@ -47,6 +47,23 @@ class ImageAsset : public AssetBase
 {
    typedef AssetBase Parent;
 
+public:
+   /// The different types of image use cases
+   enum ImageTypes
+   {
+      Albedo = 0,
+      Normal = 1,
+      Composite = 2,
+      GUI = 3,
+      Roughness = 4,
+      AO = 5,
+      Metalness = 6,
+      Glow = 7,
+      Particle = 8,
+      Decal = 9,
+   };
+
+protected:
    StringTableEntry mImageFileName;
 
    GFXTexHandle mImage;
@@ -54,6 +71,8 @@ class ImageAsset : public AssetBase
    bool mIsValidImage;
    bool mUseMips;
    bool mIsHDRImage;
+
+   ImageTypes mImageType;
 
 public:
    ImageAsset();
@@ -84,6 +103,9 @@ protected:
 };
 
 DefineConsoleType(TypeImageAssetPtr, ImageAsset)
+
+typedef ImageAsset::ImageTypes ImageAssetType;
+DefineEnumType(ImageAssetType);
 
 #endif
 

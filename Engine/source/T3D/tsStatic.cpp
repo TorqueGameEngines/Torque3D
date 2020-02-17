@@ -171,8 +171,8 @@ void TSStatic::initPersistFields()
          &TSStatic::_setShapeAsset, &defaultProtectedGetFn,
          "The source shape asset.");
 
-      addField("shapeName",   TypeShapeFilename,  Offset( mShapeName, TSStatic ),
-         "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic.", AbstractClassRep::FieldFlags::FIELD_HideInInspectors );
+      addProtectedField("shapeName",   TypeShapeFilename,  Offset( mShapeName, TSStatic ), &TSStatic::_setShape, &defaultProtectedGetFn,
+         "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic."/*, AbstractClassRep::FieldFlags::FIELD_HideInInspectors*/ );
 
    endGroup("Shape");
 
@@ -259,6 +259,27 @@ void TSStatic::initPersistFields()
    addField("invertGradientRange",   TypeBool,       Offset(mInvertGradientRange, TSStatic));
    endGroup("AFX");
    Parent::initPersistFields();
+}
+
+bool TSStatic::_setShape(void* obj, const char* index, const char* data)
+{
+   TSStatic* ts = static_cast<TSStatic*>(obj);// ->setFile(FileName(data));
+
+   //before we continue, lets hit up the Asset Database to see if this file is associated to an asset. If so, we grab the asset instead
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, data);
+   if (foundAssetcount == 0)
+   {
+      //didn't find any assets. continue as normal
+      ts->mShapeName = StringTable->insert(data);
+   }
+   else
+   {
+      ts->setShapeAsset(query.mAssetList[0]);
+      ts->mShapeName = StringTable->EmptyString();
+   }
+
+   return false;
 }
 
 bool TSStatic::_setShapeAsset(void* obj, const char* index, const char* data)
@@ -539,8 +560,10 @@ void TSStatic::prepCollision()
    setMaskBits( UpdateCollisionMask );
 
    // Allow the ShapeInstance to prep its collision if it hasn't already
-   if ( mShapeInstance )
+   if (mShapeInstance)
       mShapeInstance->prepCollision();
+   else
+      return;
 
    // Cleanup any old collision data
    mCollisionDetails.clear();

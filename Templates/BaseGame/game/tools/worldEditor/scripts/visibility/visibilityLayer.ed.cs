@@ -81,14 +81,16 @@ function setupEditorVisibilityMenu()
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Show Zones" TAB "" TAB "$Zone::isRenderable = !$Zone::isRenderable;";
-      item[ 1 ] = "Show Portals" TAB "" TAB "$Portal::isRenderable = !$Portal::isRenderable;";
-      item[ 2 ] = "Show Occlusion Volumes" TAB "" TAB "$OcclusionVolume::isRenderable = !$OcclusionVolume::isRenderable;";
-      item[ 3 ] = "Show Triggers" TAB "" TAB "$Trigger::renderTriggers = !$Trigger::renderTriggers;";
-      item[ 4 ] = "Show Physical Zones" TAB "" TAB "$PhysicalZone::renderZones = !$PhysicalZone::renderZones;";
-      item[ 5 ] = "Show Sound Emitters" TAB "" TAB "$SFXEmitter::renderEmitters = !$SFXEmitter::renderEmitters;";
-      item[ 6 ] = "Show Mission Area" TAB "" TAB "EWorldEditor.renderMissionArea = !EWorldEditor.renderMissionArea;";
-      item[ 7 ] = "Show Sound Spaces" TAB "" TAB "$SFXSpace::isRenderable = !$SFXSpace::isRenderable;";
+      radioSelection = false;
+      
+      item[ 0 ] = "Show Zones" TAB "" TAB "toggleVolumeViz(\"Zones\");";
+      item[ 1 ] = "Show Portals" TAB "" TAB "toggleVolumeViz(\"Portals\");";
+      item[ 2 ] = "Show Occlusion Volumes" TAB "" TAB "toggleVolumeViz(\"Occlusion\");";
+      item[ 3 ] = "Show Triggers" TAB "" TAB "toggleVolumeViz(\"Triggers\");";
+      item[ 4 ] = "Show Physical Zones" TAB "" TAB "toggleVolumeViz(\"PhysicalZone\");";
+      item[ 5 ] = "Show Sound Emitters" TAB "" TAB "toggleVolumeViz(\"SoundEmitters\");";
+      item[ 6 ] = "Show Mission Area" TAB "" TAB "toggleVolumeViz(\"MissionArea\");";
+      item[ 7 ] = "Show Sound Spaces" TAB "" TAB "toggleVolumeViz(\"SoundSpaces\");";
    };
    
    %debugRenderpopup = new PopupMenu(EVisibilityDebugRenderOptions)
@@ -96,17 +98,16 @@ function setupEditorVisibilityMenu()
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Show Player Collision" TAB "" TAB "$Player::renderCollision != $Player::renderCollision;";
-      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "$TerrainBlock::debugRender != $TerrainBlock::debugRender;";
-      item[ 2 ] = "Show Decals Debug" TAB "" TAB "$Decals::debugRender != $Decals::debugRender;";
-      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "$Scene::renderBoundingBoxes != $Scene::renderBoundingBoxes;";
-      item[ 4 ] = "Show Physics World" TAB "" TAB "$PhysicsWorld::render != $PhysicsWorld::render;";
-      item[ 5 ] = "Show Player Collision" TAB "" TAB "";
-      item[ 6 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
+      item[ 0 ] = "Show Player Collision" TAB "" TAB "$Player::renderCollision = !$Player::renderCollision;";
+      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "$TerrainBlock::debugRender = !$TerrainBlock::debugRender;";
+      item[ 2 ] = "Show Decals Debug" TAB "" TAB "$Decals::debugRender = !$Decals::debugRender;";
+      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "$Scene::renderBoundingBoxes = !$Scene::renderBoundingBoxes;";
+      item[ 4 ] = "Show Physics World" TAB "" TAB "togglePhysicsDebugViz();";
+      item[ 5 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
    };
    
+   %debugRenderpopup.enableItem(4, false);
    %debugRenderpopup.enableItem(5, false);
-   %debugRenderpopup.enableItem(6, false);
    
    //
    //Lighting stuff
@@ -435,6 +436,8 @@ function EVisibility::addClassOptions( %this )
 
 function togglePhysicsDebugViz( %enable )
 {
+   $PhysicsWorld::render = %enable;
+   
    if(physicsPluginPresent())
    {
       physicsDebugDraw(%enable);

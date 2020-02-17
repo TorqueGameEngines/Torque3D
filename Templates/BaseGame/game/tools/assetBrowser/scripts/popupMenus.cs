@@ -162,6 +162,8 @@ function AssetBrowser::buildPopupMenus(%this)
          item[8] = "Create C++ Asset" TAB AddNewCppAssetPopup;
          item[9] = "-";
          item[10] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
+         item[11] = "-";
+         item[12] = "Import Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
       
       };
    }
@@ -182,6 +184,8 @@ function AssetBrowser::buildPopupMenus(%this)
          Item[ 5 ] = "Duplicate Module" TAB "" TAB "AssetBrowser.copyModule();";
          Item[ 6 ] = "-";
          Item[ 7 ] = "Delete Module" TAB "" TAB "AssetBrowser.deleteModule();";
+         item[ 8 ] = "-";
+         item[ 9 ] = "Import Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
       };
    }
    
@@ -217,6 +221,8 @@ function AssetBrowser::buildPopupMenus(%this)
          Item[ 3 ] = "Duplicate Folder" TAB "" TAB "AssetBrowser.duplicateAsset();";
          item[ 4 ] = "-";
          item[ 5 ] = "Delete Folder" TAB "" TAB "AssetBrowser.deleteAsset();";
+         item[ 6 ] = "-";
+         item[ 7 ] = "Import Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
       };
    }
    
@@ -306,7 +312,7 @@ function AssetBrowser::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          
-         item[ 0 ] = "Import Project Loose Files" TAB "" TAB "AssetBrowser.importLegacyGame();";
+         item[ 0 ] = "Import Project Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
          Item[ 1 ] = "-";
          item[ 2 ] = "Import new assets" TAB "" TAB "Canvas.pushDialog(AssetImportCtrl);";
       };

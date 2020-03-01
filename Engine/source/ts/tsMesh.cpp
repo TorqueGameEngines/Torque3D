@@ -280,7 +280,7 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
       ri->primBuffIndex = mPrimBufferOffset + i;
 
       // Translucent materials need the translucent type.
-      if ( matInst->getMaterial()->isTranslucent() )
+      if ( matInst->getMaterial()->isTranslucent() && (!(matInst->getMaterial()->isAlphatest() && state->isShadowPass())))
       {
          ri->type = RenderPassManager::RIT_Translucent;
          ri->translucentSort = true;

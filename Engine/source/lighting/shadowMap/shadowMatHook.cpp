@@ -190,6 +190,8 @@ void ShadowMaterialHook::_overrideFeatures(  ProcessedMaterial *mat,
       fd.features.removeFeature( MFT_TexAnim );
       fd.features.removeFeature( MFT_DiffuseMap );
    }
+   else
+      fd.features.removeFeature(MFT_IsTranslucent);
 
    // HACK: Need to figure out how to enable these 
    // suckers without this override call!

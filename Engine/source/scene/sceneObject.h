@@ -287,6 +287,10 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       /// @name Transform and Collision Members
       /// @{
 
+      // PATHSHAPE
+      MatrixF mLastXform;
+      // PATHSHAPE END
+
       /// Transform from object space to world space.
       MatrixF mObjToWorld;
 
@@ -819,6 +823,27 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       static bool _setAccuEnabled( void *object, const char *index, const char *data );
 
       /// @}
+// PATHSHAPE
+   /// @}
+   //Anthony's Original Code, still used so i keep it here
+   /// TGE uses the term "mount" in a quirky, staticky way relating to its limited use to have
+   /// riders and guns mounted on a vehicle (and similar)
+   /// I did not alter that code at all (yet) and did not want to keep its terminology for other reasons
+   /// I decided to support a hierarchy of scene objects and dubbed the operations 
+   /// attaching and removing child SceneObjects
+  protected:
+
+      // this member struct tracks the relationship to parent and children
+      // sceneObjects in a hierarchical scene graph whose root is the entire Scene
+   struct AttachInfo {
+      SceneObject* firstChild;  ///< Objects mounted on this object
+      SimObjectPtr<SceneObject>  parent; ///< Object this object is mounted on.
+      SceneObject* nextSibling;        ///< Link to next child object of this object's parent 
+      MatrixF      objToParent;   ///< this obects transformation in the parent object's space
+      MatrixF      RenderobjToParent;   ///< this obects Render Offset transformation to the parent object
+   } mGraph;
+// PATHSHAPE END
+
 
    // Accumulation Texture
    // Note: This was placed in SceneObject to both ShapeBase and TSStatic could support it.
@@ -841,6 +866,83 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       //   as opposed to something like a Player that has a built-in camera that requires
       //   special calculations to determine the view transform.
       virtual bool isCamera() const { return false; }
+      // AFX CODE BLOCK (is-camera) >>
+// PATHSHAPE
+// Added for dynamic attaching
+	void UpdateXformChange(const MatrixF &mat);
+      /// this is useful for setting NULL parent (making SceneObject a root object)
+   virtual bool attachToParent(SceneObject *parent, MatrixF *atThisOffset = NULL, S32 node=0);
+   SceneObject *getParent() { return mGraph.parent; };
+
+   
+   /// attach a subobject, but do not alter the subObject's present absolute position or orientation
+   bool attachChild(SceneObject* subObject);   
+   /// attach a subobject, at the specified offset expressed in our local coordinate space
+   bool attachChildAt(SceneObject* subObject, MatrixF atThisTransform, S32 node);   
+
+   /// attach a subobject, at the specified position expressed in our local coordinate space
+   bool attachChildAt(SceneObject* subObject, Point3F atThisPosition);   
+   
+   /// how many child SceneObjects are (directly) attached to this one?
+   U32 getNumChildren() const;
+
+   /// how many child objects does this SceneObject have when we count them recursively?
+   U32 getNumProgeny() const;
+
+   /// returns the (direct) child SceneObject at the given index (0 <= index <= getNumChildren() - 1)
+   SceneObject *getChild(U32 index) const; 
+   
+   /// is this SceneObject a child (directly or indirectly) of the given object?
+   bool isChildOf(SceneObject *);
+
+   /// set position in parent SceneObject's coordinate space (or in world space if no parent)
+   //void setLocalPosition(const Point3F &pos);
+
+   /// move the object in parent SceneObject's coordinate space (or in world space if no parent)
+   //void localMove(const Point3F &delta);
+   /// as localMove(const Point3F &delta), with different signature
+   //void localMove(F32 x, F32 y, F32 z);
+   
+   /// move the object in world space, without altering place in scene hierarchy
+   void move(const Point3F &delta);
+   
+   // Does checks for children objects and updates their positions
+   void PerformUpdatesForChildren(MatrixF mat);
+   
+   // Move the RenderTransform
+   void moveRender(const Point3F &delta);
+   //Calculate how much to adjust the render transform - Called by the child objects
+   void updateRenderChangesByParent();
+   //Calculate how much to adjust the transform - Called by the parent object
+   void updateChildTransform(); 
+   /// as move(const Point3F &delta), with different signature   
+   void move(F32 x, F32 y, F32 z);
+
+   /// returns the transform relative to parent SceneObject transform (or world transform if no parent)
+   //const MatrixF& getLocalTransform() const;
+   /// returns the position within parent SceneObject space (or world space if no parent)
+   //Point3F getLocalPosition() const;
+   
+   
+//   virtual void onParentScaleChanged();   
+//   virtual void onParentTransformChanged();
+      
+   /// Sets the Object -> Parent transform.  If no parent SceneObject, this is equivalent to 
+   ///  setTransform()
+   ///
+   /// @param   mat   New transform matrix
+   //virtual void setLocalTransform(const MatrixF & mat);
+
+
+   /// Called to let instance specific code happen 
+   virtual void onLostParent(SceneObject *oldParent);   
+   /// Called to let instance specific code happen 
+   virtual void onNewParent(SceneObject *newParent);   
+   /// notification that a direct child object has been attached
+   virtual void onNewChild(SceneObject *subObject);   
+   /// notification that a direct child object has been detached
+   virtual void onLostChild(SceneObject *subObject);   
+// PATHSHAPE END
 };
 
 #endif  // _SCENEOBJECT_H_

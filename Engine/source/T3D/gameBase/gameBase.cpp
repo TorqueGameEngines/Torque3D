@@ -404,6 +404,12 @@ void GameBase::processTick(const Move * move)
 #endif
 }
 
+void GameBase::interpolateTick(F32 dt)
+{
+   // PATHSHAPE
+   updateRenderChangesByParent();
+   // PATHSHAPE END
+}
 //----------------------------------------------------------------------------
 
 F32 GameBase::getUpdatePriority(CameraScopeQuery *camInfo, U32 updateMask, S32 updateSkips)
@@ -471,14 +477,15 @@ F32 GameBase::getUpdatePriority(CameraScopeQuery *camInfo, U32 updateMask, S32 u
    // Weight by updateSkips
    F32 wSkips = updateSkips * 0.5;
 
-   // Calculate final priority, should total to about 1.0f
+   // Calculate final priority, should total to about 1.0f (plus children)
    //
    return
       wFov       * sUpFov +
       wDistance  * sUpDistance +
       wVelocity  * sUpVelocity +
       wSkips     * sUpSkips +
-      wInterest  * sUpInterest;
+      wInterest  * sUpInterest +
+	  getNumChildren();
 }
 
 //----------------------------------------------------------------------------
@@ -757,3 +764,44 @@ DefineEngineMethod( GameBase, applyRadialImpulse, void, ( Point3F origin, F32 ra
 {
    object->applyRadialImpulse( origin, radius, magnitude );
 }
+
+// PATHSHAPE
+// Console Methods for attach children. can't put them in sceneobject because  //
+// we want the processafter functions////////////////////////////////////////////
+
+DefineEngineMethod(GameBase, attachChild, bool, (GameBase* _subObject), (nullAsType<GameBase*>()), "(SceneObject subObject)"
+              "attach an object to this one, preserving its present transform.")
+{
+    if (_subObject != nullptr)
+    {              
+		if (_subObject->getParent() != object){
+			Con::errorf("Object is (%d)", _subObject->getId());
+         _subObject->clearProcessAfter();
+         _subObject->processAfter(object);
+			return object->attachChild(_subObject);
+      }
+      else
+         return false;
+   }
+   else 
+   {
+      Con::errorf("Couldn't addObject()!");
+      return false;
+   }
+}
+
+
+DefineEngineMethod(GameBase, detachChild, bool, (GameBase* _subObject), (nullAsType<GameBase*>()), "(SceneObject subObject)"
+              "attach an object to this one, preserving its present transform.")
+{
+   if (_subObject != nullptr)
+	{
+      _subObject->clearProcessAfter();
+		return _subObject->attachToParent(NULL);
+	}
+	else
+	{
+		return false;
+	}
+}//end
+// PATHSHAPE END

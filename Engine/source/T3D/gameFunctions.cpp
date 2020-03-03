@@ -665,6 +665,9 @@ static void RegisterGameFunctions()
    Con::setIntVariable("$TypeMasks::DebrisObjectType",         DebrisObjectType);
    Con::setIntVariable("$TypeMasks::PhysicalZoneObjectType",   PhysicalZoneObjectType);
    Con::setIntVariable("$TypeMasks::LightObjectType",          LightObjectType);
+// PATHSHAPE
+   Con::setIntVariable("$TypeMasks::PathShapeObjectType",     PathShapeObjectType);
+// PATHSHAPE END
 
    Con::addVariable("Ease::InOut", TypeS32, &gEaseInOut, 
       "InOut ease for curve movement.\n"

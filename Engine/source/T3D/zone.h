@@ -45,9 +45,11 @@
 class Zone : public SceneAmbientSoundObject< ScenePolyhedralZone >
 {
    public:
-
+      bool mSelecting = false;
+      static void initPersistFields();
+      static bool _doSelect(void* object, const char* index, const char* data);
       typedef SceneAmbientSoundObject< ScenePolyhedralZone > Parent;
-
+      void selectWithin();
    protected:
 
       // SceneVolume.

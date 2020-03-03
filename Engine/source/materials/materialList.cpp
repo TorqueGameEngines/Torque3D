@@ -35,6 +35,11 @@
 #include "core/volume.h"
 #include "console/simSet.h"
 
+#include "scene/reflectionManager.h"
+#include "renderInstance/renderDeferredMgr.h"
+#include "lighting/advanced/advancedLightManager.h"
+#include "lighting/advanced/advancedLightBinManager.h"
+
 
 MaterialList::MaterialList()
 {
@@ -411,6 +416,15 @@ void MaterialList::initMatInstances(   const FeatureSet &features,
          matInst = MATMGR->createMatInstance( "WarningMaterial" );
          matInst->init( MATMGR->getDefaultFeatures(), vertexFormat );
          mMatInstList[ i ] = matInst;
+      }
+      else
+      {
+         REFLECTMGR->getReflectionMaterial(matInst);
+
+         // Hunt for the pre-pass manager/target
+         
+         AdvancedLightManager* lightMgr = static_cast<AdvancedLightManager*>(LIGHTMGR);
+         lightMgr->getDeferredRenderBin()->getDeferredMaterial(matInst);
       }
    }
 

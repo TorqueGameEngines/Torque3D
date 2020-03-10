@@ -704,7 +704,7 @@ void ConvexShape::prepRenderImage( SceneRenderState *state )
 
       // Set our Material
       ri->matInst = matInst;
-      if (matInst->getMaterial()->isTranslucent())
+      if (matInst->getMaterial()->isTranslucent() && (!(matInst->getMaterial()->isAlphatest() && state->isShadowPass())))
       {
          ri->translucentSort = true;
          ri->type = RenderPassManager::RIT_Translucent;

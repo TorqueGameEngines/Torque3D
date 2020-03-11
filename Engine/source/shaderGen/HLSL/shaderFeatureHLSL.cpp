@@ -2565,9 +2565,10 @@ void AlphaTestHLSL::processPix(  Vector<ShaderComponent*> &componentList,
 {
    // If we're below SM3 and don't have a depth output
    // feature then don't waste an instruction here.
-   if ( GFX->getPixelShaderVersion() < 3.0 &&
+   if (( GFX->getPixelShaderVersion() < 3.0 &&
         !fd.features[ MFT_EyeSpaceDepthOut ]  &&
-        !fd.features[ MFT_DepthOut ] )
+        !fd.features[ MFT_DepthOut ] ) ||
+         fd.features[MFT_IsTranslucent])
    {
       output = NULL;
       return;

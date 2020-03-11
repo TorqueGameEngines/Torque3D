@@ -1,0 +1,10 @@
+<ModuleDefinition
+	ModuleId="inputTest"
+	VersionId="1"
+	Description="Input Monitor Module."
+	ScriptFile="inputTest.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game"
+	Dependencies="UI=1">
+</ModuleDefinition>

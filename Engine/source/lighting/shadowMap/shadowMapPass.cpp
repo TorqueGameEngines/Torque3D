@@ -260,7 +260,7 @@ void ShadowRenderPassManager::addInst( RenderInst *inst )
          return;
 
       const BaseMaterialDefinition *mat = meshRI->matInst->getMaterial();
-      if ( !mat->castsShadows() || mat->isTranslucent() )
+      if ( !mat->castsShadows() || (mat->isTranslucent() && !mat->isAlphatest()))
       {
          // Do not add this instance, return here and avoid the default behavior
          // of calling up to Parent::addInst()

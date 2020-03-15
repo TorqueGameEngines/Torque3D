@@ -28,6 +28,7 @@
 #include "scene/mixin/sceneAmbientSoundObject.impl.h"
 #include "scene/mixin/scenePolyhedralObject.impl.h"
 
+#include "scene/sceneManager.h"
 #include "gui/worldEditor/worldEditor.h"
 
 

@@ -419,12 +419,14 @@ void MaterialList::initMatInstances(   const FeatureSet &features,
       }
       else
       {
-         REFLECTMGR->getReflectionMaterial(matInst);
+         AdvancedLightManager* lightMgr = dynamic_cast<AdvancedLightManager*>(LIGHTMGR);
+         if (lightMgr)
+         {
+            REFLECTMGR->getReflectionMaterial(matInst);
 
-         // Hunt for the pre-pass manager/target
-         
-         AdvancedLightManager* lightMgr = static_cast<AdvancedLightManager*>(LIGHTMGR);
-         lightMgr->getDeferredRenderBin()->getDeferredMaterial(matInst);
+            // Hunt for the pre-pass manager/target
+            lightMgr->getDeferredRenderBin()->getDeferredMaterial(matInst);
+         }
       }
    }
 

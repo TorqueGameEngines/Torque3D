@@ -449,6 +449,8 @@ struct ParticleRenderInst : public RenderInst
    /// Bounding box render transform
    const MatrixF *bbModelViewProj;
 
+   Point3F wsPosition;
+
    /// The particle texture.
    GFXTextureObject *diffuseTex;
 

@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2019, assimp team
+Copyright (c) 2006-2020, assimp team
 
 
 
@@ -93,10 +93,10 @@ public:
     const TReal* operator[] (unsigned int p_iIndex) const;
 
     // comparison operators
-    bool operator== (const aiMatrix4x4t<TReal>& m) const;
-    bool operator!= (const aiMatrix4x4t<TReal>& m) const;
+    bool operator== (const aiMatrix3x3t<TReal>& m) const;
+    bool operator!= (const aiMatrix3x3t<TReal>& m) const;
 
-    bool Equal(const aiMatrix4x4t<TReal>& m, TReal epsilon = 1e-6) const;
+    bool Equal(const aiMatrix3x3t<TReal>& m, TReal epsilon = 1e-6) const;
 
     template <typename TOther>
     operator aiMatrix3x3t<TOther> () const;

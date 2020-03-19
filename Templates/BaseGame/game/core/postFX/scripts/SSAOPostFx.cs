@@ -275,7 +275,7 @@ singleton PostEffect( SSAOPostFx )
    allowReflectPass = false;
      
    renderTime = "PFXBeforeBin";
-   renderBin = "AL_LightBinMgr";   
+   renderBin = "ProbeBin";   
    renderPriority = 10;
    
    shader = SSAOShader;

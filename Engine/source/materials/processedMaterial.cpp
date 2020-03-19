@@ -424,7 +424,7 @@ void ProcessedMaterial::_setStageData()
       }
       else if (mMaterial->mDiffuseMapAsset[i] && !mMaterial->mDiffuseMapAsset[i].isNull())
       {
-         mStages[i].setTex(MFT_DiffuseMap, mMaterial->mDiffuseMapAsset[i]->getImage());
+         mStages[i].setTex(MFT_DiffuseMap, mMaterial->mDiffuseMapAsset[i]->getImage(GFXStaticTextureSRGBProfile));
          if (!mStages[i].getTex(MFT_DiffuseMap))
          {
             // Load a debug texture to make it clear to the user 

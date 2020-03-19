@@ -192,7 +192,8 @@ function LooseFileAuditWindow::importImage(%this)
    if(!ImportAssetWindow.isAwake())
       ImportAssetWindow.showDialog();
       
-   AssetBrowser.addImportingAsset("ImageAsset", LooseFileList.itemPath, "", "");
+   %assetItem = AssetBrowser.addImportingAsset("ImageAsset", LooseFileList.itemPath, "", "");
+   ImportAssetItems.add(%assetItem);
    LooseFileList.removeItem(LooseFileList.selectedItem, false);
    LooseFileList.buildVisibleTree(true);
    LooseFileList.expandItem(0);

@@ -9,10 +9,6 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
    ImportActivityLog.add("Asset Import Configs set to " @ %text);
    ImportActivityLog.add("");
    
-   ImportAssetWindow.importAssetUnprocessedListArray.empty();
-   ImportAssetWindow.importAssetUnprocessedListArray.duplicate(AssetBrowser.importAssetNewListArray);
-   ImportAssetWindow.importAssetFinalListArray.empty();
-   
    ImportAssetWindow.activeImportConfigIndex = %id;
    ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
    

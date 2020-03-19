@@ -121,16 +121,20 @@ function initializeAssetBrowser()
    
    ImportAssetWindow.reloadImportOptionConfigs();
    
-   if(!isObject(ImportAssetTree))
-      new GuiTreeViewCtrl(ImportAssetTree);
+   if(!isObject(ImportAssetWindow.importTempDirHandler))
+      ImportAssetWindow.importTempDirHandler = makedirectoryHandler(0, "", "");
       
    if(!isObject(ImportActivityLog))
       new ArrayObject(ImportActivityLog);
       
    ImportAssetWindow.importingFilesArray = new ArrayObject();
-   ImportAssetWindow.importAssetUnprocessedListArray = new ArrayObject();
-   ImportAssetWindow.importAssetFinalListArray = new ArrayObject();
    
+   if(!isObject(SessionImportAssetItems))
+      new ArrayObject(SessionImportAssetItems);
+      
+   if(!isObject(ImportAssetItems))
+      new ArrayObject(ImportAssetItems);  
+      
    AssetBrowser.buildPopupMenus();
    
    //Force everything to initialize if other things need to reference it's behavior before we're displayed(usually other tools)

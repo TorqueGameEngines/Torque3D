@@ -139,6 +139,15 @@ function AssetBrowser::editModuleInfo(%this)
    ModuleEditInspector.endGroup();
 }
 
+function AssetBrowser::editModuleScript(%this)
+{
+   %moduleDef = ModuleDatabase.findModule(AssetBrowser.selectedModule, 1);
+   
+   %scriptFile = %moduleDef.ModuleScriptFilePath;
+   
+   EditorOpenFileInTorsion(makeFullPath(%scriptFile), 0);
+}
+
 function AssetBrowser::renameModule(%this)
 {
    

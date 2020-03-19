@@ -29,7 +29,7 @@
 #include "scene/mixin/scenePolyhedralObject.impl.h"
 
 #include "gui/worldEditor/worldEditor.h"
-
+#include "scene/sceneManager.h"
 
 IMPLEMENT_CO_NETOBJECT_V1( Zone );
 
@@ -118,11 +118,11 @@ void Zone::selectWithin()
 
             for (SceneObject::ObjectZonesIterator zoneIter(obj); zoneIter.isValid(); ++zoneIter)
             {
-               if (*zoneIter != zoneId);
+               if (*zoneIter != zoneId)
                   fullyEnclosed = false;
             }
             if (fullyEnclosed)
-               sql.insertObject(obj);
+               sql.insertObject(obj); 
          }
    }
 

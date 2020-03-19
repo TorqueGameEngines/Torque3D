@@ -40,6 +40,8 @@
 #include "assets/assetPtr.h"
 #endif
 
+#include "gfx/gfxStringEnumTranslate.h"
+
 // Debug Profiling.
 #include "platform/profiler.h"
 
@@ -128,7 +130,30 @@ void ImageAsset::initPersistFields()
 }
 
 //------------------------------------------------------------------------------
+//Utility function to 'fill out' bindings and resources with a matching asset if one exists
+bool ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset)
+{
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets, so have us fall back to a placeholder asset
+      imageAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
 
+      if (!imageAsset->isNull())
+         return true;
+
+      //That didn't work, so fail out
+      return false;
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      imageAsset->setAssetId(query.mAssetList[0]);
+      return true;
+   }
+}
+//------------------------------------------------------------------------------
 void ImageAsset::copyTo(SimObject* object)
 {
    // Call to parent.
@@ -180,9 +205,49 @@ void ImageAsset::setImageFileName(const char* pScriptFile)
    mImageFileName = StringTable->insert(pScriptFile);
 }
 
+GFXTexHandle ImageAsset::getImage(GFXTextureProfile requestedProfile)
+{
+   /*if (mResourceMap.contains(requestedProfile))
+   {
+      return mResourceMap.find(requestedProfile)->value;
+   }
+   else
+   {
+      //If we don't have an existing map case to the requested format, we'll just create it and insert it in
+      GFXTexHandle newImage;
+      newImage.set(mImageFileName, &requestedProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
+      mResourceMap.insert(requestedProfile, newImage);
+
+      return newImage;
+   }*/
+
+   return nullptr;
+}
+
+const char* ImageAsset::getImageInfo()
+{
+   if (mIsValidImage)
+   {
+      static const U32 bufSize = 2048;
+      char* returnBuffer = Con::getReturnBuffer(bufSize);
+      dSprintf(returnBuffer, bufSize, "%s %d %d %d", GFXStringTextureFormat[mImage.getFormat()], mImage.getHeight(), mImage.getWidth(), mImage.getDepth());
+
+      return returnBuffer;
+   }
+
+   return "";
+}
+
 DefineEngineMethod(ImageAsset, getImageFilename, const char*, (), ,
    "Creates an instance of the given GameObject given the asset definition.\n"
    "@return The GameObject entity created from the asset.")
 {
    return object->getImageFileName();
+}
+
+DefineEngineMethod(ImageAsset, getImageInfo, const char*, (), ,
+   "Creates an instance of the given GameObject given the asset definition.\n"
+   "@return The GameObject entity created from the asset.")
+{
+   return object->getImageInfo();
 }

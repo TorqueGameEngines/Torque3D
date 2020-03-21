@@ -998,6 +998,94 @@ $PE_guielement_ext_colorpicker = "18 18";
                         };             
                      };
                      
+                     new GuiControl(){ // Emitter Angle Variance
+                        isContainer = "1";
+                        class = "AggregateControl";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiBitmapCtrl(){ // 0 Degrees
+                           HorizSizing = "left";
+                           position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
+                           Extent = "2 18";
+                           minExtent = "0 0";
+                           bitmap = "tools/gui/images/separator-h";
+                           tooltip = "0 Degrees ( Up )";
+                        };
+                        new GuiBitmapCtrl(){ // 90 Degrees
+                           HorizSizing = "left";
+                           position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
+                           Extent = "2 18";
+                           minExtent = "0 0";
+                           bitmap = "tools/gui/images/separator-h";
+                           tooltip = "45 Degrees";
+                        };
+                        new GuiBitmapCtrl(){ // 180 Degrees
+                           HorizSizing = "left";
+                           minExtent = "0 0";
+                           position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
+                           Extent = "2 18";
+                           bitmap = "tools/gui/images/separator-h";
+                           tooltip = "90 Degrees";
+                        };
+                        new GuiBitmapCtrl(){ // 270 Degrees
+                           HorizSizing = "left";
+                           position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
+                           Extent = "2 18";
+                           minExtent = "0 0";
+                           bitmap = "tools/gui/images/separator-h";
+                           tooltip = "135 Degrees";
+                        };
+                        new GuiBitmapCtrl(){ // 360 Degrees
+                           HorizSizing = "left";
+                           position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
+                           Extent = "2 18";
+                           minExtent = "0 0";
+                           bitmap = "tools/gui/images/separator-h";
+                           tooltip = "180 Degrees";
+                        };
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Angle Variance";
+                        };
+                        new GuiSliderCtrl(PEE_thetaVar) {
+                           internalName = "PEE_thetaVar_slider";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "PE_EmitterEditor.updateEmitter( \"thetaVariance\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_EmitterEditor.updateEmitter( \"thetaVariance\", $ThisControl.getValue(), true, false );";
+                           hovertime = "1000";
+                           range = "0 180";
+                           ticks = "0";
+                           value = "0";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEE_thetaVar_textEdit";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_EmitterEditor.updateEmitter( \"thetaVariance\", $ThisControl.getText());";
+                        };             
+                     };
+                     
                      new GuiControl(){ // Spacer ----------------------------
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
@@ -1084,7 +1172,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            Command = "PE_EmitterEditor.updateEmitter( \"ejectionOffset\", $ThisControl.getValue(), true, true );";
                            altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_EmitterEditor.updateEmitter( \"ejectionOffset\", $ThisControl.getValue(), true, false );";
                            hovertime = "1000";
-                           range = "0 10";
+                           range = "0 50";
                            ticks = "0";
                            value = "0";
                         };
@@ -2797,7 +2885,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            Profile = "GuiInspectorSwatchButtonProfile";
                            HorizSizing = "left";
                            VertSizing = "bottom";
-                           position = "75 0";
+                           position = "20 0";
                            Extent = $PE_guielement_ext_colorpicker;
                            MinExtent = "8 2";
                            canSave = "1";
@@ -2818,7 +2906,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            Profile = "GuiInspectorSwatchButtonProfile";
                            HorizSizing = "left";
                            VertSizing = "bottom";
-                           position = "102 0";
+                           position = "40 0";
                            Extent = $PE_guielement_ext_colorpicker;
                            MinExtent = "8 2";
                            canSave = "1";
@@ -2839,7 +2927,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            Profile = "GuiInspectorSwatchButtonProfile";
                            HorizSizing = "left";
                            VertSizing = "bottom";
-                           position = "129 0";
+                           position = "60 0";
                            Extent = $PE_guielement_ext_colorpicker;
                            MinExtent = "8 2";
                            canSave = "1";
@@ -2860,7 +2948,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            Profile = "GuiInspectorSwatchButtonProfile";
                            HorizSizing = "left";
                            VertSizing = "bottom";
-                           position = "156 0";
+                           position = "80 0";
                            Extent = $PE_guielement_ext_colorpicker;
                            MinExtent = "8 2";
                            canSave = "1";
@@ -2872,6 +2960,90 @@ $PE_guielement_ext_colorpicker = "18 18";
                            buttonType = "PushButton";
                            useMouseEvents = "1";
                            arrayNum = "3";
+                           class = "PE_ColorTintSwatch";
+                        };
+                        new GuiSwatchButtonCtrl(PE_ColorTintSwatch4) {
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "GuiInspectorSwatchButtonProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = "100 0";
+                           Extent = $PE_guielement_ext_colorpicker;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "getColorF( PE_ParticleEditor.currParticle.colors[4], \"PE_ColorTintSwatch4.updateParticleColor\");";
+                           altCommand = "$ThisControl.updateParticleColor( $ThisControl.color );";
+                           hovertime = "1000";
+                           groupNum = "-1";
+                           buttonType = "PushButton";
+                           useMouseEvents = "1";
+                           arrayNum = "4";
+                           class = "PE_ColorTintSwatch";
+                        };
+                        new GuiSwatchButtonCtrl(PE_ColorTintSwatch5) {
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "GuiInspectorSwatchButtonProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = "120 0";
+                           Extent = $PE_guielement_ext_colorpicker;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "getColorF( PE_ParticleEditor.currParticle.colors[5], \"PE_ColorTintSwatch5.updateParticleColor\");";
+                           altCommand = "$ThisControl.updateParticleColor( $ThisControl.color );";
+                           hovertime = "1000";
+                           groupNum = "-1";
+                           buttonType = "PushButton";
+                           useMouseEvents = "1";
+                           arrayNum = "5";
+                           class = "PE_ColorTintSwatch";
+                        };
+                        new GuiSwatchButtonCtrl(PE_ColorTintSwatch6) {
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "GuiInspectorSwatchButtonProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = "140 0";
+                           Extent = $PE_guielement_ext_colorpicker;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "getColorF( PE_ParticleEditor.currParticle.colors[6], \"PE_ColorTintSwatch6.updateParticleColor\");";
+                           altCommand = "$ThisControl.updateParticleColor( $ThisControl.color );";
+                           hovertime = "1000";
+                           groupNum = "-1";
+                           buttonType = "PushButton";
+                           useMouseEvents = "1";
+                           arrayNum = "6";
+                           class = "PE_ColorTintSwatch";
+                        };
+                        new GuiSwatchButtonCtrl(PE_ColorTintSwatch7) {
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "GuiInspectorSwatchButtonProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = "160 0";
+                           Extent = $PE_guielement_ext_colorpicker;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "getColorF( PE_ParticleEditor.currParticle.colors[7], \"PE_ColorTintSwatch7.updateParticleColor\");";
+                           altCommand = "$ThisControl.updateParticleColor( $ThisControl.color );";
+                           hovertime = "1000";
+                           groupNum = "-1";
+                           buttonType = "PushButton";
+                           useMouseEvents = "1";
+                           arrayNum = "7";
                            class = "PE_ColorTintSwatch";
                         };
                      };
@@ -3072,6 +3244,194 @@ $PE_guielement_ext_colorpicker = "18 18";
                            altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[3]\", $ThisControl.getText());";
                         };
                      };
+                     new GuiControl(){ // Particle Point Size
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Size 5";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointSize_slider4";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 50";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"sizes[4]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[4]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointSize_textEdit4";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[4]\", $ThisControl.getText());";
+                        };
+					};
+                     new GuiControl(){ // Particle Point Size
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Size 6";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointSize_slider5";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 50";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"sizes[5]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[5]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointSize_textEdit5";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[5]\", $ThisControl.getText());";
+                        };
+					};
+					new GuiControl(){ // Particle Point Size
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Size 7";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointSize_slider6";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 50";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"sizes[6]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[6]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointSize_textEdit6";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[6]\", $ThisControl.getText());";
+                        };
+					};
+                     new GuiControl(){ // Particle Point Size
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Size 8";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointSize_slider7";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 50";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"sizes[7]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[7]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointSize_textEdit7";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"sizes[7]\", $ThisControl.getText());";
+                        };
+                     };
                      
                      new GuiControl(){ // Spacer ----------------------------
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
@@ -3267,6 +3627,194 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = $PE_guielement_pos_value;
                            Extent = $PE_guielement_ext_value;
                            altCommand = "$ThisControl.setText(mClamp( $ThisControl.getValue(), 0.0, 1.0)); $ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[3]\", $ThisControl.getText());";
+                        };
+                     };
+                     new GuiControl(){ // Particle Point Time
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Time 5";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointTime_slider4";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 1";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"times[4]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[4]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointTime_textEdit4";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.setText(mClamp( $ThisControl.getValue(), 0.0, 1.0)); $ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[4]\", $ThisControl.getText());";
+                        };
+                     };
+                     new GuiControl(){ // Particle Point Time
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Time 6";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointTime_slider5";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 1";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"times[5]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[5]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointTime_textEdit5";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.setText(mClamp( $ThisControl.getValue(), 0.0, 1.0)); $ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[5]\", $ThisControl.getText());";
+                        };
+                     };
+                     new GuiControl(){ // Particle Point Time
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Time 7";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointTime_slider6";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 1";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"times[6]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[6]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointTime_textEdit6";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.setText(mClamp( $ThisControl.getValue(), 0.0, 1.0)); $ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[6]\", $ThisControl.getText());";
+                        };
+                     };
+                     new GuiControl(){ // Particle Point Time
+                        class = "AggregateControl";
+                        isContainer = "1";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        Position = $PE_guielement_pos_single_container ;
+                        Extent = $PE_guielement_ext_single_container ;
+                        
+                        new GuiTextCtrl() {
+                           Profile = "ToolsGuiTextProfile";
+                           HorizSizing = "width";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_name;
+                           Extent = $PE_guielement_ext_name;
+                           text = "Time 8";
+                        };
+                        new GuiSliderCtrl() {
+                           internalName = "PEP_pointTime_slider7";
+                           canSaveDynamicFields = "0";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiSliderProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_slider;
+                           Extent = $PE_guielement_ext_slider;
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "";
+                           hovertime = "1000";
+                           range = "0 1";
+                           ticks = "0";
+                           value = "0";
+                           Command = "PE_ParticleEditor.updateParticle( \"times[7]\", $ThisControl.getValue(), true, true );";
+                           altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[7]\", $ThisControl.getValue(), true, false );";
+                        };
+                        new GuiTextEditCtrl() {
+                           internalName = "PEP_pointTime_textEdit7";
+                           Profile = "ToolsGuiTextEditProfile";
+                           HorizSizing = "left";
+                           VertSizing = "bottom";
+                           position = $PE_guielement_pos_value;
+                           Extent = $PE_guielement_ext_value;
+                           altCommand = "$ThisControl.setText(mClamp( $ThisControl.getValue(), 0.0, 1.0)); $ThisControl.getParent().updateFromChild($ThisControl); PE_ParticleEditor.updateParticle( \"times[7]\", $ThisControl.getText());";
                         };
                      };
                   }; // end stack

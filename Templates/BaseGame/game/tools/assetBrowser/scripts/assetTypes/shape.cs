@@ -158,10 +158,13 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ %assetName @ ".asset.taml"); 
    
    //and copy the file into the relevent directory
-   %doOverwrite = !AssetBrowser.isAssetReImport;
-   if(!pathCopy(%filePath, %assetFullPath, %doOverwrite))
+   if(filePath(%filePath) !$= filePath(%assetFullPath))
    {
-      error("Unable to import asset: " @ %filePath);
+      %doOverwrite = !AssetBrowser.isAssetReImport;
+      if(!pathCopy(%filePath, %assetFullPath, %doOverwrite))
+      {
+         error("Unable to import asset: " @ %filePath);
+      }
    }
    
    %constructor = ShapeEditor.findConstructor( %assetFullPath );

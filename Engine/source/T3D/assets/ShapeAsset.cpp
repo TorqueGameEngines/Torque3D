@@ -300,6 +300,7 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
       //If possible, see if we can run an in-place import and the get the asset from that
 #if TORQUE_DEBUG
       Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
+#endif
 
       ConsoleValueRef result = Con::executef("importLooseFile", fileName, true);
 
@@ -315,7 +316,6 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
                return true;
          }
       }
-#endif
 
       //Didn't work, so have us fall back to a placeholder asset
       shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));

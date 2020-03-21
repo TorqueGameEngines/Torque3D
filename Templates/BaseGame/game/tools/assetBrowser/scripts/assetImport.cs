@@ -135,6 +135,29 @@ function findImageFile(%path, %materialName, %type)
       return %path @ "/" @ %materialName @ ".tif";
 }
 
+function getAssetTypeByFilename(%filePath)
+{
+   %fileExt = fileExt( %filePath );
+   
+   //add it to our array!
+   if(isImageFormat(%fileExt))
+      return "ImageAsset";
+   else if( isShapeFormat(%fileExt))
+      return "ShapeAsset";
+   else if( isSoundFormat(%fileExt))
+      return "SoundAsset";
+   else if( %fileExt $= ".cs" || %fileExt $= ".cs.dso" )
+      return "ScriptAsset";
+   else if( %fileExt $= ".gui" || %fileExt $= ".gui.dso" )
+      return "GUIAsset";
+   else if (%fileExt $= ".zip")
+      return "zip";
+   else if( %fileExt $= "")
+      return "folder";
+   
+   return "";
+}
+
 function AssetBrowser::onBeginDropFiles( %this )
 {   
    if(!AssetBrowser.isAwake())
@@ -405,20 +428,43 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
 //
 function importLooseFile(%filePath, %forceAutoImport)
 {
+   %assetType = getAssetTypeByFilename(%filePath);
+   
    if(%forceAutoImport)
    {
       //If we're attempting to fast-track the import, check that that's even an option
       if(ImportAssetWindow.importConfigsList.count() == 0 || 
       EditorSettings.value("Assets/AssetImporDefaultConfig") $= "" || 
       EditorSettings.value("Assets/AutoImport", false) == false)
+      {
+         MessageBoxOK("Unable to AutoImport", "Attempted to import a loose file " @ %filePath @ " with AutoImport but was unable to either due to lacking a valid import config, or the editor settings are not set to auto import.");
          return false;      
+      }
+      
+      if(%assetType $= "folder" || %assetType $= "zip")
+      {
+         MessageBoxOK("Unable to AutoImport", "Unable to auto import folders or zips at this time");
+         return false; 
+      }
+      
+      if(%assetType $= "")
+      {
+         MessageBoxOK("Unable to AutoImport", "Unable to auto import unknown file type for file " @ %filePath);
+         return false; 
+      }
    }
-   %assetItem = AssetBrowser.addImportingAsset("ImageAsset", %filePath, "", "");
+   
+   %assetItem = AssetBrowser.addImportingAsset(%assetType, %filePath, "", "");
    ImportAssetItems.add(%assetItem);
    
    if(%forceAutoImport)
    {
-      AssetImportTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(filePath(%filePath)).ModuleId;
+      %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(filePath(%filePath)).ModuleId;
+      AssetImportTargetModule.text = %targetModule;
+      
+      %assetItem.moduleName = %targetModule;
+      
+      AssetBrowser.dirHandler.currentAddress = filePath(%filePath);
       
       //skip the refresh delay, we'll force it here
       ImportAssetWindow.doRefresh();

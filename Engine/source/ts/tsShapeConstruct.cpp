@@ -172,6 +172,7 @@ TSShapeConstructor::TSShapeConstructor()
    mOptions.removeRedundantMats = true;
    mOptions.animTiming = ColladaUtils::ImportOptions::Seconds;
    mOptions.animFPS = 30;
+   mOptions.formatScaleFactor = 1.0f;
 
    mShape = NULL;
 }

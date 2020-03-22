@@ -175,6 +175,15 @@ void AssimpShapeLoader::enumerateScene()
       Con::printf("[ASSIMP] Mesh Count: %d", mScene->mNumMeshes);
       Con::printf("[ASSIMP] Material Count: %d", mScene->mNumMaterials);
 
+      // Setup default units for shape format
+      String importFormat;
+      if (getMetaString("SourceAsset_Format", importFormat))
+      {
+         // FBX uses cm as standard unit, so convert to meters
+         if (importFormat.equal("Autodesk FBX Importer", String::NoCase))
+            ColladaUtils::getOptions().formatScaleFactor = 0.01f;
+      }
+
       // Set import options (if they are not set to override)
       if (ColladaUtils::getOptions().unit <= 0.0f)
       {
@@ -732,6 +741,27 @@ bool AssimpShapeLoader::getMetaDouble(const char* key, F64& doubleVal)
    return false;
 }
 
+bool AssimpShapeLoader::getMetaString(const char* key, String& stringVal)
+{
+   if (!mScene || !mScene->mMetaData)
+      return false;
+
+   String keyStr = key;
+   for (U32 n = 0; n < mScene->mMetaData->mNumProperties; ++n)
+   {
+      if (keyStr.equal(mScene->mMetaData->mKeys[n].C_Str(), String::NoCase))
+      {
+         if (mScene->mMetaData->mValues[n].mType == AI_AISTRING)
+         {
+            aiString valString;
+            mScene->mMetaData->Get<aiString>(mScene->mMetaData->mKeys[n], valString);
+            stringVal = valString.C_Str();
+            return true;
+         }
+      }
+   }
+   return false;
+}
 //-----------------------------------------------------------------------------
 /// This function is invoked by the resource manager based on file extension.
 TSShape* assimpLoadShape(const Torque::Path &path)

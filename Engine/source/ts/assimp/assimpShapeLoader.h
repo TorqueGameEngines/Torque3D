@@ -51,6 +51,7 @@ private:
    bool getMetaInt(const char* key, S32& intVal);
    bool getMetaFloat(const char* key, F32& floatVal);
    bool getMetaDouble(const char* key, F64& doubleVal);
+   bool getMetaString(const char* key, String& stringVal);
 
 public:
    AssimpShapeLoader();

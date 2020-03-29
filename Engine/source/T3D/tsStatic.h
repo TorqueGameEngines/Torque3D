@@ -43,11 +43,6 @@
 #ifndef _TSSHAPE_H_
 #include "ts/tsShape.h"
 #endif
-
-#ifndef _REFLECTOR_H_
-   #include "scene/reflector.h"
-#endif
-
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif 
@@ -179,18 +174,12 @@ protected:
    /// Start or stop processing ticks depending on our state.
    void _updateShouldTick();
 
-   String cubeDescName;
-   U32 cubeDescId;
-   ReflectorDesc *reflectorDesc;
-   CubeReflector mCubeReflector;
-
 protected:
 
    Convex *mConvexList;
 
    StringTableEntry  mShapeName;
    U32               mShapeHash;
-   Resource<TSShape> mShape;
    Vector<S32> mCollisionDetails;
    Vector<S32> mLOSDetails;
    TSShapeInstance *mShapeInstance;
@@ -261,7 +250,7 @@ public:
 
    bool allowPlayerStep() const { return mAllowPlayerStep; }
 
-   Resource<TSShape> getShape() const { return mShape; }
+   Resource<TSShape> getShape() const;
 	StringTableEntry getShapeFileName() { return mShapeName; }
    void setShapeFileName(StringTableEntry shapeName) { mShapeName = shapeName; }
   

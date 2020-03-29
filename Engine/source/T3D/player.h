@@ -614,6 +614,9 @@ protected:
    void _handleCollision( const Collision &collision );
    virtual bool updatePos(const F32 travelTime = TickSec);
 
+   // PATHSHAPE
+   void updateAttachment();
+   // PATHSHAPE END
    ///Update head animation
    void updateLookAnimation(F32 dT = 0.f);
 

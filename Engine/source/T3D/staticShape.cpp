@@ -246,6 +246,14 @@ void StaticShape::processTick(const Move* move)
    }
 }
 
+void StaticShape::interpolateTick(F32 delta)
+{
+   Parent::interpolateTick(delta);
+   // PATHSHAPE
+   updateRenderChangesByParent();
+   // PATHSHAPE END
+}
+
 void StaticShape::setTransform(const MatrixF& mat)
 {
    Parent::setTransform(mat);

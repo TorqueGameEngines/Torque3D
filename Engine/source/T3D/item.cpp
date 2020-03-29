@@ -618,6 +618,9 @@ void Item::interpolateTick(F32 dt)
    mat.setColumn(3,pos);
    setRenderTransform(mat);
    mDelta.dt = dt;
+// PATHSHAPE
+   updateRenderChangesByParent();
+// PATHSHAPE END
 }
 
 

@@ -289,6 +289,66 @@ bool ShapeAsset::loadShape()
 }
 
 //------------------------------------------------------------------------------
+//Utility function to 'fill out' bindings and resources with a matching asset if one exists
+bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset)
+{
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
+#endif
+
+      ConsoleValueRef result = Con::executef("importLooseFile", fileName, true);
+
+      if (result.getBoolValue())
+      {
+         StringTableEntry resultingAssetId = StringTable->insert(Con::getVariable("$importedLooseFileAsset"));
+
+         if (resultingAssetId != StringTable->EmptyString())
+         {
+            shapeAsset->setAssetId(resultingAssetId);
+
+            if (!shapeAsset->isNull())
+               return true;
+         }
+      }
+
+      //Didn't work, so have us fall back to a placeholder asset
+      shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+
+      if (!shapeAsset->isNull())
+         return true;
+
+      //That didn't work, so fail out
+      return false;
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      shapeAsset->setAssetId(query.mAssetList[0]);
+      return true;
+   }
+}
+
+bool ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset)
+{
+   shapeAsset->setAssetId(assetId);
+   if (!shapeAsset->isNull())
+      return true;
+
+   //Didn't work, so have us fall back to a placeholder asset
+   shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+
+   if (!shapeAsset->isNull())
+      return true;
+
+   return false;
+}
+//------------------------------------------------------------------------------
 
 void ShapeAsset::copyTo(SimObject* object)
 {

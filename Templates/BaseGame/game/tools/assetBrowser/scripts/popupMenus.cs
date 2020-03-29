@@ -178,14 +178,15 @@ function AssetBrowser::buildPopupMenus(%this)
          
          item[ 0 ] = "New Asset" TAB AddNewAssetPopup;
          item[ 1 ] = "Reload Module" TAB "" TAB "AssetBrowser.reloadModule();";
-         Item[ 2 ] = "-";
-         Item[ 3 ] = "Edit Module" TAB "" TAB "AssetBrowser.editModuleInfo();";
-         Item[ 4 ] = "-";
-         Item[ 5 ] = "Duplicate Module" TAB "" TAB "AssetBrowser.copyModule();";
-         Item[ 6 ] = "-";
-         Item[ 7 ] = "Delete Module" TAB "" TAB "AssetBrowser.deleteModule();";
-         item[ 8 ] = "-";
-         item[ 9 ] = "Import Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
+         Item[ 2 ] = "Edit Module" TAB "" TAB "AssetBrowser.editModuleScript();";
+         Item[ 3 ] = "-";
+         Item[ 4 ] = "Module Properties" TAB "" TAB "AssetBrowser.editModuleInfo();";
+         Item[ 5 ] = "-";
+         Item[ 6 ] = "Duplicate Module" TAB "" TAB "AssetBrowser.copyModule();";
+         Item[ 7 ] = "-";
+         Item[ 8 ] = "Delete Module" TAB "" TAB "AssetBrowser.deleteModule();";
+         item[ 9 ] = "-";
+         item[ 10 ] = "Import Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
       };
    }
    

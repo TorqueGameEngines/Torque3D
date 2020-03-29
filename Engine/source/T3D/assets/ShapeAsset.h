@@ -128,6 +128,9 @@ public:
    void                    setShapeConstructorFile(const char* pScriptFile);
    inline StringTableEntry getShapeConstructorFile(void) const { return mConstructorFileName; };
 
+   static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
+   static bool getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset);
+
 protected:
    virtual void            onAssetRefresh(void);
 

@@ -34,6 +34,7 @@
 #include "core/util/dxt5nmSwizzle.h"
 #include "console/consoleTypes.h"
 #include "console/engineAPI.h"
+#include "renderInstance/renderProbeMgr.h"
 
 using namespace Torque;
 
@@ -1554,4 +1555,5 @@ DefineEngineFunction( reloadTextures, void, (),,
       return;
 
    TEXMGR->reloadTextures();
+   PROBEMGR->reloadTextures();
 }

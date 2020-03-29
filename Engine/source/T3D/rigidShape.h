@@ -146,11 +146,6 @@ class RigidShape: public ShapeBase
    SimObjectPtr<ParticleEmitter> mDustTrailEmitter;
 
   protected:
-   enum CollisionFaceFlags 
-   {
-      BodyCollision =  BIT(0),
-      WheelCollision = BIT(1),
-   };
    enum MaskBits {
       PositionMask   = Parent::NextFreeMask << 0,
       EnergyMask     = Parent::NextFreeMask << 1,
@@ -193,7 +188,6 @@ class RigidShape: public ShapeBase
 
    CollisionList mCollisionList;
    CollisionList mContacts;
-   Rigid mRigid;
    ShapeBaseConvex mConvex;
    S32 restCount;
 
@@ -238,6 +232,7 @@ class RigidShape: public ShapeBase
 public:
    // Test code...
    static ClippedPolyList* sPolyList;
+   Rigid mRigid;
 
    //
    RigidShape();

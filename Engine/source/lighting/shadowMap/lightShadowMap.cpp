@@ -537,9 +537,9 @@ ShadowMapParams::ShadowMapParams( LightInfo *light )
    numSplits = 4;
    logWeight = 0.91f;
    texSize = 1024;
-   shadowDistance = 400.0f;
-   shadowSoftness = 0.15f;
-   fadeStartDist = 0.0f;
+   shadowDistance = 100.0f;
+   shadowSoftness = 0.2f;
+   fadeStartDist = 75.0f;
    lastSplitTerrainOnly = false;
    mQuery = GFX->createOcclusionQuery();
 

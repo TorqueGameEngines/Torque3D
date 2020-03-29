@@ -1172,6 +1172,8 @@ void ParticleEmitter::prepRenderImage(SceneRenderState* state)
 
    ri->bbModelViewProj = renderManager->allocUniqueXform( *ri->modelViewProj * mBBObjToWorld );
 
+   ri->wsPosition = getWorldTransform().getPosition();
+
    ri->count = n_parts;
 
    ri->blendStyle = mDataBlock->blendStyle;

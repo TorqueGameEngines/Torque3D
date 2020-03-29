@@ -2,7 +2,8 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="ExampleLevel"
-    LevelFile="ExampleLevel.mis"
+    LevelFile="@assetFile=ExampleLevel.mis"
     LevelName="Example Level"
+    isSubScene="false"
     Description="An example level asset"
     VersionId="1" />

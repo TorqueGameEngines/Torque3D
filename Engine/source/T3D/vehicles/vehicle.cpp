@@ -816,14 +816,6 @@ void Vehicle::onRemove()
    SAFE_DELETE(mPhysicsRep);
 
    U32 i=0;
-   for( i=0; i<VehicleData::VC_NUM_DUST_EMITTERS; i++ )
-   {
-      if( mDustEmitterList[i] )
-      {
-         mDustEmitterList[i]->deleteWhenEmpty();
-         mDustEmitterList[i] = NULL;
-      }
-   }
 
    for( i=0; i<VehicleData::VC_NUM_DAMAGE_EMITTERS; i++ )
    {
@@ -831,15 +823,6 @@ void Vehicle::onRemove()
       {
          mDamageEmitterList[i]->deleteWhenEmpty();
          mDamageEmitterList[i] = NULL;
-      }
-   }
-
-   for( i=0; i<VehicleData::VC_NUM_SPLASH_EMITTERS; i++ )
-   {
-      if( mSplashEmitterList[i] )
-      {
-         mSplashEmitterList[i]->deleteWhenEmpty();
-         mSplashEmitterList[i] = NULL;
       }
    }
 
@@ -903,7 +886,9 @@ void Vehicle::processTick(const Move* move)
       // Update the physics based on the integration rate
       S32 count = mDataBlock->integration;
       --mWorkingQueryBoxCountDown;
-      updateWorkingCollisionSet(getCollisionMask());
+
+      if (!mDisableMove)
+         updateWorkingCollisionSet(getCollisionMask());
       for (U32 i = 0; i < count; i++)
          updatePos(TickSec / count);
 
@@ -952,13 +937,6 @@ void Vehicle::advanceTime(F32 dt)
 
    updateLiftoffDust( dt );
    updateDamageSmoke( dt );
-   updateFroth(dt);
-
-   // Update 3rd person camera offset.  Camera update is done
-   // here as it's a client side only animation.
-   mCameraOffset -=
-      (mCameraOffset * mDataBlock->cameraDecay +
-      mRigid.linVelocity * mDataBlock->cameraLag) * dt;
 }
 
 
@@ -1244,7 +1222,8 @@ void Vehicle::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mRigid.atRest) {
+   if (!mRigid.atRest && !mDisableMove)
+   {
       collided = updateCollision(dt);
 
       // Now that all the forces have been processed, lets
@@ -1265,7 +1244,7 @@ void Vehicle::updatePos(F32 dt)
    }
 
    // Integrate forward
-   if (!mRigid.atRest)
+   if (!mRigid.atRest && !mDisableMove)
       mRigid.integrate(dt);
 
    // Deal with client and server scripting, sounds, etc.
@@ -1375,163 +1354,6 @@ bool Vehicle::updateCollision(F32 dt)
    resolveContacts(mRigid,mCollisionList,dt);
    return collided;
 }
-
-
-//----------------------------------------------------------------------------
-/** Resolve collision impacts
-   Handle collision impacts, as opposed to contacts. Impulses are calculated based
-   on standard collision resolution formulas.
-*/
-bool Vehicle::resolveCollision(Rigid&  ns,CollisionList& cList)
-{
-   PROFILE_SCOPE( Vehicle_ResolveCollision );
-
-   // Apply impulses to resolve collision
-   bool collided = false;
-   for (S32 i = 0; i < cList.getCount(); i++) 
-   {
-      Collision& c = cList[i];
-      if (c.distance < mDataBlock->collisionTol) 
-      {
-         // Velocity into surface
-         Point3F v,r;
-         ns.getOriginVector(c.point,&r);
-         ns.getVelocity(r,&v);
-         F32 vn = mDot(v,c.normal);
-
-         // Only interested in velocities greater than sContactTol,
-         // velocities less than that will be dealt with as contacts
-         // "constraints".
-         if (vn < -mDataBlock->contactTol) 
-         {
-
-            // Apply impulses to the rigid body to keep it from
-            // penetrating the surface.
-            ns.resolveCollision(cList[i].point,
-               cList[i].normal);
-            collided  = true;
-
-            // Keep track of objects we collide with
-            if (!isGhost() && c.object->getTypeMask() & ShapeBaseObjectType) 
-            {
-               ShapeBase* col = static_cast<ShapeBase*>(c.object);
-               queueCollision(col,v - col->getVelocity());
-            }
-         }
-      }
-   }
-
-   return collided;
-}
-
-//----------------------------------------------------------------------------
-/** Resolve contact forces
-   Resolve contact forces using the "penalty" method. Forces are generated based
-   on the depth of penetration and the moment of inertia at the point of contact.
-*/
-bool Vehicle::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_ResolveContacts );
-
-   // Use spring forces to manage contact constraints.
-   bool collided = false;
-   Point3F t,p(0,0,0),l(0,0,0);
-   for (S32 i = 0; i < cList.getCount(); i++) 
-   {
-      const Collision& c = cList[i];
-      if (c.distance < mDataBlock->collisionTol) 
-      {
-
-         // Velocity into the surface
-         Point3F v,r;
-         ns.getOriginVector(c.point,&r);
-         ns.getVelocity(r,&v);
-         F32 vn = mDot(v,c.normal);
-
-         // Only interested in velocities less than mDataBlock->contactTol,
-         // velocities greater than that are dealt with as collisions.
-         if (mFabs(vn) < mDataBlock->contactTol) 
-         {
-            collided = true;
-
-            // Penetration force. This is actually a spring which
-            // will seperate the body from the collision surface.
-            F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r,c.normal));
-            F32 s = (mDataBlock->collisionTol - c.distance) * zi - ((vn / mDataBlock->contactTol) * zi);
-            Point3F f = c.normal * s;
-
-            // Friction impulse, calculated as a function of the
-            // amount of force it would take to stop the motion
-            // perpendicular to the normal.
-            Point3F uv = v - (c.normal * vn);
-            F32 ul = uv.len();
-            if (s > 0 && ul) 
-            {
-               uv /= -ul;
-               F32 u = ul * ns.getZeroImpulse(r,uv);
-               s *= mRigid.friction;
-               if (u > s)
-                  u = s;
-               f += uv * u;
-            }
-
-            // Accumulate forces
-            p += f;
-            mCross(r,f,&t);
-            l += t;
-         }
-      }
-   }
-
-   // Contact constraint forces act over time...
-   ns.linMomentum += p * dt;
-   ns.angMomentum += l * dt;
-   ns.updateVelocity();
-   return true;
-}
-
-
-//----------------------------------------------------------------------------
-
-bool Vehicle::resolveDisplacement(Rigid& ns,CollisionState *state, F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_ResolveDisplacement );
-
-   SceneObject* obj = (state->mA->getObject() == this)?
-       state->mB->getObject(): state->mA->getObject();
-
-   if (obj->isDisplacable() && ((obj->getTypeMask() & ShapeBaseObjectType) != 0))
-   {
-      // Try to displace the object by the amount we're trying to move
-      Point3F objNewMom = ns.linVelocity * obj->getMass() * 1.1f;
-      Point3F objOldMom = obj->getMomentum();
-      Point3F objNewVel = objNewMom / obj->getMass();
-
-      Point3F myCenter;
-      Point3F theirCenter;
-      getWorldBox().getCenter(&myCenter);
-      obj->getWorldBox().getCenter(&theirCenter);
-      if (mDot(myCenter - theirCenter, objNewMom) >= 0.0f || objNewVel.len() < 0.01)
-      {
-         objNewMom = (theirCenter - myCenter);
-         objNewMom.normalize();
-         objNewMom *= 1.0f * obj->getMass();
-         objNewVel = objNewMom / obj->getMass();
-      }
-
-      obj->setMomentum(objNewMom);
-      if (obj->displaceObject(objNewVel * 1.1f * dt) == true)
-      {
-         // Queue collision and change in velocity
-         VectorF dv = (objOldMom - objNewMom) / obj->getMass();
-         queueCollision(static_cast<ShapeBase*>(obj), dv);
-         return true;
-      }
-   }
-
-   return false;
-}
-
 
 //----------------------------------------------------------------------------
 

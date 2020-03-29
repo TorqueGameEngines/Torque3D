@@ -71,6 +71,7 @@ public:
 
    /// Return the lightBinManager for this light manager.
    AdvancedLightBinManager* getLightBinManager() { return mLightBinManager; }
+   RenderDeferredMgr* getDeferredRenderBin() { return mDeferredRenderBin; }
 
    // LightManager
    virtual bool isCompatible() const;

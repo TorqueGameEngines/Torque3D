@@ -505,6 +505,17 @@ void RenderProbeMgr::updateProbeTexture(ProbeRenderInst* probeInfo)
 #endif
 }
 
+void RenderProbeMgr::reloadTextures()
+{
+   U32 probeCount = mRegisteredProbes.size();
+   for (U32 i = 0; i < probeCount; i++)
+   {
+      updateProbeTexture(&mRegisteredProbes[i]);
+   }
+
+   mProbesDirty = true;
+}
+
 void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState *state)
 {
    PROFILE_SCOPE(RenderProbeMgr_SetupPerFrameParameters);
@@ -562,112 +573,33 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
 {
    PROFILE_SCOPE(ProbeManager_Update4ProbeConsts);
 
+   return;
+
    // Skip over gathering lights if we don't have to!
    //if (probeShaderConsts->isValid())
    {
       PROFILE_SCOPE(ProbeManager_Update4ProbeConsts_setProbes);
 
       const U32 MAX_FORWARD_PROBES = 4;
-
-      static AlignedArray<Point4F> probePositionArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-      static AlignedArray<Point4F> refBoxMinArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-      static AlignedArray<Point4F> refBoxMaxArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-      static AlignedArray<Point4F> probeRefPositionArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-      static AlignedArray<Point4F> probeConfigArray(MAX_FORWARD_PROBES, sizeof(Point4F));
-
-      Vector<MatrixF> probeWorldToObjArray;
-      probeWorldToObjArray.setSize(MAX_FORWARD_PROBES);
-      //static AlignedArray<CubemapData> probeCubemap(4, sizeof(CubemapData));
-      //F32 range;
-
-      // Need to clear the buffers so that we don't leak
-      // lights from previous passes or have NaNs.
-      dMemset(probePositionArray.getBuffer(), 0, probePositionArray.getBufferSize());
-      dMemset(refBoxMinArray.getBuffer(), 0, refBoxMinArray.getBufferSize());
-      dMemset(refBoxMaxArray.getBuffer(), 0, refBoxMaxArray.getBufferSize());
-      dMemset(probeRefPositionArray.getBuffer(), 0, probeRefPositionArray.getBufferSize());
-      dMemset(probeConfigArray.getBuffer(), 0, probeConfigArray.getBufferSize());
+      ProbeDataSet probeSet(MAX_FORWARD_PROBES);
 
       matSet.restoreSceneViewProjection();
 
-      //Array rendering
-      U32 probeCount = mRegisteredProbes.size();
+      getBestProbes(sgData.objTrans->getPosition(), &probeSet);
 
-      S8 bestPickProbes[4] = { -1,-1,-1,-1 };
+      shaderConsts->setSafe(probeShaderConsts->mProbeCountSC, (S32)probeSet.effectiveProbeCount);
 
-      S32 skyLightIdx = -1;
-
-      U32 effectiveProbeCount = 0;
-      for (U32 i = 0; i < probeCount; i++)
-      {
-         //if (effectiveProbeCount >= MAX_FORWARD_PROBES)
-         //   break;
-
-         const ProbeRenderInst& curEntry = mRegisteredProbes[i];
-         if (!curEntry.mIsEnabled)
-            continue;
-
-         if (!curEntry.mIsSkylight)
-         {
-            F32 dist = Point3F(sgData.objTrans->getPosition() - curEntry.getPosition()).len();
-
-            if (dist > curEntry.mRadius || dist > curEntry.mExtents.len())
-               continue;
-
-            if(bestPickProbes[0] == -1 || (Point3F(sgData.objTrans->getPosition() - mRegisteredProbes[bestPickProbes[0]].mPosition).len() > dist))
-               bestPickProbes[0] = i;
-            else if (bestPickProbes[1] == -1 || (Point3F(sgData.objTrans->getPosition() - mRegisteredProbes[bestPickProbes[1]].mPosition).len() > dist))
-               bestPickProbes[1] = i;
-            else if (bestPickProbes[2] == -1 || (Point3F(sgData.objTrans->getPosition() - mRegisteredProbes[bestPickProbes[2]].mPosition).len() > dist))
-               bestPickProbes[2] = i;
-            else if (bestPickProbes[3] == -1 || (Point3F(sgData.objTrans->getPosition() - mRegisteredProbes[bestPickProbes[3]].mPosition).len() > dist))
-               bestPickProbes[3] = i;
-         }
-         else
-         {
-            skyLightIdx = curEntry.mCubemapIndex;
-         }
-      }
-
-      //Grab our best probe picks
-      for (U32 i = 0; i < 4; i++)
-      {
-         if (bestPickProbes[i] == -1)
-            continue;
-
-         const ProbeRenderInst& curEntry = mRegisteredProbes[bestPickProbes[i]];
-
-         probePositionArray[effectiveProbeCount] = curEntry.getPosition();
-         probeRefPositionArray[effectiveProbeCount] = curEntry.mProbeRefOffset;
-         probeWorldToObjArray[effectiveProbeCount] = curEntry.getTransform();
-
-         Point3F refPos = curEntry.getPosition() + curEntry.mProbeRefOffset;
-         Point3F refBoxMin = refPos - curEntry.mProbeRefScale * curEntry.getTransform().getScale();
-         Point3F refBoxMax = refPos + curEntry.mProbeRefScale * curEntry.getTransform().getScale();
-
-         refBoxMinArray[effectiveProbeCount] = Point4F(refBoxMin.x, refBoxMin.y, refBoxMin.z, 0);
-         refBoxMaxArray[effectiveProbeCount] = Point4F(refBoxMax.x, refBoxMax.y, refBoxMax.z, 0);
-         probeConfigArray[effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
-            curEntry.mRadius,
-            curEntry.mAtten,
-            curEntry.mCubemapIndex);
-
-         effectiveProbeCount++;
-      }
-
-      shaderConsts->setSafe(probeShaderConsts->mProbeCountSC, (S32)effectiveProbeCount);
-
-      shaderConsts->setSafe(probeShaderConsts->mProbePositionSC, probePositionArray);
-      shaderConsts->setSafe(probeShaderConsts->mProbeRefPosSC, probeRefPositionArray);
+      shaderConsts->setSafe(probeShaderConsts->mProbePositionSC, probeSet.probePositionArray);
+      shaderConsts->setSafe(probeShaderConsts->mProbeRefPosSC, probeSet.probeRefPositionArray);
 
       if(probeShaderConsts->isValid())
-         shaderConsts->set(probeShaderConsts->mWorldToObjArraySC, probeWorldToObjArray.address(), effectiveProbeCount, GFXSCT_Float4x4);
+         shaderConsts->set(probeShaderConsts->mWorldToObjArraySC, probeSet.probeWorldToObjArray.address(), probeSet.effectiveProbeCount, GFXSCT_Float4x4);
 
-      shaderConsts->setSafe(probeShaderConsts->mRefBoxMinSC, refBoxMinArray);
-      shaderConsts->setSafe(probeShaderConsts->mRefBoxMaxSC, refBoxMaxArray);
-      shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeConfigArray);
+      shaderConsts->setSafe(probeShaderConsts->mRefBoxMinSC, probeSet.refBoxMinArray);
+      shaderConsts->setSafe(probeShaderConsts->mRefBoxMaxSC, probeSet.refBoxMaxArray);
+      shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataSC, probeSet.probeConfigArray);
 
-      shaderConsts->setSafe(probeShaderConsts->mSkylightCubemapIdxSC, (float)skyLightIdx);
+      shaderConsts->setSafe(probeShaderConsts->mSkylightCubemapIdxSC, (float)probeSet.skyLightIdx);
 
       if(probeShaderConsts->mBRDFTextureMap->getSamplerRegister() != -1 && mBRDFTexture.isValid())
          GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture);
@@ -677,6 +609,90 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData &sgData,
       if(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister() != -1)
          GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapSC->getSamplerRegister(), mIrradianceArray);
    }
+}
+
+void RenderProbeMgr::getBestProbes(const Point3F& objPosition, ProbeDataSet* probeDataSet)
+{
+   PROFILE_SCOPE(ProbeManager_getBestProbes);
+
+   // Skip over gathering lights if we don't have to!
+   //if (probeShaderConsts->isValid())
+   {
+      //Array rendering
+      U32 probeCount = mRegisteredProbes.size();
+
+      Vector<S8> bestPickProbes;
+
+      probeDataSet->effectiveProbeCount = 0;
+      for (U32 i = 0; i < probeCount; i++)
+      {
+         const ProbeRenderInst& curEntry = mRegisteredProbes[i];
+         if (!curEntry.mIsEnabled)
+            continue;
+
+         if (!curEntry.mIsSkylight)
+         {
+            F32 dist = Point3F(objPosition - curEntry.getPosition()).len();
+
+            if (dist > curEntry.mRadius || dist > curEntry.mExtents.len())
+               continue;
+
+            S32 bestPickIndex = -1;
+            for (U32 p = 0; p < bestPickProbes.size(); p++)
+            {
+               if (p > probeDataSet->MAX_PROBE_COUNT)
+                  break;
+
+               if (bestPickProbes[p] == -1 || (Point3F(objPosition - mRegisteredProbes[bestPickProbes[p]].mPosition).len() > dist))
+                  bestPickIndex = p;
+            }
+
+            //Can't have over our max count. Otherwise, if we haven't found a good slot for our best pick, insert it
+            //if we have a best pick slot, update it
+            if (bestPickIndex == -1 || bestPickProbes.size() >= probeDataSet->MAX_PROBE_COUNT)
+               bestPickProbes.push_back(i);
+            else
+               bestPickProbes[bestPickIndex] = i;
+         }
+         else
+         {
+            probeDataSet->skyLightIdx = curEntry.mCubemapIndex;
+         }
+      }
+
+      //Grab our best probe picks
+      for (U32 i = 0; i < bestPickProbes.size(); i++)
+      {
+         if (bestPickProbes[i] == -1)
+            continue;
+
+         const ProbeRenderInst& curEntry = mRegisteredProbes[bestPickProbes[i]];
+
+         probeDataSet->probePositionArray[probeDataSet->effectiveProbeCount] = curEntry.getPosition();
+         probeDataSet->probeRefPositionArray[probeDataSet->effectiveProbeCount] = curEntry.mProbeRefOffset;
+         probeDataSet->probeWorldToObjArray[probeDataSet->effectiveProbeCount] = curEntry.getTransform();
+
+         Point3F refPos = curEntry.getPosition() + curEntry.mProbeRefOffset;
+         Point3F refBoxMin = refPos - curEntry.mProbeRefScale * curEntry.getTransform().getScale();
+         Point3F refBoxMax = refPos + curEntry.mProbeRefScale * curEntry.getTransform().getScale();
+
+         probeDataSet->refBoxMinArray[probeDataSet->effectiveProbeCount] = Point4F(refBoxMin.x, refBoxMin.y, refBoxMin.z, 0);
+         probeDataSet->refBoxMaxArray[probeDataSet->effectiveProbeCount] = Point4F(refBoxMax.x, refBoxMax.y, refBoxMax.z, 0);
+         probeDataSet->probeConfigArray[probeDataSet->effectiveProbeCount] = Point4F(curEntry.mProbeShapeType,
+            curEntry.mRadius,
+            curEntry.mAtten,
+            curEntry.mCubemapIndex);
+
+         probeDataSet->effectiveProbeCount++;
+      }
+   }
+}
+
+void RenderProbeMgr::getProbeTextureData(ProbeTextureArrayData* probeTextureSet)
+{
+   probeTextureSet->BRDFTexture = mBRDFTexture;
+   probeTextureSet->prefilterArray = mPrefilterArray;
+   probeTextureSet->irradianceArray = mIrradianceArray;
 }
 
 void RenderProbeMgr::setProbeInfo(ProcessedMaterial *pmat,

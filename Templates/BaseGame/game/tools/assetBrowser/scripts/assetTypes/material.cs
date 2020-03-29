@@ -84,7 +84,7 @@ function AssetBrowser::moveMaterialAsset(%this, %assetDef, %destination)
 
 function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
 {
-   ImportActivityLog.add("Preparing Shape for Import: " @ %assetItem.assetName);
+   ImportActivityLog.add("Preparing Material for Import: " @ %assetItem.assetName);
    
    //Iterate over to find appropriate images for
          
@@ -92,6 +92,8 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
    %fileDir = filePath(%assetItem.filePath);
    %fileName = fileBase(%assetItem.filePath);
    %fileExt = fileExt(%assetItem.filePath);
+   
+   %assetItem.generatedAsset = true;
    
    //Check if we need to filter this material out or not
    if(getAssetImportConfigValue("Materials/IgnoreMaterials", "") !$= "")
@@ -117,7 +119,20 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
    {
       ImportActivityLog.add("Attempting to Auto-Populate Material Maps");
       
-      %materialItemId = ImportAssetTree.findItemByObjectId(%assetItem);
+      for(%i=0; %i < %assetItem.childAssetItems.count(); %i++)
+      {
+         %childAssetItem = %assetItem.childAssetItems.getKey(%i);
+         
+         if(!isObject(%childAssetItem) || %childAssetItem.skip || %childAssetItem.processed == true || %childAssetItem.assetType !$= "ImageAsset")
+            return;
+            
+         if(%childAssetItem.imageType $= "Albedo")
+         {
+            %assetItem.diffuseImageAsset = %childAssetItem;
+         }
+      }
+      
+      /*%materialItemId = ImportAssetTree.findItemByObjectId(%assetItem);
       
       if(%assetItem.diffuseImageAsset $= "")
       {
@@ -129,7 +144,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated Diffuse Map Image Asset via file: " @ %targetFilePath);
             
-            %diffuseAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %diffuseAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.diffuseImageAsset = %diffuseAsset;
          }
       }
@@ -146,7 +161,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated Normal Map Image Asset via file: " @ %targetFilePath);
             
-            %normalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %normalAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.normalImageAsset = %normalAsset;
          }
       }
@@ -161,7 +176,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated Metalness Map Image Asset via file: " @ %targetFilePath);
             
-            %metalAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %metalAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.metalImageAsset = %metalAsset;
          }
       }
@@ -176,7 +191,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated Roughness Map Image Asset via file: " @ %targetFilePath);
             
-            %roughnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %roughnessAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.roughnessImageAsset = %roughnessAsset;
          }
       }
@@ -191,7 +206,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated Smoothness Map Image Asset via file: " @ %targetFilePath);
             
-            %smoothnessAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %smoothnessAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.SmoothnessImageAsset = %smoothnessAsset;
          }
       }
@@ -206,7 +221,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated AO Map Image Asset via file: " @ %targetFilePath);
             
-            %AOAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %AOAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.AOImageAsset = %AOAsset;
          }
       }
@@ -221,7 +236,7 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          {
             ImportActivityLog.add("Auto-Populated Composite Map Image Asset via file: " @ %targetFilePath);
             
-            %compositeAsset = AssetBrowser.addImportingAsset("Image", %targetFilePath, %assetItem);
+            %compositeAsset = AssetBrowser.addImportingAsset("ImageAsset", %targetFilePath, %assetItem);
             %assetItem.compositeImageAsset = %compositeAsset;
          }
       }
@@ -240,15 +255,17 @@ function AssetBrowser::prepareImportMaterialAsset(%this, %assetItem)
          
          ImportActivityLog.add("Auto-Generated Composite Map from ORM maps");
          
-         %compositeAsset = AssetBrowser.addImportingAsset("Image", "", %assetItem, %assetItem.assetName @ "_composite");
+         %compositeAsset = AssetBrowser.addImportingAsset("ImageAsset", "", %assetItem, %assetItem.assetName @ "_composite");
          %compositeAsset.generatedAsset = true;
          %compositeAsset.filePath = %saveAsPath;
          
          %assetItem.compositeImageAsset = %compositeAsset;
-      }
+      }*/
    }
    
    %assetItem.processed = true;
+   
+   refreshImportAssetWindow();
 }
 
 function AssetBrowser::findMaterialMapFileWSuffix(%this, %fileDir, %filename, %fileExt, %suffixesList)
@@ -307,31 +324,21 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    };
    
    //check dependencies
-   %importItem = ImportAssetTree.findItemByObjectId(%assetItem);
-   if(ImportAssetTree.isParentItem(%importItem))
+   %dependencySlotId = 0;
+   for(%i=0; %i < %assetItem.childAssetItems.count(); %i++)
    {
-        %imageSlot = 0;
-        %childId = ImportAssetTree.getChild(%importItem);
-        while(%childId > 0)
-        {
-            %dependencyAssetItem = ImportAssetTree.getItemObject(%childId);
-            
-            if(%dependencyAssetItem.skip)
-            {
-               %childId = ImportAssetTree.getNextSibling(%childId);
-               continue;
-            }
-            
-            %depAssetType = %dependencyAssetItem.assetType;
-            if(%depAssetType $= "Image")
-            {
-               %matSet = "%newAsset.imageMap"@%imageSlot@"=\"@Asset="@%moduleName@":"@%dependencyAssetItem.assetName@"\";";
-               eval(%matSet);
-            }
-            
-            %childId = ImportAssetTree.getNextSibling(%childId);  
-            %imageSlot++;
-        }
+      %childAssetItem = %assetItem.childAssetItems.getKey(%i);
+      
+      if(!isObject(%childAssetItem) || %childAssetItem.skip || %childAssetItem.processed == false)
+         continue;
+
+      %depAssetType = %childAssetItem.assetType;
+      if(%depAssetType $= "ImageAsset")
+      {
+         %matSet = "%newAsset.imageMap"@%dependencySlotId@"=\"@Asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
+         eval(%matSet);
+         %dependencySlotId++;
+      }
    }
    
    %assetImportSuccessful = TamlWrite(%newAsset, %tamlpath);
@@ -368,46 +375,34 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       //TODO: pass along the shape's target material for this just to be sure
       %file.writeLine("   mapTo = \"" @ %assetName @ "\";"); 
       
-      if(%assetItem.diffuseImageAsset !$= "")
+      //now we re-iterate back over our child items so we can map them correctly
+      for(%i=0; %i < %assetItem.childAssetItems.count(); %i++)
       {
-         %diffuseAssetPath = %assetPath @ fileName(%assetItem.diffuseImageAsset.filePath);
-         %file.writeline("   DiffuseMap[0] = \"" @ %diffuseAssetPath @"\";");
-         %file.writeline("   DiffuseMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.diffuseImageAsset.assetName @"\";");
-      }
-      if(%assetItem.normalImageAsset)
-      {
-         %normalAssetPath = %assetPath @ fileName(%assetItem.normalImageAsset.filePath);
-         %file.writeline("   NormalMap[0] = \"" @ %normalAssetPath @"\";");
-         %file.writeline("   NormalMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.normalImageAsset.assetName @"\";");
-      }
-      if(%assetItem.roughnessImageAsset && %assetItem.roughnessImageAsset.skip == false)
-      {
-         %roughAssetPath = %assetPath @ fileName(%assetItem.roughnessImageAsset.filePath);
-         %file.writeline("   RoughMap[0] = \"" @ %roughAssetPath @"\";");
-         %file.writeline("   RoughMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.roughnessImageAsset.assetName @"\";");
-      }
-      if(%assetItem.smoothnessImageAsset && %assetItem.smoothnessImageAsset.skip == false)
-      {
-         %smoothnessAssetPath = %assetPath @ fileName(%assetItem.smoothnessImageAsset.filePath);
-         %file.writeline("   SmoothnessMap[0] = \"" @ %smoothnessAssetPath @"\";");
-         %file.writeline("   SmoothnessMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.smoothnessImageAsset.assetName @"\";");
-      }
-      if(%assetItem.metalnessImageAsset && %assetItem.metalnessImageAsset.skip == false)
-      {
-         %metalAssetPath = %assetPath @ fileName(%assetItem.metalnessImageAsset.filePath);
-         %file.writeline("   MetalMap[0] = \"" @ %metalAssetPath @"\";");
-         %file.writeline("   MetalMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.metalnessImageAsset.assetName @"\";");
-      }
-      if(%assetItem.AOImageAsset && %assetItem.AOImageAsset.skip == false)
-      {
-         %AOAssetPath = %assetPath @ fileName(%assetItem.AOImageAsset.filePath);
-         %file.writeline("   AOMap[0] = \"" @ %AOAssetPath @"\";");
-         %file.writeline("   AOMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.AOImageAsset.assetName @"\";");
-      }
-      if(%assetItem.PBRConfigMapImageAsset)
-      {
-         %file.writeline("   PBRConfigMap[0] = \"" @ %assetItem.compositeImageAsset.filePath @"\";");
-         %file.writeline("   PBRConfigMapAsset[0] = \"" @ %moduleName @ ":" @ %assetItem.compositeImageAsset.assetName @"\";");
+         %childAssetItem = %assetItem.childAssetItems.getKey(%i);
+         
+         if(!isObject(%childAssetItem) || %childAssetItem.skip || %childAssetItem.processed == false)
+            continue;
+
+         if(%childAssetItem.assetType $= "ImageAsset")
+         {
+            %mapFieldName = "";
+            if(%childAssetItem.imageType $= "Albedo")
+               %mapFieldName = "DiffuseMap";
+            else if(%childAssetItem.imageType $= "Normal")
+               %mapFieldName = "NormalMap";
+            else if(%childAssetItem.imageType $= "Metalness")
+               %mapFieldName = "MetalMap";
+            else if(%childAssetItem.imageType $= "Roughness")
+               %mapFieldName = "RoughnessMap";
+            else if(%childAssetItem.imageType $= "AO")
+               %mapFieldName = "AOMap";
+            else if(%childAssetItem.imageType $= "Composite")
+               %mapFieldName = "PBRConfigMap";
+            
+            %assetPath = fileName(%childAssetItem.filePath);
+            %file.writeline("   "@ %mapFieldName @ "[0] = \"" @ %assetPath @"\";");
+            %file.writeline("   "@ %mapFieldName @ "Asset[0] = \"" @ %moduleName @ ":" @ %childAssetItem.assetName @"\";");
+         }
       }
       %file.writeline("};");
       %file.writeline("//--- OBJECT WRITE END ---");
@@ -453,7 +448,9 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
+                           "Asset Type: Material Asset\n" @  
+                           "Asset Defition ID: " @  %assetDef;
 }
 
 function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)

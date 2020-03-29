@@ -38,6 +38,9 @@
 #ifndef _ASSET_FIELD_TYPES_H_
 #include "assets/assetFieldTypes.h"
 #endif
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
 
 #include "gfx/bitmap/gBitmap.h"
 #include "gfx/gfxTextureHandle.h"
@@ -74,6 +77,8 @@ protected:
 
    ImageTypes mImageType;
 
+   Map<GFXTextureProfile, GFXTexHandle> mResourceMap;
+
 public:
    ImageAsset();
    virtual ~ImageAsset();
@@ -90,7 +95,9 @@ public:
 
    bool isValid() { return mIsValidImage; }
 
-   GFXTexHandle getImage() { return mImage; }
+   GFXTexHandle getImage(GFXTextureProfile requestedProfile);
+
+   const char* getImageInfo();
 
 protected:
    virtual void            initializeAsset(void);
@@ -100,6 +107,8 @@ protected:
    static const char* getImageFileName(void* obj, const char* data) { return static_cast<ImageAsset*>(obj)->getImageFileName(); }
 
    void loadImage();
+
+   bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
 };
 
 DefineConsoleType(TypeImageAssetPtr, ImageAsset)

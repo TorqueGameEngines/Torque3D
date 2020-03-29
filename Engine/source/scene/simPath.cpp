@@ -34,6 +34,7 @@
 #include "core/stream/bitStream.h"
 #include "renderInstance/renderPassManager.h"
 #include "console/engineAPI.h"
+#include "T3D/pathShape.h"
 
 #include "T3D/Scene.h"
 
@@ -155,6 +156,11 @@ Path::Path()
 {
    mPathIndex = NoPathIndex;
    mIsLooping = true;
+   mPathSpeed = 1.0f;
+   mDataBlock = NULL;
+   mSpawnCount = 1;
+   mMinDelay = 0;
+   mMaxDelay = 0;
 }
 
 Path::~Path()
@@ -166,6 +172,13 @@ Path::~Path()
 void Path::initPersistFields()
 {
    addField("isLooping",   TypeBool, Offset(mIsLooping, Path), "If this is true, the loop is closed, otherwise it is open.\n");
+   addField("Speed",   TypeF32, Offset(mPathSpeed, Path), "Speed.\n");
+   addProtectedField("mPathShape", TYPEID< PathShapeData >(), Offset(mDataBlock, Path),
+	   &setDataBlockProperty, &defaultProtectedGetFn,
+	   "@brief Spawned PathShape.\n\n");
+   addField("spawnCount", TypeS32, Offset(mSpawnCount, Path), "Spawn Count.\n");
+   addField("minDelay", TypeS32, Offset(mMinDelay, Path), "Spawn Delay (min).\n");
+   addField("maxDelay", TypeS32, Offset(mMaxDelay, Path), "Spawn Delay (max).\n");
 
    Parent::initPersistFields();
    //
@@ -179,9 +192,14 @@ bool Path::onAdd()
    if(!Parent::onAdd())
       return false;
 
+   onAdd_callback(getId());
    return true;
 }
 
+IMPLEMENT_CALLBACK(Path, onAdd, void, (SimObjectId ID), (ID),
+	"Called when this ScriptGroup is added to the system.\n"
+	"@param ID Unique object ID assigned when created (%this in script).\n"
+);
 
 void Path::onRemove()
 {

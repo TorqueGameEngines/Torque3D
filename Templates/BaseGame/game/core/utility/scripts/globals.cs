@@ -38,7 +38,7 @@ $pref::Input::JoystickEnabled = 0;
 $pref::Video::ProfilePath = "core/rendering/scripts/gfxprofile";
 
 $pref::Video::disableVerticalSync = 1;
-$pref::Video::mode = "800 600 false 32 60 4";
+$pref::Video::mode = "1920 1080 false 32 60 4";
 $pref::Video::defaultFenceCount = 0;
 
 // This disables the hardware FSAA/MSAA so that we depend completely on the FXAA

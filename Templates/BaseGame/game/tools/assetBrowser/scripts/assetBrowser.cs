@@ -61,26 +61,6 @@ function AssetBrowser::onWake(%this)
    //First, build our our list of active modules
    %modulesList = ModuleDatabase.findModules(true);
    
-   %nonDefaultModuleCount = 0;
-   
-   for(%i=0; %i < getWordCount(%modulesList); %i++)
-   {
-      %moduleName = getWord(%modulesList, %i).ModuleId;
-      
-      %moduleGroup = getWord(%modulesList, %i).Group;
-      if((%moduleGroup $= "Core" && !%this.coreModulesFilter) || (%moduleGroup $= "Tools" && !%this.toolsModulesFilter))
-         continue;
-         
-      %nonDefaultModuleCount++;
-   }
-   
-   if(%nonDefaultModuleCount == 0)
-   {
-      MessageBoxYesNo( "Import Template Content?",
-         "You have no modules or content. Do you want to import a module from the template content?",
-         "AssetBrowser.ImportTemplateModules();", "" );
-   }
-   
    %this.setPreviewSize(EditorSettings.value("Assets/Browser/previewTileSize", "small"));
    
    AssetBrowser.toggleAssetTypeFilter(0); 

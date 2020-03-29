@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="base_material_ball"
-    scriptFile="@assetFile=data/pbr/materials/base_material_ball.cs"
+    scriptFile="@assetFile=base_material_ball.cs"
     materialDefinitionName="base_material_ball"
     imageMap0="@Asset=pbr:base_material_ball_ALBEDO"
     originalFilePath="/base_material_ball"

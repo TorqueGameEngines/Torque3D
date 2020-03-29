@@ -100,6 +100,8 @@ struct ProbeRenderInst
 
    U32 mProbeIdx;
 
+   F32 mMultiplier;
+
 public:
 
    ProbeRenderInst();
@@ -164,6 +166,51 @@ struct ProbeShaderConstants
 };
 
 typedef Map<GFXShader*, ProbeShaderConstants*> ProbeConstantMap;
+
+struct ProbeDataSet
+{
+   AlignedArray<Point4F> probePositionArray;
+   AlignedArray<Point4F> refBoxMinArray;
+   AlignedArray<Point4F> refBoxMaxArray;
+   AlignedArray<Point4F> probeRefPositionArray;
+   AlignedArray<Point4F> probeConfigArray;
+
+   Vector<MatrixF> probeWorldToObjArray;
+
+   S32 skyLightIdx;
+
+   U32 effectiveProbeCount;
+
+   U32 MAX_PROBE_COUNT;
+
+   ProbeDataSet(U32 maxProbeCount)
+   {
+      MAX_PROBE_COUNT = maxProbeCount;
+
+      probePositionArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
+      refBoxMinArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
+      refBoxMaxArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
+      probeRefPositionArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
+      probeConfigArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
+
+      probeWorldToObjArray.setSize(maxProbeCount);
+
+      // Need to clear the buffers so that we don't leak
+      // lights from previous passes or have NaNs.
+      dMemset(probePositionArray.getBuffer(), 0, probePositionArray.getBufferSize());
+      dMemset(refBoxMinArray.getBuffer(), 0, refBoxMinArray.getBufferSize());
+      dMemset(refBoxMaxArray.getBuffer(), 0, refBoxMaxArray.getBufferSize());
+      dMemset(probeRefPositionArray.getBuffer(), 0, probeRefPositionArray.getBufferSize());
+      dMemset(probeConfigArray.getBuffer(), 0, probeConfigArray.getBufferSize());
+   }
+};
+
+struct ProbeTextureArrayData
+{
+   GFXTexHandle BRDFTexture;
+   GFXCubemapArrayHandle prefilterArray;
+   GFXCubemapArrayHandle irradianceArray;
+};
 
 //**************************************************************************
 // RenderObjectMgr
@@ -292,11 +339,18 @@ public:
 
    void updateProbeTexture(ProbeRenderInst* probeInfo);
 
+   void reloadTextures();
+
    /// Debug rendering
    static bool smRenderReflectionProbes;
 
    void bakeProbe(ReflectionProbe *probeInfo);
    void bakeProbes();
+
+   void getProbeTextureData(ProbeTextureArrayData* probeTextureSet);
+   S32 getSkylightIndex() { return mSkylightCubemapIdx; }
+   //accumulates the best fit of probes given the object position
+   void getBestProbes(const Point3F& objPosition, ProbeDataSet* probeDataSet);
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

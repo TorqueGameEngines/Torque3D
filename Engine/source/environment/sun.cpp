@@ -167,8 +167,8 @@ void Sun::initPersistFields()
       addField( "castShadows", TypeBool, Offset( mCastShadows, Sun ), 
          "Enables/disables shadows cast by objects due to Sun light");    
 
-      addField("staticRefreshFreq", TypeS32, Offset(mStaticRefreshFreq, Sun), "static shadow refresh rate (milliseconds)");
-      addField("dynamicRefreshFreq", TypeS32, Offset(mDynamicRefreshFreq, Sun), "dynamic shadow refresh rate (milliseconds)");
+      //addField("staticRefreshFreq", TypeS32, Offset(mStaticRefreshFreq, Sun), "static shadow refresh rate (milliseconds)");
+      //addField("dynamicRefreshFreq", TypeS32, Offset(mDynamicRefreshFreq, Sun), "dynamic shadow refresh rate (milliseconds)");
 
    endGroup( "Lighting" );
 

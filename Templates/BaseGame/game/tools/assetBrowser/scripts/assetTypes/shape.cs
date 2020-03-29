@@ -76,7 +76,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
    %shapeCount = %assetItem.shapeInfo._meshCount;
    %shapeItem = %assetItem.shapeInfo.findItemByName("Meshes");
    
-   %shapeId = ImportAssetTree.findItemByObjectId(%assetItem);
+   //%shapeId = ImportAssetTree.findItemByObjectId(%assetItem);
    
    if(getAssetImportConfigValue("Meshes/ImportMesh", "1") == 1 && %shapeCount > 0)
    {
@@ -132,39 +132,39 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    };
    
    //check dependencies
-   %importItem = ImportAssetTree.findItemByObjectId(%assetItem);
-   if(ImportAssetTree.isParentItem(%importItem))
+   %dependencySlotId = 0;
+   for(%i=0; %i < %assetItem.childAssetItems.count(); %i++)
    {
-        %matSlotId = 0;
-        %childId = ImportAssetTree.getChild(%importItem);
-        while(%childId > 0)
-        {
-            %dependencyAssetItem = ImportAssetTree.getItemObject(%childId);
-            
-            %depAssetType = %dependencyAssetItem.assetType;
-            if(%depAssetType $= "MaterialAsset")
-            {
-               %matSet = "%newAsset.materialSlot"@%matSlotId@"=\"@Asset="@%moduleName@":"@%dependencyAssetItem.assetName@"\";";
-               eval(%matSet);
-            }
-            if(%depAssetType $= "AnimationAsset")
-            {
-               %matSet = "%newAsset.animationSequence"@%matSlotId@"=\"@Asset="@%moduleName@":"@%dependencyAssetItem.assetName@"\";";
-               eval(%matSet);
-            }
-            
-            %childId = ImportAssetTree.getNextSibling(%childId);  
-            %matSlotId++;
-        }
+      %childAssetItem = %assetItem.childAssetItems.getKey(%i);
+      
+      if(!isObject(%childAssetItem) || %childAssetItem.skip || %childAssetItem.processed == false)
+         continue;
+
+      %depAssetType = %childAssetItem.assetType;
+      if(%childAssetItem.assetType $= "MaterialAsset")
+      {
+         %matSet = "%newAsset.materialSlot"@%dependencySlotId@"=\"@Asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
+         eval(%matSet);
+         %dependencySlotId++;
+      }
+      else if(%depAssetType $= "AnimationAsset")
+      {
+         %matSet = "%newAsset.animationSequence"@%dependencySlotId@"=\"@Asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
+         eval(%matSet);
+         %dependencySlotId++;
+      }
    }
    
    %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ %assetName @ ".asset.taml"); 
    
    //and copy the file into the relevent directory
-   %doOverwrite = !AssetBrowser.isAssetReImport;
-   if(!pathCopy(%filePath, %assetFullPath, %doOverwrite))
+   if(filePath(%filePath) !$= filePath(%assetFullPath))
    {
-      error("Unable to import asset: " @ %filePath);
+      %doOverwrite = !AssetBrowser.isAssetReImport;
+      if(!pathCopy(%filePath, %assetFullPath, %doOverwrite))
+      {
+         error("Unable to import asset: " @ %filePath);
+      }
    }
    
    %constructor = ShapeEditor.findConstructor( %assetFullPath );
@@ -223,7 +223,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    ShapeEditor.saveConstructor( %constructor );
    
    //now, force-load the file if it's collada
-   %fileExt = fileExt(%assetFullPath);
+   /*%fileExt = fileExt(%assetFullPath);
    if(isSupportedFormat(getSubStr(%fileExt,1)))
    {
       %tempShape = new TSStatic()
@@ -232,7 +232,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
       };
       
       %tempShape.delete();
-   }
+   }*/
    
    %moduleDef = ModuleDatabase.findModule(%moduleName,1);
          
@@ -251,7 +251,9 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
+                           "Asset Type: Shape Asset\n" @ 
+                           "Asset Defition ID: " @  %assetDef;
 }
 
 function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
@@ -324,7 +326,13 @@ function processShapeMaterialInfo(%assetItem, %materialItem)
          //could be a stale path reference, such as if it was downloaded elsewhere. Trim to just the filename and see
          //if we can find it there
          %shapePathBase = filePath(%assetItem.filePath);
-         %imageFileName = %shapePathBase @ "/" @ fileName(%filePath);
+         
+         %filename = fileName(%filePath);
+         
+         %suffixPos = strpos(strlwr(%filename), " (not found)", 0);
+         %filename = getSubStr(%filename, 0, %suffixPos);
+         
+         %imageFileName = %shapePathBase @ "/" @ %filename;
          if(isFile(%imageFileName))
             %filePath = %imageFileName;
       }

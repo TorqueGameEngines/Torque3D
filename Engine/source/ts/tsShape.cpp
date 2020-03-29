@@ -2143,7 +2143,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
       ret = new TSShape;
       readSuccess = ret->read(&stream);
    }
-   else if ( extension.equal( "dae", String::NoCase ) || extension.equal( "kmz", String::NoCase ) )
+   /*else if ( extension.equal( "dae", String::NoCase ) || extension.equal( "kmz", String::NoCase ) )
    {
 #ifdef TORQUE_COLLADA
       // Attempt to load the DAE file
@@ -2164,7 +2164,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
       ret = new TSShape;
       readSuccess = ret->read(&stream);
 #endif
-   }
+   }*/
    else
    {
       //Con::errorf( "Resource<TSShape>::create - '%s' has an unknown file format", path.getFullPath().c_str() );

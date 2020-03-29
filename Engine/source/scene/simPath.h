@@ -36,17 +36,21 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
-class BaseMatInstance;
+#ifndef _STATICSHAPE_H_
+#include "T3D/staticShape.h"
+#endif
 
+class BaseMatInstance;
+struct PathShapeData;
 
 namespace SimPath
 {
 
 //--------------------------------------------------------------------------
 /// A path!
-class Path : public SimGroup
+class Path : public GameBase
 {
-   typedef SimGroup Parent;
+   typedef GameBase Parent;
 
   public:
    enum : U32
@@ -57,8 +61,12 @@ class Path : public SimGroup
 
   private:
    U32 mPathIndex;
+   F32 mPathSpeed;
    bool mIsLooping;
-
+   PathShapeData* mDataBlock;
+   S32 mSpawnCount;
+   S32 mMinDelay;
+   S32 mMaxDelay;
   protected:
    bool onAdd();
    void onRemove();
@@ -77,6 +85,7 @@ class Path : public SimGroup
 
    DECLARE_CONOBJECT(Path);
    static void initPersistFields();
+   DECLARE_CALLBACK(void, onAdd, (SimObjectId ID));
 };
 
 //--------------------------------------------------------------------------

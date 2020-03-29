@@ -33,10 +33,10 @@ function AssetImportConfigList::onSelect( %this, %id, %text )
    %this.populateConfigListByGroup("General");
    %this.populateConfigListByGroup("Meshes");
    %this.populateConfigListByGroup("Materials");
-   //%this.populateConfigListByGroup("Animations");
-   //%this.populateConfigListByGroup("Images");
-   //%this.populateConfigListByGroup("Collision");
-   //%this.populateConfigListByGroup("Sound");
+   %this.populateConfigListByGroup("Animations");
+   %this.populateConfigListByGroup("Images");
+   %this.populateConfigListByGroup("Collision");
+   %this.populateConfigListByGroup("Sound");
    
    ImportOptionsConfigList.update();  
 }

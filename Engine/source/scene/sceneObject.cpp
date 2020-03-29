@@ -149,6 +149,13 @@ SceneObject::SceneObject()
    mSceneObjectLinks = NULL;
 
    mObjectFlags.set( RenderEnabledFlag | SelectionEnabledFlag );
+// PATHSHAPE
+   // init the scenegraph relationships to indicate no parent, no children, and no siblings
+   mGraph.parent = NULL; 
+   mGraph.nextSibling = NULL;
+   mGraph.firstChild = NULL;
+   mGraph.objToParent.identity();
+// PATHSHAPE END
    mIsScopeAlways = false;
 
    mAccuTex = NULL;
@@ -330,6 +337,9 @@ void SceneObject::onRemove()
    plUnlink();
 
    Parent::onRemove();
+// PATHSHAPE
+   if ( getParent() != NULL)   attachToParent( NULL);
+// PATHSHAPE END
 }
 
 //-----------------------------------------------------------------------------
@@ -401,6 +411,9 @@ void SceneObject::setTransform( const MatrixF& mat )
 #endif
 
    PROFILE_SCOPE( SceneObject_setTransform );
+// PATHSHAPE
+   PerformUpdatesForChildren(mat);
+// PATHSHAPE END
 
    // Update the transforms.
 
@@ -875,6 +888,36 @@ U32 SceneObject::packUpdate( NetConnection* conn, U32 mask, BitStream* stream )
    if ( stream->writeFlag( mask & FlagMask ) )
       stream->writeRangedU32( (U32)mObjectFlags, 0, getObjectFlagMax() );
 
+   // PATHSHAPE
+   //Begin attachment
+   retMask = 0; //retry mask
+
+   if (stream->writeFlag(getParent() != NULL))   {
+      stream->writeAffineTransform(mGraph.objToParent);
+   }
+   if (stream->writeFlag(mask & MountedMask))
+   {
+      // Check to see if we need to write an object ID      
+      if (stream->writeFlag(mGraph.parent))      {
+         S32 t = conn->getGhostIndex(mGraph.parent);
+         // Check to see if we can actually ghost this...         
+         if (t == -1)         {
+            // Cant, try again later            
+            retMask |= MountedMask;
+            stream->writeFlag(false);
+         }
+         else {
+            // Can, write it.            
+            stream->writeFlag(true);
+            stream->writeRangedU32(U32(t), 0, NetConnection::MaxGhostCount);
+            stream->writeAffineTransform(mGraph.objToParent);
+            //Con::errorf("%d: sent mounted on %d", getId(), mGraph.parent->getId());         
+         }
+      }
+   }
+   // End of Attachment   
+   // PATHSHAPE END
+
    if ( mask & MountedMask ) 
    {                  
       if ( mMount.object ) 
@@ -913,6 +956,44 @@ void SceneObject::unpackUpdate( NetConnection* conn, BitStream* stream )
    // FlagMask
    if ( stream->readFlag() )      
       mObjectFlags = stream->readRangedU32( 0, getObjectFlagMax() );
+
+   // PATHSHAPE  
+   // begin of attachment
+   if (stream->readFlag())
+   {
+      MatrixF m;
+      stream->readAffineTransform(&m);
+      mGraph.objToParent = m;
+   }
+   if (stream->readFlag())
+   {
+      // Check to see if we need to read an object ID      
+      if (stream->readFlag())
+      {
+         // Check to see if we can actually ghost this...         
+         if (stream->readFlag())
+         {
+            GameBase *newParent = static_cast<GameBase*>(conn->resolveGhost(stream->readRangedU32(0, NetConnection::MaxGhostCount)));
+            MatrixF m;
+            stream->readAffineTransform(&m);
+
+            if (getParent() != newParent)
+            {
+               clearProcessAfter();
+               processAfter(newParent);
+            }
+
+            attachToParent(newParent, &m);
+            //Con::errorf("%d: got mounted on %d", getId(), mParentObject->getId());         
+         }
+      }
+      else
+      {
+         attachToParent(NULL);
+      }
+   }
+   // End of attachment
+   // PATHSHAPE END
 
    // MountedMask
    if ( stream->readFlag() ) 
@@ -1478,6 +1559,9 @@ DefineEngineMethod( SceneObject, setTransform, void, ( TransformF txfm ),,
    "Set the object's transform (orientation and position)."
    "@param txfm object transform to set" )
 {
+// PATHSHAPE
+   object->PerformUpdatesForChildren(txfm.getMatrix());
+// PATHSHAPE END
    if ( !txfm.hasRotation() )
       object->setPosition( txfm.getPosition() );
    else
@@ -1551,3 +1635,356 @@ DefineEngineMethod(SceneObject, setForwardVector, void, (VectorF newForward, Vec
 {
    object->setForwardVector(newForward, upVector);
 }
+
+// PATHSHAPE
+// Move RenderTransform by set amount
+// no longer used
+
+void SceneObject::moveRender(const Point3F &delta) 
+{
+   Point3F pos;
+
+   const MatrixF& tmat = getRenderTransform();
+   tmat.getColumn(3,&pos);
+   AngAxisF aa(tmat);
+   pos += delta;
+
+   MatrixF mat;
+   aa.setMatrix(&mat);
+   mat.setColumn(3,pos);
+   setRenderTransform(mat);
+}
+
+void SceneObject::PerformUpdatesForChildren(MatrixF mat){
+	    UpdateXformChange(mat);
+		for (U32 i=0; i < getNumChildren(); i++) {
+			SceneObject *o = getChild(i);
+			o->updateChildTransform(); //update the position of the child object
+		}
+}
+
+
+
+
+
+// This function will move the players based on how much it's
+// parent have moved
+void SceneObject::updateChildTransform(){
+	if (getParent() != NULL){
+		MatrixF one;
+		MatrixF two;
+		MatrixF three;
+		MatrixF four;
+		MatrixF mat;
+		one= getTransform();
+		two = getParent()->getTransform();
+		one.affineInverse();
+		four.mul(two,one);
+		mat.mul(getParent()->mLastXform,getTransform());
+		setTransform(mat);
+	}
+}
+
+// This function will move the rendered image based on how much it's
+// parent have moved since the processtick.
+// For some reason the player object must be updated via it's GetRenderTransform seen below,
+// Other objects seem to require getTransform() only
+void SceneObject::updateRenderChangesByParent(){
+   if (getParent() != NULL){
+		MatrixF renderXform = getParent()->getRenderTransform();
+		MatrixF xform = getParent()->getTransform();
+		xform.affineInverse();
+
+		MatrixF offset;
+		offset.mul(renderXform, xform);
+
+   	    MatrixF mat;
+		
+		//add the "offset" caused by the parents change, and add it to it's own
+		// This is needed by objects that update their own render transform thru interpolate tick
+		// Mostly for stationary objects.
+
+		if (getClassName() == "Player")
+			mat.mul(offset,getRenderTransform());  
+		else										
+			mat.mul(offset,getTransform());	 
+			setRenderTransform(mat);
+	}
+}
+
+
+
+
+
+//Ramen - Move Transform by set amount
+//written by  Anthony Lovell
+void SceneObject::move(F32 x, F32 y, F32 z) 
+{
+    Point3F delta;
+    delta.x = x;
+    delta.y = y;
+    delta.z = z;
+    move(delta);
+}
+// move by a specified delta in root coordinate space
+void SceneObject::move(const Point3F &delta) 
+{
+   Point3F pos;
+
+   const MatrixF& tmat = getTransform();
+   tmat.getColumn(3,&pos);
+   AngAxisF aa(tmat);
+ 
+   pos += delta;
+
+   MatrixF mat;
+   aa.setMatrix(&mat);
+   mat.setColumn(3,pos);
+   setTransform(mat);
+}
+
+
+
+//written by  Anthony Lovell ----------------------------------------------------------
+U32
+SceneObject::getNumChildren() const
+{   
+    U32 num = 0;
+    for (SceneObject *cur = mGraph.firstChild; cur; cur = cur->mGraph.nextSibling)
+        num++;
+    return num;
+}
+//written by  Anthony Lovell ----------------------------------------------------------
+SceneObject *
+SceneObject::getChild(U32 index) const
+{       
+    SceneObject *cur = mGraph.firstChild;
+    for (U32 i = 0; 
+        cur && i < index; 
+        i++)
+        cur = cur->mGraph.nextSibling;
+    return cur;
+}
+
+
+
+
+void SceneObject::UpdateXformChange(const MatrixF &mat){
+// This function gets the difference between the Transform and current Render transform
+// Used for Interpolation matching with the child objects who rely on this data.
+
+	MatrixF oldxform = getTransform();
+
+	oldxform.affineInverse();
+	mLastXform.mul(mat,oldxform);
+
+}
+
+
+//----------------------------------------------------------
+bool
+SceneObject::attachChildAt(SceneObject *subObject, MatrixF atThisOffset, S32 node)
+{   
+    AssertFatal(subObject, "attaching a null subObject");
+    AssertFatal(!isChildOf(subObject), "cyclic attachChild()");
+    bool b = subObject->attachToParent(this, &atThisOffset, node);    
+    if (!b) 
+        return false;
+    
+    return true;
+}
+
+//----------------------------------------------------------
+bool
+SceneObject::attachChildAt(SceneObject *subObject, Point3F atThisPosition)
+{   
+    AssertFatal(subObject, "attaching a null subObject");
+    AssertFatal(!isChildOf(subObject), "cyclic attachChild()");
+    bool b = subObject->attachToParent(this);
+    if (!b) 
+        return false;
+        
+    subObject->mGraph.objToParent.setColumn(3, atThisPosition);
+//    calcTransformFromLocalTransform();
+
+    return true;
+}
+
+//----------------------------------------------------------
+bool
+SceneObject::attachChild(SceneObject *child)
+{   
+	AssertFatal(child, "attaching a null subObject");
+    AssertFatal(!isChildOf(child), "cyclic attachChild()");
+	
+    return  child->attachToParent(this);        
+}
+
+
+//----------------------------------------------------------
+/// returns a count of children plus their children, recursively
+U32
+SceneObject::getNumProgeny() const
+{   
+    U32 num = 0;
+    for (SceneObject *cur = mGraph.firstChild; cur; cur = cur->mGraph.nextSibling) {
+        num += 1 + cur->getNumProgeny();
+    }
+    return num;
+}
+
+DefineEngineMethod(SceneObject, getNumChildren, S32, (),, "returns number of direct child objects")
+{
+    return object->getNumChildren();
+}
+
+DefineEngineMethod(SceneObject, getNumProgeny, S32, (),, "returns number of recursively-nested child objects")
+{
+    return object->getNumProgeny();
+}
+
+DefineEngineMethod(SceneObject, getChild, S32, (S32 _index), (0), "getChild(S32 index) -- returns child SceneObject at given index")
+{
+    SceneObject *s = object->getChild(_index);
+    return s ? s->getId() : 0;
+}
+
+DefineEngineMethod(SceneObject, attachChildAt, bool, (SceneObject* _subObject, MatrixF _offset, S32 _node), (nullAsType<SceneObject*>(), MatrixF::Identity, 0), "(SceneObject subObject, MatrixF offset, S32 offset)"
+              "Mount object to this one with the specified offset expressed in our coordinate space.")
+{   
+   if (_subObject != nullptr)
+   {
+      return object->attachChildAt(_subObject, _offset, _node);
+   }
+   else
+   {
+      Con::errorf("Couldn't addObject()!");
+      return false;
+   }
+}
+
+DefineEngineMethod(SceneObject, attachToParent, bool, (const char*_sceneObject), ,"attachToParent(SceneObject)"
+              "specify a null or non-null parent")
+{   
+    SceneObject * t;   
+    
+    if(Sim::findObject(_sceneObject, t))
+    {
+        return object->attachToParent(t);
+    }
+    else
+    {      
+        if ((!dStrcmp("0", _sceneObject))|| (!dStrcmp("", _sceneObject)))
+            return object->attachToParent(NULL);
+        else
+        {
+            Con::errorf("Couldn't setParent()!");   
+            return false;
+        }
+    }
+}
+
+DefineEngineMethod(SceneObject, getParent, S32, (),, "returns ID of parent SceneObject")
+{
+    SceneObject *p = object->getParent();
+    return p ? p->getId() : -1;
+}
+
+DefineEngineMethod(SceneObject, attachChild, bool, (const char*_subObject),, "(SceneObject subObject)"
+              "attach an object to this one, preserving its present transform.")
+{   
+    SceneObject * t;   
+    MatrixF m;   
+    if(Sim::findObject(_subObject, t)) 
+        return object->attachChild(t);
+
+    Con::errorf("Couldn't addObject()!");
+    return false;
+}
+
+bool SceneObject::isChildOf(SceneObject *so)
+{    
+    SceneObject *p = mGraph.parent;
+    if (p) {
+        if (p == so) 
+            return true;
+        else
+            return p->isChildOf(so);
+    } else
+        return false;
+}
+
+
+
+bool SceneObject::attachToParent(SceneObject *newParent, MatrixF *atThisOffset/* = NULL */, S32 node )
+{   
+	SceneObject *oldParent = mGraph.parent;
+
+    if (oldParent == newParent)
+        return true;
+
+    // cycles in the scene hierarchy are forbidden!
+    // that is:  a SceneObject cannot be a child of its progeny
+    if (newParent && newParent->isChildOf(this))
+        return false;
+      
+    mGraph.parent = newParent;
+
+    if (oldParent) {
+
+        clearNotify(oldParent); 
+
+        // remove this SceneObject from the list of children of oldParent
+        SceneObject *cur = oldParent->mGraph.firstChild;
+        if (cur == this) { // if we are the first child, this is easy
+            oldParent->mGraph.firstChild = mGraph.nextSibling;
+        } else {
+            while (cur->mGraph.nextSibling != this) {
+                cur = cur->mGraph.nextSibling;
+                // ASSERT cur != NULL;
+            }
+            cur->mGraph.nextSibling = mGraph.nextSibling;
+        }
+        oldParent->onLostChild(this);
+    }
+     
+    if (newParent) {
+
+        deleteNotify(newParent); // if we are deleted, inform our parent
+
+        // add this SceneObject to the list of children of oldParent
+        mGraph.nextSibling = newParent->mGraph.firstChild;
+        newParent->mGraph.firstChild = this;
+        mGraph.parent = newParent;
+        
+        newParent->onNewChild(this);
+
+        if (atThisOffset)
+            mGraph.objToParent = *atThisOffset;
+    } else {
+        mGraph.parent = NULL;
+        mGraph.nextSibling = NULL;
+        mGraph.objToParent = mObjToWorld;
+    }
+
+    onLostParent(oldParent);
+    onNewParent(newParent);
+
+    setMaskBits(MountedMask);
+    return true;
+}
+
+DefineEngineMethod(SceneObject, detachChild, bool, (const char*_subObject),, "SceneObject subObject")
+{   
+    SceneObject * t;       
+    if(Sim::findObject(_subObject, t))   {
+        return t->attachToParent(NULL);
+    } else 
+        return false;  
+}
+
+// subclasses can do something with these if they care to
+void SceneObject::onNewParent(SceneObject *newParent) {}  
+void SceneObject::onLostParent(SceneObject *oldParent){}    
+void SceneObject::onNewChild(SceneObject *newKid){}   
+void SceneObject::onLostChild(SceneObject *lostKid){}

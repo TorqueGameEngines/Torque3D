@@ -110,7 +110,7 @@ function guiInspectorListField::onSelect( %this, %id, %text )
       //ah, a global var, just do it straight, then
       %setCommand = %this.fieldName @ " = \"" @ %text @ "\";";
    }
-   else if(isObject(%this.ownerObj))
+   else if(isObject(%this.ownerObject))
    {
       //regular variable
       %setCommand = %this.ownerObject @ "." @ %this.fieldName @ " = \"" @ %text @ "\";";

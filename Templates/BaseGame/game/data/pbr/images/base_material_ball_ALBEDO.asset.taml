@@ -5,5 +5,6 @@
     imageFile="@assetFile=base_material_ball"
     useMips="true"
     isHDRImage="false"
+    imageType="Albedo"
     originalFilePath="/base_material_ball"
     VersionId="1" />

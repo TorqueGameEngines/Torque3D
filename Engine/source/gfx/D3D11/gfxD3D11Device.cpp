@@ -665,7 +665,8 @@ void GFXD3D11Device::endReset(GFXD3D11WindowTarget* windowTarget)
 
    // Now reacquire all the resources we trashed earlier
    reacquireDefaultPoolResources();
-
+   mD3DDeviceContext->PSSetShader(mLastPixShader, NULL, 0);
+   mD3DDeviceContext->VSSetShader(mLastVertShader, NULL, 0);
    mInitialized = true;
    // Mark everything dirty and flush to card, for sanity.
    updateStates(true);

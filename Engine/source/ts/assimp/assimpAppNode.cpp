@@ -91,7 +91,7 @@ MatrixF AssimpAppNode::getTransform(F32 time)
    else {
       // no parent (ie. root level) => scale by global shape <unit>
       mLastTransform.identity();
-      mLastTransform.scale(ColladaUtils::getOptions().unit);
+      mLastTransform.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
       if (!isBounds())
          convertMat(mLastTransform);
    }

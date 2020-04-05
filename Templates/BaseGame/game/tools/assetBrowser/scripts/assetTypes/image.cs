@@ -212,6 +212,24 @@ function AssetBrowser::renameImageAsset(%this, %assetDef, %newAssetName)
    renameAssetFile(%assetDef, %newAssetName);
 }
 
+//Duplicates the asset
+function AssetBrowser::duplicateImageAsset(%this, %assetDef, %newAssetName)
+{
+   %duplicatedAsset = duplicateAssetFile(%assetDef, %newAssetName);
+   
+   %newFilename = duplicateAssetLooseFile(%assetDef.imageFile, %newAssetName);
+   
+   if(!%newFilename $= "")
+      return;
+      
+   %module = AssetBrowser.dirHandler.getModuleFromAddress(%duplicatedAsset);
+      
+   %dupAssetDef = AssetDatabase.acquireAsset(%module.ModuleId @ ":" @ %newAssetName);
+
+   %dupAssetDef.imageFile = fileName(%newFilename);
+   %dupAssetDef.saveAsset();
+}
+
 //Deletes the asset
 function AssetBrowser::deleteImageAsset(%this, %assetDef)
 {

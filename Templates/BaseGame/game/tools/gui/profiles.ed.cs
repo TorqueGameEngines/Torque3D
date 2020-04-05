@@ -1232,8 +1232,10 @@ singleton GuiControlProfile (inspectorStyleRolloutNoHeaderProfile)
 singleton GuiControlProfile (IconDropdownProfile) 
 {
    border = -2;
+   opaque = true;
+   border = true;
    category = "Editor";
    //bitmap = "./icon-dropdownbar";
    
-   fillColor = "0 0 0";
+   fillColor = EditorSettings.value("Theme/headerColor");
 };

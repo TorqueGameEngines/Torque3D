@@ -444,6 +444,11 @@ function ESettingsWindow::getAssetManagementSettings(%this)
    SettingsInspector.addSettingsField("AssetManagement/Modules/coreModulePath", "Core Module Path", "string", "");
    SettingsInspector.addSettingsField("AssetManagement/Modules/gameDataModulePath", "Game Data Module Path", "string", "");
    SettingsInspector.addSettingsField("AssetManagement/Modules/moduleExtension", "Module Extension", "string", "");
+   
+   %moduleList = ModuleDatabase.findModules(true);
+   %moduleList = strreplace(%moduleList, " ", ",");
+   
+   SettingsInspector.addSettingsField("AssetManagement/Modules/DefaultModule", "Default Module", "list", %moduleList);
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Assets");
@@ -480,6 +485,7 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/previewTileSize", "Asset Preview Tile Size", "bool", "");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
    SettingsInspector.endGroup();
 }
 

@@ -260,25 +260,88 @@ function moveAssetLooseFile(%file, %destinationPath)
 
 //------------------------------------------------------------
 
-function AssetBrowser::duplicateAsset(%this, %targetModule)
+function AssetBrowser::duplicateAsset(%this)
 {
-   if(%targetModule $= "")
-   {
-      //we need a module to duplicate to first
-      Canvas.pushDialog(AssetBrowser_selectModule);
-      AssetBrowser_selectModule.callback = "AssetBrowser.duplicateAsset";
-      return;
-   }
-   
    %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
    %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetId);
    
-   //this acts as a redirect based on asset type and will enact the appropriate function
-   //so for a GameObjectAsset, it'll become %this.duplicateGameObjectAsset(%assetDef, %targetModule);
-   //and call to the tools/assetBrowser/scripts/assetTypes/gameObject.cs file for implementation
-   if(%this.isMethod("duplicate"@%assetType))
-      eval(%this @ ".duplicate"@%assetType@"("@%assetDef@","@%targetModule@");");
+   %trailingNum = getTrailingNumber(%assetDef.assetName);
+   if(%trailingNum != -1)
+   {
+      %trailingNum++;
+      %newName = stripTrailingNumber(%assetDef.assetName) @ (%trailingNum);
+   }
+   else
+   {
+      %newName = stripTrailingNumber(%assetDef.assetName) @ "1";
+   }
+   
+   AssetBrowser_assetNameEditTxt.text = %newName;
+   
+   AssetBrowser_assetNameEdit.callback = "AssetBrowser.doDuplicateAsset();";
+   
+   if(EditorSettings.value("AssetManagement/Assets/promptOnRename", "1") == 1)
+      Canvas.pushDialog(AssetBrowser_assetNameEdit);
+   else
+      eval(AssetBrowser_assetNameEdit.callback);
 }
+
+function AssetBrowser::doDuplicateAsset(%this)
+{
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetId);
+   
+   if(AssetBrowser_assetNameEditTxt.text !$= "" && AssetBrowser_assetNameEditTxt.text !$= %assetDef.assetName)
+   {
+      //this acts as a redirect based on asset type and will enact the appropriate function
+      //so for a GameObjectAsset, it'll become %this.duplicateGameObjectAsset(%assetDef, %targetModule);
+      //and call to the tools/assetBrowser/scripts/assetTypes/gameObject.cs file for implementation
+      if(%this.isMethod("duplicate"@%assetType))
+         eval(%this @ ".duplicate"@%assetType@"("@%assetDef@","@AssetBrowser_assetNameEditTxt.text@");");
+         
+      AssetBrowser.refresh();
+   }
+}
+
+function duplicateAssetFile(%assetDef, %newAssetName)
+{
+   %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
+   %assetFilepath = filePath(%assetPath);
+   %assetFileExt = fileExt(%assetPath);
+   
+   %newAssetPath = %assetFilepath @ "/" @ %newAssetName @ ".asset.taml";
+   
+   %copiedSuccess = pathCopy(%assetPath, %newAssetPath);
+   
+   if(!%copiedSuccess)
+      return "";
+      
+   replaceInFile(%newAssetPath, %assetDef.assetName, %newAssetName);
+   
+   %module = AssetBrowser.dirHandler.getModuleFromAddress(%newAssetPath);
+      
+   //Add with the new file
+   AssetDatabase.addDeclaredAsset(%module, %newAssetPath);
+      
+   return %newAssetPath;
+}
+
+function duplicateAssetLooseFile(%file, %newFilename)
+{
+   %filePath = filePath(%file);
+   %fileExt = fileExt(%file);
+   
+   %newPath = %filePath @ "/" @ %newFilename @ %fileExt;
+   %copiedSuccess = pathCopy(%file, %newPath);
+   
+   if(!%copiedSuccess)
+      return "";
+
+   return %newPath;
+}
+
+
+//------------------------------------------------------------
 
 function AssetBrowser::deleteAsset(%this)
 {

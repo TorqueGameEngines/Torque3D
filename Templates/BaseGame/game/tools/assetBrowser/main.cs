@@ -66,6 +66,7 @@ function initializeAssetBrowser()
    exec("./guis/newFolder.gui");
    exec("./guis/assetImportLog.gui");
    exec("./guis/looseFileAudit.gui");
+   exec("./guis/assetNameEdit.gui");
 
    exec("./scripts/assetBrowser.cs");
    exec("./scripts/popupMenus.cs");

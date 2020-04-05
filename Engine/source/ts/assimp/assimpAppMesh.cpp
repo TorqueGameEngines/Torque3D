@@ -211,7 +211,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
          bonePos /= scaleMult;
       }
 
-      bonePos *= ColladaUtils::getOptions().unit;
+      bonePos *= ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor;
       boneTransform.setPosition(bonePos);
 
       initialTransforms.push_back(boneTransform);

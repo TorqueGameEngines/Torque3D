@@ -399,8 +399,8 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
             else if(%childAssetItem.imageType $= "Composite")
                %mapFieldName = "PBRConfigMap";
             
-            %assetPath = fileName(%childAssetItem.filePath);
-            %file.writeline("   "@ %mapFieldName @ "[0] = \"" @ %assetPath @"\";");
+            %path = fileName(%childAssetItem.filePath);
+            %file.writeline("   "@ %mapFieldName @ "[0] = \"" @ %path @"\";");
             %file.writeline("   "@ %mapFieldName @ "Asset[0] = \"" @ %moduleName @ ":" @ %childAssetItem.assetName @"\";");
          }
       }
@@ -413,7 +413,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %moduleDef = ModuleDatabase.findModule(%moduleName,1);
          
    if(!AssetBrowser.isAssetReImport)
-      AssetDatabase.addDeclaredAsset(%moduleDef, %assetPath @ "/" @ %assetName @ ".asset.taml");
+      AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
    else
       AssetDatabase.refreshAsset(%assetId);
 }

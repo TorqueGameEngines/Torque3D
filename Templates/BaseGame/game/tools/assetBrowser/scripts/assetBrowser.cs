@@ -278,7 +278,45 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    }
    else
    {
-      %fullPath = %moduleName !$= "" ? %moduleName @ "/" @ %asset : %asset;
+      //special-case entry
+      if(getFieldCount(%asset) > 1)
+      {
+         %specialType = getField(%asset,0);
+         
+         /*if(%specialType $= "Folder")
+         {
+            
+         }
+         else if(%specialType $= "Datablock")
+         {
+            %sdfasdgah = true;  
+         }*/
+         %assetType = %specialType;
+         %assetName = getField(%asset, 1);
+         %sdfasdgah = true;  
+         
+         if(%assetType $= "Folder")
+         {
+            %fullPath = %moduleName !$= "" ? %moduleName @ "/" @ %assetName : %assetName;
+            %fullPath = strreplace(%fullPath, "/", "_");
+            
+            if(isObject(%fullPath))
+               %assetDesc = %fullPath;
+            else
+               %assetDesc = new ScriptObject(%fullPath);
+               
+            %assetDesc.dirPath = %moduleName;
+            %assetDesc.assetName = %assetName;
+            %assetDesc.description = %moduleName @ "/" @ %assetName;
+            %assetDesc.assetType = %assetType;
+         }
+         else if(%assetType $= "Datablock")
+         {
+            %assetDesc = %assetName;
+            %assetDesc.assetType = %assetType;
+         }
+      }
+      /*%fullPath = %moduleName !$= "" ? %moduleName @ "/" @ %assetName : %assetName;
       %fullPath = strreplace(%fullPath, "/", "_");
       
       if(isObject(%fullPath))
@@ -287,12 +325,12 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
          %assetDesc = new ScriptObject(%fullPath);
          
       %assetDesc.dirPath = %moduleName;
-      %assetDesc.assetName = %asset;
-      %assetDesc.description = %moduleName @ "/" @ %asset;
-      %assetDesc.assetType = "Folder";
+      %assetDesc.assetName = %assetName;
+      %assetDesc.description = %moduleName @ "/" @ %assetName;
+      %assetDesc.assetType = %assetType;*/
       
-      %assetName = %asset;
-      %assetType = "Folder";
+      //%assetName = %asset;
+      //%assetType = "Folder";
    }
 
    %previewSize = %this.previewSize SPC %this.previewSize;
@@ -425,7 +463,7 @@ function AssetBrowser::loadDirectories( %this )
    }
    
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   %category = getWord( %breadcrumbPath, 1 );                  
+   /*%category = getWord( %breadcrumbPath, 1 );                  
    %dataGroup = "DataBlockGroup";
    
    if(%dataGroup.getCount() != 0)
@@ -437,8 +475,14 @@ function AssetBrowser::loadDirectories( %this )
          %obj = %dataGroup.getObject(%i);
          // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
          
-         if ( %obj.category $= "" && %obj.category == 0 )
-            continue;
+         //if ( %obj.category $= "" && %obj.category == 0 )
+         //   continue;
+         
+         %dbFilename = %obj.getFileName();
+         %dbFilePath = filePath(%dbFilename);
+         
+         if(%breadcrumbPath $= %dbFilePath)
+         {
          
          //if ( %breadcrumbPath $= "" )
          //{         
@@ -456,8 +500,9 @@ function AssetBrowser::loadDirectories( %this )
          {            
             AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
          }*/
-      }
-   }
+         //}
+      //}
+  // }
    
    AssetPreviewArray.empty();
    
@@ -916,6 +961,9 @@ function AssetBrowser::doRebuildAssetArray(%this)
    AssetBrowser-->assetList.deleteAllObjects();
    AssetPreviewArray.empty();
 
+   if(isObject(%assetArray))
+      %assetArray.delete();
+      
    %assetArray = new ArrayObject();
    
    //First, Query for our assets
@@ -1032,12 +1080,12 @@ function AssetBrowser::doRebuildAssetArray(%this)
          if(%searchText !$= "Search Assets...")
          {
             if(strstr(strlwr(%folderName), strlwr(%searchText)) != -1)
-                     %assetArray.add( %breadcrumbPath, %folderName );
+                     %assetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
          }
          else
          {
             //got it.	
-            %assetArray.add( %breadcrumbPath, %folderName );
+            %assetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
          }
       }
    }
@@ -1046,32 +1094,36 @@ function AssetBrowser::doRebuildAssetArray(%this)
    %category = getWord( %breadcrumbPath, 1 );                  
    %dataGroup = "DataBlockGroup";
    
-   if(%dataGroup.getCount() != 0)
+   for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
    {
-      %scriptedItem = AssetBrowser-->filterTree.findItemByName("Scripted");
+      %obj = %dataGroup.getObject(%i);
+      // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
       
-      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
+      //if ( %obj.category $= "" && %obj.category == 0 )
+      //   continue;
+      
+      %dbFilename = %obj.getFileName();
+      %dbFilePath = filePath(%dbFilename);
+      
+      if(%breadcrumbPath $= %dbFilePath)
       {
-         %obj = %dataGroup.getObject(%i);
-         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
+         %dbName = %obj.getName();
+         %assetArray.add( %breadcrumbPath, "Datablock" TAB %dbName );
          
-         if ( %obj.category $= "" && %obj.category == 0 )
-            continue;
+         /*%catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
          
-         /*if ( %breadcrumbPath $= "" )
-         {         
-            %ctrl = %this.findIconCtrl( %obj.category );
-            if ( %ctrl == -1 )
-            {
-               %this.addFolderIcon( %obj.category );
-            }    
-         }
-         else */
-         if ( %breadcrumbPath $= %obj.category )
-         {            
-            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
-         }
+         if(%catItem == 0)
+            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");*/
+         /*%ctrl = %this.findIconCtrl( %obj.category );
+         if ( %ctrl == -1 )
+         {
+            %this.addFolderIcon( %obj.category );
+         }*/
       }
+      /*else if ( %breadcrumbPath $= %obj.category )
+      {            
+         AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
+      }*/
    }
       
 	AssetBrowser.currentPreviewPage = 0;

@@ -129,7 +129,10 @@ public:
    inline StringTableEntry getShapeConstructorFile(void) const { return mConstructorFileName; };
 
    static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
+   static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static bool getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset);
+
+   static StringTableEntry getNoShapeAssetId() { return StringTable->insert("Core_Rendering:noshape"); }
 
 protected:
    virtual void            onAssetRefresh(void);
@@ -143,6 +146,7 @@ protected:
 };
 
 DefineConsoleType(TypeShapeAssetPtr, S32)
+DefineConsoleType(TypeShapeAssetId, String)
 
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
@@ -159,6 +163,15 @@ public:
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
+};
+
+class GuiInspectorTypeShapeAssetId : public GuiInspectorTypeShapeAssetPtr
+{
+   typedef GuiInspectorTypeShapeAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeShapeAssetId);
+   static void consoleInit();
 };
 
 #endif

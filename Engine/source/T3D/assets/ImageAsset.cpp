@@ -97,6 +97,7 @@ ImplementEnumType(ImageAssetType,
    { ImageAsset::Glow,        "Glow",        "" },
    { ImageAsset::Particle,    "Particle",    "" },
    { ImageAsset::Decal,       "Decal",       "" },
+   { ImageAsset::Cubemap,     "Cubemap",       "" },
 
 EndImplementEnumType;
 

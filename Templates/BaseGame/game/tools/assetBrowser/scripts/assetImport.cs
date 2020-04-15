@@ -464,10 +464,14 @@ function importLooseFile(%filePath, %forceAutoImport)
       
       %assetItem.moduleName = %targetModule;
       
+      %assetName = %assetItem.assetName;
+      
       AssetBrowser.dirHandler.currentAddress = filePath(%filePath);
       
       //skip the refresh delay, we'll force it here
       ImportAssetWindow.doRefresh();
+      
+      ImportAssetItems.empty();
       
       if(ImportAssetWindow.hasImportIssues)
          return false;
@@ -673,7 +677,8 @@ function ImportAssetWindow::doRefresh(%this)
       %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Auto Renamed|";
    }
    
-   warn(%ImportActionSummary);
+   if(%ImportActionSummary !$= "")
+      warn(%ImportActionSummary);
    
    AssetImportSummarization.Text = %ImportActionSummary;
    
@@ -1222,7 +1227,7 @@ function ImportAssetWindow::checkAssetsForCollision(%this, %assetItemToCheck, %a
       }
    }
    
-   return result;
+   return %result;
 }
 
 //

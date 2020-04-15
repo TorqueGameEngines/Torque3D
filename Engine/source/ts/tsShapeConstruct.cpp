@@ -390,7 +390,11 @@ TSShapeConstructor* TSShapeConstructor::findShapeConstructor(const FileName& pat
       for (S32 i = 0; i < group->size(); i++)
       {
          TSShapeConstructor* tss = dynamic_cast<TSShapeConstructor*>( group->at(i) );
-         if ( tss->mShapePath.equal( path, String::NoCase ) )
+         FileName shapePath = tss->mShapePath;
+
+         char buf[1024];
+         FileName fullShapePath = Platform::makeFullPathName(shapePath, buf, sizeof(buf));
+         if (shapePath.equal( path, String::NoCase ) || fullShapePath.equal(path, String::NoCase))
             return tss;
       }
    }

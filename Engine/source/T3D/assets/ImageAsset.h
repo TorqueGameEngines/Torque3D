@@ -64,6 +64,7 @@ public:
       Glow = 7,
       Particle = 8,
       Decal = 9,
+      Cubemap = 10,
    };
 
 protected:

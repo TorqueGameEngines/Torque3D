@@ -38,11 +38,16 @@
 #include "core/resource.h"
 #endif
 #ifndef _NETSTRINGTABLE_H_
-   #include "sim/netStringTable.h"
+#include "sim/netStringTable.h"
 #endif
 #ifndef _TSSHAPE_H_
 #include "ts/tsShape.h"
 #endif
+
+#ifndef _REFLECTOR_H_
+#include "scene/reflector.h"
+#endif
+
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif 
@@ -71,7 +76,7 @@ public:
    Point3F              verts[4];
    PlaneF               normal;
    S32                  idx;
-   TSMesh               *mesh;
+   TSMesh* mesh;
 
    static SceneObject* smCurObject;
 
@@ -81,7 +86,7 @@ public:
    Box3F getBoundingBox() const;
    Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const;
 
-   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf);
+   void getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf);
 
    // This returns a list of convex faces to collide against
    void getPolyList(AbstractPolyList* list);
@@ -98,25 +103,25 @@ class TSStatic : public SceneObject
 
    static U32 smUniqueIdentifier;
 
-   enum MaskBits 
+   enum MaskBits
    {
-      TransformMask              = Parent::NextFreeMask << 0,
-      AdvancedStaticOptionsMask  = Parent::NextFreeMask << 1,
-      UpdateCollisionMask        = Parent::NextFreeMask << 2,
-      SkinMask                   = Parent::NextFreeMask << 3,
-      MaterialMask               = Parent::NextFreeMask << 4,
-      NextFreeMask               = Parent::NextFreeMask << 5
+      TransformMask = Parent::NextFreeMask << 0,
+      AdvancedStaticOptionsMask = Parent::NextFreeMask << 1,
+      UpdateCollisionMask = Parent::NextFreeMask << 2,
+      SkinMask = Parent::NextFreeMask << 3,
+      MaterialMask = Parent::NextFreeMask << 4,
+      NextFreeMask = Parent::NextFreeMask << 5
    };
 
 public:
    void setAlphaFade(bool enable, F32 start, F32 end, bool inverse)
    {
-      mUseAlphaFade     = enable;
-      mAlphaFadeStart   = start;
-      mAlphaFadeEnd     = end;
-      mInvertAlphaFade  = inverse;
+      mUseAlphaFade = enable;
+      mAlphaFadeStart = start;
+      mAlphaFadeEnd = end;
+      mInvertAlphaFade = inverse;
    }
-   
+
    /// The different types of mesh data types
    enum MeshType
    {
@@ -125,7 +130,7 @@ public:
       CollisionMesh = 2,   ///< Specifically designated collision meshes
       VisibleMesh = 3      ///< Rendered mesh polygons
    };
-   
+
 protected:
    bool mUseAlphaFade;
    F32  mAlphaFadeStart;
@@ -148,41 +153,47 @@ protected:
 
    // Collision
    void prepCollision();
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
-   bool castRayRendered(const Point3F &start, const Point3F &end, RayInfo* info);
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere);
-   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
+   bool castRay(const Point3F& start, const Point3F& end, RayInfo* info);
+   bool castRayRendered(const Point3F& start, const Point3F& end, RayInfo* info);
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere);
+   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F& box, const SphereF&);
    void buildConvex(const Box3F& box, Convex* convex);
 
    bool setShapeAsset(const StringTableEntry shapeAssetId);
 
    bool _createShape();
-   
+
    void _updatePhysics();
 
-   void _renderNormals( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
+   void _renderNormals(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
 
-   void _onResourceChanged( const Torque::Path &path );
+   void _onResourceChanged(const Torque::Path& path);
 
    // ProcessObject
-   virtual void processTick( const Move *move );
-   virtual void interpolateTick( F32 delta );   
-   virtual void advanceTime( F32 dt );
+   virtual void processTick(const Move* move);
+   virtual void interpolateTick(F32 delta);
+   virtual void advanceTime(F32 dt);
 
    virtual void onDynamicModified(const char* slotName, const char* newValue);
 
    /// Start or stop processing ticks depending on our state.
    void _updateShouldTick();
 
+   String cubeDescName;
+   U32 cubeDescId;
+   ReflectorDesc* reflectorDesc;
+   CubeReflector mCubeReflector;
+
 protected:
 
-   Convex *mConvexList;
+   Convex* mConvexList;
 
    StringTableEntry  mShapeName;
    U32               mShapeHash;
+   Resource<TSShape> mShape;
    Vector<S32> mCollisionDetails;
    Vector<S32> mLOSDetails;
-   TSShapeInstance *mShapeInstance;
+   TSShapeInstance* mShapeInstance;
 
    AssetPtr<ShapeAsset> mShapeAsset;
    StringTableEntry mShapeAssetId;
@@ -191,7 +202,7 @@ protected:
    String            mAppliedSkinName;
 
    bool              mPlayAmbient;
-   TSThread*         mAmbientThread;
+   TSThread* mAmbientThread;
 
    /// The type of mesh data to return for collision queries.
    MeshType mCollisionType;
@@ -209,7 +220,7 @@ protected:
    /// model instead of the nearest point of the bounds.
    bool mUseOriginSort;
 
-   PhysicsBody *mPhysicsRep;
+   PhysicsBody* mPhysicsRep;
 
    LinearColorF mOverrideColor;
 
@@ -224,36 +235,36 @@ public:
 
    DECLARE_CONOBJECT(TSStatic);
    static void initPersistFields();
-   static bool _setShape(void* obj, const char* index, const char* data);
    static bool _setShapeAsset(void* obj, const char* index, const char* data);
-   static bool _setFieldSkin( void *object, const char* index, const char* data );
-   static const char *_getFieldSkin( void *object, const char *data );
+   static bool _setShapeName(void* obj, const char* index, const char* data);
+   static bool _setFieldSkin(void* object, const char* index, const char* data);
+   static const char* _getFieldSkin(void* object, const char* data);
 
    // Skinning
-   void setSkinName( const char *name );
+   void setSkinName(const char* name);
    void reSkin();
 
    // NetObject
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream);
+   void unpackUpdate(NetConnection* conn, BitStream* stream);
 
    // SceneObject
-   void setTransform( const MatrixF &mat );
+   void setTransform(const MatrixF& mat);
    void onScaleChanged();
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage(SceneRenderState* state);
    void inspectPostApply();
-   virtual void onMount( SceneObject *obj, S32 node );
-   virtual void onUnmount( SceneObject *obj, S32 node );
+   virtual void onMount(SceneObject* obj, S32 node);
+   virtual void onUnmount(SceneObject* obj, S32 node);
 
    /// The type of mesh data use for collision queries.
    MeshType getCollisionType() const { return mCollisionType; }
 
    bool allowPlayerStep() const { return mAllowPlayerStep; }
 
-   Resource<TSShape> getShape() const;
-	StringTableEntry getShapeFileName() { return mShapeName; }
+   Resource<TSShape> getShape() const { return mShape; }
+   StringTableEntry getShapeFileName() { return mShapeName; }
    void setShapeFileName(StringTableEntry shapeName) { mShapeName = shapeName; }
-  
+
    TSShapeInstance* getShapeInstance() const { return mShapeInstance; }
 
    U32 getNumDetails();
@@ -267,10 +278,10 @@ public:
    void updateMaterials();
 
 private:
-   virtual void   onStaticModified(const char* slotName, const char*newValue = NULL);
+   virtual void   onStaticModified(const char* slotName, const char* newValue = NULL);
 protected:
    Vector<S32>    mDecalDetails;
-   Vector<S32>*   mDecalDetailsPtr;
+   Vector<S32>* mDecalDetailsPtr;
 public:
    bool           mIgnoreZodiacs;
    bool           mHasGradients;
@@ -283,7 +294,7 @@ private:
 };
 
 typedef TSStatic::MeshType TSMeshType;
-DefineEnumType( TSMeshType );
+DefineEnumType(TSMeshType);
 
 #endif // _H_TSSTATIC
 

@@ -43,6 +43,18 @@ function AssetBrowser::editMaterialAsset(%this, %assetDef)
    MaterialEditorGui.setActiveMaterial( %assetDef.materialDefinitionName );
    
    AssetBrowser.hideDialog();
+   
+   //
+   //
+   /*%assetDef.materialDefinitionName.reload();
+   $Tools::materialEditorList = "";
+   EWorldEditor.clearSelection();
+   MaterialEditorGui.currentObject = 0;
+   MaterialEditorGui.currentMode = "asset";
+   MaterialEditorGui.currentMaterial = %assetDef.materialDefinitionName;
+   MaterialEditorGui.setActiveMaterial( %assetDef.materialDefinitionName);
+   EditorGui.setEditor(MaterialEditorPlugin);
+   AssetBrowser.hideDialog();*/
 }
 
 //Renames the asset
@@ -424,7 +436,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = %assetDef.scriptFile;
 
    //Lotta prepwork
-   %previewData.doubleClickCommand = %assetDef@".materialDefinitionName.reload(); "
+   /*%previewData.doubleClickCommand = %assetDef@".materialDefinitionName.reload(); "
                                    @ "$Tools::materialEditorList = \"\";"
                                    @ "EWorldEditor.clearSelection();"
                                    @ "MaterialEditorGui.currentObject = 0;"
@@ -432,7 +444,9 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
                                    @ "MaterialEditorGui.currentMaterial = "@%assetDef@".materialDefinitionName;"
                                    @ "MaterialEditorGui.setActiveMaterial( "@%assetDef@".materialDefinitionName );"
                                    @ "EditorGui.setEditor(MaterialEditorPlugin); "
-                                   @ "AssetBrowser.hideDialog();";
+                                   @ "AssetBrowser.hideDialog();";*/
+                                   
+   %previewData.doubleClickCommand = "AssetBrowser.editAsset(" @ %assetDef @ ");";
    
    %test = %assetDef.materialDefinitionName.diffuseMapAsset[0];
    

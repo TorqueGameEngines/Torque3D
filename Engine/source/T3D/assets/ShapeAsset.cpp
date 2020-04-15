@@ -51,8 +51,6 @@ IMPLEMENT_CONOBJECT(ShapeAsset);
 
 ConsoleType(assetIdString, TypeShapeAssetPtr, String, ASSET_ID_FIELD_PREFIX)
 
-//-----------------------------------------------------------------------------
-
 ConsoleGetType(TypeShapeAssetPtr)
 {
    // Fetch asset Id.
@@ -60,9 +58,38 @@ ConsoleGetType(TypeShapeAssetPtr)
    return (*((AssetPtr<ShapeAsset>*)dptr)).getAssetId();
 }
 
+ConsoleSetType(TypeShapeAssetPtr)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
+}
+
 //-----------------------------------------------------------------------------
 
-ConsoleSetType(TypeShapeAssetPtr)
+ConsoleType(assetIdString, TypeShapeAssetId, String, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeShapeAssetId)
+{
+   // Fetch asset Id.
+   return *((const char**)(dptr));
+}
+
+ConsoleSetType(TypeShapeAssetId)
 {
    // Was a single argument specified?
    if (argc == 1)
@@ -334,14 +361,55 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
    }
 }
 
+StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
+{
+   StringTableEntry shapeAssetId = StringTable->EmptyString();
+
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
+#endif
+
+      ConsoleValueRef result = Con::executef("importLooseFile", fileName, true);
+
+      if (result.getBoolValue())
+      {
+         StringTableEntry resultingAssetId = StringTable->insert(Con::getVariable("$importedLooseFileAsset"));
+
+         if (resultingAssetId != StringTable->EmptyString())
+         {
+            shapeAssetId = resultingAssetId;
+            return shapeAssetId;
+         }
+      }
+
+      //Didn't work, so have us fall back to a placeholder asset
+      shapeAssetId = StringTable->insert("Core_Rendering:noshape");
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      shapeAssetId = query.mAssetList[0];
+   }
+
+   return shapeAssetId;
+}
+
 bool ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset)
 {
-   shapeAsset->setAssetId(assetId);
+   (*shapeAsset) = assetId;
+
    if (!shapeAsset->isNull())
       return true;
 
    //Didn't work, so have us fall back to a placeholder asset
-   shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+   StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
+   shapeAsset->setAssetId(noShapeId);
 
    if (!shapeAsset->isNull())
       return true;
@@ -460,7 +528,7 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
    // Create "Open in ShapeEditor" button
    mShapeEdButton = new GuiBitmapButtonCtrl();
 
-   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAsset(%d.getText());", retCtrl->getId());
+   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
    mShapeEdButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
@@ -501,4 +569,19 @@ bool GuiInspectorTypeShapeAssetPtr::updateRects()
    }
 
    return resized;
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetId);
+
+ConsoleDocClass(GuiInspectorTypeShapeAssetId,
+   "@brief Inspector field type for Shapes\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeShapeAssetId::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeShapeAssetId)->setInspectorFieldType("GuiInspectorTypeShapeAssetId");
 }

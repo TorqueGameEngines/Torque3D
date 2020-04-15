@@ -23,6 +23,11 @@ function AssetImportConfigEditor::refresh(%this)
       ImportAssetConfigList.setSelected(0);
 }
 
+function AssetImportConfigEditor::apply(%this)
+{
+   AssetImportSettings.write();
+}
+
 function AssetImportConfigList::onSelect( %this, %id, %text )
 {
    ImportOptionsConfigList.clearFields();

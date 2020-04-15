@@ -101,6 +101,7 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/folder.cs");  
    exec("./scripts/assetTypes/terrain.cs");
    exec("./scripts/assetTypes/terrainMaterial.cs");  
+   exec("./scripts/assetTypes/datablockObjects.cs");  
    
    new ScriptObject( AssetBrowserPlugin )
    {

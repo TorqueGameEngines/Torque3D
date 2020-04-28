@@ -67,8 +67,8 @@ struct Collision
       generateTexCoord(false),
       texCoord(-1.0f, -1.0f),
       face(0),
-      faceDot(-1.0f),
-      distance(FLT_MAX)
+      faceDot(0.0f),
+      distance(0)
 
    {
    }

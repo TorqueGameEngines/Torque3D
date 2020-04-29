@@ -529,6 +529,7 @@ inline void ColorI::set(const Hsb& color)
 	red = (U32)((((F64)r) / 100) * 255);
 	green = (U32)((((F64)g) / 100) * 255);
 	blue = (U32)((((F64)b) / 100) * 255);
+   alpha = 255;
 }
 
 // This is a subfunction of HSLtoRGB

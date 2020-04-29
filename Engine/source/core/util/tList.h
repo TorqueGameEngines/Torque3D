@@ -141,7 +141,7 @@ private:
    {
       Link* next;
       Link* prev;
-      Link() {}
+      Link(): next(NULL), prev(NULL) {}
       Link(Link* p,Link* n): next(n),prev(p) {}
    };
 

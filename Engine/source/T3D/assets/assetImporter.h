@@ -1,0 +1,680 @@
+#pragma once
+
+#include "assets/assetPtr.h"
+#include "assets/assetManager.h"
+#include "module/moduleManager.h"
+#include "util/settings.h"
+#include "gui\controls\guiTreeViewCtrl.h"
+
+/// <summary>
+/// AssetImportConfig is a SimObject derived object intended to act as a container for all the necessary configuration data when running the Asset Importer.
+/// It dictates if and how any given asset type will be processed when running an import action. This is because the Asset Importer utilizes a lot of informed logic
+/// to try and automate as much of the import process as possible. In theory, you would run the import on a given file, and based on your config the importer will do
+/// everything from importing the designated file, as well as finding and importing any associated files such as images or materials, and prepping the objects at time
+/// of import to avoid as much manual post-processing as possible.
+/// </summary>
+class AssetImportConfig : public SimObject
+{
+   //General Settings
+public:
+   /// <summary>
+   /// Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename
+   /// </summary>
+   String DuplicatAutoResolution;
+
+   /// <summary>
+   /// Indicates if warnings should be treated as errors.
+   /// </summary>
+   bool WarningsAsErrors;
+
+   /// <summary>
+   /// Indicates if importing should be prevented from completing if any errors are detected at all
+   /// </summary>
+   bool PreventImportWithErrors;
+
+   /// <summary>
+   /// Should the importer automatically prompt to find missing files if they are not detected automatically by the importer
+   /// </summary>
+   bool AutomaticallyPromptMissingFiles;
+   //
+
+   //
+   //Mesh Settings
+   /// <summary>
+   /// Indicates if this config supports importing meshes
+   /// </summary>
+   bool ImportMesh;
+
+   /// <summary>
+   /// Indicates if the up axis in the model file should be overridden 
+   /// </summary>
+   bool DoUpAxisOverride;
+
+   /// <summary>
+   /// If overriding, what axis should be used as up. Options are X_AXIS, Y_AXIS, Z_AXIS
+   /// </summary>
+   String UpAxisOverride;
+
+   /// <summary>
+   /// Indicates if the scale in the model file should be overridden 
+   /// </summary>
+   bool DoScaleOverride;
+
+   /// <summary>
+   /// If overriding, what scale should be used
+   /// </summary>
+   F32 ScaleOverride;
+
+   /// <summary>
+   /// Indicates if scale of nodes should be ignored
+   /// </summary>
+   bool IgnoreNodeScale;
+
+   /// <summary>
+   /// Indicates if the center of the model file should be automatically recentered
+   /// </summary>
+   bool AdjustCenter;
+
+   /// <summary>
+   /// Indicates if the floor height of the model file should be automatically zero'd
+   /// </summary>
+   bool AdjustFloor;
+
+   /// <summary>
+   /// Indicates if submeshes should be collapsed down into a single main mesh
+   /// </summary>
+   bool CollapseSubmeshes;
+
+   /// <summary>
+   /// Indicates what LOD mode the model file should utilize to process out LODs. Options are TrailingNumber, DetectDTS, SingleSize
+   /// </summary>
+   String LODType;
+
+   //ImportAssetConfigSettingsList.addNewConfigSetting("TrailingNumber", "Trailing Number", "float", "", "2", "", "Mesh");
+   /// <summary>
+   /// A list of what nodes should be guaranteed to be imported if found in the model file. Separated by either , or ;
+   /// </summary>
+   String ImportedNodes;
+
+   /// <summary>
+   /// A list of what nodes should be guaranteed to not be imported if found in the model file. Separated by either , or ;
+   /// </summary>
+   String IgnoreNodes;
+
+   /// <summary>
+   /// A list of what mesh objects should be guaranteed to be imported if found in the model file. Separated by either , or ;
+   /// </summary>
+   String ImportMeshes;
+
+   /// <summary>
+   /// A list of what mesh objects should be guaranteed to not be imported if found in the model file. Separated by either , or ;
+   /// </summary>
+   String IgnoreMeshes;
+
+   //Assimp/Collada params
+   /// <summary>
+   /// Flag to indicate the shape loader should convert to a left-handed coordinate system
+   /// </summary>
+   bool convertLeftHanded;
+
+   /// <summary>
+   /// Should the shape loader calculate tangent space values
+   /// </summary>
+   bool calcTangentSpace;
+
+   /// <summary>
+   /// Should the shape loader automatically prune redundant/duplicate materials
+   /// </summary>
+   bool removeRedundantMats;
+
+   /// <summary>
+   /// Should the shape loader auto-generate UV Coordinates for the mesh.
+   /// </summary>
+   bool genUVCoords;
+
+   /// <summary>
+   /// Should the UV coordinates be transformed.
+   /// </summary>
+   bool TransformUVs;
+
+   /// <summary>
+   /// Should the UV coordinates be flipped
+   /// </summary>
+   bool flipUVCoords;
+
+   /// <summary>
+   /// Should the shape loader automatically look for instanced submeshes in the model file
+   /// </summary>
+   bool findInstances;
+
+   /// <summary>
+   /// Should the shape loader limit the bone weights
+   /// </summary>
+   bool limitBoneWeights;
+
+   /// <summary>
+   /// Should the shape loader automatically merge identical/duplicate verts
+   /// </summary>
+   bool JoinIdenticalVerts;
+
+   /// <summary>
+   /// Should the shape loader reverse the winding order of the mesh's face indicies
+   /// </summary>
+   bool reverseWindingOrder;
+
+   /// <summary>
+   /// Should the normals on the model be inverted
+   /// </summary>
+   bool invertNormals;
+   //
+
+   //
+   //Materials
+   /// <summary>
+   /// Does this config allow for importing of materials
+   /// </summary>
+   bool ImportMaterials;
+
+   /// <summary>
+   /// When importing a material, should it automatically attempt to merge Roughness, AO and Metalness maps into a single, composited PBR Configuration map
+   /// </summary>
+   bool CreatePBRConfig;
+
+   /// <summary>
+   /// When generating a material off of an importing image, should the importer force appending a diffusemap suffix onto the end to avoid potential naming confusion.
+   /// e.g. MyCoolStuff.png is imported, generating MyCoolStuff material asset and MyCoolStuff_Diffuse image asset
+   /// </summary>
+   bool UseDiffuseSuffixOnOriginImage;
+
+   /// <summary>
+   /// Should the importer try and use existing material assets in the game directory if at all possible. (Not currently utilized)
+   /// </summary>
+   bool UseExistingMaterials;
+
+   /// <summary>
+   /// A list of material names that should not be imported. Separated by either , or ;
+   /// </summary>
+   String IgnoreMaterials;
+
+   /// <summary>
+   /// When processing a material asset, should the importer attempt to populate the various material maps on it by looking up common naming conventions for potentially relevent image files
+   /// e.g. If MyCoolStuff_Diffuse.png is imported, generating MyCoolStuff material, it would also find MyCoolStuff_Normal and MyCoolStuff_PBR images and map them to the normal and PBRConfig maps respectively automatically
+   /// </summary>
+   bool PopulateMaterialMaps;
+
+   //
+   //Animations
+   /// <summary>
+   /// Does this config allow for importing Shape Animations
+   /// </summary>
+   bool ImportAnimations;
+
+   /// <summary>
+   /// When importing a shape file, should the animations within be separated out into unique files
+   /// </summary>
+   bool SeparateAnimations;
+
+   /// <summary>
+   /// If separating animations out from a source file, what prefix should be added to the names for grouping association
+   /// </summary>
+   String SeparateAnimationPrefix;
+
+   /// <summary>
+   /// Defines the animation timing for the given animation sequence. Options are FrameTime, Seconds, Milliseconds
+   /// </summary>
+   String animTiming;
+
+   /// <summary>
+   /// The FPS of the animation sequence
+   /// </summary>
+   F32 animFPS;
+
+   //
+   //Collision
+   /// <summary>
+   /// Does this configuration generate collision geometry when importing. (Not currently enabled)
+   /// </summary>
+   bool GenerateCollisions;
+
+   /// <summary>
+   /// What sort of collision geometry is generated. (Not currently enabled)
+   /// </summary>
+   String GenCollisionType;
+
+   /// <summary>
+   /// What prefix is added to the collision geometry generated. (Not currently enabled)
+   /// </summary>
+   String CollisionMeshPrefix;
+
+   /// <summary>
+   /// Does this configuration generate Line of Sight collision geometry. (Not currently enabled)
+   /// </summary>
+   bool  GenerateLOSCollisions;
+
+   /// <summary>
+   /// What sort of Line of Sight collision geometry is generated. (Not currently enabled)
+   /// </summary>
+   String GenLOSCollisionType;
+
+   /// <summary>
+   /// What prefix is added to the Line of Sight collision geometry generated. (Not currently enabled)
+   /// </summary>
+   String LOSCollisionMeshPrefix;
+
+   //
+   //Images
+   /// <summary>
+   /// Does this configuration support importing images.
+   /// </summary>
+   bool importImages;
+
+   /// <summary>
+   /// What is the default ImageType images are imported as. Options are: N/A, Diffuse, Normal, Metalness, Roughness, AO, PBRConfig, GUI, Cubemap
+   /// </summary>
+   String ImageType;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a diffuse map.
+   /// e.g. _Albedo or _Color
+   /// </summary>
+   String DiffuseTypeSuffixes;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a normal map.
+   /// e.g. _Normal or _Norm
+   /// </summary>
+   String NormalTypeSuffixes;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a metalness map.
+   /// e.g. _Metalness or _Metal
+   /// </summary>
+   String MetalnessTypeSuffixes;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a roughness map.
+   /// e.g. _roughness or _rough
+   /// </summary>
+   String RoughnessTypeSuffixes;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a smoothness map.
+   /// e.g. _smoothness or _smooth
+   /// </summary>
+   String SmoothnessTypeSuffixes;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a ambient occlusion map.
+   /// e.g. _ambient or _ao
+   /// </summary>
+   String AOTypeSuffixes;
+
+   /// <summary>
+   /// What type of suffixes are scanned to detect if an importing image is a PBRConfig map.
+   /// e.g. _Composite or _PBR
+   /// </summary>
+   String PBRTypeSuffixes;
+
+   /// <summary>
+   /// Indicates what filter mode images imported with this configuration utilizes. Options are Linear, Bilinear, Trilinear
+   /// </summary>
+   String TextureFilteringMode;
+
+   /// <summary>
+   /// Indicates if images imported with this configuration utilize mipmaps
+   /// </summary>
+   bool UseMips;
+
+   /// <summary>
+   /// Indicates if images imported with this configuration are in an HDR format
+   /// </summary>
+   bool IsHDR;
+
+   /// <summary>
+   /// Indicates what amount of scaling images imported with this configuration use
+   /// </summary>
+   F32 Scaling;
+
+   /// <summary>
+   /// Indicates if images imported with this configuration are compressed
+   /// </summary>
+   bool Compressed;
+
+   /// <summary>
+   /// Indicates if images imported with this configuration generate a parent material for it as well
+   /// </summary>
+   bool GenerateMaterialOnImport;
+
+   //
+   //Sounds
+   /// <summary>
+   /// Indicates if sounds are imported with this configuration
+   /// </summary>
+   bool importSounds;
+
+   /// <summary>
+   /// Indicates what amount the volume is adjusted on sounds imported with this configuration
+   /// </summary>
+   F32 VolumeAdjust;
+
+   /// <summary>
+   /// Indicates what amount the pitch is adjusted on sounds imported with this configuration
+   /// </summary>
+   F32 PitchAdjust;
+
+   /// <summary>
+   /// Indicates if sounds imported with this configuration are compressed
+   /// </summary>
+   bool Compressed;
+
+public:
+   AssetImportConfig();
+   virtual ~AssetImportConfig();
+
+   /// Engine.
+   static void initPersistFields();
+
+   /// <summary>
+   /// Loads a configuration from a Settings object
+   /// @param configSettings, The Settings object to load from
+   /// @param configName, The name of the configuration setting to load from the setting object
+   /// </summary>
+   void loadImportConfig(Settings* configSettings, String configName);
+
+   /// Declare Console Object.
+   DECLARE_CONOBJECT(AssetImportConfig);
+};
+
+/// <summary>
+/// AssetImportConfig is a SimObject derived object that represents and holds information for an importing asset. They are generated and processed by the AssetImporter
+/// </summary>
+class AssetImportObject : public SimObject
+{
+   typedef SimObject Parent;
+
+public:
+   /// <summary>
+   /// What type is the importing asset
+   /// </summary>
+   String assetType;
+
+   /// <summary>
+   /// What is the source file path of the importing asset
+   /// </summary>
+   Torque::Path filePath;
+
+   /// <summary>
+   /// What is the asset's name
+   /// </summary>
+   String assetName;
+
+   /// <summary>
+   /// What is the original, unmodified by processing, asset name
+   /// </summary>
+   String cleanAssetName;
+
+   /// <summary>
+   /// What is the name of the module this asset will be importing into
+   /// </summary>
+   String moduleName;
+
+   /// <summary>
+   /// What is the current status of this asset item in it's import process
+   /// </summary>
+   String status;
+
+   /// <summary>
+   /// If there is a warning or error status, what type is the condition for this asset item
+   /// </summary>
+   String statusType;
+
+   /// <summary>
+   /// What is the articulated information of the status of the asset. Contains the error or warning log data.
+   /// </summary>
+   String statusInfo;
+
+   /// <summary>
+   /// Is the asset item currently flagged as dirty
+   /// </summary>
+   bool dirty;
+
+   /// <summary>
+   /// Is this asset item marked to be skipped. If it is, it's usually due to being marked as deleted
+   /// </summary>
+   bool skip;
+
+   /// <summary>
+   /// Has the asset item been processed
+   /// </summary>
+   bool processed;
+
+   /// <summary>
+   /// Is this specific asset item generated as part of the import process of another item
+   /// </summary>
+   bool generatedAsset;
+
+   /// <summary>
+   /// What, if any, importing asset item is this item's parent
+   /// </summary>
+   AssetImportObject* parentAssetItem;
+
+   /// <summary>
+   /// What, if any, importing asset item are children of this item
+   /// </summary>
+   Vector< AssetImportObject*> childAssetItems;
+
+   /// <summary>
+   /// What is the ultimate asset taml file path for this import item
+   /// </summary>
+   String tamlFilePath;
+
+   //
+   /// <summary>
+   /// Specific to ImageAsset type
+   /// What is the image asset's suffix type. Options are: Albedo, Normal, Roughness, AO, Metalness, PBRConfig
+   /// </summary>
+   String imageSuffixType;
+
+   //
+   /// <summary>
+   /// Specific to ShapeAsset type
+   /// Processed information about the shape file. Contains numbers and lists of meshes, materials and animations
+   /// </summary>
+   GuiTreeViewCtrl* shapeInfo;
+
+public:
+   AssetImportObject();
+   virtual ~AssetImportObject();
+
+   /// Engine.
+   static void initPersistFields();
+
+   /// Declare Console Object.
+   DECLARE_CONOBJECT(AssetImportObject);
+};
+
+/// <summary>
+/// AssetImporter is a SimObject derived object that processed and imports files and turns them into assets if they are of valid types.
+/// Utilizes an AssetImportConfig to inform the importing process's behavior.
+/// </summary>
+class AssetImporter : public SimObject
+{
+   typedef SimObject Parent;
+
+   /// <summary>
+   /// The import configuration that is currently being utilized
+   /// </summary>
+   AssetImportConfig activeImportConfig;
+
+   /// <summary>
+   /// A log of all the actions that have been performed by the importer
+   /// </summary>
+   Vector<String> activityLog;
+
+   /// <summary>
+   /// A list of AssetImportObjects that are to be imported
+   /// </summary>
+   Vector<AssetImportObject*> importingAssets;
+
+   /// <summary>
+   /// A list of AssetImportObjects that are to be imported. These are unmodified by anything in the importing session, and are only used for resetting purposes;
+   /// </summary>
+   Vector<Torque::Path> originalImportingAssets;
+
+   /// <summary>
+   /// The Id of the module the assets are to be imported into
+   /// </summary>
+   String targetModuleId;
+
+   /// <summary>
+   /// The path any imported assets are placed in as their destination
+   /// </summary>
+   String targetPath;
+
+   /// <summary>
+   /// Are there any issues with any of the current import asset items
+   /// </summary>
+   bool importIssues;
+
+   /// <summary>
+   /// Is this import action a reimport of an existing asset
+   /// </summary>
+   bool isReimport;
+
+   /// <summary>
+   /// Has the heirarchy of asset import items changed due to processing
+   /// </summary>
+   bool assetHeirarchyChanged;
+
+   /// <summary>
+   /// A string used for writing into the importLog
+   /// </summary>
+   char importLogBuffer[1024];
+
+public:
+   AssetImporter();
+   virtual ~AssetImporter();
+
+   /// Engine.
+   static void initPersistFields();
+
+   /// Declare Console Object.
+   DECLARE_CONOBJECT(AssetImporter);
+
+   /// <summary>
+   /// Sets the target path for the assets being imported to be deposited into
+   /// <para>@param pTargetPath, The filePath of the destination point assets are imported into</para>
+   /// </summary>
+   void setTargetPath(Torque::Path pTargetPath) { targetPath = pTargetPath; }
+
+   /// <summary>
+   /// Processes a file into an AssetImportObject and adds it to the session for importing
+   /// <para>@param filePath, The filePath of the file to be imported in as an asset</para>
+   /// <para>@return AssetImportObject that was created</para>
+   /// </summary>
+   AssetImportObject* addImportingFile(Torque::Path filePath);
+
+   /// <summary>
+   /// Adds an importing asset to the current session
+   /// <para>@param assetType, Type of the asset being imported</para>
+   /// <para>@param filePath, path of the file to be imported</para>
+   /// <para>@param parentItem, AssetImportObject that the new item is a child of. null if no parent</para>
+   /// <para>@param assetNameOverride, If not blank, will be the new item's assetName instead of being created off of the filePath</para>
+   /// <para>@return AssetImportObject that was created</para>
+   /// </summary>
+   AssetImportObject* addImportingAsset(String assetType, Torque::Path filePath, AssetImportObject* parentItem, String assetNameOverride);
+
+   /// <summary>
+   /// Deletes the asset item from the import session. Affects the item's children as well
+   /// <para>@param assetItem, asset item to be marked as deleted</para>
+   /// </summary>
+   void deleteImportingAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Finds an asset item in the session if it exists, by name
+   /// <para>@param assetName, Asset name to find</para>
+   /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
+   /// <para>@return AssetImportObject that was found</para>
+   /// </summary>
+   AssetImportObject* findImportingAssetByName(String assetName, AssetImportObject* assetItem = nullptr);
+
+   /// <summary>
+   /// Finds the module associated with a given file path
+   /// <para>@param filePath, File path to parse the the module from</para>
+   /// <para>@return ModuleDefinition that was found</para>
+   /// </summary>
+   ModuleDefinition* getModuleFromPath(Torque::Path filePath);
+
+   /// <summary>
+   /// Parses an asset's name to try and find if any of the import config's suffix lists match to it
+   /// <para>@param assetName, Asset name to parse any image suffix out of</para>
+   /// <para>@param suffixType, output, The suffix type that was matched to the asset name</para>
+   /// <para>@return suffix that matched to the asset name</para>
+   /// </summary>
+   String parseImageSuffixes(String assetName, String* suffixType);
+   String getAssetTypeByFile(Torque::Path filePath);
+   void resetImportSession();
+   void resetImportAsset(AssetImportObject* assetItem);
+   S32 getActivityLogLineCount();
+   String getActivityLogLine(U32 line);
+   void dumpActivityLog();
+
+   S32 getAssetItemCount();
+   AssetImportObject* getAssetItem(U32 index);
+   S32 getAssetItemChildCount(AssetImportObject* assetItem);
+   AssetImportObject* getAssetItemChild(AssetImportObject* assetItem, U32 index);
+
+   /// <summary>
+   /// Finds an asset item in the session if it exists
+   /// @param assetName, Asset name to find
+   /// @param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children
+   /// @return AssetImportObject that was found
+   /// </summary>
+   void processImportAssets(AssetImportObject* assetItem = nullptr);
+   void processImageAsset(AssetImportObject* assetItem);
+   void processMaterialAsset(AssetImportObject* assetItem);
+   void processShapeAsset(AssetImportObject* assetItem);
+   void processShapeMaterialInfo(AssetImportObject* assetItem, S32 materialItemId);
+
+   bool validateAssets();
+   void validateAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Finds an asset item in the session if it exists
+   /// @param assetName, Asset name to find
+   /// @param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children
+   /// @return AssetImportObject that was found
+   /// </summary>
+   void resetAssetValidationStatus(AssetImportObject* assetItem = nullptr);
+
+   /// <summary>
+   /// Finds an asset item in the session if it exists
+   /// @param assetName, Asset name to find
+   /// @param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children
+   /// @return AssetImportObject that was found
+   /// </summary>
+   bool checkAssetForCollision(AssetImportObject* assetItemToCheckFor, AssetImportObject* assetItem = nullptr);
+
+   void resolveAssetItemIssues(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Runs the import process on a single file in-place. Intended primarily for autoimporting a loose file that's in the game directory.
+   /// <para>@param filePath, The filePath of the file to be imported in as an asset</para>
+   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// </summary>
+   StringTableEntry autoImportFile(Torque::Path filePath);
+
+   /// <summary>
+   /// Finds an asset item in the session if it exists
+   /// <para>@param assetName, Asset name to find</para>
+   /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
+   /// <para>@return AssetImportObject that was found</para>
+   /// </summary>
+   void importAssets(AssetImportObject* assetItem = nullptr);
+   Torque::Path importImageAsset(AssetImportObject* assetItem);
+   Torque::Path importMaterialAsset(AssetImportObject* assetItem);
+   Torque::Path importShapeAsset(AssetImportObject* assetItem);   
+
+   //
+   AssetImportConfig* getImportConfig() { return &activeImportConfig; }
+};

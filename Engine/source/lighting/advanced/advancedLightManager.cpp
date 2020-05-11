@@ -63,6 +63,9 @@ AdvancedLightManager::AdvancedLightManager()
 {
    mLightBinManager = NULL;
    mLastShader = NULL;
+   mLastConstants = NULL;
+   mSpherePrimitiveCount = 0;
+   mConePrimitiveCount = 0;
    mAvailableSLInterfaces = NULL;
 }
 

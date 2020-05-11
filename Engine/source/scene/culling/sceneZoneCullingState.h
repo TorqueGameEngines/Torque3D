@@ -66,7 +66,7 @@ class SceneZoneCullingState
          CullingVolumeLink* mNext;
 
          CullingVolumeLink( const SceneCullingVolume& volume )
-            : mVolume( volume ) {}
+            : mVolume( volume ) {mNext=NULL;}
       };
 
       /// Iterator over the culling volumes assigned to a zone.
@@ -134,7 +134,7 @@ class SceneZoneCullingState
 
       /// Zone states are constructed by SceneCullingState.  This constructor should not
       /// be used otherwise.  It is public due to the use through Vector in SceneCullingState.
-      SceneZoneCullingState() {}
+      SceneZoneCullingState():mCanShortcuit(false), mCullingVolumes(NULL), mHaveSortedVolumes(false), mHaveIncluders(false), mHaveOccluders(false){}
 
       /// Return true if the zone is visible.  This is the case if any
       /// includers have been added to the zone's rendering state.

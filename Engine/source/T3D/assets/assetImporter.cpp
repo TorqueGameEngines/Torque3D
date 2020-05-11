@@ -896,12 +896,12 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
                processImageAsset(item);
             else if (item->assetType == String("ShapeAsset"))
                processShapeAsset(item);
-            else if (item->assetType == String("SoundAsset"))
-               SoundAsset::prepareAssetForImport(this, item);
+            /*else if (item->assetType == String("SoundAsset"))
+               SoundAsset::prepareAssetForImport(this, item);*/
             else if (item->assetType == String("MaterialAsset"))
                processMaterialAsset(item);
-            else if (item->assetType == String("ShapeAnimationAsset"))
-               ShapeAnimationAsset::prepareAssetForImport(this, item);
+            /*else if (item->assetType == String("ShapeAnimationAsset"))
+               ShapeAnimationAsset::prepareAssetForImport(this, item);*/
 
             item->processed = true;
          }
@@ -933,12 +933,12 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
                processImageAsset(childItem);
             else if (childItem->assetType == String("ShapeAsset"))
                processShapeAsset(childItem);
-            else if (childItem->assetType == String("SoundAsset"))
-               SoundAsset::prepareAssetForImport(this, childItem);
+            /*else if (childItem->assetType == String("SoundAsset"))
+               SoundAsset::prepareAssetForImport(this, childItem);*/
             else if (childItem->assetType == String("MaterialAsset"))
                processMaterialAsset(childItem);
-            else if (childItem->assetType == String("ShapeAnimationAsset"))
-               ShapeAnimationAsset::prepareAssetForImport(this, childItem);
+            /*else if (childItem->assetType == String("ShapeAnimationAsset"))
+               ShapeAnimationAsset::prepareAssetForImport(this, childItem);*/
 
             childItem->processed = true;
          }
@@ -1549,12 +1549,12 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
             assetPath = importImageAsset(importingAssets[i]);
          else if (importingAssets[i]->assetType == String("ShapeAsset"))
             assetPath = importShapeAsset(importingAssets[i]);
-         else if (importingAssets[i]->assetType == String("SoundAsset"))
-            assetPath = SoundAsset::importAsset(importingAssets[i]);
+         /*else if (importingAssets[i]->assetType == String("SoundAsset"))
+            assetPath = SoundAsset::importAsset(importingAssets[i]);*/
          else if (importingAssets[i]->assetType == String("MaterialAsset"))
             assetPath = importMaterialAsset(importingAssets[i]);
-         else if (importingAssets[i]->assetType == String("ShapeAnimationAsset"))
-            assetPath = ShapeAnimationAsset::importAsset(importingAssets[i]);
+         /*else if (importingAssets[i]->assetType == String("ShapeAnimationAsset"))
+            assetPath = ShapeAnimationAsset::importAsset(importingAssets[i]);*/
 
          //If we got a valid filepath back from the import action, then we know we're good to go and we can go ahead and register the asset!
          if (!assetPath.isEmpty() && !isReimport)
@@ -1587,12 +1587,12 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
             assetPath = importImageAsset(childItem);
          else if (childItem->assetType == String("ShapeAsset"))
             assetPath = importShapeAsset(childItem);
-         else if (childItem->assetType == String("SoundAsset"))
-            assetPath = SoundAsset::importAsset(childItem);
+         /*else if (childItem->assetType == String("SoundAsset"))
+            assetPath = SoundAsset::importAsset(childItem);*/
          else if (childItem->assetType == String("MaterialAsset"))
             assetPath = importMaterialAsset(childItem);
-         else if (childItem->assetType == String("ShapeAnimationAsset"))
-            assetPath = ShapeAnimationAsset::importAsset(childItem);
+         /*else if (childItem->assetType == String("ShapeAnimationAsset"))
+            assetPath = ShapeAnimationAsset::importAsset(childItem);*/
 
          //If we got a valid filepath back from the import action, then we know we're good to go and we can go ahead and register the asset!
          if (!assetPath.isEmpty() && !isReimport)

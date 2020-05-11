@@ -65,6 +65,7 @@ public:
       Particle = 8,
       Decal = 9,
       Cubemap = 10,
+      ImageTypeCount = 11
    };
 
 protected:
@@ -99,6 +100,11 @@ public:
    GFXTexHandle getImage(GFXTextureProfile requestedProfile);
 
    const char* getImageInfo();
+
+   static const char* getImageTypeNameFromType(ImageTypes type);
+   static ImageTypes getImageTypeFromName(const char* name);
+
+   void setImageType(ImageTypes type) { mImageType = type; }
 
 protected:
    virtual void            initializeAsset(void);

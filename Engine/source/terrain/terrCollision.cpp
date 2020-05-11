@@ -231,7 +231,7 @@ void TerrainConvex::getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeatu
 {
    U32 i;
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    // Plane is normal n + support point
    PlaneF plane;

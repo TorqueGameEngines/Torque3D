@@ -124,7 +124,7 @@ Point3F ForestConvex::support(const VectorF& v) const
 void ForestConvex::getFeatures( const MatrixF &mat, const VectorF &n, ConvexFeature *cf )
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    TSShapeInstance *si = mData->getShapeInstance();
 

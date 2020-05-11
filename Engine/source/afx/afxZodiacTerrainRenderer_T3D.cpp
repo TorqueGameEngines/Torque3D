@@ -68,6 +68,10 @@ afxZodiacTerrainRenderer::afxZodiacTerrainRenderer()
    if (!master)
      master = this;
    shader_initialized = false;
+   zodiac_shader = NULL;
+   shader_consts = NULL;
+   projection_sc = NULL;
+   color_sc = NULL;
 }
 
 afxZodiacTerrainRenderer::afxZodiacTerrainRenderer(F32 renderOrder, F32 processAddOrder)
@@ -76,6 +80,10 @@ afxZodiacTerrainRenderer::afxZodiacTerrainRenderer(F32 renderOrder, F32 processA
    if (!master)
      master = this;
    shader_initialized = false;
+   zodiac_shader = NULL;
+   shader_consts = NULL;
+   projection_sc = NULL;
+   color_sc = NULL;
 }
 
 afxZodiacTerrainRenderer::~afxZodiacTerrainRenderer()

@@ -122,6 +122,7 @@ ConsoleDocClass( afxStaticShape,
 
 afxStaticShape::afxStaticShape()
 {
+  mDataBlock = NULL;
   mAFX_data = 0;
   mIs_visible = true;
   mChor_id = 0;

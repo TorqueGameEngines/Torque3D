@@ -69,6 +69,7 @@ public:
 GFXGLShaderConstHandle::GFXGLShaderConstHandle( GFXGLShader *shader )
  : mShader( shader ), mLocation(0), mOffset(0), mSize(0), mSamplerNum(-1), mInstancingConstant(false)
 {
+   dMemset(&mDesc, 0, sizeof(mDesc));
    mValid = false;
 }
 

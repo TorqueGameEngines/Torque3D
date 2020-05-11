@@ -126,11 +126,11 @@ private:
    /// Frame to be captured next
    F32 mNextFramePosition;
 
-   /// The per-frame time (in milliseconds)
-   F32 mMsPerFrame;
-   
    /// The framerate we'll use to record
    F32 mFrameRate;
+
+   /// The per-frame time (in milliseconds)
+   F32 mMsPerFrame;   
 
    /// Accumulated error when converting the per-frame-time to integer
    /// this is used to dither the value and keep overall time advancing

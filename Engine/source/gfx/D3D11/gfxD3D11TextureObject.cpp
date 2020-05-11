@@ -46,10 +46,13 @@ GFXD3D11TextureObject::GFXD3D11TextureObject( GFXDevice * d, GFXTextureProfile *
    mLocked = false;
 
    mD3DSurface = NULL;
+   dMemset(&mLockRect, 0, sizeof(mLockRect));
+   dMemset(&mLockBox, 0, sizeof(mLockBox));
    mLockedSubresource = 0;
    mDSView = NULL;
    mRTView = NULL;
    mSRView = NULL;
+   isManaged = false;
 }
 
 GFXD3D11TextureObject::~GFXD3D11TextureObject()

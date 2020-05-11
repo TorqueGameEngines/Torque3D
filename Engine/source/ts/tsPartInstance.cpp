@@ -51,6 +51,7 @@ void TSPartInstance::init(TSShapeInstance * sourceShape)
    mCurrentObjectDetail = 0;
    mCurrentIntraDL = 1.0f;
    mData = 0;
+   mRadius = 0.125;
 }
 
 TSPartInstance::~TSPartInstance()

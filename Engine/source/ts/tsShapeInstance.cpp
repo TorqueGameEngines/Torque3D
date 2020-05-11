@@ -118,6 +118,7 @@ TSShapeInstance::TSShapeInstance( const Resource<TSShape> &shape, bool loadMater
 
    mShapeResource = shape;
    mShape = mShapeResource;
+   mUseOverrideTexture = false;
    buildInstanceData( mShape, loadMaterials );
 }
 
@@ -135,6 +136,7 @@ TSShapeInstance::TSShapeInstance( TSShape *shape, bool loadMaterials )
 
    mShapeResource = NULL;
    mShape = shape;
+   mUseOverrideTexture = false;
    buildInstanceData( mShape, loadMaterials );
 }
 

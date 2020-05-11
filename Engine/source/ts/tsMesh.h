@@ -198,7 +198,7 @@ public:
       bool ownsData;
 
    public:
-      TSMeshVertexArray() : base(NULL), numElements(0), colorOffset(0), boneOffset(0), vertexDataReady(false), ownsData(false) {}
+      TSMeshVertexArray() : base(NULL), vertSz(0), numElements(0), colorOffset(0), boneOffset(0), vertexDataReady(false), ownsData(false) {}
       virtual ~TSMeshVertexArray() { set(NULL, 0, 0, 0, 0); }
 
       virtual void set(void *b, dsize_t s, U32 n, S32 inColorOffset, S32 inBoneOffset, bool nowOwnsData = true)
@@ -339,7 +339,7 @@ protected:
    Point3F mBillboardAxis;
 
    /// @name Convex Hull Data
-   /// Convex hulls are convex (no angles >= 180บ) meshes used for collision
+   /// Convex hulls are convex (no angles >= 180ยบ) meshes used for collision
    /// @{
 
    Vector<Point3F> mPlaneNormals;

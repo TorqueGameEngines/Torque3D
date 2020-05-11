@@ -68,12 +68,19 @@ U32 TSShape::smMaxSkinBones = 70;
 
 TSShape::TSShape()
 {
+   mExporterVersion = 124;
+   mSmallestVisibleSize = 2;
+   mSmallestVisibleDL = 0;
+   mRadius = 0;
+   mFlags = 0;
+   tubeRadius = 0;
+   data = NULL;
    materialList = NULL;
    mReadVersion = -1; // -1 means constructed from scratch (e.g., in exporter or no read yet)
    mSequencesConstructed = false;
    mShapeData = NULL;
    mShapeDataSize = 0;
-
+   mVertexSize = 0;
    mUseDetailFromScreenError = false;
    mNeedReinit = false;
 

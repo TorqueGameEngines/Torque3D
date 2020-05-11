@@ -39,7 +39,7 @@ public:
    F32 fps;
 
 public:
-   AppSequence() { }
+   AppSequence():fps(30.0f) { } //default based on TSShapeLoader::XXXFrameRate(s) and AssimpAppSequence fallback
    virtual ~AppSequence() { }
 
    virtual void setActive(bool active) { }

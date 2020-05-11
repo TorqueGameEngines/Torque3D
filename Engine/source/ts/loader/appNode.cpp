@@ -26,6 +26,7 @@ AppNode::AppNode()
 {
    mName = NULL;
    mParentName = NULL;
+   mParentIndex = 0;
 }
 
 AppNode::~AppNode()

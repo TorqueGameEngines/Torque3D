@@ -38,7 +38,7 @@
 class TamlJSONParser : public TamlParser
 {
 public:
-    TamlJSONParser() {}
+    TamlJSONParser() :mDocumentDirty(false) {}
     virtual ~TamlJSONParser() {}
 
     /// Whether the parser can change a property or not.

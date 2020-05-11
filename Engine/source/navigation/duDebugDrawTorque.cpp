@@ -45,6 +45,7 @@ duDebugDrawTorque::duDebugDrawTorque()
    mCurrColor = 0;
    mOverrideColor = 0;
    mOverride = false;
+   dMemset(&mStore, 0, sizeof(mStore));
 }
 
 duDebugDrawTorque::~duDebugDrawTorque()

@@ -68,6 +68,7 @@ GuiConvexEditorCtrl::GuiConvexEditorCtrl()
    mFaceHL( -1 ),
    mFaceSavedXfm( true ),
    mSavedUndo( false ),
+   mHasGeometry(false),
    mDragging( false ),
    mGizmoMatOffset( Point3F::Zero ),
    mPivotPos( Point3F::Zero ),

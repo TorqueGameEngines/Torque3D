@@ -74,10 +74,22 @@ GuiScrollCtrl::GuiScrollCtrl()
    mChildPos(0, 0),
    mChildExt(0, 0),
    mScrollTargetPos( -1, -1 ),
-   mBaseThumbSize(0)
+   mBaseThumbSize(0),
+   mHBarEnabled(false),
+   mVBarEnabled(false),
+   mHasHScrollBar(false),
+   mHasVScrollBar(false),
+   mHThumbSize(1),
+   mHThumbPos(0),
+   mVThumbSize(1),
+   mVThumbPos(0),
+   mThumbMouseDelta(0)
 {
+   mBitmapBounds = NULL;
    mIsContainer = true;
    setExtent(200,200);
+   mLastPreRender = Platform::getVirtualMilliseconds();
+   mLastUpdated = Platform::getVirtualMilliseconds();
 }
 
 //-----------------------------------------------------------------------------

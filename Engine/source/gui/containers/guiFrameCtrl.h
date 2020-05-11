@@ -114,10 +114,6 @@ protected:
    /* member variables */
    Vector<S32> mColumnOffsets;
    Vector<S32> mRowOffsets;
-   GuiCursor *mMoveCursor;
-   GuiCursor *mUpDownCursor;
-   GuiCursor *mLeftRightCursor;
-   GuiCursor *mDefaultCursor;
    FrameDetail mFramesetDetails;
    VectorPtr<FrameDetail *> mFrameDetails;
    bool mAutoBalance;

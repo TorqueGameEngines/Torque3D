@@ -53,6 +53,7 @@ GuiTabPageCtrl::GuiTabPageCtrl(void)
    dStrcpy(mText,(UTF8*)"TabPage", MAX_STRING_LENGTH);
    mActive = true;
    mIsContainer = true;
+   mTabIndex = -1;
 }
 
 void GuiTabPageCtrl::initPersistFields()

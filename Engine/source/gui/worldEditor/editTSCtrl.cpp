@@ -106,7 +106,7 @@ EditTSCtrl::EditTSCtrl()
    mMiddleMouseDown = false;
    mMiddleMouseTriggered = false;
    mMouseLeft = false;
-
+   mLastMouseClamping = false;
    mBlendSB = NULL;
 
 }

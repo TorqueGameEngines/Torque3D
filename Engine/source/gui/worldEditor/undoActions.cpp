@@ -219,6 +219,7 @@ ConsoleDocClass( InspectorFieldUndoAction,
 
 InspectorFieldUndoAction::InspectorFieldUndoAction()
 {
+   mInspector = NULL;
    mObjId = 0;
    mField = NULL; 
    mSlotName = StringTable->EmptyString();

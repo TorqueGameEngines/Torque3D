@@ -35,8 +35,11 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
    :  Parent( name, provider, useHardware, maxBuffers ),
       mOpenAL( openal ), 
       mContext( NULL ),
-      mDevice( NULL ), 
-      mRolloffFactor( 1.0f )
+      mDevice( NULL ),
+      mDistanceModel(SFXDistanceModelLinear),
+      mDistanceFactor(1.0f),
+      mRolloffFactor( 1.0f ),
+      mUserRolloffFactor(1.0f)
 {
    mMaxBuffers = getMax( maxBuffers, 8 );
 
@@ -80,6 +83,10 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
       SFXInternal::gUpdateThread->start();
    }
 #endif
+
+   dMemset(effectSlot, 0, sizeof(effectSlot));
+   dMemset(effect, 0, sizeof(effect));
+   uLoop = 0;
 }
 
 //-----------------------------------------------------------------------------

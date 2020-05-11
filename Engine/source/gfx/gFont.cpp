@@ -198,14 +198,17 @@ GFont::GFont()
    VECTOR_SET_ASSOCIATION(mCharInfoList);
    VECTOR_SET_ASSOCIATION(mTextureSheets);
 
-   for (U32 i = 0; i < (sizeof(mRemapTable) / sizeof(S32)); i++)
-      mRemapTable[i] = -1;
+   std::fill_n(mRemapTable, Font_Table_MAX,-1);
 
    mCurX = mCurY = mCurSheet = -1;
 
    mPlatformFont = NULL;
    mSize = 0;
    mCharSet = 0;
+   mHeight = 0;
+   mBaseline = 0;
+   mAscent = 0;
+   mDescent = 0;
    mNeedSave = false;
    
    mMutex = Mutex::createMutex();

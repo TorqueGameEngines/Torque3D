@@ -68,10 +68,10 @@ inline GFXD3D11VertexBuffer::GFXD3D11VertexBuffer() : GFXVertexBuffer(0,0,0,0,(G
    mIsFirstLock = true;
    lockedVertexEnd = lockedVertexStart = 0;
    mClearAtFrameEnd = false;
+   mLockedBuffer = NULL;
 
 #ifdef TORQUE_DEBUG
    mDebugGuardBuffer = NULL;
-   mLockedBuffer = NULL;
 #endif
 }
 

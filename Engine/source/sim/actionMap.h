@@ -92,7 +92,7 @@ class ActionMap : public SimObject
       U32 deviceInst;
 
       Vector<Node> nodeMap;
-      DeviceMap() {
+      DeviceMap():deviceType(NULL), deviceInst(NULL){
          VECTOR_SET_ASSOCIATION(nodeMap);
       }
       ~DeviceMap();

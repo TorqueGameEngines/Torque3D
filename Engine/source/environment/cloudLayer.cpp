@@ -82,15 +82,16 @@ CloudLayer::CloudLayer()
    mTypeMask |= EnvironmentObjectType | StaticObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
 
-   mModelViewProjSC =
-   mAmbientColorSC =
-   mSunColorSC =
-   mSunVecSC =
-   mTexScaleSC =
-   mBaseColorSC =
-   mCoverageSC =
-   mExposureSC =
-   mEyePosWorldSC = 0;
+   mModelViewProjSC = NULL;
+   mAmbientColorSC = NULL;
+   mSunColorSC = NULL;
+   mSunVecSC = NULL;
+   mTexScaleSC = NULL;
+   mBaseColorSC = NULL;
+   mCoverageSC = NULL;
+   mExposureSC = NULL;
+   mEyePosWorldSC = NULL;
+   mNormalHeightMapSC = NULL;
 
    mTexOffsetSC[0] = mTexOffsetSC[1] = mTexOffsetSC[2] = 0;
 

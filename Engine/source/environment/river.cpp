@@ -593,7 +593,11 @@ IMPLEMENT_CO_NETOBJECT_V1(River);
 
 
 River::River()
- : mSegmentsPerBatch(10),
+ : mLowVertCount(0),
+   mHighVertCount(0),
+   mLowTriangleCount(0),
+   mHighTriangleCount(0),
+   mSegmentsPerBatch(10),
    mMetersPerSegment(10.0f),
    mDepthScale(1.0f),
    mFlowMagnitude(1.0f),

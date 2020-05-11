@@ -84,6 +84,7 @@ GuiRiverEditorCtrl::GuiRiverEditorCtrl()
    mStartHeight = -1.0f;
    mStartX = 0;
 
+   mSavedDrag = false;
    mIsDirty = false;
 
    mNodeHalfSize.set(4,4);

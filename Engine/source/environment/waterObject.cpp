@@ -204,6 +204,7 @@ WaterObject::WaterObject()
    mCubemap( NULL ),
    mSpecularColor( 1.0f, 1.0f, 1.0f, 1.0f ),
    mEmissive( false ),
+   mFullReflect(true),
    mDepthGradientMax( 50.0f )
 {
    mTypeMask = WaterObjectType;
@@ -248,6 +249,8 @@ WaterObject::WaterObject()
    mSurfMatName[BasicUnderWaterMat] = "UnderWaterBasicMat";
 
    dMemset( mMatInstances, 0, sizeof(mMatInstances) );
+   dMemset(mMatParamHandles, 0, sizeof(mMatParamHandles));
+   mUnderwater = false;
 
    mWaterPos.set( 0,0,0 );
    mWaterPlane.set( mWaterPos, Point3F(0,0,1) );

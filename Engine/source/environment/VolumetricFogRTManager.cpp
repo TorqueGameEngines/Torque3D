@@ -87,8 +87,11 @@ VolumetricFogRTManager::VolumetricFogRTManager()
    setGlobalBounds();
    mTypeMask |= EnvironmentObjectType;
    mNetFlags.set(IsGhost);
+   mPlatformWindow = NULL;
    mIsInitialized = false;
    mNumFogObjects = 0;
+   mWidth = 0;
+   mHeight = 0;
 }
    
 VolumetricFogRTManager::~VolumetricFogRTManager()

@@ -629,6 +629,11 @@ MeshRoad::MeshRoad()
    mMatInst[Bottom] = NULL;
    mMatInst[Side] = NULL;
    mTypeMask |= TerrainLikeObjectType;
+   for (U32 i = 0; i < SurfaceCount; i++)
+   {
+      mVertCount[i] = 0;
+      mTriangleCount[i] = 0;
+   }
 }
 
 MeshRoad::~MeshRoad()

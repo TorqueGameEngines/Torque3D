@@ -286,6 +286,7 @@ fxFoliageReplicator::fxFoliageReplicator()
    // Reset Foliage Count.
    mCurrentFoliageCount = 0;
 
+   dMemset(&mFrustumRenderSet, 0, sizeof(mFrustumRenderSet));
    // Reset Creation Area Angle Animation.
    mCreationAreaAngle = 0;
 
@@ -299,8 +300,15 @@ fxFoliageReplicator::fxFoliageReplicator()
 
    // Reset Frame Serial ID.
    mFrameSerialID = 0;
-
+   mQuadTreeLevels = 0;
+   mNextAllocatedNodeIdx = 0;
    mAlphaLookup = NULL;
+   mFadeInGradient = 0.0f;
+   mFadeOutGradient = 0.0f;
+   mGlobalSwayPhase = 0.0f;
+   mGlobalSwayTimeRatio = 1.0f;
+   mGlobalLightPhase = 0.0f;
+   mGlobalLightTimeRatio = 1.0f;
 
    mDirty = true;
 
@@ -317,6 +325,8 @@ fxFoliageReplicator::fxFoliageReplicator()
    mFoliageShaderTrueBillboardSC = NULL;
    mFoliageShaderGroundAlphaSC = NULL;
    mFoliageShaderAmbientColorSC = NULL;
+   mDiffuseTextureSC = NULL;
+   mAlphaMapTextureSC = NULL;
 
    mShaderData = NULL;
 }

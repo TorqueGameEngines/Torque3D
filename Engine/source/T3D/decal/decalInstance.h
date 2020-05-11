@@ -87,7 +87,7 @@ class DecalInstance
       /// Calculates the size of this decal onscreen in pixels, used for LOD.
       F32 calcPixelSize( U32 viewportHeight, const Point3F &cameraPos, F32 worldToScreenScaleY ) const;
    		
-	   DecalInstance() : mId(-1) {}   
+      DecalInstance();
 };
 
 #endif // _DECALINSTANCE_H_

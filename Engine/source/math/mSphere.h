@@ -35,7 +35,7 @@ public:
    F32     radius;
 
 public:
-   SphereF() { }
+   SphereF() :radius(1.0f) {}
    SphereF( const Point3F& in_rPosition, const F32 in_rRadius )
     : center(in_rPosition),
       radius(in_rRadius)

@@ -38,7 +38,7 @@
 class TamlXmlParser : public TamlParser
 {
 public:
-    TamlXmlParser() {}
+    TamlXmlParser() :mDocumentDirty(false) {}
     virtual ~TamlXmlParser() {}
 
     /// Whether the parser can change a property or not.

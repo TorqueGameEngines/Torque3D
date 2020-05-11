@@ -1380,6 +1380,7 @@ SimObject::SimObject(const SimObject& other, bool temp_clone)
    nextIdObject = other.nextIdObject;
    mGroup = other.mGroup;
    mFlags = other.mFlags;
+   mProgenitorFile = other.mProgenitorFile;
    mCopySource = other.mCopySource;
    mFieldDictionary = other.mFieldDictionary;
    //mIdString = other.mIdString; // special treatment (see below)

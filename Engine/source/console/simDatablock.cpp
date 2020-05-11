@@ -55,6 +55,7 @@ ConsoleDocClass( SimDataBlock,
 
 SimDataBlock::SimDataBlock()
 {
+   modifiedKey = 0;
    setModDynamicFields(true);
    setModStaticFields(true);
 }

@@ -64,8 +64,12 @@ F32 PSSMLightShadowMap::smSmallestVisiblePixelSize = 25.0f;
 
 PSSMLightShadowMap::PSSMLightShadowMap( LightInfo *light )
    :  LightShadowMap( light ),
-      mNumSplits( 1 )
-{  
+      mNumSplits( 1 ),
+      mLogWeight(0.91f)
+{
+   for (U32 i = 0; i <= MAX_SPLITS; i++) //% depth distance
+      mSplitDist[i] = mPow(F32(i/MAX_SPLITS),2.0f);
+
    mIsViewDependent = true;
 }
 

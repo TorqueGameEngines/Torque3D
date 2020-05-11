@@ -87,12 +87,12 @@ AssetImportConfig::AssetImportConfig() :
    UseMips(true),
    IsHDR(false),
    Scaling(false),
-   Compresse(false),
+   ImagesCompressed(false),
    GenerateMaterialOnImport(true),
    importSounds(true),
    VolumeAdjust(false),
    PitchAdjust(false),
-   Compressed(false)
+   SoundsCompressed(false)
 {
 }
 
@@ -105,6 +105,94 @@ AssetImportConfig::~AssetImportConfig()
 void AssetImportConfig::initPersistFields()
 {
    Parent::initPersistFields();
+
+   addGroup("General");
+      addField("DuplicatAutoResolution", TypeString, Offset(DuplicatAutoResolution, AssetImportConfig), "Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename");
+      addField("WarningsAsErrors", TypeBool, Offset(WarningsAsErrors, AssetImportConfig), "Indicates if warnings should be treated as errors");
+      addField("PreventImportWithErrors", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "Indicates if importing should be prevented from completing if any errors are detected at all");
+      addField("AutomaticallyPromptMissingFiles", TypeBool, Offset(AutomaticallyPromptMissingFiles, AssetImportConfig), "Should the importer automatically prompt to find missing files if they are not detected automatically by the importer");
+   endGroup("General");
+
+   addGroup("Meshes");
+      addField("ImportMesh", TypeBool, Offset(ImportMesh, AssetImportConfig), "Indicates if this config supports importing meshes");
+      addField("DoUpAxisOverride", TypeBool, Offset(DoUpAxisOverride, AssetImportConfig), "Indicates if the up axis in the model file should be overridden ");
+      addField("UpAxisOverride", TypeString, Offset(UpAxisOverride, AssetImportConfig), "If overriding, what axis should be used as up. Options are X_AXIS, Y_AXIS, Z_AXIS");
+      addField("DoScaleOverride", TypeBool, Offset(DoScaleOverride, AssetImportConfig), "Indicates if the scale in the model file should be overridden");
+      addField("ScaleOverride", TypeF32, Offset(ScaleOverride, AssetImportConfig), "If overriding, what scale should be used");
+      addField("IgnoreNodeScale", TypeBool, Offset(IgnoreNodeScale, AssetImportConfig), "Indicates if scale of nodes should be ignored");
+      addField("AdjustCenter", TypeBool, Offset(AdjustCenter, AssetImportConfig), "Indicates if the center of the model file should be automatically recentered");
+      addField("AdjustFloor", TypeBool, Offset(AdjustFloor, AssetImportConfig), "Indicates if the floor height of the model file should be automatically zero'd");
+      addField("CollapseSubmeshes", TypeBool, Offset(CollapseSubmeshes, AssetImportConfig), "Indicates if submeshes should be collapsed down into a single main mesh");
+      addField("LODType", TypeString, Offset(LODType, AssetImportConfig), "Indicates what LOD mode the model file should utilize to process out LODs. Options are TrailingNumber, DetectDTS, SingleSize");
+      addField("ImportedNodes", TypeString, Offset(ImportedNodes, AssetImportConfig), " A list of what nodes should be guaranteed to be imported if found in the model file. Separated by either , or ;");
+      addField("IgnoreNodes", TypeString, Offset(IgnoreNodes, AssetImportConfig), "A list of what nodes should be guaranteed to not be imported if found in the model file. Separated by either , or ;");
+      addField("ImportMeshes", TypeString, Offset(ImportMeshes, AssetImportConfig), "A list of what mesh objects should be guaranteed to be imported if found in the model file. Separated by either , or ;");
+      addField("IgnoreMeshes", TypeString, Offset(IgnoreMeshes, AssetImportConfig), "A list of what mesh objects should be guaranteed to not be imported if found in the model file. Separated by either , or ;");
+      addField("convertLeftHanded", TypeBool, Offset(convertLeftHanded, AssetImportConfig), "Flag to indicate the shape loader should convert to a left-handed coordinate system");
+      addField("calcTangentSpace", TypeBool, Offset(calcTangentSpace, AssetImportConfig), "Should the shape loader calculate tangent space values");
+      addField("removeRedundantMats", TypeBool, Offset(removeRedundantMats, AssetImportConfig), "Should the shape loader automatically prune redundant/duplicate materials");
+      addField("genUVCoords", TypeBool, Offset(genUVCoords, AssetImportConfig), "Should the shape loader auto-generate UV Coordinates for the mesh.");
+      addField("TransformUVs", TypeBool, Offset(TransformUVs, AssetImportConfig), "Should the UV coordinates be transformed");
+      addField("flipUVCoords", TypeBool, Offset(flipUVCoords, AssetImportConfig), "Should the UV coordinates be flipped");
+      addField("findInstances", TypeBool, Offset(findInstances, AssetImportConfig), "Should the shape loader automatically look for instanced submeshes in the model file");
+      addField("limitBoneWeights", TypeBool, Offset(limitBoneWeights, AssetImportConfig), "Should the shape loader limit the bone weights");
+      addField("JoinIdenticalVerts", TypeBool, Offset(JoinIdenticalVerts, AssetImportConfig), "Should the shape loader automatically merge identical/duplicate verts");
+      addField("reverseWindingOrder", TypeBool, Offset(reverseWindingOrder, AssetImportConfig), "Should the shape loader reverse the winding order of the mesh's face indicies");
+      addField("invertNormals", TypeBool, Offset(invertNormals, AssetImportConfig), "Should the normals on the model be inverted");
+   endGroup("Meshes");
+
+   addGroup("Materials");
+      addField("DuplicatAutoResolution", TypeString, Offset(DuplicatAutoResolution, AssetImportConfig), "Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename");
+      addField("ImportMaterials", TypeBool, Offset(ImportMaterials, AssetImportConfig), "Does this config allow for importing of materials");
+      addField("CreatePBRConfig", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "When importing a material, should it automatically attempt to merge Roughness, AO and Metalness maps into a single, composited PBR Configuration map");
+      addField("UseDiffuseSuffixOnOriginImage", TypeBool, Offset(UseDiffuseSuffixOnOriginImage, AssetImportConfig), "When generating a material off of an importing image, should the importer force appending a diffusemap suffix onto the end to avoid potential naming confusion.\n e.g. MyCoolStuff.png is imported, generating MyCoolStuff material asset and MyCoolStuff_Diffuse image asset");
+      addField("UseExistingMaterials", TypeBool, Offset(UseExistingMaterials, AssetImportConfig), "Should the importer try and use existing material assets in the game directory if at all possible. (Not currently utilized)");
+      addField("IgnoreMaterials", TypeString, Offset(IgnoreMaterials, AssetImportConfig), "A list of material names that should not be imported. Separated by either , or ;");
+      addField("PopulateMaterialMaps", TypeBool, Offset(PopulateMaterialMaps, AssetImportConfig), "When processing a material asset, should the importer attempt to populate the various material maps on it by looking up common naming conventions for potentially relevent image files.\n e.g. If MyCoolStuff_Diffuse.png is imported, generating MyCoolStuff material, it would also find MyCoolStuff_Normal and MyCoolStuff_PBR images and map them to the normal and PBRConfig maps respectively automatically");
+   endGroup("Materials");
+
+   addGroup("Meshes");
+      addField("ImportAnimations", TypeBool, Offset(ImportAnimations, AssetImportConfig), "Does this config allow for importing Shape Animations");
+      addField("SeparateAnimations", TypeBool, Offset(SeparateAnimations, AssetImportConfig), "When importing a shape file, should the animations within be separated out into unique files");
+      addField("SeparateAnimationPrefix", TypeString, Offset(SeparateAnimationPrefix, AssetImportConfig), "If separating animations out from a source file, what prefix should be added to the names for grouping association");
+      addField("animTiming", TypeString, Offset(animTiming, AssetImportConfig), "Defines the animation timing for the given animation sequence. Options are FrameTime, Seconds, Milliseconds");
+      addField("animFPS", TypeBool, Offset(animFPS, AssetImportConfig), "The FPS of the animation sequence");
+   endGroup("General");
+
+   addGroup("Collision");
+      addField("GenerateCollisions", TypeBool, Offset(GenerateCollisions, AssetImportConfig), "Does this configuration generate collision geometry when importing. (Not currently enabled)");
+      addField("GenCollisionType", TypeString, Offset(GenCollisionType, AssetImportConfig), "What sort of collision geometry is generated. (Not currently enabled)");
+      addField("CollisionMeshPrefix", TypeString, Offset(CollisionMeshPrefix, AssetImportConfig), "What prefix is added to the collision geometry generated. (Not currently enabled)");
+      addField("GenerateLOSCollisions", TypeBool, Offset(GenerateLOSCollisions, AssetImportConfig), "Does this configuration generate Line of Sight collision geometry. (Not currently enabled)");
+      addField("GenLOSCollisionType", TypeString, Offset(GenLOSCollisionType, AssetImportConfig), "What sort of Line of Sight collision geometry is generated. (Not currently enabled)");
+      addField("LOSCollisionMeshPrefix", TypeString, Offset(LOSCollisionMeshPrefix, AssetImportConfig), "What prefix is added to the Line of Sight collision geometry generated. (Not currently enabled)");
+   endGroup("Collision");
+
+   addGroup("Images");
+      addField("importImages", TypeBool, Offset(importImages, AssetImportConfig), "Does this configuration support importing images.");
+      addField("ImageType", TypeString, Offset(ImageType, AssetImportConfig), "What is the default ImageType images are imported as. Options are: N/A, Diffuse, Normal, Metalness, Roughness, AO, PBRConfig, GUI, Cubemap");
+      addField("DiffuseTypeSuffixes", TypeString, Offset(DiffuseTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a diffuse map. \n e.g. _Albedo or _Color");
+      addField("NormalTypeSuffixes", TypeString, Offset(NormalTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a normal map. \n e.g. _Normal or _Norm");
+      addField("MetalnessTypeSuffixes", TypeString, Offset(MetalnessTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a metalness map. \n e.g. _Metalness or _Metal");
+      addField("RoughnessTypeSuffixes", TypeString, Offset(RoughnessTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a roughness map.\n e.g. _roughness or _rough");
+      addField("SmoothnessTypeSuffixes", TypeString, Offset(SmoothnessTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a smoothness map. \n e.g. _smoothness or _smooth");
+      addField("AOTypeSuffixes", TypeString, Offset(AOTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a ambient occlusion map. \n e.g. _ambient or _ao");
+      addField("PBRTypeSuffixes", TypeString, Offset(PBRTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a PBRConfig map.\n e.g. _Composite or _PBR");
+      addField("TextureFilteringMode", TypeString, Offset(TextureFilteringMode, AssetImportConfig), "Indicates what filter mode images imported with this configuration utilizes. Options are Linear, Bilinear, Trilinear");
+      addField("UseMips", TypeBool, Offset(UseMips, AssetImportConfig), "Indicates if images imported with this configuration utilize mipmaps");
+
+      addField("IsHDR", TypeBool, Offset(IsHDR, AssetImportConfig), "Indicates if images imported with this configuration are in an HDR format");
+      addField("Scaling", TypeF32, Offset(Scaling, AssetImportConfig), "Indicates what amount of scaling images imported with this configuration use");
+      addField("ImagesCompressed", TypeBool, Offset(ImagesCompressed, AssetImportConfig), "Indicates if images imported with this configuration are compressed");
+      addField("GenerateMaterialOnImport", TypeBool, Offset(GenerateMaterialOnImport, AssetImportConfig), "Indicates if images imported with this configuration generate a parent material for it as well");
+   endGroup("Images");
+
+   addGroup("Sounds");
+      addField("importSounds", TypeBool, Offset(importSounds, AssetImportConfig), "Indicates if sounds are imported with this configuration");
+      addField("VolumeAdjust", TypeF32, Offset(VolumeAdjust, AssetImportConfig), "Indicates what amount the volume is adjusted on sounds imported with this configuration");
+      addField("PitchAdjust", TypeF32, Offset(PitchAdjust, AssetImportConfig), "Indicates what amount the pitch is adjusted on sounds imported with this configuration");
+      addField("SoundsCompressed", TypeBool, Offset(SoundsCompressed, AssetImportConfig), "Indicates if sounds imported with this configuration are compressed");
+   endGroup("Sounds");
 }
 
 void AssetImportConfig::loadImportConfig(Settings* configSettings, String configName)
@@ -181,13 +269,13 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    UseMips = dAtob(configSettings->value(String(configName + "/Images/UseMips").c_str()));
    IsHDR = dAtob(configSettings->value(String(configName + "/Images/IsHDR").c_str()));
    Scaling = dAtof(configSettings->value(String(configName + "/Images/Scaling").c_str()));
-   Compressed = dAtob(configSettings->value(String(configName + "/Images/Compressed").c_str()));
+   ImagesCompressed = dAtob(configSettings->value(String(configName + "/Images/Compressed").c_str()));
    GenerateMaterialOnImport = dAtob(configSettings->value(String(configName + "/Images/GenerateMaterialOnImport").c_str()));
 
    //Sounds
    VolumeAdjust = dAtof(configSettings->value(String(configName + "/Sounds/VolumeAdjust").c_str()));
    PitchAdjust = dAtof(configSettings->value(String(configName + "/Sounds/PitchAdjust").c_str()));
-   Compressed = dAtob(configSettings->value(String(configName + "/Sounds/Compressed").c_str()));
+   SoundsCompressed = dAtob(configSettings->value(String(configName + "/Sounds/Compressed").c_str()));
 }
 
 ConsoleDocClass(AssetImportObject,
@@ -221,6 +309,25 @@ AssetImportObject::~AssetImportObject()
 void AssetImportObject::initPersistFields()
 {
    Parent::initPersistFields();
+
+   addField("assetType", TypeString, Offset(assetType, AssetImportObject), "What type is the importing asset");
+   addField("filePath", TypeFilename, Offset(filePath, AssetImportObject), "What is the source file path of the importing asset");
+   addField("assetName", TypeString, Offset(assetName, AssetImportObject), "What is the asset's name");
+   addField("cleanAssetName", TypeString, Offset(cleanAssetName, AssetImportObject), "What is the original, unmodified by processing, asset name");
+   addField("status", TypeString, Offset(status, AssetImportObject), "What is the current status of this asset item in it's import process");
+   addField("statusType", TypeString, Offset(statusType, AssetImportObject), "If there is a warning or error status, what type is the condition for this asset item");
+   addField("statusInfo", TypeString, Offset(statusInfo, AssetImportObject), "What is the articulated information of the status of the asset. Contains the error or warning log data");
+
+   addField("dirty", TypeBool, Offset(dirty, AssetImportObject), "Is the asset item currently flagged as dirty");
+   addField("skip", TypeBool, Offset(skip, AssetImportObject), "Is this asset item marked to be skipped. If it is, it's usually due to being marked as deleted");
+   addField("processed", TypeBool, Offset(processed, AssetImportObject), "Has the asset item been processed");
+   addField("generatedAsset", TypeBool, Offset(generatedAsset, AssetImportObject), "Is this specific asset item generated as part of the import process of another item");
+
+   addField("tamlFilePath", TypeString, Offset(tamlFilePath, AssetImportObject), "What is the ultimate asset taml file path for this import item");
+
+   addField("imageSuffixType", TypeString, Offset(imageSuffixType, AssetImportObject), "Specific to ImageAsset type. What is the image asset's suffix type. Options are: Albedo, Normal, Roughness, AO, Metalness, PBRConfig");
+
+   addField("shapeInfo", TYPEID< GuiTreeViewCtrl >(), Offset(shapeInfo, AssetImportObject), "Specific to ShapeAsset type. Processed information about the shape file. Contains numbers and lists of meshes, materials and animations");
 }
 
 ConsoleDocClass(AssetImporter,
@@ -236,7 +343,8 @@ IMPLEMENT_CONOBJECT(AssetImporter);
 AssetImporter::AssetImporter() :
    importIssues(false),
    isReimport(false),
-   assetHeirarchyChanged(false)
+   assetHeirarchyChanged(false),
+   importLogBuffer("")
 {
 }
 
@@ -470,10 +578,6 @@ void AssetImporter::resetImportSession()
    {
       addImportingFile(originalImportingAssets[i]);
    }
-}
-
-void AssetImporter::resetImportAsset(AssetImportObject* assetItem)
-{
 }
 
 S32 AssetImporter::getActivityLogLineCount()
@@ -1358,17 +1462,6 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
 //
 // Importing
 //
-
-//new AssetImporter(AsImport);
-//AsImport.autoImportFile("data/pbr/images/greasy-pan-2-albedo.png");
-//AsImport.autoImportFile("data/pbr/shapeTest/Blockout_Primitive_Cube.fbx");
-
-
-//AsImport.setTargetPath("data/pbr/importTest/");
-//AsImport.addImportingFile("D:/Gamedev/art/Blockout/Blockout_Primitive_Cube.fbx");
-//AsImport.processImportingAssets();
-//AsImport.validateImportingAssets();
-//AsImport.importAssets();
 StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
 {
    String assetType = getAssetTypeByFile(filePath);

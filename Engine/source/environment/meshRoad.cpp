@@ -309,7 +309,7 @@ Point3F MeshRoadConvex::support(const VectorF& vec) const
 void MeshRoadConvex::getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf)
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    // For a tetrahedron this is pretty easy... first
    // convert everything into world space.

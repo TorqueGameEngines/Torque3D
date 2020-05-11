@@ -1486,7 +1486,7 @@ void TSStaticPolysoupConvex::getPolyList(AbstractPolyList* list)
 void TSStaticPolysoupConvex::getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf)
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    // For a tetrahedron this is pretty easy... first
    // convert everything into world space.

@@ -1033,6 +1033,14 @@ LightningBolt::LightningBolt()
    elapsedTime = 0.0f;
    lifetime = 1.0f;
    startRender = false;
+   endPoint.zero();
+   width = 1;
+   numMajorNodes = 10;
+   maxMajorAngle = 30.0f;
+   numMinorNodes = 4;
+   maxMinorAngle = 15.0f;
+   fadeTime = 0.2f;
+   renderTime = 0.125;
 }
 
 //--------------------------------------------------------------------------

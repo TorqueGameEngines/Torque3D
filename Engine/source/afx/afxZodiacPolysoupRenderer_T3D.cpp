@@ -58,6 +58,10 @@ afxZodiacPolysoupRenderer::afxZodiacPolysoupRenderer()
    if (!master)
      master = this;
    shader_initialized = false;
+   zodiac_shader = NULL;
+   shader_consts = NULL;
+   projection_sc = NULL;
+   color_sc = NULL;
 }
 
 afxZodiacPolysoupRenderer::afxZodiacPolysoupRenderer(F32 renderOrder, F32 processAddOrder)
@@ -66,6 +70,10 @@ afxZodiacPolysoupRenderer::afxZodiacPolysoupRenderer(F32 renderOrder, F32 proces
    if (!master)
      master = this;
    shader_initialized = false;
+   zodiac_shader = NULL;
+   shader_consts = NULL;
+   projection_sc = NULL;
+   color_sc = NULL;
 }
 
 afxZodiacPolysoupRenderer::~afxZodiacPolysoupRenderer()

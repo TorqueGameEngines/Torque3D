@@ -298,8 +298,6 @@ protected:
   bool              mIn_scope;
   bool              mIs_aborted;
 
-  U8                mEffect_flags;
-
   afxXM_Base*       mXfm_modifiers[MAX_XFM_MODIFIERS];
 
   F32               mLive_scale_factor;

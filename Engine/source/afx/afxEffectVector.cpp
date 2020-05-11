@@ -98,6 +98,7 @@ afxEffectVector::afxEffectVector()
   mOn_server = false;
   mTotal_fx_dur = 0;
   mAfter_life = 0;
+  mPhrase_dur = 0;
 }
 
 afxEffectVector::~afxEffectVector()

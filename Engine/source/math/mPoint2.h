@@ -266,8 +266,8 @@ class Point2D
 //-------------------------------------- Point2I
 //
 inline Point2I::Point2I()
+   :x(0),y(0)
 {
-   //
 }
 
 
@@ -448,8 +448,8 @@ inline Point2I& Point2I::operator/=(const Point2I &_vec)
 //-------------------------------------- Point2F
 //
 inline Point2F::Point2F()
+   :x(0.0f), y(0.0f)
 {
-   //
 }
 
 
@@ -692,8 +692,8 @@ inline void Point2F::normalizeSafe()
 //-------------------------------------- Point2D
 //
 inline Point2D::Point2D()
+   :x(0.0), y(0.0)
 {
-   //
 }
 
 

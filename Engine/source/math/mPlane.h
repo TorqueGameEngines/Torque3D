@@ -66,7 +66,7 @@ class PlaneF : public Point3F
       /// @name Initialization
       /// @{
 
-      PlaneF() {}
+      PlaneF() :d(0.0f) {}
       PlaneF( const Point3F& p, const Point3F& n );
       /// NOTE: d is the NEGATIVE distance along the xyz normal.
       PlaneF( F32 _x, F32 _y, F32 _z, F32 _d);
@@ -571,6 +571,7 @@ public:
 
 inline PlaneD::PlaneD()
 {
+   d = 0.0;
 }
 
 inline PlaneD::

@@ -67,6 +67,8 @@ class AngAxisF
 
 inline AngAxisF::AngAxisF()
 {
+   axis = Point3F(0.0f,0.0f,1.0f);
+   angle = 0.0f;
 }
 
 inline AngAxisF::AngAxisF( const Point3F & _axis, F32 _angle )

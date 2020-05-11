@@ -75,7 +75,7 @@ class SceneCullingVolume
    public:
 
       /// Create an *uninitialized* culling volume.
-      SceneCullingVolume() {}
+      SceneCullingVolume() : mType(Includer), mSortPoint(1.f) {}
 
       ///
       SceneCullingVolume( Type type, const PlaneSetF& planes )

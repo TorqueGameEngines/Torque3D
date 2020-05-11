@@ -97,6 +97,8 @@ ImplementEnumType( MaterialWaveType,
    { Material::Square,       "Square", "Warps the material along a wave which transitions between two oppposite states. As a Square Wave, the transition is quick and sudden." },
 EndImplementEnumType;
 
+#define initMapSlot(name,id) name##Filename[id##] = String::EmptyString; name##AssetId[id##] = StringTable->EmptyString(); name##Asset[id##] = NULL;
+#define bindMapSlot(name,id) if (name##AssetId[id##] != String::EmptyString) name##Asset[id##] = name##AssetId[id##];
 
 bool Material::sAllowTextureTargetAssignment = false;
 
@@ -111,14 +113,13 @@ GFXCubemap * Material::GetNormalizeCube()
 
 GFXCubemapHandle Material::smNormalizeCube;
 
+
 Material::Material()
 {
    for( U32 i=0; i<MAX_STAGES; i++ )
    {
       mDiffuse[i].set( 1.0f, 1.0f, 1.0f, 1.0f );
       mDiffuseMapSRGB[i] = true;
-      mDiffuseMapAsset[i] = StringTable->EmptyString();
-      mDiffuseMapAssetId[i] = StringTable->EmptyString();
 
       mSmoothness[i] = 0.0f;
       mMetalness[i] = 0.0f;
@@ -136,7 +137,20 @@ Material::Material()
       mAccuStrength[i]  = 0.6f;
       mAccuCoverage[i]  = 0.9f;
       mAccuSpecular[i]  = 16.0f;
-	  
+
+      initMapSlot(mDiffuseMap, i);
+      initMapSlot(mOverlayMap, i);
+      initMapSlot(mLightMap, i);
+      initMapSlot(mToneMap, i);
+      initMapSlot(mDetailMap, i);
+      initMapSlot(mNormalMap, i);
+      initMapSlot(mPBRConfigMap, i);
+      initMapSlot(mRoughMap, i);
+      initMapSlot(mAOMap, i);
+      initMapSlot(mMetalMap, i);
+      initMapSlot(mGlowMap, i);
+      initMapSlot(mDetailNormalMap, i);
+
       mParallaxScale[i] = 0.0f;
 
       mVertLit[i] = false;
@@ -225,6 +239,11 @@ Material::Material()
    mReverbSoundOcclusion = 1.0;
 }
 
+
+#define assetText(x,suff) (String::String(#x) + String::String(#suff)).c_str()
+#define scriptBindMapSlot(name) addField(#name, TypeImageFilename, Offset(m##name##Filename, Material), MAX_STAGES, assetText(name,texture map.)); \
+                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, Material), MAX_STAGES, assetText(name,asset reference.));
+
 void Material::initPersistFields()
 {
    addField("mapTo", TypeRealString, Offset(mMapTo, Material),
@@ -236,37 +255,25 @@ void Material::initPersistFields()
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color." );
 
-      addField("diffuseMap", TypeImageFilename, Offset(mDiffuseMapFilename, Material), MAX_STAGES,
-         "The diffuse color texture map." );
-
-      addField("diffuseMapAsset", TypeImageAssetPtr, Offset(mDiffuseMapAssetId, Material), MAX_STAGES,
-         "The diffuse color texture map." );
+      scriptBindMapSlot(DiffuseMap);
+      scriptBindMapSlot(DiffuseMap);
+      scriptBindMapSlot(OverlayMap);
+      scriptBindMapSlot(LightMap);
+      scriptBindMapSlot(ToneMap);
+      scriptBindMapSlot(DetailMap);
+      scriptBindMapSlot(NormalMap);
+      scriptBindMapSlot(PBRConfigMap);
+      scriptBindMapSlot(RoughMap);
+      scriptBindMapSlot(AOMap);
+      scriptBindMapSlot(MetalMap);
+      scriptBindMapSlot(GlowMap);
+      scriptBindMapSlot(DetailNormalMap);
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
 
-      addField("overlayMap", TypeImageFilename, Offset(mOverlayMapFilename, Material), MAX_STAGES,
-         "A secondary diffuse color texture map which will use the second texcoord of a mesh." );
-
-      addField("lightMap", TypeImageFilename, Offset(mLightMapFilename, Material), MAX_STAGES,
-         "The lightmap texture used with pureLight." );
-
-      addField("toneMap", TypeImageFilename, Offset(mToneMapFilename, Material), MAX_STAGES,
-         "The tonemap texture used with pureLight.");
-
-      addField("detailMap", TypeImageFilename, Offset(mDetailMapFilename, Material), MAX_STAGES,
-         "A typically greyscale detail texture additively blended into the material." );
-
       addField("detailScale", TypePoint2F, Offset(mDetailScale, Material), MAX_STAGES,
          "The scale factor for the detail map." );
-
-      addField( "normalMap", TypeImageFilename, Offset(mNormalMapFilename, Material), MAX_STAGES,
-         "The normal map texture.  You can use the DXTnm format only when per-pixel "
-         "specular highlights are disabled, or a specular map is in use." );
-
-      addField( "detailNormalMap", TypeImageFilename, Offset(mDetailNormalMapFilename, Material), MAX_STAGES,
-         "A second normal map texture applied at the detail scale.  You can use the DXTnm "
-         "format only when per-pixel specular highlights are disabled." );
 
       addField( "detailNormalMapStrength", TypeF32, Offset(mDetailNormalMapStrength, Material), MAX_STAGES,
          "Used to scale the strength of the detail normal map when blended with the base normal map." );
@@ -304,27 +311,14 @@ void Material::initPersistFields()
       addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, Material), MAX_STAGES,
          "Treat Smoothness as Roughness");
 
-      addField( "PBRConfigMap", TypeImageFilename, Offset(mPBRConfigMapFilename, Material), MAX_STAGES,
-         "Prepacked specular map texture. The RGB channels of this texture provide per-pixel reference values for: "
-         "smoothness (R), Ambient Occlusion (G), and metalness(B)");
-
-      addField("roughMap", TypeImageFilename, Offset(mRoughMapFilename, Material), MAX_STAGES,
-         "smoothness map. will be packed into the R channel of a packed 'specular' map");
       addField("smoothnessChan", TypeF32, Offset(mSmoothnessChan, Material), MAX_STAGES,
          "The input channel smoothness maps use.");
 
-      addField("aoMap", TypeImageFilename, Offset(mAOMapFilename, Material), MAX_STAGES,
-         "Ambient Occlusion map. will be packed into the G channel of a packed 'specular' map");
       addField("AOChan", TypeF32, Offset(mAOChan, Material), MAX_STAGES,
          "The input channel AO maps use.");
-
-      addField("metalMap", TypeImageFilename, Offset(mMetalMapFilename, Material), MAX_STAGES,
-         "Metalness map. will be packed into the B channel of a packed 'specular' map");
       addField("metalChan", TypeF32, Offset(mMetalChan, Material), MAX_STAGES,
          "The input channel metalness maps use.");
 
-      addField("glowMap", TypeImageFilename, Offset(mGlowMapFilename, Material), MAX_STAGES,
-         "Metalness map. will be packed into the B channel of a packed 'specular' map");
       addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
          "The input channel metalness maps use.");
       addField("glow", TypeBool, Offset(mGlow, Material), MAX_STAGES,
@@ -589,6 +583,7 @@ bool Material::onAdd()
    if ( slash != String::NPos )
       mPath = scriptFile.substr( 0, slash + 1 );
 
+   /*
    //bind any assets we have
    for (U32 i = 0; i < MAX_STAGES; i++)
    {
@@ -596,6 +591,21 @@ bool Material::onAdd()
       {
          mDiffuseMapAsset[0] = mDiffuseMapAssetId[0];
       }
+   }
+  */
+   for (U32 i = 0; i < MAX_STAGES; i++)
+   {
+      bindMapSlot(mDiffuseMap, i);
+      bindMapSlot(mOverlayMap, i);
+      bindMapSlot(mLightMap, i);
+      bindMapSlot(mToneMap, i);
+      bindMapSlot(mDetailMap, i);
+      bindMapSlot(mPBRConfigMap, i);
+      bindMapSlot(mRoughMap, i);
+      bindMapSlot(mAOMap, i);
+      bindMapSlot(mMetalMap, i);
+      bindMapSlot(mGlowMap, i);
+      bindMapSlot(mDetailNormalMap, i);
    }
 
    _mapMaterial();

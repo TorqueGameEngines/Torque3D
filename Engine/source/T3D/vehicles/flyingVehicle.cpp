@@ -322,6 +322,7 @@ ConsoleDocClass( FlyingVehicle,
 
 FlyingVehicle::FlyingVehicle()
 {
+   mDataBlock = NULL;
    mSteering.set(0,0);
    mThrottle = 0;
    mJetting = false;
@@ -332,6 +333,10 @@ FlyingVehicle::FlyingVehicle()
    mBackMaintainOn = false;
    mBottomMaintainOn = false;
    createHeightOn = false;
+   mCeilingFactor = 1.0f;
+   mThrustDirection = FlyingVehicle::ThrustForward;
+   for (U32 i=0;i< JetAnimCount;i++)
+      mJetSeq[i] = -1;
 
    for (S32 i = 0; i < JetAnimCount; i++)
       mJetThread[i] = 0;

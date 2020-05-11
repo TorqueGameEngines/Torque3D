@@ -36,6 +36,7 @@ CameraSpline::Knot::Knot()
    mSpeed = 0.0f;
    mType = NORMAL;
    mPath = SPLINE;
+   mDistance = 0.0f;
    prev = NULL; next = NULL;
 };
 
@@ -46,6 +47,7 @@ CameraSpline::Knot::Knot(const Knot &k)
    mSpeed    = k.mSpeed;
    mType = k.mType;
    mPath = k.mPath;
+   mDistance = k.mDistance;
    prev = NULL; next = NULL;
 }
 
@@ -56,6 +58,7 @@ CameraSpline::Knot::Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type typ
    mSpeed    = s;
    mType = type;
    mPath = path;
+   mDistance = 0.0f;
    prev = NULL; next = NULL;
 }
 

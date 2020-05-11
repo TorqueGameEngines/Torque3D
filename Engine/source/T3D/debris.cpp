@@ -157,6 +157,9 @@ DebrisData::DebrisData(const DebrisData& other, bool temp_clone) : GameBaseData(
    explosion = other.explosion;
    dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
    dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
+   mShatter = other.mShatter;
+   mProbBreak = other.mProbBreak;
+   mProbDepth = other.mProbDepth;
 }
 
 DebrisData::~DebrisData()
@@ -533,6 +536,8 @@ Debris::Debris()
    mInitialTrans.identity();
    mRadius = 0.2f;
    mStatic = false;
+   mElasticity = 0.5f;
+   mFriction = 0.5f;
 
    dMemset( mEmitterList, 0, sizeof( mEmitterList ) );
 

@@ -248,7 +248,7 @@ LightningData::LightningData()
       strikeTextureNames[i] = NULL;
       strikeTextures[i] = NULL;
    }
-
+   numThunders = 0;
    mNumStrikeTextures = 0;
 }
 
@@ -371,6 +371,7 @@ Lightning::Lightning()
    mNetFlags.set(Ghostable|ScopeAlways);
    mTypeMask |= StaticObjectType|EnvironmentObjectType;
 
+   mDataBlock = NULL;
    mLastThink = 0;
 
    mStrikeListHead  = NULL;
@@ -1041,6 +1042,8 @@ LightningBolt::LightningBolt()
    maxMinorAngle = 15.0f;
    fadeTime = 0.2f;
    renderTime = 0.125;
+   dMemset(&mMajorNodes, 0, sizeof(mMajorNodes));
+   percentFade = 0.0f;
 }
 
 //--------------------------------------------------------------------------

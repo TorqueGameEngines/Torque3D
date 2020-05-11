@@ -114,12 +114,22 @@ ConsoleDocClass( HTTPObject,
 //--------------------------------------
 
 HTTPObject::HTTPObject()
+   : mParseState(ParsingStatusLine),
+   mTotalBytes(0),
+   mBytesRemaining(0),
+   mStatus(0),
+   mVersion(0.0f),
+   mContentLength(0),
+   mChunkedEncoding(false),
+   mChunkSize(0),
+   mContentType(""),
+   mHostName(NULL),
+   mPath(NULL),
+   mQuery(NULL),
+   mPost(NULL),
+   mBufferSave(NULL),
+   mBufferSaveSize(0)
 {
-   mHostName = 0;
-   mPath = 0;
-   mQuery = 0;
-   mPost = 0;
-   mBufferSave = 0;
 }
 
 HTTPObject::~HTTPObject()

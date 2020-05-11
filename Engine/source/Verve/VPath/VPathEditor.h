@@ -199,7 +199,7 @@ private:
     public:
 
         VPathEditorEditPathAction( const UTF8 *pName = "" ) :
-                UndoAction( pName )
+                UndoAction( pName ), mEditor(NULL), mPath(NULL)
         {
             // Void.
         };
@@ -218,9 +218,11 @@ private:
     public:
 
         VPathEditorEditNodeAction( const UTF8 *pName = "" ) :
-                UndoAction( pName )
+                UndoAction( pName ), mEditor(NULL), mPath(NULL), mNodeIndex(0), mNodeWeight(0.0f)
         {
             // Void.
+           mNodeOrientation.Type = VPathNode::k_OrientationFree;
+           mNodeOrientation.Point = Point3F(0.0f, 0.0f, 0.0f);
         };
 
         VPathEditor               *mEditor;

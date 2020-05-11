@@ -203,7 +203,7 @@ public:
 class StockColorItem
 {
 private:
-   StockColorItem() {}
+   StockColorItem():mColorName("") {}
 
 public:
    StockColorItem( const char* pName, const U8 red, const U8 green, const U8 blue, const U8 alpha = 255 )

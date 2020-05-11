@@ -163,6 +163,9 @@ TelnetDebugger::TelnetDebugger()
    mProgramPaused = false;
    mWaitForClient = false;
 
+   dStrncpy(mDebuggerPassword, "", PasswordMaxLength);
+   dStrncpy(mLineBuffer, "", sizeof(mLineBuffer));
+   
    // Add the version number in a global so that
    // scripts can detect the presence of the
    // "enhanced" debugger features.

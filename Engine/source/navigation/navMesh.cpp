@@ -213,6 +213,7 @@ NavMesh::NavMesh()
    mAlwaysRender = false;
 
    mBuilding = false;
+   mCurLinkID = 0;
 }
 
 NavMesh::~NavMesh()

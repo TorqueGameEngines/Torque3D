@@ -57,6 +57,8 @@ GuiScriptNotifyCtrl::GuiScriptNotifyCtrl()
    mOnResize = false;
    mOnChildResized = false;
    mOnParentResized = false;
+   mOnLoseFirstResponder = true;
+   mOnGainFirstResponder = true;
 }
 
 GuiScriptNotifyCtrl::~GuiScriptNotifyCtrl()

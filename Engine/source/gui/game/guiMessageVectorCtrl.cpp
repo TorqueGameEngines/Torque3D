@@ -164,6 +164,7 @@ GuiMessageVectorCtrl::GuiMessageVectorCtrl()
    VECTOR_SET_ASSOCIATION(mLineElements);
 
    mMessageVector = NULL;
+   mMinSensibleWidth = 1;
    mLineSpacingPixels = 0;
    mLineContinuationIndent = 10;
 

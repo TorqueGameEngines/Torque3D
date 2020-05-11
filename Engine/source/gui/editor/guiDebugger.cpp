@@ -64,6 +64,12 @@ DbgFileView::DbgFileView()
 	mFindLineNumber = -1;
 
    mSize.set(1, 0);
+   mbMouseDragging = false;
+   mMouseDownChar = -1;
+   mMouseOverVariable[0] = '\0';
+   mMouseOverValue[0] = '\0';
+   mMouseVarStart = -1;
+   mMouseVarEnd = -1;
 }
 
 DefineEngineMethod(DbgFileView, setCurrentLine, void, (S32 line, bool selected), , "(int line, bool selected)"

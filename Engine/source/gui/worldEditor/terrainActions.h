@@ -211,7 +211,7 @@ class ScaleHeightAction : public TerrainAction
 class BrushAdjustHeightAction : public TerrainAction
 {
    public:
-      BrushAdjustHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
+      BrushAdjustHeightAction(TerrainEditor* editor) : TerrainAction(editor) { mPreviousZ = 0.0f; }
       StringTableEntry getName(){return("brushAdjustHeight");}
 
       void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);

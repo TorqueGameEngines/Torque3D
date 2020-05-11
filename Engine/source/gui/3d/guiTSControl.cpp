@@ -164,6 +164,8 @@ GuiTSCtrl::GuiTSCtrl()
    mLastCameraQuery.hasStereoTargets = false;
 
    mLastCameraQuery.ortho = false;
+   mOrthoWidth = 0.1f;
+   mOrthoHeight = 0.1f;
 }
 
 //-----------------------------------------------------------------------------

@@ -338,7 +338,7 @@ public:
    /// <summary>
    /// Indicates if images imported with this configuration are compressed
    /// </summary>
-   bool Compressed;
+   bool ImagesCompressed;
 
    /// <summary>
    /// Indicates if images imported with this configuration generate a parent material for it as well
@@ -365,7 +365,7 @@ public:
    /// <summary>
    /// Indicates if sounds imported with this configuration are compressed
    /// </summary>
-   bool Compressed;
+   bool SoundsCompressed;
 
 public:
    AssetImportConfig();
@@ -612,49 +612,126 @@ public:
    /// <para>@return suffix that matched to the asset name</para>
    /// </summary>
    String parseImageSuffixes(String assetName, String* suffixType);
+
+   /// <summary>
+   /// Parses a file path to determine its asset type
+   /// <para>@param filePath, File path to parse</para>
+   /// <para>@return The asset type as a string</para>
+   /// </summary>
    String getAssetTypeByFile(Torque::Path filePath);
+
+   /// <summary>
+   /// Resets the import session to a clean slate. This will clear all existing AssetImportObjects and the activity log
+   /// and then re-process the original filePaths again.
+   /// </summary>
    void resetImportSession();
-   void resetImportAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Get the number of lines in the activity log
+   /// <para>@return Line count as S32</para>
+   /// </summary>
    S32 getActivityLogLineCount();
+
+   /// <summary>
+   /// Gets the log line at a given index
+   /// <para>@param line, line in the log to get</para>
+   /// <para>@return The log line as a string</para>
+   /// </summary>
    String getActivityLogLine(U32 line);
+
+   /// <summary>
+   /// Dumps the entire current activity log to the console.
+   /// </summary>
    void dumpActivityLog();
 
+   /// <summary>
+   /// Gets the number of top-level asset items in the current import session(doesn't count children)
+   /// <para>@return Number of children</para>
+   /// </summary>
    S32 getAssetItemCount();
+
+   /// <summary>
+   /// Get the top-level asset item in the current import session at the requested index
+   /// <para>@param index, The index of the item array to get</para>
+   /// <para>@return The AssetImportObject at the index</para>
+   /// </summary>
    AssetImportObject* getAssetItem(U32 index);
+
+   /// <summary>
+   /// Gets the number of child asset items of a given AssetImportObject
+   /// <para>@param assetItem, The AssetImportObject to get the number of child items for</para>
+   /// <para>@return Number of children</para>
+   /// </summary>
    S32 getAssetItemChildCount(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Get the child asset item of a specific AssetImportObject at the requested index
+   /// <para>@param assetItem, The AssetImportObject to get the number of child items for</para>
+   /// <para>@param index, The index of the child item array to get</para>
+   /// <para>@return The AssetImportObject at the index</para>
+   /// </summary>
    AssetImportObject* getAssetItemChild(AssetImportObject* assetItem, U32 index);
 
    /// <summary>
-   /// Finds an asset item in the session if it exists
-   /// @param assetName, Asset name to find
-   /// @param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children
-   /// @return AssetImportObject that was found
+   /// Process AssetImportObject's to prepare them for importing.
+   /// <para>@param assetItem, If null, will loop over the top-level asset items list, if a specific item is provided, will process it's children</para>
    /// </summary>
    void processImportAssets(AssetImportObject* assetItem = nullptr);
+
+   /// <summary>
+   /// Process a specific AssetImportObject that is an ImageAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
    void processImageAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Process a specific AssetImportObject that is an MaterialAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
    void processMaterialAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
    void processShapeAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Process a specific ShapeAsset AssetImportObject with a material id in order to parse and handle the materials listed in the shape file
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// <para>@param materialItemId, The materialItemId in the shapeInfo to process</para>
+   /// </summary>
    void processShapeMaterialInfo(AssetImportObject* assetItem, S32 materialItemId);
 
+   /// <summary>
+   /// Run through and validate assets for issues, such as name collisions
+   /// </summary>
    bool validateAssets();
+
+   /// <summary>
+   /// Validate a specific asset item
+   /// <para>@param assetItem, The AssetImportObject to validate</para>
+   /// </summary>
    void validateAsset(AssetImportObject* assetItem);
 
    /// <summary>
-   /// Finds an asset item in the session if it exists
-   /// @param assetName, Asset name to find
-   /// @param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children
-   /// @return AssetImportObject that was found
+   /// Reset the validation status of asset items
+   /// <para>@param assetItem, If null, will loop over the top-level asset items list, if a specific item is provided, will reset it's children</para>
    /// </summary>
    void resetAssetValidationStatus(AssetImportObject* assetItem = nullptr);
 
    /// <summary>
-   /// Finds an asset item in the session if it exists
-   /// @param assetName, Asset name to find
-   /// @param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children
-   /// @return AssetImportObject that was found
+   /// Checks asset items for any collisions in the current import session
+   /// <para>@param assetItemToCheckFor, The asset to check for collisions with</para>
+   /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
+   /// <para>@return If a collision was detected</para>
    /// </summary>
    bool checkAssetForCollision(AssetImportObject* assetItemToCheckFor, AssetImportObject* assetItem = nullptr);
 
+   /// <summary>
+   /// Attempts to automatically resolve import issues according to the import config settings
+   /// <para>@param assetItem, The AssetImportObject to resolve</para>
+   /// </summary>
    void resolveAssetItemIssues(AssetImportObject* assetItem);
 
    /// <summary>
@@ -665,16 +742,36 @@ public:
    StringTableEntry autoImportFile(Torque::Path filePath);
 
    /// <summary>
-   /// Finds an asset item in the session if it exists
-   /// <para>@param assetName, Asset name to find</para>
+   /// Runs the import process in the current session
    /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
-   /// <para>@return AssetImportObject that was found</para>
    /// </summary>
    void importAssets(AssetImportObject* assetItem = nullptr);
+
+   /// <summary>
+   /// Runs the import processing on a specific ImageAsset item
+   /// <para>@param assetItem, The asset item to import</para>
+   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// </summary>
    Torque::Path importImageAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Runs the import processing on a specific MaterialAsset item
+   /// <para>@param assetItem, The asset item to import</para>
+   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// </summary>
    Torque::Path importMaterialAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Runs the import processing on a specific ShapeAsset item
+   /// <para>@param assetItem, The asset item to import</para>
+   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// </summary>
    Torque::Path importShapeAsset(AssetImportObject* assetItem);   
 
    //
+   /// <summary>
+   /// Gets the currently active import configuration
+   /// <para>@return Current AssetImportConfig the importer is using</para>
+   /// </summary>
    AssetImportConfig* getImportConfig() { return &activeImportConfig; }
 };

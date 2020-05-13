@@ -97,8 +97,8 @@ ImplementEnumType( MaterialWaveType,
    { Material::Square,       "Square", "Warps the material along a wave which transitions between two oppposite states. As a Square Wave, the transition is quick and sudden." },
 EndImplementEnumType;
 
-#define initMapSlot(name,id) name##Filename[id##] = String::EmptyString; name##AssetId[id##] = StringTable->EmptyString(); name##Asset[id##] = NULL;
-#define bindMapSlot(name,id) if (name##AssetId[id##] != String::EmptyString) name##Asset[id##] = name##AssetId[id##];
+#define initMapSlot(name,id) m##name##Filename[id] = String::EmptyString; m##name##AssetId[id] = StringTable->EmptyString(); m##name##Asset[id] = NULL;
+#define bindMapSlot(name,id) if (m##name##AssetId[id] != String::EmptyString) m##name##Asset[id] = m##name##AssetId[id];
 
 bool Material::sAllowTextureTargetAssignment = false;
 
@@ -124,7 +124,7 @@ Material::Material()
       mSmoothness[i] = 0.0f;
       mMetalness[i] = 0.0f;
 
-	   mIsSRGb[i] = false;
+	   mIsSRGb[i] = true;
       mInvertSmoothness[i] = false;
 
       mSmoothnessChan[i] = 0;
@@ -138,18 +138,23 @@ Material::Material()
       mAccuCoverage[i]  = 0.9f;
       mAccuSpecular[i]  = 16.0f;
 
-      initMapSlot(mDiffuseMap, i);
-      initMapSlot(mOverlayMap, i);
-      initMapSlot(mLightMap, i);
-      initMapSlot(mToneMap, i);
-      initMapSlot(mDetailMap, i);
-      initMapSlot(mNormalMap, i);
-      initMapSlot(mPBRConfigMap, i);
-      initMapSlot(mRoughMap, i);
-      initMapSlot(mAOMap, i);
-      initMapSlot(mMetalMap, i);
-      initMapSlot(mGlowMap, i);
-      initMapSlot(mDetailNormalMap, i);
+      initMapSlot(DiffuseMap, i);
+      initMapSlot(OverlayMap, i);
+      initMapSlot(LightMap, i);
+      initMapSlot(ToneMap, i);
+      initMapSlot(DetailMap, i);
+      initMapSlot(NormalMap, i);
+      initMapSlot(PBRConfigMap, i);
+      initMapSlot(RoughMap, i);
+      initMapSlot(AOMap, i);
+      initMapSlot(MetalMap, i);
+      initMapSlot(GlowMap, i);
+      initMapSlot(DetailNormalMap, i);
+
+      //cogs specific
+      initMapSlot(AlbedoDamageMap, i);
+      initMapSlot(NormalDamageMap, i);
+      initMapSlot(CompositeDamageMap, i);
 
       mParallaxScale[i] = 0.0f;
 
@@ -188,13 +193,10 @@ Material::Material()
 
       // Deferred Shading
       mMatInfoFlags[i] = 0.0f;
-      mRoughMapFilename[i].clear();
-      mRoughMapAsset[i] = StringTable->EmptyString();
-      mAOMapFilename[i].clear();
-      mMetalMapFilename[i].clear();
-      mMetalMapAsset[i] = StringTable->EmptyString();
-      mGlowMapFilename[i].clear();
-      mGlowMapAsset[i] = StringTable->EmptyString();
+
+      // Damage
+      mMaterialDamageMin[i] = 0.0f;
+      mAlbedoDamageMapSRGB[i] = true;
       mGlowMul[i] = 0.0f;
    }
 
@@ -232,6 +234,7 @@ Material::Material()
    dMemset( mEffectColor,     0, sizeof( mEffectColor ) );
 
    mFootstepSoundId = -1;     mImpactSoundId = -1;
+   mImpactFXIndex = -1;
    mFootstepSoundCustom = 0;  mImpactSoundCustom = 0;
    mFriction = 0.0;
    
@@ -240,9 +243,9 @@ Material::Material()
 }
 
 
-#define assetText(x,suff) (String::String(#x) + String::String(#suff)).c_str()
-#define scriptBindMapSlot(name) addField(#name, TypeImageFilename, Offset(m##name##Filename, Material), MAX_STAGES, assetText(name,texture map.)); \
-                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, Material), MAX_STAGES, assetText(name,asset reference.));
+#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
+#define scriptBindMapSlot(name,arraySize) addField(#name, TypeImageFilename, Offset(m##name##Filename, Material), arraySize, assetText(name,texture map.)); \
+                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, Material), arraySize, assetText(name,asset reference.));
 
 void Material::initPersistFields()
 {
@@ -255,19 +258,18 @@ void Material::initPersistFields()
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color." );
 
-      scriptBindMapSlot(DiffuseMap);
-      scriptBindMapSlot(DiffuseMap);
-      scriptBindMapSlot(OverlayMap);
-      scriptBindMapSlot(LightMap);
-      scriptBindMapSlot(ToneMap);
-      scriptBindMapSlot(DetailMap);
-      scriptBindMapSlot(NormalMap);
-      scriptBindMapSlot(PBRConfigMap);
-      scriptBindMapSlot(RoughMap);
-      scriptBindMapSlot(AOMap);
-      scriptBindMapSlot(MetalMap);
-      scriptBindMapSlot(GlowMap);
-      scriptBindMapSlot(DetailNormalMap);
+      scriptBindMapSlot(DiffuseMap, MAX_STAGES);
+      scriptBindMapSlot(OverlayMap, MAX_STAGES);
+      scriptBindMapSlot(LightMap, MAX_STAGES);
+      scriptBindMapSlot(ToneMap, MAX_STAGES);
+      scriptBindMapSlot(DetailMap, MAX_STAGES);
+      scriptBindMapSlot(NormalMap, MAX_STAGES);
+      scriptBindMapSlot(PBRConfigMap, MAX_STAGES);
+      scriptBindMapSlot(RoughMap, MAX_STAGES);
+      scriptBindMapSlot(AOMap, MAX_STAGES);
+      scriptBindMapSlot(MetalMap, MAX_STAGES);
+      scriptBindMapSlot(GlowMap, MAX_STAGES);
+      scriptBindMapSlot(DetailNormalMap, MAX_STAGES);
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
@@ -420,6 +422,22 @@ void Material::initPersistFields()
 
    endArray( "Stages" );
 
+   addGroup("Damage");
+
+   //cogs
+   scriptBindMapSlot(AlbedoDamageMap, MAX_STAGES);
+   /// Damage blend maps (normal)
+   scriptBindMapSlot(NormalDamageMap, MAX_STAGES);
+   /// Damage blend maps (Roughness, AO, Metalness)
+   scriptBindMapSlot(CompositeDamageMap, MAX_STAGES);
+
+   addField("albedoDamageSRGB", TypeBool, Offset(mAlbedoDamageMapSRGB, Material), MAX_STAGES,
+      "Enable sRGB for the albedo damage map");
+
+   addField("minDamage", TypeF32, Offset(mMaterialDamageMin, Material), MAX_STAGES,
+      "The minimum ammount of blended damage.");
+   endGroup("Damage");
+
    addField( "castShadows", TypeBool, Offset(mCastShadows, Material),
       "If set to false the lighting system will not cast shadows from this material." );
 
@@ -492,6 +510,10 @@ void Material::initPersistFields()
          "What sound to play from the PlayerData sound list when the player impacts on the surface with a velocity equal or greater "
          "than PlayerData::groundImpactMinSpeed.\n\n"
          "For a list of IDs, see #footstepSoundId" );
+      addField("ImpactFXIndex", TypeS32, Offset(mImpactFXIndex, Material),
+         "What FX to play from the PlayerData sound list when the player impacts on the surface with a velocity equal or greater "
+         "than PlayerData::groundImpactMinSpeed.\n\n"
+         "For a list of IDs, see #impactFXId");
       addField( "customImpactSound", TypeSFXTrackName,    Offset( mImpactSoundCustom, Material ),
          "The sound to play when the player impacts on the surface with a velocity equal or greater than PlayerData::groundImpactMinSpeed.  "
          "If this is set, it overrides #impactSoundId.  This field is useful for directly assigning custom impact sounds to materials "
@@ -559,6 +581,7 @@ bool Material::protectedSetCustomShaderFeatureUniforms(void *object, const char 
 	return false;
 }
 
+
 bool Material::onAdd()
 {
    if (Parent::onAdd() == false)
@@ -595,17 +618,22 @@ bool Material::onAdd()
   */
    for (U32 i = 0; i < MAX_STAGES; i++)
    {
-      bindMapSlot(mDiffuseMap, i);
-      bindMapSlot(mOverlayMap, i);
-      bindMapSlot(mLightMap, i);
-      bindMapSlot(mToneMap, i);
-      bindMapSlot(mDetailMap, i);
-      bindMapSlot(mPBRConfigMap, i);
-      bindMapSlot(mRoughMap, i);
-      bindMapSlot(mAOMap, i);
-      bindMapSlot(mMetalMap, i);
-      bindMapSlot(mGlowMap, i);
-      bindMapSlot(mDetailNormalMap, i);
+      bindMapSlot(DiffuseMap, i);
+      bindMapSlot(OverlayMap, i);
+      bindMapSlot(LightMap, i);
+      bindMapSlot(ToneMap, i);
+      bindMapSlot(DetailMap, i);
+      bindMapSlot(PBRConfigMap, i);
+      bindMapSlot(RoughMap, i);
+      bindMapSlot(AOMap, i);
+      bindMapSlot(MetalMap, i);
+      bindMapSlot(GlowMap, i);
+      bindMapSlot(DetailNormalMap, i);
+
+      //cogs specific
+      bindMapSlot(AlbedoDamageMap, i);
+      bindMapSlot(NormalDamageMap, i);
+      bindMapSlot(CompositeDamageMap, i);
    }
 
    _mapMaterial();

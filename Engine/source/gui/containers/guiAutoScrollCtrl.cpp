@@ -92,7 +92,7 @@ GuiAutoScrollCtrl::GuiAutoScrollCtrl()
      mIsLooping( true ),
      mCurrentPhase( GuiAutoScrollCtrl::PhaseComplete ),
      mCurrentTime( 0.f ),
-     mCompleteTime(FLT_MAX),
+     mCompleteTime(F32_MAX),
      mCurrentPosition(0.0f),
      mStartDelay( 3.f ),
      mResetDelay( 5.f ),

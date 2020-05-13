@@ -157,9 +157,6 @@ DebrisData::DebrisData(const DebrisData& other, bool temp_clone) : GameBaseData(
    explosion = other.explosion;
    dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
    dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
-   mShatter = other.mShatter;
-   mProbBreak = other.mProbBreak;
-   mProbDepth = other.mProbDepth;
 }
 
 DebrisData::~DebrisData()

@@ -84,9 +84,11 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
    }
 #endif
 
+#if defined(AL_ALEXT_PROTOTYPES)
    dMemset(effectSlot, 0, sizeof(effectSlot));
    dMemset(effect, 0, sizeof(effect));
    uLoop = 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------

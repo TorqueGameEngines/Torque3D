@@ -47,7 +47,7 @@ class SimFieldDictionary
 public:
    struct Entry
    {
-      Entry() : type(NULL) {};
+      Entry() : slotName(StringTable->EmptyString()), value(NULL), next(NULL), type(NULL) {};
 
       StringTableEntry slotName;
       char *value;

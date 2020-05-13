@@ -68,7 +68,7 @@ ConsoleDocClass( SFXSound,
 //-----------------------------------------------------------------------------
 
 SFXSound::SFXSound()
-   : mVoice( NULL )
+   : mVoice( NULL ), mDuration(0), mSetPositionValue(0)
 {
    // NOTE: This should never be used directly 
    // and is only here to satisfy satisfy the
@@ -79,7 +79,7 @@ SFXSound::SFXSound()
 
 SFXSound::SFXSound( SFXProfile *profile, SFXDescription* desc )
    :  Parent( profile, desc ),
-      mVoice( NULL )
+      mVoice( NULL ), mDuration(0)
 {
    mSetPositionValue = 0;
 }

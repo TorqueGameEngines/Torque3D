@@ -92,12 +92,12 @@ void ConvexShapeCollisionConvex::getFeatures( const MatrixF &mat, const VectorF 
 	if ( pShape->mGeometry.points.empty() )
 	{
 		cf->material = 0;
-		cf->object = NULL;
+		cf->mObject = NULL;
 		return;
 	}
 
 	cf->material = 0;
-	cf->object = mObject;
+	cf->mObject = mObject;
 
 	// Simple implementation... Add all Points, Edges and Faces.
 

@@ -58,7 +58,7 @@ class afxF_Gravity : public afxForce
   typedef afxForce Parent;
 
 private:
-  afxF_GravityData* datablock;
+  afxF_GravityData* mDatablock;
 
 public:
   /*C*/             afxF_Gravity();
@@ -133,12 +133,13 @@ afxForceData* afxF_GravityData::cloneAndPerformSubstitutions(const SimObject* ow
 
 afxF_Gravity::afxF_Gravity() : afxForce()
 {
+   mDatablock = NULL;
 }
 
 bool afxF_Gravity::onNewDataBlock(afxForceData* dptr, bool reload)
 {
-  datablock = dynamic_cast<afxF_GravityData*>(dptr);
-  if (!datablock || !Parent::onNewDataBlock(dptr, reload))
+   mDatablock = dynamic_cast<afxF_GravityData*>(dptr);
+  if (!mDatablock || !Parent::onNewDataBlock(dptr, reload))
     return false;
 
   return true;
@@ -146,7 +147,7 @@ bool afxF_Gravity::onNewDataBlock(afxForceData* dptr, bool reload)
 
 Point3F afxF_Gravity::evaluate(Point3F pos, Point3F v, F32 mass)
 {
-  return Point3F(0,0,-datablock->gravity)*mass;
+  return Point3F(0,0,-mDatablock->gravity)*mass;
 }
 
 

@@ -164,9 +164,7 @@ class AsyncPacketQueue
            mConsumer( consumer )
 
       {
-         #ifdef TORQUE_DEBUG
          mTotalQueuedPackets = 0;
-         #endif
       }
 
       /// Return true if there are currently

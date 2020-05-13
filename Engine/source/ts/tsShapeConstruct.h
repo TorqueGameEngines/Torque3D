@@ -196,7 +196,7 @@ public:
 public:
 
    TSShapeConstructor();
-   TSShapeConstructor(const String& path) : mShapePath(path) { }
+   TSShapeConstructor(const String& path) : mShapePath(path), mShape(NULL), mLoadingShape(false){ }
    ~TSShapeConstructor();
 
    DECLARE_CONOBJECT(TSShapeConstructor);

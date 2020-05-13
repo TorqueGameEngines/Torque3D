@@ -311,6 +311,11 @@ PlayerData::PlayerData()
    jumpEnergyDrain = 0.0f;
    minJumpEnergy = 0.0f;
    jumpSurfaceAngle = 78.0f;
+   jumpSurfaceCos = mCos(mDegToRad(jumpSurfaceAngle));
+
+   for (U32 i = 0; i < NumRecoilSequences; i++)
+      recoilSequence[i] = -1;
+
    jumpDelay = 30;
    minJumpSpeed = 500.0f;
    maxJumpSpeed = 2.0f * minJumpSpeed;
@@ -370,6 +375,9 @@ PlayerData::PlayerData()
 
    actionCount = 0;
    lookAction = 0;
+   dMemset(spineNode, 0, sizeof(spineNode));
+
+   pickupDelta = 0.0f;
 
    // size of bounding box
    boxSize.set(1.0f, 1.0f, 2.3f);

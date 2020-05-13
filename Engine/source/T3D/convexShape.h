@@ -50,7 +50,7 @@ protected:
 
 public:
 
-	ConvexShapeCollisionConvex() { mType = ConvexShapeCollisionConvexType; }
+   ConvexShapeCollisionConvex() { pShape = NULL; mType = ConvexShapeCollisionConvexType; }
 
 	ConvexShapeCollisionConvex( const ConvexShapeCollisionConvex& cv ) {
 		mType      = ConvexShapeCollisionConvexType;

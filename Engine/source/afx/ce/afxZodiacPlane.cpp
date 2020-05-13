@@ -61,7 +61,7 @@ afxZodiacPlaneData::afxZodiacPlaneData()
   color.set(1,1,1,1);
   blend_flags = BLEND_NORMAL;
   respect_ori_cons = false;
-
+  zflags = 0;
   double_sided = true;
   face_dir = FACES_UP;
   use_full_xfm = false;

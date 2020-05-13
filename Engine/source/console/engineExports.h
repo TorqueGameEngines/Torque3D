@@ -123,6 +123,7 @@ class EngineExport : public StaticEngineObject
          : mExportName( "" ),
            mExportKind( EngineExportKindScope ),
            mExportScope( NULL ),
+           mDocString(""),
            mNextExport( NULL ) {}
 };
 
@@ -165,7 +166,7 @@ class EngineExportScope : public EngineExport
    private:
    
       /// Constructor for the global scope.
-      EngineExportScope() {}
+      EngineExportScope():mExports(NULL){}
 };
 
 

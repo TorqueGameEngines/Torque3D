@@ -38,9 +38,6 @@ class RibbonNodeData : public GameBaseData
    typedef GameBaseData Parent;
 
 public:
-   F32 timeMultiple;
-
-public:
    RibbonNodeData();
    ~RibbonNodeData();
 

@@ -79,6 +79,7 @@ GuiCursor::GuiCursor()
    mRenderOffset.set(0.0f,0.0f);
    mExtent.set(1,1);
    mTextureObject = NULL;
+   mBitmapName = StringTable->EmptyString();
 }
 
 GuiCursor::~GuiCursor()

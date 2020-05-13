@@ -94,6 +94,7 @@ SFXWavStream* SFXWavStream::create( Stream *stream )
 }
 
 SFXWavStream::SFXWavStream()
+   :mDataStart(-1)
 {
 }
 

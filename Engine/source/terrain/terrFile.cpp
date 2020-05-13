@@ -46,6 +46,7 @@ template<> ResourceBase::Signature Resource<TerrainFile>::signature()
 
 TerrainFile::TerrainFile()
    : mSize( 256 ),
+     mGridLevels(0),
      mFileVersion( FILE_VERSION ),
      mNeedsResaving( false )
 {

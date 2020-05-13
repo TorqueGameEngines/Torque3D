@@ -78,6 +78,7 @@ class TelnetConsole
       S32 state;                       ///< State of the client.
                                        ///  @see TelnetConsole::State
       TelnetClient *nextClient;
+      TelnetClient() { dStrncpy(curLine, "", Con::MaxLineLength); curPos = 0; state = 0; nextClient = NULL; }
    };
    TelnetClient *mClientList;
    TelnetConsole();

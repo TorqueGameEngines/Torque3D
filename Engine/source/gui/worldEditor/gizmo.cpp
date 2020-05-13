@@ -202,6 +202,7 @@ GizmoProfile::GizmoProfile()
 
    centroidColor.set( 255, 255, 255 );
    centroidHighlightColor.set( 255, 0, 255 );
+   hideDisabledAxes = true;
 
    restoreDefaultState();
 }
@@ -297,6 +298,7 @@ Gizmo::Gizmo()
   mObjectMat( true ),
   mTransform( true ),
   mCameraMat( true ),
+  mProjLen(1000.0f),
   mSelectionIdx( -1 ),
   mObjectMatInv( true ),
   mCurrentTransform( true ),
@@ -308,10 +310,13 @@ Gizmo::Gizmo()
   mCurrentAlignment( World ),
   mDeltaTotalScale( 0,0,0 ),
   mDeltaTotalRot( 0,0,0 ),
+  mDeltaAngle(0.0f),
+  mLastAngle(0.0f),
   mDeltaTotalPos( 0,0,0 ),
   mCurrentMode( MoveMode ),
   mMouseDownPos( -1,-1 ),
   mDirty( false ),
+  mSign(0.0f),
   mMouseDown( false ),
   mLastWorldMat( true ),
   mLastProjMat( true ),
@@ -324,9 +329,10 @@ Gizmo::Gizmo()
   mHighlightAll( false ),
   mMoveGridEnabled( true ),
   mMoveGridSize( 20.f ),
-  mMoveGridSpacing( 1.f )
-{   
-   mUniformHandleEnabled = true;   
+  mMoveGridSpacing( 1.f ),
+  mUniformHandleEnabled(true),
+  mScreenRotateHandleEnabled(false)
+{
    mAxisEnabled[0] = mAxisEnabled[1] = mAxisEnabled[2] = true;
 }
 

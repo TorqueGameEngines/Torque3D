@@ -181,6 +181,10 @@ class GuiRiverEditorUndoAction : public UndoAction
 
       GuiRiverEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName )
       {
+         mRiverEditor = NULL;
+         mObjId = 0;
+         mMetersPerSegment = 1.0f;
+         mSegmentsPerBatch = 10;
       }
 
       GuiRiverEditorCtrl *mRiverEditor;         

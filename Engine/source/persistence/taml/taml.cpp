@@ -140,6 +140,7 @@ ImplementEnumType(_TamlFormatMode,
 
    // The string-table-entries are set to string literals below because Taml is used in a static scope and the string-table cannot currently be used like that.
    Taml::Taml() :
+      mMasterNodeId(0),
       mFormatMode(XmlFormat),
       mJSONStrict(true),
       mBinaryCompression(true),

@@ -41,6 +41,8 @@ static GLenum faceList[6] =
 GFXGLCubemap::GFXGLCubemap() :
       mCubemap(0), 
       mDynamicTexSize(0),
+      mWidth(0),
+      mHeight(0),
       mFaceFormat( GFXFormatR8G8B8A8 )
 {
    for(U32 i = 0; i < 6; i++)
@@ -313,6 +315,7 @@ U8* GFXGLCubemap::getTextureData(U32 face, U32 mip)
 
 GFXGLCubemapArray::GFXGLCubemapArray()
 {
+   mCubemap = NULL;
 }
 
 GFXGLCubemapArray::~GFXGLCubemapArray()

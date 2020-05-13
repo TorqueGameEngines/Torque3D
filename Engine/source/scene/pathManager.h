@@ -56,6 +56,7 @@ class PathManager
       Vector<U32>     msToNext;
 
       PathEntry() {
+         totalTime = 0;
          VECTOR_SET_ASSOCIATION(positions);
          VECTOR_SET_ASSOCIATION(rotations);
          VECTOR_SET_ASSOCIATION(smoothingType);
@@ -105,7 +106,6 @@ class PathManager
 
   private:
    bool mIsServer;
-   bool mPathsSent;
 };
 
 struct PathNode {

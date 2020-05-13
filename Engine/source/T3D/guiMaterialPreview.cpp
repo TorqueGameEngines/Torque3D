@@ -61,6 +61,8 @@ GuiMaterialPreview::GuiMaterialPreview()
    // By default don't do dynamic reflection
    // updates for this viewport.
    mReflectPriority = 0.0f;
+   mMountedModel = NULL;
+   mSkinTag = 0;
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()

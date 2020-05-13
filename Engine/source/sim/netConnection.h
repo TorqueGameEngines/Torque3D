@@ -273,7 +273,7 @@ public:
    /// @{
 
    ///
-   NetEvent() { mGuaranteeType = GuaranteedOrdered; }
+   NetEvent() { mSourceId = -1;  mGuaranteeType = GuaranteedOrdered; }
    virtual ~NetEvent();
 
    virtual void write(NetConnection *ps, BitStream *bstream) = 0;
@@ -863,7 +863,7 @@ public:
    void setScopeObject(NetObject *object);
 
    /// Get the object around which we are currently scoping network traffic.
-   NetObject *getScopeObject();
+   NetObject* getScopeObject() {};
 
    /// Add an object to scope.
    void objectInScope(NetObject *object);
@@ -1047,7 +1047,7 @@ public:
 
    bool startDemoRecord(const char *fileName);
    bool replayDemoRecord(const char *fileName);
-   void startDemoRead();
+   void startDemoRead() {};
    void stopRecording();
    void stopDemoPlayback();
 

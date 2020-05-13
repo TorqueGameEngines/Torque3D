@@ -100,8 +100,10 @@ GuiSliderCtrl::GuiSliderCtrl()
      mMouseOver( false ),
      mDepressed( false ),
      mMouseDragged( false ),
+     mHasTexture(false),
      mUseFillBar(false),
-     mFillBarColor(ColorI(255,255,255))
+     mFillBarColor(ColorI(255,255,255)),
+     mBitmapBounds(NULL)
 {
 }
 

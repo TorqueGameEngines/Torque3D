@@ -159,7 +159,12 @@ struct GFXPrimitive
 
    GFXPrimitive()
    {
-      dMemset( this, 0, sizeof( GFXPrimitive ) );
+      type = GFXPT_FIRST;
+      startVertex = 0;
+      minIndex = 0;
+      startIndex = 0;
+      numPrimitives = 0;
+      numVertices = 0;
    }
 };
 

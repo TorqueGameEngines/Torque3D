@@ -31,6 +31,8 @@ SimNameDictionary::SimNameDictionary()
 {
 #ifndef USE_NEW_SIMDICTIONARY
    hashTable = NULL;
+   hashTableSize = DefaultTableSize;
+   hashEntryCount = 0;
 #endif
    mutex = Mutex::createMutex();
 }

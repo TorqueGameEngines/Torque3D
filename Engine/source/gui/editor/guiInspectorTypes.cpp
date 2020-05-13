@@ -1087,7 +1087,7 @@ bool GuiInspectorTypeEaseF::updateRects()
 // GuiInspectorTypeColor (Base for ColorI/LinearColorF) 
 //-----------------------------------------------------------------------------
 GuiInspectorTypeColor::GuiInspectorTypeColor()
- : mBrowseButton( NULL )
+ : mColorFunction(NULL), mBrowseButton( NULL )
 {
 }
 

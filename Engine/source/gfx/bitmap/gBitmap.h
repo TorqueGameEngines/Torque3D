@@ -82,6 +82,9 @@ public:
 
       Registration()
       {
+         readFunc = NULL;
+         writeFunc = NULL;
+         defaultCompression = 0;
          priority = 0;
          VECTOR_SET_ASSOCIATION( extensions );
       }

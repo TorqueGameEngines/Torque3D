@@ -42,7 +42,8 @@ NetInterface::NetInterface()
 
    mLastTimeoutCheckTime = 0;
    mAllowConnections = false;
-
+   dMemset(mRandomHashData, 0, sizeof(mRandomHashData));
+   mRandomDataInitialized = false;
 }
 
 void NetInterface::initRandomData()

@@ -95,6 +95,7 @@ GuiPopupMenuTextListCtrl::GuiPopupMenuTextListCtrl()
    mPopup = nullptr;
 
    mLastHighlightedMenuIdx = -1;
+   mBackground = NULL;
 }
 
 void GuiPopupMenuTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver)

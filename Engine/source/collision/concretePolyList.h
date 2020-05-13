@@ -48,6 +48,9 @@ class ConcretePolyList : public AbstractPolyList
 
       Poly()
       {
+         vertexStart = 0;
+         vertexCount = 0;
+         surfaceKey = 0;
          object = NULL;
          material = NULL;
       }

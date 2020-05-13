@@ -46,7 +46,11 @@ public:
    ForestConvex() 
    { 
       mType = ForestConvexType; 
-      mTransform.identity(); 
+      mTransform.identity();
+      hullId = 0;
+      mForestItemKey = 0;
+      mData = NULL;
+      mScale = 1.0f;
    }
 
    ForestConvex( const ForestConvex &cv ) 

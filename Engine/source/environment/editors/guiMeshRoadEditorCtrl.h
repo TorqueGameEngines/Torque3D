@@ -159,6 +159,9 @@ class GuiMeshRoadEditorUndoAction : public UndoAction
 
       GuiMeshRoadEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName )
       {
+         mEditor = NULL;
+         mObjId = 0;
+         mMetersPerSegment = 1.0f;
       }
 
       GuiMeshRoadEditorCtrl *mEditor;         

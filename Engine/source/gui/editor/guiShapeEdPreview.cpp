@@ -69,6 +69,7 @@ GuiShapeEdPreview::GuiShapeEdPreview()
    mRenderNodes( false ),
    mRenderBounds( false ),
    mRenderObjBox( false ),
+   mRenderColMeshes( false ),
    mRenderMounts( true ),
    mSunDiffuseColor( 255, 255, 255, 255 ),
    mSelectedNode( -1 ),

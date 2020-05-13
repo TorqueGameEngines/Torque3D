@@ -168,12 +168,13 @@ afxMagicMissileData::afxMagicMissileData()
    impactForce = 0.0f;
 
 	armingDelay = 0;
-   fadeDelay = 20000 / 32;
-   lifetime = 20000 / 32;
 
    activateSeq = -1;
    maintainSeq = -1;
    */
+
+   lifetime = 20000 / 32;
+   fadeDelay = 20000 / 32;
 
    gravityMod = 1.0;
    /* From stock Projectile code...

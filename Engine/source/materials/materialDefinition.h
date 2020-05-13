@@ -61,6 +61,10 @@ class MaterialSoundProfile;
 class MaterialPhysicsProfile;
 class CustomShaderFeatureData;
 
+#define DECLARE_TEXTUREARRAY(name,max) FileName m##name##Filename[max];\
+                                      StringTableEntry m##name##AssetId[max];\
+                                      AssetPtr<ImageAsset>  m##name##Asset[max];
+
 /// The basic material definition.
 class Material : public BaseMaterialDefinition
 {

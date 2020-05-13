@@ -52,7 +52,9 @@ F32 sqrDistanceEdges(const Point3F& start0,
 
 CollisionState::CollisionState()
 {
-   mLista = mListb = 0;
+   mB = mA = NULL;
+   mDist = 0.0f;
+   mListb = mLista = 0;
 }
 
 CollisionState::~CollisionState()
@@ -85,7 +87,7 @@ F32 CollisionState::distance(const MatrixF& a2w, const MatrixF& b2w, const F32 d
 void ConvexFeature::reset()
 {
    material = NULL;
-   object = NULL;
+   mObject = NULL;
    mVertexList.clear();
    mEdgeList.clear();
    mFaceList.clear();
@@ -114,7 +116,7 @@ bool ConvexFeature::collide(ConvexFeature& cf,CollisionList* cList, F32 tol)
       {
          Collision &col = (*cList)[cList->getCount() - 1];
          col.material = cf.material;
-         col.object   = cf.object;
+         col.object   = cf.mObject;
       }
       vert++;
    }
@@ -167,7 +169,7 @@ void ConvexFeature::testVertex(const Point3F& v,CollisionList* cList,bool flip, 
          if (flip)
             info.normal.neg();
          info.material = material;
-         info.object = object;
+         info.object = mObject;
          info.distance = distance;
       }
    }
@@ -213,7 +215,7 @@ void ConvexFeature::testEdge(ConvexFeature* cf,const Point3F& s1, const Point3F&
       info.normal   = normal;
       info.distance = distance;
       info.material = material;
-      info.object   = object;
+      info.object   = mObject;
    }
 }
 
@@ -282,6 +284,7 @@ CollisionWorkingList::CollisionWorkingList()
 {
    wLink.mPrev = wLink.mNext = this;
    rLink.mPrev = rLink.mNext = this;
+   mConvex = NULL;
 }
 
 void CollisionWorkingList::wLinkAfter(CollisionWorkingList* ptr)
@@ -340,6 +343,8 @@ Convex::Convex()
 {
    mNext = mPrev = this;
    mTag = 0;
+   mObject = NULL;
+   mType = ConvexType::BoxConvexType;
 }
 
 Convex::~Convex()
@@ -418,7 +423,7 @@ Point3F Convex::support(const VectorF&) const
 
 void Convex::getFeatures(const MatrixF&,const VectorF&,ConvexFeature* f)
 {
-   f->object = NULL;
+   f->mObject = NULL;
 }
 
 const MatrixF& Convex::getTransform() const

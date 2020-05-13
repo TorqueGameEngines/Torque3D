@@ -58,6 +58,10 @@ afxZodiacGroundPlaneRenderer::afxZodiacGroundPlaneRenderer()
    if (!master)
      master = this;
    shader_initialized = false;
+   zodiac_shader = NULL;
+   shader_consts = NULL;
+   projection_sc = NULL;
+   color_sc = NULL;
 }
 
 afxZodiacGroundPlaneRenderer::afxZodiacGroundPlaneRenderer(F32 renderOrder, F32 processAddOrder)
@@ -66,6 +70,10 @@ afxZodiacGroundPlaneRenderer::afxZodiacGroundPlaneRenderer(F32 renderOrder, F32 
    if (!master)
      master = this;
    shader_initialized = false;
+   zodiac_shader = NULL;
+   shader_consts = NULL;
+   projection_sc = NULL;
+   color_sc = NULL;
 }
 
 afxZodiacGroundPlaneRenderer::~afxZodiacGroundPlaneRenderer()

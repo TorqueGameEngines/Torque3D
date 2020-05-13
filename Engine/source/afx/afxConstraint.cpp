@@ -1904,6 +1904,9 @@ afxEffectConstraint::afxEffectConstraint(afxConstraintMgr* mgr)
 {
   mEffect_name = ST_NULLSTRING;
   mEffect = 0;
+  mClip_tag = 0;
+  mIs_death_clip = false;
+  mLock_tag = 0;
 }
 
 afxEffectConstraint::afxEffectConstraint(afxConstraintMgr* mgr, StringTableEntry effect_name) 
@@ -1911,6 +1914,9 @@ afxEffectConstraint::afxEffectConstraint(afxConstraintMgr* mgr, StringTableEntry
 {
   mEffect_name = effect_name;
   mEffect = 0;
+  mClip_tag = 0;
+  mIs_death_clip = false;
+  mLock_tag = 0;
 }
 
 afxEffectConstraint::~afxEffectConstraint()

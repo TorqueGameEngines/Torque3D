@@ -304,7 +304,7 @@ WheeledVehicleData::WheeledVehicleData()
    brakeLightSequence = -1;
    steeringSequence = -1;
    wheelCount = 0;
-
+   dMemset(&wheel, 0, sizeof(wheel));
    for (S32 i = 0; i < MaxSounds; i++)
       sound[i] = 0;
 }

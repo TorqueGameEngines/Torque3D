@@ -56,7 +56,8 @@ WaterBlock::WaterBlock()
 {
    mGridElementSize = 5.0f;
    mObjScale.set( 100.0f, 100.0f, 10.0f );
-
+   mWidth = 2;
+   mHeight = 2;
    mNetFlags.set(Ghostable | ScopeAlways);
 
    mObjBox.minExtents.set( -0.5f, -0.5f, -0.5f );

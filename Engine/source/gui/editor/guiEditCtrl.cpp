@@ -101,7 +101,9 @@ GuiEditCtrl::GuiEditCtrl()
      mDrawBorderLines( true ),
      mFullBoxSelection( false ),
      mSnapSensitivity( 2 ),
-     mDrawGuides( true )
+     mDrawGuides( true ),
+     mDragAddSelection(false),
+     mDragMoveUndo(false)
 {
    VECTOR_SET_ASSOCIATION( mSelectedControls );
    VECTOR_SET_ASSOCIATION( mDragBeginPoints );
@@ -116,11 +118,21 @@ GuiEditCtrl::GuiEditCtrl()
 
    mDragGuide[ GuideVertical ] = false;
    mDragGuide[ GuideHorizontal ] = false;
+   mDragGuideIndex[0] = 0;
+   mDragGuideIndex[1] = 1;
+
+   std::fill_n(mSnapOffset, 2, 0);
+   std::fill_n(mSnapEdge, 2, SnapEdgeMin);
    
    if( !smGuidesPropertyName[ GuideVertical ] )
       smGuidesPropertyName[ GuideVertical ] = StringTable->insert( "guidesVertical" );
    if( !smGuidesPropertyName[ GuideHorizontal ] )
       smGuidesPropertyName[ GuideHorizontal ] = StringTable->insert( "guidesHorizontal" );
+
+   mTrash = NULL;
+   mSelectedSet = NULL;
+   mMouseDownMode = GuiEditCtrl::Selecting;
+   mSizingMode = GuiEditCtrl::sizingNone;
 }
 
 //-----------------------------------------------------------------------------

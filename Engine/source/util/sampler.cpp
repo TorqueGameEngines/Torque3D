@@ -118,9 +118,9 @@ class CSVSamplerBackend : public ISamplerBackend
          const char*	mString;
       } mValue;
 
-      SampleRecord() {}
+      SampleRecord() : mKey(0), mSet(false), mType(TypeBool) { mValue.mBool = false; }
       SampleRecord( U32 key )
-         : mKey( key ), mSet( false ) {}
+         : mKey( key ), mSet( false ), mType(TypeBool) { mValue.mBool = false; }
 
       void set( bool value )
       {

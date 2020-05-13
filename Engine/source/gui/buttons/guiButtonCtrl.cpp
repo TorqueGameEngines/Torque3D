@@ -58,6 +58,7 @@ GuiButtonCtrl::GuiButtonCtrl()
 {
    setExtent(140, 30);
    mButtonText = StringTable->EmptyString();
+   mHasTheme = false;
 }
 
 //-----------------------------------------------------------------------------

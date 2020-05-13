@@ -95,6 +95,8 @@ GuiTextEditSliderBitmapCtrl::GuiTextEditSliderBitmapCtrl()
    mTextAreaHit = None;
    mFocusOnMouseWheel = false;
    mBitmapName = StringTable->insert( "" );
+   mMouseDownTime = 0;
+   mNumberOfBitmaps = 0;
 }
 
 GuiTextEditSliderBitmapCtrl::~GuiTextEditSliderBitmapCtrl()

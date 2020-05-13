@@ -167,13 +167,20 @@ S32 sFaceList135[16][9] = {
 
 TerrainConvex::TerrainConvex() 
 {
+   halfA = true;
+   square = NULL;
+   squareId = 0;
+   material = 0;
+   split45 = false;
+
    mType = TerrainConvexType; 
 }
 
 TerrainConvex::TerrainConvex( const TerrainConvex &cv ) 
 {
    mType = TerrainConvexType;
-
+   halfA = false;
+   square = NULL;
    // Only a partial copy...
    mObject = cv.mObject;
    split45 = cv.split45;
@@ -231,7 +238,7 @@ void TerrainConvex::getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeatu
 {
    U32 i;
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    // Plane is normal n + support point
    PlaneF plane;

@@ -42,13 +42,15 @@ GuiInspectorCustomField::GuiInspectorCustomField( GuiInspector *inspector,
 {
    mInspector = inspector;
    mParent = parent;
-   setBounds(0,0,100,20);   
+   setBounds(0,0,100,20);
+   mDoc = StringTable->insert("no Docs Found!");
 }
 
 GuiInspectorCustomField::GuiInspectorCustomField()
 {
    mInspector = NULL;
    mParent = NULL;
+   mDoc = StringTable->insert("no Docs Found!");
 }
 
 void GuiInspectorCustomField::setData( const char* data, bool callbacks )

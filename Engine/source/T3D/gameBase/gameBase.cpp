@@ -254,6 +254,8 @@ GameBase::GameBase()
    mTicksSinceLastMove = 0;
    mIsAiControlled = false;
 #endif
+   mTickCount = 0;
+   mCameraFov = 90.f;
 }
 
 GameBase::~GameBase()

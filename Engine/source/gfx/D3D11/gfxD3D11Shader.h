@@ -77,17 +77,17 @@ enum REGISTER_TYPE
 
 struct ConstantDesc
 {
-   String Name;
-   S32 RegisterIndex;
-   S32 RegisterCount;
-   S32 Rows;
-   S32 Columns;
-   S32 Elements;
-   S32 StructMembers;
-   REGISTER_TYPE RegisterSet;
-   CONST_CLASS Class;
-   CONST_TYPE Type;
-   U32 Bytes;
+   String Name = String::EmptyString;
+   S32 RegisterIndex = 0;
+   S32 RegisterCount = 0;
+   S32 Rows = 0;
+   S32 Columns = 0;
+   S32 Elements = 0;
+   S32 StructMembers = 0;
+   REGISTER_TYPE RegisterSet = D3DRS_FLOAT4;
+   CONST_CLASS Class = D3DPC_SCALAR;
+   CONST_TYPE Type = D3DPT_FLOAT;
+   U32 Bytes = 0;
 };
 
 class ConstantTable

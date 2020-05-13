@@ -133,6 +133,7 @@ class WorldEditor : public EditTSCtrl
 
          WorldEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName )
          {
+            mWorldEditor = NULL;
          }
 
          WorldEditor *mWorldEditor;

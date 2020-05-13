@@ -29,7 +29,7 @@
 
 #include "afx/util/afxPath3D.h"
 
-afxPath3D::afxPath3D() : mStart_time(0), mNum_points(0), mLoop_type(LOOP_CONSTANT)
+afxPath3D::afxPath3D() : mStart_time(0), mNum_points(0), mLoop_type(LOOP_CONSTANT), mEnd_time(0.0f)
 {
 }
 

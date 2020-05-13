@@ -195,6 +195,11 @@ public:
    VideoEncoderTheora() :
       mCurrentFrame(0), td(NULL), mLastFrame(NULL)
    {
+      dMemset(&to, 0, sizeof(to));
+      dMemset(&ti, 0, sizeof(ti));
+      dMemset(&tc, 0, sizeof(tc));
+      dMemset(&mBuffer, 0, sizeof(mBuffer));
+
       setStatus(false);      
    }
       

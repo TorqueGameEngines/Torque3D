@@ -49,7 +49,7 @@ class ClippedPolyList : public AbstractPolyList
 public:
    struct Vertex {
       Point3F point;
-      U32 mask;
+      U32 mask = 0;
    };
 
    struct Poly {
@@ -61,6 +61,8 @@ public:
       U32 vertexCount;
       U32 surfaceKey;
 	  U32 polyFlags;
+     Poly() :object(NULL), material(NULL), vertexStart(0), vertexCount(0), surfaceKey(0), polyFlags(0) {}
+     ~Poly() {}
    };
 
    /// ???

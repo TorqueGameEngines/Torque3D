@@ -125,7 +125,6 @@ protected:
    GFXStateBlockRef mZDisableSB;
    GFXStateBlockRef mZEnableSB;
 
-   bool mSavedDrag;
    bool mIsDirty;
 
    String mMode;
@@ -169,15 +168,13 @@ protected:
 class GuiNavEditorUndoAction : public UndoAction
 {
 public:
-   GuiNavEditorUndoAction(const UTF8* actionName) : UndoAction(actionName)
+   GuiNavEditorUndoAction(const UTF8* actionName) : UndoAction(actionName), mNavEditor(NULL), mObjId(NULL)
    {
    }
 
    GuiNavEditorCtrl *mNavEditor;         
 
    SimObjectId mObjId;
-   F32 mMetersPerSegment;
-   U32 mSegmentsPerBatch;
 
    virtual void undo();
    virtual void redo() { undo(); }

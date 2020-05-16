@@ -57,6 +57,8 @@ SimObjectId SimObject::smForcedId = 0;
 
 bool SimObject::preventNameChanging = false;
 
+IMPLEMENT_CALLBACK(SimObject, onInspectPostApply, void, (SimObject* obj), (obj), "Generic callback for when an object is edited");
+
 namespace Sim
 {
    // Defined in simManager.cpp
@@ -2238,6 +2240,7 @@ void SimObject::inspectPreApply()
 
 void SimObject::inspectPostApply()
 {
+   onInspectPostApply_callback(this);
 }
 
 //-----------------------------------------------------------------------------

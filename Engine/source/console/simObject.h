@@ -965,6 +965,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       virtual void getConsoleMethodData(const char * fname, S32 routingId, S32 * type, S32 * minArgs, S32 * maxArgs, void ** callback, const char ** usage) {}
       
       DECLARE_CONOBJECT( SimObject );
+      DECLARE_CALLBACK(void, onInspectPostApply, (SimObject* obj));
       
       static SimObject* __findObject( const char* id ) { return Sim::findObject( id ); }
       static const char* __getObjectId( ConsoleObject* object )

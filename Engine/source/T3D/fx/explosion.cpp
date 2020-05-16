@@ -966,7 +966,7 @@ void Explosion::setInitialState(const Point3F& point, const Point3F& normal, con
 void Explosion::initPersistFields()
 {
    Parent::initPersistFields();
-
+   addField("initialNormal", TypePoint3F, Offset(mInitialNormal, Explosion), "Initial starting Normal.");
    //
 }
 

@@ -490,3 +490,9 @@ function foCollaps (%this, %tab){
          %tab.visible = "0";
    }
 }
+
+function simGroup::onInspectPostApply(%this)
+{
+    %this.callOnChildren("setHidden",%this.hidden);
+    %this.callOnChildren("setLocked",%this.locked);    
+}

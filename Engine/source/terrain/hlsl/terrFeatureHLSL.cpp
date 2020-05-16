@@ -1028,20 +1028,28 @@ void TerrainNormalMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    LangElement *bumpNormDecl = new DecOp( bumpNorm );
    meta->addStatement( expandNormalMap( texOp, bumpNormDecl, bumpNorm, fd ) );
 
-   // Normalize is done later... 
-   // Note: The reverse mul order is intentional. Affine matrix.
-   meta->addStatement( new GenOp( "      @ = lerp( @, mul( @.xyz, @ ), min( @, @.w ) );\r\n", 
-      gbNormal, gbNormal, bumpNorm, viewToTangent, detailBlend, inDet ) );
-
-   // End the conditional block.
-   meta->addStatement( new GenOp( "   }\r\n" ) );
-
    // If this is the last normal map then we 
    // can test to see the total blend value
    // to see if we should clip the result.
-   //if ( fd.features.getNextFeatureIndex( MFT_TerrainNormalMap, normalIndex ) == -1 )
-      //meta->addStatement( new GenOp( "   clip( @ - 0.0001f );\r\n", blendTotal ) );
+   Var* blendTotal = (Var*)LangElement::find("blendTotal");
+   if (blendTotal)
+   {
+      if (fd.features.getNextFeatureIndex(MFT_TerrainNormalMap, normalIndex) == -1)
+         meta->addStatement(new GenOp("   if ( @ > 0.0001f ){\r\n\r\n", blendTotal));
+   }
+      // Normalize is done later... 
+      // Note: The reverse mul order is intentional. Affine matrix.
+      meta->addStatement( new GenOp( "      @ = lerp( @, mul( @.xyz, @ ), min( @, @.w ) );\r\n", 
+            gbNormal, gbNormal, bumpNorm, viewToTangent, detailBlend, inDet ) );
 
+   if (blendTotal)
+   {
+      if (fd.features.getNextFeatureIndex(MFT_TerrainNormalMap, normalIndex) == -1)
+         meta->addStatement(new GenOp("   }\r\n"));
+   }
+   // End the conditional block.
+   meta->addStatement( new GenOp( "   }\r\n" ) );
+   
    output = meta;
 }
 
@@ -1112,9 +1120,11 @@ void TerrainAdditiveFeatHLSL::processPix( Vector<ShaderComponent*> &componentLis
                                           const MaterialFeatureData &fd )
 {
    Var *color = NULL;
+   Var* norm = NULL;
    if (fd.features[MFT_isDeferred])
    {
        color = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget1) );
+       norm = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::DefaultTarget) );
    }
    else
        color = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::DefaultTarget) );
@@ -1127,6 +1137,10 @@ void TerrainAdditiveFeatHLSL::processPix( Vector<ShaderComponent*> &componentLis
 
    meta->addStatement( new GenOp( "   clip( @ - 0.0001 );\r\n", blendTotal ) );
    meta->addStatement( new GenOp( "   @.a = @;\r\n", color, blendTotal ) );
+   if (fd.features[MFT_isDeferred])
+   {
+      meta->addStatement(new GenOp("   @.a = @;\r\n", norm, blendTotal));
+   }
 
    output = meta;
 }
@@ -1226,7 +1240,7 @@ void TerrainCompositeMapFeatHLSL::processVert(Vector<ShaderComponent*> &componen
 
 U32 TerrainCompositeMapFeatHLSL::getOutputTargets(const MaterialFeatureData &fd) const
 {
-   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::RenderTarget1;
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
 void TerrainCompositeMapFeatHLSL::processPix(Vector<ShaderComponent*> &componentList,
@@ -1264,7 +1278,7 @@ void TerrainCompositeMapFeatHLSL::processPix(Vector<ShaderComponent*> &component
 
    // search for material var
    Var * pbrConfig;
-   OutputTarget targ = RenderTarget1;
+   OutputTarget targ = DefaultTarget;
    if (fd.features[MFT_isDeferred])
    {
       targ = RenderTarget2;
@@ -1317,7 +1331,7 @@ ShaderFeature::Resources TerrainCompositeMapFeatHLSL::getResources(const Materia
 // reminder, the matinfo buffer is flags, smooth, ao, metal
 U32 TerrainBlankInfoMapFeatHLSL::getOutputTargets(const MaterialFeatureData &fd) const
 {
-   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::RenderTarget1;
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
 void TerrainBlankInfoMapFeatHLSL::processPix(Vector<ShaderComponent*> &componentList,
@@ -1325,7 +1339,7 @@ void TerrainBlankInfoMapFeatHLSL::processPix(Vector<ShaderComponent*> &component
 {
    // search for material var
    Var *material;
-   OutputTarget targ = RenderTarget1;
+   OutputTarget targ = DefaultTarget;
    if (fd.features[MFT_isDeferred])
    {
       targ = RenderTarget2;

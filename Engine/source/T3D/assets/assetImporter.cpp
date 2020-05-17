@@ -12,7 +12,7 @@
 #include "ts/collada/colladaShapeLoader.h"
 
 #include "ts/assimp/assimpShapeLoader.h"
-#include <ts\tsShapeConstruct.h>
+#include "ts/tsShapeConstruct.h"
 
 
 ConsoleDocClass(AssetImportConfig,

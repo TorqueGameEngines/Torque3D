@@ -68,6 +68,10 @@ public:
          mVertexSize( vertexSize ),
          mBufferType( bufferType ),
          mDevice( device ),
+         isLocked(false),
+         lockedVertexStart(0),
+         lockedVertexEnd(0),
+         lockedVertexPtr(NULL),
          mVolatileStart( 0 )
    {
       if ( vertexFormat )

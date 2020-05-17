@@ -53,7 +53,7 @@ void*& _USERDATA( EngineObject* object )
 //-----------------------------------------------------------------------------
 
 EngineObject::EngineObject()
-   : mEngineObjectUserData( NULL )
+   : mEngineObjectPool(NULL), mEngineObjectUserData( NULL )
 {
    #ifdef TORQUE_DEBUG
    // Add to instance list.

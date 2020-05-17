@@ -30,7 +30,12 @@ StringStack::StringStack()
    mBuffer = NULL;
    mArgBufferSize = 0;
    mArgBuffer = NULL;
+   for (U32 i = 0; i < MaxArgs; i++)
+      mArgV[i] = "";
+   dMemset(mFrameOffsets, 0, sizeof(mFrameOffsets));
+   dMemset(mStartOffsets, 0, sizeof(mStartOffsets));
    mNumFrames = 0;
+   mArgc = 0;
    mStart = 0;
    mLen = 0;
    mStartStackSize = 0;
@@ -232,6 +237,7 @@ mStackPos(0)
       mStack[i].init();
       mStack[i].type = ConsoleValue::TypeInternalString;
    }
+   dMemset(mStackFrames, 0, sizeof(mStackFrames));
 }
 
 ConsoleValueStack::~ConsoleValueStack()

@@ -76,7 +76,7 @@ protected:
 
       void insert(DelegateLink* node, F32 order);
       void unlink();
-
+      DelegateLink() :next(NULL), prev(NULL), mOrder(0) {}
       virtual ~DelegateLink() {}
    };
 

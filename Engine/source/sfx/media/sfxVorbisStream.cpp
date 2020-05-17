@@ -40,6 +40,7 @@ SFXVorbisStream* SFXVorbisStream::create( Stream *stream )
 
 SFXVorbisStream::SFXVorbisStream()
    : mVF( NULL ),
+     mBitstream(-1),
      mBytesRead( 0 )
 {
 }
@@ -47,6 +48,9 @@ SFXVorbisStream::SFXVorbisStream()
 SFXVorbisStream::SFXVorbisStream( const SFXVorbisStream& cloneFrom )
    : Parent( cloneFrom )
 {
+   mVF = NULL;
+   mBitstream = -1;
+   mBytesRead = 0;
    if( !mStream->hasCapability( Stream::StreamPosition ) )
    {
       Con::errorf( "SFXVorbisStream::SFXVorbisStream() - Source stream does not allow seeking" );

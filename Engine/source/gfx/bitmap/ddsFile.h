@@ -176,7 +176,15 @@ struct DDSFile
    // For debugging fun!
    static S32 smActiveCopies;
 
-   DDSFile()
+   DDSFile():
+      mBytesPerPixel(0),
+      mHeight(0),
+      mWidth(0),
+      mDepth(0),
+      mFormat(GFXFormat_FIRST),
+      mFourCC(0),
+      mMipMapCount(0),
+      mPitchOrLinearSize(0)
    {
       VECTOR_SET_ASSOCIATION( mSurfaces );
       smActiveCopies++;

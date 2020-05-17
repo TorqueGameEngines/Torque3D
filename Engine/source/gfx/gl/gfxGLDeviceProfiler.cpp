@@ -53,7 +53,7 @@ public:
 
    typedef Data DataType;
 
-    GLTimer(GFXDevice *device, Data &data) : mData(&data)
+    GLTimer(GFXDevice *device, Data &data) : mName(NULL), mData(&data)
    {
       glGenQueries(1, &mQueryId);
    }

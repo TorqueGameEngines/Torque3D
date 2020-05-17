@@ -107,6 +107,8 @@ bool SFXRangeModifier::update()
 
 SFXFadeModifier::SFXFadeModifier( SFXSource* source, F32 time, F32 endVolume, F32 startTime, EOnEnd onEndDo, bool removeWhenDone )
    : Parent( source, startTime, startTime + time, removeWhenDone ),
+     mStartVolume(source->getVolume()),
+     mCurrentVolume(source->getVolume()),
      mEndVolume( endVolume ),
      mOnEnd( onEndDo )
 {

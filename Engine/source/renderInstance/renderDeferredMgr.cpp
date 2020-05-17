@@ -584,7 +584,7 @@ const GFXStateBlockDesc & RenderDeferredMgr::getOpaqueStencilTestDesc()
 
 
 ProcessedDeferredMaterial::ProcessedDeferredMaterial( Material& mat, const RenderDeferredMgr *deferredMgr )
-: Parent(mat), mDeferredMgr(deferredMgr)
+: Parent(mat), mDeferredMgr(deferredMgr), mIsLightmappedGeometry(false)
 {
 
 }

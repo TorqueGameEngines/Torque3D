@@ -170,6 +170,7 @@ void RibbonData::unpackData(BitStream* stream)
 //
 Ribbon::Ribbon()
 {
+   mDataBlock = NULL;
    mTypeMask |= StaticObjectType;
 
    VECTOR_SET_ASSOCIATION(mSegmentPoints);

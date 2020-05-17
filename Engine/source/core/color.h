@@ -203,7 +203,7 @@ public:
 class StockColorItem
 {
 private:
-   StockColorItem() {}
+   StockColorItem():mColorName("") {}
 
 public:
    StockColorItem( const char* pName, const U8 red, const U8 green, const U8 blue, const U8 alpha = 255 )
@@ -529,6 +529,7 @@ inline void ColorI::set(const Hsb& color)
 	red = (U32)((((F64)r) / 100) * 255);
 	green = (U32)((((F64)g) / 100) * 255);
 	blue = (U32)((((F64)b) / 100) * 255);
+   alpha = 255;
 }
 
 // This is a subfunction of HSLtoRGB

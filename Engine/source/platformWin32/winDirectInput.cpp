@@ -47,6 +47,13 @@ DInputManager::DInputManager()
    mJoystickActive = mXInputActive = true;
    mXInputLib        = NULL;
 
+   mfnXInputGetState = NULL;
+   mfnXInputSetState = NULL;
+   dMemset(mXInputStateOld, 0, sizeof(mXInputStateOld));
+   dMemset(mXInputStateNew, 0, sizeof(mXInputStateNew));
+   mXInputStateReset = false;
+   mXInputDeadZoneOn = true;
+
    for(S32 i=0; i<4; i++)
       mLastDisconnectTime[i] = -1;
 }

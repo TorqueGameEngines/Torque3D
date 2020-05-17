@@ -58,7 +58,11 @@ TerrCell::TerrCell()
       mHasEmpty( false ),
       mMaterial( NULL ),
       mMaterials( 0 ),
-      mIsInteriorOnly( false )
+      mIsInteriorOnly( false ),
+      mSize(smMinCellSize),
+      mLevel(0),
+      mTerrain(NULL),
+      mRadius(0.5f)
 {
    dMemset( mChildren, 0, sizeof( mChildren ) );
    zode_vertexBuffer = 0;

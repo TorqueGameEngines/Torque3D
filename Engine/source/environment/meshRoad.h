@@ -85,7 +85,7 @@ public:
 
 public:
 
-   MeshRoadConvex() { mType = MeshRoadConvexType; }
+   MeshRoadConvex():pRoad(NULL), faceId(0), triangleId(0), segmentId(0) { mType = MeshRoadConvexType; }
 
    MeshRoadConvex( const MeshRoadConvex& cv ) {
       mType      = MeshRoadConvexType;
@@ -122,7 +122,7 @@ struct ObjectRenderInst;
 class MeshRoadSplineNode
 {
 public:
-   MeshRoadSplineNode() {}
+   MeshRoadSplineNode() :x(0.0f), y(0.0f), z(0.0f), width(0.0f), depth(0.0f) {}
 
    F32 x;
    F32 y;
@@ -257,6 +257,7 @@ struct MeshRoadSlice
       depth = 0.0f;
       normal.set(0,0,1);
       texCoordV = 0.0f;
+      t = 0.0f;
 
       parentNodeIdx = -1;
    };

@@ -52,12 +52,16 @@ MODULE_BEGIN( VideoCapture )
 
 MODULE_END;
 
-VideoCapture::VideoCapture() : 
+VideoCapture::VideoCapture() :
+   mCapturedFramePos(-1.0f),
    mEncoder(NULL),
    mFrameGrabber(NULL),
    mCanvas(NULL),
    mIsRecording(false),
+   mVideoCaptureStartTime(0),
+   mNextFramePosition(0.0f),
    mFrameRate(30.0f),
+   mMsPerFrame(1000.0f / mFrameRate),
    mResolution(0,0),
    mWaitingForCanvas(false),
    mEncoderName("THEORA"),

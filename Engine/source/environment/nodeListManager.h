@@ -50,7 +50,7 @@ public:
       U32   mTotalValidNodes;
       bool  mListComplete;
 
-      NodeList() { mTotalValidNodes=0; mListComplete=false; }
+      NodeList() { mId = 0; mTotalValidNodes = 0; mListComplete = false; }
       virtual ~NodeList() { }
    };
 
@@ -93,7 +93,7 @@ protected:
    U32  mListId;
 
 public:
-   NodeListNotify() { }
+   NodeListNotify() { mListId = 0; }
    virtual ~NodeListNotify() { }
 
    U32 getListId() { return mListId; }
@@ -115,7 +115,7 @@ public:
    NodeListManager::NodeList* mNodeList;
 
 public:
-   NodeListEvent() { mNodeList=NULL; mTotalNodes = mLocalListStart = 0; }
+   NodeListEvent() { mId = 0; mNodeList = NULL; mTotalNodes = mLocalListStart = 0; }
    virtual ~NodeListEvent();
 
    virtual void pack(NetConnection*, BitStream*);

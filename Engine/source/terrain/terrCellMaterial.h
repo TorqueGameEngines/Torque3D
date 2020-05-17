@@ -58,6 +58,8 @@ protected:
    public:
 
       MaterialInfo()
+         :mat(NULL), layerId(0), detailTexConst(NULL), macroTexConst(NULL), normalTexConst(NULL),
+         compositeTexConst(NULL), detailInfoVConst(NULL), detailInfoPConst(NULL), macroInfoVConst(NULL), macroInfoPConst(NULL)
       {
       }
 
@@ -92,7 +94,15 @@ protected:
    public:
 
       Pass() 
-         :  shader( NULL )                     
+         :  shader( NULL ),
+         modelViewProjConst(NULL), worldViewOnly(NULL), viewToObj(NULL),
+         eyePosWorldConst(NULL), eyePosConst(NULL),
+         objTransConst(NULL), worldToObjConst(NULL), vEyeConst(NULL),
+         layerSizeConst(NULL), lightParamsConst(NULL), lightInfoBufferConst(NULL),
+         baseTexMapConst(NULL), layerTexConst(NULL),
+         lightMapTexConst(NULL),
+         squareSize(NULL), oneOverTerrainSize(NULL),
+         fogDataConst(NULL), fogColorConst(NULL)
       {
       }
 

@@ -77,7 +77,6 @@ struct FlyingVehicleData: public VehicleData {
 
    // Initialized in preload
    ClippedPolyList rigidBody;
-   S32 surfaceCount;
    F32 maxSpeed;
 
    enum JetNodes {

@@ -166,14 +166,14 @@ public:
 
    /// @name Annotations
    /// @{
-
+   /* not implemented
    /// Should we automatically generate jump-down links?
    bool mJumpDownLinks;
    /// Height of a 'small' jump link.
    F32 mJumpLinkSmall;
    /// Height of a 'large' jump link.
    F32 mJumpLinkLarge;
-
+   */
    /// Distance to search for cover.
    F32 mCoverDist;
 

@@ -73,11 +73,11 @@ inline GFXD3D11PrimitiveBuffer::GFXD3D11PrimitiveBuffer(   GFXDevice *device,
    mLocked = false;
 #ifdef TORQUE_DEBUG
    mDebugGuardBuffer = NULL;
-   mLockedBuffer = NULL;
    mLockedSize = 0;
+#endif
    mIndexStart = 0;
    mIndexEnd = 0;
-#endif
+   mLockedBuffer = NULL;
 }
 
 #endif

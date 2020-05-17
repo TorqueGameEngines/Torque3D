@@ -52,7 +52,7 @@ class ShadowMapPass
 {
 public:
 
-   ShadowMapPass() {}   // Only called by ConsoleSystem
+   ShadowMapPass() : mTimer(NULL), mLightManager(NULL), mShadowManager(NULL), mActiveLights(0), mPrevCamFov(90.0f) {}   // Only called by ConsoleSystem
    ShadowMapPass(LightManager* LightManager, ShadowMapManager* ShadowManager);
    virtual ~ShadowMapPass();
 

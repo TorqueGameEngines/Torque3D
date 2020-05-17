@@ -3571,7 +3571,7 @@ Point3F ShapeBaseConvex::support(const VectorF& v) const
 void ShapeBaseConvex::getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf)
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    TSShape::ConvexHullAccelerator* pAccel =
       pShapeBase->mShapeInstance->getShape()->getAccelerator(pShapeBase->mDataBlock->collisionDetails[hullId]);

@@ -134,6 +134,8 @@ ShapeBaseImageData::StateData::StateData()
    recoil = NoRecoil;
    sound = 0;
    emitter = NULL;
+   shapeSequence = NULL;
+   shapeSequenceScale = true;
    script = 0;
    ignoreLoadedForReady = false;
    
@@ -1396,6 +1398,7 @@ ShapeBase::MountedImage::MountedImage()
    dataBlock = 0;
    nextImage = InvalidImagePtr;
    delayTime = 0;
+   rDT = 0.0f;
    ammo = false;
    target = false;
    triggerDown = false;
@@ -1408,6 +1411,7 @@ ShapeBase::MountedImage::MountedImage()
    motion = false;
    lightStart = 0;
    lightInfo = NULL;
+   dMemset(emitter, 0, sizeof(emitter));
 
    for (U32 i=0; i<ShapeBaseImageData::MaxGenericTriggers; ++i)
    {

@@ -1190,7 +1190,7 @@ public:
    ConsoleValueRef _exec();
    ConsoleValueRef _execLater(SimConsoleThreadExecEvent *evt);
 
-   _BaseEngineConsoleCallbackHelper() {;}
+   _BaseEngineConsoleCallbackHelper(): mThis(NULL), mInitialArgc(0), mArgc(0), mCallbackName(StringTable->EmptyString()){;}
 };
 
 

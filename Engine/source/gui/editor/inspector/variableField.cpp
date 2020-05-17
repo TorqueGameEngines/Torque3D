@@ -41,7 +41,10 @@ ConsoleDocClass( GuiInspectorVariableField,
    "@internal"
 );
 
-GuiInspectorVariableField::GuiInspectorVariableField() 
+GuiInspectorVariableField::GuiInspectorVariableField()
+   : mVariableName(StringTable->EmptyString()),
+   mSetCallbackName(StringTable->EmptyString()),
+   mOwnerObject(NULL)
 {
 }
 

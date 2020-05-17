@@ -77,6 +77,7 @@ GFXVertexFormat::GFXVertexFormat()
       mHasColor( false ),
       mHasTangent( false ),
       mHasInstancing( false ),
+      mHasBlendIndices(false),
       mTexCoordCount( 0 ),
       mSizeInBytes( 0 ),
       mDecl( NULL )

@@ -47,7 +47,7 @@ class SFXModifier : public IPolled
    
       /// Create an effect that operates on "source".
       SFXModifier( SFXSource* source, bool removeWhenDone = false )
-         : mSource( source ) {}
+         : mSource( source ), mRemoveWhenDone(removeWhenDone) {}
    
       virtual ~SFXModifier() {}
 };

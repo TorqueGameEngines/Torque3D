@@ -38,10 +38,6 @@ if(UNIX)
 
    endif()    
 
-	# for asm files
-	SET (CMAKE_ASM_NASM_OBJECT_FORMAT "elf")
-	ENABLE_LANGUAGE (ASM_NASM)
-
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 

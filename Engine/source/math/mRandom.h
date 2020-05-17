@@ -33,7 +33,7 @@
 class MRandomGenerator
 {
 protected:
-   MRandomGenerator() {}
+   MRandomGenerator() :mSeed(-1) {}
    S32  mSeed;
 
 public:

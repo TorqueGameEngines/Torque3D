@@ -317,7 +317,7 @@ protected:
       U32 addr;  ///< Address to patch
       U32 value; ///< Value to place at addr
 
-      PatchEntry() { ; }
+      PatchEntry(): addr(0), value(0) { ; }
       PatchEntry(U32 a, U32 v) : addr(a), value(v) { ; }
    } PatchEntry;
 

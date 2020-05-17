@@ -57,7 +57,7 @@ AssimpAppMaterial::AssimpAppMaterial(const char* matName)
 {
    name = ColladaUtils::getOptions().matNamePrefix;
    name += matName;
-
+   mAIMat = NULL;
    // Set some defaults
    flags |= TSMaterialList::S_Wrap;
    flags |= TSMaterialList::T_Wrap;

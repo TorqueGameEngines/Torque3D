@@ -220,7 +220,21 @@ public:
       : Parent( sizeof( void* ), conIdPtr, typeName )
    {
       VECTOR_SET_ASSOCIATION( mFieldList );
-
+      mCategory = StringTable->EmptyString();
+      mClassGroupMask = 0;
+      std::fill_n(mClassId, NetClassGroupsCount, -1);
+      mClassName = StringTable->EmptyString();
+      mClassSizeof = 0;
+      mClassType = 0;
+      mDescription = StringTable->EmptyString();
+#ifdef TORQUE_NET_STATS
+      dMemset(mDirtyMaskFrequency, 0, sizeof(mDirtyMaskFrequency));
+      dMemset(mDirtyMaskTotal, 0, sizeof(mDirtyMaskTotal));
+#endif
+      mDynamicGroupExpand = false;
+      mNamespace = NULL;
+      mNetEventDir = 0;
+      nextClass = NULL;
       parentClass  = NULL;
       mIsRenderEnabled = true;
       mIsSelectionEnabled = true;
@@ -496,6 +510,7 @@ public:
             validator( NULL ),
             setDataFn( NULL ),
             getDataFn( NULL ),
+            writeDataFn(NULL),
             networkMask(0)
       {
          doNotSubstitute = keepClearSubsOnly = false;

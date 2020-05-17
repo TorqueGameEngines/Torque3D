@@ -97,6 +97,8 @@ ImplementEnumType( MaterialWaveType,
    { Material::Square,       "Square", "Warps the material along a wave which transitions between two oppposite states. As a Square Wave, the transition is quick and sudden." },
 EndImplementEnumType;
 
+#define initMapSlot(name,id) m##name##Filename[id] = String::EmptyString; m##name##AssetId[id] = StringTable->EmptyString(); m##name##Asset[id] = NULL;
+#define bindMapSlot(name,id) if (m##name##AssetId[id] != String::EmptyString) m##name##Asset[id] = m##name##AssetId[id];
 
 bool Material::sAllowTextureTargetAssignment = false;
 
@@ -111,19 +113,18 @@ GFXCubemap * Material::GetNormalizeCube()
 
 GFXCubemapHandle Material::smNormalizeCube;
 
+
 Material::Material()
 {
    for( U32 i=0; i<MAX_STAGES; i++ )
    {
       mDiffuse[i].set( 1.0f, 1.0f, 1.0f, 1.0f );
       mDiffuseMapSRGB[i] = true;
-      mDiffuseMapAsset[i] = StringTable->EmptyString();
-      mDiffuseMapAssetId[i] = StringTable->EmptyString();
 
       mSmoothness[i] = 0.0f;
       mMetalness[i] = 0.0f;
 
-	   mIsSRGb[i] = false;
+	   mIsSRGb[i] = true;
       mInvertSmoothness[i] = false;
 
       mSmoothnessChan[i] = 0;
@@ -136,7 +137,25 @@ Material::Material()
       mAccuStrength[i]  = 0.6f;
       mAccuCoverage[i]  = 0.9f;
       mAccuSpecular[i]  = 16.0f;
-	  
+
+      initMapSlot(DiffuseMap, i);
+      initMapSlot(OverlayMap, i);
+      initMapSlot(LightMap, i);
+      initMapSlot(ToneMap, i);
+      initMapSlot(DetailMap, i);
+      initMapSlot(NormalMap, i);
+      initMapSlot(PBRConfigMap, i);
+      initMapSlot(RoughMap, i);
+      initMapSlot(AOMap, i);
+      initMapSlot(MetalMap, i);
+      initMapSlot(GlowMap, i);
+      initMapSlot(DetailNormalMap, i);
+
+      //cogs specific
+      initMapSlot(AlbedoDamageMap, i);
+      initMapSlot(NormalDamageMap, i);
+      initMapSlot(CompositeDamageMap, i);
+
       mParallaxScale[i] = 0.0f;
 
       mVertLit[i] = false;
@@ -174,13 +193,10 @@ Material::Material()
 
       // Deferred Shading
       mMatInfoFlags[i] = 0.0f;
-      mRoughMapFilename[i].clear();
-      mRoughMapAsset[i] = StringTable->EmptyString();
-      mAOMapFilename[i].clear();
-      mMetalMapFilename[i].clear();
-      mMetalMapAsset[i] = StringTable->EmptyString();
-      mGlowMapFilename[i].clear();
-      mGlowMapAsset[i] = StringTable->EmptyString();
+
+      // Damage
+      mMaterialDamageMin[i] = 0.0f;
+      mAlbedoDamageMapSRGB[i] = true;
       mGlowMul[i] = 0.0f;
    }
 
@@ -218,12 +234,18 @@ Material::Material()
    dMemset( mEffectColor,     0, sizeof( mEffectColor ) );
 
    mFootstepSoundId = -1;     mImpactSoundId = -1;
+   mImpactFXIndex = -1;
    mFootstepSoundCustom = 0;  mImpactSoundCustom = 0;
    mFriction = 0.0;
    
    mDirectSoundOcclusion = 1.f;
    mReverbSoundOcclusion = 1.0;
 }
+
+
+#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
+#define scriptBindMapSlot(name,arraySize) addField(#name, TypeImageFilename, Offset(m##name##Filename, Material), arraySize, assetText(name,texture map.)); \
+                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, Material), arraySize, assetText(name,asset reference.));
 
 void Material::initPersistFields()
 {
@@ -236,37 +258,24 @@ void Material::initPersistFields()
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color." );
 
-      addField("diffuseMap", TypeImageFilename, Offset(mDiffuseMapFilename, Material), MAX_STAGES,
-         "The diffuse color texture map." );
-
-      addField("diffuseMapAsset", TypeImageAssetPtr, Offset(mDiffuseMapAssetId, Material), MAX_STAGES,
-         "The diffuse color texture map." );
+      scriptBindMapSlot(DiffuseMap, MAX_STAGES);
+      scriptBindMapSlot(OverlayMap, MAX_STAGES);
+      scriptBindMapSlot(LightMap, MAX_STAGES);
+      scriptBindMapSlot(ToneMap, MAX_STAGES);
+      scriptBindMapSlot(DetailMap, MAX_STAGES);
+      scriptBindMapSlot(NormalMap, MAX_STAGES);
+      scriptBindMapSlot(PBRConfigMap, MAX_STAGES);
+      scriptBindMapSlot(RoughMap, MAX_STAGES);
+      scriptBindMapSlot(AOMap, MAX_STAGES);
+      scriptBindMapSlot(MetalMap, MAX_STAGES);
+      scriptBindMapSlot(GlowMap, MAX_STAGES);
+      scriptBindMapSlot(DetailNormalMap, MAX_STAGES);
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
 
-      addField("overlayMap", TypeImageFilename, Offset(mOverlayMapFilename, Material), MAX_STAGES,
-         "A secondary diffuse color texture map which will use the second texcoord of a mesh." );
-
-      addField("lightMap", TypeImageFilename, Offset(mLightMapFilename, Material), MAX_STAGES,
-         "The lightmap texture used with pureLight." );
-
-      addField("toneMap", TypeImageFilename, Offset(mToneMapFilename, Material), MAX_STAGES,
-         "The tonemap texture used with pureLight.");
-
-      addField("detailMap", TypeImageFilename, Offset(mDetailMapFilename, Material), MAX_STAGES,
-         "A typically greyscale detail texture additively blended into the material." );
-
       addField("detailScale", TypePoint2F, Offset(mDetailScale, Material), MAX_STAGES,
          "The scale factor for the detail map." );
-
-      addField( "normalMap", TypeImageFilename, Offset(mNormalMapFilename, Material), MAX_STAGES,
-         "The normal map texture.  You can use the DXTnm format only when per-pixel "
-         "specular highlights are disabled, or a specular map is in use." );
-
-      addField( "detailNormalMap", TypeImageFilename, Offset(mDetailNormalMapFilename, Material), MAX_STAGES,
-         "A second normal map texture applied at the detail scale.  You can use the DXTnm "
-         "format only when per-pixel specular highlights are disabled." );
 
       addField( "detailNormalMapStrength", TypeF32, Offset(mDetailNormalMapStrength, Material), MAX_STAGES,
          "Used to scale the strength of the detail normal map when blended with the base normal map." );
@@ -304,27 +313,14 @@ void Material::initPersistFields()
       addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, Material), MAX_STAGES,
          "Treat Smoothness as Roughness");
 
-      addField( "PBRConfigMap", TypeImageFilename, Offset(mPBRConfigMapFilename, Material), MAX_STAGES,
-         "Prepacked specular map texture. The RGB channels of this texture provide per-pixel reference values for: "
-         "smoothness (R), Ambient Occlusion (G), and metalness(B)");
-
-      addField("roughMap", TypeImageFilename, Offset(mRoughMapFilename, Material), MAX_STAGES,
-         "smoothness map. will be packed into the R channel of a packed 'specular' map");
       addField("smoothnessChan", TypeF32, Offset(mSmoothnessChan, Material), MAX_STAGES,
          "The input channel smoothness maps use.");
 
-      addField("aoMap", TypeImageFilename, Offset(mAOMapFilename, Material), MAX_STAGES,
-         "Ambient Occlusion map. will be packed into the G channel of a packed 'specular' map");
       addField("AOChan", TypeF32, Offset(mAOChan, Material), MAX_STAGES,
          "The input channel AO maps use.");
-
-      addField("metalMap", TypeImageFilename, Offset(mMetalMapFilename, Material), MAX_STAGES,
-         "Metalness map. will be packed into the B channel of a packed 'specular' map");
       addField("metalChan", TypeF32, Offset(mMetalChan, Material), MAX_STAGES,
          "The input channel metalness maps use.");
 
-      addField("glowMap", TypeImageFilename, Offset(mGlowMapFilename, Material), MAX_STAGES,
-         "Metalness map. will be packed into the B channel of a packed 'specular' map");
       addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
          "The input channel metalness maps use.");
       addField("glow", TypeBool, Offset(mGlow, Material), MAX_STAGES,
@@ -426,6 +422,22 @@ void Material::initPersistFields()
 
    endArray( "Stages" );
 
+   addGroup("Damage");
+
+   //cogs
+   scriptBindMapSlot(AlbedoDamageMap, MAX_STAGES);
+   /// Damage blend maps (normal)
+   scriptBindMapSlot(NormalDamageMap, MAX_STAGES);
+   /// Damage blend maps (Roughness, AO, Metalness)
+   scriptBindMapSlot(CompositeDamageMap, MAX_STAGES);
+
+   addField("albedoDamageSRGB", TypeBool, Offset(mAlbedoDamageMapSRGB, Material), MAX_STAGES,
+      "Enable sRGB for the albedo damage map");
+
+   addField("minDamage", TypeF32, Offset(mMaterialDamageMin, Material), MAX_STAGES,
+      "The minimum ammount of blended damage.");
+   endGroup("Damage");
+
    addField( "castShadows", TypeBool, Offset(mCastShadows, Material),
       "If set to false the lighting system will not cast shadows from this material." );
 
@@ -498,6 +510,10 @@ void Material::initPersistFields()
          "What sound to play from the PlayerData sound list when the player impacts on the surface with a velocity equal or greater "
          "than PlayerData::groundImpactMinSpeed.\n\n"
          "For a list of IDs, see #footstepSoundId" );
+      addField("ImpactFXIndex", TypeS32, Offset(mImpactFXIndex, Material),
+         "What FX to play from the PlayerData sound list when the player impacts on the surface with a velocity equal or greater "
+         "than PlayerData::groundImpactMinSpeed.\n\n"
+         "For a list of IDs, see #impactFXId");
       addField( "customImpactSound", TypeSFXTrackName,    Offset( mImpactSoundCustom, Material ),
          "The sound to play when the player impacts on the surface with a velocity equal or greater than PlayerData::groundImpactMinSpeed.  "
          "If this is set, it overrides #impactSoundId.  This field is useful for directly assigning custom impact sounds to materials "
@@ -565,6 +581,7 @@ bool Material::protectedSetCustomShaderFeatureUniforms(void *object, const char 
 	return false;
 }
 
+
 bool Material::onAdd()
 {
    if (Parent::onAdd() == false)
@@ -589,6 +606,7 @@ bool Material::onAdd()
    if ( slash != String::NPos )
       mPath = scriptFile.substr( 0, slash + 1 );
 
+   /*
    //bind any assets we have
    for (U32 i = 0; i < MAX_STAGES; i++)
    {
@@ -596,6 +614,26 @@ bool Material::onAdd()
       {
          mDiffuseMapAsset[0] = mDiffuseMapAssetId[0];
       }
+   }
+  */
+   for (U32 i = 0; i < MAX_STAGES; i++)
+   {
+      bindMapSlot(DiffuseMap, i);
+      bindMapSlot(OverlayMap, i);
+      bindMapSlot(LightMap, i);
+      bindMapSlot(ToneMap, i);
+      bindMapSlot(DetailMap, i);
+      bindMapSlot(PBRConfigMap, i);
+      bindMapSlot(RoughMap, i);
+      bindMapSlot(AOMap, i);
+      bindMapSlot(MetalMap, i);
+      bindMapSlot(GlowMap, i);
+      bindMapSlot(DetailNormalMap, i);
+
+      //cogs specific
+      bindMapSlot(AlbedoDamageMap, i);
+      bindMapSlot(NormalDamageMap, i);
+      bindMapSlot(CompositeDamageMap, i);
    }
 
    _mapMaterial();

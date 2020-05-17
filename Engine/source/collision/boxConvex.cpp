@@ -85,7 +85,7 @@ inline bool isOnPlane(const Point3F& p,PlaneF& plane)
 void BoxConvex::getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf)
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    S32 v = 0;
    v += (n.x >= 0)? 1: 0;

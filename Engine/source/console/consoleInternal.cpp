@@ -475,7 +475,7 @@ Dictionary::Entry::Entry(StringTableEntry in_name)
    nextEntry = NULL;
    mUsage = NULL;
    mIsConstant = false;
-
+   mNext = NULL;
    // NOTE: This is data inside a nameless
    // union, so we don't need to init the rest.
    value.init();
@@ -856,6 +856,7 @@ ExprEvalState::ExprEvalState()
    stack.reserve(64);
    mShouldReset = false;
    mResetLocked = false;
+   copyVariable = NULL;
 }
 
 ExprEvalState::~ExprEvalState()
@@ -927,6 +928,15 @@ Namespace::Entry::Entry()
    mUsage = NULL;
    mHeader = NULL;
    mNamespace = NULL;
+   cb.mStringCallbackFunc = NULL;
+   mFunctionLineNumber = 0;
+   mFunctionName = StringTable->EmptyString();
+   mFunctionOffset = 0;
+   mMinArgs = 0;
+   mMaxArgs = 0;
+   mNext = NULL;
+   mPackage = StringTable->EmptyString();
+   mToolOnly = false;
 }
 
 void Namespace::Entry::clear()
@@ -959,6 +969,7 @@ Namespace::Namespace()
    mHashSequence = 0;
    mRefCountToParent = 0;
    mClassRep = 0;
+   lastUsage = NULL;
 }
 
 Namespace::~Namespace()

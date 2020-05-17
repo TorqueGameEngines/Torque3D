@@ -213,6 +213,7 @@ RenderProbeMgr::RenderProbeMgr()
    smProbeManager = this;
 
    mCubeMapCount = 0;
+   mCubeSlotCount = PROBE_ARRAY_SLOT_BUFFER_SIZE;
 
    for (U32 i = 0; i < PROBE_MAX_COUNT; i++)
    {
@@ -222,7 +223,17 @@ RenderProbeMgr::RenderProbeMgr()
 
 RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder)
  : RenderBinManager(riType, renderOrder, processAddOrder)
-{  
+{
+   mCubeMapCount = 0;
+   dMemset(mCubeMapSlots, false, sizeof(mCubeMapSlots));
+   mCubeSlotCount = PROBE_ARRAY_SLOT_BUFFER_SIZE;
+   mDefaultSkyLight = nullptr;
+   mEffectiveProbeCount = 0;
+   mHasSkylight = false;
+   mSkylightCubemapIdx = -1;
+   mLastConstants = nullptr;
+   mMipCount = 0;
+   mProbesDirty = false;
 }
 
 RenderProbeMgr::~RenderProbeMgr()

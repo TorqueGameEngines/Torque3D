@@ -129,6 +129,7 @@ PlatformFont *createPlatformFont(const char *name, dsize_t size, U32 charset /* 
 
 WinFont::WinFont() : mFont(NULL)
 {
+   dMemset(&mTextMetric, 0, sizeof(mTextMetric));
 }
 
 WinFont::~WinFont()

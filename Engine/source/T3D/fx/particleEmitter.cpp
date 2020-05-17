@@ -846,6 +846,7 @@ ParticleEmitterData::ParticleEmitterData(const ParticleEmitterData& other, bool 
    textureName = other.textureName;
    textureHandle = other.textureHandle; // -- TextureHandle loads using textureName
    highResOnly = other.highResOnly;
+   glow = other.glow;
    renderReflection = other.renderReflection;
    fade_color = other.fade_color;
    fade_size = other.fade_size;
@@ -965,7 +966,7 @@ ParticleEmitter::ParticleEmitter()
    pos_pe.set(0,0,0);
    sort_priority = 0;
    mDataBlock = 0;
-   
+   std::fill_n(sizes, ParticleData::PDC_NUM_KEYS, 0.0f);
 #if defined(AFX_CAP_PARTICLE_POOLS)
    pool = 0;
 #endif 

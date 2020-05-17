@@ -187,7 +187,7 @@ public:
                         const GFXVertexFormat *vertexFormat, 
                         U32 vertexSize, 
                         GFXBufferType bufferType ) :
-      GFXVertexBuffer(device, numVerts, vertexFormat, vertexSize, bufferType) { };
+      GFXVertexBuffer(device, numVerts, vertexFormat, vertexSize, bufferType) {tempBuf =NULL;};
    virtual void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr);
    virtual void unlock();
    virtual void prepare();

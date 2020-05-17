@@ -58,6 +58,7 @@ EngineTypeInfo::EngineTypeInfo( const char* typeName, EngineExportScope* scope, 
      mEnumTable( NULL ),
      mFieldTable( NULL ),
      mPropertyTable( NULL ),
+     mArgumentTypeTable(NULL),
      mSuperType( NULL ),
      mNext( smFirst )
 {

@@ -55,7 +55,7 @@ BlobShadow::BlobShadow(SceneObject* parentObject, LightInfo* light, TSShapeInsta
    mRadius = 0.0f;
    mLastRenderTime = 0;
    mDepthBias = -0.0002f;  
-
+   mInvShadowDistance = 1.0f;
    generateGenericShadowBitmap(smGenericShadowDim);
    setupStateBlocks();
 }

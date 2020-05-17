@@ -174,7 +174,8 @@ public:
 
    struct 
    {
-      U32 mOffset, mSize;
+      U32 mOffset = 0;
+      U32 mSize = 0;
    }_getBufferData;
 
    void lock(const U32 size, U32 offsetAlign, U32 &outOffset, void* &outPtr)

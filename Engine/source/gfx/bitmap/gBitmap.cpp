@@ -50,8 +50,7 @@ GBitmap::GBitmap()
    mNumMipLevels(0),
    mHasTransparency(false)
 {
-   for (U32 i = 0; i < c_maxMipLevels; i++)
-      mMipLevelOffsets[i] = 0xffffffff;
+   std::fill_n(mMipLevelOffsets, c_maxMipLevels, 0xffffffff);
 }
 
 GBitmap::GBitmap(const GBitmap& rCopy)

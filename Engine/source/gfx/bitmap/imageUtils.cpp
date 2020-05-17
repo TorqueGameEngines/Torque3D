@@ -69,7 +69,6 @@ namespace ImageUtil
    {
       S32 width;
       S32 height;
-      S32 flags;
       const U8 *pSrc;
       U8 *pDst;
       GFXFormat format;

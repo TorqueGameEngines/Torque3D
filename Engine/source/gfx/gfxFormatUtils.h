@@ -57,7 +57,7 @@ struct GFXFormatInfo
          /// If true, channels are in floating-point.
          bool mIsFloatingPoint;
 
-         Data() {}
+         Data() :mBytesPerPixel(0), mHasAlpha(false), mIsCompressed(false), mIsFloatingPoint(false) {}
          Data( U32 bpp, bool hasAlpha = false, bool isCompressed = false, bool isFP = false )
             : mBytesPerPixel( bpp ),
               mHasAlpha( hasAlpha ),

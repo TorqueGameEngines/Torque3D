@@ -52,7 +52,7 @@ class GuiBubbleTextCtrl : public GuiTextCtrl
       DECLARE_DESCRIPTION( "A single-line text control that displays its text in a multi-line\n"
          "popup when clicked." );
 
-      GuiBubbleTextCtrl() { mInAction = false; }
+      GuiBubbleTextCtrl() :mInAction(false), mDlg(NULL), mPopup(NULL), mMLText(NULL) {}
 
       virtual void onMouseDown(const GuiEvent &event);
 };

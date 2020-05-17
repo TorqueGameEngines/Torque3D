@@ -73,7 +73,7 @@ public:
 
    struct Sample
    {
-      Sample() {}
+      Sample() :mF(0) { dMemset(&mVal, 0, sizeof(mVal)); }
       Sample( F32 f, const T &val ) : mF(f), mVal(val) {}
 
       F32 mF;

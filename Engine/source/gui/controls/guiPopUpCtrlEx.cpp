@@ -332,6 +332,10 @@ GuiPopUpMenuCtrlEx::GuiPopUpMenuCtrlEx(void)
    mBitmapBounds.set(16, 16); //  Added
    mHotTrackItems = false;
    mIdMax = -1;
+   mBackground = NULL;
+   mTl = NULL;
+   mSc = NULL;
+   mReplaceText = false;
 }
 
 //------------------------------------------------------------------------------

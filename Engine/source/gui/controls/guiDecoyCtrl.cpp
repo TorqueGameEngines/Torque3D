@@ -54,7 +54,8 @@ ConsoleDocClass( GuiDecoyCtrl,
 
 GuiDecoyCtrl::GuiDecoyCtrl() : mMouseOver(false),
 							   mIsDecoy(true),
-							   mDecoyReference(NULL)
+							   mDecoyReference(NULL),
+                        mMouseOverDecoy(false)
 {
 }
 

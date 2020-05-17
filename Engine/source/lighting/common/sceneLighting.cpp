@@ -440,7 +440,8 @@ SceneLighting::SceneLighting(AvailableSLInterfaces* lightingInterfaces)
    mStartTime = 0;
    mFileName[0] = '\0';
    mSceneManager = NULL;
-
+   sgTimeTemp = 0;
+   sgTimeTemp2 = 0;
    // Registering vars more than once doesn't hurt anything.
    Con::addVariable("$sceneLighting::terminateLighting", TypeBool, &gTerminateLighting);
    Con::addVariable("$sceneLighting::lightingProgress", TypeF32, &gLightingProgress);

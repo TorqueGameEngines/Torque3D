@@ -90,6 +90,8 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mDeviceSwizzle24 = &Swizzles::bgr;
 
    mAdapterIndex = index;
+   mSwapChain = NULL;
+
    mD3DDevice = NULL;
    mD3DDeviceContext = NULL;
    mVolatileVB = NULL;
@@ -107,6 +109,8 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
 
    mPixVersion = 0.0;
 
+   mFeatureLevel = D3D_FEATURE_LEVEL_9_1; //lowest listed. should be overridden by init
+
    mVertexShaderTarget = String::EmptyString;
    mPixelShaderTarget = String::EmptyString;
    mShaderModel = String::EmptyString;
@@ -123,7 +127,8 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mCreateFenceType = -1; // Unknown, test on first allocate
 
    mCurrentConstBuffer = NULL;
-
+   mMultisampleDesc.Count = 0;
+   mMultisampleDesc.Quality = 0;
    mOcclusionQuerySupported = false;
 
    mDebugLayers = false;

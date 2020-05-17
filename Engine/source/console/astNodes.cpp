@@ -142,6 +142,7 @@ StmtNode::StmtNode()
 {
    mNext = NULL;
    dbgFileName = CodeBlock::smCurrentParser->getCurrentFile();
+   dbgLineNumber = 0;
 }
 
 void StmtNode::setPackage(StringTableEntry)

@@ -147,8 +147,6 @@ public:
   DECLARE_CATEGORY("AFX");
 
 private:          // 3POV SECTION
-  U32             mBlockers_mask_3pov;
-
   void            cam_update_3pov(F32 dt, bool on_server);
   bool            avoid_blocked_view(const Point3F& start, const Point3F& end, Point3F& newpos);
   bool            test_blocked_line(const Point3F& start, const Point3F& end);

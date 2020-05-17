@@ -64,7 +64,6 @@ class NetStringTable
    U32 size;
    U32 firstFree;
    U32 firstValid;
-   U32 sequenceCount;
 
    Entry *table;
    U32 hashTable[HashTableSize];

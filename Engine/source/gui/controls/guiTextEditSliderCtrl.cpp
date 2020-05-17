@@ -62,6 +62,7 @@ GuiTextEditSliderCtrl::GuiTextEditSliderCtrl()
    mFormat = StringTable->insert("%3.2f");
    mTextAreaHit = None;
    mFocusOnMouseWheel = false;
+   mMouseDownTime = 0.0f;
 }
 
 GuiTextEditSliderCtrl::~GuiTextEditSliderCtrl()

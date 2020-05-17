@@ -46,6 +46,19 @@ S32 num_irregularities = 0;
 
 GjkCollisionState::GjkCollisionState()
 {
+   mBits = 0;
+   mAll_bits = 0;
+   U32 x, y;
+   for (x = 0; x < 16; x++)
+      for (y = 0; y < 4; y++)
+         mDet[x][y] = 0.0f;
+
+   for (x = 0; x < 4; x++)
+      for (y = 0; y < 4; y++)
+         mDP[x][y] = 0.0f;
+
+   mLast = 0;
+   mLast_bit = 0;
    mA = mB = 0;
 }
 

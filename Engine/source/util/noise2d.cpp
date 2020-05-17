@@ -26,6 +26,8 @@
 //--------------------------------------
 Noise2D::Noise2D()
 {
+   dMemset(mPermutation, 0, sizeof(mPermutation));
+   dMemset(mGradient, 0, sizeof(mGradient));
    mSeed   = 0;
 }
 

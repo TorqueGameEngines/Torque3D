@@ -49,7 +49,8 @@ VActorPhysicsController::VActorPhysicsController( void ) :
         mControlState( k_NullControlState ),
         mMoveState( k_NullMove ),
         mVelocity( VectorF::Zero ),
-        mGravity( 0.f, 0.f, -9.8f )
+        mGravity( 0.f, 0.f, -9.8f ),
+        mOnGround(false)
 {
     // Void.
 }

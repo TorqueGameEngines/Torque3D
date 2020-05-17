@@ -82,6 +82,7 @@ public:
       mShaderModel = 0.f;
       mIndex = 0;
 		dMemset(&mLUID, '\0', sizeof(mLUID));
+      mType = GFXAdapterType::NullDevice;
    }
 
    ~GFXAdapter()

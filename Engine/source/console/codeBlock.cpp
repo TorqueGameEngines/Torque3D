@@ -56,6 +56,9 @@ CodeBlock::CodeBlock()
    name = NULL;
    fullPath = NULL;
    modPath = NULL;
+   codeSize = 0;
+   lineBreakPairCount = 0;
+   nextFile = NULL;
 }
 
 CodeBlock::~CodeBlock()

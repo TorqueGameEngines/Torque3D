@@ -60,7 +60,7 @@ class afxF_Drag : public afxForce
   typedef afxForce Parent;
 
 private:
-  afxF_DragData*  datablock;
+  afxF_DragData*  mDatablock;
   F32             air_friction_constant;
 
 public:
@@ -149,13 +149,14 @@ afxForceData* afxF_DragData::cloneAndPerformSubstitutions(const SimObject* owner
 
 afxF_Drag::afxF_Drag() : afxForce()
 {
+  mDatablock = NULL;
   air_friction_constant = 1.0f;
 }
 
 bool afxF_Drag::onNewDataBlock(afxForceData* dptr, bool reload)
 {
-  datablock = dynamic_cast<afxF_DragData*>(dptr);
-  if (!datablock || !Parent::onNewDataBlock(dptr, reload))
+   mDatablock = dynamic_cast<afxF_DragData*>(dptr);
+  if (!mDatablock || !Parent::onNewDataBlock(dptr, reload))
     return false;
 
   return true;
@@ -163,9 +164,9 @@ bool afxF_Drag::onNewDataBlock(afxForceData* dptr, bool reload)
 
 void afxF_Drag::start()
 {
-  air_friction_constant = 0.5f * datablock->drag_coefficient 
-                               * datablock->air_density 
-                               * datablock->cross_sectional_area;
+  air_friction_constant = 0.5f * mDatablock->drag_coefficient
+                               * mDatablock->air_density
+                               * mDatablock->cross_sectional_area;
   //Con::printf("Air Friction: %f", air_friction_constant);
 }
 

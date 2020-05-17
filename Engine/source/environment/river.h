@@ -58,7 +58,7 @@ struct ObjectRenderInst;
 class RiverSplineNode
 {
 public:
-   RiverSplineNode() {}
+   RiverSplineNode() :x(0.0f), y(0.0f), z(0.0f), width(0.0f), depth(0.0f) {}
 
    F32 x;
    F32 y;

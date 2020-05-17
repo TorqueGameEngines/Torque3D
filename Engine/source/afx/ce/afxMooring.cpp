@@ -133,6 +133,7 @@ afxMooring::afxMooring()
   chor_id = 0;
   hookup_with_chor = false;
   ghost_cons_name = ST_NULLSTRING;
+  mDataBlock = NULL;
 }
 
 afxMooring::afxMooring(U32 networking, U32 chor_id, StringTableEntry cons_name)
@@ -160,6 +161,7 @@ afxMooring::afxMooring(U32 networking, U32 chor_id, StringTableEntry cons_name)
   this->chor_id = chor_id;
   hookup_with_chor = false;
   this->ghost_cons_name = cons_name;
+  mDataBlock = NULL;
 }
 
 afxMooring::~afxMooring()

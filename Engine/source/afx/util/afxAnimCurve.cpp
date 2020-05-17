@@ -29,6 +29,8 @@
 afxAnimCurve::afxAnimCurve() : usable( false ), final_value( 0.0f ), start_value( 0.0f )
 {
 	evaluator = new afxHermiteEval();
+   final_time = 0.0f;
+   start_time = 0.0f;
 }
 
 afxAnimCurve::~afxAnimCurve()

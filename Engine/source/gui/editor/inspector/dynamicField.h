@@ -34,7 +34,7 @@ class GuiInspectorDynamicField : public GuiInspectorField
 public:
 
    GuiInspectorDynamicField( GuiInspector *inspector, GuiInspectorGroup* parent, SimFieldDictionary::Entry* field );
-   GuiInspectorDynamicField() {};
+   GuiInspectorDynamicField() :mDynField(NULL), mDeleteButton(NULL) {};
    ~GuiInspectorDynamicField() {};
 
    DECLARE_CONOBJECT( GuiInspectorDynamicField );

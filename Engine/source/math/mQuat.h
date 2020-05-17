@@ -42,7 +42,7 @@ public:
   public:
    F32  x,y,z,w;
 
-   QuatF() {} // no init constructor
+   QuatF() :x(0.0f), y(0.0f), z(0.0f), w(1.0f) {} //identity constructor
    QuatF( F32 _x, F32 _y, F32 _z, F32 w );
    QuatF( const Point3F &axis, F32 angle );
    QuatF( const MatrixF & m );

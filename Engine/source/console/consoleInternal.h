@@ -306,6 +306,7 @@ public:
          nextEntry = NULL;
          mUsage = NULL;
          mIsConstant = false;
+         mNext = NULL;
          value.init();
       }
 

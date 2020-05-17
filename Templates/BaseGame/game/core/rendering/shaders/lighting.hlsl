@@ -377,7 +377,7 @@ float3 boxProject(float3 wsPosition, float3 wsReflectVec, float4x4 worldToObj, f
    float dist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
    float3 posonbox = wsPosition + wsReflectVec * dist;
 
-   return posonbox - refPosition.xyz;
+   return posonbox-refPosition;
 }
 
 float4 computeForwardProbes(Surface surface,

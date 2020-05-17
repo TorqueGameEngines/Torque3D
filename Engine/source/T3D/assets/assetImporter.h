@@ -4,7 +4,7 @@
 #include "assets/assetManager.h"
 #include "module/moduleManager.h"
 #include "util/settings.h"
-#include "gui\controls\guiTreeViewCtrl.h"
+#include "gui/controls/guiTreeViewCtrl.h"
 
 /// <summary>
 /// AssetImportConfig is a SimObject derived object intended to act as a container for all the necessary configuration data when running the Asset Importer.

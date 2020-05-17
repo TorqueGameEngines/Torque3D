@@ -517,9 +517,9 @@ class AssetImporter : public SimObject
    Vector<AssetImportObject*> importingAssets;
 
    /// <summary>
-   /// A list of AssetImportObjects that are to be imported. These are unmodified by anything in the importing session, and are only used for resetting purposes;
+   /// A list of file paths that are to be imported. These are only used for resetting purposes;
    /// </summary>
-   Vector<Torque::Path> originalImportingAssets;
+   Vector<Torque::Path> originalImportingFiles;
 
    /// <summary>
    /// The Id of the module the assets are to be imported into

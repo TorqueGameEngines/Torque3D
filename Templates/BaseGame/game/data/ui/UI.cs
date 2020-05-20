@@ -14,7 +14,6 @@
 
 function UI::onCreate( %this )
 {
-   %bool = true;
 }
 
 function UI::onDestroy( %this )
@@ -36,9 +35,14 @@ function UI::initClient(%this)
    //Profiles
    exec("./scripts/profiles.cs");
    
+   exec("./scripts/menu.keybinds.cs");
+   
    //Now gui files
-   exec("./guis/mainMenu.gui");
+   exec("./guis/guiGamepadButton.cs");
+   exec("./guis/guiGamepadButton.gui");
+   
    exec("./guis/mainMenu.cs");
+   exec("./guis/mainMenu.gui");
    
    exec("./guis/chooseLevelDlg.gui");
    exec("./guis/chooseLevelDlg.cs");
@@ -48,8 +52,8 @@ function UI::initClient(%this)
    
    exec("./guis/loadingGui.gui");
    
-   exec("./guis/optionsMenu.gui");
    exec("./guis/optionsMenu.cs");
+   exec("./guis/optionsMenu.gui");
    
    exec("./guis/pauseMenu.gui");
    exec("./guis/pauseMenu.cs");
@@ -73,8 +77,7 @@ function UI::initClient(%this)
    exec("./guis/startupGui.cs");
    
    // Load Editor Dialogs
-   exec("./guis/messageBoxOk.gui");
-   exec("./guis/messageBoxYesNo.gui");
+   exec("./guis/messageBoxDlg.gui");
    
    //Load scripts
    exec("./scripts/optionsList.cs");
@@ -89,9 +92,13 @@ function UI::initClient(%this)
    exec("./guis/menuGraphics.gui");
    exec("./guis/menuGraphics.cs");
    
+   //exec("./scripts/menu.keybinds.cs");
+   
    //exec("./scripts/GuiTreeViewCtrl.cs");
    
    loadStartup();
+   
+   //menuMoveMap.push();
 }
 
 function UI::onCreateClientConnection(%this){}

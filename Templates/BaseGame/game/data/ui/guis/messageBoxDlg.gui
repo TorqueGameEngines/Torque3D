@@ -1,0 +1,110 @@
+//--- OBJECT WRITE BEGIN ---
+%guiContent = new GuiControl(MessageBoxDlg) {
+   position = "0 0";
+   extent = "1024 768";
+   minExtent = "8 8";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiOverlayProfile";
+   visible = "1";
+   active = "1";
+   tooltipProfile = "GuiToolTipProfile";
+   hovertime = "1000";
+   isContainer = "1";
+   canSave = "1";
+   canSaveDynamicFields = "1";
+      helpTag = "0";
+
+   new GuiControl(MessageBoxCtrl) {
+      position = "192 197";
+      extent = "641 381";
+      minExtent = "8 2";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "1";
+      canSave = "1";
+      canSaveDynamicFields = "0";
+
+      new GuiBitmapCtrl() {
+         bitmap = "data/ui/images/hudfill.png";
+         color = "255 255 255 255";
+         wrap = "0";
+         position = "0 0";
+         extent = "1156 704";
+         minExtent = "8 2";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextCtrl(MessageBoxTitleText) {
+         text = "OPTIONS";
+         maxLength = "1024";
+         margin = "0 0 0 0";
+         padding = "0 0 0 0";
+         anchorTop = "1";
+         anchorBottom = "0";
+         anchorLeft = "1";
+         anchorRight = "0";
+         position = "32 10";
+         extent = "577 28";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "MenuHeaderText";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
+      new GuiMLTextCtrl(MessageBoxText) {
+         lineSpacing = "2";
+         allowColorChars = "0";
+         maxChars = "-1";
+         useURLMouseCursor = "0";
+         position = "81 83";
+         extent = "481 14";
+         minExtent = "8 8";
+         horizSizing = "center";
+         vertSizing = "center";
+         profile = "MenuMLSubHeaderText";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
+      new GuiControl(MessageBoxButtonHolder) {
+         position = "0 237";
+         extent = "641 130";
+         minExtent = "8 2";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

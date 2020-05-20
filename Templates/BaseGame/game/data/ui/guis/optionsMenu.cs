@@ -46,112 +46,260 @@
 //headbob
 //FOV
 
+function OptionsMenuSettingsList::onAdd(%this)
+{
+   %yesNoList = "No\tYes";
+   %onOffList = "Off\tOn";
+   %highMedLow = "Low\tMedium\tHigh";
+   %anisoFilter = "Off\t4\t8\t16";
+   OptionsMenuSettingsList.addOptionRow("Shadow Quality", "High\tMedium\tLow\tNone", false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Mesh Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Texture Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Terrain Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Decal Lifetime", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Ground Cover Density", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Shader Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", %anisoFilter, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "4\t2\t1\tOff", false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Refresh Rate", "75\t60\t30", false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Parallax", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Water Reflections", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("SSAO", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Depth of Field", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Vignette", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Light Rays", %onOffList, false, "", -1, -30);
+}
+
 function OptionsMenu::onWake(%this)
 {
-    OptionsMain.hidden = false;
-    ControlsMenu.hidden = true;
-    GraphicsMenu.hidden = true;
-    AudioMenu.hidden = true;
-    CameraMenu.hidden = true;
-    ScreenBrightnessMenu.hidden = true;
-    
-    OptionsOKButton.hidden = false;
-    OptionsCancelButton.hidden = false;
-    OptionsDefaultsButton.hidden = false;
-    
-    OptionsMenu.tamlReader = new Taml();
-    
-    OptionsSettingStack.clear();
+   MainMenuButtonList.hidden = true;
    
-   %array = OptionsSettingStack;
-   %array.clear();
+   %this.pageTabIndex = 0;
+   %tab = %this.getTab();
+   %tab.performClick();
+}
+
+function OptionsButtonHolder::onWake(%this)
+{
+   %this.refresh();
+}
+
+function OptionsButtonHolder::refresh(%this)
+{
+   OptionsButtonHolder.add(GamepadButtonsGui);
    
-   %keyboardMenuBtn = new GuiButtonCtrl(){
-      text = "Keyboard and Mouse";
-      profile = GuiMenuButtonProfile;
-      extent = %array.extent.x SPC "35";
-      command="ControlsMenu::loadSettings();";
-   };
+   GamepadButtonsGui.clearButtons();
    
-   %controllerMenuBtn = new GuiButtonCtrl(){
-      text = "Controller";
-      profile = GuiMenuButtonProfile;
-      extent = %array.extent.x SPC "35";
-      command="DisplayMenu::loadSettings();";
-   };
+   GamepadButtonsGui.setButton(0, "LB", "", "Prev Tab", "OptionsMenu.prevTab();", true);
+   GamepadButtonsGui.setButton(1, "RB", "", "Next Tab", "OptionsMenu.nextTab();", true);
+   GamepadButtonsGui.setButton(2, "Start", "Enter", "Apply", "OptionsMenu.apply();");
+   GamepadButtonsGui.setButton(3, "B", "Esc", "Back", "OptionsMenu.backOut();");
+   GamepadButtonsGui.setButton(7, "Back", "R", "Reset", "OptionsMenu.backOut();");
    
-   %displayMenuBtn = new GuiButtonCtrl(){
-      text = "Display";
-      profile = GuiMenuButtonProfile;
-      extent = %array.extent.x SPC "35";
-      command="DisplayMenu::loadSettings();";
-   };
+   GamepadButtonsGui.refreshButtons();
+}
+
+function OptionsMenuSettingsList::onChange(%this)
+{
+   return;
    
-   %graphicsMenuBtn = new GuiButtonCtrl(){
-      text = "Graphics";
-      profile = GuiMenuButtonProfile;
-      extent = %array.extent.x SPC "35";
-      command="GraphicsMenu::loadSettings();";
-   };
+   OptionsMenuSettingsList.clearOptions();
+
+   %currentRowText = %this.getRowLabel(%this.getSelectedRow());
    
-   %audioMenuBtn = new GuiButtonCtrl(){
-      text = "Audio";
-      profile = GuiMenuButtonProfile;
-      extent = %array.extent.x SPC "35";
-      command="AudioMenu::loadSettings();";
-   };
-   
-   %gameplayMenuBtn = new GuiButtonCtrl(){
-      text = "Gameplay";
-      profile = GuiMenuButtonProfile;
-      extent = %array.extent.x SPC "35";
-      command="GameplayMenu::loadSettings();";
-   };
-   
-   %array.add(%keyboardMenuBtn);
-   //%array.add(%controllerMenuBtn);
-   %array.add(%displayMenuBtn);
-   %array.add(%graphicsMenuBtn);
-   %array.add(%audioMenuBtn);
-   //%array.add(%gameplayMenuBtn);
-   
-   //We programmatically set up our settings here so we can do some prepwork on the fields/controls
-   //Presets
-   /*OptionsMenu.addSettingOption(%array, "Preset", "High", ShadowQualityList, $pref::Video::Resolution);
-   
-   //AA
-   OptionsMenu.addSettingOption(%array, "AntiAliasing", "FXAA 4x", ShadowQualityList, $pref::Video::Resolution);
-   
-   //Lighting
-   OptionsMenu.addSettingOption(%array, "Shadow Quality", "High", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Shadow Caching", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Soft Shadows", "High", ShadowQualityList, $pref::Video::Resolution);
-   
-   //Models and Textures
-   OptionsMenu.addSettingOption(%array, "Level of Detail", "High", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Texture Quality", "High", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Material Quality", "High", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Terrain Detail", "High", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Decal Lifetime", "High", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Ground Clutter Density", "High", ShadowQualityList, $pref::Video::Resolution);
-   
-   //Effects
-   OptionsMenu.addSettingOption(%array, "HDR", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Parallax", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Ambient Occlusion", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Light Rays", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Depth of Field", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Vignetting", "On", ShadowQualityList, $pref::Video::Resolution);
-   OptionsMenu.addSettingOption(%array, "Water Reflections", "On", ShadowQualityList, $pref::Video::Resolution);
-   
-   OptionsMenu.addSettingOption(%array, "Anisotropic Filtering", "16x", ShadowQualityList, $pref::Video::Resolution);*/
-   
-   if(!isObject(GraphicsSettingsCache))
+   if(%currentRowText $= "Display")
    {
-      new ArrayObject(GraphicsSettingsCache){};
+      OptionsMenuList.populateDisplaySettingsList();
+   }
+   else if(%currentRowText $= "Graphics")
+   {
+      OptionsMenuList.populateGraphicsSettingsList();
+   }
+   else if(%currentRowText $= "Audio")
+   {
+      OptionsMenuList.populateAudioSettingsList();
+   }
+   else if(%currentRowText $= "Keyboard + Mouse")
+   {
+      OptionsMenuList.populateKeyboardMouseSettingsList();
+   }
+   else if(%currentRowText $= "Gamepad")
+   {
+      OptionsMenuList.populateGamepadSettingsList();
+   }
+}
+
+function OptionsMenu::prevTab(%this)
+{
+   %this.pageTabIndex--;
+   if(%this.pageTabIndex < 0)
+      %this.pageTabIndex = 4;
+      
+   %tabBtn = %this.getTab();
+   %tabBtn.performClick();
+}
+
+function OptionsMenu::nextTab(%this)
+{
+   %this.pageTabIndex++;
+   if(%this.pageTabIndex > 4)
+      %this.pageTabIndex = 0;
+      
+   %tabBtn = %this.getTab();
+   %tabBtn.performClick();
+}
+
+function OptionsMenu::getTab(%this)
+{
+   if(%this.pageTabIndex == 0)
+      return %this-->DisplayButton;
+   else if(%this.pageTabIndex == 1)
+      return %this-->GraphicsButton;
+   else if(%this.pageTabIndex == 2)
+      return %this-->AudioButton;
+   else if(%this.pageTabIndex == 3)
+      return %this-->KBMButton;
+   else if(%this.pageTabIndex == 4)
+      return %this-->GamepadButton;
+   else 
+      return %this-->DisplayButton;
+}
+
+function OptionsMenu::populateDisplaySettingsList(%this)
+{
+   %this.pageTabIndex = 0;
+   OptionsMenuSettingsList.clearRows();
+   
+   %resolutionList = getScreenResolutionList();
+   //OptionsMenuSettingsList.addOptionsRow("Resolution", %yesNoList, false, "", 0, -15);
+   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "screenResolutionOptionChanged", -1, -30);
+}
+
+function _makePrettyResString( %resString, %giveAspectRation )
+{
+   %width = getWord( %resString, $WORD::RES_X );
+   %height = getWord( %resString, $WORD::RES_Y );
+   
+   %aspect = %width / %height;
+   %aspect = mRound( %aspect * 100 ) * 0.01;            
+   
+   switch$( %aspect )
+   {
+      case "1.33":
+         %aspect = "4:3";
+      case "1.78":
+         %aspect = "16:9";
+      default:
+         %aspect = "";
    }
    
-   GraphicsSettingsCache.empty();
+   %outRes = %width @ " x " @ %height;
+   if ( %giveAspectRation && %aspect !$= "" )
+      %outRes = %outRes @ "  (" @ %aspect @ ")";
+      
+   return %outRes;   
+}
+
+function getScreenResolutionList()
+{
+   %returnsList = "";
+   
+   %resCount = Canvas.getModeCount();
+   for (%i = 0; %i < %resCount; %i++)
+   {
+      %testResString = Canvas.getMode( %i );
+      %testRes = _makePrettyResString( %testResString );
+      
+      //sanitize
+      %found = false;
+      %retCount = getTokenCount(%returnsList, "\t");
+      for (%x = 0; %x < %retCount; %x++)
+      {
+         %existingEntry = getToken(%returnsList, "\t", %x);
+         if(%existingEntry $= %testRes)
+         {
+            %found = true;
+            break;  
+         }
+      }
+      
+      if(%found)
+         continue;
+                     
+      if(%i != 0)
+         %returnsList = %returnsList @ "\t" @ %testRes;
+      else
+         %returnsList = %testRes;
+   }
+   
+   return %returnsList;
+}
+
+function screenResolutionOptionChanged()
+{
+   echo("Resolution Changed to: " @ OptionsMenuSettingsList.getCurrentOption(0));
+}
+
+function OptionsMenu::populateGraphicsSettingsList(%this)
+{
+   %this.pageTabIndex = 1;
+   OptionsMenuSettingsList.clearRows();
+   
+   %yesNoList = "No\tYes";
+   %onOffList = "Off\tOn";
+   %highMedLow = "Low\tMedium\tHigh";
+   %anisoFilter = "Off\t4\t8\t16";
+   OptionsMenuSettingsList.addOptionRow("Shadow Quality", "High\tMedium\tLow\tNone", false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Mesh Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Texture Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Terrain Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Decal Lifetime", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Ground Cover Density", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Shader Quality", %highMedLow, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", %anisoFilter, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "4\t2\t1\tOff", false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Refresh Rate", "75\t60\t30", false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Parallax", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Water Reflections", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("SSAO", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Depth of Field", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Vignette", %onOffList, false, "", -1, -30);
+   OptionsMenuSettingsList.addOptionRow("Light Rays", %onOffList, false, "", -1, -30);
+}
+
+function OptionsMenu::populateAudioSettingsList(%this)
+{
+   %this.pageTabIndex = 2;
+   OptionsMenuSettingsList.clearRows();
+   
+   %yesNoList = "Yes\tNo";
+   OptionsMenuSettingsList.addOptionRow("Audio Device", %yesNoList, false, "", -1, -15);
+}
+
+function OptionsMenu::populateKeyboardMouseSettingsList(%this)
+{
+   %this.pageTabIndex = 3;
+   OptionsMenuSettingsList.clearRows();
+   
+   OptionsMenuSettingsList.addOptionRow("Forward", "W", false, "", -1, -15);
+}
+
+function OptionsMenu::populateGamepadSettingsList(%this)
+{
+   %this.pageTabIndex = 4;
+   OptionsMenuSettingsList.clearRows();
+}
+
+function OptionsMenuList::activateRow(%this)
+{
+   OptionsMenuSettingsList.setFirstResponder();
+}
+
+function OptionsMenuList::backOut(%this)
+{
+   OptionsMenuList.setFirstResponder();
 }
 
 function OptionsMenuOKButton::onClick(%this)
@@ -160,6 +308,15 @@ function OptionsMenuOKButton::onClick(%this)
     eval(OptionsMenu.currentMenu@"::apply();");
     OptionsMenu.backOut();
 }
+
+//
+//
+function OptionsMenuSettingsList::backOut(%this)
+{
+   OptionsMenuList.setFirstResponder();
+}
+//
+//
 
 function OptionsMenuCancelButton::onClick(%this)
 {

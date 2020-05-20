@@ -47,6 +47,26 @@ protected:
       bool mUseHighlightIcon;             ///< Toggle the use of the highlight icon
       bool mEnabled;                      ///< If this row is enabled or not (grayed out)
 
+      enum Mode
+      {
+         Default = 0,
+         OptionList,
+         Keybind
+      };
+
+      Mode mMode;
+
+      //List options
+      Vector<StringTableEntry>   mOptions;         ///< Collection of options available to display
+      S32                        mSelectedOption;  ///< Index into mOptions pointing at the selected option
+      bool                       mWrapOptions;     ///< Determines if options should "wrap around" at the ends
+
+      Row() : mLabel(StringTable->EmptyString()), mScriptCallback(StringTable->EmptyString()), mIconIndex(-1), mHeightPad(0), mUseHighlightIcon(false), mEnabled(true),
+         mSelectedOption(0), mWrapOptions(false), mMode(Mode::Default)
+      {
+         VECTOR_SET_ASSOCIATION(mOptions);
+      }
+
       virtual ~Row() {}
    };
 
@@ -99,7 +119,43 @@ public:
    /// means no icon will be shown on this row.
    /// \param yPad [optional] An extra amount of height padding before the row.
    /// \param enabled [optional] If this row is initially enabled. Default true.
-   virtual void addRow(const char* label, const char* callback, S32 icon = -1, S32 yPad = 0, bool useHighlightIcon = true, bool enabled = true);
+   virtual void addRow(const char* label, const char* callback, S32 icon = -1, S32 yPad = 0, bool useHighlightIcon = true, bool enabled = true, S32 mode = 0);
+
+   /// Adds a row to the control.
+   ///
+   /// \param label The text to display on the row as a label.
+   /// \param optionsList A tab separated list of options for the control.
+   /// \param wrapOptions Specify true to allow options to wrap at the ends or
+   /// false to prevent wrapping.
+   /// \param callback [optional] Name of a script function to use as a callback
+   /// when this row is activated. Default NULL means no callback.
+   /// \param icon [optional] Index of the icon to use as a marker. Default -1
+   /// means no icon will be shown on this row.
+   /// \param yPad [optional] An extra amount of height padding before the row.
+   /// \param enabled [optional] If this row is initially enabled. Default true.
+   void addRow(const char* label, const char* optionsList, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled);
+
+   /// Gets the text for the currently selected option of the given row.
+   ///
+   /// \param rowIndex Index of the row to get the option from.
+   /// \return A string representing the text currently displayed as the selected
+   /// option on the given row. If there is no such displayed text then the empty
+   /// string is returned.
+   StringTableEntry getCurrentOption(S32 rowIndex) const;
+
+   /// Attempts to set the given row to the specified selected option. The option
+   /// will only be set if the option exists in the control.
+   ///
+   /// \param rowIndex Index of the row to set an option on.
+   /// \param option The option to be made active.
+   /// \return True if the row contained the option and was set, false otherwise.
+   bool selectOption(S32 rowIndex, StringTableEntry option);
+
+   /// Sets the list of options on the given row.
+   ///
+   /// \param rowIndex Index of the row to set options on.
+   /// \param optionsList A tab separated list of options for the control.
+   void setOptions(S32 rowIndex, const char* optionsList);
 
    /// Activates the current row. The script callback of  the current row will
    /// be called (if it has one).
@@ -114,6 +170,8 @@ public:
    ~GuiGameListMenuCtrl();
 
    void onRender(Point2I offset, const RectI &updateRect);
+
+   void onRenderOptionList(Row* row, Point2I currentOffset);
 
    /// Callback when the object is registered with the sim.
    ///
@@ -158,6 +216,8 @@ public:
    /// \param event A reference to the event that triggered the callback.
    void onMouseUp(const GuiEvent &event);
 
+   virtual bool onInputEvent(const InputEventInfo& event);
+
    /// Callback when the gamepad axis is activated.
    ///
    /// \param event A reference to the event that triggered the callback.
@@ -168,6 +228,20 @@ public:
    /// \param event A reference to the event that triggered the callback.
    virtual bool onGamepadAxisDown(const GuiEvent & event);
 
+   /// Callback when the gamepad axis is activated.
+   ///
+   /// \param event A reference to the event that triggered the callback.
+   virtual bool onGamepadAxisLeft(const GuiEvent& event);
+
+   /// Callback when the gamepad axis is activated.
+   ///
+   /// \param event A reference to the event that triggered the callback.
+   virtual bool onGamepadAxisRight(const GuiEvent& event);
+
+   void clearRows();
+
+   RectI getRowBounds(S32 rowIndex);
+
    DECLARE_CONOBJECT(GuiGameListMenuCtrl);
    DECLARE_CATEGORY( "Gui Game" );
    DECLARE_DESCRIPTION( "Base class for cross platform menu controls that are gamepad friendly." );
@@ -177,6 +251,7 @@ public:
 
    static const S32 NO_ROW          = -1; ///< Indicates a query result of no row found.
    static const S32 NO_ICON         = -1; ///< Indicates a row has no extra icon available
+   static const S32 NO_OPTION = -1; ///< Indicates there is no option
 
 protected:
    /// Adds a row to the control.
@@ -189,7 +264,7 @@ protected:
    /// means no icon will be shown on this row.
    /// \param yPad [optional] An extra amount of height padding before the row.
    /// \param enabled [optional] If this row is initially enabled. Default true.
-   virtual void addRow(Row * row, const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled);
+   virtual void addRow(Row * row, const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode = 0);
 
    /// Determines if the given index is a valid row index. Any index pointing at
    /// an existing row is valid.
@@ -224,6 +299,10 @@ protected:
    /// @name Callbacks
    /// @{
    DECLARE_CALLBACK( void, onChange, () );
+
+   DECLARE_CALLBACK(void, onInputEvent,  (const char* device, const char* action, bool state));
+
+   DECLARE_CALLBACK(void, onAxisEvent, (const char* device, const char* action, F32 axisValue));
    /// @}
 
    /// Evaluates some script. If the command is empty then nothing is evaluated.
@@ -238,6 +317,30 @@ protected:
 
    bool              mDebugRender;  ///< Determines when to show debug render lines
    Vector<Row *>     mRows;         ///< Holds data wrappers on all the rows we have
+
+private:
+   /// Performs a click on the current option row. The x position is used to
+   /// determine if the left or right arrow were clicked. If one was clicked, the
+   /// option will be changed. If neither was clicked, the option is unaffected.
+   /// This method should only be called when there is an actively selected row.
+   ///
+   /// \param row The row to perform the click on.
+   /// \param xPos The x position of the the click, relative to the control.
+   void clickOption(Row* row, S32 xPos);
+
+   /// Changes the option on the currently selected row. If there is no row
+   /// selected, this method does nothing.
+   ///
+   /// \param delta The amount to change the option selection by. Typically this
+   /// will be 1 or -1.
+   void changeOption(S32 delta);
+
+   /// Changes the option on the given row.
+   ///
+   /// \param row The row to change the option on.
+   /// \param delta The amount to change the option selection by. Typically this
+   /// will be 1 or -1.
+   void changeOption(Row* row, S32 delta);
 
 private:
    /// Recalculates the height of this control based on the stored row height and
@@ -260,6 +363,8 @@ private:
 
    S32      mSelected;     ///< index of the currently selected row
    S32      mHighlighted;  ///< index of the currently highlighted row
+
+   bool     mCallbackOnInputs;
 };
 
 /// \class GuiGameListMenuProfile
@@ -324,6 +429,9 @@ public:
    Point2I  mHitAreaLowerRight;  ///< Offset for the lower right corner of the hit area
    Point2I  mIconOffset;         ///< Offset for a row's extra icon
    Point2I  mRowSize;            ///< The base size of a row
+
+   S32   mColumnSplit;  ///< Absolute position of the split between columns
+   S32   mRightPad;     ///< Extra padding between the right arrow and the hit area
 
    GuiGameListMenuProfile();
 

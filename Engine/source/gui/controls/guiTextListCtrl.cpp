@@ -516,6 +516,39 @@ bool GuiTextListCtrl::onKeyDown( const GuiEvent &event )
 
 }
 
+bool GuiTextListCtrl::onGamepadAxisUp(const GuiEvent& event)
+{
+   if (mSelectedCell.y < (mList.size() - 1))
+   {
+      S32 yDelta = 0;
+
+      mSelectedCell.y++;
+      yDelta = mCellSize.y;
+
+      GuiScrollCtrl* parent = dynamic_cast<GuiScrollCtrl*>(getParent());
+      if (parent)
+         parent->scrollDelta(0, yDelta);
+   }
+   return true;
+}
+
+bool GuiTextListCtrl::onGamepadAxisDown(const GuiEvent& event)
+{
+   if (mSelectedCell.y > 0)
+   {
+      S32 yDelta = 0;
+
+      mSelectedCell.y--;
+      yDelta = -mCellSize.y;
+
+      GuiScrollCtrl* parent = dynamic_cast<GuiScrollCtrl*>(getParent());
+      if (parent)
+         parent->scrollDelta(0, yDelta);
+   }
+
+   return true;
+}
+
 //-----------------------------------------------------------------------------
 // Console Methods
 //-----------------------------------------------------------------------------

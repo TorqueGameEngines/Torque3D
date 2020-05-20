@@ -15,11 +15,11 @@
    canSaveDynamicFields = "1";
 
    new GuiControl(JoinServerWindow) {
-      position = "80 36";
-      extent = "800 616";
+      position = "45 56";
+      extent = "928 655";
       minExtent = "8 2";
-      horizSizing = "right";
-      vertSizing = "bottom";
+      horizSizing = "center";
+      vertSizing = "center";
       profile = "GuiDefaultProfile";
       visible = "1";
       active = "1";
@@ -29,21 +29,39 @@
       canSave = "1";
       canSaveDynamicFields = "0";
 
-      new GuiTextCtrl(JS_status) {
-         text = "No servers found.";
-         maxLength = "255";
+      new GuiBitmapCtrl() {
+         bitmap = "data/ui/images/hudfill.png";
+         color = "255 255 255 255";
+         wrap = "0";
+         position = "0 0";
+         extent = "928 655";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
+      new GuiTextCtrl() {
+         text = "JOIN SERVER";
+         maxLength = "1024";
          margin = "0 0 0 0";
          padding = "0 0 0 0";
          anchorTop = "1";
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "277 31";
-         extent = "148 18";
-         minExtent = "8 8";
+         position = "22 10";
+         extent = "207 28";
+         minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiMenuButtonProfile";
+         profile = "MenuHeaderText";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -52,54 +70,28 @@
          canSave = "1";
          canSaveDynamicFields = "0";
       };
-      new GuiScrollCtrl() {
-         willFirstRespond = "1";
-         hScrollBar = "dynamic";
-         vScrollBar = "alwaysOn";
-         lockHorizScroll = "0";
-         lockVertScroll = "0";
-         constantThumbHeight = "0";
-         childMargin = "0 0";
-         mouseWheelScrollSpeed = "-1";
+      new GuiTextCtrl() {
+         text = "Player Name:";
+         maxLength = "255";
          margin = "0 0 0 0";
          padding = "0 0 0 0";
          anchorTop = "1";
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "10 80";
-         extent = "780 461";
+         position = "12 47";
+         extent = "109 18";
          minExtent = "8 8";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiMenuScrollProfile";
+         profile = "MenuSubHeaderText";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
-         isContainer = "1";
+         isContainer = "0";
          canSave = "1";
          canSaveDynamicFields = "0";
-
-         new GuiTextListCtrl(JS_serverList) {
-            columns = "0 200 270 335 400";
-            fitParentWidth = "1";
-            clipColumnText = "0";
-            position = "1 1";
-            extent = "762 8";
-            minExtent = "8 8";
-            horizSizing = "right";
-            vertSizing = "bottom";
-            profile = "GuiTextArrayProfile";
-            visible = "1";
-            active = "1";
-            altCommand = "JoinServerDlg.join();";
-            tooltipProfile = "GuiToolTipProfile";
-            hovertime = "1000";
-            isContainer = "1";
-            canSave = "1";
-            canSaveDynamicFields = "0";
-         };
       };
       new GuiTextEditCtrl() {
          historySize = "0";
@@ -114,7 +106,7 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "116 31";
+         position = "124 47";
          extent = "144 18";
          minExtent = "8 8";
          horizSizing = "right";
@@ -129,8 +121,8 @@
          canSave = "1";
          canSaveDynamicFields = "0";
       };
-      new GuiTextCtrl() {
-         text = "Player Name:";
+      new GuiTextCtrl(JS_status) {
+         text = "No servers found.";
          maxLength = "255";
          margin = "0 0 0 0";
          padding = "0 0 0 0";
@@ -138,17 +130,17 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "12 31";
-         extent = "98 18";
+         position = "277 47";
+         extent = "148 18";
          minExtent = "8 8";
          horizSizing = "right";
          vertSizing = "bottom";
-         profile = "GuiMenuButtonProfile";
+         profile = "MenuSubHeaderText";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
-         isContainer = "0";
+         isContainer = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
       };
@@ -161,7 +153,7 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "269 59";
+         position = "269 67";
          extent = "36 18";
          minExtent = "8 8";
          horizSizing = "right";
@@ -184,7 +176,7 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "335 59";
+         position = "335 67";
          extent = "38 18";
          minExtent = "8 8";
          horizSizing = "right";
@@ -207,7 +199,7 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "412 59";
+         position = "412 67";
          extent = "28 18";
          minExtent = "8 8";
          horizSizing = "right";
@@ -230,7 +222,7 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "212 59";
+         position = "212 67";
          extent = "20 18";
          minExtent = "8 8";
          horizSizing = "right";
@@ -253,7 +245,7 @@
          anchorBottom = "0";
          anchorLeft = "1";
          anchorRight = "0";
-         position = "12 59";
+         position = "12 67";
          extent = "63 18";
          minExtent = "8 8";
          horizSizing = "right";
@@ -267,9 +259,59 @@
          canSave = "1";
          canSaveDynamicFields = "0";
       };
+      new GuiScrollCtrl() {
+         willFirstRespond = "1";
+         hScrollBar = "dynamic";
+         vScrollBar = "dynamic";
+         lockHorizScroll = "0";
+         lockVertScroll = "0";
+         constantThumbHeight = "0";
+         childMargin = "0 0";
+         mouseWheelScrollSpeed = "-1";
+         margin = "0 0 0 0";
+         padding = "0 0 0 0";
+         anchorTop = "1";
+         anchorBottom = "0";
+         anchorLeft = "1";
+         anchorRight = "0";
+         position = "19 98";
+         extent = "890 501";
+         minExtent = "8 8";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "GuiMenuScrollProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+
+         new GuiTextListCtrl(JS_serverList) {
+            columns = "0 200 270 335 400";
+            fitParentWidth = "1";
+            clipColumnText = "0";
+            rowHeightPadding = "2";
+            position = "1 1";
+            extent = "765 8";
+            minExtent = "8 8";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            profile = "GuiTextArrayProfile";
+            visible = "1";
+            active = "1";
+            altCommand = "JoinServerDlg.join();";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "1";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
+      };
       new GuiControl(JS_queryStatus) {
-         position = "10 541";
-         extent = "778 35";
+         position = "16 615";
+         extent = "900 35";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
@@ -360,13 +402,14 @@
          horizSizing = "right";
          vertSizing = "bottom";
          profile = "GuiMenuButtonProfile";
-         visible = "1";
+         visible = "0";
          active = "1";
          command = "Canvas.popDialog(JoinServerMenu);\n\nif(isObject(JoinServerMenu.returnGui) && JoinServerMenu.returnGui.isMethod(\"onReturnTo\"))    JoinServerMenu.returnGui.onReturnTo();";
          accelerator = "escape";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";
+         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
       };
@@ -381,12 +424,13 @@
          horizSizing = "right";
          vertSizing = "bottom";
          profile = "GuiMenuButtonProfile";
-         visible = "1";
+         visible = "0";
          active = "1";
          command = "JoinServerMenu.queryLan();";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";
+         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
       };
@@ -401,12 +445,13 @@
          horizSizing = "right";
          vertSizing = "bottom";
          profile = "GuiMenuButtonProfile";
-         visible = "1";
+         visible = "0";
          active = "1";
          command = "JoinServerMenu.query();";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";
+         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
       };
@@ -421,12 +466,13 @@
          horizSizing = "right";
          vertSizing = "bottom";
          profile = "GuiMenuButtonProfile";
-         visible = "1";
+         visible = "0";
          active = "1";
          command = "JoinServerMenu.refresh();";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";
+         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
       };
@@ -441,15 +487,31 @@
          horizSizing = "right";
          vertSizing = "bottom";
          profile = "GuiMenuButtonProfile";
-         visible = "1";
+         visible = "0";
          active = "0";
          command = "JoinServerMenu.join();";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";
+         hidden = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
       };
+   };
+   new GuiControl(JoinServerButtonHolder) {
+      position = "189 652";
+      extent = "646 130";
+      minExtent = "8 2";
+      horizSizing = "center";
+      vertSizing = "top";
+      profile = "GuiDefaultProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "1";
+      canSave = "1";
+      canSaveDynamicFields = "0";
    };
 };
 //--- OBJECT WRITE END ---

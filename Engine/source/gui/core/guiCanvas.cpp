@@ -1082,7 +1082,7 @@ bool GuiCanvas::processGamepadEvent(InputEventInfo &inputEvent)
          case SI_YAXIS:
          case XI_THUMBLY:
          case XI_THUMBRY:
-            if (negative)
+            if (!negative)
             {
                return mFirstResponder->onGamepadAxisDown(mLastEvent);
             }

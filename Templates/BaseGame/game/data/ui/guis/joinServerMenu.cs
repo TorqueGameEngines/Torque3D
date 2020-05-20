@@ -6,6 +6,26 @@ function JoinServerMenu::onWake()
    JoinServerJoinBtn.setActive(JS_serverList.rowCount() > 0);
 }   
 
+function JoinServerButtonHolder::onWake(%this)
+{
+   %this.refresh();
+}
+
+function JoinServerButtonHolder::refresh(%this)
+{
+   JoinServerButtonHolder.add(GamepadButtonsGui);
+   
+   GamepadButtonsGui.clearButtons();
+   
+   GamepadButtonsGui.setButton(1, "A", "", "Query LAN", "JoinServerMenu.queryLan();");
+   GamepadButtonsGui.setButton(2, "X", "", "Query Internet", "JoinServerMenu.query();");
+   GamepadButtonsGui.setButton(3, "B", "", "Refresh", "JoinServerMenu.refresh();");
+   GamepadButtonsGui.setButton(6, "Start", "Enter", "Join", "JoinServerMenu.join();");
+   GamepadButtonsGui.setButton(7, "B", "Esc", "Back", "JoinServerMenu.backOut();");
+   
+   GamepadButtonsGui.refreshButtons();
+}
+
 //----------------------------------------
 function JoinServerMenu::query(%this)
 {
@@ -77,11 +97,13 @@ function JoinServerMenu::refreshSelectedServer( %this )
 }
 
 //----------------------------------------
-function JoinServerMenu::exit(%this)
+function JoinServerMenu::backOut(%this)
 {
    cancelServerQuery();
    
    Canvas.popDialog(JoinServerMenu);
+   if(isObject(JoinServerMenu.returnGui) && JoinServerMenu.returnGui.isMethod("onReturnTo"))    
+      JoinServerMenu.returnGui.onReturnTo();  
 }
 
 //----------------------------------------

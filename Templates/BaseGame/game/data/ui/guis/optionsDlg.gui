@@ -1413,5 +1413,20 @@
          canSaveDynamicFields = "0";
       };
    };
+   new GuiControl(OptionsButtonHolder) {
+      position = "190 652";
+      extent = "646 130";
+      minExtent = "8 2";
+      horizSizing = "center";
+      vertSizing = "top";
+      profile = "GuiDefaultProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "1";
+      canSave = "1";
+      canSaveDynamicFields = "0";
+   };
 };
 //--- OBJECT WRITE END ---

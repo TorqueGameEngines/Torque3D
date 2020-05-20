@@ -104,6 +104,8 @@ class GuiTextListCtrl : public GuiArrayCtrl
    const char *getSelectedText();
 
    bool onKeyDown(const GuiEvent &event);
+   bool onGamepadAxisUp(const GuiEvent& event);
+   bool onGamepadAxisDown(const GuiEvent& event);
 
    virtual void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
 

@@ -1,3 +1,75 @@
+
+new GuiGameListMenuProfile(DefaultListMenuProfile)
+{
+   fontType = "Arial Bold";
+   fontSize = 20;
+   fontColor = "120 120 120";
+   fontColorSEL = "16 16 16";
+   fontColorNA = "200 200 200";
+   fontColorHL = "100 100 120";
+   HitAreaUpperLeft = "16 20";
+   HitAreaLowerRight = "503 74";
+   IconOffset = "40 0";
+   TextOffset = "100 0";
+   RowSize = "500 90";
+   ColumnSplit = "250";
+   RightPad = "20";
+   bitmap = "data/ui/images/listMenuArray";
+   canKeyFocus = true;
+};
+
+new GuiControlProfile(GamepadDefaultProfile)
+{
+   border = 0;
+};
+
+new GuiControlProfile(GamepadButtonTextLeft)
+{
+   fontType = "Arial Bold";
+   fontSize = 20;
+   fontColor = "255 255 255";
+   justify = "left";
+};
+
+new GuiControlProfile(GamepadButtonTextRight : GamepadButtonTextLeft)
+{
+   justify = "right";
+};
+
+new GuiControlProfile(MenuHeaderText)
+{
+   fontType = "Arial Bold";
+   fontSize = 30;
+   fontColor = "255 255 255";
+   justify = "left";
+};
+
+new GuiControlProfile(MenuHeaderTextCenter)
+{
+   fontType = "Arial Bold";
+   fontSize = 30;
+   fontColor = "255 255 255";
+   justify = "center";
+};
+
+new GuiControlProfile(MenuSubHeaderText)
+{
+   fontType = "Arial Bold";
+   fontSize = 20;
+   fontColor = "255 255 255";
+   justify = "left";
+};
+
+new GuiControlProfile(MenuMLSubHeaderText)
+{
+   fontType = "Arial Bold";
+   fontSize = 20;
+   fontColor = "255 255 255";
+   justify = "left";
+   autoSizeWidth = true;
+   autoSizeHeight = true;  
+};
+
 if( !isObject( GuiMenuButtonProfile ) )
 new GuiControlProfile( GuiMenuButtonProfile )
 {
@@ -5,10 +77,16 @@ new GuiControlProfile( GuiMenuButtonProfile )
    border = false;
    fontSize = 18;
    fontType = "Arial Bold";
-   fontColor = "240 240 240";
-   fontColorHL = "0 0 0";
+   fontColor = "200 200 200";
+   fontColorHL = "80 80 80";
    fontColorNA = "0 0 0";
-   fontColorSEL ="0 0 0";
+   fontColorSEL = "0 0 0";
+   fillColor = "255 255 255 120";
+   fillColorHL = "100 100 100 50";
+   fillColorNA = "0 0 0 50";
+   borderColor = "0 0 0 0";
+   borderColorNA = "0 0 0 0";
+   borderColorHL = "0 0 0 0";
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
@@ -207,6 +285,7 @@ new GuiControlProfile( GuiTextArrayProfile : GuiTextProfile )
    fillColorSEL = "180 180 180";
    border = false;
    category = "Core";
+   canKeyFocus = true;
 };
 
 // ----------------------------------------------------------------------------
@@ -404,11 +483,11 @@ new GuiControlProfile( GuiSliderProfile )
 if(!isObject(GuiMenuScrollProfile))
 new GuiControlProfile(GuiMenuScrollProfile)
 {
-   opaque = true;
+   opaque = false;
    fillcolor = "50 50 50";
    fontColor = "200 200 200";
    fontColorHL = "250 250 250";
-   border = true;
+   border = false;
    bitmap = "data/ui/images/scrollBar";
    hasBitmapArray = true;
    category = "Core";

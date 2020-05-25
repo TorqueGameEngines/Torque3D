@@ -24,6 +24,7 @@
 #define _GuiGameListMenuCtrl_H_
 
 #include "gui/core/guiControl.h"
+#include "gui/controls/guiBitmapCtrl.h"
 
 class GuiGameListMenuProfile;
 
@@ -42,6 +43,7 @@ protected:
    {
       StringTableEntry mLabel;            ///< Text to display in the row as a label
       StringTableEntry mScriptCallback;   ///< Script callback when row is activated
+      StringTableEntry mTooltip;          ///< A descriptive tooltip message for what the row is
       S32 mIconIndex;                     ///< Index of the icon to display on the row (-1 = no icon)
       S32 mHeightPad;                     ///< Extra amount to pad above this row
       bool mUseHighlightIcon;             ///< Toggle the use of the highlight icon
@@ -51,6 +53,7 @@ protected:
       {
          Default = 0,
          OptionList,
+         Slider,
          Keybind
       };
 
@@ -61,8 +64,17 @@ protected:
       S32                        mSelectedOption;  ///< Index into mOptions pointing at the selected option
       bool                       mWrapOptions;     ///< Determines if options should "wrap around" at the ends
 
-      Row() : mLabel(StringTable->EmptyString()), mScriptCallback(StringTable->EmptyString()), mIconIndex(-1), mHeightPad(0), mUseHighlightIcon(false), mEnabled(true),
-         mSelectedOption(0), mWrapOptions(false), mMode(Mode::Default)
+      //Slider option
+      F32                        mValue;           ///< When working as a slider, this contains the value
+      F32                        mStepSize;        ///< When working as a slider, this is the increment levels in the range
+      Point2F                    mRange;           ///< When working as a slider, this sets our min/max range
+
+      //Keybind option
+      StringTableEntry           mBitmap;
+      GFXTexHandle               mBitmapTex;
+
+      Row() : mLabel(StringTable->EmptyString()), mScriptCallback(StringTable->EmptyString()), mTooltip(StringTable->EmptyString()), mIconIndex(-1), mHeightPad(0), mUseHighlightIcon(false), mEnabled(true),
+         mSelectedOption(0), mWrapOptions(false), mMode(Mode::Default), mValue(0), mStepSize(1), mRange(Point2F(0, 1)), mBitmap(StringTable->EmptyString()), mBitmapTex(nullptr)
       {
          VECTOR_SET_ASSOCIATION(mOptions);
       }
@@ -119,7 +131,7 @@ public:
    /// means no icon will be shown on this row.
    /// \param yPad [optional] An extra amount of height padding before the row.
    /// \param enabled [optional] If this row is initially enabled. Default true.
-   virtual void addRow(const char* label, const char* callback, S32 icon = -1, S32 yPad = 0, bool useHighlightIcon = true, bool enabled = true, S32 mode = 0);
+   virtual void addRow(const char* label, const char* callback, S32 icon = -1, S32 yPad = 0, bool useHighlightIcon = true, bool enabled = true, S32 mode = 0, const char* tooltip = "");
 
    /// Adds a row to the control.
    ///
@@ -133,7 +145,23 @@ public:
    /// means no icon will be shown on this row.
    /// \param yPad [optional] An extra amount of height padding before the row.
    /// \param enabled [optional] If this row is initially enabled. Default true.
-   void addRow(const char* label, const char* optionsList, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled);
+   void addRow(const char* label, const char* optionsList, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip = "", const char* defaultValue = "");
+
+   /// Adds a row to the control.
+   ///
+   /// \param label The text to display on the row as a label.
+   /// \param defaultValue A float indicating the slider's default value
+   /// \param increments A float indicating the incremental values the slider snaps along between it's range
+   /// \param range A Point2F that indicates the minimum and maximum value range
+   /// \param callback [optional] Name of a script function to use as a callback
+   /// when this row is activated. Default NULL means no callback.
+   /// \param icon [optional] Index of the icon to use as a marker. Default -1
+   /// means no icon will be shown on this row.
+   /// \param yPad [optional] An extra amount of height padding before the row.
+   /// \param enabled [optional] If this row is initially enabled. Default true.
+   void addRow(const char* label, F32 defaultValue, F32 increments, Point2F range, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip = "");
+
+   void addRow(const char* label, const char* bitmapName, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip);
 
    /// Gets the text for the currently selected option of the given row.
    ///
@@ -166,12 +194,31 @@ public:
    /// \return The number of rows in this control.
    virtual S32 getRowCount() const { return mRows.size(); }
 
+   /// Gets the value of a row
+   ///
+   /// \param rowIndex Index of the row to get the value of.
+   F32 getValue(S32 rowIndex);
+
+   /// Sets the value of a row
+   ///
+   /// \param rowIndex Index of the row to set the value of.
+   /// \param value The new value to be set.
+   void setValue(S32 rowIndex, F32 value);
+
+   /// Gets the tooltip of a row
+   ///
+   /// \param rowIndex Index of the row to get the tooltip of.
+   const char* getTooltip(S32 rowIndex);
+
    GuiGameListMenuCtrl();
    ~GuiGameListMenuCtrl();
 
    void onRender(Point2I offset, const RectI &updateRect);
 
-   void onRenderOptionList(Row* row, Point2I currentOffset);
+   void onRenderListOption(Row* row, Point2I currentOffset);
+   void onRenderSliderOption(Row* row, Point2I currentOffset);
+
+   void onRenderKeybindOption(Row* row, Point2I currentOffset);
 
    /// Callback when the object is registered with the sim.
    ///
@@ -240,6 +287,8 @@ public:
 
    void clearRows();
 
+   void refresh();
+
    RectI getRowBounds(S32 rowIndex);
 
    DECLARE_CONOBJECT(GuiGameListMenuCtrl);
@@ -264,7 +313,7 @@ protected:
    /// means no icon will be shown on this row.
    /// \param yPad [optional] An extra amount of height padding before the row.
    /// \param enabled [optional] If this row is initially enabled. Default true.
-   virtual void addRow(Row * row, const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode = 0);
+   virtual void addRow(Row * row, const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode = 0, const char* tooltip = "");
 
    /// Determines if the given index is a valid row index. Any index pointing at
    /// an existing row is valid.
@@ -341,6 +390,17 @@ private:
    /// \param delta The amount to change the option selection by. Typically this
    /// will be 1 or -1.
    void changeOption(Row* row, S32 delta);
+
+   /// Performs a click on the current slider row. The x position is used to
+   /// determine if the left or right arrow were clicked, or if it landed somewhere on the sliderbar.
+   /// If one was clicked, the option will be changed. If neither was clicked, the option is unaffected.
+   /// This method should only be called when there is an actively selected row.
+   ///
+   /// \param row The row to perform the click on.
+   /// \param xPos The x position of the the click, relative to the control.
+   void clickSlider(Row* row, S32 xPos);
+
+   void clickKeybind(Row* row, S32 xPos);
 
 private:
    /// Recalculates the height of this control based on the stored row height and

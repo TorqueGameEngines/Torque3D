@@ -10,7 +10,6 @@ function MainMenuGui::onWake(%this)
 
 function MainMenuGui::onSleep(%this)
 {
-   menuMoveMap.pop();
 }
 
 function MainMenuButtonHolder::onWake(%this)

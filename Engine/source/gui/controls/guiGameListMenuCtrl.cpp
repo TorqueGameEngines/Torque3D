@@ -144,7 +144,15 @@ void GuiGameListMenuCtrl::onRender(Point2I offset, const RectI &updateRect)
 
       if ((*row)->mMode == Row::Mode::OptionList)
       {
-         onRenderOptionList((*row), currentOffset);
+         onRenderListOption((*row), currentOffset);
+      }
+      else if ((*row)->mMode == Row::Mode::Slider)
+      {
+         onRenderSliderOption((*row), currentOffset);
+      }
+      else if ((*row)->mMode == Row::Mode::Keybind)
+      {
+         onRenderKeybindOption((*row), currentOffset);
       }
    }
 
@@ -156,7 +164,7 @@ void GuiGameListMenuCtrl::onRender(Point2I offset, const RectI &updateRect)
    renderChildControls(offset, updateRect);
 }
 
-void GuiGameListMenuCtrl::onRenderOptionList(Row* row, Point2I currentOffset)
+void GuiGameListMenuCtrl::onRenderListOption(Row* row, Point2I currentOffset)
 {
    GuiGameListMenuProfile* profile = (GuiGameListMenuProfile*)mProfile;
 
@@ -242,6 +250,165 @@ void GuiGameListMenuCtrl::onRenderOptionList(Row* row, Point2I currentOffset)
    }
 }
 
+void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
+{
+   GuiGameListMenuProfile* profile = (GuiGameListMenuProfile*)mProfile;
+
+   F32 xScale = (float)getWidth() / profile->getRowWidth();
+
+   S32 rowHeight = profile->getRowHeight();
+
+   bool profileHasArrows = profile->hasArrows();
+   Point2I arrowExtent;
+   S32 arrowOffsetY(0);
+   if (profileHasArrows)
+   {
+      arrowExtent = profile->getArrowExtent();
+
+      // icon is centered vertically
+      arrowOffsetY = (rowHeight - arrowExtent.y) >> 1;
+   }
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+
+   Point2I arrowOffset;
+   S32 columnSplit = profile->mColumnSplit * xScale;
+
+   S32 iconIndex;
+
+   bool isRowSelected = (getSelected() != NO_ROW) && (row == mRows[getSelected()]);
+   bool isRowHighlighted = (getHighlighted() != NO_ROW) ? ((row == mRows[getHighlighted()]) && (row->mEnabled)) : false;
+   if (profileHasArrows)
+   {
+      // render the left arrow
+      bool arrowOnL = (isRowSelected || isRowHighlighted) && (row->mValue > row->mRange.x);
+      iconIndex = (arrowOnL) ? Profile::TEX_L_ARROW_ON : Profile::TEX_L_ARROW_OFF;
+      arrowOffset.x = currentOffset.x + columnSplit;
+      arrowOffset.y = currentOffset.y + arrowOffsetY;
+
+      drawer->clearBitmapModulation();
+      drawer->drawBitmapStretchSR(profile->mTextureObject, RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
+
+      // render the right arrow
+      bool arrowOnR = (isRowSelected || isRowHighlighted) && (row->mValue < row->mRange.y);
+      iconIndex = (arrowOnR) ? Profile::TEX_R_ARROW_ON : Profile::TEX_R_ARROW_OFF;
+      arrowOffset.x = currentOffset.x + (profile->mHitAreaLowerRight.x - profile->mRightPad) * xScale - arrowExtent.x;
+      arrowOffset.y = currentOffset.y + arrowOffsetY;
+
+      drawer->clearBitmapModulation();
+      drawer->drawBitmapStretchSR(profile->mTextureObject, RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
+   }
+
+   //Draw the slider bar
+   if (row->mEnabled)
+   {
+      RectI sliderRect;
+
+      sliderRect.point.x = currentOffset.x + columnSplit + arrowExtent.x;
+      sliderRect.point.y = currentOffset.y + arrowOffsetY;
+
+      sliderRect.extent.x = (currentOffset.x + (profile->mHitAreaLowerRight.x - profile->mRightPad) * xScale - arrowExtent.x) - sliderRect.point.x;
+      sliderRect.extent.y = arrowExtent.y;
+
+      //Now adjust the bar to match-to our value
+
+      S32 barStart = sliderRect.point.x;
+      S32 barEnd = sliderRect.point.x + sliderRect.extent.x;
+
+      S32 xPosFill = (((row->mValue - row->mRange.x) * (barEnd - barStart)) / (row->mRange.y - row->mRange.x)) + barStart;
+
+      RectI fillRect = sliderRect;
+      fillRect.extent.x = xPosFill - sliderRect.point.x;
+
+      ColorI barColor;
+      ColorI barOutlineColor;
+      if (isRowSelected)
+      {
+         barColor = profile->mFillColorHL;
+         barOutlineColor = profile->mFillColor;
+      }
+      else
+      {
+         barColor = profile->mFillColor;
+         barOutlineColor = profile->mFillColorHL;
+      }
+
+      drawer->drawRectFill(fillRect, barColor);
+
+      drawer->drawRect(sliderRect, barOutlineColor);
+   }
+
+   // get the appropriate font color
+   ColorI fontColor;
+   if (!row->mEnabled)
+   {
+      fontColor = profile->mFontColorNA;
+   }
+   else if (isRowSelected)
+   {
+      fontColor = profile->mFontColorSEL;
+   }
+   else if (isRowHighlighted)
+   {
+      fontColor = profile->mFontColorHL;
+   }
+   else
+   {
+      fontColor = profile->mFontColor;
+   }
+
+   // calculate text to be at the center between the arrows
+   GFont* font = profile->mFont;
+
+   ConsoleValue val;
+   val.setFloatValue(row->mValue);
+
+   const char* stringVal = val.getStringValue();
+
+   S32 textWidth = font->getStrWidth(stringVal);
+   S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;
+   S32 columnCenter = columnSplit + (columnWidth >> 1);
+   S32 textStartX = columnCenter - (textWidth >> 1);
+   Point2I textOffset(textStartX, 0);
+
+   // render the option text itself
+   Point2I textExtent(columnWidth, rowHeight);
+   drawer->setBitmapModulation(fontColor);
+   renderJustifiedText(currentOffset + textOffset, textExtent, stringVal);
+}
+
+void GuiGameListMenuCtrl::onRenderKeybindOption(Row* row, Point2I currentOffset)
+{
+   GuiGameListMenuProfile* profile = (GuiGameListMenuProfile*)mProfile;
+   F32 xScale = (float)getWidth() / profile->getRowWidth();
+   S32 columnSplit = profile->mColumnSplit * xScale;
+
+   S32 rowHeight = profile->getRowHeight();
+
+   S32 optionWidth = xScale - columnSplit;
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+   //drawer->drawBitmap(row->mBitmap, )
+
+   Point2I button;
+   button.x = currentOffset.x + columnSplit + (columnSplit / 2)/* + (optionWidth / 2)*/;
+   button.y = currentOffset.y + (rowHeight / 4);
+
+   Point2I buttonSize;
+   buttonSize.x = rowHeight / 2;
+   buttonSize.y = rowHeight / 2;
+
+   if (row->mBitmapTex.isValid())
+   {
+      GFXTextureObject* texture = row->mBitmapTex;
+      RectI rect(button, buttonSize);
+      drawer->clearBitmapModulation();
+      drawer->drawBitmapStretch(texture, rect, GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+   }
+
+   //drawer->drawRectFill(button, ColorI::BLUE);
+}
+
 void GuiGameListMenuCtrl::onDebugRender(Point2I offset)
 {
    GuiGameListMenuProfile * profile = (GuiGameListMenuProfile *) mProfile;
@@ -292,13 +459,13 @@ void GuiGameListMenuCtrl::onDebugRender(Point2I offset)
    }
 }
 
-void GuiGameListMenuCtrl::addRow(const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode)
+void GuiGameListMenuCtrl::addRow(const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode, const char* tooltip)
 {
    Row * row = new Row();
-   addRow(row, label, callback, icon, yPad, useHighlightIcon, enabled, mode);
+   addRow(row, label, callback, icon, yPad, useHighlightIcon, enabled, mode, tooltip);
 }
 
-void GuiGameListMenuCtrl::addRow(Row * row, const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode)
+void GuiGameListMenuCtrl::addRow(Row * row, const char* label, const char* callback, S32 icon, S32 yPad, bool useHighlightIcon, bool enabled, S32 mode, const char* tooltip)
 {
    row->mLabel = StringTable->insert(label, true);
    row->mScriptCallback = (dStrlen(callback) > 0) ? StringTable->insert(callback, true) : NULL;
@@ -307,6 +474,7 @@ void GuiGameListMenuCtrl::addRow(Row * row, const char* label, const char* callb
    row->mUseHighlightIcon = useHighlightIcon;
    row->mEnabled = enabled;
    row->mMode = (Row::Mode)mode;
+   row->mTooltip = StringTable->insert(tooltip);
 
    mRows.push_back(row);
 
@@ -318,22 +486,51 @@ void GuiGameListMenuCtrl::addRow(Row * row, const char* label, const char* callb
    }
 }
 
-void GuiGameListMenuCtrl::addRow(const char* label, const char* optionsList, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled)
+void GuiGameListMenuCtrl::addRow(const char* label, const char* optionsList, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip, const char* defaultValue)
 {
    static StringTableEntry DELIM = StringTable->insert("\t", true);
    Row* row = new Row();
    Vector<StringTableEntry> options(__FILE__, __LINE__);
+
+   S32 defaultOption = 0;
+
    S32 count = StringUnit::getUnitCount(optionsList, DELIM);
    for (S32 i = 0; i < count; ++i)
    {
       const char* option = StringUnit::getUnit(optionsList, i, DELIM);
       options.push_back(StringTable->insert(option, true));
+
+      if (dStrcmp(option, defaultValue) == 0)
+         defaultOption = options.size() - 1;
    }
    row->mOptions = options;
    bool hasOptions = row->mOptions.size() > 0;
-   row->mSelectedOption = (hasOptions) ? 0 : NO_OPTION;
+   row->mSelectedOption = (hasOptions) ? defaultOption : NO_OPTION;
    row->mWrapOptions = wrapOptions;
-   addRow(row, label, callback, icon, yPad, true, (hasOptions) ? enabled : false, Row::Mode::OptionList);
+   addRow(row, label, callback, icon, yPad, true, (hasOptions) ? enabled : false, Row::Mode::OptionList, tooltip);
+}
+
+void GuiGameListMenuCtrl::addRow(const char* label, F32 defaultValue, F32 increments, Point2F range, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip)
+{
+   static StringTableEntry DELIM = StringTable->insert("\t", true);
+   Row* row = new Row();
+   row->mValue = defaultValue;
+   row->mStepSize = increments;
+   row->mRange = range;
+
+   addRow(row, label, callback, icon, yPad, true, enabled, Row::Mode::Slider, tooltip);
+}
+
+void GuiGameListMenuCtrl::addRow(const char* label, const char* bitmapName, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip)
+{
+   static StringTableEntry DELIM = StringTable->insert("\t", true);
+   Row* row = new Row();
+   row->mBitmap = StringTable->insert(bitmapName);
+
+   if(row->mBitmap != StringTable->EmptyString())
+      row->mBitmapTex.set(row->mBitmap, &GFXDefaultGUIProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+
+   addRow(row, label, callback, icon, yPad, true, enabled, Row::Mode::Keybind, tooltip);
 }
 
 Point2I  GuiGameListMenuCtrl::getMinExtent() const
@@ -471,6 +668,16 @@ void GuiGameListMenuCtrl::onMouseUp(const GuiEvent &event)
       {
          S32 xPos = globalToLocalCoord(event.mousePoint).x;
          clickOption((Row*)mRows[getSelected()], xPos);
+      }
+      else if (mRows[hitRow]->mMode == Row::Mode::Slider)
+      {
+         S32 xPos = globalToLocalCoord(event.mousePoint).x;
+         clickSlider((Row*)mRows[getSelected()], xPos);
+      }
+      else if (mRows[hitRow]->mMode == Row::Mode::Keybind)
+      {
+         S32 xPos = globalToLocalCoord(event.mousePoint).x;
+         clickKeybind((Row*)mRows[getSelected()], xPos);
       }
    }
 }
@@ -789,7 +996,20 @@ void GuiGameListMenuCtrl::setRowLabel(S32 rowIndex, const char * label)
 
 void GuiGameListMenuCtrl::clearRows()
 {
+   for (U32 i = 0; i < mRows.size(); i++)
+   {
+      if (mRows[i]->mBitmap != StringTable->EmptyString())
+         mRows[i]->mBitmapTex = nullptr;
+   }
+
    mRows.clear();
+   setSelected(-1);
+   setHeight(mMinExtent.y);
+}
+
+void GuiGameListMenuCtrl::refresh()
+{
+   enforceConstraints();
 }
 
 RectI GuiGameListMenuCtrl::getRowBounds(S32 rowIndex)
@@ -962,6 +1182,139 @@ void GuiGameListMenuCtrl::changeOption(Row* row, S32 delta)
 }
 IMPLEMENT_CONOBJECT(GuiGameListMenuCtrl);
 
+void GuiGameListMenuCtrl::clickSlider(Row* row, S32 xPos)
+{
+   GuiGameListMenuProfile* profile = (GuiGameListMenuProfile*)mProfile;
+   if (!profile->hasArrows())
+   {
+      return;
+   }
+
+   F32 xScale = (float)getWidth() / profile->getRowWidth();
+
+   S32 bitmapArrowWidth = mProfile->getBitmapArrayRect(Profile::TEX_FIRST_ARROW).extent.x;
+
+   S32 leftArrowX1 = profile->mColumnSplit * xScale;
+   S32 leftArrowX2 = leftArrowX1 + bitmapArrowWidth;
+
+   S32 rightArrowX2 = (profile->mHitAreaLowerRight.x - profile->mRightPad) * xScale;
+   S32 rightArrowX1 = rightArrowX2 - bitmapArrowWidth;
+
+   if ((leftArrowX1 <= xPos) && (xPos <= leftArrowX2))
+   {
+      row->mValue -= row->mStepSize;
+
+      row->mValue = mRound(row->mValue / row->mStepSize) * row->mStepSize;
+
+      if (row->mValue < row->mRange.x)
+         row->mValue = row->mRange.x;
+
+   }
+   else if ((rightArrowX1 <= xPos) && (xPos <= rightArrowX2))
+   {
+      //F32 snap = row->mValue % row->mStepSize;
+      //row->mValue.y -= snap;
+
+      row->mValue += row->mStepSize;
+
+      row->mValue = mRound(row->mValue / row->mStepSize) * row->mStepSize;
+
+      if (row->mValue > row->mRange.y)
+         row->mValue = row->mRange.y;
+   }
+   else
+   {
+      //see if we clicked on the sliderbar itself
+      S32 barStart = leftArrowX2;
+      S32 barEnd = rightArrowX1;
+
+      if (xPos >= barStart && xPos <= barEnd)
+      {
+         //Yep, we clicked in it
+         Con::printf("CLICKED A SLIDERBAR");
+
+         //find the position
+         F32 newValue = (((xPos - barStart) * (row->mRange.y - row->mRange.x)) / (barEnd - barStart)) + row->mRange.x;
+
+         newValue = mRound(newValue / row->mStepSize) * row->mStepSize;
+
+         Con::printf("New value is %f", newValue);
+
+         row->mValue = newValue;
+      }
+   }
+}
+
+void GuiGameListMenuCtrl::clickKeybind(Row* row, S32 xPos)
+{
+   GuiGameListMenuProfile* profile = (GuiGameListMenuProfile*)mProfile;
+   F32 xScale = (float)getWidth() / profile->getRowWidth();
+   S32 columnSplit = profile->mColumnSplit * xScale;
+
+   S32 rowHeight = profile->getRowHeight();
+
+   S32 optionWidth = xScale - columnSplit;
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+   //drawer->drawBitmap(row->mBitmap, )
+
+   Point2I button;
+   button.x = columnSplit + (columnSplit / 2)/* + (optionWidth / 2)*/;
+   button.y = rowHeight / 4;
+
+   Point2I buttonSize;
+   buttonSize.x = rowHeight / 2;
+   buttonSize.y = rowHeight / 2;
+
+   GFXTextureObject* texture = row->mBitmapTex;
+   RectI rect(button, buttonSize);
+
+   if (rect.pointInRect(Point2I(xPos, rowHeight / 2)))
+   {
+      if (row->mScriptCallback != StringTable->EmptyString())
+      {
+         S32 rowId = getSelected();
+         Con::executef(row->mScriptCallback, rowId);
+      }
+   }
+}
+
+F32 GuiGameListMenuCtrl::getValue(S32 rowIndex)
+{
+   if (!isValidRowIndex(rowIndex))
+   {
+      return 0;
+   }
+
+   Row* row = (Row*)mRows[rowIndex];
+
+   return row->mValue;
+}
+
+void GuiGameListMenuCtrl::setValue(S32 rowIndex, F32 value)
+{
+   if (!isValidRowIndex(rowIndex))
+   {
+      return;
+   }
+
+   Row* row = (Row*)mRows[rowIndex];
+
+   row->mValue = value;
+}
+
+const char* GuiGameListMenuCtrl::getTooltip(S32 rowIndex)
+{
+   if (!isValidRowIndex(rowIndex))
+   {
+      return "";
+   }
+
+   Row* row = (Row*)mRows[rowIndex];
+
+   return row->mTooltip;
+}
+
 ConsoleDocClass( GuiGameListMenuCtrl,
    "@brief A base class for cross platform menu controls that are gamepad friendly.\n\n"
 
@@ -1107,9 +1460,16 @@ DefineEngineMethod(GuiGameListMenuCtrl, clearRows, void, (), ,
    return object->clearRows();
 }
 
+DefineEngineMethod(GuiGameListMenuCtrl, refresh, void, (), ,
+   "Gets the index of the currently selected row.\n\n"
+   "@return Index of the selected row.")
+{
+   return object->refresh();
+}
+
 DefineEngineMethod(GuiGameListMenuCtrl, addOptionRow, void,
-   (const char* label, const char* options, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled),
-   (-1, 0, true),
+   (const char* label, const char* options, bool wrapOptions, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip, const char* defaultValue),
+   (-1, 0, true, "", ""),
    "Add a row to the list control.\n\n"
    "@param label The text to display on the row as a label.\n"
    "@param options A tab separated list of options.\n"
@@ -1119,7 +1479,37 @@ DefineEngineMethod(GuiGameListMenuCtrl, addOptionRow, void,
    "@param yPad [optional] An extra amount of height padding before the row. Does nothing on the first row.\n"
    "@param enabled [optional] If this row is initially enabled.")
 {
-   object->addRow(label, options, wrapOptions, callback, icon, yPad, enabled);
+   object->addRow(label, options, wrapOptions, callback, icon, yPad, enabled, tooltip, defaultValue);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, addSliderRow, void,
+(const char* label, F32 defaultValue, F32 increment, Point2F range, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip),
+(-1, 0, true, ""),
+"Add a row to the list control.\n\n"
+"@param label The text to display on the row as a label.\n"
+"@param options A tab separated list of options.\n"
+"@param wrapOptions Specify true to allow options to wrap at each end or false to prevent wrapping.\n"
+"@param callback Name of a script function to use as a callback when this row is activated.\n"
+"@param icon [optional] Index of the icon to use as a marker.\n"
+"@param yPad [optional] An extra amount of height padding before the row. Does nothing on the first row.\n"
+"@param enabled [optional] If this row is initially enabled.")
+{
+   object->addRow(label, defaultValue, increment, range, callback, icon, yPad, enabled, tooltip);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, addKeybindRow, void,
+(const char* label, const char* bitmapName, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip),
+(-1, 0, true, ""),
+"Add a row to the list control.\n\n"
+"@param label The text to display on the row as a label.\n"
+"@param options A tab separated list of options.\n"
+"@param wrapOptions Specify true to allow options to wrap at each end or false to prevent wrapping.\n"
+"@param callback Name of a script function to use as a callback when this row is activated.\n"
+"@param icon [optional] Index of the icon to use as a marker.\n"
+"@param yPad [optional] An extra amount of height padding before the row. Does nothing on the first row.\n"
+"@param enabled [optional] If this row is initially enabled.")
+{
+   object->addRow(label, bitmapName, callback, icon, yPad, enabled, tooltip);
 }
 
 DefineEngineMethod(GuiGameListMenuCtrl, getCurrentOption, const char*, (S32 row), ,
@@ -1145,6 +1535,30 @@ DefineEngineMethod(GuiGameListMenuCtrl, setOptions, void, (S32 row, const char* 
    "@param optionsList A tab separated list of options for the control.")
 {
    object->setOptions(row, optionsList);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, getValue, void, (S32 row), ,
+   "Sets the list of options on the given row.\n\n"
+   "@param row Index of the row to set options on."
+   "@param optionsList A tab separated list of options for the control.")
+{
+   object->getValue(row);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, setValue, void, (S32 row, F32 value), ,
+   "Sets the list of options on the given row.\n\n"
+   "@param row Index of the row to set options on."
+   "@param optionsList A tab separated list of options for the control.")
+{
+   object->setValue(row, value);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, getTooltip, const char*, (S32 row), ,
+   "Sets the list of options on the given row.\n\n"
+   "@param row Index of the row to set options on."
+   "@param optionsList A tab separated list of options for the control.")
+{
+   return object->getTooltip(row);
 }
 
 //-----------------------------------------------------------------------------

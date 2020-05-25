@@ -35,8 +35,6 @@ function UI::initClient(%this)
    //Profiles
    exec("./scripts/profiles.cs");
    
-   exec("./scripts/menu.keybinds.cs");
-   
    //Now gui files
    exec("./guis/guiGamepadButton.cs");
    exec("./guis/guiGamepadButton.gui");
@@ -44,37 +42,34 @@ function UI::initClient(%this)
    exec("./guis/mainMenu.cs");
    exec("./guis/mainMenu.gui");
    
-   exec("./guis/chooseLevelDlg.gui");
    exec("./guis/chooseLevelDlg.cs");
+   exec("./guis/chooseLevelDlg.gui");
    
-   exec("./guis/joinServerMenu.gui");
    exec("./guis/joinServerMenu.cs");
+   exec("./guis/joinServerMenu.gui");
    
    exec("./guis/loadingGui.gui");
    
    exec("./guis/optionsMenu.cs");
    exec("./guis/optionsMenu.gui");
    
-   exec("./guis/pauseMenu.gui");
    exec("./guis/pauseMenu.cs");
+   exec("./guis/pauseMenu.gui");
    
    exec("./guis/remapDlg.gui");
    exec("./guis/remapConfirmDlg.gui");
    
-   exec("./guis/profiler.gui");
    exec("./guis/profiler.cs");
+   exec("./guis/profiler.gui");
    
    exec("./guis/netGraphGui.gui");
    exec("./guis/RecordingsDlg.gui");
    
-   //exec("./guis/FileDialog.gui");
-   //exec("./guis/FileDialog.cs");
-   
-   exec("./guis/guiMusicPlayer.gui");
    exec("./guis/guiMusicPlayer.cs");
+   exec("./guis/guiMusicPlayer.gui");
    
-   exec("./guis/startupGui.gui");
    exec("./guis/startupGui.cs");
+   exec("./guis/startupGui.gui");
    
    // Load Editor Dialogs
    exec("./guis/messageBoxDlg.gui");
@@ -88,17 +83,14 @@ function UI::initClient(%this)
    exec("./scripts/messageBoxes.cs");
    exec("./scripts/help.cs");
    exec("./scripts/cursors.cs");
+   exec("./scripts/utility.cs");
+   
+   exec("./scripts/keybindEdit.cs");
    
    exec("./guis/menuGraphics.gui");
    exec("./guis/menuGraphics.cs");
    
-   //exec("./scripts/menu.keybinds.cs");
-   
-   //exec("./scripts/GuiTreeViewCtrl.cs");
-   
    loadStartup();
-   
-   //menuMoveMap.push();
 }
 
 function UI::onCreateClientConnection(%this){}

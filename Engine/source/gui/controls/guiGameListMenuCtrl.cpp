@@ -1230,15 +1230,10 @@ void GuiGameListMenuCtrl::clickSlider(Row* row, S32 xPos)
 
       if (xPos >= barStart && xPos <= barEnd)
       {
-         //Yep, we clicked in it
-         Con::printf("CLICKED A SLIDERBAR");
-
          //find the position
          F32 newValue = (((xPos - barStart) * (row->mRange.y - row->mRange.x)) / (barEnd - barStart)) + row->mRange.x;
 
          newValue = mRound(newValue / row->mStepSize) * row->mStepSize;
-
-         Con::printf("New value is %f", newValue);
 
          row->mValue = newValue;
       }
@@ -1537,12 +1532,12 @@ DefineEngineMethod(GuiGameListMenuCtrl, setOptions, void, (S32 row, const char* 
    object->setOptions(row, optionsList);
 }
 
-DefineEngineMethod(GuiGameListMenuCtrl, getValue, void, (S32 row), ,
+DefineEngineMethod(GuiGameListMenuCtrl, getValue, F32, (S32 row), ,
    "Sets the list of options on the given row.\n\n"
    "@param row Index of the row to set options on."
    "@param optionsList A tab separated list of options for the control.")
 {
-   object->getValue(row);
+   return object->getValue(row);
 }
 
 DefineEngineMethod(GuiGameListMenuCtrl, setValue, void, (S32 row, F32 value), ,

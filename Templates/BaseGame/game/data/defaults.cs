@@ -81,11 +81,11 @@ $pref::SFX::autoDetect = true;
 /// this is DirectSound, OpenAL, or XACT.  There is also 
 /// a special Null provider which acts normally, but 
 /// plays no sound.
-$pref::SFX::provider = "";
+$pref::SFX::provider = "OpenAL";
 
 /// The sound device to select from the provider.  Each
 /// provider may have several different devices.
-$pref::SFX::device = "OpenAL";
+$pref::SFX::device = "OpenAL Soft";
 
 /// If true the device will try to use hardware buffers
 /// and sound mixing.  If not it will use software.

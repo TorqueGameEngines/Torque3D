@@ -75,17 +75,12 @@ function UI::initClient(%this)
    exec("./guis/messageBoxDlg.gui");
    
    //Load scripts
-   exec("./scripts/optionsList.cs");
-   exec("./scripts/displayMenu.cs");
-   exec("./scripts/graphicsMenu.cs");
    exec("./scripts/controlsMenu.cs");
-   exec("./scripts/audioMenu.cs");
    exec("./scripts/messageBoxes.cs");
    exec("./scripts/help.cs");
    exec("./scripts/cursors.cs");
    exec("./scripts/utility.cs");
-   
-   exec("./scripts/keybindEdit.cs");
+   exec("./scripts/default.keybinds.cs");
    
    exec("./guis/menuGraphics.gui");
    exec("./guis/menuGraphics.cs");

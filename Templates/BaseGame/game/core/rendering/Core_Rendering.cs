@@ -11,6 +11,7 @@ function Core_Rendering::onCreate(%this)
    
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
+   exec("./scripts/graphicsOptions.cs");
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");
    exec("./scripts/gfxData/commonMaterialData.cs");
@@ -42,7 +43,7 @@ function Core_Rendering::initClient(%this)
    
    //Autodetect settings if it's our first time
    if($pref::Video::autoDetect)
-      GraphicsMenu.Autodetect();
+      AutodetectGraphics();
 
    postFXInit();
    

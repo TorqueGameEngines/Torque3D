@@ -89,6 +89,39 @@ function OptionsMenu::apply(%this)
    {
       %this.applyGraphicsSettings();
    }
+   else if(%this.pageTabIndex == 2)
+   {
+      %this.applyAudioSettings();
+   }
+   else if(%this.pageTabIndex == 3 || %this.pageTabIndex == 4)
+   {
+      %prefPath = getPrefpath();
+      
+      %actionMapCount = ActionMapGroup.getCount();
+   
+      %actionMapList = "";
+      %append = false;
+      for(%i=0; %i < %actionMapCount; %i++)
+      {
+         %actionMap = ActionMapGroup.getObject(%i);
+         
+         if(%actionMap == GlobalActionMap.getId())
+            continue;
+         
+         %actionMap.save( %prefPath @ "/keybinds.cs", %append );
+         
+         if(%append != true)
+            %append = true; 
+      }
+   }
+   
+   %prefPath = getPrefpath();
+   export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+}
+
+function OptionsMenu::resetToDefaults(%this)
+{
+   MessageBoxOKCancel("", "This will set the graphical settings back to the auto-detected defaults. Do you wish to continue?", "AutodetectGraphics();", "");
 }
 
 function OptionsMenuSettingsList::onChange(%this)
@@ -174,7 +207,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    
    %resolutionList = getScreenResolutionList();
    OptionsMenuSettingsList.addOptionRow("Display API", "D3D11\tOpenGL", false, "", -1, -30, true, "The display API used for rendering.", getDisplayDeviceInformation());
-   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "screenResolutionOptionChanged", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
+   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
    OptionsMenuSettingsList.addOptionRow("Fullscreen", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo($pref::Video::FullScreen));
    OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
    
@@ -220,11 +253,6 @@ function OptionsMenu::applyDisplaySettings(%this)
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
-}
-
-function screenResolutionOptionChanged()
-{
-   echo("Resolution Changed to: " @ OptionsMenuSettingsList.getCurrentOption(0));
 }
 
 function OptionsMenu::populateGraphicsSettingsList(%this)
@@ -284,10 +312,10 @@ function OptionsMenu::applyGraphicsSettings(%this)
    $pref::PostFX::EnableVignette = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(14));
    $pref::PostFX::EnableLightRays = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(15));
    
-   PostFXManager.settingsEffectSetEnabled("SSAO", $pref::PostFX::EnableSSAO);
-   PostFXManager.settingsEffectSetEnabled("DOF", $pref::PostFX::EnableDOF);
-   PostFXManager.settingsEffectSetEnabled("LightRays", $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled("Vignette", $pref::PostFX::EnableVignette);
+   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
+   PostFXManager.settingsEffectSetEnabled(DOFPostEffect, $pref::PostFX::EnableDOF);
+   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
+   PostFXManager.settingsEffectSetEnabled(vignettePostFX, $pref::PostFX::EnableVignette);
    
    $pref::Video::disableParallaxMapping = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(10));
    
@@ -314,14 +342,14 @@ function OptionsMenu::applyGraphicsSettings(%this)
 function updateDisplaySettings()
 {
    //Update the display settings now
-   $pref::Video::Resolution = getWords( Canvas.getMode( GraphicsMenuResolution.getSelected() ), $WORD::RES_X, $WORD::RES_Y );
+   $pref::Video::Resolution = getWord(OptionsMenuSettingsList.getCurrentOption(1), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(1), 2);
    %newBpp        = 32; // ... its not 1997 anymore.
-	$pref::Video::FullScreen = GraphicsMenuFullScreen.isStateOn() ? "true" : "false";
-	$pref::Video::RefreshRate    = GraphicsMenuRefreshRate.getSelected();
-	$pref::Video::disableVerticalSync = !GraphicsMenuVSync.isStateOn();	
-	$pref::Video::AA = GraphicsMenuAA.getSelected();
+	$pref::Video::FullScreen = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(2)) == 0 ? "false" : "true";
+	$pref::Video::RefreshRate    = OptionsMenuSettingsList.getCurrentOption(4);
+	%newVsync = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(3));	
+	//$pref::Video::AA = GraphicsMenuAA.getSelected();
 	
-   if ( %newFullScreen $= "false" )
+   /*if ( %newFullScreen $= "false" )
 	{
       // If we're in windowed mode switch the fullscreen check
       // if the resolution is bigger than the desktop.
@@ -334,7 +362,7 @@ function updateDisplaySettings()
          $pref::Video::FullScreen = "true";
          GraphicsMenuFullScreen.setStateOn( true );
       }
-	}
+	}*/
 
    // Build the final mode string.
 	%newMode = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC %newBpp SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
@@ -343,9 +371,6 @@ function updateDisplaySettings()
    if (  %newMode !$= $pref::Video::mode || 
          %newVsync != $pref::Video::disableVerticalSync )
    {
-      if ( %testNeedApply )
-         return true;
-
       $pref::Video::mode = %newMode;
       $pref::Video::disableVerticalSync = %newVsync;      
       configureCanvas();
@@ -364,20 +389,35 @@ function OptionsMenu::populateAudioSettingsList(%this)
    %count = getRecordCount( %buffer );  
    %audioDriverList = "";
     
+   $currentAudioProvider = $currentAudioProvider $= "" ? $pref::SFX::provider : $currentAudioProvider;
+   
    for(%i = 0; %i < %count; %i++)
    {
       %record = getRecord(%buffer, %i);
       %provider = getField(%record, 0);
+      %device = getField(%record, 1);
       
-      if(%i == 0)
-         %audioDriverList = %provider;
+      //When the client is actually running, we don't care about null audo devices
+      if(%provider $= "null")
+         continue;
+      
+      if(%audioProviderList $= "")
+         %audioProviderList = %provider;
       else 
-         %audioDriverList = %audioDriverList @ "\t" @ %provider;
+         %audioProviderList = %audioProviderList @ "\t" @ %provider;
+         
+      if(%provider $= $currentAudioProvider)
+      {
+         if(%audioDeviceList $= "")
+            %audioDeviceList = %device;
+         else 
+            %audioDeviceList = %audioDeviceList @ "\t" @ %device;  
+      }
+         
    }
    
-   %yesNoList = "Yes\tNo";
-   OptionsMenuSettingsList.addOptionRow("Audio Driver", %audioDriverList, false, "", -1, -15, true, "", $pref::SFX::provider);
-   OptionsMenuSettingsList.addOptionRow("Audio Device", %yesNoList, false, "", -1, -15, true, "");
+   OptionsMenuSettingsList.addOptionRow("Audio Provider", %audioProviderList, false, "audioProviderChanged", -1, -15, true, "", $currentAudioProvider);
+   OptionsMenuSettingsList.addOptionRow("Audio Device", %audioDeviceList, false, "", -1, -15, true, $pref::SFX::device);
    
    OptionsMenuSettingsList.addSliderRow("Master Volume", $pref::SFX::masterVolume, 0.1, "0 1", "", -1, -30);
    OptionsMenuSettingsList.addSliderRow("GUI Volume", $pref::SFX::channelVolume[ $GuiAudioType], 0.1, "0 1", "", -1, -30);
@@ -387,13 +427,31 @@ function OptionsMenu::populateAudioSettingsList(%this)
    OptionsMenuSettingsList.refresh();
 }
 
+function audioProviderChanged()
+{
+   //Get the option we have set for the provider
+   %provider = OptionsMenuSettingsList.getCurrentOption(0);
+   $currentAudioProvider = %provider;
+   
+   //And now refresh the list to get the correct devices
+   OptionsMenu.populateAudioSettingsList();
+}
+
 function OptionsMenu::applyAudioSettings(%this)
 {
+   $pref::SFX::masterVolume = OptionsMenuSettingsList.getValue(2);
    sfxSetMasterVolume( $pref::SFX::masterVolume );
+   
+   $pref::SFX::channelVolume[ $GuiAudioType ] = OptionsMenuSettingsList.getValue(3);
+   $pref::SFX::channelVolume[ $SimAudioType ] = OptionsMenuSettingsList.getValue(4);
+   $pref::SFX::channelVolume[ $MusicAudioType ] = OptionsMenuSettingsList.getValue(5);
    
    sfxSetChannelVolume( $GuiAudioType, $pref::SFX::channelVolume[ $GuiAudioType ] );
    sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
    sfxSetChannelVolume( $MusicAudioType, $pref::SFX::channelVolume[ $MusicAudioType ] );
+   
+   $pref::SFX::provider = OptionsMenuSettingsList.getCurrentOption(0);
+   $pref::SFX::device = OptionsMenuSettingsList.getCurrentOption(1);
    
    if ( !sfxCreateDevice(  $pref::SFX::provider, 
                            $pref::SFX::device, 
@@ -417,7 +475,8 @@ function OptionsMenu::populateKeyboardMouseSettingsList(%this)
    OptionName.setText("");
    OptionDescription.setText("");
    
-   OptionsMenuSettingsList.addKeybindRow("Forward", getButtonBitmap("Keyboard", "W"), "doKeyRemap", -1, -15, true, "Forward butaaaahn");
+   $remapListDevice = "keyboard";
+   fillRemapList();
    
    OptionsMenuSettingsList.refresh();
 }
@@ -429,6 +488,9 @@ function OptionsMenu::populateGamepadSettingsList(%this)
    
    OptionName.setText("");
    OptionDescription.setText("");
+   
+   $remapListDevice = "gamepad";
+   fillRemapList();
    
    OptionsMenuSettingsList.refresh();
 }

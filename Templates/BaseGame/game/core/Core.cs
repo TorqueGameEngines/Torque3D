@@ -69,6 +69,9 @@ function CoreModule::onCreate(%this)
       ModuleDatabase.scanModules( "tools", false );
       ModuleDatabase.LoadGroup( "Tools" );
    }
+   
+   //This is used to build the remap keybind sets for the different actionMaps.
+   $RemapCount = 0;
 }
 
 function CoreModule::onDestroy(%this)

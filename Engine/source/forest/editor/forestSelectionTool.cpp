@@ -161,7 +161,9 @@ ForestSelectionTool::ForestSelectionTool()
    :  Parent(),
       mGizmo( NULL ),
       mCurrAction( NULL ),
-      mGizmoProfile( NULL )
+      mGizmoProfile( NULL ),
+      mMouseDragged(false),
+      mUsingGizmo(false)
 {
    mBounds = Box3F::Invalid;
 

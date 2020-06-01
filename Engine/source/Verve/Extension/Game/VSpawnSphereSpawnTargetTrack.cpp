@@ -29,7 +29,9 @@ IMPLEMENT_CONOBJECT( VSpawnSphereSpawnTargetTrack );
 
 VSpawnSphereSpawnTargetTrack::VSpawnSphereSpawnTargetTrack( void )
 {
-    setLabel( "SpawnTargetTrack" );
+   mDespawnOnStop = false;
+   mDespawnOnLoop = false;
+   setLabel( "SpawnTargetTrack" );
 }
 
 void VSpawnSphereSpawnTargetTrack::initPersistFields( void )

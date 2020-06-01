@@ -74,7 +74,10 @@ GuiRolloutCtrl::GuiRolloutCtrl()
    mIsContainer = true;
    mCanCollapse = true;
    mAutoCollapseSiblings = false;
+   mDefaultCursor = NULL;
+   mVertSizingCursor = NULL;
    mHasTexture = false;
+   mBitmapBounds = NULL;
    // Make sure we receive our ticks.
    setProcessTicks();
 }

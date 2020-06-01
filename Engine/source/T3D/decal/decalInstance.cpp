@@ -24,6 +24,23 @@
 #include "T3D/decal/decalInstance.h"
 #include "scene/sceneRenderState.h"
 
+DecalInstance::DecalInstance()
+   : mDataBlock(NULL),
+   mRotAroundNormal(0.0f),
+   mSize(0.0f),
+   mCreateTime(0),
+   mVisibility(1.0f),
+   mLastAlpha(1.0f),
+   mTextureRectIdx(0),
+   mVerts(NULL),
+   mIndices(NULL),
+   mVertCount(0),
+   mIndxCount(0),
+   mFlags(0),
+   mRenderPriority(0),
+   mId(-1),
+   mCustomTex(NULL)
+{}
 void DecalInstance::getWorldMatrix( MatrixF *outMat, bool flip )
 {
    outMat->setPosition( mPosition );

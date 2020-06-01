@@ -49,11 +49,12 @@ public:
       mUsingPerfCounter = QueryPerformanceFrequency((LARGE_INTEGER *) &mFrequency);
       if(mUsingPerfCounter)
          mUsingPerfCounter = QueryPerformanceCounter((LARGE_INTEGER *) &mPerfCountCurrent);
-      if(!mUsingPerfCounter)
-      {
+      mPerfCountNext = 0.0;
+      if (!mUsingPerfCounter)
          mTickCountCurrent = GetTickCount();
-         mTickCountNext = 0;
-      }
+      else
+         mTickCountCurrent = 0;
+      mTickCountNext = 0;
    }
 
    const S32 getElapsedMs()

@@ -29,6 +29,7 @@
 #include "platform/types.h"
 #endif
 
+#include <string.h>
 
 template< class T > class Vector;
 
@@ -244,7 +245,7 @@ public:
             _dynamicSize( 0 ),
             _len( 0 )
       {
-         _fixedBuffer[0] = '\0';
+         strncpy(_fixedBuffer, "", 2048);
       }
 
       StrFormat(const char *formatStr, va_list args)
@@ -269,7 +270,7 @@ public:
       void reset()
       {
          _len = 0;
-         _fixedBuffer[0] = '\0';
+         strncpy(_fixedBuffer, "", 2048);
       }
 
       /// Copy the formatted string into the output buffer which must be at least size() characters.

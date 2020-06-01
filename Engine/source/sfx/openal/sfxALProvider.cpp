@@ -36,7 +36,7 @@ class SFXALProvider : public SFXProvider
 public:
 
    SFXALProvider()
-      : SFXProvider( "OpenAL" ) { mALDL = NULL; }
+      : SFXProvider( "OpenAL" ) { dMemset(&mOpenAL,0,sizeof(mOpenAL)); mALDL = NULL; }
    virtual ~SFXALProvider();
 
 protected:

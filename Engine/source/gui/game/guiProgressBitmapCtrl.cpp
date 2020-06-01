@@ -121,7 +121,9 @@ GuiProgressBitmapCtrl::GuiProgressBitmapCtrl()
    : mProgress( 0.f ),
      mBitmapName( StringTable->EmptyString() ),
      mUseVariable( false ),
-     mTile( false )
+     mTile( false ),
+     mNumberOfBitmaps(0),
+     mDim(0)
 {
 }
 

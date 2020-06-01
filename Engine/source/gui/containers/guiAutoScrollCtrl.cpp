@@ -90,8 +90,10 @@ EndImplementEnumType;
 GuiAutoScrollCtrl::GuiAutoScrollCtrl()
    : mDirection( Up ),
      mIsLooping( true ),
-     mCurrentPhase( PhaseComplete ),
+     mCurrentPhase( GuiAutoScrollCtrl::PhaseComplete ),
      mCurrentTime( 0.f ),
+     mCompleteTime(F32_MAX),
+     mCurrentPosition(0.0f),
      mStartDelay( 3.f ),
      mResetDelay( 5.f ),
      mChildBorder( 10 ),

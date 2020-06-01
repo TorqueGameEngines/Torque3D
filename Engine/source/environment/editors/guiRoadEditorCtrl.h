@@ -146,6 +146,11 @@ class GuiRoadEditorUndoAction : public UndoAction
 
       GuiRoadEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName )
       {
+         mRoadEditor = NULL;
+         mObjId = 0;
+         mBreakAngle = 3.0f;
+         mSegmentsPerBatch = 0;
+         mTextureLength = 0.0f;
       }
 
       GuiRoadEditorCtrl *mRoadEditor;

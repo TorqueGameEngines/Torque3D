@@ -38,7 +38,9 @@ GLCircularVolatileBuffer* getCircularVolatileIndexBuffer()
 GFXGLPrimitiveBuffer::GFXGLPrimitiveBuffer(GFXDevice *device, U32 indexCount, U32 primitiveCount, GFXBufferType bufferType) :
    GFXPrimitiveBuffer(device, indexCount, primitiveCount, bufferType),
    mBufferOffset(0),
-   mZombieCache(NULL)
+   mZombieCache(NULL),
+   lockedIndexEnd(0),
+   lockedIndexStart(0)
 {
    if( mBufferType == GFXBufferTypeVolatile )
    {

@@ -37,9 +37,9 @@ private:
 
 public:
    DECLARE_CONOBJECT(GuiInspectorDynamicGroup);
-   GuiInspectorDynamicGroup() { /*mNeedScroll=false;*/ };
+   GuiInspectorDynamicGroup() { mAddCtrl = NULL;/*mNeedScroll=false;*/ };
    GuiInspectorDynamicGroup( StringTableEntry groupName, SimObjectPtr<GuiInspector> parent )
-      : GuiInspectorGroup( groupName, parent) { /*mNeedScroll=false;*/};
+      : GuiInspectorGroup( groupName, parent) { mAddCtrl = NULL;/*mNeedScroll=false;*/};
 
    //-----------------------------------------------------------------------------
    // inspectGroup is overridden in GuiInspectorDynamicGroup to inspect an 

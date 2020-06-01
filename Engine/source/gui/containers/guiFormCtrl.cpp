@@ -59,6 +59,7 @@ GuiFormCtrl::GuiFormCtrl()
    // The attached menu bar
    mHasMenu = false;
    mMenuBar = NULL;
+   mMouseMovingWin = false;
 }
 
 GuiFormCtrl::~GuiFormCtrl()

@@ -139,6 +139,7 @@ HoverVehicleData::HoverVehicleData()
    dustTrailID = 0;
    dustTrailOffset.set( 0.0f, 0.0f, 0.0f );
    dustTrailFreqMod = 15.0f;
+   maxThrustSpeed = 0;
    triggerTrailHeight = 2.5f;
 
    floatingGravMag = 1;
@@ -436,24 +437,29 @@ void HoverVehicleData::unpackData(BitStream* stream)
 //
 HoverVehicle::HoverVehicle()
 {
+   mDataBlock = NULL;
    // Todo: ScopeAlways?
    mNetFlags.set(Ghostable);
 
    mFloating      = false;
-   mForwardThrust = 0;
-   mReverseThrust = 0;
-   mLeftThrust    = 0;
-   mRightThrust   = 0;
+   mThrustLevel   = 0.0f;
+   mForwardThrust = 0.0f;
+   mReverseThrust = 0.0f;
+   mLeftThrust    = 0.0f;
+   mRightThrust   = 0.0f;
 
    mJetSound    = NULL;
    mEngineSound = NULL;
    mFloatSound  = NULL;
-
+   mThrustDirection = HoverVehicle::ThrustForward;
    mDustTrailEmitter = NULL;
 
    mBackMaintainOn = false;
    for (S32 i = 0; i < JetAnimCount; i++)
-      mJetThread[i] = 0;
+   {
+      mJetSeq[i] = -1;
+      mJetThread[i] = NULL;
+   }
 }
 
 HoverVehicle::~HoverVehicle()

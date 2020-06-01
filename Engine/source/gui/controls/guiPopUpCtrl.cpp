@@ -280,6 +280,10 @@ GuiPopUpMenuCtrl::GuiPopUpMenuCtrl(void)
    mBitmapName = StringTable->EmptyString(); //  Added
    mBitmapBounds.set(16, 16); //  Added
    mIdMax = -1;
+   mBackground = NULL;
+   mTl = NULL;
+   mSc = NULL;
+   mReplaceText = false;
 }
 
 //------------------------------------------------------------------------------

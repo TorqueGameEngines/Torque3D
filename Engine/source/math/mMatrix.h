@@ -22,7 +22,7 @@
 
 #ifndef _MMATRIX_H_
 #define _MMATRIX_H_
-
+#include <algorithm>
 #ifndef _MPLANE_H_
 #include "math/mPlane.h"
 #endif
@@ -232,6 +232,8 @@ inline MatrixF::MatrixF(bool _identity)
 {
    if (_identity)
       identity();
+   else
+      std::fill_n(m, 16, 0);
 }
 
 inline MatrixF::MatrixF( const EulerF &e )

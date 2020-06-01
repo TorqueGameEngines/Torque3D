@@ -56,13 +56,15 @@ class ExtrudedPolyList: public AbstractPolyList
 public:
    struct Vertex {
       Point3F point;
-      U32 mask;
+      U32 mask = 0;
    };
 
    struct Poly {
       PlaneF plane;
       SceneObject* object;
       BaseMatInstance* material;
+      Poly() : object(NULL), material(NULL) {}
+      ~Poly() {}
    };
 
    struct ExtrudedFace {
@@ -75,6 +77,8 @@ public:
       F32 time;
       Point3F point;
       F32 height;
+      ExtrudedFace(): active(false), maxDistance(0.0f), planeMask(0), faceDot(0.0f), faceShift(0.0f), time(0.0f), height(0.0f) {}
+      ~ExtrudedFace() {}
    };
 
    typedef Vector<ExtrudedFace> ExtrudedList;
@@ -92,7 +96,6 @@ public:
    PlaneList    mPlaneList;
    VectorF      mVelocity;
    VectorF      mNormalVelocity;
-   F32          mFaceShift;
    Poly         mPoly;
 
    // Returned info

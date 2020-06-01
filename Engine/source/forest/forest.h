@@ -114,9 +114,6 @@ protected:
    static bool smDrawCells;
    static bool smDrawBounds;
 
-   ///
-   bool mRegen;
-
    enum MaskBits
    {
       MediaMask         = Parent::NextFreeMask << 1,

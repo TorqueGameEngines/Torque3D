@@ -57,6 +57,8 @@ SimObjectId SimObject::smForcedId = 0;
 
 bool SimObject::preventNameChanging = false;
 
+IMPLEMENT_CALLBACK(SimObject, onInspectPostApply, void, (SimObject* obj), (obj), "Generic callback for when an object is edited");
+
 namespace Sim
 {
    // Defined in simManager.cpp
@@ -1380,6 +1382,7 @@ SimObject::SimObject(const SimObject& other, bool temp_clone)
    nextIdObject = other.nextIdObject;
    mGroup = other.mGroup;
    mFlags = other.mFlags;
+   mProgenitorFile = other.mProgenitorFile;
    mCopySource = other.mCopySource;
    mFieldDictionary = other.mFieldDictionary;
    //mIdString = other.mIdString; // special treatment (see below)
@@ -2237,6 +2240,7 @@ void SimObject::inspectPreApply()
 
 void SimObject::inspectPostApply()
 {
+   onInspectPostApply_callback(this);
 }
 
 //-----------------------------------------------------------------------------

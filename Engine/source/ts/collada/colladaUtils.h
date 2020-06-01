@@ -886,7 +886,7 @@ struct AnimData
       return element ? (AnimChannels*)const_cast<daeElement*>(element)->getUserData() : 0;
    }
 
-   AnimData() : enabled(false) { }
+   AnimData() : enabled(false), targetValueOffset(0), targetValueCount(0){ }
 
    void parseTargetString(const char* target, S32 fullCount, const char* elements[]);
 

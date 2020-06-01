@@ -75,7 +75,8 @@ ConsoleDocClass( SFXController,
 
 SFXController::SFXController( SFXPlayList* playList )
    : Parent( playList ),
-     mTrace( playList->trace() )
+     mTrace( playList->trace() ),
+   mLoopCounter(0)
 {
    VECTOR_SET_ASSOCIATION( mInsns );
    VECTOR_SET_ASSOCIATION( mSources );

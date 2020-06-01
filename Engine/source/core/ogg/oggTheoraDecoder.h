@@ -48,9 +48,9 @@ class OggTheoraFrame : public RawData
    
       typedef RawData Parent;
       
-      OggTheoraFrame() {}
+      OggTheoraFrame() :mFrameNumber(0), mFrameTime(0), mFrameDuration(0) {}
       OggTheoraFrame( S8* data, U32 size, bool ownMemory = false )
-         : Parent( data, size, ownMemory ) {}
+         : Parent( data, size, ownMemory ), mFrameNumber(0), mFrameTime(0), mFrameDuration(0) {}
          
       /// Serial number of this frame in the stream.
       U32 mFrameNumber;

@@ -67,6 +67,7 @@ GuiMeshRoadEditorCtrl::GuiMeshRoadEditorCtrl()
 	mMovePointMode("MeshRoadEditorMoveMode"),
     mScalePointMode("MeshRoadEditorScaleMode"),
 	mRotatePointMode("MeshRoadEditorRotateMode"),
+    mSavedDrag(false),
     mIsDirty( false ),
     mRoadSet( NULL ),
     mSelNode( -1 ),
@@ -82,7 +83,7 @@ GuiMeshRoadEditorCtrl::GuiMeshRoadEditorCtrl()
     mHoverSplineColor( 255,0,0,255 ),
     mSelectedSplineColor( 0,255,0,255 ),
     mHoverNodeColor( 255,255,255,255 ),
-	mHasCopied( false )
+	 mHasCopied( false )
 {   
 	mMaterialName[Top] = StringTable->insert("DefaultRoadMaterialTop");
 	mMaterialName[Bottom] = StringTable->insert("DefaultRoadMaterialOther");

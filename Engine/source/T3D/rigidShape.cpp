@@ -253,6 +253,7 @@ RigidShapeData::RigidShapeData()
 
    dustEmitter = NULL;
    dustID = 0;
+   triggerDustHeight = 3.0;
    dustHeight = 1.0;
 
    dMemset( splashEmitterList, 0, sizeof( splashEmitterList ) );

@@ -276,8 +276,8 @@ public:
 //-------------------------------------- Point3I
 //
 inline Point3I::Point3I()
+   : x(0), y(0), z(0)
 {
-   //
 }
 
 inline Point3I::Point3I(const Point3I& _copy)
@@ -431,9 +431,7 @@ inline Point3I& Point3I::operator/=(S32 div)
 //-------------------------------------- Point3F
 //
 inline Point3F::Point3F()
-#if defined(TORQUE_OS_LINUX)
- : x(0.f), y(0.f), z(0.f)
-#endif
+ : x(0.0f), y(0.0f), z(0.0f)
 {
 // Uninitialized points are definitely a problem.
 // Enable the following code to see how often they crop up.
@@ -761,6 +759,7 @@ inline Point3F& Point3F::operator=(const Point3D &_vec)
 //-------------------------------------- Point3D
 //
 inline Point3D::Point3D()
+   : x(0.0), y(0.0), z(0.0)
 {
    //
 }

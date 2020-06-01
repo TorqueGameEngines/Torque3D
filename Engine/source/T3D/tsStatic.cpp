@@ -284,10 +284,17 @@ bool TSStatic::_setShapeName(void* obj, const char* index, const char* data)
          if (assetId == StringTable->insert("Core_Rendering:noShape"))
          {
             ts->mShapeName = data;
+            ts->mShapeAssetId = StringTable->EmptyString();
+
             return true;
          }
+         else
+         {
+            ts->mShapeAssetId = assetId;
+            ts->mShapeName = StringTable->EmptyString();
 
-         return false;
+            return false;
+         }
       }
     }
    else
@@ -295,7 +302,7 @@ bool TSStatic::_setShapeName(void* obj, const char* index, const char* data)
       ts->mShapeAsset = StringTable->EmptyString();
    }
 
-   return false;
+   return true;
 }
 
 bool TSStatic::_setFieldSkin(void* object, const char* index, const char* data)
@@ -1486,7 +1493,7 @@ void TSStaticPolysoupConvex::getPolyList(AbstractPolyList* list)
 void TSStaticPolysoupConvex::getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf)
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    // For a tetrahedron this is pretty easy... first
    // convert everything into world space.

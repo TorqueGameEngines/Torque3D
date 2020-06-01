@@ -52,7 +52,11 @@ GuiInspectorField::GuiInspectorField( GuiInspector* inspector,
    mEdit( NULL ),
    mTargetObject(NULL),
    mUseHeightOverride(false),
-   mHeightOverride(18)
+   mHighlighted(false),
+   mHeightOverride(18),
+   mSpecialEditField(false),
+   mVariableName(StringTable->EmptyString()),
+   mCallbackName(StringTable->EmptyString())
 {
    if( field != NULL )
       mCaption    = field->pFieldname;

@@ -208,7 +208,7 @@ class SFXWorld : public ScopeTracker< NUM_DIMENSIONS, Object >
          /// between this space and the space above us in the stack.
          Object mObject;
          
-         Scope() {}
+         Scope() :mSortValue(0), mSoundscape(NULL) {}
          Scope( F32 sortValue, Object object )
             : mSortValue( sortValue ),
               mSoundscape( NULL ),

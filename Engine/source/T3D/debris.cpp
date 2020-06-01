@@ -533,6 +533,8 @@ Debris::Debris()
    mInitialTrans.identity();
    mRadius = 0.2f;
    mStatic = false;
+   mElasticity = 0.5f;
+   mFriction = 0.5f;
 
    dMemset( mEmitterList, 0, sizeof( mEmitterList ) );
 

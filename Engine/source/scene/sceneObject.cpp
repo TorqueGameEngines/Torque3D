@@ -93,7 +93,6 @@ ConsoleDocClass( SceneObject,
    "@ingroup gameObjects\n"
 );
 
-IMPLEMENT_CALLBACK(SceneObject, onInspectPostApply, void, (SceneObject* obj), (obj),"Generic callback for when an object is edited");
 #ifdef TORQUE_TOOLS
 extern bool gEditingMission;
 #endif
@@ -387,7 +386,6 @@ void SceneObject::inspectPostApply()
 {
    if( isServerObject() )
       setMaskBits( MountedMask );
-   onInspectPostApply_callback(this);
    Parent::inspectPostApply();
 }
 

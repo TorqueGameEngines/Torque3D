@@ -25,6 +25,8 @@
 
 FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
 {
+   mFont = NULL;
+   mLength = 0;
    if (!mFontSB)
    {
       GFXStateBlockDesc f;

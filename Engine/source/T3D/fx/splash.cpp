@@ -309,6 +309,7 @@ Splash::Splash()
 
    mDelayMS = 0;
    mCurrMS = 0;
+   mRandAngle = 0;
    mEndingMS = 1000;
    mActive = false;
    mRadius = 0.0;
@@ -319,7 +320,8 @@ Splash::Splash()
    mElapsedTime = 0.0;
 
    mInitialNormal.set( 0.0, 0.0, 1.0 );
-
+   mFade = 0;
+   mFog = 0;
    // Only allocated client side.
    mNetFlags.set( IsGhost );
 }

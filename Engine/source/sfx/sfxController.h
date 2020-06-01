@@ -93,13 +93,14 @@ class SFXController : public SFXSource
             U32 mLoopCount;
          } mArg;
          
-         Insn() {}
+         Insn()
+            : mOpcode(SFXController::OP_Delay), mSlotIndex(0), mState(NULL) {mArg.mLoopCount=0;}
          Insn( EOp opcode )
-            : mOpcode( opcode ), mSlotIndex( U32_MAX ), mState( NULL ) {}
+            : mOpcode( opcode ), mSlotIndex( U32_MAX ), mState( NULL ) {mArg.mLoopCount=0;}
          Insn( U32 slotIndex, SFXState* state )
-            : mSlotIndex( slotIndex ), mState( state ) {}
+            : mOpcode(SFXController::OP_Delay), mSlotIndex( slotIndex ), mState( state ){mArg.mLoopCount=0;}
          Insn( EOp opcode, U32 slotIndex, SFXState* state )
-            : mOpcode( opcode ), mSlotIndex( slotIndex ), mState( state ) {}
+            : mOpcode( opcode ), mSlotIndex( slotIndex ), mState( state ) {mArg.mLoopCount=0;}
       };
       
       ///
@@ -130,7 +131,7 @@ class SFXController : public SFXSource
          F32 mFadeOutTime;
          
          Source()
-            : mState( 0 ) {}
+            : mState( 0 ), mSlotIndex(0), mVolumeScale(1.0f), mPitchScale(1.0f), mFadeInTime(0), mFadeOutTime(0) {}
       };
             
       /// The current instruction in "mInsns".
@@ -169,7 +170,7 @@ class SFXController : public SFXSource
       void _genTransition( Insn& insn, SFXPlayList::ETransitionMode transition );
       
       ///
-      void _dumpInsns();
+      void _dumpInsns() {};
       
       ///
       void _initInsn();
@@ -198,7 +199,7 @@ class SFXController : public SFXSource
       ~SFXController();
    
       /// Constructor for the sake of ConsoleObject.
-      explicit SFXController() {}
+      explicit SFXController(): mIp(0), mTrace(false), mDelayEndTime(0), mLoopCounter(0) {}
                
       /// Return the playlist being played back by the controller.
       SFXPlayList* getPlayList() const;

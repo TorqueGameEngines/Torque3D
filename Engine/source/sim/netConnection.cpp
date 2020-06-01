@@ -469,6 +469,8 @@ NetConnection::PacketNotify::PacketNotify()
    sendTime = 0;
    eventList = 0;
    ghostList = 0;
+   subList = NULL;
+   nextPacket = NULL;
 }
 
 bool NetConnection::checkTimeout(U32 time)

@@ -116,6 +116,11 @@ GuiWindowCtrl::GuiWindowCtrl()
    mMaximizeButtonPressed = false;
    mMinimizeButtonPressed = false;
 
+   mRepositionWindow = false;
+   mResizeWindow = false;
+   mSnapSignal = false;
+   mPreCollapsedYExtent = 200;
+   mPreCollapsedYMinExtent = 176;
    mText = "New Window";
 }
 

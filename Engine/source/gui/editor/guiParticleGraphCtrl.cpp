@@ -102,6 +102,8 @@ GuiParticleGraphCtrl::GuiParticleGraphCtrl()
    mPointXMovementClamped = false;
    mOutlineColor = ColorI(1, 1, 1);
    mCursorPos = Point2I(0, 0);
+   mTooltipSelectedPlot = 0;
+   mRenderNextGraphTooltip = false;
 }
 
 ImplementEnumType( GuiParticleGraphType,

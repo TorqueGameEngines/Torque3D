@@ -73,7 +73,8 @@ TerrainCellMaterial::TerrainCellMaterial()
    :  mTerrain( NULL ),
       mCurrPass( 0 ),
       mDeferredMat( NULL ),
-      mReflectMat( NULL )
+      mReflectMat( NULL ),
+      mMaterials(0)
 {
    smAllMaterials.push_back( this );
 }

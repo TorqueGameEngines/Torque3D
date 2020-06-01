@@ -190,6 +190,7 @@ TerrainBlock::TerrainBlock()
    mMaxDetailDistance( 0.0f ),
    mBaseTexScaleConst( NULL ),
    mBaseTexIdConst( NULL ),
+   mBaseLayerSizeConst(NULL),
    mDetailsDirty( false ),
    mLayerTexDirty( false ),
    mBaseTexSize( 1024 ),

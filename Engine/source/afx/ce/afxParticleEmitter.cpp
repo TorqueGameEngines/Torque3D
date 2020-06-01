@@ -687,6 +687,7 @@ bool afxParticleEmitterDiscData::preload(bool server, String &errorStr)
 
 afxParticleEmitter::afxParticleEmitter()
 {
+  mDataBlock = NULL;
   pe_vector.set(0,0,1);
   pe_vector_norm.set(0,0,1);
   tpaths.clear();
@@ -1086,6 +1087,7 @@ void afxParticleEmitter::emitParticlesExt(const MatrixF& xfm, const Point3F& poi
 
 afxParticleEmitterVector::afxParticleEmitterVector()
 {
+   mDataBlock = NULL;
 }
 
 afxParticleEmitterVector::~afxParticleEmitterVector()
@@ -1151,6 +1153,7 @@ void afxParticleEmitterVector::sub_preCompute(const MatrixF& mat)
 
 afxParticleEmitterCone::afxParticleEmitterCone()
 {
+  mDataBlock = NULL;
   cone_v.set(0,0,1);
   cone_s0.set(0,0,1);
   cone_s1.set(0,0,1);
@@ -1266,6 +1269,7 @@ void afxParticleEmitterCone::sub_preCompute(const MatrixF& mat)
 
 afxParticleEmitterPath::afxParticleEmitterPath()
 {
+  mDataBlock = NULL;
   epaths.clear();
   epath_mults.clear();
   n_epath_points = 0;
@@ -1521,6 +1525,7 @@ void afxParticleEmitterPath::groundConformPoint(Point3F& point, const MatrixF& m
 
 afxParticleEmitterDisc::afxParticleEmitterDisc()
 {
+  mDataBlock = NULL;
   disc_v.set(0,0,1);
   disc_r.set(1,0,0);
 }

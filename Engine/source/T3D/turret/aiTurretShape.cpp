@@ -119,6 +119,7 @@ AITurretShapeData::AITurretShapeData()
    }
    isAnimated = false;
    statesLoaded = false;
+   fireState = -1;
 }
 
 void AITurretShapeData::initPersistFields()

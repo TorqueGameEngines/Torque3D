@@ -278,7 +278,9 @@ bool TheoraTexture::AsyncState::isAtEnd()
 TheoraTexture::TheoraTexture()
    : mCurrentFrame( NULL ),
      mPlaybackQueue( NULL ),
-     mIsPaused( true )
+     mIsPaused( true ),
+     mLastFrameNumber(0),
+     mNumDroppedFrames(0)
 {
    GFXTextureManager::addEventDelegate( this, &TheoraTexture::_onTextureEvent );
 }

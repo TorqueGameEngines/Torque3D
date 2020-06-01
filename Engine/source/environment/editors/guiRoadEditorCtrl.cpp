@@ -82,6 +82,7 @@ GuiRoadEditorCtrl::GuiRoadEditorCtrl()
    mSelectedSplineColor.set( 0,255,0,255 );
    mHoverNodeColor.set( 255,255,255,255 );
 
+   mSavedDrag = false;
    mIsDirty = false;
 
 	mMaterialName = StringTable->insert("DefaultDecalRoadMaterial");

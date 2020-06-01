@@ -29,13 +29,13 @@ public:
 		Matrix4x4
 	};
 private:
-	StringTableEntry targetedUniformName;
+	StringTableEntry targetedUniformName = StringTable->EmptyString();
 
 	//ShaderConstHandles shaderConstHandle;
 
-	UniformType type;
+	UniformType type = CustomShaderBindingData::Float;
 
-	F32 mFloat;
+	F32 mFloat = 0.0f;
 	Point2F mFloat2;
 	Point3F mFloat3;
 	Point4F mFloat4;
@@ -49,7 +49,7 @@ public:
 	{
 		targetedUniformName = shaderConstName;
 		mFloat = f;
-		type = Float;
+		type = UniformType::Float;
 	}
 	F32 getFloat() { return mFloat; }
 

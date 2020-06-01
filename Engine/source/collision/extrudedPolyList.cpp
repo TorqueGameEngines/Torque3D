@@ -47,6 +47,7 @@ ExtrudedPolyList::ExtrudedPolyList()
    mPolyPlaneList.reserve(64);
    mPlaneList.reserve(64);
    mCollisionList = 0;
+   dMemset(&mPoly, 0, sizeof(mPoly));
 }
 
 ExtrudedPolyList::~ExtrudedPolyList()

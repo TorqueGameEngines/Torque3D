@@ -38,6 +38,8 @@
 
          StringBufferManager()
          {
+            request8 = 0.0;
+            request16 = 0.0;
             VECTOR_SET_ASSOCIATION( strings );
          }
          

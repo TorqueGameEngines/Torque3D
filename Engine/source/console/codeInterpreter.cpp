@@ -224,6 +224,9 @@ CodeInterpreter::CodeInterpreter(CodeBlock *cb) :
    mSaveCodeBlock(nullptr),
    mCurrentInstruction(0)
 {
+   dMemset(&mExec, 0, sizeof(mExec));
+   dMemset(&mObjectCreationStack, 0, sizeof(mObjectCreationStack));
+   dMemset(&mNSDocBlockClass, 0, sizeof(mNSDocBlockClass));
 }
 
 CodeInterpreter::~CodeInterpreter()

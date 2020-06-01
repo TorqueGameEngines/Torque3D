@@ -33,15 +33,24 @@
 
 GFXGLTextureObject::GFXGLTextureObject(GFXDevice * aDevice, GFXTextureProfile *profile) :
    GFXTextureObject(aDevice, profile),
+   mIsNPoT2(false),
    mBinding(GL_TEXTURE_2D),
    mBytesPerTexel(4),
    mLockedRectRect(0, 0, 0, 0),
    mGLDevice(static_cast<GFXGLDevice*>(mDevice)),
+   mIsZombie(false),
    mZombieCache(NULL),
    mNeedInitSamplerState(true),
    mFrameAllocatorMark(0),
    mFrameAllocatorPtr(NULL)
 {
+
+#if TORQUE_DEBUG
+   mFrameAllocatorMarkGuard == FrameAllocator::getWaterMark();
+#endif
+
+   dMemset(&mLockedRect, 0, sizeof(mLockedRect));
+
    AssertFatal(dynamic_cast<GFXGLDevice*>(mDevice), "GFXGLTextureObject::GFXGLTextureObject - Invalid device type, expected GFXGLDevice!");
    glGenTextures(1, &mHandle);
    glGenBuffers(1, &mBuffer);

@@ -31,6 +31,7 @@
 //-----------------------------------------------------------------------------
 FileStream::FileStream()
 {
+   dMemset(mBuffer, 0, sizeof(mBuffer));
    // initialize the file stream
    init();
 }

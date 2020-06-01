@@ -114,6 +114,7 @@ afxZodiacData::afxZodiacData()
   grade_range_user.set(0.0f, 45.0f);
   afxZodiacData::convertGradientRangeFromDegrees(grade_range, grade_range_user);
   inv_grade_range = false;
+  zflags = 0;
 }
 
 afxZodiacData::afxZodiacData(const afxZodiacData& other, bool temp_clone) : GameBaseData(other, temp_clone)

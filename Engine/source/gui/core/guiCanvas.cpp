@@ -150,6 +150,7 @@ GuiCanvas::GuiCanvas(): GuiControl(),
 #else
    mNumFences = 0;
 #endif
+   mConsumeLastInputEvent = false;
 }
 
 GuiCanvas::~GuiCanvas()

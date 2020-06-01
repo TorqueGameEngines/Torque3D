@@ -100,8 +100,6 @@ struct ProbeRenderInst
 
    U32 mProbeIdx;
 
-   F32 mMultiplier;
-
 public:
 
    ProbeRenderInst();
@@ -202,6 +200,8 @@ struct ProbeDataSet
       dMemset(refBoxMaxArray.getBuffer(), 0, refBoxMaxArray.getBufferSize());
       dMemset(probeRefPositionArray.getBuffer(), 0, probeRefPositionArray.getBufferSize());
       dMemset(probeConfigArray.getBuffer(), 0, probeConfigArray.getBufferSize());
+      skyLightIdx = -1;
+      effectiveProbeCount = 0;
    }
 };
 

@@ -324,6 +324,8 @@ GFXD3D11WindowTarget::GFXD3D11WindowTarget()
    mDepthStencilView = NULL;
    mDepthStencil = NULL;
    mBackBufferView = NULL;
+   mSwapChain = NULL;
+   dMemset(&mPresentationParams, 0, sizeof(mPresentationParams));
    mSecondaryWindow = false;
 }
 

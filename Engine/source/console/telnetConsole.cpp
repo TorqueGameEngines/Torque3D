@@ -88,6 +88,9 @@ TelnetConsole::TelnetConsole()
    mAcceptPort = -1;
    mClientList = NULL;
    mRemoteEchoEnabled = false;
+
+   dStrncpy(mTelnetPassword, "", PasswordMaxLength);
+   dStrncpy(mListenPassword, "", PasswordMaxLength);
 }
 
 TelnetConsole::~TelnetConsole()

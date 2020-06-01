@@ -279,7 +279,10 @@ DecalRoad::DecalRoad()
    mLoadRenderData( true ),
    mMaterial( NULL ),
    mMatInst( NULL ),
+   mTriangleCount(0),
+   mVertCount(0),
    mUpdateEventId( -1 ),
+   mLastEvent(NULL),
    mTerrainUpdateRect( Box3F::Invalid )
 {   
    // Setup NetObject.

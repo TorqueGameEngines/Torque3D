@@ -464,7 +464,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
                            "Asset Type: Material Asset\n" @  
-                           "Asset Defition ID: " @  %assetDef;
+                           "Asset Definition ID: " @  %assetDef;
 }
 
 function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)

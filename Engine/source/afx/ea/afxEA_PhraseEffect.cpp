@@ -75,6 +75,7 @@ afxEA_PhraseEffect::afxEA_PhraseEffect()
 {
   phrase_fx_data = 0;
   active_phrases = &_phrases_a;
+  last_trigger_mask = 0;
 }
 
 afxEA_PhraseEffect::~afxEA_PhraseEffect()

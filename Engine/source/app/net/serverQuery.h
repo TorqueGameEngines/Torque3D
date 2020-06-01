@@ -80,6 +80,7 @@ struct ServerInfo
       statusString = NULL;
       infoString = NULL;
       version = 0;
+      dMemset(&address, '\0', sizeof(NetAddress));
       ping = 0;
       cpuSpeed = 0;
       isFavorite = false;

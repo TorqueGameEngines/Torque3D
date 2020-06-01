@@ -54,6 +54,7 @@ FileDialogData::FileDialogData()
    mTitle = StringTable->EmptyString();
 
    mStyle = 0;
+   mOpaqueData = NULL;
 
 }
 FileDialogData::~FileDialogData()
@@ -123,6 +124,7 @@ FileDialog::FileDialog() : mData()
    mData.mStyle = FileDialogData::FDS_OPEN | FileDialogData::FDS_MUSTEXIST;
    mChangePath = false;
    mForceRelativePath = true;
+   mBoolTranslator = false;
 }
 
 FileDialog::~FileDialog()

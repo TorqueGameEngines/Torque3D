@@ -76,6 +76,7 @@ public:
       Collision()
       {
          object = NULL;
+         material = NULL;
          distance = 0.0;
       }
    };

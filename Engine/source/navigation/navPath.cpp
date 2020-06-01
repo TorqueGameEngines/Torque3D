@@ -70,6 +70,7 @@ NavPath::NavPath() :
    mRenderSearch = false;
 
    mQuery = NULL;
+   mStatus = DT_FAILURE;
 }
 
 NavPath::~NavPath()

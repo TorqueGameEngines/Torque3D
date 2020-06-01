@@ -79,6 +79,7 @@ protected:
    class D3D11VertexDecl : public GFXVertexDecl
    {
    public:
+      D3D11VertexDecl() :decl(NULL) {}
       virtual ~D3D11VertexDecl()
       {
          SAFE_RELEASE( decl );

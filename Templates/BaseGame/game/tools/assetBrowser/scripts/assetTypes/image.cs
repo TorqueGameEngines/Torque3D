@@ -190,7 +190,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
       "Asset Type: Image Asset\n" @ 
-      "Asset Defition ID: " @ %assetDef @ "\n" @ 
+      "Asset Definition ID: " @ %assetDef @ "\n" @ 
       "Image Type: " @ %assetDef.imageType @ "\n" @ 
       "Format: " @ getWord(%info, 0) @ "\n" @ 
       "Height: " @ getWord(%info, 1) @ "\n" @ 

@@ -44,6 +44,7 @@
 
 // Debug Profiling.
 #include "platform/profiler.h"
+#include "T3D/assets/assetImporter.h"
 
 //-----------------------------------------------------------------------------
 
@@ -329,19 +330,21 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
       Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
 #endif
 
-      ConsoleValueRef result = Con::executef("importLooseFile", fileName, true);
-
-      if (result.getBoolValue())
+      AssetImporter* autoAssetImporter;
+      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
       {
-         StringTableEntry resultingAssetId = StringTable->insert(Con::getVariable("$importedLooseFileAsset"));
+         autoAssetImporter = new AssetImporter();
+         autoAssetImporter->registerObject("autoAssetImporter");
+      }
 
-         if (resultingAssetId != StringTable->EmptyString())
-         {
-            shapeAsset->setAssetId(resultingAssetId);
+      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
 
-            if (!shapeAsset->isNull())
-               return true;
-         }
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         shapeAsset->setAssetId(resultingAssetId);
+
+         if (!shapeAsset->isNull())
+            return true;
       }
 
       //Didn't work, so have us fall back to a placeholder asset
@@ -375,17 +378,19 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
       Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
 #endif
 
-      ConsoleValueRef result = Con::executef("importLooseFile", fileName, true);
-
-      if (result.getBoolValue())
+      AssetImporter* autoAssetImporter;
+      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
       {
-         StringTableEntry resultingAssetId = StringTable->insert(Con::getVariable("$importedLooseFileAsset"));
+         autoAssetImporter = new AssetImporter();
+         autoAssetImporter->registerObject("autoAssetImporter");
+      }
 
-         if (resultingAssetId != StringTable->EmptyString())
-         {
-            shapeAssetId = resultingAssetId;
-            return shapeAssetId;
-         }
+      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         shapeAssetId = resultingAssetId;
+         return shapeAssetId;
       }
 
       //Didn't work, so have us fall back to a placeholder asset

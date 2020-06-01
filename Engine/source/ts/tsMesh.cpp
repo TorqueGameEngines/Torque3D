@@ -1182,7 +1182,14 @@ TSMesh::TSMesh() : mMeshType( StandardMeshType )
    mNumVerts = 0;
    mVertSize = 0;
    mVertOffset = 0;
-
+   mRadius = 0.0f;
+   mVertexFormat = NULL;
+   mPrimBufferOffset = 0;
+   numFrames = 0;
+   numMatFrames = 0;
+   vertsPerFrame = 0;
+   mPlanesPerFrame = 0;
+   mMergeBufferStart = 0;
    mParentMeshObject = NULL;
 }
 

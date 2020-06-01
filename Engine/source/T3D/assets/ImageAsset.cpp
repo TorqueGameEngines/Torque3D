@@ -103,7 +103,7 @@ EndImplementEnumType;
 
 
 //-----------------------------------------------------------------------------
-ImageAsset::ImageAsset() : AssetBase(), mImage(nullptr), mUseMips(true), mIsHDRImage(false), mIsValidImage(false)
+ImageAsset::ImageAsset() : AssetBase(), mImage(nullptr), mUseMips(true), mIsHDRImage(false), mIsValidImage(false), mImageType(Albedo)
 {
    mImageFileName = StringTable->EmptyString();
 }
@@ -237,6 +237,50 @@ const char* ImageAsset::getImageInfo()
    }
 
    return "";
+}
+
+const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)
+{
+   // must match ImageTypes order
+   static const char* _names[] = {
+      "Albedo"
+      "Normal"
+      "Composite"
+      "GUI"
+      "Roughness"
+      "AO"
+      "Metalness"
+      "Glow"
+      "Particle"
+      "Decal"
+      "Cubemap"
+   };
+
+   if (type < 0 || type >= ImageTypeCount)
+   {
+      Con::errorf("ImageAsset::getAdapterNameFromType - Invalid ImageType, defaulting to Albedo");
+      return _names[Albedo];
+   }
+
+   return _names[type];
+}
+
+ImageAsset::ImageTypes ImageAsset::getImageTypeFromName(const char* name)
+{
+   S32 ret = -1;
+   for (S32 i = 0; i < ImageTypeCount; i++)
+   {
+      if (!dStricmp(getImageTypeNameFromType((ImageTypes)i), name))
+         ret = i;
+   }
+
+   if (ret == -1)
+   {
+      Con::errorf("ImageAsset::getImageTypeFromName - Invalid ImageType name, defaulting to Albedo");
+      ret = Albedo;
+   }
+
+   return (ImageTypes)ret;
 }
 
 DefineEngineMethod(ImageAsset, getImageFilename, const char*, (), ,

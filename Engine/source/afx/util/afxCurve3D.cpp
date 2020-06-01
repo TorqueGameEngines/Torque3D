@@ -27,7 +27,7 @@
 #include "afx/util/afxCurveEval.h"
 #include "afx/util/afxCurve3D.h"
 
-afxCurve3D::afxCurve3D() : usable( false ), default_vector( 0, 0, 0 )
+afxCurve3D::afxCurve3D() : usable( false ), default_vector( 0, 0, 0 ), flip(false)
 {
 	evaluator = new afxHermiteEval();
 }

@@ -61,6 +61,10 @@ class MaterialSoundProfile;
 class MaterialPhysicsProfile;
 class CustomShaderFeatureData;
 
+#define DECLARE_TEXTUREARRAY(name,max) FileName m##name##Filename[max];\
+                                      StringTableEntry m##name##AssetId[max];\
+                                      AssetPtr<ImageAsset>  m##name##Asset[max];
+
 /// The basic material definition.
 class Material : public BaseMaterialDefinition
 {
@@ -209,63 +213,48 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   FileName mDiffuseMapFilename[MAX_STAGES];
-   StringTableEntry mDiffuseMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mDiffuseMapAsset[MAX_STAGES];
+   DECLARE_TEXTUREARRAY(DiffuseMap, MAX_STAGES);
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
+   DECLARE_TEXTUREARRAY(OverlayMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(LightMap, MAX_STAGES);;
+   DECLARE_TEXTUREARRAY(ToneMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(DetailMap, MAX_STAGES);;
+   DECLARE_TEXTUREARRAY(NormalMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(PBRConfigMap, MAX_STAGES);
+   bool     mIsSRGb[MAX_STAGES];
+   DECLARE_TEXTUREARRAY(RoughMap, MAX_STAGES);
+   bool     mInvertSmoothness[MAX_STAGES];
+   F32      mSmoothnessChan[MAX_STAGES];
+   DECLARE_TEXTUREARRAY(AOMap, MAX_STAGES);
+   F32      mAOChan[MAX_STAGES];
+   DECLARE_TEXTUREARRAY(MetalMap, MAX_STAGES);
+   F32      mMetalChan[MAX_STAGES];
+   DECLARE_TEXTUREARRAY(GlowMap, MAX_STAGES);
+   F32      mGlowMul[MAX_STAGES];
+   /// A second normal map which repeats at the detail map
+   /// scale and blended with the base normal map.
+   DECLARE_TEXTUREARRAY(DetailNormalMap, MAX_STAGES);
+   /// The strength scalar for the detail normal map.
+   F32 mDetailNormalMapStrength[MAX_STAGES];
+
    bool     mAccuEnabled[MAX_STAGES];
    F32      mAccuScale[MAX_STAGES];
    F32      mAccuDirection[MAX_STAGES];
    F32      mAccuStrength[MAX_STAGES];
    F32      mAccuCoverage[MAX_STAGES];
    F32      mAccuSpecular[MAX_STAGES];
-   FileName mOverlayMapFilename[MAX_STAGES];
-   StringTableEntry mOverlayMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mOverlayMapAsset[MAX_STAGES];
-   FileName mLightMapFilename[MAX_STAGES];
-   StringTableEntry mLightMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mLightMapAsset[MAX_STAGES];
-   FileName mToneMapFilename[MAX_STAGES];
-   StringTableEntry mToneMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mToneMapAsset[MAX_STAGES];
-   FileName mDetailMapFilename[MAX_STAGES];
-   StringTableEntry mDetailMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mDetailMapAsset[MAX_STAGES];
-   FileName mNormalMapFilename[MAX_STAGES];
-   StringTableEntry mNormalMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mNormalMapAsset[MAX_STAGES];
 
-   bool     mIsSRGb[MAX_STAGES];
-   bool     mInvertSmoothness[MAX_STAGES];
-   FileName mPBRConfigMapFilename[MAX_STAGES];
-   StringTableEntry mPBRConfigMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mPBRConfigMapAsset[MAX_STAGES];
-   FileName mRoughMapFilename[MAX_STAGES];
-   StringTableEntry mRoughMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mRoughMapAsset[MAX_STAGES];
-   F32      mSmoothnessChan[MAX_STAGES];
-   FileName mAOMapFilename[MAX_STAGES];
-   StringTableEntry mAOMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mAOMapAsset[MAX_STAGES];
-   F32      mAOChan[MAX_STAGES];
-   FileName mMetalMapFilename[MAX_STAGES];
-   StringTableEntry mMetalMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mMetalMapAsset[MAX_STAGES];
-   F32      mMetalChan[MAX_STAGES];
+   //cogs specific
+   /// Damage blend maps (albedo)
+   DECLARE_TEXTUREARRAY(AlbedoDamageMap, MAX_STAGES);
+   bool mAlbedoDamageMapSRGB[MAX_STAGES];
+   /// Damage blend maps (normal)
+   DECLARE_TEXTUREARRAY(NormalDamageMap, MAX_STAGES);
+   /// Damage blend maps (Roughness, AO, Metalness)
+   DECLARE_TEXTUREARRAY(CompositeDamageMap, MAX_STAGES);
+   /// Damage blend minimum
+   F32      mMaterialDamageMin[MAX_STAGES];
 
-   FileName mGlowMapFilename[MAX_STAGES];
-   StringTableEntry mGlowMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mGlowMapAsset[MAX_STAGES];
-   F32      mGlowMul[MAX_STAGES];
-   /// A second normal map which repeats at the detail map
-   /// scale and blended with the base normal map.
-   FileName mDetailNormalMapFilename[MAX_STAGES];
-   StringTableEntry mDetailNormalMapAssetId[MAX_STAGES];
-   AssetPtr<ImageAsset> mDetailNormalMapAsset[MAX_STAGES];
-
-   /// The strength scalar for the detail normal map.
-   F32 mDetailNormalMapStrength[MAX_STAGES];   
-      
    /// This color is the diffuse color of the material
    /// or if it has a texture it is multiplied against 
    /// the diffuse texture color.
@@ -369,6 +358,7 @@ public:
    /// @see mFootstepSoundCustom
    S32 mFootstepSoundId;
    S32 mImpactSoundId;
+   S32 mImpactFXIndex;
 
    /// Sound effect to play when walking on surface with this material.
    /// If defined, overrides mFootstepSoundId.

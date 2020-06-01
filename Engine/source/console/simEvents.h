@@ -62,7 +62,7 @@ public:
    ///  of addition to the list.
    SimObject *destObject;   ///< Object on which this event will be applied.
 
-   SimEvent() { destObject = NULL; }
+   SimEvent() { nextEvent = NULL; startTime = 0; time = 0; sequenceCount = 0; destObject = NULL; }
    virtual ~SimEvent() {}   ///< Destructor
    ///
    /// A dummy virtual destructor is required

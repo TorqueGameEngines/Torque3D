@@ -71,6 +71,7 @@ public:
    void disassemble();
 
    TSSortedMesh() {
+      alwaysWriteDepth = false;
       mMeshType = SortedMeshType;
    }
 };

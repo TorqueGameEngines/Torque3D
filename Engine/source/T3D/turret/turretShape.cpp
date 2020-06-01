@@ -114,17 +114,21 @@ TurretShapeData::TurretShapeData()
 
    headingNode = -1;
    pitchNode = -1;
-
-   for (U32 i=0; i<NumMirrorDirectionNodes; ++i)
+   U32 i = 0;
+   for (i=0; i<NumMirrorDirectionNodes; ++i)
    {
       pitchNodes[i] = -1;
       headingNodes[i] = -1;
    }
 
-   for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
+   for (i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
       weaponMountNode[i] = -1;
    }
+   for (i = 0; i < NumRecoilSequences;i++)
+      recoilSequence[i] = -1;
+   pitchSequence = -1;
+   headingSequence = -1;
 }
 
 void TurretShapeData::initPersistFields()
@@ -284,6 +288,8 @@ TurretShape::TurretShape()
 
    // For the Item class
    mSubclassItemHandlesScene = true;
+   mRecoilThread = NULL;
+   mImageStateThread = NULL;
 }
 
 TurretShape::~TurretShape()

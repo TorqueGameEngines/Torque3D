@@ -59,6 +59,7 @@ AsyncPeriodicUpdateThread::AsyncPeriodicUpdateThread( String name,
 
    // This is a bit contrived.  The 'dueTime' is in 100 nanosecond intervals
    // and relative if it is negative.  The period is in milliseconds.
+   mIntervalMS = intervalMS;
 
    LARGE_INTEGER deltaTime;
    deltaTime.QuadPart = - LONGLONG( intervalMS * 10 /* micro */ * 1000 /* milli */ );

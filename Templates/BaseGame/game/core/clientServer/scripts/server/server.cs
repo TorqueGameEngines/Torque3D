@@ -201,7 +201,7 @@ function onServerCreated()
    physicsInitWorld( "server" );
 
    physicsStartSimulation("server");
-   
+   DatablockFilesList.clear();
    loadDatablockFiles( DatablockFilesList, true );
    
    callOnModules("onServerScriptExec", "Core");

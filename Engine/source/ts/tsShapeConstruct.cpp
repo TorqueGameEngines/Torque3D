@@ -393,7 +393,7 @@ TSShapeConstructor* TSShapeConstructor::findShapeConstructor(const FileName& pat
          FileName shapePath = tss->mShapePath;
 
          char buf[1024];
-         FileName fullShapePath = Platform::makeFullPathName(shapePath, buf, sizeof(buf));
+         FileName fullShapePath = String(Platform::makeFullPathName(shapePath, buf, sizeof(buf)));
          if (shapePath.equal( path, String::NoCase ) || fullShapePath.equal(path, String::NoCase))
             return tss;
       }

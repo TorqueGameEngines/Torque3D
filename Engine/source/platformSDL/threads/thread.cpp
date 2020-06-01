@@ -83,6 +83,7 @@ Thread::Thread(ThreadRunFunction func, void* arg, bool start_thread, bool autode
    mData->mDead = false;
    mData->mSdlThread = NULL;
    autoDelete = autodelete;
+   shouldStop = true;
 }
 
 Thread::~Thread()

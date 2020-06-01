@@ -105,6 +105,11 @@ afxModelData::afxModelData(const afxModelData& other, bool temp_clone) : GameBas
   customAmbientForSelfIllumination = other.customAmbientForSelfIllumination;
   customAmbientLighting = other.customAmbientLighting;
   shadowEnable = other.shadowEnable;
+
+  shadowSize = other.shadowSize;
+  shadowMaxVisibleDistance = other.shadowMaxVisibleDistance;
+  shadowProjectionDistance = other.shadowProjectionDistance;
+  shadowSphereAdjust = other.shadowSphereAdjust;
 }
 
 afxModelData::~afxModelData()
@@ -360,7 +365,7 @@ afxModel::afxModel()
   fade_amt = 1.0f;
   is_visible = true;
   sort_priority = 0;
-
+  mDataBlock = NULL;
   mNetFlags.set( IsGhost );
 }
 

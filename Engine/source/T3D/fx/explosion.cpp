@@ -238,6 +238,9 @@ ExplosionData::ExplosionData()
    explosionScale.set(1.0f, 1.0f, 1.0f);
    playSpeed = 1.0f;
 
+   explosionShape = NULL;
+   explosionAnimation = -1;
+
    dMemset( emitterList, 0, sizeof( emitterList ) );
    dMemset( emitterIDList, 0, sizeof( emitterIDList ) );
    dMemset( debrisList, 0, sizeof( debrisList ) );
@@ -924,6 +927,7 @@ Explosion::Explosion()
    ss_index = 0;
    mDataBlock = 0;
    soundProfile_clone = 0;
+   mRandomVal = 0;
 }
 
 Explosion::~Explosion()
@@ -962,7 +966,7 @@ void Explosion::setInitialState(const Point3F& point, const Point3F& normal, con
 void Explosion::initPersistFields()
 {
    Parent::initPersistFields();
-
+   addField("initialNormal", TypePoint3F, Offset(mInitialNormal, Explosion), "Initial starting Normal.");
    //
 }
 

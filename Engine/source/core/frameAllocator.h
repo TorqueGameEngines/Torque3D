@@ -295,6 +295,7 @@ public:
       AssertFatal( count > 0, "Allocating a FrameTemp with less than one instance" ); \
       mWaterMark = FrameAllocator::getWaterMark(); \
       mMemory = reinterpret_cast<type *>( FrameAllocator::alloc( sizeof( type ) * count ) ); \
+      mNumObjectsInMemory = 0; \
    } \
    template<>\
    inline FrameTemp<type>::~FrameTemp() \

@@ -42,6 +42,7 @@
 
 
 GFX_DeclareTextureProfile(GFXFontTextureProfile);
+#define Font_Table_MAX 65536
 
 class GFont
 {
@@ -159,7 +160,7 @@ private:
    Vector<PlatformFont::CharInfo>  mCharInfoList;
 
    /// Index remapping
-   S32             mRemapTable[65536];
+   S32             mRemapTable[Font_Table_MAX];
 };
 
 inline U32 GFont::getCharXIncrement(const UTF16 in_charIndex)

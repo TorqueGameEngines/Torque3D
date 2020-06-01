@@ -34,7 +34,7 @@ function initRenderManager()
       enabled = "false";
       
       //When hdr is enabled this will be changed to the appropriate format
-      format = "GFXFormatR8G8B8A8_SRGB";
+      format = "GFXFormatR16G16B16A16F";
       depthFormat = "GFXFormatD24S8";
       aaLevel = 0; // -1 = match backbuffer
       

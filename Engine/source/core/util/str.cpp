@@ -590,7 +590,8 @@ String::String(const UTF16 *str)
 
 String::~String()
 {
-   _string->release();
+   if (_string && _string != StringData::Empty())
+      _string->release();
 }
 
 //-----------------------------------------------------------------------------

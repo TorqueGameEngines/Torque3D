@@ -47,6 +47,7 @@
 #include "gfx/gl/gfxGLVertexAttribLocation.h"
 #include "gfx/gl/gfxGLVertexDecl.h"
 #include "shaderGen/shaderGen.h"
+#include "gfxGLUtils.h"
 
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance); 
 
@@ -460,6 +461,22 @@ void GFXGLDevice::endSceneInternal()
 {
    // nothing to do for opengl
    mCanCurrentlyRender = false;
+}
+
+void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U32 face)
+{
+   AssertFatal(pDst, "GFXGLDevice::copyResource: Destination texture is null");
+   AssertFatal(pSrc, "GFXGLDevice::copyResource: Source cubemap is null");
+
+   GFXGLTextureObject* gGLDst = static_cast<GFXGLTextureObject*>(pDst);
+   GFXGLCubemap* pGLSrc = static_cast<GFXGLCubemap*>(pSrc);
+
+   const U32 mipLevels = pGLSrc->getMipMapLevels();
+   for (U32 mip = 0; mip < mipLevels; mip++)
+   {
+      const U32 mipSize = getMax(U32(1), pGLSrc->getSize() >> mip);
+      glCopyImageSubData(pGLSrc->mCubemap, GL_TEXTURE_CUBE_MAP, mip, 0, 0, face, gGLDst->getHandle(), GL_TEXTURE_2D, mip, 0, 0, 0, mipSize, mipSize, 1);
+   }
 }
 
 void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)

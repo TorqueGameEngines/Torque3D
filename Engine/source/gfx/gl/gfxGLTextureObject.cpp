@@ -184,7 +184,7 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    PROFILE_START(GFXGLTextureObject_copyToBmp_pixCopy);
    if (mFormat == GFXFormatR16G16B16A16F)
    {
-	   dMemcpy(dest, orig, sizeof(U16) * 4);
+	   dMemcpy(dest, orig, srcPixelCount*sizeof(U16) * 4);
    }
    else
    {

@@ -206,7 +206,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    OptionDescription.setText("");
    
    %resolutionList = getScreenResolutionList();
-   OptionsMenuSettingsList.addOptionRow("Display API", "D3D11\tOpenGL", false, "", -1, -30, true, "The display API used for rendering.", getDisplayDeviceInformation());
+   OptionsMenuSettingsList.addOptionRow("Display API", "D3D11\tOpenGL", false, "", -1, -30, true, "The display API used for rendering.", $pref::Video::displayDevice);
    OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
    OptionsMenuSettingsList.addOptionRow("Fullscreen", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo($pref::Video::FullScreen));
    OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
@@ -226,7 +226,7 @@ function OptionsMenu::applyDisplaySettings(%this)
 {
    %newAdapter    = GraphicsMenuDriver.getText();
 	%numAdapters   = GFXInit::getAdapterCount();
-	%newDevice     = $pref::Video::displayDevice;
+	%newDevice     = OptionsMenuSettingsList.getCurrentOption(0);
 							
 	for( %i = 0; %i < %numAdapters; %i ++ )
 	{

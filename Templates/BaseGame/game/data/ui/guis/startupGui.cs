@@ -155,3 +155,6 @@ function StartupGui::onDone(%this)
       }
    }
 }
+
+//execute on file exec. queued up via function UI::initClient(%this)
+loadStartup();

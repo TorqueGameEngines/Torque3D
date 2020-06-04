@@ -175,30 +175,38 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
 
    FrameAllocatorMarker mem;
    
-   U32 srcPixelCount = mTextureSize.x * mTextureSize.y;
-   U8 *dest = bmp->getWritableBits();
-   U8 *orig = (U8*)mem.alloc(srcPixelCount * srcBytesPerPixel);
 
-   glGetTexImage(mBinding, 0, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], orig);
-   
-   PROFILE_START(GFXGLTextureObject_copyToBmp_pixCopy);
-   if (mFormat == GFXFormatR16G16B16A16F)
+   U32 mipLevels = getMipLevels();
+   for (U32 mip = 0; mip < mipLevels; mip++)
    {
-	   dMemcpy(dest, orig, srcPixelCount*sizeof(U16) * 4);
-   }
-   else
-   {
-	   for (int i = 0; i < srcPixelCount; ++i)
-	   {
-		   dest[0] = orig[0];
-		   dest[1] = orig[1];
-		   dest[2] = orig[2];
-		   if (dstBytesPerPixel == 4)
-			   dest[3] = orig[3];
+      U32 srcPixelCount = mTextureSize.x * mTextureSize.y;
+      if (mipLevels>0)
+         srcPixelCount *= U32((mipLevels-mip)/mipLevels);
 
-		   orig += srcBytesPerPixel;
-		   dest += dstBytesPerPixel;
-	   }
+      U8* dest = bmp->getWritableBits(mip);
+      U8* orig = (U8*)mem.alloc(srcPixelCount * srcBytesPerPixel);
+
+      glGetTexImage(mBinding, mip, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], orig);
+
+      PROFILE_START(GFXGLTextureObject_copyToBmp_pixCopy);
+      if (mFormat == GFXFormatR16G16B16A16F)
+      {
+         dMemcpy(dest, orig, srcPixelCount * sizeof(U16) * 4);
+      }
+      else
+      {
+         for (int i = 0; i < srcPixelCount; ++i)
+         {
+            dest[0] = orig[0];
+            dest[1] = orig[1];
+            dest[2] = orig[2];
+            if (dstBytesPerPixel == 4)
+               dest[3] = orig[3];
+
+            orig += srcBytesPerPixel;
+            dest += dstBytesPerPixel;
+         }
+      }
    }
    PROFILE_END();
 

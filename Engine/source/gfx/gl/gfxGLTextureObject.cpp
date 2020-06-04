@@ -179,9 +179,7 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    U32 mipLevels = getMipLevels();
    for (U32 mip = 0; mip < mipLevels; mip++)
    {
-      U32 srcPixelCount = mTextureSize.x * mTextureSize.y;
-      if (mipLevels>0)
-         srcPixelCount *= U32((mipLevels-mip)/mipLevels);
+      U32 srcPixelCount = bmp->getSurfaceSize(mip)/ srcBytesPerPixel;
 
       U8* dest = bmp->getWritableBits(mip);
       U8* orig = (U8*)mem.alloc(srcPixelCount * srcBytesPerPixel);

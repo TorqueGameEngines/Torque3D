@@ -40,5 +40,6 @@ exec("./assimpImport.ed.gui");
 exec("./fieldTypes/assetDependencies.cs");
 exec("./fieldTypes/fieldTypes.cs");
 exec("./fieldTypes/listField.cs");
+exec("./fieldTypes/range.cs");
 exec("./fieldTypes/moduleDependencies.cs");
 exec("./fieldTypes/buttonField.cs");

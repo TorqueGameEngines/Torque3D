@@ -74,7 +74,7 @@ namespace IBLUtilities
          irrConsts->setSafe(irrFaceSC, (S32)i);
          GFX->setActiveRenderTarget(renderTarget);
          GFX->clear(GFXClearTarget, LinearColorF::BLACK, 1.0f, 0);
-         GFX->drawPrimitive(GFXTriangleList, 0, 3);
+         GFX->drawPrimitive(GFXTriangleList, 0, 1);
          renderTarget->resolve();
       }
 
@@ -177,7 +177,7 @@ namespace IBLUtilities
             GFX->setActiveRenderTarget(renderTarget, false);//we set the viewport ourselves
             GFX->setViewport(RectI(0, 0, size, size));
             GFX->clear(GFXClearTarget, LinearColorF::BLACK, 1.0f, 0);
-            GFX->drawPrimitive(GFXTriangleList, 0, 3);
+            GFX->drawPrimitive(GFXTriangleList, 0, 1);
             renderTarget->resolve();
          }
       }

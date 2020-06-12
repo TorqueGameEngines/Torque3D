@@ -134,9 +134,18 @@ void SpotLight::_conformLights()
 
    // Update the bounds and scale to fit our spotlight.
    F32 radius = mRange * mSin( mDegToRad( mOuterConeAngle ) * 0.5f );
-   mObjBox.minExtents.set( -1, 0, -1 );
-   mObjBox.maxExtents.set( 1, 1, 1 );
-   mObjScale.set( radius, mRange, radius );
+   Point3F objectScale(radius, mRange, radius);
+   Point3F objectBoxMin(-1, 0, -1);
+
+   if (mAnimationData && mAnimationData->mRot.keyLen > 0)
+   {
+      objectBoxMin.set(-1, -1, -1);
+      objectScale.set(mRange, mRange, mRange);
+   }
+
+   mObjBox.minExtents.set(objectBoxMin);
+   mObjBox.maxExtents.set(1, 1, 1);
+   mObjScale.set(objectScale);
 
    // Skip our transform... it just dirties mask bits.
    Parent::setTransform( mObjToWorld );

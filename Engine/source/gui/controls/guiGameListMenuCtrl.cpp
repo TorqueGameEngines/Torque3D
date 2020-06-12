@@ -26,8 +26,8 @@
 #include "console/engineAPI.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gui/containers/guiScrollCtrl.h"
-#include "sim\actionMap.h"
-#include "core\strings\stringUnit.h"
+#include "sim/actionMap.h"
+#include "core/strings/stringUnit.h"
 
 //-----------------------------------------------------------------------------
 // GuiGameListMenuCtrl

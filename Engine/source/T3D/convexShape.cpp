@@ -889,7 +889,8 @@ bool ConvexShape::buildExportPolyList(ColladaUtils::ExportData* exportData, cons
       ColladaUtils::ExportData::detailLevel* curDetail = &meshData->meshDetailLevels.last();
 
       //Make sure we denote the size this detail level has
-      curDetail->size = 512;
+      curDetail->size = getNextPow2(getObjBox().len());
+
    }
 
    return true;

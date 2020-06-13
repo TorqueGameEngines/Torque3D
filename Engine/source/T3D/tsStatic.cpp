@@ -1363,7 +1363,7 @@ bool TSStatic::buildExportPolyList(ColladaUtils::ExportData* exportData, const B
          ColladaUtils::ExportData::detailLevel* curDetail = &meshData->meshDetailLevels.last();
 
          //Make sure we denote the size this detail level has
-         curDetail->size = detail.size;
+         curDetail->size = getNextPow2(detail.size);
       }
    }
 

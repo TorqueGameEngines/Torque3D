@@ -1030,7 +1030,7 @@ void TerrainNormalMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
    }
    // Normalize is done later... 
    // Note: The reverse mul order is intentional. Affine matrix.
-   meta->addStatement(new GenOp("      @ = lerp( @, mul( @.xyz, @ ), min( @, @.w ) );\r\n",
+   meta->addStatement(new GenOp("      @ = lerp( @, tMul( @.xyz, @ ), min( @, @.w ) );\r\n",
       gbNormal, gbNormal, bumpNorm, viewToTangent, detailBlend, inDet));
 
    if (blendTotal)

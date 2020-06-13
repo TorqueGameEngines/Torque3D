@@ -54,7 +54,7 @@ PR bugfixes to `development-3.6`.
 
 Pull requests not adhering to these rules cannot be accepted, so pay attention!
 
-* Obviously, your contribution cannot contain any code that is not legally compatible with Torque 3D's MIT license. In addition, to legally protect the engine and everyone affiliated with it, we require that all contributors create an account on GarageGames.com and sign the Open Source Software Agreement there. For more information on the OSSA, please visit this page in our wiki.
+* Obviously, your contribution cannot contain any code that is not legally compatible with Torque 3D's MIT license.
 * Contributions must adhere to our [code style guidelines](http://wiki.torque3d.org/coder:code-style-guidelines).
 * Pull-requests against the master branch cannot be accepted. All requests must go to development, or an appropriate topic or maintenance branch.
 

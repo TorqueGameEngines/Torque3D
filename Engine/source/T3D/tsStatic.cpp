@@ -142,6 +142,8 @@ TSStatic::TSStatic()
 #ifdef TORQUE_AFX_ENABLED
    afxZodiacData::convertGradientRangeFromDegrees(mGradientRange, mGradientRangeUser);
 #endif
+   mAnimOffset = 0.0f;
+   mAnimSpeed = 1.0f;
 
    mShapeAsset = StringTable->EmptyString();
    mShapeAssetId = StringTable->EmptyString();
@@ -164,9 +166,17 @@ ImplementEnumType(TSMeshType,
    { TSStatic::VisibleMesh,   "Visible Mesh",   "Rendered mesh polygons." },
       EndImplementEnumType;
 
+FRangeValidator percentValidator(0.0f, 1.0f);
+F32 AnimSpeedMax = 4.0f;
+FRangeValidator speedValidator(0.0f, AnimSpeedMax);
 
 void TSStatic::initPersistFields()
 {
+   addFieldV("AnimOffset", TypeF32, Offset(mAnimOffset, TSStatic), &percentValidator,
+      "Percent Animation Offset.");
+
+   addFieldV("AnimSpeed", TypeF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
+      "Percent Animation Speed.");
    addGroup("Shape");
 
    addProtectedField("shapeAsset", TypeShapeAssetId, Offset(mShapeAssetId, TSStatic),
@@ -454,12 +464,8 @@ bool TSStatic::_createShape()
 
    mShapeInstance = new TSShapeInstance(mShape, isClientObject());
    if (isClientObject())
-   {
       mShapeInstance->cloneMaterialList();
-   }
 
-   if (isClientObject())
-      mShapeInstance->cloneMaterialList();
    if (isGhost())
    {
       // Reapply the current skin
@@ -475,8 +481,8 @@ bool TSStatic::_createShape()
    if (ambientSeq > -1 && !mAmbientThread)
       mAmbientThread = mShapeInstance->addThread();
 
-   if (mAmbientThread)
-      mShapeInstance->setSequence(mAmbientThread, ambientSeq, 0);
+   if ( mAmbientThread )
+      mShapeInstance->setSequence(mAmbientThread, ambientSeq, mAnimOffset);
 
    // Resolve CubeReflectorDesc.
    if (cubeDescName.isNotEmpty())
@@ -720,9 +726,11 @@ void TSStatic::reSkin()
 
 void TSStatic::processTick(const Move* move)
 {
-   if (isServerObject() && mPlayAmbient && mAmbientThread)
-      mShapeInstance->advanceTime(TickSec, mAmbientThread);
-
+   if ( isServerObject() && mPlayAmbient && mAmbientThread )
+   {
+      mShapeInstance->setTimeScale(mAmbientThread, mAnimSpeed);
+      mShapeInstance->advanceTime( TickSec, mAmbientThread );
+   }
    if (isMounted())
    {
       MatrixF mat(true);
@@ -737,8 +745,11 @@ void TSStatic::interpolateTick(F32 delta)
 
 void TSStatic::advanceTime(F32 dt)
 {
-   if (mPlayAmbient && mAmbientThread)
-      mShapeInstance->advanceTime(dt, mAmbientThread);
+   if ( mPlayAmbient && mAmbientThread )
+   {
+      mShapeInstance->setTimeScale(mAmbientThread, mAnimSpeed);
+      mShapeInstance->advanceTime( dt, mAmbientThread );
+   }
 
    if (isMounted())
    {
@@ -982,6 +993,12 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
       stream->write(mForceDetail);
 
+   if (stream->writeFlag(mAnimOffset != 0.0f))
+      stream->writeFloat(mAnimOffset, 7);
+
+   if (stream->writeFlag(mAnimSpeed != 1.0f))
+      stream->writeSignedFloat(mAnimSpeed / AnimSpeedMax, 7);
+
       stream->writeFlag(mPlayAmbient);
    }
 
@@ -1094,6 +1111,13 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
       stream->read(&mRenderNormalScalar);
 
       stream->read(&mForceDetail);
+
+   if (stream->readFlag())
+      mAnimOffset = stream->readFloat(7);
+
+   if (stream->readFlag())
+      mAnimSpeed = stream->readSignedFloat(7) * AnimSpeedMax;
+
       mPlayAmbient = stream->readFlag();
 
 

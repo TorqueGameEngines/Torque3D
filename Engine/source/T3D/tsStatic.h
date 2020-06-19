@@ -48,6 +48,10 @@
 #include "scene/reflector.h"
 #endif
 
+#ifndef _COLLADA_UTILS_H_
+#include "ts/collada/colladaUtils.h"
+#endif
+
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif 
@@ -202,8 +206,9 @@ protected:
    String            mAppliedSkinName;
 
    bool              mPlayAmbient;
-   TSThread* mAmbientThread;
-
+   TSThread*         mAmbientThread;
+   F32               mAnimOffset;
+   F32               mAnimSpeed;
    /// The type of mesh data to return for collision queries.
    MeshType mCollisionType;
 
@@ -272,6 +277,7 @@ public:
    const Vector<S32>& getCollisionDetails() const { return mCollisionDetails; }
 
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
+   bool hasAnim() { return mAmbientThread != NULL; }
 
    virtual void onInspect(GuiInspector*);
 

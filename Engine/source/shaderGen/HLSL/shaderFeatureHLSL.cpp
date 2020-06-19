@@ -1252,7 +1252,7 @@ void DiffuseVertColorFeatureHLSL::processVert(  Vector< ShaderComponent* >& comp
       outColor->setStructName( "OUT" );
       outColor->setType( "float4" );
 
-      output = new GenOp( "   @ = @;\r\n", outColor, inColor );
+      output = new GenOp( "   @ = @.bgra;\r\n", outColor, inColor );
    }
    else
       output = NULL; // Nothing we need to do.

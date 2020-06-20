@@ -146,3 +146,26 @@ datablock CameraData(Observer)
 {
    mode = "Observer";
 };
+
+datablock LightAnimData( NullLightAnim )
+{   
+   animEnabled = false;
+};
+
+datablock LightAnimData( PulseLightAnim )
+{   
+   brightnessA = 0;
+   brightnessZ = 1;
+   brightnessPeriod = 1;
+   brightnessKeys = "aza";
+   brightnessSmooth = true;
+};
+
+datablock LightAnimData( SpinLightAnim )
+{
+   rotA[2] = "0";
+   rotZ[2] = "360";
+   rotPeriod[2] = "1";
+   rotKeys[2] = "az";
+   rotSmooth[2] = true;
+};

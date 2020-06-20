@@ -47,6 +47,7 @@
 #include "gfx/gl/gfxGLVertexAttribLocation.h"
 #include "gfx/gl/gfxGLVertexDecl.h"
 #include "shaderGen/shaderGen.h"
+#include "gfxGLUtils.h"
 
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance); 
 
@@ -460,6 +461,43 @@ void GFXGLDevice::endSceneInternal()
 {
    // nothing to do for opengl
    mCanCurrentlyRender = false;
+}
+
+void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U32 face)
+{
+   AssertFatal(pDst, "GFXGLDevice::copyResource: Destination texture is null");
+   AssertFatal(pSrc, "GFXGLDevice::copyResource: Source cubemap is null");
+
+   GFXGLTextureObject* gGLDst = static_cast<GFXGLTextureObject*>(pDst);
+   GFXGLCubemap* pGLSrc = static_cast<GFXGLCubemap*>(pSrc);
+
+   GFXFormat format = pGLSrc->getFormat();
+
+   const bool isCompressed = ImageUtil::isCompressedFormat(format);
+
+   U32 mipLevels = pGLSrc->getMipMapLevels();
+   if (mipLevels < 1) mipLevels = 1;//ensure we loop at least the once
+   for (U32 mip = 0; mip < mipLevels; mip++)
+   {
+      U8* pixelData = pGLSrc->getTextureData(face, mip);
+
+      glBindTexture(gGLDst->getBinding(), gGLDst->getHandle());
+      const U32 mipSize = getMax(U32(1), pGLSrc->getSize() >> mip);
+      if (isCompressed)
+      {
+         const U32 mipDataSize = getCompressedSurfaceSize(format, pGLSrc->getSize(), pGLSrc->getSize(), 0);
+
+         glCompressedTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], mipDataSize, pixelData);
+      }
+      else
+      {
+         //glCopyImageSubData(pGLSrc->mCubemap, GFXGLCubemap::getEnumForFaceNumber(face), mip, 0, 0, face, gGLDst->getHandle(), GL_TEXTURE_2D, mip, 0, 0, 0, mipSize, mipSize, mip);
+         glTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], GFXGLTextureType[format], pixelData);
+      }
+      glBindTexture(gGLDst->getBinding(), 0);
+
+      delete[] pixelData;
+   }
 }
 
 void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)

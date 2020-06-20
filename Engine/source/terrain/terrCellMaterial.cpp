@@ -52,14 +52,14 @@ Vector<String> _initSamplerNames()
    Vector<String> samplerNames;
    samplerNames.push_back("$baseTexMap");
    samplerNames.push_back("$layerTex");   
-   samplerNames.push_back("$macrolayerTex");   
+   //samplerNames.push_back("$macrolayerTex");   
    samplerNames.push_back("$lightMapTex");
    samplerNames.push_back("$lightInfoBuffer");
-   for(int i = 0; i < 3; ++i)
+   for(int i = 0; i < sgMaxTerrainMaterialsPerPass; ++i)
    {
       samplerNames.push_back(avar("$normalMap%d",i));
       samplerNames.push_back(avar("$detailMap%d",i));
-      samplerNames.push_back(avar("$macroMap%d", i));
+      //samplerNames.push_back(avar("$macroMap%d", i));
       samplerNames.push_back(avar("$compositeMap%d", i));
    }   
 

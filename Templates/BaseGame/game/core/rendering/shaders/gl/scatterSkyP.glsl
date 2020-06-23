@@ -60,13 +60,9 @@ void main()
    vec4 nightSkyColor = texture(nightSky, -v3Direction);
    nightSkyColor = mix(nightColor, nightSkyColor, useCubemap);
 
-   float fac = dot( normalize( pos ), sunDir );
-   fac = max( nightInterpAndExposure.y, pow( clamp( fac, 0.0, 1.0 ), 2 ) );
    OUT_col = mix( color, nightSkyColor, nightInterpAndExposure.y );
 
    OUT_col.a = 1;
-   
-   OUT_col = clamp(OUT_col, 0.0, 1.0);
-   
+      
    OUT_col = hdrEncode( OUT_col );
 }

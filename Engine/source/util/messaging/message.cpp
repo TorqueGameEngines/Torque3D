@@ -100,7 +100,6 @@ bool Message::onAdd()
    if(! Parent::onAdd())
       return false;
 
-   linkNamespaces();
    onAdd_callback();
    //Con::executef(this, "onAdd");
    return true;
@@ -120,7 +119,6 @@ void Message::onRemove()
 {   
    onRemove_callback();
    //Con::executef(this, "onRemove");
-   unlinkNamespaces();
    
    Parent::onRemove();
 }

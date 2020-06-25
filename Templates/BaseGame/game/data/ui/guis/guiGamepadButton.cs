@@ -24,6 +24,7 @@ $BUTTON_RSTICK    =  11;
 function GamepadButtonsGui::onWake(%this)
 {
    GamepadButtonsGui.controllerName = "K&M";
+   %this.initMenuButtons();
 }
 
 function GamepadButtonsGui::initMenuButtons(%this)

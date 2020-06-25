@@ -1,7 +1,3 @@
-function MainMenuGui::onAdd(%this)
-{
-   GamepadButtonsGui.initMenuButtons();
-}
 
 function MainMenuGui::onWake(%this)
 {

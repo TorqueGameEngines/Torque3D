@@ -475,28 +475,33 @@ void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U
 
    const bool isCompressed = ImageUtil::isCompressedFormat(format);
 
-   U32 mipLevels = pGLSrc->getMipMapLevels();
-   if (mipLevels < 1) mipLevels = 1;//ensure we loop at least the once
+   U32 mipLevels = gGLDst->getMipLevels();
    for (U32 mip = 0; mip < mipLevels; mip++)
    {
-      U8* pixelData = pGLSrc->getTextureData(face, mip);
-
-      glBindTexture(gGLDst->getBinding(), gGLDst->getHandle());
       const U32 mipSize = getMax(U32(1), pGLSrc->getSize() >> mip);
-      if (isCompressed)
+      if (GFXGL->mCapabilities.copyImage)
       {
-         const U32 mipDataSize = getCompressedSurfaceSize(format, pGLSrc->getSize(), pGLSrc->getSize(), 0);
-
-         glCompressedTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], mipDataSize, pixelData);
+         glCopyImageSubData(pGLSrc->mCubemap, GL_TEXTURE_CUBE_MAP, mip, 0, 0, face, gGLDst->getHandle(), GL_TEXTURE_2D, mip, 0, 0, 0, mipSize, mipSize, 1);
       }
       else
       {
-         //glCopyImageSubData(pGLSrc->mCubemap, GFXGLCubemap::getEnumForFaceNumber(face), mip, 0, 0, face, gGLDst->getHandle(), GL_TEXTURE_2D, mip, 0, 0, 0, mipSize, mipSize, mip);
-         glTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], GFXGLTextureType[format], pixelData);
-      }
-      glBindTexture(gGLDst->getBinding(), 0);
+         U8* pixelData = pGLSrc->getTextureData(face, mip);
 
-      delete[] pixelData;
+         glBindTexture(gGLDst->getBinding(), gGLDst->getHandle());
+         if (isCompressed)
+         {
+            const U32 mipDataSize = getCompressedSurfaceSize(format, pGLSrc->getSize(), pGLSrc->getSize(), 0);
+
+            glCompressedTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], mipDataSize, pixelData);
+         }
+         else
+         {
+            glTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], GFXGLTextureType[format], pixelData);
+         }
+         glBindTexture(gGLDst->getBinding(), 0);
+
+         delete[] pixelData;
+      }
    }
 }
 

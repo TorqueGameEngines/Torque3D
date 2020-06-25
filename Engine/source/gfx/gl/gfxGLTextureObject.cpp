@@ -177,7 +177,6 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    
 
    U32 mipLevels = getMipLevels();
-   if (mipLevels < 1) mipLevels = 1;//ensure we loop at least the once
    for (U32 mip = 0; mip < mipLevels; mip++)
    {
       U32 srcPixelCount = bmp->getSurfaceSize(mip)/ srcBytesPerPixel;
@@ -207,6 +206,7 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
          }
       }
    }
+   glBindTexture(mBinding, NULL);
    PROFILE_END();
 
    return true;

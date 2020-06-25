@@ -227,7 +227,7 @@ void GFXGLCubemap::initDynamic(U32 texSize, GFXFormat faceFormat, U32 mipLevels)
         }
     }
 
-    if( !isCompressed )
+    if( !isCompressed && !mipLevels)
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     mInitialized = true;
 }

@@ -253,7 +253,7 @@ bool TerrainAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<Terrai
 
       TerrainAsset* newTerrainAsset = new TerrainAsset();
       newTerrainAsset->setAssetName(terrFilePath.getFileName().c_str());
-      String terrainPathBind = String("@=") + terrFilePath.getFileName() + terrFilePath.getExtension();
+      String terrainPathBind = terrFilePath.getFileName() + terrFilePath.getExtension();
 
       newTerrainAsset->mTerrainFilePath = StringTable->insert(terrainPathBind.c_str());
 
@@ -340,7 +340,7 @@ StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
 
       TerrainAsset* newTerrainAsset = new TerrainAsset();
       newTerrainAsset->setAssetName(terrFilePath.getFileName().c_str());
-      String terrainPathBind = String("@=") + terrFilePath.getFileName() + terrFilePath.getExtension();
+      String terrainPathBind = terrFilePath.getFileName() + "." + terrFilePath.getExtension();
 
       newTerrainAsset->mTerrainFilePath = StringTable->insert(terrainPathBind.c_str());
 
@@ -354,7 +354,7 @@ StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
       // Turn-off auto-formatting.
       taml.setAutoFormat(false);
 
-      String tamlPath = terrFilePath.getFullPath() + "/" + terrFilePath.getFileName() + ".asset.taml";
+      String tamlPath = terrFilePath.getPath() + "/" + terrFilePath.getFileName() + ".asset.taml";
 
       // Read object.
       bool success = taml.write(newTerrainAsset, tamlPath.c_str());

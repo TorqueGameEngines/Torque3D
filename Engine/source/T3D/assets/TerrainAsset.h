@@ -82,6 +82,10 @@ public:
 
    bool loadTerrain();
 
+   static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<TerrainAsset>* shapeAsset);
+   static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
+   static bool getAssetById(StringTableEntry assetId, AssetPtr<TerrainAsset>* shapeAsset);
+
    /// Declare Console Object.
    DECLARE_CONOBJECT(TerrainAsset);
 
@@ -94,24 +98,32 @@ protected:
 };
 
 DefineConsoleType(TypeTerrainAssetPtr, TerrainAsset)
+DefineConsoleType(TypeTerrainAssetId, String)
 
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
-class GuiInspectorTypeTerrainAssetPtr : public GuiInspectorField
+class GuiInspectorTypeTerrainAssetPtr : public GuiInspectorTypeFileName
 {
-   typedef GuiInspectorField Parent;
+   typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiControl*       mMatEdContainer;
-   GuiBitmapButtonCtrl  *mMatPreviewButton;
-   GuiTextEditCtrl *mMatAssetIdTxt;
+   GuiBitmapButtonCtrl* mShapeEdButton;
 
    DECLARE_CONOBJECT(GuiInspectorTypeTerrainAssetPtr);
    static void consoleInit();
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
+};
+
+class GuiInspectorTypeTerrainAssetId : public GuiInspectorTypeTerrainAssetPtr
+{
+   typedef GuiInspectorTypeTerrainAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeTerrainAssetId);
+   static void consoleInit();
 };
 
 #endif // _ASSET_BASE_H_

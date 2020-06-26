@@ -84,7 +84,10 @@ void TerrainBlock::_onFlushMaterials()
 }
 
 void TerrainBlock::_updateMaterials()
-{   
+{
+   if (!mFile)
+      return;
+
    mBaseTextures.setSize( mFile->mMaterials.size() );
 
    mMaxDetailDistance = 0.0f;
@@ -362,6 +365,9 @@ void TerrainBlock::_updateBaseTexture(bool writeToCache)
 void TerrainBlock::_renderBlock( SceneRenderState *state )
 {
    PROFILE_SCOPE( TerrainBlock_RenderBlock );
+
+   if (!mFile)
+      return;
 
    // Prevent rendering shadows if feature is disabled
    if ( !mCastShadows && state->isShadowPass() ) 

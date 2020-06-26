@@ -26,6 +26,8 @@
 #include "gfx/gfxTextureManager.h"
 #include "gfx/bitmap/gBitmap.h"
 
+#include <string>
+
 
 IMPLEMENT_CONOBJECT( TerrainMaterial );
 
@@ -77,7 +79,9 @@ TerrainMaterial::~TerrainMaterial()
 
 void TerrainMaterial::initPersistFields()
 {
-   addField( "diffuseMap", TypeStringFilename, Offset( mDiffuseMap, TerrainMaterial ), "Base texture for the material" );
+   scriptBindMapSlot(DiffuseMap, TerrainMaterial);
+
+   //addField( "diffuseMap", TypeStringFilename, Offset( mDiffuseMap, TerrainMaterial ), "Base texture for the material" );
    addField( "diffuseSize", TypeF32, Offset( mDiffuseSize, TerrainMaterial ), "Used to scale the diffuse map to the material square" );
 
    addField( "normalMap", TypeStringFilename, Offset( mNormalMap, TerrainMaterial ), "Bump map for the material" );
@@ -154,7 +158,7 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    {
       mat = new TerrainMaterial();
       mat->setInternalName( nameOrPath );
-      mat->mDiffuseMap = nameOrPath;
+      mat->mDiffuseMapFilename = nameOrPath;
       mat->registerObject();
       Sim::getRootGroup()->addObject( mat );
       return mat;
@@ -169,7 +173,7 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       // fallback here just in case it gets "lost".
       mat = new TerrainMaterial();
       mat->setInternalName( "warning_material" );
-      mat->mDiffuseMap = GFXTextureManager::getWarningTexturePath();
+      mat->mDiffuseMapFilename = GFXTextureManager::getWarningTexturePath();
       mat->mDiffuseSize = 500;
       mat->mDetailMap = GFXTextureManager::getWarningTexturePath();
       mat->mDetailSize = 5;

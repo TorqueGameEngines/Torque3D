@@ -366,6 +366,9 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
 
 StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
 {
+   if (fileName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
    StringTableEntry shapeAssetId = StringTable->EmptyString();
 
    AssetQuery query;

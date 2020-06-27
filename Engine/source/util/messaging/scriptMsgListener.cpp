@@ -85,7 +85,6 @@ bool ScriptMsgListener::onAdd()
    if(! Parent::onAdd())
       return false;
 
-   linkNamespaces();
    onAdd_callback();
    //Con::executef(this, "onAdd");
    return true;
@@ -105,7 +104,6 @@ void ScriptMsgListener::onRemove()
 {
    onRemove_callback();
    //Con::executef(this, "onRemove");
-   unlinkNamespaces();
    
    Parent::onRemove();
 }

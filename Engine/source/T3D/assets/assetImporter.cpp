@@ -390,6 +390,8 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    else
       assetName = filePath.getFileName();
 
+   assetName.replace(" ", "_");
+
    AssetImportObject* assetImportObj = new AssetImportObject();
    assetImportObj->registerObject();
 

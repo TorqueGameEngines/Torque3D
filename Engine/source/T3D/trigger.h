@@ -123,6 +123,7 @@ class Trigger : public GameBase
 
    static void consoleInit();
    static void initPersistFields();
+   void testObjects();
    bool onAdd();
    void onRemove();
    void onDeleteNotify(SimObject*);

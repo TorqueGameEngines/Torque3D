@@ -389,6 +389,20 @@ bool Trigger::setTickCmd(void *object, const char *index, const char *data)
    return true; // to update the actual field
 }
 
+//------------------------------------------------------------------------------
+
+void Trigger::testObjects()
+{
+   Vector<SceneObject*> foundobjs;
+   gServerContainer.findObjectList(getWorldBox(), 0xFFFFFFFF, &foundobjs);
+   for (S32 i = 0; i < foundobjs.size(); ++i)
+   {
+      GameBase* so = dynamic_cast<GameBase*>(foundobjs[i]);
+      if (so)
+         potentialEnterObject(so);
+   }
+}
+
 //--------------------------------------------------------------------------
 
 bool Trigger::onAdd()
@@ -405,7 +419,9 @@ bool Trigger::onAdd()
 
    if (isServerObject())
       scriptOnAdd();
-      
+
+   testObjects();
+
    return true;
 }
 
@@ -441,7 +457,7 @@ void Trigger::onDeleteNotify( SimObject *obj )
          {
             mObjects.erase(i);
             if (mDataBlock)
-               mDataBlock->onLeaveTrigger_callback( this, pScene );
+               mDataBlock->onLeaveTrigger_callback( this, NULL );
             break;
          }
       }
@@ -517,6 +533,8 @@ void Trigger::setTransform(const MatrixF & mat)
 
       setMaskBits(TransformMask | ScaleMask);
    }
+
+   testObjects();
 }
 
 void Trigger::prepRenderImage( SceneRenderState *state )

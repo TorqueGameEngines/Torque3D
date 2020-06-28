@@ -21,6 +21,11 @@ $BUTTON_RSTICK    =  11;
 
 /// Callback when this control wakes up. All buttons are set to invisible and
 /// disabled.
+function GamepadButtonsGui::onAdd(%this)
+{
+   GamepadButtonsGui.initMenuButtons();
+}
+
 function GamepadButtonsGui::onWake(%this)
 {
    GamepadButtonsGui.controllerName = "K&M";

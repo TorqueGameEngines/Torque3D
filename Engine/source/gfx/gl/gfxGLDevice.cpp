@@ -475,7 +475,7 @@ void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U
 
    const bool isCompressed = ImageUtil::isCompressedFormat(format);
 
-   U32 mipLevels = gGLDst->getMipLevels();
+   U32 mipLevels = pGLSrc->getMipMapLevels();
    for (U32 mip = 0; mip < mipLevels; mip++)
    {
       const U32 mipSize = getMax(U32(1), pGLSrc->getSize() >> mip);

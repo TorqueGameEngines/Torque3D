@@ -461,7 +461,9 @@ void TerrainBlock::_updateBounds()
 
 void TerrainBlock::_onZoningChanged( SceneZoneSpaceManager *zoneManager )
 {
-   if ( mCell == NULL || zoneManager != getSceneManager()->getZoneManager() )
+   const SceneManager* sm = getSceneManager();
+
+   if (mCell == NULL || (sm != NULL && sm->getZoneManager() != NULL && zoneManager != sm->getZoneManager()))
       return;
 
    mZoningDirty = true;

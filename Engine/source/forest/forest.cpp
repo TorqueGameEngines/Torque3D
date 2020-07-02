@@ -260,7 +260,9 @@ void Forest::setTransform( const MatrixF &mat )
 
 void Forest::_onZoningChanged( SceneZoneSpaceManager *zoneManager )
 {
-   if ( mData == NULL || zoneManager != getSceneManager()->getZoneManager() )
+   const SceneManager* sm = getSceneManager();
+
+   if (mData == NULL || (sm != NULL && sm->getZoneManager() != NULL && zoneManager != sm->getZoneManager()))
       return;
 
    mZoningDirty = true;

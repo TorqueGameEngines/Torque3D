@@ -25,7 +25,7 @@
 #include "platform/platformGL.h"
 
 #include "gfx/gfxCubemap.h"
-#include "gfx/screenshot.h"
+#include "gfx/gl/screenshotGL.h"
 #include "gfx/gfxDrawUtil.h"
 
 #include "gfx/gl/gfxGLEnumTranslate.h"
@@ -230,7 +230,7 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
    mDeviceSwizzle24 = &Swizzles::rgb;
 
    mTextureManager = new GFXGLTextureManager();
-   gScreenShot = new ScreenShot();
+   gScreenShot = new ScreenShotGL();
 
    for(U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
       mActiveTextureType[i] = GL_ZERO;

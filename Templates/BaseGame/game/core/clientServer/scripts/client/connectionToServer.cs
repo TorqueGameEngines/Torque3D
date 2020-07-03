@@ -104,12 +104,12 @@ function disconnect()
    // else physics resources will not cleanup properly.
    physicsStopSimulation( "client" );
 
+   disconnectedCleanup();
+
    // Delete the connection if it's still there.
    if (isObject(ServerConnection))
       ServerConnection.delete();
       
-   disconnectedCleanup();
-
    // Call destroyServer in case we're hosting
    destroyServer();
 }

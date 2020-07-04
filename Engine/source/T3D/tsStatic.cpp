@@ -56,7 +56,7 @@
 #include "T3D/accumulationVolume.h"
 
 #include "gui/editor/inspector/group.h"
-
+#include "console/typeValidators.h"
 using namespace Torque;
 
 extern bool gEditingMission;

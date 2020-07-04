@@ -471,36 +471,60 @@ void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U
    GFXGLTextureObject* gGLDst = static_cast<GFXGLTextureObject*>(pDst);
    GFXGLCubemap* pGLSrc = static_cast<GFXGLCubemap*>(pSrc);
 
-   GFXFormat format = pGLSrc->getFormat();
-
+   const GFXFormat format = pGLSrc->getFormat();
    const bool isCompressed = ImageUtil::isCompressedFormat(format);
+   const U32 mipLevels = pGLSrc->getMipMapLevels();
+   const U32 texSize = pGLSrc->getSize();
 
-   U32 mipLevels = pGLSrc->getMipMapLevels();
+   //set up pbo if we don't have copyImage support
+   if (!GFXGL->mCapabilities.copyImage)
+   {
+      const GLuint pbo = gGLDst->getBuffer();
+      glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+      //allocate data
+      glBufferData(GL_PIXEL_PACK_BUFFER, texSize * texSize * GFXFormat_getByteSize(format), NULL, GL_STREAM_COPY);
+   }
+
    for (U32 mip = 0; mip < mipLevels; mip++)
    {
-      const U32 mipSize = getMax(U32(1), pGLSrc->getSize() >> mip);
+      const U32 mipSize =  texSize >> mip;
       if (GFXGL->mCapabilities.copyImage)
       {
          glCopyImageSubData(pGLSrc->mCubemap, GL_TEXTURE_CUBE_MAP, mip, 0, 0, face, gGLDst->getHandle(), GL_TEXTURE_2D, mip, 0, 0, 0, mipSize, mipSize, 1);
       }
       else
       {
-         U8* pixelData = pGLSrc->getTextureData(face, mip);
+         //pbo id
+         const GLuint pbo = gGLDst->getBuffer();
 
+         //copy source texture data to pbo
+         glBindTexture(GL_TEXTURE_CUBE_MAP, pGLSrc->mCubemap);
+         glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+
+         if (isCompressed)
+            glGetCompressedTexImage(GFXGLFaceType[face], mip, NULL);
+         else
+            glGetTexImage(GFXGLFaceType[face], mip, GFXGLTextureFormat[format], GFXGLTextureType[format], NULL);
+
+         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+         //copy data from pbo to destination
+         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
          glBindTexture(gGLDst->getBinding(), gGLDst->getHandle());
+
          if (isCompressed)
          {
             const U32 mipDataSize = getCompressedSurfaceSize(format, pGLSrc->getSize(), pGLSrc->getSize(), 0);
-
-            glCompressedTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], mipDataSize, pixelData);
+            glCompressedTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], mipDataSize, NULL);
          }
          else
          {
-            glTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], GFXGLTextureType[format], pixelData);
+            glTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], GFXGLTextureType[format], NULL);
          }
-         glBindTexture(gGLDst->getBinding(), 0);
 
-         delete[] pixelData;
+         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+         glBindTexture(gGLDst->getBinding(), 0);
       }
    }
 }

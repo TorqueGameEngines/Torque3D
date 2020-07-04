@@ -38,6 +38,7 @@ GLint* GFXGLTextureSwizzle[GFXFormat_COUNT];
 GLenum GFXGLBufferType[GFXBufferType_COUNT];
 GLenum GFXGLCullMode[GFXCull_COUNT];
 GLenum GFXGLFillMode[GFXFill_COUNT];
+GLenum GFXGLFaceType[6];
 
 void GFXGLEnumTranslate::init()
 {
@@ -273,4 +274,12 @@ void GFXGLEnumTranslate::init()
    GFXGLFillMode[GFXFillPoint] = GL_POINT;
    GFXGLFillMode[GFXFillWireframe] = GL_LINE;
    GFXGLFillMode[GFXFillSolid] = GL_FILL;
+
+   //cubemap face type
+   GFXGLFaceType[0] = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+   GFXGLFaceType[1] = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+   GFXGLFaceType[2] = GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+   GFXGLFaceType[3] = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+   GFXGLFaceType[4] = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+   GFXGLFaceType[5] = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
 }

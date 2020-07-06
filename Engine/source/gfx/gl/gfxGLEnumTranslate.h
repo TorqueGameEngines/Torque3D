@@ -50,4 +50,6 @@ extern GLenum GFXGLCullMode[GFXCull_COUNT];
 
 extern GLenum GFXGLFillMode[GFXFill_COUNT];
 
+extern GLenum GFXGLFaceType[6];
+
 #endif

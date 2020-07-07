@@ -30,6 +30,7 @@ Signal<void(void)> Platform::SystemInfoReady;
 
 enum CPUFlags
 {
+   // EDX Register flags
    BIT_FPU     = BIT(0),
    BIT_RDTSC   = BIT(4),
    BIT_MMX     = BIT(23),
@@ -37,7 +38,7 @@ enum CPUFlags
    BIT_SSE2    = BIT(26),
    BIT_3DNOW   = BIT(31),
 
-   // These use a different value for comparison than the above flags
+   // These use a different value for comparison than the above flags (ECX Register)
    BIT_SSE3    = BIT(0),
    BIT_SSE3xt  = BIT(9),
    BIT_SSE4_1  = BIT(19),

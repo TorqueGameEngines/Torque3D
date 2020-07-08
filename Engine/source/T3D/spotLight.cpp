@@ -137,7 +137,7 @@ void SpotLight::_conformLights()
    Point3F objectScale(radius, mRange, radius);
    Point3F objectBoxMin(-1, 0, -1);
 
-   if (mAnimationData && mAnimationData->mRot.keyLen > 0)
+   if (mAnimationData && mAnimationData->mRot.keyLen[0] > 0)
    {
       objectBoxMin.set(-1, -1, -1);
       objectScale.set(mRange, mRange, mRange);

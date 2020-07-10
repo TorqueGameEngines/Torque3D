@@ -89,6 +89,8 @@ class Trigger : public GameBase
 
    static const U32 CMD_SIZE = 1024;
 
+   void onUnmount(SceneObject* obj,S32 node);
+
   protected:
    
    enum TriggerUpdateBits
@@ -104,6 +106,7 @@ class Trigger : public GameBase
    static bool smRenderTriggers;
    bool testObject(GameBase* enter);
    void processTick(const Move *move);
+   void interpolateTick(F32 delta);
 
    void buildConvex(const Box3F& box, Convex* convex);
 

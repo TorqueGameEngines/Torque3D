@@ -766,15 +766,15 @@ void TerrainFile::create(  String *inOutFilename,
                            U32 newSize, 
                            const Vector<String> &materials )
 {
-   // Determine the path and basename - first try using the input filename (mission name)
+   // Determine the path and basename
    Torque::Path basePath( *inOutFilename );
-   if ( !basePath.getExtension().equal("mis") )
+   if ( !basePath.getExtension().equal("ter") )
    {
       // Use the default path and filename
       String terrainDirectory( Con::getVariable( "$pref::Directories::Terrain" ) );
       if ( terrainDirectory.isEmpty() )
       {
-         terrainDirectory = "art/terrains";
+         terrainDirectory = "data/terrains";
       }
       basePath.setPath( terrainDirectory );
       basePath.setFileName( "terrain" );

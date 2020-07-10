@@ -42,6 +42,8 @@
 
 #include "T3D/assets/TerrainMaterialAsset.h"
 
+#include "assetImporter.h"
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(TerrainAsset);
@@ -85,6 +87,37 @@ ConsoleSetType(TypeTerrainAssetPtr)
 
    // Warn.
    Con::warnf("(TypeTerrainAssetPtr) - Cannot set multiple args to a single asset.");
+}
+
+
+//-----------------------------------------------------------------------------
+ConsoleType(assetIdString, TypeTerrainAssetId, String, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeTerrainAssetId)
+{
+   // Fetch asset Id.
+   return *((const char**)(dptr));
+}
+
+ConsoleSetType(TypeTerrainAssetId)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
 }
 
 //-----------------------------------------------------------------------------
@@ -202,7 +235,192 @@ bool TerrainAsset::loadTerrain()
 }
 
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//Utility function to 'fill out' bindings and resources with a matching asset if one exists
+bool TerrainAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<TerrainAsset>* shapeAsset)
+{
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("TerrainAsset::getAssetByFilename - Attempted to in-place import a terrainFile(%s) that had no associated asset", fileName);
+#endif
 
+      Torque::Path terrFilePath = fileName;
+
+      TerrainAsset* newTerrainAsset = new TerrainAsset();
+
+      String assetName = terrFilePath.getFileName();
+      assetName.replace(" ", "_");
+
+      newTerrainAsset->setAssetName(assetName.c_str());
+      String terrainPathBind = terrFilePath.getFileName() + terrFilePath.getExtension();
+
+      newTerrainAsset->mTerrainFilePath = StringTable->insert(terrainPathBind.c_str());
+
+      newTerrainAsset->saveAsset();
+
+      Taml taml;
+
+      // Yes, so set it.
+      taml.setFormatMode(Taml::getFormatModeEnum("xml"));
+
+      // Turn-off auto-formatting.
+      taml.setAutoFormat(false);
+
+      String tamlPath = terrFilePath.getFullPath() + "/" + assetName + ".asset.taml";
+
+      // Read object.
+      bool success = taml.write(newTerrainAsset, tamlPath.c_str());
+
+      if (!success)
+      {
+         Con::printf("TerrainAsset::getAssetByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset", fileName);
+         return false;
+      }
+
+      ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(fileName);
+
+      if (!targetModuleDef)
+      {
+         Con::printf("TerrainAsset::getAssetByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset, unable to find a valid Module for the filePath", fileName);
+         return false;
+      }
+
+      success = AssetDatabase.addDeclaredAsset(targetModuleDef, tamlPath.c_str());
+
+      if (!success)
+      {
+         Con::printf("TerrainAsset::getAssetByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset, unable to find a register asset with path", tamlPath.c_str());
+         return false;
+      }
+
+      String assetId = targetModuleDef->getModuleId();
+      assetId += ":";
+      assetId += assetName.c_str();
+
+      StringTableEntry resultingAssetId = StringTable->insert(assetId.c_str());
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         shapeAsset->setAssetId(resultingAssetId);
+
+         if (!shapeAsset->isNull())
+            return true;
+      }
+
+      //That didn't work, so fail out
+      return false;
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      shapeAsset->setAssetId(query.mAssetList[0]);
+      return true;
+   }
+}
+
+StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
+{
+   if (fileName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry shapeAssetId = StringTable->EmptyString();
+
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("TerrainAsset::getAssetByFilename - Attempted to in-place import a terrainFile(%s) that had no associated asset", fileName);
+#endif
+
+      Torque::Path terrFilePath = fileName;
+
+      TerrainAsset* newTerrainAsset = new TerrainAsset();
+
+      String assetName = terrFilePath.getFileName();
+      assetName.replace(" ", "_");
+
+      newTerrainAsset->setAssetName(assetName.c_str());
+      String terrainPathBind = terrFilePath.getFileName() + "." + terrFilePath.getExtension();
+
+      newTerrainAsset->mTerrainFilePath = StringTable->insert(terrainPathBind.c_str());
+
+      newTerrainAsset->saveAsset();
+
+      Taml taml;
+
+      // Yes, so set it.
+      taml.setFormatMode(Taml::getFormatModeEnum("xml"));
+
+      // Turn-off auto-formatting.
+      taml.setAutoFormat(false);
+
+      String tamlPath = terrFilePath.getPath() + "/" + assetName + ".asset.taml";
+
+      // Read object.
+      bool success = taml.write(newTerrainAsset, tamlPath.c_str());
+
+      if (!success)
+      {
+         Con::printf("TerrainAsset::getAssetIdByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset", fileName);
+         return false;
+      }
+
+      ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(fileName);
+
+      if (!targetModuleDef)
+      {
+         Con::printf("TerrainAsset::getAssetIdByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset, unable to find a valid Module for the filePath", fileName);
+         return false;
+      }
+
+      success = AssetDatabase.addDeclaredAsset(targetModuleDef, tamlPath.c_str());
+
+      if (!success)
+      {
+         Con::printf("TerrainAsset::getAssetIdByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset, unable to find a register asset with path", tamlPath.c_str());
+         return false;
+      }
+
+      String assetId = targetModuleDef->getModuleId();
+      assetId += ":";
+      assetId += assetName.c_str();
+
+      StringTableEntry resultingAssetId = StringTable->insert(assetId.c_str());
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         shapeAssetId = resultingAssetId;
+         return shapeAssetId;
+      }
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      shapeAssetId = query.mAssetList[0];
+   }
+
+   return shapeAssetId;
+}
+
+bool TerrainAsset::getAssetById(StringTableEntry assetId, AssetPtr<TerrainAsset>* shapeAsset)
+{
+   (*shapeAsset) = assetId;
+
+   if (!shapeAsset->isNull())
+      return true;
+
+   return false;
+}
+
+//------------------------------------------------------------------------------
 void TerrainAsset::copyTo(SimObject* object)
 {
    // Call to parent.
@@ -231,68 +449,37 @@ void GuiInspectorTypeTerrainAssetPtr::consoleInit()
 GuiControl* GuiInspectorTypeTerrainAssetPtr::constructEditControl()
 {
    // Create base filename edit controls
-   mUseHeightOverride = true;
-   mHeightOverride = 100;
-
-   mMatEdContainer = new GuiControl();
-   mMatEdContainer->registerObject();
-
-   addObject(mMatEdContainer);
-
-   // Create "Open in ShapeEditor" button
-   mMatPreviewButton = new GuiBitmapButtonCtrl();
-
-   const char* matAssetId = getData();
-
-   TerrainAsset* matAsset = AssetDatabase.acquireAsset< TerrainAsset>(matAssetId);
-
-   //TerrainMaterial* materialDef = nullptr;
-
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-
-   /*if (!Sim::findObject(matAsset->getMaterialDefinitionName(), materialDef))
-   {
-      Con::errorf("GuiInspectorTypeTerrainAssetPtr::constructEditControl() - unable to find material in asset");
-   }
-   else
-   {
-      mMatPreviewButton->setBitmap(materialDef->mDiffuseMapFilename[0]);
-   }*/
-
-   mMatPreviewButton->setPosition(0, 0);
-   mMatPreviewButton->setExtent(100,100);
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
 
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getComponentGroupTargetId(), mCaption);
-   mMatPreviewButton->setField("Command", szBuffer);
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+      mInspector->getInspectObject()->getIdString(), mCaption);
+   mBrowseButton->setField("Command", szBuffer);
 
-   mMatPreviewButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
-   mMatPreviewButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mMatPreviewButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   const char* id = mInspector->getInspectObject()->getIdString();
 
-   StringBuilder strbld;
-   /*strbld.append(matAsset->getMaterialDefinitionName());
-   strbld.append("\n");
-   strbld.append("Open this file in the Material Editor");*/
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 
-   mMatPreviewButton->setDataField(StringTable->insert("tooltip"), NULL, strbld.data());
+   // Create "Open in ShapeEditor" button
+   mShapeEdButton = new GuiBitmapButtonCtrl();
 
-   _registerEditControl(mMatPreviewButton);
-   //mMatPreviewButton->registerObject();
-   mMatEdContainer->addObject(mMatPreviewButton);
+   mShapeEdButton->setField("Command", "EditorGui.setEditor(TerrainEditorPlugin);");
 
-   mMatAssetIdTxt = new GuiTextEditCtrl();
-   mMatAssetIdTxt->registerObject();
-   mMatAssetIdTxt->setActive(false);
+   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   mShapeEdButton->setBitmap(bitmapName);
 
-   mMatAssetIdTxt->setText(matAssetId);
+   mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mShapeEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mShapeEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor");
 
-   mMatAssetIdTxt->setBounds(100, 0, 150, 18);
-   mMatEdContainer->addObject(mMatAssetIdTxt);
+   mShapeEdButton->registerObject();
+   addObject(mShapeEdButton);
 
-   return mMatEdContainer;
+   return retCtrl;
 }
 
 bool GuiInspectorTypeTerrainAssetPtr::updateRects()
@@ -306,21 +493,32 @@ bool GuiInspectorTypeTerrainAssetPtr::updateRects()
    mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
 
    bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
-
-   if (mMatEdContainer != nullptr)
+   if (mBrowseButton != NULL)
    {
-      mMatPreviewButton->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
    }
 
-   if (mMatPreviewButton != nullptr)
+   if (mShapeEdButton != NULL)
    {
-      mMatPreviewButton->resize(Point2I::Zero, Point2I(100, 100));
-   }
-
-   if (mMatAssetIdTxt != nullptr)
-   {
-      mMatAssetIdTxt->resize(Point2I(100, 0), Point2I(mEditCtrlRect.extent.x - 100, 18));
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mShapeEdButton->resize(shapeEdRect.point, shapeEdRect.extent);
    }
 
    return resized;
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeTerrainAssetId);
+
+ConsoleDocClass(GuiInspectorTypeTerrainAssetId,
+   "@brief Inspector field type for Shapes\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeTerrainAssetId::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeTerrainAssetId)->setInspectorFieldType("GuiInspectorTypeTerrainAssetId");
 }

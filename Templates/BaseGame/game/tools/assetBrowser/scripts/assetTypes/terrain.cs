@@ -38,20 +38,11 @@ function AssetBrowser::createTerrainAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	//Save out a basic terrain block here
-	/*%terrBlock = new TerrainBlock() { terrainFile = %terPath; };
-	%terrBlock.save(%terPath);
-	%terrBlock.delete();*/
-	
-	//the terrain block creation is...weird and does coded path stuff engine-side.
-	//this needs reworking, but this is a sidestep for now
-	%misFile = $Client::MissionFile;
-	$Client::MissionFile = %terPath;
-	
 	//
 	$createdTerrainBlock = TerrainBlock::createNew( %assetName, %this.newAssetSettings.resolution, "", %this.newAssetSettings.genWithNoise );
 	
-	$Client::MissionFile = %misFile;
+	$createdTerrainBlock.terrainAsset = %moduleName @ ":" @ %assetName;
+	$createdTerrainBlock.terrainFile = "";
    
 	return %tamlpath;
 }

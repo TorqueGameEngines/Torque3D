@@ -151,11 +151,6 @@ Material::Material()
       initMapSlot(GlowMap, i);
       initMapSlot(DetailNormalMap, i);
 
-      //cogs specific
-      initMapSlot(AlbedoDamageMap, i);
-      initMapSlot(NormalDamageMap, i);
-      initMapSlot(CompositeDamageMap, i);
-
       mParallaxScale[i] = 0.0f;
 
       mVertLit[i] = false;
@@ -194,9 +189,6 @@ Material::Material()
       // Deferred Shading
       mMatInfoFlags[i] = 0.0f;
 
-      // Damage
-      mMaterialDamageMin[i] = 0.0f;
-      mAlbedoDamageMapSRGB[i] = true;
       mGlowMul[i] = 0.0f;
    }
 
@@ -243,10 +235,6 @@ Material::Material()
 }
 
 
-#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
-#define scriptBindMapSlot(name,arraySize) addField(#name, TypeImageFilename, Offset(m##name##Filename, Material), arraySize, assetText(name,texture map.)); \
-                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, Material), arraySize, assetText(name,asset reference.));
-
 void Material::initPersistFields()
 {
    addField("mapTo", TypeRealString, Offset(mMapTo, Material),
@@ -258,18 +246,18 @@ void Material::initPersistFields()
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color." );
 
-      scriptBindMapSlot(DiffuseMap, MAX_STAGES);
-      scriptBindMapSlot(OverlayMap, MAX_STAGES);
-      scriptBindMapSlot(LightMap, MAX_STAGES);
-      scriptBindMapSlot(ToneMap, MAX_STAGES);
-      scriptBindMapSlot(DetailMap, MAX_STAGES);
-      scriptBindMapSlot(NormalMap, MAX_STAGES);
-      scriptBindMapSlot(PBRConfigMap, MAX_STAGES);
-      scriptBindMapSlot(RoughMap, MAX_STAGES);
-      scriptBindMapSlot(AOMap, MAX_STAGES);
-      scriptBindMapSlot(MetalMap, MAX_STAGES);
-      scriptBindMapSlot(GlowMap, MAX_STAGES);
-      scriptBindMapSlot(DetailNormalMap, MAX_STAGES);
+      scriptBindMapArraySlot(DiffuseMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(OverlayMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(LightMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(ToneMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(DetailMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(NormalMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(PBRConfigMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(RoughMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(AOMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(MetalMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(GlowMap, MAX_STAGES, Material);
+      scriptBindMapArraySlot(DetailNormalMap, MAX_STAGES, Material);
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
@@ -421,22 +409,6 @@ void Material::initPersistFields()
          "For backwards compatibility.\n@see diffuseColor\n"); 
 
    endArray( "Stages" );
-
-   addGroup("Damage");
-
-   //cogs
-   scriptBindMapSlot(AlbedoDamageMap, MAX_STAGES);
-   /// Damage blend maps (normal)
-   scriptBindMapSlot(NormalDamageMap, MAX_STAGES);
-   /// Damage blend maps (Roughness, AO, Metalness)
-   scriptBindMapSlot(CompositeDamageMap, MAX_STAGES);
-
-   addField("albedoDamageSRGB", TypeBool, Offset(mAlbedoDamageMapSRGB, Material), MAX_STAGES,
-      "Enable sRGB for the albedo damage map");
-
-   addField("minDamage", TypeF32, Offset(mMaterialDamageMin, Material), MAX_STAGES,
-      "The minimum ammount of blended damage.");
-   endGroup("Damage");
 
    addField( "castShadows", TypeBool, Offset(mCastShadows, Material),
       "If set to false the lighting system will not cast shadows from this material." );
@@ -629,11 +601,6 @@ bool Material::onAdd()
       bindMapSlot(MetalMap, i);
       bindMapSlot(GlowMap, i);
       bindMapSlot(DetailNormalMap, i);
-
-      //cogs specific
-      bindMapSlot(AlbedoDamageMap, i);
-      bindMapSlot(NormalDamageMap, i);
-      bindMapSlot(CompositeDamageMap, i);
    }
 
    _mapMaterial();

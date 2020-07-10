@@ -390,6 +390,8 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    else
       assetName = filePath.getFileName();
 
+   assetName.replace(" ", "_");
+
    AssetImportObject* assetImportObj = new AssetImportObject();
    assetImportObj->registerObject();
 
@@ -1485,7 +1487,7 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
    }
 
    //Find out if the filepath has an associated module to it. If we're importing in-place, it needs to be within a module's directory
-   ModuleDefinition* targetModuleDef = getModuleFromPath(filePath);
+   ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(filePath);
 
    if (targetModuleDef == nullptr)
    {

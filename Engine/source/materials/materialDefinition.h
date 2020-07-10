@@ -61,10 +61,6 @@ class MaterialSoundProfile;
 class MaterialPhysicsProfile;
 class CustomShaderFeatureData;
 
-#define DECLARE_TEXTUREARRAY(name,max) FileName m##name##Filename[max];\
-                                      StringTableEntry m##name##AssetId[max];\
-                                      AssetPtr<ImageAsset>  m##name##Asset[max];
-
 /// The basic material definition.
 class Material : public BaseMaterialDefinition
 {
@@ -243,17 +239,6 @@ public:
    F32      mAccuStrength[MAX_STAGES];
    F32      mAccuCoverage[MAX_STAGES];
    F32      mAccuSpecular[MAX_STAGES];
-
-   //cogs specific
-   /// Damage blend maps (albedo)
-   DECLARE_TEXTUREARRAY(AlbedoDamageMap, MAX_STAGES);
-   bool mAlbedoDamageMapSRGB[MAX_STAGES];
-   /// Damage blend maps (normal)
-   DECLARE_TEXTUREARRAY(NormalDamageMap, MAX_STAGES);
-   /// Damage blend maps (Roughness, AO, Metalness)
-   DECLARE_TEXTUREARRAY(CompositeDamageMap, MAX_STAGES);
-   /// Damage blend minimum
-   F32      mMaterialDamageMin[MAX_STAGES];
 
    /// This color is the diffuse color of the material
    /// or if it has a texture it is multiplied against 

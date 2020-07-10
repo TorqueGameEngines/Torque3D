@@ -27,6 +27,7 @@
 #include "console/simBase.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
 
 /// The TerrainMaterial class orginizes the material settings 
 /// for a single terrain material layer.
@@ -37,7 +38,11 @@ class TerrainMaterial : public SimObject
 protected:
 
    ///
-   FileName mDiffuseMap;
+  //FileName mDiffuseMap;
+
+   //AssetPtr<ImageAsset> mDiffuseAsset;
+
+   DECLARE_TEXTUREMAP(DiffuseMap);
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
@@ -99,7 +104,7 @@ public:
    /// a material is not found or defined.
    static TerrainMaterial* getWarningMaterial();
 
-   const String& getDiffuseMap() const { return mDiffuseMap; }
+   const String& getDiffuseMap() const { return mDiffuseMapFilename; }
 
    F32 getDiffuseSize() const { return mDiffuseSize; }
 

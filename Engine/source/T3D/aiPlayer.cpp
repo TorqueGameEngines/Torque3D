@@ -716,12 +716,11 @@ void AIPlayer::onReachDestination()
  */
 void AIPlayer::onStuck()
 {
+   throwCallback("onMoveStuck");
 #ifdef TORQUE_NAVIGATION_ENABLED
    if(!mPathData.path.isNull())
       repath();
-   else
 #endif
-      throwCallback("onMoveStuck");
 }
 
 #ifdef TORQUE_NAVIGATION_ENABLED

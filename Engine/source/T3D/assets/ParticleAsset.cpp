@@ -129,7 +129,7 @@ void ParticleAsset::copyTo(SimObject* object)
 IMPLEMENT_CONOBJECT(GuiInspectorTypeParticleAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeParticleAssetPtr,
-   "@brief Inspector field type for Partial Asset Objects\n\n"
+   "@brief Inspector field type for Particle Asset Objects\n\n"
    "Editor use only.\n\n"
    "@internal"
 );

@@ -125,11 +125,13 @@ void GuiPopupMenuTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool s
    if (idx != 1)
    {
       // there's a bitmap...
-      U32 index = U32(idx - 2) * 3;
+      U32 index = U32(idx - 2) * 4;
       if (!mList[cell.y].active)
-         index += 2;
-      else if (selected || mouseOver)
+         index += 3;
+      else if (selected)
          index++;
+      else if (mouseOver)
+         index += 2;
 
       if (mProfile->mBitmapArrayRects.size() > index)
       {
@@ -137,8 +139,10 @@ void GuiPopupMenuTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool s
          Point2I off = maxBitmapSize - rect.extent;
          off /= 2;
 
+         Point2I bitPos = Point2I(offset.x + mCellSize.y / 2, offset.y + mCellSize.y / 2);
+
          GFX->getDrawUtil()->clearBitmapModulation();
-         GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject, offset + off, rect);
+         GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject, bitPos + off, rect);
       }
    }
 

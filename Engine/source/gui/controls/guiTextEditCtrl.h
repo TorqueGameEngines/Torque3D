@@ -88,6 +88,8 @@ protected:
    S32                  mDoubleClickTimeMS;
    S32                  mMouseUpTime;
 
+   StringTableEntry     mPlaceholderText;
+
    /// If set, any non-ESC key is handled here or not at all
    bool    mSinkAllKeyEvents;   
    UTF16   **mHistoryBuf;
@@ -160,7 +162,23 @@ public:
    void onRender(Point2I offset, const RectI &updateRect);
    virtual void drawText( const RectI &drawRect, bool isFocused );
 
-	bool dealWithEnter( bool clearResponder ); 
+   bool dealWithEnter( bool clearResponder );
+
+   static bool setPlaceholderText(void* object, const char* index, const char* data)
+   {
+      static_cast<GuiTextEditCtrl*>(object)->setPlaceholderText(data); return true;
+   }
+   static const char* getPlaceholderText(void* obj, const char* data)
+   {
+      return static_cast<GuiTextEditCtrl*>(obj)->getPlaceholderText();
+   }
+
+   virtual void setPlaceholderText(const char* txt = NULL)
+   {
+      mPlaceholderText = StringTable->insert(txt, true);
+   }
+
+   const char* getPlaceholderText() { return (const char*)mPlaceholderText; }
 };
 
 #endif //_GUI_TEXTEDIT_CTRL_H

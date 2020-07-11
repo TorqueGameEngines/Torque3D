@@ -305,7 +305,7 @@ new GuiControlProfile( ToolsGuiTextEditProfile )
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextSELColor");
-   fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
+   fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
    textOffset = "4 2";
    autoSizeWidth = false;
    autoSizeHeight = true;
@@ -651,6 +651,8 @@ new GuiControlProfile( ToolsGuiTreeViewProfile )
    opaque = false;
    border = false;
    category = "Tools";
+   
+   fontColors[9] = "0 128 128"; //for active/selection of elements
 };
 
 if( !isObject( ToolsGuiTextPadProfile ) )

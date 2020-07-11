@@ -19,6 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+function AssetBrowser_addModuleWindow::onWake(%this)
+{
+   %this-->ModuleName.setText("");
+}
+
 function AssetBrowser_addModuleWindow::onGainFirstResponder(%this)
 {
    %this-->moduleName.setFirstResponder();

@@ -270,6 +270,10 @@ function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
    {
       %pos = getWords(%rayResult, 1, 3);
    }
+   else
+   {
+      %pos = "0 0 0";  
+   }
    
    %assetId = %assetDef.getAssetId();
    
@@ -296,17 +300,17 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
    if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
       return;
 
-   %assetType = %payload.dragSourceControl.parentGroup.assetType;
+   %assetType = %payload.assetType;
    
    if(%assetType $= "ShapeAsset")
    {
       //echo("DROPPED A SHAPE ON A SHAPE ASSET COMPONENT FIELD!");  
       
-      %module = %payload.dragSourceControl.parentGroup.moduleName;
-      %asset = %payload.dragSourceControl.parentGroup.assetName;
+      %module = %payload.moduleName;
+      %asset = %payload.assetName;
       
       %targetComponent = %this.targetObject;
-      %targetComponent.MeshAsset = %module @ ":" @ %asset;
+      %targetComponent.shapeAsset = %module @ ":" @ %asset;
       
       //Inspector.refresh();
    }

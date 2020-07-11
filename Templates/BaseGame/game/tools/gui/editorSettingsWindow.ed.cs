@@ -485,6 +485,7 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/previewTileSize", "Asset Preview Tile Size", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
    SettingsInspector.endGroup();
 }

@@ -261,7 +261,7 @@ function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %posi
    if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
       return;
 
-   %assetType = %payload.dragSourceControl.parentGroup.assetType;
+   %assetType = %payload.assetType;
    
    if(%assetType $= "ImageAsset")
    {

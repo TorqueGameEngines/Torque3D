@@ -1,7 +1,7 @@
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiControl(AssetBrowser_editAsset) {
    position = "0 0";
-   extent = "1920 1080";
+   extent = "1024 768";
    minExtent = "8 2";
    horizSizing = "right";
    vertSizing = "bottom";
@@ -13,7 +13,7 @@
    isContainer = "1";
    canSave = "1";
    canSaveDynamicFields = "1";
-      enabled = "1";
+      Enabled = "1";
 
    new GuiWindowCtrl(AssetBrowser_editAssetWindow) {
       text = "Asset Properties";
@@ -32,7 +32,7 @@
       anchorBottom = "0";
       anchorLeft = "1";
       anchorRight = "0";
-      position = "710 375";
+      position = "262 219";
       extent = "500 329";
       minExtent = "48 92";
       horizSizing = "center";
@@ -48,7 +48,7 @@
 
       new GuiScrollCtrl() {
          willFirstRespond = "1";
-         hScrollBar = "alwaysOff";
+         hScrollBar = "dynamic";
          vScrollBar = "dynamic";
          lockHorizScroll = "0";
          lockVertScroll = "0";
@@ -64,9 +64,9 @@
          position = "1 21";
          extent = "498 283";
          minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "Tools";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiScrollProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
@@ -88,9 +88,9 @@
             changeChildSizeToFit = "1";
             changeChildPosition = "1";
             position = "1 1";
-            extent = "481 101";
+            extent = "493 101";
             minExtent = "16 16";
-            horizSizing = "right";
+            horizSizing = "width";
             vertSizing = "bottom";
             profile = "GuiInspectorProfile";
             visible = "1";
@@ -110,9 +110,9 @@
          position = "402 305";
          extent = "45 22";
          minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "ToolsuiButtonProfile";
+         horizSizing = "left";
+         vertSizing = "top";
+         profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
          command = "AssetBrowser_editAsset.saveAsset();";
@@ -130,8 +130,8 @@
          position = "450 305";
          extent = "45 22";
          minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
+         horizSizing = "left";
+         vertSizing = "top";
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";

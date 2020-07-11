@@ -24,6 +24,7 @@ function initializeAssetBrowser()
    echo(" % - Initializing Asset Browser");  
    
    $AssetBrowser::importConfigsFile = "tools/assetBrowser/assetImportConfigs.xml";
+   $AssetBrowser::collectionSetsFile = "tools/assetBrowser/searchCollectionSets.xml";
    $AssetBrowser::currentImportConfig = "";
    
    if(!isObject(AssetFilterTypeList))
@@ -50,6 +51,8 @@ function initializeAssetBrowser()
       AssetFilterTypeList.add("TerrainMaterialAsset");
    }
    
+   exec("./scripts/profiles.cs");
+   
    exec("./guis/assetBrowser.gui");
    exec("./guis/addModuleWindow.gui");
    exec("./guis/gameObjectCreator.gui");
@@ -67,6 +70,7 @@ function initializeAssetBrowser()
    exec("./guis/assetImportLog.gui");
    exec("./guis/looseFileAudit.gui");
    exec("./guis/assetNameEdit.gui");
+   exec("./guis/createNewCollectionSet.gui");
 
    exec("./scripts/assetBrowser.cs");
    exec("./scripts/popupMenus.cs");
@@ -102,6 +106,8 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/terrain.cs");
    exec("./scripts/assetTypes/terrainMaterial.cs");  
    exec("./scripts/assetTypes/datablockObjects.cs");  
+   exec("./scripts/assetTypes/looseFiles.cs"); 
+   exec("./scripts/assetTypes/prefab.cs"); 
    
    new ScriptObject( AssetBrowserPlugin )
    {
@@ -123,19 +129,34 @@ function initializeAssetBrowser()
    
    ImportAssetWindow.reloadImportOptionConfigs();
    
+   //CollectionSets
+   if(!isObject(AssetBrowserCollectionSets))
+   {
+      new Settings(AssetBrowserCollectionSets) 
+      { 
+         file = $AssetBrowser::collectionSetsFile; 
+      };
+   }
+   AssetBrowserCollectionSets.read();
+   
    if(!isObject(ImportAssetWindow.importTempDirHandler))
       ImportAssetWindow.importTempDirHandler = makedirectoryHandler(0, "", "");
       
    if(!isObject(ImportActivityLog))
       new ArrayObject(ImportActivityLog);
       
+   if(!isObject(AssetSearchTerms))
+      new ArrayObject(AssetSearchTerms);
+      
    ImportAssetWindow.importingFilesArray = new ArrayObject();
    
-   if(!isObject(SessionImportAssetItems))
-      new ArrayObject(SessionImportAssetItems);
+   //if(!isObject(SessionImportAssetItems))
+   //   new ArrayObject(SessionImportAssetItems);
       
-   if(!isObject(ImportAssetItems))
-      new ArrayObject(ImportAssetItems);  
+   //if(!isObject(ImportAssetItems))
+   //   new ArrayObject(ImportAssetItems);  
+      
+   ImportAssetWindow.importer = new AssetImporter();
       
    AssetBrowser.buildPopupMenus();
    

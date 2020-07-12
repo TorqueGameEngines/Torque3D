@@ -638,8 +638,6 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    if( mStages[stageNum].getTex( MFT_PBRConfigMap ) )
    {
        newFeatures.addFeature( MFT_PBRConfigMap );
-       if( mStages[stageNum].getTex( MFT_PBRConfigMap )->mHasTransparency )
-          newFeatures.addFeature( MFT_GlowMap );
    }
    else
        newFeatures.addFeature( MFT_PBRConfigVars );

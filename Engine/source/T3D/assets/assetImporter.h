@@ -632,7 +632,7 @@ public:
    /// <para>@param filePath, File path to parse the the module from</para>
    /// <para>@return ModuleDefinition that was found</para>
    /// </summary>
-   ModuleDefinition* getModuleFromPath(Torque::Path filePath);
+   static ModuleDefinition* getModuleFromPath(Torque::Path filePath);
 
    /// <summary>
    /// Parses an asset's name to try and find if any of the import config's suffix lists match to it

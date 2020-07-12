@@ -141,6 +141,8 @@ GuiTextEditCtrl::GuiTextEditCtrl()
    mDoubleClickTimeMS = 50;
    mMouseUpTime = 0;
 
+   mPlaceholderText = StringTable->EmptyString();
+
 #if defined(__MACOSX__)
    UTF8  bullet[4] = { 0xE2, 0x80, 0xA2, 0 };
    
@@ -165,6 +167,9 @@ GuiTextEditCtrl::~GuiTextEditCtrl()
 
 void GuiTextEditCtrl::initPersistFields()
 {
+   addProtectedField("placeholderText", TypeCaseString, Offset(mPlaceholderText, GuiTextEditCtrl), setPlaceholderText, getPlaceholderText,
+      "The text to show on the control.");
+
    addGroup( "Text Input" );
    
       addField("validate",          TypeRealString,Offset(mValidateCommand,   GuiTextEditCtrl), "Script command to be called when the first validater is lost.\n");
@@ -1335,6 +1340,13 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
        textBuffer.set( renderText );
    }
 
+   bool usePlaceholder = false;
+   if (textBuffer.length() == 0 && !isFocused)
+   {
+      textBuffer.set(mPlaceholderText);
+      usePlaceholder = true;
+   }
+
    // Just a little sanity.
    if(mCursorPos > textBuffer.length()) 
       mCursorPos = textBuffer.length();
@@ -1364,6 +1376,9 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
    }
 
    ColorI fontColor = mActive ? mProfile->mFontColor : mProfile->mFontColorNA;
+
+   if (usePlaceholder)
+      fontColor = mProfile->mFontColorNA;
 
    // now draw the text
    Point2I cursorStart, cursorEnd;

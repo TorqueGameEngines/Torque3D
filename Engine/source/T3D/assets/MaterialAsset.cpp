@@ -298,6 +298,19 @@ bool GuiInspectorTypeMaterialAssetPtr::updateRects()
    return resized;
 }
 
+bool GuiInspectorTypeMaterialAssetPtr::resize(const Point2I& newPosition, const Point2I& newExtent)
+{
+   if (!Parent::resize(newPosition, newExtent))
+      return false;
+
+   if (mMatEdContainer != NULL)
+   {
+      return updateRects();
+   }
+
+   return false;
+}
+
 void GuiInspectorTypeMaterialAssetPtr::setMaterialAsset(String assetId)
 {
    mTargetObject->setDataField(mCaption, "", assetId);

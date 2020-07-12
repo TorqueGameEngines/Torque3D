@@ -19,11 +19,11 @@ DefineEngineMethod(AssetImporter, setTargetPath, void, (String path), (""),
    return object->setTargetPath(path);
 }
 
-DefineEngineMethod(AssetImporter, resetImportSession, void, (), ,
+DefineEngineMethod(AssetImporter, resetImportSession, void, (bool forceResetSession), (false),
    "Creates a new script asset using the targetFilePath.\n"
    "@return The bool result of calling exec")
 {
-   return object->resetImportSession();
+   return object->resetImportSession(forceResetSession);
 }
 
 DefineEngineMethod(AssetImporter, dumpActivityLog, void, (), ,
@@ -59,6 +59,13 @@ DefineEngineMethod(AssetImporter, addImportingFile, AssetImportObject*, (String 
    "@return The bool result of calling exec")
 {
    return object->addImportingFile(path);
+}
+
+DefineEngineMethod(AssetImporter, addImportingAssetItem, void, (AssetImportObject* assetItem, AssetImportObject* parentItem), (nullAsType< AssetImportObject*>(), nullAsType< AssetImportObject*>()),
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->addImportingAssetItem(assetItem, parentItem);
 }
 
 DefineEngineMethod(AssetImporter, processImportingAssets, void, (), ,
@@ -123,6 +130,12 @@ DefineEngineMethod(AssetImporter, getAssetItemChild, AssetImportObject*, (AssetI
    return object->getAssetItemChild(assetItem, index);
 }
 
+DefineEngineMethod(AssetImporter, deleteImportingAsset, void, (AssetImportObject* assetItem), (nullAsType< AssetImportObject*>()),
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->deleteImportingAsset(assetItem);
+}
 
 /*DefineEngineFunction(enumColladaForImport, bool, (const char* shapePath, const char* ctrl, bool loadCachedDts), ("", "", true),
    "(string shapePath, GuiTreeViewCtrl ctrl) Collect scene information from "

@@ -404,6 +404,11 @@ public:
    Torque::Path filePath;
 
    /// <summary>
+   /// What is the source file path of the importing asset in string form
+   /// </summary>
+   StringTableEntry filePathString;
+
+   /// <summary>
    /// What is the asset's name
    /// </summary>
    String assetName;
@@ -486,11 +491,23 @@ public:
    AssetImportObject();
    virtual ~AssetImportObject();
 
+   bool onAdd();
+   void onRemove();
+
    /// Engine.
    static void initPersistFields();
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(AssetImportObject);
+
+   static bool _setFilePath(void* obj, const char* index, const char* data);
+
+   void setFilePath(StringTableEntry pFilePath);
+
+   bool operator == (const AssetImportObject& o) const
+   {
+      return o.getId() == this->getId();
+   }
 };
 
 /// <summary>
@@ -551,6 +568,11 @@ class AssetImporter : public SimObject
    /// </summary>
    char importLogBuffer[1024];
 
+   /// <summary>
+   /// only used for passing up the result of an import action for a script-side handled type
+   /// </summary>
+   String finalImportedAssetPath;
+
 public:
    AssetImporter();
    virtual ~AssetImporter();
@@ -573,6 +595,13 @@ public:
    /// <para>@return AssetImportObject that was created</para>
    /// </summary>
    AssetImportObject* addImportingFile(Torque::Path filePath);
+
+   /// <summary>
+   /// Adds an existing AssetImportObject to our import session. Generally this would be created in a script somewhere
+   /// <para>@param assetItem, The asset item to be added to the import session</para>
+   /// <para>@param parentItem (Optional), The asset item that will be the parent of the assetItem being added</para>
+   /// </summary>
+   void addImportingAssetItem(AssetImportObject* assetItem, AssetImportObject* parentItem);
 
    /// <summary>
    /// Adds an importing asset to the current session
@@ -623,8 +652,9 @@ public:
    /// <summary>
    /// Resets the import session to a clean slate. This will clear all existing AssetImportObjects and the activity log
    /// and then re-process the original filePaths again.
+   /// <para>@param hardClearSession, Defaults to false. If true, will also clear the original filePaths</para>
    /// </summary>
-   void resetImportSession();
+   void resetImportSession(bool hardClearSession = false);
 
    /// <summary>
    /// Get the number of lines in the activity log
@@ -774,4 +804,32 @@ public:
    /// <para>@return Current AssetImportConfig the importer is using</para>
    /// </summary>
    AssetImportConfig* getImportConfig() { return &activeImportConfig; }
+
+   //
+   /// <summary>
+   /// </summary>
+   static inline String findImagePath(const String &testPath)
+   {
+
+      String imagePath;
+      if (Platform::isFile(testPath + String(".jpg")))
+         imagePath = testPath + String(".jpg");
+      else if (Platform::isFile(testPath + String(".png")))
+         imagePath = testPath + String(".png");
+      else if (Platform::isFile(testPath + String(".dds")))
+         imagePath = testPath + String(".dds");
+      else if (Platform::isFile(testPath + String(".tif")))
+         imagePath = testPath + String(".tif");
+
+      return imagePath;
+   }
+
+   static inline const char* makeFullPath(const String& path)
+   {
+      char qualifiedFilePath[2048];
+
+      Platform::makeFullPathName(path.c_str(), qualifiedFilePath, sizeof(qualifiedFilePath));
+
+      return qualifiedFilePath;
+   }
 };

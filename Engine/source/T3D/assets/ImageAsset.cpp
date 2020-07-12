@@ -45,6 +45,8 @@
 // Debug Profiling.
 #include "platform/profiler.h"
 
+#include "T3D/assets/assetImporter.h"
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ImageAsset);
@@ -89,7 +91,7 @@ ImplementEnumType(ImageAssetType,
    "@ingroup gameObjects")
    { ImageAsset::Albedo,      "Albedo",      "" },
    { ImageAsset::Normal,      "Normal",      "" },
-   { ImageAsset::Composite,   "Composite",   "" },
+   { ImageAsset::PBRConfig,   "PBRConfig",   "" },
    { ImageAsset::GUI,         "GUI",         "" },
    { ImageAsset::Roughness,   "Roughness",   "" },
    { ImageAsset::AO,          "AO",          "" },
@@ -138,8 +140,31 @@ bool ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAss
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
    if (foundAssetcount == 0)
    {
-      //Didn't find any assets, so have us fall back to a placeholder asset
-      imageAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("ImageAsset::getAssetByFilename - Attempted to in-place import a image file(%s) that had no associated asset", fileName);
+#endif
+
+      AssetImporter* autoAssetImporter;
+      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
+      {
+         autoAssetImporter = new AssetImporter();
+         autoAssetImporter->registerObject("autoAssetImporter");
+      }
+
+      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         imageAsset->setAssetId(resultingAssetId);
+
+         if (!imageAsset->isNull())
+            return true;
+      }
+
+      //Didn't work, so have us fall back to a placeholder asset
+      imageAsset->setAssetId(StringTable->insert("Core_Rendering:noImage"));
 
       if (!imageAsset->isNull())
          return true;
@@ -154,6 +179,48 @@ bool ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAss
       return true;
    }
 }
+
+StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
+{
+   StringTableEntry imageAssetId = StringTable->EmptyString();
+
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("ImageAsset::getAssetByFilename - Attempted to in-place import a image file(%s) that had no associated asset", fileName);
+#endif
+
+      AssetImporter* autoAssetImporter;
+      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
+      {
+         autoAssetImporter = new AssetImporter();
+         autoAssetImporter->registerObject("autoAssetImporter");
+      }
+
+      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         imageAssetId = resultingAssetId;
+         return imageAssetId;
+      }
+
+      //Didn't work, so have us fall back to a placeholder asset
+      imageAssetId = StringTable->insert("Core_Rendering:noImage");
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      imageAssetId = query.mAssetList[0];
+   }
+
+   return imageAssetId;
+}
+
 //------------------------------------------------------------------------------
 void ImageAsset::copyTo(SimObject* object)
 {
@@ -243,16 +310,16 @@ const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)
 {
    // must match ImageTypes order
    static const char* _names[] = {
-      "Albedo"
-      "Normal"
-      "Composite"
-      "GUI"
-      "Roughness"
-      "AO"
-      "Metalness"
-      "Glow"
-      "Particle"
-      "Decal"
+      "Albedo",
+      "Normal",
+      "PBRConfig",
+      "GUI",
+      "Roughness",
+      "AO",
+      "Metalness",
+      "Glow",
+      "Particle",
+      "Decal",
       "Cubemap"
    };
 

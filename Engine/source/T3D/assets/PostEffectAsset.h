@@ -47,6 +47,8 @@ class PostEffectAsset : public AssetBase
    typedef AssetBase Parent;
 
    StringTableEntry        mScriptFile;
+   StringTableEntry        mHLSLShaderFile;
+   StringTableEntry        mGLSLShaderFile;
    
 public:
    PostEffectAsset();
@@ -59,6 +61,11 @@ public:
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
 
+   void                    setHLSLShaderFile(const char* pShaderFile);
+   inline StringTableEntry getHLSLShaderFile(void) const { return mHLSLShaderFile; };
+   void                    setGLSLShaderFile(const char* pShaderFile);
+   inline StringTableEntry getGLSLShaderFile(void) const { return mGLSLShaderFile; };
+
    /// Declare Console Object.
    DECLARE_CONOBJECT(PostEffectAsset);
 
@@ -68,6 +75,11 @@ protected:
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<PostEffectAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<PostEffectAsset*>(obj)->getScriptFile(); }
+
+   static bool setHLSLShaderFile(void* obj, const char* index, const char* data) { static_cast<PostEffectAsset*>(obj)->setHLSLShaderFile(data); return false; }
+   static const char* getHLSLShaderFile(void* obj, const char* data) { return static_cast<PostEffectAsset*>(obj)->getHLSLShaderFile(); }
+   static bool setGLSLShaderFile(void* obj, const char* index, const char* data) { static_cast<PostEffectAsset*>(obj)->setGLSLShaderFile(data); return false; }
+   static const char* getGLSLShaderFile(void* obj, const char* data) { return static_cast<PostEffectAsset*>(obj)->getGLSLShaderFile(); }
 };
 
 DefineConsoleType(TypePostEffectAssetPtr, PostEffectAsset)

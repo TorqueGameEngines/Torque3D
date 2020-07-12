@@ -104,6 +104,7 @@ public:
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
+   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
    void setMaterialAsset(String assetId);
 };
 

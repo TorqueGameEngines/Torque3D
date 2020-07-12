@@ -56,7 +56,7 @@ public:
    {
       Albedo = 0,
       Normal = 1,
-      Composite = 2,
+      PBRConfig = 2,
       GUI = 3,
       Roughness = 4,
       AO = 5,
@@ -106,6 +106,9 @@ public:
 
    void setImageType(ImageTypes type) { mImageType = type; }
 
+   bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
+   StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
+
 protected:
    virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void);
@@ -114,8 +117,6 @@ protected:
    static const char* getImageFileName(void* obj, const char* data) { return static_cast<ImageAsset*>(obj)->getImageFileName(); }
 
    void loadImage();
-
-   bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
 };
 
 DefineConsoleType(TypeImageAssetPtr, ImageAsset)

@@ -1,10 +1,10 @@
-function AssetBrowser::buildPrefabPreview(%this, %assetDef, %previewData)
+function AssetBrowser::buildLooseFilePreview(%this, %assetDef, %previewData)
 {
    %fullPath = %assetDef.dirPath @ "/" @ %assetDef.assetName;
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %fullPath;
    
-   %previewData.previewImage = "tools/assetBrowser/art/genericAssetIcon";
+   %previewData.previewImage = "tools/assetBrowser/art/looseFileIcon";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

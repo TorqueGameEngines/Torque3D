@@ -10,11 +10,18 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
    ImportActivityLog.add("");
    
    ImportAssetWindow.activeImportConfigIndex = %id;
-   ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
+   //ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
+   
+   if(!isObject(%this.activeImporConfig))
+      %this.activeImporConfig = new AssetImportConfig();
+      
+   %this.activeImporConfig.loadImportConfig(AssetImportSettings, ImportAssetWindow.importConfigsList.getKey(%id));
    
    //If we were trying to import anything, refresh it with the new config
-   if( ImportAssetWindow.importingFilesArray.count() != 0)
-      AssetBrowser.reloadImportingFiles();
+   ImportAssetWindow.importer.resetImportSession();
+   
+   //if( ImportAssetWindow.importingFilesArray.count() != 0)
+   //   AssetBrowser.reloadImportingFiles();
 }
 
 function setupImportConfigSettingsList()

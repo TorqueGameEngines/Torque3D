@@ -42,15 +42,26 @@ function AssetBrowser::doCreateNewDatablock(%this)
 
 function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
 {
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.dirPath;
+   %previewData.assetName = %assetDef;
+   %previewData.assetPath = "";
    
-   %previewData.previewImage = "tools/assetBrowser/art/scriptIcon";
+   %previewData.previewImage = "tools/assetBrowser/art/datablockIcon";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.dirPath;
-   %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"navigateTo\",\""@ %assetDef.dirPath @ "/" @ %assetDef.assetName @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
+   %previewData.assetDesc = %assetDef;
+   %previewData.tooltip = %assetDef;
+   %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"spawnDatablockObject\",\""@ %assetDef @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
+}
+
+function spawnDatablockObject(%datablock)
+{
+   %name = %datablock.getName();
+   %class = %datablock.getClassName();
+   %cmd = %class @ "::create(" @ %name @ ");";
+      
+   %shapePath = ( %datablock.shapeFile !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
+   %createCmd = "EWCreatorWindow.createObject( \\\"" @ %cmd @ "\\\" );";
+   return eval("showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );");
 }
 
 function AssetBrowser::renameDatablock(%this, %folderPath, %newFolderName)
@@ -124,4 +135,25 @@ function AssetBrowser::deleteDatablock(%this, %folderPath)
    %this.dirHandler.deleteDatablock(%folderPath);
    
    %this.refresh();
+}
+
+function AssetBrowser::onDatablockEditorDropped(%this, %assetDef, %position)
+{
+   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %camPos = LocalClientConnection.camera.getPosition();
+   %rayResult = containerRayCast(%camPos, %targetPosition, -1);
+   
+   %pos = EWCreatorWindow.getCreateObjectPosition();
+
+   if(%rayResult != 0)
+   {
+      %pos = getWords(%rayResult, 1, 3);
+   }
+   else
+   {
+      %pos = "0 0 0";  
+   }
+   
+   %newObj = spawnDatablockObject(%assetDef);
+   %newObj.position = %pos;
 }

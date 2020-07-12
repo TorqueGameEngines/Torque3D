@@ -432,7 +432,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
 
 function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
 {
-   %previewData.assetName = %assetDef.materialDefinitionName;
+   %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
 
    //Lotta prepwork
@@ -501,9 +501,9 @@ function GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %p
    if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
       return;
 
-   %assetType = %payload.dragSourceControl.parentGroup.assetType;
-   %module = %payload.dragSourceControl.parentGroup.moduleName;
-   %assetName = %payload.dragSourceControl.parentGroup.assetName;
+   %assetType = %payload.assetType;
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
    
    if(%assetType $= "MaterialAsset")
    {

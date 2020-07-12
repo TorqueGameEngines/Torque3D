@@ -87,9 +87,9 @@ function AssetBrowser::buildPopupMenus(%this)
          class = "EditorWorldMenu";
          //isPopup = true;
 
-         item[ 0 ] = "Create Component" TAB AddNewComponentAssetPopup;
-         item[ 1 ] = "Create Script" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ScriptAsset\", AssetBrowser.selectedModule);";
-         item[ 2 ] = "Create State Machine" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"StateMachineAsset\", AssetBrowser.selectedModule);";
+         //item[ 0 ] = "Create Component" TAB AddNewComponentAssetPopup;
+         item[ 0 ] = "Create Script" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ScriptAsset\", AssetBrowser.selectedModule);";
+         item[ 1 ] = "Create State Machine" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"StateMachineAsset\", AssetBrowser.selectedModule);";
          //item[ 3 ] = "-";
          //item[ 3 ] = "Create Game Object" TAB "" TAB "AssetBrowser.createNewGameObjectAsset(\"NewGameObject\", AssetBrowser.selectedModule);";
       };
@@ -239,22 +239,6 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
-   //Asset Preview size presets
-   if( !isObject( AssetPreviewSizePopup ) )
-   {
-      new PopupMenu( AssetPreviewSizePopup )
-      {
-         superClass = "MenuBuilder";
-         class = "EditorWorldMenu";
-         
-         item[ 0 ] = "Small" TAB "" TAB "AssetBrowser.setPreviewSize(\"Small\");";
-         item[ 1 ] = "Medium" TAB "" TAB "AssetBrowser.setPreviewSize(\"Medium\");";
-         Item[ 2 ] = "Large" TAB "" TAB "AssetBrowser.setPreviewSize(\"Large\");";
-      };
-      
-      AssetPreviewSizePopup.checkItem(0, true);
-   }
-   
    if( !isObject( AssetTypeListPopup ) )
    {
       new PopupMenu( AssetTypeListPopup )
@@ -295,8 +279,6 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 7 ] = "Filter by Asset Type" TAB AssetTypeListPopup;
          item[ 8 ] = "-";
          item[ 9 ] = "Enable Auto-refresh" TAB "" TAB "AssetBrowser.toggleAutorefresh();";
-         Item[ 10 ] = "-";
-         Item[ 11 ] = "Asset Preview Size" TAB AssetPreviewSizePopup;
       };
       
       BrowserVisibilityPopup.enableItem(5, false);
@@ -407,6 +389,18 @@ function AssetBrowser::buildPopupMenus(%this)
       };
       
       AddNewModulePopup.enableItem(1, false);
+   }
+   
+   if( !isObject( EditCollectionSets ) )
+   {
+      new PopupMenu( EditCollectionSets )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+         
+         item[ 0 ] = "Delete Collection Set" TAB "" TAB "AssetBrowser.deleteCollectionSet();";
+      };
    }
 }
 

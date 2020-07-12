@@ -215,6 +215,8 @@ function LooseFileAuditWindow::importGUI(%this)
    if(!ImportAssetWindow.isAwake())
       ImportAssetWindow.showDialog();
       
+   ImportAssetWindow.allowAutoImport = false;
+      
    AssetBrowser.addImportingAsset("GUIAsset", LooseFileList.itemPath, "", "");
    LooseFileList.removeItem(LooseFileList.selectedItem, false);
    LooseFileList.buildVisibleTree(true);
@@ -226,6 +228,8 @@ function LooseFileAuditWindow::importLevel(%this)
    if(!ImportAssetWindow.isAwake())
       ImportAssetWindow.showDialog();
       
+   ImportAssetWindow.allowAutoImport = false;
+   
    AssetBrowser.addImportingAsset("LevelAsset", LooseFileList.itemPath, "", "");
    LooseFileList.removeItem(LooseFileList.selectedItem, false);
    LooseFileList.buildVisibleTree(true);

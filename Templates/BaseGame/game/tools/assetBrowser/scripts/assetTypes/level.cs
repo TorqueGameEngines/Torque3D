@@ -7,6 +7,10 @@ function AssetBrowser::setupCreateNewLevelAsset(%this)
    NewAssetPropertiesInspector.endGroup();
 }
 
+function AssetImporter::importLevelAsset(%this, %assetItem)
+{
+}
+
 function AssetBrowser::createLevelAsset(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;

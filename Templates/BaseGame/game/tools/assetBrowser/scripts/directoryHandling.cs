@@ -58,7 +58,7 @@ function directoryHandler::loadFolders(%this, %path, %parentId)
          //   %iconIdx = 1;
          
          %searchFoldersText = %this.searchFilter;
-         if(%searchFoldersText !$= "Search Folders...")
+         if(%searchFoldersText !$= "")
          {
             if(strstr(strlwr(%folderName), strlwr(%searchFoldersText)) != -1)
             {
@@ -123,7 +123,7 @@ function directoryHandler::navigateTo(%this, %address, %historyNav, %selectionNa
 
    //find our folder tree and action on it tree
    %folderId = %this.getFolderTreeItemFromAddress(%address);
-   
+
    %this.oldAddress = %this.currentAddress;   
    %this.currentAddress = %address;
    %this.selectedItem = %folderId;
@@ -197,7 +197,15 @@ function directoryHandler::getFolderTreeItemFromAddress(%this, %address)
    //break down the address
    %folderCount = getTokenCount(%address, "/");
 
-   %curItem = 0;
+   if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
+   {
+      %curItem = %this.treeCtrl.findChildItemByName(1, "Modules");
+   }
+   else
+   {
+      %curItem = 1;
+   }
+   
    %rebuiltPath = "";
    for(%f=0; %f < %folderCount; %f++)
    {
@@ -214,7 +222,15 @@ function directoryHandler::expandTreeToAddress(%this, %address)
    %folderCount = getTokenCount(%address, "/");
    %this.treeCtrl.expandItem(0);
 
-   %curItem = 0;
+   if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
+   {
+      %curItem = %this.treeCtrl.findChildItemByName(1, "Modules");
+   }
+   else
+   {
+      %curItem = 1;
+   }
+   
    %rebuiltPath = "";
    for(%f=0; %f < %folderCount; %f++)
    {

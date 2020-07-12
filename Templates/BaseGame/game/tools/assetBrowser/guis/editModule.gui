@@ -1,7 +1,7 @@
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiControl(AssetBrowser_editModule) {
    position = "0 0";
-   extent = "1920 1080";
+   extent = "1024 768";
    minExtent = "8 2";
    horizSizing = "right";
    vertSizing = "bottom";
@@ -13,7 +13,7 @@
    isContainer = "1";
    canSave = "1";
    canSaveDynamicFields = "1";
-      enabled = "1";
+      Enabled = "1";
 
    new GuiWindowCtrl(AssetBrowser_editModuleWindow) {
       text = "Module Properties";
@@ -32,7 +32,7 @@
       anchorBottom = "0";
       anchorLeft = "1";
       anchorRight = "0";
-      position = "710 375";
+      position = "262 219";
       extent = "500 329";
       minExtent = "48 92";
       horizSizing = "center";
@@ -110,7 +110,7 @@
          position = "402 305";
          extent = "45 22";
          minExtent = "8 2";
-         horizSizing = "right";
+         horizSizing = "left";
          vertSizing = "top";
          profile = "ToolsGuiButtonProfile";
          visible = "1";
@@ -130,7 +130,7 @@
          position = "450 305";
          extent = "45 22";
          minExtent = "8 2";
-         horizSizing = "right";
+         horizSizing = "left";
          vertSizing = "top";
          profile = "ToolsGuiButtonProfile";
          visible = "1";

@@ -95,14 +95,14 @@ function GuiInspectorTypeCubemapAssetPtr::onControlDropped( %this, %payload, %po
    if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
       return;
 
-   %assetType = %payload.dragSourceControl.parentGroup.assetType;
+   %assetType = %payload.assetType;
    
    if(%assetType $= "CubemapAsset")
    {
       echo("DROPPED A CUBEMAP ON A CUBEMAP ASSET COMPONENT FIELD!");  
       
-      %module = %payload.dragSourceControl.parentGroup.moduleName;
-      %asset = %payload.dragSourceControl.parentGroup.assetName;
+      %module = %payload.moduleName;
+      %asset = %payload.assetName;
       
       %targetComponent = %this.object;
       %targetComponent.CubemapAsset = %module @ ":" @ %asset;

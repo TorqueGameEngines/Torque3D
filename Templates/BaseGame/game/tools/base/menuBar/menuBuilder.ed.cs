@@ -120,6 +120,7 @@ function MenuBuilder::addItem(%this, %pos, %item)
    %name = getField(%item, 0);
    %accel = getField(%item, 1);
    %cmd = getField(%item, 2);
+   %bitmapIdx = getField(%item, 3);
    
    // We replace the [this] token with our object ID
    %cmd = strreplace( %cmd, "[this]", %this );
@@ -132,7 +133,7 @@ function MenuBuilder::addItem(%this, %pos, %item)
    }
    else
    {
-      %this.insertItem(%pos, %name !$= "-" ? %name : "", %accel, %cmd);
+      %this.insertItem(%pos, %name !$= "-" ? %name : "", %accel, %cmd, %bitmapIdx $= "" ? -1 : %bitmapIdx);
    }
 }
 

@@ -139,7 +139,7 @@ GuiMenuBar* PopupMenu::getMenuBarCtrl()
 //////////////////////////////////////////////////////////////////////////
 // Public Methods
 //////////////////////////////////////////////////////////////////////////
-S32 PopupMenu::insertItem(S32 pos, const char *title, const char* accelerator, const char* cmd)
+S32 PopupMenu::insertItem(S32 pos, const char *title, const char* accelerator, const char* cmd, S32 bitmapIndex)
 {
    String titleString = title;
 
@@ -147,6 +147,7 @@ S32 PopupMenu::insertItem(S32 pos, const char *title, const char* accelerator, c
    newItem.mID = pos;
    newItem.mText = titleString;
    newItem.mCMD = cmd;
+   newItem.mBitmapIndex = bitmapIndex;
 
    if (titleString.isEmpty() || titleString == String("-"))
       newItem.mIsSpacer = true;
@@ -267,6 +268,14 @@ U32 PopupMenu::getItemCount()
 void PopupMenu::clearItems()
 {
 	mMenuItems.clear();
+}
+
+String PopupMenu::getItemText(S32 pos)
+{
+   if (mMenuItems.empty() || mMenuItems.size() < pos || pos < 0)
+      return String::EmptyString;
+
+   return mMenuItems[pos].mText;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -468,9 +477,9 @@ void PopupMenu::hidePopupSubmenus()
 //-----------------------------------------------------------------------------
 // Console Methods
 //-----------------------------------------------------------------------------
-DefineEngineMethod(PopupMenu, insertItem, S32, (S32 pos, const char * title, const char * accelerator, const char* cmd), ("", "", ""), "(pos[, title][, accelerator][, cmd])")
+DefineEngineMethod(PopupMenu, insertItem, S32, (S32 pos, const char * title, const char * accelerator, const char* cmd, S32 bitmapIndex), ("", "", "", -1), "(pos[, title][, accelerator][, cmd][, bitmapIndex])")
 {
-   return object->insertItem(pos, title, accelerator, cmd);
+   return object->insertItem(pos, title, accelerator, cmd, bitmapIndex);
 }
 
 DefineEngineMethod(PopupMenu, removeItem, void, (S32 pos), , "(pos)")
@@ -505,6 +514,12 @@ DefineEngineMethod(PopupMenu, checkItem, void, (S32 pos, bool checked), , "(pos,
 {
    object->checkItem(pos, checked);
 }
+
+DefineEngineMethod(PopupMenu, getItemText, const char*, (S32 pos), , "(pos)")
+{
+   return object->getItemText(pos).c_str();
+}
+
 
 DefineEngineMethod(PopupMenu, checkRadioItem, void, (S32 firstPos, S32 lastPos, S32 checkPos), , "(firstPos, lastPos, checkPos)")
 {

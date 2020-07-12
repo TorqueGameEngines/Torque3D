@@ -107,7 +107,7 @@ public:
    /// returns the menu item's ID, or -1 on failure.
    /// implementd on a per-platform basis.
    /// TODO: factor out common code
-   S32 insertItem(S32 pos, const char *title, const char* accelerator, const char* cmd);
+   S32 insertItem(S32 pos, const char *title, const char* accelerator, const char* cmd, S32 bitmapIndex = -1);
 
    /// Sets the name title and accelerator for 
    /// an existing item.
@@ -142,6 +142,9 @@ public:
 
    ///Clears all items
    void clearItems();
+
+   ///Gets the text of a given item
+   String getItemText(S32 pos);
 
    //-----------------------------------------------------------------------------
    /// Displays this menu as a popup menu and blocks until the user has selected

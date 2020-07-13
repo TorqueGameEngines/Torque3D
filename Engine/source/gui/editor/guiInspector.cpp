@@ -232,6 +232,27 @@ GuiInspectorGroup* GuiInspector::findExistentGroup( StringTableEntry groupName )
    return NULL;
 }
 
+S32 GuiInspector::findExistentGroupIndex(StringTableEntry groupName)
+{
+   // If we have no groups, it couldn't possibly exist
+   if (mGroups.empty())
+      return -1;
+
+   // Attempt to find it in the group list
+   Vector<GuiInspectorGroup*>::iterator i = mGroups.begin();
+
+   S32 index = 0;
+   for (; i != mGroups.end(); i++)
+   {
+      if (dStricmp((*i)->getGroupName(), groupName) == 0)
+         return index;
+
+      index++;
+   }
+
+   return -1;
+}
+
 //-----------------------------------------------------------------------------
 
 void GuiInspector::updateFieldValue( StringTableEntry fieldName, StringTableEntry arrayIdx )

@@ -452,6 +452,10 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    // Deferred Shading : Material Info Flags
    fd.features.addFeature(MFT_MatInfoFlags);
 
+   if (features.hasFeature(MFT_isBackground))
+   {
+      fd.features.addFeature(MFT_isBackground);
+   }
    if (features.hasFeature(MFT_SkyBox))
    {
       fd.features.addFeature(MFT_StaticCubemap);

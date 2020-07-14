@@ -192,6 +192,7 @@ DeclareFeatureType( MFT_HardwareSkinning );
 
 // Deferred Shading
 DeclareFeatureType( MFT_isDeferred );
+DeclareFeatureType( MFT_isBackground );
 DeclareFeatureType( MFT_SkyBox );
 DeclareFeatureType( MFT_MatInfoFlags );
 #endif // _MATERIALFEATURETYPES_H_

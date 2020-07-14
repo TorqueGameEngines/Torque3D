@@ -103,6 +103,7 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsGLSL );
    FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsGLSL );
    FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapGLSL);
+   FEATUREMGR->registerFeature( MFT_isBackground, new NamedFeatureGLSL("Background Object"));
    FEATUREMGR->registerFeature( MFT_SkyBox, new NamedFeatureGLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureGLSL );
 }

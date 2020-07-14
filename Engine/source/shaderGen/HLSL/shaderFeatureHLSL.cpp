@@ -1781,7 +1781,7 @@ void VertPositionHLSL::processVert( Vector<ShaderComponent*> &componentList,
    meta->addStatement( new GenOp( "   @ = mul(@, float4(@.xyz,1));\r\n", 
       outPosition, modelview, inPosition ) );
 
-   if (fd.materialFeatures[MFT_SkyBox])
+   if (fd.materialFeatures[MFT_isBackground])
    {
       meta->addStatement(new GenOp("   @ = @.xyww;\r\n", outPosition, outPosition));
    }

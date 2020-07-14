@@ -111,12 +111,29 @@ public:
       mGroups.push_back(group);
    }
 
+   /// <summary>
+   /// Inserts a group into group list at a specific position
+   /// </summary>
+   /// <param name="insertIndex"></param>
+   /// <param name="group"></param>
+   void insertInspectorGroup(U32 insertIndex, GuiInspectorGroup* group)
+   {
+      mGroups.insert(insertIndex, group);
+   }
+
    /// Deletes all GuiInspectorGroups
    void clearGroups();   
 
    /// Returns true if the named group exists
    /// Helper for inspectObject
    GuiInspectorGroup* findExistentGroup( StringTableEntry groupName );
+
+   /// <summary>
+   /// Looks through the group list by name to find it's index
+   /// </summary>
+   /// <param name="groupName"></param>
+   /// <returns>Returns the index position of the group in the group list as S32. -1 if groupName not found.</returns>
+   S32 findExistentGroupIndex(StringTableEntry groupName);
 
    /// Should there be a GuiInspectorField associated with this fieldName,
    /// update it to reflect actual/current value of that field in the inspected object.

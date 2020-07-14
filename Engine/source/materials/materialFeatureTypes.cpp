@@ -105,6 +105,7 @@ ImplementFeatureType( MFT_ImposterVert, MFG_PreTransform, 1.0, false );
 
 // Deferred Shading
 ImplementFeatureType( MFT_isDeferred, U32(-1), -1, true );
-ImplementFeatureType( MFT_SkyBox, MFG_Transform, 1.0f, false );
+ImplementFeatureType( MFT_isBackground, MFG_Transform, 1.0f, false );
+ImplementFeatureType( MFT_SkyBox, MFG_Transform, 2.0f, false );
 ImplementFeatureType( MFT_HardwareSkinning, MFG_Transform,-2.0, false );
 

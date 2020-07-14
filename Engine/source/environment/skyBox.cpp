@@ -575,8 +575,10 @@ void SkyBox::_initRender()
    mFogBandMat->mDoubleSided = true;
    mFogBandMat->mEmissive[0] = true;
 
+   FeatureSet features = MATMGR->getDefaultFeatures();
+   features.addFeature(MFT_isBackground);
    mFogBandMatInst = mFogBandMat->createMatInstance();
-   mFogBandMatInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPC>() );
+   mFogBandMatInst->init(features, getGFXVertexFormat<GFXVertexPC>() );
 }
 
 void SkyBox::onStaticModified( const char *slotName, const char *newValue )
@@ -609,6 +611,7 @@ void SkyBox::_initMaterial()
    FeatureSet features = MATMGR->getDefaultFeatures();
    features.removeFeature( MFT_RTLighting );
    features.removeFeature( MFT_Visibility );
+   features.addFeature(MFT_isBackground);   
    features.addFeature(MFT_SkyBox);
 
    // Now initialize the material.

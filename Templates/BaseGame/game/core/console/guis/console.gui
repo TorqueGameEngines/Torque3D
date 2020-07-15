@@ -144,7 +144,7 @@
          range = "0 1";
          ticks = "10";
          snap = "0";
-         value = "0.930233";
+         value = "0.65";
          useFillBar = "0";
          fillBarColor = "255 255 255 255";
          renderTicks = "1";

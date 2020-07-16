@@ -28,7 +28,7 @@
 static float M_HALFPI_F   = 1.57079632679489661923f;
 static float M_PI_F       = 3.14159265358979323846f;
 static float M_2PI_F      = 6.28318530717958647692f;
-
+static float M_1OVER_PI_F  = 0.31830988618f;
 
 /// Calculate fog based on a start and end positions in worldSpace.
 float computeSceneFog(  float3 startPos,

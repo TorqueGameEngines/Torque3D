@@ -114,8 +114,7 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	surface.N = mul(invView, float4(gbuffer0.xyz,0)).xyz;
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = gbuffer1;
-   const float minRoughness=1e-4;
-	surface.roughness = clamp(1.0 - gbuffer2.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+	surface.roughness = 1.0 - (gbuffer2.b*0.8+0.1999); //t3d uses smoothness, so we convert to roughness.
 	surface.roughness_brdf = surface.roughness * surface.roughness;
 	surface.metalness = gbuffer2.a;
    surface.ao = gbuffer2.g;
@@ -134,8 +133,7 @@ inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrP
    surface.N = normal;
    surface.V = normalize(wsEyePos - surface.P);
    surface.baseColor = baseColor;
-   const float minRoughness=1e-4;
-   surface.roughness = clamp(1.0 - pbrProperties.b, minRoughness, 1.0); //t3d uses smoothness, so we convert to roughness.
+   surface.roughness = 1.0 - (pbrProperties.b*0.8+0.1999); //t3d uses smoothness, so we convert to roughness.
    surface.roughness_brdf = surface.roughness * surface.roughness;
    surface.metalness = pbrProperties.a;
    surface.ao = pbrProperties.g;
@@ -168,57 +166,20 @@ inline SurfaceToLight createSurfaceToLight(in Surface surface, in float3 L)
 	return surfaceToLight;
 }
 
-float3 BRDF_GetSpecular(in Surface surface, in SurfaceToLight surfaceToLight)
-{
-	float f90 = saturate(50.0 * dot(surface.f0, 0.33));
-	float3 F = F_Schlick(surface.f0, f90, surfaceToLight.HdotV);
-	float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.roughness_brdf);
-	float D = D_GGX(surfaceToLight.NdotH, surface.roughness_brdf);
-	float3 Fr = D * F * Vis / M_PI_F;
-	return Fr;
-}
-
-float3 BRDF_GetDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
-{
-   //getting some banding with disney method, using lambert instead - todo futher testing
-	float Fd = 1.0 / M_PI_F;
-   //energy conservation - remove this if reverting back to disney method
-   float3 kD = 1.0.xxx - surface.F;
-	kD *= 1.0 - surface.metalness;
-   float3 diffuse = kD * surface.baseColor.rgb * Fd;
-	return diffuse;
-}
-
 float3 BRDF_GetDebugSpecular(in Surface surface, in SurfaceToLight surfaceToLight)
 {
-   float3 neutralColor = float3(0.5,0.5,0.5);
-
-   float3 f0 = lerp(0.04.xxx, neutralColor, surface.metalness);
-	float f90 = saturate(50.0 * dot(f0, 0.33));
-	float3 F = F_Schlick(f0, f90, surfaceToLight.HdotV);
-	float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.roughness_brdf);
-	float D = D_GGX(surfaceToLight.NdotH, surface.roughness_brdf);
-	float3 Fr = D * F * Vis / M_PI_F;
-	return Fr;
+   //GGX specular
+   float3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);
+    float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.roughness);
+    float D = D_GGX(surfaceToLight.NdotH, surface.roughness);
+   float3 Fr = D * F * Vis;
+   return Fr*M_1OVER_PI_F;
 }
 
 float3 BRDF_GetDebugDiffuse(in Surface surface, in SurfaceToLight surfaceToLight)
 {
-   float3 neutralColor = float3(0.5,0.5,0.5);
-
-   //getting some banding with disney method, using lambert instead - todo futher testing
-	float Fd = 1.0 / M_PI_F;
-
-   float3 f0 = lerp(0.04.xxx, neutralColor, surface.metalness);
-
-   float f90 = saturate(50.0 * dot(f0, 0.33));
-   float3 F = F_Schlick(f0, f90, surface.NdotV);
-
-   //energy conservation - remove this if reverting back to disney method
-   float3 kD = 1.0.xxx - F;
-	kD *= 1.0 - surface.metalness;
-   float3 diffuse = kD * neutralColor * Fd;
-	return diffuse;
+   float3 Fd = surface.albedo.rgb;
+	return Fd*M_1OVER_PI_F;
 }
 
 //attenuations functions from "moving frostbite to pbr paper"
@@ -246,27 +207,33 @@ float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
    return sqr(attenuation);
 }
 
-inline float3 getDirectionalLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
+float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
-   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity;
-   float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-   float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+   //lambert diffuse
+   float3 Fd = surface.albedo.rgb;
+    
+   //GGX specular
+   float3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);
+    float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.roughness);
+    float D = D_GGX(surfaceToLight.NdotH, surface.roughness);
+   float3 Fr = D * F * Vis;
 
-   float3 final = max(0.0f, diffuse + spec);
-   return final;
+   return (Fd + Fr) * M_1OVER_PI_F;
 }
 
-inline float3 getPunctualLight(in Surface surface, in SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
+float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
+{
+   float3 factor = lightColor * max(surfaceToLight.NdotL, 0.0f) * shadow * lightIntensity;
+   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+}
+
+float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
-
-   float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-   float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
-
-   float3 final = max(0.0f, diffuse + spec * surface.F);
-   return final;
+   float3 factor = lightColor * max(surfaceToLight.NdotL, 0.0f) * shadow * lightIntensity * attenuation;
+   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
+
 
 float computeSpecOcclusion( float NdotV , float AO , float roughness )
 {

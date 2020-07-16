@@ -30,9 +30,14 @@
 // Charles de Rousiers - Electronic Arts Frostbite
 // SIGGRAPH 2014
 
+float pow5(float x) {
+    float x2 = x * x;
+    return x2 * x2 * x;
+}
+
 vec3 F_Schlick(in vec3 f0, in float f90, in float u)
 {
-	return f0 + (f90 - f0) * pow(1.f - u, 5.f);
+	return f0 + (f90 - f0) * pow5(1.f - u);
 }
 
 vec3 F_Fresnel(vec3 SpecularColor, float VoH)
@@ -68,7 +73,7 @@ float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughn
 	return lightScatter * viewScatter * energyFactor;
 }
 
-float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaG2)
+float V_SmithGGXCorrelated(float NdotL, float NdotV, float roughness)
 {
 	// Original formulation of G_SmithGGX Correlated 
 	// lambda_v = (-1 + sqrt(alphaG2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f; 
@@ -80,19 +85,24 @@ float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaG2)
 	// This is the optimized version 
 	//float alphaG2 = alphaG * alphaG;
 
-	// Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake. 
-	float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
-	float Lambda_GGXL = NdotV * sqrt((-NdotL * alphaG2 + NdotL) * NdotL + alphaG2);
+	float a2 = roughness * roughness;
 
-	return 0.5f / (Lambda_GGXV + Lambda_GGXL);
+    float lambdaV = NdotL * sqrt((NdotV - a2 * NdotV) * NdotV + a2);
+    float lambdaL = NdotV * sqrt((NdotL - a2 * NdotL) * NdotL + a2);
+    float v = 0.5f / (lambdaV + lambdaL);
+
+	return v;
 }
 
-float D_GGX(float NdotH, float m2)
+float D_GGX(float NdotH, float roughness)
 {
 	// Divide by PI is apply later 
-	//float m2 = m * m;
-	float f = (NdotH * m2 - NdotH) * NdotH + 1;
-	return m2 / (f * f);
+
+	float oneMinusNdotHSquared = 1.0 - NdotH * NdotH;
+	float a = NdotH * roughness;
+	float k = roughness / (oneMinusNdotHSquared + a * a);
+	float d = k * k * M_1OVER_PI_F;
+	return d;
 }
 
 #endif

@@ -105,6 +105,17 @@ DefineEngineFunction( mRound, S32, ( F32 v  ),,
    return mRound(v);
 }
 
+DefineEngineFunction(mRoundDelta, S32, (F32 v, S32 d), (0.0, 1),
+   "Round v to the nearest number based on the delta"
+   "@param v Value to round"
+   "@param d Delta use when rounding"
+   "@return The rounded value as a S32."
+   "@ingroup Math")
+{
+   return (mFloor(v / d + 0.5) * d);
+}
+
+
 DefineEngineFunction( mRoundColour, F32, ( F32 v, S32 n ), (0),
    "Round v to the nth decimal place or the nearest whole number by default."
    "@param v Value to roundn"

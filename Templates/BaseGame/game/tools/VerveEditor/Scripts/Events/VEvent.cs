@@ -197,7 +197,7 @@ function VEvent::getSnapTime( %this, %targetTime )
     if ( $Pref::VerveEditor::Event::SnapToTime && $Pref::VerveEditor::Event::SnapToTimeThreshold > 0 )
     {
         // Snap.
-        return mRound( %targetTime, $Pref::VerveEditor::Event::SnapToTimeThreshold );
+        return mRoundDelta( %targetTime, $Pref::VerveEditor::Event::SnapToTimeThreshold );
     }
     
     // No Snap!

@@ -91,7 +91,7 @@ function VDirectorEvent::getSnapTime( %this, %targetTime )
     if ( $VerveEditor::Event::SnapTime > 0 )
     {
         // Snap.
-        return mRound( %targetTime, $VerveEditor::Event::SnapTime );
+        return mRoundDelta( %targetTime, $VerveEditor::Event::SnapTime );
     }
     
     // No Snap!

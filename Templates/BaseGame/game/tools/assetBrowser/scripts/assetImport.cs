@@ -82,6 +82,9 @@ function ImportAssetWindow::onWake(%this)
    AssetImportTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
    ImportAssetConfigList.setSelected(0);
    
+   %this.importer.targetPath = AssetImportTargetAddress.getText();
+   %this.importer.targetModuleId = AssetImportTargetModule.getText();
+   
    ImportActivityLog.empty();
    
    %this.refresh();
@@ -707,6 +710,8 @@ function ImportAssetWindow::doRefresh(%this)
    }
    
    %this.dirty = false;
+   
+   AssetBrowser.refresh();
 }
 
 function ImportAssetWindow::refreshAssetItem(%this, %assetItem, %parentTreeIdx)
@@ -965,20 +970,24 @@ function ImportAssetWindow::addMaterialMap(%this, %map)
 function ImportAssetWindow::ImportAssets(%this)
 {
    //get the selected module data
-   %moduleName = AssetImportTargetModule.getText();
-   
-   %module = ModuleDatabase.findModule(%moduleName, 1);
-   
-   if(!isObject(%module))
+   if(%this.importer.targetModuleId $= "")
    {
-      MessageBoxOK( "Error!", "No module selected. You must select or create a module for the assets to be added to.");
-      return;
+      %moduleName = AssetImportTargetModule.getText();
+      
+      %module = ModuleDatabase.findModule(%moduleName, 1);
+      
+      if(!isObject(%module))
+      {
+         MessageBoxOK( "Error!", "No module selected. You must select or create a module for the assets to be added to.");
+         return;
+      }
+      
+      Canvas.pushDialog( EditorLoadingGui );
+      Canvas.repaint();
+   
+      %this.importer.targetModuleId = %moduleName;
    }
    
-   Canvas.pushDialog( EditorLoadingGui );
-   Canvas.repaint();
-   
-   %this.importer.targetModuleId = %moduleName;
    %this.importer.targetPath = AssetImportTargetAddress.getText();
    
    %this.importer.importAssets();

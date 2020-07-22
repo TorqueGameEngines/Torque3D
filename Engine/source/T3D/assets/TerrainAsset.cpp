@@ -370,7 +370,7 @@ StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
       if (!success)
       {
          Con::printf("TerrainAsset::getAssetIdByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset", fileName);
-         return false;
+         return nullptr;
       }
 
       ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(fileName);
@@ -378,7 +378,7 @@ StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
       if (!targetModuleDef)
       {
          Con::printf("TerrainAsset::getAssetIdByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset, unable to find a valid Module for the filePath", fileName);
-         return false;
+         return nullptr;
       }
 
       success = AssetDatabase.addDeclaredAsset(targetModuleDef, tamlPath.c_str());
@@ -386,7 +386,7 @@ StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
       if (!success)
       {
          Con::printf("TerrainAsset::getAssetIdByFilename() - failed to auto-import terrainfile(%s) as an TerrainAsset, unable to find a register asset with path", tamlPath.c_str());
-         return false;
+         return nullptr;
       }
 
       String assetId = targetModuleDef->getModuleId();

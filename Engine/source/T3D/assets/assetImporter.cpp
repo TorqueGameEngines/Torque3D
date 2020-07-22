@@ -354,7 +354,7 @@ bool AssetImportObject::_setFilePath(void* obj, const char* index, const char* d
 void AssetImportObject::setFilePath(StringTableEntry pFilePath)
 {
    filePathString = pFilePath;
-   filePath = pFilePath;
+   filePath = Torque::Path(pFilePath);
 }
 
 ConsoleDocClass(AssetImporter,
@@ -2041,7 +2041,7 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
             if (isMethod(processCommand.c_str()))
             {
                ConsoleValueRef importReturnVal = Con::executef(this, processCommand.c_str(), childItem);
-               assetPath = importReturnVal.getStringValue();
+               assetPath = Torque::Path(importReturnVal.getStringValue());
             }
          }
 

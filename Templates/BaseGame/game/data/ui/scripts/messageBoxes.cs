@@ -97,15 +97,13 @@ function MessageBoxOK(%title, %message, %callback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxButtonHolder-->OKButton.set("A", "Enter", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
+   MessageBoxOCButtonHolder.hidden = true;
+   MessageBoxYNCButtonHolder.hidden = true;
+   MessageBoxOKButtonHolder.hidden = false;
    
-   MessageBoxButtonHolder.setActive();
+   MessageBoxOKButtonHolder-->OKButton.set("btn_a", "Return", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
    
-   MessageBoxButtonHolder-->oc_OKButton.hidden = true;
-   MessageBoxButtonHolder-->oc_CancelButton.hidden = true;
-   MessageBoxButtonHolder-->ync_yesButton.hidden = true;
-   MessageBoxButtonHolder-->ync_noButton.hidden = true;
-   MessageBoxButtonHolder-->ync_CancelButton.hidden = true;
+   MessageBoxOKButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.callback = %callback;
@@ -121,15 +119,14 @@ function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxButtonHolder-->oc_OKButton.set("A", "Enter", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
-   MessageBoxButtonHolder-->oc_CancelButton.set("B", "Esc", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
-
-   MessageBoxButtonHolder.setActive();
+   MessageBoxOCButtonHolder.hidden = false;
+   MessageBoxYNCButtonHolder.hidden = true;
+   MessageBoxOKButtonHolder.hidden = true;
    
-   MessageBoxButtonHolder-->OKButton.hidden = true;
-   MessageBoxButtonHolder-->ync_yesButton.hidden = true;
-   MessageBoxButtonHolder-->ync_noButton.hidden = true;
-   MessageBoxButtonHolder-->ync_CancelButton.hidden = true;
+   MessageBoxOCButtonHolder-->OKButton.set("btn_a", "Return", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
+   MessageBoxOCButtonHolder-->CancelButton.set("btn_b", "Escape", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
+
+   MessageBoxOCButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.callback = %callback;
@@ -217,15 +214,14 @@ function MessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxButtonHolder-->oc_OKButton.set("A", "Enter", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
-   MessageBoxButtonHolder-->oc_CancelButton.set("B", "Esc", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
+   MessageBoxOCButtonHolder.hidden = false;
+   MessageBoxYNCButtonHolder.hidden = true;
+   MessageBoxOKButtonHolder.hidden = true;
    
-   MessageBoxButtonHolder.setActive();
+   MessageBoxOCButtonHolder-->OKButton.set("btn_a", "Return", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
+   MessageBoxOCButtonHolder-->CancelButton.set("btn_b", "Escape", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
    
-   MessageBoxButtonHolder-->OKButton.hidden = true;
-   MessageBoxButtonHolder-->ync_yesButton.hidden = true;
-   MessageBoxButtonHolder-->ync_noButton.hidden = true;
-   MessageBoxButtonHolder-->ync_CancelButton.hidden = true;
+   MessageBoxOCButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.yesCallBack = %yesCallback;
@@ -237,15 +233,15 @@ function MessageBoxYesNoCancel(%title, %message, %yesCallback, %noCallback, %can
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxButtonHolder-->ync_yesButton.set("A", "Enter", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
-   MessageBoxButtonHolder-->ync_noButton.set("X", "Backspace", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
-   MessageBoxButtonHolder-->ync_cancelButton.set("B", "Esc", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
+   MessageBoxOCButtonHolder.hidden = true;
+   MessageBoxYNCButtonHolder.hidden = false;
+   MessageBoxOKButtonHolder.hidden = true;
    
-   MessageBoxButtonHolder.setActive();
+   MessageBoxYNCButtonHolder-->yesButton.set("btn_a", "Return", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
+   MessageBoxYNCButtonHolder-->noButton.set("btn_x", "backspace", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
+   MessageBoxYNCButtonHolder-->cancelButton.set("btn_b", "Escape", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
    
-   MessageBoxButtonHolder-->OKButton.hidden = true;
-   MessageBoxButtonHolder-->oc_OKButton.hidden = true;
-   MessageBoxButtonHolder-->oc_CancelButton.hidden = true;
+   MessageBoxYNCButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.yesCallBack = %yesCallback;

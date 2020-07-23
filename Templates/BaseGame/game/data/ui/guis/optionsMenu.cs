@@ -63,11 +63,11 @@ function OptionsMenu::onWake(%this)
 
 function OptionsButtonHolder::onWake(%this)
 {
-   %this-->prevTabButton.set("LB", "", "Prev Tab", "OptionsMenu.prevTab();", true);
-   %this-->nextTabButton.set("RB", "", "Next Tab", "OptionsMenu.nextTab();", true);
-   %this-->resetButton.set("Back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   %this-->applyButton.set("Start", "Enter", "Apply", "OptionsMenu.apply();");
-   %this-->backButton.set("B", "Esc", "Back", "OptionsMenu.backOut();");
+   %this-->prevTabButton.set("btn_l", "", "Prev Tab", "OptionsMenu.prevTab();", true);
+   %this-->nextTabButton.set("btn_r", "", "Next Tab", "OptionsMenu.nextTab();", true);
+   %this-->resetButton.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
+   %this-->applyButton.set("btn_start", "Return", "Apply", "OptionsMenu.apply();");
+   %this-->backButton.set("btn_b", "Escape", "Back", "OptionsMenu.backOut();");
 }
 
 function OptionsMenu::apply(%this)

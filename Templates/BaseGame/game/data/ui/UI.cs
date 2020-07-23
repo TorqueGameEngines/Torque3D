@@ -80,9 +80,6 @@ function UI::initClient(%this)
    exec("./scripts/cursors.cs");
    exec("./scripts/utility.cs");
    
-   exec("./guis/menuGraphics.gui");
-   exec("./guis/menuGraphics.cs");
-   
    loadStartup();
 }
 

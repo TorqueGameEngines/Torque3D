@@ -10,11 +10,11 @@ function JoinServerMenu::onWake()
 
 function JoinServerButtonHolder::onWake(%this)
 {
-   %this-->joinButton.set("Start", "Enter", "Join", "JoinServerMenu.join();");
-   %this-->backButton.set("B", "Esc", "Back", "JoinServerMenu.backOut();");
-   %this-->refreshButton.set("Y", "R", "Refresh", "JoinServerMenu.refresh();");
-   %this-->queryLANButton.set("A", "Q", "Query LAN", "JoinServerMenu.queryLan();");
-   %this-->queryInternetButton.set("X", "E", "Query Internet", "JoinServerMenu.query();");
+   %this-->joinButton.set("Start", "Return", "Join", "JoinServerMenu.join();");
+   %this-->backButton.set("btn_b", "escape", "Back", "JoinServerMenu.backOut();");
+   %this-->refreshButton.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
+   %this-->queryLANButton.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
+   %this-->queryInternetButton.set("btn_x", "E", "Query Internet", "JoinServerMenu.query();");
 }
 
 //----------------------------------------

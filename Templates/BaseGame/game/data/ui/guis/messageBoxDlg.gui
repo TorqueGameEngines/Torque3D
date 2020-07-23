@@ -112,7 +112,54 @@
          canSave = "1";
          canSaveDynamicFields = "0";
       };
-      new GuiControl(MessageBoxButtonHolder) {
+      new GuiControl(MessageBoxOKButtonHolder) {
+         position = "0 285";
+         extent = "642 40";
+         minExtent = "8 2";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         class = "MenuInputButtonContainer";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+
+         new GuiIconButtonCtrl() {
+            buttonMargin = "4 4";
+            iconBitmap = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_Enter";
+            iconLocation = "Left";
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            textMargin = "4";
+            autoSize = "0";
+            text = "Go";
+            groupNum = "-1";
+            buttonType = "PushButton";
+            useMouseEvents = "0";
+            position = "251 0";
+            extent = "140 40";
+            minExtent = "8 2";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            profile = "GuiMenuButtonProfile";
+            visible = "1";
+            active = "1";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            internalName = "OKButton";
+            class = "MenuInputButton";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
+      };
+      new GuiControl(MessageBoxOCButtonHolder) {
          position = "0 285";
          extent = "642 40";
          minExtent = "8 2";
@@ -153,7 +200,7 @@
             tooltipProfile = "GuiToolTipProfile";
             hovertime = "1000";
             isContainer = "0";
-            internalName = "oc_OKButton";
+            internalName = "OKButton";
             class = "MenuInputButton";
             canSave = "1";
             canSaveDynamicFields = "0";
@@ -183,41 +230,28 @@
             tooltipProfile = "GuiToolTipProfile";
             hovertime = "1000";
             isContainer = "0";
-            internalName = "oc_CancelButton";
+            internalName = "CancelButton";
             class = "MenuInputButton";
             canSave = "1";
             canSaveDynamicFields = "0";
          };
-         new GuiIconButtonCtrl() {
-            buttonMargin = "4 4";
-            iconBitmap = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_Enter";
-            iconLocation = "Left";
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            textMargin = "4";
-            autoSize = "0";
-            text = "Go";
-            groupNum = "-1";
-            buttonType = "PushButton";
-            useMouseEvents = "0";
-            position = "251 0";
-            extent = "140 40";
-            minExtent = "8 2";
-            horizSizing = "right";
-            vertSizing = "bottom";
-            profile = "GuiMenuButtonProfile";
-            visible = "1";
-            active = "1";
-            command = "MainMenuButtonList.activateRow();";
-            tooltipProfile = "GuiToolTipProfile";
-            hovertime = "1000";
-            isContainer = "0";
-            internalName = "OKButton";
-            class = "MenuInputButton";
-            canSave = "1";
-            canSaveDynamicFields = "0";
-         };
+      };
+      new GuiControl(MessageBoxYNCButtonHolder) {
+         position = "0 285";
+         extent = "642 40";
+         minExtent = "8 2";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         class = "MenuInputButtonContainer";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
             iconBitmap = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_Enter";
@@ -243,7 +277,7 @@
             tooltipProfile = "GuiToolTipProfile";
             hovertime = "1000";
             isContainer = "0";
-            internalName = "ync_yesButton";
+            internalName = "yesButton";
             class = "MenuInputButton";
             canSave = "1";
             canSaveDynamicFields = "0";
@@ -273,7 +307,7 @@
             tooltipProfile = "GuiToolTipProfile";
             hovertime = "1000";
             isContainer = "0";
-            internalName = "ync_noButton";
+            internalName = "noButton";
             class = "MenuInputButton";
             canSave = "1";
             canSaveDynamicFields = "0";
@@ -303,7 +337,7 @@
             tooltipProfile = "GuiToolTipProfile";
             hovertime = "1000";
             isContainer = "0";
-            internalName = "ync_cancelButton";
+            internalName = "CancelButton";
             class = "MenuInputButton";
             canSave = "1";
             canSaveDynamicFields = "0";

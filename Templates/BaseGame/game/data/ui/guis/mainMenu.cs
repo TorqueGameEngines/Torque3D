@@ -16,7 +16,7 @@ function MainMenuGui::onSleep(%this)
 
 function MainMenuButtonHolder::onWake(%this)
 {
-   %this-->goButton.set("A", "Enter", "Go", "MainMenuButtonList.activateRow();");
+   %this-->goButton.set("btn_a", "Return", "Go", "MainMenuButtonList.activateRow();");
 }
 
 function MainMenuButtonList::onAdd(%this)

@@ -45,6 +45,6 @@ function pauseMenuExitToDesktop()
 
 function PauseButtonHolder::onWake(%this)
 {
-   %this-->goButton.set("A", "Enter", "OK", "PauseMenuList.activateRow();", true);
-   %this-->backButton.set("B", "Esc", "Back", "Canvas.popDialog();");
+   %this-->goButton.set("btn_a", "Return", "OK", "PauseMenuList.activateRow();", true);
+   %this-->backButton.set("btn_b", "Escape", "Back", "Canvas.popDialog();");
 }

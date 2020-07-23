@@ -1,40 +1,60 @@
-//------------------------------------------------------------------------------
-// global vars
-//------------------------------------------------------------------------------
+//==============================================================================
+// Menu Input Buttons
+// This file manages the Menu Input Buttons stuff
+// Any time you have a GUI button that should be clickable AND map to a key input
+// such as a gamepad button, or enter, etc, this stuff can be used
+//==============================================================================
+/*
+Gamepad input reference for 360 controller
+btn_a = A
+btn_b = B
+btn_x = X
+btn_y = Y
+btn_r = Right Bumper
+btn_l = Right Bumper
+upov = Dpad Up
+dpov = Dpad Down
+lpov = Dpad Left
+rpov = Dpad Right
+xaxis = Left Stick | + values = up, - values = down
+yaxis = Left Stick | + values = up, - values = down
+rxaxis = Right Stick | + values = up, - values = down
+ryaxis = Right Stick | + values = up, - values = down
+zaxis = Left Trigger
+rzaxis = Right Trigger
+btn_start = Start
+btn_back = Back/Select
+*/
 
-$BUTTON_A         =  0;
-$BUTTON_B         =  1;
-$BUTTON_X         =  2;
-$BUTTON_Y         =  3;
-$BUTTON_BACK      =  4;
-$BUTTON_START     =  5;
-$BUTTON_LTRIGGER  =  6;
-$BUTTON_RTRIGGER  =  7;
-$BUTTON_LSHOULDER =  8;
-$BUTTON_RSHOULDER =  9;
-$BUTTON_LSTICK    =  10;
-$BUTTON_RSTICK    =  11;
-
+/// This is used with the main UI menu lists, when a non-axis input event is called
+/// such as pressing a button
+/// It is called from the engine
 function UIMenuButtonList::onInputEvent(%this, %device, %action, %state)
 {
    if(%state)
       $activeMenuButtonContainer.processInputs(%device, %action);
 }
 
+/// This is used with the main UI menu lists, when an axis input event is called
+/// such as moving a joystick
+/// It is called from the engine
 function UIMenuButtonList::onAxisEvent(%this, %device, %action, %axisVal)
 {
+   //Skip out of the value is too low as it could just be noise or miscalibrated defaults
+   if(%axisVal < 0.02)
+      return;
+      
    $activeMenuButtonContainer.processAxisEvent(%device, %action);
 }
 
 /// Sets the command and text for the specified button. If %text and %command
 /// are left empty, the button will be disabled and hidden.
-/// Note: This command is not executed when the A button is pressed. That
-/// command is executed directly from the GuiGameList___Ctrl. This command is
-/// for the graphical hint and to allow a mouse equivalent.
 ///
-/// \param %button (constant) The button to set. See: $BUTTON_A, _B, _X, _Y
+/// \param %gamepadButton (string) The button to set for when using gamepad input. See the input map reference comment at the top of the file
+/// \param %keyboardButton (string) The button to set for when using keyboard/mouse input.
 /// \param %text (string) The text to display next to the A button graphic.
 /// \param %command (string) The command executed when the A button is pressed.
+/// \param %gamepadOnly (bool) If true, will only show the button when working in the gamepad input mode
 function MenuInputButton::set(%this, %gamepadButton, %keyboardButton, %text, %command, %gamepadOnly)
 {
    %set = (! ((%text $= "") && (%command $= "")));
@@ -53,13 +73,13 @@ function MenuInputButton::set(%this, %gamepadButton, %keyboardButton, %text, %co
    %this.Command = %command;
 }
 
+/// Refreshes the specific button, updating it's visbility status and the displayed input image
 function MenuInputButton::refresh(%this)
 {
-
    %set = (! ((%this.text $= "") && (%this.command $= "")));
    
    //Special-case of where we're in keyboard+mouse mode, but the menubutton is gamepad only mode, so we early out
-   if(%this.gamepadOnly && $activeControllerName $= "K&M")
+   if(%this.gamepadOnly && $activeControllerType !$= "gamepad")
       %set = false;
       
    %this.setActive(%set);
@@ -68,7 +88,7 @@ function MenuInputButton::refresh(%this)
    if(!%this.isActive())
       return;
    
-   if($activeControllerName !$= "K&M")
+   if($activeControllerType $= "gamepad")
    {
       if(%this.gamepadButton !$= "")
       {
@@ -77,53 +97,82 @@ function MenuInputButton::refresh(%this)
          { 
             %path = "data/ui/images/inputs/PS4/PS4_";
             
-            if(%this.gamepadButton $= "A")
+            if(%this.gamepadButton $= "btn_a")
                %path = %path @ "Cross";
-            else if(%this.gamepadButton $= "B")
+            else if(%this.gamepadButton $= "btn_b")
                %path = %path @ "Circle";
-            else if(%this.gamepadButton $= "X")
+            else if(%this.gamepadButton $= "btn_x")
                %path = %path @ "Square";
-            else if(%this.gamepadButton $= "Y")
+            else if(%this.gamepadButton $= "btn_y")
                %path = %path @ "Triangle";
-            else if(%this.gamepadButton $= "LB")
+            else if(%this.gamepadButton $= "btn_l")
                %path = %path @ "L1";
-            else if(%this.gamepadButton $= "LT")
+            else if(%this.gamepadButton $= "zaxis")
                %path = %path @ "L2";
-            else if(%this.gamepadButton $= "RB")
+            else if(%this.gamepadButton $= "btn_r")
                %path = %path @ "R1";
-            else if(%this.gamepadButton $= "RT")
+            else if(%this.gamepadButton $= "rzaxis")
                %path = %path @ "R2";
-            //else      
-            //   continue;
+            else if(%this.gamepadButton $= "btn_start")
+               %path = %path @ "Options";
+            else if(%this.gamepadButton $= "btn_back")
+               %path = %path @ "Share";
+            else      
+               continue;
          }
          else if($activeControllerName $= "Nintendo Switch Pro Controller")
          {
             %path = "data/ui/images/inputs/Switch/Switch_";
             
-            if(%this.gamepadButton $= "A")
+            if(%this.gamepadButton $= "btn_a")
                %path = %path @ "B";
-            else if(%this.gamepadButton $= "B")
+            else if(%this.gamepadButton $= "btn_b")
                %path = %path @ "A";
-            else if(%this.gamepadButton $= "X")
+            else if(%this.gamepadButton $= "btn_x")
                %path = %path @ "Y";
-            else if(%this.gamepadButton $= "Y")
+            else if(%this.gamepadButton $= "btn_y")
                %path = %path @ "X";
-            else if(%this.gamepadButton $= "LB")
+            else if(%this.gamepadButton $= "btn_l")
                %path = %path @ "LB";
-            else if(%this.gamepadButton $= "LT")
+            else if(%this.gamepadButton $= "zaxis")
                %path = %path @ "LT";
-            else if(%this.gamepadButton $= "RB")
+            else if(%this.gamepadButton $= "btn_r")
                %path = %path @ "RB";
-            else if(%this.gamepadButton $= "RT")
+            else if(%this.gamepadButton $= "rzaxis")
                %path = %path @ "RT";
-            //else      
-            //   continue;
+            else if(%this.gamepadButton $= "btn_start")
+               %path = %path @ "Plus";
+            else if(%this.gamepadButton $= "btn_back")
+               %path = %path @ "Minus";
+            else      
+               continue;
          }
          else if($activeControllerName !$= "")
          {
             %path = "data/ui/images/inputs/Xbox/Xbox_";
             
-            %path = %path @ %this.gamepadButton;
+            if(%this.gamepadButton $= "btn_a")
+               %path = %path @ "A";
+            else if(%this.gamepadButton $= "btn_b")
+               %path = %path @ "B";
+            else if(%this.gamepadButton $= "btn_x")
+               %path = %path @ "X";
+            else if(%this.gamepadButton $= "btn_y")
+               %path = %path @ "Y";
+            else if(%this.gamepadButton $= "btn_l")
+               %path = %path @ "LB";
+            else if(%this.gamepadButton $= "zaxis")
+               %path = %path @ "LT";
+            else if(%this.gamepadButton $= "btn_r")
+               %path = %path @ "RB";
+            else if(%this.gamepadButton $= "rzaxis")
+               %path = %path @ "RT";
+            else if(%this.gamepadButton $= "btn_start")
+               %path = %path @ "Menu";
+            else if(%this.gamepadButton $= "btn_back")
+               %path = %path @ "Windows";
+            else      
+               continue;
          }
       } 
    }
@@ -140,6 +189,7 @@ function MenuInputButton::refresh(%this)
    return true;
 }
 
+/// Refreshes a menu input container, updating the buttons inside it
 function MenuInputButtonContainer::refresh(%this)
 {
    %count = %this.getCount();
@@ -151,6 +201,8 @@ function MenuInputButtonContainer::refresh(%this)
    }
 }
 
+/// Sets the given MenuInputButtonContainer as the active one. This directs input events
+/// to it's buttons, ensures it's visible, and auto-hides the old active container if it was set
 function MenuInputButtonContainer::setActive(%this)
 {
    if(isObject($activeMenuButtonContainer))
@@ -161,6 +213,8 @@ function MenuInputButtonContainer::setActive(%this)
    $activeMenuButtonContainer.refresh();
 }
 
+/// Checks the input manager for if we have a gamepad active and gets it's name
+/// If we have one, also sets the active input type to gamepad
 function MenuInputButtonContainer::checkGamepad(%this)
 {
    %controllerName = SDLInputManager::JoystickNameForIndex(0);
@@ -168,101 +222,17 @@ function MenuInputButtonContainer::checkGamepad(%this)
    $activeControllerName = %controllerName;
    
    if($activeControllerName $= "")
-      $activeControllerName = "K&M";
+      $activeControllerType = "K&M";
+   else
+      $activeControllerType = "gamepad";     
 }
    
-function MenuInputButtonContainer::refreshButtons(%this)
-{
-   //Set up our basic buttons
-   for(%i=0; %i < %this.getCount(); %i++)
-   {
-      %btn = %this.getObject(%i);
-      
-      %set = (! ((%btn.text $= "") && (%btn.command $= "")));
-      
-      //Special-case of where we're in keyboard+mouse mode, but the menubutton is gamepad only mode, so we early out
-      if(%btn.gamepadOnly && $activeControllerName $= "K&M")
-         %set = false;
-         
-      %btn.setActive(%set);
-      %btn.setVisible(%set);
-      
-      if(!%btn.isActive())
-         continue;
-      
-      if($activeControllerName !$= "K&M")
-      {
-         if(%btn.gamepadButton !$= "")
-         {
-            %path = "";
-            if($activeControllerName $= "PS4 Controller")
-            { 
-               %path = "data/ui/images/inputs/PS4/PS4_";
-               
-               if(%btn.gamepadButton $= "A")
-                  %path = %path @ "Cross";
-               else if(%btn.gamepadButton $= "B")
-                  %path = %path @ "Circle";
-               else if(%btn.gamepadButton $= "X")
-                  %path = %path @ "Square";
-               else if(%btn.gamepadButton $= "Y")
-                  %path = %path @ "Triangle";
-               else if(%btn.gamepadButton $= "LB")
-                  %path = %path @ "L1";
-               else if(%btn.gamepadButton $= "LT")
-                  %path = %path @ "L2";
-               else if(%btn.gamepadButton $= "RB")
-                  %path = %path @ "R1";
-               else if(%btn.gamepadButton $= "RT")
-                  %path = %path @ "R2";
-               else      
-                  continue;
-            }
-            else if($activeControllerName $= "Nintendo Switch Pro Controller")
-            {
-               %path = "data/ui/images/inputs/Switch/Switch_";
-               
-               if(%btn.gamepadButton $= "A")
-                  %path = %path @ "B";
-               else if(%btn.gamepadButton $= "B")
-                  %path = %path @ "A";
-               else if(%btn.gamepadButton $= "X")
-                  %path = %path @ "Y";
-               else if(%btn.gamepadButton $= "Y")
-                  %path = %path @ "X";
-               else if(%btn.gamepadButton $= "LB")
-                  %path = %path @ "LB";
-               else if(%btn.gamepadButton $= "LT")
-                  %path = %path @ "LT";
-               else if(%btn.gamepadButton $= "RB")
-                  %path = %path @ "RB";
-               else if(%btn.gamepadButton $= "RT")
-                  %path = %path @ "RT";
-               else      
-                  continue;
-            }
-            else if($activeControllerName !$= "")
-            {
-               %path = "data/ui/images/inputs/Xbox/Xbox_";
-               
-               %path = %path @ %btn.gamepadButton;
-            }
-         } 
-      }
-      else
-      {
-         if(%btn.keyboardButton !$= "")
-         {
-            %path = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_" @ %btn.keyboardButton;
-         }
-      }
-      
-      %btn.setBitmap(%path);
-   }
-   
-   return true;
-}
-
+/// This is called by the earlier inputs callback that comes from the menu list
+/// this allows us to first check what the input type is, and if the device is different
+/// (such as going from keyboard and mouse to gamepad) we can refresh the buttons to update
+/// the display
+/// Then we process the input to see if it matches to any of the button maps for our 
+/// MenuInputButtons. If we have a match, we execute it's command.
 function MenuInputButtonContainer::processInputs(%this, %device, %action)
 {
    //check to see if our status has changed
@@ -270,24 +240,16 @@ function MenuInputButtonContainer::processInputs(%this, %device, %action)
    
    %oldDevice = $activeControllerName;
    
-   if(startsWith(%device, "Keyboard"))
+   %deviceName = stripTrailingNumber(%device);
+   
+   if(%deviceName $= "keyboard" || %deviceName $= "mouse")
    {
-      if($activeControllerName !$= %device)
+      if($activeControllerName !$= "K&M")
          %changed = true;
          
       $activeControllerName = "K&M";
+      $activeControllerType = "K&M";
       Canvas.showCursor();
-   }
-   else if(startsWith(%device, "Mouse"))
-   {
-      if(startsWith(%action, "button"))
-      {
-         if($activeControllerName !$= %device)
-            %changed = true;
-            
-         $activeControllerName = "K&M";
-         Canvas.showCursor();
-      }
    }
    else
    {
@@ -296,7 +258,7 @@ function MenuInputButtonContainer::processInputs(%this, %device, %action)
          Canvas.hideCursor();
       }
       
-      if($activeControllerName !$= %device)
+      if($activeControllerType !$= %oldDevice)
          %changed = true;
    }
    
@@ -312,21 +274,8 @@ function MenuInputButtonContainer::processInputs(%this, %device, %action)
       if(!%btn.isActive())
          continue;
       
-      if($activeControllerName !$= "K&M")
+      if($activeControllerType !$= "K&M")
       {
-         if(%action $= "btn_a")
-            %action = "A";
-         else if(%action $= "btn_b")
-            %action = "B";
-         else if(%action $= "btn_x")
-            %action = "X";
-         else if(%action $= "btn_y")
-            %action = "Y";
-         else if(%action $= "btn_r")
-            %action = "RB";
-         else if(%action $= "btn_l")
-            %action = "LB";
-            
          if(%btn.gamepadButton $= %action)
          {
             eval(%btn.command);
@@ -334,11 +283,6 @@ function MenuInputButtonContainer::processInputs(%this, %device, %action)
       }
       else
       {
-         if(%action $= "return")
-            %action = "enter";
-         else if(%action $= "escape")
-            %action = "esc";
-            
          if(%btn.keyboardButton $= %action)
          {
             eval(%btn.command);
@@ -347,22 +291,27 @@ function MenuInputButtonContainer::processInputs(%this, %device, %action)
    }
 }
 
+/// This is called by the earlier inputs callback that comes from the menu list
+/// this allows us to first check what the input type is, and if the device is different
+/// (such as going from keyboard and mouse to gamepad) we can refresh the buttons to update
+/// the display
 function MenuInputButtonContainer::processAxisEvent(%this, %device, %action, %axisVal)
 {
+   //check to see if our status has changed
    %changed = false;
    
    %oldDevice = $activeControllerName;
    
-   if(startsWith(%device, "Mouse"))
+   %deviceName = stripTrailingNumber(%device);
+   
+   if(%deviceName $= "mouse")
    {
-      if(startsWith(%action, "button"))
-      {
-         if($activeControllerName !$= %device)
-            %changed = true;
-            
-         $activeControllerName = "K&M";
-         Canvas.showCursor();
-      }
+      if($activeControllerName !$= "K&M")
+         %changed = true;
+         
+      $activeControllerName = "K&M";
+      $activeControllerType = "K&M";
+      Canvas.showCursor();
    }
    else
    {
@@ -371,13 +320,14 @@ function MenuInputButtonContainer::processAxisEvent(%this, %device, %action, %ax
          Canvas.hideCursor();
       }
       
-      if($activeControllerName !$= %device)
+      if($activeControllerType !$= %oldDevice)
          %changed = true;
    }
    
    if(%changed)
       %this.refresh();
 }
+
 //
 //
 function onSDLDeviceConnected(%sdlIndex, %deviceName, %deviceType)

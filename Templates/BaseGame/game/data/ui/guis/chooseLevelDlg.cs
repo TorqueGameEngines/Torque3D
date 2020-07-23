@@ -145,8 +145,8 @@ function ChooseLevelDlg::onWake( %this )
 
 function ChooseLevelButtonHolder::onWake(%this)
 {
-   %this-->goButton.set("A", "Enter", "Start Level", "ChooseLevelDlg.beginLevel();");
-   %this-->backButton.set("B", "Esc", "Back", "ChooseLevelDlg.backOut();");
+   %this-->goButton.set("btn_a", "Return", "Start Level", "ChooseLevelDlg.beginLevel();");
+   %this-->backButton.set("btn_b", "Escape", "Back", "ChooseLevelDlg.backOut();");
 }
 
 function ChooseLevelDlg::onSleep( %this )

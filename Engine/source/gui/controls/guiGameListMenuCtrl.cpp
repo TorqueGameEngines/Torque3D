@@ -818,7 +818,7 @@ bool GuiGameListMenuCtrl::onInputEvent(const InputEventInfo& event)
       {
          bool isModifier = false;
 
-         bool state = event.action == SI_MAKE ? 1 : 0;
+         bool state = event.action == SI_MAKE;
 
          switch (event.objInst)
          {
@@ -1164,7 +1164,7 @@ void GuiGameListMenuCtrl::changeOption(Row* row, S32 delta)
    static StringTableEntry LEFT = StringTable->insert("LEFT", true);
    static StringTableEntry RIGHT = StringTable->insert("RIGHT", true);
 
-   if (row->mScriptCallback != NULL)
+   if (row->mScriptCallback != NULL && row->mSelectedOption != NO_OPTION)
    {
       setThisControl();
       StringTableEntry direction = NULL;

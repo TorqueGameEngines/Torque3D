@@ -57,26 +57,17 @@ function OptionsMenu::onWake(%this)
    %this.pageTabIndex = 0;
    %tab = %this.getTab();
    %tab.performClick();
+   
+   OptionsButtonHolder.setActive();
 }
 
 function OptionsButtonHolder::onWake(%this)
 {
-   %this.refresh();
-}
-
-function OptionsButtonHolder::refresh(%this)
-{
-   OptionsButtonHolder.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   GamepadButtonsGui.setButton(0, "LB", "", "Prev Tab", "OptionsMenu.prevTab();", true);
-   GamepadButtonsGui.setButton(1, "RB", "", "Next Tab", "OptionsMenu.nextTab();", true);
-   GamepadButtonsGui.setButton(2, "Start", "Enter", "Apply", "OptionsMenu.apply();");
-   GamepadButtonsGui.setButton(3, "B", "Esc", "Back", "OptionsMenu.backOut();");
-   GamepadButtonsGui.setButton(7, "Back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   
-   GamepadButtonsGui.refreshButtons();
+   %this-->prevTabButton.set("LB", "", "Prev Tab", "OptionsMenu.prevTab();", true);
+   %this-->nextTabButton.set("RB", "", "Next Tab", "OptionsMenu.nextTab();", true);
+   %this-->resetButton.set("Back", "R", "Reset", "OptionsMenu.resetToDefaults();");
+   %this-->applyButton.set("Start", "Enter", "Apply", "OptionsMenu.apply();");
+   %this-->backButton.set("B", "Esc", "Back", "OptionsMenu.backOut();");
 }
 
 function OptionsMenu::apply(%this)

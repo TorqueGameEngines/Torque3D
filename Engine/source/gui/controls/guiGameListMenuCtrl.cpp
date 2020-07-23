@@ -818,6 +818,8 @@ bool GuiGameListMenuCtrl::onInputEvent(const InputEventInfo& event)
       {
          bool isModifier = false;
 
+         bool state = event.action == SI_MAKE ? 1 : 0;
+
          switch (event.objInst)
          {
             case KEY_LCONTROL:
@@ -837,12 +839,12 @@ bool GuiGameListMenuCtrl::onInputEvent(const InputEventInfo& event)
             if (!ActionMap::getKeyString(event.objInst, keyString))
                return false;
 
-            onInputEvent_callback(deviceString, keyString, event.action);
+            onInputEvent_callback(deviceString, keyString, state);
          }
          else
          {
             const char* actionString = ActionMap::buildActionString(&event);
-            onInputEvent_callback(deviceString, actionString, event.action);
+            onInputEvent_callback(deviceString, actionString, state);
          }
       }
       else if (event.objType == SI_AXIS || event.objType == SI_INT || event.objType == SI_FLOAT)

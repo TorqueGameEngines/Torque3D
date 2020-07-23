@@ -97,7 +97,16 @@ ExampleMoveMap.bind(keyboard, "ctrl h", hideHUDs);
 
 ExampleMoveMap.bind(keyboard, "alt p", doScreenShotHudless);
 
-ExampleMoveMap.bindCmd(keyboard, "escape", "", "disconnect();");
+function openPauseMenu(%val)
+{
+   if(%val && PauseMenu.isAwake() == false)
+   {
+      echo("PUSHING PAUSE MENU");
+      Canvas.pushDialog(PauseMenu);
+   }
+}
+
+ExampleMoveMap.bind(keyboard, "escape", openPauseMenu);
 
 //------------------------------------------------------------------------------
 // Movement Keys
@@ -127,7 +136,7 @@ ExampleMoveMap.bind( gamepad, thumbly, "D", "-0.23 0.23", gamePadMoveY );
 ExampleMoveMap.bind( gamepad, btn_a, jump );
 ExampleMoveMap.bind( gamepad, btn_x, moveup );
 ExampleMoveMap.bind( gamepad, btn_y, movedown );
-ExampleMoveMap.bindCmd( gamepad, btn_back, "disconnect();", "" );
+ExampleMoveMap.bindCmd( gamepad, btn_back, "Canvas.pushDialog(PauseMenu);", "" );
 
 //------------------------------------------------------------------------------
 // Misc.

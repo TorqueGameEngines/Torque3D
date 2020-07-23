@@ -44,9 +44,6 @@ new SFXProfile(messageBoxBeep)
 //---------------------------------------------------------------------------------------------
 function messageCallback(%dlg, %callback)
 {
-   MessageBoxDlg.originalMenubuttonContainer.add(GamepadButtonsGui);
-   MessageBoxDlg.originalMenubuttonContainer.refresh();
-   
    Canvas.popDialog(%dlg);
    eval(%callback);
 }
@@ -85,6 +82,10 @@ function MBSetText(%text, %frame, %msg)
    //sfxPlayOnce( messageBoxBeep );
 }
 
+function MessageBoxCtrl::onWake(%this)
+{
+}
+
 //---------------------------------------------------------------------------------------------
 // Various message box display functions. Each one takes a window title, a message, and a
 // callback for each button.
@@ -96,12 +97,15 @@ function MessageBoxOK(%title, %message, %callback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxDlg.originalMenubuttonContainer = GamepadButtonsGui.getParent();
+   MessageBoxButtonHolder-->OKButton.set("A", "Enter", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
    
-   MessageBoxButtonHolder.add(GamepadButtonsGui);
-   GamepadButtonsGui.clearButtons();
-   GamepadButtonsGui.setButton(7, "A", "", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
-   GamepadButtonsGui.refreshButtons();
+   MessageBoxButtonHolder.setActive();
+   
+   MessageBoxButtonHolder-->oc_OKButton.hidden = true;
+   MessageBoxButtonHolder-->oc_CancelButton.hidden = true;
+   MessageBoxButtonHolder-->ync_yesButton.hidden = true;
+   MessageBoxButtonHolder-->ync_noButton.hidden = true;
+   MessageBoxButtonHolder-->ync_CancelButton.hidden = true;
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.callback = %callback;
@@ -117,13 +121,15 @@ function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxDlg.originalMenubuttonContainer = GamepadButtonsGui.getParent();
+   MessageBoxButtonHolder-->oc_OKButton.set("A", "Enter", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
+   MessageBoxButtonHolder-->oc_CancelButton.set("B", "Esc", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
+
+   MessageBoxButtonHolder.setActive();
    
-   MessageBoxButtonHolder.add(GamepadButtonsGui);
-   GamepadButtonsGui.clearButtons();
-   GamepadButtonsGui.setButton(5, "A", "", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
-   GamepadButtonsGui.setButton(6, "B", "", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
-   GamepadButtonsGui.refreshButtons();
+   MessageBoxButtonHolder-->OKButton.hidden = true;
+   MessageBoxButtonHolder-->ync_yesButton.hidden = true;
+   MessageBoxButtonHolder-->ync_noButton.hidden = true;
+   MessageBoxButtonHolder-->ync_CancelButton.hidden = true;
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.callback = %callback;
@@ -211,13 +217,15 @@ function MessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxDlg.originalMenubuttonContainer = GamepadButtonsGui.getParent();
+   MessageBoxButtonHolder-->oc_OKButton.set("A", "Enter", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
+   MessageBoxButtonHolder-->oc_CancelButton.set("B", "Esc", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
    
-   MessageBoxButtonHolder.add(GamepadButtonsGui);
-   GamepadButtonsGui.clearButtons();
-   GamepadButtonsGui.setButton(5, "A", "", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
-   GamepadButtonsGui.setButton(6, "B", "", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
-   GamepadButtonsGui.refreshButtons();
+   MessageBoxButtonHolder.setActive();
+   
+   MessageBoxButtonHolder-->OKButton.hidden = true;
+   MessageBoxButtonHolder-->ync_yesButton.hidden = true;
+   MessageBoxButtonHolder-->ync_noButton.hidden = true;
+   MessageBoxButtonHolder-->ync_CancelButton.hidden = true;
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.yesCallBack = %yesCallback;
@@ -229,14 +237,15 @@ function MessageBoxYesNoCancel(%title, %message, %yesCallback, %noCallback, %can
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   MessageBoxDlg.originalMenubuttonContainer = GamepadButtonsGui.getParent();
+   MessageBoxButtonHolder-->ync_yesButton.set("A", "Enter", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
+   MessageBoxButtonHolder-->ync_noButton.set("X", "Backspace", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
+   MessageBoxButtonHolder-->ync_cancelButton.set("B", "Esc", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
    
-   MessageBoxButtonHolder.add(GamepadButtonsGui);
-   GamepadButtonsGui.clearButtons();
-   GamepadButtonsGui.setButton(5, "A", "", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
-   GamepadButtonsGui.setButton(6, "B", "", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
-   GamepadButtonsGui.setButton(7, "Back", "", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
-   GamepadButtonsGui.refreshButtons();
+   MessageBoxButtonHolder.setActive();
+   
+   MessageBoxButtonHolder-->OKButton.hidden = true;
+   MessageBoxButtonHolder-->oc_OKButton.hidden = true;
+   MessageBoxButtonHolder-->oc_CancelButton.hidden = true;
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
    MessageBoxDlg.yesCallBack = %yesCallback;

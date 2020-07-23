@@ -8,6 +8,8 @@ function PauseMenuList::onAdd(%this)
 function PauseMenu::onWake(%this)
 {
    $timescale = 0;
+   
+   PauseButtonHolder.setActive();
 }
 
 
@@ -19,7 +21,7 @@ function PauseMenu::onSleep(%this)
 function PauseMenu::onReturnTo(%this)
 {
    PauseMenuList.hidden = false;
-   PauseButtonHolder.refresh();
+   PauseButtonHolder.setActive();
 }
 
 function openPauseMenuOptions()
@@ -43,17 +45,6 @@ function pauseMenuExitToDesktop()
 
 function PauseButtonHolder::onWake(%this)
 {
-   %this.refresh();
-}
-
-function PauseButtonHolder::refresh(%this)
-{
-   PauseButtonHolder.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   GamepadButtonsGui.setButton(2, "A", "", "", "", true);
-   GamepadButtonsGui.setButton(3, "B", "Esc", "Back", "Canvas.popDialog();");
-   
-   GamepadButtonsGui.refreshButtons();
+   %this-->goButton.set("A", "Enter", "OK", "PauseMenuList.activateRow();", true);
+   %this-->backButton.set("B", "Esc", "Back", "Canvas.popDialog();");
 }

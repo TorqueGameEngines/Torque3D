@@ -4,26 +4,17 @@ function JoinServerMenu::onWake()
    // Double check the status. Tried setting this the control
    // inactive to start with, but that didn't seem to work.
    JoinServerJoinBtn.setActive(JS_serverList.rowCount() > 0);
+   
+   JoinServerButtonHolder.setActive();
 }   
 
 function JoinServerButtonHolder::onWake(%this)
 {
-   %this.refresh();
-}
-
-function JoinServerButtonHolder::refresh(%this)
-{
-   JoinServerButtonHolder.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   GamepadButtonsGui.setButton(1, "A", "", "Query LAN", "JoinServerMenu.queryLan();");
-   GamepadButtonsGui.setButton(2, "X", "", "Query Internet", "JoinServerMenu.query();");
-   GamepadButtonsGui.setButton(3, "B", "", "Refresh", "JoinServerMenu.refresh();");
-   GamepadButtonsGui.setButton(6, "Start", "Enter", "Join", "JoinServerMenu.join();");
-   GamepadButtonsGui.setButton(7, "B", "Esc", "Back", "JoinServerMenu.backOut();");
-   
-   GamepadButtonsGui.refreshButtons();
+   %this-->joinButton.set("Start", "Enter", "Join", "JoinServerMenu.join();");
+   %this-->backButton.set("B", "Esc", "Back", "JoinServerMenu.backOut();");
+   %this-->refreshButton.set("Y", "R", "Refresh", "JoinServerMenu.refresh();");
+   %this-->queryLANButton.set("A", "Q", "Query LAN", "JoinServerMenu.queryLan();");
+   %this-->queryInternetButton.set("X", "E", "Query Internet", "JoinServerMenu.query();");
 }
 
 //----------------------------------------

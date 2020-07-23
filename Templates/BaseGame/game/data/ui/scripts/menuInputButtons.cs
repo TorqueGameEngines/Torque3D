@@ -15,39 +15,15 @@ $BUTTON_RSHOULDER =  9;
 $BUTTON_LSTICK    =  10;
 $BUTTON_RSTICK    =  11;
 
-//------------------------------------------------------------------------------
-// GamepadButtonsGui methods
-//------------------------------------------------------------------------------
-
-/// Callback when this control wakes up. All buttons are set to invisible and
-/// disabled.
-function GamepadButtonsGui::onWake(%this)
+function UIMenuButtonList::onInputEvent(%this, %device, %action, %state)
 {
-   GamepadButtonsGui.controllerName = "K&M";
+   if(%state)
+      $activeMenuButtonContainer.processInputs(%device, %action);
 }
 
-function GamepadButtonsGui::initMenuButtons(%this)
+function UIMenuButtonList::onAxisEvent(%this, %device, %action, %axisVal)
 {
-   %buttonExt = %this.extent.x / 4 SPC %this.extent.y / 2;
-   
-   for(%i=0; %i < 9; %i++)
-   {
-      %btn = new GuiIconButtonCtrl()
-      {
-         iconLocation = "Left";
-         sizeIconToButton = true;
-         makeIconSquare = true;
-         textLocation = "Right";
-         extent = %buttonExt;
-         profile="GuiMenuButtonProfile";
-         gamepadButton = "";
-         keyboardButton = "";
-      };
-   
-      GamepadButtonsGui.addGuiControl(%btn); 
-   } 
-   
-   GamepadButtonsGui.refresh();
+   $activeMenuButtonContainer.processAxisEvent(%device, %action);
 }
 
 /// Sets the command and text for the specified button. If %text and %command
@@ -59,59 +35,153 @@ function GamepadButtonsGui::initMenuButtons(%this)
 /// \param %button (constant) The button to set. See: $BUTTON_A, _B, _X, _Y
 /// \param %text (string) The text to display next to the A button graphic.
 /// \param %command (string) The command executed when the A button is pressed.
-function GamepadButtonsGui::setButton(%this, %buttonIdx, %gamepadButton, %keyboardButton, %text, %command, %gamepadOnly)
+function MenuInputButton::set(%this, %gamepadButton, %keyboardButton, %text, %command, %gamepadOnly)
 {
-   if(%buttonIdx >= GamepadButtonsGui.getCount())
-      return;
-      
-   %btn = GamepadButtonsGui.getObject(%buttonIdx);
-   
    %set = (! ((%text $= "") && (%command $= "")));
-   %btn.setText(%text);
-   %btn.setActive(%set);
-   %btn.setVisible(%set);
+   %this.setText(%text);
+   %this.setActive(%set);
+   %this.setVisible(%set);
    
-   %btn.gamepadButton = %gamepadButton;
-   %btn.keyboardButton = %keyboardButton;
+   %this.gamepadButton = %gamepadButton;
+   %this.keyboardButton = %keyboardButton;
    
    if(%gamepadOnly $= "")
       %gamepadOnly = false;
       
-   %btn.gamepadOnly = %gamepadOnly;
+   %this.gamepadOnly = %gamepadOnly;
 
-   %btn.Command = %command;
+   %this.Command = %command;
 }
 
-function GamepadButtonsGui::checkGamepad(%this)
+function MenuInputButton::refresh(%this)
 {
-   %controllerName = SDLInputManager::JoystickNameForIndex(0);
+
+   %set = (! ((%this.text $= "") && (%this.command $= "")));
    
-   GamepadButtonsGui.controllerName = %controllerName;
-}
-   
-function GamepadButtonsGui::clearButtons(%this)
-{
-   for(%i=0; %i < GamepadButtonsGui.getCount(); %i++)
-   {
-      %btn = GamepadButtonsGui.getObject(%i);
+   //Special-case of where we're in keyboard+mouse mode, but the menubutton is gamepad only mode, so we early out
+   if(%this.gamepadOnly && $activeControllerName $= "K&M")
+      %set = false;
       
-      %btn.setBitmap("");
-      %btn.text = "";
-      %btn.command = "";
+   %this.setActive(%set);
+   %this.setVisible(%set);
+   
+   if(!%this.isActive())
+      return;
+   
+   if($activeControllerName !$= "K&M")
+   {
+      if(%this.gamepadButton !$= "")
+      {
+         %path = "";
+         if($activeControllerName $= "PS4 Controller")
+         { 
+            %path = "data/ui/images/inputs/PS4/PS4_";
+            
+            if(%this.gamepadButton $= "A")
+               %path = %path @ "Cross";
+            else if(%this.gamepadButton $= "B")
+               %path = %path @ "Circle";
+            else if(%this.gamepadButton $= "X")
+               %path = %path @ "Square";
+            else if(%this.gamepadButton $= "Y")
+               %path = %path @ "Triangle";
+            else if(%this.gamepadButton $= "LB")
+               %path = %path @ "L1";
+            else if(%this.gamepadButton $= "LT")
+               %path = %path @ "L2";
+            else if(%this.gamepadButton $= "RB")
+               %path = %path @ "R1";
+            else if(%this.gamepadButton $= "RT")
+               %path = %path @ "R2";
+            //else      
+            //   continue;
+         }
+         else if($activeControllerName $= "Nintendo Switch Pro Controller")
+         {
+            %path = "data/ui/images/inputs/Switch/Switch_";
+            
+            if(%this.gamepadButton $= "A")
+               %path = %path @ "B";
+            else if(%this.gamepadButton $= "B")
+               %path = %path @ "A";
+            else if(%this.gamepadButton $= "X")
+               %path = %path @ "Y";
+            else if(%this.gamepadButton $= "Y")
+               %path = %path @ "X";
+            else if(%this.gamepadButton $= "LB")
+               %path = %path @ "LB";
+            else if(%this.gamepadButton $= "LT")
+               %path = %path @ "LT";
+            else if(%this.gamepadButton $= "RB")
+               %path = %path @ "RB";
+            else if(%this.gamepadButton $= "RT")
+               %path = %path @ "RT";
+            //else      
+            //   continue;
+         }
+         else if($activeControllerName !$= "")
+         {
+            %path = "data/ui/images/inputs/Xbox/Xbox_";
+            
+            %path = %path @ %this.gamepadButton;
+         }
+      } 
+   }
+   else
+   {
+      if(%this.keyboardButton !$= "")
+      {
+         %path = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_" @ %this.keyboardButton;
+      }
+   }
+   
+   %this.setBitmap(%path);
+
+   return true;
+}
+
+function MenuInputButtonContainer::refresh(%this)
+{
+   %count = %this.getCount();
+   for(%i=0; %i < %count; %i++)
+   {
+      %btn = %this.getObject(%i);
+      
+      %btn.refresh();
    }
 }
 
-function GamepadButtonsGui::refreshButtons(%this)
+function MenuInputButtonContainer::setActive(%this)
+{
+   if(isObject($activeMenuButtonContainer))
+      $activeMenuButtonContainer.hidden = true;
+      
+   $activeMenuButtonContainer = %this;
+   $activeMenuButtonContainer.hidden = false;
+   $activeMenuButtonContainer.refresh();
+}
+
+function MenuInputButtonContainer::checkGamepad(%this)
+{
+   %controllerName = SDLInputManager::JoystickNameForIndex(0);
+   
+   $activeControllerName = %controllerName;
+   
+   if($activeControllerName $= "")
+      $activeControllerName = "K&M";
+}
+   
+function MenuInputButtonContainer::refreshButtons(%this)
 {
    //Set up our basic buttons
-   for(%i=0; %i < GamepadButtonsGui.getCount(); %i++)
+   for(%i=0; %i < %this.getCount(); %i++)
    {
-      %btn = GamepadButtonsGui.getObject(%i);
+      %btn = %this.getObject(%i);
       
       %set = (! ((%btn.text $= "") && (%btn.command $= "")));
       
       //Special-case of where we're in keyboard+mouse mode, but the menubutton is gamepad only mode, so we early out
-      if(%btn.gamepadOnly && GamepadButtonsGui.controllerName $= "K&M")
+      if(%btn.gamepadOnly && $activeControllerName $= "K&M")
          %set = false;
          
       %btn.setActive(%set);
@@ -120,12 +190,12 @@ function GamepadButtonsGui::refreshButtons(%this)
       if(!%btn.isActive())
          continue;
       
-      if(GamepadButtonsGui.controllerName !$= "K&M")
+      if($activeControllerName !$= "K&M")
       {
          if(%btn.gamepadButton !$= "")
          {
             %path = "";
-            if(GamepadButtonsGui.controllerName $= "PS4 Controller")
+            if($activeControllerName $= "PS4 Controller")
             { 
                %path = "data/ui/images/inputs/PS4/PS4_";
                
@@ -148,7 +218,7 @@ function GamepadButtonsGui::refreshButtons(%this)
                else      
                   continue;
             }
-            else if(GamepadButtonsGui.controllerName $= "Nintendo Switch Pro Controller")
+            else if($activeControllerName $= "Nintendo Switch Pro Controller")
             {
                %path = "data/ui/images/inputs/Switch/Switch_";
                
@@ -171,7 +241,7 @@ function GamepadButtonsGui::refreshButtons(%this)
                else      
                   continue;
             }
-            else if(GamepadButtonsGui.controllerName !$= "")
+            else if($activeControllerName !$= "")
             {
                %path = "data/ui/images/inputs/Xbox/Xbox_";
                
@@ -193,58 +263,66 @@ function GamepadButtonsGui::refreshButtons(%this)
    return true;
 }
 
-function GamepadButtonsGui::processInputs(%this, %device, %action)
+function MenuInputButtonContainer::processInputs(%this, %device, %action)
 {
    //check to see if our status has changed
    %changed = false;
    
-   %oldDevice = GamepadButtonsGui.controllerName;
+   %oldDevice = $activeControllerName;
    
    if(startsWith(%device, "Keyboard"))
    {
-      if(GamepadButtonsGui.controllerName !$= %device)
+      if($activeControllerName !$= %device)
          %changed = true;
          
-      GamepadButtonsGui.controllerName = "K&M";
+      $activeControllerName = "K&M";
       Canvas.showCursor();
    }
    else if(startsWith(%device, "Mouse"))
    {
       if(startsWith(%action, "button"))
       {
-         if(GamepadButtonsGui.controllerName !$= %device)
+         if($activeControllerName !$= %device)
             %changed = true;
             
-         GamepadButtonsGui.controllerName = "K&M";
+         $activeControllerName = "K&M";
          Canvas.showCursor();
       }
    }
    else
    {
-      if(GamepadButtonsGui.checkGamepad())
+      if(%this.checkGamepad())
       {
          Canvas.hideCursor();
       }
       
-      if(GamepadButtonsGui.controllerName !$= %device)
+      if($activeControllerName !$= %device)
          %changed = true;
    }
    
    if(%changed)
-      GamepadButtonsGui.refreshButtons();
+      %this.refresh();
       
    //Now process the input for the button accelerator, if applicable
    //Set up our basic buttons
-   for(%i=0; %i < GamepadButtonsGui.getCount(); %i++)
+   for(%i=0; %i < %this.getCount(); %i++)
    {
-      %btn = GamepadButtonsGui.getObject(%i);
+      %btn = %this.getObject(%i);
       
       if(!%btn.isActive())
          continue;
       
-      if(GamepadButtonsGui.controllerName !$= "K&M")
+      if($activeControllerName !$= "K&M")
       {
-         if(%action $= "btn_r")
+         if(%action $= "btn_a")
+            %action = "A";
+         else if(%action $= "btn_b")
+            %action = "B";
+         else if(%action $= "btn_x")
+            %action = "X";
+         else if(%action $= "btn_y")
+            %action = "Y";
+         else if(%action $= "btn_r")
             %action = "RB";
          else if(%action $= "btn_l")
             %action = "LB";
@@ -269,36 +347,36 @@ function GamepadButtonsGui::processInputs(%this, %device, %action)
    }
 }
 
-function GamepadButtonsGui::processAxisEvent(%this, %device, %action, %axisVal)
+function MenuInputButtonContainer::processAxisEvent(%this, %device, %action, %axisVal)
 {
    %changed = false;
    
-   %oldDevice = GamepadButtonsGui.controllerName;
+   %oldDevice = $activeControllerName;
    
    if(startsWith(%device, "Mouse"))
    {
       if(startsWith(%action, "button"))
       {
-         if(GamepadButtonsGui.controllerName !$= %device)
+         if($activeControllerName !$= %device)
             %changed = true;
             
-         GamepadButtonsGui.controllerName = "K&M";
+         $activeControllerName = "K&M";
          Canvas.showCursor();
       }
    }
    else
    {
-      if(GamepadButtonsGui.checkGamepad())
+      if(%this.checkGamepad())
       {
          Canvas.hideCursor();
       }
       
-      if(GamepadButtonsGui.controllerName !$= %device)
+      if($activeControllerName !$= %device)
          %changed = true;
    }
    
    if(%changed)
-      GamepadButtonsGui.refreshButtons();
+      %this.refresh();
 }
 //
 //

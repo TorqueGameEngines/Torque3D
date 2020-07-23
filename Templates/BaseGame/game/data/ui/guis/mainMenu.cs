@@ -1,32 +1,22 @@
 function MainMenuGui::onAdd(%this)
 {
-   GamepadButtonsGui.initMenuButtons();
+   $activeControllerName = "K&M"; //default input type
 }
 
 function MainMenuGui::onWake(%this)
 {
    MainMenuButtonList.hidden = false; 
+   MainMenuButtonHolder.setActive();
 }
 
 function MainMenuGui::onSleep(%this)
 {
+   MainMenuButtonHolder.hidden = true;
 }
 
 function MainMenuButtonHolder::onWake(%this)
 {
-   %this.refresh();
-}
-
-function MainMenuButtonHolder::refresh(%this)
-{
-   %this.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   //GamepadButtonsGui.setButton(2, "A", "Select", "Go", "echo(\"FART\");");
-   //GamepadButtonsGui.setButton(3, "B", "Esc", "Back", "");
-   
-   GamepadButtonsGui.refreshButtons();
+   %this-->goButton.set("A", "Enter", "Go", "MainMenuButtonList.activateRow();");
 }
 
 function MainMenuButtonList::onAdd(%this)
@@ -40,24 +30,13 @@ function MainMenuButtonList::onAdd(%this)
    MainMenuButtonList.addRow("Exit Game", "quit", 8, -15);
 }
 
-function UIMenuButtonList::onInputEvent(%this, %device, %action, %state)
-{
-   if(%state)
-      GamepadButtonsGui.processInputs(%device, %action);
-}
-
-function UIMenuButtonList::onAxisEvent(%this, %device, %action, %axisVal)
-{
-   GamepadButtonsGui.processAxisEvent(%device, %action);
-}
-
 function openSinglePlayerMenu()
 {
    $pref::HostMultiPlayer=false;
    Canvas.pushDialog(ChooseLevelDlg);
    ChooseLevelDlg.returnGui = MainMenuGui; 
    MainMenuButtonList.hidden = true; 
-   MainMenuAppLogo.setBitmap("data/ui/images/Torque-3D-logo");
+   MainMenuButtonHolder.hidden = true;
 }
 
 function openMultiPlayerMenu()
@@ -66,7 +45,6 @@ function openMultiPlayerMenu()
    Canvas.pushDialog(ChooseLevelDlg);
    ChooseLevelDlg.returnGui = MainMenuGui; 
    MainMenuButtonList.hidden = true; 
-   MainMenuAppLogo.setBitmap("data/ui/images/Torque-3D-logo");
 }
 
 function openJoinServerMenu()
@@ -81,7 +59,6 @@ function openOptionsMenu()
    Canvas.pushDialog(OptionsMenu);
    OptionsMenu.returnGui = MainMenuGui; 
    MainMenuButtonList.hidden = true; 
-   MainMenuAppLogo.setBitmap("data/ui/images/Torque-3D-logo");
 }
 
 function openWorldEditorBtn()
@@ -97,5 +74,6 @@ function openGUIEditorBtn()
 function MainMenuGui::onReturnTo(%this)
 {
    MainMenuButtonList.hidden = false;
-   MainMenuAppLogo.setBitmap("data/ui/images/Torque-3D-logo-shortcut");
+   MainMenuButtonList.setFirstResponder();
+   MainMenuButtonHolder.setActive();
 }

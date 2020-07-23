@@ -36,8 +36,7 @@ function UI::initClient(%this)
    exec("./scripts/profiles.cs");
    
    //Now gui files
-   exec("./guis/guiGamepadButton.cs");
-   exec("./guis/guiGamepadButton.gui");
+   exec("./scripts/menuInputButtons.cs");
    
    exec("./guis/mainMenu.cs");
    exec("./guis/mainMenu.gui");
@@ -80,7 +79,6 @@ function UI::initClient(%this)
    exec("./scripts/help.cs");
    exec("./scripts/cursors.cs");
    exec("./scripts/utility.cs");
-   exec("./scripts/default.keybinds.cs");
    
    exec("./guis/menuGraphics.gui");
    exec("./guis/menuGraphics.cs");

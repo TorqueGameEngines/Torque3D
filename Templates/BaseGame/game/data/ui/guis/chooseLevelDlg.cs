@@ -139,23 +139,14 @@ function ChooseLevelDlg::onWake( %this )
 
       %preview.levelDesc = %desc;
    }*/
+   
+   ChooseLevelButtonHolder.setActive();
 }
 
 function ChooseLevelButtonHolder::onWake(%this)
 {
-   %this.refresh();
-}
-
-function ChooseLevelButtonHolder::refresh(%this)
-{
-   ChooseLevelButtonHolder.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   GamepadButtonsGui.setButton(2, "A", "Enter", "Start Level", "ChooseLevelDlg.beginLevel();");
-   GamepadButtonsGui.setButton(3, "B", "Esc", "Back", "ChooseLevelDlg.backOut();");
-   
-   GamepadButtonsGui.refreshButtons();
+   %this-->goButton.set("A", "Enter", "Start Level", "ChooseLevelDlg.beginLevel();");
+   %this-->backButton.set("B", "Esc", "Back", "ChooseLevelDlg.backOut();");
 }
 
 function ChooseLevelDlg::onSleep( %this )

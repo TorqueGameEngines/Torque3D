@@ -133,7 +133,7 @@ function ESelectObjectsWindow::onSelectObjects( %this, %val, %reuseExistingSet )
       {
          if( !%name.isMemberOfClass( "WorldEditorSelection" ) )
          {
-            MessageBoxOk( "Error",
+            toolsMessageBoxOk( "Error",
                "An object called '" @ %name @ "' already exists and is not a selection." NL
                "" NL
                "Please choose a different name." );
@@ -141,7 +141,7 @@ function ESelectObjectsWindow::onSelectObjects( %this, %val, %reuseExistingSet )
          }
          else if( !%reuseExistingSet )
          {
-            MessageBoxYesNo( "Question",
+            toolsMessageBoxYesNo( "Question",
                "A selection called '" @ %name @ "' already exists. Modify the existing selection?",
                %this @ ".onSelectObjects( " @ %val @ ", true );" );
             return;
@@ -159,7 +159,7 @@ function ESelectObjectsWindow::onSelectObjects( %this, %val, %reuseExistingSet )
          eval( "%sel = new WorldEditorSelection( " @ %name @ " ) { parentGroup = Selections; canSave = true; };" );
          if( !isObject( %sel ) )
          {
-            MessageBoxOk( "Error",
+            toolsMessageBoxOk( "Error",
                "Could not create the selection set.  Please look at the console.log for details." );
             return;
          }

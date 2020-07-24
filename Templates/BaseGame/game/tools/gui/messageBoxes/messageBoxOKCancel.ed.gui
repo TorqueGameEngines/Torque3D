@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxOKCancelDlg) {
+%guiContent = new GuiControl(toolsMessageBoxOKCancelDlg) {
    profile = "GuiOverlayProfile";
    horizSizing = "width";
    vertSizing = "height";
@@ -50,7 +50,7 @@
          extent = "80 24";
          minExtent = "8 8";
          visible = "1";
-         command = "MessageCallback(MessageBoxOKCancelDlg,MessageBoxOKCancelDlg.callback);";
+         command = "MessageCallback(toolsMessageBoxOKCancelDlg,toolsMessageBoxOKCancelDlg.callback);";
          accelerator = "return";
          helpTag = "0";
          text = "Ok";
@@ -64,7 +64,7 @@
          extent = "80 24";
          minExtent = "8 8";
          visible = "1";
-         command = "MessageCallback(MessageBoxOKCancelDlg,MessageBoxOKCancelDlg.cancelCallback);";
+         command = "MessageCallback(toolsMessageBoxOKCancelDlg,toolsMessageBoxOKCancelDlg.cancelCallback);";
          accelerator = "escape";
          helpTag = "0";
          text = "Cancel";

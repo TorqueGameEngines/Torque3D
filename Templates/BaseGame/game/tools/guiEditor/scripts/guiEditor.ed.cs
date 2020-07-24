@@ -32,7 +32,7 @@ function GuiEdit( %val )
 {
    if (Canvas.isFullscreen())
    {
-      MessageBoxOK("Windowed Mode Required", "Please switch to windowed mode to access the GUI Editor.");
+      toolsMessageBoxOK("Windowed Mode Required", "Please switch to windowed mode to access the GUI Editor.");
       return;
    }
 

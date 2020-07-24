@@ -238,7 +238,7 @@ function TerrainExportGui::export( %this )
    %terrainObj = TerrainSelectListBox.getItemObject( %itemId );
    if ( !isObject( %terrainObj ) )
    {
-      MessageBoxOK( "Export failed", "Could not find the selected TerrainBlock!" );
+      toolsMessageBoxOK( "Export failed", "Could not find the selected TerrainBlock!" );
       return;
    }
 

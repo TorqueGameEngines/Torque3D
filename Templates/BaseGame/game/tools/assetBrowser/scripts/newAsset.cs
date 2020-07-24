@@ -157,7 +157,7 @@ function CreateNewAsset()
    
    if(%assetName $= "")
 	{
-	   MessageBoxOK( "Error", "Attempted to make a new asset with no name!");
+	   toolsMessageBoxOK( "Error", "Attempted to make a new asset with no name!");
 		return;
 	}
 	
@@ -166,7 +166,7 @@ function CreateNewAsset()
    
    if(%moduleName $= "")
 	{
-	   MessageBoxOK( "Error", "Attempted to make a new asset with no module!");
+	   toolsMessageBoxOK( "Error", "Attempted to make a new asset with no module!");
 		return;
 	}
 	
@@ -175,7 +175,7 @@ function CreateNewAsset()
    %assetType = AssetBrowser.newAssetSettings.assetType;
 	if(%assetType $= "")
 	{
-	   MessageBoxOK( "Error", "Attempted to make a new asset with no type!");
+	   toolsMessageBoxOK( "Error", "Attempted to make a new asset with no type!");
 		return;
 	}
 	

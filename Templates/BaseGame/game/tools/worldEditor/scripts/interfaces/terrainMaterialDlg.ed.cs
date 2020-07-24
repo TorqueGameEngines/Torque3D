@@ -206,7 +206,7 @@ function TerrainMaterialDlg::setMaterialName( %this, %newName )
       %existingMat = TerrainMaterialSet.findObjectByInternalName( %newName );
       if( isObject( %existingMat ) )
       {
-         MessageBoxOK( "Error",
+         toolsMessageBoxOK( "Error",
             "There already is a terrain material called '" @ %newName @ "'.", "", "" );
       }
       else
@@ -366,7 +366,7 @@ function TerrainMaterialDlg::deleteMat( %this )
    if ( ( ETerrainEditor.getMaterialCount() == 1 ) &&
         ( ETerrainEditor.getMaterialIndex( %this.activeMat.internalName ) != -1 ) )
    {
-      MessageBoxOK( "Error", "Cannot delete this Material, it is the only " @
+      toolsMessageBoxOK( "Error", "Cannot delete this Material, it is the only " @
          "Material still in use by the active Terrain." );
       return;
    }
@@ -543,7 +543,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
       %existingMat = TerrainMaterialSet.findObjectByInternalName( %newName );
       if( isObject( %existingMat ) )
       {
-         MessageBoxOK( "Error",
+         toolsMessageBoxOK( "Error",
             "There already is a terrain material called '" @ %newName @ "'.", "", "" );
             
          // Reset the name edit control to the old name.

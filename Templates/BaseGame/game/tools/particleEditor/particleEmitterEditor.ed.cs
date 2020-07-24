@@ -420,7 +420,7 @@ function PE_EmitterEditor::updateParticlesFields( %this )
    
    if( %changedEditParticle && PE_ParticleEditor.dirty )
    {
-      MessageBoxYesNoCancel("Save Particle Changes?", 
+      toolsMessageBoxYesNoCancel("Save Particle Changes?", 
          "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
          "PE_ParticleEditor.saveParticle( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_EmitterEditor.updateEmitter( \"particles\"," @ %particles @ ");", 
          "PE_ParticleEditor.saveParticleDialogDontSave( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_EmitterEditor.updateEmitter( \"particles\"," @ %particles @ ");", 
@@ -447,14 +447,14 @@ function PE_EmitterEditor::onNewEmitter( %this )
       
       if( PE_ParticleEditor.dirty )
       {         
-         MessageBoxYesNo("Save Existing Particle?", 
+         toolsMessageBoxYesNo("Save Existing Particle?", 
             "Do you want to save changes to <br><br>" @ PE_ParticleEditor.currParticle.getName(), 
             "PE_ParticleEditor.saveParticle(" @ PE_ParticleEditor.currParticle @ ");"
          );
       }
             
       %savedEmitter = PE_EmitterEditor.currEmitter;
-      MessageBoxYesNoCancel("Save Existing Emitter?", 
+      toolsMessageBoxYesNoCancel("Save Existing Emitter?", 
          "Do you want to save changes to <br><br>" @ %savedEmitter.getName(), 
          "PE_EmitterEditor.saveEmitter(" @ %savedEmitter@ "); PE_EmitterEditor.loadNewEmitter();", 
          "PE_EmitterEditor.saveEmitterDialogDontSave(" @ %savedEmitter @ "); PE_EmitterEditor.loadNewEmitter();"
@@ -527,7 +527,7 @@ function PE_EmitterEditor::showNewDialog( %this )
    
    if( PE_ParticleEditor.dirty )
    {         
-      MessageBoxYesNo("Save Existing Particle?", 
+      toolsMessageBoxYesNo("Save Existing Particle?", 
          "Do you want to save changes to <br><br>" @ PE_ParticleEditor.currParticle.getName(), 
          "PE_ParticleEditor.saveParticle(" @ PE_ParticleEditor.currParticle @ ");"
       );
@@ -535,7 +535,7 @@ function PE_EmitterEditor::showNewDialog( %this )
    
    if( PE_EmitterEditor.dirty )
    {
-      MessageBoxYesNoCancel("Save Emitter Changes?", 
+      toolsMessageBoxYesNoCancel("Save Emitter Changes?", 
          "Do you wish to save the changes made to the <br>current emitter before changing the emitter?", 
          "PE_EmitterEditor.saveEmitter( " @ PE_EmitterEditor.currEmitter.getName() @ " ); PE_EmitterEditor.createEmitter();", 
          "PE_EmitterEditor.saveEmitterDialogDontSave( " @ PE_EmitterEditor.currEmitter.getName() @ " ); PE_EmitterEditor.createEmitter();"
@@ -579,13 +579,13 @@ function PE_EmitterEditor::showDeleteDialog( %this )
 {
    if( PE_EmitterEditor.currEmitter.getName() $= "DefaultEmitter" )
    {
-      MessageBoxOK( "Error", "Cannot delete DefaultEmitter");
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultEmitter");
       return;
    }
    
    if( isObject( PE_EmitterEditor.currEmitter ) )
    {
-      MessageBoxYesNoCancel("Delete Emitter?", 
+      toolsMessageBoxYesNoCancel("Delete Emitter?", 
          "Are you sure you want to delete<br><br>" @ PE_EmitterEditor.currEmitter.getName() @ "<br><br> Emitter deletion won't take affect until the level is exited.", 
          "PE_EmitterEditor.saveEmitterDialogDontSave( " @ PE_EmitterEditor.currEmitter.getName() @ " ); PE_EmitterEditor.deleteEmitter();"
       );

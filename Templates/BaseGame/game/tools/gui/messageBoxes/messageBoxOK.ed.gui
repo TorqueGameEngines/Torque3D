@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxOKDlg) {
+%guiContent = new GuiControl(toolsMessageBoxOKDlg) {
    profile = "GuiOverlayProfile";
    horizSizing = "width";
    vertSizing = "height";
@@ -49,7 +49,7 @@
          extent = "80 24";
          minExtent = "8 8";
          visible = "1";
-         command = "MessageCallback(MessageBoxOKDlg,MessageBoxOKDlg.callback);";
+         command = "MessageCallback(toolsMessageBoxOKDlg,toolsMessageBoxOKDlg.callback);";
          accelerator = "return";
          helpTag = "0";
          text = "Ok";

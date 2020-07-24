@@ -166,7 +166,7 @@ function RoadEditorPlugin::setEditorFunction( %this )
    %terrainExists = parseMissionGroup( "TerrainBlock" );
 
    if( %terrainExists == false )
-      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain?", "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);");
+      toolsMessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain?", "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);");
    
    return %terrainExists;
 }

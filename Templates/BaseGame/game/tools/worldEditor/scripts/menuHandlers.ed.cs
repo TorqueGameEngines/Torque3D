@@ -88,7 +88,7 @@ function EditorQuitGame()
 {
    if( EditorIsDirty())
    {
-      MessageBoxYesNoCancel("Level Modified", "Would you like to save your changes before quitting?", "EditorSaveMissionMenu(); quit();", "quit();", "" );
+      toolsMessageBoxYesNoCancel("Level Modified", "Would you like to save your changes before quitting?", "EditorSaveMissionMenu(); quit();", "quit();", "" );
    }
    else
       quit();
@@ -98,7 +98,7 @@ function EditorExitMission()
 {  
    if( EditorIsDirty())
    {
-      MessageBoxYesNoCancel("Level Modified", "Would you like to save your changes before exiting?", "EditorDoExitMission(true);", "EditorDoExitMission(false);", "");
+      toolsMessageBoxYesNoCancel("Level Modified", "Would you like to save your changes before exiting?", "EditorDoExitMission(true);", "EditorDoExitMission(false);", "");
    }
    else
       EditorDoExitMission(false);
@@ -129,7 +129,7 @@ function EditorOpenTorsionProject( %projectFile )
    %torsionPath = EditorSettings.value( "WorldEditor/torsionPath" );
    if( !isFile( %torsionPath ) )
    {
-      MessageBoxOK(
+      toolsMessageBoxOK(
          "Torsion Not Found",
          "Torsion not found at '" @ %torsionPath @ "'.  Please set the correct path in the Editor Settings."
       );
@@ -147,7 +147,7 @@ function EditorOpenTorsionProject( %projectFile )
          %projectFile = findFirstFile( "*.torsion", false );
          if( !isFile( %projectFile ) )
          {
-            MessageBoxOK(
+            toolsMessageBoxOK(
                "Project File Not Found",
                "Cannot find .torsion project file in '" @ getMainDotCsDir() @ "'."
             );
@@ -168,7 +168,7 @@ function EditorOpenFileInTorsion( %file, %line )
    %torsionPath = EditorSettings.value( "WorldEditor/torsionPath" );
    if( !isFile( %torsionPath ) )
    {
-      MessageBoxOK(
+      toolsMessageBoxOK(
          "Torsion Not Found",
          "Torsion not found at '" @ %torsionPath @ "'.  Please set the correct path in the Editor Settings."
       );
@@ -205,7 +205,7 @@ function EditorNewLevel( %file )
    if ( EditorIsDirty() )
    {
       error(knob);
-      %saveFirst = MessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
+      %saveFirst = toolsMessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
          $Server::MissionFile @ "\" before creating a new mission?", "SaveDontSave", "Question") == $MROk;
    }
       
@@ -239,7 +239,7 @@ function EditorNewLevel( %file )
 
 function EditorSaveAsDefaultLevel()
 {
-   MessageBoxYesNo("Save as Default?", "This will save the currently active root scene as the default level the editor loads when it is opened. Continue?",
+   toolsMessageBoxYesNo("Save as Default?", "This will save the currently active root scene as the default level the editor loads when it is opened. Continue?",
       "doEditorSaveAsDefaultLevel();", "");
 }
 
@@ -250,7 +250,7 @@ function doEditorSaveAsDefaultLevel()
 
 function EditorResetDefaultLevel()
 {
-   MessageBoxYesNo("Reset Default?", "This will reset the default level for the editor back to the original. Continue?",
+   toolsMessageBoxYesNo("Reset Default?", "This will reset the default level for the editor back to the original. Continue?",
       "doEditorResetDefaultLevel();", "");
 }
 
@@ -279,7 +279,7 @@ function EditorSaveMission()
    // first check for dirty and read-only files:
    if((EWorldEditor.isDirty || ETerrainEditor.isMissionDirty) && !isWriteableFileName($Server::MissionFile))
    {
-      MessageBox("Error", "Mission file \""@ $Server::MissionFile @ "\" is read-only.  Continue?", "Ok", "Stop");
+      toolsMessageBox("Error", "Mission file \""@ $Server::MissionFile @ "\" is read-only.  Continue?", "Ok", "Stop");
       return false;
    }
    if(ETerrainEditor.isDirty)
@@ -291,7 +291,7 @@ function EditorSaveMission()
       {
          if (!isWriteableFileName(%terrainObject.terrainFile))
          {
-            if (MessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
+            if (toolsMessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
                continue;
             else
                return false;
@@ -370,7 +370,7 @@ function EditorOpenMission(%levelAsset)
    if( EditorIsDirty())
    {
       // "EditorSaveBeforeLoad();", "getLoadFilename(\"*.mis\", \"EditorDoLoadMission\");"
-      if(MessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
+      if(toolsMessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
          $Server::MissionFile @ "\" before opening a new mission?", SaveDontSave, Question) == $MROk)
       {
          if(! EditorSaveMission())

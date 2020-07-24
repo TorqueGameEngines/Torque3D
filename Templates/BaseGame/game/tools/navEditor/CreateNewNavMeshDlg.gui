@@ -346,7 +346,7 @@ function CreateNewNavMeshDlg::create(%this)
    %name = %this-->MeshName.getText();
    if(%name $= "" || nameToID(%name) != -1)
    {
-      MessageBoxOk("Error", "A NavMesh must have a unique name!");
+      toolsMessageBoxOk("Error", "A NavMesh must have a unique name!");
       return;
    }
 
@@ -356,7 +356,7 @@ function CreateNewNavMeshDlg::create(%this)
    {
       if(!isObject(getScene(0)))
       {
-         MessageBoxOk("Error", "You must have a Scene to use the mission bounds function.");
+         toolsMessageBoxOk("Error", "You must have a Scene to use the mission bounds function.");
          return;
       }
       // Get maximum extents of all objects.

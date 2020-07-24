@@ -86,13 +86,13 @@ function GuiEditor::showDeleteProfileDialog( %this, %profile )
       
    if( %profile.isInUse() )
    {
-      MessageBoxOk( "Error",
+      toolsMessageBoxOk( "Error",
          "The profile '" @ %profile.getName() @ "' is still used by Gui controls."
       );
       return;
    }
 
-   MessageBoxYesNo( "Delete Profile?",
+   toolsMessageBoxYesNo( "Delete Profile?",
       "Do you really want to delete '" @ %profile.getName() @ "'?",
       "GuiEditor.deleteProfile( " @ %profile @ " );"
    );

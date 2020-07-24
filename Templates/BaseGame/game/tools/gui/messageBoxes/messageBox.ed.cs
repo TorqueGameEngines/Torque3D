@@ -24,16 +24,16 @@
 // Cleanup Dialog created by 'core'
 if( isObject( MessagePopupDlg ) )
    MessagePopupDlg.delete();
-if( isObject( MessageBoxYesNoDlg ) )
-   MessageBoxYesNoDlg.delete();
-if( isObject( MessageBoxYesNoCancelDlg ) )
-   MessageBoxYesNoCancelDlg.delete();
-if( isObject( MessageBoxOKCancelDetailsDlg ) )
-   MessageBoxOKCancelDetailsDlg.delete();
-if( isObject( MessageBoxOKCancelDlg ) )
-   MessageBoxOKCancelDlg.delete();
-if( isObject( MessageBoxOKDlg ) )
-   MessageBoxOKDlg.delete();
+if( isObject( toolsMessageBoxYesNoDlg ) )
+   toolsMessageBoxYesNoDlg.delete();
+if( isObject( toolsMessageBoxYesNoCancelDlg ) )
+   toolsMessageBoxYesNoCancelDlg.delete();
+if( isObject( toolsMessageBoxOKCancelDetailsDlg ) )
+   toolsMessageBoxOKCancelDetailsDlg.delete();
+if( isObject( toolsMessageBoxOKCancelDlg ) )
+   toolsMessageBoxOKCancelDlg.delete();
+if( isObject( toolsMessageBoxOKDlg ) )
+   toolsMessageBoxOKDlg.delete();
 if( isObject( IODropdownDlg ) )
    IODropdownDlg.delete();
    
@@ -51,7 +51,7 @@ exec("./messagePopup.ed.gui");
 // --------------------------------------------------------------------
 // Message Sound
 // --------------------------------------------------------------------
-/*new SFXDescription(MessageBoxAudioDescription)
+/*new SFXDescription(toolsMessageBoxAudioDescription)
 {
    volume      = 1.0;
    isLooping   = false;
@@ -59,10 +59,10 @@ exec("./messagePopup.ed.gui");
    channel     = $GuiAudioType;
 };
 
-new SFXProfile(messageBoxBeep)
+new SFXProfile(toolsMessageBoxBeep)
 {
-   filename    = "./messageBoxSound";
-   description = MessageBoxAudioDescription;
+   filename    = "./toolsMessageBoxSound";
+   description = toolsMessageBoxAudioDescription;
    preload     = true;
 };*/
 
@@ -122,7 +122,7 @@ function MBSetText(%text, %frame, %msg)
    %frame.canMinimize = "0";
    %frame.canMaximize = "0";
    
-   //sfxPlayOnce( messageBoxBeep );
+   //sfxPlayOnce( toolsMessageBoxBeep );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -130,34 +130,34 @@ function MBSetText(%text, %frame, %msg)
 // callback for each button.
 //---------------------------------------------------------------------------------------------
 
-function MessageBoxOK(%title, %message, %callback)
+function toolsMessageBoxOK(%title, %message, %callback)
 {
    MBOKFrame.text = %title;
-   Canvas.pushDialog(MessageBoxOKDlg);
+   Canvas.pushDialog(toolsMessageBoxOKDlg);
    MBSetText(MBOKText, MBOKFrame, %message);
-   MessageBoxOKDlg.callback = %callback;
+   toolsMessageBoxOKDlg.callback = %callback;
 }
 
-function MessageBoxOKDlg::onSleep( %this )
+function toolsMessageBoxOKDlg::onSleep( %this )
 {
    %this.callback = "";
 }
 
-function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
+function toolsMessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
 {
    MBOKCancelFrame.text = %title;
-   Canvas.pushDialog(MessageBoxOKCancelDlg);
+   Canvas.pushDialog(toolsMessageBoxOKCancelDlg);
    MBSetText(MBOKCancelText, MBOKCancelFrame, %message);
-   MessageBoxOKCancelDlg.callback = %callback;
-   MessageBoxOKCancelDlg.cancelCallback = %cancelCallback;
+   toolsMessageBoxOKCancelDlg.callback = %callback;
+   toolsMessageBoxOKCancelDlg.cancelCallback = %cancelCallback;
 }
 
-function MessageBoxOKCancelDlg::onSleep( %this )
+function toolsMessageBoxOKCancelDlg::onSleep( %this )
 {
    %this.callback = "";
 }
 
-function MessageBoxOKCancelDetails(%title, %message, %details, %callback, %cancelCallback)
+function toolsMessageBoxOKCancelDetails(%title, %message, %details, %callback, %cancelCallback)
 {   
    if(%details $= "")
    {
@@ -168,7 +168,7 @@ function MessageBoxOKCancelDetails(%title, %message, %details, %callback, %cance
    
    MBOKCancelDetailsFrame.setText( %title );
    
-   Canvas.pushDialog(MessageBoxOKCancelDetailsDlg);
+   Canvas.pushDialog(toolsMessageBoxOKCancelDetailsDlg);
    MBSetText(MBOKCancelDetailsText, MBOKCancelDetailsFrame, %message);
    MBOKCancelDetailsInfoText.setText(%details);
    
@@ -183,8 +183,8 @@ function MessageBoxOKCancelDetails(%title, %message, %details, %callback, %cance
    
    MBOKCancelDetailsFrame.setExtent(300, %extentY);
    
-   MessageBoxOKCancelDetailsDlg.callback = %callback;
-   MessageBoxOKCancelDetailsDlg.cancelCallback = %cancelCallback;
+   toolsMessageBoxOKCancelDetailsDlg.callback = %callback;
+   toolsMessageBoxOKCancelDetailsDlg.cancelCallback = %cancelCallback;
    
    MBOKCancelDetailsFrame.defaultExtent = MBOKCancelDetailsFrame.getExtent();
 }
@@ -223,33 +223,33 @@ function MBOKCancelDetailsToggleInfoFrame()
    }
 }
 
-function MessageBoxOKCancelDetailsDlg::onSleep( %this )
+function toolsMessageBoxOKCancelDetailsDlg::onSleep( %this )
 {
    %this.callback = "";
 }
 
-function MessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
+function toolsMessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
 {
    MBYesNoFrame.text = %title;
-   MessageBoxYesNoDlg.profile = "GuiOverlayProfile";
-   Canvas.pushDialog(MessageBoxYesNoDlg);
+   toolsMessageBoxYesNoDlg.profile = "GuiOverlayProfile";
+   Canvas.pushDialog(toolsMessageBoxYesNoDlg);
    MBSetText(MBYesNoText, MBYesNoFrame, %message);
-   MessageBoxYesNoDlg.yesCallBack = %yesCallback;
-   MessageBoxYesNoDlg.noCallback = %noCallBack;
+   toolsMessageBoxYesNoDlg.yesCallBack = %yesCallback;
+   toolsMessageBoxYesNoDlg.noCallback = %noCallBack;
 }
 
-function MessageBoxYesNoCancel(%title, %message, %yesCallback, %noCallback, %cancelCallback)
+function toolsMessageBoxYesNoCancel(%title, %message, %yesCallback, %noCallback, %cancelCallback)
 {
    MBYesNoCancelFrame.text = %title;
-   MessageBoxYesNoDlg.profile = "GuiOverlayProfile";
-   Canvas.pushDialog(MessageBoxYesNoCancelDlg);
+   toolsMessageBoxYesNoDlg.profile = "GuiOverlayProfile";
+   Canvas.pushDialog(toolsMessageBoxYesNoCancelDlg);
    MBSetText(MBYesNoCancelText, MBYesNoCancelFrame, %message);
-   MessageBoxYesNoCancelDlg.yesCallBack = %yesCallback;
-   MessageBoxYesNoCancelDlg.noCallback = %noCallBack;
-   MessageBoxYesNoCancelDlg.cancelCallback = %cancelCallback;
+   toolsMessageBoxYesNoCancelDlg.yesCallBack = %yesCallback;
+   toolsMessageBoxYesNoCancelDlg.noCallback = %noCallBack;
+   toolsMessageBoxYesNoCancelDlg.cancelCallback = %cancelCallback;
 }
 
-function MessageBoxYesNoDlg::onSleep( %this )
+function toolsMessageBoxYesNoDlg::onSleep( %this )
 {
    %this.yesCallback = "";
    %this.noCallback = "";
@@ -311,15 +311,15 @@ function CloseMessagePopup()
 // "Old" message box function aliases for backwards-compatibility.
 //---------------------------------------------------------------------------------------------
 
-function MessageBoxOKOld( %title, %message, %callback )
+function toolsMessageBoxOKOld( %title, %message, %callback )
 {
-   MessageBoxOK( %title, %message, %callback );
+   toolsMessageBoxOK( %title, %message, %callback );
 }
-function MessageBoxOKCancelOld( %title, %message, %callback, %cancelCallback )
+function toolsMessageBoxOKCancelOld( %title, %message, %callback, %cancelCallback )
 {
-   MessageBoxOKCancel( %title, %message, %callback, %cancelCallback );
+   toolsMessageBoxOKCancel( %title, %message, %callback, %cancelCallback );
 }
-function MessageBoxYesNoOld( %title, %message, %yesCallback, %noCallback )
+function toolsMessageBoxYesNoOld( %title, %message, %yesCallback, %noCallback )
 {
-   MessageBoxYesNo( %title, %message, %yesCallback, %noCallback );
+   toolsMessageBoxYesNo( %title, %message, %yesCallback, %noCallback );
 }

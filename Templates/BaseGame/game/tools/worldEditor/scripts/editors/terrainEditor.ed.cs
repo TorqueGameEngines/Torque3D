@@ -189,7 +189,7 @@ function EPainter::updateLayers( %this, %matIndex )
 
 function EPainter::showMaterialDeleteDlg( %this, %matInternalName )
 {
-   MessageBoxYesNo( "Confirmation",
+   toolsMessageBoxYesNo( "Confirmation",
       "Really remove material '" @ %matInternalName @ "' from the terrain?",
       %this @ ".removeMaterial( " @ %matInternalName @ " );", "" );
 }
@@ -389,7 +389,7 @@ function TerrainEditorPlugin::setEditorFunction(%this)
    %terrainExists = parseMissionGroup( "TerrainBlock" );
 
    if( %terrainExists == false )
-      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain? No to Select Existing Terrain Block Asset", 
+      toolsMessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain? No to Select Existing Terrain Block Asset", 
          "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);",
          "AssetBrowser.showDialog(\"TerrainAsset\", createTerrainBlock, \"\", \"\", \"\");");
 
@@ -401,7 +401,7 @@ function TerrainPainterPlugin::setEditorFunction(%this, %overrideGroup)
    %terrainExists = parseMissionGroup( "TerrainBlock" );
 
    if( %terrainExists == false )
-      MessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain? No to Select Existing Terrain Block Asset", 
+      toolsMessageBoxYesNoCancel("No Terrain","Would you like to create a New Terrain? No to Select Existing Terrain Block Asset", 
          "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);",
          "AssetBrowser.showDialog(\"TerrainAsset\", createTerrainBlock, \"\", \"\", \"\");");
 

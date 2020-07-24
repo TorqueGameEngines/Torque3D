@@ -122,7 +122,7 @@ function NavEditorGui::deleteSelected(%this)
    case "SelectMode":
       // Try to delete the selected NavMesh.
       if(isObject(NavEditorGui.selectedObject))
-         MessageBoxYesNo("Warning",
+         toolsMessageBoxYesNo("Warning",
             "Are you sure you want to delete" SPC NavEditorGui.selectedObject.getName(),
             "NavEditorGui.deleteMesh();");
    case "TestMode":
@@ -277,7 +277,7 @@ function NavEditorGui::followObject(%this)
       {
          eval("%obj = " @ %text);
          if(!isObject(%obj))
-            MessageBoxOk("Error", "Cannot find object" SPC %text);
+            toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
       }
       if(isObject(%obj))
          %this.getPlayer().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());

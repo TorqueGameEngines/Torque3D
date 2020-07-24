@@ -323,7 +323,7 @@ function ShapeEditorPlugin::openShape( %this, %path, %discardChangesToCurrent )
    
    if( ShapeEditor.isDirty() && !%discardChangesToCurrent )
    {
-      MessageBoxYesNo( "Save Changes?",
+      toolsMessageBoxYesNo( "Save Changes?",
          "Save changes to current shape?",
          "ShapeEditor.saveChanges(); ShapeEditorPlugin.openShape(\"" @ %path @ "\");",
          "ShapeEditorPlugin.openShape(\"" @ %path @ "\");" );

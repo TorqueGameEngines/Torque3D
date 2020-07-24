@@ -84,7 +84,7 @@ function EManageSFXParameters::createNewParameter( %this, %name )
 
 function EManageSFXParameters::showDeleteParameterDlg( %this, %parameter )
 {
-   MessageBoxOkCancel( "Confirmation",
+   toolsMessageBoxOkCancel( "Confirmation",
       "Really delete '" @ %parameter.getInternalName() @ "'?" NL
       "" NL
       "The parameter will be removed from the file '" @ %parameter.getFileName() @ "'.",

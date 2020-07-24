@@ -620,7 +620,7 @@ function TerrainImportGui::import( %this )
    }
    else
    {
-      MessageBox( "Import Terrain", 
+      toolsMessageBox( "Import Terrain", 
          "Terrain import failed! Check console for error messages.", 
          "Ok", "Error" );
    }

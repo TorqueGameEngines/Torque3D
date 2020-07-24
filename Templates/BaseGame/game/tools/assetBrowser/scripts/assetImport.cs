@@ -422,19 +422,19 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
       EditorSettings.value("Assets/AssetImporDefaultConfig") $= "" || 
       EditorSettings.value("Assets/AutoImport", false) == false)
       {
-         MessageBoxOK("Unable to AutoImport", "Attempted to import a loose file " @ %filePath @ " with AutoImport but was unable to either due to lacking a valid import config, or the editor settings are not set to auto import.");
+         toolsMessageBoxOK("Unable to AutoImport", "Attempted to import a loose file " @ %filePath @ " with AutoImport but was unable to either due to lacking a valid import config, or the editor settings are not set to auto import.");
          return false;      
       }
       
       if(%assetType $= "folder" || %assetType $= "zip")
       {
-         MessageBoxOK("Unable to AutoImport", "Unable to auto import folders or zips at this time");
+         toolsMessageBoxOK("Unable to AutoImport", "Unable to auto import folders or zips at this time");
          return false; 
       }
       
       if(%assetType $= "")
       {
-         MessageBoxOK("Unable to AutoImport", "Unable to auto import unknown file type for file " @ %filePath);
+         toolsMessageBoxOK("Unable to AutoImport", "Unable to auto import unknown file type for file " @ %filePath);
          return false; 
       }
    }
@@ -706,7 +706,7 @@ function ImportAssetWindow::doRefresh(%this)
 
    if(ImportAssetWindow.importConfigsList.count() == 0)
    {
-      MessageBoxOK( "Warning", "No base import config. Please create an import configuration set to simplify asset importing.");
+      toolsMessageBoxOK( "Warning", "No base import config. Please create an import configuration set to simplify asset importing.");
    }
    
    %this.dirty = false;
@@ -978,7 +978,7 @@ function ImportAssetWindow::ImportAssets(%this)
       
       if(!isObject(%module))
       {
-         MessageBoxOK( "Error!", "No module selected. You must select or create a module for the assets to be added to.");
+         toolsMessageBoxOK( "Error!", "No module selected. You must select or create a module for the assets to be added to.");
          return;
       }
       

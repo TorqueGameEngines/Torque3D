@@ -136,7 +136,7 @@ ExampleMoveMap.bind( gamepad, thumbly, "D", "-0.23 0.23", gamePadMoveY );
 ExampleMoveMap.bind( gamepad, btn_a, jump );
 ExampleMoveMap.bind( gamepad, btn_x, moveup );
 ExampleMoveMap.bind( gamepad, btn_y, movedown );
-ExampleMoveMap.bindCmd( gamepad, btn_back, "Canvas.pushDialog(PauseMenu);", "" );
+ExampleMoveMap.bindCmd( gamepad, btn_start, "Canvas.pushDialog(PauseMenu);", "" );
 
 //------------------------------------------------------------------------------
 // Misc.

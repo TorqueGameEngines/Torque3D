@@ -9,6 +9,8 @@ function PauseMenu::onWake(%this)
 {
    $timescale = 0;
    
+   PauseMenuList.hidden = false;
+   PauseMenuList.setFirstResponder();
    PauseButtonHolder.setActive();
 }
 
@@ -21,6 +23,7 @@ function PauseMenu::onSleep(%this)
 function PauseMenu::onReturnTo(%this)
 {
    PauseMenuList.hidden = false;
+   PauseMenuList.setFirstResponder();
    PauseButtonHolder.setActive();
 }
 

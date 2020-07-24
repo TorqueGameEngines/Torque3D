@@ -132,7 +132,7 @@ function NavEditorPlugin::onActivated(%this)
    if(!isObject(ServerNavMeshSet))
       new SimSet(ServerNavMeshSet);
    if(ServerNavMeshSet.getCount() == 0)
-	  MessageBoxYesNo("No NavMesh", "There is no NavMesh in this level. Would you like to create one?" SPC
+	  toolsMessageBoxYesNo("No NavMesh", "There is no NavMesh in this level. Would you like to create one?" SPC
 	                                "If not, please use the Nav Editor to create a new NavMesh.",
 	                                "Canvas.pushDialog(CreateNewNavMeshDlg);");
    NavTreeView.open(ServerNavMeshSet, true);

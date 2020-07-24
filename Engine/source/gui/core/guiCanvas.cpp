@@ -1075,14 +1075,12 @@ bool GuiCanvas::processGamepadEvent(InputEventInfo &inputEvent)
 
          switch (inputEvent.objInst)
          {
-         case XI_LEFT_TRIGGER:
-         case XI_RIGHT_TRIGGER:
+         case SI_ZAXIS:
+         case SI_RZAXIS:
             return mFirstResponder->onGamepadTrigger(mLastEvent);
 
-         case SI_ZAXIS:
          case SI_YAXIS:
-         case XI_THUMBLY:
-         case XI_THUMBRY:
+         case SI_RYAXIS:
             if (!negative)
             {
                return mFirstResponder->onGamepadAxisDown(mLastEvent);
@@ -1093,8 +1091,7 @@ bool GuiCanvas::processGamepadEvent(InputEventInfo &inputEvent)
             }
 
          case SI_XAXIS:
-         case XI_THUMBLX:
-         case XI_THUMBRX:
+         case SI_RXAXIS:
          default:
             if (negative)
             {

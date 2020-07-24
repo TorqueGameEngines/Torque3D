@@ -30,7 +30,7 @@ function VGroup::OnAdd( %this )
             if ( %groupObject.isMemberOfClass( %ourClass ) )
             {
                 // Alert Message.
-                messageBox( "Verve Editor", "You cannot have more than one \"" @ %ourClass @ "\" in your sequence.", "Ok", "Warning" );
+                toolsMessageBox( "Verve Editor", "You cannot have more than one \"" @ %ourClass @ "\" in your sequence.", "Ok", "Warning" );
                 
                 // Invalid.
                 return false;

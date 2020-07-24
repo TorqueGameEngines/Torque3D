@@ -51,7 +51,7 @@ function GE_OpenGUIFile()
    // group. And, it should be the only thing in the group.
    if( !isObject( %guiContent ) )
    {
-      MessageBox( getEngineName(),
+      toolsMessageBox( getEngineName(),
          "You have loaded a Gui file that was created before this version.  It has been loaded but you must open it manually from the content list dropdown",
          "Ok", "Information" );   
       GuiEditContent( Canvas.getContent() );

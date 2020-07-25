@@ -278,7 +278,7 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
 
    bool isRowSelected = (getSelected() != NO_ROW) && (row == mRows[getSelected()]);
    bool isRowHighlighted = (getHighlighted() != NO_ROW) ? ((row == mRows[getHighlighted()]) && (row->mEnabled)) : false;
-   if (profileHasArrows)
+   /*if (profileHasArrows)
    {
       // render the left arrow
       bool arrowOnL = (isRowSelected || isRowHighlighted) && (row->mValue > row->mRange.x);
@@ -297,7 +297,7 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
 
       drawer->clearBitmapModulation();
       drawer->drawBitmapStretchSR(profile->mTextureObject, RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
-   }
+   }*/
 
    //Draw the slider bar
    if (row->mEnabled)
@@ -324,8 +324,8 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
       ColorI barOutlineColor;
       if (isRowSelected)
       {
-         barColor = profile->mFillColorHL;
-         barOutlineColor = profile->mFillColor;
+         barColor = profile->mFillColor;
+         barOutlineColor = profile->mFillColorSEL;
       }
       else
       {
@@ -1161,10 +1161,22 @@ void GuiGameListMenuCtrl::changeOption(Row* row, S32 delta)
    }
    row->mSelectedOption = newSelection;
 
+   if (row->mMode == GuiGameListMenuCtrl::Row::Slider)
+   {
+      row->mValue += row->mStepSize * delta;
+
+      row->mValue = mRound(row->mValue / row->mStepSize) * row->mStepSize;
+
+      if (row->mValue < row->mRange.x)
+         row->mValue = row->mRange.x;
+      if (row->mValue > row->mRange.y)
+         row->mValue = row->mRange.y;
+   }
+
    static StringTableEntry LEFT = StringTable->insert("LEFT", true);
    static StringTableEntry RIGHT = StringTable->insert("RIGHT", true);
 
-   if (row->mScriptCallback != NULL && row->mSelectedOption != NO_OPTION)
+   if (row->mScriptCallback != NULL && (row->mSelectedOption != NO_OPTION && row->mMode != GuiGameListMenuCtrl::Row::Slider))
    {
       setThisControl();
       StringTableEntry direction = NULL;
@@ -1714,9 +1726,6 @@ void GuiGameListMenuProfile::initPersistFields()
 
    removeField("modal");
    removeField("opaque");
-   removeField("fillColor");
-   removeField("fillColorHL");
-   removeField("fillColorNA");
    removeField("border");
    removeField("borderThickness");
    removeField("borderColor");

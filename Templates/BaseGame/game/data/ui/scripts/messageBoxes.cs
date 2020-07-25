@@ -103,6 +103,7 @@ function MessageBoxOK(%title, %message, %callback)
    
    MessageBoxOKButtonHolder-->OKButton.set("btn_a", "Return", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
    
+   MessageBoxCtrl.originalMenuInputContainer = $activeMenuButtonContainer;
    MessageBoxOKButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
@@ -112,6 +113,7 @@ function MessageBoxOK(%title, %message, %callback)
 function MessageBoxOKDlg::onSleep( %this )
 {
    %this.callback = "";
+   MessageBoxCtrl.originalMenuInputContainer.setActive();
 }
 
 function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
@@ -126,6 +128,7 @@ function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
    MessageBoxOCButtonHolder-->OKButton.set("btn_a", "Return", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
    MessageBoxOCButtonHolder-->CancelButton.set("btn_b", "Escape", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
 
+   MessageBoxCtrl.originalMenuInputContainer = $activeMenuButtonContainer;
    MessageBoxOCButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
@@ -136,6 +139,7 @@ function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
 function MessageBoxOKCancelDlg::onSleep( %this )
 {
    %this.callback = "";
+   MessageBoxCtrl.originalMenuInputContainer.setActive();
 }
 
 function MessageBoxOKCancelDetails(%title, %message, %details, %callback, %cancelCallback)
@@ -207,6 +211,7 @@ function MBOKCancelDetailsToggleInfoFrame()
 function MessageBoxOKCancelDetailsDlg::onSleep( %this )
 {
    %this.callback = "";
+   MessageBoxCtrl.originalMenuInputContainer.setActive();
 }
 
 function MessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
@@ -221,6 +226,7 @@ function MessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
    MessageBoxOCButtonHolder-->OKButton.set("btn_a", "Return", "Yes", "MessageCallback(MessageBoxDlg,MessageBoxDlg.yesCallBack);");
    MessageBoxOCButtonHolder-->CancelButton.set("btn_b", "Escape", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
    
+   MessageBoxCtrl.originalMenuInputContainer = $activeMenuButtonContainer;
    MessageBoxOCButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
@@ -241,6 +247,7 @@ function MessageBoxYesNoCancel(%title, %message, %yesCallback, %noCallback, %can
    MessageBoxYNCButtonHolder-->noButton.set("btn_x", "backspace", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.noCallback);");
    MessageBoxYNCButtonHolder-->cancelButton.set("btn_b", "Escape", "No", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
    
+   MessageBoxCtrl.originalMenuInputContainer = $activeMenuButtonContainer;
    MessageBoxYNCButtonHolder.setActive();
    
    MBSetText(MessageBoxText, MessageBoxCtrl, %message);
@@ -256,6 +263,7 @@ function MessageBoxDlg::onSleep( %this )
    %this.yesCallback = "";
    %this.noCallback = "";
    %this.cancelCallback = "";
+   MessageBoxCtrl.originalMenuInputContainer.setActive();
 }
 
 //---------------------------------------------------------------------------------------------

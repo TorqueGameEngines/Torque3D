@@ -233,8 +233,6 @@
 
          new GuiGameListMenuCtrl(OptionsMenuSettingsList) {
             debugRender = "0";
-            callbackOnA = "OptionsMenuSettingsList.activateRow();";
-            callbackOnB = "OptionsMenuSettingsList.backOut();";
             callbackOnInputs = "1";
             position = "1 1";
             extent = "621 510";

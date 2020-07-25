@@ -128,10 +128,10 @@ ExampleMoveMap.bind( keyboard, space, jump );
 ExampleMoveMap.bind( mouse, xaxis, yaw );
 ExampleMoveMap.bind( mouse, yaxis, pitch );
 
-ExampleMoveMap.bind( gamepad, thumbrx, "D", "-0.23 0.23", gamepadYaw );
-ExampleMoveMap.bind( gamepad, thumbry, "D", "-0.23 0.23", gamepadPitch );
-ExampleMoveMap.bind( gamepad, thumblx, "D", "-0.23 0.23", gamePadMoveX );
-ExampleMoveMap.bind( gamepad, thumbly, "D", "-0.23 0.23", gamePadMoveY );
+ExampleMoveMap.bind( gamepad, rxaxis, "D", "-0.23 0.23", gamepadYaw );
+ExampleMoveMap.bind( gamepad, ryaxis, "D", "-0.23 0.23", gamepadPitch );
+ExampleMoveMap.bind( gamepad, xaxis, "D", "-0.23 0.23", gamePadMoveX );
+ExampleMoveMap.bind( gamepad, yaxis, "D", "-0.23 0.23", gamePadMoveY );
 
 ExampleMoveMap.bind( gamepad, btn_a, jump );
 ExampleMoveMap.bind( gamepad, btn_x, moveup );
@@ -143,6 +143,6 @@ ExampleMoveMap.bindCmd( gamepad, btn_start, "Canvas.pushDialog(PauseMenu);", "" 
 //------------------------------------------------------------------------------
 GlobalActionMap.bind(keyboard, "tilde", toggleConsole);
 GlobalActionMap.bindCmd(keyboard, "alt k", "cls();","");
-GlobalActionMap.bindCmd(keyboard, "alt enter", "", "Canvas.attemptFullscreenToggle();");
+GlobalActionMap.bindCmd(keyboard, "alt enter", "", "Canvas.toggleFullscreen();");
 GlobalActionMap.bindCmd(keyboard, "F1", "", "contextHelp();");
 ExampleMoveMap.bindCmd(keyboard, "n", "toggleNetGraph();", "");

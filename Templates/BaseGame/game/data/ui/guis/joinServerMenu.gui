@@ -14,6 +14,18 @@
    canSave = "1";
    canSaveDynamicFields = "1";
       returnGui = "MainMenuGui";
+      
+   new GuiInputCtrl(JoinServerMenuInputHandler){
+      profile = "GuiInputCtrlProfile";
+      visible = "1";
+      active = "1";
+      position = "0 0";
+      extent = "1024 768";
+      minExtent = "8 2";
+      horizSizing = "width";
+      vertSizing = "height";
+      sendBreakEvents="1";
+   };
 
    new GuiControl(JoinServerWindow) {
       position = "48 56";

@@ -40,6 +40,8 @@ function loadStartup()
    // Call the next() function to set our firt
    // splash screen
    StartupGui.next();
+   
+   StartupGui.setFirstResponder();
 
    // Play our startup sound
    //SFXPlayOnce(AudioGui, "data/ui/sounds/startup");//SFXPlay(startsnd);

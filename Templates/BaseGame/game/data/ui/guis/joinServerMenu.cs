@@ -6,15 +6,23 @@ function JoinServerMenu::onWake()
    JoinServerJoinBtn.setActive(JS_serverList.rowCount() > 0);
    
    JoinServerButtonHolder.setActive();
+   
+   JoinServerMenuInputHandler.setFirstResponder();
 }   
 
 function JoinServerButtonHolder::onWake(%this)
 {
-   %this-->joinButton.set("Start", "Return", "Join", "JoinServerMenu.join();");
-   %this-->backButton.set("btn_b", "escape", "Back", "JoinServerMenu.backOut();");
+   %this-->joinButton.set("btn_start", "Return", "Join", "JoinServerMenu.join();");
+   %this-->backButton.set("btn_b", "Escape", "Back", "JoinServerMenu.backOut();");
    %this-->refreshButton.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
    %this-->queryLANButton.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
    %this-->queryInternetButton.set("btn_x", "E", "Query Internet", "JoinServerMenu.query();");
+}
+
+function JoinServerMenuInputHandler::onInputEvent(%this, %device, %action, %state)
+{
+   if(%state)
+      $activeMenuButtonContainer.processInputs(%device, %action);
 }
 
 //----------------------------------------

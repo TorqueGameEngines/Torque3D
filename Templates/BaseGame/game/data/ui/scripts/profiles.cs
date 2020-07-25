@@ -10,6 +10,11 @@ new GuiGameListMenuProfile(DefaultListMenuProfile)
    fontColorSEL = $TextMediumEmphasisColor;
    fontColorNA = $TextDisabledColor;
    fontColorHL = $TextMediumEmphasisColor;
+   
+   fillColor = "108 108 108";
+   fillColorHL = "140 140 140";
+   fillColorSEL = "180 180 180";
+   
    HitAreaUpperLeft = "16 20";
    HitAreaLowerRight = "503 74";
    IconOffset = "40 0";

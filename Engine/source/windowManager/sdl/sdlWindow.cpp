@@ -101,7 +101,8 @@ mPosition(0,0),
 mMouseLocked(false),
 mShouldLockMouse(false),
 mSuppressReset(false),
-mMenuHandle(NULL)
+mMenuHandle(NULL),
+mClosing(false)
 {
    mCursorController = new PlatformCursorControllerSDL( this );
 
@@ -583,8 +584,10 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
 
       case SDL_WINDOWEVENT:
       {
-         switch( evt.window.event )
+         if (!mClosing)
          {
+            switch (evt.window.event)
+            {
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                appEvent.trigger(getWindowId(), GainFocus);
                break;
@@ -595,15 +598,21 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
             case SDL_WINDOWEVENT_RESIZED:
             {
                int width, height;
-               SDL_GetWindowSize( mWindowHandle, &width, &height );
-               mVideoMode.resolution.set( width, height );
+               SDL_GetWindowSize(mWindowHandle, &width, &height);
+               mVideoMode.resolution.set(width, height);
                getGFXTarget()->resetMode();
                resizeEvent.trigger(getWindowId(), width, height);
                break;
             }
+            case SDL_WINDOWEVENT_CLOSE:
+            {
+               appEvent.trigger(getWindowId(), WindowClose);
+               mClosing = true;
+            }
 
             default:
                break;
+            }
          }
       }
    }

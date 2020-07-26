@@ -87,6 +87,9 @@ private:
    /// Menu associated with this window.  This is a passive property of the window and is not required to be used at all.
    void* mMenuHandle;
 
+   /// Indicates if the window is being closed. This allows us to safely ignore other events like focus being gained or losed after cleanup has begun
+   bool mClosing;
+
    /// @}
 
    void _processSDLEvent(SDL_Event &evt);

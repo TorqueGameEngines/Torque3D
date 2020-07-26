@@ -1473,7 +1473,7 @@ bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
    S32 seqIndex = srcShape->findSequence(oldName);
    if (seqIndex < 0)
    {
-      Con::errorf("TSShape::addSequence: Could not find sequence named '%s'", oldName.c_str());
+      Con::errorf("TSShape::addSequence (%s): Could not find sequence named '%s'", path.getFullPath().c_str(), oldName.c_str());
       return false;
    }
 
@@ -1481,16 +1481,16 @@ bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
    const TSShape::Sequence* srcSeq = &srcShape->sequences[seqIndex];
    if ((startFrame < 0) || (startFrame >= srcSeq->numKeyframes))
    {
-      Con::warnf("TSShape::addSequence: Start keyframe (%d) out of range (0-%d) for sequence '%s'",
-         startFrame, srcSeq->numKeyframes-1, oldName.c_str());
+      Con::warnf("TSShape::addSequence (%s): Start keyframe (%d) out of range (0-%d) for sequence '%s'",
+         path.getFullPath().c_str(), startFrame, srcSeq->numKeyframes-1, oldName.c_str());
       startFrame = 0;
    }
    if (endFrame < 0)
       endFrame = srcSeq->numKeyframes - 1;
    else if (endFrame >= srcSeq->numKeyframes)
    {
-      Con::warnf("TSShape::addSequence: End keyframe (%d) out of range (0-%d) for sequence '%s'",
-         endFrame, srcSeq->numKeyframes-1, oldName.c_str());
+      Con::warnf("TSShape::addSequence (%s): End keyframe (%d) out of range (0-%d) for sequence '%s'",
+         path.getFullPath().c_str(), endFrame, srcSeq->numKeyframes-1, oldName.c_str());
       endFrame = srcSeq->numKeyframes - 1;
    }
 
@@ -1573,12 +1573,27 @@ bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
 
    seq.numGroundFrames *= ratio;
    seq.firstGroundFrame = groundTranslations.size();
-   groundTranslations.reserve(groundTranslations.size() + seq.numGroundFrames);
-   groundRotations.reserve(groundRotations.size() + seq.numGroundFrames);
+   groundTranslations.reserve(mMin(groundTranslations.size() + seq.numGroundFrames, srcShape->groundTranslations.size()));
+   groundRotations.reserve(mMin(groundRotations.size() + seq.numGroundFrames, srcShape->groundRotations.size()));
    for (S32 i = 0; i < seq.numGroundFrames; i++)
    {
-      groundTranslations.push_back(srcShape->groundTranslations[groundBase + i]);
-      groundRotations.push_back(srcShape->groundRotations[groundBase + i]);
+      S32 offset = groundBase + i;
+      if (offset >= srcShape->groundTranslations.size())
+      {
+         Con::errorf("%s  groundTranslations out of bounds! [%i/%i] ", path.getFullPath().c_str(), groundBase + i, srcShape->groundTranslations.size());
+         offset = srcShape->groundTranslations.size() - 1;
+      }
+
+      groundTranslations.push_back(srcShape->groundTranslations[offset]);
+
+      S32 offset2 = groundBase + i;
+      if (offset2 >= srcShape->groundRotations.size())
+      {
+         Con::errorf("%s  groundRotations out of bounds! [%i/%i] ", path.getFullPath().c_str(), groundBase + i, srcShape->groundRotations.size());
+         offset2 = srcShape->groundRotations.size() - 1;
+      }
+
+      groundRotations.push_back(srcShape->groundRotations[offset2]);
    }
 
    // Add triggers

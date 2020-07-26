@@ -28,12 +28,19 @@ ModuleDatabase.LoadGroup( "Game" );
 //Finally, initialize the client/server structure
 ModuleDatabase.LoadExplicit( "Core_ClientServer" );
 
-//If nothing else set a main menu, try to do so now
-if(!isObject(Canvas.getContent()))
+if(isFunction("loadStartup"))
 {
-   %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
-   if (isObject( %mainMenuGUI ))
-      Canvas.setContent( %mainMenuGUI );
+   loadStartup();
+}
+else
+{
+   //If nothing else set a main menu, try to do so now
+   if(!isObject(Canvas.getContent()))
+   {
+      %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
+      if (isObject( %mainMenuGUI ))
+         Canvas.setContent( %mainMenuGUI );
+   }
 }
 
 closeSplashWindow();

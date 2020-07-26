@@ -283,7 +283,7 @@ function GuiEditCanvas::load( %this, %filename )
    // group. And, it should be the only thing in the group.
    if( !isObject( %guiContent ) )
    {
-      MessageBox( getEngineName(),
+      toolsMessageBox( getEngineName(),
          "You have loaded a Gui file that was created before this version.  It has been loaded but you must open it manually from the content list dropdown",
          "Ok", "Information" );   
       return 0;
@@ -333,7 +333,7 @@ function GuiEditCanvas::save( %this, %selectedOnly, %noPrompt )
          return;
       else if( %selected.getCount() > 1 )
       {
-         MessageBox( "Invalid selection", "Only a single control hierarchy can be saved to a file.  Make sure you have selected only one control in the tree view." );
+         toolsMessageBox( "Invalid selection", "Only a single control hierarchy can be saved to a file.  Make sure you have selected only one control in the tree view." );
          return;
       }
          
@@ -464,7 +464,7 @@ function GuiEditCanvas::save( %this, %selectedOnly, %noPrompt )
       GuiEditorStatusBar.print( "Saved file '" @ %currentObject.getFileName() @ "'" );
    }
    else
-      MessageBox( "Error writing to file", "There was an error writing to file '" @ %currentFile @ "'. The file may be read-only.", "Ok", "Error" );   
+      toolsMessageBox( "Error writing to file", "There was an error writing to file '" @ %currentFile @ "'. The file may be read-only.", "Ok", "Error" );   
 }
 
 //---------------------------------------------------------------------------------------------
@@ -490,7 +490,7 @@ function GuiEditCanvas::append( %this )
    
    if( !isObject( %guiContent ) )
    {
-      MessageBox( "Error loading GUI file", "The GUI content controls could not be found.  This function can only be used with files saved by the GUI editor.", "Ok", "Error" );
+      toolsMessageBox( "Error loading GUI file", "The GUI content controls could not be found.  This function can only be used with files saved by the GUI editor.", "Ok", "Error" );
       return;
    }
    
@@ -519,7 +519,7 @@ function GuiEditCanvas::revert( %this )
    if( %filename $= "" )
       return;
       
-   if( MessageBox( "Revert Gui", "Really revert the current Gui?  This cannot be undone.", "OkCancel", "Question" ) == $MROk )
+   if( toolsMessageBox( "Revert Gui", "Really revert the current Gui?  This cannot be undone.", "OkCancel", "Question" ) == $MROk )
       %this.load( %filename );
 }
 

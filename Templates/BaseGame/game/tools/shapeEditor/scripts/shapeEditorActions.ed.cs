@@ -95,7 +95,7 @@ function ShapeEditor::doAction( %this, %action )
    }
    else
    {
-      MessageBoxOK( "Error", %action.actionName SPC "failed. Check the console for error messages.", "" );
+      toolsMessageBoxOK( "Error", %action.actionName SPC "failed. Check the console for error messages.", "" );
    }
 }
 
@@ -108,7 +108,7 @@ function BaseShapeEdAction::redo( %this )
    }
    else
    {
-      MessageBoxOK( "Error", "Redo" SPC %this.actionName SPC "failed. Check the console for error messages.", "" );
+      toolsMessageBoxOK( "Error", "Redo" SPC %this.actionName SPC "failed. Check the console for error messages.", "" );
    }
 }
 
@@ -122,7 +122,7 @@ function BaseShapeEdAction::undo( %this )
 function ShapeEditor::doRemoveShapeData( %this, %type, %name )
 {
    // Removing data from the shape cannot be undone => so warn the user first
-   MessageBoxYesNo( "Warning", "Deleting a " @ %type @ " cannot be undone. Do " @
+   toolsMessageBoxYesNo( "Warning", "Deleting a " @ %type @ " cannot be undone. Do " @
       "you want to continue?", "ShapeEditor.doRemove" @ %type @ "( \"" @ %name @ "\" );", "" );
 }
 

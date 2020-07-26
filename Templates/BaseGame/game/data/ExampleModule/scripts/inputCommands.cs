@@ -147,6 +147,8 @@ function gamePadMoveX( %val )
 
 function gamePadMoveY( %val )
 {
+   %val *= -1;
+   
    if(%val > 0)
    {
       $mvForwardAction = %val * $movementSpeed;
@@ -183,6 +185,8 @@ function gamepadYaw(%val)
 
 function gamepadPitch(%val)
 {
+   %val *= -1;
+   
    %pitchAdj = getGamepadAdjustAmount(%val);
    if(ServerConnection.isControlObjectRotDampedCamera())
    {

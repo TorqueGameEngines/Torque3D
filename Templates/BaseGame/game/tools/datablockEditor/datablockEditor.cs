@@ -610,7 +610,7 @@ function DatablockEditorPlugin::deleteDatablock( %this )
       // Show some confirmation.
 
       if( %numSelected == 1 )
-         MessageBoxOk( "Datablock Deleted", "The datablock (" @ %db.getName() @ ") has been removed from " @
+         toolsMessageBoxOk( "Datablock Deleted", "The datablock (" @ %db.getName() @ ") has been removed from " @
                        "it's file (" @ %db.getFilename() @ ") and upon restart will cease to exist" );
    }
    
@@ -622,7 +622,7 @@ function DatablockEditorPlugin::deleteDatablock( %this )
    // Show confirmation for multiple datablocks.
    
    if( %numSelected > 1 )
-      MessageBoxOk( "Datablocks Deleted", "The datablocks have been deleted and upon restart will cease to exist." );
+      toolsMessageBoxOk( "Datablocks Deleted", "The datablocks have been deleted and upon restart will cease to exist." );
 
    // Clear selection.
       

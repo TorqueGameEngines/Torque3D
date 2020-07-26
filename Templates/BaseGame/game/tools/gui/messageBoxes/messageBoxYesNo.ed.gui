@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxYesNoDlg) {
+%guiContent = new GuiControl(toolsMessageBoxYesNoDlg) {
 	profile = "GuiOverlayProfile";
 	horizSizing = "width";
 	vertSizing = "height";
@@ -27,7 +27,7 @@
       canMaximize = "0";
       minSize = "50 50";
       text = "";
-      closeCommand = "MessageCallback(MessageBoxYesNoDlg,MessageBoxYesNoDlg.noCallback);";
+      closeCommand = "MessageCallback(toolsMessageBoxYesNoDlg,toolsMessageBoxYesNoDlg.noCallback);";
 
 		new GuiMLTextCtrl(MBYesNoText) {
          profile = "ToolsGuiMLTextProfile";
@@ -50,7 +50,7 @@
          extent = "80 22";
          minExtent = "8 8";
          visible = "1";
-			command = "MessageCallback(MessageBoxYesNoDlg,MessageBoxYesNoDlg.yesCallback);";
+			command = "MessageCallback(toolsMessageBoxYesNoDlg,toolsMessageBoxYesNoDlg.yesCallback);";
          accelerator = "return";
          helpTag = "0";
          text = "Yes";
@@ -64,7 +64,7 @@
          extent = "80 22";
          minExtent = "8 8";
          visible = "1";
-			command = "MessageCallback(MessageBoxYesNoDlg,MessageBoxYesNoDlg.noCallback);";
+			command = "MessageCallback(toolsMessageBoxYesNoDlg,toolsMessageBoxYesNoDlg.noCallback);";
          accelerator = "escape";
          helpTag = "0";
          text = "No";

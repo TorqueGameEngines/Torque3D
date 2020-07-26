@@ -366,7 +366,7 @@ function PE_ParticleEditor::onNewParticle( %this )
    // Load new particle if we're not in a dirty state
    if( PE_ParticleEditor.dirty )
    {         
-      MessageBoxYesNoCancel("Save Existing Particle?", 
+      toolsMessageBoxYesNoCancel("Save Existing Particle?", 
          "Do you want to save changes to <br><br>" @ PE_ParticleEditor.currParticle.getName(), 
          "PE_ParticleEditor.saveParticle(" @ PE_ParticleEditor.currParticle @ ");", 
          "PE_ParticleEditor.saveParticleDialogDontSave(" @ PE_ParticleEditor.currParticle @ "); PE_ParticleEditor.loadNewParticle();"
@@ -430,7 +430,7 @@ function PE_ParticleEditor::showNewDialog( %this, %replaceSlot )
    // Open a dialog if the current Particle is dirty
    if( PE_ParticleEditor.dirty ) 
    {
-      MessageBoxYesNoCancel("Save Particle Changes?", 
+      toolsMessageBoxYesNoCancel("Save Particle Changes?", 
          "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
          "PE_ParticleEditor.saveParticle( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );", 
          "PE_ParticleEditor.saveParticleDialogDontSave( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );"
@@ -453,7 +453,7 @@ function PE_ParticleEditor::createParticle( %this, %replaceSlot )
       %numExistingParticles = getWordCount( PE_EmitterEditor.currEmitter.particles );
       if( %numExistingParticles > 3 )
       {
-         MessageBoxOK( "Error", "An emitter cannot have more than 4 particles assigned to it." );
+         toolsMessageBoxOK( "Error", "An emitter cannot have more than 4 particles assigned to it." );
          return;
       }
       
@@ -493,7 +493,7 @@ function PE_ParticleEditor::showDeleteDialog( %this )
    
    if( PE_ParticleEditor.currParticle.getName() $= "DefaultParticle" )
    {
-      MessageBoxOK( "Error", "Cannot delete DefaultParticle");
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultParticle");
       return;
    }
    
@@ -501,7 +501,7 @@ function PE_ParticleEditor::showDeleteDialog( %this )
    
    if( getWordCount( PE_EmitterEditor.currEmitter.particles ) == 1 )
    {
-      MessageBoxOK( "Error", "At least one particle must remain on the particle emitter.");
+      toolsMessageBoxOK( "Error", "At least one particle must remain on the particle emitter.");
       return;
    }
    
@@ -509,7 +509,7 @@ function PE_ParticleEditor::showDeleteDialog( %this )
    
    if( isObject( PE_ParticleEditor.currParticle ) )
    {
-      MessageBoxYesNoCancel( "Delete Particle?", 
+      toolsMessageBoxYesNoCancel( "Delete Particle?", 
          "Are you sure you want to delete<br><br>" @ PE_ParticleEditor.currParticle.getName() @ "<br><br> Particle deletion won't take affect until the engine is quit.", 
          "PE_ParticleEditor.saveParticleDialogDontSave( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_ParticleEditor.deleteParticle();", 
          "", 

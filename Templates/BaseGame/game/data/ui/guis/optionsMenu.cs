@@ -57,26 +57,17 @@ function OptionsMenu::onWake(%this)
    %this.pageTabIndex = 0;
    %tab = %this.getTab();
    %tab.performClick();
+   
+   OptionsButtonHolder.setActive();
 }
 
 function OptionsButtonHolder::onWake(%this)
 {
-   %this.refresh();
-}
-
-function OptionsButtonHolder::refresh(%this)
-{
-   OptionsButtonHolder.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   GamepadButtonsGui.setButton(0, "LB", "", "Prev Tab", "OptionsMenu.prevTab();", true);
-   GamepadButtonsGui.setButton(1, "RB", "", "Next Tab", "OptionsMenu.nextTab();", true);
-   GamepadButtonsGui.setButton(2, "Start", "Enter", "Apply", "OptionsMenu.apply();");
-   GamepadButtonsGui.setButton(3, "B", "Esc", "Back", "OptionsMenu.backOut();");
-   GamepadButtonsGui.setButton(7, "Back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   
-   GamepadButtonsGui.refreshButtons();
+   %this-->prevTabButton.set("btn_l", "", "Prev Tab", "OptionsMenu.prevTab();", true);
+   %this-->nextTabButton.set("btn_r", "", "Next Tab", "OptionsMenu.nextTab();", true);
+   %this-->resetButton.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
+   %this-->applyButton.set("btn_start", "Return", "Apply", "OptionsMenu.apply();");
+   %this-->backButton.set("btn_b", "Escape", "Back", "OptionsMenu.backOut();");
 }
 
 function OptionsMenu::apply(%this)
@@ -224,18 +215,19 @@ function OptionsMenu::populateDisplaySettingsList(%this)
 
 function OptionsMenu::applyDisplaySettings(%this)
 {
-   %newAdapter    = GraphicsMenuDriver.getText();
-	%numAdapters   = GFXInit::getAdapterCount();
+   //%newAdapter    = GraphicsMenuDriver.getText();
+	//%numAdapters   = GFXInit::getAdapterCount();
 	%newDevice     = OptionsMenuSettingsList.getCurrentOption(0);
 							
-	for( %i = 0; %i < %numAdapters; %i ++ )
+	/*for( %i = 0; %i < %numAdapters; %i ++ )
 	{
-	   if( GFXInit::getAdapterName( %i ) $= %newAdapter )
+	   %targetAdapter = GFXInit::getAdapterName( %i );
+	   if( GFXInit::getAdapterName( %i ) $= %newDevice )
 	   {
 	      %newDevice = GFXInit::getAdapterType( %i );
 	      break;
 	   }
-	}
+	}*/
 	   
    // Change the device.
    if ( %newDevice !$= $pref::Video::displayDevice )
@@ -267,6 +259,7 @@ function OptionsMenu::populateGraphicsSettingsList(%this)
    %onOffList = "Off\tOn";
    %highMedLow = "Low\tMedium\tHigh";
    %anisoFilter = "Off\t4\t8\t16";
+   %aaFilter = "Off\t1\t2\t4";
    OptionsMenuSettingsList.addOptionRow("Shadow Quality", getQualityLevels(ShadowQualityList), false, "", -1, -30, true, "Shadow revolution quality", getCurrentQualityLevel(ShadowQualityList));
    OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", getQualityLevels(SoftShadowList), false, "", -1, -30, true, "Amount of softening applied to shadowmaps", getCurrentQualityLevel(SoftShadowList));
    OptionsMenuSettingsList.addOptionRow("Mesh Quality", getQualityLevels(MeshQualityGroup), false, "", -1, -30, true, "Fidelity of rendering of mesh objects", getCurrentQualityLevel(MeshQualityGroup));
@@ -276,7 +269,7 @@ function OptionsMenu::populateGraphicsSettingsList(%this)
    OptionsMenuSettingsList.addOptionRow("Ground Cover Density", getQualityLevels(GroundCoverDensityGroup), false, "", -1, -30, true, "Density of ground cover items, such as grass", getCurrentQualityLevel(GroundCoverDensityGroup));
    OptionsMenuSettingsList.addOptionRow("Shader Quality", getQualityLevels(ShaderQualityGroup), false, "", -1, -30, true, "Dictates the overall shader quality level, adjusting what features are enabled.", getCurrentQualityLevel(ShaderQualityGroup));
    OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", %anisoFilter, false, "", -1, -30, true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance", $pref::Video::defaultAnisotropy);
-   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "4\t2\t1\tOff", false, "", -1, -30, true, "Amount of Post-Processing Anti-Aliasing applied to rendering", $pref::Video::AA);
+   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", %aaFilter, false, "", -1, -30, true, "Amount of Post-Processing Anti-Aliasing applied to rendering", $pref::Video::AA);
    OptionsMenuSettingsList.addOptionRow("Parallax", %onOffList, false, "", -1, -30, true, "Whether the surface parallax shader effect is enabled", convertBoolToOnOff(!$pref::Video::disableParallaxMapping));
    OptionsMenuSettingsList.addOptionRow("Water Reflections", %onOffList, false, "", -1, -30, true, "Whether water reflections are enabled", convertBoolToOnOff(!$pref::Water::disableTrueReflections));
    OptionsMenuSettingsList.addOptionRow("SSAO", %onOffList, false, "", -1, -30, true, "Whether Screen-Space Ambient Occlusion is enabled", convertBoolToOnOff($pref::PostFX::EnableSSAO));

@@ -132,6 +132,12 @@ bool GuiFadeinBitmapCtrl::onKeyDown(const GuiEvent &)
    return true;
 }
 
+bool GuiFadeinBitmapCtrl::onGamepadButtonDown(const GuiEvent& event)
+{
+   click_callback();
+   return true;
+}
+
 //-----------------------------------------------------------------------------
 
 bool GuiFadeinBitmapCtrl::onWake()

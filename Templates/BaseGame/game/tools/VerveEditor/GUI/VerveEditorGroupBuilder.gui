@@ -283,7 +283,7 @@ function VerveEditorGroupBuilderGUI::_Build( %this, %groupLabel )
 {
     if ( %groupLabel $= "" )
     {
-        messageBox( "Warning", "You must provide a Valid Group Label.", "Ok" );
+        toolsMessageBox( "Warning", "You must provide a Valid Group Label.", "Ok" );
         return;
     }
     

@@ -30,7 +30,7 @@ function VTrack::OnAdd( %this )
             if ( %trackObject.isMemberOfClass( %ourClass ) )
             {
                 // Alert Message.
-                messageBox( "Verve Editor", "You cannot have more than one \"" @ %ourClass @ "\" in a group.", "Ok", "Warning" );
+                toolsMessageBox( "Verve Editor", "You cannot have more than one \"" @ %ourClass @ "\" in a group.", "Ok", "Warning" );
                 
                 // Invalid.
                 return false;

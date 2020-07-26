@@ -205,7 +205,7 @@ function ForestEditorPlugin::onActivated( %this )
    }   
    
    if ( %this.showError )
-      MessageBoxOK( "Error", "Your tools/forestEditor folder does not contain a valid brushes.cs. Brushes you create will not be saved!" );
+      toolsMessageBoxOK( "Error", "Your tools/forestEditor folder does not contain a valid brushes.cs. Brushes you create will not be saved!" );
 }
 
 function ForestEditorPlugin::onDeactivated( %this )

@@ -1368,7 +1368,7 @@ function MaterialSelector::createFilter( %this, %filter )
 {
    if( %filter $= %existingFilters )
    {
-      MessageBoxOK( "Error", "Can not create blank filter.");
+      toolsMessageBoxOK( "Error", "Can not create blank filter.");
       return;
    }
       
@@ -1377,7 +1377,7 @@ function MaterialSelector::createFilter( %this, %filter )
       %existingFilters = MaterialSelector-->filterArray.getObject(%i).getObject(0).filter;
       if( %filter $= %existingFilters )
       {
-         MessageBoxOK( "Error", "Can not create two filters of the same name.");
+         toolsMessageBoxOK( "Error", "Can not create two filters of the same name.");
          return;
       }
    }
@@ -1713,7 +1713,7 @@ function MaterialSelector::showDeleteDialog( %this )
    
    if( isObject( %material ) )
    {
-      MessageBoxYesNoCancel("Delete Material?", 
+      toolsMessageBoxYesNoCancel("Delete Material?", 
          "Are you sure you want to delete<br><br>" @ %material.getName() @ "<br><br> Material deletion won't take affect until the engine is quit.", 
          "MaterialSelector.deleteMaterial( " @ %material @ ", " @ %secondFilter @ ", " @ %secondFilterName @" );", 
          "", 

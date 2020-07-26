@@ -62,7 +62,7 @@ function RoadEditorGui::onDeleteKey( %this )
    }
    else
    {
-      MessageBoxOKCancel( "Notice", "Delete selected DecalRoad?", "RoadEditorGui.deleteRoad();", "" );
+      toolsMessageBoxOKCancel( "Notice", "Delete selected DecalRoad?", "RoadEditorGui.deleteRoad();", "" );
    }   
 }
 

@@ -40,7 +40,7 @@ function ForestEditorGui::onActiveForestUpdated( %this, %forest, %createNew )
    // Give the user a chance to add a forest.
    if ( !%gotForest && %createNew )
    {
-      MessageBoxYesNo(  "Forest", 
+      toolsMessageBoxYesNo(  "Forest", 
                         "There is not a Forest in this mission.  Do you want to add one?",
                         %this @ ".createForest();", "" );
       return;                                                         
@@ -245,7 +245,7 @@ function ForestEditorGui::deleteMesh( %this )
       
    if ( isObject( %obj ) )
    {
-      MessageBoxOKCancel( "Warning", 
+      toolsMessageBoxOKCancel( "Warning", 
                           "Deleting this mesh will also delete BrushesElements and ForestItems referencing it.", 
                           "ForestEditorGui.okDeleteMesh(" @ %obj @ ");",
                           "" );      
@@ -389,7 +389,7 @@ function ForestEditBrushTree::handleRenameObject( %this, %name, %obj )
       %found = ForestBrushGroup.findObjectByInternalName( %name );
       if ( isObject( %found ) && %found.getId() != %obj.getId() )
       {
-         MessageBoxOK( "Error", "Brush or Element with that name already exists.", "" );   
+         toolsMessageBoxOK( "Error", "Brush or Element with that name already exists.", "" );   
          
          // true as in, we handled it, don't rename the object.      
          return true;   

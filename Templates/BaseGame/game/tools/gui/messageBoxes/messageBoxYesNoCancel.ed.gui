@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxYesNoCancelDlg) {
+%guiContent = new GuiControl(toolsMessageBoxYesNoCancelDlg) {
    canSaveDynamicFields = "0";
    Profile = "GuiOverlayProfile";
    HorizSizing = "width";
@@ -31,7 +31,7 @@
       canMaximize = "0";
       minSize = "50 50";
       text = "";
-      closeCommand="MessageCallback(MessageBoxYesNoCancelDlg,MessageBoxYesNoCancelDlg.cancelCallback);";
+      closeCommand="MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.cancelCallback);";
 
       new GuiMLTextCtrl(MBYesNoCancelText) {
          canSaveDynamicFields = "0";
@@ -58,7 +58,7 @@
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         Command = "MessageCallback(MessageBoxYesNoCancelDlg,MessageBoxYesNoCancelDlg.yesCallback);";
+         Command = "MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.yesCallback);";
          Accelerator = "return";
          hovertime = "1000";
          text = "Yes";
@@ -75,7 +75,7 @@
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         Command = "MessageCallback(MessageBoxYesNoCancelDlg,MessageBoxYesNoCancelDlg.noCallback);";
+         Command = "MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.noCallback);";
          hovertime = "1000";
          text = "No";
          groupNum = "-1";
@@ -91,7 +91,7 @@
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         Command = "MessageCallback(MessageBoxYesNoCancelDlg,MessageBoxYesNoCancelDlg.cancelCallback);";
+         Command = "MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.cancelCallback);";
          Accelerator = "escape";
          hovertime = "1000";
          text = "Cancel";

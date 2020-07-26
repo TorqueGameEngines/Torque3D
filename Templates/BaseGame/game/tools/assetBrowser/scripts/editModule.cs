@@ -20,7 +20,7 @@ function AssetBrowser::CreateNewModule(%this)
 
 function AssetBrowser::promptNewModuleFolders(%this)
 {
-   MessageBoxYesNo("Create Folders?", 
+   toolsMessageBoxYesNo("Create Folders?", 
          "Do you want to create some common folders for organization of your new Module?", 
          "AssetBrowser.makeModuleFolders();",  //if yes, make the foldesr
          "AssetBrowser.loadDirectories();");  //if no, just refresh

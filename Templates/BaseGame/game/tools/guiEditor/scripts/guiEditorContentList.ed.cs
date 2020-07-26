@@ -30,11 +30,11 @@ if( !isDefined( "$GuiEditor::GuiFilterList" ) )
    $GuiEditor::GuiFilterList =
       "GuiEditorGui" TAB
       "AL_ShadowVizOverlayCtrl" TAB
-      "MessageBoxOKDlg" TAB
-      "MessageBoxOKCancelDlg" TAB
-      "MessageBoxOKCancelDetailsDlg" TAB
-      "MessageBoxYesNoDlg" TAB
-      "MessageBoxYesNoCancelDlg" TAB
+      "toolsMessageBoxOKDlg" TAB
+      "toolsMessageBoxOKCancelDlg" TAB
+      "toolsMessageBoxOKCancelDetailsDlg" TAB
+      "toolsMessageBoxYesNoDlg" TAB
+      "toolsMessageBoxYesNoCancelDlg" TAB
       "MessagePopupDlg";
 }
 

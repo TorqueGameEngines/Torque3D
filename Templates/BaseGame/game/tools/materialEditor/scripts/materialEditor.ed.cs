@@ -436,7 +436,7 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    // Warn if selecting a CustomMaterial (they can't be properly previewed or edited)
    if ( isObject( %material ) && %material.isMemberOfClass( "CustomMaterial" ) )
    {
-      MessageBoxOK( "Warning", "The selected Material (" @ %material.getName() @
+      toolsMessageBoxOK( "Warning", "The selected Material (" @ %material.getName() @
          ") is a CustomMaterial, and cannot be edited using the Material Editor." );
       return;
    }
@@ -1794,7 +1794,7 @@ function MaterialEditorGui::addCubemap( %this,%cubemapName )
 {
    if( %cubemapName $= "" )
    {
-      MessageBoxOK( "Error", "Can not create a cubemap without a valid name.");
+      toolsMessageBoxOK( "Error", "Can not create a cubemap without a valid name.");
       return;
    }
    
@@ -1802,7 +1802,7 @@ function MaterialEditorGui::addCubemap( %this,%cubemapName )
    {
       if( %cubemapName $= RootGroup.getObject(%i).getName() )
       {
-         MessageBoxOK( "Error", "There is already an object with the same name.");
+         toolsMessageBoxOK( "Error", "There is already an object with the same name.");
          return;
       }
    }
@@ -1884,7 +1884,7 @@ function MaterialEditorGui::showDeleteCubemapDialog(%this)
       
    if( isObject( %cubemap ) )
    {
-      MessageBoxYesNoCancel("Delete Cubemap?", 
+      toolsMessageBoxYesNoCancel("Delete Cubemap?", 
          "Are you sure you want to delete<br><br>" @ %cubemap.getName() @ "<br><br> Cubemap deletion won't take affect until the engine is quit.", 
          "MaterialEditorGui.deleteCubemap( " @ %cubemap @ ", " @ %idx @ " );", 
          "", 
@@ -1926,7 +1926,7 @@ function matEd_cubemapEd_availableCubemapList::onSelect( %this, %id, %cubemap )
    if( matEd_cubemapEditor.dirty )
    {         
       %savedCubemap = MaterialEditorGui.currentCubemap;
-      MessageBoxYesNoCancel("Save Existing Cubemap?", 
+      toolsMessageBoxYesNoCancel("Save Existing Cubemap?", 
       "Do you want to save changes to <br><br>" @ %savedCubemap.getName(), 
       "MaterialEditorGui.saveCubemap(" @ true @ ");", 
       "MaterialEditorGui.saveCubemapDialogDontSave(" @ %cubemap @ ");",
@@ -1942,7 +1942,7 @@ function MaterialEditorGui::showSaveCubemapDialog( %this )
    if( !isObject(%cubemap) )
       return;
       
-   MessageBoxYesNoCancel("Save Cubemap?", 
+   toolsMessageBoxYesNoCancel("Save Cubemap?", 
       "Do you want to save changes to <br><br>" @ %cubemap.getName(), 
       "MaterialEditorGui.saveCubemap( " @ %cubemap @ " );", 
       "", 
@@ -2070,7 +2070,7 @@ function MaterialEditorGui::copyCubemaps( %this, %copyFrom, %copyTo)
 
 function MaterialEditorGui::showSaveDialog( %this, %toMaterial )
 {
-   MessageBoxYesNoCancel("Save Material?", 
+   toolsMessageBoxYesNoCancel("Save Material?", 
       "The material " @ MaterialEditorGui.currentMaterial.getName() @ " has unsaved changes. <br>Do you want to save?", 
       "MaterialEditorGui.saveDialogSave(" @ %toMaterial @ ");", 
       "MaterialEditorGui.saveDialogDontSave(" @ %toMaterial @ ");", 
@@ -2081,7 +2081,7 @@ function MaterialEditorGui::showMaterialChangeSaveDialog( %this, %toMaterial )
 {
    %fromMaterial = MaterialEditorGui.currentMaterial;
    
-   MessageBoxYesNoCancel("Save Material?", 
+   toolsMessageBoxYesNoCancel("Save Material?", 
       "The material " @ %fromMaterial.getName() @ " has unsaved changes. <br>Do you want to save before changing the material?", 
       "MaterialEditorGui.saveDialogSave(" @ %toMaterial @ "); MaterialEditorGui.changeMaterial(" @ %fromMaterial @ ", " @ %toMaterial @ ");", 
       "MaterialEditorGui.saveDialogDontSave(" @ %toMaterial @ "); MaterialEditorGui.changeMaterial(" @ %fromMaterial @ ", " @ %toMaterial @ ");", 
@@ -2091,7 +2091,7 @@ function MaterialEditorGui::showMaterialChangeSaveDialog( %this, %toMaterial )
 /*
 function MaterialEditorGui::showCreateNewMaterialSaveDialog( %this, %toMaterial )
 {
-   MessageBoxYesNoCancel("Save Material?", 
+   toolsMessageBoxYesNoCancel("Save Material?", 
       "The material " @ MaterialEditorGui.currentMaterial.getName() @ " has unsaved changes. <br>Do you want to save before changing the material?", 
       "MaterialEditorGui.save(); MaterialEditorGui.createNewMaterial(" @ %toMaterial @ ");", 
       "MaterialEditorGui.saveDialogDontSave(" @ %toMaterial @ "); MaterialEditorGui.changeMaterial(" @ %toMaterial @ ");", 
@@ -2133,7 +2133,7 @@ function MaterialEditorGui::save( %this )
 {
    if( MaterialEditorGui.currentMaterial.getName() $= "" )
    {
-      MessageBoxOK("Cannot perform operation", "Saved materials cannot be named \"\". A name must be given before operation is performed" );
+      toolsMessageBoxOK("Cannot perform operation", "Saved materials cannot be named \"\". A name must be given before operation is performed" );
       return;   
    }
    
@@ -2143,7 +2143,7 @@ function MaterialEditorGui::save( %this )
    %currentMaterial = MaterialEditorGui.currentMaterial;
    if( %currentMaterial == -1 )
    {
-      MessageBoxOK("Cannot perform operation", "Could not locate material" );
+      toolsMessageBoxOK("Cannot perform operation", "Could not locate material" );
       return;
    }
 
@@ -2348,7 +2348,7 @@ function MaterialEditorGui::lookupMaterialInstances( %this )
 {
    if( MaterialEditorGui.currentMaterial.getName() $= "" )
    {
-      MessageBoxOK("Cannot perform operation", "Unable to look up a material with a blank name" );
+      toolsMessageBoxOK("Cannot perform operation", "Unable to look up a material with a blank name" );
       return;   
    }
    

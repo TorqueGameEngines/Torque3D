@@ -21,17 +21,15 @@ exec( "tools/gui/profiles.ed.cs" );
       Enabled = "1";
       isDecoy = "0";
       navigationIndex = "-1";
-
-   new GuiBitmapButtonCtrl(MainMenuAppLogo) {
-      bitmap = "data/ui/images/Torque-3D-logo";
+      
+   new GuiBitmapCtrl(MainMenuAppLogo) {
+      bitmap = "data/ui/images/Torque-3D-logo_alt.png";
       bitmapMode = "Stretched";
       autoFitExtents = "0";
       useModifiers = "0";
       useStates = "1";
       masked = "0";
       groupNum = "-1";
-      buttonType = "PushButton";
-      useMouseEvents = "0";
       position = "550 30";
       extent = "443 139";
       minExtent = "8 2";
@@ -40,7 +38,6 @@ exec( "tools/gui/profiles.ed.cs" );
       profile = "GuiDefaultProfile";
       visible = "1";
       active = "1";
-      command = "gotoWebPage(\"forums.torque3d.org\");";
       tooltipProfile = "GuiToolTipProfile";
       hovertime = "1000";
       isContainer = "0";
@@ -48,10 +45,9 @@ exec( "tools/gui/profiles.ed.cs" );
       canSaveDynamicFields = "1";
          navigationIndex = "-1";
    };
+
    new GuiGameListMenuCtrl(MainMenuButtonList) {
-      class = "UIMenuButtonList";
       debugRender = "0";
-      callbackOnA = "MainMenuButtonList.activateRow();";
       callbackOnInputs = "1";
       position = "292 103";
       extent = "439 561";
@@ -64,12 +60,13 @@ exec( "tools/gui/profiles.ed.cs" );
       tooltipProfile = "GuiToolTipProfile";
       hovertime = "1000";
       isContainer = "0";
+      class = "UIMenuButtonList";
       canSave = "1";
       canSaveDynamicFields = "0";
    };
    new GuiControl(MainMenuButtonHolder) {
-      position = "190 652";
-      extent = "646 130";
+      position = "189 711";
+      extent = "646 40";
       minExtent = "8 2";
       horizSizing = "center";
       vertSizing = "top";
@@ -79,8 +76,40 @@ exec( "tools/gui/profiles.ed.cs" );
       tooltipProfile = "GuiToolTipProfile";
       hovertime = "1000";
       isContainer = "1";
+      class = "MenuInputButtonContainer";
       canSave = "1";
       canSaveDynamicFields = "0";
+
+      new GuiIconButtonCtrl() {
+         buttonMargin = "4 4";
+         iconBitmap = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_Enter";
+         iconLocation = "Left";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Right";
+         textMargin = "4";
+         autoSize = "0";
+         text = "Go";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         position = "507 0";
+         extent = "140 40";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "GuiMenuButtonProfile";
+         visible = "1";
+         active = "1";
+         command = "MainMenuButtonList.activateRow();";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         internalName = "goButton";
+         class = "MenuInputButton";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
    };
 };
 //--- OBJECT WRITE END ---

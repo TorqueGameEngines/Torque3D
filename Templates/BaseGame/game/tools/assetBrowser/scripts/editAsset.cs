@@ -349,7 +349,7 @@ function AssetBrowser::deleteAsset(%this)
    //%assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
    //%assetType = %assetDef.getClassName();
    
-   MessageBoxOKCancel("Warning!", "This will delete the selected content and the files associated to it, do you wish to continue?", 
+   toolsMessageBoxOKCancel("Warning!", "This will delete the selected content and the files associated to it, do you wish to continue?", 
       "AssetBrowser.confirmDeleteAsset();", "");
 }
 

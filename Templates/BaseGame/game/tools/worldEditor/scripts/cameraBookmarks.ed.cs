@@ -338,7 +338,7 @@ function EManageBookmarksTextEdit::onValidate( %this )
    {
       %id = %this.getId();
       %callback = %id @ ".setText(\"" @ %oldname @ "\"); " @ %id @ ".makeFirstResponder(true); " @ %id @ ".selectAllText();";
-      MessageBoxOK("Create Bookmark", "You must provide a unique name for the new bookmark.", %callback);
+      toolsMessageBoxOK("Create Bookmark", "You must provide a unique name for the new bookmark.", %callback);
       return;
    }
    

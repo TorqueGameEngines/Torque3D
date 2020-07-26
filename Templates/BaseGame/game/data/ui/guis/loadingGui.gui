@@ -4,7 +4,7 @@
    useVariable = "0";
    tile = "0";
    position = "0 0";
-   extent = "1600 838";
+   extent = "1024 768";
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
@@ -19,7 +19,7 @@
       Enabled = "1";
 
    new GuiControl() {
-      position = "391 429";
+      position = "263 301";
       extent = "497 166";
       minExtent = "8 8";
       horizSizing = "center";
@@ -35,8 +35,27 @@
       canSave = "1";
       canSaveDynamicFields = "0";
 
+      new GuiBitmapCtrl() {
+         bitmap = "data/ui/images/panel.png";
+         color = "255 255 255 255";
+         wrap = "0";
+         position = "0 0";
+         extent = "497 166";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
       new GuiBitmapCtrl(LoadingLogo) {
-         bitmap = "data/ui/images/Torque-3D-logo.png";
+         bitmap = "data/ui/images/Torque-3D-logo_alt.png";
+         color = "255 255 255 255";
          wrap = "0";
          position = "27 6";
          extent = "443 139";

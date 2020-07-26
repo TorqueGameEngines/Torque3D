@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxOKCancelDetailsDlg) {
+%guiContent = new GuiControl(toolsMessageBoxOKCancelDetailsDlg) {
    canSaveDynamicFields = "0";
    Profile = "GuiOverlayProfile";
    HorizSizing = "width";
@@ -57,7 +57,7 @@
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         Command = "MessageCallback(MessageBoxOKCancelDetailsDlg,MessageBoxOKCancelDetailsDlg.callback);";
+         Command = "MessageCallback(toolsMessageBoxOKCancelDetailsDlg,toolsMessageBoxOKCancelDetailsDlg.callback);";
          Accelerator = "return";
          hovertime = "1000";
          text = "OK";
@@ -74,7 +74,7 @@
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         Command = "MessageCallback(MessageBoxOKCancelDetailsDlg,MessageBoxOKCancelDetailsDlg.cancelCallback);";
+         Command = "MessageCallback(toolsMessageBoxOKCancelDetailsDlg,toolsMessageBoxOKCancelDetailsDlg.cancelCallback);";
          Accelerator = "escape";
          hovertime = "1000";
          text = "CANCEL";

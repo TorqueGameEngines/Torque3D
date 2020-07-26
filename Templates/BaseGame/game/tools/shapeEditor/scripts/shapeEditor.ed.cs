@@ -265,7 +265,7 @@ function ShapeEdSelectWindow::onSelect( %this, %path )
    if ( ShapeEditor.isDirty() )
    {
       %cmd = "showImportDialog( \"" @ %path @ "\", \"ShapeEditor.selectShape( \\\"" @ %path @ "\\\", ";
-      MessageBoxYesNoCancel( "Shape Modified", "Would you like to save your changes?", %cmd @ "true );\" );", %cmd @ "false );\" );" );
+      toolsMessageBoxYesNoCancel( "Shape Modified", "Would you like to save your changes?", %cmd @ "true );\" );", %cmd @ "false );\" );" );
    }
    else
    {
@@ -296,7 +296,7 @@ function ShapeEditor::selectShape( %this, %path, %saveOld )
    // Initialise the shape preview window
    if ( !ShapeEdShapeView.setModel( %path ) )
    {
-      MessageBoxOK( "Error", "Failed to load '" @ %path @ "'. Check the console for error messages." );
+      toolsMessageBoxOK( "Error", "Failed to load '" @ %path @ "'. Check the console for error messages." );
       return;
    }
    ShapeEdShapeView.fitToShape();
@@ -1617,7 +1617,7 @@ function ShapeEdSequences::onEditBlend( %this )
       %blendFrame = %this-->blendFrame.getText();
       if ( ( %blendSeq $= "" ) || ( %blendFrame $= "" ) )
       {
-         MessageBoxOK( "Blend reference not set", "The blend reference sequence and " @
+         toolsMessageBoxOK( "Blend reference not set", "The blend reference sequence and " @
             "frame must be set before changing the blend flag or frame." );
          ShapeEdSequences-->blendFlag.setStateOn( %oldBlend );
          return;
@@ -2231,7 +2231,7 @@ function ShapeEdSequences::onAddTrigger( %this )
         %frame = mRound( ShapeEdSeqSlider.getValue() ) - %this-->startFrame.getText();
         if ((%frame < 0) || (%frame > %this-->endFrame.getText() - %this-->startFrame.getText()))
         {
-            MessageBoxOK( "Error", "Trigger out of range of the selected animation." );
+            toolsMessageBoxOK( "Error", "Trigger out of range of the selected animation." );
         }
         else
         {
@@ -3157,7 +3157,7 @@ function ShapeEdColWindow::editCollision( %this )
    if ( ( ShapeEditor.shape.getDetailLevelIndex( -1 ) >= 0 ) &&
         ( getField(%this.lastColSettings, 0) $= "" ) )
    {
-      MessageBoxYesNo( "Warning", "Existing collision geometry at detail size " @
+      toolsMessageBoxYesNo( "Warning", "Existing collision geometry at detail size " @
          "-1 will be removed, and this cannot be undone. Do you want to continue?",
          "ShapeEdColWindow.editCollisionOK();", "" );
    }
@@ -3366,7 +3366,7 @@ function ShapeEdMountWindow::mountShape( %this, %slot )
    }
    else
    {
-      MessageBoxOK( "Error", "Failed to mount \"" @ %model @ "\". Check the console for error messages.", "" );
+      toolsMessageBoxOK( "Error", "Failed to mount \"" @ %model @ "\". Check the console for error messages.", "" );
    }
 }
 

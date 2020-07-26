@@ -4,26 +4,25 @@ function JoinServerMenu::onWake()
    // Double check the status. Tried setting this the control
    // inactive to start with, but that didn't seem to work.
    JoinServerJoinBtn.setActive(JS_serverList.rowCount() > 0);
+   
+   JoinServerButtonHolder.setActive();
+   
+   JoinServerMenuInputHandler.setFirstResponder();
 }   
 
 function JoinServerButtonHolder::onWake(%this)
 {
-   %this.refresh();
+   %this-->joinButton.set("btn_start", "Return", "Join", "JoinServerMenu.join();");
+   %this-->backButton.set("btn_b", "Escape", "Back", "JoinServerMenu.backOut();");
+   %this-->refreshButton.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
+   %this-->queryLANButton.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
+   %this-->queryInternetButton.set("btn_x", "E", "Query Internet", "JoinServerMenu.query();");
 }
 
-function JoinServerButtonHolder::refresh(%this)
+function JoinServerMenuInputHandler::onInputEvent(%this, %device, %action, %state)
 {
-   JoinServerButtonHolder.add(GamepadButtonsGui);
-   
-   GamepadButtonsGui.clearButtons();
-   
-   GamepadButtonsGui.setButton(1, "A", "", "Query LAN", "JoinServerMenu.queryLan();");
-   GamepadButtonsGui.setButton(2, "X", "", "Query Internet", "JoinServerMenu.query();");
-   GamepadButtonsGui.setButton(3, "B", "", "Refresh", "JoinServerMenu.refresh();");
-   GamepadButtonsGui.setButton(6, "Start", "Enter", "Join", "JoinServerMenu.join();");
-   GamepadButtonsGui.setButton(7, "B", "Esc", "Back", "JoinServerMenu.backOut();");
-   
-   GamepadButtonsGui.refreshButtons();
+   if(%state)
+      $activeMenuButtonContainer.processInputs(%device, %action);
 }
 
 //----------------------------------------

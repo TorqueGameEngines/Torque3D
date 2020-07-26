@@ -141,7 +141,7 @@ function RetargetDecalButton::onClick( %this )
    
    if( !isObject(%datablock) )
    {
-      MessageBoxOK("Error", "A valid Decal Template must be selected.");
+      toolsMessageBoxOK("Error", "A valid Decal Template must be selected.");
       return;
    }
 
@@ -184,7 +184,7 @@ function DeleteDecalButton::onClick( %this )
       %id = DecalDataList.getSelectedItem();
       %datablock = DecalDataList.getItemText(%id );
    
-      MessageBoxYesNoCancel("Delete Decal Datablock?", 
+      toolsMessageBoxYesNoCancel("Delete Decal Datablock?", 
          "Are you sure you want to delete<br><br>" @ %datablock @ "<br><br> Datablock deletion won't take affect until the engine is quit.", 
          "DecalEditorGui.deleteSelectedDecalDatablock();", 
          "", 

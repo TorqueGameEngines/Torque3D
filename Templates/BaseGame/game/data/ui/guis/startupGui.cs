@@ -33,13 +33,15 @@ function loadStartup()
    // to cycle through. Note that they have to
    // be in consecutive numerical order
    StartupGui.bitmap[0]     = "data/ui/images/background-dark";
-   StartupGui.logo[0]       = "data/ui/images/Torque-3D-logo";
+   StartupGui.logo[0]       = "data/ui/images/Torque-3D-logo_alt";
    StartupGui.logoPos[0]    = "178 251";
    StartupGui.logoExtent[0] = "443 139";
 
    // Call the next() function to set our firt
    // splash screen
    StartupGui.next();
+   
+   StartupGui.setFirstResponder();
 
    // Play our startup sound
    //SFXPlayOnce(AudioGui, "data/ui/sounds/startup");//SFXPlay(startsnd);

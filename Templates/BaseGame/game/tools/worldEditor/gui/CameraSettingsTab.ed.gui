@@ -413,7 +413,7 @@ function ECameraSettingsPage::deleteCameraSettingsGroup( %this, %levelName, %rol
 {
    if( %levelName $= EditorGui.levelName )
    {
-      MessageBoxOK("Error", "You may not delete the settings group associated with the currently loaded level");
+      toolsMessageBoxOK("Error", "You may not delete the settings group associated with the currently loaded level");
       return;
    }
    

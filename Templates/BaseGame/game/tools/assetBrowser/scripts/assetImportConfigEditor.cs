@@ -168,7 +168,7 @@ function AssetImportConfigEditor::createNewImportConfig(%this)
 function AssetImportConfigEditor::deleteConfig(%this)
 {
    %callback = "AssetImportConfigEditor.onDeleteConfig();";
-   MessageBoxOKCancel("Delete Import Config", "This will delete the " @ AssetImportConfigList.currentConfig @ " config. Continue?", %callback, "");
+   toolsMessageBoxOKCancel("Delete Import Config", "This will delete the " @ AssetImportConfigList.currentConfig @ " config. Continue?", %callback, "");
 }
 
 function AssetImportConfigEditor::onDeleteConfig(%this)

@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxOKBuyDlg) {
+%guiContent = new GuiControl(toolsMessageBoxOKBuyDlg) {
 	profile = "ToolsGuiDefaultProfile";
 	horizSizing = "width";
 	vertSizing = "height";
@@ -27,7 +27,7 @@
       canMaximize = "0";
       minSize = "50 50";
       text = "";
-      closeCommand = "MessageCallback(MessageBoxOKBuyDlg,MessageBoxOKBuyDlg.noCallback);";
+      closeCommand = "MessageCallback(toolsMessageBoxOKBuyDlg,toolsMessageBoxOKBuyDlg.noCallback);";
 
 		new GuiMLTextCtrl(MBOKBuyText) {
          profile = "ToolsGuiMLTextProfile";
@@ -50,7 +50,7 @@
          extent = "80 22";
          minExtent = "8 8";
          visible = "1";
-			command = "MessageCallback(MessageBoxOKBuyDlg,MessageBoxOKBuyDlg.OKCallback);";
+			command = "MessageCallback(toolsMessageBoxOKBuyDlg,toolsMessageBoxOKBuyDlg.OKCallback);";
          accelerator = "return";
          helpTag = "0";
          text = "OK";
@@ -64,7 +64,7 @@
          extent = "80 22";
          minExtent = "8 8";
          visible = "1";
-			command = "MessageCallback(MessageBoxOKBuyDlg,MessageBoxOKBuyDlg.BuyCallback);";
+			command = "MessageCallback(toolsMessageBoxOKBuyDlg,toolsMessageBoxOKBuyDlg.BuyCallback);";
          accelerator = "escape";
          helpTag = "0";
          text = "Buy Now!";
@@ -74,12 +74,12 @@
 };
 //--- OBJECT WRITE END ---
 
-function MessageBoxOKBuy(%title, %message, %OKCallback, %BuyCallback)
+function toolsMessageBoxOKBuy(%title, %message, %OKCallback, %BuyCallback)
 {
    MBOKBuyFrame.text = %title;
-   MessageBoxOKBuyDlg.profile = "ToolsGuiOverlayProfile";
-   Canvas.pushDialog(MessageBoxOKBuyDlg);
+   toolsMessageBoxOKBuyDlg.profile = "ToolsGuiOverlayProfile";
+   Canvas.pushDialog(toolsMessageBoxOKBuyDlg);
    MBSetText(MBOKBuyText, MBOKBuyFrame, %message);
-   MessageBoxOKBuyDlg.OKCallback = %OKCallback;
-   MessageBoxOKBuyDlg.BuyCallback = %BuyCallback;
+   toolsMessageBoxOKBuyDlg.OKCallback = %OKCallback;
+   toolsMessageBoxOKBuyDlg.BuyCallback = %BuyCallback;
 }

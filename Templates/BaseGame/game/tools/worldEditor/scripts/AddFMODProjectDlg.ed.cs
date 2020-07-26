@@ -45,7 +45,7 @@ function AddFMODProjectDlg::show( %this )
    
    if( getField( sfxGetDeviceInfo(), $SFX::DEVICE_INFO_PROVIDER ) !$= "FMOD" )
    {
-      MessageBoxOK( "Error",
+      toolsMessageBoxOK( "Error",
          "You do not currently have FMOD selected as your sound system." NL
          "" NL
          "To install FMOD, place the FMOD DLLs (" @ %fmodex @ " and " @ %fmodevent @ ")" SPC
@@ -64,7 +64,7 @@ function AddFMODProjectDlg::show( %this )
    %deviceCaps = getField( sfxGetDeviceInfo(), $SFX::DEVICE_INFO_CAPS );
    if( !( %deviceCaps & $SFX::DEVICE_CAPS_FMODDESIGNER ) )
    {
-      MessageBoxOK( "Error",
+      toolsMessageBoxOK( "Error",
          "You do not have the requisite FMOD Event DLL in place." NL
          "" NL
          "Please copy " @ %fmodevent @ " into your game/ folder and restart Torque."
@@ -114,14 +114,14 @@ function AddFMODProjectDlg::onOK( %this )
    
    if( %fileName $= "" )
    {
-      MessageBoxOK( "Error",
+      toolsMessageBoxOK( "Error",
          "Please enter a project file name."
       );
       return;
    }
    if( !isFile( %fileName ) )
    {
-      MessageBoxOK( "Error",
+      toolsMessageBoxOK( "Error",
          "'" @ %fileName @ "' is not a valid file."
       );
       return;
@@ -131,7 +131,7 @@ function AddFMODProjectDlg::onOK( %this )
    
    if( !isDirectory( %mediaPath ) )
    {
-      MessageBoxOK( "Error",
+      toolsMessageBoxOK( "Error",
          "'" @ %mediaPath @ "' is not a valid directory."
       );
       return;
@@ -155,7 +155,7 @@ function AddFMODProjectDlg::onOK( %this )
    
    if( !isObject( %objName ) )
    {
-      MessageBoxOK( "Error",
+      toolsMessageBoxOK( "Error",
          "Failed to create the object.  Please take a look at the log for details."
       );
       return;

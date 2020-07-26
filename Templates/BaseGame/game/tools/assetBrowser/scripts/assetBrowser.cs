@@ -928,7 +928,7 @@ function AssetBrowser::showDeleteDialog( %this )
    
    if( isObject( %material ) )
    {
-      MessageBoxYesNoCancel("Delete Material?", 
+      toolsMessageBoxYesNoCancel("Delete Material?", 
          "Are you sure you want to delete<br><br>" @ %material.getName() @ "<br><br> Material deletion won't take affect until the engine is quit.", 
          "AssetBrowser.deleteMaterial( " @ %material @ ", " @ %secondFilter @ ", " @ %secondFilterName @" );", 
          "", 
@@ -2320,7 +2320,7 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
       if(%path !$= AssetBrowser.dirHandler.CurrentAddress)
       {
          //we're trying to move the asset to a different module!
-         //MessageBoxYesNo( "Move Asset", "Do you wish to move asset " @ %assetName @ " to " @ %path @ "?", 
+         //toolsMessageBoxYesNo( "Move Asset", "Do you wish to move asset " @ %assetName @ " to " @ %path @ "?", 
          //      "AssetBrowser.moveAsset(\""@ %moduleName @ ":" @ %assetName @"\", \""@%path@"\");", ""); 
          
          if(%assetType $= "Folder")

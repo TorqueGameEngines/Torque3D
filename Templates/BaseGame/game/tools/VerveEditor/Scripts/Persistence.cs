@@ -172,7 +172,7 @@ function VerveEditor::SavePrompt()
         return true;
     }
     
-    %result = messageBox( "Verve Editor", "Save Changes to your sequence?", "SaveDontSave", "Warning" );
+    %result = toolsMessageBox( "Verve Editor", "Save Changes to your sequence?", "SaveDontSave", "Warning" );
     if ( %result $= $MROk )
     {
         // Save.
@@ -189,7 +189,7 @@ function VerveEditor::SavePromptCancel()
         return true;
     }
     
-    %result = messageBox( "Verve Editor", "Save Changes to your sequence?", "SaveDontSaveCancel", "Warning" );
+    %result = toolsMessageBox( "Verve Editor", "Save Changes to your sequence?", "SaveDontSaveCancel", "Warning" );
     if ( %result $= $MRCancel )
     {
         return false;

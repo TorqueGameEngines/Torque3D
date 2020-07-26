@@ -104,7 +104,7 @@ function MissionAreaEditorPlugin::setEditorFunction( %this )
    %missionAreaExists = isObject(getMissionAreaServerObject());
 
    if( %missionAreaExists == false )
-      MessageBoxYesNoCancel("No Mission Area","Would you like to create a New Mission Area?", "MissionAreaEditorPlugin.createNewMissionArea();");
+      toolsMessageBoxYesNoCancel("No Mission Area","Would you like to create a New Mission Area?", "MissionAreaEditorPlugin.createNewMissionArea();");
 
    return %missionAreaExists;
 }

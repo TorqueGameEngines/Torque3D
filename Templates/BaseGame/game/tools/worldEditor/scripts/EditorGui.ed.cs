@@ -2088,7 +2088,7 @@ function EWorldEditor::addSimGroup( %this, %groupCurrentSelection )
    %activeSelection = %this.getActiveSelection();
    if ( %activeSelection.getObjectIndex( getScene(0) ) != -1 )
    {
-      MessageBoxOK( "Error", "Cannot add Scene to a new SimGroup" );
+      toolsMessageBoxOK( "Error", "Cannot add Scene to a new SimGroup" );
       return;
    }
 

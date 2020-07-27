@@ -224,3 +224,13 @@ new GuiControlProfile( GuiButtonProfile )
    hasBitmapArray = false;
    category = "Core";
 };
+
+// ---------------------------------------------------------------------------
+// Slider control
+// ---------------------------------------------------------------------------
+if( !isObject( GuiSliderProfile ) )
+new GuiControlProfile( GuiSliderProfile )
+{
+   bitmap = "core/gui/images/slider";
+   category = "Core";
+};

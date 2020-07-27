@@ -506,16 +506,6 @@ new GuiControlProfile( GuiRadioProfile )
    category = "Core";
 };
 
-// ---------------------------------------------------------------------------
-// Slider control
-// ---------------------------------------------------------------------------
-if( !isObject( GuiSliderProfile ) )
-new GuiControlProfile( GuiSliderProfile )
-{
-   bitmap = "data/ui/images/slider";
-   category = "Core";
-};
-
 //
 // Scroll Profile
 //

@@ -1120,7 +1120,7 @@ bool WaterObject::initMaterial( S32 idx )
    // We must return false for any case which it is NOT safe for the caller
    // to use the indexed material.
    
-   if ( idx < 0 || idx > NumMatTypes )
+   if ( idx < 0 || idx >= NumMatTypes )
       return false;
 
    BaseMatInstance *mat = mMatInstances[idx];

@@ -359,6 +359,8 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    {
       LightBinEntry& curEntry = *itr;
       LightInfo *curLightInfo = curEntry.lightInfo;
+      if (curEntry.lightInfo->getType() >= LightInfo::Vector)
+         continue;
       LightMaterialInfo *curLightMat = curEntry.lightMaterial;
       const U32 numPrims = curEntry.numPrims;
       const U32 numVerts = curEntry.vertBuffer->mNumVerts;

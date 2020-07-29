@@ -201,7 +201,6 @@ function onServerCreated()
    physicsInitWorld( "server" );
 
    physicsStartSimulation("server");
-   DatablockFilesList.clear();
    loadDatablockFiles( DatablockFilesList, true );
    
    callOnModules("onServerScriptExec", "Core");
@@ -287,6 +286,7 @@ function onServerDestroyed()
    
   if ($Pref::Server::EnableDatablockCache)
     resetDatablockCache();
+   DatablockFilesList.empty();
 }
 
 /// Guid list maintenance functions

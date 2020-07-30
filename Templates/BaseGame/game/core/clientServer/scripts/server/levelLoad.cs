@@ -163,6 +163,10 @@ function endMission()
    getScene(0).delete();
    MissionCleanup.delete();
    
+  if ($Pref::Server::EnableDatablockCache)
+    resetDatablockCache();
+   DatablockFilesList.empty();
+   
    clearServerPaths();
 }
 
@@ -176,6 +180,10 @@ function resetMission()
    new SimGroup( MissionCleanup );
    $instantGroup = MissionCleanup;
 
+  if ($Pref::Server::EnableDatablockCache)
+    resetDatablockCache();
+   DatablockFilesList.empty();
+   
    clearServerPaths();
    
    // Inform the game code we're resetting.

@@ -368,10 +368,10 @@ public:
       flDecayLFRatio = 0.0f;
       flReflectionsGain = 0.0f;
       flReflectionsDelay = 0.0f;
-      flReflectionsPan[3] = 0.0f;
+      dMemset(flReflectionsPan, 0, sizeof(flReflectionsPan));
       flLateReverbGain = 0.0f;
       flLateReverbDelay = 0.0f;
-      flLateReverbPan[3] = 0.0f;
+      dMemset(flLateReverbPan, 0, sizeof(flLateReverbPan));
       flEchoTime = 0.0f;
       flEchoDepth = 0.0f;
       flModulationTime = 0.0f;
@@ -472,10 +472,10 @@ public:
       flDecayLFRatio = 0.0f;
       flReflectionsGain = 0.0f;
       flReflectionsDelay = 0.0f;
-      flReflectionsPan[3] = 0.0f;
+      dMemset(flReflectionsPan, 0, sizeof(flReflectionsPan));
       flLateReverbGain = 0.0f;
       flLateReverbDelay = 0.0f;
-      flLateReverbPan[3] = 0.0f;
+      dMemset(flLateReverbPan, 0, sizeof(flLateReverbPan));
       flEchoTime = 0.0f;
       flEchoDepth = 0.0f;
       flModulationTime = 0.0f;

@@ -440,7 +440,7 @@ S32 GuiParticleGraphCtrl::getSelectedPoint()
 
 bool GuiParticleGraphCtrl::isExistingPoint(S32 plotID, S32 sample)
 {
-   if (((plotID < 0) || (plotID > MaxPlots)) || ((sample < 0) || (sample > MaxDataPoints)) || (sample >= mPlots[plotID].mGraphData.size()))
+   if (((plotID < 0) || (plotID >= MaxPlots)) || ((sample < 0) || (sample > MaxDataPoints)) || (sample >= mPlots[plotID].mGraphData.size()))
    {
       return false;
    } else
@@ -455,7 +455,7 @@ Point2F GuiParticleGraphCtrl::getPlotPoint(S32 plotID, S32 sample)
    val.x = -1;
    val.y = -1;
 
-   if (((plotID < 0) || (plotID > MaxPlots)) || ((sample < 0) || (sample > MaxDataPoints)))
+   if (((plotID < 0) || (plotID >= MaxPlots)) || ((sample < 0) || (sample > MaxDataPoints)))
    {
       return val;
    }
@@ -465,7 +465,7 @@ Point2F GuiParticleGraphCtrl::getPlotPoint(S32 plotID, S32 sample)
 
 S32 GuiParticleGraphCtrl::getPlotIndex(S32 plotID, F32 x, F32 y)
 {
-   if ((plotID < 0) || (plotID > MaxPlots))
+   if ((plotID < 0) || (plotID >= MaxPlots))
    {
       return -1;
    } 
@@ -1022,7 +1022,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setSelectedPlot, void, (S32 plotID), , 
               "Set the selected plot (a.k.a. graph)."
            "@return No return value" )
 {
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1034,7 +1034,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, clearGraph, void, (S32 plotID), , "(int
               "Clear the graph of the given plot."
            "@return No return value")
 {
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1054,7 +1054,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, addPlotPoint, S32, (S32 plotID, F32 x, 
            "@return")
 {
   
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return -2;
@@ -1069,7 +1069,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, insertPlotPoint, void, (S32 plotID, S32
            "@param x,y The plot position.\n"
            "@return No return value.")
 {
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1084,7 +1084,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, changePlotPoint, S32, (S32 plotID, S32 
            "@param x,y The plot position.\n"
            "@return No return value.")
 {
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return -1;
@@ -1110,7 +1110,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, isExistingPoint, bool, (S32 plotID, S32
               "@return Returns true or false whether or not the point in the plot passed is an existing point.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1126,7 +1126,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, getPlotPoint, Point2F, (S32 plotID, S32
            "@return The data point ID")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1146,7 +1146,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, getPlotIndex, S32, (S32 plotID, F32 x, 
            "@return Returns the index of the point.\n")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1158,7 +1158,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, getGraphColor, LinearColorF, (S32 plotI
            "@return Returns the color of the graph as a string of RGB values formatted as \"R G B\"")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1172,7 +1172,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, getGraphMin, Point2F, (S32 plotID), , "
            "@return Returns the minimum of the range formatted as \"x-min y-min\"")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1184,7 +1184,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, getGraphMax, Point2F, (S32 plotID), , "
            "@return Returns the maximum of the range formatted as \"x-max y-max\"")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1197,7 +1197,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, getGraphName, const char*, (S32 plotID)
            "@return Returns the name of the plot")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
    }
@@ -1216,7 +1216,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphMin, void, (S32 plotID, F32 min
            "@return No return value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1232,7 +1232,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphMinX, void, (S32 plotID, F32 mi
            "@return No return Value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1248,7 +1248,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphMinY, void, (S32 plotID, F32 mi
            "@return No return Value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1264,7 +1264,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphMax, void, (S32 plotID, F32 max
            "@return No return value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1280,7 +1280,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphMaxX, void, (S32 plotID, F32 ma
            "@return No return Value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1296,7 +1296,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphMaxY, void, (S32 plotID, F32 ma
            "@return No return Value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1310,7 +1310,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphHidden, void, (S32 plotID, bool
            "@return No return value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;
@@ -1362,7 +1362,7 @@ DefineEngineMethod(GuiParticleGraphCtrl, setGraphName, void, (S32 plotID, const 
            "@return No return value.")
 {
 
-   if(plotID > object->MaxPlots)
+   if(plotID >= object->MaxPlots)
    {
       Con::errorf("Invalid plotID.");
       return;

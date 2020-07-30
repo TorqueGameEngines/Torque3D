@@ -2550,7 +2550,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
          Milliseconds = 1000
       };
 
-      S32 lodType;
+      S32 lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
       if (activeImportConfig.LODType.compare("TrailingNumber") == 0)
          lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
       else if (activeImportConfig.LODType.compare("SingleSize") == 0)

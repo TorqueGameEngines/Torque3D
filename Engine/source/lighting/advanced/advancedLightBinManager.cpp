@@ -52,6 +52,11 @@ bool AdvancedLightBinManager::smDiffuseLightViz = false;
 bool AdvancedLightBinManager::smSpecularLightViz = false;
 bool AdvancedLightBinManager::smDetailLightingViz = false;
 
+S32 AdvancedLightBinManager::smMaximumNumOfLights = -1;
+bool AdvancedLightBinManager::smUseLightFade = false;
+F32 AdvancedLightBinManager::smLightFadeStart = 50;
+F32 AdvancedLightBinManager::smLightFadeEnd = 75;
+
 ImplementEnumType( ShadowFilterMode,
    "The shadow filtering modes for Advanced Lighting shadows.\n"
    "@ingroup AdvancedLighting" )
@@ -178,6 +183,15 @@ void AdvancedLightBinManager::consoleInit()
    Con::addVariable("$AL::DetailLightingViz", TypeBool, &smDetailLightingViz,
       "Enables debug rendering of the PSSM shadows.\n"
       "@ingroup AdvancedLighting\n");
+
+   Con::addVariable("$pref::maximumNumOfLights",
+      TypeS32, &smMaximumNumOfLights,
+      "The maximum number of local lights that can be rendered at a time. If set to -1, then no limit.\n");
+
+   Con::addVariable("$pref::useLightFade", TypeBool, &smUseLightFade, "Indicates if local lights should utilize the distance-based object fadeout logic.\n");
+   Con::addVariable("$pref::lightFadeStart", TypeF32, &smLightFadeStart, "Distance at which light fading begins if $pref::useLightFade is on.\n");
+   Con::addVariable("$pref::lightFadeEnd", TypeF32, &smLightFadeEnd, "Distance at which light fading should have fully faded if $pref::useLightFade is on.\n");
+
 }
 
 bool AdvancedLightBinManager::setTargetSize(const Point2I &newTargetSize)
@@ -258,6 +272,72 @@ void AdvancedLightBinManager::clearAllLights()
 
    mLightBin.clear();
    mNumLightsCulled = 0;
+}
+
+S32 QSORT_CALLBACK AdvancedLightBinManager::_lightScoreCmp(const LightBinEntry* a, const  LightBinEntry* b)
+{
+   F32 diff = a->lightInfo->getScore() - b->lightInfo->getScore();
+   return diff > 0 ? 1 : diff < 0 ? -1 : 0;
+}
+
+void AdvancedLightBinManager::_scoreLights(const MatrixF& cameraTrans)
+{
+   PROFILE_SCOPE(AdvancedLightBinManager_scoreLights);
+
+   if (!LIGHTMGR)
+      return;
+
+   // Get all the lights.
+   const Point3F lumDot(0.2125f, 0.7154f, 0.0721f);
+
+   for (LightBinIterator itr = mLightBin.begin(); itr != mLightBin.end(); itr++)
+   {
+      // Get the light.
+      LightBinEntry& light = *itr;
+
+      F32 luminace = 0.0f;
+      F32 weight = 0.0f;
+      F32 score = 0.0f;
+
+      const bool isSpot = light.lightInfo->getType() == LightInfo::Spot;
+      const bool isPoint = light.lightInfo->getType() == LightInfo::Point;
+
+      if (isPoint || isSpot)
+      {
+         Point3F distVec = light.lightInfo->getPosition() - cameraTrans.getPosition();
+         F32 dist = distVec.len();
+
+         score = dist;// light.lightInfo->getRange().x / mMax(dist, 1.0f);
+
+         // Get the luminocity.
+         luminace = mDot(light.lightInfo->getColor(), lumDot) * light.lightInfo->getBrightness();
+
+         weight = light.lightInfo->getPriority();
+
+         //Distance fading test
+         if (smUseLightFade)
+         {
+            if (dist > smLightFadeStart)
+            {
+               F32 brightness = light.lightInfo->getBrightness();
+
+               float fadeOutAmt = (dist - smLightFadeStart) / (smLightFadeEnd - smLightFadeStart);
+               fadeOutAmt = 1 - fadeOutAmt;
+
+               light.lightInfo->setFadeAmount(fadeOutAmt);
+            }
+         }
+         else
+         {
+            light.lightInfo->setFadeAmount(1.0);
+         }
+      }
+
+      light.lightInfo->setScore(score * weight - luminace);
+   }
+
+   // Sort them!
+   mLightBin.sort(_lightScoreCmp);
 }
 
 void AdvancedLightBinManager::render( SceneRenderState *state )
@@ -354,9 +434,25 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
       }
    }
 
+   const Frustum& frustum = state->getCameraFrustum();
+   MatrixF invCam(frustum.getTransform());
+   invCam.inverse();
+
+   const MatrixF& cameraTrans = frustum.getTransform();
+
+   if(smUseLightFade || smMaximumNumOfLights != -1)
+      _scoreLights(cameraTrans);
+
+   S32 lightCount = 0;
+
    // Blend the lights in the bin to the light buffer
    for( LightBinIterator itr = mLightBin.begin(); itr != mLightBin.end(); itr++ )
    {
+      if (smMaximumNumOfLights != -1 && lightCount >= smMaximumNumOfLights)
+         break;
+
+      lightCount++;
+
       LightBinEntry& curEntry = *itr;
       LightInfo *curLightInfo = curEntry.lightInfo;
       if (curEntry.lightInfo->getType() >= LightInfo::Vector)
@@ -368,7 +464,7 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
       ShadowMapParams *lsp = curLightInfo->getExtended<ShadowMapParams>();
 
       // Skip lights which won't affect the scene.
-      if ( !curLightMat || curLightInfo->getBrightness() <= 0.001f )
+      if (!curLightMat || curLightInfo->getBrightness() * curLightInfo->getFadeAmount() <= 0.001f)
          continue;
 
       GFXDEBUGEVENT_SCOPE( AdvancedLightBinManager_Render_Light, ColorI::RED );
@@ -694,7 +790,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    MaterialParameters *matParams = matInstance->getMaterialParameters();
 
    matParams->setSafe( lightColor, lightInfo->getColor() );
-   matParams->setSafe( lightBrightness, lightInfo->getBrightness() );
+   matParams->setSafe(lightBrightness, lightInfo->getBrightness() * lightInfo->getFadeAmount());
 
    switch( lightInfo->getType() )
    {

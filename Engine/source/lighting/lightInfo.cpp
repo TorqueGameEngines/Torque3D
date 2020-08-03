@@ -54,6 +54,7 @@ LightInfo::LightInfo()
       mDynamicRefreshFreq( 8 ),
       mPriority( 1.0f ),
       mScore( 0.0f ),
+      mFadeAmount(1.0f),
       mDebugRender( false )
 {
 }

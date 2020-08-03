@@ -108,6 +108,11 @@ public:
    static bool smSpecularLightViz;
    static bool smDetailLightingViz;
 
+   static S32 smMaximumNumOfLights;
+   static bool smUseLightFade;
+   static F32 smLightFadeEnd;
+   static F32 smLightFadeStart;
+
    // Used for console init
    AdvancedLightBinManager( AdvancedLightManager *lm = NULL, 
                             ShadowMapManager *sm = NULL,
@@ -129,6 +134,9 @@ public:
    void clearAllLights();
 
    virtual bool setTargetSize(const Point2I &newTargetSize);
+
+   /// Scores the registered lights for sorting/ordering purposes
+   void _scoreLights(const MatrixF& cameraTrans);
 
    // ConsoleObject interface
    DECLARE_CONOBJECT(AdvancedLightBinManager);
@@ -242,6 +250,8 @@ protected:
    void _setupPerFrameParameters( const SceneRenderState *state );
 
    void setupSGData( SceneData &data, const SceneRenderState* state, LightInfo *light );
+
+   static S32 QSORT_CALLBACK _lightScoreCmp(const LightBinEntry* a, const  LightBinEntry* b);
 };
 
 #endif // _ADVANCEDLIGHTBINMANAGER_H_

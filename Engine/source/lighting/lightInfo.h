@@ -144,6 +144,9 @@ protected:
    /// when prioritizing lights for rendering.
    F32 mScore;
 
+   /// A temporary value which holds the amount this light is faded due to distance
+   F32 mFadeAmount;
+
    /// Whether to render debugging visualizations
    /// for this light.
    bool mDebugRender;
@@ -205,6 +208,9 @@ public:
 
    void setScore( F32 score ) { mScore = score; }
    F32 getScore() const { return mScore; }
+
+   void setFadeAmount(F32 fade) { mFadeAmount = fade; }
+   F32 getFadeAmount() const { return mFadeAmount; }
 
    bool isDebugRenderingEnabled() const { return mDebugRender; }
    void enableDebugRendering( bool value ) { mDebugRender = value; }

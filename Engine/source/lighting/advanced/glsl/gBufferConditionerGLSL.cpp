@@ -171,19 +171,7 @@ void GBufferConditionerGLSL::processPix(  Vector<ShaderComponent*> &componentLis
       alphaVal = new Var( "outAlpha", "float" );
       meta->addStatement( new GenOp( "   @ = OUT_col1.a; // MFT_IsTranslucentZWrite\r\n", new DecOp( alphaVal ) ) );
    }
-
-   // If using interlaced normals, invert the normal
-   if(fd.features[MFT_InterlacedDeferred])
-   {
-      // NOTE: Its safe to not call ShaderFeatureGLSL::addOutVpos() in the vertex
-      // shader as for SM 3.0 nothing is needed there.
-      Var *Vpos = (Var*) LangElement::find( "gl_Position" ); //Var *Vpos = ShaderFeatureGLSL::getInVpos( meta, componentList );
-
-      Var *iGBNormal = new Var( "interlacedGBNormal", "float3" );
-      meta->addStatement(new GenOp("   @ = (frac(@.y * 0.5) < 0.1 ? reflect(@, float3(0.0, -1.0, 0.0)) : @);\r\n", new DecOp(iGBNormal), Vpos, gbNormal, gbNormal));
-      gbNormal = iGBNormal;
-   }
-
+   
    // NOTE: We renormalize the normal here as they
    // will not stay normalized during interpolation.
    meta->addStatement( new GenOp("   @ = @;", outputDecl, new GenOp( "float4(normalize(@), @)", gbNormal, depth ) ) );

@@ -826,11 +826,7 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
    }
    else if (smUseStaticObjectFade)
    {
-      //todo, scale-adjust the fade via bounds sizing?
-      Box3F bounds = getObjBox();
-      bounds.scale(getScale());
-
-      F32 boundsLen = bounds.len();
+      F32 boundsLen = getWorldSphere().radius;
 
       if (boundsLen < smStaticObjectUnfadeableSize)
       {

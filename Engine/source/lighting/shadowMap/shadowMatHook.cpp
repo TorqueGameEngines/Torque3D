@@ -177,36 +177,53 @@ void ShadowMaterialHook::_overrideFeatures(  ProcessedMaterial *mat,
                                              MaterialFeatureData &fd, 
                                              const FeatureSet &features )
 {
-   if ( stageNum != 0 )
+   FeatureSet newFeatures;
+
+   for (U32 i = 0; i < fd.features.getCount(); i++)
    {
-      fd.features.clear();
-      return;
+      const FeatureType& type = fd.features.getAt(i);
+      if (type == MFT_AlphaTest ||
+         type == MFT_TexAnim ||
+         type == MFT_DiffuseMap ||
+         type == MFT_IsTranslucent ||
+         type == MFT_Visibility ||
+         type == MFT_UseInstancing ||
+         type == MFT_EyeSpaceDepthOut ||
+         type == MFT_DeferredConditioner)
+            newFeatures.addFeature(type);
+      else if (type.getGroup() == MFG_PreTransform ||
+            type.getGroup() == MFG_Transform ||
+            type.getGroup() == MFG_PostTransform)
+         newFeatures.addFeature(type);
    }
+
 
    // Disable the base texture if we don't 
    // have alpha test enabled.
-   if ( !fd.features[ MFT_AlphaTest ] )
+   if (!newFeatures[MFT_AlphaTest])
    {
-      fd.features.removeFeature( MFT_TexAnim );
-      fd.features.removeFeature( MFT_DiffuseMap );
+      newFeatures.removeFeature(MFT_TexAnim);
+      newFeatures.removeFeature(MFT_DiffuseMap);
    }
    else
-      fd.features.removeFeature(MFT_IsTranslucent);
+      newFeatures.removeFeature(MFT_IsTranslucent);
 
    // HACK: Need to figure out how to enable these 
    // suckers without this override call!
 
-   fd.features.setFeature( MFT_ParaboloidVertTransform, 
+   newFeatures.setFeature( MFT_ParaboloidVertTransform,
       features.hasFeature( MFT_ParaboloidVertTransform ) );
-   fd.features.setFeature( MFT_IsSinglePassParaboloid, 
+   newFeatures.setFeature( MFT_IsSinglePassParaboloid,
       features.hasFeature( MFT_IsSinglePassParaboloid ) );
       
    // The paraboloid transform outputs linear depth, so
    // it needs to use the plain depth out feature.
-   if ( fd.features.hasFeature( MFT_ParaboloidVertTransform ) ) 
-      fd.features.addFeature( MFT_DepthOut );      
+   if (newFeatures.hasFeature( MFT_ParaboloidVertTransform ) )
+      newFeatures.addFeature( MFT_DepthOut );
    else
-      fd.features.addFeature( MFT_EyeSpaceDepthOut );
+      newFeatures.addFeature( MFT_EyeSpaceDepthOut );
+
+   fd.features = newFeatures;
 }
 
 ShadowMatInstance::ShadowMatInstance( Material *mat ) 

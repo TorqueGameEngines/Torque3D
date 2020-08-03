@@ -110,6 +110,11 @@ void SpotLight::initPersistFields()
    // Remove the scale field... it's already 
    // defined by the range and angle.
    removeField( "scale" );
+
+   //These are particular fields for PSSM, so useless for point lights
+   removeField("numSplits");
+   removeField("logWeight");
+   removeField("lastSplitTerrainOnly");
 }
 
 void SpotLight::_conformLights()

@@ -27,6 +27,7 @@
 #include "core/stream/bitStream.h"
 #include "gfx/gfxDrawUtil.h"
 
+#include "lighting/shadowMap/lightShadowMap.h"
 
 IMPLEMENT_CO_NETOBJECT_V1( PointLight );
 
@@ -83,6 +84,13 @@ PointLight::PointLight()
    // We set the type here to ensure the extended
    // parameter validation works when setting fields.
    mLight->setType( LightInfo::Point );
+
+   //This lets us override the default shadowmap properties for point lights specifically
+   //We'll set the overdark factor to a lower value to mitigate visible aliasing from over-darkening the cubemap
+   //And then use cubemaps as the default shadowmap type
+   ShadowMapParams* p = mLight->getExtended<ShadowMapParams>();
+   p->overDarkFactor = Point4F(10, 5, 4, 1);
+   p->shadowType = ShadowType::ShadowType_CubeMap;
 }
 
 PointLight::~PointLight()
@@ -104,6 +112,11 @@ void PointLight::initPersistFields()
    // Remove the scale field... it's already 
    // defined by the light radius.
    removeField( "scale" );
+
+   //These are particular fields for PSSM, so useless for point lights
+   removeField("numSplits");
+   removeField("logWeight");
+   removeField("lastSplitTerrainOnly");
 }
 
 void PointLight::_conformLights()

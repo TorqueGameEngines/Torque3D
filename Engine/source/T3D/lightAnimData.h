@@ -47,7 +47,7 @@ struct LightAnimState
 {  
    /// Constructor.
    LightAnimState()
-      :  active( true ),
+      :  active( false ),
          animationPhase( 1.0f ),
          animationPeriod( 1.0f ),
          brightness( 1.0f ),

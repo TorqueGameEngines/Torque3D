@@ -100,6 +100,11 @@ ConsoleDocClass(TSStatic,
    "@ingroup gameObjects\n"
 );
 
+bool TSStatic::smUseStaticObjectFade = false;
+F32 TSStatic::smStaticObjectFadeStart = 50;
+F32 TSStatic::smStaticObjectFadeEnd = 75;
+F32 TSStatic::smStaticObjectUnfadeableSize = 75;
+
 TSStatic::TSStatic()
    :
    cubeDescId(0),
@@ -269,6 +274,17 @@ void TSStatic::initPersistFields()
    addField("invertGradientRange", TypeBool, Offset(mInvertGradientRange, TSStatic));
    endGroup("AFX");
    Parent::initPersistFields();
+}
+
+void TSStatic::consoleInit()
+{
+   Parent::consoleInit();
+
+   // Vars for debug rendering while the RoadEditor is open, only used if smEditorOpen is true.
+   Con::addVariable("$pref::useStaticObjectFade", TypeBool, &TSStatic::smUseStaticObjectFade, "Indicates if all statics should utilize the distance-based object fadeout logic.\n");
+   Con::addVariable("$pref::staticObjectFadeStart", TypeF32, &TSStatic::smStaticObjectFadeStart, "Distance at which static object fading begins if $pref::useStaticObjectFade is on.\n");
+   Con::addVariable("$pref::staticObjectFadeEnd", TypeF32, &TSStatic::smStaticObjectFadeEnd, "Distance at which static object fading should have fully faded if $pref::useStaticObjectFade is on.\n");
+   Con::addVariable("$pref::staticObjectUnfadeableSize", TypeF32, &TSStatic::smStaticObjectUnfadeableSize, "Size of object where if the bounds is at or bigger than this, it will be ignored in the $pref::useStaticObjectFade logic. Useful for very large, distance-important objects.\n");
 }
 
 bool TSStatic::_setShapeAsset(void* obj, const char* index, const char* data)
@@ -808,6 +824,31 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
          }
       }
    }
+   else if (smUseStaticObjectFade)
+   {
+      F32 boundsLen = getWorldSphere().radius;
+
+      if (boundsLen < smStaticObjectUnfadeableSize)
+      {
+         F32 distAdjust = (boundsLen) / (smStaticObjectUnfadeableSize);
+         distAdjust = 1 - distAdjust;
+
+         dist *= distAdjust;
+
+         mAlphaFade = 1.0f;
+         if ((smStaticObjectFadeStart < smStaticObjectFadeEnd) && smStaticObjectFadeStart > 0.1f)
+         {
+            if (dist >= smStaticObjectFadeEnd)
+            {
+               return;
+            }
+            if (dist > smStaticObjectFadeStart)
+            {
+               mAlphaFade -= ((dist - smStaticObjectFadeStart) / (smStaticObjectFadeEnd - smStaticObjectFadeStart));
+            }
+         }
+      }
+   }
 
    F32 invScale = (1.0f / getMax(getMax(mObjScale.x, mObjScale.y), mObjScale.z));
 
@@ -880,7 +921,7 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
    mShapeInstance->animate();
    if (mShapeInstance)
    {
-      if (mUseAlphaFade)
+      if (mUseAlphaFade || smUseStaticObjectFade)
       {
          mShapeInstance->setAlphaAlways(mAlphaFade);
          S32 s = mShapeInstance->mMeshObjects.size();

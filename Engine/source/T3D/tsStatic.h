@@ -240,6 +240,7 @@ public:
 
    DECLARE_CONOBJECT(TSStatic);
    static void initPersistFields();
+   static void consoleInit();
    static bool _setShapeAsset(void* obj, const char* index, const char* data);
    static bool _setShapeName(void* obj, const char* index, const char* data);
    static bool _setFieldSkin(void* object, const char* index, const char* data);
@@ -288,6 +289,18 @@ private:
 protected:
    Vector<S32>    mDecalDetails;
    Vector<S32>* mDecalDetailsPtr;
+
+   ///Indicates if all statics should utilize the distance-based object fadeout logic
+   static bool    smUseStaticObjectFade;
+
+   ///Distance at which static object fading begins if smUseStaticObjectFade is on
+   static F32 smStaticObjectFadeStart;
+
+   ///Distance at which static object fading should have fully faded if smUseStaticObjectFade is on
+   static F32 smStaticObjectFadeEnd;
+
+   ///Size of object where if the bounds is at or bigger than this, it will be ignored in the smUseStaticObjectFade logic. Useful for very large, distance-important objects
+   static F32 smStaticObjectUnfadeableSize;
 public:
    bool           mIgnoreZodiacs;
    bool           mHasGradients;

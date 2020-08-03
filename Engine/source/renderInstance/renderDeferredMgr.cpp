@@ -594,6 +594,8 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
                                                    const FeatureSet &features )
 {
    Parent::_determineFeatures( stageNum, fd, features );
+   if (fd.features.hasFeature(MFT_ForwardShading))
+      return;
 
    // Find this for use down below...
    bool bEnableMRTLightmap = false;
@@ -676,7 +678,6 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
                   type == MFT_DetailNormalMap ||
                   type == MFT_AlphaTest ||
                   type == MFT_Parallax ||
-                  type == MFT_InterlacedDeferred ||
                   type == MFT_Visibility ||
                   type == MFT_UseInstancing ||
                   type == MFT_DiffuseVertColor ||

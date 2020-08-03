@@ -48,7 +48,6 @@ ImplementEnumType( ShadowType,
    "@ingroup AdvancedLighting" )
    { ShadowType_Spot,                     "Spot" },
    { ShadowType_PSSM,                     "PSSM" },
-   { ShadowType_Paraboloid,               "Paraboloid" },
    { ShadowType_DualParaboloidSinglePass, "DualParaboloidSinglePass" },
    { ShadowType_DualParaboloid,           "DualParaboloid" },
    { ShadowType_CubeMap,                  "CubeMap" },

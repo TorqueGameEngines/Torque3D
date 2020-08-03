@@ -99,7 +99,7 @@ const String AdvancedLightBinManager::smShadowTypeMacro[] =
 {
    "", // ShadowType_Spot
    "", // ShadowType_PSSM,
-   "SHADOW_PARABOLOID",                   // ShadowType_Paraboloid,
+   "", // ShadowType_Paraboloid,
    "SHADOW_DUALPARABOLOID_SINGLE_PASS",   // ShadowType_DualParaboloidSinglePass,
    "SHADOW_DUALPARABOLOID",               // ShadowType_DualParaboloid,
    "SHADOW_CUBE",                         // ShadowType_CubeMap,

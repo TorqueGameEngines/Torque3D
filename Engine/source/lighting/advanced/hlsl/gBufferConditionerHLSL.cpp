@@ -166,23 +166,17 @@ void GBufferConditionerHLSL::processPix(  Vector<ShaderComponent*> &componentLis
    // to steal away the alpha channel before the 
    // conditioner stomps on it.
    Var *alphaVal = NULL;
+
+   Var* targ = (Var*)LangElement::find(getOutputTargetVarName(DefaultTarget));
+   if (fd.features[MFT_isDeferred])
+      targ = (Var*)LangElement::find(getOutputTargetVarName(RenderTarget1));
+
    if ( fd.features[ MFT_IsTranslucentZWrite ] )
    {
       alphaVal = new Var( "outAlpha", "float" );
-      meta->addStatement( new GenOp( "   @ = OUT.col1.a; // MFT_IsTranslucentZWrite\r\n", new DecOp( alphaVal ) ) );
+      meta->addStatement( new GenOp( "   @ = @.a; // MFT_IsTranslucentZWrite\r\n", new DecOp( alphaVal ), targ) );
    }
 
-   // If using interlaced normals, invert the normal
-   if(fd.features[MFT_InterlacedDeferred])
-   {
-      // NOTE: Its safe to not call ShaderFeatureHLSL::addOutVpos() in the vertex
-      // shader as for SM 3.0 nothing is needed there.
-      Var *Vpos = ShaderFeatureHLSL::getInVpos( meta, componentList );
-
-      Var *iGBNormal = new Var( "interlacedGBNormal", "float3" );
-      meta->addStatement(new GenOp("   @ = (frac(@.y * 0.5) < 0.1 ? reflect(@, float3(0.0, -1.0, 0.0)) : @);\r\n", new DecOp(iGBNormal), Vpos, gbNormal, gbNormal));
-      gbNormal = iGBNormal;
-   }
 
    // NOTE: We renormalize the normal here as they
    // will not stay normalized during interpolation.
@@ -192,8 +186,7 @@ void GBufferConditionerHLSL::processPix(  Vector<ShaderComponent*> &componentLis
    // If we have an alpha var then we're doing deferred lerp blending.
    if ( alphaVal )
    {
-      Var *outColor = (Var*)LangElement::find( getOutputTargetVarName( DefaultTarget ) );
-      meta->addStatement( new GenOp( "   @.ba = float2( 0, @ ); // MFT_IsTranslucentZWrite\r\n", outColor, alphaVal ) );
+      meta->addStatement( new GenOp( "   @.ba = float2( 0, @ ); // MFT_IsTranslucentZWrite\r\n", targ, alphaVal ) );
    }
 
    output = meta;

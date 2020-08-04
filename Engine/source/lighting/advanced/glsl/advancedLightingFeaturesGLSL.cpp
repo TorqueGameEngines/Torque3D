@@ -142,29 +142,7 @@ void DeferredRTLightingFeatGLSL::processPix( Vector<ShaderComponent*> &component
    String unconditionLightInfo = String::ToLower( AdvancedLightBinManager::smBufferName ) + "Uncondition";
    meta->addStatement( new GenOp( avar( "   %s(tex2D(@, @), @, @, @);\r\n", 
       unconditionLightInfo.c_str() ), lightInfoBuffer, uvScene, d_lightcolor, d_NL_Att, d_specular ) );
-
-   // If this has an interlaced pre-pass, do averaging here
-   if( fd.features[MFT_InterlacedDeferred] )
-   {
-      Var *oneOverTargetSize = (Var*) LangElement::find( "oneOverTargetSize" );
-      if( !oneOverTargetSize )
-      {
-         oneOverTargetSize = new Var;
-         oneOverTargetSize->setType( "vec2" );
-         oneOverTargetSize->setName( "oneOverTargetSize" );
-         oneOverTargetSize->uniform = true;
-         oneOverTargetSize->constSortPos = cspPass;
-      }
-
-      meta->addStatement( new GenOp( "   float id_NL_Att, id_specular;\r\n   vec3 id_lightcolor;\r\n" ) );
-      meta->addStatement( new GenOp( avar( "   %s(tex2D(@, @ + vec2(0.0, @.y)), id_lightcolor, id_NL_Att, id_specular);\r\n", 
-         unconditionLightInfo.c_str() ), lightInfoBuffer, uvScene, oneOverTargetSize ) );
-
-      meta->addStatement( new GenOp("   @ = lerp(@, id_lightcolor, 0.5);\r\n", d_lightcolor, d_lightcolor ) );
-      meta->addStatement( new GenOp("   @ = lerp(@, id_NL_Att, 0.5);\r\n", d_NL_Att, d_NL_Att ) );
-      meta->addStatement( new GenOp("   @ = lerp(@, id_specular, 0.5);\r\n", d_specular, d_specular ) );
-   }
-
+   
    // This is kind of weak sauce
    if( !fd.features[MFT_VertLit] && !fd.features[MFT_ToneMap] && !fd.features[MFT_LightMap] && !fd.features[MFT_SubSurface] )
       meta->addStatement( new GenOp( "   @;\r\n", assignColor( new GenOp( "vec4(@, 1.0)", d_lightcolor ), Material::Mul ) ) );
@@ -603,9 +581,10 @@ void DeferredSubSurfaceGLSL::processPix(  Vector<ShaderComponent*> &componentLis
    Var *d_NL_Att = (Var*)LangElement::find( "d_NL_Att" );
 
    MultiLine *meta = new MultiLine;
+   Var* targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    if (fd.features[MFT_isDeferred])
    {
-      Var* targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
+      targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget3));
       meta->addStatement(new GenOp("   @.rgb += @.rgb*@.a;\r\n", targ, subSurfaceParams, subSurfaceParams));
       output = meta;
       return;

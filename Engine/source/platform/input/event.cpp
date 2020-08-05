@@ -382,8 +382,7 @@ CodeMapping gVirtualMap[] =
    { "lpov2",         SI_POV,    SI_LPOV2       },
    { "rpov2",         SI_POV,    SI_RPOV2       },
 
-#if defined( TORQUE_OS_WIN )
-   //-------------------------------------- XINPUT EVENTS
+   //-------------------------------------- GAMEPAD EVENTS
    // Controller connect / disconnect:
    { "connect",       SI_BUTTON, XI_CONNECT     },
    
@@ -420,7 +419,6 @@ CodeMapping gVirtualMap[] =
    { "btn_b",         SI_BUTTON, XI_B           },
    { "btn_x",         SI_BUTTON, XI_X           },
    { "btn_y",         SI_BUTTON, XI_Y           },
-#endif
 
    //-------------------------------------- MISCELLANEOUS EVENTS
    //

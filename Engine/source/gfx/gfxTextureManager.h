@@ -119,7 +119,6 @@ public:
    virtual GFXTextureObject *createTexture(  U32 width,
       U32 height,
       U32 depth,
-      void *pixels,
       GFXFormat format,
       GFXTextureProfile *profile,
       U32 numMipLevels = 1);

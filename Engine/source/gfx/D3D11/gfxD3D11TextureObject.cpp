@@ -70,9 +70,17 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
 
    if( !mStagingTex ||
       mStagingTex->getWidth() != getWidth() ||
-      mStagingTex->getHeight() != getHeight() )
+      mStagingTex->getHeight() != getHeight() ||
+      mStagingTex->getDepth() != getDepth())
    {
-      mStagingTex.set( getWidth(), getHeight(), mFormat, &GFXSystemMemTextureProfile, avar("%s() - mLockTex (line %d)", __FUNCTION__, __LINE__) );
+      if (getDepth() != 0)
+      {
+         mStagingTex.set(getWidth(), getHeight(), getDepth(), mFormat, &GFXSystemMemTextureProfile, avar("%s() - mLockTex (line %d)", __FUNCTION__, __LINE__, 0));
+      }
+      else
+      {
+         mStagingTex.set(getWidth(), getHeight(), mFormat, &GFXSystemMemTextureProfile, avar("%s() - mLockTex (line %d)", __FUNCTION__, __LINE__));
+      }
    }
 
    ID3D11DeviceContext* pContext = D3D11DEVICECONTEXT;
@@ -82,13 +90,20 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
    GFXD3D11TextureObject* pD3DStagingTex = (GFXD3D11TextureObject*)&(*mStagingTex);
 
    //map staging texture
-   HRESULT hr = pContext->Map(pD3DStagingTex->get2DTex(), mLockedSubresource, D3D11_MAP_READ, 0, &mapInfo);
+   HRESULT hr;
+
+   bool is3D = mStagingTex->getDepth() != 0;
+   if (is3D) //3d texture
+      hr = pContext->Map(pD3DStagingTex->get3DTex(), mLockedSubresource, D3D11_MAP_READ, 0, &mapInfo);
+   else
+      hr = pContext->Map(pD3DStagingTex->get2DTex(), mLockedSubresource, D3D11_MAP_READ, 0, &mapInfo);
 
    if (FAILED(hr))
       AssertFatal(false, "GFXD3D11TextureObject:lock - failed to map render target resource!");
 
    const U32 width = mTextureSize.x >> mipLevel;
    const U32 height = mTextureSize.y >> mipLevel;
+   const U32 depth = is3D ? mTextureSize.z >> mipLevel : 1;
 
    //calculate locked box region and offset
    if (inRect)
@@ -100,7 +115,7 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
       mLockBox.left = inRect->point.x;
       mLockBox.bottom = inRect->point.y + inRect->extent.y;
       mLockBox.right = inRect->point.x + inRect->extent.x;
-      mLockBox.back = 1;
+      mLockBox.back = depth;
       mLockBox.front = 0;
 
       //calculate offset
@@ -112,7 +127,7 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
       mLockBox.left = 0;
       mLockBox.bottom = height;
       mLockBox.right = width;
-      mLockBox.back = 1;
+      mLockBox.back = depth;
       mLockBox.front = 0;
    }
 
@@ -132,12 +147,27 @@ void GFXD3D11TextureObject::unlock(U32 mipLevel)
 
    ID3D11DeviceContext* pContext = D3D11DEVICECONTEXT;
    GFXD3D11TextureObject* pD3DStagingTex = (GFXD3D11TextureObject*)&(*mStagingTex);
-   ID3D11Texture2D *pStagingTex = pD3DStagingTex->get2DTex();
 
-   //unmap staging texture
-   pContext->Unmap(pStagingTex, mLockedSubresource);
-   //copy lock box region from the staging texture to our regular texture
-   pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, 0, pStagingTex, mLockedSubresource, &mLockBox);
+   bool is3D = mStagingTex->getDepth() != 0;
+
+   if (is3D)
+   {
+      ID3D11Texture3D* pStagingTex = pD3DStagingTex->get3DTex();
+
+      //unmap staging texture
+      pContext->Unmap(pStagingTex, mLockedSubresource);
+      //copy lock box region from the staging texture to our regular texture
+      pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, mLockBox.front, pStagingTex, mLockedSubresource, &mLockBox);
+   }
+   else
+   {
+      ID3D11Texture2D* pStagingTex = pD3DStagingTex->get2DTex();
+
+      //unmap staging texture
+      pContext->Unmap(pStagingTex, mLockedSubresource);
+      //copy lock box region from the staging texture to our regular texture
+      pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, 0, pStagingTex, mLockedSubresource, &mLockBox);
+   }
 
    PROFILE_END();
 

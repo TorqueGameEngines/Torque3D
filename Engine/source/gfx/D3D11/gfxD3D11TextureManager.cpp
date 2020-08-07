@@ -133,6 +133,11 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
          AssertFatal(false, "GFXD3D11TextureManager::_createTexture - failed to create volume texture!");
       }
 
+      if (!retTex->mProfile->isSystemMemory())
+      {
+         createResourceView(height, width, depth, d3dTextureFormat, numMipLevels, bindFlags, retTex);
+      }
+
       retTex->mTextureSize.set(width, height, depth);
       retTex->get3DTex()->GetDesc(&desc);
       retTex->mMipLevels = numMipLevels;

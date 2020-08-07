@@ -815,7 +815,6 @@ GFXTextureObject *GFXTextureManager::createTexture( U32 width, U32 height, GFXFo
 GFXTextureObject *GFXTextureManager::createTexture(   U32 width,
                                                       U32 height,
                                                       U32 depth,
-                                                      void *pixels,
                                                       GFXFormat format,
                                                       GFXTextureProfile *profile,
                                                       U32 numMipLevels)
@@ -830,14 +829,6 @@ GFXTextureObject *GFXTextureManager::createTexture(   U32 width,
       Con::errorf("GFXTextureManager - failed to create anonymous texture.");
       return NULL;
    }
-
-   // Call the internal load...
-   if( !_loadTexture( ret, pixels ) )
-   {
-      Con::errorf("GFXTextureManager - failed to load volume texture" );
-      return NULL;
-   }
-
 
    // And do book-keeping...
    //    - texture info

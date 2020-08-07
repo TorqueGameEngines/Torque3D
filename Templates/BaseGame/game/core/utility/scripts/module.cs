@@ -124,14 +124,16 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
             if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
                 error("found" SPC %datablockFilePath SPC "duplicate file!");
             if (!%locked || (%locked && %isExclusive))
-            {
-                DatablockFilesList.erase(%i);
+            { // Replacing an existing entry, update in-place
+                DatablockFilesList.setKey(%fullPath, %i);
+                DatablockFilesList.setValue(%isExclusive, %i);
+                %locked = true; //Done, but don't return and bypass trace logging below
             }
+            break;
         }
    }
-   //if we're not locked, or we are exclusive, go ahead and add it to the pile
-   //(ensures exclusives get re-added after that erasure)
-   if (!%locked || %isExclusive)
+   //if we're not locked, go ahead and add it to the pile
+   if (!%locked)
        DatablockFilesList.add(%fullPath,%isExclusive);
    if ($traceModuleCalls)
       DatablockFilesList.echo();
@@ -222,14 +224,16 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
             if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
                 error("found" SPC %execFilePath SPC "duplicate file!");
             if (!%locked || (%locked && %isExclusive))
-            {
-                ExecFilesList.erase(%i);
+            { // Replacing an existing entry, update in-place
+                ExecFilesList.setKey(%fullPath, %i);
+                ExecFilesList.setValue(%isExclusive, %i);
+                %locked = true; //Done, but don't return and bypass trace logging below
             }
+            break;
         }
    }
-   //if we're not locked, or we are exclusive, go ahead and add it to the pile
-   //(ensures exclusives get re-added after that erasure)
-   if (!%locked || %isExclusive)
+   //if we're not locked, go ahead and add it to the pile
+   if (!%locked)
        ExecFilesList.add(%fullPath,%isExclusive);
    if ($traceModuleCalls)       
       ExecFilesList.echo();

@@ -117,6 +117,8 @@ ShapeAsset::ShapeAsset()
 {
    mFileName = StringTable->EmptyString();
    mConstructorFileName = StringTable->EmptyString();
+   mFilePath = StringTable->EmptyString();
+   mConstructorFilePath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -163,10 +165,10 @@ void ShapeAsset::initializeAsset()
    ResourceManager::get().getChangedSignal().notify(this, &ShapeAsset::_onResourceChanged);
 
    //Ensure our path is expando'd if it isn't already
-   if (!Platform::isFullPath(mFileName))
-      mFileName = getOwned() ? expandAssetFilePath(mFileName) : mFileName;
+   if (!Platform::isFullPath(mFilePath))
+      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
 
-   mConstructorFileName = expandAssetFilePath(mConstructorFileName);
+   mConstructorFilePath = expandAssetFilePath(mConstructorFilePath);
 
    loadShape();
 }
@@ -258,7 +260,7 @@ bool ShapeAsset::loadShape()
       }
    }
 
-   mShape = ResourceManager::get().load(mFileName);
+   mShape = ResourceManager::get().load(mFilePath);
 
    if (!mShape)
    {
@@ -439,7 +441,7 @@ void ShapeAsset::onAssetRefresh(void)
 
    // Update.
    if(!Platform::isFullPath(mFileName))
-      mFileName = getOwned() ? expandAssetFilePath(mFileName) : mFileName;
+      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
 
    loadShape();
 }

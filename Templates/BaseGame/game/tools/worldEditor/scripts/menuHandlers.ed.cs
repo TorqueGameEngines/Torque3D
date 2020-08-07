@@ -573,10 +573,10 @@ function EditorExplodePrefab()
    EditorTree.buildVisibleTree( true );
 }
 
-function makeSelectedAMesh()
+function makeSelectedAMesh(%assetId)
 {
-
-   %dlg = new SaveFileDialog()
+   
+   /*%dlg = new SaveFileDialog()
    {
       Filters        = "Collada file (*.dae)|*.dae|";
       DefaultPath    = $Pref::WorldEditor::LastPath;
@@ -598,9 +598,45 @@ function makeSelectedAMesh()
    %dlg.delete();
    
    if ( !%ret )
-      return;
+      return;*/
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
    
-   EWorldEditor.makeSelectionAMesh( %saveFile );    
+   %assetPath = AssetDatabase.getAssetPath(%assetId);
+   %filePath = %assetPath @ "/" @ %assetDef.AssetName @ ".dae";
+   
+   %fileName = fileName(%filePath);
+   
+   %assetDef.fileName = %fileName;
+   %assetDef.saveAsset();
+   
+   %success = EWorldEditor.makeSelectionAMesh( %filePath );  
+   
+   AssetDatabase.refreshAsset(%assetId);  
+   
+   if(%success)
+   {
+      //ok, cool it worked, so clear out the old 
+      //First, get our center of the currently selected objects
+      %selectionCenter = EWorldEditor.getSelectionCentroid();
+      
+      //Next, for safety purposes(and convenience!) we'll make them a prefab aping off the filepath/name provided
+      //TODO: Make this an editor option
+      %prefabPath = %assetPath @ "/" @ %assetDef.AssetName @ ".prefab";
+      EWorldEditor.makeSelectionPrefab(%prefabPath, true);
+      
+      //Next, nuke 'em
+      EditorMenuEditDelete();
+      
+      //now make a new static  
+      %newStatic = new TSStatic()
+      {
+         shapeAsset = %assetId;
+         position = %selectionCenter;
+      };
+      
+      getRootScene().add(%newStatic);
+   }
    
    EditorTree.buildVisibleTree( true );  
 }

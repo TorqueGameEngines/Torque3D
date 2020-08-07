@@ -1833,6 +1833,9 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
 //
 StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
 {
+   //Just in case we're reusing the same importer object from another import session, nuke any existing files
+   resetImportSession(true);
+
    String assetType = getAssetTypeByFile(filePath);
 
    if (assetType == String("Folder") || assetType == String("Zip"))
@@ -1902,10 +1905,12 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
    }
 
 #if TORQUE_DEBUG
+   Con::printf("/***************/");
    for (U32 i = 0; i < activityLog.size(); i++)
    {
       Con::printf(activityLog[i].c_str());
    }
+   Con::printf("/***************/");
 #endif
 
    if (hasIssues)
@@ -2045,7 +2050,7 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
             }
          }
 
-         if (assetPath.isEmpty() && importingAssets[i]->assetType != String("MaterialAsset"))
+         if (assetPath.isEmpty() && childItem->assetType != String("MaterialAsset"))
          {
             dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Import attempt of %s failed, so skipping asset.", childItem->assetName.c_str());
             activityLog.push_back(importLogBuffer);

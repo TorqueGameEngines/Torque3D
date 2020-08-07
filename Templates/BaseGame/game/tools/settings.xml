@@ -246,7 +246,7 @@
         <Setting name="dividerDarkColor">17 16 15 255</Setting>
         <Setting name="fieldBGColor">59 58 57 255</Setting>
         <Setting name="tabsHLColor">50 49 48 255</Setting>
-        <Setting name="fieldTextNAColor">77 77 77 255</Setting>
+        <Setting name="fieldTextNAColor">120 120 120 255</Setting>
         <Setting name="tooltipBGColor">43 43 43 255</Setting>
         <Setting name="tooltipDividerColor">72 70 68 255</Setting>
         <Setting name="fieldTextColor">178 175 172 255</Setting>

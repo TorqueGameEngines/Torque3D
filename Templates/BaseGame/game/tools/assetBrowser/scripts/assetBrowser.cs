@@ -1218,11 +1218,11 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
 //
 //
 //
-function AssetBrowser::refreshDatabases(%this)
+function AssetBrowser::openAssetSettings(%this)
 {
-   //ModuleDatabase.scanModules( "data", false );
-   //ModuleDatabase.unloadGroup( "Game" );
-   //ModuleDatabase.LoadGroup( "Game" );
+   ESettingsWindow.toggleEditorSettings();
+   %assetEditIndex = ESettingsWindowList.findTextIndex("Asset Editing");
+   ESettingsWindowList.setSelectedRow( %assetEditIndex );
 }
 
 function AssetBrowser::showVisibiltyOptions(%this)

@@ -114,10 +114,10 @@ class WorldEditor : public EditTSCtrl
 
       void colladaExportSelection( const String &path );
 
-      void makeSelectionPrefab( const char *filename );
+      void makeSelectionPrefab( const char *filename, bool dontReplaceOriginals = false);
       void explodeSelectedPrefab();
 
-      void makeSelectionAMesh(const char *filename);
+      bool makeSelectionAMesh(const char *filename);
 
       //
       static SceneObject* getClientObj(SceneObject *);

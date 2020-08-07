@@ -64,6 +64,8 @@ class ShapeAsset : public AssetBase
 protected:
    StringTableEntry   mFileName;
    StringTableEntry   mConstructorFileName;
+   StringTableEntry   mFilePath;
+   StringTableEntry   mConstructorFilePath;
    Resource<TSShape>	 mShape;
 
    //Material assets we're dependent on and use
@@ -96,9 +98,9 @@ public:
    Resource<TSShape> getShapeResource() { return mShape; }
 
    void SplitSequencePathAndName(String& srcPath, String& srcName);
-   StringTableEntry getShapeFilename() { return mFileName; }
+   StringTableEntry getShapeFilename() { return mFilePath; }
    
-   U32 getShapeFilenameHash() { return _StringTable::hashString(mFileName); }
+   U32 getShapeFilenameHash() { return _StringTable::hashString(mFilePath); }
 
    Vector<AssetPtr<MaterialAsset>> getMaterialAssets() { return mMaterialAssets; }
 
@@ -127,6 +129,9 @@ public:
 
    void                    setShapeConstructorFile(const char* pScriptFile);
    inline StringTableEntry getShapeConstructorFile(void) const { return mConstructorFileName; };
+
+   inline StringTableEntry getShapeFilePath(void) const { return mFilePath; };
+   inline StringTableEntry getShapeConstructorFilePath(void) const { return mConstructorFilePath; };
 
    static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);

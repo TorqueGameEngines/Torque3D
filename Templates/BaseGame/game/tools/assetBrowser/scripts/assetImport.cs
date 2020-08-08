@@ -686,6 +686,7 @@ function ImportAssetWindow::doRefresh(%this)
       
       //Go ahead and check if we have any issues, and if not, run the import!
       ImportAssetWindow.importer.ImportAssets();
+      ImportAssetWindow.importer.resetImportSession(true);
    }
    else
    {

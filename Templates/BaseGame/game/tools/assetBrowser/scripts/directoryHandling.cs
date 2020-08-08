@@ -39,6 +39,9 @@ function directoryHandler::loadFolders(%this, %path, %parentId)
          //we don't need to display the shadercache folder
          if(%parentName $= "Data" && (%folderName $= "shaderCache" || %folderName $= "cache"))
             continue;
+            
+         if(%folderName $= ".git")
+            continue;
          
          %iconIdx = 3;
          

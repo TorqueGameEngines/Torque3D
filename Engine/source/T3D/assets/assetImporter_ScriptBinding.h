@@ -137,6 +137,14 @@ DefineEngineMethod(AssetImporter, deleteImportingAsset, void, (AssetImportObject
    return object->deleteImportingAsset(assetItem);
 }
 
+DefineEngineMethod(AssetImporter, setImportConfig, void, (AssetImportConfig* importConfig), (nullAsType< AssetImportConfig*>()),
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->setImportConfig(importConfig);
+}
+
+
 /*DefineEngineFunction(enumColladaForImport, bool, (const char* shapePath, const char* ctrl, bool loadCachedDts), ("", "", true),
    "(string shapePath, GuiTreeViewCtrl ctrl) Collect scene information from "
    "a COLLADA file and store it in a GuiTreeView control. This function is "

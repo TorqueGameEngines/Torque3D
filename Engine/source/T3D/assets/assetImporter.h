@@ -805,6 +805,14 @@ public:
    /// </summary>
    AssetImportConfig* getImportConfig() { return &activeImportConfig; }
 
+   void setImportConfig(AssetImportConfig* importConfig) {
+      if(importConfig != nullptr)
+         activeImportConfig = *importConfig;
+   }
+
+   //
+   static String getTrueFilename(const String& fileName);
+
    //
    /// <summary>
    /// </summary>
@@ -820,6 +828,10 @@ public:
          imagePath = testPath + String(".dds");
       else if (Platform::isFile(testPath + String(".tif")))
          imagePath = testPath + String(".tif");
+
+      if(imagePath.isNotEmpty())
+         //This ensures case-correct for the filename
+         imagePath = getTrueFilename(imagePath);
 
       return imagePath;
    }

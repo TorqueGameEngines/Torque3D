@@ -1492,6 +1492,15 @@ function AssetBrowser::doRebuildAssetArray(%this)
          else
          {
             //got it.	
+            if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git")
+               continue;
+               
+            if(!%this.coreModulesFilter && %folderName $= "core" && %breadcrumbPath $= "")
+               continue;
+               
+            if(!%this.toolsModulesFilter && %folderName $= "tools" && %breadcrumbPath $= "")
+               continue;
+               
             %assetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
          }
       }
@@ -1856,6 +1865,10 @@ function AssetBrowserAssetSearchBtn::onClick( %this )
 // Navigation
 function AssetBrowser::navigateTo(%this, %address, %historyNav)
 {
+   //Sanitize
+   if(startsWith(%address, "/"))
+      %address = strreplace(%address, "/", "");
+      
    //Don't bother navigating if it's to the place we already are
    if(AssetBrowser.dirHandler.currentAddress !$= %address)
    {

@@ -616,6 +616,9 @@ String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)
          if (FindMatch::isMatch(searchSuffix.c_str(), assetName.c_str(), false))
          {
             //We have a match, so indicate as such
+            S32 pos = assetName.length();
+            pos -= searchSuffix.length();
+            suffix = assetName.substr(pos+1);
             return suffix;
          }
       }
@@ -649,6 +652,103 @@ String AssetImporter::getAssetTypeByFile(Torque::Path filePath)
    return "";
 }
 
+String AssetImporter::getTrueFilename(const String& fileName)
+{
+   Torque::Path pth(fileName);
+   String pattern = pth.getFullPath() + "*";
+
+   static const String sSlash("/");
+
+   Vector<String> findFilesResults;
+
+   String sPattern(Torque::Path::CleanSeparators(pattern));
+   if (sPattern.isEmpty())
+   {
+      Con::errorf("findFirstFile() requires a search pattern");
+      return "";
+   }
+
+   char scriptFilenameBuffer[1024];
+
+   if (!Con::expandScriptFilename(scriptFilenameBuffer, sizeof(scriptFilenameBuffer), sPattern.c_str()))
+   {
+      Con::errorf("findFirstFile() given initial directory cannot be expanded: '%s'", pattern);
+      return "";
+   }
+   sPattern = String::ToString(scriptFilenameBuffer);
+
+   String::SizeType slashPos = sPattern.find('/', 0, String::Right);
+   //    if(slashPos == String::NPos)
+   //    {
+   //       Con::errorf("findFirstFile() missing search directory or expression: '%s'", sPattern.c_str());
+   //       return -1;
+   //    }
+
+      // Build the initial search path
+   Torque::Path givenPath(Torque::Path::CompressPath(sPattern));
+   givenPath.setFileName("*");
+   givenPath.setExtension("*");
+
+   if (givenPath.getPath().length() > 0 && givenPath.getPath().find('*', 0, String::Right) == givenPath.getPath().length() - 1)
+   {
+      // Deal with legacy searches of the form '*/*.*'
+      String suspectPath = givenPath.getPath();
+      String::SizeType newLen = suspectPath.length() - 1;
+      if (newLen > 0 && suspectPath.find('/', 0, String::Right) == suspectPath.length() - 2)
+      {
+         --newLen;
+      }
+      givenPath.setPath(suspectPath.substr(0, newLen));
+   }
+
+   Torque::FS::FileSystemRef fs = Torque::FS::GetFileSystem(givenPath);
+   //Torque::Path path = fs->mapTo(givenPath);
+   Torque::Path path = givenPath;
+
+   // Make sure that we have a root so the correct file system can be determined when using zips
+   if (givenPath.isRelative())
+      path = Torque::Path::Join(Torque::FS::GetCwd(), '/', givenPath);
+
+   path.setFileName(String::EmptyString);
+   path.setExtension(String::EmptyString);
+   if (!Torque::FS::IsDirectory(path))
+   {
+      Con::errorf("findFirstFile() invalid initial search directory: '%s'", path.getFullPath().c_str());
+      return "";
+   }
+
+   // Build the search expression
+   const String expression(slashPos != String::NPos ? sPattern.substr(slashPos + 1) : sPattern);
+   if (expression.isEmpty())
+   {
+      Con::errorf("findFirstFile() requires a search expression: '%s'", sPattern.c_str());
+      return "";
+   }
+
+   S32 results = Torque::FS::FindByPattern(path, expression, false, findFilesResults, false);
+   if (givenPath.isRelative() && results > 0)
+   {
+      // Strip the CWD out of the returned paths
+      // MakeRelativePath() returns incorrect results (it adds a leading ..) so doing this the dirty way
+      const String cwd = Torque::FS::GetCwd().getFullPath();
+      for (S32 i = 0; i < findFilesResults.size(); ++i)
+      {
+         String str = findFilesResults[i];
+         if (str.compare(cwd, cwd.length(), String::NoCase) == 0)
+            str = str.substr(cwd.length());
+         findFilesResults[i] = str;
+      }
+   }
+
+   for (U32 i = 0; i < findFilesResults.size(); i++)
+   {
+      if (!findFilesResults[i].compare(fileName, 0, String::NoCase|String::Left))
+         return findFilesResults[i];
+   }
+
+   return "";
+}
+
 void AssetImporter::resetImportSession(bool hardClearSession)
 {
    importingAssets.clear();
@@ -660,9 +760,12 @@ void AssetImporter::resetImportSession(bool hardClearSession)
    }
    else
    {
-      for (U32 i = 0; i < originalImportingFiles.size(); i++)
+      Vector<Torque::Path> tempImportingFiles = originalImportingFiles;
+      originalImportingFiles.clear();
+
+      for (U32 i = 0; i < tempImportingFiles.size(); i++)
       {
-         addImportingFile(originalImportingFiles[i]);
+         addImportingFile(tempImportingFiles[i]);
       }
    }
 }
@@ -1345,7 +1448,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
             for (U32 i = 0; i < suffixCount; i++)
             {
                //First, try checking based on the material's assetName for our patternbase
-               String testPath = assetItem->filePath.getPath();
+               String testPath = assetItem->filePath.getRootAndPath();
                testPath += "/" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;");
 
                String imagePath = AssetImporter::findImagePath(testPath);
@@ -1355,7 +1458,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                   //got a match!
                   AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
 
-                  newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)i);
+                  newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
 
                   matchedImageTypes[t] = newImageAssetObj;
                   break;
@@ -1364,7 +1467,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                {
                   if(materialImageNoSuffix.isNotEmpty())
                   {
-                     testPath = assetItem->filePath.getPath();
+                     testPath = assetItem->filePath.getRootAndPath();
                      testPath += "/" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;");
 
                      imagePath = AssetImporter::findImagePath(testPath);
@@ -1374,7 +1477,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                         //got a match!
                         AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
 
-                        newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)i);
+                        newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
 
                         matchedImageTypes[t] = newImageAssetObj;
                         break;
@@ -1513,6 +1616,21 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
       matAssetName += String("_Mat");
    }
 
+   //Do a check so we don't import materials that are on our ignore list
+   if (activeImportConfig.IgnoreMaterials.isNotEmpty())
+   {
+      U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig.IgnoreMaterials, ",;");
+      for (U32 i = 0; i < ignoredMatNamesCount; i++)
+      {
+         const char* ignoreMatName = StringUnit::getUnit(activeImportConfig.IgnoreMaterials, i, ",;");
+         if (FindMatch::isMatch(ignoreMatName, matName.c_str(), false))
+         {
+            //If we have a match to one of our ignore names, just bail out here and skip the material wholesale
+            return;
+         }
+      }
+   }
+
    String materialItemValue = assetItem->shapeInfo->getItemValue(materialItemId);
 
    AssetImportObject* matAssetItem = nullptr;
@@ -1556,7 +1674,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
                   filePath = imgFileName;
             }
          }
-
+ 
          matAssetItem = addImportingAsset("MaterialAsset", shapePathBase + "/", assetItem, matName);
          AssetImportObject* imageAssetItem = addImportingAsset("ImageAsset", filePath, matAssetItem, "");
 

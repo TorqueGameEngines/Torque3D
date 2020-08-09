@@ -49,6 +49,9 @@ class GUIAsset : public AssetBase
    StringTableEntry mScriptFile;
    StringTableEntry mGUIFile;
 
+   StringTableEntry mScriptPath;
+   StringTableEntry mGUIPath;
+
 public:
    GUIAsset();
    virtual ~GUIAsset();
@@ -64,6 +67,9 @@ public:
    inline StringTableEntry getGUIFile(void) const { return mGUIFile; };
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
+
+   inline StringTableEntry getGUIPath(void) const { return mGUIPath; };
+   inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
 protected:
    virtual void            initializeAsset(void);

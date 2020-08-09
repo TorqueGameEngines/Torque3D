@@ -47,6 +47,7 @@ class StateMachineAsset : public AssetBase
    typedef AssetBase Parent;
 
    StringTableEntry mStateMachineFile;
+   StringTableEntry mStateMachinePath;
 
 public:
    StateMachineAsset();
@@ -62,9 +63,11 @@ public:
    void                    setStateMachineFile(const char* pStateMachineFile);
    inline StringTableEntry getStateMachineFile(void) const { return mStateMachineFile; };
 
+   inline StringTableEntry getStateMachinePath(void) const { return mStateMachinePath; };
+
 protected:
    virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void) {}
+   virtual void            onAssetRefresh(void);
 
    static bool setStateMachineFile(void *obj, const char *index, const char *data) { static_cast<StateMachineAsset*>(obj)->setStateMachineFile(data); return false; }
    static const char* getStateMachineFile(void* obj, const char* data) { return static_cast<StateMachineAsset*>(obj)->getStateMachineFile(); }

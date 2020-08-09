@@ -95,6 +95,10 @@ PostEffectAsset::PostEffectAsset()
    mScriptFile = StringTable->EmptyString();
    mHLSLShaderFile = StringTable->EmptyString();
    mGLSLShaderFile = StringTable->EmptyString();
+
+   mScriptPath = StringTable->EmptyString();
+   mHLSLShaderPath = StringTable->EmptyString();
+   mGLSLShaderPath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -128,22 +132,22 @@ void PostEffectAsset::copyTo(SimObject* object)
 
 void PostEffectAsset::initializeAsset()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
-   mHLSLShaderFile = expandAssetFilePath(mHLSLShaderFile);
-   mGLSLShaderFile = expandAssetFilePath(mGLSLShaderFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
+   mHLSLShaderPath = expandAssetFilePath(mHLSLShaderFile);
+   mGLSLShaderPath = expandAssetFilePath(mGLSLShaderFile);
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void PostEffectAsset::onAssetRefresh()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
-   mHLSLShaderFile = expandAssetFilePath(mHLSLShaderFile);
-   mGLSLShaderFile = expandAssetFilePath(mGLSLShaderFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
+   mHLSLShaderPath = expandAssetFilePath(mHLSLShaderFile);
+   mGLSLShaderPath = expandAssetFilePath(mGLSLShaderFile);
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void PostEffectAsset::setScriptFile(const char* pScriptFile)

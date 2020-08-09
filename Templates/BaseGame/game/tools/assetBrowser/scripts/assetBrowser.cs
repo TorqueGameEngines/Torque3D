@@ -63,7 +63,7 @@ function AssetBrowser::onWake(%this)
    
    AssetBrowser-->previewSlider.setValue(EditorSettings.value("Assets/Browser/previewTileSize", "1.0"));
    
-   AssetBrowser.toggleAssetTypeFilter(0); 
+   AssetBrowser-->filterAssetsButton.setEnabled(true); 
 }
 
 function contentTreeTabBook::onTabSelected(%this, %tabText, %tabIndex)
@@ -279,7 +279,11 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    //visibility filter
    if(%AssetTypeFilter !$= "")
    {
-      AssetBrowser.toggleAssetTypeFilter(0);  
+      AssetBrowser-->filterAssetsButton.setEnabled(false);
+   }
+   else
+   {
+      AssetBrowser-->filterAssetsButton.setEnabled(true);  
    }
    
    if(%selectCallback $= "")
@@ -503,7 +507,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    //%previewButton-->AssetPreviewButton.internalName = %this.previewData.assetName@"Border";
    //%previewButton-->Button.extent = %previewSize.x + %previewBounds SPC %previewSize.y + 24;
    %previewButton.tooltip = %this.previewData.tooltip;
-   %previewButton.Command = "AssetBrowser.updateSelection( $ThisControl.getParent().assetName, $ThisControl.getParent().moduleName );";
+   %previewButton.Command = "AssetBrowser.updateSelection( $ThisControl.assetName, $ThisControl.moduleName );";
    %previewButton.altCommand = %doubleClickCommand;
    //%previewButton-->AssetPreviewButton.icon = %this.previewData.previewImage;
    
@@ -1463,11 +1467,24 @@ function AssetBrowser::doRebuildAssetArray(%this)
          }
          else
          {
-            //got it.	
-            %assetArray.add( %moduleName, %assetId );
-            
-            if(%assetType !$= "Folder")
-               %finalAssetCount++;
+            if(AssetBrowser.assetTypeFilter !$= "")
+            {
+               if(AssetBrowser.assetTypeFilter $= %assetType)
+               {
+                  %assetArray.add( %moduleName, %assetId );
+                  
+                  if(%assetType !$= "Folder")
+                     %finalAssetCount++;
+               }
+            }
+            else
+            {
+               //got it.	
+               %assetArray.add( %moduleName, %assetId );
+               
+               if(%assetType !$= "Folder")
+                  %finalAssetCount++;
+            }
          }
       }
    }

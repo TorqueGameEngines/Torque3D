@@ -93,6 +93,8 @@ CppAsset::CppAsset() : AssetBase()
 {
    mCodeFile = StringTable->EmptyString();
    mHeaderFile = StringTable->EmptyString();
+   mCodePath = StringTable->EmptyString();
+   mHeaderPath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -164,7 +166,14 @@ void CppAsset::setHeaderFile(const char* pHeaderFile)
 
 void CppAsset::initializeAsset()
 {
-   mCodeFile = expandAssetFilePath(mCodeFile);
+   mCodePath = getOwned() ? expandAssetFilePath(mCodeFile) : mCodePath;
 
-   mHeaderFile = expandAssetFilePath(mHeaderFile);
+   mHeaderPath = getOwned() ? expandAssetFilePath(mHeaderFile) : mHeaderPath;
+}
+
+void CppAsset::onAssetRefresh(void)
+{
+   mCodePath = getOwned() ? expandAssetFilePath(mCodeFile) : mCodePath;
+
+   mHeaderPath = getOwned() ? expandAssetFilePath(mHeaderFile) : mHeaderPath;
 }

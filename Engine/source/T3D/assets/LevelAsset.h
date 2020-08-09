@@ -52,6 +52,13 @@ class LevelAsset : public AssetBase
    StringTableEntry        mNavmeshFile;
    StringTableEntry        mPreviewImage;
 
+   StringTableEntry        mLevelPath;
+   StringTableEntry        mPostFXPresetPath;
+   StringTableEntry        mDecalsPath;
+   StringTableEntry        mForestPath;
+   StringTableEntry        mNavmeshPath;
+   StringTableEntry        mPreviewImagePath;
+
    StringTableEntry        mEditorFile;
    StringTableEntry        mBakedSceneFile;
 
@@ -84,6 +91,13 @@ public:
    void                    setImageFile(const char* pImageFile);
    inline StringTableEntry getImageFile(void) const { return mPreviewImage; };
 
+   inline StringTableEntry getLevelPath(void) const { return mLevelPath; };
+   inline StringTableEntry getPostFXPresetPath(void) const { return mPostFXPresetPath; };
+   inline StringTableEntry getDecalsPath(void) const { return mDecalsPath; };
+   inline StringTableEntry getForestPath(void) const { return mForestPath; };
+   inline StringTableEntry getNavmeshPath(void) const { return mNavmeshPath; };
+   inline StringTableEntry getImagePath(void) const { return mPreviewImagePath; };
+
    void                    setEditorFile(const char* pEditorFile);
    inline StringTableEntry getEditorFile(void) const { return mEditorFile; };
    void                    setBakedSceneFile(const char* pBakedSceneFile);
@@ -114,7 +128,7 @@ protected:
 
 
    virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void) {}
+   virtual void            onAssetRefresh(void);
 };
 
 DefineConsoleType(TypeLevelAssetPtr, LevelAsset)

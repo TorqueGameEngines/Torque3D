@@ -91,6 +91,7 @@ MaterialAsset::MaterialAsset()
 {
    mShaderGraphFile = "";
    mScriptFile = StringTable->EmptyString();
+   mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
 }
 
@@ -121,19 +122,18 @@ void MaterialAsset::initializeAsset()
 
    compileShader();
 
-   if (!Platform::isFullPath(mScriptFile))
-      mScriptFile = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptFile;
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void MaterialAsset::onAssetRefresh()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 
    if (mMatDefinitionName != StringTable->EmptyString())
    {

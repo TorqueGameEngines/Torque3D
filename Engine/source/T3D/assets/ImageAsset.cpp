@@ -108,6 +108,7 @@ EndImplementEnumType;
 ImageAsset::ImageAsset() : AssetBase(), mImage(nullptr), mUseMips(true), mIsHDRImage(false), mIsValidImage(false), mImageType(Albedo)
 {
    mImageFileName = StringTable->EmptyString();
+   mImagePath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -254,14 +255,16 @@ void ImageAsset::loadImage()
 
 void ImageAsset::initializeAsset()
 {
-   mImageFileName = expandAssetFilePath(mImageFileName);
+   mImagePath = expandAssetFilePath(mImageFileName);
 
    loadImage();
 }
 
 void ImageAsset::onAssetRefresh()
 {
-   setImageFileName(mImageFileName);
+   mImagePath = expandAssetFilePath(mImageFileName);
+
+   loadImage();
 }
 
 void ImageAsset::setImageFileName(const char* pScriptFile)

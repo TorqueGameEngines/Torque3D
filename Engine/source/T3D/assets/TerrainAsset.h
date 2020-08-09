@@ -58,6 +58,7 @@ class TerrainAsset : public AssetBase
 {
    typedef AssetBase Parent;
 
+   StringTableEntry        mTerrainFileName;
    StringTableEntry        mTerrainFilePath;
    Resource<TerrainFile>   mTerrainFile;
 
@@ -75,7 +76,8 @@ public:
 
    virtual void setDataField(StringTableEntry slotName, const char* array, const char* value);
 
-   void                    setTerrainFilePath(const char* pTerrainFile);
+   void                    setTerrainFileName(const char* pTerrainFile);
+   inline StringTableEntry getTerrainFileName(void) const { return mTerrainFileName; };
    inline StringTableEntry getTerrainFilePath(void) const { return mTerrainFilePath; };
 
    inline Resource<TerrainFile> getTerrainResource(void) const { return mTerrainFile; };
@@ -93,8 +95,8 @@ protected:
    virtual void initializeAsset();
    virtual void onAssetRefresh(void);
 
-   static bool setTerrainFilePath(void *obj, const char *index, const char *data) { static_cast<TerrainAsset*>(obj)->setTerrainFilePath(data); return false; }
-   static const char* getTerrainFilePath(void* obj, const char* data) { return static_cast<TerrainAsset*>(obj)->getTerrainFilePath(); }
+   static bool setTerrainFileName(void *obj, const char *index, const char *data) { static_cast<TerrainAsset*>(obj)->setTerrainFileName(data); return false; }
+   static const char* getTerrainFileName(void* obj, const char* data) { return static_cast<TerrainAsset*>(obj)->getTerrainFileName(); }
 };
 
 DefineConsoleType(TypeTerrainAssetPtr, TerrainAsset)

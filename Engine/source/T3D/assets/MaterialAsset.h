@@ -57,6 +57,7 @@ class MaterialAsset : public AssetBase
 
    String                  mShaderGraphFile;
    StringTableEntry        mScriptFile;
+   StringTableEntry        mScriptPath;
    StringTableEntry        mMatDefinitionName;
 
 public:
@@ -73,6 +74,8 @@ public:
 
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
+
+   inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(MaterialAsset);

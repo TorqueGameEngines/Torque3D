@@ -11,7 +11,7 @@ function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
       }
       else
       {
-         %suffixPos = strpos(strlwr(%assetItem.AssetName), strlwr(%assetItem.imageSuffixType), 0);
+         %suffixPos = strpos(strlwr(%assetItem.AssetName), strlwr(%assetItem.ImageType), 0);
          %noSuffixName = getSubStr(%assetItem.AssetName, 0, %suffixPos);
       }
    
@@ -280,7 +280,7 @@ function parseImageSuffixes(%assetItem)
       %suffixToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
-         %assetItem.imageSuffixType = %suffixToken;
+         %assetItem.ImageType = %suffixToken;
          return "diffuse";
       }
    }
@@ -292,7 +292,7 @@ function parseImageSuffixes(%assetItem)
       %suffixToken = getToken(getAssetImportConfigValue("Images/NormalTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
-         %assetItem.imageSuffixType = %suffixToken;
+         %assetItem.ImageType = %suffixToken;
          return "normal";
       }
    }
@@ -304,7 +304,7 @@ function parseImageSuffixes(%assetItem)
       %suffixToken = getToken(getAssetImportConfigValue("Images/RoughnessTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
-         %assetItem.imageSuffixType = %suffixToken;
+         %assetItem.ImageType = %suffixToken;
          return "roughness";
       }
    }
@@ -316,7 +316,7 @@ function parseImageSuffixes(%assetItem)
       %suffixToken = getToken(getAssetImportConfigValue("Images/AOTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
-         %assetItem.imageSuffixType = %suffixToken;
+         %assetItem.ImageType = %suffixToken;
          return "AO";
       }
    }
@@ -328,7 +328,7 @@ function parseImageSuffixes(%assetItem)
       %suffixToken = getToken(getAssetImportConfigValue("Images/MetalnessTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
-         %assetItem.imageSuffixType = %suffixToken;
+         %assetItem.ImageType = %suffixToken;
          return "metalness";
       }
    }
@@ -340,7 +340,7 @@ function parseImageSuffixes(%assetItem)
       %suffixToken = getToken(getAssetImportConfigValue("Images/CompositeTypeSuffixes", ""), ",;", %sfx);
       if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
       {
-         %assetItem.imageSuffixType = %suffixToken;
+         %assetItem.ImageType = %suffixToken;
          return "composite";
       }
    }

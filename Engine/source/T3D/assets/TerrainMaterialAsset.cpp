@@ -90,6 +90,7 @@ ConsoleSetType(TypeTerrainMaterialAssetPtr)
 TerrainMaterialAsset::TerrainMaterialAsset()
 {
    mScriptFile = StringTable->EmptyString();
+   mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
 }
 
@@ -120,18 +121,18 @@ void TerrainMaterialAsset::initializeAsset()
 
    compileShader();
 
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void TerrainMaterialAsset::onAssetRefresh()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 
    if (mMatDefinitionName != StringTable->EmptyString())
    {

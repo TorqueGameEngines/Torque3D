@@ -49,6 +49,10 @@ class PostEffectAsset : public AssetBase
    StringTableEntry        mScriptFile;
    StringTableEntry        mHLSLShaderFile;
    StringTableEntry        mGLSLShaderFile;
+
+   StringTableEntry        mScriptPath;
+   StringTableEntry        mHLSLShaderPath;
+   StringTableEntry        mGLSLShaderPath;
    
 public:
    PostEffectAsset();
@@ -65,6 +69,10 @@ public:
    inline StringTableEntry getHLSLShaderFile(void) const { return mHLSLShaderFile; };
    void                    setGLSLShaderFile(const char* pShaderFile);
    inline StringTableEntry getGLSLShaderFile(void) const { return mGLSLShaderFile; };
+
+   inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
+   inline StringTableEntry getHLSLShaderPath(void) const { return mHLSLShaderPath; };
+   inline StringTableEntry getGLSLShaderPath(void) const { return mGLSLShaderPath; };
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(PostEffectAsset);

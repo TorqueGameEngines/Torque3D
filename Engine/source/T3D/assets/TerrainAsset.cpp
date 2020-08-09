@@ -124,6 +124,7 @@ ConsoleSetType(TypeTerrainAssetId)
 
 TerrainAsset::TerrainAsset()
 {
+   mTerrainFileName = StringTable->EmptyString();
    mTerrainFilePath = StringTable->EmptyString();
 }
 
@@ -141,8 +142,8 @@ void TerrainAsset::initPersistFields()
    Parent::initPersistFields();
 
    //addField("shaderGraph", TypeRealString, Offset(mShaderGraphFile, TerrainAsset), "");
-   addProtectedField("terrainFile", TypeAssetLooseFilePath, Offset(mTerrainFilePath, TerrainAsset),
-      &setTerrainFilePath, &getTerrainFilePath, "Path to the file containing the terrain data.");
+   addProtectedField("terrainFile", TypeAssetLooseFilePath, Offset(mTerrainFileName, TerrainAsset),
+      &setTerrainFileName, &getTerrainFileName, "Path to the file containing the terrain data.");
 }
 
 void TerrainAsset::setDataField(StringTableEntry slotName, const char* array, const char* value)
@@ -164,19 +165,19 @@ void TerrainAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   mTerrainFilePath = expandAssetFilePath(mTerrainFilePath);
+   mTerrainFilePath = expandAssetFilePath(mTerrainFileName);
 
    loadTerrain();
 }
 
 void TerrainAsset::onAssetRefresh()
 {
-   mTerrainFilePath = expandAssetFilePath(mTerrainFilePath);
+   mTerrainFilePath = expandAssetFilePath(mTerrainFileName);
 
    loadTerrain();
 }
 
-void TerrainAsset::setTerrainFilePath(const char* pScriptFile)
+void TerrainAsset::setTerrainFileName(const char* pScriptFile)
 {
    // Sanity!
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
@@ -185,7 +186,7 @@ void TerrainAsset::setTerrainFilePath(const char* pScriptFile)
    pScriptFile = StringTable->insert(pScriptFile);
 
    // Update.
-   mTerrainFilePath = pScriptFile;
+   mTerrainFileName = pScriptFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -259,7 +260,7 @@ bool TerrainAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<Terrai
       newTerrainAsset->setAssetName(assetName.c_str());
       String terrainPathBind = terrFilePath.getFileName() + terrFilePath.getExtension();
 
-      newTerrainAsset->mTerrainFilePath = StringTable->insert(terrainPathBind.c_str());
+      newTerrainAsset->mTerrainFileName = StringTable->insert(terrainPathBind.c_str());
 
       newTerrainAsset->saveAsset();
 
@@ -350,7 +351,7 @@ StringTableEntry TerrainAsset::getAssetIdByFilename(StringTableEntry fileName)
       newTerrainAsset->setAssetName(assetName.c_str());
       String terrainPathBind = terrFilePath.getFileName() + "." + terrFilePath.getExtension();
 
-      newTerrainAsset->mTerrainFilePath = StringTable->insert(terrainPathBind.c_str());
+      newTerrainAsset->mTerrainFileName = StringTable->insert(terrainPathBind.c_str());
 
       newTerrainAsset->saveAsset();
 

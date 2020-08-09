@@ -93,6 +93,7 @@ ConsoleSetType(TypeSoundAssetPtr)
 SoundAsset::SoundAsset()
 {
    mSoundFile = StringTable->EmptyString();
+   mSoundPath = StringTable->EmptyString();
 
    mPitchAdjust = 0;
    mVolumeAdjust = 0;
@@ -130,11 +131,12 @@ void SoundAsset::copyTo(SimObject* object)
 
 void SoundAsset::initializeAsset(void)
 {
+   mSoundPath = expandAssetFilePath(mSoundFile);
 }
 
 void SoundAsset::onAssetRefresh(void)
 {
-
+   mSoundPath = expandAssetFilePath(mSoundFile);
 }
 
 void SoundAsset::setSoundFile(const char* pSoundFile)
@@ -150,7 +152,7 @@ void SoundAsset::setSoundFile(const char* pSoundFile)
       return;
 
    // Update.
-   mSoundFile = getOwned() ? expandAssetFilePath(pSoundFile) : StringTable->insert(pSoundFile);
+   mSoundFile = StringTable->insert(pSoundFile);
 
    // Refresh the asset.
    refreshAsset();

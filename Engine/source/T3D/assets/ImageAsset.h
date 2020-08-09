@@ -70,6 +70,7 @@ public:
 
 protected:
    StringTableEntry mImageFileName;
+   StringTableEntry mImagePath;
 
    GFXTexHandle mImage;
 
@@ -94,6 +95,8 @@ public:
 
    void                    setImageFileName(const char* pScriptFile);
    inline StringTableEntry getImageFileName(void) const { return mImageFileName; };
+
+   inline StringTableEntry getImagePath(void) const { return mImagePath; };
 
    bool isValid() { return mIsValidImage; }
 

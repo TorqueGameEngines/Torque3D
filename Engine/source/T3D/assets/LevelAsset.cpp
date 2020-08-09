@@ -92,6 +92,13 @@ LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
    mForestFile = StringTable->EmptyString();
    mNavmeshFile = StringTable->EmptyString();
 
+   mLevelPath = StringTable->EmptyString();
+   mPreviewImagePath = StringTable->EmptyString();
+   mPostFXPresetPath = StringTable->EmptyString();
+   mDecalsPath = StringTable->EmptyString();
+   mForestPath = StringTable->EmptyString();
+   mNavmeshPath = StringTable->EmptyString();
+
    mGamemodeName = StringTable->EmptyString();
    mMainLevelAsset = StringTable->EmptyString();
 
@@ -151,12 +158,23 @@ void LevelAsset::initializeAsset()
    Parent::initializeAsset();
 
    // Ensure the image-file is expanded.
-   mPreviewImage = expandAssetFilePath(mPreviewImage);
-   mLevelFile = expandAssetFilePath(mLevelFile);
-   mPostFXPresetFile = expandAssetFilePath(mPostFXPresetFile);
-   mDecalsFile = expandAssetFilePath(mDecalsFile);
-   mForestFile = expandAssetFilePath(mForestFile);
-   mNavmeshFile = expandAssetFilePath(mNavmeshFile);
+   mPreviewImagePath = expandAssetFilePath(mPreviewImage);
+   mLevelPath = expandAssetFilePath(mLevelFile);
+   mPostFXPresetPath = expandAssetFilePath(mPostFXPresetFile);
+   mDecalsPath = expandAssetFilePath(mDecalsFile);
+   mForestPath = expandAssetFilePath(mForestFile);
+   mNavmeshPath = expandAssetFilePath(mNavmeshFile);
+}
+
+void LevelAsset::onAssetRefresh(void)
+{
+   // Ensure the image-file is expanded.
+   mPreviewImagePath = expandAssetFilePath(mPreviewImage);
+   mLevelPath = expandAssetFilePath(mLevelFile);
+   mPostFXPresetPath = expandAssetFilePath(mPostFXPresetFile);
+   mDecalsPath = expandAssetFilePath(mDecalsFile);
+   mForestPath = expandAssetFilePath(mForestFile);
+   mNavmeshPath = expandAssetFilePath(mNavmeshFile);
 }
 
 //

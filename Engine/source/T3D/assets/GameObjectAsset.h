@@ -50,6 +50,8 @@ class GameObjectAsset : public AssetBase
    StringTableEntry mGameObjectName;
    StringTableEntry mScriptFile;
    StringTableEntry mTAMLFile;
+   StringTableEntry mScriptPath;
+   StringTableEntry mTAMLPath;
 
 public:
    GameObjectAsset();
@@ -77,6 +79,9 @@ protected:
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<GameObjectAsset*>(obj)->getScriptFile(); }
    static bool setTAMLFile(void *obj, const char *index, const char *data) { static_cast<GameObjectAsset*>(obj)->setTAMLFile(data); return false; }
    static const char* getTAMLFile(void* obj, const char* data) { return static_cast<GameObjectAsset*>(obj)->getTAMLFile(); }
+
+   inline StringTableEntry getScriptFilePath(void) const { return mScriptPath; };
+   inline StringTableEntry getTAMLFilePath(void) const { return mTAMLPath; };
 };
 
 DefineConsoleType(TypeGameObjectAssetPtr, GameObjectAsset)

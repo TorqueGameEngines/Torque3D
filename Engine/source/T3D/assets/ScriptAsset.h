@@ -49,6 +49,7 @@ class ScriptAsset : public AssetBase
    typedef AssetBase Parent;
 
    StringTableEntry        mScriptFile;
+   StringTableEntry        mScriptPath;
    bool                    mIsServerSide;
 
    Vector<AssetPtr<ScriptAsset>> mScriptAssets;
@@ -66,6 +67,8 @@ public:
 
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
+
+   inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
    bool execScript();
 

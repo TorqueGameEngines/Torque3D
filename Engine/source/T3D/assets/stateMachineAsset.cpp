@@ -93,6 +93,7 @@ ConsoleSetType(TypeStateMachineAssetPtr)
 StateMachineAsset::StateMachineAsset()
 {
    mStateMachineFile = StringTable->EmptyString();
+   mStateMachinePath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -133,7 +134,7 @@ void StateMachineAsset::setStateMachineFile(const char* pStateMachineFile)
       return;
 
    // Update.
-   mStateMachineFile = getOwned() ? expandAssetFilePath(pStateMachineFile) : StringTable->insert(pStateMachineFile);
+   mStateMachineFile = StringTable->insert(pStateMachineFile);
 
    // Refresh the asset.
    refreshAsset();
@@ -141,8 +142,14 @@ void StateMachineAsset::setStateMachineFile(const char* pStateMachineFile)
 
 void StateMachineAsset::initializeAsset()
 {
-   mStateMachineFile = expandAssetFilePath(mStateMachineFile);
+   mStateMachinePath = expandAssetFilePath(mStateMachineFile);
 }
+
+void StateMachineAsset::onAssetRefresh()
+{
+   mStateMachinePath = expandAssetFilePath(mStateMachineFile);
+}
+
 
 
 DefineEngineMethod(StateMachineAsset, notifyAssetChanged, void, (),,"")

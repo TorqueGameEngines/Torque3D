@@ -95,6 +95,8 @@ GameObjectAsset::GameObjectAsset()
    mGameObjectName = StringTable->EmptyString();
    mScriptFile = StringTable->EmptyString();
    mTAMLFile = StringTable->EmptyString();
+   mScriptPath = StringTable->EmptyString();
+   mTAMLPath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -129,25 +131,23 @@ void GameObjectAsset::copyTo(SimObject* object)
 void GameObjectAsset::initializeAsset()
 {
    //Ensure we have an expanded filepath
-   if (!Platform::isFullPath(mScriptFile))
-      mScriptFile = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptFile;
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 
-   if (!Platform::isFullPath(mTAMLFile))
-      mTAMLFile = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLFile;
+   mTAMLPath = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLPath;
 }
 
 void GameObjectAsset::onAssetRefresh()
 {
    //Ensure we have an expanded filepath
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 
-   mTAMLFile = expandAssetFilePath(mTAMLFile);
+   mTAMLPath = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLPath;
 }
 
 void GameObjectAsset::setScriptFile(const char* pScriptFile)

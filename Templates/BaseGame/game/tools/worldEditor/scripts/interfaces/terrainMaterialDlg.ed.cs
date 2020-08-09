@@ -555,6 +555,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    }
    
    %mat.diffuseMap = %newDiffuse;    
+   %mat.diffuseMapAsset = "";    
    %mat.normalMap = %newNormal;   
    %mat.pbrConfigMap = %newPBRConfig; 
    %mat.detailMap = %newDetail;    
@@ -575,7 +576,11 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    
    %fileName = %mat.getFileName();
    if( %fileName $= "" )
-      %fileName = "data/terrains/materials.cs";
+   {
+      error("TerrainMaterialDlg::saveDirtyMaterial() - terrain material doesn't have a fileName set to save to.");
+      return;
+      //%fileName = "data/terrains/materials.cs";
+   }
       
    ETerrainMaterialPersistMan.setDirty( %mat, %fileName ); 
 }

@@ -96,6 +96,7 @@ ShapeAnimationAsset::ShapeAnimationAsset() :
    mIsEmbedded(false), mIsCyclical(true), mIsBlend(false), mBlendFrame(0), mStartFrame(0), mEndFrame(-1), mPadRotation(true), mPadTransforms(false)
 {
    mFileName = StringTable->EmptyString();
+   mFilePath = StringTable->EmptyString();
    mAnimationName = StringTable->EmptyString();
 
    mBlendAnimAssetName = StringTable->EmptyString();
@@ -146,11 +147,9 @@ void ShapeAnimationAsset::initializeAsset(void)
    if (!mIsEmbedded)
    {
       //If we're not embedded, we need to load in our initial shape and do some prepwork
+      mFilePath = expandAssetFilePath(mFileName);
 
-      char filenameBuf[1024];
-      Con::expandScriptFilename(filenameBuf, sizeof(filenameBuf), mFileName);
-
-      mSourceShape = ResourceManager::get().load(filenameBuf);
+      mSourceShape = ResourceManager::get().load(mFilePath);
 
       if (!mSourceShape->addSequence("ambient", "", mAnimationName, mStartFrame, mEndFrame, mPadRotation, mPadTransforms))
       {
@@ -185,7 +184,7 @@ void ShapeAnimationAsset::setAnimationFile(const char* pAnimationFile)
       return;
 
    // Update.
-   mFileName = getOwned() ? expandAssetFilePath(pAnimationFile) : StringTable->insert(pAnimationFile);
+   mFileName = StringTable->insert(pAnimationFile);
 
    // Refresh the asset.
    refreshAsset();

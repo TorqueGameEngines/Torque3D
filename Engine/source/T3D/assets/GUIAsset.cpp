@@ -86,6 +86,9 @@ GUIAsset::GUIAsset()
 {
    mScriptFile = StringTable->EmptyString();
    mGUIFile = StringTable->EmptyString();
+
+   mScriptPath = StringTable->EmptyString();
+   mGUIPath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -118,28 +121,28 @@ void GUIAsset::copyTo(SimObject* object)
 
 void GUIAsset::initializeAsset()
 {
-   mGUIFile = expandAssetFilePath(mGUIFile);
+   mGUIPath = expandAssetFilePath(mGUIFile);
 
-   if (Platform::isFile(mGUIFile))
-      Con::executeFile(mGUIFile, false, false);
+   if (Platform::isFile(mGUIPath))
+      Con::executeFile(mGUIPath, false, false);
 
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void GUIAsset::onAssetRefresh()
 {
-   mGUIFile = expandAssetFilePath(mGUIFile);
+   mGUIPath = expandAssetFilePath(mGUIFile);
 
-   if (Platform::isFile(mGUIFile))
-      Con::executeFile(mGUIFile, false, false);
+   if (Platform::isFile(mGUIPath))
+      Con::executeFile(mGUIPath, false, false);
 
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Platform::isFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void GUIAsset::setGUIFile(const char* pScriptFile)
@@ -155,7 +158,7 @@ void GUIAsset::setGUIFile(const char* pScriptFile)
       return;
 
    // Update.
-   mGUIFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mGUIFile = StringTable->insert(pScriptFile);
 
    // Refresh the asset.
    refreshAsset();
@@ -174,7 +177,7 @@ void GUIAsset::setScriptFile(const char* pScriptFile)
       return;
 
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mScriptFile = StringTable->insert(pScriptFile);
 
    // Refresh the asset.
    refreshAsset();

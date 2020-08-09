@@ -51,6 +51,7 @@ class ShapeAnimationAsset : public AssetBase
 
 protected:
    StringTableEntry   mFileName;
+   StringTableEntry   mFilePath;
 
    bool            mIsEmbedded;
    bool            mIsCyclical;
@@ -80,6 +81,8 @@ public:
 
    void                    setAnimationFile(const char* pScriptFile);
    inline StringTableEntry getAnimationFile(void) const { return mFileName; };
+
+   inline StringTableEntry getAnimationPath(void) const { return mFilePath; };
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ShapeAnimationAsset);

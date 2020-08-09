@@ -92,6 +92,7 @@ ConsoleSetType(TypeScriptAssetPtr)
 ScriptAsset::ScriptAsset() : AssetBase(), mIsServerSide(true)
 {
    mScriptFile = StringTable->EmptyString();
+   mScriptPath = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -121,9 +122,9 @@ void ScriptAsset::copyTo(SimObject* object)
 
 void ScriptAsset::initializeAsset()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
+   if (Platform::isFile(mScriptPath))
    {
       //We're initialized properly, so we'll go ahead and kick along any dependencies we may have as well
       AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
@@ -143,15 +144,15 @@ void ScriptAsset::initializeAsset()
          }
       }
 
-      Con::executeFile(mScriptFile, false, false);
+      Con::executeFile(mScriptPath, false, false);
    }
 }
 
 void ScriptAsset::onAssetRefresh()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
+   if (Platform::isFile(mScriptPath))
    {
       //Refresh any dependencies we may have
       for (U32 i = 0; i < mScriptAssets.size(); i++)
@@ -159,7 +160,7 @@ void ScriptAsset::onAssetRefresh()
          mScriptAssets[i]->onAssetRefresh();
       }
 
-      Con::executeFile(mScriptFile, false, false);
+      Con::executeFile(mScriptPath, false, false);
    }
 }
 
@@ -176,7 +177,7 @@ void ScriptAsset::setScriptFile(const char* pScriptFile)
       return;
 
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mScriptFile = StringTable->insert(pScriptFile);
 
    // Refresh the asset.
    refreshAsset();
@@ -191,9 +192,9 @@ bool ScriptAsset::execScript()
 
    return false;
 
-   if (Platform::isFile(mScriptFile))
+   if (Platform::isFile(mScriptPath))
    {
-      return Con::executeFile(mScriptFile, false, false);
+      return Con::executeFile(mScriptPath, false, false);
    }
    else
    {

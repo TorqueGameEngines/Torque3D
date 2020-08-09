@@ -109,6 +109,9 @@ public:
    virtual U32 getMonitorCount();
    virtual const char* getMonitorName(U32 index);
    virtual RectI getMonitorRect(U32 index);
+   virtual U32 getMonitorModeCount(U32 monitorIndex);
+   virtual const String getMonitorMode(U32 monitorIndex, U32 modeIndex);
+   virtual const String getMonitorDesktopMode(U32 monitorIndex);
 
    virtual void getMonitorRegions(Vector<RectI> &regions);
    virtual PlatformWindow *createWindow(GFXDevice *device, const GFXVideoMode &mode);

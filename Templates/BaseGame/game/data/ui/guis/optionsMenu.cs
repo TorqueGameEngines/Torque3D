@@ -196,10 +196,28 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    OptionName.setText("");
    OptionDescription.setText("");
    
-   %resolutionList = getScreenResolutionList();
    OptionsMenuSettingsList.addOptionRow("Display API", "D3D11\tOpenGL", false, "", -1, -30, true, "The display API used for rendering.", $pref::Video::displayDevice);
+   
+   %numDevices = Canvas.getMonitorCount();
+   %devicesList = "";
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      if(%i==0)
+         %devicesList = %device;
+      else
+         %devicesList = %devicesList @ "\t" @ %device;
+   }
+   if (%numDevices < 2)
+      OptGraphicsDeviceMenu.active = false;
+      
+   OptionsMenuSettingsList.addOptionRow("Display Device", %devicesList, false, "", -1, -30, true, "The display devices the window should be on.", $pref::Video::deviceId);
+   
+   %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
+   OptionsMenuSettingsList.addOptionRow("Window Mode", $Video::ModeTags, false, "", -1, -30, true, "", %mode);
+   
+   %resolutionList = getScreenResolutionList();
    OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
-   OptionsMenuSettingsList.addOptionRow("Fullscreen", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo($pref::Video::FullScreen));
    OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
    
    OptionsMenuSettingsList.addOptionRow("Refresh Rate", "30\t60\t75", false, "", -1, -30, true, "", $pref::Video::RefreshRate);
@@ -215,20 +233,8 @@ function OptionsMenu::populateDisplaySettingsList(%this)
 
 function OptionsMenu::applyDisplaySettings(%this)
 {
-   //%newAdapter    = GraphicsMenuDriver.getText();
-	//%numAdapters   = GFXInit::getAdapterCount();
 	%newDevice     = OptionsMenuSettingsList.getCurrentOption(0);
 							
-	/*for( %i = 0; %i < %numAdapters; %i ++ )
-	{
-	   %targetAdapter = GFXInit::getAdapterName( %i );
-	   if( GFXInit::getAdapterName( %i ) $= %newDevice )
-	   {
-	      %newDevice = GFXInit::getAdapterType( %i );
-	      break;
-	   }
-	}*/
-	   
    // Change the device.
    if ( %newDevice !$= $pref::Video::displayDevice )
    {
@@ -335,37 +341,33 @@ function OptionsMenu::applyGraphicsSettings(%this)
 function updateDisplaySettings()
 {
    //Update the display settings now
-   $pref::Video::Resolution = getWord(OptionsMenuSettingsList.getCurrentOption(1), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(1), 2);
-   %newBpp        = 32; // ... its not 1997 anymore.
-	$pref::Video::FullScreen = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(2)) == 0 ? "false" : "true";
-	$pref::Video::RefreshRate    = OptionsMenuSettingsList.getCurrentOption(4);
-	%newVsync = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(3));	
-	//$pref::Video::AA = GraphicsMenuAA.getSelected();
+   %newDeviceID = OptionsMenuSettingsList.getCurrentOption(1);
+	%newDeviceMode = OptionsMenuSettingsList.getCurrentOption(2);
+   %newRes = getWord(OptionsMenuSettingsList.getCurrentOption(3), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(3), 2);
+   %newBpp = 32; // ... its not 1997 anymore.
+	%newFullScreen = %newDeviceMode == "Fullscreen" ? "false" : "true";
+	%newRefresh    = OptionsMenuSettingsList.getCurrentOption(5);
+	%newVsync = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(4));	
+	%newFSAA = $pref::Video::AA;
 	
-   /*if ( %newFullScreen $= "false" )
-	{
-      // If we're in windowed mode switch the fullscreen check
-      // if the resolution is bigger than the desktop.
-      %deskRes    = getDesktopResolution();      
-      %deskResX   = getWord(%deskRes, $WORD::RES_X);
-      %deskResY   = getWord(%deskRes, $WORD::RES_Y);
-	   if (  getWord( %newRes, $WORD::RES_X ) > %deskResX || 
-	         getWord( %newRes, $WORD::RES_Y ) > %deskResY )
-      {
-         $pref::Video::FullScreen = "true";
-         GraphicsMenuFullScreen.setStateOn( true );
-      }
-	}*/
-
    // Build the final mode string.
-	%newMode = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC %newBpp SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
+	%newMode = %newRes SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newFSAA;
 	
    // Change the video mode.   
-   if (  %newMode !$= $pref::Video::mode || 
-         %newVsync != $pref::Video::disableVerticalSync )
+   if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
+         %newVsync != $pref::Video::disableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
    {
+      if ( %testNeedApply )
+         return true;
+
       $pref::Video::mode = %newMode;
-      $pref::Video::disableVerticalSync = %newVsync;      
+      $pref::Video::disableVerticalSync = %newVsync;
+      $pref::Video::deviceId = %newDeviceID;
+      $pref::Video::deviceMode = %newDeviceMode;
+      $pref::Video::Resolution = %newRes;
+      $pref::Video::FullScreen = %newFullScreen;
+      $pref::Video::RefreshRate = %newRefresh;
+      $pref::Video::AA = %newFSAA;
       configureCanvas();
    }
 }

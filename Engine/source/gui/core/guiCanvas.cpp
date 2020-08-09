@@ -2462,6 +2462,23 @@ DefineEngineMethod( GuiCanvas, getMonitorRect, RectI, (S32 index),,
    return PlatformWindowManager::get()->getMonitorRect(index);
 }
 
+DefineEngineMethod(GuiCanvas, getMonitorModeCount, S32, (S32 monitorIndex), (0),
+   "Gets the number of video modes available on the selected monitor.\n\n")
+{
+   return PlatformWindowManager::get()->getMonitorModeCount(monitorIndex);
+}
+DefineEngineMethod(GuiCanvas, getMonitorMode, const char*, (S32 monitorIndex, S32 modeIndex), (0),
+   "Gets a video mode string from the selected monitor.\n\n")
+{
+   char* buf = Con::getReturnBuffer(PlatformWindowManager::get()->getMonitorMode(monitorIndex, modeIndex));
+   return buf;
+}
+DefineEngineMethod(GuiCanvas, getMonitorDesktopMode, const char*, (S32 monitorIndex), (0),
+   "Gets the current desktop mode for the selected monitor.\n\n")
+{
+   char* buf = Con::getReturnBuffer(PlatformWindowManager::get()->getMonitorDesktopMode(monitorIndex));
+   return buf;
+}
 
 DefineEngineMethod( GuiCanvas, getVideoMode, const char*, (),,
                "@brief Gets the current screen mode as a string.\n\n"

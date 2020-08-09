@@ -143,6 +143,62 @@ RectI PlatformWindowManagerSDL::getMonitorRect(U32 index)
    return RectI(sdlRect.x, sdlRect.y, sdlRect.w, sdlRect.h);
 }
 
+U32 PlatformWindowManagerSDL::getMonitorModeCount(U32 monitorIndex)
+{
+   S32 modeCount = SDL_GetNumDisplayModes(monitorIndex);
+   if (modeCount < 0)
+   {
+      Con::errorf("SDL_GetNumDisplayModes(%d) failed: %s", monitorIndex, SDL_GetError());
+      modeCount = 0;
+   }
+
+   return (U32)modeCount;
+}
+
+const String PlatformWindowManagerSDL::getMonitorMode(U32 monitorIndex, U32 modeIndex)
+{
+   SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
+   if (SDL_GetDisplayMode(monitorIndex, modeIndex, &mode) != 0)
+   {
+      Con::errorf("SDL_GetDisplayMode(%d, %d) failed: %s", monitorIndex, modeIndex, SDL_GetError());
+      return String::EmptyString;
+   }
+
+   GFXVideoMode vm;
+   vm.resolution.set(mode.w, mode.h);
+   vm.refreshRate = mode.refresh_rate;
+   vm.bitDepth = 32;
+   vm.antialiasLevel = 0;
+   vm.fullScreen = false;
+   vm.wideScreen = false;
+
+   return vm.toString();
+}
+
+const String PlatformWindowManagerSDL::getMonitorDesktopMode(U32 monitorIndex)
+{
+   SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
+   if (SDL_GetDesktopDisplayMode(monitorIndex, &mode) != 0)
+   {
+      Con::errorf("SDL_GetDesktopDisplayMode(%d) failed: %s", monitorIndex, SDL_GetError());
+      return String::EmptyString;
+   }
+
+   GFXVideoMode vm;
+   vm.resolution.set(mode.w, mode.h);
+   vm.refreshRate = mode.refresh_rate;
+
+   int bbp;
+   unsigned int r, g, b, a;
+   SDL_PixelFormatEnumToMasks(mode.format, &bbp, &r, &g, &b, &a);
+   vm.bitDepth = bbp;
+   vm.antialiasLevel = 0;
+   vm.fullScreen = false;
+   vm.wideScreen = ((mode.w / 16) * 9) == mode.h;
+
+   return vm.toString();
+}
+
 void PlatformWindowManagerSDL::getMonitorRegions(Vector<RectI> &regions)
 {
    SDL_Rect sdlRect;

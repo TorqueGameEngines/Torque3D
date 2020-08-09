@@ -90,6 +90,18 @@ public:
    // Get the requested monitor's rectangular region.
    virtual RectI getMonitorRect(U32 index) { return RectI(0, 0, 0, 0); }
 
+   // Retrieve the number of display modes available on a monitor.  Provides a default
+   // count of 0 for systems that don't provide information on connected monitors.
+   virtual U32 getMonitorModeCount(U32 monitorIndex) { return 0; }
+
+   // Gets a display mode for a specific monitor.  Provides a default of "" for platorms
+   // that do not provide information on connected monitors.
+   virtual const String getMonitorMode(U32 monitorIndex, U32 modeIndex) { return String::EmptyString; }
+
+   // Gets the current desktop display mode for a specific monitor.  Provides a default
+   // of "" for platorms that do not provide information on connected monitors.
+   virtual const String getMonitorDesktopMode(U32 monitorIndex) { return String::EmptyString; }
+
    /// Populate a vector with all monitors and their extents in window space.
    virtual void getMonitorRegions(Vector<RectI> &regions) = 0;
 

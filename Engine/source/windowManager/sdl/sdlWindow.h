@@ -98,6 +98,7 @@ private:
    void _triggerMouseWheelNotify(const SDL_Event& event);
    void _triggerKeyNotify(const SDL_Event& event);
    void _triggerTextNotify(const SDL_Event& event);
+   void _updateMonitorFromMove(const SDL_Event& event);
 
 public:
    PlatformWindowSDL();

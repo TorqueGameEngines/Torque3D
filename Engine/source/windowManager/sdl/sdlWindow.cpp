@@ -161,10 +161,18 @@ void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
 {
    mVideoMode = mode;
    mSuppressReset = true;
+   S32 newDisplay = Con::getIntVariable("pref::Video::deviceId", 0);
 
    // Set our window to have the right style based on the mode
    if(mode.fullScreen && !Platform::getWebDeployment() && !mOffscreenRender)
-   {     
+   {
+      SDL_Rect rect_sdl;
+      // Move the window onto the correct monitor before setting fullscreen
+      if (0 == SDL_GetDisplayBounds(newDisplay, &rect_sdl))
+      {
+         SDL_SetWindowPosition(mWindowHandle, rect_sdl.x, rect_sdl.y);
+      }
+
       setSize(mode.resolution);
 
       SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
@@ -187,8 +195,11 @@ void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
          SDL_SetWindowFullscreen( mWindowHandle, 0);
       }
 
+      SDL_SetWindowBordered(mWindowHandle, (1 == Con::getIntVariable("pref::Video::deviceMode", 0)) ? SDL_FALSE : SDL_TRUE);
       setSize(mode.resolution);
-      centerWindow();
+      SDL_SetWindowPosition(mWindowHandle, SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay), SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay));
+      if (Con::getBoolVariable("pref::Video::isMaximized", false))
+         SDL_MaximizeWindow(mWindowHandle);
    }
 
    mSuppressReset = false;
@@ -547,6 +558,24 @@ void PlatformWindowSDL::_triggerTextNotify(const SDL_Event& evt)
    }
 }
 
+void PlatformWindowSDL::_updateMonitorFromMove(const SDL_Event& evt)
+{
+   SDL_Rect sdlRect;
+   S32 monitorCount = SDL_GetNumVideoDisplays();
+   for (S32 index = 0; index < monitorCount; ++index)
+   {
+      if (0 == SDL_GetDisplayBounds(index, &sdlRect))
+      {
+         if ((evt.window.data1 >= sdlRect.x) && (evt.window.data1 < (sdlRect.x + sdlRect.w)) &&
+            (evt.window.data2 >= sdlRect.y) && (evt.window.data2 < (sdlRect.y + sdlRect.h)))
+         {
+            Con::setIntVariable("pref::Video::deviceId", index);
+            return;
+         }
+      }
+   }
+}
+
 void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
 {
    switch(evt.type)
@@ -594,7 +623,11 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
             case SDL_WINDOWEVENT_FOCUS_LOST:
                appEvent.trigger(getWindowId(), LoseFocus);
                break;
-            case SDL_WINDOWEVENT_MAXIMIZED:
+            case SDL_WINDOWEVENT_MOVED:
+            {
+               _updateMonitorFromMove(evt);
+               break;
+            }
             case SDL_WINDOWEVENT_RESIZED:
             {
                int width, height;
@@ -609,6 +642,14 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                appEvent.trigger(getWindowId(), WindowClose);
                mClosing = true;
             }
+            case SDL_WINDOWEVENT_MINIMIZED:
+               break;
+            case SDL_WINDOWEVENT_MAXIMIZED:
+               Con::setBoolVariable("pref::Video::isMaximized", true);
+               break;
+            case SDL_WINDOWEVENT_RESTORED:
+               Con::setBoolVariable("pref::Video::isMaximized", false);
+               break;
 
             default:
                break;

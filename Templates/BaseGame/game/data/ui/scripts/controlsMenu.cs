@@ -114,6 +114,9 @@ function buildFullMapString( %index, %actionMap, %deviceType )
       %device = getField( %temp, %i + 0 );
       %object = getField( %temp, %i + 1 );
       
+      if (startsWith(%device,"mouse"))
+          %deviceType = "mouse";
+      
       if(%deviceType !$= "" && !startsWith(%device, %deviceType))
          continue;
          

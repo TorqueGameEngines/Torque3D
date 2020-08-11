@@ -721,14 +721,19 @@ function _makePrettyResString( %resString, %giveAspectRation )
    return %outRes;   
 }
 
-function getScreenResolutionList()
+function getScreenResolutionList(%deviceID, %deviceMode)
 {
    %returnsList = "";
-   
+
    %resCount = Canvas.getModeCount();
    for (%i = 0; %i < %resCount; %i++)
    {
       %testResString = Canvas.getMode( %i );
+
+      // Make sure it's valid for the monitor and mode selections
+      if (!Canvas.checkCanvasRes(%testResString, %deviceID, %deviceMode, false))
+         continue;
+
       %testRes = _makePrettyResString( %testResString );
       
       //sanitize
@@ -747,11 +752,40 @@ function getScreenResolutionList()
       if(%found)
          continue;
                      
-      if(%i != 0)
+      if(%returnsList !$= "")
          %returnsList = %returnsList @ "\t" @ %testRes;
       else
          %returnsList = %testRes;
    }
-   
+
+   return %returnsList;
+}
+
+// Return a sorted tab-separated list of all refresh rates available for %resolution.
+function getScreenRefreshList(%resolution)
+{
+   %rateArray = new ArrayObject();
+   %resCount = Canvas.getModeCount();
+   for (%i = 0; %i < %resCount; %i++)
+   {
+      %testRes = Canvas.getMode(%i);
+      if ((%testRes.x != %resolution.x) || (%testRes.y != %resolution.y))
+         continue;
+      %rate = getWord(%testRes, $WORD::REFRESH);
+      if (%rateArray.getIndexFromKey(%rate) == -1)
+         %rateArray.add(%rate, %rate);
+   }
+
+   %rateArray.sort(true);
+   %returnsList = "";
+   for (%i = 0; %i < %rateArray.count(); %i++)
+   {
+      %rate = %rateArray.getKey(%i);
+      %returnsList = %returnsList @ ((%i == 0) ? %rate : ("\t" @ %rate));
+   }
+   if (%returnsList $= "")
+      %returnsList = "60";
+
+   %rateArray.delete();
    return %returnsList;
 }

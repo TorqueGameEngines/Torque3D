@@ -5,15 +5,15 @@ bool Platform::openWebBrowser(const char* webAddress)
    String startingURL(webAddress);
    String filteredURL;
 
-   U16 length = startingURL.length();
-   for(U16 i = 0; i < length; i++)
+   U32 length = startingURL.length();
+   for(U32 i = 0; i < length; i++)
    {
       filteredURL = filteredURL + '\\' + startingURL[i];
    }
 
    String runCommand = "URL=" + filteredURL + "; xdg-open $URL > /dev/null 2> /dev/null";
 
-   S16 statusCode;
+   S32 statusCode;
    statusCode = system(runCommand.c_str());
 
    if(statusCode == 0)

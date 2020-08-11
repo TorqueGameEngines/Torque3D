@@ -90,6 +90,11 @@ public:
    // Get the requested monitor's rectangular region.
    virtual RectI getMonitorRect(U32 index) { return RectI(0, 0, 0, 0); }
 
+   // Get the requested monitor's rectangular region.
+   // Use this function to get the usable desktop area represented by a display,
+   // with the primary display located at 0,0. 
+   virtual RectI getMonitorUsableRect(U32 index) { return RectI(0, 0, 0, 0); }
+
    // Retrieve the number of display modes available on a monitor.  Provides a default
    // count of 0 for systems that don't provide information on connected monitors.
    virtual U32 getMonitorModeCount(U32 monitorIndex) { return 0; }

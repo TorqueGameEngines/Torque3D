@@ -143,6 +143,18 @@ RectI PlatformWindowManagerSDL::getMonitorRect(U32 index)
    return RectI(sdlRect.x, sdlRect.y, sdlRect.w, sdlRect.h);
 }
 
+RectI PlatformWindowManagerSDL::getMonitorUsableRect(U32 index)
+{
+   SDL_Rect sdlRect;
+   if (0 != SDL_GetDisplayUsableBounds(index, &sdlRect))
+   {
+      Con::errorf("SDL_GetDisplayUsableBounds() failed: %s", SDL_GetError());
+      return RectI(0, 0, 0, 0);
+   }
+
+   return RectI(sdlRect.x, sdlRect.y, sdlRect.w, sdlRect.h);
+}
+
 U32 PlatformWindowManagerSDL::getMonitorModeCount(U32 monitorIndex)
 {
    S32 modeCount = SDL_GetNumDisplayModes(monitorIndex);
@@ -306,6 +318,9 @@ PlatformWindow *PlatformWindowManagerSDL::createWindow(GFXDevice *device, const 
 #endif
 
    linkWindow(window);
+
+   SDL_SetWindowMinimumSize(window->mWindowHandle, Con::getIntVariable("$Video::minimumXResolution", 1024),
+         Con::getIntVariable("$Video::minimumYResolution", 720));
 
    return window;
 }

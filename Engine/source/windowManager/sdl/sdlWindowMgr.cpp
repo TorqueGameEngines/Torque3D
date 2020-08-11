@@ -584,3 +584,27 @@ AFTER_MODULE_INIT(gfx)
    SDL_StopTextInput();
 #endif
 }
+
+DefineEngineFunction(dumpSDL_DisplayData, void, (), ,
+   "@brief Lists the adapter and output data for all connected monitors.\n\n"
+   "Debugging use only, internal\n"
+   "@internal")
+{
+   S32 adapterIndex, outputIndex;
+   S32 monitorCount = SDL_GetNumVideoDisplays();
+   Con::printf("\nMonitor(s) detected: %d", monitorCount);
+   for (S32 i = 0; i < monitorCount; i++)
+   {
+      if (SDL_TRUE == SDL_DXGIGetOutputInfo(i, &adapterIndex, &outputIndex))
+         Con::printf(" #%d, Adapter: %d (%s), Output Index: %d", i, adapterIndex, SDL_GetVideoDriver(adapterIndex), outputIndex);
+   }
+
+   S32 driverCount = SDL_GetNumVideoDrivers();
+   Con::printf("\nSDL Video Driver(s) detected: %d", driverCount);
+   for (S32 i = 0; i < driverCount; i++)
+   {
+      if (SDL_TRUE == SDL_DXGIGetOutputInfo(i, &adapterIndex, &outputIndex))
+         Con::printf(" #%d, Driver: %s", i, SDL_GetVideoDriver(i));
+   }
+}
+

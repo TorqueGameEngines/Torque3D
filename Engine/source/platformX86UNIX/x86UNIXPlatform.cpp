@@ -1,26 +1,27 @@
 #include "platform/platform.h"
-#include <string>
 
-bool Platform::openWebBrowser( const char* webAddress )
+bool Platform::openWebBrowser(const char* webAddress)
 {
-    std::string startingURL(webAddress);
-    std::string filteredURL;
+   String startingURL(webAddress);
+   String filteredURL;
 
-    unsigned short length = startingURL.length();
-    for(unsigned short i = 0; i < length; i++)
-    {
-        filteredURL = filteredURL + '\\' + startingURL.at(i);
-    }
+   U16 length = startingURL.length();
+   for(U16 i = 0; i < length; i++)
+   {
+      filteredURL = filteredURL + '\\' + startingURL[i];
+   }
 
-    std::string runCommand = "URL=" + filteredURL + "; xdg-open $URL > /dev/null 2> /dev/null";
+   String runCommand = "URL=" + filteredURL + "; xdg-open $URL > /dev/null 2> /dev/null";
 
-    short statusCode;
-    statusCode = system(runCommand.c_str());
+   S16 statusCode;
+   statusCode = system(runCommand.c_str());
 
-    if(statusCode == 0)
-        return true;
+   if(statusCode == 0)
+   {
+      return true;
+   }
 
-    return false;
+   return false;
 }
 
 #ifdef TORQUE_DEDICATED

@@ -464,6 +464,8 @@ bool TerrainBlock::saveAsset()
       mTerrainAsset->clearAssetDependencyFields("terrainMaterailAsset");
 
       AssetQuery* pAssetQuery = new AssetQuery();
+      pAssetQuery->registerObject();
+
       AssetDatabase.findAssetType(pAssetQuery, "TerrainMaterialAsset");
 
       TerrainBlock* clientTerr = static_cast<TerrainBlock*>(getClientObject());

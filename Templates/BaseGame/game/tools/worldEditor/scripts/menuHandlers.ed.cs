@@ -355,7 +355,7 @@ function EditorSaveMissionAs( %levelAsset )
       return;
    }
                
-   %missionName = %levelAssetDef.LevelFile;
+   %missionName = %levelAssetDef.getLevelFile();
                
    if( fileExt( %missionName ) !$= ".mis" )
       %missionName = %missionName @ ".mis";
@@ -427,7 +427,7 @@ function EditorOpenMission(%levelAsset)
       
       updateRecentLevelsListing();
       
-      %filename = %assetDef.levelFile;
+      %filename = %assetDef.getlevelFile();
       
       if(%filename $= "")
       {
@@ -473,7 +473,7 @@ function EditorOpenMission(%levelAsset)
 function EditorOpenSceneAppend(%levelAsset)
 {
    //Load the asset's level file
-   exec(%levelAsset.levelFile);
+   exec(%levelAsset.getlevelFile());
    
    //We'll assume the scene name and assetname are the same for now
    %sceneName = %levelAsset.AssetName;

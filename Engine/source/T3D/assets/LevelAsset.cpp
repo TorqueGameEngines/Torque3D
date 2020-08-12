@@ -329,3 +329,10 @@ void LevelAsset::setNavmeshFile(const char* pNavmeshFile)
    // Refresh the asset.
    refreshAsset();
 }
+
+DefineEngineMethod(LevelAsset, getLevelFile, const char*, (),,
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->getLevelPath();
+}

@@ -350,8 +350,6 @@ function TerrainMaterialDlg::newMat( %this )
    %module = AssetBrowser.dirHandler.getModuleFromAddress(%path);
    AssetBrowser.selectedModule = %module.moduleID;
    
-   AssetBrowser.dirHandler.currentAddress = "data/" @ %module.moduleID;
-   
    AssetBrowser.setupCreateNewAsset("TerrainMaterialAsset", AssetBrowser.selectedModule);
 }
 

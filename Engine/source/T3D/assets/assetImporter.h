@@ -15,6 +15,8 @@
 /// </summary>
 class AssetImportConfig : public SimObject
 {
+   typedef SimObject Parent;
+
    //General Settings
 public:
    /// <summary>
@@ -371,6 +373,9 @@ public:
    AssetImportConfig();
    virtual ~AssetImportConfig();
 
+   virtual bool onAdd();
+   virtual void onRemove();
+
    /// Engine.
    static void initPersistFields();
 
@@ -491,8 +496,8 @@ public:
    AssetImportObject();
    virtual ~AssetImportObject();
 
-   bool onAdd();
-   void onRemove();
+   virtual bool onAdd();
+   virtual void onRemove();
 
    /// Engine.
    static void initPersistFields();
@@ -521,7 +526,7 @@ class AssetImporter : public SimObject
    /// <summary>
    /// The import configuration that is currently being utilized
    /// </summary>
-   AssetImportConfig activeImportConfig;
+   AssetImportConfig* activeImportConfig;
 
    /// <summary>
    /// A log of all the actions that have been performed by the importer
@@ -576,6 +581,9 @@ class AssetImporter : public SimObject
 public:
    AssetImporter();
    virtual ~AssetImporter();
+
+   virtual bool onAdd();
+   virtual void onRemove();
 
    /// Engine.
    static void initPersistFields();
@@ -803,11 +811,11 @@ public:
    /// Gets the currently active import configuration
    /// <para>@return Current AssetImportConfig the importer is using</para>
    /// </summary>
-   AssetImportConfig* getImportConfig() { return &activeImportConfig; }
+   AssetImportConfig* getImportConfig() { return activeImportConfig; }
 
    void setImportConfig(AssetImportConfig* importConfig) {
       if(importConfig != nullptr)
-         activeImportConfig = *importConfig;
+         activeImportConfig = importConfig;
    }
 
    //

@@ -86,6 +86,7 @@ add_executable(testbounds testbounds.c)
 add_executable(testcustomcursor testcustomcursor.c)
 add_executable(controllermap controllermap.c)
 add_executable(testvulkan testvulkan.c)
+add_executable(testoffscreen testoffscreen.c)
 
 # HACK: Dummy target to cause the resource files to be copied to the build directory.
 # Need to make it an executable so we can use the TARGET_FILE_DIR generator expression.
@@ -101,22 +102,54 @@ endforeach(RESOURCE_FILE)
 file(COPY ${RESOURCE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # TODO: Might be easier to make all targets depend on the resources...?
-add_dependencies(testscale SDL2_test_resoureces)
-add_dependencies(testrendercopyex SDL2_test_resoureces)
-add_dependencies(controllermap SDL2_test_resoureces)
-add_dependencies(testyuv SDL2_test_resoureces)
-add_dependencies(testgamecontroller SDL2_test_resoureces)
-add_dependencies(testshape SDL2_test_resoureces)
-add_dependencies(testshader SDL2_test_resoureces)
-add_dependencies(testnative SDL2_test_resoureces)
-add_dependencies(testspriteminimal SDL2_test_resoureces)
-add_dependencies(testautomation SDL2_test_resoureces)
-add_dependencies(testcustomcursor SDL2_test_resoureces)
-add_dependencies(testrendertarget SDL2_test_resoureces)
-add_dependencies(testsprite2 SDL2_test_resoureces)
 
-add_dependencies(loopwave SDL2_test_resoureces)
-add_dependencies(loopwavequeue SDL2_test_resoureces)
-add_dependencies(testresample SDL2_test_resoureces)
-add_dependencies(testaudiohotplug SDL2_test_resoureces)
-add_dependencies(testmultiaudio SDL2_test_resoureces)
+set(NEEDS_RESOURCES
+    testscale
+    testrendercopyex
+    controllermap
+    testyuv
+    testgamecontroller
+    testshape
+    testshader
+    testnative
+    testspriteminimal
+    testautomation
+    testcustomcursor
+    testrendertarget
+    testsprite2
+    loopwave
+    loopwavequeue
+    testresample
+    testaudiohotplug
+    testmultiaudio
+)
+foreach(APP IN LISTS NEEDS_RESOURCES)
+    add_dependencies(${APP} SDL2_test_resoureces)
+    if(APPLE)
+        # Make sure resource files get installed into macOS/iOS .app bundles.  
+        target_sources(${APP} PRIVATE "${RESOURCE_FILES}")
+        set_target_properties(${APP} PROPERTIES RESOURCE "${RESOURCE_FILES}")
+    endif()
+endforeach()
+
+# Set Apple App ID / Bundle ID.  This is needed to launch apps on some Apple
+# platforms (iOS, for example).
+if(APPLE)
+    if(${CMAKE_VERSION} VERSION_LESS "3.7.0")
+        # CMake's 'BUILDSYSTEM_TARGETS' property is only available in
+        # CMake 3.7 and above.
+        message(WARNING "Unable to set Bundle ID for Apple .app builds due to old CMake (pre 3.7).")
+    else()
+        get_property(TARGETS DIRECTORY ${CMAKE_CURRENT_LIST_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+        foreach(CURRENT_TARGET IN LISTS TARGETS)
+            get_property(TARGET_TYPE TARGET ${CURRENT_TARGET} PROPERTY TYPE)
+            if(TARGET_TYPE STREQUAL "EXECUTABLE")
+                set_target_properties("${CURRENT_TARGET}" PROPERTIES
+                    MACOSX_BUNDLE_GUI_IDENTIFIER "org.libsdl.${CURRENT_TARGET}"
+                    MACOSX_BUNDLE_BUNDLE_VERSION "${SDL_VERSION}"
+                    MACOSX_BUNDLE_SHORT_VERSION_STRING "${SDL_VERSION}"
+                )
+            endif()
+        endforeach()
+    endif()
+endif()

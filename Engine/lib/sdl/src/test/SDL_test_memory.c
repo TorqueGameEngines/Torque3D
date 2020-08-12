@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -90,7 +90,7 @@ static void SDL_TrackAllocation(void *mem, size_t size)
     entry->size = size;
 
     /* Generate the stack trace for the allocation */
-    SDL_zero(entry->stack);
+    SDL_zeroa(entry->stack);
 #ifdef HAVE_LIBUNWIND_H
     {
         int stack_index;

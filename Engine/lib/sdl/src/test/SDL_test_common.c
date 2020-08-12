@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,7 +19,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* Ported from original test\common.c file. */
+/* Ported from original test/common.c file. */
 
 #include "SDL_config.h"
 #include "SDL_test.h"
@@ -35,7 +35,7 @@ static const char *video_usage[] = {
     "[--min-geometry WxH]", "[--max-geometry WxH]", "[--logical WxH]",
     "[--scale N]", "[--depth N]", "[--refresh R]", "[--vsync]", "[--noframe]",
     "[--resize]", "[--minimize]", "[--maximize]", "[--grab]",
-    "[--allow-highdpi]"
+    "[--allow-highdpi]", "[--usable-bounds]"
 };
 
 static const char *audio_usage[] = {
@@ -282,6 +282,15 @@ SDLTest_CommonArg(SDLTest_CommonState * state, int index)
         state->window_y = SDL_atoi(y);
         return 2;
     }
+    if (SDL_strcasecmp(argv[index], "--usable-bounds") == 0) {
+        /* !!! FIXME: this is a bit of a hack, but I don't want to add a
+           !!! FIXME:  flag to the public structure in 2.0.x */
+        state->window_x = -1;
+        state->window_y = -1;
+        state->window_w = -1;
+        state->window_h = -1;
+        return 1;
+    }
     if (SDL_strcasecmp(argv[index], "--geometry") == 0) {
         char *w, *h;
         ++index;
@@ -512,6 +521,65 @@ SDLTest_CommonLogUsage(SDLTest_CommonState * state, const char *argv0, const cha
     }
 }
 
+static const char *
+BuildCommonUsageString(char **pstr, const char **strlist, const int numitems, const char **strlist2, const int numitems2)
+{
+    char *str = *pstr;
+    if (!str) {
+        size_t len = SDL_strlen("[--trackmem]") + 2;
+        int i;
+        for (i = 0; i < numitems; i++) {
+            len += SDL_strlen(strlist[i]) + 1;
+        }
+        if (strlist2) {
+            for (i = 0; i < numitems2; i++) {
+                len += SDL_strlen(strlist2[i]) + 1;
+            }
+        }
+        str = (char *) SDL_calloc(1, len);
+        if (!str) {
+            return "";  /* oh well. */
+        }
+        SDL_strlcat(str, "[--trackmem] ", len);
+        for (i = 0; i < numitems-1; i++) {
+            SDL_strlcat(str, strlist[i], len);
+            SDL_strlcat(str, " ", len);
+        }
+        SDL_strlcat(str, strlist[i], len);
+        if (strlist2) {
+            SDL_strlcat(str, " ", len);
+            for (i = 0; i < numitems2-1; i++) {
+                SDL_strlcat(str, strlist2[i], len);
+                SDL_strlcat(str, " ", len);
+            }
+            SDL_strlcat(str, strlist2[i], len);
+        }
+        *pstr = str;
+    }
+    return str;
+}
+
+static char *common_usage_video = NULL;
+static char *common_usage_audio = NULL;
+static char *common_usage_videoaudio = NULL;
+
+const char *
+SDLTest_CommonUsage(SDLTest_CommonState * state)
+{
+
+    switch (state->flags & (SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+        case SDL_INIT_VIDEO:
+            return BuildCommonUsageString(&common_usage_video, video_usage, SDL_arraysize(video_usage), NULL, 0);
+        case SDL_INIT_AUDIO:
+            return BuildCommonUsageString(&common_usage_audio, audio_usage, SDL_arraysize(audio_usage), NULL, 0);
+        case (SDL_INIT_VIDEO | SDL_INIT_AUDIO):
+            return BuildCommonUsageString(&common_usage_videoaudio, video_usage, SDL_arraysize(video_usage), audio_usage, SDL_arraysize(audio_usage));
+        default:
+            return "[--trackmem]";
+    }
+}
+
+
 SDL_bool
 SDLTest_CommonDefaultArgs(SDLTest_CommonState *state, const int argc, char **argv)
 {
@@ -576,6 +644,9 @@ SDLTest_PrintPixelFormat(char *text, size_t maxlen, Uint32 format)
         break;
     case SDL_PIXELFORMAT_RGB444:
         SDL_snprintfcat(text, maxlen, "RGB444");
+        break;
+    case SDL_PIXELFORMAT_BGR444:
+        SDL_snprintfcat(text, maxlen, "BGR444");
         break;
     case SDL_PIXELFORMAT_RGB555:
         SDL_snprintfcat(text, maxlen, "RGB555");
@@ -956,6 +1027,15 @@ SDLTest_CommonInit(SDLTest_CommonState * state)
         }
         for (i = 0; i < state->num_windows; ++i) {
             char title[1024];
+            SDL_Rect r = {
+                state->window_x, state->window_y,
+                state->window_w, state->window_h
+            };
+
+            /* !!! FIXME: hack to make --usable-bounds work for now. */
+            if ((r.x == -1) && (r.y == -1) && (r.w == -1) && (r.h == -1)) {
+                SDL_GetDisplayUsableBounds(state->display, &r);
+            }
 
             if (state->num_windows > 1) {
                 SDL_snprintf(title, SDL_arraysize(title), "%s %d",
@@ -964,9 +1044,7 @@ SDLTest_CommonInit(SDLTest_CommonState * state)
                 SDL_strlcpy(title, state->window_title, SDL_arraysize(title));
             }
             state->windows[i] =
-                SDL_CreateWindow(title, state->window_x, state->window_y,
-                                 state->window_w, state->window_h,
-                                 state->window_flags);
+                SDL_CreateWindow(title, r.x, r.y, r.w, r.h, state->window_flags);
             if (!state->windows[i]) {
                 SDL_Log("Couldn't create window: %s\n",
                         SDL_GetError());
@@ -1072,7 +1150,7 @@ SDLTest_CommonInit(SDLTest_CommonState * state)
                     SDL_GetError());
             return SDL_FALSE;
         }
-        if (state->verbose & VERBOSE_VIDEO) {
+        if (state->verbose & VERBOSE_AUDIO) {
             SDL_Log("Audio driver: %s\n",
                     SDL_GetCurrentAudioDriver());
         }
@@ -1832,6 +1910,13 @@ void
 SDLTest_CommonQuit(SDLTest_CommonState * state)
 {
     int i;
+
+    SDL_free(common_usage_video);
+    SDL_free(common_usage_audio);
+    SDL_free(common_usage_videoaudio);
+    common_usage_video = NULL;
+    common_usage_audio = NULL;
+    common_usage_videoaudio = NULL;
 
     SDL_free(state->windows);
     if (state->targets) {

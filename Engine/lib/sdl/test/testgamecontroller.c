@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -114,11 +114,6 @@ loop(void *arg)
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
             SDL_Log("Controller button %s %s\n", SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event.cbutton.button), event.cbutton.state ? "pressed" : "released");
-            /* First button triggers a 0.5 second full strength rumble */
-            if (event.type == SDL_CONTROLLERBUTTONDOWN &&
-                event.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
-                SDL_GameControllerRumble(gamecontroller, 0xFFFF, 0xFFFF, 500);
-            }
             break;
         case SDL_KEYDOWN:
             if (event.key.keysym.sym != SDLK_ESCAPE) {
@@ -153,6 +148,13 @@ loop(void *arg)
             const double angle = axis_positions[i].angle + 180.0;
             SDL_RenderCopyEx(screen, axis, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
         }
+    }
+
+    /* Update rumble based on trigger state */
+    {
+        Uint16 low_frequency_rumble = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) * 2;
+        Uint16 high_frequency_rumble = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) * 2;
+        SDL_GameControllerRumble(gamecontroller, low_frequency_rumble, high_frequency_rumble, 250);
     }
 
     SDL_RenderPresent(screen);
@@ -292,14 +294,33 @@ main(int argc, char *argv[])
         {
             nController++;
             name = SDL_GameControllerNameForIndex(i);
-            description = "Controller";
+            switch (SDL_GameControllerTypeForIndex(i)) {
+            case SDL_CONTROLLER_TYPE_XBOX360:
+                description = "XBox 360 Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_XBOXONE:
+                description = "XBox One Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_PS3:
+                description = "PS3 Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_PS4:
+                description = "PS4 Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO:
+                description = "Nintendo Switch Pro Controller";
+                break;
+            default:
+                description = "Game Controller";
+                break;
+            }
         } else {
             name = SDL_JoystickNameForIndex(i);
             description = "Joystick";
         }
-        SDL_Log("%s %d: %s (guid %s, VID 0x%.4x, PID 0x%.4x)\n",
+        SDL_Log("%s %d: %s (guid %s, VID 0x%.4x, PID 0x%.4x, player index = %d)\n",
             description, i, name ? name : "Unknown", guid,
-            SDL_JoystickGetDeviceVendor(i), SDL_JoystickGetDeviceProduct(i));
+            SDL_JoystickGetDeviceVendor(i), SDL_JoystickGetDeviceProduct(i), SDL_JoystickGetDevicePlayerIndex(i));
     }
     SDL_Log("There are %d game controller(s) attached (%d joystick(s))\n", nController, SDL_NumJoysticks());
 
@@ -367,7 +388,7 @@ int
 main(int argc, char *argv[])
 {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL compiled without Joystick support.\n");
-    exit(1);
+    return 1;
 }
 
 #endif

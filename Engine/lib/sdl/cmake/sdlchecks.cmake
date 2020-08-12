@@ -757,8 +757,10 @@ macro(CheckOpenGLX11)
 endmacro()
 
 # Requires:
-# - nada
+# - PkgCheckModules
 macro(CheckOpenGLESX11)
+  pkg_check_modules(EGL egl)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${EGL_CFLAGS}")
   if(VIDEO_OPENGLES)
     check_c_source_compiles("
         #define EGL_API_FB
@@ -1074,7 +1076,7 @@ macro(CheckHIDAPI)
       set(HAVE_HIDAPI FALSE)
       pkg_check_modules(LIBUSB libusb)
       if (LIBUSB_FOUND)
-        check_include_file(libusb.h HAVE_LIBUSB_H)
+        check_include_file(libusb.h HAVE_LIBUSB_H ${LIBUSB_CFLAGS})
         if (HAVE_LIBUSB_H)
           set(HAVE_HIDAPI TRUE)
         endif()
@@ -1088,8 +1090,15 @@ macro(CheckHIDAPI)
       set(SOURCE_FILES ${SOURCE_FILES} ${HIDAPI_SOURCES})
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LIBUSB_CFLAGS} -I${SDL2_SOURCE_DIR}/src/hidapi/hidapi")
       if(NOT HIDAPI_SKIP_LIBUSB)
-        set(SOURCE_FILES ${SOURCE_FILES} ${SDL2_SOURCE_DIR}/src/hidapi/libusb/hid.c)
-        list(APPEND EXTRA_LIBS ${LIBUSB_LIBS})
+        if(HIDAPI_ONLY_LIBUSB)
+          set(SOURCE_FILES ${SOURCE_FILES} ${SDL2_SOURCE_DIR}/src/hidapi/libusb/hid.c)
+          list(APPEND EXTRA_LIBS ${LIBUSB_LIBS})
+        else()
+          set(SOURCE_FILES ${SOURCE_FILES} ${SDL2_SOURCE_DIR}/src/hidapi/SDL_hidapi.c)
+          # libusb is loaded dynamically, so don't add it to EXTRA_LIBS
+          FindLibraryAndSONAME("usb-1.0")
+          set(SDL_LIBUSB_DYNAMIC "\"${USB_LIB_SONAME}\"")
+        endif()
       endif()
     endif()
   endif()

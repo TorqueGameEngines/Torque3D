@@ -54,9 +54,9 @@ function ChooseLevelDlg::onWake( %this )
       
       %levelAsset = AssetDatabase.acquireAsset(%assetId);
       
-      %file = %levelAsset.LevelFile;
+      %file = %levelAsset.getLevelFile();
       
-      if ( !isFile(%file @ ".mis") && !isFile(%file) )
+      if ( !isFile(%file @ ".mis") && !isFile(%file @ ".mis.dso") &&!isFile(%file) )
          continue;
          
       // Skip our new level/mission if we arent choosing a level
@@ -184,7 +184,7 @@ function ChooseLevelDlg::addMissionFile( %this, %file )
 
 function ChooseLevelDlg::addLevelAsset( %this, %levelAsset )
 {
-   %file = %levelAsset.LevelFile;
+   %file = %levelAsset.getLevelFile();
    
    /*%levelName = fileBase(%file);
    %levelDesc = "A Torque level";

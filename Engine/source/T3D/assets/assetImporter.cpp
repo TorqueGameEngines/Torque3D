@@ -101,6 +101,19 @@ AssetImportConfig::~AssetImportConfig()
 
 }
 
+bool AssetImportConfig::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   return true;
+}
+
+void AssetImportConfig::onRemove()
+{
+   Parent::onRemove();
+}
+
 /// Engine.
 void AssetImportConfig::initPersistFields()
 {
@@ -371,13 +384,26 @@ AssetImporter::AssetImporter() :
    importIssues(false),
    isReimport(false),
    assetHeirarchyChanged(false),
-   importLogBuffer("")
+   importLogBuffer(""),
+   activeImportConfig(nullptr)
 {
 }
 
 AssetImporter::~AssetImporter()
 {
+}
 
+bool AssetImporter::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   return true;
+}
+
+void AssetImporter::onRemove()
+{
+   Parent::onRemove();
 }
 
 void AssetImporter::initPersistFields()
@@ -579,27 +605,27 @@ String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)
       switch (suffixTypeIdx)
       {
          case 0:
-            suffixList = activeImportConfig.DiffuseTypeSuffixes;
+            suffixList = activeImportConfig->DiffuseTypeSuffixes;
             suffixType->insert(0, "Albedo", 10);
             break;
          case 1:
-            suffixList = activeImportConfig.NormalTypeSuffixes;
+            suffixList = activeImportConfig->NormalTypeSuffixes;
             suffixType->insert(0, "Normal", 10);
             break;
          case 2:
-            suffixList = activeImportConfig.RoughnessTypeSuffixes;
+            suffixList = activeImportConfig->RoughnessTypeSuffixes;
             suffixType->insert(0, "Roughness", 10);
             break;
          case 3:
-            suffixList = activeImportConfig.AOTypeSuffixes;
+            suffixList = activeImportConfig->AOTypeSuffixes;
             suffixType->insert(0, "AO", 10);
             break;
          case 4:
-            suffixList = activeImportConfig.MetalnessTypeSuffixes;
+            suffixList = activeImportConfig->MetalnessTypeSuffixes;
             suffixType->insert(0, "Metalness", 10);
             break;
          case 5:
-            suffixList = activeImportConfig.PBRTypeSuffixes;
+            suffixList = activeImportConfig->PBRTypeSuffixes;
             suffixType->insert(0, "PBRConfig", 10);
             break;
          default:
@@ -1262,7 +1288,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
    dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Image for Import: %s", assetItem->assetName.c_str());
    activityLog.push_back(importLogBuffer);
 
-   if ((activeImportConfig.GenerateMaterialOnImport && assetItem->parentAssetItem == nullptr)/* || assetItem->parentAssetItem != nullptr*/)
+   if ((activeImportConfig->GenerateMaterialOnImport && assetItem->parentAssetItem == nullptr)/* || assetItem->parentAssetItem != nullptr*/)
    {
       //find our suffix match, if any
       String noSuffixName = assetItem->assetName;
@@ -1322,9 +1348,9 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
       //if we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
       if (suffixType.isEmpty())
       {
-         if (activeImportConfig.UseDiffuseSuffixOnOriginImage)
+         if (activeImportConfig->UseDiffuseSuffixOnOriginImage)
          {
-            String diffuseToken = StringUnit::getUnit(activeImportConfig.DiffuseTypeSuffixes, 0, ",;");
+            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;");
             assetItem->assetName = assetItem->assetName + diffuseToken;
             assetItem->cleanAssetName = assetItem->assetName;
          }
@@ -1359,12 +1385,12 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
    assetItem->generatedAsset = true;
 
-   if (activeImportConfig.IgnoreMaterials.isNotEmpty())
+   if (activeImportConfig->IgnoreMaterials.isNotEmpty())
    {
-      U32 ignoredMatNameCount = StringUnit::getUnitCount(activeImportConfig.IgnoreMaterials, ".;");
+      U32 ignoredMatNameCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ".;");
       for (U32 i = 0; i < ignoredMatNameCount; i++)
       {
-         String ignoredName = StringUnit::getUnit(activeImportConfig.IgnoreMaterials, i, ".;");
+         String ignoredName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ".;");
          if (FindMatch::isMatch(ignoredName.c_str(), assetName, false))
          {
             assetItem->skip = true;
@@ -1376,7 +1402,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       }
    }
 
-   if (activeImportConfig.PopulateMaterialMaps)
+   if (activeImportConfig->PopulateMaterialMaps)
    {
       //If we're trying to populate the rest of our material maps, we need to go looking
       dSprintf(importLogBuffer, sizeof(importLogBuffer), "Attempting to Auto-Populate Material Maps");
@@ -1424,22 +1450,22 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
             switch (t)
             {
             case ImageAsset::Albedo:
-               suffixList = activeImportConfig.DiffuseTypeSuffixes;
+               suffixList = activeImportConfig->DiffuseTypeSuffixes;
                break;
             case ImageAsset::Normal:
-               suffixList = activeImportConfig.NormalTypeSuffixes;
+               suffixList = activeImportConfig->NormalTypeSuffixes;
                break;
             case ImageAsset::PBRConfig:
-               suffixList = activeImportConfig.PBRTypeSuffixes;
+               suffixList = activeImportConfig->PBRTypeSuffixes;
                break;
             case ImageAsset::Metalness:
-               suffixList = activeImportConfig.MetalnessTypeSuffixes;
+               suffixList = activeImportConfig->MetalnessTypeSuffixes;
                break;
             case ImageAsset::AO:
-               suffixList = activeImportConfig.AOTypeSuffixes;
+               suffixList = activeImportConfig->AOTypeSuffixes;
                break;
             case ImageAsset::Roughness:
-               suffixList = activeImportConfig.RoughnessTypeSuffixes;
+               suffixList = activeImportConfig->RoughnessTypeSuffixes;
                break;
             //TODO: Glow map lookup too
             }
@@ -1575,12 +1601,12 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
    dSprintf(importLogBuffer, sizeof(importLogBuffer), "   Shape Info: Mesh Count: %i | Material Count: %i | Anim Count: %i", meshCount, animCount, materialCount);
    activityLog.push_back(importLogBuffer);
 
-   if (activeImportConfig.ImportMesh && meshCount > 0)
+   if (activeImportConfig->ImportMesh && meshCount > 0)
    {
 
    }
 
-   if (activeImportConfig.ImportAnimations && animCount > 0)
+   if (activeImportConfig->ImportAnimations && animCount > 0)
    {
       //If we have animations but no meshes, then this is a pure animation file so we can swap the asset type here
       if (meshCount == 0)
@@ -1589,7 +1615,7 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       }
    }
 
-   if (activeImportConfig.ImportMaterials && materialCount > 0)
+   if (activeImportConfig->ImportMaterials && materialCount > 0)
    {
       S32 materialId = assetItem->shapeInfo->getChildItem(matItem);
       processShapeMaterialInfo(assetItem, materialId);
@@ -1617,12 +1643,12 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
    }
 
    //Do a check so we don't import materials that are on our ignore list
-   if (activeImportConfig.IgnoreMaterials.isNotEmpty())
+   if (activeImportConfig->IgnoreMaterials.isNotEmpty())
    {
-      U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig.IgnoreMaterials, ",;");
+      U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;");
       for (U32 i = 0; i < ignoredMatNamesCount; i++)
       {
-         const char* ignoreMatName = StringUnit::getUnit(activeImportConfig.IgnoreMaterials, i, ",;");
+         const char* ignoreMatName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;");
          if (FindMatch::isMatch(ignoreMatName, matName.c_str(), false))
          {
             //If we have a match to one of our ignore names, just bail out here and skip the material wholesale
@@ -1774,7 +1800,7 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
 
    if (assetItem->status == String("Warning"))
    {
-      if (activeImportConfig.WarningsAsErrors)
+      if (activeImportConfig->WarningsAsErrors)
       {
          assetItem->status = "Error";
 
@@ -1909,7 +1935,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       String humanReadableReason = assetItem->statusType == String("DuplicateImportAsset") ? "Importing asset was duplicate of another importing asset" : "Importing asset was duplicate of an existing asset";
 
       //get the config value for duplicateAutoResolution
-      if (activeImportConfig.DuplicatAutoResolution == String("AutoPrune"))
+      if (activeImportConfig->DuplicatAutoResolution == String("AutoPrune"))
       {
          //delete the item
          deleteImportingAsset(assetItem);
@@ -1920,7 +1946,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
 
          importIssues = false;
       }
-      else if (activeImportConfig.DuplicatAutoResolution == String("AutoRename"))
+      else if (activeImportConfig->DuplicatAutoResolution == String("AutoRename"))
       {
          //Set trailing number
          String renamedAssetName = assetItem->assetName;
@@ -1939,7 +1965,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
          resetAssetValidationStatus(assetItem);
          importIssues = false;
       }
-      else if (activeImportConfig.DuplicatAutoResolution == String("UseExisting"))
+      else if (activeImportConfig->DuplicatAutoResolution == String("UseExisting"))
       {
 
       }
@@ -1991,7 +2017,11 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
    targetPath = filePath.getPath();
 
    //use a default import config
-   activeImportConfig = AssetImportConfig();
+   if (activeImportConfig == nullptr)
+   {
+      activeImportConfig = new AssetImportConfig();
+      activeImportConfig->registerObject();
+   }
 
    bool foundConfig = false;
    Settings* editorSettings;
@@ -2005,7 +2035,7 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
       if (Sim::findObject("AssetImportSettings", importConfigs))
       {
          //Now load the editor setting-deigned config!
-         activeImportConfig.loadImportConfig(importConfigs, defaultImportConfig.c_str());
+         activeImportConfig->loadImportConfig(importConfigs, defaultImportConfig.c_str());
       }
    }
 
@@ -2328,7 +2358,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    }
 
    //build the PBRConfig file if we're flagged to and have valid image maps
-   if (activeImportConfig.CreatePBRConfig)
+   if (activeImportConfig->CreatePBRConfig)
    {
       AssetImportObject* pbrConfigMap = nullptr;
       AssetImportObject* roughnessMap = nullptr;
@@ -2635,38 +2665,38 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       //now we write the import config logic into the constructor itself to ensure we load like we wanted it to
       String neverImportMats;
 
-      if (activeImportConfig.IgnoreMaterials.isNotEmpty())
+      if (activeImportConfig->IgnoreMaterials.isNotEmpty())
       {
-         U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig.IgnoreMaterials, ",;");
+         U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;");
          for (U32 i = 0; i < ignoredMatNamesCount; i++)
          {
             if (i == 0)
-               neverImportMats = StringUnit::getUnit(activeImportConfig.IgnoreMaterials, i, ",;");
+               neverImportMats = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;");
             else
-               neverImportMats += String("\t") + StringUnit::getUnit(activeImportConfig.IgnoreMaterials, i, ",;");
+               neverImportMats += String("\t") + StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;");
          }
       }
 
-      if (activeImportConfig.DoUpAxisOverride)
+      if (activeImportConfig->DoUpAxisOverride)
       {
          S32 upAxis = domUpAxisType::UPAXISTYPE_Z_UP;
-         if (activeImportConfig.UpAxisOverride.compare("X_AXIS") == 0)
+         if (activeImportConfig->UpAxisOverride.compare("X_AXIS") == 0)
          {
             upAxis = domUpAxisType::UPAXISTYPE_X_UP;
          }
-         else if (activeImportConfig.UpAxisOverride.compare("Y_AXIS") == 0)
+         else if (activeImportConfig->UpAxisOverride.compare("Y_AXIS") == 0)
          {
             upAxis = domUpAxisType::UPAXISTYPE_Y_UP;
          }
-         else if (activeImportConfig.UpAxisOverride.compare("Z_AXIS") == 0)
+         else if (activeImportConfig->UpAxisOverride.compare("Z_AXIS") == 0)
          {
             upAxis = domUpAxisType::UPAXISTYPE_Z_UP;
          }
          constructor->mOptions.upAxis = (domUpAxisType)upAxis;
       }
 
-      if (activeImportConfig.DoScaleOverride)
-         constructor->mOptions.unit = activeImportConfig.ScaleOverride;
+      if (activeImportConfig->DoScaleOverride)
+         constructor->mOptions.unit = activeImportConfig->ScaleOverride;
       else
          constructor->mOptions.unit = -1;
 
@@ -2678,45 +2708,45 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       };
 
       S32 lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
-      if (activeImportConfig.LODType.compare("TrailingNumber") == 0)
+      if (activeImportConfig->LODType.compare("TrailingNumber") == 0)
          lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
-      else if (activeImportConfig.LODType.compare("SingleSize") == 0)
+      else if (activeImportConfig->LODType.compare("SingleSize") == 0)
          lodType = ColladaUtils::ImportOptions::eLodType::SingleSize;
-      else if (activeImportConfig.LODType.compare("DetectDTS") == 0)
+      else if (activeImportConfig->LODType.compare("DetectDTS") == 0)
          lodType = ColladaUtils::ImportOptions::eLodType::DetectDTS;
       constructor->mOptions.lodType = (ColladaUtils::ImportOptions::eLodType)lodType;
 
-      constructor->mOptions.singleDetailSize = activeImportConfig.convertLeftHanded;
-      constructor->mOptions.alwaysImport = activeImportConfig.ImportedNodes;
-      constructor->mOptions.neverImport = activeImportConfig.IgnoreNodes;
-      constructor->mOptions.alwaysImportMesh = activeImportConfig.ImportMeshes;
-      constructor->mOptions.neverImportMesh = activeImportConfig.IgnoreMeshes;
-      constructor->mOptions.ignoreNodeScale = activeImportConfig.IgnoreNodeScale;
-      constructor->mOptions.adjustCenter = activeImportConfig.AdjustCenter;
-      constructor->mOptions.adjustFloor = activeImportConfig.AdjustFloor;
+      constructor->mOptions.singleDetailSize = activeImportConfig->convertLeftHanded;
+      constructor->mOptions.alwaysImport = activeImportConfig->ImportedNodes;
+      constructor->mOptions.neverImport = activeImportConfig->IgnoreNodes;
+      constructor->mOptions.alwaysImportMesh = activeImportConfig->ImportMeshes;
+      constructor->mOptions.neverImportMesh = activeImportConfig->IgnoreMeshes;
+      constructor->mOptions.ignoreNodeScale = activeImportConfig->IgnoreNodeScale;
+      constructor->mOptions.adjustCenter = activeImportConfig->AdjustCenter;
+      constructor->mOptions.adjustFloor = activeImportConfig->AdjustFloor;
 
-      constructor->mOptions.convertLeftHanded = activeImportConfig.convertLeftHanded;
-      constructor->mOptions.calcTangentSpace = activeImportConfig.calcTangentSpace;
-      constructor->mOptions.genUVCoords = activeImportConfig.genUVCoords;
-      constructor->mOptions.flipUVCoords = activeImportConfig.flipUVCoords;
-      constructor->mOptions.findInstances = activeImportConfig.findInstances;
-      constructor->mOptions.limitBoneWeights = activeImportConfig.limitBoneWeights;
-      constructor->mOptions.joinIdenticalVerts = activeImportConfig.JoinIdenticalVerts;
-      constructor->mOptions.reverseWindingOrder = activeImportConfig.reverseWindingOrder;
-      constructor->mOptions.invertNormals = activeImportConfig.invertNormals;
-      constructor->mOptions.removeRedundantMats = activeImportConfig.removeRedundantMats;
+      constructor->mOptions.convertLeftHanded = activeImportConfig->convertLeftHanded;
+      constructor->mOptions.calcTangentSpace = activeImportConfig->calcTangentSpace;
+      constructor->mOptions.genUVCoords = activeImportConfig->genUVCoords;
+      constructor->mOptions.flipUVCoords = activeImportConfig->flipUVCoords;
+      constructor->mOptions.findInstances = activeImportConfig->findInstances;
+      constructor->mOptions.limitBoneWeights = activeImportConfig->limitBoneWeights;
+      constructor->mOptions.joinIdenticalVerts = activeImportConfig->JoinIdenticalVerts;
+      constructor->mOptions.reverseWindingOrder = activeImportConfig->reverseWindingOrder;
+      constructor->mOptions.invertNormals = activeImportConfig->invertNormals;
+      constructor->mOptions.removeRedundantMats = activeImportConfig->removeRedundantMats;
 
       S32 animTimingType;
-      if (activeImportConfig.animTiming.compare("FrameCount") == 0)
+      if (activeImportConfig->animTiming.compare("FrameCount") == 0)
          animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::FrameCount;
-      else if (activeImportConfig.animTiming.compare("Seconds") == 0)
+      else if (activeImportConfig->animTiming.compare("Seconds") == 0)
          animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::Seconds;
-      else// (activeImportConfig.animTiming.compare("Milliseconds") == 0)
+      else// (activeImportConfig->animTiming.compare("Milliseconds") == 0)
          animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::Milliseconds;
 
       constructor->mOptions.animTiming = (ColladaUtils::ImportOptions::eAnimTimingType)animTimingType;
 
-      constructor->mOptions.animFPS = activeImportConfig.animFPS;
+      constructor->mOptions.animFPS = activeImportConfig->animFPS;
 
       constructor->mOptions.neverImportMat = neverImportMats;
 

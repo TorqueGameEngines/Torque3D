@@ -1703,6 +1703,9 @@ void TSStatic::onInspect(GuiInspector* inspector)
 
    //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
    GuiInspectorGroup* materialGroup = inspector->findExistentGroup(StringTable->insert("Materials"));
+   if (!materialGroup)
+      return;
+
    GuiControl* stack = dynamic_cast<GuiControl*>(materialGroup->findObjectByInternalName(StringTable->insert("Stack")));
 
    //Do this on both the server and client

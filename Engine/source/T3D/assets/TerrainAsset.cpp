@@ -200,6 +200,8 @@ bool TerrainAsset::loadTerrain()
    mTerrMaterialAssets.clear();
    mTerrMaterialAssetIds.clear();
 
+   StringTableEntry terrainMatAssetType = StringTable->insert("TerrainMaterialAsset");
+
    //First, load any material, animation, etc assets we may be referencing in our asset
    // Find any asset dependencies.
    AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
@@ -212,12 +214,13 @@ bool TerrainAsset::loadTerrain()
       {
          StringTableEntry assetType = mpOwningAssetManager->getAssetType(assetDependenciesItr->value);
 
-         if (assetType == StringTable->insert("TerrainMaterialAsset"))
+         if (assetType == terrainMatAssetType)
          {
-            mTerrMaterialAssetIds.push_front(assetDependenciesItr->value);
+            StringTableEntry assetId = StringTable->insert(assetDependenciesItr->value);
+            mTerrMaterialAssetIds.push_front(assetId);
 
             //Force the asset to become initialized if it hasn't been already
-            AssetPtr<TerrainMaterialAsset> matAsset = assetDependenciesItr->value;
+            AssetPtr<TerrainMaterialAsset> matAsset = assetId;
 
             mTerrMaterialAssets.push_front(matAsset);
          }

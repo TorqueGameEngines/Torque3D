@@ -1524,90 +1524,94 @@ function AssetBrowser::doRebuildAssetArray(%this)
    }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   %category = getWord( %breadcrumbPath, 1 );                  
-   %dataGroup = "DataBlockGroup";
-   
-   for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
+   if(AssetBrowser.assetTypeFilter $= "")
    {
-      %obj = %dataGroup.getObject(%i);
-      // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
+      %category = getWord( %breadcrumbPath, 1 );                  
+      %dataGroup = "DataBlockGroup";
       
-      //if ( %obj.category $= "" && %obj.category == 0 )
-      //   continue;
-      
-      %dbFilename = %obj.getFileName();
-      %dbFilePath = filePath(%dbFilename);
-      
-      %searchActive = AssetSearchTerms.count() != 0;
-      if(%searchActive)
+      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
       {
-         if(startsWith(%dbFilePath, %breadcrumbPath))
+         %obj = %dataGroup.getObject(%i);
+         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
+         
+         //if ( %obj.category $= "" && %obj.category == 0 )
+         //   continue;
+         
+         %dbFilename = %obj.getFileName();
+         %dbFilePath = filePath(%dbFilename);
+         
+         %searchActive = AssetSearchTerms.count() != 0;
+         if(%searchActive)
+         {
+            if(startsWith(%dbFilePath, %breadcrumbPath))
+            {
+               %dbName = %obj.getName();
+               if(matchesSearch(%dbName, "Datablock"))
+               {
+                  %assetArray.add( %dbFilename, "Datablock" TAB %dbName );
+               }  
+            }
+         }
+         else if(%dbFilePath $= %breadcrumbPath)
          {
             %dbName = %obj.getName();
-            if(matchesSearch(%dbName, "Datablock"))
+            %assetArray.add( %dbFilename, "Datablock" TAB %dbName );
+            
+            /*%catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
+            
+            if(%catItem == 0)
+               AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");*/
+            /*%ctrl = %this.findIconCtrl( %obj.category );
+            if ( %ctrl == -1 )
             {
-               %assetArray.add( %dbFilename, "Datablock" TAB %dbName );
-            }  
+               %this.addFolderIcon( %obj.category );
+            }*/
          }
       }
-      else if(%dbFilePath $= %breadcrumbPath)
+      
+      
+      %this.getLooseFilesInDir();
+      
+      %looseFiles = ABLooseFileArray.count();
+      for( %i=0; %i < %looseFiles; %i++)
       {
-         %dbName = %obj.getName();
-         %assetArray.add( %dbFilename, "Datablock" TAB %dbName );
+         %looseFileFullPath = ABLooseFileArray.getKey(%i);
+         %looseFilePath = filePath(%looseFileFullPath);
+         %looseFileName = fileName(%looseFileFullPath);
          
-         /*%catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
-         
-         if(%catItem == 0)
-            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");*/
-         /*%ctrl = %this.findIconCtrl( %obj.category );
-         if ( %ctrl == -1 )
-         {
-            %this.addFolderIcon( %obj.category );
-         }*/
+         %assetArray.add( %looseFilePath, "LooseFile" TAB %looseFileName );
       }
-   }
-   
-   %this.getLooseFilesInDir();
-   
-   %looseFiles = ABLooseFileArray.count();
-   for( %i=0; %i < %looseFiles; %i++)
-   {
-      %looseFileFullPath = ABLooseFileArray.getKey(%i);
-      %looseFilePath = filePath(%looseFileFullPath);
-      %looseFileName = fileName(%looseFileFullPath);
+         
+      //Prefabs
+      %expr = "*.prefab";
+      %fullPrefabPath = findFirstFile( %breadcrumbPath @ "/" @ %expr );
       
-      %assetArray.add( %looseFilePath, "LooseFile" TAB %looseFileName );
-   }
-      
-	//Prefabs
-	%expr = "*.prefab";
-   %fullPrefabPath = findFirstFile( %breadcrumbPath @ "/" @ %expr );
-   
-   while ( %fullPrefabPath !$= "" )
-   {         
-      %prefabPath = filePath(%fullPrefabPath);
-      %prefabName = fileName(%fullPrefabPath);
-      
-      %searchActive = AssetSearchTerms.count() != 0;
-      if(%searchActive)
-      {
-         if(startsWith(%prefabPath, %breadcrumbPath))
+      while ( %fullPrefabPath !$= "" )
+      {         
+         %prefabPath = filePath(%fullPrefabPath);
+         %prefabName = fileName(%fullPrefabPath);
+         
+         %searchActive = AssetSearchTerms.count() != 0;
+         if(%searchActive)
          {
-            if(matchesSearch(%prefabName, "Prefab"))
+            if(startsWith(%prefabPath, %breadcrumbPath))
             {
-               %assetArray.add( %prefabPath, "Prefab" TAB %prefabName );
-            }  
+               if(matchesSearch(%prefabName, "Prefab"))
+               {
+                  %assetArray.add( %prefabPath, "Prefab" TAB %prefabName );
+               }  
+            }
          }
-      }
-      else if(%prefabPath $= %breadcrumbPath)
-      {
-         %assetArray.add( %prefabPath, "Prefab" TAB %prefabName );
-      }
+         else if(%prefabPath $= %breadcrumbPath)
+         {
+            %assetArray.add( %prefabPath, "Prefab" TAB %prefabName );
+         }
 
-      %fullPrefabPath = findNextFile( %breadcrumbPath @ "/" @ %expr );
+         %fullPrefabPath = findNextFile( %breadcrumbPath @ "/" @ %expr );
+      }
    }
 	
-	for(%i=0; %i < %assetArray.count(); %i++)
+   for(%i=0; %i < %assetArray.count(); %i++)
 		AssetBrowser.buildAssetPreview( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
 		
    AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";

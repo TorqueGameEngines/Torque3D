@@ -595,3 +595,10 @@ void GuiInspectorTypeShapeAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeShapeAssetId)->setInspectorFieldType("GuiInspectorTypeShapeAssetId");
 }
+
+DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->getShapeFilePath();
+}

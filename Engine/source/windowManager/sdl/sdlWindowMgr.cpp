@@ -143,6 +143,18 @@ RectI PlatformWindowManagerSDL::getMonitorRect(U32 index)
    return RectI(sdlRect.x, sdlRect.y, sdlRect.w, sdlRect.h);
 }
 
+RectI PlatformWindowManagerSDL::getMonitorUsableRect(U32 index)
+{
+   SDL_Rect sdlRect;
+   if (0 != SDL_GetDisplayUsableBounds(index, &sdlRect))
+   {
+      Con::errorf("SDL_GetDisplayUsableBounds() failed: %s", SDL_GetError());
+      return RectI(0, 0, 0, 0);
+   }
+
+   return RectI(sdlRect.x, sdlRect.y, sdlRect.w, sdlRect.h);
+}
+
 U32 PlatformWindowManagerSDL::getMonitorModeCount(U32 monitorIndex)
 {
    S32 modeCount = SDL_GetNumDisplayModes(monitorIndex);
@@ -306,6 +318,9 @@ PlatformWindow *PlatformWindowManagerSDL::createWindow(GFXDevice *device, const 
 #endif
 
    linkWindow(window);
+
+   SDL_SetWindowMinimumSize(window->mWindowHandle, Con::getIntVariable("$Video::minimumXResolution", 1024),
+         Con::getIntVariable("$Video::minimumYResolution", 720));
 
    return window;
 }
@@ -569,3 +584,27 @@ AFTER_MODULE_INIT(gfx)
    SDL_StopTextInput();
 #endif
 }
+
+DefineEngineFunction(dumpSDL_DisplayData, void, (), ,
+   "@brief Lists the adapter and output data for all connected monitors.\n\n"
+   "Debugging use only, internal\n"
+   "@internal")
+{
+   S32 adapterIndex, outputIndex;
+   S32 monitorCount = SDL_GetNumVideoDisplays();
+   Con::printf("\nMonitor(s) detected: %d", monitorCount);
+   for (S32 i = 0; i < monitorCount; i++)
+   {
+      if (SDL_TRUE == SDL_DXGIGetOutputInfo(i, &adapterIndex, &outputIndex))
+         Con::printf(" #%d, Adapter: %d (%s), Output Index: %d", i, adapterIndex, SDL_GetVideoDriver(adapterIndex), outputIndex);
+   }
+
+   S32 driverCount = SDL_GetNumVideoDrivers();
+   Con::printf("\nSDL Video Driver(s) detected: %d", driverCount);
+   for (S32 i = 0; i < driverCount; i++)
+   {
+      if (SDL_TRUE == SDL_DXGIGetOutputInfo(i, &adapterIndex, &outputIndex))
+         Con::printf(" #%d, Driver: %s", i, SDL_GetVideoDriver(i));
+   }
+}
+

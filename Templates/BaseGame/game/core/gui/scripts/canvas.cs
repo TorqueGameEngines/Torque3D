@@ -55,6 +55,11 @@ $WORD::BITDEPTH = 3;
 $WORD::REFRESH = 4;
 $WORD::AA = 5;
 $Video::ModeTags = "Windowed\tBorderless\tFullscreen";
+$Video::ModeWindowed = 0;
+$Video::ModeBorderless = 1;
+$Video::ModeFullscreen = 2;
+$Video::minimumXResolution = 1024;
+$Video::minimumYResolution = 720;
 
 function configureCanvas()
 {
@@ -64,7 +69,11 @@ function configureCanvas()
       $pref::Video::deviceId = 0;  // Monitor 0
 
    if ($pref::Video::deviceMode $= "")
-      $pref::Video::deviceMode = 1; // Borderless
+   {
+      $pref::Video::deviceMode = $Video::ModeBorderless;
+      $pref::Video::mode = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      Canvas.modeStrToPrefs($pref::Video::mode);
+   }
 
    if($cliFullscreen !$= "")
       $pref::Video::deviceMode = $cliFullscreen ? 2 : 0;
@@ -77,7 +86,7 @@ function configureCanvas()
       Canvas.modeStrToPrefs($pref::Video::mode);
    }
 
-   if ($pref::Video::deviceMode != "Fullscreen")
+   if ($pref::Video::deviceMode != $Video::ModeFullscreen)
       $pref::Video::FullScreen = false;
    %modeStr = Canvas.prefsToModeStr();
 
@@ -109,6 +118,11 @@ function configureCanvas()
 
    // Actually set the new video mode
    Canvas.setVideoMode(%resX, %resY, %fs, %bpp, %rate, %aa);
+   Canvas.setFocus();
+
+   // Lock and unlock the mouse to force the position to sync with the platform window
+   lockMouse(true);
+   lockMouse(false);
 
    commandToServer('setClientAspectRatio', %resX, %resY);
 
@@ -139,22 +153,24 @@ function GuiCanvas::prefsToModeStr(%this)
 
 function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startup)
 {
-   %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
    %resX = getWord(%mode, $WORD::RES_X);
    %resY = getWord(%mode, $WORD::RES_Y);
 
-   if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
-      return false;  // Bigger than monitor is bad
+   // Make sure it meets the minimum resolution requirement
+   if ((%resX < $Video::minimumXResolution) || (%resY < $Video::minimumYResolution))
+      return false;
 
-   if (%deviceMode $= "Windowed")
-   {  // Windowed must be smaller than the device for title bar and border
-      if ((%resY > (%deviceRect.y - 60)) || (%resX > (%deviceRect.x - 2)))
+   if (%deviceMode == $Video::ModeWindowed)
+   {  // Windowed must be smaller than the device usable area
+      %deviceRect = getWords(%this.getMonitorUsableRect(%deviceId), 2);
+      if ((%resY > %deviceRect.y) || (%resX > (%deviceRect.x - 2)))
          return false;
       return true;
    }
-   else if (%deviceMode $= "Borderless")
-   {  // Borderless must be at the device res
-      if ((%resX != %deviceRect.x) || (%resY != %deviceRect.y))
+   else if (%deviceMode == $Video::ModeBorderless)
+   {  // Borderless must be at or less than the device res
+      %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
+      if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
          return false;
 
       return true;
@@ -187,21 +203,20 @@ function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startu
 // Find the best video mode setting for the device and display mode
 function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
 {
-   %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
+   if (%deviceMode == $Video::ModeWindowed)
+      %deviceRect = getWords(%this.getMonitorUsableRect(%deviceId), 2);
+   else
+      %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
 
-   %resCount = %this.getMonitorModeCount(%deviceId);
-   for (%i = 0; %i < %resCount; %i++)
+   %resCount = %this.getModeCount();
+   for (%i = %resCount - 1; %i >= 0; %i--)
    {
-      %testRes = %this.getMonitorMode(%deviceId, %i);
+      %testRes = %this.getMode(%i);
       %resX = getWord(%testRes, $WORD::RES_X);
       %resY = getWord(%testRes, $WORD::RES_Y);
 
       if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
          continue;
-      else if ((%deviceMode $= "Windowed") && (%resY == %deviceRect.y))
-         continue;
-      else if ((%deviceMode $= "Borderless") && ((%resX != %deviceRect.x) || (%resY != %deviceRect.y)))
-         continue;  // Borderless must be at the device res
 
       return %testRes;
    }

@@ -195,13 +195,19 @@ void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
          SDL_SetWindowFullscreen( mWindowHandle, 0);
       }
 
-      SDL_SetWindowBordered(mWindowHandle, (1 == Con::getIntVariable("pref::Video::deviceMode", 0)) ? SDL_FALSE : SDL_TRUE);
+      // Restore the window to it's original size/position before applying changes
+      SDL_RestoreWindow(mWindowHandle);
+
+      // pref::Video::deviceMode values 0-windowed, 1-borderless, 2-fullscreen
+      bool hasBorder = (0 == Con::getIntVariable("pref::Video::deviceMode", 0));
+      SDL_SetWindowBordered(mWindowHandle, hasBorder ? SDL_TRUE : SDL_FALSE);
       setSize(mode.resolution);
       SDL_SetWindowPosition(mWindowHandle, SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay), SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay));
-      if (Con::getBoolVariable("pref::Video::isMaximized", false))
+      if (hasBorder && Con::getBoolVariable("pref::Video::isMaximized", false))
          SDL_MaximizeWindow(mWindowHandle);
    }
 
+   getScreenResChangeSignal().trigger(this, true);
    mSuppressReset = false;
 }
 
@@ -227,7 +233,7 @@ void PlatformWindowSDL::_setFullscreen(const bool fullscreen)
    if(fullscreen && !mOffscreenRender)
    {
       Con::printf("PlatformWindowSDL::setFullscreen (full) enter");
-      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
    }
    else
    {
@@ -256,7 +262,7 @@ const char * PlatformWindowSDL::getCaption()
 
 void PlatformWindowSDL::setFocus()
 {
-   SDL_SetWindowInputFocus(mWindowHandle);
+   SDL_RaiseWindow(mWindowHandle);
 }
 
 void PlatformWindowSDL::setClientExtent( const Point2I newExtent )
@@ -333,11 +339,6 @@ void PlatformWindowSDL::centerWindow()
 bool PlatformWindowSDL::setSize( const Point2I &newSize )
 {
    SDL_SetWindowSize(mWindowHandle, newSize.x, newSize.y);
-
-   // Let GFX get an update about the new resolution
-   if (mTarget.isValid())
-      mTarget->resetMode();
-
    return true;
 }
 
@@ -485,6 +486,12 @@ void PlatformWindowSDL::_triggerMouseButtonNotify(const SDL_Event& event)
          break;
       case SDL_BUTTON_MIDDLE:
          button = 2;
+         break;
+      case SDL_BUTTON_X1:
+         button = 3;
+         break;
+      case SDL_BUTTON_X2:
+         button = 4;
          break;
       default:
          return;
@@ -635,6 +642,7 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                mVideoMode.resolution.set(width, height);
                getGFXTarget()->resetMode();
                resizeEvent.trigger(getWindowId(), width, height);
+               getScreenResChangeSignal().trigger(this, true);
                break;
             }
             case SDL_WINDOWEVENT_CLOSE:

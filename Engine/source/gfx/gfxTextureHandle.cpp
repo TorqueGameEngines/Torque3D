@@ -161,14 +161,14 @@ bool GFXTexHandle::set( U32 width, U32 height, GFXFormat format, GFXTextureProfi
    return isValid();
 }
 
-bool GFXTexHandle::set( U32 width, U32 height, U32 depth, void *pixels, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels )
+bool GFXTexHandle::set(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, const String& desc, U32 numMipLevels)
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
    free();
 
    // Create and set the new texture.
-   StrongObjectRef::set( TEXMGR->createTexture( width, height, depth, pixels, format, profile,numMipLevels ) );
+   StrongObjectRef::set(TEXMGR->createTexture(width, height, depth, format, profile, numMipLevels));
 
    #ifdef TORQUE_DEBUG
       if ( getPointer() )

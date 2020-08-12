@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@
 
 /* Make sure that this isn't included by Visual C++ */
 #ifdef _MSC_VER
-#error You should run hg revert SDL_config.h 
+#error You should run hg revert SDL_config.h
 #endif
 
 /* C language features */
@@ -99,7 +99,10 @@
 #undef HAVE_WCSLEN
 #undef HAVE_WCSLCPY
 #undef HAVE_WCSLCAT
+#undef HAVE_WCSDUP
+#undef HAVE_WCSSTR
 #undef HAVE_WCSCMP
+#undef HAVE_WCSNCMP
 #undef HAVE_STRLEN
 #undef HAVE_STRLCPY
 #undef HAVE_STRLCAT
@@ -111,6 +114,8 @@
 #undef HAVE_STRCHR
 #undef HAVE_STRRCHR
 #undef HAVE_STRSTR
+#undef HAVE_STRTOK_R
+#undef HAVE_STRTOK_S
 #undef HAVE_ITOA
 #undef HAVE__LTOA
 #undef HAVE__UITOA
@@ -192,9 +197,9 @@
 #undef HAVE__EXIT
 
 #else
-#define HAVE_STDARG_H   1
-#define HAVE_STDDEF_H   1
-#define HAVE_STDINT_H   1
+#define HAVE_STDARG_H 1
+#define HAVE_STDDEF_H 1
+#define HAVE_STDINT_H 1
 #endif /* HAVE_LIBC */
 
 #undef HAVE_ALTIVEC_H
@@ -210,7 +215,6 @@
 #undef HAVE_DSOUND_H
 #undef HAVE_DXGI_H
 #undef HAVE_XINPUT_H
-#undef HAVE_ENDPOINTVOLUME_H
 #undef HAVE_MMDEVICEAPI_H
 #undef HAVE_AUDIOCLIENT_H
 #undef HAVE_XINPUT_GAMEPAD_EX
@@ -383,6 +387,9 @@
 /* Enable Vulkan support */
 #undef SDL_VIDEO_VULKAN
 
+/* Enable Metal support */
+#undef SDL_VIDEO_METAL
+
 /* Enable system power support */
 #undef SDL_POWER_LINUX
 #undef SDL_POWER_WINDOWS
@@ -405,12 +412,17 @@
 /* Enable assembly routines */
 #undef SDL_ASSEMBLY_ROUTINES
 #undef SDL_ALTIVEC_BLITTERS
+#undef SDL_ARM_SIMD_BLITTERS
+#undef SDL_ARM_NEON_BLITTERS
 
 /* Enable ime support */
 #undef SDL_USE_IME
 
 /* Enable dynamic udev support */
 #undef SDL_UDEV_DYNAMIC
+
+/* Enable dynamic libusb support */
+#undef SDL_LIBUSB_DYNAMIC
 
 /* Enable dynamic libsamplerate support */
 #undef SDL_LIBSAMPLERATE_DYNAMIC

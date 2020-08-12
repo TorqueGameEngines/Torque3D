@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -100,7 +100,6 @@ typedef unsigned int uintptr_t;
 
 #define HAVE_MMDEVICEAPI_H 1
 #define HAVE_AUDIOCLIENT_H 1
-#define HAVE_ENDPOINTVOLUME_H 1
 
 #define HAVE_LIBC 1
 #define STDC_HEADERS 1
@@ -131,6 +130,7 @@ typedef unsigned int uintptr_t;
 #define HAVE_STRCHR 1
 #define HAVE_STRRCHR 1
 #define HAVE_STRSTR 1
+#define HAVE_STRTOK_S 1
 //#define HAVE_ITOA 1   // TODO, WinRT: consider using _itoa_s instead
 //#define HAVE__LTOA 1  // TODO, WinRT: consider using _ltoa_s instead
 //#define HAVE__ULTOA 1 // TODO, WinRT: consider using _ultoa_s instead

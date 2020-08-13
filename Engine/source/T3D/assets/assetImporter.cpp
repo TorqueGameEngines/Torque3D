@@ -1317,7 +1317,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
       {
          if (!assetItem->filePath.isEmpty())
          {
-            materialAsset = addImportingAsset("MaterialAsset", "", nullptr, noSuffixName);
+            materialAsset = addImportingAsset("MaterialAsset", assetItem->filePath, nullptr, noSuffixName);
          }
       }
 
@@ -2466,6 +2466,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
       dSprintf(lineBuffer, 1024, "   mapTo=\"%s\";", assetName);
       file->writeLine((U8*)lineBuffer);
 
+      bool hasRoughness = false;
       for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
       {
          AssetImportObject* childItem = assetItem->childAssetItems[i];
@@ -2502,6 +2503,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
             mapFieldName = "RoughnessMap";
+            hasRoughness = true;
          }
 
          assetFieldName = mapFieldName + "Asset";
@@ -2513,6 +2515,12 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
          dSprintf(lineBuffer, 1024, "   %s = \"%s:%s\";", assetFieldName.c_str(), targetModuleId.c_str(), childItem->assetName.c_str());
          file->writeLine((U8*)lineBuffer);
+      }
+
+      if (hasRoughness)
+      {
+         file->writeLine((U8*)"   invertSmoothness = true;");
+         
       }
 
       file->writeLine((U8*)"};");

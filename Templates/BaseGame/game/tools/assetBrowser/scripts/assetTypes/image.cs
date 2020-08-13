@@ -176,7 +176,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = %assetDef.scriptFile;
    //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
    
-   %imageFilePath = %assetDef.getImageFilename();
+   %imageFilePath = %assetDef.getImagePath();
    if(isFile(%imageFilePath))
       %previewData.previewImage = %imageFilePath;
    else
@@ -201,7 +201,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
 //Renames the asset
 function AssetBrowser::renameImageAsset(%this, %assetDef, %newAssetName)
 {
-   %newFilename = renameAssetLooseFile(%assetDef.imageFile, %newAssetName);
+   %newFilename = renameAssetLooseFile(%assetDef.getImagePath(), %newAssetName);
    
    if(!%newFilename $= "")
       return;

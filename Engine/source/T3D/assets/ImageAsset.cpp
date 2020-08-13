@@ -353,11 +353,11 @@ ImageAsset::ImageTypes ImageAsset::getImageTypeFromName(const char* name)
    return (ImageTypes)ret;
 }
 
-DefineEngineMethod(ImageAsset, getImageFilename, const char*, (), ,
+DefineEngineMethod(ImageAsset, getImagePath, const char*, (), ,
    "Creates an instance of the given GameObject given the asset definition.\n"
    "@return The GameObject entity created from the asset.")
 {
-   return object->getImageFileName();
+   return object->getImagePath();
 }
 
 DefineEngineMethod(ImageAsset, getImageInfo, const char*, (), ,

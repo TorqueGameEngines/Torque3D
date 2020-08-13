@@ -163,7 +163,7 @@ function ConvexEditorMaterialBtn::gotMaterialName(%this, %name)
       if(%diffuseAsset !$= "")
       {
          %diffuseAssetDef = AssetDatabase.acquireAsset(%diffuseAsset);
-         %diffusemap = %diffuseAssetDef.imageFile;
+         %diffusemap = %diffuseAssetDef.getImagePath();
       }
    }
 
@@ -228,7 +228,7 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
       if(%diffuseAsset !$= "")
       {
          %diffuseAssetDef = AssetDatabase.acquireAsset(%diffuseAsset);
-         %diffusemap = %diffuseAssetDef.imageFile;
+         %diffusemap = %diffuseAssetDef.getImagePath();
       }
    }
 

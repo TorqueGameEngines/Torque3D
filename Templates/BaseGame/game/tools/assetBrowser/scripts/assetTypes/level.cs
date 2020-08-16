@@ -146,5 +146,8 @@ function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.assetName;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
+      "Asset Type: Level Asset\n" @ 
+      "Asset Definition ID: " @ %assetDef @ "\n" @ 
+      "Level File path: " @ %assetDef.getLevelFile(); 
 }

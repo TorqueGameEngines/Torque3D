@@ -253,7 +253,9 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
                            "Asset Type: Shape Asset\n" @ 
-                           "Asset Definition ID: " @  %assetDef;
+                           "Asset Definition ID: " @  %assetDef @ "\n" @ 
+                           "Shape File path: " @ %assetDef.getShapeFile();
+                           
 }
 
 function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)

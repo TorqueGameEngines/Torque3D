@@ -113,6 +113,8 @@ public:
    static F32 smLightFadeEnd;
    static F32 smLightFadeStart;
 
+   static bool smAllowLocalLightShadows;
+
    // Used for console init
    AdvancedLightBinManager( AdvancedLightManager *lm = NULL, 
                             ShadowMapManager *sm = NULL,

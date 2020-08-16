@@ -81,15 +81,15 @@ if(!isObject(GuiToolTipProfile))
 new GuiControlProfile (GuiToolTipProfile)
 {
    // fill color
-   fillColor = "239 237 222";
+   fillColor = "56 56 56";
 
    // border color
-   borderColor   = "138 134 122";
+   borderColor   = "87 87 87";
 
    // font
    fontType = "Arial";
    fontSize = 14;
-   fontColor = "0 0 0";
+   fontColor = "200 200 200";
 
    category = "Core";
 };

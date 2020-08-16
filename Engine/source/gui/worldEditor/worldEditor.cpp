@@ -3909,8 +3909,18 @@ bool WorldEditor::makeSelectionAMesh(const char *filename)
    for ( S32 i = 0; i < mSelected->size(); i++ )
    {
       SceneObject *pObj = dynamic_cast< SceneObject* >( ( *mSelected )[i] );
-      if ( pObj )
-         objectList.push_back( pObj );
+      if (pObj)
+      {
+         //Minor sanity check to avoid baking animated shapes
+         TSStatic* staticShape = dynamic_cast<TSStatic*>(pObj);
+         if (staticShape)
+         {
+            if (staticShape->isAnimated() && staticShape->hasAnim())
+               continue;
+         }
+
+         objectList.push_back(pObj);
+      }
    }
 
    if ( objectList.empty() )
@@ -3956,6 +3966,7 @@ bool WorldEditor::makeSelectionAMesh(const char *filename)
    for (S32 i = 0; i < objectList.size(); i++)
    {
       SceneObject *pObj = objectList[i];
+
       if (!pObj->buildExportPolyList(&exportData, pObj->getWorldBox(), pObj->getWorldSphere()))
          Con::warnf("colladaExportObjectList() - object %i returned no geometry.", pObj->getId());
    }

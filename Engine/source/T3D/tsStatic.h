@@ -284,6 +284,8 @@ public:
 
    void updateMaterials();
 
+   bool isAnimated() { return mPlayAmbient; }
+
 private:
    virtual void   onStaticModified(const char* slotName, const char* newValue = NULL);
 protected:

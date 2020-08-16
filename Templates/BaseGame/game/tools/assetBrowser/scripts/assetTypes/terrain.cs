@@ -122,7 +122,9 @@ function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)
    
    %previewData.assetFriendlyName = %assetDef.gameObjectName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.gameObjectName;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
+      "Asset Type: Terrain Asset\n" @ 
+      "Asset Definition ID: " @ %assetDef; 
 }
 
 function GuiInspectorTypeTerrainAssetPtr::onClick( %this, %fieldName )

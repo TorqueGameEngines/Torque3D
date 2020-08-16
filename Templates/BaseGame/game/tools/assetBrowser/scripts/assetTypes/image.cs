@@ -195,7 +195,8 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
       "Format: " @ getWord(%info, 0) @ "\n" @ 
       "Height: " @ getWord(%info, 1) @ "\n" @ 
       "Width: " @ getWord(%info, 2) @ "\n" @ 
-      "Depth: " @ getWord(%info, 3); 
+      "Depth: " @ getWord(%info, 3) @ "\n" @ 
+      "Image File path: " @ %assetDef.getImagePath(); 
 }
 
 //Renames the asset

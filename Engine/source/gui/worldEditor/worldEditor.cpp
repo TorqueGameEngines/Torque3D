@@ -52,6 +52,7 @@
 #include "tools/editorTool.h"
 
 #include "T3D/Scene.h"
+#include <T3D\notesObject.h>
 
 IMPLEMENT_CONOBJECT( WorldEditor );
 
@@ -1708,6 +1709,37 @@ void WorldEditor::renderScreenObj( SceneObject *obj, const Point3F& projPos, con
 		  drawer->setBitmapModulation(mObjectTextColor);
 		  drawer->drawText(mProfile->mFont, pos, str);
 	  };
+   }
+
+   NotesObject* noteObj = dynamic_cast<NotesObject*>(obj);
+   if (noteObj)
+   {
+      Point2I pos(sPos);
+
+      MatrixF cameraMat = mLastCameraQuery.cameraMatrix;
+
+      Point3F camPos = cameraMat.getPosition();
+      Point3F notePos = noteObj->getPosition();
+
+      VectorF distVec = notePos - camPos;
+      F32 dist = distVec.len();
+
+      F32 maxNoteDistance = 100;
+      F32 noteFadeStartDist = 50;
+
+      F32 fade = 1;
+
+      if(dist >= noteFadeStartDist)
+         fade = -((dist - noteFadeStartDist) / (maxNoteDistance - noteFadeStartDist));
+
+      if (dist >= maxNoteDistance)
+         return;
+
+      ColorI noteTextColor = mObjectTextColor;
+      noteTextColor.alpha = 255 * fade;
+
+      drawer->setBitmapModulation(noteTextColor);
+      drawer->drawText(mProfile->mFont, pos, noteObj->getNote().c_str());
    }
 }
 

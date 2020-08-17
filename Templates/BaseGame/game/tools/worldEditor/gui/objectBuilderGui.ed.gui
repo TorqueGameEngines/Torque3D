@@ -1070,6 +1070,11 @@ function ObjectBuilderGui::buildObserverDropPoint(%this)
    %this.process();
 }
 
+function ObjectBuilderGui::buildNotesObject(%this)
+{
+   %this.objectClassName = "NotesObject";
+   %this.process();
+}
 //------------------------------------------------------------------------------
 // System
 //------------------------------------------------------------------------------

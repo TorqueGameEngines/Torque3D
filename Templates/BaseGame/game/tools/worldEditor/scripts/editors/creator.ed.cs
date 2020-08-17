@@ -93,6 +93,7 @@ function EWCreatorWindow::init( %this )
       %this.registerMissionObject("NavMesh", "Navigation mesh");
       %this.registerMissionObject("NavPath", "Path");
       %this.registerMissionObject( "Entity",       "Entity" );
+      %this.registerMissionObject( "NotesObject",       "Note" );
       
    %this.endGroup();
    

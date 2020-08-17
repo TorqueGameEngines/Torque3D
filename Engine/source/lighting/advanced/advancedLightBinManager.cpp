@@ -57,6 +57,8 @@ bool AdvancedLightBinManager::smUseLightFade = false;
 F32 AdvancedLightBinManager::smLightFadeStart = 50;
 F32 AdvancedLightBinManager::smLightFadeEnd = 75;
 
+bool AdvancedLightBinManager::smAllowLocalLightShadows = true;
+
 ImplementEnumType( ShadowFilterMode,
    "The shadow filtering modes for Advanced Lighting shadows.\n"
    "@ingroup AdvancedLighting" )
@@ -192,6 +194,8 @@ void AdvancedLightBinManager::consoleInit()
    Con::addVariable("$pref::lightFadeStart", TypeF32, &smLightFadeStart, "Distance at which light fading begins if $pref::useLightFade is on.\n");
    Con::addVariable("$pref::lightFadeEnd", TypeF32, &smLightFadeEnd, "Distance at which light fading should have fully faded if $pref::useLightFade is on.\n");
 
+   Con::addVariable("$pref::allowLocalLightShadows", TypeBool, &smAllowLocalLightShadows, "Indicates if local lights(point/spot) can cast shadows.\n");
+
 }
 
 bool AdvancedLightBinManager::setTargetSize(const Point2I &newTargetSize)
@@ -240,7 +244,7 @@ void AdvancedLightBinManager::addLight( LightInfo *light )
 
    // Get the right shadow type.
    ShadowType shadowType = ShadowType_None;
-   if (  light->getCastShadows() &&  
+   if (  light->getCastShadows() && smAllowLocalLightShadows && 
          lsm && lsm->hasShadowTex() &&
          !ShadowMapPass::smDisableShadows )
       shadowType = lsm->getShadowType();

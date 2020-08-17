@@ -641,3 +641,34 @@ function populateAllFonts(%font)
    populateFontCacheRange(%font,32,0,65535);
    populateFontCacheRange(%font,36,0,65535);
 }
+
+function compileFiles(%pattern)
+{  
+   %path = filePath(%pattern);
+
+   %saveDSO    = $Scripts::OverrideDSOPath;
+   %saveIgnore = $Scripts::ignoreDSOs;
+   
+   $Scripts::OverrideDSOPath  = %path;
+   $Scripts::ignoreDSOs       = false;
+   %mainCsFile = makeFullPath("main.cs");
+
+   for (%file = findFirstFileMultiExpr(%pattern); %file !$= ""; %file = findNextFileMultiExpr(%pattern))
+   {
+      // we don't want to try and compile the primary main.cs
+      if(%mainCsFile !$= %file)      
+         compile(%file, true);
+   }
+
+   $Scripts::OverrideDSOPath  = %saveDSO;
+   $Scripts::ignoreDSOs       = %saveIgnore;
+   
+}
+
+function shipPrep()
+{
+   compileFiles("*.cs");
+   compileFiles("*.gui");
+   compileFiles("*.mis");
+   compileFiles("*.ts");  
+}

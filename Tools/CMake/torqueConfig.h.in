@@ -153,7 +153,7 @@
 #ifdef TORQUE_DEBUG
 
    #define TORQUE_GATHER_METRICS 0
-   #define TORQUE_ENABLE_PROFILE_PATH
+   
    #ifndef TORQUE_DEBUG_GUARD
       #define TORQUE_DEBUG_GUARD
    #endif
@@ -180,7 +180,9 @@
 
    // Enable the profiler by default, if we're not doing a shipping build.
    #define TORQUE_ENABLE_PROFILER
-
+   #ifdef TORQUE_DEBUG
+      #define TORQUE_ENABLE_PROFILE_PATH
+   #endif
    // Enable the TorqueScript assert() instruction if not shipping.
    #define TORQUE_ENABLE_SCRIPTASSERTS
 

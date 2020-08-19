@@ -60,11 +60,11 @@ function Core_ClientServer::onDestroy( %this )
 }
 
 //-----------------------------------------------------------------------------
-function StartGame( %mission, %hostingType )
+function StartGame( %levelAsset, %hostingType )
 {
-   if( %mission $= "" )
+   if( %levelAsset $= "" )
    {
-      %mission = $selectedLevelFile;
+      %levelAsset = $selectedLevelAsset;
    }
 
    if (%hostingType !$= "")
@@ -88,7 +88,7 @@ function StartGame( %mission, %hostingType )
       Canvas.repaint();
    }
 
-   createAndConnectToLocalServer( %serverType, %mission );
+   createAndConnectToLocalServer( %serverType, %levelAsset );
 }
 
 function JoinGame( %serverIndex )

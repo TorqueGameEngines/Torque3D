@@ -199,7 +199,7 @@ function EditorOpenDeclarationInTorsion( %object )
    EditorOpenFileInTorsion( makeFullPath( %fileName ), %object.getDeclarationLine() );
 }
 
-function EditorNewLevel( %file )
+function EditorNewLevel( %level )
 {
    %saveFirst = false;
    if ( EditorIsDirty() )
@@ -219,18 +219,18 @@ function EditorNewLevel( %file )
       Editor.getUndoManager().clearAll();
    }
 
-   if( %file $= "" )
+   if( %level $= "" )
    {
-      %file = "tools/levels/DefaultEditorLevel.mis";
+      %level = "ToolsModule:DefaultEditorLevel";
    }
 
    if( !$missionRunning )
    {
       activatePackage( "BootEditor" );
-      StartGame( %file );
+      StartGame( %level );
    }
    else
-      EditorOpenMission(%file);
+      EditorOpenMission(%level);
 
    //EWorldEditor.isDirty = true;
    //ETerrainEditor.isDirty = true;
@@ -359,6 +359,15 @@ function EditorSaveMissionAs( %levelAsset )
                
    if( fileExt( %missionName ) !$= ".mis" )
       %missionName = %missionName @ ".mis";
+      
+   //Update to be our active
+   $Server::MissionFile = %missionName;
+   %Server::LevelAsset = %levelAssetDef;
+   
+   //Do the save
+   EditorSaveMission();
+   
+   //TODO: doublecheck that we rename the scene properly
       
    //Make sure we have a selected module so we can create our module
    //if(AssetBrowser.selectedModule $= "")

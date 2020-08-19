@@ -67,6 +67,8 @@ class LevelAsset : public AssetBase
 
    StringTableEntry        mGamemodeName;
 
+   Vector<AssetBase*>      mAssetDependencies;
+
 public:
    LevelAsset();
    virtual ~LevelAsset();
@@ -77,6 +79,9 @@ public:
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(LevelAsset);
+
+   void loadDependencies();
+   void unloadDependencies();
 
    void                    setLevelFile(const char* pImageFile);
    inline StringTableEntry getLevelFile(void) const { return mLevelFile; };

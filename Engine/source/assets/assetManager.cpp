@@ -253,30 +253,22 @@ bool AssetManager::loadModuleAutoLoadAssets(ModuleDefinition* pModuleDefinition)
 
          if (assetDef->mAssetType == pAutoloadAssets->getAssetType())
          {
-            //TODO: this is stupid and ugly, need to properly automagically parse the class for registration
-            AssetBase* assetBase = nullptr;
+            String assetPath = assetDef->mAssetBaseFilePath;
+            assetPath.replace("//", "/");
 
-            if (assetDef->mAssetType == StringTable->insert("GUIAsset"))
-            {
-               assetBase = mTaml.read<GUIAsset>(assetDef->mAssetBaseFilePath);
-            }
-            else if (assetDef->mAssetType == StringTable->insert("ScriptAsset"))
-            {
-               assetBase = mTaml.read<ScriptAsset>(assetDef->mAssetBaseFilePath);
-            }
-            else if (assetDef->mAssetType == StringTable->insert("MaterialAsset"))
-            {
-               assetBase = mTaml.read<MaterialAsset>(assetDef->mAssetBaseFilePath);
-            }
-            else if (assetDef->mAssetType == StringTable->insert("GameObjectAsset"))
-            {
-               assetBase = mTaml.read<GameObjectAsset>(assetDef->mAssetBaseFilePath);
-            }
+            String autoLoadPath = pModuleDefinition->getModulePath();
+            autoLoadPath += "/";
+            autoLoadPath += pAutoloadAssets->getPath();
 
-            //load the asset now if valid
-            if (assetBase)
+            if (pAutoloadAssets->getPath() == StringTable->EmptyString() || assetPath.startsWith(autoLoadPath.c_str()))
             {
-               assetBase->setOwned(this, assetDef);
+               AssetBase* assetBase = dynamic_cast<AssetBase*>(mTaml.read(assetDef->mAssetBaseFilePath));
+
+               //load the asset now if valid
+               if (assetBase)
+               {
+                  assetBase->setOwned(this, assetDef);
+               }
             }
          }
       }

@@ -62,6 +62,13 @@ public:
    void addDynamicObject(SceneObject* object);
    void removeDynamicObject(SceneObject* object);
 
+   void dumpUtilizedAssets();
+
+   StringTableEntry getOriginatingFile();
+   StringTableEntry getLevelAsset();
+
+   bool saveScene(StringTableEntry fileName);
+
    //
    //Networking
    U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);

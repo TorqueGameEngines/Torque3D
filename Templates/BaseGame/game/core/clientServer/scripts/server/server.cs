@@ -93,9 +93,9 @@ function portInit(%port)
 /// create a local client connection to the server.
 //
 /// @return true if successful.
-function createAndConnectToLocalServer( %serverType, %level )
+function createAndConnectToLocalServer( %serverType, %levelAsset )
 {
-   if( !createServer( %serverType, %level ) )
+   if( !createServer( %serverType, %levelAsset ) )
       return false;
    
    %conn = new GameConnection( ServerConnection );
@@ -124,7 +124,7 @@ function createAndConnectToLocalServer( %serverType, %level )
 
 /// Create a server with either a "SinglePlayer" or "MultiPlayer" type
 /// Specify the level to load on the server
-function createServer(%serverType, %level)
+function createServer(%serverType, %levelAsset)
 {
    if($Game::firstTimeServerRun == true)
    {
@@ -135,7 +135,7 @@ function createServer(%serverType, %level)
    // working with the server session we think we are.
    $Server::Session++;
    
-   if (%level $= "")
+   if (%levelAsset $= "")
    {
       error("createServer(): level name unspecified");
       return false;
@@ -143,7 +143,7 @@ function createServer(%serverType, %level)
    
    // Make sure our level name is relative so that it can send
    // across the network correctly
-   %level = makeRelativePath(%level, getWorkingDirectory());
+   //%level = makeRelativePath(%level, getWorkingDirectory());
 
    destroyServer();
 
@@ -176,7 +176,7 @@ function createServer(%serverType, %level)
    // the server has been created
    onServerCreated();
 
-   loadMission(%level, true);
+   loadMission(%levelAsset, true);
    
    $Game::running = true;
    

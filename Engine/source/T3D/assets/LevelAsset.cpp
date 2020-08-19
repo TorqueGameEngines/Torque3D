@@ -330,9 +330,52 @@ void LevelAsset::setNavmeshFile(const char* pNavmeshFile)
    refreshAsset();
 }
 
+void LevelAsset::loadDependencies()
+{
+   //First, load any material, animation, etc assets we may be referencing in our asset
+   // Find any asset dependencies.
+   AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
+
+   // Does the asset have any dependencies?
+   if (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end())
+   {
+      // Iterate all dependencies.
+      while (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end() && assetDependenciesItr->key == mpAssetDefinition->mAssetId)
+      {
+         //Force it to be loaded by acquiring it
+         StringTableEntry assetId = assetDependenciesItr->value;
+         mAssetDependencies.push_back(AssetDatabase.acquireAsset<AssetBase>(assetId));
+
+         // Next dependency.
+         assetDependenciesItr++;
+      }
+   }
+}
+
+void LevelAsset::unloadDependencies()
+{
+   for (U32 i = 0; i < mAssetDependencies.size(); i++)
+   {
+      AssetBase* assetDef = mAssetDependencies[i];
+      AssetDatabase.releaseAsset(assetDef->getAssetId());
+   }
+}
+
 DefineEngineMethod(LevelAsset, getLevelFile, const char*, (),,
    "Creates a new script asset using the targetFilePath.\n"
    "@return The bool result of calling exec")
 {
    return object->getLevelPath();
+}
+
+DefineEngineMethod(LevelAsset, loadDependencies, void, (), ,
+   "Initiates the loading of asset dependencies for this level.")
+{
+   return object->loadDependencies();
+}
+
+DefineEngineMethod(LevelAsset, unloadDependencies, void, (), ,
+   "Initiates the unloading of previously loaded asset dependencies for this level.")
+{
+   return object->unloadDependencies();
 }

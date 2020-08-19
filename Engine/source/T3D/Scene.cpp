@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "T3D/assets/LevelAsset.h"
 
 Scene * Scene::smRootScene = nullptr;
 Vector<Scene*> Scene::smSceneList;
@@ -180,6 +181,93 @@ void Scene::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 }
 
+void Scene::dumpUtilizedAssets()
+{
+   Con::printf("Dumping utilized assets in scene!");
+
+   Vector<StringTableEntry> utilizedAssetsList;
+   for (U32 i = 0; i < mPermanentObjects.size(); i++)
+   {
+      mPermanentObjects[i]->getUtilizedAssets(&utilizedAssetsList);
+   }
+
+   for (U32 i = 0; i < mDynamicObjects.size(); i++)
+   {
+      mDynamicObjects[i]->getUtilizedAssets(&utilizedAssetsList);
+   }
+
+   for (U32 i = 0; i < utilizedAssetsList.size(); i++)
+   {
+      Con::printf("Utilized Asset: %s", utilizedAssetsList[i]);
+   }
+
+   Con::printf("Utilized Asset dump complete!");
+}
+
+StringTableEntry Scene::getOriginatingFile()
+{
+   return getFilename();
+}
+
+StringTableEntry Scene::getLevelAsset()
+{
+   StringTableEntry levelFile = getFilename();
+
+   if (levelFile == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   AssetQuery* query = new AssetQuery();
+   query->registerObject();
+
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(query, levelFile);
+   if (foundAssetcount == 0)
+      return StringTable->EmptyString();
+   else
+      return query->mAssetList[0];
+}
+
+bool Scene::saveScene(StringTableEntry fileName)
+{
+   //So, we ultimately want to not only save out the level, but also collate all the assets utilized
+   //by the static objects in the scene so we can have those before we parse the level file itself
+   //Useful for preloading or stat tracking
+
+   //First, save the level file
+   if (fileName == StringTable->EmptyString())
+   {
+      fileName = getOriginatingFile();
+   }
+
+   bool saveSuccess = save(fileName);
+
+   if (!saveSuccess)
+      return false;
+
+   //Get the level asset
+   StringTableEntry levelAsset = getLevelAsset();
+   if (levelAsset == StringTable->EmptyString())
+      return saveSuccess;
+
+   LevelAsset* levelAssetDef = AssetDatabase.acquireAsset<LevelAsset>(levelAsset);
+   levelAssetDef->clearAssetDependencyFields("staticObjectAssetDependency");
+
+   //Next, lets build out our 
+   Vector<StringTableEntry> utilizedAssetsList;
+   for (U32 i = 0; i < mPermanentObjects.size(); i++)
+   {
+      mPermanentObjects[i]->getUtilizedAssets(&utilizedAssetsList);
+   }
+
+   for (U32 i = 0; i < utilizedAssetsList.size(); i++)
+   {
+      levelAssetDef->addAssetDependencyField("staticObjectAssetDependency", utilizedAssetsList[i]);
+   }
+
+   saveSuccess = levelAssetDef->saveAsset();
+
+   return saveSuccess;
+}
+
 //
 Vector<SceneObject*> Scene::getObjectsByClass(String className, bool checkSubscenes)
 {
@@ -250,4 +338,35 @@ DefineEngineMethod(Scene, getObjectsByClass, String, (String className), (""),
 
    //return object->getObjectsByClass(className);
    return "";
+}
+
+DefineEngineMethod(Scene, dumpUtilizedAssets, void, (), ,
+   "Get the root Scene object that is loaded.\n"
+   "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
+{
+   object->dumpUtilizedAssets();
+}
+
+DefineEngineMethod(Scene, getOriginatingFile, const char*, (), ,
+   "Get the root Scene object that is loaded.\n"
+   "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
+{
+   return object->getOriginatingFile();
+}
+
+DefineEngineMethod(Scene, getLevelAsset, const char*, (), ,
+   "Get the root Scene object that is loaded.\n"
+   "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
+{
+   return object->getLevelAsset();
+}
+
+DefineEngineMethod(Scene, save, bool, (const char* fileName), (""),
+   "Save out the object to the given file.\n"
+   "@param fileName The name of the file to save to."
+   "@param selectedOnly If true, only objects marked as selected will be saved out.\n"
+   "@param preAppendString Text which will be preprended directly to the object serialization.\n"
+   "@param True on success, false on failure.")
+{
+   return object->saveScene(StringTable->insert(fileName));
 }

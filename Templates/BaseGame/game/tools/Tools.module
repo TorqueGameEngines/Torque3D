@@ -5,4 +5,10 @@
 	ScriptFile="Tools.cs"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
-	Group="Tools"/>
+	Group="Tools">
+	<DeclaredAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        Extension="asset.taml"
+        Recurse="true" />
+</ModuleDefinition>

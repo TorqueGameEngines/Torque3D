@@ -33,22 +33,26 @@ $MissionLoadPause = 5000;
 
 //-----------------------------------------------------------------------------
 //This is the first call made by the server to kick the loading process off
-function loadMission( %missionName, %isFirstMission ) 
+function loadMission( %levelAsset, %isFirstMission ) 
 {
    endMission();
-   echo("*** LOADING MISSION: " @ %missionName);
+   $Server::LevelAsset = AssetDatabase.acquireAsset(%levelAsset);
+   
+   echo("*** LOADING MISSION: " @ $Server::LevelAsset.LevelName);
    echo("*** Stage 1 load");
 
    // increment the mission sequence (used for ghost sequencing)
    $missionSequence++;
    $missionRunning = false;
-   $Server::MissionFile = %missionName;
+   $Server::MissionFile = $Server::LevelAsset.getLevelFile();
    $Server::LoadFailMsg = "";
+   
+   $Server::LevelAsset.loadDependencies();
 
    // Extract mission info from the mission file,
    // including the display name and stuff to send
    // to the client.
-   buildLoadInfo( %missionName );
+   buildLoadInfo( $Server::MissionFile );
 
    // Download mission info to the clients
    %count = ClientGroup.getCount();
@@ -162,6 +166,9 @@ function endMission()
    // Delete everything
    getScene(0).delete();
    MissionCleanup.delete();
+   
+   if(isObject($Server::LevelAsset))
+      AssetDatabase.releaseAsset($Server::LevelAsset.getAssetId()); //cleanup
    
   if ($Pref::Server::EnableDatablockCache)
     resetDatablockCache();

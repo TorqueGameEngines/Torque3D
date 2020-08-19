@@ -221,7 +221,6 @@ bool TerrainAsset::loadTerrain()
 
             //Force the asset to become initialized if it hasn't been already
             AssetPtr<TerrainMaterialAsset> matAsset = assetId;
-
             mTerrMaterialAssets.push_front(matAsset);
          }
 

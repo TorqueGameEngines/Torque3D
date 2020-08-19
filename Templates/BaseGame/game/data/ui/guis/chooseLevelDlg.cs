@@ -51,6 +51,9 @@ function ChooseLevelDlg::onWake( %this )
    for(%i=0; %i < %count; %i++)
 	{
 	   %assetId = %assetQuery.getAsset(%i);
+	   
+	   if(AssetDatabase.getAssetModule(%assetId).ModuleId $= "ToolsModule")
+	      continue;
       
       %levelAsset = AssetDatabase.acquireAsset(%assetId);
       
@@ -92,53 +95,6 @@ function ChooseLevelDlg::onWake( %this )
       LevelSelectTitle.setText("SINGLE PLAYER");
    else
       LevelSelectTitle.setText("CREATE SERVER");
-   
-   /*for (%i = 0; %i < LevelList.rowCount(); %i++)
-   {
-      %preview = new GuiButtonCtrl() {
-         profile = "GuiMenuButtonProfile";
-         internalName = "SmallPreview" @ %i;
-         Extent = "368 35";
-         text = getField(CL_levelList.getRowText(%i), 0);
-         command = "ChooseLevelWindow.previewSelected(ChooseLevelWindow->SmallPreviews->SmallPreview" @ %i @ ");";
-         buttonType = "RadioButton";
-      };
-
-      ChooseLevelWindow->SmallPreviews.add(%preview);
-      
-      %rowText = CL_levelList.getRowText(%i);
-
-      // Set the level index
-      %preview.levelIndex = %i;
-
-      // Get the name
-      %name = getField(CL_levelList.getRowText(%i), 0);
-
-      %preview.levelName = %name;
-
-      %file = getField(CL_levelList.getRowText(%i), 1);
-
-      // Find the preview image
-      %levelPreview = getField(CL_levelList.getRowText(%i), 3);
-
-      // Test against all of the different image formats
-      // This should probably be moved into an engine function
-      if (isFile(%levelPreview @ ".png") ||
-          isFile(%levelPreview @ ".jpg") ||
-          isFile(%levelPreview @ ".bmp") ||
-          isFile(%levelPreview @ ".gif") ||
-          isFile(%levelPreview @ ".jng") ||
-          isFile(%levelPreview @ ".mng") ||
-          isFile(%levelPreview @ ".tga"))
-      {
-         %preview.bitmap = %levelPreview;
-      }
-
-      // Get the description
-      %desc = getField(CL_levelList.getRowText(%i), 2);
-
-      %preview.levelDesc = %desc;
-   }*/
    
    ChooseLevelButtonHolder.setActive();
 }
@@ -184,28 +140,7 @@ function ChooseLevelDlg::addMissionFile( %this, %file )
 
 function ChooseLevelDlg::addLevelAsset( %this, %levelAsset )
 {
-   %file = %levelAsset.getLevelFile();
-   
-   /*%levelName = fileBase(%file);
-   %levelDesc = "A Torque level";
-
-   %LevelInfoObject = getLevelInfo(%file);
-
-   if (%LevelInfoObject != 0)
-   {
-      if(%LevelInfoObject.levelName !$= "")
-         %levelName = %LevelInfoObject.levelName;
-      else if(%LevelInfoObject.name !$= "")
-         %levelName = %LevelInfoObject.name;
-
-      if (%LevelInfoObject.desc0 !$= "")
-         %levelDesc = %LevelInfoObject.desc0;
-         
-      if (%LevelInfoObject.preview !$= "")
-         %levelPreview = %LevelInfoObject.preview;
-         
-      %LevelInfoObject.delete();
-   }*/
+   %file = %levelAsset.getAssetId();
    
    %levelName = %levelAsset.LevelName;
    %levelDesc = %levelAsset.description;
@@ -224,7 +159,7 @@ function LevelList::onChange(%this)
    ChooseLevelWindow->LevelName.text = getField(%levelEntry, 0);
    
    // Get the level file
-   $selectedLevelFile = getField(%levelEntry, 1);
+   $selectedLevelAsset = getField(%levelEntry, 1);
    
    // Find the preview image
    %levelPreview = getField(%levelEntry, 3);

@@ -394,8 +394,12 @@ bool Trigger::setTickCmd(void *object, const char *index, const char *data)
 void Trigger::testObjects()
 {
    Vector<SceneObject*> foundobjs;
-   gServerContainer.findObjectList(getWorldBox(), 0xFFFFFFFF, &foundobjs);
-   for (S32 i = 0; i < foundobjs.size(); ++i)
+   foundobjs.clear();
+   if (getSceneManager() && getSceneManager()->getContainer() && getSceneManager()->getZoneManager())
+      getSceneManager()->getContainer()->findObjectList(getWorldBox(), 0xFFFFFFFF, &foundobjs);
+   else return;
+
+   for (S32 i = 0; i < foundobjs.size(); i++)
    {
       GameBase* so = dynamic_cast<GameBase*>(foundobjs[i]);
       if (so)

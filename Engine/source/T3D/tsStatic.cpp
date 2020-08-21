@@ -1691,6 +1691,12 @@ void TSStatic::updateMaterials()
    mShapeInstance->initMaterialList();
 }
 
+void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
+{
+   if(!mShapeAsset.isNull())
+      usedAssetsList->push_back_unique(mShapeAssetId);
+}
+
 //------------------------------------------------------------------------
 //These functions are duplicated in tsStatic and shapeBase.
 //They each function a little differently; but achieve the same purpose of gathering

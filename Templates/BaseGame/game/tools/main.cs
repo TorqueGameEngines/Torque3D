@@ -272,7 +272,7 @@ function fastLoadWorldEdit(%val)
          
       if( !$missionRunning )
       {
-         EditorNewLevel("tools/levels/DefaultEditorLevel.mis");
+         EditorNewLevel("ToolsModule:DefaultEditorLevel");
       }
       else
       {

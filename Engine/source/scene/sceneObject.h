@@ -942,6 +942,8 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
    /// notification that a direct child object has been detached
    virtual void onLostChild(SceneObject *subObject);   
 // PATHSHAPE END
+
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) {}
 };
 
 #endif  // _SCENEOBJECT_H_

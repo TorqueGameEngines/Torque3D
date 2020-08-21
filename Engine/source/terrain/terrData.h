@@ -474,6 +474,8 @@ public:
    U32 packUpdate   (NetConnection *conn, U32 mask, BitStream *stream);
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
    void inspectPostApply();
+
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
  
 protected:
    bool mIgnoreZodiacs;

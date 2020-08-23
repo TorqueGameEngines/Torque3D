@@ -66,6 +66,8 @@ public:
 	//S32 buildSearchList(const char* pattern, bool deepSearch = false, bool defaultsSearch = false);
 	const char* findFirstValue(const char* pattern, bool deepSearch = false, bool includeDefaults = false);
 	const char* findNextValue();
+
+   
 };
 
 class SettingSaveNode
@@ -105,6 +107,8 @@ public:
    void buildDocument(SimXMLDocument *document, bool skipWrite = false);
 
    void clear();
+
+   static S32 _NodeCompare(SettingSaveNode* const* a, SettingSaveNode* const* b);
 };
 
 #endif

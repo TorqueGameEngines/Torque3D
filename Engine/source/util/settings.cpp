@@ -142,28 +142,32 @@ void Settings::buildGroupString(String &name, const UTF8 *settingName)
    if(mGroupStack.size() > 0)
    {
       for(S32 i=0; i < mGroupStack.size(); i++)
-	  {
-		 S32 pos = 0;
-		 if(name.size() > 0)
-			pos = name.size()-1;
+      {
+         S32 pos = 0;
+         if(name.size() > 0)
+            pos = name.size()-1;
 
          // tack on the "/" in front if this isn't the first
-		 if(i == 0)
-		 {
-	        name.insert(pos, mGroupStack[i]);
-		 } else
-		 {
-			name.insert(pos, "/");
+         if(i == 0)
+         {
+            name.insert(pos, mGroupStack[i]);
+         }
+         else
+         {
+            name.insert(pos, "/");
             name.insert(pos+1, mGroupStack[i]);
-		 }
-	  }
+         }
+      }
 
 	  // tack on a final "/"
 	  name.insert(name.size()-1, "/");
 	  if(dStrlen(settingName) > 0)
 	     name.insert(name.size()-1, settingName);
-   } else
-	  name = settingName;
+   }
+   else
+   {
+      name = settingName;
+   }
 }
 
 void Settings::clearAllFields()
@@ -238,8 +242,8 @@ bool Settings::write()
       SimFieldDictionary::Entry* fieldEntry = *itr;
 
       String check(fieldEntry->slotName);
-	  if(check.find("_default") != String::NPos || check.find("_type") != String::NPos)
-		 continue;
+	   if(check.find("_default") != String::NPos || check.find("_type") != String::NPos)
+		  continue;
 
 	  node->addValue(fieldEntry->slotName, fieldEntry->value);
    }
@@ -622,11 +626,15 @@ void SettingSaveNode::buildDocument(SimXMLDocument *document, bool skipWrite)
 
    if(!mIsGroup && !skipWrite)
    {
-	  document->pushNewElement("Setting");
-	  document->setAttribute("name", mName);
+      document->pushNewElement("Setting");
+      document->setAttribute("name", mName);
       document->addText(mValue);
-   } else
+   }
+   else
    {
+      mSettingNodes.sort(_NodeCompare);
+      mGroupNodes.sort(_NodeCompare);
+
 	  for(S32 i=0; i<mSettingNodes.size(); i++)
 	  {
          SettingSaveNode *node = mSettingNodes[i];
@@ -642,6 +650,12 @@ void SettingSaveNode::buildDocument(SimXMLDocument *document, bool skipWrite)
    
    if(!skipWrite)
       document->popElement();
+}
+
+S32 QSORT_CALLBACK SettingSaveNode::_NodeCompare(SettingSaveNode* const* a, SettingSaveNode* const* b)
+{
+   S32 result = dStrnatcasecmp((*a)->mName.c_str(), (*b)->mName.c_str());
+   return result;
 }
 
 DefineEngineMethod(Settings, setValue, void, (const char * settingName, const char * value), (""), "settingObj.setValue(settingName, value);")

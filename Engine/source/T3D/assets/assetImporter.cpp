@@ -15,6 +15,8 @@
 #include "ts/tsShapeConstruct.h"
 #include "core/resourceManager.h"
 
+#include "materials/materialManager.h"
+
 ConsoleDocClass(AssetImportConfig,
    "@brief Defines properties for an AssetImprotConfig object.\n"
    "@AssetImportConfig is a SimObject derived object intended to act as a container for all the necessary configuration data when running the Asset Importer.\n"
@@ -33,6 +35,7 @@ AssetImportConfig::AssetImportConfig() :
    PreventImportWithErrors(true),
    AutomaticallyPromptMissingFiles(false),
    ImportMesh(true),
+   UseManualShapeConfigRules(false),
    DoUpAxisOverride(false),
    UpAxisOverride("Z_AXIS"),
    DoScaleOverride(false),
@@ -128,7 +131,8 @@ void AssetImportConfig::initPersistFields()
 
    addGroup("Meshes");
       addField("ImportMesh", TypeBool, Offset(ImportMesh, AssetImportConfig), "Indicates if this config supports importing meshes");
-      addField("DoUpAxisOverride", TypeBool, Offset(DoUpAxisOverride, AssetImportConfig), "Indicates if the up axis in the model file should be overridden ");
+      addField("UseManualShapeConfigRules", TypeBool, Offset(UseManualShapeConfigRules, AssetImportConfig), "Indicates if this config should override the per-format sis files with the config's specific settings");
+      addField("DoUpAxisOverride", TypeBool, Offset(DoUpAxisOverride, AssetImportConfig), "Indicates if the up axis in the model file should be overridden");
       addField("UpAxisOverride", TypeRealString, Offset(UpAxisOverride, AssetImportConfig), "If overriding, what axis should be used as up. Options are X_AXIS, Y_AXIS, Z_AXIS");
       addField("DoScaleOverride", TypeBool, Offset(DoScaleOverride, AssetImportConfig), "Indicates if the scale in the model file should be overridden");
       addField("ScaleOverride", TypeF32, Offset(ScaleOverride, AssetImportConfig), "If overriding, what scale should be used");
@@ -217,6 +221,7 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
 
    //Meshes
    ImportMesh = dAtob(configSettings->value(String(configName + "/Meshes/ImportMesh").c_str()));
+   UseManualShapeConfigRules = dAtob(configSettings->value(String(configName + "/Meshes/UseManualShapeConfigRules").c_str()));
    DoUpAxisOverride = dAtob(configSettings->value(String(configName + "/Meshes/DoUpAxisOverride").c_str()));
    UpAxisOverride = configSettings->value(String(configName + "/Meshes/UpAxisOverride").c_str());
    DoScaleOverride = dAtob(configSettings->value(String(configName + "/Meshes/DoScaleOverride").c_str()));
@@ -288,6 +293,89 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    VolumeAdjust = dAtof(configSettings->value(String(configName + "/Sounds/VolumeAdjust").c_str()));
    PitchAdjust = dAtof(configSettings->value(String(configName + "/Sounds/PitchAdjust").c_str()));
    SoundsCompressed = dAtob(configSettings->value(String(configName + "/Sounds/Compressed").c_str()));
+}
+
+void AssetImportConfig::CopyTo(AssetImportConfig* target) const
+{
+   target->DuplicatAutoResolution = DuplicatAutoResolution;
+   target->WarningsAsErrors = WarningsAsErrors;
+   target->PreventImportWithErrors = PreventImportWithErrors;
+   target->AutomaticallyPromptMissingFiles = AutomaticallyPromptMissingFiles;
+
+   //Meshes
+   target->ImportMesh = ImportMesh;
+   target->UseManualShapeConfigRules = UseManualShapeConfigRules;
+   target->DoUpAxisOverride = DoUpAxisOverride;
+   target->UpAxisOverride = UpAxisOverride;
+   target->DoScaleOverride = DoScaleOverride;
+   target->ScaleOverride = ScaleOverride;
+   target->IgnoreNodeScale = IgnoreNodeScale;
+   target->AdjustCenter = AdjustCenter;
+   target->AdjustFloor = AdjustFloor;
+   target->CollapseSubmeshes = CollapseSubmeshes;
+   target->LODType = LODType;
+   target->ImportedNodes = ImportedNodes;
+   target->IgnoreNodes = IgnoreNodes;
+   target->ImportMeshes = ImportMeshes;
+   target->IgnoreMeshes = IgnoreMeshes;
+
+   //Assimp/Collada
+   target->convertLeftHanded = convertLeftHanded;
+   target->calcTangentSpace = calcTangentSpace;
+   target->removeRedundantMats = removeRedundantMats;
+   target->genUVCoords = genUVCoords;
+   target->TransformUVs = TransformUVs;
+   target->flipUVCoords = flipUVCoords;
+   target->findInstances = findInstances;
+   target->limitBoneWeights = limitBoneWeights;
+   target->JoinIdenticalVerts = JoinIdenticalVerts;
+   target->reverseWindingOrder = reverseWindingOrder;
+   target->invertNormals = invertNormals;
+
+   //Materials
+   target->ImportMaterials = ImportMaterials;
+   target->CreatePBRConfig = CreatePBRConfig;
+   target->UseDiffuseSuffixOnOriginImage = UseDiffuseSuffixOnOriginImage;
+   target->UseExistingMaterials = UseExistingMaterials;
+   target->IgnoreMaterials = IgnoreMaterials;
+   target->PopulateMaterialMaps = PopulateMaterialMaps;
+
+   //Animations
+   target->ImportAnimations = ImportAnimations;
+   target->SeparateAnimations = SeparateAnimations;
+   target->SeparateAnimationPrefix = SeparateAnimationPrefix;
+   target->animTiming = animTiming;
+   target->animFPS = animFPS;
+
+   //Collisions
+   target->GenerateCollisions = GenerateCollisions;
+   target->GenCollisionType = GenCollisionType;
+   target->CollisionMeshPrefix = CollisionMeshPrefix;
+   target->GenerateLOSCollisions = GenerateLOSCollisions;
+   target->GenLOSCollisionType = GenLOSCollisionType;
+   target->LOSCollisionMeshPrefix = LOSCollisionMeshPrefix;
+
+   //Images
+   target->importImages = importImages;
+   target->ImageType = ImageType;
+   target->DiffuseTypeSuffixes = DiffuseTypeSuffixes;
+   target->NormalTypeSuffixes = NormalTypeSuffixes;
+   target->MetalnessTypeSuffixes = MetalnessTypeSuffixes;
+   target->RoughnessTypeSuffixes = RoughnessTypeSuffixes;
+   target->SmoothnessTypeSuffixes = SmoothnessTypeSuffixes;
+   target->AOTypeSuffixes = AOTypeSuffixes;
+   target->PBRTypeSuffixes = PBRTypeSuffixes;
+   target->TextureFilteringMode = TextureFilteringMode;
+   target->UseMips = UseMips;
+   target->IsHDR = IsHDR;
+   target->Scaling = Scaling;
+   target->ImagesCompressed = ImagesCompressed;
+   target->GenerateMaterialOnImport = GenerateMaterialOnImport;
+
+   //Sounds
+   target->VolumeAdjust = VolumeAdjust;
+   target->PitchAdjust = PitchAdjust;
+   target->SoundsCompressed = SoundsCompressed;
 }
 
 ConsoleDocClass(AssetImportObject,
@@ -698,7 +786,7 @@ String AssetImporter::getTrueFilename(const String& fileName)
 
    if (!Con::expandScriptFilename(scriptFilenameBuffer, sizeof(scriptFilenameBuffer), sPattern.c_str()))
    {
-      Con::errorf("findFirstFile() given initial directory cannot be expanded: '%s'", pattern);
+      Con::errorf("findFirstFile() given initial directory cannot be expanded: '%s'", pattern.c_str());
       return "";
    }
    sPattern = String::ToString(scriptFilenameBuffer);
@@ -1174,6 +1262,94 @@ static bool enumDTSForImport(const char* shapePath, GuiTreeViewCtrl* tree)
    return true;
 }
 
+void AssetImportConfig::loadSISFile(Torque::Path filePath)
+{
+   String settingsFilePath = "Tools";
+   Settings* editorSettings;
+   //See if we can get our editor settings
+   if (Sim::findObject("EditorSettings", editorSettings))
+   {
+      settingsFilePath = editorSettings->value("defaultSettingsPath", "Tools");
+   }
+
+   String fileExtension = filePath.getExtension();
+   String settingsFile = settingsFilePath + "/" + fileExtension + ".sis";
+
+   FileObject* fileObj = new FileObject();
+   if (Platform::isFile(settingsFile))
+   {
+      if (!fileObj->readMemory(settingsFile.c_str()))
+      {
+         Con::errorf("AssetImporter::loadSISFile() - Error opening file to load settings: %s", settingsFile.c_str());
+         fileObj->deleteObject();
+         return;
+      }
+   }
+
+   String headerLine = (const char*)fileObj->readLine();
+   if (headerLine.substr(0, 4).compare("SISV", 0U, String::NoCase) != 0)
+      return; //not a sis file?
+
+   while (!fileObj->isEOF())
+   {
+      const char* line = (const char*)fileObj->readLine();
+      String key = StringUnit::getUnit(line, 0, "\t");
+      String value = StringUnit::getUnit(line, 1, "\t");
+
+      if (key.compare("DoUpAxisOverride", 0U, String::NoCase) == 0)
+         DoUpAxisOverride = dAtob(value.c_str());
+      else if (key.compare("UpAxisOverride", 0U, String::NoCase) == 0)
+         UpAxisOverride = value.c_str();
+      else if (key.compare("DoScaleOverride", 0U, String::NoCase) == 0)
+         DoScaleOverride = dAtob(value.c_str());
+      else if (key.compare("ScaleOverride", 0U, String::NoCase) == 0)
+         ScaleOverride = dAtof(value.c_str());
+      else if (key.compare("IgnoreNodeScale", 0U, String::NoCase) == 0)
+         IgnoreNodeScale = dAtob(value.c_str());
+      else if (key.compare("AdjustCenter", 0U, String::NoCase) == 0)
+         AdjustCenter = dAtob(value.c_str());
+      else if (key.compare("AdjustFloor", 0U, String::NoCase) == 0)
+         AdjustFloor = dAtob(value.c_str());
+      else if (key.compare("CollapseSubmeshes", 0U, String::NoCase) == 0)
+         CollapseSubmeshes = dAtob(value.c_str());
+      else if (key.compare("LODType", 0U, String::NoCase) == 0)
+         LODType = value.c_str();
+      else if (key.compare("ImportedNodes", 0U, String::NoCase) == 0)
+         ImportedNodes = value.c_str();
+      else if (key.compare("IgnoreNodes", 0U, String::NoCase) == 0)
+         IgnoreNodes = value.c_str();
+      else if (key.compare("ImportMeshes", 0U, String::NoCase) == 0)
+         ImportMeshes = value.c_str();
+      else if (key.compare("IgnoreMeshes", 0U, String::NoCase) == 0)
+         IgnoreMeshes = value.c_str();
+      else if (key.compare("convertLeftHanded", 0U, String::NoCase) == 0)
+         convertLeftHanded = dAtob(value.c_str());
+      else if (key.compare("calcTangentSpace", 0U, String::NoCase) == 0)
+         calcTangentSpace = dAtob(value.c_str());
+      else if (key.compare("removeRedundantMats", 0U, String::NoCase) == 0)
+         removeRedundantMats = dAtob(value.c_str());
+      else if (key.compare("genUVCoords", 0U, String::NoCase) == 0)
+         genUVCoords = dAtob(value.c_str());
+      else if (key.compare("TransformUVs", 0U, String::NoCase) == 0)
+         TransformUVs = dAtob(value.c_str());
+      else if (key.compare("flipUVCoords", 0U, String::NoCase) == 0)
+         flipUVCoords = dAtob(value.c_str());
+      else if (key.compare("findInstances", 0U, String::NoCase) == 0)
+         findInstances = dAtob(value.c_str());
+      else if (key.compare("limitBoneWeights", 0U, String::NoCase) == 0)
+         limitBoneWeights = dAtob(value.c_str());
+      else if (key.compare("JoinIdenticalVerts", 0U, String::NoCase) == 0)
+         JoinIdenticalVerts = dAtob(value.c_str());
+      else if (key.compare("reverseWindingOrder", 0U, String::NoCase) == 0)
+         reverseWindingOrder = dAtob(value.c_str());
+      else if (key.compare("invertNormals", 0U, String::NoCase) == 0)
+         invertNormals = dAtob(value.c_str());
+   }
+
+   fileObj->close();
+   fileObj->deleteObject();
+}
+
 void AssetImporter::processImportAssets(AssetImportObject* assetItem)
 {
    if (assetItem == nullptr)
@@ -1601,6 +1777,16 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
    dSprintf(importLogBuffer, sizeof(importLogBuffer), "   Shape Info: Mesh Count: %i | Material Count: %i | Anim Count: %i", meshCount, animCount, materialCount);
    activityLog.push_back(importLogBuffer);
 
+   AssetImportConfig* cachedConfig = new AssetImportConfig();;
+   cachedConfig->registerObject();
+   activeImportConfig->CopyTo(cachedConfig);
+
+   if (!activeImportConfig->UseManualShapeConfigRules)
+   {
+      //Try and load a sis file if it exists for this format
+      activeImportConfig->loadSISFile(assetItem->filePath);
+   }
+
    if (activeImportConfig->ImportMesh && meshCount > 0)
    {
 
@@ -1627,6 +1813,10 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
          materialId = assetItem->shapeInfo->getNextSiblingItem(materialId);
       }
    }
+
+   //restore the cached version just in case we loaded a sis file
+   cachedConfig->CopyTo(activeImportConfig);
+   cachedConfig->deleteObject();
 
    assetItem->processed = true;
 }
@@ -2402,8 +2592,16 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    //There's 2 ways to do this. If we're in-place importing an existing asset, we can see if the definition existed already, like in an old
    //materials.cs file. if it does, we can just find the object by name, and save it out to our new file
    //If not, we'll just generate one
-   /*SimObject* matObj;
-   if (Sim::findObject(assetName, matObj))
+   Material* existingMat = MATMGR->getMaterialDefinitionByName(assetName);
+
+   //It's also possible that, for legacy models, the material hooks in via the material's mapTo field, and the material name is something completely different
+   //So we'll check for that as well if we didn't find it by name up above
+   if (existingMat == nullptr)
+   {
+      existingMat = MATMGR->getMaterialDefinitionByMapTo(assetName);
+   }
+
+   if (existingMat)
    {
       for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
       {
@@ -2447,15 +2645,16 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          assetFieldName = mapFieldName + "Asset[0]";
          mapFieldName += "[0]";
 
-         matObj->writeField(mapFieldName.c_str(), path.c_str());
+         existingMat->writeField(mapFieldName.c_str(), path.c_str());
 
          String targetAsset = targetModuleId + ":" + childItem->assetName;
 
-         matObj->writeField(assetFieldName.c_str(), targetAsset.c_str());
+         existingMat->writeField(assetFieldName.c_str(), targetAsset.c_str());
       }
-      matObj->save(scriptPath.c_str());
-   }*/
-   if (file->openForWrite(scriptPath.c_str()))
+      existingMat->save(scriptPath.c_str());
+   }
+   //However, if we didn't find any existing material, then we'll want to go ahead and just write out a new one
+   else if (file->openForWrite(scriptPath.c_str()))
    {
       file->writeLine((U8*)"//--- OBJECT WRITE BEGIN ---");
 
@@ -2509,9 +2708,9 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          assetFieldName = mapFieldName + "Asset";
          mapFieldName += "[0]";
 
-         String path = childItem->filePath.getFullFileName();
-         dSprintf(lineBuffer, 1024, "   %s = \"%s\";", mapFieldName.c_str(), path.c_str());
-         file->writeLine((U8*)lineBuffer);
+         //String path = childItem->filePath.getFullFileName();
+         //dSprintf(lineBuffer, 1024, "   %s = \"%s\";", mapFieldName.c_str(), path.c_str());
+         //file->writeLine((U8*)lineBuffer);
 
          dSprintf(lineBuffer, 1024, "   %s = \"%s:%s\";", assetFieldName.c_str(), targetModuleId.c_str(), childItem->assetName.c_str());
          file->writeLine((U8*)lineBuffer);
@@ -2568,6 +2767,16 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    newAsset->setAssetName(assetName);
    newAsset->setShapeFile(shapeFileName.c_str());
+
+   AssetImportConfig* cachedConfig = new AssetImportConfig();;
+   cachedConfig->registerObject();
+   activeImportConfig->CopyTo(cachedConfig);
+
+   if (!activeImportConfig->UseManualShapeConfigRules)
+   {
+      //Try and load a sis file if it exists for this format
+      activeImportConfig->loadSISFile(assetItem->filePath);
+   }
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
@@ -2769,6 +2978,10 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
          activityLog.push_back(importLogBuffer);
       }
    }
+
+   //restore the cached version just in case we loaded a sis file
+   cachedConfig->CopyTo(activeImportConfig);
+   cachedConfig->deleteObject();
 
    return tamlPath;
 }

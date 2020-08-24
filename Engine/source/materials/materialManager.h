@@ -50,6 +50,7 @@ public:
 
    Material * allocateAndRegister(const String &objectName, const String &mapToName = String());
    Material * getMaterialDefinitionByName(const String &matName);
+   Material* getMaterialDefinitionByMapTo(const String& mapTo);
    SimSet * getMaterialSet();   
 
    // map textures to materials

@@ -48,6 +48,11 @@ public:
    bool ImportMesh;
 
    /// <summary>
+   /// Indicates if this config should override the per-format sis files with the config's specific settings
+   /// </summary>
+   bool UseManualShapeConfigRules;
+
+   /// <summary>
    /// Indicates if the up axis in the model file should be overridden 
    /// </summary>
    bool DoUpAxisOverride;
@@ -386,8 +391,12 @@ public:
    /// </summary>
    void loadImportConfig(Settings* configSettings, String configName);
 
+   void CopyTo(AssetImportConfig* target) const;
+
    /// Declare Console Object.
    DECLARE_CONOBJECT(AssetImportConfig);
+
+   void loadSISFile(Torque::Path filePath);
 };
 
 /// <summary>

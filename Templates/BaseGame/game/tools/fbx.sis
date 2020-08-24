@@ -1,0 +1,29 @@
+SISV1
+lodType	TrailingNumber
+singleDetailSize	2
+materialPrefix	
+alwaysImport	
+neverImport	color*.
+alwaysImportMesh	
+neverImportMesh	color*.
+DoUpAxisOverride    0
+UpAxisOverride  Y_AXIS
+DoScaleOverride 1
+ScaleOverride   .1
+animTiming	Seconds
+animFPS	30
+ignoreNodeScale	0
+adjustCenter	0
+adjustFloor	0
+forceUpdateMaterials	0
+convertLeftHanded	0
+calcTangentSpace	0
+removeRedundantMats	1
+genUVCoords	0
+transformUVCoords	0
+flipUVCoords	1
+findInstances	0
+limitBoneWeights	0
+joinIdenticalVerts	1
+reverseWindingOrder	1
+invertNormals	0

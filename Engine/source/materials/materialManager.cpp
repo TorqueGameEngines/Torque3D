@@ -161,6 +161,26 @@ Material * MaterialManager::getMaterialDefinitionByName(const String &matName)
    return foundMat;
 }
 
+Material* MaterialManager::getMaterialDefinitionByMapTo(const String& mapTo)
+{
+   // Get the material
+   Material* foundMat = nullptr;
+
+   for (SimSet::iterator itr = mMaterialSet->begin(); itr != mMaterialSet->end(); ++itr)
+   {
+      // Fetch our listed materials.
+      Material* materialDef = dynamic_cast<Material*>(*itr);
+      if (materialDef && materialDef->mMapTo.compare(mapTo, 0U, String::NoCase) == 0)
+      {
+         //We have a match, so keep it and bail the loop
+         foundMat = materialDef;
+         break;
+      }
+   }
+
+   return foundMat;
+}
+
 BaseMatInstance* MaterialManager::createMatInstance(const String &matName)
 {
    BaseMaterialDefinition* mat = NULL;

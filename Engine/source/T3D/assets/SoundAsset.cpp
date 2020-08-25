@@ -95,8 +95,8 @@ SoundAsset::SoundAsset()
    mSoundFile = StringTable->EmptyString();
    mSoundPath = StringTable->EmptyString();
 
-   mPitchAdjust = 0;
-   mVolumeAdjust = 0;
+   mPitchAdjust = 1;
+   mVolumeAdjust = 1;
 
    //mSound = nullptr;
 }
@@ -156,4 +156,9 @@ void SoundAsset::setSoundFile(const char* pSoundFile)
 
    // Refresh the asset.
    refreshAsset();
+}
+
+DefineEngineMethod(SoundAsset, getSoundPath, const char*, (), , "")
+{
+   return object->getSoundPath();
 }

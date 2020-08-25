@@ -63,7 +63,7 @@ public:
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   void                    setSoundFile(const char* pScriptFile);
+   void                    setSoundFile(const char* pSoundFile);
    inline StringTableEntry getSoundFile(void) const { return mSoundFile; };
 
    inline StringTableEntry getSoundPath(void) const { return mSoundPath; };

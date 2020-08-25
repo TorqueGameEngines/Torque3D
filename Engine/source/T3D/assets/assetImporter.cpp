@@ -1797,7 +1797,7 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       //If we have animations but no meshes, then this is a pure animation file so we can swap the asset type here
       if (meshCount == 0)
       {
-         //assetItem->assetType = "ShapeAnimation";
+         assetItem->assetType = "ShapeAnimationAsset";
       }
    }
 
@@ -1913,6 +1913,95 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
       matAssetItem->assetName = matAssetName;
 }
 
+void AssetImporter::processSoundAsset(AssetImportObject* assetItem)
+{
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Image for Import: %s", assetItem->assetName.c_str());
+   activityLog.push_back(importLogBuffer);
+
+   if ((activeImportConfig->GenerateMaterialOnImport && assetItem->parentAssetItem == nullptr)/* || assetItem->parentAssetItem != nullptr*/)
+   {
+      //find our suffix match, if any
+      String noSuffixName = assetItem->assetName;
+      String suffixType;
+      String suffix = parseImageSuffixes(assetItem->assetName, &suffixType);
+      if (suffix.isNotEmpty())
+      {
+         assetItem->imageSuffixType = suffixType;
+         S32 suffixPos = assetItem->assetName.find(suffix, 0, String::NoCase | String::Left);
+         noSuffixName = assetItem->assetName.substr(0, suffixPos);
+      }
+
+      //We try to automatically populate materials under the naming convention: materialName: Rock, image maps: Rock_Albedo, Rock_Normal, etc
+
+      AssetImportObject* materialAsset = findImportingAssetByName(noSuffixName);
+      if (materialAsset != nullptr && materialAsset->assetType != String("MaterialAsset"))
+      {
+         //We may have a situation where an asset matches the no-suffix name, but it's not a material asset. Ignore this
+         //asset item for now
+
+         materialAsset = nullptr;
+      }
+
+      //If we didn't find a matching material asset in our current items, we'll make one now
+      if (materialAsset == nullptr)
+      {
+         if (!assetItem->filePath.isEmpty())
+         {
+            materialAsset = addImportingAsset("MaterialAsset", assetItem->filePath, nullptr, noSuffixName);
+         }
+      }
+
+      //Not that, one way or another, we have the generated material asset, lets move on to associating our image with it
+      if (materialAsset != nullptr && materialAsset != assetItem->parentAssetItem)
+      {
+         if (assetItem->parentAssetItem != nullptr)
+         {
+            //If the image had an existing parent, it gets removed from that parent's child item list
+            assetItem->parentAssetItem->childAssetItems.remove(assetItem);
+         }
+         else
+         {
+            //If it didn't have one, we're going to pull it from the importingAssets list
+            importingAssets.remove(assetItem);
+         }
+
+         //Now we can add it to the correct material asset
+         materialAsset->childAssetItems.push_back(assetItem);
+         assetItem->parentAssetItem = materialAsset;
+
+         assetHeirarchyChanged = true;
+      }
+
+      //Now to do some cleverness. If we're generating a material, we can parse like assets being imported(similar filenames) but different suffixes
+      //If we find these, we'll just populate into the original's material
+
+      //if we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
+      if (suffixType.isEmpty())
+      {
+         if (activeImportConfig->UseDiffuseSuffixOnOriginImage)
+         {
+            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;");
+            assetItem->assetName = assetItem->assetName + diffuseToken;
+            assetItem->cleanAssetName = assetItem->assetName;
+         }
+         else
+         {
+            //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
+            //we'll give it a generic one
+            if (materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0)
+            {
+               assetItem->assetName = assetItem->assetName + "_image";
+               assetItem->cleanAssetName = assetItem->assetName;
+            }
+         }
+
+         //Assume for abledo if it has no suffix matches
+         assetItem->imageSuffixType = "Albedo";
+      }
+   }
+
+   assetItem->processed = true;
+}
 //
 // Validation
 //
@@ -2293,8 +2382,10 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
          {
             assetPath = importShapeAsset(importingAssets[i]);
          }
-         /*else if (importingAssets[i]->assetType == String("SoundAsset"))
-            assetPath = SoundAsset::importAsset(importingAssets[i]);*/
+         else if (importingAssets[i]->assetType == String("SoundAsset"))
+         {
+            assetPath = importSoundAsset(importingAssets[i]);
+         }
          else if (importingAssets[i]->assetType == String("MaterialAsset"))
          {
             assetPath = importMaterialAsset(importingAssets[i]);
@@ -2371,8 +2462,10 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
          {
             assetPath = importShapeAsset(childItem);
          }
-         /*else if (childItem->assetType == String("SoundAsset"))
-            assetPath = SoundAsset::importAsset(childItem);*/
+         else if (childItem->assetType == String("SoundAsset"))
+         {
+            assetPath = importSoundAsset(childItem);
+         }
          else if (childItem->assetType == String("MaterialAsset"))
          {
             assetPath = importMaterialAsset(childItem);
@@ -2982,6 +3075,118 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    //restore the cached version just in case we loaded a sis file
    cachedConfig->CopyTo(activeImportConfig);
    cachedConfig->deleteObject();
+
+   return tamlPath;
+}
+
+Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
+{
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Beginning importing of Sound Asset: %s", assetItem->assetName.c_str());
+   activityLog.push_back(importLogBuffer);
+
+   SoundAsset* newAsset = new SoundAsset();
+   newAsset->registerObject();
+
+   StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
+
+   String imageFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
+   String assetPath = targetPath + "/" + imageFileName;
+   String tamlPath = targetPath + "/" + assetName + ".asset.taml";
+   String originalPath = assetItem->filePath.getFullPath().c_str();
+
+   char qualifiedFromFile[2048];
+   char qualifiedToFile[2048];
+
+   Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
+   Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+
+   newAsset->setAssetName(assetName);
+   newAsset->setSoundFile(imageFileName.c_str());
+
+   //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
+   //file path for reimporting support later
+   if (!isReimport && dStrcmp(qualifiedFromFile, qualifiedToFile))
+   {
+      newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
+   }
+
+   Taml tamlWriter;
+   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
+
+   if (!importSuccessful)
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
+      activityLog.push_back(importLogBuffer);
+      return "";
+   }
+
+   if (!isReimport)
+   {
+      bool isInPlace = !dStrcmp(qualifiedFromFile, qualifiedToFile);
+
+      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
+         activityLog.push_back(importLogBuffer);
+         return "";
+      }
+   }
+
+   return tamlPath;
+}
+
+Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetItem)
+{
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Beginning importing of Shape Animation Asset: %s", assetItem->assetName.c_str());
+   activityLog.push_back(importLogBuffer);
+
+   ShapeAnimationAsset* newAsset = new ShapeAnimationAsset();
+   newAsset->registerObject();
+
+   StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
+
+   String imageFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
+   String assetPath = targetPath + "/" + imageFileName;
+   String tamlPath = targetPath + "/" + assetName + ".asset.taml";
+   String originalPath = assetItem->filePath.getFullPath().c_str();
+
+   char qualifiedFromFile[2048];
+   char qualifiedToFile[2048];
+
+   Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
+   Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+
+   newAsset->setAssetName(assetName);
+   newAsset->setAnimationFile(imageFileName.c_str());
+
+   //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
+   //file path for reimporting support later
+   if (!isReimport && dStrcmp(qualifiedFromFile, qualifiedToFile))
+   {
+      newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
+   }
+
+   Taml tamlWriter;
+   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
+
+   if (!importSuccessful)
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
+      activityLog.push_back(importLogBuffer);
+      return "";
+   }
+
+   if (!isReimport)
+   {
+      bool isInPlace = !dStrcmp(qualifiedFromFile, qualifiedToFile);
+
+      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
+         activityLog.push_back(importLogBuffer);
+         return "";
+      }
+   }
 
    return tamlPath;
 }

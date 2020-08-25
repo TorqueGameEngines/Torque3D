@@ -742,6 +742,12 @@ public:
    void processShapeMaterialInfo(AssetImportObject* assetItem, S32 materialItemId);
 
    /// <summary>
+   /// Process a specific AssetImportObject that is an SoundAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
+   void processSoundAsset(AssetImportObject* assetItem);
+
+   /// <summary>
    /// Run through and validate assets for issues, such as name collisions
    /// </summary>
    bool validateAssets();
@@ -788,23 +794,37 @@ public:
    /// <summary>
    /// Runs the import processing on a specific ImageAsset item
    /// <para>@param assetItem, The asset item to import</para>
-   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// <para>@return TAML File path of the new asset that was imported. If import failed, it will be empty.</para>
    /// </summary>
    Torque::Path importImageAsset(AssetImportObject* assetItem);
 
    /// <summary>
    /// Runs the import processing on a specific MaterialAsset item
    /// <para>@param assetItem, The asset item to import</para>
-   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// <para>@return TAML File path of the new asset that was imported. If import failed, it will be empty.</para>
    /// </summary>
    Torque::Path importMaterialAsset(AssetImportObject* assetItem);
 
    /// <summary>
    /// Runs the import processing on a specific ShapeAsset item
    /// <para>@param assetItem, The asset item to import</para>
-   /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
+   /// <para>@return TAML File path of the new asset that was imported. If import failed, it will be empty.</para>
    /// </summary>
-   Torque::Path importShapeAsset(AssetImportObject* assetItem);   
+   Torque::Path importShapeAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Runs the import processing on a specific SoundAsset item
+   /// <para>@param assetItem, The asset item to import</para>
+   /// <para>@return TAML File path of the new asset that was imported. If import failed, it will be empty.</para>
+   /// </summary>
+   Torque::Path importSoundAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Runs the import processing on a specific ShapeAnimationAsset item
+   /// <para>@param assetItem, The asset item to import</para>
+   /// <para>@return TAML File path of the new asset that was imported. If import failed, it will be empty.</para>
+   /// </summary>
+   Torque::Path importShapeAnimationAsset(AssetImportObject* assetItem);
 
    //
    /// <summary>

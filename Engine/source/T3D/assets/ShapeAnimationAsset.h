@@ -79,7 +79,7 @@ public:
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
-   void                    setAnimationFile(const char* pScriptFile);
+   void                    setAnimationFile(const char* pAnimationFile);
    inline StringTableEntry getAnimationFile(void) const { return mFileName; };
 
    inline StringTableEntry getAnimationPath(void) const { return mFilePath; };

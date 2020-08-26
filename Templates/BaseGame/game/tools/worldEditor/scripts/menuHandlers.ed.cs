@@ -443,6 +443,9 @@ function EditorOpenMission(%levelAsset)
          error("Selected Level Asset doesn't have a valid levelFile path!");
          return;
       }
+      
+      //We cool, so dereference the def because we don't need it the rest of the way
+      AssetDatabase.releaseAsset(%levelAssetId);
    }
       
    // close the current editor, it will get cleaned up by MissionCleanup
@@ -457,11 +460,11 @@ function EditorOpenMission(%levelAsset)
    if( !$missionRunning )
    {
       activatePackage( "BootEditor" );
-      StartGame( %filename );
+      StartGame( %levelAssetId );
    }
    else
    {
-      loadMission( %filename, true ) ;
+      loadMission( %levelAssetId, true ) ;
    
       pushInstantGroup();
 

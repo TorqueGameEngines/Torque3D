@@ -1285,6 +1285,10 @@ void AssetImportConfig::loadSISFile(Torque::Path filePath)
          return;
       }
    }
+   else
+   {
+      return;
+   }
 
    String headerLine = (const char*)fileObj->readLine();
    if (headerLine.substr(0, 4).compare("SISV", 0U, String::NoCase) != 0)

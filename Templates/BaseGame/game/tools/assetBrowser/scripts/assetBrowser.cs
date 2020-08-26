@@ -63,7 +63,7 @@ function AssetBrowser::onWake(%this)
    
    AssetBrowser-->previewSlider.setValue(EditorSettings.value("Assets/Browser/previewTileSize", "1.0"));
    
-   AssetBrowser-->filterAssetsButton.setEnabled(true); 
+   AssetBrowser-->filterAssetsButton.setActive(true); 
 }
 
 function contentTreeTabBook::onTabSelected(%this, %tabText, %tabIndex)
@@ -279,11 +279,11 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    //visibility filter
    if(%AssetTypeFilter !$= "")
    {
-      AssetBrowser-->filterAssetsButton.setEnabled(false);
+      AssetBrowser-->filterAssetsButton.setActive(false);
    }
    else
    {
-      AssetBrowser-->filterAssetsButton.setEnabled(true);  
+      AssetBrowser-->filterAssetsButton.setActive(true);  
    }
    
    if(%selectCallback $= "")

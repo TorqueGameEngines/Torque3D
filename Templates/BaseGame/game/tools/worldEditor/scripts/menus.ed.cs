@@ -119,11 +119,14 @@ function EditorGui::buildMenus(%this)
       profile = "ToolsGuiMenuBarProfile";
    };
    
-   %recentLevelsMenu = new PopupMenu(RecentLevelsPopupMenu)
+   if(!isObject(RecentLevelsPopupMenu))
    {
-      superClass = "MenuBuilder";
-      class = "EditorFileMenu";
-   };
+      %recentLevelsMenu = new PopupMenu(RecentLevelsPopupMenu)
+      {
+         superClass = "MenuBuilder";
+         class = "EditorFileMenu";
+      };
+   }
    
    // File Menu
    %fileMenu = new PopupMenu()

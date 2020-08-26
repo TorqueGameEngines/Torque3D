@@ -117,8 +117,6 @@ function MenuInputButton::refresh(%this)
                %path = %path @ "Options";
             else if(%this.gamepadButton $= "btn_back")
                %path = %path @ "Share";
-            else      
-               continue;
          }
          else if($activeControllerName $= "Nintendo Switch Pro Controller")
          {
@@ -144,8 +142,6 @@ function MenuInputButton::refresh(%this)
                %path = %path @ "Plus";
             else if(%this.gamepadButton $= "btn_back")
                %path = %path @ "Minus";
-            else      
-               continue;
          }
          else if($activeControllerName !$= "")
          {
@@ -171,8 +167,6 @@ function MenuInputButton::refresh(%this)
                %path = %path @ "Menu";
             else if(%this.gamepadButton $= "btn_back")
                %path = %path @ "Windows";
-            else      
-               continue;
          }
       } 
    }

@@ -43,7 +43,7 @@ function ExampleGameMode::onMissionStart(%this)
 
    // Start the game timer
    if (%this.duration)
-      %this.gameSchedule = schedule(%this.duration * 1000, "onGameDurationEnd");
+      %this.gameSchedule = schedule(%this.duration * 1000, 0, "onGameDurationEnd");
       
    %this.running = true;
 }

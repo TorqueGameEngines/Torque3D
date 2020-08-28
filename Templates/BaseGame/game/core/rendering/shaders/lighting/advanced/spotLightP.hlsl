@@ -112,7 +112,6 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
           //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
-         float dynDistToLight = dynPxlPosLightProj.z / lightRange;
          float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       #endif      
 

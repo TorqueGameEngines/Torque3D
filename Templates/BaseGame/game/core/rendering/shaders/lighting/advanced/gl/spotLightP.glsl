@@ -106,7 +106,6 @@ void main()
 
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
-         float dynDistToLight = dynPxlPosLightProj.z / lightRange;
          float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       #endif      
    

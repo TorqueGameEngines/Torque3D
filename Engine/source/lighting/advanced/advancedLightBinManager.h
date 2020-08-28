@@ -93,6 +93,8 @@ public:
    NamedTexTargetRef mDiffuseLightingTarget;
    GFXTexHandle      mDiffuseLightingTex;
 
+   GFXTextureTargetRef mLightingTargetRef;
+
    /// The shadow filter mode to use on shadowed light materials.
    static ShadowFilterMode smShadowFilterMode;
 

@@ -370,18 +370,16 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
    if (sceneColorTargetRef.isNull())
       return;
 
-   GFXTextureTargetRef lightingTargetRef = GFX->allocRenderToTextureTarget();
-
-   if (lightingTargetRef.isNull())
-      return;
+      if (mLightingTargetRef.isNull())
+      mLightingTargetRef = GFX->allocRenderToTextureTarget();
 
    //Do a quick pass to update our probes if they're dirty
    //PROBEMGR->updateDirtyProbes();
 
-   lightingTargetRef->attachTexture(GFXTextureTarget::Color0, sceneColorTargetRef->getTexture());
+   mLightingTargetRef->attachTexture(GFXTextureTarget::Color0, sceneColorTargetRef->getTexture());
 
    GFX->pushActiveRenderTarget();
-   GFX->setActiveRenderTarget(lightingTargetRef);
+   GFX->setActiveRenderTarget(mLightingTargetRef);
 
    GFX->setViewport(sceneColorTargetRef->getViewport());
 

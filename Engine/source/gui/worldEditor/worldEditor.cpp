@@ -2167,9 +2167,14 @@ void WorldEditor::on3DMouseUp( const Gui3DMouseEvent &event )
                // this may actually cause things to disappear from mSelected so do the loop
                // in reverse.  This will make the loop work even if items are removed as
                // we go along.
-               for( S32 i = mSelected->size() - 1; i >= 0; -- i )
-                  Con::executef( this, "onUnSelect", ( *mSelected )[ i ]->getIdString() );
-               
+               for (S32 i = mSelected->size() - 1; i >= 0; --i)
+               {
+                  //We'll explicitly inform the object of being unmarked as selected in the editor as well for outlier cases potentially not being told, such as mounted objects
+                  WorldEditor::markAsSelected((*mSelected)[i], false);
+
+                  Con::executef(this, "onUnSelect", (*mSelected)[i]->getIdString());
+               }
+
                mSelected->clear();
                mSelected->addObject( mPossibleHitObject );
                mSelected->storeCurrentCentroid();
@@ -2894,8 +2899,13 @@ void WorldEditor::clearSelection()
    // this may actually cause things to disappear from mSelected so do the loop
    // in reverse.  This will make the loop work even if items are removed as
    // we go along.
-   for( S32 i = mSelected->size() - 1; i >= 0; -- i )
-      Con::executef( this, "onUnSelect", ( *mSelected )[ i ]->getIdString() );
+   for (S32 i = mSelected->size() - 1; i >= 0; --i)
+   {
+      //We'll explicitly inform the object of being unmarked as selected in the editor as well for outlier cases potentially not being told, such as mounted objects
+      WorldEditor::markAsSelected((*mSelected)[i], false);
+
+      Con::executef(this, "onUnSelect", (*mSelected)[i]->getIdString());
+   }
 
    Con::executef(this, "onClearSelection");
    mSelected->clear();

@@ -87,12 +87,12 @@ singleton shaderData( Viz_SurfaceProperties )
    OGLVertexShaderFile = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
    OGLPixelShaderFile  = "./shaders/Viz_SurfacePropertiesP.glsl";
    
-   samplerNames[0] = "deferredTex";
-   samplerNames[1] = "colorBufferTex";
-   samplerNames[2] = "matinfoTex";
-   samplerNames[3] = "ssaoMaskTex";
-   samplerNames[4] = "$backBuffer";
-   samplerNames[5] = "glowBuffer";
+   samplerNames[0] = "$deferredBuffer";
+   samplerNames[1] = "$colorBuffer";
+   samplerNames[2] = "$matInfoBuffer";
+   samplerNames[3] = "$ssaoMaskTex";
+   samplerNames[4] = "$backbufferTex";
+   samplerNames[5] = "$glowBuffer";
 
    pixVersion = 2.0;
 };

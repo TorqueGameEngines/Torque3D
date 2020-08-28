@@ -58,7 +58,7 @@ function ShapeEditor::getObjectShapeFile( %this, %obj )
    // works for the vast majority of object types)
    %path = "";
    if ( %obj.isMemberOfClass( "TSStatic" ) )
-      %path = %obj.shapeName;
+      %path = %obj.shapeAsset !$= "" ? %obj.shapeAsset : %obj.shapeName;
    else if ( %obj.isMemberOfClass( "PhysicsShape" ) )
       %path = %obj.getDataBlock().shapeName;
    else if ( %obj.isMemberOfClass( "GameBase" ) )

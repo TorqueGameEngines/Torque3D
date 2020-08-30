@@ -374,6 +374,83 @@ function EditorSaveMissionAs( %levelAsset )
    //   Canvas.pushDialog(
 }
 
+function EditorAutoSaveMission()
+{
+   // just save the mission without renaming it
+   
+   if($Editor::AutoSaveIndex $= "" || $Editor::AutoSaveIndex $= "5")
+      $Editor::AutoSaveIndex = 1;
+   else
+      $Editor::AutoSaveIndex++;
+      
+   %autosaveFileName = "tools/autosave/" @ fileBase($Server::MissionFile) @ "_autosave" @ $Editor::AutoSaveIndex @ fileExt($Server::MissionFile);
+   
+   // first check for dirty and read-only files:
+   if((EWorldEditor.isDirty || ETerrainEditor.isMissionDirty) && !isWriteableFileName(%autosaveFileName))
+   {
+      return false;
+   }
+   
+   //TODO: Make Autosave work with terrains
+   /*if(ETerrainEditor.isDirty)
+   {
+      // Find all of the terrain files
+      initContainerTypeSearch($TypeMasks::TerrainObjectType);
+
+      while ((%terrainObject = containerSearchNext()) != 0)
+      {
+         if (!isWriteableFileName(%terrainObject.terrainFile))
+         {
+            if (toolsMessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
+               continue;
+            else
+               return false;
+         }
+      }
+   }*/
+  
+   // now write the terrain and mission files out:
+
+   if(EWorldEditor.isDirty || ETerrainEditor.isMissionDirty)
+      getScene(0).save(%autosaveFileName);
+      
+   //TODO: Make Autosave work with terrains
+   /*if(ETerrainEditor.isDirty)
+   {
+      // Find all of the terrain files
+      initContainerTypeSearch($TypeMasks::TerrainObjectType);
+
+      while ((%terrainObject = containerSearchNext()) != 0)
+      {
+         if(%terrainObject.terrainAsset !$= "")
+         {
+            //we utilize a terrain asset, so we'll update our dependencies while we're at it
+            %terrainObject.saveAsset();
+         }
+         else
+         {
+            %terrainObject.save(%terrainObject.terrainFile);
+         }
+      }
+   }
+
+   ETerrainPersistMan.saveDirty();*/
+      
+   // Give EditorPlugins a chance to save.
+   for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
+   {
+      %obj = EditorPluginSet.getObject(%i);
+      if ( %obj.isDirty() )
+         %obj.onSaveMission( %autosaveFileName );      
+   } 
+   
+   %autosaveInterval = EditorSettings.value("WorldEditor/AutosaveInterval", "5");
+   %autosaveInterval = %autosaveInterval * 60000; //convert to milliseconds from minutes
+   EditorGui.autosaveSchedule = schedule( %autosaveInterval, 0, "EditorAutoSaveMission" );
+   
+   return true;
+}
+
 function EditorOpenMission(%levelAsset)
 {
    if( EditorIsDirty())

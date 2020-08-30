@@ -93,6 +93,8 @@ function ConvexEditorPlugin::onWorldEditorStartup( %this )
    
    exec( "./convexEditorSettingsTab.ed.gui" );
    //ESettingsWindow.addTabPage( EConvexEditorSettingsPage );
+   
+   ESettingsWindow.addEditorSettingsPage("ConvexEditor", "Convex Editor");
 }
 
 function ConvexEditorPlugin::onActivated( %this )
@@ -209,6 +211,13 @@ function ConvexEditorPlugin::initSettings( %this )
    EditorSettings.beginGroup( "ConvexEditor", true );
    EditorSettings.setDefaultValue(  "MaterialName",         "Grid_512_Orange" );
    EditorSettings.endGroup();
+}
+
+function ESettingsWindow::getConvexEditorSettings(%this)
+{
+   SettingsInspector.startGroup("General");
+   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material Name", "string", "");
+   SettingsInspector.endGroup();
 }
 
 function ConvexEditorPlugin::readSettings( %this )

@@ -288,6 +288,10 @@ function ESettingsWindow::getAxisSettings(%this)
 
 function ESettingsWindow::getGeneralSettings(%this)
 {
+   SettingsInspector.startGroup("Autosave");
+   SettingsInspector.addSettingsField("WorldEditor/AutosaveInterval", "Autosave Interval(in minutes)", "int", "");
+   SettingsInspector.endGroup();
+   
    SettingsInspector.startGroup("Paths");
    SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Torsion Path", "filename", "");
    SettingsInspector.endGroup();
@@ -300,9 +304,9 @@ function ESettingsWindow::getGeneralSettings(%this)
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Layout");
-   SettingsInspector.addSettingsField("WorldEditor/Layout/LayoutMode", "Editor Layout Mode", "list", "This dictates which layout style the editor should use." @
+   /*SettingsInspector.addSettingsField("WorldEditor/Layout/LayoutMode", "Editor Layout Mode", "list", "This dictates which layout style the editor should use." @
                                                                                                       "WARNING - Modern layout is highlight experimental." @
-                                                                                                      "Updating this requires a restart of the program", "Classic,Modern");
+                                                                                                      "Updating this requires a restart of the program", "Classic,Modern");*/
    SettingsInspector.endGroup();
 }  
 
@@ -315,21 +319,21 @@ function ESettingsWindow::getCameraSettings(%this)
    
    //Based on currently loaded level(rootScene)
    SettingsInspector.startGroup(EditorSettings.value("WorldEditor/newLevelFile") @ " Camera");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Camera Speed Min", "float", "");
-   SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Camera Speed Max", "200", "");
+   SettingsInspector.addSettingsField("Camera/cameraMinSpeed", "Camera Speed Min", "float", "");
+   SettingsInspector.addSettingsField("Camera/cameraMaxSpeed", "Camera Speed Max", "200", "");
    SettingsInspector.endGroup();
 }  
 
 function ESettingsWindow::getNavEditorSettings(%this)
 {
    SettingsInspector.startGroup("Test Spawn");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Spawn Class", "list", "", "AIPlayer");
-   SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Datablock", "string", "");
+   SettingsInspector.addSettingsField("NavEditor/SpawnClass", "Spawn Class", "list", "", "AIPlayer");
+   SettingsInspector.addSettingsField("NavEditor/SpawnDatablock", "Datablock", "string", "");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Colors");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Hover Spline", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Select Spline", "colorI", "");
+   SettingsInspector.addSettingsField("NavEditor/HoverSplineColor", "Hover Spline", "colorI", "");
+   SettingsInspector.addSettingsField("NavEditor/SelectedSplineColor", "Select Spline", "colorI", "");
    SettingsInspector.endGroup();
 }
 
@@ -362,19 +366,37 @@ function ESettingsWindow::getSceneEditorSettings(%this)
    SettingsInspector.startGroup("Layout");
    SettingsInspector.addSettingsField("WorldEditor/forceSidebarToSide", "Force Sidebar Window(s) to side", "bool", "1");
    SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Behavior");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/snapGround", "Snap Objects to Ground", "bool", "0");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/TerrainSnapOffsetZ", "Add Offset of Terrain Snapping on Z Axis", "bool", "0");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/OffsetZValue", "Offset Z Value", "float", "0.01");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/snapSoft", "Do Soft Snap", "bool", "0");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/snapSoftSize", "Soft Snap Size", "bool", "2");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/boundingBoxCollision", "Use Bounding Box for Collision", "bool", "0");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/objectsUseBoxCenter", "Objects Use Box Center", "bool", "1");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterScalar", "Drop at Sceen Center Scalar", "bool", "1");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterMax", "Drop at Screen Center Max Dist.", "float", "100");
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Images");
+   SettingsInspector.addSettingsField("WorldEditor/Images/defaultHandle", "Default Handle Image", "string", "");
+   SettingsInspector.addSettingsField("WorldEditor/Images/lockedHandle", "Locked Handle Image", "string", "");
+   SettingsInspector.addSettingsField("WorldEditor/Images/selectHandle", "Selected Handle Image", "string", "");
+   SettingsInspector.endGroup();
 }
 
 function ESettingsWindow::getShapeEditorSettings(%this)
 {
    SettingsInspector.startGroup("Colors");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Sun Diffuse", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Sun Ambient", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Background", "colorI", "");
+   SettingsInspector.addSettingsField("ShapeEditor/SunDiffuseColor", "Sun Diffuse", "colorI", "");
+   SettingsInspector.addSettingsField("ShapeEditor/SunAmbientColor", "Sun Ambient", "colorI", "");
+   SettingsInspector.addSettingsField("ShapeEditor/BackgroundColor", "Background", "colorI", "");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Grid");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Grid Size", "float", "");
-   SettingsInspector.addSettingsField("WorldEditor/newLevelFile", "Grid Dimension", "vector2", "");
+   SettingsInspector.addSettingsField("ShapeEditor/GridSize", "Grid Size", "float", "");
+   SettingsInspector.addSettingsField("ShapeEditor/GridDimension", "Grid Dimension", "vector2", "");
    SettingsInspector.endGroup();
 }
 
@@ -484,7 +506,6 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/Browser/showOnlyPopulatedModule", "Show Only Modules with Assets in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
-   SettingsInspector.addSettingsField("Assets/Browser/previewTileSize", "Asset Preview Tile Size", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
    SettingsInspector.endGroup();

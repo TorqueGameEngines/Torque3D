@@ -118,6 +118,8 @@ function initializeAssetBrowser()
    Input::GetEventManager().subscribe( AssetBrowser, "DropFile" );
    Input::GetEventManager().subscribe( AssetBrowser, "EndDropFiles" );
    
+   AssetBrowserPlugin.initSettings();
+   
    if(!isObject(AssetImportSettings))
    {
       new Settings(AssetImportSettings) 
@@ -149,12 +151,6 @@ function initializeAssetBrowser()
       new ArrayObject(AssetSearchTerms);
       
    ImportAssetWindow.importingFilesArray = new ArrayObject();
-   
-   //if(!isObject(SessionImportAssetItems))
-   //   new ArrayObject(SessionImportAssetItems);
-      
-   //if(!isObject(ImportAssetItems))
-   //   new ArrayObject(ImportAssetItems);  
       
    ImportAssetWindow.importer = new AssetImporter();
       
@@ -169,6 +165,34 @@ function AssetBrowserPlugin::onWorldEditorStartup( %this )
 { 
    // Add ourselves to the toolbar.
    AssetBrowser.addToolbarButton();
+}
+
+function AssetBrowserPlugin::initSettings( %this )
+{
+   EditorSettings.beginGroup( "Assets", true );
+
+   EditorSettings.setDefaultValue( "AssetImporDefaultConfig",    "DefaultConfig" );
+   EditorSettings.setDefaultValue( "AutoImport", 1 );
+   
+   EditorSettings.beginGroup( "Browser" );
+   
+   EditorSettings.setDefaultValue( "showCoreModule", 0 );
+   EditorSettings.setDefaultValue( "showToolsModule", 0 );
+   EditorSettings.setDefaultValue( "showOnlyPopulatedModule", 0 );
+   EditorSettings.setDefaultValue( "showFolders", 1 );
+   EditorSettings.setDefaultValue( "showEmptyFolders", 1 );
+   EditorSettings.setDefaultValue( "previewTileSize", 1.0 );
+   
+   EditorSettings.endGroup();
+   EditorSettings.endGroup();
+
+   EditorSettings.beginGroup( "AssetManagement", true );
+   EditorSettings.beginGroup( "Assets" );
+
+   EditorSettings.setDefaultValue( "promptOnRename", 1 );
+   
+   EditorSettings.endGroup();
+   EditorSettings.endGroup();
 }
 
 function TSStatic::onConstructField(%this, %fieldName, %fieldLabel, %fieldTypeName, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)

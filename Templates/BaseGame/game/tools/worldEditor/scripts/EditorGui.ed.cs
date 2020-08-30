@@ -256,7 +256,10 @@ function EditorGui::init(%this)
    
    // make sure to show the default world editor guis
    EditorGui.bringToFront( EWorldEditor );
-   EWorldEditor.setVisible( false );       
+   EWorldEditor.setVisible( false );  
+   
+   // Start up the settings window
+   ESettingsWindow.startup();     
    
    // Call the startup callback on the editor plugins.   
    for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
@@ -266,9 +269,6 @@ function EditorGui::init(%this)
    }
    
    callOnModules("onWorldEditorStartup", "Tools");
-
-   // With everything loaded, start up the settings window
-   ESettingsWindow.startup();
    
    // Start up initial editor plugin.
    
@@ -1631,7 +1631,7 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
       %popup.item[ 0 ] = "Delete" TAB "" TAB "EditorMenuEditDelete();";
       %popup.item[ 1 ] = "Group" TAB "" TAB "EWorldEditor.addSimGroup( true );";
       %popup.item[ 2 ] = "-";
-      %popup.item[ 1 ] = "Make select a Sub-Level" TAB "" TAB "MakeSelectionASublevel();";
+      %popup.item[ 3 ] = "Make select a Sub-Level" TAB "" TAB "MakeSelectionASublevel();";
    }
    else
    {
@@ -1925,6 +1925,10 @@ function Editor::open(%this)
    
    if(EditorSettings.value("WorldEditor/Layout/LayoutMode", "Classic") $= "Modern")
       togglePanelLayout();
+      
+   %autosaveInterval = EditorSettings.value("WorldEditor/AutosaveInterval", "5");
+   %autosaveInterval = %autosaveInterval * 60000; //convert to milliseconds from minutes
+   EditorGui.autosaveSchedule = schedule( %autosaveInterval, 0, "EditorAutoSaveMission" );
 }
 
 function Editor::close(%this, %gui)

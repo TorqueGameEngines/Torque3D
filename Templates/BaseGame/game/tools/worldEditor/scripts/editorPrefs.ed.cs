@@ -32,7 +32,8 @@ EditorSettings.setDefaultValue(  "forceLoadDAE",            "0"               );
 EditorSettings.setDefaultValue(  "displayType",             $EditTsCtrl::DisplayTypePerspective );
 EditorSettings.setDefaultValue(  "orthoFOV",                "50" );
 EditorSettings.setDefaultValue(  "orthoShowGrid",           "1" );
-EditorSettings.setDefaultValue(  "currentEditor",           "WorldEditorInspectorPlugin" );
+EditorSettings.setDefaultValue(  "AutosaveInterval",        "5" );
+EditorSettings.setDefaultValue(  "forceSidebarToSide",        "1" );
 
 if( isFile( "C:/Program Files/Torsion/Torsion.exe" ) )
    EditorSettings.setDefaultValue(  "torsionPath",          "C:/Program Files/Torsion/Torsion.exe" );
@@ -172,6 +173,36 @@ EditorSettings.endGroup();
 EditorSettings.beginGroup( "TerrainPainter", true );
 EditorSettings.endGroup();
 
+//-------------------------------------
+
+//-------------------------------------
+EditorSettings.beginGroup( "Theme", true );
+EditorSettings.setDefaultValue(  "headerColor",             "50 49 48 255");
+EditorSettings.setDefaultValue(  "windowBackgroundColor",   "32 31 30 255");
+
+EditorSettings.setDefaultValue(  "tabsColor",               "37 36 35 255" );
+EditorSettings.setDefaultValue(  "tabsHLColor",             "50 49 48 255" );
+EditorSettings.setDefaultValue(  "tabsSELColor",            "59 58 57 255" );
+
+EditorSettings.setDefaultValue(  "dividerDarkColor",        "17 16 15 255");
+EditorSettings.setDefaultValue(  "dividerMidColor",         "50 49 48 255");
+EditorSettings.setDefaultValue(  "dividerLightColor",       "96 94 92 255");
+
+EditorSettings.setDefaultValue(  "headerTextColor",         "236 234 232 255");
+
+EditorSettings.setDefaultValue(  "fieldTextColor",          "178 175 172 255");
+EditorSettings.setDefaultValue(  "fieldTextHLColor",        "234 232 230 255");
+EditorSettings.setDefaultValue(  "fieldTextSELColor",       "255 255 255 255");
+EditorSettings.setDefaultValue(  "fieldTextNAColor",        "120 120 120 255");
+
+EditorSettings.setDefaultValue(  "fieldBGColor",            "59 58 57 255");
+EditorSettings.setDefaultValue(  "fieldBGHLColor",          "72 70 68 255");
+EditorSettings.setDefaultValue(  "fieldBGSELColor",         "100 98 96 255");
+
+EditorSettings.setDefaultValue(  "tooltipBGColor",          "43 43 43 255");
+EditorSettings.setDefaultValue(  "tooltipTextColor",        "255 255 255 255");
+EditorSettings.setDefaultValue(  "tooltipDivColor",         "72 70 68 255");
+EditorSettings.endGroup();
 //-------------------------------------
 
 //TODO: this doesn't belong here

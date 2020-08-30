@@ -19,6 +19,11 @@ function SelectAssetPath::showDialog(%this, %startingPath, %callback)
    %dataItem = SelectAssetPath-->folderTree.insertItem(0, "Data");
    %this.dirHandler.loadFolders("Data", %dataItem);
    
+   %this.dirHandler.expandTreeToAddress(%startingPath);
+   %id = %this.dirHandler.getFolderTreeItemFromAddress(%startingPath);
+   %this.dirHandler.treeCtrl.clearSelection();
+   %this.dirHandler.treeCtrl.selectItem(%id);
+   
    Canvas.pushDialog(SelectAssetPath);
 }
 
@@ -44,4 +49,10 @@ function SelectAssetPath::selectPath(%this)
    }
    
    Canvas.popDialog(SelectAssetPath);
+}
+
+function SelectAssetPath::newFolder(%this)
+{   
+   AssetBrowser_newFolderNameTxt.text = "NewFolder";
+   Canvas.pushDialog(AssetBrowser_newFolder);
 }

@@ -11,12 +11,21 @@ function AssetBrowser::doCreateNewFolder(%this)
    if(%newFolderName $= "")
       %newFolderName = "NewFolder";
       
+   if(SelectAssetPath.isAwake())
+   {
+      %currentAddressPath = SelectAssetPath-->folderTree.getItemValue(SelectAssetPath.selectedTreeItem) @ "/" @ SelectAssetPath-->folderTree.getItemText(SelectAssetPath.selectedTreeItem);
+   }
+   else
+   {
+      %currentAddressPath = AssetBrowser.dirHandler.currentAddress;
+   }
+      
    %newFolderIdx = "";
    %matched = true;
    %newFolderPath = "";
    while(%matched == true)
    {
-      %newFolderPath = AssetBrowser.dirHandler.currentAddress @ "/" @ %newFolderName @ %newFolderIdx;
+      %newFolderPath = %currentAddressPath @ "/" @ %newFolderName @ %newFolderIdx;
       if(!isDirectory(%newFolderPath))
       {
          %matched = false;
@@ -38,6 +47,10 @@ function AssetBrowser::doCreateNewFolder(%this)
    AssetBrowser.loadDirectories();
    
    %this.navigateTo(%newFolderPath);
+   
+   //On the off chance we're trying to select a path, we'll update the select path window too
+   if(SelectAssetPath.isAwake())
+      SelectAssetPath.showDialog(%newFolderPath, SelectAssetPath.callback);
 }
 
 function AssetBrowser::buildFolderPreview(%this, %assetDef, %previewData)

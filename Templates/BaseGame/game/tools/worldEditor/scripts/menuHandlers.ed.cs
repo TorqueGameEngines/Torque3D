@@ -364,14 +364,17 @@ function EditorSaveMissionAs( %levelAsset )
    $Server::MissionFile = %missionName;
    %Server::LevelAsset = %levelAssetDef;
    
+   //Update the scene name to comply to the new level's name
+   GetRootScene().name = %levelAssetDef.AssetName;
+   
    //Do the save
    EditorSaveMission();
    
-   //TODO: doublecheck that we rename the scene properly
-      
-   //Make sure we have a selected module so we can create our module
-   //if(AssetBrowser.selectedModule $= "")
-   //   Canvas.pushDialog(
+   //Last, we're going to load the level proper in the editor
+   updateEditorRecentLevelsList(%levelAsset);
+   
+   //If we've opened a valid level, clear the saveAs tag as it's not really applicable now
+   EditorGui.saveAs = false;
 }
 
 function EditorAutoSaveMission()
@@ -485,33 +488,7 @@ function EditorOpenMission(%levelAsset)
          %levelAssetId = %levelAsset;
       }
       
-      EditorSettings.setValue("WorldEditor/lastEditedLevel", %levelAssetId);
-      
-      //update the recent levels list
-      %recentLevels = EditorSettings.value("WorldEditor/recentLevelsList");
-      %recentCount = getTokenCount(%recentLevels, ",");
-      
-      %updatedRecentList = %levelAssetId;
-      
-      %updatedRecentCount = 1;
-      for(%i=0; %i < %recentCount; %i++)
-      {
-         %recentEntry = getToken(%recentLevels, ",", %i);
-         
-         if(%levelAssetId $= %recentEntry)
-            continue;
-         
-         %updatedRecentList = %updatedRecentList @ "," @ %recentEntry;
-         
-         %updatedRecentCount++;
-         
-         if(%updatedRecentCount == 10)
-            break;
-      }
-      
-      EditorSettings.setValue("WorldEditor/recentLevelsList", %updatedRecentList);
-      
-      updateRecentLevelsListing();
+      updateEditorRecentLevelsList(%levelAssetId);
       
       %filename = %assetDef.getlevelFile();
       
@@ -588,6 +565,37 @@ function MakeSelectionASublevel()
    }
    %a = EWorldEditor.getSelectedObject(0);
    %b = EWorldEditor.getSelectedObject(1);*/
+}
+
+function updateEditorRecentLevelsList(%levelAssetId)
+{
+   EditorSettings.setValue("WorldEditor/lastEditedLevel", %levelAssetId);
+      
+   //update the recent levels list
+   %recentLevels = EditorSettings.value("WorldEditor/recentLevelsList");
+   %recentCount = getTokenCount(%recentLevels, ",");
+   
+   %updatedRecentList = %levelAssetId;
+   
+   %updatedRecentCount = 1;
+   for(%i=0; %i < %recentCount; %i++)
+   {
+      %recentEntry = getToken(%recentLevels, ",", %i);
+      
+      if(%levelAssetId $= %recentEntry)
+         continue;
+      
+      %updatedRecentList = %updatedRecentList @ "," @ %recentEntry;
+      
+      %updatedRecentCount++;
+      
+      if(%updatedRecentCount == 10)
+         break;
+   }
+   
+   EditorSettings.setValue("WorldEditor/recentLevelsList", %updatedRecentList);
+   
+   updateRecentLevelsListing();
 }
 
 function EditorExportToCollada()

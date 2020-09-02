@@ -143,7 +143,7 @@ function directoryHandler::navigateTo(%this, %address, %historyNav, %selectionNa
    {
       %this.foreHistoryList.empty();  
       
-      if(%oldAddress !$= "") 
+      if(%this.oldAddress !$= "") 
          %this.prevHistoryList.push_front(%this.oldAddress);
    }
    

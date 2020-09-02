@@ -446,7 +446,10 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
                                    @ "EditorGui.setEditor(MaterialEditorPlugin); "
                                    @ "AssetBrowser.hideDialog();";*/
                                    
-   %previewData.doubleClickCommand = "AssetBrowser.editAsset(" @ %assetDef @ ");";
+   if(%this.selectMode)
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   else
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
    
    %test = %assetDef.materialDefinitionName.diffuseMapAsset[0];
    

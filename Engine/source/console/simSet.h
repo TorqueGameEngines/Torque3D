@@ -465,6 +465,8 @@ class SimGroup: public SimSet
 
       virtual bool processArguments( S32 argc, ConsoleValueRef *argv );
 
+      virtual SimObject* getObject(const S32& index);
+
       DECLARE_CONOBJECT( SimGroup );
 };
 

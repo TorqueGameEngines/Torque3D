@@ -511,8 +511,9 @@ bool TSStatic::_createShape()
    }
 
    //Set up the material slot vars for easy manipulation
-   S32 materialCount = mShape->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
+   /*S32 materialCount = mShape->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
 
+   //Temporarily disabled until fixup of materialName->assetId lookup logic is sorted for easy persistance
    if (isServerObject())
    {
       char matFieldName[128];
@@ -526,15 +527,13 @@ bool TSStatic::_createShape()
 
          setDataField(matFld, NULL, materialname);
       }
-   }
+   }*/
 
    return true;
 }
 
 void TSStatic::onDynamicModified(const char* slotName, const char* newValue)
 {
-   bool isSrv = isServerObject();
-
    if (FindMatch::isMatch("materialslot*", slotName, false))
    {
       if (!getShape())

@@ -4,6 +4,11 @@ function AssetBrowser::buildSoundAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = %assetDef.soundFilePath;
    //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
    
+   if(%this.selectMode)
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   else
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+   
    %previewData.previewImage = "tools/assetBrowser/art/soundIcon";   
    
    %previewData.assetFriendlyName = %assetDef.assetName;

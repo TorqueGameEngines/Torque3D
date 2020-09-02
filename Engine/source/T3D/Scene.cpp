@@ -253,9 +253,9 @@ bool Scene::saveScene(StringTableEntry fileName)
 
    //Next, lets build out our 
    Vector<StringTableEntry> utilizedAssetsList;
-   for (U32 i = 0; i < mPermanentObjects.size(); i++)
+   for (U32 i = 0; i < size(); i++)
    {
-      mPermanentObjects[i]->getUtilizedAssets(&utilizedAssetsList);
+      getUtilizedAssetsFromSceneObject(getObject(i), &utilizedAssetsList);
    }
 
    for (U32 i = 0; i < utilizedAssetsList.size(); i++)
@@ -266,6 +266,27 @@ bool Scene::saveScene(StringTableEntry fileName)
    saveSuccess = levelAssetDef->saveAsset();
 
    return saveSuccess;
+}
+
+void Scene::getUtilizedAssetsFromSceneObject(SimObject* object, Vector<StringTableEntry>* usedAssetsList)
+{
+   SceneObject* obj = dynamic_cast<SceneObject*>(object);
+   if(obj)
+      obj->getUtilizedAssets(usedAssetsList);
+
+   SimGroup* group = dynamic_cast<SimGroup*>(object);
+   if (group)
+   {
+      for (U32 c = 0; c < group->size(); c++)
+      {
+         SceneObject* childObj = dynamic_cast<SceneObject*>(group->getObject(c));
+         if (childObj)
+            childObj->getUtilizedAssets(usedAssetsList);
+
+         //Recurse down
+         getUtilizedAssetsFromSceneObject(childObj, usedAssetsList);
+      }
+   }
 }
 
 //

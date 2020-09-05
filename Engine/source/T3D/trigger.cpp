@@ -929,26 +929,3 @@ DefineEngineMethod( Trigger, getObject, S32, ( S32 index ),,
    else
       return object->getObject(U32(index))->getId();
 }
-
-IMPLEMENT_CO_NETOBJECT_V1(AITrigger);
-AITrigger::AITrigger()
-{
-   for (S32 i = 0; i < AI_NAVCHOICES; i++)
-   {
-      mProbability[i] = 100 / AI_NAVCHOICES;
-      mWaypoints[i] = StringTable->insert("-1");
-   }
-};
-
-AITrigger::~AITrigger()
-{
-};
-
-void AITrigger::initPersistFields()
-{
-   addField("waypoint", TypeString, Offset(mWaypoints, AITrigger), AI_NAVCHOICES,
-      "waypoint name\"\n");
-   addField("probability", TypeS32, Offset(mProbability, AITrigger), AI_NAVCHOICES, "chance of picking this object to path to.");
-
-   Parent::initPersistFields();
-}

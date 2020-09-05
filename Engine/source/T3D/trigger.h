@@ -175,20 +175,5 @@ inline GameBase* Trigger::getObject(const U32 index)
    return mObjects[index];
 }
 
-#define AI_NAVCHOICES 8
-class AITrigger : public Trigger
-{
-   typedef Trigger Parent;
-public:
-   AITrigger();
-   ~AITrigger();
-
-   StringTableEntry mWaypoints[AI_NAVCHOICES];
-   S32 mProbability[AI_NAVCHOICES];
-   static void initPersistFields();
-   // SimObject
-   DECLARE_CONOBJECT(AITrigger);
-};
-
 #endif // _H_TRIGGER
 

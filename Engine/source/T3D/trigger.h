@@ -83,6 +83,11 @@ class Trigger : public GameBase
    U32               mCurrTick;
    Convex            *mConvexList;
 
+   bool              mTripOnce;
+   bool              mTripped;
+   S32               mTrippedBy;
+
+   String            mTripCondition;
    String            mEnterCommand;
    String            mLeaveCommand;
    String            mTickCommand;
@@ -105,6 +110,9 @@ class Trigger : public GameBase
 
    static bool smRenderTriggers;
    bool testObject(GameBase* enter);
+   bool testTrippable();
+   bool testCondition();
+   bool evalCmD(String*);
    void processTick(const Move *move);
    void interpolateTick(F32 delta);
 
@@ -113,7 +121,6 @@ class Trigger : public GameBase
    static bool setEnterCmd(void *object, const char *index, const char *data);
    static bool setLeaveCmd(void *object, const char *index, const char *data);
    static bool setTickCmd(void *object, const char *index, const char *data);
-
   public:
    Trigger();
    ~Trigger();
@@ -167,6 +174,21 @@ inline GameBase* Trigger::getObject(const U32 index)
 
    return mObjects[index];
 }
+
+#define AI_NAVCHOICES 8
+class AITrigger : public Trigger
+{
+   typedef Trigger Parent;
+public:
+   AITrigger();
+   ~AITrigger();
+
+   StringTableEntry mWaypoints[AI_NAVCHOICES];
+   S32 mProbability[AI_NAVCHOICES];
+   static void initPersistFields();
+   // SimObject
+   DECLARE_CONOBJECT(AITrigger);
+};
 
 #endif // _H_TRIGGER
 

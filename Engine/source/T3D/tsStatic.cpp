@@ -1692,8 +1692,9 @@ void TSStatic::updateMaterials()
 
 void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if(!mShapeAsset.isNull())
-      usedAssetsList->push_back_unique(mShapeAssetId);
+   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != StringTable->insert("Core_Rendering:noShape"))
+      usedAssetsList->push_back_unique(mShapeAsset->getAssetId());
+
 }
 
 //------------------------------------------------------------------------

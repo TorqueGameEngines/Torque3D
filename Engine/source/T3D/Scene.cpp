@@ -260,7 +260,14 @@ bool Scene::saveScene(StringTableEntry fileName)
 
    for (U32 i = 0; i < utilizedAssetsList.size(); i++)
    {
-      levelAssetDef->addAssetDependencyField("staticObjectAssetDependency", utilizedAssetsList[i]);
+      char depSlotName[50];
+      dSprintf(depSlotName, sizeof(depSlotName), "%s%d", "staticObjectAssetDependency", i);
+
+      char depValue[255];
+      dSprintf(depValue, sizeof(depValue), "@Asset=%s", utilizedAssetsList[i]);
+
+      levelAssetDef->setDataField(StringTable->insert(depSlotName), NULL, StringTable->insert(depValue));
+
    }
 
    saveSuccess = levelAssetDef->saveAsset();
@@ -280,8 +287,6 @@ void Scene::getUtilizedAssetsFromSceneObject(SimObject* object, Vector<StringTab
       for (U32 c = 0; c < group->size(); c++)
       {
          SceneObject* childObj = dynamic_cast<SceneObject*>(group->getObject(c));
-         if (childObj)
-            childObj->getUtilizedAssets(usedAssetsList);
 
          //Recurse down
          getUtilizedAssetsFromSceneObject(childObj, usedAssetsList);

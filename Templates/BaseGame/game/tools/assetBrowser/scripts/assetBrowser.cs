@@ -593,14 +593,14 @@ function AssetBrowser::loadDirectories( %this )
    %this.loadCreatorClasses();
    
    //If set to, show core
-   if(%this.coreModulesFilter)
+   if(EditorSettings.value("Assets/Browser/showCoreModule", false) == 1)
    {
       %coreItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "Core");
       %this.dirHandler.loadFolders("Core", %coreItem);
    }
    
    //If set to, show tools
-   if(%this.toolsModulesFilter)
+   if(EditorSettings.value("Assets/Browser/showToolsModule", false) == 1)
    {
       %toolsItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "Tools");
       %this.dirHandler.loadFolders("Tools", %toolsItem);

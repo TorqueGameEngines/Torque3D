@@ -27,9 +27,15 @@
 
 uniform sampler2D inputTex;
 
+in vec4 modColor;
+
 out vec4 OUT_col;
 
 void main()
 {
-   OUT_col = hdrEncode( vec4(1,1,1,1) );
+   vec4 color = texture(inputTex, IN_uv0);
+   
+   color *= modColor;
+   
+   OUT_col = hdrEncode( color );
 }

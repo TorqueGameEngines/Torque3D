@@ -250,6 +250,7 @@
          isContainer = "0";
          canSave = "1";
          canSaveDynamicFields = "0";
+         command="SelectAssetPath.selectPath();";
       };
       new GuiButtonCtrl() {
          text = "New Folder";

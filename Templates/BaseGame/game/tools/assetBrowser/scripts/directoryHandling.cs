@@ -180,7 +180,23 @@ function directoryHandler::navigateHistoryBack(%this)
 
 function directoryHandler::getModuleFromAddress(%this, %address)
 {
-   //break down the address
+   %moduleList = ModuleDatabase.findModules();
+   
+   for(%i=0; %i < getWordCount(%moduleList); %i++)
+   {
+      %module = getWord(%moduleList, %i);
+      %modulePath = makeRelativePath(%module.ModulePath);
+      
+      //We don't want to add stuff directly to the root core or tools modules
+      if(%modulePath $= "Core" || %modulePath $= "Tools")
+         continue;
+         
+      if(startsWith(%address, %modulePath))
+      {
+         return %module;
+      }
+   }
+   /*//break down the address
    %folderCount = getTokenCount(%address, "/");
       
    for(%f=0; %f < %folderCount; %f++)
@@ -190,7 +206,7 @@ function directoryHandler::getModuleFromAddress(%this, %address)
       %module = ModuleDatabase.findModule(%folderName);
       if(%module !$= "")
          return %module;
-   }
+   }*/
    
    return "";
 }

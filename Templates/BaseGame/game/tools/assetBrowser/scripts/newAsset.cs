@@ -156,7 +156,7 @@ function CreateNewAsset()
    //To enusre that any in-progress-of-being-edited field applies it's changes
    %lastEditField = AssetBrowser_newAsset.getFirstResponder(); 
    
-   if(%lastEditField.isMethod("forceValidateText"))
+   if(isObject(%lastEditField) && %lastEditField.isMethod("forceValidateText"))
       %lastEditField.forceValidateText();
    
    %assetName = AssetBrowser.newAssetSettings.assetName;
@@ -192,6 +192,9 @@ function CreateNewAsset()
 	//Load it
 	%moduleDef = ModuleDatabase.findModule(%moduleName,1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
+	//For utilities' sake, we'll acquire it immediately so it can be utilized 
+	//without delay if it's got any script/dependencies stuff
+	AssetDatabase.acquireAsset("\"" @ %moduleName @ ":" @ %assetName @ "\"");
 	
 	if(AssetBrowser_newAsset.callbackFunc !$= "")
 	{

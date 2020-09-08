@@ -25,7 +25,13 @@
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
 
+uniform float4 modColor;
+
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 {
-   return hdrEncode( float4(1,1,1,1) );
+   float4 color = TORQUE_TEX2D( inputTex, IN.uv0 );
+
+   color *= modColor;
+
+   return hdrEncode( color );
 }

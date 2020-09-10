@@ -2,6 +2,7 @@ function AssetBrowser::createStateMachineAsset(%this)
 {
    %assetName = AssetBrowser.newAssetSettings.assetName;
    %moduleName = AssetBrowser.selectedModule;
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
       
    %assetQuery = new AssetQuery();
    
@@ -20,8 +21,8 @@ function AssetBrowser::createStateMachineAsset(%this)
    
    %assetQuery.delete();
    
-   %tamlpath = "data/" @ %moduleName @ "/stateMachines/" @ %assetName @ ".asset.taml";
-   %smFilePath = "data/" @ %moduleName @ "/stateMachines/" @ %assetName @ ".xml";
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %smFilePath = %assetPath @ %assetName @ ".xml";
    
    %asset = new StateMachineAsset()
    {

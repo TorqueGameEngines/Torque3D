@@ -20,12 +20,14 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+$PostFX::@@::modColor = "1 1 1 1";
+
 singleton ShaderData( @@_Shader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= $Core:modulePath @ "@@P.hlsl";   
+   DXPixelShaderFile 	= "./@@P.hlsl";   
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = $Core:modulePath @ "@@P.glsl";
+   OGLPixelShaderFile   = "./@@P.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -55,6 +57,7 @@ singleton GFXStateBlockData( @@_StateBlock )
 
 function @@::setShaderConsts( %this )
 {
+   %this.setShaderConst( "$modColor", $PostFX::@@::modColor );
 }
 
 function @@::preProcess( %this )
@@ -74,6 +77,7 @@ function @@::onEnabled( %this )
 
 function @@::onDisabled( %this )
 {
+   return true;
 }
 
 //This is used to populate the PostFXEditor's settings so the post FX can be edited
@@ -82,8 +86,19 @@ function @@::onDisabled( %this )
 function @@::populatePostFXSettings(%this)
 {
    PostEffectEditorInspector.startGroup("@@ - General");
-   PostEffectEditorInspector.addField("$PostFXManager::Settings::Enabled@@", "Enabled", "bool", "", $PostFXManager::PostFX::Enable@@, "");
+   PostEffectEditorInspector.addCallbackField("$PostFX::@@::Enabled", "Enabled", "bool", "", $PostFX::@@::Enabled, "", "toggle@@");
+   PostEffectEditorInspector.addField("$PostFX::@@::modColor", "Modifier Color", "colorI", "", $PostFX::@@::modColor, "");
    PostEffectEditorInspector.endGroup();
+}
+
+//This is called back from our callbackField defined in populatePostFXSettings to
+//Allow us to easily toggle the postFX and have it respond immediately
+function PostEffectEditorInspector::toggle@@(%this)
+{
+   if($PostFX::@@::Enabled)
+      @@.enable();
+   else
+      @@.disable();
 }
 
 //This function pair(applyFromPreset and settingsApply) are done the way they are, with the separated variables
@@ -91,10 +106,7 @@ function @@::populatePostFXSettings(%this)
 //when rendering. This allows us to modify things but still leave room for reverting or temporarily applying them
 function @@::applyFromPreset(%this)
 {
-   //@@ Settings
-   $PostFXManager::PostFX::Enable@@ = $PostFXManager::Settings::Enabled@@;
-
-   if($PostFXManager::PostFX::Enable@@)
+   if($PostFX::@@::Enabled)
       %this.enable();
    else
       %this.disable();
@@ -102,7 +114,6 @@ function @@::applyFromPreset(%this)
 
 function @@::settingsApply(%this)
 {
-   $PostFXManager::Settings::Enabled@@ = $PostFXManager::PostFX::Enable@@;
 }
 
 //Our actual postFX
@@ -126,7 +137,7 @@ singleton PostEffect( @@ )
    shader = @@_Shader;
    stateBlock = @@_StateBlock;
    texture[0] = "$backBuffer";
-   target = "$outTex";
+   target = "$backBuffer";
    targetFormat = "GFXFormatR16G16B16A16F"; 
    targetScale = "1 1";
 };

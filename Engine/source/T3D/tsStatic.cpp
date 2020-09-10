@@ -511,8 +511,9 @@ bool TSStatic::_createShape()
    }
 
    //Set up the material slot vars for easy manipulation
-   S32 materialCount = mShape->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
+   /*S32 materialCount = mShape->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
 
+   //Temporarily disabled until fixup of materialName->assetId lookup logic is sorted for easy persistance
    if (isServerObject())
    {
       char matFieldName[128];
@@ -526,15 +527,13 @@ bool TSStatic::_createShape()
 
          setDataField(matFld, NULL, materialname);
       }
-   }
+   }*/
 
    return true;
 }
 
 void TSStatic::onDynamicModified(const char* slotName, const char* newValue)
 {
-   bool isSrv = isServerObject();
-
    if (FindMatch::isMatch("materialslot*", slotName, false))
    {
       if (!getShape())
@@ -1693,8 +1692,9 @@ void TSStatic::updateMaterials()
 
 void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if(!mShapeAsset.isNull())
-      usedAssetsList->push_back_unique(mShapeAssetId);
+   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != StringTable->insert("Core_Rendering:noShape"))
+      usedAssetsList->push_back_unique(mShapeAsset->getAssetId());
+
 }
 
 //------------------------------------------------------------------------

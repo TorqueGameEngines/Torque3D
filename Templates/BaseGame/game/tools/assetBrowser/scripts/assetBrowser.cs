@@ -290,10 +290,12 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    {
       //we're not in selection mode, so just hide the select button
       %this-->SelectButton.setHidden(true);  
+      %this.selectMode = 0;
    }
    else
    {
       %this-->SelectButton.setHidden(false); 
+      %this.selectMode = 1;
    }
 
    AssetBrowser.loadDirectories();
@@ -486,38 +488,15 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %previewButton.moduleName = %moduleName;
    %previewButton.assetType = %assetType;
    
-   if(%assetType $= "ShapeAsset")
-   {
-      %previewButton.iconBitmap = "tools/assetBrowser/art/genericAssetIcon";
-      //%previewButton.profile = AssetBrowserPreviewShapeAsset;
-      //%previewButton-->shapeAssetView.setModel(%previewImage);
-      //%previewButton-->shapeAssetView.extent = %previewSize;
-      
-   }
-   else
-   {
-      %previewButton.iconBitmap = %this.previewData.previewImage;
-      //%previewButton-->assetPreviewImage.extent = %previewSize;
-   }
+   %previewButton.iconBitmap = %this.previewData.previewImage;
    
    %previewButton.profile = "AssetBrowserPreview" @ %previewButton.assetType;
-   
-   //%previewButton-->AssetPreviewBorderButton.extent = %previewSize;
-   
-   //%previewButton-->AssetPreviewButton.internalName = %this.previewData.assetName@"Border";
-   //%previewButton-->Button.extent = %previewSize.x + %previewBounds SPC %previewSize.y + 24;
    %previewButton.tooltip = %this.previewData.tooltip;
    %previewButton.Command = "AssetBrowser.updateSelection( $ThisControl.assetName, $ThisControl.moduleName );";
    %previewButton.altCommand = %doubleClickCommand;
-   //%previewButton-->AssetPreviewButton.icon = %this.previewData.previewImage;
    
    %previewButton.text = %this.previewData.assetName;
    %previewButton.text.originalAssetName = %this.previewData.assetName;
-   
-   //%previewButton-->AssetNameLabel.position = 0 SPC %previewSize.y + %previewBounds - 16;
-   //%previewButton-->AssetNameLabel.extent = %previewSize.x + %previewBounds SPC 16;
-   //%previewButton-->AssetNameLabel.text = %this.previewData.assetName;
-   //%previewButton-->AssetNameLabel.originalAssetName = %this.previewData.assetName;
 
    // add to the gui control array
    AssetBrowser-->assetList.add(%previewButton);
@@ -690,14 +669,7 @@ function AssetBrowser::loadDirectories( %this )
 
 function AssetBrowser::updateSelection( %this, %asset, %moduleName )
 {
-   //If we're navigating a folder, just nav to it and be done
-   /*if(isDirectory(%moduleName))
-   {
-      AssetBrowser.navigateTo(%moduleName @ "/" @ %asset);
-      return;
-   }*/
-   
-   %isAssetBorder = 0;
+   /*%isAssetBorder = 0;
    eval("%isAssetBorder = isObject(AssetBrowser-->"@%asset@"Border);");
    if( %isAssetBorder )
    {
@@ -709,14 +681,24 @@ function AssetBrowser::updateSelection( %this, %asset, %moduleName )
    if( %isAssetBorderPrevious )
    {
       eval( "AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border.setStateOn(0);");
-   }
+   }*/
    
-   AssetBrowser.selectedMaterial = %asset;
+   //If we had an existing selected assetDef, clear the reference
+   if(isObject(AssetBrowser.selectedAssetDef))
+      AssetDatabase.releaseAsset(AssetBrowser.selectedAssetDef.getAssetId());
+   
+   //AssetBrowser.selectedMaterial = %asset;
    AssetBrowser.selectedAsset = %moduleName@":"@%asset;
+   
+   //If it's got slashes, it's a path so it's actually a folder item, not an asset
+   if(strstr(%moduleName, "/") != -1)
+      return;
+      
+   //Otherwise, it's an asset so we'll select the definition while we're at it
    AssetBrowser.selectedAssetDef = AssetDatabase.acquireAsset(AssetBrowser.selectedAsset);
    //AssetBrowser.selectedPreviewImagePath = %previewImagePath;
    
-   %this.prevSelectedMaterialHL = %asset;
+   //%this.prevSelectedMaterialHL = %asset;
 }
 
 function AssetBrowser::loadCollectionSets(%this)
@@ -916,7 +898,7 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
 //also need to update instances... i guess which is the tricky part....
 function AssetBrowser::showDeleteDialog( %this )
 {
-   %material = AssetBrowser.selectedMaterial;
+   %material = AssetBrowser.selectedAsset;
    %secondFilter = "MaterialFilterMappedArray";
    %secondFilterName = "Mapped";
    
@@ -1891,20 +1873,20 @@ function AssetBrowser::navigateTo(%this, %address, %historyNav)
       %address = strreplace(%address, "/", "");
       
    //Don't bother navigating if it's to the place we already are
-   if(AssetBrowser.dirHandler.currentAddress !$= %address)
+   if(%this.dirHandler.currentAddress !$= %address)
    {
-      AssetBrowser.dirHandler.navigateTo(%address, %historyNav);
+      %this.dirHandler.navigateTo(%address, %historyNav);
          
       //%this.updateNavigationBreadcrumb(%address);
       
-      AssetBrowser.lastValidNavPath = %address;
-      AssetBrowser-->navPath.setText(%address);
+      %this.lastValidNavPath = %address;
+      %this-->navPath.setText(%address);
       
-      %module = AssetBrowser.dirHandler.getModuleFromAddress(%address);
+      %module = %this.dirHandler.getModuleFromAddress(%address);
       if(%module !$= "")
       {
          //legit module, so set it as current target
-         AssetBrowser.SelectedModule = %module.moduleId;
+         %this.SelectedModule = %module.moduleId;
       }
       
       if(%this.hasLooseFilesInDir())
@@ -1927,12 +1909,17 @@ function AssetBrowser::navigateHistoryForward(%this)
    
    %this.updateNavigationBreadcrumb();
    
+   %address = %this.dirHandler.currentAddress;
+   
    %module = AssetBrowser.dirHandler.getModuleFromAddress(%address);
    if(%module !$= "")
    {
       //legit module, so set it as current target
-      AssetBrowser.SelectedModule = %module.moduleId;
+      %this.SelectedModule = %module.moduleId;
    }
+   
+   %this.lastValidNavPath = %address;
+   %this-->navPath.setText(%address);
    
    %this.rebuildAssetArray();
 }
@@ -1943,12 +1930,17 @@ function AssetBrowser::navigateHistoryBack(%this)
       
    %this.updateNavigationBreadcrumb();
    
-   %module = AssetBrowser.dirHandler.getModuleFromAddress(%address);
+   %address = %this.dirHandler.currentAddress;
+   
+   %module = %this.dirHandler.getModuleFromAddress(%address);
    if(%module !$= "")
    {
       //legit module, so set it as current target
-      AssetBrowser.SelectedModule = %module.moduleId;
+      %this.SelectedModule = %module.moduleId;
    }
+   
+   %this.lastValidNavPath = %address;
+   %this-->navPath.setText(%address);
    
    %this.rebuildAssetArray();
 }

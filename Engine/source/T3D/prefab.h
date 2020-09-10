@@ -100,6 +100,8 @@ public:
 
    bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
 
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+
 protected:
 
    void _closeFile( bool removeFileNotify );

@@ -68,6 +68,7 @@ EditorSettings.setDefaultValue(  "boundingBoxCollision",    "0"               );
 EditorSettings.setDefaultValue(  "objectsUseBoxCenter",     "1"               );
 EditorSettings.setDefaultValue(  "dropAtScreenCenterScalar","1.0"             );
 EditorSettings.setDefaultValue(  "dropAtScreenCenterMax",   "100.0"           );
+EditorSettings.setDefaultValue(  "UseGroupCenter",          "0"               );
 EditorSettings.endGroup();
 
 EditorSettings.beginGroup( "Render" );

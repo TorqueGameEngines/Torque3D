@@ -77,6 +77,8 @@ public:
    //
    Vector<SceneObject*> getObjectsByClass(String className, bool checkSubscenes);
 
+   void getUtilizedAssetsFromSceneObject(SimObject* object, Vector<StringTableEntry>* usedAssetsList);
+
    template <class T>
    Vector<T*> getObjectsByClass(bool checkSubscenes);
 

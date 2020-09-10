@@ -558,6 +558,19 @@ bool Prefab::buildExportPolyList(ColladaUtils::ExportData* exportData, const Box
    return true;
 }
 
+void Prefab::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
+{
+   Vector<SceneObject*> foundObjects;
+   mChildGroup->findObjectByType(foundObjects);
+
+   for (S32 i = 0; i < foundObjects.size(); i++)
+   {
+      SceneObject* child = foundObjects[i];
+
+      child->getUtilizedAssets(usedAssetsList);
+   }
+}
+
 ExplodePrefabUndoAction::ExplodePrefabUndoAction( Prefab *prefab )
 : UndoAction( "Explode Prefab" )
 {

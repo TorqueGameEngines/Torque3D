@@ -45,6 +45,7 @@ function ESnapOptions::ToggleVisibility()
    }
    else
    {
+      EWorldEditor.syncGui();
       ESnapOptions.setVisible(true);
       ESnapOptions.selectWindow();
       ESnapOptions.setCollapseGroup(false);

@@ -1423,7 +1423,7 @@ void TerrainBlock::getMinMaxHeight( F32 *minHeight, F32 *maxHeight ) const
 void TerrainBlock::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
    if (!mTerrainAsset.isNull())
-      usedAssetsList->push_back_unique(mTerrainAssetId);
+      usedAssetsList->push_back_unique(mTerrainAsset->getAssetId());
 }
 //-----------------------------------------------------------------------------
 // Console Methods

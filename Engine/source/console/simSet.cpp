@@ -843,6 +843,17 @@ bool SimGroup::processArguments(S32, ConsoleValueRef *argv)
    return true;
 }
 
+
+SimObject* SimGroup::getObject(const S32& index)
+{
+   if (index < 0 || index >= size())
+   {
+      Con::errorf("Set::getObject - index out of range.");
+      return NULL;
+   }
+
+   return (*this)[index];
+}
 //-----------------------------------------------------------------------------
 
 SimObject* SimGroupIterator::operator++()

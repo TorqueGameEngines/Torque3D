@@ -359,8 +359,6 @@ function ESettingsWindow::getSceneEditorSettings(%this)
    SettingsInspector.startGroup("Misc");
    //SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Force Load DAE", "bool", "");
    SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Force Load DAE", "bool", "");
-   SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterScalar", "Screen Center Scalar", "float", "");
-   SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterMax", "Screen Center Max", "float", "");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Layout");
@@ -377,6 +375,7 @@ function ESettingsWindow::getSceneEditorSettings(%this)
    SettingsInspector.addSettingsField("WorldEditor/Tools/objectsUseBoxCenter", "Objects Use Box Center", "bool", "1");
    SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterScalar", "Drop at Sceen Center Scalar", "bool", "1");
    SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterMax", "Drop at Screen Center Max Dist.", "float", "100");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/UseGroupCenter", "Use Group Center when snapping", "bool", "0");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Images");

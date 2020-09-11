@@ -7,9 +7,10 @@ function AssetBrowser::createCubemapAsset(%this)
    %modulePath = "data/" @ %moduleName;
       
    %assetName = AssetBrowser.newAssetSettings.assetName;
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";  
    
-   %tamlpath = %modulePath @ "/cubemaps/" @ %assetName @ ".asset.taml";
-   %shapeFilePath = %modulePath @ "/cubemaps/" @ %assetName @ ".dae";
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %shapeFilePath = %assetPath @ %assetName @ ".dae";
    
    %asset = new CubemapAsset()
    {

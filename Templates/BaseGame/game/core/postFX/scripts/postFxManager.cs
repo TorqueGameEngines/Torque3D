@@ -48,7 +48,7 @@ $PostFXManager::fileFilter = "Post Effect Presets|*.postfxpreset.cs";
 // Enable / disable PostFX when loading presets or just apply the settings?
 $PostFXManager::forceEnableFromPresets = true;
 
-$PostFXManager::defaultPreset  = "./default.postfxpreset.cs";
+$PostFXManager::defaultPreset  = "core/postFX/scripts/default.postfxpreset.cs";
 
 $PostFXManager::currentPreset = "";
 
@@ -100,21 +100,28 @@ function PostFXManager::savePresetHandler( %filename )
    %filename = makeRelativePath( %filename, getMainDotCsDir() );
    if(strStr(%filename, ".") == -1)
       %filename = %filename @ $PostFXManager::fileExtension;
+      
+   $PostFXManager::currentPresetFile = %filename;
+   $PostFXManager::startedPresetFileSave = false;
                
    %count = PostFXManager.Count();
    for(%i=0; %i < %count; %i++)
    {
       %postEffect = PostFXManager.getKey(%i);  
       
-      if(isObject(%postEffect) && %postEffect.isMethod("settingsApply"))
+      if(isObject(%postEffect) && %postEffect.isMethod("savePresetSettings"))
       {     
-         %postEffect.settingsApply();
+         %postEffect.savePresetSettings();
       }
    }
    
-   export("$PostFXManager::Settings::*", %filename, false);
-
    postVerbose("% - PostFX Manager - Save complete. Preset saved at : " @ %filename);
+}
+
+function PostFXManager::savePresetSetting(%setting)
+{
+   export(%setting, $PostFXManager::currentPresetFile, $PostFXManager::startedPresetFileSave);
+   $PostFXManager::startedPresetFileSave = true;
 }
 
 function PostFXManager::settingsApplyDefaultPreset(%this)

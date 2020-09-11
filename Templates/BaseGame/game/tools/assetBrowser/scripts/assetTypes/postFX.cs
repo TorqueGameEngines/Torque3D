@@ -1,14 +1,14 @@
 function AssetBrowser::createPostEffectAsset(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
-   %modulePath = "data/" @ %moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;      
+   %assetName = AssetBrowser.newAssetSettings.assetName;   
+   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    
-   %tamlpath = %modulePath @ "/postFXs/" @ %assetName @ ".asset.taml";
-   %scriptPath = %modulePath @ "/postFXs/" @ %assetName @ ".cs";
-   %hlslPath = %modulePath @ "/postFXs/" @ %assetName @ "P.hlsl";
-   %glslPath = %modulePath @ "/postFXs/" @ %assetName @ "P.glsl";
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %scriptPath = %assetPath @ %assetName @ ".cs";
+   %hlslPath = %assetPath @ %assetName @ "P.hlsl";
+   %glslPath = %assetPath @ %assetName @ "P.glsl";
    
    %asset = new PostEffectAsset()
    {
@@ -24,13 +24,6 @@ function AssetBrowser::createPostEffectAsset(%this)
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "PostEffectAsset");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
-	
    %file = new FileObject();
 	%templateFile = new FileObject();
 	

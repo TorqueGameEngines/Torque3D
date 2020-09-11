@@ -41,7 +41,7 @@
 $pref::Client::EnableDatablockCache = true;
 $pref::Client::DatablockCacheFilename = "data/cache/client/datablock_cache_c.dbc";
 
-function clientCmdMissionStartPhase1_LoadCache(%seq, %missionName)
+function clientCmdMissionStartPhase1_LoadCache(%seq, %levelAsset)
 {
   if ($pref::Client::EnableDatablockCache && $loadFromDatablockCache)
   {
@@ -57,16 +57,16 @@ function clientCmdMissionStartPhase1_LoadCache(%seq, %missionName)
     echo("<<<< Loading Datablocks From Cache >>>>");
     if (ServerConnection.loadDatablockCache_Begin())
     {
-      schedule(10, 0, "updateLoadDatablockCacheProgress", %seq, %missionName);
+      schedule(10, 0, "updateLoadDatablockCacheProgress", %seq, %levelAsset);
     }
   }
 }
 
-function updateLoadDatablockCacheProgress(%seq, %missionName)
+function updateLoadDatablockCacheProgress(%seq, %levelAsset)
 {
    if (ServerConnection.loadDatablockCache_Continue())
    {
-      $loadDatablockCacheProgressThread = schedule(10, 0, "updateLoadDatablockCacheProgress", %seq, %missionName);
+      $loadDatablockCacheProgressThread = schedule(10, 0, "updateLoadDatablockCacheProgress", %seq, %levelAsset);
       return;
    }
  
@@ -80,14 +80,14 @@ function updateLoadDatablockCacheProgress(%seq, %missionName)
    }
 
    echo("<<<< Finished Loading Datablocks From Cache >>>>");
-   clientCmdMissionStartPhase2(%seq,%missionName);
+   clientCmdMissionStartPhase2(%seq, %levelAsset);
 }
 
-function updateLoadDatablockCacheProgress(%seq, %missionName)
+function updateLoadDatablockCacheProgress(%seq, %levelAsset)
 {
    if (ServerConnection.loadDatablockCache_Continue())
    {
-      $loadDatablockCacheProgressThread = schedule(10, 0, "updateLoadDatablockCacheProgress", %seq, %missionName);
+      $loadDatablockCacheProgressThread = schedule(10, 0, "updateLoadDatablockCacheProgress", %seq, %levelAsset);
       return;
    }
  
@@ -101,21 +101,24 @@ function updateLoadDatablockCacheProgress(%seq, %missionName)
    }
 
    echo("<<<< Finished Loading Datablocks From Cache >>>>");
-   clientCmdMissionStartPhase2(%seq,%missionName);
+   clientCmdMissionStartPhase2(%seq, %levelAsset);
 }
 
-function clientCmdMissionStartPhase1(%seq, %missionName, %cache_crc)
+function clientCmdMissionStartPhase1(%seq, %levelAsset, %cache_crc)
 {
+   %levelAssetDef = AssetDatabase.acquireAsset(%levelAsset);
+   
    // These need to come after the cls.
-   echo ("*** New Mission: " @ %missionName);
+   echo ("*** New Mission: " @ %levelAssetDef.levelName);
    echo ("*** Phase 1: Download Datablocks & Targets");
    
-   $Client::MissionFile = %missionName;
+   $Client::LevelAsset = %levelAssetDef;
+   $Client::MissionFile = %levelAssetDef.getLevelPath();
    $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
    
    //Prep the postFX stuff
    // Load the post effect presets for this mission.
-   %path = filePath( %missionName ) @ "/" @ fileBase( %missionName ) @ $PostFXManager::fileExtension;
+   %path = %levelAssetDef.getPostFXPresetPath();
 
    if ( isScriptFile( %path ) )
    {
@@ -190,7 +193,7 @@ function onDataBlockObjectReceived(%index, %total)
 //----------------------------------------------------------------------------
 // Phase 2
 //----------------------------------------------------------------------------
-function clientCmdMissionStartPhase2(%seq,%missionName)
+function clientCmdMissionStartPhase2(%seq, %levelAsset)
 {
    onPhaseComplete();
    echo ("*** Phase 2: Download Ghost Objects");
@@ -215,19 +218,21 @@ function onGhostAlwaysObjectReceived()
 //----------------------------------------------------------------------------
 // Phase 3
 //----------------------------------------------------------------------------
-function clientCmdMissionStartPhase3(%seq,%missionName)
+function clientCmdMissionStartPhase3(%seq, %levelAsset)
 {
    onPhaseComplete();
    StartClientReplication();
-   StartFoliageReplication();
+   
+   %levelAssetDef = AssetDatabase.acquireAsset(%levelAsset);
    
    // Load the static mission decals.
-   if(isFile(%missionName @ ".decals"))
-      decalManagerLoad( %missionName @ ".decals" );
+   if(isFile(%levelAssetDef.getDecalsPath()))
+      decalManagerLoad( %levelAssetDef.getDecalsPath() );
    
    echo ("*** Phase 3: Mission Lighting");
    $MSeq = %seq;
-   $Client::MissionFile = %missionName;
+   $Client::LevelAsset = %levelAssetDef;
+   $Client::MissionFile = %levelAssetDef.getLevelPath();
 
    // Need to light the mission before we are ready.
    // The sceneLightingComplete function will complete the handshake 

@@ -134,7 +134,7 @@ function AssetBrowser::moveLevelAsset(%this, %assetDef, %destination)
 function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.getlevelFile();
+   %previewData.assetPath = %assetDef.getLevelPath();
    %previewData.doubleClickCommand = "schedule( 1, 0, \"EditorOpenMission\", "@%assetDef@");";
    
    %levelPreviewImage = %assetDesc.PreviewImage;
@@ -149,5 +149,5 @@ function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
       "Asset Type: Level Asset\n" @ 
       "Asset Definition ID: " @ %assetDef @ "\n" @ 
-      "Level File path: " @ %assetDef.getLevelFile(); 
+      "Level File path: " @ %assetDef.getLevelPath(); 
 }

@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DepthOfFieldPostFX"
+    scriptFile="@assetFile=DepthOfFieldPostFX.cs"
+    VersionId="1" />

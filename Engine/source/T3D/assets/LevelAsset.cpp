@@ -361,11 +361,25 @@ void LevelAsset::unloadDependencies()
    }
 }
 
-DefineEngineMethod(LevelAsset, getLevelFile, const char*, (),,
+DefineEngineMethod(LevelAsset, getLevelPath, const char*, (),,
    "Creates a new script asset using the targetFilePath.\n"
    "@return The bool result of calling exec")
 {
    return object->getLevelPath();
+}
+
+DefineEngineMethod(LevelAsset, getPostFXPresetPath, const char*, (), ,
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->getPostFXPresetPath();
+}
+
+DefineEngineMethod(LevelAsset, getDecalsPath, const char*, (), ,
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->getDecalsPath();
 }
 
 DefineEngineMethod(LevelAsset, loadDependencies, void, (), ,

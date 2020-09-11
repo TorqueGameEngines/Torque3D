@@ -35,6 +35,8 @@ class Scene : public NetObject, public virtual ITickable
 
    bool mIsDirty;
 
+   bool mEditPostFX;
+
    StringTableEntry mGameModeName;
 
 protected:
@@ -47,6 +49,8 @@ public:
    ~Scene();
 
    static void initPersistFields();
+
+   static bool _editPostEffects(void* object, const char* index, const char* data);
 
    virtual bool onAdd();
    virtual void onRemove();

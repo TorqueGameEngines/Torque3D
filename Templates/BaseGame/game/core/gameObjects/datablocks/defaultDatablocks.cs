@@ -1,6 +1,6 @@
 datablock ReflectorDesc( DefaultCubeDesc )
 {  
-   texSize = 256;
+   texSize = 64;
    nearDist = 0.1;
    farDist = 1000.0;
    objectTypeMask = 0xFFFFFFFF;

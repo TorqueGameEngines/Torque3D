@@ -1,6 +1,0 @@
-<PostEffectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="vignettePostFX"
-    scriptFile="@assetFile=vignettePostFX.cs"
-    VersionId="1" />

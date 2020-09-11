@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="edgeAAPostFX"
+    scriptFile="@assetFile=edgeAAPostFX.cs"
+    VersionId="1" />

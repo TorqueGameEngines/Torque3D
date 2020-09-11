@@ -1,0 +1,8 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SharpenPostFX"
+    scriptFile="@assetFile=SharpenPostFX.cs"
+    hlslShader="@assetFile=SharpenPostFXP.hlsl"
+    glslShader="@assetFile=SharpenPostFXP.glsl"
+    VersionId="1" />

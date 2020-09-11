@@ -33,6 +33,7 @@ function ESettingsWindow::startup( %this )
    %this.addEditorSettingsPage("NavEditor", "Navigation Editor");
    %this.addEditorSettingsPage("Theme", "Theme");
    %this.addEditorSettingsPage("AssetEditing", "Asset Editing");
+   %this.addEditorSettingsPage("PostFX", "Post Effects");
    
    %this.addGameSettingsPage("GameGeneral", "General");
    %this.addGameSettingsPage("Gameplay", "Gameplay");
@@ -429,6 +430,14 @@ function ESettingsWindow::getThemeSettings(%this)
    SettingsInspector.addSettingsField("Theme/tooltipDivColor", "Tooltip Divider Color", "ColorI", "");
    SettingsInspector.endGroup();
 } 
+
+function ESettingsWindow::getPostFXSettings(%this)
+{
+   SettingsInspector.startGroup("Post Effects");
+   SettingsInspector.addField("Edit Default PostFX", "Edit Default PostFX Config", "button", "Edit Default PostFX Config", "", "PostFXEditor.editDefaultPostFXSettings();");
+   SettingsInspector.endGroup();
+}
+
 //
 // COMMON GAME SETTINGS
 //

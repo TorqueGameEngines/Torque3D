@@ -853,7 +853,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //PROFILE_END();
 }
 
-void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
+void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
 {
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_Bake, ColorI::WHITE);
 
@@ -865,7 +865,12 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
    U32 prefilterMipLevels = mLog2(F32(resolution));
    bool renderWithProbes = Con::getIntVariable("$pref::ReflectionProbes::RenderWithProbes", false);
 
-   ReflectionProbe *clientProbe = static_cast<ReflectionProbe*>(probe->getClientObject());
+   ReflectionProbe* clientProbe = nullptr;
+
+   if (probe->isClientObject())
+      clientProbe = probe;
+   else
+      clientProbe = static_cast<ReflectionProbe*>(probe->getClientObject());
 
    if (clientProbe == nullptr)
       return;
@@ -960,10 +965,14 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe)
       U32 endMSTime = Platform::getRealMilliseconds();
       F32 diffTime = F32(endMSTime - startMSTime);
       Con::warnf("RenderProbeMgr::bake() - Finished Capture! Took %g milliseconds", diffTime);
-      Con::warnf("RenderProbeMgr::bake() - Beginning save now!");
 
-      IBLUtilities::SaveCubeMap(clientProbe->getIrradianceMapPath(), clientProbe->mIrridianceMap->mCubemap);
-      IBLUtilities::SaveCubeMap(clientProbe->getPrefilterMapPath(), clientProbe->mPrefilterMap->mCubemap);
+      if (writeFiles)
+      {
+         Con::warnf("RenderProbeMgr::bake() - Beginning save now!");
+
+         IBLUtilities::SaveCubeMap(clientProbe->getIrradianceMapPath(), clientProbe->mIrridianceMap->mCubemap);
+         IBLUtilities::SaveCubeMap(clientProbe->getPrefilterMapPath(), clientProbe->mPrefilterMap->mCubemap);
+      }
    }
    else
    {

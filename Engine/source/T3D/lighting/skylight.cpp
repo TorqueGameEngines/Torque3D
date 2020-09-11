@@ -161,6 +161,14 @@ void Skylight::prepRenderImage(SceneRenderState *state)
 
    mProbeInfo->setPosition(camPos);
 
+   if (mReflectionModeType == DynamicCubemap && mRefreshRateMS < (Platform::getRealMilliseconds() - mDynamicLastBakeMS))
+   {
+      //bake();
+      mDynamicLastBakeMS = Platform::getRealMilliseconds();
+
+      processDynamicCubemap();
+   }
+
    //Submit our probe to actually do the probe action
    // Get a handy pointer to our RenderPassmanager
    //RenderPassManager *renderPass = state->getRenderPass();

@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../../gl/hlslCompat.glsl"
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
 
 uniform sampler2D diffuseMap ;
 

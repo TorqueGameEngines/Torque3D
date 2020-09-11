@@ -20,8 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "./postFx.hlsl"
-#include "./../torque.hlsl"
+#include "core/rendering/shaders/postFX/postFx.hlsl"
+#include "core/rendering/shaders/torque.hlsl"
 
 
 uniform float2 texSize0;

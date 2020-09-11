@@ -20,8 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../../gl/hlslCompat.glsl"
-#include "../../gl/torque.glsl"
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
+#include "core/rendering/shaders/gl/torque.glsl"
 
 in vec4 vPosition;
 in vec2 vTexCoord0;

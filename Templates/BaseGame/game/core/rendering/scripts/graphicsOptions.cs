@@ -689,7 +689,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
    //force postFX updates
    PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
    PostFXManager.settingsEffectSetEnabled(HDRPostFX, $pref::PostFX::EnableHDR);
-   PostFXManager.settingsEffectSetEnabled(DOFPostEffect, $pref::PostFX::EnableDOF);
+   PostFXManager.settingsEffectSetEnabled(DepthOfFieldPostFX, $pref::PostFX::EnableDOF);
    PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
    PostFXManager.settingsEffectSetEnabled(VignettePostEffect, $pref::PostFX::EnableVignette);
    

@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MLAAPostFX"
+    scriptFile="@assetFile=MLAAPostFX.cs"
+    VersionId="1" />

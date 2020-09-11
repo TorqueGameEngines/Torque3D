@@ -332,6 +332,9 @@ function EditorSaveMission()
          %obj.onSaveMission( $Server::MissionFile );      
    } 
    
+   //Save out the PostFX config
+   PostFXManager::savePresetHandler( $Server::LevelAsset.getPostFXPresetPath() );
+   
    EditorClearDirty();
    
    EditorGui.saveAs = false;
@@ -355,14 +358,14 @@ function EditorSaveMissionAs( %levelAsset )
       return;
    }
                
-   %missionName = %levelAssetDef.getLevelFile();
+   %missionName = %levelAssetDef.getLevelPath();
                
    if( fileExt( %missionName ) !$= ".mis" )
       %missionName = %missionName @ ".mis";
       
    //Update to be our active
    $Server::MissionFile = %missionName;
-   %Server::LevelAsset = %levelAssetDef;
+   $Server::LevelAsset = %levelAssetDef;
    
    //Update the scene name to comply to the new level's name
    GetRootScene().name = %levelAssetDef.AssetName;
@@ -490,7 +493,7 @@ function EditorOpenMission(%levelAsset)
       
       updateEditorRecentLevelsList(%levelAssetId);
       
-      %filename = %assetDef.getlevelFile();
+      %filename = %assetDef.getLevelPath();
       
       if(%filename $= "")
       {
@@ -539,7 +542,7 @@ function EditorOpenMission(%levelAsset)
 function EditorOpenSceneAppend(%levelAsset)
 {
    //Load the asset's level file
-   exec(%levelAsset.getlevelFile());
+   exec(%levelAsset.getLevelPath());
    
    //We'll assume the scene name and assetname are the same for now
    %sceneName = %levelAsset.AssetName;

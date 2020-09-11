@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ovrBarrelDistortionPostFX"
+    scriptFile="@assetFile=ovrBarrelDistortionPostFX.cs"
+    VersionId="1" />

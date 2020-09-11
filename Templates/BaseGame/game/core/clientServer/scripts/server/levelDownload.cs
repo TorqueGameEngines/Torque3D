@@ -68,9 +68,9 @@ function GameConnection::loadMission(%this)
    }
    else
    {
-      commandToClient(%this, 'MissionStartPhase1', $missionSequence, $Server::MissionFile, %cache_crc);
+      commandToClient(%this, 'MissionStartPhase1', $missionSequence, $Server::LevelAsset.getAssetId(), %cache_crc);
          
-      echo("*** Sending mission load to client: " @ $Server::MissionFile);
+      echo("*** Sending mission load to client: " @ $Server::LevelAsset.getAssetId());
    }
 }
 
@@ -100,7 +100,7 @@ function GameConnection::onBeginDatablockCacheLoad( %this, %missionSequence )
    if (%this.currentPhase != 1)
       return;
    %this.currentPhase = 1.5;
-   commandToClient(%this, 'MissionStartPhase1_LoadCache', $missionSequence, $Server::MissionFile);
+   commandToClient(%this, 'MissionStartPhase1_LoadCache', $missionSequence, $Server::LevelAsset.getAssetId());
 }
 
 function serverCmdMissionStartPhase1Ack(%client, %seq)
@@ -129,7 +129,7 @@ function GameConnection::onDataBlocksDone( %this, %missionSequence )
    %this.currentPhase = 1.5;
 
    // On to the next phase
-   commandToClient(%this, 'MissionStartPhase2', $missionSequence, $Server::MissionFile);
+   commandToClient(%this, 'MissionStartPhase2', $missionSequence, $Server::LevelAsset.getAssetId());
 }
 
 //----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ function GameConnection::onGhostAlwaysFailed(%client)
 function GameConnection::onGhostAlwaysObjectsReceived(%client)
 {
    // Ready for next phase.
-   commandToClient(%client, 'MissionStartPhase3', $missionSequence, $Server::MissionFile);
+   commandToClient(%client, 'MissionStartPhase3', $missionSequence, $Server::LevelAsset.getAssetId());
 }
 
 //----------------------------------------------------------------------------

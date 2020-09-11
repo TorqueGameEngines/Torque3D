@@ -1,0 +1,8 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CameraMotionBlurPostFX"
+    scriptFile="@assetFile=CameraMotionBlurPostFX.cs"
+    hlslShader="@assetFile=CameraMotionBlurPostFXP.hlsl"
+    glslShader="@assetFile=CameraMotionBlurPostFXP.glsl"
+    VersionId="1" />

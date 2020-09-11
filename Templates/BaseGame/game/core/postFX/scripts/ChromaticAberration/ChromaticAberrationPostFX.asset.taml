@@ -1,0 +1,8 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ChromaticAberrationPostFX"
+    scriptFile="@assetFile=ChromaticAberrationPostFX.cs"
+    hlslShader="@assetFile=ChromaticAberrationPostFXP.hlsl"
+    glslShader="@assetFile=ChromaticAberrationPostFXP.glsl"
+    VersionId="1" />

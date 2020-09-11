@@ -44,7 +44,7 @@ function loadMission( %levelAsset, %isFirstMission )
    // increment the mission sequence (used for ghost sequencing)
    $missionSequence++;
    $missionRunning = false;
-   $Server::MissionFile = $Server::LevelAsset.getLevelFile();
+   $Server::MissionFile = $Server::LevelAsset.getLevelPath();
    $Server::LoadFailMsg = "";
    
    $Server::LevelAsset.loadDependencies();

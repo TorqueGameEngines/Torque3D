@@ -34,6 +34,11 @@ void Scene::initPersistFields()
    addGroup("Gameplay");
    addField("gameModeName", TypeString, Offset(mGameModeName, Scene), "The name of the gamemode that this scene utilizes");
    endGroup("Gameplay");
+
+   addGroup("PostFX");
+   addProtectedField("EditPostEffects", TypeBool, Offset(mEditPostFX, Scene),
+      &Scene::_editPostEffects, &defaultProtectedGetFn, "Edit Scene's default Post Effects", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
+   endGroup("PostFX");
 }
 
 bool Scene::onAdd()
@@ -86,6 +91,18 @@ void Scene::onPostAdd()
 {
    if (isMethod("onPostAdd"))
       Con::executef(this, "onPostAdd");
+}
+
+bool Scene::_editPostEffects(void* object, const char* index, const char* data)
+{
+   Scene* scene = static_cast<Scene*>(object);
+
+#ifdef TORQUE_TOOLS
+   if(Con::isFunction("editScenePostEffects"))
+      Con::executef("editScenePostEffects", scene);
+#endif
+
+   return false;
 }
 
 void Scene::addObject(SimObject* object)

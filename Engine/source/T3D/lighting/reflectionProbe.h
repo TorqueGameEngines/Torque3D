@@ -116,6 +116,7 @@ protected:
 
    String cubeDescName;
    U32 cubeDescId;
+   CubeReflector mCubeReflector;
    ReflectorDesc *reflectorDesc;
 
    //Utilized in dynamic reflections

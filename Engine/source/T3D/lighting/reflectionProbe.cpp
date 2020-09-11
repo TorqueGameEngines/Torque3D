@@ -83,7 +83,7 @@ ImplementEnumType(ReflectionModeEnum,
 { ReflectionProbe::NoReflection, "No Reflections", "This probe does not provide any local reflection data"},
 { ReflectionProbe::StaticCubemap, "Static Cubemap", "Uses a static CubemapData" },
 { ReflectionProbe::BakedCubemap, "Baked Cubemap", "Uses a cubemap baked from the probe's current position" },
-//{ ReflectionProbe::DynamicCubemap, "Dynamic Cubemap", "Uses a cubemap baked from the probe's current position, updated at a set rate" },
+{ ReflectionProbe::DynamicCubemap, "Dynamic Cubemap", "Uses a cubemap baked from the probe's current position, updated at a set rate" },
    EndImplementEnumType;
 
 //-----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ ReflectionProbe::ReflectionProbe() :
    mEditorShapeInst = NULL;
    mEditorShape = NULL;
 
-   mRefreshRateMS = 200;
+   mRefreshRateMS = 500;
    mDynamicLastBakeMS = 0;
 
    mMaxDrawDistance = 75;
@@ -175,6 +175,8 @@ void ReflectionProbe::initPersistFields()
          "The type of mesh data to use for collision queries.");
 
       addField("StaticCubemap", TypeCubemapName, Offset(mCubemapName, ReflectionProbe), "Cubemap used instead of reflection texture if fullReflect is off.");
+
+      addField("DynamicReflectionRefreshMS", TypeS32, Offset(mRefreshRateMS, ReflectionProbe), "How often the dynamic cubemap is refreshed in milliseconds. Only works when the ReflectionMode is set to DynamicCubemap.");
 
       addProtectedField("Bake", TypeBool, Offset(mBake, ReflectionProbe),
          &_doBake, &defaultProtectedGetFn, "Regenerate Voxel Grid", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
@@ -434,6 +436,7 @@ U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream
       stream->write(mProbeUniqueID);
       stream->write((U32)mReflectionModeType);
       stream->write(mCubemapName);
+      stream->write(mRefreshRateMS);
    }
 
    if (stream->writeFlag(mask & EnabledMask))
@@ -486,6 +489,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       if(oldReflectModeType != mReflectionModeType || oldCubemapName != mCubemapName)
          mCubemapDirty = true;
+
+      stream->read(&mRefreshRateMS);
 
       mDirty = true;
    }
@@ -582,7 +587,7 @@ void ReflectionProbe::updateProbeParams()
 
 void ReflectionProbe::processDynamicCubemap()
 {
-   //if (!mProbeInfo)
+   /*if (!mProbeInfo)
       return;
 
    mEnabled = false;
@@ -591,7 +596,18 @@ void ReflectionProbe::processDynamicCubemap()
    {
       mProbeInfo->mPrefilterCubemap = mDynamicCubemap;
 
-      //mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
+      if (reflectorDesc == nullptr)
+      {
+         //find it
+         if (!Sim::findObject("DefaultCubeDesc", reflectorDesc))
+         {
+            mProbeInfo->mIsEnabled = false;
+            return;
+         }
+      }
+
+      mCubeReflector.unregisterReflector();
+      mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
    }
 
    if (mEnabled)
@@ -603,7 +619,68 @@ void ReflectionProbe::processDynamicCubemap()
 
    //Update the probe manager with our new texture!
    //if (!mProbeInfo->mIsSkylight && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
-   //   PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);
+   //   PROBEMGR->updateProbeTexture(mProbeInfo->mProbeIdx);*/
+
+   if (!mProbeInfo)
+      return;
+
+   mProbeInfo->mIsEnabled = false;
+
+   if (mReflectionModeType != DynamicCubemap)
+      return;
+
+   if (reflectorDesc == nullptr)
+   {
+      //find it
+      if (!Sim::findObject("DefaultCubeDesc", reflectorDesc))
+      {
+         mProbeInfo->mIsEnabled = false;
+         return;
+      }
+
+      mCubeReflector.unregisterReflector();
+      mCubeReflector.registerReflector(this, reflectorDesc); //need to decide how we wanna do the reflectorDesc. static name or a field
+   }
+
+   if (mCubeReflector.getCubemap())
+   {
+      U32 resolution = Con::getIntVariable("$pref::ReflectionProbes::BakeResolution", 64);
+      U32 prefilterMipLevels = mLog2(F32(resolution));
+
+      //Prep it with whatever resolution we've dictated for our bake
+      mIrridianceMap->mCubemap->initDynamic(resolution, PROBEMGR->PROBE_FORMAT);
+      mPrefilterMap->mCubemap->initDynamic(resolution, PROBEMGR->PROBE_FORMAT);
+
+      GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
+
+      IBLUtilities::GenerateIrradianceMap(renderTarget, mCubeReflector.getCubemap(), mIrridianceMap->mCubemap);
+      IBLUtilities::GeneratePrefilterMap(renderTarget, mCubeReflector.getCubemap(), prefilterMipLevels, mPrefilterMap->mCubemap);
+   }
+
+   if (mIrridianceMap == nullptr || mIrridianceMap->mCubemap.isNull())
+   {
+      Con::errorf("ReflectionProbe::processDynamicCubemap() - Unable to load baked irradiance map at %s", getIrradianceMapPath().c_str());
+      return;
+   }
+
+   if (mPrefilterMap == nullptr || mPrefilterMap->mCubemap.isNull())
+   {
+      Con::errorf("ReflectionProbe::processDynamicCubemap() - Unable to load baked prefilter map at %s", getPrefilterMapPath().c_str());
+      return;
+   }
+
+   mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
+   mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;
+
+   if (mEnabled && mProbeInfo->mPrefilterCubemap->isInitialized() && mProbeInfo->mIrradianceCubemap->isInitialized())
+   {
+      mProbeInfo->mIsEnabled = true;
+
+      mCubemapDirty = false;
+
+      //Update the probe manager with our new texture!
+      PROBEMGR->updateProbeTexture(mProbeInfo);
+   }
 }
 
 void ReflectionProbe::processBakedCubemap()
@@ -818,10 +895,12 @@ String ReflectionProbe::getIrradianceMapPath()
 
 void ReflectionProbe::bake()
 {
-   if (mReflectionModeType != BakedCubemap)
+   bool writeFile = mReflectionModeType == BakedCubemap ? true : false;
+
+   if (mReflectionModeType == StaticCubemap)
       return;
 
-   PROBEMGR->bakeProbe(this);
+   PROBEMGR->bakeProbe(this, writeFile);
 
    setMaskBits(-1);
 }
@@ -864,8 +943,10 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 
    if (mReflectionModeType == DynamicCubemap && mRefreshRateMS < (Platform::getRealMilliseconds() - mDynamicLastBakeMS))
    {
-      bake();
+      //bake();
       mDynamicLastBakeMS = Platform::getRealMilliseconds();
+
+      processDynamicCubemap();
    }
 
    //Submit our probe to actually do the probe action

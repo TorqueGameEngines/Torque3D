@@ -223,6 +223,7 @@ class RenderProbeMgr : public RenderBinManager
 
    bool mProbesDirty;
 
+public:
    //maximum number of allowed probes
    static const U32 PROBE_MAX_COUNT = 250;
    //maximum number of rendered probes per frame adjust as needed
@@ -235,6 +236,7 @@ class RenderProbeMgr : public RenderBinManager
    static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
    static const U32 INVALID_CUBE_SLOT = U32_MAX;
 
+private:
    //Array rendering
    U32 mEffectiveProbeCount;
    S32 mMipCount;
@@ -344,7 +346,7 @@ public:
    /// Debug rendering
    static bool smRenderReflectionProbes;
 
-   void bakeProbe(ReflectionProbe *probeInfo);
+   void bakeProbe(ReflectionProbe *probeInfo, bool writeFile = true);
    void bakeProbes();
 
    void getProbeTextureData(ProbeTextureArrayData* probeTextureSet);

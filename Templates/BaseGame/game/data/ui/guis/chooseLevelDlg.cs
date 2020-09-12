@@ -57,7 +57,7 @@ function ChooseLevelDlg::onWake( %this )
       
       %levelAsset = AssetDatabase.acquireAsset(%assetId);
       
-      %file = %levelAsset.getLevelFile();
+      %file = %levelAsset.getLevelPath();
       
       if ( !isFile(%file @ ".mis") && !isFile(%file @ ".mis.dso") &&!isFile(%file) )
          continue;

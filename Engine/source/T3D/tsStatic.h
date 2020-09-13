@@ -172,6 +172,7 @@ protected:
    void _renderNormals(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
 
    void _onResourceChanged(const Torque::Path& path);
+   void _onAssetChanged();
 
    // ProcessObject
    virtual void processTick(const Move* move);

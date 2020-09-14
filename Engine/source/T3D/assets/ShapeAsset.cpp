@@ -211,7 +211,7 @@ void ShapeAsset::setShapeConstructorFile(const char* pShapeConstructorFile)
 
 void ShapeAsset::_onResourceChanged(const Torque::Path &path)
 {
-   if (path != Torque::Path(mFileName) )
+   if (path != Torque::Path(mFilePath) )
       return;
 
    refreshAsset();
@@ -313,7 +313,7 @@ bool ShapeAsset::loadShape()
       }
    }
 
-   onShapeChanged.trigger(this);
+   mChangeSignal.trigger();
 
    return true;
 }

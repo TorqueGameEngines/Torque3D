@@ -76,6 +76,10 @@ protected:
    Vector<StringTableEntry> mAnimationAssetIds;
    Vector<AssetPtr<ShapeAnimationAsset>> mAnimationAssets;
 
+   typedef Signal<void()> ShapeAssetChanged;
+
+   ShapeAssetChanged mChangeSignal;
+
 public:
    ShapeAsset();
    virtual ~ShapeAsset();
@@ -122,7 +126,7 @@ public:
 
    void _onResourceChanged(const Torque::Path &path);
 
-   Signal< void(ShapeAsset*) > onShapeChanged;
+   ShapeAssetChanged& getChangedSignal() { return mChangeSignal; }
 
    void                    setShapeFile(const char* pScriptFile);
    inline StringTableEntry getShapeFile(void) const { return mFileName; };

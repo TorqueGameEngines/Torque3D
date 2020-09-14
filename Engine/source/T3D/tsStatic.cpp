@@ -402,7 +402,7 @@ bool TSStatic::onAdd()
    setRenderTransform(mObjToWorld);
 
    // Register for the resource change signal.
-   ResourceManager::get().getChangedSignal().notify(this, &TSStatic::_onResourceChanged);
+   //ResourceManager::get().getChangedSignal().notify(this, &TSStatic::_onResourceChanged);
 
    addToScene();
 
@@ -427,6 +427,11 @@ bool TSStatic::onAdd()
 
 bool TSStatic::setShapeAsset(const StringTableEntry shapeAssetId)
 {
+   if (!mShapeAsset.isNull())
+   {
+      mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
+   }
+
    if (ShapeAsset::getAssetById(shapeAssetId, &mShapeAsset))
    {
       //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
@@ -434,6 +439,8 @@ bool TSStatic::setShapeAsset(const StringTableEntry shapeAssetId)
       if (mShapeAsset.getAssetId() != StringTable->insert("Core_Rendering:noshape"))
       {
          mShapeName = StringTable->EmptyString();
+
+         mShapeAsset->getChangedSignal().notify(this, &TSStatic::_onAssetChanged);
       }
 
       _createShape();
@@ -658,7 +665,7 @@ void TSStatic::onRemove()
    removeFromScene();
 
    // Remove the resource change signal.
-   ResourceManager::get().getChangedSignal().remove(this, &TSStatic::_onResourceChanged);
+   //ResourceManager::get().getChangedSignal().remove(this, &TSStatic::_onResourceChanged);
 
    delete mShapeInstance;
    mShapeInstance = NULL;
@@ -666,6 +673,9 @@ void TSStatic::onRemove()
    mAmbientThread = NULL;
    if (isClientObject())
       mCubeReflector.unregisterReflector();
+
+   if(!mShapeAsset.isNull())
+      mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
 
    Parent::onRemove();
 }
@@ -675,6 +685,12 @@ void TSStatic::_onResourceChanged(const Torque::Path& path)
    if (path != Path(mShapeName))
       return;
 
+   _createShape();
+   _updateShouldTick();
+}
+
+void TSStatic::_onAssetChanged()
+{
    _createShape();
    _updateShouldTick();
 }
@@ -917,9 +933,10 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
       state->getRenderPass()->addInst(ri);
    }
 
-   mShapeInstance->animate();
    if (mShapeInstance)
    {
+      mShapeInstance->animate();
+
       if (mUseAlphaFade || smUseStaticObjectFade)
       {
          mShapeInstance->setAlphaAlways(mAlphaFade);

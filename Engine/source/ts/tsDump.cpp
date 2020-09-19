@@ -64,6 +64,7 @@ void TSShapeInstance::dumpNode(Stream & stream ,S32 level, S32 nodeIndex, Vector
    if (objectList.size() == 0)
       dumpLine("\r\n");
 
+   S32 nodeNameLen = dStrlen(nodeName);
    S32 spaceCount = -1;
    for (S32 j=0;j<objectList.size(); j++)
    {
@@ -101,7 +102,7 @@ void TSShapeInstance::dumpNode(Stream & stream ,S32 level, S32 nodeIndex, Vector
 
       // how many spaces should we prepend if we have another object on this node
       if (spaceCount<0)
-         spaceCount = (S32)(dStrlen(space) + dStrlen(nodeName));
+         spaceCount = (S32)(dStrlen(space) + nodeNameLen);
 
       if(spaceCount > 2000)
          spaceCount = 2000;

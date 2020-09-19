@@ -770,6 +770,8 @@ static void conditioner_createDefaultClip(domCOLLADA* root)
 
 static void conditioner_fixupAnimation(domAnimation* anim)
 {
+   S32 visibilityLen = dStrlen("/visibility");
+
    for (S32 iChannel = 0; iChannel < anim->getChannel_array().getCount(); iChannel++) {
 
       // Get the animation elements: <channel>, <sampler>
@@ -815,7 +817,7 @@ static void conditioner_fixupAnimation(domAnimation* anim)
 
             // Get parent SID string
             char *parentSID = dStrdup(channel->getTarget());
-            parentSID[dStrlen(parentSID) - dStrlen("/visibility")] = '\0';
+            parentSID[dStrlen(parentSID) - visibilityLen] = '\0';
 
             // Find the parent element (should be a <node>)
             daeSIDResolver parentResolver(channel, parentSID);

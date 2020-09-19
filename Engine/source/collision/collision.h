@@ -160,7 +160,7 @@ typedef Chunker<BSPNode> BSPTree;
 /// @see Collision
 struct RayInfo : public Collision 
 {
-   RayInfo() : userData( NULL ) {}
+   RayInfo() : t(0), userData( NULL ) {}
 
    // The collision struct has object, point, normal & material.
 

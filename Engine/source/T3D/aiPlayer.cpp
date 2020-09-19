@@ -120,6 +120,8 @@ AIPlayer::AIPlayer()
 
    for( S32 i = 0; i < MaxTriggerKeys; i ++ )
       mMoveTriggers[ i ] = false;
+
+   mAttackRadius = 1;
 }
 
 /**

@@ -11,7 +11,8 @@ Scene::Scene() :
    mParentScene(nullptr),
    mSceneId(-1),
    mIsEditing(false),
-   mIsDirty(false)
+   mIsDirty(false),
+   mEditPostFX(0)
 {
    mGameModeName = StringTable->EmptyString();
 }

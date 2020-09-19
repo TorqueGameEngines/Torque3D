@@ -542,6 +542,8 @@ void FieldBrushObject::pasteFields( SimObject* pSimObject )
     // Force modification of static-fields on target object!
     pSimObject->setModStaticFields( true );
 
+    S32 prefixLength = dStrlen(INTERNAL_FIELD_PREFIX);
+
     // Iterate fields.
     for ( SimFieldDictionaryIterator itr(pFieldDictionary); *itr; ++itr )
     {
@@ -553,7 +555,7 @@ void FieldBrushObject::pasteFields( SimObject* pSimObject )
         if ( pInternalField == fieldEntry->slotName )
         {
             // Yes, so skip the prefix.
-            pInternalField += dStrlen(INTERNAL_FIELD_PREFIX);
+           pInternalField += prefixLength;
 
             // Is this a static-field on the target object?
             // NOTE:-   We're doing this so we don't end-up creating a dynamic-field if it isn't present.

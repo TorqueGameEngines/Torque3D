@@ -4042,23 +4042,6 @@ bool WorldEditor::makeSelectionAMesh(const char *filename)
       return true;
    else
       return false;
-
-   // Allocate TSStatic object and add to level.
-   TSStatic *ts = new TSStatic();
-   ts->setShapeFileName(StringTable->insert(filename));
-   fabMat.inverse();
-   ts->setTransform(fabMat);
-   ts->registerObject();
-   scene->addObject(ts);
-
-   // Select it, mark level as dirty.
-   clearSelection();
-   selectObject(ts);
-   setDirty();
-
-   // Delete original objects and temporary SimGroup.
-   for (S32 i = 0; i < objectList.size(); i++)
-      objectList[i]->deleteObject();
 }
 
 DefineEngineMethod( WorldEditor, makeSelectionPrefab, void, ( const char* filename, bool dontDeleteOriginals ), (false),

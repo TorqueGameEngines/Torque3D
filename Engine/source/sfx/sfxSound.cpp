@@ -149,7 +149,7 @@ SFXSound* SFXSound::_create(   SFXDevice* device,
    SFXBuffer* buffer = SFX->_createBuffer( stream, description );
    if( !buffer )
    {
-      source->deleteObject();
+      SAFE_DELETE_OBJECT(source);
 
       Con::errorf( "SFXSound::_create() - Could not create device buffer!" );
       return NULL;

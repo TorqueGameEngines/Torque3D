@@ -863,7 +863,7 @@ public:
    void setScopeObject(NetObject *object);
 
    /// Get the object around which we are currently scoping network traffic.
-   NetObject* getScopeObject() {};
+   NetObject* getScopeObject() { return nullptr; };
 
    /// Add an object to scope.
    void objectInScope(NetObject *object);

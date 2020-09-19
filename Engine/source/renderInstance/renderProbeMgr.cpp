@@ -918,7 +918,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
    Frustum culler;
    culler.set(false,
       query.fov,
-      (F32)resolution / (F32)resolution,
+      1.0f,
       query.nearPlane,
       query.farPlane,
       query.cameraMatrix);
@@ -961,6 +961,8 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
 
       IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
       IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
+
+      renderTarget->destroySelf();
 
       U32 endMSTime = Platform::getRealMilliseconds();
       F32 diffTime = F32(endMSTime - startMSTime);

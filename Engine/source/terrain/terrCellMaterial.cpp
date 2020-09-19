@@ -482,8 +482,6 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
       featureData.features = features;
       featureData.materialFeatures = features;
 
-	  Vector<CustomShaderFeatureData*> customFeatures;
-
       // Check to see how many vertex shader output 
       // registers we're gonna need.
       U32 numTex = 0;
@@ -526,7 +524,7 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
          const bool logErrors = true;// matCount == 1;
          GFXShader::setLogging( logErrors, true );
 
-         pass->shader = SHADERGEN->getShader( featureData, customFeatures, getGFXVertexFormat<TerrVertex>(), NULL, mSamplerNames );
+         pass->shader = SHADERGEN->getShader( featureData, getGFXVertexFormat<TerrVertex>(), NULL, mSamplerNames );
       }
 
       // If we got a shader then we can continue.

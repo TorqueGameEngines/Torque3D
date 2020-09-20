@@ -528,7 +528,8 @@ void GuiMLTextCtrl::inspectPostApply()
 
    setText(mInitialText, dStrlen(mInitialText));
 
-   mLineSpacingPixels = 0;
+   if (mLineSpacingPixels < 0)
+      mLineSpacingPixels = 0;
 }
 
 

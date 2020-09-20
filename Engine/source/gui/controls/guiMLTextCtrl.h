@@ -253,7 +253,7 @@ class GuiMLTextCtrl : public GuiControl
    Resource<GFont> mFont;
 
    // Console settable parameters
-   U32 mLineSpacingPixels;
+   S32 mLineSpacingPixels;
    bool mAllowColorChars;
    bool mUseURLMouseCursor;
 

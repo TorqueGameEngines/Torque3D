@@ -196,13 +196,44 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    OptionName.setText("");
    OptionDescription.setText("");
    
-   %resolutionList = getScreenResolutionList();
    OptionsMenuSettingsList.addOptionRow("Display API", "D3D11\tOpenGL", false, "", -1, -30, true, "The display API used for rendering.", $pref::Video::displayDevice);
-   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
-   OptionsMenuSettingsList.addOptionRow("Fullscreen", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo($pref::Video::FullScreen));
-   OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
    
-   OptionsMenuSettingsList.addOptionRow("Refresh Rate", "30\t60\t75", false, "", -1, -30, true, "", $pref::Video::RefreshRate);
+   %numDevices = Canvas.getMonitorCount();
+   %devicesList = "";
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      if(%i==0)
+         %devicesList = %device;
+      else
+         %devicesList = %devicesList @ "\t" @ %device;
+   }
+   
+   %selectedDevice = getField(%devicesList, $pref::Video::deviceId);
+   OptionsMenuSettingsList.addOptionRow("Display Device", %devicesList, false, "onDisplayModeChange", -1, -30, true, "The display devices the window should be on.", %selectedDevice);
+      
+   if (%numDevices > 1)
+      OptionsMenuSettingsList.setRowEnabled(1, true);
+   else
+      OptionsMenuSettingsList.setRowEnabled(1, false);
+   
+   %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
+   OptionsMenuSettingsList.addOptionRow("Window Mode", $Video::ModeTags, false, "onDisplayModeChange", -1, -30, true, "", %mode);
+   
+   %resolutionList = getScreenResolutionList($pref::Video::deviceId, $pref::Video::deviceMode);
+   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "onDisplayResChange", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
+   
+   //If they're doing borderless, the window resolution must match the display resolution
+   if(%mode !$= "Borderless")
+      OptionsMenuSettingsList.setRowEnabled(3, true);
+   else
+      OptionsMenuSettingsList.setRowEnabled(3, false);
+   
+   OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
+
+
+   %refreshList = getScreenRefreshList($pref::Video::mode);
+   OptionsMenuSettingsList.addOptionRow("Refresh Rate", %refreshList, false, "", -1, -30, true, "", $pref::Video::RefreshRate);
    
    //move to gameplay tab
    OptionsMenuSettingsList.addSliderRow("Field of View", 75, 5, "65 100", "", -1, -30);
@@ -215,20 +246,8 @@ function OptionsMenu::populateDisplaySettingsList(%this)
 
 function OptionsMenu::applyDisplaySettings(%this)
 {
-   //%newAdapter    = GraphicsMenuDriver.getText();
-	//%numAdapters   = GFXInit::getAdapterCount();
 	%newDevice     = OptionsMenuSettingsList.getCurrentOption(0);
 							
-	/*for( %i = 0; %i < %numAdapters; %i ++ )
-	{
-	   %targetAdapter = GFXInit::getAdapterName( %i );
-	   if( GFXInit::getAdapterName( %i ) $= %newDevice )
-	   {
-	      %newDevice = GFXInit::getAdapterType( %i );
-	      break;
-	   }
-	}*/
-	   
    // Change the device.
    if ( %newDevice !$= $pref::Video::displayDevice )
    {
@@ -324,9 +343,16 @@ function OptionsMenu::applyGraphicsSettings(%this)
                                  
       $pref::Video::defaultAnisotropy = %level;
    }
-   
-   updateDisplaySettings();
-   
+
+   %newFSAA = OptionsMenuSettingsList.getCurrentOption(9);
+   if (%newFSAA $= "off")
+      %newFSAA = 0;
+   if (%newFSAA !$= $pref::Video::AA)
+   {
+      $pref::Video::AA = %newFSAA;
+      configureCanvas();
+   }
+
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
@@ -335,37 +361,58 @@ function OptionsMenu::applyGraphicsSettings(%this)
 function updateDisplaySettings()
 {
    //Update the display settings now
-   $pref::Video::Resolution = getWord(OptionsMenuSettingsList.getCurrentOption(1), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(1), 2);
-   %newBpp        = 32; // ... its not 1997 anymore.
-	$pref::Video::FullScreen = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(2)) == 0 ? "false" : "true";
-	$pref::Video::RefreshRate    = OptionsMenuSettingsList.getCurrentOption(4);
-	%newVsync = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(3));	
-	//$pref::Video::AA = GraphicsMenuAA.getSelected();
-	
-   /*if ( %newFullScreen $= "false" )
-	{
-      // If we're in windowed mode switch the fullscreen check
-      // if the resolution is bigger than the desktop.
-      %deskRes    = getDesktopResolution();      
-      %deskResX   = getWord(%deskRes, $WORD::RES_X);
-      %deskResY   = getWord(%deskRes, $WORD::RES_Y);
-	   if (  getWord( %newRes, $WORD::RES_X ) > %deskResX || 
-	         getWord( %newRes, $WORD::RES_Y ) > %deskResY )
-      {
-         $pref::Video::FullScreen = "true";
-         GraphicsMenuFullScreen.setStateOn( true );
-      }
-	}*/
+   %deviceName = OptionsMenuSettingsList.getCurrentOption(1);
+   %newDeviceID = getWord(%deviceName, 0) - 1;
+   %deviceModeName = OptionsMenuSettingsList.getCurrentOption(2);
+   %newDeviceMode = 0;
+   foreach$(%modeName in $Video::ModeTags)
+   {
+      if (%deviceModeName $= %modeName)
+         break;
+      else
+         %newDeviceMode++;
+   }
 
+   %newRes = getWord(OptionsMenuSettingsList.getCurrentOption(3), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(3), 2);
+   %newBpp = 32; // ... its not 1997 anymore.
+	%newFullScreen = %deviceModeName $= "Fullscreen" ? true : false;
+	%newRefresh    = OptionsMenuSettingsList.getCurrentOption(5);
+	%newVsync = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(4));	
+	%newFSAA = $pref::Video::AA;
+	
    // Build the final mode string.
-	%newMode = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC %newBpp SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
+	%newMode = %newRes SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newFSAA;
 	
    // Change the video mode.   
-   if (  %newMode !$= $pref::Video::mode || 
-         %newVsync != $pref::Video::disableVerticalSync )
+   if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
+         %newVsync != $pref::Video::disableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
    {
+      if ( %testNeedApply )
+         return true;
+
+      //****Edge Case Hack
+      // If we're in fullscreen mode and switching to a different monitor at the
+      // same resolution and maintaining fullscreen, GFX...WindowTarget::resetMode()
+      // will early-out because there is no "mode change" and the monitor change
+      // will not get applied. Instead of modifying platform code, we're going to
+      // move onto the new monitor in borderless and immediately switch to FS.
+      if (%newFullScreen && $pref::Video::FullScreen &&
+         ($pref::Video::Resolution $= %newRes) && ($pref::Video::deviceId != %newDeviceID))
+      {
+         $pref::Video::deviceId = %newDeviceID;
+         $pref::Video::deviceMode = $Video::ModeBorderless;
+         %tmpModeStr = Canvas.getMonitorMode(%newDeviceID, 0);
+         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %aa);
+      }
+
       $pref::Video::mode = %newMode;
-      $pref::Video::disableVerticalSync = %newVsync;      
+      $pref::Video::disableVerticalSync = %newVsync;
+      $pref::Video::deviceId = %newDeviceID;
+      $pref::Video::deviceMode = %newDeviceMode;
+      $pref::Video::Resolution = %newRes;
+      $pref::Video::FullScreen = %newFullScreen;
+      $pref::Video::RefreshRate = %newRefresh;
+      $pref::Video::AA = %newFSAA;
       configureCanvas();
    }
 }
@@ -537,4 +584,76 @@ function convertBoolToOnOff(%val)
       return "On";
    else 
       return "Off";
+}
+
+function onDisplayModeChange(%val)
+{  
+   // The display device (monitor) or screen mode has changed. Refill the
+   // resolution list with only available options.
+   %deviceName = OptionsMenuSettingsList.getCurrentOption(1);
+   %newDeviceID = getWord(%deviceName, 0) - 1;
+   %deviceModeName = OptionsMenuSettingsList.getCurrentOption(2);
+   %newDeviceMode = 0;
+   foreach$(%modeName in $Video::ModeTags)
+   {
+      if (%deviceModeName $= %modeName)
+         break;
+      else
+         %newDeviceMode++;
+   }
+   %resolutionList = getScreenResolutionList(%newDeviceID, %newDeviceMode);
+
+   // If we're switching to borderless, default to monitor res
+   if (%newDeviceMode == $Video::ModeBorderless)
+      %newRes = getWords(Canvas.getMonitorRect(%newDeviceID), 2);
+   else
+   {  // Otherwise, if our old resolution is still in the list, attempt to reset it.
+      %oldRes = getWord(OptionsMenuSettingsList.getCurrentOption(3), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(3), 2);
+
+      %found = false;
+      %retCount = getFieldCount(%resolutionList);
+      for (%i = 0; %i < %retCount; %i++)
+      {
+         %existingEntry = getField(%resolutionList, %i);
+         if ((%existingEntry.x $= %oldRes.x) && (%existingEntry.z $= %oldRes.y))
+         {
+            %found = true;
+            %newRes = %oldRes;
+            break;  
+         }
+      }
+
+      if (!%found)
+      {  // Pick the best resoltion available for the device and mode
+         %newRes = Canvas.getBestCanvasRes(%newDeviceID, %newDeviceMode);
+      }
+   }
+   
+   if(%newDeviceMode == $Video::ModeBorderless)
+      OptionsMenuSettingsList.setRowEnabled(3, false);
+   else
+      OptionsMenuSettingsList.setRowEnabled(3, true);
+      
+   OptionsMenuSettingsList.setOptions(3, %resolutionList);
+   OptionsMenuSettingsList.selectOption(3, _makePrettyResString(%newRes));
+}
+
+function onDisplayResChange(%val)
+{  // The resolution has changed. Setup refresh rates available at this res.
+   %newRes = getWord(OptionsMenuSettingsList.getCurrentOption(3), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(3), 2);
+   %refreshList = getScreenRefreshList(%newRes);
+
+   // If our old rate still exists, select it
+   %oldRate = OptionsMenuSettingsList.getCurrentOption(5);
+   %retCount = getFieldCount(%refreshList);
+   for (%i = 0; %i < %retCount; %i++)
+   {
+      %existingEntry = getField(%refreshList, %i);
+      %newRate = %existingEntry;
+      if (%existingEntry $= %oldRate)
+         break;  
+   }
+
+   OptionsMenuSettingsList.setOptions(5, %refreshList);
+   OptionsMenuSettingsList.selectOption(5, %newRate);
 }

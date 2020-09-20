@@ -27,11 +27,6 @@ $sceneLighting::cacheLighting = 1;
 
 $pref::Video::displayDevice = "D3D11";
 $pref::Video::disableVerticalSync = 1;
-$pref::Video::Resolution = "1024 768";
-$pref::Video::FullScreen = false;
-$pref::Video::BitDepth = "32";
-$pref::Video::RefreshRate = "60";
-$pref::Video::AA = "4";
 $pref::Video::defaultFenceCount = 0;
 $pref::Video::screenShotSession = 0;
 $pref::Video::screenShotFormat = "PNG";

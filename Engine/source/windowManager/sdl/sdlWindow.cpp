@@ -161,10 +161,18 @@ void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
 {
    mVideoMode = mode;
    mSuppressReset = true;
+   S32 newDisplay = Con::getIntVariable("pref::Video::deviceId", 0);
 
    // Set our window to have the right style based on the mode
    if(mode.fullScreen && !Platform::getWebDeployment() && !mOffscreenRender)
-   {     
+   {
+      SDL_Rect rect_sdl;
+      // Move the window onto the correct monitor before setting fullscreen
+      if (0 == SDL_GetDisplayBounds(newDisplay, &rect_sdl))
+      {
+         SDL_SetWindowPosition(mWindowHandle, rect_sdl.x, rect_sdl.y);
+      }
+
       setSize(mode.resolution);
 
       SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
@@ -187,10 +195,19 @@ void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
          SDL_SetWindowFullscreen( mWindowHandle, 0);
       }
 
+      // Restore the window to it's original size/position before applying changes
+      SDL_RestoreWindow(mWindowHandle);
+
+      // pref::Video::deviceMode values 0-windowed, 1-borderless, 2-fullscreen
+      bool hasBorder = (0 == Con::getIntVariable("pref::Video::deviceMode", 0));
+      SDL_SetWindowBordered(mWindowHandle, hasBorder ? SDL_TRUE : SDL_FALSE);
       setSize(mode.resolution);
-      centerWindow();
+      SDL_SetWindowPosition(mWindowHandle, SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay), SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay));
+      if (hasBorder && Con::getBoolVariable("pref::Video::isMaximized", false))
+         SDL_MaximizeWindow(mWindowHandle);
    }
 
+   getScreenResChangeSignal().trigger(this, true);
    mSuppressReset = false;
 }
 
@@ -216,7 +233,7 @@ void PlatformWindowSDL::_setFullscreen(const bool fullscreen)
    if(fullscreen && !mOffscreenRender)
    {
       Con::printf("PlatformWindowSDL::setFullscreen (full) enter");
-      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
    }
    else
    {
@@ -245,7 +262,7 @@ const char * PlatformWindowSDL::getCaption()
 
 void PlatformWindowSDL::setFocus()
 {
-   SDL_SetWindowInputFocus(mWindowHandle);
+   SDL_RaiseWindow(mWindowHandle);
 }
 
 void PlatformWindowSDL::setClientExtent( const Point2I newExtent )
@@ -322,11 +339,6 @@ void PlatformWindowSDL::centerWindow()
 bool PlatformWindowSDL::setSize( const Point2I &newSize )
 {
    SDL_SetWindowSize(mWindowHandle, newSize.x, newSize.y);
-
-   // Let GFX get an update about the new resolution
-   if (mTarget.isValid())
-      mTarget->resetMode();
-
    return true;
 }
 
@@ -475,6 +487,12 @@ void PlatformWindowSDL::_triggerMouseButtonNotify(const SDL_Event& event)
       case SDL_BUTTON_MIDDLE:
          button = 2;
          break;
+      case SDL_BUTTON_X1:
+         button = 3;
+         break;
+      case SDL_BUTTON_X2:
+         button = 4;
+         break;
       default:
          return;
    }
@@ -547,6 +565,24 @@ void PlatformWindowSDL::_triggerTextNotify(const SDL_Event& evt)
    }
 }
 
+void PlatformWindowSDL::_updateMonitorFromMove(const SDL_Event& evt)
+{
+   SDL_Rect sdlRect;
+   S32 monitorCount = SDL_GetNumVideoDisplays();
+   for (S32 index = 0; index < monitorCount; ++index)
+   {
+      if (0 == SDL_GetDisplayBounds(index, &sdlRect))
+      {
+         if ((evt.window.data1 >= sdlRect.x) && (evt.window.data1 < (sdlRect.x + sdlRect.w)) &&
+            (evt.window.data2 >= sdlRect.y) && (evt.window.data2 < (sdlRect.y + sdlRect.h)))
+         {
+            Con::setIntVariable("pref::Video::deviceId", index);
+            return;
+         }
+      }
+   }
+}
+
 void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
 {
    switch(evt.type)
@@ -594,7 +630,11 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
             case SDL_WINDOWEVENT_FOCUS_LOST:
                appEvent.trigger(getWindowId(), LoseFocus);
                break;
-            case SDL_WINDOWEVENT_MAXIMIZED:
+            case SDL_WINDOWEVENT_MOVED:
+            {
+               _updateMonitorFromMove(evt);
+               break;
+            }
             case SDL_WINDOWEVENT_RESIZED:
             {
                int width, height;
@@ -602,6 +642,7 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                mVideoMode.resolution.set(width, height);
                getGFXTarget()->resetMode();
                resizeEvent.trigger(getWindowId(), width, height);
+               getScreenResChangeSignal().trigger(this, true);
                break;
             }
             case SDL_WINDOWEVENT_CLOSE:
@@ -609,6 +650,14 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                appEvent.trigger(getWindowId(), WindowClose);
                mClosing = true;
             }
+            case SDL_WINDOWEVENT_MINIMIZED:
+               break;
+            case SDL_WINDOWEVENT_MAXIMIZED:
+               Con::setBoolVariable("pref::Video::isMaximized", true);
+               break;
+            case SDL_WINDOWEVENT_RESTORED:
+               Con::setBoolVariable("pref::Video::isMaximized", false);
+               break;
 
             default:
                break;

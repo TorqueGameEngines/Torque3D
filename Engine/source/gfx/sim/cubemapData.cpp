@@ -202,7 +202,7 @@ DefineEngineMethod(CubemapData, save, void, (const char* filename, const GFXForm
 	"Returns the script filename of where the CubemapData object was "
 	"defined.  This is used by the material editor.")
 {
-	if (filename == "")
+   if (dStrEqual(filename, ""))
       filename = object->getName();
 
    //add dds extension if needed

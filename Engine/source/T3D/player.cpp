@@ -290,6 +290,7 @@ PlayerData::PlayerData()
 
    maxStepHeight = 1.0f;
    runSurfaceAngle = 80.0f;
+   runSurfaceCos = mCos(mDegToRad(runSurfaceAngle));
 
    fallingSpeedThreshold = -10.0f;
 

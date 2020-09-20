@@ -1584,8 +1584,8 @@ static void handleMasterServerListResponse( BitStream* stream, U32 key, U8 /*fla
       {
          if ( i != packetIndex )
          {
-            PacketStatus* p = new PacketStatus( i, gMasterServerPing.key, currentTime );
-            gPacketStatusList.push_back( *p );
+            PacketStatus p = PacketStatus( i, gMasterServerPing.key, currentTime );
+            gPacketStatusList.push_back( p );
          }
       }
 
@@ -1674,8 +1674,8 @@ static void handleExtendedMasterServerListResponse(BitStream* stream, U32 key, U
       {
          if (i != packetIndex)
          {
-            PacketStatus* p = new PacketStatus(i, gMasterServerPing.key, currentTime);
-            gPacketStatusList.push_back(*p);
+            PacketStatus p = PacketStatus(i, gMasterServerPing.key, currentTime);
+            gPacketStatusList.push_back(p);
          }
       }
 

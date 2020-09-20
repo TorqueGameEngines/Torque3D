@@ -375,6 +375,8 @@ GFXTextureObject *GFXTextureManager::_createTexture(  GBitmap *bmp,
 
    if(!ret)
    {
+      SAFE_DELETE(realBmp);
+
       Con::errorf("GFXTextureManager - failed to create texture (1) for '%s'", (resourceName.isNotEmpty() ? resourceName.c_str() : "unknown"));
       return NULL;
    }

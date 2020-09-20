@@ -266,7 +266,7 @@ GuiControl* GuiInspectorTypeGameObjectAssetPtr::constructEditControl()
 
    const char* assetId = getData();
 
-   if (assetId == "")
+   if (dStrEqual(assetId, ""))
    {
       mGameObjectEditButton->setText("Create Game Object");
 

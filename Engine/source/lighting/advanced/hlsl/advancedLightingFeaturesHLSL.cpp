@@ -115,10 +115,6 @@ void DeferredRTLightingFeatHLSL::processPix( Vector<ShaderComponent*> &component
    meta->addStatement( new GenOp( "   @.y = 1.0 - @.y;\r\n", uvScene, uvScene ) ); // flip the y axis 
    meta->addStatement( new GenOp( "   @ = ( @ * @.zw ) + @.xy;\r\n", uvScene, uvScene, rtParams, rtParams) ); // scale it down and offset it to the rt size
 
-   Var *lightInfoSamp = new Var;
-   lightInfoSamp->setType( "float4" );
-   lightInfoSamp->setName( "lightInfoSample" );
-
    // create texture var
    Var *lightInfoBuffer = new Var;
    lightInfoBuffer->setType( "SamplerState" );

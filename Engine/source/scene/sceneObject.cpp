@@ -1704,7 +1704,7 @@ void SceneObject::updateRenderChangesByParent(){
 		// This is needed by objects that update their own render transform thru interpolate tick
 		// Mostly for stationary objects.
 
-		if (getClassName() == "Player")
+          if (getClassName() == StringTable->insert("Player"))
 			mat.mul(offset,getRenderTransform());  
 		else										
 			mat.mul(offset,getTransform());	 

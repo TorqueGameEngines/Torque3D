@@ -141,15 +141,12 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
                                 F32 *pixVersion,
                                 const GFXVertexFormat *vertexFormat,
                                 const char* cacheName,
-                                Vector<GFXShaderMacro> &macros,
-								Vector<CustomShaderFeatureData*> &customFeatureData)
+                                Vector<GFXShaderMacro> &macros)
 {
    PROFILE_SCOPE( ShaderGen_GenerateShader );
 
    mFeatureData = featureData;
    mVertexFormat = vertexFormat;
-
-   mCustomFeaturesData = customFeatureData;
 
    _uninit();
    _init();
@@ -290,44 +287,6 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
       }
    }
 
-   //Handle if we have any custom features
-   if (!mCustomFeaturesData.empty())
-   {
-	   for (U32 i = 0; i < mCustomFeaturesData.size(); ++i)
-	   {
-#ifdef TORQUE_D3D11
-         if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
-         {
-            mCustomFeaturesData[i]->mFeatureHLSL->processVert(mComponents, mFeatureData);
-
-            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
-            mOutput->addStatement(new GenOp(line));
-
-            if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
-               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
-
-            mCustomFeaturesData[i]->mFeatureHLSL->reset();
-            mOutput->addStatement(new GenOp("   \r\n"));
-         }
-#endif
-#ifdef TORQUE_OPENGL
-         if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
-         {
-            mCustomFeaturesData[i]->mFeatureGLSL->processVert(mComponents, mFeatureData);
-
-            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureGLSL->getName().c_str());
-            mOutput->addStatement(new GenOp(line));
-
-            if (mCustomFeaturesData[i]->mFeatureGLSL->getOutput())
-               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureGLSL->getOutput());
-
-            mCustomFeaturesData[i]->mFeatureGLSL->reset();
-            mOutput->addStatement(new GenOp("   \r\n"));
-         }
-#endif
-	   }
-   }
-
    ShaderConnector *connect = dynamic_cast<ShaderConnector *>( mComponents[C_CONNECTOR] );
    connect->sortVars();
 }
@@ -366,44 +325,6 @@ void ShaderGen::_processPixFeatures( Vector<GFXShaderMacro> &macros, bool macros
          feature->reset();
          mOutput->addStatement( new GenOp( "   \r\n" ) );
       }
-   }
-
-   //Handle if we have any custom features
-   if (!mCustomFeaturesData.empty())
-   {
-	   for (U32 i = 0; i < mCustomFeaturesData.size(); ++i)
-	   {
-#ifdef TORQUE_D3D11
-         if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
-         {
-            mCustomFeaturesData[i]->mFeatureHLSL->processPix(mComponents, mFeatureData);
-
-            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureHLSL->getName().c_str());
-            mOutput->addStatement(new GenOp(line));
-
-            if (mCustomFeaturesData[i]->mFeatureHLSL->getOutput())
-               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureHLSL->getOutput());
-
-            mCustomFeaturesData[i]->mFeatureHLSL->reset();
-            mOutput->addStatement(new GenOp("   \r\n"));
-         }
-#endif
-#ifdef TORQUE_OPENGL
-         if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
-         {
-            mCustomFeaturesData[i]->mFeatureGLSL->processPix(mComponents, mFeatureData);
-
-            String line = String::ToString("   // %s\r\n", mCustomFeaturesData[i]->mFeatureGLSL->getName().c_str());
-            mOutput->addStatement(new GenOp(line));
-
-            if (mCustomFeaturesData[i]->mFeatureGLSL->getOutput())
-               mOutput->addStatement(mCustomFeaturesData[i]->mFeatureGLSL->getOutput());
-
-            mCustomFeaturesData[i]->mFeatureGLSL->reset();
-            mOutput->addStatement(new GenOp("   \r\n"));
-         }
-#endif
-	   }
    }
    
    ShaderConnector *connect = dynamic_cast<ShaderConnector *>( mComponents[C_CONNECTOR] );
@@ -528,7 +449,7 @@ void ShaderGen::_printPixShader( Stream &stream )
    mPrinter->printPixelShaderCloser(stream);
 }
 
-GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, Vector<CustomShaderFeatureData*> &customFeatureData, const GFXVertexFormat *vertexFormat, const Vector<GFXShaderMacro> *macros, const Vector<String> &samplers )
+GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, const GFXVertexFormat *vertexFormat, const Vector<GFXShaderMacro> *macros, const Vector<String> &samplers )
 {
    PROFILE_SCOPE( ShaderGen_GetShader );
 
@@ -568,7 +489,7 @@ GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, Vector<
    shaderMacros.push_back( GFXShaderMacro( "TORQUE_SHADERGEN" ) );
    if ( macros )
       shaderMacros.merge( *macros );
-   generateShader( featureData, vertFile, pixFile, &pixVersion, vertexFormat, cacheKey, shaderMacros, customFeatureData );
+   generateShader( featureData, vertFile, pixFile, &pixVersion, vertexFormat, cacheKey, shaderMacros );
 
    GFXShader *shader = GFX->createShader();
    if (!shader->init(vertFile, pixFile, pixVersion, shaderMacros, samplers, &mInstancingFormat))

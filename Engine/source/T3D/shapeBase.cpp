@@ -1210,7 +1210,7 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
    }
    ShapeBaseData *prevDB = dynamic_cast<ShapeBaseData*>( mDataBlock );
 
-   bool isInitialDataBlock = ( mDataBlock == 0 );
+   bool isInitialDataBlock = (prevDB == 0);
 
    if ( Parent::onNewDataBlock( dptr, reload ) == false )
       return false;
@@ -1236,13 +1236,14 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
             for (S32 i = 0; i < mDataBlock->txr_tag_remappings.size(); i++)
             {
                ShapeBaseData::TextureTagRemapping* remap = &mDataBlock->txr_tag_remappings[i];
-               Vector<String> & mat_names = (Vector<String>&) mat_list->getMaterialNameList();
-               for (S32 j = 0; j < mat_names.size(); j++) 
+               Vector<String>& mat_names = (Vector<String>&) mat_list->getMaterialNameList();
+               S32 old_tagLen = dStrlen(remap->old_tag);
+               for (S32 j = 0; j < mat_names.size(); j++)
                {
-                  if (mat_names[j].compare(remap->old_tag, dStrlen(remap->old_tag), String::NoCase) == 0)
+                  if (mat_names[j].compare(remap->old_tag, old_tagLen, String::NoCase) == 0)
                   {
                      mat_names[j] = String(remap->new_tag);
-                     mat_names[j].insert(0,'#');
+                     mat_names[j].insert(0, '#');
                      break;
                   }
                }
@@ -1263,14 +1264,15 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
                for (S32 i = 0; i < mDataBlock->txr_tag_remappings.size(); i++)
                {
                   ShapeBaseData::TextureTagRemapping* remap = &mDataBlock->txr_tag_remappings[i];
-                  Vector<String> & mat_names = (Vector<String>&) mat_list->getMaterialNameList();
-                  for (S32 j = 0; j < mat_names.size(); j++) 
+                  Vector<String>& mat_names = (Vector<String>&) mat_list->getMaterialNameList();
+                  S32 new_tagLen = dStrlen(remap->new_tag);
+                  for (S32 j = 0; j < mat_names.size(); j++)
                   {
                      String::SizeType len = mat_names[j].length();
                      if (len > 1)
                      {
-                        String temp_name = mat_names[j].substr(1,len-1);
-                        if (temp_name.compare(remap->new_tag, dStrlen(remap->new_tag)) == 0)
+                        String temp_name = mat_names[j].substr(1, len - 1);
+                        if (temp_name.compare(remap->new_tag, new_tagLen) == 0)
                         {
                            mat_names[j] = String(remap->old_tag);
                            break;
@@ -1286,7 +1288,7 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
       resetWorldBox();
 
       // Set the initial mesh hidden state.
-      mMeshHidden.setSize( mDataBlock->mShape->objects.size() );
+      mMeshHidden.setSize(mDataBlock->mShape->objects.size());
       mMeshHidden.clear();
 
       // Initialize the threads
@@ -1304,37 +1306,37 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
             // initialized either by the constructor or from the server.
             bool reset = st.thread != 0;
             st.thread = 0;
-            
+
             // New datablock/shape may not actually HAVE this sequence.
             // In that case stop playing it.
-            
-            AssertFatal( prevDB != NULL, "ShapeBase::onNewDataBlock - how did you have a sequence playing without a prior datablock?" );
-   
-            const TSShape *prevShape = prevDB->mShape;
-            const TSShape::Sequence &prevSeq = prevShape->sequences[st.sequence];
-            const String &prevSeqName = prevShape->names[prevSeq.nameIndex];
 
-            st.sequence = mDataBlock->mShape->findSequence( prevSeqName );
+            AssertFatal(prevDB != NULL, "ShapeBase::onNewDataBlock - how did you have a sequence playing without a prior datablock?");
 
-            if ( st.sequence != -1 )
+            const TSShape* prevShape = prevDB->mShape;
+            const TSShape::Sequence& prevSeq = prevShape->sequences[st.sequence];
+            const String& prevSeqName = prevShape->names[prevSeq.nameIndex];
+
+            st.sequence = mDataBlock->mShape->findSequence(prevSeqName);
+
+            if (st.sequence != -1)
             {
-               setThreadSequence( i, st.sequence, reset );                              
-            }            
+               setThreadSequence(i, st.sequence, reset);
+            }
          }
       }
 
       if (mDataBlock->damageSequence != -1) {
          mDamageThread = mShapeInstance->addThread();
          mShapeInstance->setSequence(mDamageThread,
-                                     mDataBlock->damageSequence,0);
+            mDataBlock->damageSequence, 0);
       }
       if (mDataBlock->hulkSequence != -1) {
          mHulkThread = mShapeInstance->addThread();
          mShapeInstance->setSequence(mHulkThread,
-                                     mDataBlock->hulkSequence,0);
+            mDataBlock->hulkSequence, 0);
       }
 
-      if( isGhost() )
+      if (isGhost())
       {
          // Reapply the current skin
          mAppliedSkinName = "";

@@ -120,8 +120,7 @@ SFXEmitter::~SFXEmitter()
 {
    mLocalProfile._unregisterSignals();
    
-   if( mSource )
-      SFX_DELETE( mSource );
+   SFX_DELETE( mSource );
 }
 
 //-----------------------------------------------------------------------------

@@ -98,7 +98,7 @@ struct PolyhedronData
          ///   it defines a *clockwise* orientation for face[ 0 ].  This is important!
          U32 vertex[ 2 ];
 
-         Edge() { std::fill_n(face, 2, 0), std::fill_n(vertex, 0, 0); }
+         Edge() { std::fill_n(face, 2, 0), std::fill_n(vertex, 2, 0); }
          Edge( U32 face1, U32 face2, U32 vertex1, U32 vertex2 )
          {
             face[ 0 ] = face1;

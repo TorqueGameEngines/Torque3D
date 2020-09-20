@@ -424,6 +424,8 @@ bool TSShapeConstructor::onAdd()
       group = new SimGroup();
       if ( !group->registerObject("TSShapeConstructorGroup") )
       {
+         SAFE_DELETE(group);
+
          Con::errorf("TSShapeConstructor::onAdd failed: Could not register "
             "TSShapeConstructorGroup");
          return false;

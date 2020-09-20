@@ -747,14 +747,21 @@ void ReflectionProbe::processStaticCubemap()
 
    if (Platform::isFile(irradFileName))
    {
-      mIrridianceMap->setCubemapFile(FileName(irradFileName));
-      mIrridianceMap->updateFaces();
-   }
+      if (mIrridianceMap == nullptr)
+      {
+         Con::errorf("ReflectionProbe::processStaticCubemap() - Unable to load baked irradiance map at %s", irradFileName);
+         return;
+      }
 
-   if (mIrridianceMap == nullptr || mIrridianceMap->mCubemap.isNull())
-   {
-      Con::errorf("ReflectionProbe::processStaticCubemap() - Unable to load baked irradiance map at %s", irradFileName);
-      return;
+      mIrridianceMap->setCubemapFile(FileName(irradFileName));
+
+      if (mIrridianceMap->mCubemap.isNull())
+      {
+         Con::errorf("ReflectionProbe::processStaticCubemap() - Unable to load baked irradiance map at %s", irradFileName);
+         return;
+      }
+
+      mIrridianceMap->updateFaces();
    }
 
    char prefilterFileName[256];
@@ -762,14 +769,21 @@ void ReflectionProbe::processStaticCubemap()
 
    if (Platform::isFile(prefilterFileName))
    {
-      mPrefilterMap->setCubemapFile(FileName(prefilterFileName));
-      mPrefilterMap->updateFaces();
-   }
+      if (mPrefilterMap == nullptr)
+      {
+         Con::errorf("ReflectionProbe::processStaticCubemap() - Unable to load baked prefilter map at %s", prefilterFileName);
+         return;
+      }
 
-   if (mPrefilterMap == nullptr || mPrefilterMap->mCubemap.isNull())
-   {
-      Con::errorf("ReflectionProbe::processStaticCubemap() - Unable to load baked prefilter map at %s", prefilterFileName);
-      return;
+      mPrefilterMap->setCubemapFile(FileName(prefilterFileName));
+
+      if (mPrefilterMap->mCubemap.isNull())
+      {
+         Con::errorf("ReflectionProbe::processStaticCubemap() - Unable to load baked prefilter map at %s", prefilterFileName);
+         return;
+      }
+
+      mPrefilterMap->updateFaces();
    }
 
    if (!Platform::isFile(prefilterFileName) || !Platform::isFile(irradFileName))
@@ -809,7 +823,7 @@ void ReflectionProbe::processStaticCubemap()
       IBLUtilities::SaveCubeMap(prefilterFileName, mPrefilterMap->mCubemap);
    }
 
-   if ((mIrridianceMap != nullptr || !mIrridianceMap->mCubemap.isNull()) && (mPrefilterMap != nullptr || !mPrefilterMap->mCubemap.isNull()))
+   if ((mIrridianceMap != nullptr && !mIrridianceMap->mCubemap.isNull()) && (mPrefilterMap != nullptr && !mPrefilterMap->mCubemap.isNull()))
    {
       mProbeInfo->mPrefilterCubemap = mPrefilterMap->mCubemap;
       mProbeInfo->mIrradianceCubemap = mIrridianceMap->mCubemap;

@@ -110,7 +110,7 @@ public:
    };
    Vector<customHandleData> mCustomHandles;
 
-   void init( GFXShader* shader, Vector<CustomShaderFeatureData*> customFeatureData, CustomMaterial* mat = NULL);
+   void init( GFXShader* shader, CustomMaterial* mat = NULL);
    
 };
 

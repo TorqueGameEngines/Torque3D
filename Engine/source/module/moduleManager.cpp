@@ -616,7 +616,7 @@ bool ModuleManager::unloadModuleGroup( const char* pModuleGroup )
             if ( mEchoInfo )
             {
                 Con::printf( "Module Manager: Unloading group '%s' but could not unload module Id '%s' at version Id '%d'.",
-                    moduleGroup, pLoadedEntry->mpModuleDefinition->getModuleId(), pLoadedEntry->mpModuleDefinition->getVersionId() );
+                   moduleGroup, pLoadReadyModuleDefinition->getModuleId(), pLoadReadyModuleDefinition->getVersionId());
             }
             // Skip.
             continue;

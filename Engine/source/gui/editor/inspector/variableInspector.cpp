@@ -268,7 +268,7 @@ DefineEngineMethod(GuiVariableInspector, addField, void, (const char* name, cons
    const char* description, const char* defaultValue, const char* dataValues, SimObject* ownerObj),
    ("","","","","", "", nullAsType<SimObject*>()), "addField( fieldName/varName, fieldLabel, fieldTypeName, description, defaultValue, defaultValues, ownerObject )")
 {
-   if (name == "" || typeName == "")
+   if (dStrEqual(name, "") || dStrEqual(typeName, ""))
       return;
 
    object->addField(name, label, typeName, description, defaultValue, dataValues, "", ownerObj);
@@ -278,7 +278,7 @@ DefineEngineMethod(GuiVariableInspector, addCallbackField, void, (const char* na
    const char* description, const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj),
    ("", "", "", "", "", "", nullAsType<SimObject*>()), "addField( fieldName/varName, fieldLabel, fieldTypeName, description, defaultValue, defaultValues, callbackName, ownerObject )")
 {
-   if (name == "" || typeName == "")
+   if (dStrEqual(name, "") || dStrEqual(typeName, ""))
       return;
 
    object->addCallbackField(name, label, typeName, description, defaultValue, dataValues, callbackName, ownerObj);

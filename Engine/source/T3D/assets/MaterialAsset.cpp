@@ -280,7 +280,7 @@ bool GuiInspectorTypeMaterialAssetPtr::updateRects()
 
    bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
 
-   if (mMatEdContainer != nullptr)
+   if (mMatEdContainer != nullptr && mMatPreviewButton != nullptr)
    {
       mMatPreviewButton->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
    }

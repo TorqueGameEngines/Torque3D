@@ -783,7 +783,7 @@ U32 DecalManager::_generateConvexHull( const Vector<Point3F> &points, Vector<Poi
    while ( ++i <= maxmin )
    {
       // the lower line joins P[minmin] with P[maxmin]
-      if ( isLeft( points[minmin], points[maxmin], points[i]) >= 0 && i < maxmin )
+      if (i < maxmin && isLeft(points[minmin], points[maxmin], points[i]) >= 0)
          continue;          // ignore P[i] above or on the lower line
 
       while (top > 0)        // there are at least 2 points on the stack

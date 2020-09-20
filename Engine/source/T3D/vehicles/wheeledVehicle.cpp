@@ -339,8 +339,13 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
-         if( !sfxResolve( &sound[ i ], errorStr ) )
+      {
+         if (!sfxResolve(&sound[i], errorStr))
+         {
+            delete si;
             return false;
+         }
+      }
 
       if (tireEmitter)
          Sim::findObject(SimObjectId((uintptr_t)tireEmitter),tireEmitter);

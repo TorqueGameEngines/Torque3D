@@ -54,7 +54,7 @@
 ///
 /// ShaderConstHandles
 ///
-void ShaderConstHandles::init( GFXShader *shader, Vector<CustomShaderFeatureData*> customFeatureData, CustomMaterial* mat /*=NULL*/)
+void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/)
 {
    mDiffuseColorSC = shader->getShaderConstHandle("$diffuseMaterialColor");
    mTexMatSC = shader->getShaderConstHandle(ShaderGenVars::texMat);
@@ -125,19 +125,6 @@ void ShaderConstHandles::init( GFXShader *shader, Vector<CustomShaderFeatureData
 
    // Deferred Shading
    mMatInfoFlagsSC = shader->getShaderConstHandle(ShaderGenVars::matInfoFlags);
-
-   //custom features
-   for (U32 f = 0; f < customFeatureData.size(); ++f)
-   {
-	   for (U32 i = 0; i < customFeatureData[f]->mAddedShaderConstants.size(); ++i)
-	   {
-		   customHandleData newSC;
-		   newSC.handle = shader->getShaderConstHandle(String("$") + String(customFeatureData[f]->mAddedShaderConstants[i]));
-		   newSC.handleName = customFeatureData[f]->mAddedShaderConstants[i];
-
-		   mCustomHandles.push_back(newSC);
-      }
-   }
 }
 
 ///
@@ -686,10 +673,10 @@ bool ProcessedShaderMaterial::_addPass( ShaderRenderPassData &rpd,
 
    // Generate shader
    GFXShader::setLogging( true, true );
-   rpd.shader = SHADERGEN->getShader( rpd.mFeatureData, mMaterial->mCustomShaderFeatures, mVertexFormat, &mUserMacros, samplers );
+   rpd.shader = SHADERGEN->getShader( rpd.mFeatureData, mVertexFormat, &mUserMacros, samplers );
    if( !rpd.shader )
       return false;
-   rpd.shaderHandles.init( rpd.shader, mMaterial->mCustomShaderFeatures);
+   rpd.shaderHandles.init( rpd.shader );
 
    // If a pass glows, we glow
    if( rpd.mGlow )

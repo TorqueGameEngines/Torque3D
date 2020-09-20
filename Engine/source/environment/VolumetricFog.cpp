@@ -606,7 +606,7 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
       if (mShapeAssetId != StringTable->EmptyString())
       {
-         mShape = mShape = mShapeAsset->getShapeResource();
+         mShape = mShapeAsset->getShapeResource();
       }
       else if (mShapeName && mShapeName[0] != '\0')
       {
@@ -1048,7 +1048,7 @@ void VolumetricFog::prepRenderImage(SceneRenderState *state)
       return;
    if (mNumDetailLevels > 1)
    {
-      if ((det_size[mCurDetailLevel].det_size > mPixelSize) && (mCurDetailLevel < mNumDetailLevels - 1))
+      if ((mCurDetailLevel < mNumDetailLevels - 1) && (det_size[mCurDetailLevel].det_size > mPixelSize))
          UpdateBuffers(mCurDetailLevel + 1);
       else if (mCurDetailLevel > 0)
       {

@@ -185,6 +185,8 @@ bool CustomShaderFeatureData::hasFeature(String name)
    if (GFX->getAdapterType() == GFXAdapterType::OpenGL)
       return mFeatureGLSL->hasFeature(name);
 #endif
+
+   return false;
 }
 
 void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef* argv)

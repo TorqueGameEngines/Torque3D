@@ -238,7 +238,8 @@ bool GuiCanvas::onAdd()
          mPlatformWindow->lockSize(true);
       
       // Set a minimum on the window size so people can't break us by resizing tiny.
-      mPlatformWindow->setMinimumWindowSize(Point2I(640,480));
+      mPlatformWindow->setMinimumWindowSize(Point2I(Con::getIntVariable("$Video::minimumXResolution", 1024),
+         Con::getIntVariable("$Video::minimumYResolution", 720)));
 
       // Now, we have to hook in our event callbacks so we'll get
       // appropriate events from the window.
@@ -2462,6 +2463,35 @@ DefineEngineMethod( GuiCanvas, getMonitorRect, RectI, (S32 index),,
    return PlatformWindowManager::get()->getMonitorRect(index);
 }
 
+DefineEngineMethod( GuiCanvas, getMonitorUsableRect, RectI, (S32 index),,
+               "@brief Use this function to get the usable desktop area represented by a display, with the primary display located at 0,0.\n\n"
+               "This is the same area as Canvas.getMonitorRect() reports, but with portions reserved by the system removed. "
+               "For example, on Apple Mac OS X, this subtracts the area occupied by the menu bar and dock.\n"
+               "Setting a window to be fullscreen generally bypasses these unusable areas, so these are good guidelines for "
+               "the maximum space available to a non - fullscreen window."
+               "@param index The monitor index.\n\n"
+               "@return The rectangular region of the requested monitor.")
+{
+   return PlatformWindowManager::get()->getMonitorUsableRect(index);
+}
+
+DefineEngineMethod(GuiCanvas, getMonitorModeCount, S32, (S32 monitorIndex), (0),
+   "Gets the number of video modes available on the selected monitor.\n\n")
+{
+   return PlatformWindowManager::get()->getMonitorModeCount(monitorIndex);
+}
+DefineEngineMethod(GuiCanvas, getMonitorMode, const char*, (S32 monitorIndex, S32 modeIndex), (0),
+   "Gets a video mode string from the selected monitor.\n\n")
+{
+   char* buf = Con::getReturnBuffer(PlatformWindowManager::get()->getMonitorMode(monitorIndex, modeIndex));
+   return buf;
+}
+DefineEngineMethod(GuiCanvas, getMonitorDesktopMode, const char*, (S32 monitorIndex), (0),
+   "Gets the current desktop mode for the selected monitor.\n\n")
+{
+   char* buf = Con::getReturnBuffer(PlatformWindowManager::get()->getMonitorDesktopMode(monitorIndex));
+   return buf;
+}
 
 DefineEngineMethod( GuiCanvas, getVideoMode, const char*, (),,
                "@brief Gets the current screen mode as a string.\n\n"
@@ -2698,8 +2728,11 @@ DefineEngineMethod( GuiCanvas, restoreWindow, void, (), , "() - restore this can
 DefineEngineMethod( GuiCanvas, setFocus, void, (), , "() - Claim OS input focus for this canvas' window.")
 {
    PlatformWindow* window = object->getPlatformWindow();
-   if( window )
+   if (window)
+   {
       window->setFocus();
+      window->appEvent.trigger(window->getWindowId(), GainFocus);
+   }
 }
 
 DefineEngineMethod( GuiCanvas, setMenuBar, void, ( GuiControl* menu ),,

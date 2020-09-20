@@ -533,6 +533,14 @@ void GuiGameListMenuCtrl::addRow(const char* label, const char* bitmapName, cons
    addRow(row, label, callback, icon, yPad, true, enabled, Row::Mode::Keybind, tooltip);
 }
 
+void GuiGameListMenuCtrl::removeRow(const S32& row)
+{
+   if (row == -1 || row >= mRows.size())
+      return;
+
+   mRows.erase(row);
+}
+
 Point2I  GuiGameListMenuCtrl::getMinExtent() const
 {
    Point2I parentMin = Parent::getMinExtent();
@@ -1519,6 +1527,12 @@ DefineEngineMethod(GuiGameListMenuCtrl, addKeybindRow, void,
 "@param enabled [optional] If this row is initially enabled.")
 {
    object->addRow(label, bitmapName, callback, icon, yPad, enabled, tooltip);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, removeRow, void, (S32 row),,
+   "Removes the row at the provided index")
+{
+   object->removeRow(row);
 }
 
 DefineEngineMethod(GuiGameListMenuCtrl, getCurrentOption, const char*, (S32 row), ,

@@ -462,7 +462,7 @@ void RenderProbeMgr::_setupStaticParameters()
          continue;
 
       U32 mips = mRegisteredProbes[i].mPrefilterCubemap.getPointer()->getMipMapLevels();
-      mMipCount = mips != 0 && mips >= mMipCount ? mips : 0;
+      mMipCount = (mips != 0 && mips >= mMipCount) ? mips : 0;
 
       if (curEntry.mIsSkylight)
       {
@@ -962,7 +962,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
       IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
       IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
 
-      renderTarget->destroySelf();
+      renderTarget->zombify();
 
       U32 endMSTime = Platform::getRealMilliseconds();
       F32 diffTime = F32(endMSTime - startMSTime);

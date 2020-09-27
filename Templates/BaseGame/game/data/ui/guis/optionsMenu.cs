@@ -279,9 +279,11 @@ function OptionsMenu::populateGraphicsSettingsList(%this)
    %highMedLow = "Low\tMedium\tHigh";
    %anisoFilter = "Off\t4\t8\t16";
    %aaFilter = "Off\t1\t2\t4";
+   OptionsMenuSettingsList.addOptionRow("Lighting Quality", getQualityLevels(LightingQualityList), false, "", -1, -30, true, "Amount and drawdistance of local lights", getCurrentQualityLevel(LightingQualityList));
    OptionsMenuSettingsList.addOptionRow("Shadow Quality", getQualityLevels(ShadowQualityList), false, "", -1, -30, true, "Shadow revolution quality", getCurrentQualityLevel(ShadowQualityList));
    OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", getQualityLevels(SoftShadowList), false, "", -1, -30, true, "Amount of softening applied to shadowmaps", getCurrentQualityLevel(SoftShadowList));
    OptionsMenuSettingsList.addOptionRow("Mesh Quality", getQualityLevels(MeshQualityGroup), false, "", -1, -30, true, "Fidelity of rendering of mesh objects", getCurrentQualityLevel(MeshQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Object Draw Distance", getQualityLevels(MeshDrawDistQualityGroup), false, "", -1, -30, true, "Dictates if and when static objects fade out in the distance", getCurrentQualityLevel(MeshDrawDistQualityGroup));
    OptionsMenuSettingsList.addOptionRow("Texture Quality", getQualityLevels(TextureQualityGroup), false, "", -1, -30, true, "Fidelity of textures", getCurrentQualityLevel(TextureQualityGroup));
    OptionsMenuSettingsList.addOptionRow("Terrain Quality", getQualityLevels(TerrainQualityGroup), false, "", -1, -30, true, "Quality level of terrain objects", getCurrentQualityLevel(TerrainQualityGroup));
    OptionsMenuSettingsList.addOptionRow("Decal Lifetime", getQualityLevels(DecalLifetimeGroup), false, "", -1, -30, true, "How long decals are rendered", getCurrentQualityLevel(DecalLifetimeGroup));
@@ -301,15 +303,17 @@ function OptionsMenu::populateGraphicsSettingsList(%this)
 
 function OptionsMenu::applyGraphicsSettings(%this)
 {
-   ShadowQualityList.applySetting(OptionsMenuSettingsList.getCurrentOption(0));
-   SoftShadowList.applySetting(OptionsMenuSettingsList.getCurrentOption(1));
+   LightingQualityList.applySetting(OptionsMenuSettingsList.getCurrentOption(0));
+   ShadowQualityList.applySetting(OptionsMenuSettingsList.getCurrentOption(1));
+   SoftShadowList.applySetting(OptionsMenuSettingsList.getCurrentOption(2));
    
-   MeshQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(2));
-   TextureQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(3));
-   TerrainQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(4));
-   DecalLifetimeGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(5));
-   GroundCoverDensityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(6));
-   ShaderQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(7));
+   MeshQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(3));
+   MeshDrawDistQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(4));
+   TextureQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(5));
+   TerrainQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(6));
+   DecalLifetimeGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(7));
+   GroundCoverDensityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(8));
+   ShaderQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(9));
    
    //Update Textures
    reloadTextures();
@@ -319,23 +323,23 @@ function OptionsMenu::applyGraphicsSettings(%this)
    // if its already set or if its not compatible.   
    //setLightManager( $pref::lightManager );   
    
-   $pref::PostFX::EnableSSAO = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(12));
-   $pref::PostFX::EnableDOF = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(13));
-   $pref::PostFX::EnableVignette = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(14));
-   $pref::PostFX::EnableLightRays = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(15));
+   $pref::PostFX::EnableSSAO = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(14));
+   $pref::PostFX::EnableDOF = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(15));
+   $pref::PostFX::EnableVignette = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(16));
+   $pref::PostFX::EnableLightRays = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(17));
    
    PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
    PostFXManager.settingsEffectSetEnabled(DOFPostEffect, $pref::PostFX::EnableDOF);
    PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
    PostFXManager.settingsEffectSetEnabled(vignettePostFX, $pref::PostFX::EnableVignette);
    
-   $pref::Video::disableParallaxMapping = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(10));
+   $pref::Video::disableParallaxMapping = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(12));
    
    //water reflections
-   $pref::Water::disableTrueReflections = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(11));
+   $pref::Water::disableTrueReflections = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(13));
    
    // Check the anisotropic filtering.   
-   %level = OptionsMenuSettingsList.getCurrentOption(8);
+   %level = OptionsMenuSettingsList.getCurrentOption(10);
    if ( %level != $pref::Video::defaultAnisotropy )
    {
       if ( %testNeedApply )
@@ -344,7 +348,7 @@ function OptionsMenu::applyGraphicsSettings(%this)
       $pref::Video::defaultAnisotropy = %level;
    }
 
-   %newFSAA = OptionsMenuSettingsList.getCurrentOption(9);
+   %newFSAA = OptionsMenuSettingsList.getCurrentOption(11);
    if (%newFSAA $= "off")
       %newFSAA = 0;
    if (%newFSAA !$= $pref::Video::AA)

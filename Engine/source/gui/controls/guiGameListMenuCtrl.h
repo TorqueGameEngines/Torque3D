@@ -164,7 +164,7 @@ public:
    void addRow(const char* label, const char* bitmapName, const char* callback, S32 icon, S32 yPad, bool enabled, const char* tooltip);
 
    //Removes row at the provided index
-   void GuiGameListMenuCtrl::removeRow(const S32& row);
+   void removeRow(const S32& row);
 
    /// Gets the text for the currently selected option of the given row.
    ///

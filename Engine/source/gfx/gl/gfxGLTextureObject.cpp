@@ -185,8 +185,6 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
       U8* orig = (U8*)mem.alloc(srcPixelCount * srcBytesPerPixel);
 
       glGetTexImage(mBinding, mip, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], orig);
-
-      PROFILE_START(GFXGLTextureObject_copyToBmp_pixCopy);
       if (mFormat == GFXFormatR16G16B16A16F)
       {
          dMemcpy(dest, orig, srcPixelCount * srcBytesPerPixel);
@@ -207,7 +205,6 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
       }
    }
    glBindTexture(mBinding, NULL);
-   PROFILE_END();
 
    return true;
 }

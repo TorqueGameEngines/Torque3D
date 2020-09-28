@@ -204,7 +204,8 @@ RenderProbeMgr::RenderProbeMgr()
    mHasSkylight(false),
    mSkylightCubemapIdx(-1),
    mCubeMapCount(0),
-   mDefaultSkyLight(nullptr)
+   mDefaultSkyLight(nullptr),
+   mBakeRenderTarget(nullptr)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -853,7 +854,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    //PROFILE_END();
 }
 
-void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
+void RenderProbeMgr::bakeProbe(ReflectionProbe* probe, bool writeFiles)
 {
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_Bake, ColorI::WHITE);
 
@@ -918,7 +919,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
    Frustum culler;
    culler.set(false,
       query.fov,
-      1.0f,
+      (F32)resolution / (F32)resolution,
       query.nearPlane,
       query.farPlane,
       query.cameraMatrix);
@@ -957,12 +958,13 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
       clientProbe->mIrridianceMap->mCubemap->initDynamic(resolution, reflectFormat);
       clientProbe->mPrefilterMap->mCubemap->initDynamic(resolution, reflectFormat);
 
-      GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
+      if (mBakeRenderTarget == nullptr)
+         mBakeRenderTarget = GFX->allocRenderToTextureTarget(false);
+      else
+         mBakeRenderTarget->resurrect();
 
-      IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
-      IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
-
-      renderTarget->destroySelf();
+      IBLUtilities::GenerateIrradianceMap(mBakeRenderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
+      IBLUtilities::GeneratePrefilterMap(mBakeRenderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
 
       U32 endMSTime = Platform::getRealMilliseconds();
       F32 diffTime = F32(endMSTime - startMSTime);
@@ -975,11 +977,14 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe *probe, bool writeFiles)
          IBLUtilities::SaveCubeMap(clientProbe->getIrradianceMapPath(), clientProbe->mIrridianceMap->mCubemap);
          IBLUtilities::SaveCubeMap(clientProbe->getPrefilterMapPath(), clientProbe->mPrefilterMap->mCubemap);
       }
+
+      mBakeRenderTarget->zombify();
    }
    else
    {
       Con::errorf("RenderProbeMgr::bake() - Didn't generate a valid scene capture cubemap, unable to generate prefilter and irradiance maps!");
    }
+
 
    if (!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = probeRenderState;

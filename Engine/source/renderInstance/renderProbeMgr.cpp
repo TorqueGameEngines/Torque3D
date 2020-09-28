@@ -919,7 +919,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe, bool writeFiles)
    Frustum culler;
    culler.set(false,
       query.fov,
-      (F32)resolution / (F32)resolution,
+      1.0f,
       query.nearPlane,
       query.farPlane,
       query.cameraMatrix);

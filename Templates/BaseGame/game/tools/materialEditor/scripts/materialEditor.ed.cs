@@ -2578,7 +2578,7 @@ function MaterialEditorGui::saveCompositeMap(%this)
     %metal = %material.metalChan[%layer];
     
     %channelKey = %roughness SPC %ao SPC %metal SPC 0;
-    error("Storing: \"" @ %roughMap @"\" \""@  %aoMap @"\" \""@ %metalMap @"\" \""@ %channelKey @"\" \""@ %saveAs @"\"");
-    saveCompositeTexture(%roughMap,%aoMap,%metalMap,"",%channelKey, %saveAs);
+    error("Storing: \"" @ %aoMap @"\" \""@ %roughMap @"\" \""@ %metalMap @"\" \""@ %channelKey @"\" \""@ %saveAs @"\"");
+    saveCompositeTexture(%aoMap,%roughMap,%metalMap,"",%channelKey, %saveAs);
     %dlg.delete();
 }

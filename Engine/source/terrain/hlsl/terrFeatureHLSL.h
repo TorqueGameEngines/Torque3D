@@ -46,7 +46,7 @@ public:
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
    Var* _getNormalMapTex();
-   Var* _getCompositeMapTex();
+   Var* _getORMConfigMapTex();
 
    static Var* _getUniformVar( const char *name, const char *type, ConstantSortPosition csp );
 
@@ -162,7 +162,7 @@ public:
    virtual String getName() { return "Terrain Additive"; }
 };
 
-class TerrainCompositeMapFeatHLSL : public TerrainFeatHLSL
+class TerrainORMMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 

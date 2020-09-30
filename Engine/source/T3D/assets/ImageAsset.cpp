@@ -315,7 +315,7 @@ const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)
    static const char* _names[] = {
       "Albedo",
       "Normal",
-      "PBRConfig",
+      "ORMConfig",
       "GUI",
       "Roughness",
       "AO",

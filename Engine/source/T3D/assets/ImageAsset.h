@@ -56,7 +56,7 @@ public:
    {
       Albedo = 0,
       Normal = 1,
-      PBRConfig = 2,
+      ORMConfig = 2,
       GUI = 3,
       Roughness = 4,
       AO = 5,

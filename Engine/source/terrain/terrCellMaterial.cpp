@@ -60,7 +60,7 @@ Vector<String> _initSamplerNames()
       samplerNames.push_back(avar("$normalMap%d",i));
       samplerNames.push_back(avar("$detailMap%d",i));
       //samplerNames.push_back(avar("$macroMap%d", i));
-      samplerNames.push_back(avar("$compositeMap%d", i));
+      samplerNames.push_back(avar("$ormConfigMap%d", i));
    }   
 
    return samplerNames;
@@ -151,9 +151,9 @@ void TerrainCellMaterial::_updateDefaultAnisotropy()
                   desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
             }
 
-            if (matInfo->compositeTexConst->isValid())
+            if (matInfo->ormTexConst->isValid())
             {
-               const S32 sampler = matInfo->compositeTexConst->getSamplerRegister();
+               const S32 sampler = matInfo->ormTexConst->getSamplerRegister();
 
                if (maxAnisotropy > 1)
                {
@@ -439,15 +439,15 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
             features.addFeature(MFT_isDeferred, featureIndex);
          features.addFeature( MFT_TerrainDetailMap, featureIndex );
 
-         if (!(mat->getCompositeMap().isEmpty()))
+         if (!(mat->getORMConfigMap().isEmpty()))
          {
             if (deferredMat)
                features.addFeature(MFT_isDeferred, featureIndex);
-            features.addFeature(MFT_TerrainCompositeMap, featureIndex);
+            features.addFeature(MFT_TerrainORMMap, featureIndex);
             features.removeFeature(MFT_DeferredTerrainBlankInfoMap);
          }
-         if (mat->getInvertSmoothness())
-            features.addFeature(MFT_InvertSmoothness);
+         if (mat->getInvertRoughness())
+            features.addFeature(MFT_InvertRoughness);
 
          pass->materials.push_back( (*materials)[i] );
          normalMaps.increment();
@@ -638,16 +638,16 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
             &GFXStaticTextureProfile, "TerrainCellMaterial::_createPass() - DetailMap" );
       }
 
-	  matInfo->compositeTexConst = pass->shader->getShaderConstHandle(avar("$compositeMap%d", i));
-	  if (matInfo->compositeTexConst->isValid())
+	  matInfo->ormTexConst = pass->shader->getShaderConstHandle(avar("$ormConfigMap%d", i));
+	  if (matInfo->ormTexConst->isValid())
 	  {
         GFXTextureProfile* profile = &GFXStaticTextureProfile;
         if (matInfo->mat->getIsSRGB())
            profile = &GFXStaticTextureSRGBProfile;
 
-		  matInfo->compositeTex.set(matInfo->mat->getCompositeMap(),
+		  matInfo->ormTex.set(matInfo->mat->getORMConfigMap(),
 			  profile, "TerrainCellMaterial::_createPass() - CompositeMap");
-		  const S32 sampler = matInfo->compositeTexConst->getSamplerRegister();
+		  const S32 sampler = matInfo->ormTexConst->getSamplerRegister();
 
 		  desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
 		  desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
@@ -859,8 +859,8 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
          GFX->setTexture( matInfo->macroTexConst->getSamplerRegister(), matInfo->macroTex );
       if ( matInfo->normalTexConst->isValid() )
          GFX->setTexture( matInfo->normalTexConst->getSamplerRegister(), matInfo->normalTex );
-      if ( matInfo->compositeTexConst->isValid() )
-         GFX->setTexture( matInfo->compositeTexConst->getSamplerRegister(), matInfo->compositeTex );
+      if ( matInfo->ormTexConst->isValid() )
+         GFX->setTexture( matInfo->ormTexConst->getSamplerRegister(), matInfo->ormTex );
    }
 
    pass.consts->setSafe( pass.layerSizeConst, (F32)mTerrain->mLayerTex.getWidth() );

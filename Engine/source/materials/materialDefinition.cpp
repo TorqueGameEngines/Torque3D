@@ -118,13 +118,13 @@ Material::Material()
       mDiffuse[i].set( 1.0f, 1.0f, 1.0f, 1.0f );
       mDiffuseMapSRGB[i] = true;
 
-      mSmoothness[i] = 0.0f;
+      mRoughness[i] = 1.0f;
       mMetalness[i] = 0.0f;
 
 	   mIsSRGb[i] = true;
-      mInvertSmoothness[i] = false;
+      mInvertRoughness[i] = false;
 
-      mSmoothnessChan[i] = 0;
+      mRoughnessChan[i] = 0;
       mAOChan[i] = 1;
       mMetalChan[i] = 2;
 
@@ -265,11 +265,11 @@ void Material::initPersistFields()
       addField( "detailNormalMapStrength", TypeF32, Offset(mDetailNormalMapStrength, Material), MAX_STAGES,
          "Used to scale the strength of the detail normal map when blended with the base normal map." );
       
-      addField("smoothness", TypeF32, Offset(mSmoothness, Material), MAX_STAGES,
-         "The degree of smoothness when not using a PBRConfigMap." );
+      addField("roughness", TypeF32, Offset(mRoughness, Material), MAX_STAGES,
+         "The degree of roughness when not using a ORMConfigMap." );
 
 		addField("metalness", TypeF32, Offset(mMetalness, Material), MAX_STAGES,
-         "The degree of Metalness when not using a PBRConfigMap." );
+         "The degree of Metalness when not using a ORMConfigMap." );
 
       addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
          "glow mask multiplier");
@@ -295,11 +295,11 @@ void Material::initPersistFields()
       addField("isSRGb", TypeBool, Offset(mIsSRGb, Material), MAX_STAGES,
          "Substance Designer Workaround.");
 
-      addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, Material), MAX_STAGES,
-         "Treat Smoothness as Roughness");
+      addField("invertRoughness", TypeBool, Offset(mInvertRoughness, Material), MAX_STAGES,
+         "Treat Roughness as Roughness");
 
-      addField("smoothnessChan", TypeF32, Offset(mSmoothnessChan, Material), MAX_STAGES,
-         "The input channel smoothness maps use.");
+      addField("roughnessChan", TypeF32, Offset(mRoughnessChan, Material), MAX_STAGES,
+         "The input channel roughness maps use.");
 
       addField("AOChan", TypeF32, Offset(mAOChan, Material), MAX_STAGES,
          "The input channel AO maps use.");

@@ -579,7 +579,7 @@
                            VertSizing = "bottom";
                            position = "9 4";
                            Extent = "72 16";
-                           text = "Smoothness";
+                           text = "Roughness";
                            Profile = "ToolsGuiTextProfile";
                         };                        
                         
@@ -599,7 +599,7 @@
                            
                            new GuiSliderCtrl() {
                               canSaveDynamicFields = "0";
-                              internalName = "SmoothnessSlider";
+                              internalName = "RoughnessSlider";
                               Enabled = "1";
                               isContainer = "0";
                               Profile = "ToolsGuiSliderProfile";
@@ -610,10 +610,10 @@
                               MinExtent = "8 2";
                               canSave = "1";
                               Visible = "1";
-                              Command = "MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
-                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
+                              Command = "MaterialEditorGui.updateActiveMaterial(\"Roughness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, true);";
+                              AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Roughness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue(), true, false);";
                               tooltipprofile = "ToolsGuiDefaultProfile";
-                              ToolTip = "Sets Smoothness.";
+                              ToolTip = "Sets Roughness.";
                               hovertime = "1000";
                               range = "0 1";
                               ticks = "0";
@@ -621,7 +621,7 @@
                            };
                            new GuiTextEditCtrl() {
                               canSaveDynamicFields = "0";
-                              internalName = "SmoothnessTextEdit";
+                              internalName = "RoughnessTextEdit";
                               Enabled = "1";
                               isContainer = "0";
                               Profile = "ToolsGuiTextEditProfile";
@@ -632,7 +632,7 @@
                               MinExtent = "8 2";
                               canSave = "1";
                               Visible = "1";
-                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Smoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
+                              Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateActiveMaterial(\"Roughness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
                               hovertime = "1000";
                               AnchorTop = "1";
                               AnchorBottom = "0";
@@ -724,7 +724,7 @@
                         };						
                         new GuiCheckBoxCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "invertSmoothnessCheckbox";
+                           internalName = "invertRoughnessCheckbox";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiCheckBoxProfile";
@@ -735,11 +735,11 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateActiveMaterial(\"invertSmoothness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
+                           Command = "MaterialEditorGui.updateActiveMaterial(\"invertRoughness[\" @ MaterialEditorGui.currentLayer @ \"]\", $ThisControl.getValue());";
                            tooltipprofile = "ToolsGuiDefaultProfile";
                            ToolTip = "Treat as Roughest = 1.0, not 0.0";
                            hovertime = "1000";
-                           text = "Invert Smoothness";
+                           text = "Invert Roughness";
                            groupNum = "-1";
                            buttonType = "ToggleButton";
                            useMouseEvents = "0";
@@ -772,7 +772,7 @@
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "PBRConfigMapDisplayBitmap";
+                           internalName = "ORMConfigMapDisplayBitmap";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiDefaultProfile";
@@ -806,7 +806,7 @@
                            AnchorBottom = "0";
                            AnchorLeft = "1";
                            AnchorRight = "0";
-                           text = "PBR Config Map";
+                           text = "ORM(Config)Map";
                            maxLength = "1024";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -821,9 +821,9 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updatePBRConfigMap(1);";
+                           Command = "MaterialEditorGui.updateORMConfigMap(1);";
                            tooltipprofile = "ToolsGuiDefaultProfile";
-                           ToolTip = "Change the packed spec map for this layer. \n Smoothness (R), Ambient Occlusion (G), and Metalness(B))";
+                           ToolTip = "Change the packed spec map for this layer. \n Roughness (R), Ambient Occlusion (G), and Metalness(B))";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";
@@ -832,7 +832,7 @@
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "PBRConfigMapNameText";
+                           internalName = "ORMConfigMapNameText";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiTextProfile";
@@ -861,7 +861,7 @@
                            position = "134 34";
                            Extent = "40 16";
                            buttonType = "PushButton";
-                           command="MaterialEditorGui.updatePBRConfigMap(1);";
+                           command="MaterialEditorGui.updateORMConfigMap(1);";
                         };
                         new GuiBitmapButtonCtrl() {
                            canSaveDynamicFields = "0";
@@ -875,7 +875,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updatePBRConfigMap(0);";
+                           Command = "MaterialEditorGui.updateORMConfigMap(0);";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";
@@ -1010,7 +1010,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiTextCtrl() {
-						 text = "Smoothness";
+						 text = "Roughness";
 						 maxLength = "1024";
 						 margin = "0 0 0 0";
 						 padding = "0 0 0 0";
@@ -1051,7 +1051,7 @@
 						 active = "1";
 						 command = "MaterialEditorGui.updateroughMap(1);";
 						 tooltipProfile = "GuiToolTipProfile";
-						 tooltip = "Change the Smoothness map for this layer.";
+						 tooltip = "Change the Roughness map for this layer.";
 						 hovertime = "1000";
 						 isContainer = "0";
 						 canSave = "1";

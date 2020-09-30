@@ -195,8 +195,8 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
          if (rmName.isNotEmpty())
          {
             mat->mRoughMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // Roughness
-            mat->mSmoothnessChan[0] = 1.0f;
-            mat->mInvertSmoothness[0] = (floatVal == 1.0f);
+            mat->mRoughnessChan[0] = 1.0f;
+            mat->mInvertRoughness[0] = (floatVal == 1.0f);
             mat->mMetalMapFilename[0] = cleanTextureName(rmName, cleanFile, path, false); // Metallic
             mat->mMetalChan[0] = 2.0f;
          }

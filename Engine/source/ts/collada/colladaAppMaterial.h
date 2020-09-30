@@ -45,8 +45,7 @@ public:
    String                     normalMap;
 
    LinearColorF               diffuseColor;
-   LinearColorF               specularColor;
-   F32                        smoothness;
+   F32                        roughness;
    F32                        metalness;
    bool                       doubleSided;
 

@@ -49,13 +49,10 @@ protected:
    F32 mDiffuseSize;
 
    ///
-   FileName mNormalMap;
+   DECLARE_TEXTUREMAP(NormalMap);
 
    ///
-   FileName mDetailMap;
-
-   ///
-   FileName mCompositeMap;
+   DECLARE_TEXTUREMAP(DetailMap);
    
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
@@ -68,22 +65,25 @@ protected:
    /// 
    F32 mDetailDistance;
 
+   ///
+   DECLARE_TEXTUREMAP(ORMConfigMap);
+
+   bool mIsSRGB;
+   bool mInvertRoughness;
+
    /// Normally the detail is projected on to the xy 
    /// coordinates of the terrain.  If this flag is true
    /// then this detail is projected along the xz and yz
    /// planes.
    bool mSideProjection;
 
-   FileName mMacroMap;
+   DECLARE_TEXTUREMAP(MacroMap);
    F32 mMacroSize;
    F32 mMacroStrength;
    F32 mMacroDistance;
 
    ///
    F32 mParallaxScale;
-
-   bool mIsSRGB;
-   bool mInvertSmoothness;
 
 public:
 
@@ -124,7 +124,7 @@ public:
 
    bool getIsSRGB() const { return mIsSRGB; }
 
-   bool getInvertSmoothness() const { return mInvertSmoothness; }
+   bool getInvertRoughness() const { return mInvertRoughness; }
 
 };
 

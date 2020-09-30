@@ -767,12 +767,12 @@
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                isContainer = "0";
-               internalName = "pbrConfigTexCtrl";
+               internalName = "ormConfigTexCtrl";
                canSave = "1";
                canSaveDynamicFields = "0";
             };
             new GuiTextCtrl() {
-               text = "PBR Config";
+               text = "ORM Config";
                maxLength = "1024";
                margin = "0 0 0 0";
                padding = "0 0 0 0";
@@ -812,9 +812,9 @@
                profile = "ToolsGuiDefaultProfile";
                visible = "1";
                active = "1";
-               command = "TerrainMaterialDlg.changePBRConfig();";
+               command = "TerrainMaterialDlg.changeormConfig();";
                tooltipProfile = "ToolsGuiDefaultProfile";
-               tooltip = "Change the active PBR Config Map for this layer.";
+               tooltip = "Change the active ORM Config Map for this layer.";
                hovertime = "1000";
                isContainer = "0";
                canSave = "1";
@@ -856,7 +856,7 @@
                profile = "ToolsGuiButtonProfile";
                visible = "1";
                active = "1";
-               command = "TerrainMaterialDlg.changePBRConfig();";
+               command = "TerrainMaterialDlg.changeormConfig();";
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                isContainer = "0";
@@ -881,7 +881,7 @@
                profile = "ToolsGuiDefaultProfile";
                visible = "1";
                active = "1";
-               command = "TerrainMaterialDlg-->pbrConfigTexCtrl.setBitmap(\"tools/materialEditor/gui/unknownImage\");";
+               command = "TerrainMaterialDlg-->ormConfigTexCtrl.setBitmap(\"tools/materialEditor/gui/unknownImage\");";
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                isContainer = "0";
@@ -909,7 +909,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiCheckBoxCtrl() {
-               text = " Invert Smoothness";
+               text = " Invert Roughness";
                groupNum = "-1";
                buttonType = "ToggleButton";
                useMouseEvents = "0";
@@ -924,7 +924,7 @@
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                isContainer = "0";
-               internalName = "invertSmoothness";
+               internalName = "invertRoughness";
                canSave = "1";
                canSaveDynamicFields = "0";
             };

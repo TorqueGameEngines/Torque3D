@@ -69,7 +69,7 @@ TerrainMaterial::TerrainMaterial()
       mMacroDistance( 500.0f ),
       mParallaxScale( 0.0f ),
       mIsSRGB(false),
-      mInvertSmoothness(false)
+      mInvertRoughness(false)
 {
    initMapSlot(DiffuseMap);
    initMapSlot(NormalMap);

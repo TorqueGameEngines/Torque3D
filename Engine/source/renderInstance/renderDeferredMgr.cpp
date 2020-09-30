@@ -633,16 +633,16 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
    }
    newFeatures.addFeature( MFT_DiffuseColor );
    
-   if (mMaterial->mInvertSmoothness[stageNum])
-      newFeatures.addFeature(MFT_InvertSmoothness);
+   if (mMaterial->mInvertRoughness[stageNum])
+      newFeatures.addFeature(MFT_InvertRoughness);
 
    // Deferred Shading : PBR Config
-   if( mStages[stageNum].getTex( MFT_PBRConfigMap ) )
+   if( mStages[stageNum].getTex( MFT_OrmMap ) )
    {
-       newFeatures.addFeature( MFT_PBRConfigMap );
+       newFeatures.addFeature( MFT_OrmMap );
    }
    else
-       newFeatures.addFeature( MFT_PBRConfigVars );
+       newFeatures.addFeature( MFT_ORMConfigVars );
 
    if (mStages[stageNum].getTex(MFT_GlowMap))
    {

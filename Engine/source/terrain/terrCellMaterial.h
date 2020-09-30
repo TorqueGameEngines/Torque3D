@@ -59,7 +59,7 @@ protected:
 
       MaterialInfo()
          :mat(NULL), layerId(0), detailTexConst(NULL), macroTexConst(NULL), normalTexConst(NULL),
-         compositeTexConst(NULL), detailInfoVConst(NULL), detailInfoPConst(NULL), macroInfoVConst(NULL), macroInfoPConst(NULL)
+         ormTexConst(NULL), detailInfoVConst(NULL), detailInfoPConst(NULL), macroInfoVConst(NULL), macroInfoPConst(NULL)
       {
       }
 
@@ -79,8 +79,8 @@ protected:
       GFXShaderConstHandle *normalTexConst;
       GFXTexHandle normalTex;
 
-      GFXShaderConstHandle *compositeTexConst;
-      GFXTexHandle compositeTex;
+      GFXShaderConstHandle *ormTexConst;
+      GFXTexHandle ormTex;
 
       GFXShaderConstHandle *detailInfoVConst;
       GFXShaderConstHandle *detailInfoPConst;

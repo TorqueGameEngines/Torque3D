@@ -27,7 +27,7 @@
 #include "shaderGen/GLSL/bumpGLSL.h"
 
 // Specular Outputs
-class PBRConfigMapGLSL : public ShaderFeatureGLSL
+class DeferredOrmMapGLSL : public ShaderFeatureGLSL
 {
 public:
    virtual String getName() { return "Deferred Shading: PBR Config Map"; }
@@ -60,7 +60,7 @@ public:
    virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
 };
 
-class PBRConfigVarsGLSL : public ShaderFeatureGLSL
+class ORMConfigVarsGLSL : public ShaderFeatureGLSL
 {
 public:
    virtual String getName() { return "Deferred Shading: PBR Config Explicit Numbers"; }

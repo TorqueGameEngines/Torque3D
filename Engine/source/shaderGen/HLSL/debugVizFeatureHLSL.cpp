@@ -155,9 +155,9 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       Var* irradianceCubemapAR = (Var*)LangElement::find("irradianceCubemapAR");
       Var* irradianceCubemapARTex = (Var*)LangElement::find("texture_irradianceCubemapAR");
 
-      Var* matinfo = (Var*)LangElement::find("PBRConfig");
+      Var* matinfo = (Var*)LangElement::find("ORMConfig");
       Var* metalness = (Var*)LangElement::find("metalness");
-      Var* smoothness = (Var*)LangElement::find("smoothness");
+      Var* roughness = (Var*)LangElement::find("roughness");
 
       Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
 

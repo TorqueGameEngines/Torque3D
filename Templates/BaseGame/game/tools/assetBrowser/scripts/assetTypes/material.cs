@@ -409,7 +409,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
             else if(%childAssetItem.imageType $= "AO")
                %mapFieldName = "AOMap";
             else if(%childAssetItem.imageType $= "Composite")
-               %mapFieldName = "PBRConfigMap";
+               %mapFieldName = "ORMConfigMap";
             
             %path = fileName(%childAssetItem.filePath);
             %file.writeline("   "@ %mapFieldName @ "[0] = \"" @ %path @"\";");

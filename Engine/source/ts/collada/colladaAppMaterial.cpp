@@ -64,9 +64,8 @@ ColladaAppMaterial::ColladaAppMaterial(const char* matName)
    flags |= TSMaterialList::T_Wrap;
 
    diffuseColor = LinearColorF::ONE;
-   specularColor = LinearColorF::ONE;
 
-   smoothness = 0.0f;
+   roughness = 0.0f;
    metalness = 0.0f;
    doubleSided = false;
 }
@@ -74,8 +73,7 @@ ColladaAppMaterial::ColladaAppMaterial(const char* matName)
 ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
 :  mat(pMat),
    diffuseColor(LinearColorF::ONE),
-   specularColor(LinearColorF::ONE),
-   smoothness(0.0f),
+   roughness(0.0f),
    metalness(0.0f),
    doubleSided(false)
 {
@@ -100,37 +98,33 @@ ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
       if (commonProfile->getTechnique()->getConstant()) {
          const domProfile_COMMON::domTechnique::domConstant* constant = commonProfile->getTechnique()->getConstant();
          diffuseColor.set(1.0f, 1.0f, 1.0f, 1.0f);
-         resolveColor(constant->getReflective(), &specularColor);
-         resolveFloat(constant->getReflectivity(), &smoothness);
+         resolveFloat(constant->getReflectivity(), &metalness);
          resolveTransparency(constant, &transparency);
       }
       else if (commonProfile->getTechnique()->getLambert()) {
          const domProfile_COMMON::domTechnique::domLambert* lambert = commonProfile->getTechnique()->getLambert();
          resolveColor(lambert->getDiffuse(), &diffuseColor);
-         resolveColor(lambert->getReflective(), &specularColor);
-         resolveFloat(lambert->getReflectivity(), &smoothness);
+         resolveFloat(lambert->getReflectivity(), &metalness);
          resolveTransparency(lambert, &transparency);
       }
       else if (commonProfile->getTechnique()->getPhong()) {
          const domProfile_COMMON::domTechnique::domPhong* phong = commonProfile->getTechnique()->getPhong();
          resolveColor(phong->getDiffuse(), &diffuseColor);
-         resolveColor(phong->getSpecular(), &specularColor);
-         resolveFloat(phong->getShininess(), &metalness);
+         resolveFloat(phong->getShininess(), &roughness);
          resolveTransparency(phong, &transparency);
       }
       else if (commonProfile->getTechnique()->getBlinn()) {
          const domProfile_COMMON::domTechnique::domBlinn* blinn = commonProfile->getTechnique()->getBlinn();
          resolveColor(blinn->getDiffuse(), &diffuseColor);
-         resolveColor(blinn->getSpecular(), &specularColor);
-         resolveFloat(blinn->getShininess(), &metalness);
+         resolveFloat(blinn->getShininess(), &roughness);
          resolveTransparency(blinn, &transparency);
       }
 
       // Normalize specularPower (1-128). Values > 1 are assumed to be
       // already normalized.
-      if (smoothness <= 1.0f)
-          smoothness *= 128;
-      smoothness = mClampF(smoothness, 1.0f, 128.0f);
+      if (roughness <= 1.0f)
+          roughness *= 128;
+      roughness = mClampF(roughness, 1.0f, 128.0f);
 
       // Set translucency
       if (transparency != 0.0f) {
@@ -218,7 +212,7 @@ Material *ColladaAppMaterial::createMaterial(const Torque::Path& path) const
    newMat->mNormalMapFilename[0] = normalMap;
 
    newMat->mDiffuse[0] = diffuseColor;
-   newMat->mSmoothness[0] = smoothness;
+   newMat->mRoughness[0] = roughness;
    newMat->mMetalness[0] = metalness;
 
    newMat->mDoubleSided = doubleSided;

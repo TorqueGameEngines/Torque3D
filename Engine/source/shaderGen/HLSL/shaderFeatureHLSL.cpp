@@ -848,8 +848,8 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
 
    Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
-   Var* pbrConfig = (Var*)LangElement::find("PBRConfig");
-   if (!pbrConfig)
+   Var* ormConfig = (Var*)LangElement::find("ORMConfig");
+   if (!ormConfig)
    {
       Var* metalness = (Var*)LangElement::find("metalness");
       if (!metalness)
@@ -859,17 +859,17 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
          metalness->constSortPos = cspPotentialPrimitive;
       }
 
-      Var* smoothness = (Var*)LangElement::find("smoothness");
-      if (!smoothness)
+      Var* roughness = (Var*)LangElement::find("roughness");
+      if (!roughness)
       {
-         smoothness = new Var("smoothness", "float");
-         smoothness->uniform = true;
-         smoothness->constSortPos = cspPotentialPrimitive;
+         roughness = new Var("roughness", "float");
+         roughness->uniform = true;
+         roughness->constSortPos = cspPotentialPrimitive;
       }
 
-      pbrConfig = new Var("PBRConfig", "float4");
-      LangElement* colorDecl = new DecOp(pbrConfig);
-      meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, smoothness, metalness)); //reconstruct matinfo, no ao darkening
+      ormConfig = new Var("ORMConfig", "float4");
+      LangElement* colorDecl = new DecOp(ormConfig);
+      meta->addStatement(new GenOp("   @ = float4(0.0,1.0,@,@);\r\n", colorDecl, roughness, metalness)); //reconstruct matinfo, no ao darkening
    }
 
    Var* normal = (Var*)LangElement::find("normal");
@@ -902,7 +902,7 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    if (!surface)
    {
       surface = new Var("surface", "Surface");
-      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, pbrConfig,
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, ormConfig,
          wsPosition, wsEyePos, wsView));
    }
 
@@ -1327,7 +1327,7 @@ void LightmapFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
    lightMapTex->texture = true;
    lightMapTex->constNum = lightMap->constNum;
    
-   // argh, PBRConfigMap should prob use this too
+   // argh, ORMConfigMap should prob use this too
    if( fd.features[MFT_NormalMap] )
    {
       Var *lmColor = new Var;
@@ -1985,11 +1985,11 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
       
    LangElement *texCube = NULL;
    Var* matinfo = (Var*) LangElement::find( getOutputTargetVarName(ShaderFeature::RenderTarget2) );
-   Var *smoothness = (Var*)LangElement::find("smoothness");
+   Var *roughness = (Var*)LangElement::find("roughness");
 
-   if (smoothness) //try to grab smoothness directly
+   if (roughness) //try to grab roughness directly
    {
-      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min((1.0 - @)*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, smoothness, cubeMips, cubeMips);
+      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min((1.0 - @)*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, roughness, cubeMips, cubeMips);
    }
    else if (glossColor)//failing that, try and find color data
    {
@@ -2287,7 +2287,7 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
       Con::errorf("ShaderGen::RTLightingFeatHLSL()  - failed to generate surface!");
       return;
    }   
-   Var *smoothness = (Var*)LangElement::find("smoothness");
+   Var *roughness = (Var*)LangElement::find("roughness");
 
    Var *metalness = (Var*)LangElement::find("metalness");
 

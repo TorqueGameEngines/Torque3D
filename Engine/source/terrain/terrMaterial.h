@@ -104,17 +104,7 @@ public:
    /// a material is not found or defined.
    static TerrainMaterial* getWarningMaterial();
 
-   const String& getDiffuseMap() const { return mDiffuseMapFilename; }
-
    F32 getDiffuseSize() const { return mDiffuseSize; }
-
-   const String& getNormalMap() const { return mNormalMap; }
-
-   const String& getDetailMap() const { return mDetailMap; }
-
-   const String& getMacroMap() const { return mMacroMap; }
-
-   const String& getCompositeMap() const { return mCompositeMap; }
 
    F32 getDetailSize() const { return mDetailSize; }
 

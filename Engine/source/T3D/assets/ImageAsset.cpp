@@ -91,7 +91,7 @@ ImplementEnumType(ImageAssetType,
    "@ingroup gameObjects")
    { ImageAsset::Albedo,      "Albedo",      "" },
    { ImageAsset::Normal,      "Normal",      "" },
-   { ImageAsset::PBRConfig,   "PBRConfig",   "" },
+   { ImageAsset::ORMConfig,   "ORMConfig",   "" },
    { ImageAsset::GUI,         "GUI",         "" },
    { ImageAsset::Roughness,   "Roughness",   "" },
    { ImageAsset::AO,          "AO",          "" },

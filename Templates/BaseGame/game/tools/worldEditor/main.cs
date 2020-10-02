@@ -43,6 +43,7 @@ function initializeWorldEditor()
    exec("./gui/AddFMODProjectDlg.ed.gui");
    exec("./gui/SelectObjectsWindow.ed.gui");
    exec("./gui/ProceduralTerrainPainterGui.gui" );
+   exec("tools/gui/renderTargetVisualizer.ed.gui");
    exec("./gui/shadowViz.gui" );
    exec("./gui/probeBakeDlg.gui" );
    
@@ -75,6 +76,7 @@ function initializeWorldEditor()
    exec("./scripts/visibility/miscViz.cs");
    
    exec("tools/gui/postFxEditor.cs" );
+   exec("tools/gui/renderTargetVisualizer.ed.cs");
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));

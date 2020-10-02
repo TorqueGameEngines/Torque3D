@@ -770,7 +770,7 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
-   Parent::processTick(move);
+   ShapeBase::processTick(move);
    if ( isMounted() )
       return;
 

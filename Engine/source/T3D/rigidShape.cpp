@@ -1072,7 +1072,7 @@ void RigidShape::enableCollision()
 
 void RigidShape::updatePos(F32 dt)
 {
-   PROFILE_SCOPE(Vehicle_UpdatePos);
+   PROFILE_SCOPE(RigidShape_UpdatePos);
 
    Point3F origVelocity = mRigid.linVelocity;
 

@@ -34,7 +34,9 @@
 #include "shaderGen/GLSL/accuFeatureGLSL.h"
 
 // Deferred Shading
+#if defined(TORQUE_ADVANCED_LIGHTING)
 #include "lighting/advanced/glsl/deferredShadingFeaturesGLSL.h"
+#endif
 
 static ShaderGen::ShaderGenInitDelegate sInitDelegate;
 
@@ -98,12 +100,14 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_ImposterVert, new ImposterVertFeatureGLSL );
 
    // Deferred Shading
+#if defined(TORQUE_ADVANCED_LIGHTING)
    FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureGLSL( "Deferred Material" ) );
    FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapGLSL );
    FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsGLSL );
    FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsGLSL );
    FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapGLSL);
    FEATUREMGR->registerFeature( MFT_isBackground, new NamedFeatureGLSL("Background Object"));
+#endif
    FEATUREMGR->registerFeature( MFT_SkyBox, new NamedFeatureGLSL( "skybox" ) );
    FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureGLSL );
 }

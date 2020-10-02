@@ -76,3 +76,18 @@ singleton Material(DefaultRoadMaterialOther)
    diffuseMap[0] = "core/gameObjects/images/defaultRoadTextureOther.png";
    materialTag0 = "RoadAndPath";
 };
+
+singleton CubemapData(TestSkyCubemap)
+{
+   cubeFace[0] = "core/gameObjects/images/testSky/num1";		//right
+   cubeFace[1] = "core/gameObjects/images/testSky/num2";		//left   
+   cubeFace[2] = "core/gameObjects/images/testSky/num3";		//back
+   cubeFace[3] = "core/gameObjects/images/testSky/num4";		//front   
+   cubeFace[4] = "core/gameObjects/images/testSky/num5";		//top 
+   cubeFace[5] = "core/gameObjects/images/testSky/num6";		//bottom
+};
+singleton Material( TestSkyCubemapMat )
+{
+   cubemap = TestSkyCubemap;
+   materialTag0 = "Skies";
+};

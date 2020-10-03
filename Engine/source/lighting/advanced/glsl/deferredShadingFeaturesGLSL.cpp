@@ -35,72 +35,72 @@
 //****************************************************************************
 // Deferred Shading Features
 //****************************************************************************
-U32 PBRConfigMapGLSL::getOutputTargets(const MaterialFeatureData& fd) const
+U32 DeferredOrmMapGLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
    return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
-void PBRConfigMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void DeferredOrmMapGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord( "texCoord", "vec2", componentList );
    
    MultiLine* meta = new MultiLine;
-   Var* pbrConfig;
+   Var* ormConfig;
    if (fd.features[MFT_isDeferred])
    {
-      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!ormConfig)
       {
          // create material var
-         pbrConfig = new Var;
-         pbrConfig->setType("vec4");
-         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-         pbrConfig->setStructName("OUT");
+         ormConfig = new Var;
+         ormConfig->setType("vec4");
+         ormConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         ormConfig->setStructName("OUT");
       }
    }
    else
    {
-      pbrConfig = (Var*)LangElement::find("PBRConfig");
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig)
       {
-         pbrConfig = new Var("PBRConfig", "vec4");
-         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+         ormConfig = new Var("ORMConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
       }
    }
 
    // create texture var
-   Var *pbrConfigMap = new Var;
-   pbrConfigMap->setType( "sampler2D" );
-   pbrConfigMap->setName( "pbrConfigMap" );
-   pbrConfigMap->uniform = true;
-   pbrConfigMap->sampler = true;
-   pbrConfigMap->constNum = Var::getTexUnitNum();
-   LangElement *texOp = new GenOp( "tex2D(@, @)", pbrConfigMap, texCoord );
+   Var *ormMap = new Var;
+   ormMap->setType( "sampler2D" );
+   ormMap->setName( "ormMap" );
+   ormMap->uniform = true;
+   ormMap->sampler = true;
+   ormMap->constNum = Var::getTexUnitNum();
+   LangElement *texOp = new GenOp( "tex2D(@, @)", ormMap, texCoord );
 
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
-   Var *smoothness = (Var*)LangElement::find("smoothness");
-   if (!smoothness) smoothness = new Var("smoothness", "float");
+   Var *roughness = (Var*)LangElement::find("roughness");
+   if (!roughness) roughness = new Var("roughness", "float");
    Var* ao = (Var*)LangElement::find("ao");
    if (!ao) ao = new Var("ao", "float");
 
 
-   meta->addStatement(new GenOp("   @.bga = @.rgb;\r\n", pbrConfig, texOp));
+   meta->addStatement(new GenOp("   @.gba = @.rgb;\r\n", ormConfig, texOp));
 
-   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(smoothness), pbrConfig));
-   if (fd.features[MFT_InvertSmoothness])
+   meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), ormConfig));
+   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(roughness), ormConfig));
+   if (fd.features[MFT_InvertRoughness])
    {
-      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", pbrConfig, pbrConfig));
-      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", ormConfig, ormConfig));
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", roughness, roughness));
    }
-   meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), pbrConfig));
-   meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), pbrConfig));
+   meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), ormConfig));
 
    output = meta;
 }
 
-ShaderFeature::Resources PBRConfigMapGLSL::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources DeferredOrmMapGLSL::getResources( const MaterialFeatureData &fd )
 {
    Resources res; 
    res.numTex = 1;
@@ -109,21 +109,21 @@ ShaderFeature::Resources PBRConfigMapGLSL::getResources( const MaterialFeatureDa
    return res;
 }
 
-void PBRConfigMapGLSL::setTexData(   Material::StageData &stageDat,
+void DeferredOrmMapGLSL::setTexData(   Material::StageData &stageDat,
                                        const MaterialFeatureData &fd,
                                        RenderPassData &passData,
                                        U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex(MFT_PBRConfigMap);
+   GFXTextureObject *tex = stageDat.getTex(MFT_OrmMap);
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "pbrConfigMap";
+      passData.mSamplerNames[ texIndex ] = "ormMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }
 
-void PBRConfigMapGLSL::processVert( Vector<ShaderComponent*> &componentList,
+void DeferredOrmMapGLSL::processVert( Vector<ShaderComponent*> &componentList,
                                        const MaterialFeatureData &fd )
 {
    MultiLine *meta = new MultiLine;
@@ -145,26 +145,26 @@ void MatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentList, cons
 {
 	MultiLine *meta = new MultiLine;
 
-   Var* pbrConfig;
+   Var* ormConfig;
    if (fd.features[MFT_isDeferred])
    {
-      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!ormConfig)
       {
          // create material var
-         pbrConfig = new Var;
-         pbrConfig->setType("vec4");
-         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-         pbrConfig->setStructName("OUT");
+         ormConfig = new Var;
+         ormConfig->setType("vec4");
+         ormConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         ormConfig->setStructName("OUT");
       }
    }
    else
    {
-      pbrConfig = (Var*)LangElement::find("PBRConfig");
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig)
       {
-         pbrConfig = new Var("PBRConfig", "vec4");
-         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+         ormConfig = new Var("ORMConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
       }
    }
 
@@ -174,57 +174,57 @@ void MatInfoFlagsGLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    matInfoFlags->uniform = true;
    matInfoFlags->constSortPos = cspPotentialPrimitive;
 
-   meta->addStatement(output = new GenOp("   @.r = @;\r\n", pbrConfig, matInfoFlags));
+   meta->addStatement(output = new GenOp("   @.r = @;\r\n", ormConfig, matInfoFlags));
    output = meta;
 }
 
-U32 PBRConfigVarsGLSL::getOutputTargets(const MaterialFeatureData& fd) const
+U32 ORMConfigVarsGLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
    return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
 // Spec Strength -> Blue Channel of Material Info Buffer.
 // Spec Power -> Alpha Channel ( of Material Info Buffer.
-void PBRConfigVarsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void ORMConfigVarsGLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    MultiLine* meta = new MultiLine;
 
-   Var* pbrConfig;
+   Var* ormConfig;
    if (fd.features[MFT_isDeferred])
    {
-      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!ormConfig)
       {
          // create material var
-         pbrConfig = new Var;
-         pbrConfig->setType("vec4");
-         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-         pbrConfig->setStructName("OUT");
+         ormConfig = new Var;
+         ormConfig->setType("vec4");
+         ormConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         ormConfig->setStructName("OUT");
       }
    }
    else
    {
-      pbrConfig = (Var*)LangElement::find("PBRConfig");
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig)
       {
-         pbrConfig = new Var("PBRConfig", "vec4");
-         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+         ormConfig = new Var("ORMConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
       }
    }
    Var* metalness = new Var("metalness", "float");
    metalness->uniform = true;
    metalness->constSortPos = cspPotentialPrimitive;
 
-   Var* smoothness = new Var("smoothness", "float");
-   smoothness->uniform = true;
-   smoothness->constSortPos = cspPotentialPrimitive;
+   Var* roughness = new Var("roughness", "float");
+   roughness->uniform = true;
+   roughness->constSortPos = cspPotentialPrimitive;
 
    //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", pbrConfig));
-   meta->addStatement(new GenOp("   @.b = @;\r\n", pbrConfig, smoothness));
-   if (fd.features[MFT_InvertSmoothness])
-      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
-   meta->addStatement(new GenOp("   @.a = @;\r\n", pbrConfig, metalness));
+   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", ormConfig));
+   meta->addStatement(new GenOp("   @.b = @;\r\n", ormConfig, roughness));
+   if (fd.features[MFT_InvertRoughness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", roughness, roughness));
+   meta->addStatement(new GenOp("   @.a = @;\r\n", ormConfig, metalness));
    output = meta;
 }
 

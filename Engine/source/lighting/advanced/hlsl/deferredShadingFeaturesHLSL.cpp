@@ -35,79 +35,79 @@
 //****************************************************************************
 // Deferred Shading Features
 //****************************************************************************
-U32 PBRConfigMapHLSL::getOutputTargets(const MaterialFeatureData& fd) const
+U32 DeferredOrmMapHLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
    return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
-void PBRConfigMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void DeferredOrmMapHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // Get the texture coord.
    Var *texCoord = getInTexCoord( "texCoord", "float2", componentList );
 
    MultiLine* meta = new MultiLine;
-   Var* pbrConfig;
+   Var* ormConfig;
    if (fd.features[MFT_isDeferred])
    {
-      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!ormConfig)
       {
          // create material var
-         pbrConfig = new Var;
-         pbrConfig->setType("fragout");
-         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-         pbrConfig->setStructName("OUT");
+         ormConfig = new Var;
+         ormConfig->setType("fragout");
+         ormConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         ormConfig->setStructName("OUT");
       }
    }
    else
    {
-      pbrConfig = (Var*)LangElement::find("PBRConfig");
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig)
       {
-         pbrConfig = new Var("PBRConfig", "float4");
-         meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+         ormConfig = new Var("ORMConfig", "float4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
       }
    }
 
    // create texture var
-   Var * pbrConfigMap = new Var;
-   pbrConfigMap->setType( "SamplerState" );
-   pbrConfigMap->setName( "PBRConfigMap" );
-   pbrConfigMap->uniform = true;
-   pbrConfigMap->sampler = true;
-   pbrConfigMap->constNum = Var::getTexUnitNum();
+   Var * ormMap = new Var;
+   ormMap->setType( "SamplerState" );
+   ormMap->setName( "ORMConfigMap" );
+   ormMap->uniform = true;
+   ormMap->sampler = true;
+   ormMap->constNum = Var::getTexUnitNum();
 
-   Var* pbrConfigMapTex = new Var;
-   pbrConfigMapTex->setName("PBRConfigMapTex");
-   pbrConfigMapTex->setType("Texture2D");
-   pbrConfigMapTex->uniform = true;
-   pbrConfigMapTex->texture = true;
-   pbrConfigMapTex->constNum = pbrConfigMap->constNum;
-   LangElement *texOp = new GenOp("@.Sample(@, @)", pbrConfigMapTex, pbrConfigMap, texCoord);
+   Var* ormMapTex = new Var;
+   ormMapTex->setName("ORMConfigMapTex");
+   ormMapTex->setType("Texture2D");
+   ormMapTex->uniform = true;
+   ormMapTex->texture = true;
+   ormMapTex->constNum = ormMap->constNum;
+   LangElement *texOp = new GenOp("@.Sample(@, @)", ormMapTex, ormMap, texCoord);
    
    Var *metalness = (Var*)LangElement::find("metalness");
    if (!metalness) metalness = new Var("metalness", "float");
-   Var *smoothness = (Var*)LangElement::find("smoothness");
-   if (!smoothness) smoothness = new Var("smoothness", "float");
+   Var *roughness = (Var*)LangElement::find("roughness");
+   if (!roughness) roughness = new Var("roughness", "float");
    Var* ao = (Var*)LangElement::find("ao");
    if (!ao) ao = new Var("ao", "float");
 
 
-   meta->addStatement(new GenOp("   @.bga = @.rgb;\r\n", pbrConfig, texOp));
+   meta->addStatement(new GenOp("   @.gba = @.rgb;\r\n", ormConfig, texOp));
 
-   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(smoothness), pbrConfig));
-   if (fd.features[MFT_InvertSmoothness])
+   meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), ormConfig));
+   meta->addStatement(new GenOp("   @ = @.b;\r\n", new DecOp(roughness), ormConfig));
+   if (fd.features[MFT_InvertRoughness])
    {
-      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", pbrConfig, pbrConfig));
-      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
+      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", ormConfig, ormConfig));
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", roughness, roughness));
    }
-   meta->addStatement(new GenOp("   @ = @.g;\r\n", new DecOp(ao), pbrConfig));
-   meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), pbrConfig));
+   meta->addStatement(new GenOp("   @ = @.a;\r\n", new DecOp(metalness), ormConfig));
 
    output = meta;
 }
 
-ShaderFeature::Resources PBRConfigMapHLSL::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources DeferredOrmMapHLSL::getResources( const MaterialFeatureData &fd )
 {
    Resources res; 
    res.numTex = 1;
@@ -116,21 +116,21 @@ ShaderFeature::Resources PBRConfigMapHLSL::getResources( const MaterialFeatureDa
    return res;
 }
 
-void PBRConfigMapHLSL::setTexData(   Material::StageData &stageDat,
+void DeferredOrmMapHLSL::setTexData(   Material::StageData &stageDat,
                                        const MaterialFeatureData &fd,
                                        RenderPassData &passData,
                                        U32 &texIndex )
 {
-   GFXTextureObject *tex = stageDat.getTex(MFT_PBRConfigMap);
+   GFXTextureObject *tex = stageDat.getTex(MFT_OrmMap);
    if ( tex )
    {
       passData.mTexType[ texIndex ] = Material::Standard;
-      passData.mSamplerNames[ texIndex ] = "PBRConfigMap";
+      passData.mSamplerNames[ texIndex ] = "ORMConfigMap";
       passData.mTexSlot[ texIndex++ ].texObject = tex;
    }
 }
 
-void PBRConfigMapHLSL::processVert( Vector<ShaderComponent*> &componentList,
+void DeferredOrmMapHLSL::processVert( Vector<ShaderComponent*> &componentList,
                                        const MaterialFeatureData &fd )
 {
    MultiLine *meta = new MultiLine;
@@ -151,23 +151,23 @@ U32 MatInfoFlagsHLSL::getOutputTargets(const MaterialFeatureData& fd) const
 void MatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    // search for material var
-   Var* pbrConfig;
+   Var* ormConfig;
    if (fd.features[MFT_isDeferred])
    {
-      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!ormConfig)
       {
          // create material var
-         pbrConfig = new Var;
-         pbrConfig->setType("fragout");
-         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-         pbrConfig->setStructName("OUT");
+         ormConfig = new Var;
+         ormConfig->setType("fragout");
+         ormConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         ormConfig->setStructName("OUT");
       }
    }
    else
    {
-      pbrConfig = (Var*)LangElement::find("PBRConfig");
-      if (!pbrConfig) pbrConfig = new Var("PBRConfig", "float4");
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig) ormConfig = new Var("ORMConfig", "float4");
    }
 
    Var *matInfoFlags = new Var;
@@ -176,50 +176,50 @@ void MatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
    matInfoFlags->uniform = true;
    matInfoFlags->constSortPos = cspPotentialPrimitive;
 
-   output = new GenOp( "   @.r = @;\r\n", pbrConfig, matInfoFlags );
+   output = new GenOp( "   @.r = @;\r\n", ormConfig, matInfoFlags );
 }
 
-U32 PBRConfigVarsHLSL::getOutputTargets(const MaterialFeatureData& fd) const
+U32 ORMConfigVarsHLSL::getOutputTargets(const MaterialFeatureData& fd) const
 {
    return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget;
 }
 
-void PBRConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+void ORMConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
 {
    MultiLine* meta = new MultiLine;
-   Var* pbrConfig;
+   Var* ormConfig;
    if (fd.features[MFT_isDeferred])
    {
-      pbrConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-      if (!pbrConfig)
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+      if (!ormConfig)
       {
          // create material var
-         pbrConfig = new Var;
-         pbrConfig->setType("fragout");
-         pbrConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
-         pbrConfig->setStructName("OUT");
+         ormConfig = new Var;
+         ormConfig->setType("fragout");
+         ormConfig->setName(getOutputTargetVarName(ShaderFeature::RenderTarget2));
+         ormConfig->setStructName("OUT");
       }
    }
    else
    {
-      pbrConfig = (Var*)LangElement::find("PBRConfig");
-      if (!pbrConfig) pbrConfig = new Var("PBRConfig", "float4");
-      meta->addStatement(new GenOp("   @;\r\n", new DecOp(pbrConfig)));
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig) ormConfig = new Var("ORMConfig", "float4");
+      meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
    }
    Var *metalness = new Var("metalness", "float");
    metalness->uniform = true;
    metalness->constSortPos = cspPotentialPrimitive;
 
-   Var *smoothness = new Var("smoothness", "float");
-   smoothness->uniform = true;
-   smoothness->constSortPos = cspPotentialPrimitive;
+   Var *roughness = new Var("roughness", "float");
+   roughness->uniform = true;
+   roughness->constSortPos = cspPotentialPrimitive;
 
    //matinfo.g slot reserved for AO later
-   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", pbrConfig));
-   meta->addStatement(new GenOp("   @.b = @;\r\n", pbrConfig, smoothness));
-   if (fd.features[MFT_InvertSmoothness])
-      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", smoothness, smoothness));
-   meta->addStatement(new GenOp("   @.a = @;\r\n", pbrConfig, metalness));
+   meta->addStatement(new GenOp("   @.g = 1.0;\r\n", ormConfig));
+   meta->addStatement(new GenOp("   @.b = @;\r\n", ormConfig, roughness));
+   if (fd.features[MFT_InvertRoughness])
+      meta->addStatement(new GenOp("   @ = 1.0-@;\r\n", roughness, roughness));
+   meta->addStatement(new GenOp("   @.a = @;\r\n", ormConfig, metalness));
    output = meta;
 }
 

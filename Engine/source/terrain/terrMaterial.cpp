@@ -69,8 +69,13 @@ TerrainMaterial::TerrainMaterial()
       mMacroDistance( 500.0f ),
       mParallaxScale( 0.0f ),
       mIsSRGB(false),
-      mInvertSmoothness(false)
+      mInvertRoughness(false)
 {
+   initMapSlot(DiffuseMap);
+   initMapSlot(NormalMap);
+   initMapSlot(DetailMap);
+   initMapSlot(ORMConfigMap);
+   initMapSlot(MacroMap);
 }
 
 TerrainMaterial::~TerrainMaterial()
@@ -79,33 +84,30 @@ TerrainMaterial::~TerrainMaterial()
 
 void TerrainMaterial::initPersistFields()
 {
-   scriptBindMapSlot(DiffuseMap, TerrainMaterial);
-
-   //addField( "diffuseMap", TypeStringFilename, Offset( mDiffuseMap, TerrainMaterial ), "Base texture for the material" );
+   scriptBindMapSlot(DiffuseMap, TerrainMaterial,"Base Albedo stretched over the whole map");
    addField( "diffuseSize", TypeF32, Offset( mDiffuseSize, TerrainMaterial ), "Used to scale the diffuse map to the material square" );
 
-   addField( "normalMap", TypeStringFilename, Offset( mNormalMap, TerrainMaterial ), "Bump map for the material" );
-   
-   addField( "detailMap", TypeStringFilename, Offset( mDetailMap, TerrainMaterial ), "Detail map for the material" );
-   addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );
-
-   addField( "detailStrength", TypeF32, Offset( mDetailStrength, TerrainMaterial ), "Exponentially sharpens or lightens the detail map rendering on the material" );
-   addField( "detailDistance", TypeF32, Offset( mDetailDistance, TerrainMaterial ), "Changes how far camera can see the detail map rendering on the material" );
-   addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
-	   "slopes instead of projected downwards");
-
-   //Macro maps additions
-   addField( "macroMap", TypeStringFilename, Offset( mMacroMap, TerrainMaterial ), "Macro map for the material" );
-   addField( "macroSize", TypeF32, Offset( mMacroSize, TerrainMaterial ), "Used to scale the Macro map to the material square" );
-   addField( "macroStrength", TypeF32, Offset( mMacroStrength, TerrainMaterial ), "Exponentially sharpens or lightens the Macro map rendering on the material" );
-   addField( "macroDistance", TypeF32, Offset( mMacroDistance, TerrainMaterial ), "Changes how far camera can see the Macro map rendering on the material" );
-
+   scriptBindMapSlot(NormalMap, TerrainMaterial,"NormalMap");
    addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
 
-   addField("pbrConfigMap", TypeStringFilename, Offset(mCompositeMap, TerrainMaterial), "Composite map for the PBR Configuration of the material");
+   scriptBindMapSlot(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
+   addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );
+   addField( "detailStrength", TypeF32, Offset( mDetailStrength, TerrainMaterial ), "Exponentially sharpens or lightens the detail map rendering on the material" );
+   addField( "detailDistance", TypeF32, Offset( mDetailDistance, TerrainMaterial ), "Changes how far camera can see the detail map rendering on the material" );
+
+   addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
+	   "slopes instead of projected downwards");
+
+   scriptBindMapSlot(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
    addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");
-   addField("invertSmoothness", TypeBool, Offset(mInvertSmoothness, TerrainMaterial), "Should the smoothness channel of the PBR Config map be inverted?");
+   addField("invertRoughness", TypeBool, Offset(mInvertRoughness, TerrainMaterial), "Should the roughness channel of the PBR Config map be inverted?");
+
+   //Macro maps additions
+   scriptBindMapSlot(MacroMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo at a distance.");
+   addField( "macroSize", TypeF32, Offset( mMacroSize, TerrainMaterial ), "Used to scale the Macro map to the material square" );
+   addField( "macroStrength", TypeF32, Offset( mMacroStrength, TerrainMaterial ), "Exponentially sharpens or lightens the Macro map rendering on the material" );
+   addField( "macroDistance", TypeF32, Offset( mMacroDistance, TerrainMaterial ), "Changes how far camera can see the Macro map rendering on the material" );
 
    Parent::initPersistFields();
 
@@ -128,7 +130,14 @@ bool TerrainMaterial::onAdd()
       SimObject *object = set->findObjectByInternalName( mInternalName );
       if ( object )
          Con::warnf( "TerrainMaterial::onAdd() - Internal name collision; '%s' already exists!", mInternalName );
-   }
+   }  
+
+   //bind any assets we have
+   bindMapSlot(DiffuseMap);
+   bindMapSlot(NormalMap);
+   bindMapSlot(DetailMap);
+   bindMapSlot(ORMConfigMap);
+   bindMapSlot(MacroMap);
 
    set->addObject( this );
 
@@ -175,9 +184,9 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       mat->setInternalName( "warning_material" );
       mat->mDiffuseMapFilename = GFXTextureManager::getWarningTexturePath();
       mat->mDiffuseSize = 500;
-      mat->mDetailMap = GFXTextureManager::getWarningTexturePath();
+      mat->mDetailMapFilename = GFXTextureManager::getWarningTexturePath();
       mat->mDetailSize = 5;
-	  mat->mMacroMap = GFXTextureManager::getWarningTexturePath();
+	  mat->mMacroMapFilename = GFXTextureManager::getWarningTexturePath();
 	  mat->mMacroSize = 200;
       mat->registerObject();
       

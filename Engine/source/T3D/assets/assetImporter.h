@@ -185,7 +185,7 @@ public:
    /// <summary>
    /// When importing a material, should it automatically attempt to merge Roughness, AO and Metalness maps into a single, composited PBR Configuration map
    /// </summary>
-   bool CreatePBRConfig;
+   bool CreateORMConfig;
 
    /// <summary>
    /// When generating a material off of an importing image, should the importer force appending a diffusemap suffix onto the end to avoid potential naming confusion.
@@ -205,7 +205,7 @@ public:
 
    /// <summary>
    /// When processing a material asset, should the importer attempt to populate the various material maps on it by looking up common naming conventions for potentially relevent image files
-   /// e.g. If MyCoolStuff_Diffuse.png is imported, generating MyCoolStuff material, it would also find MyCoolStuff_Normal and MyCoolStuff_PBR images and map them to the normal and PBRConfig maps respectively automatically
+   /// e.g. If MyCoolStuff_Diffuse.png is imported, generating MyCoolStuff material, it would also find MyCoolStuff_Normal and MyCoolStuff_PBR images and map them to the normal and ORMConfig maps respectively automatically
    /// </summary>
    bool PopulateMaterialMaps;
 
@@ -276,7 +276,7 @@ public:
    bool importImages;
 
    /// <summary>
-   /// What is the default ImageType images are imported as. Options are: N/A, Diffuse, Normal, Metalness, Roughness, AO, PBRConfig, GUI, Cubemap
+   /// What is the default ImageType images are imported as. Options are: N/A, Diffuse, Normal, Metalness, Roughness, AO, ORMConfig, GUI, Cubemap
    /// </summary>
    String ImageType;
 
@@ -317,7 +317,7 @@ public:
    String AOTypeSuffixes;
 
    /// <summary>
-   /// What type of suffixes are scanned to detect if an importing image is a PBRConfig map.
+   /// What type of suffixes are scanned to detect if an importing image is a ORMConfig map.
    /// e.g. _Composite or _PBR
    /// </summary>
    String PBRTypeSuffixes;
@@ -490,7 +490,7 @@ public:
    //
    /// <summary>
    /// Specific to ImageAsset type
-   /// What is the image asset's suffix type. Options are: Albedo, Normal, Roughness, AO, Metalness, PBRConfig
+   /// What is the image asset's suffix type. Options are: Albedo, Normal, Roughness, AO, Metalness, ORMConfig
    /// </summary>
    String imageSuffixType;
 

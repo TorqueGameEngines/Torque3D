@@ -2,6 +2,7 @@
 #include "../../shaderModel.hlsl"
 #include "../../shaderModelAutoGen.hlsl"
 #include "../../lighting.hlsl"
+#include "../../brdf.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 1);
@@ -159,7 +160,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    // Radiance (Specular)
 #if DEBUGVIZ_SPECCUBEMAP == 0
-   float lod = surface.roughness*cubeMips;
+   float lod = roughnessToMipLevel(surface.roughness, cubeMips);
 #elif DEBUGVIZ_SPECCUBEMAP == 1
    float lod = 0;
 #endif
@@ -193,17 +194,23 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 #endif
 
    //energy conservation
-   float3 kD = 1.0f - surface.F;
+   float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+   float3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
    float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
-   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
    //AO
    irradiance *= surface.ao;
    specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
 
-   return float4(irradiance + specular, 0);//alpha writes disabled
+   //http://marmosetco.tumblr.com/post/81245981087
+   float horizonOcclusion = 1.3;
+   float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
+   horizon *= horizon;
+
+   return float4((irradiance + specular) * horizon, 0);//alpha writes disabled
 }

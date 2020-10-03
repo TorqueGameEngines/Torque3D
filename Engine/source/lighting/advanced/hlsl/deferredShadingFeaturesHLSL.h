@@ -26,7 +26,7 @@
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
 #include "shaderGen/HLSL/bumpHLSL.h"
 
-class PBRConfigMapHLSL : public ShaderFeatureHLSL
+class DeferredOrmMapHLSL : public ShaderFeatureHLSL
 {
 public:
    virtual String getName() { return "Deferred Shading: PBR Config Map"; }
@@ -59,7 +59,7 @@ public:
    virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
 };
 
-class PBRConfigVarsHLSL : public ShaderFeatureHLSL
+class ORMConfigVarsHLSL : public ShaderFeatureHLSL
 {
 public:
    virtual String getName() { return "Deferred Shading: PBR Config Explicit Numbers"; }

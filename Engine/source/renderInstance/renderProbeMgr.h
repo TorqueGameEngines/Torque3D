@@ -280,6 +280,8 @@ private:
 
    GFXTexHandle mBRDFTexture;
 
+   GFXTextureTargetRef mBakeRenderTarget;
+
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);

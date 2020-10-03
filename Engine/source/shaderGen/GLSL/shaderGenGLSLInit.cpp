@@ -64,7 +64,7 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_DetailMap, new DetailFeatGLSL );
 	FEATUREMGR->registerFeature( MFT_StaticCubemap, new NamedFeatureGLSL( "Static Cubemap" ) );
    FEATUREMGR->registerFeature( MFT_CubeMap, new ReflectCubeFeatGLSL );
-   FEATUREMGR->registerFeature( MFT_InvertSmoothness, new NamedFeatureGLSL("Roughest = 1.0"));
+   FEATUREMGR->registerFeature( MFT_InvertRoughness, new NamedFeatureGLSL("Roughest = 1.0"));
    FEATUREMGR->registerFeature( MFT_AccuMap, new AccuTexFeatGLSL );
    FEATUREMGR->registerFeature( MFT_IsTranslucent, new NamedFeatureGLSL( "Translucent" ) );
    FEATUREMGR->registerFeature( MFT_IsTranslucentZWrite, new NamedFeatureGLSL( "Translucent ZWrite" ) );
@@ -99,8 +99,8 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
 
    // Deferred Shading
    FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureGLSL( "Deferred Material" ) );
-   FEATUREMGR->registerFeature( MFT_PBRConfigMap, new PBRConfigMapGLSL );
-   FEATUREMGR->registerFeature( MFT_PBRConfigVars, new PBRConfigVarsGLSL );
+   FEATUREMGR->registerFeature( MFT_OrmMap, new DeferredOrmMapGLSL );
+   FEATUREMGR->registerFeature( MFT_ORMConfigVars, new ORMConfigVarsGLSL );
    FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsGLSL );
    FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapGLSL);
    FEATUREMGR->registerFeature( MFT_isBackground, new NamedFeatureGLSL("Background Object"));

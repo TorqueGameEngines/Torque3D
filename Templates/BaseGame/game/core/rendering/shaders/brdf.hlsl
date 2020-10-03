@@ -30,22 +30,15 @@
 // Charles de Rousiers - Electronic Arts Frostbite
 // SIGGRAPH 2014
 
-float pow5(float x) {
-    float x2 = x * x;
-    return x2 * x2 * x;
-}
+// BRDF from Frostbite presentation:
+// Moving Frostbite to Physically Based Rendering
+// S´ebastien Lagarde - Electronic Arts Frostbite
+// Charles de Rousiers - Electronic Arts Frostbite
+// SIGGRAPH 2014
 
-float3 F_Schlick(in float3 f0, in float f90, in float u)
+float3 F_Schlick(float3 f0, float f90, float u)
 {
-	return f0 + (f90 - f0) * pow5(1.f - u);
-}
-
-float3 F_Fresnel(float3 SpecularColor, float VoH)
-{
-	float3 SpecularColorSqrt = sqrt(min(SpecularColor, float3(0.99, 0.99, 0.99)));
-	float3 n = (1 + SpecularColorSqrt) / (1 - SpecularColorSqrt);
-	float3 g = sqrt(n*n + VoH*VoH - 1);
-	return 0.5 * sqr((g - VoH) / (g + VoH)) * (1 + sqr(((g + VoH)*VoH - 1) / ((g - VoH)*VoH + 1)));
+	return f0 + (f90 - f0) * pow(1.f - u, 5.f);
 }
 
 float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
@@ -61,57 +54,23 @@ float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 	return ret;
 }
 
-float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness)
+float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaRoughnessSq)
 {
-	float energyBias = lerp(0, 0.5, linearRoughness);
-	float energyFactor = lerp(1.0, 1.0 / 1.51, linearRoughness);
-	float fd90 = energyBias + 2.0 * LdotH*LdotH * linearRoughness;
-	float3 f0 = float3(1.0f, 1.0f, 1.0f);
-	float lightScatter = F_Schlick(f0, fd90, NdotL).r;
-	float viewScatter = F_Schlick(f0, fd90, NdotV).r;
+	float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+	float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
 
-	return lightScatter * viewScatter * energyFactor;
+	float GGX = GGXV + GGXL;
+	if (GGX > 0.0f)
+	{
+		return 0.5f / GGX;
+	}
+	return 0.f;
 }
 
-float V_SmithGGXCorrelated(float NdotL, float NdotV, float roughness)
+float D_GGX(float NdotH, float alphaRoughnessSq)
 {
-	// Original formulation of G_SmithGGX Correlated 
-	// lambda_v = (-1 + sqrt(alphaG2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f; 
-	// lambda_l = (-1 + sqrt(alphaG2 * (1 - NdotV2) / NdotV2 + 1)) * 0.5f; 
-	// G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l); 
-	// V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV); 
-
-
-	// This is the optimized version 
-	//float alphaG2 = alphaG * alphaG;
-
-	// Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake. 
-	//float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
-	//float Lambda_GGXL = NdotV * sqrt((-NdotL * alphaG2 + NdotL) * NdotL + alphaG2);
-
-	//return 0.5f / (Lambda_GGXV + Lambda_GGXL);
-
-	float a2 = roughness * roughness;
-
-    float lambdaV = NdotL * sqrt((NdotV - a2 * NdotV) * NdotV + a2);
-    float lambdaL = NdotV * sqrt((NdotL - a2 * NdotL) * NdotL + a2);
-    float v = 0.5 / (lambdaV + lambdaL);
-
-	return v;
-}
-
-float D_GGX(float NdotH, float roughness)
-{
-	// Divide by PI is apply later 
-	//float m2 = m * m;
-	//float f = (NdotH * m2 - NdotH) * NdotH + 1;
-	//return m2 / (f * f);
-
-	float oneMinusNdotHSquared = 1.0 - NdotH * NdotH;
-	float a = NdotH * roughness;
-	float k = roughness / (oneMinusNdotHSquared + a * a);
-	float d = k * k * M_1OVER_PI_F;
-	return d;
+	float f = (NdotH * alphaRoughnessSq - NdotH) * NdotH + 1;
+	return alphaRoughnessSq / (M_PI_F * f * f);
 }
 
 #endif

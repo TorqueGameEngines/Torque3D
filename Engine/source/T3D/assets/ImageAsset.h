@@ -56,7 +56,7 @@ public:
    {
       Albedo = 0,
       Normal = 1,
-      PBRConfig = 2,
+      ORMConfig = 2,
       GUI = 3,
       Roughness = 4,
       AO = 5,
@@ -128,15 +128,32 @@ typedef ImageAsset::ImageTypes ImageAssetType;
 DefineEnumType(ImageAssetType);
 
 #define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
-#define scriptBindMapSlot(name, consoleClass) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), assetText(name,texture map.)); \
+
+#define initMapSlot(name) m##name##Filename = String::EmptyString; m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
+#define bindMapSlot(name) if (m##name##AssetId != String::EmptyString) m##name##Asset = m##name##AssetId;
+
+#define scriptBindMapSlot(name, consoleClass, docs) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), assetText(name, docs)); \
                                       addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, consoleClass), assetText(name,asset reference.));
 
-#define scriptBindMapArraySlot(name, arraySize, consoleClass) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), arraySize, assetText(name,texture map.)); \
+#define initMapArraySlot(name,id) m##name##Filename[id] = String::EmptyString; m##name##AssetId[id] = StringTable->EmptyString(); m##name##Asset[id] = NULL;
+#define bindMapArraySlot(name,id) if (m##name##AssetId[id] != String::EmptyString) m##name##Asset[id] = m##name##AssetId[id];
+#define scriptBindMapArraySlot(name, arraySize, consoleClass, docs) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), arraySize, assetText(name, docs)); \
                                       addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, consoleClass), arraySize, assetText(name,asset reference.));
 
-#define DECLARE_TEXTUREMAP(name) FileName m##name##Filename;\
+#define DECLARE_TEXTUREMAP(name)      protected: \
+                                      FileName m##name##Filename;\
                                       StringTableEntry m##name##AssetId;\
-                                      AssetPtr<ImageAsset>  m##name##Asset;
+                                      AssetPtr<ImageAsset>  m##name##Asset;\
+                                      public: \
+                                      const String& get##name##() const { return m##name##Filename; }\
+                                      void set##name##(FileName _in) { m##name##Filename = _in; }\
+                                      const AssetPtr<ImageAsset> & get##name##Asset() const { return m##name##Asset; }\
+                                      void set##name##Asset(AssetPtr<ImageAsset>_in) { m##name##Asset = _in; }
+
+#define GET_TEXTUREMAP(name)          get##name##()
+#define SET_TEXTUREMAP(name,_in)      set##name##(_in)
+#define GET_TEXTUREASSET(name)        get##name##Asset()
+#define SET_TEXTUREASSET(name,_in)    set##name##Asset(_in)
 
 #define DECLARE_TEXTUREARRAY(name,max) FileName m##name##Filename[max];\
                                       StringTableEntry m##name##AssetId[max];\

@@ -3,6 +3,7 @@
 #include "../../../gl/torque.glsl"
 #include "shadergen:/autogenConditioners.h"
 #include "../../../gl/lighting.glsl"
+#include "../../../gl/brdf.glsl"
 
 #line 7
 
@@ -55,11 +56,11 @@ void main()
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {
-      discard;
+      return texture(colorBuffer, IN_uv0.xy);
    }
    
    #ifdef USE_SSAO_MASK
-      float ssao = 1.0 - texture( ssaoMask, viewportCoordToRenderTarget( uv0.xy, rtParams6 ) ).r;
+      float ssao =  1.0 - texture( ssaoMask, viewportCoordToRenderTarget( IN_uv0.xy, rtParams6 ) ).r;
       surface.ao = min(surface.ao, ssao);  
    #endif
 
@@ -166,7 +167,7 @@ void main()
 
    // Radiance (Specular)
 #if DEBUGVIZ_SPECCUBEMAP == 0
-   float lod = surface.roughness*cubeMips;
+   float lod = roughnessToMipLevel(surface.roughness, cubeMips);
 #elif DEBUGVIZ_SPECCUBEMAP == 1
    float lod = 0;
 #endif
@@ -177,7 +178,7 @@ void main()
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         float cubemapIdx = probeConfigData[i].a;
+         int cubemapIdx = probeConfigData[i].a;
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
@@ -189,8 +190,8 @@ void main()
 
    if (skylightCubemapIdx != -1 && alpha > 0.001)
    {
-      irradiance += textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz * alpha;
-      specular += textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz * alpha;
+      irradiance = lerp(irradiance,textureLod(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
+      specular = lerp(specular,textureLod(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
 
 #if DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0
@@ -203,17 +204,23 @@ void main()
 
 
    //energy conservation
-   vec3 kD = 1.0f - surface.F;
+   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
+   vec3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
    float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
    vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
-   specular *= surface.F * envBRDF.x + surface.f90 * envBRDF.y;
+   specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
    //AO
    irradiance *= surface.ao;
    specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
+
+   //http://marmosetco.tumblr.com/post/81245981087
+   float horizonOcclusion = 1.3;
+   float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
+   horizon *= horizon;
 
    OUT_col = vec4(irradiance + specular, 0);//alpha writes disabled
 }

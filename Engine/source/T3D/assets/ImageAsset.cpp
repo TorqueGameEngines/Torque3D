@@ -91,7 +91,7 @@ ImplementEnumType(ImageAssetType,
    "@ingroup gameObjects")
    { ImageAsset::Albedo,      "Albedo",      "" },
    { ImageAsset::Normal,      "Normal",      "" },
-   { ImageAsset::PBRConfig,   "PBRConfig",   "" },
+   { ImageAsset::ORMConfig,   "ORMConfig",   "" },
    { ImageAsset::GUI,         "GUI",         "" },
    { ImageAsset::Roughness,   "Roughness",   "" },
    { ImageAsset::AO,          "AO",          "" },
@@ -315,7 +315,7 @@ const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)
    static const char* _names[] = {
       "Albedo",
       "Normal",
-      "PBRConfig",
+      "ORMConfig",
       "GUI",
       "Roughness",
       "AO",

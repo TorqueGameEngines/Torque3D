@@ -1028,26 +1028,45 @@ GFXTextureObject *GFXTextureManager::createCompositeTexture(const Torque::Path &
    GFXTextureObject *cacheHit = _lookupTexture(resourceTag, profile);
    if (cacheHit != NULL) return cacheHit;
 
+   Torque::Path lastValidPath = "";
    GBitmap*bitmap[4];
-   bitmap[0] = loadUncompressedTexture(pathR, profile);
+
+   if (!pathR.isEmpty())
+   {
+      bitmap[0] = loadUncompressedTexture(pathR, profile);
+      lastValidPath = pathR;
+   }
+   else
+      bitmap[0] = NULL;
+
    if (!pathG.isEmpty())
+   {
       bitmap[1] = loadUncompressedTexture(pathG, profile);
+      lastValidPath = pathG;
+   }
    else
       bitmap[1] = NULL;
 
    if (!pathB.isEmpty())
+   {
       bitmap[2] = loadUncompressedTexture(pathB, profile);
+      lastValidPath = pathB;
+   }
    else
       bitmap[2] = NULL;
+
    if (!pathA.isEmpty())
+   {
       bitmap[3] = loadUncompressedTexture(pathA, profile);
+      lastValidPath = pathA;
+   }
    else
       bitmap[3] = NULL;
    
 
    Path realPath;
    GFXTextureObject *retTexObj = NULL;
-   realPath = validatePath(pathR); //associate path with r channel texture in.
+   realPath = validatePath(lastValidPath); //associate path with last valid channel texture in.
 
    retTexObj = createCompositeTexture(bitmap, inputKey, resourceTag, profile, false);
 
@@ -1087,26 +1106,45 @@ void GFXTextureManager::saveCompositeTexture(const Torque::Path &pathR, const To
       cacheHit->dumpToDisk("png", saveAs.getFullPath());
       return;
    }
-   GBitmap*bitmap[4];
-   bitmap[0] = loadUncompressedTexture(pathR, profile);
+
+   Torque::Path lastValidPath = "";
+   GBitmap* bitmap[4];
+
+   if (!pathR.isEmpty())
+   {
+      bitmap[0] = loadUncompressedTexture(pathR, profile);
+      lastValidPath = pathR;
+   }
+   else
+      bitmap[0] = NULL;
+
    if (!pathG.isEmpty())
+   {
       bitmap[1] = loadUncompressedTexture(pathG, profile);
+      lastValidPath = pathG;
+   }
    else
       bitmap[1] = NULL;
 
    if (!pathB.isEmpty())
+   {
       bitmap[2] = loadUncompressedTexture(pathB, profile);
+      lastValidPath = pathB;
+   }
    else
       bitmap[2] = NULL;
+
    if (!pathA.isEmpty())
+   {
       bitmap[3] = loadUncompressedTexture(pathA, profile);
+      lastValidPath = pathA;
+   }
    else
       bitmap[3] = NULL;
 
-
    Path realPath;
    GFXTextureObject *retTexObj = NULL;
-   realPath = validatePath(pathR); //associate path with r channel texture in.
+   realPath = validatePath(lastValidPath); //associate path with last valid channel texture in.
 
    retTexObj = createCompositeTexture(bitmap, inputKey, resourceTag, profile, false);
    if (retTexObj != NULL)
@@ -1130,9 +1168,16 @@ DefineEngineFunction(saveCompositeTexture, void, (const char* pathR, const char*
 GFXTextureObject *GFXTextureManager::createCompositeTexture(GBitmap*bmp[4], U32 inputKey[4],
    const String &resourceName, GFXTextureProfile *profile, bool deleteBmp)
 {
-   if (!bmp[0])
+   S32 lastValidTex = -1;
+   for (U32 i = 0; i < 4; i++)
    {
-      Con::errorf(ConsoleLogEntry::General, "GFXTextureManager::createCompositeTexture() - Got NULL bitmap(R)!");
+      if (bmp[i])
+         lastValidTex = i;
+   }
+
+   if (lastValidTex == -1)
+   {
+      Con::errorf(ConsoleLogEntry::General, "GFXTextureManager::createCompositeTexture() - Got all NULL bitmaps!");
       return NULL;
    }
 
@@ -1145,11 +1190,11 @@ GFXTextureObject *GFXTextureManager::createCompositeTexture(GBitmap*bmp[4], U32 
 
    U8 rChan, gChan, bChan, aChan;
    GBitmap *outBitmap = new GBitmap();
-   outBitmap->allocateBitmap(bmp[0]->getWidth(), bmp[0]->getHeight(),false, GFXFormatR8G8B8A8);
+   outBitmap->allocateBitmap(bmp[lastValidTex]->getWidth(), bmp[lastValidTex]->getHeight(),false, GFXFormatR8G8B8A8);
    //pack additional bitmaps into the origional
-   for (U32 x = 0; x < bmp[0]->getWidth(); x++)
+   for (U32 x = 0; x < bmp[lastValidTex]->getWidth(); x++)
    {
-      for (U32 y = 0; y < bmp[0]->getHeight(); y++)
+      for (U32 y = 0; y < bmp[lastValidTex]->getHeight(); y++)
       {
          rChan = bmp[0]->getChanelValueAt(x, y, inputKey[0]);
 

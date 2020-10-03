@@ -211,11 +211,11 @@ public:
    DECLARE_TEXTUREARRAY(ToneMap, MAX_STAGES);
    DECLARE_TEXTUREARRAY(DetailMap, MAX_STAGES);;
    DECLARE_TEXTUREARRAY(NormalMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(PBRConfigMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(ORMConfigMap, MAX_STAGES);
    bool     mIsSRGb[MAX_STAGES];
    DECLARE_TEXTUREARRAY(RoughMap, MAX_STAGES);
-   bool     mInvertSmoothness[MAX_STAGES];
-   F32      mSmoothnessChan[MAX_STAGES];
+   bool     mInvertRoughness[MAX_STAGES];
+   F32      mRoughnessChan[MAX_STAGES];
    DECLARE_TEXTUREARRAY(AOMap, MAX_STAGES);
    F32      mAOChan[MAX_STAGES];
    DECLARE_TEXTUREARRAY(MetalMap, MAX_STAGES);
@@ -240,7 +240,7 @@ public:
    /// the diffuse texture color.
    LinearColorF mDiffuse[MAX_STAGES];
    
-   F32 mSmoothness[MAX_STAGES];
+   F32 mRoughness[MAX_STAGES];
    F32 mMetalness[MAX_STAGES];
    
    bool mVertLit[MAX_STAGES];

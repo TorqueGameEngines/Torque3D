@@ -2889,6 +2889,8 @@ void Player::updateMove(const Move* move)
    moveSpeed *= speed_bias;
    // Acceleration due to gravity
    VectorF acc(0.0f, 0.0f, mNetGravity/(1.0 - mBuoyancy) * TickSec);
+   if (getParent() !=NULL)
+	   acc = VectorF::Zero;
 
    // Determine ground contact normal. Only look for contacts if
    // we can move and aren't mounted.

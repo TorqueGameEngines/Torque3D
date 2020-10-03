@@ -1457,7 +1457,7 @@ DefineEngineMethod( GuiRiverEditorCtrl, setNodeNormal, void, (Point3F normal), ,
 
 DefineEngineMethod( GuiRiverEditorCtrl, setSelectedRiver, void, (const char * objName), (""), "" )
 {
-   if (dStrcmp( objName,"" )==0)
+   if (String::compare( objName,"" )==0)
       object->setSelectedRiver(NULL);
    else
    {

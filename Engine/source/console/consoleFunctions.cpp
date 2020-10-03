@@ -266,7 +266,7 @@ DefineEngineFunction( strcmp, S32, ( const char* str1, const char* str2 ),,
    "@see strnatcmp\n"
    "@ingroup Strings" )
 {
-   return dStrcmp( str1, str2 );
+   return String::compare( str1, str2 );
 }
 
 //-----------------------------------------------------------------------------
@@ -949,7 +949,7 @@ DefineEngineFunction( endsWith, bool, ( const char* str, const char* suffix, boo
       return false;
       
    if( caseSensitive )
-      return ( dStrcmp( &str[ srcLen - targetLen ], suffix ) == 0 );
+      return ( String::compare( &str[ srcLen - targetLen ], suffix ) == 0 );
 
    // both src and target are non empty, create temp buffers for lowercase operation
    char* srcBuf = new char[ srcLen + 1 ];
@@ -967,7 +967,7 @@ DefineEngineFunction( endsWith, bool, ( const char* str, const char* suffix, boo
    str += srcLen - targetLen;
 
    // do the comparison
-   bool endsWith = dStrcmp( str, suffix ) == 0;
+   bool endsWith = String::compare( str, suffix ) == 0;
 
    // delete temp buffers
    delete [] srcBuf;
@@ -1188,7 +1188,7 @@ DefineEngineFunction( isValidIP, bool, ( const char* str),,
    "@endtsexample\n"
    "@ingroup Strings" )
 {
-   if(dStrcmp(str, "localhost") == 0)
+   if(String::compare(str, "localhost") == 0)
    {
       return true;
    }
@@ -2577,7 +2577,7 @@ DefineEngineFunction( isDefined, bool, ( const char* varName, const char* varVal
    else
    {
       // Is it an object?
-      if (dStrcmp(varName, "0") && dStrcmp(varName, "") && (Sim::findObject(varName) != NULL))
+      if (String::compare(varName, "0") && String::compare(varName, "") && (Sim::findObject(varName) != NULL))
          return true;
       else if (!String::isEmpty(varValue))
       {

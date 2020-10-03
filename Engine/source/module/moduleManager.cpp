@@ -83,7 +83,7 @@ S32 QSORT_CALLBACK moduleDependencySort(const void* a, const void* b)
    bool foundDependant = false;
    for (ModuleDefinition::typeModuleDependencyVector::const_iterator dependencyItr = moduleDependencies.begin(); dependencyItr != moduleDependencies.end(); ++dependencyItr)
    {
-      if (dStrcmp(dependencyItr->mModuleId, pDefinition2->getModuleId())
+      if (String::compare(dependencyItr->mModuleId, pDefinition2->getModuleId())
          && (dependencyItr->mVersionId == pDefinition2->getVersionId()))
             foundDependant = true;
    }

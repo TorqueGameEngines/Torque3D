@@ -1874,7 +1874,7 @@ DefineEngineMethod(SceneObject, attachToParent, bool, (const char*_sceneObject),
     }
     else
     {      
-        if ((!dStrcmp("0", _sceneObject))|| (!dStrcmp("", _sceneObject)))
+        if ((!String::compare("0", _sceneObject))|| (!String::compare("", _sceneObject)))
             return object->attachToParent(NULL);
         else
         {

@@ -890,10 +890,10 @@ PersistenceManager::ParsedObject* PersistenceManager::findParsedObject(SimObject
          {
             const ParsedProperty &prop = testObj->properties[j];
 
-            if (  dStrcmp( prop.name, "internalName" ) == 0 && 
-               dStrcmp( prop.value, object->getInternalName() ) == 0 )
+            if (  String::compare( prop.name, "internalName" ) == 0 && 
+               String::compare( prop.value, object->getInternalName() ) == 0 )
                return testObj;
-            else if ( dStrcmp(prop.name, "internalName") == 0)
+            else if ( String::compare(prop.name, "internalName") == 0)
                break;
          }
       }
@@ -1544,7 +1544,7 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
          if( object->getCopySource() )
          {
             const char* copySourceFieldValue = object->getCopySource()->getDataField( entry->slotName, NULL );
-            if( dStrcmp( copySourceFieldValue, entry->value ) == 0 )
+            if( String::compare( copySourceFieldValue, entry->value ) == 0 )
             {
                removeField( prop );
                continue;
@@ -1576,7 +1576,7 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
          if( object->getCopySource() )
          {
             const char* copySourceFieldValue = object->getCopySource()->getDataField( entry->slotName, NULL );
-            if( dStrcmp( copySourceFieldValue, entry->value ) == 0 )
+            if( String::compare( copySourceFieldValue, entry->value ) == 0 )
                continue;
          }
 
@@ -2201,7 +2201,7 @@ DefineEngineMethod( PersistenceManager, setDirty, void,  ( const char * objName,
               "Mark an existing SimObject as dirty (will be written out when saveDirty() is called).")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp(objName,"") != 0)
+   if (String::compare(objName,"") != 0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2219,7 +2219,7 @@ DefineEngineMethod( PersistenceManager, setDirty, void,  ( const char * objName,
 
    if (dirtyObject)
    {
-      if (dStrcmp( fileName,"")!=0)
+      if (String::compare( fileName,"")!=0)
          object->setDirty(dirtyObject, fileName);
       else
          object->setDirty(dirtyObject);
@@ -2230,7 +2230,7 @@ DefineEngineMethod( PersistenceManager, removeDirty, void, ( const char * objNam
               "Remove a SimObject from the dirty list.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp(  objName,"")!=0)
+	if (String::compare(  objName,"")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2247,7 +2247,7 @@ DefineEngineMethod( PersistenceManager, isDirty, bool, ( const char * objName ),
               "Returns true if the SimObject is on the dirty list.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp ( objName,"")!=0)
+   if (String::compare ( objName,"")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2328,7 +2328,7 @@ DefineEngineMethod( PersistenceManager, saveDirtyObject, bool, (const char * obj
               "Save a dirty SimObject to it's file.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp (  objName, "")!=0)
+   if (String::compare (  objName, "")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2353,7 +2353,7 @@ DefineEngineMethod( PersistenceManager, removeObjectFromFile, void, (const char 
                the one it was created in.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp ( objName , "")!=0)
+   if (String::compare ( objName , "")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2364,7 +2364,7 @@ DefineEngineMethod( PersistenceManager, removeObjectFromFile, void, (const char 
 
    if (dirtyObject)
    {
-      if (dStrcmp( filename,"")!=0)
+      if (String::compare( filename,"")!=0)
          object->removeObjectFromFile(dirtyObject, filename);
       else
          object->removeObjectFromFile(dirtyObject);
@@ -2375,7 +2375,7 @@ DefineEngineMethod( PersistenceManager, removeField, void, (const char * objName
               "Remove a specific field from an object declaration.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp(objName,"")!=0)
+   if (String::compare(objName,"")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2386,7 +2386,7 @@ DefineEngineMethod( PersistenceManager, removeField, void, (const char * objName
 
    if (dirtyObject)
    {
-      if (dStrcmp(fieldName,"") != 0)
+      if (String::compare(fieldName,"") != 0)
          object->addRemoveField(dirtyObject, fieldName);
    }
 }

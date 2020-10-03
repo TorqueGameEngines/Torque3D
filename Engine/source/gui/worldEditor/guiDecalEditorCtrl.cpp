@@ -881,7 +881,7 @@ DefineEngineMethod( GuiDecalEditorCtrl, getSelectionCount, S32, (), , "" )
 
 DefineEngineMethod( GuiDecalEditorCtrl, retargetDecalDatablock, void, ( const char * dbFrom, const char * dbTo ), , "" )
 {
-   if( dStrcmp( dbFrom, "" ) != 0 && dStrcmp( dbTo, "" ) != 0 )
+   if( String::compare( dbFrom, "" ) != 0 && String::compare( dbTo, "" ) != 0 )
 		object->retargetDecalDatablock( dbFrom, dbTo );
 }
 

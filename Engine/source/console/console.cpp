@@ -437,7 +437,7 @@ U32 tabComplete(char* inputBuffer, U32 cursorPos, U32 maxResultLength, bool forw
    }
 
    // See if this is the same partial text as last checked.
-   if (dStrcmp(tabBuffer, inputBuffer)) 
+   if (String::compare(tabBuffer, inputBuffer)) 
    {
       // If not...
       // Save it for checking next time.

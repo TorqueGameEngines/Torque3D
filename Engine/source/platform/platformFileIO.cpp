@@ -101,7 +101,7 @@ static bool deleteDirectoryRecusrive(const char* pPath)
       StringTableEntry basePath = *basePathItr;
 
       // Skip if the base path.
-      if (basePathItr == directories.begin() && dStrcmp(pPath, basePath) == 0)
+      if (basePathItr == directories.begin() && String::compare(pPath, basePath) == 0)
          continue;
 
       // Delete any directories recursively.
@@ -206,7 +206,7 @@ void Platform::clearExcludedDirectories()
 bool Platform::isExcludedDirectory(const char *pDir)
 {
    for(CharVector::iterator i=gPlatformDirectoryExcludeList.begin(); i!=gPlatformDirectoryExcludeList.end(); i++)
-      if(!dStrcmp(pDir, *i))
+      if(!String::compare(pDir, *i))
          return true;
 
    return false;
@@ -349,18 +349,18 @@ char * Platform::makeFullPathName(const char *path, char *buffer, U32 size, cons
 
          // Directory
 
-         if(dStrcmp(ptr, "..") == 0)
+         if(String::compare(ptr, "..") == 0)
          {
             // Parent
             endptr = dStrrchr(buffer, '/');
             if (endptr)
                *endptr-- = 0;
          }
-         else if(dStrcmp(ptr, ".") == 0)
+         else if(String::compare(ptr, ".") == 0)
          {
             // Current dir
          }
-         else if(dStrcmp(ptr, "~") == 0)
+         else if(String::compare(ptr, "~") == 0)
          {
             catPath(endptr, defaultDir, size - (endptr - buffer));
             endptr += dStrlen(endptr) - 1;

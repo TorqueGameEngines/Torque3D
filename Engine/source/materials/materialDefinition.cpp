@@ -695,33 +695,33 @@ DefineEngineMethod( Material, getAnimFlags, const char*, (U32 id), , "" )
 
    if(object->mAnimFlags[ id ] & Material::Scroll)
    {
-	   if(dStrcmp( animFlags, "" ) == 0)
+	   if(String::compare( animFlags, "" ) == 0)
 	      dStrcpy( animFlags, "$Scroll", 512 );
    }
    if(object->mAnimFlags[ id ] & Material::Rotate)
    {
-	   if(dStrcmp( animFlags, "" ) == 0)
+	   if(String::compare( animFlags, "" ) == 0)
 	      dStrcpy( animFlags, "$Rotate", 512 );
 	   else
 			dStrcat( animFlags, " | $Rotate", 512);
    }
    if(object->mAnimFlags[ id ] & Material::Wave)
    {
-	   if(dStrcmp( animFlags, "" ) == 0)
+	   if(String::compare( animFlags, "" ) == 0)
 	      dStrcpy( animFlags, "$Wave", 512 );
 	   else
 			dStrcat( animFlags, " | $Wave", 512);
    }
    if(object->mAnimFlags[ id ] & Material::Scale)
    {
-	   if(dStrcmp( animFlags, "" ) == 0)
+	   if(String::compare( animFlags, "" ) == 0)
 	      dStrcpy( animFlags, "$Scale", 512 );
 	   else
 			dStrcat( animFlags, " | $Scale", 512);
    }
    if(object->mAnimFlags[ id ] & Material::Sequence)
    {
-	   if(dStrcmp( animFlags, "" ) == 0)
+	   if(String::compare( animFlags, "" ) == 0)
 	      dStrcpy( animFlags, "$Sequence", 512 );
 	   else
 			dStrcat( animFlags, " | $Sequence", 512);

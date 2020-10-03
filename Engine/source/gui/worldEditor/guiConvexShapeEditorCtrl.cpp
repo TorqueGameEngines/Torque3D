@@ -132,7 +132,7 @@ bool GuiConvexEditorCtrl::onWake()
    SimGroup::iterator itr = scene->begin();
    for ( ; itr != scene->end(); itr++ )
    {
-      if ( dStrcmp( (*itr)->getClassName(), "ConvexShape" ) == 0 )
+      if ( String::compare( (*itr)->getClassName(), "ConvexShape" ) == 0 )
       {
          mConvexSEL = static_cast<ConvexShape*>( *itr );
          mGizmo->set( mConvexSEL->getTransform(), mConvexSEL->getPosition(), mConvexSEL->getScale() );
@@ -1974,11 +1974,11 @@ void GuiConvexEditorCtrl::setSelectedFaceMaterial(const char* materialName)
    bool found = false;
    U32 oldmatID = mConvexSEL->mSurfaceUVs[mFaceSEL].matID;
 
-   if (dStrcmp(materialName, mConvexSEL->getMaterialName().c_str()))
+   if (String::compare(materialName, mConvexSEL->getMaterialName().c_str()))
    {
       for (U32 i = 0; i < mConvexSEL->mSurfaceTextures.size(); i++)
       {
-         if (!dStrcmp(mConvexSEL->mSurfaceTextures[i].materialName, materialName))
+         if (!String::compare(mConvexSEL->mSurfaceTextures[i].materialName, materialName))
          {
             //found a match
             mConvexSEL->mSurfaceUVs[mFaceSEL].matID = i + 1;
@@ -2958,7 +2958,7 @@ DefineEngineMethod(GuiConvexEditorCtrl, setSelectedFaceMaterial, void, (const ch
    "@return true if successful, false if failed (objB is not valid)")
 {
    //return Point2F(0, 0);
-   if (!dStrcmp(materialName, ""))
+   if (!String::compare(materialName, ""))
       return;
 
    object->setSelectedFaceMaterial(materialName);

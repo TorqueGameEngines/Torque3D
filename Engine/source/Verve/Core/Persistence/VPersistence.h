@@ -162,7 +162,7 @@ namespace VPersistence
         }
 
         const char *docVersion = rootElement->Attribute( "Version" );
-        if ( !docVersion || dStrcmp( VSFVersionString, docVersion ) != 0 )
+        if ( !docVersion || String::compare( VSFVersionString, docVersion ) != 0 )
         {
             Con::errorf( "VPersistence::readFile() - Invalid file version." );
             return false;

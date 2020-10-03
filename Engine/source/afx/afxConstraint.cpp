@@ -156,7 +156,7 @@ bool afxConstraintDef::parseSpec(const char* spec, bool runs_on_server,
   // move words to words2 while extracting #center and #history
   for (S32 i = 0; i < n_words; i++)
   {
-    if (dStrcmp(words[i], "#center") == 0)
+    if (String::compare(words[i], "#center") == 0)
       mPos_at_box_center = true;
     else if (dStrncmp(words[i], "#history(", 9) == 0)
       hist_spec = words[i];

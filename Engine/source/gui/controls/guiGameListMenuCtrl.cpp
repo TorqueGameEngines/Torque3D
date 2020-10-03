@@ -500,7 +500,7 @@ void GuiGameListMenuCtrl::addRow(const char* label, const char* optionsList, boo
       const char* option = StringUnit::getUnit(optionsList, i, DELIM);
       options.push_back(StringTable->insert(option, true));
 
-      if (dStrcmp(option, defaultValue) == 0)
+      if (String::compare(option, defaultValue) == 0)
          defaultOption = options.size() - 1;
    }
    row->mOptions = options;
@@ -1073,7 +1073,7 @@ bool GuiGameListMenuCtrl::selectOption(S32 rowIndex, const char* theOption)
 
    for (Vector<StringTableEntry>::iterator anOption = row->mOptions.begin(); anOption < row->mOptions.end(); ++anOption)
    {
-      if (dStrcmp(*anOption, theOption) == 0)
+      if (String::compare(*anOption, theOption) == 0)
       {
          S32 newIndex = anOption - row->mOptions.begin();
          row->mSelectedOption = newIndex;

@@ -198,7 +198,7 @@ bool FileDialog::Execute()
       //The first of each pair is the name, which we'll skip because NFD doesn't support named filters atm
       String filter = StringUnit::getUnit(mData.mFilters, i, "|");
 
-      if (!dStrcmp(filter.c_str(), "*.*"))
+      if (!String::compare(filter.c_str(), "*.*"))
          continue;
 
       U32 subFilterCount = StringUnit::getUnitCount(filter, ";");

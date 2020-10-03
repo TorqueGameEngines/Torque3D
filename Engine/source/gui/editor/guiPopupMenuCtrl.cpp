@@ -108,7 +108,7 @@ void GuiPopupMenuTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool s
    }
    else
    {
-      if (dStrcmp(mList[cell.y].text + 3, "-\t")) //  Was: dStrcmp(mList[cell.y].text + 2, "-\t")) but has been changed to take into account the submenu flag
+      if (String::compare(mList[cell.y].text + 3, "-\t")) //  Was: String::compare(mList[cell.y].text + 2, "-\t")) but has been changed to take into account the submenu flag
       {
          Parent::onRenderCell(offset, cell, selected, mouseOver);
       }

@@ -2558,7 +2558,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && dStrcmp(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -2578,7 +2578,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 
    if (!isReimport)
    {
-      bool isInPlace = !dStrcmp(qualifiedFromFile, qualifiedToFile);
+      bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
       if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
@@ -2877,7 +2877,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && dStrcmp(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -2930,7 +2930,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    bool makeNewConstructor = true;
    if (!isReimport)
    {
-      bool isInPlace = !dStrcmp(qualifiedFromFile, qualifiedToFile);
+      bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
       if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
@@ -3109,7 +3109,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && dStrcmp(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3126,7 +3126,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    if (!isReimport)
    {
-      bool isInPlace = !dStrcmp(qualifiedFromFile, qualifiedToFile);
+      bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
       if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
@@ -3165,7 +3165,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && dStrcmp(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3182,7 +3182,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
 
    if (!isReimport)
    {
-      bool isInPlace = !dStrcmp(qualifiedFromFile, qualifiedToFile);
+      bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
       if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
       {

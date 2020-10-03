@@ -478,6 +478,7 @@ public:
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
  
 protected:
+   bool mUpdateBasetex;
    bool mIgnoreZodiacs;
    U16* zode_primBuffer;
    void deleteZodiacPrimitiveBuffer();

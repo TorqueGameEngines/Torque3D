@@ -56,7 +56,8 @@ void main()
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {
-      return texture(colorBuffer, IN_uv0.xy);
+      OUT_col = vec4(surface.albedo, 0);
+      return;
    }
    
    #ifdef USE_SSAO_MASK

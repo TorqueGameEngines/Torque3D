@@ -305,7 +305,7 @@ bool TerrainBlock::_setBaseTexFormat(void *obj, const char *index, const char *d
          // If the cached base texture is older that the terrain file or
          // it doesn't exist then generate and cache it.
          String baseCachePath = terrain->_getBaseTexCacheFileName();
-         if (Platform::compareModifiedTimes(baseCachePath, terrain->mTerrainAsset->getTerrainFilePath()) < 0 && mUpdateBasetex)
+         if (Platform::compareModifiedTimes(baseCachePath, terrain->mTerrainAsset->getTerrainFilePath()) < 0 && terrain->mUpdateBasetex)
             terrain->_updateBaseTexture(true);
          break;
       }

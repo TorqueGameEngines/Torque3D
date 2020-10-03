@@ -215,7 +215,7 @@ DefineEngineFunction( redbookOpen, bool, (const char * device), (""), "(string d
 				"@brief Deprecated\n\n"
 				"@internal")
 {
-   if(dStrcmp(device,"")==0)
+   if(String::compare(device,"")==0)
       return(RedBook::open(RedBook::getDeviceName(0)));
    else
       return(RedBook::open(device));

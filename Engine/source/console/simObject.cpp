@@ -421,7 +421,7 @@ bool SimObject::save(const char *pcFileName, bool bOnlySelected, const char *pre
    while(!f.isEOF())
    {
       buffer = (const char *) f.readLine();
-      if(!dStrcmp(buffer, beginMessage))
+      if(!String::compare(buffer, beginMessage))
          break;
       stream->write(dStrlen(buffer), buffer);
       stream->write(2, "\r\n");
@@ -436,7 +436,7 @@ bool SimObject::save(const char *pcFileName, bool bOnlySelected, const char *pre
    while(!f.isEOF())
    {
       buffer = (const char *) f.readLine();
-      if(!dStrcmp(buffer, endMessage))
+      if(!String::compare(buffer, endMessage))
          break;
    }
    while(!f.isEOF())

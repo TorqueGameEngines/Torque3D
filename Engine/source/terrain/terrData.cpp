@@ -202,7 +202,8 @@ TerrainBlock::TerrainBlock()
    mPhysicsRep( NULL ),
    mScreenError( 16 ),
    mCastShadows( true ),
-   mZoningDirty( false )
+   mZoningDirty( false ),
+   mUpdateBasetex ( true )
 {
    mTypeMask = TerrainObjectType | StaticObjectType | StaticShapeObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
@@ -304,7 +305,7 @@ bool TerrainBlock::_setBaseTexFormat(void *obj, const char *index, const char *d
          // If the cached base texture is older that the terrain file or
          // it doesn't exist then generate and cache it.
          String baseCachePath = terrain->_getBaseTexCacheFileName();
-         if (Platform::compareModifiedTimes(baseCachePath, terrain->mTerrainAsset->getTerrainFilePath()) < 0)
+         if (Platform::compareModifiedTimes(baseCachePath, terrain->mTerrainAsset->getTerrainFilePath()) < 0 && mUpdateBasetex)
             terrain->_updateBaseTexture(true);
          break;
       }
@@ -409,7 +410,7 @@ void TerrainBlock::setFile(const Resource<TerrainFile>& terr)
       // If the cached base texture is older that the terrain file or
       // it doesn't exist then generate and cache it.
       String baseCachePath = _getBaseTexCacheFileName();
-      if (Platform::compareModifiedTimes(baseCachePath, mTerrainAsset->getTerrainFilePath()) < 0)
+      if (Platform::compareModifiedTimes(baseCachePath, mTerrainAsset->getTerrainFilePath()) < 0 && mUpdateBasetex)
          _updateBaseTexture(true);
 
       // The base texture should have been cached by now... so load it.
@@ -1285,6 +1286,8 @@ void TerrainBlock::initPersistFields()
          "Light map dimensions in pixels." );
 
       addField( "screenError", TypeS32, Offset( mScreenError, TerrainBlock ), "Not yet implemented." );
+	
+      addField( "updateBasetex", TypeBool, Offset( mUpdateBasetex, TerrainBlock ), "Whether or not to update the Base Texture" );
 
    endGroup( "Misc" );
 
@@ -1342,6 +1345,8 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
       stream->write( mScreenError );
 
    stream->writeInt(mBaseTexFormat, 32);
+	
+   stream->writeFlag(mUpdateBasetex);
    stream->writeFlag(mIgnoreZodiacs);
 
    return retMask;
@@ -1409,6 +1414,8 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       stream->read( &mScreenError );
 
    mBaseTexFormat = (BaseTexFormat)stream->readInt(32);
+	
+   mUpdateBasetex = stream->readFlag();
    mIgnoreZodiacs = stream->readFlag();
 }
 

@@ -2898,7 +2898,10 @@ OPCodeReturn CodeInterpreter::op_iter_begin(U32 &ip)
 
    IterStackRecord& iter = iterStack[_ITER];
 
-   iter.mVariable = gEvalState.getCurrentFrame().add(varName);
+   if (varName[0] == '$')
+      iter.mVariable = gEvalState.globalVars.add(varName);
+   else
+      iter.mVariable = gEvalState.getCurrentFrame().add(varName);
 
    if (iter.mIsStringIter)
    {

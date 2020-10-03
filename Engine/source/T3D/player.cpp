@@ -1581,8 +1581,6 @@ ConsoleDocClass( Player,
    "@ingroup gameObjects\n"
 );
 
-F32 Player::mGravity = -20;
-
 //----------------------------------------------------------------------------
 
 Player::Player()
@@ -2890,7 +2888,7 @@ void Player::updateMove(const Move* move)
    speed_bias = speed_bias + (speed_bias_goal - speed_bias)*0.1f;
    moveSpeed *= speed_bias;
    // Acceleration due to gravity
-   VectorF acc(0.0f, 0.0f, mGravity * mGravityMod * TickSec);
+   VectorF acc(0.0f, 0.0f, mNetGravity/(1.0 - mBuoyancy) * TickSec);
 
    // Determine ground contact normal. Only look for contacts if
    // we can move and aren't mounted.
@@ -3253,30 +3251,6 @@ void Player::updateMove(const Move* move)
          mVelocity.z = mDataBlock->upMaxSpeed;
       mVelocity.z -= mDataBlock->upResistFactor * TickSec * (mVelocity.z - mDataBlock->upResistSpeed);
    }
-
-   // Container buoyancy & drag
-/* Commented out until the buoyancy calculation can be reworked so that a container and
-** player with the same density will result in neutral buoyancy.
-   if (mBuoyancy != 0)
-   {     
-      // Applying buoyancy when standing still causing some jitters-
-      if (mBuoyancy > 1.0 || !mVelocity.isZero() || !runSurface)
-      {
-         // A little hackery to prevent oscillation
-         // based on http://reinot.blogspot.com/2005/11/oh-yes-they-float-georgie-they-all.html
-
-         F32 buoyancyForce = mBuoyancy * mGravity * mGravityMod * TickSec;
-         F32 currHeight = getPosition().z;
-         const F32 C = 2.0f;
-         const F32 M = 0.1f;
-         
-         if ( currHeight + mVelocity.z * TickSec * C > mLiquidHeight )
-            buoyancyForce *= M;
-                  
-         mVelocity.z -= buoyancyForce;
-      }
-   }
-*/
 
    // Apply drag
    if ( mSwimming )

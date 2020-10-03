@@ -1000,7 +1000,7 @@ ShapeBase::ShapeBase()
    mLiquidHeight( 0.0f ),
    mWaterCoverage( 0.0f ),
    mAppliedForce( Point3F::Zero ),
-   mGravityMod( 1.0f ),
+   mNetGravity( 1.0f ),
    mDamageFlash( 0.0f ),
    mWhiteOut( 0.0f ),
    mFlipFadeVal( false ),
@@ -1768,7 +1768,7 @@ void ShapeBase::updateContainer()
    // Set default values.
    mDrag = mDataBlock->drag;
    mBuoyancy = 0.0f;      
-   mGravityMod = 1.0;
+   mNetGravity = gGravity;
    mAppliedForce.set(0,0,0);
    
    ContainerQueryInfo info;
@@ -1797,7 +1797,7 @@ void ShapeBase::updateContainer()
    }
 
    mAppliedForce = info.appliedForce;
-   mGravityMod = info.gravityScale;
+   mNetGravity = (1.0-mBuoyancy)*info.gravityScale* gGravity;
 
    //Con::printf( "WaterCoverage: %f", mWaterCoverage );
    //Con::printf( "Drag: %f", mDrag );

@@ -50,8 +50,6 @@ const static U32 sCollisionMoveMask = ( TerrainObjectType | WaterObjectType     
 static U32 sServerCollisionMask = sCollisionMoveMask; // ItemObjectType
 static U32 sClientCollisionMask = sCollisionMoveMask;
 
-static F32 sFlyingVehicleGravity = -20.0f;
-
 //
 const char* FlyingVehicle::sJetSequence[FlyingVehicle::JetAnimCount] =
 {
@@ -485,6 +483,7 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
 {
    PROFILE_SCOPE( FlyingVehicle_UpdateForces );
 
+   if (mDisableMove) return;
    MatrixF currPosMat;
    mRigid.getTransform(&currPosMat);
    mRigid.atRest = false;
@@ -498,7 +497,7 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    currPosMat.getColumn(2,&zv);
    F32 speed = mRigid.linVelocity.len();
 
-   Point3F force  = Point3F(0, 0, sFlyingVehicleGravity * mRigid.mass * mGravityMod);
+   Point3F force  = Point3F(0, 0, mRigid.mass * mNetGravity);
    Point3F torque = Point3F(0, 0, 0);
 
    // Drag at any speed
@@ -520,7 +519,7 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    }
 
    // Hovering Jet
-   F32 vf = -sFlyingVehicleGravity * mRigid.mass * mGravityMod;
+   F32 vf = mRigid.mass * -mNetGravity;
    F32 h  = getHeight();
    if (h <= 1) {
       if (h > 0) {
@@ -567,8 +566,6 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    // Add in force from physical zones...
    force += mAppliedForce;
 
-   // Container buoyancy & drag
-   force -= Point3F(0, 0, 1) * (mBuoyancy * sFlyingVehicleGravity * mRigid.mass * mGravityMod);
    force -= mRigid.linVelocity * mDrag;
 
    //

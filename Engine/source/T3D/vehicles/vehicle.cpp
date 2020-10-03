@@ -66,7 +66,6 @@ static F32 sWorkingQueryBoxSizeMultiplier = 2.0f;  // How much larger should the
 // Client prediction
 const S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
 const S32 sMaxPredictionTicks = 30;    // Number of ticks to predict
-const F32 sVehicleGravity = -20;
 
 // Physics and collision constants
 static F32 sRestTol = 0.5;             // % of gravity energy to be at rest
@@ -123,17 +122,6 @@ ConsoleDocClass( VehicleData,
 
    "@ingroup Vehicles\n"
 );
-
-IMPLEMENT_CALLBACK( VehicleData, onEnterLiquid, void, ( Vehicle* obj, F32 coverage, const char* type ), ( obj, coverage, type ),
-   "Called when the vehicle enters liquid.\n"
-   "@param obj the Vehicle object\n"
-   "@param coverage percentage of the vehicle's bounding box covered by the liquid\n"
-   "@param type type of liquid the vehicle has entered\n" );
-
-IMPLEMENT_CALLBACK( VehicleData, onLeaveLiquid, void, ( Vehicle* obj, const char* type ), ( obj, type ),
-   "Called when the vehicle leaves liquid.\n"
-   "@param obj the Vehicle object\n"
-   "@param type type of liquid the vehicle has left\n" );
 
 //----------------------------------------------------------------------------
 
@@ -678,9 +666,7 @@ Vehicle::Vehicle()
 
    mCameraOffset.set(0,0,0);
 
-   dMemset( mDustEmitterList, 0, sizeof( mDustEmitterList ) );
    dMemset( mDamageEmitterList, 0, sizeof( mDamageEmitterList ) );
-   dMemset( mSplashEmitterList, 0, sizeof( mSplashEmitterList ) );
 
    mDisableMove = false;
    restCount = 0;
@@ -701,30 +687,6 @@ U32 Vehicle::getCollisionMask()
    return 0;
 }
 
-Point3F Vehicle::getVelocity() const
-{
-   return mRigid.linVelocity;
-}
-
-void Vehicle::_createPhysics()
-{
-   SAFE_DELETE(mPhysicsRep);
-
-   if (!PHYSICSMGR || !mDataBlock->enablePhysicsRep)
-      return;
-
-   TSShape *shape = mShapeInstance->getShape();
-   PhysicsCollision *colShape = NULL;
-   colShape = shape->buildColShape(false, getScale());
-
-   if (colShape)
-   {
-      PhysicsWorld *world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
-      mPhysicsRep = PHYSICSMGR->createBody();
-      mPhysicsRep->init(colShape, 0, PhysicsBody::BF_KINEMATIC, this, world);
-      mPhysicsRep->setTransform(getTransform());
-   }
-}
 //----------------------------------------------------------------------------
 
 bool Vehicle::onAdd()
@@ -747,21 +709,6 @@ bool Vehicle::onAdd()
    // Create Emitters on the client
    if( isClientObject() )
    {
-      if( mDataBlock->dustEmitter )
-      {
-         for( S32 i=0; i<VehicleData::VC_NUM_DUST_EMITTERS; i++ )
-         {
-            mDustEmitterList[i] = new ParticleEmitter;
-            mDustEmitterList[i]->onNewDataBlock( mDataBlock->dustEmitter, false );
-            if( !mDustEmitterList[i]->registerObject() )
-            {
-               Con::warnf( ConsoleLogEntry::General, "Could not register dust emitter for class: %s", mDataBlock->getName() );
-               delete mDustEmitterList[i];
-               mDustEmitterList[i] = NULL;
-            }
-         }
-      }
-
       U32 j;
       for( j=0; j<VehicleData::VC_NUM_DAMAGE_EMITTERS; j++ )
       {
@@ -774,22 +721,6 @@ bool Vehicle::onAdd()
                Con::warnf( ConsoleLogEntry::General, "Could not register damage emitter for class: %s", mDataBlock->getName() );
                delete mDamageEmitterList[j];
                mDamageEmitterList[j] = NULL;
-            }
-
-         }
-      }
-
-      for( j=0; j<VehicleData::VC_NUM_SPLASH_EMITTERS; j++ )
-      {
-         if( mDataBlock->splashEmitterList[j] )
-         {
-            mSplashEmitterList[j] = new ParticleEmitter;
-            mSplashEmitterList[j]->onNewDataBlock( mDataBlock->splashEmitterList[j], false );
-            if( !mSplashEmitterList[j]->registerObject() )
-            {
-               Con::warnf( ConsoleLogEntry::General, "Could not register splash emitter for class: %s", mDataBlock->getName() );
-               delete mSplashEmitterList[j];
-               mSplashEmitterList[j] = NULL;
             }
 
          }
@@ -839,7 +770,7 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
-   Parent::processTick(move);
+   ShapeBase::processTick(move);
    if ( isMounted() )
       return;
 
@@ -907,26 +838,6 @@ void Vehicle::processTick(const Move* move)
       if (mPhysicsRep)
          mPhysicsRep->moveKinematicTo(getTransform());
    }
-}
-
-void Vehicle::interpolateTick(F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_InterpolateTick );
-
-   Parent::interpolateTick(dt);
-   if ( isMounted() )
-      return;
-
-   if(dt == 0.0f)
-      setRenderPosition(mDelta.pos, mDelta.rot[1]);
-   else
-   {
-      QuatF rot;
-      rot.interpolate(mDelta.rot[1], mDelta.rot[0], dt);
-      Point3F pos = mDelta.pos + mDelta.posVec * dt;
-      setRenderPosition(pos,rot);
-   }
-   mDelta.dt = dt;
 }
 
 void Vehicle::advanceTime(F32 dt)
@@ -1080,22 +991,6 @@ void Vehicle::getCameraTransform(F32* pos, MatrixF* mat)
    mat->mul( gCamFXMgr.getTrans() );
 }
 
-
-//----------------------------------------------------------------------------
-
-void Vehicle::getVelocity(const Point3F& r, Point3F* v)
-{
-   mRigid.getVelocity(r, v);
-}
-
-void Vehicle::applyImpulse(const Point3F &pos, const Point3F &impulse)
-{
-   Point3F r;
-   mRigid.getOriginVector(pos,&r);
-   mRigid.applyImpulse(r, impulse);
-}
-
-
 //----------------------------------------------------------------------------
 
 void Vehicle::updateMove(const Move* move)
@@ -1161,51 +1056,6 @@ void Vehicle::updateMove(const Move* move)
       mJetting = false;
 }
 
-
-//----------------------------------------------------------------------------
-
-void Vehicle::setPosition(const Point3F& pos,const QuatF& rot)
-{
-   MatrixF mat;
-   rot.setMatrix(&mat);
-   mat.setColumn(3,pos);
-   Parent::setTransform(mat);
-}
-
-void Vehicle::setRenderPosition(const Point3F& pos, const QuatF& rot)
-{
-   MatrixF mat;
-   rot.setMatrix(&mat);
-   mat.setColumn(3,pos);
-   Parent::setRenderTransform(mat);
-}
-
-void Vehicle::setTransform(const MatrixF& newMat)
-{
-   mRigid.setTransform(newMat);
-   Parent::setTransform(newMat);
-   mRigid.atRest = false;
-   mContacts.clear();
-}
-
-
-//-----------------------------------------------------------------------------
-
-void Vehicle::disableCollision()
-{
-   Parent::disableCollision();
-   for (SceneObject* ptr = getMountList(); ptr; ptr = ptr->getMountLink())
-      ptr->disableCollision();
-}
-
-void Vehicle::enableCollision()
-{
-   Parent::enableCollision();
-   for (SceneObject* ptr = getMountList(); ptr; ptr = ptr->getMountLink())
-      ptr->enableCollision();
-}
-
-
 //----------------------------------------------------------------------------
 /** Update the physics
 */
@@ -1234,7 +1084,7 @@ void Vehicle::updatePos(F32 dt)
       if (mCollisionList.getCount()) 
       {
          F32 k = mRigid.getKineticEnergy();
-         F32 G = sVehicleGravity * dt;
+         F32 G = mNetGravity * dt;
          F32 Kg = 0.5 * mRigid.mass * G * G;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
@@ -1324,101 +1174,6 @@ void Vehicle::updateForces(F32 /*dt*/)
    // Nothing here.
 }
 
-
-//-----------------------------------------------------------------------------
-/** Update collision information
-   Update the convex state and check for collisions. If the object is in
-   collision, impact and contact forces are generated.
-*/
-
-bool Vehicle::updateCollision(F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_UpdateCollision );
-
-   // Update collision information
-   MatrixF mat,cmat;
-   mConvex.transform = &mat;
-   mRigid.getTransform(&mat);
-   cmat = mConvex.getTransform();
-
-   mCollisionList.clear();
-   CollisionState *state = mConvex.findClosestState(cmat, getScale(), mDataBlock->collisionTol);
-   if (state && state->mDist <= mDataBlock->collisionTol) 
-   {
-      //resolveDisplacement(ns,state,dt);
-      mConvex.getCollisionInfo(cmat, getScale(), &mCollisionList, mDataBlock->collisionTol);
-   }
-
-   // Resolve collisions
-   bool collided = resolveCollision(mRigid,mCollisionList);
-   resolveContacts(mRigid,mCollisionList,dt);
-   return collided;
-}
-
-//----------------------------------------------------------------------------
-
-void Vehicle::updateWorkingCollisionSet(const U32 mask)
-{
-   PROFILE_SCOPE( Vehicle_UpdateWorkingCollisionSet );
-
-   // First, we need to adjust our velocity for possible acceleration.  It is assumed
-   // that we will never accelerate more than 20 m/s for gravity, plus 30 m/s for
-   // jetting, and an equivalent 10 m/s for vehicle accel.  We also assume that our
-   // working list is updated on a Tick basis, which means we only expand our box by
-   // the possible movement in that tick, plus some extra for caching purposes
-   Box3F convexBox = mConvex.getBoundingBox(getTransform(), getScale());
-   F32 len = (mRigid.linVelocity.len() + 50) * TickSec;
-   F32 l = (len * 1.1) + 0.1;  // fudge factor
-   convexBox.minExtents -= Point3F(l, l, l);
-   convexBox.maxExtents += Point3F(l, l, l);
-
-   // Check to see if it is actually necessary to construct the new working list,
-   // or if we can use the cached version from the last query.  We use the x
-   // component of the min member of the mWorkingQueryBox, which is lame, but
-   // it works ok.
-   bool updateSet = false;
-
-   // Check containment
-   if ((sWorkingQueryBoxStaleThreshold == -1 || mWorkingQueryBoxCountDown > 0) && mWorkingQueryBox.minExtents.x != -1e9f)
-   {
-      if (mWorkingQueryBox.isContained(convexBox) == false)
-         // Needed region is outside the cached region.  Update it.
-         updateSet = true;
-   }
-   else
-   {
-      // Must update
-      updateSet = true;
-   }
-
-   // Actually perform the query, if necessary
-   if (updateSet == true)
-   {
-      mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
-
-      const Point3F  lPoint( sWorkingQueryBoxSizeMultiplier * l );
-      mWorkingQueryBox = convexBox;
-      mWorkingQueryBox.minExtents -= lPoint;
-      mWorkingQueryBox.maxExtents += lPoint;
-
-      disableCollision();
-      mConvex.updateWorkingList(mWorkingQueryBox, mask);
-      enableCollision();
-   }
-}
-
-
-//----------------------------------------------------------------------------
-/** Check collisions with trigger and items
-   Perform a container search using the current bounding box
-   of the main body, wheels are not included.  This method should
-   only be called on the server.
-*/
-void Vehicle::checkTriggers()
-{
-   Box3F bbox = mConvex.getBoundingBox(getTransform(), getScale());
-   gServerContainer.findObjects(bbox,sTriggerMask,findCallback,this);
-}
 
 /** The callback used in by the checkTriggers() method.
    The checkTriggers method uses a container search which will
@@ -1741,32 +1496,6 @@ void Vehicle::updateFroth( F32 dt )
       }
    }
 
-}
-
-
-//--------------------------------------------------------------------------
-// Returns true if vehicle is intersecting a water surface (roughly)
-//--------------------------------------------------------------------------
-bool Vehicle::collidingWithWater( Point3F &waterHeight )
-{
-   Point3F curPos = getPosition();
-
-   F32 height = mFabs( mObjBox.maxExtents.z - mObjBox.minExtents.z );
-
-   RayInfo rInfo;
-   if( gClientContainer.castRay( curPos + Point3F(0.0, 0.0, height), curPos, WaterObjectType, &rInfo) )
-   {
-      waterHeight = rInfo.point;
-      return true;
-   }
-
-   return false;
-}
-
-void Vehicle::setEnergyLevel(F32 energy)
-{
-   Parent::setEnergyLevel(energy);
-   setMaskBits(EnergyMask);
 }
 
 void Vehicle::prepBatchRender( SceneRenderState *state, S32 mountedImageIndex )

@@ -31,11 +31,13 @@
 #ifndef _BOXCONVEX_H_
 #include "collision/boxConvex.h"
 #endif
+#ifndef _T3D_PHYSICS_PHYSICSBODY_H_
+#include "T3D/physics/physicsBody.h"
+#endif
 
 class ParticleEmitter;
 class ParticleEmitterData;
 class ClippedPolyList;
-
 
 class RigidShapeData : public ShapeBaseData
 {
@@ -112,6 +114,8 @@ class RigidShapeData : public ShapeBaseData
    F32 splashFreqMod;
    F32 splashVelEpsilon;
 
+   bool enablePhysicsRep;
+
 
    F32 dragForce;
    F32 vertFactor;
@@ -131,6 +135,9 @@ class RigidShapeData : public ShapeBaseData
    bool preload(bool server, String &errorStr);
 
    DECLARE_CONOBJECT(RigidShapeData);
+
+   DECLARE_CALLBACK(void, onEnterLiquid, (RigidShape* obj, F32 coverage, const char* type));
+   DECLARE_CALLBACK(void, onLeaveLiquid, (RigidShape* obj, const char* type));
 
 };
 
@@ -177,6 +184,8 @@ class RigidShape: public ShapeBase
       Point3F cameraRotVec;
    };
 
+   PhysicsBody* mPhysicsRep;
+
    StateDelta mDelta;
    S32 mPredictionCount;            ///< Number of ticks to predict
    bool inLiquid;
@@ -196,6 +205,9 @@ class RigidShape: public ShapeBase
 
    GFXStateBlockRef  mSolidSB;
 
+   Box3F         mWorkingQueryBox;
+   S32           mWorkingQueryBoxCountDown;
+
    //
    bool onNewDataBlock( GameBaseData *dptr, bool reload );
    void updatePos(F32 dt);
@@ -203,7 +215,6 @@ class RigidShape: public ShapeBase
    bool resolveCollision(Rigid& ns,CollisionList& cList);
    bool resolveContacts(Rigid& ns,CollisionList& cList,F32 dt);
    bool resolveDisplacement(Rigid& ns,CollisionState *state,F32 dt);
-   bool findContacts(Rigid& ns,CollisionList& cList);
    void checkTriggers();
    static void findCallback(SceneObject* obj,void * key);
 
@@ -227,7 +238,7 @@ class RigidShape: public ShapeBase
 
    void _renderMassAndContacts( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
-   void updateForces(F32);
+   void updateForces(F32 dt);
 
 public:
    // Test code...
@@ -238,11 +249,13 @@ public:
    RigidShape();
    ~RigidShape();
 
+   static void consoleInit();
    static void initPersistFields();
    void processTick(const Move *move);
    bool onAdd();
    void onRemove();
-   
+   void _createPhysics();
+
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function
    void interpolateTick(F32 dt);
@@ -291,8 +304,6 @@ public:
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
 
    DECLARE_CONOBJECT(RigidShape);
-   DECLARE_CALLBACK( void, onEnterLiquid, ( const char* objId, F32 waterCoverage, const char* liquidType ));
-   DECLARE_CALLBACK( void, onLeaveLiquid, ( const char* objId, const char* liquidType ));
 };
 
 

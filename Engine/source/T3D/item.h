@@ -92,7 +92,6 @@ class Item: public ShapeBase
 
    // Static attributes
    ItemData* mDataBlock;
-   static F32 mGravity;
    bool mStatic;
    bool mRotate;
 

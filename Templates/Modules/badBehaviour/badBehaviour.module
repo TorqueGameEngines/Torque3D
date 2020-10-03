@@ -1,0 +1,9 @@
+<ModuleDefinition
+	ModuleId="badBehaviour"
+	VersionId="1"
+	Description="Bad Behaviour Module."
+	ScriptFile="badBehaviour.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game">
+</ModuleDefinition>

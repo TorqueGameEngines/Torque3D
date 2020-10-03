@@ -59,17 +59,17 @@ function BehaviorTreeManager::onRemove(%this)
 
 function BehaviorTreeManager::loadTrees(%this)
 {
-   if(!isDirectory("./BehaviorTrees"))
+   if(!isDirectory("./behaviorTrees"))
       return;
    
    pushInstantGroup(BehaviorTreeGroup);
    
-   %pattern = "./BehaviorTrees/*.cs";   
+   %pattern = "./behaviorTrees/*.cs";   
    %file = findFirstFile( %pattern );
    if ( %file $= "" )
    {
       // Try for DSOs next.
-      %pattern = "./BehaviorTrees/*.cs.dso";
+      %pattern = "./behaviorTrees/*.cs.dso";
       %file = findFirstFile( %pattern );
    }
    

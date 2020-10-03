@@ -129,7 +129,7 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
       aiString opacityMode;
       if (AI_SUCCESS == mAIMat->Get("$mat.gltf.alphaMode", 0, 0, opacityMode))
       {
-         if (dStrcmp("MASK", opacityMode.C_Str()) == 0)
+         if (String::compare("MASK", opacityMode.C_Str()) == 0)
          {
             translucent = true;
             blendOp = Material::None;
@@ -141,7 +141,7 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
                mat->mAlphaTest = true;
             }
          }
-         else if (dStrcmp("BLEND", opacityMode.C_Str()) == 0)
+         else if (String::compare("BLEND", opacityMode.C_Str()) == 0)
          {
             translucent = true;
             blendOp = Material::LerpAlpha;

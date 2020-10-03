@@ -309,7 +309,7 @@ void VertPixelConnectorGLSL::print( Stream &stream, bool isVerterShader )
       U8 output[256];
 
       Var *var = mElementList[i];
-      if(!dStrcmp((const char*)var->name, "gl_Position"))
+      if(!String::compare((const char*)var->name, "gl_Position"))
          continue;
 
       if(var->arraySize <= 1)
@@ -339,7 +339,7 @@ void VertPixelConnectorGLSL::printOnMain( Stream &stream, bool isVerterShader )
       U8 output[256];
 
       Var *var = mElementList[i];
-      if(!dStrcmp((const char*)var->name, "gl_Position"))
+      if(!String::compare((const char*)var->name, "gl_Position"))
          continue;
   
       dSprintf((char*)output, sizeof(output), "   %s IN_%s = _%s_;\r\n", var->type, var->name, var->connectName);      
@@ -415,7 +415,7 @@ void VertPixelConnectorGLSL::printStructDefines( Stream &stream, bool in )
       U8 output[256];
 
       Var *var = mElementList[i];
-      if(!dStrcmp((const char*)var->name, "gl_Position"))
+      if(!String::compare((const char*)var->name, "gl_Position"))
          continue;      
   
       if(!in)

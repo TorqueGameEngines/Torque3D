@@ -1120,7 +1120,7 @@ DefineEngineFunction(saveCompositeTexture, void, (const char* pathR, const char*
 {
    U32 inputKey[4] = {0,0,0,0};
 
-   if (dStrcmp(inputKeyString, "") != 0)
+   if (String::compare(inputKeyString, "") != 0)
    {
       dSscanf(inputKeyString, "%i %i %i %i", &inputKey[0], &inputKey[1], &inputKey[2], &inputKey[3]);
    }

@@ -2415,7 +2415,7 @@ DefineEngineMethod( TerrainEditor, attachTerrain, void, (const char * terrain), 
    VectorPtr<TerrainBlock*> terrains;
 
    // attach to first found terrainBlock
-   if (dStrcmp (terrain,"")==0)
+   if (String::compare (terrain,"")==0)
    {
       for(SimSetIterator itr(scene); *itr; ++itr)
       {

@@ -1188,7 +1188,7 @@ DefineEngineFunction( isValidIP, bool, ( const char* str),,
    "@endtsexample\n"
    "@ingroup Strings" )
 {
-   if(dStrcmp(str, "localhost") == 0)
+   if(String::compare(str, "localhost") == 0)
    {
       return true;
    }

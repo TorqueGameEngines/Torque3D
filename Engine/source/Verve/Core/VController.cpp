@@ -1041,7 +1041,7 @@ DefineEngineMethod( VController, sortGroups, void, (),, "( void ) - Sort Groups 
             }
 
             // Swap?
-            if ( dStrcmp( groupA->getLabel(), groupB->getLabel() ) > 0 )
+            if ( String::compare( groupA->getLabel(), groupB->getLabel() ) > 0 )
             {
                 // Get Outer Siblings.
                 ITreeNode *prevNode = groupA->mSiblingPrevNode;
@@ -1100,7 +1100,7 @@ DefineEngineMethod( VController, sortTracks, void, (),, "( void ) - Sort Tracks 
                 }
 
                 // Swap?
-                if ( dStrcmp( trackA->getLabel(), trackB->getLabel() ) > 0 )
+                if ( String::compare( trackA->getLabel(), trackB->getLabel() ) > 0 )
                 {
                     // Get Outer Siblings.
                     ITreeNode *prevNode = trackA->mSiblingPrevNode;

@@ -2247,7 +2247,7 @@ DefineEngineMethod( PersistenceManager, isDirty, bool, ( const char * objName ),
               "Returns true if the SimObject is on the dirty list.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp ( objName,"")!=0)
+   if (String::compare ( objName,"")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2328,7 +2328,7 @@ DefineEngineMethod( PersistenceManager, saveDirtyObject, bool, (const char * obj
               "Save a dirty SimObject to it's file.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp (  objName, "")!=0)
+   if (String::compare (  objName, "")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {
@@ -2353,7 +2353,7 @@ DefineEngineMethod( PersistenceManager, removeObjectFromFile, void, (const char 
                the one it was created in.")
 {
    SimObject *dirtyObject = NULL;
-   if (dStrcmp ( objName , "")!=0)
+   if (String::compare ( objName , "")!=0)
    {
       if (!Sim::findObject(objName, dirtyObject))
       {

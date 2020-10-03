@@ -259,11 +259,11 @@ bool ReflectionProbe::_setReflectionMode(void *object, const char *index, const 
 {
    ReflectionProbe* probe = reinterpret_cast<ReflectionProbe*>(object);
 
-   if (!dStrcmp(data,"Static Cubemap"))
+   if (!String::compare(data,"Static Cubemap"))
    {
       probe->mReflectionModeType = StaticCubemap;
    }
-   else if (!dStrcmp(data, "Baked Cubemap"))
+   else if (!String::compare(data, "Baked Cubemap"))
    {
       //Clear our cubemap if we changed it to be baked, just for cleanliness
       probe->mReflectionModeType = BakedCubemap;

@@ -101,7 +101,7 @@ static bool deleteDirectoryRecusrive(const char* pPath)
       StringTableEntry basePath = *basePathItr;
 
       // Skip if the base path.
-      if (basePathItr == directories.begin() && dStrcmp(pPath, basePath) == 0)
+      if (basePathItr == directories.begin() && String::compare(pPath, basePath) == 0)
          continue;
 
       // Delete any directories recursively.

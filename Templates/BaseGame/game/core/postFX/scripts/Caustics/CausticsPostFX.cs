@@ -36,10 +36,10 @@ singleton GFXStateBlockData( PFX_CausticsStateBlock : PFX_DefaultStateBlock )
 singleton ShaderData( PFX_CausticsShader )
 {   
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./causticsP.hlsl";
+   DXPixelShaderFile 	= "./CausticsPostFXP.hlsl";
          
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./causticsP.glsl";
+   OGLPixelShaderFile   = "./CausticsPostFXP.glsl";
       
    samplerNames[0] = "$deferredTex";
    samplerNames[1] = "$causticsTex0";

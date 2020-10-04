@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "core/rendering/shaders/postFx.hlsl"
+#include "core/rendering/shaders/postFX/postFx.hlsl"
 #include "core/rendering/shaders/shaderModelAutoGen.hlsl"
 
 uniform float     accumTime;

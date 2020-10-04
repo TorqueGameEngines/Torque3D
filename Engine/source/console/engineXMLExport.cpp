@@ -255,12 +255,16 @@ static String getValueForType(const EngineTypeInfo* type, void* addr)
       {
          const EngineTypeInfo* fieldType = (*fieldTable)[i].getType();
          U32 fieldOffset = (*fieldTable)[i].getOffset();
-         AssertFatal((*fieldTable)[i].getNumElements() == 1, "engineXMLExport - numElements != 1 not supported currently.");
-         if (i == 0) {
-            value = getValueForType(fieldType, (void*)((size_t)addr + fieldOffset));
-         }
-         else {
-            value += " " + getValueForType(fieldType, (void*)((size_t)addr + fieldOffset));
+         U32 numElements = (*fieldTable)[i].getNumElements();
+
+         for (int j = 0; j < numElements; ++j)
+         {
+            if (i == 0 && j == 0) {
+               value = getValueForType(fieldType, (void*)((size_t)addr + fieldOffset));
+            }
+            else {
+               value += " " + getValueForType(fieldType, (void*)((size_t)addr + (size_t)fieldOffset * ((size_t)j * fieldType->getInstanceSize())));
+            }
          }
       }
 
@@ -572,6 +576,7 @@ static void exportScope(const EngineExportScope* scope, SimXMLDocument* xml, boo
          break;
 
       default:
+         AssertFatal(true, "Unknown EngineExportKind: " + exportInfo->getExportKind());
          break;
       }
    }

@@ -514,7 +514,12 @@ static void exportType(const EngineTypeInfo* type, SimXMLDocument* xml)
                ConsoleBaseType *cbt = ConsoleBaseType::getType(property.getType());
                if (cbt != NULL)
                {
-                  xml->setAttribute("type", cbt->getTypeClassName());
+                  if (cbt->getTypeInfo() != NULL) {
+                     xml->setAttribute("type", cbt->getTypeInfo()->getTypeName());
+                  }
+                  else {
+                     xml->setAttribute("type", cbt->getTypeClassName());
+                  }
                }
                else
                {

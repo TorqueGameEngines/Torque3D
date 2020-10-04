@@ -460,7 +460,7 @@ DefineEngineMethod(afxMagicSpellData, reset, void, (),,
   object->reloadReset();
 }
 
-DefineEngineMethod(afxMagicSpellData, addCastingEffect, void, (afxEffectBaseData* effect),,
+DefineEngineMethod(afxMagicSpellData, pushCastingEffect, void, (afxEffectBaseData* effect),,
                    "Adds an effect (wrapper or group) to a spell's casting phase.\n\n"
                    "@ingroup AFX")
 {
@@ -475,7 +475,7 @@ DefineEngineMethod(afxMagicSpellData, addCastingEffect, void, (afxEffectBaseData
   object->mCasting_fx_list.push_back(effect);
 }
 
-DefineEngineMethod(afxMagicSpellData, addLaunchEffect, void, (afxEffectBaseData* effect),,
+DefineEngineMethod(afxMagicSpellData, pushLaunchEffect, void, (afxEffectBaseData* effect),,
                    "Adds an effect (wrapper or group) to a spell's launch phase.\n\n"
                    "@ingroup AFX")
 
@@ -491,7 +491,7 @@ DefineEngineMethod(afxMagicSpellData, addLaunchEffect, void, (afxEffectBaseData*
   object->mLaunch_fx_list.push_back(effect);
 }
 
-DefineEngineMethod(afxMagicSpellData, addDeliveryEffect, void, (afxEffectBaseData* effect),,
+DefineEngineMethod(afxMagicSpellData, pushDeliveryEffect, void, (afxEffectBaseData* effect),,
                    "Adds an effect (wrapper or group) to a spell's delivery phase.\n\n"
                    "@ingroup AFX")
 
@@ -507,7 +507,7 @@ DefineEngineMethod(afxMagicSpellData, addDeliveryEffect, void, (afxEffectBaseDat
   object->mDelivery_fx_list.push_back(effect);
 }
 
-DefineEngineMethod(afxMagicSpellData, addImpactEffect, void, (afxEffectBaseData* effect),,
+DefineEngineMethod(afxMagicSpellData, pushImpactEffect, void, (afxEffectBaseData* effect),,
                    "Adds an effect (wrapper or group) to a spell's impact phase.\n\n"
                    "@ingroup AFX")
 
@@ -523,7 +523,7 @@ DefineEngineMethod(afxMagicSpellData, addImpactEffect, void, (afxEffectBaseData*
   object->mImpact_fx_list.push_back(effect);
 }
 
-DefineEngineMethod(afxMagicSpellData, addLingerEffect, void, (afxEffectBaseData* effect),,
+DefineEngineMethod(afxMagicSpellData, pushLingerEffect, void, (afxEffectBaseData* effect),,
                    "Adds an effect (wrapper or group) to a spell's linger phase.\n\n"
                    "@ingroup AFX")
 

@@ -35,7 +35,7 @@
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 // afxSelectronData::ewValidator
 //
-// When an effect is added using "addEffect", this validator intercepts the value
+// When an effect is added using "pushEffect", this validator intercepts the value
 // and adds it to the dynamic effects list.
 //
 void afxSelectronData::ewValidator::validateType(SimObject* object, void* typePtr)

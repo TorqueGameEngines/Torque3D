@@ -15,8 +15,8 @@ function gameUI::onDestroyGameServer(%this){}
 function gameUI::initClient(%this)
 {
    //guis
-   exec("./GUIs/playGui.gui");
-   exec("./GUIs/playGui.cs");
+   %this.queueExec("./GUIs/playGui.gui");
+   %this.queueExec("./GUIs/playGui.cs");
 }
 
 function gameUI::onCreateClientConnection(%this){}

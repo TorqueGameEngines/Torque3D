@@ -33,52 +33,52 @@ function UI::initClient(%this)
    //%this.queueExec("./datablocks/guiSounds.cs");
    
    //Profiles
-   %this.queueExec("/scripts/profiles.cs");
+   %this.queueExec("./scripts/profiles.cs");
    
    //Now gui files
-   %this.queueExec("/scripts/menuInputButtons.cs");
+   %this.queueExec("./scripts/menuInputButtons.cs");
    
-   %this.queueExec("/guis/mainMenu.cs");
-   %this.queueExec("/guis/mainMenu.gui");
+   %this.queueExec("./guis/mainMenu.cs");
+   %this.queueExec("./guis/mainMenu.gui");
    
-   %this.queueExec("/guis/chooseLevelDlg.cs");
-   %this.queueExec("/guis/chooseLevelDlg.gui");
+   %this.queueExec("./guis/chooseLevelDlg.cs");
+   %this.queueExec("./guis/chooseLevelDlg.gui");
    
-   %this.queueExec("/guis/joinServerMenu.cs");
-   %this.queueExec("/guis/joinServerMenu.gui");
+   %this.queueExec("./guis/joinServerMenu.cs");
+   %this.queueExec("./guis/joinServerMenu.gui");
    
-   %this.queueExec("/guis/loadingGui.gui");
+   %this.queueExec("./guis/loadingGui.gui");
    
-   %this.queueExec("/guis/optionsMenu.cs");
-   %this.queueExec("/guis/optionsMenu.gui");
+   %this.queueExec("./guis/optionsMenu.cs");
+   %this.queueExec("./guis/optionsMenu.gui");
    
-   %this.queueExec("/guis/pauseMenu.cs");
-   %this.queueExec("/guis/pauseMenu.gui");
+   %this.queueExec("./guis/pauseMenu.cs");
+   %this.queueExec("./guis/pauseMenu.gui");
    
-   %this.queueExec("/guis/remapDlg.gui");
-   %this.queueExec("/guis/remapConfirmDlg.gui");
+   %this.queueExec("./guis/remapDlg.gui");
+   %this.queueExec("./guis/remapConfirmDlg.gui");
    
-   %this.queueExec("/guis/profiler.cs");
-   %this.queueExec("/guis/profiler.gui");
+   %this.queueExec("./guis/profiler.cs");
+   %this.queueExec("./guis/profiler.gui");
    
-   %this.queueExec("/guis/netGraphGui.gui");
-   %this.queueExec("/guis/RecordingsDlg.gui");
+   %this.queueExec("./guis/netGraphGui.gui");
+   %this.queueExec("./guis/RecordingsDlg.gui");
    
-   %this.queueExec("/guis/guiMusicPlayer.cs");
-   %this.queueExec("/guis/guiMusicPlayer.gui");
+   %this.queueExec("./guis/guiMusicPlayer.cs");
+   %this.queueExec("./guis/guiMusicPlayer.gui");
    
-   %this.queueExec("/guis/startupGui.cs");
-   %this.queueExec("/guis/startupGui.gui");
+   %this.queueExec("./guis/startupGui.cs");
+   %this.queueExec("./guis/startupGui.gui");
    
    // Load Editor Dialogs
-   %this.queueExec("/guis/messageBoxDlg.gui");
+   %this.queueExec("./guis/messageBoxDlg.gui");
    
    //Load scripts
-   %this.queueExec("/scripts/controlsMenu.cs");
-   %this.queueExec("/scripts/messageBoxes.cs");
-   %this.queueExec("/scripts/help.cs");
-   %this.queueExec("/scripts/cursors.cs");
-   %this.queueExec("/scripts/utility.cs");
+   %this.queueExec("./scripts/controlsMenu.cs");
+   %this.queueExec("./scripts/messageBoxes.cs");
+   %this.queueExec("./scripts/help.cs");
+   %this.queueExec("./scripts/cursors.cs");
+   %this.queueExec("./scripts/utility.cs");
 }
 
 function UI::onCreateClientConnection(%this){}

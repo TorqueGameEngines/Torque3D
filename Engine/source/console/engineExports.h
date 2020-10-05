@@ -166,7 +166,7 @@ class EngineExportScope : public EngineExport
    private:
    
       /// Constructor for the global scope.
-      EngineExportScope():mExports(NULL){}
+      EngineExportScope(){}
 };
 
 

@@ -33,7 +33,7 @@ function ExampleModule::onDestroy(%this)
 function ExampleModule::initServer(%this)
 {
    //This script contains our ExampleGameMode logic
-   exec("./scripts/ExampleGamemodeScript.cs");
+   %this.queueExec("./scripts/ExampleGamemodeScript.cs");
 }
 
 //This is called when a game session server is actually created so the game may be played. It's called 
@@ -74,13 +74,13 @@ function ExampleModule::initClient(%this)
    
    //client scripts
    //Here, we exec out keybind scripts so the player is able to move when they get into a game
-   exec("./scripts/default.keybinds.cs");
+   %this.queueExec("./scripts/default.keybinds.cs");
    
    %prefPath = getPrefpath();
    if(isFile(%prefPath @ "/keybinds.cs"))
       exec(%prefPath @ "/keybinds.cs");
       
-   exec("./scripts/inputCommands.cs");
+   %this.queueExec("./scripts/inputCommands.cs");
 }
 
 //This is called when a game session client successfuly connects to a game server. 

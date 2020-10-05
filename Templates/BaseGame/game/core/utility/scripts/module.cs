@@ -205,7 +205,7 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
    if ($traceModuleCalls)
       warn("module root path="@ makeRelativePath(%moduleDef.ModulePath));
   
-   %fullPath = makeRelativePath(%moduleDef.ModulePath) @ %execFilePath;
+   %fullPath = pathConcat(%moduleDef.ModulePath, %execFilePath);
    ///go through all entries
    %locked = false;
    %execFilecount = ExecFilesList.count();

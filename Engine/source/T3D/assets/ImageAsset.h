@@ -145,13 +145,13 @@ DefineEnumType(ImageAssetType);
                                       StringTableEntry m##name##AssetId;\
                                       AssetPtr<ImageAsset>  m##name##Asset;\
                                       public: \
-                                      const String& get##name##() const { return m##name##Filename; }\
-                                      void set##name##(FileName _in) { m##name##Filename = _in; }\
+                                      const String& get##name() const { return m##name##Filename; }\
+                                      void set##name(FileName _in) { m##name##Filename = _in; }\
                                       const AssetPtr<ImageAsset> & get##name##Asset() const { return m##name##Asset; }\
                                       void set##name##Asset(AssetPtr<ImageAsset>_in) { m##name##Asset = _in; }
 
-#define GET_TEXTUREMAP(name)          get##name##()
-#define SET_TEXTUREMAP(name,_in)      set##name##(_in)
+#define GET_TEXTUREMAP(name)          get##name()
+#define SET_TEXTUREMAP(name,_in)      set##name(_in)
 #define GET_TEXTUREASSET(name)        get##name##Asset()
 #define SET_TEXTUREASSET(name,_in)    set##name##Asset(_in)
 

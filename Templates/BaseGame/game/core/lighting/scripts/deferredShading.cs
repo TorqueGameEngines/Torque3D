@@ -1,6 +1,6 @@
 singleton ShaderData( DeferredColorShader )
 {
-   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFx/postFxV.hlsl";
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = $Core::CommonShaderPath @ "/lighting/advanced/deferredColorShaderP.hlsl";
    
    OGLVertexShaderFile = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";

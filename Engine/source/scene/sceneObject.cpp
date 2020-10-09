@@ -293,6 +293,8 @@ bool SceneObject::collideBox(const Point3F &start, const Point3F &end, RayInfo *
 
 void SceneObject::disableCollision()
 {
+   for (SceneObject* ptr = getMountList(); ptr; ptr = ptr->getMountLink())
+      ptr->disableCollision();
    mCollisionCount++;
    AssertFatal(mCollisionCount < 50, "SceneObject::disableCollision called 50 times on the same object. Is this inside a circular loop?" );
 }
@@ -301,6 +303,8 @@ void SceneObject::disableCollision()
 
 void SceneObject::enableCollision()
 {
+   for (SceneObject* ptr = getMountList(); ptr; ptr = ptr->getMountLink())
+      ptr->enableCollision();
    if (mCollisionCount)
       --mCollisionCount;
 }

@@ -22,7 +22,7 @@
 
 #include "core/rendering/shaders/gl/hlslCompat.glsl"  
 #include "core/rendering/shaders/gl/torque.glsl"
-#include "core/rendering/shaders/postFX/postFx.glsl"
+#include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 //-----------------------------------------------------------------------------

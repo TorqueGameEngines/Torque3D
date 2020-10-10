@@ -22,7 +22,6 @@
 
 #include "./torque.glsl"
 #include "./brdf.glsl"
-#include "./shaderModelAutoGen.glsl"
 
 #ifndef TORQUE_SHADERGEN
 #line 26
@@ -98,7 +97,7 @@ void updateSurface(inout Surface surface)
     surface.linearRoughnessSq = surface.linearRoughness * surface.linearRoughness;
 
 	surface.albedo = surface.baseColor.rgb * (1.0f - surface.metalness);
-	surface.f0 = mix(0.04f, surface.baseColor.rgb, surface.metalness);
+	surface.f0 = mix(vec3(0.04f,0.04f,0.04f), surface.baseColor.rgb, surface.metalness);
 
 	surface.R = -reflect(surface.V, surface.N);
 	surface.f90 = saturate(50.0 * dot(surface.f0, vec3(0.33,0.33,0.33)));
@@ -452,7 +451,7 @@ vec4 computeForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         int cubemapIdx = int(probeConfigData[i].a);
+         float cubemapIdx = int(probeConfigData[i].a);
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
@@ -473,7 +472,7 @@ vec4 computeForwardProbes(Surface surface,
    kD *= 1.0f - surface.metalness;
 
    float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   vec2 envBRDF = texture(BRDFTexture, vec4(dfgNdotV, surface.roughness,0,0)).rg;
+   vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
@@ -492,7 +491,7 @@ vec4 computeForwardProbes(Surface surface,
 vec4 debugVizForwardProbes(Surface surface,
     float cubeMips, int numProbes, mat4 worldToObjArray[MAX_FORWARD_PROBES], vec4 probeConfigData[MAX_FORWARD_PROBES], 
     vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 refBoxMinArray[MAX_FORWARD_PROBES], vec4 refBoxMaxArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
-    float skylightCubemapIdx, sampler2D(BRDFTexture), 
+    float skylightCubemapIdx, sampler2D BRDFTexture, 
 	 samplerCubeArray irradianceCubemapAR, samplerCubeArray specularCubemapAR, int showAtten, int showContrib, int showSpec, int showDiff)
 {
    int i = 0;
@@ -601,19 +600,19 @@ vec4 debugVizForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         int cubemapIdx = probeConfigData[i].a;
+         float cubemapIdx = probeConfigData[i].a;
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
-         irradiance += textureLod(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
-         specular += textureLod(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
+         irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
+         specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
          alpha -= contrib;
       }
    }
 
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
-      specular = mix(specular,textureLod(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
+      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz,alpha);
+      specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz,alpha);
    }
 
    if(showSpec == 1)

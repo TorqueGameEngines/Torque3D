@@ -1,4 +1,4 @@
-#include "../../postFx/postFx.hlsl"
+#include "../../postFX/postFx.hlsl"
 #include "../../shaderModel.hlsl"
 #include "../../shaderModelAutoGen.hlsl"
 #include "../../lighting.hlsl"

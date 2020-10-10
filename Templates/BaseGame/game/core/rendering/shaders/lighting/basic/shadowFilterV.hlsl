@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../../postFx/postFx.hlsl"
+#include "../../postFX/postFx.hlsl"
 #include "../../torque.hlsl"
 
 float4 rtParams0;

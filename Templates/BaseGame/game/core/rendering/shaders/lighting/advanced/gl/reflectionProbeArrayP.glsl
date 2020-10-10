@@ -179,7 +179,7 @@ void main()
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         int cubemapIdx = probeConfigData[i].a;
+         float cubemapIdx = probeConfigData[i].a;
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
@@ -191,8 +191,8 @@ void main()
 
    if (skylightCubemapIdx != -1 && alpha > 0.001)
    {
-      irradiance = lerp(irradiance,textureLod(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
-      specular = lerp(specular,textureLod(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
+      irradiance = lerp(irradiance,textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz,alpha);
+      specular = lerp(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz,alpha);
    }
 
 #if DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0

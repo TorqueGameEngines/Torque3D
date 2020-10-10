@@ -296,10 +296,10 @@ singleton shaderData( PrefiterCubemapShader )
 //
 singleton ShaderData( PFX_ReflectionProbeArray )
 {
-   DXVertexShaderFile   = $Core::CommonShaderPath @ "/postFx/postFxV.hlsl";
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile    = $Core::CommonShaderPath @ "/lighting/advanced/reflectionProbeArrayP.hlsl";
 
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFx/gl/postFxV.glsl";
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
    OGLPixelShaderFile   = $Core::CommonShaderPath @ "/lighting/advanced/gl/reflectionProbeArrayP.glsl";
    
    samplerNames[0] = "$deferredBuffer";

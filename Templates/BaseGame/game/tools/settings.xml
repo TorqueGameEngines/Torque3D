@@ -21,6 +21,7 @@
         <Setting name="AutoImport">1</Setting>
         <Group name="Browser">
             <Setting name="previewTileSize">small</Setting>
+            <Setting name="showCoreModule">1</Setting>
         </Group>
     </Group>
     <Group name="AxisGizmo">

@@ -45,6 +45,8 @@
 #include "gfx/bitmap/gBitmap.h"
 #include "gfx/gfxTextureHandle.h"
 
+#include "gui/editor/guiInspectorTypes.h"
+
 //-----------------------------------------------------------------------------
 class ImageAsset : public AssetBase
 {
@@ -109,23 +111,48 @@ public:
 
    void setImageType(ImageTypes type) { mImageType = type; }
 
-   bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
-   StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
+   static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
+   static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
+   static bool getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset);
 
 protected:
    virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void);
 
-   static bool setImageFileName(void *obj, const char *index, const char *data) { static_cast<ImageAsset*>(obj)->setImageFileName(data); return false; }
+   static bool setImageFileName(void* obj, const char* index, const char* data) { static_cast<ImageAsset*>(obj)->setImageFileName(data); return false; }
    static const char* getImageFileName(void* obj, const char* data) { return static_cast<ImageAsset*>(obj)->getImageFileName(); }
 
    void loadImage();
 };
 
 DefineConsoleType(TypeImageAssetPtr, ImageAsset)
+DefineConsoleType(TypeImageAssetId, String)
 
 typedef ImageAsset::ImageTypes ImageAssetType;
 DefineEnumType(ImageAssetType);
+
+class GuiInspectorTypeImageAssetPtr : public GuiInspectorTypeFileName
+{
+   typedef GuiInspectorTypeFileName Parent;
+public:
+
+   GuiBitmapButtonCtrl* mImageEdButton;
+
+   DECLARE_CONOBJECT(GuiInspectorTypeImageAssetPtr);
+   static void consoleInit();
+
+   virtual GuiControl* constructEditControl();
+   virtual bool updateRects();
+};
+
+class GuiInspectorTypeImageAssetId : public GuiInspectorTypeImageAssetPtr
+{
+   typedef GuiInspectorTypeImageAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeImageAssetId);
+   static void consoleInit();
+};
 
 #define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
 
@@ -133,12 +160,12 @@ DefineEnumType(ImageAssetType);
 #define bindMapSlot(name) if (m##name##AssetId != String::EmptyString) m##name##Asset = m##name##AssetId;
 
 #define scriptBindMapSlot(name, consoleClass, docs) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), assetText(name, docs)); \
-                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, consoleClass), assetText(name,asset reference.));
+                                      addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, & defaultProtectedGetFn, assetText(name, asset reference.));
 
 #define initMapArraySlot(name,id) m##name##Filename[id] = String::EmptyString; m##name##AssetId[id] = StringTable->EmptyString(); m##name##Asset[id] = NULL;
 #define bindMapArraySlot(name,id) if (m##name##AssetId[id] != String::EmptyString) m##name##Asset[id] = m##name##AssetId[id];
 #define scriptBindMapArraySlot(name, arraySize, consoleClass, docs) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), arraySize, assetText(name, docs)); \
-                                      addField(assetText(name,Asset), TypeImageAssetPtr, Offset(m##name##AssetId, consoleClass), arraySize, assetText(name,asset reference.));
+                                      addProtectedField(assetText(name,Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, &defaultProtectedGetFn, arraySize, assetText(name,asset reference.));
 
 #define DECLARE_TEXTUREMAP(name)      protected: \
                                       FileName m##name##Filename;\

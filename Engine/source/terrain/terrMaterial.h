@@ -93,6 +93,12 @@ public:
    bool onAdd();
    static void initPersistFields();
 
+   static bool _setDiffuseMapAsset(void* obj, const char* index, const char* data);
+   static bool _setNormalMapAsset(void* obj, const char* index, const char* data);
+   static bool _setDetailMapAsset(void* obj, const char* index, const char* data);
+   static bool _setORMConfigMapAsset(void* obj, const char* index, const char* data);
+   static bool _setMacroMapAsset(void* obj, const char* index, const char* data);
+
    DECLARE_CONOBJECT( TerrainMaterial );
 
    /// This method locates the TerrainMaterial if it exists, tries 

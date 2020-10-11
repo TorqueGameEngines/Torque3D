@@ -412,6 +412,19 @@ protected:
    /// in the "mapTo" data variable.
    virtual void _mapMaterial();
 
+   static bool _setDiffuseMapAsset(void* obj, const char* index, const char* data);
+   static bool _setOverlayMapAsset(void* obj, const char* index, const char* data);
+   static bool _setLightMapAsset(void* obj, const char* index, const char* data);
+   static bool _setToneMapAsset(void* obj, const char* index, const char* data);
+   static bool _setDetailMapAsset(void* obj, const char* index, const char* data);
+   static bool _setNormalMapAsset(void* obj, const char* index, const char* data);
+   static bool _setORMConfigMapAsset(void* obj, const char* index, const char* data);
+   static bool _setRoughMapAsset(void* obj, const char* index, const char* data);
+   static bool _setAOMapAsset(void* obj, const char* index, const char* data);
+   static bool _setMetalMapAsset(void* obj, const char* index, const char* data);
+   static bool _setGlowMapAsset(void* obj, const char* index, const char* data);
+   static bool _setDetailNormalMapAsset(void* obj, const char* index, const char* data);
+
 private:
    static GFXCubemapHandle smNormalizeCube;
 };

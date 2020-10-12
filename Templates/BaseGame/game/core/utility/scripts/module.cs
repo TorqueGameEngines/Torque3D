@@ -112,7 +112,7 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
    {
         %check = DatablockFilesList.getKey(%i);
         //look for a substring match
-        %isMatch = strIsMatchExpr("*"@ %datablockFilePath,%check );
+        %isMatch = strIsMatchExpr("*"@ strReplace(%datablockFilePath,"./","/"),%check );
         if (%isMatch)
         {
             //check if we're already locked in
@@ -213,7 +213,7 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
    {
         %check = ExecFilesList.getKey(%i);
         //look for a substring match
-        %isMatch = strIsMatchExpr("*"@ %execFilePath,%check );
+        %isMatch = strIsMatchExpr("*"@ strReplace(%execFilePath,"./","/"),%check );
         if (%isMatch)
         {
             //check if we're already locked in

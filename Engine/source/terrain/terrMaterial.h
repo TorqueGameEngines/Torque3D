@@ -42,17 +42,17 @@ protected:
 
    //AssetPtr<ImageAsset> mDiffuseAsset;
 
-   DECLARE_TEXTUREMAP(DiffuseMap);
+   DECLARE_TEXTUREMAP(TerrainMaterial, DiffuseMap);
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
    F32 mDiffuseSize;
 
    ///
-   DECLARE_TEXTUREMAP(NormalMap);
+   DECLARE_TEXTUREMAP(TerrainMaterial, NormalMap);
 
    ///
-   DECLARE_TEXTUREMAP(DetailMap);
+   DECLARE_TEXTUREMAP(TerrainMaterial, DetailMap);
    
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
@@ -66,7 +66,7 @@ protected:
    F32 mDetailDistance;
 
    ///
-   DECLARE_TEXTUREMAP(ORMConfigMap);
+   DECLARE_TEXTUREMAP(TerrainMaterial, ORMConfigMap);
 
    bool mIsSRGB;
    bool mInvertRoughness;
@@ -77,7 +77,7 @@ protected:
    /// planes.
    bool mSideProjection;
 
-   DECLARE_TEXTUREMAP(MacroMap);
+   DECLARE_TEXTUREMAP(TerrainMaterial, MacroMap);
    F32 mMacroSize;
    F32 mMacroStrength;
    F32 mMacroDistance;
@@ -92,12 +92,6 @@ public:
 
    bool onAdd();
    static void initPersistFields();
-
-   static bool _setDiffuseMapAsset(void* obj, const char* index, const char* data);
-   static bool _setNormalMapAsset(void* obj, const char* index, const char* data);
-   static bool _setDetailMapAsset(void* obj, const char* index, const char* data);
-   static bool _setORMConfigMapAsset(void* obj, const char* index, const char* data);
-   static bool _setMacroMapAsset(void* obj, const char* index, const char* data);
 
    DECLARE_CONOBJECT( TerrainMaterial );
 

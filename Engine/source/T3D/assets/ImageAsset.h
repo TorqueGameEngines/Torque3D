@@ -165,9 +165,9 @@ public:
 #define initMapArraySlot(name,id) m##name##Filename[id] = String::EmptyString; m##name##AssetId[id] = StringTable->EmptyString(); m##name##Asset[id] = NULL;
 #define bindMapArraySlot(name,id) if (m##name##AssetId[id] != String::EmptyString) m##name##Asset[id] = m##name##AssetId[id];
 #define scriptBindMapArraySlot(name, arraySize, consoleClass, docs) addField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), arraySize, assetText(name, docs)); \
-                                      addProtectedField(assetText(name,Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, &defaultProtectedGetFn, arraySize, assetText(name,asset reference.));
+                                      addProtectedField(assetText(name,Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##AssetSlot, &defaultProtectedGetFn, arraySize, assetText(name,asset reference.));
 
-#define DECLARE_TEXTUREMAP(name)      protected: \
+#define DECLARE_TEXTUREMAP(className,name)      protected: \
                                       FileName m##name##Filename;\
                                       StringTableEntry m##name##AssetId;\
                                       AssetPtr<ImageAsset>  m##name##Asset;\
@@ -175,16 +175,45 @@ public:
                                       const String& get##name() const { return m##name##Filename; }\
                                       void set##name(FileName _in) { m##name##Filename = _in; }\
                                       const AssetPtr<ImageAsset> & get##name##Asset() const { return m##name##Asset; }\
-                                      void set##name##Asset(AssetPtr<ImageAsset>_in) { m##name##Asset = _in; }
+                                      void set##name##Asset(AssetPtr<ImageAsset>_in) { m##name##Asset = _in; }\
+static bool _set##name##Asset(void* obj, const char* index, const char* data)\
+{\
+    ##className* mat = static_cast<##className*>(obj);\
+   mat->m##name##AssetId = StringTable->insert(data);\
+   if (ImageAsset::getAssetById(mat->m##name##AssetId, &mat->m##name##Asset))\
+   {\
+      if (mat->m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))\
+         mat->m##name##Filename = StringTable->EmptyString();\
+      return true;\
+   }\
+   return true;\
+}
 
 #define GET_TEXTUREMAP(name)          get##name()
 #define SET_TEXTUREMAP(name,_in)      set##name(_in)
 #define GET_TEXTUREASSET(name)        get##name##Asset()
 #define SET_TEXTUREASSET(name,_in)    set##name##Asset(_in)
 
-#define DECLARE_TEXTUREARRAY(name,max) FileName m##name##Filename[max];\
+#define DECLARE_TEXTUREARRAY(className,name,max) FileName m##name##Filename[max];\
                                       StringTableEntry m##name##AssetId[max];\
-                                      AssetPtr<ImageAsset>  m##name##Asset[max];
-
+                                      AssetPtr<ImageAsset>  m##name##Asset[max];\
+static bool _set##name##AssetSlot(void* obj, const char* index, const char* data)\
+{\
+   ##className* mat = static_cast<##className*>(obj);\
+   if (!index) return false;\
+   U32 idx = dAtoi(index);\
+   if (idx >= ##max)\
+      return false;\
+   mat->m##name##AssetId[idx] = StringTable->insert(data);\
+   if (ImageAsset::getAssetById(mat->m##name##AssetId[idx], &mat->m##name##Asset[idx]))\
+   {\
+      if (mat->m##name##Asset[idx].getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))\
+      {\
+         mat->m##name##Filename[idx] = StringTable->EmptyString();\
+      }\
+      return true;\
+   }\
+   return true;\
+}
 #endif
 

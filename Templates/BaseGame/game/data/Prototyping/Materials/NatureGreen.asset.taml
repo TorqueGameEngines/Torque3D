@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NatureGreen"
+    scriptFile="@assetFile=NatureGreen.cs"
+    imageMap0="@Asset=Prototyping:NatureGreen_ALBEDO"
+    originalFilePath="D:/Gamedev/art/Blockout/NatureGreen.png" />

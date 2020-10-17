@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="InteractiveRed_ALBEDO"
+    imageFile="@assetFile=InteractiveRed.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo"
+    originalFilePath="D:/Gamedev/art/Blockout/InteractiveRed.png" />

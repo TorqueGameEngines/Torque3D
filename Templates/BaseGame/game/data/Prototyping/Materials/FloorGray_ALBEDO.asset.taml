@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="FloorGray_ALBEDO"
+    imageFile="@assetFile=FloorGray.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo"
+    originalFilePath="D:/Gamedev/art/Blockout/FloorGray.png" />

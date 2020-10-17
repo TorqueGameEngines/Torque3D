@@ -1,0 +1,37 @@
+function Prototyping::onCreate(%this)
+{
+}
+
+function Prototyping::onDestroy(%this)
+{
+}
+
+//This is called when the server is initially set up by the game application
+function Prototyping::initServer(%this)
+{
+}
+
+//This is called when the server is created for an actual game/map to be played
+function Prototyping::onCreateGameServer(%this)
+{
+}
+
+//This is called when the server is shut down due to the game/map being exited
+function Prototyping::onDestroyGameServer(%this)
+{
+}
+
+//This is called when the client is initially set up by the game application
+function Prototyping::initClient(%this)
+{
+}
+
+//This is called when a client connects to a server
+function Prototyping::onCreateClientConnection(%this)
+{
+}
+
+//This is called when a client disconnects from a server
+function Prototyping::onDestroyClientConnection(%this)
+{
+}

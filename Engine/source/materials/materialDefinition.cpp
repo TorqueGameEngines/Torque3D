@@ -121,7 +121,7 @@ Material::Material()
       mRoughness[i] = 1.0f;
       mMetalness[i] = 0.0f;
 
-	   mIsSRGb[i] = true;
+	   mIsSRGb[i] = false;
       mInvertRoughness[i] = false;
 
       mRoughnessChan[i] = 0;

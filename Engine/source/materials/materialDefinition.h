@@ -204,27 +204,27 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_TEXTUREARRAY(DiffuseMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, DiffuseMap, MAX_STAGES);
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
-   DECLARE_TEXTUREARRAY(OverlayMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(LightMap, MAX_STAGES);;
-   DECLARE_TEXTUREARRAY(ToneMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(DetailMap, MAX_STAGES);;
-   DECLARE_TEXTUREARRAY(NormalMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(ORMConfigMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, OverlayMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, LightMap, MAX_STAGES);;
+   DECLARE_TEXTUREARRAY(Material, ToneMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, DetailMap, MAX_STAGES);;
+   DECLARE_TEXTUREARRAY(Material, NormalMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, ORMConfigMap, MAX_STAGES);
    bool     mIsSRGb[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(RoughMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, RoughMap, MAX_STAGES);
    bool     mInvertRoughness[MAX_STAGES];
    F32      mRoughnessChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(AOMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, AOMap, MAX_STAGES);
    F32      mAOChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(MetalMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, MetalMap, MAX_STAGES);
    F32      mMetalChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(GlowMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, GlowMap, MAX_STAGES);
    F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
-   DECLARE_TEXTUREARRAY(DetailNormalMap, MAX_STAGES);
+   DECLARE_TEXTUREARRAY(Material, DetailNormalMap, MAX_STAGES);
    /// The strength scalar for the detail normal map.
    F32 mDetailNormalMapStrength[MAX_STAGES];
 

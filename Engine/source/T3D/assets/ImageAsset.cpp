@@ -84,6 +84,34 @@ ConsoleSetType(TypeImageAssetPtr)
    Con::warnf("(TypeImageAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
+ConsoleType(assetIdString, TypeImageAssetId, String, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeImageAssetId)
+{
+   // Fetch asset Id.
+   return *((const char**)(dptr));
+}
+
+ConsoleSetType(TypeImageAssetId)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
+}
 //-----------------------------------------------------------------------------
 
 ImplementEnumType(ImageAssetType,
@@ -222,6 +250,22 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    return imageAssetId;
 }
 
+bool ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset)
+{
+   (*imageAsset) = assetId;
+
+   if (!imageAsset->isNull())
+      return true;
+
+   //Didn't work, so have us fall back to a placeholder asset
+   StringTableEntry noImageId = StringTable->insert("Core_Rendering:noMaterial");
+   imageAsset->setAssetId(noImageId);
+
+   if (!imageAsset->isNull())
+      return true;
+
+   return false;
+}
 //------------------------------------------------------------------------------
 void ImageAsset::copyTo(SimObject* object)
 {
@@ -233,15 +277,15 @@ void ImageAsset::loadImage()
 {
    SAFE_DELETE(mImage);
 
-   if (mImageFileName)
+   if (mImagePath)
    {
-      if (!Platform::isFile(mImageFileName))
+      if (!Platform::isFile(mImagePath))
       {
          Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFileName);
          return;
       }
 
-      mImage.set(mImageFileName, &GFXStaticTextureSRGBProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
+      mImage.set(mImagePath, &GFXStaticTextureSRGBProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
 
       if (mImage)
       {
@@ -291,6 +335,9 @@ GFXTexHandle ImageAsset::getImage(GFXTextureProfile requestedProfile)
 
       return newImage;
    }*/
+
+   if (mImage.isValid())
+      return mImage;
 
    return nullptr;
 }
@@ -365,4 +412,101 @@ DefineEngineMethod(ImageAsset, getImageInfo, const char*, (), ,
    "@return The GameObject entity created from the asset.")
 {
    return object->getImageInfo();
+}
+
+//-----------------------------------------------------------------------------
+// GuiInspectorTypeAssetId
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeImageAssetPtr);
+
+ConsoleDocClass(GuiInspectorTypeImageAssetPtr,
+   "@brief Inspector field type for Shapes\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeImageAssetPtr::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeImageAssetPtr)->setInspectorFieldType("GuiInspectorTypeImageAssetPtr");
+}
+
+GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
+{
+   // Create base filename edit controls
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   // Change filespec
+   char szBuffer[512];
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+      mInspector->getInspectObject()->getIdString(), mCaption);
+   mBrowseButton->setField("Command", szBuffer);
+
+   const char* id = mInspector->getInspectObject()->getIdString();
+
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+   // Create "Open in ShapeEditor" button
+   mImageEdButton = new GuiBitmapButtonCtrl();
+
+   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
+   mImageEdButton->setField("Command", szBuffer);
+
+   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   mImageEdButton->setBitmap(bitmapName);
+
+   mImageEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mImageEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mImageEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mImageEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor");
+
+   mImageEdButton->registerObject();
+   addObject(mImageEdButton);
+
+   return retCtrl;
+}
+
+bool GuiInspectorTypeImageAssetPtr::updateRects()
+{
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
+   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
+
+   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+   if (mBrowseButton != NULL)
+   {
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
+   }
+
+   if (mImageEdButton != NULL)
+   {
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mImageEdButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   return resized;
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeImageAssetId);
+
+ConsoleDocClass(GuiInspectorTypeImageAssetId,
+   "@brief Inspector field type for Shapes\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeImageAssetId::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeImageAssetId)->setInspectorFieldType("GuiInspectorTypeImageAssetId");
 }

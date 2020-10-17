@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="InteractiveRed"
+    scriptFile="@assetFile=InteractiveRed.cs"
+    imageMap0="@Asset=Prototyping:InteractiveRed_ALBEDO"
+    originalFilePath="D:/Gamedev/art/Blockout/InteractiveRed.png" />

@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TrimYellow"
+    scriptFile="@assetFile=TrimYellow.cs"
+    imageMap0="@Asset=Prototyping:TrimYellow_ALBEDO"
+    originalFilePath="D:/Gamedev/art/Blockout/TrimYellow.png" />

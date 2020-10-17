@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NullPink_ALBEDO"
+    imageFile="@assetFile=NullPink.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo"
+    originalFilePath="D:/Gamedev/art/Blockout/NullPink.png" />

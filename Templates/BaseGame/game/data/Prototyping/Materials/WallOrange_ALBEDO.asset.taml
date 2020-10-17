@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="WallOrange_ALBEDO"
+    imageFile="@assetFile=WallOrange.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo"
+    originalFilePath="D:/Gamedev/art/Blockout/WallOrange.png" />

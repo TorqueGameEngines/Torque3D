@@ -1,0 +1,9 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TrimYellow_ALBEDO"
+    imageFile="@assetFile=TrimYellow.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo"
+    originalFilePath="D:/Gamedev/art/Blockout/TrimYellow.png" />

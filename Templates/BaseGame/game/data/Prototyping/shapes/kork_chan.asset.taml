@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="kork_chan"
+    scriptFile="@assetFile=kork_chan.cs"
+    imageMap0="@Asset=Prototyping:kork_chan_ALBEDO"
+    originalFilePath="D:/Gamedev/T3DMIT/Resources/Prototyping/Shapes" />

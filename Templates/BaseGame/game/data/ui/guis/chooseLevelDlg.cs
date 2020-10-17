@@ -83,9 +83,9 @@ function ChooseLevelDlg::onWake( %this )
 
    for(%i=0; %i < LevelListEntries.count(); %i++)
    {
-      %levelEntry = LevelListEntries.getKey(%i);
+      %levelAsset = LevelListEntries.getKey(%i);
       
-      LevelList.addRow(getField(%levelEntry, 0), "", -1, -30);
+      LevelList.addRow(%levelAsset.LevelName, "", -1, -30);
    }
    
    LevelList.setSelected(0);
@@ -140,45 +140,33 @@ function ChooseLevelDlg::addMissionFile( %this, %file )
 
 function ChooseLevelDlg::addLevelAsset( %this, %levelAsset )
 {
-   %file = %levelAsset.getAssetId();
-   
-   %levelName = %levelAsset.LevelName;
-   %levelDesc = %levelAsset.description;
-   %levelPreview = %levelAsset.levelPreviewImage;
-   
-   LevelListEntries.add( %levelName TAB %file TAB %levelDesc TAB %levelPreview );
+   LevelListEntries.add( %levelAsset );
 }
 
 function LevelList::onChange(%this)
 {
    %index = %this.getSelectedRow();
    
-   %levelEntry = LevelListEntries.getKey(%index);
+   %levelAsset = LevelListEntries.getKey(%index);
    
    // Get the name
-   ChooseLevelWindow->LevelName.text = getField(%levelEntry, 0);
+   ChooseLevelWindow->LevelName.text = %levelAsset.LevelName;
    
-   // Get the level file
-   $selectedLevelAsset = getField(%levelEntry, 1);
+   // Get the level id
+   $selectedLevelAsset = %levelAsset.getAssetId();
    
    // Find the preview image
-   %levelPreview = getField(%levelEntry, 3);
+   %levelPreview = %levelAsset.getPreviewImagePath();
    
    // Test against all of the different image formats
    // This should probably be moved into an engine function
-   if (isFile(%levelPreview @ ".png") ||
-       isFile(%levelPreview @ ".jpg") ||
-       isFile(%levelPreview @ ".bmp") ||
-       isFile(%levelPreview @ ".gif") ||
-       isFile(%levelPreview @ ".jng") ||
-       isFile(%levelPreview @ ".mng") ||
-       isFile(%levelPreview @ ".tga"))
-      ChooseLevelWindow->CurrentPreview.setBitmap(%previewFile);
+   if (isFile(%levelPreview))
+      ChooseLevelWindow->CurrentPreview.setBitmap(%levelPreview);
    else
       ChooseLevelWindow->CurrentPreview.setBitmap("data/ui/images/no-preview");
 
    // Get the description
-   %levelDesc = getField(%levelEntry, 2);
+   %levelDesc = %levelAsset.description;
    
    if(%levelDesc !$= "")
    {

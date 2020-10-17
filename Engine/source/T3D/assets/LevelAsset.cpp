@@ -362,22 +362,29 @@ void LevelAsset::unloadDependencies()
 }
 
 DefineEngineMethod(LevelAsset, getLevelPath, const char*, (),,
-   "Creates a new script asset using the targetFilePath.\n"
-   "@return The bool result of calling exec")
+   "Gets the full path of the asset's defined level file.\n"
+   "@return The string result of the level path")
 {
    return object->getLevelPath();
 }
 
+DefineEngineMethod(LevelAsset, getPreviewImagePath, const char*, (), ,
+   "Gets the full path of the asset's defined preview image file.\n"
+   "@return The string result of the level preview image path")
+{
+   return object->getImagePath();
+}
+
 DefineEngineMethod(LevelAsset, getPostFXPresetPath, const char*, (), ,
-   "Creates a new script asset using the targetFilePath.\n"
-   "@return The bool result of calling exec")
+   "Gets the full path of the asset's defined postFX preset file.\n"
+   "@return The string result of the postFX preset path")
 {
    return object->getPostFXPresetPath();
 }
 
 DefineEngineMethod(LevelAsset, getDecalsPath, const char*, (), ,
-   "Creates a new script asset using the targetFilePath.\n"
-   "@return The bool result of calling exec")
+   "Gets the full path of the asset's defined decal file.\n"
+   "@return The string result of the decal path")
 {
    return object->getDecalsPath();
 }

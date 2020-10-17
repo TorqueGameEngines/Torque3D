@@ -1613,7 +1613,10 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
                   String imageAssetName = childAssetItem->assetName;
 
-                  materialImageNoSuffix = imageAssetName.erase(imageAssetName.length() - suffix.length(), suffix.length());//cache this for later as we may need it for file association lookups
+                  if (suffix.isEmpty())
+                     materialImageNoSuffix = imageAssetName;
+                  else
+                     materialImageNoSuffix = imageAssetName.erase(imageAssetName.length() - suffix.length(), suffix.length());//cache this for later as we may need it for file association lookups
                }
             }
          }
@@ -1622,34 +1625,34 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       //Now that we've checked off any existingly matched image types, process through the unmatched to look for files that associate
       for (S32 t = 0; t < ImageAsset::ImageTypeCount; t++)
       {
+         //This type wasn't found, so try and find a match based on suffix
+         String suffixList;
+
+         switch (t)
+         {
+         case ImageAsset::Albedo:
+            suffixList = activeImportConfig->DiffuseTypeSuffixes;
+            break;
+         case ImageAsset::Normal:
+            suffixList = activeImportConfig->NormalTypeSuffixes;
+            break;
+         case ImageAsset::ORMConfig:
+            suffixList = activeImportConfig->PBRTypeSuffixes;
+            break;
+         case ImageAsset::Metalness:
+            suffixList = activeImportConfig->MetalnessTypeSuffixes;
+            break;
+         case ImageAsset::AO:
+            suffixList = activeImportConfig->AOTypeSuffixes;
+            break;
+         case ImageAsset::Roughness:
+            suffixList = activeImportConfig->RoughnessTypeSuffixes;
+            break;
+            //TODO: Glow map lookup too
+         }
+
          if (!matchedImageTypes[t])
          {
-            //This type wasn't found, so try and find a match based on suffix
-            String suffixList;
-
-            switch (t)
-            {
-            case ImageAsset::Albedo:
-               suffixList = activeImportConfig->DiffuseTypeSuffixes;
-               break;
-            case ImageAsset::Normal:
-               suffixList = activeImportConfig->NormalTypeSuffixes;
-               break;
-            case ImageAsset::ORMConfig:
-               suffixList = activeImportConfig->PBRTypeSuffixes;
-               break;
-            case ImageAsset::Metalness:
-               suffixList = activeImportConfig->MetalnessTypeSuffixes;
-               break;
-            case ImageAsset::AO:
-               suffixList = activeImportConfig->AOTypeSuffixes;
-               break;
-            case ImageAsset::Roughness:
-               suffixList = activeImportConfig->RoughnessTypeSuffixes;
-               break;
-            //TODO: Glow map lookup too
-            }
-
             U32 suffixCount = StringUnit::getUnitCount(suffixList.c_str(), ",;");
             for (U32 i = 0; i < suffixCount; i++)
             {
@@ -1714,6 +1717,18 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
                   matchedImageTypes[t] = newImageAssetObj;
                }
+            }
+         }
+         else
+         {
+            //just a bit of cleanup and logical testing for matches
+            //in the event we KNOW what the type is, but we don't have a suffix, such as a found image on a material lookup
+            //that doesn't have a suffix, we assume it to be the albedo, so we'll just append the suffix to avoid collisions if
+            //the name already matches our material name, similar to above logic
+            if (matchedImageTypes[t]->assetName == assetItem->assetName)
+            {
+               matchedImageTypes[t]->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;");
+               matchedImageTypes[t]->cleanAssetName = matchedImageTypes[t]->assetName;
             }
          }
       }
@@ -1903,6 +1918,11 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
          if (suffix.isNotEmpty())
          {
             imageAssetItem->imageSuffixType = suffixType;
+         }
+         else
+         {
+            //we'll assume it's albedo
+            imageAssetItem->imageSuffixType = "Albedo";
          }
       }
       else

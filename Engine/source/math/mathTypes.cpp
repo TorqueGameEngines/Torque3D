@@ -376,7 +376,7 @@ ConsoleSetType( TypeMatrixF )
 //-----------------------------------------------------------------------------
 // TypeMatrixPosition
 //-----------------------------------------------------------------------------
-ConsoleType(MatrixPosition, TypeMatrixPosition, MatrixF, "")
+ConsoleMappedType(MatrixPosition, TypeMatrixPosition, Point3F, MatrixF, "")
 
 ConsoleGetType( TypeMatrixPosition )
 {
@@ -411,7 +411,7 @@ ConsoleSetType( TypeMatrixPosition )
 //-----------------------------------------------------------------------------
 // TypeMatrixRotation
 //-----------------------------------------------------------------------------
-ConsoleType(MatrixRotation, TypeMatrixRotation, MatrixF, "")
+ConsoleMappedType(MatrixRotation, TypeMatrixRotation, AngAxisF, MatrixF, "")
 
 ConsoleGetType( TypeMatrixRotation )
 {

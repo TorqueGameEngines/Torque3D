@@ -95,6 +95,7 @@ class SimSet : public SimObject, public TamlChildren
    public:
 
       typedef SimObject Parent;
+      typedef SimObject Children;
 
       enum SetModification
       {

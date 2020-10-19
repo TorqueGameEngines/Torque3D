@@ -33,8 +33,7 @@ uniform vec4 rtParams6;
 uniform vec4    inProbePosArray[MAX_PROBES];
 uniform vec4    inRefPosArray[MAX_PROBES];
 uniform mat4    worldToObjArray[MAX_PROBES];
-uniform vec4    refBoxMinArray[MAX_PROBES];
-uniform vec4    refBoxMaxArray[MAX_PROBES];
+uniform vec4    refScaleArray[MAX_PROBES];
 uniform vec4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
 
 #if DEBUGVIZ_CONTRIB
@@ -180,7 +179,7 @@ void main()
       if (contrib > 0.0f)
       {
          float cubemapIdx = probeConfigData[i].a;
-         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refBoxMinArray[i].xyz, refBoxMaxArray[i].xyz, inRefPosArray[i].xyz);
+         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
          specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;

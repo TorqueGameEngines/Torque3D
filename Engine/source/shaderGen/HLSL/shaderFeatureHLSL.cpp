@@ -3075,15 +3075,10 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    inRefPosArray->uniform = true;
    inRefPosArray->constSortPos = cspPotentialPrimitive;
 
-   Var * refBoxMinArray = new Var("inRefBoxMin", "float4");
-   refBoxMinArray->arraySize = MAX_FORWARD_PROBES;
-   refBoxMinArray->uniform = true;
-   refBoxMinArray->constSortPos = cspPotentialPrimitive;
-
-   Var * refBoxMaxArray = new Var("inRefBoxMax", "float4");
-   refBoxMaxArray->arraySize = MAX_FORWARD_PROBES;
-   refBoxMaxArray->uniform = true;
-   refBoxMaxArray->constSortPos = cspPotentialPrimitive;
+   Var * refScaleArray = new Var("inRefScale", "float4");
+   refScaleArray->arraySize = MAX_FORWARD_PROBES;
+   refScaleArray->uniform = true;
+   refScaleArray->constSortPos = cspPotentialPrimitive;
 
    Var *probeConfigData = new Var("probeConfigData", "float4");
    probeConfigData->arraySize = MAX_FORWARD_PROBES;
@@ -3142,11 +3137,11 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       ibl = new Var("ibl", "float3");
    }
 
-   String computeForwardProbes = String::String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+   String computeForwardProbes = String::String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
    computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
       
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray,
       skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
 

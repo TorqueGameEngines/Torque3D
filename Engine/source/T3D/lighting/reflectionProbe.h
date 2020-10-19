@@ -63,6 +63,9 @@ class ReflectionProbe : public SceneObject
 
 public:
 
+   /// <summary>
+   /// Used to dictate what sort of cubemap the probes use when using IBL
+   /// </summary>
    enum ReflectionModeType
    {
       NoReflection = 0,
@@ -87,36 +90,84 @@ protected:
       NextFreeMask = Parent::NextFreeMask << 3
    };
 
-   bool mBake;
+   /// <summary>
+   /// Only used for interfacing with the editor's inspector bake button
+   /// </summary>
+   bool mBakeReflections;
+
+   /// <summary>
+   /// Whether this probe is enabled or not
+   /// </summary>
    bool mEnabled;
+   
    bool mDirty;
+
+   /// <summary>
+   /// Whether this probe's cubemap is dirty or not
+   /// </summary>
    bool mCubemapDirty;
 
+#ifdef TORQUE_TOOLS
+   /// <summary>
+   /// Used only when the editor is loaded, this is the shape data used for the probe viewing(aka, a sphere)
+   /// </summary>
    Resource<TSShape> mEditorShape;
+   /// <summary>
+   /// This is the shape instance of the editor shape data
+   /// </summary>
    TSShapeInstance* mEditorShapeInst;
+#endif // TORQUE_TOOLS
 
    //--------------------------------------------------------------------------
    // Rendering variables
    //--------------------------------------------------------------------------
+   /// <summary>
+   /// The shape of the probe
+   /// </summary>
    ProbeRenderInst::ProbeShapeType mProbeShapeType;
 
-   ProbeRenderInst* mProbeInfo;
+   /// <summary>
+   /// This is effectively a packed cache of the probe data actually utilized for rendering.
+   /// The RenderProbeManager uses this via the probe calling registerProbe on creation, and unregisterProbe on destruction
+   /// When the manager goes to render it has the compacted data to read over more efficiently for setting up what probes should
+   /// Actually render in that frame
+   /// </summary>
+   ProbeRenderInst mProbeInfo;
 
-   //Reflection Contribution stuff
+   /// <summary>
+   /// Used to dictate what sort of cubemap the probes use when using IBL
+   /// </summary>
    ReflectionModeType mReflectionModeType;
 
+   /// <summary>
+   /// The radius of the probe's influence. Only really relevent in Sphere probes
+   /// </summary>
    F32 mRadius;
+   /// <summary>
+   /// The reference positional offset for the probe. This is used for adjusting the perceived center and area of influence.
+   /// Helpful in adjusting parallax issues
+   /// </summary>
    Point3F mProbeRefOffset;
+   /// <summary>
+   /// The reference scale for the probe. This is used for adjusting the perceived center and area of influence.
+   /// Helpful in adjusting parallax issues
+   /// </summary>
    Point3F mProbeRefScale;
+
+   /// <summary>
+   /// Only used for interfacing with the editor's inspector edit offset button
+   /// </summary>
    bool mEditPosOffset;
 
+   /// <summary>
+   /// This is used when a static cubemap is used. The name of the cubemap is looked up and loaded for the IBL calculations
+   /// </summary>
    String mCubemapName;
    CubemapData *mStaticCubemap;
    GFXCubemapHandle  mDynamicCubemap;
 
    String cubeDescName;
    U32 cubeDescId;
-   CubeReflector mCubeReflector;
    ReflectorDesc *reflectorDesc;
 
    //Utilized in dynamic reflections
@@ -133,18 +184,11 @@ protected:
    U32 mPrefilterMipLevels;
    U32 mPrefilterSize;
 
+   /// <summary>
+   /// This is calculated based on the object's persistantID. Effectively a unique hash ID to set it apart from other probes
+   /// Used to ensure the cubemaps named when baking are unique
+   /// </summary>
    String mProbeUniqueID;
-
-   // Define our vertex format here so we don't have to
-   // change it in multiple spots later
-   typedef GFXVertexPNTTB VertexType;
-
-   // The GFX vertex and primitive buffers
-   GFXVertexBufferHandle< VertexType > mVertexBuffer;
-   GFXPrimitiveBufferHandle            mPrimitiveBuffer;
-
-   U32 mSphereVertCount;
-   U32 mSpherePrimitiveCount;
 
    //Debug rendering
    static bool smRenderPreviewProbes;
@@ -188,6 +232,10 @@ public:
    bool onAdd();
    void onRemove();
 
+   /// <summary>
+   /// This is called when the object is deleted. It allows us to do special-case cleanup actions
+   /// In probes' case, it's used to delete baked cubemap files
+   /// </summary>
    virtual void handleDeleteAction();
 
    // Override this so that we can dirty the network flag when it is called
@@ -215,14 +263,26 @@ public:
    //--------------------------------------------------------------------------
 
    // Create the geometry for rendering
-   void createGeometry();
+   void createEditorResources();
 
+   /// <summary>
+   /// Updates the probe rendering data
+   /// </summary>
    virtual void updateProbeParams();
-
+   
    bool createClientResources();
 
+   /// <summary>
+   /// Updates the probe's cubemaps in the array when using dynamic reflections
+   /// </summary>
    void processDynamicCubemap();
+   /// <summary>
+   /// Updates the probe's cubemaps in the array when using baked cubemaps
+   /// </summary>
    void processBakedCubemap();
+   /// <summary>
+   /// Updates the probe's cubemaps in the array when using a static cubemaps
+   /// </summary>
    void processStaticCubemap();
 
    // This is the function that allows this object to submit itself for rendering
@@ -234,9 +294,22 @@ public:
 
    void setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat);
 
-   //Baking
+   /// <summary>
+   /// This gets the filepath to the prefilter cubemap associated to this probe.
+   /// In the event the probe is set to use a static cubemap, it is the prefiltered version of the cubemap's file
+   /// </summary>
+   /// <returns>The filepath to the prefilter cubemap</returns>
    String getPrefilterMapPath();
+   /// <summary>
+   /// This gets the filepath to the irradiance cubemap associated to this probe.
+   /// In the event the probe is set to use a static cubemap, it is the irradiance version of the cubemap's file
+   /// </summary>
+   /// <returns>The filepath to the irradiance cubemap</returns>
    String getIrradianceMapPath();
+
+   /// <summary>
+   /// Invokes a cubemap bake action for this probe
+   /// </summary>
    void bake();
 };
 

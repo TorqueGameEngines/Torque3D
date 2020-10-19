@@ -39,17 +39,11 @@ function ProbeBakeDlg_RunBake::onClick(%this)
       if(%iter != 0)
          $pref::ReflectionProbes::RenderWithProbes = true;
          
-      for(%i=0; %i < %probeCount; %i++)
-      {
-         %probe = getWord(%probeIds, %i);
-         
-         $pref::ReflectionProbes::CurrentLevelPath = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
-         ProbeBin.bakeProbe(%probe);
-         
-         %currentProgressValue += %progressStep;
-         ProbeBakeDlg_Progress.setValue(%currentProgressValue);
-         Canvas.repaint();
-      }
+      $pref::ReflectionProbes::CurrentLevelPath = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
+      ProbeBin.bakeProbes();
+      
+      %currentProgressValue += %progressStep;
+      ProbeBakeDlg_Progress.setValue(%currentProgressValue);
    }
    
    EWorldEditor.isDirty = true;

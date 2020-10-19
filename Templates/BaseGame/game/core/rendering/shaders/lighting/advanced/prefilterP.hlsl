@@ -126,5 +126,5 @@ float4 prefilterEnvMap(float3 R)
 float4 main(ConnectData IN) : TORQUE_TARGET0
 {
 	float3 N = getCubeDir(face, IN.uv);
-	return prefilterEnvMap(N);
+	return float4(prefilterEnvMap(N).rgb,1.0);
 }

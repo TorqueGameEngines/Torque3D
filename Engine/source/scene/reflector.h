@@ -151,11 +151,11 @@ public:
                            ReflectorDesc *inDesc );
 
    virtual void unregisterReflector();
-   virtual void updateReflection( const ReflectParams &params );   
+   virtual void updateReflection( const ReflectParams &params, Point3F explicitPostion = Point3F::Max);
 
    GFXCubemap* getCubemap() const { return mCubemap; }
 
-   void updateFace( const ReflectParams &params, U32 faceidx );
+   void updateFace( const ReflectParams &params, U32 faceidx, Point3F explicitPostion = Point3F::Max);
    F32 calcFaceScore( const ReflectParams &params, U32 faceidx );
 
 protected:

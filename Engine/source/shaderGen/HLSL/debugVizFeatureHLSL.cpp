@@ -140,8 +140,7 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       Var* skylightCubemapIdx = (Var*)LangElement::find("skylightCubemapIdx");
       Var* inProbePosArray = (Var*)LangElement::find("inProbePosArray");
       Var* inRefPosArray = (Var*)LangElement::find("inRefPosArray");
-      Var* refBoxMinArray = (Var*)LangElement::find("inRefBoxMin");
-      Var* refBoxMaxArray = (Var*)LangElement::find("inRefBoxMax");
+      Var* refScaleArray = (Var*)LangElement::find("inRefScale");
 
       Var* probeConfigData = (Var*)LangElement::find("probeConfigData");
       Var* worldToObjArray = (Var*)LangElement::find("worldToObjArray");
@@ -181,11 +180,11 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showDiff);
       meta->addStatement(new GenOp(buf, new DecOp(showDiffVar)));
 
-      String computeForwardProbes = String::String("   @ = debugVizForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
+      String computeForwardProbes = String::String("   @ = debugVizForwardProbes(@,@,@,@,@,@,@,@,\r\n\t\t");
       computeForwardProbes += String::String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t");
       computeForwardProbes += String::String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@), @, @, @, @).rgb; \r\n");
 
-      meta->addStatement(new GenOp(computeForwardProbes.c_str(), ibl, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refBoxMinArray, refBoxMaxArray, inRefPosArray,
+      meta->addStatement(new GenOp(computeForwardProbes.c_str(), ibl, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray,
          skylightCubemapIdx, BRDFTexture,
          irradianceCubemapAR, specularCubemapAR,
          showAttenVar, showContribVar, showSpecVar, showDiffVar));

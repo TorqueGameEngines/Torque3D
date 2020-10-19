@@ -81,8 +81,7 @@ const String ShaderGenVars::glowMul("$glowMul");
 //Reflection Probes
 const String ShaderGenVars::probePosition("$inProbePosArray");
 const String ShaderGenVars::probeRefPos("$inRefPosArray");
-const String ShaderGenVars::refBoxMin("$inRefBoxMin");
-const String ShaderGenVars::refBoxMax("$inRefBoxMax");
+const String ShaderGenVars::refScale("$inRefScale");
 const String ShaderGenVars::worldToObjArray("$worldToObjArray");
 const String ShaderGenVars::probeConfigData("$probeConfigData");
 const String ShaderGenVars::specularCubemapAR("$specularCubemapAR");

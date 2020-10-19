@@ -127,4 +127,5 @@ void main()
 {   
 	vec3 N = getCubeDir(face, uv0);
 	OUT_col = prefilterEnvMap(N);
+	OUT_col.a = 1;
 }

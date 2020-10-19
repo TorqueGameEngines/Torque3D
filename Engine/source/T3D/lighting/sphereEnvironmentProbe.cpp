@@ -131,6 +131,11 @@ void SphereEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream
 {
    // Let the Parent read any info it sent
    Parent::unpackUpdate(conn, stream);
+
+   if (mDirty)
+   {
+      updateProbeParams();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -139,9 +144,6 @@ void SphereEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream
 
 void SphereEnvironmentProbe::updateProbeParams()
 {
-   if (!mProbeInfo)
-      return;
-
    mProbeShapeType = ProbeRenderInst::Sphere;
    Parent::updateProbeParams();
 }
@@ -151,6 +153,7 @@ void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)
    if (!mEnabled || !ReflectionProbe::smRenderPreviewProbes)
       return;
 
+#ifdef TORQUE_TOOLS
    if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
    {
       GFXTransformSaver saver;
@@ -215,6 +218,7 @@ void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)
       ri->type = RenderPassManager::RIT_Editor;
       state->getRenderPass()->addInst(ri);
    }
+#endif
 }
 
 void SphereEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)

@@ -295,7 +295,7 @@ void CubeReflector::unregisterReflector()
    mEnabled = false;
 }
 
-void CubeReflector::updateReflection( const ReflectParams &params )
+void CubeReflector::updateReflection( const ReflectParams &params, Point3F explicitPostion)
 {
    GFXDEBUGEVENT_SCOPE( CubeReflector_UpdateReflection, ColorI::WHITE );
 
@@ -336,7 +336,7 @@ void CubeReflector::updateReflection( const ReflectParams &params )
 
 
    for ( U32 i = 0; i < 6; i++ )
-      updateFace( params, i );
+      updateFace( params, i, explicitPostion);
    
 
    GFX->popActiveRenderTarget();
@@ -347,7 +347,7 @@ void CubeReflector::updateReflection( const ReflectParams &params )
    mLastTexSize = texDim;
 }
 
-void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx )
+void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3F explicitPostion)
 {
    GFXDEBUGEVENT_SCOPE( CubeReflector_UpdateFace, ColorI::WHITE );
 
@@ -402,7 +402,15 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx )
    matView.setColumn( 0, cross );
    matView.setColumn( 1, vLookatPt );
    matView.setColumn( 2, vUpVec );
-   matView.setPosition( mObject->getPosition() );
+
+   if (explicitPostion == Point3F::Max)
+   {
+      matView.setPosition(mObject->getPosition());
+   }
+   else
+   {
+      matView.setPosition(explicitPostion);
+   }
    matView.inverse();
 
    GFX->setWorldMatrix(matView);

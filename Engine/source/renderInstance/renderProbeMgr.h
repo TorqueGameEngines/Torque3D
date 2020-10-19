@@ -85,8 +85,6 @@ struct ProbeRenderInst
    /// when prioritizing lights for rendering.
    F32 mScore;
 
-   bool mIsSkylight;
-
    enum ProbeShapeType
    {
       Box = 0,            ///< Sphere shaped
@@ -115,9 +113,6 @@ public:
    Point3F getPosition() const { return mPosition; }
    void setPosition(const Point3F &pos) { mPosition = pos; }
 
-   VectorF getDirection() const { return mTransform.getForwardVector(); }
-   void setDirection(const VectorF &val);
-
    void setPriority(F32 priority) { mPriority = priority; }
    F32 getPriority() const { return mPriority; }
 
@@ -141,8 +136,7 @@ struct ProbeShaderConstants
    //Reflection Probes
    GFXShaderConstHandle *mProbePositionSC;
    GFXShaderConstHandle *mProbeRefPosSC;
-   GFXShaderConstHandle *mRefBoxMinSC;
-   GFXShaderConstHandle *mRefBoxMaxSC;
+   GFXShaderConstHandle *mRefScaleSC;
    GFXShaderConstHandle *mWorldToObjArraySC;
    GFXShaderConstHandle *mProbeConfigDataSC;
    GFXShaderConstHandle *mProbeSpecularCubemapSC;
@@ -167,39 +161,43 @@ typedef Map<GFXShader*, ProbeShaderConstants*> ProbeConstantMap;
 
 struct ProbeDataSet
 {
-   AlignedArray<Point4F> probePositionArray;
-   AlignedArray<Point4F> refBoxMinArray;
-   AlignedArray<Point4F> refBoxMaxArray;
-   AlignedArray<Point4F> probeRefPositionArray;
-   AlignedArray<Point4F> probeConfigArray;
+   Vector<Point4F> probePositionArray;
+   Vector<Point4F> refScaleArray;
+   Vector<Point4F> probeRefPositionArray;
+   Vector<Point4F> probeConfigArray;
 
    Vector<MatrixF> probeWorldToObjArray;
 
    S32 skyLightIdx;
 
    U32 effectiveProbeCount;
+   U32 maxProbeCount;
 
-   U32 MAX_PROBE_COUNT;
-
-   ProbeDataSet(U32 maxProbeCount)
+   ProbeDataSet()
    {
-      MAX_PROBE_COUNT = maxProbeCount;
+      probePositionArray.setSize(0);
+      refScaleArray.setSize(0);
+      probeRefPositionArray.setSize(0);
+      probeConfigArray.setSize(0);
 
-      probePositionArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
-      refBoxMinArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
-      refBoxMaxArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
-      probeRefPositionArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
-      probeConfigArray = AlignedArray<Point4F>(maxProbeCount, sizeof(Point4F));
+      probeWorldToObjArray.setSize(0);
+
+      skyLightIdx = -1;
+      effectiveProbeCount = 0;
+      maxProbeCount = 0;
+   }
+
+   ProbeDataSet(U32 _maxProbeCount)
+   {
+      maxProbeCount = _maxProbeCount;
+
+      probePositionArray.setSize(maxProbeCount);
+      refScaleArray.setSize(maxProbeCount);
+      probeRefPositionArray.setSize(maxProbeCount);
+      probeConfigArray.setSize(maxProbeCount);
 
       probeWorldToObjArray.setSize(maxProbeCount);
 
-      // Need to clear the buffers so that we don't leak
-      // lights from previous passes or have NaNs.
-      dMemset(probePositionArray.getBuffer(), 0, probePositionArray.getBufferSize());
-      dMemset(refBoxMinArray.getBuffer(), 0, refBoxMinArray.getBufferSize());
-      dMemset(refBoxMaxArray.getBuffer(), 0, refBoxMaxArray.getBufferSize());
-      dMemset(probeRefPositionArray.getBuffer(), 0, probeRefPositionArray.getBufferSize());
-      dMemset(probeConfigArray.getBuffer(), 0, probeConfigArray.getBufferSize());
       skyLightIdx = -1;
       effectiveProbeCount = 0;
    }
@@ -219,10 +217,11 @@ class RenderProbeMgr : public RenderBinManager
 {
    typedef RenderBinManager Parent;
 
-   Vector<ProbeRenderInst> mRegisteredProbes;
+   Vector<ProbeRenderInst*> mRegisteredProbes;
 
    bool mProbesDirty;
-
+   
+   Vector<ProbeRenderInst>  mActiveProbes;
 public:
    //maximum number of allowed probes
    static const U32 PROBE_MAX_COUNT = 250;
@@ -236,26 +235,16 @@ public:
    static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
    static const U32 INVALID_CUBE_SLOT = U32_MAX;
 
+   static F32 smMaxProbeDrawDistance;
+   static S32 smMaxProbesPerFrame;
+
 private:
    //Array rendering
    U32 mEffectiveProbeCount;
    S32 mMipCount;
-   Vector<Point4F> probePositionsData;
-   Vector<Point4F> probeRefPositionsData;
-   Vector<MatrixF> probeWorldToObjData;
-   Vector<Point4F> refBoxMinData;
-   Vector<Point4F> refBoxMaxData;
-   Vector<Point4F> probeConfigData;
 
    bool            mHasSkylight;
    S32             mSkylightCubemapIdx;
-
-   AlignedArray<Point4F> mProbePositions;
-   AlignedArray<Point4F> mRefBoxMin;
-   AlignedArray<Point4F> mRefBoxMax;
-   AlignedArray<float> mProbeUseSphereMode;
-   AlignedArray<float> mProbeRadius;
-   AlignedArray<float> mProbeAttenuation;
 
    //number of cubemaps
    U32 mCubeMapCount;
@@ -280,8 +269,12 @@ private:
 
    GFXTexHandle mBRDFTexture;
 
-   GFXTextureTargetRef mBakeRenderTarget;
+   ProbeDataSet mProbeData;
+   ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
+   bool mUseHDRCaptures;
 
+   U32 mPrefilterMipLevels;
+   U32 mPrefilterSize;
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
@@ -291,6 +284,8 @@ public:
 
    // ConsoleObject
    static void initPersistFields();
+   static void consoleInit();
+
    DECLARE_CONOBJECT(RenderProbeMgr);
 
 protected:
@@ -306,7 +301,7 @@ protected:
 
    void _setupStaticParameters();
    void _setupPerFrameParameters(const SceneRenderState *state);
-   virtual void addElement(RenderInst *inst);
+   virtual void addElement(RenderInst* inst) {};
    virtual void render(SceneRenderState * state);
 
    ProbeShaderConstants* getProbeShaderConstants(GFXShaderConstBuffer* buffer);
@@ -331,8 +326,11 @@ public:
    /// Returns the active LM.
    static inline RenderProbeMgr* getProbeManager();
 
-   ProbeRenderInst* registerProbe();
+   void registerProbe(ProbeRenderInst* newProbe);
    void unregisterProbe(U32 probeIdx);
+   void submitProbe(const ProbeRenderInst& newProbe);
+
+   static S32 QSORT_CALLBACK _probeScoreCmp(const ProbeRenderInst* a, const  ProbeRenderInst* b);
 
    virtual void setProbeInfo(ProcessedMaterial *pmat,
 	   const Material *mat,
@@ -341,6 +339,8 @@ public:
 	   U32 pass,
 	   GFXShaderConstBuffer *shaderConsts);
 
+   void setupSGData(SceneData& data, const SceneRenderState* state, LightInfo* light);
+   
    void updateProbeTexture(ProbeRenderInst* probeInfo);
 
    void reloadTextures();
@@ -348,7 +348,7 @@ public:
    /// Debug rendering
    static bool smRenderReflectionProbes;
 
-   void bakeProbe(ReflectionProbe *probeInfo, bool writeFile = true);
+   void bakeProbe(ReflectionProbe *probeInfo);
    void bakeProbes();
 
    void getProbeTextureData(ProbeTextureArrayData* probeTextureSet);

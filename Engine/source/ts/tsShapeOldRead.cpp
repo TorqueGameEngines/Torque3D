@@ -859,7 +859,7 @@ S32 TSShape::readName(Stream * s, bool addName)
    S32 sz;
    S32 nameIndex = -1;
    s->read(&sz);
-   if (sz)
+   if (sz && (sz <= mMin(s->getStreamSize(), 255)))
    {
       s->read(sz*sizeof(char),buffer);
       buffer[sz] = '\0';
@@ -881,6 +881,8 @@ S32 TSShape::readName(Stream * s, bool addName)
          names.last() = buffer;
       }
    }
+   else
+      Con::errorf("invalid TSShape::readName length!");
 
    return nameIndex;
 }

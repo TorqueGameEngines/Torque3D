@@ -856,12 +856,12 @@ void TSShape::writeName(Stream * s, S32 nameIndex)
 S32 TSShape::readName(Stream * s, bool addName)
 {
    static char buffer[256];
-   S32 sz;
+   U32 sz;
    S32 nameIndex = -1;
    s->read(&sz);
-   if (sz && (sz <= mMin(s->getStreamSize(), 255)))
+   if (sz>0 && sz<256)
    {
-      s->read(sz*sizeof(char),buffer);
+      s->read(sz,buffer);
       buffer[sz] = '\0';
       nameIndex = findName(buffer);
 

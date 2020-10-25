@@ -621,7 +621,7 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
    {
       Platform::LocalTime lt;
       Platform::getLocalTime(lt);
-      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[%d/%d/%d %02d:%02d:%02d]", lt.year + 1900, lt.month + 1, lt.monthday, lt.hour, lt.min, lt.sec);
+      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[%d-%d-%d %02d:%02d:%02d]", lt.year + 1900, lt.month + 1, lt.monthday, lt.hour, lt.min, lt.sec);
    }
 
    if (useTimestamp)
@@ -630,6 +630,12 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
       U32 curTime = Platform::getRealMilliseconds() - startTime;
       offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[+%4d.%03d]", U32(curTime * 0.001), curTime % 1000);
    }
+
+   if (useTimestamp || useRealTimestamp) {
+      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, " ");
+   }
+
+
    dVsprintf(buffer + offset, sizeof(buffer) - offset, fmt, argptr);
 
    for(S32 i = 0; i < gConsumers.size(); i++)

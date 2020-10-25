@@ -9,6 +9,7 @@ function PauseMenu::onWake(%this)
 {
    $timescale = 0;
    
+   sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ 0 ] );
    PauseMenuList.hidden = false;
    PauseMenuList.setFirstResponder();
    PauseButtonHolder.setActive();
@@ -18,6 +19,7 @@ function PauseMenu::onWake(%this)
 function PauseMenu::onSleep(%this)
 {
    $timescale = 1;
+   sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
 }
 
 function PauseMenu::onReturnTo(%this)

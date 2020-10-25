@@ -206,7 +206,7 @@
          willFirstRespond = "1";
          hScrollBar = "alwaysOff";
          vScrollBar = "dynamic";
-         lockHorizScroll = "0";
+         lockHorizScroll = "1";
          lockVertScroll = "0";
          constantThumbHeight = "0";
          childMargin = "0 0";

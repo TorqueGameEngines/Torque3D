@@ -275,6 +275,7 @@ S32 gObjectCopyFailures = -1;
 
 bool alwaysUseDebugOutput = true;
 bool useTimestamp = false;
+bool useRealTimestamp = false;
 
 ConsoleFunctionGroupBegin( Clipboard, "Miscellaneous functions to control the clipboard and clear the console.");
 
@@ -372,6 +373,10 @@ void init()
 
    // controls whether a timestamp is prepended to every console message
    addVariable("Con::useTimestamp", TypeBool, &useTimestamp, "If true a timestamp is prepended to every console message.\n"
+      "@ingroup Console\n");
+
+   // controls whether a real date and time is prepended to every console message
+   addVariable("Con::useRealTimestamp", TypeBool, &useRealTimestamp, "If true a date and time will be prepended to every console message.\n"
       "@ingroup Console\n");
 
    // Plug us into the journaled console input signal.
@@ -612,12 +617,25 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
          buffer[i] = ' ';
    }
 
+   if (useRealTimestamp)
+   {
+      Platform::LocalTime lt;
+      Platform::getLocalTime(lt);
+      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[%d-%d-%d %02d:%02d:%02d]", lt.year + 1900, lt.month + 1, lt.monthday, lt.hour, lt.min, lt.sec);
+   }
+
    if (useTimestamp)
    {
       static U32 startTime = Platform::getRealMilliseconds();
       U32 curTime = Platform::getRealMilliseconds() - startTime;
       offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[+%4d.%03d]", U32(curTime * 0.001), curTime % 1000);
    }
+
+   if (useTimestamp || useRealTimestamp) {
+      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, " ");
+   }
+
+
    dVsprintf(buffer + offset, sizeof(buffer) - offset, fmt, argptr);
 
    for(S32 i = 0; i < gConsumers.size(); i++)

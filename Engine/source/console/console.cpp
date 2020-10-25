@@ -621,7 +621,7 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
    {
       Platform::LocalTime lt;
       Platform::getLocalTime(lt);
-      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[%d/%d/%d %02d:%02d:%02d]", lt.monthday, lt.month + 1, lt.year + 1900, lt.hour, lt.min, lt.sec);
+      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[%d/%d/%d %02d:%02d:%02d]", lt.year + 1900, lt.month + 1, lt.monthday, lt.hour, lt.min, lt.sec);
    }
 
    if (useTimestamp)

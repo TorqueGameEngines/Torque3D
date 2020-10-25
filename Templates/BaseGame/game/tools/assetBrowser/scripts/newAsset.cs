@@ -167,6 +167,13 @@ function CreateNewAsset()
 		return;
 	}
 	
+	%firstChar = getSubStr(%assetName, 0, 1);
+	if(isInt(%firstChar))
+	{
+	    toolsMessageBoxOK( "Error", "Names cannot start with a number!");
+		return;
+	}
+	
 	//get the selected module data
    %moduleName = NewAssetTargetModule.getText();
    

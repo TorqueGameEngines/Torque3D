@@ -7,7 +7,12 @@ function PauseMenuList::onAdd(%this)
 
 function PauseMenu::onWake(%this)
 {
-   $timescale = 0;
+   if($Server::ServerType $= "SinglePlayer")
+   {
+      $timescale = 0;
+      
+      sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ 0 ] );
+   }
    
    PauseMenuList.hidden = false;
    PauseMenuList.setFirstResponder();
@@ -17,7 +22,11 @@ function PauseMenu::onWake(%this)
 
 function PauseMenu::onSleep(%this)
 {
-   $timescale = 1;
+   if($Server::ServerType $= "SinglePlayer")
+   {
+      $timescale = 1;
+      sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
+   }
 }
 
 function PauseMenu::onReturnTo(%this)

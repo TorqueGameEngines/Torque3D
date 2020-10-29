@@ -391,7 +391,7 @@ void GuiGameListMenuCtrl::onRenderKeybindOption(Row* row, Point2I currentOffset)
    //drawer->drawBitmap(row->mBitmap, )
 
    Point2I button;
-   button.x = currentOffset.x + columnSplit + (columnSplit / 2)/* + (optionWidth / 2)*/;
+   button.x = currentOffset.x + columnSplit + (columnSplit / 2.5)/* + (optionWidth / 2)*/;
    button.y = currentOffset.y + (rowHeight / 4);
 
    Point2I buttonSize;
@@ -883,6 +883,14 @@ bool GuiGameListMenuCtrl::onKeyDown(const GuiEvent &event)
 
       case KEY_DOWN:
          changeRow(1);
+         return true;
+
+      case KEY_LEFT:
+         changeOption(-1);
+         return true;
+
+      case KEY_RIGHT:
+         changeOption(1);
          return true;
 
       case KEY_A:

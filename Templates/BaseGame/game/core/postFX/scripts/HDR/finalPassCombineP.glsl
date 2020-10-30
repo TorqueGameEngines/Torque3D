@@ -69,28 +69,25 @@ float3 ACESFilm( float3 x )
     const float c = 2.43;
     const float d = 0.59;
     const float e = 0.14;
-    return sat((x*(a*x+b))/(x*(c*x+d)+e));
+    return saturate((x*(a*x+b))/(x*(c*x+d)+e));
 }
 
 vec3 tonemap(vec3 c)
 {
    vec3 colorOut = c;
-
+    
    if(g_fTonemapMode == 1.0)
    {
       const float W = 11.2;
       float ExposureBias = 2.0f;
-      float ExposureAdjust = 1.5f;
-      c *= ExposureAdjust;
-      vec3 curr = Uncharted2Tonemap(ExposureBias*c);
-      vec3 whiteScale = 1.0f / Uncharted2Tonemap(vec3(W,W,W));
-
-      colorOut = curr*whiteScale;
-   }
+      //float ExposureAdjust = 1.5f;
+      //c *= ExposureAdjust;
+      colorOut = Uncharted2Tonemap(ExposureBias*colorOut);
+      colorOut = colorOut * (1.0f / Uncharted2Tonemap(vec3(W,W,W)));
    }
    else if(g_fTonemapMode == 2.0)
    {
-      colorOut = ACESFilm(c);
+      colorOut = ACESFilm(colorOut);
    }
 
    return colorOut;
@@ -123,7 +120,7 @@ void main()
    }
 
    // Add the bloom effect.
-   _sample += g_fBloomScale * bloom;
+   _sample.rgb += clamp(vec3(g_fBloomScale,g_fBloomScale,g_fBloomScale) * bloom.rgb, vec3(0,0,0), vec3(1.0,1.0,1.0));
 
    // Apply contrast
    _sample.rgb = ((_sample.rgb - 0.5f) * Contrast) + 0.5f;

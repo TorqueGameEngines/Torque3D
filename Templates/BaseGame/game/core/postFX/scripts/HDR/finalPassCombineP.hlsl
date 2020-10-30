@@ -113,7 +113,7 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    }
 
    // Add the bloom effect.
-   sample += g_fBloomScale * bloom;
+   sample += saturate(g_fBloomScale * bloom);
 
    // Apply contrast
    sample.rgb = ((sample.rgb - 0.5f) * Contrast) + 0.5f;

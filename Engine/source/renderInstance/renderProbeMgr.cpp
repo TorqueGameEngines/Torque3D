@@ -203,7 +203,8 @@ RenderProbeMgr::RenderProbeMgr()
    mHasSkylight(false),
    mSkylightCubemapIdx(-1),
    mCubeMapCount(0),
-   mDefaultSkyLight(nullptr)
+   mDefaultSkyLight(nullptr),
+   mUseHDRCaptures(true)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;

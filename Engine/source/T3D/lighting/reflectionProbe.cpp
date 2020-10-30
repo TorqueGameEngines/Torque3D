@@ -296,7 +296,7 @@ bool ReflectionProbe::onAdd()
    // Refresh this object's material (if any)
    if (isClientObject())
    {
-      if (!createClientResources())
+      if (!mResourcesCreated && !createClientResources())
          return false;
 
       updateProbeParams();
@@ -496,6 +496,12 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 //-----------------------------------------------------------------------------
 void ReflectionProbe::updateProbeParams()
 {
+   if (!mResourcesCreated)
+   {
+      if (!createClientResources())
+         return;
+   }
+
    mProbeInfo.mIsEnabled = mEnabled;
 
    mProbeInfo.mProbeShapeType = mProbeShapeType;
@@ -624,7 +630,7 @@ void ReflectionProbe::processStaticCubemap()
    String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
 
    char irradFileName[256];
-   dSprintf(irradFileName, 256, "%s_Irradiance.dds", path.c_str(), mCubemapName.c_str());
+   dSprintf(irradFileName, 256, "%s%s_Irradiance.dds", path.c_str(), mCubemapName.c_str());
 
    if (Platform::isFile(irradFileName))
    {

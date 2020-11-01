@@ -103,13 +103,26 @@ function PostFXManager::savePresetHandler( %filename )
       
    $PostFXManager::currentPresetFile = %filename;
    $PostFXManager::startedPresetFileSave = false;
-               
+   
+   //First, clear the existing file
+   %fileObj = new FileObject();
+   if (!%fileObj.openForWrite($PostFXManager::currentPresetFile))
+   {
+      %fileObj.delete();
+   }
+   else
+   {
+      %fileObj.writeLine("");
+      %fileObj.close();
+      %fileObj.delete();
+   }
+   
    %count = PostFXManager.Count();
    for(%i=0; %i < %count; %i++)
    {
       %postEffect = PostFXManager.getKey(%i);  
       
-      if(isObject(%postEffect) && %postEffect.isMethod("savePresetSettings"))
+      if(isObject(%postEffect) && %postEffect.isEnabled && %postEffect.isMethod("savePresetSettings"))
       {     
          %postEffect.savePresetSettings();
       }

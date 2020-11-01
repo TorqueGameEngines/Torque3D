@@ -341,9 +341,6 @@ function HDRPostFX::onAdd( %this )
 {
    PostFXManager.registerPostEffect(%this);
    
-   //HDR should really be on at all times
-   //%this.enable();
-   
    $PostFX::HDRPostFX::enableToneMapping = 1;
 }
 
@@ -356,7 +353,6 @@ function HDRPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.addCallbackField("$PostFX::HDRPostFX::Enabled", "Enabled", "bool", "", $PostFX::HDRPostFX::Enabled, "", "toggleHDRPostFX");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::minLuminace", "Minimum Luminance", "range", "", $PostFX::HDRPostFX::minLuminace, "0 1 100");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::whiteCutoff", "White Cutoff", "range", "", $PostFX::HDRPostFX::whiteCutoff, "0 10 20");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::adaptRate", "Brightness Adapt Rate", "range", "", $PostFX::HDRPostFX::adaptRate, "0 1 10");
    PostEffectEditorInspector.endGroup();
    
    PostEffectEditorInspector.startGroup("HDR - Tonemapping");
@@ -373,6 +369,7 @@ function HDRPostFX::populatePostFXSettings(%this)
    
    PostEffectEditorInspector.startGroup("HDR - Adaptation");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableAutoExposure", "Enable Auto Exposure", "bool", "", $PostFX::HDRPostFX::enableAutoExposure, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::adaptRate", "Brightness Adapt Rate", "range", "", $PostFX::HDRPostFX::adaptRate, "0 1 10");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::keyValue", "Key Value", "range", "", $PostFX::HDRPostFX::keyValue, "0 1 10");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBlueShift", "Enable Blue Shift", "bool", "", $PostFX::HDRPostFX::enableBlueShift, "");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::blueShiftColor", "Blue Shift Color", "colorF", "", $PostFX::HDRPostFX::blueShiftColor, "");

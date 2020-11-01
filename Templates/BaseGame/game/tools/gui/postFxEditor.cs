@@ -134,6 +134,7 @@ function editScenePostEffects(%scene)
 function PostFXEditorNewPFXWindow::showDialog(%this)
 {
    %this.setHidden(false);
+   PostFXEditorNewPFXWindow.selectWindow();
    
    PostFXEditorNewPFXList.clear();
    

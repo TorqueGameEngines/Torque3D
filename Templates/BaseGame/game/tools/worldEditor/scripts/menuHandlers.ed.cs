@@ -332,8 +332,22 @@ function EditorSaveMission()
          %obj.onSaveMission( $Server::MissionFile );      
    } 
    
+   //We'll sanity check that we have a valid file association to our level asset first
+   %presetFile = $Server::LevelAsset.getPostFXPresetPath();
+   
+   if(!isFile(%presetFile))
+   {
+      //if it isn't valid, we'll fabricate a new one just to be sure
+      $Server::LevelAsset.PostFXPresetFile = fileBase($Server::LevelAsset.getLevelPath()) @ $PostFXManager::fileExtension;
+    
+      $Server::LevelAsset.saveAsset();
+      $Server::LevelAsset.refresh(); 
+      
+      %presetFile = $Server::LevelAsset.getPostFXPresetPath();
+   }
+   
    //Save out the PostFX config
-   PostFXManager::savePresetHandler( $Server::LevelAsset.getPostFXPresetPath() );
+   PostFXManager::savePresetHandler( %presetFile );
    
    EditorClearDirty();
    

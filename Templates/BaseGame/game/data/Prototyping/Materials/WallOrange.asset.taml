@@ -3,5 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="WallOrange"
     scriptFile="@assetFile=WallOrange.cs"
+    materialDefinitionName="WallOrange"
     imageMap0="@Asset=Prototyping:WallOrange_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/WallOrange.png" />

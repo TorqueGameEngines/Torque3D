@@ -85,6 +85,35 @@ ConsoleSetType(TypeMaterialAssetPtr)
    Con::warnf("(TypeMaterialAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
+
+ConsoleType(assetIdString, TypeMaterialAssetId, String, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeMaterialAssetId)
+{
+   // Fetch asset Id.
+   return *((const char**)(dptr));
+}
+
+ConsoleSetType(TypeMaterialAssetId)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeMaterialAssetId) - Cannot set multiple args to a single asset.");
+}
 //-----------------------------------------------------------------------------
 
 MaterialAsset::MaterialAsset()
@@ -180,6 +209,51 @@ DefineEngineMethod(MaterialAsset, compileShader, void, (), , "Compiles the mater
    object->compileShader();
 }
 
+//------------------------------------------------------------------------------
+StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
+{
+   StringTableEntry materialAssetId = StringTable->EmptyString();
+
+   AssetQuery* query = new AssetQuery();
+   U32 foundCount = AssetDatabase.findAssetType(query, "MaterialAsset");
+   if (foundCount == 0)
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      materialAssetId = StringTable->insert("Core_Rendering:noMaterial");
+   }
+   else
+   {
+      for (U32 i = 0; i < foundCount; i++)
+      {
+         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(query->mAssetList[i]);
+         if (matAsset && matAsset->getMaterialDefinitionName() == matName)
+         {
+            materialAssetId = matAsset->getAssetId();
+            break;
+         }
+      }
+   }
+
+   return materialAssetId;
+}
+
+bool MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset)
+{
+   (*materialAsset) = assetId;
+
+   if (!materialAsset->isNull())
+      return true;
+
+   //Didn't work, so have us fall back to a placeholder asset
+   StringTableEntry noImageId = StringTable->insert("Core_Rendering:noMaterial");
+   materialAsset->setAssetId(noImageId);
+
+   if (!materialAsset->isNull())
+      return true;
+
+   return false;
+}
+
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -187,7 +261,7 @@ DefineEngineMethod(MaterialAsset, compileShader, void, (), , "Compiles the mater
 IMPLEMENT_CONOBJECT(GuiInspectorTypeMaterialAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeMaterialAssetPtr,
-   "@brief Inspector field type for Material Asset Objects\n\n"
+   "@brief Inspector field type for Shapes\n\n"
    "Editor use only.\n\n"
    "@internal"
 );
@@ -202,70 +276,36 @@ void GuiInspectorTypeMaterialAssetPtr::consoleInit()
 GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
 {
    // Create base filename edit controls
-   mUseHeightOverride = true;
-   mHeightOverride = 100;
-
-   mMatEdContainer = new GuiControl();
-   mMatEdContainer->registerObject();
-
-   addObject(mMatEdContainer);
-
-   // Create "Open in ShapeEditor" button
-   mMatPreviewButton = new GuiBitmapButtonCtrl();
-
-   const char* matAssetId = getData();
-
-   MaterialAsset* matAsset = AssetDatabase.acquireAsset< MaterialAsset>(matAssetId);
-
-   Material* materialDef = nullptr;
-
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-
-   StringTableEntry matDefName = matAsset ? matAsset->getMaterialDefinitionName() : matAssetId;
-
-   if (!Sim::findObject(matDefName, materialDef))
-   {
-      Con::errorf("GuiInspectorTypeMaterialAssetPtr::constructEditControl() - unable to find material in asset");
-   }
-   else
-   {
-      mMatPreviewButton->setBitmap(materialDef->mDiffuseMapFilename[0]);
-   }
-
-   mMatPreviewButton->setPosition(0, 0);
-   mMatPreviewButton->setExtent(100,100);
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
 
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getComponentGroupTargetId(), mCaption);
-   mMatPreviewButton->setField("Command", szBuffer);
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+      mInspector->getInspectObject()->getIdString(), mCaption);
+   mBrowseButton->setField("Command", szBuffer);
 
-   mMatPreviewButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
-   mMatPreviewButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mMatPreviewButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 
-   StringBuilder strbld;
-   strbld.append(matDefName);
-   strbld.append("\n");
-   strbld.append("Open this file in the Material Editor");
+   // Create "Open in Editor" button
+   mEditButton = new GuiBitmapButtonCtrl();
 
-   mMatPreviewButton->setDataField(StringTable->insert("tooltip"), NULL, strbld.data());
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
+   mEditButton->setField("Command", szBuffer);
 
-   _registerEditControl(mMatPreviewButton);
-   //mMatPreviewButton->registerObject();
-   mMatEdContainer->addObject(mMatPreviewButton);
+   char bitmapName[512] = "tools/worldEditor/images/toolbar/material-editor";
+   mEditButton->setBitmap(bitmapName);
 
-   mMatAssetIdTxt = new GuiTextEditCtrl();
-   mMatAssetIdTxt->registerObject();
-   mMatAssetIdTxt->setActive(false);
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Material Editor");
 
-   mMatAssetIdTxt->setText(matAssetId);
+   mEditButton->registerObject();
+   addObject(mEditButton);
 
-   mMatAssetIdTxt->setBounds(100, 0, 150, 18);
-   mMatEdContainer->addObject(mMatAssetIdTxt);
-
-   return mMatEdContainer;
+   return retCtrl;
 }
 
 bool GuiInspectorTypeMaterialAssetPtr::updateRects()
@@ -279,54 +319,32 @@ bool GuiInspectorTypeMaterialAssetPtr::updateRects()
    mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
 
    bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
-
-   if (mMatEdContainer != nullptr && mMatPreviewButton != nullptr)
+   if (mBrowseButton != NULL)
    {
-      mMatPreviewButton->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
    }
 
-   if (mMatPreviewButton != nullptr)
+   if (mEditButton != NULL)
    {
-      mMatPreviewButton->resize(Point2I::Zero, Point2I(100, 100));
-   }
-
-   if (mMatAssetIdTxt != nullptr)
-   {
-      mMatAssetIdTxt->resize(Point2I(100, 0), Point2I(mEditCtrlRect.extent.x - 100, 18));
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mEditButton->resize(shapeEdRect.point, shapeEdRect.extent);
    }
 
    return resized;
 }
 
-bool GuiInspectorTypeMaterialAssetPtr::resize(const Point2I& newPosition, const Point2I& newExtent)
+IMPLEMENT_CONOBJECT(GuiInspectorTypeMaterialAssetId);
+
+ConsoleDocClass(GuiInspectorTypeMaterialAssetId,
+   "@brief Inspector field type for Material Assets\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeMaterialAssetId::consoleInit()
 {
-   if (!Parent::resize(newPosition, newExtent))
-      return false;
+   Parent::consoleInit();
 
-   if (mMatEdContainer != NULL)
-   {
-      return updateRects();
-   }
-
-   return false;
-}
-
-void GuiInspectorTypeMaterialAssetPtr::setMaterialAsset(String assetId)
-{
-   mTargetObject->setDataField(mCaption, "", assetId);
-
-   //force a refresh
-   SimObject* obj = mInspector->getInspectObject();
-   mInspector->inspectObject(obj);
-}
-
-DefineEngineMethod(GuiInspectorTypeMaterialAssetPtr, setMaterialAsset, void, (String assetId), (""),
-   "Gets a particular shape animation asset for this shape.\n"
-   "@param animation asset index.\n"
-   "@return Shape Animation Asset.\n")
-{
-   if (assetId == String::EmptyString)
-      return;
-
-   return object->setMaterialAsset(assetId);
+   ConsoleBaseType::getType(TypeMaterialAssetId)->setInspectorFieldType("GuiInspectorTypeMaterialAssetId");
 }

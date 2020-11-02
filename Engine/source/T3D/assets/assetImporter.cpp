@@ -2633,6 +2633,8 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    newAsset->setAssetName(assetName);
    newAsset->setScriptFile(scriptName.c_str());
    newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
+   newAsset->setDataField(StringTable->insert("materialDefinitionName"), nullptr, assetName);
+   
 
    //iterate through and write out the material maps dependencies
    S32 dependencySlotId = 0;

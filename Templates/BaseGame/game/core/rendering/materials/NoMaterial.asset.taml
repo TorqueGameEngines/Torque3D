@@ -1,0 +1,6 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NoMaterial"
+    scriptFile="@assetFile=NoMaterial.cs"
+    materialDefinitionName="NoMaterial" />

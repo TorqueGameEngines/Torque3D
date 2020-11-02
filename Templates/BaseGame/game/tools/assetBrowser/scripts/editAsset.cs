@@ -28,6 +28,12 @@ function AssetBrowser::editAsset(%this, %assetDef)
          }
       }
    }
+   else if(!isObject(%assetDef) && strchrpos(%assetDef, ":") != -1)
+   {
+      //Turns out we were passed an assetid, not an asset definition. 
+      //Grab the asset def from that  
+      %assetDef = AssetDatabase.acquireAsset(%assetDef);
+   }
       
       
    %assetType = %assetDef.getClassName();

@@ -3,5 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="TrimYellow"
     scriptFile="@assetFile=TrimYellow.cs"
+    materialDefinitionName="TrimYellow"
     imageMap0="@Asset=Prototyping:TrimYellow_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/TrimYellow.png" />

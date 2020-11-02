@@ -3,5 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="NatureGreen"
     scriptFile="@assetFile=NatureGreen.cs"
+    materialDefinitionName="NatureGreen"
     imageMap0="@Asset=Prototyping:NatureGreen_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/NatureGreen.png" />

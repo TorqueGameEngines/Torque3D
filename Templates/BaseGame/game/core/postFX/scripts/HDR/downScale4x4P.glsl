@@ -22,7 +22,7 @@
 
 #define IN_GLSL
 #include "core/rendering/shaders/shdrConsts.h"
-#include ".core/rendering/shaders/gl/hlslCompat.glsl"
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 in vec4 texCoords[8];

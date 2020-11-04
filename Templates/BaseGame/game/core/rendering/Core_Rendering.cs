@@ -33,11 +33,10 @@ function Core_Rendering::initClient(%this)
    initLightingSystems("Advanced Lighting"); 
 
    //load prefs
+   exec("data/defaults.cs");
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
       exec( %prefPath @ "/clientPrefs.cs" );
-   else
-      exec("data/defaults.cs");
    
    configureCanvas();
    

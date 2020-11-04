@@ -15,11 +15,10 @@ function initClient()
    exec( "./levelLoad.cs" );
    
    //load prefs
+   exec( "data/defaults.cs" );
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
       exec( %prefPath @ "/clientPrefs.cs" );
-   else
-      exec( "data/defaults.cs" );
       
    callOnModules("initClient");
 

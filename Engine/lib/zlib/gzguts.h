@@ -19,7 +19,13 @@
 #endif
 
 #include <stdio.h>
+
+#ifdef __APPLE__
+#include <unistd.h>
+#endif
+
 #include "zlib.h"
+
 #ifdef STDC
 #  include <string.h>
 #  include <stdlib.h>

@@ -52,7 +52,7 @@
 #include "tools/editorTool.h"
 
 #include "T3D/Scene.h"
-#include <T3D\notesObject.h>
+#include <T3D/notesObject.h>
 
 IMPLEMENT_CONOBJECT( WorldEditor );
 

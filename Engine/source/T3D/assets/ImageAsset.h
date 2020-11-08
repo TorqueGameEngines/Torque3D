@@ -178,7 +178,7 @@ public:
                                       void set##name##Asset(AssetPtr<ImageAsset>_in) { m##name##Asset = _in; }\
 static bool _set##name##Asset(void* obj, const char* index, const char* data)\
 {\
-    ##className* mat = static_cast<##className*>(obj);\
+    className* mat = static_cast<className*>(obj);\
    mat->m##name##AssetId = StringTable->insert(data);\
    if (ImageAsset::getAssetById(mat->m##name##AssetId, &mat->m##name##Asset))\
    {\
@@ -199,10 +199,10 @@ static bool _set##name##Asset(void* obj, const char* index, const char* data)\
                                       AssetPtr<ImageAsset>  m##name##Asset[max];\
 static bool _set##name##AssetSlot(void* obj, const char* index, const char* data)\
 {\
-   ##className* mat = static_cast<##className*>(obj);\
+   className* mat = static_cast<className*>(obj);\
    if (!index) return false;\
    U32 idx = dAtoi(index);\
-   if (idx >= ##max)\
+   if (idx >= max)\
       return false;\
    mat->m##name##AssetId[idx] = StringTable->insert(data);\
    if (ImageAsset::getAssetById(mat->m##name##AssetId[idx], &mat->m##name##Asset[idx]))\

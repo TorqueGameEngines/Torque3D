@@ -7,7 +7,7 @@
 #include "gfx/gfxDebugEvent.h"
 #include "gfx/gfxTransformSaver.h"
 #include "renderInstance/renderPassManager.h"
-#include "math\mathUtils.h"
+#include "math/mathUtils.h"
 #include "gfx/gfxDrawUtil.h"
 
 IMPLEMENT_CO_NETOBJECT_V1(NotesObject);

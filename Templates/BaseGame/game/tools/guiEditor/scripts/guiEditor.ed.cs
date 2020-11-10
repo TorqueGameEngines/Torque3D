@@ -46,7 +46,7 @@ function GuiEdit( %val )
       //Temp fix to disable MLAA when in GUI editor
       if( isObject(MLAAFx) && MLAAFx.isEnabled==true )
       {
-	 MLAAFx.isEnabled = false;
+	 MLAAFx.Enabled = false;
          $MLAAFxGuiEditorTemp = true;
       }
 

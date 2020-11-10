@@ -59,13 +59,13 @@
          childMargin = "0 0";
 
          new GuiScriptNotifyCtrl(VerveEditorGroupNotify) {
-            onChildAdded = "0";
-            onChildRemoved = "0";
-            onChildResized = "0";
-            onParentResized = "1";
-            onResize = "1";
-            onLoseFirstResponder = "0";
-            onGainFirstResponder = "0";
+            notifyOnChildAdded = "0";
+            notifyOnChildRemoved = "0";
+            notifyOnChildResized = "0";
+            notifyOnParentResized = "1";
+            notifyOnResize = "1";
+            notifyOnLoseFirstResponder = "0";
+            notifyOnGainFirstResponder = "0";
             canSaveDynamicFields = "0";
             class = "VerveEditorScrollNotifyV";
             className = "VerveEditorScrollNotifyV";
@@ -155,13 +155,13 @@
          childMargin = "0 0";
 
          new GuiScriptNotifyCtrl(VerveEditorTrackNotify) {
-            onChildAdded = "0";
-            onChildRemoved = "0";
-            onChildResized = "0";
-            onParentResized = "1";
-            onResize = "1";
-            onLoseFirstResponder = "0";
-            onGainFirstResponder = "0";
+            notifyOnChildAdded = "0";
+            notifyOnChildRemoved = "0";
+            notifyOnChildResized = "0";
+            notifyOnParentResized = "1";
+            notifyOnResize = "1";
+            notifyOnLoseFirstResponder = "0";
+            notifyOnGainFirstResponder = "0";
             canSaveDynamicFields = "0";
             class = "VerveEditorScrollNotify";
             className = "VerveEditorScrollNotify";
@@ -406,13 +406,13 @@
          childMargin = "0 0";
 
          new GuiScriptNotifyCtrl(VerveEditorTimeNotify) {
-            onChildAdded = "0";
-            onChildRemoved = "0";
-            onChildResized = "0";
-            onParentResized = "1";
-            onResize = "1";
-            onLoseFirstResponder = "0";
-            onGainFirstResponder = "0";
+            notifyOnChildAdded = "0";
+            notifyOnChildRemoved = "0";
+            notifyOnChildResized = "0";
+            notifyOnParentResized = "1";
+            notifyOnResize = "1";
+            notifyOnLoseFirstResponder = "0";
+            notifyOnGainFirstResponder = "0";
             canSaveDynamicFields = "0";
             class = "VerveEditorScrollNotifyH";
             className = "VerveEditorScrollNotifyH";

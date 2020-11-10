@@ -544,7 +544,7 @@ function GuiEditCanvas::quit( %this )
    //Temp fix to disable MLAA when in GUI editor
    if( isObject(MLAAFx) && $MLAAFxGuiEditorTemp==true )
    {
-	 MLAAFx.isEnabled = true;
+	 MLAAFx.Enabled = true;
          $MLAAFxGuiEditorTemp = false;
    }
 }

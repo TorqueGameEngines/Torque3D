@@ -44,7 +44,7 @@ singleton ShaderData( PFX_TurbulenceShader )
 
 singleton PostEffect( TurbulencePostFX )  
 {  
-   isEnabled = false;    
+   enabled = false;    
    allowReflectPass = true;  
          
    renderTime = "PFXAfterDiffuse";

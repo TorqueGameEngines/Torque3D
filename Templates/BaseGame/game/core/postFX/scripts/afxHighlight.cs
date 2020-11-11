@@ -36,7 +36,7 @@ singleton PostEffect( afxHighlightPostFX )
    renderTime = "PFXAfterDiffuse";
    renderBin = "HighlightBin";
    renderPriority = 1;
-   isEnabled = true;
+   enabled = true;
 
    shader = PFX_afxHighlightShader;
    stateBlock = PFX_afxDefaultHighlightStateBlock;

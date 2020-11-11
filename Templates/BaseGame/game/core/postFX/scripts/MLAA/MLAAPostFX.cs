@@ -119,7 +119,7 @@ singleton ShaderData( MLAA_NeighborhoodBlendingShader )
 
 singleton PostEffect( MLAAFx )
 {
-   isEnabled = false;
+   enabled = false;
    
    allowReflectPass = false;
    renderTime = "PFXAfterDiffuse";

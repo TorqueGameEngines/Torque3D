@@ -70,7 +70,7 @@ singleton PostEffect( underWaterFogPostFX )
    // Needs to happen after the FogPostFx
    renderPriority = 4;
    
-   isEnabled = true;
+   enabled = true;
 };
 
 function underWaterFogPostFX::onEnabled( %this )

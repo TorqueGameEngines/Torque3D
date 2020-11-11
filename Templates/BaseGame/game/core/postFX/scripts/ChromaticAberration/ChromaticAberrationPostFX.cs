@@ -132,7 +132,7 @@ function ChromaticAberrationPostFX::savePresetSettings(%this)
 //Our actual postFX
 singleton PostEffect( ChromaticAberrationPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
 
    // Resolve the HDR before we render any editor stuff

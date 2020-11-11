@@ -53,6 +53,18 @@ uniform float4 albedo;
 
 #define MAX_FORWARD_LIGHT 4
 
+#ifndef CAPTURING
+#define CAPTURING 0
+#endif
+
+#ifndef DEBUGVIZ_ATTENUATION
+#define DEBUGVIZ_ATTENUATION 0
+#endif
+
+#ifndef DEBUGVIZ_CONTRIB
+#define DEBUGVIZ_CONTRIB 0
+#endif
+
 inline float3 getDistanceVectorToPlane( float3 origin, float3 direction, float4 plane )
 {
    float denum = dot( plane.xyz, direction.xyz );

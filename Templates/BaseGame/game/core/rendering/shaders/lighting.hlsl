@@ -220,10 +220,10 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    float3 Fr = D * F * Vis;
    
-#if CAPTURING == true
-    return lerp(Fd + Fr,surface.f0,surface.metalness);
+#ifdef CAPTURING
+    return saturate(lerp(Fd + Fr,surface.f0,surface.metalness));
 #else
-   return Fd + Fr;
+   return saturate(Fd + Fr);
 #endif
 
 }

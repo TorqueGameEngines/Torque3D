@@ -219,10 +219,10 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    vec3 Fr = D * F * Vis;
 
-#if CAPTURING == true
-   return mix(Fd + Fr,surface.f0,surface.metalness);
+#ifdef CAPTURING
+   return saturate(mix(Fd + Fr,surface.f0,surface.metalness));
 #else
-   return Fd + Fr;
+   return saturate(Fd + Fr);
 #endif
 
 }

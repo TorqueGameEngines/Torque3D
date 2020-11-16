@@ -61,5 +61,5 @@ void main()
       average = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
 
    // Write the colour to the bright-pass render target
-   OUT_col = hdrEncode( average );
+   OUT_col = hdrEncode( saturate(average) );
 }

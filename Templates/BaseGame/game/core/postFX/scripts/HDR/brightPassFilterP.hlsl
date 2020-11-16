@@ -58,5 +58,5 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
       average = float4( 0.0f, 0.0f, 0.0f, 1.0f );
 
    // Write the colour to the bright-pass render target
-   return hdrEncode( average );
+   return hdrEncode( saturate(average) );
 }

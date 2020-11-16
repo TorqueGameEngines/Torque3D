@@ -232,24 +232,24 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    float3 Fr = D * F * Vis;
    
-#if CAPTURING == true
-    return lerp(Fd + Fr,surface.f0,surface.metalness);
+#ifdef CAPTURING
+    return saturate(lerp(Fd + Fr,surface.f0,surface.metalness));
 #else
-   return Fd + Fr;
+   return saturate(Fd + Fr);
 #endif
 
 }
 
 float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-   float3 factor = lightColor * max(surfaceToLight.NdotL, 0.0f) * shadow * lightIntensity;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity*(1.0-surface.metalness), 0.0f) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   float3 factor = lightColor * max(surfaceToLight.NdotL, 0.0f) * shadow * lightIntensity * attenuation;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation*(1.0-surface.metalness), 0.0f) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 

@@ -306,8 +306,6 @@ void Material::initPersistFields()
       addField("metalChan", TypeF32, Offset(mMetalChan, Material), MAX_STAGES,
          "The input channel metalness maps use.");
 
-      addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
-         "The input channel metalness maps use.");
       addField("glow", TypeBool, Offset(mGlow, Material), MAX_STAGES,
          "Enables rendering as glowing.");
 

@@ -404,7 +404,7 @@ function DepthOfFieldPostFX::setLerpDist( %this, %d0, %d1, %d2 )
 
 singleton PostEffect( DepthOfFieldPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    
    renderTime = "PFXAfterBin";
    renderBin = "GlowBin";      

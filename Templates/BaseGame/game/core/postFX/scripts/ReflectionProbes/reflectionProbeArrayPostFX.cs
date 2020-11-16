@@ -7,7 +7,7 @@ singleton PostEffect( reflectionProbeArrayPostFX )
    renderTime = "PFXAfterBin";
    renderBin = "ProbeBin";
    renderPriority = 9999;
-   isEnabled = true;
+   enabled = true;
 
    shader = PFX_ReflectionProbeArray;
    stateBlock = PFX_ReflectionProbeArrayStateBlock;

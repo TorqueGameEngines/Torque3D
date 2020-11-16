@@ -81,7 +81,7 @@ singleton GFXStateBlockData( OVRBarrelDistortionStateBlock : PFX_DefaultStateBlo
 //-----------------------------------------------------------------------------
 singleton BarrelDistortionPostEffect( OVRBarrelDistortionPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
    
    renderTime = "PFXAfterDiffuse";
@@ -107,7 +107,7 @@ singleton BarrelDistortionPostEffect( OVRBarrelDistortionPostFX )
 //-----------------------------------------------------------------------------
 singleton BarrelDistortionPostEffect( OVRBarrelDistortionChromaPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
    
    renderTime = "PFXAfterDiffuse";
@@ -132,7 +132,7 @@ singleton BarrelDistortionPostEffect( OVRBarrelDistortionChromaPostFX )
 //-----------------------------------------------------------------------------
 singleton PostEffect( OVRBarrelDistortionMonoPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
    
    renderTime = "PFXAfterDiffuse";

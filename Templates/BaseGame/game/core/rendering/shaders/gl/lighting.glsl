@@ -24,7 +24,7 @@
 #include "./brdf.glsl"
 
 #ifndef TORQUE_SHADERGEN
-#line 26
+#line 27
 // These are the uniforms used by most lighting shaders.
 
 uniform vec4 inLightPos[4];
@@ -51,6 +51,18 @@ uniform vec4 albedo;
 #define MAX_FORWARD_PROBES 4
 
 #define MAX_FORWARD_LIGHT 4
+
+#ifndef CAPTURING
+#define CAPTURING 0
+#endif
+
+#ifndef DEBUGVIZ_ATTENUATION
+#define DEBUGVIZ_ATTENUATION 0
+#endif
+
+#ifndef DEBUGVIZ_CONTRIB
+#define DEBUGVIZ_CONTRIB 0
+#endif
 
 vec3 getDistanceVectorToPlane( vec3 origin, vec3 direction, vec4 plane )
 {
@@ -416,7 +428,7 @@ vec4 computeForwardProbes(Surface surface,
       }
    }
 
-#if DEBUGVIZ_ATTENUATION == 1
+#if (DEBUGVIZ_ATTENUATION == 1)
       float contribAlpha = 1;
       for (i = 0; i < numProbes; ++i)
       {
@@ -426,7 +438,7 @@ vec4 computeForwardProbes(Surface surface,
       return vec4(1 - contribAlpha, 1 - contribAlpha, 1 - contribAlpha, 1);
 #endif
 
-#if DEBUGVIZ_CONTRIB == 1
+#if (DEBUGVIZ_CONTRIB == 1)
    vec3 probeContribColors[4];
    probeContribColors[0] = vec3(1,0,0);
    probeContribColors[1] = vec3(0,1,0);

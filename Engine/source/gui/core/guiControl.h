@@ -107,6 +107,7 @@ class GuiControl : public SimGroup
    public:
    
       typedef SimGroup Parent;
+      typedef GuiControl Children;
       
       friend class GuiWindowCtrl; // mCollapseGroupVec
       friend class GuiCanvas;

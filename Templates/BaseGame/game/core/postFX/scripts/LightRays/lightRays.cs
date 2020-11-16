@@ -69,7 +69,7 @@ singleton GFXStateBlockData( LightRayStateBlock : PFX_DefaultStateBlock )
 
 singleton PostEffect( LightRayPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
         
    renderTime = "PFXBeforeBin";

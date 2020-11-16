@@ -50,7 +50,7 @@ singleton ShaderData( PFX_CausticsShader )
 
 singleton PostEffect( CausticsPFX )
 {
-   isEnabled = false;
+   enabled = false;
    renderTime = "PFXAfterDiffuse";
    renderBin = "ObjTranslucentBin";      
    //renderPriority = 0.1;

@@ -125,7 +125,7 @@ singleton PostEffect( AL_FormatCopy )
 {
    // This PostEffect is used by 'AL_FormatToken' directly. It is never added to
    // the PostEffectManager. Do not call enable() on it.
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = true;
    
    shader = PFX_PassthruShader;

@@ -412,7 +412,7 @@ function HDRPostFX::savePresetSettings(%this)
 
 singleton PostEffect( HDRPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
 
    // Resolve the HDR before we render any editor stuff
@@ -580,7 +580,7 @@ function LuminanceVisPostFX::setShaderConsts( %this )
 
 singleton PostEffect( LuminanceVisPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
       
    // Render before we do any editor rendering.  

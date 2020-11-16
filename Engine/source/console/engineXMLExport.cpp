@@ -58,9 +58,9 @@ static const char* getDocString(const EngineExport* exportInfo)
 }
 
 template< typename T >
-inline T getArgValue(const EngineFunctionDefaultArguments* defaultArgs, U32 offset)
+inline T getArgValue(const EngineFunctionDefaultArguments* defaultArgs, U32 idx)
 {
-   return *reinterpret_cast< const T* >(defaultArgs->getArgs() + offset);
+   return *(const T*)(defaultArgs->mFirst + defaultArgs->mOffsets[idx]);
 }
 
 
@@ -122,7 +122,7 @@ static Vector< String > parseFunctionArgumentNames(const EngineFunctionInfo* fun
       // Parse out name.
 
       const char* end = ptr + 1;
-      while (ptr > prototype && dIsalnum(*ptr))
+      while (ptr > prototype && (dIsalnum(*ptr) || *ptr == '_'))
          ptr--;
       const char* start = ptr + 1;
 
@@ -169,20 +169,19 @@ static Vector< String > parseFunctionArgumentNames(const EngineFunctionInfo* fun
 }
 
 //-----------------------------------------------------------------------------
-
-static String getDefaultArgumentValue(const EngineFunctionInfo* function, const EngineTypeInfo* type, U32 offset)
+static String getValueForType(const EngineTypeInfo* type, void* addr)
 {
    String value;
-   const EngineFunctionDefaultArguments* defaultArgs = function->getDefaultArguments();
+#define ADDRESS_TO_TYPE(tp) *(const tp*)(addr);
 
    switch (type->getTypeKind())
    {
    case EngineTypeKindPrimitive:
    {
-#define PRIMTYPE( tp )                                               \
+#define PRIMTYPE( tp )                                                        \
             if( TYPE< tp >() == type )                                        \
             {                                                                 \
-               tp val = getArgValue< tp >( defaultArgs, offset );             \
+               tp val = ADDRESS_TO_TYPE(tp);                                  \
                value = String::ToString( val );                               \
             }
 
@@ -195,9 +194,9 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
       PRIMTYPE(F64);
 
       //TODO: for now we store string literals in ASCII; needs to be sorted out
-      if (TYPE< const char* >() == type)
+      if (TYPE< String >() == type || TYPE< const UTF8* >() == type)
       {
-         const char* val = reinterpret_cast<const char*>(defaultArgs->getArgs() + offset);
+         const UTF8* val = *((const UTF8**)(addr));
          value = val;
       }
 
@@ -207,7 +206,7 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
 
    case EngineTypeKindEnum:
    {
-      S32 val = getArgValue< S32 >(defaultArgs, offset);
+      S32 val = ADDRESS_TO_TYPE(S32);
       AssertFatal(type->getEnumTable(), "engineXMLExport - Enum type without table!");
 
       const EngineEnumTable& table = *(type->getEnumTable());
@@ -225,7 +224,7 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
 
    case EngineTypeKindBitfield:
    {
-      S32 val = getArgValue< S32 >(defaultArgs, offset);
+      S32 val = ADDRESS_TO_TYPE(S32);
       AssertFatal(type->getEnumTable(), "engineXMLExport - Bitfield type without table!");
 
       const EngineEnumTable& table = *(type->getEnumTable());
@@ -247,7 +246,28 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
 
    case EngineTypeKindStruct:
    {
-      //TODO: struct type default argument values
+      AssertFatal(type->getFieldTable(), "engineXMLExport - Struct type without table!");
+      const EngineFieldTable* fieldTable = type->getFieldTable();
+      U32 numFields = fieldTable->getNumFields();
+
+
+      for (int i = 0; i < numFields; ++i)
+      {
+         const EngineTypeInfo* fieldType = (*fieldTable)[i].getType();
+         U32 fieldOffset = (*fieldTable)[i].getOffset();
+         U32 numElements = (*fieldTable)[i].getNumElements();
+
+         for (int j = 0; j < numElements; ++j)
+         {
+            if (i == 0 && j == 0) {
+               value = getValueForType(fieldType, (void*)((size_t)addr + fieldOffset));
+            }
+            else {
+               value += " " + getValueForType(fieldType, (void*)((size_t)addr + (size_t)fieldOffset * ((size_t)j * fieldType->getInstanceSize())));
+            }
+         }
+      }
+
       break;
    }
 
@@ -257,7 +277,7 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
       // For these two kinds, we support "null" as the only valid
       // default value.
 
-      const void* ptr = getArgValue< const void* >(defaultArgs, offset);
+      const void* ptr = ADDRESS_TO_TYPE(void*);
       if (!ptr)
          value = "null";
       break;
@@ -267,7 +287,16 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
       break;
    }
 
+#undef ADDRESS_TO_TYPE
    return value;
+}
+
+//-----------------------------------------------------------------------------
+
+static String getDefaultArgumentValue(const EngineFunctionInfo* function, const EngineTypeInfo* type, U32 idx)
+{
+   const EngineFunctionDefaultArguments* defaultArgs = function->getDefaultArguments();
+   return getValueForType(type, (void*)(defaultArgs->mFirst + defaultArgs->mOffsets[idx]));
 }
 
 //-----------------------------------------------------------------------------
@@ -295,9 +324,6 @@ static void exportFunction(const EngineFunctionInfo* function, SimXMLDocument* x
    Vector< String > argumentNames = parseFunctionArgumentNames(function);
    const U32 numArgumentNames = argumentNames.size();
 
-   // Accumulated offset in function argument frame vector.
-   U32 argFrameOffset = 0;
-
    for (U32 i = 0; i < numArguments; ++i)
    {
       xml->pushNewElement("EngineFunctionArgument");
@@ -313,21 +339,17 @@ static void exportFunction(const EngineFunctionInfo* function, SimXMLDocument* x
 
       if (i >= firstDefaultArg)
       {
-         String defaultValue = getDefaultArgumentValue(function, type, argFrameOffset);
+         String defaultValue = getDefaultArgumentValue(function, type, i);
          xml->setAttribute("defaultValue", defaultValue);
       }
 
+      // A bit hacky, default arguments have all offsets.
+      if (function->getDefaultArguments() != NULL)
+      {
+         xml->setAttribute("offset", String::ToString(function->getDefaultArguments()->mOffsets[i]));
+      }
+
       xml->popElement();
-
-      if (type->getTypeKind() == EngineTypeKindStruct)
-         argFrameOffset += type->getInstanceSize();
-      else
-         argFrameOffset += type->getValueSize();
-
-#ifdef _PACK_BUG_WORKAROUNDS
-      if (argFrameOffset % 4 > 0)
-         argFrameOffset += 4 - (argFrameOffset % 4);
-#endif
    }
 
    xml->popElement();
@@ -492,7 +514,12 @@ static void exportType(const EngineTypeInfo* type, SimXMLDocument* xml)
                ConsoleBaseType *cbt = ConsoleBaseType::getType(property.getType());
                if (cbt != NULL)
                {
-                  xml->setAttribute("type", cbt->getTypeClassName());
+                  if (cbt->getTypeInfo() != NULL) {
+                     xml->setAttribute("type", cbt->getTypeInfo()->getTypeName());
+                  }
+                  else {
+                     xml->setAttribute("type", cbt->getTypeClassName());
+                  }
                }
                else
                {
@@ -554,6 +581,7 @@ static void exportScope(const EngineExportScope* scope, SimXMLDocument* xml, boo
          break;
 
       default:
+         AssertFatal(true, "Unknown EngineExportKind: " + exportInfo->getExportKind());
          break;
       }
    }

@@ -37,7 +37,7 @@
 #include "math/mMathFn.h"
 
 
-IMPLEMENT_CONOBJECT( SimSet );
+IMPLEMENT_CONOBJECT_CHILDREN( SimSet );
 IMPLEMENT_CONOBJECT( SimGroup );
 
 ConsoleDocClass( SimSet,

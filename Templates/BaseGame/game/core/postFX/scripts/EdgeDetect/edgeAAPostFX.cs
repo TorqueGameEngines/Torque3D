@@ -84,7 +84,7 @@ singleton PostEffect( EdgeDetectPostEffect )
    texture[0] = "#deferred";
    target = "#edge";
    
-   isEnabled = true;
+   enabled = true;
 };
 
 singleton PostEffect( EdgeAAPostEffect )

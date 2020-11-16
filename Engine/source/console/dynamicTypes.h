@@ -284,6 +284,26 @@ const EngineTypeInfo* _MAPTYPE() { return TYPE< T >(); }
    }; \
    ConsoleType ## type gConsoleType ## type ## Instance;
 
+#define ConsoleMappedType( typeName, type, consoleType, nativeType, typePrefix ) \
+   S32 type; \
+   class ConsoleType##type : public ConsoleBaseType \
+   { \
+   public: \
+      typedef nativeType T; \
+      ConsoleType##type() \
+         : ConsoleBaseType( sizeof( nativeType ), &type, #type ) \
+      { \
+         mTypeInfo = _MAPTYPE< consoleType >(); \
+      } \
+      virtual void setData(void *dptr, S32 argc, const char **argv, const EnumTable *tbl, BitSet32 flag); \
+      virtual const char *getData(void *dptr, const EnumTable *tbl, BitSet32 flag ); \
+      virtual const char *getTypeClassName() { return #typeName ; } \
+      virtual void       *getNativeVariable() { T* var = new T; return (void*)var; } \
+      virtual void        deleteNativeVariable(void* var) { T* nativeVar = reinterpret_cast<T*>(var); delete nativeVar; } \
+      virtual StringTableEntry getTypePrefix( void ) const { return StringTable->insert( typePrefix ); } \
+   }; \
+   ConsoleType ## type gConsoleType ## type ## Instance;
+
 #define ImplementConsoleTypeCasters( type, nativeType ) \
    const char *castConsoleTypeToString( _ConsoleConstType< nativeType >::ConstType &arg ) { return Con::getData(type, const_cast< nativeType* >( &arg ), 0); } \
    bool castConsoleTypeFromString( nativeType &arg, const char *str ) { Con::setData(type, const_cast< nativeType* >( &arg ), 0, 1, &str); return true; } \

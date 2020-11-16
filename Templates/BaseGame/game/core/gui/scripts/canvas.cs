@@ -133,7 +133,7 @@ function configureCanvas()
    // It's formatted as AATypexAALevel
    // So, FXAAx4 or MLAAx2
    if ( isObject( FXAA_PostEffect ) )
-      FXAA_PostEffect.isEnabled = ( %aa > 0 ) ? true : false;
+      FXAA_PostEffect.Enabled = ( %aa > 0 ) ? true : false;
 }
 
 function GuiCanvas::modeStrToPrefs(%this, %modeStr)

@@ -119,7 +119,7 @@ function VignettePostFX::savePresetSettings(%this)
 //Our actual postFX
 singleton PostEffect( VignettePostFX )
 {
-   isEnabled = false;
+   enabled = false;
    
    renderTime = "PFXBeforeBin";
    renderBin = "EditorBin";

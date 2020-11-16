@@ -37,7 +37,7 @@ singleton ShaderData( PFX_FlashShader )
  
 singleton PostEffect( FlashFx )
 {
-   isEnabled = false;    
+   enabled = false;    
    allowReflectPass = false;  
 
    renderTime = "PFXAfterDiffuse";  

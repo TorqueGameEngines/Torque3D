@@ -121,7 +121,7 @@ function SharpenPostFX::savePresetSettings(%this)
 //Our actual postFX
 singleton PostEffect( SharpenPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    allowReflectPass = false;
 
    // Resolve the HDR before we render any editor stuff

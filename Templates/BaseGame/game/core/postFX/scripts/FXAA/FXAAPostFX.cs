@@ -49,7 +49,7 @@ singleton ShaderData( FXAA_ShaderData )
 
 singleton PostEffect( FXAAPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    
    allowReflectPass = false;
    renderTime = "PFXAfterDiffuse";

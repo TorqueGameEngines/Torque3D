@@ -113,7 +113,7 @@ function CameraMotionBlurPostFX::savePresetSettings(%this)
 //Our actual postFX
 singleton PostEffect( CameraMotionBlurPostFX )
 {
-   isEnabled = false;
+   enabled = false;
    renderTime = "PFXAfterDiffuse"; 
 
    shader = CameraMotionBlurPostFX_Shader;

@@ -44,7 +44,7 @@
 //#define DEBUG_SPEW
 
 
-IMPLEMENT_CONOBJECT( GuiControl );
+IMPLEMENT_CONOBJECT_CHILDREN( GuiControl );
 
 ConsoleDocClass( GuiControl,
    "@brief Base class for all Gui control objects.\n\n"

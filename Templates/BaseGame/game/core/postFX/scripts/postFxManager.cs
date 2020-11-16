@@ -122,7 +122,7 @@ function PostFXManager::savePresetHandler( %filename )
    {
       %postEffect = PostFXManager.getKey(%i);  
       
-      if(isObject(%postEffect) && %postEffect.isEnabled && %postEffect.isMethod("savePresetSettings"))
+      if(isObject(%postEffect) && %postEffect.Enabled && %postEffect.isMethod("savePresetSettings"))
       {     
          %postEffect.savePresetSettings();
       }

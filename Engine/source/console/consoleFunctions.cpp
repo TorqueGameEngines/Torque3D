@@ -30,6 +30,7 @@
 #include "console/consoleFunctions.h"
 #endif
 
+#include "cinterface/cinterface.h"
 #include "core/strings/findMatch.h"
 #include "core/strings/stringUnit.h"
 #include "core/strings/unicode.h"
@@ -2426,6 +2427,10 @@ DefineEngineFunction( isMethod, bool, ( const char* nameSpace, const char* metho
    "@return True if the method exists, false if not\n"
    "@ingroup Scripting\n")
 {
+   if (CInterface::isMethod(nameSpace, method)) {
+      return true;
+   }
+
    Namespace* ns = Namespace::find( StringTable->insert( nameSpace ) );
    Namespace::Entry* nse = ns->lookup( StringTable->insert( method ) );
    if( !nse )

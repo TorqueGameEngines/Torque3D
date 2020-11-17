@@ -1,4 +1,6 @@
+using System;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using T3DSharpFramework.Interop;
@@ -15,12 +17,26 @@ namespace Game
 
          Thread.CurrentThread.CurrentCulture = customCulture;
 
-         Initializer.InitializeTypeDictionaries(Assembly.GetExecutingAssembly().GetTypes());
+         foreach (string library in Directory.GetFiles("./", "*.dll"))
+         {
+            try
+            {
+               Initializer.InitializeTypeDictionaries(Assembly.LoadFile(Path.GetFullPath(library)).GetTypes());
+            }
+            catch (BadImageFormatException e)
+            {
+               // Skip
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+               // Skip
+            }
+         }
 
          Torque3D.Libraries libraries = new Torque3D.Libraries
          {
-            Windows32bit = "Stock_DEBUG.dll", // <- Change this to match your build output
-            Windows64bit = "Stock_DEBUG.dll"  // <- Change this to match your build output
+            Windows32bit = "CoinCollection_DEBUG.dll", // <- Change this to match your build output
+            Windows64bit = "CoinCollection_DEBUG.dll"  // <- Change this to match your build output
          };
 
          Torque3D.Initialize(args, libraries);

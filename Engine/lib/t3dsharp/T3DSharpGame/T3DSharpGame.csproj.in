@@ -14,6 +14,7 @@
    
    <ItemGroup>
       <ProjectReference Include="@CSHARP_FRAMEWORK_REL_PATH@" />
+	  @GAME_INCLUDES@
    </ItemGroup>
    
    <ItemGroup>

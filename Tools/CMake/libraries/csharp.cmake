@@ -79,8 +79,8 @@ foreach(entry ${BLACKLIST})
 endforeach()
 
 foreach(f ${tmp_files})
-string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" tmp_folder ${f})
-string(REGEX REPLACE "(.*)(/[^/]*)$" "\\2" tmp_file ${f})
+string(REGEX REPLACE "(.*)/([^/]*)$" "\\1" tmp_folder ${f})
+string(REGEX REPLACE "(.*)/([^/]*)$" "\\2" tmp_file ${f})
 string(REGEX REPLACE "(.*)\.in$" "\\1" tmp_target ${tmp_file})
 string(REGEX REPLACE "(.*)\.csproj\.in$" "\\1" tmp_project_name ${tmp_file})
 
@@ -91,6 +91,7 @@ configure_file(
 )
 add_csproject(${tmp_project_name} "${tmp_folder}/${tmp_target}")
 LIST(APPEND TEMPLATED_CSPROJ_FILES "${tmp_folder}/${tmp_target}")
+LIST(APPEND CSPROJ_FILES "${tmp_folder}/${tmp_target}")
 endforeach()
 
 #####
@@ -110,16 +111,27 @@ foreach(entry ${TEMPLATED_CSPROJ_FILES})
 endforeach()
 
 foreach(f ${tmp_files})
-string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" tmp_folder ${f})
-string(REGEX REPLACE "(.*)(/[^/]*)$" "\\2" tmp_file ${f})
+string(REGEX REPLACE "(.*)/([^/]*)$" "\\1" tmp_folder ${f})
+string(REGEX REPLACE "(.*)/([^/]*)$" "\\2" tmp_file ${f})
 
 set_relative_csharp_framework_path("${tmp_folder}")
 add_csproject(${tmp_project_name} "${tmp_folder}/${tmp_file}")
+LIST(APPEND CSPROJ_FILES "${tmp_folder}/${tmp_target}")
 endforeach()
 
 #####
 # Add game
 #####
+
+foreach(f ${CSPROJ_FILES})
+
+file(RELATIVE_PATH tmp_rel_path "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame" "${f}")
+set(GAME_INCLUDES "${GAME_INCLUDES} \n\
+      <ProjectReference Include=\"${tmp_rel_path}\"> \n\
+        <Private>true</Private> \n\
+      </ProjectReference> \n\
+")
+endforeach()
 
 set_relative_csharp_framework_path("${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame")
 configure_file(

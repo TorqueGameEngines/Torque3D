@@ -74,7 +74,7 @@ function GameObjectCreateBtn::onClick(%this)
       
       %file = new FileObject();
       
-      if(%file.openForWrite(%path @ "\\" @ %className @ ".cs"))
+      if(%file.openForWrite(%path @ "\\" @ %className @ ".ts"))
       {
          %file.writeline("function " @ %className @ "::onAdd(%this)\n{\n\n}\n");
          %file.writeline("function " @ %className @ "::onRemove(%this)\n{\n\n}\n");
@@ -86,7 +86,7 @@ function GameObjectCreateBtn::onClick(%this)
       
       //set up the paths
       %tamlPath = %path  @ %className @ ".taml";
-      %scriptPath = %path  @ %className @ ".cs";
+      %scriptPath = %path  @ %className @ ".ts";
       saveGameObject(%className, %tamlPath, %scriptPath);
       
       %asset = new GameObjectAsset()

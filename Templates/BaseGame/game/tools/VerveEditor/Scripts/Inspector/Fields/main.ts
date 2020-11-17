@@ -5,21 +5,21 @@
 
 function VerveEditor::InitInspectorFieldScripts()
 {
-    exec( "./TypeBool.cs" );
-    exec( "./TypeData.cs" );
-    exec( "./TypeEnum.cs" );
-    exec( "./TypeString.cs" );
+    exec( "./TypeBool.ts" );
+    exec( "./TypeData.ts" );
+    exec( "./TypeEnum.ts" );
+    exec( "./TypeString.ts" );
     
-    exec( "./TypeVCameraGroupEnum.cs" );
-    exec( "./TypeVCommandEnum.cs" );
-    exec( "./TypeVControllerDataEnum.cs" );
-    exec( "./TypeVGroupEnum.cs" );
-    exec( "./TypeVLightAnimationDataEnum.cs" );
-    exec( "./TypeVPathOrientationModeEnum.cs" );
-    exec( "./TypeVPostEffectEnum.cs" );
-    exec( "./TypeVSceneEnum.cs" );
-    exec( "./TypeVSFXProfileEnum.cs" );
-    exec( "./TypeVShapeAnimationEnum.cs" );
-    exec( "./TypeToggleEnum.cs" );
+    exec( "./TypeVCameraGroupEnum.ts" );
+    exec( "./TypeVCommandEnum.ts" );
+    exec( "./TypeVControllerDataEnum.ts" );
+    exec( "./TypeVGroupEnum.ts" );
+    exec( "./TypeVLightAnimationDataEnum.ts" );
+    exec( "./TypeVPathOrientationModeEnum.ts" );
+    exec( "./TypeVPostEffectEnum.ts" );
+    exec( "./TypeVSceneEnum.ts" );
+    exec( "./TypeVSFXProfileEnum.ts" );
+    exec( "./TypeVShapeAnimationEnum.ts" );
+    exec( "./TypeToggleEnum.ts" );
 }
 VerveEditor::InitInspectorFieldScripts();

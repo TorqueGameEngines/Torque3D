@@ -46,13 +46,13 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
    
    %moduleFilePath = "data/" @ %newModuleName;
    %moduleDefinitionFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".module";
-   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".cs";
+   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".ts";
    
    %newModule = new ModuleDefinition()
    {
       ModuleId = %newModuleName;
       versionId = 1;
-      ScriptFile = %newModuleName @ ".cs";
+      ScriptFile = %newModuleName @ ".ts";
       CreateFunction="onCreate";
 	   DestroyFunction="onDestroy";
 	   Group = "Game";
@@ -70,7 +70,7 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
    %file = new FileObject();
    %templateFile = new FileObject();
    
-   %moduleTemplateCodeFilePath = AssetBrowser.templateFilesPath @ "module.cs.template";
+   %moduleTemplateCodeFilePath = AssetBrowser.templateFilesPath @ "module.ts.template";
    
    if(%file.openForWrite(%moduleScriptFilePath) && %templateFile.openForRead(%moduleTemplateCodeFilePath))
    {

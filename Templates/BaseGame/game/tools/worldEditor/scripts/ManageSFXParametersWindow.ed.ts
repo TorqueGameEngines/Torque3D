@@ -26,7 +26,7 @@
 //=============================================================================
 
 /// File to save newly created SFXParameters in by default.
-$SFX_PARAMETER_FILE = "scripts/client/audioData.cs";
+$SFX_PARAMETER_FILE = "scripts/client/audioData.ts";
 
 $SFX_PARAMETER_CHANNELS[  0 ] = "Volume";
 $SFX_PARAMETER_CHANNELS[  1 ] = "Pitch";

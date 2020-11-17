@@ -40,9 +40,9 @@
 ///   
 ///   EditorPlugin::register( %obj );
 ///
-/// For an a full example see: tools/roadEditor/main.cs
-///                        or: tools/riverEditor/main.cs
-///                        or: tools/decalEditor/main.cs
+/// For an a full example see: tools/roadEditor/main.ts
+///                        or: tools/riverEditor/main.ts
+///                        or: tools/decalEditor/main.ts
 ///
 
 /// It is not intended for the user to overload this method.

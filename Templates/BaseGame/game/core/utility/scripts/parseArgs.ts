@@ -355,7 +355,7 @@ function parseArgs()
                %i++;
             }
             else
-               error("Error: Missing Command Line argument. Usage: -prefs <path/script.cs>");
+               error("Error: Missing Command Line argument. Usage: -prefs <path/script.ts>");
 
             
          //-------------------

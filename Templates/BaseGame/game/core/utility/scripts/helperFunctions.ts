@@ -39,9 +39,9 @@ function loadMaterials()
    // the folder exists
    if( IsDirectory( "materialEditor" ) )
    {
-      for( %file = findFirstFile( "materialEditor/*.cs.dso" );
+      for( %file = findFirstFile( "materialEditor/*.ts.dso" );
            %file !$= "";
-           %file = findNextFile( "materialEditor/*.cs.dso" ))
+           %file = findNextFile( "materialEditor/*.ts.dso" ))
       {
          // Only execute, if we don't have the source file.
          %csFileName = getSubStr( %file, 0, strlen( %file ) - 4 );
@@ -49,9 +49,9 @@ function loadMaterials()
             exec( %csFileName );
       }
 
-      for( %file = findFirstFile( "materialEditor/*.cs" );
+      for( %file = findFirstFile( "materialEditor/*.ts" );
            %file !$= "";
-           %file = findNextFile( "materialEditor/*.cs" ))
+           %file = findNextFile( "materialEditor/*.ts" ))
       {
          exec( %file );
       }
@@ -477,11 +477,11 @@ function compileFiles(%pattern)
    
    $Scripts::OverrideDSOPath  = %path;
    $Scripts::ignoreDSOs       = false;
-   %mainCsFile = makeFullPath("main.cs");
+   %mainCsFile = makeFullPath("main.ts");
 
    for (%file = findFirstFileMultiExpr(%pattern); %file !$= ""; %file = findNextFileMultiExpr(%pattern))
    {
-      // we don't want to try and compile the primary main.cs
+      // we don't want to try and compile the primary main.ts
       if(%mainCsFile !$= %file)      
          compile(%file, true);
    }
@@ -502,7 +502,7 @@ function displayHelp()
 
    error(
       "Torque Demo command line options:\n"@
-      "  -log <logmode>         Logging behavior; see main.cs comments for details\n"@
+      "  -log <logmode>         Logging behavior; see main.ts comments for details\n"@
       "  -game <game_name>      Reset list of mods to only contain <game_name>\n"@
       "  <game_name>            Works like the -game argument\n"@
       "  -dir <dir_name>        Add <dir_name> to list of directories\n"@
@@ -518,8 +518,8 @@ function loadDir(%dir)
 {
    pushback($userDirs, %dir, ";");
 
-   if (isScriptFile(%dir @ "/main.cs"))
-   exec(%dir @ "/main.cs");
+   if (isScriptFile(%dir @ "/main.ts"))
+   exec(%dir @ "/main.ts");
 }
 
 function loadDirs(%dirPath)
@@ -528,7 +528,7 @@ function loadDirs(%dirPath)
    if (%dirPath !$= "")
       loadDirs(%dirPath);
 
-   if(exec(%token @ "/main.cs") != true)
+   if(exec(%token @ "/main.ts") != true)
    {
       error("Error: Unable to find specified directory: " @ %token );
       $dirCount--;

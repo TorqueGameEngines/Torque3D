@@ -30,55 +30,55 @@ function UI::initClient(%this)
 {
    //Load UI stuff
    //we need to load this because some of the menu profiles use the sounds here
-   //%this.queueExec("./datablocks/guiSounds.cs");
+   //%this.queueExec("./datablocks/guiSounds.ts");
    
    //Profiles
-   %this.queueExec("./scripts/profiles.cs");
+   %this.queueExec("./scripts/profiles.ts");
    
    //Now gui files
-   %this.queueExec("./scripts/menuInputButtons.cs");
+   %this.queueExec("./scripts/menuInputButtons.ts");
    
-   %this.queueExec("./guis/mainMenu.cs");
+   %this.queueExec("./guis/mainMenu.ts");
    %this.queueExec("./guis/mainMenu.gui");
    
-   %this.queueExec("./guis/chooseLevelDlg.cs");
+   %this.queueExec("./guis/chooseLevelDlg.ts");
    %this.queueExec("./guis/chooseLevelDlg.gui");
    
-   %this.queueExec("./guis/joinServerMenu.cs");
+   %this.queueExec("./guis/joinServerMenu.ts");
    %this.queueExec("./guis/joinServerMenu.gui");
    
    %this.queueExec("./guis/loadingGui.gui");
    
-   %this.queueExec("./guis/optionsMenu.cs");
+   %this.queueExec("./guis/optionsMenu.ts");
    %this.queueExec("./guis/optionsMenu.gui");
    
-   %this.queueExec("./guis/pauseMenu.cs");
+   %this.queueExec("./guis/pauseMenu.ts");
    %this.queueExec("./guis/pauseMenu.gui");
    
    %this.queueExec("./guis/remapDlg.gui");
    %this.queueExec("./guis/remapConfirmDlg.gui");
    
-   %this.queueExec("./guis/profiler.cs");
+   %this.queueExec("./guis/profiler.ts");
    %this.queueExec("./guis/profiler.gui");
    
    %this.queueExec("./guis/netGraphGui.gui");
    %this.queueExec("./guis/RecordingsDlg.gui");
    
-   %this.queueExec("./guis/guiMusicPlayer.cs");
+   %this.queueExec("./guis/guiMusicPlayer.ts");
    %this.queueExec("./guis/guiMusicPlayer.gui");
    
-   %this.queueExec("./guis/startupGui.cs");
+   %this.queueExec("./guis/startupGui.ts");
    %this.queueExec("./guis/startupGui.gui");
    
    // Load Editor Dialogs
    %this.queueExec("./guis/messageBoxDlg.gui");
    
    //Load scripts
-   %this.queueExec("./scripts/controlsMenu.cs");
-   %this.queueExec("./scripts/messageBoxes.cs");
-   %this.queueExec("./scripts/help.cs");
-   %this.queueExec("./scripts/cursors.cs");
-   %this.queueExec("./scripts/utility.cs");
+   %this.queueExec("./scripts/controlsMenu.ts");
+   %this.queueExec("./scripts/messageBoxes.ts");
+   %this.queueExec("./scripts/help.ts");
+   %this.queueExec("./scripts/cursors.ts");
+   %this.queueExec("./scripts/utility.ts");
 }
 
 function UI::onCreateClientConnection(%this){}

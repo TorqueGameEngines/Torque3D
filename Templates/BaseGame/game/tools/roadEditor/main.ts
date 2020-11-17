@@ -24,10 +24,10 @@ function initializeRoadEditor()
 {
    echo( " - Initializing Road and Path Editor" );
    
-   exec( "./roadEditor.cs" );
+   exec( "./roadEditor.ts" );
    exec( "./RoadEditorGui.gui" );
    exec( "./RoadEditorToolbar.gui");
-   exec( "./roadEditorGui.cs" );
+   exec( "./roadEditorGui.ts" );
    
    // Add ourselves to EditorGui, where all the other tools reside
    RoadEditorGui.setVisible( false ); 

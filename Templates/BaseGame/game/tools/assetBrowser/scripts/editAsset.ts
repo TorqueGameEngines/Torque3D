@@ -295,7 +295,7 @@ function AssetBrowser::doDuplicateAsset(%this)
    {
       //this acts as a redirect based on asset type and will enact the appropriate function
       //so for a GameObjectAsset, it'll become %this.duplicateGameObjectAsset(%assetDef, %targetModule);
-      //and call to the tools/assetBrowser/scripts/assetTypes/gameObject.cs file for implementation
+      //and call to the tools/assetBrowser/scripts/assetTypes/gameObject.ts file for implementation
       if(%this.isMethod("duplicate"@%assetType))
          eval(%this @ ".duplicate"@%assetType@"("@%assetDef@","@AssetBrowser_assetNameEditTxt.text@");");
          

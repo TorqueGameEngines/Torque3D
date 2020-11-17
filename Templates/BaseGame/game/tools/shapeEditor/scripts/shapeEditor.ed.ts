@@ -253,7 +253,7 @@ function ShapeEditor::createConstructor( %this, %path )
 
 function ShapeEditor::saveConstructor( %this, %constructor )
 {
-   %savepath = filePath( %constructor.baseShape ) @ "/" @ fileBase( %constructor.baseShape ) @ ".cs";
+   %savepath = filePath( %constructor.baseShape ) @ "/" @ fileBase( %constructor.baseShape ) @ ".ts";
    new PersistenceManager( shapeEd_perMan );
    shapeEd_perMan.setDirty( %constructor, %savepath );
    shapeEd_perMan.saveDirtyObject( %constructor );
@@ -362,7 +362,7 @@ function ShapeEdShapeTreeView::onSelect( %this, %obj )
 }
 
 // Find all DTS or COLLADA models. Note: most of this section was shamelessly
-// stolen from creater.ed.cs => great work whoever did the original!
+// stolen from creater.ed.ts => great work whoever did the original!
 function ShapeEdSelectWindow::navigate( %this, %address )
 {
    // Freeze the icon array so it doesn't update until we've added all of the
@@ -3041,7 +3041,7 @@ function ShapeEditor::addLODFromFile( %this, %dest, %filename, %size, %allowUnma
 {
    // Get (or create) a TSShapeConstructor object for the source shape. Need to
    // exec the script manually as the resource may not have been loaded yet
-   %csPath = filePath( %filename ) @ "/" @ fileBase( %filename ) @ ".cs";
+   %csPath = filePath( %filename ) @ "/" @ fileBase( %filename ) @ ".ts";
    if ( isFile( %csPath ) )
       exec( %csPath );
 

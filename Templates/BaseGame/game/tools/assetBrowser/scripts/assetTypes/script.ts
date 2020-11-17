@@ -8,13 +8,13 @@ function AssetBrowser::createScriptAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ ".cs";
+   %scriptPath = %assetPath @ %assetName @ ".ts";
    
    %asset = new ScriptAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ ".cs";
+      scriptFile = %assetName @ ".ts";
    };
    
    TamlWrite(%asset, %tamlpath);

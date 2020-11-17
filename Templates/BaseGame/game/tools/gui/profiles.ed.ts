@@ -22,7 +22,7 @@
 
 function execEditorProfilesCS()
 {
-   exec("./profiles.ed.cs");   
+   exec("./profiles.ed.ts");   
 }
 
 $Gui::clipboardFile = expandFilename("./clipboard.gui");

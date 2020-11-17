@@ -9,16 +9,16 @@ function initClient()
    $Client::GameTypeQuery = $appName;
    $Client::MissionTypeQuery = "Any";
    
-   exec( "./message.cs" );
-   exec( "./connectionToServer.cs" );
-   exec( "./levelDownload.cs" );
-   exec( "./levelLoad.cs" );
+   exec( "./message.ts" );
+   exec( "./connectionToServer.ts" );
+   exec( "./levelDownload.ts" );
+   exec( "./levelLoad.ts" );
    
    //load prefs
-   exec( "data/defaults.cs" );
+   exec( "data/defaults.ts" );
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
-      exec( %prefPath @ "/clientPrefs.cs" );
+   if ( isFile( %prefPath @ "/clientPrefs.ts" ) )
+      exec( %prefPath @ "/clientPrefs.ts" );
       
    callOnModules("initClient");
 

@@ -38,7 +38,7 @@ function EditorGui::init(%this)
    if( !isObject( %this-->ToolsPaletteWindow ) )
    {
       // Load Creator/Inspector GUI
-      exec("~/worldEditor/gui/ToolsPaletteGroups/init.cs");
+      exec("~/worldEditor/gui/ToolsPaletteGroups/init.ts");
       exec("~/worldEditor/gui/ToolsPaletteWindow.ed.gui");
       
       if( isObject( EWToolsPaletteWindow ) )
@@ -156,7 +156,7 @@ function EditorGui::init(%this)
    if( !isObject( %this-->EditorSettingsWindow ) )
    {
       exec("tools/gui/EditorSettingsWindow.ed.gui");
-      exec("tools/gui/editorSettingsWindow.ed.cs");
+      exec("tools/gui/editorSettingsWindow.ed.ts");
       %this.add( ESettingsWindow );
       ESettingsWindow.setVisible(false);
       
@@ -177,7 +177,7 @@ function EditorGui::init(%this)
    if( !isObject( %this-->SnapOptionsWindow ) )
    {
       exec("~/worldEditor/gui/ObjectSnapOptionsWindow.ed.gui");
-      exec("~/worldEditor/scripts/objectSnapOptions.ed.cs");
+      exec("~/worldEditor/scripts/objectSnapOptions.ed.ts");
       %this.add( ESnapOptions );
       ESnapOptions.setVisible(false);
       ESnapOptionsTabBook.selectPage(0);
@@ -187,7 +187,7 @@ function EditorGui::init(%this)
    if( !isObject( %this-->TransformSelectionWindow ) )
    {
       exec("~/worldEditor/gui/TransformSelectionWindow.ed.gui");
-      exec("~/worldEditor/scripts/transformSelection.ed.cs");
+      exec("~/worldEditor/scripts/transformSelection.ed.ts");
       %this.add( ETransformSelection );
       ETransformSelection.setVisible(false);
    }

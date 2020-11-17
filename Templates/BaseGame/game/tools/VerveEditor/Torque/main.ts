@@ -12,7 +12,7 @@
 function VerveEditor::InitTorqueScripts()
 {
     // Core.
-    exec( "./ObjectClasses.cs" );
-    exec( "./Selection.cs" );
+    exec( "./ObjectClasses.ts" );
+    exec( "./Selection.ts" );
 }
 VerveEditor::InitTorqueScripts();

@@ -2,11 +2,11 @@
 function Core_PostFX::onCreate(%this)
 {
    //
-   exec("./scripts/postFxManager.cs");
-   exec("./scripts/postFx.cs");
+   exec("./scripts/postFxManager.ts");
+   exec("./scripts/postFx.ts");
    
    //Load the default config
-   loadPresetHandler("./scripts/default.postfxpreset.cs");
+   loadPresetHandler("./scripts/default.postfxpreset.ts");
 }
 
 function Core_PostFX::onDestroy(%this)

@@ -51,9 +51,9 @@ function loadModuleMaterials(%moduleGroup)
       
       // Load any materials files for which we only have DSOs.
 
-      for( %file = findFirstFile( %modulePath @ "/*/materials.cs.dso" );
+      for( %file = findFirstFile( %modulePath @ "/*/materials.ts.dso" );
            %file !$= "";
-           %file = findNextFile( %modulePath @ "/*/materials.cs.dso" ))
+           %file = findNextFile( %modulePath @ "/*/materials.ts.dso" ))
       {
          // Only execute, if we don't have the source file.
          %csFileName = getSubStr( %file, 0, strlen( %file ) - 4 );
@@ -63,9 +63,9 @@ function loadModuleMaterials(%moduleGroup)
 
       // Load all source material files.
 
-      for( %file = findFirstFile( %modulePath @ "/*/materials.cs" );
+      for( %file = findFirstFile( %modulePath @ "/*/materials.ts" );
            %file !$= "";
-           %file = findNextFile( %modulePath @ "/*/materials.cs" ))
+           %file = findNextFile( %modulePath @ "/*/materials.ts" ))
       {
          exec( %file );
       }

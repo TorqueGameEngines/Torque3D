@@ -40,15 +40,15 @@ function PostFXManager::registerPostEffect(%this, %postEffect)
 }
 
 // Used to name the saved files.
-$PostFXManager::fileExtension = ".postfxpreset.cs";
+$PostFXManager::fileExtension = ".postfxpreset.ts";
 
 // The filter string for file open/save dialogs.
-$PostFXManager::fileFilter = "Post Effect Presets|*.postfxpreset.cs";
+$PostFXManager::fileFilter = "Post Effect Presets|*.postfxpreset.ts";
 
 // Enable / disable PostFX when loading presets or just apply the settings?
 $PostFXManager::forceEnableFromPresets = true;
 
-$PostFXManager::defaultPreset  = "core/postFX/scripts/default.postfxpreset.cs";
+$PostFXManager::defaultPreset  = "core/postFX/scripts/default.postfxpreset.ts";
 
 $PostFXManager::currentPreset = "";
 

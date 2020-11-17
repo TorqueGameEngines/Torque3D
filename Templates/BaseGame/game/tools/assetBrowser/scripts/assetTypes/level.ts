@@ -29,7 +29,7 @@ function AssetBrowser::createLevelAsset(%this)
       versionId = 1;
       LevelFile = %assetName @ ".mis";
       DecalsFile = %assetName @ ".mis.decals";
-      PostFXPresetFile = %assetName @ ".postfxpreset.cs";
+      PostFXPresetFile = %assetName @ ".postfxpreset.ts";
       ForestFile = %assetName @ ".forest";
       NavmeshFile = %assetName @ ".nav";
       LevelName = AssetBrowser.newAssetSettings.levelName;

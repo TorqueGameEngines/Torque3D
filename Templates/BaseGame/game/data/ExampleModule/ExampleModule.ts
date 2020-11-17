@@ -18,7 +18,7 @@ function ExampleModule::onDestroy(%this)
 //This is called when the server part of the application is initially created. Torque3D
 //assumes, even in a single player context, that there is ultimately a 'server' and a 'client'
 //So during initial launch and startup of the engine, the server side is initialized in
-//core/clientServer/scripts/server/server.cs - in the initServer() function where this is called. 
+//core/clientServer/scripts/server/server.ts - in the initServer() function where this is called. 
 //This is called on all modules that have this function defined. This is important for 
 //any persistant parts of the server that always need to run such as gameplay scripts
 //
@@ -29,15 +29,15 @@ function ExampleModule::onDestroy(%this)
 //ExampleGameMode::onMissionReset
 //Are called during the startup, shut down, and resetting of any and all active gamemodes, as informed by the loaded scenes
 //when the game server is processed.
-//These callbacks are activated in core/clientServer/scripts/server/levelLoad.cs
+//These callbacks are activated in core/clientServer/scripts/server/levelLoad.ts
 function ExampleModule::initServer(%this)
 {
    //This script contains our ExampleGameMode logic
-   %this.queueExec("./scripts/ExampleGamemodeScript.cs");
+   %this.queueExec("./scripts/ExampleGamemodeScript.ts");
 }
 
 //This is called when a game session server is actually created so the game may be played. It's called 
-//from core/clientServer/scripts/server/server.cs - in the createServer() function, which is called when 
+//from core/clientServer/scripts/server/server.ts - in the createServer() function, which is called when 
 //A game session is actually launched, and the server is generated so game clients can connect to it.
 //This is utilized to set up common things that need to be set up each time the game session server is 
 //created, such as common variables, datablocks to be transmitted to the client, etc.
@@ -50,11 +50,11 @@ function ExampleModule::onCreateGameServer(%this)
    //onServerCreated(), it loads the datablocks via this array, and when when the server goes
    //to pass data to the client, it iterates over this list and processes it, ensuring all datablocks
    //are the most up to date possible for transmission to the connecting client
-   //%this.registerDatablock("./datablocks/ExampleDatablock.cs");
+   //%this.registerDatablock("./datablocks/ExampleDatablock.ts");
 }
 
 //This is called when a game session server is destroyed, when the game shuts down. It's called from
-//core/clientServer/scripts/server/server.cs - in the destroyServer() function, which just cleans up anything
+//core/clientServer/scripts/server/server.ts - in the destroyServer() function, which just cleans up anything
 //The module may have set up as part of the game server being created.
 function ExampleModule::onDestroyGameServer(%this)
 {
@@ -63,7 +63,7 @@ function ExampleModule::onDestroyGameServer(%this)
 
 //Similar to initServer, this is called during the initial launch of the application and the client component
 //is set up. The difference is that the client may not actually be created, such as in the case for dedicated servers
-//Where no UI or gameplay interface is required. It's called from core/clientServer/scripts/client/client.cs - 
+//Where no UI or gameplay interface is required. It's called from core/clientServer/scripts/client/client.ts - 
 //in the initClient() function. It sets up common elements that the client will always need, such as scripts, GUIs
 //and the like
 function ExampleModule::initClient(%this)
@@ -74,17 +74,17 @@ function ExampleModule::initClient(%this)
    
    //client scripts
    //Here, we exec out keybind scripts so the player is able to move when they get into a game
-   %this.queueExec("./scripts/default.keybinds.cs");
+   %this.queueExec("./scripts/default.keybinds.ts");
    
    %prefPath = getPrefpath();
-   if(isFile(%prefPath @ "/keybinds.cs"))
-      exec(%prefPath @ "/keybinds.cs");
+   if(isFile(%prefPath @ "/keybinds.ts"))
+      exec(%prefPath @ "/keybinds.ts");
       
-   %this.queueExec("./scripts/inputCommands.cs");
+   %this.queueExec("./scripts/inputCommands.ts");
 }
 
 //This is called when a game session client successfuly connects to a game server. 
-//It's called from core/clientServer/scripts/client/connectionToServer.cs - in the GameConnection::onConnectionAccepted() function
+//It's called from core/clientServer/scripts/client/connectionToServer.ts - in the GameConnection::onConnectionAccepted() function
 //It's used for any client-side specific game session stuff that the client needs to load or pass to the server, such as profile data
 //account progress, preferences, etc.
 //
@@ -96,7 +96,7 @@ function ExampleModule::onCreateClientConnection(%this)
 }
 
 //This is called when a client game session disconnects from a game server
-//It's called from core/clientServer/scripts/client/connectionToServer.cs - in the disconnectedCleanup() function
+//It's called from core/clientServer/scripts/client/connectionToServer.ts - in the disconnectedCleanup() function
 //It's used to clean up and potentially write out any client-side stuff that needs housekeeping when disconnecting for any reason.
 //It will be called if the connection is manually terminated, or lost due to any sort of connection issue.
 //

@@ -7,7 +7,7 @@
 //ExampleGameMode::onMissionReset
 //ExampleGameMode::onMissionEnd
 //Are the primary hooks for the server to start, restart and end any active gamemodes
-//onMissionStart, for example is called from core/clientServer/scripts/server/levelLoad.cs
+//onMissionStart, for example is called from core/clientServer/scripts/server/levelLoad.ts
 //It's called once the server has successfully loaded the level, and has parsed
 //through any active scenes to get GameModeNames defined by them. It then iterates
 //over them and calls these callbacks to envoke gamemode behaviors. This allows multiple
@@ -128,7 +128,7 @@ function ExampleGameMode::onClientConnect(%this, %client)
 
 //This is called when a client enters the game server. It's used to spawn a player object
 //set up any client-specific properties such as saved configs, values, their name, etc
-//These callbacks are activated in core/clientServer/scripts/server/levelDownload.cs
+//These callbacks are activated in core/clientServer/scripts/server/levelDownload.ts
 function ExampleGameMode::onClientEnterGame(%this, %client)
 {
    //Set the player name based on the client's connection data
@@ -139,7 +139,7 @@ function ExampleGameMode::onClientEnterGame(%this, %client)
 
 //This is called when the player leaves the game server. It's used to clean up anything that
 //was spawned or setup for the client when it connected, in onClientEnterGame
-//These callbacks are activated in core/clientServer/scripts/server/levelDownload.cs
+//These callbacks are activated in core/clientServer/scripts/server/levelDownload.ts
 function ExampleGameMode::onClientLeaveGame(%this, %client)
 {
    // Cleanup the camera

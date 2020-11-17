@@ -6,12 +6,12 @@
 function InitializeVPathEditor()
 {
     // Gui.
-    exec( "./GUI/Profiles.cs" );
+    exec( "./GUI/Profiles.ts" );
     exec( "./GUI/VPathEditor.gui" );
     
     // Scripts.
-    exec( "./Scripts/Plugin.cs" );
-    exec( "./Scripts/Editor.cs" );
+    exec( "./Scripts/Plugin.ts" );
+    exec( "./Scripts/Editor.ts" );
 }
 
 function DestroyVPathEditor()

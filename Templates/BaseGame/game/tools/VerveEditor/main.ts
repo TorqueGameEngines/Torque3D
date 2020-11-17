@@ -8,34 +8,34 @@ function InitializeVerveEditor()
    $Verve::UseSeparateWindow = true;
    
     // Preferences.
-    exec( "./DefaultPrefs.cs" );
+    exec( "./DefaultPrefs.ts" );
     
     // GUI.
-    exec( "./GUI/GuiProfiles.cs" );
+    exec( "./GUI/GuiProfiles.ts" );
     exec( "./GUI/VerveEditorGroupBuilder.gui" );
     exec( "./GUI/VerveEditorImportPathNodes.gui" );
     
     // Scripts.
-    exec( "./Scripts/Plugin.cs" );
-    exec( "./Scripts/Utility.cs" );
+    exec( "./Scripts/Plugin.ts" );
+    exec( "./Scripts/Utility.ts" );
     
-    exec( "./Scripts/EditorControls.cs" );
-    exec( "./Scripts/EditorHistory.cs" );
-    exec( "./Scripts/EditorMenu.cs" );
-    exec( "./Scripts/EditorPreferences.cs" );
-    exec( "./Scripts/EditorWindow.cs" );
-    exec( "./Scripts/Persistence.cs" );
-    exec( "./Scripts/ScrollNotify.cs" );
-    exec( "./Scripts/VObject.cs" );
+    exec( "./Scripts/EditorControls.ts" );
+    exec( "./Scripts/EditorHistory.ts" );
+    exec( "./Scripts/EditorMenu.ts" );
+    exec( "./Scripts/EditorPreferences.ts" );
+    exec( "./Scripts/EditorWindow.ts" );
+    exec( "./Scripts/Persistence.ts" );
+    exec( "./Scripts/ScrollNotify.ts" );
+    exec( "./Scripts/VObject.ts" );
     
-    exec( "./Scripts/Inspector/main.cs" );
+    exec( "./Scripts/Inspector/main.ts" );
     
-    exec( "./Scripts/Controller/main.cs" );
-    exec( "./Scripts/Groups/main.cs" );
-    exec( "./Scripts/Tracks/main.cs" );
-    exec( "./Scripts/Events/main.cs" );
+    exec( "./Scripts/Controller/main.ts" );
+    exec( "./Scripts/Groups/main.ts" );
+    exec( "./Scripts/Tracks/main.ts" );
+    exec( "./Scripts/Events/main.ts" );
     
-    exec( "./Torque/main.cs" );
+    exec( "./Torque/main.ts" );
     
     // Register Events.
     VerveEditor::RegisterEvent( "VGroupObjectUpdate" );

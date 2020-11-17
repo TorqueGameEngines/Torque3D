@@ -190,7 +190,7 @@ function ActionDeleteEmitter::redo( %this )
    // Remove from file.
    
    if(    %emitter.getFileName() !$= ""
-       && %emitter.getFilename() !$= "tools/particleEditor/particleEmitterEditor.ed.cs" )
+       && %emitter.getFilename() !$= "tools/particleEditor/particleEmitterEditor.ed.ts" )
       PE_EmitterSaver.removeObjectFromFile( %emitter );
       
    // Select DefaultEmitter or first in list.
@@ -449,7 +449,7 @@ function ActionDeleteParticle::redo( %this )
    // Remove from file.
    
    if(    %particle.getFileName() !$= ""
-       && %particle.getFilename() !$= "tools/particleEditor/particleParticleEditor.ed.cs" )
+       && %particle.getFilename() !$= "tools/particleEditor/particleParticleEditor.ed.ts" )
       PE_ParticleSaver.removeObjectFromFile( %particleId );
       
    // Remove from dropdown.

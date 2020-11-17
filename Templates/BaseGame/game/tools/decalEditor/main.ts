@@ -24,12 +24,12 @@ function initializeDecalEditor()
 {
    echo(" % - Initializing Decal Editor");
    
-   $decalDataFile = "art/decals/managedDecalData.cs";
+   $decalDataFile = "art/decals/managedDecalData.ts";
      
-   exec( "./decalEditor.cs" );
+   exec( "./decalEditor.ts" );
    exec( "./decalEditorGui.gui" );
-   exec( "./decalEditorGui.cs" );
-   exec( "./decalEditorActions.cs" );
+   exec( "./decalEditorGui.ts" );
+   exec( "./decalEditorActions.ts" );
    
    // Add ourselves to EditorGui, where all the other tools reside
    DecalEditorGui.setVisible( false ); 
@@ -66,9 +66,9 @@ function destroyDecalEditor()
 // JCF: helper for during development
 function reinitDecalEditor()
 {
-   exec( "./main.cs" );
-   exec( "./decalEditor.cs" );
-   exec( "./decalEditorGui.cs" );
+   exec( "./main.ts" );
+   exec( "./decalEditor.ts" );
+   exec( "./decalEditorGui.ts" );
 }
 
 function DecalEditorPlugin::onWorldEditorStartup( %this )

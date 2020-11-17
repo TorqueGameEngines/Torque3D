@@ -27,10 +27,10 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_PostFX" );
    ModuleDatabase.LoadExplicit( "Core_GameObjects" );
    
-   exec("data/defaults.cs");
+   exec("data/defaults.ts");
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
-      exec( %prefPath @ "/clientPrefs.cs" );
+   if ( isFile( %prefPath @ "/clientPrefs.ts" ) )
+      exec( %prefPath @ "/clientPrefs.ts" );
       
    // Seed the random number generator.
    setRandomSeed();
@@ -44,7 +44,7 @@ function CoreModule::onCreate(%this)
    createCanvas($appName);
 
    //load canvas
-   //exec("./console/main.cs");
+   //exec("./console/main.ts");
 
    ModuleDatabase.LoadExplicit( "Core_Console" );
    
@@ -62,8 +62,8 @@ function CoreModule::onCreate(%this)
    // If we have editors, initialize them here as well
    if (isToolBuild())
    {
-      if(isFile("tools/main.cs") && !$isDedicated)
-         exec("tools/main.cs");
+      if(isFile("tools/main.ts") && !$isDedicated)
+         exec("tools/main.ts");
    }
    
    //This is used to build the remap keybind sets for the different actionMaps.

@@ -25,8 +25,8 @@ function initializeWorldEditor()
    echo(" % - Initializing World Editor");
    
    // Load GUI
-   exec("./gui/profiles.ed.cs");
-   exec("./scripts/cursors.ed.cs");
+   exec("./gui/profiles.ed.ts");
+   exec("./scripts/cursors.ed.ts");
 
    exec("./gui/guiCreateNewTerrainGui.gui" );
    exec("./gui/GenericPromptDialog.ed.gui" );
@@ -51,32 +51,32 @@ function initializeWorldEditor()
    exec("tools/gui/postFxEditor.gui" );
    
    // Load Scripts.
-   exec("./scripts/menus.ed.cs");
-   exec("./scripts/menuHandlers.ed.cs");
-   exec("./scripts/editor.ed.cs");
-   exec("./scripts/editorInputCommands.cs");
-   exec("./scripts/editor.keybinds.cs");
-   exec("./scripts/undoManager.ed.cs");
-   exec("./scripts/lighting.ed.cs");
-   exec("./scripts/EditorGui.ed.cs");
-   exec("./scripts/editorPrefs.ed.cs");
-   exec("./scripts/editorRender.ed.cs");
-   exec("./scripts/editorPlugin.ed.cs");
-   exec("./scripts/EditorChooseLevelGui.ed.cs");
-   exec("./scripts/cameraBookmarks.ed.cs");
-   exec("./scripts/ManageSFXParametersWindow.ed.cs");
-   exec("./scripts/AddFMODProjectDlg.ed.cs");
-   exec("./scripts/SelectObjectsWindow.ed.cs");
-   exec("./scripts/cameraCommands.ed.cs");
-   exec("./scripts/probeBake.ed.cs");
-   exec("./scripts/visibility/visibilityLayer.ed.cs");
-   exec("./scripts/visibility/lightViz.cs");
-   exec("./scripts/visibility/shadowViz.cs");
-   exec("./scripts/visibility/probeViz.cs");
-   exec("./scripts/visibility/miscViz.cs");
+   exec("./scripts/menus.ed.ts");
+   exec("./scripts/menuHandlers.ed.ts");
+   exec("./scripts/editor.ed.ts");
+   exec("./scripts/editorInputCommands.ts");
+   exec("./scripts/editor.keybinds.ts");
+   exec("./scripts/undoManager.ed.ts");
+   exec("./scripts/lighting.ed.ts");
+   exec("./scripts/EditorGui.ed.ts");
+   exec("./scripts/editorPrefs.ed.ts");
+   exec("./scripts/editorRender.ed.ts");
+   exec("./scripts/editorPlugin.ed.ts");
+   exec("./scripts/EditorChooseLevelGui.ed.ts");
+   exec("./scripts/cameraBookmarks.ed.ts");
+   exec("./scripts/ManageSFXParametersWindow.ed.ts");
+   exec("./scripts/AddFMODProjectDlg.ed.ts");
+   exec("./scripts/SelectObjectsWindow.ed.ts");
+   exec("./scripts/cameraCommands.ed.ts");
+   exec("./scripts/probeBake.ed.ts");
+   exec("./scripts/visibility/visibilityLayer.ed.ts");
+   exec("./scripts/visibility/lightViz.ts");
+   exec("./scripts/visibility/shadowViz.ts");
+   exec("./scripts/visibility/probeViz.ts");
+   exec("./scripts/visibility/miscViz.ts");
    
-   exec("tools/gui/postFxEditor.cs" );
-   exec("tools/gui/renderTargetVisualizer.ed.cs");
+   exec("tools/gui/postFxEditor.ts" );
+   exec("tools/gui/renderTargetVisualizer.ed.ts");
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));

@@ -313,9 +313,9 @@ void TSShapeConstructor::initPersistFields()
       "@see adjustCenter" );
 
    addField( "forceUpdateMaterials", TypeBool, Offset(mOptions.forceUpdateMaterials, TSShapeConstructor),
-      "Forces update of the materials.cs file in the same folder as the COLLADA "
+      "Forces update of the materials.ts file in the same folder as the COLLADA "
       "(.dae) file, even if Materials already exist. No effect for DTS files.\n"
-      "Normally only Materials that are not already defined are written to materials.cs." );
+      "Normally only Materials that are not already defined are written to materials.ts." );
 
    // Fields added for assimp options
    addField( "convertLeftHanded", TypeBool, Offset(mOptions.convertLeftHanded, TSShapeConstructor),
@@ -710,11 +710,11 @@ DefineTSShapeConstructorMethod( saveShape, void, ( const char* filename ),,
 DefineTSShapeConstructorMethod( writeChangeSet, void, (),,
    (),,
    "Write the current change set to a TSShapeConstructor script file. The "
-   "name of the script file is the same as the model, but with .cs extension. "
-   "eg. myShape.cs for myShape.dts or myShape.dae.\n" )
+   "name of the script file is the same as the model, but with .ts extension. "
+   "eg. myShape.ts for myShape.dts or myShape.dae.\n" )
 {
    Torque::Path scriptPath( mShapePath );
-   scriptPath.setExtension( "cs" );
+   scriptPath.setExtension( "ts" );
 
    // Read current file contents
    FileObject f;

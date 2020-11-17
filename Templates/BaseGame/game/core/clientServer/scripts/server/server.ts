@@ -27,21 +27,21 @@ function initServer()
    //load prefs
 
    //Force-load the defaults just so we don't have any mistakes
-   exec( "./defaults.cs" );   
+   exec( "./defaults.ts" );   
    
    //Then, if the user has saved preferences, we load those over-top the defaults
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/serverPrefs.cs" ) )
-      exec( %prefPath @ "/serverPrefs.cs" );
+   if ( isFile( %prefPath @ "/serverPrefs.ts" ) )
+      exec( %prefPath @ "/serverPrefs.ts" );
    
-   exec( "./audio.cs" );
-   exec( "./commands.cs" );
-   exec( "./kickban.cs" );
-   exec( "./message.cs" );
-   exec( "./levelDownload.cs" );
-   exec( "./levelLoad.cs" );
-   exec( "./levelInfo.cs" );
-   exec( "./connectionToClient.cs" );
+   exec( "./audio.ts" );
+   exec( "./commands.ts" );
+   exec( "./kickban.ts" );
+   exec( "./message.ts" );
+   exec( "./levelDownload.ts" );
+   exec( "./levelLoad.ts" );
+   exec( "./levelInfo.ts" );
+   exec( "./connectionToClient.ts" );
 
    // Server::Status is returned in the Game Info Query and represents the
    // current status of the server. This string sould be very short.
@@ -248,9 +248,9 @@ function destroyServer()
    // Save any server settings
    %prefPath = getPrefpath();
    echo( "Exporting server prefs..." );
-   export( "$Pref::Server::*", %prefPath@"/serverPrefs.cs", false );
+   export( "$Pref::Server::*", %prefPath@"/serverPrefs.ts", false );
    
-   BanList::Export(%prefPath@"/banlist.cs");
+   BanList::Export(%prefPath@"/banlist.ts");
 
    // Increase the server session number.  This is used to make sure we're
    // working with the server session we think we are.

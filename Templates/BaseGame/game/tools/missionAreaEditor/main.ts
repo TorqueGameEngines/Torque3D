@@ -24,9 +24,9 @@ function initializeMissionAreaEditor()
 {
    echo(" % - Initializing Mission Area Editor");
      
-   exec( "./missionAreaEditor.ed.cs" );
+   exec( "./missionAreaEditor.ed.ts" );
    exec( "./missionAreaEditorGui.ed.gui" );
-   exec( "./missionAreaEditorGui.ed.cs" );
+   exec( "./missionAreaEditorGui.ed.ts" );
    
    // Add ourselves to EditorGui, where all the other tools reside
    MissionAreaEditorGui.setVisible( false );  

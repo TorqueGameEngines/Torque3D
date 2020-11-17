@@ -36,10 +36,10 @@ function initializeMaterialEditor()
    exec("~/materialEditor/gui/materialInstancesView.ed.gui");
    
    // Load Client Scripts.
-   exec("./scripts/materialEditor.ed.cs");
-   exec("./scripts/materialEditorUndo.ed.cs");
-   exec("./scripts/materialInstanceView.ed.cs");
-   //exec("./gui/profiles.ed.cs");
+   exec("./scripts/materialEditor.ed.ts");
+   exec("./scripts/materialEditorUndo.ed.ts");
+   exec("./scripts/materialInstanceView.ed.ts");
+   //exec("./gui/profiles.ed.ts");
    
    MaterialEditorPreviewWindow.setVisible( false );
    //matEd_cubemapEditor.setVisible( false );
@@ -91,7 +91,7 @@ function MaterialEditorPlugin::onWorldEditorStartup( %this )
    
    MaterialEditorPlugin.map = %map; 
    
-   MaterialEditorGui.fileSpec = "Torque Material Files (materials.cs)|materials.cs|All Files (*.*)|*.*|";
+   MaterialEditorGui.fileSpec = "Torque Material Files (materials.ts)|materials.ts|All Files (*.*)|*.*|";
    MaterialEditorGui.textureFormats = "Image Files (*.png, *.jpg, *.dds, *.bmp, *.gif, *.jng. *.tga)|*.png;*.jpg;*.dds;*.bmp;*.gif;*.jng;*.tga|All Files (*.*)|*.*|";
    MaterialEditorGui.modelFormats = "DTS Files (*.dts)|*.dts";
    MaterialEditorGui.lastTexturePath = "";   

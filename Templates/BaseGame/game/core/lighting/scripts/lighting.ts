@@ -26,12 +26,12 @@ function initLightingSystems(%manager)
 
    // First exec the scripts for the different light managers
    // in the lighting folder.
-   /*%pattern = "./lighting/*//*init.cs";   
+   /*%pattern = "./lighting/*//*init.ts";   
    %file = findFirstFile( %pattern );
    if ( %file $= "" )
    {
       // Try for DSOs next.
-      %pattern = "./lighting/*//*init.cs.dso";
+      %pattern = "./lighting/*//*init.ts.dso";
       %file = findFirstFile( %pattern );
    }
 

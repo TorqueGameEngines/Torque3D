@@ -1,9 +1,9 @@
 
 function Core_GUI::onCreate(%this)
 {
-   exec("./scripts/profiles.cs");
-   exec("./scripts/canvas.cs");
-   exec("./scripts/cursor.cs");
+   exec("./scripts/profiles.ts");
+   exec("./scripts/canvas.ts");
+   exec("./scripts/cursor.ts");
 }
 
 function Core_GUI::onDestroy(%this)

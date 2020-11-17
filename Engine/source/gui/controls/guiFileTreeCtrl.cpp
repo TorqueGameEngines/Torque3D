@@ -67,7 +67,7 @@ GuiFileTreeCtrl::GuiFileTreeCtrl()
    mSupportMouseDragging = false;
    mMultipleSelections = false;
 
-   mFileFilter = "*.cs *.gui *.ed.cs";
+   mFileFilter = "*.ts *.gui *.ed.ts";
    _initFilters();
 }
 
@@ -111,7 +111,7 @@ void GuiFileTreeCtrl::updateTree()
    if( !mRootPath.isEmpty() )
       rootPath = String::ToString( "%s/%s", rootPath.c_str(), mRootPath.c_str() );
 
-   // get the files in the main.cs dir
+   // get the files in the main.ts dir
    Vector<StringTableEntry> pathVec;
    Platform::dumpDirectories( rootPath, pathVec, 0, true);
    _dumpFiles( rootPath, pathVec, 0);

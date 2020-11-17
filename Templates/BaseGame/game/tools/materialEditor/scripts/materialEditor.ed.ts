@@ -475,7 +475,7 @@ function MaterialEditorGui::isMatEditorMaterial(%this, %material)
 {
    return ( %material.getFilename() $= "" ||
             %material.getFilename() $= "tools/gui/materialSelector.ed.gui" ||
-            %material.getFilename() $= "tools/materialEditor/scripts/materialEditor.ed.cs" );
+            %material.getFilename() $= "tools/materialEditor/scripts/materialEditor.ed.ts" );
 }
 
 function MaterialEditorGui::setMaterialNotDirty(%this)
@@ -521,13 +521,13 @@ function MaterialEditorGui::setMaterialDirty(%this)
             %k = %pos + 1;
          }
          %savePath = getSubStr( %shapePath , 0 , %k );
-         %savePath = %savePath @ "materials.cs";
+         %savePath = %savePath @ "materials.ts";
          
          matEd_PersistMan.setDirty(MaterialEditorGui.currentMaterial, %savePath);
       }
       else
       {
-         matEd_PersistMan.setDirty(MaterialEditorGui.currentMaterial, "art/materials.cs");
+         matEd_PersistMan.setDirty(MaterialEditorGui.currentMaterial, "art/materials.ts");
       }
    }
    else
@@ -1840,7 +1840,7 @@ function MaterialEditorGui::createNewCubemap( %this, %cubemap )
       parentGroup = RootGroup;
    };
 
-   matEd_cubemapEdPerMan.setDirty( %cubemap, "art/materials.cs" );
+   matEd_cubemapEdPerMan.setDirty( %cubemap, "art/materials.ts" );
    matEd_cubemapEdPerMan.saveDirty();
 
    return %cubemap;
@@ -1857,7 +1857,7 @@ function MaterialEditorGui::setCubemapDirty(%this)
 
    // materials created in the materail selector are given that as its filename, so we run another check
    if( MaterialEditorGui.isMatEditorMaterial( %cubemap ) )
-      matEd_cubemapEdPerMan.setDirty(%cubemap, "art/materials.cs");
+      matEd_cubemapEdPerMan.setDirty(%cubemap, "art/materials.ts");
    else
       matEd_cubemapEdPerMan.setDirty(%cubemap);
 }
@@ -2384,7 +2384,7 @@ function MaterialEditorGui::switchMaterial( %this, %material )
  and updates the engines libraries accordingly in order to make this change per 
  object/per objects instances/per target. Before this functionality is enacted, 
  there is a popup beforehand that will ask if you are sure if you want to make
- this change. Making this change will physically alter possibly two materials.cs 
+ this change. Making this change will physically alter possibly two materials.ts 
  files in order to move the (%fromMaterial, %toMaterial), replacing the 
  (%fromMaterials)'s mapTo to "unmapped_mat".
 -------------------------------------------------------------------------------*/
@@ -2424,7 +2424,7 @@ function MaterialEditorGui::changeMaterial(%this, %fromMaterial, %toMaterial)
          %k = %count + 1;
       }
       %fileName = getSubStr( %sourcePath , 0 , %k );
-      %fileName = %fileName @ "materials.cs";
+      %fileName = %fileName @ "materials.ts";
       
       %action.toMaterialNewFname = %fileName;
       

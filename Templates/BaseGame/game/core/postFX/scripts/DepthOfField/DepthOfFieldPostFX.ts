@@ -581,7 +581,7 @@ function DepthOfFieldPostFX::autoFocus( %this )
 /*
 function reloadDOF()
 {
-   exec( "./dof.cs" );
+   exec( "./dof.ts" );
    DepthOfFieldPostFX.reload();  
    DepthOfFieldPostFX.disable();
    DepthOfFieldPostFX.enable();

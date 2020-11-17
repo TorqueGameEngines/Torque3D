@@ -30,10 +30,10 @@ function initializeParticleEditor()
    echo( " % - Initializing Particle Editor" );
      
    exec( "./ParticleEditor.ed.gui" );
-   exec( "./particleEditor.ed.cs" );
-   exec( "./particleEditorUndo.ed.cs" );   
-   exec( "./particleEmitterEditor.ed.cs" );
-   exec( "./particleParticleEditor.ed.cs" );
+   exec( "./particleEditor.ed.ts" );
+   exec( "./particleEditorUndo.ed.ts" );   
+   exec( "./particleEmitterEditor.ed.ts" );
+   exec( "./particleParticleEditor.ed.ts" );
    
    PE_Window.setVisible( false );
    EditorGui.add( PE_Window );

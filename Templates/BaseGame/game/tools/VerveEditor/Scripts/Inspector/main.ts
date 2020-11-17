@@ -5,16 +5,16 @@
 
 function VerveEditor::InitInspectorScripts()
 {
-    exec( "./Controls.cs" );
-    exec( "./CutCopyPaste.cs" );
-    exec( "./EventNotify.cs" );
-    exec( "./Factory.cs" );
-    exec( "./FactoryControls.cs" );
-    exec( "./FieldNotify.cs" );
-    exec( "./Lists.cs" );
-    exec( "./Properties.cs" );
-    exec( "./Selection.cs" );
+    exec( "./Controls.ts" );
+    exec( "./CutCopyPaste.ts" );
+    exec( "./EventNotify.ts" );
+    exec( "./Factory.ts" );
+    exec( "./FactoryControls.ts" );
+    exec( "./FieldNotify.ts" );
+    exec( "./Lists.ts" );
+    exec( "./Properties.ts" );
+    exec( "./Selection.ts" );
     
-    exec( "./Fields/main.cs" );
+    exec( "./Fields/main.ts" );
 }
 VerveEditor::InitInspectorScripts();

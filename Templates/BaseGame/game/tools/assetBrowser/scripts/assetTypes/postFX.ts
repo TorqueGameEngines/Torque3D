@@ -6,7 +6,7 @@ function AssetBrowser::createPostEffectAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ ".cs";
+   %scriptPath = %assetPath @ %assetName @ ".ts";
    %hlslPath = %assetPath @ %assetName @ "P.hlsl";
    %glslPath = %assetPath @ %assetName @ "P.glsl";
    
@@ -14,7 +14,7 @@ function AssetBrowser::createPostEffectAsset(%this)
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ ".cs";
+      scriptFile = %assetName @ ".ts";
       hlslShader = %assetName @ "P.hlsl";
       glslShader = %assetName @ "P.glsl";
    };
@@ -27,7 +27,7 @@ function AssetBrowser::createPostEffectAsset(%this)
    %file = new FileObject();
 	%templateFile = new FileObject();
 	
-   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFile.cs.template";
+   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFile.ts.template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
    {

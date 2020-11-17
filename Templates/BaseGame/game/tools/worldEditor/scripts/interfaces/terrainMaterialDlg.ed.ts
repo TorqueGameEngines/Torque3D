@@ -340,10 +340,10 @@ function TerrainMaterialDlg::newMat( %this )
       internalName = %matName;
       parentGroup = TerrainMaterialDlgNewGroup;
    };
-   %newMat.setFileName( "art/terrains/materials.cs" );
+   %newMat.setFileName( "art/terrains/materials.ts" );
    
    // Mark it as dirty and to be saved in the default location.
-   ETerrainMaterialPersistMan.setDirty( %newMat, "art/terrains/materials.cs" );*/
+   ETerrainMaterialPersistMan.setDirty( %newMat, "art/terrains/materials.ts" );*/
 
    %scene = getRootScene();
    %path = filePath(%scene.getFilename());
@@ -577,7 +577,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    {
       error("TerrainMaterialDlg::saveDirtyMaterial() - terrain material doesn't have a fileName set to save to.");
       return;
-      //%fileName = "data/terrains/materials.cs";
+      //%fileName = "data/terrains/materials.ts";
    }
       
    ETerrainMaterialPersistMan.setDirty( %mat, %fileName ); 

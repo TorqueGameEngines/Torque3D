@@ -962,7 +962,7 @@ function AssetBrowser::deleteMaterial( %this, %materialName, %secondFilter, %sec
    
    if( %materialName.getFilename() !$= "" && 
          %materialName.getFilename() !$= "tools/gui/AssetBrowser.ed.gui" &&
-         %materialName.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.cs" )
+         %materialName.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.ts" )
    {
       AssetBrowserPerMan.removeObjectFromFile(%materialName);
       AssetBrowserPerMan.saveDirty();

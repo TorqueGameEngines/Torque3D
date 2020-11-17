@@ -99,7 +99,7 @@ function OptionsMenu::apply(%this)
          if(%actionMap == GlobalActionMap.getId())
             continue;
          
-         %actionMap.save( %prefPath @ "/keybinds.cs", %append );
+         %actionMap.save( %prefPath @ "/keybinds.ts", %append );
          
          if(%append != true)
             %append = true; 
@@ -107,7 +107,7 @@ function OptionsMenu::apply(%this)
    }
    
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+   export("$pref::*", %prefPath @ "/clientPrefs.ts", false);
 }
 
 function OptionsMenu::resetToDefaults(%this)
@@ -263,7 +263,7 @@ function OptionsMenu::applyDisplaySettings(%this)
    
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+   export("$pref::*", %prefPath @ "/clientPrefs.ts", false);
 }
 
 function OptionsMenu::populateGraphicsSettingsList(%this)
@@ -359,7 +359,7 @@ function OptionsMenu::applyGraphicsSettings(%this)
 
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+   export("$pref::*", %prefPath @ "/clientPrefs.ts", false);
 }   
 
 function updateDisplaySettings()

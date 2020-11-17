@@ -140,7 +140,7 @@ function AddFMODProjectDlg::onOK( %this )
    // If an event script exists from a previous instantiation,
    // delete it first.
    
-   %eventFileName = %fileName @ ".cs";
+   %eventFileName = %fileName @ ".ts";
    if( isFile( %eventFileName ) )
       fileDelete( %eventFileName );
    
@@ -164,7 +164,7 @@ function AddFMODProjectDlg::onOK( %this )
    {
       // Save the object.
 
-      %objName.setFileName( "scripts/client/audioData.cs" );
+      %objName.setFileName( "scripts/client/audioData.ts" );
       %this.persistenceMgr.setDirty( %objName );
       %this.persistenceMgr.saveDirty();
    }

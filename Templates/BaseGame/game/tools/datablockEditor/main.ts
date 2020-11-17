@@ -27,8 +27,8 @@ function initializeDatablockEditor()
 {
    echo( " - Initializing Datablock Editor" );
    
-   exec("./datablockEditor.cs");
-   exec("./datablockEditorUndo.cs");
+   exec("./datablockEditor.ts");
+   exec("./datablockEditorUndo.ts");
    exec("./DatablockEditorTreeWindow.ed.gui");
    exec("./DatablockEditorInspectorWindow.ed.gui");
    exec("./DatablockEditorCreatePrompt.ed.gui");

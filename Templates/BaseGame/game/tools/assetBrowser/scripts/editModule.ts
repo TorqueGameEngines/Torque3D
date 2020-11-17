@@ -232,7 +232,7 @@ function AssetBrowser::RefreshModuleDependencies(%this, %moduleDef)
    //AssetBrowser.RefreshModuleDependencies(16823);
    %modulePath = filePath(%moduleDef.ModuleFilePath);
    
-   %filePattern = "*.cs" TAB "*.taml" TAB "*.mis";
+   %filePattern = "*.ts" TAB "*.taml" TAB "*.mis";
    
    //First, wipe out any files inside the folder first
    %file = makeFullPath(findFirstFileMultiExpr( %filePattern, true));

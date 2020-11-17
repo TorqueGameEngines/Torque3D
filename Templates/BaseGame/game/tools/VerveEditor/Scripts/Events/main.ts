@@ -6,23 +6,23 @@
 function VerveEditor::InitEventScripts()
 {
     // Core.
-    exec( "./VEvent.cs" );
+    exec( "./VEvent.ts" );
     
     // Built-In.
-    exec( "./VCameraShakeEvent.cs" );
-    exec( "./VDirectorEvent.cs" );
-    exec( "./VFadeEvent.cs" );
-    exec( "./VLightObjectAnimationEvent.cs" );
-    exec( "./VLightObjectToggleEvent.cs" );
-    exec( "./VMotionEvent.cs" );
-    exec( "./VParticleEffectToggleEvent.cs" );
-    exec( "./VPostEffectToggleEvent.cs" );
-    exec( "./VSceneJumpEvent.cs" );
-    exec( "./VScriptEvent.cs" );
-    exec( "./VShapeAnimationEvent.cs" );
-    exec( "./VSlowMoEvent.cs" );
-    exec( "./VSoundEffectEvent.cs" );
-    exec( "./VSpawnSphereSpawnTargetEvent.cs" );
+    exec( "./VCameraShakeEvent.ts" );
+    exec( "./VDirectorEvent.ts" );
+    exec( "./VFadeEvent.ts" );
+    exec( "./VLightObjectAnimationEvent.ts" );
+    exec( "./VLightObjectToggleEvent.ts" );
+    exec( "./VMotionEvent.ts" );
+    exec( "./VParticleEffectToggleEvent.ts" );
+    exec( "./VPostEffectToggleEvent.ts" );
+    exec( "./VSceneJumpEvent.ts" );
+    exec( "./VScriptEvent.ts" );
+    exec( "./VShapeAnimationEvent.ts" );
+    exec( "./VSlowMoEvent.ts" );
+    exec( "./VSoundEffectEvent.ts" );
+    exec( "./VSpawnSphereSpawnTargetEvent.ts" );
     
     // Custom.
     // Exec Custom Event Scripts.

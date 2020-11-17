@@ -23,13 +23,13 @@
 function loadDirectory(%path, %type, %dsoType)
 {
    if( %type $= "" )
-      %type = "ed.cs";
+      %type = "ed.ts";
    if( %dsoType $= "" )
       %dsoType = "edso"; 
 
    %cspath = %path @ "/*." @ %type;
 
-   // Because in a shipping version there will be no .cs files, we can't just
+   // Because in a shipping version there will be no .ts files, we can't just
    // find all the cs files and exec them.
 
    // First we find all the scripts and compile them if there are any

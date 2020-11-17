@@ -9,13 +9,13 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ ".cs";
+   %scriptPath = %assetPath @ %assetName @ ".ts";
    
    %asset = new TerrainMaterialAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ ".cs";
+      scriptFile = %assetName @ ".ts";
       materialDefinitionName = %assetName;
    };
    
@@ -33,7 +33,7 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
 	%file = new FileObject();
 	%templateFile = new FileObject();
 	
-	%templateFilePath = %this.templateFilesPath @ "terrainMaterial.cs.template";
+	%templateFilePath = %this.templateFilesPath @ "terrainMaterial.ts.template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateFilePath))
    {

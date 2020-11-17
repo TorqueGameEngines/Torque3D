@@ -41,13 +41,13 @@ function AssetBrowser_addPackageWindow::CreateNewPackage(%this)
    
    %moduleFilePath = "data/" @ %newPackageName;
    %moduleDefinitionFilePath = %moduleFilePath @ "/" @ %newPackageName @ ".module";
-   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newPackageName @ ".cs";
+   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newPackageName @ ".ts";
    
    %newPackage = new ModuleDefinition()
    {
       ModuleId = %newPackageName;
       versionId = 1;
-      ScriptFile = %newPackageName @ ".cs";
+      ScriptFile = %newPackageName @ ".ts";
       CreateFunction="onCreate";
 	   DestroyFunction="onDestroy";
 	   Group = "Game";

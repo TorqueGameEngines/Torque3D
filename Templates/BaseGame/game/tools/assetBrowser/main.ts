@@ -51,7 +51,7 @@ function initializeAssetBrowser()
       AssetFilterTypeList.add("TerrainMaterialAsset");
    }
    
-   exec("./scripts/profiles.cs");
+   exec("./scripts/profiles.ts");
    
    exec("./guis/assetBrowser.gui");
    exec("./guis/addModuleWindow.gui");
@@ -72,42 +72,42 @@ function initializeAssetBrowser()
    exec("./guis/assetNameEdit.gui");
    exec("./guis/createNewCollectionSet.gui");
 
-   exec("./scripts/assetBrowser.cs");
-   exec("./scripts/popupMenus.cs");
-   exec("./scripts/addModuleWindow.cs");
-   exec("./scripts/assetImport.cs");
-   exec("./scripts/assetImportConfig.cs");
-   exec("./scripts/gameObjectCreator.cs");
-   exec("./scripts/newAsset.cs");
-   exec("./scripts/editAsset.cs");
-   exec("./scripts/editModule.cs");   
-   exec("./scripts/selectModule.cs");   
-   exec("./scripts/assetImportConfigEditor.cs");  
-   exec("./scripts/directoryHandling.cs");
-   exec("./scripts/selectPath.cs");
-   exec("./scripts/looseFileAudit.cs");
+   exec("./scripts/assetBrowser.ts");
+   exec("./scripts/popupMenus.ts");
+   exec("./scripts/addModuleWindow.ts");
+   exec("./scripts/assetImport.ts");
+   exec("./scripts/assetImportConfig.ts");
+   exec("./scripts/gameObjectCreator.ts");
+   exec("./scripts/newAsset.ts");
+   exec("./scripts/editAsset.ts");
+   exec("./scripts/editModule.ts");   
+   exec("./scripts/selectModule.ts");   
+   exec("./scripts/assetImportConfigEditor.ts");  
+   exec("./scripts/directoryHandling.ts");
+   exec("./scripts/selectPath.ts");
+   exec("./scripts/looseFileAudit.ts");
    
    //Processing for the different asset types
-   exec("./scripts/assetTypes/component.cs"); 
-   exec("./scripts/assetTypes/cpp.cs");
-   exec("./scripts/assetTypes/gameObject.cs");   
-   exec("./scripts/assetTypes/gui.cs");
-   exec("./scripts/assetTypes/image.cs");  
-   exec("./scripts/assetTypes/level.cs"); 
-   exec("./scripts/assetTypes/material.cs");   
-   exec("./scripts/assetTypes/postFX.cs");
-   exec("./scripts/assetTypes/script.cs");
-   exec("./scripts/assetTypes/shape.cs");
-   exec("./scripts/assetTypes/shapeAnimation.cs"); 
-   exec("./scripts/assetTypes/sound.cs"); 
-   exec("./scripts/assetTypes/stateMachine.cs");   
-   exec("./scripts/assetTypes/cubemap.cs");  
-   exec("./scripts/assetTypes/folder.cs");  
-   exec("./scripts/assetTypes/terrain.cs");
-   exec("./scripts/assetTypes/terrainMaterial.cs");  
-   exec("./scripts/assetTypes/datablockObjects.cs");  
-   exec("./scripts/assetTypes/looseFiles.cs"); 
-   exec("./scripts/assetTypes/prefab.cs"); 
+   exec("./scripts/assetTypes/component.ts"); 
+   exec("./scripts/assetTypes/cpp.ts");
+   exec("./scripts/assetTypes/gameObject.ts");   
+   exec("./scripts/assetTypes/gui.ts");
+   exec("./scripts/assetTypes/image.ts");  
+   exec("./scripts/assetTypes/level.ts"); 
+   exec("./scripts/assetTypes/material.ts");   
+   exec("./scripts/assetTypes/postFX.ts");
+   exec("./scripts/assetTypes/script.ts");
+   exec("./scripts/assetTypes/shape.ts");
+   exec("./scripts/assetTypes/shapeAnimation.ts"); 
+   exec("./scripts/assetTypes/sound.ts"); 
+   exec("./scripts/assetTypes/stateMachine.ts");   
+   exec("./scripts/assetTypes/cubemap.ts");  
+   exec("./scripts/assetTypes/folder.ts");  
+   exec("./scripts/assetTypes/terrain.ts");
+   exec("./scripts/assetTypes/terrainMaterial.ts");  
+   exec("./scripts/assetTypes/datablockObjects.ts");  
+   exec("./scripts/assetTypes/looseFiles.ts"); 
+   exec("./scripts/assetTypes/prefab.ts"); 
    
    new ScriptObject( AssetBrowserPlugin )
    {

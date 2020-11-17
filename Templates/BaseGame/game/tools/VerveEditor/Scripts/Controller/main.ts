@@ -6,8 +6,8 @@
 function VerveEditor::InitControllerScripts()
 {
     // Core.
-    exec( "./VController.cs" );
-    exec( "./VControllerProperties.cs" );
+    exec( "./VController.ts" );
+    exec( "./VControllerProperties.ts" );
     
     // Custom.
     // Exec Custom Controller Scripts.

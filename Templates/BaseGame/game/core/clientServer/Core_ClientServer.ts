@@ -15,8 +15,8 @@
 function Core_ClientServer::onCreate( %this )
 {
    echo("\n--------- Initializing Directory: scripts ---------");
-   exec( "./scripts/client/client.cs" );
-   exec( "./scripts/server/server.cs" );
+   exec( "./scripts/client/client.ts" );
+   exec( "./scripts/server/server.ts" );
 
    $Game::MainScene = getScene(0);
    
@@ -52,11 +52,11 @@ function Core_ClientServer::onDestroy( %this )
       
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+   export("$pref::*", %prefPath @ "/clientPrefs.ts", false);
 
    echo("Exporting server prefs");
-   export("$Pref::Server::*", %prefPath @ "/serverPrefs.cs", false);
-   BanList::Export(%prefPath @ "/banlist.cs");
+   export("$Pref::Server::*", %prefPath @ "/serverPrefs.ts", false);
+   BanList::Export(%prefPath @ "/banlist.ts");
 }
 
 //-----------------------------------------------------------------------------

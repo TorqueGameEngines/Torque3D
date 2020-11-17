@@ -21,15 +21,15 @@
 //-----------------------------------------------------------------------------
 
 //Scripts
-exec("./scripts/componentEditor.ed.cs");
-exec("./scripts/stateMachineEditor.ed.cs");
-exec("./scripts/superToolTipDlg.ed.cs");
+exec("./scripts/componentEditor.ed.ts");
+exec("./scripts/stateMachineEditor.ed.ts");
+exec("./scripts/superToolTipDlg.ed.ts");
 
 //gui
 exec("./gui/superToolTipDlg.ed.gui");
 exec("./gui/stateMachineDlg.ed.gui");
 
 //field types
-exec("./interface/materialFieldType.cs");
-exec("./interface/typeMaskFieldType.cs");
-exec("./interface/stateMachineField.cs");
+exec("./interface/materialFieldType.ts");
+exec("./interface/typeMaskFieldType.ts");
+exec("./interface/stateMachineField.ts");

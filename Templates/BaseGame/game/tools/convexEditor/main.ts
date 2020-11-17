@@ -24,12 +24,12 @@ function initializeConvexEditor()
 {
    echo(" % - Initializing Sketch Tool");
      
-   exec( "./convexEditor.cs" );
+   exec( "./convexEditor.ts" );
    exec( "./convexEditorGui.gui" );
    exec( "./convexEditorToolbar.ed.gui" );
-   exec( "./convexEditorGui.cs" );
+   exec( "./convexEditorGui.ts" );
    exec( "./convexEditorSidebarGui.gui" );
-   exec( "./materials.cs" );
+   exec( "./materials.ts" );
 
    ConvexEditorGui.setVisible( false );  
    ConvexEditorOptionsWindow.setVisible( false );  

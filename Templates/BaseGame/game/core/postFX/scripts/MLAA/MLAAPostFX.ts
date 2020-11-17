@@ -27,7 +27,7 @@
 // http://www.iryoku.com/mlaa/
 
 // NOTE: This is currently disabled in favor of FXAA.  See 
-// core\scripts\client\canvas.cs if you want to re-enable it.
+// core\scripts\client\canvas.ts if you want to re-enable it.
 
 singleton GFXStateBlockData( MLAA_EdgeDetectStateBlock : PFX_DefaultStateBlock )
 {   

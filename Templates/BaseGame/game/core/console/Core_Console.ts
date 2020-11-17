@@ -1,8 +1,8 @@
 
 function Core_Console::onCreate(%this)
 {
-    exec("./scripts/profiles.cs");
-    exec("./scripts/console.cs");
+    exec("./scripts/profiles.ts");
+    exec("./scripts/console.ts");
 
     exec("./guis/console.gui");
 }

@@ -20,9 +20,9 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-exec("./fileDialogBase.ed.cs");
-exec("./openFileDialog.ed.cs");
-exec("./saveFileDialog.ed.cs");
+exec("./fileDialogBase.ed.ts");
+exec("./openFileDialog.ed.ts");
+exec("./saveFileDialog.ed.ts");
 exec("./saveChangesMBDlg.ed.gui");
 exec("./simViewDlg.ed.gui");
 exec("./colorPicker.ed.gui");
@@ -30,16 +30,16 @@ exec("./materialSelector.ed.gui");
 exec("./scriptEditorDlg.ed.gui");
 exec("./colladaImport.ed.gui");
 exec("./GuiEaseEditDlg.ed.gui");
-exec("./GuiEaseEditDlg.ed.cs");
-exec("./guiObjectInspector.ed.cs");
+exec("./GuiEaseEditDlg.ed.ts");
+exec("./guiObjectInspector.ed.ts");
 exec("./uvEditor.ed.gui");
-exec("./objectSelection.ed.cs");
+exec("./objectSelection.ed.ts");
 exec("./postFxManager.gui");
 exec("./assimpImport.ed.gui");
 
-exec("./fieldTypes/assetDependencies.cs");
-exec("./fieldTypes/fieldTypes.cs");
-exec("./fieldTypes/listField.cs");
-exec("./fieldTypes/range.cs");
-exec("./fieldTypes/moduleDependencies.cs");
-exec("./fieldTypes/buttonField.cs");
+exec("./fieldTypes/assetDependencies.ts");
+exec("./fieldTypes/fieldTypes.ts");
+exec("./fieldTypes/listField.ts");
+exec("./fieldTypes/range.ts");
+exec("./fieldTypes/moduleDependencies.ts");
+exec("./fieldTypes/buttonField.ts");

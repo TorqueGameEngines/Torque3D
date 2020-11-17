@@ -2617,7 +2617,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
-   String scriptName = assetItem->assetName + ".cs";
+   String scriptName = assetItem->assetName + ".ts";
    String scriptPath = targetPath + "/" + scriptName;
    String originalPath = assetItem->filePath.getFullPath().c_str();
 
@@ -2861,10 +2861,10 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    String shapeFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
    String assetPath = targetPath + "/" + shapeFileName;
-   String constructorPath = targetPath + "/" + assetItem->filePath.getFileName() + ".cs";
+   String constructorPath = targetPath + "/" + assetItem->filePath.getFileName() + ".ts";
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
-   String originalConstructorPath = assetItem->filePath.getPath() + "/" + assetItem->filePath.getFileName() + ".cs";
+   String originalConstructorPath = assetItem->filePath.getPath() + "/" + assetItem->filePath.getFileName() + ".ts";
 
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];

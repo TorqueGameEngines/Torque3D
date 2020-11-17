@@ -15,7 +15,7 @@ function LooseFileAuditWindow::buildPopupMenus(%this)
       };
    }
    
-   //Done with .cs files
+   //Done with .ts files
    if( !isObject( ScriptLooseFilePopup ) )
    {
       %this.ImportAssetActions = new PopupMenu( ScriptLooseFilePopup )
@@ -159,7 +159,7 @@ function LooseFileList::onRightMouseDown(%this, %itemId)
    {
         ImageLooseFilePopup.showPopup(Canvas);
    }
-   else if(%ext $= ".cs")
+   else if(%ext $= ".ts")
    {
         ScriptLooseFilePopup.showPopup(Canvas);
    }

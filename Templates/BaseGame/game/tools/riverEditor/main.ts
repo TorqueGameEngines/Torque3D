@@ -24,10 +24,10 @@ function initializeRiverEditor()
 {
    echo(" % - Initializing River Editor");
      
-   exec( "./riverEditor.cs" );
+   exec( "./riverEditor.ts" );
    exec( "./RiverEditorGui.gui" );
    exec( "./RiverEditorToolbar.gui" );
-   exec( "./riverEditorGui.cs" );
+   exec( "./riverEditorGui.ts" );
    
    // Add ourselves to EditorGui, where all the other tools reside
    RiverEditorGui.setVisible( false );  

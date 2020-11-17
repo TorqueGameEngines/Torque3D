@@ -1,17 +1,17 @@
 
 function Core_Lighting::onCreate(%this)
 {
-   exec("./scripts/lighting.cs");
+   exec("./scripts/lighting.ts");
    
    //Advanced/Deferred
-   exec("./scripts/advancedLighting_Shaders.cs");
-   exec("./scripts/deferredShading.cs");
-   exec("./scripts/advancedLighting_Init.cs");
+   exec("./scripts/advancedLighting_Shaders.ts");
+   exec("./scripts/deferredShading.ts");
+   exec("./scripts/advancedLighting_Init.ts");
    
    //Basic/Forward
-   exec("./scripts/basicLighting_shadowFilter.cs");
-   exec("./scripts/shadowMaps_Init.cs");
-   exec("./scripts/basicLighting_Init.cs");
+   exec("./scripts/basicLighting_shadowFilter.ts");
+   exec("./scripts/shadowMaps_Init.ts");
+   exec("./scripts/basicLighting_Init.ts");
    
 }
 

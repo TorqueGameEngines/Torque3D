@@ -39,8 +39,8 @@ $pref::LightManager::sgUseDynamicShadows = "1";
 $pref::LightManager::sgUseToneMapping = "";
 */
 
-//exec( "./shaders.cs" );
-//exec( "./deferredShading.cs" );
+//exec( "./shaders.ts" );
+//exec( "./deferredShading.ts" );
 
 function onActivateAdvancedLM()
 {

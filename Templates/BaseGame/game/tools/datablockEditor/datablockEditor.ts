@@ -23,7 +23,7 @@
 // Main code for the Datablock Editor plugin.
 
 
-$DATABLOCK_EDITOR_DEFAULT_FILENAME = "art/datablocks/managedDatablocks.cs";
+$DATABLOCK_EDITOR_DEFAULT_FILENAME = "art/datablocks/managedDatablocks.ts";
 
 //=============================================================================================
 //    Initialization.
@@ -375,7 +375,7 @@ function DatablockEditorPlugin::flagDatablockAsDirty(%this, %datablock, %dirty )
 function DatablockEditorPlugin::showSaveNewFileDialog(%this)
 {
    %currentFile = %this.getSelectedDatablock().getFilename();
-   getSaveFilename( "TorqueScript Files|*.cs|All Files|*.*", %this @ ".saveNewFileFinish", %currentFile, false );
+   getSaveFilename( "TorqueScript Files|*.ts|All Files|*.*", %this @ ".saveNewFileFinish", %currentFile, false );
 }
 
 //---------------------------------------------------------------------------------------------

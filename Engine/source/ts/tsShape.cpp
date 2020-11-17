@@ -2112,7 +2112,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
 {
    // Execute the shape script if it exists
    Torque::Path scriptPath(path);
-   scriptPath.setExtension("cs");
+   scriptPath.setExtension("ts");
 
    // Don't execute the script if we're already doing so!
    StringTableEntry currentScript = Platform::stripBasePath(CodeBlock::getCurrentCodeBlockFullPath());

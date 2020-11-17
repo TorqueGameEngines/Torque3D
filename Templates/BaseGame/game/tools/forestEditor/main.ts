@@ -24,12 +24,12 @@ function initializeForestEditor()
 {
    echo(" % - Initializing Forest Editor");   
   
-   exec( "./forestEditor.cs" );
+   exec( "./forestEditor.ts" );
    exec( "./forestEditorGui.gui" );
    exec( "./forestEditToolbar.ed.gui" );
 
-   exec( "./forestEditorGui.cs" );
-   exec( "./tools.cs" );
+   exec( "./forestEditorGui.ts" );
+   exec( "./tools.ts" );
    
    ForestEditorGui.setVisible( false );   
    ForestEditorPalleteWindow.setVisible( false );
@@ -84,16 +84,16 @@ function destroyForestEditor()
 // NOTE: debugging helper.
 function reinitForest()
 {
-   exec( "./main.cs" );
-   exec( "./forestEditorGui.cs" );   
-   exec( "./tools.cs" );
+   exec( "./main.ts" );
+   exec( "./forestEditorGui.ts" );   
+   exec( "./tools.ts" );
 }
 
 function ForestEditorPlugin::onWorldEditorStartup( %this )
 {       
    new PersistenceManager( ForestDataManager );
    
-   %brushPath = "tools/forestEditor/brushes.cs";
+   %brushPath = "tools/forestEditor/brushes.ts";
    
    if ( !isFile( %brushPath ) )   
       %successfulFile = createPath( %brushPath );       
@@ -205,7 +205,7 @@ function ForestEditorPlugin::onActivated( %this )
    }   
    
    if ( %this.showError )
-      toolsMessageBoxOK( "Error", "Your tools/forestEditor folder does not contain a valid brushes.cs. Brushes you create will not be saved!" );
+      toolsMessageBoxOK( "Error", "Your tools/forestEditor folder does not contain a valid brushes.ts. Brushes you create will not be saved!" );
 }
 
 function ForestEditorPlugin::onDeactivated( %this )
@@ -262,7 +262,7 @@ function ForestEditorPlugin::onSaveMission( %this, %missionFile )
       }
    }
       
-   ForestBrushGroup.save( "tools/forestEditor/brushes.cs" );
+   ForestBrushGroup.save( "tools/forestEditor/brushes.ts" );
 }
 
 function ForestEditorPlugin::onEditorSleep( %this )

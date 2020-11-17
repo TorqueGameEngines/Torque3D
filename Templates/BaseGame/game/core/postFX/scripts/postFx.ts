@@ -39,12 +39,12 @@ function postFXInit()
    if (!$Server::Dedicated)
    {
       //init the postFX
-      %pattern = "./*.cs";   
+      %pattern = "./*.ts";   
       %file = findFirstFile( %pattern );
       if ( %file $= "" )
       {
          // Try for DSOs next.
-         %pattern = "core/postFX/*.cs.dso";
+         %pattern = "core/postFX/*.ts.dso";
          %file = findFirstFile( %pattern );
       }
       

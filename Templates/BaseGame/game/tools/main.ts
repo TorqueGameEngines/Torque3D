@@ -40,9 +40,9 @@ if(!$Tools::loaded)
    
    //We may need to lean on certain EditorSettings, and specifically default values if the settings.xml
    //isn't found
-   exec("tools/worldEditor/scripts/editorPrefs.ed.cs");
+   exec("tools/worldEditor/scripts/editorPrefs.ed.ts");
    
-   exec( "tools/gui/profiles.ed.cs" );
+   exec( "tools/gui/profiles.ed.ts" );
    exec("tools/gui/EditorLoadingGui.gui");
 }
 
@@ -77,14 +77,14 @@ function onStart()
    }
    
    // Common GUI stuff.
-   exec( "./gui/cursors.ed.cs" );
-   exec( "./gui/messageBoxes/messageBox.ed.cs" );
-   exec( "./editorClasses/gui/panels/navPanelProfiles.ed.cs" );
+   exec( "./gui/cursors.ed.ts" );
+   exec( "./gui/messageBoxes/messageBox.ed.ts" );
+   exec( "./editorClasses/gui/panels/navPanelProfiles.ed.ts" );
    
    // Make sure we get editor profiles before any GUI's
    // BUG: these dialogs are needed earlier in the init sequence, and should be moved to
    // common, along with the guiProfiles they depend on.
-   exec( "./gui/guiDialogs.ed.cs" );
+   exec( "./gui/guiDialogs.ed.ts" );
    
    //%toggle = $Scripts::ignoreDSOs;
    //$Scripts::ignoreDSOs = true;
@@ -98,12 +98,12 @@ function onStart()
       $editors[%i] = getWord( $Tools::loadFirst, %i );
    }
    
-   %pattern = $Tools::resourcePath @ "/*/main.cs";
+   %pattern = $Tools::resourcePath @ "/*/main.ts";
    %folder = findFirstFile( %pattern );
    if ( %folder $= "")
    {
-      // if we have absolutely no matches for main.cs, we look for main.cs.dso
-      %pattern = $Tools::resourcePath @ "/*/main.cs.dso";
+      // if we have absolutely no matches for main.ts, we look for main.ts.dso
+      %pattern = $Tools::resourcePath @ "/*/main.ts.dso";
       %folder = findFirstFile( %pattern );
    }
    while ( %folder !$= "" )
@@ -130,7 +130,7 @@ function onStart()
    %count = $editors[count];
    for ( %i = 0; %i < %count; %i++ )
    {
-      exec( "./" @ $editors[%i] @ "/main.cs" );
+      exec( "./" @ $editors[%i] @ "/main.ts" );
       
       %initializeFunction = "initialize" @ $editors[%i];
       if( isFunction( %initializeFunction ) )
@@ -355,7 +355,7 @@ function Tools::LoadResources( %path )
    for( %i = 0; %i < %wordCount; %i++ )
    {
       %resource = GetField( %resourcesList, %i );
-      if( isFile( %resourcesPath @ %resource @ "/resourceDatabase.cs") )
+      if( isFile( %resourcesPath @ %resource @ "/resourceDatabase.ts") )
          ResourceObject::load( %path, %resource );
    }
 }

@@ -24,10 +24,10 @@ function initializeMeshRoadEditor()
 {
    echo(" % - Initializing Mesh Road Editor");
      
-   exec( "./meshRoadEditor.cs" );
+   exec( "./meshRoadEditor.ts" );
    exec( "./meshRoadEditorGui.gui" );
    exec( "./meshRoadEditorToolbar.gui");
-   exec( "./meshRoadEditorGui.cs" );
+   exec( "./meshRoadEditorGui.ts" );
    
    MeshRoadEditorGui.setVisible( false );  
    MeshRoadEditorOptionsWindow.setVisible( false );  

@@ -323,14 +323,14 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ %assetName @ ".sgf";
-   %scriptPath = %assetPath @ %assetName @ ".cs";
+   %scriptPath = %assetPath @ %assetName @ ".ts";
    
    %newAsset = new MaterialAsset()
    {
       assetName = %assetName;
       versionId = 1;
       shaderGraph = %sgfPath;
-      scriptFile = %assetName @ ".cs";
+      scriptFile = %assetName @ ".ts";
       originalFilePath = %filePath;
       materialDefinitionName = %assetName;
    };

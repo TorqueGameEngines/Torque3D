@@ -6,15 +6,15 @@
 function VerveEditor::InitGroupScripts()
 {
     // Core.
-    exec( "./VGroup.cs" );
+    exec( "./VGroup.ts" );
     
     // Built In.
-    exec( "./VCameraGroup.cs" );
-    exec( "./VDirectorGroup.cs" );
-    exec( "./VLightObjectGroup.cs" );
-    exec( "./VParticleEffectGroup.cs" );
-    exec( "./VSceneObjectGroup.cs" );
-    exec( "./VSpawnSphereGroup.cs" );
+    exec( "./VCameraGroup.ts" );
+    exec( "./VDirectorGroup.ts" );
+    exec( "./VLightObjectGroup.ts" );
+    exec( "./VParticleEffectGroup.ts" );
+    exec( "./VSceneObjectGroup.ts" );
+    exec( "./VSpawnSphereGroup.ts" );
     
     // Custom.
     // Exec Custom Group Scripts.

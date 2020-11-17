@@ -33,7 +33,7 @@ function initializeDebugger()
    echo(" % - Initializing Debugger");
    
    // Load the scripts.
-   exec("./scripts/debugger.ed.cs");
+   exec("./scripts/debugger.ed.ts");
    
    // And the guis.
    exec("./gui/breakConditionDlg.ed.gui");

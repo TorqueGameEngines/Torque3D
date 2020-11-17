@@ -323,7 +323,7 @@ void init()
    ConsoleConstructor::setup();
 
    // Set up the parser(s)
-   CON_ADD_PARSER(CMD,   "cs",   true);   // TorqueScript
+   CON_ADD_PARSER(CMD,   "ts",   true);   // TorqueScript
 
    // Setup the console types.
    ConsoleBaseType::initialize();
@@ -1184,7 +1184,7 @@ bool executeFile(const char* fileName, bool noCalls, bool journalScript)
    Con::expandScriptFilename(scriptFilenameBuffer, sizeof(scriptFilenameBuffer), fileName);
 
    // since this function expects a script file reference, if it's a .dso
-   // lets terminate the string before the dso so it will act like a .cs
+   // lets terminate the string before the dso so it will act like a .ts
    if (dStrEndsWith(scriptFilenameBuffer, ".dso"))
    {
       scriptFilenameBuffer[dStrlen(scriptFilenameBuffer) - dStrlen(".dso")] = '\0';
@@ -1206,11 +1206,11 @@ bool executeFile(const char* fileName, bool noCalls, bool journalScript)
    // Check Editor Extensions
    bool isEditorScript = false;
 
-   // If the script file extension is '.ed.cs' then compile it to a different compiled extension
-   if (dStricmp(ext, ".cs") == 0)
+   // If the script file extension is '.ed.ts' then compile it to a different compiled extension
+   if (dStricmp(ext, ".ts") == 0)
    {
       const char* ext2 = ext - 3;
-      if (dStricmp(ext2, ".ed.cs") == 0)
+      if (dStricmp(ext2, ".ed.ts") == 0)
          isEditorScript = true;
    }
    else if (dStricmp(ext, ".gui") == 0)

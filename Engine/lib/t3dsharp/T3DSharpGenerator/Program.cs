@@ -55,7 +55,7 @@ namespace T3DSharpGenerator
 
         [ScriptEntryPoint]
         public static void Entry() {
-            // --- Boilerplate C#-specific setup. Normally Torque uses the main.cs file to set these variables, here we have to do it ourselves.
+            // --- Boilerplate C#-specific setup. Normally Torque uses the main.ts file to set these variables, here we have to do it ourselves.
             string CSDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location).Replace('\\', '/');
             eval($"setMainDotCsDir(\"{CSDir}\");");
             eval($"setCurrentDirectory(\"{CSDir}\");");

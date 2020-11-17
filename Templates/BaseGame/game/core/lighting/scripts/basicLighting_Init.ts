@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-//exec( "./shadowFilter.cs" );
+//exec( "./shadowFilter.ts" );
 
 singleton GFXStateBlockData( BL_ProjectedShadowSBData )
 {

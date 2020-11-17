@@ -34,7 +34,7 @@ function initializeEditorClasses()
    // Load Editor Profiles
    //-----------------------------------------------------------------------------
    
-   exec("./scripts/fileLoader.ed.cs");   
+   exec("./scripts/fileLoader.ed.ts");   
    
    loadDirectory( expandFilename("./gui/panels") );
    
@@ -43,39 +43,39 @@ function initializeEditorClasses()
    // Setup Preferences Manager
    //-----------------------------------------------------------------------------
    
-   exec("./scripts/preferencesManager.ed.cs");
+   exec("./scripts/preferencesManager.ed.ts");
    initPreferencesManager();
    
    //-----------------------------------------------------------------------------
    // Load Form Managers
    //-----------------------------------------------------------------------------
    
-   exec("./scripts/guiFormLibraryManager.ed.cs");
-   exec("./scripts/guiFormContentManager.ed.cs");
-   exec("./scripts/guiFormReferenceManager.ed.cs");
-   exec("./scripts/guiFormLayoutManager.ed.cs");
-   exec("./scripts/guiFormMessageManager.ed.cs");
-   exec("./scripts/expandos.ed.cs");
-   exec("./scripts/utility.ed.cs");
+   exec("./scripts/guiFormLibraryManager.ed.ts");
+   exec("./scripts/guiFormContentManager.ed.ts");
+   exec("./scripts/guiFormReferenceManager.ed.ts");
+   exec("./scripts/guiFormLayoutManager.ed.ts");
+   exec("./scripts/guiFormMessageManager.ed.ts");
+   exec("./scripts/expandos.ed.ts");
+   exec("./scripts/utility.ed.ts");
    setupBaseExpandos();
 
    // User Display
-   exec("./scripts/contextPopup.ed.cs");
+   exec("./scripts/contextPopup.ed.ts");
 
    // Project Support   
-   exec("./scripts/projects/projectEvents.ed.cs");
-   exec("./scripts/projects/projectInternalInterface.ed.cs");
+   exec("./scripts/projects/projectEvents.ed.ts");
+   exec("./scripts/projects/projectInternalInterface.ed.ts");
    
    // Input
-   exec("./scripts/input/inputEvents.ed.cs");
-   exec("./scripts/input/dragDropEvents.ed.cs");
-   exec("./scripts/input/applicationEvents.ed.cs");
+   exec("./scripts/input/inputEvents.ed.ts");
+   exec("./scripts/input/dragDropEvents.ed.ts");
+   exec("./scripts/input/applicationEvents.ed.ts");
    
    // Form Class
-   exec("./scripts/guiFormClass.ed.cs");
-   exec("./scripts/guiClasses/guiThumbnailPopup.ed.cs");
-   exec("./scripts/guiClasses/guiThumbnail.ed.cs");
-   exec("./scripts/RSSNews/RSSFeedScript.ed.cs");
+   exec("./scripts/guiFormClass.ed.ts");
+   exec("./scripts/guiClasses/guiThumbnailPopup.ed.ts");
+   exec("./scripts/guiClasses/guiThumbnail.ed.ts");
+   exec("./scripts/RSSNews/RSSFeedScript.ed.ts");
 
    loadDirectory( expandFilename("./scripts/core") );
    loadDirectory( expandFilename("./scripts/platform") );

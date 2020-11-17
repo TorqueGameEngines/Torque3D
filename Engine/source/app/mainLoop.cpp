@@ -436,7 +436,7 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
    }
 #endif
 
-   // Executes an entry script file. This is "main.cs"
+   // Executes an entry script file. This is "main.ts"
    // by default, but any file name (with no whitespace
    // in it) may be run if it is specified as the first
    // command-line parameter. The script used, default
@@ -459,7 +459,7 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
    // The working filestream.
    FileStream str; 
 
-   const char *defaultScriptName = "main.cs";
+   const char *defaultScriptName = "main.ts";
    bool useDefaultScript = true;
 
    // Check if any command-line parameters were passed (the first is just the app name).
@@ -493,14 +493,14 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
       {
          OpenFileDialog ofd;
          FileDialogData &fdd = ofd.getData();
-         fdd.mFilters = StringTable->insert("Main Entry Script (main.cs)|main.cs|");
+         fdd.mFilters = StringTable->insert("Main Entry Script (main.ts)|main.ts|");
          fdd.mTitle   = StringTable->insert("Locate Game Entry Script");
 
          // Get the user's selection
          if( !ofd.Execute() )
             return false;
 
-         // Process and update CWD so we can run the selected main.cs
+         // Process and update CWD so we can run the selected main.ts
          S32 pathLen = dStrlen( fdd.mFile );
          FrameTemp<char> szPathCopy( pathLen + 1);
 

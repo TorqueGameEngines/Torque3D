@@ -34,7 +34,7 @@ function initializeNavEditor()
    echo(" % - Initializing Navigation Editor");
 
    // Execute all relevant scripts and GUIs.
-   exec("./navEditor.cs");
+   exec("./navEditor.ts");
    exec("./NavEditorGui.gui");
    exec("./NavEditorToolbar.gui");
    exec("./NavEditorConsoleDlg.gui");

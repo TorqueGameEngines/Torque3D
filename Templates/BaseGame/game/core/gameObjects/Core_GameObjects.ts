@@ -12,7 +12,7 @@ function Core_GameObjects::initServer( %this )
 
 function Core_GameObjects::onCreateGameServer(%this)
 {
-   %this.registerDatablock("./datablocks/defaultDatablocks.cs");
+   %this.registerDatablock("./datablocks/defaultDatablocks.ts");
 }
 
 function Core_GameObjects::onDestroyGameServer(%this)

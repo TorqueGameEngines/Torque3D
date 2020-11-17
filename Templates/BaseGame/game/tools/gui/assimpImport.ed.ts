@@ -280,7 +280,7 @@ function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
 
    // Check for an existing TSShapeConstructor object. Need to exec the script
    // manually as the resource may not have been loaded yet
-   %csPath = filePath(%this.path) @ "/" @ fileBase(%this.path) @ ".cs";
+   %csPath = filePath(%this.path) @ "/" @ fileBase(%this.path) @ ".ts";
    if (isFile(%csPath))
       exec(%csPath);
 

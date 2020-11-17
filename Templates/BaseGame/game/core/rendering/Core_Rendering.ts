@@ -11,15 +11,15 @@ function Core_Rendering::onCreate(%this)
    
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
-   exec("./scripts/graphicsOptions.cs");
-   exec("./scripts/renderManager.cs");
-   exec("./scripts/gfxData/clouds.cs");
-   exec("./scripts/gfxData/commonMaterialData.cs");
-   exec("./scripts/gfxData/scatterSky.cs");
-   exec("./scripts/gfxData/shaders.cs");
-   exec("./scripts/gfxData/terrainBlock.cs");
-   exec("./scripts/gfxData/water.cs");
-   exec("./scripts/gfxData/warningTerrainMat.cs");
+   exec("./scripts/graphicsOptions.ts");
+   exec("./scripts/renderManager.ts");
+   exec("./scripts/gfxData/clouds.ts");
+   exec("./scripts/gfxData/commonMaterialData.ts");
+   exec("./scripts/gfxData/scatterSky.ts");
+   exec("./scripts/gfxData/shaders.ts");
+   exec("./scripts/gfxData/terrainBlock.ts");
+   exec("./scripts/gfxData/water.ts");
+   exec("./scripts/gfxData/warningTerrainMat.ts");
 }
 
 function Core_Rendering::onDestroy(%this)
@@ -33,10 +33,10 @@ function Core_Rendering::initClient(%this)
    initLightingSystems("Advanced Lighting"); 
 
    //load prefs
-   exec("data/defaults.cs");
+   exec("data/defaults.ts");
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/clientPrefs.cs" ) )
-      exec( %prefPath @ "/clientPrefs.cs" );
+   if ( isFile( %prefPath @ "/clientPrefs.ts" ) )
+      exec( %prefPath @ "/clientPrefs.ts" );
    
    configureCanvas();
    

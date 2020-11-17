@@ -6,7 +6,7 @@ function AssetBrowser::createComponentAsset(%this)
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
    %tamlpath = %modulePath @ "/components/" @ %assetName @ ".asset.taml";
-   %scriptPath = %modulePath @ "/components/" @ %assetName @ ".cs";
+   %scriptPath = %modulePath @ "/components/" @ %assetName @ ".ts";
    
    %asset = new ComponentAsset()
    {
@@ -17,7 +17,7 @@ function AssetBrowser::createComponentAsset(%this)
       friendlyName = AssetBrowser.newAssetSettings.friendlyName;
       componentType = AssetBrowser.newAssetSettings.componentGroup;
       description = AssetBrowser.newAssetSettings.description;
-      scriptFile = %assetName @ ".cs";
+      scriptFile = %assetName @ ".ts";
    };
    
    TamlWrite(%asset, %tamlpath);
@@ -25,7 +25,7 @@ function AssetBrowser::createComponentAsset(%this)
    %file = new FileObject();
 	%templateFile = new FileObject();
 	
-   %templateCodeFilePath = %this.templateFilesPath @ "componentFile.cs.template";
+   %templateCodeFilePath = %this.templateFilesPath @ "componentFile.ts.template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateCodeFilePath))
    {

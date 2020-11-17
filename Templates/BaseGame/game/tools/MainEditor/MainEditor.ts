@@ -2,12 +2,12 @@ function MainEditor::onCreate( %this )
 {
    echo("\n--------- Initializing MainEditor ---------");
    
-   //exec("tools/gui/profiles.ed.cs");
-   //exec("./scripts/GuiProfiles.cs");
+   //exec("tools/gui/profiles.ed.ts");
+   //exec("./scripts/GuiProfiles.ts");
 
    exec("./guis/MainEditorWindow.gui");
    
-   //exec("./scripts/newEditorGui.cs");
+   //exec("./scripts/newEditorGui.ts");
    
    $UsePanelLayout = false;
    $AssetBrowserPanelState = true;

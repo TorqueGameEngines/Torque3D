@@ -16,7 +16,7 @@ function gameUI::initClient(%this)
 {
    //guis
    %this.queueExec("./GUIs/playGui.gui");
-   %this.queueExec("./GUIs/playGui.cs");
+   %this.queueExec("./GUIs/playGui.ts");
 }
 
 function gameUI::onCreateClientConnection(%this){}

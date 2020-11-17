@@ -25,7 +25,7 @@
 // Functions that process commands sent from the server.
 
 // Game event descriptions, which may or may not include text messages, can be
-// sent using the message* functions in core/scripts/server/message.cs.  Those
+// sent using the message* functions in core/scripts/server/message.ts.  Those
 // functions do commandToClient with the tag ServerMessage, which invokes the
 // function below.
 

@@ -77,7 +77,7 @@ function GuiFormManager::RegisterLayout( %libraryName, %layoutName, %layoutObj )
       layoutName    = %layoutName;
       layoutLibrary = %libraryObj;
       layoutObj     = %layoutObj;
-      layoutFile    = %libraryObj.basePath @ %layoutName @ ".cs";     
+      layoutFile    = %libraryObj.basePath @ %layoutName @ ".ts";     
    };
 
    // Tag Layout Object Properly so it can reset itself.
@@ -192,7 +192,7 @@ function GuiFormManager::SaveLayout( %library, %layoutName, %newName )
    // Do any form layout specifics saving.
    GuiFormManager::SaveLayoutContent( %layoutObjRef.layoutObj );
 
-   %newFile = %libraryObj.basePath @  "/" @ %newName @ ".cs";
+   %newFile = %libraryObj.basePath @  "/" @ %newName @ ".ts";
    if( %newName $= "" )
    {
       %newName = %layoutObjRef.layoutName;

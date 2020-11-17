@@ -6,23 +6,23 @@
 function VerveEditor::InitTrackScripts()
 {
     // Core.
-    exec( "./VTrack.cs" );
+    exec( "./VTrack.ts" );
     
     // Built-In.
-    exec( "./VCameraShakeTrack.cs" );
-    exec( "./VDirectorTrack.cs" );
-    exec( "./VFadeTrack.cs" );
-    exec( "./VLightObjectAnimationTrack.cs" );
-    exec( "./VLightObjectToggleTrack.cs" );
-    exec( "./VMotionTrack.cs" );
-    exec( "./VParticleEffectToggleTrack.cs" );
-    exec( "./VPostEffectToggleTrack.cs" );
-    exec( "./VSceneJumpTrack.cs" );
-    exec( "./VScriptEventTrack.cs" );
-    exec( "./VShapeAnimationTrack.cs" );
-    exec( "./VSlowMoTrack.cs" );
-    exec( "./VSoundEffectTrack.cs" );
-    exec( "./VSpawnSphereSpawnTargetTrack.cs" );
+    exec( "./VCameraShakeTrack.ts" );
+    exec( "./VDirectorTrack.ts" );
+    exec( "./VFadeTrack.ts" );
+    exec( "./VLightObjectAnimationTrack.ts" );
+    exec( "./VLightObjectToggleTrack.ts" );
+    exec( "./VMotionTrack.ts" );
+    exec( "./VParticleEffectToggleTrack.ts" );
+    exec( "./VPostEffectToggleTrack.ts" );
+    exec( "./VSceneJumpTrack.ts" );
+    exec( "./VScriptEventTrack.ts" );
+    exec( "./VShapeAnimationTrack.ts" );
+    exec( "./VSlowMoTrack.ts" );
+    exec( "./VSoundEffectTrack.ts" );
+    exec( "./VSpawnSphereSpawnTargetTrack.ts" );
     
     // Custom.
     // Exec Custom Track Scripts.

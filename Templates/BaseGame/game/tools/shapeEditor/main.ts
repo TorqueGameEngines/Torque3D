@@ -28,7 +28,7 @@ function initializeShapeEditor()
 {
    echo(" % - Initializing Shape Editor");
 
-   exec("./gui/Profiles.ed.cs");
+   exec("./gui/Profiles.ed.ts");
 
    exec("./gui/shapeEdPreviewWindow.ed.gui");
    exec("./gui/shapeEdAnimWindow.ed.gui");
@@ -37,9 +37,9 @@ function initializeShapeEditor()
    exec("./gui/shapeEdSelectWindow.ed.gui");
    exec("./gui/shapeEdPropWindow.ed.gui");
 
-   exec("./scripts/shapeEditor.ed.cs");
-   exec("./scripts/shapeEditorHints.ed.cs");
-   exec("./scripts/shapeEditorActions.ed.cs");
+   exec("./scripts/shapeEditor.ed.ts");
+   exec("./scripts/shapeEditorHints.ed.ts");
+   exec("./scripts/shapeEditorActions.ed.ts");
 
    // Add windows to editor gui
    ShapeEdPreviewGui.setVisible(false);

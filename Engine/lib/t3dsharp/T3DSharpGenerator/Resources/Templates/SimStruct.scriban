@@ -1,0 +1,72 @@
+using System;
+using System.Linq;
+using System.Runtime.InteropServices;
+using T3DSharpFramework.Engine;
+using T3DSharpFramework.Generated.Structs.Math;
+using T3DSharpFramework.Interop;
+
+namespace T3DSharpFramework.Generated.Structs.{{scope}} {
+{{ for struct in structs }}
+{{
+    prefix_lines struct.docs "    /// " indentFirstLine: true
+~}}
+    public class {{struct.name}} : IEngineStruct {
+        [StructLayout(LayoutKind.Explicit)]
+        public struct InternalStruct {
+{{ for field in struct.fields ~}}
+            [FieldOffset({{field.offset}})] public {{field.type.native_return_type}} {{ field.name | sanitize_name }};
+{{ end ~}}
+        }
+
+        public InternalStruct internalStruct;
+
+        public IntPtr internalStructPtr;
+
+{{ for field in struct.fields ~}}
+        public {{field.type.managed_type}} {{ field.name | sanitize_name camelCase:true }} { get; set; }
+{{ end ~}}
+
+        public {{struct.name}}() { }
+
+        public {{struct.name}}(InternalStruct data) {
+            internalStruct = data;
+			Free();
+        }
+
+        public {{struct.name}}(string s) {
+            string[] strings = s.Split(' ');
+{{~ for field in struct.fields ~}}
+            {{ sanitize_name field.name camelCase:true }} = GenericMarshal.StringTo<{{field.type.managed_type}}>(string.Join(' ', strings.Skip({{field.field_offset}}).Take({{field.field_count}})));
+{{~ end ~}}
+        }
+
+        public void Alloc() {
+{{~ for field in struct.fields ~}}
+            {{ struct_field_alloc field }}
+{{~ end ~}}
+            internalStructPtr = StructMarshal.StructToIntPtr(internalStruct);
+        }
+
+        public void Free() {
+{{~ for field in struct.fields ~}}
+            {{ struct_field_free field }}
+{{~ end ~}}
+            if (internalStructPtr != IntPtr.Zero) {
+                StructMarshal.FreeStructPtr<InternalStruct>(internalStructPtr);
+            }
+            internalStructPtr = IntPtr.Zero;
+        }
+
+        public override string ToString() {
+            string s = "";
+{{ for field in struct.fields ~}}
+            s += " " + GenericMarshal.ToString({{ sanitize_name field.name camelCase:true }});
+{{ end ~}}
+            return s.Substring(1);
+        }
+    }
+{{~ if !for.last ~}}
+
+{{~ end ~}}
+{{~ end ~}}
+}

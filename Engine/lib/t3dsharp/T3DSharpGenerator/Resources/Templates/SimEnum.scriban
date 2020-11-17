@@ -1,0 +1,22 @@
+namespace T3DSharpFramework.Generated.Enums.{{scope}} {
+{{ for enum in enums ~}}
+{{ 
+    prefix_lines enum.docs "    /// " indentFirstLine: true 
+~}}
+    public enum {{enum.name}} {
+{{~
+    for field in enum.fields
+        fieldName = field.name | sanitize_name camelCase: true
+        fieldValue = field.value
+        if !for.last
+            fieldValue = fieldValue + ","
+        end
+~}}
+        {{fieldName}} = {{fieldValue}} 
+{{~ end ~}}
+    }
+{{~ if !for.last ~}}
+
+{{~ end ~}} 
+{{~ end ~}}
+}

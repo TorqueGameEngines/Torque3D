@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+   <PropertyGroup>
+     <TargetFramework>netcoreapp3.1</TargetFramework>
+     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+     <PlatformTarget>AnyCPU</PlatformTarget>
+   </PropertyGroup>
+   
+   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' "></PropertyGroup>
+
+   <ItemGroup>
+      <Compile Include="@libDir@/t3dsharp/T3DSharpFramework/**/*.cs"/>
+   </ItemGroup>
+</Project>

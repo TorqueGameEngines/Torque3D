@@ -1,0 +1,117 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using T3DSharpFramework.Engine;
+using T3DSharpFramework.Engine.Util;
+using T3DSharpFramework.Generated.Classes.Global;
+using T3DSharpFramework.Generated.Classes.Reflection;
+using T3DSharpFramework.Generated.Classes.Sim;
+using T3DSharpFramework.Generated.Classes.Sim.Net;
+using T3DSharpFramework.Generated.Enums.Global;
+using T3DSharpFramework.Generated.Enums.Reflection;
+using T3DSharpFramework.Generated.Structs.Global;
+using T3DSharpFramework.Generated.Structs.Gui;
+using T3DSharpFramework.Generated.Structs.Math;
+using T3DSharpFramework.Interop;
+
+namespace T3DSharpFramework.Generated.Classes.{{scope}} {
+{{ 
+    prefix_lines class.docs "    /// " indentFirstLine: true 
+~}}
+{{~ if class.super_type ~}}
+    public unsafe class {{class.name}} : {{class.super_type.managed_type}}{{ if class.name == "SimObject" }}, ISimObject{{ end }}{{ if class.name == "SimPersistID" }}, ISimPersistID{{ end }} {
+{{~ else ~}}
+    public unsafe class {{class.name}} : ConsoleObjectBase {
+{{~ end ~}}
+{{~ if class.is_sim_object ~}}
+{{~ include "simobject_body" ~}}
+{{~ else ~}}
+{{~ include "engineobject_body" ~}}
+{{~ end ~}}
+
+{{~ if class.name == "SimObject" ~}}
+        public void SetPointerFromObject(ISimObject pObj) {
+            if (pObj is SimObject sim) {
+                base.SetPointerFromObject(sim);
+            } else if (pObj is UnknownSimObject unk) {
+                base.SetPointerFromObject(unk);
+            } else {
+                throw new NotImplementedException();
+            }
+        }
+
+        public T As<T>() where T : class, ISimObject {
+            if (typeof(SimObject).IsAssignableFrom(typeof(T))) {
+                return base.As(typeof(T)) as T;
+            } else if (typeof(UnknownSimObject).IsAssignableFrom(typeof(T))) {
+                return base.As(typeof(T)) as T;
+            }
+            throw new NotImplementedException();
+        }
+
+        public ISimObject As(Type t) {
+            if (typeof(SimObject).IsAssignableFrom(t)) {
+                return base.As(t) as ISimObject;
+            }
+            throw new NotImplementedException();
+        }
+        
+        public static implicit operator string(SimObject simObject) {
+            return GenericMarshal.ToString((ISimObject)simObject);
+        }
+        
+        public bool RegisterObject() {
+			InternalUnsafeMethods.RegisterObject__Args _args = new InternalUnsafeMethods.RegisterObject__Args()
+			{
+			};
+            bool registered = InternalUnsafeMethods.RegisterObject()(ObjectPtr, _args);
+            if (registered) {
+                SimDictionary.RegisterObject(this);
+            }
+
+            return registered;
+        }
+
+        public bool RegisterSingleton() => RegisterObject();
+{{~ else if class.name == "SimPersistID" ~}}
+		public string MarshalToString() {
+			return GenericMarshal.ToString(GetUUID());
+		}
+{{~ end ~}}
+
+        #region UnsafeNativeMethods
+        new internal struct InternalUnsafeMethods {
+{{~ for function in class.methods ~}}
+{{ include "native_function" }}
+{{~ if !for.last ~}}
+
+{{~ end ~}}
+{{~ end ~}}
+        }
+        #endregion
+{{~
+    if class.methods.size > 0
+        for function in class.methods
+            if (include "managed_function") != ""
+~}}
+
+                {{~ include "managed_function" ~}}
+{{~
+            end
+        end
+    end
+~}}
+{{~
+    if class.properties.size > 0
+        for property in class.properties
+            if (include "managed_property") != ""
+~}}
+
+                {{~ include "managed_property" ~}}
+{{~
+            end
+        end
+    end
+~}}
+    }
+}

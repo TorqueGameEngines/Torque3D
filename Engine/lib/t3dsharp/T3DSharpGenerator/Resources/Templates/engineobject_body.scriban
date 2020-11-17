@@ -1,0 +1,11 @@
+        public {{class.name}}(bool pRegister = false) 
+            : base(pRegister) {
+        }
+        
+        public {{class.name}}(ConsoleObjectBase pObj) 
+            : base(pObj) {
+        }
+        
+        public {{class.name}}(IntPtr pObj) 
+            : base(pObj) {
+        }

@@ -607,7 +607,14 @@ endif()
 
 ###############################################################################
 ###############################################################################
-finishExecutable()
+if(${TORQUE_LIBRARY})
+	set(TORQUE_STATIC_TMP ${TORQUE_STATIC})
+	set(TORQUE_STATIC OFF)
+	finishLibrary()
+	set(TORQUE_STATIC ${TORQUE_STATIC_TMP})
+else()
+	finishExecutable()
+endif()
 ###############################################################################
 ###############################################################################
 
@@ -641,8 +648,10 @@ endif()
 if(NOT EXISTS "${projectOutDir}/${PROJECT_NAME}.torsion")
     CONFIGURE_FILE("${cmakeDir}/template.torsion.in" "${projectOutDir}/${PROJECT_NAME}.torsion")
 endif()
-if(EXISTS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.cs.in")
-    CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.cs.in" "${projectOutDir}/main.cs")
+if(NOT ${TORQUE_NO_MAIN_CS})
+	if(EXISTS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.cs.in")
+		CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.cs.in" "${projectOutDir}/main.cs")
+	endif()
 endif()
 if(WIN32)
     if(NOT EXISTS "${projectSrcDir}/torque.rc")
@@ -905,4 +914,11 @@ if(TORQUE_TEMPLATE)
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeleteDSOs.bat"       DESTINATION "${TORQUE_APP_DIR}")
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeletePrefs.bat"      DESTINATION "${TORQUE_APP_DIR}")
     endif()
+endif()
+
+if( TORQUE_CSHARP )
+	# check if we can build it ourselfs
+	if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")
+		addLibSrc("${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")
+	endif()
 endif()

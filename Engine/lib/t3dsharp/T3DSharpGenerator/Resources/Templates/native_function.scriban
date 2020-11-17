@@ -1,0 +1,47 @@
+{{~
+    functionName = function.name | sanitize_name camelCase:true
+    if function.is_static
+        parameters = ""
+    else
+        parameters = "IntPtr _this, " 
+    end 
+~}}
+{{~ if function.is_variadic ~}}
+    {{~
+        parameters = parameters + "ref StringVector.InternalStruct args"
+    ~}}
+{{~ else ~}}
+            [StructLayout(LayoutKind.Sequential)]
+            internal struct {{ functionName }}__Args
+            {
+                {{~ for arg in function.arguments ~}}
+                {{~ if for.index != 0 || function.is_static ~}}
+                {{~ if marshal_as arg.type.name ~}}
+                {{ marshal_as arg.type.name }}
+                {{~ end ~}}
+                internal {{arg.type.native_arg_type}} {{ arg.name | sanitize_name }};
+                {{~ end ~}}
+                {{~ end ~}}
+            }
+    {{~
+        parameters = parameters + functionName + "__Args args"
+    ~}}
+{{~ end ~}}
+
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            {{~ if marshal_as function.return_type.name ~}}
+            {{ marshal_as function.return_type.name return:true }}
+            {{~ end ~}}
+            internal delegate {{ function.return_type.native_return_type }} _{{ functionName }}({{ parameters }});
+            private static _{{ functionName }} _{{ functionName }}Func;
+            internal static _{{ functionName }} {{ functionName }}() {
+                if (_{{ functionName }}Func == null) {
+                    _{{ functionName }}Func =
+                        (_{{ functionName }})Marshal.GetDelegateForFunctionPointer(
+                            Torque3D.DllLoadUtils.GetProcAddress(
+                                Torque3D.Torque3DLibHandle,
+                                "{{function.symbol}}"), typeof(_{{ functionName }}));
+                }
+                
+                return _{{ functionName }}Func;
+            }

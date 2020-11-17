@@ -1,0 +1,83 @@
+{{~ 
+    if function.name == "create" || function.name == "RegisterObject"
+        ret
+    end
+    
+    functionName = function.name | sanitize_name camelCase:true 
+~}}
+{{ 
+    prefix_lines function.docs "        /// " indentFirstLine: true 
+~}}
+{{~ if function.is_variadic ~}}
+        public {{ if function.is_static }}static {{ end }}{{ if function.is_callback }}virtual {{ end }}{{ if function.is_override }}override {{ end }}{{function.return_type.managed_type}} {{ functionName }}(params string[] args) { 
+            List<string> _argList = new List<string>() {""{{ if function.is_static == false }}, ""{{ end }}};
+            _argList.AddRange(args);
+
+            StringVector nativeVecArgs = new StringVector {
+                ElementCount = (uint)_argList.Count,
+                Array = _argList.ToArray(),
+                ArraySize = (uint)_argList.Count
+            };
+            nativeVecArgs.Alloc();
+            {{ if function.return_type.managed_type != 'void' }}{{ function.return_type.native_return_type }} _engineResult = {{ end }}InternalUnsafeMethods.{{ functionName }}()({{ if !function.is_static }}ObjectPtr, {{ end }}ref nativeVecArgs.internalStruct);
+            nativeVecArgs.Free();
+
+{{~ if function.return_type.managed_type != 'void' ~}}
+            {{ get_return_string type: function.return_type variable: "_engineResult" }};
+{{~ end ~}}
+        }
+{{~ else if function.is_static ~}}
+        public static {{function.return_type.managed_type}} {{ functionName }}({{ get_managed_parameters function }}) {
+            {{~ 
+                for arg in function.arguments
+                    if alloc arg
+                        alloc arg
+                    end
+                end
+             ~}}
+             InternalUnsafeMethods.{{ functionName }}__Args _args = new InternalUnsafeMethods.{{ functionName }}__Args() {
+                {{~ for arg in function.arguments ~}}
+                {{ sanitize_name arg.name }} = {{ marshal arg }},
+                {{~ end ~}}
+             };
+             {{ if function.return_type.managed_type != 'void' }}{{ function.return_type.native_return_type }} _engineResult = {{ end -}}
+             InternalUnsafeMethods.{{ functionName }}()(_args);
+            {{~ 
+                for arg in function.arguments
+                    if free arg
+                        free arg
+                    end
+                end
+             ~}}
+            {{~ if function.return_type.managed_type != 'void' ~}}
+             {{ get_return_string type: function.return_type variable: "_engineResult" }};
+            {{~ end ~}}
+        }
+{{~ else ~}}
+        public {{ if function.is_override}}override {{ end }}{{ if function.is_callback }}virtual {{ end }}{{function.return_type.managed_type}} {{ functionName }}({{ get_managed_parameters function }}) {
+            {{~ 
+                for arg in function.arguments offset:1
+                    if alloc arg
+                        alloc arg
+                    end
+                end
+             ~}}
+             InternalUnsafeMethods.{{ functionName }}__Args _args = new InternalUnsafeMethods.{{ functionName }}__Args() {
+                {{~ for arg in function.arguments offset:1 ~}}
+                {{ sanitize_name arg.name }} = {{ marshal arg }},
+                {{~ end ~}}
+             };
+             {{ if function.return_type.managed_type != 'void' }}{{ function.return_type.native_return_type }} _engineResult = {{ end -}}
+             InternalUnsafeMethods.{{ functionName }}()(ObjectPtr, _args);
+            {{~ 
+                for arg in function.arguments
+                    if free arg
+                        free arg
+                    end
+                end
+             ~}}
+            {{~ if function.return_type.managed_type != 'void' ~}}
+             {{ get_return_string type: function.return_type variable: "_engineResult" }};
+            {{~ end ~}}
+        }
+{{~ end ~}}

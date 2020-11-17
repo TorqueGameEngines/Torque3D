@@ -1,0 +1,31 @@
+
+        /// <value>
+{{ 
+    prefix_lines property.docs "        /// " indentFirstLine: true 
+~}}
+        /// </value>
+{{~ if property.name == "Name" ~}}
+        public new {{ property.type.managed_type }} {{ sanitize_name property.name camelCase:true }} {
+            get => GetName();
+            set => SetName(value);
+        }
+{{~ else if property.name == "TypeKind" ~}}
+        public EngineTypeKind TypeKind => GetTypeKind();
+{{~ else if property.name == "SuperType" ~}}
+        public EngineTypeInfo SuperType => GetSuperType();
+{{~ else if property.indexed_size == 1 ~}}
+        public {{ property.type.managed_type }} {{ sanitize_name property.name camelCase:true }} {
+            get => GenericMarshal.StringTo<{{property.type.managed_type}}>(GetFieldValue("{{property.name}}"));
+            set => SetFieldValue("{{property.name}}", GenericMarshal.ToString(value));
+        }
+{{~ else ~}}
+        public DynamicFieldVector<{{ property.type.managed_type }}> {{ sanitize_name property.name camelCase:true }} {
+            get => new DynamicFieldVector<{{ property.type.managed_type }}>(
+                    this, 
+                    "{{ property.name }}", 
+                    {{ property.indexed_size }}, 
+                    val => GenericMarshal.StringTo<{{property.type.managed_type}}>(val),
+                    obj => GenericMarshal.ToString(obj)
+                );
+        }
+{{~ end ~}}

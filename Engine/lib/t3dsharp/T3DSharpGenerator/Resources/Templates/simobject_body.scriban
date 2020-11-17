@@ -1,0 +1,38 @@
+        public {{class.name}}(bool pRegister = false) 
+            : base(pRegister) {
+        }
+        
+        public {{class.name}}(string pName, bool pRegister) 
+            : this(false) {
+            Name = pName;
+            if (pRegister) {
+                RegisterObject();
+            }
+        }
+        
+        public {{class.name}}(string pName) 
+            : this(pName, false) {
+        }
+        
+        public {{class.name}}(string pName, string pParent, bool pRegister = false) 
+            : this(pName, pRegister) {
+            CopyFrom(Engine.Sim.FindObject<SimObject>(pParent));
+        }
+        
+        public {{class.name}}(string pName, SimObject pParent, bool pRegister = false) 
+            : this(pName, pRegister) {
+            CopyFrom(pParent);
+        }
+        
+        public {{class.name}}(SimObject pObj) 
+            : base(pObj) {
+        }
+        
+        public {{class.name}}(IntPtr pObj) 
+            : base(pObj) {
+        }
+        
+		protected override void CreateObjectPtr()
+		{
+			ObjectPtr = InternalUnsafeMethods.Create()(new InternalUnsafeMethods.Create__Args());
+		}

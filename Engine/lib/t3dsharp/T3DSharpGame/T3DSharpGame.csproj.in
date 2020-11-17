@@ -13,12 +13,11 @@
    <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' "></PropertyGroup>
    
    <ItemGroup>
-      <ProjectReference Include="..\T3DSharpFramework\T3DSharpFramework.csproj" />
+      <ProjectReference Include="@CSHARP_FRAMEWORK_REL_PATH@" />
    </ItemGroup>
    
    <ItemGroup>
-      <Compile Include="@libDir@/t3dsharp/T3DSharpGame/**/*.cs" LinkBase="Engine"/>
-      <Compile Include="@projectOutDir@/**/*.cs" LinkBase="Game"/>
+      <Compile Include="@libDir@/t3dsharp/T3DSharpGame/**/*.cs" />
    </ItemGroup>
    
 </Project>

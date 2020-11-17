@@ -26,52 +26,104 @@ project(csharp)
 # -- Projects
 # --------------------
 
-configure_file(
-	"${libDir}/t3dsharp/T3DSharpGenerator/T3DSharpGenerator.csproj.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGenerator/T3DSharpGenerator.csproj"
-)
-include_external_msproject(
-T3DSharpGenerator "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGenerator/T3DSharpGenerator.csproj"
-TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
-PLATFORM "Any CPU")
+macro(add_csproject name path)
 
-set_target_properties(T3DSharpGenerator PROPERTIES 
-	MAP_IMPORTED_CONFIG_RELEASE Release
-	MAP_IMPORTED_CONFIG_MINSIZEREL Release
-	MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
-	MAP_IMPORTED_CONFIG_DEBUG Debug
+	include_external_msproject(
+		${name} "${path}"
+		TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
+		PLATFORM "Any CPU"
 	)
+
+	set_target_properties(${name} PROPERTIES 
+		MAP_IMPORTED_CONFIG_RELEASE Release
+		MAP_IMPORTED_CONFIG_MINSIZEREL Release
+		MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
+		MAP_IMPORTED_CONFIG_DEBUG Debug
+		)
+	
+	set_target_properties(${name} PROPERTIES FOLDER "Managed")
+
+endmacro()
+
+macro(set_relative_csharp_framework_path src_path)
+file(RELATIVE_PATH CSHARP_FRAMEWORK_REL_PATH ${src_path} "${CSHARP_FRAMEWORK_PATH}")
+
+endmacro()
+
 	
 configure_file(
 	"${libDir}/t3dsharp/T3DSharpFramework/T3DSharpFramework.csproj.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpFramework/T3DSharpFramework.csproj"
 )
-include_external_msproject(
-T3DSharpFramework "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpFramework/T3DSharpFramework.csproj"
-TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
-PLATFORM "Any CPU")
+add_csproject(T3DSharpFramework "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpFramework/T3DSharpFramework.csproj")
+set(CSHARP_FRAMEWORK_PATH "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpFramework/T3DSharpFramework.csproj")
 
-set_target_properties(T3DSharpFramework PROPERTIES 
-	MAP_IMPORTED_CONFIG_RELEASE Release
-	MAP_IMPORTED_CONFIG_MINSIZEREL Release
-	MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
-	MAP_IMPORTED_CONFIG_DEBUG Debug
-	)
+set_relative_csharp_framework_path("${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGenerator")
+configure_file(
+	"${libDir}/t3dsharp/T3DSharpGenerator/T3DSharpGenerator.csproj.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGenerator/T3DSharpGenerator.csproj"
+)
+add_csproject(T3DSharpGenerator "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGenerator/T3DSharpGenerator.csproj")
 
+#####
+# Add .csproj templates
+#####
+
+
+set(tmp_files "")
+
+file(GLOB_RECURSE tmp_files ${projectOutDir}/*.csproj.in)
+
+foreach(entry ${BLACKLIST})
+	list(REMOVE_ITEM tmp_files ${dir}/${entry})
+endforeach()
+
+foreach(f ${tmp_files})
+string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" tmp_folder ${f})
+string(REGEX REPLACE "(.*)(/[^/]*)$" "\\2" tmp_file ${f})
+string(REGEX REPLACE "(.*)\.in$" "\\1" tmp_target ${tmp_file})
+string(REGEX REPLACE "(.*)\.csproj\.in$" "\\1" tmp_project_name ${tmp_file})
+
+set_relative_csharp_framework_path("${tmp_folder}")
+configure_file(
+	"${tmp_folder}/${tmp_file}"
+	"${tmp_folder}/${tmp_target}"
+)
+add_csproject(${tmp_project_name} "${tmp_folder}/${tmp_target}")
+LIST(APPEND TEMPLATED_CSPROJ_FILES "${tmp_folder}/${tmp_target}")
+endforeach()
+
+#####
+# Add .csproj
+#####
+
+set(tmp_files "")
+
+file(GLOB_RECURSE tmp_files ${projectOutDir}/*.csproj)
+
+foreach(entry ${BLACKLIST})
+	list(REMOVE_ITEM tmp_files ${projectOutDir}/${entry})
+endforeach()
+
+foreach(entry ${TEMPLATED_CSPROJ_FILES})
+	list(REMOVE_ITEM tmp_files ${entry})
+endforeach()
+
+foreach(f ${tmp_files})
+string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" tmp_folder ${f})
+string(REGEX REPLACE "(.*)(/[^/]*)$" "\\2" tmp_file ${f})
+
+set_relative_csharp_framework_path("${tmp_folder}")
+add_csproject(${tmp_project_name} "${tmp_folder}/${tmp_file}")
+endforeach()
+
+#####
+# Add game
+#####
+
+set_relative_csharp_framework_path("${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame")
 configure_file(
 	"${libDir}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj"
 )
-include_external_msproject(
-T3DSharpGame "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj"
-TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
-PLATFORM "Any CPU")
-
-set_target_properties(T3DSharpGame PROPERTIES 
-	MAP_IMPORTED_CONFIG_RELEASE Release
-	MAP_IMPORTED_CONFIG_MINSIZEREL Release
-	MAP_IMPORTED_CONFIG_RELWITHDEBINFO Debug
-	MAP_IMPORTED_CONFIG_DEBUG Debug
-	)
-
-
+add_csproject(T3DSharpGame "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj")

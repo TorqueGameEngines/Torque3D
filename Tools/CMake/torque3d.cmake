@@ -218,6 +218,9 @@ if(WIN32)
 	endif()
 endif()
 
+option(USE_SOLUTION_FOLDERS "use solution folders to group projects" OFF)
+set_property(GLOBAL PROPERTY USE_FOLDERS ${USE_SOLUTION_FOLDERS})
+
 # build types
 if(NOT MSVC AND NOT APPLE) # handle single-configuration generator
 	set(CMAKE_BUILD_TYPE ${TORQUE_BUILD_TYPE})

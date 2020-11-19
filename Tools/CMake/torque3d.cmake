@@ -919,10 +919,3 @@ if(TORQUE_TEMPLATE)
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeletePrefs.bat"      DESTINATION "${TORQUE_APP_DIR}")
     endif()
 endif()
-
-if( TORQUE_CSHARP )
-	# check if we can build it ourselfs
-	if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")
-		addLibSrc("${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")
-	endif()
-endif()

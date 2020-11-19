@@ -8,9 +8,12 @@
       <PublishTrimmed>true</PublishTrimmed>
       <PlatformTarget>x64</PlatformTarget>
       <OutputPath>@projectOutDir@</OutputPath>
+	  <Configurations>@CMAKE_CONFIGURATION_TYPES@</Configurations>
    </PropertyGroup>
    
    <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' "></PropertyGroup>
+   
+   @CSHARP_DEFINE_CONSTANTS@
    
    <ItemGroup>
       <ProjectReference Include="@CSHARP_FRAMEWORK_REL_PATH@" />
@@ -19,6 +22,7 @@
    
    <ItemGroup>
       <Compile Include="@libDir@/t3dsharp/T3DSharpGame/**/*.cs" />
+      <Compile Include="@projectOutDir@/Program.cs" />
    </ItemGroup>
    
 </Project>

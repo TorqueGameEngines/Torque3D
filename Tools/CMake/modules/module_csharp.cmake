@@ -31,10 +31,10 @@ endif()
 
 set(TORQUE_LIBRARY ON)
 set(TORQUE_NO_MAIN_CS ON)
-
-return()
 	           
 # check if we can build it ourselfs
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")
+    set(cached_project_name ${PROJECT_NAME})
 	addLibSrc("${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")
+    project(${cached_project_name})
 endif()

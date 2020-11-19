@@ -89,7 +89,7 @@ configure_file(
 	"${tmp_folder}/${tmp_file}"
 	"${tmp_folder}/${tmp_target}"
 )
-add_csproject(${tmp_project_name} "${tmp_folder}/${tmp_target}")
+add_csproject("${tmp_project_name}" "${tmp_folder}/${tmp_target}")
 LIST(APPEND TEMPLATED_CSPROJ_FILES "${tmp_folder}/${tmp_target}")
 LIST(APPEND CSPROJ_FILES "${tmp_folder}/${tmp_target}")
 endforeach()
@@ -113,10 +113,11 @@ endforeach()
 foreach(f ${tmp_files})
 string(REGEX REPLACE "(.*)/([^/]*)$" "\\1" tmp_folder ${f})
 string(REGEX REPLACE "(.*)/([^/]*)$" "\\2" tmp_file ${f})
+string(REGEX REPLACE "(.*)\.csproj$" "\\1" tmp_project_name ${tmp_file})
 
 set_relative_csharp_framework_path("${tmp_folder}")
-add_csproject(${tmp_project_name} "${tmp_folder}/${tmp_file}")
-LIST(APPEND CSPROJ_FILES "${tmp_folder}/${tmp_target}")
+add_csproject("${tmp_project_name}" "${tmp_folder}/${tmp_file}")
+LIST(APPEND CSPROJ_FILES "${tmp_folder}/${tmp_file}")
 endforeach()
 
 #####
@@ -124,7 +125,6 @@ endforeach()
 #####
 
 foreach(f ${CSPROJ_FILES})
-
 file(RELATIVE_PATH tmp_rel_path "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame" "${f}")
 set(GAME_INCLUDES "${GAME_INCLUDES} \n\
       <ProjectReference Include=\"${tmp_rel_path}\"> \n\
@@ -133,9 +133,51 @@ set(GAME_INCLUDES "${GAME_INCLUDES} \n\
 ")
 endforeach()
 
+if(MSVC)
+    # Match projectGenerator naming for executables
+    set(OUTPUT_CONFIG DEBUG MINSIZEREL RELWITHDEBINFO)
+    set(OUTPUT_SUFFIX DEBUG MINSIZE    OPTIMIZEDDEBUG)
+	set(CSHARP_TORQUE_LIBRARIES_STATEMENTS "#if RELEASE \n\
+            Windows32bit = \"${TORQUE_APP_NAME}.dll\", \n\
+            Windows64bit = \"${TORQUE_APP_NAME}.dll\"  \n\
+"	)
+    foreach(INDEX RANGE 2)
+        list(GET OUTPUT_CONFIG ${INDEX} CONF)
+        list(GET OUTPUT_SUFFIX ${INDEX} SUFFIX)
+		set(CSHARP_TORQUE_LIBRARIES_STATEMENTS "${CSHARP_TORQUE_LIBRARIES_STATEMENTS}\
+            #elif ${CONF} \n\
+            Windows32bit = \"${TORQUE_APP_NAME}_${SUFFIX}.dll\", \n\
+            Windows64bit = \"${TORQUE_APP_NAME}_${SUFFIX}.dll\"  \n\
+"		)
+    endforeach()
+	set(CSHARP_TORQUE_LIBRARIES_STATEMENTS "${CSHARP_TORQUE_LIBRARIES_STATEMENTS}\
+            #endif"	)
+endif()
+
+foreach(c ${CMAKE_CONFIGURATION_TYPES})
+string(TOUPPER ${c} tmp_c_upper)
+set(CSHARP_DEFINE_CONSTANTS "${CSHARP_DEFINE_CONSTANTS} \n\
+   <PropertyGroup Condition=\"\'\$(Configuration)'=='${c}'\">\n\
+     <DefineConstants>${tmp_c_upper}</DefineConstants>\n\
+   </PropertyGroup>\n\
+")
+endforeach()
+
+configure_file(
+	"${libDir}/t3dsharp/T3DSharpGame/Program.cs.in"
+	"${projectOutDir}/Program.cs"
+)
+
 set_relative_csharp_framework_path("${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame")
 configure_file(
 	"${libDir}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj"
 )
 add_csproject(T3DSharpGame "${CMAKE_CURRENT_BINARY_DIR}/t3dsharp/T3DSharpGame/T3DSharpGame.csproj")
+
+set_target_properties(T3DSharpGame PROPERTIES 
+	MAP_IMPORTED_CONFIG_RELEASE Release
+	MAP_IMPORTED_CONFIG_MINSIZEREL MinSizeRel
+	MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo
+	MAP_IMPORTED_CONFIG_DEBUG Debug
+	)

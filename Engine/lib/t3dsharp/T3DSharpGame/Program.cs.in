@@ -1,4 +1,8 @@
+using System;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
+using System.Threading;
 using T3DSharpFramework.Engine;
 using T3DSharpFramework.Generated.Classes.Sim;
 using T3DSharpFramework.Generated.Functions;
@@ -6,8 +10,40 @@ using T3DSharpFramework.Interop;
 
 namespace Game
 {
-   class Main
+   class Program
    {
+      static void Main(string[] args)
+      {
+         CultureInfo customCulture =
+            (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+         customCulture.NumberFormat.NumberDecimalSeparator = ".";
+
+         Thread.CurrentThread.CurrentCulture = customCulture;
+
+         foreach (string library in Directory.GetFiles("./", "*.dll"))
+         {
+            try
+            {
+               Initializer.InitializeTypeDictionaries(Assembly.LoadFile(System.IO.Path.GetFullPath(library)).GetTypes());
+            }
+            catch (BadImageFormatException e)
+            {
+               // Skip
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+               // Skip
+            }
+         }
+
+         Torque3D.Libraries libraries = new Torque3D.Libraries
+         {
+            @CSHARP_TORQUE_LIBRARIES_STATEMENTS@
+         };
+
+         Torque3D.Initialize(args, libraries);
+      }
+
       [ScriptEntryPoint]
       public static void Entry()
       {

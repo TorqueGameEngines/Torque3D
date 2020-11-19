@@ -689,7 +689,7 @@ ImplementEnumType(_TamlFormatMode,
          // For now, we only deal with non-array fields.
          if (elementCount == 1 &&
             pField->setDataFn != NULL &&
-            (!getWriteDefaults() && pField->writeDataFn(pSimObject, fieldName) == false))
+            (!getWriteDefaults() && pField->writeDataFn(pSimObject, NULL, fieldName) == false))
             continue;
 
          // Iterate elements.

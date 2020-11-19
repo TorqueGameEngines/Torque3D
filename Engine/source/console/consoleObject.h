@@ -450,7 +450,7 @@ public:
    typedef const char *(*GetDataNotify)( void *obj, const char *data );
 
    /// This is a function pointer typedef to support optional writing for fields.
-   typedef bool(*WriteDataNotify)(void* obj, StringTableEntry pFieldName);
+   typedef bool(*WriteDataNotify)(void* obj, const char* idx, StringTableEntry fieldName);
 
    /// These are special field type values used to mark
    /// groups and arrays in the field list.
@@ -531,7 +531,7 @@ public:
       TypeValidator *validator;     ///< Validator, if any.
       SetDataNotify  setDataFn;     ///< Set data notify Fn
       GetDataNotify  getDataFn;     ///< Get data notify Fn
-	    WriteDataNotify writeDataFn;  ///< Function to determine whether data should be written or not.
+	   WriteDataNotify writeDataFn;  ///< Function to determine whether data should be written or not.
       bool           doNotSubstitute;
       bool           keepClearSubsOnly;
 
@@ -757,7 +757,7 @@ template< typename T > EnginePropertyTable& ConcreteAbstractClassRep< T >::smPro
 //------------------------------------------------------------------------------
 // Forward declaration of this function so  it can be used in the class
 const char *defaultProtectedGetFn( void *obj, const char *data );
-bool defaultProtectedWriteFn(void* obj, StringTableEntry pFieldName);
+bool defaultProtectedWriteFn(void* obj, const char* idx, StringTableEntry fieldName);
 
 //=============================================================================
 //    ConsoleObject.
@@ -1334,7 +1334,7 @@ inline const char *emptyStringProtectedGetFn( void *obj, const char *data )
    return "";
 }
 
-inline bool defaultProtectedWriteFn(void* obj, StringTableEntry pFieldName)
+inline bool defaultProtectedWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
 {
    return true;
 }
@@ -1344,7 +1344,7 @@ inline bool defaultProtectedNotSetFn(void* obj, const char *array, const char* d
    return false;
 }
 
-inline bool defaultProtectedNotWriteFn(void* obj, StringTableEntry pFieldName)
+inline bool defaultProtectedNotWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
 {
    return false;
 }

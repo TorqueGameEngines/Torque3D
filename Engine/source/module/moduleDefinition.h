@@ -203,33 +203,33 @@ protected:
     static bool             setModuleId(void* obj, const char* index, const char* data)                    { static_cast<ModuleDefinition*>(obj)->setModuleId( data ); return false; }
     static bool             setVersionId(void* obj, const char* index, const char* data)                   { static_cast<ModuleDefinition*>(obj)->setVersionId((U32)dAtoi(data)); return false; }
     static bool             setBuildId(void* obj, const char* index, const char* data)                     { static_cast<ModuleDefinition*>(obj)->setBuildId((U32)dAtoi(data)); return false; }
-    static bool             writeBuildId( void* obj, StringTableEntry pFieldName )      { return static_cast<ModuleDefinition*>(obj)->getBuildId() != 0; }
+    static bool             writeBuildId( void* obj, const char* idx, StringTableEntry pFieldName )      { return static_cast<ModuleDefinition*>(obj)->getBuildId() != 0; }
     static bool             setEnabled(void* obj, const char* index, const char* data)                     { static_cast<ModuleDefinition*>(obj)->setEnabled(dAtob(data)); return false; }
-    static bool             writeEnabled( void* obj, StringTableEntry pFieldName )      { return static_cast<ModuleDefinition*>(obj)->getEnabled() == false; }
+    static bool             writeEnabled( void* obj, const char* idx, StringTableEntry pFieldName )      { return static_cast<ModuleDefinition*>(obj)->getEnabled() == false; }
     static bool             setSynchronized(void* obj, const char* index, const char* data)                { static_cast<ModuleDefinition*>(obj)->setSynchronized(dAtob(data)); return false; }
-    static bool             writeSynchronized( void* obj, StringTableEntry pFieldName ) { return static_cast<ModuleDefinition*>(obj)->getSynchronized() == true; }
+    static bool             writeSynchronized( void* obj, const char* idx, StringTableEntry pFieldName ) { return static_cast<ModuleDefinition*>(obj)->getSynchronized() == true; }
     static bool             setDeprecated(void* obj, const char* index, const char* data)                  { static_cast<ModuleDefinition*>(obj)->setDeprecated(dAtob(data)); return false; }
-    static bool             writeDeprecated( void* obj, StringTableEntry pFieldName )   { return static_cast<ModuleDefinition*>(obj)->getDeprecated() == true; }
-    static bool             writeCriticalMerge( void* obj, StringTableEntry pFieldName ){ return static_cast<ModuleDefinition*>(obj)->getCriticalMerge() == true; }    
+    static bool             writeDeprecated( void* obj, const char* idx, StringTableEntry pFieldName )   { return static_cast<ModuleDefinition*>(obj)->getDeprecated() == true; }
+    static bool             writeCriticalMerge( void* obj, const char* idx, StringTableEntry pFieldName ){ return static_cast<ModuleDefinition*>(obj)->getCriticalMerge() == true; }
     static bool             setOverrideExistingObjects(void* obj, const char* index, const char* data)     { static_cast<ModuleDefinition*>(obj)->setOverrideExistingObjects(dAtob(data)); return false; }
-    static bool             writeOverrideExistingObjects(void* obj, StringTableEntry pFieldName)           { return static_cast<ModuleDefinition*>(obj)->getOverrideExistingObjects() == true; }
+    static bool             writeOverrideExistingObjects(void* obj, const char* idx, StringTableEntry pFieldName)           { return static_cast<ModuleDefinition*>(obj)->getOverrideExistingObjects() == true; }
     static bool             setModuleDescription(void* obj, const char* index, const char* data)           { static_cast<ModuleDefinition*>(obj)->setModuleDescription(data); return false; }
-    static bool             writeModuleDescription( void* obj, StringTableEntry pFieldName ) { return static_cast<ModuleDefinition*>(obj)->getModuleDescription() != StringTable->EmptyString(); }
+    static bool             writeModuleDescription( void* obj, const char* idx, StringTableEntry pFieldName ) { return static_cast<ModuleDefinition*>(obj)->getModuleDescription() != StringTable->EmptyString(); }
     static bool             setAuthor(void* obj, const char* index, const char* data)                      { static_cast<ModuleDefinition*>(obj)->setAuthor(data); return false; }
-    static bool             writeAuthor(void* obj, StringTableEntry pFieldName)       { return static_cast<ModuleDefinition*>(obj)->getAuthor() != StringTable->EmptyString(); }
+    static bool             writeAuthor(void* obj, const char* idx, StringTableEntry pFieldName)       { return static_cast<ModuleDefinition*>(obj)->getAuthor() != StringTable->EmptyString(); }
     static bool             setModuleGroup(void* obj, const char* index, const char* data)                 { static_cast<ModuleDefinition*>(obj)->setModuleGroup(data); return false; }
     static bool             setModuleType(void* obj, const char* index, const char* data)                  { static_cast<ModuleDefinition*>(obj)->setModuleType(data); return false; }
-    static bool             writeModuleType(void* obj, StringTableEntry pFieldName)   { return static_cast<ModuleDefinition*>(obj)->getModuleType() != StringTable->EmptyString(); }
+    static bool             writeModuleType(void* obj, const char* idx, StringTableEntry pFieldName)   { return static_cast<ModuleDefinition*>(obj)->getModuleType() != StringTable->EmptyString(); }
     static bool             setScriptFile(void* obj, const char* index, const char* data)                  { static_cast<ModuleDefinition*>(obj)->setScriptFile(data); return false; }
-    static bool             writeScriptFile(void* obj, StringTableEntry pFieldName)   { return static_cast<ModuleDefinition*>(obj)->getScriptFile() != StringTable->EmptyString(); }
+    static bool             writeScriptFile(void* obj, const char* idx, StringTableEntry pFieldName)   { return static_cast<ModuleDefinition*>(obj)->getScriptFile() != StringTable->EmptyString(); }
     static bool             setCreateFunction(void* obj, const char* index, const char* data)              { static_cast<ModuleDefinition*>(obj)->setCreateFunction(data); return false; }
-    static bool             writeCreateFunction(void* obj, StringTableEntry pFieldName) { return static_cast<ModuleDefinition*>(obj)->getCreateFunction() != StringTable->EmptyString(); }
+    static bool             writeCreateFunction(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<ModuleDefinition*>(obj)->getCreateFunction() != StringTable->EmptyString(); }
     static bool             setDestroyFunction(void* obj, const char* index, const char* data)             { static_cast<ModuleDefinition*>(obj)->setDestroyFunction(data); return false; }
-    static bool             writeDestroyFunction(void* obj, StringTableEntry pFieldName) { return static_cast<ModuleDefinition*>(obj)->getDestroyFunction() != StringTable->EmptyString(); }
+    static bool             writeDestroyFunction(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<ModuleDefinition*>(obj)->getDestroyFunction() != StringTable->EmptyString(); }
 
     /// Asset manifest.
     static bool             setAssetTagsManifest(void* obj, const char* index, const char* data)     { static_cast<ModuleDefinition*>(obj)->setAssetTagsManifest(data); return false; }
-    static bool             writeAssetTagsManifest(void* obj, StringTableEntry pFieldName) { return static_cast<ModuleDefinition*>(obj)->getAssetTagsManifest() != StringTable->EmptyString(); }
+    static bool             writeAssetTagsManifest(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<ModuleDefinition*>(obj)->getAssetTagsManifest() != StringTable->EmptyString(); }
     static const char*      getScopeSet(void* obj, const char* data)                    { return Con::getIntArg(static_cast<ModuleDefinition*>(obj)->getScopeSet()); }
 
     static bool             setDependencies(void* obj, const char* index, const char* data)
@@ -328,7 +328,7 @@ protected:
 
         return pReturnBuffer;
     }
-    static bool             writeDependencies( void* obj, StringTableEntry pFieldName ) { return static_cast<ModuleDefinition*>(obj)->getDependencies().size() > 0; }
+    static bool             writeDependencies( void* obj, const char* idx, StringTableEntry pFieldName ) { return static_cast<ModuleDefinition*>(obj)->getDependencies().size() > 0; }
     static const char*      getSignature(void* obj, const char* data)                   { return static_cast<ModuleDefinition*>(obj)->getSignature(); }
 };
 

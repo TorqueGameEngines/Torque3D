@@ -153,26 +153,32 @@ void SimObject::initPersistFields()
    addGroup( "Ungrouped" );
 
       addProtectedField( "name", TypeName, Offset(mObjectName, SimObject), &setProtectedName, &defaultProtectedGetFn,
+         &PublicStringMemberWriteFn<SimObject, "", &SimObject::mObjectName>,
          "Optional global name of this object." );
                   
    endGroup( "Ungrouped" );
 
    addGroup( "Object" );
 
-      addField( "internalName", TypeString, Offset(mInternalName, SimObject), 
+      addField( "internalName", TypeString, Offset(mInternalName, SimObject),
+         &PublicStringMemberWriteFn<SimObject, "", &SimObject::mInternalName>,
          "Optional name that may be used to lookup this object within a SimSet.");
 
-      addProtectedField( "parentGroup", TYPEID< SimObject >(), Offset(mGroup, SimObject), &setProtectedParent, &defaultProtectedGetFn, 
+      addProtectedField( "parentGroup", TYPEID< SimObject >(), Offset(mGroup, SimObject), &setProtectedParent, &defaultProtectedGetFn,
+         &PublicMemberWriteFn<SimObject, SimGroup*, NULL, &SimObject::mGroup>,
          "Group hierarchy parent of the object." );
 
       addProtectedField( "class", TypeString, Offset(mClassName, SimObject), &setClass, &defaultProtectedGetFn,
+         &PublicStringMemberWriteFn<SimObject, "", &SimObject::mClassName>,
          "Script class of object." );
 
       addProtectedField( "superClass", TypeString, Offset(mSuperClassName, SimObject), &setSuperClass, &defaultProtectedGetFn,
+         &PublicStringMemberWriteFn<SimObject, "", &SimObject::mSuperClassName>,
          "Script super-class of object." );
 
       // For legacy support
       addProtectedField( "className", TypeString, Offset(mClassName, SimObject), &setClass, &defaultProtectedGetFn,
+         &PublicStringMemberWriteFn<SimObject, "", &SimObject::mClassName>,
          "Script class of object.", AbstractClassRep::FIELD_HideInInspectors );
 
    endGroup( "Object" );
@@ -180,10 +186,10 @@ void SimObject::initPersistFields()
    addGroup( "Editing" );
    
       addProtectedField( "hidden", TypeBool, NULL,
-         &_setHidden, &_getHidden,
+         &_setHidden, &_getHidden, &DefaultBoolWriteFn<false>,
          "Whether the object is visible." );
       addProtectedField( "locked", TypeBool, NULL,
-         &_setLocked, &_getLocked,
+         &_setLocked, &_getLocked, &DefaultBoolWriteFn<false>,
          "Whether the object can be edited." );
    
    endGroup( "Editing" );
@@ -191,14 +197,15 @@ void SimObject::initPersistFields()
    addGroup( "Persistence" );
 
       addProtectedField( "canSave", TypeBool, Offset( mFlags, SimObject ),
-         &_setCanSave, &_getCanSave,
+         &_setCanSave, &_getCanSave, &PublicConstMethodWriteFn<SimObject, bool, true, &SimObject::getCanSave>,
          "Whether the object can be saved out. If false, the object is purely transient in nature." );
 
-      addField( "canSaveDynamicFields", TypeBool, Offset(mCanSaveFieldDictionary, SimObject), 
+      addField( "canSaveDynamicFields", TypeBool, Offset(mCanSaveFieldDictionary, SimObject),
+         &PublicMemberWriteFn<SimObject, bool, true, &SimObject::mCanSaveFieldDictionary>,
          "True if dynamic fields (added at runtime) should be saved. Defaults to true." );
    
       addProtectedField( "persistentId", TypePID, Offset( mPersistentId, SimObject ),
-         &_setPersistentID, &defaultProtectedGetFn,
+         &_setPersistentID, &defaultProtectedGetFn, &PublicMemberWriteFn<SimObject, SimPersistID*, NULL, &SimObject::mPersistentId>,
          "The universally unique identifier for the object." );
    
    endGroup( "Persistence" );

@@ -819,11 +819,11 @@ bool GuiGameListMenuCtrl::onInputEvent(const InputEventInfo& event)
 {
    if (mCallbackOnInputs)
    {
-      char deviceString[32];
-      if (!ActionMap::getDeviceName(event.deviceType, event.deviceInst, deviceString))
+      char deviceStr[32];
+      if (!ActionMap::getDeviceName(event.deviceType, event.deviceInst, deviceStr))
          return false;
 
-      StringTableEntry deviceStringEntry = StringTable->insert(deviceString);
+      String deviceString = deviceStr;
 
       if (event.action == SI_MAKE || event.action == SI_BREAK)
       {
@@ -850,23 +850,22 @@ bool GuiGameListMenuCtrl::onInputEvent(const InputEventInfo& event)
             if (!ActionMap::getKeyString(event.objInst, keyString))
                return false;
 
-            onInputEvent_callback(deviceStringEntry, keyString, state);
+            onInputEvent_callback(deviceString.c_str(), keyString, state);
 
             if (mConsumeKeyInputEvents)
             {
-               if(deviceStringEntry == StringTable->insert("keyboard"))
+               if(deviceString.startsWith("keyboard"))
                   return true;
             }
-
          }
          else
          {
             const char* actionString = ActionMap::buildActionString(&event);
-            onInputEvent_callback(deviceStringEntry, actionString, state);
+            onInputEvent_callback(deviceString.c_str(), actionString, state);
 
             if (mConsumeKeyInputEvents)
             {
-               if (deviceStringEntry == StringTable->insert("keyboard"))
+               if (deviceString.startsWith("keyboard") || deviceString.startsWith("gamepad"))
                   return true;
             }
          }
@@ -877,12 +876,12 @@ bool GuiGameListMenuCtrl::onInputEvent(const InputEventInfo& event)
          if (event.objType == SI_INT)
             fValue = (F32)event.iValue;
 
-         if (!ActionMap::getDeviceName(event.deviceType, event.deviceInst, deviceString))
+         if (!ActionMap::getDeviceName(event.deviceType, event.deviceInst, deviceStr))
             return false;
 
          const char* actionString = ActionMap::buildActionString(&event);
 
-         onAxisEvent_callback(deviceString, actionString, fValue);
+         onAxisEvent_callback(deviceStr, actionString, fValue);
       }
    }
 

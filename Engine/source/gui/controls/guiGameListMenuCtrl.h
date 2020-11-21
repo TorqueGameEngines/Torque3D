@@ -428,6 +428,7 @@ private:
    S32      mHighlighted;  ///< index of the currently highlighted row
 
    bool     mCallbackOnInputs;
+   bool     mConsumeKeyInputEvents;
 };
 
 /// \class GuiGameListMenuProfile

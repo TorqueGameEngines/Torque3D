@@ -53,6 +53,7 @@
       new GuiGameListMenuCtrl(PauseMenuList) {
          debugRender = "0";
          callbackOnInputs = "1";
+         consumeKeyInputEvents = "1";
          position = "0 0";
          extent = "700 320";
          minExtent = "8 2";

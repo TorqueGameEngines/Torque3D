@@ -802,9 +802,10 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowProjectionDistance);
    stream->write(shadowSphereAdjust);
 
-
-   stream->writeString(shapeName);
-   stream->writeString(shapeAsset.getAssetId());
+   if (stream->writeFlag(shapeAsset.notNull()))
+      stream->writeString(shapeAsset.getAssetId());
+   else
+      stream->writeString(shapeName);
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -882,12 +883,16 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowProjectionDistance);
    stream->read(&shadowSphereAdjust);
 
-   shapeName = stream->readSTString();
-
-   char buffer[256];
-   stream->readString(buffer);
+   if (stream->readFlag())
+   {
+      char buffer[256];
+      stream->readString(buffer);
+   }
+   else
+      shapeName = stream->readSTString();
 
    cloakTexName = stream->readSTString();
+
    if(stream->readFlag())
       stream->read(&mass);
    else

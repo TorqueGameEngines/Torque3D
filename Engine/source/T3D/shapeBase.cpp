@@ -158,6 +158,8 @@ ShapeBaseData::ShapeBaseData()
    shadowProjectionDistance( 10.0f ),
    shadowSphereAdjust( 1.0f ),
    shapeName( StringTable->EmptyString() ),
+   shapeAsset(StringTable->EmptyString()),
+   shapeAssetId(StringTable->EmptyString()),
    cloakTexName( StringTable->EmptyString() ),
    cubeDescId( 0 ),
    reflectorDesc( NULL ),
@@ -212,6 +214,8 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    shadowProjectionDistance = other.shadowProjectionDistance;
    shadowSphereAdjust = other.shadowSphereAdjust;
    shapeName = other.shapeName;
+   shapeAsset = other.shapeAsset;
+   shapeAssetId = other.shapeAssetId;
    cloakTexName = other.cloakTexName;
    cubeDescName = other.cubeDescName;
    cubeDescId = other.cubeDescId;
@@ -356,12 +360,29 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
       }
    }
 
-   //
-   if (shapeName && shapeName[0]) {
+   //Legacy catch
+   if (shapeAssetId == StringTable->EmptyString() && shapeName != StringTable->EmptyString())
+   {
+      StringTableEntry assetId = ShapeAsset::getAssetIdByFilename(shapeName);
+      if (assetId != StringTable->EmptyString())
+      {
+         shapeAssetId = assetId;
+      }
+   }
+
+   if (ShapeAsset::getAssetById(shapeAssetId, &shapeAsset))
+   {
+      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
+      //the TSStatic
+      if (shapeAsset.getAssetId() != StringTable->insert("Core_Rendering:noshape"))
+      {
+         shapeName = StringTable->EmptyString();
+      }
+   
       S32 i;
 
       // Resolve shapename
-      mShape = ResourceManager::get().load(shapeName);
+      mShape = shapeAsset->getShapeResource();
       if (bool(mShape) == false)
       {
          errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"",shapeName);
@@ -574,6 +595,9 @@ void ShapeBaseData::initPersistFields()
 
    addGroup( "Render" );
 
+      addField("shapeAsset", TypeShapeAssetId, Offset(shapeAssetId, ShapeBaseData),
+         "The source shape asset.");
+
       addField( "shapeFile", TypeShapeFilename, Offset(shapeName, ShapeBaseData),
          "The DTS or DAE model to use for this object." );
 
@@ -780,6 +804,8 @@ void ShapeBaseData::packData(BitStream* stream)
 
 
    stream->writeString(shapeName);
+   stream->writeString(shapeAsset.getAssetId());
+
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
       stream->write(mass);
@@ -857,6 +883,10 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowSphereAdjust);
 
    shapeName = stream->readSTString();
+
+   char buffer[256];
+   stream->readString(buffer);
+
    cloakTexName = stream->readSTString();
    if(stream->readFlag())
       stream->read(&mass);

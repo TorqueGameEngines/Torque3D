@@ -67,6 +67,10 @@
    #include "console/dynamicTypes.h"
 #endif
 
+#ifndef SHAPEASSET_H
+#include "T3D/assets/ShapeAsset.h"
+#endif 
+
 // Need full definition visible for SimObjectPtr<ParticleEmitter>
 #include "T3D/fx/particleEmitter.h"
 
@@ -536,6 +540,10 @@ public:
 
 
    StringTableEntry  shapeName;
+
+   AssetPtr<ShapeAsset> shapeAsset;
+   StringTableEntry shapeAssetId;
+
    StringTableEntry  cloakTexName;
 
    String cubeDescName;

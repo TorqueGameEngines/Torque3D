@@ -361,13 +361,9 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
 
    //Legacy catch
-   if (shapeAssetId == StringTable->EmptyString() && shapeName != StringTable->EmptyString())
+   if (shapeName != StringTable->EmptyString())
    {
-      StringTableEntry assetId = ShapeAsset::getAssetIdByFilename(shapeName);
-      if (assetId != StringTable->EmptyString())
-      {
-         shapeAssetId = assetId;
-      }
+      shapeAssetId = ShapeAsset::getAssetIdByFilename(shapeName);
    }
 
    if (ShapeAsset::getAssetById(shapeAssetId, &shapeAsset))
@@ -802,11 +798,14 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowProjectionDistance);
    stream->write(shadowSphereAdjust);
 
-
-   //if (stream->writeFlag(shapeAsset.notNull()))
+   if (stream->writeFlag(shapeAsset.notNull()))
+   {
       stream->writeString(shapeAsset.getAssetId());
-   //else
+   }
+   else
+   {
       stream->writeString(shapeName);
+   }
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -884,11 +883,16 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowProjectionDistance);
    stream->read(&shadowSphereAdjust);
 
-
-   //if (stream->readFlag())
+   if (stream->readFlag())
+   {
       shapeAssetId = stream->readSTString();
-   //else
+      ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
+      shapeName = shapeAsset->getShapeFilename();
+   }
+   else
+   {
       shapeName = stream->readSTString();
+   }
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())

@@ -503,6 +503,7 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
 
+#ifdef TORQUE_TOOLS
 IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeShapeAssetPtr,
@@ -595,6 +596,8 @@ void GuiInspectorTypeShapeAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeShapeAssetId)->setInspectorFieldType("GuiInspectorTypeShapeAssetId");
 }
+
+#endif
 
 DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
    "Creates a new script asset using the targetFilePath.\n"

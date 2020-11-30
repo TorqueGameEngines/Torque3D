@@ -30,6 +30,8 @@
 #include "ts/tsShapeInstance.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 //-----------------------------------------------------------------------------
 // This class implements a basic SceneObject that can exist in the world at a
 // 3D position and render itself. There are several valid ways to render an
@@ -60,7 +62,8 @@ class RenderShapeExample : public SceneObject
    // Rendering variables
    //--------------------------------------------------------------------------
    // The name of the shape file we will use for rendering
-   String            mShapeFile;
+   DECLARE_SHAPEASSET(RenderShapeExample, Shape);
+
    // The actual shape instance
    TSShapeInstance*  mShapeInstance;
    // Store the resource so we can access the filename later

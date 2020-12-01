@@ -410,21 +410,21 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    return shapeAssetId;
 }
 
-bool ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset)
+U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset)
 {
    (*shapeAsset) = assetId;
 
    if (!shapeAsset->isNull())
-      return true;
+      return AssetErrCode::Ok;
 
    //Didn't work, so have us fall back to a placeholder asset
    StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
    shapeAsset->setAssetId(noShapeId);
 
    if (!shapeAsset->isNull())
-      return true;
+      return AssetErrCode::UsingFallback;
 
-   return false;
+   return AssetErrCode::Failed;
 }
 //------------------------------------------------------------------------------
 
@@ -503,6 +503,7 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
 
+#ifdef TORQUE_TOOLS
 IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeShapeAssetPtr,
@@ -595,6 +596,8 @@ void GuiInspectorTypeShapeAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeShapeAssetId)->setInspectorFieldType("GuiInspectorTypeShapeAssetId");
 }
+
+#endif
 
 DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
    "Creates a new script asset using the targetFilePath.\n"

@@ -119,6 +119,7 @@ ShapeAsset::ShapeAsset()
    mConstructorFileName = StringTable->EmptyString();
    mFilePath = StringTable->EmptyString();
    mConstructorFilePath = StringTable->EmptyString();
+   mLoadedState = AssetErrCode::NotLoaded;
 }
 
 //-----------------------------------------------------------------------------
@@ -264,7 +265,8 @@ bool ShapeAsset::loadShape()
 
    if (!mShape)
    {
-      Con::errorf("StaticMesh::updateShape : failed to load shape file!");
+      Con::errorf("ShapeAsset::loadShape : failed to load shape file!");
+      mLoadedState = BadFileReference;
       return false; //if it failed to load, bail out
    }
 
@@ -280,8 +282,10 @@ bool ShapeAsset::loadShape()
 
       if (!mShape->addSequence(srcPath, srcName, srcName,
          mAnimationAssets[i]->getStartFrame(), mAnimationAssets[i]->getEndFrame(), mAnimationAssets[i]->getPadRotation(), mAnimationAssets[i]->getPadTransforms()))
+      {
+         mLoadedState = MissingAnimatons;
          return false;
-
+      }
       if (mAnimationAssets[i]->isBlend())
          hasBlends = true;
    }
@@ -300,14 +304,20 @@ bool ShapeAsset::loadShape()
             if (blendAnimAsset.isNull())
             {
                Con::errorf("ShapeAsset::initializeAsset - Unable to acquire reference animation asset %s for asset %s to blend!", mAnimationAssets[i]->getBlendAnimationName(), mAnimationAssets[i]->getAssetName());
-               return false;
+               {
+                  mLoadedState = MissingAnimatons;
+                  return false;
+               }
             }
 
             String refAnimName = blendAnimAsset->getAnimationName();
             if (!mShape->setSequenceBlend(mAnimationAssets[i]->getAnimationName(), true, blendAnimAsset->getAnimationName(), mAnimationAssets[i]->getBlendFrame()))
             {
                Con::errorf("ShapeAnimationAsset::initializeAsset - Unable to set animation clip %s for asset %s to blend!", mAnimationAssets[i]->getAnimationName(), mAnimationAssets[i]->getAssetName());
-               return false;
+               {
+                  mLoadedState = MissingAnimatons;
+                  return false;
+               }
             }
          }
       }
@@ -315,6 +325,7 @@ bool ShapeAsset::loadShape()
 
    mChangeSignal.trigger();
 
+   mLoadedState = Ok;
    return true;
 }
 
@@ -414,14 +425,14 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 {
    (*shapeAsset) = assetId;
 
-   if (!shapeAsset->isNull())
-      return AssetErrCode::Ok;
+   if ((*shapeAsset) && AssetErrCode::Ok == (*shapeAsset)->mLoadedState)
+      return (*shapeAsset)->mLoadedState;
 
    //Didn't work, so have us fall back to a placeholder asset
    StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
    shapeAsset->setAssetId(noShapeId);
-
-   if (!shapeAsset->isNull())
+   (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
+   if (shapeAsset->notNull())
       return AssetErrCode::UsingFallback;
 
    return AssetErrCode::Failed;

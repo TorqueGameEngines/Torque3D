@@ -60,6 +60,7 @@ enum AssetErrCode
 {
    Failed,
    Ok,
+   NotLoaded,
    BadFileReference,
    InvalidFormat,
    DependencyNotFound,

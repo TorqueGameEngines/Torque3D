@@ -86,7 +86,8 @@ public:
    enum ShapeAssetErrCode
    {
       TooManyVerts = AssetErrCode::Extended,
-      TooManyBones
+      TooManyBones,
+      MissingAnimatons
    };
 
    ShapeAsset();
@@ -104,6 +105,7 @@ public:
    DECLARE_CONOBJECT(ShapeAsset);
 
    bool loadShape();
+   U32 mLoadedState;
 
    TSShape* getShape() { return mShape; }
 

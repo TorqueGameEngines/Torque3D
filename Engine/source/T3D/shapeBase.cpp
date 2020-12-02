@@ -361,20 +361,15 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
 
    //Legacy catch
-   if (shapeAssetId == StringTable->EmptyString() && shapeName != StringTable->EmptyString())
+   if (shapeName != StringTable->EmptyString())
    {
-      StringTableEntry assetId = ShapeAsset::getAssetIdByFilename(shapeName);
-      if (assetId != StringTable->EmptyString())
-      {
-         shapeAssetId = assetId;
-      }
+      shapeAssetId = ShapeAsset::getAssetIdByFilename(shapeName);
    }
-
-   if (ShapeAsset::getAssetById(shapeAssetId, &shapeAsset))
+   U32 assetState = ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
+   if (AssetErrCode::Failed != assetState)
    {
-      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
-      //the TSStatic
-      if (shapeAsset.getAssetId() != StringTable->insert("Core_Rendering:noshape"))
+      //only clear the legacy direct file reference if everything checks out fully
+      if (assetState == AssetErrCode::Ok)
       {
          shapeName = StringTable->EmptyString();
       }

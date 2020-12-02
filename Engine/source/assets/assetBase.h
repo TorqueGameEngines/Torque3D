@@ -56,6 +56,19 @@ extern StringTableEntry assetAutoUnloadField;
 
 //-----------------------------------------------------------------------------
 
+enum AssetErrCode
+{
+   Failed,
+   Ok,
+   NotLoaded,
+   BadFileReference,
+   InvalidFormat,
+   DependencyNotFound,
+   FileTooLarge,
+   UsingFallback,
+   Extended
+};
+
 class AssetBase : public SimObject
 {
    friend class AssetManager;

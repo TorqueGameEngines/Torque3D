@@ -425,19 +425,15 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 {
    (*shapeAsset) = assetId;
 
-   if ((*shapeAsset) && (AssetErrCode::NotLoaded != (*shapeAsset)->mLoadedState))
-   {
-      if (AssetErrCode::UsingFallback == (*shapeAsset)->mLoadedState || AssetErrCode::BadFileReference == (*shapeAsset)->mLoadedState)
-      {
-         //Didn't work, so have us fall back to a placeholder asset
-         StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
-         shapeAsset->setAssetId(noShapeId);
-         (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
-         return AssetErrCode::UsingFallback;
-      }
-
+   if ((*shapeAsset) && AssetErrCode::Ok == (*shapeAsset)->mLoadedState)
       return (*shapeAsset)->mLoadedState;
-   }
+
+   //Didn't work, so have us fall back to a placeholder asset
+   StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
+   shapeAsset->setAssetId(noShapeId);
+   (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
+   if (shapeAsset->notNull())
+      return AssetErrCode::UsingFallback;
 
    return AssetErrCode::Failed;
 }

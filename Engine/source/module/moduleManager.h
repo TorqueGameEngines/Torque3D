@@ -173,6 +173,7 @@ public:
 
     /// Module type enumeration.
     ModuleDefinition* findModule( const char* pModuleId, const U32 versionId );
+    ModuleDefinition* findModuleByFilePath(StringTableEntry filePath);
     ModuleDefinition* findLoadedModule( const char* pModuleId );
     void findModules( const bool loadedOnly, typeConstModuleDefinitionVector& moduleDefinitions );
     void findModuleTypes( const char* pModuleType, const bool loadedOnly, typeConstModuleDefinitionVector& moduleDefinitions );

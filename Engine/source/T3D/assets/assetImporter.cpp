@@ -666,18 +666,13 @@ AssetImportObject* AssetImporter::findImportingAssetByName(String assetName, Ass
 
 ModuleDefinition* AssetImporter::getModuleFromPath(Torque::Path filePath)
 {
-   U32 folderCount = StringUnit::getUnitCount(filePath.getPath().c_str(), "/");
+   //We want to ensure it's a full filepath, because the module system internally uses full paths for the module dirs
+   char fullPath[2048];
+   Platform::makeFullPathName(filePath.getFullPath().c_str(), fullPath, sizeof(fullPath));
 
-   for (U32 i = 0; i < folderCount; i++)
-   {
-      String folderName = StringUnit::getUnit(filePath.getPath().c_str(), i, "/");
+   ModuleDefinition* moduleDef = ModuleDatabase.findModuleByFilePath(StringTable->insert(fullPath));
 
-      ModuleDefinition* moduleDef = ModuleDatabase.findModule(folderName.c_str(), 1);
-      if (moduleDef != nullptr)
-         return moduleDef;
-   }
-
-   return nullptr;
+   return moduleDef;
 }
 
 String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)

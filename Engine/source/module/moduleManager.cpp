@@ -1058,6 +1058,42 @@ ModuleDefinition* ModuleManager::findModule( const char* pModuleId, const U32 ve
 
 //-----------------------------------------------------------------------------
 
+ModuleDefinition* ModuleManager::findModuleByFilePath(StringTableEntry filePath)
+{
+   // Sanity!
+   AssertFatal(filePath != StringTable->EmptyString(), "Cannot find module with an empty filePath.");
+
+   String desiredPath = filePath;
+   StringTableEntry coreModuleId = StringTable->insert("CoreModule");
+   StringTableEntry toolsModuleId = StringTable->insert("ToolsModule");
+
+   for (typeModuleIdDatabaseHash::iterator moduleIdItr = mModuleIdDatabase.begin(); moduleIdItr != mModuleIdDatabase.end(); ++moduleIdItr)
+   {
+      // Fetch module definition entry.
+      ModuleDefinitionEntry* pModuleDefinitionEntry = moduleIdItr->value;
+
+      for (typeModuleDefinitionVector::iterator moduleDefinitionItr = pModuleDefinitionEntry->begin(); moduleDefinitionItr != pModuleDefinitionEntry->end(); ++moduleDefinitionItr)
+      {
+         // Fetch module definition.
+         ModuleDefinition* pModuleDefinition = *moduleDefinitionItr;
+
+         Torque::Path modulePath = pModuleDefinition->getModulePath();
+
+         StringTableEntry asdasd = StringTable->insert(modulePath.getFullPath());
+
+         //We don't deal with CoreModule or ToolsModule having assets for now
+         if (desiredPath.startsWith(asdasd) && pModuleDefinition->mModuleId != coreModuleId)
+         {
+            return pModuleDefinition;
+         }
+      }
+   }
+
+   return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+
 ModuleDefinition* ModuleManager::findLoadedModule( const char* pModuleId )
 {
     // Sanity!

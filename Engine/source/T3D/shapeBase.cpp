@@ -366,14 +366,14 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
       shapeAssetId = ShapeAsset::getAssetIdByFilename(shapeName);
    }
    U32 assetState = ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
-   if (AssetErrCode::Failed != assetState)
+   if (ShapeAsset::Failed != assetState)
    {
       //only clear the legacy direct file reference if everything checks out fully
-      if (assetState == AssetErrCode::Ok)
+      if (assetState == ShapeAsset::Ok)
       {
          shapeName = StringTable->EmptyString();
       }
-   
+      else Con::warnf("Warning: ShapeBaseData::preload-%s", ShapeAsset::getAssetErrstrn(assetState).c_str());
       S32 i;
 
       // Resolve shapename
@@ -798,10 +798,14 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowSphereAdjust);
 
 
-   //if (stream->writeFlag(shapeAsset.notNull()))
+   if (stream->writeFlag(shapeAsset.notNull()))
+   {
       stream->writeString(shapeAsset.getAssetId());
-   //else
+   }
+   else
+   {
       stream->writeString(shapeName);
+   }
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -880,10 +884,16 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowSphereAdjust);
 
 
-   //if (stream->readFlag())
+   if (stream->readFlag())
+   {
       shapeAssetId = stream->readSTString();
-   //else
+      ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
+      shapeName = shapeAsset->getShapeFilename();
+   }
+   else
+   {
       shapeName = stream->readSTString();
+   }
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())

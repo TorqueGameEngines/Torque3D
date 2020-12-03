@@ -87,7 +87,16 @@ public:
    {
       TooManyVerts = AssetErrCode::Extended,
       TooManyBones,
-      MissingAnimatons
+      MissingAnimatons,
+      Extended
+   };
+
+   static const String mErrCodeStrings[ShapeAssetErrCode::Extended - Parent::Extended + 1];
+   static String getAssetErrstrn(U32 errCode)
+   {
+      if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
+      if (errCode > ShapeAssetErrCode::Extended) return "undefined error";
+      return mErrCodeStrings[errCode];
    };
 
    ShapeAsset();

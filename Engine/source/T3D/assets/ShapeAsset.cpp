@@ -113,6 +113,15 @@ ConsoleSetType(TypeShapeAssetId)
 
 //-----------------------------------------------------------------------------
 
+const String ShapeAsset::mErrCodeStrings[] =
+{
+   "TooManyVerts",
+   "TooManyBones",
+   "MissingAnimatons",
+   "UnKnown"
+};
+//-----------------------------------------------------------------------------
+
 ShapeAsset::ShapeAsset()
 {
    mFileName = StringTable->EmptyString();

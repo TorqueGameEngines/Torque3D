@@ -458,7 +458,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    else if(%assetDef.materialDefinitionName.diffuseMapAsset[0] !$= "")
    {
       %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.diffuseMapAsset[0]);
-      %previewData.previewImage = %imgAsset.getImageFilename();
+      %previewData.previewImage = %imgAsset.getImagePath();
    }
    else
       %previewData.previewImage = "tools/assetBrowser/art/materialIcon";
@@ -510,7 +510,6 @@ function GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %p
    
    if(%assetType $= "MaterialAsset")
    {
-      echo("DROPPED A MATERIAL ON A MATERIAL ASSET COMPONENT FIELD!");  
       //%assetDef = AssetDatabase.acquireAsset(%module @ ":" @ %assetName);
       
       %this.setMaterialAsset(%module @ ":" @ %assetName);

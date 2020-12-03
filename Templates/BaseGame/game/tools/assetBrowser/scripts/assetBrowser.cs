@@ -256,7 +256,7 @@ function AssetBrowser::selectAsset( %this, %asset )
       %this.changeAsset();
    }
    
-   Inspector.refresh();
+   EWInspectorWindow.refresh();
    
    AssetBrowser.hideDialog();
 }
@@ -2241,79 +2241,6 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
       }
       eval(%buildCommand);
    }
-   
-   /*if(%assetType $= "ImageAsset")
-   {
-      echo("WorldEditor::onControlDropped - dropped an ImageAsset onto the editor window. Todo: Implement dropping image/material into scene");  
-   }
-   else if(%assetType $= "ShapeAsset")
-   {
-      echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
-      
-      /*%staticShapeObjDef = AssetDatabase.acquireAsset("Core_GameObjects:StaticShapeObject");
-      
-      %newEntity = %staticShapeObjDef.createObject();
-      
-      %newEntity.position = %pos;
-      %newEntity-->MeshComponent.MeshAsset = %module @ ":" @ %asset;
-      
-      %newEntity.dirtyGameObject = true; //because if we're specifically setting the mesh asset, it's dirty*/
-      
-      /*%newEntity = new TSStatic()
-      {
-         position = %pos;
-         shapeAsset = %module @ ":" @ %asset;
-      };
-      
-      getScene(0).add(%newEntity);
-      
-      EWorldEditor.clearSelection();
-      EWorldEditor.selectObject(%newEntity);
-   }
-   else if(%assetType $= "MaterialAsset")
-   {
-      echo("WorldEditor::onControlDropped - dropped an MaterialAsset onto the editor window. Todo: Implement dropping image/material into scene"); 
-   }
-   else if(%assetType $= "GameObjectAsset")
-   {
-      echo("WorldEditor::onControlDropped - dropped an GameObjectAsset onto the editor window.");  
-      
-      %goAssetDef = AssetDatabase.acquireAsset(%module @ ":" @%asset);
-      
-      AssetBrowser.dragAndDropGameObjectAsset(%goAssetDef, EWorldEditor);
-   }
-   else if(%assetType $= "ComponentAsset")
-   {
-      %newEntity = new Entity()
-      {
-         position = %pos;
-      };
-      
-      %assetDef = AssetDatabase.acquireAsset(%module @ ":" @ %asset);
-      
-      if(%assetDef.componentClass $= "Component")
-         eval("$tmpVar = new " @ %assetDef.componentClass @ "() { class = " @ %assetDef.componentName @ "; }; %newEntity.add($tmpVar);");
-      else
-         eval("$tmpVar = new " @ %assetDef.componentClass @ "() {}; %newEntity.add($tmpVar);");
-         
-      getScene(0).add(%newEntity);
-      
-      EWorldEditor.clearSelection();
-      EWorldEditor.selectObject(%newEntity);
-   }
-   else if(%assetType $= "ScriptAsset") //do we want to do it this way?
-   {
-      %newEntity = new Entity()
-      {
-         position = %pos;
-         class = %asset;
-      };
-
-      getScene(0).add(%newEntity);
-      
-      EWorldEditor.clearSelection();
-      EWorldEditor.selectObject(%newEntity);
-   }*/
    
    EWorldEditor.isDirty = true;
 }

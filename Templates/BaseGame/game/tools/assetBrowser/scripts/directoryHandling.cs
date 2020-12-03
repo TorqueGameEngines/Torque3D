@@ -239,7 +239,8 @@ function directoryHandler::expandTreeToAddress(%this, %address)
 {
    //break down the address
    %folderCount = getTokenCount(%address, "/");
-   %this.treeCtrl.expandItem(0);
+   %rootId = AssetBrowser-->filterTree.findItemByName("Content");
+   %this.treeCtrl.expandItem(%rootId);
 
    if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
    {
@@ -258,7 +259,7 @@ function directoryHandler::expandTreeToAddress(%this, %address)
       %this.treeCtrl.expandItem(%curItem);
    }
    
-   %this.treeCtrl.expandItem(0);
+   %this.treeCtrl.expandItem(%rootId);
 }
 
 function directoryHandler::createFolder(%this, %folderPath)

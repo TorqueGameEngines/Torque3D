@@ -133,6 +133,24 @@ DefineEngineMethod(ModuleManager, findModule, String, (const char* pModuleId, U3
 
 //-----------------------------------------------------------------------------
 
+DefineEngineMethod(ModuleManager, findModuleByFilePath, String, (const char* filePath), (""),
+   "Find the specific module Id optionally at the specified version Id.\n"
+   "@param moduleId The module Id to find.\n"
+   "@param versionId The version Id to find.\n"
+   "@return The module definition object or NULL if not found.\n")
+{
+   // Find module definition.
+   ModuleDefinition* pModuleDefinition = object->findModuleByFilePath(StringTable->insert(filePath));
+
+   // Return nothing if not found.
+   if (pModuleDefinition == NULL)
+      return StringTable->EmptyString();
+
+   return pModuleDefinition->getIdString();
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineMethod(ModuleManager, findModules, String, (bool loadedOnly), (false),
    "Find all the modules registered with the specified loaded state.\n"
    "@param loadedOnly Whether to return only modules that are loaded or not.\n"

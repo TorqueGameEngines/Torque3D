@@ -61,6 +61,8 @@ function ShapeEditor::getObjectShapeFile( %this, %obj )
       %path = %obj.shapeAsset !$= "" ? %obj.shapeAsset : %obj.shapeName;
    else if ( %obj.isMemberOfClass( "PhysicsShape" ) )
       %path = %obj.getDataBlock().shapeName;
+   else if ( %obj.isMemberOfClass( "ShapeBase" ) )
+      %path = %obj.getDataBlock().shapeAsset !$= "" ? %obj.getDataBlock().shapeAsset : %obj.getDataBlock().shapeFile;
    else if ( %obj.isMemberOfClass( "GameBase" ) )
       %path = %obj.getDataBlock().shapeFile;
       

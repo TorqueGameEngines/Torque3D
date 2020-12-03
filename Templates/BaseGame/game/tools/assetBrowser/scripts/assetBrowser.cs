@@ -2234,6 +2234,10 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
       {
          %buildCommand = AssetBrowser @ ".on" @ %assetType @ "EditorDropped(" @ %asset @ ",\"" @ %position @ "\");";
       }
+      else if(%assetType $= "Prefab")
+      {
+         %buildCommand = AssetBrowser @ ".on" @ %assetType @ "EditorDropped(\"" @ %module @ "/" @ %asset @ "\",\"" @ %position @ "\");";
+      }
       else
       {
          %assetDef = AssetDatabase.acquireAsset(%module @ ":" @ %asset);

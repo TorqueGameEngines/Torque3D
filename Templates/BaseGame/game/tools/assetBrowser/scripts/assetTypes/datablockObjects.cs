@@ -50,7 +50,7 @@ function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef;
    %previewData.tooltip = %assetDef;
-   %previewData.doubleClickCommand = "DatablockEditorPlugin.openDatablock(" @ %assetDef @ ");";
+   %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"spawnDatablockObject\",\""@ %assetDef @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
 }
 
 function spawnDatablockObject(%datablock)
@@ -58,10 +58,10 @@ function spawnDatablockObject(%datablock)
    %name = %datablock.getName();
    %class = %datablock.getClassName();
    %cmd = %class @ "::create(" @ %name @ ");";
-      
-   %shapePath = ( %datablock.shapeFile !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
+   
+   %shapePath = ( %datablock.shapeAsset !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
    %createCmd = "EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
-   return eval(%createCmd);
+   return eval(%createCmd);//eval("showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );");
 }
 
 function AssetBrowser::renameDatablock(%this, %folderPath, %newFolderName)

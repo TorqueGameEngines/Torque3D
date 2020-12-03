@@ -194,7 +194,31 @@ function AssetBrowser::reloadModule(%this)
 
 function AssetBrowser::deleteModule(%this)
 {
+   %moduleDef = ModuleDatabase.findModule(AssetBrowser.selectedModule, 1);
    
+   toolsMessageBoxYesNo("Delete Module?", 
+         "This will permanently delete the module " @ %moduleDef.moduleId @ " and all it's contents. <br><br> Do you wish to continue?", 
+         "AssetBrowser.doDeleteModule();", 
+         "");
+}
+
+function AssetBrowser::doDeleteModule(%this)
+{
+   //First, get the module path
+   %moduleDef = ModuleDatabase.findModule(AssetBrowser.selectedModule, 1);
+   %modulePath = %moduleDef.ModulePath;
+   
+   //Next, unregister the module
+   ModuleDatabase.unregisterModule(AssetBrowser.SelectedModule, 1);
+   
+   //Then, delete it
+   %this.deleteFolder(%modulePath);
+   
+   //Remove the module def
+   %moduleDef.delete();
+   
+   //And refresh the browser
+   %this.loadDirectories();
 }
 
 function AssetBrowser::RefreshModuleDependencies(%this, %moduleDef)

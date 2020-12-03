@@ -540,8 +540,14 @@ void GuiTreeViewCtrl::Item::getDisplayText(U32 bufLen, char *buf)
             if( mState.test( ShowObjectName ) )
             {
                S32 n = 0;
-               if( hasObjectName )
-                  n = dSprintf( ptr, len, "%s", pObjName );
+               if (hasObjectName)
+               {
+                  //If it's been marked, reflect that
+                  if (mState.test(Item::Marked))
+                     n = dSprintf(ptr, len, "*%s", pObjName);
+                  else
+                     n = dSprintf(ptr, len, "%s", pObjName);                  
+               }
                else if( mState.test( ShowClassNameForUnnamed ) )
                   n = dSprintf( ptr, len, "%s", pClassName );
                   
@@ -549,8 +555,13 @@ void GuiTreeViewCtrl::Item::getDisplayText(U32 bufLen, char *buf)
                len -= n;
             }
             
-            if( hasInternalName && mState.test( ShowInternalName ) )
-               dSprintf( ptr, len, " [%s]", pInternalName );
+            if (hasInternalName && mState.test(ShowInternalName))
+            {
+               if (mState.test(Item::Marked))
+                  dSprintf(ptr, len, " *[%s]", pInternalName);
+               else
+                  dSprintf(ptr, len, " [%s]", pObjName);
+            }
          }
       }
       else

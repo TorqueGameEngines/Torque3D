@@ -1,10 +1,3 @@
-function PauseMenuList::onAdd(%this)
-{
-   %this.addRow("Options", "openPauseMenuOptions", -1, -30);
-   %this.addRow("Exit to Menu", "pauseMenuExitToMenu", -1, -30);
-   %this.addRow("Exit to Desktop", "pauseMenuExitToDesktop", -1, -30);  
-}
-
 function PauseMenu::onWake(%this)
 {
    if($Server::ServerType $= "SinglePlayer")
@@ -17,6 +10,17 @@ function PauseMenu::onWake(%this)
    PauseMenuList.hidden = false;
    PauseMenuList.setFirstResponder();
    PauseButtonHolder.setActive();
+   
+   PauseMenuList.clearRows();
+   
+   if($Tools::loaded && EditorIsActive())
+   {
+      PauseMenuList.addRow("Exit Editor", "fastLoadWorldEdit", -1, -30); 
+   }
+   
+   PauseMenuList.addRow("Options", "openPauseMenuOptions", -1, -30);
+   PauseMenuList.addRow("Exit to Menu", "pauseMenuExitToMenu", -1, -30);
+   PauseMenuList.addRow("Exit to Desktop", "pauseMenuExitToDesktop", -1, -30); 
 }
 
 

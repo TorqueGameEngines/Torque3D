@@ -257,7 +257,7 @@ function EditorCreateFakeGameSession(%fileName)
 
 function fastLoadWorldEdit(%val)
 {
-   if(%val)
+   if(%val || %val $= "")
    {
       if(!$Tools::loaded)
       {

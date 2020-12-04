@@ -1006,7 +1006,6 @@ void GuiGameListMenuCtrl::setThisControl()
 
 StringTableEntry GuiGameListMenuCtrl::getRowLabel(S32 rowIndex) const
 {
-   AssertFatal(isValidRowIndex(rowIndex), avar("GuiGameListMenuCtrl: You can't get the label from row %d of %s because it is not a valid row index. Please specify a valid row index in the range [0, %d).", rowIndex, getName(), getRowCount()));
    if (! isValidRowIndex(rowIndex))
    {
       // not a valid row index, don't do anything
@@ -1017,7 +1016,6 @@ StringTableEntry GuiGameListMenuCtrl::getRowLabel(S32 rowIndex) const
 
 void GuiGameListMenuCtrl::setRowLabel(S32 rowIndex, const char * label)
 {
-   AssertFatal(isValidRowIndex(rowIndex), avar("GuiGameListMenuCtrl: You can't set the label on row %d of %s because it is not a valid row index. Please specify a valid row index in the range [0, %d).", rowIndex, getName(), getRowCount()));
    if (! isValidRowIndex(rowIndex))
    {
       // not a valid row index, don't do anything

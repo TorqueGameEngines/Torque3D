@@ -749,7 +749,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setShaderConst("$numProbes", (S32)mProbeData.effectiveProbeCount);
    mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)mProbeData.skyLightIdx);
 
-   mProbeArrayEffect->setShaderConst("$cubeMips", (float)mMipCount);
+   mProbeArrayEffect->setShaderConst("$cubeMips", (float)mPrefilterArray->getMipMapLevels());
 
    //also set up some colors
    Vector<Point4F> contribColors;

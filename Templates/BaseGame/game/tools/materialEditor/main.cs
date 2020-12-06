@@ -42,7 +42,7 @@ function initializeMaterialEditor()
    //exec("./gui/profiles.ed.cs");
    
    MaterialEditorPreviewWindow.setVisible( false );
-   matEd_cubemapEditor.setVisible( false );
+   //matEd_cubemapEditor.setVisible( false );
    matEd_addCubemapWindow.setVisible( false );
    MaterialEditorPropertiesWindow.setVisible( false );
    
@@ -64,7 +64,7 @@ function MaterialEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Material Editor (" @ %accel @ ")"; 
-   EditorGui.addToToolsToolbar( "MaterialEditorPlugin", "MaterialEditorPalette", expandFilename("tools/worldEditor/images/toolbar/matterial-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "MaterialEditorPlugin", "MaterialEditorPalette", expandFilename("tools/worldEditor/images/toolbar/material-editor"), %tooltip );
 
    //connect editor windows
    GuiWindowCtrl::attach( MaterialEditorPropertiesWindow, MaterialEditorPreviewWindow);

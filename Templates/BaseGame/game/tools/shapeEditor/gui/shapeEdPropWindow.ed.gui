@@ -1353,7 +1353,7 @@
                buttonType = "PushButton";
                useMouseEvents = "0";
                buttonMargin = "0 4";
-               iconBitmap = "tools/worldEditor/images/toolbar/matterial-editor_n";
+               iconBitmap = "tools/worldEditor/images/toolbar/material-editor_n";
                textMargin = "25";
             };
             new GuiCheckBoxCtrl() {

@@ -276,57 +276,6 @@ function EVisibility::onWake( %this )
       %this.classArray = new ArrayObject();
       %this.addClassOptions();   
    }
-
-   %this.updateOptions();
-
-}
-
-function EVisibility::updateOptions( %this )
-{
-   // First clear the stack control.
-   %this-->theVisOptionsList.clear();   
-    
-   // Go through all the
-   // parameters in our array and
-   // create a check box for each.
-   for ( %i = 0; %i < %this.array.count(); %i++ )
-   {
-      %text = "  " @ %this.array.getValue( %i );
-      %val = %this.array.getKey( %i );
-      %var = getWord( %val, 0 );
-      %toggleFunction = getWord( %val, 1 );         
-      
-      %textLength = strlen( %text );
-      
-      %cmd = "";
-      if ( %toggleFunction !$= "" )
-         %cmd = %toggleFunction @ "( $thisControl.getValue() );";      
-      
-      %checkBox = new GuiCheckBoxCtrl()
-      {
-         canSaveDynamicFields = "0";
-         isContainer = "0";
-         Profile = "ToolsGuiCheckBoxListProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "0 0";
-         Extent = (%textLength * 4) @ " 18";
-         MinExtent = "8 2";
-         canSave = "1";
-         Visible = "1";
-         Variable = %var;
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         hovertime = "1000";
-         text = %text;
-         groupNum = "-1";
-         buttonType = "ToggleButton";
-         useMouseEvents = "0";
-         useInactiveState = "0";
-         Command = %cmd;
-      };
-
-      %this-->theVisOptionsList.addGuiControl( %checkBox );
-   }   
 }
 
 function EVisibility::addOption( %this, %text, %varName, %toggleFunction )

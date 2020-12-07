@@ -122,18 +122,22 @@ function SSAOPostFx::onEnabled( %this )
    // from our #ssaoMask texture target. 
    $AL::UseSSAOMask = true;
    
+   $PostFX::SSAOPostFx::Enabled = true;
+   
    return true;
 }
 
 function SSAOPostFx::onDisabled( %this )
 {
   $AL::UseSSAOMask = false;
+  
+  $PostFX::SSAOPostFx::Enabled = false;
 }
 
 function SSAOPostFx::populatePostFXSettings(%this)
 {
    PostEffectEditorInspector.startGroup("SSAO - General");
-   PostEffectEditorInspector.addCallbackField("$PostFX::SSAOPostFx::Enabled", "Enabled", "bool", "", $PostFXManager::PostFX::Enable, "", "toggleSSAOPostFx");
+   PostEffectEditorInspector.addCallbackField("$PostFX::SSAOPostFx::Enabled", "Enabled", "bool", "", $PostFX::SSAOPostFx::Enabled, "", "toggleSSAOPostFx");
    PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::quality", "Quality", "list", "0,1,2", $PostFX::SSAOPostFX::quality, "0,1,2");
    PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::overallStrength", "Overall Strength", "float", "", $PostFX::SSAOPostFX::overallStrength, "");
    PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::blurDepthTol", "Blur (Softness)", "float", "", $PostFX::SSAOPostFX::blurDepthTol, "");

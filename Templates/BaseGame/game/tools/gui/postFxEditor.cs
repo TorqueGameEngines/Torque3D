@@ -52,7 +52,7 @@ function PostFXEditor::refresh(%this)
    {
       %postEffect = PostFXManager.getKey(%i);  
       
-      if(%postEffect.isEnabled)
+      if(%postEffect.isEnabled())
          PostEffectEditorList.addRow( %i, %postEffect.getName() );
    }
 }
@@ -143,7 +143,7 @@ function PostFXEditorNewPFXWindow::showDialog(%this)
    {
       %postEffect = PostFXManager.getKey(%i);  
       
-      if(!%postEffect.isEnabled)
+      if(!%postEffect.isEnabled())
          PostFXEditorNewPFXList.addRow( %i, %postEffect.getName() );
    }
 }

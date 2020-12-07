@@ -8,7 +8,7 @@
    HorizSizing = "right";
    VertSizing = "bottom";
    Position = "306 0";
-   Extent = "550" SPC getWord(EditorGuiToolbar.extent, 1);
+   Extent = "600" SPC getWord(EditorGuiToolbar.extent, 1);
    MinExtent = "8 2";
    canSave = "1";
    Visible = "1";
@@ -493,6 +493,56 @@
             buttonType = "PushButton";
             useMouseEvents = "0";
          };
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         canSaveDynamicFields = "0";
+         internalName = "bakeProbesBtn";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "452 3";
+         Extent = "29 27";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Variable = "";
+         Command = "updateReflectionProbes();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Update Reflection Probes";
+         hovertime = "1000";
+         bitmap = "tools/gui/images/menubar/probe";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         canSaveDynamicFields = "0";
+         internalName = "editorSettingsBtn";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "484 3";
+         Extent = "29 27";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Variable = "";
+         Command = "ESettingsWindow.toggleEditorSettings();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Open Editor Settings";
+         hovertime = "1000";
+         bitmap = "tools/gui/images/menubar/settings";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
       };
 
       new GuiContainer(objectCenterDropdown){

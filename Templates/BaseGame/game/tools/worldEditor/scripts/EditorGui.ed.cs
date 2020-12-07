@@ -566,7 +566,6 @@ function EditorGui::onWake( %this )
    // before activating an editor plugin, so that if the plugin
    // installs an ActionMap, it will be highest on the stack.
    
-   MoveMap.push();
    EditorMap.push();
    
    // Active the current editor plugin.

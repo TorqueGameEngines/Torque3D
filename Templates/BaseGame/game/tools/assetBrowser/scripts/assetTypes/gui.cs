@@ -111,6 +111,12 @@ function AssetBrowser::editGUIAsset(%this, %assetDef)
       exec(%assetDef.mScriptFilePath);
    }
    
+   if( EditorIsActive() && !GuiEditor.toggleIntoEditorGui )
+         toggleEditor( true );
+         
+   if( !$InGuiEditor && !GuiEditorIsActive() )
+      GuiEditor.open();
+      
    GuiEditContent(%assetDef.assetName);  
 }
 

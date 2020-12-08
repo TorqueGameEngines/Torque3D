@@ -83,10 +83,10 @@ bool Selection::validate()
       U32 entry = mHashLists[i];
       if(entry == -1)
          continue;
-      
+
       GridInfo info = (*this)[entry];
       U32 hashIndex = getHashIndex(info.mGridPoint.gridPos);
-      
+
       if( entry != mHashLists[hashIndex] )
       {
          AssertFatal(false, "Selection hash lists corrupted");
@@ -107,7 +107,7 @@ bool Selection::validate()
 
       if(mHashLists[hashIndex] != i)
       {
-         AssertFatal(false, "Selection list heads corrupted");       
+         AssertFatal(false, "Selection list heads corrupted");
          return false;
       }
       headsProcessed++;
@@ -191,13 +191,13 @@ bool Selection::remove(const GridInfo &info)
    const GridInfo victim = (*this)[victimEntry];
    const S32 vicPrev = victim.mPrev;
    const S32 vicNext = victim.mNext;
-      
+
    // remove us from the linked list, if there is one.
    if(vicPrev != -1)
       (*this)[vicPrev].mNext = vicNext;
    if(vicNext != -1)
       (*this)[vicNext].mPrev = vicPrev;
-   
+
    // if we were the head of the list, make our next the new head in the hash table.
    if(vicPrev == -1)
       mHashLists[hashIndex] = vicNext;
@@ -210,7 +210,7 @@ bool Selection::remove(const GridInfo &info)
       const S32 lastPrev = lastEntry.mPrev;
       const S32 lastNext = lastEntry.mNext;
       (*this)[victimEntry] = lastEntry;
-      
+
       // update the new element's next and prev, to reestablish it in it's linked list.
       if(lastPrev != -1)
          (*this)[lastPrev].mNext = victimEntry;
@@ -225,7 +225,7 @@ bool Selection::remove(const GridInfo &info)
          mHashLists[lastHash] = victimEntry;
       }
    }
-   
+
    // decrement the vector, we're done here
    pop_back();
    //AssertFatal( validate(), "Selection hashLists corrupted after Selection.remove()");
@@ -378,16 +378,16 @@ void Brush::render()
    for(S32 x = 0; x < mSize.x; x++)
    {
       for(S32 y = 0; y < mSize.y; y++)
-      {   
+      {
          S32 id = mRenderList[x*mSize.x+y];
          if ( id == -1 )
             continue;
 
-         const GridInfo &gInfo = (*this)[ id ];                        
+         const GridInfo &gInfo = (*this)[ id ];
 
          Point3F pos;
          mTerrainEditor->gridToWorld( gInfo.mGridPoint.gridPos, pos, gInfo.mGridPoint.terrainBlock );
-         
+
          if ( !mTerrainEditor->project( pos, &pos ) )
             continue;
 
@@ -395,9 +395,9 @@ void Brush::render()
          GFXVertexPCT &pointInfo = pointList.last();
 
          pointInfo.point = pos;
-         
-         pointInfo.color.set( 255, 0, 255, gInfo.mWeight * 255 );      
-         
+
+         pointInfo.color.set( 255, 0, 255, gInfo.mWeight * 255 );
+
          pointInfo.texCoord.set( 1.0f, 0.0f );
       }
    }
@@ -414,17 +414,17 @@ void BoxBrush::rebuild()
    const F32 squareSize = mGridPoint.terrainBlock->getSquareSize();
 
    mRenderList.setSize(mSize.x*mSize.y);
-   
+
    Point3F center( F32(mSize.x - 1) / 2.0f * squareSize, F32(mSize.y - 1) / 2.0f * squareSize, 0.0f );
-   
+
    Filter filter;
    filter.set(1, &mTerrainEditor->mSoftSelectFilter);
-   
-   const Point3F mousePos = mTerrainEditor->getMousePos();   
+
+   const Point3F mousePos = mTerrainEditor->getMousePos();
 
    F32 xFactorScale = center.x / ( center.x + 0.5f );
    F32 yFactorScale = center.y / ( center.y + 0.5f );
-   
+
    const F32 softness = mTerrainEditor->getBrushSoftness();
    const F32 pressure = mTerrainEditor->getBrushPressure();
 
@@ -445,12 +445,12 @@ void BoxBrush::rebuild()
             yFactor = mAbs( center.y - y ) / center.y * yFactorScale;
 
          S32 &rl = mRenderList[x*mSize.x+y];
-         
+
          posw.x = mousePos.x + (F32)x * squareSize - center.x;
          posw.y = mousePos.y + (F32)y * squareSize - center.y;
          // round to grid coords
          GridPoint gridPoint = mGridPoint;
-         mTerrainEditor->worldToGrid( posw, gridPoint );         
+         mTerrainEditor->worldToGrid( posw, gridPoint );
 
          // Check that the grid point is valid within the terrain.  This assumes
          // that there is no wrap around past the edge of the terrain.
@@ -459,7 +459,7 @@ void BoxBrush::rebuild()
             rl = -1;
             continue;
          }
-         
+
          infos.clear();
          mTerrainEditor->getGridInfos( gridPoint, infos );
 
@@ -491,7 +491,7 @@ void BoxBrush::_renderOutline()
    const ColorI col( 255, 0, 255, 255 );
 
    const Point3F &mousePos = mTerrainEditor->getMousePos();
-   
+
    static const Point2F offsetArray [5] =
    {
       Point2F( -1, -1 ),
@@ -503,31 +503,31 @@ void BoxBrush::_renderOutline()
 
    // 64 total steps, 4 sides to the box, 16 steps per side.
    // 64 / 4 = 16
-   const U32 steps = 16; 
-   
+   const U32 steps = 16;
+
    for ( S32 i = 0; i < 4; i++ )
-   {            
+   {
       const Point2F &offset = offsetArray[i];
-      const Point2F &next = offsetArray[i+1];      
+      const Point2F &next = offsetArray[i+1];
 
       for ( S32 j = 0; j < steps; j++ )
       {
          F32 frac = (F32)j / ( (F32)steps - 1.0f );
-         
+
          Point2F tmp;
-         tmp.interpolate( offset, next, frac );         
+         tmp.interpolate( offset, next, frac );
 
          start.x = end.x = mousePos.x + tmp.x * squareSize * 0.5f * (F32)mSize.x;
          start.y = end.y = mousePos.y + tmp.y * squareSize * 0.5f * (F32)mSize.y;
-               
+
          hit = gServerContainer.castRay( start, end, TerrainObjectType, &ri );
 
          if ( hit )
             pointList.push_back( ri.point );
       }
-   }   
+   }
 
-   mTerrainEditor->drawLineList( pointList, col, 1.0f );  
+   mTerrainEditor->drawLineList( pointList, col, 1.0f );
 }
 
 void EllipseBrush::rebuild()
@@ -539,13 +539,13 @@ void EllipseBrush::rebuild()
    const F32 squareSize = mGridPoint.terrainBlock->getSquareSize();
 
    mRenderList.setSize(mSize.x*mSize.y);
-   
+
    Point3F center( F32(mSize.x - 1) / 2.0f * squareSize, F32(mSize.y - 1) / 2.0f * squareSize, 0.0f );
-   
+
    Filter filter;
    filter.set(1, &mTerrainEditor->mSoftSelectFilter);
-   
-   const Point3F mousePos = mTerrainEditor->getMousePos();   
+
+   const Point3F mousePos = mTerrainEditor->getMousePos();
 
    // a point is in a circle if:
    // x^2 + y^2 <= r^2
@@ -558,7 +558,7 @@ void EllipseBrush::rebuild()
 
    F32 a = 1.0f / (F32(mSize.x) * squareSize * 0.5f);
    F32 b = 1.0f / (F32(mSize.y) * squareSize * 0.5f);
-   
+
    const F32 softness = mTerrainEditor->getBrushSoftness();
    const F32 pressure = mTerrainEditor->getBrushPressure();
 
@@ -581,13 +581,13 @@ void EllipseBrush::rebuild()
          }
 
          S32 &rl = mRenderList[x*mSize.x+y];
-         
+
          posw.x = mousePos.x + (F32)x * squareSize - center.x;
          posw.y = mousePos.y + (F32)y * squareSize - center.y;
 
          // round to grid coords
-         GridPoint gridPoint = mGridPoint;         
-         mTerrainEditor->worldToGrid( posw, gridPoint );         
+         GridPoint gridPoint = mGridPoint;
+         mTerrainEditor->worldToGrid( posw, gridPoint );
 
          // Check that the grid point is valid within the terrain.  This assumes
          // that there is no wrap around past the edge of the terrain.
@@ -596,13 +596,13 @@ void EllipseBrush::rebuild()
             rl = -1;
             continue;
          }
-         
+
          infos.clear();
          mTerrainEditor->getGridInfos( gridPoint, infos );
 
          for ( U32 z = 0; z < infos.size(); z++ )
          {
-            infos[z].mWeight = pressure * mLerp( infos[z].mWeight, filter.getValue( factor ), softness ); 
+            infos[z].mWeight = pressure * mLerp( infos[z].mWeight, filter.getValue( factor ), softness );
             push_back(infos[z]);
          }
 
@@ -623,11 +623,11 @@ void EllipseBrush::_renderOutline()
    Vector<Point3F> pointList;
 
    ColorI col( 255, 0, 255, 255 );
-   
+
    const U32 steps = 64;
 
    const Point3F &mousePos = mTerrainEditor->getMousePos();
-   
+
    for ( S32 i = 0; i < steps; i++ )
    {
       F32 radians = (F32)i / (F32)(steps-1) * M_2PI_F;
@@ -636,14 +636,14 @@ void EllipseBrush::_renderOutline()
 
       start.x = end.x = mousePos.x + vec.x * squareSize * (F32)mSize.x * 0.5f;
       start.y = end.y = mousePos.y + vec.y * squareSize * (F32)mSize.y * 0.5f;
-            
+
       hit = gServerContainer.castRay( start, end, TerrainObjectType, &ri );
 
       if ( hit )
          pointList.push_back( ri.point );
-   }   
+   }
 
-   mTerrainEditor->drawLineList( pointList, col, 1.0f );   
+   mTerrainEditor->drawLineList( pointList, col, 1.0f );
 }
 
 SelectionBrush::SelectionBrush(TerrainEditor * editor) :
@@ -817,8 +817,8 @@ void TerrainEditor::onSleep()
    Parent::onSleep();
 }
 
-void TerrainEditor::get3DCursor( GuiCursor *&cursor, 
-                                       bool &visible, 
+void TerrainEditor::get3DCursor( GuiCursor *&cursor,
+                                       bool &visible,
                                        const Gui3DMouseEvent &event_ )
 {
    cursor = NULL;
@@ -835,15 +835,15 @@ void TerrainEditor::get3DCursor( GuiCursor *&cursor,
 
    PlatformWindow *window = root->getPlatformWindow();
    PlatformCursorController *controller = window->getCursorController();
-   
-   // We've already changed the cursor, 
+
+   // We've already changed the cursor,
    // so set it back before we change it again.
    if( root->mCursorChanged != -1)
       controller->popCursor();
 
    // Now change the cursor shape
    controller->pushCursor(currCursor);
-   root->mCursorChanged = currCursor;   
+   root->mCursorChanged = currCursor;
 }
 
 void TerrainEditor::onDeleteNotify(SimObject * object)
@@ -1161,7 +1161,7 @@ void TerrainEditor::setGridMaterial( const GridPoint &gPoint, U8 index )
    // If we changed the empty state then we need
    // to do a grid update as well.
    U8 currIndex = file->getLayerIndex( cPos.x, cPos.y );
-   if (  ( currIndex == (U8)-1 && index != (U8)-1 ) || 
+   if (  ( currIndex == (U8)-1 && index != (U8)-1 ) ||
          ( currIndex != (U8)-1 && index == (U8)-1 ) )
    {
       mGridUpdateMin.setMin( cPos );
@@ -1191,7 +1191,7 @@ TerrainBlock* TerrainEditor::collide(const Gui3DMouseEvent & evt, Point3F & pos)
       tpos = evt.pos;
       tvec = evt.vec;
 
-      mMousePlane.intersect( evt.pos, evt.vec, &pos ); 
+      mMousePlane.intersect( evt.pos, evt.vec, &pos );
 
       return mActiveTerrain;
    }
@@ -1290,7 +1290,7 @@ void TerrainEditor::onPreRender()
 
 void TerrainEditor::renderScene(const RectI &)
 {
-   PROFILE_SCOPE( TerrainEditor_RenderScene );      
+   PROFILE_SCOPE( TerrainEditor_RenderScene );
 
    if(mTerrainBlocks.size() == 0)
       return;
@@ -1308,7 +1308,7 @@ void TerrainEditor::renderScene(const RectI &)
 //------------------------------------------------------------------------------
 
 void TerrainEditor::renderGui( Point2I offset, const RectI &updateRect )
-{   
+{
    PROFILE_SCOPE( TerrainEditor_RenderGui );
 
    if ( !mActiveTerrain )
@@ -1331,7 +1331,7 @@ void TerrainEditor::renderPoints( const Vector<GFXVertexPCT> &pointList )
    GFXStateBlockDesc desc;
    desc.setBlend( true );
    desc.setZReadWrite( false, false );
-   GFX->setupGenericShaders();   
+   GFX->setupGenericShaders();
    GFX->setStateBlockByDesc( desc );
 
    U32 vertsLeft = vertCount;
@@ -1349,11 +1349,11 @@ void TerrainEditor::renderPoints( const Vector<GFXVertexPCT> &pointList )
 
       for ( S32 i = 0; i < loops; i++ )
       {
-         const GFXVertexPCT &pointInfo = pointList[i + offset];                  
-               
+         const GFXVertexPCT &pointInfo = pointList[i + offset];
+
          vert[0].color = vert[1].color = vert[2].color = vert[3].color = vert[4].color = vert[5].color = pointInfo.color;
-         
-         
+
+
          const F32 halfSize = pointInfo.texCoord.x * 0.5f;
          const Point3F &pos = pointInfo.point;
 
@@ -1365,7 +1365,7 @@ void TerrainEditor::renderPoints( const Vector<GFXVertexPCT> &pointList )
          vert[0].point = p0;
          vert[1].point = p1;
          vert[2].point = p2;
-         
+
          vert[3].point = p0;
          vert[4].point = p2;
          vert[5].point = p3;
@@ -1526,7 +1526,7 @@ void TerrainEditor::renderSelection( const Selection & sel, const LinearColorF &
 }
 
 void TerrainEditor::renderBrush( const Brush & brush, const LinearColorF & inColorFull, const LinearColorF & inColorNone, const LinearColorF & outColorFull, const LinearColorF & outColorNone, bool renderFill, bool renderFrame )
-{  
+{
 }
 
 void TerrainEditor::renderBorder()
@@ -1546,12 +1546,12 @@ void TerrainEditor::renderBorder()
    };
 
    GFX->setStateBlock( mStateBlock );
-   
+
    //
    if(mBorderLineMode)
    {
       PrimBuild::color(mBorderFrameColor);
-      
+
       PrimBuild::begin( GFXLineStrip, TerrainBlock::BlockSize * 4 + 1 );
       for(U32 i = 0; i < 4; i++)
       {
@@ -1635,7 +1635,7 @@ void TerrainEditor::submitUndo( Selection *sel )
    if ( !Sim::findObject( "EUndoManager", undoMan ) )
    {
       Con::errorf( "TerrainEditor::submitUndo() - EUndoManager not found!" );
-      return;     
+      return;
    }
 
    // Create and submit the action.
@@ -1643,7 +1643,7 @@ void TerrainEditor::submitUndo( Selection *sel )
    action->mSel = sel;
    action->mTerrainEditor = this;
    undoMan->addAction( action );
-   
+
    // Mark the editor as dirty!
    setDirty();
 }
@@ -1663,10 +1663,10 @@ void TerrainEditor::TerrainEditorUndoAction::undo()
 
       materialChanged |= info.mMaterialChanged;
 
-      // Restore the previous grid info.      
+      // Restore the previous grid info.
       mTerrainEditor->setGridInfo( (*mSel)[i] );
 
-      // Save the old grid info so we can 
+      // Save the old grid info so we can
       // restore it later.
       (*mSel)[i] = info;
    }
@@ -1684,11 +1684,11 @@ void TerrainEditor::submitMaterialUndo( String actionName )
    if ( !Sim::findObject( "EUndoManager", undoMan ) )
    {
       Con::errorf( "TerrainEditor::submitMaterialUndo() - EUndoManager not found!" );
-      return;     
+      return;
    }
 
    TerrainBlock *terr = getClientTerrain();
-   
+
    // Create and submit the action.
    TerrainMaterialUndoAction *action = new TerrainMaterialUndoAction( actionName );
    action->mTerrain = terr;
@@ -1697,7 +1697,7 @@ void TerrainEditor::submitMaterialUndo( String actionName )
    action->mEditor = this;
 
    undoMan->addAction( action );
-   
+
    // Mark the editor as dirty!
    setDirty();
 }
@@ -1709,7 +1709,7 @@ void TerrainEditor::onMaterialUndo( TerrainBlock *terr )
    setGridUpdateMinMax();
 
    terr->mDetailsDirty = true;
-   terr->mLayerTexDirty = true; 
+   terr->mLayerTexDirty = true;
 
    Con::executef( this, "onMaterialUndo" );
 }
@@ -1724,8 +1724,8 @@ void TerrainEditor::TerrainMaterialUndoAction::undo()
 
    mMaterials = tempMaterials;
    mLayerMap = tempLayers;
-      
-   mEditor->onMaterialUndo( mTerrain );      
+
+   mEditor->onMaterialUndo( mTerrain );
 }
 
 void TerrainEditor::TerrainMaterialUndoAction::redo()
@@ -1759,22 +1759,22 @@ void TerrainEditor::processActionTick(U32 sequence)
 bool TerrainEditor::onInputEvent(const InputEventInfo & event)
 {
    /*
-   if (  mRightMousePassThru && 
+   if (  mRightMousePassThru &&
          event.deviceType == KeyboardDeviceType &&
          event.objType == SI_KEY &&
-         event.objInst == KEY_TAB && 
+         event.objInst == KEY_TAB &&
          event.action == SI_MAKE )
    {
       if ( isMethod( "onToggleToolWindows" ) )
          Con::executef( this, "onToggleToolWindows" );
    }
    */
-   
+
    return Parent::onInputEvent( event );
 }
 
 void TerrainEditor::on3DMouseDown(const Gui3DMouseEvent & event)
-{   
+{
    getRoot()->showCursor( false );
 
    if(mTerrainBlocks.size() == 0)
@@ -1800,7 +1800,7 @@ void TerrainEditor::on3DMouseDown(const Gui3DMouseEvent & event)
             //mCursorVisible = false;
          mMousePos = pos;
 
-         mMouseBrush->setPosition(mMousePos);         
+         mMouseBrush->setPosition(mMousePos);
 
          return;
       }
@@ -1845,7 +1845,7 @@ void TerrainEditor::on3DMouseMove(const Gui3DMouseEvent & event)
    else
    {
       // We do not change the active terrain as the mouse moves when
-      // in painting mode.  This is because it causes the material 
+      // in painting mode.  This is because it causes the material
       // window to change as you cursor over to it.
       if ( String::compare(getCurrentAction(),"paintMaterial") != 0 )
       {
@@ -1861,7 +1861,7 @@ void TerrainEditor::on3DMouseMove(const Gui3DMouseEvent & event)
 
       mMouseBrush->setTerrain(mActiveTerrain);
       mMouseBrush->setPosition(mMousePos);
-   }  
+   }
 }
 
 void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
@@ -1873,7 +1873,7 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
 
    if ( !isMouseLocked() )
       return;
-    
+
    Point3F pos;
 
    if ( !mSelectionLocked )
@@ -1881,7 +1881,7 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
       if ( !collide( event, pos)  )
          mMouseBrush->reset();
    }
-   
+
    // check if the mouse has actually moved in grid space
    bool selChanged = false;
    if ( !mSelectionLocked )
@@ -1897,6 +1897,9 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
       selChanged = gMouse != gLastMouse;
    }
 
+   if ( mMouseDown )
+      return;
+
    mCurrentAction->process( mMouseBrush, event, true, TerrainAction::Update );
 }
 
@@ -1906,7 +1909,7 @@ void TerrainEditor::on3DMouseUp(const Gui3DMouseEvent & event)
    getRoot()->showCursor( true );
 
    if ( mTerrainBlocks.size() == 0 )
-      return;   
+      return;
 
    if ( isMouseLocked() )
    {
@@ -1938,11 +1941,11 @@ bool TerrainEditor::onMouseWheelDown( const GuiEvent & event )
    }
    else if ( event.modifier & SI_PRIMARY_CTRL )
    {
-      Point2I newBrush = getBrushSize() - Point2I(1,1);  
+      Point2I newBrush = getBrushSize() - Point2I(1,1);
       setBrushSize( newBrush.x, newBrush.y );
       return true;
    }
-      
+
    return Parent::onMouseWheelDown( event );
 }
 
@@ -1964,7 +1967,7 @@ bool TerrainEditor::onMouseWheelUp( const GuiEvent & event )
       setBrushSize( newBrush.x, newBrush.y );
       return true;
    }
-   
+
    return Parent::onMouseWheelUp( event );
 }
 
@@ -2049,7 +2052,7 @@ void TerrainEditor::setBrushType( const char *type )
       mMouseBrush = new SelectionBrush(this);
       mBrushChanged = true;
    }
-   else {}   
+   else {}
 }
 
 const char* TerrainEditor::getBrushType() const
@@ -2083,7 +2086,7 @@ void TerrainEditor::setBrushSize( S32 w, S32 h )
 void TerrainEditor::setBrushPressure( F32 pressure )
 {
    pressure = mClampF( pressure, 0.01f, 1.0f );
-   
+
    if ( mBrushPressure == pressure )
       return;
 
@@ -2364,7 +2367,7 @@ bool TerrainEditor::isPointInTerrain( const GridPoint & gPoint)
 }
 
 void TerrainEditor::reorderMaterial( S32 index, S32 orderPos )
-{   
+{
    TerrainBlock *terr = getClientTerrain();
    Vector<U8> layerMap = terr->getLayerMap();
    Vector<TerrainMaterial*> materials = terr->getMaterials();
@@ -2382,19 +2385,19 @@ void TerrainEditor::reorderMaterial( S32 index, S32 orderPos )
       // Was previous material, set to new index.
       if ( *itr == index )
          *itr = orderPos;
-      else 
+      else
       {
          // We removed a Material prior to this one, bump it down.
          if ( *itr > index )
             (*itr)--;
          // We added a Material prior to this one, bump it up.
-         if ( *itr >= orderPos )         
+         if ( *itr >= orderPos )
             (*itr)++;
       }
    }
 
    terr->setMaterials( materials );
-   terr->setLayerMap( layerMap );   
+   terr->setLayerMap( layerMap );
 
    // We didn't really just "undo" but it happens to do everything we
    // need to update the materials and gui.
@@ -2545,7 +2548,7 @@ DefineEngineMethod( TerrainEditor, setBrushSoftness, void, (F32 softness), , "(f
 
 DefineEngineMethod( TerrainEditor, getBrushSoftness, F32, (), , "()")
 {
-	
+
    return object->getBrushSoftness();
 }
 
@@ -2627,14 +2630,14 @@ DefineEngineMethod(TerrainEditor, setTerraformOverlay, void, (bool overlayEnable
    // XA: This one needs to be implemented :)
 }
 
-DefineEngineMethod(TerrainEditor, updateMaterial, bool, ( U32 index, String matName ), , 
+DefineEngineMethod(TerrainEditor, updateMaterial, bool, ( U32 index, String matName ), ,
    "( int index, string matName )\n"
    "Changes the material name at the index." )
 {
    TerrainBlock *terr = object->getClientTerrain();
    if ( !terr )
       return false;
-   
+
    if ( index >= terr->getMaterialCount() )
       return false;
 
@@ -2645,14 +2648,14 @@ DefineEngineMethod(TerrainEditor, updateMaterial, bool, ( U32 index, String matN
    return true;
 }
 
-DefineEngineMethod(TerrainEditor, addMaterial, S32, ( String matName ), , 
+DefineEngineMethod(TerrainEditor, addMaterial, S32, ( String matName ), ,
    "( string matName )\n"
    "Adds a new material." )
 {
    TerrainBlock *terr = object->getClientTerrain();
    if ( !terr )
       return false;
-   
+
    terr->addMaterial( matName );
 
    object->setDirty();
@@ -2665,7 +2668,7 @@ DefineEngineMethod( TerrainEditor, removeMaterial, void, ( S32 index ), , "( int
    TerrainBlock *terr = object->getClientTerrain();
    if ( !terr )
       return;
-      
+
    if ( index < 0 || index >= terr->getMaterialCount() )
    {
       Con::errorf( "TerrainEditor::removeMaterial - index out of range!" );
@@ -2681,7 +2684,7 @@ DefineEngineMethod( TerrainEditor, removeMaterial, void, ( S32 index ), , "( int
    const char *matName = terr->getMaterialName( index );
 
    object->submitMaterialUndo( String::ToString( "Remove TerrainMaterial %s", matName ) );
-   
+
    terr->removeMaterial( index );
 
    object->setDirty();
@@ -2689,7 +2692,7 @@ DefineEngineMethod( TerrainEditor, removeMaterial, void, ( S32 index ), , "( int
    object->setGridUpdateMinMax();
 }
 
-DefineEngineMethod(TerrainEditor, getMaterialCount, S32, (), , 
+DefineEngineMethod(TerrainEditor, getMaterialCount, S32, (), ,
    "Returns the current material count." )
 {
    TerrainBlock *terr = object->getClientTerrain();
@@ -2721,13 +2724,13 @@ DefineEngineMethod( TerrainEditor, getMaterialName, const char*, (S32 index), , 
    TerrainBlock *terr = object->getClientTerrain();
    if ( !terr )
       return "";
-      
+
    if( index < 0 || index >= terr->getMaterialCount() )
    {
       Con::errorf( "TerrainEditor::getMaterialName - index out of range!" );
       return "";
    }
-   
+
    const char* name = terr->getMaterialName( index );
    return Con::getReturnBuffer( name );
 }
@@ -2737,13 +2740,13 @@ DefineEngineMethod( TerrainEditor, getMaterialIndex, S32, ( String name ), , "( 
    TerrainBlock *terr = object->getClientTerrain();
    if ( !terr )
       return -1;
-      
+
    const U32 count = terr->getMaterialCount();
-   
+
    for( U32 i = 0; i < count; ++ i )
       if( dStricmp( name, terr->getMaterialName( i ) ) == 0 )
          return i;
-         
+
    return -1;
 }
 
@@ -2753,12 +2756,12 @@ DefineEngineMethod( TerrainEditor, reorderMaterial, void, ( S32 index, S32 order
    object->reorderMaterial( index, orderPos );
 }
 
-DefineEngineMethod(TerrainEditor, getTerrainUnderWorldPoint, S32, (const char * ptOrX, const char * Y, const char * Z), ("", "", ""), 
+DefineEngineMethod(TerrainEditor, getTerrainUnderWorldPoint, S32, (const char * ptOrX, const char * Y, const char * Z), ("", "", ""),
                                                                            "(x/y/z) Gets the terrain block that is located under the given world point.\n"
-                                                                           "@param x/y/z The world coordinates (floating point values) you wish to query at. " 
+                                                                           "@param x/y/z The world coordinates (floating point values) you wish to query at. "
                                                                            "These can be formatted as either a string (\"x y z\") or separately as (x, y, z)\n"
                                                                            "@return Returns the ID of the requested terrain block (0 if not found).\n\n")
-{   
+{
    TerrainEditor *tEditor = (TerrainEditor *) object;
    if(tEditor == NULL)
       return 0;
@@ -2791,7 +2794,7 @@ DefineEngineMethod(TerrainEditor, getTerrainUnderWorldPoint, S32, (const char * 
 
 void TerrainEditor::initPersistFields()
 {
-   addGroup("Misc");	
+   addGroup("Misc");
    addField("isDirty", TypeBool, Offset(mIsDirty, TerrainEditor));
    addField("isMissionDirty", TypeBool, Offset(mIsMissionDirty, TerrainEditor));
    addField("renderBorder", TypeBool, Offset(mRenderBorder, TerrainEditor));                    ///< Not currently used
@@ -2849,89 +2852,89 @@ DefineEngineMethod( TerrainEditor, setSlopeLimitMaxAngle, F32, (F32 angle), , ""
 		angle = 90.0f;
    if ( angle < object->mSlopeMinAngle )
       angle = object->mSlopeMinAngle;
-      
+
 	object->mSlopeMaxAngle = angle;
 	return angle;
 }
 
-//------------------------------------------------------------------------------  
-void TerrainEditor::autoMaterialLayer( F32 mMinHeight, F32 mMaxHeight, F32 mMinSlope, F32 mMaxSlope, F32 mCoverage )  
-{  
+//------------------------------------------------------------------------------
+void TerrainEditor::autoMaterialLayer( F32 mMinHeight, F32 mMaxHeight, F32 mMinSlope, F32 mMaxSlope, F32 mCoverage )
+{
 
-#define AUTOPAINT_UNDO 
-	
-	if (!mActiveTerrain)  
-      return;  
-  
-   S32 mat = getPaintMaterialIndex();  
-   if (mat == -1)  
-      return;  
+#define AUTOPAINT_UNDO
+
+	if (!mActiveTerrain)
+      return;
+
+   S32 mat = getPaintMaterialIndex();
+   if (mat == -1)
+      return;
 
 
 	  #ifndef AUTOPAINT_UNDO
-	  mUndoSel = new Selection;  
+	  mUndoSel = new Selection;
 	  #endif
 
-          
-   U32 terrBlocks = mActiveTerrain->getBlockSize();  
-   for (U32 y = 0; y < terrBlocks; y++) 
-   {  
-      for (U32 x = 0; x < terrBlocks; x++) 
-      {  
-         // get info  
-         GridPoint gp;  
-         gp.terrainBlock = mActiveTerrain;  
-         gp.gridPos.set(x, y);  
-  
-         GridInfo gi;  
-         getGridInfo(gp, gi);  
-  
-         if (gi.mMaterial == mat)  
-            continue;  
+
+   U32 terrBlocks = mActiveTerrain->getBlockSize();
+   for (U32 y = 0; y < terrBlocks; y++)
+   {
+      for (U32 x = 0; x < terrBlocks; x++)
+      {
+         // get info
+         GridPoint gp;
+         gp.terrainBlock = mActiveTerrain;
+         gp.gridPos.set(x, y);
+
+         GridInfo gi;
+         getGridInfo(gp, gi);
+
+         if (gi.mMaterial == mat)
+            continue;
 
          if (mRandI(0, 100) > mCoverage)
             continue;
-  
-         Point3F wp;  
-         gridToWorld(gp, wp);  
-  
-         if (!(wp.z >= mMinHeight && wp.z <= mMaxHeight))  
-            continue;  
-  
-         // transform wp to object space  
-         Point3F op;  
-         mActiveTerrain->getWorldTransform().mulP(wp, &op);  
-  
-         Point3F norm;  
-         mActiveTerrain->getNormal(Point2F(op.x, op.y), &norm, true);  
-  
-         if (mMinSlope > 0)  
-            if (norm.z > mSin(mDegToRad(90.0f - mMinSlope)))  
-               continue;  
-  
-         if (mMaxSlope < 90)  
-            if (norm.z < mSin(mDegToRad(90.0f - mMaxSlope)))  
-               continue;  
-  
-         gi.mMaterialChanged = true; 
+
+         Point3F wp;
+         gridToWorld(gp, wp);
+
+         if (!(wp.z >= mMinHeight && wp.z <= mMaxHeight))
+            continue;
+
+         // transform wp to object space
+         Point3F op;
+         mActiveTerrain->getWorldTransform().mulP(wp, &op);
+
+         Point3F norm;
+         mActiveTerrain->getNormal(Point2F(op.x, op.y), &norm, true);
+
+         if (mMinSlope > 0)
+            if (norm.z > mSin(mDegToRad(90.0f - mMinSlope)))
+               continue;
+
+         if (mMaxSlope < 90)
+            if (norm.z < mSin(mDegToRad(90.0f - mMaxSlope)))
+               continue;
+
+         gi.mMaterialChanged = true;
          #ifndef AUTOPAINT_UNDO
          mUndoSel->add(gi);
          #endif
-         gi.mMaterial = mat;  
-         setGridInfo(gi);  
-      }  
-   }  
-  
+         gi.mMaterial = mat;
+         setGridInfo(gi);
+      }
+   }
+
    #ifndef AUTOPAINT_UNDO
-   if(mUndoSel->size())  
-      submitUndo( mUndoSel );  
-   else  
-      delete mUndoSel;  
-   mUndoSel = 0;  
+   if(mUndoSel->size())
+      submitUndo( mUndoSel );
+   else
+      delete mUndoSel;
+   mUndoSel = 0;
    #endif
 
-  
-   scheduleMaterialUpdate();     
+
+   scheduleMaterialUpdate();
 }
 
 DefineEngineMethod( TerrainEditor, autoMaterialLayer, void, (F32 minHeight, F32 maxHeight, F32 minSlope, F32 maxSlope, F32 coverage),,
@@ -2942,5 +2945,5 @@ DefineEngineMethod( TerrainEditor, autoMaterialLayer, void, (F32 minHeight, F32 
    "@param maxSlope Maximum terrain slope."
    "@param coverage Terrain coverage amount.")
 {
-   object->autoMaterialLayer( minHeight,maxHeight, minSlope, maxSlope, coverage );  
+   object->autoMaterialLayer( minHeight,maxHeight, minSlope, maxSlope, coverage );
 }

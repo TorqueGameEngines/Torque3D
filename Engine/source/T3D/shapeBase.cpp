@@ -68,6 +68,7 @@
 #include "renderInstance/renderOcclusionMgr.h"
 #include "core/stream/fileStream.h"
 #include "T3D/accumulationVolume.h"
+#include "console/persistenceManager.h"
 
 IMPLEMENT_CO_DATABLOCK_V1(ShapeBaseData);
 
@@ -359,6 +360,13 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
          }
       }
    }
+   PersistenceManager persistMgr;
+   bool unsavedShapeAsset = false;
+   if (shapeAssetId == StringTable->EmptyString())
+   {
+      unsavedShapeAsset = true;
+      persistMgr.setDirty(this);
+   }
 
    //Legacy catch
    if (shapeName != StringTable->EmptyString())
@@ -550,6 +558,9 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    {
       Sim::findObject( cubeDescId, reflectorDesc );
    }
+
+   if (unsavedShapeAsset)
+      persistMgr.saveDirty();
 
    return !shapeError;
 }

@@ -52,6 +52,18 @@ StringTableEntry assetInternalField = StringTable->insert("AssetInternal");
 StringTableEntry assetPrivateField = StringTable->insert("AssetPrivate");
 
 //-----------------------------------------------------------------------------
+const String AssetBase::mErrCodeStrings[] =
+{
+   "Failed",
+   "Ok",
+   "NotLoaded",
+   "BadFileReference",
+   "InvalidFormat",
+   "DependencyNotFound",
+   "FileTooLarge",
+   "UsingFallback",
+   "UnKnown"
+};
 
 AssetBase::AssetBase() :
 mpOwningAssetManager(NULL),

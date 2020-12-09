@@ -49,7 +49,10 @@ private:
     StringTableEntry mAssetNameTo;
 
 public:
-    TamlAssetDeclaredUpdateVisitor() {}
+    TamlAssetDeclaredUpdateVisitor():
+       mAssetIdFrom(StringTable->EmptyString()), mAssetIdTo(StringTable->EmptyString()),
+       mAssetNameFrom(StringTable->EmptyString()), mAssetNameTo(StringTable->EmptyString()) {}
+
     virtual ~TamlAssetDeclaredUpdateVisitor() {}
 
     void setAssetIdFrom( const char* pAssetIdFrom )

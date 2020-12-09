@@ -55,7 +55,7 @@ private:
     StringTableEntry mAssetIdTo;
 
 public:
-    TamlAssetReferencedUpdateVisitor() {}
+    TamlAssetReferencedUpdateVisitor() : mAssetIdFrom(StringTable->EmptyString()), mAssetIdTo(StringTable->EmptyString()) {}
     virtual ~TamlAssetReferencedUpdateVisitor() {}
 
     void setAssetIdFrom( const char* pAssetIdFrom )

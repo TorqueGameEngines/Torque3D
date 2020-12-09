@@ -55,7 +55,6 @@ extern StringTableEntry assetAutoUnloadField;
 //#define ASSET_BASE_AUTOUNLOAD_FIELD        "AssetAutoUnload"
 
 //-----------------------------------------------------------------------------
-
 class AssetBase : public SimObject
 {
    friend class AssetManager;
@@ -69,6 +68,26 @@ protected:
    U32                     mAcquireReferenceCount;
 
 public:
+   enum AssetErrCode
+   {
+      Failed,
+      Ok,
+      NotLoaded,
+      BadFileReference,
+      InvalidFormat,
+      DependencyNotFound,
+      FileTooLarge,
+      UsingFallback,
+      Extended
+   };
+
+   static const String mErrCodeStrings[AssetErrCode::Extended + 1];
+   static String getAssetErrstrn(U32 errCode)
+   {
+      if (errCode > AssetErrCode::Extended) return "undefined error";
+      return mErrCodeStrings[errCode];
+   };
+
    AssetBase();
    virtual ~AssetBase();
 

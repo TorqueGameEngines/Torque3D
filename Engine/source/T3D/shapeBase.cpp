@@ -361,24 +361,19 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
 
    //Legacy catch
-   if (shapeAssetId == StringTable->EmptyString() && shapeName != StringTable->EmptyString())
+   if (shapeName != StringTable->EmptyString())
    {
-      StringTableEntry assetId = ShapeAsset::getAssetIdByFilename(shapeName);
-      if (assetId != StringTable->EmptyString())
-      {
-         shapeAssetId = assetId;
-      }
+      shapeAssetId = ShapeAsset::getAssetIdByFilename(shapeName);
    }
-
-   if (ShapeAsset::getAssetById(shapeAssetId, &shapeAsset))
+   U32 assetState = ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
+   if (ShapeAsset::Failed != assetState)
    {
-      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
-      //the TSStatic
-      if (shapeAsset.getAssetId() != StringTable->insert("Core_Rendering:noshape"))
+      //only clear the legacy direct file reference if everything checks out fully
+      if (assetState == ShapeAsset::Ok)
       {
          shapeName = StringTable->EmptyString();
       }
-   
+      else Con::warnf("Warning: ShapeBaseData::preload-%s", ShapeAsset::getAssetErrstrn(assetState).c_str());
       S32 i;
 
       // Resolve shapename
@@ -803,10 +798,14 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowSphereAdjust);
 
 
-   //if (stream->writeFlag(shapeAsset.notNull()))
+   if (stream->writeFlag(shapeAsset.notNull()))
+   {
       stream->writeString(shapeAsset.getAssetId());
-   //else
+   }
+   else
+   {
       stream->writeString(shapeName);
+   }
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -885,10 +884,16 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowSphereAdjust);
 
 
-   //if (stream->readFlag())
+   if (stream->readFlag())
+   {
       shapeAssetId = stream->readSTString();
-   //else
+      ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
+      shapeName = shapeAsset->getShapeFilename();
+   }
+   else
+   {
       shapeName = stream->readSTString();
+   }
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())

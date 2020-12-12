@@ -2,7 +2,7 @@
 	ModuleId="MainEditor"
 	VersionId="1"
 	Description="Tool that can be used to view/edit an object."
-	ScriptFile="MainEditor.cs"
+	ScriptFile="MainEditor.tscript"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Tools">

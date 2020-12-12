@@ -36,7 +36,7 @@ class CodeBlock;
 /// To use the debugger, use dbgSetParameters(port, password); in the console
 /// of the server to enable debugger connections.  Then on some other system,
 /// start up the app (you don't have to start a game or connect to the
-/// server) and exec("common/debugger/debugger.cs"); in the console.  Then use
+/// server) and exec("common/debugger/debugger.tscript"); in the console.  Then use
 /// the debugger GUI to connect to the server with the right port and password.
 ///
 /// @see http://www.planettribes.com/tribes2/editing.shtml for more thorough discussion.

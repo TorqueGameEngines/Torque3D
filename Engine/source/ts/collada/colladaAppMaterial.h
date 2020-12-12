@@ -40,7 +40,7 @@ public:
    ColladaExtension_effect*   effectExt;        ///< effect extension
    String                     name;             ///< Name of this material (cleaned)
 
-   // Settings extracted from the Collada file, and optionally saved to materials.cs
+   // Settings extracted from the Collada file, and optionally saved to materials.tscript
    String                     diffuseMap;
    String                     normalMap;
 

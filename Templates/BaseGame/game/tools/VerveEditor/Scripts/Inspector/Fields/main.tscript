@@ -1,0 +1,25 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+function VerveEditor::InitInspectorFieldScripts()
+{
+    exec( "./TypeBool.tscript" );
+    exec( "./TypeData.tscript" );
+    exec( "./TypeEnum.tscript" );
+    exec( "./TypeString.tscript" );
+    
+    exec( "./TypeVCameraGroupEnum.tscript" );
+    exec( "./TypeVCommandEnum.tscript" );
+    exec( "./TypeVControllerDataEnum.tscript" );
+    exec( "./TypeVGroupEnum.tscript" );
+    exec( "./TypeVLightAnimationDataEnum.tscript" );
+    exec( "./TypeVPathOrientationModeEnum.tscript" );
+    exec( "./TypeVPostEffectEnum.tscript" );
+    exec( "./TypeVSceneEnum.tscript" );
+    exec( "./TypeVSFXProfileEnum.tscript" );
+    exec( "./TypeVShapeAnimationEnum.tscript" );
+    exec( "./TypeToggleEnum.tscript" );
+}
+VerveEditor::InitInspectorFieldScripts();

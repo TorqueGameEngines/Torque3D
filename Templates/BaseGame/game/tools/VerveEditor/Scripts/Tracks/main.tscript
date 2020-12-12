@@ -1,0 +1,33 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+function VerveEditor::InitTrackScripts()
+{
+    // Core.
+    exec( "./VTrack.tscript" );
+    
+    // Built-In.
+    exec( "./VCameraShakeTrack.tscript" );
+    exec( "./VDirectorTrack.tscript" );
+    exec( "./VFadeTrack.tscript" );
+    exec( "./VLightObjectAnimationTrack.tscript" );
+    exec( "./VLightObjectToggleTrack.tscript" );
+    exec( "./VMotionTrack.tscript" );
+    exec( "./VParticleEffectToggleTrack.tscript" );
+    exec( "./VPostEffectToggleTrack.tscript" );
+    exec( "./VSceneJumpTrack.tscript" );
+    exec( "./VScriptEventTrack.tscript" );
+    exec( "./VShapeAnimationTrack.tscript" );
+    exec( "./VSlowMoTrack.tscript" );
+    exec( "./VSoundEffectTrack.tscript" );
+    exec( "./VSpawnSphereSpawnTargetTrack.tscript" );
+    
+    // Custom.
+    // Exec Custom Track Scripts.
+    
+    // Non-Unique Group List.
+    $VerveEditor::NonUniqueTrackList = "VTrack VPostEffectToggleTrack VSoundEffectTrack";
+}
+VerveEditor::InitTrackScripts();

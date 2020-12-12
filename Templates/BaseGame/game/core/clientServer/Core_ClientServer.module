@@ -2,7 +2,7 @@
 	ModuleId="Core_ClientServer"
 	VersionId="1"
 	Description="Default module for the game."
-	ScriptFile="Core_ClientServer.cs"
+	ScriptFile="Core_ClientServer.tscript"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Core">

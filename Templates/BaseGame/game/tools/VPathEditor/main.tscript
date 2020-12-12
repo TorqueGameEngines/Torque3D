@@ -1,0 +1,20 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+function InitializeVPathEditor()
+{
+    // Gui.
+    exec( "./GUI/Profiles.tscript" );
+    exec( "./GUI/VPathEditor.gui" );
+    
+    // Scripts.
+    exec( "./Scripts/Plugin.tscript" );
+    exec( "./Scripts/Editor.tscript" );
+}
+
+function DestroyVPathEditor()
+{
+    // Void.
+}

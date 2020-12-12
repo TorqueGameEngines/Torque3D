@@ -103,7 +103,7 @@ void freeConsoleParserList(void);
 /// \param p Parse function
 /// \param r Restart function
 /// \param ssb SetScanBuffer function
-/// \param def true if this is the default parser (<b>Note:</b> set this only on the .cs parser!)
+/// \param def true if this is the default parser (<b>Note:</b> set this only on the .tscript parser!)
 /// \return true for success, false for failure (out of memory)
 /// \sa FreeConsoleParserList(), ConsoleParser
 //-----------------------------------------------------------------------------

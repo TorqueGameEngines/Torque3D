@@ -294,7 +294,7 @@ DefineEngineStaticMethod( BanList, export, void, ( const char* filename ),,
               "Dump the banlist to a file.\n\n"
               "@param filename Path of the file to write the list to.\n\n"
 			  "@tsexample\n"
-			  "BanList::Export(\"./server/banlist.cs\");\n"
+			  "BanList::Export(\"./server/banlist." TORQUE_SCRIPT_EXTENSION "\");\n"
 			  "@endtsexample\n\n")
 {
    BanList::instance()->exportToFile( filename );

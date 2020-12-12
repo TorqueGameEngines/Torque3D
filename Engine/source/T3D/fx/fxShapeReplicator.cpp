@@ -37,14 +37,14 @@
 
 //------------------------------------------------------------------------------
 //
-//	Put this in /example/common/editor/editor.cs in function [Editor::create()] (around line 66).
+//	Put this in /example/common/editor/editor.tscript in function [Editor::create()] (around line 66).
 //
 //   // Ignore Replicated fxStatic Instances.
 //   EWorldEditor.ignoreObjClass("fxShapeReplicatedStatic");
 //
 //------------------------------------------------------------------------------
 //
-//	Put this in /example/common/editor/EditorGui.cs in [function Creator::init( %this )]
+//	Put this in /example/common/editor/EditorGui.tscript in [function Creator::init( %this )]
 //
 //   %Environment_Item[8] = "fxShapeReplicator";  <-- ADD THIS.
 //
@@ -60,7 +60,7 @@
 //
 //------------------------------------------------------------------------------
 //
-//	Put this in /example/common/client/missionDownload.cs in [function clientCmdMissionStartPhase3(%seq,%missionName)] (line 65)
+//	Put this in /example/common/client/missionDownload.tscript in [function clientCmdMissionStartPhase3(%seq,%missionName)] (line 65)
 //	after codeline 'onPhase2Complete();'.
 //
 //	StartClientReplication();

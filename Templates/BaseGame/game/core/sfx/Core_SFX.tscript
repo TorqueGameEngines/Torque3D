@@ -1,0 +1,15 @@
+
+function Core_SFX::onCreate(%this)
+{
+   exec("./scripts/audio.tscript");
+   exec("./scripts/audioData.tscript");
+   exec("./scripts/audioAmbience.tscript");
+   exec("./scripts/audioDescriptions.tscript");
+   exec("./scripts/audioEnvironments.tscript");
+   exec("./scripts/audioStates.tscript");
+
+}
+
+function Core_SFX::onDestroy(%this)
+{
+}

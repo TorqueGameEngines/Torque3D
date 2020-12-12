@@ -1,0 +1,20 @@
+
+function Core_Lighting::onCreate(%this)
+{
+   exec("./scripts/lighting.tscript");
+   
+   //Advanced/Deferred
+   exec("./scripts/advancedLighting_Shaders.tscript");
+   exec("./scripts/deferredShading.tscript");
+   exec("./scripts/advancedLighting_Init.tscript");
+   
+   //Basic/Forward
+   exec("./scripts/basicLighting_shadowFilter.tscript");
+   exec("./scripts/shadowMaps_Init.tscript");
+   exec("./scripts/basicLighting_Init.tscript");
+   
+}
+
+function Core_Lighting::onDestroy(%this)
+{
+}

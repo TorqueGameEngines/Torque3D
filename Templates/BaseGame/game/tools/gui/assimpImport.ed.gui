@@ -1049,7 +1049,7 @@
          };
          new GuiCheckBoxCtrl() {
             useInactiveState = "0";
-            text = " Force update materials.cs";
+            text = " Force update materials.tscript";
             groupNum = "-1";
             buttonType = "ToggleButton";
             useMouseEvents = "0";
@@ -1063,7 +1063,7 @@
             canSave = "1";
             Visible = "1";
             tooltipprofile = "ToolsGuiToolTipProfile";
-            ToolTip = "Forces update of materials.cs (even if Materials already exist)";
+            ToolTip = "Forces update of materials.tscript (even if Materials already exist)";
             hovertime = "1000";
             internalName = "forceUpdateMaterials";
             canSaveDynamicFields = "0";
@@ -1510,4 +1510,4 @@
    };
 };
 //--- OBJECT WRITE END ---
-exec("./assimpImport.ed.cs");
+exec("./assimpImport.ed.tscript");

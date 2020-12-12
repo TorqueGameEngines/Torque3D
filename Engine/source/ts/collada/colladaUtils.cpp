@@ -181,7 +181,7 @@ String ColladaUtils::resolveImagePath(const domImage* image)
    //    it is inside the Torque folder, otherwise force textures
    //    to be in the same folder as the shape.
    // 2. If the URI string contains a relative path, append it
-   //    to the shape path (since materials.cs cannot handle
+   //    to the shape path (since materials.tscript cannot handle
    //    relative paths).
 
    Torque::Path imagePath;

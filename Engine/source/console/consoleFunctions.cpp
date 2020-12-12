@@ -787,7 +787,7 @@ DefineEngineFunction( strIsMatchMultipleExpr, bool, ( const char* patterns, cons
       "this string.  If false, differences in casing are ignored.\n"
    "@return True if @a str matches any of the given @a patterns.\n\n"
    "@tsexample\n"
-   "strIsMatchMultipleExpr( \"*.cs *.gui *.mis\", \"mymission.mis\" ) // Returns true.\n"
+   "strIsMatchMultipleExpr( \"*." TORQUE_SCRIPT_EXTENSION " *.gui *.mis\", \"mymission.mis\" ) // Returns true.\n"
    "@endtsexample\n"
    "@see strIsMatchExpr\n"
    "@ingroup Strings" )
@@ -1200,7 +1200,7 @@ DefineEngineFunction( isValidIP, bool, ( const char* str),,
 //----------------------------------------------------------------
 
 // Torque won't normally add another string if it already exists with another casing,
-// so this forces the addition. It should be called once near the start, such as in main.cs.
+// so this forces the addition. It should be called once near the start, such as in main.tscript.
 DefineEngineStringlyVariadicFunction(addCaseSensitiveStrings,void,2,0,"[string1, string2, ...]"
                 "Adds case sensitive strings to the StringTable.")
 {
@@ -1810,7 +1810,7 @@ DefineEngineFunction( detag, const char*, ( const char* str ),,
    "to convert a tagged string ID back into a regular string at any time.\n\n"
 
    "@tsexample\n"
-      "// From scripts/client/message.cs\n"
+      "// From scripts/client/message. " TORQUE_SCRIPT_EXTENSION "\n"
       "function clientCmdChatMessage(%sender, %voice, %pitch, %msgString, %a1, %a2, %a3, %a4, %a5, %a6, %a7, %a8, %a9, %a10)\n"
       "{\n"
       "   onChatMessage(detag(%msgString), %voice, %pitch);\n"
@@ -2262,7 +2262,7 @@ static U32 journalDepth = 1;
 
 DefineEngineFunction( getDSOPath, const char*, ( const char* scriptFileName ),,
    "Get the absolute path to the file in which the compiled code for the given script file will be stored.\n"
-   "@param scriptFileName %Path to the .cs script file.\n"
+   "@param scriptFileName %Path to the ." TORQUE_SCRIPT_EXTENSION " script file.\n"
    "@return The absolute path to the .dso file for the given script file.\n\n"
    "@note The compiler will store newly compiled DSOs in the prefs path but pre-existing DSOs will be loaded "
       "from the current paths.\n\n"
@@ -2303,13 +2303,13 @@ DefineEngineFunction( compile, bool, ( const char* fileName, bool overrideNoDSO 
    if(dsoPath && *dsoPath == 0)
       return false;
 
-   // If the script file extention is '.ed.cs' then compile it to a different compiled extention
+   // If the script file extention is '.ed.tscript' then compile it to a different compiled extention
    bool isEditorScript = false;
    const char *ext = dStrrchr( scriptFilenameBuffer, '.' );
-   if( ext && ( dStricmp( ext, ".cs" ) == 0 ) )
+   if( ext && ( dStricmp( ext, "." TORQUE_SCRIPT_EXTENSION) == 0 ) )
    {
       const char* ext2 = ext - 3;
-      if( dStricmp( ext2, ".ed.cs" ) == 0 )
+      if( dStricmp( ext2, ".ed." TORQUE_SCRIPT_EXTENSION) == 0 )
          isEditorScript = true;
    }
    else if( ext && ( dStricmp( ext, ".gui" ) == 0 ) )
@@ -2364,8 +2364,8 @@ DefineEngineFunction( exec, bool, ( const char* fileName, bool noCalls, bool jou
    "@param journalScript Deprecated\n"
    "@return True if the script was successfully executed, false if not.\n\n"
    "@tsexample\n"
-      "// Execute the init.cs script file found in the same directory as the current script file.\n"
-      "exec( \"./init.cs\" );\n"
+      "// Execute the init." TORQUE_SCRIPT_EXTENSION " script file found in the same directory as the current script file.\n"
+      "exec( \"./init." TORQUE_SCRIPT_EXTENSION "\" );\n"
    "@endtsexample\n\n"
    "@see compile\n"
    "@see eval\n"
@@ -2684,8 +2684,8 @@ DefineEngineFunction( export, void, ( const char* pattern, const char* filename,
    "@param append If true and @a fileName is not \"\", then the definitions are appended to the specified file. "
       "Otherwise existing contents of the file (if any) will be overwritten.\n\n"
    "@tsexample\n"
-      "// Write out all preference variables to a prefs.cs file.\n"
-      "export( \"$prefs::*\", \"prefs.cs\" );\n"
+      "// Write out all preference variables to a prefs." TORQUE_SCRIPT_EXTENSION " file.\n"
+      "export( \"$prefs::*\", \"prefs." TORQUE_SCRIPT_EXTENSION "\" );\n"
    "@endtsexample\n\n"
    "@ingroup Scripting" )
 {

@@ -427,7 +427,7 @@ void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
 {
    Torque::Path scriptPath(path);
    scriptPath.setFileName("materials");
-   scriptPath.setExtension("cs");
+   scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
 
    // First see what materials we need to update
    PersistenceManager persistMgr;

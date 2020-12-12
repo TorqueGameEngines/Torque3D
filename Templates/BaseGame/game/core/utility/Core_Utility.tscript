@@ -1,0 +1,16 @@
+
+function Core_Utility::onCreate(%this)
+{
+   exec("./scripts/parseArgs.tscript");
+   exec("./scripts/globals.tscript");
+   exec("./scripts/helperFunctions.tscript");
+   exec("./scripts/gameObjectManagement.tscript");
+   exec("./scripts/persistanceManagement.tscript");
+   exec("./scripts/module.tscript");
+   exec("./scripts/scene.tscript");
+   exec("./scripts/input.tscript");
+}
+
+function Core_Utility::onDestroy(%this)
+{
+}

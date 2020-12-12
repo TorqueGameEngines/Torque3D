@@ -1,0 +1,19 @@
+function Verve::create( %this )
+{
+   exec("data/Verve/gui/verveCinematic.gui");
+   
+   exec("data/Verve/scripts/server/verveCinematicController.tscript");
+   exec("data/Verve/scripts/server/verveCinematicTrigger.tscript");
+   exec("data/Verve/scripts/server/vervePathTutorialData.tscript");
+   
+   if(isObject(DatablockFilesList))
+   {
+      DatablockFilesList.add( "data/Verve/scripts/datablocks/verve/VerveActorData.tscript" );
+      DatablockFilesList.add( "data/Verve/scripts/datablocks/verve/VervePathTutorialData.tscript" );
+   }
+}
+
+function Verve::destroy( %this )
+{
+   
+}

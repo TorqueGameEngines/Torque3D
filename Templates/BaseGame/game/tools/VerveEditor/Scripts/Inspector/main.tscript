@@ -1,0 +1,20 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+function VerveEditor::InitInspectorScripts()
+{
+    exec( "./Controls.tscript" );
+    exec( "./CutCopyPaste.tscript" );
+    exec( "./EventNotify.tscript" );
+    exec( "./Factory.tscript" );
+    exec( "./FactoryControls.tscript" );
+    exec( "./FieldNotify.tscript" );
+    exec( "./Lists.tscript" );
+    exec( "./Properties.tscript" );
+    exec( "./Selection.tscript" );
+    
+    exec( "./Fields/main.tscript" );
+}
+VerveEditor::InitInspectorScripts();

@@ -1,0 +1,11 @@
+
+function Core_GUI::onCreate(%this)
+{
+   exec("./scripts/profiles.tscript");
+   exec("./scripts/canvas.tscript");
+   exec("./scripts/cursor.tscript");
+}
+
+function Core_GUI::onDestroy(%this)
+{
+}

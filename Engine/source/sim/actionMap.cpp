@@ -2218,8 +2218,8 @@ DefineEngineMethod( ActionMap, save, void, ( const char* fileName, bool append )
    " the ActionMap will be dumped to the console.\n"
    "@param append Whether to write the ActionMap at the end of the file or overwrite it.\n"
    "@tsexample\n"
-   "// Write out the actionmap into the config.cs file\n"
-   "moveMap.save( \"scripts/client/config.cs\" );"
+   "// Write out the actionmap into the config." TORQUE_SCRIPT_EXTENSION " file\n"
+   "moveMap.save( \"scripts/client/config." TORQUE_SCRIPT_EXTENSION "\" );"
    "@endtsexample\n\n")
 {
    char buffer[1024];

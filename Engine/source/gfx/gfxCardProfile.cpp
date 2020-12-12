@@ -64,16 +64,16 @@ void GFXCardProfiler::loadProfileScript(const char* aScriptName)
 
 void GFXCardProfiler::loadProfileScripts(const String& render, const String& vendor, const String& card, const String& version)
 {
-   String script = render + ".cs";
+   String script = render + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 
-   script = render + "." + vendor + ".cs";
+   script = render + "." + vendor + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 
-   script = render + "." + vendor + "." + card + ".cs";
+   script = render + "." + vendor + "." + card + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 
-   script = render + "." + vendor + "." + card + "." + version + ".cs";
+   script = render + "." + vendor + "." + card + "." + version + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 }
 

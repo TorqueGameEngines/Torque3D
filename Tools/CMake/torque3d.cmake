@@ -199,6 +199,12 @@ mark_as_advanced(TORQUE_DEBUG_GFX_MODE)
 #option(DEBUG_SPEW "more debug" OFF)
 set(TORQUE_NO_DSO_GENERATION ON)
 
+if(NOT TORQUE_SCRIPT_EXTENSION)
+    set(TORQUE_SCRIPT_EXTENSION "tscript" CACHE STRING "The default script extension to use for TorqueScript files")
+endif()
+
+mark_as_advanced(TORQUE_SCRIPT_EXTENSION)
+
 option(TORQUE_USE_ZENITY "use the Zenity backend for NFD" OFF)
 mark_as_advanced(TORQUE_USE_ZENITY)
 

@@ -1,0 +1,14 @@
+
+function Core_PostFX::onCreate(%this)
+{
+   //
+   exec("./scripts/postFxManager.tscript");
+   exec("./scripts/postFx.tscript");
+   
+   //Load the default config
+   loadPresetHandler("./scripts/default.postfxpreset.tscript");
+}
+
+function Core_PostFX::onDestroy(%this)
+{
+}

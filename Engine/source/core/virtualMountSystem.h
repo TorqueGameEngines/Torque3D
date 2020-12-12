@@ -46,7 +46,7 @@ namespace FS
    /// 3) Nothing special is done for the WriteAppend case; that is, it follows the same logic as if you were 
    /// just trying to Write the file.
    ///
-   /// Because of rule 1) above, you should take care that any files you need to write (such as prefs.cs), are not
+   /// Because of rule 1) above, you should take care that any files you need to write (such as prefs.tscript), are not
    /// included in read-only zip archive files.
    class VirtualMountSystem : public MountSystem
    {

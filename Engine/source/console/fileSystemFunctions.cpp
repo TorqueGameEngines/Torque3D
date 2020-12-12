@@ -156,8 +156,8 @@ DefineEngineFunction( findFirstFile, String, ( const char* pattern, bool recurse
    "@return The path of the first file matched by the search or an empty string if no matching file could be found.\n\n"
 
    "@tsexample\n"
-      "// Execute all .cs files in a subdirectory and its subdirectories.\n"
-      "for( %file = findFirstFile( \"subdirectory/*.cs\" ); %file !$= \"\"; %file = findNextFile() )\n"
+      "// Execute all ." TORQUE_SCRIPT_EXTENSION " files in a subdirectory and its subdirectories.\n"
+      "for( %file = findFirstFile( \"subdirectory/*." TORQUE_SCRIPT_EXTENSION "\" ); %file !$= \"\"; %file = findNextFile() )\n"
       "   exec( %file );\n"
    "@endtsexample\n\n"
 
@@ -193,8 +193,8 @@ DefineEngineFunction( findNextFile, String, ( const char* pattern ), ( "" ),
    "@return The path of the next filename matched by the search or an empty string if no more files match.\n\n"
 
    "@tsexample\n"
-      "// Execute all .cs files in a subdirectory and its subdirectories.\n"
-      "for( %file = findFirstFile( \"subdirectory/*.cs\" ); %file !$= \"\"; %file = findNextFile() )\n"
+      "// Execute all ." TORQUE_SCRIPT_EXTENSION " files in a subdirectory and its subdirectories.\n"
+      "for( %file = findFirstFile( \"subdirectory/*." TORQUE_SCRIPT_EXTENSION "\" ); %file !$= \"\"; %file = findNextFile() )\n"
       "   exec( %file );\n"
    "@endtsexample\n\n"
 
@@ -224,8 +224,8 @@ DefineEngineFunction( getFileCount, S32, ( const char* pattern, bool recurse ), 
    "@return Number of files located using the pattern\n\n"
 
    "@tsexample\n"
-      "// Count the number of .cs files in a subdirectory and its subdirectories.\n"
-      "getFileCount( \"subdirectory/*.cs\" );\n"
+      "// Count the number of ." TORQUE_SCRIPT_EXTENSION " files in a subdirectory and its subdirectories.\n"
+      "getFileCount( \"subdirectory/*." TORQUE_SCRIPT_EXTENSION "\" );\n"
    "@endtsexample\n\n"
 
    "@see findFirstFile()"
@@ -259,8 +259,8 @@ DefineEngineFunction(findFirstFileMultiExpr, String, ( const char* pattern, bool
    "call to findFirstFile() and findFirstFileMultiExpr() initiates a new search and renders "
    "a previous search invalid.\n\n"
 
-   "@param pattern The path and file name pattern to match against, such as *.cs.  Separate "
-   "multiple patterns with TABs.  For example: \"*.cs\" TAB \"*.dso\"\n"
+   "@param pattern The path and file name pattern to match against, such as *." TORQUE_SCRIPT_EXTENSION ".  Separate "
+   "multiple patterns with TABs.  For example: \"*." TORQUE_SCRIPT_EXTENSION "\" TAB \"*.dso\"\n"
    "@param recurse If true, the search will exhaustively recurse into subdirectories "
    "of the given path and match the given filename patterns.\n"
    "@return String of the first matching file path, or an empty string if no matching "
@@ -333,8 +333,8 @@ DefineEngineFunction(getFileCountMultiExpr, S32, ( const char* pattern, bool rec
    "If you're interested in a list of files that match the given patterns and not just "
    "the number of files, use findFirstFileMultiExpr() and findNextFileMultiExpr().\n\n"
 
-   "@param pattern The path and file name pattern to match against, such as *.cs.  Separate "
-   "multiple patterns with TABs.  For example: \"*.cs\" TAB \"*.dso\"\n"
+   "@param pattern The path and file name pattern to match against, such as *." TORQUE_SCRIPT_EXTENSION ".  Separate "
+   "multiple patterns with TABs.  For example: \"*." TORQUE_SCRIPT_EXTENSION "\" TAB \"*.dso\"\n"
    "@param recurse If true, the search will exhaustively recurse into subdirectories "
    "of the given path and match the given filename pattern.\n"
    "@return Number of files located using the patterns\n\n"
@@ -589,7 +589,7 @@ DefineEngineFunction(fileExt, String, ( const char* fileName ),,
    "@brief Get the extension of a file\n\n"
 
    "@param fileName Name and path of file\n"
-   "@return String containing the extension, such as \".exe\" or \".cs\"\n"
+   "@return String containing the extension, such as \".exe\" or \"." TORQUE_SCRIPT_EXTENSION "\"\n"
    "@ingroup FileSystem")
 {
    const char *ret = dStrrchr(fileName, '.');
@@ -744,7 +744,7 @@ DefineEngineFunction(getExecutableName, String, (),,
 //-----------------------------------------------------------------------------
 
 DefineEngineFunction( getMainDotCsDir, String, (),,
-   "@brief Get the absolute path to the directory that contains the main.cs script from which the engine was started.\n\n"
+   "@brief Get the absolute path to the directory that contains the main." TORQUE_SCRIPT_EXTENSION " script from which the engine was started.\n\n"
 
    "This directory will usually contain all the game assets and, in a user-side game installation, will usually be "
    "read-only.\n\n"

@@ -1162,9 +1162,9 @@ bool WaterObject::initMaterial( S32 idx )
 void WaterObject::initTextures()
 {
    if ( mRippleTexName.isNotEmpty() )
-      mRippleTex.set( mRippleTexName, &GFXStaticTextureSRGBProfile, "WaterObject::mRippleTex" );
+      mRippleTex.set( mRippleTexName, &GFXStaticTextureProfile, "WaterObject::mRippleTex" );
    if ( mRippleTex.isNull() )
-      mRippleTex.set( GFXTextureManager::getWarningTexturePath(), &GFXStaticTextureSRGBProfile, "WaterObject::mRippleTex" );
+      mRippleTex.set( GFXTextureManager::getWarningTexturePath(), &GFXStaticTextureProfile, "WaterObject::mRippleTex" );
 
    if ( mDepthGradientTexName.isNotEmpty() )
       mDepthGradientTex.set( mDepthGradientTexName, &GFXStaticTextureSRGBProfile, "WaterObject::mDepthGradientTex" );

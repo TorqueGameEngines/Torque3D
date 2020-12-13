@@ -196,7 +196,32 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    OptionName.setText("");
    OptionDescription.setText("");
    
-   OptionsMenuSettingsList.addOptionRow("Display API", "D3D11\tOpenGL", false, "", -1, -30, true, "The display API used for rendering.", $pref::Video::displayDevice);
+   //First, lets double-check the active device is accurate. Sometimes the default value in our prefs doesn't match the active one
+   %displayDevice = getDisplayDeviceType();
+   if($changingDisplayDevice !$= "")
+      %displayDevice = $changingDisplayDevice;
+      
+   %apiList = "";
+   %apiCount = GFXInit::getAdapterCount();
+   %apiIdx = 0;
+   for(%i=0; %i < %apiCount; %i++)
+   {
+      %api = GFXInit::getAdapterType(%i);
+      
+      if(%api !$= "NullDevice")
+      {
+         if(%apiIdx==0)
+            %apiList = %api;
+         else
+            %apiList = %apiList TAB %api;
+            
+         %apiIdx++;
+      }
+   }   
+   
+   trim(%apiList);
+   
+   OptionsMenuSettingsList.addOptionRow("Display API", %apiList, false, "", -1, -30, true, "The display API used for rendering.", %displayDevice);
    
    %numDevices = Canvas.getMonitorCount();
    %devicesList = "";
@@ -246,7 +271,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
 
 function OptionsMenu::applyDisplaySettings(%this)
 {
-	%newDevice     = OptionsMenuSettingsList.getCurrentOption(0);
+	%newDevice = OptionsMenuSettingsList.getCurrentOption(0);
 							
    // Change the device.
    if ( %newDevice !$= $pref::Video::displayDevice )
@@ -257,6 +282,8 @@ function OptionsMenu::applyDisplaySettings(%this)
       $pref::Video::displayDevice = %newDevice;
       if( %newAdapter !$= getDisplayDeviceInformation() )
          MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
+         
+      $changingDisplayDevice = %newDevice;
    }
    
    updateDisplaySettings();

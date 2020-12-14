@@ -943,7 +943,7 @@ bool Platform::isFile(const char *pFilePath)
    if (!pFilePath || !*pFilePath)
       return false;
 
-   TempAlloc< TCHAR > buf( dStrlen( pFilePath ) + 1 );
+   TempAlloc< TCHAR > buf(dStrlen(getMainDotCsDir()) + dStrlen(pFilePath) + 1);
 
 #ifdef UNICODE
    convertUTF8toUTF16N( pFilePath, buf, buf.size );

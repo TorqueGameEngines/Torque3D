@@ -1364,6 +1364,17 @@ DefineEngineFunction( getDisplayDeviceInformation, const char*, (),,
    return adapter.getName();
 }
 
+DefineEngineFunction(getDisplayDeviceType, GFXAdapterType, (), ,
+   "Get the string describing the active GFX device type.\n"
+   "@ingroup GFX\n")
+{
+   if (!GFXDevice::devicePresent())
+      return NullDevice;
+
+   const GFXAdapter& adapter = GFX->getAdapter();
+   return adapter.mType;
+}
+
 DefineEngineFunction( getBestHDRFormat, GFXFormat, (),,
    "Returns the best texture format for storage of HDR data for the active device.\n"
    "@ingroup GFX\n" )

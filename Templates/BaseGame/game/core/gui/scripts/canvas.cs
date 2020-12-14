@@ -37,7 +37,7 @@ function createCanvas(%windowTitle)
    // Set the window title
    if (isObject(Canvas)) 
    {
-      Canvas.setWindowTitle(%windowTitle @ " - " @ $pref::Video::displayDevice);
+      Canvas.setWindowTitle(%windowTitle @ " - " @ getDisplayDeviceType());
       configureCanvas();
    } 
    else 
@@ -107,7 +107,7 @@ function configureCanvas()
    %resY = $pref::Video::Resolution.y;
    %bpp  = $pref::Video::BitDepth;
    %rate = $pref::Video::RefreshRate;
-   %fsaa = $pref::Video::AA;
+   %aa = $pref::Video::AA;
    %fs = ($pref::Video::deviceMode == 2);
 
    echo("Accepted Mode: " NL
@@ -115,7 +115,7 @@ function configureCanvas()
       "--Screen Mode    : " @ %fsLabel NL
       "--Bits Per Pixel : " @ %bpp NL
       "--Refresh Rate   : " @ %rate NL
-      "--FSAA Level     : " @ %fsaa NL
+      "--FSAA Level     : " @ %aa NL
       "--------------");
 
    // Actually set the new video mode
@@ -132,8 +132,8 @@ function configureCanvas()
    // We need to parse the setting between AA modes, and then it's level
    // It's formatted as AATypexAALevel
    // So, FXAAx4 or MLAAx2
-   if ( isObject( FXAA_PostEffect ) )
-      FXAA_PostEffect.Enabled = ( %aa > 0 ) ? true : false;
+   if ( isObject( FXAAPostFX ) )
+      FXAAPostFX.Enabled = ( %aa > 0 ) ? true : false;
 }
 
 function GuiCanvas::modeStrToPrefs(%this, %modeStr)

@@ -2065,7 +2065,7 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
 
          ModuleDefinition* moduleDef = AssetDatabase.getAssetModuleDefinition(assetId);
 
-         if (moduleDef->getModuleId() != StringTable->insert(targetModuleId.c_str()))
+         if ((moduleDef == NULL) || moduleDef->getModuleId() != StringTable->insert(targetModuleId.c_str()))
             continue;
 
          StringTableEntry assetName = AssetDatabase.getAssetName(assetId);
@@ -2982,7 +2982,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       {
          constructor = new TSShapeConstructor(qualifiedToFile);
 
-         String constructorName = assetItem->filePath.getFileName() + "_" + assetItem->filePath.getExtension().substr(0, 3);
+         String constructorName = assetItem->filePath.getFileName() + assetItem->filePath.getExtension().substr(0, 3);
          constructorName.replace(" ", "_");
          constructorName.replace("-", "_");
          constructorName.replace(".", "_");

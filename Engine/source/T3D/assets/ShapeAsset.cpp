@@ -440,9 +440,12 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
    //Didn't work, so have us fall back to a placeholder asset
    StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
    shapeAsset->setAssetId(noShapeId);
-   (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
+
    if (shapeAsset->notNull())
+   {
+      (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
       return AssetErrCode::UsingFallback;
+   }
 
    return AssetErrCode::Failed;
 }

@@ -332,7 +332,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
  }
 
  //-----------------------------------------------------------------------------
- static bool RecurseDumpPath(const char *path, const char* relativePath, const char *pattern, Vector<Platform::FileInfo> &fileVector)
+ static bool RecurseDumpPath(const char *path, const char* relativePath, const char *pattern, Vector<Platform::FileInfo> &fileVector, S32 currentDepth = 0, S32 recurseDepth = -1)
  {
     char search[1024];
 
@@ -382,7 +382,8 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
                 relativePath, fEntry->d_name);
              childRelative = childRelativeBuf;
           }
-          RecurseDumpPath(child, childRelative, pattern, fileVector);
+          if (currentDepth < recurseDepth || recurseDepth == -1 )
+            RecurseDumpPath(child, childRelative, pattern, fileVector, currentDepth+1, recurseDepth);
        }
        else
        {
@@ -908,7 +909,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
     {
        char prefPathName[MaxPath];
        MungePath(prefPathName, MaxPath, path, GetPrefDir());
-       RecurseDumpPath(prefPathName, path, pattern, fileVector);
+       RecurseDumpPath(prefPathName, path, pattern, fileVector, 0, depth);
     }
 
     // munge the requested path and dump it
@@ -916,7 +917,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
     char cwd[MaxPath];
     getcwd(cwd, MaxPath);
     MungePath(mungedPath, MaxPath, path, cwd);
-    return RecurseDumpPath(mungedPath, path, pattern, fileVector);
+    return RecurseDumpPath(mungedPath, path, pattern, fileVector, 0, depth);
  }
 
  //-----------------------------------------------------------------------------

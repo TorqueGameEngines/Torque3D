@@ -35,6 +35,9 @@ extern void createFontInit(void);
 extern void createFontShutdown(void);
 #endif
 
+#if defined(TORQUE_SDL)
+#include "SDL.h"
+#endif
 
 #if defined( TORQUE_MINIDUMP ) && defined( TORQUE_RELEASE )
 extern S32 CreateMiniDump(LPEXCEPTION_POINTERS ExceptionInfo);
@@ -227,7 +230,11 @@ extern "C" {
 
    const char* torque_getexecutablepath()
    {
+#if defined(TORQUE_SDL)
+      return gExecutablePath ? gExecutablePath : SDL_GetBasePath();
+#elif
       return gExecutablePath;
+#endif
    }
 
    void torque_setexecutablepath(const char* directory)

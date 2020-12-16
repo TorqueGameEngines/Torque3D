@@ -362,7 +362,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
    PersistenceManager persistMgr;
    bool unsavedShapeAsset = false;
-   if (shapeAssetId == StringTable->EmptyString())
+   if (server && shapeAssetId == StringTable->EmptyString())
    {
       unsavedShapeAsset = true;
       persistMgr.setDirty(this);

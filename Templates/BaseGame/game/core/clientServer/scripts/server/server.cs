@@ -185,6 +185,7 @@ function createServer(%serverType, %levelAsset)
 
 function onServerCreated()
 {
+   new PersistenceManager( ServerAssetValidator );
    // Server::GameType is sent to the master server.
    // This variable should uniquely identify your game and/or mod.
    $Server::GameType = $appName;
@@ -208,6 +209,7 @@ function onServerCreated()
    
    // Keep track of when the game started
    $Game::StartTime = $Sim::Time;
+   ServerAssetValidator.saveDirty();
 }
 
 /// Shut down the server

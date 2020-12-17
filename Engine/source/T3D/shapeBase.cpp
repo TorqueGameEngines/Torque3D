@@ -68,6 +68,7 @@
 #include "renderInstance/renderOcclusionMgr.h"
 #include "core/stream/fileStream.h"
 #include "T3D/accumulationVolume.h"
+#include "console/persistenceManager.h"
 
 IMPLEMENT_CO_DATABLOCK_V1(ShapeBaseData);
 
@@ -358,6 +359,12 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             delete pDummy;
          }
       }
+   }
+   PersistenceManager *persistMgr;
+   if (!Sim::findObject("ServerAssetValidator", persistMgr)) Con::errorf("ServerAssetValidator not found!");
+   if (server && persistMgr && shapeAssetId == StringTable->EmptyString())
+   {
+      persistMgr->setDirty(this);
    }
 
    //Legacy catch

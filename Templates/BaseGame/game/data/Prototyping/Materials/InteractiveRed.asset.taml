@@ -3,5 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="InteractiveRed"
     scriptFile="@assetFile=InteractiveRed.cs"
+    materialDefinitionName="InteractiveRed"
     imageMap0="@Asset=Prototyping:InteractiveRed_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/InteractiveRed.png" />

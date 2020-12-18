@@ -33,6 +33,8 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class PhysicsBody;
 class BaseMatInstance;
 
@@ -62,6 +64,9 @@ public:
    GroundPlane();
    virtual ~GroundPlane();
 
+   static bool _setMaterialAsset(void* obj, const char* index, const char* data);
+   static bool _setMaterialName(void* obj, const char* index, const char* data);
+
    virtual bool      onAdd();
    virtual void      onRemove();
    virtual U32       packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
@@ -75,6 +80,10 @@ public:
    virtual void      setScale( const Point3F& scale );
 
    static void       initPersistFields();
+
+   bool setMaterialAsset(const StringTableEntry materialAssetId);
+
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 
 protected:
 
@@ -102,6 +111,9 @@ private:
    F32               mScaleV;       ///< Scale factor for V texture coordinates.
    String            mMaterialName; ///< Object name of material to use.
    BaseMatInstance*  mMaterial;     ///< Instantiated material based on given material name.
+
+   AssetPtr<MaterialAsset> mMaterialAsset;
+   StringTableEntry mMaterialAssetId;
 
    PhysicsBody *mPhysicsRep;
 

@@ -35,7 +35,7 @@
             <Setting name="IsHDR">0</Setting>
             <Setting name="ImageType">N/A</Setting>
             <Setting name="Compressed">1</Setting>
-            <Setting name="PBRTypeSuffixes">_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR</Setting>
+            <Setting name="PBRTypeSuffixes">_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR,_ORM,-ORM</Setting>
             <Setting name="NormalTypeSuffixes">_NORMAL,_NORM</Setting>
             <Setting name="AOTypeSuffixes">_AO,_AMBIENT,_AMBIENTOCCLUSION</Setting>
             <Setting name="DiffuseTypeSuffixes">_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL</Setting>
@@ -105,7 +105,7 @@
             <Setting name="NormalTypeSuffixes">_NORMAL,_NORM</Setting>
             <Setting name="TextureFilteringMode">Bilinear</Setting>
             <Setting name="RoughnessTypeSuffixes">_ROUGH,_ROUGHNESS</Setting>
-            <Setting name="PBRTypeSuffixes">_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR</Setting>
+            <Setting name="PBRTypeSuffixes">_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR,_ORM,-ORM</Setting>
             <Setting name="UseMips">1</Setting>
             <Setting name="Compressed">1</Setting>
             <Setting name="Scaling">1.0</Setting>

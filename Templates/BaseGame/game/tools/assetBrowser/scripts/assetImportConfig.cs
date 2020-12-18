@@ -47,10 +47,10 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/CollapseSubmeshes", "Collapse Submeshes", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/LODType", "LOD Type", "list", "", "TrailingNumber", "TrailingNumber,DetectDTS,SingleSize");
       //ImportAssetConfigSettingsList.addNewConfigSetting("TrailingNumber", "Trailing Number", "float", "", "2", "", "Mesh");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportedNodes", "Imported Nodes", "command", "", "", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/IgnoreNodes", "Ignore Nodes", "command", "", "", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMeshes", "Import Meshes", "command", "", "", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/IgnoreMeshes", "Imported Meshes", "command", "", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysImportedNodes", "Always Imported Nodes", "command", "", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysIgnoreNodes", "Always Ignored Nodes", "command", "", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysImportMeshes", "Always Imported Meshes", "command", "", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysIgnoreMeshes", "Always Ignored Meshes", "command", "", "", "");
       
       //Assimp/Collada params
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/convertLeftHanded", "Convert To Left Hand", "bool", "", "0", "");
@@ -312,10 +312,10 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Meshes/AdjustFloor", "0");
    AssetImportSettings.setValue("Meshes/CollapseSubmeshes", "0");
    AssetImportSettings.setValue("Meshes/LODType", "TrailingNumber");
-   AssetImportSettings.setValue("Meshes/ImportedNodes", "");
-   AssetImportSettings.setValue("Meshes/IgnoreNodes", "");
-   AssetImportSettings.setValue("Meshes/ImportMeshes", "");
-   AssetImportSettings.setValue("Meshes/IgnoreMeshes", "");
+   AssetImportSettings.setValue("Meshes/AlwaysImportedNodes", "");
+   AssetImportSettings.setValue("Meshes/AlwaysIgnoreNodes", "");
+   AssetImportSettings.setValue("Meshes/AlwaysImportMeshes", "");
+   AssetImportSettings.setValue("Meshes/AlwaysIgnoreMeshes", "");
    
    //Materials
    AssetImportSettings.setValue("Materials/ImportMaterials", "1");
@@ -476,8 +476,8 @@ function ImportOptionsConfigList::ToggleImportMesh(%this, %fieldName, %newValue,
    %this.setFieldEnabled("AdjustFloor", %newValue);
    %this.setFieldEnabled("CollapseSubmeshes", %newValue);
    %this.setFieldEnabled("LODType", %newValue);   
-   %this.setFieldEnabled("ImportedNodes", %newValue);
-   %this.setFieldEnabled("IgnoreNodes", %newValue);
-   %this.setFieldEnabled("ImportMeshes", %newValue);
-   %this.setFieldEnabled("IgnoreMeshes", %newValue);
+   %this.setFieldEnabled("AlwaysImportedNodes", %newValue);
+   %this.setFieldEnabled("AlwaysIgnoreNodes", %newValue);
+   %this.setFieldEnabled("AlwaysImportMeshes", %newValue);
+   %this.setFieldEnabled("AlwaysIgnoreMeshes", %newValue);
 }

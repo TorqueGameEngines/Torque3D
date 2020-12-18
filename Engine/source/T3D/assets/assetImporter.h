@@ -101,22 +101,22 @@ public:
    /// <summary>
    /// A list of what nodes should be guaranteed to be imported if found in the model file. Separated by either , or ;
    /// </summary>
-   String ImportedNodes;
+   String AlwaysImportedNodes;
 
    /// <summary>
    /// A list of what nodes should be guaranteed to not be imported if found in the model file. Separated by either , or ;
    /// </summary>
-   String IgnoreNodes;
+   String AlwaysIgnoreNodes;
 
    /// <summary>
    /// A list of what mesh objects should be guaranteed to be imported if found in the model file. Separated by either , or ;
    /// </summary>
-   String ImportMeshes;
+   String AlwaysImportMeshes;
 
    /// <summary>
    /// A list of what mesh objects should be guaranteed to not be imported if found in the model file. Separated by either , or ;
    /// </summary>
-   String IgnoreMeshes;
+   String AlwaysIgnoreMeshes;
 
    //Assimp/Collada params
    /// <summary>

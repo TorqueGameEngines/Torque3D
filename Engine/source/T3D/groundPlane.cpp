@@ -85,6 +85,9 @@ GroundPlane::GroundPlane()
 
    mConvexList = new Convex;
    mTypeMask |= TerrainLikeObjectType;
+
+   mMaterialAsset = StringTable->EmptyString();
+   mMaterialAssetId = StringTable->EmptyString();
 }
 
 GroundPlane::~GroundPlane()
@@ -103,7 +106,14 @@ void GroundPlane::initPersistFields()
       addField( "squareSize",    TypeF32,          Offset( mSquareSize, GroundPlane ), "Square size in meters to which %GroundPlane subdivides its geometry." );
       addField( "scaleU",        TypeF32,          Offset( mScaleU, GroundPlane ), "Scale of texture repeat in the U direction." );
       addField( "scaleV",        TypeF32,          Offset( mScaleV, GroundPlane ), "Scale of texture repeat in the V direction." );
-      addField( "material",      TypeMaterialName, Offset( mMaterialName, GroundPlane ), "Name of Material used to render %GroundPlane's surface." );
+
+      addProtectedField("materialAsset", TypeMaterialAssetId, Offset(mMaterialAssetId, GroundPlane),
+         &GroundPlane::_setMaterialAsset, &defaultProtectedGetFn,
+         "The material asset.");
+
+      addProtectedField("material", TypeMaterialName, Offset(mMaterialName, GroundPlane),
+         &GroundPlane::_setMaterialName, &defaultProtectedGetFn,
+         "The material name.");
 
    endGroup( "Plane" );
    
@@ -112,6 +122,72 @@ void GroundPlane::initPersistFields()
    removeField( "scale" );
    removeField( "position" );
    removeField( "rotation" );
+}
+
+bool GroundPlane::_setMaterialAsset(void* obj, const char* index, const char* data)
+{
+   GroundPlane* gp = static_cast<GroundPlane*>(obj);// ->setFile(FileName(data));
+
+   gp->mMaterialAssetId = StringTable->insert(data);
+
+   return gp->setMaterialAsset(gp->mMaterialAssetId);
+}
+
+bool GroundPlane::_setMaterialName(void* obj, const char* index, const char* data)
+{
+   GroundPlane* gp = static_cast<GroundPlane*>(obj);// ->setFile(FileName(data));
+
+   StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(data));
+   if (assetId != StringTable->EmptyString())
+   {
+      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
+      //the TSStatic
+      if (gp->setMaterialAsset(assetId))
+      {
+         if (assetId == StringTable->insert("Core_Rendering:NoMaterial"))
+         {
+            gp->mMaterialName = data;
+            gp->mMaterialAssetId = StringTable->EmptyString();
+
+            return true;
+         }
+         else
+         {
+            gp->mMaterialAssetId = assetId;
+            gp->mMaterialName = StringTable->EmptyString();
+
+            return false;
+         }
+      }
+   }
+   else
+   {
+      gp->mMaterialAsset = StringTable->EmptyString();
+      gp->mMaterialName = data;
+   }
+
+   return true;
+}
+
+bool GroundPlane::setMaterialAsset(const StringTableEntry materialAssetId)
+{
+   if (MaterialAsset::getAssetById(materialAssetId, &mMaterialAsset))
+   {
+      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
+      //the TSStatic
+      if (mMaterialAsset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))
+      {
+         mMaterialName = StringTable->EmptyString();
+      }
+
+      _updateMaterial();
+
+      setMaskBits(-1);
+
+      return true;
+   }
+
+   return false;
 }
 
 bool GroundPlane::onAdd()
@@ -187,6 +263,7 @@ U32 GroundPlane::packUpdate( NetConnection* connection, U32 mask, BitStream* str
    stream->write( mSquareSize );
    stream->write( mScaleU );
    stream->write( mScaleV );
+   stream->writeString( mMaterialAsset.getAssetId() );
    stream->write( mMaterialName );
 
    return retMask;
@@ -199,6 +276,11 @@ void GroundPlane::unpackUpdate( NetConnection* connection, BitStream* stream )
    stream->read( &mSquareSize );
    stream->read( &mScaleU );
    stream->read( &mScaleV );
+
+   char buffer[256];
+   stream->readString(buffer);
+   setMaterialAsset(StringTable->insert(buffer));
+
    stream->read( &mMaterialName );
 
    // If we're added then something possibly changed in 
@@ -213,23 +295,14 @@ void GroundPlane::unpackUpdate( NetConnection* connection, BitStream* stream )
 
 void GroundPlane::_updateMaterial()
 {
-   if( mMaterialName.isEmpty() )
+   if (!mMaterialAsset.isNull())
    {
-      Con::warnf( "GroundPlane::_updateMaterial - no material set; defaulting to 'WarningMaterial'" );
-      mMaterialName = "WarningMaterial";
+      String matName = mMaterialAsset->getMaterialDefinitionName();
+
+      mMaterial = MATMGR->createMatInstance(matName, getGFXVertexFormat< VertexType >());
+      if (!mMaterial)
+         Con::errorf("GroundPlane::_updateMaterial - no material called '%s'", matName.c_str());
    }
-
-   // If the material name matches then don't 
-   // bother updating it.
-   if (  mMaterial && 
-         mMaterialName.compare( mMaterial->getMaterial()->getName() ) == 0 )
-      return;
-
-   SAFE_DELETE( mMaterial );
-
-   mMaterial = MATMGR->createMatInstance( mMaterialName, getGFXVertexFormat< VertexType >() );
-   if ( !mMaterial )
-      Con::errorf( "GroundPlane::_updateMaterial - no material called '%s'", mMaterialName.c_str() );
 }
 
 bool GroundPlane::castRay( const Point3F& start, const Point3F& end, RayInfo* info )
@@ -580,6 +653,13 @@ void GroundPlane::generateGrid( U32 width, U32 height, F32 squareSize,
    }
 
    outPrimitives.unlock();
+}
+
+void GroundPlane::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
+{
+   if (!mMaterialAsset.isNull() && mMaterialAsset->getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))
+      usedAssetsList->push_back_unique(mMaterialAsset->getAssetId());
+
 }
 
 DefineEngineMethod( GroundPlane, postApply, void, (),,

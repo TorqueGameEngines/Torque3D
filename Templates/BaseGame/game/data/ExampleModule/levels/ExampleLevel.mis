@@ -36,7 +36,7 @@ new Scene(EditorTemplateLevel) {
       squareSize = "128";
       scaleU = "25";
       scaleV = "25";
-      Material = "Grid_512_Grey";
+      Material = "FloorGray";
       canSave = "1";
       canSaveDynamicFields = "1";
          Enabled = "1";
@@ -100,7 +100,6 @@ new Scene(EditorTemplateLevel) {
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "fff282f5-dced-11e9-a423-bb0e346e3870";
-         reflectionPath = "D:/Gamedev/T3DMIT/T3DPreview4_0/Bugfixaroo/My Projects/Bugfixaroo/game/data/ExampleModule/levels/ExampleLevel/probes/";
    };
 };
 //--- OBJECT WRITE END ---

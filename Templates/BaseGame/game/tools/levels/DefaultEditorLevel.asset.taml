@@ -6,5 +6,5 @@
     LevelName="DefaultEditorLevel"
     isSubScene="false"
     description="An empty room"
-    staticObjectAssetDependency0="@Asset=FPSGameplay:station01"
+    staticObjectAssetDependency0="@Asset=Prototyping:FloorGray"
     VersionId="1" />

@@ -5,6 +5,7 @@ new Scene(EditorTemplateLevel) {
    isSubScene = "0";
    isEditing = "0";
    isDirty = "0";
+   EditPostEffects = "0";
       cdTrack = "2";
       CTF_scoreLimit = "5";
       Enabled = "1";
@@ -35,6 +36,7 @@ new Scene(EditorTemplateLevel) {
       Material = "BlankSkyMat";
       drawBottom = "0";
       fogBandHeight = "0";
+      dirtyGameObject = "0";
       position = "0 0 0";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -48,8 +50,6 @@ new Scene(EditorTemplateLevel) {
       ambient = "0.337255 0.533333 0.619608 1";
       brightness = "1";
       castShadows = "1";
-      staticRefreshFreq = "250";
-      dynamicRefreshFreq = "8";
       coronaEnabled = "1";
       coronaScale = "0.5";
       coronaTint = "1 1 1 1";
@@ -68,6 +68,7 @@ new Scene(EditorTemplateLevel) {
       representedInLightmap = "0";
       shadowDarkenColor = "0 0 0 -1";
       includeLightmappedGeometryInShadow = "0";
+      dirtyGameObject = "0";
       position = "0 0 0";
       rotation = "1 0 0 0";
       scale = "1 1 1";
@@ -75,6 +76,7 @@ new Scene(EditorTemplateLevel) {
       canSaveDynamicFields = "1";
          bias = "0.1";
          Blur = "1";
+         dynamicRefreshFreq = "8";
          Enabled = "1";
          height = "1024";
          lightBleedFactor = "0.8";
@@ -82,13 +84,15 @@ new Scene(EditorTemplateLevel) {
          pointShadowType = "PointShadowType_Paraboloid";
          shadowBox = "-100 -100 -100 100 100 100";
          splitFadeDistances = "1 1 1 1";
+         staticRefreshFreq = "250";
          width = "3072";
    };
    new GroundPlane() {
       squareSize = "128";
       scaleU = "25";
       scaleV = "25";
-      Material = "Grid_512_Grey";
+      MaterialAsset = "Prototyping:FloorGray";
+      dirtyGameObject = "0";
       canSave = "1";
       canSaveDynamicFields = "1";
          Enabled = "1";
@@ -99,12 +103,12 @@ new Scene(EditorTemplateLevel) {
    new Skylight() {
       Enabled = "1";
       ReflectionMode = "Baked Cubemap";
+      dirtyGameObject = "0";
       position = "1.37009 -5.23561 46.5817";
       rotation = "1 0 0 0";
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "d5eb3afb-dced-11e9-a423-bb0e346e3870";
-         reflectionPath = "tools/levels/BlankRoom/probes/";
    };
 };
 //--- OBJECT WRITE END ---

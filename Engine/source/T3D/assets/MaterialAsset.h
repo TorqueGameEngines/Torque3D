@@ -42,9 +42,7 @@
 #include "gfx/gfxDevice.h"
 #endif
 
-#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
-#endif
 
 #include "materials/matTextureTarget.h"
 #include "materials/materialDefinition.h"
@@ -77,6 +75,9 @@ public:
 
    inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
+   static StringTableEntry getAssetIdByMaterialName(StringTableEntry fileName);
+   static bool getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+
    /// Declare Console Object.
    DECLARE_CONOBJECT(MaterialAsset);
 
@@ -89,26 +90,32 @@ protected:
 };
 
 DefineConsoleType(TypeMaterialAssetPtr, MaterialAsset)
+DefineConsoleType(TypeMaterialAssetId, String)
 
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
-class GuiInspectorTypeMaterialAssetPtr : public GuiInspectorField
+class GuiInspectorTypeMaterialAssetPtr : public GuiInspectorTypeFileName
 {
-   typedef GuiInspectorField Parent;
+   typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiControl*       mMatEdContainer;
-   GuiBitmapButtonCtrl  *mMatPreviewButton;
-   GuiTextEditCtrl *mMatAssetIdTxt;
+   GuiBitmapButtonCtrl* mEditButton;
 
    DECLARE_CONOBJECT(GuiInspectorTypeMaterialAssetPtr);
    static void consoleInit();
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
-   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
-   void setMaterialAsset(String assetId);
+};
+
+class GuiInspectorTypeMaterialAssetId : public GuiInspectorTypeMaterialAssetPtr
+{
+   typedef GuiInspectorTypeMaterialAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeMaterialAssetId);
+   static void consoleInit();
 };
 
 #endif // _ASSET_BASE_H_

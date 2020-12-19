@@ -3,5 +3,6 @@
     canSaveDynamicFields="true"
     AssetName="DetailBlue"
     scriptFile="@assetFile=DetailBlue.cs"
+    materialDefinitionName="DetailBlue"
     imageMap0="@Asset=Prototyping:DetailBlue_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/DetailBlue.png" />

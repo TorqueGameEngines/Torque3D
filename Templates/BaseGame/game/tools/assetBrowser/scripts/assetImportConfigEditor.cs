@@ -126,10 +126,10 @@ function AssetImportConfigEditorInspector::ToggleImportMesh(%this, %fieldName, %
    %this.setFieldEnabled("AdjustFloor", %newValue);
    %this.setFieldEnabled("CollapseSubmeshes", %newValue);
    %this.setFieldEnabled("LODType", %newValue);   
-   %this.setFieldEnabled("ImportedNodes", %newValue);
-   %this.setFieldEnabled("IgnoreNodes", %newValue);
-   %this.setFieldEnabled("ImportMeshes", %newValue);
-   %this.setFieldEnabled("IgnoreMeshes", %newValue);
+   %this.setFieldEnabled("AlwaysImportedNodes", %newValue);
+   %this.setFieldEnabled("AlwaysIgnoreNodes", %newValue);
+   %this.setFieldEnabled("AlwaysImportMeshes", %newValue);
+   %this.setFieldEnabled("AlwaysIgnoreMeshes", %newValue);
 }
 
 function AssetImportConfigEditor::addNewConfig(%this)

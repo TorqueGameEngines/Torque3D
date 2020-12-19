@@ -17,6 +17,8 @@
 
 #include "materials/materialManager.h"
 
+#include "console/persistenceManager.h"
+
 ConsoleDocClass(AssetImportConfig,
    "@brief Defines properties for an AssetImprotConfig object.\n"
    "@AssetImportConfig is a SimObject derived object intended to act as a container for all the necessary configuration data when running the Asset Importer.\n"
@@ -45,10 +47,10 @@ AssetImportConfig::AssetImportConfig() :
    AdjustFloor(false),
    CollapseSubmeshes(false),
    LODType("TrailingNumber"),
-   ImportedNodes(""),
-   IgnoreNodes(""),
-   ImportMeshes(""),
-   IgnoreMeshes(""),
+   AlwaysImportedNodes(""),
+   AlwaysIgnoreNodes(""),
+   AlwaysImportMeshes(""),
+   AlwaysIgnoreMeshes(""),
    convertLeftHanded(false),
    calcTangentSpace(false),
    removeRedundantMats(false),
@@ -85,7 +87,7 @@ AssetImportConfig::AssetImportConfig() :
    RoughnessTypeSuffixes("_ROUGH,_ROUGHNESS,_R,-ROUGH,-ROUGHNESS,-R"),
    SmoothnessTypeSuffixes("_SMOOTH,_SMOOTHNESS,_S,-SMOOTH,-SMOOTHNESS,-S"),
    AOTypeSuffixes("_AO,_AMBIENT,_AMBIENTOCCLUSION,-AO,-AMBIENT,-AMBIENTOCCLUSION"),
-   PBRTypeSuffixes("_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR"),
+   PBRTypeSuffixes("_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR,_ORM,-ORM"),
    TextureFilteringMode("Bilinear"),
    UseMips(true),
    IsHDR(false),
@@ -141,10 +143,10 @@ void AssetImportConfig::initPersistFields()
       addField("AdjustFloor", TypeBool, Offset(AdjustFloor, AssetImportConfig), "Indicates if the floor height of the model file should be automatically zero'd");
       addField("CollapseSubmeshes", TypeBool, Offset(CollapseSubmeshes, AssetImportConfig), "Indicates if submeshes should be collapsed down into a single main mesh");
       addField("LODType", TypeRealString, Offset(LODType, AssetImportConfig), "Indicates what LOD mode the model file should utilize to process out LODs. Options are TrailingNumber, DetectDTS, SingleSize");
-      addField("ImportedNodes", TypeRealString, Offset(ImportedNodes, AssetImportConfig), " A list of what nodes should be guaranteed to be imported if found in the model file. Separated by either , or ;");
-      addField("IgnoreNodes", TypeRealString, Offset(IgnoreNodes, AssetImportConfig), "A list of what nodes should be guaranteed to not be imported if found in the model file. Separated by either , or ;");
-      addField("ImportMeshes", TypeRealString, Offset(ImportMeshes, AssetImportConfig), "A list of what mesh objects should be guaranteed to be imported if found in the model file. Separated by either , or ;");
-      addField("IgnoreMeshes", TypeRealString, Offset(IgnoreMeshes, AssetImportConfig), "A list of what mesh objects should be guaranteed to not be imported if found in the model file. Separated by either , or ;");
+      addField("AlwaysImportedNodes", TypeRealString, Offset(AlwaysImportedNodes, AssetImportConfig), " A list of what nodes should be guaranteed to be imported if found in the model file. Separated by either , or ;");
+      addField("AlwaysIgnoreNodes", TypeRealString, Offset(AlwaysIgnoreNodes, AssetImportConfig), "A list of what nodes should be guaranteed to not be imported if found in the model file. Separated by either , or ;");
+      addField("AlwaysImportMeshes", TypeRealString, Offset(AlwaysImportMeshes, AssetImportConfig), "A list of what mesh objects should be guaranteed to be imported if found in the model file. Separated by either , or ;");
+      addField("AlwaysIgnoreMeshes", TypeRealString, Offset(AlwaysIgnoreMeshes, AssetImportConfig), "A list of what mesh objects should be guaranteed to not be imported if found in the model file. Separated by either , or ;");
       addField("convertLeftHanded", TypeBool, Offset(convertLeftHanded, AssetImportConfig), "Flag to indicate the shape loader should convert to a left-handed coordinate system");
       addField("calcTangentSpace", TypeBool, Offset(calcTangentSpace, AssetImportConfig), "Should the shape loader calculate tangent space values");
       addField("removeRedundantMats", TypeBool, Offset(removeRedundantMats, AssetImportConfig), "Should the shape loader automatically prune redundant/duplicate materials");
@@ -231,10 +233,10 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    AdjustFloor = dAtob(configSettings->value(String(configName + "/Meshes/AdjustFloor").c_str()));
    CollapseSubmeshes = dAtob(configSettings->value(String(configName + "/Meshes/CollapseSubmeshes").c_str()));
    LODType = configSettings->value(String(configName + "/Meshes/LODType").c_str());
-   ImportedNodes = configSettings->value(String(configName + "/Meshes/ImportedNodes").c_str());
-   IgnoreNodes = configSettings->value(String(configName + "/Meshes/IgnoreNodes").c_str());
-   ImportMeshes = configSettings->value(String(configName + "/Meshes/ImportMeshes").c_str());
-   IgnoreMeshes = configSettings->value(String(configName + "/Meshes/IgnoreMeshes").c_str());
+   AlwaysImportedNodes = configSettings->value(String(configName + "/Meshes/AlwaysImportedNodes").c_str());
+   AlwaysIgnoreNodes = configSettings->value(String(configName + "/Meshes/AlwaysIgnoreNodes").c_str());
+   AlwaysImportMeshes = configSettings->value(String(configName + "/Meshes/AlwaysImportMeshes").c_str());
+   AlwaysIgnoreMeshes = configSettings->value(String(configName + "/Meshes/AlwaysIgnoreMeshes").c_str());
 
    //Assimp/Collada
    convertLeftHanded = dAtob(configSettings->value(String(configName + "/Meshes/convertLeftHanded").c_str()));
@@ -314,10 +316,10 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
    target->AdjustFloor = AdjustFloor;
    target->CollapseSubmeshes = CollapseSubmeshes;
    target->LODType = LODType;
-   target->ImportedNodes = ImportedNodes;
-   target->IgnoreNodes = IgnoreNodes;
-   target->ImportMeshes = ImportMeshes;
-   target->IgnoreMeshes = IgnoreMeshes;
+   target->AlwaysImportedNodes = AlwaysImportedNodes;
+   target->AlwaysIgnoreNodes = AlwaysIgnoreNodes;
+   target->AlwaysImportMeshes = AlwaysImportMeshes;
+   target->AlwaysIgnoreMeshes = AlwaysIgnoreMeshes;
 
    //Assimp/Collada
    target->convertLeftHanded = convertLeftHanded;
@@ -717,11 +719,12 @@ String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)
 
       suffixTypeIdx++;
 
-      U32 suffixCount = StringUnit::getUnitCount(suffixList, ",;");
+      U32 suffixCount = StringUnit::getUnitCount(suffixList, ",;\t");
       for (U32 i = 0; i < suffixCount; i++)
       {
-         String suffix = StringUnit::getUnit(suffixList, i, ",;");
+         String suffix = StringUnit::getUnit(suffixList, i, ",;\t");
          String searchSuffix = String("*") + suffix;
+
          if (FindMatch::isMatch(searchSuffix.c_str(), assetName.c_str(), false))
          {
             //We have a match, so indicate as such
@@ -1313,14 +1316,14 @@ void AssetImportConfig::loadSISFile(Torque::Path filePath)
          CollapseSubmeshes = dAtob(value.c_str());
       else if (key.compare("LODType", 0U, String::NoCase) == 0)
          LODType = value.c_str();
-      else if (key.compare("ImportedNodes", 0U, String::NoCase) == 0)
-         ImportedNodes = value.c_str();
-      else if (key.compare("IgnoreNodes", 0U, String::NoCase) == 0)
-         IgnoreNodes = value.c_str();
-      else if (key.compare("ImportMeshes", 0U, String::NoCase) == 0)
-         ImportMeshes = value.c_str();
-      else if (key.compare("IgnoreMeshes", 0U, String::NoCase) == 0)
-         IgnoreMeshes = value.c_str();
+      else if (key.compare("AlwaysImportedNodes", 0U, String::NoCase) == 0)
+         AlwaysImportedNodes = value.c_str();
+      else if (key.compare("AlwaysIgnoreNodes", 0U, String::NoCase) == 0)
+         AlwaysIgnoreNodes = value.c_str();
+      else if (key.compare("AlwaysImportMeshes", 0U, String::NoCase) == 0)
+         AlwaysImportMeshes = value.c_str();
+      else if (key.compare("AlwaysIgnoreMeshes", 0U, String::NoCase) == 0)
+         AlwaysIgnoreMeshes = value.c_str();
       else if (key.compare("convertLeftHanded", 0U, String::NoCase) == 0)
          convertLeftHanded = dAtob(value.c_str());
       else if (key.compare("calcTangentSpace", 0U, String::NoCase) == 0)
@@ -1469,6 +1472,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
       String noSuffixName = assetItem->assetName;
       String suffixType;
       String suffix = parseImageSuffixes(assetItem->assetName, &suffixType);
+
       if (suffix.isNotEmpty())
       {
          assetItem->imageSuffixType = suffixType;
@@ -1525,7 +1529,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
       {
          if (activeImportConfig->UseDiffuseSuffixOnOriginImage)
          {
-            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;");
+            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;\t");
             assetItem->assetName = assetItem->assetName + diffuseToken;
             assetItem->cleanAssetName = assetItem->assetName;
          }
@@ -1542,6 +1546,10 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
 
          //Assume for abledo if it has no suffix matches
          assetItem->imageSuffixType = "Albedo";
+      }
+      else
+      {
+
       }
    }
 
@@ -1562,10 +1570,10 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
    if (activeImportConfig->IgnoreMaterials.isNotEmpty())
    {
-      U32 ignoredMatNameCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ".;");
+      U32 ignoredMatNameCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;\t");
       for (U32 i = 0; i < ignoredMatNameCount; i++)
       {
-         String ignoredName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ".;");
+         String ignoredName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
          if (FindMatch::isMatch(ignoredName.c_str(), assetName, false))
          {
             assetItem->skip = true;
@@ -1648,12 +1656,12 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
          if (!matchedImageTypes[t])
          {
-            U32 suffixCount = StringUnit::getUnitCount(suffixList.c_str(), ",;");
+            U32 suffixCount = StringUnit::getUnitCount(suffixList.c_str(), ",;\t");
             for (U32 i = 0; i < suffixCount; i++)
             {
                //First, try checking based on the material's assetName for our patternbase
                String testPath = assetItem->filePath.getRootAndPath();
-               testPath += "/" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;");
+               testPath += "/" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
 
                String imagePath = AssetImporter::findImagePath(testPath);
 
@@ -1672,7 +1680,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                   if(materialImageNoSuffix.isNotEmpty())
                   {
                      testPath = assetItem->filePath.getRootAndPath();
-                     testPath += "/" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;");
+                     testPath += "/" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
 
                      imagePath = AssetImporter::findImagePath(testPath);
 
@@ -1704,7 +1712,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                   //In the event that the names match, we want to avoid duplications, so we'll go ahead and append a suffix onto our new image asset
                   if (newImageAssetObj->assetName == assetItem->assetName)
                   {
-                     newImageAssetObj->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;");
+                     newImageAssetObj->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;\t");
                      newImageAssetObj->cleanAssetName = newImageAssetObj->assetName;
                   }
 
@@ -1722,7 +1730,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
             //the name already matches our material name, similar to above logic
             if (matchedImageTypes[t]->assetName == assetItem->assetName)
             {
-               matchedImageTypes[t]->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;");
+               matchedImageTypes[t]->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;\t");
                matchedImageTypes[t]->cleanAssetName = matchedImageTypes[t]->assetName;
             }
          }
@@ -1849,10 +1857,10 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
    //Do a check so we don't import materials that are on our ignore list
    if (activeImportConfig->IgnoreMaterials.isNotEmpty())
    {
-      U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;");
+      U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;\t");
       for (U32 i = 0; i < ignoredMatNamesCount; i++)
       {
-         const char* ignoreMatName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;");
+         const char* ignoreMatName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
          if (FindMatch::isMatch(ignoreMatName, matName.c_str(), false))
          {
             //If we have a match to one of our ignore names, just bail out here and skip the material wholesale
@@ -1999,7 +2007,7 @@ void AssetImporter::processSoundAsset(AssetImportObject* assetItem)
       {
          if (activeImportConfig->UseDiffuseSuffixOnOriginImage)
          {
-            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;");
+            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;\t");
             assetItem->assetName = assetItem->assetName + diffuseToken;
             assetItem->cleanAssetName = assetItem->assetName;
          }
@@ -2996,13 +3004,13 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
       if (activeImportConfig->IgnoreMaterials.isNotEmpty())
       {
-         U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;");
+         U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;\t");
          for (U32 i = 0; i < ignoredMatNamesCount; i++)
          {
             if (i == 0)
-               neverImportMats = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;");
+               neverImportMats = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
             else
-               neverImportMats += String("\t") + StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;");
+               neverImportMats += String("\t") + StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
          }
       }
 
@@ -3046,10 +3054,10 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       constructor->mOptions.lodType = (ColladaUtils::ImportOptions::eLodType)lodType;
 
       constructor->mOptions.singleDetailSize = activeImportConfig->convertLeftHanded;
-      constructor->mOptions.alwaysImport = activeImportConfig->ImportedNodes;
-      constructor->mOptions.neverImport = activeImportConfig->IgnoreNodes;
-      constructor->mOptions.alwaysImportMesh = activeImportConfig->ImportMeshes;
-      constructor->mOptions.neverImportMesh = activeImportConfig->IgnoreMeshes;
+      constructor->mOptions.alwaysImport = activeImportConfig->AlwaysImportedNodes;
+      constructor->mOptions.neverImport = activeImportConfig->AlwaysIgnoreNodes;
+      constructor->mOptions.alwaysImportMesh = activeImportConfig->AlwaysImportMeshes;
+      constructor->mOptions.neverImportMesh = activeImportConfig->AlwaysIgnoreMeshes;
       constructor->mOptions.ignoreNodeScale = activeImportConfig->IgnoreNodeScale;
       constructor->mOptions.adjustCenter = activeImportConfig->AdjustCenter;
       constructor->mOptions.adjustFloor = activeImportConfig->AdjustFloor;
@@ -3079,7 +3087,11 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
       constructor->mOptions.neverImportMat = neverImportMats;
 
-      if (!constructor->save(constructorPath.c_str()))
+      PersistenceManager* constructorPersist = new PersistenceManager();
+      constructorPersist->registerObject();
+      constructorPersist->setDirty(constructor, qualifiedToCSFile);
+
+      if (!constructorPersist->saveDirtyObject(constructor))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Failed to save shape constructor file to %s", constructorPath.c_str());
          activityLog.push_back(importLogBuffer);
@@ -3089,6 +3101,8 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Finished creating shape constructor file to %s", constructorPath.c_str());
          activityLog.push_back(importLogBuffer);
       }
+
+      constructorPersist->destroySelf();
    }
 
    //restore the cached version just in case we loaded a sis file

@@ -198,10 +198,10 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
 
    %constructor.lodType = getAssetImportConfigValue("Meshes/LODType", "0");
    //%constructor.singleDetailSize = getAssetImportConfigValue("Meshes/convertLeftHanded", "0");
-   %constructor.alwaysImport = getAssetImportConfigValue("Meshes/ImportedNodes", "");
-   %constructor.neverImport = getAssetImportConfigValue("Meshes/IgnoreNodes", "");
-   %constructor.alwaysImportMesh = getAssetImportConfigValue("Meshes/ImportMeshes", "");
-   %constructor.neverImportMesh = getAssetImportConfigValue("Meshes/IgnoreMeshes", "");   
+   %constructor.alwaysImport = getAssetImportConfigValue("Meshes/AlwaysImportedNodes", "");
+   %constructor.neverImport = getAssetImportConfigValue("Meshes/AlwaysIgnoreNodes", "");
+   %constructor.alwaysImportMesh = getAssetImportConfigValue("Meshes/AlwaysImportMeshes", "");
+   %constructor.neverImportMesh = getAssetImportConfigValue("Meshes/AlwaysIgnoreMeshes", "");   
    %constructor.ignoreNodeScale = getAssetImportConfigValue("Meshes/IgnoreNodeScale", "0"); 
    %constructor.adjustCenter = getAssetImportConfigValue("Meshes/AdjustCenter", "0");  
    %constructor.adjustFloor = getAssetImportConfigValue("Meshes/AdjustFloor", "0");  

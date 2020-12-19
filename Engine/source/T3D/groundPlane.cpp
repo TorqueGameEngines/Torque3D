@@ -144,7 +144,7 @@ bool GroundPlane::_setMaterialName(void* obj, const char* index, const char* dat
       //the TSStatic
       if (gp->setMaterialAsset(assetId))
       {
-         if (assetId == StringTable->insert("Core_Rendering:noMaterial"))
+         if (assetId == StringTable->insert("Core_Rendering:NoMaterial"))
          {
             gp->mMaterialName = data;
             gp->mMaterialAssetId = StringTable->EmptyString();

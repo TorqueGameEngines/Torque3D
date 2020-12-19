@@ -109,7 +109,6 @@ new Scene(EditorTemplateLevel) {
       canSave = "1";
       canSaveDynamicFields = "1";
       persistentId = "d5eb3afb-dced-11e9-a423-bb0e346e3870";
-         reflectionPath = "tools/levels/BlankRoom/probes/";
    };
 };
 //--- OBJECT WRITE END ---

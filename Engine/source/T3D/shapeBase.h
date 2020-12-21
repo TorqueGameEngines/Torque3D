@@ -538,11 +538,7 @@ public:
    F32 shadowProjectionDistance;
    F32 shadowSphereAdjust;
 
-
-   StringTableEntry  shapeName;
-
-   AssetPtr<ShapeAsset> shapeAsset;
-   StringTableEntry shapeAssetId;
+   DECLARE_SHAPEASSET(ShapeBaseData, Shape);
 
    StringTableEntry  cloakTexName;
 

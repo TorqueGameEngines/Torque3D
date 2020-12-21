@@ -157,9 +157,6 @@ ShapeBaseData::ShapeBaseData()
    shadowMaxVisibleDistance( 80.0f ),
    shadowProjectionDistance( 10.0f ),
    shadowSphereAdjust( 1.0f ),
-   shapeName( StringTable->EmptyString() ),
-   shapeAsset(StringTable->EmptyString()),
-   shapeAssetId(StringTable->EmptyString()),
    cloakTexName( StringTable->EmptyString() ),
    cubeDescId( 0 ),
    reflectorDesc( NULL ),
@@ -199,7 +196,8 @@ ShapeBaseData::ShapeBaseData()
    isInvincible( false ),
    renderWhenDestroyed( true ),
    inheritEnergyFromMount( false )
-{      
+{
+   initShapeAsset(Shape);
    dMemset( mountPointNode, -1, sizeof( S32 ) * SceneObject::NumMountPoints );
    remap_txr_tags = NULL;
    remap_buffer = NULL;
@@ -213,10 +211,8 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    shadowMaxVisibleDistance = other.shadowMaxVisibleDistance;
    shadowProjectionDistance = other.shadowProjectionDistance;
    shadowSphereAdjust = other.shadowSphereAdjust;
-   shapeName = other.shapeName;
-   shapeAsset = other.shapeAsset;
-   shapeAssetId = other.shapeAssetId;
    cloakTexName = other.cloakTexName;
+   cloneShapeAsset(Shape);
    cubeDescName = other.cubeDescName;
    cubeDescId = other.cubeDescId;
    reflectorDesc = other.reflectorDesc;
@@ -361,26 +357,26 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
 
    //Legacy catch
-   if (shapeName != StringTable->EmptyString())
+   if (mShapeName != StringTable->EmptyString())
    {
-      shapeAssetId = ShapeAsset::getAssetIdByFilename(shapeName);
+      mShapeAssetId = ShapeAsset::getAssetIdByFilename(mShapeName);
    }
-   U32 assetState = ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
+   U32 assetState = ShapeAsset::getAssetById(mShapeAssetId, &mShapeAsset);
    if (ShapeAsset::Failed != assetState)
    {
       //only clear the legacy direct file reference if everything checks out fully
       if (assetState == ShapeAsset::Ok)
       {
-         shapeName = StringTable->EmptyString();
+         mShapeName = StringTable->EmptyString();
       }
       else Con::warnf("Warning: ShapeBaseData::preload-%s", ShapeAsset::getAssetErrstrn(assetState).c_str());
       S32 i;
 
       // Resolve shapename
-      mShape = shapeAsset->getShapeResource();
+      mShape = mShapeAsset->getShapeResource();
       if (bool(mShape) == false)
       {
-         errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"",shapeName);
+         errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"",mShapeName);
          return false;
       }
       if(!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
@@ -388,13 +384,13 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
 
       if(computeCRC)
       {
-         Con::printf("Validation required for shape: %s", shapeName);
+         Con::printf("Validation required for shape: %s", mShapeName);
 
          Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShape.getPath());
 
          if (!fileRef)
          {
-            errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"",shapeName);
+            errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"", mShapeName);
             return false;
          }
 
@@ -402,7 +398,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             mCRC = fileRef->getChecksum();
          else if(mCRC != fileRef->getChecksum())
          {
-            errorStr = String::ToString("Shape \"%s\" does not match version on server.",shapeName);
+            errorStr = String::ToString("Shape \"%s\" does not match version on server.", mShapeName);
             return false;
          }
       }
@@ -424,13 +420,13 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             if (!mShape->mBounds.isContained(collisionBounds.last()))
             {
                if (!silent_bbox_check)
-               Con::warnf("Warning: shape %s collision detail %d (Collision-%d) bounds exceed that of shape.", shapeName, collisionDetails.size() - 1, collisionDetails.last());
+               Con::warnf("Warning: shape %s collision detail %d (Collision-%d) bounds exceed that of shape.", mShapeName, collisionDetails.size() - 1, collisionDetails.last());
                collisionBounds.last() = mShape->mBounds;
             }
             else if (collisionBounds.last().isValidBox() == false)
             {
                if (!silent_bbox_check)
-               Con::errorf("Error: shape %s-collision detail %d (Collision-%d) bounds box invalid!", shapeName, collisionDetails.size() - 1, collisionDetails.last());
+               Con::errorf("Error: shape %s-collision detail %d (Collision-%d) bounds box invalid!", mShapeName, collisionDetails.size() - 1, collisionDetails.last());
                collisionBounds.last() = mShape->mBounds;
             }
 
@@ -590,10 +586,10 @@ void ShapeBaseData::initPersistFields()
 
    addGroup( "Render" );
 
-      addField("shapeAsset", TypeShapeAssetId, Offset(shapeAssetId, ShapeBaseData),
+      addField("shapeAsset", TypeShapeAssetId, Offset(mShapeAssetId, ShapeBaseData),
          "The source shape asset.");
 
-      addField( "shapeFile", TypeShapeFilename, Offset(shapeName, ShapeBaseData),
+      addField( "shapeFile", TypeShapeFilename, Offset(mShapeName, ShapeBaseData),
          "The DTS or DAE model to use for this object." );
 
    endGroup( "Render" );
@@ -798,14 +794,7 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowSphereAdjust);
 
 
-   if (stream->writeFlag(shapeAsset.notNull()))
-   {
-      stream->writeString(shapeAsset.getAssetId());
-   }
-   else
-   {
-      stream->writeString(shapeName);
-   }
+   packShapeAsset(stream);
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -884,16 +873,7 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowSphereAdjust);
 
 
-   if (stream->readFlag())
-   {
-      shapeAssetId = stream->readSTString();
-      ShapeAsset::getAssetById(shapeAssetId, &shapeAsset);
-      shapeName = shapeAsset->getShapeFilename();
-   }
-   else
-   {
-      shapeName = stream->readSTString();
-   }
+   unpackShapeAsset(stream);
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())

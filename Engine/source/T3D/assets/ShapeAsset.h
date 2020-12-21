@@ -57,7 +57,9 @@
 #ifdef TORQUE_TOOLS
 #include "gui/editor/guiInspectorTypes.h"
 #endif
-
+#ifndef _BITSTREAM_H_
+#include "core/stream/bitStream.h"
+#endif
 //-----------------------------------------------------------------------------
 class ShapeAsset : public AssetBase
 {
@@ -207,19 +209,19 @@ public:
 
 #define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
 
-#define initShapeAsset(name) m##name##Filename = StringTable->EmptyString(); m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
+#define initShapeAsset(name) m##name##Name = StringTable->EmptyString(); m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
+#define cloneShapeAsset(name) m##name##Name = other.m##name##Name; m##name##AssetId = other.m##name##AssetId; m##name##Asset = other.m##name##Asset;
 #define bindShapeAsset(name) if (m##name##AssetId != StringTable->EmptyString()) m##name##Asset = m##name##AssetId;
 
-#define scriptBindShapeAsset(name, consoleClass, docs) addProtectedField(assetText(name, File), TypeShapeFilename, Offset(m##name##Filename, consoleClass), consoleClass::_set##name##Filename,  & defaultProtectedGetFn, assetText(name, docs)); \
+#define scriptBindShapeAsset(name, consoleClass, docs) addProtectedField(assetText(name, File), TypeShapeFilename, Offset(m##name##Name, consoleClass), consoleClass::_set##name##Filename,  & defaultProtectedGetFn, assetText(name, docs)); \
                                       addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, & defaultProtectedGetFn, assetText(name, asset reference.));
 
-#define DECLARE_SHAPEASSET(className,name)      protected: \
-                                      StringTableEntry m##name##Filename;\
+#define DECLARE_SHAPEASSET(className,name)\
+                                      StringTableEntry m##name##Name;\
                                       StringTableEntry m##name##AssetId;\
                                       AssetPtr<ShapeAsset>  m##name##Asset;\
-                                      public: \
-                                      const StringTableEntry& get##name() const { return m##name##Filename; }\
-                                      void set##name(FileName _in) { m##name##Filename = _in; }\
+                                      const StringTableEntry& get##name() const { return m##name##Name; }\
+                                      void set##name(FileName _in) { m##name##Name = _in; }\
                                       const AssetPtr<ShapeAsset> & get##name##Asset() const { return m##name##Asset; }\
                                       void set##name##Asset(AssetPtr<ShapeAsset>_in) { m##name##Asset = _in; }\
 static bool _set##name##Filename(void* obj, const char* index, const char* data)\
@@ -233,7 +235,7 @@ static bool _set##name##Filename(void* obj, const char* index, const char* data)
       {\
          if (assetId == StringTable->insert("Core_Rendering:noShape"))\
          {\
-            shape->m##name##Filename = data;\
+            shape->m##name##Name = data;\
             shape->m##name##AssetId = StringTable->EmptyString();\
             \
             return true;\
@@ -241,7 +243,7 @@ static bool _set##name##Filename(void* obj, const char* index, const char* data)
          else\
          {\
             shape->m##name##AssetId = assetId;\
-            shape->m##name##Filename = StringTable->EmptyString();\
+            shape->m##name##Name = StringTable->EmptyString();\
             \
             return false;\
          }\
@@ -262,12 +264,28 @@ static bool _set##name##Asset(void* obj, const char* index, const char* data)\
    if (ShapeAsset::getAssetById(shape->m##name##AssetId, &shape->m##name##Asset))\
    {\
       if (shape->m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noShape"))\
-         shape->m##name##Filename = StringTable->EmptyString();\
-      \
-      shape->setMaskBits(-1);\
+         shape->m##name##Name = StringTable->EmptyString();\
       return true;\
    }\
    return false;\
+}\
+void className::pack##name##Asset(BitStream *stream)\
+{\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+      stream->writeString(m##name##Asset.getAssetId());\
+   else\
+      stream->writeString(m##name##Name);\
+}\
+void className::unpack##name##Asset(BitStream *stream)\
+{\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId = stream->readSTString();\
+      ShapeAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
+      m##name##Name = m##name##Asset->getShapeFilename(); \
+   }\
+   else\
+      m##name##Name = stream->readSTString();\
 }
 
 #endif

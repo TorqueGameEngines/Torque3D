@@ -86,7 +86,7 @@ public:
   virtual U32           packUpdate(NetConnection*, U32, BitStream*);
   virtual void          unpackUpdate(NetConnection*, BitStream*);
 
-  const char*           getShapeFileName() const { return mDataBlock->shapeName; }
+  const char*           getShapeFileName() const { return mDataBlock->mShapeName; }
   void                  setVisibility(bool flag) { mIs_visible = flag; }
 
   DECLARE_CONOBJECT(afxStaticShape);

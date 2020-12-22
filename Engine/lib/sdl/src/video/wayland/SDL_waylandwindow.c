@@ -408,19 +408,19 @@ handle_surface_leave(void *data, struct wl_surface *surface,
     SDL_WindowData *window = data;
     int i;
 
-    if (window->num_outputs > 1) {
-       struct wl_output **new_outputs = SDL_malloc((window->num_outputs - 1) * sizeof *window->outputs), **iter = new_outputs;
-       for (i=0; i < window->num_outputs; i++) {
-           if (window->outputs[i] != output) {
-               *iter = window->outputs[i];
-               iter++;
-           }
-       }
-       SDL_free(window->outputs);
-       window->outputs = new_outputs;
-       window->num_outputs--;
-    } else {
-       window->num_outputs = 0;
+    for (i = 0; i < window->num_outputs; i++) {
+        if (window->outputs[i] == output) {  /* remove this one */
+            if (i == (window->num_outputs-1)) {
+                window->outputs[i] = NULL;
+            } else {
+                SDL_memmove(&window->outputs[i], &window->outputs[i+1], sizeof (output) * ((window->num_outputs - i) - 1));
+            }
+            window->num_outputs--;
+            i--;
+        }
+    }
+
+    if (window->num_outputs == 0) {
        SDL_free(window->outputs);
        window->outputs = NULL;
     }
@@ -628,13 +628,24 @@ Wayland_MaximizeWindow(_THIS, SDL_Window * window)
     WAYLAND_wl_display_flush( viddata->display );
 }
 
+void
+Wayland_SetWindowGrab(_THIS, SDL_Window *window, SDL_bool grabbed)
+{
+    SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
+
+    if (grabbed)
+        Wayland_input_confine_pointer(window, data->input);
+    else
+        Wayland_input_unconfine_pointer(data->input);
+}
+
 int Wayland_CreateWindow(_THIS, SDL_Window *window)
 {
     SDL_WindowData *data;
     SDL_VideoData *c;
     struct wl_region *region;
 
-    data = calloc(1, sizeof *data);
+    data = SDL_calloc(1, sizeof *data);
     if (data == NULL)
         return SDL_OutOfMemory();
 

@@ -26,7 +26,6 @@
 #ifdef SDL_JOYSTICK_HIDAPI
 
 #include "SDL_hints.h"
-#include "SDL_log.h"
 #include "SDL_events.h"
 #include "SDL_timer.h"
 #include "SDL_joystick.h"
@@ -38,6 +37,20 @@
 
 
 #ifdef SDL_JOYSTICK_HIDAPI_SWITCH
+
+/* Define this if you want to log all packets from the controller */
+/*#define DEBUG_SWITCH_PROTOCOL*/
+
+/* Define this to get log output for rumble logic */
+/*#define DEBUG_RUMBLE*/
+
+/* How often you can write rumble commands to the controller in Bluetooth mode
+   If you send commands more frequently than this, you can turn off the controller.
+ */
+#define RUMBLE_WRITE_FREQUENCY_MS   25
+
+/* How often you have to refresh a long duration rumble to keep the motors running */
+#define RUMBLE_REFRESH_FREQUENCY_MS 40
 
 typedef enum {
     k_eSwitchInputReportIDs_SubcommandReply       = 0x21,
@@ -203,7 +216,10 @@ typedef struct {
     SwitchCommonOutputPacket_t m_RumblePacket;
     Uint8 m_rgucReadBuffer[k_unSwitchMaxOutputPacketLength];
     SDL_bool m_bRumbleActive;
-    Uint32 m_unRumbleRefresh;
+    Uint32 m_unRumbleSent;
+    SDL_bool m_bRumblePending;
+    SDL_bool m_bRumbleZeroPending;
+    Uint32 m_unRumblePending;
 
     SwitchInputOnlyControllerStatePacket_t m_lastInputOnlyState;
     SwitchSimpleStatePacket_t m_lastSimpleState;
@@ -226,7 +242,24 @@ typedef struct {
 } SDL_DriverSwitch_Context;
 
 
-static SDL_bool IsGameCubeFormFactor(int vendor_id, int product_id)
+static SDL_bool
+HasHomeLED(int vendor_id, int product_id)
+{
+    /* The Power A Nintendo Switch Pro controllers don't have a Home LED */
+    if (vendor_id == 0 && product_id == 0) {
+        return SDL_FALSE;
+    }
+
+    /* HORI Wireless Switch Pad */
+    if (vendor_id == 0x0f0d && product_id == 0x00f6) {
+        return SDL_FALSE;
+    }
+
+    return SDL_TRUE;
+}
+
+static SDL_bool
+IsGameCubeFormFactor(int vendor_id, int product_id)
 {
     static Uint32 gamecube_formfactor[] = {
         MAKE_VIDPID(0x0e6f, 0x0185),    /* PDP Wired Fight Pad Pro for Nintendo Switch */
@@ -255,7 +288,7 @@ HIDAPI_DriverSwitch_IsSupportedDevice(const char *name, SDL_GameControllerType t
     if (SDL_strcmp( name, "HORI Wireless Switch Pad" ) == 0) {
         return SDL_FALSE;
     }
-    return (type == SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO);
+    return (type == SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO) ? SDL_TRUE : SDL_FALSE;
 }
 
 static const char *
@@ -455,14 +488,7 @@ static SDL_bool WriteRumble(SDL_DriverSwitch_Context *ctx)
     ctx->m_nCommandNumber = (ctx->m_nCommandNumber + 1) & 0xF;
 
     /* Refresh the rumble state periodically */
-    if (ctx->m_bRumbleActive) {
-        ctx->m_unRumbleRefresh = SDL_GetTicks() + 30;
-        if (!ctx->m_unRumbleRefresh) {
-            ctx->m_unRumbleRefresh = 1;
-        }
-    } else {
-        ctx->m_unRumbleRefresh = 0;
-    }
+    ctx->m_unRumbleSent = SDL_GetTicks();
 
     return WritePacket(ctx, (Uint8 *)&ctx->m_RumblePacket, sizeof(ctx->m_RumblePacket));
 }
@@ -524,7 +550,7 @@ static SDL_bool SetSlotLED(SDL_DriverSwitch_Context *ctx, Uint8 slot)
     return WriteSubcommand(ctx, k_eSwitchSubcommandIDs_SetPlayerLights, &led_data, sizeof(led_data), NULL);
 }
 
-static SDL_bool LoadStickCalibration(SDL_DriverSwitch_Context *ctx)
+static SDL_bool LoadStickCalibration(SDL_DriverSwitch_Context *ctx, Uint8 input_mode)
 {
     Uint8 *pStickCal;
     size_t stick, axis;
@@ -577,7 +603,7 @@ static SDL_bool LoadStickCalibration(SDL_DriverSwitch_Context *ctx)
         }
     }
 
-    if (ctx->m_bUsingBluetooth) {
+    if (input_mode == k_eSwitchInputReportIDs_SimpleControllerState) {
         for (stick = 0; stick < 2; ++stick) {
             for(axis = 0; axis < 2; ++axis) {
                 ctx->m_StickExtents[stick].axis[axis].sMin = (Sint16)(SDL_MIN_SINT16 * 0.5f);
@@ -708,8 +734,7 @@ HIDAPI_DriverSwitch_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joysti
     /* Find out whether or not we can send output reports */
     ctx->m_bInputOnly = SDL_IsJoystickNintendoSwitchProInputOnly(device->vendor_id, device->product_id);
     if (!ctx->m_bInputOnly) {
-        /* The Power A Nintendo Switch Pro controllers don't have a Home LED */
-        ctx->m_bHasHomeLED = (device->vendor_id != 0 && device->product_id != 0) ? SDL_TRUE : SDL_FALSE;
+        ctx->m_bHasHomeLED = HasHomeLED(device->vendor_id, device->product_id);
 
         /* Initialize rumble data */
         SetNeutralRumble(&ctx->m_RumblePacket.rumbleData[0]);
@@ -720,7 +745,24 @@ HIDAPI_DriverSwitch_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joysti
             ctx->m_bUsingBluetooth = SDL_TRUE;
         }
 
-        if (!LoadStickCalibration(ctx)) {
+        /* Determine the desired input mode (needed before loading stick calibration) */
+        if (ctx->m_bUsingBluetooth) {
+            input_mode = k_eSwitchInputReportIDs_SimpleControllerState;
+        } else {
+            input_mode = k_eSwitchInputReportIDs_FullControllerState;
+        }
+
+        /* The official Nintendo Switch Pro Controller supports FullControllerState over bluetooth
+         * just fine. We really should use that, or else the epowerlevel code in
+         * HandleFullControllerState is completely pointless. We need full state if we want battery
+         * level and we only care about battery level over bluetooth anyway.
+         */
+        if (device->vendor_id == USB_VENDOR_NINTENDO &&
+            device->product_id == USB_PRODUCT_NINTENDO_SWITCH_PRO) {
+            input_mode = k_eSwitchInputReportIDs_FullControllerState;
+        }
+
+        if (!LoadStickCalibration(ctx, input_mode)) {
             SDL_SetError("Couldn't load stick calibration");
             goto error;
         }
@@ -730,12 +772,7 @@ HIDAPI_DriverSwitch_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joysti
             goto error;
         }
 
-        /* Set the desired input mode */
-        if (ctx->m_bUsingBluetooth) {
-            input_mode = k_eSwitchInputReportIDs_SimpleControllerState;
-        } else {
-            input_mode = k_eSwitchInputReportIDs_FullControllerState;
-        }
+        /* Set desired input mode */
         if (!SetInputMode(ctx, input_mode)) {
             SDL_SetError("Couldn't set input mode");
             goto error;
@@ -766,7 +803,7 @@ HIDAPI_DriverSwitch_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joysti
                         SDL_GameControllerButtonReportingHintChanged, ctx);
 
     /* Initialize the joystick capabilities */
-    joystick->nbuttons = SDL_CONTROLLER_BUTTON_MAX;
+    joystick->nbuttons = 16;
     joystick->naxes = SDL_CONTROLLER_AXIS_MAX;
     joystick->epowerlevel = SDL_JOYSTICK_POWER_WIRED;
 
@@ -785,10 +822,8 @@ error:
 }
 
 static int
-HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+HIDAPI_DriverSwitch_ActuallyRumbleJoystick(SDL_DriverSwitch_Context *ctx, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
-    SDL_DriverSwitch_Context *ctx = (SDL_DriverSwitch_Context *)device->context;
-
     /* Experimentally determined rumble values. These will only matter on some controllers as tested ones
      * seem to disregard these and just use any non-zero rumble values as a binary flag for constant rumble
      *
@@ -821,6 +856,98 @@ HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joys
     return 0;
 }
 
+static int
+HIDAPI_DriverSwitch_SendPendingRumble(SDL_DriverSwitch_Context *ctx)
+{
+    if ((SDL_GetTicks() - ctx->m_unRumbleSent) < RUMBLE_WRITE_FREQUENCY_MS) {
+        return 0;
+    }
+
+    if (ctx->m_bRumblePending) {
+        Uint16 low_frequency_rumble = (Uint16)(ctx->m_unRumblePending >> 16);
+        Uint16 high_frequency_rumble = (Uint16)ctx->m_unRumblePending;
+
+#ifdef DEBUG_RUMBLE
+        SDL_Log("Sent pending rumble %d/%d\n", low_frequency_rumble, high_frequency_rumble);
+#endif
+        ctx->m_bRumblePending = SDL_FALSE;
+        ctx->m_unRumblePending = 0;
+
+        return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_frequency_rumble, high_frequency_rumble);
+    }
+
+    if (ctx->m_bRumbleZeroPending) {
+        ctx->m_bRumbleZeroPending = SDL_FALSE;
+
+#ifdef DEBUG_RUMBLE
+        SDL_Log("Sent pending zero rumble\n");
+#endif
+        return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, 0, 0);
+    }
+
+    return 0;
+}
+
+static int
+HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    SDL_DriverSwitch_Context *ctx = (SDL_DriverSwitch_Context *)device->context;
+
+    if (ctx->m_bRumblePending) {
+        if (HIDAPI_DriverSwitch_SendPendingRumble(ctx) < 0) {
+            return -1;
+        }
+    }
+
+    if (ctx->m_bUsingBluetooth && (SDL_GetTicks() - ctx->m_unRumbleSent) < RUMBLE_WRITE_FREQUENCY_MS) {
+        if (low_frequency_rumble || high_frequency_rumble) {
+            Uint32 unRumblePending = ((Uint32)low_frequency_rumble << 16) | high_frequency_rumble;
+
+            /* Keep the highest rumble intensity in the given interval */
+            if (unRumblePending > ctx->m_unRumblePending) {
+                ctx->m_unRumblePending = unRumblePending;
+            }
+            ctx->m_bRumblePending = SDL_TRUE;
+            ctx->m_bRumbleZeroPending = SDL_FALSE;
+        } else {
+            /* When rumble is complete, turn it off */
+            ctx->m_bRumbleZeroPending = SDL_TRUE;
+        }
+        return 0;
+    }
+
+#ifdef DEBUG_RUMBLE
+    SDL_Log("Sent rumble %d/%d\n", low_frequency_rumble, high_frequency_rumble);
+#endif
+
+    return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_frequency_rumble, high_frequency_rumble);
+}
+
+static int
+HIDAPI_DriverSwitch_RumbleJoystickTriggers(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static SDL_bool
+HIDAPI_DriverSwitch_HasJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick)
+{
+    /* Doesn't have an RGB LED, so don't return true here */
+    return SDL_FALSE;
+}
+
+static int
+HIDAPI_DriverSwitch_SetJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+HIDAPI_DriverSwitch_SetJoystickSensorsEnabled(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, SDL_bool enabled)
+{
+    return SDL_Unsupported();
+}
+
 static void HandleInputOnlyControllerState(SDL_Joystick *joystick, SDL_DriverSwitch_Context *ctx, SwitchInputOnlyControllerStatePacket_t *packet)
 {
     Sint16 axis;
@@ -848,6 +975,7 @@ static void HandleInputOnlyControllerState(SDL_Joystick *joystick, SDL_DriverSwi
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_LEFTSTICK, (data & 0x04) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_RIGHTSTICK, (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_GUIDE, (data & 0x10) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_MISC1, (data & 0x20) ? SDL_PRESSED : SDL_RELEASED);
     }
 
     if (packet->ucStickHat != ctx->m_lastInputOnlyState.ucStickHat) {
@@ -925,10 +1053,10 @@ static void HandleSimpleControllerState(SDL_Joystick *joystick, SDL_DriverSwitch
 
     if (packet->rgucButtons[0] != ctx->m_lastSimpleState.rgucButtons[0]) {
         Uint8 data = packet->rgucButtons[0];
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_A), (data & 0x01) ? SDL_PRESSED : SDL_RELEASED);
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_B), (data & 0x02) ? SDL_PRESSED : SDL_RELEASED);
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_X), (data & 0x04) ? SDL_PRESSED : SDL_RELEASED);
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_Y), (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_A), (data & 0x02) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_B), (data & 0x01) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_X), (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_Y), (data & 0x04) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, (data & 0x10) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, (data & 0x20) ? SDL_PRESSED : SDL_RELEASED);
 
@@ -946,6 +1074,7 @@ static void HandleSimpleControllerState(SDL_Joystick *joystick, SDL_DriverSwitch
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_LEFTSTICK, (data & 0x04) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_RIGHTSTICK, (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_GUIDE, (data & 0x10) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_MISC1, (data & 0x20) ? SDL_PRESSED : SDL_RELEASED);
     }
 
     if (packet->ucStickHat != ctx->m_lastSimpleState.ucStickHat) {
@@ -1013,10 +1142,10 @@ static void HandleFullControllerState(SDL_Joystick *joystick, SDL_DriverSwitch_C
 
     if (packet->controllerState.rgucButtons[0] != ctx->m_lastFullState.controllerState.rgucButtons[0]) {
         Uint8 data = packet->controllerState.rgucButtons[0];
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_X), (data & 0x01) ? SDL_PRESSED : SDL_RELEASED);
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_Y), (data & 0x02) ? SDL_PRESSED : SDL_RELEASED);
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_A), (data & 0x04) ? SDL_PRESSED : SDL_RELEASED);
-        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_B), (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_A), (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_B), (data & 0x04) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_X), (data & 0x02) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, RemapButton(ctx, SDL_CONTROLLER_BUTTON_Y), (data & 0x01) ? SDL_PRESSED : SDL_RELEASED);
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, (data & 0x40) ? SDL_PRESSED : SDL_RELEASED);
         axis = (data & 0x80) ? 32767 : -32768;
         SDL_PrivateJoystickAxis(joystick, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, axis);
@@ -1030,6 +1159,7 @@ static void HandleFullControllerState(SDL_Joystick *joystick, SDL_DriverSwitch_C
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_LEFTSTICK, (data & 0x08) ? SDL_PRESSED : SDL_RELEASED);
 
         SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_GUIDE, (data & 0x10) ? SDL_PRESSED : SDL_RELEASED);
+        SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_MISC1, (data & 0x20) ? SDL_PRESSED : SDL_RELEASED);
     }
 
     if (packet->controllerState.rgucButtons[2] != ctx->m_lastFullState.controllerState.rgucButtons[2]) {
@@ -1098,6 +1228,9 @@ HIDAPI_DriverSwitch_UpdateDevice(SDL_HIDAPI_Device *device)
     }
 
     while ((size = ReadInput(ctx)) > 0) {
+#ifdef DEBUG_SWITCH_PROTOCOL
+        HIDAPI_DumpPacket("Nintendo Switch packet: size = %d", ctx->m_rgucReadBuffer, size);
+#endif
         if (ctx->m_bInputOnly) {
             HandleInputOnlyControllerState(joystick, ctx, (SwitchInputOnlyControllerStatePacket_t *)&ctx->m_rgucReadBuffer[0]);
         } else {
@@ -1114,8 +1247,13 @@ HIDAPI_DriverSwitch_UpdateDevice(SDL_HIDAPI_Device *device)
         }
     }
 
-    if (ctx->m_bRumbleActive &&
-        SDL_TICKS_PASSED(SDL_GetTicks(), ctx->m_unRumbleRefresh)) {
+    if (ctx->m_bRumblePending || ctx->m_bRumbleZeroPending) {
+        HIDAPI_DriverSwitch_SendPendingRumble(ctx);
+    } else if (ctx->m_bRumbleActive &&
+               SDL_TICKS_PASSED(SDL_GetTicks(), ctx->m_unRumbleSent + RUMBLE_REFRESH_FREQUENCY_MS)) {
+#ifdef DEBUG_RUMBLE
+        SDL_Log("Sent continuing rumble\n");
+#endif
         WriteRumble(ctx);
     }
 
@@ -1163,8 +1301,12 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverSwitch =
     HIDAPI_DriverSwitch_UpdateDevice,
     HIDAPI_DriverSwitch_OpenJoystick,
     HIDAPI_DriverSwitch_RumbleJoystick,
+    HIDAPI_DriverSwitch_RumbleJoystickTriggers,
+    HIDAPI_DriverSwitch_HasJoystickLED,
+    HIDAPI_DriverSwitch_SetJoystickLED,
+    HIDAPI_DriverSwitch_SetJoystickSensorsEnabled,
     HIDAPI_DriverSwitch_CloseJoystick,
-    HIDAPI_DriverSwitch_FreeDevice
+    HIDAPI_DriverSwitch_FreeDevice,
 };
 
 #endif /* SDL_JOYSTICK_HIDAPI_SWITCH */

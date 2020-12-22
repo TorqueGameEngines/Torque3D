@@ -30,12 +30,10 @@
 #if SDL_VIDEO_VULKAN && SDL_VIDEO_DRIVER_VIVANTE
 
 #include "SDL_vivantevideo.h"
-#include "SDL_assert.h"
 
 #include "SDL_loadso.h"
 #include "SDL_vivantevulkan.h"
 #include "SDL_syswm.h"
-#include "SDL_log.h"
 
 int VIVANTE_Vulkan_LoadLibrary(_THIS, const char *path)
 {

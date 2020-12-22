@@ -47,10 +47,8 @@ using namespace Windows::Phone::UI::Input;
 
 /* SDL includes */
 extern "C" {
-#include "SDL_assert.h"
 #include "SDL_events.h"
 #include "SDL_hints.h"
-#include "SDL_log.h"
 #include "SDL_main.h"
 #include "SDL_stdinc.h"
 #include "SDL_render.h"

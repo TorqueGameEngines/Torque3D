@@ -24,7 +24,6 @@
 
 /* Handle rumble on a separate thread so it doesn't block the application */
 
-#include "SDL_assert.h"
 #include "SDL_thread.h"
 #include "SDL_hidapijoystick_c.h"
 #include "SDL_hidapi_rumble.h"
@@ -90,6 +89,8 @@ static int SDL_HIDAPI_RumbleThread(void *data)
 static void
 SDL_HIDAPI_StopRumbleThread(SDL_HIDAPI_RumbleContext *ctx)
 {
+    SDL_HIDAPI_RumbleRequest *request;
+
     SDL_AtomicSet(&ctx->running, SDL_FALSE);
 
     if (ctx->thread) {
@@ -100,9 +101,18 @@ SDL_HIDAPI_StopRumbleThread(SDL_HIDAPI_RumbleContext *ctx)
         ctx->thread = NULL;
     }
 
-    /* This should always be called with an empty queue */
-    SDL_assert(!ctx->requests_head);
-    SDL_assert(!ctx->requests_tail);
+    SDL_LockMutex(ctx->lock);
+    while (ctx->requests_tail) {
+        request = ctx->requests_tail;
+        if (request == ctx->requests_head) {
+            ctx->requests_head = NULL;
+        }
+        ctx->requests_tail = request->prev;
+
+        (void)SDL_AtomicDecRef(&request->device->rumble_pending);
+        SDL_free(request);
+    }
+    SDL_UnlockMutex(ctx->lock);
 
     if (ctx->request_sem) {
         SDL_DestroySemaphore(ctx->request_sem);
@@ -157,15 +167,19 @@ int SDL_HIDAPI_LockRumble(void)
 SDL_bool SDL_HIDAPI_GetPendingRumbleLocked(SDL_HIDAPI_Device *device, Uint8 **data, int **size, int *maximum_size)
 {
     SDL_HIDAPI_RumbleContext *ctx = &rumble_context;
-    SDL_HIDAPI_RumbleRequest *request;
+    SDL_HIDAPI_RumbleRequest *request, *found;
 
+    found = NULL;
     for (request = ctx->requests_tail; request; request = request->prev) {
         if (request->device == device) {
-            *data = request->data;
-            *size = &request->size;
-            *maximum_size = sizeof(request->data);
-            return SDL_TRUE;
+            found = request;
         }
+    }
+    if (found) {
+        *data = found->data;
+        *size = &found->size;
+        *maximum_size = sizeof(found->data);
+        return SDL_TRUE;
     }
     return SDL_FALSE;
 }

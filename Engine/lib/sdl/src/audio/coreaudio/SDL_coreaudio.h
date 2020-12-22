@@ -31,7 +31,6 @@
 
 #if MACOSX_COREAUDIO
 #include <CoreAudio/CoreAudio.h>
-#include <CoreServices/CoreServices.h>
 #else
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIApplication.h>
@@ -47,6 +46,7 @@ struct SDL_PrivateAudioData
 {
     SDL_Thread *thread;
     AudioQueueRef audioQueue;
+    int numAudioBuffers;
     AudioQueueBufferRef *audioBuffer;
     void *buffer;
     UInt32 bufferOffset;
@@ -57,6 +57,7 @@ struct SDL_PrivateAudioData
     SDL_atomic_t shutdown;
 #if MACOSX_COREAUDIO
     AudioDeviceID deviceID;
+    SDL_atomic_t device_change_flag;
 #else
     SDL_bool interrupted;
     CFTypeRef interruption_listener;

@@ -28,7 +28,7 @@ LIBTOOL = @LIBTOOL@
 INSTALL = @INSTALL@
 AR	= @AR@
 RANLIB	= @RANLIB@
-WINDRES	= @WINDRES@
+RC	= @RC@
 
 TARGET  = libSDL2.la
 OBJECTS = @OBJECTS@
@@ -55,6 +55,7 @@ RUN_CMD_CC     = @echo "  CC    " $@;
 RUN_CMD_CXX    = @echo "  CXX   " $@;
 RUN_CMD_LTLINK = @echo "  LTLINK" $@;
 RUN_CMD_RANLIB = @echo "  RANLIB" $@;
+RUN_CMD_RC     = @echo "  RC    " $@;
 RUN_CMD_GEN    = @echo "  GEN   " $@;
 LIBTOOL += --quiet
 endif
@@ -81,10 +82,12 @@ HDRS = \
 	SDL_keyboard.h \
 	SDL_keycode.h \
 	SDL_loadso.h \
+	SDL_locale.h \
 	SDL_log.h \
 	SDL_main.h \
 	SDL_messagebox.h \
 	SDL_metal.h \
+	SDL_misc.h \
 	SDL_mouse.h \
 	SDL_mutex.h \
 	SDL_name.h \
@@ -175,7 +178,7 @@ install-hdrs: update-revision
 	    $(INSTALL) -m 644 $(srcdir)/include/SDL_revision.h $(DESTDIR)$(includedir)/SDL2/SDL_revision.h; \
 	fi
 
-install-lib: $(objects) $(objects)/$(TARGET) $(objects)/$(SDLMAIN_TARGET) $(objects)/$(SDLTEST_TARGET)
+install-lib: $(objects)/$(TARGET) $(objects)/$(SDLMAIN_TARGET) $(objects)/$(SDLTEST_TARGET)
 	$(SHELL) $(auxdir)/mkinstalldirs $(DESTDIR)$(libdir)
 	$(LIBTOOL) --mode=install $(INSTALL) $(objects)/$(TARGET) $(DESTDIR)$(libdir)/$(TARGET)
 	$(LIBTOOL) --mode=install $(INSTALL) $(objects)/$(SDLMAIN_TARGET) $(DESTDIR)$(libdir)/$(SDLMAIN_TARGET)

@@ -610,7 +610,7 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
    {
       Var *viewToTangent = getInViewToTangent(componentList);
 
-      meta->addStatement(new GenOp("   @ = lerp( @, @[2], min( @, @.w ) );\r\n",
+      meta->addStatement(new GenOp("   @ = lerp( @, tGetMatrix3Row(@, 2), min( @, @.w ) );\r\n",
          gbNormal, gbNormal, viewToTangent, detailBlend, inDet));
    }
 

@@ -390,7 +390,6 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
          // if HDR is not enabled in the engine.
          features.addFeature( MFT_HDROut );
       }
-      features.addFeature(MFT_DeferredTerrainBlankInfoMap);
 
       // Enable lightmaps and fogging if we're in BL.
       if ( reflectMat || useBLM )
@@ -444,10 +443,13 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
             if (deferredMat)
                features.addFeature(MFT_isDeferred, featureIndex);
             features.addFeature(MFT_TerrainORMMap, featureIndex);
-            features.removeFeature(MFT_DeferredTerrainBlankInfoMap);
+         }
+         else
+         {
+            features.addFeature(MFT_DeferredTerrainBlankInfoMap, featureIndex);
          }
          if (mat->getInvertRoughness())
-            features.addFeature(MFT_InvertRoughness);
+            features.addFeature(MFT_InvertRoughness, featureIndex);
 
          pass->materials.push_back( (*materials)[i] );
          normalMaps.increment();

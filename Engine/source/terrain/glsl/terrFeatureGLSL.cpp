@@ -1260,7 +1260,7 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
 
 	// search for material var
 	Var * ormConfig;
-	OutputTarget targ = RenderTarget1;
+	OutputTarget targ = DefaultTarget;
 	if (fd.features[MFT_isDeferred])
 	{
 		targ = RenderTarget2;
@@ -1283,22 +1283,19 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
 	String matinfoName(String::ToString("matinfoCol%d", compositeIndex));
 	Var *matinfoCol = new Var(matinfoName, "vec3");
 
-	Var *priorComp = (Var*)LangElement::find(String::ToString("matinfoCol%d", compositeIndex - 1));
-	if (priorComp)
-	{
-		meta->addStatement(new GenOp("   @ = @.rgb*@;\r\n", new DecOp(matinfoCol), texOp, detailBlend));
-		meta->addStatement(new GenOp("   @.gba += @;\r\n", ormConfig, matinfoCol));
-	}
-	else
-	{
-		meta->addStatement(new GenOp("   @ = lerp(vec3(1.0,1.0,0.0),@.rgb,@);\r\n", new DecOp(matinfoCol), texOp, detailBlend));
-		meta->addStatement(new GenOp("   @ = vec4(0.0,@);\r\n", ormConfig, matinfoCol));
-	}
-
-   if (fd.features[MFT_InvertRoughness])
+   if (compositeIndex == 0)
    {
-      meta->addStatement(new GenOp("   @.b = 1.0-@.b;\r\n", ormConfig, ormConfig));
+      meta->addStatement(new GenOp("   @ = vec4(0.0, 0.0, 0.0, 0.0);\r\n", ormConfig));
    }
+
+   meta->addStatement(new GenOp("   @ = @.rgb;\r\n", new DecOp(matinfoCol), texOp));
+
+   if (fd.features.hasFeature(MFT_InvertRoughness, compositeIndex))
+   {
+      meta->addStatement(new GenOp("   @.b = 1.0 - @.b;\r\n", matinfoCol, matinfoCol));
+   }
+
+   meta->addStatement(new GenOp("   @.gba += @ * @;\r\n", ormConfig, matinfoCol, detailBlend));
 
 	output = meta;
 }
@@ -1321,9 +1318,11 @@ U32 TerrainBlankInfoMapFeatGLSL::getOutputTargets(const MaterialFeatureData &fd)
 void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
    const MaterialFeatureData &fd)
 {
+   S32 compositeIndex = getProcessIndex();
+
    // search for material var
    Var *material;
-   OutputTarget targ = RenderTarget1;
+   OutputTarget targ = DefaultTarget;
    if (fd.features[MFT_isDeferred])
    {
       targ = RenderTarget2;
@@ -1340,7 +1339,17 @@ void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
       material->setStructName("OUT");
    }
 
-   meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,1.0,0.0);\r\n", material));
+   if (compositeIndex == 0)
+   {
+      meta->addStatement(new GenOp("   @ = vec4(0.0, 0.0, 0.0, 0.0);\r\n", material));
+   }
+
+   Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));
+   AssertFatal(detailBlend, "The detail blend is missing!");
+
+   String matinfoName(String::ToString("matinfoCol%d", compositeIndex));
+
+   meta->addStatement(new GenOp("   @.gba += vec3(@, @, 0.0);\r\n", material, detailBlend, detailBlend));
 
    output = meta;
 }

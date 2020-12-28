@@ -153,7 +153,7 @@ struct ProfilerData
    U32 mHash;
    U32 mSubDepth;
    U32 mInvokeCount;
-   U32 mStartTime[2];
+   U64 mStartTime;
    F64 mTotalTime;
    F64 mSubTime;
 #ifdef TORQUE_ENABLE_PROFILE_PATH

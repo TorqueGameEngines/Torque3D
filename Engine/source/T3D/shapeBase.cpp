@@ -358,7 +358,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
    PersistenceManager *persistMgr;
    if (!Sim::findObject("ServerAssetValidator", persistMgr)) Con::errorf("ServerAssetValidator not found!");
-   if (server && persistMgr && shapeAssetId == StringTable->EmptyString())
+   if (server && persistMgr && mShapeAssetId == StringTable->EmptyString())
    {
       persistMgr->setDirty(this);
    }

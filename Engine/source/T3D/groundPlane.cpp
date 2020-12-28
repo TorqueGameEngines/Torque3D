@@ -86,8 +86,7 @@ GroundPlane::GroundPlane()
    mConvexList = new Convex;
    mTypeMask |= TerrainLikeObjectType;
 
-   mMaterialAsset = StringTable->EmptyString();
-   mMaterialAssetId = StringTable->EmptyString();
+   initMaterialAsset(Material);
 }
 
 GroundPlane::~GroundPlane()
@@ -107,13 +106,7 @@ void GroundPlane::initPersistFields()
       addField( "scaleU",        TypeF32,          Offset( mScaleU, GroundPlane ), "Scale of texture repeat in the U direction." );
       addField( "scaleV",        TypeF32,          Offset( mScaleV, GroundPlane ), "Scale of texture repeat in the V direction." );
 
-      addProtectedField("materialAsset", TypeMaterialAssetId, Offset(mMaterialAssetId, GroundPlane),
-         &GroundPlane::_setMaterialAsset, &defaultProtectedGetFn,
-         "The material asset.");
-
-      addProtectedField("material", TypeMaterialName, Offset(mMaterialName, GroundPlane),
-         &GroundPlane::_setMaterialName, &defaultProtectedGetFn,
-         "The material name.");
+      scriptBindMaterialAsset(Material, GroundPlane, "The material used to render the ground plane.");
 
    endGroup( "Plane" );
    
@@ -122,72 +115,6 @@ void GroundPlane::initPersistFields()
    removeField( "scale" );
    removeField( "position" );
    removeField( "rotation" );
-}
-
-bool GroundPlane::_setMaterialAsset(void* obj, const char* index, const char* data)
-{
-   GroundPlane* gp = static_cast<GroundPlane*>(obj);// ->setFile(FileName(data));
-
-   gp->mMaterialAssetId = StringTable->insert(data);
-
-   return gp->setMaterialAsset(gp->mMaterialAssetId);
-}
-
-bool GroundPlane::_setMaterialName(void* obj, const char* index, const char* data)
-{
-   GroundPlane* gp = static_cast<GroundPlane*>(obj);// ->setFile(FileName(data));
-
-   StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(data));
-   if (assetId != StringTable->EmptyString())
-   {
-      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
-      //the TSStatic
-      if (gp->setMaterialAsset(assetId))
-      {
-         if (assetId == StringTable->insert("Core_Rendering:NoMaterial"))
-         {
-            gp->mMaterialName = data;
-            gp->mMaterialAssetId = StringTable->EmptyString();
-
-            return true;
-         }
-         else
-         {
-            gp->mMaterialAssetId = assetId;
-            gp->mMaterialName = StringTable->EmptyString();
-
-            return false;
-         }
-      }
-   }
-   else
-   {
-      gp->mMaterialAsset = StringTable->EmptyString();
-      gp->mMaterialName = data;
-   }
-
-   return true;
-}
-
-bool GroundPlane::setMaterialAsset(const StringTableEntry materialAssetId)
-{
-   if (MaterialAsset::getAssetById(materialAssetId, &mMaterialAsset))
-   {
-      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
-      //the TSStatic
-      if (mMaterialAsset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))
-      {
-         mMaterialName = StringTable->EmptyString();
-      }
-
-      _updateMaterial();
-
-      setMaskBits(-1);
-
-      return true;
-   }
-
-   return false;
 }
 
 bool GroundPlane::onAdd()
@@ -263,8 +190,8 @@ U32 GroundPlane::packUpdate( NetConnection* connection, U32 mask, BitStream* str
    stream->write( mSquareSize );
    stream->write( mScaleU );
    stream->write( mScaleV );
-   stream->writeString( mMaterialAsset.getAssetId() );
-   stream->write( mMaterialName );
+
+   packMaterialAsset(connection, Material);
 
    return retMask;
 }
@@ -277,11 +204,7 @@ void GroundPlane::unpackUpdate( NetConnection* connection, BitStream* stream )
    stream->read( &mScaleU );
    stream->read( &mScaleV );
 
-   char buffer[256];
-   stream->readString(buffer);
-   setMaterialAsset(StringTable->insert(buffer));
-
-   stream->read( &mMaterialName );
+   unpackMaterialAsset(connection, Material);
 
    // If we're added then something possibly changed in 
    // the editor... do an update of the material and the
@@ -295,13 +218,17 @@ void GroundPlane::unpackUpdate( NetConnection* connection, BitStream* stream )
 
 void GroundPlane::_updateMaterial()
 {
-   if (!mMaterialAsset.isNull())
+   if (mMaterialAsset.notNull())
    {
-      String matName = mMaterialAsset->getMaterialDefinitionName();
+      if (mMaterial && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterial->getMaterial()->getName(), String::NoCase))
+         return;
 
-      mMaterial = MATMGR->createMatInstance(matName, getGFXVertexFormat< VertexType >());
+      SAFE_DELETE(mMaterial);
+
+      mMaterial = MATMGR->createMatInstance(mMaterialAsset->getMaterialDefinitionName(), getGFXVertexFormat< VertexType >());
+
       if (!mMaterial)
-         Con::errorf("GroundPlane::_updateMaterial - no material called '%s'", matName.c_str());
+         Con::errorf("GroundPlane::_updateMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
    }
 }
 

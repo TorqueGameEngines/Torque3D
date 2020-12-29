@@ -318,8 +318,8 @@ bool Tween::SetGuiControlTargetField(GuiControl* obj, F32 value)
    case 'X':
       if (size == 1)
       {
-         obj->setPosition(obj->getPosition().x + S32(value), obj->getPosition().y);
-         mCurrentValue += S32(value);
+         obj->setPosition(obj->getPosition().x + static_cast<S32>(value), obj->getPosition().y);
+         mCurrentValue += static_cast<S32>(value);
          return true;
       }
       break;
@@ -327,8 +327,8 @@ bool Tween::SetGuiControlTargetField(GuiControl* obj, F32 value)
    case 'Y':
       if (size == 1)
       {
-         obj->setPosition(obj->getPosition().x, obj->getPosition().y + S32(value));
-         mCurrentValue += S32(value);
+         obj->setPosition(obj->getPosition().x, obj->getPosition().y + static_cast<S32>(value));
+         mCurrentValue += static_cast<S32>(value);
          return true;
       }
       break;
@@ -341,8 +341,8 @@ bool Tween::SetGuiControlTargetField(GuiControl* obj, F32 value)
       case 'X':
          if (size == 2)
          {
-            obj->setExtent(obj->getExtent().x + S32(value), obj->getExtent().y);
-            mCurrentValue += S32(value);
+            obj->setExtent(obj->getExtent().x + static_cast<S32>(value), obj->getExtent().y);
+            mCurrentValue += static_cast<S32>(value);
             return true;
          }
          break;
@@ -350,8 +350,8 @@ bool Tween::SetGuiControlTargetField(GuiControl* obj, F32 value)
       case 'Y':
          if (size == 2)
          {
-            obj->setExtent(obj->getExtent().x, obj->getExtent().y + S32(value));
-            mCurrentValue += S32(value);
+            obj->setExtent(obj->getExtent().x, obj->getExtent().y + static_cast<S32>(value));
+            mCurrentValue += static_cast<S32>(value);
             return true;
          }
          break;
@@ -369,8 +369,8 @@ bool Tween::SetGuiControlTargetField(GuiControl* obj, F32 value)
       case 'X':
          if (size == 2)
          {
-            obj->setExtent(obj->getMinExtent().x + S32(value), obj->getMinExtent().y);
-            mCurrentValue += S32(value);
+            obj->setExtent(obj->getMinExtent().x + static_cast<S32>(value), obj->getMinExtent().y);
+            mCurrentValue += static_cast<S32>(value);
             return true;
          }
          break;
@@ -378,8 +378,8 @@ bool Tween::SetGuiControlTargetField(GuiControl* obj, F32 value)
       case 'Y':
          if (size == 2)
          {
-            obj->setExtent(obj->getMinExtent().x, obj->getMinExtent().y + S32(value));
-            mCurrentValue += S32(value);
+            obj->setExtent(obj->getMinExtent().x, obj->getMinExtent().y + static_cast<S32>(value));
+            mCurrentValue += static_cast<S32>(value);
             return true;
          }
          break;

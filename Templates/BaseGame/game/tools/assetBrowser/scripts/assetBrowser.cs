@@ -1121,14 +1121,22 @@ function AssetBrowserPreviewButton::onRightClick(%this)
    }
    
    if(%assetType $= "LevelAsset")
+   {
       EditLevelAssetPopup.showPopup(Canvas);  
+   }
    else if(%assetType $= "Folder")
    {
       EditFolderPopup.dirPath = %this.moduleName @ "/" @ %this.assetName;
       EditFolderPopup.showPopup(Canvas);  
    }
+   else if(%assetType $= "TerrainAsset")
+   {
+      EditTerrainAssetPopup.showPopup(Canvas); 
+   }
    else
+   {
       EditAssetPopup.showPopup(Canvas);  
+   }
       
    if(%assetType $= "Folder")
    {

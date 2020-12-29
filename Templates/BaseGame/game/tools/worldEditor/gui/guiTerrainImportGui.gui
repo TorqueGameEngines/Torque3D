@@ -328,10 +328,10 @@
          canSave = "1";
          isDecoy = "0";
          Visible = "1";
-         Command = "TerrainImportGui.import();";
+         Command = "TerrainImportGui.acceptSettings();";
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
-         text = "Import";
+         text = "Accept";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -414,60 +414,6 @@
          text = "Channels";
          maxLength = "1024";
       };
-      new GuiTextCtrl() {
-         canSaveDynamicFields = "0";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiTextProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "11 26";
-         Extent = "64 18";
-         MinExtent = "8 2";
-         canSave = "1";
-         isDecoy = "0";
-         Visible = "1";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         hovertime = "1000";
-         Margin = "0 0 0 0";
-         Padding = "0 0 0 0";
-         AnchorTop = "1";
-         AnchorBottom = "0";
-         AnchorLeft = "1";
-         AnchorRight = "0";
-         text = "Name:";
-         maxLength = "1024";
-      };
-      new GuiTextEditCtrl() {
-         canSaveDynamicFields = "0";
-         internalName = "TerrainName";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiTextEditProfile";
-         HorizSizing = "width";
-         VertSizing = "bottom";
-         Position = "10 44";
-         Extent = "206 18";
-         MinExtent = "8 2";
-         canSave = "1";
-         isDecoy = "0";
-         Visible = "1";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         hovertime = "1000";
-         Margin = "0 0 0 0";
-         Padding = "0 0 0 0";
-         AnchorTop = "1";
-         AnchorBottom = "0";
-         AnchorLeft = "1";
-         AnchorRight = "0";
-         text = "theTerrain";
-         maxLength = "1024";
-         historySize = "0";
-         password = "0";
-         tabComplete = "0";
-         sinkAllKeyEvents = "0";
-         passwordMask = "*";
-      };
       new GuiButtonCtrl() {
          canSaveDynamicFields = "0";
          Enabled = "1";
@@ -502,7 +448,7 @@
          canSave = "1";
          isDecoy = "0";
          Visible = "1";
-         Command = "Canvas.popDialog( TerrainImportGui );";
+         Command = "TerrainImportGui.cancel();";
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          text = "Cancel";
@@ -544,28 +490,23 @@ function TerrainImportGui::onWake( %this )
       %this.channelsArray = new ArrayObject();
 }
 
-function TerrainImportGui::import( %this )
+function TerrainImportGui::acceptSettings( %this )
 {
    // Gather all the import settings.
-   
-   %heightMapPng = %this-->HeightfieldFilename.getText();
+   AssetBrowser.newAssetSettings.importingTerrain = true;
+   AssetBrowser.newAssetSettings.heightMapPng = %this-->HeightfieldFilename.getText();
      
-   %metersPerPixel = %this-->MetersPerPixel.getText();
-   %heightScale = %this-->HeightScale.getText();
+   AssetBrowser.newAssetSettings.metersPerPixel = %this-->MetersPerPixel.getText();
+   AssetBrowser.newAssetSettings.heightScale = %this-->HeightScale.getText();
    
-   %flipYAxis = %this-->FlipYAxis.isStateOn();
+   AssetBrowser.newAssetSettings.flipYAxis = %this-->FlipYAxis.isStateOn();
    
    // Grab and validate terrain object name.
    
-   %terrainName = %this-->TerrainName.getText();
-   if( !( isObject( %terrainName ) && %terrainName.isMemberOfClass( "TerrainBlock" ) ) &&
-       !Editor::validateObjectName( %terrainName ) )
-      return;
+   AssetBrowser.newAssetSettings.opacityNames = "";
+   AssetBrowser.newAssetSettings.materialNames = "";
    
-   %opacityNames = "";
-   %materialNames = "";
-   
-   %opacityList = %this-->OpacityLayerTextList;
+   AssetBrowser.newAssetSettings.opacityList = %this-->OpacityLayerTextList;
    
    for( %i = 0; %i < %opacityList.rowCount(); %i++ )
    {
@@ -577,53 +518,19 @@ function TerrainImportGui::import( %this )
       
       %materialName = getField( %itemText, 2 );
 
-      %opacityNames = %opacityNames @ %opacityName TAB %channel @ "\n";
-      %materialNames = %materialNames @ %materialName @ "\n";
+      AssetBrowser.newAssetSettings.opacityNames = AssetBrowser.newAssetSettings.opacityNames @ %opacityName TAB %channel @ "\n";
+      AssetBrowser.newAssetSettings.materialNames = AssetBrowser.newAssetSettings.materialNames @ %materialName @ "\n";
    }
 
-   %updated = nameToID( %terrainName );
-
-   // This will update an existing terrain with the name %terrainName,
-   // or create a new one if %terrainName isn't a TerrainBlock
-   %obj = TerrainBlock::import(   %terrainName, 
-                                  %heightMapPng, 
-                                  %metersPerPixel, 
-                                  %heightScale, 
-                                  %opacityNames, 
-                                  %materialNames,
-                                  %flipYAxis );
-
+   //AssetBrowser.newAssetSettings.updated = nameToID( %terrainName );
+   
    Canvas.popDialog( %this );
+}
 
-   if ( isObject( %obj ) )
-   {
-      if( %obj != %updated )
-      {
-         // created a new TerrainBlock
-         // Submit an undo action. 
-         MECreateUndoAction::submit(%obj);
-      }
-
-      assert( isObject( EWorldEditor ), 
-         "ObjectBuilderGui::processNewObject - EWorldEditor is missing!" );
-
-      // Select it in the editor.
-      EWorldEditor.clearSelection();
-      EWorldEditor.selectObject(%obj);
-
-      // When we drop the selection don't store undo
-      // state for it... the creation deals with it.
-      EWorldEditor.dropSelection( true );
-
-      ETerrainEditor.isDirty = true;
-      EPainter.updateLayers();
-   }
-   else
-   {
-      toolsMessageBox( "Import Terrain", 
-         "Terrain import failed! Check console for error messages.", 
-         "Ok", "Error" );
-   }
+function TerrainImportGui::cancel( %this )
+{
+   AssetBrowser.newAssetSettings.importingTerrain = false;
+   Canvas.popDialog( TerrainImportGui );
 }
 
 function TerrainImportGui::doOpenDialog( %this, %filter, %callback )

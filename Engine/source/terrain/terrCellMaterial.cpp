@@ -401,16 +401,18 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
             features.addFeature(MFT_isDeferred, featureIndex);
          features.addFeature(MFT_TerrainDetailMap, featureIndex);
 
-         if (!(mat->getORMConfigMap().isEmpty()))
+         if (deferredMat)
          {
-            if (deferredMat)
-               features.addFeature(MFT_isDeferred, featureIndex);
-            features.addFeature(MFT_TerrainORMMap, featureIndex);
+            if (!(mat->getORMConfigMap().isEmpty()))
+            {
+               features.addFeature(MFT_TerrainORMMap, featureIndex);
+            }
+            else
+            {
+               features.addFeature(MFT_DeferredTerrainBlankInfoMap, featureIndex);
+            }
          }
-         else
-         {
-            features.addFeature(MFT_DeferredTerrainBlankInfoMap, featureIndex);
-         }
+         
          if (mat->getInvertRoughness())
             features.addFeature(MFT_InvertRoughness, featureIndex);
 
@@ -442,6 +444,12 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
             features.addFeature(MFT_TerrainSideProject, featureIndex);
 
          featureIndex++;
+      }
+
+      // New blending
+      if (matCount > 0 && !Con::getBoolVariable("$Terrain::LerpBlend", false))
+      {
+         features.addFeature(MFT_TerrainHeightBlend);
       }
 
       MaterialFeatureData featureData;
@@ -528,6 +536,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
    mLightMapTexConst = mShader->getShaderConstHandle("$lightMapTex");
    mOneOverTerrainSizeConst = mShader->getShaderConstHandle("$oneOverTerrainSize");
    mSquareSizeConst = mShader->getShaderConstHandle("$squareSize");
+   mBlendDepthConst = mShader->getShaderConstHandle("$baseBlendDepth");
 
    mLightParamsConst = mShader->getShaderConstHandle("$rtParamslightInfoBuffer");
 
@@ -634,6 +643,23 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
          desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
    }
 
+   for (U32 i = 0; i < matCount && !baseOnly; i++)
+   {
+      TerrainMaterial* mat = mMaterialInfos[i]->mat;
+
+      if (mat == NULL)
+         continue;
+
+      // We only include materials that 
+      // have more than a base texture.
+      if (mat->getDetailSize() <= 0 ||
+         mat->getDetailDistance() <= 0 ||
+         mat->getDetailMap().isEmpty())
+         continue;
+
+      mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
+   }
+
    // If we're doing deferred it requires some 
    // special stencil settings for it to work.
    if ( deferredMat )
@@ -701,10 +727,13 @@ void TerrainCellMaterial::_updateMaterialConsts( )
 
       detailScaleAndFadeArray[j] = detailScaleAndFade;
       detailInfoArray[j] = detailIdStrengthParallax;
+
+      mConsts->setSafe(matInfo->mBlendDepthConst, matInfo->mat->getBlendDepth());
    }
 
    mConsts->setSafe(mDetailInfoVArrayConst, detailScaleAndFadeArray);
    mConsts->setSafe(mDetailInfoPArrayConst, detailInfoArray);
+
 }
 
 bool TerrainCellMaterial::setupPass(   const SceneRenderState *state, 
@@ -781,6 +810,8 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
       fogData.z = sceneData.fogHeightFalloff;     
       mConsts->set( mFogDataConst, fogData );
    }
+
+   mConsts->setSafe( mBlendDepthConst, Con::getFloatVariable("$Terrain::BlendDepth", 0.2f) );
 
    mConsts->setSafe( mFogColorConst, sceneData.fogColor );
 

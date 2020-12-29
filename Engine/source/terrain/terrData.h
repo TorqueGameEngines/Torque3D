@@ -313,6 +313,8 @@ public:
    /// Deletes all the materials on the terrain.
    void deleteAllMaterials();
 
+   void setMaterialsDirty() { mDetailsDirty = true; };
+
    //void setMaterialName( U32 index, const String &name );
 
    /// Accessors and mutators for TerrainMaterialUndoAction.

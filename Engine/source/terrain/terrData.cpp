@@ -1471,6 +1471,11 @@ DefineEngineMethod(TerrainBlock, saveAsset, bool, (), ,
    return static_cast<TerrainBlock*>(object)->saveAsset();
 }
 
+DefineEngineMethod( TerrainBlock, setMaterialsDirty, void, (),, "")
+{
+   static_cast<TerrainBlock*>(object)->setMaterialsDirty();
+}
+
 //ConsoleMethod(TerrainBlock, save, bool, 3, 3, "(string fileName) - saves the terrain block's terrain file to the specified file name.")
 //{
 //   char filename[256];

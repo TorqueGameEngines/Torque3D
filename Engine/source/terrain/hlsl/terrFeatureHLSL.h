@@ -184,4 +184,14 @@ public:
    virtual String getName() { return "Blank Matinfo map"; }
 };
 
+class TerrainHeightMapBlendHLSL : public TerrainFeatHLSL
+{
+public:
+
+   virtual void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual String getName() { return "Terrain Heightmap Blend"; }
+};
+
 #endif // _TERRFEATUREHLSL_H_

@@ -69,6 +69,7 @@ protected:
 
       TerrainMaterial *mat;
       U32 layerId;
+      GFXShaderConstHandle* mBlendDepthConst;
    };
 
    ///
@@ -115,6 +116,8 @@ protected:
    GFXShaderConstHandle *mMacroTexArrayConst;
    GFXShaderConstHandle *mNormalTexArrayConst;
    GFXShaderConstHandle *mOrmTexArrayConst;
+
+   GFXShaderConstHandle* mBlendDepthConst;
 
    TerrainBlock *mTerrain;
 

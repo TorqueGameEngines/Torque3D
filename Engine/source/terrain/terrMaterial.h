@@ -85,6 +85,11 @@ protected:
    ///
    F32 mParallaxScale;
 
+   /// Depth for blending the textures using the new
+   /// blending method. Higher numbers = larger blend
+   /// radius.
+   F32 mBlendDepth;
+
 public:
 
    TerrainMaterial();
@@ -121,6 +126,8 @@ public:
    bool useSideProjection() const { return mSideProjection; }
 
    F32 getParallaxScale() const { return mParallaxScale; }
+
+   F32 getBlendDepth() const { return mBlendDepth; }
 
    bool getIsSRGB() const { return mIsSRGB; }
 

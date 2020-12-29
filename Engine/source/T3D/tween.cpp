@@ -72,23 +72,29 @@ void Tween::advanceTime(F32 time)
    case Tween::Idle:
       break;
    case Tween::Playing:
-      SetValueByTime(mCurrentTime + time);
       if (mCurrentTime >= mDuration)
       {
          mCurrentTime = mDuration;
          SetValueByTime(mDuration);
          mState = Tween::Idle;
       }
+      else
+      {
+         SetValueByTime(mClampF(mCurrentTime + time, 0.0, mDuration));
+      }
       break;
    case Tween::Paused:
       break;
    case Tween::PlayingReversed:
-      SetValueByTime(mCurrentTime - time);
       if (mCurrentTime <= 0.0f)
       {
          mCurrentTime = 0.0f;
          SetValueByTime(0);
          mState = Tween::Idle;
+      }
+      else
+      {
+         SetValueByTime(mClampF(mCurrentTime - time, 0.0, mDuration));
       }
       break;
    default:

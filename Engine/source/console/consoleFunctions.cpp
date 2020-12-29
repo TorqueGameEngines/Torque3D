@@ -43,6 +43,7 @@
 #include "core/color.h"
 #include "math/mPoint3.h"
 #include "math/mathTypes.h"
+#include <SDL.h>
 
 // This is a temporary hack to get tools using the library to
 // link in this module which contains no other references.
@@ -2118,7 +2119,7 @@ DefineEngineFunction( gotoWebPage, void, ( const char* address ),,
    char* protocolSep = dStrstr( address,"://");
    if( protocolSep != NULL )
    {
-      Platform::openWebBrowser( address );
+      SDL_OpenURL( address );
       return;
    }
 
@@ -2139,7 +2140,7 @@ DefineEngineFunction( gotoWebPage, void, ( const char* address ),,
    else
       addr = String::ToString( "http://%s", address );
    
-   Platform::openWebBrowser( addr );
+   SDL_OpenURL( addr );
    return;
 }
 

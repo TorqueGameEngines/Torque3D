@@ -3,7 +3,7 @@ BINPATH = .
 TARGETS = testatomic.exe testdisplayinfo.exe testbounds.exe testdraw2.exe &
           testdrawchessboard.exe testdropfile.exe testerror.exe testfile.exe &
           testfilesystem.exe testgamecontroller.exe testgesture.exe &
-          testhittesting.exe testhotplug.exe testiconv.exe testime.exe &
+          testhittesting.exe testhotplug.exe testiconv.exe testime.exe testlocale.exe &
           testintersections.exe testjoystick.exe testkeys.exe testloadso.exe &
           testlock.exe testmessage.exe testoverlay2.exe testplatform.exe &
           testpower.exe testsensor.exe testrelative.exe testrendercopyex.exe &
@@ -13,7 +13,7 @@ TARGETS = testatomic.exe testdisplayinfo.exe testbounds.exe testdraw2.exe &
           testviewport.exe testwm2.exe torturethread.exe checkkeys.exe &
           controllermap.exe testhaptic.exe testqsort.exe testresample.exe &
           testaudioinfo.exe testaudiocapture.exe loopwave.exe loopwavequeue.exe &
-          testyuv.exe testgl2.exe testvulkan.exe testautomation.exe
+          testyuv.exe testgl2.exe testvulkan.exe testnative.exe testautomation.exe
 
 # SDL2test.lib sources (../src/test)
 
@@ -55,7 +55,7 @@ LIBS    = SDL2.lib $(TESTLIB)
 .c: ../src/test
 
 $(TESTLIB): $(COBJS)
-  wlib -q -b -n $@ $(COBJS)
+  wlib -q -b -n -c $@ $(COBJS)
 
 .obj.exe:
   @%make $(TESTLIB)
@@ -66,6 +66,10 @@ $(TESTLIB): $(COBJS)
 
 # specials
 testautomation.exe: $(TAOBJS)
+  @%make $(TESTLIB)
+  wlink SYS os2v2 libpath $(LIBPATH) lib {$(LIBS)} op q op el file {$<} name $@
+
+testnative.exe: testnative.obj testnativeos2.obj
   @%make $(TESTLIB)
   wlink SYS os2v2 libpath $(LIBPATH) lib {$(LIBS)} op q op el file {$<} name $@
 

@@ -23,10 +23,8 @@
 #if SDL_AUDIO_DRIVER_EMSCRIPTEN
 
 #include "SDL_audio.h"
-#include "SDL_log.h"
 #include "../SDL_audio_c.h"
 #include "SDL_emscriptenaudio.h"
-#include "SDL_assert.h"
 
 #include <emscripten/emscripten.h>
 

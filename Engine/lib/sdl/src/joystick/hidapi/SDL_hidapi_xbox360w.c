@@ -23,7 +23,6 @@
 #ifdef SDL_JOYSTICK_HIDAPI
 
 #include "SDL_hints.h"
-#include "SDL_log.h"
 #include "SDL_events.h"
 #include "SDL_timer.h"
 #include "SDL_joystick.h"
@@ -34,6 +33,9 @@
 
 
 #ifdef SDL_JOYSTICK_HIDAPI_XBOX360
+
+/* Define this if you want to log all packets from the controller */
+/*#define DEBUG_XBOX_PROTOCOL*/
 
 
 typedef struct {
@@ -126,6 +128,9 @@ HIDAPI_DriverXbox360W_GetDevicePlayerIndex(SDL_HIDAPI_Device *device, SDL_Joysti
 static void
 HIDAPI_DriverXbox360W_SetDevicePlayerIndex(SDL_HIDAPI_Device *device, SDL_JoystickID instance_id, int player_index)
 {
+    if (!device->dev) {
+        return;
+    }
     SetSlotLED(device->dev, (player_index % 4));
 }
 
@@ -137,7 +142,7 @@ HIDAPI_DriverXbox360W_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joys
     SDL_zeroa(ctx->last_state);
 
     /* Initialize the joystick capabilities */
-    joystick->nbuttons = SDL_CONTROLLER_BUTTON_MAX;
+    joystick->nbuttons = 15;
     joystick->naxes = SDL_CONTROLLER_AXIS_MAX;
     joystick->epowerlevel = SDL_JOYSTICK_POWER_UNKNOWN;
 
@@ -156,6 +161,31 @@ HIDAPI_DriverXbox360W_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *jo
         return SDL_SetError("Couldn't send rumble packet");
     }
     return 0;
+}
+
+static int
+HIDAPI_DriverXbox360W_RumbleJoystickTriggers(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static SDL_bool
+HIDAPI_DriverXbox360W_HasJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick)
+{
+    /* Doesn't have an RGB LED, so don't return true here */
+    return SDL_FALSE;
+}
+
+static int
+HIDAPI_DriverXbox360W_SetJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+HIDAPI_DriverXbox360W_SetJoystickSensorsEnabled(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, SDL_bool enabled)
+{
+    return SDL_Unsupported();
 }
 
 static void
@@ -220,6 +250,9 @@ HIDAPI_DriverXbox360W_UpdateDevice(SDL_HIDAPI_Device *device)
     }
 
     while ((size = hid_read_timeout(device->dev, data, sizeof(data), 0)) > 0) {
+#ifdef DEBUG_XBOX_PROTOCOL
+        HIDAPI_DumpPacket("Xbox 360 wireless packet: size = %d", data, size);
+#endif
         if (size == 2 && data[0] == 0x08) {
             SDL_bool connected = (data[1] & 0x80) ? SDL_TRUE : SDL_FALSE;
 #ifdef DEBUG_JOYSTICK
@@ -295,8 +328,12 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverXbox360W =
     HIDAPI_DriverXbox360W_UpdateDevice,
     HIDAPI_DriverXbox360W_OpenJoystick,
     HIDAPI_DriverXbox360W_RumbleJoystick,
+    HIDAPI_DriverXbox360W_RumbleJoystickTriggers,
+    HIDAPI_DriverXbox360W_HasJoystickLED,
+    HIDAPI_DriverXbox360W_SetJoystickLED,
+    HIDAPI_DriverXbox360W_SetJoystickSensorsEnabled,
     HIDAPI_DriverXbox360W_CloseJoystick,
-    HIDAPI_DriverXbox360W_FreeDevice
+    HIDAPI_DriverXbox360W_FreeDevice,
 };
 
 #endif /* SDL_JOYSTICK_HIDAPI_XBOX360 */

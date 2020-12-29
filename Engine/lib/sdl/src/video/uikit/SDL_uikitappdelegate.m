@@ -23,7 +23,6 @@
 #if SDL_VIDEO_DRIVER_UIKIT
 
 #include "../SDL_sysvideo.h"
-#include "SDL_assert.h"
 #include "SDL_hints.h"
 #include "SDL_system.h"
 #include "SDL_main.h"
@@ -43,20 +42,12 @@ static int forward_argc;
 static char **forward_argv;
 static int exit_status;
 
-#if defined(SDL_MAIN_NEEDED) && !defined(IOS_DYLIB)
-/* SDL is being built as a static library, include main() */
-int main(int argc, char *argv[])
-{
-	return SDL_UIKitRunApp(argc, argv, SDL_main);
-}
-#endif /* SDL_MAIN_NEEDED && !IOS_DYLIB */
-
 int SDL_UIKitRunApp(int argc, char *argv[], SDL_main_func mainFunction)
 {
     int i;
 
     /* store arguments */
-	forward_main = mainFunction;
+    forward_main = mainFunction;
     forward_argc = argc;
     forward_argv = (char **)malloc((argc+1) * sizeof(char *));
     for (i = 0; i < argc; i++) {

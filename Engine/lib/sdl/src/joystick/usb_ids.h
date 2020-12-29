@@ -24,6 +24,7 @@
 
 /* Definitions of useful USB VID/PID values */
 
+#define USB_VENDOR_APPLE        0x05ac
 #define USB_VENDOR_HYPERKIN     0x2e24
 #define USB_VENDOR_MICROSOFT    0x045e
 #define USB_VENDOR_NINTENDO     0x057e
@@ -35,16 +36,47 @@
 #define USB_VENDOR_VALVE        0x28de
 
 #define USB_PRODUCT_NINTENDO_GAMECUBE_ADAPTER           0x0337
+#define USB_PRODUCT_NINTENDO_SWITCH_PRO                 0x2009
 #define USB_PRODUCT_RAZER_PANTHERA                      0x0401
 #define USB_PRODUCT_RAZER_PANTHERA_EVO                  0x1008
+#define USB_PRODUCT_RAZER_ATROX                         0x0a00
 #define USB_PRODUCT_SONY_DS4                            0x05c4
 #define USB_PRODUCT_SONY_DS4_DONGLE                     0x0ba0
 #define USB_PRODUCT_SONY_DS4_SLIM                       0x09cc
+#define USB_PRODUCT_SONY_DS5                            0x0ce6
 #define USB_PRODUCT_XBOX_ONE_ELITE_SERIES_1             0x02e3
 #define USB_PRODUCT_XBOX_ONE_ELITE_SERIES_2             0x0b00
 #define USB_PRODUCT_XBOX_ONE_ELITE_SERIES_2_BLUETOOTH   0x0b05
+#define USB_PRODUCT_XBOX_ONE_S                          0x02ea
 #define USB_PRODUCT_XBOX_ONE_S_REV1_BLUETOOTH           0x02e0
 #define USB_PRODUCT_XBOX_ONE_S_REV2_BLUETOOTH           0x02fd
+#define USB_PRODUCT_XBOX_ONE_SERIES_X                   0x0b12
+#define USB_PRODUCT_XBOX_ONE_SERIES_X_BLUETOOTH         0x0b13
+#define USB_PRODUCT_XBOX_ONE_RAW_INPUT_CONTROLLER       0x02ff
+#define USB_PRODUCT_XBOX_ONE_XINPUT_CONTROLLER          0x02fe    /* Made up product ID for XInput */
+
+/* USB usage pages */
+#define USB_USAGEPAGE_GENERIC_DESKTOP   0x0001
+#define USB_USAGEPAGE_BUTTON            0x0009
+
+/* USB usages for USAGE_PAGE_GENERIC_DESKTOP */
+#define USB_USAGE_GENERIC_POINTER               0x0001
+#define USB_USAGE_GENERIC_MOUSE                 0x0002
+#define USB_USAGE_GENERIC_JOYSTICK              0x0004
+#define USB_USAGE_GENERIC_GAMEPAD               0x0005
+#define USB_USAGE_GENERIC_KEYBOARD              0x0006
+#define USB_USAGE_GENERIC_KEYPAD                0x0007
+#define USB_USAGE_GENERIC_MULTIAXISCONTROLLER   0x0008
+#define USB_USAGE_GENERIC_X                     0x0030
+#define USB_USAGE_GENERIC_Y                     0x0031
+#define USB_USAGE_GENERIC_Z                     0x0032
+#define USB_USAGE_GENERIC_RX                    0x0033
+#define USB_USAGE_GENERIC_RY                    0x0034
+#define USB_USAGE_GENERIC_RZ                    0x0035
+#define USB_USAGE_GENERIC_SLIDER                0x0036
+#define USB_USAGE_GENERIC_DIAL                  0x0037
+#define USB_USAGE_GENERIC_WHEEL                 0x0038
+#define USB_USAGE_GENERIC_HAT                   0x0039
 
 #endif /* usb_ids_h_ */
 

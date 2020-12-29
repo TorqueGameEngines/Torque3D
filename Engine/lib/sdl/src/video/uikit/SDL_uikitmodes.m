@@ -22,7 +22,6 @@
 
 #if SDL_VIDEO_DRIVER_UIKIT
 
-#include "SDL_assert.h"
 #include "SDL_system.h"
 #include "SDL_uikitmodes.h"
 
@@ -181,6 +180,44 @@
 
 @end
 
+@interface SDL_DisplayWatch : NSObject
+@end
+
+@implementation SDL_DisplayWatch
+
++ (void)start
+{
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+
+    [center addObserver:self selector:@selector(screenConnected:)
+            name:UIScreenDidConnectNotification object:nil];
+    [center addObserver:self selector:@selector(screenDisconnected:)
+            name:UIScreenDidDisconnectNotification object:nil];
+}
+
++ (void)stop
+{
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+
+    [center removeObserver:self
+            name:UIScreenDidConnectNotification object:nil];
+    [center removeObserver:self
+            name:UIScreenDidDisconnectNotification object:nil];
+}
+
++ (void)screenConnected:(NSNotification*)notification
+{
+    UIScreen *uiscreen = [notification object];
+    UIKit_AddDisplay(uiscreen, SDL_TRUE);
+}
+
++ (void)screenDisconnected:(NSNotification*)notification
+{
+    UIScreen *uiscreen = [notification object];
+    UIKit_DelDisplay(uiscreen);
+}
+
+@end
 
 static int
 UIKit_AllocateDisplayModeData(SDL_DisplayMode * mode,
@@ -265,8 +302,8 @@ UIKit_AddDisplayMode(SDL_VideoDisplay * display, int w, int h, UIScreen * uiscre
     return 0;
 }
 
-static int
-UIKit_AddDisplay(UIScreen *uiscreen)
+int
+UIKit_AddDisplay(UIScreen *uiscreen, SDL_bool send_event)
 {
     UIScreenMode *uiscreenmode = uiscreen.currentMode;
     CGSize size = uiscreen.bounds.size;
@@ -302,9 +339,25 @@ UIKit_AddDisplay(UIScreen *uiscreen)
     }
 
     display.driverdata = (void *) CFBridgingRetain(data);
-    SDL_AddVideoDisplay(&display);
+    SDL_AddVideoDisplay(&display, send_event);
 
     return 0;
+}
+
+void
+UIKit_DelDisplay(UIScreen *uiscreen)
+{
+    int i;
+
+    for (i = 0; i < SDL_GetNumVideoDisplays(); ++i) {
+        SDL_DisplayData *data = (__bridge SDL_DisplayData *)SDL_GetDisplayDriverData(i);
+
+        if (data && data.uiscreen == uiscreen) {
+            CFRelease(SDL_GetDisplayDriverData(i));
+            SDL_DelVideoDisplay(i);
+            return;
+        }
+    }
 }
 
 SDL_bool
@@ -326,13 +379,15 @@ UIKit_InitModes(_THIS)
 {
     @autoreleasepool {
         for (UIScreen *uiscreen in [UIScreen screens]) {
-            if (UIKit_AddDisplay(uiscreen) < 0) {
+            if (UIKit_AddDisplay(uiscreen, SDL_FALSE) < 0) {
                 return -1;
             }
         }
 #if !TARGET_OS_TV
         SDL_OnApplicationDidChangeStatusBarOrientation();
 #endif
+
+        [SDL_DisplayWatch start];
     }
 
     return 0;
@@ -466,6 +521,8 @@ UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
 void
 UIKit_QuitModes(_THIS)
 {
+    [SDL_DisplayWatch stop];
+
     /* Release Objective-C objects, so higher level doesn't free() them. */
     int i, j;
     @autoreleasepool {

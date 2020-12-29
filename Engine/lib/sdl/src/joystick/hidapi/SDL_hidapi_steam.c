@@ -23,7 +23,6 @@
 #ifdef SDL_JOYSTICK_HIDAPI
 
 #include "SDL_hints.h"
-#include "SDL_log.h"
 #include "SDL_events.h"
 #include "SDL_timer.h"
 #include "SDL_joystick.h"
@@ -138,8 +137,8 @@ typedef struct SteamControllerStateInternal_t
 #define STEAM_BUTTON_RIGHTPAD_CLICKED_MASK  0x00040000
 #define STEAM_LEFTPAD_FINGERDOWN_MASK       0x00080000
 #define STEAM_RIGHTPAD_FINGERDOWN_MASK      0x00100000
-#define STEAM_JOYSTICK_BUTTON_MASK            0x00400000
-#define STEAM_LEFTPAD_AND_JOYSTICK_MASK        0x00800000
+#define STEAM_JOYSTICK_BUTTON_MASK          0x00400000
+#define STEAM_LEFTPAD_AND_JOYSTICK_MASK     0x00800000
 
 
 // Look for report version 0x0001, type WIRELESS (3), length >= 1 byte
@@ -1011,7 +1010,7 @@ HIDAPI_DriverSteam_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystic
     InitializeSteamControllerPacketAssembler(&ctx->m_assembler);
 
     /* Initialize the joystick capabilities */
-    joystick->nbuttons = SDL_CONTROLLER_BUTTON_MAX;
+    joystick->nbuttons = 17;
     joystick->naxes = SDL_CONTROLLER_AXIS_MAX;
 
     return SDL_TRUE;
@@ -1032,6 +1031,33 @@ static int
 HIDAPI_DriverSteam_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
     /* You should use the full Steam Input API for rumble support */
+    return SDL_Unsupported();
+}
+
+static int
+HIDAPI_DriverSteam_RumbleJoystickTriggers(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static SDL_bool
+HIDAPI_DriverSteam_HasJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick)
+{
+    /* You should use the full Steam Input API for LED support */
+    return SDL_FALSE;
+}
+
+static int
+HIDAPI_DriverSteam_SetJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    /* You should use the full Steam Input API for LED support */
+    return SDL_Unsupported();
+}
+
+static int
+HIDAPI_DriverSteam_SetSensorsEnabled(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, SDL_bool enabled)
+{
+    /* You should use the full Steam Input API for sensor support */
     return SDL_Unsupported();
 }
 
@@ -1098,6 +1124,10 @@ HIDAPI_DriverSteam_UpdateDevice(SDL_HIDAPI_Device *device)
 
                 SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_LEFTSTICK,
                     (ctx->m_state.ulButtons & STEAM_JOYSTICK_BUTTON_MASK) ? SDL_PRESSED : SDL_RELEASED);
+                SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_MISC1 + 0,
+                    (ctx->m_state.ulButtons & STEAM_BUTTON_BACK_LEFT_MASK) ? SDL_PRESSED : SDL_RELEASED);
+                SDL_PrivateJoystickButton(joystick, SDL_CONTROLLER_BUTTON_MISC1 + 1,
+                    (ctx->m_state.ulButtons & STEAM_BUTTON_BACK_RIGHT_MASK) ? SDL_PRESSED : SDL_RELEASED);
             }
             {
                 /* Minimum distance from center of pad to register a direction */
@@ -1165,8 +1195,12 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverSteam =
     HIDAPI_DriverSteam_UpdateDevice,
     HIDAPI_DriverSteam_OpenJoystick,
     HIDAPI_DriverSteam_RumbleJoystick,
+    HIDAPI_DriverSteam_RumbleJoystickTriggers,
+    HIDAPI_DriverSteam_HasJoystickLED,
+    HIDAPI_DriverSteam_SetJoystickLED,
+    HIDAPI_DriverSteam_SetSensorsEnabled,
     HIDAPI_DriverSteam_CloseJoystick,
-    HIDAPI_DriverSteam_FreeDevice
+    HIDAPI_DriverSteam_FreeDevice,
 };
 
 #endif /* SDL_JOYSTICK_HIDAPI_STEAM */

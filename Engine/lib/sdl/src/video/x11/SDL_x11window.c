@@ -22,7 +22,6 @@
 
 #if SDL_VIDEO_DRIVER_X11
 
-#include "SDL_assert.h"
 #include "SDL_hints.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
@@ -40,7 +39,6 @@
 
 #include "SDL_timer.h"
 #include "SDL_syswm.h"
-#include "SDL_log.h"
 
 #define _NET_WM_STATE_REMOVE    0l
 #define _NET_WM_STATE_ADD       1l
@@ -1577,6 +1575,13 @@ X11_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
     oldstyle_fullscreen = X11_IsWindowLegacyFullscreen(_this, window);
 
     if (oldstyle_fullscreen || grabbed) {
+        /* If the window is unmapped, XGrab calls return GrabNotViewable,
+           so when we get a MapNotify later, we'll try to update the grab as
+           appropriate. */
+        if (window->flags & SDL_WINDOW_HIDDEN) {
+            return;
+        }
+
         /* Try to grab the mouse */
         if (!data->videodata->broken_pointer_grab) {
             const unsigned int mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask;
@@ -1662,7 +1667,15 @@ SDL_bool
 X11_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
-    Display *display = data->videodata->display;
+    Display *display;
+
+    if (!data) {
+        /* This sometimes happens in SDL_IBus_UpdateTextRect() while creating the window */
+        SDL_SetError("Window not initialized");
+        return SDL_FALSE;
+    }
+
+    display = data->videodata->display;
 
     if (info->version.major == SDL_MAJOR_VERSION &&
         info->version.minor == SDL_MINOR_VERSION) {

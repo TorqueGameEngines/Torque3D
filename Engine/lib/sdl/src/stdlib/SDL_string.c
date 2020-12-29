@@ -516,14 +516,98 @@ SDL_wcsncmp(const wchar_t *str1, const wchar_t *str2, size_t maxlen)
 #if defined(HAVE_WCSNCMP)
     return wcsncmp(str1, str2, maxlen);
 #else
-    while (*str1 && *str2) {
+    while (*str1 && *str2 && maxlen) {
         if (*str1 != *str2)
             break;
         ++str1;
         ++str2;
+        --maxlen;
     }
-    return (int)(*str1 - *str2);
+    if (!maxlen) {
+        return 0;
+    }
+    return (int) (*str1 - *str2);
+
 #endif /* HAVE_WCSNCMP */
+}
+
+int
+SDL_wcscasecmp(const wchar_t *str1, const wchar_t *str2)
+{
+#if defined(HAVE_WCSCASECMP)
+    return wcscasecmp(str1, str2);
+#elif defined(HAVE__WCSICMP)
+    return _wcsicmp(str1, str2);
+#else
+    wchar_t a = 0;
+    wchar_t b = 0;
+    while (*str1 && *str2) {
+        /* FIXME: This doesn't actually support wide characters */
+        if (*str1 >= 0x80 || *str2 >= 0x80) {
+            a = *str1;
+            b = *str2;
+        } else {
+            a = SDL_toupper((unsigned char) *str1);
+            b = SDL_toupper((unsigned char) *str2);
+        }
+        if (a != b)
+            break;
+        ++str1;
+        ++str2;
+    }
+
+    /* FIXME: This doesn't actually support wide characters */
+    if (*str1 >= 0x80 || *str2 >= 0x80) {
+        a = *str1;
+        b = *str2;
+    } else {
+        a = SDL_toupper((unsigned char) *str1);
+        b = SDL_toupper((unsigned char) *str2);
+    }
+    return (int) ((unsigned int) a - (unsigned int) b);
+#endif /* HAVE__WCSICMP */
+}
+
+int
+SDL_wcsncasecmp(const wchar_t *str1, const wchar_t *str2, size_t maxlen)
+{
+#if defined(HAVE_WCSNCASECMP)
+    return wcsncasecmp(str1, str2, maxlen);
+#elif defined(HAVE__WCSNICMP)
+    return _wcsnicmp(str1, str2, maxlen);
+#else
+    wchar_t a = 0;
+    wchar_t b = 0;
+    while (*str1 && *str2 && maxlen) {
+        /* FIXME: This doesn't actually support wide characters */
+        if (*str1 >= 0x80 || *str2 >= 0x80) {
+            a = *str1;
+            b = *str2;
+        } else {
+            a = SDL_toupper((unsigned char) *str1);
+            b = SDL_toupper((unsigned char) *str2);
+        }
+        if (a != b)
+            break;
+        ++str1;
+        ++str2;
+        --maxlen;
+    }
+
+    if (maxlen == 0) {
+        return 0;
+    } else {
+        /* FIXME: This doesn't actually support wide characters */
+        if (*str1 >= 0x80 || *str2 >= 0x80) {
+            a = *str1;
+            b = *str2;
+        } else {
+            a = SDL_toupper((unsigned char) *str1);
+            b = SDL_toupper((unsigned char) *str2);
+        }
+        return (int) ((unsigned int) a - (unsigned int) b);
+    }
+#endif /* HAVE__WCSNICMP */
 }
 
 size_t
@@ -1815,10 +1899,15 @@ SDL_vsnprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, const char *fmt, 
                     {
                         /* In practice this is used on Windows for WCHAR strings */
                         wchar_t *wide_arg = va_arg(ap, wchar_t *);
-                        char *arg = SDL_iconv_string("UTF-8", "UTF-16LE", (char *)(wide_arg), (SDL_wcslen(wide_arg)+1)*sizeof(*wide_arg));
-                        info.pad_zeroes = SDL_FALSE;
-                        len = SDL_PrintString(text, left, &info, arg);
-                        SDL_free(arg);
+                        if (wide_arg) {
+                            char *arg = SDL_iconv_string("UTF-8", "UTF-16LE", (char *)(wide_arg), (SDL_wcslen(wide_arg)+1)*sizeof(*wide_arg));
+                            info.pad_zeroes = SDL_FALSE;
+                            len = SDL_PrintString(text, left, &info, arg);
+                            SDL_free(arg);
+                        } else {
+                            info.pad_zeroes = SDL_FALSE;
+                            len = SDL_PrintString(text, left, &info, NULL);
+                        }
                         done = SDL_TRUE;
                     }
                     break;

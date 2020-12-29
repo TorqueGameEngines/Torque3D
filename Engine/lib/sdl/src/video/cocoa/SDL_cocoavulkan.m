@@ -29,7 +29,6 @@
 
 #include "SDL_cocoavideo.h"
 #include "SDL_cocoawindow.h"
-#include "SDL_assert.h"
 
 #include "SDL_loadso.h"
 #include "SDL_cocoametalview.h"
@@ -236,7 +235,7 @@ SDL_bool Cocoa_Vulkan_CreateSurface(_THIS,
 
 void Cocoa_Vulkan_GetDrawableSize(_THIS, SDL_Window *window, int *w, int *h)
 {
-    Cocoa_Metal_GetDrawableSize(window, w, h);
+    Cocoa_Metal_GetDrawableSize(_this, window, w, h);
 }
 
 #endif

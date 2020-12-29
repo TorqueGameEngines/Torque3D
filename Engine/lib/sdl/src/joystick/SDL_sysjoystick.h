@@ -39,10 +39,32 @@ typedef struct _SDL_JoystickAxisInfo
     SDL_bool sent_initial_value; /* Whether we've sent the initial axis value */
 } SDL_JoystickAxisInfo;
 
+typedef struct _SDL_JoystickTouchpadFingerInfo
+{
+    Uint8 state;
+    float x;
+    float y;
+    float pressure;
+} SDL_JoystickTouchpadFingerInfo;
+
+typedef struct _SDL_JoystickTouchpadInfo
+{
+    int nfingers;
+    SDL_JoystickTouchpadFingerInfo *fingers;
+} SDL_JoystickTouchpadInfo;
+
+typedef struct _SDL_JoystickSensorInfo
+{
+    SDL_SensorType type;
+    SDL_bool enabled;
+    float data[3];      /* If this needs to expand, update SDL_ControllerSensorEvent */
+} SDL_JoystickSensorInfo;
+
 struct _SDL_Joystick
 {
     SDL_JoystickID instance_id; /* Device instance, monotonically increasing from 0 */
     char *name;                 /* Joystick name - system dependent */
+    char *serial;               /* Joystick serial */
     SDL_JoystickGUID guid;      /* Joystick guid */
 
     int naxes;                  /* Number of axis controls on the joystick */
@@ -60,15 +82,30 @@ struct _SDL_Joystick
     int nbuttons;               /* Number of buttons on the joystick */
     Uint8 *buttons;             /* Current button states */
 
+    int ntouchpads;             /* Number of touchpads on the joystick */
+    SDL_JoystickTouchpadInfo *touchpads;    /* Current touchpad states */
+
+    int nsensors;               /* Number of sensors on the joystick */
+    int nsensors_enabled;
+    SDL_JoystickSensorInfo *sensors;
+
     Uint16 low_frequency_rumble;
     Uint16 high_frequency_rumble;
     Uint32 rumble_expiration;
 
+    Uint16 left_trigger_rumble;
+    Uint16 right_trigger_rumble;
+    Uint32 trigger_rumble_expiration;
+
+    Uint8 led_red;
+    Uint8 led_green;
+    Uint8 led_blue;
+
     SDL_bool attached;
     SDL_bool is_game_controller;
     SDL_bool delayed_guide_button; /* SDL_TRUE if this device has the guide button event delayed */
-    SDL_bool force_recentering; /* SDL_TRUE if this device needs to have its state reset to 0 */
     SDL_JoystickPowerLevel epowerlevel; /* power level of this joystick, SDL_JOYSTICK_POWER_UNKNOWN if not supported */
+
     struct _SDL_JoystickDriver *driver;
 
     struct joystick_hwdata *hwdata;     /* Driver dependent information */
@@ -119,23 +156,34 @@ typedef struct _SDL_JoystickDriver
        This should fill the nbuttons and naxes fields of the joystick structure.
        It returns 0, or -1 if there is an error.
      */
-    int (*Open)(SDL_Joystick * joystick, int device_index);
+    int (*Open)(SDL_Joystick *joystick, int device_index);
 
     /* Rumble functionality */
-    int (*Rumble)(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble);
+    int (*Rumble)(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble);
+    int (*RumbleTriggers)(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble);
+
+    /* LED functionality */
+    SDL_bool (*HasLED)(SDL_Joystick *joystick);
+    int (*SetLED)(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue);
+
+    /* Sensor functionality */
+    int (*SetSensorsEnabled)(SDL_Joystick *joystick, SDL_bool enabled);
 
     /* Function to update the state of a joystick - called as a device poll.
      * This function shouldn't update the joystick structure directly,
      * but instead should call SDL_PrivateJoystick*() to deliver events
      * and update joystick device state.
      */
-    void (*Update)(SDL_Joystick * joystick);
+    void (*Update)(SDL_Joystick *joystick);
 
     /* Function to close a joystick after use */
-    void (*Close)(SDL_Joystick * joystick);
+    void (*Close)(SDL_Joystick *joystick);
 
     /* Function to perform any system-specific joystick related cleanup */
     void (*Quit)(void);
+
+    /* Function to get the autodetected controller mapping; returns false if there isn't any. */
+    SDL_bool (*GetGamepadMapping)(int device_index, SDL_GamepadMapping * out);
 
 } SDL_JoystickDriver;
 
@@ -150,8 +198,11 @@ extern SDL_JoystickDriver SDL_DUMMY_JoystickDriver;
 extern SDL_JoystickDriver SDL_EMSCRIPTEN_JoystickDriver;
 extern SDL_JoystickDriver SDL_HAIKU_JoystickDriver;
 extern SDL_JoystickDriver SDL_HIDAPI_JoystickDriver;
+extern SDL_JoystickDriver SDL_RAWINPUT_JoystickDriver;
 extern SDL_JoystickDriver SDL_IOS_JoystickDriver;
 extern SDL_JoystickDriver SDL_LINUX_JoystickDriver;
+extern SDL_JoystickDriver SDL_VIRTUAL_JoystickDriver;
+extern SDL_JoystickDriver SDL_WGI_JoystickDriver;
 extern SDL_JoystickDriver SDL_WINDOWS_JoystickDriver;
 
 #endif /* SDL_sysjoystick_h_ */

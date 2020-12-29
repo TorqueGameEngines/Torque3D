@@ -198,11 +198,10 @@ SetBlendMode(DirectFB_RenderData * data, int blendMode,
             SDL_DFB_CHECK(destsurf->SetDstBlendFunction(destsurf, DSBF_SRCCOLOR));
 
             break;
-        }
         case SDL_BLENDMODE_MUL:
             data->blitFlags = DSBLIT_BLEND_ALPHACHANNEL;
             data->drawFlags = DSDRAW_BLEND;
-            SDL_DFB_CHECK(destsurf->SetSrcBlendFunction(destsurf, DSBF_DSTCOLOR));
+            SDL_DFB_CHECK(destsurf->SetSrcBlendFunction(destsurf, DSBF_DESTCOLOR));
             SDL_DFB_CHECK(destsurf->SetDstBlendFunction(destsurf, DSBF_INVSRCALPHA));
 
             break;
@@ -627,7 +626,7 @@ DirectFB_QueueFillRects(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const S
     }
 
     cmd->data.draw.count = count;
-    SDL_memcpy(verts, rects, count);
+    SDL_memcpy(verts, rects, len);
     return 0;
 }
 

@@ -22,7 +22,6 @@
 
 #if SDL_VIDEO_DRIVER_WINDOWS
 
-#include "SDL_assert.h"
 #include "SDL_windowsvideo.h"
 
 #include "../../events/SDL_mouse_c.h"
@@ -276,12 +275,14 @@ WIN_GetGlobalMouseState(int *x, int *y)
 {
     Uint32 retval = 0;
     POINT pt = { 0, 0 };
+    SDL_bool swapButtons = GetSystemMetrics(SM_SWAPBUTTON) != 0;
+
     GetCursorPos(&pt);
     *x = (int) pt.x;
     *y = (int) pt.y;
 
-    retval |= GetAsyncKeyState(VK_LBUTTON) & 0x8000 ? SDL_BUTTON_LMASK : 0;
-    retval |= GetAsyncKeyState(VK_RBUTTON) & 0x8000 ? SDL_BUTTON_RMASK : 0;
+    retval |= GetAsyncKeyState(!swapButtons ? VK_LBUTTON : VK_RBUTTON) & 0x8000 ? SDL_BUTTON_LMASK : 0;
+    retval |= GetAsyncKeyState(!swapButtons ? VK_RBUTTON : VK_LBUTTON) & 0x8000 ? SDL_BUTTON_RMASK : 0;
     retval |= GetAsyncKeyState(VK_MBUTTON) & 0x8000 ? SDL_BUTTON_MMASK : 0;
     retval |= GetAsyncKeyState(VK_XBUTTON1) & 0x8000 ? SDL_BUTTON_X1MASK : 0;
     retval |= GetAsyncKeyState(VK_XBUTTON2) & 0x8000 ? SDL_BUTTON_X2MASK : 0;

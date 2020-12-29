@@ -63,10 +63,10 @@
 /* This should only be called on the thread on which a user is using the context. */
 - (void)updateIfNeeded
 {
-    int value = SDL_AtomicSet(&self->dirty, 0);
+    const int value = SDL_AtomicSet(&self->dirty, 0);
     if (value > 0) {
         /* We call the real underlying update here, since -[SDLOpenGLContext update] just calls us. */
-        [super update];
+        [self explicitUpdate];
     }
 }
 
@@ -97,17 +97,6 @@
         SDL_WindowData *windowdata = (SDL_WindowData *)newWindow->driverdata;
         NSView *contentview = windowdata->sdlContentView;
 
-        /* This should never be nil since sdlContentView is only nil if the
-           window was created via SDL_CreateWindowFrom, and SDL doesn't allow
-           OpenGL contexts to be created in that case. However, it doesn't hurt
-           to check. */
-        if (contentview == nil) {
-            /* Prefer to access the cached content view above instead of this,
-               since as of Xcode 11 + SDK 10.15, [window contentView] causes
-               Apple's Main Thread Checker to output a warning. */
-            contentview = [windowdata->nswindow contentView];
-        }
-
         /* Now sign up for scheduled updates for the new window. */
         NSMutableArray *contexts = windowdata->nscontexts;
         @synchronized (contexts) {
@@ -115,9 +104,13 @@
         }
 
         if ([self view] != contentview) {
-            [self setView:contentview];
+            if ([NSThread isMainThread]) {
+                [self setView:contentview];
+            } else {
+                dispatch_sync(dispatch_get_main_queue(), ^{ [self setView:contentview]; });
+            }
             if (self == [NSOpenGLContext currentContext]) {
-                [self update];
+                [self explicitUpdate];
             } else {
                 [self scheduleUpdate];
             }
@@ -125,10 +118,24 @@
     } else {
         [self clearDrawable];
         if (self == [NSOpenGLContext currentContext]) {
-            [self update];
+            [self explicitUpdate];
         } else {
             [self scheduleUpdate];
         }
+    }
+}
+
+- (SDL_Window*)window
+{
+    return self->window;
+}
+
+- (void)explicitUpdate
+{
+    if ([NSThread isMainThread]) {
+        [super update];
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{ [super update]; });
     }
 }
 
@@ -348,8 +355,10 @@ Cocoa_GL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context)
 {
     if (context) {
         SDLOpenGLContext *nscontext = (SDLOpenGLContext *)context;
-        [nscontext setWindow:window];
-        [nscontext updateIfNeeded];
+        if ([nscontext window] != window) {
+            [nscontext setWindow:window];
+            [nscontext updateIfNeeded];
+        }
         [nscontext makeCurrentContext];
     } else {
         [NSOpenGLContext clearCurrentContext];
@@ -362,7 +371,7 @@ void
 Cocoa_GL_GetDrawableSize(_THIS, SDL_Window * window, int * w, int * h)
 {
     SDL_WindowData *windata = (SDL_WindowData *) window->driverdata;
-    NSView *contentView = [windata->nswindow contentView];
+    NSView *contentView = windata->sdlContentView;
     NSRect viewport = [contentView bounds];
 
     if (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) {

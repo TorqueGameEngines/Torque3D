@@ -22,12 +22,12 @@
 
 #ifdef SDL_HAPTIC_LINUX
 
-#include "SDL_assert.h"
 #include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
 #include "SDL_joystick.h"
 #include "../../joystick/SDL_sysjoystick.h"     /* For the real SDL_Joystick */
 #include "../../joystick/linux/SDL_sysjoystick_c.h"     /* For joystick hwdata */
+#include "../../core/linux/SDL_evdev_capabilities.h"
 #include "../../core/linux/SDL_udev.h"
 
 #include <unistd.h>             /* close */
@@ -86,8 +86,6 @@ static SDL_hapticlist_item *SDL_hapticlist = NULL;
 static SDL_hapticlist_item *SDL_hapticlist_tail = NULL;
 static int numhaptics = 0;
 
-#define test_bit(nr, addr) \
-   (((1UL << ((nr) & 31)) & (((const unsigned int *) addr)[(nr) >> 5])) != 0)
 #define EV_TEST(ev,f) \
    if (test_bit((ev), features)) ret |= (f);
 /*
@@ -512,10 +510,15 @@ SDL_SYS_HapticMouse(void)
 int
 SDL_SYS_JoystickIsHaptic(SDL_Joystick * joystick)
 {
+#ifdef SDL_JOYSTICK_LINUX
     if (joystick->driver != &SDL_LINUX_JoystickDriver) {
-        return 0;
+        return SDL_FALSE;
     }
-    return EV_IsHaptic(joystick->hwdata->fd);
+    if (EV_IsHaptic(joystick->hwdata->fd)) {
+        return SDL_TRUE;
+    }
+#endif
+    return SDL_FALSE;
 }
 
 
@@ -525,6 +528,7 @@ SDL_SYS_JoystickIsHaptic(SDL_Joystick * joystick)
 int
 SDL_SYS_JoystickSameHaptic(SDL_Haptic * haptic, SDL_Joystick * joystick)
 {
+#ifdef SDL_JOYSTICK_LINUX
     if (joystick->driver != &SDL_LINUX_JoystickDriver) {
         return 0;
     }
@@ -533,6 +537,7 @@ SDL_SYS_JoystickSameHaptic(SDL_Haptic * haptic, SDL_Joystick * joystick)
     if (SDL_strcmp(joystick->hwdata->fname, haptic->hwdata->fname) == 0) {
         return 1;
     }
+#endif
     return 0;
 }
 
@@ -543,6 +548,7 @@ SDL_SYS_JoystickSameHaptic(SDL_Haptic * haptic, SDL_Joystick * joystick)
 int
 SDL_SYS_HapticOpenFromJoystick(SDL_Haptic * haptic, SDL_Joystick * joystick)
 {
+#ifdef SDL_JOYSTICK_LINUX
     int device_index = 0;
     int fd;
     int ret;
@@ -577,6 +583,9 @@ SDL_SYS_HapticOpenFromJoystick(SDL_Haptic * haptic, SDL_Joystick * joystick)
     haptic->hwdata->fname = SDL_strdup( joystick->hwdata->fname );
 
     return 0;
+#else
+    return -1;
+#endif
 }
 
 
@@ -718,7 +727,9 @@ SDL_SYS_ToDirection(Uint16 *dest, SDL_HapticDirection * src)
             *dest = (Uint16) tmp;
         }
         break;
-
+    case SDL_HAPTIC_STEERING_AXIS:
+        *dest = 0x4000;
+        break;
     default:
         return SDL_SetError("Haptic: Unsupported direction type.");
     }

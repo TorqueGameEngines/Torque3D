@@ -33,7 +33,6 @@
 #include "lighting/lightQuery.h"
 #include "console/engineAPI.h"
 
-
 IMPLEMENT_CO_NETOBJECT_V1(RenderMeshExample);
 
 ConsoleDocClass( RenderMeshExample, 
@@ -63,6 +62,8 @@ RenderMeshExample::RenderMeshExample()
    // Make sure we the Material instance to NULL
    // so we don't try to access it incorrectly
    mMaterialInst = NULL;
+
+   initMaterialAsset(Material);
 }
 
 RenderMeshExample::~RenderMeshExample()
@@ -77,8 +78,7 @@ RenderMeshExample::~RenderMeshExample()
 void RenderMeshExample::initPersistFields()
 {
    addGroup( "Rendering" );
-   addField( "material",      TypeMaterialName, Offset( mMaterialName, RenderMeshExample ),
-      "The name of the material used to render the mesh." );
+   scriptBindMaterialAsset(Material, RenderMeshExample, "The material used to render the mesh.");
    endGroup( "Rendering" );
 
    // SceneObject already handles exposing the transform
@@ -145,8 +145,10 @@ U32 RenderMeshExample::packUpdate( NetConnection *conn, U32 mask, BitStream *str
    }
 
    // Write out any of the updated editable properties
-   if ( stream->writeFlag( mask & UpdateMask ) )
-      stream->write( mMaterialName );
+   if (stream->writeFlag(mask & UpdateMask))
+   {
+      packMaterialAsset(conn, Material);
+   }
 
    return retMask;
 }
@@ -166,7 +168,7 @@ void RenderMeshExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      stream->read( &mMaterialName );
+      unpackMaterialAsset(conn, Material);
 
       if ( isProperlyAdded() )
          updateMaterial();
@@ -248,18 +250,18 @@ void RenderMeshExample::createGeometry()
 
 void RenderMeshExample::updateMaterial()
 {
-   if ( mMaterialName.isEmpty() )
-      return;
+   if (mMaterialAsset.notNull())
+   {
+      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+         return;
 
-   // If the material name matches then don't bother updating it.
-   if ( mMaterialInst && mMaterialName.equal( mMaterialInst->getMaterial()->getName(), String::NoCase ) )
-      return;
+      SAFE_DELETE(mMaterialInst);
 
-   SAFE_DELETE( mMaterialInst );
+      mMaterialInst = MATMGR->createMatInstance(mMaterialAsset->getMaterialDefinitionName(), getGFXVertexFormat< VertexType >());
 
-   mMaterialInst = MATMGR->createMatInstance( mMaterialName, getGFXVertexFormat< VertexType >() );
-   if ( !mMaterialInst )
-      Con::errorf( "RenderMeshExample::updateMaterial - no Material called '%s'", mMaterialName.c_str() );
+      if (!mMaterialInst)
+         Con::errorf("RenderMeshExample::updateMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+   }
 }
 
 void RenderMeshExample::prepRenderImage( SceneRenderState *state )

@@ -64,9 +64,6 @@ public:
    GroundPlane();
    virtual ~GroundPlane();
 
-   static bool _setMaterialAsset(void* obj, const char* index, const char* data);
-   static bool _setMaterialName(void* obj, const char* index, const char* data);
-
    virtual bool      onAdd();
    virtual void      onRemove();
    virtual U32       packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
@@ -80,8 +77,6 @@ public:
    virtual void      setScale( const Point3F& scale );
 
    static void       initPersistFields();
-
-   bool setMaterialAsset(const StringTableEntry materialAssetId);
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 
@@ -109,11 +104,9 @@ private:
    F32               mSquareSize;   ///< World units per grid cell edge.
    F32               mScaleU;       ///< Scale factor for U texture coordinates.
    F32               mScaleV;       ///< Scale factor for V texture coordinates.
-   String            mMaterialName; ///< Object name of material to use.
    BaseMatInstance*  mMaterial;     ///< Instantiated material based on given material name.
 
-   AssetPtr<MaterialAsset> mMaterialAsset;
-   StringTableEntry mMaterialAssetId;
+   DECLARE_MATERIALASSET(GroundPlane, Material, -1);
 
    PhysicsBody *mPhysicsRep;
 

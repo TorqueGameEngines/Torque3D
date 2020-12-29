@@ -900,14 +900,16 @@ function ObjectBuilderGui::buildWaterPlane(%this)
 
 function ObjectBuilderGui::buildTerrainBlock(%this)
 {
-   %this.objectClassName = "TerrainBlock";
+   /*%this.objectClassName = "TerrainBlock";
    %this.createCallback = "ETerrainEditor.attachTerrain();";
 
    %this.addField("terrainFile", "TypeFile", "Terrain file", "", "*.ter");
    %this.addField("terrainAsset", "TypeTerrainAsset", "Terrain Asset", "", "");
    %this.addField("squareSize", "TypeInt", "Square size", "8");
 
-   %this.process();
+   %this.process();*/
+   
+   AssetBrowser.setupCreateNewAsset("TerrainAsset", AssetBrowser.selectedModule);
 }
 
 function ObjectBuilderGui::buildGroundCover( %this )

@@ -4,6 +4,10 @@ function AssetBrowser::setupCreateNewTerrainAsset(%this)
    NewAssetPropertiesInspector.addField("resolution", "Terrain Texture Resolution", "list",  "Is this script used on the server?", "1024", "256,512,1024,2048,4096", %this.newAssetSettings);
    NewAssetPropertiesInspector.addField("genWithNoise", "Generate Terrain With Noise", "bool",  "Is this script used on the server?", "0", "2", %this.newAssetSettings);
    NewAssetPropertiesInspector.endGroup();
+   
+   NewAssetPropertiesInspector.startGroup("Terrain - Import");
+   NewAssetPropertiesInspector.addField("importDetails", "Import Heightmap", "button",  "Import an existing heightmap", "", "Canvas.pushDialog( TerrainImportGui );", %this.newAssetSettings);
+   NewAssetPropertiesInspector.endGroup();
 }
 
 function AssetBrowser::createTerrainAsset(%this)
@@ -38,11 +42,48 @@ function AssetBrowser::createTerrainAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	//
 	$createdTerrainBlock = TerrainBlock::createNew( %assetName, %this.newAssetSettings.resolution, "", %this.newAssetSettings.genWithNoise );
 	
-	$createdTerrainBlock.terrainAsset = %moduleName @ ":" @ %assetName;
-	$createdTerrainBlock.terrainFile = "";
+	MECreateUndoAction::submit($createdTerrainBlock);
+      
+   $createdTerrainBlock.terrainAsset = %moduleName @ ":" @ %assetName;
+   $createdTerrainBlock.terrainFile = "";
+	
+	//If we're importing, deal with that now, otherwise just create the new terrain
+   if(AssetBrowser.newAssetSettings.importingTerrain)
+   {
+      // This will update an existing terrain with the name %terrainName,
+      // or create a new one if %terrainName isn't a TerrainBlock
+      $createdTerrainBlock = TerrainBlock::import(  $createdTerrainBlock, 
+                                                    AssetBrowser.newAssetSettings.heightMapPng, 
+                                                    AssetBrowser.newAssetSettings.metersPerPixel, 
+                                                    AssetBrowser.newAssetSettings.heightScale, 
+                                                    AssetBrowser.newAssetSettings.opacityNames, 
+                                                    AssetBrowser.newAssetSettings.materialNames,
+                                                    AssetBrowser.newAssetSettings.flipYAxis );
+
+      if ( isObject( $createdTerrainBlock ) )
+      {
+         assert( isObject( EWorldEditor ), 
+            "ObjectBuilderGui::processNewObject - EWorldEditor is missing!" );
+
+         // Select it in the editor.
+         //EWorldEditor.clearSelection();
+         //EWorldEditor.selectObject($createdTerrainBlock);
+
+         // When we drop the selection don't store undo
+         // state for it... the creation deals with it.
+         //EWorldEditor.dropSelection( true );
+
+         
+      }
+      else
+      {
+         toolsMessageBox( "Import Terrain", 
+            "Terrain import failed! Check console for error messages.", 
+            "Ok", "Error" );
+      }
+   }
    
 	return %tamlpath;
 }
@@ -78,6 +119,9 @@ function createTerrainBlock(%assetId)
       // When we drop the selection don't store undo
       // state for it... the creation deals with it.
       EWorldEditor.dropSelection( true );
+      
+      ETerrainEditor.isDirty = true;
+      EPainter.updateLayers();
    }
    else
    {

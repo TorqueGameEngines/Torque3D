@@ -22,7 +22,6 @@
 
 /* General mouse handling code for SDL */
 
-#include "SDL_assert.h"
 #include "SDL_hints.h"
 #include "SDL_timer.h"
 #include "SDL_events.h"
@@ -31,6 +30,10 @@
 #include "../video/SDL_sysvideo.h"
 #ifdef __WIN32__
 #include "../core/windows/SDL_windows.h"    // For GetDoubleClickTime()
+#endif
+#if defined(__OS2__)
+#define INCL_WIN
+#include <os2.h>
 #endif
 
 /* #define DEBUG_MOUSE */
@@ -54,6 +57,8 @@ SDL_MouseDoubleClickTimeChanged(void *userdata, const char *name, const char *ol
     } else {
 #ifdef __WIN32__
         mouse->double_click_time = GetDoubleClickTime();
+#elif defined(__OS2__)
+        mouse->double_click_time = WinQuerySysValue(HWND_DESKTOP, SV_DBLCLKTIME);
 #else
         mouse->double_click_time = 500;
 #endif
@@ -722,23 +727,24 @@ Uint32
 SDL_GetGlobalMouseState(int *x, int *y)
 {
     SDL_Mouse *mouse = SDL_GetMouse();
-    int tmpx, tmpy;
 
-    /* make sure these are never NULL for the backend implementations... */
-    if (!x) {
-        x = &tmpx;
+    if (mouse->GetGlobalMouseState) {
+        int tmpx, tmpy;
+
+        /* make sure these are never NULL for the backend implementations... */
+        if (!x) {
+            x = &tmpx;
+        }
+        if (!y) {
+            y = &tmpy;
+        }
+
+        *x = *y = 0;
+
+        return mouse->GetGlobalMouseState(x, y);
+    } else {
+        return SDL_GetMouseState(x, y);
     }
-    if (!y) {
-        y = &tmpy;
-    }
-
-    *x = *y = 0;
-
-    if (!mouse->GetGlobalMouseState) {
-        return 0;
-    }
-
-    return mouse->GetGlobalMouseState(x, y);
 }
 
 void

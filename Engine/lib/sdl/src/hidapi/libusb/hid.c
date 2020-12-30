@@ -524,17 +524,17 @@ static int is_xbox360(unsigned short vendor_id, const struct libusb_interface_de
 
 static int is_xboxone(unsigned short vendor_id, const struct libusb_interface_descriptor *intf_desc)
 {
-        static const int XB1_IFACE_SUBCLASS = 71;
-        static const int XB1_IFACE_PROTOCOL = 208;
-        static const int SUPPORTED_VENDORS[] = {
-            0x045e, /* Microsoft */
-            0x0738, /* Mad Catz */
-            0x0e6f, /* PDP */
-            0x0f0d, /* Hori */
-            0x1532, /* Razer Wildcat */
-            0x24c6, /* PowerA */
-            0x2e24, /* Hyperkin */
-        };
+    static const int XB1_IFACE_SUBCLASS = 71;
+    static const int XB1_IFACE_PROTOCOL = 208;
+    static const int SUPPORTED_VENDORS[] = {
+        0x045e, /* Microsoft */
+        0x0738, /* Mad Catz */
+        0x0e6f, /* PDP */
+        0x0f0d, /* Hori */
+        0x1532, /* Razer Wildcat */
+        0x24c6, /* PowerA */
+        0x2e24, /* Hyperkin */
+    };
 
 	if (intf_desc->bInterfaceNumber == 0 &&
 	    intf_desc->bInterfaceClass == LIBUSB_CLASS_VENDOR_SPEC &&
@@ -783,7 +783,7 @@ hid_device * hid_open(unsigned short vendor_id, unsigned short product_id, const
 	return handle;
 }
 
-static void read_callback(struct libusb_transfer *transfer)
+static void LIBUSB_CALL read_callback(struct libusb_transfer *transfer)
 {
 	hid_device *dev = (hid_device *)transfer->user_data;
 	int res;
@@ -982,9 +982,9 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path, int bExclusive)
 			libusb_get_config_descriptor(usb_dev, 0, &conf_desc);
 		if (!conf_desc)
 			continue;
-		for (j = 0; j < conf_desc->bNumInterfaces; j++) {
+		for (j = 0; j < conf_desc->bNumInterfaces && !good_open; j++) {
 			const struct libusb_interface *intf = &conf_desc->interface[j];
-			for (k = 0; k < intf->num_altsetting; k++) {
+			for (k = 0; k < intf->num_altsetting && !good_open; k++) {
 				const struct libusb_interface_descriptor *intf_desc;
 				intf_desc = &intf->altsetting[k];
 				if (should_enumerate_interface(desc.idVendor, intf_desc)) {

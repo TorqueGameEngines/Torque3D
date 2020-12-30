@@ -41,7 +41,6 @@
 #include "SDL_cocoamousetap.h"
 #include "SDL_cocoaopengl.h"
 #include "SDL_cocoaopengles.h"
-#include "SDL_assert.h"
 
 /* #define DEBUG_COCOAWINDOW */
 
@@ -56,6 +55,9 @@
 
 #ifndef MAC_OS_X_VERSION_10_12
 #define NSEventModifierFlagCapsLock NSAlphaShiftKeyMask
+#endif
+#ifndef NSAppKitVersionNumber10_14
+#define NSAppKitVersionNumber10_14 1671
 #endif
 
 @interface SDLWindow : NSWindow <NSDraggingDestination>
@@ -297,15 +299,15 @@ SetWindowStyle(SDL_Window * window, NSUInteger style)
     NSWindow *nswindow = data->nswindow;
 
     /* The view responder chain gets messed with during setStyleMask */
-    if ([[nswindow contentView] nextResponder] == data->listener) {
-        [[nswindow contentView] setNextResponder:nil];
+    if ([data->sdlContentView nextResponder] == data->listener) {
+        [data->sdlContentView setNextResponder:nil];
     }
 
     [nswindow setStyleMask:style];
 
     /* The view responder chain gets messed with during setStyleMask */
-    if ([[nswindow contentView] nextResponder] != data->listener) {
-        [[nswindow contentView] setNextResponder:data->listener];
+    if ([data->sdlContentView nextResponder] != data->listener) {
+        [data->sdlContentView setNextResponder:data->listener];
     }
 
     return SDL_TRUE;
@@ -318,7 +320,7 @@ SetWindowStyle(SDL_Window * window, NSUInteger style)
 {
     NSNotificationCenter *center;
     NSWindow *window = data->nswindow;
-    NSView *view = [window contentView];
+    NSView *view = data->sdlContentView;
 
     _data = data;
     observingVisible = YES;
@@ -912,11 +914,9 @@ SetWindowStyle(SDL_Window * window, NSUInteger style)
        keypresses; it won't toggle the mod state if you send a keyrelease.  */
     const SDL_bool osenabled = ([theEvent modifierFlags] & NSEventModifierFlagCapsLock) ? SDL_TRUE : SDL_FALSE;
     const SDL_bool sdlenabled = (SDL_GetModState() & KMOD_CAPS) ? SDL_TRUE : SDL_FALSE;
-    if (!osenabled && sdlenabled) {
-        SDL_ToggleModState(KMOD_CAPS, SDL_FALSE);
-        SDL_SendKeyboardKey(SDL_RELEASED, SDL_SCANCODE_CAPSLOCK);
-    } else if (osenabled && !sdlenabled) {
+    if (osenabled ^ sdlenabled) {
         SDL_SendKeyboardKey(SDL_PRESSED, SDL_SCANCODE_CAPSLOCK);
+        SDL_SendKeyboardKey(SDL_RELEASED, SDL_SCANCODE_CAPSLOCK);
     }
 }
 - (void)keyDown:(NSEvent *)theEvent
@@ -1360,7 +1360,7 @@ SetWindowStyle(SDL_Window * window, NSUInteger style)
 @end
 
 static int
-SetupWindowData(_THIS, SDL_Window * window, NSWindow *nswindow, SDL_bool created)
+SetupWindowData(_THIS, SDL_Window * window, NSWindow *nswindow, NSView *nsview, SDL_bool created)
 { @autoreleasepool
 {
     SDL_VideoData *videodata = (SDL_VideoData *) _this->driverdata;
@@ -1376,11 +1376,7 @@ SetupWindowData(_THIS, SDL_Window * window, NSWindow *nswindow, SDL_bool created
     data->created = created;
     data->videodata = videodata;
     data->nscontexts = [[NSMutableArray alloc] init];
-
-    /* Only store this for windows created by us since the content view might
-     * get replaced from under us otherwise, and we only need it when the
-     * window is guaranteed to be created by us (OpenGL contexts). */
-    data->sdlContentView = created ? [nswindow contentView] : nil;
+    data->sdlContentView = nsview;
 
     /* Create an event listener for the window */
     data->listener = [[Cocoa_WindowListener alloc] init];
@@ -1541,7 +1537,7 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
     [nswindow setContentView:contentView];
     [contentView release];
 
-    if (SetupWindowData(_this, window, nswindow, SDL_TRUE) < 0) {
+    if (SetupWindowData(_this, window, nswindow, contentView, SDL_TRUE) < 0) {
         [nswindow release];
         return -1;
     }
@@ -1571,7 +1567,19 @@ int
 Cocoa_CreateWindowFrom(_THIS, SDL_Window * window, const void *data)
 { @autoreleasepool
 {
-    NSWindow *nswindow = (NSWindow *) data;
+    NSView* nsview = nil;
+    NSWindow *nswindow = nil;
+
+    if ([(id)data isKindOfClass:[NSWindow class]]) {
+      nswindow = (NSWindow*)data;
+      nsview = [nswindow contentView];
+    } else if ([(id)data isKindOfClass:[NSView class]]) {
+      nsview = (NSView*)data;
+      nswindow = [nsview window];
+    } else {
+      SDL_assert(false);
+    }
+
     NSString *title;
 
     /* Query the title from the existing window */
@@ -1580,7 +1588,22 @@ Cocoa_CreateWindowFrom(_THIS, SDL_Window * window, const void *data)
         window->title = SDL_strdup([title UTF8String]);
     }
 
-    return SetupWindowData(_this, window, nswindow, SDL_FALSE);
+    /* We still support OpenGL as long as Apple offers it, deprecated or not, so disable deprecation warnings about it. */
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+    /* Note: as of the macOS 10.15 SDK, this defaults to YES instead of NO when
+     * the NSHighResolutionCapable boolean is set in Info.plist. */
+    if ([nsview respondsToSelector:@selector(setWantsBestResolutionOpenGLSurface:)]) {
+        BOOL highdpi = (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) != 0;
+        [nsview setWantsBestResolutionOpenGLSurface:highdpi];
+    }
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #endif
+
+    return SetupWindowData(_this, window, nswindow, nsview, SDL_FALSE);
 }}
 
 void
@@ -1795,8 +1818,8 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
     NSRect rect;
 
     /* The view responder chain gets messed with during setStyleMask */
-    if ([[nswindow contentView] nextResponder] == data->listener) {
-        [[nswindow contentView] setNextResponder:nil];
+    if ([data->sdlContentView nextResponder] == data->listener) {
+        [data->sdlContentView setNextResponder:nil];
     }
 
     if (fullscreen) {
@@ -1812,10 +1835,7 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
         /* Hack to fix origin on Mac OS X 10.4
            This is no longer needed as of Mac OS X 10.15, according to bug 4822.
          */
-        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-        NSOperatingSystemVersion version = { 10, 15, 0 };
-        if (![processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] ||
-            ![processInfo isOperatingSystemAtLeastVersion:version]) {
+        if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_14) {
             NSRect screenRect = [[nswindow screen] frame];
             if (screenRect.size.height >= 1.0f) {
                 rect.origin.y += (screenRect.size.height - rect.size.height);
@@ -1845,8 +1865,8 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
     }
 
     /* The view responder chain gets messed with during setStyleMask */
-    if ([[nswindow contentView] nextResponder] != data->listener) {
-        [[nswindow contentView] setNextResponder:data->listener];
+    if ([data->sdlContentView nextResponder] != data->listener) {
+        [data->sdlContentView setNextResponder:data->listener];
     }
 
     s_moveHack = 0;

@@ -51,13 +51,6 @@ static void OFFSCREEN_VideoQuit(_THIS);
 
 /* OFFSCREEN driver bootstrap functions */
 
-static int
-OFFSCREEN_Available(void)
-{
-    /* Consider it always available */
-    return (1);
-}
-
 static void
 OFFSCREEN_DeleteDevice(SDL_VideoDevice * device)
 {
@@ -106,21 +99,8 @@ OFFSCREEN_CreateDevice(int devindex)
 
 VideoBootStrap OFFSCREEN_bootstrap = {
     OFFSCREENVID_DRIVER_NAME, "SDL offscreen video driver",
-    OFFSCREEN_Available, OFFSCREEN_CreateDevice
+    OFFSCREEN_CreateDevice
 };
-
-static Uint32
-OFFSCREEN_GetGlobalMouseState(int *x, int *y)
-{
-    if (x) {
-        *x = 0;
-    }
-
-    if (y) {
-        *y = 0;
-    }
-    return 0;
-}
 
 int
 OFFSCREEN_VideoInit(_THIS)
@@ -141,11 +121,6 @@ OFFSCREEN_VideoInit(_THIS)
     SDL_zero(mode);
     SDL_AddDisplayMode(&_this->displays[0], &mode);
 
-    /* Init mouse */
-    mouse = SDL_GetMouse();
-    /* This function needs to be implemented by every driver */
-    mouse->GetGlobalMouseState = OFFSCREEN_GetGlobalMouseState;
-    
     /* We're done! */
     return 0;
 }

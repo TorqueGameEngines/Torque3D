@@ -26,7 +26,6 @@
 #include "SDL.h"
 #include "SDL_x11video.h"
 #include "SDL_x11dyn.h"
-#include "SDL_assert.h"
 #include "SDL_x11messagebox.h"
 
 #include <X11/keysym.h>
@@ -246,7 +245,7 @@ X11_MessageBoxInitPositions( SDL_MessageBoxDataX11 *data )
     const SDL_MessageBoxData *messageboxdata = data->messageboxdata;
 
     /* Go over text and break linefeeds into separate lines. */
-    if ( messageboxdata->message && messageboxdata->message[ 0 ] ) {
+    if ( messageboxdata->message[0] ) {
         const char *text = messageboxdata->message;
         const int linecount = CountLinesOfText(text);
         TextLineData *plinedata = (TextLineData *) SDL_malloc(sizeof (TextLineData) * linecount);

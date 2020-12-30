@@ -64,6 +64,27 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
+   if( !isObject( EditTerrainAssetPopup ) )
+   {
+      new PopupMenu( EditTerrainAssetPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+
+         item[ 0 ] = "Export Terraform Data" TAB "" TAB "Heightfield::saveBitmap(\"\");";
+         item[ 1 ] = "Rename Asset" TAB "" TAB "AssetBrowser.renameAsset();";
+         item[ 2 ] = "Asset Properties" TAB "" TAB "AssetBrowser.editAssetInfo();";
+         item[ 3 ] = "-";
+         Item[ 4 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
+         item[ 5 ] = "-";
+         item[ 6 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+
    if( !isObject( AddNewComponentAssetPopup ) )
    {
       new PopupMenu( AddNewComponentAssetPopup )

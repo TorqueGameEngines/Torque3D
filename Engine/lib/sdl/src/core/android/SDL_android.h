@@ -104,6 +104,9 @@ void Android_JNI_InitTouch(void);
 JNIEnv *Android_JNI_GetEnv(void);
 int Android_JNI_SetupThread(void);
 
+/* Locale */
+int Android_JNI_GetLocale(char *buf, size_t buflen);
+
 /* Generic messages */
 int Android_JNI_SendMessage(int command, int param);
 
@@ -125,6 +128,8 @@ SDL_bool Android_JNI_SetRelativeMouseEnabled(SDL_bool enabled);
 
 /* Request permission */
 SDL_bool Android_JNI_RequestPermission(const char *permission);
+
+int Android_JNI_OpenURL(const char *url);
 
 int SDL_GetAndroidSDKVersion(void);
 

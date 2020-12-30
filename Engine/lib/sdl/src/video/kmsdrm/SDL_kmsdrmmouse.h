@@ -1,6 +1,7 @@
 /*
   Simple DirectMedia Layer
   Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Atomic KMSDRM backend by Manuel Alfayate Corchete <redwindwanderer@gmail.com>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -29,16 +30,24 @@
 #define MAX_CURSOR_W 512
 #define MAX_CURSOR_H 512
 
+/* Driverdata with driver-side info about the cursor. */
 typedef struct _KMSDRM_CursorData
 {
-    struct gbm_bo *bo;
-    uint32_t       crtc_id;
-    int            hot_x, hot_y;
-    int            w, h;
+    uint16_t       hot_x, hot_y;
+    uint16_t       w, h;
+
+    /* The buffer where we store the mouse bitmap ready to be used.
+       We get it ready and filled in CreateCursor(), and copy it to a GBM BO in ShowCursor().*/     
+    uint32_t *buffer;
+    size_t buffer_size;
+    size_t buffer_pitch;
+
 } KMSDRM_CursorData;
 
 extern void KMSDRM_InitMouse(_THIS);
-extern void KMSDRM_QuitMouse(_THIS);
+extern void KMSDRM_DeinitMouse(_THIS);
+
+extern void KMSDRM_InitCursor();
 
 #endif /* SDL_KMSDRM_mouse_h_ */
 

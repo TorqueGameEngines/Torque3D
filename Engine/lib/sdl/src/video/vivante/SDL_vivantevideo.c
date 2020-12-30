@@ -40,12 +40,6 @@
 #include "SDL_vivantevulkan.h"
 
 
-static int
-VIVANTE_Available(void)
-{
-    return 1;
-}
-
 static void
 VIVANTE_Destroy(SDL_VideoDevice * device)
 {
@@ -125,7 +119,6 @@ VIVANTE_Create()
 VideoBootStrap VIVANTE_bootstrap = {
     "vivante",
     "Vivante EGL Video Driver",
-    VIVANTE_Available,
     VIVANTE_Create
 };
 
@@ -177,7 +170,7 @@ VIVANTE_AddVideoDisplays(_THIS)
     display.desktop_mode = current_mode;
     display.current_mode = current_mode;
     display.driverdata = data;
-    SDL_AddVideoDisplay(&display);
+    SDL_AddVideoDisplay(&display, SDL_FALSE);
     return 0;
 }
 

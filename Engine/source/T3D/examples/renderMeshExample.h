@@ -33,6 +33,8 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class BaseMatInstance;
 
 
@@ -65,8 +67,8 @@ class RenderMeshExample : public SceneObject
    //--------------------------------------------------------------------------
    // Rendering variables
    //--------------------------------------------------------------------------
-   // The name of the Material we will use for rendering
-   String            mMaterialName;
+   DECLARE_MATERIALASSET(RenderMeshExample, Material, UpdateMask);
+
    // The actual Material instance
    BaseMatInstance*  mMaterialInst;
 

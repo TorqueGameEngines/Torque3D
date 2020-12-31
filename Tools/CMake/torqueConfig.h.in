@@ -197,3 +197,8 @@
 #else
 #  define TORQUE_INSTANCE_EXCLUSION   "TorqueTest"
 #endif
+
+//use sdl backend?
+#if defined(TORQUE_SDL)
+#include <SDL.h>
+#endif

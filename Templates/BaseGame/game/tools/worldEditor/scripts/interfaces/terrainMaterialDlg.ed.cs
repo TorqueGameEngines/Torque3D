@@ -443,6 +443,10 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %this-->detDistanceCtrl.setText( %mat.detailDistance );      
       %this-->sideProjectionCtrl.setValue( %mat.useSideProjection );
       %this-->parallaxScaleCtrl.setText( %mat.parallaxScale );
+      
+      %blendDepth = mFloor(%mat.blendDepth * 1000)/1000;
+      %this-->blendDepthTextEditCtrl.setText( %blendDepth );
+      %this-->blendDepthSliderCtrl.setValue( %mat.blendDepth );
 
       %this-->macroSizeCtrl.setText( %mat.macroSize );
       %this-->macroStrengthCtrl.setText( %mat.macroStrength );
@@ -504,6 +508,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %detailDistance = %this-->detDistanceCtrl.getText();   
    %useSideProjection = %this-->sideProjectionCtrl.getValue();   
    %parallaxScale = %this-->parallaxScaleCtrl.getText();
+   %blendDepth = %this-->blendDepthTextEditCtrl.getText();
 
    %macroSize = %this-->macroSizeCtrl.getText();      
    %macroStrength = %this-->macroStrengthCtrl.getText();
@@ -529,7 +534,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.macroSize == %macroSize &&
          %mat.macroStrength == %macroStrength &&
          %mat.macroDistance == %macroDistance &&         
-         %mat.parallaxScale == %parallaxScale &&         
+         %mat.parallaxScale == %parallaxScale &&
+         %mat.blendDepth == %blendDepth &&         
          %mat.isSRGB == %isSRGB &&         
          %mat.invertRoughness == %invertRoughness)               
       return;
@@ -567,6 +573,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %mat.macroDistance = %macroDistance;    
    %mat.useSideProjection = %useSideProjection;
    %mat.parallaxScale = %parallaxScale;
+   %mat.blendDepth = %blendDepth;
    %mat.isSRGB = %isSRGB;
    %mat.invertRoughness = %invertRoughness;
    
@@ -619,6 +626,7 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          macroDistance = %mat.macroDistance;
          useSideProjection = %mat.useSideProjection;
          parallaxScale = %mat.parallaxScale;
+         blendDepth = %mat.blendDepth;
          isSRGB = %mat.isSRGB;
          invertRoughness = %mat.invertRoughness;
       };
@@ -656,6 +664,7 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.macroDistance = %obj.macroDistance;
       %mat.useSideProjection = %obj.useSideProjection;
       %mat.parallaxScale = %obj.parallaxScale;
+      %mat.blendDepth = %obj.blendDepth;
       %mat.isSRGB = %obj.isSRGB;
       %mat.invertRoughness = %obj.invertRoughness;
    }
@@ -692,4 +701,18 @@ function TerrainMaterialDlg::_selectTextureFileDialog( %this, %defaultFileName )
    %file = filePath(%file) @ "/" @ fileBase(%file);
       
    return %file;
+}
+
+function TerrainMaterialDlgBlendDepthSlider::onMouseDragged(%this)
+{
+   %value = mFloor(%this.value * 1000)/1000;
+   TerrainMaterialDlgBlendDepthTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendDepth = %this.value;
+
+}
+
+function TerrainMaterialDlgBlendDepthTextEdit::onValidate(%this)
+{
+   TerrainMaterialDlgBlendDepthSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendDepth = %this.getText();
 }

@@ -29,7 +29,7 @@
 #import "platform/platformInput.h"
 #import "platform/threads/thread.h"
 #import "core/util/journal/process.h"
-
+#include <SDL.h>
 //-----------------------------------------------------------------------------
 // Completely closes and restarts the simulation
 void Platform::restartInstance()
@@ -135,6 +135,10 @@ void Platform::outputDebugString( const char *string, ... )
 //-----------------------------------------------------------------------------
 bool Platform::openWebBrowser( const char* webAddress )
 {
+#if defined(TORQUE_SDL)
+   SDL_OpenURL(webAddress);
+   return true;
+#endif
    OSStatus err;
    CFURLRef url = CFURLCreateWithBytes(NULL,(UInt8*)webAddress,dStrlen(webAddress),kCFStringEncodingASCII,NULL);
    err = LSOpenCFURLRef(url,NULL);

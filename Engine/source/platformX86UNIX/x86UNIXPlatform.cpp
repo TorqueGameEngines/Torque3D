@@ -1,7 +1,11 @@
 #include "platform/platform.h"
-
+#include <SDL.h>
 bool Platform::openWebBrowser(const char* webAddress)
 {
+#if defined(TORQUE_SDL)
+   SDL_OpenURL(webAddress);
+   return true;
+#endif
    String startingURL(webAddress);
    String filteredURL;
 

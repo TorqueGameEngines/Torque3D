@@ -34,7 +34,7 @@
 #include "gfx/gfxDevice.h"
 #include "core/strings/unicode.h"
 #include "gui/core/guiCanvas.h"
-
+#include <SDL.h>
 
 extern void createFontInit();
 extern void createFontShutdown();
@@ -517,6 +517,10 @@ F32 Platform::getRandom()
 /// @return true if browser successfully spawned
 bool Platform::openWebBrowser( const char* webAddress )
 {
+#if defined(TORQUE_SDL)
+   SDL_OpenURL(webAddress);
+   return true;
+#endif
    static bool sHaveKey = false;
    static wchar_t sWebKey[512];
    char utf8WebKey[512];

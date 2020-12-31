@@ -269,14 +269,14 @@ static bool _set##name##Asset(void* obj, const char* index, const char* data)\
    }\
    return false;\
 }\
-void className::pack##name##Asset(BitStream *stream)\
+void pack##name##Asset(BitStream *stream)\
 {\
    if (stream->writeFlag(m##name##Asset.notNull()))\
       stream->writeString(m##name##Asset.getAssetId());\
    else\
       stream->writeString(m##name##Name);\
 }\
-void className::unpack##name##Asset(BitStream *stream)\
+void unpack##name##Asset(BitStream *stream)\
 {\
    if (stream->readFlag())\
    {\

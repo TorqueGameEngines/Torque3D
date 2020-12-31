@@ -23,11 +23,9 @@
 #include "platform/platform.h"
 
 #if defined(TORQUE_OS_WIN)
-#include<Windows.h> // for SetThreadAffinityMask
-#endif
-
-#if defined(TORQUE_OS_MAC)
-#include <mach/mach_time.h>
+#include<Windows.h> // for SetThreadAffinityMask, QueryPerformanceCounter, QueryPerformanceFrequency
+#elif defined(TORQUE_OS_MAC)
+#include <mach/mach_time.h> // for mach_absolute_time, mach_timebase_info
 #endif
 
 #include "core/stream/fileStream.h"
@@ -63,111 +61,61 @@ Vector<StringTableEntry> gProfilerNodeStack;
 #define PROFILER_DEBUG_POP_NODE() ;
 #endif
 
-#if defined(TORQUE_SUPPORTS_VC_INLINE_X86_ASM)
-// platform specific get hires times...
-void startHighResolutionTimer(U32 time[2])
-{
-   //time[0] = Platform::getRealMilliseconds();
+#if defined(TORQUE_OS_WIN)
 
-   __asm
-   {
-      push eax
-      push edx
-      push ecx
-      rdtsc
-      mov ecx, time
-      mov DWORD PTR [ecx], eax
-      mov DWORD PTR [ecx + 4], edx
-      pop ecx
-      pop edx
-      pop eax
-   }
-}
-
-U32 endHighResolutionTimer(U32 time[2])
-{
-   U32 ticks;
-   //ticks = Platform::getRealMilliseconds() - time[0];
-   //return ticks;
-
-   __asm
-   {
-      push  eax
-      push  edx
-      push  ecx
-      //db    0fh, 31h
-      rdtsc
-      mov   ecx, time
-      sub   edx, DWORD PTR [ecx+4]
-      sbb   eax, DWORD PTR [ecx]
-      mov   DWORD PTR ticks, eax
-      pop   ecx
-      pop   edx
-      pop   eax
-   }
-   return ticks;
-}
-
-#elif defined(TORQUE_SUPPORTS_GCC_INLINE_X86_ASM)
+static bool sQueryPerformanceInit = false;
+static U64 sQueryPerformanceFrequency = 0;
 
 // platform specific get hires times...
-void startHighResolutionTimer(U32 time[2])
+void startHighResolutionTimer(U64 &time)
 {
-   __asm__ __volatile__(
-      "rdtsc\n"
-      : "=a" (time[0]), "=d" (time[1])
-      );
+   QueryPerformanceCounter((LARGE_INTEGER*)&time);
 }
 
-U32 endHighResolutionTimer(U32 time[2])
+F64 endHighResolutionTimer(U64 time)
 {
-   U32 ticks;
-   __asm__ __volatile__(
-      "rdtsc\n"
-      "sub  0x4(%%ecx),  %%edx\n"
-      "sbb  (%%ecx),  %%eax\n"
-      : "=a" (ticks) : "c" (time)
-      );
-   return ticks;
+   if (!sQueryPerformanceInit)
+   {
+      sQueryPerformanceInit = true;
+      QueryPerformanceFrequency((LARGE_INTEGER*)&sQueryPerformanceFrequency);
+   }
+
+   U64 current;
+   QueryPerformanceCounter((LARGE_INTEGER*)&current);
+
+   return ((1000.0 * static_cast<F64>(current-time)) / static_cast<F64>(sQueryPerformanceFrequency));
 }
 
 #elif defined(TORQUE_OS_MAC)
 
-
-void startHighResolutionTimer(U32 time[2]) {
-   U64 now = mach_absolute_time();
-   AssertFatal(sizeof(U32[2]) == sizeof(U64), "Can't pack mach_absolute_time into U32[2]");
-   memcpy(time, &now, sizeof(U64));
+void startHighResolutionTimer(U64 &time) {
+   time = mach_absolute_time();
 }
 
-U32 endHighResolutionTimer(U32 time[2])  {
+F64 endHighResolutionTimer(U64 time)  {
    static mach_timebase_info_data_t    sTimebaseInfo = {0, 0};
    
    U64 now = mach_absolute_time();
-   AssertFatal(sizeof(U32[2]) == sizeof(U64), "Can't pack mach_absolute_time into U32[2]");
-   U64 then;
-   memcpy(&then, time, sizeof(U64));
    
    if(sTimebaseInfo.denom == 0){
       mach_timebase_info(&sTimebaseInfo);
    }
    // Handle the micros/nanos conversion first, because shedding a few bits is better than overflowing.
-   U64 elapsedMicros = ((now - then) / 1000) * sTimebaseInfo.numer / sTimebaseInfo.denom;
+   F64 elapsedMicros = (static_cast<F64>(now - time) / 1000.0) * static_cast<F64>(sTimebaseInfo.numer) / static_cast<F64>(sTimebaseInfo.denom);
    
-   return (U32)elapsedMicros; // Just truncate, and hope we didn't overflow
+   return elapsedMicros; // Just truncate, and hope we didn't overflow
 }
 
 #else
 
-void startHighResolutionTimer(U32 time[2])
+void startHighResolutionTimer(U64 &time)
 {
-   time[0] = Platform::getRealMilliseconds();
+   time = (U64)Platform::getRealMilliseconds();
 }
 
-U32 endHighResolutionTimer(U32 time[2])
+F64 endHighResolutionTimer(U64 time)
 {
-   U32 ticks = Platform::getRealMilliseconds() - time[0];
-   return ticks;
+   return (F64)Platform::getRealMilliseconds() - time;
 }
 
 #endif

@@ -16,5 +16,7 @@
 	<string>APPL</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
+    <key>SDL_FILESYSTEM_BASE_DIR_TYPE</key>
+    <string>parent</string>
 </dict>
 </plist>

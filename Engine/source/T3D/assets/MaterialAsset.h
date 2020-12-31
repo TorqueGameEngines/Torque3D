@@ -198,7 +198,7 @@ static bool _set##name##Asset(void* obj, const char* index, const char* data)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
       NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      ##netconn##->packNetStringHandleU(stream, assetIdStr);\
+      netconn->packNetStringHandleU(stream, assetIdStr);\
    }\
    else\
       stream->writeString(m##name##Name);
@@ -206,7 +206,7 @@ static bool _set##name##Asset(void* obj, const char* index, const char* data)\
 #define unpackMaterialAsset(netconn, name)\
    if (stream->readFlag())\
    {\
-      m##name##AssetId = StringTable->insert(##netconn##->unpackNetStringHandleU(stream).getString());\
+      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
       MaterialAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
    }\
    else\

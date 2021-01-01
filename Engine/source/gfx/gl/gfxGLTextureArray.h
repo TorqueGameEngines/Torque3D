@@ -11,9 +11,10 @@ class GFXGLTextureArray : public GFXTextureArray
 public:
    GFXGLTextureArray();
 
-   ~GFXGLTextureArray();
+   ~GFXGLTextureArray() { Release(); };
 
-   bool fromTextureArray(const Vector<GFXTexHandle>& textureArray) override;
+   void init();
+
    void setToTexUnit(U32 tuNum) override;
 
    void bind(U32 textureUnit) const;
@@ -23,11 +24,13 @@ public:
    void resurrect() override;
    void Release() override;
 
+protected:
+   void _setTexture(const GFXTexHandle& texture, U32 slot) override;
+
 private:
    GLuint mTextureArray;
 
-   U32 mMipMapLevels;
-   GFXFormat mFormat;
+   bool mIsCompressed;
 };
 
 

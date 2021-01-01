@@ -20,7 +20,9 @@ public:
    {
    }
 
-   bool fromTextureArray(const Vector<GFXTexHandle> &textureArray) override;
+   ~GFXD3D11TextureArray() { Release();  };
+
+   void init();
    void setToTexUnit(U32 tuNum) override;
 
    void createResourceView(DXGI_FORMAT format, U32 numMipLevels, U32 usageFlags);
@@ -39,12 +41,15 @@ public:
    ID3D11RenderTargetView** getRTViewPtr();
    ID3D11DepthStencilView** getDSViewPtr();
 
+protected:
+   void _setTexture(const GFXTexHandle& texture, U32 slot) override;
+
 private:
    ID3D11ShaderResourceView* mSRView; // for shader resource input
    ID3D11RenderTargetView* mRTView; // for render targets
    ID3D11DepthStencilView* mDSView; //render target view for depth stencil
-
    ID3D11Texture2D* mTextureArray;
+   D3D11_TEXTURE2D_DESC mTextureArrayDesc;
 };
 
 

@@ -35,6 +35,7 @@
 #ifndef _GFXTEXTUREHANDLE_H_
 #include "gfxTextureHandle.h"
 #endif
+#include "core/util/tVector.h"
 
 
 class GFXTextureProfile;
@@ -43,18 +44,30 @@ class GFXTextureObject;
 class GFXTextureArray : public StrongRefBase, public GFXResource
 {
 public:
-   virtual bool fromTextureArray(const Vector<GFXTexHandle> &textureArray) = 0;
+   virtual void init() = 0;
+   virtual void set(U32 width, U32 height, U32 size, GFXFormat format, U32 mipLevels);
+   virtual bool fromTextureArray(const Vector<GFXTexHandle> &textureArray);
+   virtual void setTexture(const GFXTexHandle &texture, U32 slot);
    virtual void setToTexUnit(U32 tuNum) = 0;
 
 
    // GFXResource interface
    virtual void zombify() = 0;
    virtual void resurrect() = 0;
-   virtual void Release() = 0;
+   virtual void Release();
 
    virtual const String describeSelf() const;
 
+   GFXFormat mFormat;
+   U32 mWidth;
+   U32 mHeight;
    U32 mArraySize;
+   U32 mMipLevels;
+
+   Vector<GFXTexHandle> mTextures;
+
+protected:
+   virtual void _setTexture(const GFXTexHandle& texture, U32 slot) = 0;
 };
 
 

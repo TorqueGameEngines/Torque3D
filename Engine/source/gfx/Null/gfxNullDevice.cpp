@@ -184,8 +184,11 @@ public:
    void zombify() override {}
    void resurrect() override {}
    void Release() override {}
-   bool fromTextureArray(const Vector<GFXTexHandle> &textureArray) override { return true; }
-   virtual void setToTexUnit(U32 tuNum) { }
+   void setToTexUnit(U32 tuNum) override { }
+   void init() override { }
+
+protected:
+   void _setTexture(const GFXTexHandle& texture, U32 slot) override { }
 };
 
 class GFXNullVertexBuffer : public GFXVertexBuffer 

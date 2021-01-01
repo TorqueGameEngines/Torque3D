@@ -178,6 +178,16 @@ public:
    virtual void resurrect() {}
 };
 
+class GFXNullTextureArray : public GFXTextureArray
+{
+public:
+   void zombify() override {}
+   void resurrect() override {}
+   void Release() override {}
+   bool fromTextureArray(const Vector<GFXTexHandle> &textureArray) override { return true; }
+   virtual void setToTexUnit(U32 tuNum) { }
+};
+
 class GFXNullVertexBuffer : public GFXVertexBuffer 
 {
    unsigned char* tempBuf;
@@ -315,6 +325,11 @@ GFXCubemap* GFXNullDevice::createCubemap()
 GFXCubemapArray* GFXNullDevice::createCubemapArray()
 {
    return new GFXNullCubemapArray();
+};
+
+GFXTextureArray* GFXNullDevice::createTextureArray()
+{
+   return new GFXNullTextureArray();
 };
 
 void GFXNullDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )

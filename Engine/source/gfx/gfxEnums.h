@@ -599,7 +599,8 @@ enum GFXShaderConstType
    // Samplers
    GFXSCT_Sampler,
    GFXSCT_SamplerCube,
-   GFXSCT_SamplerCubeArray
+   GFXSCT_SamplerCubeArray,
+   GFXSCT_SamplerTextureArray
 };
 
 

@@ -20,11 +20,11 @@ public:
    class TextureUnit
    {
    public:
-      TextureUnit() :  mTexture1D(0), mTexture2D(0), mTexture3D(0), mTextureCube(0), mTextureCubeArray(0)
+      TextureUnit() :  mTexture1D(0), mTexture2D(0), mTexture3D(0), mTextureCube(0), mTextureCubeArray(0), mTextureArray(0)
       {
 
       }
-      GLuint mTexture1D, mTexture2D, mTexture3D, mTextureCube, mTextureCubeArray;
+      GLuint mTexture1D, mTexture2D, mTexture3D, mTextureCube, mTextureCubeArray, mTextureArray;
    };
 
    /// after glBindTexture
@@ -47,6 +47,9 @@ public:
          break;
       case GL_TEXTURE_CUBE_MAP_ARRAY:
          mTextureUnits[mActiveTexture].mTextureCubeArray = handle;
+         break;
+      case GL_TEXTURE_2D_ARRAY:
+         mTextureUnits[mActiveTexture].mTextureArray = handle;
          break;
       default:
          AssertFatal(0, avar("GFXGLStateCache::setCacheBindedTex - binding (%x) not supported.", biding) );
@@ -73,6 +76,9 @@ public:
          break;
       case GL_TEXTURE_CUBE_MAP_ARRAY:
          mTextureUnits[mActiveTexture].mTextureCubeArray = handle;
+         break;
+      case GL_TEXTURE_2D_ARRAY:
+         mTextureUnits[mActiveTexture].mTextureArray = handle;
          break;
       case GL_FRAMEBUFFER:
          mBindedFBO_W = mBindedFBO_R = handle;
@@ -109,6 +115,8 @@ public:
          return mTextureUnits[mActiveTexture].mTextureCube;
       case GL_TEXTURE_CUBE_MAP_ARRAY:
          return mTextureUnits[mActiveTexture].mTextureCubeArray;
+      case GL_TEXTURE_2D_ARRAY:
+         return mTextureUnits[mActiveTexture].mTextureArray;
       case GL_DRAW_FRAMEBUFFER:
          return mBindedFBO_W;
       case GL_READ_FRAMEBUFFER:

@@ -35,6 +35,7 @@
 #include "gfx/gfxResource.h"
 #include "gfx/gl/gfxGLStateBlock.h"
 
+class GFXGLTextureArray;
 class GFXGLVertexBuffer;
 class GFXGLPrimitiveBuffer;
 class GFXGLTextureTarget;
@@ -83,6 +84,7 @@ public:
 
    virtual GFXCubemap * createCubemap();
    virtual GFXCubemapArray *createCubemapArray();
+   virtual GFXTextureArray *createTextureArray();
 
    virtual F32 getFillConventionOffset() const { return 0.0f; }
 
@@ -173,6 +175,7 @@ protected:
    virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject*texture);
    virtual void setCubemapInternal(U32 textureUnit, const GFXGLCubemap* texture);
    virtual void setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArray* texture);
+   virtual void setTextureArrayInternal(U32 textureUnit, const GFXGLTextureArray* texture);
 
    virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable);
    virtual void setLightMaterialInternal(const GFXLightMaterial mat);
@@ -210,6 +213,7 @@ private:
    friend class GFXGLTextureObject;
    friend class GFXGLCubemap;
    friend class GFXGLCubemapArray;
+   friend class GFXGLTextureArray;
    friend class GFXGLWindowTarget;
    friend class GFXGLPrimitiveBuffer;
    friend class GFXGLVertexBuffer;

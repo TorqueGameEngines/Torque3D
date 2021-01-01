@@ -40,6 +40,8 @@
 #include "shaderGen/shaderGen.h"
 #include <d3d9.h> //d3dperf
 
+#include "gfxD3D11TextureArray.h"
+
 #ifdef TORQUE_DEBUG
 #include "d3d11sdklayers.h"
 #endif
@@ -47,6 +49,8 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d9.lib") //d3dperf
 #pragma comment(lib, "d3d11.lib")
+
+class GFXD3D11TextureArray;
 
 class GFXPCD3D11RegisterDevice
 {
@@ -1734,6 +1738,13 @@ GFXCubemapArray * GFXD3D11Device::createCubemapArray()
    GFXD3D11CubemapArray* cubeArray = new GFXD3D11CubemapArray();
    cubeArray->registerResourceWithDevice(this);
    return cubeArray;
+}
+
+GFXTextureArray * GFXD3D11Device::createTextureArray()
+{
+   GFXD3D11TextureArray* textureArray = new GFXD3D11TextureArray();
+   textureArray->registerResourceWithDevice(this);
+   return textureArray;
 }
 
 // Debug events

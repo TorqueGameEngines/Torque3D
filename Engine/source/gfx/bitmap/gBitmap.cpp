@@ -727,7 +727,7 @@ bool GBitmap::checkForTransparency()
 }
 
 //------------------------------------------------------------------------------
-LinearColorF GBitmap::sampleTexel(F32 u, F32 v) const
+LinearColorF GBitmap::sampleTexel(F32 u, F32 v, bool retAlpha) const
 {
    LinearColorF col(0.5f, 0.5f, 0.5f);
    // normally sampling wraps all the way around at 1.0,
@@ -751,6 +751,13 @@ LinearColorF GBitmap::sampleTexel(F32 u, F32 v) const
       col.red = F32(buffer[lexelindex + 0]) / 255.0f;
       col.green = F32(buffer[lexelindex + 1]) / 255.0f;
       col.blue = F32(buffer[lexelindex + 2]) / 255.0f;
+      if (retAlpha)
+      {
+         if (getHasTransparency())
+            col.alpha = F32(buffer[lexelindex + 3]) / 255.0f;
+         else
+            col.alpha = 1.0f;
+      }
    }
 
    return col;
@@ -1352,7 +1359,7 @@ U32 GBitmap::getSurfaceSize(const U32 mipLevel) const
 }
 
 DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
-   "Returns image info in the following format: width TAB height TAB bytesPerPixel. "
+   "Returns image info in the following format: width TAB height TAB bytesPerPixel TAB format. "
    "It will return an empty string if the file is not found.\n"
    "@ingroup Rendering\n" )
 {
@@ -1360,7 +1367,8 @@ DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
    if ( !image )
       return String::EmptyString;
 
-   return String::ToString( "%d\t%d\t%d", image->getWidth(), 
+   return String::ToString( "%d\t%d\t%d\t%d", image->getWidth(), 
                                           image->getHeight(),
-                                          image->getBytesPerPixel() );
+                                          image->getBytesPerPixel(),
+                                          image->getFormat());
 }

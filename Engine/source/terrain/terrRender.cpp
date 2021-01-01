@@ -96,7 +96,7 @@ void TerrainBlock::_updateMaterials()
    {
       TerrainMaterial *mat = mFile->mMaterials[i];
 
-      if (!mat->getDiffuseMap().isEmpty())
+      if (mat->getDiffuseMap().isNotEmpty())
       {
          mBaseTextures[i].set(mat->getDiffuseMap(), &GFXStaticTextureSRGBProfile,
             "TerrainBlock::_updateMaterials() - DiffuseMap");
@@ -112,6 +112,63 @@ void TerrainBlock::_updateMaterials()
       if (  mat->getMacroMap().isNotEmpty() &&
             mat->getMacroDistance() > mMaxDetailDistance )
          mMaxDetailDistance = mat->getMacroDistance();
+   }
+
+   Vector<GFXTexHandle> detailTexArray;
+   detailTexArray.setSize(mFile->mMaterials.size());
+   Vector<GFXTexHandle> macroTexArray;
+   macroTexArray.setSize(mFile->mMaterials.size());
+   Vector<GFXTexHandle> normalTexArray;
+   normalTexArray.setSize(mFile->mMaterials.size());
+   Vector<GFXTexHandle> ormTexArray;
+   ormTexArray.setSize(mFile->mMaterials.size());
+
+   for (U32 i = 0; i < mFile->mMaterials.size(); i++)
+   {
+      TerrainMaterial* mat = mFile->mMaterials[i];
+      GFXTextureProfile* profile = &GFXStaticTextureProfile;
+      if (mat->getIsSRGB())
+         profile = &GFXStaticTextureSRGBProfile;
+
+      if (mat->getDetailMap().isNotEmpty())
+         detailTexArray[i] = TEXMGR->createTexture(mat->getDetailMap(), profile);
+      if (mat->getMacroMap().isNotEmpty())
+         macroTexArray[i] = TEXMGR->createTexture(mat->getMacroMap(), profile);
+      if (mat->getNormalMap().isNotEmpty())
+         normalTexArray[i] = TEXMGR->createTexture(mat->getNormalMap(), profile);
+      if (mat->getORMConfigMap().isNotEmpty())
+         ormTexArray[i] = TEXMGR->createTexture(mat->getORMConfigMap(), profile);
+   }
+
+   mDetailTextureArray = NULL;
+   mMacroTextureArray = NULL;
+   mNormalTextureArray = NULL;
+   mOrmTextureArray = NULL;
+
+
+   mDetailTextureArray = GFX->createTextureArray();
+   mMacroTextureArray = GFX->createTextureArray();
+   mNormalTextureArray = GFX->createTextureArray();
+   mOrmTextureArray = GFX->createTextureArray();
+
+   if(!mDetailTextureArray->fromTextureArray(detailTexArray))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the diffuse terrain materials was detected. Please ensure they are all of the same size and format!");
+   }
+
+   if(!mMacroTextureArray->fromTextureArray(macroTexArray))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the detail terrain materials was detected. Please ensure they are all of the same size and format!");
+   }
+
+   if(!mNormalTextureArray->fromTextureArray(normalTexArray))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the normal terrain materials was detected. Please ensure they are all of the same size and format!");
+   }
+
+   if(!mOrmTextureArray->fromTextureArray(ormTexArray))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the orm terrain materials was detected. Please ensure they are all of the same size and format!");
    }
 
    if ( mCell )

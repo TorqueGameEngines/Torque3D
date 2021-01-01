@@ -45,6 +45,12 @@ public:
 
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
+   Var* _getDetailMapSampler();
+   Var* _getDetailMapArray();
+   Var* _getNormalMapSampler();
+   Var* _getNormalMapArray();
+   Var* _getOrmMapSampler();
+   Var* _getOrmMapArray();
    Var* _getNormalMapTex();
    Var* _getORMConfigMapTex();
 
@@ -149,17 +155,6 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Lightmap Texture"; }
-};
-
-
-class TerrainAdditiveFeatHLSL : public TerrainFeatHLSL
-{
-public:
-
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
-
-   virtual String getName() { return "Terrain Additive"; }
 };
 
 class TerrainORMMapFeatHLSL : public TerrainFeatHLSL

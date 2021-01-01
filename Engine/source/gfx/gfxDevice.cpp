@@ -132,6 +132,8 @@ GFXDevice::GFXDevice()
       mCurrentCubemap[i] = NULL;
       mNewCubemap[i] = NULL;
       mCurrentCubemapArray[i] = NULL;
+      mNewTextureArray[i] = NULL;
+      mCurrentTextureArray[i] = NULL;
       mNewCubemapArray[i] = NULL;
       mTexType[i] = GFXTDT_Normal;
 
@@ -266,6 +268,8 @@ GFXDevice::~GFXDevice()
       mNewCubemap[i] = NULL;
       mCurrentCubemapArray[i] = NULL;
       mNewCubemapArray[i] = NULL;
+      mCurrentTextureArray[i] = NULL;
+      mNewTextureArray[i] = NULL;
    }
 
    mCurrentRT = NULL;
@@ -403,14 +407,23 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
                }
                break;
             case GFXTDT_CubeArray:
-            {
-               mCurrentCubemapArray[i] = mNewCubemapArray[i];
-               if (mCurrentCubemapArray[i])
-                  mCurrentCubemapArray[i]->setToTexUnit(i);
-               else
-                  setTextureInternal(i, NULL);
-            }
-            break;
+               {
+                  mCurrentCubemapArray[i] = mNewCubemapArray[i];
+                  if (mCurrentCubemapArray[i])
+                     mCurrentCubemapArray[i]->setToTexUnit(i);
+                  else
+                     setTextureInternal(i, NULL);
+               }
+               break;
+            case GFXTDT_TextureArray:
+               {
+                  mCurrentTextureArray[i] = mNewTextureArray[i];
+                  if (mCurrentTextureArray[i])
+                     mCurrentTextureArray[i]->setToTexUnit(i);
+                  else
+                     setTextureInternal(i, NULL);
+               }
+               break;
             default:
                AssertFatal(false, "Unknown texture type!");
                break;
@@ -555,6 +568,15 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
             mCurrentCubemapArray[i] = mNewCubemapArray[i];
             if (mCurrentCubemapArray[i])
                mCurrentCubemapArray[i]->setToTexUnit(i);
+            else
+               setTextureInternal(i, NULL);
+         }
+            break;
+         case GFXTDT_TextureArray:
+         {
+            mCurrentTextureArray[i] = mNewTextureArray[i];
+            if (mCurrentTextureArray[i])
+               mCurrentTextureArray[i]->setToTexUnit(i);
             else
                setTextureInternal(i, NULL);
          }
@@ -801,6 +823,8 @@ void GFXDevice::setTexture( U32 stage, GFXTextureObject *texture )
    mCurrentCubemap[stage] = NULL;
    mNewCubemapArray[stage] = NULL;
    mCurrentCubemapArray[stage] = NULL;
+   mNewTextureArray[stage] = NULL;
+   mCurrentTextureArray[stage] = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -827,6 +851,8 @@ void GFXDevice::setCubeTexture( U32 stage, GFXCubemap *cubemap )
    mCurrentTexture[stage] = NULL;
    mNewCubemapArray[stage] = NULL;
    mCurrentCubemapArray[stage] = NULL;
+   mNewTextureArray[stage] = NULL;
+   mCurrentTextureArray[stage] = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -853,6 +879,36 @@ void GFXDevice::setCubeArrayTexture(U32 stage, GFXCubemapArray *cubemapArray)
    mCurrentTexture[stage] = NULL;
    mNewCubemap[stage] = NULL;
    mCurrentCubemap[stage] = NULL;
+   mNewTextureArray[stage] = NULL;
+   mCurrentTextureArray[stage] = NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Set texture array
+//-----------------------------------------------------------------------------
+void GFXDevice::setTextureArray(U32 stage, GFXTextureArray *textureArray)
+{
+   AssertFatal(stage < getNumSamplers(), avar("GFXDevice::setTextureArray - out of range stage! %i>%i", stage, getNumSamplers()));
+
+   if (mTexType[stage] == GFXTDT_TextureArray &&
+      ((mTextureDirty[stage] && mNewTextureArray[stage].getPointer() == textureArray) ||
+      (!mTextureDirty[stage] && mCurrentTextureArray[stage].getPointer() == textureArray)))
+      return;
+
+   mStateDirty = true;
+   mTexturesDirty = true;
+   mTextureDirty[stage] = true;
+
+   mNewTextureArray[stage] = textureArray;
+   mTexType[stage] = GFXTDT_TextureArray;
+
+   // Clear out textures
+   mNewTexture[stage] = NULL;
+   mCurrentTexture[stage] = NULL;
+   mNewCubemap[stage] = NULL;
+   mCurrentCubemap[stage] = NULL;
+   mNewCubemapArray[stage] = NULL;
+   mCurrentCubemapArray[stage] = NULL;
 }
 
 //------------------------------------------------------------------------------

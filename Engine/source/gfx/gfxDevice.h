@@ -57,6 +57,7 @@
 #ifndef _PLATFORM_PLATFORMTIMER_H_
 #include "platform/platformTimer.h"
 #endif
+#include "gfxTextureArray.h"
 
 class FontRenderBatcher;
 class GFont;
@@ -498,7 +499,8 @@ protected:
    {
       GFXTDT_Normal,
       GFXTDT_Cube,
-      GFXTDT_CubeArray
+      GFXTDT_CubeArray,
+      GFXTDT_TextureArray
    };
    
    GFXTexHandle mCurrentTexture[TEXTURE_STAGE_COUNT];
@@ -507,6 +509,8 @@ protected:
    GFXCubemapHandle mNewCubemap[TEXTURE_STAGE_COUNT];
    GFXCubemapArrayHandle mCurrentCubemapArray[TEXTURE_STAGE_COUNT];
    GFXCubemapArrayHandle mNewCubemapArray[TEXTURE_STAGE_COUNT];
+   GFXTextureArrayHandle mCurrentTextureArray[TEXTURE_STAGE_COUNT];
+   GFXTextureArrayHandle mNewTextureArray[TEXTURE_STAGE_COUNT];
 
    TexDirtyType   mTexType[TEXTURE_STAGE_COUNT];
    bool           mTextureDirty[TEXTURE_STAGE_COUNT];
@@ -757,6 +761,7 @@ protected:
 public:   
    virtual GFXCubemap * createCubemap() = 0;
    virtual GFXCubemapArray *createCubemapArray() = 0;
+   virtual GFXTextureArray *createTextureArray() = 0;
 
    inline GFXTextureManager *getTextureManager()
    {
@@ -952,6 +957,7 @@ public:
    void setTexture(U32 stage, GFXTextureObject *texture);
    void setCubeTexture( U32 stage, GFXCubemap *cubemap );
    void setCubeArrayTexture( U32 stage, GFXCubemapArray *cubemapArray);
+   void setTextureArray( U32 stage, GFXTextureArray *textureArray);
    inline GFXTextureObject* getCurrentTexture( U32 stage ) { return mCurrentTexture[stage]; }
 
    /// @}

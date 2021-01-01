@@ -135,6 +135,11 @@ protected:
    ///
    Vector<GFXTexHandle> mBaseTextures;
 
+   GFXTextureArray* mDetailTextureArray;
+   GFXTextureArray* mMacroTextureArray;
+   GFXTextureArray* mNormalTextureArray;
+   GFXTextureArray* mOrmTextureArray;
+
    /// 
    GFXTexHandle mLayerTex;
 
@@ -323,6 +328,11 @@ public:
    const char* getMaterialName( U32 index ) const;
 
    U32 getMaterialCount() const;
+
+   GFXTextureArray* getDetailTextureArray() const { return mDetailTextureArray; }
+   GFXTextureArray* getMacroTextureArray() const { return mMacroTextureArray; }
+   GFXTextureArray* getNormalTextureArray() const { return mNormalTextureArray; }
+   GFXTextureArray* getOrmTextureArray() const { return mOrmTextureArray; }
 
    //BaseMatInstance* getMaterialInst( U32 x, U32 y );
 

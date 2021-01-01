@@ -274,7 +274,7 @@ bool ShapeAsset::loadShape()
 
    if (!mShape)
    {
-      Con::errorf("ShapeAsset::loadShape : failed to load shape file!");
+      Con::errorf("ShapeAsset::loadShape : failed to load shape file %s!", mFilePath);
       mLoadedState = BadFileReference;
       return false; //if it failed to load, bail out
    }
@@ -437,12 +437,16 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
    if ((*shapeAsset))
       return (*shapeAsset)->mLoadedState;
 
-   //Didn't work, so have us fall back to a placeholder asset
-   StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
-   shapeAsset->setAssetId(noShapeId);
-
    if (shapeAsset->notNull())
    {
+      //Didn't work, so have us fall back to a placeholder asset
+      StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
+      shapeAsset->setAssetId(noShapeId);
+
+      //handle noshape not being loaded itself
+      if ((*shapeAsset)->mLoadedState == BadFileReference)
+         return AssetErrCode::Failed;
+
       (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
       return AssetErrCode::UsingFallback;
    }

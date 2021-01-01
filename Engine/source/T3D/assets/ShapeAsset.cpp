@@ -274,7 +274,7 @@ bool ShapeAsset::loadShape()
 
    if (!mShape)
    {
-      Con::errorf("ShapeAsset::loadShape : failed to load shape file %s!", mFilePath);
+      Con::errorf("ShapeAsset::loadShape : failed to load shape file %s (%s)!", getAssetName(), mFilePath);
       mLoadedState = BadFileReference;
       return false; //if it failed to load, bail out
    }

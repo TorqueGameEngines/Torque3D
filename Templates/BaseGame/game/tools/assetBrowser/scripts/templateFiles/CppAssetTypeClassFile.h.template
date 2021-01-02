@@ -1,0 +1,157 @@
+#ifndef @_H
+#define @_H
+
+#ifndef _ASSET_BASE_H_
+#include "assets/assetBase.h"
+#endif
+
+#ifndef _ASSET_DEFINITION_H_
+#include "assets/assetDefinition.h"
+#endif
+
+#ifndef _STRINGUNIT_H_
+#include "string/stringUnit.h"
+#endif
+
+#ifndef _ASSET_FIELD_TYPES_H_
+#include "assets/assetFieldTypes.h"
+#endif
+
+#ifndef __RESOURCE_H__
+#include "core/resource.h"
+#endif
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+
+#ifdef TORQUE_TOOLS
+#include "gui/editor/guiInspectorTypes.h"
+#endif
+
+//-----------------------------------------------------------------------------
+class @ : public AssetBase
+{
+   typedef AssetBase Parent;
+
+protected:
+   StringTableEntry   mFileName;
+   StringTableEntry   mFilePath;
+
+   typedef Signal<void()> @Changed;
+
+   @Changed mChangeSignal;
+
+public:
+   enum @ErrCode
+   {
+      Extended = AssetErrCode::Extended
+   };
+
+   static const String mErrCodeStrings[@ErrCode::Extended - Parent::Extended + 1];
+   static String getAssetErrstrn(U32 errCode)
+   {
+      if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
+      if (errCode > @ErrCode::Extended) return "undefined error";
+      return mErrCodeStrings[errCode];
+   };
+
+   @();
+   virtual ~@();
+
+   /// Engine.
+   static void initPersistFields();
+   virtual void copyTo(SimObject* object);
+
+   virtual void setDataField(StringTableEntry slotName, const char *array, const char *value);
+
+   virtual void initializeAsset();
+
+   /// Declare Console Object.
+   DECLARE_CONOBJECT(@);
+
+   U32 mLoadedState;
+
+   void _onResourceChanged(const Torque::Path &path);
+
+   @Changed& getChangedSignal() { return mChangeSignal; }
+
+   void                    set@File(const char* pFile);
+   inline StringTableEntry get@File(void) const { return mFileName; };
+
+   inline StringTableEntry get@FilePath(void) const { return mFilePath; };
+
+   static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<@>* @);
+
+   static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
+   static U32 getAssetById(StringTableEntry assetId, AssetPtr<@>* @);
+
+   static StringTableEntry getNo@Id() { return StringTable->insert("Core_Rendering:noshape"); }
+
+protected:
+   virtual void            onAssetRefresh(void);
+
+   static bool set@File(void* obj, const char* index, const char* data) { static_cast<@*>(obj)->set@File(data); return false; }
+   static const char* get@File(void* obj, const char* data) { return static_cast<@*>(obj)->get@File(); }
+};
+
+#ifdef TORQUE_TOOLS
+DefineConsoleType(Type@Ptr, S32)
+DefineConsoleType(Type@Id, String)
+
+//-----------------------------------------------------------------------------
+// TypeAssetId GuiInspectorField Class
+//-----------------------------------------------------------------------------
+class GuiInspectorType@Ptr : public GuiInspectorTypeFileName
+{
+   typedef GuiInspectorTypeFileName Parent;
+public:
+
+   GuiBitmapButtonCtrl  *mShapeEdButton;
+
+   DECLARE_CONOBJECT(GuiInspectorType@Ptr);
+   static void consoleInit();
+
+   virtual GuiControl* constructEditControl();
+   virtual bool updateRects();
+};
+
+class GuiInspectorType@Id : public GuiInspectorType@Ptr
+{
+   typedef GuiInspectorType@Ptr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorType@Id);
+   static void consoleInit();
+};
+#endif
+
+#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
+
+#define init@(name) m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
+#define bind@(name) if (m##name##AssetId != StringTable->EmptyString()) m##name##Asset = m##name##AssetId;
+
+#define scriptBind@(name, consoleClass, docs) addProtectedField(assetText(name, Asset), Type@Id, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, & defaultProtectedGetFn, assetText(name, asset reference.));
+
+#define DECLARE_@(className,name)      protected: \
+                                      StringTableEntry m##name##AssetId;\
+                                      AssetPtr<@>  m##name##Asset;\
+                                      public: \
+                                      const AssetPtr<@> & get##name##Asset() const { return m##name##Asset; }\
+                                      void set##name##Asset(AssetPtr<@>_in) { m##name##Asset = _in; }\
+static bool _set##name##Asset(void* obj, const char* index, const char* data)\
+{\
+   className* shape = static_cast<className*>(obj);\
+   shape->m##name##AssetId = StringTable->insert(data);\
+   if (@::getAssetById(shape->m##name##AssetId, &shape->m##name##Asset))\
+   {\
+      if (shape->m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noShape"))\
+         shape->m##name##Filename = StringTable->EmptyString();\
+      \
+      shape->setMaskBits(-1);\
+      return true;\
+   }\
+   return false;\
+}
+
+#endif
+

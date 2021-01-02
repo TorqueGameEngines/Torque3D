@@ -1,0 +1,105 @@
+#include "@.h"
+#include "math/mathIO.h"
+#include "console/consoleTypes.h"
+#include "core/stream/bitStream.h"
+
+
+IMPLEMENT_CO_NETOBJECT_V1(@);
+
+@::@()
+{
+   // Flag this object so that it will always
+   // be sent across the network to clients
+   mNetFlags.set( Ghostable | ScopeAlways );
+
+   // Set it as a "static" object that casts shadows
+   mTypeMask |= StaticObjectType | StaticShapeObjectType;
+}
+
+@::~@()
+{
+}
+
+bool @::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   // Set up a 1x1x1 bounding box
+   mObjBox.set( Point3F( -0.5f, -0.5f, -0.5f ),
+                Point3F(  0.5f,  0.5f,  0.5f ) );
+
+   resetWorldBox();
+
+   // Add this object to the scene
+   addToScene();
+
+   return true;
+}
+
+void @::onRemove()
+{
+   // Remove this object from the scene
+   removeFromScene();
+
+   Parent::onRemove();
+}
+
+void @::initPersistFields()
+{
+   Parent::initPersistFields();
+}
+
+void @::inspectPostApply()
+{
+   Parent::inspectPostApply();
+
+   // Flag the network mask to send the updates
+   // to the client object
+   setMaskBits( TransformMask );
+}
+
+void @::setTransform(const MatrixF & mat)
+{
+   // Let SceneObject handle all of the matrix manipulation
+   Parent::setTransform( mat );
+
+   // Dirty our network mask so that the new transform gets
+   // transmitted to the client object
+   setMaskBits( TransformMask );
+}
+
+U32 @::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
+{
+   // Allow the Parent to get a crack at writing its info
+   U32 retMask = Parent::packUpdate( conn, mask, stream );
+
+   // Write our transform information
+   if ( stream->writeFlag( mask & TransformMask ) )
+   {
+      mathWrite(*stream, getTransform());
+      mathWrite(*stream, getScale());
+   }
+
+   return retMask;
+}
+
+void @::unpackUpdate(NetConnection *conn, BitStream *stream)
+{
+   // Let the Parent read any info it sent
+   Parent::unpackUpdate(conn, stream);
+
+   if ( stream->readFlag() )  // TransformMask
+   {
+      mathRead(*stream, &mObjToWorld);
+      mathRead(*stream, &mObjScale);
+
+      setTransform( mObjToWorld );
+   }
+}
+
+DefineEngineMethod( @, postApply, void, (),,
+   "A utility method for forcing a network update.\n")
+{
+	object->inspectPostApply();
+}

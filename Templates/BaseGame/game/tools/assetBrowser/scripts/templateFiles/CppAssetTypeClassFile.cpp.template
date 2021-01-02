@@ -1,0 +1,409 @@
+#ifndef @_H_
+#include "@.h"
+#endif
+
+#ifndef _ASSET_MANAGER_H_
+#include "assets/assetManager.h"
+#endif
+
+#ifndef _CONSOLETYPES_H_
+#include "console/consoleTypes.h"
+#endif
+
+#ifndef _TAML_
+#include "persistence/taml/taml.h"
+#endif
+
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif
+
+#include "core/resourceManager.h"
+
+// Debug Profiling.
+#include "platform/profiler.h"
+#include "T3D/assets/assetImporter.h"
+
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_CONOBJECT(@);
+
+ConsoleType(assetIdString, Type@Ptr, String, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(Type@Ptr)
+{
+   // Fetch asset Id.
+   //return *((StringTableEntry*)dptr);
+   return (*((AssetPtr<@>*)dptr)).getAssetId();
+}
+
+ConsoleSetType(Type@Ptr)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
+}
+
+//-----------------------------------------------------------------------------
+
+ConsoleType(assetIdString, Type@Id, String, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(Type@Id)
+{
+   // Fetch asset Id.
+   return *((const char**)(dptr));
+}
+
+ConsoleSetType(Type@Id)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
+}
+
+//-----------------------------------------------------------------------------
+
+const String @::mErrCodeStrings[] =
+{
+   "UnKnown"
+};
+//-----------------------------------------------------------------------------
+
+@::@()
+{
+   mFileName = StringTable->EmptyString();
+   mFilePath = StringTable->EmptyString();
+   mLoadedState = AssetErrCode::NotLoaded;
+}
+
+//-----------------------------------------------------------------------------
+
+@::~@()
+{
+}
+
+//-----------------------------------------------------------------------------
+
+void @::initPersistFields()
+{
+   // Call parent.
+   Parent::initPersistFields();
+
+   addProtectedField("fileName", TypeAssetLooseFilePath, Offset(mFileName, @),
+      &set@File, &get@File, "Path to the asset file");
+}
+
+// In the event we have any special case logic where the asset's values are changed(such as a dependency value is updated), this
+// will let us react to that variable changing to implement behavior in response
+void @::setDataField(StringTableEntry slotName, const char *array, const char *value)
+{
+   Parent::setDataField(slotName, array, value);
+}
+
+void @::initializeAsset()
+{
+   // Call parent.
+   Parent::initializeAsset();
+
+   if (mFileName == StringTable->EmptyString())
+      return;
+
+   ResourceManager::get().getChangedSignal().notify(this, &@::_onResourceChanged);
+
+   //Ensure our path is expando'd if it isn't already
+   if (!Platform::isFullPath(mFilePath))
+      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
+
+   //Do a loading function here to do the actual load logic
+}
+
+void @::set@File(const char* pFile)
+{
+   // Sanity!
+   AssertFatal(pFile != NULL, "Cannot use a NULL file.");
+
+   // Fetch file.
+   pFile = StringTable->insert(pFile);
+
+   // Ignore no change,
+   if (pFile == mFileName)
+      return;
+
+   mFileName = pFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void @::_onResourceChanged(const Torque::Path &path)
+{
+   if (path != Torque::Path(mFilePath) )
+      return;
+
+   refreshAsset();
+
+   //Do a loading function here to do the actual load logic
+}
+
+//------------------------------------------------------------------------------
+//Utility function to 'fill out' bindings and resources with a matching asset if one exists
+bool @::getAssetByFilename(StringTableEntry fileName, AssetPtr<@>* @)
+{
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("@::getAssetByFilename - Attempted to in-place import a file(%s) that had no associated asset", fileName);
+#endif
+
+      AssetImporter* autoAssetImporter;
+      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
+      {
+         autoAssetImporter = new AssetImporter();
+         autoAssetImporter->registerObject("autoAssetImporter");
+      }
+
+      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         @->setAssetId(resultingAssetId);
+
+         if (!@->isNull())
+            return true;
+      }
+
+      //Didn't work, so have us fall back to a placeholder asset
+      @->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+
+      if (!@->isNull())
+         return true;
+
+      //That didn't work, so fail out
+      return false;
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      @->setAssetId(query.mAssetList[0]);
+      return true;
+   }
+}
+
+StringTableEntry @::getAssetIdByFilename(StringTableEntry fileName)
+{
+   if (fileName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry @Id = StringTable->EmptyString();
+
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+      //Didn't find any assets
+      //If possible, see if we can run an in-place import and the get the asset from that
+#if TORQUE_DEBUG
+      Con::warnf("@::getAssetByFilename - Attempted to in-place import a file(%s) that had no associated asset", fileName);
+#endif
+
+      AssetImporter* autoAssetImporter;
+      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
+      {
+         autoAssetImporter = new AssetImporter();
+         autoAssetImporter->registerObject("autoAssetImporter");
+      }
+
+      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
+
+      if (resultingAssetId != StringTable->EmptyString())
+      {
+         @Id = resultingAssetId;
+         return @Id;
+      }
+
+      //Didn't work, so have us fall back to a placeholder asset
+      @Id = StringTable->insert("Core_Rendering:noshape");
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      @Id = query.mAssetList[0];
+   }
+
+   return @Id;
+}
+
+U32 @::getAssetById(StringTableEntry assetId, AssetPtr<@>* @)
+{
+   (*@) = assetId;
+
+   if ((*@))
+      return (*@)->mLoadedState;
+
+   //Didn't work, so have us fall back to a placeholder asset
+   StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
+   @->setAssetId(noShapeId);
+   (*@)->mLoadedState = AssetErrCode::UsingFallback;
+   if (@->notNull())
+      return AssetErrCode::UsingFallback;
+
+   return AssetErrCode::Failed;
+}
+//------------------------------------------------------------------------------
+
+void @::copyTo(SimObject* object)
+{
+   // Call to parent.
+   Parent::copyTo(object);
+}
+
+void @::onAssetRefresh(void)
+{
+   if (mFileName == StringTable->EmptyString())
+      return;
+
+   // Update.
+   if(!Platform::isFullPath(mFileName))
+      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
+
+   //Do a loading function here to do the actual load logic
+}
+
+//-----------------------------------------------------------------------------
+// GuiInspectorTypeAssetId
+//-----------------------------------------------------------------------------
+
+#ifdef TORQUE_TOOLS
+IMPLEMENT_CONOBJECT(GuiInspectorType@Ptr);
+
+ConsoleDocClass(GuiInspectorType@Ptr,
+   "@brief Inspector field type for @\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+   );
+
+void GuiInspectorType@Ptr::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(Type@Ptr)->setInspectorFieldType("GuiInspectorType@Ptr");
+}
+
+GuiControl* GuiInspectorType@Ptr::constructEditControl()
+{
+   // Create base filename edit controls
+   GuiControl *retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   // Change filespec
+   char szBuffer[512];
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"@\", \"AssetBrowser.changeAsset\", %s, %s);", 
+      mInspector->getInspectObject()->getIdString(), mCaption);
+   mBrowseButton->setField("Command", szBuffer);
+
+   const char* id = mInspector->getInspectObject()->getIdString();
+
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+   // Create "Open in ShapeEditor" button
+   mShapeEdButton = new GuiBitmapButtonCtrl();
+
+   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.open@Id(%d.getText());", retCtrl->getId());
+   mShapeEdButton->setField("Command", szBuffer);
+
+   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   mShapeEdButton->setBitmap(bitmapName);
+
+   mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mShapeEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mShapeEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor");
+
+   mShapeEdButton->registerObject();
+   addObject(mShapeEdButton);
+
+   return retCtrl;
+}
+
+bool GuiInspectorType@Ptr::updateRects()
+{
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
+   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
+
+   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+   if (mBrowseButton != NULL)
+   {
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
+   }
+
+   if (mShapeEdButton != NULL)
+   {
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mShapeEdButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   return resized;
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorType@Id);
+
+ConsoleDocClass(GuiInspectorType@Id,
+   "@brief Inspector field type for @\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorType@Id::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(Type@Id)->setInspectorFieldType("GuiInspectorType@Id");
+}
+
+#endif
+
+DefineEngineMethod(@, getFilePath, const char*, (), ,
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->get@FilePath();
+}

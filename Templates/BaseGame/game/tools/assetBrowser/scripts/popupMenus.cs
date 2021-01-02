@@ -154,13 +154,11 @@ function AssetBrowser::buildPopupMenus(%this)
          class = "EditorWorldMenu";
          //isPopup = true;
 
-         /*item[ 0 ] = "Create Static Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppStaticClassAsset\", AssetBrowser.selectedModule);";
-         item[ 1 ] = "Create Regular Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppRegularClassAsset\", AssetBrowser.selectedModule);";
-         item[ 2 ] = "Create GameObject Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppGameObjectAsset\", AssetBrowser.selectedModule);";
-         item[ 3 ] = "Create Component Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppComponentAsset\", AssetBrowser.selectedModule);";
-         item[ 4 ] = "Create Script Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppScriptClass\", AssetBrowser.selectedModule);";*/
-         
-         item[ 0 ] = "Create C++ Class" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
+         item[ 0 ] = "Create Static C++ Class" TAB "" TAB "$AssetBrowser::newAssetTypeOverride = \"StaticClass\"; AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
+         item[ 1 ] = "Create ScriptObject C++ Class" TAB "" TAB "$AssetBrowser::newAssetTypeOverride = \"ScriptClass\"; AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
+         item[ 2 ] = "Create AssetType C++ Class" TAB "" TAB "$AssetBrowser::newAssetTypeOverride = \"AssetTypeCppClass\"; AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
+         item[ 3 ] = "Create Render C++ Class" TAB "" TAB "$AssetBrowser::newAssetTypeOverride = \"RenderCppClass\"; AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
+         item[ 3 ] = "Create SceneObject Class" TAB "" TAB "$AssetBrowser::newAssetTypeOverride = \"SceneObjectCppClass\"; AssetBrowser.setupCreateNewAsset(\"CppAsset\", AssetBrowser.selectedModule);";
       };
       //%this.AddNewScriptAssetPopup.insertSubMenu(0, "Create Component", AddNewComponentAssetPopup);
    }

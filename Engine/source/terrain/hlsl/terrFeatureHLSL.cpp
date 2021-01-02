@@ -1456,7 +1456,7 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
                detailH, blendDepth));
          }
 
-         meta->addStatement(new GenOp("      @ = ((@ - 0.5f) * max(@, 0.0f)) + 0.5f;\r\n",
+         meta->addStatement(new GenOp("      @ = (@ * 2.0f - 1.0f) * @ + 0.5f;\r\n",
             detailH, detailH, blendContrast));
 
          meta->addStatement(new GenOp("   }\r\n"));

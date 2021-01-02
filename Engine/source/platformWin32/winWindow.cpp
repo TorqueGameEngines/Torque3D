@@ -511,6 +511,7 @@ F32 Platform::getRandom()
    return sgPlatRandom.randF();
 }
 
+#ifndef TORQUE_SDL
 ////--------------------------------------
 /// Spawn the default Operating System web browser with a URL
 /// @param webAddress URL to pass to browser
@@ -585,6 +586,7 @@ bool Platform::openWebBrowser( const char* webAddress )
 
    return( true );
 }
+#endif
 
 //--------------------------------------
 // Login password routines:

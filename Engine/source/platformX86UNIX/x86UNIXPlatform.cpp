@@ -1,5 +1,5 @@
 #include "platform/platform.h"
-
+#ifndef TORQUE_SDL
 bool Platform::openWebBrowser(const char* webAddress)
 {
    String startingURL(webAddress);
@@ -23,7 +23,7 @@ bool Platform::openWebBrowser(const char* webAddress)
 
    return false;
 }
-
+#endif
 #ifdef TORQUE_DEDICATED
 // XA: New class for the unix unicode font
 class PlatformFont;

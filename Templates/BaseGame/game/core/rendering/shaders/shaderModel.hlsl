@@ -60,6 +60,7 @@
 //helper if you want to pass sampler/texture in a function
 //2D
 #define TORQUE_SAMPLER2D(tex) Texture2D texture_##tex, SamplerState tex
+#define TORQUE_SAMPLER2DARRAY(tex) Texture2DArray texture_##tex, SamplerState tex
 #define TORQUE_SAMPLER2D_MAKEARG(tex) texture_##tex, tex
 // Sampler comparison state - use above MAKEARG with this
 #define TORQUE_SAMPLER2DCMP(tex) Texture2D texture_##tex, SamplerComparisonState tex

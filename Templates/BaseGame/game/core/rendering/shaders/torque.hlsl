@@ -167,6 +167,35 @@ float2 parallaxOffsetDxtnm(TORQUE_SAMPLER2D(texMap), float2 texCoord, float3 neg
    return offset;
 }
 
+/// Copy of the above to functions, but for arrays
+float2 parallaxOffsetTexArray(TORQUE_SAMPLER2DARRAY(texMap), float3 texCoord, float3 negViewTS, float depthScale)
+{
+   float depth = TORQUE_TEX2D(texMap, texCoord).a/(PARALLAX_REFINE_STEPS*2);
+   float2 offset = negViewTS.xy * (depth * depthScale)/(PARALLAX_REFINE_STEPS);
+
+   for (int i = 0; i < PARALLAX_REFINE_STEPS; i++)
+   {
+      depth = (depth + TORQUE_TEX2D(texMap, texCoord + float3(offset, 0.0)).a)/(PARALLAX_REFINE_STEPS*2);
+      offset = negViewTS.xy * (depth * depthScale)/(PARALLAX_REFINE_STEPS);
+   }
+
+   return offset;
+}
+
+float2 parallaxOffsetDxtnmTexArray(TORQUE_SAMPLER2DARRAY(texMap), float3 texCoord, float3 negViewTS, float depthScale)
+{
+   float depth = TORQUE_TEX2D(texMap, texCoord).r/(PARALLAX_REFINE_STEPS*2);
+   float2 offset = negViewTS.xy * (depth * depthScale)/(PARALLAX_REFINE_STEPS*2);
+
+   for (int i = 0; i < PARALLAX_REFINE_STEPS; i++)
+   {
+      depth = (depth + TORQUE_TEX2D(texMap, texCoord + float3(offset, 0.0)).r)/(PARALLAX_REFINE_STEPS*2);
+      offset = negViewTS.xy * (depth * depthScale)/(PARALLAX_REFINE_STEPS*2);
+   }
+
+   return offset;
+}
+
 /// The maximum value for 10bit per component integer HDR encoding.
 static const float HDR_RGB10_MAX = 4.0;
 

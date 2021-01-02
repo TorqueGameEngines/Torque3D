@@ -69,6 +69,7 @@ TerrainMaterial::TerrainMaterial()
       mMacroDistance( 500.0f ),
       mParallaxScale( 0.0f ),
       mBlendDepth( 0.5f ),
+      mBlendContrast( 1.0f ),
       mIsSRGB(false),
       mInvertRoughness(false)
 {
@@ -92,7 +93,10 @@ void TerrainMaterial::initPersistFields()
    addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
 
-   addField("blendDepth", TypeF32, Offset(mBlendDepth, TerrainMaterial), "Depth for blending the textures using the new blending method by Lukas Joergensen."
+   addField("blendHeightBase", TypeF32, Offset(mBlendDepth, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
+      "Higher numbers = larger blend radius.");
+
+   addField("blendHeightContrast", TypeF32, Offset(mBlendContrast, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
       "Higher numbers = larger blend radius.");
 
    scriptBindMapSlot(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");

@@ -511,7 +511,7 @@
             anchorLeft = "1";
             anchorRight = "0";
             position = "6 122";
-            extent = "185 80";
+            extent = "185 100";
             minExtent = "8 2";
             horizSizing = "width";
             vertSizing = "bottom";
@@ -712,7 +712,7 @@
                canSave = "1";
                canSaveDynamicFields = "0";
             };
-            new GuiSliderCtrl(TerrainMaterialDlgBlendDepthSlider) {
+            new GuiSliderCtrl(TerrainMaterialDlgBlendHeightBaseSlider) {
                range = "-0.5 0.5";
                ticks = "0";
                snap = "0";
@@ -731,12 +731,12 @@
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                isContainer = "0";
-               internalName = "blendDepthSliderCtrl";
+               internalName = "blendHeightBaseSliderCtrl";
                canSave = "1";
                canSaveDynamicFields = "0";
             };
             new GuiTextCtrl() {
-               text = "Blend Depth";
+               text = "Blend Height";
                maxLength = "1024";
                margin = "0 0 0 0";
                padding = "0 0 0 0";
@@ -758,7 +758,7 @@
                canSave = "1";
                canSaveDynamicFields = "0";
             };
-            new GuiTextEditCtrl(TerrainMaterialDlgBlendDepthTextEdit) {
+            new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightBaseTextEdit) {
                historySize = "0";
                tabComplete = "0";
                sinkAllKeyEvents = "0";
@@ -783,7 +783,82 @@
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                isContainer = "0";
-               internalName = "blendDepthTextEditCtrl";
+               internalName = "blendHeightBaseTextEditCtrl";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+            };
+            new GuiSliderCtrl(TerrainMaterialDlgBlendHeightContrastSlider) {
+               range = "0.0 5.0";
+               ticks = "0";
+               snap = "0";
+               value = "1.0";
+               useFillBar = "0";
+               fillBarColor = "255 255 255 255";
+               renderTicks = "1";
+               position = "39 81";
+               extent = "70 14";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiSliderProfile";
+               visible = "1";
+               active = "1";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               hovertime = "1000";
+               isContainer = "0";
+               internalName = "blendHeightContrastSliderCtrl";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+            };
+            new GuiTextCtrl() {
+               text = "Blend Contrast";
+               maxLength = "1024";
+               margin = "0 0 0 0";
+               padding = "0 0 0 0";
+               anchorTop = "1";
+               anchorBottom = "0";
+               anchorLeft = "1";
+               anchorRight = "0";
+               position = "115 81";
+               extent = "58 15";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiTextProfile";
+               visible = "1";
+               active = "1";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               hovertime = "1000";
+               isContainer = "1";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+            };
+            new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightContrastTextEdit) {
+               historySize = "0";
+               tabComplete = "0";
+               sinkAllKeyEvents = "0";
+               password = "0";
+               passwordMask = "*";
+               text = "0.3";
+               maxLength = "1024";
+               margin = "0 0 0 0";
+               padding = "0 0 0 0";
+               anchorTop = "0";
+               anchorBottom = "0";
+               anchorLeft = "0";
+               anchorRight = "0";
+               position = "1 79";
+               extent = "35 18";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiTextEditProfile";
+               visible = "1";
+               active = "1";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               hovertime = "1000";
+               isContainer = "0";
+               internalName = "blendHeightContrastTextEditCtrl";
                canSave = "1";
                canSaveDynamicFields = "0";
             };
@@ -792,7 +867,7 @@
             bitmap = "tools/gui/images/separator-v";
             color = "255 255 255 255";
             wrap = "0";
-            position = "6 202";
+            position = "6 222";
             extent = "175 2";
             minExtent = "8 2";
             horizSizing = "width";
@@ -813,7 +888,7 @@
             anchorBottom = "0";
             anchorLeft = "1";
             anchorRight = "0";
-            position = "6 209";
+            position = "6 229";
             extent = "185 64";
             minExtent = "8 2";
             horizSizing = "width";
@@ -1008,7 +1083,7 @@
             bitmap = "tools/gui/images/separator-v";
             color = "255 255 255 255";
             wrap = "0";
-            position = "6 279";
+            position = "6 299";
             extent = "175 2";
             minExtent = "8 2";
             horizSizing = "width";
@@ -1029,7 +1104,7 @@
             anchorBottom = "0";
             anchorLeft = "1";
             anchorRight = "0";
-            position = "6 286";
+            position = "6 306";
             extent = "185 72";
             minExtent = "8 2";
             horizSizing = "width";
@@ -1513,7 +1588,7 @@
             bitmap = "tools/gui/images/separator-v";
             color = "255 255 255 255";
             wrap = "0";
-            position = "6 361";
+            position = "6 381";
             extent = "175 2";
             minExtent = "8 2";
             horizSizing = "width";
@@ -1534,7 +1609,7 @@
             anchorBottom = "0";
             anchorLeft = "1";
             anchorRight = "0";
-            position = "6 368";
+            position = "6 388";
             extent = "185 72";
             minExtent = "8 2";
             horizSizing = "width";

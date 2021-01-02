@@ -70,6 +70,7 @@ protected:
       TerrainMaterial *mat;
       U32 layerId;
       GFXShaderConstHandle* mBlendDepthConst;
+      GFXShaderConstHandle* mBlendContrastConst;
    };
 
    ///

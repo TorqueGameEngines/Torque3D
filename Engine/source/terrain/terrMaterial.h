@@ -90,6 +90,8 @@ protected:
    /// radius.
    F32 mBlendDepth;
 
+   F32 mBlendContrast;
+
 public:
 
    TerrainMaterial();
@@ -128,6 +130,8 @@ public:
    F32 getParallaxScale() const { return mParallaxScale; }
 
    F32 getBlendDepth() const { return mBlendDepth; }
+
+   F32 getBlendContrast() const { return mBlendContrast; }
 
    bool getIsSRGB() const { return mIsSRGB; }
 

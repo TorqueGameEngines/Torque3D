@@ -444,9 +444,13 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %this-->sideProjectionCtrl.setValue( %mat.useSideProjection );
       %this-->parallaxScaleCtrl.setText( %mat.parallaxScale );
       
-      %blendDepth = mFloor(%mat.blendDepth * 1000)/1000;
-      %this-->blendDepthTextEditCtrl.setText( %blendDepth );
-      %this-->blendDepthSliderCtrl.setValue( %mat.blendDepth );
+      %blendHeightBase = mFloor(%mat.blendHeightBase * 1000)/1000;
+      %this-->blendHeightBaseTextEditCtrl.setText( %blendHeightBase );
+      %this-->blendHeightBaseSliderCtrl.setValue( %mat.blendHeightBase );
+      
+      %blendHeightContrast = mFloor(%mat.blendHeightContrast * 1000)/1000;
+      %this-->blendHeightContrastTextEditCtrl.setText( %blendHeightContrast );
+      %this-->blendHeightContrastSliderCtrl.setValue( %mat.blendHeightContrast );
 
       %this-->macroSizeCtrl.setText( %mat.macroSize );
       %this-->macroStrengthCtrl.setText( %mat.macroStrength );
@@ -508,7 +512,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %detailDistance = %this-->detDistanceCtrl.getText();   
    %useSideProjection = %this-->sideProjectionCtrl.getValue();   
    %parallaxScale = %this-->parallaxScaleCtrl.getText();
-   %blendDepth = %this-->blendDepthTextEditCtrl.getText();
+   %blendHeightBase = %this-->blendHeightBaseTextEditCtrl.getText();
+   %blendHeightContrast = %this-->blendHeightContrastTextEditCtrl.getText();
 
    %macroSize = %this-->macroSizeCtrl.getText();      
    %macroStrength = %this-->macroStrengthCtrl.getText();
@@ -535,11 +540,12 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.macroStrength == %macroStrength &&
          %mat.macroDistance == %macroDistance &&         
          %mat.parallaxScale == %parallaxScale &&
-         %mat.blendDepth == %blendDepth &&         
+         %mat.blendHeightBase == %blendHeightBase &&
+         %mat.blendHeightContrast == %blendHeightContrast &&
          %mat.isSRGB == %isSRGB &&         
-         %mat.invertRoughness == %invertRoughness)               
+         %mat.invertRoughness == %invertRoughness && false)               
       return;
-      
+   
    // Make sure the material name is unique.
    
    if( %mat.internalName !$= %newName )
@@ -573,7 +579,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %mat.macroDistance = %macroDistance;    
    %mat.useSideProjection = %useSideProjection;
    %mat.parallaxScale = %parallaxScale;
-   %mat.blendDepth = %blendDepth;
+   %mat.blendHeightBase = %blendHeightBase;
+   %mat.blendHeightContrast = %blendHeightContrast;
    %mat.isSRGB = %isSRGB;
    %mat.invertRoughness = %invertRoughness;
    
@@ -626,7 +633,8 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          macroDistance = %mat.macroDistance;
          useSideProjection = %mat.useSideProjection;
          parallaxScale = %mat.parallaxScale;
-         blendDepth = %mat.blendDepth;
+         blendHeightBase = %mat.blendHeightBase;
+         blendHeightContrast = %mat.blendHeightContrast;
          isSRGB = %mat.isSRGB;
          invertRoughness = %mat.invertRoughness;
       };
@@ -664,7 +672,8 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.macroDistance = %obj.macroDistance;
       %mat.useSideProjection = %obj.useSideProjection;
       %mat.parallaxScale = %obj.parallaxScale;
-      %mat.blendDepth = %obj.blendDepth;
+      %mat.blendHeightBase = %obj.blendHeightBase;
+      %mat.blendHeightContrast = %obj.blendHeightContrast;
       %mat.isSRGB = %obj.isSRGB;
       %mat.invertRoughness = %obj.invertRoughness;
    }
@@ -703,16 +712,30 @@ function TerrainMaterialDlg::_selectTextureFileDialog( %this, %defaultFileName )
    return %file;
 }
 
-function TerrainMaterialDlgBlendDepthSlider::onMouseDragged(%this)
+function TerrainMaterialDlgBlendHeightBaseSlider::onMouseDragged(%this)
 {
    %value = mFloor(%this.value * 1000)/1000;
-   TerrainMaterialDlgBlendDepthTextEdit.setText(%value);
-   TerrainMaterialDlg.activeMat.blendDepth = %this.value;
+   TerrainMaterialDlgBlendHeightBaseTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightBase = %this.value;
 
 }
 
-function TerrainMaterialDlgBlendDepthTextEdit::onValidate(%this)
+function TerrainMaterialDlgBlendHeightBaseTextEdit::onValidate(%this)
 {
-   TerrainMaterialDlgBlendDepthSlider.setValue(%this.getText());
-   TerrainMaterialDlg.activeMat.blendDepth = %this.getText();
+   TerrainMaterialDlgBlendHeightBaseSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendHeightBase = %this.getText();
+}
+
+function TerrainMaterialDlgBlendHeightContrastSlider::onMouseDragged(%this)
+{
+   %value = mFloor(%this.value * 1000)/1000;
+   TerrainMaterialDlgBlendHeightContrastTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightContrast = %this.value;
+
+}
+
+function TerrainMaterialDlgBlendHeightContrastTextEdit::onValidate(%this)
+{
+   TerrainMaterialDlgBlendHeightContrastSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendHeightContrast = %this.getText();
 }

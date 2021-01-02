@@ -648,6 +648,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
          continue;
 
       mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
+      mMaterialInfos[i]->mBlendContrastConst = mShader->getShaderConstHandle(avar("$blendContrast%d", i));
    }
 
    // If we're doing deferred it requires some 
@@ -719,6 +720,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       detailInfoArray[j] = detailIdStrengthParallax;
 
       mConsts->setSafe(matInfo->mBlendDepthConst, matInfo->mat->getBlendDepth());
+      mConsts->setSafe(matInfo->mBlendContrastConst, matInfo->mat->getBlendContrast());
    }
 
    mConsts->setSafe(mDetailInfoVArrayConst, detailScaleAndFadeArray);

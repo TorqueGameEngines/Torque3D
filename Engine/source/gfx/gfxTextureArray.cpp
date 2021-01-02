@@ -6,8 +6,35 @@
 #include "bitmap/imageUtils.h"
 #include "console/console.h"
 
+GFXTextureArray::GFXTextureArray()
+   : mFormat(GFXFormat_COUNT),
+     mIsCompressed(false),
+     mWidth(0),
+     mHeight(0),
+     mArraySize(0),
+     mMipLevels(0)
+{
+}
+
 void GFXTextureArray::set(U32 width, U32 height, U32 size, GFXFormat format, U32 mipLevels)
 {
+   if (mipLevels == 0 && width == height && isPow2(width))
+   {
+      mipLevels = mLog2(static_cast<F32>(width)) + 1;
+   }
+   if (
+      mWidth == width &&
+      mHeight == height &&
+      mArraySize == size &&
+      mFormat == format &&
+      mMipLevels == mipLevels
+      )
+   {
+      return;
+   }
+
+   Release();
+
    mWidth = width;
    mHeight = height;
    mArraySize = size;
@@ -20,43 +47,52 @@ void GFXTextureArray::set(U32 width, U32 height, U32 size, GFXFormat format, U32
    init();
 }
 
-bool GFXTextureArray::fromTextureArray(const Vector<GFXTexHandle>& textureArray)
+bool GFXTextureArray::fromTextureArray(const Vector<GFXTexHandle>& textureArray, U32 capacity)
 {
    bool success = true;
 
-   //---------------------------------------------------------------------------------------
-   //	Create the texture array.  Each element in the texture 
-   //		array has the same format/dimensions.
-   //---------------------------------------------------------------------------------------
-   bool found = false;
-   for (const GFXTexHandle& texObj : textureArray)
+   // Not initialized, infer it from the given array of textures
+   if (mArraySize == 0)
    {
-      if (texObj.isValid())
+      bool found = false;
+      for (const GFXTexHandle& texObj : textureArray)
       {
-         if (!found)
+         if (texObj.isValid())
          {
-            found = true;
-            mFormat = texObj.getFormat();
-            mWidth = texObj.getWidth();
-            mHeight = texObj.getHeight();
-            mMipLevels = texObj->getMipLevels();
-         }
+            if (!found)
+            {
+               found = true;
+               mFormat = texObj.getFormat();
+               mWidth = texObj.getWidth();
+               mHeight = texObj.getHeight();
+               mMipLevels = texObj->getMipLevels();
+            }
 
-         if (mFormat != texObj.getFormat() || mWidth != texObj.getWidth() || mHeight != texObj.getHeight())
-         {
-            AssertWarn(true, "GFXTextureArray::fromTextureArray there was a mismatch in texture formats, defaulting to uncompressed format");
-            Con::warnf("GFXTextureArray::fromTextureArray there was a mismatch in texture formats, defaulting to uncompressed format");
-            success = false;
-            mFormat = GFXFormatR8G8B8A8;
+            if (mFormat != texObj.getFormat() || mWidth != texObj.getWidth() || mHeight != texObj.getHeight())
+            {
+               AssertWarn(true, "GFXTextureArray::fromTextureArray there was a mismatch in texture formats, defaulting to uncompressed format");
+               Con::warnf("GFXTextureArray::fromTextureArray there was a mismatch in texture formats, defaulting to uncompressed format");
+               success = false;
+               mFormat = GFXFormatR8G8B8A8;
+            }
          }
       }
+
+      // One might think this should return false in this case, but the return value is mostly to highlight internal errors not input errors.
+      if (!found) return true;
+
+
+      //---------------------------------------------------------------------------------------
+      //	Create the texture array.  Each element in the texture 
+      //		array has the same format/dimensions.
+      //---------------------------------------------------------------------------------------
+      U32 size = capacity;
+      if (size == 0)
+      {
+         size = textureArray.size();
+      }
+      set(mWidth, mHeight, size, mFormat, mMipLevels);
    }
-
-   // One might think this should return false in this case, but the return value is mostly to highlight internal errors not input errors.
-   if (!found) return true;
-
-   set(mWidth, mHeight, textureArray.size(), mFormat, mMipLevels);
-
    //---------------------------------------------------------------------------------------
 
 
@@ -64,7 +100,7 @@ bool GFXTextureArray::fromTextureArray(const Vector<GFXTexHandle>& textureArray)
    //	Copy individual texture elements into texture array.
    //---------------------------------------------------------------------------------------
    // for each texture element...
-   for (U32 i = 0; i < mArraySize; ++i)
+   for (U32 i = 0; i < textureArray.size(); ++i)
    {
       if (textureArray[i].isValid())
       {

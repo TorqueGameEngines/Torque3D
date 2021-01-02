@@ -44,9 +44,11 @@ class GFXTextureObject;
 class GFXTextureArray : public StrongRefBase, public GFXResource
 {
 public:
+   GFXTextureArray();
+
    virtual void init() = 0;
-   virtual void set(U32 width, U32 height, U32 size, GFXFormat format, U32 mipLevels);
-   virtual bool fromTextureArray(const Vector<GFXTexHandle> &textureArray);
+   virtual void set(U32 width, U32 height, U32 size, GFXFormat format, U32 mipLevels = 0);
+   virtual bool fromTextureArray(const Vector<GFXTexHandle> &textureArray, U32 capacity = 0);
    virtual void setTexture(const GFXTexHandle &texture, U32 slot);
    virtual void setToTexUnit(U32 tuNum) = 0;
 

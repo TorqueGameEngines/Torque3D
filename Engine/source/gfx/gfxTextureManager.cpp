@@ -894,7 +894,7 @@ Torque::Path GFXTextureManager::validatePath(const Torque::Path &path)
    return correctPath;
 }
 
-GBitmap *GFXTextureManager::loadUncompressedTexture(const Torque::Path &path, GFXTextureProfile *profile, U32 width, U32 height)
+GBitmap *GFXTextureManager::loadUncompressedTexture(const Torque::Path &path, GFXTextureProfile *profile, U32 width, U32 height, bool genMips)
 {
    GBitmap* inBitmap = loadUncompressedTexture(path, &GFXTexturePersistentProfile);
 
@@ -926,6 +926,9 @@ GBitmap *GFXTextureManager::loadUncompressedTexture(const Torque::Path &path, GF
          oBits[(y * width + x) * 4 + 3] = texelColor.alpha;
       }
    }
+
+   if (genMips)
+      outBmp->extrudeMipLevels();
 
    return outBmp;
 }

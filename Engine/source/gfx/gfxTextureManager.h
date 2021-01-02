@@ -132,7 +132,7 @@ public:
       S32 antialiasLevel);
 
    Torque::Path validatePath(const Torque::Path &path);
-   GBitmap *loadUncompressedTexture(const Torque::Path& path, GFXTextureProfile* profile, U32 width, U32 height);
+   GBitmap *loadUncompressedTexture(const Torque::Path& path, GFXTextureProfile* profile, U32 width, U32 height, bool genMips = false);
    GBitmap *loadUncompressedTexture(const Torque::Path &path, GFXTextureProfile *profile);
    virtual GFXTextureObject *createCompositeTexture(const Torque::Path &pathR, const Torque::Path &pathG, const Torque::Path &pathB, const Torque::Path &pathA, U32 inputKey[4],
       GFXTextureProfile *profile);

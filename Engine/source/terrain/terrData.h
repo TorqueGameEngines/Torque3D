@@ -174,6 +174,15 @@ protected:
 
    BaseTexFormat mBaseTexFormat;
 
+   U32 mDetailTexSize;
+   GFXFormat mDetailTexFormat;
+   U32 mMacroTexSize;
+   GFXFormat mMacroTexFormat;
+   U32 mNormalTexSize;
+   GFXFormat mNormalTexFormat;
+   U32 mOrmTexSize;
+   GFXFormat mOrmTexFormat;
+
    ///
    TerrCell *mCell;
 
@@ -258,6 +267,14 @@ protected:
    static bool _setSquareSize( void *obj, const char *index, const char *data );
    static bool _setBaseTexSize(void *obj, const char *index, const char *data);
    static bool _setBaseTexFormat(void *obj, const char *index, const char *data);
+   static bool _setDetailTexSize(void *obj, const char *index, const char *data);
+   static bool _setDetailTexFormat(void *obj, const char *index, const char *data);
+   static bool _setMacroTexSize(void *obj, const char *index, const char *data);
+   static bool _setMacroTexFormat(void *obj, const char *index, const char *data);
+   static bool _setNormalTexSize(void *obj, const char *index, const char *data);
+   static bool _setNormalTexFormat(void *obj, const char *index, const char *data);
+   static bool _setOrmTexSize(void *obj, const char *index, const char *data);
+   static bool _setOrmTexFormat(void *obj, const char *index, const char *data);
    static bool _setLightMapSize( void *obj, const char *index, const char *data );
 
 public:

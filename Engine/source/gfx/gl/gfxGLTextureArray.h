@@ -29,8 +29,6 @@ protected:
 
 private:
    GLuint mTextureArray;
-
-   bool mIsCompressed;
 };
 
 

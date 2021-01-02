@@ -59,6 +59,7 @@ public:
    virtual const String describeSelf() const;
 
    GFXFormat mFormat;
+   bool mIsCompressed;
    U32 mWidth;
    U32 mHeight;
    U32 mArraySize;

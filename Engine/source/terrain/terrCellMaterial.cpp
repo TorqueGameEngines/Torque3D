@@ -53,23 +53,13 @@ Vector<String> _initSamplerNames()
 {
    Vector<String> samplerNames;
    samplerNames.push_back("$baseTexMap");
-   samplerNames.push_back("$layerTex");   
-   //samplerNames.push_back("$macrolayerTex");   
+   samplerNames.push_back("$layerTex");
    samplerNames.push_back("$lightMapTex");
    samplerNames.push_back("$lightInfoBuffer");
    samplerNames.push_back("$normalMapSampler");
    samplerNames.push_back("$detailMapSampler");
    samplerNames.push_back("$macroMapSampler");
-   samplerNames.push_back("$ormMapSampler");
-   // samplerNames.push_back("$ormConfigMapArray");
-
-   for(int i = 0; i < sgMaxTerrainMaterialsPerPass; ++i)
-   {
-      //samplerNames.push_back(avar("$normalMap%d",i));
-      //samplerNames.push_back(avar("$detailMap%d",i));
-      //samplerNames.push_back(avar("$macroMap%d", i));
-      // samplerNames.push_back(avar("$ormConfigMap%d", i));
-   }   
+   samplerNames.push_back("$ormMapSampler"); 
 
    return samplerNames;
 }
@@ -783,13 +773,13 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
                            0,
                            mConsts );
 
-   if (mDetailTexArrayConst->isValid())
+   if (mDetailTexArrayConst->isValid() && mTerrain->getDetailTextureArray().isValid())
       GFX->setTextureArray(mDetailTexArrayConst->getSamplerRegister(), mTerrain->getDetailTextureArray());
-   if (mMacroTexArrayConst->isValid())
+   if (mMacroTexArrayConst->isValid() && mTerrain->getMacroTextureArray().isValid())
       GFX->setTextureArray(mMacroTexArrayConst->getSamplerRegister(), mTerrain->getMacroTextureArray());
-   if (mNormalTexArrayConst->isValid())
+   if (mNormalTexArrayConst->isValid() && mTerrain->getNormalTextureArray().isValid())
       GFX->setTextureArray(mNormalTexArrayConst->getSamplerRegister(), mTerrain->getNormalTextureArray());
-   if (mOrmTexArrayConst->isValid())
+   if (mOrmTexArrayConst->isValid() && mTerrain->getOrmTextureArray().isValid())
       GFX->setTextureArray(mOrmTexArrayConst->getSamplerRegister(), mTerrain->getOrmTextureArray());
 
    mConsts->setSafe( mLayerSizeConst, (F32)mTerrain->mLayerTex.getWidth() );

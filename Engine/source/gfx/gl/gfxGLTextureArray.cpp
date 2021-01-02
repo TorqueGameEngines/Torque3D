@@ -11,8 +11,8 @@ GFXGLTextureArray::GFXGLTextureArray()
 
 void GFXGLTextureArray::init()
 {
-   glGenTextures(1, &mTextureArray);
    PRESERVE_2D_TEXTURE_ARRAY();
+   glGenTextures(1, &mTextureArray);
    glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureArray);
    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, mMin(mMipLevels - 1, 1));
    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -20,7 +20,7 @@ void GFXGLTextureArray::init()
    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-   glTexStorage3D(GL_TEXTURE_2D_ARRAY, mMipLevels, GL_RGBA8, mWidth, mHeight, mArraySize);
+   glTexStorage3D(GL_TEXTURE_2D_ARRAY, mMipLevels, GFXGLTextureInternalFormat[mFormat], mWidth, mHeight, mArraySize);
 }
 
 void GFXGLTextureArray::_setTexture(const GFXTexHandle& texture, U32 slot)
@@ -73,9 +73,10 @@ void GFXGLTextureArray::bind(U32 textureUnit) const
 {
    glActiveTexture(GL_TEXTURE0 + textureUnit);
    glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureArray);
+
    dynamic_cast<GFXGLDevice*>(getOwningDevice())->getOpenglCache()->setCacheBindedTex(textureUnit, GL_TEXTURE_2D_ARRAY, mTextureArray);
 
-   GFXGLStateBlockRef sb = static_cast<GFXGLDevice*>(GFX)->getCurrentStateBlock();
+   GFXGLStateBlockRef sb = dynamic_cast<GFXGLDevice*>(GFX)->getCurrentStateBlock();
    AssertFatal(sb, "GFXGLTextureArray::bind - No active stateblock!");
    if (!sb)
       return;

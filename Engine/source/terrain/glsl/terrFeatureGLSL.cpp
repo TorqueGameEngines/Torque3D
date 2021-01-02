@@ -336,9 +336,11 @@ void TerrainBaseMapFeatGLSL::processPix(  Vector<ShaderComponent*> &componentLis
 
 ShaderFeature::Resources TerrainBaseMapFeatGLSL::getResources( const MaterialFeatureData &fd )
 {
-   Resources res; 
+   Resources res;
+
+   // Sample base texture
    res.numTexReg = 1;
-      res.numTex = 1;
+   res.numTex = 1;
 
    return res;
 }
@@ -521,73 +523,40 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
    meta->addStatement( new GenOp( "   @ = calcBlend( @.x, @.xy, @, @ );\r\n", 
                                     new DecOp( detailBlend ), new IndexOp(detailInfo, detailIndex), inTex, layerSize, layerSample ) );
 
-   // New terrain
-
-   Var *lerpBlend = (Var*)LangElement::find("lerpBlend");
-   if (!lerpBlend)
+   // If we had a parallax feature... then factor in the parallax
+   // amount so that it fades out with the layer blending.
+   if (fd.features.hasFeature(MFT_TerrainParallaxMap, detailIndex))
    {
-	   lerpBlend = new Var;
-	   lerpBlend->setType("float");
-	   lerpBlend->setName("lerpBlend");
-	   lerpBlend->uniform = true;
-	   lerpBlend->constSortPos = cspPrimitive;
+      // Get the normal map texture.
+      Var* normalMap = _getNormalMapSampler();
+
+      // Call the library function to do the rest.
+      if (fd.features.hasFeature(MFT_IsBC3nm, detailIndex))
+      {
+         meta->addStatement(new GenOp("   @.xy += parallaxOffsetDxtnm( @, vec3(@.xy, @.x), @, @.z * @ );\r\n",
+            inDet, normalMap, inDet, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
+      }
+      else
+      {
+         meta->addStatement(new GenOp("   @.xy += parallaxOffset( @, vec3(@.xy, @.x), @, @.z * @ );\r\n",
+            inDet, normalMap, inDet, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
+      }
    }
 
-
-   Var *blendDepth = (Var*)LangElement::find(String::ToString("blendDepth%d", detailIndex));
-   if (!blendDepth)
-   {
-	   blendDepth = new Var;
-	   blendDepth->setType("float");
-	   blendDepth->setName(String::ToString("blendDepth%d", detailIndex));
-	   blendDepth->uniform = true;
-	   blendDepth->constSortPos = cspPrimitive;
-   }
-
-   ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;
-
-   if (fd.features.hasFeature(MFT_isDeferred))
-      target= ShaderFeature::RenderTarget1;
-
-   Var *outColor = (Var*)LangElement::find( getOutputTargetVarName(target) );
-
-   if (!outColor)
-   {
-	   // create color var
-	   outColor = new Var;
-	   outColor->setType("vec4");
-	   outColor->setName("col");
-       outColor->setStructName("OUT");
-	   meta->addStatement(new GenOp("   @;\r\n", outColor));
-   }
-
-   Var *detailColor = (Var*)LangElement::find(String::ToString("detailColor%d", detailIndex));
+   Var* detailColor = (Var*)LangElement::find(String::ToString("detailColor%d", detailIndex));
    if (!detailColor)
    {
-	   detailColor = new Var;
-	   detailColor->setType("vec4");
-	   detailColor->setName(String::ToString("detailColor%d", detailIndex));
-	   meta->addStatement(new GenOp("   @;\r\n", new DecOp(detailColor)));
+      detailColor = new Var;
+      detailColor->setType("vec4");
+      detailColor->setName(String::ToString("detailColor%d", detailIndex));
+      meta->addStatement(new GenOp("   @;\r\n", new DecOp(detailColor)));
    }
 
    // Get the detail texture.
    Var *detailMap = _getDetailMapSampler();
 
-   // Get the normal map texture.
-   Var *normalMap = _getNormalMapSampler();
-
-   // Sample the normal map.
-   //
-   // We take two normal samples and lerp between them for
-   // side projection layers... else a single sample.
-   //
-   // Note that we're doing the standard greyscale detail 
-   // map technique here which can darken and lighten the 
-   // diffuse texture.
-   //
-   // We take two color samples and lerp between them for
-   // side projection layers... else a single sample.
-   //
+   // If we had a parallax feature... then factor in the parallax
+  // amount so that it fades out with the layer blending.
    if (fd.features.hasFeature(MFT_TerrainSideProject, detailIndex))
    {
 	   meta->addStatement(new GenOp("   @ = ( lerp( tex2D( @, vec3(@.yz, @.x) ), tex2D( @, vec3(@.xz, @.x) ), @.z ) * 2.0 ) - 1.0;\r\n",
@@ -601,31 +570,6 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
 
    meta->addStatement(new GenOp("   @ *= @.y * @.w;\r\n",
       detailColor, new IndexOp(detailInfo, detailIndex), inDet));
-
-   // If we had a parallax feature... then factor in the parallax
-   // amount so that it fades out with the layer blending.
-   if ( fd.features.hasFeature( MFT_TerrainParallaxMap, detailIndex ) )
-   {
-      // Call the library function to do the rest.
-      if (fd.features.hasFeature(MFT_IsBC3nm, detailIndex))
-      {
-         meta->addStatement(new GenOp("   @.xy += parallaxOffsetDxtnm( @, vec3(@.xy, @.x), @, @.z * @ );\r\n",
-         inDet, normalMap, inDet, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
-      }
-      else
-      {
-         meta->addStatement(new GenOp("   @.xy += parallaxOffset( @, vec3(@.xy, @.x), @, @.z * @ );\r\n",
-         inDet, normalMap, inDet, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
-      }
-   }
-
-   // Check to see if we have a gbuffer normal.
-   Var* viewToTangent = (Var*)LangElement::find("viewToTangent");
-   if (!viewToTangent && fd.features.hasFeature(MFT_TerrainHeightBlend))
-   {
-      // This needs to be here, to ensure consistent ordering of texcoords, be careful with moving it
-      getInViewToTangent(componentList);
-   }
 
    if (!fd.features.hasFeature(MFT_TerrainHeightBlend))
    {
@@ -651,6 +595,14 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
          meta->addStatement(new GenOp("   if ( @ > 0.0f )\r\n", detailBlend));
 
       meta->addStatement(new GenOp("   {\r\n"));
+
+      ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;
+
+      if (fd.features.hasFeature(MFT_isDeferred))
+         target = ShaderFeature::RenderTarget1;
+
+      Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
+
       meta->addStatement(new GenOp("      @.rgb = toGamma(@.rgb);\r\n", outColor, outColor));
 
       meta->addStatement(new GenOp("      @ += @ * @;\r\n",
@@ -672,10 +624,10 @@ ShaderFeature::Resources TerrainDetailMapFeatGLSL::getResources( const MaterialF
    {
       // If this is the first detail pass then we 
       // samples from the layer tex.
-      res.numTex += 1;
-      res.numTexReg += 1;
+      res.numTex = 1;
+      res.numTexReg = 1;
 
-      // Texture Array
+      // Add Detail TextureArray
       res.numTex += 1;
       res.numTexReg += 1;
    }
@@ -930,9 +882,12 @@ void TerrainNormalMapFeatGLSL::processVert(  Vector<ShaderComponent*> &component
 
    MultiLine *meta = new MultiLine;
 
-   // Make sure the world to tangent transform
-   // is created and available for the pixel shader.
-   getOutViewToTangent( componentList, meta, fd );
+   if (!fd.features.hasFeature(MFT_TerrainHeightBlend))
+   {
+      // Make sure the world to tangent transform
+      // is created and available for the pixel shader.
+      getOutViewToTangent(componentList, meta, fd);
+   }
 
    output = meta;
 }
@@ -1018,24 +973,26 @@ ShaderFeature::Resources TerrainNormalMapFeatGLSL::getResources( const MaterialF
 {
    Resources res;
 
-   if (getProcessIndex() == 0)
+   // We only need to process normals during the deferred.
+   if (!fd.features.hasFeature(MFT_DeferredConditioner))
    {
-      // Texture Array
-      res.numTex += 1;
-      res.numTexReg += 1;
+      return  res;
+   }
+
+   S32 featureIndex = 0, firstNormalMapIndex = 0;
+   for (int idx = 0; idx < fd.features.getCount(); ++idx) {
+      const FeatureType& type = fd.features.getAt(idx, &featureIndex);
+      if (type == MFT_TerrainNormalMap) {
+         firstNormalMapIndex = getMin(firstNormalMapIndex, featureIndex);
+      }
    }
 
    // We only need to process normals during the deferred.
-   if ( fd.features.hasFeature( MFT_DeferredConditioner ) )
+   if (getProcessIndex() == firstNormalMapIndex)
    {
-      // If this is the first normal map and there
-      // are no parallax features then we will 
-      // generate the worldToTanget transform.
-      if (  !fd.features.hasFeature( MFT_TerrainParallaxMap ) &&
-            ( getProcessIndex() == 0 || !fd.features.hasFeature( MFT_TerrainNormalMap, getProcessIndex() - 1 ) ) )
-         res.numTexReg = 3;
-
-      res.numTex = 1;
+      // Normal Texture Array
+      res.numTexReg += 1;
+      res.numTex += 1;
    }
 
    return res;
@@ -1260,10 +1217,23 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
 
 ShaderFeature::Resources TerrainORMMapFeatGLSL::getResources(const MaterialFeatureData &fd)
 {
-	Resources res;
-	res.numTex = 1;
-	res.numTexReg += 1;
-	return res;
+   Resources res;
+
+   S32 featureIndex = 0, firstOrmMapIndex = 0;
+   for (int idx = 0; idx < fd.features.getCount(); ++idx) {
+      const FeatureType& type = fd.features.getAt(idx, &featureIndex);
+      if (type == MFT_TerrainORMMap) {
+         firstOrmMapIndex = getMin(firstOrmMapIndex, featureIndex);
+      }
+   }
+
+   // We only need to process normals during the deferred.
+   if (getProcessIndex() == firstOrmMapIndex)
+   {
+      res.numTexReg = 1;
+      res.numTex = 1;
+   }
+   return res;
 }
 
 
@@ -1312,8 +1282,23 @@ void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
    output = meta;
 }
 
+void TerrainHeightMapBlendGLSL::processVert(
+    Vector<ShaderComponent *> &componentList, const MaterialFeatureData &fd) {
+   // We only need to process normals during the deferred.
+   if (!fd.features.hasFeature(MFT_DeferredConditioner))
+      return;
+
+   MultiLine* meta = new MultiLine;
+
+   // Make sure the world to tangent transform
+   // is created and available for the pixel shader.
+   getOutViewToTangent(componentList, meta, fd);
+
+   output = meta;
+}
+
 void TerrainHeightMapBlendGLSL::processPix(Vector<ShaderComponent*>& componentList,
-   const MaterialFeatureData& fd)
+                                           const MaterialFeatureData& fd)
 {
 
    ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;

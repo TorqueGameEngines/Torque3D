@@ -135,10 +135,10 @@ protected:
    ///
    Vector<GFXTexHandle> mBaseTextures;
 
-   GFXTextureArray* mDetailTextureArray;
-   GFXTextureArray* mMacroTextureArray;
-   GFXTextureArray* mNormalTextureArray;
-   GFXTextureArray* mOrmTextureArray;
+   GFXTextureArrayHandle mDetailTextureArray;
+   GFXTextureArrayHandle mMacroTextureArray;
+   GFXTextureArrayHandle mNormalTextureArray;
+   GFXTextureArrayHandle mOrmTextureArray;
 
    /// 
    GFXTexHandle mLayerTex;
@@ -331,10 +331,10 @@ public:
 
    U32 getMaterialCount() const;
 
-   GFXTextureArray* getDetailTextureArray() const { return mDetailTextureArray; }
-   GFXTextureArray* getMacroTextureArray() const { return mMacroTextureArray; }
-   GFXTextureArray* getNormalTextureArray() const { return mNormalTextureArray; }
-   GFXTextureArray* getOrmTextureArray() const { return mOrmTextureArray; }
+   GFXTextureArrayHandle getDetailTextureArray() const { return mDetailTextureArray; }
+   GFXTextureArrayHandle getMacroTextureArray() const { return mMacroTextureArray; }
+   GFXTextureArrayHandle getNormalTextureArray() const { return mNormalTextureArray; }
+   GFXTextureArrayHandle getOrmTextureArray() const { return mOrmTextureArray; }
 
    //BaseMatInstance* getMaterialInst( U32 x, U32 y );
 

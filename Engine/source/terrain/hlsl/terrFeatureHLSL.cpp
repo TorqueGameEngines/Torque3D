@@ -30,6 +30,7 @@
 #include "gfx/gfxDevice.h"
 #include "shaderGen/langElement.h"
 #include "shaderGen/shaderOp.h"
+#include "shaderGen/featureType.h"
 #include "shaderGen/featureMgr.h"
 #include "shaderGen/shaderGen.h"
 #include "core/module.h"
@@ -609,7 +610,6 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
      
    }
 
-
    Var *detailColor = (Var*)LangElement::find(String::ToString("detailColor%d", detailIndex));
    if ( !detailColor )
    {
@@ -618,19 +618,6 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
       detailColor->setName( String::ToString("detailColor%d", detailIndex) );
       meta->addStatement( new GenOp( "   @;\r\n", new DecOp( detailColor ) ) );
    }
-
-   // Sample the normal map.
-   //
-   // We take two normal samples and lerp between them for
-   // side projection layers... else a single sample.
-   //
-   // Note that we're doing the standard greyscale detail 
-   // map technique here which can darken and lighten the 
-   // diffuse texture.
-   //
-   // We take two color samples and lerp between them for
-   // side projection layers... else a single sample.
-   //
 
    //Sampled detail texture that is not expanded
    Var* detailMapArray = _getDetailMapArray();
@@ -649,15 +636,6 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
 
    meta->addStatement(new GenOp("   @ *= @.y * @.w;\r\n",
       detailColor, new IndexOp(detailInfo, detailIndex), inDet));
-
-
-   // Check to see if we have a gbuffer normal.
-   Var* viewToTangent = (Var*)LangElement::find("viewToTangent");
-   if (!viewToTangent && fd.features.hasFeature(MFT_TerrainHeightBlend))
-   {
-      // This needs to be here, to ensure consistent ordering of texcoords, be careful with moving it
-      getInViewToTangent(componentList);
-   }
 
    if (!fd.features.hasFeature(MFT_TerrainHeightBlend))
    {
@@ -719,18 +697,6 @@ ShaderFeature::Resources TerrainDetailMapFeatHLSL::getResources( const MaterialF
       res.numTex += 1;
       res.numTexReg += 1;
    }
-
-   // sample from the detail texture for diffuse coloring.
-      // res.numTex += 1;
-
-   // If we have parallax for this layer then we'll also
-   // be sampling the normal map for the parallax heightmap.
-   //if ( fd.features.hasFeature( MFT_TerrainParallaxMap, getProcessIndex() ) )
-      //res.numTex += 1;
-
-   // Finally we always send the detail texture 
-   // coord to the pixel shader.
-   // res.numTexReg += 1;
 
    return res;
 }
@@ -1003,9 +969,12 @@ void TerrainNormalMapFeatHLSL::processVert(  Vector<ShaderComponent*> &component
 
    MultiLine *meta = new MultiLine;
 
-   // Make sure the world to tangent transform
-   // is created and available for the pixel shader.
-   getOutViewToTangent( componentList, meta, fd );
+   if ( !fd.features.hasFeature(MFT_TerrainHeightBlend) )
+   {
+      // Make sure the world to tangent transform
+      // is created and available for the pixel shader.
+      getOutViewToTangent(componentList, meta, fd);
+   }
 
    output = meta;
 }
@@ -1092,20 +1061,26 @@ ShaderFeature::Resources TerrainNormalMapFeatHLSL::getResources( const MaterialF
 {
    Resources res;
 
+   if (!fd.features.hasFeature(MFT_DeferredConditioner))
+   {
+      return  res;
+   }
 
-   if (getProcessIndex() == 0)
+   S32 featureIndex = 0, firstNormalMapIndex = 0;
+   for (int idx = 0; idx < fd.features.getCount(); ++idx) {
+      const FeatureType &type = fd.features.getAt(idx, &featureIndex);
+     if (type == MFT_TerrainNormalMap) {
+        firstNormalMapIndex = getMin(firstNormalMapIndex, featureIndex);
+     }
+   }
+
+   // We only need to process normals during the deferred.
+   if (getProcessIndex() == firstNormalMapIndex)
    {
       res.numTexReg += 1;
       res.numTex += 1;
    }
-   
-   // If this is the first normal map and there
-   // are no parallax features then we will 
-   // generate the worldToTanget transform.
-   //if (  !fd.features.hasFeature( MFT_TerrainParallaxMap ) &&
-   //   ( getProcessIndex() == 0 || !fd.features.hasFeature( MFT_TerrainNormalMap, getProcessIndex() - 1 ) ) )
-   //   res.numTexReg = 3;
-   //res.numTex = 1;
+
    return res;
 }
 
@@ -1386,6 +1361,22 @@ void TerrainBlankInfoMapFeatHLSL::processPix(Vector<ShaderComponent*> &component
    output = meta;
 }
 
+void TerrainHeightMapBlendHLSL::processVert(Vector<ShaderComponent*>& componentList,
+   const MaterialFeatureData& fd)
+{
+   // We only need to process normals during the deferred.
+   if (!fd.features.hasFeature(MFT_DeferredConditioner))
+      return;
+
+   MultiLine* meta = new MultiLine;
+
+   // Make sure the world to tangent transform
+   // is created and available for the pixel shader.
+   getOutViewToTangent(componentList, meta, fd);
+
+   output = meta;
+}
+
 void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentList,
    const MaterialFeatureData& fd)
 {
@@ -1482,8 +1473,6 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
 
    for (S32 idx = 0; idx < detailCount; ++idx)
    {
-      Var* detCoord = (Var*)LangElement::find(String::ToString("detCoord%d", idx));
-
       Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
       Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
 

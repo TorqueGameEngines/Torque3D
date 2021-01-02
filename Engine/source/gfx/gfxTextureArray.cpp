@@ -1,9 +1,9 @@
 #include "gfxTextureArray.h"
 
 
-
 #include "gfxDevice.h"
 #include "gfxTextureManager.h"
+#include "bitmap/imageUtils.h"
 #include "console/console.h"
 
 void GFXTextureArray::set(U32 width, U32 height, U32 size, GFXFormat format, U32 mipLevels)
@@ -12,7 +12,8 @@ void GFXTextureArray::set(U32 width, U32 height, U32 size, GFXFormat format, U32
    mHeight = height;
    mArraySize = size;
    mFormat = format;
-   mMipLevels = mipLevels;
+   mIsCompressed = ImageUtil::isCompressedFormat(mFormat);
+   mMipLevels = getMax(mipLevels, static_cast<U32>(1));
 
    mTextures.setSize(size);
 

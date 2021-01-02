@@ -1,0 +1,45 @@
+#include "@.h"
+
+
+IMPLEMENT_CONOBJECT(@);
+
+@::@()
+{
+}
+
+@::~@()
+{
+}
+
+void @::initPersistFields()
+{
+   Parent::initPersistFields();
+}
+
+bool @::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   return true;
+}
+
+void @::onRemove()
+{
+   Parent::onRemove();
+}
+
+void @::interpolateTick( F32 delta )
+{
+   Parent::interpolateTick(delta);
+}
+
+void @::processTick()
+{
+   Parent::processTick();
+}
+
+void @::advanceTime( F32 timeDelta )
+{
+	Parent::advanceTime(timeDelta);
+}

@@ -1,0 +1,53 @@
+#pragma once
+
+#ifndef _SCENEOBJECT_H_
+#include "scene/sceneObject.h"
+#endif
+
+class @ : public SceneObject
+{
+   typedef SceneObject Parent;
+
+private:
+   enum MaskBits 
+   {
+      TransformMask = Parent::NextFreeMask << 0,
+      NextFreeMask  = Parent::NextFreeMask << 1
+   };
+
+protected:
+
+public:
+   @();
+   virtual ~@();
+
+   // Declare this object as a ConsoleObject so that we can
+   // instantiate it into the world and network it
+   DECLARE_CONOBJECT(@);
+
+   // Handle when we are added to the scene and removed from the scene
+   bool onAdd();
+   void onRemove();
+
+   // Set up any fields that we want to be editable (like position)
+   static void initPersistFields();
+
+   // Allows the object to update its editable settings
+   // from the server object to the client
+   virtual void inspectPostApply();
+
+   // Override this so that we can dirty the network flag when it is called
+   void setTransform( const MatrixF &mat );
+
+   // This function handles sending the relevant data from the server
+   // object to the client object
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
+
+   // This function handles receiving relevant data from the server
+   // object and applying it to the client object
+   void unpackUpdate( NetConnection *conn, BitStream *stream );
+
+   virtual void interpolateTick( F32 delta );
+   virtual void processTick();
+   virtual void advanceTime( F32 timeDelta );
+};

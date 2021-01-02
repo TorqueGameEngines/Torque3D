@@ -1,4 +1,4 @@
-function AssetBrowser::buildCppAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::buildCppPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.codeFilePath;
@@ -11,7 +11,7 @@ function AssetBrowser::buildCppAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = %assetDef.assetName;
 }
 
-function AssetBrowser::createCppAsset(%this)
+function AssetBrowser::createCpp(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
@@ -20,21 +20,12 @@ function AssetBrowser::createCppAsset(%this)
    
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";     
    
-   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   //%tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %codePath = %assetPath @ %assetName @ ".cpp";
    %headerPath = %assetPath @ %assetName @ ".h";
    
    //Do the work here
-   %assetType = AssetBrowser.newAssetSettings.assetType;
-   
-   /*if(%assetType $= "CppStaticClassAsset" 
-	   || %assetType $= "CppRegularClassAsset" 
-	   || %assetType $= "CppGameObjectAsset"
-	   || %assetType $= "CppComponentAsset"
-      || %assetType $= "CppScriptClass")
-   {
-      
-   }*/
+   /*%assetType = AssetBrowser.newAssetSettings.assetType;
    
    %asset = new CppAsset()
    {
@@ -44,26 +35,48 @@ function AssetBrowser::createCppAsset(%this)
       headerFile = %headerPath;
    };
    
-   TamlWrite(%asset, %tamlpath);
+   TamlWrite(%asset, %tamlpath);*/
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
+	//AssetBrowser.loadFilters();
 	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
+	/*%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
 	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "CppAsset");
 	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowserFilterTree.onSelect(%smItem);*/
 	
 	%file = new FileObject();
 	%templateFile = new FileObject();
 	
-	if(%assetType $= "CppStaticClassAsset")
+	if($AssetBrowser::newAssetTypeOverride $= "StaticClass")
 	{
-	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppStaticClassFile.cpp";
-	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppStaticClassFile.h";
+	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppStaticClassFile.cpp.template";
+	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppStaticClassFile.h.template";
 	}
+	else if($AssetBrowser::newAssetTypeOverride $= "ScriptClass")
+	{
+	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppScriptClassFile.cpp.template";
+	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppScriptClassFile.h.template";
+	}
+	else if($AssetBrowser::newAssetTypeOverride $= "AssetTypeCppClass")
+	{
+	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppAssetTypeClassFile.cpp.template";
+	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppAssetTypeClassFile.h.template";
+	}
+	else if($AssetBrowser::newAssetTypeOverride $= "RenderCppClass")
+	{
+	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppRenderClassFile.cpp.template";
+	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppRenderClassFile.h.template";
+	}
+	else if($AssetBrowser::newAssetTypeOverride $= "SceneObjectCppClass")
+	{
+	   %cppTemplateCodeFilePath = %this.templateFilesPath @ "CppSceneObjectClassFile.cpp.template";
+	   %cppTemplateHeaderFilePath = %this.templateFilesPath @ "CppSceneObjectClassFile.h.template";
+	}
+	
+	$AssetBrowser::newAssetTypeOverride = "";
    
    if(%file.openForWrite(%codePath) && %templateFile.openForRead(%cppTemplateCodeFilePath))
    {
@@ -73,7 +86,7 @@ function AssetBrowser::createCppAsset(%this)
          %line = strreplace( %line, "@", %assetName );
          
          %file.writeline(%line);
-         echo(%line);
+         //echo(%line);
       }
       
       %file.close();
@@ -84,7 +97,7 @@ function AssetBrowser::createCppAsset(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreateNewCppAsset - Something went wrong and we couldn't write the C++ code file!");
+      warn("CreateNewCppAsset - Something went wrong and we couldn't write the C++ code file!");
    }
    
    if(%file.openForWrite(%headerPath) && %templateFile.openForRead(%cppTemplateHeaderFilePath))
@@ -95,7 +108,7 @@ function AssetBrowser::createCppAsset(%this)
          %line = strreplace( %line, "@", %assetName );
          
          %file.writeline(%line);
-         echo(%line);
+         //echo(%line);
       }
       
       %file.close();
@@ -124,7 +137,7 @@ function AssetBrowser::createCppAsset(%this)
             %line = strreplace( %line, "@", %moduleName );
             
             %file.writeline(%line);
-            echo(%line);
+            //echo(%line);
          }
          
          %file.close();
@@ -139,15 +152,15 @@ function AssetBrowser::createCppAsset(%this)
       }
 	}
    
-	return %tamlpath;
+	return "";
 }
 
-function AssetBrowser::editCppAsset(%this, %assetDef)
+function AssetBrowser::editCpp(%this, %assetDef)
 {
 }
 
 //Renames the asset
-function AssetBrowser::renameCppAsset(%this, %assetDef, %newAssetName)
+function AssetBrowser::renameCpp(%this, %assetDef, %newAssetName)
 {
    %newCodeLooseFilename = renameAssetLooseFile(%assetDef.codefile, %newAssetName);
    
@@ -167,13 +180,13 @@ function AssetBrowser::renameCppAsset(%this, %assetDef, %newAssetName)
 }
 
 //Deletes the asset
-function AssetBrowser::deleteCppAsset(%this, %assetDef)
+function AssetBrowser::deleteCpp(%this, %assetDef)
 {
    AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
 }
 
 //Moves the asset to a new path/module
-function AssetBrowser::moveCppAsset(%this, %assetDef, %destination)
+function AssetBrowser::moveCpp(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
    %targetModule = AssetBrowser.getModuleFromAddress(%destination);

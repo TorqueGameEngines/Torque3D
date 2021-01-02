@@ -119,7 +119,8 @@ function EditorGui::init(%this)
       }
          
       exec("~/worldEditor/gui/guiTerrainMaterialDlg.ed.gui"); 
-      exec("~/worldEditor/gui/TerrainBrushSoftnessCurveDlg.ed.gui");        
+      exec("~/worldEditor/gui/TerrainBrushSoftnessCurveDlg.ed.gui");   
+      exec("~/worldEditor/gui/guiTerrainTextureSettingsDlg.ed.gui");      
    }
    if ( !isObject( %this-->TerrainPainterToolbar) )
    {

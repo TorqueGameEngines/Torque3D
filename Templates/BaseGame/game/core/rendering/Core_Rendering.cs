@@ -11,6 +11,18 @@ function Core_Rendering::onCreate(%this)
    
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
+   $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");
+   
+   $Terrain::DetailTextureSize = ProjectSettings.value("Terrain/DetailTextureSize");
+   $Terrain::MacroTextureSize = ProjectSettings.value("Terrain/MacroTextureSize");
+   $Terrain::NormalTextureSize = ProjectSettings.value("Terrain/NormalTextureSize");
+   $Terrain::OrmTextureSize = ProjectSettings.value("Terrain/OrmTextureSize");
+   
+   $Terrain::DetailTextureFormat = ProjectSettings.value("Terrain/DetailTextureFormat");
+   $Terrain::MacroTextureFormat = ProjectSettings.value("Terrain/MacroTextureFormat");
+   $Terrain::NormalTextureFormat = ProjectSettings.value("Terrain/NormalTextureFormat");
+   $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat");
+   
    exec("./scripts/graphicsOptions.cs");
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");

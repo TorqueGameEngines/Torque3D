@@ -319,7 +319,7 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
       U32 currWidth  = in_width;
       U32 currHeight = in_height;
 
-      do 
+      while (currWidth != 1 || currHeight != 1)
       {
          mMipLevelOffsets[mNumMipLevels] = mMipLevelOffsets[mNumMipLevels - 1] +
                                          (currWidth * currHeight * mBytesPerPixel);
@@ -330,7 +330,7 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
 
          mNumMipLevels++;
          allocPixels += currWidth * currHeight * mBytesPerPixel;
-      } while (currWidth != 1 || currHeight != 1);
+      }
 
       U32 expectedMips = mFloor(mLog2(mMax(in_width, in_height))) + 1;
       AssertFatal(mNumMipLevels == expectedMips, "GBitmap::allocateBitmap: mipmap count wrong");

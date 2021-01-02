@@ -197,14 +197,6 @@ TerrainBlock::TerrainBlock()
    mLayerTexDirty( false ),
    mBaseTexSize( 1024 ),
    mBaseTexFormat( TerrainBlock::DDS ),
-   mDetailTexSize(0),
-   mDetailTexFormat(GFXFormat_COUNT),
-   mMacroTexSize(0),
-   mMacroTexFormat(GFXFormat_COUNT),
-   mNormalTexSize(0),
-   mNormalTexFormat(GFXFormat_COUNT),
-   mOrmTexSize(0),
-   mOrmTexFormat(GFXFormat_COUNT),
    mCell( NULL ),
    mBaseMaterial( NULL ),
    mDefaultMatInst( NULL ),
@@ -350,142 +342,6 @@ bool TerrainBlock::_setLightMapSize( void *obj, const char *index, const char *d
    {
       terrain->mLightMapSize = mapSize;
       terrain->setMaskBits( MaterialMask );
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setDetailTexSize(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   S32 size;
-   castConsoleTypeFromString(size, data);
-
-   if (terrain->mDetailTexSize != size)
-   {
-      terrain->mDetailTexSize = size;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setDetailTexFormat(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   GFXFormat format;
-   castConsoleTypeFromString(format, data);
-
-   if (terrain->mDetailTexFormat != format)
-   {
-      terrain->mDetailTexFormat = format;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setMacroTexSize(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   S32 size;
-   castConsoleTypeFromString(size, data);
-
-   if (terrain->mMacroTexSize != size)
-   {
-      terrain->mMacroTexSize = size;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setMacroTexFormat(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   GFXFormat format;
-   castConsoleTypeFromString(format, data);
-
-   if (terrain->mMacroTexFormat != format)
-   {
-      terrain->mMacroTexFormat = format;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setNormalTexSize(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   S32 size;
-   castConsoleTypeFromString(size, data);
-
-   if (terrain->mNormalTexSize != size)
-   {
-      terrain->mNormalTexSize = size;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setNormalTexFormat(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   GFXFormat format;
-   castConsoleTypeFromString(format, data);
-
-   if (terrain->mNormalTexFormat != format)
-   {
-      terrain->mNormalTexFormat = format;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setOrmTexSize(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   S32 size;
-   castConsoleTypeFromString(size, data);
-
-   if (terrain->mOrmTexSize != size)
-   {
-      terrain->mOrmTexSize = size;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
-   }
-
-   return false;
-}
-
-bool TerrainBlock::_setOrmTexFormat(void* obj, const char* index, const char* data)
-{
-   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
-
-   GFXFormat format;
-   castConsoleTypeFromString(format, data);
-
-   if (terrain->mOrmTexFormat != format)
-   {
-      terrain->mOrmTexFormat = format;
-      terrain->_updateMaterials();
-      terrain->setMaskBits(MaterialMask);
    }
 
    return false;
@@ -1440,38 +1296,6 @@ void TerrainBlock::initPersistFields()
          &TerrainBlock::_setLightMapSize, &defaultProtectedGetFn,
          "Light map dimensions in pixels." );
 
-      addProtectedField("detailTexSize", TypeS32, Offset(mDetailTexSize, TerrainBlock),
-         &TerrainBlock::_setDetailTexSize, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("detailTexFormat", TypeGFXFormat, Offset(mDetailTexFormat, TerrainBlock),
-         &TerrainBlock::_setDetailTexFormat, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("macroTexSize", TypeS32, Offset(mMacroTexSize, TerrainBlock),
-         &TerrainBlock::_setMacroTexSize, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("macroTexFormat", TypeGFXFormat, Offset(mMacroTexFormat, TerrainBlock),
-         &TerrainBlock::_setMacroTexFormat, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("normalTexSize", TypeS32, Offset(mNormalTexSize, TerrainBlock),
-         &TerrainBlock::_setNormalTexSize, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("normalTexFormat", TypeGFXFormat, Offset(mNormalTexFormat, TerrainBlock),
-         &TerrainBlock::_setNormalTexFormat, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("ormTexSize", TypeS32, Offset(mOrmTexSize, TerrainBlock),
-         &TerrainBlock::_setOrmTexSize, &defaultProtectedGetFn,
-         "");
-
-      addProtectedField("ormTexFormat", TypeGFXFormat, Offset(mOrmTexFormat, TerrainBlock),
-         &TerrainBlock::_setOrmTexFormat, &defaultProtectedGetFn,
-         "");
-
       addField( "screenError", TypeS32, Offset( mScreenError, TerrainBlock ), "Not yet implemented." );
 	
       addField( "updateBasetex", TypeBool, Offset( mUpdateBasetex, TerrainBlock ), "Whether or not to update the Base Texture" );
@@ -1524,15 +1348,6 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    {
       stream->write( mBaseTexSize );
       stream->write( mLightMapSize );
-
-      stream->write( mDetailTexSize );
-      stream->write( static_cast<S32>(mDetailTexFormat) );
-      stream->write( mMacroTexSize );
-      stream->write( static_cast<S32>(mMacroTexFormat) );
-      stream->write( mNormalTexSize );
-      stream->write( static_cast<S32>(mNormalTexFormat) );
-      stream->write( mOrmTexSize );
-      stream->write( static_cast<S32>(mOrmTexFormat) );
    }
 
    stream->writeFlag( mask & HeightMapChangeMask );
@@ -1594,73 +1409,6 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
             SAFE_DELETE( mLightMap );
             clearLightMap();
          }
-      }
-
-      bool updateMaterials = false;
-
-      U32 detailTexSize;
-      stream->read(&detailTexSize);
-      if (mDetailTexSize != detailTexSize)
-      {
-         mDetailTexSize = detailTexSize;
-         updateMaterials = true;
-      }
-      S32 detailTexFormat;
-      stream->read(&detailTexFormat);
-      if (mDetailTexFormat != detailTexFormat)
-      {
-         mDetailTexFormat = static_cast<GFXFormat>(detailTexFormat);
-         updateMaterials = true;
-      }
-
-      U32 macroTexSize;
-      stream->read(&macroTexSize);
-      if (mMacroTexSize != macroTexSize)
-      {
-         mMacroTexSize = macroTexSize;
-         updateMaterials = true;
-      }
-      S32 macroTexFormat;
-      stream->read(&macroTexFormat);
-      if (mMacroTexFormat != macroTexFormat)
-      {
-         mMacroTexFormat = static_cast<GFXFormat>(macroTexFormat);
-         updateMaterials = true;
-      }
-
-      U32 normalTexSize;
-      stream->read(&normalTexSize);
-      if (mNormalTexSize != normalTexSize)
-      {
-         mNormalTexSize = normalTexSize;
-         updateMaterials = true;
-      }
-      S32 normalTexFormat;
-      stream->read(&normalTexFormat);
-      if (mNormalTexFormat != normalTexFormat)
-      {
-         mNormalTexFormat = static_cast<GFXFormat>(normalTexFormat);
-         updateMaterials = true;
-      }
-
-      U32 ormTexSize;
-      stream->read(&ormTexSize);
-      if (mOrmTexSize != ormTexSize)
-      {
-         mOrmTexSize = ormTexSize;
-         updateMaterials = true;
-      }
-      S32 ormTexFormat;
-      stream->read(&ormTexFormat);
-      if (mOrmTexFormat != ormTexFormat)
-      {
-         mOrmTexFormat = static_cast<GFXFormat>(ormTexFormat);
-         updateMaterials = true;
-      }
-
-      if (updateMaterials && isProperlyAdded())
-      {
-         _updateMaterials();
       }
    }
 

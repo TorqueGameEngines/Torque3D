@@ -173,41 +173,52 @@ void TerrainBlock::_updateMaterials()
 #endif
 
    // Format has been explicitly set
-   if (mDetailTexSize != 0)
+   const U32 detailTexSize = Con::getIntVariable("Terrain::DetailTextureSize");
+   const GFXFormat detailTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::DetailTextureFormat"));
+   if (detailTexSize != 0)
    {
       GFXFormat format = GFXFormatR8G8B8A8;
-      if (mDetailTexFormat < GFXFormat_COUNT)
+      if (detailTexFormat < GFXFormat_COUNT)
       {
-         format = mDetailTexFormat;
+         format = detailTexFormat;
       }
-      mDetailTextureArray->set(mDetailTexSize, mDetailTexSize, detailTexArraySize, format);
+      mDetailTextureArray->set(detailTexSize, detailTexSize, detailTexArraySize, format);
    }
-   if (mMacroTexSize != 0)
+
+   const U32 macroTexSize = Con::getIntVariable("Terrain::MacroTextureSize");
+   const GFXFormat macroTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::MacroTextureFormat"));
+   if (macroTexSize != 0)
    {
       GFXFormat format = GFXFormatR8G8B8A8;
-      if (mMacroTexFormat < GFXFormat_COUNT)
+      if (macroTexFormat < GFXFormat_COUNT)
       {
-         format = mMacroTexFormat;
+         format = macroTexFormat;
       }
-      mMacroTextureArray->set(mMacroTexSize, mMacroTexSize, macroTexArraySize, format);
+      mMacroTextureArray->set(macroTexSize, macroTexSize, macroTexArraySize, format);
    }
-   if (mNormalTexSize != 0)
+
+   const U32 normalTexSize = Con::getIntVariable("Terrain::NormalTextureSize");
+   const GFXFormat normalTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::NormalTextureFormat"));
+   if (normalTexSize != 0)
    {
       GFXFormat format = GFXFormatR8G8B8A8;
-      if (mNormalTexFormat < GFXFormat_COUNT)
+      if (normalTexFormat < GFXFormat_COUNT)
       {
-         format = mNormalTexFormat;
+         format = normalTexFormat;
       }
-      mNormalTextureArray->set(mNormalTexSize, mNormalTexSize, normalTexArraySize, format);
+      mNormalTextureArray->set(normalTexSize, normalTexSize, normalTexArraySize, format);
    }
-   if (mOrmTexSize != 0)
+
+   const U32 ormTexSize = Con::getIntVariable("Terrain::OrmTextureSize");
+   const GFXFormat ormTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::OrmTextureFormat"));
+   if (ormTexSize != 0)
    {
       GFXFormat format = GFXFormatR8G8B8A8;
-      if (mOrmTexFormat < GFXFormat_COUNT)
+      if (ormTexFormat < GFXFormat_COUNT)
       {
-         format = mOrmTexFormat;
+         format = ormTexFormat;
       }
-      mOrmTextureArray->set(mOrmTexSize, mOrmTexSize, ormTexArraySize, format);
+      mOrmTextureArray->set(ormTexSize, ormTexSize, ormTexArraySize, format);
    }
 
    if (!mDetailTextureArray->fromTextureArray(detailTexArray, detailTexArraySize))

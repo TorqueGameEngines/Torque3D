@@ -2450,7 +2450,7 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
 
         // Format full file-path.
         char assetFileBuffer[1024];
-        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", assetPath.getPath(), assetPath.getFullFileName());
+        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", assetPath.getPath().c_str(), assetPath.getFullFileName().c_str());
 
         // Parse the filename.
         if ( !mTaml.parse( assetFileBuffer, assetDeclaredVisitor ) )
@@ -2628,7 +2628,7 @@ bool AssetManager::scanReferencedAssets( const char* pPath, const char* pExtensi
 
         // Format full file-path.
         char assetFileBuffer[1024];
-        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", assetPath.getPath(), assetPath.getFullFileName());
+        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", assetPath.getPath().c_str(), assetPath.getFullFileName().c_str());
 
         // Format reference file-path.
         typeReferenceFilePath referenceFilePath = StringTable->insert( assetFileBuffer );

@@ -192,6 +192,10 @@
 
 #endif
 
+#if defined( _WIN32 ) || defined ( _WIN64 )
+   #define TORQUE_NO_ZIPCASE
+#endif
+
 #ifdef TORQUE_TOOLS
 #  define TORQUE_INSTANCE_EXCLUSION   "TorqueToolsTest"
 #else

@@ -52,6 +52,8 @@
 
 #include "math/util/decomposePoly.h"
 
+#include "T3D/assets/MaterialAsset.h"
+
 //extern U32 gIdxArray[6][2][3];
 
 struct MeshRoadHitSegment
@@ -619,7 +621,11 @@ protected:
    GFXVertexBufferHandle<GFXVertexPNTT> mVB[SurfaceCount];   
    GFXPrimitiveBufferHandle mPB[SurfaceCount];      
 
-   String mMaterialName[SurfaceCount];   
+   DECLARE_NET_MATERIALASSET(MeshRoad, TopMaterial, MeshRoadMask);
+   DECLARE_NET_MATERIALASSET(MeshRoad, BottomMaterial, MeshRoadMask);
+   DECLARE_NET_MATERIALASSET(MeshRoad, SideMaterial, MeshRoadMask);
+
+   //String mMaterialName[SurfaceCount];   
    SimObjectPtr<Material> mMaterial[SurfaceCount];
    BaseMatInstance *mMatInst[SurfaceCount];
 

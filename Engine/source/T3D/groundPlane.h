@@ -106,7 +106,7 @@ private:
    F32               mScaleV;       ///< Scale factor for V texture coordinates.
    BaseMatInstance*  mMaterial;     ///< Instantiated material based on given material name.
 
-   DECLARE_MATERIALASSET(GroundPlane, Material, -1);
+   DECLARE_NET_MATERIALASSET(GroundPlane, Material, -1);
 
    PhysicsBody *mPhysicsRep;
 

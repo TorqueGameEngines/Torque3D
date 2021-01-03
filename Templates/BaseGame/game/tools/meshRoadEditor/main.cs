@@ -23,6 +23,10 @@
 function initializeMeshRoadEditor()
 {
    echo(" % - Initializing Mesh Road Editor");
+   
+   $MeshRoadEditor::defaultTopMaterialAsset = "Prototyping:FloorGray";
+   $MeshRoadEditor::defaultBottomMaterialAsset = "Prototyping:FloorGray";
+   $MeshRoadEditor::defaultSideMaterialAsset = "Prototyping:WallOrange";
      
    exec( "./meshRoadEditor.cs" );
    exec( "./meshRoadEditorGui.gui" );

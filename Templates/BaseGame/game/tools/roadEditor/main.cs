@@ -24,6 +24,8 @@ function initializeRoadEditor()
 {
    echo( " - Initializing Road and Path Editor" );
    
+   $DecalRoadEditor::defaultMaterialAsset = "Prototyping:FloorGray";
+   
    exec( "./roadEditor.cs" );
    exec( "./RoadEditorGui.gui" );
    exec( "./RoadEditorToolbar.gui");
@@ -183,7 +185,7 @@ function RoadEditorPlugin::initSettings( %this )
    EditorSettings.setDefaultValue(  "HoverSplineColor",     "255 0 0 255" );
    EditorSettings.setDefaultValue(  "SelectedSplineColor",  "0 255 0 255" );
    EditorSettings.setDefaultValue(  "HoverNodeColor",       "255 255 255 255" ); //<-- Not currently used
-   EditorSettings.setDefaultValue(  "MaterialName",         "DefaultDecalRoadMaterial" );
+   EditorSettings.setDefaultValue(  "materialAsset",         "Prototyping:FloorGray" );
    
    EditorSettings.endGroup();
 }
@@ -196,7 +198,7 @@ function RoadEditorPlugin::readSettings( %this )
    RoadEditorGui.HoverSplineColor     = EditorSettings.value("HoverSplineColor");
    RoadEditorGui.SelectedSplineColor  = EditorSettings.value("SelectedSplineColor");
    RoadEditorGui.HoverNodeColor       = EditorSettings.value("HoverNodeColor");
-   RoadEditorGui.materialName         = EditorSettings.value("MaterialName");   
+   RoadEditorGui.materialAsset        = EditorSettings.value("materialAsset");   
    
    EditorSettings.endGroup();  
 }
@@ -209,7 +211,7 @@ function RoadEditorPlugin::writeSettings( %this )
    EditorSettings.setValue( "HoverSplineColor",       RoadEditorGui.HoverSplineColor );
    EditorSettings.setValue( "SelectedSplineColor",    RoadEditorGui.SelectedSplineColor );
    EditorSettings.setValue( "HoverNodeColor",         RoadEditorGui.HoverNodeColor );
-   EditorSettings.setValue( "MaterialName",           RoadEditorGui.materialName );
+   EditorSettings.setValue( "materialAsset",          RoadEditorGui.materialAsset );
    
    EditorSettings.endGroup();
 }

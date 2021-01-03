@@ -458,7 +458,8 @@ GroundCover::GroundCover()
 
    mRandomSeed = 1;
 
-   mMaterial = NULL;
+   initMaterialAsset(Material);
+
    mMatInst = NULL;
    mMatParams = NULL;
    mTypeRectsParam = NULL;
@@ -537,8 +538,8 @@ IMPLEMENT_CO_NETOBJECT_V1(GroundCover);
 void GroundCover::initPersistFields()
 {
    addGroup( "GroundCover General" );
-      
-      addField( "material",      TypeMaterialName, Offset( mMaterialName, GroundCover ),        "Material used by all GroundCover segments." );
+
+      scriptBindMaterialAsset(Material, GroundCover, "Material used by all GroundCover segments.");
 
       addField( "radius",        TypeF32,          Offset( mRadius, GroundCover ),              "Outer generation radius from the current camera position." );
       addField( "dissolveRadius",TypeF32,          Offset( mFadeRadius, GroundCover ),          "This is less than or equal to radius and defines when fading of cover elements begins." );
@@ -709,7 +710,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
       // TODO: We could probably optimize a few of these
       // based on reasonable units at some point.
 
-      stream->write( mMaterialName );
+      packMaterialAsset(connection, Material);
 
       stream->write( mRadius );
       stream->write( mZOffset );
@@ -780,7 +781,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
    if (stream->readFlag())
    {
-      stream->read( &mMaterialName );
+      unpackMaterialAsset(connection, Material);
 
       stream->read( &mRadius );
       stream->read( &mZOffset );
@@ -852,17 +853,29 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 }
 
 void GroundCover::_initMaterial()
-{   
-   SAFE_DELETE( mMatInst );
-   
-   if ( mMaterialName.isNotEmpty() )
-      if ( !Sim::findObject( mMaterialName, mMaterial ) )
-         Con::errorf( "GroundCover::_initMaterial - Material %s was not found.", mMaterialName.c_str() );
+{
+   if (mMaterialAsset.notNull())
+   {
+      if (mMatInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMatInst->getMaterial()->getName(), String::NoCase))
+         return;
 
-   if ( mMaterial )
-      mMatInst = mMaterial->createMatInstance();
+      SAFE_DELETE(mMatInst);
+
+      if (!Sim::findObject(mMaterialAsset->getMaterialDefinitionName(), mMaterial))
+         Con::errorf("GroundCover::_initMaterial - Material %s was not found.", mMaterialAsset->getMaterialDefinitionName());
+
+      if (mMaterial)
+         mMatInst = mMaterial->createMatInstance();
+      else
+         mMatInst = MATMGR->createMatInstance("WarningMaterial");
+
+      if (!mMatInst)
+         Con::errorf("GroundCover::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+   }
    else
-      mMatInst = MATMGR->createMatInstance( "WarningMaterial" );
+   {
+      return;
+   }
    
    // Add our special feature that makes it all work...
    FeatureSet features = MATMGR->getDefaultFeatures();
@@ -1567,6 +1580,8 @@ void GroundCover::_updateCoverGrid( const Frustum &culler )
 void GroundCover::prepRenderImage( SceneRenderState *state )
 {
    // Reset stats each time we hit the diffuse pass.
+   if (mMatInst == nullptr)
+      return;
 
    if( state->isDiffusePass() )
    {

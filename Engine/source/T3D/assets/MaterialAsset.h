@@ -126,23 +126,87 @@ public:
 
 #define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
 
-#define initMaterialAsset(name) m##name##Name = StringTable->EmptyString(); m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
+#define initMaterialAsset(name) m##name##Name = ""; m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
 #define bindMaterialAsset(name) if (m##name##AssetId != StringTable->EmptyString()) m##name##Asset = m##name##AssetId;
 
-#define scriptBindMaterialAsset(name, consoleClass, docs) addProtectedField(assetText(name, File), TypeMaterialName, Offset(m##name##Name, consoleClass), consoleClass::_set##name##Name,  & defaultProtectedGetFn, assetText(name, docs)); \
-                                      addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, & defaultProtectedGetFn, assetText(name, asset reference.));
+#define scriptBindMaterialAsset(name, consoleClass, docs)\
+   addProtectedField(assetText(name, File), TypeMaterialName, Offset(m##name##Name, consoleClass), consoleClass::_set##name##Name,  & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, & defaultProtectedGetFn, assetText(name, asset reference.));
+
+#define DECLARE_MATERIALASSET(className,name)      protected: \
+                                      String m##name##Name;\
+                                      StringTableEntry m##name##AssetId;\
+                                      AssetPtr<MaterialAsset>  m##name##Asset;\
+                                      public: \
+                                      const String& get##name() const { return m##name##Name; }\
+                                      void set##name(FileName _in) { m##name##Name = _in; }\
+                                      const AssetPtr<MaterialAsset> & get##name##Asset() const { return m##name##Asset; }\
+                                      void set##name##Asset(AssetPtr<MaterialAsset>_in) { m##name##Asset = _in; }\
+static bool _set##name##Name(void* obj, const char* index, const char* data)\
+{\
+   className* shape = static_cast<className*>(obj);\
+   \
+   StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(data));\
+   if (assetId != StringTable->EmptyString())\
+   {\
+      if (shape->_set##name##Asset(obj, index, assetId))\
+      {\
+         if (assetId == StringTable->insert("Core_Rendering:noMaterial"))\
+         {\
+            shape->m##name##Name = data;\
+            shape->m##name##AssetId = StringTable->EmptyString();\
+            \
+            return true;\
+         }\
+         else\
+         {\
+            shape->m##name##AssetId = assetId;\
+            shape->m##name##Name = StringTable->EmptyString();\
+            \
+            return false;\
+         }\
+      }\
+   }\
+   else\
+   {\
+      shape->m##name##Asset = StringTable->EmptyString();\
+   }\
+   \
+   return true;\
+}\
+\
+static bool _set##name##Asset(void* obj, const char* index, const char* data)\
+{\
+   className* shape = static_cast<className*>(obj);\
+   shape->m##name##AssetId = StringTable->insert(data);\
+   if (MaterialAsset::getAssetById(shape->m##name##AssetId, &shape->m##name##Asset))\
+   {\
+      if (shape->m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))\
+         shape->m##name##Name = StringTable->EmptyString();\
+      \
+      return true;\
+   }\
+   return false;\
+}\
+\
+static bool set##name##Asset(const char* assetId)\
+{\
+   m##name##AssetId = StringTable->insert(assetId);\
+   if (m##name##AssetId != StringTable->EmptyString())\
+      m##name##Asset = m##name##AssetId;\
+}
 
 /// <summary>
 /// DECLARE_MATERIALASSET is a utility macro for MaterialAssets. It takes in the name of the class using it, the name of the field for the material, and a networking bitmask
 /// The first 2 are for setting up/filling out the fields and class member defines
 /// The bitmask is for when the material is changed, it can automatically kick a network update on the owner object to pass the changed asset to clients
 /// </summary>
-#define DECLARE_MATERIALASSET(className,name,bitmask)      protected: \
-                                      StringTableEntry m##name##Name;\
+#define DECLARE_NET_MATERIALASSET(className,name,bitmask)      protected: \
+                                      String m##name##Name;\
                                       StringTableEntry m##name##AssetId;\
                                       AssetPtr<MaterialAsset>  m##name##Asset;\
                                       public: \
-                                      const StringTableEntry& get##name() const { return m##name##Name; }\
+                                      const String& get##name() const { return m##name##Name; }\
                                       void set##name(FileName _in) { m##name##Name = _in; }\
                                       const AssetPtr<MaterialAsset> & get##name##Asset() const { return m##name##Asset; }\
                                       void set##name##Asset(AssetPtr<MaterialAsset>_in) { m##name##Asset = _in; }\
@@ -189,10 +253,28 @@ static bool _set##name##Asset(void* obj, const char* index, const char* data)\
          shape->m##name##Name = StringTable->EmptyString();\
       \
       shape->setMaskBits(bitmask);\
+      shape->inspectPostApply();\
       return true;\
    }\
+   shape->inspectPostApply();\
+   return false;\
+}\
+\
+bool set##name##AssetId(const char* _assetId)\
+{\
+   m##name##AssetId = StringTable->insert(_assetId);\
+   if (m##name##AssetId != StringTable->EmptyString())\
+   {\
+      m##name##Asset = m##name##AssetId;\
+      \
+      setMaskBits(bitmask);\
+      inspectPostApply();\
+      return true;\
+   }\
+   \
    return false;\
 }
+
 
 #define packMaterialAsset(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\

@@ -36,6 +36,8 @@
 #include "environment/meshRoad.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class GameBase;
 
 class GuiMeshRoadEditorCtrl : public EditTSCtrl
@@ -156,8 +158,14 @@ class GuiMeshRoadEditorCtrl : public EditTSCtrl
 
       bool mHasCopied;
 	public:
-		
-		StringTableEntry mMaterialName[SurfaceCount];
+
+      StringTableEntry mTopMaterialAssetId;
+      StringTableEntry mBottomMaterialAssetId;
+      StringTableEntry mSideMaterialAssetId;
+
+      AssetPtr<MaterialAsset> mTopMaterialAsset;
+      AssetPtr<MaterialAsset> mBottomMaterialAsset;
+      AssetPtr<MaterialAsset> mSideMaterialAsset;
 };
 
 class GuiMeshRoadEditorUndoAction : public UndoAction

@@ -138,7 +138,7 @@ void GFXTextureArray::setTexture(const GFXTexHandle& texture, U32 slot)
          GBitmap* inBitmap = TEXMGR->loadUncompressedTexture(texture->getPath(), &GFXTexturePersistentProfile, mWidth, mHeight);
          if (!inBitmap->setFormat(mFormat))
          {
-            AssertWarn(true, "GFXTextureArray::setTexture all textures must be convertible to GFXFormat " + mFormat);
+            AssertFatal(true, "GFXTextureArray::setTexture all textures must be convertible to GFXFormat " + mFormat);
             Con::errorf("GFXTextureArray::setTexture all textures must be convertible to GFXFormat" + mFormat);
             handle = NULL;
             delete inBitmap;
@@ -156,7 +156,7 @@ void GFXTextureArray::setTexture(const GFXTexHandle& texture, U32 slot)
 
    if (handle.getHeight() != mHeight || handle.getWidth() != mWidth || handle.getFormat() != mFormat || handle->getMipLevels() < mMipLevels)
    {
-      AssertWarn(true, "GFXTextureArray::setTexture all textures must have the same size and format");
+      AssertFatal(true, "GFXTextureArray::setTexture all textures must have the same size and format");
       Con::errorf("GFXTextureArray::setTexture all textures must have the same size and format");
       return;
    }

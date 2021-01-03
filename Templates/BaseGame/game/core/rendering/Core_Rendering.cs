@@ -12,6 +12,7 @@ function Core_Rendering::onCreate(%this)
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
    $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");
+   $Terrain::BlendDepth = ProjectSettings.value("Terrain/BlendDepth");
    
    $Terrain::DetailTextureSize = ProjectSettings.value("Terrain/DetailTextureSize");
    $Terrain::MacroTextureSize = ProjectSettings.value("Terrain/MacroTextureSize");
@@ -24,6 +25,7 @@ function Core_Rendering::onCreate(%this)
    $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat");
    
    exec("./scripts/graphicsOptions.cs");
+   exec("./scripts/terrainSettings.cs");
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");
    exec("./scripts/gfxData/commonMaterialData.cs");
@@ -32,6 +34,8 @@ function Core_Rendering::onCreate(%this)
    exec("./scripts/gfxData/terrainBlock.cs");
    exec("./scripts/gfxData/water.cs");
    exec("./scripts/gfxData/warningTerrainMat.cs");
+   
+   loadTerrainSettings();
 }
 
 function Core_Rendering::onDestroy(%this)

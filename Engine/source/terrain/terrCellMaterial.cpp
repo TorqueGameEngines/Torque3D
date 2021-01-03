@@ -803,7 +803,14 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
       mConsts->set( mFogDataConst, fogData );
    }
 
-   mConsts->setSafe( mBlendDepthConst, Con::getFloatVariable("$Terrain::BlendDepth", 0.2f) );
+   if (String::isEmpty(Con::getVariable("$Terrain::BlendDepth")))
+   {
+      mConsts->setSafe(mBlendDepthConst, 0.2f);
+   }
+   else
+   {
+      mConsts->setSafe(mBlendDepthConst, Con::getFloatVariable("$Terrain::BlendDepth"));
+   }
 
    mConsts->setSafe( mFogColorConst, sceneData.fogColor );
 

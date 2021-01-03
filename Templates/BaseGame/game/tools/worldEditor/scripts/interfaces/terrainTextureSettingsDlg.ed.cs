@@ -31,12 +31,12 @@ $TerrainTextureSettingsDlg::TerrainTextureFormat =
 
 function TerrainTextureSettingsDlg::show( %this )
 {
-   //%this.onWake();
    Canvas.pushDialog( %this );
 }
 
 function TerrainTextureSettingsDlg::onWake( %this ) {
    %this-->lerpBlendCheckBox.setStateOn(ProjectSettings.value("Terrain/LerpBlend"));
+   %this-->blendDepthSlider.setValue(ProjectSettings.value("Terrain/BlendDepth"));
    
    %this-->detailTextureFormatPopUpMenu.clear();
    %this-->macroTextureFormatPopUpMenu.clear();
@@ -63,8 +63,13 @@ function TerrainTextureSettingsDlg::onWake( %this ) {
    %this-->ormTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/OrmTextureSize"));
 }
 
+function TerrainTextureSettingsDlg::updateBlendDepth( %this ) {
+   $Terrain::BlendDepth = %this-->blendDepthSlider.getValue();
+}
+
 function TerrainTextureSettingsDlg::apply( %this ) {
    $Terrain::LerpBlend = %this-->lerpBlendCheckBox.isStateOn();
+   $Terrain::BlendDepth = %this-->blendDepthSlider.getValue();
    
    $Terrain::DetailTextureFormat = %this-->detailTextureFormatPopUpMenu.getSelected();
    $Terrain::MacroTextureFormat = %this-->macroTextureFormatPopUpMenu.getSelected();
@@ -112,6 +117,7 @@ function TerrainTextureSettingsDlg::validate( %this ) {
 
 function TerrainTextureSettingsDlg::cancel( %this ) {
    $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");
+   $Terrain::BlendDepth = ProjectSettings.value("Terrain/BlendDepth");
    
    $Terrain::DetailTextureFormat = ProjectSettings.value("Terrain/DetailTextureFormat");
    $Terrain::MacroTextureFormat = ProjectSettings.value("Terrain/MacroTextureFormat");
@@ -134,6 +140,7 @@ function TerrainTextureSettingsDlg::applyAndSave( %this ) {
    %this.apply();
    
    ProjectSettings.setValue("Terrain/LerpBlend", $Terrain::LerpBlend);
+   ProjectSettings.setValue("Terrain/BlendDepth", $Terrain::BlendDepth);
 
    ProjectSettings.setValue("Terrain/DetailTextureFormat", $Terrain::DetailTextureFormat);
    ProjectSettings.setValue("Terrain/MacroTextureFormat", $Terrain::MacroTextureFormat);

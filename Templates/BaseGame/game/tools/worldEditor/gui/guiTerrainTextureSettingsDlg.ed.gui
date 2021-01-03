@@ -61,13 +61,44 @@
       };
       
       new GuiControl() {
-         position = "20 80";
+         position = "20 70";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Global Blend Depth:";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+            tooltip = "Controls the general level of bleding across all textures, has no effect if Lerp Blend is enabled.";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+      
+         new GuiSliderCtrl() {
+            internalName = "blendDepthSlider";
+            profile = "ToolsGuiSliderProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            altCommand = "TerrainTextureSettingsDlg.updateBlendDepth();";
+            
+            position = "130 0";
+            extent = "170 20";
+            
+            range = "0.01 1.0";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 100";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
          new GuiTextCtrl() {
             text = "Detail Texture Size:";
             profile = "ToolsGuiTextProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
             
             position = "0 0";
             extent = "120 20";
@@ -85,7 +116,7 @@
       };
       
       new GuiControl() {
-         position = "20 110";
+         position = "20 130";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -109,7 +140,7 @@
       };
       
       new GuiControl() {
-         position = "20 140";
+         position = "20 160";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -133,7 +164,7 @@
       };
       
       new GuiControl() {
-         position = "20 170";
+         position = "20 190";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -157,7 +188,7 @@
       };
       
       new GuiControl() {
-         position = "20 200";
+         position = "20 220";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -181,7 +212,7 @@
       };
       
       new GuiControl() {
-         position = "20 230";
+         position = "20 250";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -205,7 +236,7 @@
       };
       
       new GuiControl() {
-         position = "20 260";
+         position = "20 280";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -227,7 +258,7 @@
       };
       
       new GuiControl() {
-         position = "20 290";
+         position = "20 310";
          profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
          
@@ -258,9 +289,9 @@
             profile = "ToolsGuiButtonProfile";
             position = "0 0";
             
-            extent = "145 30";
-            
             command = "TerrainTextureSettingsDlg.applyAndSave();";
+            
+            extent = "145 30";
          };
       
          new GuiButtonCtrl() {

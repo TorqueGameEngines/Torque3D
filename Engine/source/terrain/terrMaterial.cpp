@@ -68,7 +68,7 @@ TerrainMaterial::TerrainMaterial()
       mMacroStrength( 0.7f ),
       mMacroDistance( 500.0f ),
       mParallaxScale( 0.0f ),
-      mBlendDepth( 0.5f ),
+      mBlendDepth( 0.0f ),
       mBlendContrast( 1.0f ),
       mIsSRGB(false),
       mInvertRoughness(false)

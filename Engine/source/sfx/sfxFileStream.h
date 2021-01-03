@@ -49,6 +49,7 @@ class SFXFileStream : public SFXStream
 
       static ExtensionsVector smExtensions;
       static CreateFnsVector smCreateFns;
+      static CreateFnsVector smCreateFromZipFns;
 
       /// The file stream we're reading from.
       Stream *mStream;
@@ -80,7 +81,7 @@ class SFXFileStream : public SFXStream
    public:
 
       ///
-      static void registerExtension( String ext, SFXFILESTREAM_CREATE_FN create_fn );
+      static void registerExtension( String ext, SFXFILESTREAM_CREATE_FN create_fn, SFXFILESTREAM_CREATE_FN create_fromzip_fn );
 
       ///
       static void unregisterExtension( String ext );

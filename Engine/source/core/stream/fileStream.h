@@ -65,6 +65,9 @@ public:
    bool Flush() { return flush(); }
    FileStream* clone() const;
 
+   // query an open files mode attributes
+   virtual bool hasModeFlag(Torque::FS::FileNode::Mode fileMode);
+
 protected:
    // more mandatory methods from Stream base class...
    virtual bool _read(const U32 i_numBytes, void *o_pBuffer);

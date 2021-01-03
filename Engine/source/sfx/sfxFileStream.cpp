@@ -28,13 +28,15 @@
 
 SFXFileStream::ExtensionsVector SFXFileStream::smExtensions( __FILE__, __LINE__ );
 SFXFileStream::CreateFnsVector SFXFileStream::smCreateFns( __FILE__, __LINE__ );
+SFXFileStream::CreateFnsVector SFXFileStream::smCreateFromZipFns( __FILE__, __LINE__ );
 
 
-void SFXFileStream::registerExtension( String ext, SFXFILESTREAM_CREATE_FN create_fn )
+void SFXFileStream::registerExtension( String ext, SFXFILESTREAM_CREATE_FN create_fn, SFXFILESTREAM_CREATE_FN create_fromzip_fn )
 {
    // Register the stream creation first.
    smExtensions.push_back( ext );
    smCreateFns.push_back( create_fn );
+   smCreateFromZipFns.push_back(create_fromzip_fn);
 }
 
 void SFXFileStream::unregisterExtension( String ext )
@@ -70,7 +72,11 @@ SFXFileStream* SFXFileStream::create( String filename )
 
       // Note that the creation function swallows up the 
       // resource stream and will take care of deleting it.
-      sfxStream = smCreateFns[i]( stream );
+      // Select compressed or flat file creation function.
+      if (((FileStream*) stream)->hasModeFlag(Torque::FS::FileNode::Mode::Compressed))
+         sfxStream = smCreateFromZipFns[i]( stream );
+      else
+         sfxStream = smCreateFns[i]( stream );
       if ( sfxStream )
          return sfxStream;
    }

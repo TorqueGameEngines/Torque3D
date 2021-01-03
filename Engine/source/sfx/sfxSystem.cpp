@@ -46,6 +46,7 @@
 #include "sfx/media/sfxWavStream.h"
 #ifdef TORQUE_OGGVORBIS
    #include "sfx/media/sfxVorbisStream.h"
+   #include "sfx/media/sfxVorbisZipStream.h"
 #endif
 
 
@@ -364,9 +365,9 @@ void SFXSystem::init()
 
    // Register the streams and resources.  Note that 
    // the order here does matter!
-   SFXFileStream::registerExtension( ".wav", ( SFXFILESTREAM_CREATE_FN ) SFXWavStream::create );
+   SFXFileStream::registerExtension( ".wav", ( SFXFILESTREAM_CREATE_FN ) SFXWavStream::create, ( SFXFILESTREAM_CREATE_FN ) SFXWavStream::create );
    #ifdef TORQUE_OGGVORBIS
-      SFXFileStream::registerExtension( ".ogg", ( SFXFILESTREAM_CREATE_FN ) SFXVorbisStream::create );
+      SFXFileStream::registerExtension( ".ogg", ( SFXFILESTREAM_CREATE_FN ) SFXVorbisStream::create, ( SFXFILESTREAM_CREATE_FN ) SFXVorbisZipStream::create );
    #endif
    
    // Create the stream thread pool.

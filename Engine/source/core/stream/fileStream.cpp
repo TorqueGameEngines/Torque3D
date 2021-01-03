@@ -240,6 +240,19 @@ bool FileStream::flush()
 }
 
 //-----------------------------------------------------------------------------
+bool FileStream::hasModeFlag(Torque::FS::FileNode::Mode fileMode)
+{
+   Torque::FS::FileNode::Attributes fileAttributes;
+
+   if (mFile != NULL)
+   {
+      mFile->getAttributes(&fileAttributes);
+      return (fileMode & fileAttributes.flags);
+   }
+   return false;
+}
+
+//-----------------------------------------------------------------------------
 bool FileStream::_read(const U32 i_numBytes, void *o_pBuffer)
 {
    AssertFatal(0 != mStreamCaps, "FileStream::_read: the stream isn't open");

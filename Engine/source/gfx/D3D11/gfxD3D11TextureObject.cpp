@@ -210,8 +210,8 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    // check format limitations
    // at the moment we only support RGBA for the source (other 4 byte formats should
    // be easy to add though)
-   AssertFatal(mFormat == GFXFormatR16G16B16A16F || mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB, "copyToBmp: invalid format");
-   if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB)
+   AssertFatal(mFormat == GFXFormatR16G16B16A16F || mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB || mFormat == GFXFormatR8G8B8, "copyToBmp: invalid format");
+   if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB && mFormat != GFXFormatR8G8B8)
       return false;
 
    PROFILE_START(GFXD3D11TextureObject_copyToBmp);
@@ -248,6 +248,7 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    desc.BindFlags = 0;
    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
    desc.Usage = D3D11_USAGE_STAGING;
+   desc.MiscFlags = 0;
 
    ID3D11Texture2D* pStagingTexture = NULL;
    HRESULT hr = D3D11DEVICE->CreateTexture2D(&desc, NULL, &pStagingTexture);

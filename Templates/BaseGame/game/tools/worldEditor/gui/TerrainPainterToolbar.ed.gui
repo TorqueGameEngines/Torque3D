@@ -210,7 +210,7 @@
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "270 3";
+         position = "230 3";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmap = "tools/gui/images/separator-h.png";
@@ -222,7 +222,7 @@
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         Position = "262 5";
+         Position = "222 5";
          Extent = "256 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -370,7 +370,7 @@
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "525 3";
+         position = "445 3";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmap = "tools/gui/images/separator-h.png";
@@ -382,7 +382,7 @@
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "540 5";
+         position = "480 5";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -453,6 +453,43 @@
             useMouseEvents = "0";
             bitmap = "tools/gui/images/dropslider";
          }; 
+      };
+
+      new GuiBitmapCtrl() {
+         Enabled = "1";
+         Profile = "ToolsGuiDefaultProfile";
+         position = "618 3";
+         Extent = "2 26";
+         MinExtent = "1 1";
+         bitmap = "tools/gui/images/separator-h.png";
+      };
+
+      new GuiControl(TerrainTextureSettingsButtonContainer,EditorGuiGroup) {
+         position = "628 5";
+         extent = "90 18";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "ToolsGuiTransparentProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+         
+         new GuiButtonCtrl() {
+            text = "Texture Settings";
+            buttonType = "pushButton";
+            profile = "ToolsGuiButtonProfile";
+            command = "TerrainTextureSettingsDlg.show();";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+            position = "0 0";
+            extent = "90 18";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         };
       };
    };
 };

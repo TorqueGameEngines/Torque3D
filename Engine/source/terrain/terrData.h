@@ -135,6 +135,11 @@ protected:
    ///
    Vector<GFXTexHandle> mBaseTextures;
 
+   GFXTextureArrayHandle mDetailTextureArray;
+   GFXTextureArrayHandle mMacroTextureArray;
+   GFXTextureArrayHandle mNormalTextureArray;
+   GFXTextureArrayHandle mOrmTextureArray;
+
    /// 
    GFXTexHandle mLayerTex;
 
@@ -308,6 +313,8 @@ public:
    /// Deletes all the materials on the terrain.
    void deleteAllMaterials();
 
+   void setMaterialsDirty() { mDetailsDirty = true; };
+
    //void setMaterialName( U32 index, const String &name );
 
    /// Accessors and mutators for TerrainMaterialUndoAction.
@@ -323,6 +330,11 @@ public:
    const char* getMaterialName( U32 index ) const;
 
    U32 getMaterialCount() const;
+
+   GFXTextureArrayHandle getDetailTextureArray() const { return mDetailTextureArray; }
+   GFXTextureArrayHandle getMacroTextureArray() const { return mMacroTextureArray; }
+   GFXTextureArrayHandle getNormalTextureArray() const { return mNormalTextureArray; }
+   GFXTextureArrayHandle getOrmTextureArray() const { return mOrmTextureArray; }
 
    //BaseMatInstance* getMaterialInst( U32 x, U32 y );
 

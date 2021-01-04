@@ -11,7 +11,22 @@ function Core_Rendering::onCreate(%this)
    
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
+   $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");
+   $Terrain::BlendDepth = ProjectSettings.value("Terrain/BlendDepth");
+   
+   $Terrain::DetailTextureSize = ProjectSettings.value("Terrain/DetailTextureSize");
+   $Terrain::MacroTextureSize = ProjectSettings.value("Terrain/MacroTextureSize");
+   $Terrain::NormalTextureSize = ProjectSettings.value("Terrain/NormalTextureSize");
+   $Terrain::OrmTextureSize = ProjectSettings.value("Terrain/OrmTextureSize");
+   
+   // Default to R8G8B8A8 for all textures
+   $Terrain::DetailTextureFormat = ProjectSettings.value("Terrain/DetailTextureFormat", 12);
+   $Terrain::MacroTextureFormat = ProjectSettings.value("Terrain/MacroTextureFormat", 12);
+   $Terrain::NormalTextureFormat = ProjectSettings.value("Terrain/NormalTextureFormat", 12);
+   $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat", 12);
+   
    exec("./scripts/graphicsOptions.cs");
+   exec("./scripts/terrainSettings.cs");
    exec("./scripts/renderManager.cs");
    exec("./scripts/gfxData/clouds.cs");
    exec("./scripts/gfxData/commonMaterialData.cs");
@@ -20,6 +35,8 @@ function Core_Rendering::onCreate(%this)
    exec("./scripts/gfxData/terrainBlock.cs");
    exec("./scripts/gfxData/water.cs");
    exec("./scripts/gfxData/warningTerrainMat.cs");
+   
+   loadTerrainSettings();
 }
 
 function Core_Rendering::onDestroy(%this)

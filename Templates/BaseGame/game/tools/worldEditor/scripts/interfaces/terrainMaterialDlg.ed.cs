@@ -443,6 +443,14 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %this-->detDistanceCtrl.setText( %mat.detailDistance );      
       %this-->sideProjectionCtrl.setValue( %mat.useSideProjection );
       %this-->parallaxScaleCtrl.setText( %mat.parallaxScale );
+      
+      %blendHeightBase = mFloor(%mat.blendHeightBase * 1000)/1000;
+      %this-->blendHeightBaseTextEditCtrl.setText( %blendHeightBase );
+      %this-->blendHeightBaseSliderCtrl.setValue( %mat.blendHeightBase );
+      
+      %blendHeightContrast = mFloor(%mat.blendHeightContrast * 1000)/1000;
+      %this-->blendHeightContrastTextEditCtrl.setText( %blendHeightContrast );
+      %this-->blendHeightContrastSliderCtrl.setValue( %mat.blendHeightContrast );
 
       %this-->macroSizeCtrl.setText( %mat.macroSize );
       %this-->macroStrengthCtrl.setText( %mat.macroStrength );
@@ -504,6 +512,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %detailDistance = %this-->detDistanceCtrl.getText();   
    %useSideProjection = %this-->sideProjectionCtrl.getValue();   
    %parallaxScale = %this-->parallaxScaleCtrl.getText();
+   %blendHeightBase = %this-->blendHeightBaseTextEditCtrl.getText();
+   %blendHeightContrast = %this-->blendHeightContrastTextEditCtrl.getText();
 
    %macroSize = %this-->macroSizeCtrl.getText();      
    %macroStrength = %this-->macroStrengthCtrl.getText();
@@ -529,11 +539,13 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.macroSize == %macroSize &&
          %mat.macroStrength == %macroStrength &&
          %mat.macroDistance == %macroDistance &&         
-         %mat.parallaxScale == %parallaxScale &&         
+         %mat.parallaxScale == %parallaxScale &&
+         %mat.blendHeightBase == %blendHeightBase &&
+         %mat.blendHeightContrast == %blendHeightContrast &&
          %mat.isSRGB == %isSRGB &&         
-         %mat.invertRoughness == %invertRoughness)               
+         %mat.invertRoughness == %invertRoughness && false)               
       return;
-      
+   
    // Make sure the material name is unique.
    
    if( %mat.internalName !$= %newName )
@@ -567,6 +579,8 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %mat.macroDistance = %macroDistance;    
    %mat.useSideProjection = %useSideProjection;
    %mat.parallaxScale = %parallaxScale;
+   %mat.blendHeightBase = %blendHeightBase;
+   %mat.blendHeightContrast = %blendHeightContrast;
    %mat.isSRGB = %isSRGB;
    %mat.invertRoughness = %invertRoughness;
    
@@ -619,6 +633,8 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          macroDistance = %mat.macroDistance;
          useSideProjection = %mat.useSideProjection;
          parallaxScale = %mat.parallaxScale;
+         blendHeightBase = %mat.blendHeightBase;
+         blendHeightContrast = %mat.blendHeightContrast;
          isSRGB = %mat.isSRGB;
          invertRoughness = %mat.invertRoughness;
       };
@@ -656,6 +672,8 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.macroDistance = %obj.macroDistance;
       %mat.useSideProjection = %obj.useSideProjection;
       %mat.parallaxScale = %obj.parallaxScale;
+      %mat.blendHeightBase = %obj.blendHeightBase;
+      %mat.blendHeightContrast = %obj.blendHeightContrast;
       %mat.isSRGB = %obj.isSRGB;
       %mat.invertRoughness = %obj.invertRoughness;
    }
@@ -692,4 +710,32 @@ function TerrainMaterialDlg::_selectTextureFileDialog( %this, %defaultFileName )
    %file = filePath(%file) @ "/" @ fileBase(%file);
       
    return %file;
+}
+
+function TerrainMaterialDlgBlendHeightBaseSlider::onMouseDragged(%this)
+{
+   %value = mFloor(%this.value * 1000)/1000;
+   TerrainMaterialDlgBlendHeightBaseTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightBase = %this.value;
+
+}
+
+function TerrainMaterialDlgBlendHeightBaseTextEdit::onValidate(%this)
+{
+   TerrainMaterialDlgBlendHeightBaseSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendHeightBase = %this.getText();
+}
+
+function TerrainMaterialDlgBlendHeightContrastSlider::onMouseDragged(%this)
+{
+   %value = mFloor(%this.value * 1000)/1000;
+   TerrainMaterialDlgBlendHeightContrastTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightContrast = %this.value;
+
+}
+
+function TerrainMaterialDlgBlendHeightContrastTextEdit::onValidate(%this)
+{
+   TerrainMaterialDlgBlendHeightContrastSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendHeightContrast = %this.getText();
 }

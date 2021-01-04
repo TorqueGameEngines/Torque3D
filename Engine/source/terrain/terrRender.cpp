@@ -96,7 +96,7 @@ void TerrainBlock::_updateMaterials()
    {
       TerrainMaterial *mat = mFile->mMaterials[i];
 
-      if (!mat->getDiffuseMap().isEmpty())
+      if (mat->getDiffuseMap().isNotEmpty())
       {
          mBaseTextures[i].set(mat->getDiffuseMap(), &GFXStaticTextureSRGBProfile,
             "TerrainBlock::_updateMaterials() - DiffuseMap");
@@ -112,6 +112,133 @@ void TerrainBlock::_updateMaterials()
       if (  mat->getMacroMap().isNotEmpty() &&
             mat->getMacroDistance() > mMaxDetailDistance )
          mMaxDetailDistance = mat->getMacroDistance();
+   }
+
+   Vector<GFXTexHandle> detailTexArray;
+   detailTexArray.setSize(mFile->mMaterials.size());
+   Vector<GFXTexHandle> macroTexArray;
+   macroTexArray.setSize(mFile->mMaterials.size());
+   Vector<GFXTexHandle> normalTexArray;
+   normalTexArray.setSize(mFile->mMaterials.size());
+   Vector<GFXTexHandle> ormTexArray;
+   ormTexArray.setSize(mFile->mMaterials.size());
+
+   for (U32 i = 0; i < mFile->mMaterials.size(); i++)
+   {
+      TerrainMaterial* mat = mFile->mMaterials[i];
+      GFXTextureProfile* profile = &GFXStaticTextureProfile;
+      if (mat->getIsSRGB())
+         profile = &GFXStaticTextureSRGBProfile;
+
+      if (mat->getDetailMap().isNotEmpty())
+         detailTexArray[i] = TEXMGR->createTexture(mat->getDetailMap(), profile);
+      if (mat->getMacroMap().isNotEmpty())
+         macroTexArray[i] = TEXMGR->createTexture(mat->getMacroMap(), profile);
+      if (mat->getNormalMap().isNotEmpty())
+         normalTexArray[i] = TEXMGR->createTexture(mat->getNormalMap(), profile);
+      if (mat->getORMConfigMap().isNotEmpty())
+         ormTexArray[i] = TEXMGR->createTexture(mat->getORMConfigMap(), profile);
+   }
+
+   if (mDetailTextureArray.isNull())
+   {
+      mDetailTextureArray = GFX->createTextureArray();
+   }
+
+   if (mMacroTextureArray.isNull())
+   {
+      mMacroTextureArray = GFX->createTextureArray();
+   }
+
+   if (mNormalTextureArray.isNull())
+   {
+      mNormalTextureArray = GFX->createTextureArray();
+   }
+
+   if (mOrmTextureArray.isNull())
+   {
+      mOrmTextureArray = GFX->createTextureArray();
+   }
+
+   U32 detailTexArraySize = detailTexArray.size();
+   U32 macroTexArraySize = macroTexArray.size();
+   U32 normalTexArraySize = normalTexArray.size();
+   U32 ormTexArraySize = ormTexArray.size();
+#ifdef TORQUE_TOOLS
+   // For performance improvement when adding terrain layers, we always allocate at least 32 textures to the arrays in tool builds
+   detailTexArraySize = mMax(32, detailTexArraySize);
+   macroTexArraySize = mMax(32, macroTexArraySize);
+   normalTexArraySize = mMax(32, normalTexArraySize);
+   ormTexArraySize = mMax(32, ormTexArraySize);
+#endif
+
+   // Format has been explicitly set
+   const U32 detailTexSize = Con::getIntVariable("Terrain::DetailTextureSize");
+   const GFXFormat detailTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::DetailTextureFormat"));
+   if (detailTexSize != 0)
+   {
+      GFXFormat format = GFXFormatR8G8B8A8;
+      if (detailTexFormat < GFXFormat_COUNT)
+      {
+         format = detailTexFormat;
+      }
+      mDetailTextureArray->set(detailTexSize, detailTexSize, detailTexArraySize, format);
+   }
+
+   const U32 macroTexSize = Con::getIntVariable("Terrain::MacroTextureSize");
+   const GFXFormat macroTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::MacroTextureFormat"));
+   if (macroTexSize != 0)
+   {
+      GFXFormat format = GFXFormatR8G8B8A8;
+      if (macroTexFormat < GFXFormat_COUNT)
+      {
+         format = macroTexFormat;
+      }
+      mMacroTextureArray->set(macroTexSize, macroTexSize, macroTexArraySize, format);
+   }
+
+   const U32 normalTexSize = Con::getIntVariable("Terrain::NormalTextureSize");
+   const GFXFormat normalTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::NormalTextureFormat"));
+   if (normalTexSize != 0)
+   {
+      GFXFormat format = GFXFormatR8G8B8A8;
+      if (normalTexFormat < GFXFormat_COUNT)
+      {
+         format = normalTexFormat;
+      }
+      mNormalTextureArray->set(normalTexSize, normalTexSize, normalTexArraySize, format);
+   }
+
+   const U32 ormTexSize = Con::getIntVariable("Terrain::OrmTextureSize");
+   const GFXFormat ormTexFormat = static_cast<GFXFormat>(Con::getIntVariable("Terrain::OrmTextureFormat"));
+   if (ormTexSize != 0)
+   {
+      GFXFormat format = GFXFormatR8G8B8A8;
+      if (ormTexFormat < GFXFormat_COUNT)
+      {
+         format = ormTexFormat;
+      }
+      mOrmTextureArray->set(ormTexSize, ormTexSize, ormTexArraySize, format);
+   }
+
+   if (!mDetailTextureArray->fromTextureArray(detailTexArray, detailTexArraySize))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the diffuse terrain materials was detected. Please ensure they are all of the same size and format!");
+   }
+
+   if (!mMacroTextureArray->fromTextureArray(macroTexArray, macroTexArraySize))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the detail terrain materials was detected. Please ensure they are all of the same size and format!");
+   }
+
+   if (!mNormalTextureArray->fromTextureArray(normalTexArray, normalTexArraySize))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the normal terrain materials was detected. Please ensure they are all of the same size and format!");
+   }
+
+   if (!mOrmTextureArray->fromTextureArray(ormTexArray, ormTexArraySize))
+   {
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the orm terrain materials was detected. Please ensure they are all of the same size and format!");
    }
 
    if ( mCell )

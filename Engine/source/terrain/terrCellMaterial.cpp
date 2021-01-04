@@ -23,6 +23,8 @@
 #include "platform/platform.h"
 #include "terrain/terrCellMaterial.h"
 
+
+#include "core/util/safeRelease.h"
 #include "terrain/terrData.h"
 #include "terrain/terrCell.h"
 #include "materials/materialFeatureTypes.h"
@@ -37,7 +39,7 @@
 #include "gfx/util/screenspace.h"
 #include "lighting/advanced/advancedLightBinManager.h"
 
-S32 sgMaxTerrainMaterialsPerPass = 3;
+S32 sgMaxTerrainMaterialsPerPass = 32;
 
 AFTER_MODULE_INIT( MaterialManager )
 {
@@ -51,17 +53,13 @@ Vector<String> _initSamplerNames()
 {
    Vector<String> samplerNames;
    samplerNames.push_back("$baseTexMap");
-   samplerNames.push_back("$layerTex");   
-   //samplerNames.push_back("$macrolayerTex");   
+   samplerNames.push_back("$layerTex");
    samplerNames.push_back("$lightMapTex");
    samplerNames.push_back("$lightInfoBuffer");
-   for(int i = 0; i < sgMaxTerrainMaterialsPerPass; ++i)
-   {
-      samplerNames.push_back(avar("$normalMap%d",i));
-      samplerNames.push_back(avar("$detailMap%d",i));
-      //samplerNames.push_back(avar("$macroMap%d", i));
-      samplerNames.push_back(avar("$ormConfigMap%d", i));
-   }   
+   samplerNames.push_back("$normalMapSampler");
+   samplerNames.push_back("$detailMapSampler");
+   samplerNames.push_back("$macroMapSampler");
+   samplerNames.push_back("$ormMapSampler"); 
 
    return samplerNames;
 }
@@ -71,10 +69,11 @@ const Vector<String> TerrainCellMaterial::mSamplerNames = _initSamplerNames();
 
 TerrainCellMaterial::TerrainCellMaterial()
    :  mTerrain( NULL ),
-      mCurrPass( 0 ),
       mDeferredMat( NULL ),
       mReflectMat( NULL ),
-      mMaterials(0)
+      mShader( NULL ),
+      mCurrPass( 0 ),
+      mMaterials( 0 )
 {
    smAllMaterials.push_back( this );
 }
@@ -84,6 +83,9 @@ TerrainCellMaterial::~TerrainCellMaterial()
    SAFE_DELETE( mDeferredMat );
    SAFE_DELETE( mReflectMat );   
    smAllMaterials.remove( this );
+
+   T3D::for_each(mMaterialInfos.begin(), mMaterialInfos.end(), T3D::delete_pointer());
+   mMaterialInfos.clear();
 }
 
 void TerrainCellMaterial::_updateDefaultAnisotropy()
@@ -101,86 +103,74 @@ void TerrainCellMaterial::_updateDefaultAnisotropy()
    Vector<TerrainCellMaterial*>::iterator iter = smAllMaterials.begin();
    for ( ; iter != smAllMaterials.end(); iter++ )
    {
-      for ( U32 p=0; p < (*iter)->mPasses.size(); p++ )
+      // Start from the existing state block.
+      GFXStateBlockDesc desc = (*iter)->mStateBlock->getDesc();
+
+      if ((*iter)->mDetailTexArrayConst->isValid())
       {
-         Pass &pass = (*iter)->mPasses[p];
+         const S32 sampler = (*iter)->mDetailTexArrayConst->getSamplerRegister();
 
-         // Start from the existing state block.
-         GFXStateBlockDesc desc = pass.stateBlock->getDesc();
-
-         for ( U32 m=0; m < pass.materials.size(); m++ )
+         if (maxAnisotropy > 1)
          {
-            const MaterialInfo *matInfo = pass.materials[m];
+            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+         }
+         else
+            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+      }
 
-            if ( matInfo->detailTexConst->isValid() )
-            {
-               const S32 sampler = matInfo->detailTexConst->getSamplerRegister();
+      if ((*iter)->mMacroTexArrayConst->isValid())
+      {
+         const S32 sampler = (*iter)->mMacroTexArrayConst->getSamplerRegister();
 
-               if ( maxAnisotropy > 1 )
-               {
-                  desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-                  desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-               }
-               else
-                  desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-            }
+         if (maxAnisotropy > 1)
+         {
+            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+         }
+         else
+            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+      }
 
-            if ( matInfo->macroTexConst->isValid() )
-            {
-               const S32 sampler = matInfo->macroTexConst->getSamplerRegister();
+      if ((*iter)->mNormalTexArrayConst->isValid())
+      {
+         const S32 sampler = (*iter)->mNormalTexArrayConst->getSamplerRegister();
 
-               if ( maxAnisotropy > 1 )
-               {
-                  desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-                  desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-               }
-               else
-                  desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-            }
+         if (maxAnisotropy > 1)
+         {
+            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+         }
+         else
+            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+      }
 
-            if ( matInfo->normalTexConst->isValid() )
-            {
-               const S32 sampler = matInfo->normalTexConst->getSamplerRegister();
+      if ((*iter)->mOrmTexArrayConst->isValid())
+      {
+         const S32 sampler = (*iter)->mOrmTexArrayConst->getSamplerRegister();
 
-               if ( maxAnisotropy > 1 )
-               {
-                  desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-                  desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-               }
-               else
-                  desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-            }
+         if (maxAnisotropy > 1)
+         {
+            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+         }
+         else
+            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+      }
 
-            if (matInfo->ormTexConst->isValid())
-            {
-               const S32 sampler = matInfo->ormTexConst->getSamplerRegister();
+      // Set the updated stateblock.
+      desc.setCullMode(GFXCullCCW);
+      (*iter)->mStateBlock = GFX->createStateBlock(desc);
 
-               if (maxAnisotropy > 1)
-               {
-                  desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-                  desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-               }
-               else
-                  desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-            }
+      //reflection
+      desc.setCullMode(GFXCullCW);
+      (*iter)->mReflectionStateBlock = GFX->createStateBlock(desc);
 
-         } // for ( U32 m=0; m < pass.materials.size(); m++ )
-
-         // Set the updated stateblock.
-         desc.setCullMode( GFXCullCCW );
-         pass.stateBlock = GFX->createStateBlock( desc );
-
-         //reflection
-         desc.setCullMode( GFXCullCW );
-         pass.reflectionStateBlock = GFX->createStateBlock(desc);
-
-         // Create the wireframe state blocks.
-         GFXStateBlockDesc wireframe( desc );
-         wireframe.fillMode = GFXFillWireframe;
-         wireframe.setCullMode( GFXCullCCW );
-         pass.wireframeStateBlock = GFX->createStateBlock( wireframe );
-
-      } // for ( U32 p=0; i < (*iter)->mPasses.size(); p++ )
+      // Create the wireframe state blocks.
+      GFXStateBlockDesc wireframe(desc);
+      wireframe.fillMode = GFXFillWireframe;
+      wireframe.setCullMode(GFXCullCCW);
+      (*iter)->mWireframeStateBlock = GFX->createStateBlock(wireframe);
    }
 
 }
@@ -207,31 +197,26 @@ void TerrainCellMaterial::setTransformAndEye(   const MatrixF &modelXfm,
    VectorF vEye = invViewXfm.getForwardVector();
    vEye.normalize( 1.0f / farPlane );
 
-   for ( U32 i=0; i < mPasses.size(); i++ )
+   mConsts->setSafe(mModelViewProjConst, modelViewProj);
+
+   if (mViewToObjConst->isValid() || mWorldViewOnlyConst->isValid())
    {
-      Pass &pass = mPasses[i];
+      MatrixF worldViewOnly = viewXfm * modelXfm;
 
-      pass.consts->setSafe( pass.modelViewProjConst, modelViewProj );
+      mConsts->setSafe(mWorldViewOnlyConst, worldViewOnly);
 
-      if( pass.viewToObj->isValid() || pass.worldViewOnly->isValid() )
+      if (mViewToObjConst->isValid())
       {
-         MatrixF worldViewOnly = viewXfm * modelXfm;
-
-         pass.consts->setSafe( pass.worldViewOnly, worldViewOnly );
-
-         if( pass.viewToObj->isValid() )
-         {
-            worldViewOnly.affineInverse();
-            pass.consts->set( pass.viewToObj, worldViewOnly);
-         } 
+         worldViewOnly.affineInverse();
+         mConsts->set(mViewToObjConst, worldViewOnly);
       }
-
-      pass.consts->setSafe( pass.eyePosWorldConst, eyePos );
-      pass.consts->setSafe( pass.eyePosConst, objEyePos );
-      pass.consts->setSafe( pass.objTransConst, modelXfm );
-      pass.consts->setSafe( pass.worldToObjConst, invModelXfm );
-      pass.consts->setSafe( pass.vEyeConst, vEye );
    }
+
+   mConsts->setSafe(mEyePosWorldConst, eyePos);
+   mConsts->setSafe(mEyePosConst, objEyePos);
+   mConsts->setSafe(mObjTransConst, modelXfm);
+   mConsts->setSafe(mWorldToObjConst, invModelXfm);
+   mConsts->setSafe(mVEyeConst, vEye);
 }
 
 TerrainCellMaterial* TerrainCellMaterial::getDeferredMat()
@@ -268,8 +253,7 @@ void TerrainCellMaterial::init(  TerrainBlock *block,
    mTerrain = block;
    mMaterials = activeMaterials;
 
-   Vector<MaterialInfo*> materials;
-
+   mMaterialInfos.clear();
    for ( U32 i = 0; i < 64; i++ )
    {
       if ( !( mMaterials & ((U64)1 << i ) ) )
@@ -280,40 +264,19 @@ void TerrainCellMaterial::init(  TerrainBlock *block,
       MaterialInfo *info = new MaterialInfo();
       info->layerId = i;
       info->mat = mat;
-      materials.push_back( info );
+      mMaterialInfos.push_back(info);
    }
 
-   mCurrPass = 0;
-   mPasses.clear();
-
-   // Ok... loop till we successfully generate all 
-   // the shader passes for the materials.
-   while ( materials.size() > 0 || baseOnly )
+   if (!_initShader(deferredMat,
+                     reflectMat,
+                     baseOnly))
    {
-      mPasses.increment();
+      Con::errorf("TerrainCellMaterial::init - Failed to init shader!");
 
-      if ( !_createPass(   &materials, 
-                           &mPasses.last(), 
-                           mPasses.size() == 1, 
-                           deferredMat,
-                           reflectMat,
-                           baseOnly ) )
-      {
-         Con::errorf( "TerrainCellMaterial::init - Failed to create pass!" );
-
-         // The pass failed to be generated... give up.
-         mPasses.last().materials.clear();
-         mPasses.clear();
-		 T3D::for_each( materials.begin(), materials.end(), T3D::delete_pointer() );
-         return;
-      }
-
-      if ( baseOnly )
-         break;
+      T3D::for_each(mMaterialInfos.begin(), mMaterialInfos.end(), T3D::delete_pointer());
+      mMaterialInfos.clear();
+      return;
    }
-
-   // Cleanup any remaining matinfo.
-   T3D::for_each( materials.begin(), materials.end(), T3D::delete_pointer() );
 
    // If we have attached mats then update them too.
    if ( mDeferredMat )
@@ -322,14 +285,11 @@ void TerrainCellMaterial::init(  TerrainBlock *block,
       mReflectMat->init( mTerrain, mMaterials, false, true, baseOnly );
 }
 
-bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials, 
-                                       Pass *pass, 
-                                       bool firstPass,
-                                       bool deferredMat,
-                                       bool reflectMat,
-                                       bool baseOnly )
+bool TerrainCellMaterial::_initShader(bool deferredMat,
+   bool reflectMat,
+   bool baseOnly)
 {
-   if ( GFX->getPixelShaderVersion() < 3.0f )
+   if (GFX->getPixelShaderVersion() < 3.0f)
       baseOnly = true;
 
    // NOTE: At maximum we only try to combine sgMaxTerrainMaterialsPerPass materials 
@@ -337,7 +297,7 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
    // cases, but the most common case results in much fewer
    // shader generation failures and permutations leading to
    // faster load time and less hiccups during gameplay.
-   U32 matCount = getMin( sgMaxTerrainMaterialsPerPass, materials->size() );
+   U32 matCount = getMin(sgMaxTerrainMaterialsPerPass, mMaterialInfos.size());
 
    Vector<GFXTexHandle> normalMaps;
 
@@ -347,135 +307,139 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
    // TODO: This seems ugly... we should trigger
    // features like this differently in the future.
    //
-   bool useBLM = String::compare( LIGHTMGR->getId(), "BLM" ) == 0;
+   bool useBLM = String::compare(LIGHTMGR->getId(), "BLM") == 0;
 
    // Do we need to disable normal mapping?
-   const bool disableNormalMaps = MATMGR->getExclusionFeatures().hasFeature( MFT_NormalMap ) || useBLM;
+   const bool disableNormalMaps = MATMGR->getExclusionFeatures().hasFeature(MFT_NormalMap) || useBLM;
 
    // How about parallax?
-   const bool disableParallaxMaps = GFX->getPixelShaderVersion() < 3.0f || 
-                                    MATMGR->getExclusionFeatures().hasFeature( MFT_Parallax );
+   const bool disableParallaxMaps = GFX->getPixelShaderVersion() < 3.0f ||
+      MATMGR->getExclusionFeatures().hasFeature(MFT_Parallax);
 
    // Has advanced lightmap support been enabled for deferred.
    bool advancedLightmapSupport = false;
-   if ( deferredMat )
+   if (deferredMat)
    {
       // This sucks... but it works.
-      AdvancedLightBinManager *lightBin;
-      if ( Sim::findObject( "AL_LightBinMgr", lightBin ) )
+      AdvancedLightBinManager* lightBin;
+      if (Sim::findObject("AL_LightBinMgr", lightBin))
          advancedLightmapSupport = lightBin->MRTLightmapsDuringDeferred();
    }
 
    // Loop till we create a valid shader!
-   while( true )
+   while (true)
    {
       FeatureSet features;
-      features.addFeature( MFT_VertTransform );
-      features.addFeature( MFT_TerrainBaseMap );
+      features.addFeature(MFT_VertTransform);
+      features.addFeature(MFT_TerrainBaseMap);
 
-      if ( deferredMat )
+      if (deferredMat)
       {
-         features.addFeature( MFT_EyeSpaceDepthOut );
-         features.addFeature( MFT_DeferredConditioner );
+         features.addFeature(MFT_EyeSpaceDepthOut);
+         features.addFeature(MFT_DeferredConditioner);
          features.addFeature(MFT_isDeferred);
 
-         if ( advancedLightmapSupport )
-            features.addFeature( MFT_RenderTarget3_Zero );
+         if (advancedLightmapSupport)
+            features.addFeature(MFT_RenderTarget3_Zero);
       }
       else
       {
-         features.addFeature( MFT_RTLighting );
+         features.addFeature(MFT_RTLighting);
 
          // The HDR feature is always added... it will compile out
          // if HDR is not enabled in the engine.
-         features.addFeature( MFT_HDROut );
+         features.addFeature(MFT_HDROut);
       }
-      features.addFeature(MFT_DeferredTerrainBlankInfoMap);
 
       // Enable lightmaps and fogging if we're in BL.
-      if ( reflectMat || useBLM )
+      if (reflectMat || useBLM)
       {
-         features.addFeature( MFT_Fog );
-         features.addFeature( MFT_ForwardShading );
+         features.addFeature(MFT_Fog);
+         features.addFeature(MFT_ForwardShading);
       }
-      if ( useBLM )
-         features.addFeature( MFT_TerrainLightMap );
-
-      // The additional passes need to be lerp blended into the
-      // target to maintain the results of the previous passes.
-      if (!firstPass && deferredMat)
-         features.addFeature( MFT_TerrainAdditive );
+      if (useBLM)
+         features.addFeature(MFT_TerrainLightMap);
 
       normalMaps.clear();
-      pass->materials.clear();
+
+      S32 featureIndex = 0;
 
       // Now add all the material layer features.
-
-      for ( U32 i=0; i < matCount && !baseOnly; i++ )
+      for (U32 i = 0; i < matCount && !baseOnly; i++)
       {
-         TerrainMaterial *mat = (*materials)[i]->mat;
+         TerrainMaterial* mat = mMaterialInfos[i]->mat;
 
-         if ( mat == NULL )
+         if (mat == NULL)
             continue;
 
          // We only include materials that 
          // have more than a base texture.
-         if (  mat->getDetailSize() <= 0 ||
-               mat->getDetailDistance() <= 0 ||
-               mat->getDetailMap().isEmpty() )
-            continue;         
+         if (mat->getDetailSize() <= 0 ||
+            mat->getDetailDistance() <= 0 ||
+            mat->getDetailMap().isEmpty())
+            continue;
 
-         S32 featureIndex = pass->materials.size();
-
-		 // check for macro detail texture
-         if (  !(mat->getMacroSize() <= 0 || mat->getMacroDistance() <= 0 || mat->getMacroMap().isEmpty() ) )
-         {
-            if(deferredMat)
-               features.addFeature(MFT_isDeferred, featureIndex);
-	         features.addFeature( MFT_TerrainMacroMap, featureIndex );
-         }
-
-         if(deferredMat)
-            features.addFeature(MFT_isDeferred, featureIndex);
-         features.addFeature( MFT_TerrainDetailMap, featureIndex );
-
-         if (!(mat->getORMConfigMap().isEmpty()))
+         // check for macro detail texture
+         if (!(mat->getMacroSize() <= 0 || mat->getMacroDistance() <= 0 || mat->getMacroMap().isEmpty()))
          {
             if (deferredMat)
                features.addFeature(MFT_isDeferred, featureIndex);
-            features.addFeature(MFT_TerrainORMMap, featureIndex);
-            features.removeFeature(MFT_DeferredTerrainBlankInfoMap);
+            features.addFeature(MFT_TerrainMacroMap, featureIndex);
          }
-         if (mat->getInvertRoughness())
-            features.addFeature(MFT_InvertRoughness);
 
-         pass->materials.push_back( (*materials)[i] );
+         if (deferredMat)
+            features.addFeature(MFT_isDeferred, featureIndex);
+         features.addFeature(MFT_TerrainDetailMap, featureIndex);
+
+         if (deferredMat)
+         {
+            if (!(mat->getORMConfigMap().isEmpty()))
+            {
+               features.addFeature(MFT_TerrainORMMap, featureIndex);
+            }
+            else
+            {
+               features.addFeature(MFT_DeferredTerrainBlankInfoMap, featureIndex);
+            }
+         }
+         
+         if (mat->getInvertRoughness())
+            features.addFeature(MFT_InvertRoughness, featureIndex);
+
          normalMaps.increment();
 
          // Skip normal maps if we need to.
-         if ( !disableNormalMaps && mat->getNormalMap().isNotEmpty() )
+         if (!disableNormalMaps && mat->getNormalMap().isNotEmpty())
          {
-            features.addFeature( MFT_TerrainNormalMap, featureIndex );
+            features.addFeature(MFT_TerrainNormalMap, featureIndex);
 
-            normalMaps.last().set( mat->getNormalMap(), 
-               &GFXNormalMapProfile, "TerrainCellMaterial::_createPass() - NormalMap" );
+            normalMaps.last().set(mat->getNormalMap(),
+               &GFXNormalMapProfile, "TerrainCellMaterial::_initShader() - NormalMap");
 
             GFXFormat normalFmt = normalMaps.last().getFormat();
-            if ( normalFmt == GFXFormatBC3 )
-               features.addFeature( MFT_IsBC3nm, featureIndex );
-            else if ( normalFmt == GFXFormatBC5)
-               features.addFeature( MFT_IsBC5nm, featureIndex);
+            if (normalFmt == GFXFormatBC3)
+               features.addFeature(MFT_IsBC3nm, featureIndex);
+            else if (normalFmt == GFXFormatBC5)
+               features.addFeature(MFT_IsBC5nm, featureIndex);
 
             // Do we need and can we do parallax mapping?
-            if (  !disableParallaxMaps &&
-                  mat->getParallaxScale() > 0.0f &&
-                  !mat->useSideProjection() )
-               features.addFeature( MFT_TerrainParallaxMap, featureIndex );
+            if (!disableParallaxMaps &&
+               mat->getParallaxScale() > 0.0f &&
+               !mat->useSideProjection())
+               features.addFeature(MFT_TerrainParallaxMap, featureIndex);
          }
 
          // Is this layer got side projection?
-         if ( mat->useSideProjection() )
-            features.addFeature( MFT_TerrainSideProject, featureIndex );
+         if (mat->useSideProjection())
+            features.addFeature(MFT_TerrainSideProject, featureIndex);
+
+         featureIndex++;
+      }
+
+      // New blending
+      if (matCount > 0 && !Con::getBoolVariable("$Terrain::LerpBlend", false))
+      {
+         features.addFeature(MFT_TerrainHeightBlend);
       }
 
       MaterialFeatureData featureData;
@@ -486,16 +450,16 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
       // registers we're gonna need.
       U32 numTex = 0;
       U32 numTexReg = 0;
-      for ( U32 i=0; i < features.getCount(); i++ )
+      for (U32 i = 0; i < features.getCount(); i++)
       {
          S32 index;
-         const FeatureType &type = features.getAt( i, &index );
-         ShaderFeature* sf = FEATUREMGR->getByType( type );
-         if ( !sf ) 
+         const FeatureType& type = features.getAt(i, &index);
+         ShaderFeature* sf = FEATUREMGR->getByType(type);
+         if (!sf)
             continue;
 
-         sf->setProcessIndex( index );
-         ShaderFeature::Resources res = sf->getResources( featureData );
+         sf->setProcessIndex(index);
+         ShaderFeature::Resources res = sf->getResources(featureData);
 
          numTex += res.numTex;
          numTexReg += res.numTexReg;
@@ -507,9 +471,9 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
       // limit.  Its really supposed to be 11, but that
       // always fails to compile so far.
       //
-      if (  numTex < GFX->getNumSamplers() &&
-            numTexReg <= 10 )
-      {         
+      if (numTex < GFX->getNumSamplers() &&
+         numTexReg <= 10)
+      {
          // NOTE: We really shouldn't be getting errors building the shaders,
          // but we can generate more instructions than the ps_2_x will allow.
          //
@@ -522,18 +486,18 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
          // we get down to a single material.  If a single material case
          // fails it means it cannot generate any passes at all!
          const bool logErrors = true;// matCount == 1;
-         GFXShader::setLogging( logErrors, true );
+         GFXShader::setLogging(logErrors, true);
 
-         pass->shader = SHADERGEN->getShader( featureData, getGFXVertexFormat<TerrVertex>(), NULL, mSamplerNames );
+         mShader = SHADERGEN->getShader(featureData, getGFXVertexFormat<TerrVertex>(), NULL, mSamplerNames);
       }
 
       // If we got a shader then we can continue.
-      if ( pass->shader )
+      if (mShader)
          break;
 
       // If the material count is already 1 then this
       // is a real shader error... give up!
-      if ( matCount <= 1 )
+      if (matCount <= 1)
          return false;
 
       // If we failed we next try half the input materials
@@ -542,180 +506,149 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
    }
 
    // Setup the constant buffer.
-   pass->consts = pass->shader->allocConstBuffer();
+   mConsts = mShader->allocConstBuffer();
 
    // Prepare the basic constants.
-   pass->modelViewProjConst = pass->shader->getShaderConstHandle( "$modelview" );
-   pass->worldViewOnly = pass->shader->getShaderConstHandle( "$worldViewOnly" );
-   pass->viewToObj = pass->shader->getShaderConstHandle( "$viewToObj" );
-   pass->eyePosWorldConst = pass->shader->getShaderConstHandle( "$eyePosWorld" );
-   pass->eyePosConst = pass->shader->getShaderConstHandle( "$eyePos" );
-   pass->vEyeConst = pass->shader->getShaderConstHandle( "$vEye" );
-   pass->layerSizeConst = pass->shader->getShaderConstHandle( "$layerSize" );
-   pass->objTransConst = pass->shader->getShaderConstHandle( "$objTrans" );
-   pass->worldToObjConst = pass->shader->getShaderConstHandle( "$worldToObj" );  
-   pass->lightInfoBufferConst = pass->shader->getShaderConstHandle( "$lightInfoBuffer" );   
-   pass->baseTexMapConst = pass->shader->getShaderConstHandle( "$baseTexMap" );
-   pass->layerTexConst = pass->shader->getShaderConstHandle( "$layerTex" );
-   pass->fogDataConst = pass->shader->getShaderConstHandle( "$fogData" );
-   pass->fogColorConst = pass->shader->getShaderConstHandle( "$fogColor" );
-   pass->lightMapTexConst = pass->shader->getShaderConstHandle( "$lightMapTex" );
-   pass->oneOverTerrainSize = pass->shader->getShaderConstHandle( "$oneOverTerrainSize" );
-   pass->squareSize = pass->shader->getShaderConstHandle( "$squareSize" );
+   mModelViewProjConst = mShader->getShaderConstHandle("$modelview");
+   mWorldViewOnlyConst = mShader->getShaderConstHandle("$worldViewOnly");
+   mViewToObjConst = mShader->getShaderConstHandle("$viewToObj");
+   mEyePosWorldConst = mShader->getShaderConstHandle("$eyePosWorld");
+   mEyePosConst = mShader->getShaderConstHandle("$eyePos");
+   mVEyeConst = mShader->getShaderConstHandle("$vEye");
+   mLayerSizeConst = mShader->getShaderConstHandle("$layerSize");
+   mObjTransConst = mShader->getShaderConstHandle("$objTrans");
+   mWorldToObjConst = mShader->getShaderConstHandle("$worldToObj");
+   mLightInfoBufferConst = mShader->getShaderConstHandle("$lightInfoBuffer");
+   mBaseTexMapConst = mShader->getShaderConstHandle("$baseTexMap");
+   mLayerTexConst = mShader->getShaderConstHandle("$layerTex");
+   mFogDataConst = mShader->getShaderConstHandle("$fogData");
+   mFogColorConst = mShader->getShaderConstHandle("$fogColor");
+   mLightMapTexConst = mShader->getShaderConstHandle("$lightMapTex");
+   mOneOverTerrainSizeConst = mShader->getShaderConstHandle("$oneOverTerrainSize");
+   mSquareSizeConst = mShader->getShaderConstHandle("$squareSize");
+   mBlendDepthConst = mShader->getShaderConstHandle("$baseBlendDepth");
 
-   pass->lightParamsConst = pass->shader->getShaderConstHandle( "$rtParamslightInfoBuffer" );
+   mLightParamsConst = mShader->getShaderConstHandle("$rtParamslightInfoBuffer");
 
    // Now prepare the basic stateblock.
    GFXStateBlockDesc desc;
-   if ( !firstPass )
-   {
-      desc.setBlend( true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha );
-
-      // If this is the deferred then we don't want to
-      // write to the last two color channels (where
-      // depth is usually encoded).
-      //
-      // This trick works in combination with the 
-      // MFT_TerrainAdditive feature to lerp the
-      // output normal with the previous pass.
-      //
-      if ( deferredMat )
-         desc.setColorWrites( true, true, true, false );
-   }
 
    // We write to the zbuffer if this is a deferred
    // material or if the deferred is disabled.
-   desc.setZReadWrite( true,  !MATMGR->getDeferredEnabled() || 
-                              deferredMat ||
-                              reflectMat );
+   desc.setZReadWrite(true, !MATMGR->getDeferredEnabled() ||
+      deferredMat ||
+      reflectMat);
 
    desc.samplersDefined = true;
-   if ( pass->baseTexMapConst->isValid() )
-      desc.samplers[pass->baseTexMapConst->getSamplerRegister()] = GFXSamplerStateDesc::getWrapLinear();
+   if (mBaseTexMapConst->isValid())
+      desc.samplers[mBaseTexMapConst->getSamplerRegister()] = GFXSamplerStateDesc::getWrapLinear();
 
-   if ( pass->layerTexConst->isValid() )
-      desc.samplers[pass->layerTexConst->getSamplerRegister()] = GFXSamplerStateDesc::getClampPoint();
+   if (mLayerTexConst->isValid())
+      desc.samplers[mLayerTexConst->getSamplerRegister()] = GFXSamplerStateDesc::getClampPoint();
 
-   if ( pass->lightInfoBufferConst->isValid() )
-      desc.samplers[pass->lightInfoBufferConst->getSamplerRegister()] = GFXSamplerStateDesc::getClampPoint();
+   if (mLightInfoBufferConst->isValid())
+      desc.samplers[mLightInfoBufferConst->getSamplerRegister()] = GFXSamplerStateDesc::getClampPoint();
 
-   if ( pass->lightMapTexConst->isValid() )
-      desc.samplers[pass->lightMapTexConst->getSamplerRegister()] = GFXSamplerStateDesc::getWrapLinear();
+   if (mLightMapTexConst->isValid())
+      desc.samplers[mLightMapTexConst->getSamplerRegister()] = GFXSamplerStateDesc::getWrapLinear();
 
    const U32 maxAnisotropy = MATMGR->getDefaultAnisotropy();
 
-   // Finally setup the material specific shader 
-   // constants and stateblock state.
-   //
-   // NOTE: If this changes be sure to check TerrainCellMaterial::_updateDefaultAnisotropy
-   // to see if it needs the same changes.
-   //
-   for ( U32 i=0; i < pass->materials.size(); i++ )
+   mDetailInfoVArrayConst = mShader->getShaderConstHandle("$detailScaleAndFade");
+   mDetailInfoPArrayConst = mShader->getShaderConstHandle("$detailIdStrengthParallax");
+   mMacroInfoVArrayConst = mShader->getShaderConstHandle("$macroIdStrengthParallax");
+   mMacroInfoPArrayConst = mShader->getShaderConstHandle("$macroIdStrengthParallax");
+
+   mDetailTexArrayConst = mShader->getShaderConstHandle("$detailMapSampler");
+   if (mDetailTexArrayConst->isValid())
    {
-      MaterialInfo *matInfo = pass->materials[i];
+      const S32 sampler = mDetailTexArrayConst->getSamplerRegister();
 
-      matInfo->detailInfoVConst = pass->shader->getShaderConstHandle( avar( "$detailScaleAndFade%d", i ) );
-      matInfo->detailInfoPConst = pass->shader->getShaderConstHandle( avar( "$detailIdStrengthParallax%d", i ) );
+      desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
+      desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
+      desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
 
-      matInfo->detailTexConst = pass->shader->getShaderConstHandle( avar( "$detailMap%d", i ) );
-      if ( matInfo->detailTexConst->isValid() )
+      if (maxAnisotropy > 1)
       {
-         const S32 sampler = matInfo->detailTexConst->getSamplerRegister();
-
-         desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
-         desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
-         desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
-
-         if ( maxAnisotropy > 1 )
-         {
-            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-         }
-         else
-            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-
-         matInfo->detailTex.set( matInfo->mat->getDetailMap(), 
-            &GFXStaticTextureProfile, "TerrainCellMaterial::_createPass() - DetailMap" );
+         desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+         desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
       }
-
-	  matInfo->ormTexConst = pass->shader->getShaderConstHandle(avar("$ormConfigMap%d", i));
-	  if (matInfo->ormTexConst->isValid())
-	  {
-        GFXTextureProfile* profile = &GFXStaticTextureProfile;
-        if (matInfo->mat->getIsSRGB())
-           profile = &GFXStaticTextureSRGBProfile;
-
-		  matInfo->ormTex.set(matInfo->mat->getORMConfigMap(),
-			  profile, "TerrainCellMaterial::_createPass() - CompositeMap");
-		  const S32 sampler = matInfo->ormTexConst->getSamplerRegister();
-
-		  desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
-		  desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
-		  desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
-
-		  if (maxAnisotropy > 1)
-		  {
-			  desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-			  desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-		  }
-		  else
-			  desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-	  }
-
-      matInfo->macroInfoVConst = pass->shader->getShaderConstHandle( avar( "$macroScaleAndFade%d", i ) );
-      matInfo->macroInfoPConst = pass->shader->getShaderConstHandle( avar( "$macroIdStrengthParallax%d", i ) );
-
-      matInfo->macroTexConst = pass->shader->getShaderConstHandle( avar( "$macroMap%d", i ) );
-      if ( matInfo->macroTexConst->isValid() )
-      {
-         const S32 sampler = matInfo->macroTexConst->getSamplerRegister();
-
-         desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
-         desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
-         desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
-
-         if ( maxAnisotropy > 1 )
-         {
-            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-         }
-         else
-            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-
-         matInfo->macroTex.set( matInfo->mat->getMacroMap(), 
-            &GFXStaticTextureProfile, "TerrainCellMaterial::_createPass() - MacroMap" );
-      }
-	  //end macro texture
-
-      matInfo->normalTexConst = pass->shader->getShaderConstHandle( avar( "$normalMap%d", i ) );
-      if ( matInfo->normalTexConst->isValid() )
-      {
-         const S32 sampler = matInfo->normalTexConst->getSamplerRegister();
-
-         desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
-         desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
-         desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
-
-         if ( maxAnisotropy > 1 )
-         {
-            desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
-            desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
-         }
-         else
-            desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
-
-         matInfo->normalTex = normalMaps[i];
-      }
+      else
+         desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
    }
 
-   // Remove the materials we processed and leave the
-   // ones that remain for the next pass.
-   for ( U32 i=0; i < matCount; i++ )
+   mMacroTexArrayConst = mShader->getShaderConstHandle("$macroMapSampler");
+   if (mMacroTexArrayConst->isValid())
    {
-      MaterialInfo *matInfo = materials->first();
-      if ( baseOnly || pass->materials.find_next( matInfo ) == -1 )
-         delete matInfo;     
-      materials->pop_front();
+      const S32 sampler = mMacroTexArrayConst->getSamplerRegister();
+
+      desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
+      desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
+      desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
+
+      if (maxAnisotropy > 1)
+      {
+         desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+         desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+      }
+      else
+         desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+   }
+
+   mNormalTexArrayConst = mShader->getShaderConstHandle("$normalMapSampler");
+   if (mNormalTexArrayConst->isValid())
+   {
+      const S32 sampler = mNormalTexArrayConst->getSamplerRegister();
+
+      desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
+      desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
+      desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
+
+      if (maxAnisotropy > 1)
+      {
+         desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+         desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+      }
+      else
+         desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+   }
+
+   mOrmTexArrayConst = mShader->getShaderConstHandle("$ormMapSampler");
+   if (mOrmTexArrayConst->isValid())
+   {
+      GFXTextureProfile* profile = &GFXStaticTextureProfile;
+
+      const S32 sampler = mOrmTexArrayConst->getSamplerRegister();
+
+      desc.samplers[sampler] = GFXSamplerStateDesc::getWrapLinear();
+      desc.samplers[sampler].magFilter = GFXTextureFilterLinear;
+      desc.samplers[sampler].mipFilter = GFXTextureFilterLinear;
+
+      if (maxAnisotropy > 1)
+      {
+         desc.samplers[sampler].minFilter = GFXTextureFilterAnisotropic;
+         desc.samplers[sampler].maxAnisotropy = maxAnisotropy;
+      }
+      else
+         desc.samplers[sampler].minFilter = GFXTextureFilterLinear;
+   }
+
+   for (U32 i = 0; i < matCount && !baseOnly; i++)
+   {
+      TerrainMaterial* mat = mMaterialInfos[i]->mat;
+
+      if (mat == NULL)
+         continue;
+
+      // We only include materials that 
+      // have more than a base texture.
+      if (mat->getDetailSize() <= 0 ||
+         mat->getDetailDistance() <= 0 ||
+         mat->getDetailMap().isEmpty())
+         continue;
+
+      mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
+      mMaterialInfos[i]->mBlendContrastConst = mShader->getShaderConstHandle(avar("$blendContrast%d", i));
    }
 
    // If we're doing deferred it requires some 
@@ -724,28 +657,34 @@ bool TerrainCellMaterial::_createPass( Vector<MaterialInfo*> *materials,
       desc.addDesc( RenderDeferredMgr::getOpaqueStenciWriteDesc( false ) );
 
    desc.setCullMode( GFXCullCCW );
-   pass->stateBlock = GFX->createStateBlock(desc);
+   mStateBlock = GFX->createStateBlock(desc);
 
    //reflection stateblock
    desc.setCullMode( GFXCullCW );
-   pass->reflectionStateBlock = GFX->createStateBlock(desc);
+   mReflectionStateBlock = GFX->createStateBlock(desc);
 
    // Create the wireframe state blocks.
    GFXStateBlockDesc wireframe( desc );
    wireframe.fillMode = GFXFillWireframe;
    wireframe.setCullMode( GFXCullCCW );
-   pass->wireframeStateBlock = GFX->createStateBlock( wireframe );
+   mWireframeStateBlock = GFX->createStateBlock( wireframe );
 
    return true;
 }
 
-void TerrainCellMaterial::_updateMaterialConsts( Pass *pass )
+void TerrainCellMaterial::_updateMaterialConsts( )
 {
    PROFILE_SCOPE( TerrainCellMaterial_UpdateMaterialConsts );
-
-   for ( U32 j=0; j < pass->materials.size(); j++ )
+   if (mMaterialInfos.empty())
    {
-      MaterialInfo *matInfo = pass->materials[j];
+      return;
+   }
+   AlignedArray<Point4F> detailInfoArray(mMaterialInfos.size(), sizeof(Point4F));
+   AlignedArray<Point4F> detailScaleAndFadeArray(mMaterialInfos.size(), sizeof(Point4F));
+
+   for ( U32 j=0; j < mMaterialInfos.size(); j++ )
+   {
+      MaterialInfo *matInfo = mMaterialInfos[j];
 
       F32 detailSize = matInfo->mat->getDetailSize();
       F32 detailScale = 1.0f;
@@ -773,38 +712,20 @@ void TerrainCellMaterial::_updateMaterialConsts( Pass *pass )
       if ( !mIsZero( distance ) )
          detailScaleAndFade.w = 1.0f / distance;
 
-      Point3F detailIdStrengthParallax( matInfo->layerId,
+      Point4F detailIdStrengthParallax( matInfo->layerId,
                                         matInfo->mat->getDetailStrength(),
-                                        matInfo->mat->getParallaxScale() );
+                                        matInfo->mat->getParallaxScale(), 0 );
 
-      pass->consts->setSafe( matInfo->detailInfoVConst, detailScaleAndFade );
-      pass->consts->setSafe( matInfo->detailInfoPConst, detailIdStrengthParallax );
+      detailScaleAndFadeArray[j] = detailScaleAndFade;
+      detailInfoArray[j] = detailIdStrengthParallax;
 
-	// macro texture info
-
-      F32 macroSize = matInfo->mat->getMacroSize();
-      F32 macroScale = 1.0f;
-      if ( !mIsZero( macroSize ) )
-         macroScale = mTerrain->getWorldBlockSize() / macroSize;
-
-      // Scale the distance by the global scalar.
-      const F32 macroDistance = mTerrain->smDetailScale * matInfo->mat->getMacroDistance();
-
-      Point4F macroScaleAndFade(   macroScale,
-                                    -macroScale,
-                                    macroDistance, 
-                                    0 );
-
-      if ( !mIsZero( macroDistance ) )
-         macroScaleAndFade.w = 1.0f / macroDistance;
-
-      Point3F macroIdStrengthParallax( matInfo->layerId,
-                                        matInfo->mat->getMacroStrength(),
-                                        0 );
-
-      pass->consts->setSafe( matInfo->macroInfoVConst, macroScaleAndFade );
-      pass->consts->setSafe( matInfo->macroInfoPConst, macroIdStrengthParallax );
+      mConsts->setSafe(matInfo->mBlendDepthConst, matInfo->mat->getBlendDepth());
+      mConsts->setSafe(matInfo->mBlendContrastConst, matInfo->mat->getBlendContrast());
    }
+
+   mConsts->setSafe(mDetailInfoVArrayConst, detailScaleAndFadeArray);
+   mConsts->setSafe(mDetailInfoPArrayConst, detailInfoArray);
+
 }
 
 bool TerrainCellMaterial::setupPass(   const SceneRenderState *state, 
@@ -812,80 +733,89 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
 {
    PROFILE_SCOPE( TerrainCellMaterial_SetupPass );
 
-   if ( mCurrPass >= mPasses.size() )
+   if (mCurrPass > 0)
    {
       mCurrPass = 0;
       return false;
    }
 
-   Pass &pass = mPasses[mCurrPass];
+   if (mMaterialInfos.size() > 4)
+   {
+      int a = 2 + 2;
+   }
 
-   _updateMaterialConsts( &pass );
+   mCurrPass++;
 
-   if ( pass.baseTexMapConst->isValid() )
-      GFX->setTexture( pass.baseTexMapConst->getSamplerRegister(), mTerrain->mBaseTex.getPointer() );
+   _updateMaterialConsts();
 
-   if ( pass.layerTexConst->isValid() )
-      GFX->setTexture( pass.layerTexConst->getSamplerRegister(), mTerrain->mLayerTex.getPointer() );
+   if ( mBaseTexMapConst->isValid() )
+      GFX->setTexture( mBaseTexMapConst->getSamplerRegister(), mTerrain->mBaseTex.getPointer() );
 
-   if ( pass.lightMapTexConst->isValid() )
-      GFX->setTexture( pass.lightMapTexConst->getSamplerRegister(), mTerrain->getLightMapTex() );
+   if ( mLayerTexConst->isValid() )
+      GFX->setTexture( mLayerTexConst->getSamplerRegister(), mTerrain->mLayerTex.getPointer() );
+
+   if ( mLightMapTexConst->isValid() )
+      GFX->setTexture( mLightMapTexConst->getSamplerRegister(), mTerrain->getLightMapTex() );
 
    if ( sceneData.wireframe )
-      GFX->setStateBlock( pass.wireframeStateBlock );
+      GFX->setStateBlock( mWireframeStateBlock );
    else if ( state->isReflectPass( ))
-      GFX->setStateBlock( pass.reflectionStateBlock );
+      GFX->setStateBlock( mReflectionStateBlock );
    else
-      GFX->setStateBlock( pass.stateBlock );
+      GFX->setStateBlock( mStateBlock );
 
-   GFX->setShader( pass.shader );
-   GFX->setShaderConstBuffer( pass.consts );
+   GFX->setShader( mShader );
+   GFX->setShaderConstBuffer( mConsts );
 
    // Let the light manager prepare any light stuff it needs.
    LIGHTMGR->setLightInfo( NULL,
                            NULL,
                            sceneData,
                            state,
-                           mCurrPass,
-                           pass.consts );
+                           0,
+                           mConsts );
 
-   for ( U32 i=0; i < pass.materials.size(); i++ )
-   {
-      MaterialInfo *matInfo = pass.materials[i];
+   if (mDetailTexArrayConst->isValid() && mTerrain->getDetailTextureArray().isValid())
+      GFX->setTextureArray(mDetailTexArrayConst->getSamplerRegister(), mTerrain->getDetailTextureArray());
+   if (mMacroTexArrayConst->isValid() && mTerrain->getMacroTextureArray().isValid())
+      GFX->setTextureArray(mMacroTexArrayConst->getSamplerRegister(), mTerrain->getMacroTextureArray());
+   if (mNormalTexArrayConst->isValid() && mTerrain->getNormalTextureArray().isValid())
+      GFX->setTextureArray(mNormalTexArrayConst->getSamplerRegister(), mTerrain->getNormalTextureArray());
+   if (mOrmTexArrayConst->isValid() && mTerrain->getOrmTextureArray().isValid())
+      GFX->setTextureArray(mOrmTexArrayConst->getSamplerRegister(), mTerrain->getOrmTextureArray());
 
-      if ( matInfo->detailTexConst->isValid() )
-         GFX->setTexture( matInfo->detailTexConst->getSamplerRegister(), matInfo->detailTex );
-      if ( matInfo->macroTexConst->isValid() )
-         GFX->setTexture( matInfo->macroTexConst->getSamplerRegister(), matInfo->macroTex );
-      if ( matInfo->normalTexConst->isValid() )
-         GFX->setTexture( matInfo->normalTexConst->getSamplerRegister(), matInfo->normalTex );
-      if ( matInfo->ormTexConst->isValid() )
-         GFX->setTexture( matInfo->ormTexConst->getSamplerRegister(), matInfo->ormTex );
-   }
+   mConsts->setSafe( mLayerSizeConst, (F32)mTerrain->mLayerTex.getWidth() );
 
-   pass.consts->setSafe( pass.layerSizeConst, (F32)mTerrain->mLayerTex.getWidth() );
-
-   if ( pass.oneOverTerrainSize->isValid() )
+   if ( mOneOverTerrainSizeConst->isValid() )
    {
       F32 oneOverTerrainSize = 1.0f / mTerrain->getWorldBlockSize();
-      pass.consts->set( pass.oneOverTerrainSize, oneOverTerrainSize );
+      mConsts->set( mOneOverTerrainSizeConst, oneOverTerrainSize );
    }
 
-   pass.consts->setSafe( pass.squareSize, mTerrain->getSquareSize() );
+   mConsts->setSafe( mSquareSizeConst, mTerrain->getSquareSize() );
 
-   if ( pass.fogDataConst->isValid() )
+   if ( mFogDataConst->isValid() )
    {
       Point3F fogData;
       fogData.x = sceneData.fogDensity;
       fogData.y = sceneData.fogDensityOffset;
       fogData.z = sceneData.fogHeightFalloff;     
-      pass.consts->set( pass.fogDataConst, fogData );
+      mConsts->set( mFogDataConst, fogData );
    }
 
-   pass.consts->setSafe( pass.fogColorConst, sceneData.fogColor );
+   if (String::isEmpty(Con::getVariable("$Terrain::BlendDepth")))
+   {
+      mConsts->setSafe(mBlendDepthConst, 0.2f);
+   }
+   else
+   {
+      mConsts->setSafe(mBlendDepthConst, Con::getFloatVariable("$Terrain::BlendDepth"));
+   }
 
-   if (  pass.lightInfoBufferConst->isValid() &&
-         pass.lightParamsConst->isValid() )
+   mConsts->setSafe( mFogColorConst, sceneData.fogColor );
+
+   if (  mLightInfoBufferConst->isValid() &&
+         mLightParamsConst->isValid() )
    {
       if ( !mLightInfoTarget )
          mLightInfoTarget = NamedTexTarget::find( "diffuseLighting" );
@@ -898,17 +828,16 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
       
       if ( texObject )
       {
-         GFX->setTexture( pass.lightInfoBufferConst->getSamplerRegister(), texObject );
+         GFX->setTexture( mLightInfoBufferConst->getSamplerRegister(), texObject );
 
          const Point3I &targetSz = texObject->getSize();
          const RectI &targetVp = mLightInfoTarget->getViewport();
          Point4F rtParams;
          ScreenSpace::RenderTargetParameters(targetSz, targetVp, rtParams);
-         pass.consts->setSafe( pass.lightParamsConst, rtParams );
+         mConsts->setSafe( mLightParamsConst, rtParams );
       }
    }
 
-   ++mCurrPass;
    return true;
 }
 

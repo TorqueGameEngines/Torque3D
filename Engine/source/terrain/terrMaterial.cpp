@@ -68,6 +68,8 @@ TerrainMaterial::TerrainMaterial()
       mMacroStrength( 0.7f ),
       mMacroDistance( 500.0f ),
       mParallaxScale( 0.0f ),
+      mBlendDepth( 0.0f ),
+      mBlendContrast( 1.0f ),
       mIsSRGB(false),
       mInvertRoughness(false)
 {
@@ -90,6 +92,12 @@ void TerrainMaterial::initPersistFields()
    scriptBindMapSlot(NormalMap, TerrainMaterial,"NormalMap");
    addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
+
+   addField("blendHeightBase", TypeF32, Offset(mBlendDepth, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
+      "Higher numbers = larger blend radius.");
+
+   addField("blendHeightContrast", TypeF32, Offset(mBlendContrast, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
+      "Higher numbers = larger blend radius.");
 
    scriptBindMapSlot(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
    addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );

@@ -44,9 +44,9 @@ public:
    
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
-   Var* _getNormalMapTex();
-
-   Var* _getORMConfigMapTex();
+   Var* _getDetailMapSampler();
+   Var* _getNormalMapSampler();
+   Var* _getOrmMapSampler();
 
    static Var* _getUniformVar( const char *name, const char *type, ConstantSortPosition csp );
    
@@ -151,17 +151,6 @@ public:
    virtual String getName() { return "Terrain Lightmap Texture"; }
 };
 
-
-class TerrainAdditiveFeatGLSL : public TerrainFeatGLSL
-{
-public:
-
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
-
-   virtual String getName() { return "Terrain Additive"; }
-};
-
 class TerrainORMMapFeatGLSL : public TerrainFeatGLSL
 {
 public:
@@ -187,6 +176,19 @@ public:
 
    virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
    virtual String getName() { return "Blank Matinfo map"; }
+};
+
+class TerrainHeightMapBlendGLSL : public TerrainFeatGLSL
+{
+public:
+
+   virtual void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual String getName() { return "Terrain Heightmap Blend"; }
 };
 
 #endif // _TERRFEATUREGLSL_H_

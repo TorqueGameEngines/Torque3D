@@ -130,6 +130,7 @@ protected:
 public:
    virtual GFXCubemap * createCubemap();
    virtual GFXCubemapArray *createCubemapArray();
+   virtual GFXTextureArray *createTextureArray();
 
    virtual F32 getFillConventionOffset() const { return 0.0f; };
 

@@ -166,6 +166,35 @@ vec2 parallaxOffsetDxtnm(sampler2D texMap, vec2 texCoord, vec3 negViewTS, float 
    return offset;
 }
 
+/// Same as the above but for arrays
+vec2 parallaxOffset( sampler2DArray texMap, vec3 texCoord, vec3 negViewTS, float depthScale )
+{
+   float depth = texture( texMap, texCoord ).a/(PARALLAX_REFINE_STEPS*2);
+   vec2 offset = negViewTS.xy * vec2( depth * depthScale )/vec2(PARALLAX_REFINE_STEPS*2);
+
+   for ( int i=0; i < PARALLAX_REFINE_STEPS; i++ )
+   {
+      depth = ( depth + texture( texMap, texCoord + vec3(offset, 0.0) ).a )/(PARALLAX_REFINE_STEPS*2);
+      offset = negViewTS.xy * vec2( depth * depthScale )/vec2(PARALLAX_REFINE_STEPS*2);
+   }
+
+   return offset;
+}
+
+vec2 parallaxOffsetDxtnm(sampler2DArray texMap, vec3 texCoord, vec3 negViewTS, float depthScale)
+{
+   float depth = texture(texMap, texCoord).r/(PARALLAX_REFINE_STEPS*2);
+   vec2 offset = negViewTS.xy * vec2(depth * depthScale)/vec2(PARALLAX_REFINE_STEPS*2);
+
+   for (int i = 0; i < PARALLAX_REFINE_STEPS; i++)
+   {
+      depth = (depth + texture(texMap, texCoord + vec3(offset, 0.0)).r)/(PARALLAX_REFINE_STEPS*2);
+      offset = negViewTS.xy * vec2(depth * depthScale)/vec2(PARALLAX_REFINE_STEPS*2);
+   }
+
+   return offset;
+}
+
 /// The maximum value for 10bit per component integer HDR encoding.
 const float HDR_RGB10_MAX = 4.0;
 

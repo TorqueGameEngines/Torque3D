@@ -47,11 +47,13 @@
 #include "materials/baseMatInstance.h"
 #include "gfx/gfxTextureManager.h"
 #include "gfx/gfxCardProfile.h"
+#include "gfx/gfxAPI.h"
 #include "core/resourceManager.h"
 #include "T3D/physics/physicsPlugin.h"
 #include "T3D/physics/physicsBody.h"
 #include "T3D/physics/physicsCollision.h"
 #include "console/engineAPI.h"
+#include "core/util/safeRelease.h"
 
 #include "T3D/assets/TerrainMaterialAsset.h"
 using namespace Torque;
@@ -203,7 +205,11 @@ TerrainBlock::TerrainBlock()
    mScreenError( 16 ),
    mCastShadows( true ),
    mZoningDirty( false ),
-   mUpdateBasetex ( true )
+   mUpdateBasetex ( true ),
+   mDetailTextureArray( NULL ),
+   mMacroTextureArray( NULL ),
+   mOrmTextureArray( NULL ),
+   mNormalTextureArray( NULL )
 {
    mTypeMask = TerrainObjectType | StaticObjectType | StaticShapeObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
@@ -231,6 +237,11 @@ TerrainBlock::~TerrainBlock()
       editor->detachTerrain(this);
 #endif
    deleteZodiacPrimitiveBuffer();
+
+   SAFE_RELEASE(mDetailTextureArray);
+   SAFE_RELEASE(mMacroTextureArray);
+   SAFE_RELEASE(mNormalTextureArray);
+   SAFE_RELEASE(mOrmTextureArray);
 }
 
 void TerrainBlock::_onTextureEvent( GFXTexCallbackCode code )
@@ -1459,6 +1470,11 @@ DefineEngineMethod(TerrainBlock, saveAsset, bool, (), ,
    "@return True if file save was successful, false otherwise")
 {
    return static_cast<TerrainBlock*>(object)->saveAsset();
+}
+
+DefineEngineMethod( TerrainBlock, setMaterialsDirty, void, (),, "")
+{
+   static_cast<TerrainBlock*>(object)->setMaterialsDirty();
 }
 
 //ConsoleMethod(TerrainBlock, save, bool, 3, 3, "(string fileName) - saves the terrain block's terrain file to the specified file name.")

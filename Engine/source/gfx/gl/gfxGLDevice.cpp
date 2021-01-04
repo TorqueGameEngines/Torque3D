@@ -22,6 +22,8 @@
 
 #include "platform/platform.h"
 #include "gfx/gl/gfxGLDevice.h"
+
+#include "gfxGLTextureArray.h"
 #include "platform/platformGL.h"
 
 #include "gfx/gfxCubemap.h"
@@ -457,6 +459,13 @@ GFXCubemapArray *GFXGLDevice::createCubemapArray()
    return cubeArray;
 }
 
+GFXTextureArray* GFXGLDevice::createTextureArray()
+{
+   GFXGLTextureArray* textureArray = new GFXGLTextureArray();
+   textureArray->registerResourceWithDevice(this);
+   return textureArray;
+}
+
 void GFXGLDevice::endSceneInternal() 
 {
    // nothing to do for opengl
@@ -755,6 +764,22 @@ void GFXGLDevice::setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArr
    if (texture)
    {
       mActiveTextureType[textureUnit] = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
+      texture->bind(textureUnit);
+   }
+   else if (mActiveTextureType[textureUnit] != GL_ZERO)
+   {
+      glActiveTexture(GL_TEXTURE0 + textureUnit);
+      glBindTexture(mActiveTextureType[textureUnit], 0);
+      getOpenglCache()->setCacheBindedTex(textureUnit, mActiveTextureType[textureUnit], 0);
+      mActiveTextureType[textureUnit] = GL_ZERO;
+   }
+}
+
+void GFXGLDevice::setTextureArrayInternal(U32 textureUnit, const GFXGLTextureArray* texture)
+{
+   if (texture)
+   {
+      mActiveTextureType[textureUnit] = GL_TEXTURE_2D_ARRAY;
       texture->bind(textureUnit);
    }
    else if (mActiveTextureType[textureUnit] != GL_ZERO)

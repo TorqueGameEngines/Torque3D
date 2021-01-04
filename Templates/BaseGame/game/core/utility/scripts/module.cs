@@ -121,9 +121,9 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
             //allows one to override exclusive with exclusive
             %locked = DatablockFilesList.getValue(%i);
 
-            if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
+            if ((%locked && !%isExclusive)&&($reportModuleFileConflicts))
                 error("found" SPC %datablockFilePath SPC "duplicate file!");
-            if (!%locked || (%locked && %isExclusive))
+            if (%isExclusive)
             { // Replacing an existing entry, update in-place
                 DatablockFilesList.setKey(%fullPath, %i);
                 DatablockFilesList.setValue(%isExclusive, %i);
@@ -221,9 +221,9 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
             //do note that doing it in this order means setting exclusive twice
             //allows one to override exclusive with exclusive
             %locked = ExecFilesList.getValue(%i);
-            if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
+            if ((%locked && !%isExclusive)&&($reportModuleFileConflicts))
                 error("found" SPC %execFilePath SPC "duplicate file!");
-            if (!%locked || (%locked && %isExclusive))
+            if (%isExclusive)
             { // Replacing an existing entry, update in-place
                 ExecFilesList.setKey(%fullPath, %i);
                 ExecFilesList.setValue(%isExclusive, %i);

@@ -52,15 +52,15 @@ function TerrainTextureSettingsDlg::onWake( %this ) {
       %this-->ormTextureFormatPopUpMenu.add(getWord(%field, 0), getWord(%field, 1));
    }
    
-   %this-->detailTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/DetailTextureFormat"), false);
-   %this-->macroTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/MacroTextureFormat"), false);
-   %this-->normalTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/NormalTextureFormat"), false);
-   %this-->ormTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/OrmTextureFormat"), false);
+   %this-->detailTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/DetailTextureFormat", 12), false);
+   %this-->macroTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/MacroTextureFormat", 12), false);
+   %this-->normalTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/NormalTextureFormat", 12), false);
+   %this-->ormTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/OrmTextureFormat", 12), false);
    
-   %this-->detailTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/DetailTextureSize", 12));
-   %this-->macroTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/MacroTextureSize", 12));
-   %this-->normalTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/NormalTextureSize", 12));
-   %this-->ormTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/OrmTextureSize", 12));
+   %this-->detailTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/DetailTextureSize"));
+   %this-->macroTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/MacroTextureSize"));
+   %this-->normalTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/NormalTextureSize"));
+   %this-->ormTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/OrmTextureSize"));
 }
 
 function TerrainTextureSettingsDlg::updateBlendDepth( %this ) {

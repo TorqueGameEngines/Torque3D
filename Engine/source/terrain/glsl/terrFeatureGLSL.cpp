@@ -1372,11 +1372,11 @@ void TerrainHeightMapBlendGLSL::processPix(Vector<ShaderComponent*>& componentLi
          }
          else
          {
-            meta->addStatement(new GenOp("      @ = clamp(0.5 + @, 0.0, 1.0);\r\n",
+            meta->addStatement(new GenOp("      @ = clamp(@, 0.5, 1.0);\r\n",
                detailH, blendDepth));
          }
 
-         meta->addStatement(new GenOp("      @ = max((@ * 2.0f - 1.0f) * @ + 0.5f, 0.0f);\r\n",
+         meta->addStatement(new GenOp("      @ = (@ * 2.0f - 1.0f) * @;\r\n",
             detailH, detailH, blendContrast));
 
          meta->addStatement(new GenOp("   }\r\n"));

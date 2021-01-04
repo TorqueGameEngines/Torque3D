@@ -49,6 +49,7 @@ void GFXTextureArray::set(U32 width, U32 height, U32 size, GFXFormat format, U32
 
 bool GFXTextureArray::fromTextureArray(const Vector<GFXTexHandle>& textureArray, U32 capacity)
 {
+   PROFILE_SCOPE(GFXTextureArray_fromTextureArray)
    bool success = true;
 
    // Not initialized, infer it from the given array of textures
@@ -114,6 +115,7 @@ bool GFXTextureArray::fromTextureArray(const Vector<GFXTexHandle>& textureArray,
 
 void GFXTextureArray::setTexture(const GFXTexHandle& texture, U32 slot)
 {
+   PROFILE_SCOPE(GFXTextureArray_setTexture)
    GFXTexHandle handle = texture;
    if (texture->getPath().isNotEmpty())
    {

@@ -1370,9 +1370,13 @@ void TerrainHeightMapBlendHLSL::processVert(Vector<ShaderComponent*>& componentL
 
    MultiLine* meta = new MultiLine;
 
-   // Make sure the world to tangent transform
-   // is created and available for the pixel shader.
-   getOutViewToTangent(componentList, meta, fd);
+   // Handle an edge-case when there are no detail-maps available
+   if (fd.features.getNextFeatureIndex(MFT_TerrainDetailMap, -1) >= 0)
+   {
+      // Make sure the world to tangent transform
+      // is created and available for the pixel shader.
+      getOutViewToTangent(componentList, meta, fd);
+   }
 
    output = meta;
 }

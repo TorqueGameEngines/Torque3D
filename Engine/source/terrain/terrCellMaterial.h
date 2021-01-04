@@ -59,7 +59,7 @@ protected:
    public:
 
       MaterialInfo()
-         :mat(NULL), layerId(0)
+         :mat(NULL), layerId(0), mBlendDepthConst(NULL), mBlendContrastConst(NULL)
       {
       }
 
@@ -69,8 +69,8 @@ protected:
 
       TerrainMaterial *mat;
       U32 layerId;
-      GFXShaderConstHandle* mBlendDepthConst;
-      GFXShaderConstHandle* mBlendContrastConst;
+      GFXShaderConstHandle *mBlendDepthConst;
+      GFXShaderConstHandle *mBlendContrastConst;
    };
 
    ///

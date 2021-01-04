@@ -675,16 +675,53 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 void TerrainCellMaterial::_updateMaterialConsts( )
 {
    PROFILE_SCOPE( TerrainCellMaterial_UpdateMaterialConsts );
-   if (mMaterialInfos.empty())
+
+   int detailMatCount = 0;
+   for (MaterialInfo* materialInfo : mMaterialInfos)
+   {
+      if (materialInfo == NULL)
+         continue;
+
+      TerrainMaterial* mat = materialInfo->mat;
+
+      if (mat == NULL)
+         continue;
+
+      // We only include materials that 
+      // have more than a base texture.
+      if (mat->getDetailSize() <= 0 ||
+         mat->getDetailDistance() <= 0 ||
+         mat->getDetailMap().isEmpty())
+         continue;
+
+      detailMatCount++;
+   }
+
+   if (detailMatCount == 0)
    {
       return;
    }
-   AlignedArray<Point4F> detailInfoArray(mMaterialInfos.size(), sizeof(Point4F));
-   AlignedArray<Point4F> detailScaleAndFadeArray(mMaterialInfos.size(), sizeof(Point4F));
 
-   for ( U32 j=0; j < mMaterialInfos.size(); j++ )
+   AlignedArray<Point4F> detailInfoArray(detailMatCount, sizeof(Point4F));
+   AlignedArray<Point4F> detailScaleAndFadeArray(detailMatCount, sizeof(Point4F));
+
+   int detailIndex = 0;
+   for (MaterialInfo* matInfo : mMaterialInfos)
    {
-      MaterialInfo *matInfo = mMaterialInfos[j];
+      if (matInfo == NULL)
+         continue;
+
+      TerrainMaterial* mat = matInfo->mat;
+
+      if (mat == NULL)
+         continue;
+
+      // We only include materials that 
+      // have more than a base texture.
+      if (mat->getDetailSize() <= 0 ||
+         mat->getDetailDistance() <= 0 ||
+         mat->getDetailMap().isEmpty())
+         continue;
 
       F32 detailSize = matInfo->mat->getDetailSize();
       F32 detailScale = 1.0f;
@@ -716,11 +753,19 @@ void TerrainCellMaterial::_updateMaterialConsts( )
                                         matInfo->mat->getDetailStrength(),
                                         matInfo->mat->getParallaxScale(), 0 );
 
-      detailScaleAndFadeArray[j] = detailScaleAndFade;
-      detailInfoArray[j] = detailIdStrengthParallax;
+      detailScaleAndFadeArray[detailIndex] = detailScaleAndFade;
+      detailInfoArray[detailIndex] = detailIdStrengthParallax;
 
-      mConsts->setSafe(matInfo->mBlendDepthConst, matInfo->mat->getBlendDepth());
-      mConsts->setSafe(matInfo->mBlendContrastConst, matInfo->mat->getBlendContrast());
+      if (matInfo->mBlendDepthConst != NULL)
+      {
+         mConsts->setSafe(matInfo->mBlendDepthConst, matInfo->mat->getBlendDepth());
+      }
+
+      if (matInfo->mBlendContrastConst != NULL)
+      {
+         mConsts->setSafe(matInfo->mBlendContrastConst, matInfo->mat->getBlendContrast());
+      }
+      detailIndex++;
    }
 
    mConsts->setSafe(mDetailInfoVArrayConst, detailScaleAndFadeArray);
@@ -737,11 +782,6 @@ bool TerrainCellMaterial::setupPass(   const SceneRenderState *state,
    {
       mCurrPass = 0;
       return false;
-   }
-
-   if (mMaterialInfos.size() > 4)
-   {
-      int a = 2 + 2;
    }
 
    mCurrPass++;

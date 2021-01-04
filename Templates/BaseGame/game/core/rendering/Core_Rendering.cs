@@ -19,10 +19,11 @@ function Core_Rendering::onCreate(%this)
    $Terrain::NormalTextureSize = ProjectSettings.value("Terrain/NormalTextureSize");
    $Terrain::OrmTextureSize = ProjectSettings.value("Terrain/OrmTextureSize");
    
-   $Terrain::DetailTextureFormat = ProjectSettings.value("Terrain/DetailTextureFormat");
-   $Terrain::MacroTextureFormat = ProjectSettings.value("Terrain/MacroTextureFormat");
-   $Terrain::NormalTextureFormat = ProjectSettings.value("Terrain/NormalTextureFormat");
-   $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat");
+   // Default to R8G8B8A8 for all textures
+   $Terrain::DetailTextureFormat = ProjectSettings.value("Terrain/DetailTextureFormat", 12);
+   $Terrain::MacroTextureFormat = ProjectSettings.value("Terrain/MacroTextureFormat", 12);
+   $Terrain::NormalTextureFormat = ProjectSettings.value("Terrain/NormalTextureFormat", 12);
+   $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat", 12);
    
    exec("./scripts/graphicsOptions.cs");
    exec("./scripts/terrainSettings.cs");

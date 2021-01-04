@@ -57,10 +57,10 @@ function TerrainTextureSettingsDlg::onWake( %this ) {
    %this-->normalTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/NormalTextureFormat"), false);
    %this-->ormTextureFormatPopUpMenu.setSelected(ProjectSettings.value("Terrain/OrmTextureFormat"), false);
    
-   %this-->detailTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/DetailTextureSize"));
-   %this-->macroTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/MacroTextureSize"));
-   %this-->normalTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/NormalTextureSize"));
-   %this-->ormTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/OrmTextureSize"));
+   %this-->detailTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/DetailTextureSize", 12));
+   %this-->macroTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/MacroTextureSize", 12));
+   %this-->normalTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/NormalTextureSize", 12));
+   %this-->ormTextureSizeTextEdit.setText(ProjectSettings.value("Terrain/OrmTextureSize", 12));
 }
 
 function TerrainTextureSettingsDlg::updateBlendDepth( %this ) {

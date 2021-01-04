@@ -1074,4 +1074,74 @@ class SimObjectPtr : public WeakRefPtr< T >
       }
 };
 
+inline bool DefaultNonEmptyStringWriteFn(void *obj, const char* idx, StringTableEntry fieldName)
+{
+   const char* value = static_cast<SimObject*>(obj)->getDataField(fieldName, idx);
+   return value != NULL && dStricmp(value, "") != 0;
+}
+
+template<const char* defaultValue>
+bool DefaultValueWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   const char* value = static_cast<SimObject*>(obj)->getDataField(fieldName, idx);
+   return dStricmp(value, defaultValue) != 0;
+}
+
+template<const char* defaultValue>
+bool DefaultFloatWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   const char* value = static_cast<SimObject*>(obj)->getDataField(fieldName, idx);
+   return dAtof(value) != dAtof(defaultValue);
+}
+
+template<S32 defaultValue>
+bool DefaultIntWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   const char* value = static_cast<SimObject*>(obj)->getDataField(fieldName, idx);
+   return dAtoi(value) != defaultValue;
+}
+
+template<U32 defaultValue>
+bool DefaultUintWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   const char* value = static_cast<SimObject*>(obj)->getDataField(fieldName, idx);
+   return dAtoui(value) != defaultValue;
+}
+
+template<bool defaultValue>
+bool DefaultBoolWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   const char* value = static_cast<SimObject*>(obj)->getDataField(fieldName, idx);
+   return dAtob(value) != defaultValue;
+}
+
+template<typename C, typename T, T defaultValue, T C::*field>
+bool PublicMemberWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   C* instance = static_cast<C*>(obj);
+   return instance->*field != defaultValue;
+}
+
+template<typename C, const char* defaultValue, StringTableEntry C::* field>
+bool PublicStringMemberWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   C* instance = static_cast<C*>(obj);
+   return instance->*field != NULL && dStricmp(instance->*field, StringTable->insert(defaultValue)) != 0;
+}
+
+template<typename C, typename T, T defaultValue, T(C::* method)(void)>
+bool PublicMethodWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   C* instance = static_cast<C*>(obj);
+   return (instance->*method)() != defaultValue;
+}
+
+template<typename C, typename T, T defaultValue, T(C::* method)(void) const>
+bool PublicConstMethodWriteFn(void* obj, const char* idx, StringTableEntry fieldName)
+{
+   C* instance = static_cast<C*>(obj);
+   return (instance->*method)() != defaultValue;
+}
+
+
 #endif // _SIMOBJECT_H_

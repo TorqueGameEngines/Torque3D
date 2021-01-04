@@ -57,7 +57,7 @@ protected:
     virtual void onTamlCustomRead( const TamlCustomNodes& customNodes );
 
     static const char* getCount(void* obj, const char* data) { return Con::getIntArg(static_cast<AssetQuery*>(obj)->mAssetList.size()); }
-    static bool writeCount( void* obj, StringTableEntry pFieldName ) { return false; }
+    static bool writeCount( void* obj, const char* idx, StringTableEntry pFieldName ) { return false; }
 
 public:
     AssetQuery() {}

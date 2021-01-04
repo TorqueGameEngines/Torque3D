@@ -139,23 +139,23 @@ protected:
 protected:
    static bool             setAssetName(void *obj, const char *array, const char *data)           { static_cast<AssetBase*>(obj)->setAssetName(data); return false; }
    static const char*      getAssetName(void* obj, const char* data)           { return static_cast<AssetBase*>(obj)->getAssetName(); }
-   static bool             writeAssetName(void* obj, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetName() != StringTable->EmptyString(); }
+   static bool             writeAssetName(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetName() != StringTable->EmptyString(); }
 
    static bool             setAssetDescription(void *obj, const char *array, const char *data)    { static_cast<AssetBase*>(obj)->setAssetDescription(data); return false; }
    static const char*      getAssetDescription(void* obj, const char* data)    { return static_cast<AssetBase*>(obj)->getAssetDescription(); }
-   static bool             writeAssetDescription(void* obj, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetDescription() != StringTable->EmptyString(); }
+   static bool             writeAssetDescription(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetDescription() != StringTable->EmptyString(); }
 
    static bool             setAssetCategory(void *obj, const char *array, const char *data)       { static_cast<AssetBase*>(obj)->setAssetCategory(data); return false; }
    static const char*      getAssetCategory(void* obj, const char* data)       { return static_cast<AssetBase*>(obj)->getAssetCategory(); }
-   static bool             writeAssetCategory(void* obj, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetCategory() != StringTable->EmptyString(); }
+   static bool             writeAssetCategory(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetCategory() != StringTable->EmptyString(); }
 
    static bool             setAssetAutoUnload(void *obj, const char *array, const char *data)     { static_cast<AssetBase*>(obj)->setAssetAutoUnload(dAtob(data)); return false; }
    static const char*      getAssetAutoUnload(void* obj, const char* data)     { return Con::getBoolArg(static_cast<AssetBase*>(obj)->getAssetAutoUnload()); }
-   static bool             writeAssetAutoUnload(void* obj, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetAutoUnload() == false; }
+   static bool             writeAssetAutoUnload(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetAutoUnload() == false; }
 
    static bool             setAssetInternal(void *obj, const char *array, const char *data)       { static_cast<AssetBase*>(obj)->setAssetInternal(dAtob(data)); return false; }
    static const char*      getAssetInternal(void* obj, const char* data)       { return Con::getBoolArg(static_cast<AssetBase*>(obj)->getAssetInternal()); }
-   static bool             writeAssetInternal(void* obj, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetInternal() == true; }
+   static bool             writeAssetInternal(void* obj, const char* idx, StringTableEntry pFieldName) { return static_cast<AssetBase*>(obj)->getAssetInternal() == true; }
 
    static const char*      getAssetPrivate(void* obj, const char* data)        { return Con::getBoolArg(static_cast<AssetBase*>(obj)->getAssetPrivate()); }
 

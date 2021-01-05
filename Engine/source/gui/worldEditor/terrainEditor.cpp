@@ -1897,9 +1897,6 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
       selChanged = gMouse != gLastMouse;
    }
 
-   if ( mMouseDown )
-      return;
-
    mCurrentAction->process( mMouseBrush, event, true, TerrainAction::Update );
 }
 

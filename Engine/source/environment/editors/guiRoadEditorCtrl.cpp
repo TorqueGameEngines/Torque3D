@@ -85,7 +85,7 @@ GuiRoadEditorCtrl::GuiRoadEditorCtrl()
    mSavedDrag = false;
    mIsDirty = false;
 
-	mMaterialName = StringTable->insert("DefaultDecalRoadMaterial");
+   mMaterialAssetId = Con::getVariable("$DecalRoadEditor::defaultMaterialAsset");
 }
 
 GuiRoadEditorCtrl::~GuiRoadEditorCtrl()
@@ -100,7 +100,7 @@ void GuiRoadEditorUndoAction::undo()
       return;
 
    // Temporarily save the roads current data.
-   String materialName = road->mMaterialName;
+   String materialAssetId = road->mMaterialAssetId;
    F32 textureLength = road->mTextureLength;
    F32 breakAngle = road->mBreakAngle;
    F32 segmentsPerBatch = road->mSegmentsPerBatch;
@@ -108,7 +108,7 @@ void GuiRoadEditorUndoAction::undo()
    nodes.merge( road->mNodes );
 
    // Restore the Road properties saved in the UndoAction
-   road->mMaterialName = materialName;
+   road->setMaterialAssetId(materialAssetId);
    road->mBreakAngle = breakAngle;
    road->mSegmentsPerBatch = segmentsPerBatch;
    road->mTextureLength = textureLength;
@@ -130,7 +130,7 @@ void GuiRoadEditorUndoAction::undo()
 
    // Now save the previous Road data in this UndoAction
    // since an undo action must become a redo action and vice-versa
-   mMaterialName = materialName;
+   mMaterialAssetId = materialAssetId;
    mBreakAngle = breakAngle;
    mSegmentsPerBatch = segmentsPerBatch;
    mTextureLength = textureLength;
@@ -153,6 +153,8 @@ bool GuiRoadEditorCtrl::onAdd()
 
    mZDisableSB = GFX->createStateBlock(desc);
 
+   bindMaterialAsset(Material);
+
    return true;
 }
 
@@ -163,8 +165,9 @@ void GuiRoadEditorCtrl::initPersistFields()
    addField( "SelectedSplineColor", TypeColorI, Offset( mSelectedSplineColor, GuiRoadEditorCtrl ) );
    addField( "HoverNodeColor",      TypeColorI, Offset( mHoverNodeColor, GuiRoadEditorCtrl ) );
    addField( "isDirty",             TypeBool,   Offset( mIsDirty, GuiRoadEditorCtrl ) );
-	addField( "materialName",			TypeString, Offset( mMaterialName, GuiRoadEditorCtrl ),
-      "Default Material used by the Road Editor on road creation." );
+
+   addField("material", TypeMaterialAssetId, Offset(mMaterialAssetId, GuiRoadEditorCtrl), "Default Material used by the Road Editor on road creation.");
+
    //addField( "MoveNodeCursor", TYPEID< SimObject >(), Offset( mMoveNodeCursor, GuiRoadEditorCtrl) );
    //addField( "AddNodeCursor", TYPEID< SimObject >(), Offset( mAddNodeCursor, GuiRoadEditorCtrl) );
    //addField( "InsertNodeCursor", TYPEID< SimObject >(), Offset( mInsertNodeCursor, GuiRoadEditorCtrl) );
@@ -405,8 +408,8 @@ void GuiRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
 		DecalRoad *newRoad = new DecalRoad;
 		
-
-		newRoad->mMaterialName = mMaterialName;
+      if (mMaterialAsset.notNull())
+         newRoad->setMaterialAssetId(mMaterialAssetId);
 
       newRoad->registerObject();
 
@@ -1027,7 +1030,7 @@ void GuiRoadEditorCtrl::submitUndo( const UTF8 *name )
 
    action->mObjId = mSelRoad->getId();
    action->mBreakAngle = mSelRoad->mBreakAngle;
-   action->mMaterialName = mSelRoad->mMaterialName;
+   action->mMaterialAssetId = mSelRoad->mMaterialAssetId;
    action->mSegmentsPerBatch = mSelRoad->mSegmentsPerBatch;   
    action->mTextureLength = mSelRoad->mTextureLength;
    action->mRoadEditor = this;

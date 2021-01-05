@@ -920,6 +920,10 @@ MeshRoad::MeshRoad()
       mTriangleCount[i] = 0;
    }
 
+   initMaterialAsset(TopMaterial);
+   initMaterialAsset(BottomMaterial);
+   initMaterialAsset(SideMaterial);
+
    mSideProfile.mRoad = this;
 }
 
@@ -933,14 +937,14 @@ void MeshRoad::initPersistFields()
 {
    addGroup( "MeshRoad" );
 
-      addField( "topMaterial", TypeMaterialName, Offset( mMaterialName[Top], MeshRoad ),
-         "Material for the upper surface of the road." );
+      addProtectedField("TopMaterial", TypeMaterialName, Offset(mTopMaterialName, MeshRoad), MeshRoad::_setTopMaterialName, & defaultProtectedGetFn, "Material for the upper surface of the road.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("TopMaterialAsset", TypeMaterialAssetId, Offset(mTopMaterialAssetId, MeshRoad), MeshRoad::_setTopMaterialAsset, & defaultProtectedGetFn, "Material for the upper surface of the road.");
 
-      addField( "bottomMaterial", TypeMaterialName, Offset( mMaterialName[Bottom], MeshRoad ),
-         "Material for the bottom surface of the road." );
+      addProtectedField("BottomMaterial", TypeMaterialName, Offset(mBottomMaterialName, MeshRoad), MeshRoad::_setBottomMaterialName, & defaultProtectedGetFn, "Material for the bottom surface of the road.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("BottomMaterialAsset", TypeMaterialAssetId, Offset(mBottomMaterialAssetId, MeshRoad), MeshRoad::_setBottomMaterialAsset, & defaultProtectedGetFn, "Material for the bottom surface of the road.");
 
-      addField( "sideMaterial", TypeMaterialName, Offset( mMaterialName[Side], MeshRoad ),
-         "Material for the left, right, front, and back surfaces of the road." );
+      addProtectedField("SideMaterial", TypeMaterialName, Offset(mSideMaterialName, MeshRoad), MeshRoad::_setSideMaterialName, & defaultProtectedGetFn, "Material for the left, right, front, and back surfaces of the road.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("SideMaterialAsset", TypeMaterialAssetId, Offset(mSideMaterialAssetId, MeshRoad), MeshRoad::_setSideMaterialAsset, & defaultProtectedGetFn, "Material for the left, right, front, and back surfaces of the road.");
 
       addField( "textureLength", TypeF32, Offset( mTextureLength, MeshRoad ), 
          "The length in meters of textures mapped to the MeshRoad." );      
@@ -1265,17 +1269,68 @@ void MeshRoad::prepRenderImage( SceneRenderState* state )
 
 void MeshRoad::_initMaterial()
 {
-   for ( U32 i = 0; i < SurfaceCount; i++ )
+   if (mTopMaterialAsset.notNull())
    {
-      if ( mMatInst[i] )
-         SAFE_DELETE( mMatInst[i] );
+      if (!mMatInst[Top] || !String(mTopMaterialAsset->getMaterialDefinitionName()).equal(mMatInst[Top]->getMaterial()->getName(), String::NoCase))
+      {
+         SAFE_DELETE(mMatInst[Top]);
 
-      if ( mMaterial[i] )
-         mMatInst[i] = mMaterial[i]->createMatInstance();
-      else
-         mMatInst[i] = MATMGR->createMatInstance( "WarningMaterial" );
+         Material* tMat = nullptr;
+         if (!Sim::findObject(mTopMaterialAsset->getMaterialDefinitionName(), tMat))
+            Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mTopMaterialAsset->getMaterialDefinitionName());
 
-      mMatInst[i]->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTT>() );
+         mMaterial[Top] = tMat;
+
+         if (mMaterial[Top])
+            mMatInst[Top] = mMaterial[Top]->createMatInstance();
+         else
+            mMatInst[Top] = MATMGR->createMatInstance("WarningMaterial");
+
+         mMatInst[Top]->init(MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTT>());
+      }
+   }
+
+   if (mBottomMaterialAsset.notNull())
+   {
+      if (!mMatInst[Bottom] || !String(mBottomMaterialAsset->getMaterialDefinitionName()).equal(mMatInst[Bottom]->getMaterial()->getName(), String::NoCase))
+      {
+
+         SAFE_DELETE(mMatInst[Bottom]);
+
+         Material* tMat = nullptr;
+         if (!Sim::findObject(mBottomMaterialAsset->getMaterialDefinitionName(), tMat))
+            Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mBottomMaterialAsset->getMaterialDefinitionName());
+
+         mMaterial[Bottom] = tMat;
+
+         if (mMaterial[Bottom])
+            mMatInst[Bottom] = mMaterial[Bottom]->createMatInstance();
+         else
+            mMatInst[Bottom] = MATMGR->createMatInstance("WarningMaterial");
+
+         mMatInst[Bottom]->init(MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTT>());
+      }
+   }
+
+   if (mSideMaterialAsset.notNull())
+   {
+      if (!mMatInst[Side] || !String(mSideMaterialAsset->getMaterialDefinitionName()).equal(mMatInst[Side]->getMaterial()->getName(), String::NoCase))
+      {
+         SAFE_DELETE(mMatInst[Side]);
+
+         Material* tMat = nullptr;
+         if (!Sim::findObject(mSideMaterialAsset->getMaterialDefinitionName(), tMat))
+            Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mSideMaterialAsset->getMaterialDefinitionName());
+
+         mMaterial[Side] = tMat;
+
+         if (mMaterial[Side])
+            mMatInst[Side] = mMaterial[Side]->createMatInstance();
+         else
+            mMatInst[Side] = MATMGR->createMatInstance("WarningMaterial");
+
+         mMatInst[Side]->init(MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTT>());
+      }
    }
 }
 
@@ -1365,10 +1420,10 @@ U32 MeshRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
       // Write Object Transform.
       stream->writeAffineTransform( mObjToWorld );
 
-      // Write Materials      
-      stream->write( mMaterialName[0] );      
-      stream->write( mMaterialName[1] );
-      stream->write( mMaterialName[2] );
+      // Write Materials
+      packMaterialAsset(con, TopMaterial);
+      packMaterialAsset(con, BottomMaterial);
+      packMaterialAsset(con, SideMaterial);
 
       stream->write( mTextureLength );      
       stream->write( mBreakAngle );
@@ -1465,18 +1520,9 @@ void MeshRoad::unpackUpdate(NetConnection * con, BitStream * stream)
       stream->readAffineTransform(&ObjectMatrix);
       Parent::setTransform(ObjectMatrix);
 
-      // Read Materials...
-      Material *pMat = NULL;
-
-      for ( U32 i = 0; i < SurfaceCount; i++ )
-      {
-         stream->read( &mMaterialName[i] );
-        
-         if ( !Sim::findObject( mMaterialName[i], pMat ) )
-            Con::printf( "DecalRoad::unpackUpdate, failed to find Material of name %s", mMaterialName[i].c_str() );
-         else         
-            mMaterial[i] = pMat;         
-      }
+      unpackMaterialAsset(con, TopMaterial);
+      unpackMaterialAsset(con, BottomMaterial);
+      unpackMaterialAsset(con, SideMaterial);
 
       if ( isProperlyAdded() )
          _initMaterial(); 

@@ -45,6 +45,8 @@
 #include "shaderGen/shaderFeature.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class TerrainBlock;
 class GroundCoverCell;
 class TSShapeInstance;
@@ -264,8 +266,8 @@ protected:
    static F32 smDensityScale;   
    static F32 smFadeScale;
 
-   String mMaterialName;
-   Material *mMaterial;
+   DECLARE_NET_MATERIALASSET(GroundCover, Material, InitialUpdateMask);
+   Material* mMaterial;
    BaseMatInstance *mMatInst;
 
    GroundCoverShaderConstData mShaderConstData;

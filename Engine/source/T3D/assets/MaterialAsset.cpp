@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
 #ifndef MATERIALASSET_H
 #include "MaterialAsset.h"
@@ -39,6 +40,8 @@
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif
+
+#include "T3D\assets\assetImporter.h"
 
 //-----------------------------------------------------------------------------
 
@@ -231,6 +234,82 @@ StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matNam
             materialAssetId = matAsset->getAssetId();
             break;
          }
+         AssetDatabase.releaseAsset(query->mAssetList[i]); //cleanup if that's not the one we needed
+      }
+
+      if (materialAssetId == StringTable->EmptyString())
+      {
+         //Try auto-importing it if it exists already
+         BaseMaterialDefinition* baseMatDef;
+         if (!Sim::findObject(matName, baseMatDef))
+         {
+            //Not even a real material, apparently?
+            //return back a blank
+            return StringTable->EmptyString();
+         }
+
+         //Ok, a real mat def, we can work with this
+#if TORQUE_DEBUG
+         Con::warnf("MaterialAsset::getAssetIdByMaterialName - Attempted to in-place import a material(%s) that had no associated asset", matName);
+#endif
+
+         AssetImporter* autoAssetImporter;
+         if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
+         {
+            autoAssetImporter = new AssetImporter();
+            autoAssetImporter->registerObject("autoAssetImporter");
+         }
+
+         autoAssetImporter->resetImportSession(true);
+
+         String originalMaterialDefFile = Torque::Path(baseMatDef->getFilename()).getPath();
+
+         autoAssetImporter->setTargetPath(originalMaterialDefFile);
+
+         autoAssetImporter->resetImportConfig();
+
+         AssetImportObject* assetObj = autoAssetImporter->addImportingAsset("MaterialAsset", originalMaterialDefFile, nullptr, matName);
+
+         //Find out if the filepath has an associated module to it. If we're importing in-place, it needs to be within a module's directory
+         ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(originalMaterialDefFile);
+
+         if (targetModuleDef == nullptr)
+         {
+            return StringTable->EmptyString();
+         }
+         else
+         {
+            autoAssetImporter->setTargetModuleId(targetModuleDef->getModuleId());
+         }
+
+         autoAssetImporter->processImportAssets();
+
+         bool hasIssues = autoAssetImporter->validateAssets();
+
+         if (hasIssues)
+         {
+            //log it
+            Con::errorf("Error! Import process of Material(%s) has failed due to issues discovered during validation!", matName);
+            return StringTable->EmptyString();
+         }
+         else
+         {
+            autoAssetImporter->importAssets();
+         }
+
+#if TORQUE_DEBUG
+         autoAssetImporter->dumpActivityLog();
+#endif
+
+         if (hasIssues)
+         {
+            return StringTable->EmptyString();
+         }
+         else
+         {
+            String assetId = autoAssetImporter->getTargetModuleId() + ":" + assetObj->assetName;
+            return StringTable->insert(assetId.c_str());
+         }
       }
    }
 
@@ -282,8 +361,8 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
 
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getInspectObject()->getIdString(), mCaption);
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, \"\");",
+      getIdString());
    mBrowseButton->setField("Command", szBuffer);
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());

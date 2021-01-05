@@ -287,7 +287,9 @@ DecalRoad::DecalRoad()
 {   
    // Setup NetObject.
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
-   mNetFlags.set(Ghostable);      
+   mNetFlags.set(Ghostable);
+
+   initMaterialAsset(Material);
 }
 
 DecalRoad::~DecalRoad()
@@ -303,7 +305,8 @@ void DecalRoad::initPersistFields()
 {
    addGroup( "DecalRoad" );
 
-      addField( "material", TypeMaterialName, Offset( mMaterialName, DecalRoad ), "Material used for rendering." ); 
+      addProtectedField("materialAsset", TypeMaterialAssetId, Offset(mMaterialAssetId, DecalRoad), &DecalRoad::_setMaterialAsset, &defaultProtectedGetFn, "Material Asset used for rendering.");
+      addProtectedField( "material", TypeMaterialName, Offset( mMaterialName, DecalRoad ), &DecalRoad::_setMaterialName, &defaultProtectedGetFn, "Material used for rendering." );
 
       addProtectedField( "textureLength", TypeF32, Offset( mTextureLength, DecalRoad ), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, 
          "The length in meters of textures mapped to the DecalRoad" );      
@@ -489,7 +492,7 @@ U32 DecalRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
    if ( stream->writeFlag( mask & DecalRoadMask ) )
    {
       // Write Texture Name.
-      stream->write( mMaterialName );
+      packMaterialAsset(con, Material);
 
       stream->write( mBreakAngle );      
 
@@ -578,24 +581,10 @@ void DecalRoad::unpackUpdate( NetConnection *con, BitStream *stream )
    // DecalRoadMask
    if ( stream->readFlag() )
    {
-      String matName;
-      stream->read( &matName );
-      
-      if ( matName != mMaterialName )
-      {
-         mMaterialName = matName;
-         Material *pMat = NULL;
-         if ( !Sim::findObject( mMaterialName, pMat ) )
-         {
-            Con::printf( "DecalRoad::unpackUpdate, failed to find Material of name %s!", mMaterialName.c_str() );
-         }
-         else
-         {
-            mMaterial = pMat;
-            if ( isProperlyAdded() )
-               _initMaterial(); 
-         }
-      }
+      unpackMaterialAsset(con, Material);
+
+      if (isProperlyAdded())
+         _initMaterial();
 
       stream->read( &mBreakAngle );    
 
@@ -1056,12 +1045,31 @@ bool DecalRoad::addNodeFromField( void *object, const char *index, const char *d
 
 void DecalRoad::_initMaterial()
 {
-   SAFE_DELETE( mMatInst );
+   if (mMaterialAsset.notNull())
+   {
+      if (mMatInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMatInst->getMaterial()->getName(), String::NoCase))
+         return;
 
-   if ( mMaterial )
-      mMatInst = mMaterial->createMatInstance();
-   else
-      mMatInst = MATMGR->createMatInstance( "WarningMaterial" );
+      SAFE_DELETE(mMatInst);
+
+      Material* tMat = nullptr;
+
+      if (!Sim::findObject(mMaterialAsset->getMaterialDefinitionName(), tMat))
+         Con::errorf("DecalRoad::_initMaterial - Material %s was not found.", mMaterialAsset->getMaterialDefinitionName());
+
+      mMaterial = tMat;
+
+      if (mMaterial)
+         mMatInst = mMaterial->createMatInstance();
+      else
+         mMatInst = MATMGR->createMatInstance("WarningMaterial");
+
+      if (!mMatInst)
+         Con::errorf("DecalRoad::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+   }
+
+   if (!mMatInst)
+      return;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite( true, false );

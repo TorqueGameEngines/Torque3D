@@ -1058,7 +1058,10 @@ function AssetBrowser::toggleTagFilterPopup(%this)
 function AssetBrowser::changeAsset(%this)
 {
    //alright, we've selectd an asset for a field, so time to set it!
-   %cmd = %this.fieldTargetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
+   if(%this.fieldTargetName $= "")
+      %cmd = %this.fieldTargetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
+   else
+      %cmd = %this.fieldTargetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
    echo("Changing asset via the " @ %cmd @ " command");
    eval(%cmd);
    

@@ -2282,6 +2282,32 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
    }
 }
 
+void AssetImporter::resetImportConfig()
+{
+   //use a default import config
+   if (activeImportConfig == nullptr)
+   {
+      activeImportConfig = new AssetImportConfig();
+      activeImportConfig->registerObject();
+   }
+
+   bool foundConfig = false;
+   Settings* editorSettings;
+   //See if we can get our editor settings
+   if (Sim::findObject("EditorSettings", editorSettings))
+   {
+      String defaultImportConfig = editorSettings->value("Assets/AssetImporDefaultConfig");
+
+      //If we found it, grab the import configs
+      Settings* importConfigs;
+      if (Sim::findObject("AssetImportSettings", importConfigs))
+      {
+         //Now load the editor setting-deigned config!
+         activeImportConfig->loadImportConfig(importConfigs, defaultImportConfig.c_str());
+      }
+   }
+}
+
 //
 // Importing
 //
@@ -2322,28 +2348,7 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
    //set our path
    targetPath = filePath.getPath();
 
-   //use a default import config
-   if (activeImportConfig == nullptr)
-   {
-      activeImportConfig = new AssetImportConfig();
-      activeImportConfig->registerObject();
-   }
-
-   bool foundConfig = false;
-   Settings* editorSettings;
-   //See if we can get our editor settings
-   if (Sim::findObject("EditorSettings", editorSettings))
-   {
-      String defaultImportConfig = editorSettings->value("Assets/AssetImporDefaultConfig");
-
-      //If we found it, grab the import configs
-      Settings* importConfigs;
-      if (Sim::findObject("AssetImportSettings", importConfigs))
-      {
-         //Now load the editor setting-deigned config!
-         activeImportConfig->loadImportConfig(importConfigs, defaultImportConfig.c_str());
-      }
-   }
+   resetImportConfig();
 
    AssetImportObject* assetItem = addImportingAsset(assetType, filePath, nullptr, "");
 
@@ -2767,7 +2772,9 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          assetFieldName = mapFieldName + "Asset[0]";
          mapFieldName += "[0]";
 
-         existingMat->writeField(mapFieldName.c_str(), path.c_str());
+         //If there's already an existing image map file on the material definition in this slot, don't override it
+         if(!path.isEmpty())
+            existingMat->writeField(mapFieldName.c_str(), path.c_str());
 
          String targetAsset = targetModuleId + ":" + childItem->assetName;
 

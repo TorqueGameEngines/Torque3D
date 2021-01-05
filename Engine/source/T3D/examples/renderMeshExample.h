@@ -67,7 +67,7 @@ class RenderMeshExample : public SceneObject
    //--------------------------------------------------------------------------
    // Rendering variables
    //--------------------------------------------------------------------------
-   DECLARE_MATERIALASSET(RenderMeshExample, Material, UpdateMask);
+   DECLARE_NET_MATERIALASSET(RenderMeshExample, Material, UpdateMask);
 
    // The actual Material instance
    BaseMatInstance*  mMaterialInst;

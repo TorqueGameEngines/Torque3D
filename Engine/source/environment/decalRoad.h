@@ -36,6 +36,8 @@
 #include "collision/clippedPolyList.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class Path;
 class TerrainBlock;
 struct ObjectRenderInst;
@@ -237,7 +239,8 @@ protected:
    F32 mBreakAngle;
    U32 mSegmentsPerBatch;
    F32 mTextureLength;
-   String mMaterialName;
+
+   DECLARE_NET_MATERIALASSET(DecalRoad, Material, DecalRoadMask);
    U32 mRenderPriority;
 
    // Static ConsoleVars for editor

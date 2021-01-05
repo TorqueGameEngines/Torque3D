@@ -27,31 +27,35 @@
 
 // These are for the enum translation. It will help with porting to other platforms
 // and API's.
-#define GFX_UNSUPPORTED_VAL 0xDEADBEEF
-#define GFX_UNINIT_VAL 0xDECAFBAD
+#define GFX_UNSUPPORTED_VAL 0xDEADBEEFULL
+#define GFX_UNINIT_VAL 0xDECAFBADULL
 
 // Adjust these pools to your app's needs.  Be aware dynamic vertices are much more
 // expensive than static vertices. These are in gfxEnums because they should be
 // consistant across all APIs/platforms so that the dynamic buffer performance
 // and behavior is also consistant. -patw
-#define MAX_DYNAMIC_VERTS   (8192*2)
-#define MAX_DYNAMIC_INDICES (8192*4)
+#define GFX_MAX_DYNAMIC_VERTS   (8192*2)
+#define GFX_MAX_DYNAMIC_INDICES (8192*4)
+
+#define GFX_WORLD_STACK_MAX 24
+
+#define GFX_TEXTURE_STAGE_COUNT 16
 
 enum GFXBufferType
 {
-      GFXBufferTypeStatic,   ///< Static vertex buffers are created and rarely updated.
-                   ///< Updating might incur a performance penalty.  Resizing a static vertex buffer is not
-                   ///< allowed.
-      GFXBufferTypeDynamic,  ///< Dynamic vertex buffers are meant for vertices that can be changed
-                   ///< often.  Vertices written into dynamic vertex buffers will remain valid
-                   ///< until the dynamic vertex buffer is released.  Resizing a dynamic vertex buffer is not
-                   ///< allowed.
-      GFXBufferTypeVolatile, ///< Volatile vertex or index buffers are meant for vertices or indices that are essentially
-                   ///< only used once.  They can be resized without any performance penalty.
+   GFXBufferTypeStatic,    ///< Static vertex buffers are created and rarely updated.
+                           ///< Updating might incur a performance penalty.  Resizing a static vertex buffer is not
+                           ///< allowed.
+   GFXBufferTypeDynamic,   ///< Dynamic vertex buffers are meant for vertices that can be changed
+                           ///< often.  Vertices written into dynamic vertex buffers will remain valid
+                           ///< until the dynamic vertex buffer is released.  Resizing a dynamic vertex buffer is not
+                           ///< allowed.
+   GFXBufferTypeVolatile,  ///< Volatile vertex or index buffers are meant for vertices or indices that are essentially
+                           ///< only used once.  They can be resized without any performance penalty.
 
-      GFXBufferTypeImmutable, ///< Immutable buffers must specify the data when creating the buffer. Cannot be modified.
+   GFXBufferTypeImmutable, ///< Immutable buffers must specify the data when creating the buffer. Cannot be modified.
 
-      GFXBufferType_COUNT ///< Number of buffer types.
+   GFXBufferType_COUNT     ///< Number of buffer types.
 };
 
 enum GFXTexCallbackCode
@@ -59,7 +63,6 @@ enum GFXTexCallbackCode
    GFXZombify,
    GFXResurrect,
 };
-
 
 enum GFXPrimitiveType 
 {
@@ -72,52 +75,12 @@ enum GFXPrimitiveType
    GFXPT_COUNT
 };
 
-enum GFXTextureType 
-{
-   GFXTextureType_Normal,
-   GFXTextureType_KeepBitmap,
-   GFXTextureType_Dynamic,
-   GFXTextureType_RenderTarget,
-   GFXTextureType_Count
-};
-
 enum GFXBitmapFlip 
 {
    GFXBitmapFlip_None = 0,
    GFXBitmapFlip_X    = 1 << 0,
    GFXBitmapFlip_Y    = 1 << 1,
    GFXBitmapFlip_XY   = GFXBitmapFlip_X | GFXBitmapFlip_Y
-};
-
-enum GFXTextureOp 
-{
-   GFXTOP_FIRST = 0,
-   GFXTOPDisable = 0,
-   GFXTOPSelectARG1,
-   GFXTOPSelectARG2,
-   GFXTOPModulate,
-   GFXTOPModulate2X,
-   GFXTOPModulate4X,
-   GFXTOPAdd,
-   GFXTOPAddSigned,
-   GFXTOPAddSigned2X,
-   GFXTOPSubtract,
-   GFXTOPAddSmooth, 
-   GFXTOPBlendDiffuseAlpha,
-   GFXTOPBlendTextureAlpha,
-   GFXTOPBlendFactorAlpha,
-   GFXTOPBlendTextureAlphaPM,
-   GFXTOPBlendCURRENTALPHA,
-   GFXTOPPreModulate,
-   GFXTOPModulateAlphaAddColor,
-   GFXTOPModulateColorAddAlpha,
-   GFXTOPModulateInvAlphaAddColor,
-   GFXTOPModulateInvColorAddAlpha,
-   GFXTOPBumpEnvMap,
-   GFXTOPBumpEnvMapLuminance,
-   GFXTOPDotProduct3,
-   GFXTOPLERP,
-   GFXTOP_COUNT
 };
 
 enum GFXTextureAddressMode 
@@ -138,8 +101,6 @@ enum GFXTextureFilterType
    GFXTextureFilterPoint,
    GFXTextureFilterLinear,
    GFXTextureFilterAnisotropic,
-   GFXTextureFilterPyramidalQuad,
-   GFXTextureFilterGaussianQuad,
    GFXTextureFilter_COUNT
 };
 
@@ -248,13 +209,6 @@ inline U32 GFXFormat_getByteSize( GFXFormat format )
    return 16;
 }
 
-enum GFXShadeMode 
-{
-   GFXShadeFlat = 1,
-   GFXShadeGouraud,
-   GFXShadePhong,
-};
-
 enum GFXClearFlags 
 {
    GFXClearTarget = 1 << 0,
@@ -328,13 +282,6 @@ enum GFXStencilOp
    GFXStencilOp_COUNT
 };
 
-enum GFXMaterialColorSource 
-{
-   GFXMCSMaterial = 0,
-   GFXMCSColor1,
-   GFXMCSColor2,
-};
-
 enum GFXBlendOp 
 { 
    GFXBlendOp_FIRST = 0,
@@ -345,195 +292,6 @@ enum GFXBlendOp
    GFXBlendOpMax,
    GFXBlendOp_COUNT
 };
-
-enum GFXRenderState 
-{
-   GFXRenderState_FIRST = 0,
-   GFXRSZEnable = 0,
-   GFXRSFillMode,
-   GFXRSShadeMode,
-   GFXRSZWriteEnable,
-   GFXRSAlphaTestEnable,
-   GFXRSLastPixel,
-   GFXRSSrcBlend,
-   GFXRSDestBlend,
-   GFXRSCullMode,
-   GFXRSZFunc,
-   GFXRSAlphaRef,
-   GFXRSAlphaFunc,
-   GFXRSDitherEnable,
-   GFXRSAlphaBlendEnable,
-   GFXRSFogEnable,
-   GFXRSSpecularEnable,
-   GFXRSFogColor,
-   GFXRSFogTableMode,
-   GFXRSFogStart,
-   GFXRSFogEnd,
-   GFXRSFogDensity,
-   GFXRSRangeFogEnable,
-   GFXRSStencilEnable,
-   GFXRSStencilFail,
-   GFXRSStencilZFail,
-   GFXRSStencilPass,
-   GFXRSStencilFunc,
-   GFXRSStencilRef,
-   GFXRSStencilMask,
-   GFXRSStencilWriteMask,
-   GFXRSTextureFactor,
-   GFXRSWrap0,
-   GFXRSWrap1,
-   GFXRSWrap2,
-   GFXRSWrap3,
-   GFXRSWrap4,
-   GFXRSWrap5,
-   GFXRSWrap6,
-   GFXRSWrap7,
-   GFXRSClipping,
-   GFXRSLighting,
-   GFXRSAmbient,
-   GFXRSFogVertexMode,
-   GFXRSColorVertex,
-   GFXRSLocalViewer,
-   GFXRSNormalizeNormals,
-   GFXRSDiffuseMaterialSource,
-   GFXRSSpecularMaterialSource,
-   GFXRSAmbientMaterialSource,
-   GFXRSEmissiveMaterialSource,
-   GFXRSVertexBlend,
-   GFXRSClipPlaneEnable,
-   GFXRSPointSize,
-   GFXRSPointSizeMin,
-   GFXRSPointSpriteEnable,
-   GFXRSPointScaleEnable,
-   GFXRSPointScale_A,
-   GFXRSPointScale_B,
-   GFXRSPointScale_C,
-   GFXRSMultiSampleantiAlias,
-   GFXRSMultiSampleMask,
-   GFXRSPatchEdgeStyle,
-   GFXRSDebugMonitorToken,
-   GFXRSPointSize_Max,
-   GFXRSIndexedVertexBlendEnable,
-   GFXRSColorWriteEnable,
-   GFXRSTweenFactor,
-   GFXRSBlendOp,
-   GFXRSPositionDegree,
-   GFXRSNormalDegree,
-   GFXRSScissorTestEnable,
-   GFXRSSlopeScaleDepthBias,
-   GFXRSAntiAliasedLineEnable,
-   GFXRSMinTessellationLevel,
-   GFXRSMaxTessellationLevel,
-   GFXRSAdaptiveTess_X,
-   GFXRSAdaptiveTess_Y,
-   GFXRSdaptiveTess_Z,
-   GFXRSAdaptiveTess_W,
-   GFXRSEnableAdaptiveTesselation,
-   GFXRSTwoSidedStencilMode,
-   GFXRSCCWStencilFail,
-   GFXRSCCWStencilZFail,
-   GFXRSCCWStencilPass,
-   GFXRSCCWStencilFunc,
-   GFXRSColorWriteEnable1,
-   GFXRSColorWriteEnable2,
-   GFXRSolorWriteEnable3,
-   GFXRSBlendFactor,
-   GFXRSSRGBWriteEnable,
-   GFXRSDepthBias,
-   GFXRSWrap8,
-   GFXRSWrap9,
-   GFXRSWrap10,
-   GFXRSWrap11,
-   GFXRSWrap12,
-   GFXRSWrap13,
-   GFXRSWrap14,
-   GFXRSWrap15,
-   GFXRSSeparateAlphaBlendEnable,
-   GFXRSSrcBlendAlpha,
-   GFXRSDestBlendAlpha,
-   GFXRSBlendOpAlpha,
-   GFXRenderState_COUNT          ///< Don't use this one, this is a counter
-};
-
-#define GFXCOLORWRITEENABLE_RED     1
-#define GFXCOLORWRITEENABLE_GREEN   2
-#define GFXCOLORWRITEENABLE_BLUE    4
-#define GFXCOLORWRITEENABLE_ALPHA   8
-
-enum GFXTextureStageState 
-{
-   GFXTSS_FIRST = 0,
-   GFXTSSColorOp = 0,
-   GFXTSSColorArg1,
-   GFXTSSColorArg2,
-   GFXTSSAlphaOp,
-   GFXTSSAlphaArg1,
-   GFXTSSAlphaArg2,
-   GFXTSSBumpEnvMat00,
-   GFXTSSBumpEnvMat01,
-   GFXTSSBumpEnvMat10,
-   GFXTSSBumpEnvMat11,
-   GFXTSSTexCoordIndex,
-   GFXTSSBumpEnvlScale,
-   GFXTSSBumpEnvlOffset,
-   GFXTSSTextureTransformFlags,
-   GFXTSSColorArg0,
-   GFXTSSAlphaArg0,
-   GFXTSSResultArg,
-   GFXTSSConstant,
-   GFXTSS_COUNT            ///< Don't use this one, this is a counter
-};
-
-enum GFXTextureTransformFlags
-{
-   GFXTTFFDisable = 0,
-   GFXTTFFCoord1D = 1,
-   GFXTTFFCoord2D = 2,
-   GFXTTFFCoord3D = 3,
-   GFXTTFFCoord4D = 4,
-   GFXTTFFProjected = 256,
-};
-
-// CodeReview: This number is used for the declaration of variables, but it
-// should *not* be used for any run-time purposes [7/2/2007 Pat]
-#define TEXTURE_STAGE_COUNT 16
-
-enum GFXSamplerState 
-{
-   GFXSAMP_FIRST = 0,
-   GFXSAMPAddressU = 0,
-   GFXSAMPAddressV,
-   GFXSAMPAddressW,
-   GFXSAMPBorderColor,
-   GFXSAMPMagFilter,
-   GFXSAMPMinFilter,
-   GFXSAMPMipFilter,
-   GFXSAMPMipMapLODBias,
-   GFXSAMPMaxMipLevel,
-   GFXSAMPMaxAnisotropy,
-   GFXSAMPSRGBTexture,
-   GFXSAMPElementIndex,
-   GFXSAMPDMapOffset,
-   GFXSAMP_COUNT          ///< Don't use this one, this is a counter
-};
-
-enum GFXTextureArgument 
-{
-   GFXTA_FIRST = 0,
-   GFXTADiffuse = 0,
-   GFXTACurrent,
-   GFXTATexture,
-   GFXTATFactor,
-   GFXTASpecular,
-   GFXTATemp,
-   GFXTAConstant,
-   GFXTA_COUNT,
-   GFXTAComplement = 0x00000010,       // take 1.0 - x (read modifier)
-   GFXTAAlphaReplicate = 0x00000020,   // replicate alpha to color components (read modifier)
-};
-
-// Matrix stuff
-#define WORLD_STACK_MAX 24
 
 enum GFXMatrixType 
 {
@@ -549,30 +307,6 @@ enum GFXMatrixType
    GFXMatrixTexture5 = 21,
    GFXMatrixTexture6 = 22,
    GFXMatrixTexture7 = 23,
-};
-
-// Light define
-#define LIGHT_STAGE_COUNT 8
-
-#define GFXVERTEXFLAG_F32     3
-#define GFXVERTEXFLAG_POINT2F 0
-#define GFXVERTEXFLAG_POINT3F 1 
-#define GFXVERTEXFLAG_POINT4F 2
-
-#define GFXVERTEXFLAG_TEXCOORD_F32(CoordIndex)     ( GFXVERTEXFLAG_F32     << ( CoordIndex * 2 + 16 ) ) 
-#define GFXVERTEXFLAG_TEXCOORD_POINT2F(CoordIndex) ( GFXVERTEXFLAG_POINT2F ) 
-#define GFXVERTEXFLAG_TEXCOORD_POINT3F(CoordIndex) ( GFXVERTEXFLAG_POINT3F << ( CoordIndex * 2 + 16 ) ) 
-#define GFXVERTEXFLAG_TEXCOORD_POINT4F(CoordIndex) ( GFXVERTEXFLAG_POINT4F << ( CoordIndex * 2 + 16 ) )
-
-#define STATE_STACK_SIZE 32
-
-// Index Formats
-enum GFXIndexFormat 
-{
-   GFXIndexFormat_FIRST = 0,
-   GFXIndexFormat16 = 0,
-   GFXIndexFormat32,
-   GFXIndexFormat_COUNT
 };
 
 enum GFXShaderConstType
@@ -602,7 +336,6 @@ enum GFXShaderConstType
    GFXSCT_SamplerCubeArray,
    GFXSCT_SamplerTextureArray
 };
-
 
 /// Defines a vertex declaration type.
 /// @see GFXVertexElement

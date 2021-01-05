@@ -2799,5 +2799,5 @@ DefineEngineFunction( getMaxDynamicVerts, S32, (),,
    "Get max number of allowable dynamic vertices in a single vertex buffer.\n\n"
    "@return the max number of allowable dynamic vertices in a single vertex buffer" )
 {
-   return MAX_DYNAMIC_VERTS / 2;
+   return GFX_MAX_DYNAMIC_VERTS / 2;
 }

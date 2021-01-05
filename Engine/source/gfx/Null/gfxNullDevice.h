@@ -99,9 +99,6 @@ protected:
 
    virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject*texture) { };
 
-   virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable);
-   virtual void setLightMaterialInternal(const GFXLightMaterial mat) { };
-   virtual void setGlobalAmbientInternal(LinearColorF color) { };
 
    /// @name State Initalization.
    /// @{
@@ -109,8 +106,6 @@ protected:
    /// State initalization. This MUST BE CALLED in setVideoMode after the device
    /// is created.
    virtual void initStates() { };
-
-   virtual void setMatrix( GFXMatrixType mtype, const MatrixF &mat ) { };
 
    virtual GFXVertexBuffer *allocVertexBuffer(  U32 numVerts, 
                                                 const GFXVertexFormat *vertexFormat, 

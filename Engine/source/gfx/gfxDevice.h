@@ -72,9 +72,7 @@ class GFXShaderConstBuffer;
 class GFXTextureManager;
 
 // Global macro
-#define GFX GFXDevice::get()
-
-#define MAX_MRT_TARGETS 4 
+#define GFX GFXDevice::get() 
 
 //-----------------------------------------------------------------------------
 
@@ -185,10 +183,6 @@ private:
    friend class GFXTextureObject;
    friend class GFXTexHandle;
    friend class GFXVertexFormat;
-   friend class GFXTestFullscreenToggle;
-   friend class TestGFXTextureCube;
-   friend class TestGFXRenderTargetCube;
-   friend class TestGFXRenderTargetStack;
    friend class GFXResource;
    friend class LightMatInstance; // For stencil interface
 
@@ -220,11 +214,11 @@ public:
       /// The device has started rendering a frame's field (such as for side-by-side rendering)
       deStartOfField,
 
-     /// left stereo frame has been rendered
-     deLeftStereoFrameRendered,
+      /// left stereo frame has been rendered
+      deLeftStereoFrameRendered,
 
-     /// right stereo frame has been rendered
-     deRightStereoFrameRendered,
+      /// right stereo frame has been rendered
+      deRightStereoFrameRendered,
 
       /// The device is about to finish rendering a frame's field
       deEndOfField,
@@ -255,7 +249,7 @@ public:
    {
       RS_Standard          = 0,
       RS_StereoSideBySide  = (1<<0),     // Render into current Render Target side-by-side
-     RS_StereoSeparate    = (1<<1)      // Render in two separate passes (then combined by vr compositor)
+      RS_StereoSeparate    = (1<<1)      // Render in two separate passes (then combined by vr compositor)
    };
 
    enum GFXDeviceLimits
@@ -503,17 +497,17 @@ protected:
       GFXTDT_TextureArray
    };
    
-   GFXTexHandle mCurrentTexture[TEXTURE_STAGE_COUNT];
-   GFXTexHandle mNewTexture[TEXTURE_STAGE_COUNT];
-   GFXCubemapHandle mCurrentCubemap[TEXTURE_STAGE_COUNT];
-   GFXCubemapHandle mNewCubemap[TEXTURE_STAGE_COUNT];
-   GFXCubemapArrayHandle mCurrentCubemapArray[TEXTURE_STAGE_COUNT];
-   GFXCubemapArrayHandle mNewCubemapArray[TEXTURE_STAGE_COUNT];
-   GFXTextureArrayHandle mCurrentTextureArray[TEXTURE_STAGE_COUNT];
-   GFXTextureArrayHandle mNewTextureArray[TEXTURE_STAGE_COUNT];
+   GFXTexHandle mCurrentTexture[GFX_TEXTURE_STAGE_COUNT];
+   GFXTexHandle mNewTexture[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapHandle mCurrentCubemap[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapHandle mNewCubemap[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapArrayHandle mCurrentCubemapArray[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapArrayHandle mNewCubemapArray[GFX_TEXTURE_STAGE_COUNT];
+   GFXTextureArrayHandle mCurrentTextureArray[GFX_TEXTURE_STAGE_COUNT];
+   GFXTextureArrayHandle mNewTextureArray[GFX_TEXTURE_STAGE_COUNT];
 
-   TexDirtyType   mTexType[TEXTURE_STAGE_COUNT];
-   bool           mTextureDirty[TEXTURE_STAGE_COUNT];
+   TexDirtyType   mTexType[GFX_TEXTURE_STAGE_COUNT];
+   bool           mTextureDirty[GFX_TEXTURE_STAGE_COUNT];
    bool           mTexturesDirty;
 
    // This maps a GFXStateBlockDesc hash value to a GFXStateBlockRef
@@ -542,40 +536,11 @@ protected:
 
    /// @}
 
-   /// @name Light Tracking
-   /// @{
-
-   GFXLightInfo  mCurrentLight[LIGHT_STAGE_COUNT]; 
-   bool          mCurrentLightEnable[LIGHT_STAGE_COUNT];
-   bool          mLightDirty[LIGHT_STAGE_COUNT];
-   bool          mLightsDirty;
-
-   LinearColorF        mGlobalAmbientColor;
-   bool          mGlobalAmbientColorDirty;
-
-   /// @}
-
-   /// @name Fixed function material tracking
-   /// @{
-
-   GFXLightMaterial mCurrentLightMaterial;
-   bool mLightMaterialDirty;
-
-   /// @}
-
-   /// @name Bitmap modulation and color stack
-   /// @{
-
-   ///
-
-   /// @}
-
    /// @see getDeviceSwizzle32
    Swizzle<U8, 4> *mDeviceSwizzle32;
 
    /// @see getDeviceSwizzle24
    Swizzle<U8, 3> *mDeviceSwizzle24;
-
 
    //-----------------------------------------------------------------------------
 
@@ -583,19 +548,14 @@ protected:
    /// @{
 
    ///
-   MatrixF mWorldMatrix[WORLD_STACK_MAX];
-   bool    mWorldMatrixDirty;
+   MatrixF mWorldMatrix[GFX_WORLD_STACK_MAX];
+
    S32     mWorldStackSize;
 
    MatrixF mProjectionMatrix;
-   bool    mProjectionMatrixDirty;
 
    MatrixF mViewMatrix;
-   bool    mViewMatrixDirty;
 
-   MatrixF mTextureMatrix[TEXTURE_STAGE_COUNT];
-   bool    mTextureMatrixDirty[TEXTURE_STAGE_COUNT];
-   bool    mTextureMatrixCheckDirty;
    /// @}
 
    /// @name Current frustum planes
@@ -621,10 +581,6 @@ protected:
 
    virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject*texture) = 0;
 
-   virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable) = 0;
-   virtual void setGlobalAmbientInternal(LinearColorF color) = 0;
-   virtual void setLightMaterialInternal(const GFXLightMaterial mat) = 0;
-
    virtual bool beginSceneInternal() = 0;
    virtual void endSceneInternal() = 0;
 
@@ -635,21 +591,6 @@ protected:
    /// is created.
    virtual void initStates() = 0;
    /// @}
-
-   //-----------------------------------------------------------------------------
-
-   /// This function must be implemented differently per
-   /// API and it should set ONLY the current matrix.
-   /// For example, in OpenGL, there should be NO matrix stack
-   /// activity, all the stack stuff is managed in the GFX layer.
-   ///
-   /// OpenGL does not have separate world and
-   /// view matrices. It has ModelView which is world * view.
-   /// You must take this into consideration.
-   ///
-   /// @param   mtype   Which matrix to set, world/view/projection
-   /// @param   mat   Matrix to assign
-   virtual void setMatrix( GFXMatrixType mtype, const MatrixF &mat ) = 0;
 
    //-----------------------------------------------------------------------------
 protected:
@@ -711,13 +652,7 @@ protected:
 
    /// @}
 
-   //---------------------------------------
-   // SFX buffer
-   //---------------------------------------
 protected:
-
-   GFXTexHandle mFrontBuffer[2];
-   U32 mCurrentFrontBufferIdx;
 
    //---------------------------------------
    // Render target related
@@ -850,8 +785,6 @@ public:
    virtual void endField();
    PlatformTimer *mFrameTime;
 
-   virtual GFXTexHandle & getFrontBuffer(){ return mFrontBuffer[mCurrentFrontBufferIdx]; }
-
    void setPrimitiveBuffer( GFXPrimitiveBuffer *buffer );
 
    /// Sets the vertex buffer.
@@ -924,7 +857,6 @@ public:
    void drawPrimitive( const GFXPrimitive &prim );
    void drawPrimitive( U32 primitiveIndex );
    void drawPrimitives();
-   void drawPrimitiveBuffer( GFXPrimitiveBuffer *buffer );
    /// @}
 
    //-----------------------------------------------------------------------------
@@ -936,18 +868,8 @@ public:
 
    /// Returns a hardware occlusion query object or NULL
    /// if this device does not support them.   
-   virtual GFXOcclusionQuery* createOcclusionQuery() { return NULL; }
-   
-   /// @name Light Settings
-   /// NONE of these should be overridden by API implementations
-   /// because of the state caching stuff.
-   /// @{
-   void setLight(U32 stage, GFXLightInfo* light);
-   void setLightMaterial(const GFXLightMaterial& mat);
-   void setGlobalAmbientColor(const LinearColorF& color);
-
-   /// @}
-   
+   virtual GFXOcclusionQuery* createOcclusionQuery() { return NULL; }   
+  
    /// @name Texture State Settings
    /// NONE of these should be overridden by API implementations
    /// because of the state caching stuff.
@@ -1136,23 +1058,20 @@ public:
 
 inline void GFXDevice::setWorldMatrix( const MatrixF &newWorld )
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldMatrix[mWorldStackSize] = newWorld;
 }
 
 inline void GFXDevice::pushWorldMatrix()
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldStackSize++;
-   AssertFatal( mWorldStackSize < WORLD_STACK_MAX, "GFX: Exceeded world matrix stack size" );
+   AssertFatal( mWorldStackSize < GFX_WORLD_STACK_MAX, "GFX: Exceeded world matrix stack size" );
    mWorldMatrix[mWorldStackSize] = mWorldMatrix[mWorldStackSize - 1];
 }
 
 inline void GFXDevice::popWorldMatrix()
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldStackSize--;
    AssertFatal( mWorldStackSize >= 0, "GFX: Negative WorldStackSize!" );
@@ -1160,14 +1079,12 @@ inline void GFXDevice::popWorldMatrix()
 
 inline void GFXDevice::multWorld( const MatrixF &mat )
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldMatrix[mWorldStackSize].mul(mat);
 }
 
 inline void GFXDevice::setProjectionMatrix( const MatrixF &newProj )
 {
-   mProjectionMatrixDirty = true;
    mStateDirty = true;
    mProjectionMatrix = newProj;
 }
@@ -1175,17 +1092,7 @@ inline void GFXDevice::setProjectionMatrix( const MatrixF &newProj )
 inline void GFXDevice::setViewMatrix( const MatrixF &newView )
 {
    mStateDirty = true;
-   mViewMatrixDirty = true;
    mViewMatrix = newView;
-}
-
-inline void GFXDevice::setTextureMatrix( const U32 stage, const MatrixF &texMat )
-{
-   AssertFatal( stage < TEXTURE_STAGE_COUNT, "Out of range texture sampler" );
-   mStateDirty = true;
-   mTextureMatrixDirty[stage] = true;
-   mTextureMatrix[stage] = texMat;
-   mTextureMatrixCheckDirty = true;
 }
 
 //-----------------------------------------------------------------------------

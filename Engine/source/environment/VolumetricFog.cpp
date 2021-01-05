@@ -960,7 +960,6 @@ bool VolumetricFog::setupRenderer()
    descD.samplers[0].magFilter = GFXTextureFilterLinear;
    descD.samplers[0].minFilter = GFXTextureFilterLinear;
    descD.samplers[0].mipFilter = GFXTextureFilterLinear;
-   descD.samplers[0].textureColorOp = GFXTOPDisable;
 
    // DepthBuffer sampler
    descD.samplers[1].addressModeU = GFXAddressClamp;
@@ -969,7 +968,6 @@ bool VolumetricFog::setupRenderer()
    descD.samplers[1].magFilter = GFXTextureFilterLinear;
    descD.samplers[1].minFilter = GFXTextureFilterLinear;
    descD.samplers[1].mipFilter = GFXTextureFilterLinear;
-   descD.samplers[1].textureColorOp = GFXTOPModulate;
 
    // FrontBuffer sampler
    descD.samplers[2].addressModeU = GFXAddressClamp;
@@ -978,7 +976,6 @@ bool VolumetricFog::setupRenderer()
    descD.samplers[2].magFilter = GFXTextureFilterLinear;
    descD.samplers[2].minFilter = GFXTextureFilterLinear;
    descD.samplers[2].mipFilter = GFXTextureFilterLinear;
-   descD.samplers[2].textureColorOp = GFXTOPModulate;
 
    // animated density modifier map sampler
    descD.samplers[3].addressModeU = GFXAddressWrap;
@@ -987,7 +984,6 @@ bool VolumetricFog::setupRenderer()
    descD.samplers[3].magFilter = GFXTextureFilterLinear;
    descD.samplers[3].minFilter = GFXTextureFilterLinear;
    descD.samplers[3].mipFilter = GFXTextureFilterLinear;
-   descD.samplers[3].textureColorOp = GFXTOPModulate;
 
    dMemcpy(&descF, &descD, sizeof(GFXStateBlockDesc));
    descF.setCullMode(GFXCullCCW);

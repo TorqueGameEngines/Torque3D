@@ -176,11 +176,6 @@ protected:
    /// Called by base GFXDevice to actually set a const buffer
    virtual void setShaderConstBufferInternal(GFXShaderConstBuffer* buffer);
 
-   virtual void setMatrix( GFXMatrixType /*mtype*/, const MatrixF &/*mat*/ ) { };
-   virtual void setLightInternal(U32 /*lightStage*/, const GFXLightInfo /*light*/, bool /*lightEnable*/) { };
-   virtual void setLightMaterialInternal(const GFXLightMaterial /*mat*/) { };
-   virtual void setGlobalAmbientInternal(LinearColorF /*color*/) { };
-
    // }
 
    // Index buffer management
@@ -286,8 +281,8 @@ public:
    virtual void setVertexStreamFrequency( U32 stream, U32 frequency );
    // }
 
-   virtual U32 getMaxDynamicVerts() { return MAX_DYNAMIC_VERTS; }
-   virtual U32 getMaxDynamicIndices() { return MAX_DYNAMIC_INDICES; }
+   virtual U32 getMaxDynamicVerts() { return GFX_MAX_DYNAMIC_VERTS; }
+   virtual U32 getMaxDynamicIndices() { return GFX_MAX_DYNAMIC_INDICES; }
 
    inline U32 primCountToIndexCount(GFXPrimitiveType primType, U32 primitiveCount);
 

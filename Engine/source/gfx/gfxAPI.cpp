@@ -98,73 +98,8 @@ ImplementEnumType( GFXTextureFilterType,
    { GFXTextureFilterPoint,   "GFXTextureFilterPoint" },
    { GFXTextureFilterLinear,  "GFXTextureFilterLinear" },
    { GFXTextureFilterAnisotropic, "GFXTextureFilterAnisotropic" },
-   { GFXTextureFilterPyramidalQuad, "GFXTextureFilterPyramidalQuad" },
-   { GFXTextureFilterGaussianQuad, "GFXTextureFilterGaussianQuad" }
 
 EndImplementEnumType;
-
-ImplementEnumType( GFXTextureOp,
-   "The texture operators.\n"
-   "@ingroup GFX" )
-
-   { GFXTOPDisable, "GFXTOPDisable" },
-   { GFXTOPSelectARG1, "GFXTOPSelectARG1" },
-   { GFXTOPSelectARG2, "GFXTOPSelectARG2" },
-   { GFXTOPModulate, "GFXTOPModulate" },
-   { GFXTOPModulate2X, "GFXTOPModulate2X" },
-   { GFXTOPModulate4X, "GFXTOPModulate4X" },
-   { GFXTOPAdd, "GFXTOPAdd" },
-   { GFXTOPAddSigned, "GFXTOPAddSigned" },
-   { GFXTOPAddSigned2X, "GFXTOPAddSigned2X" },
-   { GFXTOPSubtract, "GFXTOPSubtract" },
-   { GFXTOPAddSmooth, "GFXTOPAddSmooth" }, 
-   { GFXTOPBlendDiffuseAlpha, "GFXTOPBlendDiffuseAlpha" },
-   { GFXTOPBlendTextureAlpha, "GFXTOPBlendTextureAlpha" },
-   { GFXTOPBlendFactorAlpha, "GFXTOPBlendFactorAlpha" },
-   { GFXTOPBlendTextureAlphaPM, "GFXTOPBlendTextureAlphaPM" },
-   { GFXTOPBlendCURRENTALPHA, "GFXTOPBlendCURRENTALPHA" },
-   { GFXTOPPreModulate, "GFXTOPPreModulate" },
-   { GFXTOPModulateAlphaAddColor, "GFXTOPModulateAlphaAddColor" },
-   { GFXTOPModulateColorAddAlpha, "GFXTOPModulateColorAddAlpha" },
-   { GFXTOPModulateInvAlphaAddColor, "GFXTOPModulateInvAlphaAddColor" },
-   { GFXTOPModulateInvColorAddAlpha, "GFXTOPModulateInvColorAddAlpha" },
-   { GFXTOPBumpEnvMap, "GFXTOPBumpEnvMap" },
-   { GFXTOPBumpEnvMapLuminance, "GFXTOPBumpEnvMapLuminance" },
-   { GFXTOPDotProduct3, "GFXTOPDotProduct3" },
-   { GFXTOPLERP, "GFXTOPLERP" }
-
-EndImplementEnumType;
-
-ImplementEnumType( GFXTextureArgument,
-   "The texture arguments.\n"
-   "@ingroup GFX" )
-
-   { GFXTADiffuse, "GFXTADiffuse" },
-   { GFXTACurrent, "GFXTACurrent" },
-   { GFXTATexture, "GFXTATexture" },
-   { GFXTATFactor, "GFXTATFactor" },
-   { GFXTASpecular, "GFXTASpecular" },
-   { GFXTATemp, "GFXTATemp" },
-   { GFXTAConstant, "GFXTAConstant" },
-
-   { GFXTAComplement, "OneMinus" },
-   { GFXTAAlphaReplicate, "AlphaReplicate" }
-
-EndImplementEnumType;
-
-ImplementEnumType( GFXTextureTransformFlags,
-   "The texture transform state flags.\n"
-   "@ingroup GFX" )
-
-   { GFXTTFFDisable, "GFXTTFDisable" },
-   { GFXTTFFCoord1D, "GFXTTFFCoord1D" },
-   { GFXTTFFCoord2D, "GFXTTFFCoord2D" },
-   { GFXTTFFCoord3D, "GFXTTFFCoord3D" },
-   { GFXTTFFCoord4D, "GFXTTFFCoord4D" },
-   { GFXTTFFProjected, "GFXTTFProjected" }
-
-EndImplementEnumType;
-
 
 ImplementEnumType( GFXFormat,
    "The texture formats.\n"

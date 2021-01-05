@@ -140,8 +140,8 @@ public:
 
    virtual void preDestroy() { Parent::preDestroy(); }
 
-   virtual U32 getMaxDynamicVerts() { return MAX_DYNAMIC_VERTS; }
-   virtual U32 getMaxDynamicIndices() { return MAX_DYNAMIC_INDICES; }
+   virtual U32 getMaxDynamicVerts() { return GFX_MAX_DYNAMIC_VERTS; }
+   virtual U32 getMaxDynamicIndices() { return GFX_MAX_DYNAMIC_INDICES; }
    
    GFXFence *createFence();
    
@@ -177,18 +177,12 @@ protected:
    virtual void setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArray* texture);
    virtual void setTextureArrayInternal(U32 textureUnit, const GFXGLTextureArray* texture);
 
-   virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable);
-   virtual void setLightMaterialInternal(const GFXLightMaterial mat);
-   virtual void setGlobalAmbientInternal(LinearColorF color);
-
    /// @name State Initalization.
    /// @{
 
    /// State initalization. This MUST BE CALLED in setVideoMode after the device
    /// is created.
    virtual void initStates() { }
-
-   virtual void setMatrix( GFXMatrixType mtype, const MatrixF &mat );
 
    virtual GFXVertexBuffer *allocVertexBuffer(  U32 numVerts, 
                                                 const GFXVertexFormat *vertexFormat,
@@ -255,7 +249,7 @@ private:
    
    GFXGLStateBlockRef mCurrentGLStateBlock;
    
-   GLenum mActiveTextureType[TEXTURE_STAGE_COUNT];
+   GLenum mActiveTextureType[GFX_TEXTURE_STAGE_COUNT];
    
    Vector< StrongRefPtr<GFXGLVertexBuffer> > mVolatileVBs; ///< Pool of existing volatile VBs so we can reuse previously created ones
    Vector< StrongRefPtr<GFXGLPrimitiveBuffer> > mVolatilePBs; ///< Pool of existing volatile PBs so we can reuse previously created ones

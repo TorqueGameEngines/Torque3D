@@ -109,7 +109,7 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/)
    mImposterUVs = shader->getShaderConstHandle( "$imposterUVs" );
    mImposterLimits = shader->getShaderConstHandle( "$imposterLimits" );
 
-   for (S32 i = 0; i < TEXTURE_STAGE_COUNT; ++i)
+   for (S32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; ++i)
       mRTParamsSC[i] = shader->getShaderConstHandle( String::ToString( "$rtParams%d", i ) );
 
    // MFT_HardwareSkinning

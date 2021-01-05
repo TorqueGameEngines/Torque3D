@@ -26,7 +26,6 @@
 GLenum GFXGLPrimType[GFXPT_COUNT];
 GLenum GFXGLBlend[GFXBlend_COUNT];
 GLenum GFXGLBlendOp[GFXBlendOp_COUNT];
-GLenum GFXGLSamplerState[GFXSAMP_COUNT];
 GLenum GFXGLTextureFilter[GFXTextureFilter_COUNT];
 GLenum GFXGLTextureAddress[GFXAddress_COUNT];
 GLenum GFXGLCmpFunc[GFXCmp_COUNT];
@@ -75,14 +74,7 @@ void GFXGLEnumTranslate::init()
    GFXGLBlendOp[GFXBlendOpMin] = GL_MIN;
    GFXGLBlendOp[GFXBlendOpMax] = GL_MAX;
 
-   // Sampler
-   GFXGLSamplerState[GFXSAMPMagFilter] = GL_TEXTURE_MAG_FILTER;
-   GFXGLSamplerState[GFXSAMPMinFilter] = GL_TEXTURE_MIN_FILTER;
-   GFXGLSamplerState[GFXSAMPAddressU] = GL_TEXTURE_WRAP_S;
-   GFXGLSamplerState[GFXSAMPAddressV] = GL_TEXTURE_WRAP_T;
-   GFXGLSamplerState[GFXSAMPAddressW] = GL_TEXTURE_WRAP_R;
-   GFXGLSamplerState[GFXSAMPMipMapLODBias] = GL_TEXTURE_LOD_BIAS;
-   
+  
    // Comparison
    GFXGLCmpFunc[GFXCmpNever] = GL_NEVER;
    GFXGLCmpFunc[GFXCmpLess] = GL_LESS;
@@ -96,10 +88,7 @@ void GFXGLEnumTranslate::init()
    GFXGLTextureFilter[GFXTextureFilterNone] = GL_NEAREST;
    GFXGLTextureFilter[GFXTextureFilterPoint] = GL_NEAREST;
    GFXGLTextureFilter[GFXTextureFilterLinear] = GL_LINEAR;
-
    GFXGLTextureFilter[GFXTextureFilterAnisotropic] = GL_LINEAR;
-   GFXGLTextureFilter[GFXTextureFilterPyramidalQuad] = GL_LINEAR; 
-   GFXGLTextureFilter[GFXTextureFilterGaussianQuad] = GL_LINEAR;
 
    GFXGLTextureAddress[GFXAddressWrap] = GL_REPEAT;
    GFXGLTextureAddress[GFXAddressMirror] = GL_REPEAT;
@@ -116,8 +105,7 @@ void GFXGLEnumTranslate::init()
    GFXGLStencilOp[GFXStencilOpInvert] = GL_INVERT;
    
    GFXGLStencilOp[GFXStencilOpIncr] = GL_INCR_WRAP;
-   GFXGLStencilOp[GFXStencilOpDecr] = GL_DECR_WRAP;
-   
+   GFXGLStencilOp[GFXStencilOpDecr] = GL_DECR_WRAP;   
    
    // Texture formats
    for(int i = 0; i < GFXFormat_COUNT; ++i)

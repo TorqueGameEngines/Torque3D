@@ -1608,14 +1608,6 @@ void Precipitation::renderObject(ObjectRenderInst *ri, SceneRenderState *state, 
       mDefaultSB = GFX->createStateBlock(desc);
 
       desc.samplersDefined = true;
-      desc.samplers[0].textureColorOp =  GFXTOPModulate;
-      desc.samplers[0].colorArg1 = GFXTATexture;
-      desc.samplers[0].colorArg2 = GFXTADiffuse;
-      desc.samplers[0].alphaOp = GFXTOPSelectARG1;
-      desc.samplers[0].alphaArg1 = GFXTATexture;
-
-      desc.samplers[1].textureColorOp = GFXTOPDisable;
-      desc.samplers[1].alphaOp = GFXTOPDisable;
 
       mDistantSB = GFX->createStateBlock(desc);
    }

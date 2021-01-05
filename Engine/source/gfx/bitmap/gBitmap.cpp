@@ -882,20 +882,8 @@ U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan)
 
 //-----------------------------------------------------------------------------
 
-bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const GFXTextureOp combineOp )
+bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const TextureOp combineOp )
 {
-   // Check valid texture ops
-   switch( combineOp )
-   {
-      case GFXTOPAdd:
-      case GFXTOPSubtract:
-         break;
-
-      default:
-         Con::errorf( "GBitmap::combine - Invalid op type" );
-         return false;
-   }
-
    // Check bitmapA format
    switch( bitmapA->getFormat() )
    {
@@ -970,11 +958,11 @@ bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const GFX
             // Combine them (clamp values 0-U8_MAX)
             switch( combineOp )
             {
-               case GFXTOPAdd:
+               case Add:
                   *destBits++ = getMin( U8( pxA + pxB ), U8_MAX );
                   break;
 
-               case GFXTOPSubtract:
+               case Subtract:
                   *destBits++ = getMax( U8( pxA - pxB ), U8( 0 ) );
                   break;
                default:

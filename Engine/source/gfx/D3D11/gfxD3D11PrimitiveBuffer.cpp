@@ -48,7 +48,7 @@ void GFXD3D11PrimitiveBuffer::lock(U32 indexStart, U32 indexEnd, void **indexPtr
 	case GFXBufferTypeVolatile:
 		// Get our range now...
 		AssertFatal(indexStart == 0,                "Cannot get a subrange on a volatile buffer.");
-		AssertFatal(indexEnd < MAX_DYNAMIC_INDICES, "Cannot get more than MAX_DYNAMIC_INDICES in a volatile buffer. Up the constant!");
+		AssertFatal(indexEnd < GFX_MAX_DYNAMIC_INDICES, "Cannot get more than GFX_MAX_DYNAMIC_INDICES in a volatile buffer. Up the constant!");
 
 		// Get the primtive buffer
 		mVolatileBuffer = D3D11->mDynamicPB;
@@ -56,7 +56,7 @@ void GFXD3D11PrimitiveBuffer::lock(U32 indexStart, U32 indexEnd, void **indexPtr
 		AssertFatal( mVolatileBuffer, "GFXD3D11PrimitiveBuffer::lock - No dynamic primitive buffer was available!");
 
 		// We created the pool when we requested this volatile buffer, so assume it exists...
-		if(mVolatileBuffer->mIndexCount + indexEnd > MAX_DYNAMIC_INDICES) 
+		if(mVolatileBuffer->mIndexCount + indexEnd > GFX_MAX_DYNAMIC_INDICES) 
 		{
 			flags = D3D11_MAP_WRITE_DISCARD;
 			mVolatileStart = indexStart  = 0;

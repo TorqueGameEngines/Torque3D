@@ -354,11 +354,6 @@ void GFXNullDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
    adapterList.push_back(toAdd);
 }
 
-void GFXNullDevice::setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable)
-{
-
-}
-
 void GFXNullDevice::init( const GFXVideoMode &mode, PlatformWindow *window )
 {
    mCardProfiler = new GFXNullCardProfiler();

@@ -1339,7 +1339,7 @@ void TerrainEditor::renderPoints( const Vector<GFXVertexPCT> &pointList )
 
    while ( vertsLeft > 0 )
    {
-      U32 vertsThisDrawCall = getMin( (U32)vertsLeft, (U32)MAX_DYNAMIC_VERTS );
+      U32 vertsThisDrawCall = getMin( (U32)vertsLeft, (U32)GFX_MAX_DYNAMIC_VERTS );
       vertsLeft -= vertsThisDrawCall;
 
       GFXVertexBufferHandle<GFXVertexPCT> vbuff( GFX, vertsThisDrawCall, GFXBufferTypeVolatile );

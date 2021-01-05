@@ -1520,14 +1520,10 @@ void fxFoliageReplicator::renderObject(ObjectRenderInst *ri, SceneRenderState *s
 
          // Debug SB
          desc.samplersDefined = true;
-         desc.samplers[0].textureColorOp = GFXTOPDisable;
-         desc.samplers[1].textureColorOp = GFXTOPDisable;
 
          mDebugSB = GFX->createStateBlock(desc);
 
          // Render SB
-         desc.samplers[0].textureColorOp = GFXTOPModulate;
-         desc.samplers[1].textureColorOp = GFXTOPModulate;
          desc.samplers[1].addressModeU = GFXAddressClamp;
          desc.samplers[1].addressModeV = GFXAddressClamp;
 

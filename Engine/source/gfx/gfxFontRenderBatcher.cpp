@@ -40,18 +40,10 @@ FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
       f.blendSrc = GFXBlendSrcAlpha;
       f.blendDest = GFXBlendInvSrcAlpha;
       f.samplersDefined = true;
-      f.samplers[0].alphaOp = GFXTOPModulate;
       f.samplers[0].magFilter = GFXTextureFilterPoint;
       f.samplers[0].minFilter = GFXTextureFilterPoint;
       f.samplers[0].addressModeU = GFXAddressClamp;
       f.samplers[0].addressModeV = GFXAddressClamp;
-      f.samplers[0].alphaArg1 = GFXTATexture;
-      f.samplers[0].alphaArg2 = GFXTADiffuse;
-      // This is an add operation because in D3D, when a texture of format D3DFMT_A8
-      // is used, the RGB channels are all set to 0.  Therefore a modulate would 
-      // result in the text always being black.  This may not be the case in OpenGL
-      // so it may have to change.  -bramage
-      f.samplers[0].textureColorOp = GFXTOPAdd;
 
       f.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
       mFontSB = GFX->createStateBlock(f);

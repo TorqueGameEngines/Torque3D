@@ -234,7 +234,7 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
    mTextureManager = new GFXGLTextureManager();
    gScreenShot = new ScreenShotGL();
 
-   for(U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for(U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
       mActiveTextureType[i] = GL_ZERO;
 
    mNumVertexStream = 2;
@@ -260,7 +260,7 @@ GFXGLDevice::~GFXGLDevice()
       mVolatilePBs[i] = NULL;
 
    // Clear out our current texture references
-   for (U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for (U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
    {
       mCurrentTexture[i] = NULL;
       mNewTexture[i] = NULL;
@@ -711,21 +711,6 @@ void GFXGLDevice::setPB(GFXGLPrimitiveBuffer* pb)
    mCurrentPB = pb;
 }
 
-void GFXGLDevice::setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable)
-{
-   // ONLY NEEDED ON FFP
-}
-
-void GFXGLDevice::setLightMaterialInternal(const GFXLightMaterial mat)
-{
-   // ONLY NEEDED ON FFP
-}
-
-void GFXGLDevice::setGlobalAmbientInternal(LinearColorF color)
-{
-   // ONLY NEEDED ON FFP
-}
-
 void GFXGLDevice::setTextureInternal(U32 textureUnit, const GFXTextureObject*texture)
 {
    GFXGLTextureObject *tex = static_cast<GFXGLTextureObject*>(const_cast<GFXTextureObject*>(texture));
@@ -791,11 +776,6 @@ void GFXGLDevice::setTextureArrayInternal(U32 textureUnit, const GFXGLTextureArr
    }
 }
 
-void GFXGLDevice::setMatrix( GFXMatrixType mtype, const MatrixF &mat )
-{
-   // ONLY NEEDED ON FFP
-}
-
 void GFXGLDevice::setClipRect( const RectI &inRect )
 {
    AssertFatal(mCurrentRT.isValid(), "GFXGLDevice::setClipRect - must have a render target set to do any rendering operations!");
@@ -837,8 +817,6 @@ void GFXGLDevice::setClipRect( const RectI &inRect )
    translate.setColumn(3, pt);
    
    mProjectionMatrix *= translate;
-   
-   setMatrix(GFXMatrixProjection, mProjectionMatrix);
    
    MatrixF mTempMatrix(true);
    setViewMatrix( mTempMatrix );
@@ -985,7 +963,7 @@ void GFXGLDevice::setShaderConstBufferInternal(GFXShaderConstBuffer* buffer)
 
 U32 GFXGLDevice::getNumSamplers() const
 {
-   return getMin((U32)TEXTURE_STAGE_COUNT,mPixelShaderVersion > 0.001f ? mMaxShaderTextures : mMaxFFTextures);
+   return getMin((U32)GFX_TEXTURE_STAGE_COUNT,mPixelShaderVersion > 0.001f ? mMaxShaderTextures : mMaxFFTextures);
 }
 
 GFXTextureObject* GFXGLDevice::getDefaultDepthTex() const 

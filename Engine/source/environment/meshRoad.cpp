@@ -937,9 +937,14 @@ void MeshRoad::initPersistFields()
 {
    addGroup( "MeshRoad" );
 
-      scriptBindMaterialAsset(TopMaterial, MeshRoad, "Material for the upper surface of the road.");
-      scriptBindMaterialAsset(BottomMaterial, MeshRoad, "Material for the bottom surface of the road.");
-      scriptBindMaterialAsset(SideMaterial, MeshRoad, "Material for the left, right, front, and back surfaces of the road.");
+      addProtectedField("TopMaterial", TypeMaterialName, Offset(mTopMaterialName, MeshRoad), MeshRoad::_setTopMaterialName, & defaultProtectedGetFn, "Material for the upper surface of the road.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("TopMaterialAsset", TypeMaterialAssetId, Offset(mTopMaterialAssetId, MeshRoad), MeshRoad::_setTopMaterialAsset, & defaultProtectedGetFn, "Material for the upper surface of the road.");
+
+      addProtectedField("BottomMaterial", TypeMaterialName, Offset(mBottomMaterialName, MeshRoad), MeshRoad::_setBottomMaterialName, & defaultProtectedGetFn, "Material for the bottom surface of the road.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("BottomMaterialAsset", TypeMaterialAssetId, Offset(mBottomMaterialAssetId, MeshRoad), MeshRoad::_setBottomMaterialAsset, & defaultProtectedGetFn, "Material for the bottom surface of the road.");
+
+      addProtectedField("SideMaterial", TypeMaterialName, Offset(mSideMaterialName, MeshRoad), MeshRoad::_setSideMaterialName, & defaultProtectedGetFn, "Material for the left, right, front, and back surfaces of the road.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("SideMaterialAsset", TypeMaterialAssetId, Offset(mSideMaterialAssetId, MeshRoad), MeshRoad::_setSideMaterialAsset, & defaultProtectedGetFn, "Material for the left, right, front, and back surfaces of the road.");
 
       addField( "textureLength", TypeF32, Offset( mTextureLength, MeshRoad ), 
          "The length in meters of textures mapped to the MeshRoad." );      

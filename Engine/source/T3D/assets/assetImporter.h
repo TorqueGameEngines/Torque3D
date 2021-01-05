@@ -847,6 +847,12 @@ public:
          activeImportConfig = importConfig;
    }
 
+   /// <summary>
+   /// Resets the active import config to whatever the default is. Either a clean slate if one isn't defined
+   /// or loading one if defined via the editor config
+   /// </summary>
+   void resetImportConfig();
+
    //
    static String getTrueFilename(const String& fileName);
 
@@ -881,4 +887,8 @@ public:
 
       return qualifiedFilePath;
    }
+
+   //
+   void setTargetModuleId(const String& moduleId) { targetModuleId = moduleId; }
+   const String& getTargetModuleId() { return targetModuleId; }
 };

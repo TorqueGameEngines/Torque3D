@@ -65,10 +65,10 @@ public:
    struct Registration
    {
       /// The read function prototype.
-      typedef bool(*ReadFunc)(Stream &stream, GBitmap *bitmap);
+      typedef bool(*ReadFunc)(const String& bmType, Stream& stream, GBitmap* bitmap);
 
       /// The write function prototype.  Compression levels are image-specific - see their registration declaration for details.
-      typedef bool(*WriteFunc)(GBitmap *bitmap, Stream &stream, U32 compressionLevel);
+      typedef bool(*WriteFunc)(const String& bmType, GBitmap* bitmap, Stream& stream, U32 compressionLevel);
 
       /// Used to sort the registrations so that 
       /// lookups occur in a fixed order.

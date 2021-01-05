@@ -209,13 +209,6 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4018")
     # warning C4244: 'initializing' : conversion from 'XXX' to 'XXX', possible loss of data
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4244")
-	if(TORQUE_SFX_DirectX) 
-		if( TORQUE_CPU_X64 )
-			link_directories($ENV{DXSDK_DIR}/Lib/x64)
-		else()
-			link_directories($ENV{DXSDK_DIR}/Lib/x86)
-		endif()
-	endif()
 endif()
 
 # build types
@@ -659,8 +652,6 @@ endif()
 ###############################################################################
 # Common Libraries
 ###############################################################################
-addLib(lpng)
-addLib(ljpeg)
 addLib(zlib)
 addLib(tinyxml)
 addLib(opcode)
@@ -838,10 +829,7 @@ endif()
 ###############################################################################
 addInclude("${projectSrcDir}")
 addInclude("${srcDir}/")
-addInclude("${libDir}/lmpg")
-addInclude("${libDir}/lpng")
-addInclude("${libDir}/ljpeg")
-addInclude("${libDir}/lungif")
+addInclude("${libDir}/stb")
 addInclude("${libDir}/zlib")
 addInclude("${libDir}/") # for tinyxml
 addInclude("${libDir}/tinyxml")

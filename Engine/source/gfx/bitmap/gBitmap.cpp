@@ -1214,7 +1214,7 @@ bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
       return NULL;
    }
 
-   return regInfo->readFunc( ioStream, this );
+   return regInfo->readFunc(bmType, ioStream, this );
 }
 
 bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compressionLevel )
@@ -1227,7 +1227,7 @@ bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compress
       return NULL;
    }
 
-   return regInfo->writeFunc( this, ioStream, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
+   return regInfo->writeFunc(bmType, this, ioStream, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
 }
 
 template<> void *Resource<GBitmap>::create(const Torque::Path &path)

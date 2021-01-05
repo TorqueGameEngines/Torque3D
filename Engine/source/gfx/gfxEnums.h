@@ -27,8 +27,8 @@
 
 // These are for the enum translation. It will help with porting to other platforms
 // and API's.
-#define GFX_UNSUPPORTED_VAL 0xDEADBEEFULL
-#define GFX_UNINIT_VAL 0xDECAFBADULL
+#define GFX_UNSUPPORTED_VAL 0xDEADBEEF
+#define GFX_UNINIT_VAL 0xDECAFBAD
 
 // Adjust these pools to your app's needs.  Be aware dynamic vertices are much more
 // expensive than static vertices. These are in gfxEnums because they should be

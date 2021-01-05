@@ -664,9 +664,6 @@ GFXStateBlockRef RenderParticleMgr::_getOffscreenStateBlock(ParticleRenderInst *
 
    // Diffuse texture sampler
    d.samplers[0] = GFXSamplerStateDesc::getClampLinear();
-   d.samplers[0].alphaOp = GFXTOPModulate;
-   d.samplers[0].alphaArg1 = GFXTATexture;
-   d.samplers[0].alphaArg2 = GFXTADiffuse;
 
    // Deferred sampler
    d.samplers[1] = GFXSamplerStateDesc::getClampPoint();
@@ -697,9 +694,6 @@ GFXStateBlockRef RenderParticleMgr::_getHighResStateBlock(ParticleRenderInst *ri
 
    // Diffuse texture sampler
    d.samplers[0] = GFXSamplerStateDesc::getClampLinear();
-   d.samplers[0].alphaOp = GFXTOPModulate;
-   d.samplers[0].alphaArg1 = GFXTATexture;
-   d.samplers[0].alphaArg2 = GFXTADiffuse;
 
    // Deferred sampler
    d.samplers[1] = GFXSamplerStateDesc::getClampPoint();
@@ -769,9 +763,6 @@ GFXStateBlockRef RenderParticleMgr::_getMixedResStateBlock(ParticleRenderInst *r
 
    // Diffuse texture sampler
    d.samplers[0] = GFXSamplerStateDesc::getClampLinear();
-   d.samplers[0].alphaOp = GFXTOPModulate;
-   d.samplers[0].alphaArg1 = GFXTATexture;
-   d.samplers[0].alphaArg2 = GFXTADiffuse;
 
    // Deferred sampler
    d.samplers[1] = GFXSamplerStateDesc::getClampPoint();

@@ -88,9 +88,6 @@ GFXStateBlockDesc::GFXStateBlockDesc()
    stencilMask = 0xFFFFFFFF;
    stencilWriteMask = 0xFFFFFFFF;
 
-   // FF lighting
-   ffLighting = false;
-
    vertexColorEnable = false;
 
    fillMode = GFXFillSolid;
@@ -183,7 +180,7 @@ void GFXStateBlockDesc::addDesc(const GFXStateBlockDesc& desc)
    if (desc.samplersDefined)
    {
       samplersDefined = true;
-      for (U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+      for (U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
       {
          samplers[i] = desc.samplers[i];
       }
@@ -214,8 +211,6 @@ const String GFXStateBlockDesc::describeSelf() const
    ret += String::ToString("  Stencil: %d, StencilFailOp: %s, StencilZFailOp: %s, StencilPassOp: %s, \n  stencilFunc: %s, stencilRef: %d, stencilMask: 0x%x, stencilWriteMask: 0x%x\n",
       stencilEnable, GFXStringCmpFunc[stencilFailOp], GFXStringCmpFunc[stencilZFailOp], GFXStringCmpFunc[stencilPassOp], 
       GFXStringCmpFunc[stencilFunc], stencilRef, stencilMask, stencilWriteMask);
-   ret += String::ToString("  FF Lighting: %d, VertexColors: %d, fillMode: %s",
-      ffLighting, vertexColorEnable, GFXStringFillMode[fillMode]);
 
    return ret;
 }
@@ -274,7 +269,6 @@ void GFXStateBlockDesc::setColorWrites( bool red, bool green, bool blue, bool al
 
 GFXSamplerStateDesc::GFXSamplerStateDesc()
 {
-   textureColorOp = GFXTOPDisable;
    addressModeU = GFXAddressWrap;
    addressModeV = GFXAddressWrap;
    addressModeW = GFXAddressWrap;
@@ -283,15 +277,6 @@ GFXSamplerStateDesc::GFXSamplerStateDesc()
    mipFilter = GFXTextureFilterLinear;
    samplerFunc = GFXCmpNever;
    maxAnisotropy = 1;
-   alphaArg1 = GFXTATexture;
-   alphaArg2 = GFXTADiffuse;
-   alphaArg3 = GFXTACurrent;
-   colorArg1 = GFXTACurrent;
-   colorArg2 = GFXTATexture;
-   colorArg3 = GFXTACurrent;
-   alphaOp = GFXTOPModulate;
-   textureTransform = GFXTTFFDisable;
-   resultArg = GFXTACurrent;
    mipLODBias = 0.0f;
 }
 
@@ -299,14 +284,12 @@ GFXSamplerStateDesc GFXSamplerStateDesc::getWrapLinear()
 {
    // Linear with wrapping is already the default
    GFXSamplerStateDesc ssd;
-   ssd.textureColorOp = GFXTOPModulate;
    return ssd;
 }
 
 GFXSamplerStateDesc GFXSamplerStateDesc::getWrapPoint()
 {
    GFXSamplerStateDesc ssd;
-   ssd.textureColorOp = GFXTOPModulate;
    ssd.magFilter = GFXTextureFilterPoint;
    ssd.minFilter = GFXTextureFilterPoint;
    ssd.mipFilter = GFXTextureFilterPoint;
@@ -316,7 +299,6 @@ GFXSamplerStateDesc GFXSamplerStateDesc::getWrapPoint()
 GFXSamplerStateDesc GFXSamplerStateDesc::getClampLinear()
 {
    GFXSamplerStateDesc ssd;
-   ssd.textureColorOp = GFXTOPModulate;
    ssd.addressModeU = GFXAddressClamp;
    ssd.addressModeV = GFXAddressClamp;
    ssd.addressModeW = GFXAddressClamp;
@@ -326,7 +308,6 @@ GFXSamplerStateDesc GFXSamplerStateDesc::getClampLinear()
 GFXSamplerStateDesc GFXSamplerStateDesc::getClampPoint()
 {
    GFXSamplerStateDesc ssd;
-   ssd.textureColorOp = GFXTOPModulate;
    ssd.addressModeU = GFXAddressClamp;
    ssd.addressModeV = GFXAddressClamp;
    ssd.addressModeW = GFXAddressClamp;

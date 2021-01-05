@@ -68,14 +68,11 @@ bool GuiTerrPreviewCtrl::onAdd()
    desc.samplersDefined = true;
    desc.samplers[0].addressModeU = GFXAddressWrap;
    desc.samplers[0].addressModeV = GFXAddressWrap;
-   desc.samplers[0].textureColorOp = GFXTOPSelectARG1;
-   desc.samplers[0].colorArg1 = GFXTATexture;
    desc.setCullMode(GFXCullNone);
    desc.setZReadWrite(false);
 
    mTerrainBitmapStateBlock = GFX->createStateBlock(desc);
 
-   desc.samplers[0].textureColorOp = GFXTOPDisable;
 
    mControlsStateBlock = GFX->createStateBlock(desc);
 

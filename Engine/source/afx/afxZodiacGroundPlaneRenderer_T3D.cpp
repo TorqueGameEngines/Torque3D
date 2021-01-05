@@ -103,7 +103,6 @@ void afxZodiacGroundPlaneRenderer::initShader()
    GFXStateBlockDesc d;
 
    d.cullDefined = true;
-   d.ffLighting = false;
    d.blendDefined = true;
    d.blendEnable = true;
    d.zDefined = false;

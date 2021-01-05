@@ -210,10 +210,6 @@ void ProcessedMaterial::_initStateBlockTemplates(GFXStateBlockDesc& stateTranslu
    stateTranslucent.alphaTestRef = mMaterial->mAlphaRef;
    stateTranslucent.alphaTestFunc = GFXCmpGreaterEqual;
    stateTranslucent.samplersDefined = true;
-   stateTranslucent.samplers[0].textureColorOp = GFXTOPModulate;
-   stateTranslucent.samplers[0].alphaOp = GFXTOPModulate;   
-   stateTranslucent.samplers[0].alphaArg1 = GFXTATexture;
-   stateTranslucent.samplers[0].alphaArg2 = GFXTADiffuse;   
 
    // Glow   
    stateGlow.zDefined = true;
@@ -268,7 +264,6 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
       {
          default:
          {
-            result.samplers[i].textureColorOp = GFXTOPModulate;
             result.samplers[i].addressModeU = GFXAddressWrap;
             result.samplers[i].addressModeV = GFXAddressWrap;
 

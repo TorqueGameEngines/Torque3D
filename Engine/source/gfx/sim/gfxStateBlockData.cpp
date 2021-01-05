@@ -59,7 +59,7 @@ ConsoleDocClass(  GFXStateBlockData,
 
 GFXStateBlockData::GFXStateBlockData()
 {
-   for (U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for (U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
       mSamplerStates[i] = NULL;
 }
 
@@ -210,9 +210,6 @@ void GFXStateBlockData::initPersistFields()
 
    addGroup( "Fixed Function" );
 
-      addField( "ffLighting", TypeBool, Offset(mState.ffLighting, GFXStateBlockData),
-         "Enables fixed function lighting when rendering without a shader on geometry with vertex normals.  The default is false." );
-
       addField( "vertexColorEnable", TypeBool, Offset(mState.vertexColorEnable, GFXStateBlockData),
          "Enables fixed function vertex coloring when rendering without a shader.  The default is false." );
 
@@ -224,7 +221,7 @@ void GFXStateBlockData::initPersistFields()
       addField( "samplersDefined", TypeBool, Offset(mState.samplersDefined, GFXStateBlockData),
          "Set to true if the sampler states are not all defaults." );
 
-      addField( "samplerStates", TYPEID<GFXSamplerStateData>(), Offset(mSamplerStates, GFXStateBlockData), TEXTURE_STAGE_COUNT,
+      addField( "samplerStates", TYPEID<GFXSamplerStateData>(), Offset(mSamplerStates, GFXStateBlockData), GFX_TEXTURE_STAGE_COUNT,
          "The array of texture sampler states.\n"
          "@note Not all graphics devices support 16 samplers.  In general "
          "all systems support 4 samplers with most modern cards doing 8." );
@@ -243,7 +240,7 @@ bool GFXStateBlockData::onAdd()
    if (!Parent::onAdd())
       return false;
 
-   for (U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for (U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
    {  
       if (mSamplerStates[i])
          mSamplerStates[i]->setSamplerState(mState.samplers[i]);
@@ -284,38 +281,6 @@ void GFXSamplerStateData::initPersistFields()
 {
    Parent::initPersistFields();
 
-   addGroup( "Color Op" );
-
-      addField("textureColorOp", TypeGFXTextureOp, Offset(mState.textureColorOp, GFXSamplerStateData),
-         "The texture color blending operation.  The default value is GFXTOPDisable which disables the sampler." );
-
-      addField("colorArg1", TYPEID< GFXTextureArgument >(), Offset(mState.colorArg1, GFXSamplerStateData),
-         "The first color argument for the texture stage.  The default value is GFXTACurrent." );
-
-      addField("colorArg2", TYPEID< GFXTextureArgument >(), Offset(mState.colorArg2, GFXSamplerStateData),
-         "The second color argument for the texture stage.  The default value is GFXTATexture." );
-
-      addField("colorArg3", TYPEID< GFXTextureArgument >(), Offset(mState.colorArg3, GFXSamplerStateData),
-         "The third color argument for triadic operations (multiply, add, and linearly interpolate).  The default value is GFXTACurrent." );
-
-   endGroup( "Color Op" );
-
-   addGroup( "Alpha Op" );
-
-      addField("alphaOp", TypeGFXTextureOp, Offset(mState.alphaOp, GFXSamplerStateData),
-         "The texture alpha blending operation.  The default value is GFXTOPModulate." );
-
-      addField("alphaArg1", TYPEID< GFXTextureArgument >(), Offset(mState.alphaArg1, GFXSamplerStateData),
-         "The first alpha argument for the texture stage.  The default value is GFXTATexture." );
-
-      addField("alphaArg2", TYPEID< GFXTextureArgument >(), Offset(mState.alphaArg2, GFXSamplerStateData),
-         "The second alpha argument for the texture stage.  The default value is GFXTADiffuse." );
-
-      addField("alphaArg3", TYPEID< GFXTextureArgument >(), Offset(mState.alphaArg3, GFXSamplerStateData),
-         "The third alpha channel selector operand for triadic operations (multiply, add, and linearly interpolate).  The default value is GFXTACurrent." );
-
-   endGroup( "Alpha Op" );
-
    addGroup( "Address Mode" );
 
       addField("addressModeU", TypeGFXTextureAddressMode, Offset(mState.addressModeU, GFXSamplerStateData),
@@ -347,12 +312,6 @@ void GFXSamplerStateData::initPersistFields()
          "The maximum texture anisotropy.  The default value is 1." );
 
    endGroup( "Filter State" );
-
-   addField("textureTransform", TypeGFXTextureTransformFlags, Offset(mState.textureTransform, GFXSamplerStateData),
-      "Sets the texture transform state.  The default is GFXTTFFDisable." );
-
-   addField("resultArg", TypeGFXTextureArgument, Offset(mState.resultArg, GFXSamplerStateData),
-      "The selection of the destination register for the result of this stage.  The default is GFXTACurrent." );
 
    addField("samplerFunc", TypeGFXCmpFunc, Offset(mState.samplerFunc, GFXSamplerStateData),
       "Compares sampled data against existing sampled data.  The default is GFXCmpNever.");

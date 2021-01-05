@@ -125,9 +125,6 @@ GFXStateBlockRef RenderTranslucentMgr::_getStateBlock( U8 transFlag )
    d.zWriteEnable = false;
    d.samplersDefined = true;
    d.samplers[0] = GFXSamplerStateDesc::getClampLinear();
-   d.samplers[0].alphaOp = GFXTOPModulate;
-   d.samplers[0].alphaArg1 = GFXTATexture;
-   d.samplers[0].alphaArg2 = GFXTADiffuse;
 
    mStateBlocks[transFlag] = GFX->createStateBlock(d);
    return mStateBlocks[transFlag];

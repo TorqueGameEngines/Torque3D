@@ -87,8 +87,6 @@ void GFXD3D11EnumTranslate::init()
    GFXD3D11TextureFilter[GFXTextureFilterPoint] = D3D11_FILTER_MIN_MAG_MIP_POINT;
    GFXD3D11TextureFilter[GFXTextureFilterLinear] = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
    GFXD3D11TextureFilter[GFXTextureFilterAnisotropic] = D3D11_FILTER_ANISOTROPIC;
-   GFXD3D11TextureFilter[GFXTextureFilterPyramidalQuad] = D3D11_FILTER_ANISOTROPIC;
-   GFXD3D11TextureFilter[GFXTextureFilterGaussianQuad] = D3D11_FILTER_ANISOTROPIC;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
    GFXD3D11Blend[GFXBlendZero] = D3D11_BLEND_ZERO;

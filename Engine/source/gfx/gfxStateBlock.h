@@ -63,21 +63,6 @@ struct GFXSamplerStateDesc
    /// Defaults to zero.
    F32 mipLODBias;
 
-   GFXTextureOp textureColorOp;
-
-   GFXTextureOp alphaOp;
-   GFXTextureArgument alphaArg1;
-   GFXTextureArgument alphaArg2;
-   GFXTextureArgument alphaArg3;
-
-   GFXTextureArgument colorArg1;
-   GFXTextureArgument colorArg2;
-   GFXTextureArgument colorArg3;
-
-   GFXTextureArgument resultArg;
-
-   GFXTextureTransformFlags textureTransform;
-
    GFXSamplerStateDesc();
 
    /// Returns an modulate, wrap, and linear sampled state.
@@ -153,16 +138,13 @@ struct GFXStateBlockDesc
    U32 stencilMask;
    U32 stencilWriteMask;
 
-   // FF lighting
-   bool ffLighting;
-
    bool vertexColorEnable;
 
    GFXFillMode fillMode;
 
    // Sampler states
    bool samplersDefined;
-   GFXSamplerStateDesc samplers[TEXTURE_STAGE_COUNT];
+   GFXSamplerStateDesc samplers[GFX_TEXTURE_STAGE_COUNT];
    ColorI textureFactor;
 
    GFXStateBlockDesc();

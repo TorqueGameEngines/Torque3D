@@ -91,35 +91,6 @@ void LightInfo::set( const LightInfo *light )
    }
 }
 
-void LightInfo::setGFXLight( GFXLightInfo *outLight )
-{
-   switch( getType() )
-   {
-      case LightInfo::Point :
-         outLight->mType = GFXLightInfo::Point;
-         break;
-      case LightInfo::Spot :
-         outLight->mType = GFXLightInfo::Spot;
-         break;
-      case LightInfo::Vector:
-         outLight->mType = GFXLightInfo::Vector;
-         break;
-      case LightInfo::Ambient:
-         outLight->mType = GFXLightInfo::Ambient;
-         break;
-      default:
-         break;
-   }
-
-   outLight->mPos = getPosition();
-   outLight->mDirection = getDirection();
-   outLight->mColor = mColor * mBrightness;
-   outLight->mAmbient = mAmbient;
-   outLight->mRadius = mRange.x;
-   outLight->mInnerConeAngle = mInnerConeAngle;
-   outLight->mOuterConeAngle = mOuterConeAngle;
-}
-
 void LightInfo::setDirection( const VectorF &dir )
 {
    MathUtils::getMatrixFromForwardVector( mNormalize( dir ), &mTransform );

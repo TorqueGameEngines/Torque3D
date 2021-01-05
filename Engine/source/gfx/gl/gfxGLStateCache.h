@@ -141,7 +141,7 @@ public:
 
 protected:   
    GLuint mActiveTexture, mBindedVBO, mBindedIBO, mBindedFBO_W, mBindedFBO_R;
-   TextureUnit mTextureUnits[TEXTURE_STAGE_COUNT];
+   TextureUnit mTextureUnits[GFX_TEXTURE_STAGE_COUNT];
    U32 mVertexAttribActive;
 };
 

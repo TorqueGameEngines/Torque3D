@@ -159,9 +159,6 @@ public:
    // Copies data passed in from light
    void set( const LightInfo *light );
 
-   // Sets a fixed function GFXLight with our properties 
-   void setGFXLight( GFXLightInfo *light );
-
    // Accessors
    Type getType() const { return mType; }
    void setType( Type val ) { mType = val; }

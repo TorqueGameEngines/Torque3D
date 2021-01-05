@@ -2254,7 +2254,7 @@ void River::_makeHighLODBuffers()
       }
    }
 
-   if ( numVerts > MAX_DYNAMIC_VERTS || numTriangles * 3 > MAX_DYNAMIC_INDICES )
+   if ( numVerts > GFX_MAX_DYNAMIC_VERTS || numTriangles * 3 > GFX_MAX_DYNAMIC_INDICES )
    {
       mVB_high = NULL;
       mPB_high = NULL;

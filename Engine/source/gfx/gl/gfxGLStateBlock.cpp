@@ -41,7 +41,7 @@ GFXGLStateBlock::GFXGLStateBlock(const GFXStateBlockDesc& desc) :
 {
    static Map<GFXSamplerStateDesc, U32> mSamplersMap;
 
-   for(int i = 0; i < TEXTURE_STAGE_COUNT; ++i)
+   for(int i = 0; i < GFX_TEXTURE_STAGE_COUNT; ++i)
    {
       GLuint &id = mSamplerObjects[i];
       GFXSamplerStateDesc &ssd = mDesc.samplers[i];
@@ -172,7 +172,7 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
 #undef CHECK_TOGGLE_STATE
 
    //sampler objects
-   for (U32 i = 0; i < getMin(getOwningDevice()->getNumSamplers(), (U32) TEXTURE_STAGE_COUNT); i++)
+   for (U32 i = 0; i < getMin(getOwningDevice()->getNumSamplers(), (U32) GFX_TEXTURE_STAGE_COUNT); i++)
    {
       if(!oldState || oldState->mSamplerObjects[i] != mSamplerObjects[i])
          glBindSampler(i, mSamplerObjects[i] );

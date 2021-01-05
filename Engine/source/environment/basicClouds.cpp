@@ -150,7 +150,6 @@ bool BasicClouds::onAdd()
       desc.samplers[0].magFilter = GFXTextureFilterLinear;
       desc.samplers[0].minFilter = GFXTextureFilterLinear;
       desc.samplers[0].mipFilter = GFXTextureFilterLinear;
-      desc.samplers[0].textureColorOp = GFXTOPModulate;
       
       mStateblock = GFX->createStateBlock( desc );      
    }

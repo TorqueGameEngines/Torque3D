@@ -62,11 +62,11 @@ void GFXD3D11VertexBuffer::lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr
 
       // Get our range now...
       AssertFatal(vertexStart == 0,              "Cannot get a subrange on a volatile buffer.");
-      AssertFatal(vertexEnd <= MAX_DYNAMIC_VERTS, "Cannot get more than MAX_DYNAMIC_VERTS in a volatile buffer. Up the constant!");
+      AssertFatal(vertexEnd <= GFX_MAX_DYNAMIC_VERTS, "Cannot get more than GFX_MAX_DYNAMIC_VERTS in a volatile buffer. Up the constant!");
       AssertFatal(mVolatileBuffer->lockedVertexStart == 0 && mVolatileBuffer->lockedVertexEnd == 0, "Got more than one lock on the volatile pool.");
 
       // We created the pool when we requested this volatile buffer, so assume it exists...
-      if( mVolatileBuffer->mNumVerts + vertexEnd > MAX_DYNAMIC_VERTS ) 
+      if( mVolatileBuffer->mNumVerts + vertexEnd > GFX_MAX_DYNAMIC_VERTS ) 
       {
          flags = D3D11_MAP_WRITE_DISCARD;
          mVolatileStart = vertexStart  = 0;

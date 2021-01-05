@@ -76,7 +76,7 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
    else if ( retTex->mProfile->isSystemMemory() )
    {
       usage |= D3D11_USAGE_STAGING;
-      cpuFlags |= D3D11_CPU_ACCESS_READ;
+      cpuFlags |= D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
    }
    else
    {

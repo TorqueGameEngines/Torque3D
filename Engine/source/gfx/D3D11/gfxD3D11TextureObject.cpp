@@ -90,17 +90,13 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
    GFXD3D11TextureObject* pD3DStagingTex = (GFXD3D11TextureObject*)&(*mStagingTex);
 
    //map staging texture
-   HRESULT hr;
-
-   bool is3D = mStagingTex->getDepth() != 0;
-   if (is3D) //3d texture
-      hr = pContext->Map(pD3DStagingTex->get3DTex(), mLockedSubresource, D3D11_MAP_READ, 0, &mapInfo);
-   else
-      hr = pContext->Map(pD3DStagingTex->get2DTex(), mLockedSubresource, D3D11_MAP_READ, 0, &mapInfo);
+   HRESULT hr = pContext->Map(pD3DStagingTex->getResource(), mLockedSubresource, D3D11_MAP_WRITE, 0, &mapInfo);      
 
    if (FAILED(hr))
       AssertFatal(false, "GFXD3D11TextureObject:lock - failed to map render target resource!");
 
+
+   const bool is3D = mStagingTex->getDepth() != 0;
    const U32 width = mTextureSize.x >> mipLevel;
    const U32 height = mTextureSize.y >> mipLevel;
    const U32 depth = is3D ? mTextureSize.z >> mipLevel : 1;
@@ -147,27 +143,13 @@ void GFXD3D11TextureObject::unlock(U32 mipLevel)
 
    ID3D11DeviceContext* pContext = D3D11DEVICECONTEXT;
    GFXD3D11TextureObject* pD3DStagingTex = (GFXD3D11TextureObject*)&(*mStagingTex);
+   ID3D11Resource* pStagingResource = pD3DStagingTex->getResource();
+   const bool is3D = mStagingTex->getDepth() != 0;
 
-   bool is3D = mStagingTex->getDepth() != 0;
-
-   if (is3D)
-   {
-      ID3D11Texture3D* pStagingTex = pD3DStagingTex->get3DTex();
-
-      //unmap staging texture
-      pContext->Unmap(pStagingTex, mLockedSubresource);
-      //copy lock box region from the staging texture to our regular texture
-      pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, mLockBox.front, pStagingTex, mLockedSubresource, &mLockBox);
-   }
-   else
-   {
-      ID3D11Texture2D* pStagingTex = pD3DStagingTex->get2DTex();
-
-      //unmap staging texture
-      pContext->Unmap(pStagingTex, mLockedSubresource);
-      //copy lock box region from the staging texture to our regular texture
-      pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, 0, pStagingTex, mLockedSubresource, &mLockBox);
-   }
+   //unmap staging texture
+   pContext->Unmap(pStagingResource, mLockedSubresource);
+   //copy lock box region from the staging texture to our regular texture
+   pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, is3D ? mLockBox.back : 0, pStagingResource, mLockedSubresource, &mLockBox);
 
    PROFILE_END();
 

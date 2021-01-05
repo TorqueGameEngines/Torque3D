@@ -60,7 +60,6 @@ void afxMooring::_renderAxisLines(ObjectRenderInst *ri, SceneRenderState* state,
     desc.blendEnable = false;
     desc.cullDefined = true;
     desc.cullMode = GFXCullNone;
-    desc.ffLighting = false;
     desc.zDefined = true;
     desc.zWriteEnable = false;
 

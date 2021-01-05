@@ -60,7 +60,6 @@ afxBillboardData::afxBillboardData()
   blendStyle = BlendUndefined;
   srcBlendFactor = BLEND_UNDEFINED;
   dstBlendFactor = BLEND_UNDEFINED;
-  texFunc = TexFuncModulate;
 }
 
 afxBillboardData::afxBillboardData(const afxBillboardData& other, bool temp_clone)
@@ -77,7 +76,6 @@ afxBillboardData::afxBillboardData(const afxBillboardData& other, bool temp_clon
   blendStyle = other.blendStyle;
   srcBlendFactor = other.srcBlendFactor;
   dstBlendFactor = other.dstBlendFactor;
-  texFunc = other.texFunc;
 }
 
 #define myOffset(field) Offset(field, afxBillboardData)
@@ -90,12 +88,6 @@ ImplementEnumType( afxBillboard_BlendStyle, "Possible blending types.\n" "@ingro
     { afxBillboardData::BlendAdditive,       "ADDITIVE",       "..." },
     { afxBillboardData::BlendSubtractive,    "SUBTRACTIVE",    "..." },
     { afxBillboardData::BlendPremultAlpha,   "PREMULTALPHA",   "..." },
-EndImplementEnumType;
-
-ImplementEnumType( afxBillboard_TexFuncType, "Possible texture function types.\n" "@ingroup afxBillboard\n\n" )
-    { afxBillboardData::TexFuncReplace,   "replace",     "..." },
-    { afxBillboardData::TexFuncModulate,  "modulate",    "..." },
-    { afxBillboardData::TexFuncAdd,       "add",         "..." },
 EndImplementEnumType;
 
 void afxBillboardData::initPersistFields()
@@ -123,11 +115,6 @@ void afxBillboardData::initPersistFields()
     "Specifies destination blend factor when blendStyle is set to 'user'.\n"
     "Possible values: GFXBlendZero, GFXBlendOne, GFXBlendSrcColor, GFXBlendInvSrcColor, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha, GFXBlendDestAlpha, or GFXBlendInvDestAlpha");
 
-  addField("textureFunction", TYPEID<afxBillboardData::TexFuncType>(),  myOffset(texFunc),
-    "Selects a texture function that determines how the texture pixels are combined "
-    "with the shaded color of the billboard's quadrangle geometry.\n"
-    "Possible values: replace, modulate, or add.");
-
   Parent::initPersistFields();
 }
 
@@ -145,7 +132,6 @@ void afxBillboardData::packData(BitStream* stream)
 
   stream->writeInt(srcBlendFactor, 4);
   stream->writeInt(dstBlendFactor, 4);
-  stream->writeInt(texFunc, 4);
 }
 
 void afxBillboardData::unpackData(BitStream* stream)
@@ -163,7 +149,6 @@ void afxBillboardData::unpackData(BitStream* stream)
 
   srcBlendFactor = (GFXBlend) stream->readInt(4);
   dstBlendFactor = (GFXBlend) stream->readInt(4);
-  texFunc = stream->readInt(4);
 }
 
 bool afxBillboardData::preload(bool server, String &errorStr)

@@ -72,20 +72,6 @@ void afxBillboard::_renderBillboard(ObjectRenderInst *ri, SceneRenderState* stat
     desc.zWriteEnable = false;
 
     desc.samplersDefined = true;
-    switch (mDataBlock->texFunc)
-    {
-    case afxBillboardData::TexFuncReplace:
-      desc.samplers[0].textureColorOp = GFXTOPDisable;
-      break;
-    case afxBillboardData::TexFuncModulate:
-      desc.samplers[0].textureColorOp = GFXTOPModulate;
-      break;
-    case afxBillboardData::TexFuncAdd:
-      desc.samplers[0].textureColorOp = GFXTOPAdd;
-      break;
-    }
-
-    desc.samplers[1].textureColorOp = GFXTOPDisable;
 
     normal_sb = GFX->createStateBlock(desc);
 

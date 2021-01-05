@@ -46,12 +46,6 @@ public:
      BlendUser,
    };
 
-   enum TexFuncType {
-     TexFuncReplace,
-     TexFuncModulate,
-     TexFuncAdd,
-   };  
-
 public:
   StringTableEntry  txr_name;
   GFXTexHandle      txr;
@@ -62,7 +56,6 @@ public:
   S32               blendStyle; 
   GFXBlend          srcBlendFactor;
   GFXBlend          dstBlendFactor;
-  S32               texFunc;
 
 public:
   /*C*/             afxBillboardData();
@@ -84,8 +77,6 @@ public:
 typedef afxBillboardData::BlendStyle afxBillboard_BlendStyle;
 DefineEnumType( afxBillboard_BlendStyle );
 
-typedef afxBillboardData::TexFuncType afxBillboard_TexFuncType;
-DefineEnumType( afxBillboard_TexFuncType );
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 // afxBillboard

@@ -96,7 +96,7 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
       AssertFatal(false, "GFXD3D11TextureObject:lock - failed to map render target resource!");
 
 
-   bool is3D = mStagingTex->getDepth() != 0;
+   const bool is3D = mStagingTex->getDepth() != 0;
    const U32 width = mTextureSize.x >> mipLevel;
    const U32 height = mTextureSize.y >> mipLevel;
    const U32 depth = is3D ? mTextureSize.z >> mipLevel : 1;

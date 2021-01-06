@@ -201,18 +201,18 @@ bool AssetManager::addModuleDeclaredAssets( ModuleDefinition* pModuleDefinition 
             continue;
 
         // Expand asset manifest location.
-        char filePathBuffer[1024];
+        char filePathBuffer[1024], extensionBuffer[256];
         String mdldfpth = pModuleDefinition->getModulePath();
         String astfpth = pDeclaredAssets->getPath();
 
-        //dSprintf( filePathBuffer, sizeof(filePathBuffer), "%s/%s", pModuleDefinition->getModulePath(), pDeclaredAssets->getPath() );
         dSprintf(filePathBuffer, sizeof(filePathBuffer), "%s/%s", pModuleDefinition->getModulePath(), pDeclaredAssets->getPath());
+        dSprintf(extensionBuffer, sizeof(extensionBuffer), "*.%s", pDeclaredAssets->getExtension());
 
         // Scan declared assets at location.
-        if ( !scanDeclaredAssets( filePathBuffer, pDeclaredAssets->getExtension(), pDeclaredAssets->getRecurse(), pModuleDefinition ) )
+        if ( !scanDeclaredAssets( filePathBuffer, extensionBuffer, pDeclaredAssets->getRecurse(), pModuleDefinition ) )
         {
             // Warn.
-            Con::warnf( "AssetManager::addModuleDeclaredAssets() - Could not scan for declared assets at location '%s' with extension '%s'.", filePathBuffer, pDeclaredAssets->getExtension() );
+            Con::warnf( "AssetManager::addModuleDeclaredAssets() - No assets found at location '%s' with extension '%s'.", filePathBuffer, pDeclaredAssets->getExtension() );
         }
     }  
 
@@ -289,7 +289,7 @@ bool AssetManager::addDeclaredAsset( ModuleDefinition* pModuleDefinition, const 
 
     // Expand asset file-path.
     char assetFilePathBuffer[1024];
-    Con::expandPath( assetFilePathBuffer, sizeof(assetFilePathBuffer), pAssetFilePath );
+    dStrcpy(assetFilePathBuffer, Platform::makeRelativePathName(pAssetFilePath, NULL), sizeof(assetFilePathBuffer));
 
     // Find the final slash which should be just before the file.
     char* pFileStart = dStrrchr( assetFilePathBuffer, '/' );
@@ -2298,12 +2298,8 @@ S32 AssetManager::findAssetLooseFile( AssetQuery* pAssetQuery, const char* pLoos
     AssertFatal( pAssetQuery != NULL, "Cannot use NULL asset query." );
     AssertFatal( pLooseFile != NULL, "Cannot use NULL loose file." );
 
-    // Expand loose file.
-    char looseFileBuffer[1024];
-    Con::expandPath(looseFileBuffer, sizeof(looseFileBuffer), pLooseFile, NULL, false );
-
-    // Fetch asset loose file.
-    StringTableEntry looseFile = StringTable->insert( looseFileBuffer );
+    // Make game relative path for loose file.
+    StringTableEntry looseFile = Platform::makeRelativePathName(pLooseFile, NULL);;
 
     // Reset result count.
     S32 resultCount = 0;
@@ -2402,19 +2398,20 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
 
     // Expand path location.
     String relativePath = Platform::makeRelativePathName(pPath, NULL);
-    String pattern = "*.";
-    pattern += pExtension;
+    // Strip any trailing slash off the path.
+    if (relativePath.endsWith("/"))
+       relativePath = relativePath.substr(0, relativePath.length() - 1);
 
     Torque::Path scanPath = Torque::FS::GetCwd();
     scanPath.setPath(relativePath);
 
     // Find files.
     Vector<String> files;
-    S32 numAssets = Torque::FS::FindByPattern(scanPath, pattern, recurse, files, true);
+    S32 numAssets = Torque::FS::FindByPattern(scanPath, pExtension, recurse, files, true);
     if (numAssets <= 0)
     {
-        // Failed so warn.
-        Con::warnf( "Asset Manager: No declared assets found in directory '%s'.", relativePath.c_str());
+        // Failed so warn. or don't... Common error when scanning modules with no assets
+        //Con::warnf( "Asset Manager: No declared assets found in directory '%s'.", relativePath.c_str());
         return false;
     }
 

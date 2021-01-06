@@ -193,7 +193,10 @@
 #endif
 
 #if defined( _WIN32 ) || defined ( _WIN64 )
-   #define TORQUE_NO_ZIPCASE
+   // If this is defined all zip file names and mount directories will need to
+   // be all lower case (even on windows). This is because the root map
+   // mRootMap.tryGetValue(root, fsList) call is case sensitive.
+   //#define TORQUE_LOWER_ZIPCASE
 #endif
 
 #ifdef TORQUE_TOOLS

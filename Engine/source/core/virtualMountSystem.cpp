@@ -39,7 +39,7 @@ bool VirtualMountSystem::mount(String root, FileSystemRef fs)
    if (!ok)
       return false;
 
-#ifdef TORQUE_NO_ZIPCASE
+#ifdef TORQUE_LOWER_ZIPCASE
    root = String::ToLower(root);
 #endif
 
@@ -271,7 +271,7 @@ FileSystemRef VirtualMountSystem::_getFileSystemFromList(const Path& fullpath) c
    if (path[(String::SizeType)0] == '/')
       path = path.substr(1);
 
-#ifdef TORQUE_NO_ZIPCASE
+#ifdef TORQUE_LOWER_ZIPCASE
    // lowercase the root and path
    root = String::ToLower(root);
    path = String::ToLower(path);

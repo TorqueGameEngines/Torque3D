@@ -2272,7 +2272,7 @@ bool isBasePath(const char* SrcPath, const char* pBasePath)
 {
    char expandBuffer[1024], expandBaseBuffer[1024];
    Con::expandPath(expandBuffer, sizeof(expandBuffer), SrcPath);
-   Con::expandPath(expandBaseBuffer, sizeof(expandBaseBuffer), SrcPath);
+   Con::expandPath(expandBaseBuffer, sizeof(expandBaseBuffer), pBasePath);
    return dStrnicmp(expandBaseBuffer, expandBuffer, dStrlen(expandBaseBuffer)) == 0;
 }
 

@@ -140,7 +140,7 @@ function AddFMODProjectDlg::onOK( %this )
    // If an event script exists from a previous instantiation,
    // delete it first.
    
-   %eventFileName = %fileName @ ".tscript";
+   %eventFileName = %fileName @ "." @ $TorqueScriptFileExtension;
    if( isFile( %eventFileName ) )
       fileDelete( %eventFileName );
    
@@ -164,7 +164,7 @@ function AddFMODProjectDlg::onOK( %this )
    {
       // Save the object.
 
-      %objName.setFileName( "scripts/client/audioData.tscript" );
+      %objName.setFileName( "scripts/client/audioData." @ $TorqueScriptFileExtension );
       %this.persistenceMgr.setDirty( %objName );
       %this.persistenceMgr.saveDirty();
    }

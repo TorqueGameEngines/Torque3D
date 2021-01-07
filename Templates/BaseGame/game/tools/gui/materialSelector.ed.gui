@@ -1573,7 +1573,7 @@ function MaterialSelector::updateMaterialTags( %this, %material, %tag, %tagValue
    // their auto-generated or new material
    if( %material.getFilename() !$= "" && 
          %material.getFilename() !$= "tools/gui/MaterialSelector.ed.gui" &&
-         %material.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.tscript"  )
+         %material.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed." @ $TorqueScriptFileExtension  )
    {
       MaterialSelectorPerMan.setDirty( %material );
       MaterialSelectorPerMan.saveDirty();
@@ -1761,7 +1761,7 @@ function MaterialSelector::deleteMaterial( %this, %materialName, %secondFilter, 
    
    if( %materialName.getFilename() !$= "" && 
          %materialName.getFilename() !$= "tools/gui/MaterialSelector.ed.gui" &&
-         %materialName.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.tscript" )
+         %materialName.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed." @ $TorqueScriptFileExtension )
    {
       MaterialSelectorPerMan.removeObjectFromFile(%materialName);
       MaterialSelectorPerMan.saveDirty();

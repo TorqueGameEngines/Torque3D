@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-$PE_EMITTEREDITOR_DEFAULT_FILENAME = "art/particles/managedParticleEmitterData.tscript";
+$PE_EMITTEREDITOR_DEFAULT_FILENAME = "art/particles/managedParticleEmitterData." @ $TorqueScriptFileExtension;
 
 
 //=============================================================================================
@@ -500,7 +500,7 @@ function PE_EmitterEditor::setEmitterDirty( %this )
    
    %emitter = PE_EmitterEditor.currEmitter;
    
-   if( %emitter.getFilename() $= "" || %emitter.getFilename() $= "tools/particleEditor/particleEmitterEditor.ed.tscript" )
+   if( %emitter.getFilename() $= "" || %emitter.getFilename() $= "tools/particleEditor/particleEmitterEditor.ed." @ $TorqueScriptFileExtension )
       PE_EmitterSaver.setDirty( %emitter, $PE_EMITTEREDITOR_DEFAULT_FILENAME );
    else
       PE_EmitterSaver.setDirty( %emitter );

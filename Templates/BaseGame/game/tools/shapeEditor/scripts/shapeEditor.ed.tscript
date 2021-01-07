@@ -253,7 +253,7 @@ function ShapeEditor::createConstructor( %this, %path )
 
 function ShapeEditor::saveConstructor( %this, %constructor )
 {
-   %savepath = filePath( %constructor.baseShape ) @ "/" @ fileBase( %constructor.baseShape ) @ ".tscript";
+   %savepath = filePath( %constructor.baseShape ) @ "/" @ fileBase( %constructor.baseShape ) @ "." @ $TorqueScriptFileExtension;
    new PersistenceManager( shapeEd_perMan );
    shapeEd_perMan.setDirty( %constructor, %savepath );
    shapeEd_perMan.saveDirtyObject( %constructor );
@@ -3041,7 +3041,7 @@ function ShapeEditor::addLODFromFile( %this, %dest, %filename, %size, %allowUnma
 {
    // Get (or create) a TSShapeConstructor object for the source shape. Need to
    // exec the script manually as the resource may not have been loaded yet
-   %csPath = filePath( %filename ) @ "/" @ fileBase( %filename ) @ ".tscript";
+   %csPath = filePath( %filename ) @ "/" @ fileBase( %filename ) @ "." @ $TorqueScriptFileExtension;
    if ( isFile( %csPath ) )
       exec( %csPath );
 

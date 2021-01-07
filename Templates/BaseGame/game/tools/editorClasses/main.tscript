@@ -34,7 +34,7 @@ function initializeEditorClasses()
    // Load Editor Profiles
    //-----------------------------------------------------------------------------
    
-   exec("./scripts/fileLoader.ed.tscript");   
+   exec("./scripts/fileLoader.ed." @ $TorqueScriptFileExtension);   
    
    loadDirectory( expandFilename("./gui/panels") );
    
@@ -43,39 +43,39 @@ function initializeEditorClasses()
    // Setup Preferences Manager
    //-----------------------------------------------------------------------------
    
-   exec("./scripts/preferencesManager.ed.tscript");
+   exec("./scripts/preferencesManager.ed." @ $TorqueScriptFileExtension);
    initPreferencesManager();
    
    //-----------------------------------------------------------------------------
    // Load Form Managers
    //-----------------------------------------------------------------------------
    
-   exec("./scripts/guiFormLibraryManager.ed.tscript");
-   exec("./scripts/guiFormContentManager.ed.tscript");
-   exec("./scripts/guiFormReferenceManager.ed.tscript");
-   exec("./scripts/guiFormLayoutManager.ed.tscript");
-   exec("./scripts/guiFormMessageManager.ed.tscript");
-   exec("./scripts/expandos.ed.tscript");
-   exec("./scripts/utility.ed.tscript");
+   exec("./scripts/guiFormLibraryManager.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/guiFormContentManager.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/guiFormReferenceManager.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/guiFormLayoutManager.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/guiFormMessageManager.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/expandos.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/utility.ed." @ $TorqueScriptFileExtension);
    setupBaseExpandos();
 
    // User Display
-   exec("./scripts/contextPopup.ed.tscript");
+   exec("./scripts/contextPopup.ed." @ $TorqueScriptFileExtension);
 
    // Project Support   
-   exec("./scripts/projects/projectEvents.ed.tscript");
-   exec("./scripts/projects/projectInternalInterface.ed.tscript");
+   exec("./scripts/projects/projectEvents.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/projects/projectInternalInterface.ed." @ $TorqueScriptFileExtension);
    
    // Input
-   exec("./scripts/input/inputEvents.ed.tscript");
-   exec("./scripts/input/dragDropEvents.ed.tscript");
-   exec("./scripts/input/applicationEvents.ed.tscript");
+   exec("./scripts/input/inputEvents.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/input/dragDropEvents.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/input/applicationEvents.ed." @ $TorqueScriptFileExtension);
    
    // Form Class
-   exec("./scripts/guiFormClass.ed.tscript");
-   exec("./scripts/guiClasses/guiThumbnailPopup.ed.tscript");
-   exec("./scripts/guiClasses/guiThumbnail.ed.tscript");
-   exec("./scripts/RSSNews/RSSFeedScript.ed.tscript");
+   exec("./scripts/guiFormClass.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/guiClasses/guiThumbnailPopup.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/guiClasses/guiThumbnail.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/RSSNews/RSSFeedScript.ed." @ $TorqueScriptFileExtension);
 
    loadDirectory( expandFilename("./scripts/core") );
    loadDirectory( expandFilename("./scripts/platform") );

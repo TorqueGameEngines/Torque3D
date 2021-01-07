@@ -12,7 +12,7 @@
 function VerveEditor::InitTorqueScripts()
 {
     // Core.
-    exec( "./ObjectClasses.tscript" );
-    exec( "./Selection.tscript" );
+    exec( "./ObjectClasses." @ $TorqueScriptFileExtension );
+    exec( "./Selection." @ $TorqueScriptFileExtension );
 }
 VerveEditor::InitTorqueScripts();

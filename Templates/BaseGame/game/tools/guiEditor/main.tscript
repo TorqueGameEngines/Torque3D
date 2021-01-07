@@ -34,22 +34,22 @@ function initializeGuiEditor()
    
    // Scripts.
 
-   exec( "./scripts/guiEditor.ed.tscript" );
-   exec( "./scripts/guiEditorTreeView.ed.tscript" );
-   exec( "./scripts/guiEditorInspector.ed.tscript" );
-   exec( "./scripts/guiEditorProfiles.ed.tscript" );
-   exec( "./scripts/guiEditorGroup.ed.tscript" );
-   exec( "./scripts/guiEditorUndo.ed.tscript" );
-   exec( "./scripts/guiEditorCanvas.ed.tscript" );
-   exec( "./scripts/guiEditorContentList.ed.tscript" );
-   exec( "./scripts/guiEditorStatusBar.ed.tscript" );
-   exec( "./scripts/guiEditorToolbox.ed.tscript" );
-   exec( "./scripts/guiEditorSelectDlg.ed.tscript" );
+   exec( "./scripts/guiEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorTreeView.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorInspector.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorProfiles.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorGroup.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorUndo.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorCanvas.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorContentList.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorStatusBar.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorToolbox.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorSelectDlg.ed." @ $TorqueScriptFileExtension );
    
-   exec( "./scripts/guiEditorNewGuiDialog.ed.tscript" );
-   exec( "./scripts/fileDialogs.ed.tscript" );
-   exec( "./scripts/guiEditorPrefsDlg.ed.tscript" );
-   exec( "./scripts/EditorChooseGUI.ed.tscript" );
+   exec( "./scripts/guiEditorNewGuiDialog.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/fileDialogs.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorPrefsDlg.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/EditorChooseGUI.ed." @ $TorqueScriptFileExtension );
 }
 
 function destroyGuiEditor()

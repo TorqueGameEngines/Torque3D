@@ -991,7 +991,7 @@
             };
             new GuiCheckBoxCtrl() {
                useInactiveState = "0";
-               text = " Force update materials.tscript";
+               text = " Force update materials." @ $TorqueScriptFileExtension;
                groupNum = "-1";
                buttonType = "ToggleButton";
                useMouseEvents = "0";
@@ -1005,7 +1005,7 @@
                canSave = "1";
                Visible = "1";
                tooltipprofile = "ToolsGuiToolTipProfile";
-               ToolTip = "Forces update of materials.tscript (even if Materials already exist)";
+               ToolTip = "Forces update of materials." @ $TorqueScriptFileExtension @ " (even if Materials already exist)";
                hovertime = "1000";
                internalName = "forceUpdateMaterials";
                canSaveDynamicFields = "0";
@@ -1255,7 +1255,7 @@ function ColladaImportDlg::showDialog(%this, %shapePath, %cmd)
 
    // Check for an existing TSShapeConstructor object. Need to exec the script
    // manually as the DAE resource may not have been loaded yet
-   %csPath = filePath(%this.path) @ "/" @ fileBase(%this.path) @ ".tscript";
+   %csPath = filePath(%this.path) @ "/" @ fileBase(%this.path) @ "." @ $TorqueScriptFileExtension;
    if (isFile(%csPath))
       exec(%csPath);
 

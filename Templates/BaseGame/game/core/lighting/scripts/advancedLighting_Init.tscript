@@ -39,8 +39,8 @@ $pref::LightManager::sgUseDynamicShadows = "1";
 $pref::LightManager::sgUseToneMapping = "";
 */
 
-//exec( "./shaders.tscript" );
-//exec( "./deferredShading.tscript" );
+//exec( "./shaders." @ $TorqueScriptFileExtension );
+//exec( "./deferredShading." @ $TorqueScriptFileExtension );
 
 function onActivateAdvancedLM()
 {

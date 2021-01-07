@@ -40,9 +40,9 @@ if(!$Tools::loaded)
    
    //We may need to lean on certain EditorSettings, and specifically default values if the settings.xml
    //isn't found
-   exec("tools/worldEditor/scripts/editorPrefs.ed.tscript");
+   exec("tools/worldEditor/scripts/editorPrefs.ed." @ $TorqueScriptFileExtension);
    
-   exec( "tools/gui/profiles.ed.tscript" );
+   exec( "tools/gui/profiles.ed." @ $TorqueScriptFileExtension );
    exec("tools/gui/EditorLoadingGui.gui");
 }
 
@@ -77,14 +77,14 @@ function onStart()
    }
    
    // Common GUI stuff.
-   exec( "./gui/cursors.ed.tscript" );
-   exec( "./gui/messageBoxes/messageBox.ed.tscript" );
-   exec( "./editorClasses/gui/panels/navPanelProfiles.ed.tscript" );
+   exec( "./gui/cursors.ed." @ $TorqueScriptFileExtension );
+   exec( "./gui/messageBoxes/messageBox.ed." @ $TorqueScriptFileExtension );
+   exec( "./editorClasses/gui/panels/navPanelProfiles.ed." @ $TorqueScriptFileExtension );
    
    // Make sure we get editor profiles before any GUI's
    // BUG: these dialogs are needed earlier in the init sequence, and should be moved to
    // common, along with the guiProfiles they depend on.
-   exec( "./gui/guiDialogs.ed.tscript" );
+   exec( "./gui/guiDialogs.ed." @ $TorqueScriptFileExtension );
    
    //%toggle = $Scripts::ignoreDSOs;
    //$Scripts::ignoreDSOs = true;
@@ -98,12 +98,12 @@ function onStart()
       $editors[%i] = getWord( $Tools::loadFirst, %i );
    }
    
-   %pattern = $Tools::resourcePath @ "/*/main.tscript";
+   %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension;
    %folder = findFirstFile( %pattern );
    if ( %folder $= "")
    {
       // if we have absolutely no matches for main.tscript, we look for main.tscript.dso
-      %pattern = $Tools::resourcePath @ "/*/main.tscript.dso";
+      %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension @ ".dso";
       %folder = findFirstFile( %pattern );
    }
    while ( %folder !$= "" )
@@ -130,7 +130,7 @@ function onStart()
    %count = $editors[count];
    for ( %i = 0; %i < %count; %i++ )
    {
-      exec( "./" @ $editors[%i] @ "/main.tscript" );
+      exec( "./" @ $editors[%i] @ "/main." @ $TorqueScriptFileExtension );
       
       %initializeFunction = "initialize" @ $editors[%i];
       if( isFunction( %initializeFunction ) )
@@ -355,7 +355,7 @@ function Tools::LoadResources( %path )
    for( %i = 0; %i < %wordCount; %i++ )
    {
       %resource = GetField( %resourcesList, %i );
-      if( isFile( %resourcesPath @ %resource @ "/resourceDatabase.tscript") )
+      if( isFile( %resourcesPath @ %resource @ "/resourceDatabase." @ $TorqueScriptFileExtension) )
          ResourceObject::load( %path, %resource );
    }
 }

@@ -27,8 +27,8 @@ function initializeDatablockEditor()
 {
    echo( " - Initializing Datablock Editor" );
    
-   exec("./datablockEditor.tscript");
-   exec("./datablockEditorUndo.tscript");
+   exec("./datablockEditor." @ $TorqueScriptFileExtension);
+   exec("./datablockEditorUndo." @ $TorqueScriptFileExtension);
    exec("./DatablockEditorTreeWindow.ed.gui");
    exec("./DatablockEditorInspectorWindow.ed.gui");
    exec("./DatablockEditorCreatePrompt.ed.gui");

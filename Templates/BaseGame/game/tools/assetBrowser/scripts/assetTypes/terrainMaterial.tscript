@@ -9,13 +9,13 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ ".tscript";
+   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new TerrainMaterialAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ ".tscript";
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
       materialDefinitionName = %assetName;
    };
    
@@ -33,7 +33,7 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
 	%file = new FileObject();
 	%templateFile = new FileObject();
 	
-	%templateFilePath = %this.templateFilesPath @ "terrainMaterial.tscript.template";
+	%templateFilePath = %this.templateFilesPath @ "terrainMaterial." @ $TorqueScriptFileExtension @ ".template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateFilePath))
    {

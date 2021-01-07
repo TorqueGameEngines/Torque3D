@@ -6,7 +6,7 @@ function AssetBrowser::createComponentAsset(%this)
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
    %tamlpath = %modulePath @ "/components/" @ %assetName @ ".asset.taml";
-   %scriptPath = %modulePath @ "/components/" @ %assetName @ ".tscript";
+   %scriptPath = %modulePath @ "/components/" @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new ComponentAsset()
    {
@@ -17,7 +17,7 @@ function AssetBrowser::createComponentAsset(%this)
       friendlyName = AssetBrowser.newAssetSettings.friendlyName;
       componentType = AssetBrowser.newAssetSettings.componentGroup;
       description = AssetBrowser.newAssetSettings.description;
-      scriptFile = %assetName @ ".tscript";
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
    };
    
    TamlWrite(%asset, %tamlpath);
@@ -25,7 +25,7 @@ function AssetBrowser::createComponentAsset(%this)
    %file = new FileObject();
 	%templateFile = new FileObject();
 	
-   %templateCodeFilePath = %this.templateFilesPath @ "componentFile.tscript.template";
+   %templateCodeFilePath = %this.templateFilesPath @ "componentFile." @ $TorqueScriptFileExtension @ ".template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateCodeFilePath))
    {

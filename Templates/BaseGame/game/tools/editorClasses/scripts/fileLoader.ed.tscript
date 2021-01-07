@@ -23,7 +23,7 @@
 function loadDirectory(%path, %type, %dsoType)
 {
    if( %type $= "" )
-      %type = "ed.tscript";
+      %type = "ed." @ $TorqueScriptFileExtension;
    if( %dsoType $= "" )
       %dsoType = "edso"; 
 

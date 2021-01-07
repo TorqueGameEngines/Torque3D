@@ -24,9 +24,9 @@ function initializeMissionAreaEditor()
 {
    echo(" % - Initializing Mission Area Editor");
      
-   exec( "./missionAreaEditor.ed.tscript" );
+   exec( "./missionAreaEditor.ed." @ $TorqueScriptFileExtension );
    exec( "./missionAreaEditorGui.ed.gui" );
-   exec( "./missionAreaEditorGui.ed.tscript" );
+   exec( "./missionAreaEditorGui.ed." @ $TorqueScriptFileExtension );
    
    // Add ourselves to EditorGui, where all the other tools reside
    MissionAreaEditorGui.setVisible( false );  

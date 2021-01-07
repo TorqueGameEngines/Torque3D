@@ -25,8 +25,8 @@ function initializeWorldEditor()
    echo(" % - Initializing World Editor");
    
    // Load GUI
-   exec("./gui/profiles.ed.tscript");
-   exec("./scripts/cursors.ed.tscript");
+   exec("./gui/profiles.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/cursors.ed." @ $TorqueScriptFileExtension);
 
    exec("./gui/guiCreateNewTerrainGui.gui" );
    exec("./gui/GenericPromptDialog.ed.gui" );
@@ -51,32 +51,32 @@ function initializeWorldEditor()
    exec("tools/gui/postFxEditor.gui" );
    
    // Load Scripts.
-   exec("./scripts/menus.ed.tscript");
-   exec("./scripts/menuHandlers.ed.tscript");
-   exec("./scripts/editor.ed.tscript");
-   exec("./scripts/editorInputCommands.tscript");
-   exec("./scripts/editor.keybinds.tscript");
-   exec("./scripts/undoManager.ed.tscript");
-   exec("./scripts/lighting.ed.tscript");
-   exec("./scripts/EditorGui.ed.tscript");
-   exec("./scripts/editorPrefs.ed.tscript");
-   exec("./scripts/editorRender.ed.tscript");
-   exec("./scripts/editorPlugin.ed.tscript");
-   exec("./scripts/EditorChooseLevelGui.ed.tscript");
-   exec("./scripts/cameraBookmarks.ed.tscript");
-   exec("./scripts/ManageSFXParametersWindow.ed.tscript");
-   exec("./scripts/AddFMODProjectDlg.ed.tscript");
-   exec("./scripts/SelectObjectsWindow.ed.tscript");
-   exec("./scripts/cameraCommands.ed.tscript");
-   exec("./scripts/probeBake.ed.tscript");
-   exec("./scripts/visibility/visibilityLayer.ed.tscript");
-   exec("./scripts/visibility/lightViz.tscript");
-   exec("./scripts/visibility/shadowViz.tscript");
-   exec("./scripts/visibility/probeViz.tscript");
-   exec("./scripts/visibility/miscViz.tscript");
+   exec("./scripts/menus.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/menuHandlers.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/editor.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/editorInputCommands." @ $TorqueScriptFileExtension);
+   exec("./scripts/editor.keybinds." @ $TorqueScriptFileExtension);
+   exec("./scripts/undoManager.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/lighting.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/EditorGui.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/editorPrefs.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/editorRender.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/editorPlugin.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/EditorChooseLevelGui.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/cameraBookmarks.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/ManageSFXParametersWindow.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/AddFMODProjectDlg.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/SelectObjectsWindow.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/cameraCommands.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/probeBake.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/visibility/visibilityLayer.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/visibility/lightViz." @ $TorqueScriptFileExtension);
+   exec("./scripts/visibility/shadowViz." @ $TorqueScriptFileExtension);
+   exec("./scripts/visibility/probeViz." @ $TorqueScriptFileExtension);
+   exec("./scripts/visibility/miscViz." @ $TorqueScriptFileExtension);
    
-   exec("tools/gui/postFxEditor.tscript" );
-   exec("tools/gui/renderTargetVisualizer.ed.tscript");
+   exec("tools/gui/postFxEditor." @ $TorqueScriptFileExtension );
+   exec("tools/gui/renderTargetVisualizer.ed." @ $TorqueScriptFileExtension);
 
    // Load Custom Editors
    loadDirectory(expandFilename("./scripts/editors"));

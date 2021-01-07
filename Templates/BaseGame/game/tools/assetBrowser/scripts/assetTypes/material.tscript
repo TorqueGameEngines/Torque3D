@@ -323,14 +323,14 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ %assetName @ ".sgf";
-   %scriptPath = %assetPath @ %assetName @ ".tscript";
+   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %newAsset = new MaterialAsset()
    {
       assetName = %assetName;
       versionId = 1;
       shaderGraph = %sgfPath;
-      scriptFile = %assetName @ ".tscript";
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
       originalFilePath = %filePath;
       materialDefinitionName = %assetName;
    };

@@ -2,7 +2,7 @@
 	ModuleId="ToolsModule"
 	VersionId="1"
 	Description="Module that implements the tools and editor suite."
-	ScriptFile="Tools.tscript"
+	ScriptFile="Tools"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Tools">

@@ -1197,6 +1197,13 @@ bool executeFile(const char* fileName, bool noCalls, bool journalScript)
 
    if (!ext)
    {
+      // Try appending the default script extension and see if that succeeds
+
+      if (executeFile(fileName + String("." TORQUE_SCRIPT_EXTENSION), noCalls, journalScript))
+      {
+         return true;
+      }
+
       // We need an extension!
       Con::errorf(ConsoleLogEntry::Script, "exec: invalid script file name %s.", scriptFilenameBuffer);
       execDepth--;

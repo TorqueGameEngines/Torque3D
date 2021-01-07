@@ -8,34 +8,34 @@ function InitializeVerveEditor()
    $Verve::UseSeparateWindow = true;
    
     // Preferences.
-    exec( "./DefaultPrefs.tscript" );
+    exec( "./DefaultPrefs." @ $TorqueScriptFileExtension );
     
     // GUI.
-    exec( "./GUI/GuiProfiles.tscript" );
+    exec( "./GUI/GuiProfiles." @ $TorqueScriptFileExtension );
     exec( "./GUI/VerveEditorGroupBuilder.gui" );
     exec( "./GUI/VerveEditorImportPathNodes.gui" );
     
     // Scripts.
-    exec( "./Scripts/Plugin.tscript" );
-    exec( "./Scripts/Utility.tscript" );
+    exec( "./Scripts/Plugin." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/Utility." @ $TorqueScriptFileExtension );
     
-    exec( "./Scripts/EditorControls.tscript" );
-    exec( "./Scripts/EditorHistory.tscript" );
-    exec( "./Scripts/EditorMenu.tscript" );
-    exec( "./Scripts/EditorPreferences.tscript" );
-    exec( "./Scripts/EditorWindow.tscript" );
-    exec( "./Scripts/Persistence.tscript" );
-    exec( "./Scripts/ScrollNotify.tscript" );
-    exec( "./Scripts/VObject.tscript" );
+    exec( "./Scripts/EditorControls." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/EditorHistory." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/EditorMenu." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/EditorPreferences." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/EditorWindow." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/Persistence." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/ScrollNotify." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/VObject." @ $TorqueScriptFileExtension );
     
-    exec( "./Scripts/Inspector/main.tscript" );
+    exec( "./Scripts/Inspector/main." @ $TorqueScriptFileExtension );
     
-    exec( "./Scripts/Controller/main.tscript" );
-    exec( "./Scripts/Groups/main.tscript" );
-    exec( "./Scripts/Tracks/main.tscript" );
-    exec( "./Scripts/Events/main.tscript" );
+    exec( "./Scripts/Controller/main." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/Groups/main." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/Tracks/main." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/Events/main." @ $TorqueScriptFileExtension );
     
-    exec( "./Torque/main.tscript" );
+    exec( "./Torque/main." @ $TorqueScriptFileExtension );
     
     // Register Events.
     VerveEditor::RegisterEvent( "VGroupObjectUpdate" );

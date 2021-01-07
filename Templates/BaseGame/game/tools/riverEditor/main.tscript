@@ -24,10 +24,10 @@ function initializeRiverEditor()
 {
    echo(" % - Initializing River Editor");
      
-   exec( "./riverEditor.tscript" );
+   exec( "./riverEditor." @ $TorqueScriptFileExtension );
    exec( "./RiverEditorGui.gui" );
    exec( "./RiverEditorToolbar.gui" );
-   exec( "./riverEditorGui.tscript" );
+   exec( "./riverEditorGui." @ $TorqueScriptFileExtension );
    
    // Add ourselves to EditorGui, where all the other tools reside
    RiverEditorGui.setVisible( false );  

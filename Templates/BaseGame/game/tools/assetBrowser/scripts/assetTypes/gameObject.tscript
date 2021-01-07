@@ -14,10 +14,10 @@ function AssetBrowser::createGameObjectAsset(%this)
 function AssetBrowser::editGameObjectAsset(%this, %assetDef)
 {
    //We have no dedicated GO editor for now, so just defer to the script editing aspect
-   %this.editGameObjectAssetScript(%assetDef);
+   %this.editGameObjectAsse" @ $TorqueScriptFileExtension @ "(%assetDef);
 }
 
-function AssetBrowser::editGameObjectAssetScript(%this, %assetDef)
+function AssetBrowser::editGameObjectAsse" @ $TorqueScriptFileExtension @ "(%this, %assetDef)
 {
    %scriptFile = %assetDef.scriptFile;
    

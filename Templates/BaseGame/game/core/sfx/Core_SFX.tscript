@@ -1,12 +1,12 @@
 
 function Core_SFX::onCreate(%this)
 {
-   exec("./scripts/audio.tscript");
-   exec("./scripts/audioData.tscript");
-   exec("./scripts/audioAmbience.tscript");
-   exec("./scripts/audioDescriptions.tscript");
-   exec("./scripts/audioEnvironments.tscript");
-   exec("./scripts/audioStates.tscript");
+   exec("./scripts/audio." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioData." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioAmbience." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioDescriptions." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioEnvironments." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioStates." @ $TorqueScriptFileExtension);
 
 }
 

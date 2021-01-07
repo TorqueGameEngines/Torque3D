@@ -30,10 +30,10 @@ function initializeParticleEditor()
    echo( " % - Initializing Particle Editor" );
      
    exec( "./ParticleEditor.ed.gui" );
-   exec( "./particleEditor.ed.tscript" );
-   exec( "./particleEditorUndo.ed.tscript" );   
-   exec( "./particleEmitterEditor.ed.tscript" );
-   exec( "./particleParticleEditor.ed.tscript" );
+   exec( "./particleEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./particleEditorUndo.ed." @ $TorqueScriptFileExtension );   
+   exec( "./particleEmitterEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./particleParticleEditor.ed." @ $TorqueScriptFileExtension );
    
    PE_Window.setVisible( false );
    EditorGui.add( PE_Window );

@@ -99,7 +99,7 @@ function OptionsMenu::apply(%this)
          if(%actionMap == GlobalActionMap.getId())
             continue;
          
-         %actionMap.save( %prefPath @ "/keybinds.tscript", %append );
+         %actionMap.save( %prefPath @ "/keybinds." @ $TorqueScriptFileExtension, %append );
          
          if(%append != true)
             %append = true; 
@@ -107,7 +107,7 @@ function OptionsMenu::apply(%this)
    }
    
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.tscript", false);
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
 }
 
 function OptionsMenu::resetToDefaults(%this)
@@ -290,7 +290,7 @@ function OptionsMenu::applyDisplaySettings(%this)
    
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.tscript", false);
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
 }
 
 function OptionsMenu::populateGraphicsSettingsList(%this)
@@ -386,7 +386,7 @@ function OptionsMenu::applyGraphicsSettings(%this)
 
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.tscript", false);
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
 }   
 
 function updateDisplaySettings()

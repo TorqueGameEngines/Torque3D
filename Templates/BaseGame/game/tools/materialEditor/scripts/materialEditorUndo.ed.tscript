@@ -326,7 +326,7 @@ function ActionChangeMaterial::redo(%this)
       MaterialEditorGui.currentObject = %this.object;
    
       if( %this.toMaterial.getFilename() !$= "tools/gui/materialSelector.ed.gui" || 
-            %this.toMaterial.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.tscript")
+            %this.toMaterial.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed." @ $TorqueScriptFileExtension)
       {
          matEd_PersistMan.removeObjectFromFile(%this.toMaterial);
       }
@@ -357,7 +357,7 @@ function ActionChangeMaterial::undo(%this)
       MaterialEditorGui.currentObject = %this.object;    
          
       if( %this.toMaterial.getFilename() !$= "tools/gui/materialSelector.ed.gui" || 
-            %this.toMaterial.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.tscript")
+            %this.toMaterial.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed." @ $TorqueScriptFileExtension)
       {
          matEd_PersistMan.removeObjectFromFile(%this.toMaterial);
       }
@@ -442,7 +442,7 @@ function ActionDeleteMaterial::redo(%this)
    }
    
    if( %this.oldMaterial.getFilename() !$= "tools/gui/materialSelector.ed.gui" || 
-         %this.oldMaterial.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed.tscript")
+         %this.oldMaterial.getFilename() !$= "tools/materialEditor/scripts/materialEditor.ed." @ $TorqueScriptFileExtension)
    {
       matEd_PersistMan.removeObjectFromFile(%this.oldMaterial);
    }

@@ -5,21 +5,21 @@
 
 function VerveEditor::InitInspectorFieldScripts()
 {
-    exec( "./TypeBool.tscript" );
-    exec( "./TypeData.tscript" );
-    exec( "./TypeEnum.tscript" );
-    exec( "./TypeString.tscript" );
+    exec( "./TypeBool." @ $TorqueScriptFileExtension );
+    exec( "./TypeData." @ $TorqueScriptFileExtension );
+    exec( "./TypeEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeString." @ $TorqueScriptFileExtension );
     
-    exec( "./TypeVCameraGroupEnum.tscript" );
-    exec( "./TypeVCommandEnum.tscript" );
-    exec( "./TypeVControllerDataEnum.tscript" );
-    exec( "./TypeVGroupEnum.tscript" );
-    exec( "./TypeVLightAnimationDataEnum.tscript" );
-    exec( "./TypeVPathOrientationModeEnum.tscript" );
-    exec( "./TypeVPostEffectEnum.tscript" );
-    exec( "./TypeVSceneEnum.tscript" );
-    exec( "./TypeVSFXProfileEnum.tscript" );
-    exec( "./TypeVShapeAnimationEnum.tscript" );
-    exec( "./TypeToggleEnum.tscript" );
+    exec( "./TypeVCameraGroupEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVCommandEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVControllerDataEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVGroupEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVLightAnimationDataEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVPathOrientationModeEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVPostEffectEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVSceneEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVSFXProfileEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeVShapeAnimationEnum." @ $TorqueScriptFileExtension );
+    exec( "./TypeToggleEnum." @ $TorqueScriptFileExtension );
 }
 VerveEditor::InitInspectorFieldScripts();

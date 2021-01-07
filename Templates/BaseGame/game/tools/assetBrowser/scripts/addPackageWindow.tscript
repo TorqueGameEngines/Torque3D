@@ -41,13 +41,13 @@ function AssetBrowser_addPackageWindow::CreateNewPackage(%this)
    
    %moduleFilePath = "data/" @ %newPackageName;
    %moduleDefinitionFilePath = %moduleFilePath @ "/" @ %newPackageName @ ".module";
-   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newPackageName @ ".tscript";
+   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newPackageName @ "." @ $TorqueScriptFileExtension;
    
    %newPackage = new ModuleDefinition()
    {
       ModuleId = %newPackageName;
       versionId = 1;
-      ScriptFile = %newPackageName @ ".tscript";
+      ScriptFile = %newPackageName @ "." @ $TorqueScriptFileExtension;
       CreateFunction="onCreate";
 	   DestroyFunction="onDestroy";
 	   Group = "Game";

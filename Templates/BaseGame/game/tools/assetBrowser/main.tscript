@@ -51,7 +51,7 @@ function initializeAssetBrowser()
       AssetFilterTypeList.add("TerrainMaterialAsset");
    }
    
-   exec("./scripts/profiles.tscript");
+   exec("./scripts/profiles." @ $TorqueScriptFileExtension);
    
    exec("./guis/assetBrowser.gui");
    exec("./guis/addModuleWindow.gui");
@@ -72,42 +72,42 @@ function initializeAssetBrowser()
    exec("./guis/assetNameEdit.gui");
    exec("./guis/createNewCollectionSet.gui");
 
-   exec("./scripts/assetBrowser.tscript");
-   exec("./scripts/popupMenus.tscript");
-   exec("./scripts/addModuleWindow.tscript");
-   exec("./scripts/assetImport.tscript");
-   exec("./scripts/assetImportConfig.tscript");
-   exec("./scripts/gameObjectCreator.tscript");
-   exec("./scripts/newAsset.tscript");
-   exec("./scripts/editAsset.tscript");
-   exec("./scripts/editModule.tscript");   
-   exec("./scripts/selectModule.tscript");   
-   exec("./scripts/assetImportConfigEditor.tscript");  
-   exec("./scripts/directoryHandling.tscript");
-   exec("./scripts/selectPath.tscript");
-   exec("./scripts/looseFileAudit.tscript");
+   exec("./scripts/assetBrowser." @ $TorqueScriptFileExtension);
+   exec("./scripts/popupMenus." @ $TorqueScriptFileExtension);
+   exec("./scripts/addModuleWindow." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetImport." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetImportConfig." @ $TorqueScriptFileExtension);
+   exec("./scripts/gameObjectCreator." @ $TorqueScriptFileExtension);
+   exec("./scripts/newAsset." @ $TorqueScriptFileExtension);
+   exec("./scripts/editAsset." @ $TorqueScriptFileExtension);
+   exec("./scripts/editModule." @ $TorqueScriptFileExtension);   
+   exec("./scripts/selectModule." @ $TorqueScriptFileExtension);   
+   exec("./scripts/assetImportConfigEditor." @ $TorqueScriptFileExtension);  
+   exec("./scripts/directoryHandling." @ $TorqueScriptFileExtension);
+   exec("./scripts/selectPath." @ $TorqueScriptFileExtension);
+   exec("./scripts/looseFileAudit." @ $TorqueScriptFileExtension);
    
    //Processing for the different asset types
-   exec("./scripts/assetTypes/component.tscript"); 
-   exec("./scripts/assetTypes/cpp.tscript");
-   exec("./scripts/assetTypes/gameObject.tscript");   
-   exec("./scripts/assetTypes/gui.tscript");
-   exec("./scripts/assetTypes/image.tscript");  
-   exec("./scripts/assetTypes/level.tscript"); 
-   exec("./scripts/assetTypes/material.tscript");   
-   exec("./scripts/assetTypes/postFX.tscript");
-   exec("./scripts/assetTypes/script.tscript");
-   exec("./scripts/assetTypes/shape.tscript");
-   exec("./scripts/assetTypes/shapeAnimation.tscript"); 
-   exec("./scripts/assetTypes/sound.tscript"); 
-   exec("./scripts/assetTypes/stateMachine.tscript");   
-   exec("./scripts/assetTypes/cubemap.tscript");  
-   exec("./scripts/assetTypes/folder.tscript");  
-   exec("./scripts/assetTypes/terrain.tscript");
-   exec("./scripts/assetTypes/terrainMaterial.tscript");  
-   exec("./scripts/assetTypes/datablockObjects.tscript");  
-   exec("./scripts/assetTypes/looseFiles.tscript"); 
-   exec("./scripts/assetTypes/prefab.tscript"); 
+   exec("./scripts/assetTypes/component." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/cpp." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetTypes/gameObject." @ $TorqueScriptFileExtension);   
+   exec("./scripts/assetTypes/gui." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetTypes/image." @ $TorqueScriptFileExtension);  
+   exec("./scripts/assetTypes/level." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/material." @ $TorqueScriptFileExtension);   
+   exec("./scripts/assetTypes/postFX." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetTypes/script." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetTypes/shape." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetTypes/shapeAnimation." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/sound." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/stateMachine." @ $TorqueScriptFileExtension);   
+   exec("./scripts/assetTypes/cubemap." @ $TorqueScriptFileExtension);  
+   exec("./scripts/assetTypes/folder." @ $TorqueScriptFileExtension);  
+   exec("./scripts/assetTypes/terrain." @ $TorqueScriptFileExtension);
+   exec("./scripts/assetTypes/terrainMaterial." @ $TorqueScriptFileExtension);  
+   exec("./scripts/assetTypes/datablockObjects." @ $TorqueScriptFileExtension);  
+   exec("./scripts/assetTypes/looseFiles." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/prefab." @ $TorqueScriptFileExtension); 
    
    new ScriptObject( AssetBrowserPlugin )
    {

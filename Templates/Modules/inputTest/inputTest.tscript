@@ -13,12 +13,12 @@ function inputTest::destroy( %this )
 
 function inputTest::initClient( %this )
 {
-   %this.queueExec("/scripts/customProfiles.tscript");
-   %this.queueExec("/scripts/inputMonitor.tscript");
+   %this.queueExec("/scripts/customProfiles." @ $TorqueScriptFileExtension);
+   %this.queueExec("/scripts/inputMonitor." @ $TorqueScriptFileExtension);
    %this.queueExec("/scripts/gui/inputMonitor.gui");
-   %this.queueExec("/scripts/joystickSettings.tscript");
+   %this.queueExec("/scripts/joystickSettings." @ $TorqueScriptFileExtension);
    %this.queueExec("/scripts/gui/joystickSettings.gui");
-   %this.queueExec("/scripts/menuButtons.tscript");
+   %this.queueExec("/scripts/menuButtons." @ $TorqueScriptFileExtension);
 }
 
 function onSDLDeviceConnected(%sdlIndex, %deviceName, %deviceType)

@@ -24,10 +24,10 @@ function initializeRoadEditor()
 {
    echo( " - Initializing Road and Path Editor" );
    
-   exec( "./roadEditor.tscript" );
+   exec( "./roadEditor." @ $TorqueScriptFileExtension );
    exec( "./RoadEditorGui.gui" );
    exec( "./RoadEditorToolbar.gui");
-   exec( "./roadEditorGui.tscript" );
+   exec( "./roadEditorGui." @ $TorqueScriptFileExtension );
    
    // Add ourselves to EditorGui, where all the other tools reside
    RoadEditorGui.setVisible( false ); 

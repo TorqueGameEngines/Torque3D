@@ -12,7 +12,7 @@ function Core_GameObjects::initServer( %this )
 
 function Core_GameObjects::onCreateGameServer(%this)
 {
-   %this.registerDatablock("./datablocks/defaultDatablocks.tscript");
+   %this.registerDatablock("./datablocks/defaultDatablocks." @ $TorqueScriptFileExtension);
 }
 
 function Core_GameObjects::onDestroyGameServer(%this)

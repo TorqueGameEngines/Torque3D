@@ -37,7 +37,7 @@ function GuiFormManager::InitLayouts( %libraryName, %layoutName, %layoutObj )
    }
 
    // Load up all Layouts in the layout base path.
-   loadDirectory( %libraryObj.basePath, "tscript", "dso" );
+   loadDirectory( %libraryObj.basePath, "" @ $TorqueScriptFileExtension, "dso" );
 
 }
 
@@ -77,7 +77,7 @@ function GuiFormManager::RegisterLayout( %libraryName, %layoutName, %layoutObj )
       layoutName    = %layoutName;
       layoutLibrary = %libraryObj;
       layoutObj     = %layoutObj;
-      layoutFile    = %libraryObj.basePath @ %layoutName @ ".tscript";     
+      layoutFile    = %libraryObj.basePath @ %layoutName @ "." @ $TorqueScriptFileExtension;     
    };
 
    // Tag Layout Object Properly so it can reset itself.
@@ -192,7 +192,7 @@ function GuiFormManager::SaveLayout( %library, %layoutName, %newName )
    // Do any form layout specifics saving.
    GuiFormManager::SaveLayoutContent( %layoutObjRef.layoutObj );
 
-   %newFile = %libraryObj.basePath @  "/" @ %newName @ ".tscript";
+   %newFile = %libraryObj.basePath @  "/" @ %newName @ "." @ $TorqueScriptFileExtension;
    if( %newName $= "" )
    {
       %newName = %layoutObjRef.layoutName;

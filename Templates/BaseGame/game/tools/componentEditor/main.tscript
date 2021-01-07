@@ -21,15 +21,15 @@
 //-----------------------------------------------------------------------------
 
 //Scripts
-exec("./scripts/componentEditor.ed.tscript");
-exec("./scripts/stateMachineEditor.ed.tscript");
-exec("./scripts/superToolTipDlg.ed.tscript");
+exec("./scripts/componentEditor.ed." @ $TorqueScriptFileExtension);
+exec("./scripts/stateMachineEditor.ed." @ $TorqueScriptFileExtension);
+exec("./scripts/superToolTipDlg.ed." @ $TorqueScriptFileExtension);
 
 //gui
 exec("./gui/superToolTipDlg.ed.gui");
 exec("./gui/stateMachineDlg.ed.gui");
 
 //field types
-exec("./interface/materialFieldType.tscript");
-exec("./interface/typeMaskFieldType.tscript");
-exec("./interface/stateMachineField.tscript");
+exec("./interface/materialFieldType." @ $TorqueScriptFileExtension);
+exec("./interface/typeMaskFieldType." @ $TorqueScriptFileExtension);
+exec("./interface/stateMachineField." @ $TorqueScriptFileExtension);

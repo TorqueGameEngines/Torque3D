@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-$PE_PARTICLEEDITOR_DEFAULT_FILENAME = "art/particles/managedParticleData.tscript";
+$PE_PARTICLEEDITOR_DEFAULT_FILENAME = "art/particles/managedParticleData." @ $TorqueScriptFileExtension;
 
 
 //=============================================================================================
@@ -407,7 +407,7 @@ function PE_ParticleEditor::setParticleDirty( %this )
    
    %particle = PE_ParticleEditor.currParticle;
    
-   if( %particle.getFilename() $= "" || %particle.getFilename() $= "tools/particleEditor/particleParticleEditor.ed.tscript" )
+   if( %particle.getFilename() $= "" || %particle.getFilename() $= "tools/particleEditor/particleParticleEditor.ed." @ $TorqueScriptFileExtension )
       PE_ParticleSaver.setDirty( %particle, $PE_PARTICLEEDITOR_DEFAULT_FILENAME );
    else
       PE_ParticleSaver.setDirty( %particle );

@@ -5,16 +5,16 @@
 
 function VerveEditor::InitInspectorScripts()
 {
-    exec( "./Controls.tscript" );
-    exec( "./CutCopyPaste.tscript" );
-    exec( "./EventNotify.tscript" );
-    exec( "./Factory.tscript" );
-    exec( "./FactoryControls.tscript" );
-    exec( "./FieldNotify.tscript" );
-    exec( "./Lists.tscript" );
-    exec( "./Properties.tscript" );
-    exec( "./Selection.tscript" );
+    exec( "./Controls." @ $TorqueScriptFileExtension );
+    exec( "./CutCopyPaste." @ $TorqueScriptFileExtension );
+    exec( "./EventNotify." @ $TorqueScriptFileExtension );
+    exec( "./Factory." @ $TorqueScriptFileExtension );
+    exec( "./FactoryControls." @ $TorqueScriptFileExtension );
+    exec( "./FieldNotify." @ $TorqueScriptFileExtension );
+    exec( "./Lists." @ $TorqueScriptFileExtension );
+    exec( "./Properties." @ $TorqueScriptFileExtension );
+    exec( "./Selection." @ $TorqueScriptFileExtension );
     
-    exec( "./Fields/main.tscript" );
+    exec( "./Fields/main." @ $TorqueScriptFileExtension );
 }
 VerveEditor::InitInspectorScripts();

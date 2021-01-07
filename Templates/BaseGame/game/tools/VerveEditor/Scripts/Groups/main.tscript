@@ -6,15 +6,15 @@
 function VerveEditor::InitGroupScripts()
 {
     // Core.
-    exec( "./VGroup.tscript" );
+    exec( "./VGroup." @ $TorqueScriptFileExtension );
     
     // Built In.
-    exec( "./VCameraGroup.tscript" );
-    exec( "./VDirectorGroup.tscript" );
-    exec( "./VLightObjectGroup.tscript" );
-    exec( "./VParticleEffectGroup.tscript" );
-    exec( "./VSceneObjectGroup.tscript" );
-    exec( "./VSpawnSphereGroup.tscript" );
+    exec( "./VCameraGroup." @ $TorqueScriptFileExtension );
+    exec( "./VDirectorGroup." @ $TorqueScriptFileExtension );
+    exec( "./VLightObjectGroup." @ $TorqueScriptFileExtension );
+    exec( "./VParticleEffectGroup." @ $TorqueScriptFileExtension );
+    exec( "./VSceneObjectGroup." @ $TorqueScriptFileExtension );
+    exec( "./VSpawnSphereGroup." @ $TorqueScriptFileExtension );
     
     // Custom.
     // Exec Custom Group Scripts.

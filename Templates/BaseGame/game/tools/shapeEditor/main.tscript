@@ -28,7 +28,7 @@ function initializeShapeEditor()
 {
    echo(" % - Initializing Shape Editor");
 
-   exec("./gui/Profiles.ed.tscript");
+   exec("./gui/Profiles.ed." @ $TorqueScriptFileExtension);
 
    exec("./gui/shapeEdPreviewWindow.ed.gui");
    exec("./gui/shapeEdAnimWindow.ed.gui");
@@ -37,9 +37,9 @@ function initializeShapeEditor()
    exec("./gui/shapeEdSelectWindow.ed.gui");
    exec("./gui/shapeEdPropWindow.ed.gui");
 
-   exec("./scripts/shapeEditor.ed.tscript");
-   exec("./scripts/shapeEditorHints.ed.tscript");
-   exec("./scripts/shapeEditorActions.ed.tscript");
+   exec("./scripts/shapeEditor.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/shapeEditorHints.ed." @ $TorqueScriptFileExtension);
+   exec("./scripts/shapeEditorActions.ed." @ $TorqueScriptFileExtension);
 
    // Add windows to editor gui
    ShapeEdPreviewGui.setVisible(false);

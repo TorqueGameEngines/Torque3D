@@ -24,12 +24,12 @@ function initializeConvexEditor()
 {
    echo(" % - Initializing Sketch Tool");
      
-   exec( "./convexEditor.tscript" );
+   exec( "./convexEditor." @ $TorqueScriptFileExtension );
    exec( "./convexEditorGui.gui" );
    exec( "./convexEditorToolbar.ed.gui" );
-   exec( "./convexEditorGui.tscript" );
+   exec( "./convexEditorGui." @ $TorqueScriptFileExtension );
    exec( "./convexEditorSidebarGui.gui" );
-   exec( "./materials.tscript" );
+   exec( "./materials." @ $TorqueScriptFileExtension );
 
    ConvexEditorGui.setVisible( false );  
    ConvexEditorOptionsWindow.setVisible( false );  

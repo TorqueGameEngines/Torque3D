@@ -33,7 +33,7 @@ function initializeDebugger()
    echo(" % - Initializing Debugger");
    
    // Load the scripts.
-   exec("./scripts/debugger.ed.tscript");
+   exec("./scripts/debugger.ed." @ $TorqueScriptFileExtension);
    
    // And the guis.
    exec("./gui/breakConditionDlg.ed.gui");

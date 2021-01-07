@@ -8,13 +8,13 @@ function AssetBrowser::createScriptAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ ".tscript";
+   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new ScriptAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ ".tscript";
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
    };
    
    TamlWrite(%asset, %tamlpath);
@@ -32,7 +32,7 @@ function AssetBrowser::createScriptAsset(%this)
 	return %tamlpath;
 }
 
-function AssetBrowser::editScriptAsset(%this, %assetDef)
+function AssetBrowser::edi" @ $TorqueScriptFileExtension @ "Asset(%this, %assetDef)
 {
    %scriptFile = %assetDef.scriptFile;
    
@@ -43,7 +43,7 @@ function AssetBrowser::duplicateScriptAsset(%this, %assetDef, %targetModule)
 {
 }
 
-function AssetBrowser::importScriptAsset(%this, %assetId)
+function AssetBrowser::impor" @ $TorqueScriptFileExtension @ "Asset(%this, %assetId)
 {
 }
 
@@ -99,7 +99,7 @@ function AssetBrowser::buildScriptAssetPreview(%this, %assetDef, %previewData)
    if(%assetDef.isServerSide)
       %previewData.previewImage = "tools/assetBrowser/art/serverScriptIcon";
    else
-      %previewData.previewImage = "tools/assetBrowser/art/clientScriptIcon";
+      %previewData.previewImage = "tools/assetBrowser/art/clien" @ $TorqueScriptFileExtension @ "Icon";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

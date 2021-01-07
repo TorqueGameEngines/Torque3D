@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-//exec( "./shadowFilter.tscript" );
+//exec( "./shadowFilter." @ $TorqueScriptFileExtension );
 
 singleton GFXStateBlockData( BL_ProjectedShadowSBData )
 {

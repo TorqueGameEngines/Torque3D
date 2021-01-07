@@ -9,16 +9,16 @@ function initClient()
    $Client::GameTypeQuery = $appName;
    $Client::MissionTypeQuery = "Any";
    
-   exec( "./message.tscript" );
-   exec( "./connectionToServer.tscript" );
-   exec( "./levelDownload.tscript" );
-   exec( "./levelLoad.tscript" );
+   exec( "./message." @ $TorqueScriptFileExtension );
+   exec( "./connectionToServer." @ $TorqueScriptFileExtension );
+   exec( "./levelDownload." @ $TorqueScriptFileExtension );
+   exec( "./levelLoad." @ $TorqueScriptFileExtension );
    
    //load prefs
-   exec( "data/defaults.tscript" );
+   exec( "data/defaults." @ $TorqueScriptFileExtension );
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/clientPrefs.tscript" ) )
-      exec( %prefPath @ "/clientPrefs.tscript" );
+   if ( isFile( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
+      exec( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
       
    callOnModules("initClient");
 

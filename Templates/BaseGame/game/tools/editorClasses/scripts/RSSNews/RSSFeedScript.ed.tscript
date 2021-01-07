@@ -28,7 +28,7 @@ $RSSFeed::userAgent = "TorqueGameEngineAdvances/1.1";
 $RSSFeed::maxNewHeadlines = 10;
 
 // Load up the helper objects
-exec( "./RSSStructs.ed.tscript" );
+exec( "./RSSStructs.ed." @ $TorqueScriptFileExtension );
 
 function RSSFeedObject::onConnected(%this)
 {
@@ -93,7 +93,7 @@ function RSSFeedObject::onDisconnect(%this)
 {
    // Create collection and load cache.
    %ret = constructRSSHeadlineCollection();
-   %ret.loadFromFile( "RSSCache.tscript" );
+   %ret.loadFromFile( "RSSCache." @ $TorqueScriptFileExtension );
    
    // Ok, we have a full buffer now, hopefully. Let's process it.
    //echo("   - Got " @ $RSSFeed::lineCount @ " lines.");
@@ -137,7 +137,7 @@ function RSSFeedObject::onDisconnect(%this)
       eval( %this._callback @ "(" @ %params @ ");" );
    }
    
-   %ret.writeToFile( "RSSCache.tscript", false );
+   %ret.writeToFile( "RSSCache." @ $TorqueScriptFileExtension, false );
 }
 
 function RSSUpdate::initialize( %callback )

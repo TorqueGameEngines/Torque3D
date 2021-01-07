@@ -6,8 +6,8 @@
 function VerveEditor::InitControllerScripts()
 {
     // Core.
-    exec( "./VController.tscript" );
-    exec( "./VControllerProperties.tscript" );
+    exec( "./VController." @ $TorqueScriptFileExtension );
+    exec( "./VControllerProperties." @ $TorqueScriptFileExtension );
     
     // Custom.
     // Exec Custom Controller Scripts.

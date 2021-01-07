@@ -1,8 +1,8 @@
 
 function Core_Console::onCreate(%this)
 {
-    exec("./scripts/profiles.tscript");
-    exec("./scripts/console.tscript");
+    exec("./scripts/profiles." @ $TorqueScriptFileExtension);
+    exec("./scripts/console." @ $TorqueScriptFileExtension);
 
     exec("./guis/console.gui");
 }

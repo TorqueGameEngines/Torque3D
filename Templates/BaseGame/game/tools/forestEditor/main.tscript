@@ -24,12 +24,12 @@ function initializeForestEditor()
 {
    echo(" % - Initializing Forest Editor");   
   
-   exec( "./forestEditor.tscript" );
+   exec( "./forestEditor." @ $TorqueScriptFileExtension );
    exec( "./forestEditorGui.gui" );
    exec( "./forestEditToolbar.ed.gui" );
 
-   exec( "./forestEditorGui.tscript" );
-   exec( "./tools.tscript" );
+   exec( "./forestEditorGui." @ $TorqueScriptFileExtension );
+   exec( "./tools." @ $TorqueScriptFileExtension );
    
    ForestEditorGui.setVisible( false );   
    ForestEditorPalleteWindow.setVisible( false );
@@ -84,16 +84,16 @@ function destroyForestEditor()
 // NOTE: debugging helper.
 function reinitForest()
 {
-   exec( "./main.tscript" );
-   exec( "./forestEditorGui.tscript" );   
-   exec( "./tools.tscript" );
+   exec( "./main." @ $TorqueScriptFileExtension );
+   exec( "./forestEditorGui." @ $TorqueScriptFileExtension );   
+   exec( "./tools." @ $TorqueScriptFileExtension );
 }
 
 function ForestEditorPlugin::onWorldEditorStartup( %this )
 {       
    new PersistenceManager( ForestDataManager );
    
-   %brushPath = "tools/forestEditor/brushes.tscript";
+   %brushPath = "tools/forestEditor/brushes." @ $TorqueScriptFileExtension;
    
    if ( !isFile( %brushPath ) )   
       %successfulFile = createPath( %brushPath );       
@@ -205,7 +205,7 @@ function ForestEditorPlugin::onActivated( %this )
    }   
    
    if ( %this.showError )
-      toolsMessageBoxOK( "Error", "Your tools/forestEditor folder does not contain a valid brushes.tscript. Brushes you create will not be saved!" );
+      toolsMessageBoxOK( "Error", "Your tools/forestEditor folder does not contain a valid brushes." @ $TorqueScriptFileExtension @ ". Brushes you create will not be saved!" );
 }
 
 function ForestEditorPlugin::onDeactivated( %this )
@@ -262,7 +262,7 @@ function ForestEditorPlugin::onSaveMission( %this, %missionFile )
       }
    }
       
-   ForestBrushGroup.save( "tools/forestEditor/brushes.tscript" );
+   ForestBrushGroup.save( "tools/forestEditor/brushes." @ $TorqueScriptFileExtension );
 }
 
 function ForestEditorPlugin::onEditorSleep( %this )

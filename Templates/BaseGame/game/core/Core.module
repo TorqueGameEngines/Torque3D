@@ -2,7 +2,7 @@
 	ModuleId="CoreModule"
 	VersionId="1"
 	Description="Module that implements the core engine-level setup for the game."
-	ScriptFile="Core.tscript"
+	ScriptFile="Core"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Core"/>

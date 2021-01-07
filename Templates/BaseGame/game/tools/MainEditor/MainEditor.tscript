@@ -2,12 +2,12 @@ function MainEditor::onCreate( %this )
 {
    echo("\n--------- Initializing MainEditor ---------");
    
-   //exec("tools/gui/profiles.ed.tscript");
-   //exec("./scripts/GuiProfiles.tscript");
+   //exec("tools/gui/profiles.ed." @ $TorqueScriptFileExtension);
+   //exec("./scripts/GuiProfiles." @ $TorqueScriptFileExtension);
 
    exec("./guis/MainEditorWindow.gui");
    
-   //exec("./scripts/newEditorGui.tscript");
+   //exec("./scripts/newEditorGui." @ $TorqueScriptFileExtension);
    
    $UsePanelLayout = false;
    $AssetBrowserPanelState = true;

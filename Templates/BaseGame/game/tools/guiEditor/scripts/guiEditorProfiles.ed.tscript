@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-$GUI_EDITOR_DEFAULT_PROFILE_FILENAME = "art/gui/customProfiles.tscript";
+$GUI_EDITOR_DEFAULT_PROFILE_FILENAME = "art/gui/customProfiles." @ $TorqueScriptFileExtension;
 $GUI_EDITOR_DEFAULT_PROFILE_CATEGORY = "Other";
 
 
@@ -127,7 +127,7 @@ function GuiEditor::deleteProfile( %this, %profile )
 
 function GuiEditor::showSaveProfileDialog( %this, %currentFileName )
 {
-   getSaveFileName( "TorqueScript Files|*.tscript", %this @ ".doSaveProfile", %currentFileName );
+   getSaveFileName( "TorqueScript Files|*." @ $TorqueScriptFileExtension, %this @ ".doSaveProfile", %currentFileName );
 }
 
 //---------------------------------------------------------------------------------------------

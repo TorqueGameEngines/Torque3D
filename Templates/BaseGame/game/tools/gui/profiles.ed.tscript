@@ -22,7 +22,7 @@
 
 function execEditorProfilesCS()
 {
-   exec("./profiles.ed.tscript");   
+   exec("./profiles.ed." @ $TorqueScriptFileExtension);   
 }
 
 $Gui::clipboardFile = expandFilename("./clipboard.gui");

@@ -2,7 +2,7 @@
 	ModuleId="UI"
 	VersionId="1"
 	Description="Module that implements the menus for the game."
-	ScriptFile="UI.tscript"
+	ScriptFile="UI"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Game">

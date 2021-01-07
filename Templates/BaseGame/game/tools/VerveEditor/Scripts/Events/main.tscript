@@ -3,28 +3,28 @@
 // Copyright (C) - Violent Tulip
 //-----------------------------------------------------------------------------
 
-function VerveEditor::InitEventScripts()
+function VerveEditor::InitEven" @ $TorqueScriptFileExtension @ "s()
 {
     // Core.
-    exec( "./VEvent.tscript" );
+    exec( "./VEvent." @ $TorqueScriptFileExtension );
     
     // Built-In.
-    exec( "./VCameraShakeEvent.tscript" );
-    exec( "./VDirectorEvent.tscript" );
-    exec( "./VFadeEvent.tscript" );
-    exec( "./VLightObjectAnimationEvent.tscript" );
-    exec( "./VLightObjectToggleEvent.tscript" );
-    exec( "./VMotionEvent.tscript" );
-    exec( "./VParticleEffectToggleEvent.tscript" );
-    exec( "./VPostEffectToggleEvent.tscript" );
-    exec( "./VSceneJumpEvent.tscript" );
-    exec( "./VScriptEvent.tscript" );
-    exec( "./VShapeAnimationEvent.tscript" );
-    exec( "./VSlowMoEvent.tscript" );
-    exec( "./VSoundEffectEvent.tscript" );
-    exec( "./VSpawnSphereSpawnTargetEvent.tscript" );
+    exec( "./VCameraShakeEvent." @ $TorqueScriptFileExtension );
+    exec( "./VDirectorEvent." @ $TorqueScriptFileExtension );
+    exec( "./VFadeEvent." @ $TorqueScriptFileExtension );
+    exec( "./VLightObjectAnimationEvent." @ $TorqueScriptFileExtension );
+    exec( "./VLightObjectToggleEvent." @ $TorqueScriptFileExtension );
+    exec( "./VMotionEvent." @ $TorqueScriptFileExtension );
+    exec( "./VParticleEffectToggleEvent." @ $TorqueScriptFileExtension );
+    exec( "./VPostEffectToggleEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSceneJumpEvent." @ $TorqueScriptFileExtension );
+    exec( "./VScriptEvent." @ $TorqueScriptFileExtension );
+    exec( "./VShapeAnimationEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSlowMoEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSoundEffectEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSpawnSphereSpawnTargetEvent." @ $TorqueScriptFileExtension );
     
     // Custom.
     // Exec Custom Event Scripts.
 }
-VerveEditor::InitEventScripts();
+VerveEditor::InitEven" @ $TorqueScriptFileExtension @ "s();

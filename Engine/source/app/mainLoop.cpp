@@ -570,6 +570,7 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
    Platform::setMainDotCsDir(buffer);
    Platform::setCurrentDirectory(buffer);
 
+   Con::setVariable("TorqueScriptFileExtension", TORQUE_SCRIPT_EXTENSION);
    Con::evaluate(script, false, useDefaultScript ? defaultScriptName : argv[1]); 
    delete[] script;
 

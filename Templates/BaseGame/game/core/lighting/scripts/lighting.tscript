@@ -26,12 +26,12 @@ function initLightingSystems(%manager)
 
    // First exec the scripts for the different light managers
    // in the lighting folder.
-   /*%pattern = "./lighting/*//*init.tscript";   
+   /*%pattern = "./lighting/*//*init." @ $TorqueScriptFileExtension;   
    %file = findFirstFile( %pattern );
    if ( %file $= "" )
    {
       // Try for DSOs next.
-      %pattern = "./lighting/*//*init.tscript.dso";
+      %pattern = "./lighting/*//*init." @ $TorqueScriptFileExtension @ ".dso";
       %file = findFirstFile( %pattern );
    }
 

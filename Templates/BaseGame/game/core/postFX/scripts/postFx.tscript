@@ -39,12 +39,12 @@ function postFXInit()
    if (!$Server::Dedicated)
    {
       //init the postFX
-      %pattern = "./*.tscript";   
+      %pattern = "./*." @ $TorqueScriptFileExtension;   
       %file = findFirstFile( %pattern );
       if ( %file $= "" )
       {
          // Try for DSOs next.
-         %pattern = "core/postFX/*.tscript.dso";
+         %pattern = "core/postFX/*." @ $TorqueScriptFileExtension @ ".dso";
          %file = findFirstFile( %pattern );
       }
       

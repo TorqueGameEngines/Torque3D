@@ -24,45 +24,45 @@
 // a server is constructed.
 
 // Do the sounds first -- later scripts/datablocks may need them
-exec("./audioProfiles.tscript");
+exec("./audioProfiles." @ $TorqueScriptFileExtension);
 
 // LightFlareData and LightAnimData(s)
-exec("./lights.tscript");
+exec("./lights." @ $TorqueScriptFileExtension);
 
 // Do the various effects next -- later scripts/datablocks may need them
-exec("./particles.tscript");
-exec("./environment.tscript");
+exec("./particles." @ $TorqueScriptFileExtension);
+exec("./environment." @ $TorqueScriptFileExtension);
 
-exec("./triggers.tscript");
+exec("./triggers." @ $TorqueScriptFileExtension);
 
 // Add a rigid example
-exec("./rigidShape.tscript");
+exec("./rigidShape." @ $TorqueScriptFileExtension);
 
-exec("./health.tscript");
+exec("./health." @ $TorqueScriptFileExtension);
 
 // Load our supporting weapon datablocks, effects and such.  They must be
 // loaded before any weapon that uses them.
-exec("./weapon.tscript");
-exec("./weapons/grenadefx.tscript");
-exec("./weapons/rocketfx.tscript");
+exec("./weapon." @ $TorqueScriptFileExtension);
+exec("./weapons/grenadefx." @ $TorqueScriptFileExtension);
+exec("./weapons/rocketfx." @ $TorqueScriptFileExtension);
 
 // Load the weapon datablocks
-exec("./weapons/Lurker.tscript");
-exec("./weapons/Ryder.tscript");
-exec("./weapons/ProxMine.tscript");
-exec("./weapons/Turret.tscript");
+exec("./weapons/Lurker." @ $TorqueScriptFileExtension);
+exec("./weapons/Ryder." @ $TorqueScriptFileExtension);
+exec("./weapons/ProxMine." @ $TorqueScriptFileExtension);
+exec("./weapons/Turret." @ $TorqueScriptFileExtension);
 
-exec("./teleporter.tscript");
+exec("./teleporter." @ $TorqueScriptFileExtension);
 
 // Load the default player datablocks
-exec("./player.tscript");
+exec("./player." @ $TorqueScriptFileExtension);
 
 // Load our other player datablocks
-exec("./aiPlayer.tscript");
+exec("./aiPlayer." @ $TorqueScriptFileExtension);
 
 // Load the vehicle datablocks
-exec("./vehicles/cheetahCar.tscript");
+exec("./vehicles/cheetahCar." @ $TorqueScriptFileExtension);
 
 // Load Verve Data.
-exec("./verve/VerveActorData.tscript");
-exec("./verve/VervePathTutorialData.tscript");
+exec("./verve/VerveActorData." @ $TorqueScriptFileExtension);
+exec("./verve/VervePathTutorialData." @ $TorqueScriptFileExtension);

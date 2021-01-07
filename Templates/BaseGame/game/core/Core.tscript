@@ -27,10 +27,10 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_PostFX" );
    ModuleDatabase.LoadExplicit( "Core_GameObjects" );
    
-   exec("data/defaults.tscript");
+   exec("data/defaults." @ $TorqueScriptFileExtension);
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/clientPrefs.tscript" ) )
-      exec( %prefPath @ "/clientPrefs.tscript" );
+   if ( isFile( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
+      exec( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
       
    // Seed the random number generator.
    setRandomSeed();
@@ -44,7 +44,7 @@ function CoreModule::onCreate(%this)
    createCanvas($appName);
 
    //load canvas
-   //exec("./console/main.tscript");
+   //exec("./console/main." @ $TorqueScriptFileExtension);
 
    ModuleDatabase.LoadExplicit( "Core_Console" );
    
@@ -62,8 +62,8 @@ function CoreModule::onCreate(%this)
    // If we have editors, initialize them here as well
    if (isToolBuild())
    {
-      if(isFile("tools/main.tscript") && !$isDedicated)
-         exec("tools/main.tscript");
+      if(isFile("tools/main." @ $TorqueScriptFileExtension) && !$isDedicated)
+         exec("tools/main." @ $TorqueScriptFileExtension);
    }
    
    //This is used to build the remap keybind sets for the different actionMaps.

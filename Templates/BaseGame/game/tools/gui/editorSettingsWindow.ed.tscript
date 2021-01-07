@@ -187,7 +187,7 @@ function SettingsInspector::changeEditorSetting(%this, %varName, %value)
       
       //Bit of a hack, but if we were editing the theme, reexec the profiles for GUI
       if(ESettingsWindow.selectedPageText $= "Theme")
-         exec("tools/gui/profiles.ed.tscript");
+         exec("tools/gui/profiles.ed." @ $TorqueScriptFileExtension);
    }
    else
       %success = ProjectSettings.write();

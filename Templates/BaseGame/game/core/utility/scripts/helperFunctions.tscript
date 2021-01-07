@@ -39,9 +39,9 @@ function loadMaterials()
    // the folder exists
    if( IsDirectory( "materialEditor" ) )
    {
-      for( %file = findFirstFile( "materialEditor/*.tscript.dso" );
+      for( %file = findFirstFile( "materialEditor/*." @ $TorqueScriptFileExtension @ ".dso" );
            %file !$= "";
-           %file = findNextFile( "materialEditor/*.tscript.dso" ))
+           %file = findNextFile( "materialEditor/*." @ $TorqueScriptFileExtension @ ".dso" ))
       {
          // Only execute, if we don't have the source file.
          %csFileName = getSubStr( %file, 0, strlen( %file ) - 4 );
@@ -49,9 +49,9 @@ function loadMaterials()
             exec( %csFileName );
       }
 
-      for( %file = findFirstFile( "materialEditor/*.tscript" );
+      for( %file = findFirstFile( "materialEditor/*." @ $TorqueScriptFileExtension );
            %file !$= "";
-           %file = findNextFile( "materialEditor/*.tscript" ))
+           %file = findNextFile( "materialEditor/*." @ $TorqueScriptFileExtension ))
       {
          exec( %file );
       }
@@ -477,11 +477,11 @@ function compileFiles(%pattern)
    
    $Scripts::OverrideDSOPath  = %path;
    $Scripts::ignoreDSOs       = false;
-   %mainCsFile = makeFullPath("main.tscript");
+   %mainCsFile = makeFullPath("main." @ $TorqueScriptFileExtension);
 
    for (%file = findFirstFileMultiExpr(%pattern); %file !$= ""; %file = findNextFileMultiExpr(%pattern))
    {
-      // we don't want to try and compile the primary main.tscript
+      // we don't want to try and compile the primary main
       if(%mainCsFile !$= %file)      
          compile(%file, true);
    }
@@ -502,7 +502,7 @@ function displayHelp()
 
    error(
       "Torque Demo command line options:\n"@
-      "  -log <logmode>         Logging behavior; see main.tscript comments for details\n"@
+      "  -log <logmode>         Logging behavior; see main." @ $TorqueScriptFileExtension @ " comments for details\n"@
       "  -game <game_name>      Reset list of mods to only contain <game_name>\n"@
       "  <game_name>            Works like the -game argument\n"@
       "  -dir <dir_name>        Add <dir_name> to list of directories\n"@
@@ -518,8 +518,8 @@ function loadDir(%dir)
 {
    pushback($userDirs, %dir, ";");
 
-   if (isScriptFile(%dir @ "/main.tscript"))
-   exec(%dir @ "/main.tscript");
+   if (isScriptFile(%dir @ "/main." @ $TorqueScriptFileExtension))
+   exec(%dir @ "/main." @ $TorqueScriptFileExtension);
 }
 
 function loadDirs(%dirPath)
@@ -528,7 +528,7 @@ function loadDirs(%dirPath)
    if (%dirPath !$= "")
       loadDirs(%dirPath);
 
-   if(exec(%token @ "/main.tscript") != true)
+   if(exec(%token @ "/main." @ $TorqueScriptFileExtension) != true)
    {
       error("Error: Unable to find specified directory: " @ %token );
       $dirCount--;

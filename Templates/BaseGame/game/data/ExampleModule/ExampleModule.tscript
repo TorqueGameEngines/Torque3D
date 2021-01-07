@@ -33,7 +33,7 @@ function ExampleModule::onDestroy(%this)
 function ExampleModule::initServer(%this)
 {
    //This script contains our ExampleGameMode logic
-   %this.queueExec("./scripts/ExampleGamemodeScript.tscript");
+   %this.queueExec("./scripts/ExampleGamemodeScript." @ $TorqueScriptFileExtension);
 }
 
 //This is called when a game session server is actually created so the game may be played. It's called 
@@ -50,7 +50,7 @@ function ExampleModule::onCreateGameServer(%this)
    //onServerCreated(), it loads the datablocks via this array, and when when the server goes
    //to pass data to the client, it iterates over this list and processes it, ensuring all datablocks
    //are the most up to date possible for transmission to the connecting client
-   //%this.registerDatablock("./datablocks/ExampleDatablock.tscript");
+   //%this.registerDatablock("./datablocks/ExampleDatablock." @ $TorqueScriptFileExtension);
 }
 
 //This is called when a game session server is destroyed, when the game shuts down. It's called from
@@ -74,13 +74,13 @@ function ExampleModule::initClient(%this)
    
    //client scripts
    //Here, we exec out keybind scripts so the player is able to move when they get into a game
-   %this.queueExec("./scripts/default.keybinds.tscript");
+   %this.queueExec("./scripts/default.keybinds." @ $TorqueScriptFileExtension);
    
    %prefPath = getPrefpath();
-   if(isFile(%prefPath @ "/keybinds.tscript"))
-      exec(%prefPath @ "/keybinds.tscript");
+   if(isFile(%prefPath @ "/keybinds." @ $TorqueScriptFileExtension))
+      exec(%prefPath @ "/keybinds." @ $TorqueScriptFileExtension);
       
-   %this.queueExec("./scripts/inputCommands.tscript");
+   %this.queueExec("./scripts/inputCommands." @ $TorqueScriptFileExtension);
 }
 
 //This is called when a game session client successfuly connects to a game server. 

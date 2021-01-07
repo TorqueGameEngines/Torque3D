@@ -24,10 +24,10 @@ function initializeMeshRoadEditor()
 {
    echo(" % - Initializing Mesh Road Editor");
      
-   exec( "./meshRoadEditor.tscript" );
+   exec( "./meshRoadEditor." @ $TorqueScriptFileExtension );
    exec( "./meshRoadEditorGui.gui" );
    exec( "./meshRoadEditorToolbar.gui");
-   exec( "./meshRoadEditorGui.tscript" );
+   exec( "./meshRoadEditorGui." @ $TorqueScriptFileExtension );
    
    MeshRoadEditorGui.setVisible( false );  
    MeshRoadEditorOptionsWindow.setVisible( false );  

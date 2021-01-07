@@ -232,7 +232,7 @@ function AssetBrowser::RefreshModuleDependencies(%this, %moduleDef)
    //AssetBrowser.RefreshModuleDependencies(16823);
    %modulePath = filePath(%moduleDef.ModuleFilePath);
    
-   %filePattern = "*.tscript" TAB "*.taml" TAB "*.mis";
+   %filePattern = "*." @ $TorqueScriptFileExtension TAB "*.taml" TAB "*.mis";
    
    //First, wipe out any files inside the folder first
    %file = makeFullPath(findFirstFileMultiExpr( %filePattern, true));

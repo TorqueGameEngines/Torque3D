@@ -6,12 +6,12 @@
 function InitializeVPathEditor()
 {
     // Gui.
-    exec( "./GUI/Profiles.tscript" );
+    exec( "./GUI/Profiles." @ $TorqueScriptFileExtension );
     exec( "./GUI/VPathEditor.gui" );
     
     // Scripts.
-    exec( "./Scripts/Plugin.tscript" );
-    exec( "./Scripts/Editor.tscript" );
+    exec( "./Scripts/Plugin." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/Editor." @ $TorqueScriptFileExtension );
 }
 
 function DestroyVPathEditor()

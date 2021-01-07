@@ -26,7 +26,7 @@
 //=============================================================================
 
 /// File to save newly created SFXParameters in by default.
-$SFX_PARAMETER_FILE = "scripts/client/audioData.tscript";
+$SFX_PARAMETER_FILE = "scripts/client/audioData." @ $TorqueScriptFileExtension;
 
 $SFX_PARAMETER_CHANNELS[  0 ] = "Volume";
 $SFX_PARAMETER_CHANNELS[  1 ] = "Pitch";

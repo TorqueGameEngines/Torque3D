@@ -74,7 +74,7 @@ function GameObjectCreateBtn::onClick(%this)
       
       %file = new FileObject();
       
-      if(%file.openForWrite(%path @ "\\" @ %className @ ".tscript"))
+      if(%file.openForWrite(%path @ "\\" @ %className @ "." @ $TorqueScriptFileExtension))
       {
          %file.writeline("function " @ %className @ "::onAdd(%this)\n{\n\n}\n");
          %file.writeline("function " @ %className @ "::onRemove(%this)\n{\n\n}\n");
@@ -86,7 +86,7 @@ function GameObjectCreateBtn::onClick(%this)
       
       //set up the paths
       %tamlPath = %path  @ %className @ ".taml";
-      %scriptPath = %path  @ %className @ ".tscript";
+      %scriptPath = %path  @ %className @ "." @ $TorqueScriptFileExtension;
       saveGameObject(%className, %tamlPath, %scriptPath);
       
       %asset = new GameObjectAsset()

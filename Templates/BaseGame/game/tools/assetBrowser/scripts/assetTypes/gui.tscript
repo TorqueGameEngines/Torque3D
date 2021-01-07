@@ -9,13 +9,13 @@ function AssetBrowser::createGUIAsset(%this)
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %guipath = %assetPath @ %assetName @ ".gui";
-   %scriptPath = %assetPath @ %assetName @ ".tscript";
+   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new GUIAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ ".tscript";
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
       guiFile = %assetName @ ".gui";
    };
    
@@ -48,7 +48,7 @@ function AssetBrowser::createGUIAsset(%this)
       warnf("CreateGUIAsset - Something went wrong and we couldn't write the GUI file!");
    }
    
-   %scriptTemplateCodeFilePath = %this.templateFilesPath @ "guiFile.tscript.template";
+   %scriptTemplateCodeFilePath = %this.templateFilesPath @ "guiFile." @ $TorqueScriptFileExtension @ ".template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%scriptTemplateCodeFilePath))
    {

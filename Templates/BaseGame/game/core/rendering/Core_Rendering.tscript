@@ -35,8 +35,6 @@ function Core_Rendering::onCreate(%this)
    exec("./scripts/gfxData/terrainBlock." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/water." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);
-   
-   loadTerrainSettings();
 }
 
 function Core_Rendering::onDestroy(%this)

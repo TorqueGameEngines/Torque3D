@@ -24,12 +24,12 @@ function initializeDecalEditor()
 {
    echo(" % - Initializing Decal Editor");
    
-   $decalDataFile = "art/decals/managedDecalData.tscript";
+   $decalDataFile = "art/decals/managedDecalData." @ $TorqueScriptFileExtension;
      
-   exec( "./decalEditor.tscript" );
+   exec( "./decalEditor." @ $TorqueScriptFileExtension );
    exec( "./decalEditorGui.gui" );
-   exec( "./decalEditorGui.tscript" );
-   exec( "./decalEditorActions.tscript" );
+   exec( "./decalEditorGui." @ $TorqueScriptFileExtension );
+   exec( "./decalEditorActions." @ $TorqueScriptFileExtension );
    
    // Add ourselves to EditorGui, where all the other tools reside
    DecalEditorGui.setVisible( false ); 
@@ -66,9 +66,9 @@ function destroyDecalEditor()
 // JCF: helper for during development
 function reinitDecalEditor()
 {
-   exec( "./main.tscript" );
-   exec( "./decalEditor.tscript" );
-   exec( "./decalEditorGui.tscript" );
+   exec( "./main." @ $TorqueScriptFileExtension );
+   exec( "./decalEditor." @ $TorqueScriptFileExtension );
+   exec( "./decalEditorGui." @ $TorqueScriptFileExtension );
 }
 
 function DecalEditorPlugin::onWorldEditorStartup( %this )

@@ -581,7 +581,7 @@ function DepthOfFieldPostFX::autoFocus( %this )
 /*
 function reloadDOF()
 {
-   exec( "./dof.tscript" );
+   exec( "./dof." @ $TorqueScriptFileExtension );
    DepthOfFieldPostFX.reload();  
    DepthOfFieldPostFX.disable();
    DepthOfFieldPostFX.enable();

@@ -20,9 +20,9 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-exec("./fileDialogBase.ed.tscript");
-exec("./openFileDialog.ed.tscript");
-exec("./saveFileDialog.ed.tscript");
+exec("./fileDialogBase.ed." @ $TorqueScriptFileExtension);
+exec("./openFileDialog.ed." @ $TorqueScriptFileExtension);
+exec("./saveFileDialog.ed." @ $TorqueScriptFileExtension);
 exec("./saveChangesMBDlg.ed.gui");
 exec("./simViewDlg.ed.gui");
 exec("./colorPicker.ed.gui");
@@ -30,16 +30,16 @@ exec("./materialSelector.ed.gui");
 exec("./scriptEditorDlg.ed.gui");
 exec("./colladaImport.ed.gui");
 exec("./GuiEaseEditDlg.ed.gui");
-exec("./GuiEaseEditDlg.ed.tscript");
-exec("./guiObjectInspector.ed.tscript");
+exec("./GuiEaseEditDlg.ed." @ $TorqueScriptFileExtension);
+exec("./guiObjectInspector.ed." @ $TorqueScriptFileExtension);
 exec("./uvEditor.ed.gui");
-exec("./objectSelection.ed.tscript");
+exec("./objectSelection.ed." @ $TorqueScriptFileExtension);
 exec("./postFxManager.gui");
 exec("./assimpImport.ed.gui");
 
-exec("./fieldTypes/assetDependencies.tscript");
-exec("./fieldTypes/fieldTypes.tscript");
-exec("./fieldTypes/listField.tscript");
-exec("./fieldTypes/range.tscript");
-exec("./fieldTypes/moduleDependencies.tscript");
-exec("./fieldTypes/buttonField.tscript");
+exec("./fieldTypes/assetDependencies." @ $TorqueScriptFileExtension);
+exec("./fieldTypes/fieldTypes." @ $TorqueScriptFileExtension);
+exec("./fieldTypes/listField." @ $TorqueScriptFileExtension);
+exec("./fieldTypes/range." @ $TorqueScriptFileExtension);
+exec("./fieldTypes/moduleDependencies." @ $TorqueScriptFileExtension);
+exec("./fieldTypes/buttonField." @ $TorqueScriptFileExtension);

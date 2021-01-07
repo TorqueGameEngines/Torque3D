@@ -329,7 +329,7 @@ function AssetBrowser::buildPopupMenus(%this)
          //isPopup = true;
          
          item[ 0 ] = "Open GameObject Editor" TAB "" TAB "echo(\"Not yet implemented.\");";
-         item[ 1 ] = "Edit GameObject Script" TAB "" TAB "AssetBrowser.editGameObjectAssetScript(AssetDatabase.acquireAsset(EditGameObjectAssetPopup.assetId));";
+         item[ 1 ] = "Edit GameObject Script" TAB "" TAB "AssetBrowser.editGameObjectAsse" @ $TorqueScriptFileExtension @ "(AssetDatabase.acquireAsset(EditGameObjectAssetPopup.assetId));";
          item[ 2 ] = "-";
          item[ 3 ] = "Apply Instance to GameObject" TAB "" TAB "AssetBrowser.applyInstanceToGameObject(AssetDatabase.acquireAsset(EditGameObjectAssetPopup.assetId));";
          item[ 4 ] = "Reset Instance to GameObject" TAB "" TAB "echo(\"Not yet implemented.\");";

@@ -15,8 +15,8 @@
 function Core_ClientServer::onCreate( %this )
 {
    echo("\n--------- Initializing Directory: scripts ---------");
-   exec( "./scripts/client/client.tscript" );
-   exec( "./scripts/server/server.tscript" );
+   exec( "./scripts/client/client." @ $TorqueScriptFileExtension );
+   exec( "./scripts/server/server." @ $TorqueScriptFileExtension );
 
    $Game::MainScene = getScene(0);
    
@@ -52,11 +52,11 @@ function Core_ClientServer::onDestroy( %this )
       
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs.tscript", false);
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
 
    echo("Exporting server prefs");
-   export("$Pref::Server::*", %prefPath @ "/serverPrefs.tscript", false);
-   BanList::Export(%prefPath @ "/banlist.tscript");
+   export("$Pref::Server::*", %prefPath @ "/serverPrefs." @ $TorqueScriptFileExtension, false);
+   BanList::Export(%prefPath @ "/banlist." @ $TorqueScriptFileExtension);
 }
 
 //-----------------------------------------------------------------------------

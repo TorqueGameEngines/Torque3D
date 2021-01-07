@@ -151,7 +151,7 @@ function getAssetTypeByFilename(%filePath)
       return "ShapeAsset";
    else if( isSoundFormat(%fileExt))
       return "SoundAsset";
-   else if( %fileExt $= ".tscript" || %fileExt $= ".tscript.dso" )
+   else if( %fileExt $= "." @ $TorqueScriptFileExtension || %fileExt $= "." @ $TorqueScriptFileExtension @ ".dso" )
       return "ScriptAsset";
    else if( %fileExt $= ".gui" || %fileExt $= ".gui.dso" )
       return "GUIAsset";
@@ -188,7 +188,7 @@ function AssetBrowser::onDropFile( %this, %filePath )
       %assetItem = %this.addImportingAsset("ShapeAsset", %filePath);
    else if( isSoundFormat(%fileExt))
       %assetItem = %this.addImportingAsset("SoundAsset", %filePath);
-   else if( %fileExt $= ".tscript" || %fileExt $= ".tscript.dso" )
+   else if( %fileExt $= "." @ $TorqueScriptFileExtension || %fileExt $= "." @ $TorqueScriptFileExtension @ ".dso" )
       %assetItem = %this.addImportingAsset("ScriptAsset", %filePath);
    else if( %fileExt $= ".gui" || %fileExt $= ".gui.dso" )
       %assetItem = %this.addImportingAsset("GUIAsset", %filePath);
@@ -238,13 +238,13 @@ function AssetBrowser::onDropZipFile(%this, %filePath)
          %this.importAssetListArray.add("SoundAsset", %filePath);
       else if( (%fileExt $= ".gui") || (%fileExt $= ".gui.dso"))
          %this.importAssetListArray.add("GUIAsset", %filePath);
-      //else if( (%fileExt $= ".tscript") || (%fileExt $= ".dso"))
+      //else if( (%fileExt $= "." @ $TorqueScriptFileExtension) || (%fileExt $= ".dso"))
       //   %this.importAssetListArray.add("Script", %filePath);
       else if( (%fileExt $= ".mis"))
          %this.importAssetListArray.add("LevelAsset", %filePath);*/
          
       // For now, if it's a .tscript file, we'll assume it's a behavior.
-      //if (fileExt(%fileFrom) !$= ".tscript")
+      //if (fileExt(%fileFrom) !$= "." @ $TorqueScriptFileExtension)
       //   continue;
       
       %fileTo = expandFilename("^tools/assetBrowser/importTemp/") @ %fileFrom;
@@ -286,13 +286,13 @@ function AssetBrowser::onDropFolder(%this, %filePath)
          %this.importAssetListArray.add("SoundAsset", %filePath);
       else if( (%fileExt $= ".gui") || (%fileExt $= ".gui.dso"))
          %this.importAssetListArray.add("GUIAsset", %filePath);
-      //else if( (%fileExt $= ".tscript") || (%fileExt $= ".dso"))
+      //else if( (%fileExt $= "." @ $TorqueScriptFileExtension) || (%fileExt $= ".dso"))
       //   %this.importAssetListArray.add("Script", %filePath);
       else if( (%fileExt $= ".mis"))
          %this.importAssetListArray.add("LevelAsset", %filePath);
          
       // For now, if it's a .tscript file, we'll assume it's a behavior.
-      if (fileExt(%fileFrom) !$= ".tscript")
+      if (fileExt(%fileFrom) !$= "." @ $TorqueScriptFileExtension)
          continue;
       
       %fileTo = expandFilename("^game/behaviors/") @ fileName(%fileFrom);
@@ -942,7 +942,7 @@ function ImportAssetWindow::addNewImportingAsset(%this, %filterType)
       %type = "ShapeAsset";
    else if( isSoundFormat(%fileExt))
       %type = "SoundAsset";
-   else if( %fileExt $= ".tscript" || %fileExt $= ".tscript.dso" )
+   else if( %fileExt $= "." @ $TorqueScriptFileExtension || %fileExt $= "." @ $TorqueScriptFileExtension @ ".dso" )
       %type = "ScriptAsset";
    else if( %fileExt $= ".gui" || %fileExt $= ".gui.dso" )
       %type = "GUIAsset";

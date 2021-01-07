@@ -27,21 +27,21 @@ function initServer()
    //load prefs
 
    //Force-load the defaults just so we don't have any mistakes
-   exec( "./defaults.tscript" );   
+   exec( "./defaults." @ $TorqueScriptFileExtension );   
    
    //Then, if the user has saved preferences, we load those over-top the defaults
    %prefPath = getPrefpath();
-   if ( isFile( %prefPath @ "/serverPrefs.tscript" ) )
-      exec( %prefPath @ "/serverPrefs.tscript" );
+   if ( isFile( %prefPath @ "/serverPrefs." @ $TorqueScriptFileExtension ) )
+      exec( %prefPath @ "/serverPrefs." @ $TorqueScriptFileExtension );
    
-   exec( "./audio.tscript" );
-   exec( "./commands.tscript" );
-   exec( "./kickban.tscript" );
-   exec( "./message.tscript" );
-   exec( "./levelDownload.tscript" );
-   exec( "./levelLoad.tscript" );
-   exec( "./levelInfo.tscript" );
-   exec( "./connectionToClient.tscript" );
+   exec( "./audio." @ $TorqueScriptFileExtension );
+   exec( "./commands." @ $TorqueScriptFileExtension );
+   exec( "./kickban." @ $TorqueScriptFileExtension );
+   exec( "./message." @ $TorqueScriptFileExtension );
+   exec( "./levelDownload." @ $TorqueScriptFileExtension );
+   exec( "./levelLoad." @ $TorqueScriptFileExtension );
+   exec( "./levelInfo." @ $TorqueScriptFileExtension );
+   exec( "./connectionToClient." @ $TorqueScriptFileExtension );
 
    // Server::Status is returned in the Game Info Query and represents the
    // current status of the server. This string sould be very short.
@@ -250,9 +250,9 @@ function destroyServer()
    // Save any server settings
    %prefPath = getPrefpath();
    echo( "Exporting server prefs..." );
-   export( "$Pref::Server::*", %prefPath@"/serverPrefs.tscript", false );
+   export( "$Pref::Server::*", %prefPath@"/serverPrefs." @ $TorqueScriptFileExtension, false );
    
-   BanList::Export(%prefPath@"/banlist.tscript");
+   BanList::Export(%prefPath@"/banlist." @ $TorqueScriptFileExtension);
 
    // Increase the server session number.  This is used to make sure we're
    // working with the server session we think we are.

@@ -31,7 +31,6 @@
 #define STBI_ONLY_PNG
 #define STBI_ONLY_BMP
 #define STBI_ONLY_TGA
-#define STBI_NO_STDIO
 #define STBI_MALLOC dMalloc
 #define STBI_REALLOC dRealloc
 #define STBI_FREE dFree

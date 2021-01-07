@@ -27,8 +27,6 @@
 #include "core/util/noncopyable.h"
 #include "console/console.h"
 
-#define TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
-
 namespace Torque
 {
    using namespace FS;

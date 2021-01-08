@@ -33,7 +33,6 @@ function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, 
             }
          }
          %stryng = %stryng @ ");";
-         echo(%stryng);
          eval(%stryng);
       }
    }

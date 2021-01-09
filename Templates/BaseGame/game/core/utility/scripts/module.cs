@@ -3,8 +3,9 @@ $reportModuleFileConflicts=true;
 if (!isObject(ExecFilesList))
    new ArrayObject(ExecFilesList);
   
-function callOnModules(%functionName, %moduleGroup)
+function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, %var4, %var5, %var6)
 {
+   %maxvars = 7; // match this to i/o signature
    //clear per module group file execution chain
    ExecFilesList.empty();
    //Get our modules so we can exec any specific client-side loading/handling
@@ -21,7 +22,18 @@ function callOnModules(%functionName, %moduleGroup)
       
       if(isObject(%module.scopeSet) && %module.scopeSet.isMethod(%functionName))
       {
-         eval(%module.scopeSet @ "." @ %functionName @ "();");
+         %stryng = %module.scopeSet @ "." @ %functionName @ "(";
+         for (%a=0;%a<%maxvars;%a++)
+         {
+            if (%var[%a] !$= "")
+            {
+               %stryng = %stryng @ %var[%a];
+               if (%a<%maxvars-1 && %var[%a+1] !$= "")
+                  %stryng = %stryng @ ",";
+            }
+         }
+         %stryng = %stryng @ ");";
+         eval(%stryng);
       }
    }
    
@@ -121,9 +133,9 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
             //allows one to override exclusive with exclusive
             %locked = DatablockFilesList.getValue(%i);
 
-            if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
+            if ((%locked && !%isExclusive)&&($reportModuleFileConflicts))
                 error("found" SPC %datablockFilePath SPC "duplicate file!");
-            if (!%locked || (%locked && %isExclusive))
+            if (%isExclusive)
             { // Replacing an existing entry, update in-place
                 DatablockFilesList.setKey(%fullPath, %i);
                 DatablockFilesList.setValue(%isExclusive, %i);
@@ -221,9 +233,9 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
             //do note that doing it in this order means setting exclusive twice
             //allows one to override exclusive with exclusive
             %locked = ExecFilesList.getValue(%i);
-            if ((!%locked && !%isExclusive)&&($reportModuleFileConflicts))
+            if ((%locked && !%isExclusive)&&($reportModuleFileConflicts))
                 error("found" SPC %execFilePath SPC "duplicate file!");
-            if (!%locked || (%locked && %isExclusive))
+            if (%isExclusive)
             { // Replacing an existing entry, update in-place
                 ExecFilesList.setKey(%fullPath, %i);
                 ExecFilesList.setValue(%isExclusive, %i);

@@ -87,6 +87,7 @@ function EWCreatorWindow::init( %this )
       %this.registerMissionObject( "Portal",       "Zone Portal" );
       %this.registerMissionObject( "SpawnSphere",  "Player Spawn Sphere", "PlayerDropPoint" );
       %this.registerMissionObject( "SpawnSphere",  "Observer Spawn Sphere", "ObserverDropPoint" );
+      %this.registerMissionObject( "SpawnSphere",  "General Spawn Sphere", "GeneralDropPoint" );
       %this.registerMissionObject( "SFXSpace",      "Sound Space" );
       %this.registerMissionObject( "OcclusionVolume", "Occlusion Volume" );
       %this.registerMissionObject( "AccumulationVolume", "Accumulation Volume" );

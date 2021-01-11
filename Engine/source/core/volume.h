@@ -302,6 +302,7 @@ public:
    virtual String   getTypeStr() const = 0; ///< Used for describing the file system type
 
    virtual FileNodeRef resolve(const Path& path) = 0;
+   virtual FileNodeRef resolveLoose(const Path& path) { return resolve(path); }
    virtual FileNodeRef create(const Path& path,FileNode::Mode) = 0;
    virtual bool remove(const Path& path) = 0;
    virtual bool rename(const Path& a,const Path& b) = 0;

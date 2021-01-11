@@ -730,7 +730,7 @@ S32 MountSystem::findByPattern( const Path &inBasePath, const String &inFilePatt
    else
    {
       // use specified filesystem to open directory
-      FileNodeRef fNode = mFindByPatternOverrideFS->resolve(inBasePath);
+      FileNodeRef fNode = mFindByPatternOverrideFS->resolveLoose(inBasePath);
       if (fNode && (dir = dynamic_cast<Directory*>(fNode.getPointer())) != NULL)
          dir->open();
    }

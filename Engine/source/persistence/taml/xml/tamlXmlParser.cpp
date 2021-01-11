@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "persistence/taml/xml/tamlXmlParser.h"
+#include "persistence/taml/fsTinyXml.h"
 #include "persistence/taml/tamlVisitor.h"
 #include "console/console.h"
 
@@ -45,7 +46,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     char filenameBuffer[1024];
     // TODO: Make sure this is a proper substitute for
     // Con::expandPath (T2D)
-    Con::expandToolScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
+    Con::expandScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
     /** T2D uses a custom version of TinyXML that supports FileStream.
       * We don't so we can't do this
       *
@@ -67,7 +68,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     
      */
 
-    TiXmlDocument xmlDocument;
+    fsTiXmlDocument xmlDocument;
 
     // Load document from stream.
     if ( !xmlDocument.LoadFile( filenameBuffer ) )
@@ -87,7 +88,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     mDocumentDirty = false;
 
     // Parse root element.
-    parseElement( xmlDocument.RootElement(), visitor );
+    parseElement( (fsTiXmlElement*)xmlDocument.RootElement(), visitor );
 
     // Reset parsing filename.
     setParsingFilename( StringTable->EmptyString() );
@@ -120,7 +121,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
 
 //-----------------------------------------------------------------------------
 
-inline bool TamlXmlParser::parseElement( TiXmlElement* pXmlElement, TamlVisitor& visitor )
+inline bool TamlXmlParser::parseElement( fsTiXmlElement* pXmlElement, TamlVisitor& visitor )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlParser_ParseElement);
@@ -140,7 +141,7 @@ inline bool TamlXmlParser::parseElement( TiXmlElement* pXmlElement, TamlVisitor&
     if ( pChildXmlNode != NULL && pChildXmlNode->Type() == TiXmlNode::TINYXML_ELEMENT )
     {
         // Iterate children.
-        for ( TiXmlElement* pChildXmlElement = dynamic_cast<TiXmlElement*>( pChildXmlNode ); pChildXmlElement; pChildXmlElement = pChildXmlElement->NextSiblingElement() )
+        for ( fsTiXmlElement* pChildXmlElement = dynamic_cast<fsTiXmlElement*>( pChildXmlNode ); pChildXmlElement; pChildXmlElement = (fsTiXmlElement*)pChildXmlElement->NextSiblingElement() )
         {
             // Parse element (stop processing if instructed).
             if ( !parseElement( pChildXmlElement, visitor ) )
@@ -153,7 +154,7 @@ inline bool TamlXmlParser::parseElement( TiXmlElement* pXmlElement, TamlVisitor&
 
 //-----------------------------------------------------------------------------
 
-inline bool TamlXmlParser::parseAttributes( TiXmlElement* pXmlElement, TamlVisitor& visitor )
+inline bool TamlXmlParser::parseAttributes( fsTiXmlElement* pXmlElement, TamlVisitor& visitor )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlParser_ParseAttribute);

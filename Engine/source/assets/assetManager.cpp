@@ -201,18 +201,18 @@ bool AssetManager::addModuleDeclaredAssets( ModuleDefinition* pModuleDefinition 
             continue;
 
         // Expand asset manifest location.
-        char filePathBuffer[1024];
+        char filePathBuffer[1024], extensionBuffer[256];
         String mdldfpth = pModuleDefinition->getModulePath();
         String astfpth = pDeclaredAssets->getPath();
 
-        //dSprintf( filePathBuffer, sizeof(filePathBuffer), "%s/%s", pModuleDefinition->getModulePath(), pDeclaredAssets->getPath() );
         dSprintf(filePathBuffer, sizeof(filePathBuffer), "%s/%s", pModuleDefinition->getModulePath(), pDeclaredAssets->getPath());
+        dSprintf(extensionBuffer, sizeof(extensionBuffer), "*.%s", pDeclaredAssets->getExtension());
 
         // Scan declared assets at location.
-        if ( !scanDeclaredAssets( filePathBuffer, pDeclaredAssets->getExtension(), pDeclaredAssets->getRecurse(), pModuleDefinition ) )
+        if ( !scanDeclaredAssets( filePathBuffer, extensionBuffer, pDeclaredAssets->getRecurse(), pModuleDefinition ) )
         {
             // Warn.
-            Con::warnf( "AssetManager::addModuleDeclaredAssets() - Could not scan for declared assets at location '%s' with extension '%s'.", filePathBuffer, pDeclaredAssets->getExtension() );
+            Con::warnf( "AssetManager::addModuleDeclaredAssets() - No assets found at location '%s' with extension '%s'.", filePathBuffer, pDeclaredAssets->getExtension() );
         }
     }  
 
@@ -289,7 +289,7 @@ bool AssetManager::addDeclaredAsset( ModuleDefinition* pModuleDefinition, const 
 
     // Expand asset file-path.
     char assetFilePathBuffer[1024];
-    Con::expandPath( assetFilePathBuffer, sizeof(assetFilePathBuffer), pAssetFilePath );
+    dStrcpy(assetFilePathBuffer, Platform::makeRelativePathName(pAssetFilePath, NULL), sizeof(assetFilePathBuffer));
 
     // Find the final slash which should be just before the file.
     char* pFileStart = dStrrchr( assetFilePathBuffer, '/' );
@@ -1479,7 +1479,7 @@ bool AssetManager::loadAssetTags( ModuleDefinition* pModuleDefinition )
     }
 
     // Is the specified file valid?
-    if ( Platform::isFile( assetTagsManifestFilePathBuffer ) )
+    if (Torque::FS::IsFile( assetTagsManifestFilePathBuffer ) )
     {
         // Yes, so read asset tags manifest.
         mAssetTagsManifest = mTaml.read<AssetTagsManifest>( assetTagsManifestFilePathBuffer );
@@ -2298,12 +2298,8 @@ S32 AssetManager::findAssetLooseFile( AssetQuery* pAssetQuery, const char* pLoos
     AssertFatal( pAssetQuery != NULL, "Cannot use NULL asset query." );
     AssertFatal( pLooseFile != NULL, "Cannot use NULL loose file." );
 
-    // Expand loose file.
-    char looseFileBuffer[1024];
-    Con::expandPath(looseFileBuffer, sizeof(looseFileBuffer), pLooseFile, NULL, false );
-
-    // Fetch asset loose file.
-    StringTableEntry looseFile = StringTable->insert( looseFileBuffer );
+    // Make game relative path for loose file.
+    StringTableEntry looseFile = Platform::makeRelativePathName(pLooseFile, NULL);;
 
     // Reset result count.
     S32 resultCount = 0;
@@ -2401,24 +2397,30 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
     AssertFatal( pExtension != NULL, "Cannot scan declared assets with NULL extension." );
 
     // Expand path location.
-    char pathBuffer[1024];
-    Con::expandPath( pathBuffer, sizeof(pathBuffer), pPath );
+    String relativePath = Platform::makeRelativePathName(pPath, NULL);
+    // Strip any trailing slash off the path.
+    if (relativePath.endsWith("/"))
+       relativePath = relativePath.substr(0, relativePath.length() - 1);
+
+    Torque::Path scanPath = Torque::FS::GetCwd();
+    scanPath.setPath(relativePath);
 
     // Find files.
-    Vector<Platform::FileInfo> files;
-    if ( !Platform::dumpPath( pathBuffer, files, recurse ? -1 : 0 ) )
+    Vector<String> files;
+    S32 numAssets = Torque::FS::FindByPattern(scanPath, pExtension, recurse, files, true);
+    if (numAssets <= 0)
     {
-        // Failed so warn.
-        Con::warnf( "Asset Manager: Failed to scan declared assets in directory '%s'.", pathBuffer );
+        // Failed so warn. or don't... Common error when scanning modules with no assets
+        //Con::warnf( "Asset Manager: No declared assets found in directory '%s'.", relativePath.c_str());
         return false;
     }
 
     // Is the asset file-path located within the specified module?
-    if ( !Con::isBasePath( pathBuffer, pModuleDefinition->getModulePath() ) )
+    if ( !Con::isBasePath(relativePath.c_str(), pModuleDefinition->getModulePath()) )
     {
         // No, so warn.
         Con::warnf( "Asset Manager: Could not add declared asset file '%s' as file does not exist with module path '%s'",
-            pathBuffer,
+            pPath,
             pModuleDefinition->getModulePath() );
         return false;
     }
@@ -2427,11 +2429,8 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
     if ( mEchoInfo )
     {
         Con::printSeparator();
-        Con::printf( "Asset Manager: Scanning for declared assets in path '%s' for files with extension '%s'...", pathBuffer, pExtension );
+        Con::printf( "Asset Manager: Scanning for declared assets in path '%s' for files with extension '%s'...", relativePath.c_str(), pExtension );
     }
-
-    // Fetch extension length.
-    const U32 extensionLength = dStrlen( pExtension );
 
     // Fetch module assets.
     ModuleDefinition::typeModuleAssetsVector& moduleAssets = pModuleDefinition->getModuleAssets();
@@ -2439,31 +2438,16 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
     TamlAssetDeclaredVisitor assetDeclaredVisitor;
 
     // Iterate files.
-    for ( Vector<Platform::FileInfo>::iterator fileItr = files.begin(); fileItr != files.end(); ++fileItr )
+    for (S32 i = 0; i < numAssets; ++i)
     {
-        // Fetch file info.
-        Platform::FileInfo& fileInfo = *fileItr;
-
-        // Fetch filename.
-        const char* pFilename = fileInfo.pFileName;
-
-        // Find filename length.
-        const U32 filenameLength = dStrlen( pFilename );
-
-        // Skip if extension is longer than filename.
-        if ( extensionLength > filenameLength )
-            continue;
-
-        // Skip if extension not found.
-        if ( dStricmp( pFilename + filenameLength - extensionLength, pExtension ) != 0 )
-            continue;
+        Torque::Path assetPath = files[i];
 
         // Clear declared assets.
         assetDeclaredVisitor.clear();
 
         // Format full file-path.
         char assetFileBuffer[1024];
-        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", fileInfo.pFullPath, fileInfo.pFileName );
+        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", assetPath.getPath().c_str(), assetPath.getFullFileName().c_str());
 
         // Parse the filename.
         if ( !mTaml.parse( assetFileBuffer, assetDeclaredVisitor ) )
@@ -2585,7 +2569,7 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
     if ( mEchoInfo )
     {
         Con::printSeparator();
-        Con::printf( "Asset Manager: ... Finished scanning for declared assets in path '%s' for files with extension '%s'.", pathBuffer, pExtension );
+        Con::printf( "Asset Manager: ... Finished scanning for declared assets in path '%s' for files with extension '%s'.", relativePath.c_str(), pExtension );
         Con::printSeparator();
         Con::printBlankLine();
     }
@@ -2605,15 +2589,20 @@ bool AssetManager::scanReferencedAssets( const char* pPath, const char* pExtensi
     AssertFatal( pExtension != NULL, "Cannot scan referenced assets with NULL extension." );
 
     // Expand path location.
-    char pathBuffer[1024];
-    Con::expandPath( pathBuffer, sizeof(pathBuffer), pPath );
+    String relativePath = Platform::makeRelativePathName(pPath, NULL);
+    String pattern = "*.";
+    pattern += pExtension;
+
+    Torque::Path scanPath = Torque::FS::GetCwd();
+    scanPath.setPath(relativePath);
 
     // Find files.
-    Vector<Platform::FileInfo> files;
-    if ( !Platform::dumpPath( pathBuffer, files, recurse ? -1 : 0 ) )
+    Vector<String> files;
+    S32 numAssets = Torque::FS::FindByPattern(scanPath, pattern, recurse, files, true);
+    if (numAssets <= 0)
     {
         // Failed so warn.
-        Con::warnf( "Asset Manager: Failed to scan referenced assets in directory '%s'.", pathBuffer );
+        Con::warnf( "Asset Manager: Failed to scan referenced assets in directory '%s'.", pPath );
         return false;
     }
 
@@ -2621,40 +2610,22 @@ bool AssetManager::scanReferencedAssets( const char* pPath, const char* pExtensi
     if ( mEchoInfo )
     {
         Con::printSeparator();
-        Con::printf( "Asset Manager: Scanning for referenced assets in path '%s' for files with extension '%s'...", pathBuffer, pExtension );
+        Con::printf( "Asset Manager: Scanning for referenced assets in path '%s' for files with extension '%s'...", pPath, pExtension );
     }
-
-    // Fetch extension length.
-    const U32 extensionLength = dStrlen( pExtension );
 
     TamlAssetReferencedVisitor assetReferencedVisitor;
 
     // Iterate files.
-    for ( Vector<Platform::FileInfo>::iterator fileItr = files.begin(); fileItr != files.end(); ++fileItr )
+    for (S32 i = 0; i < numAssets; ++i)
     {
-        // Fetch file info.
-        Platform::FileInfo& fileInfo = *fileItr;
-
-        // Fetch filename.
-        const char* pFilename = fileInfo.pFileName;
-
-        // Find filename length.
-        const U32 filenameLength = dStrlen( pFilename );
-
-        // Skip if extension is longer than filename.
-        if ( extensionLength > filenameLength )
-            continue;
-
-        // Skip if extension not found.
-        if ( dStricmp( pFilename + filenameLength - extensionLength, pExtension ) != 0 )
-            continue;
+        Torque::Path assetPath = files[i];
 
         // Clear referenced assets.
         assetReferencedVisitor.clear();
 
         // Format full file-path.
         char assetFileBuffer[1024];
-        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", fileInfo.pFullPath, fileInfo.pFileName );
+        dSprintf( assetFileBuffer, sizeof(assetFileBuffer), "%s/%s", assetPath.getPath().c_str(), assetPath.getFullFileName().c_str());
 
         // Format reference file-path.
         typeReferenceFilePath referenceFilePath = StringTable->insert( assetFileBuffer );
@@ -2700,7 +2671,7 @@ bool AssetManager::scanReferencedAssets( const char* pPath, const char* pExtensi
     // Info.
     if ( mEchoInfo )
     {
-        Con::printf( "Asset Manager: ... Finished scanning for referenced assets in path '%s' for files with extension '%s'.", pathBuffer, pExtension );
+        Con::printf( "Asset Manager: ... Finished scanning for referenced assets in path '%s' for files with extension '%s'.", relativePath.c_str(), pExtension );
         Con::printSeparator();
         Con::printBlankLine();
     }

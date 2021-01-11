@@ -56,12 +56,24 @@
 /// Define me if you want to disable looking for the root of a given path
 /// within a zip file.  This means that the zip file name itself must be
 /// the root of the path.  Requires the virtual mount system to be active.
+/// i.e. data/ui.zip would be mounted as data/ui, so the zip should not
+/// contain the ui folder, only it's contents. The one exception to this
+/// is if a file game.zip is located in the executable directory. The zip
+/// name 'game' will NOT be added as an extra directory.
 #cmakedefine TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
 
-//Uncomment this define if you want to use the alternative zip support where you can 
-//define your directories and files inside the zip just like you would on disk
-//instead of the default zip support that treats the zip as an extra directory.
+/// Define me if you want to use the alternative zip support where you can 
+/// define your directories and files inside the zip just like you would on disk
+/// instead of the default zip support that treats the zip as an extra directory.
+/// With this define, all zips should be placed in the executable directory and
+/// contain the full path structure to the files.
 #cmakedefine TORQUE_ZIP_DISK_LAYOUT
+
+/// If this is defined all zip file names and mount directories will need to
+/// be all lower case (even on windows). This is because the root map
+/// mRootMap.tryGetValue(root, fsList) call is case sensitive. Define to match
+/// legacy zip case behavior.
+/* #undef TORQUE_LOWER_ZIPCASE */
 
 /// Define me if you don't want Torque to compile dso's
 #cmakedefine TORQUE_NO_DSO_GENERATION

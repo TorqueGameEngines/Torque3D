@@ -3,7 +3,7 @@
 // Copyright (C) - Violent Tulip
 //-----------------------------------------------------------------------------
 
-function VerveEditor::InitEven" @ $TorqueScriptFileExtension @ "s()
+function VerveEditor::InitEventScripts()
 {
     // Core.
     exec( "./VEvent." @ $TorqueScriptFileExtension );
@@ -27,4 +27,4 @@ function VerveEditor::InitEven" @ $TorqueScriptFileExtension @ "s()
     // Custom.
     // Exec Custom Event Scripts.
 }
-VerveEditor::InitEven" @ $TorqueScriptFileExtension @ "s();
+VerveEditor::InitEventScripts();

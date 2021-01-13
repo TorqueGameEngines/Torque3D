@@ -23,7 +23,7 @@ function LooseFileAuditWindow::buildPopupMenus(%this)
          superClass = "MenuBuilder";
          class = "EditorWorldMenu";
          
-         item[0] = "Make a Script Asset" TAB "" TAB "LooseFileAuditWindow.impor" @ $TorqueScriptFileExtension @ "();";
+         item[0] = "Make a Script Asset" TAB "" TAB "LooseFileAuditWindow.importScript();";
          item[1] = "Make a PostFX Asset" TAB "" TAB "LooseFileAuditWindow.importPostFX();";
          item[2] = "Make a Material Asset" TAB "" TAB "LooseFileAuditWindow.importMaterial();";
          item[3] = "Make a Terrain Material Asset" TAB "" TAB "LooseFileAuditWindow.importTerrMat();";
@@ -199,7 +199,7 @@ function LooseFileAuditWindow::importImage(%this)
    LooseFileList.expandItem(0);
 }
 
-function LooseFileAuditWindow::impor" @ $TorqueScriptFileExtension @ "(%this)
+function LooseFileAuditWindow::importScript(%this)
 {
    if(!ImportAssetWindow.isAwake())
       ImportAssetWindow.showDialog();

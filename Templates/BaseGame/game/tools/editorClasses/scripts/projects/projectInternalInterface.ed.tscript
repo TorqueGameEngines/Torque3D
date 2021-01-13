@@ -112,8 +112,8 @@ function ProjectBase::_onProjectOpen( %this, %data )
    setCurrentDirectory( %this.gamePath );
      
    // Set ^game expando
-   se" @ $TorqueScriptFileExtension @ "PathExpando("project", %this.gamePath );
-   se" @ $TorqueScriptFileExtension @ "PathExpando("game", %this.gamePath @ "/game" );
+   setScriptPathExpando("project", %this.gamePath );
+   setScriptPathExpando("game", %this.gamePath @ "/game" );
    
    %this.onProjectOpen( %data );
    %this.setActive();

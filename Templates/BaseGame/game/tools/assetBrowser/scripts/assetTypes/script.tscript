@@ -32,7 +32,7 @@ function AssetBrowser::createScriptAsset(%this)
 	return %tamlpath;
 }
 
-function AssetBrowser::edi" @ $TorqueScriptFileExtension @ "Asset(%this, %assetDef)
+function AssetBrowser::editScriptAsset(%this, %assetDef)
 {
    %scriptFile = %assetDef.scriptFile;
    
@@ -43,7 +43,7 @@ function AssetBrowser::duplicateScriptAsset(%this, %assetDef, %targetModule)
 {
 }
 
-function AssetBrowser::impor" @ $TorqueScriptFileExtension @ "Asset(%this, %assetId)
+function AssetBrowser::importScriptAsset(%this, %assetId)
 {
 }
 

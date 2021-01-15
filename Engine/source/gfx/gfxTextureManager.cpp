@@ -900,14 +900,14 @@ GBitmap *GFXTextureManager::loadUncompressedTexture(const Torque::Path &path, GF
 
    if (inBitmap == NULL)
    {
-      Con::warnf("GFXTextureManager::loadUncompressedTexture unable to load texture: %s", path.getFullPath());
+      Con::warnf("GFXTextureManager::loadUncompressedTexture unable to load texture: %s", path.getFullPath().c_str());
       return NULL;
    }
 
    // Set the format so we don't have to handle which channels are where.
    if (!inBitmap->setFormat(GFXFormatR8G8B8A8))
    {
-      Con::warnf("GFXTextureManager::loadUncompressedTexture unable to handle texture format: %s", path.getFullPath());
+      Con::warnf("GFXTextureManager::loadUncompressedTexture unable to handle texture format: %s", path.getFullPath().c_str());
       return NULL;
    }
 

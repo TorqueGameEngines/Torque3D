@@ -144,7 +144,7 @@ GuiTextEditCtrl::GuiTextEditCtrl()
    mPlaceholderText = StringTable->EmptyString();
 
 #if defined(__MACOSX__)
-   UTF8  bullet[4] = { 0xE2, 0x80, 0xA2, 0 };
+   UTF8  bullet[4] = { UTF8(0xE2), UTF8(0x80), UTF8(0xA2), 0 };
    
    mPasswordMask = StringTable->insert( bullet );
 #else

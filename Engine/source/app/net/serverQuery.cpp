@@ -149,8 +149,8 @@ static U32 gHeartbeatSeq = 0;
 
 class DemoNetInterface : public NetInterface
 {
-public:
-   void handleInfoPacket(const NetAddress *address, U8 packetType, BitStream *stream);
+   public:
+      void handleInfoPacket(const NetAddress *address, U8 packetType, BitStream *stream);
 };
 
 DemoNetInterface gNetInterface;
@@ -192,8 +192,14 @@ struct PacketStatus
       tryCount = gPacketRetryCount;
    }
 
-   inline U8 getOldIndex() { return (U8)index; }
-   inline U16 getIndex() { return index; }
+   inline U8 getOldIndex()
+   {
+      return (U8)index;
+   }
+   inline U16 getIndex()
+   {
+      return index;
+   }
 };
 
 static Vector<PacketStatus> gPacketStatusList(__FILE__, __LINE__);
@@ -233,7 +239,7 @@ struct ServerFilter
 
       RegionAddressMask = RegionIsIPV4Address | RegionIsIPV6Address
    };
-   
+
    //Rearranging the fields according to their sizes
    char* gameType;
    char* missionType;
@@ -316,7 +322,7 @@ void clearServerList();
 //----------------------------------------------------------------
 class ProcessMasterQueryEvent : public SimEvent
 {
-   U32 session;
+      U32 session;
    public:
       ProcessMasterQueryEvent( U32 _session )
       {
@@ -331,7 +337,7 @@ class ProcessMasterQueryEvent : public SimEvent
 //----------------------------------------------------------------
 class ProcessPingEvent : public SimEvent
 {
-   U32 session;
+      U32 session;
    public:
       ProcessPingEvent( U32 _session )
       {
@@ -346,7 +352,7 @@ class ProcessPingEvent : public SimEvent
 //----------------------------------------------------------------
 class ProcessPacketEvent : public SimEvent
 {
-   U32 session;
+      U32 session;
    public:
       ProcessPacketEvent( U32 _session )
       {
@@ -362,7 +368,7 @@ class ProcessPacketEvent : public SimEvent
 //----------------------------------------------------------------
 class HeartbeatEvent : public SimEvent
 {
-   U32 mSeq;
+      U32 mSeq;
    public:
       HeartbeatEvent(U32 seq)
       {
@@ -382,26 +388,26 @@ class HeartbeatEvent : public SimEvent
 //-----------------------------------------------------------------------------
 
 void queryLanServers(U32 port, U8 flags, const char* gameType, const char* missionType,
-      U8 minPlayers, U8 maxPlayers, U8 maxBots, U32 regionMask, U32 maxPing, U16 minCPU,
-      U8 filterFlags)
+                     U8 minPlayers, U8 maxPlayers, U8 maxBots, U32 regionMask, U32 maxPing, U16 minCPU,
+                     U8 filterFlags)
 {
    sgServerQueryActive = true;
    pushServerFavorites();
 
-      sActiveFilter.type = ServerFilter::Offline;
+   sActiveFilter.type = ServerFilter::Offline;
 
-      // Clear the filter:
-      if ( !sActiveFilter.gameType || dStricmp( sActiveFilter.gameType, "Any" ) != 0 )
-      {
-         sActiveFilter.gameType = (char*) dRealloc( sActiveFilter.gameType, 4 );
-         dStrcpy( sActiveFilter.gameType, "Any", 4 );
-      }
-      if ( !sActiveFilter.missionType || dStricmp( sActiveFilter.missionType, "Any" ) != 0 )
-      {
-         sActiveFilter.missionType = (char*) dRealloc( sActiveFilter.missionType, 4 );
-         dStrcpy( sActiveFilter.missionType, "Any", 4 );
-      }
-      sActiveFilter.queryFlags   = 0;
+   // Clear the filter:
+   if ( !sActiveFilter.gameType || dStricmp( sActiveFilter.gameType, "Any" ) != 0 )
+   {
+      sActiveFilter.gameType = (char*) dRealloc( sActiveFilter.gameType, 4 );
+      dStrcpy( sActiveFilter.gameType, "Any", 4 );
+   }
+   if ( !sActiveFilter.missionType || dStricmp( sActiveFilter.missionType, "Any" ) != 0 )
+   {
+      sActiveFilter.missionType = (char*) dRealloc( sActiveFilter.missionType, 4 );
+      dStrcpy( sActiveFilter.missionType, "Any", 4 );
+   }
+   sActiveFilter.queryFlags   = 0;
    sActiveFilter.minPlayers   = minPlayers;
    sActiveFilter.maxPlayers   = maxPlayers;
    sActiveFilter.maxBots      = maxBots;
@@ -430,50 +436,50 @@ void queryLanServers(U32 port, U8 flags, const char* gameType, const char* missi
 //-----------------------------------------------------------------------------
 
 DefineEngineFunction( queryAllServers
-                     , void, ( U32 lanPort
-                             , U32 flags
-                             , const char * gameType
-                             , const char * missionType
-                             , U32 minPlayers
-                             , U32 maxPlayers
-                             , U32 maxBots
-                             , U32 regionMask
-                             , U32 maxPing
-                             , U32 minCPU
-                             , U32 filterFlags )
-                     , , "queryAllServers(...);" )
+                       , void, ( U32 lanPort
+                                 , U32 flags
+                                 , const char * gameType
+                                 , const char * missionType
+                                 , U32 minPlayers
+                                 , U32 maxPlayers
+                                 , U32 maxBots
+                                 , U32 regionMask
+                                 , U32 maxPing
+                                 , U32 minCPU
+                                 , U32 filterFlags )
+                       ,, "queryAllServers(...);" )
 {
    U32 buddyList = 0;
 
    clearServerList();
 
    queryMasterServer(flags,gameType,missionType,minPlayers,maxPlayers,
-      maxBots,regionMask,maxPing,minCPU,filterFlags,0,&buddyList);
+                     maxBots,regionMask,maxPing,minCPU,filterFlags,0,&buddyList);
 
    queryLanServers(lanPort, flags, gameType, missionType, minPlayers, maxPlayers, maxBots,
-      regionMask, maxPing, minCPU, filterFlags);
+                   regionMask, maxPing, minCPU, filterFlags);
 
 }
 
 DefineEngineFunction( queryLanServers
-                     , void, ( U32 lanPort
-                             , U32 flags
-                             , const char * gameType
-                             , const char * missionType
-                             , U32 minPlayers
-                             , U32 maxPlayers
-                             , U32 maxBots
-                             , U32 regionMask
-                             , U32 maxPing
-                             , U32 minCPU
-                             , U32 filterFlags )
-                     , , "queryLanServers(...);" )
+                       , void, ( U32 lanPort
+                                 , U32 flags
+                                 , const char * gameType
+                                 , const char * missionType
+                                 , U32 minPlayers
+                                 , U32 maxPlayers
+                                 , U32 maxBots
+                                 , U32 regionMask
+                                 , U32 maxPing
+                                 , U32 minCPU
+                                 , U32 filterFlags )
+                       ,, "queryLanServers(...);" )
 
 {
 
    clearServerList();
    queryLanServers(lanPort, flags, gameType, missionType, minPlayers, maxPlayers, maxBots,
-      regionMask, maxPing, minCPU, filterFlags);
+                   regionMask, maxPing, minCPU, filterFlags);
 
 }
 
@@ -494,8 +500,8 @@ void queryMasterGameTypes()
 //-----------------------------------------------------------------------------
 
 void queryMasterServer(U8 flags, const char* gameType, const char* missionType,
-      U8 minPlayers, U8 maxPlayers, U8 maxBots, U32 regionMask, U32 maxPing,
-      U16 minCPU, U8 filterFlags, U8 buddyCount, U32* buddyList )
+                       U8 minPlayers, U8 maxPlayers, U8 maxBots, U32 regionMask, U32 maxPing,
+                       U16 minCPU, U8 filterFlags, U8 buddyCount, U32* buddyList )
 {
    // Reset the list packet flag:
    gGotFirstListPacket = false;
@@ -561,30 +567,30 @@ void queryMasterServer(U8 flags, const char* gameType, const char* missionType,
 }
 
 DefineEngineFunction( queryMasterServer
-                     , void, (  U32 flags
-                             , const char * gameType
-                             , const char * missionType
-                             , U32 minPlayers
-                             , U32 maxPlayers
-                             , U32 maxBots
-                             , U32 regionMask
-                             , U32 maxPing
-                             , U32 minCPU
-                             , U32 filterFlags )
-                     , , "queryMasterServer(...);" )
+                       , void, (  U32 flags
+                                  , const char * gameType
+                                  , const char * missionType
+                                  , U32 minPlayers
+                                  , U32 maxPlayers
+                                  , U32 maxBots
+                                  , U32 regionMask
+                                  , U32 maxPing
+                                  , U32 minCPU
+                                  , U32 filterFlags )
+                       ,, "queryMasterServer(...);" )
 {
    U32 buddyList = 0;
 
    clearServerList();
    queryMasterServer(flags,gameType,missionType,minPlayers,maxPlayers,
-      maxBots,regionMask,maxPing,minCPU,filterFlags,0,&buddyList);
+                     maxBots,regionMask,maxPing,minCPU,filterFlags,0,&buddyList);
 }
 
 //-----------------------------------------------------------------------------
 
 DefineEngineFunction( querySingleServer
-                     , void, ( const char* addrText, U8 flags )
-                     , (0), "querySingleServer(address, flags);" )
+                       , void, ( const char* addrText, U8 flags )
+                       , (0), "querySingleServer(address, flags);" )
 {
    NetAddress addr;
    Net::stringToAddress( addrText, &addr );
@@ -668,7 +674,7 @@ void cancelServerQuery()
    }
 }
 
-DefineEngineFunction( cancelServerQuery, void, (), , "cancelServerQuery();" )
+DefineEngineFunction( cancelServerQuery, void, (),, "cancelServerQuery();" )
 {
    cancelServerQuery();
 }
@@ -696,36 +702,38 @@ void stopServerQuery()
    }
 }
 
-DefineEngineFunction( stopServerQuery, void, (), , "stopServerQuery();" )
+DefineEngineFunction( stopServerQuery, void, (),, "stopServerQuery();" )
 {
    stopServerQuery();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineFunction( startHeartbeat, void, (), , "startHeartbeat();" )
+DefineEngineFunction( startHeartbeat, void, (),, "startHeartbeat();" )
 {
-   if (validateAuthenticatedServer()) {
+   if (validateAuthenticatedServer())
+   {
       gHeartbeatSeq++;
       processHeartbeat(gHeartbeatSeq);  // thump-thump...
    }
 }
 
-DefineEngineFunction( stopHeartbeat, void, (), , "stopHeartbeat();" )
+DefineEngineFunction( stopHeartbeat, void, (),, "stopHeartbeat();" )
 {
    gHeartbeatSeq++;
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineFunction( getServerCount, int, (), , "getServerCount();" )
+DefineEngineFunction( getServerCount, int, (),, "getServerCount();" )
 {
    return gServerList.size();
 }
 
-DefineEngineFunction( setServerInfo, bool, (U32 index), , "setServerInfo(index);" )
+DefineEngineFunction( setServerInfo, bool, (U32 index),, "setServerInfo(index);" )
 {
-   if (index < gServerList.size()) {
+   if (index < gServerList.size())
+   {
       ServerInfo& info = gServerList[index];
 
       char addrString[256];
@@ -785,18 +793,21 @@ Vector<MasterInfo>* getMasterServerList()
    static Vector<MasterInfo> masterList;
    masterList.clear();
 
-   for (U32 i = 0; i < 10; i++) {
+   for (U32 i = 0; i < 10; i++)
+   {
       char buffer[50];
       dSprintf(buffer,sizeof(buffer),"pref::Master%d",i);
       const char* master = Con::getVariable(buffer);
-      if (master && *master) {
+      if (master && *master)
+      {
          NetAddress address;
          // Format for master server variable:
          //    regionMask:netAddress
          U32 region = 1; // needs to default to something > 0
          dSscanf(master,"%d:",&region);
          const char* madd = dStrchr(master,':') + 1;
-         if (region && Net::stringToAddress(madd,&address) == Net::NoError) {
+         if (region && Net::stringToAddress(madd,&address) == Net::NoError)
+         {
             masterList.increment();
             MasterInfo& info = masterList.last();
             info.address = address;
@@ -1196,7 +1207,7 @@ static void processMasterServerQuery( U32 session )
             out->clearStringBuffer();
 
             out->write( U8( NetInterface::MasterServerListRequest ) );
-            
+
             out->write( U8( sActiveFilter.queryFlags) );
             out->write( ( gMasterServerPing.session << 16 ) | ( gMasterServerPing.key & 0xFFFF ) );
             out->write( U8( 255 ) );
@@ -1408,7 +1419,7 @@ static void processServerListPackets( U32 session )
 
             out->write( U8( sActiveFilter.queryFlags ) );   // flags
             out->write( ( session << 16) | ( p.key & 0xFFFF ) );
-            
+
             if ( extendedPacket )
                out->write( p.getOldIndex() );  // packet index
             else
@@ -1459,10 +1470,10 @@ static void updatePingProgress()
    char msg[64];
    U32 pingsLeft = countPingRequests();
    dSprintf( msg, sizeof(msg),
-      (!pingsLeft && gPingList.size())?
-         "Waiting for lan servers...":
-         "Pinging servers: %d left...",
-      pingsLeft );
+             (!pingsLeft && gPingList.size())?
+             "Waiting for lan servers...":
+             "Pinging servers: %d left...",
+             pingsLeft );
 
    // Ping progress is 0 -> 0.5
    F32 progress = 0.0f;
@@ -1928,8 +1939,8 @@ static void handleGamePingResponse( const NetAddress* address, BitStream* stream
    // Get the server build version:
    stream->read( &temp32 );
    if ( applyFilter
-     && ( sActiveFilter.filterFlags & ServerFilter::CurrentVersion )
-     && ( temp32 != getVersionNumber() ) )
+         && ( sActiveFilter.filterFlags & ServerFilter::CurrentVersion )
+         && ( temp32 != getVersionNumber() ) )
    {
       Con::printf( "Server %s filtered out by version number.", addrString );
       gFinishedList.push_back( *address );
@@ -1990,12 +2001,14 @@ static void handleGameInfoRequest( const NetAddress* address, U32 key, U8 flags 
       out->write( flags );
       out->write( key );
 
-      if ( compressStrings ) {
+      if ( compressStrings )
+      {
          out->writeString( Con::getVariable( "Server::GameType" ) );
          out->writeString( Con::getVariable( "Server::MissionType" ) );
          out->writeString( Con::getVariable( "Server::MissionName" ) );
       }
-      else {
+      else
+      {
          writeCString( out, Con::getVariable( "Server::GameType" ) );
          writeCString( out, Con::getVariable( "Server::MissionType" ) );
          writeCString( out, Con::getVariable( "Server::MissionName" ) );
@@ -2060,7 +2073,7 @@ static void handleGameInfoResponse( const NetAddress* address, BitStream* stream
 
       // Test against the active filter:
       if ( applyFilter && dStricmp( sActiveFilter.gameType, "any" ) != 0
-        && dStricmp( si->gameType, sActiveFilter.gameType ) != 0 )
+            && dStricmp( si->gameType, sActiveFilter.gameType ) != 0 )
       {
          Con::printf( "Server %s filtered out by rules set. (%s:%s)", addrString, sActiveFilter.gameType, si->gameType );
          removeServerInfo( address );
@@ -2078,7 +2091,7 @@ static void handleGameInfoResponse( const NetAddress* address, BitStream* stream
 
       // Test against the active filter:
       if ( applyFilter && dStricmp( sActiveFilter.missionType, "any" ) != 0
-        && dStricmp( si->missionType, sActiveFilter.missionType ) != 0 )
+            && dStricmp( si->missionType, sActiveFilter.missionType ) != 0 )
       {
          Con::printf( "Server %s filtered out by mission type. (%s:%s)", addrString, sActiveFilter.missionType, si->missionType );
          removeServerInfo( address );

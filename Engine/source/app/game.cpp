@@ -67,21 +67,21 @@ bool gEditingMission = false;
 
 ConsoleFunctionGroupBegin( InputManagement, "Functions that let you deal with input from scripts" );
 
-DefineEngineFunction( deactivateDirectInput, void, (), ,
-         "()"
-            "@brief Disables DirectInput.\n\n"
-            "Also deactivates any connected joysticks.\n\n"
-			"@ingroup Input" )
+DefineEngineFunction( deactivateDirectInput, void, (),,
+                       "()"
+                       "@brief Disables DirectInput.\n\n"
+                       "Also deactivates any connected joysticks.\n\n"
+                       "@ingroup Input" )
 {
    if ( Input::isActive() )
       Input::deactivate();
 }
 
-DefineEngineFunction( activateDirectInput, void, (), ,
-            "()"
-            "@brief Activates DirectInput.\n\n"
-            "Also activates any connected joysticks."
-			"@ingroup Input")
+DefineEngineFunction( activateDirectInput, void, (),,
+                       "()"
+                       "@brief Activates DirectInput.\n\n"
+                       "Also activates any connected joysticks."
+                       "@ingroup Input")
 {
    if ( !Input::isActive() )
       Input::activate();
@@ -91,10 +91,10 @@ ConsoleFunctionGroupEnd( InputManagement );
 //--------------------------------------------------------------------------
 
 static const U32 MaxPlayerNameLength = 16;
-DefineEngineFunction( strToPlayerName, const char*, (const char* ptr ), , "strToPlayerName(string);" )
+DefineEngineFunction( strToPlayerName, const char*, (const char* ptr ),, "strToPlayerName(string);" )
 {
 
-	// Strip leading spaces and underscores:
+   // Strip leading spaces and underscores:
    while ( *ptr == ' ' || *ptr == '_' )
       ptr++;
 
@@ -138,90 +138,90 @@ DefineEngineFunction( strToPlayerName, const char*, (const char* ptr ), , "strTo
       }
       *rptr = '\0';
 
-		//finally, strip out the ML text control chars...
-		return GuiMLTextCtrl::stripControlChars(ret);
+      //finally, strip out the ML text control chars...
+      return GuiMLTextCtrl::stripControlChars(ret);
    }
 
-	return( "" );
+   return( "" );
 }
 
-ConsoleFunctionGroupBegin( Platform , "General platform functions.");
+ConsoleFunctionGroupBegin( Platform, "General platform functions.");
 
-DefineEngineFunction( lockMouse, void, (bool isLocked ), , "(bool isLocked)"
-            "@brief Lock or unlock the mouse to the window.\n\n"
-            "When true, prevents the mouse from leaving the bounds of the game window.\n\n"
-            "@ingroup Input")
+DefineEngineFunction( lockMouse, void, (bool isLocked ),, "(bool isLocked)"
+                       "@brief Lock or unlock the mouse to the window.\n\n"
+                       "When true, prevents the mouse from leaving the bounds of the game window.\n\n"
+                       "@ingroup Input")
 {
    Platform::setWindowLocked(isLocked);
 }
 
 
 DefineEngineFunction( setNetPort, bool, (int port, bool bind), (true), "(int port, bool bind=true)" 
-   "@brief Set the network port for the game to use.\n\n"
+                       "@brief Set the network port for the game to use.\n\n"
 
-   "@param port The port to use.\n"
-   "@param bind True if bind() should be called on the port.\n"
+                       "@param port The port to use.\n"
+                       "@param bind True if bind() should be called on the port.\n"
 
-   "@returns True if the port was successfully opened.\n"
+                       "@returns True if the port was successfully opened.\n"
 
-   "This will trigger a windows firewall prompt.  "
-   "If you don't have firewall tunneling tech you can set this to false to avoid the prompt.\n\n"
-   "@ingroup Networking")
+                       "This will trigger a windows firewall prompt.  "
+                       "If you don't have firewall tunneling tech you can set this to false to avoid the prompt.\n\n"
+                       "@ingroup Networking")
 {
    return Net::openPort((S32)port, bind);
 }
 
-DefineEngineFunction(isAddressTypeAvailable, bool, (int addressType), , "(protocol id)"
-	"@brief Determines if a specified address type can be reached.\n\n"
-	"@ingroup Networking")
+DefineEngineFunction(isAddressTypeAvailable, bool, (int addressType),, "(protocol id)"
+                      "@brief Determines if a specified address type can be reached.\n\n"
+                      "@ingroup Networking")
 {
-	return Net::isAddressTypeAvailable((NetAddress::Type)addressType);
+   return Net::isAddressTypeAvailable((NetAddress::Type)addressType);
 }
 
-DefineEngineFunction( closeNetPort, void, (), , "()" 
-   "@brief Closes the current network port\n\n"
-   "@ingroup Networking")
+DefineEngineFunction( closeNetPort, void, (),, "()" 
+                       "@brief Closes the current network port\n\n"
+                       "@ingroup Networking")
 {
    Net::closePort();
 }
 
-DefineEngineFunction( saveJournal, void, (const char * filename), , "(string filename)" 
-                "Save the journal to the specified file.\n\n"
-				"@ingroup Platform")
+DefineEngineFunction( saveJournal, void, (const char * filename),, "(string filename)" 
+                       "Save the journal to the specified file.\n\n"
+                       "@ingroup Platform")
 {
    Journal::Record(filename);
 }
 
-DefineEngineFunction( playJournal, void, (const char * filename), , "(string filename)" 
-                "@brief Begin playback of a journal from a specified field.\n\n"
-				"@param filename Name and path of file journal file\n"
-				"@ingroup Platform")
+DefineEngineFunction( playJournal, void, (const char * filename),, "(string filename)" 
+                       "@brief Begin playback of a journal from a specified field.\n\n"
+                       "@param filename Name and path of file journal file\n"
+                       "@ingroup Platform")
 {
    // CodeReview - BJG 4/24/2007 - The break flag needs to be wired back in.
    // bool jBreak = (argc > 2)? dAtob(argv[2]): false;
    Journal::Play(filename);
 }
 
-DefineEngineFunction( getSimTime, S32, (), , "()" 
-				"Return the current sim time in milliseconds.\n\n"
-                "@brief Sim time is time since the game started.\n\n"
-				"@ingroup Platform")
+DefineEngineFunction( getSimTime, S32, (),, "()" 
+                       "Return the current sim time in milliseconds.\n\n"
+                       "@brief Sim time is time since the game started.\n\n"
+                       "@ingroup Platform")
 {
    return Sim::getCurrentTime();
 }
 
-DefineEngineFunction( getRealTime, S32, (), , "()" 
-				"@brief Return the current real time in milliseconds.\n\n"
-                "Real time is platform defined; typically time since the computer booted.\n\n"
-				"@ingroup Platform")
+DefineEngineFunction( getRealTime, S32, (),, "()" 
+                       "@brief Return the current real time in milliseconds.\n\n"
+                       "Real time is platform defined; typically time since the computer booted.\n\n"
+                       "@ingroup Platform")
 {
    return Platform::getRealMilliseconds();
 }
 
 DefineEngineFunction(getLocalTime, const char*, (),,
-   "@brief Return the current local time as: weekday month day year hour min sec.\n\n"
-   "Local time is platform defined."
-   "@ingroup Platform")
+                      "@brief Return the current local time as: weekday month day year hour min sec.\n\n"
+                      "Local time is platform defined."
+                      "@ingroup Platform")
 {
    Platform::LocalTime lt;
    Platform::getLocalTime(lt);
@@ -229,13 +229,13 @@ DefineEngineFunction(getLocalTime, const char*, (),,
    static const U32 bufSize = 128;
    char *retBuffer = Con::getReturnBuffer(bufSize);
    dSprintf(retBuffer, bufSize, "%d %d %d %d %02d %02d %02d",
-      lt.weekday,
-      lt.month + 1,
-      lt.monthday,
-      lt.year + 1900,
-      lt.hour,
-      lt.min,
-      lt.sec);
+            lt.weekday,
+            lt.month + 1,
+            lt.monthday,
+            lt.year + 1900,
+            lt.hour,
+            lt.min,
+            lt.sec);
 
    return retBuffer;
 }
@@ -256,7 +256,7 @@ bool clientProcess(U32 timeDelta)
 #ifndef TORQUE_TGB_ONLY
    ret = ClientProcessList::get()->advanceTime(timeDelta);
 #else
-	ret = gt2dNetworkClientProcess.advanceTime( timeDelta );
+   ret = gt2dNetworkClientProcess.advanceTime( timeDelta );
 #endif
 
    ITickable::advanceTime(timeDelta);
@@ -265,16 +265,16 @@ bool clientProcess(U32 timeDelta)
    // Determine if we're lagging
    GameConnection* connection = GameConnection::getConnectionToServer();
    if(connection)
-	{
+   {
       connection->detectLag();
-	}
+   }
 #else
    // Determine if we're lagging
    t2dGameConnection* connection = t2dGameConnection::getConnectionToServer();
    if(connection)
-	{
+   {
       connection->detectLag();
-	}
+   }
 #endif
 
    // Let SFX process.

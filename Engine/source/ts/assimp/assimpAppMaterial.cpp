@@ -150,7 +150,7 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
          else
          {  // OPAQUE
             translucent = false;
-            blendOp = Material::LerpAlpha; // Make default so it doesn't get written to materials.cs
+            blendOp = Material::LerpAlpha; // Make default so it doesn't get written to materials.tscript
          }
       }
    }
@@ -296,7 +296,7 @@ String AssimpAppMaterial::cleanTextureName(String& texName, String& shapeName, c
       if (nameOnly)
          cleanStr = foundPath.getFullFileName();
       else
-      {  // Unless the file is in the same directory as the materials.cs (covered above)
+      {  // Unless the file is in the same directory as the materials.tscript (covered above)
          // we need to set the full path from the root directory. If we use "subdirectory/file.ext",
          // the material manager won't find the image file, but it will be found the next time the
          // material is loaded from file. If we use "./subdirectory/file.ext", the image will be found

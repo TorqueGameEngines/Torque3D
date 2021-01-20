@@ -1,0 +1,20 @@
+
+function Core_Lighting::onCreate(%this)
+{
+   exec("./scripts/lighting." @ $TorqueScriptFileExtension);
+   
+   //Advanced/Deferred
+   exec("./scripts/advancedLighting_Shaders." @ $TorqueScriptFileExtension);
+   exec("./scripts/deferredShading." @ $TorqueScriptFileExtension);
+   exec("./scripts/advancedLighting_Init." @ $TorqueScriptFileExtension);
+   
+   //Basic/Forward
+   exec("./scripts/basicLighting_shadowFilter." @ $TorqueScriptFileExtension);
+   exec("./scripts/shadowMaps_Init." @ $TorqueScriptFileExtension);
+   exec("./scripts/basicLighting_Init." @ $TorqueScriptFileExtension);
+   
+}
+
+function Core_Lighting::onDestroy(%this)
+{
+}

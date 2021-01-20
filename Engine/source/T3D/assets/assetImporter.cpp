@@ -2630,7 +2630,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
-   String scriptName = assetItem->assetName + ".cs";
+   String scriptName = assetItem->assetName + "." TORQUE_SCRIPT_EXTENSION;
    String scriptPath = targetPath + "/" + scriptName;
    String originalPath = assetItem->filePath.getFullPath().c_str();
 
@@ -2717,7 +2717,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
    //Now write the script file containing our material out
    //There's 2 ways to do this. If we're in-place importing an existing asset, we can see if the definition existed already, like in an old
-   //materials.cs file. if it does, we can just find the object by name, and save it out to our new file
+   //materials.tscript file. if it does, we can just find the object by name, and save it out to our new file
    //If not, we'll just generate one
    Material* existingMat = MATMGR->getMaterialDefinitionByName(assetName);
 
@@ -2878,10 +2878,10 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    String shapeFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
    String assetPath = targetPath + "/" + shapeFileName;
-   String constructorPath = targetPath + "/" + assetItem->filePath.getFileName() + ".cs";
+   String constructorPath = targetPath + "/" + assetItem->filePath.getFileName() + "." TORQUE_SCRIPT_EXTENSION;
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
-   String originalConstructorPath = assetItem->filePath.getPath() + "/" + assetItem->filePath.getFileName() + ".cs";
+   String originalConstructorPath = assetItem->filePath.getPath() + "/" + assetItem->filePath.getFileName() + "." TORQUE_SCRIPT_EXTENSION;
 
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];

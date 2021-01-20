@@ -409,7 +409,7 @@ FileNodeRef ZipFileSystem::resolve(const Path& path)
          // If a zip file's name isn't the root of the path we're looking for
          // then do not continue.  Otherwise, we'll continue to look for the
          // path's root within the zip file itself.  i.e. we're looking for the
-         // path "scripts/test.cs".  If the zip file itself isn't called scripts.zip
+         // path "scripts/test.tscript".  If the zip file itself isn't called scripts.zip
          // then we won't look within the archive for a "scripts" directory.
          return NULL;
 #endif

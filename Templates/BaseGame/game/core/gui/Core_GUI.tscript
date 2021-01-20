@@ -1,0 +1,11 @@
+
+function Core_GUI::onCreate(%this)
+{
+   exec("./scripts/profiles." @ $TorqueScriptFileExtension);
+   exec("./scripts/canvas." @ $TorqueScriptFileExtension);
+   exec("./scripts/cursor." @ $TorqueScriptFileExtension);
+}
+
+function Core_GUI::onDestroy(%this)
+{
+}

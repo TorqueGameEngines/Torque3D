@@ -66,6 +66,9 @@
 /// Define me if you don't want Torque to compile dso's
 #cmakedefine TORQUE_NO_DSO_GENERATION
 
+/// Define the default extension to be used for TorqueScript files
+#cmakedefine TORQUE_SCRIPT_EXTENSION "@TORQUE_SCRIPT_EXTENSION@"
+
 // Define me if this build is a tools build
 #cmakedefine TORQUE_PLAYER
 #cmakedefine TORQUE_TOOLS

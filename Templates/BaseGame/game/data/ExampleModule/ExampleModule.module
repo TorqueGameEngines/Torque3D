@@ -4,7 +4,7 @@
     ModuleId="ExampleModule"
     VersionId="1"
     Group="Game"
-    scriptFile="ExampleModule.cs"
+    scriptFile="ExampleModule"
     CreateFunction="onCreate"
     DestroyFunction="onDestroy">
     <DeclaredAssets

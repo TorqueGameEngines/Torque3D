@@ -2,7 +2,7 @@
 	ModuleId="gameUI"
 	VersionId="1"
 	Description="Basic Game GUI."
-	ScriptFile="gameUI.cs"
+	ScriptFile="gameUI.tscript"
 	CreateFunction="create"
 	DestroyFunction="destroy"
 	Group="Game"

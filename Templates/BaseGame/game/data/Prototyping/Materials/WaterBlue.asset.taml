@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="WaterBlue"
-    scriptFile="@assetFile=WaterBlue.cs"
+    scriptFile="@assetFile=WaterBlue.tscript"
     materialDefinitionName="WaterBlue"
     imageMap0="@Asset=Prototyping:WaterBlue_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/WaterBlue.png" />

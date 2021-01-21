@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="NullPink"
-    scriptFile="@assetFile=NullPink.cs"
+    scriptFile="@assetFile=NullPink.tscript"
     materialDefinitionName="NullPink"
     imageMap0="@Asset=Prototyping:NullPink_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/NullPink.png" />

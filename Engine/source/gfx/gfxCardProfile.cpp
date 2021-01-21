@@ -68,8 +68,9 @@ void GFXCardProfiler::loadProfileScripts(const String& render, const String& ven
    script = render + "." + vendor + "." + card + ".cs";
    loadProfileScript(script);
 
-   script = render + "." + vendor + "." + card + "." + version + ".cs";
-   loadProfileScript(script);
+   // Version is not available on d3d11 - suggestion was: (should likely be replaced with nvapi & amd ags lib)
+   //script = render + "." + vendor + "." + card + "." + version + ".cs";
+   //loadProfileScript(script);
 }
 
 GFXCardProfiler::GFXCardProfiler() : mVideoMemory( 0 )

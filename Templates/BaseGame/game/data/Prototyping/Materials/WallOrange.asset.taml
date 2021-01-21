@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="WallOrange"
-    scriptFile="@assetFile=WallOrange.cs"
+    scriptFile="@assetFile=WallOrange.tscript"
     materialDefinitionName="WallOrange"
     imageMap0="@Asset=Prototyping:WallOrange_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/WallOrange.png" />

@@ -81,13 +81,30 @@ bool Platform::displaySplashWindow( String path )
       }
 
       gSplashImage = SDL_CreateRGBSurfaceFrom(img->getAddress(0, 0), img->getWidth(), img->getHeight(), depth, pitch, rmask, gmask, bmask, amask);
+      gSplashImage = SDL_ConvertSurfaceFormat(gSplashImage, SDL_PIXELFORMAT_RGBA8888, NULL);
    }
 
    //now the pop-up window
    if (gSplashImage)
    {
-      gSplashWindow = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-         gSplashImage->w, gSplashImage->h, SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
+      gSplashWindow = SDL_CreateShapedWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+         gSplashImage->w, gSplashImage->h, SDL_WINDOW_BORDERLESS);
+
+      SDL_WindowShapeMode mode;
+      SDL_Color black = { 0,0,0,0xff };
+      SDL_PixelFormat* format = gSplashImage->format;
+      if (SDL_ISPIXELFORMAT_ALPHA(format->format))
+      {
+         mode.mode = ShapeModeBinarizeAlpha;
+         mode.parameters.binarizationCutoff = 255;
+      }
+      else
+      {
+         mode.mode = ShapeModeColorKey;
+         mode.parameters.colorKey = black;
+      }
+
+      SDL_SetWindowShape(gSplashWindow, gSplashImage, &mode);
 
       gSplashRenderer = SDL_CreateRenderer(gSplashWindow, -1, SDL_RENDERER_ACCELERATED);
 

@@ -296,7 +296,8 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
      case GFXFormatR8G8B8X8:
      case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
       break;
-	 case GFXFormatL16:
+     case GFXFormatA8L8:
+	  case GFXFormatL16:
      case GFXFormatR5G6B5:
      case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
       break;

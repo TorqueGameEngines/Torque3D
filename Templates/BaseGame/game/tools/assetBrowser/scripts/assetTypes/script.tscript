@@ -90,7 +90,7 @@ function AssetBrowser::moveScriptAsset(%this, %assetDef, %destination)
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }
 
-function AssetBrowser::buildScriptAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::buildTScriptPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;

@@ -108,6 +108,7 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/datablockObjects." @ $TorqueScriptFileExtension);  
    exec("./scripts/assetTypes/looseFiles." @ $TorqueScriptFileExtension); 
    exec("./scripts/assetTypes/prefab." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/creatorObj." @ $TorqueScriptFileExtension); 
    
    new ScriptObject( AssetBrowserPlugin )
    {

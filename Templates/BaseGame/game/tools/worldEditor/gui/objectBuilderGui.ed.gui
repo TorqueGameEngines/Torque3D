@@ -1254,3 +1254,23 @@ function RibbonData::create( %datablock )
 
    return %obj;
 }
+
+function ParticleEmitterData::create( %datablock ) 
+{
+   %obj = new ParticleEmitter()
+   {
+      dataBlock = %datablock;
+      parentGroup = EWCreatorWindow.objectGroup;
+   };
+   return %obj;
+}
+
+function PrecipitationData::create(%datablock)
+{
+   %obj = new Precipitation()
+   {
+      dataBlock = %datablock;
+      parentGroup = EWCreatorWindow.objectGroup;
+   };
+   return %obj;
+}

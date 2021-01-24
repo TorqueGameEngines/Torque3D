@@ -47,9 +47,21 @@ function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
    
    %previewData.previewImage = "tools/assetBrowser/art/datablockIcon";
    
+   //Lets see if we have a icon for specifically for this datablock type
+   %dataClass = %assetDef.getClassName();
+   %dataClass = strreplace(%dataClass, "Data", "");
+   
+   %previewImage = "tools/classIcons/" @ %dataClass @ ".png";
+   if(isFile(%previewImage))
+   {
+      %previewData.previewImage = %previewImage;
+   }
+   
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef;
-   %previewData.tooltip = %assetDef;
+   %previewData.tooltip =  "Datablock Name: " @ %assetDef @ "\n" @ 
+                           "Datablock Type: " @ %assetDef.getClassName();
+                           
    %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"spawnDatablockObject\",\""@ %assetDef @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
 }
 

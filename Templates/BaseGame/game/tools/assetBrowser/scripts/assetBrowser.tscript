@@ -421,6 +421,12 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
             %assetDesc.description = %moduleName @ "/" @ %assetName;
             %assetDesc.assetType = %assetType;
          }
+         else if(%assetType $= "Creator")
+         {
+            %assetDesc = %assetName;
+            %assetDesc.assetType = %assetType;
+            %moduleName = %assetDesc;
+         }
       }
       /*%fullPath = %moduleName !$= "" ? %moduleName @ "/" @ %assetName : %assetName;
       %fullPath = strreplace(%fullPath, "/", "_");
@@ -810,69 +816,69 @@ function AssetBrowser::loadCreatorClasses(%this)
    
    %this.beginCreatorGroup( "Environment" );
    
-      /*// Removed Prefab as there doesn't really seem to be a point in creating a blank one
-      //%this.registerMissionObject( "Prefab",              "Prefab" );
-      %this.registerMissionObject( "SkyBox",              "Sky Box" );
-      %this.registerMissionObject( "CloudLayer",          "Cloud Layer" );
-      %this.registerMissionObject( "BasicClouds",         "Basic Clouds" );
-      %this.registerMissionObject( "ScatterSky",          "Scatter Sky" );
-      %this.registerMissionObject( "Sun",                 "Basic Sun" );
-      %this.registerMissionObject( "Lightning" );
-      %this.registerMissionObject( "WaterBlock",          "Water Block" );
-      %this.registerMissionObject( "SFXEmitter",          "Sound Emitter" );
-      %this.registerMissionObject( "Precipitation" );
-      %this.registerMissionObject( "ParticleEmitterNode", "Particle Emitter" );
+      // Removed Prefab as there doesn't really seem to be a point in creating a blank one
+      //%this.addCreatorClass( "Prefab",              "Prefab" );
+      %this.addCreatorClass( "SkyBox",              "Sky Box" );
+      %this.addCreatorClass( "CloudLayer",          "Cloud Layer" );
+      %this.addCreatorClass( "BasicClouds",         "Basic Clouds" );
+      %this.addCreatorClass( "ScatterSky",          "Scatter Sky" );
+      %this.addCreatorClass( "Sun",                 "Basic Sun" );
+      %this.addCreatorClass( "Lightning" );
+      %this.addCreatorClass( "WaterBlock",          "Water Block" );
+      %this.addCreatorClass( "SFXEmitter",          "Sound Emitter" );
+      %this.addCreatorClass( "Precipitation" );
+      %this.addCreatorClass( "ParticleEmitterNode", "Particle Emitter" );
       
       // Legacy features. Users should use Ground Cover and the Forest Editor.   
-      //%this.registerMissionObject( "fxShapeReplicator",   "Shape Replicator" );
-      //%this.registerMissionObject( "fxFoliageReplicator", "Foliage Replicator" );
+      //%this.addCreatorClass( "fxShapeReplicator",   "Shape Replicator" );
+      //%this.addCreatorClass( "fxFoliageReplicator", "Foliage Replicator" );
       
-      %this.registerMissionObject( "PointLight",          "Point Light" );
-      %this.registerMissionObject( "SpotLight",           "Spot Light" );
-      %this.registerMissionObject( "GroundCover",         "Ground Cover" );
-      %this.registerMissionObject( "TerrainBlock",        "Terrain Block" );
-      %this.registerMissionObject( "GroundPlane",         "Ground Plane" );
-      %this.registerMissionObject( "WaterPlane",          "Water Plane" );
-      %this.registerMissionObject( "PxCloth",             "Cloth" );
-      %this.registerMissionObject( "ForestWindEmitter",   "Wind Emitter" );
+      %this.addCreatorClass( "PointLight",          "Point Light" );
+      %this.addCreatorClass( "SpotLight",           "Spot Light" );
+      %this.addCreatorClass( "GroundCover",         "Ground Cover" );
+      %this.addCreatorClass( "TerrainBlock",        "Terrain Block" );
+      %this.addCreatorClass( "GroundPlane",         "Ground Plane" );
+      %this.addCreatorClass( "WaterPlane",          "Water Plane" );
+      %this.addCreatorClass( "PxCloth",             "Cloth" );
+      %this.addCreatorClass( "ForestWindEmitter",   "Wind Emitter" );
                
-      %this.registerMissionObject( "DustEmitter", "Dust Emitter" );
-      %this.registerMissionObject( "DustSimulation", "Dust Simulation" );
-      %this.registerMissionObject( "DustEffecter", "Dust Effecter" );*/
+      %this.addCreatorClass( "DustEmitter", "Dust Emitter" );
+      %this.addCreatorClass( "DustSimulation", "Dust Simulation" );
+      %this.addCreatorClass( "DustEffecter", "Dust Effecter" );
       
    %this.endCreatorGroup();
 
    %this.beginCreatorGroup( "Level" );
    
-      /*%this.registerMissionObject( "MissionArea",  "Mission Area" );
-      %this.registerMissionObject( "Path" );
-      %this.registerMissionObject( "Marker",       "Path Node" );
-      %this.registerMissionObject( "Trigger" );
-      %this.registerMissionObject( "PhysicalZone", "Physical Zone" );
-      %this.registerMissionObject( "Camera" );
-      %this.registerMissionObject( "LevelInfo",    "Level Info" );
-      %this.registerMissionObject( "TimeOfDay",    "Time of Day" );
-      %this.registerMissionObject( "Zone",         "Zone" );
-      %this.registerMissionObject( "Portal",       "Zone Portal" );
-      %this.registerMissionObject( "SpawnSphere",  "Player Spawn Sphere", "PlayerDropPoint" );
-      %this.registerMissionObject( "SpawnSphere",  "Observer Spawn Sphere", "ObserverDropPoint" );
-      %this.registerMissionObject( "SFXSpace",      "Sound Space" );
-      %this.registerMissionObject( "OcclusionVolume", "Occlusion Volume" );*/
+      %this.addCreatorClass("MissionArea",  "Mission Area" );
+      %this.addCreatorClass("Path" );
+      %this.addCreatorClass("Marker",       "Path Node" );
+      %this.addCreatorClass("Trigger" );
+      %this.addCreatorClass("PhysicalZone", "Physical Zone" );
+      %this.addCreatorClass("Camera" );
+      %this.addCreatorClass( "LevelInfo",    "Level Info" );
+      %this.addCreatorClass( "TimeOfDay",    "Time of Day" );
+      %this.addCreatorClass( "Zone",         "Zone" );
+      %this.addCreatorClass( "Portal",       "Zone Portal" );
+      %this.addCreatorClass( "SpawnSphere",  "Player Spawn Sphere"/*, "PlayerDropPoint"*/ );
+      %this.addCreatorClass( "SpawnSphere",  "Observer Spawn Sphere"/*, "ObserverDropPoint"*/ );
+      %this.addCreatorClass( "SFXSpace",      "Sound Space" );
+      %this.addCreatorClass( "OcclusionVolume", "Occlusion Volume" );
       
    %this.endCreatorGroup();
    
    %this.beginCreatorGroup( "System" );
    
-      //%this.registerMissionObject( "SimGroup" );
-      //%this.registerMissionObject( "AIPathGroup" );
+      %this.addCreatorClass( "SimGroup" );
+      %this.addCreatorClass( "AIPathGroup" );
       
    %this.endCreatorGroup();  
 
    %this.beginCreatorGroup( "ExampleObjects" );
    
-      //%this.registerMissionObject( "RenderObjectExample" );
-      //%this.registerMissionObject( "RenderMeshExample" );
-      //%this.registerMissionObject( "RenderShapeExample" );
+      %this.addCreatorClass( "RenderObjectExample" );
+      %this.addCreatorClass( "RenderMeshExample" );
+      %this.addCreatorClass( "RenderShapeExample" );
       
    %this.endCreatorGroup(); 
    
@@ -881,9 +887,8 @@ function AssetBrowser::loadCreatorClasses(%this)
 
 function AssetBrowser::beginCreatorGroup(%this, %group)
 {
-   %this.currentCreatorGroup = %group; 
-   
    AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.creatorIdx, %group);
+   %this.currentCreatorGroup = %group;
 }
 
 function AssetBrowser::endCreatorGroup(%this, %group)
@@ -906,6 +911,20 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
    {
       warn( "AssetBrowser::addCreatorClass, invalid parameters!" );
       return;  
+   }
+   
+   if(%buildfunc $= "")
+   {
+      %method = "build" @ %buildfunc;
+      if( !ObjectBuilderGui.isMethod( %method ) )
+         %method = "build" @ %class;
+
+      if( !ObjectBuilderGui.isMethod( %method ) )
+         %cmd = "return new " @ %class @ "();";
+      else
+         %cmd = "ObjectBuilderGui." @ %method @ "();";
+
+      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
    }
 
    %args = new ScriptObject();
@@ -1330,23 +1349,10 @@ function AssetBrowserFilterTree::onSelect(%this, %itemId)
    }
    else if(%parentItem == %this.creatorIdx)
    {
-      //One of the creator folders was selected
-      %creatorGroup = %this.getItemText(%itemId);
-      for ( %i = 0; %i < %this.creatorClassArray.count(); %i++ )
-      {
-         %group = %array.getKey( %i );
-
-         if ( %group $= %creatorGroup )
-         {
-            %args = %array.getValue( %i );
-            %class = %args.val[0];
-            %name = %args.val[1];
-            %func = %args.val[2];
-
-            //%this.addMissionObjectIcon( %class, %name, %func );                                             
-            echo("Populating Creator Group! " @ %group @ " for class: " @ %class);
-         }               
-      }
+      %name = %this.getItemText(%itemId);
+      AssetBrowser.dirHandler.currentAddress = "Creator/" @ %name;
+      AssetBrowser.rebuildAssetArray();
+      AssetBrowser.refresh();
    }
    else
    {
@@ -1366,6 +1372,23 @@ function AssetBrowserFilterTree::onSelect(%this, %itemId)
          
       AssetBrowser.navigateTo(%breadcrumbPath);
    }
+}
+
+function AssetBrowserFilterTree::hasAsParent(%this, %itemId, %text)
+{
+   %parentId = %this.getParentItem(%itemId);
+   
+   while(%parentId != 0)
+   {
+      %parentText =  %this.getItemText(%parentId);
+      if(%parentText $= %text)
+         return true;
+         
+      %parentId = %this.getParentItem(%parentId);
+   }
+   
+   
+   return false;
 }
 
 function AssetBrowser::rebuildAssetArray(%this)
@@ -1539,7 +1562,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
    }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "")
+   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && !startsWith(%breadcrumbPath, "Creator/"))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";
@@ -1698,6 +1721,28 @@ function AssetBrowser::doRebuildAssetArray(%this)
          }
       }
    }
+	
+	//If we've selected into the Creator section, we have special handling for that
+	if(startsWith(%breadcrumbPath, "Creator"))
+	{
+      //One of the creator folders was selected
+      %creatorGroup = AssetBrowserFilterTree.getItemText(AssetBrowserFilterTree.getSelectedItem(0));
+            
+      for ( %i = 0; %i < AssetBrowser.creatorClassArray.count(); %i++ )
+      {
+         %group = AssetBrowser.creatorClassArray.getKey( %i );
+
+         if ( %group $= %creatorGroup )
+         {
+            %creatorObj = AssetBrowser.creatorClassArray.getValue( %i );
+            %class = %creatorObj.val[0];
+            %name = %creatorObj.val[1];
+            %func = %creatorObj.val[2];
+            
+            %assetArray.add( %name, "Creator" TAB %creatorObj );
+         }               
+      }   
+	}
 	
    for(%i=0; %i < %assetArray.count(); %i++)
 		AssetBrowser.buildAssetPreview( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
@@ -2188,18 +2233,6 @@ function AssetBrowserPreviewButton::onMouseDragged(%this)
    %payload.position = "0 0";
    //%payload.class = "AssetPreviewControl";
    
-   /*%payload = new GuiBitmapButtonCtrl();
-   //%payload.assignFieldsFrom( %this );
-   %payload.assetName = %this.assetName;
-   %payload.assetType = %this.assetType ;
-   %payload.moduleName = %this.moduleName;
-   %payload.class = "AssetPreviewControl";
-   %payload.position = "0 0";
-   %payload.dragSourceControl = %this;
-   %payload.bitmap = %this.icon;
-   %payload.extent.x /= 2;
-   %payload.extent.y /= 2;*/
-   
    %xOffset = getWord( %payload.extent, 0 ) / 2;
    %yOffset = getWord( %payload.extent, 1 ) / 2;
    
@@ -2343,6 +2376,10 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
       else if(%assetType $= "Prefab")
       {
          %buildCommand = AssetBrowser @ ".on" @ %assetType @ "EditorDropped(\"" @ %module @ "/" @ %asset @ "\",\"" @ %position @ "\");";
+      }
+      else if(%assetType $= "Creator")
+      {
+         %buildCommand = AssetBrowser @ ".on" @ %assetType @ "EditorDropped(" @ %module @ ",\"" @ %position @ "\");";
       }
       else
       {

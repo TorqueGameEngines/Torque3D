@@ -1562,7 +1562,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
    }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "")
+   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && !startsWith(%breadcrumbPath, "Creator/"))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";

@@ -32,7 +32,7 @@
 		text = "Create Object";
 
 		new GuiTextCtrl() {
-			profile = "GuiCenterTextProfile";
+			profile = "ToolsGuiTextProfile";
 			horizSizing = "right";
 			vertSizing = "bottom";
 			position = "9 26";

@@ -77,7 +77,7 @@ function loadDatablockFiles( %datablockFiles, %recurse )
    for ( %i=0; %i < %count; %i++ )
    {
       %file = %datablockFiles.getKey( %i );
-      if ( !isFile(%file @ ".dso") && !isFile(%file) )
+      if (!isFile(%file) && !isFile(%file @ ".dso") && !isFile(%file @"."@ $TorqueScriptFileExtension @ ".dso") && !isFile(%file @"."@ $TorqueScriptFileExtension))
          continue;
                   
       exec( %file );
@@ -100,7 +100,7 @@ function recursiveLoadDatablockFiles( %datablockFiles, %previousErrors )
    for ( %i=0; %i < %count; %i++ )
    {      
       %file = %datablockFiles.getKey( %i );
-      if ( !isFile(%file @ ".dso") && !isFile(%file) )
+      if (!isFile(%file) && !isFile(%file @ ".dso") && !isFile(%file @"."@ $TorqueScriptFileExtension @ ".dso") && !isFile(%file @"."@ $TorqueScriptFileExtension))
          continue;
          
       // Start counting copy constructor creation errors.

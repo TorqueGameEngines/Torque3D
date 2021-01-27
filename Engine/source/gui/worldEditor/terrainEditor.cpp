@@ -1897,6 +1897,12 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
       selChanged = gMouse != gLastMouse;
    }
 
+   if (String::compare(getCurrentAction(), "paintMaterial") != 0)
+   {
+      if (mMouseDown)
+         return;
+   }
+
    mCurrentAction->process( mMouseBrush, event, true, TerrainAction::Update );
 }
 

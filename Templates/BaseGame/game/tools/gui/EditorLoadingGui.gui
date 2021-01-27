@@ -52,6 +52,7 @@
          isContainer = "0";
          canSave = "1";
          canSaveDynamicFields = "0";
+         internalName = "loadingText";
       };
    };
 };
@@ -72,4 +73,20 @@ function EditorLoadingGui::onWake(%this)
    %posX = (%resX / 2) - (%dialogWidth / 2);
    %posY = (%resY / 2) - (%dialogHeight / 2);
    %dialog.setPosition(%posX, %posY);
+}
+
+function displayEditorLoadingGui(%displayText)
+{
+   if(%displayText $= "")
+      %displayText = "Loading the Editor...";
+      
+   EditorLoadingGui-->loadingText.setText(%displayText);
+   
+   Canvas.pushDialog( EditorLoadingGui );
+   Canvas.repaint();
+}
+
+function hideEditorLoadingGui()
+{
+   Canvas.popDialog( EditorLoadingGui );
 }

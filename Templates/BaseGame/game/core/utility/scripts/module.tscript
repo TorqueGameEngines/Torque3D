@@ -85,6 +85,7 @@ function loadModuleMaterials(%moduleGroup)
 }
 
 function loadAssetsByType(%assetType)
+{
    %assetQuery = new AssetQuery();
    AssetDatabase.findAssetType(%assetQuery, %assetType);
    %count = %assetQuery.getCount();

@@ -261,12 +261,11 @@ function fastLoadWorldEdit(%val)
    {
       if(!$Tools::loaded)
       {
-         canvas.pushDialog( EditorLoadingGui );
-         canvas.repaint();
+         displayEditorLoadingGui();
       
          onStart();
          
-         canvas.popDialog(EditorLoadingGui);
+         hideEditorLoadingGui();
       }
       
       %timerId = startPrecisionTimer();
@@ -304,8 +303,7 @@ function fastLoadWorldEdit(%val)
          }
          else
          {
-            canvas.pushDialog( EditorLoadingGui );
-            canvas.repaint();
+            displayEditorLoadingGui();
       
             Editor.open();
 			
@@ -317,7 +315,7 @@ function fastLoadWorldEdit(%val)
             if (theLevelInfo.type $= "DemoScene")
                commandToServer('dropCameraAtPlayer', true);
                
-            canvas.popDialog(EditorLoadingGui);
+            hideEditorLoadingGui();
          }
          
          popInstantGroup();
@@ -334,12 +332,11 @@ function fastLoadGUIEdit(%val)
    {
       if(!$Tools::loaded)
       {
-         canvas.pushDialog( EditorLoadingGui );
-         canvas.repaint();
+         displayEditorLoadingGui();
       
          onStart();
          
-         canvas.popDialog(EditorLoadingGui);
+         hideEditorLoadingGui();
       }
 
       toggleGuiEditor(true);

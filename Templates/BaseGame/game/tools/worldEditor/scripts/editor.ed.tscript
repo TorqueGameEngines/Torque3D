@@ -138,8 +138,7 @@ function toggleEditor(%make)
          }
          else
          {
-            canvas.pushDialog( EditorLoadingGui );
-            canvas.repaint();
+            displayEditorLoadingGui();
             
             Editor.open();
 			
@@ -151,7 +150,7 @@ function toggleEditor(%make)
             if (theLevelInfo.type $= "DemoScene")
                commandToServer('dropCameraAtPlayer', true);
                
-            canvas.popDialog(EditorLoadingGui);
+            hideEditorLoadingGui();
          }
          
          popInstantGroup();

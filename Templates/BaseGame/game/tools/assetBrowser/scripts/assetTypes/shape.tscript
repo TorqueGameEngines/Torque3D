@@ -244,10 +244,48 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
 
 function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
 {
+   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getShapeFile())));
+   %previewPath = "tools/resources/shapePreviewCache/" @ %module.moduleId @ "/";
+   
+   if(!IsDirectory(%previewPath))
+   {
+      %this.dirHandler.createFolder(%previewPath);
+   }
+   
+   %previewPath = %previewPath @ %assetDef.assetName @ "_Preview.png";
+   if(!isFile(%previewPath))
+   {
+      displayEditorLoadingGui("Generating Shape Asset Preview...");
+      
+      //This is slightly hacky, but we're going to utilize the imposter/last detail system
+      //to generate our previews for us and then clean up the unneeded bits
+      %oldImposterSetting = $TSLastDetail::dumpImposters;
+      $TSLastDetail::dumpImposters = true;
+      
+      %filePath = %assetDef.generateCachedPreviewImage();
+      
+      %imposterPath = %filePath @ ".imposter.png";
+      pathCopy(%imposterPath, %previewPath);
+      
+      //cleanup
+      fileDelete(%imposterPath);
+      fileDelete(%filePath @ ".imposter.dds");
+      fileDelete(%filePath @ ".imposter_normals.png");
+      fileDelete(%filePath @ ".imposter_normals.dds");
+      
+      $TSLastDetail::dumpImposters = %oldImposterSetting;
+      
+      hideEditorLoadingGui();
+   }
+   
+   //Revalidate. If it didn't work, just use the default placeholder one
+   if(!isFile(%previewPath))
+      %previewPath = "tools/assetBrowser/art/genericAssetIcon";
+   
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.fileName;
 
-   %previewData.previewImage = "tools/assetBrowser/art/genericAssetIcon";//%assetDef.fileName;
+   %previewData.previewImage = %previewPath;//%assetDef.fileName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

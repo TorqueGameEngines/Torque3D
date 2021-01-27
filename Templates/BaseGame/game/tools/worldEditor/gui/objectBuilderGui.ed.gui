@@ -1082,6 +1082,7 @@ function ObjectBuilderGui::buildGeneralDropPoint(%this)
    %this.addField("spawnClass",     "TypeString",    "Spawn Class", "");
    %this.addField("spawnDatablock", "TypeString", "Spawn Data", "");
    %this.addField("spawnTransform", "TypeBool", "Spawn Here", "true");
+   %this.addField("canSaveDynamicFields", "TypeBool", "Save metadata", "false");
    %this.process();
 }
 

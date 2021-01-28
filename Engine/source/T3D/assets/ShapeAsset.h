@@ -165,6 +165,10 @@ public:
 
    static StringTableEntry getNoShapeAssetId() { return StringTable->insert("Core_Rendering:noshape"); }
 
+#ifdef TORQUE_TOOLS
+   const char* generateCachedPreviewImage(S32 resolution);
+#endif
+
 protected:
    virtual void            onAssetRefresh(void);
 

@@ -983,8 +983,7 @@ function ImportAssetWindow::ImportAssets(%this)
          return;
       }
       
-      Canvas.pushDialog( EditorLoadingGui );
-      Canvas.repaint();
+      displayEditorLoadingGui("Importing Assets...");
    
       %this.importer.targetModuleId = %moduleName;
    }
@@ -1000,7 +999,7 @@ function ImportAssetWindow::ImportAssets(%this)
    
    %this.importer.resetImportSession(true);
    
-   Canvas.popDialog( EditorLoadingGui );
+   hideEditorLoadingGui();
    
    //do the actual importing, now!
    /*%assetCount = ImportAssetItems.count();

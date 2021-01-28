@@ -1,0 +1,16 @@
+
+function Core_Utility::onCreate(%this)
+{
+   exec("./scripts/parseArgs." @ $TorqueScriptFileExtension);
+   exec("./scripts/globals." @ $TorqueScriptFileExtension);
+   exec("./scripts/helperFunctions." @ $TorqueScriptFileExtension);
+   exec("./scripts/gameObjectManagement." @ $TorqueScriptFileExtension);
+   exec("./scripts/persistanceManagement." @ $TorqueScriptFileExtension);
+   exec("./scripts/module." @ $TorqueScriptFileExtension);
+   exec("./scripts/scene." @ $TorqueScriptFileExtension);
+   exec("./scripts/input." @ $TorqueScriptFileExtension);
+}
+
+function Core_Utility::onDestroy(%this)
+{
+}

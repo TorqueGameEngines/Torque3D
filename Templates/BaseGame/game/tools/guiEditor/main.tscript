@@ -1,0 +1,57 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+function initializeGuiEditor()
+{
+   echo( " % - Initializing Gui Editor" );
+   
+   // GUIs.
+   
+   exec( "./gui/guiEditor.ed.gui" );
+   exec( "./gui/guiEditorNewGuiDialog.ed.gui" );
+   exec( "./gui/guiEditorPrefsDlg.ed.gui" );
+   exec( "./gui/guiEditorSelectDlg.ed.gui" );
+   exec( "./gui/EditorChooseGUI.ed.gui" );
+   
+   // Scripts.
+
+   exec( "./scripts/guiEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorTreeView.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorInspector.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorProfiles.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorGroup.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorUndo.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorCanvas.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorContentList.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorStatusBar.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorToolbox.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorSelectDlg.ed." @ $TorqueScriptFileExtension );
+   
+   exec( "./scripts/guiEditorNewGuiDialog.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/fileDialogs.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/guiEditorPrefsDlg.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/EditorChooseGUI.ed." @ $TorqueScriptFileExtension );
+}
+
+function destroyGuiEditor()
+{
+}

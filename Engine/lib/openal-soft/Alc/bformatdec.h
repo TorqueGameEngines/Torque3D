@@ -1,57 +1,75 @@
 #ifndef BFORMATDEC_H
 #define BFORMATDEC_H
 
-#include "alMain.h"
+#include <array>
+#include <cstddef>
+#include <memory>
 
-
-/* These are the necessary scales for first-order HF responses to play over
- * higher-order 2D (non-periphonic) decoders.
- */
-#define W_SCALE_2H0P   1.224744871f /* sqrt(1.5) */
-#define XYZ_SCALE_2H0P 1.0f
-#define W_SCALE_3H0P   1.414213562f /* sqrt(2) */
-#define XYZ_SCALE_3H0P 1.082392196f
-
-/* These are the necessary scales for first-order HF responses to play over
- * higher-order 3D (periphonic) decoders.
- */
-#define W_SCALE_2H2P   1.341640787f /* sqrt(1.8) */
-#define XYZ_SCALE_2H2P 1.0f
-#define W_SCALE_3H3P   1.695486018f
-#define XYZ_SCALE_3H3P 1.136697713f
-
-
-/* NOTE: These are scale factors as applied to Ambisonics content. Decoder
- * coefficients should be divided by these values to get proper N3D scalings.
- */
-const ALfloat N3D2N3DScale[MAX_AMBI_COEFFS];
-const ALfloat SN3D2N3DScale[MAX_AMBI_COEFFS];
-const ALfloat FuMa2N3DScale[MAX_AMBI_COEFFS];
-
+#include "almalloc.h"
+#include "alspan.h"
+#include "core/ambidefs.h"
+#include "core/bufferline.h"
+#include "core/devformat.h"
+#include "core/filters/splitter.h"
 
 struct AmbDecConf;
-struct BFormatDec;
-struct AmbiUpsampler;
+struct FrontStablizer;
 
 
-struct BFormatDec *bformatdec_alloc();
-void bformatdec_free(struct BFormatDec **dec);
-void bformatdec_reset(struct BFormatDec *dec, const struct AmbDecConf *conf, ALsizei chancount, ALuint srate, const ALsizei chanmap[MAX_OUTPUT_CHANNELS]);
+using ChannelDec = std::array<float,MaxAmbiChannels>;
 
-/* Decodes the ambisonic input to the given output channels. */
-void bformatdec_process(struct BFormatDec *dec, ALfloat (*restrict OutBuffer)[BUFFERSIZE], ALsizei OutChannels, const ALfloat (*restrict InSamples)[BUFFERSIZE], ALsizei SamplesToDo);
+class BFormatDec {
+    static constexpr size_t sHFBand{0};
+    static constexpr size_t sLFBand{1};
+    static constexpr size_t sNumBands{2};
 
-/* Up-samples a first-order input to the decoder's configuration. */
-void bformatdec_upSample(struct BFormatDec *dec, ALfloat (*restrict OutBuffer)[BUFFERSIZE], const ALfloat (*restrict InSamples)[BUFFERSIZE], ALsizei InChannels, ALsizei SamplesToDo);
+    struct ChannelDecoder {
+        union MatrixU {
+            float Dual[sNumBands][MAX_OUTPUT_CHANNELS];
+            float Single[MAX_OUTPUT_CHANNELS];
+        } mGains{};
 
+        /* NOTE: BandSplitter filter is unused with single-band decoding. */
+        BandSplitter mXOver;
+    };
 
-/* Stand-alone first-order upsampler. Kept here because it shares some stuff
- * with bformatdec. Assumes a periphonic (4-channel) input mix!
- */
-struct AmbiUpsampler *ambiup_alloc();
-void ambiup_free(struct AmbiUpsampler **ambiup);
-void ambiup_reset(struct AmbiUpsampler *ambiup, const ALCdevice *device, ALfloat w_scale, ALfloat xyz_scale);
+    alignas(16) std::array<FloatBufferLine,2> mSamples;
 
-void ambiup_process(struct AmbiUpsampler *ambiup, ALfloat (*restrict OutBuffer)[BUFFERSIZE], ALsizei OutChannels, const ALfloat (*restrict InSamples)[BUFFERSIZE], ALsizei SamplesToDo);
+    const std::unique_ptr<FrontStablizer> mStablizer;
+    const bool mDualBand{false};
+
+    al::FlexArray<ChannelDecoder> mChannelDec;
+
+public:
+    BFormatDec(const AmbDecConf *conf, const bool allow_2band, const size_t inchans,
+        const uint srate, const uint (&chanmap)[MAX_OUTPUT_CHANNELS],
+        std::unique_ptr<FrontStablizer> stablizer);
+    BFormatDec(const size_t inchans, const al::span<const ChannelDec> coeffs,
+        const al::span<const ChannelDec> coeffslf, std::unique_ptr<FrontStablizer> stablizer);
+
+    bool hasStablizer() const noexcept { return mStablizer != nullptr; };
+
+    /* Decodes the ambisonic input to the given output channels. */
+    void process(const al::span<FloatBufferLine> OutBuffer, const FloatBufferLine *InSamples,
+        const size_t SamplesToDo);
+
+    /* Decodes the ambisonic input to the given output channels with stablization. */
+    void processStablize(const al::span<FloatBufferLine> OutBuffer,
+        const FloatBufferLine *InSamples, const size_t lidx, const size_t ridx, const size_t cidx,
+        const size_t SamplesToDo);
+
+    /* Retrieves per-order HF scaling factors for "upsampling" ambisonic data. */
+    static std::array<float,MaxAmbiOrder+1> GetHFOrderScales(const uint in_order,
+        const uint out_order) noexcept;
+
+    static std::unique_ptr<BFormatDec> Create(const AmbDecConf *conf, const bool allow_2band,
+        const size_t inchans, const uint srate, const uint (&chanmap)[MAX_OUTPUT_CHANNELS],
+        std::unique_ptr<FrontStablizer> stablizer);
+    static std::unique_ptr<BFormatDec> Create(const size_t inchans,
+        const al::span<const ChannelDec> coeffs, const al::span<const ChannelDec> coeffslf,
+        std::unique_ptr<FrontStablizer> stablizer);
+
+    DEF_FAM_NEWDEL(BFormatDec, mChannelDec)
+};
 
 #endif /* BFORMATDEC_H */

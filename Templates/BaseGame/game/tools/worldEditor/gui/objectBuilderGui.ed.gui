@@ -32,7 +32,7 @@
 		text = "Create Object";
 
 		new GuiTextCtrl() {
-			profile = "GuiCenterTextProfile";
+			profile = "ToolsGuiTextProfile";
 			horizSizing = "right";
 			vertSizing = "bottom";
 			position = "9 26";
@@ -1266,5 +1266,25 @@ function RibbonData::create( %datablock )
       ribbon = %datablock;
    };
 
+   return %obj;
+}
+
+function ParticleEmitterData::create( %datablock ) 
+{
+   %obj = new ParticleEmitter()
+   {
+      dataBlock = %datablock;
+      parentGroup = EWCreatorWindow.objectGroup;
+   };
+   return %obj;
+}
+
+function PrecipitationData::create(%datablock)
+{
+   %obj = new Precipitation()
+   {
+      dataBlock = %datablock;
+      parentGroup = EWCreatorWindow.objectGroup;
+   };
    return %obj;
 }

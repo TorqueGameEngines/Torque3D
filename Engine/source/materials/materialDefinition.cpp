@@ -532,7 +532,7 @@ bool Material::onAdd()
       matSet->addObject( (SimObject*)this );
 
    // save the current script path for texture lookup later
-   const String  scriptFile = Con::getVariable("$Con::File");  // current script file - local materials.cs
+   const String  scriptFile = Con::getVariable("$Con::File");  // current script file - local materials.tscript
 
    String::SizeType  slash = scriptFile.find( '/', scriptFile.length(), String::Right );
    if ( slash != String::NPos )

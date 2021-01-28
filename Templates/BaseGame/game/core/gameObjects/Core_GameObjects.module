@@ -2,7 +2,7 @@
 	ModuleId="Core_GameObjects"
 	VersionId="1"
 	Description="Module that implements the core engine-level setup for the game."
-	ScriptFile="Core_GameObjects.cs"
+	ScriptFile="Core_GameObjects"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Core">

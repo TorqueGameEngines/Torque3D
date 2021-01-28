@@ -72,9 +72,11 @@
 #frequency =
 
 ## period_size:
-#  Sets the update period size, in frames. This is the number of frames needed
-#  for each mixing update. Acceptable values range between 64 and 8192.
-#period_size = 1024
+#  Sets the update period size, in sample frames. This is the number of frames
+#  needed for each mixing update. Acceptable values range between 64 and 8192.
+#  If left unspecified it will default to 1/50th of the frequency (20ms, or 882
+#  for 44100, 960 for 48000, etc).
+#period_size =
 
 ## periods:
 #  Sets the number of update periods. Higher values create a larger mix ahead,
@@ -100,18 +102,37 @@
 
 ## ambi-format:
 #  Specifies the channel order and normalization for the "ambi*" set of channel
-#  configurations. Valid settings are: fuma, acn+sn3d, acn+n3d
-#ambi-format = acn+sn3d
+#  configurations. Valid settings are: fuma, ambix (or acn+sn3d), acn+n3d
+#ambi-format = ambix
 
 ## hrtf:
 #  Controls HRTF processing. These filters provide better spatialization of
-#  sounds while using headphones, but do require a bit more CPU power. The
-#  default filters will only work with 44100hz or 48000hz stereo output. While
+#  sounds while using headphones, but do require a bit more CPU power. While
 #  HRTF is used, the cf_level option is ignored. Setting this to auto (default)
 #  will allow HRTF to be used when headphones are detected or the app requests
 #  it, while setting true or false will forcefully enable or disable HRTF
 #  respectively.
 #hrtf = auto
+
+## hrtf-mode:
+#  Specifies the rendering mode for HRTF processing. Setting the mode to full
+#  (default) applies a unique HRIR filter to each source given its relative
+#  location, providing the clearest directional response at the cost of the
+#  highest CPU usage. Setting the mode to ambi1, ambi2, or ambi3 will instead
+#  mix to a first-, second-, or third-order ambisonic buffer respectively, then
+#  decode that buffer with HRTF filters. Ambi1 has the lowest CPU usage,
+#  replacing the per-source HRIR filter for a simple 4-channel panning mix, but
+#  retains full 3D placement at the cost of a more diffuse response. Ambi2 and
+#  ambi3 increasingly improve the directional clarity, at the cost of more CPU
+#  usage (still less than "full", given some number of active sources).
+#hrtf-mode = full
+
+## hrtf-size:
+#  Specifies the impulse response size, in samples, for the HRTF filter. Larger
+#  values increase the filter quality, while smaller values reduce processing
+#  cost. A value of 0 (default) uses the full filter size in the dataset, and
+#  the default dataset has a filter size of 32 samples at 44.1khz.
+#hrtf-size = 0
 
 ## default-hrtf:
 #  Specifies the default HRTF to use. When multiple HRTFs are available, this
@@ -146,14 +167,18 @@
 #cf_level = 0
 
 ## resampler: (global)
-#  Selects the resampler used when mixing sources. Valid values are:
+#  Selects the default resampler used when mixing sources. Valid values are:
 #  point - nearest sample, no interpolation
 #  linear - extrapolates samples using a linear slope between samples
 #  cubic - extrapolates samples using a Catmull-Rom spline
 #  bsinc12 - extrapolates samples using a band-limited Sinc filter (varying
 #            between 12 and 24 points, with anti-aliasing)
+#  fast_bsinc12 - same as bsinc12, except without interpolation between down-
+#                 sampling scales
 #  bsinc24 - extrapolates samples using a band-limited Sinc filter (varying
 #            between 24 and 48 points, with anti-aliasing)
+#  fast_bsinc24 - same as bsinc24, except without interpolation between down-
+#                 sampling scales
 #resampler = linear
 
 ## rt-prio: (global)
@@ -161,9 +186,9 @@
 #  (eg. PortAudio) as they already control the priority of the mixing thread.
 #  0 and negative values will disable it. Note that this may constitute a
 #  security risk since a real-time priority thread can indefinitely block
-#  normal-priority threads if it fails to wait. As such, the default is
-#  disabled.
-#rt-prio = 0
+#  normal-priority threads if it fails to wait. Disable this if it turns out to
+#  be a problem.
+#rt-prio = 1
 
 ## sources:
 #  Sets the maximum number of allocatable sources. Lower values may help for
@@ -180,7 +205,7 @@
 ## sends:
 #  Limits the number of auxiliary sends allowed per source. Setting this higher
 #  than the default has no effect.
-#sends = 16
+#sends = 6
 
 ## front-stablizer:
 #  Applies filters to "stablize" front sound imaging. A psychoacoustic method
@@ -219,8 +244,9 @@
 ## excludefx: (global)
 #  Sets which effects to exclude, preventing apps from using them. This can
 #  help for apps that try to use effects which are too CPU intensive for the
-#  system to handle. Available effects are: eaxreverb,reverb,chorus,compressor,
-#  distortion,echo,equalizer,flanger,modulator,dedicated,pshifter
+#  system to handle. Available effects are: eaxreverb,reverb,autowah,chorus,
+#  compressor,distortion,echo,equalizer,flanger,modulator,dedicated,pshifter,
+#  fshifter,vmorpher.
 #excludefx =
 
 ## default-reverb: (global)
@@ -256,7 +282,7 @@
 #  configuration files for the appropriate speaker configuration you intend to
 #  use (see the quad, surround51, etc options below). Currently, up to third-
 #  order decoding is supported.
-hq-mode = false
+#hq-mode = true
 
 ## distance-comp:
 #  Enables compensation for the speakers' relative distances to the listener.
@@ -264,7 +290,7 @@ hq-mode = false
 #  behave as though they are all equidistant, which is important for proper
 #  playback of 3D sound rendering. Requires the proper distances to be
 #  specified in the decoder configuration file.
-distance-comp = true
+#distance-comp = true
 
 ## nfc:
 #  Enables near-field control filters. This simulates and compensates for low-
@@ -272,40 +298,41 @@ distance-comp = true
 #  creates a more realistic perception of sound distance. Note that the effect
 #  may be stronger or weaker than intended if the application doesn't use or
 #  specify an appropriate unit scale, or if incorrect speaker distances are set
-#  in the decoder configuration file. Requires hq-mode to be enabled.
-nfc = true
+#  in the decoder configuration file.
+#nfc = false
 
 ## nfc-ref-delay
-#  Specifies the reference delay value for ambisonic output. When channels is
-#  set to one of the ambi* formats, this option enables NFC-HOA output with the
-#  specified Reference Delay parameter. The specified value can then be shared
-#  with an appropriate NFC-HOA decoder to reproduce correct near-field effects.
-#  Keep in mind that despite being designed for higher-order ambisonics, this
-#  applies to first-order output all the same. When left unset, normal output
-#  is created with no near-field simulation.
-nfc-ref-delay =
+#  Specifies the reference delay value for ambisonic output when NFC filters
+#  are enabled. If channels is set to one of the ambi* formats, this option
+#  enables NFC-HOA output with the specified Reference Delay parameter. The
+#  specified value can then be shared with an appropriate NFC-HOA decoder to
+#  reproduce correct near-field effects. Keep in mind that despite being
+#  designed for higher-order ambisonics, this also applies to first-order
+#  output. When left unset, normal output is created with no near-field
+#  simulation. Requires the nfc option to also be enabled.
+#nfc-ref-delay =
 
 ## quad:
 #  Decoder configuration file for Quadraphonic channel output. See
 #  docs/ambdec.txt for a description of the file format.
-quad =
+#quad =
 
 ## surround51:
 #  Decoder configuration file for 5.1 Surround (Side and Rear) channel output.
 #  See docs/ambdec.txt for a description of the file format.
-surround51 =
+#surround51 =
 
 ## surround61:
 #  Decoder configuration file for 6.1 Surround channel output. See
 #  docs/ambdec.txt for a description of the file format.
-surround61 =
+#surround61 =
 
 ## surround71:
 #  Decoder configuration file for 7.1 Surround channel output. See
 #  docs/ambdec.txt for a description of the file format. Note: This can be used
 #  to enable 3D7.1 with the appropriate configuration and speaker placement,
 #  see docs/3D7.1.txt.
-surround71 =
+#surround71 =
 
 ##
 ## Reverb effect stuff (includes EAX reverb)
@@ -335,7 +362,7 @@ surround71 =
 #  device specifier (seen by applications) will not be updated when this
 #  occurs, and neither will the AL device configuration (sample rate, format,
 #  etc).
-#allow-moves = false
+#allow-moves = true
 
 ## fix-rate:
 #  Specifies whether to match the playback stream's sample rate to the device's
@@ -343,6 +370,14 @@ surround71 =
 #  directly to the actual output rate, avoiding a second resample pass by the
 #  PulseAudio server.
 #fix-rate = false
+
+## adjust-latency:
+#  Attempts to adjust the overall latency of device playback. Note that this
+#  may have adverse effects on the resulting internal buffer sizes and mixing
+#  updates, leading to performance problems and drop-outs. However, if the
+#  PulseAudio server is creating a lot of latency, enabling this may help make
+#  it more manageable.
+#adjust-latency = false
 
 ##
 ## ALSA backend stuff
@@ -366,6 +401,13 @@ surround71 =
 #  case-sensitive.
 #device-prefix- =
 
+## custom-devices: (global)
+#  Specifies a list of enumerated playback devices and the ALSA devices they
+#  refer to. The list pattern is "Display Name=ALSA device;...". The display
+#  names will be returned for device enumeration, and the ALSA device is the
+#  device name to open for each enumerated device.
+#custom-devices =
+
 ## capture: (global)
 #  Sets the device name for the default capture device.
 #capture = default
@@ -382,6 +424,13 @@ surround71 =
 #  capture-prefix-NVidia), or the card id and device index (eg,
 #  capture-prefix-NVidia-0). The card id is case-sensitive.
 #capture-prefix- =
+
+## custom-captures: (global)
+#  Specifies a list of enumerated capture devices and the ALSA devices they
+#  refer to. The list pattern is "Display Name=ALSA device;...". The display
+#  names will be returned for device enumeration, and the ALSA device is the
+#  device name to open for each enumerated device.
+#custom-captures =
 
 ## mmap:
 #  Sets whether to try using mmap mode (helps reduce latencies and CPU
@@ -433,6 +482,20 @@ surround71 =
 #  Attempts to autospawn a JACK server whenever needed (initializing the
 #  backend, opening devices, etc).
 #spawn-server = false
+
+## custom-devices: (global)
+#  Specifies a list of enumerated devices and the ports they connect to. The
+#  list pattern is "Display Name=ports regex;Display Name=ports regex;...". The
+#  display names will be returned for device enumeration, and the ports regex
+#  is the regular expression to identify the target ports on the server (as
+#  given by the jack_get_ports function) for each enumerated device.
+#custom-devices =
+
+## connect-ports:
+#  Attempts to automatically connect the client ports to physical server ports.
+#  Client ports that fail to connect will leave the remaining channels
+#  unconnected and silent (the device format won't change to accommodate).
+#connect-ports = true
 
 ## buffer-size:
 #  Sets the update buffer size, in samples, that the backend will keep buffered

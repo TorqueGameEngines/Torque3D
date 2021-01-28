@@ -62,8 +62,8 @@ struct AuthInfo;
 
 // To disable datablock caching, remove or comment out the AFX_CAP_DATABLOCK_CACHE define below.
 // Also, at a minimum, the following script preferences should be set to false:
-//   $pref::Client::EnableDatablockCache = false; (in arcane.fx/client/defaults.cs)
-//   $Pref::Server::EnableDatablockCache = false; (in arcane.fx/server/defaults.cs)
+//   $pref::Client::EnableDatablockCache = false; (in arcane.fx/client/defaults.tscript)
+//   $Pref::Server::EnableDatablockCache = false; (in arcane.fx/server/defaults.tscript)
 // Alternatively, all script code marked with "DATABLOCK CACHE CODE" can be removed or
 // commented out.
 //

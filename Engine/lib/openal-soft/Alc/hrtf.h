@@ -1,89 +1,90 @@
 #ifndef ALC_HRTF_H
 #define ALC_HRTF_H
 
-#include "AL/al.h"
-#include "AL/alc.h"
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <string>
 
-#include "alMain.h"
-#include "alstring.h"
+#include "almalloc.h"
+#include "alspan.h"
 #include "atomic.h"
+#include "core/ambidefs.h"
+#include "core/bufferline.h"
+#include "core/filters/splitter.h"
+#include "core/mixer/hrtfdefs.h"
+#include "intrusive_ptr.h"
+#include "vector.h"
 
 
-/* The maximum number of virtual speakers used to generate HRTF coefficients
- * for decoding B-Format.
- */
-#define HRTF_AMBI_MAX_CHANNELS 18
+struct HrtfStore {
+    RefCount mRef;
 
+    uint sampleRate;
+    uint irSize;
 
-#define HRTF_HISTORY_BITS   (6)
-#define HRTF_HISTORY_LENGTH (1<<HRTF_HISTORY_BITS)
-#define HRTF_HISTORY_MASK   (HRTF_HISTORY_LENGTH-1)
+    struct Field {
+        float distance;
+        ubyte evCount;
+    };
+    /* NOTE: Fields are stored *backwards*. field[0] is the farthest field, and
+     * field[fdCount-1] is the nearest.
+     */
+    uint fdCount;
+    const Field *field;
 
-#define HRIR_BITS        (7)
-#define HRIR_LENGTH      (1<<HRIR_BITS)
-#define HRIR_MASK        (HRIR_LENGTH-1)
+    struct Elevation {
+        ushort azCount;
+        ushort irOffset;
+    };
+    Elevation *elev;
+    const HrirArray *coeffs;
+    const ubyte2 *delays;
 
+    void add_ref();
+    void release();
 
-struct HrtfEntry;
-
-struct Hrtf {
-    RefCount ref;
-
-    ALuint sampleRate;
-    ALsizei irSize;
-
-    ALfloat distance;
-    ALubyte evCount;
-
-    const ALubyte *azCount;
-    const ALushort *evOffset;
-    const ALfloat (*coeffs)[2];
-    const ALubyte (*delays)[2];
+    DEF_PLACE_NEWDEL()
 };
+using HrtfStorePtr = al::intrusive_ptr<HrtfStore>;
 
 
-typedef struct HrtfState {
-    alignas(16) ALfloat History[HRTF_HISTORY_LENGTH];
-    alignas(16) ALfloat Values[HRIR_LENGTH][2];
-} HrtfState;
-
-typedef struct HrtfParams {
-    alignas(16) ALfloat Coeffs[HRIR_LENGTH][2];
-    ALsizei Delay[2];
-    ALfloat Gain;
-} HrtfParams;
-
-typedef struct DirectHrtfState {
-    /* HRTF filter state for dry buffer content */
-    ALsizei Offset;
-    ALsizei IrSize;
-    struct {
-        alignas(16) ALfloat Values[HRIR_LENGTH][2];
-        alignas(16) ALfloat Coeffs[HRIR_LENGTH][2];
-    } Chan[];
-} DirectHrtfState;
-
+struct EvRadians { float value; };
+struct AzRadians { float value; };
 struct AngularPoint {
-    ALfloat Elev;
-    ALfloat Azim;
+    EvRadians Elev;
+    AzRadians Azim;
 };
 
 
-void FreeHrtfs(void);
+struct DirectHrtfState {
+    std::array<float,HrtfDirectDelay+BufferLineSize> mTemp;
 
-vector_EnumeratedHrtf EnumerateHrtf(const_al_string devname);
-void FreeHrtfList(vector_EnumeratedHrtf *list);
-struct Hrtf *GetLoadedHrtf(struct HrtfEntry *entry);
-void Hrtf_IncRef(struct Hrtf *hrtf);
-void Hrtf_DecRef(struct Hrtf *hrtf);
+    /* HRTF filter state for dry buffer content */
+    uint mIrSize{0};
+    al::FlexArray<HrtfChannelState> mChannels;
 
-void GetHrtfCoeffs(const struct Hrtf *Hrtf, ALfloat elevation, ALfloat azimuth, ALfloat spread, ALfloat (*coeffs)[2], ALsizei *delays);
+    DirectHrtfState(size_t numchans) : mChannels{numchans} { }
+    /**
+     * Produces HRTF filter coefficients for decoding B-Format, given a set of
+     * virtual speaker positions, a matching decoding matrix, and per-order
+     * high-frequency gains for the decoder. The calculated impulse responses
+     * are ordered and scaled according to the matrix input.
+     */
+    void build(const HrtfStore *Hrtf, const uint irSize,
+        const al::span<const AngularPoint> AmbiPoints, const float (*AmbiMatrix)[MaxAmbiChannels],
+        const float XOverFreq, const al::span<const float,MaxAmbiOrder+1> AmbiOrderHFGain);
 
-/**
- * Produces HRTF filter coefficients for decoding B-Format, given a set of
- * virtual speaker positions and HF/LF matrices for decoding to them. The
- * returned coefficients are ordered and scaled according to the matrices.
- */
-void BuildBFormatHrtf(const struct Hrtf *Hrtf, DirectHrtfState *state, ALsizei NumChannels, const struct AngularPoint *AmbiPoints, const ALfloat (*restrict AmbiMatrix)[MAX_AMBI_COEFFS], ALsizei AmbiCount, const ALfloat *restrict AmbiOrderHFGain);
+    static std::unique_ptr<DirectHrtfState> Create(size_t num_chans);
+
+    DEF_FAM_NEWDEL(DirectHrtfState, mChannels)
+};
+
+
+al::vector<std::string> EnumerateHrtf(const char *devname);
+HrtfStorePtr GetLoadedHrtf(const std::string &name, const uint devrate);
+
+void GetHrtfCoeffs(const HrtfStore *Hrtf, float elevation, float azimuth, float distance,
+    float spread, HrirArray &coeffs, const al::span<uint,2> delays);
 
 #endif /* ALC_HRTF_H */

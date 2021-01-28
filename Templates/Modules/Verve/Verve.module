@@ -2,7 +2,7 @@
 	ModuleId="Verve"
 	VersionId="1"
 	Description="Module that implements Verve."
-	ScriptFile="Verve.cs"
+	ScriptFile="Verve"
 	CreateFunction="create"
 	DestroyFunction="destroy"
 	Group="Game">

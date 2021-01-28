@@ -1841,6 +1841,7 @@ void TerrainEditor::on3DMouseMove(const Gui3DMouseEvent & event)
    if(!hitTerrain)
    {
       mMouseBrush->reset();
+      return;
    }
    else
    {
@@ -1875,17 +1876,19 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
       return;
 
    Point3F pos;
-
-   if ( !mSelectionLocked )
-   {
-      if ( !collide( event, pos)  )
-         mMouseBrush->reset();
-   }
-
-   // check if the mouse has actually moved in grid space
    bool selChanged = false;
+
    if ( !mSelectionLocked )
    {
+      TerrainBlock* hitTerrain = collide(event, pos);
+
+      if (!hitTerrain)
+      {
+         mMouseBrush->reset();
+         return;
+      }
+
+      // check if the mouse has actually moved in grid space
       Point2I gMouse;
       Point2I gLastMouse;
       worldToGrid( pos, gMouse );
@@ -1896,14 +1899,8 @@ void TerrainEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
 
       selChanged = gMouse != gLastMouse;
    }
-
-   if (String::compare(getCurrentAction(), "paintMaterial") != 0)
-   {
-      if (mMouseDown)
-         return;
-   }
-
-   mCurrentAction->process( mMouseBrush, event, true, TerrainAction::Update );
+   if (selChanged)
+      mCurrentAction->process( mMouseBrush, event, true, TerrainAction::Update );
 }
 
 void TerrainEditor::on3DMouseUp(const Gui3DMouseEvent & event)

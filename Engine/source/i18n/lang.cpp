@@ -510,7 +510,7 @@ bool compiledFileNeedsUpdate(UTF8* filename)
 
 DefineEngineFunction(CompileLanguage, void, (const char* inputFile, bool createMap), (false), 
    "@brief Compiles a LSO language file."
-   " if createIndex is true, will also create languageMap.cs with"
+   " if createIndex is true, will also create languageMap." TORQUE_SCRIPT_EXTENSION " with"
    " the global variables for each string index."
    " The input file must follow this example layout:"
    " TXT_HELLO_WORLD = Hello world in english!")
@@ -538,9 +538,9 @@ DefineEngineFunction(CompileLanguage, void, (const char* inputFile, bool createM
       {
          Torque::Path mapPath = scriptFilenameBuffer;
          mapPath.setFileName("languageMap");
-         mapPath.setExtension("cs");
+         mapPath.setExtension(TORQUE_SCRIPT_EXTENSION);
          if ((mapStream = FileStream::createAndOpen(mapPath, Torque::FS::File::Write)) == NULL)
-            Con::errorf("CompileLanguage - failed creating languageMap.cs");
+            Con::errorf("CompileLanguage - failed creating languageMap." TORQUE_SCRIPT_EXTENSION);
       }
 
       LangFile langFile;

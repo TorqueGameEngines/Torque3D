@@ -46,6 +46,10 @@
 #include "platform/profiler.h"
 #include "T3D/assets/assetImporter.h"
 
+#ifdef TORQUE_TOOLS
+#include "ts/tsLastDetail.h"
+#endif
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ShapeAsset);
@@ -505,6 +509,29 @@ ShapeAnimationAsset* ShapeAsset::getAnimation(S32 index)
    return nullptr;
 }
 
+#ifdef TORQUE_TOOLS
+const char* ShapeAsset::generateCachedPreviewImage(S32 resolution)
+{
+   if (!mShape)
+      return "";
+
+   TSLastDetail* dt = new TSLastDetail(mShape,
+      mFilePath,
+      1,
+      0,
+      0,
+      false,
+      0,
+      resolution);
+
+   dt->update();
+
+   delete dt;
+
+   return mFilePath;
+}
+#endif
+
 DefineEngineMethod(ShapeAsset, getMaterialCount, S32, (), ,
    "Gets the number of materials for this shape asset.\n"
    "@return Material count.\n")
@@ -526,6 +553,21 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
 {
    return object->getAnimation(index);
 }
+
+DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
+   "Creates a new script asset using the targetFilePath.\n"
+   "@return The bool result of calling exec")
+{
+   return object->getShapeFilePath();
+}
+
+#ifdef TORQUE_TOOLS
+DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution), (256), "")
+{
+   return object->generateCachedPreviewImage(resolution);
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -625,10 +667,3 @@ void GuiInspectorTypeShapeAssetId::consoleInit()
 }
 
 #endif
-
-DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
-   "Creates a new script asset using the targetFilePath.\n"
-   "@return The bool result of calling exec")
-{
-   return object->getShapeFilePath();
-}

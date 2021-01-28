@@ -67,7 +67,7 @@ ConsoleDocClass( RenderDeferredMgr,
    "and render them to the g-buffer for use in lighting the scene and doing effects.\n\n"
    "PostEffect and other shaders can access the output of this bin by using the #deferred "
    "texture target name.  See the edge anti-aliasing post effect for an example.\n\n"
-   "@see game/core/scripts/client/postFx/edgeAA.cs\n"
+   "@see game/core/scripts/client/postFx/edgeAA." TORQUE_SCRIPT_EXTENSION "\n"
    "@ingroup RenderBin\n" );
 
 

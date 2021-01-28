@@ -2,7 +2,7 @@
 	ModuleId="Core_Rendering"
 	VersionId="1"
 	Description="Module that implements the core engine-level setup for the game."
-	ScriptFile="Core_Rendering.cs"
+	ScriptFile="Core_Rendering"
 	CreateFunction="onCreate"
 	DestroyFunction="onDestroy"
 	Group="Core">

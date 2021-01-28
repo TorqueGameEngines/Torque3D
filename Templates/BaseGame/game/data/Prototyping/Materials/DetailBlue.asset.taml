@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="DetailBlue"
-    scriptFile="@assetFile=DetailBlue.cs"
+    scriptFile="@assetFile=DetailBlue.tscript"
     materialDefinitionName="DetailBlue"
     imageMap0="@Asset=Prototyping:DetailBlue_ALBEDO"
     originalFilePath="D:/Gamedev/art/Blockout/DetailBlue.png" />

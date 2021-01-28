@@ -101,7 +101,7 @@ namespace ColladaUtils
       bool           ignoreNodeScale;  // Ignore <scale> elements in <node>s
       bool           adjustCenter;     // Translate model so origin is at the center
       bool           adjustFloor;      // Translate model so origin is at the bottom
-      bool           forceUpdateMaterials;   // Force update of materials.cs
+      bool           forceUpdateMaterials;   // Force update of materials.tscript
       bool           useDiffuseNames;  // Use diffuse texture as the material name
 
       // Assimp specific preprocess import options

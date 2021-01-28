@@ -6,7 +6,7 @@ MIT Licensed Open Source version of [Torque 3D](http://torque3d.org) from [Garag
 [![GitHub release](https://img.shields.io/github/release/GarageGames/Torque3D.svg)](https://github.com/GarageGames/Torque3D/releases/latest)
 [![Github All Releases](https://img.shields.io/github/downloads/GarageGames/Torque3D/total.svg)](https://github.com/GarageGames/Torque3D/releases/latest)
 
-[![IRC](https://img.shields.io/badge/irc-%23garagegames-green.svg)](https://kiwiirc.com/client/irc.maxgaming.net/?nick=wiki_user|?#garagegames)
+[![Discord](https://img.shields.io/badge/Discord%20-%237289DA.svg?&logo=discord&logoColor=white)](https://discord.com/invite/qdAZxT4) [![IRC](https://img.shields.io/badge/irc-%23garagegames-green.svg)](https://kiwiirc.com/client/irc.maxgaming.net/?nick=wiki_user|?#garagegames) 
 
 ## More Information
 

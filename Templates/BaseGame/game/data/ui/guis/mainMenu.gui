@@ -1,4 +1,4 @@
-exec( "tools/gui/profiles.ed.cs" );
+exec( "tools/gui/profiles.ed.tscript" );
 
 //--- OBJECT WRITE BEGIN ---
 %guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {

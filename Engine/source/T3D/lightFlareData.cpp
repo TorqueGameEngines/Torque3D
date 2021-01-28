@@ -85,7 +85,7 @@ ConsoleDocClass( LightFlareData,
    "as a 2D sprite in screenspace.\n\n"
 
    "@tsexample\n"
-   "// example from Full Template, core/art/datablocks/lights.cs\n"
+   "// example from Full Template, core/art/datablocks/lights." TORQUE_SCRIPT_EXTENSION "\n"
    "datablock LightFlareData( LightFlareExample0 )\n"
    "{\n"
    "   overallScale = 2.0;\n"

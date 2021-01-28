@@ -453,7 +453,7 @@ void copySketchupTexture(const Torque::Path &path, String &textureFilename)
 }
 
 //-----------------------------------------------------------------------------
-/// Add collada materials to materials.cs
+/// Add collada materials to materials.tscript
 void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
 {
 #ifdef DAE2DTS_TOOL
@@ -463,7 +463,7 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
 
    Torque::Path scriptPath(path);
    scriptPath.setFileName("materials");
-   scriptPath.setExtension("cs");
+   scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
 
    // First see what materials we need to update
    PersistenceManager persistMgr;
@@ -731,7 +731,7 @@ TSShape* loadColladaShape(const Torque::Path &path)
 
 #endif // DAE2DTS_TOOL
 
-         // Add collada materials to materials.cs
+         // Add collada materials to materials.tscript
          updateMaterialsScript(path, isSketchup);
       }
    }

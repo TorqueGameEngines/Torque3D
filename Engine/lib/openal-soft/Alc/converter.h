@@ -1,55 +1,59 @@
 #ifndef CONVERTER_H
 #define CONVERTER_H
 
-#include "alMain.h"
-#include "alu.h"
+#include <cstddef>
+#include <memory>
 
-#ifdef __cpluspluc
-extern "C" {
-#endif
+#include "almalloc.h"
+#include "core/devformat.h"
+#include "core/mixer/defs.h"
 
-typedef struct SampleConverter {
-    enum DevFmtType mSrcType;
-    enum DevFmtType mDstType;
-    ALsizei mNumChannels;
-    ALsizei mSrcTypeSize;
-    ALsizei mDstTypeSize;
-
-    ALint mSrcPrepCount;
-
-    ALsizei mFracOffset;
-    ALsizei mIncrement;
-    InterpState mState;
-    ResamplerFunc mResample;
-
-    alignas(16) ALfloat mSrcSamples[BUFFERSIZE];
-    alignas(16) ALfloat mDstSamples[BUFFERSIZE];
-
-    struct {
-        alignas(16) ALfloat mPrevSamples[MAX_RESAMPLE_PADDING*2];
-    } Chan[];
-} SampleConverter;
-
-SampleConverter *CreateSampleConverter(enum DevFmtType srcType, enum DevFmtType dstType, ALsizei numchans, ALsizei srcRate, ALsizei dstRate);
-void DestroySampleConverter(SampleConverter **converter);
-
-ALsizei SampleConverterInput(SampleConverter *converter, const ALvoid **src, ALsizei *srcframes, ALvoid *dst, ALsizei dstframes);
-ALsizei SampleConverterAvailableOut(SampleConverter *converter, ALsizei srcframes);
+using uint = unsigned int;
 
 
-typedef struct ChannelConverter {
-    enum DevFmtType mSrcType;
-    enum DevFmtChannels mSrcChans;
-    enum DevFmtChannels mDstChans;
-} ChannelConverter;
+struct SampleConverter {
+    DevFmtType mSrcType{};
+    DevFmtType mDstType{};
+    uint mSrcTypeSize{};
+    uint mDstTypeSize{};
 
-ChannelConverter *CreateChannelConverter(enum DevFmtType srcType, enum DevFmtChannels srcChans, enum DevFmtChannels dstChans);
-void DestroyChannelConverter(ChannelConverter **converter);
+    int mSrcPrepCount{};
 
-void ChannelConverterInput(ChannelConverter *converter, const ALvoid *src, ALfloat *dst, ALsizei frames);
+    uint mFracOffset{};
+    uint mIncrement{};
+    InterpState mState{};
+    ResamplerFunc mResample{};
 
-#ifdef __cpluspluc
-}
-#endif
+    alignas(16) float mSrcSamples[BufferLineSize]{};
+    alignas(16) float mDstSamples[BufferLineSize]{};
+
+    struct ChanSamples {
+        alignas(16) float PrevSamples[MaxResamplerPadding];
+    };
+    al::FlexArray<ChanSamples> mChan;
+
+    SampleConverter(size_t numchans) : mChan{numchans} { }
+
+    uint convert(const void **src, uint *srcframes, void *dst, uint dstframes);
+    uint availableOut(uint srcframes) const;
+
+    DEF_FAM_NEWDEL(SampleConverter, mChan)
+};
+using SampleConverterPtr = std::unique_ptr<SampleConverter>;
+
+SampleConverterPtr CreateSampleConverter(DevFmtType srcType, DevFmtType dstType, size_t numchans,
+    uint srcRate, uint dstRate, Resampler resampler);
+
+
+struct ChannelConverter {
+    DevFmtType mSrcType{};
+    uint mSrcStep{};
+    uint mChanMask{};
+    DevFmtChannels mDstChans{};
+
+    bool is_active() const noexcept { return mChanMask != 0; }
+
+    void convert(const void *src, float *dst, uint frames) const;
+};
 
 #endif /* CONVERTER_H */

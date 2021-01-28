@@ -267,12 +267,12 @@ namespace Platform
    /// Returns full pathname of the torque executable without filename
    StringTableEntry getExecutablePath();
    
-   /// Returns the full path to the directory that contains main.cs.
+   /// Returns the full path to the directory that contains main.tscript.
    /// Tools scripts are validated as such if they are in this directory or a
    /// subdirectory of this directory.
    StringTableEntry getMainDotCsDir();
 
-   /// Set main.cs directory. Used in runEntryScript()
+   /// Set main.tscript directory. Used in runEntryScript()
    void setMainDotCsDir(const char *dir);
 
    StringTableEntry getPrefsPath(const char *file = NULL);

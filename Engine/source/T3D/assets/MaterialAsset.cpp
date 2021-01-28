@@ -41,7 +41,7 @@
 #include "assets/assetPtr.h"
 #endif
 
-#include "T3D\assets\assetImporter.h"
+#include "T3D/assets/assetImporter.h"
 
 //-----------------------------------------------------------------------------
 

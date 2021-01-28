@@ -4,7 +4,7 @@
     ModuleId="Prototyping"
     VersionId="1"
     Group="Game"
-    scriptFile="Prototyping.cs"
+    scriptFile="Prototyping.tscript"
     CreateFunction="onCreate"
     DestroyFunction="onDestroy">
     <DeclaredAssets

@@ -204,27 +204,27 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_TEXTUREARRAY(Material, DiffuseMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, MAX_STAGES);
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
-   DECLARE_TEXTUREARRAY(Material, OverlayMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(Material, LightMap, MAX_STAGES);;
-   DECLARE_TEXTUREARRAY(Material, ToneMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(Material, DetailMap, MAX_STAGES);;
-   DECLARE_TEXTUREARRAY(Material, NormalMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(Material, ORMConfigMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, MAX_STAGES);;
+   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, MAX_STAGES);;
+   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, MAX_STAGES);
    bool     mIsSRGb[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, RoughMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, MAX_STAGES);
    bool     mInvertRoughness[MAX_STAGES];
    F32      mRoughnessChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, AOMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, MAX_STAGES);
    F32      mAOChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, MetalMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, MAX_STAGES);
    F32      mMetalChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, GlowMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, MAX_STAGES);
    F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
-   DECLARE_TEXTUREARRAY(Material, DetailNormalMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, MAX_STAGES);
    /// The strength scalar for the detail normal map.
    F32 mDetailNormalMapStrength[MAX_STAGES];
 

@@ -42,17 +42,17 @@ protected:
 
    //AssetPtr<ImageAsset> mDiffuseAsset;
 
-   DECLARE_TEXTUREMAP(TerrainMaterial, DiffuseMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap);
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
    F32 mDiffuseSize;
 
    ///
-   DECLARE_TEXTUREMAP(TerrainMaterial, NormalMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap);
 
    ///
-   DECLARE_TEXTUREMAP(TerrainMaterial, DetailMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap);
    
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
@@ -66,7 +66,7 @@ protected:
    F32 mDetailDistance;
 
    ///
-   DECLARE_TEXTUREMAP(TerrainMaterial, ORMConfigMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap);
 
    bool mIsSRGB;
    bool mInvertRoughness;
@@ -77,7 +77,7 @@ protected:
    /// planes.
    bool mSideProjection;
 
-   DECLARE_TEXTUREMAP(TerrainMaterial, MacroMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap);
    F32 mMacroSize;
    F32 mMacroStrength;
    F32 mMacroDistance;

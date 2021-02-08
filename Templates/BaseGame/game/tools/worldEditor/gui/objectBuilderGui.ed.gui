@@ -299,7 +299,120 @@ function ObjectBuilderGui::gotTerrainAsset(%this, %name)
    //%this.controls[%this.currentControl].setValue(%name);
 }
 //------------------------------------------------------------------------------
+function ObjectBuilderGui::createImageAssetType(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::createImageAssetType: invalid field");
+      return;
+   }
 
+   //
+   if(%this.field[%index, text] $= "")
+      %name = %this.field[%index, name];
+   else
+      %name = %this.field[%index, text];
+
+   // 
+   /*%this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      internalName = "assetText";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+
+   // 
+   %this.controls[%this.numControls] = new GuiButtonCtrl() {
+      HorizSizing = "width";
+      profile = "ToolsGuiButtonProfile";
+      internalName = "assetButton";
+      extent = %this.fileButtonExtent;
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+      command = %this @ ".getImageAsset(" @ %index @ ");";
+   };
+
+   %val = %this.field[%index, value];
+   %this.controls[%this.numControls].setText(fileBase(%val) @ fileExt(%val));*/
+   
+   %this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+
+   // 
+   %this.controls[%this.numControls] = new GuiControl() {
+      HorizSizing = "width";
+      profile = "ToolsGuiDefaultProfile";
+      extent = %this.textEditExtent;
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+   };
+   
+   %text = new GuiTextEditCtrl() {
+      class = ObjectBuilderGuiTextEditCtrl;
+      internalName = "assetText";
+      HorizSizing = "width";
+      profile = "ToolsGuiTextEditProfile";
+      extent = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) - 2 @ " " @ getWord(%this.textEditExtent,1);
+      text = %this.field[%index, value];
+      position = "0 0";
+      modal = "1";
+   };
+   %this.controls[%this.numControls].addGuiControl(%text);
+   
+   %button = new GuiBitmapButtonCtrl() {
+      internalName = "assetButton";
+      HorizSizing = "left";
+      profile = "ToolsGuiButtonProfile";
+      extent = %this.matButtonExtent;
+      position = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) @ " 0";
+      modal = "1";
+      command = %this @ ".getImageAsset(" @ %index @ ");";
+   };
+   %button.setBitmap("tools/materialEditor/gui/change-material-btn");
+   %this.controls[%this.numControls].addGuiControl(%button);
+
+   %this.numControls++;
+   %this.curYPos += %this.defaultFieldStep;
+}
+
+function ObjectBuilderGui::getImageAsset(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::getImageAsset: invalid field");
+      return;
+   }
+   
+   %val = %this.field[%index, ext];
+
+   //%path = filePath(%val);
+   //%ext = fileExt(%val);
+
+   %this.currentControl = %index;
+   AssetBrowser.showDialog("ImageAsset", %this @ ".gotImageAsset", "", "", "");
+   //getLoadFilename( %val @ "|" @ %val, %this @ ".gotFileName", %this.lastPath );
+}
+
+function ObjectBuilderGui::gotImageAsset(%this, %name)
+{
+   %index = %this.currentControl;
+   
+   %this.field[%index, value] = %name;
+   %this.controls[%this.currentControl]-->assetText.setText(%name);
+   
+   %this.lastPath = %name;
+   
+   // This doesn't work for button controls as getValue returns their state!
+   //%this.controls[%this.currentControl].setValue(%name);
+}
+//------------------------------------------------------------------------------
 function ObjectBuilderGui::createMaterialNameType(%this, %index)
 {
    if(%index >= %this.numFields || %this.field[%index, name] $= "")
@@ -563,6 +676,9 @@ function ObjectBuilderGui::process(%this)
             
          case "TypeTerrainAsset":
             %this.createTerrainAssetType(%i);
+            
+         case "TypeImageAsset":
+            %this.createImageAssetType(%i);
 
          case "TypeMaterialName":
             %this.createMaterialNameType(%i);
@@ -634,6 +750,13 @@ function ObjectBuilderGui::onOK(%this)
       if (%this.field[%i, type] $= "TypeMaterialName")
       {
          %this.field[%i, value] = %this.controls[%i]-->MatText.getValue();
+         continue;
+      }
+      if (%this.field[%i, type] $= "TypeImageAsset" || 
+      %this.field[%i, type] $= "TypeTerrainAsset")
+      {
+         %asdasdasdasdas = %this.controls[%i]-->assetText.getText();
+         %this.field[%i, value] = %this.controls[%i]-->assetText.getText();
          continue;
       }
       %this.field[%i, value] = %this.controls[%i].getValue();
@@ -746,7 +869,8 @@ function ObjectBuilderGui::buildCloudLayer(%this)
 {
    OBObjectName.setValue( "" );      
    %this.objectClassName = "CloudLayer";
-   %this.addField( "texture", "TypeImageFilename", "Texture", "core/rendering/images/clouds_normal_displacement" );   
+   %this.addField( "textureAsset", "TypeImageAsset", "Image", "Core_Rendering:clouds_normal_displacement" ); 
+   //%this.addField( "textureFile", "TypeImageFilename", "Texture", "core/rendering/images/clouds_normal_displacement" );   
 	%this.process();
 }
 

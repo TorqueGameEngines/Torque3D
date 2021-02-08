@@ -135,18 +135,18 @@ Material::Material()
       mAccuCoverage[i]  = 0.9f;
       mAccuSpecular[i]  = 16.0f;
 
-      initMapArraySlot(DiffuseMap, i);
-      initMapArraySlot(OverlayMap, i);
-      initMapArraySlot(LightMap, i);
-      initMapArraySlot(ToneMap, i);
-      initMapArraySlot(DetailMap, i);
-      initMapArraySlot(NormalMap, i);
-      initMapArraySlot(ORMConfigMap, i);
-      initMapArraySlot(RoughMap, i);
-      initMapArraySlot(AOMap, i);
-      initMapArraySlot(MetalMap, i);
-      initMapArraySlot(GlowMap, i);
-      initMapArraySlot(DetailNormalMap, i);
+      INIT_IMAGEASSET_ARRAY(DiffuseMap, i);
+      INIT_IMAGEASSET_ARRAY(OverlayMap, i);
+      INIT_IMAGEASSET_ARRAY(LightMap, i);
+      INIT_IMAGEASSET_ARRAY(ToneMap, i);
+      INIT_IMAGEASSET_ARRAY(DetailMap, i);
+      INIT_IMAGEASSET_ARRAY(NormalMap, i);
+      INIT_IMAGEASSET_ARRAY(ORMConfigMap, i);
+      INIT_IMAGEASSET_ARRAY(RoughMap, i);
+      INIT_IMAGEASSET_ARRAY(AOMap, i);
+      INIT_IMAGEASSET_ARRAY(MetalMap, i);
+      INIT_IMAGEASSET_ARRAY(GlowMap, i);
+      INIT_IMAGEASSET_ARRAY(DetailNormalMap, i);
 
       mParallaxScale[i] = 0.0f;
 
@@ -243,18 +243,18 @@ void Material::initPersistFields()
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color." );
 
-      scriptBindMapArraySlot(DiffuseMap, MAX_STAGES, Material, "Albedo");
-      scriptBindMapArraySlot(OverlayMap, MAX_STAGES, Material, "Overlay");
-      scriptBindMapArraySlot(LightMap, MAX_STAGES, Material, "LightMap");
-      scriptBindMapArraySlot(ToneMap, MAX_STAGES, Material, "ToneMap");
-      scriptBindMapArraySlot(DetailMap, MAX_STAGES, Material, "DetailMap");
-      scriptBindMapArraySlot(NormalMap, MAX_STAGES, Material, "NormalMap");
-      scriptBindMapArraySlot(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
-      scriptBindMapArraySlot(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
-      scriptBindMapArraySlot(AOMap, MAX_STAGES, Material, "AOMap");
-      scriptBindMapArraySlot(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
-      scriptBindMapArraySlot(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
-      scriptBindMapArraySlot(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(DiffuseMap, MAX_STAGES, Material, "Albedo");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(OverlayMap, MAX_STAGES, Material, "Overlay");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(LightMap, MAX_STAGES, Material, "LightMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(ToneMap, MAX_STAGES, Material, "ToneMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailMap, MAX_STAGES, Material, "DetailMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(NormalMap, MAX_STAGES, Material, "NormalMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(AOMap, MAX_STAGES, Material, "AOMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
 
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
@@ -541,17 +541,17 @@ bool Material::onAdd()
    //bind any assets we have
    for (U32 i = 0; i < MAX_STAGES; i++)
    {
-      bindMapArraySlot(DiffuseMap, i);
-      bindMapArraySlot(OverlayMap, i);
-      bindMapArraySlot(LightMap, i);
-      bindMapArraySlot(ToneMap, i);
-      bindMapArraySlot(DetailMap, i);
-      bindMapArraySlot(ORMConfigMap, i);
-      bindMapArraySlot(RoughMap, i);
-      bindMapArraySlot(AOMap, i);
-      bindMapArraySlot(MetalMap, i);
-      bindMapArraySlot(GlowMap, i);
-      bindMapArraySlot(DetailNormalMap, i);
+      LOAD_IMAGEASSET_ARRAY(DiffuseMap, i);
+      LOAD_IMAGEASSET_ARRAY(OverlayMap, i);
+      LOAD_IMAGEASSET_ARRAY(LightMap, i);
+      LOAD_IMAGEASSET_ARRAY(ToneMap, i);
+      LOAD_IMAGEASSET_ARRAY(DetailMap, i);
+      LOAD_IMAGEASSET_ARRAY(ORMConfigMap, i);
+      LOAD_IMAGEASSET_ARRAY(RoughMap, i);
+      LOAD_IMAGEASSET_ARRAY(AOMap, i);
+      LOAD_IMAGEASSET_ARRAY(MetalMap, i);
+      LOAD_IMAGEASSET_ARRAY(GlowMap, i);
+      LOAD_IMAGEASSET_ARRAY(DetailNormalMap, i);
    }
 
    _mapMaterial();

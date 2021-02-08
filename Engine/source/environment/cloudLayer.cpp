@@ -110,6 +110,8 @@ CloudLayer::CloudLayer()
    mTexOffset[0] = mTexOffset[1] = mTexOffset[2] = Point2F::Zero;
 
    mHeight = 4.0f;
+
+   INIT_IMAGEASSET(Texture);
 }
 
 IMPLEMENT_CO_NETOBJECT_V1( CloudLayer );
@@ -127,9 +129,11 @@ bool CloudLayer::onAdd()
 
    addToScene();
 
+   LOAD_IMAGEASSET(Texture);
+
    if ( isClientObject() )
    {
-      _initTexture();
+      //_initTexture();
       _initBuffers();
 
       // Find ShaderData
@@ -186,11 +190,10 @@ void CloudLayer::onRemove()
 
 void CloudLayer::initPersistFields()
 {
-   addGroup( "CloudLayer" );	   
-      
-      addField( "texture", TypeImageFilename, Offset( mTextureName, CloudLayer ),
-         "An RGBA texture which should contain normals and opacity (density)." );
+   addGroup( "CloudLayer" );
 
+      INITPERSISTFIELD_IMAGEASSET(Texture, CloudLayer, "An RGBA texture which should contain normals and opacity (density).");
+      
       addArray( "Textures", TEX_COUNT );
 
          addField( "texScale", TypeF32, Offset( mTexScale, CloudLayer ), TEX_COUNT,
@@ -238,7 +241,7 @@ U32 CloudLayer::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   stream->write( mTextureName );
+   PACK_IMAGEASSET(conn, Texture);
    
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
@@ -260,8 +263,10 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   String oldTextureName = mTextureName;
-   stream->read( &mTextureName );
+   UNPACK_IMAGEASSET(conn, Texture);
+
+   if(mTextureAssetId != StringTable->EmptyString())
+      mTextureAsset = mTextureAssetId;
 
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
@@ -283,8 +288,9 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    if ( isProperlyAdded() )
    {
-      if ( ( oldTextureName != mTextureName ) || ( ( oldCoverage == 0.0f ) != ( mCoverage == 0.0f ) ) )
-         _initTexture();
+      //if ( ( oldTextureName != mTextureName ) || ( ( oldCoverage == 0.0f ) != ( mCoverage == 0.0f ) ) )
+      //   _initTexture();
+
       if ( oldHeight != mHeight )
          _initBuffers();
    }
@@ -329,6 +335,9 @@ void CloudLayer::prepRenderImage( SceneRenderState *state )
 void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *mi )
 {
    GFXTransformSaver saver;
+
+   if (!mTextureAsset || !mTextureAsset->isAssetValid())
+      return;
 
    const Point3F &camPos = state->getCameraPosition();
    MatrixF xfm(true);
@@ -378,7 +387,7 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 
    mShaderConsts->setSafe( mExposureSC, mExposure );
 
-   GFX->setTexture( mNormalHeightMapSC->getSamplerRegister(), mTexture );                            
+   GFX->setTexture( mNormalHeightMapSC->getSamplerRegister(), mTextureAsset->getImage(GFXNormalMapProfile));
    GFX->setVertexBuffer( mVB );            
    GFX->setPrimitiveBuffer( mPB );
 
@@ -389,7 +398,7 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 // CloudLayer Internal Methods....
 
 
-void CloudLayer::_initTexture()
+/*void CloudLayer::_initTexture()
 {
    if ( mCoverage <= 0.0f )
    {
@@ -402,7 +411,7 @@ void CloudLayer::_initTexture()
 
    if ( mTexture.isNull() )
       mTexture.set( GFXTextureManager::getWarningTexturePath(), &GFXNormalMapProfile, "CloudLayer" );
-}
+}*/
 
 void CloudLayer::_initBuffers()
 {      

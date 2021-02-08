@@ -256,7 +256,7 @@ function AssetBrowser::selectAsset( %this, %asset )
       %this.changeAsset();
    }
    
-   EWInspectorWindow.refresh();
+   Inspector.refresh();
    
    AssetBrowser.hideDialog();
 }
@@ -270,6 +270,7 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    AssetBrowser.fieldTargetObject = %targetObj;
    AssetBrowser.fieldTargetName = %fieldName;
 
+   Canvas.popDialog(AssetBrowser);
    Canvas.pushDialog(AssetBrowser);
    AssetBrowser.setVisible(1);
    AssetBrowserWindow.setVisible(1);

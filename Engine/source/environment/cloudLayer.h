@@ -39,6 +39,8 @@
 #include "materials/matInstance.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 GFXDeclareVertexFormat( GFXCloudVertex )
 {
    Point3F point;
@@ -83,7 +85,7 @@ public:
 
 protected:
 
-   void _initTexture();
+   //void _initTexture();
    void _initBuffers();
 
 protected:
@@ -93,7 +95,7 @@ protected:
    static U32 smVertCount;
    static U32 smTriangleCount;
 
-   GFXTexHandle mTexture;
+   DECLARE_NET_IMAGEASSET(CloudLayer, Texture, CloudLayerMask);
 
    GFXShaderRef mShader;
 
@@ -120,7 +122,6 @@ protected:
 
    // Fields...
 
-   String mTextureName;
    F32 mTexScale[TEX_COUNT];
    Point2F mTexDirection[TEX_COUNT];
    F32 mTexSpeed[TEX_COUNT];   

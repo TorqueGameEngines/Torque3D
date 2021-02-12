@@ -148,7 +148,7 @@ function ShapeEditorPlugin::onWorldEditorStartup(%this)
 function ShapeEditorPlugin::openShapeAsset(%this, %assetDef)
 {
    %this.selectedAssetDef = %assetDef;
-   %this.open(%this.selectedAssetDef.getShapeFile());
+   %this.open(makeRelativePath(%this.selectedAssetDef.getShapeFile()));
 }
 
 function ShapeEditorPlugin::openShapeAssetId(%this, %assetId)

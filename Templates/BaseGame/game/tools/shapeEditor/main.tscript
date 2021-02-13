@@ -155,7 +155,7 @@ function ShapeEditorPlugin::openShapeAssetId(%this, %assetId)
 {
    %this.selectedAssetDef = AssetDatabase.acquireAsset(%assetId);
    //%this.selectedAssetDef = %assetDef;
-   %this.open(%this.selectedAssetDef.getShapeFile());
+   %this.open(makeRelativePath(%this.selectedAssetDef.getShapeFile()));
 }
 
 function ShapeEditorPlugin::open(%this, %filename)

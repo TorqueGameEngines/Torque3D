@@ -86,8 +86,8 @@ void main()
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {
-      OUT_col = vec4(0.0);
-	   return;
+      OUT_col = vec4(surface.albedo, 0);
+      return;
    }
    
    vec3 L = lightPosition - surface.P;

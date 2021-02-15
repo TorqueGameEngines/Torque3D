@@ -51,7 +51,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {
-      return TORQUE_TEX2D(colorBuffer, IN.uv0.xy);
+      return float4(surface.albedo, 0);
    }
 
    #ifdef USE_SSAO_MASK

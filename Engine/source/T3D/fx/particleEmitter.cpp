@@ -91,6 +91,7 @@ ConsoleDocClass( ParticleEmitterData,
    "   ejectionOffset = 0.0;\n"
    "   thetaMin = 85;\n"
    "   thetaMax = 85;\n"
+   "   thetaVariance = 0;\n"
    "   phiReferenceVel = 0;\n"
    "   phiVariance = 360;\n"
    "   overrideAdvance = false;\n"
@@ -127,6 +128,7 @@ ParticleEmitterData::ParticleEmitterData()
 
    thetaMin         = 0.0f;   // All heights
    thetaMax         = 90.0f;
+   thetaVariance    = 0.0f;
 
    phiReferenceVel  = sgDefaultPhiReferenceVel;   // All directions
    phiVariance      = sgDefaultPhiVariance;
@@ -140,6 +142,7 @@ ParticleEmitterData::ParticleEmitterData()
    overrideAdvance  = true;
    orientParticles  = false;
    orientOnVelocity = true;
+   ribbonParticles = false;
    useEmitterSizes  = false;
    useEmitterColors = false;
    particleString   = NULL;
@@ -158,7 +161,6 @@ ParticleEmitterData::ParticleEmitterData()
    
    alignParticles = false;
    alignDirection = Point3F(0.0f, 1.0f, 0.0f);
-   
    ejectionInvert = false;
    fade_color    = false;
    fade_alpha    = false;
@@ -231,6 +233,9 @@ void ParticleEmitterData::initPersistFields()
       addFieldV( "thetaMax", TYPEID< F32 >(), Offset(thetaMax, ParticleEmitterData), &thetaFValidator,
          "Maximum angle, from the horizontal plane, to eject particles from." );
 
+	  addFieldV( "thetaVariance", TYPEID< F32 >(), Offset(thetaVariance, ParticleEmitterData), &thetaFValidator,
+         "Angle variance from the previous particle, from 0 - 180." );
+
       addFieldV( "phiReferenceVel", TYPEID< F32 >(), Offset(phiReferenceVel, ParticleEmitterData), &phiFValidator,
          "Reference angle, from the vertical plane, to eject particles from." );
 
@@ -257,6 +262,9 @@ void ParticleEmitterData::initPersistFields()
 
       addField( "orientOnVelocity", TYPEID< bool >(), Offset(orientOnVelocity, ParticleEmitterData),
          "If true, particles will be oriented to face in the direction they are moving." );
+
+      addField( "ribbonParticles", TYPEID< bool >(), Offset(ribbonParticles, ParticleEmitterData),
+         "If true, particles are rendered as a continous ribbon." );
 
       addField( "particles", TYPEID< StringTableEntry >(), Offset(particleString, ParticleEmitterData),
          "@brief List of space or TAB delimited ParticleData datablock names.\n\n"
@@ -368,6 +376,7 @@ void ParticleEmitterData::packData(BitStream* stream)
       stream->writeInt((S32)(ejectionOffsetVariance * 100), 16);
    stream->writeRangedU32((U32)thetaMin, 0, 180);
    stream->writeRangedU32((U32)thetaMax, 0, 180);
+   stream->writeRangedU32((U32)thetaVariance, 0, 180);
    if( stream->writeFlag( phiReferenceVel != sgDefaultPhiReferenceVel ) )
       stream->writeRangedU32((U32)phiReferenceVel, 0, 360);
    if( stream->writeFlag( phiVariance != sgDefaultPhiVariance ) )
@@ -379,6 +388,7 @@ void ParticleEmitterData::packData(BitStream* stream)
    stream->writeFlag(overrideAdvance);
    stream->writeFlag(orientParticles);
    stream->writeFlag(orientOnVelocity);
+   stream->writeFlag(ribbonParticles);
    stream->write( lifetimeMS );
    stream->write( lifetimeVarianceMS );
    stream->writeFlag(useEmitterSizes);
@@ -441,6 +451,7 @@ void ParticleEmitterData::unpackData(BitStream* stream)
       ejectionOffsetVariance = 0.0f;
    thetaMin = (F32)stream->readRangedU32(0, 180);
    thetaMax = (F32)stream->readRangedU32(0, 180);
+   thetaVariance = (F32)stream->readRangedU32(0, 180);
    if( stream->readFlag() )
       phiReferenceVel = (F32)stream->readRangedU32(0, 360);
    else
@@ -457,6 +468,7 @@ void ParticleEmitterData::unpackData(BitStream* stream)
    overrideAdvance = stream->readFlag();
    orientParticles = stream->readFlag();
    orientOnVelocity = stream->readFlag();
+   ribbonParticles = stream->readFlag();
    stream->read( &lifetimeMS );
    stream->read( &lifetimeVarianceMS );
    useEmitterSizes = stream->readFlag();
@@ -544,6 +556,11 @@ bool ParticleEmitterData::onAdd()
       Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) ejectionOffset < 0", getName());
       ejectionOffset = 0.0f;
    }
+   if( ejectionOffsetVariance < 0.0f )
+   {
+      Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) ejectionOffset < 0", getName());
+      ejectionOffsetVariance = 0.0f;
+   }
    if( thetaMin < 0.0f )
    {
       Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) thetaMin < 0.0", getName());
@@ -559,10 +576,28 @@ bool ParticleEmitterData::onAdd()
       Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) thetaMin > thetaMax", getName());
       thetaMin = thetaMax;
    }
+
+   if( thetaVariance > 180.0f )
+   {
+      Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) thetaVariance > 180.0", getName());
+      thetaVariance = 180.0f;
+   }
+
+   if( thetaVariance < 0.0f )
+   {
+      Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) thetaVariance < 0.0", getName());
+      thetaVariance = 0.0f;
+   }
+
    if( phiVariance < 0.0f || phiVariance > 360.0f )
    {
       Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) invalid phiVariance", getName());
       phiVariance = phiVariance < 0.0f ? 0.0f : 360.0f;
+   }
+   if( thetaVariance < 0.0f || thetaVariance > 180.0f )
+   {
+      Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) invalid thetaVariance", getName());
+      thetaVariance = thetaVariance < 0.0f ? 0.0f : 180.0f;
    }
 
    if ( softnessDistance < 0.0f )
@@ -822,6 +857,7 @@ ParticleEmitterData::ParticleEmitterData(const ParticleEmitterData& other, bool 
    ejectionOffsetVariance = other.ejectionOffsetVariance;
    thetaMin = other.thetaMin;
    thetaMax = other.thetaMax;
+   thetaVariance = other.thetaVariance;
    phiReferenceVel = other.phiReferenceVel;
    phiVariance = other.phiVariance;
    softnessDistance = other.softnessDistance;
@@ -831,6 +867,7 @@ ParticleEmitterData::ParticleEmitterData(const ParticleEmitterData& other, bool 
    overrideAdvance = other.overrideAdvance;
    orientParticles = other.orientParticles;
    orientOnVelocity = other.orientOnVelocity;
+   ribbonParticles = other.ribbonParticles;
    useEmitterSizes = other.useEmitterSizes;
    useEmitterColors = other.useEmitterColors;
    alignParticles = other.alignParticles;
@@ -952,6 +989,9 @@ ParticleEmitter::ParticleEmitter()
    part_list_head.next = NULL;
    n_part_capacity = 0;
    n_parts = 0;
+
+   mThetaOld = 0;
+   mPhiOld = 0;
 
    mCurBuffSize = 0;
 
@@ -1570,11 +1610,34 @@ void ParticleEmitter::addParticle(const Point3F& pos, const Point3F& axis, const
    else
      pos_start = pos;
    Point3F ejectionAxis = axis;
-   F32 theta = (mDataBlock->thetaMax - mDataBlock->thetaMin) * gRandGen.randF() +
-               mDataBlock->thetaMin;
+   F32 theta = 0.0f;
+   F32 thetaTarget = (mDataBlock->thetaMax + mDataBlock->thetaMin) / 2.0f;
+   if (mDataBlock->thetaVariance <= 0.0f)
+      theta = (mDataBlock->thetaMax - mDataBlock->thetaMin) * gRandGen.randF() + mDataBlock->thetaMin;
+   else
+   {
+	   F32 thetaDelta = ( gRandGen.randF() - 0.5f) * mDataBlock->thetaVariance * 2.0f;
+	   thetaDelta += ( (thetaTarget - mThetaOld) / mDataBlock->thetaMax ) * mDataBlock->thetaVariance * 0.25f;
+	   theta = mThetaOld + thetaDelta;
+   }
+   mThetaOld = theta;
 
    F32 ref  = (F32(mInternalClock) / 1000.0) * mDataBlock->phiReferenceVel;
-   F32 phi  = ref + gRandGen.randF() * mDataBlock->phiVariance;
+   F32 phi = 0.0f;
+   if (mDataBlock->thetaVariance <= 0.0f)
+   {
+      phi  = ref + gRandGen.randF() * mDataBlock->phiVariance;
+   }
+   else
+   {
+      F32 phiDelta = (gRandGen.randF() - 0.5f) * mDataBlock->thetaVariance * 2.0f;
+      phi  = ref + mPhiOld + phiDelta;
+	  if (phi > mDataBlock->phiVariance)
+	      phi += fabs(phiDelta) * -2.0f;
+	  if (phi < 0.0f)
+	      phi += fabs(phiDelta) * 2.0f;
+   }
+   mPhiOld = phi;
 
    // Both phi and theta are in degs.  Create axis angles out of them, and create the
    //  appropriate rotation matrix...
@@ -1601,7 +1664,16 @@ void ParticleEmitter::addParticle(const Point3F& pos, const Point3F& axis, const
    pNew->acc.set(0, 0, 0);
    pNew->currentAge = age_offset;
    pNew->t_last = 0.0f;
+   // ribbon particles only use the first particle
+   if(mDataBlock->ribbonParticles)
+   {
+      mDataBlock->particleDataBlocks[0]->initializeParticle(pNew, vel);
+   }
+   else
+   {
+      U32 dBlockIndex = gRandGen.randI() % mDataBlock->particleDataBlocks.size();
    mDataBlock->particleDataBlocks[dBlockIndex]->initializeParticle(pNew, vel);
+   }
    updateKeyData( pNew );
 
 }
@@ -1745,6 +1817,7 @@ void ParticleEmitter::updateKeyData( Particle *part )
 //-----------------------------------------------------------------------------
 // Update particles
 //-----------------------------------------------------------------------------
+// AFX CODE BLOCK (enhanced-emitter) <<
 void ParticleEmitter::update( U32 ms )
 {
    F32 t = F32(ms)/1000.0f; // AFX -- moved outside loop, no need to recalculate this for every particle
@@ -1828,7 +1901,52 @@ void ParticleEmitter::copyToVB( const Point3F &camPos, const LinearColorF &ambie
    tempBuff.reserve( n_parts*4 + 64); // make sure tempBuff is big enough
    ParticleVertexType *buffPtr = tempBuff.address(); // use direct pointer (faster)
    
-   if (mDataBlock->orientParticles)
+   if (mDataBlock->ribbonParticles)
+   {
+      PROFILE_START(ParticleEmitter_copyToVB_Ribbon);
+
+      if (mDataBlock->reverseOrder)
+      {
+         buffPtr += 4 * (n_parts - 1);
+         // do sorted-oriented particles
+         if (mDataBlock->sortParticles)
+         {
+            SortParticle* partPtr = orderedVector.address();
+            for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr -= 4)
+               setupRibbon(partPtr->p, partPtr++->p, partPtr--->p, camPos, ambientColor, buffPtr);
+         }
+         // do unsorted-oriented particles
+         else
+         {
+            Particle* oldPtr = NULL;
+            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr -= 4) {
+               setupRibbon(partPtr, partPtr->next, oldPtr, camPos, ambientColor, buffPtr);
+               oldPtr = partPtr;
+            }
+         }
+      }
+      else
+      {
+         // do sorted-oriented particles
+         if (mDataBlock->sortParticles)
+         {
+            SortParticle* partPtr = orderedVector.address();
+            for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr += 4)
+               setupRibbon(partPtr->p, partPtr++->p, partPtr--->p, camPos, ambientColor, buffPtr);
+         }
+         // do unsorted-oriented particles
+         else
+         {
+            Particle* oldPtr = NULL;
+            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr += 4) {
+               setupRibbon(partPtr, partPtr->next, oldPtr, camPos, ambientColor, buffPtr);
+               oldPtr = partPtr;
+            }
+         }
+      }
+      PROFILE_END();
+   }
+   else if (mDataBlock->orientParticles)
    {
       PROFILE_START(ParticleEmitter_copyToVB_Orient);
 
@@ -2263,6 +2381,199 @@ void ParticleEmitter::setupAligned( const Particle *part,
       lVerts->texCoord = part->dataBlock->texCoords[3];
       ++lVerts;
    }
+}
+
+void ParticleEmitter::setupRibbon(Particle *part,
+   Particle *next,
+   Particle *prev,
+   const Point3F &camPos,
+   const LinearColorF &ambientColor,
+   ParticleVertexType *lVerts)
+{
+   Point3F dir, dirFromCam;
+   Point3F crossDir, crossDirNext;
+   Point3F start, end;
+   LinearColorF prevCol;
+   static Point3F crossDirPrev;
+   static int position;
+   static F32 alphaMod, alphaModEnd;
+
+   const F32 ambientLerp = mClampF(mDataBlock->ambientFactor, 0.0f, 1.0f);
+   LinearColorF partCol = mLerp(part->color, (part->color * ambientColor), ambientLerp);
+   if (part->currentAge > part->totalLifetime)
+   {
+      F32 alphaDeath = (part->currentAge - part->totalLifetime) / 200.0f;
+      if (alphaDeath > 1.0f)
+         alphaDeath = 1.0f;
+      alphaDeath = 1.0f - alphaDeath;
+      partCol.alpha *= alphaDeath;
+   }
+
+   start = part->pos;
+   position++;
+
+   if (next == NULL && prev == NULL) {
+      // a ribbon of just one particle
+      position = 0;
+
+      if (part->vel.magnitudeSafe() == 0.0)
+         dir = part->orientDir;
+      else
+         dir = part->vel;
+
+      dir.normalize();
+      dirFromCam = part->pos - camPos;
+      mCross(dirFromCam, dir, &crossDir);
+      crossDir.normalize();
+      crossDir = crossDir * part->size * 0.5;
+      crossDirPrev = crossDir;
+
+      partCol.alpha = 0.0f;
+      prevCol = partCol;
+      end = part->pos;
+   }
+   else if (next == NULL && prev != NULL)
+   {
+      // last link in the chain, also the oldest
+      dir = part->pos - prev->pos;
+      dir.normalize();
+      dirFromCam = part->pos - camPos;
+      mCross(dirFromCam, dir, &crossDir);
+      crossDir.normalize();
+      crossDir = crossDir * part->size * 0.5;
+
+      end = prev->pos;
+      partCol.alpha = 0.0f;
+      prevCol = mLerp(prev->color, (prev->color * ambientColor), ambientLerp);
+      prevCol.alpha *= alphaModEnd;
+   }
+   else if (next != NULL && prev == NULL)
+   {
+      // first link in chain, newest particle
+      // since we draw from current to previous, this one isn't drawn
+      position = 0;
+
+      dir = next->pos - part->pos;
+      dir.normalize();
+
+      dirFromCam = part->pos - camPos;
+      mCross(dirFromCam, dir, &crossDir);
+      crossDir.normalize();
+      crossDir = crossDir * part->size * 0.5f;
+      crossDirPrev = crossDir;
+
+      partCol.alpha = 0.0f;
+      prevCol = partCol;
+      alphaModEnd = 0.0f;
+
+      end = part->pos;
+   }
+   else
+   {
+      // middle of chain
+      dir = next->pos - prev->pos;
+      dir.normalize();
+      dirFromCam = part->pos - camPos;
+      mCross(dirFromCam, dir, &crossDir);
+      crossDir.normalize();
+
+      crossDir = crossDir * part->size * 0.5;
+
+      prevCol = mLerp(prev->color, (prev->color * ambientColor), ambientLerp);
+
+      if (position == 1)
+      {
+         // the second particle has a few tweaks for alpha, to smoothly match the first particle
+         // we only want to do this once when the particle first fades in, and avoid a strobing effect
+         alphaMod = (float(part->currentAge) / float(part->currentAge - prev->currentAge)) - 1.0f;
+         if (alphaMod > 1.0f)
+            alphaMod = 1.0f;
+         partCol.alpha *= alphaMod;
+         prevCol.alpha = 0.0f;
+         if (next->next == NULL)
+            alphaModEnd = alphaMod;
+         //Con::printf("alphaMod: %f", alphaMod );
+      }
+      else if (position == 2)
+      {
+         prevCol.alpha *= alphaMod;
+         alphaMod = 0.0f;
+      }
+
+      if (next->next == NULL && position > 1)
+      {
+         // next to last particle, start the fade out
+         alphaModEnd = (float(next->totalLifetime - next->currentAge)) / (float(part->totalLifetime - part->currentAge));
+         alphaModEnd *= 2.0f;
+         if (alphaModEnd > 1.0f)
+            alphaModEnd = 1.0f;
+         partCol.alpha *= alphaModEnd;
+         //Con::printf("alphaMod: %f  Lifetime: %d  Age: %d", alphaMod, part->totalLifetime, part->currentAge );
+      }
+      end = prev->pos;
+   }
+
+   ColorI pCol = partCol.toColorI();
+
+   // Here we deal with UVs for animated particle (oriented)
+   if (part->dataBlock->animateTexture)
+   {
+      // Let particle compute the UV indices for current frame
+      S32 fm = (S32)(part->currentAge*(1.0f / 1000.0f)*part->dataBlock->framesPerSec);
+      U8 fm_tile = part->dataBlock->animTexFrames[fm % part->dataBlock->numFrames];
+      S32 uv[4];
+      uv[0] = fm_tile + fm_tile / part->dataBlock->animTexTiling.x;
+      uv[1] = uv[0] + (part->dataBlock->animTexTiling.x + 1);
+      uv[2] = uv[1] + 1;
+      uv[3] = uv[0] + 1;
+
+      lVerts->point = start + crossDir;
+      lVerts->color = pCol;
+      // Here and below, we copy UVs from particle datablock's current frame's UVs (oriented)
+      lVerts->texCoord = part->dataBlock->animTexUVs[uv[0]];
+      ++lVerts;
+
+      lVerts->point = start - crossDir;
+      lVerts->color = pCol;
+      lVerts->texCoord = part->dataBlock->animTexUVs[uv[1]];
+      ++lVerts;
+
+      lVerts->point = end - crossDirPrev;
+      lVerts->color = pCol;
+      lVerts->texCoord = part->dataBlock->animTexUVs[uv[2]];
+      ++lVerts;
+
+      lVerts->point = end + crossDirPrev;
+      lVerts->color = pCol;
+      lVerts->texCoord = part->dataBlock->animTexUVs[uv[3]];
+      ++lVerts;
+
+      crossDirPrev = crossDir;
+      return;
+   }
+
+   lVerts->point = start + crossDir;
+   lVerts->color = pCol;
+   // Here and below, we copy UVs from particle datablock's texCoords (oriented)
+   lVerts->texCoord = part->dataBlock->texCoords[0];
+   ++lVerts;
+
+   lVerts->point = start - crossDir;
+   lVerts->color = pCol;
+   lVerts->texCoord = part->dataBlock->texCoords[1];
+   ++lVerts;
+
+   lVerts->point = end - crossDirPrev;
+   lVerts->color = pCol;
+   lVerts->texCoord = part->dataBlock->texCoords[2];
+   ++lVerts;
+
+   lVerts->point = end + crossDirPrev;
+   lVerts->color = pCol;
+   lVerts->texCoord = part->dataBlock->texCoords[3];
+   ++lVerts;
+
+   crossDirPrev = crossDir;
 }
 
 bool ParticleEmitterData::reload()

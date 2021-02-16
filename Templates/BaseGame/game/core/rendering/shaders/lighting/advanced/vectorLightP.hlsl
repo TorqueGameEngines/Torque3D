@@ -180,7 +180,7 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
-      return 0.0.xxxx;
+      return float4(surface.albedo, 0);
 	}
    
    //create surface to light                           

@@ -256,7 +256,7 @@ function AssetBrowser::selectAsset( %this, %asset )
       %this.changeAsset();
    }
    
-   EWInspectorWindow.refresh();
+   Inspector.refresh();
    
    AssetBrowser.hideDialog();
 }
@@ -270,6 +270,7 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    AssetBrowser.fieldTargetObject = %targetObj;
    AssetBrowser.fieldTargetName = %fieldName;
 
+   Canvas.popDialog(AssetBrowser);
    Canvas.pushDialog(AssetBrowser);
    AssetBrowser.setVisible(1);
    AssetBrowserWindow.setVisible(1);
@@ -1701,6 +1702,30 @@ function AssetBrowser::doRebuildAssetArray(%this)
       %tscriptPattern = %breadcrumbPath @ "/" @ "*.tscript";
       for (%fullScriptPath = findFirstFile(%tscriptPattern); %fullScriptPath !$= ""; %fullScriptPath = findNextFile(%tscriptPattern))
       {
+         //If it's associated to an asset, we'll want to do extra checks
+         %assetQuery = new AssetQuery();
+         %foundAssets = AssetDatabase.findAssetLooseFile(%assetQuery, %fullScriptPath);
+         
+         if(%foundAssets != 0)
+         {
+            %doSkip = false;
+            %count = %assetQuery.getCount();
+            for(%i=0; %i < %count; %i++)
+            {
+               %assetId = %assetQuery.getAsset(%i);
+               %foundAssetType = AssetDatabase.getAssetType(%assetId);
+
+               if(%foundAssetType !$= "ScriptAsset" && %foundAssetType !$= "GUIAsset")
+               {
+                  %doSkip = true;
+                  break;
+               }
+            }  
+            
+            if(%doSkip)
+               continue;
+         }
+         
          %tscriptPath = filePath(%fullScriptPath);
          %tscriptName = fileName(%fullScriptPath);
          

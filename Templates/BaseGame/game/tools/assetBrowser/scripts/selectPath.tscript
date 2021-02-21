@@ -3,7 +3,7 @@ function SelectAssetPath::onWake(%this)
 }
 
 //SelectAssetPath.showDialog();
-function SelectAssetPath::showDialog(%this, %startingPath, %callback)
+function SelectAssetPath::showDialog(%this, %startingPath, %callback, %promptText)
 {
    if(!isObject(%this.dirHandler))
       %this.dirHandler = makedirectoryHandler(SelectAssetPath-->folderTree, "Core,Tools,cache,shaderCache", ""); 
@@ -12,6 +12,11 @@ function SelectAssetPath::showDialog(%this, %startingPath, %callback)
 
    SelectAssetPath-->folderTree.buildIconTable( ":tools/classIcons/Prefab:tools/classIcons/Prefab" @
                                              ":tools/classIcons/SimSet:tools/classIcons/SimSet");
+                                        
+   if(%promptText $= "")
+      %promptText = "Select Path";
+                                             
+   SelectAssetPathWindow.text = %promptText;
       
    %this.dirHandler.currentPath = %startingPath;
    %this.callback = %callback;

@@ -62,8 +62,10 @@ function ForestEditorGui::createForest( %this )
    new Forest( theForest )
    {
       dataFile = "";
-      parentGroup = "MissionGroup";
+      //parentGroup = "MissionGroup";
    };
+   
+   getRootScene().add(theForest);
    
    MECreateUndoAction::submit( theForest );
 
@@ -169,7 +171,19 @@ function ForestEditorGui::deleteBrushOrElement( %this )
 
 function ForestEditorGui::newMesh( %this )
 {
-   %spec = "All Mesh Files|*.dts;*.dae|DTS|*.dts|DAE|*.dae";
+   SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, "createNewForestMesh", "Select Forest Mesh Datablock Path");
+   SelectAssetPathWindow.selectWindow();
+}
+
+function createNewForestMesh(%newPath)
+{
+   ForestEditorGui.newMeshPath = %newPath;
+   AssetBrowser.showDialog("ShapeAsset", "selectNewForestMesh", "", "", "");
+}
+
+function selectNewForestMesh(%selectedShapeAssetId)
+{
+   /*%spec = "All Mesh Files|*.dts;*.dae|DTS|*.dts|DAE|*.dae";
    
    %dlg = new OpenFileDialog()
    {
@@ -188,15 +202,23 @@ function ForestEditorGui::newMesh( %this )
       %file = fileBase( %fullPath );
    }   
    
-   %dlg.delete();
+   %dlg.delete();*/
    
-   if ( !%ret )
+   if ( %selectedShapeAssetId $= "")
       return;
          
-   %name = getUniqueName( %file );
+   %name = getUniqueName( AssetDatabase.getAssetName(%selectedShapeAssetId) );
       
-   %str = "datablock TSForestItemData( " @ %name @ " ) { shapeFile = \"" @ %fullPath @ "\"; };";            
-   eval( %str );
+   //%str = "datablock TSForestItemData( " @ %name @ " ) { shapeFile = \"" @ %fullPath @ "\"; };";            
+   //eval( %str );
+   
+   %fullPath = AssetDatabase.acquireAsset(%selectedShapeAssetId).getShapeFile();
+   
+   new TSForestItemData(%name) {
+      shapeFile = %fullPath;
+   };
+   
+   %isrl = isObject( %name );
    
    if ( isObject( %name ) )
    {
@@ -206,7 +228,7 @@ function ForestEditorGui::newMesh( %this )
       ForestEditMeshTree.scrollVisible( %item );
       ForestEditMeshTree.addSelection( %item );
       
-      ForestDataManager.setDirty( %name, "art/forest/managedItemData." @ $TorqueScriptFileExtension );  
+      ForestDataManager.setDirty( %name, ForestEditorGui.newMeshPath @ "/managedForestItemData." @ $TorqueScriptFileExtension );  
       
       %element = new ForestBrushElement()
       {
@@ -233,7 +255,7 @@ function ForestEditorGui::newMesh( %this )
       %action.addToManager( Editor.getUndoManager() );   
       
       ForestEditorPlugin.dirty = true;   
-   }         
+   }  
 }
 
 function ForestEditorGui::deleteMesh( %this )
@@ -254,8 +276,10 @@ function ForestEditorGui::deleteMesh( %this )
 
 function ForestEditorGui::okDeleteMesh( %this, %mesh )
 {
+   %originatingFile = %mesh.getFileName();
+   
    // Remove mesh from file
-   ForestDataManager.removeObjectFromFile( %mesh, "art/forest/managedItemData." @ $TorqueScriptFileExtension );  
+   ForestDataManager.removeObjectFromFile( %mesh, %originatingFile );  
 
    // Submitting undo actions is handled in code.
    %this.deleteMeshSafe( %mesh );   

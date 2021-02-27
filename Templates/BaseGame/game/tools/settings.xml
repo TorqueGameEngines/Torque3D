@@ -17,10 +17,10 @@
         <Setting name="TerrainMatAssetSubdirectoryFormat">&lt;AssetType&gt;/</Setting>
     </Group>
     <Group name="Assets">
-        <Setting name="AssetImporDefaultConfig">TestConfig</Setting>
+        <Setting name="AssetImporDefaultConfig">DefaultImportConfig</Setting>
         <Setting name="AutoImport">1</Setting>
         <Group name="Browser">
-            <Setting name="previewTileSize">small</Setting>
+            <Setting name="previewTileSize">1</Setting>
         </Group>
     </Group>
     <Group name="AxisGizmo">

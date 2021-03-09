@@ -157,7 +157,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    //early out if emissive
    if (getFlag(surface.matFlag, 0))
    {   
-        return float4(surface.albedo, 0);
+      return float4(0, 0, 0, 0);
    }
 
    float3 L = lightPosition - surface.P;

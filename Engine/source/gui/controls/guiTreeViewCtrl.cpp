@@ -560,7 +560,7 @@ void GuiTreeViewCtrl::Item::getDisplayText(U32 bufLen, char *buf)
                if (mState.test(Item::Marked))
                   dSprintf(ptr, len, " *[%s]", pInternalName);
                else
-                  dSprintf(ptr, len, " [%s]", pObjName);
+                  dSprintf(ptr, len, " [%s]", pInternalName);
             }
          }
       }

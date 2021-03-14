@@ -299,7 +299,7 @@
          MinExtent = "8 2";
          canSave = "1";
          Visible = "0";
-         Command = "DatablockEditorPlugin.createDatablock();";
+         Command = "DatablockEditorPlugin.pickDatablockPath();";
          tooltipprofile = "ToolsGuiToolTipProfile";
          tooltip = "Create New Datablock";
          hovertime = "1000";

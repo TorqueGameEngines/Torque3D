@@ -674,8 +674,19 @@ function DatablockEditorPlugin::createDatablock(%this)
 }
 
 //---------------------------------------------------------------------------------------------
+function DatablockEditorPlugin::pickDatablockPath(%this)
+{
+   SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, "DatablockEditorPlugin.pickedNewDBPath", "Select New Datablock Path");
+   SelectAssetPathWindow.selectWindow();   
+}
 
-function DatablockEditorPlugin::createPromptNameCheck(%this)
+function DatablockEditorPlugin::pickedNewDBPath(%this, %path)
+{
+   $DATABLOCK_EDITOR_DEFAULT_FILENAME = %path @ "/managedDatablocks." @ $TorqueScriptFileExtension;
+   DatablockEditorPlugin.createDatablock();
+}
+
+function DatablockEditorPlugin::createPromptNameCheck(%this, %path)
 {
    %name = DatablockEditorCreatePrompt-->CreateDatablockName.getText();
    if( !Editor::validateObjectName( %name, true ) )

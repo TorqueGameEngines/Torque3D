@@ -37,6 +37,8 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("General/AutomaticallyPromptMissingFiles", "Automatically Prompt Missing Files", "bool", "", "0", "", "");
    
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysAddShapeSuffix", "Always Add Shape Suffix", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AddedShapeSuffix", "Added Shape Suffix", "string", "", "_shape", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/DoUpAxisOverride", "Do Up-axis Override", "bool", "", "0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/UpAxisOverride", "Up-axis Override", "list", "", "Z_AXIS", "X_AXIS,Y_AXIS,Z_AXIS");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/DoScaleOverride", "Do Scale Override", "bool", "", "0", "");
@@ -67,6 +69,8 @@ function setupImportConfigSettingsList()
       
       //Materials
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/ImportMaterials", "Import Materials", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AlwaysAddMaterialSuffix", "Always Add Material Suffix", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AddedMaterialSuffix", "Added Material Suffix", "string", "", "_mat", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/CreateComposites", "Create Composites", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseDiffuseSuffixOnOriginImage", "Use Diffuse Suffix for Origin Image", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseExistingMaterials", "Use Existing Materials", "bool", "", "1", "");
@@ -89,6 +93,9 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Collision/LOSCollisionMeshPrefix", "LOS CollisionMesh Prefix", "string", "", "LOS", "");
       
       //Images
+      ImportAssetConfigSettingsList.addNewConfigSetting("Images/ImportImages", "Import Images", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Images/AlwaysAddImageSuffix", "Always Add Image Suffix", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Images/AddedImageSuffix", "Added Image Suffix", "string", "", "_image", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/ImageType", "Image Type", "list", "", "N/A", "N/A,Diffuse,Normal,Specular,Metalness,Roughness,AO,Composite,GUI");
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/DiffuseTypeSuffixes", "Diffuse Type Suffixes", "command", "", "_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/NormalTypeSuffixes", "Normal Type Suffixes", "command", "", "_NORMAL,_NORM", "");
@@ -303,6 +310,8 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    
    //Meshes
    AssetImportSettings.setValue("Meshes/ImportMesh", "1");
+   AssetImportSettings.setValue("Meshes/AlwaysAddShapeSuffix", "0");
+   AssetImportSettings.setValue("Meshes/AddedShapeSuffix", "_shape");
    AssetImportSettings.setValue("Meshes/DoUpAxisOverride", "0");
    AssetImportSettings.setValue("Meshes/UpAxisOverride", "Z_AXIS");
    AssetImportSettings.setValue("Meshes/DoScaleOverride", "0");
@@ -319,6 +328,8 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    
    //Materials
    AssetImportSettings.setValue("Materials/ImportMaterials", "1");
+   AssetImportSettings.setValue("Materials/AlwaysAddMaterialSuffix", "1");
+   AssetImportSettings.setValue("Materials/AddedMaterialSuffix", "_mat");
    AssetImportSettings.setValue("Materials/IgnoreMaterials", "");
    AssetImportSettings.setValue("Materials/CreateComposites", "1");
    AssetImportSettings.setValue("Materials/UseDiffuseSuffixOnOriginImage", "1");
@@ -339,6 +350,9 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Collision/LOSCollisionMeshPrefix", "LOS");
    
    //Images
+   AssetImportSettings.setValue("Images/ImportImage", "1");
+   AssetImportSettings.setValue("Images/AlwaysAddImageSuffix", "1");
+   AssetImportSettings.setValue("Images/AddedImageSuffix", "_image");
    AssetImportSettings.setValue("Images/ImageType", "N/A");
    AssetImportSettings.setValue("Images/DiffuseTypeSuffixes", "_ALBEDO;_DIFFUSE;_ALB;_DIF;_COLOR;_COL;_BASECOLOR;_BASE_COLOR");
    AssetImportSettings.setValue("Images/NormalTypeSuffixes", "_NORMAL;_NORM");
@@ -346,7 +360,7 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Images/RoughnessTypeSuffixes", "_ROUGH;_ROUGHNESS");
    AssetImportSettings.setValue("Images/SmoothnessTypeSuffixes", "_SMOOTH;_SMOOTHNESS");
    AssetImportSettings.setValue("Images/AOTypeSuffixes", "_AO;_AMBIENT;_AMBIENTOCCLUSION");
-   AssetImportSettings.setValue("Images/CompositeTypeSuffixes", "_COMP;_COMPOSITE");
+   AssetImportSettings.setValue("Images/CompositeTypeSuffixes", "_COMP;_COMPOSITE;_PBR;-COMP;-COMPOSITE;-PBR;_ORM;-ORM");
    AssetImportSettings.setValue("Images/TextureFilteringMode", "Bilinear");
    AssetImportSettings.setValue("Images/UseMips", "1");
    AssetImportSettings.setValue("Images/IsHDR", "0");

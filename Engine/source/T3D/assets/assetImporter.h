@@ -48,6 +48,16 @@ public:
    bool ImportMesh;
 
    /// <summary>
+   /// When importing a shape, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddShapeSuffix;
+
+   /// <summary>
+   /// If AlwaysAddShapeSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedShapeSuffix;
+
+   /// <summary>
    /// Indicates if this config should override the per-format sis files with the config's specific settings
    /// </summary>
    bool UseManualShapeConfigRules;
@@ -188,6 +198,16 @@ public:
    bool CreateORMConfig;
 
    /// <summary>
+   /// When creating a material on import, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddMaterialSuffix;
+
+   /// <summary>
+   /// If AlwaysAddMaterialSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedMaterialSuffix;
+
+   /// <summary>
    /// When generating a material off of an importing image, should the importer force appending a diffusemap suffix onto the end to avoid potential naming confusion.
    /// e.g. MyCoolStuff.png is imported, generating MyCoolStuff material asset and MyCoolStuff_Diffuse image asset
    /// </summary>
@@ -274,6 +294,16 @@ public:
    /// Does this configuration support importing images.
    /// </summary>
    bool importImages;
+
+   /// <summary>
+   /// When importing an image, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddImageSuffix;
+
+   /// <summary>
+   /// If AlwaysAddImageSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedImageSuffix;
 
    /// <summary>
    /// What is the default ImageType images are imported as. Options are: N/A, Diffuse, Normal, Metalness, Roughness, AO, ORMConfig, GUI, Cubemap

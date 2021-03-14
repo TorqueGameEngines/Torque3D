@@ -37,6 +37,8 @@ AssetImportConfig::AssetImportConfig() :
    PreventImportWithErrors(true),
    AutomaticallyPromptMissingFiles(false),
    ImportMesh(true),
+   AlwaysAddShapeSuffix(false),
+   AddedShapeSuffix("_shape"),
    UseManualShapeConfigRules(false),
    DoUpAxisOverride(false),
    UpAxisOverride("Z_AXIS"),
@@ -63,6 +65,8 @@ AssetImportConfig::AssetImportConfig() :
    reverseWindingOrder(false),
    invertNormals(false),
    ImportMaterials(true),
+   AlwaysAddMaterialSuffix(true),
+   AddedMaterialSuffix("_mat"),
    CreateORMConfig(true),
    UseDiffuseSuffixOnOriginImage(false),
    UseExistingMaterials(false),
@@ -80,6 +84,8 @@ AssetImportConfig::AssetImportConfig() :
    GenLOSCollisionType(""),
    LOSCollisionMeshPrefix(""),
    importImages(true),
+   AlwaysAddImageSuffix(true),
+   AddedImageSuffix("_image"),
    ImageType("GUI"),
    DiffuseTypeSuffixes("_ALBEDO,_DIFFUSE,_ALB,_DIF,_COLOR,_COL,_A,_C,-ALBEDO,-DIFFUSE,-ALB,-DIF,-COLOR,-COL,-A,-C"),
    NormalTypeSuffixes("_NORMAL,_NORM,_N,-NORMAL,-NORM,-N"),
@@ -133,6 +139,8 @@ void AssetImportConfig::initPersistFields()
 
    addGroup("Meshes");
       addField("ImportMesh", TypeBool, Offset(ImportMesh, AssetImportConfig), "Indicates if this config supports importing meshes");
+      addField("AlwaysAddShapeSuffix", TypeBool, Offset(AlwaysAddShapeSuffix, AssetImportConfig), "When importing a shape, this indicates if it should automatically add a standard suffix onto the name");
+      addField("AddedShapeSuffix", TypeString, Offset(AddedShapeSuffix, AssetImportConfig), " If AlwaysAddShapeSuffix is on, this is the suffix to be added");
       addField("UseManualShapeConfigRules", TypeBool, Offset(UseManualShapeConfigRules, AssetImportConfig), "Indicates if this config should override the per-format sis files with the config's specific settings");
       addField("DoUpAxisOverride", TypeBool, Offset(DoUpAxisOverride, AssetImportConfig), "Indicates if the up axis in the model file should be overridden");
       addField("UpAxisOverride", TypeRealString, Offset(UpAxisOverride, AssetImportConfig), "If overriding, what axis should be used as up. Options are X_AXIS, Y_AXIS, Z_AXIS");
@@ -162,6 +170,8 @@ void AssetImportConfig::initPersistFields()
 
    addGroup("Materials");
       addField("ImportMaterials", TypeBool, Offset(ImportMaterials, AssetImportConfig), "Does this config allow for importing of materials");
+      addField("AlwaysAddMaterialSuffix", TypeBool, Offset(AlwaysAddMaterialSuffix, AssetImportConfig), "When importing a material, this indicates if it should automatically add a standard suffix onto the name");
+      addField("AddedMaterialSuffix", TypeString, Offset(AddedMaterialSuffix, AssetImportConfig), " If AlwaysAddMaterialSuffix is on, this is the suffix to be added");
       addField("CreateORMConfig", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "When importing a material, should it automatically attempt to merge Roughness, AO and Metalness maps into a single, composited PBR Configuration map");
       addField("UseDiffuseSuffixOnOriginImage", TypeBool, Offset(UseDiffuseSuffixOnOriginImage, AssetImportConfig), "When generating a material off of an importing image, should the importer force appending a diffusemap suffix onto the end to avoid potential naming confusion.\n e.g. MyCoolStuff.png is imported, generating MyCoolStuff material asset and MyCoolStuff_Diffuse image asset");
       addField("UseExistingMaterials", TypeBool, Offset(UseExistingMaterials, AssetImportConfig), "Should the importer try and use existing material assets in the game directory if at all possible. (Not currently utilized)");
@@ -169,13 +179,13 @@ void AssetImportConfig::initPersistFields()
       addField("PopulateMaterialMaps", TypeBool, Offset(PopulateMaterialMaps, AssetImportConfig), "When processing a material asset, should the importer attempt to populate the various material maps on it by looking up common naming conventions for potentially relevent image files.\n e.g. If MyCoolStuff_Diffuse.png is imported, generating MyCoolStuff material, it would also find MyCoolStuff_Normal and MyCoolStuff_PBR images and map them to the normal and ORMConfig maps respectively automatically");
    endGroup("Materials");
 
-   addGroup("Meshes");
+   addGroup("Animation");
       addField("ImportAnimations", TypeBool, Offset(ImportAnimations, AssetImportConfig), "Does this config allow for importing Shape Animations");
       addField("SeparateAnimations", TypeBool, Offset(SeparateAnimations, AssetImportConfig), "When importing a shape file, should the animations within be separated out into unique files");
       addField("SeparateAnimationPrefix", TypeRealString, Offset(SeparateAnimationPrefix, AssetImportConfig), "If separating animations out from a source file, what prefix should be added to the names for grouping association");
       addField("animTiming", TypeRealString, Offset(animTiming, AssetImportConfig), "Defines the animation timing for the given animation sequence. Options are FrameTime, Seconds, Milliseconds");
       addField("animFPS", TypeBool, Offset(animFPS, AssetImportConfig), "The FPS of the animation sequence");
-   endGroup("General");
+   endGroup("Animation");
 
    addGroup("Collision");
       addField("GenerateCollisions", TypeBool, Offset(GenerateCollisions, AssetImportConfig), "Does this configuration generate collision geometry when importing. (Not currently enabled)");
@@ -188,6 +198,8 @@ void AssetImportConfig::initPersistFields()
 
    addGroup("Images");
       addField("importImages", TypeBool, Offset(importImages, AssetImportConfig), "Does this configuration support importing images.");
+      addField("AlwaysAddImageSuffix", TypeBool, Offset(AlwaysAddImageSuffix, AssetImportConfig), "When importing an image, this indicates if it should automatically add a standard suffix onto the name");
+      addField("AddedImageSuffix", TypeString, Offset(AddedImageSuffix, AssetImportConfig), " If AlwaysAddImageSuffix is on, this is the suffix to be added");
       addField("ImageType", TypeRealString, Offset(ImageType, AssetImportConfig), "What is the default ImageType images are imported as. Options are: N/A, Diffuse, Normal, Metalness, Roughness, AO, ORMConfig, GUI, Cubemap");
       addField("DiffuseTypeSuffixes", TypeRealString, Offset(DiffuseTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a diffuse map. \n e.g. _Albedo or _Color");
       addField("NormalTypeSuffixes", TypeRealString, Offset(NormalTypeSuffixes, AssetImportConfig), "What type of suffixes are scanned to detect if an importing image is a normal map. \n e.g. _Normal or _Norm");
@@ -223,6 +235,8 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
 
    //Meshes
    ImportMesh = dAtob(configSettings->value(String(configName + "/Meshes/ImportMesh").c_str()));
+   AlwaysAddShapeSuffix = dAtob(configSettings->value(String(configName + "/Meshes/AlwaysAddShapeSuffix").c_str()));
+   AddedShapeSuffix = configSettings->value(String(configName + "/Meshes/AddedShapeSuffix").c_str());
    UseManualShapeConfigRules = dAtob(configSettings->value(String(configName + "/Meshes/UseManualShapeConfigRules").c_str()));
    DoUpAxisOverride = dAtob(configSettings->value(String(configName + "/Meshes/DoUpAxisOverride").c_str()));
    UpAxisOverride = configSettings->value(String(configName + "/Meshes/UpAxisOverride").c_str());
@@ -253,6 +267,8 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
 
    //Materials
    ImportMaterials = dAtob(configSettings->value(String(configName + "/Materials/ImportMaterials").c_str()));
+   AlwaysAddMaterialSuffix = dAtob(configSettings->value(String(configName + "/Materials/AlwaysAddMaterialSuffix").c_str()));
+   AddedMaterialSuffix = configSettings->value(String(configName + "/Materials/AddedMaterialSuffix").c_str());
    CreateORMConfig = dAtob(configSettings->value(String(configName + "/Materials/CreateORMConfig").c_str()));
    UseDiffuseSuffixOnOriginImage = dAtob(configSettings->value(String(configName + "/Materials/UseDiffuseSuffixOnOriginImage").c_str()));
    UseExistingMaterials = dAtob(configSettings->value(String(configName + "/Materials/UseExistingMaterials").c_str()));
@@ -276,6 +292,8 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
 
    //Images
    importImages = dAtob(configSettings->value(String(configName + "/Images/importImages").c_str()));
+   AlwaysAddImageSuffix = dAtob(configSettings->value(String(configName + "/Images/AlwaysAddImageSuffix").c_str()));
+   AddedImageSuffix = configSettings->value(String(configName + "/Images/AddedImageSuffix").c_str());
    ImageType = configSettings->value(String(configName + "/Images/ImageType").c_str());
    DiffuseTypeSuffixes = configSettings->value(String(configName + "/Images/DiffuseTypeSuffixes").c_str());
    NormalTypeSuffixes = configSettings->value(String(configName + "/Images/NormalTypeSuffixes").c_str());
@@ -306,6 +324,8 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
 
    //Meshes
    target->ImportMesh = ImportMesh;
+   target->AlwaysAddShapeSuffix = AlwaysAddShapeSuffix;
+   target->AddedShapeSuffix = AddedShapeSuffix;
    target->UseManualShapeConfigRules = UseManualShapeConfigRules;
    target->DoUpAxisOverride = DoUpAxisOverride;
    target->UpAxisOverride = UpAxisOverride;
@@ -336,6 +356,8 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
 
    //Materials
    target->ImportMaterials = ImportMaterials;
+   target->AlwaysAddMaterialSuffix = AlwaysAddMaterialSuffix;
+   target->AddedMaterialSuffix = AddedMaterialSuffix;
    target->CreateORMConfig = CreateORMConfig;
    target->UseDiffuseSuffixOnOriginImage = UseDiffuseSuffixOnOriginImage;
    target->UseExistingMaterials = UseExistingMaterials;
@@ -359,6 +381,8 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
 
    //Images
    target->importImages = importImages;
+   target->AlwaysAddImageSuffix = AlwaysAddImageSuffix;
+   target->AddedImageSuffix = AddedImageSuffix;
    target->ImageType = ImageType;
    target->DiffuseTypeSuffixes = DiffuseTypeSuffixes;
    target->NormalTypeSuffixes = NormalTypeSuffixes;
@@ -1537,9 +1561,9 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
          {
             //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
             //we'll give it a generic one
-            if (materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0)
+            if ((materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0) || activeImportConfig->AlwaysAddImageSuffix)
             {
-               assetItem->assetName = assetItem->assetName + "_image";
+               assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
                assetItem->cleanAssetName = assetItem->assetName;
             }
          }
@@ -1583,6 +1607,11 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
             return;
          }
       }
+   }
+
+   if (activeImportConfig->AlwaysAddMaterialSuffix)
+   {
+      assetItem->assetName += activeImportConfig->AddedMaterialSuffix;
    }
 
    if (activeImportConfig->PopulateMaterialMaps)
@@ -1787,6 +1816,11 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       assetItem->shapeInfo = shapeInfo;
    }
 
+   if (activeImportConfig->AlwaysAddShapeSuffix)
+   {
+      assetItem->assetName += activeImportConfig->AddedShapeSuffix;
+   }
+
    S32 meshCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_meshCount"), nullptr));
    S32 shapeItem = assetItem->shapeInfo->findItemByName("Meshes");
 
@@ -1851,7 +1885,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
    if (matName == assetItem->assetName)
    {
       //So apparently we managed to name the material the same as the shape. So we'll tweak the name
-      matAssetName += String("_Mat");
+      matAssetName += activeImportConfig->AlwaysAddMaterialSuffix;
    }
 
    //Do a check so we don't import materials that are on our ignore list
@@ -2015,9 +2049,9 @@ void AssetImporter::processSoundAsset(AssetImportObject* assetItem)
          {
             //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
             //we'll give it a generic one
-            if (materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0)
+            if ((materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0) || activeImportConfig->AlwaysAddImageSuffix)
             {
-               assetItem->assetName = assetItem->assetName + "_image";
+               assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
                assetItem->cleanAssetName = assetItem->assetName;
             }
          }

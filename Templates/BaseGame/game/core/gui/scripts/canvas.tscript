@@ -155,6 +155,10 @@ function GuiCanvas::prefsToModeStr(%this)
 
 function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startup)
 {
+   // Toggle for selecting the borderless window allowed sizes. Set true to allow
+   // boderless windows to be less than the device res.
+   %allowSmallBorderless = true;
+
    %resX = getWord(%mode, $WORD::RES_X);
    %resY = getWord(%mode, $WORD::RES_Y);
 
@@ -173,6 +177,9 @@ function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startu
    {  // Borderless must be at or less than the device res
       %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
       if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
+         return false;
+
+      if (!%allowSmallBorderless && ((%resX != %deviceRect.x) || (%resY != %deviceRect.y)))
          return false;
 
       return true;
@@ -202,7 +209,8 @@ function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startu
    return false;
 }
 
-// Find the best video mode setting for the device and display mode
+// Find the best video mode setting for the device and display mode.
+// "Best" is the largest resolution that will fit at highest refresh rate.
 function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
 {
    if (%deviceMode == $Video::ModeWindowed)
@@ -210,19 +218,25 @@ function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
    else
       %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
 
+   %bestRes = "";
    %resCount = %this.getModeCount();
    for (%i = %resCount - 1; %i >= 0; %i--)
    {
       %testRes = %this.getMode(%i);
       %resX = getWord(%testRes, $WORD::RES_X);
       %resY = getWord(%testRes, $WORD::RES_Y);
+      %rate = getWord(%testRes, $WORD::REFRESH);
 
-      if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
+      if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y) ||
+         (%resX < $Video::minimumXResolution) || (%resY < $Video::minimumYResolution))
          continue;
 
-      return %testRes;
+      if (((%bestRes $= "") || (%resX > getWord(%bestRes, $WORD::RES_X)) ||
+            (%resY > getWord(%bestRes, $WORD::RES_Y))) ||
+         ((%resX == getWord(%bestRes, $WORD::RES_X)) && (%resY == getWord(%bestRes, $WORD::RES_Y)) &&
+            (%rate > getWord(%bestRes, $WORD::REFRESH))))
+         %bestRes = %testRes;
    }
 
-   // Nothing found? return first mode
-   return %this.getMonitorMode(%deviceId, 0);
+   return %bestRes;
 }

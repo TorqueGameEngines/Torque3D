@@ -96,6 +96,8 @@ class PhysicalZone : public SceneObject
    void deactivate();
    inline bool isActive() const { return mActive; }
 
+   S8 mTeamId;
+   bool mIFF;
 };
 
 #endif // _H_PHYSICALZONE

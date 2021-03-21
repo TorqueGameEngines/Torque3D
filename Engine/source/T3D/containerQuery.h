@@ -39,15 +39,16 @@ class WaterObject;
 struct ContainerQueryInfo
 {
    ContainerQueryInfo()
-      : waterCoverage(0.0f),
+      : box(-1,-1,-1,1,1,1),
+        mass(1.0f),
+        waterCoverage(0.0f),
         waterHeight(0.0f),                
         waterDensity(0.0f),
         waterViscosity(0.0f),
         gravityScale(1.0f),
         appliedForce(0,0,0),
-        box(-1,-1,-1,1,1,1),
-        mass(1.0f),
-        waterObject(NULL)
+        waterObject(NULL),
+        mTeamId(0)
    {        
    }
 
@@ -62,6 +63,7 @@ struct ContainerQueryInfo
    F32 gravityScale;
    Point3F appliedForce;
    WaterObject *waterObject;
+   U8 mTeamId;
 };
 
 extern void findRouter( SceneObject *obj, void *key );

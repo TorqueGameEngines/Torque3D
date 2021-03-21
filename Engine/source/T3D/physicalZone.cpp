@@ -103,6 +103,8 @@ PhysicalZone::PhysicalZone()
 
    mConvexList = new Convex;
    mActive = true;
+   mTeamId = 0;
+   mIFF = false;
 }
 
 PhysicalZone::~PhysicalZone()
@@ -123,6 +125,8 @@ void PhysicalZone::initPersistFields()
    addGroup("Misc");
    addField("velocityMod",  TypeF32,               Offset(mVelocityMod,  PhysicalZone), "Multiply velocity of objects entering zone by this value every tick.");
    addField("gravityMod",   TypeF32,               Offset(mGravityMod,   PhysicalZone), "Gravity in PhysicalZone. Multiplies against standard gravity.");
+   addField("team",         TypeS8,               Offset(mTeamId,   PhysicalZone), "Team ID.");
+   addField("iff",          TypeBool,               Offset(mIFF,   PhysicalZone), "iff");
    addField("appliedForce", TypePoint3F,           Offset(mAppliedForce, PhysicalZone), "Three-element floating point value representing forces in three axes to apply to objects entering PhysicalZone.");
    addField("polyhedron",   TypeTriggerPolyhedron, Offset(mPolyhedron,   PhysicalZone),
       "The polyhedron type is really a quadrilateral and consists of a corner"
@@ -275,6 +279,10 @@ U32 PhysicalZone::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
       stream->writeFlag(mActive);
    }
 
+   if (stream->writeFlag(mIFF))
+   {
+      stream->writeInt(mTeamId,8);
+   }
    return retMask;
 }
 
@@ -325,6 +333,12 @@ void PhysicalZone::unpackUpdate(NetConnection* con, BitStream* stream)
    } else {
       mActive = stream->readFlag();
    }
+
+	mIFF = stream->readFlag();
+	if (mIFF)
+	{
+		mTeamId = stream->readInt(8);
+	}
 }
 
 

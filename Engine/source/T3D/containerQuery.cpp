@@ -89,9 +89,11 @@ void physicalZoneFind(SceneObject* obj, void *key)
    if (pz == NULL || pz->testBox(info->box) == false)
       return;
 
-   if (pz->isActive()) {
+   if (pz->isActive() && ((!pz->mIFF) || (pz->mIFF && pz->mTeamId != info->mTeamId))) {
       info->gravityScale *= pz->getGravityMod();
-      info->appliedForce += pz->getForce();
+      Point3F center; 
+      info->box.getCenter(&center);
+      info->appliedForce += pz->getForce(&center);
    }
 }
 

@@ -4748,7 +4748,7 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
       {
          AssertFatal(dynamic_cast<PhysicalZone*>(physZoneCollisionList[j].object), "Bad phys zone!");
          const PhysicalZone* pZone = (PhysicalZone*)physZoneCollisionList[j].object;
-         if (pZone->isActive())
+         if (pZone->isActive() && ((!pZone->mIFF)||(pZone->mIFF && pZone->mTeamId != mTeamId)))
             mVelocity *= pZone->getVelocityMod();
       }
 

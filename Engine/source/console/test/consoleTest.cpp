@@ -252,36 +252,4 @@ TEST(Con, execute)
 	STR.popFrame();
 }
 
-static U32 gConsoleStackFrame = 0;
-
-ConsoleFunction(testConsoleStackFrame, S32, 1, 1, "")
-{
-	gConsoleStackFrame = CSTK.mFrame;
-	return (U32)Con::executef("testScriptEvalFunction"); // execute a sub function which manipulates the stack
-}
-
-TEST(Con, evaluate)
-{
-	U32 startStackPos = CSTK.mStackPos;
-	U32 startStringStackPos = STR.mStart;
-	S32 returnValue = Con::evaluate("function testScriptEvalFunction() {return \"1\"@\"2\"@\"3\";}\nreturn testConsoleStackFrame();", false, "testEvaluate");
-	U32 frame = CSTK.mFrame;
-
-	EXPECT_TRUE(returnValue == 123) <<
-		"Evaluate should return 123";
-
-	EXPECT_TRUE(gConsoleStackFrame == (frame+2)) <<
-		"Console stack frame inside function should be +2";
-
-	EXPECT_TRUE(CSTK.mFrame == frame) <<
-		"Console stack frame outside function should be the same as before";
-
-	EXPECT_TRUE(STR.mStart == startStringStackPos) <<
-		"Console string stack should not be changed";
-
-	EXPECT_TRUE(CSTK.mStackPos == startStackPos) <<
-		"Console stack should not be changed";
-
-}
-
 #endif

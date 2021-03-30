@@ -324,17 +324,17 @@ public:
 
       inline U32 getIntValue()
       {
-         return value.getIntValue();
+         return value.getInt();
       }
 
       inline F32 getFloatValue()
       {
-         return value.getFloatValue();
+         return value.getFloat();
       }
 
       inline const char *getStringValue()
       {
-         return value.getStringValue();
+         return value.getString();
       }
 
       void setIntValue(U32 val)
@@ -345,7 +345,7 @@ public:
             return;
          }
 
-         value.setIntValue(val);
+         value.setInt(val);
 
          // Fire off the notification if we have one.
          if (notify)
@@ -360,23 +360,7 @@ public:
             return;
          }
 
-         value.setFloatValue(val);
-
-         // Fire off the notification if we have one.
-         if (notify)
-            notify->trigger();
-      }
-
-      void setStringStackPtrValue(StringStackPtr newValue)
-      {
-         if (mIsConstant)
-         {
-            Con::errorf("Cannot assign value to constant '%s'.", name);
-            return;
-         }
-
-         value.setStringStackPtrValue(newValue);
-
+         value.setFloat(val);
 
          // Fire off the notification if we have one.
          if (notify)
@@ -391,8 +375,7 @@ public:
             return;
          }
 
-         value.setStringValue(newValue);
-
+         value.setString(newValue, dStrlen(newValue));
 
          // Fire off the notification if we have one.
          if (notify)
@@ -471,6 +454,18 @@ public:
    void validate();
 };
 
+struct ConsoleValueFrame
+{
+   ConsoleValue* values;
+   bool isReference;
+
+   ConsoleValueFrame(ConsoleValue* vals, bool isRef)
+   {
+      values = vals;
+      isReference = isRef;
+   }
+};
+
 class ExprEvalState
 {
 public:
@@ -499,6 +494,9 @@ public:
    /// an interior pointer that will become invalid when the object changes address.
    Vector< Dictionary* > stack;
 
+   Vector< ConsoleValueFrame > localStack;
+   ConsoleValueFrame* currentRegisterArray; // contains array at to top of localStack
+
    ///
    Dictionary globalVars;
 
@@ -511,10 +509,43 @@ public:
    void setIntVariable(S32 val);
    void setFloatVariable(F64 val);
    void setStringVariable(const char *str);
-   void setStringStackPtrVariable(StringStackPtr str);
-   void setCopyVariable();
 
-   void pushFrame(StringTableEntry frameName, Namespace *ns);
+   TORQUE_FORCEINLINE S32 getLocalIntVariable(S32 reg)
+   {
+      return currentRegisterArray->values[reg].getInt();
+   }
+
+   TORQUE_FORCEINLINE F64 getLocalFloatVariable(S32 reg)
+   {
+      return currentRegisterArray->values[reg].getFloat();
+   }
+
+   TORQUE_FORCEINLINE const char* getLocalStringVariable(S32 reg)
+   {
+      return currentRegisterArray->values[reg].getString();
+   }
+
+   TORQUE_FORCEINLINE void setLocalIntVariable(S32 reg, S64 val)
+   {
+      currentRegisterArray->values[reg].setInt(val);
+   }
+
+   TORQUE_FORCEINLINE void setLocalFloatVariable(S32 reg, F64 val)
+   {
+      currentRegisterArray->values[reg].setFloat(val);
+   }
+
+   TORQUE_FORCEINLINE void setLocalStringVariable(S32 reg, const char* val, S32 len)
+   {
+      currentRegisterArray->values[reg].setString(val, len);
+   }
+
+   TORQUE_FORCEINLINE void setLocalStringTableEntryVariable(S32 reg, StringTableEntry val)
+   {
+      currentRegisterArray->values[reg].setStringTableEntry(val);
+   }
+
+   void pushFrame(StringTableEntry frameName, Namespace *ns, S32 regCount);
    void popFrame();
 
    /// Puts a reference to an existing stack frame

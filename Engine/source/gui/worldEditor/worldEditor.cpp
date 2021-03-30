@@ -2858,17 +2858,17 @@ void WorldEditor::initPersistFields()
 //------------------------------------------------------------------------------
 // These methods are needed for the console interfaces.
 
-void WorldEditor::ignoreObjClass( U32 argc, ConsoleValueRef *argv )
+void WorldEditor::ignoreObjClass( U32 argc, ConsoleValue *argv )
 {
    for(S32 i = 2; i < argc; i++)
    {
-      ClassInfo::Entry * entry = getClassEntry(argv[i]);
+      ClassInfo::Entry * entry = getClassEntry(argv[i].getString());
       if(entry)
          entry->mIgnoreCollision = true;
       else
       {
          entry = new ClassInfo::Entry;
-         entry->mName = StringTable->insert(argv[i]);
+         entry->mName = StringTable->insert(argv[i].getString());
          entry->mIgnoreCollision = true;
          if(!addClassEntry(entry))
             delete entry;

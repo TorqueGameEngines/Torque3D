@@ -93,26 +93,28 @@ namespace Compiler
       OP_MUL,
       OP_DIV,
       OP_NEG,
-
       OP_INC,
-      OP_DEC,
 
       OP_SETCURVAR,
       OP_SETCURVAR_CREATE,
       OP_SETCURVAR_ARRAY,
-      OP_SETCURVAR_ARRAY_VARLOOKUP,
       OP_SETCURVAR_ARRAY_CREATE,
-      OP_SETCURVAR_ARRAY_CREATE_VARLOOKUP,
 
       OP_LOADVAR_UINT,// 40
       OP_LOADVAR_FLT,
       OP_LOADVAR_STR,
-      OP_LOADVAR_VAR,
 
       OP_SAVEVAR_UINT,
       OP_SAVEVAR_FLT,
       OP_SAVEVAR_STR,
-      OP_SAVEVAR_VAR,
+
+      OP_LOAD_LOCAL_VAR_UINT,
+      OP_LOAD_LOCAL_VAR_FLT,
+      OP_LOAD_LOCAL_VAR_STR,
+
+      OP_SAVE_LOCAL_VAR_UINT,
+      OP_SAVE_LOCAL_VAR_FLT,
+      OP_SAVE_LOCAL_VAR_STR,
 
       OP_SETCUROBJECT,
       OP_SETCUROBJECT_NEW,
@@ -121,8 +123,6 @@ namespace Compiler
       OP_SETCURFIELD,
       OP_SETCURFIELD_ARRAY, // 50
       OP_SETCURFIELD_TYPE,
-      OP_SETCURFIELD_ARRAY_VAR,
-      OP_SETCURFIELD_THIS,
 
       OP_LOADFIELD_UINT,
       OP_LOADFIELD_FLT,
@@ -141,19 +141,15 @@ namespace Compiler
       OP_UINT_TO_FLT,
       OP_UINT_TO_STR,
       OP_UINT_TO_NONE,
-      OP_COPYVAR_TO_NONE,
 
       OP_LOADIMMED_UINT,
       OP_LOADIMMED_FLT,
       OP_TAG_TO_STR,
       OP_LOADIMMED_STR, // 70
-      OP_DOCBLOCK_STR,
+      OP_DOCBLOCK_STR,  // 76
       OP_LOADIMMED_IDENT,
 
-      OP_CALLFUNC_RESOLVE,
       OP_CALLFUNC,
-      OP_CALLFUNC_POINTER,
-      OP_CALLFUNC_THIS,
 
       OP_ADVANCE_STR,
       OP_ADVANCE_STR_APPENDCHAR,
@@ -166,8 +162,6 @@ namespace Compiler
       OP_PUSH,          // String
       OP_PUSH_UINT,     // Integer
       OP_PUSH_FLT,      // Float
-      OP_PUSH_VAR,      // Variable
-      OP_PUSH_THIS,     // This pointer
       OP_PUSH_FRAME,    // Frame
 
       OP_ASSERT,

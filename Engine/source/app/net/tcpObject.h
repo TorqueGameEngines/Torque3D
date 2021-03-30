@@ -83,7 +83,7 @@ public:
    void disconnect();
    State getState() { return mState; }
 
-   bool processArguments(S32 argc, ConsoleValueRef *argv);
+   bool processArguments(S32 argc, ConsoleValue *argv);
    void send(const U8 *buffer, U32 bufferLen);
 
    ///Send an entire file over tcp

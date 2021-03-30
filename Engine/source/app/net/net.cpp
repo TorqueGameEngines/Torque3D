@@ -251,7 +251,7 @@ DefineEngineStringlyVariadicFunction( commandToServer, void, 2, RemoteCommandEve
    NetConnection *conn = NetConnection::getConnectionToServer();
    if(!conn)
       return;
-   StringStackWrapper args(argc - 1, argv + 1);
+   ConsoleValueToStringArrayWrapper args(argc - 1, argv + 1);
    RemoteCommandEvent::sendRemoteCommand(conn, args.count(), args);
 }
 
@@ -289,7 +289,7 @@ DefineEngineStringlyVariadicFunction( commandToClient, void, 3, RemoteCommandEve
    NetConnection *conn;
    if(!Sim::findObject(argv[1], conn))
       return;
-   StringStackWrapper args(argc - 2, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 2, argv + 2);
    RemoteCommandEvent::sendRemoteCommand(conn, args.count(), args);
 }
 

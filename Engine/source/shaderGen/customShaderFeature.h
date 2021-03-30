@@ -77,7 +77,7 @@ public:
    void addVertTexCoord(String name);
 	bool hasFeature(String name);
 
-	void writeLine(String format, S32 argc, ConsoleValueRef *argv);
+	void writeLine(String format, S32 argc, ConsoleValue *argv);
 };
 
 #endif

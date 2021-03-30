@@ -411,7 +411,7 @@ void WaterObject::inspectPostApply()
    setMaskBits( UpdateMask | WaveMask | TextureMask | SoundMask );
 }
 
-bool WaterObject::processArguments( S32 argc, ConsoleValueRef *argv )
+bool WaterObject::processArguments( S32 argc, ConsoleValue *argv )
 {
    if( typeid( *this ) == typeid( WaterObject ) )
    {

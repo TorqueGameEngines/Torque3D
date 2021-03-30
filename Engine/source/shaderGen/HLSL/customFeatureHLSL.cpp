@@ -385,7 +385,7 @@ void CustomFeatureHLSL::addVertTexCoord(String name)
    mVars.push_back(newVarHolder);
 }
 
-void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef * argv)
+void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValue *argv)
 {
    //do the var/arg fetching here
    Vector<Var*> varList;
@@ -393,7 +393,7 @@ void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef * arg
 
    for (U32 i = 0; i < argc; i++)
    {
-      String varName = argv[i].getStringValue();
+      String varName = argv[i].getString();
       Var* newVar = (Var*)LangElement::find(varName.c_str());
       if (!newVar)
       {
@@ -451,7 +451,7 @@ void CustomFeatureHLSL::writeLine(String format, S32 argc, ConsoleValueRef * arg
          if (!newVar)
          {
             //couldn't find that variable, bail out
-            Con::errorf("CustomShaderFeature::writeLine: unable to find variable %s, meaning it was not declared before being used!", argv[i].getStringValue());
+            Con::errorf("CustomShaderFeature::writeLine: unable to find variable %s, meaning it was not declared before being used!", argv[i].getString());
             return;
          }
       }

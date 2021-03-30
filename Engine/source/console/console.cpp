@@ -271,8 +271,6 @@ StringTableEntry gCurrentFile;
 StringTableEntry gCurrentRoot;
 /// @}
 
-S32 gObjectCopyFailures = -1;
-
 bool alwaysUseDebugOutput = true;
 bool useTimestamp = false;
 bool useRealTimestamp = false;
@@ -327,6 +325,7 @@ void init()
 
    // Setup the console types.
    ConsoleBaseType::initialize();
+   ConsoleValue::init();
 
    // And finally, the ACR...
    AbstractClassRep::initialize();
@@ -343,10 +342,6 @@ void init()
       "@ingroup Console\n");
    addVariable( "instantGroup", TypeRealString, &gInstantGroup, "The group that objects will be added to when they are created.\n"
       "@ingroup Console\n");
-
-   addVariable("Con::objectCopyFailures", TypeS32, &gObjectCopyFailures, "If greater than zero then it counts the number of object creation "
-      "failures based on a missing copy object and does not report an error..\n"
-      "@ingroup Console\n");   
 
    // Current script file name and root
    addVariable( "Con::File", TypeString, &gCurrentFile, "The currently executing script file.\n"
@@ -1590,11 +1585,9 @@ ConsoleValueRef _internalExecute(SimObject *object, S32 argc, ConsoleValueRef ar
       ICallMethod *com = dynamic_cast<ICallMethod *>(object);
       if(com)
       {
-         STR.pushFrame();
-         CSTK.pushFrame();
+         gCallStack.pushFrame(0);
          com->callMethodArgList(argc, argv, false);
-         STR.popFrame();
-         CSTK.popFrame();
+         gCallStack.popFrame();
       }
    }
 
@@ -2523,70 +2516,20 @@ DefineEngineFunction( logWarning, void, ( const char* message ),,
 
 //------------------------------------------------------------------------------
 
-extern ConsoleValueStack CSTK;
-
-ConsoleValueRef::ConsoleValueRef(const ConsoleValueRef &ref)
-{
-   value = ref.value;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(const ConsoleValueRef &newValue)
-{
-   value = newValue.value;
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(const char *newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setStringValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(S32 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setIntValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(U32 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setIntValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(F32 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setFloatValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(F64 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setFloatValue(newValue);
-   return *this;
-}
-
-//------------------------------------------------------------------------------
-
-StringStackWrapper::StringStackWrapper(int targc, ConsoleValueRef targv[])
+ConsoleValueToStringArrayWrapper::ConsoleValueToStringArrayWrapper(int targc, ConsoleValue *targv)
 {
    argv = new const char*[targc];
    argc = targc;
 
-   for (int i=0; i<targc; i++)
+   for (S32 i = 0; i < targc; i++)
    {
-      argv[i] = dStrdup(targv[i]);
+      argv[i] = dStrdup(targv[i].getString());
    }
 }
 
-StringStackWrapper::~StringStackWrapper()
+ConsoleValueToStringArrayWrapper::~ConsoleValueToStringArrayWrapper()
 {
-   for (int i=0; i<argc; i++)
+   for (S32 i = 0; i< argc; i++)
    {
       dFree(argv[i]);
    }
@@ -2594,164 +2537,20 @@ StringStackWrapper::~StringStackWrapper()
 }
 
 
-StringStackConsoleWrapper::StringStackConsoleWrapper(int targc, const char** targ)
+StringArrayToConsoleValueWrapper::StringArrayToConsoleValueWrapper(int targc, const char** targv)
 {
-   argv = new ConsoleValueRef[targc];
-   argvValue = new ConsoleValue[targc];
+   argv = new ConsoleValue[targc];
    argc = targc;
 
-   for (int i=0; i<targc; i++) {
-      argvValue[i].init();
-      argv[i].value = &argvValue[i];
-      argvValue[i].setStackStringValue(targ[i]);
+   for (int i=0; i<targc; i++)
+   {
+      argv[i].setString(targv[i], dStrlen(targv[i]));
    }
 }
 
-StringStackConsoleWrapper::~StringStackConsoleWrapper()
+StringArrayToConsoleValueWrapper::~StringArrayToConsoleValueWrapper()
 {
-   for (int i=0; i<argc; i++)
-   {
-      argv[i] = 0;
-   }
    delete[] argv;
-   delete[] argvValue;
-}
-
-//------------------------------------------------------------------------------
-
-S32 ConsoleValue::getSignedIntValue()
-{
-   if(type <= TypeInternalString)
-      return (S32)fval;
-   else
-      return dAtoi(Con::getData(type, dataPtr, 0, enumTable));
-}
-
-U32 ConsoleValue::getIntValue()
-{
-   if(type <= TypeInternalString)
-      return ival;
-   else
-      return dAtoi(Con::getData(type, dataPtr, 0, enumTable));
-}
-
-F32 ConsoleValue::getFloatValue()
-{
-   if(type <= TypeInternalString)
-      return fval;
-   else
-      return dAtof(Con::getData(type, dataPtr, 0, enumTable));
-}
-
-const char *ConsoleValue::getStringValue()
-{
-   if(type == TypeInternalString || type == TypeInternalStackString)
-      return sval;
-   else if (type == TypeInternalStringStackPtr)
-      return STR.mBuffer + (uintptr_t)sval;
-   else
-   {
-      // We need a string representation, so lets create one
-      const char *internalValue = NULL;
-
-      if(type == TypeInternalFloat)
-         internalValue = Con::getData(TypeF32, &fval, 0);
-      else if(type == TypeInternalInt)
-         internalValue = Con::getData(TypeS32, &ival, 0);
-      else
-         return Con::getData(type, dataPtr, 0, enumTable); // We can't save sval here since it is the same as dataPtr
-
-      if (!internalValue)
-         return "";
-
-      U32 stringLen = dStrlen(internalValue);
-      U32 newLen = ((stringLen + 1) + 15) & ~15; // pad upto next cache line
-      
-      if (bufferLen == 0)
-         sval = (char *) dMalloc(newLen);
-      else if(newLen > bufferLen)
-         sval = (char *) dRealloc(sval, newLen);
-
-      dStrcpy(sval, internalValue, newLen);
-      bufferLen = newLen;
-
-      return sval;
-   }
-}
-
-StringStackPtr ConsoleValue::getStringStackPtr()
-{
-   if (type == TypeInternalStringStackPtr)
-      return (uintptr_t)sval;
-   else
-      return (uintptr_t)-1;
-}
-
-bool ConsoleValue::getBoolValue()
-{
-   if(type == TypeInternalString || type == TypeInternalStackString || type == TypeInternalStringStackPtr)
-      return dAtob(getStringValue());
-   if(type == TypeInternalFloat)
-      return fval > 0;
-   else if(type == TypeInternalInt)
-      return ival > 0;
-   else {
-      const char *value = Con::getData(type, dataPtr, 0, enumTable);
-      return dAtob(value);
-   }
-}
-
-void ConsoleValue::setIntValue(S32 val)
-{
-   setFloatValue(val);
-}
-
-void ConsoleValue::setIntValue(U32 val)
-{
-   if(type <= TypeInternalString)
-   {
-      fval = (F32)val;
-      ival = val;
-      if(bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-
-      sval = typeValueEmpty;
-      type = TypeInternalInt;
-   }
-   else
-   {
-      const char *dptr = Con::getData(TypeS32, &val, 0);
-      Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
-   }
-}
-
-void ConsoleValue::setBoolValue(bool val)
-{
-   return setIntValue(val ? 1 : 0);
-}
-
-void ConsoleValue::setFloatValue(F32 val)
-{
-   if(type <= TypeInternalString)
-   {
-      fval = val;
-      ival = static_cast<U32>(val);
-      if(bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-      sval = typeValueEmpty;
-      type = TypeInternalFloat;
-   }
-   else
-   {
-      const char *dptr = Con::getData(TypeF32, &val, 0);
-      Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
-   }
 }
 
 //------------------------------------------------------------------------------

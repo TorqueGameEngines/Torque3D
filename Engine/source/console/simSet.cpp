@@ -229,11 +229,16 @@ void SimSet::scriptSort( const String &scriptCallbackFn )
 
 //-----------------------------------------------------------------------------
 
-void SimSet::callOnChildren( const String &method, S32 argc, ConsoleValueRef argv[], bool executeOnChildGroups )
+void SimSet::callOnChildren( const String &method, S32 argc, ConsoleValue argv[], bool executeOnChildGroups )
 {
+   // TODO(JTH): Implement
+   AssertISV(false, "TODO Implement");
+   return;
+
+   /*
    // Prep the arguments for the console exec...
    // Make sure and leave args[1] empty.
-   ConsoleValueRef args[21] = { };
+   ConsoleValue args[21] = { };
    ConsoleValue name_method;
    name_method.setStackStringValue(method.c_str());
    args[0] = ConsoleValueRef::fromValue(&name_method);
@@ -255,6 +260,7 @@ void SimSet::callOnChildren( const String &method, S32 argc, ConsoleValueRef arg
             childSet->callOnChildren( method, argc, argv, executeOnChildGroups );
       }
    }
+   */
 }
 
 //-----------------------------------------------------------------------------
@@ -838,7 +844,7 @@ SimGroup* SimGroup::deepClone()
 
 //-----------------------------------------------------------------------------
 
-bool SimGroup::processArguments(S32, ConsoleValueRef *argv)
+bool SimGroup::processArguments(S32, ConsoleValue *argv)
 {
    return true;
 }

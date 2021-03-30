@@ -189,7 +189,7 @@ bool CustomShaderFeatureData::hasFeature(String name)
    return false;
 }
 
-void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef* argv)
+void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValue* argv)
 {
 #ifdef TORQUE_D3D11
    if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)

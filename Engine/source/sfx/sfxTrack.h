@@ -61,7 +61,7 @@ class SFXTrack : public SimDataBlock
       StringTableEntry mParameters[ MaxNumParameters ];
    
       /// Overload this to disable direct instantiation of this class via script 'new'.
-      virtual bool processArguments( S32 argc, ConsoleValueRef *argv );
+      virtual bool processArguments( S32 argc, ConsoleValue *argv );
 
    public:
          

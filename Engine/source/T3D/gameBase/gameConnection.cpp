@@ -331,7 +331,7 @@ DefineEngineStringlyVariadicMethod(GameConnection, setConnectArgs, void, 3, 17,
    
    "@see GameConnection::onConnect()\n\n")
 {
-   StringStackWrapper args(argc - 2, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 2, argv + 2);
    object->setConnectArgs(args.count(), args);
 }
 
@@ -494,11 +494,17 @@ bool GameConnection::readConnectRequest(BitStream *stream, const char **errorStr
       *errorString = "CR_INVALID_ARGS";
       return false;
    }
-   ConsoleValueRef connectArgv[MaxConnectArgs + 3];
+   ConsoleValue connectArgv[MaxConnectArgs + 3];
    ConsoleValue connectArgvValue[MaxConnectArgs + 3];
 
+   // TODO(JTH): Fix pls.
+   AssertISV(false, "TODO: FIX CONSOLE VALUE");
+   return false;
+
+   /*
    for(U32 i = 0; i < mConnectArgc+3; i++)
    {
+
       connectArgv[i].value = &connectArgvValue[i];
       connectArgvValue[i].init();
    }
@@ -524,6 +530,7 @@ bool GameConnection::readConnectRequest(BitStream *stream, const char **errorStr
       return false;
    }
    return true;
+   */
 }
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1088,7 +1095,7 @@ bool GameConnection::readDemoStartBlock(BitStream *stream)
 void GameConnection::demoPlaybackComplete()
 {
    static const char* demoPlaybackArgv[1] = { "demoPlaybackComplete" };
-   static StringStackConsoleWrapper demoPlaybackCmd(1, demoPlaybackArgv);
+   static StringArrayToConsoleValueWrapper demoPlaybackCmd(1, demoPlaybackArgv);
 
    Sim::postCurrentEvent(Sim::getRootGroup(), new SimConsoleEvent(demoPlaybackCmd.argc, demoPlaybackCmd.argv, false));
    Parent::demoPlaybackComplete();

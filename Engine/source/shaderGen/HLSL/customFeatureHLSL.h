@@ -128,5 +128,5 @@ public:
    void addTexture(String name, String type, String samplerState, U32 arraySize);
    void addConnector(String name, String type, String elementName);
    void addVertTexCoord(String name);
-   void writeLine(String format, S32 argc, ConsoleValueRef* argv);
+   void writeLine(String format, S32 argc, ConsoleValue* argv);
 };

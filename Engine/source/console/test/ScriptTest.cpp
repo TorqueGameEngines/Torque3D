@@ -20,6 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#ifdef 0
 #ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
@@ -392,4 +393,5 @@ TEST(Script, Basic_Package)
    EXPECT_EQ(deactivatedValue, 3);
 }
 
+#endif
 #endif

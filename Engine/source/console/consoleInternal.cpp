@@ -183,13 +183,13 @@ void Dictionary::exportVariables(const char *varString, const char *fileName, bo
 
    for (s = sortList.begin(); s != sortList.end(); s++)
    {
-      switch ((*s)->value.type)
+      switch ((*s)->value.getType())
       {
-         case ConsoleValue::TypeInternalInt:
-            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->value.ival, cat);
+         case ConsoleValueType::cvInteger:
+            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->value.getInt(), cat);
             break;
-         case ConsoleValue::TypeInternalFloat:
-            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->value.fval, cat);
+         case ConsoleValueType::cvFloat:
+            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->value.getFloat(), cat);
             break;
          default:
             expandEscape(expandBuffer, (*s)->getStringValue());
@@ -243,13 +243,11 @@ void Dictionary::exportVariables(const char *varString, Vector<String> *names, V
 
       if (values)
       {
-         switch ((*s)->value.type)
+         switch ((*s)->value.getType())
          {
-            case ConsoleValue::TypeInternalInt:
-               values->push_back(String::ToString((*s)->value.ival));
-               break;
-            case ConsoleValue::TypeInternalFloat:
-               values->push_back(String::ToString((*s)->value.fval));
+            case ConsoleValueType::cvInteger:
+            case ConsoleValueType::cvFloat:
+               values->push_back(String((*s)->value.getString()));
                break;
             default:
                expandEscape(expandBuffer, (*s)->getStringValue());
@@ -470,7 +468,6 @@ char *typeValueEmpty = "";
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
-   value.type = ConsoleValue::TypeInternalString;
    notify = NULL;
    nextEntry = NULL;
    mUsage = NULL;
@@ -506,150 +503,6 @@ const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
       Con::warnf(" *** Accessed undefined variable '%s'", name);
 
    return "";
-}
-
-void ConsoleValue::setStringValue(const char * value)
-{
-   if (value == NULL) value = typeValueEmpty;
-
-   if (type <= ConsoleValue::TypeInternalString)
-   {
-      // Let's not remove empty-string-valued global vars from the dict.
-      // If we remove them, then they won't be exported, and sometimes
-      // it could be necessary to export such a global.  There are very
-      // few empty-string global vars so there's no performance-related
-      // need to remove them from the dict.
-      /*
-      if(!value[0] && name[0] == '$')
-      {
-      gEvalState.globalVars.remove(this);
-      return;
-      }
-      */
-      if (value == typeValueEmpty)
-      {
-         if (bufferLen > 0)
-         {
-            dFree(sval);
-            bufferLen = 0;
-         }
-
-         sval = typeValueEmpty;
-         fval = 0.f;
-         ival = 0;
-         type = TypeInternalString;
-         return;
-      }
-
-      U32 stringLen = dStrlen(value);
-
-      // If it's longer than 256 bytes, it's certainly not a number.
-      //
-      // (This decision may come back to haunt you. Shame on you if it
-      // does.)
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      // may as well pad to the next cache line
-      U32 newLen = ((stringLen + 1) + 15) & ~15;
-
-      if (bufferLen == 0)
-         sval = (char *)dMalloc(newLen);
-      else if (newLen > bufferLen)
-         sval = (char *)dRealloc(sval, newLen);
-
-      type = TypeInternalString;
-
-      bufferLen = newLen;
-      dStrcpy(sval, value, newLen);
-   }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-}
-
-
-void ConsoleValue::setStackStringValue(const char *value)
-{
-   if (value == NULL) value = typeValueEmpty;
-
-   if (type <= ConsoleValue::TypeInternalString)
-   {
-      // sval might still be temporarily present so we need to check and free it
-      if (bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-
-      if (value == typeValueEmpty)
-      {
-         sval = typeValueEmpty;
-         fval = 0.f;
-         ival = 0;
-         type = TypeInternalString;
-         return;
-      }
-
-      U32 stringLen = dStrlen(value);
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalStackString;
-      sval = (char*)value;
-      bufferLen = 0;
-   }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-}
-
-void ConsoleValue::setStringStackPtrValue(StringStackPtr ptrValue)
-{
-   if (type <= ConsoleValue::TypeInternalString)
-   {
-      const char *value = StringStackPtrRef(ptrValue).getPtr(&STR);
-      if (bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-
-      U32 stringLen = dStrlen(value);
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalStringStackPtr;
-      sval = (char*)(value - STR.mBuffer);
-      bufferLen = 0;
-   }
-   else
-   {
-      const char *value = StringStackPtrRef(ptrValue).getPtr(&STR);
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-   }
 }
 
 S32 Dictionary::getIntVariable(StringTableEntry name, bool *entValid)

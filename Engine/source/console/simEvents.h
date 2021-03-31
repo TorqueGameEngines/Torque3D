@@ -83,8 +83,6 @@ public:
    virtual void process(SimObject *object)=0;
 };
 
-class ConsoleValueRef;
-
 /// Implementation of schedule() function.
 ///
 /// This allows you to set a console function to be

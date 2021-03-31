@@ -864,7 +864,7 @@ public:
       (Vector<const char*>* vec)                                                                                                 \
    {                                                                                                                             \
       _CHECK_ENGINE_INITIALIZED( name, returnType );                                                                             \
-      StringStackConsoleWrapper args(vec->size(), vec->address());                                                               \
+      StringArrayToConsoleValueWrapper args(vec->size(), vec->address());                                                               \
       return EngineTypeTraits< returnType >::ReturnValue(                                                                        \
          _fn ## name ## impl(NULL, args.count(), args)                                                                           \
       );                                                                                                                         \
@@ -895,7 +895,7 @@ public:
       (className* object, Vector<const char*>* vec)                                                                              \
    {                                                                                                                             \
       _CHECK_ENGINE_INITIALIZED( name, returnType );                                                                             \
-      StringStackConsoleWrapper args(vec->size(), vec->address());                                                               \
+      StringArrayToConsoleValueWrapper args(vec->size(), vec->address());                                                               \
       _ ## className ## name ## frame frame {};                                                                                  \
       frame.object = static_cast< className* >( object );                                                                        \
       return EngineTypeTraits< returnType >::ReturnValue(                                                                        \
@@ -1226,7 +1226,7 @@ public:
 template<typename P1> struct _EngineConsoleExecCallbackHelper : public _BaseEngineConsoleCallbackHelper
 {
 private:
-   using Helper = engineAPI::detail::MarshallHelpers<ConsoleValueRef>;
+   using Helper = engineAPI::detail::MarshallHelpers<ConsoleValue>;
 public:
 
    _EngineConsoleExecCallbackHelper( SimObject* pThis )

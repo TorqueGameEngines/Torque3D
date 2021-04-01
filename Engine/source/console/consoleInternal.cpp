@@ -613,7 +613,7 @@ void Dictionary::validate()
       "Dictionary::validate() - Dictionary not owner of own hashtable!");
 }
 
-void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns)
+void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 registerCount)
 {
 #ifdef DEBUG_SPEW
    validate();
@@ -1266,7 +1266,7 @@ void Namespace::markGroup(const char* name, const char* usage)
 
 extern S32 executeBlock(StmtNode *block, ExprEvalState *state);
 
-ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprEvalState *state)
+ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalState *state)
 {
    STR.clearFunctionOffset();
 
@@ -1274,11 +1274,11 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
    {
       if (mFunctionOffset)
       {
-         return mCode->exec(mFunctionOffset, argv[0], mNamespace, argc, argv, false, mPackage);
+         return std::move(mCode->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage));
       }
       else
       {
-         return ConsoleValueRef();
+         return std::move(ConsoleValue());
       }
    }
 
@@ -1288,7 +1288,7 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
    if (mToolOnly && !Con::isCurrentScriptToolScript())
    {
       Con::errorf(ConsoleLogEntry::Script, "%s::%s - attempting to call tools only function from outside of tools", mNamespace->mName, mFunctionName);
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
 #endif
 
@@ -1296,25 +1296,31 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
    {
       Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments.", mNamespace->mName, mFunctionName);
       Con::warnf(ConsoleLogEntry::Script, "usage: %s", mUsage);
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
 
+   ConsoleValue result;
    switch (mType)
    {
       case StringCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushStackString(cb.mStringCallbackFunc(state->thisObject, argc, argv)));
+         const char* str = cb.mStringCallbackFunc(state->thisObject, argc, argv);
+         result.setString(str, dStrlen(str));
+         break;
       case IntCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushUINT((U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv)));
+         result.setInt(cb.mIntCallbackFunc(state->thisObject, argc, argv));
+         break;
       case FloatCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushFLT((U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv)));
+         result.setFloat(cb.mBoolCallbackFunc(state->thisObject, argc, argv));
+         break;
       case VoidCallbackType:
          cb.mVoidCallbackFunc(state->thisObject, argc, argv);
-         return ConsoleValueRef();
+         break;
       case BoolCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushUINT((U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv)));
+         result.setBool(cb.mBoolCallbackFunc(state->thisObject, argc, argv));
+         break;
    }
 
-   return ConsoleValueRef();
+   return std::move(result);
 }
 
 //-----------------------------------------------------------------------------

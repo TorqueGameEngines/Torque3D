@@ -2592,7 +2592,7 @@ ConsoleValue _BaseEngineConsoleCallbackHelper::_exec()
       {
          ConsoleValue returnValue = std::move(Con::_internalExecute( mThis, mArgc, mArgv, false ));
          mArgc = mInitialArgc; // reset
-         return returnValue;
+         return std::move(returnValue);
       }
 
       STR.clearFunctionOffset();
@@ -2609,7 +2609,7 @@ ConsoleValue _BaseEngineConsoleCallbackHelper::_execLater(SimConsoleThreadExecEv
 {
    mArgc = mInitialArgc; // reset args
    Sim::postEvent((SimObject*)Sim::getRootGroup(), evt, Sim::getCurrentTime());
-   return evt->getCB().waitForResult();
+   return std::move(evt->getCB().waitForResult());
 }
 
 //------------------------------------------------------------------------------

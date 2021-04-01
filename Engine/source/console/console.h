@@ -1254,9 +1254,9 @@ public:
       static ConsoleConstructor cfg_ConsoleFunctionGroup_##groupName##_GroupBegin(NULL,#groupName,usage)
 
 #  define ConsoleToolFunction(name,returnType,minArgs,maxArgs,usage1) \
-   returnType ctf_##name(SimObject *, S32, ConsoleValueRef *argv); \
+   returnType ctf_##name(SimObject *, S32, ConsoleValue *argv); \
    ConsoleConstructor cc_##name##_obj(NULL,#name,ctf_##name,usage1,minArgs,maxArgs, true); \
-   returnType ctf_##name(SimObject *, S32 argc, ConsoleValueRef *argv)
+   returnType ctf_##name(SimObject *, S32 argc, ConsoleValue *argv)
 
 #  define ConsoleFunctionGroupEnd(groupName) \
       static ConsoleConstructor cfg_##groupName##_GroupEnd(NULL,#groupName,NULL)
@@ -1289,23 +1289,23 @@ public:
 
 // These are identical to what's above, we just want to null out the usage strings.
 #  define ConsoleFunction(name,returnType,minArgs,maxArgs,usage1)                   \
-      static returnType c##name(SimObject *, S32, ConsoleValueRef*);                   \
+      static returnType c##name(SimObject *, S32, ConsoleValue*);                   \
       static ConsoleConstructor g##name##obj(NULL,#name,c##name,"",minArgs,maxArgs);\
-      static returnType c##name(SimObject *, S32 argc, ConsoleValueRef *argv)
+      static returnType c##name(SimObject *, S32 argc, ConsoleValue *argv)
 
 #  define ConsoleToolFunction(name,returnType,minArgs,maxArgs,usage1)                   \
-   static returnType c##name(SimObject *, S32, ConsoleValueRef*);                   \
+   static returnType c##name(SimObject *, S32, ConsoleValue*);                   \
    static ConsoleConstructor g##name##obj(NULL,#name,c##name,"",minArgs,maxArgs, true);\
-   static returnType c##name(SimObject *, S32 argc, ConsoleValueRef *argv)
+   static returnType c##name(SimObject *, S32 argc, ConsoleValue *argv)
 
 #  define ConsoleMethod(className,name,returnType,minArgs,maxArgs,usage1)                             \
-      static inline returnType c##className##name(className *, S32, ConsoleValueRef *argv);               \
-      static returnType c##className##name##caster(SimObject *object, S32 argc, ConsoleValueRef *argv) {  \
+      static inline returnType c##className##name(className *, S32, ConsoleValue *argv);               \
+      static returnType c##className##name##caster(SimObject *object, S32 argc, ConsoleValue *argv) {  \
          conmethod_return_##returnType ) c##className##name(static_cast<className*>(object),argc,argv);              \
       };                                                                                              \
       static ConsoleConstructor                                                                       \
          className##name##obj(#className,#name,c##className##name##caster,"",minArgs,maxArgs);        \
-      static inline returnType c##className##name(className *object, S32 argc, ConsoleValueRef *argv)
+      static inline returnType c##className##name(className *object, S32 argc, ConsoleValue *argv)
 
 #define ConsoleDoc( text )
 

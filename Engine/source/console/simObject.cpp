@@ -141,7 +141,7 @@ SimObject::~SimObject()
 
 //-----------------------------------------------------------------------------
 
-bool SimObject::processArguments(S32 argc, ConsoleValueRef *argv)
+bool SimObject::processArguments(S32 argc, ConsoleValue *argv)
 {
    return argc == 0;
 }

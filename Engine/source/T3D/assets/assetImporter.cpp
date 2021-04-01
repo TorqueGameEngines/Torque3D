@@ -2546,8 +2546,8 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
             processCommand += childItem->assetType;
             if (isMethod(processCommand.c_str()))
             {
-               ConsoleValueRef importReturnVal = Con::executef(this, processCommand.c_str(), childItem);
-               assetPath = Torque::Path(importReturnVal.getStringValue());
+               const char* importReturnVal = Con::executef(this, processCommand.c_str(), childItem).getString();
+               assetPath = Torque::Path(importReturnVal);
             }
          }
 

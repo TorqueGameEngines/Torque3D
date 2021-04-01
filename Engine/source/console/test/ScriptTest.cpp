@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef 0
 #ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
@@ -32,40 +31,40 @@
 #include "console/stringStack.h"
 
 template<typename T>
-inline T Convert(ConsoleValueRef);
+inline T Convert(ConsoleValue&);
 
 template<>
-inline U32 Convert(ConsoleValueRef val)
+inline U32 Convert(ConsoleValue &val)
 {
-   return val.getIntValue();
+   return val.getInt();
 }
 
 template<>
-inline S32 Convert(ConsoleValueRef val)
+inline S32 Convert(ConsoleValue &val)
 {
-   return val.getSignedIntValue();
+   return val.getInt();
 }
 
 template<>
-inline bool Convert(ConsoleValueRef val)
+inline bool Convert(ConsoleValue &val)
 {
-   return val.getBoolValue();
+   return val.getBool();
 }
 
 template<>
-inline F32 Convert(ConsoleValueRef val)
+inline F32 Convert(ConsoleValue &val)
 {
-   return val.getFloatValue();
+   return val.getFloat();
 }
 
 template<>
-inline const char* Convert(ConsoleValueRef val)
+inline const char* Convert(ConsoleValue &val)
 {
-   return val.getStringValue();
+   return val.getString();
 }
 
 template<>
-inline SimObject* Convert(ConsoleValueRef val)
+inline SimObject* Convert(ConsoleValue &val)
 {
    return Sim::findObject(val);
 }
@@ -73,7 +72,7 @@ inline SimObject* Convert(ConsoleValueRef val)
 template<typename T>
 inline T RunScript(const char* str)
 {
-   return Convert<T>(Con::evaluate(str, false, NULL));
+   return Convert<T>(std::move(Con::evaluate(str, false, NULL)));
 }
 
 TEST(Script, Basic_Arithmetic)
@@ -393,5 +392,4 @@ TEST(Script, Basic_Package)
    EXPECT_EQ(deactivatedValue, 3);
 }
 
-#endif
 #endif

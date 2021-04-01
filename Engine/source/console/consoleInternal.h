@@ -150,7 +150,7 @@ public:
       void clear();
 
       ///
-      ConsoleValueRef execute(S32 argc, ConsoleValueRef* argv, ExprEvalState* state);
+      ConsoleValue execute(S32 argc, ConsoleValue* argv, ExprEvalState* state);
 
       /// Return a one-line documentation text string for the function.
       String getBriefDescription(String* outRemainingDocText = NULL) const;

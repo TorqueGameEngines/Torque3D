@@ -91,7 +91,7 @@ class SimConsoleEvent : public SimEvent
 {
 protected:
    S32 mArgc;
-   ConsoleValueRef *mArgv;
+   ConsoleValue *mArgv;
    bool mOnObject;
 public:
 
@@ -108,13 +108,13 @@ public:
    ///
    /// @see Con::execute(S32 argc, const char *argv[])
    /// @see Con::execute(SimObject *object, S32 argc, const char *argv[])
-   SimConsoleEvent(S32 argc, ConsoleValueRef *argv, bool onObject);
+   SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject);
 
    ~SimConsoleEvent();
    virtual void process(SimObject *object);
 
    /// Creates a reference to our internal args list in argv
-   void populateArgs(ConsoleValueRef *argv);
+   void populateArgs(ConsoleValue *argv);
 };
 
 
@@ -123,13 +123,13 @@ public:
 struct SimConsoleThreadExecCallback
 {
    Semaphore   *sem;
-   ConsoleValueRef retVal;
+   ConsoleValue retVal;
 
    SimConsoleThreadExecCallback();
    ~SimConsoleThreadExecCallback();
 
-   void handleCallback(ConsoleValueRef ret);
-   ConsoleValueRef waitForResult();
+   void handleCallback(ConsoleValue ret);
+   ConsoleValue waitForResult();
 };
 
 class SimConsoleThreadExecEvent : public SimConsoleEvent
@@ -137,7 +137,7 @@ class SimConsoleThreadExecEvent : public SimConsoleEvent
    SimConsoleThreadExecCallback *cb;
 
 public:
-   SimConsoleThreadExecEvent(S32 argc, ConsoleValueRef *argv, bool onObject, SimConsoleThreadExecCallback *callback);
+   SimConsoleThreadExecEvent(S32 argc, ConsoleValue *argv, bool onObject, SimConsoleThreadExecCallback *callback);
 
    SimConsoleThreadExecCallback& getCB() { return *cb; }
    virtual void process(SimObject *object);

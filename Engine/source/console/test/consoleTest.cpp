@@ -1,4 +1,4 @@
-#ifdef 0
+#if 0
 
 #ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"

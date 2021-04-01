@@ -158,25 +158,12 @@ class ConsoleValue
 
    char* convertToBuffer() const;
 
-   TORQUE_FORCEINLINE bool isStringType() const
-   {
-      return type == ConsoleValueType::cvString || type == ConsoleValueType::cvSTEntry;
-   }
-
-   TORQUE_FORCEINLINE bool isNumberType() const
-   {
-      return type == ConsoleValueType::cvFloat || type == ConsoleValueType::cvInteger;
-   }
-
    TORQUE_FORCEINLINE bool hasAllocatedData() const
    {
-      return type == ConsoleValueType::cvString || type >= ConsoleValueType::cvConsoleValueType;
+      return type == ConsoleValueType::cvString || isConsoleType();
    }
 
-   TORQUE_FORCEINLINE const char* getConsoleData() const
-   {
-      return Con::getData(type, ct->dataPtr, 0, ct->enumTable);
-   }
+   const char* getConsoleData() const;
 
    TORQUE_FORCEINLINE void cleanupData()
    {
@@ -192,7 +179,7 @@ public:
       type = ConsoleValueType::cvNone;
    }
 
-   ConsoleValue(ConsoleValue&& ref)
+   ConsoleValue(ConsoleValue&& ref) noexcept
    {
       cleanupData();
       type = ref.type;
@@ -209,7 +196,7 @@ public:
          f = ref.f;
          break;
       case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH
+         TORQUE_CASE_FALLTHROUGH;
       case cvString:
          s = ref.s;
          break;
@@ -227,6 +214,12 @@ public:
    TORQUE_FORCEINLINE ~ConsoleValue()
    {
       cleanupData();
+   }
+
+   TORQUE_FORCEINLINE void reset()
+   {
+      cleanupData();
+      type = ConsoleValueType::cvNone;
    }
 
    TORQUE_FORCEINLINE F64 getFloat() const
@@ -263,6 +256,11 @@ public:
       return getConsoleData();
    }
 
+   TORQUE_FORCEINLINE operator const char* () const
+   {
+      return getString();
+   }
+
    TORQUE_FORCEINLINE bool getBool() const
    {
       AssertFatal(type == ConsoleValueType::cvNone, "Attempted to access ConsoleValue when it has no value!");
@@ -290,6 +288,11 @@ public:
       i = val;
    }
 
+   TORQUE_FORCEINLINE void setString(const char* val)
+   {
+      setString(val, dStrlen(val));
+   }
+
    TORQUE_FORCEINLINE void setString(const char* val, S32 len)
    {
       cleanupData();
@@ -315,16 +318,31 @@ public:
       s = const_cast<char*>(val);
    }
 
-   TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, EnumTable* enumTable)
+   TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)
    {
       cleanupData();
       type = ConsoleValueType::cvSTEntry;
-      ct = new ConsoleValueConsoleType{ dataPtr, enumTable };
+      ct = new ConsoleValueConsoleType{ dataPtr, const_cast<EnumTable*>(enumTable) };
    }
 
    TORQUE_FORCEINLINE S32 getType() const
    {
       return type;
+   }
+
+   TORQUE_FORCEINLINE bool isStringType() const
+   {
+      return type == ConsoleValueType::cvString || type == ConsoleValueType::cvSTEntry;
+   }
+
+   TORQUE_FORCEINLINE bool isNumberType() const
+   {
+      return type == ConsoleValueType::cvFloat || type == ConsoleValueType::cvInteger;
+   }
+
+   TORQUE_FORCEINLINE bool isConsoleType() const
+   {
+      return type >= ConsoleValueType::cvConsoleValueType;
    }
 
    static void init();

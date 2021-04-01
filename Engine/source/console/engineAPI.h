@@ -1187,8 +1187,7 @@ public:
       if (Con::isMainThread())
       {
          ConsoleStackFrameSaver sav; sav.save();
-         CSTK.reserveValues(mArgc + sizeof...(ArgTs), mArgv);
-         mArgv[ 0 ].value->setStackStringValue(mCallbackName);
+         mArgv[ 0 ].setStringTableEntry(mCallbackName);
         
         Helper::marshallEach(mArgc, mArgv, args...);
         
@@ -1199,7 +1198,7 @@ public:
          SimConsoleThreadExecCallback cb;
          SimConsoleThreadExecEvent *evt = new SimConsoleThreadExecEvent(mArgc + sizeof...(ArgTs), NULL, false, &cb);
          evt->populateArgs(mArgv);
-         mArgv[ 0 ].value->setStackStringValue(mCallbackName);
+         mArgv[ 0 ].setStringTableEntry(mCallbackName);
         
         Helper::marshallEach(mArgc, mArgv, args...);
         
@@ -1233,7 +1232,6 @@ public:
       if (Con::isMainThread())
       {
          ConsoleStackFrameSaver sav; sav.save();
-         CSTK.reserveValues(mArgc+sizeof...(ArgTs), mArgv);
          mArgv[ 0 ].setString(simCB, dStrlen(simCB));
 
         Helper::marshallEach(mArgc, mArgv, args...);

@@ -565,7 +565,7 @@ bool CodeBlock::compile(const char *codeFileName, StringTableEntry fileName, con
    return true;
 }
 
-void CodeBlock::compileExec(StringTableEntry fileName, const char *inString, ConsoleValue &returnValue, bool noCalls, S32 setFrame)
+ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inString, bool noCalls, S32 setFrame)
 {
    AssertFatal(Con::isMainThread(), "Compiling code on a secondary thread");
 
@@ -619,7 +619,7 @@ void CodeBlock::compileExec(StringTableEntry fileName, const char *inString, Con
    if (!gStatementList)
    {
       delete this;
-      return;
+      return std::move(ConsoleValue());
    }
 
    resetTables();
@@ -653,7 +653,7 @@ void CodeBlock::compileExec(StringTableEntry fileName, const char *inString, Con
    if (lastIp + 1 != codeSize)
       Con::warnf(ConsoleLogEntry::General, "precompile size mismatch, precompile: %d compile: %d", codeSize, lastIp);
 
-   exec(0, fileName, NULL, 0, 0, noCalls, NULL, returnValue, setFrame);
+   return std::move(exec(0, fileName, NULL, 0, 0, noCalls, NULL, setFrame));
 }
 
 //-------------------------------------------------------------------------

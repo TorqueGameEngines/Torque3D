@@ -420,7 +420,7 @@ void ExprEvalState::setStringVariable(const char *val)
 //-----------------------------------------------------------------------------
 
 U32 gExecCount = 0;
-void CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace, U32 argc, ConsoleValue* argv, bool noCalls, StringTableEntry packageName, ConsoleValue& returnValue, S32 setFrame)
+ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace, U32 argc, ConsoleValue* argv, bool noCalls, StringTableEntry packageName, S32 setFrame)
 {
 #ifdef TORQUE_DEBUG
    U32 stackStart = STR.mStartStackSize;
@@ -432,6 +432,7 @@ void CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace,
    U32 i;
 
    U32 iterDepth = 0;
+   ConsoleValue returnValue;
 
    incRefCount();
    F64* curFloatTable;
@@ -1738,9 +1739,8 @@ void CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace,
          {
             if (nsEntry->mFunctionOffset)
             {
-               ConsoleValue ret;
-               nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage, ret);
-               STR.setStringValue(ret.getString());
+               const char* ret = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage).getString();
+               STR.setStringValue(ret);
             }
             else // no body
                STR.setStringValue("");
@@ -2128,6 +2128,10 @@ execFinished:
    AssertFatal(!(STR.mStartStackSize > stackStart), "String stack not popped enough in script exec");
    AssertFatal(!(STR.mStartStackSize < stackStart), "String stack popped too much in script exec");
 #endif
+
+   if (returnValue.getType() == ConsoleValueType::cvNone)
+      returnValue.setStringTableEntry(StringTable->EmptyString());
+   return std::move(returnValue);
 }
 
 //------------------------------------------------------------

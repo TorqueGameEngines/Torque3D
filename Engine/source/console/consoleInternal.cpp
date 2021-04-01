@@ -480,8 +480,6 @@ Dictionary::Entry::Entry(StringTableEntry in_name)
 
 Dictionary::Entry::~Entry()
 {
-   value.cleanup();
-
    if (notify)
       delete notify;
 }
@@ -560,20 +558,13 @@ Dictionary::Entry* Dictionary::addVariable(const char *name,
    }
 
    Entry *ent = add(StringTable->insert(name));
-
-   if (ent->value.type <= ConsoleValue::TypeInternalString &&
-      ent->value.bufferLen > 0)
-      dFree(ent->value.sval);
-
-   ent->value.type = type;
-   ent->value.dataPtr = dataPtr;
    ent->mUsage = usage;
 
    // Fetch enum table, if any.
 
    ConsoleBaseType* conType = ConsoleBaseType::getType(type);
    AssertFatal(conType, "Dictionary::addVariable - invalid console type");
-   ent->value.enumTable = conType->getEnumTable();
+   ent->value.setConsoleData(type, dataPtr, conType->getEnumTable());
 
    return ent;
 }
@@ -1303,9 +1294,11 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalSta
    switch (mType)
    {
       case StringCallbackType:
+      {
          const char* str = cb.mStringCallbackFunc(state->thisObject, argc, argv);
          result.setString(str, dStrlen(str));
          break;
+      }
       case IntCallbackType:
          result.setInt(cb.mIntCallbackFunc(state->thisObject, argc, argv));
          break;

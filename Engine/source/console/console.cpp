@@ -73,6 +73,11 @@ char* ConsoleValue::convertToBuffer() const
    return offset;
 }
 
+const char* ConsoleValue::getConsoleData() const
+{
+   return Con::getData(type, ct->dataPtr, 0, ct->enumTable);
+}
+
 ConsoleDocFragment* ConsoleDocFragment::smFirst;
 ExprEvalState gEvalState;
 StmtNode *gStatementList;

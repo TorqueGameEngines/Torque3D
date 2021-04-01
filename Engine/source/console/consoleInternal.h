@@ -274,8 +274,6 @@ public:
 
 typedef VectorPtr<Namespace::Entry *>::iterator NamespaceEntryListIterator;
 
-
-
 class Dictionary
 {
 public:
@@ -307,7 +305,6 @@ public:
          mUsage = NULL;
          mIsConstant = false;
          mNext = NULL;
-         value.init();
       }
 
       Entry(StringTableEntry name);
@@ -317,7 +314,7 @@ public:
 
       void reset() {
          name = NULL;
-         value.cleanup();
+         value.reset();
          if (notify)
             delete notify;
       }

@@ -82,7 +82,7 @@ void StringStack::setIntValue(U32 i)
 void StringStack::setFloatValue(F64 v)
 {
    validateBufferSize(mStart + 32);
-   dSprintf(mBuffer + mStart, 32, "%g", v);
+   dSprintf(mBuffer + mStart, 32, "%.9g", v);
    mLen = dStrlen(mBuffer + mStart);
 }
 

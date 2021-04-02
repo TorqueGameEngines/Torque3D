@@ -138,16 +138,6 @@ struct StringStack
       return mBuffer + mStartOffsets[mStartStackSize-1];
    }
 
-   inline StringStackPtr getStringValuePtr()
-   {
-      return (getStringValue() - mBuffer);
-   }
-
-   inline StringStackPtr getPreviousStringValuePtr()
-   {
-      return (getPreviousStringValue() - mBuffer);
-   }
-
    /// Advance the start stack, placing a zero length string on the top.
    ///
    /// @note You should use StringStack::push, not this, if you want to
@@ -184,9 +174,6 @@ struct StringStack
    void popFrame();
 
    void clearFrames();
-
-   /// Get the arguments for a function call from the stack.
-   void getArgcArgv(StringTableEntry name, U32 *argc, const char ***in_argv, bool popStackFrame = false);
 };
 
 extern StringStack STR;

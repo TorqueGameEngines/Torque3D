@@ -1076,7 +1076,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             STR.rewind();
 
             returnValue.setString(retVal, STR.mLen);
-            //STR.setStringValue(returnValue); // Not nice but works.
+            STR.setStringValue(retVal); // Not nice but works.
          }
 
          goto execFinished;
@@ -2070,9 +2070,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       }
    }
 execFinished:
-#ifdef TORQUE_DEBUG
-   AssertFatal(returnValue.getType() == ConsoleValueType::cvNone, "returnValue was never set during script exec");
-#endif
 
    if (telDebuggerOn && setFrame < 0)
       TelDebugger->popStackFrame();
@@ -2129,8 +2126,6 @@ execFinished:
    AssertFatal(!(STR.mStartStackSize < stackStart), "String stack popped too much in script exec");
 #endif
 
-   if (returnValue.getType() == ConsoleValueType::cvNone)
-      returnValue.setStringTableEntry(StringTable->EmptyString());
    return std::move(returnValue);
 }
 

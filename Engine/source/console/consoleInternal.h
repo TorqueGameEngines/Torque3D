@@ -372,7 +372,7 @@ public:
             return;
          }
 
-         value.setString(newValue, dStrlen(newValue));
+         value.setString(newValue);
 
          // Fire off the notification if we have one.
          if (notify)
@@ -455,6 +455,9 @@ struct ConsoleValueFrame
 {
    ConsoleValue* values;
    bool isReference;
+
+   ConsoleValueFrame() : values(NULL), isReference(false)
+   {}
 
    ConsoleValueFrame(ConsoleValue* vals, bool isRef)
    {

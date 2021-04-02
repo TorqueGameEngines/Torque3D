@@ -38,7 +38,7 @@ SimConsoleEvent::SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject)
    {
       if (argv)
       {
-         mArgv->setString(argv[i].getString(), dStrlen(argv[i].getString()));
+         mArgv->setString(argv[i].getString());
       }
    }
 }
@@ -92,7 +92,7 @@ void SimConsoleEvent::populateArgs(ConsoleValue *argv)
 {
    for (U32 i=0; i<mArgc; i++)
    {
-      argv[i].setString(mArgv[i].getString(), dStrlen(mArgv[i].getString()));
+      argv[i].setString(mArgv[i].getString());
    }
 }
 
@@ -111,7 +111,7 @@ SimConsoleThreadExecCallback::~SimConsoleThreadExecCallback()
 void SimConsoleThreadExecCallback::handleCallback(ConsoleValue ret)
 {
    // can we move this pls?
-   retVal.setString(ret.getString(), dStrlen(ret.getString()));
+   retVal.setString(ret.getString());
    sem->release();
 }
 

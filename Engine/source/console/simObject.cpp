@@ -2962,7 +2962,7 @@ DefineEngineStringlyVariadicMethod( SimObject, call, const char*, 3, 0, "( strin
    "@param args Zero or more arguments for the method.\n"
    "@return The result of the method call." )
 {
-   argv[1].setString(argv[2], dStrlen(argv[2]));
+   argv[1].setString(argv[2]);
    return Con::execute( object, argc - 1, argv + 1 );
 }
 

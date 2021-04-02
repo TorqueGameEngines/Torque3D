@@ -1555,7 +1555,7 @@ ConsoleValue _internalExecute(S32 argc, ConsoleValue argv[])
    if (result)
    {
       ConsoleValue ret;
-      ret.setString(methodRes, dStrlen(methodRes));
+      ret.setString(methodRes);
       return std::move(ret);
    }
    
@@ -1644,7 +1644,7 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
    if (result)
    {
       ConsoleValue val;
-      val.setString(methodRes, dStrlen(methodRes));
+      val.setString(methodRes);
       return std::move(val);
    }
 
@@ -1672,7 +1672,7 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
       gEvalState.thisObject = save;
 
       // Twiddle it back
-      argv[1].setString(oldIdent, dStrlen(oldIdent));
+      argv[1].setString(oldIdent);
 
       return std::move(ret);
    }
@@ -1934,8 +1934,8 @@ void postConsoleInput( RawData data )
    // TODO(JTH): Mem leak
    // Schedule this to happen at the next time event.
    ConsoleValue* argv = new ConsoleValue[2];
-   argv[0].setString("eval", 4);
-   argv[1].setString(reinterpret_cast<const char*>(data.data), dStrlen(reinterpret_cast<const char*>(data.data)));
+   argv[0].setString("eval");
+   argv[1].setString(reinterpret_cast<const char*>(data.data));
 
    Sim::postCurrentEvent(Sim::getRootGroup(), new SimConsoleEvent(2, argv, false));
 }
@@ -2577,7 +2577,7 @@ StringArrayToConsoleValueWrapper::StringArrayToConsoleValueWrapper(int targc, co
 
    for (int i=0; i<targc; i++)
    {
-      argv[i].setString(targv[i], dStrlen(targv[i]));
+      argv[i].setString(targv[i]);
    }
 }
 

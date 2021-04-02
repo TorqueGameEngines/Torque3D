@@ -171,11 +171,11 @@ inline void EngineMarshallData( F32 arg, S32& argc, ConsoleValue *argv )
 }
 inline void EngineMarshallData( const char* arg, S32& argc, ConsoleValue *argv )
 {
-   argv[ argc++ ].setString(arg, dStrlen(arg));
+   argv[ argc++ ].setString(arg);
 }
 inline void EngineMarshallData( char* arg, S32& argc, ConsoleValue *argv )
 {
-   argv[ argc++ ].setString(arg, dStrlen(arg));
+   argv[ argc++ ].setString(arg);
 }
 
 template< typename T >
@@ -1232,7 +1232,7 @@ public:
       if (Con::isMainThread())
       {
          ConsoleStackFrameSaver sav; sav.save();
-         mArgv[ 0 ].setString(simCB, dStrlen(simCB));
+         mArgv[ 0 ].setString(simCB);
 
         Helper::marshallEach(mArgc, mArgv, args...);
 
@@ -1243,7 +1243,7 @@ public:
          SimConsoleThreadExecCallback cb;
          SimConsoleThreadExecEvent *evt = new SimConsoleThreadExecEvent(mArgc+sizeof...(ArgTs), NULL, true, &cb);
          evt->populateArgs(mArgv);
-         mArgv[ 0 ].setString(simCB, dStrlen(simCB));
+         mArgv[ 0 ].setString(simCB);
         
         Helper::marshallEach(mArgc, mArgv, args...);
 

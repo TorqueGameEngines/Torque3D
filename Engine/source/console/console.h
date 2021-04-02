@@ -36,6 +36,7 @@
 
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"
+#include "core/stringTable.h"
 
 class SimObject;
 class Namespace;
@@ -119,7 +120,6 @@ extern char *typeValueEmpty;
 
 enum ConsoleValueType
 {
-   cvNone = -5,
    cvInteger = -4,
    cvFloat = -3,
    cvString = -2,
@@ -160,7 +160,7 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE bool hasAllocatedData() const
    {
-      return type == ConsoleValueType::cvString || isConsoleType();
+      return (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
    }
 
    const char* getConsoleData() const;
@@ -170,13 +170,14 @@ class ConsoleValue
       if (hasAllocatedData())
       {
          dFree(data);
+         data = NULL;
       }
    }
 
 public:
    ConsoleValue()
    {
-      type = ConsoleValueType::cvNone;
+      setEmptyString();
    }
 
    ConsoleValue(ConsoleValue&& ref) noexcept
@@ -186,9 +187,6 @@ public:
 
       switch (ref.type)
       {
-      TORQUE_UNLIKELY
-      case cvNone:
-         break;
       case cvInteger:
          i = ref.i;
          break;
@@ -205,7 +203,7 @@ public:
          break;
       }
 
-      ref.type = cvNone;
+      ref.setEmptyString();
    }
 
    ConsoleValue(const ConsoleValue&) = delete;
@@ -219,12 +217,11 @@ public:
    TORQUE_FORCEINLINE void reset()
    {
       cleanupData();
-      type = ConsoleValueType::cvNone;
+      setEmptyString();
    }
 
    TORQUE_FORCEINLINE F64 getFloat() const
    {
-      AssertFatal(type == ConsoleValueType::cvNone, "Attempted to access ConsoleValue when it has no value!");
       if (type == ConsoleValueType::cvFloat)
          return f;
       if (type == ConsoleValueType::cvInteger)
@@ -236,7 +233,6 @@ public:
 
    TORQUE_FORCEINLINE S64 getInt() const
    {
-      AssertFatal(type == ConsoleValueType::cvNone, "Attempted to access ConsoleValue when it has no value!");
       if (type == ConsoleValueType::cvInteger)
          return i;
       if (type == ConsoleValueType::cvFloat)
@@ -248,7 +244,6 @@ public:
 
    TORQUE_FORCEINLINE const char* getString() const
    {
-      AssertFatal(type == ConsoleValueType::cvNone, "Attempted to access ConsoleValue when it has no value!");
       if (isStringType())
          return s;
       if (isNumberType())
@@ -263,7 +258,6 @@ public:
 
    TORQUE_FORCEINLINE bool getBool() const
    {
-      AssertFatal(type == ConsoleValueType::cvNone, "Attempted to access ConsoleValue when it has no value!");
       if (type == ConsoleValueType::cvInteger)
          return (bool)i;
       if (type == ConsoleValueType::cvFloat)
@@ -275,7 +269,6 @@ public:
 
    TORQUE_FORCEINLINE void setFloat(const F64 val)
    {
-      AssertFatal(type == ConsoleValueType::cvNone, "Attempted to access ConsoleValue when it has no value!");
       cleanupData();
       type = ConsoleValueType::cvFloat;
       f = val;
@@ -290,11 +283,17 @@ public:
 
    TORQUE_FORCEINLINE void setString(const char* val)
    {
-      setString(val, dStrlen(val));
+      setString(val, dStrlen(val) + 1);
    }
 
    TORQUE_FORCEINLINE void setString(const char* val, S32 len)
    {
+      if (len == 0)
+      {
+         setEmptyString();
+         return;
+      }
+
       cleanupData();
 
       type = ConsoleValueType::cvString;
@@ -316,6 +315,11 @@ public:
       cleanupData();
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(val);
+   }
+
+   TORQUE_FORCEINLINE void setEmptyString()
+   {
+      setStringTableEntry(StringTable->EmptyString());
    }
 
    TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)

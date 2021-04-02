@@ -633,6 +633,10 @@ void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 reg
 
    AssertFatal(!newFrame.getCount(), "ExprEvalState::pushFrame - Dictionary not empty!");
 
+   ConsoleValue* consoleValArray = new ConsoleValue[registerCount];
+   localStack.push_back(ConsoleValueFrame(consoleValArray, false));
+   currentRegisterArray = &localStack.last();
+
 #ifdef DEBUG_SPEW
    validate();
 #endif
@@ -652,6 +656,13 @@ void ExprEvalState::popFrame()
    mStackDepth--;
    stack[mStackDepth]->reset();
    currentVariable = NULL;
+
+   const ConsoleValueFrame& frame = localStack.last();
+   localStack.pop_back();
+   if (!frame.isReference)
+      delete[] frame.values;
+
+   currentRegisterArray = localStack.size() ? &localStack.last() : NULL;
 
 #ifdef DEBUG_SPEW
    validate();
@@ -1296,7 +1307,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalSta
       case StringCallbackType:
       {
          const char* str = cb.mStringCallbackFunc(state->thisObject, argc, argv);
-         result.setString(str, dStrlen(str));
+         result.setString(str);
          break;
       }
       case IntCallbackType:

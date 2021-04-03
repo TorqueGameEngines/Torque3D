@@ -203,6 +203,7 @@ public:
          break;
       }
 
+      ref.data = NULL;
       ref.setEmptyString();
    }
 
@@ -283,7 +284,7 @@ public:
 
    TORQUE_FORCEINLINE void setString(const char* val)
    {
-      setString(val, dStrlen(val) + 1);
+      setString(val, dStrlen(val));
    }
 
    TORQUE_FORCEINLINE void setString(const char* val, S32 len)
@@ -298,9 +299,9 @@ public:
 
       type = ConsoleValueType::cvString;
 
-      s = (char*)dMalloc(len + 1);
-      s[len] = 0x0;
-      dStrcpy(s, val, len);
+      s = (char*)dMalloc(static_cast<dsize_t>(len) + 1);
+      s[len] = '\0';
+      dStrcpy(s, val, static_cast<dsize_t>(len) + 1);
    }
 
    TORQUE_FORCEINLINE void setBool(const bool val)

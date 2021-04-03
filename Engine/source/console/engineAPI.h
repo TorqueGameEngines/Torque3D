@@ -151,7 +151,7 @@ template< typename T >
 inline void EngineMarshallData( const T& arg, S32& argc, ConsoleValue *argv )
 {
    const char* str = castConsoleTypeToString(arg);;
-   argv[ argc++ ].setString(str, dStrlen(str));
+   argv[ argc++ ].setString(str);
 }
 inline void EngineMarshallData( bool arg, S32& argc, ConsoleValue *argv )
 {

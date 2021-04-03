@@ -30,139 +30,99 @@
 #include "math/mMath.h"
 #include "console/stringStack.h"
 
-template<typename T>
-inline T Convert(ConsoleValue&);
-
-template<>
-inline U32 Convert(ConsoleValue &val)
+inline ConsoleValue RunScript(const char* str)
 {
-   return val.getInt();
-}
-
-template<>
-inline S32 Convert(ConsoleValue &val)
-{
-   return val.getInt();
-}
-
-template<>
-inline bool Convert(ConsoleValue &val)
-{
-   return val.getBool();
-}
-
-template<>
-inline F32 Convert(ConsoleValue &val)
-{
-   return val.getFloat();
-}
-
-template<>
-inline const char* Convert(ConsoleValue &val)
-{
-   return val.getString();
-}
-
-template<>
-inline SimObject* Convert(ConsoleValue &val)
-{
-   return Sim::findObject(val);
-}
-
-template<typename T>
-inline T RunScript(const char* str)
-{
-   return Convert<T>(std::move(Con::evaluate(str, false, NULL)));
+   return std::move(Con::evaluate(str, false, NULL));
 }
 
 TEST(Script, Basic_Arithmetic)
 {
-   S32 add = RunScript<S32>(R"(
+   ConsoleValue add = RunScript(R"(
          return 1.0 + 1;
    )");
 
-   EXPECT_EQ(add, 2);
+   ASSERT_EQ(add.getInt(), 2);
 
-   S32 sub = RunScript<S32>(R"(
+   ConsoleValue sub = RunScript(R"(
          return 10 - 1.0;
    )");
 
-   EXPECT_EQ(sub, 9);
+   ASSERT_EQ(sub.getInt(), 9);
 
-   S32 mult = RunScript<S32>(R"(
+   ConsoleValue mult = RunScript(R"(
          return 10 * 2.5;
    )");
 
-   EXPECT_EQ(mult, 25);
+   ASSERT_EQ(mult.getInt(), 25);
 
-   S32 div = RunScript<S32>(R"(
+   ConsoleValue div = RunScript(R"(
          return 10.0 / 2;
    )");
 
-   EXPECT_EQ(div, 5);
+   ASSERT_EQ(div.getInt(), 5);
 }
 
 TEST(Script, Complex_Arithmetic)
 {
-   S32 result = RunScript<S32>(R"(
+   ConsoleValue result = RunScript(R"(
          return 1 * 2 - (0.5 * 2);
    )");
 
-   EXPECT_EQ(result, 1);
+   ASSERT_EQ(result.getInt(), 1);
 
-   S32 result2 = RunScript<S32>(R"(
+   ConsoleValue result2 = RunScript(R"(
          return 1 * 2 * 3 % 2;
    )");
 
-   EXPECT_EQ(result2, 0);
+   ASSERT_EQ(result2.getInt(), 0);
 }
 
 TEST(Script, Basic_Concatination)
 {
-   const char* result1 = RunScript<const char*>(R"(
+   ConsoleValue result1 = RunScript(R"(
          return "a" @ "b";
    )");
 
-   EXPECT_STREQ(result1, "ab");
+   ASSERT_STREQ(result1.getString(), "ab");
 
-   const char* result2 = RunScript<const char*>(R"(
+   ConsoleValue result2 = RunScript(R"(
          return "a" SPC "b";
    )");
 
-   EXPECT_STREQ(result2, "a b");
+   ASSERT_STREQ(result2.getString(), "a b");
 
-   const char* result3 = RunScript<const char*>(R"(
+   ConsoleValue result3 = RunScript(R"(
          return "a" TAB "b";
    )");
 
-   EXPECT_STREQ(result3, "a\tb");
+   ASSERT_STREQ(result3.getString(), "a\tb");
 
-   const char* result4 = RunScript<const char*>(R"(
+   ConsoleValue result4 = RunScript(R"(
          return "a" NL "b";
    )");
 
-   EXPECT_STREQ(result4, "a\nb");
+   ASSERT_STREQ(result4.getString(), "a\nb");
 
-   const char* complex = RunScript<const char*>(R"(
+   ConsoleValue complex = RunScript(R"(
          return "a" @ "b" @ "c" @ "d";
    )");
 
-   EXPECT_STREQ(complex, "abcd");
+   ASSERT_STREQ(complex.getString(), "abcd");
 }
 
 TEST(Script, Basic_Global_Variable_Tests)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          $a = 1;
          return $a;
    )");
 
-   EXPECT_EQ(value, 1);
+   ASSERT_EQ(value.getInt(), 1);
 }
 
 TEST(Script, Variable_Chaining_And_Usage)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function t() 
          {
             %a = %b = 2;
@@ -171,9 +131,9 @@ TEST(Script, Variable_Chaining_And_Usage)
          return t();
    )");
 
-   EXPECT_EQ(value, 2);
+   ASSERT_EQ(value.getInt(), 2);
 
-   S32 valueGlobal = RunScript<S32>(R"(
+   ConsoleValue valueGlobal = RunScript(R"(
          function t() 
          {
             $a = %b = 2;
@@ -182,9 +142,9 @@ TEST(Script, Variable_Chaining_And_Usage)
          return $a;
    )");
 
-   EXPECT_EQ(valueGlobal, 2);
+   ASSERT_EQ(valueGlobal.getInt(), 2);
 
-   S32 value2 = RunScript<S32>(R"(
+   ConsoleValue value2 = RunScript(R"(
          function t(%a) 
          {
             if ((%b = 2 * %a) != 5)
@@ -195,26 +155,26 @@ TEST(Script, Variable_Chaining_And_Usage)
          return t(2);
    )");
 
-   EXPECT_EQ(value2, 4);
+   ASSERT_EQ(value2.getInt(), 4);
 }
 
 TEST(Script, Basic_Function_Call_And_Local_Variable_Testing)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function t() { %a = 2; return %a; }
          return t();
    )");
 
-   EXPECT_EQ(value, 2);
+   ASSERT_EQ(value.getInt(), 2);
 
-   S32 value2 = RunScript<S32>(R"(
+   ConsoleValue value2 = RunScript(R"(
          function add(%a, %b) { return %a + %b; }
          return add(2, 4);
    )");
 
-   EXPECT_EQ(value2, 6);
+   ASSERT_EQ(value2.getInt(), 6);
 
-   S32 value3 = RunScript<S32>(R"(
+   ConsoleValue value3 = RunScript(R"(
          function fib(%a) {
             if (%a == 0)
                return 0;
@@ -225,48 +185,48 @@ TEST(Script, Basic_Function_Call_And_Local_Variable_Testing)
          return fib(15);
    )");
 
-   EXPECT_EQ(value3, 610);
+   ASSERT_EQ(value3.getInt(), 610);
 
-   S32 staticCall = RunScript<S32>(R"(
+   ConsoleValue staticCall = RunScript(R"(
          function SimObject::bar(%a, %b) {
             return %a + %b;
          }
          return SimObject::bar(1, 2);
    )");
 
-   EXPECT_EQ(staticCall, 3);
+   ASSERT_EQ(staticCall.getInt(), 3);
 }
 
 TEST(Script, Basic_Conditional_Statements)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          $a = "hello";
          if ($a $= "hello")
             return 1;
          return 2;
    )");
 
-   EXPECT_EQ(value, 1);
+   ASSERT_EQ(value.getInt(), 1);
 
-   const char* ternaryValue = RunScript<const char*>(R"(
+   ConsoleValue ternaryValue = RunScript(R"(
          return $a $= "hello" ? "World" : "No U";
    )");
 
-   EXPECT_STREQ(ternaryValue, "World");
+   ASSERT_STREQ(ternaryValue.getString(), "World");
 }
 
 TEST(Script, Basic_Loop_Statements)
 {
-   S32 whileValue = RunScript<S32>(R"(
+   ConsoleValue whileValue = RunScript(R"(
          $count = 0;
          while ($count < 5)
             $count++;
          return $count;
    )");
 
-   EXPECT_EQ(whileValue, 5);
+   ASSERT_EQ(whileValue.getInt(), 5);
 
-   const char* forValue = RunScript<const char*>(R"(
+   ConsoleValue forValue = RunScript(R"(
          function t(%times) 
          { 
             %result = "";
@@ -278,9 +238,9 @@ TEST(Script, Basic_Loop_Statements)
          return t(3);
    )");
 
-   EXPECT_STREQ(forValue, "aaa");
+   ASSERT_STREQ(forValue.getString(), "aaa");
 
-   const char* forIfValue = RunScript<const char*>(R"(
+   ConsoleValue forIfValue = RunScript(R"(
          function t() {
             %str = "";
             for (%i = 0; %i < 5; %i++) {
@@ -298,43 +258,43 @@ TEST(Script, Basic_Loop_Statements)
          return t();
    )");
 
-   EXPECT_STREQ(forIfValue, "0, 1, 2, 3, 4");
+   ASSERT_STREQ(forIfValue.getString(), "0, 1, 2, 3, 4");
 }
 
 TEST(Script, TorqueScript_Array_Testing)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function t(%idx) { %a[idx] = 2; return %a[idx]; }
          return t(5);
    )");
 
-   EXPECT_EQ(value, 2);
+   ASSERT_EQ(value.getInt(), 2);
 
-   S32 value2 = RunScript<S32>(R"(
+   ConsoleValue value2 = RunScript(R"(
          function t(%idx) { %a[idx, 0] = 2; return %a[idx, 0]; }
          return t(5);
    )");
 
-   EXPECT_EQ(value2, 2);
+   ASSERT_EQ(value2.getInt(), 2);
 }
 
 TEST(Script, Basic_SimObject)
 {
-   SimObject* object = RunScript<SimObject*>(R"(
+   ConsoleValue object = RunScript(R"(
          return new SimObject(FudgeCollector) {
             fudge = "Chocolate"; 
          };
    )");
 
-   EXPECT_NE(object, (SimObject*)NULL);
+   ASSERT_NE(Sim::findObject(object), (SimObject*)NULL);
 
-   const char* propertyValue = RunScript<const char*>(R"(
+   ConsoleValue propertyValue = RunScript(R"(
          return FudgeCollector.fudge;
    )");
 
-   EXPECT_STREQ(propertyValue, "Chocolate");
+   ASSERT_STREQ(propertyValue.getString(), "Chocolate");
 
-   const char* funcReturn = RunScript<const char*>(R"(
+   ConsoleValue funcReturn = RunScript(R"(
          function SimObject::fooFunc(%this)
          {
             return "Bar";
@@ -343,9 +303,9 @@ TEST(Script, Basic_SimObject)
          return FudgeCollector.fooFunc();
    )");
 
-   EXPECT_STREQ(funcReturn, "Bar");
+   ASSERT_STREQ(funcReturn.getString(), "Bar");
 
-   const char* parentFn = RunScript<const char*>(R"(
+   ConsoleValue parentFn = RunScript(R"(
          new SimObject(Hello);
 
          function SimObject::fooFunc2(%this)
@@ -362,12 +322,12 @@ TEST(Script, Basic_SimObject)
          return Hello.fooFunc2();
    )");
 
-   EXPECT_STREQ(parentFn, "FooBar");
+   ASSERT_STREQ(parentFn.getString(), "FooBar");
 }
 
 TEST(Script, Basic_Package)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function a() { return 3; }
          package overrides {
             function a() { return 5; }
@@ -375,21 +335,21 @@ TEST(Script, Basic_Package)
          return a();
    )");
 
-   EXPECT_EQ(value, 3);
+   ASSERT_EQ(value.getInt(), 3);
 
-   S32 overrideValue = RunScript<S32>(R"(
+   ConsoleValue overrideValue = RunScript(R"(
          activatePackage(overrides);
          return a();
    )");
 
-   EXPECT_EQ(overrideValue, 5);
+   ASSERT_EQ(overrideValue.getInt(), 5);
 
-   S32 deactivatedValue = RunScript<S32>(R"(
+   ConsoleValue deactivatedValue = RunScript(R"(
          deactivatePackage(overrides);
          return a();
    )");
 
-   EXPECT_EQ(deactivatedValue, 3);
+   ASSERT_EQ(deactivatedValue.getInt(), 3);
 }
 
 #endif

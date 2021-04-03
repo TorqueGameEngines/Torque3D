@@ -494,6 +494,8 @@ public:
    /// an interior pointer that will become invalid when the object changes address.
    Vector< Dictionary* > stack;
 
+   S32 getTopOfStack() { return (S32)mStackDepth; }
+
    Vector< ConsoleValueFrame > localStack;
    ConsoleValueFrame* currentRegisterArray; // contains array at to top of localStack
 

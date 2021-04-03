@@ -254,7 +254,7 @@ StrConstNode* StrConstNode::alloc(S32 lineNumber, char* str, bool tag, bool doc)
    ret->str = (char*)consoleAlloc(len + 1);
    ret->tag = tag;
    ret->doc = doc;
-   dStrcpy(ret->str, str, len);
+   dStrcpy(ret->str, str, len + 1);
    ret->str[len] = '\0';
 
    return ret;

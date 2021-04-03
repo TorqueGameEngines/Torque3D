@@ -637,6 +637,8 @@ void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 reg
    localStack.push_back(ConsoleValueFrame(consoleValArray, false));
    currentRegisterArray = &localStack.last();
 
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
 #ifdef DEBUG_SPEW
    validate();
 #endif
@@ -664,6 +666,8 @@ void ExprEvalState::popFrame()
 
    currentRegisterArray = localStack.size() ? &localStack.last() : NULL;
 
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
 #ifdef DEBUG_SPEW
    validate();
 #endif
@@ -671,7 +675,7 @@ void ExprEvalState::popFrame()
 
 void ExprEvalState::pushFrameRef(S32 stackIndex)
 {
-   AssertFatal(stackIndex >= 0 && stackIndex < stack.size(), "You must be asking for a valid frame!");
+   AssertFatal(stackIndex >= 0 && stackIndex < mStackDepth, "You must be asking for a valid frame!");
 
 #ifdef DEBUG_SPEW
    validate();
@@ -694,6 +698,12 @@ void ExprEvalState::pushFrameRef(S32 stackIndex)
 
    mStackDepth++;
    currentVariable = NULL;
+
+   ConsoleValue* values = localStack[stackIndex].values;
+   localStack.push_back(ConsoleValueFrame(values, true));
+   currentRegisterArray = &localStack.last();
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
 
 #ifdef DEBUG_SPEW
    validate();

@@ -512,6 +512,12 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       curStringTable = globalStrings;
       curStringTableLen = globalStringsMaxLen;
 
+      // If requested stack frame isn't available, request a new one
+      // (this prevents assert failures when creating local
+      //  variables without a stack frame)
+      if (gEvalState.getStackDepth() <= setFrame)
+         setFrame = -1;
+
       // Do we want this code to execute using a new stack frame?
       if (setFrame < 0)
       {
@@ -519,13 +525,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          gCallStack.pushFrame(0);
          popFrame = true;
       }
-      else if (!gEvalState.stack.empty())
+      else
       {
          // We want to copy a reference to an existing stack frame
          // on to the top of the stack.  Any change that occurs to
          // the locals during this new frame will also occur in the
          // original frame.
-         S32 stackIndex = gEvalState.stack.size() - setFrame - 1;
+         S32 stackIndex = gEvalState.getTopOfStack() - setFrame - 1;
          gEvalState.pushFrameRef(stackIndex);
          popFrame = true;
       }
@@ -1062,7 +1068,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // We're falling thru here on purpose.
 
       case OP_RETURN:
-
+      {
          if (iterDepth > 0)
          {
             // Clear iterator state.
@@ -1074,13 +1080,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
             const char* retVal = STR.getStringValue();
             STR.rewind();
-
-            returnValue.setString(retVal, STR.mLen);
             STR.setStringValue(retVal); // Not nice but works.
          }
 
-         goto execFinished;
+         returnValue.setString(STR.getStringValue(), STR.mLen);
 
+         goto execFinished;
+      }
       case OP_RETURN_FLT:
 
          if (iterDepth > 0)
@@ -1739,8 +1745,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             if (nsEntry->mFunctionOffset)
             {
-               const char* ret = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage).getString();
-               STR.setStringValue(ret);
+               ConsoleValue returnFromFn = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage);
+               STR.setStringValue(returnFromFn.getString());
             }
             else // no body
                STR.setStringValue("");

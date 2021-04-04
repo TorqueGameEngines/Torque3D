@@ -643,7 +643,8 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    codeStream.emit(OP_RETURN);
    codeStream.emitCodeStream(&codeSize, &code, &lineBreakPairs);
 
-   //dumpInstructions(0, false);
+   if (Con::getBoolVariable("dump"))
+   dumpInstructions(0, false);
 
    consoleAllocReset();
 
@@ -1392,23 +1393,50 @@ void CodeBlock::dumpInstructions(U32 startIp, bool upToReturn)
 
       case OP_ITER_BEGIN:
       {
-         StringTableEntry varName = CodeToSTE(code, ip);
-         U32 failIp = code[ip + 2];
+         bool isGlobal = code[ip];
+         if (isGlobal)
+         {
+            StringTableEntry varName = CodeToSTE(code, ip + 1);
+            U32 failIp = code[ip + 3];
 
-         Con::printf("%i: OP_ITER_BEGIN varName=%s failIp=%i", ip - 1, varName, failIp);
+            Con::printf("%i: OP_ITER_BEGIN varName=%s failIp=%i isGlobal=%s", ip - 1, varName, failIp, "true");
 
-         ip += 3;
+            ip += 4;
+         }
+         else
+         {
+            S32 reg = code[ip + 1];
+            U32 failIp = code[ip + 2];
+
+            Con::printf("%i: OP_ITER_BEGIN varRegister=%d failIp=%i isGlobal=%s", ip - 1, reg, failIp, "false");
+
+            ip += 3;
+         }
          break;
       }
 
       case OP_ITER_BEGIN_STR:
       {
-         StringTableEntry varName = CodeToSTE(code, ip);
-         U32 failIp = code[ip + 2];
+         bool isGlobal = code[ip];
+         if (isGlobal)
+         {
+            StringTableEntry varName = CodeToSTE(code, ip + 1);
+            U32 failIp = code[ip + 3];
 
-         Con::printf("%i: OP_ITER_BEGIN varName=%s failIp=%i", ip - 1, varName, failIp);
+            Con::printf("%i: OP_ITER_BEGIN_STR varName=%s failIp=%i isGlobal=%s", ip - 1, varName, failIp, "true");
 
-         ip += 3;
+            ip += 4;
+         }
+         else
+         {
+            S32 reg = code[ip + 1];
+            U32 failIp = code[ip + 2];
+
+            Con::printf("%i: OP_ITER_BEGIN_STR varRegister=%d failIp=%i isGlobal=%s", ip - 1, reg, failIp, "false");
+
+            ip += 3;
+         }
+
          break;
       }
 

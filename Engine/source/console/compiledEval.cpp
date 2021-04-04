@@ -66,8 +66,18 @@ struct IterStackRecord
    /// If true, this is a foreach$ loop; if not, it's a foreach loop.
    bool mIsStringIter;
 
-   /// The iterator variable.
-   Dictionary::Entry* mVariable;
+   /// True if the variable referenced is a global
+   bool mIsGlobalVariable;
+
+   union
+   {
+
+      /// The iterator variable if we are a global variable
+      Dictionary::Entry* mVariable;
+
+      /// The register variable if we are a local variable
+      S32 mRegister;
+   } mVar;
 
    /// Information for an object iterator loop.
    struct ObjectPos
@@ -1745,6 +1755,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             if (nsEntry->mFunctionOffset)
             {
+               // TODO: not make this strings only for returns.
                ConsoleValue returnFromFn = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage);
                STR.setStringValue(returnFromFn.getString());
             }
@@ -1954,12 +1965,22 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_ITER_BEGIN:
       {
-         StringTableEntry varName = CodeToSTE(code, ip);
-         U32 failIp = code[ip + 2];
+         bool isGlobal = code[ip];
+
+         U32 failIp = code[ip + isGlobal ? 3 : 2];
 
          IterStackRecord& iter = iterStack[_ITER];
+         iter.mIsGlobalVariable = isGlobal;
 
-         iter.mVariable = gEvalState.getCurrentFrame().add(varName);
+         if (isGlobal)
+         {
+            StringTableEntry varName = CodeToSTE(code, ip + 1);
+            iter.mVar.mVariable = gEvalState.globalVars.add(varName);
+         }
+         else
+         {
+            iter.mVar.mRegister = code[ip + 1];
+         }
 
          if (iter.mIsStringIter)
          {
@@ -1990,7 +2011,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
          STR.push();
 
-         ip += 3;
+         ip += isGlobal ? 4 : 3;
          break;
       }
 
@@ -2026,11 +2047,21 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             {
                char savedChar = str[endIndex];
                const_cast<char*>(str)[endIndex] = '\0'; // We are on the string stack so this is okay.
-               iter.mVariable->setStringValue(&str[startIndex]);
+
+               if (iter.mIsGlobalVariable)
+                  iter.mVar.mVariable->setStringValue(&str[startIndex]);
+               else
+                  gEvalState.setLocalStringVariable(iter.mVar.mRegister, &str[startIndex], endIndex - startIndex);
+
                const_cast<char*>(str)[endIndex] = savedChar;
             }
             else
-               iter.mVariable->setStringValue("");
+            {
+               if (iter.mIsGlobalVariable)
+                  iter.mVar.mVariable->setStringValue("");
+               else
+                  gEvalState.setLocalStringVariable(iter.mVar.mRegister, "", 0);
+            }
 
             // Skip separator.
             if (str[endIndex] != '\0')
@@ -2049,7 +2080,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                continue;
             }
 
-            iter.mVariable->setIntValue(set->at(index)->getId());
+            SimObjectId id = set->at(index)->getId();
+
+            if (iter.mIsGlobalVariable)
+               iter.mVar.mVariable->setIntValue(id);
+            else
+               gEvalState.setLocalIntVariable(iter.mVar.mRegister, id);
+
             iter.mData.mObj.mIndex = index + 1;
          }
 

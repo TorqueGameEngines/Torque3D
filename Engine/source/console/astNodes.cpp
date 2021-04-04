@@ -413,11 +413,18 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 
    codeStream.pushFixScope(true);
 
+   bool isGlobal = varName[0] == '$';
+   TypeReq varType = isStringIter ? TypeReqString : TypeReqUInt;
+
    const U32 startIp = ip;
-   containerExpr->compile(codeStream, startIp, TypeReqString);
+   containerExpr->compile(codeStream, startIp, TypeReqString); // todo: figure out better way to codegen this so we don't rely on STR
 
    codeStream.emit(isStringIter ? OP_ITER_BEGIN_STR : OP_ITER_BEGIN);
-   codeStream.emitSTE(varName);
+   codeStream.emit(isGlobal);
+   if (isGlobal)
+      codeStream.emitSTE(varName);
+   else
+      codeStream.emit(gFuncVars->assign(varName, varType));
    const U32 finalFix = codeStream.emit(0);
    const U32 continueIp = codeStream.emit(OP_ITER);
    codeStream.emitFix(CodeStream::FIXTYPE_BREAK);

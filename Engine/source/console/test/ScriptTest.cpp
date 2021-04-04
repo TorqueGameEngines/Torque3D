@@ -241,9 +241,11 @@ TEST(Script, Basic_Loop_Statements)
    ASSERT_STREQ(forValue.getString(), "aaa");
 
    ConsoleValue forIfValue = RunScript(R"(
-         function t() {
+         function t()
+         {
             %str = "";
-            for (%i = 0; %i < 5; %i++) {
+            for (%i = 0; %i < 5; %i++)
+            {
 
                %loopValue = %i;
 
@@ -259,6 +261,82 @@ TEST(Script, Basic_Loop_Statements)
    )");
 
    ASSERT_STREQ(forIfValue.getString(), "0, 1, 2, 3, 4");
+}
+
+TEST(Script, ForEachLoop)
+{
+   ConsoleValue forEach1 = RunScript(R"(
+         $theSimSet = new SimSet();
+         $theSimSet.add(new SimObject());
+         $theSimSet.add(new SimObject());
+
+         $counter = 0;
+         foreach ($obj in $theSimSet)
+         {
+            $counter++;
+         }
+
+         $theSimSet.delete();
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEach1.getInt(), 2);
+
+   ConsoleValue forEach2 = RunScript(R"(
+         $counter = 0;
+         foreach$ ($word in "a b c d")
+         {
+            $counter++;
+         }
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEach2.getInt(), 4);
+
+   ConsoleValue forEach3 = RunScript(R"(
+         function SimObject::addOne(%this)
+         {
+            return 1;
+         }
+
+         function test()
+         {
+            %set = new SimSet();
+            %set.add(new SimObject());
+            %set.add(new SimObject());
+
+            %count = 0;
+            foreach (%obj in %set)
+               %count += %obj.addOne();
+
+            %set.delete();
+
+            return %count;
+         }
+
+         return test();
+   )");
+
+   ASSERT_EQ(forEach3.getInt(), 2);
+
+   ConsoleValue forEach4 = RunScript(R"(
+         function test()
+         {
+            %string = "a b c d e";
+
+            %count = 0;
+            foreach$ (%word in %string)
+               %count++;
+
+            return %count;
+         }
+
+         return test();
+   )");
+
+   ASSERT_EQ(forEach4.getInt(), 5);
 }
 
 TEST(Script, TorqueScript_Array_Testing)
@@ -281,7 +359,8 @@ TEST(Script, TorqueScript_Array_Testing)
 TEST(Script, Basic_SimObject)
 {
    ConsoleValue object = RunScript(R"(
-         return new SimObject(FudgeCollector) {
+         return new SimObject(FudgeCollector)
+         {
             fudge = "Chocolate"; 
          };
    )");
@@ -329,7 +408,8 @@ TEST(Script, Basic_Package)
 {
    ConsoleValue value = RunScript(R"(
          function a() { return 3; }
-         package overrides {
+         package overrides
+         {
             function a() { return 5; }
          };
          return a();

@@ -763,6 +763,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
                   // Clean up...
                   delete object;
+                  currentNewObject = NULL;
                   ip = failJump;
                   break;
                }
@@ -1011,7 +1012,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          if (currentNewObject)
             currentNewObject->onPostAdd();
 
-         //Assert( objectCreationStackIndex >= 0 );
+         AssertFatal( objectCreationStackIndex >= 0, "Object Stack is empty." );
          // Restore the object info from the stack [7/9/2007 Black]
          currentNewObject = objectCreationStack[--objectCreationStackIndex].newObject;
          failJump = objectCreationStack[objectCreationStackIndex].failJump;

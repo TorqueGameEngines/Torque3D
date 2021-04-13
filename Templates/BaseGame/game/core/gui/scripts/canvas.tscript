@@ -156,7 +156,7 @@ function GuiCanvas::prefsToModeStr(%this)
 function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startup)
 {
    // Toggle for selecting the borderless window allowed sizes. Set true to allow
-   // boderless windows to be less than the device res.
+   // borderless windows to be less than the device res.
    %allowSmallBorderless = true;
 
    %resX = getWord(%mode, $WORD::RES_X);

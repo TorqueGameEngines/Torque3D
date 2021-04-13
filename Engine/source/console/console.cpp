@@ -1657,7 +1657,7 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
 
       if(ent == NULL)
       {
-         warnf(ConsoleLogEntry::Script, "%s: undefined for object '%s' - id %d", funcName, object->getName(), object->getId());
+         //warnf(ConsoleLogEntry::Script, "%s: undefined for object '%s' - id %d", funcName, object->getName(), object->getId());
 
          STR.clearFunctionOffset();
          return std::move(ConsoleValue());

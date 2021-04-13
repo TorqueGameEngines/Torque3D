@@ -468,6 +468,7 @@ char *typeValueEmpty = "";
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
+   type = TypeInternalString;
    notify = NULL;
    nextEntry = NULL;
    mUsage = NULL;

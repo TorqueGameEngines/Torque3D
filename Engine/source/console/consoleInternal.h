@@ -344,11 +344,17 @@ public:
 
       Entry() {
          name = NULL;
+         type = TypeInternalString;
          notify = NULL;
          nextEntry = NULL;
          mUsage = NULL;
          mIsConstant = false;
          mNext = NULL;
+
+         ival = 0;
+         fval = 0;
+         sval = typeValueEmpty;
+         bufferLen = 0;
       }
 
       Entry(StringTableEntry name);

@@ -109,14 +109,18 @@ ConsoleValueStack<4096> gCallStack;
 
 StringStack STR;
 
-U32 _FLT = 0;     ///< Stack pointer for floatStack.
-U32 _UINT = 0;    ///< Stack pointer for intStack.
 U32 _ITER = 0;    ///< Stack pointer for iterStack.
 
 IterStackRecord iterStack[MaxStackSize];
 
-F64 floatStack[MaxStackSize];
-S64 intStack[MaxStackSize];
+union StackValue
+{
+   F64 f;
+   S64 i;
+};
+
+StackValue numStack[MaxStackSize];
+U32 _STK = 0;
 
 char curFieldArray[256];
 char prevFieldArray[256];
@@ -945,7 +949,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          }
 
          // What group will we be added to, if any?
-         U32 groupAddId = (U32)intStack[_UINT];
+         U32 groupAddId = (U32)numStack[_STK].i;
          SimGroup* grp = NULL;
          SimSet* set = NULL;
 
@@ -990,9 +994,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // id, if one was given, otherwise getting pushed)
          S32 id = currentNewObject->getId();
          if (placeAtRoot)
-            intStack[_UINT] = id;
+            numStack[_STK].i = id;
          else
-            intStack[++_UINT] = id;
+            numStack[++_STK].i = id;
 
          break;
       }
@@ -1003,7 +1007,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // our group reference.
          bool placeAtRoot = code[ip++];
          if (!placeAtRoot)
-            _UINT--;
+            _STK--;
          break;
       }
 
@@ -1020,7 +1024,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       }
 
       case OP_JMPIFFNOT:
-         if (floatStack[_FLT--])
+         if (numStack[_STK--].f)
          {
             ip++;
             break;
@@ -1028,7 +1032,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIFNOT:
-         if (intStack[_UINT--])
+         if (numStack[_STK--].i)
          {
             ip++;
             break;
@@ -1036,7 +1040,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIFF:
-         if (!floatStack[_FLT--])
+         if (!numStack[_STK--].f)
          {
             ip++;
             break;
@@ -1044,7 +1048,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIF:
-         if (!intStack[_UINT--])
+         if (!numStack[_STK--].i)
          {
             ip++;
             break;
@@ -1052,18 +1056,18 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIFNOT_NP:
-         if (intStack[_UINT])
+         if (numStack[_STK].i)
          {
-            _UINT--;
+            _STK--;
             ip++;
             break;
          }
          ip = code[ip];
          break;
       case OP_JMPIF_NP:
-         if (!intStack[_UINT])
+         if (!numStack[_STK].i)
          {
-            _UINT--;
+            _STK--;
             ip++;
             break;
          }
@@ -1111,8 +1115,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
          }
 
-         returnValue.setFloat(floatStack[_FLT]);
-         _FLT--;
+         returnValue.setFloat(numStack[_STK].f);
+         _STK--;
 
          goto execFinished;
 
@@ -1128,124 +1132,116 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             }
          }
 
-         returnValue.setInt(intStack[_UINT]);
-         _UINT--;
+         returnValue.setInt(numStack[_STK].i);
+         _STK--;
 
          goto execFinished;
 
       case OP_CMPEQ:
-         intStack[_UINT + 1] = bool(floatStack[_FLT] == floatStack[_FLT - 1]);
-         _UINT++;
-         _FLT -= 2;
+         numStack[_STK - 1].i = bool(numStack[_STK].f == numStack[_STK - 1].f);
+         _STK--;
          break;
 
       case OP_CMPGR:
-         intStack[_UINT + 1] = bool(floatStack[_FLT] > floatStack[_FLT - 1]);
-         _UINT++;
-         _FLT -= 2;
+         numStack[_STK - 1].i = bool(numStack[_STK].f > numStack[_STK - 1].f);
+         _STK--;
          break;
 
       case OP_CMPGE:
-         intStack[_UINT + 1] = bool(floatStack[_FLT] >= floatStack[_FLT - 1]);
-         _UINT++;
-         _FLT -= 2;
+         numStack[_STK - 1].i = bool(numStack[_STK].f >= numStack[_STK - 1].f);
+         _STK--;
          break;
 
       case OP_CMPLT:
-         intStack[_UINT + 1] = bool(floatStack[_FLT] < floatStack[_FLT - 1]);
-         _UINT++;
-         _FLT -= 2;
+         numStack[_STK - 1].i = bool(numStack[_STK].f < numStack[_STK - 1].f);
+         _STK--;
          break;
 
       case OP_CMPLE:
-         intStack[_UINT + 1] = bool(floatStack[_FLT] <= floatStack[_FLT - 1]);
-         _UINT++;
-         _FLT -= 2;
+         numStack[_STK - 1].i = bool(numStack[_STK].f <= numStack[_STK - 1].f);
+         _STK--;
          break;
 
       case OP_CMPNE:
-         intStack[_UINT + 1] = bool(floatStack[_FLT] != floatStack[_FLT - 1]);
-         _UINT++;
-         _FLT -= 2;
+         numStack[_STK - 1].i = bool(numStack[_STK].f != numStack[_STK - 1].f);
+         _STK--;
          break;
 
       case OP_XOR:
-         intStack[_UINT - 1] = intStack[_UINT] ^ intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i ^ numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_MOD:
-         if (intStack[_UINT - 1] != 0)
-            intStack[_UINT - 1] = intStack[_UINT] % intStack[_UINT - 1];
+         if (numStack[_STK - 1].i != 0)
+            numStack[_STK - 1].i = numStack[_STK].i % numStack[_STK - 1].i;
          else
-            intStack[_UINT - 1] = 0;
-         _UINT--;
+            numStack[_STK - 1].i = 0;
+         _STK--;
          break;
 
       case OP_BITAND:
-         intStack[_UINT - 1] = intStack[_UINT] & intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i & numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_BITOR:
-         intStack[_UINT - 1] = intStack[_UINT] | intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i | numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_NOT:
-         intStack[_UINT] = !intStack[_UINT];
+         numStack[_STK].i = !numStack[_STK].i;
          break;
 
       case OP_NOTF:
-         intStack[_UINT + 1] = !floatStack[_FLT];
-         _FLT--;
-         _UINT++;
+         numStack[_STK].i = !numStack[_STK].f;
          break;
 
       case OP_ONESCOMPLEMENT:
-         intStack[_UINT] = ~intStack[_UINT];
+         numStack[_STK].i = ~numStack[_STK].i;
          break;
 
       case OP_SHR:
-         intStack[_UINT - 1] = intStack[_UINT] >> intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i >> numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_SHL:
-         intStack[_UINT - 1] = intStack[_UINT] << intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i << numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_AND:
-         intStack[_UINT - 1] = intStack[_UINT] && intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i && numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_OR:
-         intStack[_UINT - 1] = intStack[_UINT] || intStack[_UINT - 1];
-         _UINT--;
+         numStack[_STK - 1].i = numStack[_STK].i || numStack[_STK - 1].i;
+         _STK--;
          break;
 
       case OP_ADD:
-         floatStack[_FLT - 1] = floatStack[_FLT] + floatStack[_FLT - 1];
-         _FLT--;
+         numStack[_STK - 1].f = numStack[_STK].f + numStack[_STK - 1].f;
+         _STK--;
          break;
 
       case OP_SUB:
-         floatStack[_FLT - 1] = floatStack[_FLT] - floatStack[_FLT - 1];
-         _FLT--;
+         numStack[_STK - 1].f = numStack[_STK].f - numStack[_STK - 1].f;
+         _STK--;
          break;
 
       case OP_MUL:
-         floatStack[_FLT - 1] = floatStack[_FLT] * floatStack[_FLT - 1];
-         _FLT--;
+         numStack[_STK - 1].f = numStack[_STK].f * numStack[_STK - 1].f;
+         _STK--;
          break;
       case OP_DIV:
-         floatStack[_FLT - 1] = floatStack[_FLT] / floatStack[_FLT - 1];
-         _FLT--;
+         numStack[_STK - 1].f = numStack[_STK].f / numStack[_STK - 1].f;
+         _STK--;
          break;
       case OP_NEG:
-         floatStack[_FLT] = -floatStack[_FLT];
+         numStack[_STK].f = -numStack[_STK].f;
          break;
 
       case OP_INC:
@@ -1320,13 +1316,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_LOADVAR_UINT:
-         intStack[_UINT + 1] = gEvalState.getIntVariable();
-         _UINT++;
+         numStack[_STK + 1].i = gEvalState.getIntVariable();
+         _STK++;
          break;
 
       case OP_LOADVAR_FLT:
-         floatStack[_FLT + 1] = gEvalState.getFloatVariable();
-         _FLT++;
+         numStack[_STK + 1].f = gEvalState.getFloatVariable();
+         _STK++;
          break;
 
       case OP_LOADVAR_STR:
@@ -1335,11 +1331,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SAVEVAR_UINT:
-         gEvalState.setIntVariable((S32)intStack[_UINT]);
+         gEvalState.setIntVariable(numStack[_STK].i);
          break;
 
       case OP_SAVEVAR_FLT:
-         gEvalState.setFloatVariable(floatStack[_FLT]);
+         gEvalState.setFloatVariable(numStack[_STK].f);
          break;
 
       case OP_SAVEVAR_STR:
@@ -1348,14 +1344,14 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_LOAD_LOCAL_VAR_UINT:
          reg = code[ip++];
-         intStack[_UINT + 1] = gEvalState.getLocalIntVariable(reg);
-         _UINT++;
+         numStack[_STK + 1].i = gEvalState.getLocalIntVariable(reg);
+         _STK++;
          break;
 
       case OP_LOAD_LOCAL_VAR_FLT:
          reg = code[ip++];
-         floatStack[_FLT + 1] = gEvalState.getLocalFloatVariable(reg);
-         _FLT++;
+         numStack[_STK + 1].f = gEvalState.getLocalFloatVariable(reg);
+         _STK++;
          break;
 
       case OP_LOAD_LOCAL_VAR_STR:
@@ -1366,12 +1362,12 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_SAVE_LOCAL_VAR_UINT:
          reg = code[ip++];
-         gEvalState.setLocalIntVariable(reg, (S32)intStack[_UINT]);
+         gEvalState.setLocalIntVariable(reg, numStack[_STK].i);
          break;
 
       case OP_SAVE_LOCAL_VAR_FLT:
          reg = code[ip++];
-         gEvalState.setLocalFloatVariable(reg, floatStack[_FLT]);
+         gEvalState.setLocalFloatVariable(reg, numStack[_STK].f);
          break;
 
       case OP_SAVE_LOCAL_VAR_STR:
@@ -1408,13 +1404,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                StringTableEntry intName = StringTable->insert(STR.getStringValue());
                bool recurse = code[ip - 1];
                SimObject* obj = group->findObjectByInternalName(intName, recurse);
-               intStack[_UINT + 1] = obj ? obj->getId() : 0;
-               _UINT++;
+               numStack[_STK + 1].i = obj ? obj->getId() : 0;
+               _STK++;
             }
             else
             {
                Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use -> on non-group %s of class %s.", getFileLine(ip - 2), curObject->getName(), curObject->getClassName());
-               intStack[_UINT] = 0;
+               numStack[_STK].i = 0;
             }
          }
          break;
@@ -1444,7 +1440,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_LOADFIELD_UINT:
          if (curObject)
-            intStack[_UINT + 1] = U32(dAtoi(curObject->getDataField(curField, curFieldArray)));
+            numStack[_STK + 1].i = dAtol(curObject->getDataField(curField, curFieldArray));
          else
          {
             // The field is not being retrieved from an object. Maybe it's
@@ -1452,14 +1448,14 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
             getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
-            intStack[_UINT + 1] = dAtoi(buff);
+            numStack[_STK + 1].i = dAtol(buff);
          }
-         _UINT++;
+         _STK++;
          break;
 
       case OP_LOADFIELD_FLT:
          if (curObject)
-            floatStack[_FLT + 1] = dAtof(curObject->getDataField(curField, curFieldArray));
+            numStack[_STK + 1].f = dAtod(curObject->getDataField(curField, curFieldArray));
          else
          {
             // The field is not being retrieved from an object. Maybe it's
@@ -1467,9 +1463,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
             getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
-            floatStack[_FLT + 1] = dAtof(buff);
+            numStack[_STK + 1].f = dAtod(buff);
          }
-         _FLT++;
+         _STK++;
          break;
 
       case OP_LOADFIELD_STR:
@@ -1491,7 +1487,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SAVEFIELD_UINT:
-         STR.setIntValue((U32)intStack[_UINT]);
+         STR.setIntValue(numStack[_STK].i);
          if (curObject)
             curObject->setDataField(curField, curFieldArray, STR.getStringValue());
          else
@@ -1504,7 +1500,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SAVEFIELD_FLT:
-         STR.setFloatValue(floatStack[_FLT]);
+         STR.setFloatValue(numStack[_STK].f);
          if (curObject)
             curObject->setDataField(curField, curFieldArray, STR.getStringValue());
          else
@@ -1529,13 +1525,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_STR_TO_UINT:
-         intStack[_UINT + 1] = STR.getIntValue();
-         _UINT++;
+         numStack[_STK + 1].i = STR.getIntValue();
+         _STK++;
          break;
 
       case OP_STR_TO_FLT:
-         floatStack[_FLT + 1] = STR.getFloatValue();
-         _FLT++;
+         numStack[_STK + 1].f = STR.getFloatValue();
+         _STK++;
          break;
 
       case OP_STR_TO_NONE:
@@ -1543,44 +1539,39 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_FLT_TO_UINT:
-         intStack[_UINT + 1] = (S64)floatStack[_FLT];
-         _FLT--;
-         _UINT++;
+         numStack[_STK].i = (S64)numStack[_STK].f;
          break;
 
       case OP_FLT_TO_STR:
-         STR.setFloatValue(floatStack[_FLT]);
-         _FLT--;
+         STR.setFloatValue(numStack[_STK].f);
+         _STK--;
          break;
 
       case OP_FLT_TO_NONE:
-         _FLT--;
+         _STK--;
          break;
 
       case OP_UINT_TO_FLT:
-         floatStack[_FLT + 1] = (F64)intStack[_UINT];
-         _UINT--;
-         _FLT++;
+         numStack[_STK].f = (F64)numStack[_STK].i;
          break;
 
       case OP_UINT_TO_STR:
-         STR.setIntValue((U32)intStack[_UINT]);
-         _UINT--;
+         STR.setIntValue(numStack[_STK].i);
+         _STK--;
          break;
 
       case OP_UINT_TO_NONE:
-         _UINT--;
+         _STK--;
          break;
 
       case OP_LOADIMMED_UINT:
-         intStack[_UINT + 1] = code[ip++];
-         _UINT++;
+         numStack[_STK + 1].i = code[ip++];
+         _STK++;
          break;
 
       case OP_LOADIMMED_FLT:
-         floatStack[_FLT + 1] = curFloatTable[code[ip]];
-         ip++;
-         _FLT++;
+         numStack[_STK + 1].f = curFloatTable[code[ip++]];
+         _STK++;
          break;
       case OP_TAG_TO_STR:
          code[ip - 1] = OP_LOADIMMED_STR;
@@ -1791,18 +1782,18 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
                case Namespace::Entry::IntCallbackType:
                {
-                  S32 result = nsEntry->cb.mIntCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  S64 result = nsEntry->cb.mIntCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
                   if (code[ip] == OP_STR_TO_UINT)
                   {
                      ip++;
-                     intStack[++_UINT] = result;
+                     numStack[++_STK].i = result;
                      break;
                   }
                   else if (code[ip] == OP_STR_TO_FLT)
                   {
                      ip++;
-                     floatStack[++_FLT] = result;
+                     numStack[++_STK].f = result;
                      break;
                   }
                   else if (code[ip] == OP_STR_TO_NONE)
@@ -1818,13 +1809,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                   if (code[ip] == OP_STR_TO_UINT)
                   {
                      ip++;
-                     intStack[++_UINT] = (S64)result;
+                     numStack[++_STK].i = (S64)result;
                      break;
                   }
                   else if (code[ip] == OP_STR_TO_FLT)
                   {
                      ip++;
-                     floatStack[++_FLT] = result;
+                     numStack[++_STK].f = result;
                      break;
                   }
                   else if (code[ip] == OP_STR_TO_NONE)
@@ -1849,13 +1840,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                   if (code[ip] == OP_STR_TO_UINT)
                   {
                      ip++;
-                     intStack[++_UINT] = result;
+                     numStack[++_STK].i = result;
                      break;
                   }
                   else if (code[ip] == OP_STR_TO_FLT)
                   {
                      ip++;
-                     floatStack[++_FLT] = result;
+                     numStack[++_STK].f = result;
                      break;
                   }
                   else if (code[ip] == OP_STR_TO_NONE)
@@ -1896,7 +1887,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_COMPARE_STR:
-         intStack[++_UINT] = STR.compare();
+         numStack[++_STK].i = STR.compare();
          break;
 
       case OP_PUSH:
@@ -1904,11 +1895,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_PUSH_UINT:
-         gCallStack.pushInt((U32)intStack[_UINT--]);
+         gCallStack.pushInt((U32)numStack[_STK--].i);
          break;
 
       case OP_PUSH_FLT:
-         gCallStack.pushFloat(floatStack[_FLT--]);
+         gCallStack.pushFloat(numStack[_STK--].f);
          break;
 
       case OP_PUSH_FRAME:
@@ -1917,7 +1908,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_ASSERT:
       {
-         if (!intStack[_UINT--])
+         if (!numStack[_STK--].i)
          {
             const char* message = curStringTable + code[ip];
 

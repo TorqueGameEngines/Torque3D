@@ -114,15 +114,15 @@ struct StringStack
    }
 
    /// Get an integer representation of the top of the stack.
-   inline U32 getIntValue()
+   inline S64 getIntValue()
    {
-      return dAtoi(mBuffer + mStart);
+      return dAtol(mBuffer + mStart);
    }
 
    /// Get a float representation of the top of the stack.
    inline F64 getFloatValue()
    {
-      return dAtof(mBuffer + mStart);
+      return dAtod(mBuffer + mStart);
    }
 
    /// Get a string representation of the top of the stack.

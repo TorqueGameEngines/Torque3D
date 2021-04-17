@@ -137,10 +137,9 @@ namespace Compiler
       OP_STR_TO_NONE,  // 60
       OP_FLT_TO_UINT,
       OP_FLT_TO_STR,
-      OP_FLT_TO_NONE,
       OP_UINT_TO_FLT,
       OP_UINT_TO_STR,
-      OP_UINT_TO_NONE,
+      OP_NUM_TO_NONE,
 
       OP_LOADIMMED_UINT,
       OP_LOADIMMED_FLT,

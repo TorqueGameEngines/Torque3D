@@ -175,14 +175,14 @@ class ConsoleValue
    }
 
 public:
-   ConsoleValue()
+   explicit ConsoleValue()
    {
-      setEmptyString();
+      type = ConsoleValueType::cvSTEntry;
+      s = const_cast<char*>(StringTable->EmptyString());
    }
 
    ConsoleValue(ConsoleValue&& ref) noexcept
    {
-      cleanupData();
       type = ref.type;
 
       switch (ref.type)
@@ -217,7 +217,6 @@ public:
 
    TORQUE_FORCEINLINE void reset()
    {
-      cleanupData();
       setEmptyString();
    }
 

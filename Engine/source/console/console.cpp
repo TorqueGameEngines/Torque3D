@@ -2595,7 +2595,7 @@ ConsoleValue _BaseEngineConsoleCallbackHelper::_exec()
       // Cannot invoke callback until object has been registered
       if (mThis->isProperlyAdded())
       {
-         ConsoleValue returnValue = std::move(Con::_internalExecute( mThis, mArgc, mArgv, false ));
+         ConsoleValue returnValue = Con::_internalExecute( mThis, mArgc, mArgv, false );
          mArgc = mInitialArgc; // reset
          return std::move(returnValue);
       }

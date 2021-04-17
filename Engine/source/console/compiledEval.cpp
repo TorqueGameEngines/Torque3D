@@ -1547,10 +1547,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          _STK--;
          break;
 
-      case OP_FLT_TO_NONE:
-         _STK--;
-         break;
-
       case OP_UINT_TO_FLT:
          numStack[_STK].f = (F64)numStack[_STK].i;
          break;
@@ -1560,7 +1556,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          _STK--;
          break;
 
-      case OP_UINT_TO_NONE:
+      case OP_NUM_TO_NONE:
          _STK--;
          break;
 

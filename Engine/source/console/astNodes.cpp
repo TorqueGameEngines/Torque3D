@@ -165,7 +165,7 @@ static U32 conversionOp(TypeReq src, TypeReq dst)
       case TypeReqString:
          return OP_FLT_TO_STR;
       case TypeReqNone:
-         return OP_FLT_TO_NONE;
+         return OP_NUM_TO_NONE;
       default:
          break;
       }
@@ -179,7 +179,7 @@ static U32 conversionOp(TypeReq src, TypeReq dst)
       case TypeReqString:
          return OP_UINT_TO_STR;
       case TypeReqNone:
-         return OP_UINT_TO_NONE;
+         return OP_NUM_TO_NONE;
       default:
          break;
       }

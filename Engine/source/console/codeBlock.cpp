@@ -1215,12 +1215,6 @@ void CodeBlock::dumpInstructions(U32 startIp, bool upToReturn)
          break;
       }
 
-      case OP_FLT_TO_NONE:
-      {
-         Con::printf("%i: OP_FLT_TO_NONE", ip - 1);
-         break;
-      }
-
       case OP_UINT_TO_FLT:
       {
          Con::printf("%i: OP_UINT_TO_FLT", ip - 1);
@@ -1233,9 +1227,9 @@ void CodeBlock::dumpInstructions(U32 startIp, bool upToReturn)
          break;
       }
 
-      case OP_UINT_TO_NONE:
+      case OP_NUM_TO_NONE:
       {
-         Con::printf("%i: OP_UINT_TO_NONE", ip - 1);
+         Con::printf("%i: OP_NUM_TO_NONE", ip - 1);
          break;
       }
 

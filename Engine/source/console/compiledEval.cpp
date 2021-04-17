@@ -1682,7 +1682,16 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             if (simObjectLookupValue.getType() == ConsoleValueType::cvInteger)
                gEvalState.thisObject = Sim::findObject(static_cast<SimObjectId>(simObjectLookupValue.getInt()));
             else
-               gEvalState.thisObject = Sim::findObject(simObjectLookupValue.getString());
+            {
+               SimObject *foundObject = Sim::findObject(simObjectLookupValue.getString());
+
+               // Optimization: If we're not an integer, let's make it so that the fast path exists
+               // on the first argument of the method call (speeds up future usage of %this, for example)
+               if (foundObject != NULL)
+                  callArgv[1].setInt(static_cast<S64>(foundObject->getId()));
+
+               gEvalState.thisObject = foundObject;
+            }
 
             if (gEvalState.thisObject == NULL)
             {

@@ -101,6 +101,12 @@ private:
 
 FuncVars* gFuncVars = NULL;
 
+inline FuncVars* getFuncVars()
+{
+   AssertISV(gFuncVars, "Attemping to use local variable in global scope.");
+   return gFuncVars;
+}
+
 //-----------------------------------------------------------------------------
 
 void StmtNode::addBreakLine(CodeStream& code)
@@ -424,7 +430,7 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    if (isGlobal)
       codeStream.emitSTE(varName);
    else
-      codeStream.emit(gFuncVars->assign(varName, varType));
+      codeStream.emit(getFuncVars()->assign(varName, varType));
    const U32 finalFix = codeStream.emit(0);
    const U32 continueIp = codeStream.emit(OP_ITER);
    codeStream.emitFix(CodeStream::FIXTYPE_BREAK);
@@ -793,7 +799,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       default:           codeStream.emit(OP_LOAD_LOCAL_VAR_STR);
       }
 
-      codeStream.emit(gFuncVars->lookup(varName));
+      codeStream.emit(getFuncVars()->lookup(varName));
    }
 
    return codeStream.tell();
@@ -802,7 +808,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 TypeReq VarNode::getPreferredType()
 {
    bool oldVariables = arrayIndex || varName[0] == '$';
-   return oldVariables ? TypeReqNone : gFuncVars->lookupType(varName);
+   return oldVariables ? TypeReqNone : getFuncVars()->lookupType(varName);
 }
 
 //------------------------------------------------------------
@@ -1040,7 +1046,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       case TypeReqFloat: codeStream.emit(OP_SAVE_LOCAL_VAR_FLT); break;
       default:           codeStream.emit(OP_SAVE_LOCAL_VAR_STR);
       }
-      codeStream.emit(gFuncVars->assign(varName, subType == TypeReqNone ? TypeReqString : subType));
+      codeStream.emit(getFuncVars()->assign(varName, subType == TypeReqNone ? TypeReqString : subType));
    }
 
    if (type != subType)
@@ -1136,7 +1142,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    if (op == opPLUSPLUS && !oldVariables)
    {
-      const S32 varIdx = gFuncVars->assign(varName, TypeReqFloat);
+      const S32 varIdx = getFuncVars()->assign(varName, TypeReqFloat);
 
       codeStream.emit(OP_INC);
       codeStream.emit(varIdx);
@@ -1169,7 +1175,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       else
       {
          const bool isFloat = subType == TypeReqFloat;
-         const S32 varIdx = gFuncVars->assign(varName, subType == TypeReqNone ? TypeReqString : subType);
+         const S32 varIdx = getFuncVars()->assign(varName, subType == TypeReqNone ? TypeReqString : subType);
 
          codeStream.emit(isFloat ? OP_LOAD_LOCAL_VAR_FLT : OP_LOAD_LOCAL_VAR_UINT);
          codeStream.emit(varIdx);
@@ -1649,7 +1655,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
       precompileIdent(walk->varName);
-      gFuncVars->assign(walk->varName, TypeReqNone);
+      getFuncVars()->assign(walk->varName, TypeReqNone);
       argc++;
    }
 
@@ -1673,7 +1679,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
       StringTableEntry name = walk->varName;
-      codeStream.emit(gFuncVars->lookup(name));
+      codeStream.emit(getFuncVars()->lookup(name));
    }
    CodeBlock::smInFunction = true;
    ip = compileBlock(stmts, codeStream, ip);
@@ -1685,7 +1691,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    CodeBlock::smInFunction = false;
    codeStream.emit(OP_RETURN_VOID);
 
-   codeStream.patch(localNumVarsIP, gFuncVars->count());
+   codeStream.patch(localNumVarsIP, getFuncVars()->count());
    codeStream.patch(endIp, codeStream.tell());
 
    setCurrentStringTable(&getGlobalStringTable());

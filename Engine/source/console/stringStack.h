@@ -169,10 +169,6 @@ struct StringStack
    /// and returning true if they matched, false if they didn't.
    U32 compare();
 
-   void pushFrame();
-
-   void popFrame();
-
    void clearFrames();
 };
 

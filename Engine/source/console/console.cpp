@@ -2622,7 +2622,6 @@ ConsoleValue _BaseEngineConsoleCallbackHelper::_execLater(SimConsoleThreadExecEv
 void ConsoleStackFrameSaver::save()
 {
    gCallStack.pushFrame(0);
-   STR.pushFrame();
    mSaved = true;
 }
 
@@ -2631,6 +2630,5 @@ void ConsoleStackFrameSaver::restore()
    if (mSaved)
    {
       gCallStack.popFrame();
-      STR.popFrame();
    }
 }

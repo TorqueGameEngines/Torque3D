@@ -39,7 +39,6 @@ StringStack::StringStack()
    mStart = 0;
    mLen = 0;
    mStartStackSize = 0;
-   mFunctionOffset = 0;
    validateBufferSize(8192);
    validateArgBufferSize(2048);
    dMemset(mBuffer, '\0', mBufferSize);
@@ -179,31 +178,4 @@ U32 StringStack::compare()
    mBuffer[mStart] = 0;
 
    return ret;
-}
-
-void StringStack::pushFrame()
-{
-   //Con::printf("StringStack pushFrame [frame=%i, start=%i]", mNumFrames, mStartStackSize);
-   mFrameOffsets[mNumFrames++] = mStartStackSize;
-   mStartOffsets[mStartStackSize++] = mStart;
-   mStart += ReturnBufferSpace;
-   validateBufferSize(0);
-}
-
-void StringStack::popFrame()
-{
-   //Con::printf("StringStack popFrame [frame=%i, start=%i]", mNumFrames, mStartStackSize);
-   mStartStackSize = mFrameOffsets[--mNumFrames];
-   mStart = mStartOffsets[mStartStackSize];
-   mLen = 0;
-}
-
-void StringStack::clearFrames()
-{
-   //Con::printf("StringStack clearFrames");
-   mNumFrames = 0;
-   mStart = 0;
-   mLen = 0;
-   mStartStackSize = 0;
-   mFunctionOffset = 0;
 }

@@ -376,11 +376,11 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
          // have more than a base texture.
          if (mat->getDetailSize() <= 0 ||
             mat->getDetailDistance() <= 0 ||
-            mat->getDetailMap().isEmpty())
+            mat->getDetailMap() == StringTable->EmptyString())
             continue;
 
          // check for macro detail texture
-         if (!(mat->getMacroSize() <= 0 || mat->getMacroDistance() <= 0 || mat->getMacroMap().isEmpty()))
+         if (!(mat->getMacroSize() <= 0 || mat->getMacroDistance() <= 0 || mat->getMacroMap() == StringTable->EmptyString()))
          {
             if (deferredMat)
                features.addFeature(MFT_isDeferred, featureIndex);
@@ -393,7 +393,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
          if (deferredMat)
          {
-            if (!(mat->getORMConfigMap().isEmpty()))
+            if (!(mat->getORMConfigMap() == StringTable->EmptyString()))
             {
                features.addFeature(MFT_TerrainORMMap, featureIndex);
             }
@@ -409,7 +409,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
          normalMaps.increment();
 
          // Skip normal maps if we need to.
-         if (!disableNormalMaps && mat->getNormalMap().isNotEmpty())
+         if (!disableNormalMaps && mat->getNormalMap() != StringTable->EmptyString())
          {
             features.addFeature(MFT_TerrainNormalMap, featureIndex);
 
@@ -644,7 +644,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
       // have more than a base texture.
       if (mat->getDetailSize() <= 0 ||
          mat->getDetailDistance() <= 0 ||
-         mat->getDetailMap().isEmpty())
+         mat->getDetailMap() == StringTable->EmptyString())
          continue;
 
       mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
@@ -691,7 +691,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       // have more than a base texture.
       if (mat->getDetailSize() <= 0 ||
          mat->getDetailDistance() <= 0 ||
-         mat->getDetailMap().isEmpty())
+         mat->getDetailMap() == StringTable->EmptyString())
          continue;
 
       detailMatCount++;
@@ -720,7 +720,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       // have more than a base texture.
       if (mat->getDetailSize() <= 0 ||
          mat->getDetailDistance() <= 0 ||
-         mat->getDetailMap().isEmpty())
+         mat->getDetailMap() == StringTable->EmptyString())
          continue;
 
       F32 detailSize = matInfo->mat->getDetailSize();

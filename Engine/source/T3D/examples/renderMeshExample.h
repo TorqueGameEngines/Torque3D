@@ -64,17 +64,17 @@ class RenderMeshExample : public SceneObject
       NextFreeMask  = Parent::NextFreeMask << 2
    };
 
-   //--------------------------------------------------------------------------
-   // Rendering variables
-   //--------------------------------------------------------------------------
-   DECLARE_NET_MATERIALASSET(RenderMeshExample, Material, UpdateMask);
-
-   // The actual Material instance
-   BaseMatInstance*  mMaterialInst;
-
    // Define our vertex format here so we don't have to
    // change it in multiple spots later
    typedef GFXVertexPNT VertexType;
+
+   //--------------------------------------------------------------------------
+   // Rendering variables
+   //--------------------------------------------------------------------------
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(RenderMeshExample, Material);
+   DECLARE_MATERIALASSET_NET_SETGET(RenderMeshExample, Material, UpdateMask);
 
    // The GFX vertex and primitive buffers
    GFXVertexBufferHandle< VertexType > mVertexBuffer;

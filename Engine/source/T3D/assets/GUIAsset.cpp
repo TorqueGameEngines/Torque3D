@@ -47,14 +47,14 @@
 
 IMPLEMENT_CONOBJECT(GUIAsset);
 
-ConsoleType(GUIAssetPtr, TypeGUIAssetPtr, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(GUIAssetPtr, TypeGUIAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
 ConsoleGetType(TypeGUIAssetPtr)
 {
    // Fetch asset Id.
-   return *((StringTableEntry*)dptr);
+   return *((const char**)(dptr));
 }
 
 //-----------------------------------------------------------------------------
@@ -67,11 +67,7 @@ ConsoleSetType(TypeGUIAssetPtr)
       // Yes, so fetch field value.
       const char* pFieldValue = argv[0];
 
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }

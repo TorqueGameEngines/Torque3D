@@ -143,13 +143,13 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
       %depAssetType = %childAssetItem.assetType;
       if(%childAssetItem.assetType $= "MaterialAsset")
       {
-         %matSet = "%newAsset.materialSlot"@%dependencySlotId@"=\"@Asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
+         %matSet = "%newAsset.materialSlot"@%dependencySlotId@"=\"@asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
          eval(%matSet);
          %dependencySlotId++;
       }
       else if(%depAssetType $= "AnimationAsset")
       {
-         %matSet = "%newAsset.animationSequence"@%dependencySlotId@"=\"@Asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
+         %matSet = "%newAsset.animationSequence"@%dependencySlotId@"=\"@asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
          eval(%matSet);
          %dependencySlotId++;
       }

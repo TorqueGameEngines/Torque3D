@@ -55,12 +55,12 @@ void GuiBitmapBarCtrl::initPersistFields()
 
 void GuiBitmapBarCtrl::onRender(Point2I offset, const RectI &updateRect)
 {
-   if (mTextureObject)
+   if (mBitmap)
    {
       GFX->getDrawUtil()->clearBitmapModulation();
       GFX->getDrawUtil()->setBitmapModulation(mColor);
       F32 pct = (mPercent / 100.0);
-      GFXTextureObject* texture = mTextureObject;
+      GFXTextureObject* texture = mBitmap;
       Point2I modifiedSRC;
       modifiedSRC.x = mVertical ? (F32)texture->mBitmapSize.x : (F32)(texture->mBitmapSize.x*pct);
       modifiedSRC.y = mVertical ? (F32)(texture->mBitmapSize.y*pct) : (F32)texture->mBitmapSize.y;
@@ -91,7 +91,7 @@ void GuiBitmapBarCtrl::onRender(Point2I offset, const RectI &updateRect)
       GFX->getDrawUtil()->drawBitmapStretchSR(texture, destRegion, srcRegion, GFXBitmapFlip_None, GFXTextureFilterLinear, false);
    }
 
-   if (mProfile->mBorder || !mTextureObject)
+   if (mProfile->mBorder || !mBitmap)
    {
       RectI rect(offset, getExtent());
       GFX->getDrawUtil()->drawRect(rect, mProfile->mBorderColor);

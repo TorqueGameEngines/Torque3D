@@ -458,9 +458,8 @@ GroundCover::GroundCover()
 
    mRandomSeed = 1;
 
-   initMaterialAsset(Material);
+   INIT_MATERIALASSET(Material);
 
-   mMatInst = NULL;
    mMatParams = NULL;
    mTypeRectsParam = NULL;
    mFadeParams = NULL;
@@ -530,7 +529,7 @@ GroundCover::GroundCover()
 
 GroundCover::~GroundCover()
 {
-   SAFE_DELETE( mMatInst );
+   SAFE_DELETE( mMaterialInst );
 }
 
 IMPLEMENT_CO_NETOBJECT_V1(GroundCover);
@@ -539,7 +538,7 @@ void GroundCover::initPersistFields()
 {
    addGroup( "GroundCover General" );
 
-      scriptBindMaterialAsset(Material, GroundCover, "Material used by all GroundCover segments.");
+      INITPERSISTFIELD_MATERIALASSET(Material, GroundCover, "Material used by all GroundCover segments.");
 
       addField( "radius",        TypeF32,          Offset( mRadius, GroundCover ),              "Outer generation radius from the current camera position." );
       addField( "dissolveRadius",TypeF32,          Offset( mFadeRadius, GroundCover ),          "This is less than or equal to radius and defines when fading of cover elements begins." );
@@ -710,7 +709,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
       // TODO: We could probably optimize a few of these
       // based on reasonable units at some point.
 
-      packMaterialAsset(connection, Material);
+      PACK_MATERIALASSET(connection, Material);
 
       stream->write( mRadius );
       stream->write( mZOffset );
@@ -781,7 +780,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
    if (stream->readFlag())
    {
-      unpackMaterialAsset(connection, Material);
+      UNPACK_MATERIALASSET(connection, Material);
 
       stream->read( &mRadius );
       stream->read( &mZOffset );
@@ -854,28 +853,31 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
 void GroundCover::_initMaterial()
 {
-   if (mMaterialAsset.notNull())
+   /*if (mMaterialAsset.notNull())
    {
-      if (mMatInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMatInst->getMaterial()->getName(), String::NoCase))
+      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
          return;
 
-      SAFE_DELETE(mMatInst);
+      SAFE_DELETE(mMaterialInst);
 
       if (!Sim::findObject(mMaterialAsset->getMaterialDefinitionName(), mMaterial))
          Con::errorf("GroundCover::_initMaterial - Material %s was not found.", mMaterialAsset->getMaterialDefinitionName());
 
       if (mMaterial)
-         mMatInst = mMaterial->createMatInstance();
+         mMaterialInst = mMaterial->createMatInstance();
       else
-         mMatInst = MATMGR->createMatInstance("WarningMaterial");
+         mMaterialInst = MATMGR->createMatInstance("WarningMaterial");
 
-      if (!mMatInst)
+      if (!mMaterialInst)
          Con::errorf("GroundCover::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
    }
    else
    {
       return;
-   }
+   }*/
+
+   if (!mMaterialInst)
+      return;
    
    // Add our special feature that makes it all work...
    FeatureSet features = MATMGR->getDefaultFeatures();
@@ -883,10 +885,10 @@ void GroundCover::_initMaterial()
    
    // Our feature requires a pointer back to this object
    // to properly setup its shader consts.
-   mMatInst->setUserObject( this );
+   mMaterialInst->setUserObject( this );
 
    // DO IT!
-   mMatInst->init( features, getGFXVertexFormat<GCVertex>() );
+   mMaterialInst->init( features, getGFXVertexFormat<GCVertex>() );
 }
 
 void GroundCover::_initShapes()
@@ -982,16 +984,16 @@ void GroundCover::_initialize( U32 cellCount, U32 cellPlacementCount )
 
    // Rebuild the texture aspect scales for each type.
    F32 textureAspect = 1.0f;
-   if( mMatInst && mMatInst->isValid())
+   if( mMaterialInst && mMaterialInst->isValid())
    {
-      Material* mat = dynamic_cast<Material*>(mMatInst->getMaterial());
+      Material* mat = dynamic_cast<Material*>(mMaterialInst->getMaterial());
       if(mat)
       {
          GFXTexHandle tex;
          if (!mat->mDiffuseMapFilename[0].isEmpty())
             tex = GFXTexHandle(mat->mDiffuseMapFilename[0], &GFXStaticTextureSRGBProfile, "GroundCover texture aspect ratio check");
          else if (!mat->mDiffuseMapAsset[0].isNull())
-            tex = mat->mDiffuseMapAsset[0]->getImage(GFXStaticTextureSRGBProfile);
+            tex = mat->mDiffuseMapAsset[0]->getTexture(&GFXStaticTextureSRGBProfile);
 
          if(tex.isValid())
          {
@@ -1580,7 +1582,7 @@ void GroundCover::_updateCoverGrid( const Frustum &culler )
 void GroundCover::prepRenderImage( SceneRenderState *state )
 {
    // Reset stats each time we hit the diffuse pass.
-   if (mMatInst == nullptr)
+   if (mMaterialInst == nullptr)
       return;
 
    if( state->isDiffusePass() )
@@ -1617,7 +1619,7 @@ void GroundCover::prepRenderImage( SceneRenderState *state )
 
    // Render billboards but not into shadow passes.
 
-   if ( !state->isShadowPass() && mMatInst->isValid() && !mDebugNoBillboards )
+   if ( !state->isShadowPass() && mMaterialInst->isValid() && !mDebugNoBillboards )
    {
       PROFILE_SCOPE( GroundCover_RenderBillboards );
 
@@ -1692,7 +1694,7 @@ void GroundCover::prepRenderImage( SceneRenderState *state )
          if ( mCuller.isCulled( cell->getRenderBounds() ) )
             continue;
 
-         cell->renderBillboards( state, mMatInst, &mPrimBuffer );
+         cell->renderBillboards( state, mMaterialInst, &mPrimBuffer );
       }     
    }
 

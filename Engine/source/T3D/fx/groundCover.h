@@ -266,9 +266,10 @@ protected:
    static F32 smDensityScale;   
    static F32 smFadeScale;
 
-   DECLARE_NET_MATERIALASSET(GroundCover, Material, InitialUpdateMask);
-   Material* mMaterial;
-   BaseMatInstance *mMatInst;
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(GroundCover, Material);
+   DECLARE_MATERIALASSET_NET_SETGET(GroundCover, Material, InitialUpdateMask);
 
    GroundCoverShaderConstData mShaderConstData;
 

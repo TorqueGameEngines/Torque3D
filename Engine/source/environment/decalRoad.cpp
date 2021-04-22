@@ -277,8 +277,6 @@ DecalRoad::DecalRoad()
    mTextureLength( 5.0f ),
    mRenderPriority( 10 ),
    mLoadRenderData( true ),
-   mMaterial( NULL ),
-   mMatInst( NULL ),
    mTriangleCount(0),
    mVertCount(0),
    mUpdateEventId( -1 ),
@@ -289,7 +287,7 @@ DecalRoad::DecalRoad()
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
    mNetFlags.set(Ghostable);
 
-   initMaterialAsset(Material);
+   INIT_MATERIALASSET(Material);
 }
 
 DecalRoad::~DecalRoad()
@@ -305,8 +303,10 @@ void DecalRoad::initPersistFields()
 {
    addGroup( "DecalRoad" );
 
-      addProtectedField("materialAsset", TypeMaterialAssetId, Offset(mMaterialAssetId, DecalRoad), &DecalRoad::_setMaterialAsset, &defaultProtectedGetFn, "Material Asset used for rendering.");
-      addProtectedField( "material", TypeMaterialName, Offset( mMaterialName, DecalRoad ), &DecalRoad::_setMaterialName, &defaultProtectedGetFn, "Material used for rendering." );
+      //addProtectedField("materialAsset", TypeMaterialAssetId, Offset(mMaterialAssetId, DecalRoad), &DecalRoad::_setMaterialAsset, &defaultProtectedGetFn, "Material Asset used for rendering.");
+      //addProtectedField( "material", TypeMaterialName, Offset( mMaterialName, DecalRoad ), &DecalRoad::_setMaterialName, &defaultProtectedGetFn, "Material used for rendering." );
+
+      INITPERSISTFIELD_MATERIALASSET(Material, DecalRoad, "Material used for rendering.");
 
       addProtectedField( "textureLength", TypeF32, Offset( mTextureLength, DecalRoad ), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, 
          "The length in meters of textures mapped to the DecalRoad" );      
@@ -398,7 +398,7 @@ bool DecalRoad::onAdd()
 
 void DecalRoad::onRemove()
 {
-   SAFE_DELETE( mMatInst );
+   SAFE_DELETE( mMaterialInst );
 
    TerrainBlock::smUpdateSignal.remove( this, &DecalRoad::_onTerrainChanged );
 
@@ -492,7 +492,7 @@ U32 DecalRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
    if ( stream->writeFlag( mask & DecalRoadMask ) )
    {
       // Write Texture Name.
-      packMaterialAsset(con, Material);
+      PACK_MATERIALASSET(con, Material);
 
       stream->write( mBreakAngle );      
 
@@ -581,7 +581,7 @@ void DecalRoad::unpackUpdate( NetConnection *con, BitStream *stream )
    // DecalRoadMask
    if ( stream->readFlag() )
    {
-      unpackMaterialAsset(con, Material);
+      UNPACK_MATERIALASSET(con, Material);
 
       if (isProperlyAdded())
          _initMaterial();
@@ -685,13 +685,13 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
 
    if (  mNodes.size() <= 1 || 
          mBatches.size() == 0 ||
-         !mMatInst ||
+         !mMaterialInst ||
          state->isShadowPass() )
       return;
 
    // If we don't have a material instance after the override then 
    // we can skip rendering all together.
-   BaseMatInstance *matInst = state->getOverrideMaterial( mMatInst );
+   BaseMatInstance *matInst = state->getOverrideMaterial(mMaterialInst);
    if ( !matInst )
       return;
       
@@ -1045,7 +1045,7 @@ bool DecalRoad::addNodeFromField( void *object, const char *index, const char *d
 
 void DecalRoad::_initMaterial()
 {
-   if (mMaterialAsset.notNull())
+   /*if (mMaterialAsset.notNull())
    {
       if (mMatInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMatInst->getMaterial()->getName(), String::NoCase))
          return;
@@ -1066,16 +1066,18 @@ void DecalRoad::_initMaterial()
 
       if (!mMatInst)
          Con::errorf("DecalRoad::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
-   }
+   }*/
 
-   if (!mMatInst)
+   _setMaterial(getMaterial());
+
+   if (!mMaterialInst)
       return;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite( true, false );
-   mMatInst->addStateBlockDesc( desc );
+   mMaterialInst->addStateBlockDesc( desc );
 
-   mMatInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTBT>() );
+   mMaterialInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTBT>() );
 }
 
 void DecalRoad::_debugRender( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* )

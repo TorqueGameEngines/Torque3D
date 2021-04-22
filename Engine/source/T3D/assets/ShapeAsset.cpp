@@ -86,7 +86,7 @@ ConsoleSetType(TypeShapeAssetPtr)
 
 //-----------------------------------------------------------------------------
 
-ConsoleType(assetIdString, TypeShapeAssetId, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeShapeAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeShapeAssetId)
 {
@@ -100,13 +100,7 @@ ConsoleSetType(TypeShapeAssetId)
    if (argc == 1)
    {
       // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }
@@ -154,7 +148,7 @@ void ShapeAsset::initPersistFields()
       &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
 }
 
-void ShapeAsset::setDataField(StringTableEntry slotName, const char *array, const char *value)
+void ShapeAsset::setDataField(StringTableEntry slotName, StringTableEntry array, StringTableEntry value)
 {
    Parent::setDataField(slotName, array, value);
 
@@ -350,29 +344,6 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
    if (foundAssetcount == 0)
    {
-      //Didn't find any assets
-      //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
-      Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
-#endif
-
-      AssetImporter* autoAssetImporter;
-      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-      {
-         autoAssetImporter = new AssetImporter();
-         autoAssetImporter->registerObject("autoAssetImporter");
-      }
-
-      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
-
-      if (resultingAssetId != StringTable->EmptyString())
-      {
-         shapeAsset->setAssetId(resultingAssetId);
-
-         if (!shapeAsset->isNull())
-            return true;
-      }
-
       //Didn't work, so have us fall back to a placeholder asset
       shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
 
@@ -401,27 +372,6 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
    if (foundAssetcount == 0)
    {
-      //Didn't find any assets
-      //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
-      Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
-#endif
-
-      AssetImporter* autoAssetImporter;
-      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-      {
-         autoAssetImporter = new AssetImporter();
-         autoAssetImporter->registerObject("autoAssetImporter");
-      }
-
-      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
-
-      if (resultingAssetId != StringTable->EmptyString())
-      {
-         shapeAssetId = resultingAssetId;
-         return shapeAssetId;
-      }
-
       //Didn't work, so have us fall back to a placeholder asset
       shapeAssetId = StringTable->insert("Core_Rendering:noshape");
    }
@@ -441,21 +391,16 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
    if ((*shapeAsset))
       return (*shapeAsset)->mLoadedState;
 
-   if (shapeAsset->notNull())
-   {
-      //Didn't work, so have us fall back to a placeholder asset
-      StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
-      shapeAsset->setAssetId(noShapeId);
+   //Didn't work, so have us fall back to a placeholder asset
+   StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
+   shapeAsset->setAssetId(noShapeId);
 
-      //handle noshape not being loaded itself
-      if ((*shapeAsset)->mLoadedState == BadFileReference)
-         return AssetErrCode::Failed;
+   //handle noshape not being loaded itself
+   if ((*shapeAsset)->mLoadedState == BadFileReference)
+      return AssetErrCode::Failed;
 
-      (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
-      return AssetErrCode::UsingFallback;
-   }
-
-   return AssetErrCode::Failed;
+   (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
+   return AssetErrCode::UsingFallback;
 }
 //------------------------------------------------------------------------------
 

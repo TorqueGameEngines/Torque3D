@@ -91,7 +91,7 @@ ConsoleSetType(TypeTerrainAssetPtr)
 
 
 //-----------------------------------------------------------------------------
-ConsoleType(assetIdString, TypeTerrainAssetId, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeTerrainAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeTerrainAssetId)
 {
@@ -107,11 +107,7 @@ ConsoleSetType(TypeTerrainAssetId)
       // Yes, so fetch field value.
       const char* pFieldValue = argv[0];
 
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }

@@ -104,9 +104,11 @@ private:
    F32               mSquareSize;   ///< World units per grid cell edge.
    F32               mScaleU;       ///< Scale factor for U texture coordinates.
    F32               mScaleV;       ///< Scale factor for V texture coordinates.
-   BaseMatInstance*  mMaterial;     ///< Instantiated material based on given material name.
 
-   DECLARE_NET_MATERIALASSET(GroundPlane, Material, -1);
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(GroundPlane, Material);
+   DECLARE_MATERIALASSET_NET_SETGET(GroundPlane, Material, -1);
 
    PhysicsBody *mPhysicsRep;
 

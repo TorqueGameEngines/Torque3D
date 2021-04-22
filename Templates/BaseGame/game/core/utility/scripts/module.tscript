@@ -81,7 +81,11 @@ function loadModuleMaterials(%moduleGroup)
       {
          exec( %file );
       }
-   }   
+   }
+      
+   //Next, frontload materials and terrainMaterials
+   loadAssetsByType(MaterialAsset);
+   loadAssetsByType(TerrainMaterialAsset);
 }
 
 function loadAssetsByType(%assetType)

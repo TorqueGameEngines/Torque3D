@@ -46,6 +46,10 @@
 #include "core/stream/fileStream.h"
 #include "T3D/fx/cameraFXMgr.h"
 
+#ifdef TORQUE_TOOLS
+#include "console\persistenceManager.h"
+#endif
+
 //----------------------------------------------------------------------------
 
 ShapeBaseImageData* InvalidImagePtr = (ShapeBaseImageData*) 1;
@@ -191,8 +195,9 @@ ShapeBaseImageData::ShapeBaseImageData()
    lightRadius = 10.f;
    lightBrightness = 1.0f;
 
-   shapeName = "core/rendering/shapes/noshape.dts";
-   shapeNameFP = "";
+   INIT_SHAPEASSET(Shape);
+   INIT_SHAPEASSET(ShapeFP);
+
    imageAnimPrefix = "";
    imageAnimPrefixFP = "";
    fireState = -1;
@@ -408,6 +413,10 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
    if (!Parent::preload(server, errorStr))
       return false;
 
+   PersistenceManager* persistMgr;
+   bool shapeError = false;
+   if (!Sim::findObject("ServerAssetValidator", persistMgr)) Con::errorf("ServerAssetValidator not found!");
+
    // Resolve objects transmitted from server
    if (!server) {
       if (projectile)
@@ -434,14 +443,14 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
       // Shape 0: Standard image shape
       // Shape 1: Optional first person image shape
 
-      StringTableEntry name;
+      AssetPtr<ShapeAsset>* shpAsset;
       if (i == FirstPersonImageShape)
       {
-         if ((useEyeOffset || useEyeNode) && shapeNameFP && shapeNameFP[0])
+         if ((useEyeOffset || useEyeNode) && !mShapeFPAsset.isNull())
          {
             // Make use of the first person shape
             useFirstPersonShape = true;
-            name = shapeNameFP;
+            shpAsset = &mShapeFPAsset;
          }
          else
          {
@@ -451,25 +460,27 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
       }
       else
       {
-         name = shapeName;
+         shpAsset = &mShapeAsset;
       }
 
-      if (name && name[0]) {
+      if (!shpAsset->isNull())
+      {
          // Resolve shapename
-         shape[i] = ResourceManager::get().load(name);
+         shape[i] = (*shpAsset)->getShapeResource();
+
          if (!bool(shape[i])) {
-            errorStr = String::ToString("Unable to load shape: %s", name);
+            errorStr = String::ToString("Unable to load shape asset: %s", shpAsset->getAssetId());
             return false;
          }
          if(computeCRC)
          {
-            Con::printf("Validation required for shape: %s", name);
+            Con::printf("Validation required for shape asset: %s", shpAsset->getAssetId());
 
             Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(shape[i].getPath());
 
             if (!fileRef)
             {
-               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape \"%s\"",name);
+               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape asset\"%s\"", shpAsset->getAssetId());
                return false;
             }
 
@@ -479,7 +490,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             }
             else if(mCRC[i] != fileRef->getChecksum())
             {
-               errorStr = String::ToString("Shape \"%s\" does not match version on server.",name);
+               errorStr = String::ToString("Shape asset\"%s\" does not match version on server.", shpAsset->getAssetId());
                return false;
             }
          }
@@ -590,11 +601,9 @@ void ShapeBaseImageData::initPersistFields()
    addField( "emap", TypeBool, Offset(emap, ShapeBaseImageData),
       "@brief Whether to enable environment mapping on this Image.\n\n" );
 
-   addField( "shapeFile", TypeShapeFilename, Offset(shapeName, ShapeBaseImageData),
-      "@brief The DTS or DAE model to use for this Image.\n\n" );
+   INITPERSISTFIELD_SHAPEASSET(Shape, ShapeBaseImageData, "The shape asset to use for this image in the third person")
 
-   addField( "shapeFileFP", TypeShapeFilename, Offset(shapeNameFP, ShapeBaseImageData),
-      "@brief The DTS or DAE model to use for this Image when in first person.\n\n"
+   INITPERSISTFIELD_SHAPEASSET(ShapeFP, ShapeBaseImageData, "@brief The shape asset to use for this Image when in first person.\n\n"
       "This is an optional parameter that also requires either eyeOffset or useEyeNode "
       "to be set.  If none of these conditions is met then shapeFile will be used "
       "for all cases.\n\n"
@@ -602,7 +611,8 @@ void ShapeBaseImageData::initPersistFields()
       "includes the player's arms attached to it for animating while firing, "
       "reloading, etc.  This is typical of many FPS games."
       "@see eyeOffset\n"
-      "@see useEyeNode\n");
+      "@see useEyeNode\n")
+   addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeFPName, ShapeBaseImageData), _setShapeFPData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset");
 
    addField( "imageAnimPrefix", TypeCaseString, Offset(imageAnimPrefix, ShapeBaseImageData),
       "@brief Passed along to the mounting shape to modify animation sequences played in third person. [optional]\n\n" );
@@ -987,8 +997,8 @@ void ShapeBaseImageData::packData(BitStream* stream)
       }
    }
 
-   stream->writeString(shapeName);        // shape 0 for normal use
-   stream->writeString(shapeNameFP);      // shape 1 for first person use (optional)
+   PACKDATA_SHAPEASSET(Shape);        // shape 0 for normal use
+   PACKDATA_SHAPEASSET(ShapeFP);      // shape 1 for first person use (optional)
 
    stream->writeString(imageAnimPrefix);
    stream->writeString(imageAnimPrefixFP);
@@ -1169,8 +1179,8 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
       }
    }
 
-   shapeName = stream->readSTString();       // shape 0 for normal use
-   shapeNameFP = stream->readSTString();     // shape 1 for first person use (optional)
+   UNPACKDATA_SHAPEASSET(Shape);        // shape 0 for normal use
+   UNPACKDATA_SHAPEASSET(ShapeFP);      // shape 1 for first person use (optional)
 
    imageAnimPrefix = stream->readSTString();
    imageAnimPrefixFP = stream->readSTString();

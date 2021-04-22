@@ -28,13 +28,6 @@ function Core_Rendering::onCreate(%this)
    exec("./scripts/graphicsOptions." @ $TorqueScriptFileExtension);
    exec("./scripts/terrainSettings." @ $TorqueScriptFileExtension);
    exec("./scripts/renderManager." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/commonMaterialData." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/scatterSky." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/shaders." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/terrainBlock." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/water." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);
 }
 
 function Core_Rendering::onDestroy(%this)
@@ -46,6 +39,14 @@ function Core_Rendering::initClient(%this)
    // Start rendering and stuff.
    initRenderManager();
    initLightingSystems("Advanced Lighting"); 
+   
+   exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/commonMaterialData." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/scatterSky." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/shaders." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/terrainBlock." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/water." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);
 
    //load prefs
    exec("data/defaults." @ $TorqueScriptFileExtension);

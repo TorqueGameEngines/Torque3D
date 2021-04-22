@@ -253,7 +253,16 @@ function SubMaterialSelector::onSelect( %this )
    // object does not have a valid method to grab a material
    if( !isObject( %material ) )
    {
-      // look for a newMaterial name to grab
+      if(!AssetDatabase.isDeclaredAsset(%material))
+      {
+         return;
+      }
+      else
+      {
+         %assetDef = AssetDatabase.acquireAsset(%material);
+         %material = %assetDef.materialDefinitionName;  
+      }
+      /*// look for a newMaterial name to grab
       // addiitonally, convert "." to "_" in case we have something like: "base.texname" as a material name   
       // at the end we will have generated material name: "base_texname_mat"   
       %material = getUniqueName( strreplace(%material, ".", "_") @ "_mat" );
@@ -268,7 +277,7 @@ function SubMaterialSelector::onSelect( %this )
       eval( "MaterialEditorGui.currentObject." @ strreplace(%this.getText(),".","_") @ " = " @ %material @ ";");
       
       if( MaterialEditorGui.currentObject.isMethod("postApply") )
-         MaterialEditorGui.currentObject.postApply();
+         MaterialEditorGui.currentObject.postApply();*/
    }
 
    MaterialEditorGui.prepareActiveMaterial( %material.getId() );
@@ -325,7 +334,7 @@ function MaterialEditorGui::prepareActiveObject( %this, %override )
       {
          %fieldName = %obj.getField(%i);
          
-         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialName" )
+         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" && %obj.getFieldType(%fieldName) !$= "TypeMaterialName")
             continue;
       
          if( !%canSupportMaterial )
@@ -409,7 +418,8 @@ function MaterialEditorGui::prepareActiveMaterial(%this, %material, %override)
 {
    // If were not valid, grab the first valid material out of the materialSet
    if( !isObject(%material) )
-      %material = MaterialSet.getObject(0);
+      return;
+      //%material = MaterialSet.getObject(0);
 	
 	// Check made in order to avoid loading the same material. Overriding
 	// made in special cases
@@ -743,7 +753,6 @@ function MaterialEditorGui::copyMaterials( %this, %copyFrom, %copyTo)
    %mapTo = %copyTo.mapTo;
    %copyTo.assignFieldsFrom( %copyFrom );
    %copyTo.mapTo = %mapTo;
-
 }
 
 function MaterialEditorGui::guiSync( %this, %material )
@@ -775,6 +784,7 @@ function MaterialEditorGui::guiSync( %this, %material )
          MatEdTargetMode-->selMaterialMapTo.setText(%info);
          MatEdTargetMode-->selMaterialName.setText(MaterialEditorGui.currentMaterial.name);
       }
+      MatEdTargetMode-->selMaterialType.setText((%material).materialType);
    }
    
    MaterialEditorPropertiesWindow-->alphaRefTextEdit.setText((%material).alphaRef);
@@ -785,15 +795,6 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->castShadows.setValue((%material).castShadows);
    MaterialEditorPropertiesWindow-->castDynamicShadows.setValue((%material).castDynamicShadows);
    MaterialEditorPropertiesWindow-->translucentCheckbox.setValue((%material).translucent);
-   /*
-   
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(preMul,1);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(LerpAlpha,2);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Mul,3);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Add,4);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(AddAlpha,5);
-   MaterialEditorPropertiesWindow-->blendingTypePopUp.add(Sub,6);
-   */
    switch$((%material).translucentBlendOp)
    {
         case "None": %selectedNum = 0;
@@ -837,140 +838,175 @@ function MaterialEditorGui::guiSync( %this, %material )
    //layer specific controls are located here
    %layer = MaterialEditorGui.currentLayer;
    
-   if((%material).diffuseMap[%layer] $= "") 
+   //Diffuse
+   if((%material).getDiffuseMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->diffuseMapNameText.setText( (%material).getDiffuseMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( (%material).getDiffuseMap(%layer) );
+   }
+   else
    {
       MaterialEditorPropertiesWindow-->diffuseMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
    }
-   else
+   
+   //Normal
+   if((%material).getNormalMap(%layer) !$= "") 
    {
-      MaterialEditorPropertiesWindow-->diffuseMapNameText.setText( (%material).diffuseMap[%layer] );      
-      MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( (%material).diffuseMap[%layer] );
+      MaterialEditorPropertiesWindow-->normalMapNameText.setText( (%material).getNormalMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->normalMapDisplayBitmap.setBitmap( (%material).getNormalMap(%layer) );
    }
- 
-   if((%material).normalMap[%layer] $= "") 
+   else
    {
       MaterialEditorPropertiesWindow-->normalMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->normalMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+   }   
+    
+   //ORM Config
+   if((%material).getORMConfigMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText( (%material).getORMConfigMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap( (%material).getORMConfigMap(%layer) );
+      //hide unused
+      MaterialEditorPropertiesWindow-->RoughnessTextEdit.setVisible(false);
+      MaterialEditorPropertiesWindow-->RoughnessSlider.setVisible(false);
+      MaterialEditorPropertiesWindow-->MetalnessTextEdit.setVisible(false);
+      MaterialEditorPropertiesWindow-->MetalnessSlider.setVisible(false);
+      
+      MaterialEditorPropertiesWindow-->isSRGBCheckbox.setValue((%material).isSRGB[%layer]);
+      MaterialEditorPropertiesWindow-->invertRoughnessCheckbox.setValue((%material).invertRoughness[%layer]);
+      //show used
+      MaterialEditorPropertiesWindow-->isSRGBCheckbox.setVisible(true);
+      MaterialEditorPropertiesWindow-->invertRoughnessCheckbox.setVisible(true);
+
    }
    else
    {
-      MaterialEditorPropertiesWindow-->normalMapNameText.setText( (%material).normalMap[%layer] );
-      MaterialEditorPropertiesWindow-->normalMapDisplayBitmap.setBitmap( (%material).normalMap[%layer] );
+      MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+      
+      MaterialEditorPropertiesWindow-->RoughnessTextEdit.setText((%material).Roughness[%layer]);
+      MaterialEditorPropertiesWindow-->RoughnessSlider.setValue((%material).Roughness[%layer]);
+      MaterialEditorPropertiesWindow-->MetalnessTextEdit.setText((%material).Metalness[%layer]);
+      MaterialEditorPropertiesWindow-->MetalnessSlider.setValue((%material).Metalness[%layer]);   
+      //show used   
+      MaterialEditorPropertiesWindow-->RoughnessTextEdit.setVisible(true);
+      MaterialEditorPropertiesWindow-->RoughnessSlider.setVisible(true);
+      MaterialEditorPropertiesWindow-->MetalnessTextEdit.setVisible(true);
+      MaterialEditorPropertiesWindow-->MetalnessSlider.setVisible(true);
+      
+      //hide unused
+      MaterialEditorPropertiesWindow-->isSRGBCheckbox.setVisible(false);
+      MaterialEditorPropertiesWindow-->invertRoughnessCheckbox.setVisible(false);
    }
    
-   if((%material).overlayMap[%layer] $= "") 
+   //AOMap
+   if((%material).getAOMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->aoMapNameText.setText( (%material).getAOMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap( (%material).getAOMap(%layer) );
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->aoMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+   }   
+   //RoughMap
+   if((%material).getRoughMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->roughMapNameText.setText( (%material).getRoughMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap( (%material).getRoughMap(%layer) );
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->roughMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+   }
+   
+   //MetalMap
+   if((%material).getMetalMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->metalMapNameText.setText( (%material).getMetalMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap( (%material).getMetalMap(%layer) );
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->metalMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+   }   
+   
+   //GlowMap
+   if((%material).getGlowMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->glowMapNameText.setText( (%material).getGlowMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->glowMapDisplayBitmap.setBitmap( (%material).getGlowMap(%layer) );
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->glowMapNameText.setText( "None" );
+      MaterialEditorPropertiesWindow-->glowMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
+   }   
+   
+   //Overlay
+   if((%material).getOverlayMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->overlayMapNameText.setText( (%material).getOverlayMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->overlayMapDisplayBitmap.setBitmap( (%material).getOverlayMap(%layer) );
+   }
+   else
    {
       MaterialEditorPropertiesWindow-->overlayMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->overlayMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
    }
-   else
-   {
-      MaterialEditorPropertiesWindow-->overlayMapNameText.setText( (%material).overlayMap[%layer] );
-      MaterialEditorPropertiesWindow-->overlayMapDisplayBitmap.setBitmap( (%material).overlayMap[%layer] );
-   }
    
-   if((%material).detailMap[%layer] $= "") 
+   //Detail
+   if((%material).getDetailMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->detailMapNameText.setText( (%material).getDetailMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->detailMapDisplayBitmap.setBitmap( (%material).getDetailMap(%layer) );
+   }
+   else
    {
       MaterialEditorPropertiesWindow-->detailMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->detailMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
    }
-   else
-   {
-      MaterialEditorPropertiesWindow-->detailMapNameText.setText( (%material).detailMap[%layer] );
-      MaterialEditorPropertiesWindow-->detailMapDisplayBitmap.setBitmap( (%material).detailMap[%layer] );
-   }
    
-   if((%material).detailNormalMap[%layer] $= "") 
+   //Detail Normal
+   if((%material).getDetailNormalMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->detailNormalMapNameText.setText( (%material).getDetailNormalMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->detailNormalMapDisplayBitmap.setBitmap( (%material).getDetailNormalMap(%layer) );
+   }
+   else
    {
       MaterialEditorPropertiesWindow-->detailNormalMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->detailNormalMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
    }
-   else
-   {
-      MaterialEditorPropertiesWindow-->detailNormalMapNameText.setText( (%material).detailNormalMap[%layer] );
-      MaterialEditorPropertiesWindow-->detailNormalMapDisplayBitmap.setBitmap( (%material).detailNormalMap[%layer] );
-   }
    
-   if((%material).lightMap[%layer] $= "") 
+   //Light
+   if((%material).getLightMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->lightMapNameText.setText( (%material).getLightMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->lightMapDisplayBitmap.setBitmap( (%material).getLightMap(%layer) );
+   }
+   else
    {
       MaterialEditorPropertiesWindow-->lightMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->lightMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
    }
-   else
-   {
-      MaterialEditorPropertiesWindow-->lightMapNameText.setText( (%material).lightMap[%layer] );
-      MaterialEditorPropertiesWindow-->lightMapDisplayBitmap.setBitmap( (%material).lightMap[%layer] );
-   }
    
-   if((%material).toneMap[%layer] $= "") 
+   //Tone
+   if((%material).getToneMap(%layer) !$= "") 
+   {
+      MaterialEditorPropertiesWindow-->toneMapNameText.setText( (%material).getToneMapAsset(%layer) );      
+      MaterialEditorPropertiesWindow-->toneMapDisplayBitmap.setBitmap( (%material).getToneMap(%layer) );
+   }
+   else
    {
       MaterialEditorPropertiesWindow-->toneMapNameText.setText( "None" );
       MaterialEditorPropertiesWindow-->toneMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->toneMapNameText.setText( (%material).toneMap[%layer] );
-      MaterialEditorPropertiesWindow-->toneMapDisplayBitmap.setBitmap( (%material).toneMap[%layer] );
-   }
-   MaterialEditorPropertiesWindow-->isSRGBCheckbox.setValue((%material).isSRGB[%layer]);
-   MaterialEditorPropertiesWindow-->invertRoughnessCheckbox.setValue((%material).invertRoughness[%layer]);
+   }   
       
-   if((%material).ORMConfigMap[%layer] $= "") 
-   {
-      MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText( "None" );
-      MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap( "tools/materialEditor/gui/unknownImage" );
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText( (%material).ORMConfigMap[%layer] );
-      MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap( (%material).ORMConfigMap[%layer] );
-   }
-   
-   if((%material).roughMap[%layer] $= "") 
-   {
-      MaterialEditorPropertiesWindow-->roughMapNameText.setText( "None" );
-      MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap( "tools/materialeditor/gui/unknownImage" );
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->roughMapNameText.setText( (%material).roughMap[%layer] );
-      MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap( (%material).roughMap[%layer] );
-   }
-   
-   if((%material).aoMap[%layer] $= "") 
-   {
-      MaterialEditorPropertiesWindow-->aoMapNameText.setText( "None" );
-      MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap( "tools/materialeditor/gui/unknownImage" );
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->aoMapNameText.setText( (%material).aoMap[%layer] );
-      MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap( (%material).aoMap[%layer] );
-   }
-   
-   if((%material).metalMap[%layer] $= "") 
-   {
-      MaterialEditorPropertiesWindow-->metalMapNameText.setText( "None" );
-      MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap( "tools/materialeditor/gui/unknownImage" );
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->metalMapNameText.setText( (%material).metalMap[%layer] );
-      MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap( (%material).metalMap[%layer] );
-   }
-   
-   if((%material).glowMap[%layer] $= "") 
-   {
-      MaterialEditorPropertiesWindow-->glowMapNameText.setText( "None" );
-      MaterialEditorPropertiesWindow-->glowMapDisplayBitmap.setBitmap( "tools/materialeditor/gui/unknownImage" );
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->glowMapNameText.setText( (%material).glowMap[%layer] );
-      MaterialEditorPropertiesWindow-->glowMapDisplayBitmap.setBitmap( (%material).glowMap[%layer] );
-   }
-   
    MaterialEditorPropertiesWindow-->accuScaleTextEdit.setText((%material).accuScale[%layer]);
    MaterialEditorPropertiesWindow-->accuScaleTextEdit.setText((%material).accuScale[%layer]);
    MaterialEditorPropertiesWindow-->accuDirectionTextEdit.setText((%material).accuDirection[%layer]);
@@ -988,14 +1024,11 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->colorTintSwatch.color = (%material).diffuseColor[%layer];
    MaterialEditorPropertiesWindow-->specularColorSwatch.color = (%material).specular[%layer];     
    
-   MaterialEditorPropertiesWindow-->RoughnessTextEdit.setText((%material).Roughness[%layer]);
-   MaterialEditorPropertiesWindow-->RoughnessSlider.setValue((%material).Roughness[%layer]);
-   MaterialEditorPropertiesWindow-->MetalnessTextEdit.setText((%material).Metalness[%layer]);
-   MaterialEditorPropertiesWindow-->MetalnessSlider.setValue((%material).Metalness[%layer]);
    MaterialEditorPropertiesWindow-->glowMulTextEdit.setText((%material).glowMul[%layer]);
    MaterialEditorPropertiesWindow-->glowMulSlider.setValue((%material).glowMul[%layer]);
    MaterialEditorPropertiesWindow-->glowCheckbox.setValue((%material).glow[%layer]);
    MaterialEditorPropertiesWindow-->emissiveCheckbox.setValue((%material).emissive[%layer]);
+   MaterialEditorPropertiesWindow-->foregroundCheckbox.setValue((%material).foreground[%layer]);
    MaterialEditorPropertiesWindow-->parallaxTextEdit.setText((%material).parallaxScale[%layer]);
    MaterialEditorPropertiesWindow-->parallaxSlider.setValue((%material).parallaxScale[%layer]);
 
@@ -1088,11 +1121,6 @@ function MaterialEditorGui::getAOChan(%this, %channel)
 function MaterialEditorGui::getMetalChan(%this, %channel)
 {
 	%guiElement = metalChanBtn @ %channel;
-	%guiElement.setStateOn(true);
-}
-function MaterialEditorGui::getGlowChan(%this, %channel)
-{
-	%guiElement = glowChanBtn @ %channel;
 	%guiElement.setStateOn(true);
 }
 //=======================================
@@ -1234,13 +1262,42 @@ function MaterialEditorGui::updateReflectionType( %this, %type )
 function MaterialEditorGui::updateTextureMap( %this, %type, %action )
 {
    %layer = MaterialEditorGui.currentLayer;
+   
+   %this.updatingTextureType = %type;
 
    %bitmapCtrl = MaterialEditorPropertiesWindow.findObjectByInternalName( %type @ "MapDisplayBitmap", true );
    %textCtrl = MaterialEditorPropertiesWindow.findObjectByInternalName( %type @ "MapNameText", true );
 
    if( %action )
    {
-      %texture = MaterialEditorGui.openFile("texture");
+      AssetBrowser.showDialog("ImageAsset", %this@".doUpdateTextureMap");
+   }
+   else
+   {
+      %textCtrl.setText("None");
+      %bitmapCtrl.setBitmap("tools/materialEditor/gui/unknownImage");
+      MaterialEditorGui.updateActiveMaterial(%type @ "Map[" @ %layer @ "]","");
+      MaterialEditorGui.updateActiveMaterial(%type @ "MapAsset[" @ %layer @ "]","");
+   }
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
+}
+
+function MaterialEditorGui::doUpdateTextureMap( %this, %assetId )
+{
+   if(%assetId !$= "")
+   {
+      %layer = MaterialEditorGui.currentLayer;
+      
+      %type = %this.updatingTextureType;
+
+      %bitmapCtrl = MaterialEditorPropertiesWindow.findObjectByInternalName( %type @ "MapDisplayBitmap", true );
+      %textCtrl = MaterialEditorPropertiesWindow.findObjectByInternalName( %type @ "MapNameText", true );
+      
+      %assetDef = AssetDatabase.acquireAsset(%assetId);
+      
+      %texture = %assetDef.getImagePath();
+      
+      //%texture = MaterialEditorGui.openFile("texture");
       if( %texture !$= "" )
       {
          %bitmapCtrl.setBitmap(%texture);
@@ -1248,16 +1305,14 @@ function MaterialEditorGui::updateTextureMap( %this, %type, %action )
          %bitmap = %bitmapCtrl.bitmap;
          %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
          %bitmapCtrl.setBitmap(%bitmap);
-         %textCtrl.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial(%type @ "Map[" @ %layer @ "]","\"" @ %bitmap @ "\"");	
+         %textCtrl.setText(%assetId);
+         MaterialEditorGui.updateActiveMaterial(%type @ "Map[" @ %layer @ "]","\"\"");
+         MaterialEditorGui.updateActiveMaterial(%type @ "MapAsset[" @ %layer @ "]","\"" @ %assetId @ "\"");	
       }
    }
-   else
-   {
-      %textCtrl.setText("None");
-      %bitmapCtrl.setBitmap("tools/materialEditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial(%type @ "Map[" @ %layer @ "]","");
-   }
+   
+   %this.updatingTextureType = "";
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
 }
 
 function MaterialEditorGui::updateDetailScale(%this,%newScale)
@@ -1274,148 +1329,6 @@ function MaterialEditorGui::updateDetailNormalStrength(%this,%newStrength)
    
    %detailStrength = "\"" @ %newStrength @ "\"";
    MaterialEditorGui.updateActiveMaterial("detailNormalMapStrength[" @ %layer @ "]", %detailStrength);
-}
-
-function MaterialEditorGui::updateORMConfigMap(%this,%action)
-{
-   %layer = MaterialEditorGui.currentLayer;
-   
-   if( %action )
-   {
-      %texture = MaterialEditorGui.openFile("texture");
-      if( %texture !$= "" )
-      {
-         MaterialEditorGui.updateActiveMaterial("pixelSpecular[" @ MaterialEditorGui.currentLayer @ "]", 0);
-         
-         MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap(%texture);
-      
-         %bitmap = MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.bitmap;
-         %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
-         MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap(%bitmap);
-         MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial("ORMConfigMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
-      }
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText("None");
-      MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap("tools/materialEditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial("ORMConfigMap[" @ %layer @ "]","");
-   }
-   
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
-}
-
-function MaterialEditorGui::updateRoughMap(%this,%action)
-{
-   %layer = MaterialEditorGui.currentLayer;
-   
-   if( %action )
-   {
-      %texture = MaterialEditorGui.openFile("texture");
-      if( %texture !$= "" )
-      {         
-         MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap(%texture);
-      
-         %bitmap = MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.bitmap;
-         %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
-         MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap(%bitmap);
-         MaterialEditorPropertiesWindow-->roughMapNameText.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial("roughMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
-      }
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->roughMapNameText.setText("None");
-      MaterialEditorPropertiesWindow-->roughMapDisplayBitmap.setBitmap("tools/materialeditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial("roughMap[" @ %layer @ "]","");
-   }
-   
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
-}
-
-function MaterialEditorGui::updateaoMap(%this,%action)
-{
-   %layer = MaterialEditorGui.currentLayer;
-   
-   if( %action )
-   {
-      %texture = MaterialEditorGui.openFile("texture");
-      if( %texture !$= "" )
-      {         
-         MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap(%texture);
-      
-         %bitmap = MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.bitmap;
-         %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
-         MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap(%bitmap);
-         MaterialEditorPropertiesWindow-->aoMapNameText.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial("aoMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
-      }
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->aoMapNameText.setText("None");
-      MaterialEditorPropertiesWindow-->aoMapDisplayBitmap.setBitmap("tools/materialeditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial("aoMap[" @ %layer @ "]","");
-   }
-   
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
-}
-
-function MaterialEditorGui::updatemetalMap(%this,%action)
-{
-   %layer = MaterialEditorGui.currentLayer;
-   
-   if( %action )
-   {
-      %texture = MaterialEditorGui.openFile("texture");
-      if( %texture !$= "" )
-      {         
-         MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap(%texture);
-      
-         %bitmap = MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.bitmap;
-         %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
-         MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap(%bitmap);
-         MaterialEditorPropertiesWindow-->metalMapNameText.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial("metalMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
-      }
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->metalMapNameText.setText("None");
-      MaterialEditorPropertiesWindow-->metalMapDisplayBitmap.setBitmap("tools/materialeditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial("metalMap[" @ %layer @ "]","");
-   }
-   
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
-}
-
-function MaterialEditorGui::updateGlowMap(%this,%action)
-{
-   %layer = MaterialEditorGui.currentLayer;
-   
-   if( %action )
-   {
-      %texture = MaterialEditorGui.openFile("texture");
-      if( %texture !$= "" )
-      {         
-         MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.setBitmap(%texture);
-      
-         %bitmap = MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.bitmap;
-         %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
-         MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.setBitmap(%bitmap);
-         MaterialEditorPropertiesWindow-->GlowMapNameText.setText(%bitmap);
-         MaterialEditorGui.updateActiveMaterial("glowMap[" @ %layer @ "]","\"" @ %bitmap @ "\"");
-      }
-   }
-   else
-   {
-      MaterialEditorPropertiesWindow-->GlowMapNameText.setText("None");
-      MaterialEditorPropertiesWindow-->GlowMapDisplayBitmap.setBitmap("tools/materialeditor/gui/unknownImage");
-      MaterialEditorGui.updateActiveMaterial("glowMap[" @ %layer @ "]","");
-   }
-   
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
 }
 
 function MaterialEditorGui::updateRotationOffset(%this, %isSlider, %onMouseUp)
@@ -1597,12 +1510,6 @@ function MaterialEditorGui::updateColorMultiply(%this,%color)
 {
    %propName = "diffuseColor[" @ MaterialEditorGui.currentLayer @ "]";
    %this.syncGuiColor(MaterialEditorPropertiesWindow-->colorTintSwatch, %propName, %color);
-}
-
-function MaterialEditorGui::updateSpecularCheckbox(%this,%value)
-{
-   MaterialEditorGui.updateActiveMaterial("pixelSpecular[" @ MaterialEditorGui.currentLayer @ "]", %value);   
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
 }
 
 function MaterialEditorGui::updateSpecular(%this, %color)
@@ -2568,10 +2475,9 @@ function MaterialEditorGui::saveCompositeMap(%this)
     %material = %this.currentMaterial;
     %layer = %this.currentLayer;
    
-    %roughMap = %material.roughMap[%layer];
-    %aoMap = %material.aoMap[%layer];
-    %metalMap = %material.metalMap[%layer];
-    %glowMap = %material.glowMap[%layer];
+    %roughMap = %material.getRoughMap(%layer);
+    %aoMap = %material.getAOMap(%layer);
+    %metalMap = %material.getMetalMap(%layer);
     
     %roughness = %material.RoughnessChan[%layer];
     %ao = %material.AOChan[%layer];

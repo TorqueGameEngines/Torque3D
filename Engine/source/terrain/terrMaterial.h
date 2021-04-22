@@ -42,17 +42,110 @@ protected:
 
    //AssetPtr<ImageAsset> mDiffuseAsset;
 
-   DECLARE_TEXTUREMAP(TerrainMaterial, DiffuseMap);
+   //DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap, GFXStaticTextureSRGBProfile);
+public: \
+   GFXTexHandle mDiffuseMap = NULL; \
+   FileName mDiffuseMapFilename = String::EmptyString; \
+   StringTableEntry mDiffuseMapAssetId = StringTable->EmptyString();\
+   AssetPtr<ImageAsset>  mDiffuseMapAsset = NULL;\
+   GFXTextureProfile* mDiffuseMapProfile = &GFXStaticTextureSRGBProfile;\
+public: \
+   const StringTableEntry getDiffuseMapFile() const { return StringTable->insert(mDiffuseMapFilename.c_str()); }\
+   void setDiffuseMapFile(const FileName &_in) { mDiffuseMapFilename = _in;}\
+   const AssetPtr<ImageAsset> & getDiffuseMapAsset() const { return mDiffuseMapAsset; }\
+   void setDiffuseMapAsset(const AssetPtr<ImageAsset> &_in) { mDiffuseMapAsset = _in;}\
+   \
+   bool _setDiffuseMap(StringTableEntry _in)\
+   {\
+      if (_in == StringTable->EmptyString())\
+      {\
+         mDiffuseMapFilename = String::EmptyString;\
+         mDiffuseMapAssetId = StringTable->EmptyString();\
+         mDiffuseMapAsset = NULL;\
+         mDiffuseMap.free();\
+         mDiffuseMap = NULL;\
+         return true;\
+      }\
+      \
+      if (AssetDatabase.isDeclaredAsset(_in))\
+      {\
+         mDiffuseMapAssetId = _in;\
+         \
+         U32 assetState = ImageAsset::getAssetById(mDiffuseMapAssetId, &mDiffuseMapAsset);\
+         \
+         if (ImageAsset::Ok == assetState)\
+         {\
+            mDiffuseMapFilename = String::EmptyString;\
+         }\
+         else\
+         {\
+            mDiffuseMapFilename = _in;\
+            mDiffuseMapAsset = NULL;\
+         }\
+      }\
+      else\
+      {\
+         Torque::Path imagePath = _in;\
+         if (imagePath.getExtension() == String::EmptyString)\
+         {\
+            if (Platform::isFile(imagePath.getFullPath() + ".png"))\
+               imagePath.setExtension("png");\
+            else if (Platform::isFile(imagePath.getFullPath() + ".dds"))\
+               imagePath.setExtension("dds");\
+            else if (Platform::isFile(imagePath.getFullPath() + ".jpg"))\
+               imagePath.setExtension("jpg");\
+         }\
+         if (ImageAsset::getAssetByFilename(imagePath.getFullPath(), &mDiffuseMapAsset))\
+         {\
+            mDiffuseMapAssetId = mDiffuseMapAsset.getAssetId();\
+            \
+            if (ImageAsset::Ok == mDiffuseMapAsset->getStatus())\
+            {\
+               mDiffuseMapFilename = String::EmptyString;\
+            }\
+         }\
+         else\
+         {\
+            mDiffuseMapFilename = _in;\
+            mDiffuseMapAssetId = StringTable->EmptyString();\
+            mDiffuseMapAsset = NULL;\
+         }\
+      }\
+      if (getDiffuseMap() != StringTable->EmptyString() && !mDiffuseMapFilename.equal("texhandle", String::NoCase))\
+      {\
+         mDiffuseMap.set(getDiffuseMap(), mDiffuseMapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
+         return true;\
+      }\
+      return false;\
+   }\
+   \
+   const StringTableEntry getDiffuseMap() const\
+   {\
+      if (mDiffuseMapAsset && (mDiffuseMapAsset->getImageFileName() != StringTable->EmptyString()))\
+         return  Platform::makeRelativePathName(mDiffuseMapAsset->getImagePath(), Platform::getMainDotCsDir());\
+      else if (mDiffuseMapFilename.isNotEmpty())\
+         return StringTable->insert(Platform::makeRelativePathName(mDiffuseMapFilename.c_str(), Platform::getMainDotCsDir()));\
+      else\
+         return StringTable->EmptyString();\
+   }\
+   GFXTexHandle getDiffuseMapResource() \
+   {\
+      return mDiffuseMap;\
+   }
+
+   DECLARE_IMAGEASSET_SETGET(TerrainMaterial, DiffuseMap);
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
    F32 mDiffuseSize;
 
    ///
-   DECLARE_TEXTUREMAP(TerrainMaterial, NormalMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap, GFXNormalMapProfile);
+   DECLARE_IMAGEASSET_SETGET(TerrainMaterial, NormalMap);
 
    ///
-   DECLARE_TEXTUREMAP(TerrainMaterial, DetailMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET_SETGET(TerrainMaterial, DetailMap);
    
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
@@ -66,7 +159,8 @@ protected:
    F32 mDetailDistance;
 
    ///
-   DECLARE_TEXTUREMAP(TerrainMaterial, ORMConfigMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET_SETGET(TerrainMaterial, ORMConfigMap);
 
    bool mIsSRGB;
    bool mInvertRoughness;
@@ -77,7 +171,8 @@ protected:
    /// planes.
    bool mSideProjection;
 
-   DECLARE_TEXTUREMAP(TerrainMaterial, MacroMap);
+   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET_SETGET(TerrainMaterial, MacroMap);
    F32 mMacroSize;
    F32 mMacroStrength;
    F32 mMacroDistance;

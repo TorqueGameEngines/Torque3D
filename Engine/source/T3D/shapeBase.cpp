@@ -163,7 +163,6 @@ ShapeBaseData::ShapeBaseData()
    reflectorDesc( NULL ),
    debris( NULL ),
    debrisID( 0 ),
-   debrisShapeName( StringTable->EmptyString() ),
    explosion( NULL ),
    explosionID( 0 ),
    underwaterExplosion( NULL ),
@@ -198,7 +197,9 @@ ShapeBaseData::ShapeBaseData()
    renderWhenDestroyed( true ),
    inheritEnergyFromMount( false )
 {
-   initShapeAsset(Shape);
+   INIT_SHAPEASSET(Shape);
+   INIT_SHAPEASSET(DebrisShape);
+
    dMemset( mountPointNode, -1, sizeof( S32 ) * SceneObject::NumMountPoints );
    remap_txr_tags = NULL;
    remap_buffer = NULL;
@@ -213,14 +214,13 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    shadowProjectionDistance = other.shadowProjectionDistance;
    shadowSphereAdjust = other.shadowSphereAdjust;
    cloakTexName = other.cloakTexName;
-   cloneShapeAsset(Shape);
+   CLONE_SHAPEASSET(Shape);
    cubeDescName = other.cubeDescName;
    cubeDescId = other.cubeDescId;
    reflectorDesc = other.reflectorDesc;
    debris = other.debris;
    debrisID = other.debrisID; // -- for pack/unpack of debris ptr
-   debrisShapeName = other.debrisShapeName;
-   debrisShape = other.debrisShape; // -- TSShape loaded using debrisShapeName
+   CLONE_SHAPEASSET(DebrisShape);
    explosion = other.explosion;
    explosionID = other.explosionID; // -- for pack/unpack of explosion ptr
    underwaterExplosion = other.underwaterExplosion;
@@ -305,7 +305,10 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
 {
    if (!Parent::preload(server, errorStr))
       return false;
+
+   PersistenceManager* persistMgr;
    bool shapeError = false;
+   if (!Sim::findObject("ServerAssetValidator", persistMgr)) Con::errorf("ServerAssetValidator not found!");
 
    // Resolve objects transmitted from server
    if (!server) {
@@ -337,67 +340,25 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             "ShapeBaseData::preload: invalid debris data");
       }
 
-
-      if( debrisShapeName && debrisShapeName[0] != '\0' && !bool(debrisShape) )
+      if( bool(mDebrisShape))
       {
-         debrisShape = ResourceManager::get().load(debrisShapeName);
-         if( bool(debrisShape) == false )
-         {
-            errorStr = String::ToString("ShapeBaseData::load: Couldn't load shape \"%s\"", debrisShapeName);
-            return false;
-         }
-         else
-         {
-            if(!server && !debrisShape->preloadMaterialList(debrisShape.getPath()) && NetConnection::filesWereDownloaded())
-               shapeError = true;
-
-            TSShapeInstance* pDummy = new TSShapeInstance(debrisShape, !server);
-            delete pDummy;
-         }
+         TSShapeInstance* pDummy = new TSShapeInstance(mDebrisShape, !server);
+         delete pDummy;
       }
    }
-   PersistenceManager *persistMgr;
-   if (!Sim::findObject("ServerAssetValidator", persistMgr)) Con::errorf("ServerAssetValidator not found!");
-   if (server && persistMgr && mShapeAssetId == StringTable->EmptyString())
-   {
-      persistMgr->setDirty(this);
-   }
 
-   //Legacy catch
-   if (mShapeName != StringTable->EmptyString())
+   S32 i;
+   if (ShapeAsset::getAssetErrCode(mShapeAsset) != ShapeAsset::Failed)
    {
-      mShapeAssetId = ShapeAsset::getAssetIdByFilename(mShapeName);
-   }
-   U32 assetState = ShapeAsset::getAssetById(mShapeAssetId, &mShapeAsset);
-   if (ShapeAsset::Failed != assetState)
-   {
-      //only clear the legacy direct file reference if everything checks out fully
-      if (assetState == ShapeAsset::Ok)
-      {
-         mShapeName = StringTable->EmptyString();
-      }
-      else Con::warnf("Warning: ShapeBaseData::preload-%s", ShapeAsset::getAssetErrstrn(assetState).c_str());
-      S32 i;
-
-      // Resolve shapename
-      mShape = mShapeAsset->getShapeResource();
-      if (bool(mShape) == false)
-      {
-         errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"",mShapeName);
-         return false;
-      }
-      if(!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
-         shapeError = true;
-
       if(computeCRC)
       {
-         Con::printf("Validation required for shape: %s", mShapeName);
+         Con::printf("Validation required for shape asset: %s", mShapeAsset.getAssetId());
 
-         Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShape.getPath());
+         Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShapeAsset->getShapePath());
 
          if (!fileRef)
          {
-            errorStr = String::ToString("ShapeBaseData: Couldn't load shape \"%s\"", mShapeName);
+            errorStr = String::ToString("ShapeBaseData: Couldn't load shape asset \"%s\"", mShapeAsset.getAssetId());
             return false;
          }
 
@@ -405,7 +366,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             mCRC = fileRef->getChecksum();
          else if(mCRC != fileRef->getChecksum())
          {
-            errorStr = String::ToString("Shape \"%s\" does not match version on server.", mShapeName);
+            errorStr = String::ToString("Shape asset \"%s\" does not match version on server.", mShapeAsset.getAssetId());
             return false;
          }
       }
@@ -427,13 +388,13 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             if (!mShape->mBounds.isContained(collisionBounds.last()))
             {
                if (!silent_bbox_check)
-               Con::warnf("Warning: shape %s collision detail %d (Collision-%d) bounds exceed that of shape.", mShapeName, collisionDetails.size() - 1, collisionDetails.last());
+               Con::warnf("Warning: shape asset %s collision detail %d (Collision-%d) bounds exceed that of shape.", mShapeAsset.getAssetId(), collisionDetails.size() - 1, collisionDetails.last());
                collisionBounds.last() = mShape->mBounds;
             }
             else if (collisionBounds.last().isValidBox() == false)
             {
                if (!silent_bbox_check)
-               Con::errorf("Error: shape %s-collision detail %d (Collision-%d) bounds box invalid!", mShapeName, collisionDetails.size() - 1, collisionDetails.last());
+               Con::errorf("Error: shape asset %s-collision detail %d (Collision-%d) bounds box invalid!", mShapeAsset.getAssetId(), collisionDetails.size() - 1, collisionDetails.last());
                collisionBounds.last() = mShape->mBounds;
             }
 
@@ -593,11 +554,7 @@ void ShapeBaseData::initPersistFields()
 
    addGroup( "Render" );
 
-      addField("shapeAsset", TypeShapeAssetId, Offset(mShapeAssetId, ShapeBaseData),
-         "The source shape asset.");
-
-      addField( "shapeFile", TypeShapeFilename, Offset(mShapeName, ShapeBaseData),
-         "The DTS or DAE model to use for this object." );
+      INITPERSISTFIELD_SHAPEASSET(Shape, ShapeBaseData, "The source shape asset.");
 
    endGroup( "Render" );
 
@@ -611,8 +568,8 @@ void ShapeBaseData::initPersistFields()
          "%Debris to generate when this shape is blown up." );
       addField( "renderWhenDestroyed", TypeBool, Offset(renderWhenDestroyed, ShapeBaseData),
          "Whether to render the shape when it is in the \"Destroyed\" damage state." );
-      addField( "debrisShapeName", TypeShapeFilename, Offset(debrisShapeName, ShapeBaseData),
-         "The DTS or DAE model to use for auto-generated breakups. @note may not be functional." );
+
+      INITPERSISTFIELD_SHAPEASSET(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups. @note may not be functional.");
 
    endGroup( "Destruction" );
 
@@ -800,8 +757,8 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowProjectionDistance);
    stream->write(shadowSphereAdjust);
 
-
-   packShapeAsset(stream);
+   PACKDATA_SHAPEASSET(Shape);
+   PACKDATA_SHAPEASSET(DebrisShape);
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -825,7 +782,6 @@ void ShapeBaseData::packData(BitStream* stream)
       stream->write(cameraMaxFov);
    stream->writeFlag(cameraCanBank);
    stream->writeFlag(mountedImagesBank);
-   stream->writeString( debrisShapeName );
 
    stream->writeFlag(observeThroughObject);
 
@@ -879,8 +835,8 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowProjectionDistance);
    stream->read(&shadowSphereAdjust);
 
-
-   unpackShapeAsset(stream);
+   UNPACKDATA_SHAPEASSET(Shape);
+   UNPACKDATA_SHAPEASSET(DebrisShape);
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())
@@ -930,9 +886,6 @@ void ShapeBaseData::unpackData(BitStream* stream)
 
    cameraCanBank = stream->readFlag();
    mountedImagesBank = stream->readFlag();
-
-   debrisShapeName = stream->readSTString();
-
    observeThroughObject = stream->readFlag();
 
    if( stream->readFlag() )
@@ -2011,13 +1964,13 @@ void ShapeBase::blowUp()
 
    TSShapeInstance *debShape = NULL;
 
-   if( mDataBlock->debrisShape == NULL )
+   if( mDataBlock->mDebrisShape == NULL )
    {
       return;
    }
    else
    {
-      debShape = new TSShapeInstance( mDataBlock->debrisShape, true);
+      debShape = new TSShapeInstance( mDataBlock->mDebrisShape, true);
    }
 
 

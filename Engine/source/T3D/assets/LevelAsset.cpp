@@ -47,14 +47,14 @@
 
 IMPLEMENT_CONOBJECT(LevelAsset);
 
-ConsoleType(LevelAssetPtr, TypeLevelAssetPtr, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(LevelAssetPtr, TypeLevelAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
 ConsoleGetType(TypeLevelAssetPtr)
 {
    // Fetch asset Id.
-   return *((StringTableEntry*)dptr);
+   return *((const char**)(dptr));
 }
 
 //-----------------------------------------------------------------------------
@@ -65,13 +65,7 @@ ConsoleSetType(TypeLevelAssetPtr)
    if (argc == 1)
    {
       // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }
@@ -86,14 +80,12 @@ LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
 {
    mLevelName = StringTable->EmptyString();
    mLevelFile = StringTable->EmptyString();
-   mPreviewImage = StringTable->EmptyString();
    mPostFXPresetFile = StringTable->EmptyString();
    mDecalsFile = StringTable->EmptyString();
    mForestFile = StringTable->EmptyString();
    mNavmeshFile = StringTable->EmptyString();
 
    mLevelPath = StringTable->EmptyString();
-   mPreviewImagePath = StringTable->EmptyString();
    mPostFXPresetPath = StringTable->EmptyString();
    mDecalsPath = StringTable->EmptyString();
    mForestPath = StringTable->EmptyString();
@@ -104,6 +96,9 @@ LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
 
    mEditorFile = StringTable->EmptyString();
    mBakedSceneFile = StringTable->EmptyString();
+
+   mPreviewImageAssetId = StringTable->EmptyString();
+   mPreviewImageAsset = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -122,8 +117,6 @@ void LevelAsset::initPersistFields()
    addProtectedField("LevelFile", TypeAssetLooseFilePath, Offset(mLevelFile, LevelAsset),
       &setLevelFile, &getLevelFile, "Path to the actual level file.");
    addField("LevelName", TypeString, Offset(mLevelName, LevelAsset), "Human-friendly name for the level.");
-   addProtectedField("PreviewImage", TypeAssetLooseFilePath, Offset(mPreviewImage, LevelAsset),
-      &setPreviewImageFile, &getPreviewImageFile, "Path to the image used for selection preview.");
 
    addProtectedField("PostFXPresetFile", TypeAssetLooseFilePath, Offset(mPostFXPresetFile, LevelAsset),
       &setPostFXPresetFile, &getPostFXPresetFile, "Path to the level's postFXPreset.");
@@ -157,24 +150,32 @@ void LevelAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   // Ensure the image-file is expanded.
-   mPreviewImagePath = expandAssetFilePath(mPreviewImage);
-   mLevelPath = expandAssetFilePath(mLevelFile);
-   mPostFXPresetPath = expandAssetFilePath(mPostFXPresetFile);
-   mDecalsPath = expandAssetFilePath(mDecalsFile);
-   mForestPath = expandAssetFilePath(mForestFile);
-   mNavmeshPath = expandAssetFilePath(mNavmeshFile);
+   loadAsset();
 }
 
 void LevelAsset::onAssetRefresh(void)
 {
+   loadAsset();
+}
+
+void LevelAsset::loadAsset()
+{
    // Ensure the image-file is expanded.
-   mPreviewImagePath = expandAssetFilePath(mPreviewImage);
    mLevelPath = expandAssetFilePath(mLevelFile);
    mPostFXPresetPath = expandAssetFilePath(mPostFXPresetFile);
    mDecalsPath = expandAssetFilePath(mDecalsFile);
    mForestPath = expandAssetFilePath(mForestFile);
    mNavmeshPath = expandAssetFilePath(mNavmeshFile);
+
+   StringTableEntry previewImageAssetId = getAssetDependencyField("previewImageAsset");
+
+   if (previewImageAssetId != StringTable->EmptyString())
+   {
+      mPreviewImageAssetId = previewImageAssetId;
+
+      AssetPtr<ImageAsset> previewImgAsset = mPreviewImageAssetId;
+      mPreviewImageAsset = previewImgAsset;
+   }
 }
 
 //
@@ -197,23 +198,19 @@ void LevelAsset::setLevelFile(const char* pLevelFile)
    refreshAsset();
 }
 
-void LevelAsset::setImageFile(const char* pImageFile)
+StringTableEntry LevelAsset::getPreviewImageAsset() const
 {
-   // Sanity!
-   AssertFatal(pImageFile != NULL, "Cannot use a NULL image file.");
+   return mPreviewImageAssetId;
+}
 
-   // Fetch image file.
-   pImageFile = StringTable->insert(pImageFile);
+StringTableEntry LevelAsset::getPreviewImagePath(void) const
+{
+   if (mPreviewImageAsset->isValid())
+   {
+      return mPreviewImageAsset->getImagePath();
+   }
 
-   // Ignore no change,
-   if (pImageFile == mPreviewImage)
-      return;
-
-   // Update.
-   mPreviewImage = pImageFile;
-
-   // Refresh the asset.
-   refreshAsset();
+   return StringTable->EmptyString();
 }
 
 void LevelAsset::setEditorFile(const char* pEditorFile)
@@ -368,11 +365,18 @@ DefineEngineMethod(LevelAsset, getLevelPath, const char*, (),,
    return object->getLevelPath();
 }
 
+DefineEngineMethod(LevelAsset, getPreviewImageAsset, const char*, (), ,
+   "Gets the full path of the asset's defined preview image file.\n"
+   "@return The string result of the level preview image path")
+{
+   return object->getPreviewImageAsset();
+}
+
 DefineEngineMethod(LevelAsset, getPreviewImagePath, const char*, (), ,
    "Gets the full path of the asset's defined preview image file.\n"
    "@return The string result of the level preview image path")
 {
-   return object->getImagePath();
+   return object->getPreviewImagePath();
 }
 
 DefineEngineMethod(LevelAsset, getPostFXPresetPath, const char*, (), ,

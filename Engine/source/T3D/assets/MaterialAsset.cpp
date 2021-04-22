@@ -89,7 +89,7 @@ ConsoleSetType(TypeMaterialAssetPtr)
 }
 
 
-ConsoleType(assetIdString, TypeMaterialAssetId, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeMaterialAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeMaterialAssetId)
 {
@@ -152,12 +152,12 @@ void MaterialAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   compileShader();
-
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Platform::isFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
+
+   loadMaterial();
 }
 
 void MaterialAsset::onAssetRefresh()
@@ -167,17 +167,7 @@ void MaterialAsset::onAssetRefresh()
    if (Platform::isFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
-   if (mMatDefinitionName != StringTable->EmptyString())
-   {
-      Material* matDef;
-      if (!Sim::findObject(mMatDefinitionName, matDef))
-      {
-         Con::errorf("MaterialAsset: Unable to find the Material %s", mMatDefinitionName);
-         return;
-      }
-
-      matDef->reload();
-   }
+   loadMaterial();
 }
 
 void MaterialAsset::setScriptFile(const char* pScriptFile)
@@ -197,9 +187,27 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-void MaterialAsset::compileShader()
+void MaterialAsset::loadMaterial()
 {
+   if (mMaterialDefinition)
+      SAFE_DELETE(mMaterialDefinition);
+
+   if (mMatDefinitionName != StringTable->EmptyString())
+   {
+      Material* matDef;
+      if (!Sim::findObject(mMatDefinitionName, matDef))
+      {
+         Con::errorf("MaterialAsset: Unable to find the Material %s", mMatDefinitionName);
+         return;
+      }
+
+      mMaterialDefinition = matDef;
+
+      mMaterialDefinition->reload();
+   }
 }
+
+//------------------------------------------------------------------------------
 
 void MaterialAsset::copyTo(SimObject* object)
 {
@@ -207,12 +215,30 @@ void MaterialAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
-DefineEngineMethod(MaterialAsset, compileShader, void, (), , "Compiles the material's generated shader, if any. Not yet implemented\n")
+//------------------------------------------------------------------------------
+StringTableEntry MaterialAsset::findAssetIdByMaterialName(StringTableEntry matName)
 {
-   object->compileShader();
+   StringTableEntry materialAssetId = StringTable->EmptyString();
+
+   AssetQuery* query = new AssetQuery();
+   U32 foundCount = AssetDatabase.findAssetType(query, "MaterialAsset");
+   if (foundCount != 0)
+   {
+      for (U32 i = 0; i < foundCount; i++)
+      {
+         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(query->mAssetList[i]);
+         if (matAsset && matAsset->getMaterialDefinitionName() == matName)
+         {
+            materialAssetId = matAsset->getAssetId();
+            break;
+         }
+         AssetDatabase.releaseAsset(query->mAssetList[i]); //cleanup if that's not the one we needed
+      }
+   }
+
+   return materialAssetId;
 }
 
-//------------------------------------------------------------------------------
 StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
 {
    StringTableEntry materialAssetId = StringTable->EmptyString();
@@ -236,81 +262,6 @@ StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matNam
          }
          AssetDatabase.releaseAsset(query->mAssetList[i]); //cleanup if that's not the one we needed
       }
-
-      if (materialAssetId == StringTable->EmptyString())
-      {
-         //Try auto-importing it if it exists already
-         BaseMaterialDefinition* baseMatDef;
-         if (!Sim::findObject(matName, baseMatDef))
-         {
-            //Not even a real material, apparently?
-            //return back a blank
-            return StringTable->EmptyString();
-         }
-
-         //Ok, a real mat def, we can work with this
-#if TORQUE_DEBUG
-         Con::warnf("MaterialAsset::getAssetIdByMaterialName - Attempted to in-place import a material(%s) that had no associated asset", matName);
-#endif
-
-         AssetImporter* autoAssetImporter;
-         if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-         {
-            autoAssetImporter = new AssetImporter();
-            autoAssetImporter->registerObject("autoAssetImporter");
-         }
-
-         autoAssetImporter->resetImportSession(true);
-
-         String originalMaterialDefFile = Torque::Path(baseMatDef->getFilename()).getPath();
-
-         autoAssetImporter->setTargetPath(originalMaterialDefFile);
-
-         autoAssetImporter->resetImportConfig();
-
-         AssetImportObject* assetObj = autoAssetImporter->addImportingAsset("MaterialAsset", originalMaterialDefFile, nullptr, matName);
-
-         //Find out if the filepath has an associated module to it. If we're importing in-place, it needs to be within a module's directory
-         ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(originalMaterialDefFile);
-
-         if (targetModuleDef == nullptr)
-         {
-            return StringTable->EmptyString();
-         }
-         else
-         {
-            autoAssetImporter->setTargetModuleId(targetModuleDef->getModuleId());
-         }
-
-         autoAssetImporter->processImportAssets();
-
-         bool hasIssues = autoAssetImporter->validateAssets();
-
-         if (hasIssues)
-         {
-            //log it
-            Con::errorf("Error! Import process of Material(%s) has failed due to issues discovered during validation!", matName);
-            return StringTable->EmptyString();
-         }
-         else
-         {
-            autoAssetImporter->importAssets();
-         }
-
-#if TORQUE_DEBUG
-         autoAssetImporter->dumpActivityLog();
-#endif
-
-         if (hasIssues)
-         {
-            return StringTable->EmptyString();
-         }
-         else
-         {
-            String assetId = autoAssetImporter->getTargetModuleId() + ":" + assetObj->assetName;
-            return StringTable->insert(assetId.c_str());
-         }
-      }
    }
 
    return materialAssetId;
@@ -324,8 +275,8 @@ bool MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsse
       return true;
 
    //Didn't work, so have us fall back to a placeholder asset
-   StringTableEntry noImageId = StringTable->insert("Core_Rendering:noMaterial");
-   materialAsset->setAssetId(noImageId);
+   StringTableEntry noMaterialId = StringTable->insert("Core_Rendering:noMaterial");
+   materialAsset->setAssetId(noMaterialId);
 
    if (!materialAsset->isNull())
       return true;

@@ -2551,7 +2551,7 @@ function MaterialEditorGui::saveCompositeMap(%this)
     %saveAs = "";
     %dlg = new SaveFileDialog()
     {
-        Filters        = "png";
+        Filters        = "PNG File (*.png)|*.png";
         DefaultPath    = EditorSettings.value("data/");
         ChangePath     = false;
         OverwritePrompt   = true;
@@ -2564,6 +2564,9 @@ function MaterialEditorGui::saveCompositeMap(%this)
         EditorSettings.setValue( "art/shapes/textures", collapseFilename(filePath( %dlg.FileName )) );
         %saveAs = %dlg.FileName;
     }
+    
+   if( fileExt( %saveAs ) !$= ".png" )
+      %saveAs = %saveAs @ ".png";
     
     %material = %this.currentMaterial;
     %layer = %this.currentLayer;

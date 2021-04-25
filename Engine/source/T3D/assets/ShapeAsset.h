@@ -254,20 +254,13 @@ public: \
       }\
       else\
       {\
-         StringTableEntry assetId = ShapeAsset::getAssetIdByFilename(_in);\
-         if (assetId != StringTable->EmptyString())\
+         if (ShapeAsset::getAssetByFilename(_in, &m##name##Asset))\
          {\
-            m##name##AssetId = _in;\
-            if (ShapeAsset::getAssetById(m##name##AssetId, &m##name##Asset))\
+            m##name##AssetId = m##name##Asset.getAssetId();\
+            \
+            if (ImageAsset::Ok == m##name##Asset->getStatus())\
             {\
-               if (m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noShape"))\
-               {\
-                  m##name##Name = StringTable->EmptyString();\
-               }\
-               else\
-               {\
-                  m##name##AssetId = StringTable->EmptyString();\
-               }\
+               m##name##Name = StringTable->EmptyString();\
             }\
          }\
          else\
@@ -283,7 +276,7 @@ public: \
          \
          if (bool(m##name) == NULL)\
          {\
-            Con::errorf("classname::_set##name() - %s: Couldn't load shape %s", assetText(className,""), get##name());\
+            Con::errorf("%s::_set##name() - %s: Couldn't load shape %s", assetText(className,""), get##name());\
             return false;\
          }\
          return true;\

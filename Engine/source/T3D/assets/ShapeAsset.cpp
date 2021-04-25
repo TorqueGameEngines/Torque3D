@@ -348,9 +348,13 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
       shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
 
       if (!shapeAsset->isNull())
-         return true;
+      {
+         Con::warnf("ShapeAsset::getAssetByFilename - Finding of file(%s) associated to asset failed, utilizing fallback asset", fileName);
+         return false;
+      }
 
       //That didn't work, so fail out
+      Con::warnf("ShapeAsset::getAssetByFilename -  Finding of file(%s) associated to asset failed with no fallback asset", fileName);
       return false;
    }
    else
@@ -388,19 +392,23 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 {
    (*shapeAsset) = assetId;
 
-   if ((*shapeAsset))
+   if (shapeAsset->notNull())
+   {
       return (*shapeAsset)->mLoadedState;
+   }
+   else
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
+      shapeAsset->setAssetId(noShapeId);
 
-   //Didn't work, so have us fall back to a placeholder asset
-   StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
-   shapeAsset->setAssetId(noShapeId);
+      //handle noshape not being loaded itself
+      if ((*shapeAsset)->mLoadedState == BadFileReference)
+         return AssetErrCode::BadFileReference;
 
-   //handle noshape not being loaded itself
-   if ((*shapeAsset)->mLoadedState == BadFileReference)
-      return AssetErrCode::Failed;
-
-   (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
-   return AssetErrCode::UsingFallback;
+      (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
 }
 //------------------------------------------------------------------------------
 
@@ -510,6 +518,13 @@ DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
 DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution), (256), "")
 {
    return object->generateCachedPreviewImage(resolution);
+}
+
+DefineEngineStaticMethod(ShapeAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided file path.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return ShapeAsset::getAssetIdByFilename(StringTable->insert(filePath));
 }
 #endif
 

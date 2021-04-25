@@ -76,9 +76,6 @@ protected:
    StringTableEntry mImageFileName;
    StringTableEntry mImagePath;
 
-   GBitmap* mBitmap;
-   //GFXTexHandle mTexture;
-
    bool mIsValidImage;
    bool mUseMips;
    bool mIsHDRImage;
@@ -209,17 +206,7 @@ public: \
       }\
       else\
       {\
-         Torque::Path imagePath = _in;\
-         if (imagePath.getExtension() == String::EmptyString)\
-         {\
-            if (Platform::isFile(imagePath.getFullPath() + ".png"))\
-               imagePath.setExtension("png");\
-            else if (Platform::isFile(imagePath.getFullPath() + ".dds"))\
-               imagePath.setExtension("dds");\
-            else if (Platform::isFile(imagePath.getFullPath() + ".jpg"))\
-               imagePath.setExtension("jpg");\
-         }\
-         if (ImageAsset::getAssetByFilename(imagePath.getFullPath(), &m##name##Asset))\
+         if (ImageAsset::getAssetByFilename(_in, &m##name##Asset))\
          {\
             m##name##AssetId = m##name##Asset.getAssetId();\
             \
@@ -305,32 +292,6 @@ DefineEngineMethod(className, set##name, bool, (const char* map), , assetText(na
    m##name##AssetId = other.m##name##AssetId;\
    m##name##Asset = other.m##name##Asset;
 
-#define AUTOCONVERT_IMAGEASSET(name)\
-if (m##name##Filename != String::EmptyString)\
-{\
-   if (m##name##Filename != String::EmptyString)\
-   {\
-      Torque::Path imagePath = m##name##Filename;\
-      if (imagePath.getPath() == String::EmptyString)\
-      {\
-         String subPath = Torque::Path(getFilename()).getPath();\
-         imagePath.setPath(subPath);\
-      }\
-      \
-      if (imagePath.getExtension() == String::EmptyString)\
-      {\
-         if (Platform::isFile(imagePath.getFullPath() + ".png"))\
-            imagePath.setExtension("png");\
-         else if (Platform::isFile(imagePath.getFullPath() + ".dds"))\
-            imagePath.setExtension("dds");\
-         else if (Platform::isFile(imagePath.getFullPath() + ".jpg"))\
-            imagePath.setExtension("jpg");\
-      }\
-      \
-      m##name##AssetId = ImageAsset::getAssetIdByFilename(imagePath.getFullPath());\
-   }\
-}
-
 #define LOAD_IMAGEASSET(name)\
 if (m##name##AssetId != StringTable->EmptyString())\
 {\
@@ -410,17 +371,7 @@ public: \
       }\
       else\
       {\
-         Torque::Path imagePath = _in;\
-         if (imagePath.getExtension() == String::EmptyString)\
-         {\
-            if (Platform::isFile(imagePath.getFullPath() + ".png"))\
-               imagePath.setExtension("png");\
-            else if (Platform::isFile(imagePath.getFullPath() + ".dds"))\
-               imagePath.setExtension("dds");\
-            else if (Platform::isFile(imagePath.getFullPath() + ".jpg"))\
-               imagePath.setExtension("jpg");\
-         }\
-         if (ImageAsset::getAssetByFilename(imagePath.getFullPath(), &m##name##Asset[index]))\
+         if (ImageAsset::getAssetByFilename(_in, &m##name##Asset[index]))\
          {\
             m##name##AssetId[index] = m##name##Asset[index].getAssetId();\
             \
@@ -516,32 +467,6 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
    m##name##Filename[index] = other.m##name##Filename[index];\
    m##name##AssetId[index] = other.m##name##AssetId[index];\
    m##name##Asset[index] = other.m##name##Asset[index];
-
-#define AUTOCONVERT_IMAGEASSET_ARRAY(name, index)\
-if (m##name##Filename[index] != String::EmptyString)\
-{\
-   if (m##name##Filename[index] != String::EmptyString)\
-   {\
-      Torque::Path imagePath = m##name##Filename[index];\
-      if (imagePath.getPath() == String::EmptyString)\
-      {\
-         String subPath = Torque::Path(getFilename()).getPath();\
-         imagePath.setPath(subPath);\
-      }\
-      \
-      if (imagePath.getExtension() == String::EmptyString)\
-      {\
-         if (Platform::isFile(imagePath.getFullPath() + ".png"))\
-            imagePath.setExtension("png");\
-         else if (Platform::isFile(imagePath.getFullPath() + ".dds"))\
-            imagePath.setExtension("dds");\
-         else if (Platform::isFile(imagePath.getFullPath() + ".jpg"))\
-            imagePath.setExtension("jpg");\
-      }\
-      \
-      m##name##AssetId[index] = ImageAsset::getAssetIdByFilename(imagePath.getFullPath());\
-   }\
-}
 
 #define LOAD_IMAGEASSET_ARRAY(name, index)\
 if (m##name##AssetId[index] != StringTable->EmptyString())\

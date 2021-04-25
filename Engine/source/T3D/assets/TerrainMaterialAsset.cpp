@@ -119,8 +119,6 @@ void TerrainMaterialAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   compileShader();
-
    mScriptPath = expandAssetFilePath(mScriptFile);
 
    if (Platform::isFile(mScriptPath))
@@ -164,21 +162,49 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-void TerrainMaterialAsset::compileShader()
-{
-}
-
 void TerrainMaterialAsset::copyTo(SimObject* object)
 {
    // Call to parent.
    Parent::copyTo(object);
 }
 
-DefineEngineMethod(TerrainMaterialAsset, compileShader, void, (), , "Compiles the material's generated shader, if any. Not yet implemented\n")
+StringTableEntry TerrainMaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
 {
-   object->compileShader();
+   StringTableEntry materialAssetId = StringTable->EmptyString();
+
+   AssetQuery* query = new AssetQuery();
+   U32 foundCount = AssetDatabase.findAssetType(query, "TerrainMaterialAsset");
+   if (foundCount == 0)
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      materialAssetId = StringTable->insert("Core_Rendering:noMaterial");
+   }
+   else
+   {
+      for (U32 i = 0; i < foundCount; i++)
+      {
+         TerrainMaterialAsset* matAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query->mAssetList[i]);
+         if (matAsset && matAsset->getMaterialDefinitionName() == matName)
+         {
+            materialAssetId = matAsset->getAssetId();
+            AssetDatabase.releaseAsset(query->mAssetList[i]);
+            break;
+         }
+         AssetDatabase.releaseAsset(query->mAssetList[i]);
+      }
+   }
+
+   return materialAssetId;
 }
 
+#ifdef TORQUE_TOOLS
+DefineEngineStaticMethod(TerrainMaterialAsset, getAssetIdByMaterialName, const char*, (const char* materialName), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return TerrainMaterialAsset::getAssetIdByMaterialName(StringTable->insert(materialName));
+}
+#endif
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------

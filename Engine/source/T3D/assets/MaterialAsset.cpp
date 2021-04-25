@@ -125,12 +125,14 @@ MaterialAsset::MaterialAsset()
    mScriptFile = StringTable->EmptyString();
    mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
+   mMaterialDefinition = nullptr;
 }
 
 //-----------------------------------------------------------------------------
 
 MaterialAsset::~MaterialAsset()
 {
+   //SAFE_DELETE(mMaterialDefinition);
 }
 
 //-----------------------------------------------------------------------------
@@ -198,13 +200,19 @@ void MaterialAsset::loadMaterial()
       if (!Sim::findObject(mMatDefinitionName, matDef))
       {
          Con::errorf("MaterialAsset: Unable to find the Material %s", mMatDefinitionName);
+         mLoadedState = BadFileReference;
          return;
       }
 
       mMaterialDefinition = matDef;
 
+      mLoadedState = Ok;
+
       mMaterialDefinition->reload();
+      return;
    }
+
+   mLoadedState = Failed;
 }
 
 //------------------------------------------------------------------------------
@@ -216,27 +224,41 @@ void MaterialAsset::copyTo(SimObject* object)
 }
 
 //------------------------------------------------------------------------------
-StringTableEntry MaterialAsset::findAssetIdByMaterialName(StringTableEntry matName)
+bool MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<MaterialAsset>* matAsset)
 {
-   StringTableEntry materialAssetId = StringTable->EmptyString();
-
    AssetQuery* query = new AssetQuery();
    U32 foundCount = AssetDatabase.findAssetType(query, "MaterialAsset");
-   if (foundCount != 0)
+   if (foundCount == 0)
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      matAsset->setAssetId(StringTable->insert("Core_Rendering:noMaterial"));
+
+      if (!matAsset->isNull())
+      {
+         Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of material(%s) associated to asset failed, utilizing fallback asset", matName);
+         return false;
+      }
+
+      //That didn't work, so fail out
+      Con::warnf("MaterialAsset::getAssetByMaterialName -  Finding of material(%s) associated to asset failed with no fallback asset", matName);
+      return false;
+   }
+   else
    {
       for (U32 i = 0; i < foundCount; i++)
       {
-         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(query->mAssetList[i]);
-         if (matAsset && matAsset->getMaterialDefinitionName() == matName)
+         MaterialAsset* tMatAsset = AssetDatabase.acquireAsset<MaterialAsset>(query->mAssetList[i]);
+         if (tMatAsset && tMatAsset->getMaterialDefinitionName() == matName)
          {
-            materialAssetId = matAsset->getAssetId();
-            break;
+            AssetDatabase.releaseAsset(query->mAssetList[i]);
+            matAsset->setAssetId(query->mAssetList[i]);
+            return true;
          }
          AssetDatabase.releaseAsset(query->mAssetList[i]); //cleanup if that's not the one we needed
       }
    }
 
-   return materialAssetId;
+   return false;
 }
 
 StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
@@ -258,31 +280,48 @@ StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matNam
          if (matAsset && matAsset->getMaterialDefinitionName() == matName)
          {
             materialAssetId = matAsset->getAssetId();
+            AssetDatabase.releaseAsset(query->mAssetList[i]);
             break;
          }
-         AssetDatabase.releaseAsset(query->mAssetList[i]); //cleanup if that's not the one we needed
+         AssetDatabase.releaseAsset(query->mAssetList[i]);
       }
    }
 
    return materialAssetId;
 }
 
-bool MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset)
+U32 MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset)
 {
    (*materialAsset) = assetId;
 
-   if (!materialAsset->isNull())
-      return true;
+   if (materialAsset->notNull())
+   {
+      return (*materialAsset)->mLoadedState;
+   }
+   else
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      StringTableEntry noMaterialId = StringTable->insert("Core_Rendering:noMaterial");
+      materialAsset->setAssetId(noMaterialId);
 
-   //Didn't work, so have us fall back to a placeholder asset
-   StringTableEntry noMaterialId = StringTable->insert("Core_Rendering:noMaterial");
-   materialAsset->setAssetId(noMaterialId);
+      if ((*materialAsset)->mLoadedState == BadFileReference)
+         return AssetErrCode::BadFileReference;
 
-   if (!materialAsset->isNull())
-      return true;
+      (*materialAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
 
-   return false;
+   return AssetErrCode::Failed;
 }
+
+#ifdef TORQUE_TOOLS
+DefineEngineStaticMethod(MaterialAsset, getAssetIdByMaterialName, const char*, (const char* materialName), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return MaterialAsset::getAssetIdByMaterialName(StringTable->insert(materialName));
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId

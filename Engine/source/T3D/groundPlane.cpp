@@ -92,8 +92,10 @@ GroundPlane::GroundPlane()
 
 GroundPlane::~GroundPlane()
 {
-   if( mMaterial )
-      SAFE_DELETE( mMaterial );
+   mMaterial = nullptr;
+
+   if(mMaterialInst)
+      SAFE_DELETE(mMaterialInst);
 
    mConvexList->nukeList();
    SAFE_DELETE( mConvexList );

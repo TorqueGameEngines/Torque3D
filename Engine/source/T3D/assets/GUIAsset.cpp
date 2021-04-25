@@ -179,6 +179,50 @@ void GUIAsset::setScriptFile(const char* pScriptFile)
    refreshAsset();
 }
 
+StringTableEntry GUIAsset::getAssetIdByGUIName(StringTableEntry guiName)
+{
+   StringTableEntry assetId = StringTable->EmptyString();
+
+   AssetQuery* query = new AssetQuery();
+   U32 foundCount = AssetDatabase.findAssetType(query, "GUIAsset");
+   if (foundCount == 0)
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      assetId = StringTable->insert("Core_Rendering:noMaterial");
+   }
+   else
+   {
+      GuiControl* guiObject;
+      if (!Sim::findObject(guiName, guiObject))
+         return "";
+
+      StringTableEntry guiFile = guiObject->getFilename();
+
+      for (U32 i = 0; i < foundCount; i++)
+      {
+         GUIAsset* guiAsset = AssetDatabase.acquireAsset<GUIAsset>(query->mAssetList[i]);
+         if (guiAsset && guiAsset->getGUIPath() == guiFile)
+         {
+            assetId = guiAsset->getAssetId();
+            AssetDatabase.releaseAsset(query->mAssetList[i]);
+            break;
+         }
+         AssetDatabase.releaseAsset(query->mAssetList[i]);
+      }
+   }
+
+   return assetId;
+}
+
+#ifdef TORQUE_TOOLS
+DefineEngineStaticMethod(GUIAsset, getAssetIdByGUIName, const char*, (const char* guiName), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided GUI Name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return GUIAsset::getAssetIdByGUIName(StringTable->insert(guiName));
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------

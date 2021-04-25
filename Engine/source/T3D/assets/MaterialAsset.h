@@ -86,13 +86,6 @@ public:
    inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
    /// <summary>
-   /// A simple check to see if there is an asset that uses the provided Material Definition name
-   /// </summary>
-   /// <param name="matName">Material Definition name to look for</param>
-   /// <returns>AssetId of matching asset. Blank if none are found.</returns>
-   static StringTableEntry findAssetIdByMaterialName(StringTableEntry matName);
-
-   /// <summary>
    /// Looks for any assets that uses the provided Material Definition name.
    /// If none are found, attempts to auto-import the material definition if the
    /// material definition exists.
@@ -100,7 +93,8 @@ public:
    /// <param name="matName">Material Definition name to look for</param>
    /// <returns>AssetId of matching asset.</returns>
    static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
-   static bool getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+   static U32 getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+   static bool getAssetByMaterialName(StringTableEntry matName, AssetPtr<MaterialAsset>* matAsset);
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(MaterialAsset);
@@ -189,20 +183,13 @@ public: \
       }\
       else\
       {\
-         StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(_in);\
-         if (assetId != StringTable->EmptyString())\
+         if (MaterialAsset::getAssetByMaterialName(_in, &m##name##Asset))\
          {\
-            m##name##AssetId = _in;\
-            if (MaterialAsset::getAssetById(m##name##AssetId, &m##name##Asset))\
+            m##name##AssetId = m##name##Asset.getAssetId();\
+            \
+            if (ImageAsset::Ok == m##name##Asset->getStatus())\
             {\
-               if (m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))\
-               {\
-                  m##name##Name = String::EmptyString;\
-               }\
-               else\
-               {\
-                  m##name##AssetId = StringTable->EmptyString();\
-               }\
+               m##name##Name = String::EmptyString;\
             }\
          }\
          else\

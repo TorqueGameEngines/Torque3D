@@ -1620,7 +1620,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       //So if the material already exists, we should just use that. So first, let's find out if it already exists
 
       //check to see if the definition for this already exists
-      StringTableEntry existingMatAsset = MaterialAsset::findAssetIdByMaterialName(StringTable->insert(assetName));
+      StringTableEntry existingMatAsset = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(assetName));
 
       if (existingMatAsset != StringTable->EmptyString())
       {

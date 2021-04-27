@@ -109,18 +109,11 @@ ConsoleValueStack<4096> gCallStack;
 
 StringStack STR;
 
+IterStackRecord iterStack[MaxStackSize];
 U32 _ITER = 0;    ///< Stack pointer for iterStack.
 
-IterStackRecord iterStack[MaxStackSize];
-
-union StackValue
-{
-   F64 f;
-   S64 i;
-};
-
-StackValue numStack[MaxStackSize];
-U32 _STK = 0;
+ConsoleValue stack[MaxStackSize];
+S32 _STK = 0;
 
 char curFieldArray[256];
 char prevFieldArray[256];
@@ -166,7 +159,7 @@ static void getFieldComponent(SimObject* object, StringTableEntry field, const c
    // Otherwise, grab from the string stack. The value coming in will always
    // be a string because that is how multicomponent variables are handled.
    else
-      prevVal = STR.getStringValue();
+      prevVal = stack[_STK].getString();
 
    // Make sure we got a value.
    if (prevVal && *prevVal)
@@ -214,7 +207,7 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
 {
    // Copy the current string value
    char strValue[1024];
-   dStrncpy(strValue, STR.getStringValue(), 1024);
+   dStrncpy(strValue, stack[_STK].getString(), 1024);
 
    char val[1024] = "";
    const char* prevVal = NULL;
@@ -437,7 +430,7 @@ U32 gExecCount = 0;
 ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace, U32 argc, ConsoleValue* argv, bool noCalls, StringTableEntry packageName, S32 setFrame)
 {
 #ifdef TORQUE_DEBUG
-   U32 stackStart = STR.mStartStackSize;
+   U32 stackStart = _STK;
    gExecCount++;
 #endif
 
@@ -452,7 +445,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    F64* curFloatTable;
    char* curStringTable;
    S32 curStringTableLen = 0; //clint to ensure we dont overwrite it
-   STR.clearFunctionOffset();
+
    StringTableEntry thisFunctionName = NULL;
    bool popFrame = false;
    if (argv)
@@ -949,7 +942,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          }
 
          // What group will we be added to, if any?
-         U32 groupAddId = (U32)numStack[_STK].i;
+         U32 groupAddId = (U32)stack[_STK].getInt();
          SimGroup* grp = NULL;
          SimSet* set = NULL;
 
@@ -994,9 +987,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // id, if one was given, otherwise getting pushed)
          S32 id = currentNewObject->getId();
          if (placeAtRoot)
-            numStack[_STK].i = id;
+            stack[_STK].setInt(id);
          else
-            numStack[++_STK].i = id;
+            stack[++_STK].setInt(id);
 
          break;
       }
@@ -1024,7 +1017,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       }
 
       case OP_JMPIFFNOT:
-         if (numStack[_STK--].f)
+         if (stack[_STK--].getFloat())
          {
             ip++;
             break;
@@ -1032,7 +1025,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIFNOT:
-         if (numStack[_STK--].i)
+         if (stack[_STK--].getInt())
          {
             ip++;
             break;
@@ -1040,7 +1033,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIFF:
-         if (!numStack[_STK--].f)
+         if (!stack[_STK--].getFloat())
          {
             ip++;
             break;
@@ -1048,7 +1041,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIF:
-         if (!numStack[_STK--].i)
+         if (!stack[_STK--].getFloat())
          {
             ip++;
             break;
@@ -1056,7 +1049,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIFNOT_NP:
-         if (numStack[_STK].i)
+         if (stack[_STK].getInt())
          {
             _STK--;
             ip++;
@@ -1065,7 +1058,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
       case OP_JMPIF_NP:
-         if (!numStack[_STK].i)
+         if (!stack[_STK].getInt())
          {
             _STK--;
             ip++;
@@ -1077,10 +1070,24 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip = code[ip];
          break;
 
-         // This fixes a bug when not explicitly returning a value.
       case OP_RETURN_VOID:
-         STR.setStringValue("");
-         // We're falling thru here on purpose.
+      {
+         if (iterDepth > 0)
+         {
+            // Clear iterator state.
+            while (iterDepth > 0)
+            {
+               iterStack[--_ITER].mIsStringIter = false;
+               --iterDepth;
+            }
+
+            _STK--; // this is a pop from foreach()
+         }
+
+         returnValue.setEmptyString();
+
+         goto execFinished;
+      }
 
       case OP_RETURN:
       {
@@ -1093,12 +1100,16 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                --iterDepth;
             }
 
-            const char* retVal = STR.getStringValue();
-            STR.rewind();
-            STR.setStringValue(retVal); // Not nice but works.
+            
+            const char* retVal = stack[_STK].getString();
+            _STK--;
+            _STK--;
+            stack[_STK + 1].setString(retVal);
+            _STK++; // Not nice but works.
          }
 
-         returnValue.setString(STR.getStringValue(), STR.mLen);
+         returnValue.setString(stack[_STK].getString());
+         _STK--;
 
          goto execFinished;
       }
@@ -1115,7 +1126,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
          }
 
-         returnValue.setFloat(numStack[_STK].f);
+         returnValue.setFloat(stack[_STK].getFloat());
          _STK--;
 
          goto execFinished;
@@ -1132,116 +1143,118 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             }
          }
 
-         returnValue.setInt(numStack[_STK].i);
+         returnValue.setInt(stack[_STK].getInt());
          _STK--;
 
          goto execFinished;
 
       case OP_CMPEQ:
-         numStack[_STK - 1].i = bool(numStack[_STK].f == numStack[_STK - 1].f);
+         stack[_STK - 1].setInt(stack[_STK].getFloat() == stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_CMPGR:
-         numStack[_STK - 1].i = bool(numStack[_STK].f > numStack[_STK - 1].f);
+         stack[_STK - 1].setInt(stack[_STK].getFloat() > stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_CMPGE:
-         numStack[_STK - 1].i = bool(numStack[_STK].f >= numStack[_STK - 1].f);
+         stack[_STK - 1].setInt(stack[_STK].getFloat() >= stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_CMPLT:
-         numStack[_STK - 1].i = bool(numStack[_STK].f < numStack[_STK - 1].f);
+         stack[_STK - 1].setInt(stack[_STK].getFloat() < stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_CMPLE:
-         numStack[_STK - 1].i = bool(numStack[_STK].f <= numStack[_STK - 1].f);
+         stack[_STK - 1].setInt(stack[_STK].getFloat() <= stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_CMPNE:
-         numStack[_STK - 1].i = bool(numStack[_STK].f != numStack[_STK - 1].f);
+         stack[_STK - 1].setInt(stack[_STK].getFloat() != stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_XOR:
-         numStack[_STK - 1].i = numStack[_STK].i ^ numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() ^ stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_MOD:
-         if (numStack[_STK - 1].i != 0)
-            numStack[_STK - 1].i = numStack[_STK].i % numStack[_STK - 1].i;
+         if (stack[_STK - 1].getInt() != 0)
+            stack[_STK - 1].setInt(stack[_STK].getInt() % stack[_STK - 1].getInt());
          else
-            numStack[_STK - 1].i = 0;
+            stack[_STK - 1].setInt(0);
          _STK--;
          break;
 
       case OP_BITAND:
-         numStack[_STK - 1].i = numStack[_STK].i & numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() & stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_BITOR:
-         numStack[_STK - 1].i = numStack[_STK].i | numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() | stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_NOT:
-         numStack[_STK].i = !numStack[_STK].i;
+         stack[_STK].setInt(!stack[_STK].getInt());
          break;
 
       case OP_NOTF:
-         numStack[_STK].i = !numStack[_STK].f;
+         stack[_STK].setInt(!stack[_STK].getFloat());
          break;
 
       case OP_ONESCOMPLEMENT:
-         numStack[_STK].i = ~numStack[_STK].i;
+         stack[_STK].setInt(~stack[_STK].getInt());
          break;
 
       case OP_SHR:
-         numStack[_STK - 1].i = numStack[_STK].i >> numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() >> stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_SHL:
-         numStack[_STK - 1].i = numStack[_STK].i << numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() << stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_AND:
-         numStack[_STK - 1].i = numStack[_STK].i && numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() && stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_OR:
-         numStack[_STK - 1].i = numStack[_STK].i || numStack[_STK - 1].i;
+         stack[_STK - 1].setInt(stack[_STK].getInt() || stack[_STK - 1].getInt());
          _STK--;
          break;
 
       case OP_ADD:
-         numStack[_STK - 1].f = numStack[_STK].f + numStack[_STK - 1].f;
+         stack[_STK - 1].setFloat(stack[_STK].getFloat() + stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_SUB:
-         numStack[_STK - 1].f = numStack[_STK].f - numStack[_STK - 1].f;
+         stack[_STK - 1].setFloat(stack[_STK].getFloat() - stack[_STK - 1].getFloat());
          _STK--;
          break;
 
       case OP_MUL:
-         numStack[_STK - 1].f = numStack[_STK].f * numStack[_STK - 1].f;
+         stack[_STK - 1].setFloat(stack[_STK].getFloat() * stack[_STK - 1].getFloat());
          _STK--;
          break;
+
       case OP_DIV:
-         numStack[_STK - 1].f = numStack[_STK].f / numStack[_STK - 1].f;
+         stack[_STK - 1].setFloat(stack[_STK].getFloat() / stack[_STK - 1].getFloat());
          _STK--;
          break;
+
       case OP_NEG:
-         numStack[_STK].f = -numStack[_STK].f;
+         stack[_STK].setFloat(-stack[_STK].getFloat());
          break;
 
       case OP_INC:
@@ -1286,7 +1299,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SETCURVAR_ARRAY:
-         var = STR.getSTValue();
+         var = StringTable->insert(stack[_STK].getString());
 
          // See OP_SETCURVAR
          prevField = NULL;
@@ -1301,7 +1314,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SETCURVAR_ARRAY_CREATE:
-         var = STR.getSTValue();
+         var = StringTable->insert(stack[_STK].getString());
 
          // See OP_SETCURVAR
          prevField = NULL;
@@ -1316,69 +1329,72 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_LOADVAR_UINT:
-         numStack[_STK + 1].i = gEvalState.getIntVariable();
+         stack[_STK + 1].setInt(gEvalState.getIntVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_FLT:
-         numStack[_STK + 1].f = gEvalState.getFloatVariable();
+         stack[_STK + 1].setFloat(gEvalState.getFloatVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_STR:
-         val = gEvalState.getStringVariable();
-         STR.setStringValue(val);
+         stack[_STK + 1].setString(gEvalState.getStringVariable());
+         _STK++;
          break;
 
       case OP_SAVEVAR_UINT:
-         gEvalState.setIntVariable(numStack[_STK].i);
+         gEvalState.setIntVariable(stack[_STK].getInt());
          break;
 
       case OP_SAVEVAR_FLT:
-         gEvalState.setFloatVariable(numStack[_STK].f);
+         gEvalState.setFloatVariable(stack[_STK].getFloat());
          break;
 
       case OP_SAVEVAR_STR:
-         gEvalState.setStringVariable(STR.getStringValue());
+         gEvalState.setStringVariable(stack[_STK].getString());
          break;
 
       case OP_LOAD_LOCAL_VAR_UINT:
          reg = code[ip++];
-         numStack[_STK + 1].i = gEvalState.getLocalIntVariable(reg);
+         stack[_STK + 1].setInt(gEvalState.getLocalIntVariable(reg));
          _STK++;
          break;
 
       case OP_LOAD_LOCAL_VAR_FLT:
          reg = code[ip++];
-         numStack[_STK + 1].f = gEvalState.getLocalFloatVariable(reg);
+         stack[_STK + 1].setFloat(gEvalState.getLocalFloatVariable(reg));
          _STK++;
          break;
 
       case OP_LOAD_LOCAL_VAR_STR:
          reg = code[ip++];
          val = gEvalState.getLocalStringVariable(reg);
-         STR.setStringValue(val);
+         stack[_STK + 1].setString(val);
+         _STK++;
          break;
 
       case OP_SAVE_LOCAL_VAR_UINT:
          reg = code[ip++];
-         gEvalState.setLocalIntVariable(reg, numStack[_STK].i);
+         gEvalState.setLocalIntVariable(reg, stack[_STK].getInt());
          break;
 
       case OP_SAVE_LOCAL_VAR_FLT:
          reg = code[ip++];
-         gEvalState.setLocalFloatVariable(reg, numStack[_STK].f);
+         gEvalState.setLocalFloatVariable(reg, stack[_STK].getFloat());
          break;
 
       case OP_SAVE_LOCAL_VAR_STR:
          reg = code[ip++];
-         gEvalState.setLocalStringVariable(reg, STR.getStringValue(), (S32)STR.mLen);
+         val = stack[_STK].getString();
+         gEvalState.setLocalStringVariable(reg, val, (S32)dStrlen(val));
          break;
 
       case OP_SETCUROBJECT:
          // Save the previous object for parsing vector fields.
          prevObject = curObject;
-         val = STR.getStringValue();
+         val = stack[_STK].getString();
+         _STK--;
 
          // Sim::findObject will sometimes find valid objects from
          // multi-component strings. This makes sure that doesn't
@@ -1401,16 +1417,15 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             SimGroup* group = dynamic_cast<SimGroup*>(curObject);
             if (group)
             {
-               StringTableEntry intName = StringTable->insert(STR.getStringValue());
+               StringTableEntry intName = StringTable->insert(stack[_STK].getString());
                bool recurse = code[ip - 1];
                SimObject* obj = group->findObjectByInternalName(intName, recurse);
-               numStack[_STK + 1].i = obj ? obj->getId() : 0;
-               _STK++;
+               stack[_STK].setInt(obj ? obj->getId() : 0);
             }
             else
             {
                Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use -> on non-group %s of class %s.", getFileLine(ip - 2), curObject->getName(), curObject->getClassName());
-               numStack[_STK].i = 0;
+               stack[_STK].setInt(0);
             }
          }
          break;
@@ -1429,7 +1444,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SETCURFIELD_ARRAY:
-         dStrcpy(curFieldArray, STR.getStringValue(), 256);
+         dStrcpy(curFieldArray, stack[_STK].getString(), 256);
          break;
 
       case OP_SETCURFIELD_TYPE:
@@ -1440,7 +1455,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_LOADFIELD_UINT:
          if (curObject)
-            numStack[_STK + 1].i = dAtol(curObject->getDataField(curField, curFieldArray));
+            stack[_STK + 1].setInt(dAtol(curObject->getDataField(curField, curFieldArray)));
          else
          {
             // The field is not being retrieved from an object. Maybe it's
@@ -1448,14 +1463,14 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
             getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
-            numStack[_STK + 1].i = dAtol(buff);
+            stack[_STK + 1].setInt(dAtol(buff));
          }
          _STK++;
          break;
 
       case OP_LOADFIELD_FLT:
          if (curObject)
-            numStack[_STK + 1].f = dAtod(curObject->getDataField(curField, curFieldArray));
+            stack[_STK + 1].setFloat(dAtod(curObject->getDataField(curField, curFieldArray)));
          else
          {
             // The field is not being retrieved from an object. Maybe it's
@@ -1463,7 +1478,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
             getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
-            numStack[_STK + 1].f = dAtod(buff);
+            stack[_STK + 1].setFloat(dAtod(buff));
          }
          _STK++;
          break;
@@ -1472,7 +1487,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          if (curObject)
          {
             val = curObject->getDataField(curField, curFieldArray);
-            STR.setStringValue(val);
+            stack[_STK + 1].setString(val);
          }
          else
          {
@@ -1481,15 +1496,14 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             char buff[FieldBufferSizeString];
             memset(buff, 0, sizeof(buff));
             getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
-            STR.setStringValue(buff);
+            stack[_STK + 1].setString(buff);
          }
-
+         _STK++;
          break;
 
       case OP_SAVEFIELD_UINT:
-         STR.setIntValue(numStack[_STK].i);
          if (curObject)
-            curObject->setDataField(curField, curFieldArray, STR.getStringValue());
+            curObject->setDataField(curField, curFieldArray, stack[_STK].getString());
          else
          {
             // The field is not being set on an object. Maybe it's
@@ -1500,9 +1514,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SAVEFIELD_FLT:
-         STR.setFloatValue(numStack[_STK].f);
          if (curObject)
-            curObject->setDataField(curField, curFieldArray, STR.getStringValue());
+            curObject->setDataField(curField, curFieldArray, stack[_STK].getString());
          else
          {
             // The field is not being set on an object. Maybe it's
@@ -1514,7 +1527,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_SAVEFIELD_STR:
          if (curObject)
-            curObject->setDataField(curField, curFieldArray, STR.getStringValue());
+            curObject->setDataField(curField, curFieldArray, stack[_STK].getString());
          else
          {
             // The field is not being set on an object. Maybe it's
@@ -1524,51 +1537,20 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          }
          break;
 
-      case OP_STR_TO_UINT:
-         numStack[_STK + 1].i = STR.getIntValue();
-         _STK++;
-         break;
-
-      case OP_STR_TO_FLT:
-         numStack[_STK + 1].f = STR.getFloatValue();
-         _STK++;
-         break;
-
-      case OP_STR_TO_NONE:
-         // This exists simply to deal with certain typecast situations.
-         break;
-
-      case OP_FLT_TO_UINT:
-         numStack[_STK].i = (S64)numStack[_STK].f;
-         break;
-
-      case OP_FLT_TO_STR:
-         STR.setFloatValue(numStack[_STK].f);
-         _STK--;
-         break;
-
-      case OP_UINT_TO_FLT:
-         numStack[_STK].f = (F64)numStack[_STK].i;
-         break;
-
-      case OP_UINT_TO_STR:
-         STR.setIntValue(numStack[_STK].i);
-         _STK--;
-         break;
-
-      case OP_NUM_TO_NONE:
+      case OP_POP_STK:
          _STK--;
          break;
 
       case OP_LOADIMMED_UINT:
-         numStack[_STK + 1].i = code[ip++];
+         stack[_STK + 1].setInt(code[ip++]);
          _STK++;
          break;
 
       case OP_LOADIMMED_FLT:
-         numStack[_STK + 1].f = curFloatTable[code[ip++]];
+         stack[_STK + 1].setFloat(curFloatTable[code[ip++]]);
          _STK++;
          break;
+
       case OP_TAG_TO_STR:
          code[ip - 1] = OP_LOADIMMED_STR;
          // it's possible the string has already been converted
@@ -1578,8 +1560,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             dSprintf(curStringTable + code[ip] + 1, 7, "%d", id);
             *(curStringTable + code[ip]) = StringTagPrefixByte;
          }
+         TORQUE_CASE_FALLTHROUGH;
+
       case OP_LOADIMMED_STR:
-         STR.setStringValue(curStringTable + code[ip++]);
+         stack[_STK + 1].setString(curStringTable + code[ip++]);
+         _STK ++;
          break;
 
       case OP_DOCBLOCK_STR:
@@ -1614,7 +1599,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       break;
 
       case OP_LOADIMMED_IDENT:
-         STR.setStringValue(CodeToSTE(code, ip));
+         stack[_STK + 1].setString(CodeToSTE(code, ip));
+         _STK++;
          ip += 2;
          break;
 
@@ -1652,8 +1638,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                Con::warnf(ConsoleLogEntry::General,
                   "%s: Unable to find function %s",
                   getFileLine(ip - 4), fnName);
-               //STR.popFrame();
+
                gCallStack.popFrame();
+               stack[_STK + 1].setEmptyString();
+               _STK++;
                break;
             }
          }
@@ -1668,8 +1656,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                   "%s: Unable to find function %s%s%s",
                   getFileLine(ip - 4), fnNamespace ? fnNamespace : "",
                   fnNamespace ? "::" : "", fnName);
-               //STR.popFrame();
+
                gCallStack.popFrame();
+               stack[_STK + 1].setEmptyString();
+               _STK++;
                break;
             }
          }
@@ -1702,9 +1692,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                   simObjectLookupValue.getString(),
                   fnName
                );
-               //STR.popFrame();
+
                gCallStack.popFrame();
-               STR.setStringValue("");
+               stack[_STK + 1].setEmptyString();
+               _STK++;
                break;
             }
 
@@ -1744,8 +1735,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
             }
             gCallStack.popFrame();
-            STR.setStringValue("");
-            STR.setStringValue("");
+            stack[_STK + 1].setEmptyString();
+            _STK++;
             break;
          }
          if (nsEntry->mType == Namespace::Entry::ConsoleFunctionType)
@@ -1754,10 +1745,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             {
                // TODO: not make this strings only for returns.
                ConsoleValue returnFromFn = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage);
-               STR.setStringValue(returnFromFn.getString());
+               stack[_STK + 1] = std::move(returnFromFn);
             }
             else // no body
-               STR.setStringValue("");
+               stack[_STK + 1].setEmptyString();
+            _STK++;
 
             gCallStack.popFrame();
          }
@@ -1769,7 +1761,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                Con::warnf(ConsoleLogEntry::Script, "%s: %s::%s - wrong number of arguments.", getFileLine(ip - 4), nsName, fnName);
                Con::warnf(ConsoleLogEntry::Script, "%s: usage: %s", getFileLine(ip - 4), nsEntry->mUsage);
                gCallStack.popFrame();
-               STR.setStringValue("");
+               stack[_STK + 1].setEmptyString();
+               _STK++;
             }
             else
             {
@@ -1777,87 +1770,73 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                {
                case Namespace::Entry::StringCallbackType:
                {
-                  const char* ret = nsEntry->cb.mStringCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  const char* result = nsEntry->cb.mStringCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
-                  if (ret != STR.getStringValue())
-                     STR.setStringValue(ret);
-                  else
-                     STR.setLen(dStrlen(ret));
+                  stack[_STK + 1].setString(result);
+                  _STK++;
                   break;
                }
                case Namespace::Entry::IntCallbackType:
                {
                   S64 result = nsEntry->cb.mIntCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
-                  if (code[ip] == OP_STR_TO_UINT)
+
+                  if (code[ip] == OP_POP_STK)
                   {
                      ip++;
-                     numStack[++_STK].i = result;
                      break;
                   }
-                  else if (code[ip] == OP_STR_TO_FLT)
-                  {
-                     ip++;
-                     numStack[++_STK].f = result;
-                     break;
-                  }
-                  else if (code[ip] == OP_STR_TO_NONE)
-                     ip++;
-                  else
-                     STR.setIntValue(result);
+
+                  stack[_STK + 1].setInt(result);
+                  _STK++;
                   break;
                }
                case Namespace::Entry::FloatCallbackType:
                {
                   F64 result = nsEntry->cb.mFloatCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
-                  if (code[ip] == OP_STR_TO_UINT)
+
+                  if (code[ip] == OP_POP_STK)
                   {
                      ip++;
-                     numStack[++_STK].i = (S64)result;
                      break;
                   }
-                  else if (code[ip] == OP_STR_TO_FLT)
-                  {
-                     ip++;
-                     numStack[++_STK].f = result;
-                     break;
-                  }
-                  else if (code[ip] == OP_STR_TO_NONE)
-                     ip++;
-                  else
-                     STR.setFloatValue(result);
+
+                  stack[_STK + 1].setInt(result);
+                  _STK++;
                   break;
                }
                case Namespace::Entry::VoidCallbackType:
                {
                   nsEntry->cb.mVoidCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
-                  if (code[ip] != OP_STR_TO_NONE)
-                     Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
                   gCallStack.popFrame();
-                  STR.setStringValue("");
+
+                  if (code[ip] == OP_POP_STK)
+                  {
+                     ip++;
+                     break;
+                  }
+
+                  Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
+                  stack[_STK + 1].setEmptyString();
+                  _STK++;
+
                   break;
                }
                case Namespace::Entry::BoolCallbackType:
                {
                   bool result = nsEntry->cb.mBoolCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
-                  if (code[ip] == OP_STR_TO_UINT)
+
+                  if (code[ip] == OP_POP_STK)
                   {
                      ip++;
-                     numStack[++_STK].i = result;
                      break;
                   }
-                  else if (code[ip] == OP_STR_TO_FLT)
-                  {
-                     ip++;
-                     numStack[++_STK].f = result;
-                     break;
-                  }
-                  else if (code[ip] == OP_STR_TO_NONE)
-                     ip++;
-                  else
-                     STR.setIntValue(result);
+
+                  stack[_STK + 1].setBool(result);
+                  _STK++;
+
                   break;
                }
                }
@@ -1868,43 +1847,45 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             gEvalState.thisObject = saveObject;
          break;
       }
-      case OP_ADVANCE_STR:
-         STR.advance();
-         break;
+
       case OP_ADVANCE_STR_APPENDCHAR:
-         STR.advanceChar(code[ip++]);
-         break;
+      {
+         // TODO: Create a better way to handle string concatination without
+         // heap allocating every time.
 
-      case OP_ADVANCE_STR_COMMA:
-         STR.advanceChar('_');
-         break;
+         val = stack[_STK].getString();
+         dsize_t len = dStrlen(val) + 2;
 
-      case OP_ADVANCE_STR_NUL:
-         STR.advanceChar(0);
+         char buff[2];
+         buff[0] = (char)code[ip++];
+         buff[1] = '\0';
+
+         char* concat = new char[len];
+         dMemset(concat, 0, len);
+         dStrcat(concat, val, len);
+         dStrcat(concat, buff, len);
+
+         stack[_STK].setString(concat);
+
+         delete[] concat;
+
          break;
+      }
 
       case OP_REWIND_STR:
-         STR.rewind();
-         break;
-
+         TORQUE_CASE_FALLTHROUGH;
       case OP_TERMINATE_REWIND_STR:
-         STR.rewindTerminate();
+         stack[_STK - 1].setString((String(stack[_STK - 1] + String(stack[_STK]))));
+         _STK--;
          break;
 
       case OP_COMPARE_STR:
-         numStack[++_STK].i = STR.compare();
+         stack[_STK - 1].setBool(!dStricmp(stack[_STK].getString(), stack[_STK - 1].getString()));
+         _STK--;
          break;
 
       case OP_PUSH:
-         gCallStack.pushString(STR.getStringValue(), STR.mLen);
-         break;
-
-      case OP_PUSH_UINT:
-         gCallStack.pushInt((U32)numStack[_STK--].i);
-         break;
-
-      case OP_PUSH_FLT:
-         gCallStack.pushFloat(numStack[_STK--].f);
+         gCallStack.push(std::move(stack[_STK--]));
          break;
 
       case OP_PUSH_FRAME:
@@ -1913,7 +1894,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_ASSERT:
       {
-         if (!numStack[_STK--].i)
+         if (!stack[_STK--].getBool())
          {
             const char* message = curStringTable + code[ip];
 
@@ -1957,7 +1938,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_ITER_BEGIN_STR:
       {
          iterStack[_ITER].mIsStringIter = true;
-         /* fallthrough */
+         TORQUE_CASE_FALLTHROUGH;
       }
 
       case OP_ITER_BEGIN:
@@ -1981,7 +1962,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
          if (iter.mIsStringIter)
          {
-            iter.mData.mStr.mString = STR.getStringValue();
+            iter.mData.mStr.mString = stack[_STK].getString();
             iter.mData.mStr.mIndex = 0;
          }
          else
@@ -1989,9 +1970,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // Look up the object.
 
             SimSet* set;
-            if (!Sim::findObject(STR.getStringValue(), set))
+            if (!Sim::findObject(stack[_STK].getString(), set))
             {
-               Con::errorf(ConsoleLogEntry::General, "No SimSet object '%s'", STR.getStringValue());
+               Con::errorf(ConsoleLogEntry::General, "No SimSet object '%s'", stack[_STK].getString());
                Con::errorf(ConsoleLogEntry::General, "Did you mean to use 'foreach$' instead of 'foreach'?");
                ip = failIp;
                continue;
@@ -2005,8 +1986,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
          _ITER++;
          iterDepth++;
-
-         STR.push();
 
          ip += isGlobal ? 4 : 3;
          break;
@@ -2096,16 +2075,17 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          --_ITER;
          --iterDepth;
 
-         STR.rewind();
+         _STK--;
 
          iterStack[_ITER].mIsStringIter = false;
          break;
       }
 
       case OP_INVALID:
-
+         TORQUE_CASE_FALLTHROUGH;
       default:
          // error!
+         AssertISV(false, "Invalid OPCode Processed!");
          goto execFinished;
       }
    }
@@ -2162,8 +2142,8 @@ execFinished:
    decRefCount();
 
 #ifdef TORQUE_DEBUG
-   AssertFatal(!(STR.mStartStackSize > stackStart), "String stack not popped enough in script exec");
-   AssertFatal(!(STR.mStartStackSize < stackStart), "String stack popped too much in script exec");
+   AssertFatal(!(_STK > stackStart), "String stack not popped enough in script exec");
+   AssertFatal(!(_STK < stackStart), "String stack popped too much in script exec");
 #endif
 
    return std::move(returnValue);

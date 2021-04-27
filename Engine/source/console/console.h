@@ -174,14 +174,7 @@ class ConsoleValue
       }
    }
 
-public:
-   explicit ConsoleValue()
-   {
-      type = ConsoleValueType::cvSTEntry;
-      s = const_cast<char*>(StringTable->EmptyString());
-   }
-
-   ConsoleValue(ConsoleValue&& ref) noexcept
+   TORQUE_FORCEINLINE void _move(ConsoleValue&& ref) noexcept
    {
       type = ref.type;
 
@@ -205,6 +198,24 @@ public:
 
       ref.data = NULL;
       ref.setEmptyString();
+   }
+
+public:
+   ConsoleValue()
+   {
+      type = ConsoleValueType::cvSTEntry;
+      s = const_cast<char*>(StringTable->EmptyString());
+   }
+
+   ConsoleValue(ConsoleValue&& ref) noexcept
+   {
+      _move(std::move(ref));
+   }
+
+   TORQUE_FORCEINLINE ConsoleValue& operator=(ConsoleValue&& ref) noexcept
+   {
+      _move(std::move(ref));
+      return *this;
    }
 
    ConsoleValue(const ConsoleValue&) = delete;

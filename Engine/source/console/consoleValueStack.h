@@ -89,22 +89,10 @@ public:
       stack.pop_back();
    }
 
-   TORQUE_FORCEINLINE void pushInt(S64 value)
+   TORQUE_FORCEINLINE void push(ConsoleValue&& val)
    {
       Frame& frame = stack.last();
-      frame.values[frame.internalCounter++].setInt(value);
-   }
-
-   TORQUE_FORCEINLINE void pushFloat(F64 value)
-   {
-      Frame& frame = stack.last();
-      frame.values[frame.internalCounter++].setFloat(value);
-   }
-
-   TORQUE_FORCEINLINE void pushString(const char* value, S32 len)
-   {
-      Frame& frame = stack.last();
-      frame.values[frame.internalCounter++].setString(value, len);
+      frame.values[frame.internalCounter++] = std::move(val);
    }
 
    TORQUE_FORCEINLINE void argvc(StringTableEntry fn, S32& argc, ConsoleValue** argv)

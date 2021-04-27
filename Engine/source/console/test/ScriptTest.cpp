@@ -60,6 +60,60 @@ TEST(Script, Basic_Arithmetic)
    )");
 
    ASSERT_EQ(div.getInt(), 5);
+
+   ConsoleValue mod = RunScript(R"(
+         return 4 % 5;
+   )");
+
+   ASSERT_EQ(mod.getInt(), 4);
+
+   ConsoleValue add2 = RunScript(R"(
+         $a = 0;
+         $a += 2;
+         return $a;
+   )");
+
+   ASSERT_EQ(add2.getInt(), 2);
+
+   ConsoleValue sub2 = RunScript(R"(
+         $a = 0;
+         $a -= 2;
+         return $a;
+   )");
+
+   ASSERT_EQ(sub2.getInt(), -2);
+
+   ConsoleValue mult2 = RunScript(R"(
+         $a = 2;
+         $a *= 3;
+         return $a;
+   )");
+
+   ASSERT_EQ(mult2.getInt(), 6);
+
+   ConsoleValue div2 = RunScript(R"(
+         $a = 10;
+         $a /= 2;
+         return $a;
+   )");
+
+   ASSERT_EQ(div2.getInt(), 5);
+
+   ConsoleValue pp = RunScript(R"(
+         $a = 0;
+         $a++;
+         return $a;
+   )");
+
+   ASSERT_EQ(pp.getInt(), 1);
+
+   ConsoleValue mm = RunScript(R"(
+         $a = 2;
+         $a--;
+         return $a;
+   )");
+
+   ASSERT_EQ(mm.getInt(), 1);
 }
 
 TEST(Script, Complex_Arithmetic)
@@ -240,6 +294,20 @@ TEST(Script, Basic_Loop_Statements)
 
    ASSERT_STREQ(forValue.getString(), "aaa");
 
+   ConsoleValue forReverseLoop = RunScript(R"(
+         function t(%times) 
+         { 
+            %result = "";
+            for (%i = %times - 1; %i >= 0; %i--)
+               %result = %result @ "b";
+            return %result;
+         }
+
+         return t(3);
+   )");
+
+   ASSERT_STREQ(forReverseLoop.getString(), "bbb");
+
    ConsoleValue forIfValue = RunScript(R"(
          function t()
          {
@@ -402,6 +470,77 @@ TEST(Script, Basic_SimObject)
    )");
 
    ASSERT_STREQ(parentFn.getString(), "FooBar");
+
+   ConsoleValue grp = RunScript(R"(
+         new SimGroup(FudgeCollectorGroup)
+         {
+            theName = "fudge";
+
+            new SimObject(ChocolateFudge)
+            {
+               type = "Chocolate";
+            };
+            new SimObject(PeanutButterFudge)
+            {
+               type = "Peanut Butter";
+
+               field["a"] = "Yes";
+            };
+         };
+
+         return FudgeCollectorGroup.getId();
+   )");
+
+   SimGroup* simGroup = dynamic_cast<SimGroup*>(Sim::findObject(grp));
+   ASSERT_NE(simGroup, (SimGroup*)NULL);
+   ASSERT_EQ(simGroup->size(), 2);
+
+   simGroup->deleteObject();
+
+   ConsoleValue fieldTest = RunScript(R"(
+         function a()
+         {
+            %obj = new SimObject();
+            %obj.field = "A";
+            %obj.val[%obj.field] = "B";
+
+            %value = %obj.val["A"];
+            %obj.delete();
+            return %value;
+         }
+         return a();
+   )");
+
+   ASSERT_STREQ(fieldTest.getString(), "B");
+}
+
+TEST(Script, Internal_Name)
+{
+   ConsoleValue value = RunScript(R"(
+         function SimObject::_internalCall(%this)
+         {
+            return 5;
+         }
+
+         function a()
+         {
+            %grp = new SimGroup();
+            %obj = new SimObject()
+            {
+               internalName = "Yay";
+            };
+            %grp.add(%obj);
+
+            %val = %grp->Yay._internalCall();
+
+            %grp.delete();
+
+            return %val;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(value.getInt(), 5);
 }
 
 TEST(Script, Basic_Package)

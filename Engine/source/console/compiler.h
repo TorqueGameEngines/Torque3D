@@ -69,6 +69,7 @@ namespace Compiler
       OP_RETURN_FLT,
       OP_RETURN_UINT,
 
+
       OP_CMPEQ,
       OP_CMPGR,
       OP_CMPGE,
@@ -132,14 +133,7 @@ namespace Compiler
       OP_SAVEFIELD_FLT,
       OP_SAVEFIELD_STR,
 
-      OP_STR_TO_UINT,
-      OP_STR_TO_FLT,
-      OP_STR_TO_NONE,  // 60
-      OP_FLT_TO_UINT,
-      OP_FLT_TO_STR,
-      OP_UINT_TO_FLT,
-      OP_UINT_TO_STR,
-      OP_NUM_TO_NONE,
+      OP_POP_STK,
 
       OP_LOADIMMED_UINT,
       OP_LOADIMMED_FLT,
@@ -150,18 +144,14 @@ namespace Compiler
 
       OP_CALLFUNC,
 
-      OP_ADVANCE_STR,
       OP_ADVANCE_STR_APPENDCHAR,
-      OP_ADVANCE_STR_COMMA,
-      OP_ADVANCE_STR_NUL,
       OP_REWIND_STR,
-      OP_TERMINATE_REWIND_STR,  // 80
+      OP_TERMINATE_REWIND_STR,
+
       OP_COMPARE_STR,
 
-      OP_PUSH,          // String
-      OP_PUSH_UINT,     // Integer
-      OP_PUSH_FLT,      // Float
-      OP_PUSH_FRAME,    // Frame
+      OP_PUSH,
+      OP_PUSH_FRAME,
 
       OP_ASSERT,
       OP_BREAK,

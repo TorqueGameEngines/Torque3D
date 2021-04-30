@@ -459,6 +459,7 @@ GroundCover::GroundCover()
    mRandomSeed = 1;
 
    INIT_MATERIALASSET(Material);
+   mMaterialInst = NULL;
 
    mMatParams = NULL;
    mTypeRectsParam = NULL;

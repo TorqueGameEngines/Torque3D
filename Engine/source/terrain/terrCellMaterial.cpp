@@ -413,8 +413,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
          {
             features.addFeature(MFT_TerrainNormalMap, featureIndex);
 
-            normalMaps.last().set(mat->getNormalMap(),
-               &GFXNormalMapProfile, "TerrainCellMaterial::_initShader() - NormalMap");
+            normalMaps.last() = mat->getNormalMapResource();
 
             GFXFormat normalFmt = normalMaps.last().getFormat();
             if (normalFmt == GFXFormatBC3)

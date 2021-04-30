@@ -280,7 +280,7 @@ bool TerrainBlock::_setBaseTexSize( void *obj, const char *index, const char *da
    TerrainBlock *terrain = static_cast<TerrainBlock*>( obj );
 
    // NOTE: We're limiting the base texture size to 
-   // 2048 as anything greater in size becomes too
+   // 8192 as anything greater in size becomes too
    // large to generate for many cards.
    //
    // If you want to remove this limit feel free, but
@@ -288,7 +288,7 @@ bool TerrainBlock::_setBaseTexSize( void *obj, const char *index, const char *da
    // base texture with your installer.
    //
 
-   S32 texSize = mClamp( dAtoi( data ), 0, 2048 );
+   S32 texSize = mClamp( dAtoi( data ), 0, 8192);
    if ( terrain->mBaseTexSize != texSize )
    {
       terrain->mBaseTexSize = texSize;

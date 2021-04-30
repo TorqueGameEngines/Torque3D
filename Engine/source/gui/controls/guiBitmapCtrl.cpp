@@ -261,6 +261,13 @@ DefineEngineMethod( GuiBitmapCtrl, setBitmap, void, ( const char * fileRoot, boo
    object->setBitmap(filename, resize );
 }
 
+DefineEngineMethod(GuiBitmapCtrl, getBitmap, const char*, (),,
+   "Gets the current bitmap set for this control.\n\n"
+   "@hide")
+{
+   return object->getBitmap();
+}
+
 DefineEngineMethod( GuiBitmapCtrl, setNamedTexture, bool, (String namedtexture),,
    "@brief Set a texture as the image.\n\n"
    "@param namedtexture The name of the texture (NamedTexTarget).\n"

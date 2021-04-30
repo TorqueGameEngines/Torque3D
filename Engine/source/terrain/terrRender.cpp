@@ -98,8 +98,7 @@ void TerrainBlock::_updateMaterials()
 
       if (mat->getDiffuseMap() != StringTable->EmptyString())
       {
-         mBaseTextures[i].set(mat->getDiffuseMap(), &GFXStaticTextureSRGBProfile,
-            "TerrainBlock::_updateMaterials() - DiffuseMap");
+         mBaseTextures[i] = mat->getDiffuseMapResource();
       }
       else
          mBaseTextures[ i ] = GFXTexHandle();

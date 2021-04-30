@@ -490,23 +490,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       {
          S32 reg = code[ip + (2 + 6 + 1 + 1) + i];
          ConsoleValue& value = argv[i + 1];
-         switch (value.getType())
-         {
-         case ConsoleValueType::cvString:
-            gEvalState.setLocalStringVariable(reg, value.getString(), dStrlen(value.getString()));
-            break;
-         case ConsoleValueType::cvInteger:
-            gEvalState.setLocalIntVariable(reg, value.getInt());
-            break;
-         case ConsoleValueType::cvFloat:
-            gEvalState.setLocalFloatVariable(reg, value.getFloat());
-            break;
-         case ConsoleValueType::cvSTEntry:
-            gEvalState.setLocalStringTableEntryVariable(reg, value.getString());
-            break;
-         default:
-            AssertFatal(false, avar("Invalid local variable type. Type was: %i", value.getType()));
-         }
+         gEvalState.moveConsoleValue(reg, std::move(value));
       }
       ip = ip + fnArgc + (2 + 6 + 1 + 1);
       curFloatTable = functionFloats;

@@ -46,31 +46,21 @@
 extern StringStack STR;
 extern ConsoleValueStack<4096> gCallStack;
 
-S32 ConsoleValue::sBufferOffset = 0;
 char ConsoleValue::sConversionBuffer[ConversionBufferSize];
 
 void ConsoleValue::init()
 {
-   sBufferOffset = 0;
    dMemset(sConversionBuffer, '\0', ConversionBufferSize);
 }
 
 char* ConsoleValue::convertToBuffer() const
 {
-   sBufferOffset += StringSize;
-   if (sBufferOffset > ConversionBufferSize)
-   {
-      dMemset(sConversionBuffer, '\0', ConversionBufferSize);
-      sBufferOffset = 0;
-   }
-
-   char* offset = sConversionBuffer + sBufferOffset;
    if (type == ConsoleValueType::cvFloat)
-      dSprintf(offset, StringSize, "%.9g", f);
+      dSprintf(sConversionBuffer, ConversionBufferSize, "%.9g", f);
    else
-      dSprintf(offset, StringSize, "%lld", i);
+      dSprintf(sConversionBuffer, ConversionBufferSize, "%lld", i);
 
-   return offset;
+   return sConversionBuffer;
 }
 
 const char* ConsoleValue::getConsoleData() const

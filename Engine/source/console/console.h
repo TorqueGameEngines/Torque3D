@@ -149,12 +149,10 @@ class ConsoleValue
 
    enum Constants
    {
-      ConversionBufferSize = 1024,
-      StringSize = 16
+      ConversionBufferSize = 32
    };
 
    static char sConversionBuffer[ConversionBufferSize];
-   static S32 sBufferOffset;
 
    char* convertToBuffer() const;
 
@@ -314,6 +312,13 @@ public:
       dStrcpy(s, val, static_cast<dsize_t>(len) + 1);
    }
 
+   TORQUE_FORCEINLINE void setStringRef(const char* ref, S32 len)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvString;
+      s = const_cast<char*>(ref);
+   }
+
    TORQUE_FORCEINLINE void setBool(const bool val)
    {
       cleanupData();
@@ -361,7 +366,6 @@ public:
    }
 
    static void init();
-   static S32 getConstantBufferCount() { return (S32)ConversionBufferSize / StringSize; }
 };
 
 // Transparently converts ConsoleValue[] to const char**

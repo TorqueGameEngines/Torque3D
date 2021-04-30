@@ -57,6 +57,7 @@ enum EvalConstants
    MaxStackSize = 1024,
    FieldBufferSizeString = 2048,
    FieldBufferSizeNumeric = 128,
+   ConcatBufferInitialSize = 8192,
    MethodOnComponent = -2
 };
 
@@ -117,6 +118,23 @@ S32 _STK = 0;
 
 char curFieldArray[256];
 char prevFieldArray[256];
+
+const char* tsconcat(const char* strA, const char* strB, S32& outputLen)
+{
+   S32 lenA = dStrlen(strA);
+   S32 lenB = dStrlen(strB);
+
+   S32 len = lenA + lenB + 1;
+
+   char* concatBuffer = (char*)dMalloc(len);
+
+   concatBuffer[len - 1] = '\0';
+   memcpy(concatBuffer, strA, lenA);
+   memcpy(concatBuffer + lenA, strB, lenB);
+
+   outputLen = lenA + lenB;
+   return concatBuffer;
+}
 
 namespace Con
 {
@@ -1727,7 +1745,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             if (nsEntry->mFunctionOffset)
             {
-               // TODO: not make this strings only for returns.
                ConsoleValue returnFromFn = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage);
                stack[_STK + 1] = std::move(returnFromFn);
             }
@@ -1834,34 +1851,28 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_ADVANCE_STR_APPENDCHAR:
       {
-         // TODO: Create a better way to handle string concatination without
-         // heap allocating every time.
-
-         val = stack[_STK].getString();
-         dsize_t len = dStrlen(val) + 2;
-
          char buff[2];
          buff[0] = (char)code[ip++];
          buff[1] = '\0';
 
-         char* concat = new char[len];
-         dMemset(concat, 0, len);
-         dStrcat(concat, val, len);
-         dStrcat(concat, buff, len);
+         S32 len;
+         const char* concat = tsconcat(stack[_STK].getString(), buff, len);
 
-         stack[_STK].setString(concat);
-
-         delete[] concat;
-
+         stack[_STK].setStringRef(concat, len);
          break;
       }
 
       case OP_REWIND_STR:
          TORQUE_CASE_FALLTHROUGH;
       case OP_TERMINATE_REWIND_STR:
-         stack[_STK - 1].setString((String(stack[_STK - 1] + String(stack[_STK]))));
+      {
+         S32 len;
+         const char* concat = tsconcat(stack[_STK - 1].getString(), stack[_STK].getString(), len);
+
+         stack[_STK - 1].setStringRef(concat, len);
          _STK--;
          break;
+      }
 
       case OP_COMPARE_STR:
          stack[_STK - 1].setBool(!dStricmp(stack[_STK].getString(), stack[_STK - 1].getString()));

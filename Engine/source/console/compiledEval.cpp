@@ -1824,7 +1824,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // Optimization: If we're an integer, we can lookup the value by SimObjectId
             const ConsoleValue& simObjectLookupValue = callArgv[1];
             if (simObjectLookupValue.getType() == ConsoleValueType::cvInteger)
-               gEvalState.thisObject = Sim::findObject(static_cast<SimObjectId>(simObjectLookupValue.getInt()));
+               gEvalState.thisObject = Sim::findObject(static_cast<SimObjectId>(simObjectLookupValue.getFastInt()));
             else
             {
                SimObject *foundObject = Sim::findObject(simObjectLookupValue.getString());

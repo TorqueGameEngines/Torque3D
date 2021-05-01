@@ -379,7 +379,7 @@ bool TSStatic::onAdd()
 
 bool TSStatic::_createShape()
 {
-   mShapeAsset->getChangedSignal().notify(this, &TSStatic::_onAssetChanged);
+   //mShapeAsset->getChangedSignal().notify(this, &TSStatic::_onAssetChanged);
 
    // Cleanup before we create.
    mCollisionDetails.clear();
@@ -600,8 +600,8 @@ void TSStatic::onRemove()
    if (isClientObject())
       mCubeReflector.unregisterReflector();
 
-   if(!mShapeAsset.isNull())
-      mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
+   //if(!mShapeAsset.isNull())
+   //   mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
 
    Parent::onRemove();
 }

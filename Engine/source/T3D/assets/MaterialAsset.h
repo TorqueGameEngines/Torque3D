@@ -189,6 +189,7 @@ public: \
       }\
       else\
       {\
+         m##name##Asset = NULL;\
          if (MaterialAsset::getAssetByMaterialName(_in, &m##name##Asset))\
          {\
             m##name##AssetId = m##name##Asset.getAssetId();\
@@ -202,10 +203,9 @@ public: \
          {\
             m##name##Name = _in;\
             m##name##AssetId = StringTable->EmptyString();\
-            m##name##Asset = NULL;\
          }\
       }\
-      if (get##name() != StringTable->EmptyString())\
+      if (!m##name##Asset.isNull() && m##name##Asset->isAssetValid())\
       {\
          if (m##name && String(m##name##Asset->getMaterialDefinitionName()).equal(m##name->getName(), String::NoCase))\
             return false;\

@@ -288,6 +288,8 @@ DecalRoad::DecalRoad()
    mNetFlags.set(Ghostable);
 
    INIT_MATERIALASSET(Material);
+
+   mMaterialInst = nullptr;
 }
 
 DecalRoad::~DecalRoad()
@@ -1045,12 +1047,14 @@ bool DecalRoad::addNodeFromField( void *object, const char *index, const char *d
 
 void DecalRoad::_initMaterial()
 {
-   /*if (mMaterialAsset.notNull())
+   _setMaterial(getMaterial());
+
+   if (mMaterialAsset.notNull())
    {
-      if (mMatInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMatInst->getMaterial()->getName(), String::NoCase))
+      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
          return;
 
-      SAFE_DELETE(mMatInst);
+      SAFE_DELETE(mMaterialInst);
 
       Material* tMat = nullptr;
 
@@ -1060,15 +1064,13 @@ void DecalRoad::_initMaterial()
       mMaterial = tMat;
 
       if (mMaterial)
-         mMatInst = mMaterial->createMatInstance();
+         mMaterialInst = mMaterial->createMatInstance();
       else
-         mMatInst = MATMGR->createMatInstance("WarningMaterial");
+         mMaterialInst = MATMGR->createMatInstance("WarningMaterial");
 
-      if (!mMatInst)
+      if (!mMaterialInst)
          Con::errorf("DecalRoad::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
-   }*/
-
-   _setMaterial(getMaterial());
+   }
 
    if (!mMaterialInst)
       return;

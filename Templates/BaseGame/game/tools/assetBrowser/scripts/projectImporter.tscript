@@ -197,6 +197,14 @@ function beginShapeImport()
       %filename = fileName(%file);
       %fileExt = fileExt(%file);
       %filePath = filePath(%file);
+      
+      //Specific exclusions
+      if(endsWith(%filename, "cached.dts"))
+      {
+         %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+         continue;
+      }
+         
       if(isShapeFormat(%fileExt))
       {
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
@@ -365,7 +373,7 @@ function beginMaterialImport()
 function processMaterialIntoAsset(%matName, %file)
 {
    %filePath = filePath(%file);
-   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
    %modulePath = "data/" @ %moduleName;
       
    //test import config here for forcing type suffixes
@@ -447,7 +455,7 @@ function beginTerrainMaterialImport()
 function processTerrainMaterialIntoAsset(%matName, %file)
 {
    %filePath = filePath(%file);
-   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
    %modulePath = "data/" @ %moduleName;
       
    //test import config here for forcing type suffixes
@@ -650,8 +658,10 @@ function processGUIChildren(%gui)
 
 function processGUIntoAsset(%guiName, %file)
 {
+   warn("Processing GUI into asset: " @ %guiName @ ", file: " @ %file);
+   
    %filePath = filePath(%file);
-   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
    %modulePath = "data/" @ %moduleName;
       
    %assetName = %guiName;

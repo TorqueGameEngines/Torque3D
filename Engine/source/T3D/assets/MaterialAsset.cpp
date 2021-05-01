@@ -238,22 +238,7 @@ bool MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<Ma
 {
    AssetQuery* query = new AssetQuery();
    U32 foundCount = AssetDatabase.findAssetType(query, "MaterialAsset");
-   if (foundCount == 0)
-   {
-      //Didn't work, so have us fall back to a placeholder asset
-      matAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
-
-      if (!matAsset->isNull())
-      {
-         Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of material(%s) associated to asset failed, utilizing fallback asset", matName);
-         return false;
-      }
-
-      //That didn't work, so fail out
-      Con::warnf("MaterialAsset::getAssetByMaterialName -  Finding of material(%s) associated to asset failed with no fallback asset", matName);
-      return false;
-   }
-   else
+   if (foundCount != 0)
    {
       for (U32 i = 0; i < foundCount; i++)
       {
@@ -268,6 +253,17 @@ bool MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<Ma
       }
    }
 
+   //Didn't work, so have us fall back to a placeholder asset
+   matAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
+
+   if (!matAsset->isNull())
+   {
+      Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of material(%s) associated to asset failed, utilizing fallback asset", matName);
+      return false;
+   }
+
+   //That didn't work, so fail out
+   Con::warnf("MaterialAsset::getAssetByMaterialName -  Finding of material(%s) associated to asset failed with no fallback asset", matName);
    return false;
 }
 

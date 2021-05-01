@@ -1,0 +1,8 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="warnMat_mat"
+    scriptFile="@assetFile=warnMat_mat.tscript"
+    materialDefinitionName="warnMat_mat"
+    imageMap0="@asset=Core_Rendering:warnMat_image"
+    originalFilePath="D:/Gamedev/T3DMIT/PRs/azMacroLatestCompare/My Projects/azMacroLatestCompare/game/core/rendering/images/warnMat.dds" />

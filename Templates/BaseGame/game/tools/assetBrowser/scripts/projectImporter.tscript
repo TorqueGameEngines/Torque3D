@@ -1,0 +1,690 @@
+function ProjectImporter::beginProjectImport()
+{
+   toolsMessageBoxOKCancel("Begin Project Import", 
+      "This process will go through your game's directory and import any accepted files not associated to an asset.\n" @
+      "It will then go through datablocks, materials, guis and anything that actually uses files for game purposes and update those\n" @
+      "to use the newly imported assets. This process can take some time. Do you wish to continue?", "beginProjectImport();", "");
+}
+
+function beginProjectImport()
+{
+   error("===========================================");
+   error("Beginning Project Import");
+   error("===========================================");
+   
+   $ProjectImporter::assetQuery = new AssetQuery();
+   $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::persistMgr = new PersistenceManager();
+   
+   beginMaterialImport();
+   
+   beginTerrainMaterialImport();
+   
+   beginShapeImport();
+   
+   beginDatablockImport();
+   
+   beginGUIImport();
+   
+   beginTerrainImport();
+   
+   $ProjectImporter::assetQuery.delete();
+   $ProjectImporter::importer.delete();
+   $ProjectImporter::persistMgr.delete();
+   
+   error("===========================================");
+   error("Finished Project Import");
+   error("===========================================");
+   
+   AssetBrowser.refresh(); //update the AB just in case
+}
+
+function updateObjectLegacyField(%obj, %fieldName, %arrayIndex, %setObjDirty)
+{
+   %targetAssetField = %fieldName;
+   
+   if(%arrayIndex !$= "")
+      %fieldName = %fieldName @ "[" @ %arrayIndex @ "]";
+   
+   %fieldFile = %obj.getFieldValue(%fieldName);
+   if(%fieldFile !$= "")
+   {
+      %objName = %obj.getName();
+      if(%objName $= "")
+         %objName = %obj.getId();
+         
+      if(%setObjDirty $= "")
+         %setObjDirty = true;
+         
+      if(!isFile(%fieldFile))
+      {
+         //probably have to do some work here. First we need to see if it has an extension:
+         %ext = fileExt(%fieldFile);
+         if(%ext $= "")
+         {
+            %fieldType = %obj.getFieldType(%fieldName);
+            if(%fieldType $= "TypeImageFilename")
+            {
+               if(isFile(%fieldFile @ ".png"))
+                  %fieldFile = %fieldFile @ ".png";
+               else if(isFile(%fieldFile @ ".dds"))
+                  %fieldFile = %fieldFile @ ".dds";
+               else if(isFile(%fieldFile @ ".jpg"))
+                  %fieldFile = %fieldFile @ ".jpg";
+            }
+            else if(%fieldType $= "TypeShapeFilename")
+            {
+               if(isFile(%fieldFile @ ".dts"))
+                  %fieldFile = %fieldFile @ ".dts";
+               else if(isFile(%fieldFile @ ".dae"))
+                  %fieldFile = %fieldFile @ ".dae";
+               else if(isFile(%fieldFile @ ".fbx"))
+                  %fieldFile = %fieldFile @ ".fbx";
+            }
+         }
+         
+         %path = filePath(%fieldFile);
+         if(%path $= "")
+         {
+            %path = filePath(%obj.getFilename());
+            
+            if(isFile(%path @ "/" @ %fieldFile))
+               %fieldFile = %path @ "/" @ %fieldFile;
+         }
+      }
+         
+      warn(%objName @ " has " @ %fieldName @ " that contains the file: " @ %fieldFile);
+      warn("Attempting to find existing asset for field file data");
+      
+      $ProjectImporter::assetQuery.clear();
+         
+      %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %fieldFile);
+      if(%assetsFound == 0)
+      {
+         warn("No associated asset found. Attempting to import file.");
+         %assetId = $ProjectImporter::importer.autoImportFile(%fieldFile);  
+         
+         if(%assetId !$= "")
+         {
+            warn("File import successful, creating new asset: " @ %assetId);  
+         }
+         else
+         {
+            error("File import failed");  
+         }
+      }
+      else
+      {
+         %assetId = $ProjectImporter::assetQuery.getAsset(0);
+         warn("Associated asset found: " @ %assetId);
+      }
+         
+      %fallbackAsset = "";
+      %assetType = "";
+      if(%obj.getFieldType(%fieldName) $= "TypeShapeFilename")
+      {
+         %fallbackAsset = "Core_Rendering::noShape";
+         %assetType = "ShapeAsset";
+      }
+      else if(%obj.getFieldType(%fieldName) $= "TypeImageFilename")
+      {
+         %fallbackAsset = "Core_Rendering::noImage";
+         %assetType = "ImageAsset";
+      }
+      else if(%obj.getFieldType(%fieldName) $= "TypeMaterialName")
+      {
+         %fallbackAsset = "Core_Rendering::noMaterial";
+         %assetType = "MaterialAsset";
+      }
+      else if(%obj.getFieldType(%fieldName) $= "TypeSoundFilename")
+      {
+         %fallbackAsset = "Core_Rendering::noSound";
+         %assetType = "SoundAsset";
+      }
+      
+      if(%assetId !$= "" && %assetId !$= %fallbackAsset)
+      {
+         //Clear legacy field
+         %clearCommand = %obj @ "." @ %fieldName @ " = \"\";";
+         eval(%clearCommand);
+         
+         if(%arrayIndex $= "")
+            %targetAssetField = %targetAssetField @ "Asset";
+         else
+            %targetAssetField = %targetAssetField @ "Asset[" @ %arrayIndex @ "]";
+            
+         %updateCommand = %obj @ "." @ %targetAssetField @ " = \"" @ %assetId @ "\";";
+         eval(%updateCommand);
+         echo(%objName @ ": New " @ %assetType @ " asset on " @ %targetAssetField @ " : " @ %assetId );
+         
+         if(%setObjDirty)
+            $ProjectImporter::persistMgr.setDirty(%obj);
+            
+         return %assetId;
+      }
+      else
+      {
+         error("Failed to process " @ %assetType @ " for object " @ %objName @ " in field " @ %fieldName);
+      }
+   }
+   
+   return "";
+}
+
+//==============================================================================
+//Shape Importing
+//==============================================================================
+function beginShapeImport()
+{
+   error("===========================================");
+   error("Importing 3D Shape files");
+   error("===========================================");
+   //First, we need to go through and process all loose shape files. This will
+   //get us shape assets, material assets image, assets and animation assets.
+   %currentAddress = "data";
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      if(endsWith(%file, "cached.dts"))
+      {
+         %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+         continue;
+      }
+      
+      %filename = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(isShapeFormat(%fileExt))
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            //No asset found associated to this fileas far as we can determine, so time to import it
+            
+            warn("Importing 3D Shape file: " @ %file);
+            %assetId = $ProjectImporter::importer.autoImportFile(%file);  
+            
+            if(%assetId != "")
+            {
+               warn("Finished importing 3D Shape file, resulting in asset with an id of: " @ %assetId);
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   error("===========================================");
+   error("Finished Importing 3D Shape files");
+   error("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Image Importing
+//==============================================================================
+
+//==============================================================================
+
+//==============================================================================
+//Terrain Importing
+//==============================================================================
+function beginTerrainImport()
+{
+   error("===========================================");
+   error("Importing Terrain files");
+   error("===========================================");
+
+   %currentAddress = "data";
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(%fileExt $= ".ter")
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            warn("Importing Terrain file: " @ %file);
+            
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+            %modulePath = "data/" @ %moduleName;
+               
+            //test import config here for forcing type suffixes
+            %assetName = fileBase(%file);
+            
+            %assetPath = %filePath @ "/";
+            
+            %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+            
+            %asset = new TerrainAsset()
+            {
+               AssetName = %assetName;
+               versionId = 1;
+               terrainFile = %fileName;
+            };
+            
+            if(TamlWrite(%asset, %tamlpath))
+            {
+               %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+               AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+               
+               warn("Finished importing Terrain file, resulting in asset with an id of: " @ %moduleDef @ ":" @ %assetName);
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   error("===========================================");
+   error("Finished Importing 3D Shape files");
+   error("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Sound Importing
+//==============================================================================
+
+//==============================================================================
+
+//==============================================================================
+//Material Importing
+//==============================================================================
+function beginMaterialImport()
+{
+   error("===========================================");
+   error("Importing Materials");
+   error("===========================================");
+
+   foreach( %mat in MaterialSet )
+   {
+      %id = %mat.getId();
+      
+      %matName = %mat.getName();
+      %matFile = %mat.getFilename();
+      
+      if(%matFile $= "" || startsWith(%matFile, "core") || startsWith(%matFile, "tools"))
+         continue;
+      
+      %result = MaterialAsset::getAssetIdByMaterialName(%matName);
+      if(%result !$= "" && %result !$= "Core_Rendering:noMaterial")
+         continue; //don't re-process if we've already got an asset for it
+      
+      warn("Updating Material " @ %matName @ " to use assets instead of legacy fields");
+      
+      %maxLayers = 4;
+      
+      for(%i = 0; %i < %maxLayers; %i++)
+      {
+         //Process through the material now
+         %imageAssetId = updateObjectLegacyField(%mat, "diffuseMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "normalMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "ORMConfigMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "OverlayMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "LightMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "ToneMap", %i);
+
+         %imageAssetId = updateObjectLegacyField(%mat, "DetailMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "RoughMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "AOMap", %i);
+
+         %imageAssetId = updateObjectLegacyField(%mat, "MetalMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "GlowMap", %i);
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "DetailNormalMap", %i);
+      }
+      
+      processMaterialIntoAsset(%matName, %matFile);
+   }
+   
+   $ProjectImporter::persistMgr.saveDirty();
+
+   error("===========================================");
+   error("Finished Importing Materials");
+   error("===========================================");
+}
+
+function processMaterialIntoAsset(%matName, %file)
+{
+   %filePath = filePath(%file);
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %modulePath = "data/" @ %moduleName;
+      
+   //test import config here for forcing type suffixes
+   %assetName = %matName @ "_mat";
+   
+   %assetPath = %filePath @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %fileName = fileName(%file);
+   
+   %asset = new MaterialAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      scriptFile = %fileName;
+      materialDefinitionName = %matName;
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+	
+	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	
+	return %tamlpath;    
+}
+//==============================================================================
+
+//==============================================================================
+//TerrainMaterial Importing
+//==============================================================================
+function beginTerrainMaterialImport()
+{
+   error("===========================================");
+   error("Importing Terrain Materials");
+   error("===========================================");
+
+   foreach( %mat in TerrainMaterialSet )
+   {
+      %id = %mat.getId();
+      
+      %matName = %mat.getName();
+      %matFile = %mat.getFilename();
+      
+      if(%matFile $= "" || startsWith(%matFile, "core") || startsWith(%matFile, "tools"))
+         continue;
+      
+      %result = TerrainMaterialAsset::getAssetIdByMaterialName(%matName);
+      if(%result !$= "" && %result !$= "Core_Rendering:noMaterial")
+         continue; //don't re-process if we've already got an asset for it
+      
+      warn("Updating Terrain Material " @ %matName @ " to use assets instead of legacy fields");
+      
+      %maxLayers = 4;
+      
+      for(%i = 0; %i < %maxLayers; %i++)
+      {
+         //Process through the material now
+         %imageAssetId = updateObjectLegacyField(%mat, "diffuseMap");
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "normalMap");
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "ORMConfigMap");
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "detailMap");
+         
+         %imageAssetId = updateObjectLegacyField(%mat, "macroMap");
+      }
+      
+      processTerrainMaterialIntoAsset(%matName, %matFile);
+   }
+   
+   $ProjectImporter::persistMgr.saveDirty();
+
+   error("===========================================");
+   error("Finished Importing Terrain Materials");
+   error("===========================================");
+}
+
+function processTerrainMaterialIntoAsset(%matName, %file)
+{
+   %filePath = filePath(%file);
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %modulePath = "data/" @ %moduleName;
+      
+   //test import config here for forcing type suffixes
+   %assetName = %matName @ "_mat";
+   
+   %assetPath = %filePath @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %fileName = fileName(%file);
+   
+   %asset = new TerrainMaterialAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      scriptFile = %fileName;
+      materialDefinitionName = %matName;
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+	
+	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	
+	return %tamlpath;    
+}
+//==============================================================================
+
+//==============================================================================
+//Datablock Importing
+//==============================================================================
+function beginDatablockImport()
+{
+   error("===========================================");
+   error("Importing Datablock files");
+   error("===========================================");
+   
+      foreach( %datablock in DataBlockSet )
+   {
+      %unlistedFound = false;
+      %id = %datablock.getId();
+      
+      foreach( %obj in UnlistedDatablocks )
+         if( %obj.getId() == %id )
+         {
+            %unlistedFound = true;
+            break;
+         }
+   
+      if( %unlistedFound )
+         continue;
+         
+      %dbName = %datablock.getName();
+      
+      warn("Updating datablock " @ %dbName @ " to use assets instead of legacy fields");
+         
+      //Process through the datablocks now
+      if(%datablock.isInNamespaceHierarchy("ShapeBaseData"))
+      {
+         %shapeAssetId = updateObjectLegacyField(%datablock, "shapeFile");
+         if(%shapeAssetId $= "")
+         {
+            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeName");
+         }
+         
+         %debrisShapeAssetId = updateObjectLegacyField(%datablock, "debrisShapeName");
+         
+         if(%datablock.isInNamespaceHierarchy("PlayerData"))
+         {
+            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeNameFP", 0);
+            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeNameFP", 1);
+         }
+      }
+      else if(%datablock.isInNamespaceHierarchy("DebrisData") ||
+         %datablock.isInNamespaceHierarchy("PhysicsDebrisData")||
+         %datablock.isInNamespaceHierarchy("PhysicsShapeData") || 
+         %datablock.isInNamespaceHierarchy("WheeledVehicleTire"))
+      {
+         %shapeAssetId = updateObjectLegacyField(%datablock, "shapeFile");
+         if(%shapeAssetId $= "")
+         {
+            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeName");
+         }
+      }
+      else if(%datablock.isInNamespaceHierarchy("ExplosionData"))
+      {
+         %shapeAssetId = updateObjectLegacyField(%datablock, "explosionShape");
+      }
+      else if(%datablock.isInNamespaceHierarchy("ProjectileData"))
+      {
+         %shapeAssetId = updateObjectLegacyField(%datablock, "projectileShapeName");
+      }
+      else if(%datablock.isInNamespaceHierarchy("ShapeBaseImageData"))
+      {
+         %shapeAssetId = updateObjectLegacyField(%datablock, "shapeFile");
+         
+         %shapeFPAssetId = updateObjectLegacyField(%datablock, "shapeFileFP");
+      }
+      else if(%datablock.isInNamespaceHierarchy("LightFlareData"))
+      {
+         %imageAssetId = updateObjectLegacyField(%datablock, "flareTexture");
+      }
+      else if(%datablock.isInNamespaceHierarchy("DecalData"))
+      {
+         %materialAssetId = updateObjectLegacyField(%datablock, "material");
+      }
+   }
+   
+   $ProjectImporter::persistMgr.saveDirty();
+
+   error("===========================================");
+   error("Finished Importing Datablock files");
+   error("===========================================");
+
+}
+//==============================================================================
+
+//==============================================================================
+//Gui Importing
+//==============================================================================
+function beginGUIImport()
+{
+   error("===========================================");
+   error("Importing GUIs");
+   error("===========================================");
+
+   foreach( %gui in GuiGroup )
+   {
+      %id = %gui.getId();
+      
+      %guiName = %gui.getName();
+      if(%guiName $= "")
+         %guiName = %id;
+      
+      %guiFile = %gui.getFilename();
+      
+      if(%guiFile $= "" || startsWith(%guiFile, "core") || startsWith(%guiFile, "tools"))
+         continue;
+      
+      if(GUIAsset::getAssetIdByGUIName(%guiName) !$= "")
+         continue; //don't re-process if we've already got an asset for it
+      
+      warn("Updating GUI " @ %guiName @ " to use assets instead of legacy fields");
+      
+      $ProjectImporter::saveParent = false;
+         
+      //Process through the GUI now
+      if(%gui.isInNamespaceHierarchy("guiBitmapCtrl"))
+      {
+         %imageAssetId = updateObjectLegacyField(%gui, "bitmap", "", false);
+         if(%imageAssetId !$= "")
+         {
+            //successful import
+            $ProjectImporter::saveParent = true;
+            warn("Successfully processed imageAsset for GUI " @ %guiName);
+         }
+      }
+      
+      processGUIChildren(%gui);
+      
+      if($ProjectImporter::saveParent)
+      {
+         $ProjectImporter::persistMgr.setDirty(%gui);
+      }
+      
+      processGUIntoAsset(%guiName, %guiFile);
+   }
+   
+   $ProjectImporter::persistMgr.saveDirty();
+
+   error("===========================================");
+   error("Finished Importing GUIs");
+   error("===========================================");
+}
+
+function processGUIChildren(%gui)
+{
+   foreach( %guiChild in %gui )
+   {
+      %id = %guiChild.getId();
+      
+      %guiName = %guiChild.getName();
+      if(%guiName $= "")
+         %guiName = %id;
+         
+      //Process through the GUI now
+      if(%guiChild.isInNamespaceHierarchy("guiBitmapCtrl"))
+      {
+         %imageAssetId = updateObjectLegacyField(%guiChild, "bitmap", "", false);
+         if(%imageAssetId !$= "")
+         {
+            //successful import
+            $ProjectImporter::saveParent = true;
+            warn("Successfully processed imageAsset for GUI " @ %guiName);
+         }
+      }
+      
+      processGUIChildren(%guiChild);
+   }
+}
+
+function processGUIntoAsset(%guiName, %file)
+{
+   %filePath = filePath(%file);
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %modulePath = "data/" @ %moduleName;
+      
+   %assetName = %guiName;
+   
+   %assetPath = %filePath @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   
+   %asset = new GUIAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
+      guiFile = %assetName @ ".gui";
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+	
+	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	
+	return %tamlpath;    
+}
+//==============================================================================
+
+//==============================================================================
+//Level Importing
+//==============================================================================
+
+//==============================================================================
+
+//==============================================================================
+//Misc Script file conversion
+//==============================================================================
+
+//==============================================================================

@@ -365,6 +365,28 @@ public:
       return type >= ConsoleValueType::cvConsoleValueType;
    }
 
+   TORQUE_FORCEINLINE void setFastFloat(F64 flt)
+   {
+      type = ConsoleValueType::cvFloat;
+      f = flt;
+   }
+
+   TORQUE_FORCEINLINE F64 getFastFloat() const
+   {
+      return f;
+   }
+
+   TORQUE_FORCEINLINE void setFastInt(S64 flt)
+   {
+      type = ConsoleValueType::cvInteger;
+      i = flt;
+   }
+
+   TORQUE_FORCEINLINE S64 getFastInt() const
+   {
+      return i;
+   }
+
    static void init();
 };
 

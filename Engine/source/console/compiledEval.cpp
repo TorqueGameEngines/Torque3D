@@ -444,6 +444,172 @@ void ExprEvalState::setStringVariable(const char *val)
 
 //-----------------------------------------------------------------------------
 
+enum class FloatOperation
+{
+   Add,
+   Sub,
+   Mul,
+   Div,
+
+   LT,
+   LE,
+   GR,
+   GE,
+   EQ,
+   NE
+};
+
+template<FloatOperation Op>
+TORQUE_FORCEINLINE void doFloatMathOperation()
+{
+   ConsoleValue& a = stack[_STK];
+   ConsoleValue& b = stack[_STK - 1];
+
+   S32 fastIf = (a.getType() == ConsoleValueType::cvFloat) & (b.getType() == ConsoleValueType::cvFloat);
+   if (fastIf)
+   {
+      // Arithmetic
+      if constexpr (Op == FloatOperation::Add)
+         stack[_STK - 1].setFastFloat(a.getFastFloat() + b.getFastFloat());
+      if constexpr (Op == FloatOperation::Sub)
+         stack[_STK - 1].setFastFloat(a.getFastFloat() - b.getFastFloat());
+      if constexpr (Op == FloatOperation::Mul)
+         stack[_STK - 1].setFastFloat(a.getFastFloat() * b.getFastFloat());
+      if constexpr (Op == FloatOperation::Div)
+         stack[_STK - 1].setFastFloat(a.getFastFloat() / b.getFastFloat());
+
+      // Logical
+      if constexpr (Op == FloatOperation::LT)
+         stack[_STK - 1].setFastInt(a.getFastFloat() < b.getFastFloat());
+      if constexpr (Op == FloatOperation::LE)
+         stack[_STK - 1].setFastInt(a.getFastFloat() <= b.getFastFloat());
+      if constexpr (Op == FloatOperation::GR)
+         stack[_STK - 1].setFastInt(a.getFastFloat() > b.getFastFloat());
+      if constexpr (Op == FloatOperation::GE)
+         stack[_STK - 1].setFastInt(a.getFastFloat() >= b.getFastFloat());
+      if constexpr (Op == FloatOperation::EQ)
+         stack[_STK - 1].setFastInt(a.getFastFloat() == b.getFastFloat());
+      if constexpr (Op == FloatOperation::NE)
+         stack[_STK - 1].setFastInt(a.getFastFloat() != b.getFastFloat());
+
+      _STK--;
+   }
+   else
+   {
+      doSlowMathOp<Op>();
+   }
+}
+
+template<FloatOperation Op>
+TORQUE_NOINLINE void doSlowMathOp()
+{
+   ConsoleValue& a = stack[_STK];
+   ConsoleValue& b = stack[_STK - 1];
+
+   // Arithmetic
+   if constexpr (Op == FloatOperation::Add)
+      stack[_STK - 1].setFloat(a.getFloat() + b.getFloat());
+   else if constexpr (Op == FloatOperation::Sub)
+      stack[_STK - 1].setFloat(a.getFloat() - b.getFloat());
+   else if constexpr (Op == FloatOperation::Mul)
+      stack[_STK - 1].setFloat(a.getFloat() * b.getFloat());
+   else if constexpr (Op == FloatOperation::Div)
+      stack[_STK - 1].setFloat(a.getFloat() / b.getFloat());
+
+   // Logical
+   if constexpr (Op == FloatOperation::LT)
+      stack[_STK - 1].setFastInt(a.getFloat() < b.getFloat());
+   if constexpr (Op == FloatOperation::LE)
+      stack[_STK - 1].setFastInt(a.getFloat() <= b.getFloat());
+   if constexpr (Op == FloatOperation::GR)
+      stack[_STK - 1].setFastInt(a.getFloat() > b.getFloat());
+   if constexpr (Op == FloatOperation::GE)
+      stack[_STK - 1].setFastInt(a.getFloat() >= b.getFloat());
+   if constexpr (Op == FloatOperation::EQ)
+      stack[_STK - 1].setFastInt(a.getFloat() == b.getFloat());
+   if constexpr (Op == FloatOperation::NE)
+      stack[_STK - 1].setFastInt(a.getFloat() != b.getFloat());
+
+   _STK--;
+}
+
+//-----------------------------------------------------------------------------
+
+enum class IntegerOperation
+{
+   BitAnd,
+   BitOr,
+   Xor,
+   LShift,
+   RShift,
+
+   LogicalAnd,
+   LogicalOr
+};
+
+template<IntegerOperation Op>
+TORQUE_FORCEINLINE void doIntOperation()
+{
+   ConsoleValue& a = stack[_STK];
+   ConsoleValue& b = stack[_STK - 1];
+
+   if (a.isNumberType() && b.isNumberType())
+   {
+      // Bitwise Op
+      if constexpr (Op == IntegerOperation::BitAnd)
+         stack[_STK - 1].setFastInt(a.getFastInt() & b.getFastInt());
+      if constexpr (Op == IntegerOperation::BitOr)
+         stack[_STK - 1].setFastInt(a.getFastInt() | b.getFastInt());
+      if constexpr (Op == IntegerOperation::Xor)
+         stack[_STK - 1].setFastInt(a.getFastInt() ^ b.getFastInt());
+      if constexpr (Op == IntegerOperation::LShift)
+         stack[_STK - 1].setFastInt(a.getFastInt() << b.getFastInt());
+      if constexpr (Op == IntegerOperation::RShift)
+         stack[_STK - 1].setFastInt(a.getFastInt() >> b.getFastInt());
+
+      // Logical Op
+      if constexpr (Op == IntegerOperation::LogicalAnd)
+         stack[_STK - 1].setFastInt(a.getFastInt() && b.getFastInt());
+      if constexpr (Op == IntegerOperation::LogicalOr)
+         stack[_STK - 1].setFastInt(a.getFastInt() || b.getFastInt());
+
+      _STK--;
+   }
+   else
+   {
+      doSlowIntegerOp<Op>();
+   }
+}
+
+template<IntegerOperation Op>
+TORQUE_NOINLINE void doSlowIntegerOp()
+{
+   ConsoleValue& a = stack[_STK];
+   ConsoleValue& b = stack[_STK - 1];
+
+   // Bitwise Op
+   if constexpr (Op == IntegerOperation::BitAnd)
+      stack[_STK - 1].setInt(a.getInt() & b.getInt());
+   if constexpr (Op == IntegerOperation::BitOr)
+      stack[_STK - 1].setInt(a.getInt() | b.getInt());
+   if constexpr (Op == IntegerOperation::Xor)
+      stack[_STK - 1].setInt(a.getInt() ^ b.getInt());
+   if constexpr (Op == IntegerOperation::LShift)
+      stack[_STK - 1].setInt(a.getInt() << b.getInt());
+   if constexpr (Op == IntegerOperation::RShift)
+      stack[_STK - 1].setInt(a.getInt() >> b.getInt());
+
+   // Logical Op
+   if constexpr (Op == IntegerOperation::LogicalAnd)
+      stack[_STK - 1].setInt(a.getInt() && b.getInt());
+   if constexpr (Op == IntegerOperation::LogicalOr)
+      stack[_STK - 1].setInt(a.getInt() || b.getInt());
+
+   _STK--;
+}
+
+//-----------------------------------------------------------------------------
+
 U32 gExecCount = 0;
 ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace, U32 argc, ConsoleValue* argv, bool noCalls, StringTableEntry packageName, S32 setFrame)
 {
@@ -1151,56 +1317,39 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          goto execFinished;
 
       case OP_CMPEQ:
-         stack[_STK - 1].setInt(stack[_STK].getFloat() == stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::EQ>();
          break;
 
       case OP_CMPGR:
-         stack[_STK - 1].setInt(stack[_STK].getFloat() > stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::GR>();
          break;
 
       case OP_CMPGE:
-         stack[_STK - 1].setInt(stack[_STK].getFloat() >= stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::GE>();
          break;
 
       case OP_CMPLT:
-         stack[_STK - 1].setInt(stack[_STK].getFloat() < stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::LT>();
          break;
 
       case OP_CMPLE:
-         stack[_STK - 1].setInt(stack[_STK].getFloat() <= stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::LE>();
          break;
 
       case OP_CMPNE:
-         stack[_STK - 1].setInt(stack[_STK].getFloat() != stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::NE>();
          break;
 
       case OP_XOR:
-         stack[_STK - 1].setInt(stack[_STK].getInt() ^ stack[_STK - 1].getInt());
-         _STK--;
-         break;
-
-      case OP_MOD:
-         if (stack[_STK - 1].getInt() != 0)
-            stack[_STK - 1].setInt(stack[_STK].getInt() % stack[_STK - 1].getInt());
-         else
-            stack[_STK - 1].setInt(0);
-         _STK--;
+         doIntOperation<IntegerOperation::Xor>();
          break;
 
       case OP_BITAND:
-         stack[_STK - 1].setInt(stack[_STK].getInt() & stack[_STK - 1].getInt());
-         _STK--;
+         doIntOperation<IntegerOperation::BitAnd>();
          break;
 
       case OP_BITOR:
-         stack[_STK - 1].setInt(stack[_STK].getInt() | stack[_STK - 1].getInt());
-         _STK--;
+         doIntOperation<IntegerOperation::BitOr>();
          break;
 
       case OP_NOT:
@@ -1216,44 +1365,47 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SHR:
-         stack[_STK - 1].setInt(stack[_STK].getInt() >> stack[_STK - 1].getInt());
-         _STK--;
+         doIntOperation<IntegerOperation::RShift>();
          break;
 
       case OP_SHL:
-         stack[_STK - 1].setInt(stack[_STK].getInt() << stack[_STK - 1].getInt());
-         _STK--;
+         doIntOperation<IntegerOperation::LShift>();
          break;
 
       case OP_AND:
-         stack[_STK - 1].setInt(stack[_STK].getInt() && stack[_STK - 1].getInt());
-         _STK--;
+         doIntOperation<IntegerOperation::LogicalAnd>();
          break;
 
       case OP_OR:
-         stack[_STK - 1].setInt(stack[_STK].getInt() || stack[_STK - 1].getInt());
-         _STK--;
+         doIntOperation<IntegerOperation::LogicalOr>();
          break;
 
       case OP_ADD:
-         stack[_STK - 1].setFloat(stack[_STK].getFloat() + stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::Add>();
          break;
 
       case OP_SUB:
-         stack[_STK - 1].setFloat(stack[_STK].getFloat() - stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::Sub>();
          break;
 
       case OP_MUL:
-         stack[_STK - 1].setFloat(stack[_STK].getFloat() * stack[_STK - 1].getFloat());
-         _STK--;
+         doFloatMathOperation<FloatOperation::Mul>();
          break;
 
       case OP_DIV:
-         stack[_STK - 1].setFloat(stack[_STK].getFloat() / stack[_STK - 1].getFloat());
+         doFloatMathOperation<FloatOperation::Div>();
+         break;
+
+      case OP_MOD:
+      {
+         S64 divisor = stack[_STK - 1].getInt();
+         if (divisor != 0)
+            stack[_STK - 1].setInt(stack[_STK].getInt() % divisor);
+         else
+            stack[_STK - 1].setInt(0);
          _STK--;
          break;
+      }
 
       case OP_NEG:
          stack[_STK].setFloat(-stack[_STK].getFloat());

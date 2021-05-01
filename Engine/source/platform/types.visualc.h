@@ -105,6 +105,7 @@ typedef unsigned _int64 U64;
 #pragma warning(disable: 4291)
 
 #define TORQUE_FORCEINLINE __forceinline
+#define TORQUE_NOINLINE __declspec(noinline)
 
 #if __cplusplus >= 201703L
 #define TORQUE_CASE_FALLTHROUGH [[fallthrough]];

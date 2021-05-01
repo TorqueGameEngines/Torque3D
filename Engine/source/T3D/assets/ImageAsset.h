@@ -47,6 +47,8 @@
 
 #include "gui/editor/guiInspectorTypes.h"
 
+#include "sim/netConnection.h"
+
 #include <string>
 
 //-----------------------------------------------------------------------------
@@ -432,7 +434,7 @@ public: \
    {\
       if (!index) return false;\
       U32 idx = dAtoi(index);\
-      if (idx >= max)\
+      if (idx >= sm##name##Count)\
          return false;\
       bool ret = false;\
       className* object = static_cast<className*>(obj);\

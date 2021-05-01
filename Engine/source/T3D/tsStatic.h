@@ -163,8 +163,6 @@ protected:
    bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F& box, const SphereF&);
    void buildConvex(const Box3F& box, Convex* convex);
 
-   bool setShapeAsset(const StringTableEntry shapeAssetId);
-
    bool _createShape();
 
    void _updatePhysics();
@@ -193,15 +191,13 @@ protected:
 
    Convex* mConvexList;
 
-   StringTableEntry  mShapeName;
+   DECLARE_SHAPEASSET(TSStatic, Shape);
+   DECLARE_SHAPEASSET_NET_SETGET(TSStatic, Shape, AdvancedStaticOptionsMask);
+
    U32               mShapeHash;
-   Resource<TSShape> mShape;
    Vector<S32> mCollisionDetails;
    Vector<S32> mLOSDetails;
    TSShapeInstance* mShapeInstance;
-
-   AssetPtr<ShapeAsset> mShapeAsset;
-   StringTableEntry mShapeAssetId;
 
    NetStringHandle   mSkinNameHandle;
    String            mAppliedSkinName;
@@ -242,8 +238,6 @@ public:
    DECLARE_CONOBJECT(TSStatic);
    static void initPersistFields();
    static void consoleInit();
-   static bool _setShapeAsset(void* obj, const char* index, const char* data);
-   static bool _setShapeName(void* obj, const char* index, const char* data);
    static bool _setFieldSkin(void* object, const char* index, const char* data);
    static const char* _getFieldSkin(void* object, const char* data);
 
@@ -267,10 +261,6 @@ public:
    MeshType getCollisionType() const { return mCollisionType; }
 
    bool allowPlayerStep() const { return mAllowPlayerStep; }
-
-   Resource<TSShape> getShape() const { return mShape; }
-   StringTableEntry getShapeFileName() { return mShapeName; }
-   void setShapeFileName(StringTableEntry shapeName) { mShapeName = shapeName; }
 
    TSShapeInstance* getShapeInstance() const { return mShapeInstance; }
 

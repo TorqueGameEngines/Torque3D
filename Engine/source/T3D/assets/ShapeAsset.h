@@ -93,6 +93,8 @@ public:
       Extended
    };
 
+   static StringTableEntry smNoShapeAssetFallback;
+
    static const String mErrCodeStrings[ShapeAssetErrCode::Extended - Parent::Extended + 1];
 
    static U32 getAssetErrCode(AssetPtr<ShapeAsset> shapeAsset) { if (shapeAsset) return shapeAsset->mLoadedState; else return 0; }
@@ -106,6 +108,9 @@ public:
 
    ShapeAsset();
    virtual ~ShapeAsset();
+
+   /// Set up some global script interface stuff.
+   static void consoleInit();
 
    /// Engine.
    static void initPersistFields();
@@ -165,8 +170,6 @@ public:
 
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset);
-
-   static StringTableEntry getNoShapeAssetId() { return StringTable->insert("Core_Rendering:noshape"); }
 
 #ifdef TORQUE_TOOLS
    const char* generateCachedPreviewImage(S32 resolution);

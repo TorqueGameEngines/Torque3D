@@ -50,6 +50,10 @@
 
 //-----------------------------------------------------------------------------
 
+StringTableEntry ImageAsset::smNoImageAssetFallback(StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback")));
+
+//-----------------------------------------------------------------------------
+
 IMPLEMENT_CONOBJECT(ImageAsset);
 
 ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
@@ -134,6 +138,15 @@ ImageAsset::~ImageAsset()
 {
 }
 
+
+void ImageAsset::consoleInit()
+{
+   Parent::consoleInit();
+   Con::addVariable("$Core::NoImageAssetFallback", TypeString, &smNoImageAssetFallback,
+      "The assetId of the texture to display when the requested image asset is missing.\n"
+      "@ingroup GFX\n");
+}
+
 //-----------------------------------------------------------------------------
 
 void ImageAsset::initPersistFields()
@@ -158,8 +171,11 @@ bool ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAss
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
    if (foundAssetcount == 0)
    {
+
+      String dsfasdf = Con::getVariable("$Core::NoImageAssetFallback");
+
       //Didn't work, so have us fall back to a placeholder asset
-      imageAsset->setAssetId(StringTable->insert("Core_Rendering:missingTexture_image"));
+      imageAsset->setAssetId(ImageAsset::smNoImageAssetFallback);
 
       if (!imageAsset->isNull())
       {
@@ -191,7 +207,7 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    if (foundAssetcount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      imageAssetId = StringTable->insert("Core_Rendering:missingTexture_image");
+      imageAssetId = ImageAsset::smNoImageAssetFallback;
    }
    else
    {
@@ -212,9 +228,10 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
    }
    else
    {
+      String dsfasdf = Con::getVariable("$Core::NoImageAssetFallback");
+
       //Didn't work, so have us fall back to a placeholder asset
-      StringTableEntry noImageId = StringTable->insert("Core_Rendering:missingTexture_image");
-      imageAsset->setAssetId(noImageId);
+      imageAsset->setAssetId(ImageAsset::smNoImageAssetFallback);
 
       //handle fallback not being loaded itself
       if ((*imageAsset)->mLoadedState == BadFileReference)

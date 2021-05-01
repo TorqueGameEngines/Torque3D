@@ -307,7 +307,7 @@ bool TSStatic::_setShapeName(void* obj, const char* index, const char* data)
       //the TSStatic
       if (ts->setShapeAsset(assetId))
       {
-         if (assetId == StringTable->insert("Core_Rendering:noShape"))
+         if (assetId == ShapeAsset::smNoShapeAssetFallback)
          {
             ts->mShapeName = data;
             ts->mShapeAssetId = StringTable->EmptyString();
@@ -436,7 +436,7 @@ bool TSStatic::setShapeAsset(const StringTableEntry shapeAssetId)
    {
       //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
       //the TSStatic
-      if (mShapeAsset.getAssetId() != StringTable->insert("Core_Rendering:noshape"))
+      if (mShapeAsset.getAssetId() != ShapeAsset::smNoShapeAssetFallback)
       {
          mShapeName = StringTable->EmptyString();
 
@@ -1709,7 +1709,7 @@ void TSStatic::updateMaterials()
 
 void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != StringTable->insert("Core_Rendering:noShape"))
+   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != ShapeAsset::smNoShapeAssetFallback)
       usedAssetsList->push_back_unique(mShapeAsset->getAssetId());
 
 }

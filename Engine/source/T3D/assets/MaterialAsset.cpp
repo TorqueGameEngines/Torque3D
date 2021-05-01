@@ -43,6 +43,8 @@
 
 #include "T3D/assets/assetImporter.h"
 
+StringTableEntry MaterialAsset::smNoMaterialAssetFallback(StringTable->insert(Con::getVariable("$Core::NoMaterialAssetFallback")));
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(MaterialAsset);
@@ -136,6 +138,14 @@ MaterialAsset::~MaterialAsset()
 }
 
 //-----------------------------------------------------------------------------
+
+void MaterialAsset::consoleInit()
+{
+   Parent::consoleInit();
+   Con::addVariable("$Core::NoMaterialAssetFallback", TypeString, &smNoMaterialAssetFallback,
+      "The assetId of the material to display when the requested material asset is missing.\n"
+      "@ingroup GFX\n");
+}
 
 void MaterialAsset::initPersistFields()
 {
@@ -231,7 +241,7 @@ bool MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<Ma
    if (foundCount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      matAsset->setAssetId(StringTable->insert("Core_Rendering:noMaterial"));
+      matAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
 
       if (!matAsset->isNull())
       {
@@ -270,7 +280,7 @@ StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matNam
    if (foundCount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      materialAssetId = StringTable->insert("Core_Rendering:noMaterial");
+      materialAssetId = MaterialAsset::smNoMaterialAssetFallback;
    }
    else
    {
@@ -301,8 +311,7 @@ U32 MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset
    else
    {
       //Didn't work, so have us fall back to a placeholder asset
-      StringTableEntry noMaterialId = StringTable->insert("Core_Rendering:noMaterial");
-      materialAsset->setAssetId(noMaterialId);
+      materialAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
 
       if ((*materialAsset)->mLoadedState == BadFileReference)
          return AssetErrCode::BadFileReference;

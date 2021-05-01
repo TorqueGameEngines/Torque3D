@@ -9,6 +9,10 @@ function Core_Rendering::onCreate(%this)
    $Core::DefaultPrefilterCubemap = "core/rendering/images/default_prefilter.dds";
    $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";
    
+   $Core::NoImageAssetFallback = "Core_Rendering:missingTexture_image";
+   $Core::NoMaterialAssetFallback = "Core_Rendering:noMaterial";
+   $Core::NoShapeAssetFallback = "Core_Rendering:noShape";
+   
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
    $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");

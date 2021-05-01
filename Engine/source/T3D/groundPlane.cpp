@@ -592,7 +592,7 @@ void GroundPlane::generateGrid( U32 width, U32 height, F32 squareSize,
 
 void GroundPlane::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if (!mMaterialAsset.isNull() && mMaterialAsset->getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))
+   if (!mMaterialAsset.isNull() && mMaterialAsset->getAssetId() != MaterialAsset::smNoMaterialAssetFallback)
       usedAssetsList->push_back_unique(mMaterialAsset->getAssetId());
 
 }

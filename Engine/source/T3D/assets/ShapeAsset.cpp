@@ -50,6 +50,8 @@
 #include "ts/tsLastDetail.h"
 #endif
 
+StringTableEntry ShapeAsset::smNoShapeAssetFallback(StringTable->insert(Con::getVariable("$Core::NoShapeAssetFallback")));
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ShapeAsset);
@@ -133,6 +135,17 @@ ShapeAsset::ShapeAsset()
 
 ShapeAsset::~ShapeAsset()
 {
+}
+
+//-----------------------------------------------------------------------------
+
+void ShapeAsset::consoleInit()
+{
+   Parent::consoleInit();
+
+   Con::addVariable("$Core::NoShapeAssetFallback", TypeString, &smNoShapeAssetFallback,
+      "The assetId of the shape to display when the requested shape asset is missing.\n"
+      "@ingroup GFX\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -345,7 +358,7 @@ bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAss
    if (foundAssetcount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+      shapeAsset->setAssetId(ShapeAsset::smNoShapeAssetFallback);
 
       if (!shapeAsset->isNull())
       {
@@ -377,7 +390,7 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    if (foundAssetcount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      shapeAssetId = StringTable->insert("Core_Rendering:noshape");
+      shapeAssetId = ShapeAsset::smNoShapeAssetFallback;
    }
    else
    {
@@ -399,8 +412,7 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
    else
    {
       //Didn't work, so have us fall back to a placeholder asset
-      StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
-      shapeAsset->setAssetId(noShapeId);
+      shapeAsset->setAssetId(ShapeAsset::smNoShapeAssetFallback);
 
       //handle noshape not being loaded itself
       if ((*shapeAsset)->mLoadedState == BadFileReference)

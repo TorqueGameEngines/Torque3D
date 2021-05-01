@@ -72,6 +72,8 @@ public:
       ImageTypeCount = 11
    };
 
+   static StringTableEntry smNoImageAssetFallback;
+
 protected:
    StringTableEntry mImageFileName;
    StringTableEntry mImagePath;
@@ -87,6 +89,9 @@ protected:
 public:
    ImageAsset();
    virtual ~ImageAsset();
+
+   /// Set up some global script interface stuff.
+   static void consoleInit();
 
    /// Engine.
    static void initPersistFields();

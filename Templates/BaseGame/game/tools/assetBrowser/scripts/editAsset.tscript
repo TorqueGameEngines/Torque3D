@@ -143,6 +143,10 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    //Update the selection to immediately jump to the new asset
    AssetBrowser-->filterTree.clearSelection();
    %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
+
+   // TODO is this correct?
+   %assetType = %ModuleItem.getClassName();
+
    %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
    
    AssetBrowser-->filterTree.selectItem(%assetTypeId);
@@ -236,9 +240,9 @@ function moveAssetFile(%assetDef, %destinationPath)
    %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
    %assetFilename = fileName(%assetPath);
    
-   %newAssetPath = %destination @ "/" @ %assetFilename;
+   %newAssetPath = %destinationPath @ "/" @ %assetFilename;
    
-   %copiedSuccess = pathCopy(%assetPath, %destination @ "/" @ %assetFilename);
+   %copiedSuccess = pathCopy(%assetPath, %destinationPath @ "/" @ %assetFilename);
    
    if(!%copiedSuccess)
       return "";

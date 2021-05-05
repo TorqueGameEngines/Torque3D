@@ -871,6 +871,7 @@ function EditorToolsMenu::onSelectItem(%this, %id)
 {
    %toolName = getField( %this.item[%id], 2 );  
 
+   %paletteName = "";
    EditorGui.setEditor(%toolName, %paletteName  );
    
    %this.checkRadioItem(0, %this.getItemCount(), %id);

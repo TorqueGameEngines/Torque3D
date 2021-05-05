@@ -430,7 +430,7 @@ function DbgRemoveBreakPoint(%file, %line)
 function DbgDeleteSelectedBreak()
 {
    %selectedBreak = DebuggerBreakPoints.getSelectedId();
-   %rowNum = DebuggerBreakPoints.getRowNumById(%selectedWatch);
+   %rowNum = DebuggerBreakPoints.getRowNumById(%selectedBreak);
    if (%rowNum >= 0) {
       %breakText = DebuggerBreakPoints.getRowText(%rowNum);
       %breakLine = getField(%breakText, 0);

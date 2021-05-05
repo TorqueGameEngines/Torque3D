@@ -20,6 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-%forestBrushesGroup = new SimGroup( ForestBrushGroup )
+$forestBrushesGroup = new SimGroup( ForestBrushGroup )
 {
 };

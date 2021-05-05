@@ -1,4 +1,4 @@
-%paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
+$paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

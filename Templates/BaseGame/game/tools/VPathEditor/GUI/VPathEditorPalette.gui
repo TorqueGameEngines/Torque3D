@@ -3,7 +3,7 @@
 // Copyright (C) - Violent Tulip
 //-----------------------------------------------------------------------------
 
-%paletteId = new GuiControl(VPathEditorPalette) {
+$paletteId = new GuiControl(VPathEditorPalette) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

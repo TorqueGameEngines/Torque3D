@@ -364,6 +364,10 @@ function GenericUndoAction::learn(%this, %object)
    %oldFieldNames = %this.fieldNames[%object];
    %numNewFields = getWordCount(%newFieldNames);
    %numOldFields = getWordCount(%oldFieldNames);
+
+   %newNullFields = "";
+   %oldNullFields = "";
+
    // compare the old field list to the new field list.
    // if a field is on the old list that isn't on the new list, 
    // add it to the newNullFields list.

@@ -137,8 +137,7 @@ function EManageSFXParameters::onVisible( %this, %value )
    if( %value )
    {
       // Schedule an update.
-
-      %this.schedule( %SFX_PARAMETERS_UPDATE_INTERVAL, "update" );      
+      %this.schedule( $SFX_PARAMETERS_UPDATE_INTERVAL, "update" );      
    }
 }
 
@@ -770,7 +769,7 @@ function EManageSFXParameters::addParameter( %this, %parameter )
    
    // Set the fields to reflect the parameter's current settings.
    
-   %ctrl-->valueField.setValue( %paramter.value );
+   %ctrl-->valueField.setValue( %parameter.value );
    %ctrl-->rangeMinField.setText( %parameter.range.x );
    %ctrl-->rangeMaxField.setText( %parameter.range.y );
    %ctrl-->defaultField.setValue( %parameter.defaultValue );

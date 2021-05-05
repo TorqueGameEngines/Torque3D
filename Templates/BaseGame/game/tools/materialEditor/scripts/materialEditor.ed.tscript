@@ -1496,7 +1496,8 @@ function MaterialEditorGui::updateAnimationFlags(%this)
 {
    MaterialEditorGui.setMaterialDirty();
    %single = true;
-   
+   %flags = "";
+
    if(MaterialEditorPropertiesWindow-->RotationAnimation.getValue() == true)
    {
       if(%single == true)

@@ -1,4 +1,4 @@
-%paletteId = new GuiControl(ShapeEditorPalette,EditorGuiGroup) {
+$paletteId = new GuiControl(ShapeEditorPalette,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

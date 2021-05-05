@@ -136,7 +136,7 @@ function MeshRoadEditorGui::editNodeDetails( %this )
 
 function MeshRoadEditorGui::onBrowseClicked( %this )
 {
-   //%filename = RETextureFileCtrl.getText();
+   %filename = RETextureFileCtrl.getText();
 
    %dlg = new OpenFileDialog()
    {

@@ -233,7 +233,7 @@ function GuiInspectorVariableGroup::buildOptionsSettingField(%this, %fieldName, 
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
-      tooltip = %tooltip;
+      tooltip = "";//%tooltip;
       text = %fieldDefaultVal;
       hovertime = "1000";
       ownerObject = %ownerObj;
@@ -492,7 +492,8 @@ function ESettingsWindow::getAssetManagementSettings(%this)
 function ESettingsWindow::getAssetEditingSettings(%this)
 {
    ImportAssetWindow::reloadImportOptionConfigs();
-   
+   %formattedConfigList = "";
+
    for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
    {
       %configName = ImportAssetWindow.importConfigsList.getKey(%i);

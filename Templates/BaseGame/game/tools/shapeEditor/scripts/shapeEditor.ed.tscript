@@ -1439,6 +1439,8 @@ function ShapeEdPropWindow::update_onSequenceBlendChanged( %this, %seqName, %ble
    %proxyName = ShapeEditor.getProxyName( %seqName );
    if ( ShapeEditor.shape.getSequenceIndex( %proxyName ) != -1 )
    {
+      //TODO
+      %oldBlend = false;
       if ( %blend && %oldBlend )
          ShapeEditor.shape.setSequenceBlend( %proxyName, false, %oldBlendSeq, %oldBlendFrame );
       ShapeEditor.shape.setSequenceBlend( %proxyName, %blend, %blendSeq, %blendFrame );
@@ -2217,7 +2219,7 @@ function ShapeEdTriggerList::updateItem( %this, %oldFrame, %oldState, %frame, %s
       if ( %frame != %oldFrame )
       {
          %pos = ShapeEdAnimWindow.getTimelineBitmapPos( ShapeEdAnimWindow-->seqIn.getText() + %frame, 2 );
-         eval( "%ctrl = ShapeEdAnimWindow-->trigger" @ %updatedId @ ";" );
+         %ctrl = eval( "return ShapeEdAnimWindow-->trigger" @ %updatedId @ ";" );
          %ctrl.position = %pos SPC "0";
       }
    }

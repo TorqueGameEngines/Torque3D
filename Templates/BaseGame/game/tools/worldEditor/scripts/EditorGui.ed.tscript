@@ -399,7 +399,7 @@ function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %bitma
          Visible = "1";
          Command = "EditorGui.setEditor(" @ %pluginName @ ");";
          tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = %tooltip;
+         ToolTip = "";// %tooltip;
          hovertime = "750";
          bitmap = %bitmap;
          buttonType = "RadioButton";

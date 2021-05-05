@@ -1,4 +1,4 @@
-%paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
+$paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

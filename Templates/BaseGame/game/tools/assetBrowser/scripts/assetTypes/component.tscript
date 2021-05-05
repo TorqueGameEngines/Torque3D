@@ -110,7 +110,7 @@ function AssetBrowser::renameComponentAsset(%this, %assetDef, %newAssetId, %orig
          %line = %file.readLine();
          %line = trim( %line );
          
-         %editedFileContents = %editedFileContents @ strreplace(%line, %originalAssetName, %newName) @ "\n";
+         %editedFileContents = %editedFileContents @ strreplace(%line, %originalName, %newName) @ "\n";
       }
       
       %file.close();

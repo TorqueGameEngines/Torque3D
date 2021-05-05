@@ -86,6 +86,9 @@ function AssetBrowser::editStateMachineAsset(%this, %assetDef)
 
 function AssetBrowser::duplicateStateMachineAsset(%this, %assetDef)
 {
+   // TODO:
+   %targetModule = "";
+
    //Check if we have a target module, if not we need to select one
    if(%targetModule $= "")
    {

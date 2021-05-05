@@ -1,4 +1,4 @@
-%paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
+$paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

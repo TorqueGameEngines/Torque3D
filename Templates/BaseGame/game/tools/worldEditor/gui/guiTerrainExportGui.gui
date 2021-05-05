@@ -288,6 +288,9 @@ function TerrainExportGui::selectFolder( %this )
 
 function TerrainExportGui::doOpenDialog( %this, %filter, %callback )
 {
+   // TODO
+   %currentFile = "";
+
    %dlg = new OpenFolderDialog()
    {
       Title = "Select Export Folder";

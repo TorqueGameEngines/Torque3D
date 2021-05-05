@@ -159,6 +159,9 @@ function QuickEditComponentList::onHotTrackItem( %this, %itemID )
       {
          %name = getField(%componentObj.getComponentField(%i), 0);
 
+         // TODO:
+         %description = "";
+
          SuperTooltipDlg.addParam(%name, %description @ "\n");
       }
       %position = %this.getGlobalPosition();

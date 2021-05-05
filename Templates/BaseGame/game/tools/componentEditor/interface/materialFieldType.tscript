@@ -9,6 +9,13 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
    if(%currentMaterial $= "" || %currentMaterial == 0)
 	  %currentMaterial = %fieldDefaultVal;
       
+   // TODO?
+   %matName = "";
+   %component = "";
+   %material = "";
+   %accessor = "";
+   %precision = "";
+
    %container = new GuiControl() {
       canSaveDynamicFields = "0";
       Profile = "EditorContainerProfile";
@@ -20,7 +27,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
       canSave = "0";
       Visible = "1";
       hovertime = "100";
-      tooltip = %tooltip;
+      tooltip = "";// %tooltip;
       tooltipProfile = "EditorToolTipProfile";
    };
 
@@ -35,7 +42,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
       canSave = "0";
       Visible = "1";
       hovertime = "100";
-      tooltip = %tooltip;
+      tooltip = ""; //%tooltip;
       tooltipProfile = "EditorToolTipProfile";
       text = %fieldName;
       maxLength = "1024";
@@ -57,7 +64,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
          text = %currentMaterial;
       };
    };
-   
+
    %previewButton = new GuiBitmapButtonCtrl(){
       internalName = %matName;
       HorizSizing = "right";
@@ -121,7 +128,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
       canSave = "0";
       Visible = "1";
       hovertime = "100";
-      tooltip = %tooltip;
+      tooltip = ""; //%tooltip;
       tooltipProfile = "EditorToolTipProfile";
       text = "Mapped to:" SPC %material.mapTo;
       maxLength = "1024";
@@ -140,7 +147,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
       canSave = "0";
       Visible = "1";
       hovertime = "100";
-      tooltip = %tooltip;
+      tooltip = "";// %tooltip;
       tooltipProfile = "EditorToolTipProfile";
       maxLength = "1024";
       historySize = "0";

@@ -1,4 +1,4 @@
-%paletteId = new GuiControl(NavEditorPalette,EditorGuiGroup) {
+$paletteId = new GuiControl(NavEditorPalette,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

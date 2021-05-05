@@ -242,6 +242,8 @@ function AssetBrowser::selectAsset( %this, %asset )
       //eval("materialEd_previewMaterial." @ %propertyField @ " = " @ %value @ ";");
       if( AssetBrowser.returnType $= "name" )
       {
+         // TODO!
+         %name = "";
          eval( "" @ AssetBrowser.selectCallback @ "(" @ %name  @ ");");
       }
       else
@@ -663,6 +665,7 @@ function AssetBrowser::loadDirectories( %this )
    //Remove any modules that have no assets if we have that filter on
    if(%this.onlyShowModulesWithAssets)
    {
+      %modulesList = ModuleDatabase.findModules();
       for(%i=0; %i < getWordCount(%modulesList); %i++)
       {
          %moduleName = getWord(%modulesList, %i).ModuleId;
@@ -905,6 +908,8 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
    if ( %name $= "" )
       %name = %class;
       
+   // TODO
+   %group = "";   
    if ( %this.currentCreatorGroup !$= "" && %group $= "" )
       %group = %this.currentCreatorGroup;
    
@@ -1048,6 +1053,13 @@ function AssetBrowser::toggleTagFilterPopup(%this)
 		//now, add the asset's category
 		%assetType = AssetDatabase.getAssetCategory(%assetId);
 		
+      // TODO?
+      %text = "";
+      %var = "";
+      %cmd = "";
+      %textLength = strlen(%text);
+      // end todo
+
 		%checkBox = new GuiCheckBoxCtrl()
 		{
 			canSaveDynamicFields = "0";
@@ -1108,6 +1120,9 @@ function AssetBrowser::reImportAsset(%this)
          //if(%assetType $= "ImageAsset")
          //   %filters = "";
             
+         //TODO
+         %currentFile = "";
+
          %dlg = new OpenFileDialog()
          {
             Filters = "(All Files (*.*)|*.*|";
@@ -1412,10 +1427,13 @@ function AssetBrowser::doRebuildAssetArray(%this)
    AssetBrowser-->assetList.deleteAllObjects();
    AssetPreviewArray.empty();
 
+   // uhh?? I just added global schenanagins here to make this work
+   %assetArray = $AssetBrowser::AssetArray;
    if(isObject(%assetArray))
       %assetArray.delete();
       
    %assetArray = new ArrayObject();
+   $AssetBrowser::AssetArray = %assetArray;
    
    //First, Query for our assets
    %assetQuery = new AssetQuery();

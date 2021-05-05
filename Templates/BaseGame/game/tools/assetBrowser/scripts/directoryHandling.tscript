@@ -325,7 +325,7 @@ function directoryHandler::copyFolder(%this, %fromFolder, %toFolder)
       if(!%success)
          error("copyProjectFolder() - failed to copy file: " @ %file);
       
-      %file = findNextFileMultiExpr( %fullPath @ "/*.*" );
+      %file = findNextFileMultiExpr( %fromFolder @ "/*.*" );
    }
    
    //do sub directories

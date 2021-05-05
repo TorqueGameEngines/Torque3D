@@ -22,7 +22,7 @@ function VDirectorGroup::PopulateBuildStack( %this, %stack )
 
 function VDirectorGroup::ResolveBuildStack( %this, %stack )
 {
-    Parent::ResolveBuildStack( %this, %stack, %groupObject );
+    Parent::ResolveBuildStack( %this, %stack );
     
     // Find the Track Toggle.
     %directorTrackCheckBox = %stack.findObjectByInternalName( "DirectorTrackToggle", true );

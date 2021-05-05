@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ScriptEditorDlg,EditorGuiGroup) {
+$guiContent = new GuiControl(ScriptEditorDlg,EditorGuiGroup) {
    isContainer = "1";
    Profile = "ToolsGuiDefaultNonModalProfile";
    HorizSizing = "width";

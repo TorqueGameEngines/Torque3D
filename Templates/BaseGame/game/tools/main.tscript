@@ -252,7 +252,7 @@ function EditorCreateFakeGameSession(%fileName)
    
    $Game::MissionGroup = "MissionGroup";
 
-   exec(%file);
+   exec(%fileName);
 }
 
 function fastLoadWorldEdit(%val)

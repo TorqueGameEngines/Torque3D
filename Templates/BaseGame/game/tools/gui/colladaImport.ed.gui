@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ColladaImportDlg,EditorGuiGroup) {
+$guiContent = new GuiControl(ColladaImportDlg,EditorGuiGroup) {
    isContainer = "1";
    Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "width";
@@ -1754,8 +1754,8 @@ function convertColladaModels(%pattern)
 
 function showImportDialog(%shapePath, %cmd)
 {
-   %this.path = %shapePath;
-   %this.cmd = %cmd;
+   ColladaImportDlg.path = %shapePath;
+   ColladaImportDlg.cmd = %cmd;
 
    if ( fileExt(%shapePath) $= ".dts" || fileExt(%shapePath) $= ".dsq" 
       || fileExt(%shapePath) $= ".dae" || fileExt(%shapePath) $= ".kmz" )

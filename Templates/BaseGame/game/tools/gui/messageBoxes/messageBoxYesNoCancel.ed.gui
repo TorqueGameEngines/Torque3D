@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(toolsMessageBoxYesNoCancelDlg) {
+$guiContent = new GuiControl(toolsMessageBoxYesNoCancelDlg) {
    canSaveDynamicFields = "0";
    Profile = "GuiOverlayProfile";
    HorizSizing = "width";

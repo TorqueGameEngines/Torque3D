@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiContainer(NewEditorGui) {
+$guiContent = new GuiContainer(NewEditorGui) {
    margin = "0 0 0 0";
    padding = "0 0 0 0";
    anchorTop = "1";

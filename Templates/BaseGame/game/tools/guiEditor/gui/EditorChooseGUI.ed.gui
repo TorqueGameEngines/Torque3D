@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiChunkedBitmapCtrl(EditorChooseGUI, EditorGuiGroup) {
+$guiContent = new GuiChunkedBitmapCtrl(EditorChooseGUI, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

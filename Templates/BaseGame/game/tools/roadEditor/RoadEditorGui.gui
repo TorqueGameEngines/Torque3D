@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiRoadEditorCtrl(RoadEditorGui) {
+$guiContent = new GuiRoadEditorCtrl(RoadEditorGui) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

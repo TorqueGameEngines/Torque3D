@@ -101,7 +101,7 @@ function showMetics(%var)
 
 GlobalActionMap.bind(keyboard, "ctrl F2", showMetics);
 
-%guiContent = new GuiControl(FrameOverlayGui) {
+$guiContent = new GuiControl(FrameOverlayGui) {
 	profile = "GuiModelessDialogProfile";
 	horizSizing = "right";
 	vertSizing = "bottom";

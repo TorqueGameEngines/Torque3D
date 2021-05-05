@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
+$guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
    displayMode = "Dropper"; // this makes the background visible
    actionOnMove = "1";
    position = "0 0";

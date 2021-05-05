@@ -292,7 +292,7 @@ public:
 
    TORQUE_FORCEINLINE void setString(const char* val)
    {
-      setString(val, dStrlen(val));
+      setString(val, val != NULL ? dStrlen(val) : 0);
    }
 
    TORQUE_FORCEINLINE void setString(const char* val, S32 len)

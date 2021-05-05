@@ -1,4 +1,4 @@
-%guiContent = new GuiControl(RoadEditorToolbar) {
+$guiContent = new GuiControl(RoadEditorToolbar) {
    canSaveDynamicFields = "0";
    internalName = "RoadEditorToolbar";
    Enabled = "1";

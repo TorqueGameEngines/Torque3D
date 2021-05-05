@@ -3,7 +3,7 @@
 // Copyright (C) - Violent Tulip
 //-----------------------------------------------------------------------------
 
-%guiContent = new GuiControl(VPathEditorToolbar)
+$guiContent = new GuiControl(VPathEditorToolbar)
 {
     canSaveDynamicFields = "0";
     internalName = "VPathEditorToolbar";

@@ -3,7 +3,7 @@
 // Copyright (C) GarageGames.com, Inc.
 //---------------------------------------------------------------------------------------------
 
-%guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
+$guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    isContainer = "1";
    Profile = "ToolsGuiDefaultProfile";

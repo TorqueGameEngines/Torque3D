@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---  
-%guiContent = new GuiControl(ProceduralTerrainPainterGui) {  
+$guiContent = new GuiControl(ProceduralTerrainPainterGui) {  
    canSaveDynamicFields = "0";  
    isContainer = "1";  
    Profile = "ToolsGuiDefaultProfile";  

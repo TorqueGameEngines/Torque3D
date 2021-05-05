@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
+$guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "MatEdPropertiesWindowContainer";
    Enabled = "1";

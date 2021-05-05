@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiContainer(EWToolsToolbar) {
+$guiContent = new GuiContainer(EWToolsToolbar) {
    canSaveDynamicFields = "0";
    Enabled = "0";
    internalName = "ToolsToolbar";

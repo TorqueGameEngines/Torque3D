@@ -20,7 +20,7 @@ $PE_guielement_pos_colorpicker = "158 0";
 $PE_guielement_ext_colorpicker = "18 18";
 
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiWindowCollapseCtrl(PE_Window) {
+$guiContent = new GuiWindowCollapseCtrl(PE_Window) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

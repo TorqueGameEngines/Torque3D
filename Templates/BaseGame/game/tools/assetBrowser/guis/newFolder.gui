@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(AssetBrowser_newFolder) {
+$guiContent = new GuiControl(AssetBrowser_newFolder) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 2";

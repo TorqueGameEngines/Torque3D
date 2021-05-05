@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
+$guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
    canSaveDynamicFields = "0";
    isContainer = "1";
    Profile = "ToolsGuiToolbarWindowProfile";

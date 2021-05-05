@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(TerrainExportGui, EditorGuiGroup) {
+$guiContent = new GuiControl(TerrainExportGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Profile = "ToolsGuiOverlayProfile";
    Enabled = "1";

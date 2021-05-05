@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(GameObjectCreator) {
+$guiContent = new GuiControl(GameObjectCreator) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 2";

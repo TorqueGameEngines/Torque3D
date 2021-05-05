@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(TimeAdjustGui, EditorGuiGroup) {
+$guiContent = new GuiControl(TimeAdjustGui, EditorGuiGroup) {
    isContainer = "1";
    Profile = "ToolsGuiModelessDialogProfile";
    HorizSizing = "right";

@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
+$guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

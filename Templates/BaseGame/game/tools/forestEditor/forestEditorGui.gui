@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
+$guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
    renderMissionArea = "0";
    missionAreaFillColor = "255 0 0 20";
    missionAreaFrameColor = "255 0 0 128";

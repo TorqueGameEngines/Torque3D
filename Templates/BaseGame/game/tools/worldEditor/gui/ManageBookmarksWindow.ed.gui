@@ -1,4 +1,4 @@
-%guiContent = new GuiControl(ManageBookmarksContainer, EditorGuiGroup) {
+$guiContent = new GuiControl(ManageBookmarksContainer, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

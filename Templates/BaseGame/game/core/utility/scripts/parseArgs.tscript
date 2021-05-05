@@ -67,28 +67,28 @@ function parseArgs()
             $isDedicated = true;
             $Server::Dedicated = true;
             enableWinConsole(true);
-            $argUsed[%i]++;
+            $argUsed[$i]++;
             
                   //--------------------
          case "-mission":
-            $argUsed[%i]++;
+            $argUsed[$i]++;
             if ($hasNextArg) 
             {
                $missionArg = $nextArg;
-               $argUsed[%i+1]++;
-               %i++;
+               $argUsed[$i+1]++;
+               $i++;
             }
             else
                error("Error: Missing Command Line argument. Usage: -mission <filename>");
 
          //--------------------
          case "-connect":
-            $argUsed[%i]++;
+            $argUsed[$i]++;
             if ($hasNextArg) 
             {
                $JoinGameAddress = $nextArg;
-               $argUsed[%i+1]++;
-               %i++;
+               $argUsed[$i+1]++;
+               $i++;
             }
             else
                error("Error: Missing Command Line argument. Usage: -connect <ip_address>");
@@ -271,9 +271,9 @@ function parseArgs()
                {
                   $levelToLoad = $nextArg @ " ";
                   
-                  for(%i = $i + 2; %i < $Game::argc; %i++)
+                  for(%j = $i + 2; %j < $Game::argc; %j++)
                   {
-                     $arg = $Game::argv[%i];
+                     $arg = $Game::argv[%j];
                      %hasExt = strpos($arg, ".mis");
                      
                      if(%hasExt == -1)
@@ -329,30 +329,30 @@ function parseArgs()
             
          case "-fullscreen":
             $cliFullscreen = true;
-            $argUsed[%i]++;
+            $argUsed[$i]++;
 
          case "-windowed":
             $cliFullscreen = false;
-            $argUsed[%i]++;
+            $argUsed[$i]++;
 
          case "-openGL":
             $pref::Video::displayDevice = "OpenGL";
-            $argUsed[%i]++;
+            $argUsed[$i]++;
 
          case "-directX":
             $pref::Video::displayDevice = "D3D";
-            $argUsed[%i]++;
+            $argUsed[$i]++;
 
          case "-autoVideo":
             $pref::Video::displayDevice = "";
-            $argUsed[%i]++;
+            $argUsed[$i]++;
 
          case "-prefs":
-            $argUsed[%i]++;
+            $argUsed[$i]++;
             if ($hasNextArg) {
                exec($nextArg, true, true);
-               $argUsed[%i+1]++;
-               %i++;
+               $argUsed[$i+1]++;
+               $i++;
             }
             else
                error("Error: Missing Command Line argument. Usage: -prefs <path/script." @ $TorqueScriptFileExtension @ ">");

@@ -1,7 +1,7 @@
 exec( "tools/gui/profiles.ed.tscript" );
 
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
+$guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    bitmap = "data/ui/images/background-dark.png";
    useVariable = "0";
    tile = "0";

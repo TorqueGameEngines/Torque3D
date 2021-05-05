@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GameTSCtrl(PlayGui) {
+$guiContent = new GameTSCtrl(PlayGui) {
       cameraZRot = "0";
       forceFOV = "0";
       reflectPriority = "1";

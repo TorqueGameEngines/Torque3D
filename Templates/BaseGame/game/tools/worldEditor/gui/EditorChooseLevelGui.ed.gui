@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiContainer(EditorChooseLevelGui, EditorGuiGroup) {
+$guiContent = new GuiContainer(EditorChooseLevelGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";
@@ -34,7 +34,7 @@
    };
 };
 
-%guiContent = new GuiContainer(EditorChooseLevelContainer, EditorGuiGroup) {
+$guiContent = new GuiContainer(EditorChooseLevelContainer, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

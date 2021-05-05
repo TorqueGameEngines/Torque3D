@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
+$guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "TerrainEditToolbar";
    Enabled = "1";

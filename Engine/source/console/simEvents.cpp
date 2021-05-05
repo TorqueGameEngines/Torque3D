@@ -38,7 +38,7 @@ SimConsoleEvent::SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject)
    {
       if (argv)
       {
-         mArgv->setString(argv[i].getString());
+         mArgv[i].setString(argv[i].getString());
       }
    }
 }

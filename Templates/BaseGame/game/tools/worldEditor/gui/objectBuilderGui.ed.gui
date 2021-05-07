@@ -1072,6 +1072,20 @@ function ObjectBuilderGui::buildObserverDropPoint(%this)
    %this.process();
 }
 
+function ObjectBuilderGui::buildGeneralDropPoint(%this)
+{
+   %this.objectClassName = "SpawnSphere";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "MissionMarkerData SpawnSphereMarker");
+   %this.addField("radius",       "TypeFloat",     "Radius",        1);
+   %this.addField("sphereWeight", "TypeFloat",     "Sphere Weight", 1);
+
+   %this.addField("spawnClass",     "TypeString",    "Spawn Class", "");
+   %this.addField("spawnDatablock", "TypeString", "Spawn Data", "");
+   %this.addField("spawnTransform", "TypeBool", "Spawn Here", "true");
+   %this.addField("canSaveDynamicFields", "TypeBool", "Save metadata", "false");
+   %this.process();
+}
+
 function ObjectBuilderGui::buildNotesObject(%this)
 {
    %this.objectClassName = "NotesObject";

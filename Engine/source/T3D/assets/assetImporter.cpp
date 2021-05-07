@@ -599,7 +599,13 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    assetImportObj->registerObject();
 
    //sanitize
-   assetName.replace(" ", "_");
+   assetName.replace(' ', '_');
+   assetName.replace('~', '_');
+   assetName.replace('`', '_');
+   assetName.replace('-', '_');
+   assetName.replace('*', '_');
+   assetName.replace('-', '_');
+   assetName.replace('+', '_');
 
    assetImportObj->assetType = assetType;
    assetImportObj->filePath = filePath;

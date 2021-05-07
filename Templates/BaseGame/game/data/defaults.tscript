@@ -5,6 +5,8 @@ $pref::Player::zoomSpeed = 0;
 $pref::Net::LagThreshold = 400;
 $pref::Net::Port = 28000;
 
+$pref::Master[0] = "2:master.torque3d.org:5664";
+
 $pref::HudMessageLogSize = 40;
 $pref::ChatHudLength = 1;
 

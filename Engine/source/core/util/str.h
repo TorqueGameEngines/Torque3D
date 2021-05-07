@@ -187,7 +187,7 @@ public:
    static inline String ToString( S32 v ) { return ToString( "%d", v ); }
    static inline String ToString( F32 v ) { return ToString( "%g", v ); }
    static inline String ToString( F64 v ) { return ToString( "%Lg", v ); }
-
+   inline operator const char* () { return c_str(); }
    static String SpanToString(const char* start, const char* end);
 
    static String ToLower(const String &string);

@@ -341,9 +341,21 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    m##name##Asset = NULL; \
    m##name = NULL;\
 
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
+
 #define INITPERSISTFIELD_SHAPEASSET(name, consoleClass, docs) \
    addProtectedField(assetText(name, File), TypeShapeFilename, Offset(m##name##Name, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs)); \
    addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
+
+#else
+
+#define INITPERSISTFIELD_SHAPEASSET(name, consoleClass, docs) \
+   addProtectedField(assetText(name, File), TypeShapeFilename, Offset(m##name##Name, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
+
+#endif // SHOW_LEGACY_FILE_FIELDS
+
+
 
 #define CLONE_SHAPEASSET(name) \
    m##name##Name = other.m##name##Name;\

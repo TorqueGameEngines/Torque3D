@@ -47,11 +47,11 @@ DefineEngineMethod(AssetImporter, getActivityLogLine, String, (S32 i), (0),
    return object->getActivityLogLine(0);
 }
 
-DefineEngineMethod(AssetImporter, autoImportFile, String, (String path), (""),
+DefineEngineMethod(AssetImporter, autoImportFile, String, (String path, String typeHint), ("", ""),
    "Creates a new script asset using the targetFilePath.\n"
    "@return The bool result of calling exec")
 {
-   return object->autoImportFile(path);
+   return object->autoImportFile(path, typeHint);
 }
 
 DefineEngineMethod(AssetImporter, addImportingFile, AssetImportObject*, (String path), (""),

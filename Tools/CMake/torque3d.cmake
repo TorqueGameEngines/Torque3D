@@ -208,6 +208,9 @@ mark_as_advanced(TORQUE_SCRIPT_EXTENSION)
 option(TORQUE_USE_ZENITY "use the Zenity backend for NFD" OFF)
 mark_as_advanced(TORQUE_USE_ZENITY)
 
+option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
+mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
+
 if(WIN32)
     # warning C4800: 'XXX' : forcing value to bool 'true' or 'false' (performance warning)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4800")

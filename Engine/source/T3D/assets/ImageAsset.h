@@ -310,6 +310,22 @@ if (m##name##AssetId != StringTable->EmptyString())\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId, ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
 
+#define PACKDATA_IMAGEASSET(name)\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+   {\
+      stream->writeString(m##name##Asset.getAssetId());\
+   }\
+   else\
+      stream->writeString(m##name##Filename);
+
+#define UNPACKDATA_IMAGEASSET(name)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId = stream->readSTString();\
+   }\
+   else\
+      m##name##Filename = stream->readSTString();
+
 #define PACK_IMAGEASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\

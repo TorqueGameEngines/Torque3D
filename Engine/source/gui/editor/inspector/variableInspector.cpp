@@ -22,6 +22,9 @@
 
 #include "gui/editor/inspector/variableInspector.h"
 #include "console/engineAPI.h"
+#include "T3D/assets/ShapeAsset.h"
+#include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/MaterialAsset.h"
 
 GuiVariableInspector::GuiVariableInspector() : mAutoUpdate(true)
 {
@@ -180,12 +183,12 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
       fieldTypeMask = TypePoint3F;
    else if (newField.mFieldTypeName == StringTable->insert("vector2"))
       fieldTypeMask = TypePoint2F;
-   //else if (fieldType == StringTable->insert("material"))
-   //   fieldTypeMask = TypeMaterialName;
+   else if (newField.mFieldTypeName == StringTable->insert("material"))
+      fieldTypeMask = TypeMaterialAssetId;
    else if (newField.mFieldTypeName == StringTable->insert("image"))
-      fieldTypeMask = TypeImageFilename;
+      fieldTypeMask = TypeImageAssetId;
    else if (newField.mFieldTypeName == StringTable->insert("shape"))
-      fieldTypeMask = TypeShapeFilename;
+      fieldTypeMask = TypeShapeAssetId;
    else if (newField.mFieldTypeName == StringTable->insert("bool"))
       fieldTypeMask = TypeBool;
    else if (newField.mFieldTypeName == StringTable->insert("object"))

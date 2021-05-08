@@ -33,6 +33,7 @@
 #include "console/dynamicTypes.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
 
 class ForestItem;
 class ForestCellBatch;
@@ -61,8 +62,8 @@ protected:
 
 public:
    
-   /// Shape file for this item type.
-   StringTableEntry mShapeFile;   
+   DECLARE_SHAPEASSET(ForestItemData, Shape);
+   DECLARE_SHAPEASSET_SETGET(ForestItemData, Shape);
 
    /// This is the radius used during placement to ensure
    /// the element isn't crowded up against other trees.

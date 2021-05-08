@@ -35,6 +35,8 @@
 #include "T3D/gameBase/gameBase.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 class ParticleEmitterData;
 class ParticleEmitter;
 class ExplosionData;
@@ -81,8 +83,8 @@ struct DebrisData : public GameBaseData
    F32      terminalVelocity;    // max velocity magnitude
    bool     ignoreWater;
 
-   const char* shapeName;
-   Resource<TSShape> shape;
+   DECLARE_SHAPEASSET(DebrisData, Shape);
+   DECLARE_SHAPEASSET_SETGET(DebrisData, Shape);
 
    StringTableEntry  textureName;
 

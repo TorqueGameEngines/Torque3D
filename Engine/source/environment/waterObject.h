@@ -45,6 +45,8 @@
 #include "materials/matTextureTarget.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 GFXDeclareVertexFormat( GFXWaterVertex )
 {
    Point3F point;
@@ -266,10 +268,14 @@ protected:
    F32 mDepthGradientMax;
 
    // Other textures
-   String mRippleTexName;
-   String mFoamTexName;
+   DECLARE_IMAGEASSET(WaterObject, RippleTex, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, RippleTex, TextureMask);
+   DECLARE_IMAGEASSET(WaterObject, FoamTex, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, FoamTex, TextureMask);
+   DECLARE_IMAGEASSET(WaterObject, DepthGradientTex, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, DepthGradientTex, TextureMask);
+
    String mCubemapName;
-   String mDepthGradientTexName;
 
    // Sound
    SFXAmbience* mSoundAmbience;
@@ -309,9 +315,6 @@ protected:
    WaterMatParams mMatParamHandles[NumMatTypes];   
    bool mUnderwater;
    GFXStateBlockRef mUnderwaterSB;
-   GFXTexHandle mRippleTex;
-   GFXTexHandle mDepthGradientTex;
-   GFXTexHandle mFoamTex;   
    CubemapData *mCubemap;
    MatrixSet *mMatrixSet;
    NamedTexTarget mNamedDepthGradTex;

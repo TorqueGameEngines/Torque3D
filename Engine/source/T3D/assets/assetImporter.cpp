@@ -1582,6 +1582,22 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
 
       }
    }
+   else
+   {
+      //If we're processing an unaffiliated image without generating materials for it, we can check some other bits
+      if (assetItem->parentAssetItem == nullptr)
+      {
+         if (assetItem->typeHint != String::EmptyString)
+         {
+            ImageAssetType type = ImageAsset::getImageTypeFromName(StringTable->insert(assetItem->typeHint.c_str()));
+
+            if (type == ImageAssetType::GUI)
+            {
+
+            }
+         }
+      }
+   }
 
    assetItem->processed = true;
 }
@@ -2390,7 +2406,7 @@ void AssetImporter::resetImportConfig()
 //
 // Importing
 //
-StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath)
+StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath, String typeHint)
 {
    //Just in case we're reusing the same importer object from another import session, nuke any existing files
    resetImportSession(true);
@@ -2670,8 +2686,15 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
 
-   ImageAsset::ImageTypes imageType = ImageAsset::getImageTypeFromName(assetItem->imageSuffixType.c_str());
-   newAsset->setImageType(imageType);
+   if (assetItem->typeHint != String::EmptyString)
+   {
+      newAsset->setImageType(ImageAsset::getImageTypeFromName(StringTable->insert(assetItem->typeHint.c_str())));
+   }
+   else
+   {
+      ImageAsset::ImageTypes imageType = ImageAsset::getImageTypeFromName(assetItem->imageSuffixType.c_str());
+      newAsset->setImageType(imageType);
+   }
 
    Taml tamlWriter;
    bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());

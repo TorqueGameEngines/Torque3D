@@ -42,6 +42,8 @@
    #include "console/simObjectRef.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 class TSShapeInstance;
 class PhysicsBody;
 class PhysicsWorld;
@@ -72,11 +74,8 @@ public:
 
 public:
 
-   /// The shape to load.
-   StringTableEntry shapeName;
-
-   /// The shape resource.
-   Resource<TSShape> shape;
+   DECLARE_SHAPEASSET(PhysicsShapeData, Shape);
+   DECLARE_SHAPEASSET_SETGET(PhysicsShapeData, Shape);
 
    /// The shared unscaled collision shape.
    PhysicsCollisionRef colShape;

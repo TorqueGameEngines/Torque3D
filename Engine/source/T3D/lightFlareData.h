@@ -45,6 +45,8 @@
 #include "gfx/gfxOcclusionQuery.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class LightInfo;
 struct ObjectRenderInst;
 class SceneRenderState;
@@ -115,8 +117,10 @@ protected:
 
    F32 mScale;
    bool mFlareEnabled;
-   String mFlareTextureName;
-   GFXTexHandle mFlareTexture;
+
+   DECLARE_IMAGEASSET(LightFlareData, FlareTexture, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(LightFlareData, FlareTexture);
+
    F32 mOcclusionRadius;
    bool mRenderReflectPass;
 

@@ -259,6 +259,10 @@ WaterObject::WaterObject()
 
    mMatrixSet = reinterpret_cast<MatrixSet *>(dMalloc_aligned(sizeof(MatrixSet), 16));
    constructInPlace(mMatrixSet);
+
+   INIT_IMAGEASSET(RippleTex);
+   INIT_IMAGEASSET(FoamTex);
+   INIT_IMAGEASSET(DepthGradientTex);
 }
 
 WaterObject::~WaterObject()
@@ -292,8 +296,8 @@ void WaterObject::initPersistFields()
 
       addField( "overallWaveMagnitude", TypeF32, Offset( mOverallWaveMagnitude, WaterObject ), "Master variable affecting entire body" 
 		  " of water's undulation" );  
-      
-      addField( "rippleTex", TypeImageFilename, Offset( mRippleTexName, WaterObject ), "Normal map used to simulate small surface ripples" );
+
+      INITPERSISTFIELD_IMAGEASSET(RippleTex, WaterObject, "Normal map used to simulate small surface ripples");
 
       addArray( "Ripples (texture animation)", MAX_WAVES );
 
@@ -307,7 +311,7 @@ void WaterObject::initPersistFields()
 
       addField( "overallRippleMagnitude", TypeF32, Offset( mOverallRippleMagnitude, WaterObject ), "Master variable affecting entire surface");
 
-      addField( "foamTex", TypeImageFilename, Offset( mFoamTexName, WaterObject ), "Diffuse texture for foam in shallow water (advanced lighting only)" );
+      INITPERSISTFIELD_IMAGEASSET(FoamTex, WaterObject, "Diffuse texture for foam in shallow water (advanced lighting only)");
 
       addArray( "Foam", MAX_FOAM );
 
@@ -358,8 +362,9 @@ void WaterObject::initPersistFields()
    endGroup( "Underwater Fogging" );
 
    addGroup( "Misc" );
-      
-      addField( "depthGradientTex", TypeImageFilename, Offset( mDepthGradientTexName, WaterObject ), "1D texture defining the base water color by depth" );
+
+      INITPERSISTFIELD_IMAGEASSET(DepthGradientTex, WaterObject, "1D texture defining the base water color by depth");
+
       addField( "depthGradientMax", TypeF32, Offset( mDepthGradientMax, WaterObject ), "Depth in world units, the max range of the color gradient texture." );      
 
    endGroup( "Misc" );
@@ -539,9 +544,10 @@ U32 WaterObject::packUpdate( NetConnection * conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & TextureMask ) )
    {
-      stream->write( mRippleTexName );
-      stream->write( mDepthGradientTexName );
-      stream->write( mFoamTexName );
+      PACK_IMAGEASSET(conn, RippleTex);
+      PACK_IMAGEASSET(conn, DepthGradientTex);
+      PACK_IMAGEASSET(conn, FoamTex);
+
       stream->write( mCubemapName );      
    }
 
@@ -660,9 +666,10 @@ void WaterObject::unpackUpdate( NetConnection * conn, BitStream *stream )
    // TextureMask
    if ( stream->readFlag() )
    {
-      stream->read( &mRippleTexName );
-      stream->read( &mDepthGradientTexName );
-      stream->read( &mFoamTexName );
+      UNPACK_IMAGEASSET(conn, RippleTex);
+      UNPACK_IMAGEASSET(conn, DepthGradientTex);
+      UNPACK_IMAGEASSET(conn, FoamTex);
+
       stream->read( &mCubemapName );
 
       if ( isProperlyAdded() )
@@ -1161,23 +1168,8 @@ bool WaterObject::initMaterial( S32 idx )
 
 void WaterObject::initTextures()
 {
-   if ( mRippleTexName.isNotEmpty() )
-      mRippleTex.set( mRippleTexName, &GFXStaticTextureProfile, "WaterObject::mRippleTex" );
-   if ( mRippleTex.isNull() )
-      mRippleTex.set( GFXTextureManager::getWarningTexturePath(), &GFXStaticTextureProfile, "WaterObject::mRippleTex" );
-
-   if ( mDepthGradientTexName.isNotEmpty() )
-      mDepthGradientTex.set( mDepthGradientTexName, &GFXStaticTextureSRGBProfile, "WaterObject::mDepthGradientTex" );
-   if ( mDepthGradientTex.isNull() )
-      mDepthGradientTex.set( GFXTextureManager::getWarningTexturePath(), &GFXStaticTextureSRGBProfile, "WaterObject::mDepthGradientTex" );
-   
    if ( mNamedDepthGradTex.isRegistered() )
       mNamedDepthGradTex.setTexture( mDepthGradientTex );
-
-   if ( mFoamTexName.isNotEmpty() )
-      mFoamTex.set( mFoamTexName, &GFXStaticTextureSRGBProfile, "WaterObject::mFoamTex" );
-   if ( mFoamTex.isNull() )
-      mFoamTex.set( GFXTextureManager::getWarningTexturePath(), &GFXStaticTextureSRGBProfile, "WaterObject::mFoamTex" );
 
    if ( mCubemapName.isNotEmpty() )
       Sim::findObject( mCubemapName, mCubemap );   

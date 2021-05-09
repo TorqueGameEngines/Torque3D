@@ -254,7 +254,7 @@ namespace Compiler
 
    inline StringTableEntry CodeToSTE(U32 *code, U32 ip)
    {
-#ifdef TORQUE_CPU_X64
+#if defined(TORQUE_CPU_X64) || defined(TORQUE_CPU_ARM64)
       return (StringTableEntry)(*((U64*)(code + ip)));
 #else
       return (StringTableEntry)(*(code + ip));

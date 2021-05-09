@@ -34,21 +34,29 @@ static MRandomLCG sgPlatRandom;
 
 U32 Platform::getMathControlState()
 {
+#ifdef TORQUE_CPU_X86
    U16 cw;
    asm("fstcw %0" : "=m" (cw) :);
    return cw;
+#else
+   return 0;
+#endif
 }
 
 void Platform::setMathControlState(U32 state)
 {
+#ifdef TORQUE_CPU_X86
    U16 cw = state;
    asm("fldcw %0" : : "m" (cw));
+#endif
 }
 
 void Platform::setMathControlStateKnown()
 {
+#ifdef TORQUE_CPU_X86
    U16 cw = 0x27F;
    asm("fldcw %0" : : "m" (cw));
+#endif
 }
 
 //--------------------------------------

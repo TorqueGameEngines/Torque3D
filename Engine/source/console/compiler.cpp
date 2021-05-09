@@ -65,7 +65,7 @@ namespace Compiler
 
    void evalSTEtoCode(StringTableEntry ste, U32 ip, U32 *ptr)
    {
-#ifdef TORQUE_CPU_X64
+#if defined(TORQUE_CPU_X64) || defined(TORQUE_CPU_ARM64)
       *(U64*)(ptr) = (U64)ste;
 #else
       *ptr = (U32)ste;

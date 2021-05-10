@@ -136,7 +136,7 @@ void tc_spinloop()
    #elif defined( _WIN64 )
       YieldProcessor( );
    #elif (defined( __arm64__ ) && defined( __APPLE__ )) || defined( __arch64__ )
-      asm( "yield" );
+      pthread_yield_np();
    #else
       __asm { pause };
    #endif

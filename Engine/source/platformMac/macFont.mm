@@ -83,9 +83,34 @@ bool OSXFont::create( const char* name, dsize_t size, U32 charset )
 {
    // Sanity!
    AssertFatal( name != NULL, "Cannot create a NULL font name." );
-   
+    
+   bool doBold = false;
+   bool doItalic = false;
+
+   String nameStr = name;
+   nameStr = nameStr.trim();
+
+   bool haveModifier;
+   do
+   {
+      haveModifier = false;
+      if( nameStr.compare( "Bold", 4, String::NoCase | String::Right ) == 0 )
+      {
+         doBold = true;
+         nameStr = nameStr.substr( 0, nameStr.length() - 4 ).trim();
+         haveModifier = true;
+      }
+      if( nameStr.compare( "Italic", 6, String::NoCase | String::Right ) == 0 )
+      {
+         doItalic = true;
+         nameStr = nameStr.substr( 0, nameStr.length() - 6 ).trim();
+         haveModifier = true;
+      }
+   }
+   while( haveModifier );
+
    // Generate compatible font name.
-   CFStringRef fontName = CFStringCreateWithCString( kCFAllocatorDefault, name, kCFStringEncodingUTF8 );
+   NSString* fontName = [NSString stringWithUTF8String: nameStr.utf8()];
    
    // Sanity!
    if ( !fontName )
@@ -94,12 +119,22 @@ bool OSXFont::create( const char* name, dsize_t size, U32 charset )
       return false;
    }
    
-   // Use Windows as a baseline (96 DPI) and adjust accordingly.
-   F32 scaledSize = size * (72.0f/96.0f);
-   scaledSize = mRound(scaledSize);
+   NSMutableDictionary* fontAttributes = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+      fontName, (NSString*)kCTFontFamilyNameAttribute,
+      [NSNumber numberWithFloat: (float)size], (NSString*)kCTFontSizeAttribute,
+      nil];
    
-   // Create the font reference.
-   mFontRef = CTFontCreateWithName( fontName, scaledSize, NULL );
+   CTFontSymbolicTraits traits = 0x0;
+   if (doBold)
+      traits |= kCTFontBoldTrait;
+   if (doItalic)
+      traits |= kCTFontItalicTrait;
+   
+   CTFontDescriptorRef descriptor =
+             CTFontDescriptorCreateWithAttributes((CFDictionaryRef)fontAttributes);
+   
+   mFontRef = CTFontCreateWithFontDescriptor(descriptor, 0.0, NULL);
+   CFRelease(descriptor);
    
    // Sanity!
    if ( !mFontRef )
@@ -107,6 +142,10 @@ bool OSXFont::create( const char* name, dsize_t size, U32 charset )
       Con::errorf( "Could not generate a font reference to font name '%s' of size '%d'", name, size );
       return false;
    }
+   
+   // Apply font traits if we have any by creating a copy of the font
+   if (traits != 0x0)
+      mFontRef = CTFontCreateCopyWithSymbolicTraits(mFontRef, (float)size, NULL, traits, traits);
    
    // Fetch font metrics.
    CGFloat ascent = CTFontGetAscent( mFontRef );
@@ -227,17 +266,8 @@ PlatformFont::CharInfo& OSXFont::getCharInfo(const UTF16 character) const
    CGPoint renderOrigin;
    renderOrigin.x = -characterInfo.xOrigin;
    renderOrigin.y = -characterInfo.yOrigin;
-   
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
+
    CTFontDrawGlyphs( mFontRef, &characterGlyph, &renderOrigin, 1, bitmapContext );
-#else
-   CGFontRef cgFont = CTFontCopyGraphicsFont(mFontRef, NULL);
-   CGContextSetFont(bitmapContext, cgFont);
-   CGContextSetFontSize(bitmapContext, CTFontGetSize(mFontRef));
-   CGContextShowGlyphsAtPositions(bitmapContext, &characterGlyph, &renderOrigin, 1);
-   CFRelease(cgFont);
-#endif
-   
    
 #if 0
    Con::printf("Width:%f, Height:%f, OriginX:%f, OriginY:%f",

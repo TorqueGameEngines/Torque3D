@@ -24,6 +24,11 @@ project(lpng)
 
 # addDef(PNG_NO_ASSEMBLER_CODE)
 
+# Issues with Neon at the moment (Arm support)
+# https://sourceforge.net/p/libpng/bugs/281/
+set(PNG_ARM_NEON off CACHE STRING "")
+add_definitions(-DPNG_ARM_NEON_OPT=0)
+
 addInclude(${libDir}/zlib)
 
 finishLibrary("${libDir}/${PROJECT_NAME}")

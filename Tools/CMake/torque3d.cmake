@@ -692,8 +692,8 @@ if(WIN32)
 endif()
 
 if (APPLE)
-	addFramework("Cocoa")
-	addFramework("OpenGL")
+  addFramework("Cocoa")
+  addFramework("OpenGL")
   #These are needed by sdl2 static lib
   addFramework("CoreAudio")
   addFramework("AudioUnit")
@@ -704,9 +704,29 @@ if (APPLE)
   addFramework("Carbon")
   addFramework("AudioToolbox")
   addLib("iconv")
-  #set a few arch defaults
-  set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "OSX Architecture" FORCE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "OSX Deployment target" FORCE)
+endif()
+
+#detect Architecture
+if (APPLE AND NOT IOS)
+  option(TORQUE_MACOS_UNIVERSAL_BINARY OFF)
+
+  # Detect architecture if not using universal
+  if (TORQUE_MACOS_UNIVERSAL_BINARY)
+    set(ARCHITECTURE_STRING_APPLE "x86_64;arm64")
+    set(DEPLOYMENT_TARGET_APPLE "10.13")
+  else()
+    check_c_compiler_flag("-arch arm64" armSupportedApple)
+    if(armSupportedApple)
+      set(ARCHITECTURE_STRING_APPLE "arm64")
+      set(DEPLOYMENT_TARGET_APPLE "11.0")
+    else()
+      set(ARCHITECTURE_STRING_APPLE "x86_64")
+      set(DEPLOYMENT_TARGET_APPLE "10.9")
+    endif() 
+  endif()
+
+  set(CMAKE_OSX_ARCHITECTURES ${ARCHITECTURE_STRING_APPLE} CACHE STRING "OSX Architecture" FORCE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET ${DEPLOYMENT_TARGET_APPLE} CACHE STRING "OSX Deployment target" FORCE)
 endif()
 
 if(UNIX AND NOT APPLE)

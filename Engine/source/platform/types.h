@@ -128,7 +128,7 @@ static const F32 F32_MAX = F32(3.402823466e+38F);                 ///< Constant 
 #endif
 
 /// Integral type matching the host's memory address width.
-#ifdef TORQUE_CPU_X64
+#if defined(TORQUE_CPU_X64) || defined(TORQUE_CPU_ARM64)
    typedef U64 MEM_ADDRESS;
 #else
    typedef U32 MEM_ADDRESS;

@@ -1026,8 +1026,8 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const Optimize
       {
          Torque::Path diffusePath;
 
-         if (mat->mDiffuseMapFilename[0].isNotEmpty())
-            diffusePath = mat->mDiffuseMapFilename[0];
+         if (mat->mDiffuseMapName[0].isNotEmpty())
+            diffusePath = mat->mDiffuseMapName[0];
          else
             diffusePath = String("warningMat");
 
@@ -1036,8 +1036,8 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const Optimize
       }
       else
       {
-         if (mat->mDiffuseMapFilename[0].isNotEmpty())
-            diffuseMap += mat->mDiffuseMapFilename[0];
+         if (mat->mDiffuseMapName[0].isNotEmpty())
+            diffuseMap += mat->mDiffuseMapName[0];
          else
             diffuseMap += "warningMat";
       }
@@ -1310,8 +1310,8 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const ExportDa
       {
          Torque::Path diffusePath;
 
-         if (mat->mDiffuseMapFilename[0].isNotEmpty())
-            diffusePath = mat->mDiffuseMapFilename[0];
+         if (mat->mDiffuseMapName[0].isNotEmpty())
+            diffusePath = mat->mDiffuseMapName[0];
          else
             diffusePath = String("warningMat");
 
@@ -1320,8 +1320,8 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const ExportDa
       }
       else
       {
-         if (mat->mDiffuseMapFilename[0].isNotEmpty())
-            diffuseMap += mat->mDiffuseMapFilename[0];
+         if (mat->mDiffuseMapName[0].isNotEmpty())
+            diffuseMap += mat->mDiffuseMapName[0];
          else
             diffuseMap += "warningMat";
       }

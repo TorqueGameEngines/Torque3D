@@ -118,6 +118,7 @@ public:
    static ImageTypes getImageTypeFromName(StringTableEntry name);
 
    void setImageType(ImageTypes type) { mImageType = type; }
+   ImageTypes getImageType() { return mImageType; }
 
    static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
@@ -173,13 +174,13 @@ public:
 /// </Summary>
 #define DECLARE_IMAGEASSET(className, name, profile) public: \
    GFXTexHandle m##name = NULL;\
-   FileName m##name##Filename = String::EmptyString; \
+   FileName m##name##Name = String::EmptyString; \
    StringTableEntry m##name##AssetId = StringTable->EmptyString();\
    AssetPtr<ImageAsset>  m##name##Asset = NULL;\
    GFXTextureProfile* m##name##Profile = &profile;\
 public: \
-   const StringTableEntry get##name##File() const { return StringTable->insert(m##name##Filename.c_str()); }\
-   void set##name##File(const FileName &_in) { m##name##Filename = _in;}\
+   const StringTableEntry get##name##File() const { return StringTable->insert(m##name##Name.c_str()); }\
+   void set##name##File(const FileName &_in) { m##name##Name = _in;}\
    const AssetPtr<ImageAsset> & get##name##Asset() const { return m##name##Asset; }\
    void set##name##Asset(const AssetPtr<ImageAsset> &_in) { m##name##Asset = _in;}\
    \
@@ -187,7 +188,16 @@ public: \
    {\
       if (_in == StringTable->EmptyString())\
       {\
-         m##name##Filename = String::EmptyString;\
+         m##name##Name = String::EmptyString;\
+         m##name##AssetId = StringTable->EmptyString();\
+         m##name##Asset = NULL;\
+         m##name.free();\
+         m##name = NULL;\
+         return true;\
+      }\
+      else if(_in[0] == '$' || _in[0] == '#')\
+      {\
+         m##name##Name = _in;\
          m##name##AssetId = StringTable->EmptyString();\
          m##name##Asset = NULL;\
          m##name.free();\
@@ -203,11 +213,11 @@ public: \
          \
          if (ImageAsset::Ok == assetState)\
          {\
-            m##name##Filename = String::EmptyString;\
+            m##name##Name = String::EmptyString;\
          }\
          else\
          {\
-            m##name##Filename = _in;\
+            m##name##Name = _in;\
             m##name##Asset = NULL;\
          }\
       }\
@@ -219,17 +229,17 @@ public: \
             \
             if (ImageAsset::Ok == m##name##Asset->getStatus())\
             {\
-               m##name##Filename = String::EmptyString;\
+               m##name##Name = String::EmptyString;\
             }\
          }\
          else\
          {\
-            m##name##Filename = _in;\
+            m##name##Name = _in;\
             m##name##AssetId = StringTable->EmptyString();\
             m##name##Asset = NULL;\
          }\
       }\
-      if (get##name() != StringTable->EmptyString() && !m##name##Filename.equal("texhandle", String::NoCase))\
+      if (get##name() != StringTable->EmptyString() && !m##name##Name.equal("texhandle", String::NoCase))\
       {\
          m##name.set(get##name(), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
          return true;\
@@ -241,8 +251,8 @@ public: \
    {\
       if (m##name##Asset && (m##name##Asset->getImageFileName() != StringTable->EmptyString()))\
          return  Platform::makeRelativePathName(m##name##Asset->getImagePath(), Platform::getMainDotCsDir());\
-      else if (m##name##Filename.isNotEmpty())\
-         return StringTable->insert(Platform::makeRelativePathName(m##name##Filename.c_str(), Platform::getMainDotCsDir()));\
+      else if (m##name##Name.isNotEmpty())\
+         return StringTable->insert(Platform::makeRelativePathName(m##name##Name.c_str(), Platform::getMainDotCsDir()));\
       else\
          return StringTable->EmptyString();\
    }\
@@ -286,16 +296,16 @@ DefineEngineMethod(className, set##name, bool, (const char* map), , assetText(na
 }
 
 #define INIT_IMAGEASSET(name) \
-   m##name##Filename = String::EmptyString; \
+   m##name##Name = String::EmptyString; \
    m##name##AssetId = StringTable->EmptyString(); \
    m##name##Asset = NULL;
 
 #define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs) \
-   addProtectedField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs)); \
+   addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs)); \
    addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
 
 #define CLONE_IMAGEASSET(name) \
-   m##name##Filename = other.m##name##Filename;\
+   m##name##Name = other.m##name##Name;\
    m##name##AssetId = other.m##name##AssetId;\
    m##name##Asset = other.m##name##Asset;
 
@@ -305,7 +315,7 @@ if (m##name##AssetId != StringTable->EmptyString())\
    S32 assetState = ImageAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
    if (assetState == ImageAsset::Ok )\
    {\
-      m##name##Filename = StringTable->EmptyString();\
+      m##name##Name = StringTable->EmptyString();\
    }\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId, ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
@@ -316,7 +326,7 @@ if (m##name##AssetId != StringTable->EmptyString())\
       stream->writeString(m##name##Asset.getAssetId());\
    }\
    else\
-      stream->writeString(m##name##Filename);
+      stream->writeString(m##name##Name);
 
 #define UNPACKDATA_IMAGEASSET(name)\
    if (stream->readFlag())\
@@ -324,7 +334,7 @@ if (m##name##AssetId != StringTable->EmptyString())\
       m##name##AssetId = stream->readSTString();\
    }\
    else\
-      m##name##Filename = stream->readSTString();
+      m##name##Name = stream->readSTString();
 
 #define PACK_IMAGEASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
@@ -333,7 +343,7 @@ if (m##name##AssetId != StringTable->EmptyString())\
       netconn->packNetStringHandleU(stream, assetIdStr);\
    }\
    else\
-      stream->writeString(m##name##Filename);
+      stream->writeString(m##name##Name);
 
 #define UNPACK_IMAGEASSET(netconn, name)\
    if (stream->readFlag())\
@@ -342,7 +352,7 @@ if (m##name##AssetId != StringTable->EmptyString())\
       _set##name(m##name##AssetId);\
    }\
    else\
-      m##name##Filename = stream->readSTString();
+      m##name##Name = stream->readSTString();
 
 #pragma endregion
 
@@ -352,13 +362,13 @@ if (m##name##AssetId != StringTable->EmptyString())\
 #define DECLARE_IMAGEASSET_ARRAY(className, name, profile, max) public: \
    static const U32 sm##name##Count = max;\
    GFXTexHandle m##name[max] = { NULL };\
-   FileName m##name##Filename[max] = { String::EmptyString }; \
+   FileName m##name##Name[max] = { String::EmptyString }; \
    StringTableEntry m##name##AssetId[max] = { StringTable->EmptyString() };\
    AssetPtr<ImageAsset>  m##name##Asset[max] = { NULL };\
    GFXTextureProfile * m##name##Profile = &profile;\
 public: \
-   const StringTableEntry get##name##File(const U32& index) const { return StringTable->insert(m##name##Filename[index].c_str()); }\
-   void set##name##File(const FileName &_in, const U32& index) { m##name##Filename[index] = _in;}\
+   const StringTableEntry get##name##File(const U32& index) const { return StringTable->insert(m##name##Name[index].c_str()); }\
+   void set##name##File(const FileName &_in, const U32& index) { m##name##Name[index] = _in;}\
    const AssetPtr<ImageAsset> & get##name##Asset(const U32& index) const { return m##name##Asset[index]; }\
    void set##name##Asset(const AssetPtr<ImageAsset> &_in, const U32& index) { m##name##Asset[index] = _in;}\
    \
@@ -368,7 +378,16 @@ public: \
          return false;\
       if (_in == StringTable->EmptyString())\
       {\
-         m##name##Filename[index] = String::EmptyString;\
+         m##name##Name[index] = String::EmptyString;\
+         m##name##AssetId[index] = StringTable->EmptyString();\
+         m##name##Asset[index] = NULL;\
+         m##name[index].free();\
+         m##name[index] = NULL;\
+         return true;\
+      }\
+      else if(_in[0] == '$' || _in[0] == '#')\
+      {\
+         m##name##Name[index] = _in;\
          m##name##AssetId[index] = StringTable->EmptyString();\
          m##name##Asset[index] = NULL;\
          m##name[index].free();\
@@ -384,11 +403,11 @@ public: \
          \
          if (ImageAsset::Ok == assetState)\
          {\
-            m##name##Filename[index] = StringTable->EmptyString();\
+            m##name##Name[index] = StringTable->EmptyString();\
          }\
          else\
          {\
-            m##name##Filename[index] = _in;\
+            m##name##Name[index] = _in;\
             m##name##Asset[index] = NULL;\
          }\
       }\
@@ -399,16 +418,16 @@ public: \
             m##name##AssetId[index] = m##name##Asset[index].getAssetId();\
             \
             if (ImageAsset::Ok == m##name##Asset[index]->getStatus())\
-               m##name##Filename[index] = StringTable->EmptyString();\
+               m##name##Name[index] = StringTable->EmptyString();\
          }\
          else\
          {\
-            m##name##Filename[index] = _in;\
+            m##name##Name[index] = _in;\
             m##name##AssetId[index] = StringTable->EmptyString();\
             m##name##Asset[index] = NULL;\
          }\
       }\
-      if (get##name(index) != StringTable->EmptyString() && !m##name##Filename[index].equal("texhandle", String::NoCase))\
+      if (get##name(index) != StringTable->EmptyString() && !m##name##Name[index].equal("texhandle", String::NoCase))\
       {\
          m##name[index].set(get##name(index), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
          return true;\
@@ -420,8 +439,8 @@ public: \
    {\
       if (m##name##Asset[index] && (m##name##Asset[index]->getImageFileName() != StringTable->EmptyString()))\
          return  Platform::makeRelativePathName(m##name##Asset[index]->getImagePath(), Platform::getMainDotCsDir());\
-      else if (m##name##Filename[index].isNotEmpty())\
-         return StringTable->insert(Platform::makeRelativePathName(m##name##Filename[index].c_str(), Platform::getMainDotCsDir()));\
+      else if (m##name##Name[index].isNotEmpty())\
+         return StringTable->insert(Platform::makeRelativePathName(m##name##Name[index].c_str(), Platform::getMainDotCsDir()));\
       else\
          return StringTable->EmptyString();\
    }\
@@ -477,17 +496,17 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
 }
 
 #define INIT_IMAGEASSET_ARRAY(name, index) \
-   m##name##Filename[index] = String::EmptyString; \
+   m##name##Name[index] = String::EmptyString; \
    m##name##AssetId[index] = StringTable->EmptyString(); \
    m##name##Asset[index] = NULL;
 
 
 #define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs) \
-   addProtectedField(#name, TypeImageFilename, Offset(m##name##Filename, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs)); \
+   addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs)); \
    addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
 
 #define CLONE_IMAGEASSET_ARRAY(name, index) \
-   m##name##Filename[index] = other.m##name##Filename[index];\
+   m##name##Name[index] = other.m##name##Name[index];\
    m##name##AssetId[index] = other.m##name##AssetId[index];\
    m##name##Asset[index] = other.m##name##Asset[index];
 
@@ -497,7 +516,7 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    S32 assetState = ImageAsset::getAssetById(m##name##AssetId[index], &m##name##Asset[index]);\
    if (assetState == ImageAsset::Ok )\
    {\
-      m##name##Filename[index] = StringTable->EmptyString();\
+      m##name##Name[index] = StringTable->EmptyString();\
    }\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId[index], ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
@@ -509,7 +528,7 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       netconn->packNetStringHandleU(stream, assetIdStr);\
    }\
    else\
-      stream->writeString(m##name##Filename[index]);
+      stream->writeString(m##name##Name[index]);
 
 #define UNPACK_IMAGEASSET_ARRAY(netconn, name, index)\
    if (stream->readFlag())\
@@ -518,7 +537,7 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       _set##name(m##name##AssetId[index], index);\
    }\
    else\
-      m##name##Filename[index] = stream->readSTString();
+      m##name##Name[index] = stream->readSTString();
 
 #pragma endregion
 

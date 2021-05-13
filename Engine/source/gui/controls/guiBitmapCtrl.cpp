@@ -101,7 +101,7 @@ bool GuiBitmapCtrl::onWake()
 
 void GuiBitmapCtrl::onSleep()
 {
-   if ( !mBitmapFilename.equal("texhandle", String::NoCase) )
+   if ( !mBitmapName.equal("texhandle", String::NoCase) )
       mBitmap = NULL;
 
    Parent::onSleep();
@@ -149,7 +149,7 @@ void GuiBitmapCtrl::setBitmapHandle(GFXTexHandle handle, bool resize)
 {
    mBitmap = handle;
 
-   mBitmapFilename = String("texhandle");
+   mBitmapName = String("texhandle");
 
    // Resize the control to fit the bitmap
    if (resize) 

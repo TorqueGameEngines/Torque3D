@@ -28,6 +28,10 @@ function beginProjectImport()
    
    beginTerrainImport();
    
+   //postFX imports'll need to look up render target names and ensure assets for those exist
+   //otherwise they need to be generated
+   beginPostFXImport();
+   
    $ProjectImporter::assetQuery.delete();
    $ProjectImporter::importer.delete();
    $ProjectImporter::persistMgr.delete();
@@ -39,7 +43,7 @@ function beginProjectImport()
    AssetBrowser.refresh(); //update the AB just in case
 }
 
-function updateObjectLegacyField(%obj, %fieldName, %arrayIndex, %setObjDirty)
+function updateObjectLegacyField(%obj, %fieldName, %arrayIndex, %typeHint, %setObjDirty)
 {
    %targetAssetField = %fieldName;
    
@@ -102,7 +106,7 @@ function updateObjectLegacyField(%obj, %fieldName, %arrayIndex, %setObjDirty)
       if(%assetsFound == 0)
       {
          warn("No associated asset found. Attempting to import file.");
-         %assetId = $ProjectImporter::importer.autoImportFile(%fieldFile);  
+         %assetId = $ProjectImporter::importer.autoImportFile(%fieldFile, %typeHint);  
          
          if(%assetId !$= "")
          {
@@ -604,7 +608,7 @@ function beginGUIImport()
       //Process through the GUI now
       if(%gui.isInNamespaceHierarchy("guiBitmapCtrl"))
       {
-         %imageAssetId = updateObjectLegacyField(%gui, "bitmap", "", false);
+         %imageAssetId = updateObjectLegacyField(%gui, "bitmap", "", "GUI", false);
          if(%imageAssetId !$= "")
          {
             //successful import
@@ -643,7 +647,7 @@ function processGUIChildren(%gui)
       //Process through the GUI now
       if(%guiChild.isInNamespaceHierarchy("guiBitmapCtrl"))
       {
-         %imageAssetId = updateObjectLegacyField(%guiChild, "bitmap", "", false);
+         %imageAssetId = updateObjectLegacyField(%guiChild, "bitmap", "", "GUI", false);
          if(%imageAssetId !$= "")
          {
             //successful import
@@ -697,4 +701,34 @@ function processGUIntoAsset(%guiName, %file)
 //Misc Script file conversion
 //==============================================================================
 
+//==============================================================================
+
+//==============================================================================
+//PostFX conversion
+//==============================================================================
+function beginPostFXImport()
+{
+   error("===========================================");
+   error("Importing PostFXs");
+   error("===========================================");
+   
+   %count = PostFXManager.Count();
+   for(%i=0; %i < %count; %i++)
+   {
+      %postEffect = PostFXManager.getKey(%i);  
+      
+      if(isObject(%postEffect))
+      {     
+         echo("Processing import of PostFX: " @ %postEffect.getName());
+         
+         //$ProjectImporter::persistMgr.setDirty(%gui);
+      }
+   }
+   
+   //$ProjectImporter::persistMgr.saveDirty();
+
+   error("===========================================");
+   error("Finished Importing PostFXs");
+   error("===========================================");
+}
 //==============================================================================

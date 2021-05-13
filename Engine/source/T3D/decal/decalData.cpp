@@ -204,7 +204,7 @@ void DecalData::initPersistFields()
          "grid; use #textureCoords to manually specify UV coordinates for "
          "irregular sized frames." );
 
-      addField( "textureCoords", TypeRectF,  Offset( texRect, DecalData ), MAX_TEXCOORD_COUNT,
+      addField( "textureCoords", TypeRectUV,  Offset( texRect, DecalData ), MAX_TEXCOORD_COUNT,
          "@brief An array of RectFs (topleft.x topleft.y extent.x extent.y) "
          "representing the UV coordinates for each frame in the imagemap.\n\n"
          "@note This field should only be set if the imagemap frames are "

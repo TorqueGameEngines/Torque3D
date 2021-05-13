@@ -70,7 +70,7 @@
 #include "core/util/md5.h"
 #include "console/enginePrimitives.h"
 
-#if defined (TORQUE_OS_MAC) && defined(TORQUE_CPU_X64)
+#if defined (TORQUE_OS_MAC) && (defined(TORQUE_CPU_X64) || defined(TORQUE_CPU_ARM64))
 typedef unsigned int    unsigned32;
 #else
 typedef unsigned long   unsigned32;

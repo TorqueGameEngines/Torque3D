@@ -1,14 +1,14 @@
 <TorsionProject>
 <Name>@TORQUE_APP_NAME@</Name>
 <WorkingDir/>
-<EntryScript>main.tscript</EntryScript>
+<EntryScript>main.@TORQUE_SCRIPT_EXTENSION@</EntryScript>
 <DebugHook>dbgSetParameters( #port#, "#password#", true );</DebugHook>
 <Mods>
 <Folder>core</Folder>
 <Folder>data</Folder>
 <Folder>tools</Folder>
 </Mods>
-<ScannerExts>cs; gui; taml; module; tscript;</ScannerExts>
+<ScannerExts>@TORQUE_SCRIPT_EXTENSION@; gui; taml; module;</ScannerExts>
 <Configs>
 <Config>
 <Name>Release</Name>

@@ -184,6 +184,12 @@ function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startu
 
       return true;
    }
+   else if (%deviceMode == $Video::ModeFullscreen)
+   {  // Fullscreen must match the aspect ratio of the monitor
+      %deviceRes = getWords(%this.getMonitorRect(%deviceId), 2);
+      if (mRoundColour(%resX / %resY, 2) != mRoundColour(%deviceRes.x / %deviceRes.y, 2))
+         return false;
+   }
 
    if (!%startup)
       return true;

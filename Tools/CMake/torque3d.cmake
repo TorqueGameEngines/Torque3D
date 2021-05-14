@@ -169,6 +169,12 @@ mark_as_advanced(TORQUE_DISABLE_MEMORY_MANAGER)
 option(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM "Disable virtual mount system" OFF)
 mark_as_advanced(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM)
 
+option(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP "Disable reading root path from zip. Zips will be mounted in-place with file name as directory name." ON)
+mark_as_advanced(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP)
+
+option(TORQUE_ZIP_DISK_LAYOUT "All zips must be placed in the executable directory and contain full paths to the files." OFF)
+mark_as_advanced(TORQUE_ZIP_DISK_LAYOUT)
+
 option(TORQUE_PLAYER "Playback only?" OFF)
 mark_as_advanced(TORQUE_PLAYER)
 

@@ -114,7 +114,6 @@ TSStatic::TSStatic()
 
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
-   mShapeName = "";
    mShapeInstance = NULL;
 
    mPlayAmbient = true;
@@ -150,8 +149,7 @@ TSStatic::TSStatic()
    mAnimOffset = 0.0f;
    mAnimSpeed = 1.0f;
 
-   mShapeAsset = StringTable->EmptyString();
-   mShapeAssetId = StringTable->EmptyString();
+   INIT_SHAPEASSET(Shape);
 }
 
 TSStatic::~TSStatic()
@@ -184,13 +182,11 @@ void TSStatic::initPersistFields()
       "Percent Animation Speed.");
    addGroup("Shape");
 
-   addProtectedField("shapeAsset", TypeShapeAssetId, Offset(mShapeAssetId, TSStatic),
-      &TSStatic::_setShapeAsset, &defaultProtectedGetFn,
-      "The source shape asset.");
+   INITPERSISTFIELD_SHAPEASSET(Shape, TSStatic, "Model to use for this TSStatic");
 
    addProtectedField("shapeName", TypeShapeFilename, Offset(mShapeName, TSStatic),
-      &TSStatic::_setShapeName, &defaultProtectedGetFn,
-      "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic. Legacy field. Any loose files assigned here will attempt to be auto-imported in as an asset.");
+      &TSStatic::_setShapeData, &defaultProtectedGetFn,
+      "%Path and filename of the model file (.DTS, .DAE) to use for this TSStatic. Legacy field. Any loose files assigned here will attempt to be auto-imported in as an asset.", AbstractClassRep::FIELD_HideInInspectors);
 
    endGroup("Shape");
 
@@ -287,50 +283,6 @@ void TSStatic::consoleInit()
    Con::addVariable("$pref::staticObjectUnfadeableSize", TypeF32, &TSStatic::smStaticObjectUnfadeableSize, "Size of object where if the bounds is at or bigger than this, it will be ignored in the $pref::useStaticObjectFade logic. Useful for very large, distance-important objects.\n");
 }
 
-bool TSStatic::_setShapeAsset(void* obj, const char* index, const char* data)
-{
-   TSStatic* ts = static_cast<TSStatic*>(obj);// ->setFile(FileName(data));
-
-   ts->mShapeAssetId = StringTable->insert(data);
-
-   return ts->setShapeAsset(ts->mShapeAssetId);
-}
-
-bool TSStatic::_setShapeName(void* obj, const char* index, const char* data)
-{
-   TSStatic* ts = static_cast<TSStatic*>(obj);// ->setFile(FileName(data));
-
-   StringTableEntry assetId = ShapeAsset::getAssetIdByFilename(StringTable->insert(data));
-   if (assetId != StringTable->EmptyString())
-   {
-      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
-      //the TSStatic
-      if (ts->setShapeAsset(assetId))
-      {
-         if (assetId == StringTable->insert("Core_Rendering:noShape"))
-         {
-            ts->mShapeName = data;
-            ts->mShapeAssetId = StringTable->EmptyString();
-
-            return true;
-         }
-         else
-         {
-            ts->mShapeAssetId = assetId;
-            ts->mShapeName = StringTable->EmptyString();
-
-            return false;
-         }
-      }
-    }
-   else
-   {
-      ts->mShapeAsset = StringTable->EmptyString();
-   }
-
-   return true;
-}
-
 bool TSStatic::_setFieldSkin(void* object, const char* index, const char* data)
 {
    TSStatic* ts = static_cast<TSStatic*>(object);
@@ -425,36 +377,10 @@ bool TSStatic::onAdd()
    return true;
 }
 
-bool TSStatic::setShapeAsset(const StringTableEntry shapeAssetId)
-{
-   if (!mShapeAsset.isNull())
-   {
-      mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
-   }
-
-   if (ShapeAsset::getAssetById(shapeAssetId, &mShapeAsset))
-   {
-      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
-      //the TSStatic
-      if (mShapeAsset.getAssetId() != StringTable->insert("Core_Rendering:noshape"))
-      {
-         mShapeName = StringTable->EmptyString();
-
-         mShapeAsset->getChangedSignal().notify(this, &TSStatic::_onAssetChanged);
-      }
-
-      _createShape();
-
-      setMaskBits(-1);
-
-      return true;
-   }
-
-   return false;
-}
-
 bool TSStatic::_createShape()
 {
+   //mShapeAsset->getChangedSignal().notify(this, &TSStatic::_onAssetChanged);
+
    // Cleanup before we create.
    mCollisionDetails.clear();
    mDecalDetails.clear();
@@ -674,8 +600,8 @@ void TSStatic::onRemove()
    if (isClientObject())
       mCubeReflector.unregisterReflector();
 
-   if(!mShapeAsset.isNull())
-      mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
+   //if(!mShapeAsset.isNull())
+   //   mShapeAsset->getChangedSignal().remove(this, &TSStatic::_onAssetChanged);
 
    Parent::onRemove();
 }
@@ -1037,8 +963,7 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    if (stream->writeFlag(mask & AdvancedStaticOptionsMask))
    {
-      stream->writeString(mShapeAsset.getAssetId());
-      stream->writeString(mShapeName);
+      PACK_SHAPEASSET(con, Shape);
 
       stream->write((U32)mDecalType);
 
@@ -1153,11 +1078,7 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
 
    if (stream->readFlag()) // AdvancedStaticOptionsMask
    {
-      char buffer[256];
-      stream->readString(buffer);
-      setShapeAsset(StringTable->insert(buffer));
-
-      mShapeName = stream->readSTString();
+      UNPACK_SHAPEASSET(con, Shape);
 
       stream->read((U32*)&mDecalType);
 
@@ -1676,7 +1597,7 @@ void TSStatic::updateMaterials()
 
    String path;
    if (mShapeAsset->isAssetValid())
-      path = mShapeAsset->getShapeFilename();
+      path = mShapeAsset->getShapeFileName();
    else
       path = mShapeName;
 
@@ -1709,9 +1630,8 @@ void TSStatic::updateMaterials()
 
 void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != StringTable->insert("Core_Rendering:noShape"))
+   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != ShapeAsset::smNoShapeAssetFallback)
       usedAssetsList->push_back_unique(mShapeAsset->getAssetId());
-
 }
 
 //------------------------------------------------------------------------
@@ -1874,7 +1794,7 @@ DefineEngineMethod(TSStatic, changeMaterial, void, (const char* mapTo, Material*
       return;
    }
 
-   TSMaterialList* shapeMaterialList = object->getShape()->materialList;
+   TSMaterialList* shapeMaterialList = object->getShapeResource()->materialList;
 
    // Check the mapTo name exists for this shape
    S32 matIndex = shapeMaterialList->getMaterialNameList().find_next(String(mapTo));
@@ -1914,7 +1834,7 @@ DefineEngineMethod(TSStatic, getModelFile, const char*, (), ,
    "@endtsexample\n"
 )
 {
-   return object->getShapeFileName();
+   return object->getShape();
 }
 
 void TSStatic::set_special_typing()

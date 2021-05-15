@@ -105,6 +105,7 @@ function LooseFileAuditWindow::buildPopupMenus(%this)
    }
 }
 
+//LooseFileAuditWindow.showDialog("data")
 function LooseFileAuditWindow::showDialog(%this, %address)
 {
    LooseFileAuditWindow.buildPopupMenus();
@@ -116,35 +117,50 @@ function LooseFileAuditWindow::showDialog(%this, %address)
    %this.refresh();
 }
 
-function LooseFileAuditWindow::refresh(%this)
+function LooseFileAuditWindow::refresh(%this, %recurse)
 {
+   if(%recurse $= "")
+      %recurse = true;
+   
    LooseFileList.clear();
    LooseFileList.insertItem(0, "Loose Files");
    
    //First, wipe out any files inside the folder first
-   %file = findFirstFileMultiExpr( %this.currentAddress @ "/*.*", false);
+   %file = findFirstFileMultiExpr( %this.currentAddress @ "/*.*", %recurse);
    
    %aq = new AssetQuery();
 
    while( %file !$= "" )
    {      
-      //%filename = fileName(%file);
-      //%filePath = filePath(%file);
-      if(!strIsMatchExpr("*.asset.taml", %file) && !strIsMatchExpr("*.taml", %file))
+      %filename = fileName(%file);
+      %filePath = filePath(%file);
+      if(!strIsMatchExpr("*.asset.taml", %file) && 
+         !strIsMatchExpr("*.taml", %file) && 
+         !strIsMatchExpr("*.dbc", %file) && 
+         !strIsMatchExpr("*.hlsl", %file) && 
+         !strIsMatchExpr("*.glsl", %file) && 
+         !strIsMatchExpr("*.h", %file) && 
+         !strIsMatchExpr("*.cpp", %file) && 
+         !strIsMatchExpr("*.module", %file))
       {
+         %found = false;
+         
          %assetsFound = AssetDatabase.findAssetLooseFile(%aq, %file);
          
-         if(%assetsFound == 0)
-         {
+         if(%assetsFound != 0)
+            %found = true;
+         
+         if(!%found)
             LooseFileList.insertItem(1, %file); 
-         }
       }
       
       %file = findNextFileMultiExpr( %this.currentAddress @ "/*.*" );
+      
+      %sfsdfh = true;
    }
    
    LooseFileList.buildVisibleTree(true);
-   LooseFileList.expandItem(0);
+   LooseFileList.expandItem(1);
    
    %aq.delete();
 }

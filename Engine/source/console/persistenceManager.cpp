@@ -1427,6 +1427,13 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
 
                      updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, fnBuf, true);
                   }
+                  else if (f->type == TypeCommand)
+                  {
+                     char cmdBuf[1024];
+                     expandEscape(cmdBuf, value);
+
+                     updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, cmdBuf, true);
+                  }
                   else
                      updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, value, true);
                }
@@ -1505,6 +1512,13 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                   Con::collapseScriptFilename(fnBuf, 1024, value);
 
                   newLines.push_back(createNewProperty(f->pFieldname, fnBuf, f->elementCount > 1, j));
+               }
+               else if (f->type == TypeCommand)
+               {
+                  char cmdBuf[1024];
+                  expandEscape(cmdBuf, value);
+
+                  newLines.push_back(createNewProperty(f->pFieldname, cmdBuf, f->elementCount > 1, j));
                }
                else
                   newLines.push_back(createNewProperty(f->pFieldname, value, f->elementCount > 1, j));              

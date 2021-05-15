@@ -59,11 +59,7 @@ RenderMeshExample::RenderMeshExample()
    // Set it as a "static" object that casts shadows
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
-   // Make sure we the Material instance to NULL
-   // so we don't try to access it incorrectly
-   mMaterialInst = NULL;
-
-   initMaterialAsset(Material);
+   INIT_MATERIALASSET(Material);
 }
 
 RenderMeshExample::~RenderMeshExample()
@@ -78,7 +74,7 @@ RenderMeshExample::~RenderMeshExample()
 void RenderMeshExample::initPersistFields()
 {
    addGroup( "Rendering" );
-   scriptBindMaterialAsset(Material, RenderMeshExample, "The material used to render the mesh.");
+   INITPERSISTFIELD_MATERIALASSET(Material, RenderMeshExample, "The material used to render the mesh.");
    endGroup( "Rendering" );
 
    // SceneObject already handles exposing the transform
@@ -147,7 +143,7 @@ U32 RenderMeshExample::packUpdate( NetConnection *conn, U32 mask, BitStream *str
    // Write out any of the updated editable properties
    if (stream->writeFlag(mask & UpdateMask))
    {
-      packMaterialAsset(conn, Material);
+      PACK_MATERIALASSET(conn, Material);
    }
 
    return retMask;
@@ -168,7 +164,7 @@ void RenderMeshExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      unpackMaterialAsset(conn, Material);
+      UNPACK_MATERIALASSET(conn, Material);
 
       if ( isProperlyAdded() )
          updateMaterial();

@@ -821,7 +821,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateORMConfigMap(1);";
+                           Command = "MaterialEditorGui.updateTextureMap(\"ORMConfig\",1);";
                            tooltipprofile = "ToolsGuiDefaultProfile";
                            ToolTip = "Change the packed spec map for this layer. \n Roughness (R), Ambient Occlusion (G), and Metalness(B))";
                            hovertime = "1000";
@@ -861,7 +861,7 @@
                            position = "134 34";
                            Extent = "40 16";
                            buttonType = "PushButton";
-                           command="MaterialEditorGui.updateORMConfigMap(1);";
+                           Command = "MaterialEditorGui.updateTextureMap(\"ORMConfig\",1);";
                         };
                         new GuiBitmapButtonCtrl() {
                            canSaveDynamicFields = "0";
@@ -875,7 +875,7 @@
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateORMConfigMap(0);";
+                           Command = "MaterialEditorGui.updateTextureMap(\"ORMConfig\",0);";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";
@@ -1049,7 +1049,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateroughMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"rough\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the Roughness map for this layer.";
 						 hovertime = "1000";
@@ -1094,7 +1094,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateroughMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"rough\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1118,7 +1118,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateroughMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"rough\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1285,7 +1285,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateaoMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"ao\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the AO map for this layer.";
 						 hovertime = "1000";
@@ -1330,7 +1330,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateaoMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"ao\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1354,7 +1354,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateaoMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"ao\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1521,7 +1521,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updatemetalMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"metal\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the Metalness Map for this layer.";
 						 hovertime = "1000";
@@ -1566,7 +1566,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updatemetalMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"metal\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1590,7 +1590,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updatemetalMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"metal\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1773,7 +1773,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateglowMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"glow\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the glowness Map for this layer.";
 						 hovertime = "1000";
@@ -1818,7 +1818,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateglowMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"glow\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1842,7 +1842,7 @@
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateglowMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"glow\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";

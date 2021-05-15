@@ -621,9 +621,14 @@ protected:
    GFXVertexBufferHandle<GFXVertexPNTT> mVB[SurfaceCount];   
    GFXPrimitiveBufferHandle mPB[SurfaceCount];      
 
-   DECLARE_NET_MATERIALASSET(MeshRoad, TopMaterial, MeshRoadMask);
-   DECLARE_NET_MATERIALASSET(MeshRoad, BottomMaterial, MeshRoadMask);
-   DECLARE_NET_MATERIALASSET(MeshRoad, SideMaterial, MeshRoadMask);
+   DECLARE_MATERIALASSET(MeshRoad, TopMaterial);
+   DECLARE_MATERIALASSET_NET_SETGET(MeshRoad, TopMaterial, MeshRoadMask);
+
+   DECLARE_MATERIALASSET(MeshRoad, BottomMaterial);
+   DECLARE_MATERIALASSET_NET_SETGET(MeshRoad, BottomMaterial, MeshRoadMask);
+
+   DECLARE_MATERIALASSET(MeshRoad, SideMaterial);
+   DECLARE_MATERIALASSET_NET_SETGET(MeshRoad, SideMaterial, MeshRoadMask);
 
    //String mMaterialName[SurfaceCount];   
    SimObjectPtr<Material> mMaterial[SurfaceCount];

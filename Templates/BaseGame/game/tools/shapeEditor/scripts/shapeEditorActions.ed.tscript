@@ -361,7 +361,7 @@ function ActionAddSequence::doit( %this )
       //We adjust due to the list "header" row as well
       %idx -= 1;
       
-      %animSet = "ShapeEditorPlugin.selectedAssetDef.animationSequence"@%idx@"=\"@Asset="@%moduleName@":"@%assetDef.assetName@"\";";
+      %animSet = "ShapeEditorPlugin.selectedAssetDef.animationSequence"@%idx@"=\"@asset="@%moduleName@":"@%assetDef.assetName@"\";";
       eval(%animSet);
       
       %assetPath = AssetDatabase.getAssetFilePath(ShapeEditorPlugin.selectedAssetId);

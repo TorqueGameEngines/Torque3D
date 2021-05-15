@@ -159,7 +159,7 @@ bool GuiMissionAreaCtrl::onWake()
 
 void GuiMissionAreaCtrl::onSleep()
 {
-   mTextureObject = NULL;
+   mBitmap = NULL;
    mMissionArea = 0;
    mTerrainBlock = 0;
 
@@ -604,7 +604,7 @@ void GuiMissionAreaCtrl::onRender(Point2I offset, const RectI & updateRect)
 
    GFXDrawUtil *drawer = GFX->getDrawUtil();
    drawer->clearBitmapModulation();
-   drawer->drawBitmapStretch(mTextureObject, rect, GFXBitmapFlip_Y, GFXTextureFilterLinear, false);
+   drawer->drawBitmapStretch(mBitmap, rect, GFXBitmapFlip_Y, GFXTextureFilterLinear, false);
 
    GFX->setStateBlock(mSolidStateBlock);
    drawer->clearBitmapModulation();

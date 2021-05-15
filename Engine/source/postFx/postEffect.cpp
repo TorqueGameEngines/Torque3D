@@ -505,6 +505,11 @@ PostEffect::PostEffect()
    dMemset( mActiveTextureViewport, 0, sizeof( RectI ) * NumTextures );
    dMemset( mTexSizeSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
    dMemset( mRenderTargetParamsSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
+
+   for (U32 i = 0; i < NumTextures; i++)
+   {
+      INIT_IMAGEASSET_ARRAY(Texture, i);
+   }
 }
 
 PostEffect::~PostEffect()
@@ -548,9 +553,8 @@ void PostEffect::initPersistFields()
    addField( "targetViewport", TYPEID< PFXTargetViewport >(), Offset( mTargetViewport, PostEffect ),
       "Specifies how the viewport should be set up for a target texture." );
 
-   addField( "texture", TypeImageFilename, Offset( mTexFilename, PostEffect ), NumTextures,
-      "Input textures to this effect ( samplers ).\n"
-      "@see PFXTextureIdentifiers" );
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NumTextures, PostEffect, "Input textures to this effect ( samplers ).\n"
+      "@see PFXTextureIdentifiers");
 
    addField("textureSRGB", TypeBool, Offset(mTexSRGB, PostEffect), NumTextures,
       "Set input texture to be sRGB");
@@ -601,23 +605,6 @@ bool PostEffect::onAdd()
    for( S32 i = 0; i < NumTextures; i++ )
    {
       mTextureType[i] = NormalTextureType;
-
-      String texFilename = mTexFilename[i];
-
-      // Skip empty stages or ones with variable or target names.
-      if (  texFilename.isEmpty() ||
-            texFilename[0] == '$' ||
-            texFilename[0] == '#' )
-         continue;
-
-      GFXTextureProfile *profile = &PostFxTextureProfile;
-      if (mTexSRGB[i])
-         profile = &PostFxTextureSRGBProfile;
-
-      // Try to load the texture.
-      bool success = mTextures[i].set( texFilename, &PostFxTextureProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
-      if (!success)
-         Con::errorf("Invalid Texture for PostEffect (%s), The Texture '%s' does not exist!", this->getName(), texFilename.c_str());
    }
 
    // Is the target a named target?
@@ -1139,7 +1126,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
 
 void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *inTexViewport )
 {
-   const String &texFilename = mTexFilename[ stage ];
+   const String &texFilename = mTextureName[ stage ];
 
    GFXTexHandle theTex;
    NamedTexTarget *namedTarget = NULL;
@@ -1176,7 +1163,7 @@ void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *
    }
    else
    {
-      theTex = mTextures[ stage ];
+      theTex = mTexture[ stage ];
       if ( theTex )
          viewport.set( 0, 0, theTex->getWidth(), theTex->getHeight() );
    }
@@ -1643,8 +1630,8 @@ void PostEffect::reload()
 void PostEffect::setTexture( U32 index, const String &texFilePath )
 {
 	// Set the new texture name.
-	mTexFilename[index] = texFilePath;
-	mTextures[index].free();
+	mTextureName[index] = texFilePath;
+	mTexture[index].free();
 
     // Skip empty stages or ones with variable or target names.
     if (	texFilePath.isEmpty() ||
@@ -1653,7 +1640,7 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
 		return;
 
     // Try to load the texture.
-    mTextures[index].set( texFilePath, &PostFxTextureProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+    mTexture[index].set( texFilePath, &PostFxTextureProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
 
     mTextureType[index] = NormalTextureType;
 }
@@ -1661,15 +1648,15 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
 void PostEffect::setTexture(U32 index, const GFXTexHandle& texHandle)
 {
    // Set the new texture name.
-   mTexFilename[index] = "";
-   mTextures[index].free();
+   mTextureName[index] = "";
+   mTexture[index].free();
 
    // Skip empty stages or ones with variable or target names.
    if (!texHandle.isValid())
       return;
 
    // Try to load the texture.
-   mTextures[index] = texHandle;
+   mTexture[index] = texHandle;
 
    mTextureType[index] = NormalTextureType;
 }
@@ -1850,7 +1837,7 @@ void PostEffect::_checkRequirements()
    {
       if (mTextureType[i] == NormalTextureType)
       {
-         const String &texFilename = mTexFilename[i];
+         const String &texFilename = mTextureName[i];
 
          if (texFilename.isNotEmpty() && texFilename[0] == '#')
          {

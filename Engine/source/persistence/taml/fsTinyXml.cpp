@@ -27,7 +27,7 @@ bool fsTiXmlDocument::LoadFile( const char * pFilename, TiXmlEncoding encoding )
 {
    // Expand the file-path.
    char filenameBuffer[1024];
-   Con::expandToolScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
+   Con::expandScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
 
    FileStream stream;
 
@@ -62,7 +62,7 @@ bool fsTiXmlDocument::SaveFile( const char * pFilename ) const
 {
    // Expand the file-name into the file-path buffer.
    char filenameBuffer[1024];
-   Con::expandToolScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
+   Con::expandScriptFilename(filenameBuffer, sizeof(filenameBuffer), pFilename);
 
    FileStream stream;
 

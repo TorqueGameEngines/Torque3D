@@ -2,5 +2,5 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="NoMaterial"
-    scriptFile="@assetFile=NoMaterial.cs"
+    scriptFile="@assetFile=NoMaterial.tscript"
     materialDefinitionName="NoMaterial" />

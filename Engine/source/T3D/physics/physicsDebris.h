@@ -33,6 +33,8 @@
 #include "T3D/physics/physicsCommon.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 
 class TSShapeInstance;
 class TSShape;
@@ -84,8 +86,8 @@ public:
    /// Is rendererd during shadow passes.
    bool castShadows;
 
-   const char* shapeName;
-   Resource<TSShape> shape;
+   DECLARE_SHAPEASSET(PhysicsDebrisData, Shape);
+   DECLARE_SHAPEASSET_SETGET(PhysicsDebrisData, Shape);
 
    PhysicsDebrisData();
 

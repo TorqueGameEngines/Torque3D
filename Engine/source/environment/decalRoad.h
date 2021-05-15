@@ -240,7 +240,11 @@ protected:
    U32 mSegmentsPerBatch;
    F32 mTextureLength;
 
-   DECLARE_NET_MATERIALASSET(DecalRoad, Material, DecalRoadMask);
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(DecalRoad, Material);
+   DECLARE_MATERIALASSET_NET_SETGET(DecalRoad, Material, DecalRoadMask);
+
    U32 mRenderPriority;
 
    // Static ConsoleVars for editor
@@ -261,9 +265,6 @@ protected:
    RoadBatchVector mBatches;
    
    bool mLoadRenderData;
-   
-   SimObjectPtr<Material> mMaterial;
-   BaseMatInstance *mMatInst;
 
    GFXVertexBufferHandle<GFXVertexPNTBT> mVB;
    GFXPrimitiveBufferHandle mPB;

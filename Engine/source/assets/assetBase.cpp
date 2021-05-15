@@ -315,6 +315,32 @@ S32 AssetBase::getAssetDependencyFieldCount(const char* pFieldName)
 
 //-----------------------------------------------------------------------------
 
+StringTableEntry AssetBase::getAssetDependencyField(const char* pFieldName, S32 index)
+{
+   SimFieldDictionary* fieldDictionary = getFieldDictionary();
+   for (SimFieldDictionaryIterator itr(fieldDictionary); *itr; ++itr)
+   {
+      SimFieldDictionary::Entry* entry = *itr;
+
+      String slotName = String(entry->slotName);
+
+      if (slotName.startsWith(pFieldName))
+      {
+         S32 trailingNum;
+         String::GetTrailingNumber(slotName.c_str(), trailingNum);
+
+         if (trailingNum == index)
+         {
+            return StringTable->insert(String(entry->value).replace(ASSET_ID_FIELD_PREFIX, "").c_str());
+         }
+      }
+   }
+
+   return StringTable->EmptyString();
+}
+
+//-----------------------------------------------------------------------------
+
 void AssetBase::clearAssetDependencyFields(const char* pFieldName)
 {
    SimFieldDictionary* fieldDictionary = getFieldDictionary();
@@ -340,7 +366,7 @@ void AssetBase::addAssetDependencyField(const char* pFieldName, const char* pAss
    dSprintf(depSlotName, sizeof(depSlotName), "%s%d", pFieldName, existingFieldCount);
 
    char depValue[255];
-   dSprintf(depValue, sizeof(depValue), "@Asset=%s", pAssetId);
+   dSprintf(depValue, sizeof(depValue), "%s=%s", ASSET_ID_SIGNATURE, pAssetId);
 
    setDataField(StringTable->insert(depSlotName), NULL, StringTable->insert(depValue));
 }

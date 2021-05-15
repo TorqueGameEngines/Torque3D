@@ -87,6 +87,8 @@ function initializeAssetBrowser()
    exec("./scripts/selectPath." @ $TorqueScriptFileExtension);
    exec("./scripts/looseFileAudit." @ $TorqueScriptFileExtension);
    
+   exec("./scripts/projectImporter." @ $TorqueScriptFileExtension);
+   
    //Processing for the different asset types
    exec("./scripts/assetTypes/component." @ $TorqueScriptFileExtension); 
    exec("./scripts/assetTypes/cpp." @ $TorqueScriptFileExtension);

@@ -60,6 +60,8 @@
 #include "materials/matTextureTarget.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class GFXStateBlockData;
 class Frustum;
 class SceneRenderState;
@@ -88,7 +90,101 @@ public:
 
 protected:
 
-   FileName mTexFilename[NumTextures];
+   //DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, PostFxTextureProfile, NumTextures);
+public: \
+   static const U32 smTextureCount = NumTextures; \
+   GFXTexHandle mTexture[NumTextures] = { NULL };\
+   FileName mTextureName[NumTextures] = { String::EmptyString }; \
+   StringTableEntry mTextureAssetId[NumTextures] = { StringTable->EmptyString() };\
+   AssetPtr<ImageAsset>  mTextureAsset[NumTextures] = { NULL };\
+   GFXTextureProfile * mTextureProfile = &PostFxTextureProfile;\
+public: \
+   const StringTableEntry getTextureFile(const U32& index) const { return StringTable->insert(mTextureName[index].c_str()); }\
+   void setTextureFile(const FileName &_in, const U32& index) { mTextureName[index] = _in;}\
+   const AssetPtr<ImageAsset> & getTextureAsset(const U32& index) const { return mTextureAsset[index]; }\
+   void setTextureAsset(const AssetPtr<ImageAsset> &_in, const U32& index) { mTextureAsset[index] = _in;}\
+   \
+   bool _setTexture(StringTableEntry _in, const U32& index)\
+   {\
+      if(index >= smTextureCount || index < 0)\
+         return false;\
+      if (_in == StringTable->EmptyString())\
+      {\
+         mTextureName[index] = String::EmptyString;\
+         mTextureAssetId[index] = StringTable->EmptyString();\
+         mTextureAsset[index] = NULL;\
+         mTexture[index].free();\
+         mTexture[index] = NULL;\
+         return true;\
+      }\
+      else if(_in[0] == '$' || _in[0] == '#')\
+      {\
+         mTextureName[index] = _in;\
+         mTextureAssetId[index] = StringTable->EmptyString();\
+         mTextureAsset[index] = NULL;\
+         mTexture[index].free();\
+         mTexture[index] = NULL;\
+         return true;\
+      }\
+      \
+      if (AssetDatabase.isDeclaredAsset(_in))\
+      {\
+         mTextureAssetId[index] = _in;\
+         \
+         U32 assetState = ImageAsset::getAssetById(mTextureAssetId[index], &mTextureAsset[index]);\
+         \
+         if (ImageAsset::Ok == assetState)\
+         {\
+            mTextureName[index] = StringTable->EmptyString();\
+         }\
+         else\
+         {\
+            mTextureName[index] = _in;\
+            mTextureAsset[index] = NULL;\
+         }\
+      }\
+      else\
+      {\
+         if (ImageAsset::getAssetByFilename(_in, &mTextureAsset[index]))\
+         {\
+            mTextureAssetId[index] = mTextureAsset[index].getAssetId();\
+            \
+            if (ImageAsset::Ok == mTextureAsset[index]->getStatus())\
+               mTextureName[index] = StringTable->EmptyString();\
+         }\
+         else\
+         {\
+            mTextureName[index] = _in;\
+            mTextureAssetId[index] = StringTable->EmptyString();\
+            mTextureAsset[index] = NULL;\
+         }\
+      }\
+      if (getTexture(index) != StringTable->EmptyString() && !mTextureName[index].equal("texhandle", String::NoCase))\
+      {\
+         mTexture[index].set(getTexture(index), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
+         return true;\
+      }\
+      return false;\
+   }\
+   \
+   const StringTableEntry getTexture(const U32& index) const\
+   {\
+      if (mTextureAsset[index] && (mTextureAsset[index]->getImageFileName() != StringTable->EmptyString()))\
+         return  Platform::makeRelativePathName(mTextureAsset[index]->getImagePath(), Platform::getMainDotCsDir());\
+      else if (mTextureName[index].isNotEmpty())\
+         return StringTable->insert(Platform::makeRelativePathName(mTextureName[index].c_str(), Platform::getMainDotCsDir()));\
+      else\
+         return StringTable->EmptyString();\
+   }\
+   GFXTexHandle getTextureResource(const U32& index) \
+   {\
+      if(index >= smTextureCount || index < 0)\
+         return nullptr;\
+      return mTexture[index];\
+   }
+
+   DECLARE_IMAGEASSET_ARRAY_SETGET(PostEffect, Texture);
+
    bool mTexSRGB[NumTextures];
 
    enum
@@ -98,7 +194,6 @@ protected:
       CubemapArrayType,
    } mTextureType[NumTextures];
 
-   GFXTexHandle mTextures[NumTextures];
    GFXCubemapHandle mCubemapTextures[NumTextures];
    GFXCubemapArrayHandle mCubemapArrayTextures[NumTextures];
 

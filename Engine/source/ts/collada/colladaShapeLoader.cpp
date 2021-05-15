@@ -497,8 +497,8 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
       {
          Material *mat = dynamic_cast<Material*>( persistMgr.getDirtyList()[iMat].getObject() );
 
-         copySketchupTexture(path, mat->mDiffuseMapFilename[0]);
-         copySketchupTexture(path, mat->mNormalMapFilename[0]);
+         copySketchupTexture(path, mat->mDiffuseMapName[0]);
+         copySketchupTexture(path, mat->mNormalMapName[0]);
       }
    }
 

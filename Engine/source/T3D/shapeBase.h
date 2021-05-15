@@ -373,8 +373,11 @@ struct ShapeBaseImageData: public GameBaseData {
    F32 scriptAnimTransitionTime;    ///< The amount of time to transition between the previous sequence and new sequence
                                     ///< when the script prefix has changed.
 
-   StringTableEntry  shapeName;     ///< Name of shape to render.
-   StringTableEntry  shapeNameFP;   ///< Name of shape to render in first person (optional).
+   DECLARE_SHAPEASSET(ShapeBaseData, Shape);  ///< Name of shape to render.
+   DECLARE_SHAPEASSET_SETGET(ShapeBaseImageData, Shape);
+
+   DECLARE_SHAPEASSET(ShapeBaseData, ShapeFP);  ///< Name of shape to render in first person (optional).
+   DECLARE_SHAPEASSET_SETGET(ShapeBaseImageData, ShapeFP);
 
    StringTableEntry  imageAnimPrefix;     ///< Passed along to the mounting shape to modify
                                           ///  animation sequences played in 3rd person. [optional]
@@ -539,6 +542,7 @@ public:
    F32 shadowSphereAdjust;
 
    DECLARE_SHAPEASSET(ShapeBaseData, Shape);
+   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, Shape);
 
    StringTableEntry  cloakTexName;
 
@@ -552,8 +556,9 @@ public:
    /// @{
    DebrisData *      debris;
    S32               debrisID;
-   StringTableEntry  debrisShapeName;
-   Resource<TSShape> debrisShape;
+
+   DECLARE_SHAPEASSET(ShapeBaseData, DebrisShape);
+   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, DebrisShape);
 
    ExplosionData*    explosion;
    S32               explosionID;
@@ -598,8 +603,6 @@ public:
 
    /// @name Data initialized on preload
    /// @{
-
-   Resource<TSShape> mShape;         ///< Shape handle
    U32 mCRC;
    bool computeCRC;
 

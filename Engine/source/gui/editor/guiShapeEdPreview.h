@@ -114,6 +114,7 @@ protected:
    bool        mRenderColMeshes;
    bool        mRenderMounts;
    TSShapeInstance*  mModel;
+   StringTableEntry mModelName;
 
    LightInfo*  mFakeSun;
    EulerF      mSunRot;
@@ -198,6 +199,8 @@ public:
 
    void setCurrentDetail(S32 dl);
    bool setObjectModel(const char * modelName);
+
+   void _onResourceChanged(const Torque::Path& path);
 
    /// @name Threads
    ///@{

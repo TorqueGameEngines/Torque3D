@@ -83,6 +83,9 @@ class VolumetricFog : public SceneObject
       Vector <GFXPrimitive> *piArray;
       Vector <U32> *indices;
    };
+
+   DECLARE_SHAPEASSET(VolumetricFog, Shape);
+   DECLARE_SHAPEASSET_NET_SETGET(VolumetricFog, Shape, FogShapeMask);
    
    protected:
       // Rendertargets;
@@ -90,9 +93,6 @@ class VolumetricFog : public SceneObject
       NamedTexTargetRef mDeferredTarget;
       NamedTexTargetRef mDepthBufferTarget;
       NamedTexTargetRef mFrontBufferTarget;
-   
-      // Fog Modulation texture
-      GFXTexHandle mTexture;
    
       // Shaders
       GFXShaderRef mShader;
@@ -143,10 +143,7 @@ class VolumetricFog : public SceneObject
       GFXPrimitiveBufferHandle mPB;
    
       // Fog volume data;
-      AssetPtr<ShapeAsset> mShapeAsset;
-      StringTableEntry mShapeAssetId;
-
-      StringTableEntry mShapeName;
+      
       ColorI mFogColor;
       F32 mFogDensity;
       bool mIgnoreWater;
@@ -165,7 +162,9 @@ class VolumetricFog : public SceneObject
       F32 mInvScale;
    
       // Fog Modulation data
-      String mTextureName;
+      DECLARE_IMAGEASSET(VolumetricFog, Texture, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_NET_SETGET(VolumetricFog, Texture, FogModulationMask);
+
       bool mIsTextured;
       F32 mTexTiles;
       F32 mStrength;

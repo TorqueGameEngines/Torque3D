@@ -58,7 +58,10 @@ bool ZipSubRStream::attachStream(Stream* io_pSlaveStream)
    AssertFatal(io_pSlaveStream != NULL, "NULL Slave stream?");
    AssertFatal(m_pStream == NULL,       "Already attached!");
 
+   m_pStream          = io_pSlaveStream->clone();
+   if (!m_pStream)
    m_pStream          = io_pSlaveStream;
+
    m_originalSlavePosition = io_pSlaveStream->getPosition();
    m_uncompressedSize = 0;
    m_currentPosition  = 0;

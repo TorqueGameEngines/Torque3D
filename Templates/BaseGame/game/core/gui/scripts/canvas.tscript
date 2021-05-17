@@ -120,6 +120,13 @@ function configureCanvas()
 
    // Actually set the new video mode
    Canvas.setVideoMode(%resX, %resY, %fs, %bpp, %rate, %aa);
+
+   // For borderless on non-windows OS, move the window into position.
+   if (($pref::Video::deviceMode == $Video::ModeBorderless) && ($platform !$= "windows"))
+   {
+      %borderlessPos = getWords(Canvas.getMonitorUsableRect($pref::Video::deviceId), 0, 1);
+      Canvas.setWindowPosition(%borderlessPos);
+   }
    Canvas.setFocus();
 
    // Lock and unlock the mouse to force the position to sync with the platform window
@@ -184,6 +191,12 @@ function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startu
 
       return true;
    }
+   else if (%deviceMode == $Video::ModeFullscreen)
+   {  // Fullscreen must match the aspect ratio of the monitor
+      %deviceRes = getWords(%this.getMonitorRect(%deviceId), 2);
+      if (mRoundColour(%resX / %resY, 2) != mRoundColour(%deviceRes.x / %deviceRes.y, 2))
+         return false;
+   }
 
    if (!%startup)
       return true;
@@ -236,6 +249,14 @@ function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
          ((%resX == getWord(%bestRes, $WORD::RES_X)) && (%resY == getWord(%bestRes, $WORD::RES_Y)) &&
             (%rate > getWord(%bestRes, $WORD::REFRESH))))
          %bestRes = %testRes;
+   }
+
+   // Borderless on non-windows OS should be the usable screen area.
+   if ((%deviceMode == $Video::ModeBorderless) && ($platform !$= "windows"))
+   {
+      %deviceRect = getWords(%this.getMonitorUsableRect(%deviceId), 2);
+      %bestRes = setWord(%bestRes, $WORD::RES_X, %deviceRect.x);
+      %bestRes = setWord(%bestRes, $WORD::RES_Y, %deviceRect.y);
    }
 
    return %bestRes;

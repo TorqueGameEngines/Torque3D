@@ -40,26 +40,47 @@ mark_as_advanced(FETCHCONTENT_UPDATES_DISCONNECTED_T3DSHARP)
 
 set(CSHARP_SOURCE_DIR "${t3dsharp_SOURCE_DIR}")
 set(CSHARP_OUTPUT_DIR "${t3dsharp_SOURCE_DIR}")
+set(CSHARP_SOLUTION_NAME "T3DSharpSolution")
+set(CSHARP_SOLUTION_PATH "${CSHARP_SOURCE_DIR}/${CSHARP_SOLUTION_NAME}.sln")
+
+# --------------------
+# -- Solution 
+# --------------------
+if(UNIX)
+   FILE(REMOVE "${CSHARP_SOLUTION_PATH}")
+   execute_process(
+      COMMAND dotnet new sln --name ${CSHARP_SOLUTION_NAME}
+      WORKING_DIRECTORY ${CSHARP_SOURCE_DIR}
+   )
+   add_custom_target(__T3DSHARP_SOLUTION ALL
+      COMMAND dotnet build ${CSHARP_SOLUTION_PATH} -o ${projectOutDir}
+   )
+endif()
 
 # --------------------
 # -- Projects
 # --------------------
-
 macro(add_csproject name path)
-	include_external_msproject(
-		${name} "${path}"
-		TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
-		PLATFORM "Any CPU"
-	)
+   if(UNIX)
+      execute_process(
+         COMMAND dotnet sln ${CSHARP_SOLUTION_PATH} add ${path}
+      )
+   else()
+      include_external_msproject(
+         ${name} "${path}"
+         TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
+         PLATFORM "Any CPU"
+      )
 
-	set_target_properties(${name} PROPERTIES 
-		MAP_IMPORTED_CONFIG_RELEASE Release
-		MAP_IMPORTED_CONFIG_MINSIZEREL Release
-		MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
-		MAP_IMPORTED_CONFIG_DEBUG Debug
-		)
-	
-	set_target_properties(${name} PROPERTIES FOLDER "Managed")
+      set_target_properties(${name} PROPERTIES 
+         MAP_IMPORTED_CONFIG_RELEASE Release
+         MAP_IMPORTED_CONFIG_MINSIZEREL Release
+         MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
+         MAP_IMPORTED_CONFIG_DEBUG Debug
+         )
+      
+      set_target_properties(${name} PROPERTIES FOLDER "Managed")
+   endif()
 endmacro()
 
 macro(set_relative_csharp_framework_path src_path)
@@ -206,9 +227,11 @@ configure_file(
 
 add_csproject(T3DSharpGame "${CSHARP_OUTPUT_DIR}/T3DSharpGame/T3DSharpGame.csproj")
 
-set_target_properties(T3DSharpGame PROPERTIES 
-	MAP_IMPORTED_CONFIG_RELEASE Release
-	MAP_IMPORTED_CONFIG_MINSIZEREL MinSizeRel
-	MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo
-	MAP_IMPORTED_CONFIG_DEBUG Debug
-	)
+if (NOT UNIX)
+   set_target_properties(T3DSharpGame PROPERTIES 
+      MAP_IMPORTED_CONFIG_RELEASE Release
+      MAP_IMPORTED_CONFIG_MINSIZEREL MinSizeRel
+      MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo
+      MAP_IMPORTED_CONFIG_DEBUG Debug
+      )
+endif()

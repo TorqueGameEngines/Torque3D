@@ -617,7 +617,7 @@ endif()
 
 ###############################################################################
 ###############################################################################
-if(${TORQUE_LIBRARY})
+if(${TORQUE_CSHARP})
 	set(TORQUE_STATIC_TMP ${TORQUE_STATIC})
 	set(TORQUE_STATIC OFF)
 	set(TORQUE_CXX_FLAGS_${TORQUE_APP_NAME} "${TORQUE_CXX_FLAGS_EXECUTABLES}")
@@ -659,7 +659,7 @@ endif()
 if(NOT EXISTS "${projectOutDir}/${PROJECT_NAME}.torsion")
     CONFIGURE_FILE("${cmakeDir}/template.torsion.in" "${projectOutDir}/${PROJECT_NAME}.torsion")
 endif()
-if(NOT ${TORQUE_NO_MAIN_CS})
+if(NOT ${TORQUE_CSHARP})
     if(EXISTS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.${TORQUE_SCRIPT_EXTENSION}.in")
          CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.${TORQUE_SCRIPT_EXTENSION}.in" "${projectOutDir}/main.${TORQUE_SCRIPT_EXTENSION}")
 	endif()

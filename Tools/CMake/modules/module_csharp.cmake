@@ -27,9 +27,6 @@ option(TORQUE_CSHARP "Enable C# Scripting" OFF)
 if( NOT TORQUE_CSHARP )
     return()
 endif()
-
-set(TORQUE_LIBRARY ON)
-set(TORQUE_NO_MAIN_CS ON)
 	           
 # check if we can build it ourselfs
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/csharp.cmake")

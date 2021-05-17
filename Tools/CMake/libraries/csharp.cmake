@@ -46,7 +46,7 @@ set(CSHARP_SOLUTION_PATH "${CSHARP_SOURCE_DIR}/${CSHARP_SOLUTION_NAME}.sln")
 # --------------------
 # -- Solution 
 # --------------------
-if(UNIX)
+if(NOT MSVC)
    FILE(REMOVE "${CSHARP_SOLUTION_PATH}")
    execute_process(
       COMMAND dotnet new sln --name ${CSHARP_SOLUTION_NAME}
@@ -61,11 +61,7 @@ endif()
 # -- Projects
 # --------------------
 macro(add_csproject name path)
-   if(UNIX)
-      execute_process(
-         COMMAND dotnet sln ${CSHARP_SOLUTION_PATH} add ${path}
-      )
-   else()
+   if(MSVC)
       include_external_msproject(
          ${name} "${path}"
          TYPE FAE04EC0-301F-11D3-BF4B-00C04F79EFBC
@@ -80,6 +76,10 @@ macro(add_csproject name path)
          )
       
       set_target_properties(${name} PROPERTIES FOLDER "Managed")
+   else()
+      execute_process(
+         COMMAND dotnet sln ${CSHARP_SOLUTION_PATH} add ${path}
+      )
    endif()
 endmacro()
 
@@ -227,7 +227,7 @@ configure_file(
 
 add_csproject(T3DSharpGame "${CSHARP_OUTPUT_DIR}/T3DSharpGame/T3DSharpGame.csproj")
 
-if (NOT UNIX)
+if (MSVC)
    set_target_properties(T3DSharpGame PROPERTIES 
       MAP_IMPORTED_CONFIG_RELEASE Release
       MAP_IMPORTED_CONFIG_MINSIZEREL MinSizeRel

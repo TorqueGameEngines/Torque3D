@@ -144,7 +144,7 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 ProjectileData::ProjectileData()
 {
-   projectileShapeName = NULL;
+   INIT_SHAPEASSET(ProjectileShape);
 
    sound = NULL;
 
@@ -197,7 +197,6 @@ ProjectileData::ProjectileData()
 
 ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   projectileShapeName = other.projectileShapeName;
    faceViewer = other.faceViewer; // -- always set to false
    scale = other.scale;
    velInheritFactor = other.velInheritFactor;
@@ -221,7 +220,7 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
    sound = other.sound;
    lightDesc = other.lightDesc;
    lightDescId = other.lightDescId; // -- for pack/unpack of lightDesc ptr
-   projectileShape = other.projectileShape; // -- TSShape loads using projectileShapeName
+   CLONE_SHAPEASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
    activateSeq = other.activateSeq; // -- from projectileShape sequence "activate"
    maintainSeq = other.maintainSeq; // -- from projectileShape sequence "maintain"
    particleEmitter = other.particleEmitter;
@@ -244,8 +243,11 @@ void ProjectileData::initPersistFields()
       "as the projectile enters or leaves water.\n\n"
       "@see particleEmitter\n");
 
-   addField("projectileShapeName", TypeShapeFilename, Offset(projectileShapeName, ProjectileData),
-      "@brief File path to the model of the projectile.\n\n");
+   INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
+
+   addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
+      "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
+
    addField("scale", TypePoint3F, Offset(scale, ProjectileData),
       "@brief Scale to apply to the projectile's size.\n\n"
       "@note This is applied after SceneObject::scale\n");
@@ -375,21 +377,17 @@ bool ProjectileData::preload(bool server, String &errorStr)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockid(lightDesc): %d", lightDescId);   
    }
 
-   if (projectileShapeName && projectileShapeName[0] != '\0')
+   if (!mProjectileShape)
    {
-      projectileShape = ResourceManager::get().load(projectileShapeName);
-      if (bool(projectileShape) == false)
-      {
-         errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", projectileShapeName);
-         return false;
-      }
-      activateSeq = projectileShape->findSequence("activate");
-      maintainSeq = projectileShape->findSequence("maintain");
+      errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", mProjectileShapeAssetId);
+      return false;
    }
-
-   if (bool(projectileShape)) // create an instance to preload shape data
+   else
    {
-      TSShapeInstance* pDummy = new TSShapeInstance(projectileShape, !server);
+      activateSeq = mProjectileShape->findSequence("activate");
+      maintainSeq = mProjectileShape->findSequence("maintain");
+
+      TSShapeInstance* pDummy = new TSShapeInstance(mProjectileShape, !server);
       delete pDummy;
    }
 
@@ -401,7 +399,8 @@ void ProjectileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   stream->writeString(projectileShapeName);
+   PACKDATA_SHAPEASSET(ProjectileShape);
+
    stream->writeFlag(faceViewer);
    if(stream->writeFlag(scale.x != 1 || scale.y != 1 || scale.z != 1))
    {
@@ -465,7 +464,7 @@ void ProjectileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   projectileShapeName = stream->readSTString();
+   UNPACKDATA_SHAPEASSET(ProjectileShape);
 
    faceViewer = stream->readFlag();
    if(stream->readFlag())
@@ -786,9 +785,9 @@ bool Projectile::onAdd()
    }
    else
    {
-      if (bool(mDataBlock->projectileShape))
+      if (bool(mDataBlock->mProjectileShape))
       {
-         mProjectileShape = new TSShapeInstance(mDataBlock->projectileShape, isClientObject());
+         mProjectileShape = new TSShapeInstance(mDataBlock->mProjectileShape, isClientObject());
 
          if (mDataBlock->activateSeq != -1)
          {
@@ -827,8 +826,8 @@ bool Projectile::onAdd()
       processAfter(mSourceObject);
 
    // Setup our bounding box
-   if (bool(mDataBlock->projectileShape) == true)
-      mObjBox = mDataBlock->projectileShape->mBounds;
+   if (bool(mDataBlock->mProjectileShape) == true)
+      mObjBox = mDataBlock->mProjectileShape->mBounds;
    else
       mObjBox = Box3F(Point3F(0, 0, 0), Point3F(0, 0, 0));
 

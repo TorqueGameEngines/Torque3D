@@ -170,7 +170,7 @@ protected:
    void _renderNormals(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
 
    void _onResourceChanged(const Torque::Path& path);
-   void _onAssetChanged();
+   void onShapeChanged();
 
    // ProcessObject
    virtual void processTick(const Move* move);
@@ -191,7 +191,7 @@ protected:
 
    Convex* mConvexList;
 
-   DECLARE_SHAPEASSET(TSStatic, Shape);
+   DECLARE_SHAPEASSET(TSStatic, Shape, onShapeChanged);
    DECLARE_SHAPEASSET_NET_SETGET(TSStatic, Shape, AdvancedStaticOptionsMask);
 
    U32               mShapeHash;

@@ -276,7 +276,7 @@ void GuiFormCtrl::onRender(Point2I offset, const RectI &updateRect)
       Point2I barOffset(barStart, barTop);
 
       // Draw the start of the bar...
-      GFX->getDrawUtil()->drawBitmapStretchSR(mProfile->mTextureObject ,RectI(barOffset, mProfile->mBitmapArrayRects[2].extent), mProfile->mBitmapArrayRects[2] );
+      GFX->getDrawUtil()->drawBitmapStretchSR(mProfile->getBitmapResource(),RectI(barOffset, mProfile->mBitmapArrayRects[2].extent), mProfile->mBitmapArrayRects[2] );
 
       // Now draw the middle...
       barOffset.x += mProfile->mBitmapArrayRects[2].extent.x;
@@ -290,7 +290,7 @@ void GuiFormCtrl::onRender(Point2I offset, const RectI &updateRect)
          foo.inset(1,0);
 
          GFX->getDrawUtil()->drawBitmapStretchSR(
-            mProfile->mTextureObject,
+            mProfile->getBitmapResource(),
             RectI(barOffset, Point2I(barMiddleSize, mProfile->mBitmapArrayRects[3].extent.y)),
             foo
             );
@@ -299,7 +299,7 @@ void GuiFormCtrl::onRender(Point2I offset, const RectI &updateRect)
       // And the end
       barOffset.x += barMiddleSize;
 
-      GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mTextureObject, RectI(barOffset, mProfile->mBitmapArrayRects[4].extent),
+      GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->getBitmapResource(), RectI(barOffset, mProfile->mBitmapArrayRects[4].extent),
          mProfile->mBitmapArrayRects[4]);
 
       GFX->getDrawUtil()->setBitmapModulation((mMouseOver ? mProfile->mFontColorHL : mProfile->mFontColor));

@@ -39,7 +39,7 @@ class GuiBitmapCtrl : public GuiControl
    
       /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
       /// from a file but rather set explicitly on the control.
-      DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, GFXDefaultGUIProfile);
+      DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
       DECLARE_IMAGEASSET_SETGET(GuiBitmapCtrl, Bitmap);
             
       Point2I mStartPoint;
@@ -50,6 +50,8 @@ class GuiBitmapCtrl : public GuiControl
 
       static bool setBitmapName( void *object, const char *index, const char *data );
       static const char *getBitmapName( void *obj, const char *data );
+
+      void onImageChanged() {}
 
    public:
       

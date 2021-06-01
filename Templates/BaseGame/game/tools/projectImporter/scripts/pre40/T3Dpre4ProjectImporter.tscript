@@ -1,0 +1,530 @@
+function T3Dpre4ProjectImporter::setupModule(%this)
+{
+   %newModuleName = $ProjectImporter::moduleName;
+      
+   echo("Creating a new Module named: " @ %newModuleName);
+   
+   %moduleFilePath = "data/" @ %newModuleName;
+   %moduleDefinitionFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".module";
+   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension;
+   
+   %newModule = new ModuleDefinition()
+   {
+      ModuleId = %newModuleName;
+      versionId = 1;
+      ScriptFile = %newModuleName @ "." @ $TorqueScriptFileExtension;
+      CreateFunction="onCreate";
+	   DestroyFunction="onDestroy";
+	   Group = "Game";
+      
+      new DeclaredAssets()
+      {
+         Extension = "asset.taml";
+         Recurse = true;
+      };
+   };
+   
+   TAMLWrite(%newModule, %moduleDefinitionFilePath); 
+   
+   //Now generate the script file for it
+   %file = new FileObject();
+   %templateFile = new FileObject();
+   
+   %moduleTemplateCodeFilePath = AssetBrowser.templateFilesPath @ "module.tscript.template";
+   
+   if(%file.openForWrite(%moduleScriptFilePath) && %templateFile.openForRead(%moduleTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %newModuleName );
+         
+         %file.writeline(%line);
+         echo(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("CreateNewModule - Something went wrong and we couldn't write the script file!");
+   }
+   
+   //force a refresh of our modules list
+   ModuleDatabase.ignoreLoadedGroups(true);
+   ModuleDatabase.scanModules( "data", false );
+   %success = ModuleDatabase.loadExplicit(%newModuleName, 1);
+   ModuleDatabase.ignoreLoadedGroups(false);
+   
+   //force a reload of the Module lists
+   AssetBrowser.refresh();
+}
+
+function T3Dpre4ProjectImporter::copyFiles(%this)
+{
+   ProjectImportWizardPage4-->fileCopyText.setText("Beginning copy of files to new module folder now. This may take a few minutes...");
+   Canvas.repaint();
+   
+   %file = findFirstFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {
+      %filePath = filePath(%file);
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      
+      if(%fileExt $= ".dll" || %fileExt $= ".log" || %fileExt $= ".exe" || %fileExt $= ".manifest"|| %fileExt $= ".h" ||
+         %fileExt $= ".cpp" || %fileExt $= ".so" || %fileExt $= ".do")
+      {
+         %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
+         continue;
+      }
+      
+      %targetFilePath = strReplace(%file, $ProjectImporter::sourceContentFolder, $ProjectImporter::modulePath);
+      %targetFolder = filePath(%targetFilePath);
+      
+      if(!isDirectory(%targetFolder))
+      {
+         DirectoryHandler::createFolder(0, %targetFolder);
+      }
+      
+      if(!pathCopy(%file, %targetFilePath))
+      {
+         error("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
+      }
+      
+      %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
+   }
+   
+   ProjectImportWizardPage4-->fileCopyText.setValue("File copy done! Press Next to continue.");
+   
+   ProjectImportWindow-->nextButton.setActive(true);
+   Canvas.repaint();
+}
+
+function T3Dpre4ProjectImporter::processImportedFiles(%this)
+{
+   %this.doImport();
+   
+   ProjectImportWizardPage5-->processingText.setText("Processing of files done! Press Next to continue.");
+   ProjectImportWindow-->nextButton.setActive(true);
+   Canvas.repaint();
+}
+
+function T3Dpre4ProjectImporter::doImport(%this)
+{
+   //Update asset content
+   beginImageImport();
+   beginShapeImport();
+   beginTerrainImport();
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*.*", true);
+   
+   %fileObj = new FileObject();
+   %objectClassStack = new ArrayObject();
+   %fileOutputLines = new ArrayObject();
+   
+   error("Legacy Project Importer - Beginning processing of imported code files");
+   
+   //Walk through and process all code files to update references
+   while( %file !$= "" )
+   {      
+      if(!endsWith(%file, "cs") && 
+         !endsWith(%file, "tscript") && 
+         !endsWith(%file, "mis") && 
+         !endsWith(%file, "gui"))
+      {
+         %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.*" );
+         continue;
+      }
+      
+      %fileWasChanged = false;
+      
+      %filename = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      $ProjectImporter::currentFilePath = %filePath @ "/";
+      
+      ProjectImportWizardPage5-->processingText.setText("Processing file: " @ %file);
+      Canvas.repaint();
+      
+      if ( %fileObj.openForRead( %file ) ) 
+      {
+         error("Legacy Project Importer - Beginning process of file: " @ %file);
+         %lineNum = 0;
+         while ( !%fileObj.isEOF() ) 
+         {
+            %line = %fileObj.readLine();
+            %trimmedLine = trim(%line);
+            
+            if(strIsMatchExpr("*new*(*)*", %line))
+            {
+               //we have a new object, add it to the stack
+               //substr to peel the class name
+               %start = strpos(%line, "new ");
+               %end = strpos(%line, "(", %start);
+
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 4, %end-%start-4);
+                  
+                  %objectClassStack.push_back(%className);
+               }
+            }
+            else if(strIsMatchExpr("*singleton*(*)*", %line))
+            {
+               //we have a new object, add it to the stack
+               //substr to peel the class name
+               %start = strpos(%line, "singleton ");
+               %end = strpos(%line, "(", %start);
+               
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 10, %end-%start-10);
+                  
+                  %objectClassStack.push_back(%className);
+               }
+            }
+            else if(strIsMatchExpr("*};*", %line))
+            {
+               //hit the end of an object, pop our object stack
+               %objectClassStack.pop_back();
+            }
+            
+            if(%objectClassStack.count() != 0)
+            {
+               %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+               
+               %processFunction = "process" @ %currentObjClass @ "Line";
+               if(%this.isMethod(%processFunction))
+               {
+                  %outLine = %this.call(%processFunction, %line);
+
+                  if(%line !$= %outLine)
+                  {
+                     %fileWasChanged = true;
+                     %line = %outLine;
+                  }
+               }
+            }
+            %lineNum++;
+            
+            %fileOutputLines.push_back(%line);
+         }
+         
+         %fileObj.close();
+      }
+      else
+      {
+         error("Legacy Project Importer - File not able to be opened: " @ %file);  
+      }
+      
+      if(%fileWasChanged)
+      {
+         %fileObj.openForWrite(%file);
+
+         for(%l = 0; %l < %fileOutputLines.count(); %l++)
+         {
+            %outLine = %fileOutputLines.getKey(%l);
+            
+            %fileObj.writeline(%outLine);
+         }
+         
+         %fileObj.close();
+      }
+      
+      %fileOutputLines.empty();
+      %objectClassStack.empty();
+      
+      %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.*" );
+   }
+   
+   error("Legacy Project Importer - Processing of imported code files done!");
+   
+   //exec common loader files, process the remainder into assets
+   
+   //beginMaterialImport();
+   //beginGUIImport();
+   //beginTerrainMaterialImport();
+   //beginTerrainImport();
+   
+   %fileOutputLines.delete();
+   %objectClassStack.delete();
+   %fileObj.delete();
+}
+
+function T3Dpre4ProjectImporter::processLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "", "Asset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+//==============================================================================
+// Misc Object Classes
+//==============================================================================
+function T3Dpre4ProjectImporter::processBasicCloudsLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "texture", "textureAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processCloudLayerLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "texture", "textureAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processDecalRoadLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "material", "materialAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processMeshRoadLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "topMaterial", "topMaterialAsset");
+   %outLine = processLegacyField(%line, "bottomMaterial", "bottomMaterialAsset");
+   %outLine = processLegacyField(%line, "sideMaterial", "sideMaterialAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processScatterSkyLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "moonMat", "moonMatAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processSunLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "coronaMaterial", "coronaMaterialAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processVolumetricFogLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "shape", "ShapeAsset");
+   %outLine = processLegacyField(%line, "texture", "textureAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processWaterPlaneLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "rippleTex", "rippleTexAsset");
+   %outLine = processLegacyField(%line, "foamTex", "foamTexAsset");
+   %outLine = processLegacyField(%line, "depthGradientTex", "depthGradientTexAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processWaterBlockLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "rippleTex", "rippleTexAsset");
+   %outLine = processLegacyField(%line, "foamTex", "foamTexAsset");
+   %outLine = processLegacyField(%line, "depthGradientTex", "depthGradientTexAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processForestItemDataLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "shape", "shapeAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processCubeMapDataLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "cubemapFace", "cubemapFaceAsset");
+   %outLine = processLegacyField(%line, "cubemap", "cubemapAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+//==============================================================================
+// GUIs
+//==============================================================================
+
+function T3Dpre4ProjectImporter::processGuiIconButtonCtrlLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiToolboxButtonCtrlLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "normalBitmap", "normalBitmapAsset");
+   %outLine = processLegacyField(%line, "loweredBitmap", "loweredBitmapAsset");
+   %outLine = processLegacyField(%line, "hoverBitmap", "hoverBitmapAsset");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiBitmapCtrlLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiMaterialCtrlLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "material", "materialAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiCursorLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiChunkedBitmapCtrlLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiProgressBitmapLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processGuiMissionAreaCtrlLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "handleBitmap", "handleBitmapAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processWorldEditorLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "selectHandle", "selectHandleAsset");
+   %outLine = processLegacyField(%line, "defaultHandle", "defaultHandleAsset");
+   %outLine = processLegacyField(%line, "lockedHandle", "lockedHandleAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+//==============================================================================
+// Materials
+//==============================================================================
+function T3Dpre4ProjectImporter::processMaterialLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "baseTex", "diffuseMapAsset");
+   %outLine = processLegacyField(%outLine, "diffuseMap", "diffuseMapAsset");
+   %outLine = processLegacyField(%outLine, "lightMap", "lightMapAsset");
+   %outLine = processLegacyField(%outLine, "toneMap", "toneMapAsset");
+   %outLine = processLegacyField(%outLine, "detailTex", "detailMapAsset");
+   %outLine = processLegacyField(%outLine, "detailMap", "detailMapAsset");
+   %outLine = processLegacyField(%outLine, "overlayTex", "overlayMapAsset");
+   %outLine = processLegacyField(%outLine, "overlayMap", "overlayMapAsset");
+   %outLine = processLegacyField(%outLine, "bumpTex", "normalMapAsset");
+   %outLine = processLegacyField(%outLine, "normalMap", "normalMapAsset");
+   %outLine = processLegacyField(%outLine, "ormConfigMap", "ormConfigMapAsset");
+   %outLine = processLegacyField(%outLine, "roughMap", "roughMapAsset");
+   %outLine = processLegacyField(%outLine, "aoMap", "aoMapAsset");
+   %outLine = processLegacyField(%outLine, "metalMap", "metalMapAsset");
+   %outLine = processLegacyField(%outLine, "glowMap", "glowMapAsset");
+   %outLine = processLegacyField(%outLine, "detailNormalMap", "detailNormalMapAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+//==============================================================================
+// PostEffects
+//==============================================================================
+function T3Dpre4ProjectImporter::processPostEffectLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "texture", "textureAsset");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}

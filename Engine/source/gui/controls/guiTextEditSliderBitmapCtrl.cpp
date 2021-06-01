@@ -109,7 +109,7 @@ void GuiTextEditSliderBitmapCtrl::initPersistFields()
    addField("range",     TypePoint2F, Offset(mRange, GuiTextEditSliderBitmapCtrl), "Maximum vertical and horizontal range to allow in the control.\n");
    addField("increment", TypeF32,     Offset(mIncAmount,     GuiTextEditSliderBitmapCtrl), "How far to increment the slider on each step.\n");
    addField("focusOnMouseWheel", TypeBool, Offset(mFocusOnMouseWheel, GuiTextEditSliderBitmapCtrl), "If true, the control will accept giving focus to the user when the mouse wheel is used.\n");
-   addField("bitmap",    TypeFilename,Offset(mBitmapName, GuiTextEditSliderBitmapCtrl), "Unused" );
+   addField("bitmap",    TypeFilename,Offset(mBitmapName, GuiTextEditSliderBitmapCtrl), "Unused", AbstractClassRep::FIELD_HideInInspectors );
 
    Parent::initPersistFields();
 }
@@ -425,14 +425,14 @@ void GuiTextEditSliderBitmapCtrl::onRender(Point2I offset, const RectI &updateRe
 	{
 		// This control needs 4 images in order to render correctly
 		if(mTextAreaHit == ArrowUp)
-			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mTextureObject, RectI(arrowUpStart,arrowUpEnd), mProfile->mBitmapArrayRects[0] );
+			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mBitmap, RectI(arrowUpStart,arrowUpEnd), mProfile->mBitmapArrayRects[0] );
 		else
-			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mTextureObject, RectI(arrowUpStart,arrowUpEnd), mProfile->mBitmapArrayRects[1] );
+			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mBitmap, RectI(arrowUpStart,arrowUpEnd), mProfile->mBitmapArrayRects[1] );
 
 		if(mTextAreaHit == ArrowDown)
-			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mTextureObject, RectI(arrowDownStart,arrowDownEnd), mProfile->mBitmapArrayRects[2] );
+			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mBitmap, RectI(arrowDownStart,arrowDownEnd), mProfile->mBitmapArrayRects[2] );
 		else
-			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mTextureObject, RectI(arrowDownStart,arrowDownEnd), mProfile->mBitmapArrayRects[3] );
+			GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mBitmap, RectI(arrowDownStart,arrowDownEnd), mProfile->mBitmapArrayRects[3] );
 	}
 }
 

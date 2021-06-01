@@ -328,7 +328,10 @@ GuiPopUpMenuCtrlEx::GuiPopUpMenuCtrlEx(void)
    mRenderScrollInNA = false; //  Added
    mBackgroundCancel = false; //  Added
    mReverseTextList = false; //  Added - Don't reverse text list if displaying up
-   mBitmapName = StringTable->EmptyString(); //  Added
+
+   INIT_IMAGEASSET_ARRAY(Bitmap, Normal);
+   INIT_IMAGEASSET_ARRAY(Bitmap, Depressed);
+
    mBitmapBounds.set(16, 16); //  Added
    mHotTrackItems = false;
    mIdMax = -1;
@@ -349,12 +352,24 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
    addField("maxPopupHeight",           TypeS32,          Offset(mMaxPopupHeight, GuiPopUpMenuCtrlEx), "Length of menu when it extends");
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrlEx), "Deprecated" "@internal");
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrlEx), "Reverses text list if popup extends up, instead of down");
-   addField("bitmap",                   TypeFilename,     Offset(mBitmapName, GuiPopUpMenuCtrlEx), "File name of bitmap to use");
+
+   addProtectedField("bitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "Name of bitmap asset to use");
+   addProtectedField("bitmap",          TypeImageFilename,     Offset(mBitmapName, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "File name of bitmap to use");
+
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrlEx), "Boundaries of bitmap displayed");
    addField("hotTrackCallback",         TypeBool,         Offset(mHotTrackItems, GuiPopUpMenuCtrlEx),
       "Whether to provide a 'onHotTrackItem' callback when a list item is hovered over");
 
    Parent::initPersistFields();
+}
+
+bool GuiPopUpMenuCtrlEx::_setBitmaps(void* obj, const char* index, const char* data)
+{
+   bool ret = false;
+   GuiPopUpMenuCtrlEx* object = static_cast<GuiPopUpMenuCtrlEx*>(obj);
+
+   object->setBitmap(data);
+   return true;
 }
 
 //------------------------------------------------------------------------------
@@ -664,7 +679,7 @@ bool GuiPopUpMenuCtrlEx::onWake()
       return false;
 
    // Set the bitmap for the popup.
-   setBitmap( mBitmapName );
+   setBitmap(getBitmap(Normal));
 
    // Now update the Form Control's bitmap array, and possibly the child's too
    mProfile->constructBitmapArray();
@@ -688,8 +703,6 @@ bool GuiPopUpMenuCtrlEx::onAdd()
 //------------------------------------------------------------------------------
 void GuiPopUpMenuCtrlEx::onSleep()
 {
-   mTextureNormal = NULL; //  Added
-   mTextureDepressed = NULL; //  Added
    Parent::onSleep();
    closePopUp();  // Tests in function.
 }
@@ -767,30 +780,32 @@ static S32 QSORT_CALLBACK idCompare(const void *a,const void *b)
 //  Added
 void GuiPopUpMenuCtrlEx::setBitmap(const char *name)
 {
-   mBitmapName = StringTable->insert( name );
-   if ( !isAwake() )
-      return;
+   StringTableEntry bitmapName = StringTable->insert(name);
+   //if ( !isAwake() )
+   //   return;
 
-   if ( *mBitmapName )
+   if (bitmapName != StringTable->EmptyString())
    {
       char buffer[1024];
-      char *p;
-      dStrcpy(buffer, name, 1024);
+      char* p;
+      dStrcpy(buffer, bitmapName, 1024);
       p = buffer + dStrlen(buffer);
       S32 pLen = 1024 - dStrlen(buffer);
 
       dStrcpy(p, "_n", pLen);
-      mTextureNormal = GFXTexHandle( (StringTableEntry)buffer, &GFXDefaultGUIProfile, avar("%s() - mTextureNormal (line %d)", __FUNCTION__, __LINE__) );
+
+      _setBitmap((StringTableEntry)buffer, Normal);
 
       dStrcpy(p, "_d", pLen);
-      mTextureDepressed = GFXTexHandle( (StringTableEntry)buffer, &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__) );
-      if ( !mTextureDepressed )
-         mTextureDepressed = mTextureNormal;
+      _setBitmap((StringTableEntry)buffer, Depressed);
+
+      if (!mBitmap[Depressed])
+         mBitmap[Depressed] = mBitmap[Normal];
    }
    else
    {
-      mTextureNormal = NULL;
-      mTextureDepressed = NULL;
+      _setBitmap(StringTable->EmptyString(), Normal);
+      _setBitmap(StringTable->EmptyString(), Depressed);
    }
    setUpdate();
 }   
@@ -1061,17 +1076,17 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
       }
 
       //  Draw a bitmap over the background?
-      if ( mTextureDepressed )
+      if ( mBitmap[Depressed] )
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapStretch( mTextureDepressed, rect );
+         drawUtil->drawBitmapStretch(mBitmap[Depressed], rect );
       } 
-      else if ( mTextureNormal )
+      else if (mBitmap[Normal])
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapStretch( mTextureNormal, rect );
+         drawUtil->drawBitmapStretch(mBitmap[Normal], rect );
       }
 
       // Do we render a bitmap border or lines?
@@ -1105,11 +1120,11 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          //  Draw a bitmap over the background?
-         if ( mTextureNormal )
+         if (mBitmap[Normal])
          {
             RectI rect( offset, mBitmapBounds );
             drawUtil->clearBitmapModulation();
-            drawUtil->drawBitmapStretch( mTextureNormal, rect );
+            drawUtil->drawBitmapStretch(mBitmap[Normal], rect );
          }
 
          // Do we render a bitmap border or lines?
@@ -1135,11 +1150,11 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          //  Draw a bitmap over the background?
-         if ( mTextureNormal )
+         if (mBitmap[Normal])
          {
             RectI rect(offset, mBitmapBounds);
             drawUtil->clearBitmapModulation();
-            drawUtil->drawBitmapStretch( mTextureNormal, rect );
+            drawUtil->drawBitmapStretch(mBitmap[Normal], rect );
          }
 
          // Do we render a bitmap border or lines?

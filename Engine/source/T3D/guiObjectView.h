@@ -30,6 +30,8 @@
    #include "ts/tsShapeInstance.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 
 class LightInfo;
 

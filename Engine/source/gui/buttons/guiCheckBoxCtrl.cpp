@@ -134,7 +134,7 @@ void GuiCheckBoxCtrl::onRender(Point2I offset, const RectI &updateRect)
       }
       xOffset = mProfile->mBitmapArrayRects[0].extent.x + 2 + mIndent;
       S32 y = (getHeight() - mProfile->mBitmapArrayRects[0].extent.y) / 2;
-      GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject, offset + Point2I(mIndent, y), mProfile->mBitmapArrayRects[index]);
+      GFX->getDrawUtil()->drawBitmapSR(mProfile->getBitmapResource(), offset + Point2I(mIndent, y), mProfile->mBitmapArrayRects[index]);
    }
    
    if(mButtonText[0] != '\0')

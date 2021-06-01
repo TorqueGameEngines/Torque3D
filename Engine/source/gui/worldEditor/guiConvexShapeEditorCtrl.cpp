@@ -1910,11 +1910,11 @@ const char* GuiConvexEditorCtrl::getSelectedFaceMaterial()
 
    if (mConvexSEL->mSurfaceUVs[mFaceSEL].matID == 0)
    {
-      return mConvexSEL->mMaterialName;
+      return mConvexSEL->getMaterial();
    }
    else
    {
-      return mConvexSEL->mSurfaceTextures[mConvexSEL->mSurfaceUVs[mFaceSEL].matID - 1].materialName;
+      return mConvexSEL->mSurfaceTextures[mConvexSEL->mSurfaceUVs[mFaceSEL].matID - 1].getMaterial();
    }
 }
 
@@ -1978,7 +1978,7 @@ void GuiConvexEditorCtrl::setSelectedFaceMaterial(const char* materialName)
    {
       for (U32 i = 0; i < mConvexSEL->mSurfaceTextures.size(); i++)
       {
-         if (!String::compare(mConvexSEL->mSurfaceTextures[i].materialName, materialName))
+         if (!String::compare(mConvexSEL->mSurfaceTextures[i].getMaterial(), materialName))
          {
             //found a match
             mConvexSEL->mSurfaceUVs[mFaceSEL].matID = i + 1;
@@ -1990,7 +1990,7 @@ void GuiConvexEditorCtrl::setSelectedFaceMaterial(const char* materialName)
       {
          //add a new one
          ConvexShape::surfaceMaterial newMat;
-         newMat.materialName = materialName;
+         newMat._setMaterial(materialName);
 
          mConvexSEL->mSurfaceTextures.push_back(newMat);
 

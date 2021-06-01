@@ -83,7 +83,7 @@ struct DebrisData : public GameBaseData
    F32      terminalVelocity;    // max velocity magnitude
    bool     ignoreWater;
 
-   DECLARE_SHAPEASSET(DebrisData, Shape);
+   DECLARE_SHAPEASSET(DebrisData, Shape, onShapeChanged);
    DECLARE_SHAPEASSET_SETGET(DebrisData, Shape);
 
    StringTableEntry  textureName;
@@ -110,6 +110,8 @@ public:
    DebrisData*  cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
    virtual void onPerformSubstitutions();
    virtual bool allowSubstitutions() const { return true; }
+
+   void onShapeChanged() {}
 };
 
 //**************************************************************************

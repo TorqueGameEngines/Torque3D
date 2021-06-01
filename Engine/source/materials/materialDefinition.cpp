@@ -396,19 +396,19 @@ void Material::initPersistFields()
    //
    addProtectedField("baseTex", TypeImageFilename, Offset(mDiffuseMapName, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see diffuseMap\n");
+      "For backwards compatibility.\n@see diffuseMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("detailTex", TypeImageFilename, Offset(mDetailMapName, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see detailMap\n");
+      "For backwards compatibility.\n@see detailMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("overlayTex", TypeImageFilename, Offset(mOverlayMapName, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see overlayMap\n");
+      "For backwards compatibility.\n@see overlayMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("bumpTex", TypeImageFilename, Offset(mNormalMapName, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see normalMap\n");
+      "For backwards compatibility.\n@see normalMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("colorMultiply", TypeColorF, Offset(mDiffuse, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see diffuseColor\n");
+      "For backwards compatibility.\n@see diffuseColor\n", AbstractClassRep::FIELD_HideInInspectors);
 
    endArray("Stages");
 

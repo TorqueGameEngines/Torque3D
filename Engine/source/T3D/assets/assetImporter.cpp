@@ -2339,7 +2339,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
          deleteImportingAsset(assetItem);
 
          //log it's deletion
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was autoprined due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was autopruned due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());
          activityLog.push_back(importLogBuffer);
 
          importIssues = false;

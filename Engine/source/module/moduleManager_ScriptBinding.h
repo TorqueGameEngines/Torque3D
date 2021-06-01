@@ -398,7 +398,7 @@ DefineEngineMethod(ModuleManager, removeListener, void, (const char* listenerObj
 //-----------------------------------------------------------------------------
 
 DefineEngineMethod(ModuleManager, ignoreLoadedGroups, void, (bool doIgnore), (false),
-   "Sets if the Module Manager should ingore laoded groups.\n"
+   "Sets if the Module Manager should ingore loaded groups.\n"
    "@param doIgnore Whether we should or should not ignore loaded groups.\n"
    "@return No return value.\n")
 {

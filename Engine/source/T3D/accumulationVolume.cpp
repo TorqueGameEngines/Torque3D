@@ -85,19 +85,20 @@ AccumulationVolume::AccumulationVolume()
    mWorldToObj.identity();
 
    // Accumulation Texture.
-   mTextureName = "";
-   mAccuTexture = NULL;
+   INIT_IMAGEASSET(Texture);
 
    resetWorldBox();
 }
 
 AccumulationVolume::~AccumulationVolume()
 {
-   mAccuTexture = NULL;
+   mTexture = nullptr;
 }
 
 void AccumulationVolume::initPersistFields()
 {
+   addProtectedField("textureAsset", TypeImageAssetId, Offset(mTextureAssetId, AccumulationVolume),
+      &_setTexture, &defaultProtectedGetFn, "Accumulation texture.");
    addProtectedField( "texture", TypeStringFilename, Offset( mTextureName, AccumulationVolume ),
          &_setTexture, &defaultProtectedGetFn, "Accumulation texture." );
 
@@ -262,13 +263,7 @@ void AccumulationVolume::inspectPostApply()
 
 void AccumulationVolume::setTexture( const String& name )
 {
-   mTextureName = name;
-   if ( isClientObject() && mTextureName.isNotEmpty() )
-   {
-      mAccuTexture.set(mTextureName, &GFXStaticTextureSRGBProfile, "AccumulationVolume::mAccuTexture");
-      if ( mAccuTexture.isNull() )
-         Con::warnf( "AccumulationVolume::setTexture - Unable to load texture: %s", mTextureName.c_str() );
-   }
+   _setTexture(StringTable->insert(name.c_str()));
    refreshVolumes();
 }
 
@@ -312,7 +307,7 @@ void AccumulationVolume::refreshVolumes()
          if ( object.isNull() ) continue;
 
          if ( volume->containsPoint(object->getPosition()) )
-            object->mAccuTex = volume->mAccuTexture;
+            object->mAccuTex = volume->getTextureResource();
       }
    }
 }
@@ -346,6 +341,6 @@ void AccumulationVolume::updateObject(SceneObject* object)
       if ( volume.isNull() ) continue;
 
       if ( volume->containsPoint(object->getPosition()) )
-         object->mAccuTex = volume->mAccuTexture;
+         object->mAccuTex = volume->getTextureResource();
    }
 }

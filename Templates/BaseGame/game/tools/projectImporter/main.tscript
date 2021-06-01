@@ -19,52 +19,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _GUIMATERIALCTRL_H_
-#define _GUIMATERIALCTRL_H_
-
-#ifndef _GUICONTAINER_H_
-#include "gui/containers/guiContainer.h"
-#endif
-
-#include "T3D/assets/MaterialAsset.h"
-
-class BaseMatInstance;
-
-
-///
-class GuiMaterialCtrl : public GuiContainer
+function initializeProjectImporter()
 {
-private:
-   typedef GuiContainer Parent;
-
-protected:
-
-   DECLARE_MATERIALASSET(GuiMaterialCtrl, Material);
-   DECLARE_MATERIALASSET_SETGET(GuiMaterialCtrl, Material);
-
-   BaseMatInstance *mMaterialInst;
-
-   static bool _setMaterial( void *object, const char *index, const char *data );
-
-public:
-
-   GuiMaterialCtrl();
-
-   // ConsoleObject
-   static void initPersistFields();
-   void inspectPostApply();
+   echo(" % - Initializing Project Importer");  
    
-   DECLARE_CONOBJECT(GuiMaterialCtrl);
-   DECLARE_CATEGORY( "Gui Editor" );
+   exec("./scripts/projectImporter." @ $TorqueScriptFileExtension);
+   
+   //Versioned actions
+   exec("./scripts/pre40/T3Dpre4ProjectImporter." @ $TorqueScriptFileExtension);
+   
+   
+   exec("./guis/projectImporter.gui");
+   
+   new ScriptObject( ProjectImporterPlugin )
+   {
+      superClass = "EditorPlugin";
+   };
+   
+   //Input::GetEventManager().subscribe( ProjectImportCtrl, "BeginDropFiles" );
+   //Input::GetEventManager().subscribe( ProjectImportCtrl, "DropFile" );
+   //Input::GetEventManager().subscribe( ProjectImportCtrl, "EndDropFiles" );
+   
+   $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::assetQuery = new AssetQuery();
+   
+   ProjectImporterPlugin.initSettings();
+}
 
-   // GuiControl
-   bool onWake();
-   void onSleep();
+function ProjectImporterPlugin::initSettings( %this )
+{
+   EditorSettings.beginGroup( "ProjectImporter", true );
 
-   bool setMaterial( const String &materialName );
-
-   void onRender( Point2I offset, const RectI &updateRect );
-};
-
-#endif // _GUIMATERIALCTRL_H_
+   EditorSettings.endGroup();
+}

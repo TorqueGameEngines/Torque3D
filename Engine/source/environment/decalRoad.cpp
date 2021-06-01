@@ -305,9 +305,6 @@ void DecalRoad::initPersistFields()
 {
    addGroup( "DecalRoad" );
 
-      //addProtectedField("materialAsset", TypeMaterialAssetId, Offset(mMaterialAssetId, DecalRoad), &DecalRoad::_setMaterialAsset, &defaultProtectedGetFn, "Material Asset used for rendering.");
-      //addProtectedField( "material", TypeMaterialName, Offset( mMaterialName, DecalRoad ), &DecalRoad::_setMaterialName, &defaultProtectedGetFn, "Material used for rendering." );
-
       INITPERSISTFIELD_MATERIALASSET(Material, DecalRoad, "Material used for rendering.");
 
       addProtectedField( "textureLength", TypeF32, Offset( mTextureLength, DecalRoad ), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, 

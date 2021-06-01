@@ -1347,7 +1347,7 @@ void GuiMenuBar::onRender(Point2I offset, const RectI &updateRect)
          bitmapstart.y = mMenuList[i].bounds.point.y + (mMenuList[i].bounds.extent.y - rect.extent.y) / 2;
 
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapSR(mProfile->mTextureObject, offset + bitmapstart, rect);
+         drawUtil->drawBitmapSR(mProfile->getBitmapResource(), offset + bitmapstart, rect);
 
          // Should we also draw the text?
          if (!mMenuList[i].drawBitmapOnly)

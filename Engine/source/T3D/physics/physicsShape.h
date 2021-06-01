@@ -74,7 +74,7 @@ public:
 
 public:
 
-   DECLARE_SHAPEASSET(PhysicsShapeData, Shape);
+   DECLARE_SHAPEASSET(PhysicsShapeData, Shape, onShapeChanged);
    DECLARE_SHAPEASSET_SETGET(PhysicsShapeData, Shape);
 
    /// The shared unscaled collision shape.
@@ -134,6 +134,8 @@ public:
    SimObjectRef< PhysicsDebrisData > debris;   
    SimObjectRef< ExplosionData > explosion;   
    SimObjectRef< PhysicsShapeData > destroyedShape;
+
+   void onShapeChanged() {}
 };
 
 typedef PhysicsShapeData::SimType PhysicsSimType;

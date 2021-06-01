@@ -615,7 +615,7 @@ void TSStatic::_onResourceChanged(const Torque::Path& path)
    _updateShouldTick();
 }
 
-void TSStatic::_onAssetChanged()
+void TSStatic::onShapeChanged()
 {
    _createShape();
    _updateShouldTick();

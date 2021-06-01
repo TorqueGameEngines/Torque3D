@@ -90,8 +90,8 @@ public:
 
 protected:
 
-   //DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, PostFxTextureProfile, NumTextures);
-public: \
+   DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, PostFxTextureProfile, NumTextures);
+/*public: \
    static const U32 smTextureCount = NumTextures; \
    GFXTexHandle mTexture[NumTextures] = { NULL };\
    FileName mTextureName[NumTextures] = { String::EmptyString }; \
@@ -181,7 +181,7 @@ public: \
       if(index >= smTextureCount || index < 0)\
          return nullptr;\
       return mTexture[index];\
-   }
+   }*/
 
    DECLARE_IMAGEASSET_ARRAY_SETGET(PostEffect, Texture);
 

@@ -62,7 +62,7 @@ protected:
 
 public:
    
-   DECLARE_SHAPEASSET(ForestItemData, Shape);
+   DECLARE_SHAPEASSET(ForestItemData, Shape, onShapeChanged);
    DECLARE_SHAPEASSET_SETGET(ForestItemData, Shape);
 
    /// This is the radius used during placement to ensure
@@ -142,6 +142,8 @@ public:
       static ReloadSignal theSignal;
       return theSignal;
    }
+
+   void onShapeChanged() {}
 };
 
 typedef Vector<ForestItemData*> ForestItemDataVector;

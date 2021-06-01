@@ -30,6 +30,9 @@
 #include "gui/core/guiDefaultControlRender.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gfx/gfxTextureManager.h"
+#include "gui/editor/inspector/group.h"
+#include "gui/editor/inspector/field.h"
+#include "gui/editor/guiInspector.h"
 
 
 ImplementEnumType( GuiBitmapMode,
@@ -261,6 +264,43 @@ void GuiBitmapButtonCtrl::inspectPostApply()
    if ((getWidth() == 0) && (getHeight() == 0) && mTextures[ 0 ].mTextureNormal)
    {
       setExtent( mTextures[ 0 ].mTextureNormal->getWidth(), mTextures[ 0 ].mTextureNormal->getHeight());
+   }
+}
+
+void GuiBitmapButtonCtrl::onInspect(GuiInspector* inspector)
+{
+   if (mUseStates)
+   {
+      //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
+      GuiInspectorGroup* bitmapGroup = inspector->findExistentGroup(StringTable->insert("Bitmap"));
+      if (!bitmapGroup)
+         return;
+
+      GuiControl* stack = dynamic_cast<GuiControl*>(bitmapGroup->findObjectByInternalName(StringTable->insert("Stack")));
+
+      GuiInspectorField* fieldGui = bitmapGroup->constructField(TypeImageAssetId);
+      fieldGui->init(inspector, bitmapGroup);
+
+      fieldGui->setSpecialEditField(true);
+      fieldGui->setTargetObject(this);
+
+      StringTableEntry fldnm = StringTable->insert("TestModeBitmaphandle");
+
+      fieldGui->setSpecialEditVariableName(fldnm);
+
+      fieldGui->setInspectorField(NULL, fldnm);
+      fieldGui->setDocs("");
+
+      if (fieldGui->registerObject())
+      {
+         fieldGui->setValue("");
+
+         stack->addObject(fieldGui);
+      }
+      else
+      {
+         SAFE_DELETE(fieldGui);
+      }
    }
 }
 

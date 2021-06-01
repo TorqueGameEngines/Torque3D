@@ -59,8 +59,8 @@ ConsoleDocClass( GuiMissionAreaCtrl,
 
 GuiMissionAreaCtrl::GuiMissionAreaCtrl()
 {
-   mHandleBitmap = StringTable->EmptyString();
-   mHandleTexture = NULL;
+   INIT_IMAGEASSET(HandleBitmap);
+
    mHandleTextureSize = Point2I::Zero;
    mHandleTextureHalfSize = Point2F::Zero;
 
@@ -89,8 +89,7 @@ void GuiMissionAreaCtrl::initPersistFields()
 {
    addField( "squareBitmap",        TypeBool,      Offset(mSquareBitmap, GuiMissionAreaCtrl));
 
-   addField( "handleBitmap",        TypeFilename,  Offset( mHandleBitmap, GuiMissionAreaCtrl ),
-      "Bitmap file for the mission area handles.\n");
+   INITPERSISTFIELD_IMAGEASSET(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
 
    addField( "missionBoundsColor",  TypeColorI,    Offset(mMissionBoundsColor, GuiMissionAreaCtrl));
    addField( "cameraColor",         TypeColorI,    Offset(mCameraColor, GuiMissionAreaCtrl));
@@ -114,15 +113,13 @@ bool GuiMissionAreaCtrl::onAdd()
    desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    mBlendStateBlock = GFX->createStateBlock( desc );
 
-   if (*mHandleBitmap)
+   if (!mHandleBitmap.isNull())
    {
-      mHandleTexture = GFXTexHandle( mHandleBitmap, &GFXTexturePersistentSRGBProfile, avar("%s() - mHandleTexture (line %d)", __FUNCTION__, __LINE__) );
-      mHandleTextureSize = Point2I( mHandleTexture->getWidth(), mHandleTexture->getHeight() );
+      mHandleTextureSize = Point2I(mHandleBitmap->getWidth(), mHandleBitmap->getHeight() );
       mHandleTextureHalfSize = Point2F(mHandleTextureSize.x, mHandleTextureSize.y) * 0.5f;
    }
    else
    {
-      mHandleTexture = NULL;
       mHandleTextureSize = Point2I::Zero;
       mHandleTextureHalfSize = Point2F::Zero;
    }
@@ -420,7 +417,7 @@ void GuiMissionAreaCtrl::setArea(const RectI & area)
 void GuiMissionAreaCtrl::drawHandle(const Point2F & pos)
 {
    Point2F pnt(pos.x-mHandleTextureHalfSize.x, pos.y-mHandleTextureHalfSize.y);
-   GFX->getDrawUtil()->drawBitmap(mHandleTexture, pnt);
+   GFX->getDrawUtil()->drawBitmap(mHandleBitmap, pnt);
 }
 
 void GuiMissionAreaCtrl::drawHandles(RectI & box)

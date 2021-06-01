@@ -42,7 +42,7 @@ protected:
 
    //AssetPtr<ImageAsset> mDiffuseAsset;
 
-   DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap, onDiffuseMapChanged, GFXStaticTextureSRGBProfile);
    DECLARE_IMAGEASSET_SETGET(TerrainMaterial, DiffuseMap);
 
    /// The size of the diffuse base map in meters 
@@ -50,11 +50,11 @@ protected:
    F32 mDiffuseSize;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap, GFXNormalMapProfile);
+   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap, onNormalMapChanged, GFXNormalMapProfile);
    DECLARE_IMAGEASSET_SETGET(TerrainMaterial, NormalMap);
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap, onDetailMapChanged, GFXStaticTextureProfile);
    DECLARE_IMAGEASSET_SETGET(TerrainMaterial, DetailMap);
    
    /// The size of the detail map in meters used
@@ -69,7 +69,7 @@ protected:
    F32 mDetailDistance;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap, onORMConfigMapChanged, GFXStaticTextureProfile);
    DECLARE_IMAGEASSET_SETGET(TerrainMaterial, ORMConfigMap);
 
    bool mIsSRGB;
@@ -81,7 +81,7 @@ protected:
    /// planes.
    bool mSideProjection;
 
-   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, onMacroMapChanged, GFXStaticTextureProfile);
    DECLARE_IMAGEASSET_SETGET(TerrainMaterial, MacroMap);
    F32 mMacroSize;
    F32 mMacroStrength;
@@ -141,6 +141,12 @@ public:
    bool getIsSRGB() const { return mIsSRGB; }
 
    bool getInvertRoughness() const { return mInvertRoughness; }
+
+   void onDiffuseMapChanged() {}
+   void onNormalMapChanged() {}
+   void onDetailMapChanged() {}
+   void onORMConfigMapChanged() {}
+   void onMacroMapChanged() {}
 
 };
 

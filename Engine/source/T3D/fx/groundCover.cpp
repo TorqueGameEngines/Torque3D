@@ -519,7 +519,8 @@ GroundCover::GroundCover()
       mBillboardRects[i].point.set( 0.0f, 0.0f );
       mBillboardRects[i].extent.set( 1.0f, 1.0f );
 
-      mShapeFilenames[i] = NULL;
+      INIT_SHAPEASSET_ARRAY(Shape, i);
+
       mShapeInstances[i] = NULL;
 
       mBillboardAspectScales[i] = 1.0f;
@@ -559,7 +560,8 @@ void GroundCover::initPersistFields()
 
          addField( "billboardUVs",  TypeRectUV,    Offset( mBillboardRects, GroundCover ), MAX_COVERTYPES,  "Subset material UV coordinates for this cover billboard." );
 
-         addField( "shapeFilename", TypeFilename,  Offset( mShapeFilenames, GroundCover ), MAX_COVERTYPES,  "The cover shape filename. [Optional]" );
+         INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, GroundCover, "The cover shape. [Optional]");
+         addField( "shapeFilename", TypeFilename,  Offset( mShapeName, GroundCover ), MAX_COVERTYPES,  "The cover shape filename. [Optional]", AbstractClassRep::FIELD_HideInInspectors );
 
          addField( "layer",         TypeTerrainMaterialName, Offset( mLayer, GroundCover ), MAX_COVERTYPES, "Terrain material name to limit coverage to, or blank to not limit." );
 
@@ -741,11 +743,11 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          
          stream->write( mMinSlope[i] );
          stream->write( mMaxSlope[i] );
-		 stream->writeFlag(mConformToNormal[i]);
-		 stream->write(mMinRotX[i]);
-		 stream->write(mMaxRotX[i]);
-		 stream->write(mMinRotY[i]);
-		 stream->write(mMaxRotY[i]);
+         stream->writeFlag(mConformToNormal[i]);
+         stream->write(mMinRotX[i]);
+         stream->write(mMaxRotX[i]);
+         stream->write(mMinRotY[i]);
+         stream->write(mMaxRotY[i]);
          
          stream->write( mMinElevation[i] );
          stream->write( mMaxElevation[i] );     
@@ -763,7 +765,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          stream->write( mBillboardRects[i].extent.x );
          stream->write( mBillboardRects[i].extent.y );
 
-         stream->writeString( mShapeFilenames[i] );
+         PACK_SHAPEASSET_ARRAY(connection, Shape, i);
       }
 
       stream->writeFlag( mDebugRenderCells );
@@ -812,11 +814,11 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
          stream->read( &mMinSlope[i] );
          stream->read( &mMaxSlope[i] );
-		 mConformToNormal[i] = stream->readFlag();
-		 stream->read(&mMinRotX[i]);
-		 stream->read(&mMaxRotX[i]);
-		 stream->read(&mMinRotY[i]);
-		 stream->read(&mMaxRotY[i]);
+         mConformToNormal[i] = stream->readFlag();
+         stream->read(&mMinRotX[i]);
+         stream->read(&mMaxRotX[i]);
+         stream->read(&mMinRotY[i]);
+         stream->read(&mMaxRotY[i]);
 
          stream->read( &mMinElevation[i] );
          stream->read( &mMaxElevation[i] );     
@@ -834,7 +836,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          stream->read( &mBillboardRects[i].extent.x );
          stream->read( &mBillboardRects[i].extent.y );
 
-         mShapeFilenames[i] = stream->readSTString();
+         UNPACK_SHAPEASSET_ARRAY(connection, Shape, i);
       }
 
       mDebugRenderCells    = stream->readFlag();
@@ -898,25 +900,17 @@ void GroundCover::_initShapes()
 
    for ( S32 i=0; i < MAX_COVERTYPES; i++ )
    {
-      if ( !mShapeFilenames[i] || !mShapeFilenames[i][0] )
+      if ( mShapeAsset[i].isNull() || mShape[i] == nullptr)
          continue;
 
-      // Load the shape.
-      Resource<TSShape> shape = ResourceManager::get().load(mShapeFilenames[i]);
-      if ( !(bool)shape )
+      if ( isClientObject() && !mShape[i]->preloadMaterialList(mShape[i].getPath()) && NetConnection::filesWereDownloaded() )
       {
-         Con::warnf( "GroundCover::_initShapes() unable to load shape: %s", mShapeFilenames[i] );
-         continue;
-      }
-
-      if ( isClientObject() && !shape->preloadMaterialList(shape.getPath()) && NetConnection::filesWereDownloaded() )
-      {
-         Con::warnf( "GroundCover::_initShapes() material preload failed for shape: %s", mShapeFilenames[i] );
+         Con::warnf( "GroundCover::_initShapes() material preload failed for shape: %s", mShapeAssetId[i] );
          continue;
       }
 
       // Create the shape instance.
-      mShapeInstances[i] = new TSShapeInstance( shape, isClientObject() );
+      mShapeInstances[i] = new TSShapeInstance(mShape[i], isClientObject() );
    }
 }
 

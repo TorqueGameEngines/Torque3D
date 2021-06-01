@@ -36,6 +36,7 @@
 #include "console/dynamicTypes.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
 
 #include "gfx/gfxDevice.h"
 #include "platform/input/event.h"
@@ -335,16 +336,20 @@ struct ControlSizing
 
 };
 
+GFX_DeclareTextureProfile(GFXGuiCursorProfile);
+GFX_DeclareTextureProfile(GFXDefaultGUIProfile);
+
 class GuiCursor : public SimObject
 {
 private:
    typedef SimObject Parent;
-   StringTableEntry mBitmapName;
+
+   DECLARE_IMAGEASSET(GuiCursor, Bitmap, onImageChanged, GFXGuiCursorProfile);
+   DECLARE_IMAGEASSET_SETGET(GuiCursor, Bitmap);
 
    Point2I mHotSpot;
    Point2F mRenderOffset;
    Point2I mExtent;
-   GFXTexHandle mTextureObject;
 
 public:
    Point2I getHotSpot() { return mHotSpot; }
@@ -358,6 +363,8 @@ public:
    bool onAdd(void);
    void onRemove();
    void render(const Point2I &pos);
+
+   void onImageChanged() {}
 };
 
 /// A GuiControlProfile is used by every GuiObject and is akin to a
@@ -441,9 +448,96 @@ public:
 	Point2I mTextOffset;                            ///< Text offset for the control
 
    // bitmap members
-   StringTableEntry mBitmapName;                   ///< Bitmap file name for the bitmap of the control
+   ///< Bitmap for the bitmap of the control
+   /// 
+public:
+   GFXTexHandle mBitmap = NULL;
+   FileName mBitmapName = String::EmptyString;
+   StringTableEntry mBitmapAssetId = StringTable->EmptyString();
+   AssetPtr<ImageAsset>  mBitmapAsset = NULL;
+   GFXTextureProfile* mBitmapProfile = &GFXTexturePersistentSRGBProfile;
+public: 
+   const StringTableEntry getBitmapFile() const { return StringTable->insert(mBitmapName.c_str()); }
+   void setBitmapFile(const FileName &_in) { mBitmapName = _in;}
+   const AssetPtr<ImageAsset> & getBitmapAsset() const { return mBitmapAsset; }
+   void setBitmapAsset(const AssetPtr<ImageAsset> &_in) { mBitmapAsset = _in;}
+   
+   bool _setBitmap(StringTableEntry _in)
+   {
+      if (_in == StringTable->EmptyString())
+      {
+         mBitmapName = String::EmptyString;
+         mBitmapAssetId = StringTable->EmptyString();
+         mBitmapAsset = NULL;
+         mBitmap.free();
+         mBitmap = NULL;
+         return true;
+      }
+      else if(_in[0] == '$' || _in[0] == '#')
+      {
+         mBitmapName = _in;
+         mBitmapAssetId = StringTable->EmptyString();
+         mBitmapAsset = NULL;
+         mBitmap.free();
+         mBitmap = NULL;
+         return true;
+      }
+
+      if (AssetDatabase.isDeclaredAsset(_in))
+      {
+         mBitmapAssetId = _in;
+         
+         U32 assetState = ImageAsset::getAssetById(mBitmapAssetId, &mBitmapAsset);
+         
+         if (ImageAsset::Ok == assetState)
+         {
+            mBitmapName = String::EmptyString;
+         }
+         else
+         {
+            mBitmapName = _in;
+            mBitmapAsset = NULL;
+         }
+      }
+      else
+      {
+         if (ImageAsset::getAssetByFilename(_in, &mBitmapAsset))
+         {
+            mBitmapAssetId = mBitmapAsset.getAssetId();
+            
+            if (ImageAsset::Ok == mBitmapAsset->getStatus())
+            {
+               mBitmapName = String::EmptyString;
+            }
+         }
+         else
+         {
+            mBitmapName = _in;
+            mBitmapAssetId = StringTable->EmptyString();
+            mBitmapAsset = NULL;
+         }
+      }
+
+      return true;
+   }
+   
+   const StringTableEntry getBitmap() const
+   {
+      if (mBitmapAsset && (mBitmapAsset->getImageFileName() != StringTable->EmptyString()))
+         return  Platform::makeRelativePathName(mBitmapAsset->getImagePath(), Platform::getMainDotCsDir());
+      else if (mBitmapName.isNotEmpty())
+         return StringTable->insert(Platform::makeRelativePathName(mBitmapName.c_str(), Platform::getMainDotCsDir()));
+      else
+         return StringTable->EmptyString();
+   }
+   GFXTexHandle getBitmapResource() 
+   {
+      return mBitmap;
+   }
+
+   DECLARE_IMAGEASSET_SETGET(GuiControlProfile, Bitmap);
+
    bool mUseBitmapArray;                           ///< Flag to use the bitmap array or to fallback to non-array rendering
-   GFXTexHandle mTextureObject;
    Vector<RectI> mBitmapArrayRects;                ///< Used for controls which use an array of bitmaps such as checkboxes
 
    // sound members
@@ -517,8 +611,5 @@ DefineEnumType( GuiAlignmentType );
 
 typedef FontCharset GuiFontCharset;
 DefineEnumType( GuiFontCharset );
-
-GFX_DeclareTextureProfile(GFXGuiCursorProfile);
-GFX_DeclareTextureProfile(GFXDefaultGUIProfile);
 
 #endif //_GUITYPES_H

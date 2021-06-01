@@ -264,7 +264,7 @@ bool ConvexShape::protectedSetSurfaceTexture(void *object, const char *index, co
 
    surfaceMaterial surface;
 
-   surface.materialName = data;
+   surface._setMaterial(data);
 
    shape->mSurfaceTextures.push_back(surface);
 
@@ -272,7 +272,7 @@ bool ConvexShape::protectedSetSurfaceTexture(void *object, const char *index, co
 }
 
 ConvexShape::ConvexShape()
- : mMaterialName( "Grid512_OrangeLines_Mat" ),
+   :
    mMaterialInst( NULL ),
    //mVertCount( 0 ),
    //mPrimCount( 0 ),
@@ -289,6 +289,8 @@ ConvexShape::ConvexShape()
    mSurfaceBuffers.clear();
    mSurfaceUVs.clear();
    mSurfaceTextures.clear();
+
+   INIT_MATERIALASSET(Material);
 }
 
 ConvexShape::~ConvexShape()
@@ -310,7 +312,7 @@ void ConvexShape::initPersistFields()
 {
    addGroup( "Rendering" );
 
-      addField( "material", TypeMaterialName, Offset( mMaterialName, ConvexShape ), "Material used to render the ConvexShape surface." );
+      INITPERSISTFIELD_MATERIALASSET(Material, ConvexShape, "Default material used to render the ConvexShape surface.");
 
    endGroup( "Rendering" );
 
@@ -461,9 +463,7 @@ void ConvexShape::writeFields( Stream &stream, U32 tabStop )
       char buffer[1024];
       dMemset(buffer, 0, 1024);
 
-      const char* tex = mSurfaceTextures[i].materialName.c_str();
-
-      dSprintf(buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[i].materialName.c_str());
+      dSprintf(buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[i].getMaterial());
 
       stream.writeLine((const U8*)buffer);
    }
@@ -528,7 +528,7 @@ U32 ConvexShape::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      stream->write( mMaterialName );
+      PACK_MATERIALASSET(conn, Material);
       
       U32 surfCount = mSurfaces.size();
       stream->writeInt( surfCount, 32 );
@@ -556,8 +556,13 @@ U32 ConvexShape::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 	  //next check for any texture coord or scale mods
 	  for(U32 i=0; i < surfaceTex; i++)
      {
-        String a = mSurfaceTextures[i].materialName;
-			stream->write( mSurfaceTextures[i].materialName );
+         if (stream->writeFlag(mSurfaceTextures[i].mMaterialAsset.notNull()))
+         {
+            NetStringHandle assetIdStr = mSurfaceTextures[i].mMaterialAsset.getAssetId();
+            conn->packNetStringHandleU(stream, assetIdStr);
+         }
+         else
+            stream->writeString(mSurfaceTextures[i].mMaterialName);
 	  }
    }
 
@@ -579,7 +584,7 @@ void ConvexShape::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    if ( stream->readFlag() ) // UpdateMask
    {
-      stream->read( &mMaterialName );      
+      UNPACK_MATERIALASSET(conn, Material);
 
       mSurfaces.clear();
       mSurfaceUVs.clear();
@@ -619,7 +624,13 @@ void ConvexShape::unpackUpdate( NetConnection *conn, BitStream *stream )
      {
         mSurfaceTextures.increment();
 
-		  stream->read( &mSurfaceTextures[i].materialName );
+        if (stream->readFlag())
+        {
+           mSurfaceTextures[i].mMaterialAssetId = StringTable->insert(conn->unpackNetStringHandleU(stream).getString());
+           mSurfaceTextures[i]._setMaterial(mSurfaceTextures[i].mMaterialAssetId);
+         }
+         else
+           mSurfaceTextures[i].mMaterialName = stream->readSTString();
 	  }
 
      if (isProperlyAdded())
@@ -1207,13 +1218,13 @@ void ConvexShape::_updateMaterial()
    for (U32 i = 0; i<mSurfaceTextures.size(); i++)
    {
       //If we already have the material inst and it hasn't changed, skip
-      if (mSurfaceTextures[i].materialInst && mSurfaceTextures[i].materialName.equal(mSurfaceTextures[i].materialInst->getMaterial()->getName(), String::NoCase))
+      if (mSurfaceTextures[i].materialInst &&
+         mSurfaceTextures[i].getMaterialAsset()->getMaterialDefinitionName() == mSurfaceTextures[i].materialInst->getMaterial()->getName())
          continue;
 
-      Material *material;
+      Material* material = mSurfaceTextures[i].getMaterialResource();
 
-      if (!Sim::findObject(mSurfaceTextures[i].materialName, material))
-         //bail
+      if (material == nullptr)
          continue;
 
       mSurfaceTextures[i].materialInst = material->createMatInstance();
@@ -1229,15 +1240,15 @@ void ConvexShape::_updateMaterial()
    }
 
    // If the material name matches then don't bother updating it.
-   if (mMaterialInst && mMaterialName.equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+   if (mMaterialInst && getMaterialAsset()->getMaterialDefinitionName() == mMaterialInst->getMaterial()->getName())
       return;
 
    SAFE_DELETE( mMaterialInst );
 
-   Material *material;
-   
-   if ( !Sim::findObject( mMaterialName, material ) )
-      Sim::findObject( "WarningMaterial", material );
+   Material* material = getMaterialResource();
+
+   if (material == nullptr)
+      return;
 
    mMaterialInst = material->createMatInstance();
 

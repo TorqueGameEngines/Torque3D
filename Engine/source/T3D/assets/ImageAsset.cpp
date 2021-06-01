@@ -42,6 +42,8 @@
 
 #include "gfx/gfxStringEnumTranslate.h"
 
+#include "ImageAssetInspectors.h"
+
 // Debug Profiling.
 #include "platform/profiler.h"
 
@@ -278,6 +280,8 @@ void ImageAsset::loadImage()
 
          return;
       }*/
+
+      mChangeSignal.trigger();
    }
    mLoadedState = BadFileReference;
 
@@ -286,6 +290,8 @@ void ImageAsset::loadImage()
 
 void ImageAsset::initializeAsset()
 {
+   ResourceManager::get().getChangedSignal().notify(this, &ImageAsset::_onResourceChanged);
+
    mImagePath = expandAssetFilePath(mImageFileName);
    loadImage();
 }
@@ -293,6 +299,16 @@ void ImageAsset::initializeAsset()
 void ImageAsset::onAssetRefresh()
 {
    mImagePath = expandAssetFilePath(mImageFileName);
+
+   loadImage();
+}
+
+void ImageAsset::_onResourceChanged(const Torque::Path& path)
+{
+   if (path != Torque::Path(mImagePath))
+      return;
+
+   refreshAsset();
 
    loadImage();
 }
@@ -390,6 +406,11 @@ const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)
 
 ImageAsset::ImageTypes ImageAsset::getImageTypeFromName(const char* name)
 {
+   if (dStrIsEmpty(name))
+   {
+      return (ImageTypes)Albedo;
+   }
+
    S32 ret = -1;
    for (S32 i = 0; i < ImageTypeCount; i++)
    {

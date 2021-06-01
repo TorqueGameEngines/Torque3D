@@ -20,8 +20,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#ifndef IMAGE_ASSET_H
-#define IMAGE_ASSET_H
+#pragma once
 
 #ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
@@ -44,8 +43,6 @@
 
 #include "gfx/bitmap/gBitmap.h"
 #include "gfx/gfxTextureHandle.h"
-
-#include "gui/editor/guiInspectorTypes.h"
 
 #include "sim/netConnection.h"
 
@@ -88,6 +85,12 @@ protected:
 
    HashMap<GFXTextureProfile*, GFXTexHandle> mResourceMap;
 
+   typedef Signal<void()> ImageAssetChanged;
+   ImageAssetChanged mChangeSignal;
+
+   typedef Signal<void(S32 index)> ImageAssetArrayChanged;
+   ImageAssetArrayChanged mChangeArraySignal;
+
 public:
    ImageAsset();
    virtual ~ImageAsset();
@@ -101,6 +104,11 @@ public:
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ImageAsset);
+
+   void _onResourceChanged(const Torque::Path& path);
+
+   ImageAssetChanged& getChangedSignal() { return mChangeSignal; }
+   ImageAssetArrayChanged& getChangedArraySignal() { return mChangeArraySignal; }
 
    void                    setImageFileName(StringTableEntry pScriptFile);
    inline StringTableEntry getImageFileName(void) const { return mImageFileName; };
@@ -141,30 +149,6 @@ DefineConsoleType(TypeImageAssetId, String)
 typedef ImageAsset::ImageTypes ImageAssetType;
 DefineEnumType(ImageAssetType);
 
-class GuiInspectorTypeImageAssetPtr : public GuiInspectorTypeFileName
-{
-   typedef GuiInspectorTypeFileName Parent;
-public:
-
-   GuiBitmapButtonCtrl* mImageEdButton;
-
-   DECLARE_CONOBJECT(GuiInspectorTypeImageAssetPtr);
-   static void consoleInit();
-
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
-   bool renderTooltip(const Point2I& hoverPos, const Point2I& cursorPos, const char* tipText = NULL);
-};
-
-class GuiInspectorTypeImageAssetId : public GuiInspectorTypeImageAssetPtr
-{
-   typedef GuiInspectorTypeImageAssetPtr Parent;
-public:
-
-   DECLARE_CONOBJECT(GuiInspectorTypeImageAssetId);
-   static void consoleInit();
-};
-
 #pragma region Singular Asset Macros
 
 //Singular assets
@@ -172,7 +156,7 @@ public:
 /// Declares an image asset
 /// This establishes the assetId, asset and legacy filepath fields, along with supplemental getter and setter functions
 /// </Summary>
-#define DECLARE_IMAGEASSET(className, name, profile) public: \
+#define DECLARE_IMAGEASSET(className, name, changeFunc, profile) public: \
    GFXTexHandle m##name = NULL;\
    FileName m##name##Name = String::EmptyString; \
    StringTableEntry m##name##AssetId = StringTable->EmptyString();\
@@ -186,6 +170,10 @@ public: \
    \
    bool _set##name(StringTableEntry _in)\
    {\
+      if (m##name##Asset.notNull())\
+      {\
+         m##name##Asset->getChangedSignal().remove(this, &className::changeFunc);\
+      }\
       if (_in == StringTable->EmptyString())\
       {\
          m##name##Name = String::EmptyString;\
@@ -241,6 +229,11 @@ public: \
       }\
       if (get##name() != StringTable->EmptyString() && !m##name##Name.equal("texhandle", String::NoCase))\
       {\
+         if (m##name##Asset.notNull())\
+         {\
+            m##name##Asset->getChangedSignal().notify(this, &className::changeFunc);\
+         }\
+         \
          m##name.set(get##name(), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
          return true;\
       }\
@@ -300,9 +293,20 @@ DefineEngineMethod(className, set##name, bool, (const char* map), , assetText(na
    m##name##AssetId = StringTable->EmptyString(); \
    m##name##Asset = NULL;
 
+
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
+
 #define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs) \
    addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs)); \
    addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#else
+
+#define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs) \
+   addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#endif // SHOW_LEGACY_FILE_FIELDS
 
 #define CLONE_IMAGEASSET(name) \
    m##name##Name = other.m##name##Name;\
@@ -429,6 +433,7 @@ public: \
       }\
       if (get##name(index) != StringTable->EmptyString() && !m##name##Name[index].equal("texhandle", String::NoCase))\
       {\
+         \
          m##name[index].set(get##name(index), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
          return true;\
       }\
@@ -500,10 +505,19 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
    m##name##AssetId[index] = StringTable->EmptyString(); \
    m##name##Asset[index] = NULL;
 
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
 #define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs) \
    addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs)); \
    addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
+
+#else
+
+#define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs) \
+   addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
+
+#endif
 
 #define CLONE_IMAGEASSET_ARRAY(name, index) \
    m##name##Name[index] = other.m##name##Name[index];\
@@ -520,6 +534,22 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    }\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId[index], ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
+
+#define PACKDATA_IMAGEASSET_ARRAY(name, index)\
+   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   {\
+      stream->writeString(m##name##Asset[index].getAssetId());\
+   }\
+   else\
+      stream->writeString(m##name##Name[index]);
+
+#define UNPACKDATA_IMAGEASSET_ARRAY(name, index)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId[index] = stream->readSTString();\
+   }\
+   else\
+      m##name##Name[index] = stream->readSTString();
 
 #define PACK_IMAGEASSET_ARRAY(netconn, name, index)\
    if (stream->writeFlag(m##name##Asset[index].notNull()))\
@@ -541,5 +571,4 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
 
 #pragma endregion
 
-#endif
 

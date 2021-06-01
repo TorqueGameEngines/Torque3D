@@ -36,6 +36,8 @@
 #include "collision/convex.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class ConvexShape;
 
 // Crap name, but whatcha gonna do.
@@ -134,14 +136,16 @@ public:
    struct surfaceMaterial
    {
       // The name of the Material we will use for rendering
-      String            materialName;
+      DECLARE_MATERIALASSET(surfaceMaterial, Material);
+      DECLARE_MATERIALASSET_SETGET(surfaceMaterial, Material);
 
       // The actual Material instance
       BaseMatInstance*  materialInst;
 
       surfaceMaterial()
       {
-         materialName = "";
+         INIT_MATERIALASSET(Material);
+
          materialInst = NULL;
       }
    };
@@ -258,8 +262,8 @@ protected:
   
 protected:
    
-   // The name of the Material we will use for rendering
-   String            mMaterialName;
+   DECLARE_MATERIALASSET(ConvexShape, Material);
+   DECLARE_MATERIALASSET_SETGET(ConvexShape, Material);
 
    // The actual Material instance
    BaseMatInstance*  mMaterialInst;

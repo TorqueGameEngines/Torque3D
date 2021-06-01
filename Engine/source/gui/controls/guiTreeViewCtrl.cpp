@@ -3696,7 +3696,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
       {
          drawRect.point.x -= mTabSize;
          if ( parent->mNext )
-            drawer->drawBitmapSR( mProfile->mTextureObject, drawRect.point, mProfile->mBitmapArrayRects[BmpLine] );
+            drawer->drawBitmapSR( mProfile->mBitmap, drawRect.point, mProfile->mBitmapArrayRects[BmpLine] );
 
          parent = parent->mParent;
       }
@@ -3707,7 +3707,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
 
    // First, draw the rollover glow, if it's an inner node.
    if ( item->isParent() && item->mState.test( Item::MouseOverBmp ) )
-      drawer->drawBitmapSR( mProfile->mTextureObject, drawRect.point, mProfile->mBitmapArrayRects[BmpGlow] );
+      drawer->drawBitmapSR( mProfile->mBitmap, drawRect.point, mProfile->mBitmapArrayRects[BmpGlow] );
 
    // Now, do we draw a treeview-selected item or an item dependent one?
    S32 newOffset = 0; // This is stored so we can render glow, then update render pos.
@@ -3752,7 +3752,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
    if( ( bitmap >= 0 ) && ( bitmap < mProfile->mBitmapArrayRects.size() ) )
    {
       if( drawBitmap )
-         drawer->drawBitmapSR( mProfile->mTextureObject, drawRect.point, mProfile->mBitmapArrayRects[bitmap] );
+         drawer->drawBitmapSR( mProfile->getBitmapResource(), drawRect.point, mProfile->mBitmapArrayRects[bitmap] );
       newOffset = mProfile->mBitmapArrayRects[bitmap].extent.x;
    }
 

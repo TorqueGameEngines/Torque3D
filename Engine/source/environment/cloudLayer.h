@@ -83,6 +83,8 @@ public:
    void prepRenderImage( SceneRenderState *state );
    void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *mi );
 
+   void onImageChanged() {}
+
 protected:
 
    //void _initTexture();
@@ -95,7 +97,7 @@ protected:
    static U32 smVertCount;
    static U32 smTriangleCount;
 
-   DECLARE_IMAGEASSET(CloudLayer, Texture, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET(CloudLayer, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
    DECLARE_IMAGEASSET_NET_SETGET(CloudLayer, Texture, CloudLayerMask);
 
    GFXShaderRef mShader;

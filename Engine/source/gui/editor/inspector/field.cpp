@@ -390,6 +390,8 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
 
    // Force our edit to update
    updateValue();
+
+   //mInspector->refresh();
 }
 
 //-----------------------------------------------------------------------------

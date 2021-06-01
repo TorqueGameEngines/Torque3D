@@ -86,7 +86,7 @@ public:
    /// Is rendererd during shadow passes.
    bool castShadows;
 
-   DECLARE_SHAPEASSET(PhysicsDebrisData, Shape);
+   DECLARE_SHAPEASSET(PhysicsDebrisData, Shape, onShapeChanged);
    DECLARE_SHAPEASSET_SETGET(PhysicsDebrisData, Shape);
 
    PhysicsDebrisData();
@@ -96,6 +96,8 @@ public:
    static void initPersistFields();
    void        packData( BitStream *stream );
    void        unpackData( BitStream *stream );
+
+   void onShapeChanged() {}
 
    DECLARE_CONOBJECT( PhysicsDebrisData );
 

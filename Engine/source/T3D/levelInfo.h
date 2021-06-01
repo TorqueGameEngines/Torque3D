@@ -40,6 +40,8 @@
 #include "gfx/gfxTextureHandle.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class SFXAmbience;
 class SFXSoundscape;
 
@@ -101,8 +103,11 @@ class LevelInfo : public NetObject
 
       void _onLMActivate(const char *lm, bool enable);
    protected:
-      // Name (path) of the accumulation texture.
-      String mAccuTextureName;
+
+      DECLARE_IMAGEASSET(LevelInfo, AccuTexture, onAccuTextureChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_SETGET(LevelInfo, AccuTexture);
+
+      void onAccuTextureChanged() {}
 
    public:
 
@@ -137,12 +142,10 @@ class LevelInfo : public NetObject
          UpdateMask = BIT(0)
       };
 
-      GFXTexHandle mAccuTexture;
-
       virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
       virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
       static bool _setLevelAccuTexture(void *object, const char *index, const char *data);
-      void setLevelAccuTexture(const String& name);
+      void setLevelAccuTexture(StringTableEntry name);
       /// @}
 };
 

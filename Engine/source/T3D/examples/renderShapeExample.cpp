@@ -72,8 +72,7 @@ RenderShapeExample::~RenderShapeExample()
 void RenderShapeExample::initPersistFields()
 {
    addGroup( "Rendering" );
-   addField( "shapeFile",      TypeStringFilename, Offset( mShapeFile, RenderShapeExample ),
-      "The path to the DTS shape file." );
+   INITPERSISTFIELD_IMAGEASSET(Shape, RenderShapeExample, "The path to the shape file.")
    endGroup( "Rendering" );
 
    // SceneObject already handles exposing the transform
@@ -146,7 +145,7 @@ U32 RenderShapeExample::packUpdate( NetConnection *conn, U32 mask, BitStream *st
    // Write out any of the updated editable properties
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      stream->write( mShapeFile );
+      PACK_SHAPEASSET(conn, Shape);
 
       // Allow the server object a chance to handle a new shape
       createShape();
@@ -170,7 +169,7 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      stream->read( &mShapeFile );
+      UNPACK_SHAPEASSET(conn, Shape);
 
       if ( isProperlyAdded() )
          createShape();
@@ -182,33 +181,23 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 //-----------------------------------------------------------------------------
 void RenderShapeExample::createShape()
 {
-   if ( mShapeFile.isEmpty() )
+   if ( getShape() == StringTable->EmptyString() )
       return;
 
    // If this is the same shape then no reason to update it
-   if ( mShapeInstance && mShapeFile.equal( mShape.getPath().getFullPath(), String::NoCase ) )
+   if ( mShapeInstance && getShape() == StringTable->insert(mShape.getPath().getFullPath().c_str()) )
       return;
 
    // Clean up our previous shape
    if ( mShapeInstance )
       SAFE_DELETE( mShapeInstance );
-   mShape = NULL;
-
-   // Attempt to get the resource from the ResourceManager
-   mShape = ResourceManager::get().load( mShapeFile );
-
-   if ( !mShape )
-   {
-      Con::errorf( "RenderShapeExample::createShape() - Unable to load shape: %s", mShapeFile.c_str() );
-      return;
-   }
 
    // Attempt to preload the Materials for this shape
    if ( isClientObject() && 
         !mShape->preloadMaterialList( mShape.getPath() ) && 
         NetConnection::filesWereDownloaded() )
    {
-      mShape = NULL;
+      //mShape = NULL;
       return;
    }
 

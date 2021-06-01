@@ -45,7 +45,7 @@
 #include "shaderGen/shaderFeature.h"
 #endif
 
-#include "T3D/assets/MaterialAsset.h"
+#include "T3D/assets/ShapeAsset.h"
 
 class TerrainBlock;
 class GroundCoverCell;
@@ -340,7 +340,9 @@ protected:
    RectF mBillboardRects[MAX_COVERTYPES];
 
    /// The cover shape filenames.
-   StringTableEntry mShapeFilenames[MAX_COVERTYPES];
+   DECLARE_SHAPEASSET_ARRAY(GroundCover, Shape, MAX_COVERTYPES);
+   DECLARE_SHAPEASSET_ARRAY_NET_SETGET(GroundCover, Shape, -1);
+   //StringTableEntry mShapeFilenames[MAX_COVERTYPES];
 
    /// The cover shape instances.
    TSShapeInstance* mShapeInstances[MAX_COVERTYPES];
@@ -407,6 +409,8 @@ protected:
                                     S32 randSeed );
 
    void _debugRender( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
+
+   void onShapeChanged(U32 index) {}
 };
 
 #endif // _GROUNDCOVER_H_

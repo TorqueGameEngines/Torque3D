@@ -112,8 +112,8 @@ void PhysicsDebrisData::initPersistFields()
 {
    addGroup( "Display" );
 
-   INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
-      "Compatable with Live-Asset Reloading.");
+      INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
+         "Compatable with Live-Asset Reloading.");
 
       addProtectedField( "shapeFile", TypeShapeFilename, Offset( mShapeName, PhysicsDebrisData ), &_setShapeData, &defaultProtectedGetFn,
          "@brief Path to the .DAE or .DTS file to use for this shape.\n\n"

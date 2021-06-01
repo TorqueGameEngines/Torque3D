@@ -280,9 +280,19 @@ DefineEngineMethod(className, set##name, bool, (const char* mat), , assetText(na
    m##name##Asset = NULL;\
    m##name = NULL;\
 
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
+
 #define INITPERSISTFIELD_MATERIALASSET(name, consoleClass, docs) \
    addProtectedField(#name, TypeMaterialName, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs)); \
    addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#else
+
+#define INITPERSISTFIELD_MATERIALASSET(name, consoleClass, docs) \
+   addProtectedField(#name, TypeMaterialName, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#endif // SHOW_LEGACY_FILE_FIELDS
 
 #define CLONE_MATERIALASSET(name) \
    m##name##Name = other.m##name##Name;\
@@ -333,6 +343,22 @@ if (m##name##AssetId != StringTable->EmptyString())\
    }\
    else Con::warnf("Warning: %s::LOAD_MATERIALASSET(%s)-%s", mClassName, m##name##AssetId, MaterialAsset::getAssetErrstrn(assetState).c_str());\
 }
+
+#define PACKDATA_MATERIALASSET(name)\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+   {\
+      stream->writeString(m##name##Asset.getAssetId());\
+   }\
+   else\
+      stream->writeString(m##name##Name);
+
+#define UNPACKDATA_MATERIALASSET(name)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId = stream->readSTString();\
+   }\
+   else\
+      m##name##Name = stream->readSTString();
 
 #define PACK_MATERIALASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\

@@ -76,7 +76,7 @@ class ExplosionData : public GameBaseData {
    Point3F              explosionScale;
    F32                  playSpeed;
 
-   DECLARE_SHAPEASSET(ExplosionData, ExplosionShape);
+   DECLARE_SHAPEASSET(ExplosionData, ExplosionShape, onShapeChanged);
    DECLARE_SHAPEASSET_SETGET(ExplosionData, ExplosionShape);
 
    S32               explosionAnimation;
@@ -139,6 +139,8 @@ public:
    /*D*/          ~ExplosionData();
    ExplosionData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
    virtual bool   allowSubstitutions() const { return true; }
+
+   void onShapeChanged() {}
 };
 
 

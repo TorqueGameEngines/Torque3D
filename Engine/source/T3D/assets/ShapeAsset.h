@@ -81,8 +81,10 @@ protected:
    Vector<AssetPtr<ShapeAnimationAsset>> mAnimationAssets;
 
    typedef Signal<void()> ShapeAssetChanged;
-
    ShapeAssetChanged mChangeSignal;
+
+   typedef Signal<void(S32 index)> ShapeAssetArrayChanged;
+   ShapeAssetArrayChanged mChangeArraySignal;
 
 public:
    enum ShapeAssetErrCode
@@ -156,6 +158,7 @@ public:
    void _onResourceChanged(const Torque::Path& path);
 
    ShapeAssetChanged& getChangedSignal() { return mChangeSignal; }
+   ShapeAssetArrayChanged& getChangedArraySignal() { return mChangeArraySignal; }
 
    void                    setShapeFile(const char* pScriptFile);
    inline StringTableEntry getShapeFile(void) const { return mFileName; };
@@ -217,7 +220,9 @@ public:
 };
 #endif
 
-#define DECLARE_SHAPEASSET(className,name) public: \
+#pragma region Singular Asset Macros
+
+#define DECLARE_SHAPEASSET(className,name,changeFunc) public: \
    Resource<TSShape>m##name;\
    StringTableEntry m##name##Name; \
    StringTableEntry m##name##AssetId;\
@@ -230,6 +235,10 @@ public: \
    \
    bool _set##name(StringTableEntry _in)\
    {\
+      if (m##name##Asset.notNull())\
+      {\
+         m##name##Asset->getChangedSignal().remove(this, &className::changeFunc);\
+      }\
       if (_in == StringTable->EmptyString())\
       {\
          m##name##Name = StringTable->EmptyString();\
@@ -276,6 +285,11 @@ public: \
       if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
       {\
          m##name = m##name##Asset->getShapeResource();\
+         \
+         if (m##name##Asset.notNull())\
+         {\
+            m##name##Asset->getChangedSignal().notify(this, &className::changeFunc);\
+         }\
          \
          if (bool(m##name) == NULL)\
          {\
@@ -355,8 +369,6 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
 
 #endif // SHOW_LEGACY_FILE_FIELDS
 
-
-
 #define CLONE_SHAPEASSET(name) \
    m##name##Name = other.m##name##Name;\
    m##name##AssetId = other.m##name##AssetId;\
@@ -395,5 +407,203 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    }\
    else\
       m##name##Name = stream->readSTString();
+
+#pragma endregion
+
+#pragma region Arrayed Asset Macros
+
+#define DECLARE_SHAPEASSET_ARRAY(className,name,max) public: \
+   static const U32 sm##name##Count = max;\
+   Resource<TSShape>m##name[max];\
+   StringTableEntry m##name##Name[max]; \
+   StringTableEntry m##name##AssetId[max];\
+   AssetPtr<ShapeAsset>  m##name##Asset[max];\
+public: \
+   const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
+   void set##name##Name(const FileName &_in, const U32& index) { m##name##Name[index] = _in;}\
+   const AssetPtr<ShapeAsset> & get##name##Asset(const U32& index) const { return m##name##Asset[index]; }\
+   void set##name##Asset(const AssetPtr<ShapeAsset> &_in, const U32& index) { m##name##Asset[index] = _in;}\
+   \
+   bool _set##name(StringTableEntry _in, const U32& index)\
+   {\
+      if(index >= sm##name##Count || index < 0)\
+         return false;\
+      if (_in == StringTable->EmptyString())\
+      {\
+         m##name##Name[index] = StringTable->EmptyString();\
+         m##name##AssetId[index] = StringTable->EmptyString();\
+         m##name##Asset[index] = NULL;\
+         m##name[index] = NULL;\
+         return true;\
+      }\
+      \
+      if (AssetDatabase.isDeclaredAsset(_in))\
+      {\
+         m##name##AssetId[index] = _in;\
+         \
+         U32 assetState = ShapeAsset::getAssetById(m##name##AssetId[index], &m##name##Asset[index]);\
+         \
+         if (ShapeAsset::Ok == assetState)\
+         {\
+            m##name##Name[index] = StringTable->EmptyString();\
+         }\
+         else\
+         {\
+            m##name##Name[index] = _in;\
+            m##name##Asset[index] = NULL;\
+         }\
+      }\
+      else\
+      {\
+         if (ShapeAsset::getAssetByFilename(_in, &m##name##Asset[index]))\
+         {\
+            m##name##AssetId[index] = m##name##Asset[index].getAssetId();\
+            \
+            if (ImageAsset::Ok == m##name##Asset[index]->getStatus())\
+            {\
+               m##name##Name[index] = StringTable->EmptyString();\
+            }\
+         }\
+         else\
+         {\
+            m##name##Name[index] = _in;\
+            m##name##AssetId[index] = StringTable->EmptyString();\
+            m##name##Asset[index] = NULL;\
+         }\
+      }\
+      if (get##name(index) != StringTable->EmptyString() && m##name##Asset[index].notNull())\
+      {\
+         m##name[index] = m##name##Asset[index]->getShapeResource();\
+         \
+         if (bool(m##name[index]) == NULL)\
+         {\
+            Con::errorf("%s::_set##name() - %s: Couldn't load shape %s", assetText(className,""), get##name(index));\
+            return false;\
+         }\
+         return true;\
+      }\
+      return false;\
+   }\
+   \
+   const StringTableEntry get##name(const U32& index) const\
+   {\
+      if (m##name##Asset[index] && (m##name##Asset[index]->getShapePath() != StringTable->EmptyString()))\
+         return m##name##Asset[index]->getShapePath();\
+      else if (m##name##Name[index] != StringTable->EmptyString())\
+         return StringTable->insert(m##name##Name[index]);\
+      else\
+         return StringTable->EmptyString();\
+   }\
+   Resource<TSShape> get##name##Resource(const U32& index) \
+   {\
+      if(index >= sm##name##Count || index < 0)\
+         return nullptr;\
+      return m##name[index];\
+   }
+
+#define DECLARE_SHAPEASSET_ARRAY_SETGET(className, name)\
+   static bool _set##name##Data(void* obj, const char* index, const char* data)\
+   {\
+      if (!index) return false;\
+      U32 idx = dAtoi(index);\
+      if (idx >= sm##name##Count)\
+         return false;\
+      bool ret = false;\
+      className* object = static_cast<className*>(obj);\
+      ret = object->_set##name(StringTable->insert(data), idx);\
+      return ret;\
+   }
+
+#define DECLARE_SHAPEASSET_ARRAY_NET_SETGET(className, name, bitmask)\
+   static bool _set##name##Data(void* obj, const char* index, const char* data)\
+   {\
+      if (!index) return false;\
+      U32 idx = dAtoi(index);\
+      if (idx >= sm##name##Count)\
+         return false;\
+      bool ret = false;\
+      className* object = static_cast<className*>(obj);\
+      ret = object->_set##name(StringTable->insert(data), idx);\
+      if(ret)\
+         object->setMaskBits(bitmask);\
+      return ret;\
+   }
+
+#define DEF_SHAPEASSET_ARRAY_BINDS(className,name)\
+DefineEngineMethod(className, get##name, String, (S32 index), , "get name")\
+{\
+   return object->get##name(index); \
+}\
+DefineEngineMethod(className, get##name##Asset, String, (S32 index), , assetText(name, asset reference))\
+{\
+   if(index >= className::sm##name##Count || index < 0)\
+      return "";\
+   return object->m##name##AssetId[index]; \
+}\
+DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), , assetText(name,assignment. first tries asset then flat file.))\
+{\
+   return object->_set##name(StringTable->insert(shape), index);\
+}
+
+#define INIT_SHAPEASSET_ARRAY(name, index) \
+   m##name##Name[index] = StringTable->EmptyString(); \
+   m##name##AssetId[index] = StringTable->EmptyString(); \
+   m##name##Asset[index] = NULL; \
+   m##name[index] = NULL;\
+
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
+
+#define INITPERSISTFIELD_SHAPEASSET_ARRAY(name, consoleClass, docs) \
+   addProtectedField(assetText(name, File), TypeShapeFilename, Offset(m##name##Name, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs)); \
+   addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
+
+#else
+
+#define INITPERSISTFIELD_SHAPEASSET_ARRAY(name, consoleClass, docs) \
+   addProtectedField(assetText(name, File), TypeShapeFilename, Offset(m##name##Name, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
+
+#endif // SHOW_LEGACY_FILE_FIELDS
+
+#define CLONE_SHAPEASSET_ARRAY(name, index) \
+   m##name##Name[index] = other.m##name##Name[index];\
+   m##name##AssetId[index] = other.m##name##AssetId[index];\
+   m##name##Asset[index] = other.m##name##Asset[index];\
+
+#define PACKDATA_SHAPEASSET_ARRAY(name, index)\
+   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   {\
+      stream->writeString(m##name##Asset[index].getAssetId());\
+   }\
+   else\
+      stream->writeString(m##name##Name[index]);
+
+#define UNPACKDATA_SHAPEASSET_ARRAY(name, index)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId[index] = stream->readSTString();\
+   }\
+   else\
+      m##name##Name[index] = stream->readSTString();
+
+#define PACK_SHAPEASSET_ARRAY(netconn, name, index)\
+   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   {\
+      NetStringHandle assetIdStr = m##name##Asset[index].getAssetId();\
+      netconn->packNetStringHandleU(stream, assetIdStr);\
+   }\
+   else\
+      stream->writeString(m##name##Name[index]);
+
+#define UNPACK_SHAPEASSET_ARRAY(netconn, name, index)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
+      _set##name(m##name##AssetId[index], index);\
+   }\
+   else\
+      m##name##Name[index] = stream->readSTString();
+
+#pragma endregion
 
 #endif

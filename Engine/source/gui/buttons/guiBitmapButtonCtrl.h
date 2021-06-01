@@ -163,6 +163,8 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       virtual void onAction();
       virtual void inspectPostApply();
 
+      virtual void onInspect(GuiInspector* inspector);
+
       virtual void onRender(Point2I offset, const RectI &updateRect);
 
       static void initPersistFields();

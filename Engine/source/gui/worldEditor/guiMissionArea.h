@@ -63,8 +63,9 @@ protected:
    GFXStateBlockRef  mBlendStateBlock;
    GFXStateBlockRef  mSolidStateBlock;
 
-   StringTableEntry  mHandleBitmap;
-   GFXTexHandle      mHandleTexture;
+   DECLARE_IMAGEASSET(GuiMissionAreaCtrl, HandleBitmap, onHandleBitmapChanged, GFXTexturePersistentSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(GuiMissionAreaCtrl, HandleBitmap);
+
    Point2I           mHandleTextureSize;
    Point2F           mHandleTextureHalfSize;
 
@@ -108,6 +109,8 @@ protected:
 
    bool testWithinHandle(const Point2I & testPoint, S32 handleX, S32 handleY);
    S32 getHitHandles(const Point2I & mousePnt, const RectI & box);
+
+   void onHandleBitmapChanged() {}
 
 public:
    GuiMissionAreaCtrl();

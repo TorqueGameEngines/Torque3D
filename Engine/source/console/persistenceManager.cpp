@@ -1427,7 +1427,7 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
 
                      updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, fnBuf, true);
                   }
-                  else if (f->type == TypeCommand)
+                  else if (f->type == TypeCommand || f->type == TypeString || f->type == TypeRealString)
                   {
                      char cmdBuf[1024];
                      expandEscape(cmdBuf, value);

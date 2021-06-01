@@ -35,6 +35,8 @@
 #include "gfx/gfxTextureHandle.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 #define MaxParticleSize 50.0
 
 struct Particle;
@@ -46,7 +48,7 @@ class ParticleData : public SimDataBlock
 {
    typedef SimDataBlock Parent;
 
-  public:
+public:
    enum PDConst
    {
       // This increase the keyframes from 4 to 8. Especially useful for premult-alpha blended particles
@@ -74,22 +76,25 @@ class ParticleData : public SimDataBlock
    U32   numFrames;
    U32   framesPerSec;
 
-   LinearColorF colors[ PDC_NUM_KEYS ];
-   F32    sizes[ PDC_NUM_KEYS ];
-   F32    times[ PDC_NUM_KEYS ];
+   LinearColorF colors[PDC_NUM_KEYS];
+   F32    sizes[PDC_NUM_KEYS];
+   F32    times[PDC_NUM_KEYS];
 
-   Point2F*          animTexUVs;
+   Point2F* animTexUVs;
    Point2F           texCoords[4];   // default: {{0.0,0.0}, {0.0,1.0}, {1.0,1.0}, {1.0,0.0}} 
    Point2I           animTexTiling;
    StringTableEntry  animTexFramesString;
    Vector<U8>        animTexFrames;
-   StringTableEntry  textureName;
-   GFXTexHandle      textureHandle;
 
-   static bool protectedSetSizes( void *object, const char *index, const char *data );
-   static bool protectedSetTimes( void *object, const char *index, const char *data );
+   DECLARE_IMAGEASSET(ParticleData, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(ParticleData, Texture);
 
-  public:
+   static bool protectedSetSizes(void* object, const char* index, const char* data);
+   static bool protectedSetTimes(void* object, const char* index, const char* data);
+
+   void onImageChanged() {}
+
+public:
    ParticleData();
    ~ParticleData();
 
@@ -99,28 +104,29 @@ class ParticleData : public SimDataBlock
    void packData(BitStream* stream);
    void unpackData(BitStream* stream);
    bool onAdd();
-   bool preload(bool server, String &errorStr);
+   bool preload(bool server, String& errorStr);
    DECLARE_CONOBJECT(ParticleData);
    static void  initPersistFields();
 
    bool reload(char errorBuffer[256]);
-  public:
+public:
    /*C*/  ParticleData(const ParticleData&, bool = false);
    virtual void onPerformSubstitutions();
    virtual bool allowSubstitutions() const { return true; }
-  protected:
+protected:
    F32   spinBias;
    bool  randomizeSpinDir;
-   StringTableEntry  textureExtName;
-  public:
-   GFXTexHandle      textureExtHandle;
+public:
+   DECLARE_IMAGEASSET(ParticleData, TextureExt, onImageChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(ParticleData, TextureExt);
+
    bool   constrain_pos;
    F32    start_angle;
    F32    angle_variance;
-   F32    sizeBias; 
-  public:
-   bool loadParameters();  
-   bool reload(String &errorStr);
+   F32    sizeBias;
+public:
+   bool loadParameters();
+   bool reload(String& errorStr);
 };
 
 //*****************************************************************************

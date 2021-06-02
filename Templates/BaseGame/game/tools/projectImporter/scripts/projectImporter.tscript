@@ -318,6 +318,10 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       else if(startsWith(%value, "~"))
       {
          %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/");
+         if(!isFile(%targetFilename))
+         {
+            %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/main/");
+         }
       }
       else
       {
@@ -354,280 +358,6 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
    {
       return %line;  
    }
-}
-
-function updateObjectLegacyField(%obj, %fieldName, %arrayIndex, %typeHint, %setObjDirty)
-{
-   %targetAssetField = %fieldName;
-   
-   if(%arrayIndex !$= "")
-      %fieldName = %fieldName @ "[" @ %arrayIndex @ "]";
-   
-   %fieldFile = %obj.getFieldValue(%fieldName);
-   if(%fieldFile !$= "")
-   {
-      %objName = %obj.getName();
-      if(%objName $= "")
-         %objName = %obj.getId();
-         
-      if(%setObjDirty $= "")
-         %setObjDirty = true;
-         
-      if(!isFile(%fieldFile))
-      {
-         //probably have to do some work here. First we need to see if it has an extension:
-         %ext = fileExt(%fieldFile);
-         if(%ext $= "")
-         {
-            %fieldType = %obj.getFieldType(%fieldName);
-            if(%fieldType $= "TypeImageFilename" || %fieldType $= "TypeFilename")
-            {
-               if(isFile(%fieldFile @ ".png"))
-                  %fieldFile = %fieldFile @ ".png";
-               else if(isFile(%fieldFile @ ".dds"))
-                  %fieldFile = %fieldFile @ ".dds";
-               else if(isFile(%fieldFile @ ".jpg"))
-                  %fieldFile = %fieldFile @ ".jpg";
-            }
-            else if(%fieldType $= "TypeShapeFilename")
-            {
-               if(isFile(%fieldFile @ ".dts"))
-                  %fieldFile = %fieldFile @ ".dts";
-               else if(isFile(%fieldFile @ ".dae"))
-                  %fieldFile = %fieldFile @ ".dae";
-               else if(isFile(%fieldFile @ ".fbx"))
-                  %fieldFile = %fieldFile @ ".fbx";
-            }
-         }
-         
-         %path = filePath(%fieldFile);
-         if(%path $= "")
-         {
-            %path = filePath(%obj.getFilename());
-            
-            if(isFile(%path @ "/" @ %fieldFile))
-               %fieldFile = %path @ "/" @ %fieldFile;
-         }
-         
-         if(!isFile(%fieldFile))
-         {
-            error("Failed to process " @ %objName @ "'s field " @ %fieldName @ " with data: " @ %fieldFile @ ", does not appear to contain a valid file path");
-            return "";
-         }
-      }
-         
-      warn(%objName @ " has " @ %fieldName @ " that contains the file: " @ %fieldFile);
-      warn("Attempting to find existing asset for field file data");
-      
-      $ProjectImporter::assetQuery.clear();
-         
-      %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %fieldFile);
-      if(%assetsFound == 0)
-      {
-         warn("No associated asset found. Attempting to import file.");
-         %assetId = $ProjectImporter::importer.autoImportFile(%fieldFile, %typeHint);  
-         
-         if(%assetId !$= "")
-         {
-            warn("File import successful, creating new asset: " @ %assetId);  
-         }
-         else
-         {
-            error("File import failed");  
-         }
-      }
-      else
-      {
-         %assetId = $ProjectImporter::assetQuery.getAsset(0);
-         warn("Associated asset found: " @ %assetId);
-      }
-         
-      %fallbackAsset = "";
-      %assetType = "";
-      if(%obj.getFieldType(%fieldName) $= "TypeShapeFilename")
-      {
-         %fallbackAsset = "Core_Rendering::noShape";
-         %assetType = "ShapeAsset";
-      }
-      else if(%obj.getFieldType(%fieldName) $= "TypeImageFilename")
-      {
-         %fallbackAsset = "Core_Rendering::noImage";
-         %assetType = "ImageAsset";
-      }
-      else if(%obj.getFieldType(%fieldName) $= "TypeMaterialName")
-      {
-         %fallbackAsset = "Core_Rendering::noMaterial";
-         %assetType = "MaterialAsset";
-      }
-      else if(%obj.getFieldType(%fieldName) $= "TypeSoundFilename")
-      {
-         %fallbackAsset = "Core_Rendering::noSound";
-         %assetType = "SoundAsset";
-      }
-      
-      if(%assetId !$= "" && %assetId !$= %fallbackAsset)
-      {
-         //Clear legacy field
-         %clearCommand = %obj @ "." @ %fieldName @ " = \"\";";
-         eval(%clearCommand);
-         
-         if(%arrayIndex $= "")
-            %targetAssetField = %targetAssetField @ "Asset";
-         else
-            %targetAssetField = %targetAssetField @ "Asset[" @ %arrayIndex @ "]";
-            
-         %updateCommand = %obj @ "." @ %targetAssetField @ " = \"" @ %assetId @ "\";";
-         eval(%updateCommand);
-         echo(%objName @ ": New " @ %assetType @ " asset on " @ %targetAssetField @ " : " @ %assetId );
-         
-         if(%setObjDirty)
-            $ProjectImporter::persistMgr.setDirty(%obj);
-            
-         return %assetId;
-      }
-      else
-      {
-         error("Failed to process " @ %assetType @ " for object " @ %objName @ " in field " @ %fieldName);
-      }
-   }
-   
-   return "";
-}
-
-function remapObjectLegacyField(%obj, %oldFieldName, %newfieldName, %arrayIndex, %typeHint, %setObjDirty)
-{
-   if(%arrayIndex !$= "")
-      %oldFieldName = %oldFieldName @ "[" @ %arrayIndex @ "]";
-   
-   %fieldFile = %obj.getFieldValue(%oldFieldName);
-   if(%fieldFile !$= "")
-   {
-      %objName = %obj.getName();
-      if(%objName $= "")
-         %objName = %obj.getId();
-         
-      if(%setObjDirty $= "")
-         %setObjDirty = true;
-         
-      if(!isFile(%fieldFile))
-      {
-         //probably have to do some work here. First we need to see if it has an extension:
-         %ext = fileExt(%fieldFile);
-         if(%ext $= "")
-         {
-            %fieldType = %obj.getFieldType(%oldFieldName);
-            if(%fieldType $= "TypeImageFilename" || %fieldType $= "TypeFilename")
-            {
-               if(isFile(%fieldFile @ ".png"))
-                  %fieldFile = %fieldFile @ ".png";
-               else if(isFile(%fieldFile @ ".dds"))
-                  %fieldFile = %fieldFile @ ".dds";
-               else if(isFile(%fieldFile @ ".jpg"))
-                  %fieldFile = %fieldFile @ ".jpg";
-            }
-            else if(%fieldType $= "TypeShapeFilename")
-            {
-               if(isFile(%fieldFile @ ".dts"))
-                  %fieldFile = %fieldFile @ ".dts";
-               else if(isFile(%fieldFile @ ".dae"))
-                  %fieldFile = %fieldFile @ ".dae";
-               else if(isFile(%fieldFile @ ".fbx"))
-                  %fieldFile = %fieldFile @ ".fbx";
-            }
-         }
-         
-         %path = filePath(%fieldFile);
-         if(%path $= "")
-         {
-            %path = filePath(%obj.getFilename());
-            
-            if(isFile(%path @ "/" @ %fieldFile))
-               %fieldFile = %path @ "/" @ %fieldFile;
-         }
-         
-         if(!isFile(%fieldFile))
-         {
-            error("Failed to process " @ %objName @ "'s field " @ %oldFieldName @ " with data: " @ %fieldFile @ ", does not appear to contain a valid file path");
-            return "";
-         }
-      }
-         
-      warn(%objName @ " has " @ %oldFieldName @ " that contains the file: " @ %fieldFile @ ", to be remapped to " @ %newfieldName);
-      warn("Attempting to find existing asset for field file data");
-      
-      $ProjectImporter::assetQuery.clear();
-         
-      %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %fieldFile);
-      if(%assetsFound == 0)
-      {
-         warn("No associated asset found. Attempting to import file.");
-         %assetId = $ProjectImporter::importer.autoImportFile(%fieldFile, %typeHint);  
-         
-         if(%assetId !$= "")
-         {
-            warn("File import successful, creating new asset: " @ %assetId);  
-         }
-         else
-         {
-            error("File import failed");  
-         }
-      }
-      else
-      {
-         %assetId = $ProjectImporter::assetQuery.getAsset(0);
-         warn("Associated asset found: " @ %assetId);
-      }
-         
-      %fallbackAsset = "";
-      %assetType = "";
-      if(%obj.getFieldType(%oldFieldName) $= "TypeShapeFilename")
-      {
-         %fallbackAsset = "Core_Rendering::noShape";
-         %assetType = "ShapeAsset";
-      }
-      else if(%obj.getFieldType(%oldFieldName) $= "TypeImageFilename")
-      {
-         %fallbackAsset = "Core_Rendering::noImage";
-         %assetType = "ImageAsset";
-      }
-      else if(%obj.getFieldType(%oldFieldName) $= "TypeMaterialName")
-      {
-         %fallbackAsset = "Core_Rendering::noMaterial";
-         %assetType = "MaterialAsset";
-      }
-      else if(%obj.getFieldType(%oldFieldName) $= "TypeSoundFilename")
-      {
-         %fallbackAsset = "Core_Rendering::noSound";
-         %assetType = "SoundAsset";
-      }
-      
-      if(%assetId !$= "" && %assetId !$= %fallbackAsset)
-      {
-         //Clear legacy field
-         //%clearCommand = %obj @ "." @ %oldFieldName @ " = \"\";";
-         //eval(%clearCommand);
-         
-         if(%arrayIndex $= "")
-            %targetAssetField = %newfieldName @ "Asset";
-         else
-            %targetAssetField = %newfieldName @ "Asset[" @ %arrayIndex @ "]";
-            
-         %updateCommand = %obj @ "." @ %targetAssetField @ " = \"" @ %assetId @ "\";";
-         eval(%updateCommand);
-         echo(%objName @ ": New " @ %assetType @ " asset on " @ %targetAssetField @ " : " @ %assetId );
-         
-         if(%setObjDirty)
-            $ProjectImporter::persistMgr.setDirty(%obj);
-            
-         return %assetId;
-      }
-      else
-      {
-         error("Failed to process " @ %assetType @ " for object " @ %objName @ " in field " @ %oldFieldName @ " to new field " @ %newfieldName);
-      }
-   }
-   
-   return "";
 }
 
 //==============================================================================
@@ -669,6 +399,9 @@ function beginShapeImport()
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
+            ProjectImportWizardPage5-->processingText.setText("Processing Shape Asset file: " @ %file);
+            Canvas.repaint();
+            
             //No asset found associated to this fileas far as we can determine, so time to import it
             
             warn("Importing 3D Shape file: " @ %file);
@@ -716,6 +449,9 @@ function beginImageImport()
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
+            ProjectImportWizardPage5-->processingText.setText("Processing Image Asset file: " @ %file);
+            Canvas.repaint();
+      
             //No asset found associated to this fileas far as we can determine, so time to import it
             
             warn("Importing Image file: " @ %file);
@@ -761,6 +497,9 @@ function beginTerrainImport()
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
+            ProjectImportWizardPage5-->processingText.setText("Processing Terrain Asset file: " @ %file);
+            Canvas.repaint();
+            
             warn("Importing Terrain file: " @ %file);
             
             %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file);
@@ -794,7 +533,7 @@ function beginTerrainImport()
    }
    
    error("===========================================");
-   error("Finished Importing 3D Shape files");
+   error("Finished Importing Terrain files");
    error("===========================================");
 }
 //==============================================================================
@@ -806,277 +545,6 @@ function beginTerrainImport()
 //==============================================================================
 
 //==============================================================================
-//Material Importing
-//==============================================================================
-function beginMaterialImport()
-{
-   error("===========================================");
-   error("Importing Materials");
-   error("===========================================");
-
-   foreach( %mat in MaterialSet )
-   {
-      %id = %mat.getId();
-      
-      %matName = %mat.getName();
-      %matFile = %mat.getFilename();
-      
-      if(%matFile $= "" || !startsWith(%matFile, $ProjectImporter::modulePath))
-         continue;
-      
-      %result = MaterialAsset::getAssetIdByMaterialName(%matName);
-      if(%result !$= "" && %result !$= "Core_Rendering:noMaterial")
-         continue; //don't re-process if we've already got an asset for it
-      
-      warn("Updating Material " @ %matName @ " to use assets instead of legacy fields");
-      
-      %maxLayers = 4;
-      
-      for(%i = 0; %i < %maxLayers; %i++)
-      {
-         //Process through the material now
-         %imageAssetId = updateObjectLegacyField(%mat, "diffuseMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "normalMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "ORMConfigMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "OverlayMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "LightMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "ToneMap", %i);
-
-         %imageAssetId = updateObjectLegacyField(%mat, "DetailMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "RoughMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "AOMap", %i);
-
-         %imageAssetId = updateObjectLegacyField(%mat, "MetalMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "GlowMap", %i);
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "DetailNormalMap", %i);
-      }
-      
-      processMaterialIntoAsset(%matName, %matFile);
-   }
-   
-   $ProjectImporter::persistMgr.saveDirty();
-
-   error("===========================================");
-   error("Finished Importing Materials");
-   error("===========================================");
-}
-
-function processMaterialIntoAsset(%matName, %file)
-{
-   %filePath = filePath(%file);
-   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
-   %modulePath = $ProjectImporter::modulePath @ "/" @ %moduleName;
-      
-   //test import config here for forcing type suffixes
-   %assetName = %matName @ "_mat";
-   
-   %assetPath = %filePath @ "/";
-   
-   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %fileName = fileName(%file);
-   
-   %asset = new MaterialAsset()
-   {
-      AssetName = %assetName;
-      versionId = 1;
-      scriptFile = %fileName;
-      materialDefinitionName = %matName;
-   };
-   
-   TamlWrite(%asset, %tamlpath);
-	
-	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
-	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
-	
-	return %tamlpath;    
-}
-//==============================================================================
-
-//==============================================================================
-//TerrainMaterial Importing
-//==============================================================================
-function beginTerrainMaterialImport()
-{
-   error("===========================================");
-   error("Importing Terrain Materials");
-   error("===========================================");
-
-   foreach( %mat in TerrainMaterialSet )
-   {
-      %id = %mat.getId();
-      
-      %matName = %mat.getName();
-      %matFile = %mat.getFilename();
-      
-      if(%matFile $= "" || !startsWith(%matFile, $ProjectImporter::modulePath))
-         continue;
-      
-      %result = TerrainMaterialAsset::getAssetIdByMaterialName(%matName);
-      if(%result !$= "" && %result !$= "Core_Rendering:noMaterial")
-         continue; //don't re-process if we've already got an asset for it
-      
-      warn("Updating Terrain Material " @ %matName @ " to use assets instead of legacy fields");
-      
-      %maxLayers = 4;
-      
-      for(%i = 0; %i < %maxLayers; %i++)
-      {
-         //Process through the material now
-         %imageAssetId = updateObjectLegacyField(%mat, "diffuseMap");
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "normalMap");
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "ORMConfigMap");
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "detailMap");
-         
-         %imageAssetId = updateObjectLegacyField(%mat, "macroMap");
-      }
-      
-      processTerrainMaterialIntoAsset(%matName, %matFile);
-   }
-   
-   $ProjectImporter::persistMgr.saveDirty();
-
-   error("===========================================");
-   error("Finished Importing Terrain Materials");
-   error("===========================================");
-}
-
-function processTerrainMaterialIntoAsset(%matName, %file)
-{
-   %filePath = filePath(%file);
-   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
-   %modulePath = $ProjectImporter::modulePath @ "/" @ %moduleName;
-      
-   //test import config here for forcing type suffixes
-   %assetName = %matName @ "_mat";
-   
-   %assetPath = %filePath @ "/";
-   
-   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %fileName = fileName(%file);
-   
-   %asset = new TerrainMaterialAsset()
-   {
-      AssetName = %assetName;
-      versionId = 1;
-      scriptFile = %fileName;
-      materialDefinitionName = %matName;
-   };
-   
-   TamlWrite(%asset, %tamlpath);
-	
-	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
-	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
-	
-	return %tamlpath;    
-}
-//==============================================================================
-
-//==============================================================================
-//Datablock Importing
-//==============================================================================
-function beginDatablockImport()
-{
-   error("===========================================");
-   error("Importing Datablock files");
-   error("===========================================");
-   
-      foreach( %datablock in DataBlockSet )
-   {
-      %unlistedFound = false;
-      %id = %datablock.getId();
-      
-      foreach( %obj in UnlistedDatablocks )
-         if( %obj.getId() == %id )
-         {
-            %unlistedFound = true;
-            break;
-         }
-   
-      if( %unlistedFound )
-         continue;
-         
-      %dbName = %datablock.getName();
-      
-      warn("Updating datablock " @ %dbName @ " to use assets instead of legacy fields");
-         
-      //Process through the datablocks now
-      if(%datablock.isInNamespaceHierarchy("ShapeBaseData"))
-      {
-         %shapeAssetId = updateObjectLegacyField(%datablock, "shapeFile");
-         if(%shapeAssetId $= "")
-         {
-            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeName");
-         }
-         
-         %debrisShapeAssetId = updateObjectLegacyField(%datablock, "debrisShapeName");
-         
-         if(%datablock.isInNamespaceHierarchy("PlayerData"))
-         {
-            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeNameFP", 0);
-            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeNameFP", 1);
-         }
-      }
-      else if(%datablock.isInNamespaceHierarchy("DebrisData") ||
-         %datablock.isInNamespaceHierarchy("PhysicsDebrisData")||
-         %datablock.isInNamespaceHierarchy("PhysicsShapeData") || 
-         %datablock.isInNamespaceHierarchy("WheeledVehicleTire"))
-      {
-         %shapeAssetId = updateObjectLegacyField(%datablock, "shapeFile");
-         if(%shapeAssetId $= "")
-         {
-            %shapeAssetId = updateObjectLegacyField(%datablock, "shapeName");
-         }
-      }
-      else if(%datablock.isInNamespaceHierarchy("ExplosionData"))
-      {
-         %shapeAssetId = updateObjectLegacyField(%datablock, "explosionShape");
-      }
-      else if(%datablock.isInNamespaceHierarchy("ProjectileData"))
-      {
-         %shapeAssetId = updateObjectLegacyField(%datablock, "projectileShapeName");
-         if(%shapeAssetId $= "")
-         {
-            %shapeAssetId = updateObjectLegacyField(%datablock, "projectileShapeFile");
-         }
-      }
-      else if(%datablock.isInNamespaceHierarchy("ShapeBaseImageData"))
-      {
-         %shapeAssetId = updateObjectLegacyField(%datablock, "shapeFile");
-         
-         %shapeFPAssetId = updateObjectLegacyField(%datablock, "shapeFileFP");
-      }
-      else if(%datablock.isInNamespaceHierarchy("LightFlareData"))
-      {
-         %imageAssetId = updateObjectLegacyField(%datablock, "flareTexture");
-      }
-      else if(%datablock.isInNamespaceHierarchy("DecalData"))
-      {
-         %materialAssetId = updateObjectLegacyField(%datablock, "material");
-      }
-   }
-   
-   $ProjectImporter::persistMgr.saveDirty();
-
-   error("===========================================");
-   error("Finished Importing Datablock files");
-   error("===========================================");
-
-}
-//==============================================================================
-
-//==============================================================================
 //Gui Importing
 //==============================================================================
 function beginGUIImport()
@@ -1084,151 +552,71 @@ function beginGUIImport()
    error("===========================================");
    error("Importing GUIs");
    error("===========================================");
-
-   foreach( %gui in GuiGroup )
-   {
-      %id = %gui.getId();
-      
-      %guiName = %gui.getName();
-      if(%guiName $= "")
-         %guiName = %id;
-         
-      if(%guiName.isInNamespaceHierarchy("GuiCanvas"))
-         continue;
-      
-      %guiFile = %gui.getFilename();
-      
-      if(%guiFile $= "" || !startsWith(%guiFile, $ProjectImporter::modulePath))
-         continue;
-      
-      if(GUIAsset::getAssetIdByGUIName(%guiName) !$= "")
-         continue; //don't re-process if we've already got an asset for it
-      
-      warn("Updating GUI " @ %guiName @ " to use assets instead of legacy fields");
-      
-      $ProjectImporter::saveParent = false;
-         
-      updateGUIControl(%gui);
-      
-      processGUIChildren(%gui);
-      
-      if($ProjectImporter::saveParent)
+   
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(%fileExt $= ".gui")
       {
-         $ProjectImporter::persistMgr.setDirty(%gui);
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing GUI Asset file: " @ %file);
+            Canvas.repaint();
+            
+            %fileObj = new FileObject();
+            if ( %fileObj.openForRead( %file ) ) 
+            {
+               while ( !%fileObj.isEOF() ) 
+               {
+                  %line = %fileObj.readLine();
+                  
+                  if(strIsMatchExpr("*new*(*)*", %line))
+                  {
+                     %start = strpos(%line, "new ");
+                     %end = strpos(%line, "(", %start);
+
+                     if(%start != -1 && %end != -1)
+                     {
+                        %className = getSubStr(%line, %start + 4, %end-%start-4);
+                     }
+                     
+                     %nameEnd = strpos(%line, ")", %end);
+                     
+                     %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+                     
+                     if(%objectName !$= "")
+                     {
+                        if(strpos(%objectName, ":") != -1)
+                        {
+                           %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
+                        }
+                     }
+                     
+                     processGUIntoAsset(%objectName, %file);
+                     break;
+                  }
+               }
+            }
+            
+            %fileObj.close();
+            %fileObj.delete();
+         }
       }
       
-      processGUIntoAsset(%guiName, %guiFile);
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
    }
-   
-   $ProjectImporter::persistMgr.saveDirty();
 
    error("===========================================");
    error("Finished Importing GUIs");
    error("===========================================");
-}
-
-function processGUIChildren(%gui)
-{
-   foreach( %guiChild in %gui )
-   {
-      %id = %guiChild.getId();
-      
-      %guiName = %guiChild.getName();
-      if(%guiName $= "")
-         %guiName = %id;
-         
-      //Process through the GUI now
-      updateGUIControl(%guiChild);
-      
-      processGUIChildren(%guiChild);
-   }
-}
-
-function updateGUIControl(%gui)
-{
-   //Process through the GUI now
-   if(%gui.isInNamespaceHierarchy("guiBitmapCtrl") || 
-      %gui.isInNamespaceHierarchy("guiChunkedBitmapCtrl") || 
-      %gui.isInNamespaceHierarchy("guiProgressBitmapCtrl") || 
-      %gui.isInNamespaceHierarchy("GuiPopUpMenuCtrl") ||
-      %gui.isInNamespaceHierarchy("GuiPopUpMenuCtrlEx"))
-   {
-      %imageAssetId = updateObjectLegacyField(%gui, "bitmap", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-   }
-   else if(%gui.isInNamespaceHierarchy("guiToolboxButtonCtrl"))
-   {
-      %imageAssetId = updateObjectLegacyField(%gui, "normalBitmap", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-      %imageAssetId = updateObjectLegacyField(%gui, "loweredBitmap", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-      %imageAssetId = updateObjectLegacyField(%gui, "hoverBitmap", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-   }
-   else if(%gui.isInNamespaceHierarchy("GuiIconButtonCtrl"))
-   {
-      %imageAssetId = remapObjectLegacyField(%gui, "iconBitmap", "bitmap", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-   }
-   else if(%gui.isInNamespaceHierarchy("GuiMissionAreaCtrl"))
-   {
-      %imageAssetId = updateObjectLegacyField(%gui, "handleBitmap", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-   }
-   else if(%gui.isInNamespaceHierarchy("WorldEditor"))
-   {
-      %imageAssetId = updateObjectLegacyField(%gui, "SelectHandle", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-      %imageAssetId = updateObjectLegacyField(%gui, "DefaultHandle", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-      %imageAssetId = updateObjectLegacyField(%gui, "LockedHandle", "", "GUI", false);
-      if(%imageAssetId !$= "")
-      {
-         //successful import
-         $ProjectImporter::saveParent = true;
-         warn("Successfully processed imageAsset for GUI " @ %guiName);
-      }
-   }
 }
 
 function processGUIntoAsset(%guiName, %file)
@@ -1245,12 +633,18 @@ function processGUIntoAsset(%guiName, %file)
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    
+   %scriptFile = "";
+   if(isFile(%filePath @ "/" @ %fileName @ ".cs")
+   {
+      %scriptFile = %fileName @ ".cs";
+   }
+   
    %asset = new GUIAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
-      guiFile = %assetName @ ".gui";
+      scriptFile = %scriptFile;
+      guiFile = fileName(%file);
    };
    
    TamlWrite(%asset, %tamlpath);
@@ -1264,87 +658,6 @@ function processGUIntoAsset(%guiName, %file)
 
 //==============================================================================
 //Misc Object Type Converion
-//==============================================================================
-function beginMiscObjectImport()
-{
-   error("===========================================");
-   error("Importing Misc Object Types");
-   error("===========================================");
-   
-   foreach( %obj in GuiDataGroup )
-   {
-      %id = %obj.getId();
-      
-      %objName = %obj.getName();
-      if(%objName $= "")
-         %objName = %id;
-      
-      %objFile = %obj.getFilename();
-      
-      if(%objFile $= "" || !startsWith(%objFile, $ProjectImporter::modulePath))
-         continue;
-         
-      %changed = false;
-      
-      if(%obj.isInNamespaceHierarchy("guiControlProfile"))
-      {
-         %imageAssetId = updateObjectLegacyField(%obj, "bitmap");
-         if(%imageAssetId !$= "")
-         {
-            warn("Successfully processed imageAsset for object: " @ %objName);
-            %changed = true;
-         }
-      }
-      
-      if(%changed)
-         $ProjectImporter::persistMgr.setDirty(%obj);
-   }
-
-   foreach( %obj in RootGroup )
-   {
-      %id = %obj.getId();
-      
-      %objName = %obj.getName();
-      if(%objName $= "")
-         %objName = %id;
-      
-      %objFile = %obj.getFilename();
-      
-      if(%objFile $= "" || !startsWith(%objFile, $ProjectImporter::modulePath))
-         continue;
-         
-      %changed = false;
-      
-      if(%obj.isInNamespaceHierarchy("guiCursor"))
-      {
-         %imageAssetId = remapObjectLegacyField(%obj, "bitmapName", "bitmap");
-         if(%imageAssetId !$= "")
-         {
-            warn("Successfully processed imageAsset for object: " @ %objName);
-            %changed = true;
-         }
-      }
-      
-      if(%changed)
-         $ProjectImporter::persistMgr.setDirty(%obj);
-   }
-   
-   $ProjectImporter::persistMgr.saveDirty();
-   
-   error("===========================================");
-   error("Finished Importing Misc Object Types");
-   error("===========================================");
-}
-//==============================================================================
-
-//==============================================================================
-//Level Importing
-//==============================================================================
-
-//==============================================================================
-
-//==============================================================================
-//Misc Script file conversion
 //==============================================================================
 
 //==============================================================================
@@ -1375,6 +688,104 @@ function beginPostFXImport()
 
    error("===========================================");
    error("Finished Importing PostFXs");
+   error("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Level Importing
+//==============================================================================
+function beginLevelImport()
+{
+   error("===========================================");
+   error("Importing Level files");
+   error("===========================================");
+
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      %fileBase = fileBase(%file);
+      
+      if(%fileExt $= ".mis")
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing Level Asset file: " @ %file);
+            Canvas.repaint();
+            
+            warn("Importing Level file: " @ %file);
+            
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
+
+            %assetName = %fileBase;
+            
+            if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+            {
+               error("Legacy Project Importer - trying to process a level into an asset that already exists");
+               return false;  
+            }
+            
+            %assetPath = %filePath @ "/";
+            %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+            
+            %asset = new LevelAsset()
+            {
+               AssetName = %assetName;
+               versionId = 1;
+               levelFile = %fileName;
+               levelName = %assetName;
+            };
+            
+            if(isFile(%filePath @ "/" @ %assetName @ ".decal"))
+            {
+               %asset.decalsFile = %assetName @ ".decal";
+            }
+            if(isFile(%filePath @ "/" @ %assetName @ ".forest"))
+            {
+               %asset.forestFile = %assetName @ ".forest";
+            }
+            if(isFile(%filePath @ "/" @ %assetName @ ".nav"))
+            {
+               %asset.decalsFile = %assetName @ ".nav";
+            }
+            if(isFile(%filePath @ "/" @ %assetName @ ".postfx.preset"))
+            {
+               %asset.postFXPresetFile = %assetName @ ".postfx.preset";
+            }
+            
+            if(isFile(%filePath @ "/" @ %assetName @ ".png"))
+            {
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %assetName @ ".png");
+               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+            }
+            else if(isFile(%filePath @ "/" @ %assetName @ ".dds"))
+            {
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %assetName @ ".dds");
+               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+            }
+            
+            TamlWrite(%asset, %tamlpath);
+            
+            %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+            %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+            
+            %sdfg = true;
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   error("===========================================");
+   error("Finished Importing Level files");
    error("===========================================");
 }
 //==============================================================================

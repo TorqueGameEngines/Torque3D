@@ -205,3 +205,6 @@
 #if defined(TORQUE_SDL)
 #include <SDL.h>
 #endif
+
+/// Password to use when opening encrypted zip files. Change this to whatever the password is for your zips.
+#define DEFAULT_ZIP_PASSWORD     "@TORQUE_APP_PASSWORD@"

@@ -57,6 +57,8 @@ mark_as_advanced(TORQUE_BASIC_LIGHTING)
 option(TORQUE_SFX_DirectX "DirectX Sound" OFF)
 mark_as_advanced(TORQUE_SFX_DirectX)
 option(TORQUE_SFX_OPENAL "OpenAL Sound" ON)
+mark_as_advanced(TORQUE_APP_PASSWORD)
+set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
 #windows uses openal-soft
 if(WIN32)
     #disable a few things that are not required

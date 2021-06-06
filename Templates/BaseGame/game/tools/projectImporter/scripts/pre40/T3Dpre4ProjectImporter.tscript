@@ -78,11 +78,24 @@ function T3Dpre4ProjectImporter::copyFiles(%this)
       %fileExt = fileExt(%file);
       
       if(%fileExt $= ".dll" || %fileExt $= ".log" || %fileExt $= ".exe" || %fileExt $= ".manifest"|| %fileExt $= ".h" ||
-         %fileExt $= ".cpp" || %fileExt $= ".so" || %fileExt $= ".do")
+         %fileExt $= ".cpp" || %fileExt $= ".so" || %fileExt $= ".do" || %fileExt $= ".lib" ||%fileExt $= ".exp")
       {
          %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
          continue;
       }
+      
+      //filter out some unneeded folders
+      %slashCount = getTokenCount(%filePath, "/");
+      %topFolder = getToken(%filePath, "/", %slashCount-1);
+      if(%topFolder $= "")
+         %topFolder = getToken(%filePath, "/", %slashCount-2);
+         
+      if(%topFolder $= "creator" || %topFolder $= "tools" || %topFolder $= "web")
+      {
+         %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
+         continue;
+      }
+      
       
       %targetFilePath = strReplace(%file, $ProjectImporter::sourceContentFolder, $ProjectImporter::modulePath);
       %targetFolder = filePath(%targetFilePath);
@@ -117,13 +130,214 @@ function T3Dpre4ProjectImporter::processImportedFiles(%this)
 
 function T3Dpre4ProjectImporter::doImport(%this)
 {
+   //Store off the current default import config
+   %defaultConfig = EditorSettings.value("Assets/AssetImporDefaultConfig", "");
+   EditorSettings.setValue("Assets/AssetImporDefaultConfig", "LegacyProjectImport");
+   
    //Update asset content
    beginImageImport();
+   
+   %this.beginMaterialFilesImport();
+   
    beginShapeImport();
    beginTerrainImport();
    beginLevelImport();
    beginGUIImport();
    
+   %this.beginCodeFilesImport();
+   
+   EditorSettings.setValue("Assets/AssetImporDefaultConfig", %defaultConfig);
+}
+
+function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
+{
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.cs", true);
+   
+   %fileObj = new FileObject();
+   %objectClassStack = new ArrayObject();
+   %fileOutputLines = new ArrayObject();
+   
+   error("Legacy Project Importer - Beginning processing of imported code files");
+   
+   //Walk through and process all code files to update references
+   while( %file !$= "" )
+   {      
+      %fileWasChanged = false;
+      
+      %filename = fileName(%file);
+      %fileBase = fileBase(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      $ProjectImporter::currentFilePath = %filePath @ "/";
+      
+      ProjectImportWizardPage5-->processingText.setText("Processing material script file: " @ %file);
+      Canvas.repaint();
+      
+      if ( %fileObj.openForRead( %file ) ) 
+      {
+         error("Legacy Project Importer - Beginning process of file: " @ %file);
+         %lineNum = 0;
+         while ( !%fileObj.isEOF() ) 
+         {
+            %line = %fileObj.readLine();
+            %trimmedLine = trim(%line);
+            
+            if(strIsMatchExpr("*new*(*)*", %line))
+            {
+               //we have a new object, add it to the stack
+               //substr to peel the class name
+               %start = strpos(%line, "new ");
+               %end = strpos(%line, "(", %start);
+
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 4, %end-%start-4);
+                  
+                  if(%className !$= "Material" && %className !$= "CustomMaterial")
+                  {
+                     %lineNum++;
+                     %fileOutputLines.push_back(%line);
+                     continue;
+                  }
+                  
+                  %objectClassStack.push_back(%className);
+               }
+               
+               %nameEnd = strpos(%line, ")", %end);
+               
+               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               
+               if(%objectName !$= "")
+               {
+                  if(strpos(%objectName, ":") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
+                  }
+                  
+                  if(%objectClassStack.count() == 1)
+                  {
+                     //we only process top-level objects directly
+                     %processFunction = "process" @ %currentObjClass @ "Object";
+                     if(%this.isMethod(%processFunction))
+                     {
+                        %this.call(%processFunction, %file, %objectName);
+                     } 
+                  }
+               }
+            }
+            else if(strIsMatchExpr("*singleton*(*)*", %line))
+            {
+               //we have a new object, add it to the stack
+               //substr to peel the class name
+               %start = strpos(%line, "singleton ");
+               %end = strpos(%line, "(", %start);
+               
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 10, %end-%start-10);
+                  
+                  if(%className !$= "Material" && %className !$= "CustomMaterial")
+                  {
+                     %lineNum++;
+                     %fileOutputLines.push_back(%line);
+                     continue;
+                  }
+                  
+                  %objectClassStack.push_back(%className);
+               }
+               
+               %nameEnd = strpos(%line, ")", %end);
+               
+               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               
+               if(%objectName !$= "")
+               {
+                  if(strpos(%objectName, ":") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
+                  }
+                  
+                  if(%objectClassStack.count() == 1)
+                  {
+                     //we only process top-level objects directly
+                     %processFunction = "process" @ %currentObjClass @ "Object";
+                     if(%this.isMethod(%processFunction))
+                     {
+                        %this.call(%processFunction, %file, %objectName);
+                     } 
+                  }
+               }
+            }
+            else if(strIsMatchExpr("*};*", %line))
+            {
+               //hit the end of an object, pop our object stack
+               %objectClassStack.pop_back();
+            }
+            else
+            {
+               if(%objectClassStack.count() != 0)
+               {
+                  %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+                  
+                  %processFunction = "process" @ %currentObjClass @ "Line";
+                  if(%this.isMethod(%processFunction))
+                  {
+                     %outLine = %this.call(%processFunction, %line);
+
+                     if(%line !$= %outLine)
+                     {
+                        %fileWasChanged = true;
+                        %line = %outLine;
+                     }
+                  }
+               }
+            }
+            %lineNum++;
+            
+            %fileOutputLines.push_back(%line);
+         }
+         
+         %fileObj.close();
+      }
+      else
+      {
+         error("Legacy Project Importer - File not able to be opened: " @ %file);  
+      }
+      
+      if(%fileWasChanged)
+      {
+         %fileObj.openForWrite(%file);
+
+         for(%l = 0; %l < %fileOutputLines.count(); %l++)
+         {
+            %outLine = %fileOutputLines.getKey(%l);
+            
+            %fileObj.writeline(%outLine);
+         }
+         
+         %fileObj.close();
+      }
+      
+      %fileOutputLines.empty();
+      %objectClassStack.empty();
+      
+      %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.cs" );
+   }
+   
+   error("Legacy Project Importer - Processing of imported code files done!");
+   
+   %fileOutputLines.delete();
+   %objectClassStack.delete();
+   %fileObj.delete();  
+   
+   //now exec the materials
+   loadModuleMaterials("Game");
+}
+
+function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
+{
    //First, wipe out any files inside the folder first
    %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*.*", true);
    
@@ -151,6 +365,13 @@ function T3Dpre4ProjectImporter::doImport(%this)
       %fileBase = fileBase(%file);
       %fileExt = fileExt(%file);
       %filePath = filePath(%file);
+      
+      if(%filename $= "materials.cs")
+      {
+         //we already handled materials.cs files, so skip
+         %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.*" );
+         continue;
+      }
       
       $ProjectImporter::currentFilePath = %filePath @ "/";
       
@@ -340,7 +561,7 @@ function T3Dpre4ProjectImporter::doImport(%this)
    
    %fileOutputLines.delete();
    %objectClassStack.delete();
-   %fileObj.delete();
+   %fileObj.delete();  
 }
 
 //To implement a custom class to have it's fields processed, just utilize this template function

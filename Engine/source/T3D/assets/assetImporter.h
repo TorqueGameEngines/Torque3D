@@ -40,6 +40,11 @@ public:
    bool AutomaticallyPromptMissingFiles;
    //
 
+   /// <summary>
+   /// Should the importer add the folder name as a prefix to the assetName. Helps prevent name collisions.
+   /// </summary>
+   bool AddDirectoryPrefixToAssetName;
+   //
    //
    //Mesh Settings
    /// <summary>

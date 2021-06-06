@@ -41,6 +41,10 @@ function initializeProjectImporter()
    //Input::GetEventManager().subscribe( ProjectImportCtrl, "EndDropFiles" );
    
    $ProjectImporter::importer = new AssetImporter();
+   
+   %importConfig = new AssetImportConfig();
+   %importConfig.loadImportConfig(AssetImportSettings, "LegacyProjectImport");
+   $ProjectImporter::importer.setImportConfig(%importConfig);
    $ProjectImporter::assetQuery = new AssetQuery();
    
    ProjectImporterPlugin.initSettings();

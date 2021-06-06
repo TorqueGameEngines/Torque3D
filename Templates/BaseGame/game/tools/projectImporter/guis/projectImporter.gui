@@ -130,7 +130,7 @@
                   clipColumnText = "0";
                   rowHeightPadding = "2";
                   position = "1 1";
-                  extent = "135 96";
+                  extent = "135 112";
                   minExtent = "8 2";
                   horizSizing = "width";
                   vertSizing = "height";
@@ -411,7 +411,7 @@
                      canSaveDynamicFields = "0";
                   };
                   new GuiRadioCtrl() {
-                     text = "Existing module folder in current project\'s data/ folder";
+                     text = "Existing folder in current project\'s data/ folder";
                      groupNum = "-1";
                      buttonType = "RadioButton";
                      useMouseEvents = "0";
@@ -426,27 +426,7 @@
                      tooltipProfile = "GuiToolTipProfile";
                      hovertime = "1000";
                      isContainer = "0";
-                     internalName = "existingModuleBtn";
-                     canSave = "1";
-                     canSaveDynamicFields = "0";
-                  };
-                  new GuiRadioCtrl() {
-                     text = "Existing non-module folder in current project\'s data/ folder";
-                     groupNum = "-1";
-                     buttonType = "RadioButton";
-                     useMouseEvents = "0";
-                     position = "22 101";
-                     extent = "320 52";
-                     minExtent = "8 2";
-                     horizSizing = "right";
-                     vertSizing = "bottom";
-                     profile = "ToolsGuiRadioProfile";
-                     visible = "1";
-                     active = "1";
-                     tooltipProfile = "GuiToolTipProfile";
-                     hovertime = "1000";
-                     isContainer = "0";
-                     internalName = "existingFolderBtn";
+                     internalName = "internalFolderBtn";
                      canSave = "1";
                      canSaveDynamicFields = "0";
                   };
@@ -455,7 +435,7 @@
                      groupNum = "-1";
                      buttonType = "RadioButton";
                      useMouseEvents = "0";
-                     position = "22 157";
+                     position = "22 109";
                      extent = "320 52";
                      minExtent = "8 2";
                      horizSizing = "right";
@@ -476,7 +456,7 @@
                      maxChars = "-1";
                      text = "Now, point to the folder to be imported.";
                      useURLMouseCursor = "0";
-                     position = "23 253";
+                     position = "23 221";
                      extent = "328 14";
                      minExtent = "8 2";
                      horizSizing = "right";
@@ -495,7 +475,7 @@
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     position = "19 278";
+                     position = "19 246";
                      extent = "330 30";
                      minExtent = "8 2";
                      horizSizing = "right";

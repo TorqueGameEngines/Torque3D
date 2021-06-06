@@ -188,8 +188,8 @@ function directoryHandler::getModuleFromAddress(%this, %address)
       %modulePath = makeRelativePath(%module.ModulePath);
       
       //We don't want to add stuff directly to the root core or tools modules
-      if(%modulePath $= "Core" || %modulePath $= "Tools")
-         continue;
+      //if(%modulePath $= "Core" || %modulePath $= "Tools")
+      //   continue;
          
       if(startsWith(%address, %modulePath))
       {

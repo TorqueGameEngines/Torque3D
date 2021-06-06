@@ -45,6 +45,22 @@ function ProjectImportWindow::nextStep(%this)
    %this.showPage(%this.importStepNumber);
 }
 
+function ProjectImportWindow::setStep(%this, %stepNum)
+{
+   if(%stepNum >= %this.stepCount)
+   {
+      Canvas.popDialog(ProjectImportCtrl);
+      return;  
+   }
+   
+   if(%stepNum < 0)
+      return;  
+   
+   %this.importStepNumber = %stepNum;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
 function ProjectImportWindow::selectOGFolder(%this)
 {
    %dlg = new OpenFolderDialog()
@@ -105,8 +121,8 @@ function ProjectImportWizardPage1::openPage(%this)
    ProjectImportWindow-->backButton.setHidden(false);
    
    %this-->previousContentVersionPopup.clear();
-   %this-->previousContentVersionPopup.add("Torque Game Engine");
-   %this-->previousContentVersionPopup.add("Torque Shader Engine");
+   //this-->previousContentVersionPopup.add("Torque Game Engine");
+   //%this-->previousContentVersionPopup.add("Torque Shader Engine");
    %this-->previousContentVersionPopup.add("Torque 3D Pre-4.0");
 }
 
@@ -116,7 +132,22 @@ function ProjectImportWizardPage1::processPage(%this)
 
 function ProjectImportWizardPage2::openPage(%this)
 {
+   %version = ProjectImportWizardPage1-->previousContentVersionPopup.getSelected();
    
+   Canvas.repaint(); //force it to refresh the page so we're up to date.
+   
+   switch$(%version)
+   {
+      case 0:
+         $ProjectImporter::versionMode = "T3Dpre4Project";
+      default:
+         $ProjectImporter::versionMode = "T3Dpre4Project";
+   }
+   
+   if(isObject($ProjectImporter::importTool))
+      $ProjectImporter::importTool.delete();
+      
+   $ProjectImporter::importTool = new ScriptObject($ProjectImporter::versionMode @ "Importer");
 }
 
 function ProjectImportWizardPage2::processPage(%this)
@@ -125,14 +156,42 @@ function ProjectImportWizardPage2::processPage(%this)
 
 function ProjectImportWizardPage3::openPage(%this)
 {
-   %slashCount = getTokenCount($ProjectImporter::sourceContentFolder, "/");
-   %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-1);
-   if(%topFolder $= "")
-      %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-2);
-  
-   $ProjectImporter::moduleName = %topFolder; //preseed the module name
-   
-   ProjectImportWizardPage3-->newModuleName.setText($ProjectImporter::moduleName);
+   if(ProjectImportWizardPage2-->internalFolderBtn.isStateOn())
+      $ProjectImporter::importMode = "InternalFolder";
+   else if(ProjectImportWizardPage2-->externalFolderBtn.isStateOn())
+      $ProjectImporter::importMode = "ExternalFolder";
+      
+   if($ProjectImporter::importMode $= "InternalFolder")
+   {
+      %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath($ProjectImporter::sourceContentFolder));
+      if(isObject(%moduleDef))
+      {
+         //already a valid module in place so just skip this step  
+         $ProjectImporter::useExistingModule = true;
+         $ProjectImporter::moduleName = %moduleDef.moduleId;
+         $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+         ProjectImportWindow.setStep(5);
+      }
+   }
+   else
+   {
+      %slashCount = getTokenCount($ProjectImporter::sourceContentFolder, "/");
+      %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-1);
+      if(%topFolder $= "")
+         %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-2);
+         
+      //clean up invalid characters and stuff
+      %topFolder = strReplace(%topFolder, " ", "");
+      %topFolder = strReplace(%topFolder, "!", "");
+      %topFolder = strReplace(%topFolder, "-", "");
+      %topFolder = strReplace(%topFolder, ".", "");
+     
+      $ProjectImporter::useExistingModule = false;
+      $ProjectImporter::moduleName = %topFolder; //preseed the module name
+      $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+      
+      ProjectImportWizardPage3-->newModuleName.setText($ProjectImporter::moduleName);
+   }
 }
 
 function ProjectImportWizardPage3::processPage(%this)
@@ -143,36 +202,11 @@ function ProjectImportWizardPage4::openPage(%this)
 {
    ProjectImportWindow-->backButton.setHidden(true);
    ProjectImportWindow-->nextButton.setActive(false);
-   %version = ProjectImportWizardPage1-->previousContentVersionPopup.getSelected();
-   
-   Canvas.repaint(); //force it to refresh the page so we're up to date.
-   
-   switch$(%version)
-   {
-      case 0:
-         $ProjectImporter::versionMode = "TGEProject";
-      case 1:
-         $ProjectImporter::versionMode = "TSEProject";
-      case 2:
-         $ProjectImporter::versionMode = "T3Dpre4Project";
-      default:
-         $ProjectImporter::versionMode = "T3Dpre4Project";
-   }
-
-   if(ProjectImportWizardPage2-->existingModuleBtn.isStateOn())
-      $ProjectImporter::importMode = "ExistingModule";
-   else if(ProjectImportWizardPage2-->existingFolderBtn.isStateOn())
-      $ProjectImporter::importMode = "ExistingFolder";
-   else if(ProjectImportWizardPage2-->externalFolderBtn.isStateOn())
-      $ProjectImporter::importMode = "ExternalFolder";
       
    $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
-   
-   $ProjectImporter::importTool = new ScriptObject($ProjectImporter::versionMode @ "Importer");
       
-   $ProjectImporter::importTool.setupModule();
-   
-   $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+   if(!$ProjectImporter::useExistingModule)
+      $ProjectImporter::importTool.setupModule();
    
    $ProjectImporter::importTool.copyFiles();
 }
@@ -634,7 +668,7 @@ function processGUIntoAsset(%guiName, %file)
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    
    %scriptFile = "";
-   if(isFile(%filePath @ "/" @ %fileName @ ".cs")
+   if(isFile(%filePath @ "/" @ %fileName @ ".cs"))
    {
       %scriptFile = %fileName @ ".cs";
    }

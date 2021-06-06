@@ -36,6 +36,7 @@ AssetImportConfig::AssetImportConfig() :
    WarningsAsErrors(false),
    PreventImportWithErrors(true),
    AutomaticallyPromptMissingFiles(false),
+   AddDirectoryPrefixToAssetName(false),
    ImportMesh(true),
    AlwaysAddShapeSuffix(false),
    AddedShapeSuffix("_shape"),
@@ -135,6 +136,7 @@ void AssetImportConfig::initPersistFields()
       addField("WarningsAsErrors", TypeBool, Offset(WarningsAsErrors, AssetImportConfig), "Indicates if warnings should be treated as errors");
       addField("PreventImportWithErrors", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "Indicates if importing should be prevented from completing if any errors are detected at all");
       addField("AutomaticallyPromptMissingFiles", TypeBool, Offset(AutomaticallyPromptMissingFiles, AssetImportConfig), "Should the importer automatically prompt to find missing files if they are not detected automatically by the importer");
+      addField("AddDirectoryPrefixToAssetName", TypeBool, Offset(AddDirectoryPrefixToAssetName, AssetImportConfig), "Should the importer add the folder name as a prefix to the assetName. Helps prevent name collisions.");   
    endGroup("General");
 
    addGroup("Meshes");
@@ -232,6 +234,7 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    WarningsAsErrors = dAtob(configSettings->value(String(configName + "/General/WarningsAsErrors").c_str()));
    PreventImportWithErrors = dAtob(configSettings->value(String(configName + "/General/PreventImportWithErrors").c_str()));
    AutomaticallyPromptMissingFiles = dAtob(configSettings->value(String(configName + "/General/AutomaticallyPromptMissingFiles").c_str()));
+   AddDirectoryPrefixToAssetName = dAtob(configSettings->value(String(configName + "/General/AddDirectoryPrefixToAssetName").c_str()));
 
    //Meshes
    ImportMesh = dAtob(configSettings->value(String(configName + "/Meshes/ImportMesh").c_str()));
@@ -321,6 +324,7 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
    target->WarningsAsErrors = WarningsAsErrors;
    target->PreventImportWithErrors = PreventImportWithErrors;
    target->AutomaticallyPromptMissingFiles = AutomaticallyPromptMissingFiles;
+   target->AddDirectoryPrefixToAssetName = AddDirectoryPrefixToAssetName;
 
    //Meshes
    target->ImportMesh = ImportMesh;

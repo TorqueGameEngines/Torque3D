@@ -228,10 +228,10 @@ void BitStream::writeBits(S32 bitCount, const void *bitPtr)
    if(!bitCount)
       return;
 
-   if(bitCount + bitNum > maxWriteBitNum)
+   if((bitCount + bitNum) > maxWriteBitNum)
    {
       error = true;
-      AssertFatal(false, "Out of range write");
+      AssertFatal(false, avar("BitStream::writeBits - Out of range write [(%i+%i)/%i]", bitCount, bitNum, maxWriteBitNum));
       return;
    }
 
@@ -264,10 +264,10 @@ bool BitStream::testBit(S32 bitCount)
 
 bool BitStream::writeFlag(bool val)
 {
-   if(bitNum + 1 > maxWriteBitNum)
+   if((bitNum + 1) > maxWriteBitNum)
    {
       error = true;
-      AssertFatal(false, "Out of range write");
+      AssertFatal(false, avar("BitStream::writeFlag - Out of range write [%i/%i]", bitNum+1, maxWriteBitNum));
       return false;
    }
    if(val)

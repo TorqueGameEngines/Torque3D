@@ -585,7 +585,7 @@ void ShadowMapParams::_validate()
    // We apply the hardware specific limits during 
    // shadow rendering.
    //
-   U32 maxTexSize = 4096;
+   U32 maxTexSize = 8192;
 
    if ( mLight->getType() == LightInfo::Vector )
    {
@@ -595,15 +595,16 @@ void ShadowMapParams::_validate()
       // based on the split count to keep the total
       // shadow texture size within 4096.
       if ( numSplits == 2 || numSplits == 4 )
-         maxTexSize = 4096;
+         maxTexSize = 8192;
       if ( numSplits == 3 )
-         maxTexSize = 2048;
+         maxTexSize = 4096;
    }
    else
       numSplits = 1;
 
    // Keep it in a valid range... less than 32 is dumb.
    texSize = mClamp( texSize, 32, maxTexSize );
+   shadowDistance = mClamp(shadowDistance, 25.0f, 10000.0f);
 }
 
 LightShadowMap* ShadowMapParams::getOrCreateShadowMap()

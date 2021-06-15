@@ -1451,9 +1451,9 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
       case StringCallbackType:
          return ConsoleValueRef::fromValue(CSTK.pushStackString(cb.mStringCallbackFunc(state->thisObject, argc, argv)));
       case IntCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushUINT((U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv)));
+         return ConsoleValueRef::fromValue(CSTK.pushUINT((U32)cb.mIntCallbackFunc(state->thisObject, argc, argv)));
       case FloatCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushFLT((U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv)));
+         return ConsoleValueRef::fromValue(CSTK.pushFLT((U32)cb.mFloatCallbackFunc(state->thisObject, argc, argv)));
       case VoidCallbackType:
          cb.mVoidCallbackFunc(state->thisObject, argc, argv);
          return ConsoleValueRef();

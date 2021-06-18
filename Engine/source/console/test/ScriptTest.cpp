@@ -410,14 +410,14 @@ TEST(Script, ForEachLoop)
 TEST(Script, TorqueScript_Array_Testing)
 {
    ConsoleValue value = RunScript(R"(
-         function t(%idx) { %a[idx] = 2; return %a[idx]; }
+         function t(%idx) { %a[%idx] = 2; return %a[%idx]; }
          return t(5);
    )");
 
    ASSERT_EQ(value.getInt(), 2);
 
    ConsoleValue value2 = RunScript(R"(
-         function t(%idx) { %a[idx, 0] = 2; return %a[idx, 0]; }
+         function t(%idx) { %a[%idx, 0] = 2; return %a[%idx, 0]; }
          return t(5);
    )");
 

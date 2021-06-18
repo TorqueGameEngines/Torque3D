@@ -518,17 +518,17 @@ TORQUE_NOINLINE void doSlowMathOp()
 
    // Logical
    if constexpr (Op == FloatOperation::LT)
-      stack[_STK - 1].setFastInt(a.getFloat() < b.getFloat());
+      stack[_STK - 1].setInt(a.getFloat() < b.getFloat());
    if constexpr (Op == FloatOperation::LE)
-      stack[_STK - 1].setFastInt(a.getFloat() <= b.getFloat());
+      stack[_STK - 1].setInt(a.getFloat() <= b.getFloat());
    if constexpr (Op == FloatOperation::GR)
-      stack[_STK - 1].setFastInt(a.getFloat() > b.getFloat());
+      stack[_STK - 1].setInt(a.getFloat() > b.getFloat());
    if constexpr (Op == FloatOperation::GE)
-      stack[_STK - 1].setFastInt(a.getFloat() >= b.getFloat());
+      stack[_STK - 1].setInt(a.getFloat() >= b.getFloat());
    if constexpr (Op == FloatOperation::EQ)
-      stack[_STK - 1].setFastInt(a.getFloat() == b.getFloat());
+      stack[_STK - 1].setInt(a.getFloat() == b.getFloat());
    if constexpr (Op == FloatOperation::NE)
-      stack[_STK - 1].setFastInt(a.getFloat() != b.getFloat());
+      stack[_STK - 1].setInt(a.getFloat() != b.getFloat());
 
    _STK--;
 }
@@ -1276,7 +1276,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             _STK++; // Not nice but works.
          }
 
-         returnValue.setString(stack[_STK].getString());
+         returnValue = std::move(stack[_STK]);
          _STK--;
 
          goto execFinished;

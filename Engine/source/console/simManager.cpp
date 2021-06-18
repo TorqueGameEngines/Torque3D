@@ -389,14 +389,14 @@ SimObject* findObject(const char* name)
 SimObject* findObject(const ConsoleValue &val)
 {
    if (val.getType() == ConsoleValueType::cvInteger)
-      return findObject((SimObjectId)val.getInt());
+      return findObject((SimObjectId)val.getFastInt());
    return findObject(val.getString());
 }
 
 SimObject* findObject(ConsoleValue* val)
 {
    if (val->getType() == ConsoleValueType::cvInteger)
-      return findObject((SimObjectId)val->getInt());
+      return findObject((SimObjectId)val->getFastInt());
    return findObject(val->getString());
 }
 

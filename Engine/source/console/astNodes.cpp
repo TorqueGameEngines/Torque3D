@@ -66,12 +66,12 @@ class FuncVars
    };
 
 public:
-   S32 assign(StringTableEntry var, TypeReq currentType, bool isConstant = false)
+   S32 assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant = false)
    {
       std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
       if (found != vars.end())
       {
-         AssertISV(!found->second.isConstant, avar("Reassigning variable %s when it is a constant", var));
+         AssertISV(!found->second.isConstant, avar("Reassigning variable %s when it is a constant. File: %s Line : %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
          return found->second.reg;
       }
 
@@ -80,17 +80,18 @@ public:
       return id;
    }
 
-   S32 lookup(StringTableEntry var)
+   S32 lookup(StringTableEntry var, S32 lineNumber)
    {
       std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
-      AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script.", var));
+      AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
       return found->second.reg;
    }
 
-   TypeReq lookupType(StringTableEntry var)
+   TypeReq lookupType(StringTableEntry var, S32 lineNumber)
    {
       std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
-      AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script.", var));
+
+      AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
       return found->second.currentType;
    }
 
@@ -103,9 +104,9 @@ private:
 
 FuncVars* gFuncVars = NULL;
 
-inline FuncVars* getFuncVars()
+inline FuncVars* getFuncVars(S32 lineNumber)
 {
-   AssertISV(gFuncVars, "Attemping to use local variable in global scope.");
+   AssertISV(gFuncVars, avar("Attemping to use local variable in global scope. File: %s Line: %d", CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
    return gFuncVars;
 }
 
@@ -383,7 +384,7 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    if (isGlobal)
       codeStream.emitSTE(varName);
    else
-      codeStream.emit(getFuncVars()->assign(varName, varType));
+      codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, varType, dbgLineNumber));
    const U32 finalFix = codeStream.emit(0);
    const U32 continueIp = codeStream.emit(OP_ITER);
    codeStream.emitFix(CodeStream::FIXTYPE_BREAK);
@@ -736,7 +737,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       default:           codeStream.emit(OP_LOAD_LOCAL_VAR_STR);
       }
 
-      codeStream.emit(getFuncVars()->lookup(varName));
+      codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
    }
 
    return codeStream.tell();
@@ -745,7 +746,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 TypeReq VarNode::getPreferredType()
 {
    bool oldVariables = arrayIndex || varName[0] == '$';
-   return oldVariables ? TypeReqNone : getFuncVars()->lookupType(varName);
+   return oldVariables ? TypeReqNone : getFuncVars(dbgLineNumber)->lookupType(varName, dbgLineNumber);
 }
 
 //------------------------------------------------------------
@@ -983,7 +984,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       case TypeReqFloat: codeStream.emit(OP_SAVE_LOCAL_VAR_FLT); break;
       default:           codeStream.emit(OP_SAVE_LOCAL_VAR_STR);
       }
-      codeStream.emit(getFuncVars()->assign(varName, subType == TypeReqNone ? TypeReqString : subType));
+      codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber));
    }
 
    if (type == TypeReqNone)
@@ -1081,7 +1082,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    if (op == opPLUSPLUS && !oldVariables)
    {
-      const S32 varIdx = getFuncVars()->assign(varName, TypeReqFloat);
+      const S32 varIdx = getFuncVars(dbgLineNumber)->assign(varName, TypeReqFloat, dbgLineNumber);
 
       codeStream.emit(OP_INC);
       codeStream.emit(varIdx);
@@ -1116,7 +1117,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       else
       {
          const bool isFloat = subType == TypeReqFloat;
-         const S32 varIdx = getFuncVars()->assign(varName, subType == TypeReqNone ? TypeReqString : subType);
+         const S32 varIdx = getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber);
 
          codeStream.emit(isFloat ? OP_LOAD_LOCAL_VAR_FLT : OP_LOAD_LOCAL_VAR_UINT);
          codeStream.emit(varIdx);
@@ -1562,7 +1563,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
       precompileIdent(walk->varName);
-      getFuncVars()->assign(walk->varName, TypeReqNone);
+      getFuncVars(dbgLineNumber)->assign(walk->varName, TypeReqNone, dbgLineNumber);
       argc++;
    }
 
@@ -1586,7 +1587,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
       StringTableEntry name = walk->varName;
-      codeStream.emit(getFuncVars()->lookup(name));
+      codeStream.emit(getFuncVars(dbgLineNumber)->lookup(name, dbgLineNumber));
    }
    CodeBlock::smInFunction = true;
    ip = compileBlock(stmts, codeStream, ip);
@@ -1598,7 +1599,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    CodeBlock::smInFunction = false;
    codeStream.emit(OP_RETURN_VOID);
 
-   codeStream.patch(localNumVarsIP, getFuncVars()->count());
+   codeStream.patch(localNumVarsIP, getFuncVars(dbgLineNumber)->count());
    codeStream.patch(endIp, codeStream.tell());
 
    setCurrentStringTable(&getGlobalStringTable());

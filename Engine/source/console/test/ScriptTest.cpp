@@ -512,6 +512,22 @@ TEST(Script, Basic_SimObject)
    )");
 
    ASSERT_STREQ(fieldTest.getString(), "B");
+
+   ConsoleValue fieldOpTest = RunScript(R"(
+         function a()
+         {
+            %obj = new SimObject();
+            %obj.field = 1;
+            %obj.field += 2;
+
+            %value = %obj.field;
+            %obj.delete();
+            return %value;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(fieldOpTest.getInt(), 3);
 }
 
 TEST(Script, Internal_Name)

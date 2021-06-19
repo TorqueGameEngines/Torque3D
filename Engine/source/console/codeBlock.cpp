@@ -447,7 +447,7 @@ bool CodeBlock::read(StringTableEntry fileName, Stream &st)
       {
          U32 ip;
          st.read(&ip);
-#ifdef TORQUE_CPU_X64
+#if defined(TORQUE_CPU_X64) || defined(TORQUE_CPU_ARM64)
          *(U64*)(code + ip) = (U64)ste;
 #else
          code[ip] = *((U32 *)&ste);

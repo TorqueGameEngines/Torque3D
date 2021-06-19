@@ -627,9 +627,14 @@ function onDisplayModeChange(%val)
    }
    %resolutionList = getScreenResolutionList(%newDeviceID, %newDeviceMode);
 
-   // If we're switching to borderless, default to monitor res
    if (%newDeviceMode == $Video::ModeBorderless)
-      %newRes = getWords(Canvas.getMonitorRect(%newDeviceID), 2);
+   {  // If we're switching to borderless, default to monitor res on Windows OS,
+      // monitor usable area for other platforms.
+      if ($platform $= "windows")
+         %newRes = getWords(Canvas.getMonitorRect(%newDeviceID), 2);
+      else
+         %newRes = getWords(Canvas.getMonitorUsableRect(%newDeviceID), 2);
+   }
    else
    {  // Otherwise, if our old resolution is still in the list, attempt to reset it.
       %oldRes = getWord(OptionsMenuSettingsList.getCurrentOption(3), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(3), 2);

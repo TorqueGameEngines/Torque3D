@@ -1401,7 +1401,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalSta
          result.setInt(cb.mIntCallbackFunc(state->thisObject, argc, argv));
          break;
       case FloatCallbackType:
-         result.setFloat(cb.mBoolCallbackFunc(state->thisObject, argc, argv));
+         result.setFloat(cb.mFloatCallbackFunc(state->thisObject, argc, argv));
          break;
       case VoidCallbackType:
          cb.mVoidCallbackFunc(state->thisObject, argc, argv);

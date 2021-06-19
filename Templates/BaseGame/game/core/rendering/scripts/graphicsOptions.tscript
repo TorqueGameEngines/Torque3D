@@ -845,6 +845,13 @@ function getScreenResolutionList(%deviceID, %deviceMode)
 {
    %returnsList = "";
 
+   // For borderless on non-windows OS only add the usable area.
+   if ((%deviceMode == $Video::ModeBorderless) && ($platform !$= "windows"))
+   {
+      %borderlessRes = getWords(Canvas.getMonitorUsableRect(%newDeviceID), 2);
+      return _makePrettyResString(%borderlessRes);
+   }
+
    %resCount = Canvas.getModeCount();
    for (%i = 0; %i < %resCount; %i++)
    {

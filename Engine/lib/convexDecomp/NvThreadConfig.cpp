@@ -135,6 +135,8 @@ void tc_spinloop()
       // Pause would do nothing on the Xbox. Threads are not scheduled.
    #elif defined( _WIN64 )
       YieldProcessor( );
+   #elif (defined( __arm64__ ) && defined( __APPLE__ )) || defined( __arch64__ )
+      pthread_yield_np();
    #else
       __asm { pause };
    #endif

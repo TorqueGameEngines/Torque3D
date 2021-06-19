@@ -120,6 +120,11 @@ typedef unsigned long  U64;
 #  define TORQUE_CPU_X64
 #  define TORQUE_LITTLE_ENDIAN
 
+#elif (defined( __arm64__ ) && defined( __APPLE__ )) || defined( __arch64__ )
+#  define TORQUE_CPU_STRING "Arm 64"
+#  define TORQUE_CPU_ARM64
+#  define TORQUE_LITTLE_ENDIAN
+
 #else
 #  error "GCC: Unsupported Target CPU"
 #endif

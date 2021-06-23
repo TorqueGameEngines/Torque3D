@@ -1332,13 +1332,6 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    if ( stream->writeFlag( mask & TransformMask ) )
       mathWrite( *stream, getTransform() );
 
-   if ( stream->writeFlag( mask & FileMask ) )
-   {
-      S32 idasdasdf = getId();
-      stream->write(mCRC);
-      stream->writeString( mTerrainAsset.getAssetId() );
-   }
-
    if ( stream->writeFlag( mask & SizeMask ) )
       stream->write( mSquareSize );
 
@@ -1348,6 +1341,13 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    {
       stream->write( mBaseTexSize );
       stream->write( mLightMapSize );
+   }
+
+   if ( stream->writeFlag( mask & FileMask ) )
+   {
+      S32 idasdasdf = getId();
+      stream->write(mCRC);
+      stream->writeString( mTerrainAsset.getAssetId() );
    }
 
    stream->writeFlag( mask & HeightMapChangeMask );
@@ -1374,20 +1374,13 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       setTransform( mat );
    }
 
-   if ( stream->readFlag() ) // FileMask
-   {
-      stream->read(&mCRC);
-
-      char buffer[256];
-      stream->readString(buffer);
-      bool validAsset = setTerrainAsset(StringTable->insert(buffer));
-   }
 
    if ( stream->readFlag() ) // SizeMask
       stream->read( &mSquareSize );
 
    mCastShadows = stream->readFlag();
 
+   bool baseTexSizeChanged = false;
    if ( stream->readFlag() ) // MaterialMask
    {
       U32 baseTexSize;
@@ -1395,8 +1388,7 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       if ( mBaseTexSize != baseTexSize )
       {
          mBaseTexSize = baseTexSize;
-         if ( isProperlyAdded() )
-            _updateBaseTexture( NONE );
+         baseTexSizeChanged = true;
       }
 
       U32 lightMapSize;
@@ -1411,6 +1403,18 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
          }
       }
    }
+
+   if (stream->readFlag()) // FileMask
+   {
+      stream->read(&mCRC);
+
+      char buffer[256];
+      stream->readString(buffer);
+      bool validAsset = setTerrainAsset(StringTable->insert(buffer));
+      _updateBaseTexture(NONE);
+   }
+   if (baseTexSizeChanged && isProperlyAdded())
+      _updateBaseTexture(NONE);
 
    if ( stream->readFlag() && isProperlyAdded() ) // HeightMapChangeMask
    {

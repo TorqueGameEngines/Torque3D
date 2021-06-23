@@ -495,16 +495,8 @@ void TerrainDetailMapFeatHLSL::processVert(  Vector<ShaderComponent*> &component
    meta->addStatement( new GenOp( "   @.xyz = @ * @.xyx;\r\n", outTex, inTex, new IndexOp(detScaleAndFade, detailIndex) ) );
 
    // And sneak the detail fade thru the w detailCoord.
-   if (fd.features.hasFeature(MFT_TerrainSideProject))
-   {
-      meta->addStatement(new GenOp("   @.w = 1.0-clamp(abs( dot( normalize( @.xyz),float3(0,0,1)))*(( @.z - @ ) * @.w),0.0f,1.0f);\r\n",
-         outTex, inTex, new IndexOp(detScaleAndFade, detailIndex), dist, new IndexOp(detScaleAndFade, detailIndex)));
-   }
-   else
-   {
-      meta->addStatement(new GenOp("   @.w = clamp(abs( dot( normalize( @.xyz),float3(0,0,1)))*(( @.z - @ ) * @.w),0.0f,1.0f);\r\n",
-         outTex, inTex, new IndexOp(detScaleAndFade, detailIndex), dist, new IndexOp(detScaleAndFade, detailIndex)));
-   }
+   meta->addStatement(new GenOp("   @.w = clamp( ( @.z - @ ) * @.w, 0.0, 1.0 );\r\n",
+      outTex, new IndexOp(detScaleAndFade, detailIndex), dist, new IndexOp(detScaleAndFade, detailIndex)));
 
    output = meta;
 }
@@ -1495,22 +1487,6 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
    }
 
    meta->addStatement(new GenOp(") / @;\r\n", detailTot));
-   /*
-   for (S32 idx = 0; idx < detailCount; ++idx)
-   {
-      Var* detailB = (Var*)LangElement::find(String::ToString("detailB%d", idx));
-
-      if (idx > 0)
-      {
-         meta->addStatement(new GenOp(" + "));
-      }
-
-      meta->addStatement(new GenOp("@", detailB));
-   }
-
-
-   meta->addStatement(new GenOp(");\r\n"));
-*/
    meta->addStatement(new GenOp("   @.rgb = toLinear(clamp(@.rgb, 0, 1));\r\n",
       outColor, outColor));
 
@@ -1549,24 +1525,6 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
    }
 
    meta->addStatement(new GenOp(") / @;\r\n", detailTot));
-   /*
-   meta->addStatement(new GenOp(") / ("));
-
-   for (S32 idx = 0; idx < detailCount; ++idx)
-   {
-      Var* detailB = (Var*)LangElement::find(String::ToString("detailB%d", idx));
-
-      if (idx > 0)
-      {
-         meta->addStatement(new GenOp(" + "));
-      }
-
-      meta->addStatement(new GenOp("@", detailB));
-   }
-
-
-   meta->addStatement(new GenOp(");\r\n"));
-   */
 
    meta->addStatement(new GenOp("\r\n"));
 
@@ -1654,24 +1612,6 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
       }
 
       meta->addStatement(new GenOp(") / @;\r\n", detailTot));
-      /*
-      meta->addStatement(new GenOp(") / ("));
-
-      for (S32 idx = 0; idx < detailCount; ++idx)
-      {
-         Var* normalDetailB = (Var*)LangElement::find(String::ToString("normalDetailB%d", idx));
-
-         if (idx > 0)
-         {
-            meta->addStatement(new GenOp(" + "));
-         }
-
-         meta->addStatement(new GenOp("@", normalDetailB));
-      }
-
-
-      meta->addStatement(new GenOp(");\r\n"));
-      */
    }
 
 

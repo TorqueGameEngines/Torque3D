@@ -460,6 +460,39 @@ enum class FloatOperation
 };
 
 template<FloatOperation Op>
+TORQUE_NOINLINE void doSlowMathOp()
+{
+   ConsoleValue& a = stack[_STK];
+   ConsoleValue& b = stack[_STK - 1];
+
+   // Arithmetic
+   if constexpr (Op == FloatOperation::Add)
+      stack[_STK - 1].setFloat(a.getFloat() + b.getFloat());
+   else if constexpr (Op == FloatOperation::Sub)
+      stack[_STK - 1].setFloat(a.getFloat() - b.getFloat());
+   else if constexpr (Op == FloatOperation::Mul)
+      stack[_STK - 1].setFloat(a.getFloat() * b.getFloat());
+   else if constexpr (Op == FloatOperation::Div)
+      stack[_STK - 1].setFloat(a.getFloat() / b.getFloat());
+
+   // Logical
+   if constexpr (Op == FloatOperation::LT)
+      stack[_STK - 1].setInt(a.getFloat() < b.getFloat());
+   if constexpr (Op == FloatOperation::LE)
+      stack[_STK - 1].setInt(a.getFloat() <= b.getFloat());
+   if constexpr (Op == FloatOperation::GR)
+      stack[_STK - 1].setInt(a.getFloat() > b.getFloat());
+   if constexpr (Op == FloatOperation::GE)
+      stack[_STK - 1].setInt(a.getFloat() >= b.getFloat());
+   if constexpr (Op == FloatOperation::EQ)
+      stack[_STK - 1].setInt(a.getFloat() == b.getFloat());
+   if constexpr (Op == FloatOperation::NE)
+      stack[_STK - 1].setInt(a.getFloat() != b.getFloat());
+
+   _STK--;
+}
+
+template<FloatOperation Op>
 TORQUE_FORCEINLINE void doFloatMathOperation()
 {
    ConsoleValue& a = stack[_STK];
@@ -500,39 +533,6 @@ TORQUE_FORCEINLINE void doFloatMathOperation()
    }
 }
 
-template<FloatOperation Op>
-TORQUE_NOINLINE void doSlowMathOp()
-{
-   ConsoleValue& a = stack[_STK];
-   ConsoleValue& b = stack[_STK - 1];
-
-   // Arithmetic
-   if constexpr (Op == FloatOperation::Add)
-      stack[_STK - 1].setFloat(a.getFloat() + b.getFloat());
-   else if constexpr (Op == FloatOperation::Sub)
-      stack[_STK - 1].setFloat(a.getFloat() - b.getFloat());
-   else if constexpr (Op == FloatOperation::Mul)
-      stack[_STK - 1].setFloat(a.getFloat() * b.getFloat());
-   else if constexpr (Op == FloatOperation::Div)
-      stack[_STK - 1].setFloat(a.getFloat() / b.getFloat());
-
-   // Logical
-   if constexpr (Op == FloatOperation::LT)
-      stack[_STK - 1].setInt(a.getFloat() < b.getFloat());
-   if constexpr (Op == FloatOperation::LE)
-      stack[_STK - 1].setInt(a.getFloat() <= b.getFloat());
-   if constexpr (Op == FloatOperation::GR)
-      stack[_STK - 1].setInt(a.getFloat() > b.getFloat());
-   if constexpr (Op == FloatOperation::GE)
-      stack[_STK - 1].setInt(a.getFloat() >= b.getFloat());
-   if constexpr (Op == FloatOperation::EQ)
-      stack[_STK - 1].setInt(a.getFloat() == b.getFloat());
-   if constexpr (Op == FloatOperation::NE)
-      stack[_STK - 1].setInt(a.getFloat() != b.getFloat());
-
-   _STK--;
-}
-
 //-----------------------------------------------------------------------------
 
 enum class IntegerOperation
@@ -546,6 +546,33 @@ enum class IntegerOperation
    LogicalAnd,
    LogicalOr
 };
+
+template<IntegerOperation Op>
+TORQUE_NOINLINE void doSlowIntegerOp()
+{
+   ConsoleValue& a = stack[_STK];
+   ConsoleValue& b = stack[_STK - 1];
+
+   // Bitwise Op
+   if constexpr (Op == IntegerOperation::BitAnd)
+      stack[_STK - 1].setInt(a.getInt() & b.getInt());
+   if constexpr (Op == IntegerOperation::BitOr)
+      stack[_STK - 1].setInt(a.getInt() | b.getInt());
+   if constexpr (Op == IntegerOperation::Xor)
+      stack[_STK - 1].setInt(a.getInt() ^ b.getInt());
+   if constexpr (Op == IntegerOperation::LShift)
+      stack[_STK - 1].setInt(a.getInt() << b.getInt());
+   if constexpr (Op == IntegerOperation::RShift)
+      stack[_STK - 1].setInt(a.getInt() >> b.getInt());
+
+   // Logical Op
+   if constexpr (Op == IntegerOperation::LogicalAnd)
+      stack[_STK - 1].setInt(a.getInt() && b.getInt());
+   if constexpr (Op == IntegerOperation::LogicalOr)
+      stack[_STK - 1].setInt(a.getInt() || b.getInt());
+
+   _STK--;
+}
 
 template<IntegerOperation Op>
 TORQUE_FORCEINLINE void doIntOperation()
@@ -579,33 +606,6 @@ TORQUE_FORCEINLINE void doIntOperation()
    {
       doSlowIntegerOp<Op>();
    }
-}
-
-template<IntegerOperation Op>
-TORQUE_NOINLINE void doSlowIntegerOp()
-{
-   ConsoleValue& a = stack[_STK];
-   ConsoleValue& b = stack[_STK - 1];
-
-   // Bitwise Op
-   if constexpr (Op == IntegerOperation::BitAnd)
-      stack[_STK - 1].setInt(a.getInt() & b.getInt());
-   if constexpr (Op == IntegerOperation::BitOr)
-      stack[_STK - 1].setInt(a.getInt() | b.getInt());
-   if constexpr (Op == IntegerOperation::Xor)
-      stack[_STK - 1].setInt(a.getInt() ^ b.getInt());
-   if constexpr (Op == IntegerOperation::LShift)
-      stack[_STK - 1].setInt(a.getInt() << b.getInt());
-   if constexpr (Op == IntegerOperation::RShift)
-      stack[_STK - 1].setInt(a.getInt() >> b.getInt());
-
-   // Logical Op
-   if constexpr (Op == IntegerOperation::LogicalAnd)
-      stack[_STK - 1].setInt(a.getInt() && b.getInt());
-   if constexpr (Op == IntegerOperation::LogicalOr)
-      stack[_STK - 1].setInt(a.getInt() || b.getInt());
-
-   _STK--;
 }
 
 //-----------------------------------------------------------------------------

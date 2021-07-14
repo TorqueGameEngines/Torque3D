@@ -1551,9 +1551,13 @@ void ParticleEmitter::updateBBox()
 
    for (Particle* part = part_list_head.next; part != NULL; part = part->next)
    {
-      Point3F particleSize(part->size * 0.5f, 0.0f, part->size * 0.5f);
-      minPt.setMin( part->pos - particleSize );
-      maxPt.setMax( part->pos + particleSize );
+      for (Particle* part = part_list_head.next; part != NULL; part = part->next)
+      {
+         Point3F particleSize(part->size * 0.5f);
+         F32 motion = getMax((part->vel.len() * part->totalLifetime / 1000.0f), 1.0f);
+         minPt.setMin(part->pos - particleSize - Point3F(motion));
+         maxPt.setMax(part->pos + particleSize + Point3F(motion));
+      }
    }
    
    mObjBox = Box3F(minPt, maxPt);

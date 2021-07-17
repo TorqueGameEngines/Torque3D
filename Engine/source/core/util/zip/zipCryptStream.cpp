@@ -85,7 +85,7 @@ void ZipCryptRStream::setPassword(const char *password)
 
 bool ZipCryptRStream::attachStream(Stream* io_pSlaveStream)
 {
-   mStream = io_pSlaveStream;
+   mStream = io_pSlaveStream->clone();
    mStreamStartPos = mStream->getPosition();
 
    // [tom, 12/20/2005] Encrypted zip files have an extra 12 bytes

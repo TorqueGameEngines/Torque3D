@@ -201,13 +201,13 @@ bool GuiIconButtonCtrl::resize(const Point2I &newPosition, const Point2I &newExt
 
 void GuiIconButtonCtrl::setBitmap(const char *name)
 {
-   mBitmapName = StringTable->insert(name);
+   mBitmapName = Platform::makeRelativePathName(name, NULL);
    if(!isAwake())
       return;
 
    if (*mBitmapName)
    {
-      mTextureNormal = GFXTexHandle( name, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureNormal (line %d)", __FUNCTION__, __LINE__) );
+      mTextureNormal = GFXTexHandle(mBitmapName, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureNormal (line %d)", __FUNCTION__, __LINE__) );
    }
    else
    {

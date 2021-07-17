@@ -698,11 +698,8 @@ AssetImportObject* AssetImporter::findImportingAssetByName(String assetName, Ass
 
 ModuleDefinition* AssetImporter::getModuleFromPath(Torque::Path filePath)
 {
-   //We want to ensure it's a full filepath, because the module system internally uses full paths for the module dirs
-   char fullPath[2048];
-   Platform::makeFullPathName(filePath.getFullPath().c_str(), fullPath, sizeof(fullPath));
-
-   ModuleDefinition* moduleDef = ModuleDatabase.findModuleByFilePath(StringTable->insert(fullPath));
+   // Use a relative path so modules on mounted file systems will be found.
+   ModuleDefinition* moduleDef = ModuleDatabase.findModuleByFilePath(Platform::makeRelativePathName(filePath.getFullPath().c_str(), NULL));
 
    return moduleDef;
 }

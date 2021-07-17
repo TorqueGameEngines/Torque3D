@@ -2277,9 +2277,10 @@ bool expandPath(char* pDstPath, U32 size, const char* pSrcPath, const char* pWor
 
 bool isBasePath(const char* SrcPath, const char* pBasePath)
 {
-   char expandBuffer[1024];
+   char expandBuffer[1024], expandBaseBuffer[1024];
    Con::expandPath(expandBuffer, sizeof(expandBuffer), SrcPath);
-   return dStrnicmp(pBasePath, expandBuffer, dStrlen(pBasePath)) == 0;
+   Con::expandPath(expandBaseBuffer, sizeof(expandBaseBuffer), pBasePath);
+   return dStrnicmp(expandBaseBuffer, expandBuffer, dStrlen(expandBaseBuffer)) == 0;
 }
 
 //-----------------------------------------------------------------------------

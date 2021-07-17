@@ -39,7 +39,7 @@
 #include "core/stream/bitStream.h"
 #include "math/mathIO.h"
 
-#include "core/fileio.h"
+#include "core/stream/fileStream.h"
 
 extern bool gEditingMission;
 
@@ -1528,10 +1528,9 @@ bool NavMesh::load()
    if(!dStrlen(mFileName))
       return false;
 
-   File file;
-   if(file.open(mFileName, File::Read) != File::Ok)
+   FileStream stream;
+   if(!stream.open(mFileName, Torque::FS::File::Read))
    {
-      file.close();
       Con::errorf("Could not open file %s when loading navmesh %s.",
          mFileName, getName() ? getName() : getIdString());
       return false;
@@ -1539,17 +1538,17 @@ bool NavMesh::load()
 
    // Read header.
    NavMeshSetHeader header;
-   file.read(sizeof(NavMeshSetHeader), (char*)&header);
+   stream.read(sizeof(NavMeshSetHeader), (char*)&header);
    if(header.magic != NAVMESHSET_MAGIC)
    {
-      file.close();
+      stream.close();
       Con::errorf("Navmesh magic incorrect when loading navmesh %s; possible corrupt navmesh file %s.",
          getName() ? getName() : getIdString(), mFileName);
       return false;
    }
    if(header.version != NAVMESHSET_VERSION)
    {
-      file.close();
+      stream.close();
       Con::errorf("Navmesh version incorrect when loading navmesh %s; possible corrupt navmesh file %s.",
          getName() ? getName() : getIdString(), mFileName);
       return false;
@@ -1560,7 +1559,7 @@ bool NavMesh::load()
    nm = dtAllocNavMesh();
    if(!nm)
    {
-      file.close();
+      stream.close();
       Con::errorf("Out of memory when loading navmesh %s.",
          getName() ? getName() : getIdString());
       return false;
@@ -1569,7 +1568,7 @@ bool NavMesh::load()
    dtStatus status = nm->init(&header.params);
    if(dtStatusFailed(status))
    {
-      file.close();
+      stream.close();
       Con::errorf("Failed to initialise navmesh params when loading navmesh %s.",
          getName() ? getName() : getIdString());
       return false;
@@ -1579,35 +1578,35 @@ bool NavMesh::load()
    for(U32 i = 0; i < header.numTiles; ++i)
    {
       NavMeshTileHeader tileHeader;
-      file.read(sizeof(NavMeshTileHeader), (char*)&tileHeader);
+      stream.read(sizeof(NavMeshTileHeader), (char*)&tileHeader);
       if(!tileHeader.tileRef || !tileHeader.dataSize)
          break;
 
       unsigned char* data = (unsigned char*)dtAlloc(tileHeader.dataSize, DT_ALLOC_PERM);
       if(!data) break;
       memset(data, 0, tileHeader.dataSize);
-      file.read(tileHeader.dataSize, (char*)data);
+      stream.read(tileHeader.dataSize, (char*)data);
 
       nm->addTile(data, tileHeader.dataSize, DT_TILE_FREE_DATA, tileHeader.tileRef, 0);
    }
 
    S32 s;
-   file.read(sizeof(S32), (char*)&s);
+   stream.read(sizeof(S32), (char*)&s);
    setLinkCount(s);
    if (s > 0)
    {
-      file.read(sizeof(F32) * s * 6, (char*)const_cast<F32*>(mLinkVerts.address()));
-      file.read(sizeof(F32) * s, (char*)const_cast<F32*>(mLinkRads.address()));
-      file.read(sizeof(U8) * s, (char*)const_cast<U8*>(mLinkDirs.address()));
-      file.read(sizeof(U8) * s, (char*)const_cast<U8*>(mLinkAreas.address()));
-      file.read(sizeof(U16) * s, (char*)const_cast<U16*>(mLinkFlags.address()));
-      file.read(sizeof(F32) * s, (char*)const_cast<U32*>(mLinkIDs.address()));
+      stream.read(sizeof(F32) * s * 6, (char*)const_cast<F32*>(mLinkVerts.address()));
+      stream.read(sizeof(F32) * s, (char*)const_cast<F32*>(mLinkRads.address()));
+      stream.read(sizeof(U8) * s, (char*)const_cast<U8*>(mLinkDirs.address()));
+      stream.read(sizeof(U8) * s, (char*)const_cast<U8*>(mLinkAreas.address()));
+      stream.read(sizeof(U16) * s, (char*)const_cast<U16*>(mLinkFlags.address()));
+      stream.read(sizeof(F32) * s, (char*)const_cast<U32*>(mLinkIDs.address()));
    }
    mLinksUnsynced.fill(false);
    mLinkSelectStates.fill(Unselected);
    mDeleteLinks.fill(false);
 
-   file.close();
+   stream.close();
 
    updateTiles();
 
@@ -1632,10 +1631,9 @@ bool NavMesh::save()
    if(!dStrlen(mFileName) || !nm)
       return false;
    
-   File file;
-   if(file.open(mFileName, File::Write) != File::Ok)
+   FileStream stream;
+   if(!stream.open(mFileName, Torque::FS::File::Write))
    {
-      file.close();
       Con::errorf("Could not open file %s when saving navmesh %s.",
          mFileName, getName() ? getName() : getIdString());
       return false;
@@ -1653,7 +1651,7 @@ bool NavMesh::save()
       header.numTiles++;
    }
    memcpy(&header.params, nm->getParams(), sizeof(dtNavMeshParams));
-   file.write(sizeof(NavMeshSetHeader), (const char*)&header);
+   stream.write(sizeof(NavMeshSetHeader), (const char*)&header);
 
    // Store tiles.
    for(U32 i = 0; i < nm->getMaxTiles(); ++i)
@@ -1665,23 +1663,23 @@ bool NavMesh::save()
       tileHeader.tileRef = nm->getTileRef(tile);
       tileHeader.dataSize = tile->dataSize;
 
-      file.write(sizeof(tileHeader), (const char*)&tileHeader);
-      file.write(tile->dataSize, (const char*)tile->data);
+      stream.write(sizeof(tileHeader), (const char*)&tileHeader);
+      stream.write(tile->dataSize, (const char*)tile->data);
    }
 
    S32 s = mLinkIDs.size();
-   file.write(sizeof(S32), (const char*)&s);
+   stream.write(sizeof(S32), (const char*)&s);
    if (s > 0)
    {
-      file.write(sizeof(F32) * s * 6, (const char*)mLinkVerts.address());
-      file.write(sizeof(F32) * s,     (const char*)mLinkRads.address());
-      file.write(sizeof(U8) * s,      (const char*)mLinkDirs.address());
-      file.write(sizeof(U8) * s,      (const char*)mLinkAreas.address());
-      file.write(sizeof(U16) * s,     (const char*)mLinkFlags.address());
-      file.write(sizeof(U32) * s,     (const char*)mLinkIDs.address());
+      stream.write(sizeof(F32) * s * 6, (const char*)mLinkVerts.address());
+      stream.write(sizeof(F32) * s,     (const char*)mLinkRads.address());
+      stream.write(sizeof(U8) * s,      (const char*)mLinkDirs.address());
+      stream.write(sizeof(U8) * s,      (const char*)mLinkAreas.address());
+      stream.write(sizeof(U16) * s,     (const char*)mLinkFlags.address());
+      stream.write(sizeof(U32) * s,     (const char*)mLinkIDs.address());
    }
 
-   file.close();
+   stream.close();
 
    return true;
 }

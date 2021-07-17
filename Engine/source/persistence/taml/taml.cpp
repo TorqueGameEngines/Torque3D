@@ -254,7 +254,7 @@ ImplementEnumType(_TamlFormatMode,
       AssertFatal(pFilename != NULL, "Cannot read from a NULL filename.");
 
       // Expand the file-name into the file-path buffer.
-      Con::expandToolScriptFilename(mFilePathBuffer, sizeof(mFilePathBuffer), pFilename);
+      Con::expandScriptFilename(mFilePathBuffer, sizeof(mFilePathBuffer), pFilename);
 
       FileStream stream;
 

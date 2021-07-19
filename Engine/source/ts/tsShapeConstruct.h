@@ -161,8 +161,8 @@ public:
    static const S32 MaxLegacySequences = 127;
 
 protected:
-   FileName          mShapePath;
-   Vector<FileName>  mSequences;
+   StringTableEntry          mShapePath;
+   Vector<StringTableEntry>  mSequences;
    ChangeSet         mChangeSet;
 
    // Paths to shapes used by MeshFit
@@ -196,7 +196,7 @@ public:
 public:
 
    TSShapeConstructor();
-   TSShapeConstructor(const String& path) : mShapePath(path), mShape(NULL), mLoadingShape(false){ }
+   TSShapeConstructor(StringTableEntry path) : mShapePath(path), mShape(NULL), mLoadingShape(false){ }
    ~TSShapeConstructor();
 
    DECLARE_CONOBJECT(TSShapeConstructor);
@@ -222,7 +222,7 @@ public:
    ///@}
 
    TSShape* getShape() const { return mShape; }
-   const String& getShapePath() const { return mShapePath; }
+   StringTableEntry getShapePath() const { return mShapePath; }
 
    /// @name Dumping
    ///@{

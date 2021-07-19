@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="editor_menubar_image"
+    imageFile="@assetFile=editor-menubar.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

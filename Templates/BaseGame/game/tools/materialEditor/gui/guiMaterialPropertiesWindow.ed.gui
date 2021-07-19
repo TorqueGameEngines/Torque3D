@@ -277,7 +277,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -429,7 +429,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -747,7 +747,7 @@
                         };
 					 };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -784,7 +784,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -884,7 +884,7 @@
                         };
                      };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -954,7 +954,7 @@
 					  };
 				   };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -992,7 +992,7 @@
 					  canSaveDynamicFields = "0";
 
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1228,7 +1228,7 @@
 					  canSaveDynamicFields = "0";
 
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1464,7 +1464,7 @@
 					  canSaveDynamicFields = "0";
 
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1679,7 +1679,7 @@
 					  };
 				    };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -1716,7 +1716,7 @@
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1967,7 +1967,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -2112,7 +2112,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -2257,7 +2257,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -2383,7 +2383,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -2509,7 +2509,7 @@
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -3525,14 +3525,14 @@
                            position = "136 20";
                            Extent = "48 48";
                            isContainer = true;
-                           bitmap="";
+                           bitmapAsset="";
                            
                            new GuiBitmapCtrl(){
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "0 0";
                               Extent = "48 48";
-                              bitmap="tools/materialEditor/gui/cubemapBtnBorder_n";
+                              bitmapAsset="ToolsModule:cubemapBtnBorder_n_image";
                            };
                            
                            new GuiBitmapCtrl(){ //horizontal bar
@@ -3542,7 +3542,7 @@
                               position = "20 20";
                               Extent = "7 7";
                               MinExtent = "0 0";
-                              bitmap="tools/gui/images/crosshair_blue";
+                              bitmapAsset="ToolsModule:crosshair_blue_image";
                            };
                         };
                         
@@ -3742,14 +3742,14 @@
                            position = "136 20";
                            Extent = "48 48";
                            isContainer = true;
-                           bitmap="";
+                           bitmapAsset="";
                            
                            new GuiBitmapCtrl(){
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "0 0";
                               Extent = "48 48";
-                              bitmap="tools/materialEditor/gui/cubemapBtnBorder_n";
+                              bitmapAsset="ToolsModule:cubemapBtnBorder_n_image";
                            };
                            new GuiBitmapCtrl(){ //vertical bar
                               HorizSizing = "right";
@@ -3757,7 +3757,7 @@
                               position = "20 20";
                               Extent = "7 7";
                               MinExtent = "7 7";
-                              bitmap="tools/gui/images/crosshair";
+                              bitmapAsset="ToolsModule:crosshair_image";
                            };
                            new GuiBitmapCtrl(){ //horizontal bar
                               internalName = "ScrollCrosshair";
@@ -3766,7 +3766,7 @@
                               position = "20 20";
                               Extent = "7 7";
                               MinExtent = "0 0";
-                              bitmap="tools/gui/images/crosshair_blue";
+                              bitmapAsset="ToolsModule:crosshair_blue_image";
                            };
                         };
                         
@@ -4799,7 +4799,7 @@
             minExtent = "2 16";
             HorizSizing = "left";
             VertSizing = "bottom";
-            bitmap = "tools/gui/images/separator-h";
+            bitmapAsset = "ToolsModule:separator_h_image";
          };
          // Revert Material
          new GuiBitmapButtonCtrl() {

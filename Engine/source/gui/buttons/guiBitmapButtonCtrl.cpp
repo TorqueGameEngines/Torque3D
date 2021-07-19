@@ -30,6 +30,9 @@
 #include "gui/core/guiDefaultControlRender.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gfx/gfxTextureManager.h"
+#include "gui/editor/inspector/group.h"
+#include "gui/editor/inspector/field.h"
+#include "gui/editor/guiInspector.h"
 
 
 ImplementEnumType( GuiBitmapMode,
@@ -208,7 +211,7 @@ bool GuiBitmapButtonCtrl::_setAutoFitExtents( void *object, const char *index, c
 bool GuiBitmapButtonCtrl::_setBitmap( void *object, const char *index, const char *data )
 {
    GuiBitmapButtonCtrl* ctrl = reinterpret_cast< GuiBitmapButtonCtrl* >( object );
-   ctrl->setBitmap( data );
+   ctrl->setBitmap( StringTable->insert(data) );
    return false;
 }
 
@@ -219,7 +222,7 @@ DefineEngineMethod( GuiBitmapButtonCtrl, setBitmap, void, ( const char* path ),,
    "Set the bitmap to show on the button.\n"
    "@param path Path to the texture file in any of the supported formats.\n" )
 {
-   object->setBitmap( path );
+   object->setBitmap( StringTable->insert(path) );
 }
 
 //-----------------------------------------------------------------------------
@@ -253,7 +256,7 @@ void GuiBitmapButtonCtrl::inspectPostApply()
       }
    }
    
-   setBitmap( path.getFullPath() );
+   setBitmap( StringTable->insert(path.getFullPath().c_str()) );
 
    // if the extent is set to (0,0) in the gui editor and appy hit, this control will
    // set it's extent to be exactly the size of the normal bitmap (if present)
@@ -275,7 +278,7 @@ void GuiBitmapButtonCtrl::setAutoFitExtents( bool state )
 
 //-----------------------------------------------------------------------------
 
-void GuiBitmapButtonCtrl::setBitmap( const String& name )
+void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
 {
    PROFILE_SCOPE( GuiBitmapButtonCtrl_setBitmap );
    
@@ -283,7 +286,7 @@ void GuiBitmapButtonCtrl::setBitmap( const String& name )
    if( !isAwake() )
       return;
 
-   if( !mBitmapName.isEmpty() )
+   if( mBitmapName != StringTable->EmptyString())
    {
       if( dStricmp( mBitmapName, "texhandle" ) != 0 )
       {
@@ -329,8 +332,8 @@ void GuiBitmapButtonCtrl::setBitmap( const String& name )
 
             if( i == 0 && mTextures[ i ].mTextureNormal.isNull() && mTextures[ i ].mTextureHilight.isNull() && mTextures[ i ].mTextureDepressed.isNull() && mTextures[ i ].mTextureInactive.isNull() )
             {
-               Con::warnf( "GuiBitmapButtonCtrl::setBitmap - Unable to load texture: %s", mBitmapName.c_str() );
-               this->setBitmap( GFXTextureManager::getUnavailableTexturePath() );
+               Con::warnf( "GuiBitmapButtonCtrl::setBitmap - Unable to load texture: %s", mBitmapName );
+               this->setBitmap( StringTable->insert(GFXTextureManager::getUnavailableTexturePath().c_str()) );
                return;
             }
          }
@@ -375,7 +378,7 @@ void GuiBitmapButtonCtrl::setBitmapHandles(GFXTexHandle normal, GFXTexHandle hig
       if (mTextures[ i ].mTextureNormal.isNull() && mTextures[ i ].mTextureHilight.isNull() && mTextures[ i ].mTextureDepressed.isNull() && mTextures[ i ].mTextureInactive.isNull())
       {
          Con::warnf("GuiBitmapButtonCtrl::setBitmapHandles() - Invalid texture handles");
-         setBitmap( GFXTextureManager::getUnavailableTexturePath() );
+         setBitmap( StringTable->insert(GFXTextureManager::getUnavailableTexturePath().c_str()) );
          
          return;
       }

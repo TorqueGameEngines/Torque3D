@@ -46,7 +46,7 @@ class GuiTheoraCtrl : public GuiControl
    protected:
    
       /// The Theora file we should play.
-      String mFilename;
+      StringTableEntry mFilename;
       
       /// Theora video player backend.
       TheoraTexture mTheoraTexture;

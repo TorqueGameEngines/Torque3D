@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="convexEditorToolbar, EditorGuiGroup"
+    scriptFile="@assetFile=convexEditorToolbar.ed.gui"
+    GUIFile="@assetFile=convexEditorToolbar.ed.gui"
+    VersionId="1" />

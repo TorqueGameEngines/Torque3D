@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="btn_Forward_h_image"
+    imageFile="@assetFile=btn_Forward_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

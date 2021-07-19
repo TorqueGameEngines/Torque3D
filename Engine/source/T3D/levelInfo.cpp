@@ -98,8 +98,8 @@ LevelInfo::LevelInfo()
    mNetFlags.set( ScopeAlways | Ghostable );
 
    mAdvancedLightmapSupport = true;
-   mAccuTextureName = "";
-   mAccuTexture = NULL;
+
+   INIT_IMAGEASSET(AccuTexture);
 
    // Register with the light manager activation signal, and we need to do it first
    // so the advanced light bin manager can be instructed about MRT lightmaps
@@ -166,8 +166,7 @@ void LevelInfo::initPersistFields()
       //addField( "advancedLightmapSupport", TypeBool, Offset( mAdvancedLightmapSupport, LevelInfo ),
       //   "Enable expanded support for mixing static and dynamic lighting (more costly)" );
 
-      addProtectedField("AccuTexture", TypeStringFilename, Offset(mAccuTextureName, LevelInfo),
-         &_setLevelAccuTexture, &defaultProtectedGetFn, "Accumulation texture.");
+      INITPERSISTFIELD_IMAGEASSET(AccuTexture, LevelInfo, "Accumulation texture.");
 
    endGroup( "Lighting" );
    
@@ -216,7 +215,8 @@ U32 LevelInfo::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    sfxWrite( stream, mSoundAmbience );
    stream->writeInt( mSoundDistanceModel, 1 );
 
-   stream->write(mAccuTextureName);
+   PACK_IMAGEASSET(conn, AccuTexture);
+
    return retMask;
 }
 
@@ -261,8 +261,9 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       SFX->setDistanceModel( mSoundDistanceModel );
    }
-   stream->read(&mAccuTextureName);
-   setLevelAccuTexture(mAccuTextureName);
+
+   UNPACK_IMAGEASSET(conn, AccuTexture);
+   setLevelAccuTexture(getAccuTexture());
 }
 
 //-----------------------------------------------------------------------------
@@ -361,19 +362,19 @@ void LevelInfo::_onLMActivate(const char *lm, bool enable)
 bool LevelInfo::_setLevelAccuTexture(void *object, const char *index, const char *data)
 {
    LevelInfo* volume = reinterpret_cast< LevelInfo* >(object);
-   volume->setLevelAccuTexture(data);
+   volume->setLevelAccuTexture(StringTable->insert(data));
    return false;
 }
 
 
-void LevelInfo::setLevelAccuTexture(const String& name)
+void LevelInfo::setLevelAccuTexture(StringTableEntry name)
 {
-   mAccuTextureName = name;
-   if (isClientObject() && mAccuTextureName.isNotEmpty())
+   _setAccuTexture(name);
+
+   if (isClientObject() && getAccuTexture() != StringTable->EmptyString())
    {
-      mAccuTexture.set(mAccuTextureName, &GFXStaticTextureSRGBProfile, "AccumulationVolume::mAccuTexture");
       if (mAccuTexture.isNull())
-         Con::warnf("AccumulationVolume::setTexture - Unable to load texture: %s", mAccuTextureName.c_str());
+         Con::warnf("AccumulationVolume::setTexture - Unable to load texture: %s", getAccuTexture());
       else
          gLevelAccuMap = mAccuTexture;
    }

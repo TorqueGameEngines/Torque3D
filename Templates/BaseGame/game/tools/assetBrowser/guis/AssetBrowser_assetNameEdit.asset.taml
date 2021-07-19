@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssetBrowser_assetNameEdit"
+    scriptFile="@assetFile=assetNameEdit.gui"
+    GUIFile="@assetFile=assetNameEdit.gui"
+    VersionId="1" />

@@ -1254,17 +1254,7 @@ PersistenceManager::ParsedObject* PersistenceManager::writeNewObject(SimObject* 
        dynamic_cast<TSShapeConstructor*>(object))
       dclToken = "singleton";
    else if( dynamic_cast< SimDataBlock* >( object ) )
-   {
-      SimDataBlock* db = static_cast<SimDataBlock*>(object);
-
-      if( db->isClientOnly() )
-      {
-         if( db->getName() && db->getName()[ 0 ] )
-            dclToken = "singleton";
-      }
-      else
-         dclToken = "datablock";
-   }
+      dclToken = "datablock";
 
    char newLine[ 4096 ];
    dMemset(newLine, 0, sizeof( newLine));
@@ -1416,16 +1406,24 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                {
                   // TODO: This should be wrapped in a helper method... probably.
                   // Detect and collapse relative path information
-                  if (f->type == TypeFilename ||
-                     f->type == TypeStringFilename ||
-                     f->type == TypeImageFilename ||
-                     f->type == TypePrefabFilename ||
-                     f->type == TypeShapeFilename)
+                  if (f->type == TypeFilename       ||
+                      f->type == TypeStringFilename ||
+                      f->type == TypeImageFilename  ||
+                      f->type == TypePrefabFilename ||
+                      f->type == TypeShapeFilename  ||
+                      f->type == TypeSoundFilename )
                   {
                      char fnBuf[1024];
                      Con::collapseScriptFilename(fnBuf, 1024, value);
 
                      updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, fnBuf, true);
+                  }
+                  else if (f->type == TypeCommand || f->type == TypeString || f->type == TypeRealString)
+                  {
+                     char cmdBuf[1024];
+                     expandEscape(cmdBuf, value);
+
+                     updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, cmdBuf, true);
                   }
                   else
                      updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, value, true);
@@ -1495,16 +1493,24 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
             {
                // TODO: This should be wrapped in a helper method... probably.
                // Detect and collapse relative path information
-               if (f->type == TypeFilename ||
+               if (f->type == TypeFilename       ||
                    f->type == TypeStringFilename ||
-                   f->type == TypeImageFilename ||
+                   f->type == TypeImageFilename  ||
                    f->type == TypePrefabFilename ||
-                   f->type == TypeShapeFilename)
+                   f->type == TypeShapeFilename  ||
+                   f->type == TypeSoundFilename )
                {
                   char fnBuf[1024];
                   Con::collapseScriptFilename(fnBuf, 1024, value);
 
                   newLines.push_back(createNewProperty(f->pFieldname, fnBuf, f->elementCount > 1, j));
+               }
+               else if (f->type == TypeCommand)
+               {
+                  char cmdBuf[1024];
+                  expandEscape(cmdBuf, value);
+
+                  newLines.push_back(createNewProperty(f->pFieldname, cmdBuf, f->elementCount > 1, j));
                }
                else
                   newLines.push_back(createNewProperty(f->pFieldname, value, f->elementCount > 1, j));              

@@ -838,7 +838,7 @@
                   buttonType = "RadioButton";
                   useMouseEvents = "0";
                   buttonMargin = "0 4";
-                  iconBitmap = "tools/gui/images/menubar/world-transform_n";
+                  bitmapAsset = "ToolsModule:world_transform_n_image";
                   textMargin = "25";
                };
                new GuiIconButtonCtrl() {
@@ -862,7 +862,7 @@
                   buttonType = "RadioButton";
                   useMouseEvents = "0";
                   buttonMargin = "0 4";
-                  iconBitmap = "tools/gui/images/menubar/object-transform_n";
+                  bitmapAsset = "ToolsModule:object_transform_n_image";
                   textMargin = "26";
                };
                new GuiTextEditCtrl() {
@@ -1137,7 +1137,7 @@
                   internalName = "objectNode";
                };
                new GuiBitmapCtrl(){
-                  bitmap = "tools/gui/images/inactive-overlay";
+                  bitmapAsset = "ToolsModule:inactive_overlay_image";
                   position = "4 45";
                   extent = "193 42";
                   tooltip = "A mesh must be selected to edit these properties";
@@ -1353,7 +1353,7 @@
                buttonType = "PushButton";
                useMouseEvents = "0";
                buttonMargin = "0 4";
-               iconBitmap = "tools/worldEditor/images/toolbar/material-editor_n";
+               bitmapAsset = "ToolsModule:material_editor_n_image";
                textMargin = "25";
             };
             new GuiCheckBoxCtrl() {

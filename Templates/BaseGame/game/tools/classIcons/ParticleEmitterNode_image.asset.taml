@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ParticleEmitterNode_image"
+    imageFile="@assetFile=ParticleEmitterNode.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

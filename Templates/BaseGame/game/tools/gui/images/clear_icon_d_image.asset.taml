@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="clear_icon_d_image"
+    imageFile="@assetFile=clear-icon_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

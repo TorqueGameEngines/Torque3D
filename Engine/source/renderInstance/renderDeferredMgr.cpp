@@ -881,9 +881,10 @@ bool DeferredMatInstance::init( const FeatureSet &features,
 {
    bool vaild = Parent::init(features, vertexFormat);
 
-   if (mMaterial && mMaterial->mDiffuseMapFilename[0].isNotEmpty() && mMaterial->mDiffuseMapFilename[0].substr(0, 1).equal("#"))
+   if (mMaterial && mMaterial->getDiffuseMap(0) != StringTable->EmptyString() && String(mMaterial->getDiffuseMap(0)).startsWith("#"))
    {
-      String texTargetBufferName = mMaterial->mDiffuseMapFilename[0].substr(1, mMaterial->mDiffuseMapFilename[0].length() - 1);
+      String difName = mMaterial->getDiffuseMap(0);
+      String texTargetBufferName = difName.substr(1, difName.length() - 1);
       NamedTexTarget *texTarget = NamedTexTarget::find(texTargetBufferName);
       RenderPassData* rpd = getPass(0);
 

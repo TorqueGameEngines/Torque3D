@@ -60,6 +60,8 @@
 #include "materials/matTextureTarget.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class GFXStateBlockData;
 class Frustum;
 class SceneRenderState;
@@ -88,7 +90,9 @@ public:
 
 protected:
 
-   FileName mTexFilename[NumTextures];
+   DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, PostFxTextureProfile, NumTextures);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(PostEffect, Texture);
+
    bool mTexSRGB[NumTextures];
 
    enum
@@ -98,7 +102,6 @@ protected:
       CubemapArrayType,
    } mTextureType[NumTextures];
 
-   GFXTexHandle mTextures[NumTextures];
    GFXCubemapHandle mCubemapTextures[NumTextures];
    GFXCubemapArrayHandle mCubemapArrayTextures[NumTextures];
 

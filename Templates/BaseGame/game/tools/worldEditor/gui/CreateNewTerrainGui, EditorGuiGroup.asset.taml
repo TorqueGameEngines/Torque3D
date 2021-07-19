@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CreateNewTerrainGui, EditorGuiGroup"
+    scriptFile="@assetFile=guiCreateNewTerrainGui.gui"
+    GUIFile="@assetFile=guiCreateNewTerrainGui.gui"
+    VersionId="1" />

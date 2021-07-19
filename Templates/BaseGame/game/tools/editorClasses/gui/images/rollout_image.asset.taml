@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="rollout_image"
+    imageFile="@assetFile=rollout.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

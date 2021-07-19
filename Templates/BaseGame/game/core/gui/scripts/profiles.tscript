@@ -107,7 +107,7 @@ new GuiControlProfile (GuiWindowProfile)
    bevelColorHL = "255 255 255";
    bevelColorLL = "0 0 0";
    text = "untitled";
-   bitmap = "core/gui/images/window";
+   bitmapAsset = "Core_GUI:window_image";
    textOffset = "8 4";
    hasBitmapArray = true;
    justify = "left";
@@ -119,7 +119,7 @@ if(!isObject(GuiTextEditProfile))
 new GuiControlProfile(GuiTextEditProfile)
 {
    opaque = true;
-   bitmap = "core/gui/images/textEdit";
+   bitmapAsset = "Core_GUI:textEdit_image";
    hasBitmapArray = true; 
    border = -2;
    fillColor = "242 241 240 0";
@@ -145,7 +145,7 @@ new GuiControlProfile(GuiScrollProfile)
    fontColor = "0 0 0";
    fontColorHL = "150 150 150";
    border = true;
-   bitmap = "core/gui/images/scrollBar";
+   bitmapAsset = "Core_GUI:scrollBar_image";
    hasBitmapArray = true;
    category = "Core";
 };
@@ -173,7 +173,7 @@ new GuiControlProfile(GuiCheckBoxProfile)
 	fontColorNA = "200 200 200";
    fixedExtent = true;
    justify = "left";
-   bitmap = "core/gui/images/checkbox";
+   bitmapAsset = "Core_GUI:checkbox_image";
    hasBitmapArray = true;
    category = "Tools";
 };
@@ -193,7 +193,7 @@ new GuiControlProfile( GuiProgressBitmapProfile )
 {
    border = false;
    hasBitmapArray = true;
-   bitmap = "core/gui/images/loadingbar";
+   bitmapAsset = "Core_GUI:loadingbar_image";
    category = "Core";
 };
 
@@ -220,7 +220,7 @@ new GuiControlProfile( GuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-	bitmap = "core/gui/images/button";
+	bitmapAsset = "Core_GUI:button_image";
    hasBitmapArray = false;
    category = "Core";
 };
@@ -231,6 +231,6 @@ new GuiControlProfile( GuiButtonProfile )
 if( !isObject( GuiSliderProfile ) )
 new GuiControlProfile( GuiSliderProfile )
 {
-   bitmap = "core/gui/images/slider";
+   bitmapAsset = "Core_GUI:slider_image";
    category = "Core";
 };

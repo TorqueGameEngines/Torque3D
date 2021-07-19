@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CUR_grab_image"
+    imageFile="@assetFile=CUR_grab.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

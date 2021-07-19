@@ -143,7 +143,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_xPosTxt) {
@@ -186,7 +186,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_xNegTxt) {
@@ -229,7 +229,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_yPosTxt) {
@@ -272,7 +272,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_yNegTxt) {
@@ -315,7 +315,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_zPosTxt) {
@@ -358,7 +358,7 @@
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_zNegTxt) {

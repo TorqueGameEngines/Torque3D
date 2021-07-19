@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="rl_loadingbar_image"
+    imageFile="@assetFile=rl-loadingbar.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

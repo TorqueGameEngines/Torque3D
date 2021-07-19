@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="add_mesh_road_d_image"
+    imageFile="@assetFile=add-mesh-road_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

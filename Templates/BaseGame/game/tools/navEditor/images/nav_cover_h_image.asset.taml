@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="nav_cover_h_image"
+    imageFile="@assetFile=nav-cover_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

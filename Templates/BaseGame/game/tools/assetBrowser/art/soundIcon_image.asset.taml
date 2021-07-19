@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="soundIcon_image"
+    imageFile="@assetFile=soundIcon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

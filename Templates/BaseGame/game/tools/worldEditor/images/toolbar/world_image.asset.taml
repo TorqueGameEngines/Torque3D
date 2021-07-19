@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="world_image"
+    imageFile="@assetFile=world.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

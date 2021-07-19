@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="skybox_1_image"
+    imageFile="@assetFile=skybox_1.jpg"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

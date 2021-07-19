@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ripple_image"
+    imageFile="@assetFile=ripple.dds"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

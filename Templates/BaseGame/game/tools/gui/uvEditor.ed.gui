@@ -180,7 +180,7 @@ new GuiControl(UVEditorOverlay, EditorGuiGroup) {
          position = "26 38";
          extent = "256 256";
          wrap = "0";
-         bitmap = "";
+         bitmapAsset = "";
       };
       new GuiRectHandles(){
          internalName = "uvHandles";

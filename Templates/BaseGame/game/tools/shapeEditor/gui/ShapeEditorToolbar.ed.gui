@@ -52,7 +52,7 @@
          position = "94 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       new GuiBitmapButtonCtrl() {
          canSaveDynamicFields = "0";
@@ -125,7 +125,7 @@
          position = "202 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       new GuiBitmapButtonCtrl() {
          canSaveDynamicFields = "0";
@@ -195,7 +195,7 @@
          position = "309 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       new GuiBitmapButtonCtrl() {
          canSaveDynamicFields = "0";
@@ -268,7 +268,7 @@
          position = "415 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       new GuiBitmapButtonCtrl() {
          internalName = "showAdvanced";

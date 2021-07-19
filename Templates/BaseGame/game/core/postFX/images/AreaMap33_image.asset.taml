@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AreaMap33_image"
+    imageFile="@assetFile=AreaMap33.dds"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -162,7 +162,7 @@ protected:
    /// <summary>
    /// This is used when a static cubemap is used. The name of the cubemap is looked up and loaded for the IBL calculations
    /// </summary>
-   String mCubemapName;
+   StringTableEntry mCubemapName;
    CubemapData *mStaticCubemap;
    GFXCubemapHandle  mDynamicCubemap;
 

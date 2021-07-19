@@ -56,7 +56,7 @@ SkyBox::SkyBox()
    mTypeMask |= EnvironmentObjectType | StaticObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
 
-   mMatName = "";
+   INIT_MATERIALASSET(Material);
    mMatInstance = NULL;
 
    mIsVBDirty = false;
@@ -116,8 +116,7 @@ void SkyBox::initPersistFields()
 {
    addGroup( "Sky Box" );	
 
-   addField( "material", TypeMaterialName, Offset( mMatName, SkyBox ), 
-      "The name of a cubemap material for the sky box." );
+   INITPERSISTFIELD_MATERIALASSET(Material, SkyBox, "The name of a cubemap material for the sky box.");
 
    addField( "drawBottom", TypeBool, Offset( mDrawBottom, SkyBox ),
       "If false the bottom of the skybox is not rendered." );
@@ -139,8 +138,9 @@ void SkyBox::inspectPostApply()
 U32 SkyBox::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
-   
-   stream->write( mMatName );
+
+   PACK_MATERIALASSET(conn, Material);
+
    stream->writeFlag( mDrawBottom );
    stream->write( mFogBandHeight );
 
@@ -151,11 +151,10 @@ void SkyBox::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   String tmpString( "" );
-   stream->read( &tmpString );
-   if ( !tmpString.equal( mMatName, String::NoCase ) )
+   StringTableEntry oldMatName = getMaterial();
+   UNPACK_MATERIALASSET(conn, Material);
+   if (oldMatName != getMaterial())
    {
-      mMatName = tmpString;
       _updateMaterial();
    }
 
@@ -620,16 +619,15 @@ void SkyBox::_initMaterial()
 
 void SkyBox::_updateMaterial()
 {
-   if ( mMatName.isEmpty() )
-      return;
-
-   Material *pMat = NULL;
-   if ( !Sim::findObject( mMatName, pMat ) )
-      Con::printf( "SkyBox::_updateMaterial, failed to find Material of name %s!", mMatName.c_str() );
-   else if ( isProperlyAdded() )
+   if (!getMaterialResource().isValid())
    {
-      mMaterial = pMat;
-      _initMaterial(); 
+      //If our materialDef isn't valid, try setting it
+      _setMaterial(getMaterial());
+   }
+
+   if (getMaterialResource().isValid())
+   {
+      _initMaterial();
    }
 }
 

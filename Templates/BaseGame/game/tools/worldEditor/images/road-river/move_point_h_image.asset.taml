@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="move_point_h_image"
+    imageFile="@assetFile=move-point_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

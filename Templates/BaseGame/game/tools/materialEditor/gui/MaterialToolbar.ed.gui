@@ -40,7 +40,7 @@
       position = "86 3";
       Extent = "2 26";
       MinExtent = "1 1";
-      bitmap = "tools/gui/images/separator-h.png";
+      bitmapAsset = "ToolsModule:separator_h_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";

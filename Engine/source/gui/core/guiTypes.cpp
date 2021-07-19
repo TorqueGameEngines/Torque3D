@@ -78,8 +78,8 @@ GuiCursor::GuiCursor()
    mHotSpot.set(0,0);
    mRenderOffset.set(0.0f,0.0f);
    mExtent.set(1,1);
-   mTextureObject = NULL;
-   mBitmapName = StringTable->EmptyString();
+
+   INIT_IMAGEASSET(Bitmap);
 }
 
 GuiCursor::~GuiCursor()
@@ -90,7 +90,9 @@ void GuiCursor::initPersistFields()
 {
    addField("hotSpot",     TypePoint2I,   Offset(mHotSpot, GuiCursor), "The location of the cursor's hot spot (which pixel carries the click).");
    addField("renderOffset",TypePoint2F,   Offset(mRenderOffset, GuiCursor), "Offset of the bitmap, where 0 signifies left edge of the bitmap, 1, the right. Similarly for the Y-component.");
-   addField("bitmapName",  TypeFilename,  Offset(mBitmapName, GuiCursor), "File name of the bitmap for the cursor.");
+
+   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiCursor, "name of the bitmap for the cursor.");
+   addProtectedField("bitmapName",  TypeImageFilename,  Offset(mBitmapName, GuiCursor), _setBitmapData, &defaultProtectedGetFn, "File name of the bitmap for the cursor.");
    Parent::initPersistFields();
 }
 
@@ -111,24 +113,21 @@ void GuiCursor::onRemove()
 
 void GuiCursor::render(const Point2I &pos)
 {
-   if (!mTextureObject && mBitmapName && mBitmapName[0])
+   if (mBitmap)
    {
-      mTextureObject.set( mBitmapName, &GFXGuiCursorProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
-      if(!mTextureObject)
-         return;
-      mExtent.set(mTextureObject->getWidth(), mTextureObject->getHeight());
+      mExtent.set(mBitmap->getWidth(), mBitmap->getHeight());
    }
 
    // Render the cursor centered according to dimensions of texture
-   S32 texWidth = mTextureObject.getWidth();
-   S32 texHeight = mTextureObject.getHeight();
+   S32 texWidth = mBitmap.getWidth();
+   S32 texHeight = mBitmap.getHeight();
 
    Point2I renderPos = pos;
    renderPos.x -= (S32)( texWidth  * mRenderOffset.x );
    renderPos.y -= (S32)( texHeight * mRenderOffset.y );
 
    GFX->getDrawUtil()->clearBitmapModulation();
-   GFX->getDrawUtil()->drawBitmap(mTextureObject, renderPos);
+   GFX->getDrawUtil()->drawBitmap(mBitmap, renderPos);
 }
 
 //------------------------------------------------------------------------------
@@ -180,33 +179,40 @@ StringTableEntry GuiControlProfile::sFontCacheDirectory = "";
 
 void GuiControlProfile::setBitmapHandle(GFXTexHandle handle)
 {
-   mTextureObject = handle;
+   mBitmap = handle;
 
-   mBitmapName = StringTable->insert("texhandle");
+   _setBitmap(StringTable->insert("texhandle"));
 }
 
 bool GuiControlProfile::protectedSetBitmap( void *object, const char *index, const char *data )
 {
    GuiControlProfile *profile = static_cast<GuiControlProfile*>( object );
    
-   profile->mBitmapName = StringTable->insert(data);
+   profile->_setBitmap(StringTable->insert(data));
 
    if ( !profile->isProperlyAdded() )
-      return false;
+      return true;
       
    if( profile->mLoadCount > 0 )
    {
       profile->mBitmapArrayRects.clear();
-      profile->mTextureObject = NULL;
+      profile->mBitmap = nullptr;
 
-      //verify the bitmap
-      if (profile->mBitmapName && profile->mBitmapName[0] && dStricmp(profile->mBitmapName, "texhandle") != 0 &&
-         !profile->mTextureObject.set( profile->mBitmapName, &GFXTexturePersistentProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__) ))
-         Con::errorf("Failed to load profile bitmap (%s)",profile->mBitmapName);
+      if (profile->getBitmap() != StringTable->EmptyString())
+      {
+         if (profile->mBitmapAsset.notNull() && profile->getBitmap() != StringTable->insert("texHandle"))
+         {
+            profile->mBitmap.set(profile->mBitmapAsset->getImagePath(), profile->mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+         }
 
-      // If we've got a special border, make sure it's usable.
-      //if( profile->mBorder == -1 || profile->mBorder == -2 )
-      profile->constructBitmapArray();
+         //verify the bitmap
+         if (!profile->mBitmap)
+            Con::errorf("(%s) - Failed to load profile bitmap (%s)", profile->getName(), profile->getBitmap());
+
+         // If we've got a special border, make sure it's usable.
+         //if( profile->mBorder == -1 || profile->mBorder == -2 )
+         profile->constructBitmapArray();
+      }
    }
 
    return false;
@@ -318,9 +324,8 @@ GuiControlProfile::GuiControlProfile(void) :
    mMouseOverSelected = false;
    
    // bitmap members
-   mBitmapName = NULL;
+   INIT_IMAGEASSET(Bitmap);
    mUseBitmapArray = false;
-   mTextureObject = NULL; // initialized in incLoadCount()
 
    mChildrenProfileName = NULL;
    mChildrenProfile = NULL;
@@ -456,10 +461,20 @@ void GuiControlProfile::initPersistFields()
    endGroup( "Text" );
    
    addGroup( "Misc" );
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
+   addProtectedField("bitmap", TypeImageFilename, Offset(mBitmapName, GuiControlProfile),
+      &GuiControlProfile::protectedSetBitmap, &defaultProtectedGetFn,
+      "Texture to use for rendering control.");
+#else
+   addProtectedField("bitmap", TypeImageFilename, Offset(mBitmapName, GuiControlProfile),
+      &GuiControlProfile::protectedSetBitmap, &defaultProtectedGetFn,
+      "Texture to use for rendering control.", AbstractClassRep::FIELD_HideInInspectors);
+#endif
 
-      addProtectedField( "bitmap", TypeFilename,  Offset(mBitmapName, GuiControlProfile),
+      addProtectedField("bitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiControlProfile),
          &GuiControlProfile::protectedSetBitmap, &defaultProtectedGetFn,
-         "Texture to use for rendering control." );
+         "Texture to use for rendering control.");
+
       addField("hasBitmapArray", TypeBool,      Offset(mUseBitmapArray, GuiControlProfile),
          "If true, 'bitmap' is an array of images." );
 
@@ -565,20 +580,28 @@ S32 GuiControlProfile::constructBitmapArray()
    if(mBitmapArrayRects.size())
       return mBitmapArrayRects.size();
 
-   if( mTextureObject.isNull() )
-   {   
-      if ( !mBitmapName || !mBitmapName[0] || !mTextureObject.set( mBitmapName, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__) ))
+   if( mBitmap.isNull() )
+   {
+      if (!_setBitmap(getBitmap()))
+         return 0;
+
+      if (getBitmap() != StringTable->EmptyString() && mBitmapName != StringTable->insert("texhandle"))
+      {
+         mBitmap.set(getBitmap(), mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+      }
+
+      if (getBitmap() == StringTable->EmptyString() || mBitmap.isNull())
          return 0;
    }
 
-   GBitmap *bmp = mTextureObject->getBitmap();
+   GBitmap *bmp = mBitmap->getBitmap();
 
    //get the separator color
    ColorI sepColor;
    if ( !bmp || !bmp->getColor( 0, 0, sepColor ) )
 	{
-      Con::errorf("Failed to create bitmap array from %s for profile %s - couldn't ascertain seperator color!", mBitmapName, getName());
-      AssertFatal( false, avar("Failed to create bitmap array from %s for profile %s - couldn't ascertain seperator color!", mBitmapName, getName()));
+      Con::errorf("Failed to create bitmap array from %s for profile %s - couldn't ascertain seperator color!", getBitmap(), getName());
+      AssertFatal( false, avar("Failed to create bitmap array from %s for profile %s - couldn't ascertain seperator color!", getBitmap(), getName()));
       return 0;
 	}
 
@@ -654,12 +677,19 @@ void GuiControlProfile::incLoadCount()
          loadFont();
 
       //
+      if (getBitmap() != StringTable->EmptyString())
+      {
+         if (mBitmapAsset.notNull() && getBitmap() != StringTable->insert("texHandle"))
+         {
+            mBitmap.set(mBitmapAsset->getImagePath(), mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+         }
 
-      if (mBitmapName && mBitmapName[0] && dStricmp(mBitmapName, "texhandle") != 0 &&
-         !mTextureObject.set( mBitmapName, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__) ))
-         Con::errorf("Failed to load profile bitmap (%s)",mBitmapName);
+         //verify the bitmap
+         if (!mBitmap)
+            Con::errorf("(%s) - Failed to load profile bitmap (%s)", getName(), getBitmap());
 
-      constructBitmapArray();
+         constructBitmapArray();
+      }
    }
    
    mLoadCount ++;
@@ -682,8 +712,9 @@ void GuiControlProfile::decLoadCount()
          getId(), getClassName(), getName(), getInternalName() );
       #endif
 
-      if( !mBitmapName || !mBitmapName[0] || dStricmp(mBitmapName, "texhandle") != 0 )
-         mTextureObject = NULL;
+      StringTableEntry bitmapName = getBitmap();
+      if(bitmapName == StringTable->EmptyString() || bitmapName == StringTable->insert("texhandle"))
+         mBitmap = NULL;
    }
 }
 
@@ -705,6 +736,19 @@ DefineEngineMethod( GuiControlProfile, getStringWidth, S32, (const char* string)
    "@return width of the string in pixels." )
 {
    return object->mFont->getStrNWidth( string, dStrlen( string ) );
+}
+
+DefineEngineMethod(GuiControlProfile, getBitmap, const char*, (), , "get name")
+{
+   return object->getBitmap(); 
+}
+DefineEngineMethod(GuiControlProfile, getBitmapAsset, const char*, (), , "")
+{
+   return object->mBitmapAssetId; 
+}
+DefineEngineMethod(GuiControlProfile, setBitmap, bool, (const char* map), , "")
+{
+    return object->_setBitmap(StringTable->insert(map));
 }
 
 //-----------------------------------------------------------------------------

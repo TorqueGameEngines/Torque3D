@@ -191,8 +191,6 @@ ShapeBaseImageData::ShapeBaseImageData()
    lightRadius = 10.f;
    lightBrightness = 1.0f;
 
-   shapeName = "core/rendering/shapes/noshape.dts";
-   shapeNameFP = "";
    imageAnimPrefix = "";
    imageAnimPrefixFP = "";
    fireState = -1;
@@ -295,6 +293,8 @@ ShapeBaseImageData::ShapeBaseImageData()
       isAnimated[i] = false;
       hasFlash[i] = false;
       shapeIsValid[i] = false;
+
+      INIT_SHAPEASSET_ARRAY(Shape, i);
    }
 
    shakeCamera = false;
@@ -407,6 +407,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
 {
    if (!Parent::preload(server, errorStr))
       return false;
+   bool shapeError = false;
 
    // Resolve objects transmitted from server
    if (!server) {
@@ -434,14 +435,12 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
       // Shape 0: Standard image shape
       // Shape 1: Optional first person image shape
 
-      StringTableEntry name;
       if (i == FirstPersonImageShape)
       {
-         if ((useEyeOffset || useEyeNode) && shapeNameFP && shapeNameFP[0])
+         if ((useEyeOffset || useEyeNode) && !mShapeAsset[i].isNull())
          {
             // Make use of the first person shape
             useFirstPersonShape = true;
-            name = shapeNameFP;
          }
          else
          {
@@ -449,27 +448,25 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             continue;
          }
       }
-      else
-      {
-         name = shapeName;
-      }
 
-      if (name && name[0]) {
+      if (!mShapeAsset[i].isNull())
+      {
          // Resolve shapename
-         shape[i] = ResourceManager::get().load(name);
-         if (!bool(shape[i])) {
-            errorStr = String::ToString("Unable to load shape: %s", name);
+         mShape[i] = mShapeAsset[i]->getShapeResource();
+
+         if (!bool(mShape[i])) {
+            errorStr = String::ToString("Unable to load shape asset: %s", mShapeAsset[i]->getAssetId());
             return false;
          }
          if(computeCRC)
          {
-            Con::printf("Validation required for shape: %s", name);
+            Con::printf("Validation required for shape asset: %s", mShapeAsset[i]->getAssetId());
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(shape[i].getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShape[i].getPath());
 
             if (!fileRef)
             {
-               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape \"%s\"",name);
+               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape asset\"%s\"", mShapeAsset[i]->getAssetId());
                return false;
             }
 
@@ -479,29 +476,29 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             }
             else if(mCRC[i] != fileRef->getChecksum())
             {
-               errorStr = String::ToString("Shape \"%s\" does not match version on server.",name);
+               errorStr = String::ToString("Shape asset\"%s\" does not match version on server.", mShapeAsset[i]->getAssetId());
                return false;
             }
          }
 
          // Resolve nodes & build mount transform
-         eyeMountNode[i] = shape[i]->findNode("eyeMount");
-         eyeNode[i] = shape[i]->findNode("eye");
+         eyeMountNode[i] = mShape[i]->findNode("eyeMount");
+         eyeNode[i] = mShape[i]->findNode("eye");
          if (eyeNode[i] == -1)
             eyeNode[i] = eyeMountNode[i];
-         ejectNode[i] = shape[i]->findNode("ejectPoint");
-         muzzleNode[i] = shape[i]->findNode("muzzlePoint");
-         retractNode[i] = shape[i]->findNode("retractionPoint");
+         ejectNode[i] = mShape[i]->findNode("ejectPoint");
+         muzzleNode[i] = mShape[i]->findNode("muzzlePoint");
+         retractNode[i] = mShape[i]->findNode("retractionPoint");
          mountTransform[i] = mountOffset;
-         S32 node = shape[i]->findNode("mountPoint");
+         S32 node = mShape[i]->findNode("mountPoint");
          if (node != -1) {
             MatrixF total(1);
             do {
                MatrixF nmat;
                QuatF q;
-               TSTransform::setMatrix(shape[i]->defaultRotations[node].getQuatF(&q),shape[i]->defaultTranslations[node],&nmat);
+               TSTransform::setMatrix(mShape[i]->defaultRotations[node].getQuatF(&q), mShape[i]->defaultTranslations[node],&nmat);
                total.mul(nmat);
-               node = shape[i]->nodes[node].parentIndex;
+               node = mShape[i]->nodes[node].parentIndex;
             }
             while(node != -1);
             total.inverse();
@@ -514,7 +511,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          for (U32 j = 0; j < MaxStates; j++) {
             StateData& s = state[j];
             if (stateSequence[j] && stateSequence[j][0])
-               s.sequence[i] = shape[i]->findSequence(stateSequence[j]);
+               s.sequence[i] = mShape[i]->findSequence(stateSequence[j]);
             if (s.sequence[i] != -1)
             {
                // This state has an animation sequence
@@ -525,7 +522,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
                char bufferVis[128];
                dStrncpy(bufferVis, stateSequence[j], 100);
                dStrcat(bufferVis, "_vis", 128);
-               s.sequenceVis[i] = shape[i]->findSequence(bufferVis);
+               s.sequenceVis[i] = mShape[i]->findSequence(bufferVis);
             }
             if (s.sequenceVis[i] != -1)
             {
@@ -537,13 +534,13 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             s.ignoreLoadedForReady = stateIgnoreLoadedForReady[j];
 
             if (stateEmitterNode[j] && stateEmitterNode[j][0])
-               s.emitterNode[i] = shape[i]->findNode(stateEmitterNode[j]);
+               s.emitterNode[i] = mShape[i]->findNode(stateEmitterNode[j]);
             if (s.emitterNode[i] == -1)
                s.emitterNode[i] = muzzleNode[i];
          }
 
-         ambientSequence[i] = shape[i]->findSequence("ambient");
-         spinSequence[i] = shape[i]->findSequence("spin");
+         ambientSequence[i] = mShape[i]->findSequence("ambient");
+         spinSequence[i] = mShape[i]->findSequence("spin");
 
          shapeIsValid[i] = true;
       }
@@ -567,7 +564,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
    {
       if( shapeIsValid[i] )
       {
-         TSShapeInstance* pDummy = new TSShapeInstance(shape[i], !server);
+         TSShapeInstance* pDummy = new TSShapeInstance(mShape[i], !server);
          delete pDummy;
       }
    }
@@ -590,19 +587,9 @@ void ShapeBaseImageData::initPersistFields()
    addField( "emap", TypeBool, Offset(emap, ShapeBaseImageData),
       "@brief Whether to enable environment mapping on this Image.\n\n" );
 
-   addField( "shapeFile", TypeShapeFilename, Offset(shapeName, ShapeBaseImageData),
-      "@brief The DTS or DAE model to use for this Image.\n\n" );
+   INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, ShapeBaseImageData, "The shape asset to use for this image in the third person")
 
-   addField( "shapeFileFP", TypeShapeFilename, Offset(shapeNameFP, ShapeBaseImageData),
-      "@brief The DTS or DAE model to use for this Image when in first person.\n\n"
-      "This is an optional parameter that also requires either eyeOffset or useEyeNode "
-      "to be set.  If none of these conditions is met then shapeFile will be used "
-      "for all cases.\n\n"
-      "Typically you set a first person image for a weapon that "
-      "includes the player's arms attached to it for animating while firing, "
-      "reloading, etc.  This is typical of many FPS games."
-      "@see eyeOffset\n"
-      "@see useEyeNode\n");
+   addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeName[1], ShapeBaseImageData), _setShapeData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset", AbstractClassRep::FIELD_HideInInspectors);
 
    addField( "imageAnimPrefix", TypeCaseString, Offset(imageAnimPrefix, ShapeBaseImageData),
       "@brief Passed along to the mounting shape to modify animation sequences played in third person. [optional]\n\n" );
@@ -987,8 +974,10 @@ void ShapeBaseImageData::packData(BitStream* stream)
       }
    }
 
-   stream->writeString(shapeName);        // shape 0 for normal use
-   stream->writeString(shapeNameFP);      // shape 1 for first person use (optional)
+   for (U32 j = 0; j < MaxShapes; ++j)
+   {
+      PACKDATA_SHAPEASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+   }
 
    stream->writeString(imageAnimPrefix);
    stream->writeString(imageAnimPrefixFP);
@@ -1169,8 +1158,10 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
       }
    }
 
-   shapeName = stream->readSTString();       // shape 0 for normal use
-   shapeNameFP = stream->readSTString();     // shape 1 for first person use (optional)
+   for (U32 j = 0; j < MaxShapes; ++j)
+   {
+      UNPACKDATA_SHAPEASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+   }
 
    imageAnimPrefix = stream->readSTString();
    imageAnimPrefixFP = stream->readSTString();
@@ -2128,7 +2119,7 @@ S32 ShapeBase::getNodeIndex(U32 imageSlot,StringTableEntry nodeName)
 {
    MountedImage& image = mMountedImageList[imageSlot];
    if (image.dataBlock)
-      return image.dataBlock->shape[getImageShapeIndex(image)]->findNode(nodeName);
+      return image.dataBlock->mShape[getImageShapeIndex(image)]->findNode(nodeName);
    else
       return -1;
 }
@@ -2318,7 +2309,7 @@ void ShapeBase::setImage(  U32 imageSlot,
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
       if (image.dataBlock->shapeIsValid[i])
-         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->shape[i], isClientObject());
+         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->mShape[i], isClientObject());
    }
 
    if (isClientObject())

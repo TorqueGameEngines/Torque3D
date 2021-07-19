@@ -83,6 +83,9 @@ class VolumetricFog : public SceneObject
       Vector <GFXPrimitive> *piArray;
       Vector <U32> *indices;
    };
+
+   DECLARE_SHAPEASSET(VolumetricFog, Shape, onShapeChanged);
+   DECLARE_SHAPEASSET_NET_SETGET(VolumetricFog, Shape, FogShapeMask);
    
    protected:
       // Rendertargets;
@@ -90,9 +93,6 @@ class VolumetricFog : public SceneObject
       NamedTexTargetRef mDeferredTarget;
       NamedTexTargetRef mDepthBufferTarget;
       NamedTexTargetRef mFrontBufferTarget;
-   
-      // Fog Modulation texture
-      GFXTexHandle mTexture;
    
       // Shaders
       GFXShaderRef mShader;
@@ -143,10 +143,7 @@ class VolumetricFog : public SceneObject
       GFXPrimitiveBufferHandle mPB;
    
       // Fog volume data;
-      AssetPtr<ShapeAsset> mShapeAsset;
-      StringTableEntry mShapeAssetId;
-
-      StringTableEntry mShapeName;
+      
       ColorI mFogColor;
       F32 mFogDensity;
       bool mIgnoreWater;
@@ -165,7 +162,9 @@ class VolumetricFog : public SceneObject
       F32 mInvScale;
    
       // Fog Modulation data
-      String mTextureName;
+      DECLARE_IMAGEASSET(VolumetricFog, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_NET_SETGET(VolumetricFog, Texture, FogModulationMask);
+
       bool mIsTextured;
       F32 mTexTiles;
       F32 mStrength;
@@ -221,6 +220,8 @@ class VolumetricFog : public SceneObject
       void _leaveFog(ShapeBase *control);
 
       static bool _setShapeAsset(void* obj, const char* index, const char* data);
+
+      void onImageChanged() {}
    
    public:
       // Public methods
@@ -248,6 +249,8 @@ class VolumetricFog : public SceneObject
       bool isInsideFog();
 
       bool setShapeAsset(const StringTableEntry shapeAssetId);
+
+      void onShapeChanged() {}
    
       DECLARE_CONOBJECT(VolumetricFog);
    

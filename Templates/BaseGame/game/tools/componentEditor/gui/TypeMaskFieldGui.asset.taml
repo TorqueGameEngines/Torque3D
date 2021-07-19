@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TypeMaskFieldGui"
+    scriptFile="@assetFile=TypeMaskFieldGui.gui"
+    GUIFile="@assetFile=TypeMaskFieldGui.gui"
+    VersionId="1" />

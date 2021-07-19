@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="object_transform_h_image"
+    imageFile="@assetFile=object-transform_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

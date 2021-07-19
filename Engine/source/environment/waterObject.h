@@ -45,6 +45,8 @@
 #include "materials/matTextureTarget.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 GFXDeclareVertexFormat( GFXWaterVertex )
 {
    Point3F point;
@@ -200,6 +202,10 @@ protected:
    /// Callback used internally when smDisableTrueReflections changes.
    void _onDisableTrueRelfections();
 
+   void onRippleTexChanged() {}
+   void onFoamTexChanged() {}
+   void onDepthGradientTexChanged() {}
+
 protected:
 
    static bool _setFullReflect( void *object, const char *index, const char *data );
@@ -266,10 +272,14 @@ protected:
    F32 mDepthGradientMax;
 
    // Other textures
-   String mRippleTexName;
-   String mFoamTexName;
-   String mCubemapName;
-   String mDepthGradientTexName;
+   DECLARE_IMAGEASSET(WaterObject, RippleTex, onRippleTexChanged, GFXStaticTextureProfile);
+   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, RippleTex, TextureMask);
+   DECLARE_IMAGEASSET(WaterObject, FoamTex, onFoamTexChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, FoamTex, TextureMask);
+   DECLARE_IMAGEASSET(WaterObject, DepthGradientTex, onDepthGradientTexChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, DepthGradientTex, TextureMask);
+
+   StringTableEntry mCubemapName;
 
    // Sound
    SFXAmbience* mSoundAmbience;
@@ -309,9 +319,6 @@ protected:
    WaterMatParams mMatParamHandles[NumMatTypes];   
    bool mUnderwater;
    GFXStateBlockRef mUnderwaterSB;
-   GFXTexHandle mRippleTex;
-   GFXTexHandle mDepthGradientTex;
-   GFXTexHandle mFoamTex;   
    CubemapData *mCubemap;
    MatrixSet *mMatrixSet;
    NamedTexTarget mNamedDepthGradTex;

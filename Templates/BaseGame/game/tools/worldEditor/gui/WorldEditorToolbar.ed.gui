@@ -65,7 +65,7 @@
          position = "34 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       
       new GuiTextCtrl() {
@@ -117,7 +117,7 @@
             Position = "23 21";
             Extent = "4 4";
             MinExtent = "4 4";
-            bitmap = "tools/gui/images/dropdown-button-arrow";
+            bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
          };
       }; 
          
@@ -258,7 +258,7 @@
          position = "269 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
          
       new GuiBitmapButtonCtrl() {
@@ -291,7 +291,7 @@
          position = "307 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       
       new GuiControl(ToggleButtonBar){
@@ -329,7 +329,7 @@
                Position = "23 21";
                Extent = "4 4";
                MinExtent = "4 4";
-               bitmap = "tools/gui/images/dropdown-button-arrow";
+               bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
             };
          };
 
@@ -361,7 +361,7 @@
                Position = "23 21";
                Extent = "4 4";
                MinExtent = "4 4";
-               bitmap = "tools/gui/images/dropdown-button-arrow";
+               bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
             };  
          };
       };
@@ -372,7 +372,7 @@
          position = "379 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
             
       new GuiControl(ToggleNodeBar){
@@ -436,7 +436,7 @@
          position = "379 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
             
       new GuiControl(PrefabBar){
@@ -569,7 +569,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Use object defined center (O)";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/object-center_n";
+            bitmapAsset = "ToolsModule:object_center_n_image";
             text = "Object Center";
             buttonMargin = "0 4";
             textMargin = "38";
@@ -594,7 +594,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Use bounding box center (P)";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/bounds-center_n";
+            bitmapAsset = "ToolsModule:bounds_center_n_image";
             text = "Bounds Center";
             buttonMargin = "0 4";
             textMargin = "38";
@@ -641,7 +641,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Use world normal for transformations (L)";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/world-transform_n";
+            bitmapAsset = "ToolsModule:world_transform_n_image";
             text = "World Transform";
             buttonMargin = "0 4";
             textMargin = "38";
@@ -667,7 +667,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Use object normal for transformations (K)";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/object-transform_n";
+            bitmapAsset = "ToolsModule:object_transform_n_image";
             text = "Object Transform";
             buttonMargin = "0 4";
             textMargin = "38";

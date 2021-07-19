@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="EWTerrainPainterToolbar,EditorGuiGroup"
+    scriptFile="@assetFile=TerrainPainterToolbar.ed.gui"
+    GUIFile="@assetFile=TerrainPainterToolbar.ed.gui"
+    VersionId="1" />

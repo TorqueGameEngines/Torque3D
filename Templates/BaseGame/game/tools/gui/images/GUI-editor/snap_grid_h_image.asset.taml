@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="snap_grid_h_image"
+    imageFile="@assetFile=snap-grid_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

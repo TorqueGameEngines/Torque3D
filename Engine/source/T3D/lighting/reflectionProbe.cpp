@@ -426,7 +426,7 @@ U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream
       stream->write(mRadius);
       stream->write(mProbeUniqueID);
       stream->write((U32)mReflectionModeType);
-      stream->write(mCubemapName);
+      stream->writeString(mCubemapName);
    }
 
    if (stream->writeFlag(mask & EnabledMask))
@@ -474,8 +474,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
       stream->read(&reflectModeType);
       mReflectionModeType = (ReflectionModeType)reflectModeType;
 
-      String oldCubemapName = mCubemapName;
-      stream->read(&mCubemapName);
+      StringTableEntry oldCubemapName = mCubemapName;
+      mCubemapName = stream->readSTString();
 
       if(oldReflectModeType != mReflectionModeType || oldCubemapName != mCubemapName)
          mCubemapDirty = true;
@@ -630,7 +630,7 @@ void ReflectionProbe::processStaticCubemap()
    String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
 
    char irradFileName[256];
-   dSprintf(irradFileName, 256, "%s%s_Irradiance.dds", path.c_str(), mCubemapName.c_str());
+   dSprintf(irradFileName, 256, "%s%s_Irradiance.dds", path.c_str(), mCubemapName);
 
    if (Platform::isFile(irradFileName))
    {
@@ -645,7 +645,7 @@ void ReflectionProbe::processStaticCubemap()
    }
 
    char prefilterFileName[256];
-   dSprintf(prefilterFileName, 256, "%s%s_Prefilter.dds", path.c_str(), mCubemapName.c_str());
+   dSprintf(prefilterFileName, 256, "%s%s_Prefilter.dds", path.c_str(), mCubemapName);
 
    if (Platform::isFile(prefilterFileName))
    {

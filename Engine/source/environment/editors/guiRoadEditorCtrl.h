@@ -103,8 +103,9 @@ class GuiRoadEditorCtrl : public EditTSCtrl
 	
 	public:
 
-		StringTableEntry mMaterialAssetId;
-      AssetPtr<MaterialAsset> mMaterialAsset;
+      DECLARE_MATERIALASSET(GuiRoadEditorCtrl, Material);
+      DECLARE_MATERIALASSET_SETGET(GuiRoadEditorCtrl, Material);
+
    protected:
 
       void _drawRoadSpline( DecalRoad *road, const ColorI &color );

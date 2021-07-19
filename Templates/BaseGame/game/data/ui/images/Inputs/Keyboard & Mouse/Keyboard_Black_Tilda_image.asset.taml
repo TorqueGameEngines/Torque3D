@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Keyboard_Black_Tilda_image"
+    imageFile="@assetFile=Keyboard_Black_Tilda.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

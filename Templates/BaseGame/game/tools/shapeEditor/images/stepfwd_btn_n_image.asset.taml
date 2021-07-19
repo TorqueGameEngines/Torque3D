@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="stepfwd_btn_n_image"
+    imageFile="@assetFile=stepfwd_btn_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

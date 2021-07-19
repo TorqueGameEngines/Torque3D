@@ -90,6 +90,8 @@ Sun::Sun()
    mCoronaUseLightColor = true;
    mCoronaMatInst = NULL;
 
+   INIT_MATERIALASSET(CoronaMaterial);
+
    mMatrixSet = reinterpret_cast<MatrixSet *>(dMalloc_aligned(sizeof(MatrixSet), 16));
    constructInPlace(mMatrixSet);
 
@@ -177,8 +179,7 @@ void Sun::initPersistFields()
       addField( "coronaEnabled", TypeBool, Offset( mCoronaEnabled, Sun ), 
          "Enable or disable rendering of the corona sprite." );
 
-      addField( "coronaMaterial", TypeMaterialName, Offset( mCoronaMatName, Sun ),
-         "Texture for the corona sprite." );
+      INITPERSISTFIELD_MATERIALASSET(CoronaMaterial, Sun, "Material for the corona sprite.");
 
       addField( "coronaScale", TypeF32, Offset( mCoronaScale, Sun ),
          "Controls size the corona sprite renders, specified as a fractional amount of the screen height." );
@@ -238,7 +239,9 @@ U32 Sun::packUpdate(NetConnection *conn, U32 mask, BitStream *stream )
       }
 
       stream->writeFlag( mCoronaEnabled );
-      stream->write( mCoronaMatName );
+
+      PACK_MATERIALASSET(conn, CoronaMaterial);
+
       stream->write( mCoronaScale );
       stream->write( mCoronaTint );
       stream->writeFlag( mCoronaUseLightColor );
@@ -282,7 +285,9 @@ void Sun::unpackUpdate( NetConnection *conn, BitStream *stream )
          mFlareData = NULL;
 
       mCoronaEnabled = stream->readFlag();
-      stream->read( &mCoronaMatName );
+
+      UNPACK_MATERIALASSET(conn, CoronaMaterial);
+
       stream->read( &mCoronaScale );
       stream->read( &mCoronaTint );
       mCoronaUseLightColor = stream->readFlag();
@@ -446,8 +451,10 @@ void Sun::_initCorona()
       
    SAFE_DELETE( mCoronaMatInst );
 
-   if ( mCoronaMatName.isNotEmpty() )      
-      mCoronaMatInst = MATMGR->createMatInstance( mCoronaMatName, MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPCT>() );         
+   if (mCoronaMaterialAsset.notNull())
+   {
+      mCoronaMatInst = MATMGR->createMatInstance(mCoronaMaterialAsset->getMaterialDefinitionName(), MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPCT>());
+   }
 }
 
 void Sun::_renderCorona( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat )

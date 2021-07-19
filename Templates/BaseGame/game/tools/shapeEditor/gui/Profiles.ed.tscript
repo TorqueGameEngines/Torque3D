@@ -48,12 +48,12 @@ singleton GuiControlProfile(GuiShapeEdTextListProfile : ToolsGuiTextListProfile)
 
 singleton GuiControlProfile(GuiShapeEdRolloutProfile : GuiInspectorRolloutProfile0)
 {
-   bitmap = "tools/editorClasses/gui/images/rollout";
+   bitmapAsset = "ToolsModule:rollout_image";
    category = "Editor";
 };
 
 singleton GuiControlProfile( GuiShapeEdTransitionSliderProfile )
 {
-   bitmap = "tools/shapeEditor/images/transition_slider";
+   bitmapAsset = "ToolsModule:transition_slider_image";
    category = "Core";
 };

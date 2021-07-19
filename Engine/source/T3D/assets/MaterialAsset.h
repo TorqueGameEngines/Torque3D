@@ -53,6 +53,7 @@
 #include "materials/matTextureTarget.h"
 #include "materials/materialDefinition.h"
 #include "materials/customMaterialDefinition.h"
+#include "materials/materialManager.h"
 
 //-----------------------------------------------------------------------------
 class MaterialAsset : public AssetBase
@@ -64,25 +65,42 @@ class MaterialAsset : public AssetBase
    StringTableEntry        mScriptPath;
    StringTableEntry        mMatDefinitionName;
 
+   SimObjectPtr<Material>  mMaterialDefinition;
+
+public:
+   static StringTableEntry smNoMaterialAssetFallback;
+
 public:
    MaterialAsset();
    virtual ~MaterialAsset();
+
+   /// Set up some global script interface stuff.
+   static void consoleInit();
 
    /// Engine.
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
-   void compileShader();
+   void loadMaterial();
 
    StringTableEntry getMaterialDefinitionName() { return mMatDefinitionName; }
+   SimObjectPtr<Material> getMaterialDefinition() { return mMaterialDefinition; }
 
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
 
    inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
-   static StringTableEntry getAssetIdByMaterialName(StringTableEntry fileName);
-   static bool getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+   /// <summary>
+   /// Looks for any assets that uses the provided Material Definition name.
+   /// If none are found, attempts to auto-import the material definition if the
+   /// material definition exists.
+   /// </summary>
+   /// <param name="matName">Material Definition name to look for</param>
+   /// <returns>AssetId of matching asset.</returns>
+   static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
+   static U32 getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+   static U32 getAssetByMaterialName(StringTableEntry matName, AssetPtr<MaterialAsset>* matAsset);
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(MaterialAsset);
@@ -124,159 +142,203 @@ public:
    static void consoleInit();
 };
 
-#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
+#pragma region Singular Asset Macros
 
-#define initMaterialAsset(name) m##name##Name = ""; m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
-#define bindMaterialAsset(name) if (m##name##AssetId != StringTable->EmptyString()) m##name##Asset = m##name##AssetId;
-
-#define scriptBindMaterialAsset(name, consoleClass, docs)\
-   addProtectedField(assetText(name, File), TypeMaterialName, Offset(m##name##Name, consoleClass), consoleClass::_set##name##Name,  & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-   addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), consoleClass::_set##name##Asset, & defaultProtectedGetFn, assetText(name, asset reference.));
-
-#define DECLARE_MATERIALASSET(className,name)      protected: \
-                                      String m##name##Name;\
-                                      StringTableEntry m##name##AssetId;\
-                                      AssetPtr<MaterialAsset>  m##name##Asset;\
-                                      public: \
-                                      const String& get##name() const { return m##name##Name; }\
-                                      void set##name(FileName _in) { m##name##Name = _in; }\
-                                      const AssetPtr<MaterialAsset> & get##name##Asset() const { return m##name##Asset; }\
-                                      void set##name##Asset(AssetPtr<MaterialAsset>_in) { m##name##Asset = _in; }\
-static bool _set##name##Name(void* obj, const char* index, const char* data)\
-{\
-   className* shape = static_cast<className*>(obj);\
+//Singular assets
+/// <Summary>
+/// Declares an material asset
+/// This establishes the assetId, asset and legacy filepath fields, along with supplemental getter and setter functions
+/// </Summary>
+#define DECLARE_MATERIALASSET(className, name) public: \
+   StringTableEntry m##name##Name;\
+   StringTableEntry m##name##AssetId;\
+   AssetPtr<MaterialAsset>  m##name##Asset;\
+   SimObjectPtr<Material> m##name;\
+public: \
+   const StringTableEntry get##name##File() const { return m##name##Name; }\
+   void set##name##Name(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\
+   const AssetPtr<MaterialAsset> & get##name##Asset() const { return m##name##Asset; }\
+   void set##name##Asset(const AssetPtr<MaterialAsset> &_in) { m##name##Asset = _in;}\
    \
-   StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(data));\
-   if (assetId != StringTable->EmptyString())\
+   bool _set##name(StringTableEntry _in)\
    {\
-      if (shape->_set##name##Asset(obj, index, assetId))\
+      if(m##name##AssetId != _in || m##name##Name != _in)\
       {\
-         if (assetId == StringTable->insert("Core_Rendering:noMaterial"))\
+         if (_in == StringTable->EmptyString())\
          {\
-            shape->m##name##Name = data;\
-            shape->m##name##AssetId = StringTable->EmptyString();\
-            \
+            m##name##Name = StringTable->EmptyString();\
+            m##name##AssetId = StringTable->EmptyString();\
+            m##name##Asset = NULL;\
+            m##name = NULL;\
             return true;\
+         }\
+         \
+         if (AssetDatabase.isDeclaredAsset(_in))\
+         {\
+            m##name##AssetId = _in;\
+            \
+            U32 assetState = MaterialAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
+            \
+            if (MaterialAsset::Ok == assetState)\
+            {\
+               m##name##Name = StringTable->EmptyString();\
+            }\
          }\
          else\
          {\
-            shape->m##name##AssetId = assetId;\
-            shape->m##name##Name = StringTable->EmptyString();\
-            \
-            return false;\
+            StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(_in);\
+            if (assetId != StringTable->EmptyString())\
+            {\
+               m##name##AssetId = assetId;\
+               if (MaterialAsset::getAssetById(m##name##AssetId, &m##name##Asset) == MaterialAsset::Ok)\
+               {\
+                  m##name##Name = StringTable->EmptyString();\
+               }\
+            }\
+            else\
+            {\
+               m##name##Name = _in;\
+               m##name##AssetId = StringTable->EmptyString();\
+               m##name##Asset = NULL;\
+            }\
          }\
       }\
-   }\
-   else\
-   {\
-      shape->m##name##Asset = StringTable->EmptyString();\
-   }\
-   \
-   return true;\
-}\
-\
-static bool _set##name##Asset(void* obj, const char* index, const char* data)\
-{\
-   className* shape = static_cast<className*>(obj);\
-   shape->m##name##AssetId = StringTable->insert(data);\
-   if (MaterialAsset::getAssetById(shape->m##name##AssetId, &shape->m##name##Asset))\
-   {\
-      if (shape->m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))\
-         shape->m##name##Name = StringTable->EmptyString();\
-      \
-      return true;\
-   }\
-   return false;\
-}\
-\
-static bool set##name##Asset(const char* assetId)\
-{\
-   m##name##AssetId = StringTable->insert(assetId);\
-   if (m##name##AssetId != StringTable->EmptyString())\
-      m##name##Asset = m##name##AssetId;\
-}
-
-/// <summary>
-/// DECLARE_MATERIALASSET is a utility macro for MaterialAssets. It takes in the name of the class using it, the name of the field for the material, and a networking bitmask
-/// The first 2 are for setting up/filling out the fields and class member defines
-/// The bitmask is for when the material is changed, it can automatically kick a network update on the owner object to pass the changed asset to clients
-/// </summary>
-#define DECLARE_NET_MATERIALASSET(className,name,bitmask)      protected: \
-                                      String m##name##Name;\
-                                      StringTableEntry m##name##AssetId;\
-                                      AssetPtr<MaterialAsset>  m##name##Asset;\
-                                      public: \
-                                      const String& get##name() const { return m##name##Name; }\
-                                      void set##name(FileName _in) { m##name##Name = _in; }\
-                                      const AssetPtr<MaterialAsset> & get##name##Asset() const { return m##name##Asset; }\
-                                      void set##name##Asset(AssetPtr<MaterialAsset>_in) { m##name##Asset = _in; }\
-static bool _set##name##Name(void* obj, const char* index, const char* data)\
-{\
-   className* shape = static_cast<className*>(obj);\
-   \
-   StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(data));\
-   if (assetId != StringTable->EmptyString())\
-   {\
-      if (shape->_set##name##Asset(obj, index, assetId))\
+      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
       {\
-         if (assetId == StringTable->insert("Core_Rendering:noMaterial"))\
-         {\
-            shape->m##name##Name = data;\
-            shape->m##name##AssetId = StringTable->EmptyString();\
-            \
-            return true;\
-         }\
-         else\
-         {\
-            shape->m##name##AssetId = assetId;\
-            shape->m##name##Name = StringTable->EmptyString();\
-            \
+         if (m##name && String(m##name##Asset->getMaterialDefinitionName()).equal(m##name->getName(), String::NoCase))\
             return false;\
-         }\
+         \
+         Material* tempMat = nullptr;\
+         \
+         if (!Sim::findObject(m##name##Asset->getMaterialDefinitionName(), tempMat))\
+            Con::errorf("classname::_set##name() - Material %s was not found.", m##name##Asset->getMaterialDefinitionName());\
+         m##name = tempMat;\
       }\
-   }\
-   else\
-   {\
-      shape->m##name##Asset = StringTable->EmptyString();\
-   }\
-   \
-   return true;\
-}\
-\
-static bool _set##name##Asset(void* obj, const char* index, const char* data)\
-{\
-   className* shape = static_cast<className*>(obj);\
-   shape->m##name##AssetId = StringTable->insert(data);\
-   if (MaterialAsset::getAssetById(shape->m##name##AssetId, &shape->m##name##Asset))\
-   {\
-      if (shape->m##name##Asset.getAssetId() != StringTable->insert("Core_Rendering:noMaterial"))\
-         shape->m##name##Name = StringTable->EmptyString();\
+      else\
+      {\
+         m##name = NULL;\
+      }\
       \
-      shape->setMaskBits(bitmask);\
-      shape->inspectPostApply();\
-      return true;\
-   }\
-   shape->inspectPostApply();\
-   return false;\
-}\
-\
-bool set##name##AssetId(const char* _assetId)\
-{\
-   m##name##AssetId = StringTable->insert(_assetId);\
-   if (m##name##AssetId != StringTable->EmptyString())\
-   {\
-      m##name##Asset = m##name##AssetId;\
+      if(get##name() == StringTable->EmptyString())\
+         return true;\
       \
-      setMaskBits(bitmask);\
-      inspectPostApply();\
+      if (m##name##Asset.notNull() && m##name##Asset->getStatus() != MaterialAsset::Ok)\
+      {\
+         Con::errorf("%s::_set%s() - material asset failure\"%s\" due to [%s]", macroText(className), macroText(name), _in, MaterialAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
+         return false; \
+      }\
+      else if (bool(m##name) == NULL)\
+      {\
+         Con::errorf("%s::_set%s() - Couldn't load material \"%s\"", macroText(className), macroText(name), _in);\
+         return false;\
+      }\
       return true;\
    }\
    \
-   return false;\
+   const StringTableEntry get##name() const\
+   {\
+      if (m##name##Asset && (m##name##Asset->getMaterialDefinitionName() != StringTable->EmptyString()))\
+         return m##name##Asset->getMaterialDefinitionName();\
+      else if (m##name##AssetId != StringTable->EmptyString())\
+         return m##name##AssetId;\
+      else if (m##name##Name != StringTable->EmptyString())\
+         return m##name##Name;\
+      else\
+         return StringTable->EmptyString();\
+   }\
+   SimObjectPtr<Material> get##name##Resource() \
+   {\
+      return m##name##;\
+   }
+
+#define DECLARE_MATERIALASSET_SETGET(className, name)\
+   static bool _set##name##Data(void* obj, const char* index, const char* data)\
+   {\
+      bool ret = false;\
+      className* object = static_cast<className*>(obj);\
+      ret = object->_set##name(StringTable->insert(data));\
+      return ret;\
+   }
+
+#define DECLARE_MATERIALASSET_NET_SETGET(className, name, bitmask)\
+   static bool _set##name##Data(void* obj, const char* index, const char* data)\
+   {\
+      bool ret = false;\
+      className* object = static_cast<className*>(obj);\
+      ret = object->_set##name(StringTable->insert(data));\
+      if(ret)\
+         object->setMaskBits(bitmask);\
+      return ret;\
+   }
+
+#define DEF_MATERIALASSET_BINDS(className,name)\
+DefineEngineMethod(className, get##name, const char*, (), , "get name")\
+{\
+   return object->get##name(); \
+}\
+DefineEngineMethod(className, get##name##Asset, const char*, (), , assetText(name, asset reference))\
+{\
+   return object->m##name##AssetId; \
+}\
+DefineEngineMethod(className, set##name, bool, (const char* mat), , assetText(name,assignment. first tries asset then material name.))\
+{\
+    return object->_set##name(StringTable->insert(map));\
 }
 
+#define INIT_MATERIALASSET(name) \
+   m##name##Name = StringTable->EmptyString(); \
+   m##name##AssetId = StringTable->EmptyString(); \
+   m##name##Asset = NULL;\
+   m##name = NULL;
 
-#define packMaterialAsset(netconn, name)\
+#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
+
+#define INITPERSISTFIELD_MATERIALASSET(name, consoleClass, docs) \
+   addProtectedField(#name, TypeMaterialName, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs)); \
+   addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#else
+
+#define INITPERSISTFIELD_MATERIALASSET(name, consoleClass, docs) \
+   addProtectedField(#name, TypeMaterialName, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn,assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeMaterialAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#endif // SHOW_LEGACY_FILE_FIELDS
+
+#define CLONE_MATERIALASSET(name) \
+   m##name##Name = other.m##name##Name;\
+   m##name##AssetId = other.m##name##AssetId;\
+   m##name##Asset = other.m##name##Asset;
+
+#define LOAD_MATERIALASSET(name)\
+if (m##name##AssetId != StringTable->EmptyString())\
+{\
+   S32 assetState = MaterialAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
+   if (assetState == MaterialAsset::Ok )\
+   {\
+      m##name##Name = StringTable->EmptyString();\
+   }\
+   else Con::warnf("Warning: %s::LOAD_MATERIALASSET(%s)-%s", mClassName, m##name##AssetId, MaterialAsset::getAssetErrstrn(assetState).c_str());\
+}
+
+#define PACKDATA_MATERIALASSET(name)\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+   {\
+      stream->writeString(m##name##Asset.getAssetId());\
+   }\
+   else\
+      stream->writeString(m##name##Name);
+
+#define UNPACKDATA_MATERIALASSET(name)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId = stream->readSTString();\
+      _set##name(m##name##AssetId);\
+   }\
+   else\
+      m##name##Name = stream->readSTString();
+
+#define PACK_MATERIALASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
       NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
@@ -285,14 +347,16 @@ bool set##name##AssetId(const char* _assetId)\
    else\
       stream->writeString(m##name##Name);
 
-#define unpackMaterialAsset(netconn, name)\
+#define UNPACK_MATERIALASSET(netconn, name)\
    if (stream->readFlag())\
    {\
       m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      MaterialAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
+      _set##name(m##name##AssetId);\
    }\
    else\
-      m##name##Name = stream->readSTString();\
+      m##name##Name = stream->readSTString();
+
+#pragma endregion
 
 #endif // _ASSET_BASE_H_
 

@@ -65,6 +65,7 @@ GuiShapeEdPreview::GuiShapeEdPreview()
    mZoomSpeed ( 1.0f ),
    mGridDimension( 30, 30 ),
    mModel( NULL ),
+   mModelName(StringTable->EmptyString()),
    mRenderGhost( false ),
    mRenderNodes( false ),
    mRenderBounds( false ),
@@ -349,6 +350,8 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
    mThreads.clear();
    mActiveThread = -1;
 
+   ResourceManager::get().getChangedSignal().remove(this, &GuiShapeEdPreview::_onResourceChanged);
+
    if (modelName && modelName[0])
    {
       Resource<TSShape> model = ResourceManager::get().load( modelName );
@@ -382,9 +385,26 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
 
       // the first time recording
       mLastRenderTime = Platform::getVirtualMilliseconds();
+
+      mModelName = StringTable->insert(modelName);
+
+      //Now to reflect changes when the model file is changed.
+      ResourceManager::get().getChangedSignal().notify(this, &GuiShapeEdPreview::_onResourceChanged);
+   }
+   else
+   {
+      mModelName = StringTable->EmptyString();
    }
 
    return true;
+}
+
+void GuiShapeEdPreview::_onResourceChanged(const Torque::Path& path)
+{
+   if (path != Torque::Path(mModelName))
+      return;
+
+   setObjectModel(path.getFullPath());
 }
 
 void GuiShapeEdPreview::addThread()

@@ -124,7 +124,7 @@ protected:
    U32 mCRC;
 
    ///
-   FileName mTerrFileName;
+   StringTableEntry mTerrFileName;
 
    AssetPtr<TerrainAsset> mTerrainAsset;
    StringTableEntry mTerrainAssetId;
@@ -476,7 +476,7 @@ public:
                         RayInfo *info, 
                         bool collideEmpty );
 
-   const FileName& getTerrainFile() const { return mTerrFileName; }
+   const StringTableEntry getTerrainFile() const { return mTerrFileName; }
 
    void postLight(Vector<TerrainBlock *> &terrBlocks) {};
 

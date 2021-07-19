@@ -42,23 +42,30 @@
 
 #include "gfx/gfxStringEnumTranslate.h"
 
+#include "ImageAssetInspectors.h"
+
 // Debug Profiling.
 #include "platform/profiler.h"
 
 #include "T3D/assets/assetImporter.h"
+#include "gfx/gfxDrawUtil.h"
+
+//-----------------------------------------------------------------------------
+
+StringTableEntry ImageAsset::smNoImageAssetFallback(StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback")));
 
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ImageAsset);
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtr, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
 ConsoleGetType(TypeImageAssetPtr)
 {
    // Fetch asset Id.
-   return *((StringTableEntry*)dptr);
+   return *((const char**)(dptr));
 }
 
 //-----------------------------------------------------------------------------
@@ -69,13 +76,7 @@ ConsoleSetType(TypeImageAssetPtr)
    if (argc == 1)
    {
       // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }
@@ -84,7 +85,7 @@ ConsoleSetType(TypeImageAssetPtr)
    Con::warnf("(TypeImageAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
-ConsoleType(assetIdString, TypeImageAssetId, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeImageAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeImageAssetId)
 {
@@ -97,14 +98,7 @@ ConsoleSetType(TypeImageAssetId)
    // Was a single argument specified?
    if (argc == 1)
    {
-      // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }
@@ -117,32 +111,42 @@ ConsoleSetType(TypeImageAssetId)
 ImplementEnumType(ImageAssetType,
    "Type of mesh data available in a shape.\n"
    "@ingroup gameObjects")
-   { ImageAsset::Albedo,      "Albedo",      "" },
-   { ImageAsset::Normal,      "Normal",      "" },
-   { ImageAsset::ORMConfig,   "ORMConfig",   "" },
-   { ImageAsset::GUI,         "GUI",         "" },
-   { ImageAsset::Roughness,   "Roughness",   "" },
-   { ImageAsset::AO,          "AO",          "" },
-   { ImageAsset::Metalness,   "Metalness",   "" },
-   { ImageAsset::Glow,        "Glow",        "" },
-   { ImageAsset::Particle,    "Particle",    "" },
-   { ImageAsset::Decal,       "Decal",       "" },
-   { ImageAsset::Cubemap,     "Cubemap",       "" },
+{ ImageAsset::Albedo, "Albedo", "" },
+{ ImageAsset::Normal,      "Normal",      "" },
+{ ImageAsset::ORMConfig,   "ORMConfig",   "" },
+{ ImageAsset::GUI,         "GUI",         "" },
+{ ImageAsset::Roughness,   "Roughness",   "" },
+{ ImageAsset::AO,          "AO",          "" },
+{ ImageAsset::Metalness,   "Metalness",   "" },
+{ ImageAsset::Glow,        "Glow",        "" },
+{ ImageAsset::Particle,    "Particle",    "" },
+{ ImageAsset::Decal,       "Decal",       "" },
+{ ImageAsset::Cubemap,     "Cubemap",       "" },
 
 EndImplementEnumType;
 
 
 //-----------------------------------------------------------------------------
-ImageAsset::ImageAsset() : AssetBase(), mImage(nullptr), mUseMips(true), mIsHDRImage(false), mIsValidImage(false), mImageType(Albedo)
+ImageAsset::ImageAsset() : AssetBase(), mUseMips(true), mIsHDRImage(false), mIsValidImage(false), mImageType(Albedo)
 {
    mImageFileName = StringTable->EmptyString();
    mImagePath = StringTable->EmptyString();
+   mLoadedState = AssetErrCode::NotLoaded;
 }
 
 //-----------------------------------------------------------------------------
 
 ImageAsset::~ImageAsset()
 {
+}
+
+
+void ImageAsset::consoleInit()
+{
+   Parent::consoleInit();
+   Con::addVariable("$Core::NoImageAssetFallback", TypeString, &smNoImageAssetFallback,
+      "The assetId of the texture to display when the requested image asset is missing.\n"
+      "@ingroup GFX\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -163,85 +167,52 @@ void ImageAsset::initPersistFields()
 
 //------------------------------------------------------------------------------
 //Utility function to 'fill out' bindings and resources with a matching asset if one exists
-bool ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset)
+U32 ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset)
 {
    AssetQuery query;
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
    if (foundAssetcount == 0)
    {
-      //Didn't find any assets
-      //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
-      Con::warnf("ImageAsset::getAssetByFilename - Attempted to in-place import a image file(%s) that had no associated asset", fileName);
-#endif
-
-      AssetImporter* autoAssetImporter;
-      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-      {
-         autoAssetImporter = new AssetImporter();
-         autoAssetImporter->registerObject("autoAssetImporter");
-      }
-
-      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
-
-      if (resultingAssetId != StringTable->EmptyString())
-      {
-         imageAsset->setAssetId(resultingAssetId);
-
-         if (!imageAsset->isNull())
-            return true;
-      }
-
       //Didn't work, so have us fall back to a placeholder asset
-      imageAsset->setAssetId(StringTable->insert("Core_Rendering:noImage"));
+      imageAsset->setAssetId(ImageAsset::smNoImageAssetFallback);
 
-      if (!imageAsset->isNull())
-         return true;
+      if (imageAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("ImageAsset::getAssetByFilename - Finding of asset associated with file %s failed with no fallback asset", fileName);
+         return AssetErrCode::Failed;
+      }
 
-      //That didn't work, so fail out
-      return false;
+      //handle noshape not being loaded itself
+      if ((*imageAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("ImageAsset::getAssetByFilename - Finding of associated with file %s failed, and fallback asset reported error of Bad File Reference.", fileName);
+         return AssetErrCode::BadFileReference;
+      }
+
+      Con::warnf("ImageAsset::getAssetByFilename - Finding of associated with file %s failed, utilizing fallback asset", fileName);
+
+      (*imageAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
    }
    else
    {
       //acquire and bind the asset, and return it out
       imageAsset->setAssetId(query.mAssetList[0]);
-      return true;
+      return (*imageAsset)->mLoadedState;
    }
 }
 
 StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
 {
-   StringTableEntry imageAssetId = StringTable->EmptyString();
+   if (fileName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback;
 
    AssetQuery query;
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
-   if (foundAssetcount == 0)
-   {
-      //Didn't find any assets
-      //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
-      Con::warnf("ImageAsset::getAssetByFilename - Attempted to in-place import a image file(%s) that had no associated asset", fileName);
-#endif
-
-      AssetImporter* autoAssetImporter;
-      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-      {
-         autoAssetImporter = new AssetImporter();
-         autoAssetImporter->registerObject("autoAssetImporter");
-      }
-
-      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
-
-      if (resultingAssetId != StringTable->EmptyString())
-      {
-         imageAssetId = resultingAssetId;
-         return imageAssetId;
-      }
-
-      //Didn't work, so have us fall back to a placeholder asset
-      imageAssetId = StringTable->insert("Core_Rendering:noImage");
-   }
-   else
+   if (foundAssetcount != 0)
    {
       //acquire and bind the asset, and return it out
       imageAssetId = query.mAssetList[0];
@@ -250,22 +221,37 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    return imageAssetId;
 }
 
-bool ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset)
+U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset)
 {
    (*imageAsset) = assetId;
 
-   if (!imageAsset->isNull())
-      return true;
+   if (imageAsset->notNull())
+   {
+      return (*imageAsset)->mLoadedState;
+   }
+   else
+   {
+      if (imageAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+         return AssetErrCode::Failed;
+      }
 
-   //Didn't work, so have us fall back to a placeholder asset
-   StringTableEntry noImageId = StringTable->insert("Core_Rendering:noMaterial");
-   imageAsset->setAssetId(noImageId);
+      //handle noshape not being loaded itself
+      if ((*imageAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
+         return AssetErrCode::BadFileReference;
+      }
 
-   if (!imageAsset->isNull())
-      return true;
+      Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed, utilizing fallback asset", assetId);
 
-   return false;
+      (*imageAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
 }
+
 //------------------------------------------------------------------------------
 void ImageAsset::copyTo(SimObject* object)
 {
@@ -275,38 +261,65 @@ void ImageAsset::copyTo(SimObject* object)
 
 void ImageAsset::loadImage()
 {
-   SAFE_DELETE(mImage);
-
    if (mImagePath)
    {
       if (!Platform::isFile(mImagePath))
       {
          Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFileName);
+         mLoadedState = BadFileReference;
          return;
       }
 
-      mImage.set(mImagePath, &GFXStaticTextureSRGBProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
+      mLoadedState = Ok;
+      mIsValidImage = true;
+      return;
 
-      if (mImage)
+      //GFXTexHandle texture = getTexture(&GFXStaticTextureSRGBProfile);
+
+      //mTexture.set(mImagePath, &GFXStaticTextureSRGBProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
+
+      /*if (texture.isValid())
       {
          mIsValidImage = true;
+
+         //mBitmap = texture.getBitmap();
+
          return;
-      }
+      }*/
+
+      mChangeSignal.trigger();
    }
+   mLoadedState = BadFileReference;
 
    mIsValidImage = false;
 }
 
 void ImageAsset::initializeAsset()
 {
-   mImagePath = expandAssetFilePath(mImageFileName);
+   if (mImageFileName == StringTable->insert("z.png"))
+   {
+      Con::printf("Loaded z");
+   }
 
+   ResourceManager::get().getChangedSignal().notify(this, &ImageAsset::_onResourceChanged);
+
+   mImagePath = expandAssetFilePath(mImageFileName);
    loadImage();
 }
 
 void ImageAsset::onAssetRefresh()
 {
    mImagePath = expandAssetFilePath(mImageFileName);
+
+   loadImage();
+}
+
+void ImageAsset::_onResourceChanged(const Torque::Path& path)
+{
+   if (path != Torque::Path(mImagePath))
+      return;
+
+   refreshAsset();
 
    loadImage();
 }
@@ -320,24 +333,34 @@ void ImageAsset::setImageFileName(const char* pScriptFile)
    mImageFileName = StringTable->insert(pScriptFile);
 }
 
-GFXTexHandle ImageAsset::getImage(GFXTextureProfile requestedProfile)
+const GBitmap& ImageAsset::getImage()
 {
-   /*if (mResourceMap.contains(requestedProfile))
+   return GBitmap(); //TODO fix this
+}
+
+GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
+{
+   if (mResourceMap.contains(requestedProfile))
    {
+      mLoadedState = Ok;
       return mResourceMap.find(requestedProfile)->value;
    }
    else
    {
       //If we don't have an existing map case to the requested format, we'll just create it and insert it in
-      GFXTexHandle newImage;
-      newImage.set(mImageFileName, &requestedProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
-      mResourceMap.insert(requestedProfile, newImage);
+      GFXTexHandle newTex = TEXMGR->createTexture(mImagePath, requestedProfile);
+      if (newTex)
+      {
+         mResourceMap.insert(requestedProfile, newTex);
+         mLoadedState = Ok;
+         return newTex;
+      }
+      else
+         mLoadedState = BadFileReference;
+   }
 
-      return newImage;
-   }*/
-
-   if (mImage.isValid())
-      return mImage;
+   //if (mTexture.isValid())
+   //   return mTexture;
 
    return nullptr;
 }
@@ -348,7 +371,17 @@ const char* ImageAsset::getImageInfo()
    {
       static const U32 bufSize = 2048;
       char* returnBuffer = Con::getReturnBuffer(bufSize);
-      dSprintf(returnBuffer, bufSize, "%s %d %d %d", GFXStringTextureFormat[mImage.getFormat()], mImage.getHeight(), mImage.getWidth(), mImage.getDepth());
+
+      GFXTexHandle newTex = TEXMGR->createTexture(mImagePath, &GFXStaticTextureSRGBProfile);
+      if (newTex)
+      {
+         dSprintf(returnBuffer, bufSize, "%s %d %d %d", GFXStringTextureFormat[newTex->getFormat()], newTex->getHeight(), newTex->getWidth(), newTex->getDepth());
+         newTex = nullptr;
+      }
+      else
+      {
+         dSprintf(returnBuffer, bufSize, "ImageAsset::getImageInfo() - Failed to get image info for %s", getAssetId());
+      }
 
       return returnBuffer;
    }
@@ -384,6 +417,11 @@ const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)
 
 ImageAsset::ImageTypes ImageAsset::getImageTypeFromName(const char* name)
 {
+   if (dStrIsEmpty(name))
+   {
+      return (ImageTypes)Albedo;
+   }
+
    S32 ret = -1;
    for (S32 i = 0; i < ImageTypeCount; i++)
    {
@@ -414,6 +452,15 @@ DefineEngineMethod(ImageAsset, getImageInfo, const char*, (), ,
    return object->getImageInfo();
 }
 
+#ifdef TORQUE_TOOLS
+DefineEngineStaticMethod(ImageAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided file path.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return ImageAsset::getAssetIdByFilename(StringTable->insert(filePath));
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -435,10 +482,15 @@ void GuiInspectorTypeImageAssetPtr::consoleInit()
 
 GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
 {
+   if (mInspector->getInspectObject() == nullptr)
+      return nullptr;
+
    // Create base filename edit controls
    GuiControl* retCtrl = Parent::constructEditControl();
    if (retCtrl == NULL)
       return retCtrl;
+
+   retCtrl->getRenderTooltipDelegate().bind(this, &GuiInspectorTypeImageAssetPtr::renderTooltip);
 
    // Change filespec
    char szBuffer[512];
@@ -457,7 +509,7 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    mImageEdButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-   mImageEdButton->setBitmap(bitmapName);
+   mImageEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mImageEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mImageEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
@@ -494,6 +546,66 @@ bool GuiInspectorTypeImageAssetPtr::updateRects()
    }
 
    return resized;
+}
+
+bool GuiInspectorTypeImageAssetPtr::renderTooltip(const Point2I& hoverPos, const Point2I& cursorPos, const char* tipText)
+{
+   if (!mAwake)
+      return false;
+
+   GuiCanvas* root = getRoot();
+   if (!root)
+      return false;
+
+   AssetPtr<ImageAsset> imgAsset;
+   U32 assetState = ImageAsset::getAssetById(getData(), &imgAsset);
+   if (imgAsset == NULL || assetState == ImageAsset::Failed)
+      return false;
+
+   StringTableEntry filename = imgAsset->getImagePath();
+   if (!filename || !filename[0])
+      return false;
+
+   GFXTexHandle texture(filename, &GFXStaticTextureSRGBProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__));
+   if (texture.isNull())
+      return false;
+
+   // Render image at a reasonable screen size while 
+   // keeping its aspect ratio...
+   Point2I screensize = getRoot()->getWindowSize();
+   Point2I offset = hoverPos;
+   Point2I tipBounds;
+
+   U32 texWidth = texture.getWidth();
+   U32 texHeight = texture.getHeight();
+   F32 aspect = (F32)texHeight / (F32)texWidth;
+
+   const F32 newWidth = 150.0f;
+   F32 newHeight = aspect * newWidth;
+
+   // Offset below cursor image
+   offset.y += 20; // TODO: Attempt to fix?: root->getCursorExtent().y;
+   tipBounds.x = newWidth;
+   tipBounds.y = newHeight;
+
+   // Make sure all of the tooltip will be rendered width the app window,
+   // 5 is given as a buffer against the edge
+   if (screensize.x < offset.x + tipBounds.x + 5)
+      offset.x = screensize.x - tipBounds.x - 5;
+   if (screensize.y < offset.y + tipBounds.y + 5)
+      offset.y = hoverPos.y - tipBounds.y - 5;
+
+   RectI oldClip = GFX->getClipRect();
+   RectI rect(offset, tipBounds);
+   GFX->setClipRect(rect);
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+   drawer->clearBitmapModulation();
+   GFX->getDrawUtil()->drawBitmapStretch(texture, rect);
+
+   GFX->setClipRect(oldClip);
+
+   return true;
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeImageAssetId);

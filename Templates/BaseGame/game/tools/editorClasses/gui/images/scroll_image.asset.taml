@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="scroll_image"
+    imageFile="@assetFile=scroll.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

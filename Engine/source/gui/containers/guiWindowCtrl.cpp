@@ -678,13 +678,14 @@ bool GuiWindowCtrl::onWake()
       return false;
 
    //get the texture for the close, minimize, and maximize buttons
-   mTextureObject = mProfile->mTextureObject;
    bool result = mProfile->constructBitmapArray() >= NumBitmaps;
    if( !result )
    {
       Con::errorf( "GuiWindowCtrl::onWake - failed to create bitmap array from profile bitmap." );
       return false;
    }
+
+   mTextureObject = mProfile->getBitmapResource();
 
    mBitmapBounds = mProfile->mBitmapArrayRects.address();
    S32 buttonHeight = mBitmapBounds[BmpStates * BmpClose].extent.y;

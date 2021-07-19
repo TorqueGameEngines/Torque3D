@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="btn_AddTrack_image"
+    imageFile="@assetFile=btn_AddTrack.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

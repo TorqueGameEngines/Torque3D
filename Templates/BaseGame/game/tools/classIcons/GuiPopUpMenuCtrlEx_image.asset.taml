@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiPopUpMenuCtrlEx_image"
+    imageFile="@assetFile=GuiPopUpMenuCtrlEx.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

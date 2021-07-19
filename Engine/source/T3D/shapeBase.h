@@ -373,8 +373,11 @@ struct ShapeBaseImageData: public GameBaseData {
    F32 scriptAnimTransitionTime;    ///< The amount of time to transition between the previous sequence and new sequence
                                     ///< when the script prefix has changed.
 
-   StringTableEntry  shapeName;     ///< Name of shape to render.
-   StringTableEntry  shapeNameFP;   ///< Name of shape to render in first person (optional).
+   DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes);  ///< Name of shape to render.
+   DECLARE_SHAPEASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
+
+   //DECLARE_SHAPEASSET(ShapeBaseImageData, ShapeFP);  ///< Name of shape to render in first person (optional).
+   //DECLARE_SHAPEASSET_SETGET(ShapeBaseImageData, ShapeFP);
 
    StringTableEntry  imageAnimPrefix;     ///< Passed along to the mounting shape to modify
                                           ///  animation sequences played in 3rd person. [optional]
@@ -407,7 +410,6 @@ struct ShapeBaseImageData: public GameBaseData {
 
    /// @name Shape Data
    /// @{
-   Resource<TSShape> shape[MaxShapes]; ///< Shape handle
    bool shapeIsValid[MaxShapes];       ///< Indicates that the shape has been loaded and is valid
 
    U32 mCRC[MaxShapes];                ///< Checksum of shape.
@@ -538,7 +540,8 @@ public:
    F32 shadowProjectionDistance;
    F32 shadowSphereAdjust;
 
-   DECLARE_SHAPEASSET(ShapeBaseData, Shape);
+   DECLARE_SHAPEASSET(ShapeBaseData, Shape, onShapeChanged);
+   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, Shape);
 
    StringTableEntry  cloakTexName;
 
@@ -552,8 +555,9 @@ public:
    /// @{
    DebrisData *      debris;
    S32               debrisID;
-   StringTableEntry  debrisShapeName;
-   Resource<TSShape> debrisShape;
+
+   DECLARE_SHAPEASSET(ShapeBaseData, DebrisShape, onDebrisChanged);
+   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, DebrisShape);
 
    ExplosionData*    explosion;
    S32               explosionID;
@@ -598,8 +602,6 @@ public:
 
    /// @name Data initialized on preload
    /// @{
-
-   Resource<TSShape> mShape;         ///< Shape handle
    U32 mCRC;
    bool computeCRC;
 
@@ -672,6 +674,9 @@ public:
    char* remap_buffer;
    Vector<TextureTagRemapping> txr_tag_remappings;
    bool silent_bbox_check;
+
+   void onShapeChanged() {}
+   void onDebrisChanged() {}
 public:
    ShapeBaseData(const ShapeBaseData&, bool = false);
 };

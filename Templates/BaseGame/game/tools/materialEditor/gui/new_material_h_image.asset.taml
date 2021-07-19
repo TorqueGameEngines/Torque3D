@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="new_material_h_image"
+    imageFile="@assetFile=new-material_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

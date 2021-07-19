@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Keyboard_Black_Tab_image"
+    imageFile="@assetFile=Keyboard_Black_Tab.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

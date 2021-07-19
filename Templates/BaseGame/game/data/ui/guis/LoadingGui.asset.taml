@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="LoadingGui"
+    scriptFile="@assetFile=loadingGui.gui"
+    GUIFile="@assetFile=loadingGui.gui"
+    VersionId="1" />

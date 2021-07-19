@@ -221,7 +221,7 @@ GuiControl* GuiInspectorTypeMaterialName::construct(const char* command)
 
 	//temporary static button name
 	char bitmapName[512] = "tools/materialEditor/gui/change-material-btn";
-	mBrowseButton->setBitmap( bitmapName );
+	mBrowseButton->setBitmap( StringTable->insert(bitmapName) );
 
    mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
    mBrowseButton->registerObject();
@@ -327,7 +327,7 @@ GuiControl* GuiInspectorTypeTerrainMaterialName::construct(const char* command)
 
 	//temporary static button name
 	char bitmapName[512] = "tools/gui/images/layers-btn";
-	mBrowseButton->setBitmap( bitmapName );
+	mBrowseButton->setBitmap(StringTable->insert(bitmapName) );
 
    mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
    mBrowseButton->registerObject();
@@ -805,7 +805,7 @@ GuiControl* GuiInspectorTypeShapeFilename::constructEditControl()
    mShapeEdButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-   mShapeEdButton->setBitmap(bitmapName);
+   mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
@@ -957,7 +957,7 @@ GuiControl* GuiInspectorTypeRectUV::constructEditControl()
 
 	//temporary static button name
 	char bitmapName[512] = "tools/gui/images/uv-editor-btn";
-	mBrowseButton->setBitmap( bitmapName );
+	mBrowseButton->setBitmap(StringTable->insert(bitmapName) );
 
    mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
    mBrowseButton->registerObject();
@@ -1544,7 +1544,7 @@ GuiControl* GuiInspectorTypeBitMask32Helper::constructEditControl()
    mButton->setField( "Command", szBuffer );
    mButton->setField( "buttonType", "ToggleButton" );
    mButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorButtonProfile" );
-   mButton->setBitmap( "tools/gui/images/arrowBtn" );
+   mButton->setBitmap(StringTable->insert("tools/gui/images/arrowBtn.png") );
    mButton->setStateOn( true );
    mButton->setExtent( 16, 16 );
    mButton->registerObject();

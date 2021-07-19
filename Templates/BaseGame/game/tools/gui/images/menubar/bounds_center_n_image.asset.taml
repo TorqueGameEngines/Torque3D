@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="bounds_center_n_image"
+    imageFile="@assetFile=bounds-center_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

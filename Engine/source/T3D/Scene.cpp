@@ -282,7 +282,7 @@ bool Scene::saveScene(StringTableEntry fileName)
       dSprintf(depSlotName, sizeof(depSlotName), "%s%d", "staticObjectAssetDependency", i);
 
       char depValue[255];
-      dSprintf(depValue, sizeof(depValue), "@Asset=%s", utilizedAssetsList[i]);
+      dSprintf(depValue, sizeof(depValue), "%s=%s", ASSET_ID_SIGNATURE, utilizedAssetsList[i]);
 
       levelAssetDef->setDataField(StringTable->insert(depSlotName), NULL, StringTable->insert(depValue));
 

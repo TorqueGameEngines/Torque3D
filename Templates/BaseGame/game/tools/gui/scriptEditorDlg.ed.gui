@@ -125,7 +125,7 @@
       };
       new GuiIconButtonCtrl() {
          buttonMargin = "4 4";
-         iconBitmap = "tools/gui/images/iconCancel.png";
+         bitmapAsset = "ToolsModule:iconCancel_image";
          iconLocation = "Left";
          sizeIconToButton = "0";
          makeIconSquare = "0";
@@ -152,7 +152,7 @@
       };
       new GuiIconButtonCtrl() {
          buttonMargin = "4 4";
-         iconBitmap = "tools/gui/images/iconAccept.png";
+         bitmapAsset = "ToolsModule:iconAccept_image";
          iconLocation = "Left";
          sizeIconToButton = "0";
          makeIconSquare = "0";

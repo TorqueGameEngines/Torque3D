@@ -133,7 +133,7 @@ bool TheoraTextureObject::onAdd()
    if( !Parent::onAdd() )
       return false;
 
-   if( mFilename.isEmpty() )
+   if( mFilename == StringTable->EmptyString())
    {
       Con::errorf( "TheoraTextureObject::onAdd - 'filename' must be set" );
       return false;
@@ -171,11 +171,11 @@ void TheoraTextureObject::onRemove()
 
 void TheoraTextureObject::play()
 {
-   if( mTheoraTexture.getFilename().isEmpty() || mTheoraTexture.getFilename() != mFilename )
+   if( mTheoraTexture.getFilename().isEmpty() || mTheoraTexture.getFilename() != String(mFilename) )
    {
       if( !mTheoraTexture.setFile( mFilename, mSFXDescription ) )
       {
-         Con::errorf( "TheoraTextureObject::play - Could not load video '%s'", mFilename.c_str() );
+         Con::errorf( "TheoraTextureObject::play - Could not load video '%s'", mFilename );
          return;
       }
    }

@@ -111,7 +111,7 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       BitmapMode mBitmapMode;
 
       /// File name for bitmap.
-      String mBitmapName;
+      StringTableEntry mBitmapName;
       
       /// alpha masking
       bool mMasked;
@@ -154,7 +154,7 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       GuiBitmapButtonCtrl();
 
       void setAutoFitExtents( bool state );
-      void setBitmap( const String& name );
+      void setBitmap( StringTableEntry name );
       void setBitmapHandles( GFXTexHandle normal, GFXTexHandle highlighted, GFXTexHandle depressed, GFXTexHandle inactive );
 
       //Parent methods

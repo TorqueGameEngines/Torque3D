@@ -40,7 +40,7 @@ function MaterialEditorGui::establishMaterials(%this)
    singleton Material(materialEd_previewMaterial)
    {
       mapTo = "matEd_mappedMat";
-      diffuseMap[0] = "tools/materialEditor/gui/matEd_mappedMat";
+      diffuseMapAsset[0] = "ToolsModule:matEd_mappedMat_image";
    };
 
    singleton CustomMaterial( materialEd_justAlphaMaterial )
@@ -448,7 +448,7 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    singleton Material(notDirtyMaterial)
    {
       mapTo = "matEd_mappedMat";
-      diffuseMap[0] = "tools/materialEditor/gui/matEd_mappedMat";
+      diffuseMapAsset[0] = "ToolsModule:matEd_mappedMat_image";
    };
    
    // Converts the texture files into absolute paths.

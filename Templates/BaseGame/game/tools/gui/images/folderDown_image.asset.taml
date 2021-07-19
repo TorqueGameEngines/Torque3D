@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="folderDown_image"
+    imageFile="@assetFile=folderDown.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

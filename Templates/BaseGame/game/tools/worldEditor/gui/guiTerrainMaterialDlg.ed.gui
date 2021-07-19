@@ -298,7 +298,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/materialEditor/gui/unknownImage";
+               bitmapAsset = "ToolsModule:unknownImage_image";
                color = "255 255 255 255";
                wrap = "0";
                position = "1 1";
@@ -486,7 +486,7 @@
             };
          };
          new GuiBitmapCtrl() {
-            bitmap = "tools/gui/images/separator-v";
+            bitmapAsset = "ToolsModule:separator_v_image";
             color = "255 255 255 255";
             wrap = "0";
             position = "6 116";
@@ -525,7 +525,7 @@
             canSaveDynamicFields = "0";
 
             new GuiBitmapCtrl() {
-               bitmap = "tools/materialEditor/gui/unknownImage";
+               bitmapAsset = "ToolsModule:unknownImage_image";
                color = "255 255 255 255";
                wrap = "0";
                position = "1 1";
@@ -864,7 +864,7 @@
             };
          };
          new GuiBitmapCtrl() {
-            bitmap = "tools/gui/images/separator-v";
+            bitmapAsset = "ToolsModule:separator_v_image";
             color = "255 255 255 255";
             wrap = "0";
             position = "6 222";
@@ -903,7 +903,7 @@
             canSaveDynamicFields = "0";
 
             new GuiBitmapCtrl() {
-               bitmap = "tools/materialEditor/gui/unknownImage";
+               bitmapAsset = "ToolsModule:unknownImage_image";
                color = "255 255 255 255";
                wrap = "0";
                position = "1 1";
@@ -1080,7 +1080,7 @@
             };
          };
          new GuiBitmapCtrl() {
-            bitmap = "tools/gui/images/separator-v";
+            bitmapAsset = "ToolsModule:separator_v_image";
             color = "255 255 255 255";
             wrap = "0";
             position = "6 299";
@@ -1119,7 +1119,7 @@
             canSaveDynamicFields = "0";
 
             new GuiBitmapCtrl() {
-               bitmap = "tools/materialEditor/gui/unknownImage";
+               bitmapAsset = "ToolsModule:unknownImage_image";
                color = "255 255 255 255";
                wrap = "0";
                position = "1 1";
@@ -1429,7 +1429,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapCtrl() {
-                  bitmap = "tools/materialEditor/gui/unknownImage";
+                  bitmapAsset = "ToolsModule:unknownImage_image";
                   color = "255 255 255 255";
                   wrap = "0";
                   position = "1 1";
@@ -1565,7 +1565,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapCtrl() {
-                  bitmap = "tools/gui/images/separator-v";
+                  bitmapAsset = "ToolsModule:separator_v_image";
                   color = "255 255 255 255";
                   wrap = "0";
                   position = "4 51";
@@ -1585,7 +1585,7 @@
             };
          };
          new GuiBitmapCtrl() {
-            bitmap = "tools/gui/images/separator-v";
+            bitmapAsset = "ToolsModule:separator_v_image";
             color = "255 255 255 255";
             wrap = "0";
             position = "6 381";
@@ -1624,7 +1624,7 @@
             canSaveDynamicFields = "0";
 
             new GuiBitmapCtrl() {
-               bitmap = "tools/materialEditor/gui/unknownImage";
+               bitmapAsset = "ToolsModule:unknownImage_image";
                color = "255 255 255 255";
                wrap = "0";
                position = "1 1";
@@ -2039,7 +2039,7 @@
          canSaveDynamicFields = "0";
       };
       new GuiBitmapCtrl() {
-         bitmap = "tools/gui/images/inactive-overlay";
+         bitmapAsset = "ToolsModule:inactive_overlay_image";
          color = "255 255 255 255";
          wrap = "0";
          position = "199 23";

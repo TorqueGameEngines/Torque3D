@@ -141,7 +141,7 @@ static void SplitSequencePathAndName( String& srcPath, String& srcName )
 IMPLEMENT_CONOBJECT(TSShapeConstructor);
 
 TSShapeConstructor::TSShapeConstructor()
- : mShapePath(""), mLoadingShape(false)
+ : mShapePath(StringTable->EmptyString()), mLoadingShape(false)
 {
    mOptions.upAxis = UPAXISTYPE_COUNT;
    mOptions.unit = -1.0f;
@@ -186,7 +186,7 @@ bool TSShapeConstructor::addSequenceFromField( void *obj, const char *index, con
    TSShapeConstructor *pObj = static_cast<TSShapeConstructor*>( obj );
 
    if ( data && data[0] )
-      pObj->mSequences.push_back( FileName(data) );
+      pObj->mSequences.push_back( StringTable->insert(data) );
 
    return false;
 }
@@ -408,11 +408,12 @@ bool TSShapeConstructor::onAdd()
       return false;
 
    // Prevent multiple objects pointing at the same shape file
-   TSShapeConstructor* tss = findShapeConstructor( mShapePath );
+   FileName path = mShapePath;
+   TSShapeConstructor* tss = findShapeConstructor( path );
    if ( tss )
    {
       Con::errorf("TSShapeConstructor::onAdd failed: %s is already referenced by "
-         "another TSShapeConstructor object (%s - %d)", mShapePath.c_str(),
+         "another TSShapeConstructor object (%s - %d)", mShapePath,
          tss->getName(), tss->getId());
       return false;
    }
@@ -481,7 +482,7 @@ void TSShapeConstructor::_onLoad(TSShape* shape)
       _onUnload();
 
    #ifdef DEBUG_SPEW
-   Con::printf( "[TSShapeConstructor] attaching to shape '%s'", mShapePath.c_str() );
+   Con::printf( "[TSShapeConstructor] attaching to shape '%s'", mShapePath );
    #endif
 
    mShape = shape;
@@ -491,7 +492,7 @@ void TSShapeConstructor::_onLoad(TSShape* shape)
    // Add sequences defined using field syntax
    for ( S32 i = 0; i < mSequences.size(); i++ )
    {
-      if ( mSequences[i].isEmpty() )
+      if ( mSequences[i] == StringTable->EmptyString())
          continue;
 
       // Split the sequence path from the target sequence name
@@ -512,7 +513,7 @@ void TSShapeConstructor::_onLoad(TSShape* shape)
 void TSShapeConstructor::_onUnload()
 {
    #ifdef DEBUG_SPEW
-   Con::printf( "[TSShapeConstructor] detaching from '%s'", mShapePath.c_str() );
+   Con::printf( "[TSShapeConstructor] detaching from '%s'", mShapePath );
    #endif
 
    onUnload_callback();

@@ -184,7 +184,7 @@ singleton GuiControlProfile( VEditorPropertyRolloutProfile : GuiRolloutProfile )
 {
     border = 0;
     hasBitmapArray = true;
-    bitmap = "./Images/PropertyRollout";
+    bitmapAsset = "ToolsModule:PropertyRollout_image";
 
     fontType      = "Arial";
     fontSize      = 12;

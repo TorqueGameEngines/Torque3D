@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="dropDown_image"
+    imageFile="@assetFile=dropDown.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CUR_3dleftright_image"
+    imageFile="@assetFile=CUR_3dleftright.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

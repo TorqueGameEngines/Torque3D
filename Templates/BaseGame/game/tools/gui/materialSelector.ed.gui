@@ -468,7 +468,7 @@ new GuiControl(MaterialSelectorOverlay, EditorGuiGroup) {
             profile = "ToolsGuiDefaultProfile";
             position = "1 18";
             extent = "148 148";
-            bitmap = "";
+            bitmapAsset = "";
          };
       };
       new GuiTextCtrl(){
@@ -486,7 +486,7 @@ new GuiControl(MaterialSelectorOverlay, EditorGuiGroup) {
          profile = "ToolsGuiDefaultProfile";
          position = "612 39";
          extent = "150 150";
-         bitmap = "tools/worldEditor/images/terrainpainter/terrain-painter-border-large";
+         bitmapAsset = "ToolsModule:terrain_painter_border_large_image";
          visible = false;
       };
       new GuiTextCtrl(){

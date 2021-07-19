@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="panel_light_image"
+    imageFile="@assetFile=panel_light.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconIcon_image"
+    imageFile="@assetFile=iconIcon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

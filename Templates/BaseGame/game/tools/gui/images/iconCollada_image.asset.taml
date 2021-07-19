@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconCollada_image"
+    imageFile="@assetFile=iconCollada.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

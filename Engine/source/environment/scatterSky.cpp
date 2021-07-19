@@ -167,6 +167,8 @@ ScatterSky::ScatterSky()
    mUseNightCubemap = false;
    mSunSize = 1.0f;
 
+   INIT_MATERIALASSET(MoonMat);
+
    mMoonMatInst = NULL;
 
    mNetFlags.set( Ghostable | ScopeAlways );
@@ -407,8 +409,7 @@ void ScatterSky::initPersistFields()
       addField( "moonEnabled", TypeBool, Offset( mMoonEnabled, ScatterSky ),
          "Enable or disable rendering of the moon sprite during night." );
 
-      addField( "moonMat", TypeMaterialName, Offset( mMoonMatName, ScatterSky ),
-         "Material for the moon sprite." );
+      INITPERSISTFIELD_MATERIALASSET(MoonMat, ScatterSky, "Material for the moon sprite.");
 
       addField( "moonScale", TypeF32, Offset( mMoonScale, ScatterSky ),
          "Controls size the moon sprite renders, specified as a fractional amount of the screen height." );
@@ -500,11 +501,13 @@ U32 ScatterSky::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       }
 
       stream->writeFlag( mMoonEnabled );
-      stream->write( mMoonMatName );
+
+      PACK_MATERIALASSET(con, MoonMat);
+      
       stream->write( mMoonScale );
       stream->write( mMoonTint );
       stream->writeFlag( mUseNightCubemap );
-      stream->write( mNightCubemapName );
+      stream->writeString( mNightCubemapName );
 
       stream->write( mMoonAzimuth );
       stream->write( mMoonElevation );
@@ -612,11 +615,13 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
          mFlareData = NULL;
 
       mMoonEnabled = stream->readFlag();
-      stream->read( &mMoonMatName );
+
+      UNPACK_MATERIALASSET(con, MoonMat);
+
       stream->read( &mMoonScale );
       stream->read( &mMoonTint );
       mUseNightCubemap = stream->readFlag();
-      stream->read( &mNightCubemapName );
+      mNightCubemapName = stream->readSTString();
 
       stream->read( &mMoonAzimuth );
       stream->read( &mMoonElevation );
@@ -832,8 +837,10 @@ void ScatterSky::_initMoon()
    if ( mMoonMatInst )
       SAFE_DELETE( mMoonMatInst );
 
-   if ( mMoonMatName.isNotEmpty() )
-      mMoonMatInst = MATMGR->createMatInstance( mMoonMatName, MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPCT>() );
+   if (mMoonMatAsset.notNull())
+   {
+      mMoonMatInst = MATMGR->createMatInstance(mMoonMatAsset->getMaterialDefinitionName(), MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPCT>());
+   }
 }
 
 void ScatterSky::_initCurves()

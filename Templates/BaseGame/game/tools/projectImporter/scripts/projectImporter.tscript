@@ -1,0 +1,976 @@
+$ProjectImporter::rootDir = "tools";
+
+function ProjectImporter::beginProjectImport()
+{
+   Canvas.pushDialog(ProjectImportCtrl);
+}
+
+function ProjectImportWindow::onWake(%this)
+{
+   %this.importStepNumber = 0;
+   %this-->stepsList.clear();
+   %this-->stepsList.addRow(0, "Welcome");  
+   %this-->stepsList.addRow(1, "Previous Project Ver.");
+   %this-->stepsList.addRow(2, "Locate Previous Project Content");
+   %this-->stepsList.addRow(3, "Set New Module Name");
+   %this-->stepsList.addRow(4, "Copy Old Files");
+   %this-->stepsList.addRow(5, "Update Script Extensions");
+   %this-->stepsList.addRow(6, "Import");
+   %this-->stepsList.addRow(7, "Done");
+   
+   %this.stepCount = %this-->stepsList.rowCount()-1;
+   
+   %this.showPage(0);
+}
+
+function ProjectImportWindow::previousStep(%this)
+{
+   if(%this.importStepNumber == 0)
+      return;
+      
+   %this.importStepNumber--;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
+function ProjectImportWindow::nextStep(%this)
+{
+   if(%this.importStepNumber == %this.stepCount)
+   {
+      Canvas.popDialog(ProjectImportCtrl);
+      return;  
+   }
+   
+   %this.importStepNumber++;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
+function ProjectImportWindow::setStep(%this, %stepNum)
+{
+   if(%stepNum >= %this.stepCount)
+   {
+      Canvas.popDialog(ProjectImportCtrl);
+      return;  
+   }
+   
+   if(%stepNum < 0)
+      return;  
+   
+   %this.importStepNumber = %stepNum;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
+function ProjectImportWindow::selectOGFolder(%this)
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Export Folder";
+      Filters = %filter;
+      DefaultFile = "data/";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   //if(filePath( %currentFile ) !$= "")
+      %dlg.DefaultPath = "data/";
+
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      %this-->targetImportingPath.setText("Folder: " @ %path);
+      $ProjectImporter::sourceContentFolder = %path;
+   }
+
+   %dlg.delete();
+}
+
+function ProjectImportWindow::showPage(%this, %pageIndex)
+{
+   if(%pageIndex < 0 || %pageIndex > %this.stepCount)
+      return;
+      
+   %this.importStepNumber = %pageIndex;
+   %this-->stepsList.clearSelection();
+   %this-->stepsList.setSelectedById(%this.importStepNumber);
+   
+   for(%i=0; %i < %this-->stepsList.rowCount(); %i++)
+   {
+      (ProjectImportWizardPage @ %i).setHidden(true);
+   }
+   
+   (ProjectImportWizardPage @ %this.importStepNumber).setHidden(false);
+   (ProjectImportWizardPage @ %this.importStepNumber).openPage();
+}
+
+function ProjectImportWindow::getCurrentPage(%this)
+{
+   return (ProjectImportWizardPage @ %this.importStepNumber);
+}
+
+function ProjectImportWizardPage0::openPage(%this)
+{
+   ProjectImportWindow-->backButton.setHidden(true);
+}
+
+function ProjectImportWizardPage0::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage1::openPage(%this)
+{
+   ProjectImportWindow-->backButton.setHidden(false);
+   
+   %this-->previousContentVersionPopup.clear();
+   //this-->previousContentVersionPopup.add("Torque Game Engine");
+   //%this-->previousContentVersionPopup.add("Torque Shader Engine");
+   %this-->previousContentVersionPopup.add("Torque 3D Pre-4.0");
+}
+
+function ProjectImportWizardPage1::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage2::openPage(%this)
+{
+   %version = ProjectImportWizardPage1-->previousContentVersionPopup.getSelected();
+   if(ProjectImportWizardPage1-->previousContentVersionPopup.getText() $= "")
+   {
+      ProjectImportWindow.previousStep();
+      toolsMessageBoxOK("Version Required", "You must select a project version to continue.");
+      return;
+   }
+   
+   ProjectImportWizardPage2-->internalFolderBtn.setStateOn(false);
+   ProjectImportWizardPage2-->externalFolderBtn.setStateOn(false);
+   ProjectImportWizardPage2-->coreAndToolsBtn.setStateOn(false);
+   $ProjectImporter::sourceContentFolder = "";
+   %this-->targetImportingPath.setText("");
+   
+   Canvas.repaint(); //force it to refresh the page so we're up to date.
+   
+   switch$(%version)
+   {
+      case 0:
+         $ProjectImporter::versionMode = "T3Dpre4Project";
+      default:
+         $ProjectImporter::versionMode = "T3Dpre4Project";
+   }
+   
+   if(isObject($ProjectImporter::importTool))
+      $ProjectImporter::importTool.delete();
+      
+   $ProjectImporter::importTool = new ScriptObject($ProjectImporter::versionMode @ "Importer");
+}
+
+function ProjectImportWizardPage2::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage3::openPage(%this)
+{
+   if(ProjectImportWizardPage2-->internalFolderBtn.isStateOn())
+   {
+      $ProjectImporter::importMode = "InternalFolder";
+   }
+   else if(ProjectImportWizardPage2-->externalFolderBtn.isStateOn())
+   {
+      $ProjectImporter::importMode = "ExternalFolder";
+   }
+   else if(ProjectImportWizardPage2-->coreAndToolsBtn.isStateOn())
+   {
+      $ProjectImporter::importMode = "CoreAndTools";
+   }
+   else
+   {
+      ProjectImportWindow.previousStep();
+      toolsMessageBoxOK("Folder Type Required", "You must indicate if the folder is an internal or external folder.");
+      return;
+   }
+   
+   if($ProjectImporter::sourceContentFolder $= "" && $ProjectImporter::importMode !$= "CoreAndTools")
+   {
+      ProjectImportWindow.previousStep();
+      toolsMessageBoxOK("Source Folder Required", "You must select the original folder to import files from.");
+      return;
+   }
+      
+   if($ProjectImporter::importMode $= "InternalFolder")
+   {
+      %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath($ProjectImporter::sourceContentFolder));
+      if(isObject(%moduleDef))
+      {
+         //already a valid module in place so just skip this step  
+         $ProjectImporter::useExistingModule = true;
+         $ProjectImporter::moduleName = %moduleDef.moduleId;
+         $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+         ProjectImportWindow.setStep(4);
+      }
+   }
+   else if($ProjectImporter::importMode $= "ExternalFolder")
+   {
+      %slashCount = getTokenCount($ProjectImporter::sourceContentFolder, "/");
+      %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-1);
+      if(%topFolder $= "")
+         %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-2);
+         
+      //clean up invalid characters and stuff
+      %topFolder = strReplace(%topFolder, " ", "");
+      %topFolder = strReplace(%topFolder, "!", "");
+      %topFolder = strReplace(%topFolder, "-", "");
+      %topFolder = strReplace(%topFolder, ".", "");
+     
+      $ProjectImporter::useExistingModule = false;
+      $ProjectImporter::moduleName = %topFolder; //preseed the module name
+      $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+      
+      ProjectImportWizardPage3-->newModuleName.setText($ProjectImporter::moduleName);
+   }
+   else if($ProjectImporter::importMode $= "CoreAndTools")
+   {
+      ProjectImportWindow.setStep(5);
+   }
+}
+
+function ProjectImportWizardPage3::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage4::openPage(%this)
+{
+   ProjectImportWindow-->backButton.setHidden(true);
+   ProjectImportWindow-->nextButton.setActive(false);
+      
+   $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
+      
+   if(!$ProjectImporter::useExistingModule)
+      $ProjectImporter::importTool.setupModule();
+      
+   //Do some sanity checking here to sidestep the copy if we're already in-place
+   %sourcePath = $ProjectImporter::sourceContentFolder;
+   %targetPath = makeFullPath($ProjectImporter::modulePath);
+   
+   //If the source path starts with the module target path at all, we're already that folder, or a subfolder in it, so skip filecopy
+   if(!startsWith(%sourcePath, %targetPath))
+      $ProjectImporter::importTool.copyFiles();
+   else
+      ProjectImportWindow.nextStep();
+}
+
+function ProjectImportWizardPage4::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage5::openPage(%this)
+{
+   ProjectImportWindow-->nextButton.setActive(false);
+   Canvas.repaint();
+   
+   $ProjectImporter::importTool.processImportedFiles();
+}
+
+function ProjectImportWizardPage5::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage6::openPage(%this)
+{
+   ProjectImportWindow-->nextButton.setActive(false);
+   Canvas.repaint();
+   
+   if($ProjectImporter::importMode $= "CoreAndTools")
+   {
+      $ProjectImporter::modulePath = "Core";
+      $ProjectImporter::importTool.processScriptExtensions();
+      
+      $ProjectImporter::modulePath = "Tools";
+      $ProjectImporter::importTool.processScriptExtensions();
+   }
+   else
+   {
+      $ProjectImporter::importTool.processScriptExtensions();
+   }
+}
+
+function ProjectImportWizardPage6::processPage(%this)
+{
+}
+
+function ProjectImportWizardPage7::openPage(%this)
+{
+}
+
+function beginProjectImport()
+{
+   echo("===========================================");
+   echo("Beginning Project Import");
+   echo("===========================================");
+   
+   $ProjectImporter::assetQuery = new AssetQuery();
+   $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::persistMgr = new PersistenceManager();
+   
+   //beginMaterialImport();
+   
+   //beginTerrainMaterialImport();
+   
+   //beginShapeImport();
+   
+   beginImageImport();
+   
+   beginDatablockImport();
+   
+   beginGUIImport();
+   
+   beginTerrainImport();
+   
+   //postFX imports'll need to look up render target names and ensure assets for those exist
+   //otherwise they need to be generated
+   beginPostFXImport();
+   
+   beginMiscObjectImport();
+   
+   $ProjectImporter::assetQuery.delete();
+   $ProjectImporter::importer.delete();
+   $ProjectImporter::persistMgr.delete();
+   
+   echo("===========================================");
+   echo("Finished Project Import");
+   echo("===========================================");
+   
+   AssetBrowser.refresh(); //update the AB just in case
+}
+
+function testFilenameExtensions(%filename)
+{
+   %ext = fileExt(%filename);  
+   if(%ext !$= "")
+      return %filename;
+      
+   if(isFile(%filename @ ".png"))
+      return %filename @ ".png";
+   else if(isFile(%filename @ ".jpg"))
+      return %filename @ ".jpg";
+   else if(isFile(%filename @ ".jpeg"))
+      return %filename @ ".jpeg";
+   else if(isFile(%filename @ ".dds"))
+      return %filename @ ".dds";
+   else if(isFile(%filename @ ".bmp"))
+      return %filename @ ".bmp";
+   else if(isFile(%filename @ ".cached.dts"))
+      return %filename @ ".cached.dts";
+   else if(isFile(%filename @ ".dts"))
+      return %filename @ ".dts";
+   else if(isFile(%filename @ ".dae"))
+      return %filename @ ".dae";
+   else if(isFile(%filename @ ".dds"))
+      return %filename @ ".dds";
+      
+   return "";
+}
+
+function processLegacyField(%line, %originalFieldName, %newFieldName)
+{
+   if(!strIsMatchExpr("*"@%originalFieldName@"=*\"*\";", %line) && 
+      !strIsMatchExpr("*"@%originalFieldName@"[*=*\"*\";", %line) &&
+      !strIsMatchExpr("*"@%originalFieldName@" *=*\"*\";", %line))
+      return %line;
+      
+   %outLine = strreplace(%line, %originalFieldName, %newFieldName);
+   
+   //get the value
+   %value = "";
+   %pos = strpos(%outLine, "= \"");
+   if(%pos != -1)
+   {
+     %endPos = strpos(%outLine, "\";", %pos); 
+     
+     %value = getSubStr(%outLine, %pos+3, %endPos-%pos-3);
+   }
+   else
+   {
+      %pos = strpos(%outLine, "=\"");
+      if(%pos != -1)
+      {
+        %endPos = strpos(%outLine, "\";", %pos); 
+        
+        %value = getSubStr(%outLine, %pos+2, %endPos-%pos-2);
+      }
+   }
+   
+   if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
+   {
+      echo("Legacy Project Importer - processing legacy field line: " @ %line);
+      
+      if(startsWith(%value, "$") || startsWith(%value, "#"))
+      {
+         //These are going to be texture/render targets, and we can leave them alone
+         return %line;
+      }
+      //find any assets with that filename
+      else if(startsWith(%value, "./"))
+      {
+         %targetFilename = strReplace(%value, "./", $ProjectImporter::currentFilePath @ "/");
+      }
+      else if(startsWith(%value, "../"))
+      {
+         %slashPos = strposr($ProjectImporter::currentFilePath, "/");
+         if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
+         {
+            %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
+         }
+         
+         %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
+         %targetFilename = strReplace(%value, "../", %parentPath @ "/");
+      }
+      else if(startsWith(%value, "~"))
+      {
+         %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/");
+         if(!isFile(%targetFilename))
+         {
+            %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/main/");
+         }
+      }
+      else if(!startsWith(%value, $ProjectImporter::modulePath @ "/"))
+      {
+         %targetFilename = $ProjectImporter::modulePath @ "/" @ %value;
+      }
+      else
+      {
+         %targetFilename = %value;
+      }
+      
+      %targetFilename = strReplace(%targetFilename, "//", "/");
+      %targetFilename = testFilenameExtensions(%targetFilename);
+      
+      if(!isFile(%targetFilename)) //if our presumed file target is bad, just bail out
+      {
+         error("Legacy Project Importer - file described in line could not be found/is not valid");
+         return %line;
+      }
+      
+      $ProjectImporter::assetQuery.clear();
+      %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+      if(%foundAssets != 0)
+      {
+         %assetId = $ProjectImporter::assetQuery.getAsset(0);
+         echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+      }
+     
+      if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
+      {
+         %outLine = strReplace(%outLine, %value, %assetId);
+      }
+   }
+   
+   if(%outLine !$= %line)
+   {
+      echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      return %outLine;  
+   }
+   else
+   {
+      return %line;  
+   }
+}
+
+//==============================================================================
+//Shape Importing
+//==============================================================================
+function beginShapeImport()
+{
+   echo("===========================================");
+   echo("Importing 3D Shape files");
+   echo("===========================================");
+   //First, we need to go through and process all loose shape files. This will
+   //get us shape assets, material assets image, assets and animation assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      if(endsWith(%file, "cached.dts"))
+      {
+         %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+         continue;
+      }
+      
+      %filename = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      //Specific exclusions
+      if(endsWith(%filename, "cached.dts"))
+      {
+         %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+         continue;
+      }
+         
+      if(isShapeFormat(%fileExt))
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing Shape Asset file: " @ %file);
+            Canvas.repaint();
+            
+            //No asset found associated to this fileas far as we can determine, so time to import it
+            
+            warn("Importing 3D Shape file: " @ %file);
+            %assetId = $ProjectImporter::importer.autoImportFile(%file);  
+            
+            if(%assetId !$= "")
+            {
+               warn("Finished importing 3D Shape file, resulting in asset with an id of: " @ %assetId);
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   echo("===========================================");
+   echo("Finished Importing 3D Shape files");
+   echo("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Image Importing
+//==============================================================================
+function beginImageImport()
+{
+   echo("===========================================");
+   echo("Importing Image files");
+   echo("===========================================");
+   //First, we need to go through and process all loose image files. This will
+   //get us image assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %filename = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      if(isImageFormat(%fileExt))
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing Image Asset file: " @ %file);
+            Canvas.repaint();
+      
+            //No asset found associated to this fileas far as we can determine, so time to import it
+            
+            warn("Importing Image file: " @ %file);
+            %assetId = $ProjectImporter::importer.autoImportFile(%file);  
+            
+            if(%assetId !$= "")
+            {
+               warn("Finished importing Image file, resulting in asset with an id of: " @ %assetId);
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   echo("===========================================");
+   echo("Finished Importing Image files");
+   echo("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Terrain Importing
+//==============================================================================
+function beginTerrainImport()
+{
+   echo("===========================================");
+   echo("Importing Terrain files");
+   echo("===========================================");
+
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(%fileExt $= ".ter")
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing Terrain Asset file: " @ %file);
+            Canvas.repaint();
+            
+            warn("Importing Terrain file: " @ %file);
+            
+            %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+            %moduleName = %moduleDef.ModuleID;
+            %modulePath = %moduleDef.ModulePath;
+               
+            //test import config here for forcing type suffixes
+            %assetName = fileBase(%file);
+            
+            %assetPath = %filePath @ "/";
+            
+            %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+            
+            %asset = new TerrainAsset()
+            {
+               AssetName = %assetName;
+               versionId = 1;
+               terrainFile = %fileName;
+            };
+            
+            if(TamlWrite(%asset, %tamlpath))
+            {
+               AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+               
+               warn("Finished importing Terrain file, resulting in asset with an id of: " @ %moduleName @ ":" @ %assetName);
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   echo("===========================================");
+   echo("Finished Importing Terrain files");
+   echo("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Sound Importing
+//==============================================================================
+
+//==============================================================================
+
+//==============================================================================
+//Gui Importing
+//==============================================================================
+function beginGUIImport()
+{
+   echo("===========================================");
+   echo("Importing GUIs");
+   echo("===========================================");
+   
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(%fileExt $= ".gui")
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing GUI Asset file: " @ %file);
+            Canvas.repaint();
+            
+            %fileObj = new FileObject();
+            if ( %fileObj.openForRead( %file ) ) 
+            {
+               while ( !%fileObj.isEOF() ) 
+               {
+                  %line = %fileObj.readLine();
+                  
+                  if(strIsMatchExpr("*new*(*)*", %line))
+                  {
+                     %start = strpos(%line, "new ");
+                     %end = strpos(%line, "(", %start);
+
+                     if(%start != -1 && %end != -1)
+                     {
+                        %className = getSubStr(%line, %start + 4, %end-%start-4);
+                     }
+                     
+                     %nameEnd = strpos(%line, ")", %end);
+                     
+                     %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+                     
+                     if(%objectName !$= "")
+                     {
+                        if(strpos(%objectName, ":") != -1)
+                        {
+                           %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
+                        }
+                     }
+                     
+                     processGUIntoAsset(%objectName, %file);
+                     break;
+                  }
+               }
+            }
+            
+            %fileObj.close();
+            %fileObj.delete();
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+
+   echo("===========================================");
+   echo("Finished Importing GUIs");
+   echo("===========================================");
+}
+
+function processGUIntoAsset(%guiName, %file)
+{
+   warn("Processing GUI into asset: " @ %guiName @ ", file: " @ %file);
+   
+   %filePath = filePath(%file);
+   %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %moduleName = %moduleDef.ModuleId;
+   %modulePath = %moduleDef.ModulePath;
+      
+   %assetName = %guiName;
+   
+   %assetPath = %filePath @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   
+   %scriptFile = "";
+   if(isFile(%filePath @ "/" @ %fileName @ ".cs"))
+   {
+      %scriptFile = %fileName @ ".cs";
+   }
+   
+   %asset = new GUIAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      scriptFile = %scriptFile;
+      guiFile = fileName(%file);
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+	
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	
+	return %tamlpath;    
+}
+//==============================================================================
+
+//==============================================================================
+//Misc Object Type Converion
+//==============================================================================
+
+//==============================================================================
+
+//==============================================================================
+//PostFX conversion
+//==============================================================================
+function beginPostFXImport()
+{
+   echo("===========================================");
+   echo("Importing PostFXs");
+   echo("===========================================");
+   
+   %count = PostFXManager.Count();
+   for(%i=0; %i < %count; %i++)
+   {
+      %postEffect = PostFXManager.getKey(%i);  
+      
+      if(isObject(%postEffect))
+      {     
+         echo("Processing import of PostFX: " @ %postEffect.getName());
+         
+         //$ProjectImporter::persistMgr.setDirty(%gui);
+      }
+   }
+   
+   //$ProjectImporter::persistMgr.saveDirty();
+
+   echo("===========================================");
+   echo("Finished Importing PostFXs");
+   echo("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Level Importing
+//==============================================================================
+function beginLevelImport()
+{
+   echo("===========================================");
+   echo("Importing Level files");
+   echo("===========================================");
+
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      %fileBase = fileBase(%file);
+      
+      if(%fileExt $= ".mis")
+      {
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
+         if(%assetsFound == 0)
+         {
+            ProjectImportWizardPage5-->processingText.setText("Processing Level Asset file: " @ %file);
+            Canvas.repaint();
+            
+            warn("Importing Level file: " @ %file);
+            
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
+
+            %assetName = %fileBase;
+            
+            if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+            {
+               warn("Legacy Project Importer - trying to process a level into an asset that already exists");
+               return false;  
+            }
+            
+            %assetPath = %filePath @ "/";
+            %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+            
+            %asset = new LevelAsset()
+            {
+               AssetName = %assetName;
+               versionId = 1;
+               levelFile = %fileName;
+               levelName = %assetName;
+            };
+            
+            if(isFile(%filePath @ "/" @ %assetName @ ".decal"))
+            {
+               %asset.decalsFile = %assetName @ ".decal";
+            }
+            if(isFile(%filePath @ "/" @ %assetName @ ".forest"))
+            {
+               %asset.forestFile = %assetName @ ".forest";
+            }
+            if(isFile(%filePath @ "/" @ %assetName @ ".nav"))
+            {
+               %asset.decalsFile = %assetName @ ".nav";
+            }
+            if(isFile(%filePath @ "/" @ %assetName @ ".postfx.preset"))
+            {
+               %asset.postFXPresetFile = %assetName @ ".postfx.preset";
+            }
+            
+            if(isFile(%filePath @ "/" @ %assetName @ ".png"))
+            {
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %assetName @ ".png");
+               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+            }
+            else if(isFile(%filePath @ "/" @ %assetName @ ".dds"))
+            {
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %assetName @ ".dds");
+               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+            }
+            
+            TamlWrite(%asset, %tamlpath);
+            
+            %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+            %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+            
+            %sdfg = true;
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   echo("===========================================");
+   echo("Finished Importing Level files");
+   echo("===========================================");
+}
+//==============================================================================
+
+function deleteAssetDefinitions()
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Folder";
+      Filters = %filter;
+      DefaultFile = "data/";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      ProjectImporter::deleteAssetDefinitions(%path);
+   }
+
+   %dlg.delete();
+}
+
+function ProjectImporter::deleteAssetDefinitions(%targetFolder)
+{
+   if(%targetFolder $= "")
+   {
+      toolsMessageBoxOK("Must select valid folder", "You must select a valid project folder.", "");
+      return;
+   }
+      
+   $deleteAssetDefsTargetFolder = %targetFolder;
+   toolsMessageBoxOKCancel("Delete Asset Definitions", "This will delete all asset definitions in the folder " @ %targetFolder @ ". Do you wish to continue?", "doDeleteAssetDefinitions();", "");
+}
+
+function doDeleteAssetDefinitions()
+{
+   echo("===========================================");
+   echo("Deleting Asset Definitions");
+   echo("===========================================");
+   
+   %currentAddress = $deleteAssetDefsTargetFolder;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.asset.taml", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(endsWith(%file, ".asset.taml"))
+      {
+         if(fileDelete(%file))
+         {
+            echo("File: " @ %file @ " deleted successfully.");  
+         }
+         else
+         {
+            error("File: " @ %file @ " failed to delete.");  
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.asset.taml" );
+   }
+
+   echo("===========================================");
+   echo("Finished Deleting Asset Definitions");
+   echo("===========================================");
+}

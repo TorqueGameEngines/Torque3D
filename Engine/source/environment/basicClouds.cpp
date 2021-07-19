@@ -173,8 +173,7 @@ void BasicClouds::initPersistFields()
          addField( "layerEnabled", TypeBool, Offset( mLayerEnabled, BasicClouds ), TEX_COUNT,
             "Enable or disable rendering of this layer." );
 
-         addField( "texture", TypeImageFilename, Offset( mTexName, BasicClouds ), TEX_COUNT,
-            "Texture for this layer." );
+         INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, TEX_COUNT, BasicClouds, "Texture for this layer.");
 
          addField( "texScale", TypeF32, Offset( mTexScale, BasicClouds ), TEX_COUNT,
             "Texture repeat for this layer." );
@@ -216,7 +215,7 @@ U32 BasicClouds::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
    {
       stream->writeFlag( mLayerEnabled[i] );
 
-      stream->write( mTexName[i] );
+      PACK_IMAGEASSET_ARRAY(conn, Texture, i);
 
       stream->write( mTexScale[i] );
       mathWrite( *stream, mTexDirection[i] );
@@ -237,7 +236,7 @@ void BasicClouds::unpackUpdate( NetConnection *conn, BitStream *stream )
    {
       mLayerEnabled[i] = stream->readFlag();
 
-      stream->read( &mTexName[i] );
+      UNPACK_IMAGEASSET_ARRAY(conn, Texture, i);
       
       stream->read( &mTexScale[i] );      
       mathRead( *stream, &mTexDirection[i] );
@@ -340,11 +339,7 @@ void BasicClouds::_initTexture()
          continue;
       }
 
-      if ( mTexName[i].isNotEmpty() )
-      mTexture[i].set( mTexName[i], &GFXStaticTextureSRGBProfile, "BasicClouds" );
-
-      if ( mTexture[i].isNull() )
-         mTexture[i].set( GFXTextureManager::getWarningTexturePath(), &GFXStaticTextureSRGBProfile, "BasicClouds" );
+      _setTexture(getTexture(i), i);
    }
 }
 

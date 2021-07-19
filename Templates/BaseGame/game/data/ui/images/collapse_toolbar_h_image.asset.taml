@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="collapse_toolbar_h_image"
+    imageFile="@assetFile=collapse-toolbar_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

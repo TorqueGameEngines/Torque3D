@@ -81,7 +81,11 @@ function loadModuleMaterials(%moduleGroup)
       {
          exec( %file );
       }
-   }   
+   }
+      
+   //Next, frontload materials and terrainMaterials
+   loadAssetsByType(MaterialAsset);
+   loadAssetsByType(TerrainMaterialAsset);
 }
 
 function loadAssetsByType(%assetType)
@@ -91,8 +95,8 @@ function loadAssetsByType(%assetType)
    %count = %assetQuery.getCount();
    for(%i=0; %i < %count; %i++)
    {
-        %assetId = %assetQuery.getAsset(%i);
-        %asset = AssetDatabase.acquireAsset(%assetId);
+      %assetId = %assetQuery.getAsset(%i);
+      %asset = AssetDatabase.acquireAsset(%assetId);
    }
 }
 

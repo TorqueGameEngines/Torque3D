@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="scale_point_h_image"
+    imageFile="@assetFile=scale-point_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

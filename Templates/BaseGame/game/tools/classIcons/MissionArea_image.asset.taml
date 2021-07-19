@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MissionArea_image"
+    imageFile="@assetFile=MissionArea.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -124,7 +124,7 @@
       position = "152 3";
       Extent = "2 26";
       MinExtent = "1 1";
-      bitmap = "tools/gui/images/separator-h.png";
+      bitmapAsset = "ToolsModule:separator_h_image";
    };
       
       new GuiControl(PaintBrushSizeTextEditContainer) {
@@ -213,7 +213,7 @@
          position = "230 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
                 
 	   new GuiControl(PaintBrushSlopeControl) {
@@ -373,7 +373,7 @@
          position = "445 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
 
       new GuiControl(PaintBrushPressureTextEditContainer,EditorGuiGroup) {
@@ -461,7 +461,7 @@
          position = "618 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
 
       new GuiControl(TerrainTextureSettingsButtonContainer,EditorGuiGroup) {

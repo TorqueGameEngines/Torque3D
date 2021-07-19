@@ -43,9 +43,10 @@ ConsoleDocClass( GuiToolboxButtonCtrl,
 //-------------------------------------
 GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 {
-   mNormalBitmapName = StringTable->EmptyString();
-   mLoweredBitmapName = StringTable->insert("sceneeditor/client/images/buttondown");
-   mHoverBitmapName = StringTable->insert("sceneeditor/client/images/buttonup");
+   INIT_IMAGEASSET(NormalBitmap);
+   INIT_IMAGEASSET(LoweredBitmap);
+   INIT_IMAGEASSET(HoverBitmap);
+
    setMinExtent(Point2I(16,16));
    setExtent(48, 48);
    mButtonType = ButtonTypeRadio;
@@ -57,9 +58,10 @@ GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 //-------------------------------------
 void GuiToolboxButtonCtrl::initPersistFields()
 {
-   addField("normalBitmap", TypeFilename, Offset(mNormalBitmapName, GuiToolboxButtonCtrl));
-   addField("loweredBitmap", TypeFilename, Offset(mLoweredBitmapName, GuiToolboxButtonCtrl));
-   addField("hoverBitmap", TypeFilename, Offset(mHoverBitmapName, GuiToolboxButtonCtrl));
+   INITPERSISTFIELD_IMAGEASSET(NormalBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET(LoweredBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET(HoverBitmap, GuiToolboxButtonCtrl, "");
+
    Parent::initPersistFields();
 }
 
@@ -72,9 +74,9 @@ bool GuiToolboxButtonCtrl::onWake()
 
    setActive( true );
    
-   setNormalBitmap( mNormalBitmapName );
-   setLoweredBitmap( mLoweredBitmapName );
-   setHoverBitmap( mHoverBitmapName );
+   setNormalBitmap( getNormalBitmap() );
+   setLoweredBitmap( getLoweredBitmap() );
+   setHoverBitmap( getHoverBitmap() );
 
    return true;
 }
@@ -83,28 +85,7 @@ bool GuiToolboxButtonCtrl::onWake()
 //-------------------------------------
 void GuiToolboxButtonCtrl::onSleep()
 {
-   mTextureNormal = NULL;
-   mTextureLowered = NULL;
-   mTextureHover = NULL;
    Parent::onSleep();
-}
-
-
-//-------------------------------------
-
-DefineEngineMethod( GuiToolboxButtonCtrl, setNormalBitmap, void, ( const char * name ), , "( filepath name ) sets the bitmap that shows when the button is active")
-{
-   object->setNormalBitmap(name);
-}
-
-DefineEngineMethod( GuiToolboxButtonCtrl, setLoweredBitmap, void, ( const char * name ), , "( filepath name ) sets the bitmap that shows when the button is disabled")
-{
-   object->setLoweredBitmap(name);
-}
-
-DefineEngineMethod( GuiToolboxButtonCtrl, setHoverBitmap, void, ( const char * name ), , "( filepath name ) sets the bitmap that shows when the button is disabled")
-{
-   object->setHoverBitmap(name);
 }
 
 //-------------------------------------
@@ -114,9 +95,9 @@ void GuiToolboxButtonCtrl::inspectPostApply()
    // set it's extent to be exactly the size of the normal bitmap (if present)
    Parent::inspectPostApply();
 
-   if ((getWidth() == 0) && (getHeight() == 0) && mTextureNormal)
+   if ((getWidth() == 0) && (getHeight() == 0) && mNormalBitmap)
    {
-      setExtent( mTextureNormal->getWidth(), mTextureNormal->getHeight());
+      setExtent(mNormalBitmap->getWidth(), mNormalBitmap->getHeight());
    }
 }
 
@@ -124,45 +105,30 @@ void GuiToolboxButtonCtrl::inspectPostApply()
 //-------------------------------------
 void GuiToolboxButtonCtrl::setNormalBitmap( StringTableEntry bitmapName )
 {
-   mNormalBitmapName = StringTable->insert( bitmapName );
+   _setNormalBitmap(bitmapName);
    
    if(!isAwake())
       return;
-
-   if ( *mNormalBitmapName )
-      mTextureNormal = GFXTexHandle( mNormalBitmapName, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureNormal (line %d)", __FUNCTION__, __LINE__) );
-   else
-      mTextureNormal = NULL;
    
    setUpdate();
 }   
 
 void GuiToolboxButtonCtrl::setLoweredBitmap( StringTableEntry bitmapName )
 {
-   mLoweredBitmapName = StringTable->insert( bitmapName );
+   _setLoweredBitmap(bitmapName);
    
    if(!isAwake())
       return;
-
-   if ( *mLoweredBitmapName )
-      mTextureLowered = GFXTexHandle( mLoweredBitmapName, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureLowered (line %d)", __FUNCTION__, __LINE__) );
-   else
-      mTextureLowered = NULL;
    
    setUpdate();
 }   
 
 void GuiToolboxButtonCtrl::setHoverBitmap( StringTableEntry bitmapName )
 {
-   mHoverBitmapName = StringTable->insert( bitmapName );
+   _setHoverBitmap(bitmapName);
 
    if(!isAwake())
       return;
-
-   if ( *mHoverBitmapName )
-      mTextureHover = GFXTexHandle( mHoverBitmapName, &GFXTexturePersistentSRGBProfile, avar("%s() - mTextureHover (line %d)", __FUNCTION__, __LINE__) );
-   else
-      mTextureHover = NULL;
 
    setUpdate();
 }   
@@ -177,15 +143,15 @@ void GuiToolboxButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
    {
       RectI r(offset, getExtent());
       if ( mDepressed  || mStateOn )
-         renderStateRect( mTextureLowered , r );
+         renderStateRect( mLoweredBitmap , r );
       else if ( mMouseOver )
-         renderStateRect( mTextureHover , r );
+         renderStateRect( mHoverBitmap , r );
    }
 
    // Now render the image
-   if( mTextureNormal )
+   if( mNormalBitmap )
    {
-      renderButton( mTextureNormal, offset, updateRect );
+      renderButton(mNormalBitmap, offset, updateRect );
       return;
    }
 
@@ -226,3 +192,7 @@ void GuiToolboxButtonCtrl::renderButton(GFXTexHandle &texture, Point2I &offset, 
       renderChildControls( offset, updateRect);
    }
 }
+
+DEF_IMAGEASSET_BINDS(GuiToolboxButtonCtrl, NormalBitmap);
+DEF_IMAGEASSET_BINDS(GuiToolboxButtonCtrl, LoweredBitmap);
+DEF_IMAGEASSET_BINDS(GuiToolboxButtonCtrl, HoverBitmap);

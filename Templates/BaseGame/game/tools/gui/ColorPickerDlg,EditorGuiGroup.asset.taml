@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ColorPickerDlg,EditorGuiGroup"
+    scriptFile="@assetFile=colorPicker.ed.gui"
+    GUIFile="@assetFile=colorPicker.ed.gui"
+    VersionId="1" />

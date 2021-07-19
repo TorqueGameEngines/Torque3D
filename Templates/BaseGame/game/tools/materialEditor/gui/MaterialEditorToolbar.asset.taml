@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MaterialEditorToolbar"
+    scriptFile="@assetFile=MaterialToolbar.ed.gui"
+    GUIFile="@assetFile=MaterialToolbar.ed.gui"
+    VersionId="1" />

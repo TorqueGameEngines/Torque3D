@@ -139,7 +139,7 @@
          };
       };
       new GuiBitmapCtrl() {
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
          wrap = "0";
          isContainer = "0";
          Profile = "ToolsGuiDefaultProfile";
@@ -241,7 +241,7 @@
          };
       };
       new GuiBitmapCtrl() {
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
          wrap = "0";
          isContainer = "0";
          Profile = "ToolsGuiDefaultProfile";

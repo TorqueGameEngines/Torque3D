@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="chatHudBorderArray_image"
+    imageFile="@assetFile=chatHudBorderArray.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

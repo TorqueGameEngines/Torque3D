@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="sculpt_terrain_n_image"
+    imageFile="@assetFile=sculpt-terrain_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

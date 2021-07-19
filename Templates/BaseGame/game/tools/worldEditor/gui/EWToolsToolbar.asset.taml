@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="EWToolsToolbar"
+    scriptFile="@assetFile=ToolsToolbar.ed.gui"
+    GUIFile="@assetFile=ToolsToolbar.ed.gui"
+    VersionId="1" />

@@ -862,7 +862,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Degrees ( Up )";
                         };
                         new GuiBitmapCtrl(){ // 90 Degrees
@@ -870,7 +870,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "90 Degrees ( Left )";
                         };
                         new GuiBitmapCtrl(){ // 180 Degrees
@@ -878,7 +878,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "180 Degrees ( Down )";
                         };
                         new GuiBitmapCtrl(){ // 270 Degrees
@@ -886,7 +886,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "270 Degrees ( Right )";
                         };
                         new GuiBitmapCtrl(){ // 360 Degrees
@@ -894,7 +894,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "360 Degrees ( Up )";
                         };
                         
@@ -949,7 +949,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Degrees ( Up )";
                         };
                         new GuiBitmapCtrl(){ // 90 Degrees
@@ -957,7 +957,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "90 Degrees ( Left )";
                         };
                         new GuiBitmapCtrl(){ // 180 Degrees
@@ -965,7 +965,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            minExtent = "0 0";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "180 Degrees ( Down )";
                         };
                         new GuiBitmapCtrl(){ // 270 Degrees
@@ -973,7 +973,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "270 Degrees ( Right )";
                         };
                         new GuiBitmapCtrl(){ // 360 Degrees
@@ -981,7 +981,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "360 Degrees ( Up )";
                         };
                         
@@ -1037,7 +1037,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Degrees ( Up )";
                         };
                         new GuiBitmapCtrl(){ // 90 Degrees
@@ -1045,7 +1045,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "45 Degrees";
                         };
                         new GuiBitmapCtrl(){ // 180 Degrees
@@ -1053,7 +1053,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            minExtent = "0 0";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "90 Degrees";
                         };
                         new GuiBitmapCtrl(){ // 270 Degrees
@@ -1061,7 +1061,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "135 Degrees";
                         };
                         new GuiBitmapCtrl(){ // 360 Degrees
@@ -1069,7 +1069,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "180 Degrees";
                         };
                         
@@ -1976,7 +1976,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -2370,7 +2370,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Gravity";
                         };
                         
@@ -2554,7 +2554,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "No Spin";
                         };
                         
@@ -2609,7 +2609,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "No Spin";
                         };
                         

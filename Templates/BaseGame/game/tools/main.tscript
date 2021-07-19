@@ -38,6 +38,9 @@ if(!$Tools::loaded)
    new Settings(EditorSettings) { file = "tools/settings.xml"; };
    EditorSettings.read();
    
+   ModuleDatabase.scanModules( "tools", false );
+   ModuleDatabase.LoadGroup( "Tools" );
+
    //We may need to lean on certain EditorSettings, and specifically default values if the settings.xml
    //isn't found
    exec("tools/worldEditor/scripts/editorPrefs.ed." @ $TorqueScriptFileExtension);

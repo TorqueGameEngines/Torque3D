@@ -100,6 +100,7 @@ struct PFXFrameState
 
 ///
 GFX_DeclareTextureProfile( PostFxTextureProfile );
+GFX_DeclareTextureProfile( PostFxTextureSRGBProfile );
 
 GFX_DeclareTextureProfile( VRTextureProfile );
 

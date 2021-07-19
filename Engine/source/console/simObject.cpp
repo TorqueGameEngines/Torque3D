@@ -339,11 +339,12 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
 
          // detect and collapse relative path information
          char fnBuf[1024];
-         if (f->type == TypeFilename ||
+         if (f->type == TypeFilename       ||
              f->type == TypeStringFilename ||
-             f->type == TypeImageFilename ||
+             f->type == TypeImageFilename  ||
              f->type == TypePrefabFilename ||
-             f->type == TypeShapeFilename)
+             f->type == TypeShapeFilename  ||
+             f->type == TypeSoundFilename )
          {
             Con::collapseScriptFilename(fnBuf, 1024, val);
             val = fnBuf;
@@ -919,7 +920,15 @@ void SimObject::assignFieldsFrom(SimObject *parent)
             dMemset( bufferSecure, 0, 2048 );
             dMemcpy( bufferSecure, szBuffer, dStrlen( szBuffer ) );
 
-            if((*f->setDataFn)( this, NULL, bufferSecure ) )
+            //If we have an index worth mentioning, process it for pass-along as well to ensure we set stuff correctly
+            char* elementIdxBuffer = nullptr;
+            if (f->elementCount > 1)
+            {
+               elementIdxBuffer = Con::getArgBuffer(256);
+               dSprintf(elementIdxBuffer, 256, "%i", j);
+            }
+
+            if((*f->setDataFn)( this, elementIdxBuffer, bufferSecure ) )
                Con::setData(f->type, (void *) (((const char *)this) + f->offset), j, 1, &fieldVal, f->table);
 
             if (f->networkMask != 0)

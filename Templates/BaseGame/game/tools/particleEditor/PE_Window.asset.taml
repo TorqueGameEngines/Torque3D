@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PE_Window"
+    scriptFile="@assetFile=ParticleEditor.ed.gui"
+    GUIFile="@assetFile=ParticleEditor.ed.gui"
+    VersionId="1" />

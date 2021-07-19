@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ShapeEditorPalette,EditorGuiGroup"
+    scriptFile="@assetFile=ShapeEditorPalette.ed.gui"
+    GUIFile="@assetFile=ShapeEditorPalette.ed.gui"
+    VersionId="1" />

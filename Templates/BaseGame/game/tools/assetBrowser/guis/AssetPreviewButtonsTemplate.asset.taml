@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssetPreviewButtonsTemplate"
+    scriptFile="@assetFile=assetPreviewButtonsTemplate.gui"
+    GUIFile="@assetFile=assetPreviewButtonsTemplate.gui"
+    VersionId="1" />

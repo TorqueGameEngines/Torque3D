@@ -197,7 +197,7 @@
 
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/phone.png";
+            bitmapAsset = "ToolsModule:phone_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -225,7 +225,7 @@
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/plus.png";
+            bitmapAsset = "ToolsModule:plus_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -253,7 +253,7 @@
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/import.png";
+            bitmapAsset = "ToolsModule:import_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -281,7 +281,7 @@
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/filter.png";
+            bitmapAsset = "ToolsModule:filter_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -310,7 +310,7 @@
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/gear.png";
+            bitmapAsset = "ToolsModule:gear_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -339,7 +339,7 @@
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/warning.png";
+            bitmapAsset = "ToolsModule:warning_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";

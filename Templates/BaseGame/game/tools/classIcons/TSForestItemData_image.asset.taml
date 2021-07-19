@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TSForestItemData_image"
+    imageFile="@assetFile=TSForestItemData.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

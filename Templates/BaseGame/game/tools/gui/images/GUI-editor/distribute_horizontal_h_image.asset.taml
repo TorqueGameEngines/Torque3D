@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="distribute_horizontal_h_image"
+    imageFile="@assetFile=distribute-horizontal_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

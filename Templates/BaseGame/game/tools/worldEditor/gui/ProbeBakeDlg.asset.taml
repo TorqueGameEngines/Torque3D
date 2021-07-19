@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ProbeBakeDlg"
+    scriptFile="@assetFile=probeBakeDlg.gui"
+    GUIFile="@assetFile=probeBakeDlg.gui"
+    VersionId="1" />

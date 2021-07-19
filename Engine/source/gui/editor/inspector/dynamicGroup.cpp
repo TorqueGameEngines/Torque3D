@@ -60,7 +60,7 @@ bool GuiInspectorDynamicGroup::createContent()
          addFieldBtn->setControlProfile( dynamic_cast<GuiControlProfile*>(profilePtr) );
 		
 		// FIXME Hardcoded image
-      addFieldBtn->setBitmap("tools/gui/images/iconAdd.png");
+      addFieldBtn->setBitmap(StringTable->insert("tools/gui/images/iconAdd.png"));
 
       char commandBuf[64];
       dSprintf(commandBuf, 64, "%d.addDynamicField();", this->getId());

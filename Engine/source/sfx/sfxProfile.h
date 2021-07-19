@@ -93,7 +93,7 @@ class SFXProfile : public SFXTrack
       
       /// The sound filename.  If no extension is specified
       /// the system will try .wav first then other formats.
-      String mFilename;
+      StringTableEntry mFilename;
 
       /// If true the sound data will be loaded from
       /// disk and possibly cached with the active 
@@ -155,6 +155,10 @@ class SFXProfile : public SFXTrack
 
       /// Returns the sound filename.
       const String& getSoundFileName() const { return mFilename; }
+      void setSoundFileName(StringTableEntry filename) { mFilename = filename; }
+
+      bool getPreload() const { return mPreload; }
+      void setPreload(bool preload) { mPreload = preload; }
 
       /// @note This has nothing to do with mPreload.
       /// @see SimDataBlock::preload

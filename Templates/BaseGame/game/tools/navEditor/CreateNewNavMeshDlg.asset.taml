@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CreateNewNavMeshDlg"
+    scriptFile="@assetFile=CreateNewNavMeshDlg.gui"
+    GUIFile="@assetFile=CreateNewNavMeshDlg.gui"
+    VersionId="1" />

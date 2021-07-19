@@ -136,7 +136,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/separator-h.png";
+               bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
                isContainer = "0";
                profile = "ToolsGuiDefaultProfile";
@@ -219,7 +219,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/separator-h.png";
+               bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
                isContainer = "0";
                profile = "ToolsGuiDefaultProfile";
@@ -315,7 +315,7 @@
                };
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/separator-h.png";
+               bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
                isContainer = "0";
                profile = "ToolsGuiDefaultProfile";
@@ -493,7 +493,7 @@
                };
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/separator-h.png";
+               bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
                isContainer = "0";
                profile = "ToolsGuiDefaultProfile";
@@ -509,7 +509,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/separator-h.png";
+               bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
                isContainer = "0";
                profile = "ToolsGuiDefaultProfile";
@@ -720,7 +720,7 @@
                   canSave = "1";
                   Visible = "1";
                   hovertime = "1000";
-                  bitmap = "tools/guiEditor/gui/gridTiny2";
+                  bitmapAsset = "ToolsModule:gridTiny2_image";
                   wrap = "1";
                };
                new GuiControl(GuiEditorContent) {

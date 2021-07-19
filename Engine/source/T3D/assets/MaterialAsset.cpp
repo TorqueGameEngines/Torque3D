@@ -43,6 +43,8 @@
 
 #include "T3D/assets/assetImporter.h"
 
+StringTableEntry MaterialAsset::smNoMaterialAssetFallback(StringTable->insert(Con::getVariable("$Core::NoMaterialAssetFallback")));
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(MaterialAsset);
@@ -89,7 +91,7 @@ ConsoleSetType(TypeMaterialAssetPtr)
 }
 
 
-ConsoleType(assetIdString, TypeMaterialAssetId, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeMaterialAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeMaterialAssetId)
 {
@@ -125,15 +127,25 @@ MaterialAsset::MaterialAsset()
    mScriptFile = StringTable->EmptyString();
    mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
+   mMaterialDefinition = nullptr;
 }
 
 //-----------------------------------------------------------------------------
 
 MaterialAsset::~MaterialAsset()
 {
+   //SAFE_DELETE(mMaterialDefinition);
 }
 
 //-----------------------------------------------------------------------------
+
+void MaterialAsset::consoleInit()
+{
+   Parent::consoleInit();
+   Con::addVariable("$Core::NoMaterialAssetFallback", TypeString, &smNoMaterialAssetFallback,
+      "The assetId of the material to display when the requested material asset is missing.\n"
+      "@ingroup GFX\n");
+}
 
 void MaterialAsset::initPersistFields()
 {
@@ -152,12 +164,12 @@ void MaterialAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   compileShader();
-
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Platform::isFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
+
+   loadMaterial();
 }
 
 void MaterialAsset::onAssetRefresh()
@@ -167,17 +179,7 @@ void MaterialAsset::onAssetRefresh()
    if (Platform::isFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
-   if (mMatDefinitionName != StringTable->EmptyString())
-   {
-      Material* matDef;
-      if (!Sim::findObject(mMatDefinitionName, matDef))
-      {
-         Con::errorf("MaterialAsset: Unable to find the Material %s", mMatDefinitionName);
-         return;
-      }
-
-      matDef->reload();
-   }
+   loadMaterial();
 }
 
 void MaterialAsset::setScriptFile(const char* pScriptFile)
@@ -197,9 +199,33 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-void MaterialAsset::compileShader()
+void MaterialAsset::loadMaterial()
 {
+   if (mMaterialDefinition)
+      SAFE_DELETE(mMaterialDefinition);
+
+   if (mMatDefinitionName != StringTable->EmptyString())
+   {
+      Material* matDef;
+      if (!Sim::findObject(mMatDefinitionName, matDef))
+      {
+         Con::errorf("MaterialAsset: Unable to find the Material %s", mMatDefinitionName);
+         mLoadedState = BadFileReference;
+         return;
+      }
+
+      mMaterialDefinition = matDef;
+
+      mLoadedState = Ok;
+
+      mMaterialDefinition->reload();
+      return;
+   }
+
+   mLoadedState = Failed;
 }
+
+//------------------------------------------------------------------------------
 
 void MaterialAsset::copyTo(SimObject* object)
 {
@@ -207,131 +233,120 @@ void MaterialAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
-DefineEngineMethod(MaterialAsset, compileShader, void, (), , "Compiles the material's generated shader, if any. Not yet implemented\n")
-{
-   object->compileShader();
-}
-
 //------------------------------------------------------------------------------
-StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
+U32 MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<MaterialAsset>* matAsset)
 {
-   StringTableEntry materialAssetId = StringTable->EmptyString();
-
-   AssetQuery* query = new AssetQuery();
-   U32 foundCount = AssetDatabase.findAssetType(query, "MaterialAsset");
-   if (foundCount == 0)
+   AssetQuery query;
+   U32 foundAssetcount = AssetDatabase.findAssetType(&query, "MaterialAsset");
+   if (foundAssetcount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      materialAssetId = StringTable->insert("Core_Rendering:noMaterial");
+      matAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
+
+      if (matAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of asset associated with material name %s failed with no fallback asset", matName);
+         return AssetErrCode::Failed;
+      }
+
+      //handle noshape not being loaded itself
+      if ((*matAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("ShapeAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, and fallback asset reported error of Bad File Reference.", matName);
+         return AssetErrCode::BadFileReference;
+      }
+
+      Con::warnf("ShapeAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, utilizing fallback asset", matName);
+
+      (*matAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
    }
    else
    {
+      for (U32 i = 0; i < foundAssetcount; i++)
+      {
+         MaterialAsset* tMatAsset = AssetDatabase.acquireAsset<MaterialAsset>(query.mAssetList[i]);
+         if (tMatAsset && tMatAsset->getMaterialDefinitionName() == matName)
+         {
+            matAsset->setAssetId(query.mAssetList[i]);
+            AssetDatabase.releaseAsset(query.mAssetList[i]);
+            return (*matAsset)->mLoadedState;
+         }
+         AssetDatabase.releaseAsset(query.mAssetList[i]); //cleanup if that's not the one we needed
+      }
+   }
+}
+
+StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
+{
+   if (matName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry materialAssetId = MaterialAsset::smNoMaterialAssetFallback;
+
+   AssetQuery query;
+   U32 foundCount = AssetDatabase.findAssetType(&query, "MaterialAsset");
+   if (foundCount != 0)
+   {
       for (U32 i = 0; i < foundCount; i++)
       {
-         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(query->mAssetList[i]);
+         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(query.mAssetList[i]);
          if (matAsset && matAsset->getMaterialDefinitionName() == matName)
          {
             materialAssetId = matAsset->getAssetId();
+            AssetDatabase.releaseAsset(query.mAssetList[i]);
             break;
          }
-         AssetDatabase.releaseAsset(query->mAssetList[i]); //cleanup if that's not the one we needed
-      }
-
-      if (materialAssetId == StringTable->EmptyString())
-      {
-         //Try auto-importing it if it exists already
-         BaseMaterialDefinition* baseMatDef;
-         if (!Sim::findObject(matName, baseMatDef))
-         {
-            //Not even a real material, apparently?
-            //return back a blank
-            return StringTable->EmptyString();
-         }
-
-         //Ok, a real mat def, we can work with this
-#if TORQUE_DEBUG
-         Con::warnf("MaterialAsset::getAssetIdByMaterialName - Attempted to in-place import a material(%s) that had no associated asset", matName);
-#endif
-
-         AssetImporter* autoAssetImporter;
-         if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-         {
-            autoAssetImporter = new AssetImporter();
-            autoAssetImporter->registerObject("autoAssetImporter");
-         }
-
-         autoAssetImporter->resetImportSession(true);
-
-         String originalMaterialDefFile = Torque::Path(baseMatDef->getFilename()).getPath();
-
-         autoAssetImporter->setTargetPath(originalMaterialDefFile);
-
-         autoAssetImporter->resetImportConfig();
-
-         AssetImportObject* assetObj = autoAssetImporter->addImportingAsset("MaterialAsset", originalMaterialDefFile, nullptr, matName);
-
-         //Find out if the filepath has an associated module to it. If we're importing in-place, it needs to be within a module's directory
-         ModuleDefinition* targetModuleDef = AssetImporter::getModuleFromPath(originalMaterialDefFile);
-
-         if (targetModuleDef == nullptr)
-         {
-            return StringTable->EmptyString();
-         }
-         else
-         {
-            autoAssetImporter->setTargetModuleId(targetModuleDef->getModuleId());
-         }
-
-         autoAssetImporter->processImportAssets();
-
-         bool hasIssues = autoAssetImporter->validateAssets();
-
-         if (hasIssues)
-         {
-            //log it
-            Con::errorf("Error! Import process of Material(%s) has failed due to issues discovered during validation!", matName);
-            return StringTable->EmptyString();
-         }
-         else
-         {
-            autoAssetImporter->importAssets();
-         }
-
-#if TORQUE_DEBUG
-         autoAssetImporter->dumpActivityLog();
-#endif
-
-         if (hasIssues)
-         {
-            return StringTable->EmptyString();
-         }
-         else
-         {
-            String assetId = autoAssetImporter->getTargetModuleId() + ":" + assetObj->assetName;
-            return StringTable->insert(assetId.c_str());
-         }
+         AssetDatabase.releaseAsset(query.mAssetList[i]);
       }
    }
 
    return materialAssetId;
 }
 
-bool MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset)
+U32 MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset)
 {
    (*materialAsset) = assetId;
 
-   if (!materialAsset->isNull())
-      return true;
+   if (materialAsset->notNull())
+   {
+      return (*materialAsset)->mLoadedState;
+   }
+   else
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      materialAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
 
-   //Didn't work, so have us fall back to a placeholder asset
-   StringTableEntry noImageId = StringTable->insert("Core_Rendering:noMaterial");
-   materialAsset->setAssetId(noImageId);
+      if (materialAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("MaterialAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+         return AssetErrCode::Failed;
+      }
 
-   if (!materialAsset->isNull())
-      return true;
+      //handle noshape not being loaded itself
+      if ((*materialAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("MaterialAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
+         return AssetErrCode::BadFileReference;
+      }
 
-   return false;
+      Con::warnf("MaterialAsset::getAssetById - Finding of asset with id %s failed, utilizing fallback asset", assetId);
+
+      (*materialAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
 }
+
+#ifdef TORQUE_TOOLS
+DefineEngineStaticMethod(MaterialAsset, getAssetIdByMaterialName, const char*, (const char* materialName), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return MaterialAsset::getAssetIdByMaterialName(StringTable->insert(materialName));
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
@@ -374,7 +389,7 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    mEditButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/material-editor";
-   mEditButton->setBitmap(bitmapName);
+   mEditButton->setBitmap(StringTable->insert(bitmapName));
 
    mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");

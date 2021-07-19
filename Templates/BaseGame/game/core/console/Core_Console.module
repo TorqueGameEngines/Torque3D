@@ -7,4 +7,9 @@
 	DestroyFunction="onDestroy"
 	Group="Core"
 	Dependencies="Core_GUI=1">
+	<DeclaredAssets
+           canSave="true"
+           canSaveDynamicFields="true"
+           Extension="asset.taml"
+           Recurse="true" />
 </ModuleDefinition>

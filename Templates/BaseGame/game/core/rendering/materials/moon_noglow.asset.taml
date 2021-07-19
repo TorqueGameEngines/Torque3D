@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="moon_noglow"
+    scriptFile="@assetFile=moon_noglow.tscript"
+    materialDefinitionName="moon_noglow"
+    imageMap0="@Asset=Core_Rendering:moon_noglow_image"/>

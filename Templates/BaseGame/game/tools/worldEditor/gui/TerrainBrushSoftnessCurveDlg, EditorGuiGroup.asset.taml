@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TerrainBrushSoftnessCurveDlg, EditorGuiGroup"
+    scriptFile="@assetFile=TerrainBrushSoftnessCurveDlg.ed.gui"
+    GUIFile="@assetFile=TerrainBrushSoftnessCurveDlg.ed.gui"
+    VersionId="1" />

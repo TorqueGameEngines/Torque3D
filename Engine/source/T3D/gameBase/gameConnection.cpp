@@ -371,7 +371,6 @@ void GameConnection::onConnectionEstablished(bool isInitiator)
       setTranslatesStrings(true);
       Sim::getClientGroup()->addObject(this);
       mMoveList->init();
-
       const char *argv[MaxConnectArgs + 2];
       argv[0] = "onConnect";
       argv[1] = NULL; // Filled in later
@@ -646,6 +645,7 @@ void GameConnection::setCameraObject(GameBase *obj)
          smFovUpdate.trigger(fov);
       }
    }
+
 }
 
 GameBase* GameConnection::getCameraObject()

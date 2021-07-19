@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ScatterSky_image"
+    imageFile="@assetFile=ScatterSky.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

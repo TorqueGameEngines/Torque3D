@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wav_square_i_image"
+    imageFile="@assetFile=wav-square_i.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

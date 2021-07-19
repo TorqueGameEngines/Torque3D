@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiEditorSelectDlgContainer,EditorGuiGroup"
+    scriptFile="@assetFile=guiEditorSelectDlg.ed.gui"
+    GUIFile="@assetFile=guiEditorSelectDlg.ed.gui"
+    VersionId="1" />

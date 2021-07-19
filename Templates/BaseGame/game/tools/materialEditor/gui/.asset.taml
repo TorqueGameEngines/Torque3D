@@ -1,0 +1,6 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    scriptFile="@assetFile=guiMaterialPreviewWindow.ed.gui"
+    GUIFile="@assetFile=guiMaterialPreviewWindow.ed.gui"
+    VersionId="1" />

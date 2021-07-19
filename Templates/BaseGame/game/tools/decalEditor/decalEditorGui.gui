@@ -517,7 +517,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         wrap = "0";
-                        bitmap= "tools/materialeditor/gui/unknownImage";
+                        bitmapAsset= "ToolsModule:unknownImage_image";
                      };
                      new GuiBitmapCtrl() {
                         canSaveDynamicFields = "0";
@@ -534,7 +534,7 @@
                         Visible = "1";
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
-                        bitmap = "tools/worldEditor/images/terrainpainter/terrain-painter-border-large";
+                        bitmapAsset = "ToolsModule:terrain_painter_border_large_image";
                         wrap = "0";
                      };
                   };
@@ -761,7 +761,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         wrap = "0";
-                        bitmap= "tools/materialeditor/gui/unknownImage";
+                        bitmapAsset= "ToolsModule:unknownImage_image";
                      };
                      new GuiBitmapCtrl() {
                         canSaveDynamicFields = "0";
@@ -778,7 +778,7 @@
                         Visible = "1";
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
-                        bitmap = "tools/worldEditor/images/terrainpainter/terrain-painter-border-large";
+                        bitmapAsset = "ToolsModule:terrain_painter_border_large_image";
                         wrap = "0";
                      };
                   };

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="forest_editor_btn_h_image"
+    imageFile="@assetFile=forest-editor-btn_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

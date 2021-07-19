@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="add_road_path_d_image"
+    imageFile="@assetFile=add-road-path_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

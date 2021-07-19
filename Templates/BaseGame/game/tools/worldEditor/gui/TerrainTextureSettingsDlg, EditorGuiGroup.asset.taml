@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TerrainTextureSettingsDlg, EditorGuiGroup"
+    scriptFile="@assetFile=guiTerrainTextureSettingsDlg.ed.gui"
+    GUIFile="@assetFile=guiTerrainTextureSettingsDlg.ed.gui"
+    VersionId="1" />

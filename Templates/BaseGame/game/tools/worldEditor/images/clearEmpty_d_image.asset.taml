@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="clearEmpty_d_image"
+    imageFile="@assetFile=clearEmpty_d.PNG"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

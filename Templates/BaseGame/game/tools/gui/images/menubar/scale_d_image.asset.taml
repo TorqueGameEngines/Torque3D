@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="scale_d_image"
+    imageFile="@assetFile=scale_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

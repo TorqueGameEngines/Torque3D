@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="LooseFileAudit"
+    scriptFile="@assetFile=looseFileAudit.gui"
+    GUIFile="@assetFile=looseFileAudit.gui"
+    VersionId="1" />

@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ENavEditorSettingsPage"
+    scriptFile="@assetFile=NavEditorSettingsTab.gui"
+    GUIFile="@assetFile=NavEditorSettingsTab.gui"
+    VersionId="1" />

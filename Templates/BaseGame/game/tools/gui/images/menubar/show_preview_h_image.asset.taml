@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="show_preview_h_image"
+    imageFile="@assetFile=show-preview_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

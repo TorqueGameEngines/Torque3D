@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="toolsMessageBoxOKCancelDetailsDlg"
+    scriptFile="@assetFile=messageBoxOKCancelDetailsDlg.ed.gui"
+    GUIFile="@assetFile=messageBoxOKCancelDetailsDlg.ed.gui"
+    VersionId="1" />

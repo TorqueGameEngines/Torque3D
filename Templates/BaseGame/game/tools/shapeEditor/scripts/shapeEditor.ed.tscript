@@ -2168,7 +2168,7 @@ function ShapeEdTriggerList::addItem( %this, %frame, %state )
       VertSizing = "bottom";
       position = %pos SPC "0";
       Extent = "2 12";
-      bitmap = "tools/shapeEditor/images/trigger_marker";
+      bitmapAsset = "ToolsModule:trigger_marker_image";
    };
    ShapeEdAnimWindow.getObject(0).addGuiControl( %ctrl );
    %this.triggerId++;

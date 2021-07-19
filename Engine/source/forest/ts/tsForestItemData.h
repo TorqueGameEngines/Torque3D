@@ -49,8 +49,6 @@ protected:
    // This is setup during forest creation.
    mutable TSShapeInstance *mShapeInstance;
 
-   Resource<TSShape> mShape;
-
    Vector<S32> mCollisionDetails;
    Vector<S32> mLOSDetails;
    

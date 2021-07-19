@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="moon_wglow"
+    scriptFile="@assetFile=moon_wglow.tscript"
+    materialDefinitionName="moon_wglow"
+    imageMap0="@Asset=Core_Rendering:moon_wglow_image"/>

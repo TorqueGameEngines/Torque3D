@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="slider_image"
+    imageFile="@assetFile=slider.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

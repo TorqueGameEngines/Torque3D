@@ -161,7 +161,7 @@ GuiControl* GuiInspectorTypeParticleAssetPtr::constructEditControl()
    mSMEdButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-   mSMEdButton->setBitmap(bitmapName);
+   mSMEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mSMEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mSMEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");

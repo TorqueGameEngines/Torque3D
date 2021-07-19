@@ -108,7 +108,7 @@ new GuiControlProfile( ToolsGuiGroupBorderProfile )
    border = false;
    opaque = false;
    hasBitmapArray = true;
-   bitmap = "./images/group-border";
+   bitmapAsset = "ToolsModule:group_border_image";
    category = "Tools";
 };
 
@@ -118,7 +118,7 @@ new GuiControlProfile( ToolsGuiTabBorderProfile )
    border = false;
    opaque = false;
    hasBitmapArray = true;
-   bitmap = "./images/tab-border";
+   bitmapAsset = "ToolsModule:tab_border_image";
    category = "Tools";
 };
 
@@ -170,7 +170,7 @@ new GuiControlProfile (ToolsGuiWindowProfile)
    bevelColorHL = "255 255 255";
    bevelColorLL = "0 0 0";
    text = "untitled";
-   bitmap = "./images/window";
+   bitmapAsset = "ToolsModule:window_image";
    textOffset = "10 4";
    hasBitmapArray = true;
    justify = "left";
@@ -180,7 +180,7 @@ new GuiControlProfile (ToolsGuiWindowProfile)
 if( !isObject( ToolsGuiToolbarWindowProfile ) )
 new GuiControlProfile(ToolsGuiToolbarWindowProfile : ToolsGuiWindowProfile)
 {
-      bitmap = "./images/toolbar-window";
+      bitmapAsset = "ToolsModule:toolbar_window_image";
       text = "";
       category = "Tools";
 }; 
@@ -293,7 +293,7 @@ if( !isObject( ToolsGuiTextEditProfile ) )
 new GuiControlProfile( ToolsGuiTextEditProfile )
 {
    opaque = true;
-   bitmap = "./images/textEditFrame";
+   bitmapAsset = "ToolsModule:textEditFrame_image";
    hasBitmapArray = true; 
    border = -2; // fix to display textEdit img
    //borderWidth = "1";  // fix to display textEdit img
@@ -325,7 +325,7 @@ new GuiControlProfile( ToolsGuiNumericTextEditProfile : ToolsGuiTextEditProfile 
 if( !isObject( ToolsGuiNumericDropSliderTextProfile ) )
 new GuiControlProfile( ToolsGuiNumericDropSliderTextProfile : ToolsGuiTextEditProfile )
 {
-   bitmap = "./images/textEditSliderBox";
+   bitmapAsset = "ToolsModule:textEditSliderBox_image";
    category = "Tools";
 };
 
@@ -334,7 +334,7 @@ new GuiControlProfile( ToolsGuiRLProgressBitmapProfile )
 {
    border = false;
    hasBitmapArray = true;
-   bitmap = "./images/rl-loadingbar";
+   bitmapAsset = "ToolsModule:rl_loadingbar_image";
    category = "Tools";
 };
 
@@ -359,7 +359,7 @@ new GuiControlProfile( ToolsGuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-	bitmap = "tools/gui/images/button";
+	bitmapAsset = "ToolsModule:button_image";
    hasBitmapArray = false;
    category = "Tools";
 };
@@ -367,7 +367,7 @@ new GuiControlProfile( ToolsGuiButtonProfile )
 if( !isObject( ToolsGuiThumbHighlightButtonProfile ) )
 new GuiControlProfile( ToolsGuiThumbHighlightButtonProfile : ToolsGuiButtonProfile )
 {
-   bitmap = "./images/thumbHightlightButton";
+   bitmapAsset = "ToolsModule:thumbHightlightButton_image";
    category = "Tools";
 };
 
@@ -382,7 +382,7 @@ new GuiControlProfile( ToolsGuiIconButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-	bitmap = "./images/iconbutton";
+	bitmapAsset = "ToolsModule:iconbutton_image";
    hasBitmapArray = true;
    category = "Tools";
 };
@@ -390,7 +390,7 @@ new GuiControlProfile( ToolsGuiIconButtonProfile )
 if( !isObject( ToolsGuiIconButtonSmallProfile ) )
 new GuiControlProfile( ToolsGuiIconButtonSmallProfile : ToolsGuiIconButtonProfile )
 {
-   bitmap = "./images/iconbuttonsmall";
+   bitmapAsset = "ToolsModule:iconbuttonsmall_image";
    category = "Tools";
 };
 
@@ -406,7 +406,7 @@ new GuiControlProfile(ToolsGuiEditorTabPage)
    fixedExtent = false;
    justify = "left";
    canKeyFocus = false;
-   bitmap = "./images/tab";
+   bitmapAsset = "ToolsModule:tab_image";
    hasBitmapArray = true;
    category = "Tools";
 };
@@ -424,7 +424,7 @@ new GuiControlProfile( ToolsGuiCheckBoxProfile )
 	fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    fixedExtent = true;
    justify = "left";
-   bitmap = "./images/checkbox";
+   bitmapAsset = "./images/checkbox";
    hasBitmapArray = true;
    category = "Tools";
 };
@@ -432,14 +432,14 @@ new GuiControlProfile( ToolsGuiCheckBoxProfile )
 if( !isObject( ToolsGuiCheckBoxListProfile ) )
 new GuiControlProfile( ToolsGuiCheckBoxListProfile : ToolsGuiCheckBoxProfile)
 {
-   bitmap = "./images/checkbox-list";
+   bitmapAsset = "ToolsModule:checkbox_list_image";
    category = "Tools";
 };
 
 if( !isObject( ToolsGuiCheckBoxListFlipedProfile ) )
 new GuiControlProfile( ToolsGuiCheckBoxListFlipedProfile : ToolsGuiCheckBoxProfile)
 {
-   bitmap = "./images/checkbox-list_fliped";
+   bitmapAsset = "ToolsModule:checkbox_list_fliped_image";
    category = "Tools";
 };
 
@@ -457,7 +457,7 @@ new GuiControlProfile( ToolsGuiRadioProfile )
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fixedExtent = true;
-   bitmap = "./images/radioButton";
+   bitmapAsset = "ToolsModule:radioButton_image";
    hasBitmapArray = true;
    category = "Tools";
 };
@@ -471,7 +471,7 @@ new GuiControlProfile( ToolsGuiScrollProfile )
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    borderColor = EditorSettings.value("Theme/dividerDarkColor");
    border = true;
-   bitmap = "./images/scrollBar";
+   bitmapAsset = "ToolsModule:scrollBar_image";
    hasBitmapArray = true;
    category = "Tools";
 };
@@ -489,14 +489,14 @@ new GuiControlProfile( ToolsGuiOverlayProfile )
 if( !isObject( ToolsGuiSliderProfile ) )
 new GuiControlProfile( ToolsGuiSliderProfile )
 {
-   bitmap = "./images/slider";
+   bitmapAsset = "ToolsModule:slider_image";
    category = "Tools";
 };
 
 if( !isObject( ToolsGuiSliderBoxProfile ) )
 new GuiControlProfile( ToolsGuiSliderBoxProfile )
 {
-   bitmap = "./images/slider-w-box";
+   bitmapAsset = "ToolsModule:slider_w_box_image";
    category = "Tools";
 };
 
@@ -511,7 +511,7 @@ new GuiControlProfile( ToolsGuiPopupMenuItemBorder : ToolsGuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "./images/button";
+   bitmapAsset = "ToolsModule:button_image";
    category = "Tools";
 };
 
@@ -524,7 +524,7 @@ new GuiControlProfile( ToolsGuiPopUpMenuDefault : ToolsGuiDefaultProfile )
    border = 0;
    borderThickness = 0;
    fixedExtent = true;
-   bitmap = "./images/scrollbar";
+   bitmapAsset = "ToolsModule:scrollBar_image";
    hasBitmapArray = true;
    profileForChildren = ToolsGuiPopupMenuItemBorder;
    fillColor = EditorSettings.value("Theme/fieldBGColor");//"255 255 255";//100
@@ -545,7 +545,7 @@ if( !isObject( ToolsGuiPopUpMenuProfile ) )
 new GuiControlProfile( ToolsGuiPopUpMenuProfile : ToolsGuiPopUpMenuDefault )
 {
    textOffset         = "6 4";
-   bitmap             = "./images/dropDown";
+   bitmapAsset             = "ToolsModule:dropDown_image";
    hasBitmapArray     = true;
    border             = 1;
    profileForChildren = ToolsGuiPopUpMenuDefault;
@@ -555,7 +555,7 @@ new GuiControlProfile( ToolsGuiPopUpMenuProfile : ToolsGuiPopUpMenuDefault )
 if( !isObject( ToolsGuiPopUpMenuTabProfile ) )
 new GuiControlProfile( ToolsGuiPopUpMenuTabProfile : ToolsGuiPopUpMenuDefault )
 {
-   bitmap             = "./images/dropDown-tab";
+   bitmapAsset             = "ToolsModule:dropDown_tab_image";
    textOffset         = "6 4";
    canKeyFocus        = true;
    hasBitmapArray     = true;
@@ -569,7 +569,7 @@ new GuiControlProfile( ToolsGuiPopUpMenuEditProfile : ToolsGuiPopUpMenuDefault )
 {
    textOffset         = "6 4";
    canKeyFocus        = true;
-   bitmap             = "./images/dropDown";
+   bitmapAsset             = "ToolsModule:dropDown_image";
    hasBitmapArray     = true;
    border             = 1;
    profileForChildren = ToolsGuiPopUpMenuDefault;
@@ -601,7 +601,7 @@ new GuiControlProfile( ToolsGuiTabBookProfile )
    fontType = "Noto Sans";
    fontSize = 14;
    justify = "center";
-   bitmap = "./images/tab";
+   bitmapAsset = "ToolsModule:tab_image";
    tabWidth = 65;
    tabHeight = 25;
    tabPosition = "Top";
@@ -615,7 +615,7 @@ new GuiControlProfile( ToolsGuiTabBookProfile )
 if( !isObject( ToolsGuiTabBookNoBitmapProfile ) )
 new GuiControlProfile( ToolsGuiTabBookNoBitmapProfile : ToolsGuiTabBookProfile )
 {
-   bitmap = "";
+   bitmapAsset = "";
    category = "Tools";
 };
 
@@ -625,7 +625,7 @@ new GuiControlProfile( ToolsGuiTabPageProfile : ToolsGuiDefaultProfile )
    fontType = "Noto Sans";
    fontSize = 10;
    justify = "center";
-   bitmap = "./images/tab";
+   bitmapAsset = "ToolsModule:tab_image";
    opaque = false;
    fillColor = "240 239 238";
    category = "Tools";
@@ -634,7 +634,7 @@ new GuiControlProfile( ToolsGuiTabPageProfile : ToolsGuiDefaultProfile )
 if( !isObject( ToolsGuiTreeViewProfile ) )
 new GuiControlProfile( ToolsGuiTreeViewProfile )
 {  
-   bitmap = "./images/treeView";
+   bitmapAsset = "ToolsModule:treeView_image";
    autoSizeHeight = true;
    canKeyFocus = true;
    fillColor = EditorSettings.value("Theme/windowBackgroundColor"); 
@@ -687,7 +687,7 @@ new GuiControlProfile( ToolsGuiFormProfile : ToolsGuiTextProfile )
    profileForChildren = ToolsGuiButtonProfile;
    opaque = false;
    hasBitmapArray = true;
-   bitmap = "./images/button";
+   bitmapAsset = "ToolsModule:button_image";
    category = "Tools";
 };
 
@@ -704,7 +704,7 @@ singleton GuiControlProfile( GuiEditorClassProfile )
    fontColorHL = "50 50 50";
    fixedExtent = true;
    justify = "center";
-   bitmap = "tools/gui/images/scrollBar";
+   bitmapAsset = "ToolsModule:scrollBar_image";
    hasBitmapArray = true;
    category = "Editor";
 };
@@ -739,7 +739,7 @@ singleton GuiControlProfile( GuiControlListPopupProfile )
    autoSizeHeight = true;
    tab = true;
    canKeyFocus = true;
-   bitmap = "tools/gui/images/scrollBar";
+   bitmapAsset = "ToolsModule:scrollBar_image";
    hasBitmapArray = true;
    category = "Editor";
 };
@@ -794,7 +794,7 @@ singleton GuiControlProfile( GuiInspectorTextEditProfile )
 };
 singleton GuiControlProfile( GuiDropdownTextEditProfile :  ToolsGuiTextEditProfile )
 {
-   bitmap = "tools/gui/images/dropdown-textEdit";
+   bitmapAsset = "ToolsModule:dropdown_textEdit_image";
    category = "Editor";
 };
 singleton GuiControlProfile( GuiInspectorTextEditRightProfile : GuiInspectorTextEditProfile )
@@ -816,7 +816,7 @@ singleton GuiControlProfile( GuiInspectorGroupProfile )
    opaque = false;
    border = false;
   
-   bitmap = "tools/editorClasses/gui/images/rollout";
+   bitmapAsset = "ToolsModule:rollout_image";
    
    textOffset = "20 0";
 
@@ -903,7 +903,7 @@ singleton GuiControlProfile( GuiRolloutProfile )
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    
    hasBitmapArray = true;
-   bitmap = "tools/editorClasses/gui/images/rollout";
+   bitmapAsset = "ToolsModule:rollout_image";
    
    textoffset = "17 0";
    category = "Editor";
@@ -927,7 +927,7 @@ singleton GuiControlProfile( GuiInspectorRolloutProfile0 )
    borderColorHL = "156 156 156";
    borderColorNA = "64 64 64";
   
-   bitmap = "tools/editorclasses/gui/images/rollout_plusminus_header";
+   bitmapAsset = "ToolsModule:rollout_plusminus_header_image";
    
    textOffset = "20 0";
    category = "Editor";
@@ -1017,7 +1017,7 @@ singleton GuiControlProfile( GuiInspectorColumnCtrlProfile : GuiInspectorFieldPr
 singleton GuiControlProfile( InspectorTypeEnumProfile : GuiInspectorFieldProfile )
 {
    mouseOverSelected = true;
-   bitmap = "tools/gui/images/scrollBar";
+   bitmapAsset = "ToolsModule:scrollBar_image";
    hasBitmapArray = true;
    opaque=true;
    border=true;
@@ -1027,7 +1027,7 @@ singleton GuiControlProfile( InspectorTypeEnumProfile : GuiInspectorFieldProfile
 
 singleton GuiControlProfile( InspectorTypeCheckboxProfile : GuiInspectorFieldProfile )
 {
-   bitmap = "tools/gui/images/checkBox";
+   bitmapAsset = "ToolsModule:checkBox_image";
    hasBitmapArray = true;
    opaque=false;
    border=false;
@@ -1098,7 +1098,7 @@ singleton GuiControlProfile( GuiEditorScrollProfile )
    fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
    borderColor = EditorSettings.value("Theme/dividerDarkColor");
    border = 1;
-   bitmap = "tools/gui/images/scrollBar";
+   bitmapAsset = "ToolsModule:scrollBar_image";
    hasBitmapArray = true;
    category = "Editor";
 };
@@ -1147,7 +1147,7 @@ singleton GuiControlProfile( ToolsGuiMenuBarProfile )
    opaque = true;
    mouseOverSelected = true;
    category = "Editor";
-   bitmap = "tools/gui/images/checkbox-menubar";
+   bitmapAsset = "ToolsModule:checkbox_menubar_image";
 };
 
 singleton GuiControlProfile( ToolsMenubarProfile : ToolsGuiDefaultProfile ) 

@@ -38,6 +38,7 @@
 #ifndef _ASSET_FIELD_TYPES_H_
 #include "assets/assetFieldTypes.h"
 #endif
+#include "T3D/assets/ImageAsset.h"
 
 //-----------------------------------------------------------------------------
 class LevelAsset : public AssetBase
@@ -50,14 +51,12 @@ class LevelAsset : public AssetBase
    StringTableEntry        mDecalsFile;
    StringTableEntry        mForestFile;
    StringTableEntry        mNavmeshFile;
-   StringTableEntry        mPreviewImage;
 
    StringTableEntry        mLevelPath;
    StringTableEntry        mPostFXPresetPath;
    StringTableEntry        mDecalsPath;
    StringTableEntry        mForestPath;
    StringTableEntry        mNavmeshPath;
-   StringTableEntry        mPreviewImagePath;
 
    StringTableEntry        mEditorFile;
    StringTableEntry        mBakedSceneFile;
@@ -68,6 +67,9 @@ class LevelAsset : public AssetBase
    StringTableEntry        mGamemodeName;
 
    Vector<AssetBase*>      mAssetDependencies;
+
+   StringTableEntry mPreviewImageAssetId;
+   AssetPtr<ImageAsset> mPreviewImageAsset;
 
 public:
    LevelAsset();
@@ -93,15 +95,16 @@ public:
    inline StringTableEntry getForestFile(void) const { return mForestFile; };
    void                    setNavmeshFile(const char* pNavmeshFile);
    inline StringTableEntry getNavmeshFile(void) const { return mNavmeshFile; };
-   void                    setImageFile(const char* pImageFile);
-   inline StringTableEntry getImageFile(void) const { return mPreviewImage; };
+
+   StringTableEntry        getPreviewImageAsset(void) const;
 
    inline StringTableEntry getLevelPath(void) const { return mLevelPath; };
    inline StringTableEntry getPostFXPresetPath(void) const { return mPostFXPresetPath; };
    inline StringTableEntry getDecalsPath(void) const { return mDecalsPath; };
    inline StringTableEntry getForestPath(void) const { return mForestPath; };
    inline StringTableEntry getNavmeshPath(void) const { return mNavmeshPath; };
-   inline StringTableEntry getImagePath(void) const { return mPreviewImagePath; };
+
+   StringTableEntry        getPreviewImagePath(void) const;
 
    void                    setEditorFile(const char* pEditorFile);
    inline StringTableEntry getEditorFile(void) const { return mEditorFile; };
@@ -113,8 +116,6 @@ public:
 protected:
    static bool setLevelFile(void *obj, const char *index, const char *data) { static_cast<LevelAsset*>(obj)->setLevelFile(data); return false; }
    static const char* getLevelFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getLevelFile(); }
-   static bool setPreviewImageFile(void *obj, const char *index, const char *data) { static_cast<LevelAsset*>(obj)->setImageFile(data); return false; }
-   static const char* getPreviewImageFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getImageFile(); }
 
    static bool setEditorFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setEditorFile(data); return false; }
    static const char* getEditorFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getEditorFile(); }
@@ -134,6 +135,7 @@ protected:
 
    virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void);
+   void                    loadAsset();
 };
 
 DefineConsoleType(TypeLevelAssetPtr, LevelAsset)

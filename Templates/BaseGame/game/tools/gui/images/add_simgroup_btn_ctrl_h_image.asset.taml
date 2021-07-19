@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="add_simgroup_btn_ctrl_h_image"
+    imageFile="@assetFile=add-simgroup-btn_ctrl_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

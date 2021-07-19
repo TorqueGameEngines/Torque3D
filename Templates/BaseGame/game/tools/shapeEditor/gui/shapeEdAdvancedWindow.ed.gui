@@ -690,7 +690,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapCtrl(){
-                  bitmap = "tools/gui/images/inactive-overlay";
+                  bitmapAsset = "ToolsModule:inactive_overlay_image";
                   position = "4 18";
                   Extent = "193 64";
                   tooltip = "Imposters must be enabled, and an imposter detail level selected to edit these properties";
@@ -1747,7 +1747,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/inactive-overlay";
+               bitmapAsset = "ToolsModule:inactive_overlay_image";
                position = "0 47";
                extent = "199 175";
                horizSizing = "right";

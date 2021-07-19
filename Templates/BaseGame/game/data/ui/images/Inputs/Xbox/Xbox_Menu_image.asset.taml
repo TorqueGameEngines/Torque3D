@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Xbox_Menu_image"
+    imageFile="@assetFile=Xbox_Menu.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

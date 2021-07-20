@@ -30,55 +30,55 @@ function UI::initClient(%this)
 {
    //Load UI stuff
    //we need to load this because some of the menu profiles use the sounds here
-   //%this.queueExec("./datablocks/guiSounds." @ $TorqueScriptFileExtension);
+   //%this.queueExec("./datablocks/guiSounds");
    
    //Profiles
-   %this.queueExec("./scripts/profiles." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/profiles");
    
    //Now gui files
-   %this.queueExec("./scripts/menuInputButtons." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/menuInputButtons");
    
-   %this.queueExec("./guis/mainMenu." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/mainMenu");
    %this.queueExec("./guis/mainMenu.gui");
    
-   %this.queueExec("./guis/chooseLevelDlg." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/chooseLevelDlg");
    %this.queueExec("./guis/chooseLevelDlg.gui");
    
-   %this.queueExec("./guis/joinServerMenu." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/joinServerMenu");
    %this.queueExec("./guis/joinServerMenu.gui");
    
    %this.queueExec("./guis/loadingGui.gui");
    
-   %this.queueExec("./guis/optionsMenu." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/optionsMenu");
    %this.queueExec("./guis/optionsMenu.gui");
    
-   %this.queueExec("./guis/pauseMenu." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/pauseMenu");
    %this.queueExec("./guis/pauseMenu.gui");
    
    %this.queueExec("./guis/remapDlg.gui");
    %this.queueExec("./guis/remapConfirmDlg.gui");
    
-   %this.queueExec("./guis/profiler." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/profiler");
    %this.queueExec("./guis/profiler.gui");
    
    %this.queueExec("./guis/netGraphGui.gui");
    %this.queueExec("./guis/RecordingsDlg.gui");
    
-   %this.queueExec("./guis/guiMusicPlayer." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/guiMusicPlayer");
    %this.queueExec("./guis/guiMusicPlayer.gui");
    
-   %this.queueExec("./guis/startupGui." @ $TorqueScriptFileExtension);
+   %this.queueExec("./guis/startupGui");
    %this.queueExec("./guis/startupGui.gui");
    
    // Load Editor Dialogs
    %this.queueExec("./guis/messageBoxDlg.gui");
    
    //Load scripts
-   %this.queueExec("./scripts/controlsMenu." @ $TorqueScriptFileExtension);
-   %this.queueExec("./scripts/messageBoxes." @ $TorqueScriptFileExtension);
-   %this.queueExec("./scripts/help." @ $TorqueScriptFileExtension);
-   %this.queueExec("./scripts/cursors." @ $TorqueScriptFileExtension);
-   %this.queueExec("./scripts/utility." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/controlsMenu");
+   %this.queueExec("./scripts/messageBoxes");
+   %this.queueExec("./scripts/help");
+   %this.queueExec("./scripts/cursors");
+   %this.queueExec("./scripts/utility");
 }
 
 function UI::onCreateClientConnection(%this){}

@@ -161,7 +161,7 @@ function AssetBrowser::buildPostEffectAssetPreview(%this, %assetDef, %previewDat
    %previewData.assetPath = %assetDef.scriptFilePath;
    %previewData.doubleClickCommand = "";
    
-   %previewData.previewImage = "tools/assetBrowser/art/postEffectIcon";
+   %previewData.previewImage = "ToolsModule:postEffectIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

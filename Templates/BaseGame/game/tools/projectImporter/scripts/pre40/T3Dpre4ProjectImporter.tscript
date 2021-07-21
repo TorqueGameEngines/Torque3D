@@ -114,6 +114,21 @@ function T3Dpre4ProjectImporter::copyFiles(%this)
       %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
    }
    
+   //
+   //Now that we've done that, we'll load and scan the module for asset defs
+   %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*.asset.taml", true);
+   
+   while( %file !$= "" )
+   {
+      %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
+      %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+      
+      AssetDatabase.addDeclaredAsset(%moduleDef, %file);
+      
+      %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.asset.taml" );
+   }
+   //
+   
    %currentPage-->fileCopyText.setValue("File copy done! Press Next to continue.");
    
    ProjectImportWindow-->nextButton.setActive(true);

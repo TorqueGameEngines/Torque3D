@@ -158,6 +158,15 @@ function RetargetDecalButton::onClick( %this )
 
 function NewDecalButton::onClick( %this )
 {  
+   AssetBrowser_SelectModule.showDialog("DecalEditorGui.pickedNewDecalTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function DecalEditorGui::pickedNewDecalTargetModule(%this, %module)
+{
+   %moduleDef = ModuleDatabase.findModule(%module);
+   $decalDataFile = %moduleDef.ModulePath @ "/scripts/managedData/managedDecalData." @ $TorqueScriptFileExtension;
+   
    %name = getUniqueName( "NewDecalData" );
    
    %str = "datablock DecalData( " @ %name @ " ) { Material = \"WarningMaterial\"; };";            

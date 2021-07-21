@@ -481,8 +481,8 @@
       selectionBoxColor = "255 255 0 255";
       selectionLocked = "0";
       toggleIgnoreList = "0";
-      selectHandle = "tools/worldEditor/images/SelectHandle.png";
-      defaultHandle = "tools/worldEditor/images/DefaultHandle.png";
+      selectHandle = "ToolsModule:SelectHandle_image";
+      defaultHandle = "ToolsModule:DefaultHandle_image";
       lockedHandleAsset = "ToolsModule:LockedHandle_image";
    };
    new TerrainEditor(ETerrainEditor) {

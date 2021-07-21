@@ -347,7 +347,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       %depAssetType = %childAssetItem.assetType;
       if(%depAssetType $= "ImageAsset")
       {
-         %matSet = "%newAsset.imageMap"@%dependencySlotId@"=\"@Asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
+         %matSet = "%newAsset.imageMap"@%dependencySlotId@"=\"@asset="@%moduleName@":"@%childAssetItem.assetName@"\";";
          eval(%matSet);
          %dependencySlotId++;
       }
@@ -461,7 +461,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
       %previewData.previewImage = %imgAsset.getImagePath();
    }
    else
-      %previewData.previewImage = "tools/assetBrowser/art/materialIcon";
+      %previewData.previewImage = "tools/assetBrowser/art/materialIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

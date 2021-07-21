@@ -9,7 +9,7 @@ function AssetBrowser::buildSoundAssetPreview(%this, %assetDef, %previewData)
    else
       %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
    
-   %previewData.previewImage = "tools/assetBrowser/art/soundIcon";   
+   %previewData.previewImage = "ToolsModule:soundIcon_image";   
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

@@ -61,7 +61,9 @@ function TerrainEditor::setPaintMaterial( %this, %matIndex, %terrainMat )
    ETerrainEditor.paintIndex = %matIndex;
    ETerrainMaterialSelected.selectedMatIndex = %matIndex;
    ETerrainMaterialSelected.selectedMat = %terrainMat;
-   ETerrainMaterialSelected.bitmap = %terrainMat.diffuseMap;
+   
+   ETerrainMaterialSelected.setBitmap(%terrainMat.getDiffuseMap());
+
    ETerrainMaterialSelectedEdit.Visible = isObject(%terrainMat);
    TerrainTextureText.text = %terrainMat.getInternalName();
    ProceduralTerrainPainterDescription.text = "Generate "@ %terrainMat.getInternalName() @" layer";
@@ -139,7 +141,7 @@ function EPainter::updateLayers( %this, %matIndex )
       };
 
       %ctrl.setText( %matInternalName );
-      %ctrl.setBitmap( %mat.diffuseMap );
+      %ctrl.setBitmap( %mat.getDiffuseMap() );
 
       %tooltip = %matInternalName;
       if(%i < 9)

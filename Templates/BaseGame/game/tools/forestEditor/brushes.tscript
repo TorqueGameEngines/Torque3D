@@ -20,6 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//--- OBJECT WRITE BEGIN ---
 %forestBrushesGroup = new SimGroup( ForestBrushGroup )
 {
 };
+//--- OBJECT WRITE END ---

@@ -30,7 +30,6 @@ function Core_Rendering::onCreate(%this)
    $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat", 12);
    
    exec("./scripts/graphicsOptions." @ $TorqueScriptFileExtension);
-   exec("./scripts/terrainSettings." @ $TorqueScriptFileExtension);
    exec("./scripts/renderManager." @ $TorqueScriptFileExtension);
 }
 

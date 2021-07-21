@@ -567,11 +567,13 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), 
 }
 
 #define INIT_SHAPEASSET_ARRAY(name, index) \
+{\
    m##name##Name[index] = StringTable->EmptyString(); \
    m##name##AssetId[index] = StringTable->EmptyString(); \
    m##name##Asset[index] = NULL; \
    m##name[index] = NULL;\
-   _set##name(StringTable->insert(ShapeAsset::smNoShapeAssetFallback), index);
+   _set##name(StringTable->insert(ShapeAsset::smNoShapeAssetFallback), index);\
+}
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -588,9 +590,11 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), 
 #endif // SHOW_LEGACY_FILE_FIELDS
 
 #define CLONE_SHAPEASSET_ARRAY(name, index) \
+{\
    m##name##Name[index] = other.m##name##Name[index];\
    m##name##AssetId[index] = other.m##name##AssetId[index];\
    m##name##Asset[index] = other.m##name##Asset[index];\
+}
 
 #define PACKDATA_SHAPEASSET_ARRAY(name, index)\
    if (stream->writeFlag(m##name##Asset[index].notNull()))\

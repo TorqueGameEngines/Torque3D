@@ -1,8 +1,8 @@
 <ImageAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="skybox_4"
-    imageFile="@assetFile=skybox_4.png"
+    AssetName="NightSkybox_1"
+    imageFile="@assetFile=NightSkybox_1.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

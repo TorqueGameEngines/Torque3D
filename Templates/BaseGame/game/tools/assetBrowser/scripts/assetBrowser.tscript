@@ -453,15 +453,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    
    %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
    
-   /*if(%assetType $= "ShapeAsset")
-   {
-      %previewButton = AssetPreviewButtonsTemplate-->ShapeAssetPreviewButton.deepClone();
-   }
-   else
-   {
-      %previewButton = AssetPreviewButtonsTemplate-->GeneralAssetPreviewButton.deepClone();
-   }*/
-   
    %textBottomPad = 20;
    
    %previewButton = new GuiIconButtonCtrl()
@@ -517,7 +508,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %previewButton.moduleName = %moduleName;
    %previewButton.assetType = %assetType;
    
-   %previewButton.iconBitmap = %this.previewData.previewImage;
+   %previewButton.bitmapAsset = %this.previewData.previewImage;
    
    %previewButton.profile = "AssetBrowserPreview" @ %previewButton.assetType;
    %previewButton.tooltip = %this.previewData.tooltip;

@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-$PE_PARTICLEEDITOR_DEFAULT_FILENAME = "art/particles/managedParticleData." @ $TorqueScriptFileExtension;
+$PE_PARTICLEEDITOR_DEFAULT_FILENAME = "data/managedParticleData." @ $TorqueScriptFileExtension;
 
 
 //=============================================================================================
@@ -57,11 +57,16 @@ function PE_ParticleEditor::guiSync( %this )
    %popup.sort();
    %popup.setSelected( %data );
          
-   %bitmap = MaterialEditorGui.searchForTexture( %data.getName(), %data.textureName );
+   %bitmap = %data.getTexture();//MaterialEditorGui.searchForTexture( %data.getName(), %data.getTexture() );
    if( %bitmap !$= "" )
    {
       PE_ParticleEditor-->PEP_previewImage.setBitmap( %bitmap );
-      PE_ParticleEditor-->PEP_previewImageName.setText( %bitmap );
+      
+      %text = %data.getTextureAsset();
+      if(%text $= "")
+         %text = %bitmap;
+         
+      PE_ParticleEditor-->PEP_previewImageName.setText( %text );
       PE_ParticleEditor-->PEP_previewImageName.tooltip = %bitmap;
    }
    else
@@ -215,15 +220,7 @@ function PE_ParticleEditor::updateParticleTexture( %this, %action )
 {
    if( %action )
    {
-      %texture = MaterialEditorGui.openFile("texture");
-      if( %texture !$= "" )
-      {
-         PE_ParticleEditor-->PEP_previewImage.setBitmap(%texture);
-         PE_ParticleEditor-->PEP_previewImageName.setText(%texture);
-         PE_ParticleEditor-->PEP_previewImageName.tooltip = %texture;
-         
-         PE_ParticleEditor.updateParticle( "textureName", %texture );
-      }
+      AssetBrowser.showDialog("ImageAsset", "PE_ParticleEditor.onImageAssetSelected");
    }
    else
    {
@@ -232,6 +229,18 @@ function PE_ParticleEditor::updateParticleTexture( %this, %action )
       PE_ParticleEditor-->PEP_previewImageName.tooltip = "";
       
       PE_ParticleEditor.updateParticle( "textureName", "" );
+   }
+}
+
+function PE_ParticleEditor::onImageAssetSelected(%this, %assetId)
+{
+   if( AssetDatabase.isDeclaredAsset(%assetId) )
+   {
+      PE_ParticleEditor-->PEP_previewImage.setBitmap(%assetId);
+      PE_ParticleEditor-->PEP_previewImageName.setText(%assetId);
+      PE_ParticleEditor-->PEP_previewImageName.tooltip = %assetId;
+      
+      PE_ParticleEditor.updateParticle( "textureAsset", %assetId );
    }
 }
 
@@ -389,10 +398,17 @@ function PE_ParticleEditor::loadNewParticle( %this, %particle )
       
    PE_ParticleEditor.currParticle = %particle;
    
+   error("PE_ParticleEditor::loadNewParticle() - Loading particle: " @ %particle.getName());
+   error("Particle TextureName: " @ %particle.getTexture());
+   
+   error("ReloadingParticle...");
    %particle.reload();
    
    PE_ParticleEditor_NotDirtyParticle.assignFieldsFrom( %particle );
    PE_ParticleEditor_NotDirtyParticle.originalName = %particle.getName();
+
+   error("Post duplicate Particle TextureName: " @ %particle.getTexture());
+   error("Post duplicate PE_ParticleEditor_NotDirtyParticle TextureName: " @ PE_ParticleEditor_NotDirtyParticle.getTexture());
 
    PE_ParticleEditor.guiSync();
    PE_ParticleEditor.setParticleNotDirty();
@@ -406,8 +422,10 @@ function PE_ParticleEditor::setParticleDirty( %this )
    PE_ParticleEditor.dirty = true;
    
    %particle = PE_ParticleEditor.currParticle;
+   %filename = %particle.getFilename();
+   %editorFilename = "tools/particleEditor/particleParticleEditor.ed." @ $TorqueScriptFileExtension;
    
-   if( %particle.getFilename() $= "" || %particle.getFilename() $= "tools/particleEditor/particleParticleEditor.ed." @ $TorqueScriptFileExtension )
+   if( %filename $= "" || %filename $= %editorFilename )
       PE_ParticleSaver.setDirty( %particle, $PE_PARTICLEEDITOR_DEFAULT_FILENAME );
    else
       PE_ParticleSaver.setDirty( %particle );
@@ -462,6 +480,24 @@ function PE_ParticleEditor::createParticle( %this, %replaceSlot )
    else
       %particleIndex = %replaceSlot - 1;
    
+   PE_ParticleEditor.newParticleSlot = %particleIndex;
+   
+   if(%replaceSlot $= "" || %replaceSlot != 0)
+   {
+      AssetBrowser_SelectModule.showDialog("PE_ParticleEditor.pickedNewParticleTargetModule");
+      AssetBrowser_SelectModuleWindow.selectWindow();
+   }
+   else
+   {
+      PE_ParticleEditor.pickedNewParticleTargetModule(PE_EmitterEditor.targetModule);
+   }
+}
+
+function PE_ParticleEditor::pickedNewParticleTargetModule(%this, %module)
+{
+   %moduleDef = ModuleDatabase.findModule(%module);
+   $PE_PARTICLEEDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedParticleData." @ $TorqueScriptFileExtension;
+   
    // Create the particle datablock and add to the emitter.
    
    %newParticle = getUniqueName( "newParticle" );
@@ -474,8 +510,8 @@ function PE_ParticleEditor::createParticle( %this, %replaceSlot )
    
    %action = ParticleEditor.createUndo( ActionCreateNewParticle, "Create New Particle" );
    %action.particle = %newParticle.getId();
-   %action.particleIndex = %particleIndex;
-   %action.prevParticle = ( "PEE_EmitterParticleSelector" @ ( %particleIndex + 1 ) ).getSelected();
+   %action.particleIndex = PE_ParticleEditor.newParticleSlot;
+   %action.prevParticle = ( "PEE_EmitterParticleSelector" @ ( PE_ParticleEditor.newParticleSlot + 1 ) ).getSelected();
    %action.emitter = PE_EmitterEditor.currEmitter;
    
    ParticleEditor.submitUndo( %action );

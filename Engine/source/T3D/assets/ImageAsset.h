@@ -538,9 +538,11 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
 }
 
 #define INIT_IMAGEASSET_ARRAY(name, index) \
+{\
    m##name##Name[index] = StringTable->EmptyString(); \
    m##name##AssetId[index] = StringTable->EmptyString(); \
-   m##name##Asset[index] = NULL;
+   m##name##Asset[index] = NULL;\
+}
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -557,9 +559,11 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
 #endif
 
 #define CLONE_IMAGEASSET_ARRAY(name, index) \
+{\
    m##name##Name[index] = other.m##name##Name[index];\
    m##name##AssetId[index] = other.m##name##AssetId[index];\
-   m##name##Asset[index] = other.m##name##Asset[index];
+   m##name##Asset[index] = other.m##name##Asset[index];\
+}
 
 #define LOAD_IMAGEASSET_ARRAY(name, index)\
 if (m##name##AssetId[index] != StringTable->EmptyString())\

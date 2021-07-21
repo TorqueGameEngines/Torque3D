@@ -64,8 +64,6 @@ function StartupGui::next(%this)
    // Set us to a blank screen while we load the next one
    Canvas.setContent(BlankGui);
    
-   %asdasd = %this.bitmap[$StartupIdx];
-
    // Set our bitmap and reset the done variable
    %this.setBitmap(%this.bitmap[$StartupIdx]);
    %this.done = false;

@@ -22,12 +22,12 @@
 
 singleton CubemapData( NightCubemap )
 {
-   cubeFace[0] = "./skybox_1";
-   cubeFace[1] = "./skybox_2";
-   cubeFace[2] = "./skybox_3";
-   cubeFace[3] = "./skybox_4";
-   cubeFace[4] = "./skybox_5";
-   cubeFace[5] = "./skybox_6";
+   cubeFaceAsset[0] = "Core_Rendering:NightSkybox_1";
+   cubeFaceAsset[1] = "Core_Rendering:NightSkybox_2";
+   cubeFaceAsset[2] = "Core_Rendering:NightSkybox_3";
+   cubeFaceAsset[3] = "Core_Rendering:NightSkybox_4";
+   cubeFaceAsset[4] = "Core_Rendering:NightSkybox_5";
+   cubeFaceAsset[5] = "Core_Rendering:NightSkybox_6";
 };
 
 singleton Material( NightSkyMat )

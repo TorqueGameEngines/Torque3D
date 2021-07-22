@@ -542,6 +542,7 @@ ShadowMapParams::ShadowMapParams( LightInfo *light )
    fadeStartDist = 75.0f;
    lastSplitTerrainOnly = false;
    mQuery = GFX->createOcclusionQuery();
+   cookie = StringTable->EmptyString();;
 
    _validate();
 }
@@ -647,15 +648,15 @@ LightShadowMap* ShadowMapParams::getOrCreateShadowMap()
 
 GFXTextureObject* ShadowMapParams::getCookieTex()
 {
-   if (  cookie.isNotEmpty() &&
+   if ( hasCookieTex() &&
          (  mCookieTex.isNull() || 
-            cookie != mCookieTex->getPath() ) )
+            cookie != StringTable->insert(mCookieTex->getPath().c_str()) ) )
    {
       mCookieTex.set(   cookie, 
                         &GFXStaticTextureSRGBProfile, 
                         "ShadowMapParams::getCookieTex()" );
    }
-   else if ( cookie.isEmpty() )
+   else if (!hasCookieTex())
       mCookieTex = NULL;
 
    return mCookieTex.getPointer();
@@ -663,13 +664,13 @@ GFXTextureObject* ShadowMapParams::getCookieTex()
 
 GFXCubemap* ShadowMapParams::getCookieCubeTex()
 {
-   if (  cookie.isNotEmpty() &&
+   if (  hasCookieTex() &&
          (  mCookieCubeTex.isNull() || 
-            cookie != mCookieCubeTex->getPath() ) )
+            cookie != StringTable->insert(mCookieTex->getPath().c_str())) )
    {
       mCookieCubeTex.set( cookie );
    }
-   else if ( cookie.isEmpty() )
+   else if (!hasCookieTex())
       mCookieCubeTex = NULL;
 
    return mCookieCubeTex.getPointer();
@@ -693,7 +694,7 @@ void ShadowMapParams::packUpdate( BitStream *stream ) const
    
    stream->write( texSize );
 
-   stream->write( cookie );
+   stream->writeString( cookie );
 
    stream->write( numSplits );
    stream->write( logWeight );
@@ -723,7 +724,7 @@ void ShadowMapParams::unpackUpdate( BitStream *stream )
 
    stream->read( &texSize );
 
-   stream->read( &cookie );
+   cookie = stream->readSTString();
 
    stream->read( &numSplits );
    stream->read( &logWeight );

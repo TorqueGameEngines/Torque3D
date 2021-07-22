@@ -361,8 +361,7 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    m##name##Name = StringTable->EmptyString(); \
    m##name##AssetId = StringTable->EmptyString(); \
    m##name##Asset = NULL; \
-   m##name = NULL;\
-   _set##name(StringTable->insert(ShapeAsset::smNoShapeAssetFallback));
+   m##name = NULL;
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -572,7 +571,6 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), 
    m##name##AssetId[index] = StringTable->EmptyString(); \
    m##name##Asset[index] = NULL; \
    m##name[index] = NULL;\
-   _set##name(StringTable->insert(ShapeAsset::smNoShapeAssetFallback), index);\
 }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS

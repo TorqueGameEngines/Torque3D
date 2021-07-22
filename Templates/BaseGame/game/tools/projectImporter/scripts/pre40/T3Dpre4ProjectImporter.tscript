@@ -249,12 +249,17 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                   
                   if(%objectClassStack.count() == 1)
                   {
-                     //we only process top-level objects directly
-                     %processFunction = "process" @ %currentObjClass @ "Object";
-                     if(%this.isMethod(%processFunction))
+                     //we only process top-level objects directly                 
+                     %inheritanceList = getClassHierarchy(%currentObjClass);
+                     for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                      {
-                        %this.call(%processFunction, %file, %objectName);
-                     } 
+                        %subclass = getWord(%inheritanceList, %classDepth);
+                        %processFunction = "process" @ %subclass @ "Object";
+                        if(%this.isMethod(%processFunction))
+                        {
+                           %this.call(%processFunction, %file, %objectName);
+                        }
+                     }
                   }
                }
             }
@@ -292,12 +297,17 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                   
                   if(%objectClassStack.count() == 1)
                   {
-                     //we only process top-level objects directly
-                     %processFunction = "process" @ %currentObjClass @ "Object";
-                     if(%this.isMethod(%processFunction))
+                     //we only process top-level objects directly                 
+                     %inheritanceList = getClassHierarchy(%currentObjClass);
+                     for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                      {
-                        %this.call(%processFunction, %file, %objectName);
-                     } 
+                        %subclass = getWord(%inheritanceList, %classDepth);
+                        %processFunction = "process" @ %subclass @ "Object";
+                        if(%this.isMethod(%processFunction))
+                        {
+                           %this.call(%processFunction, %file, %objectName);
+                        }
+                     }
                   }
                }
             }
@@ -312,15 +322,20 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                {
                   %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
                   
-                  %processFunction = "process" @ %currentObjClass @ "Line";
-                  if(%this.isMethod(%processFunction))
+                  %inheritanceList = getClassHierarchy(%currentObjClass);
+                  for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                   {
-                     %outLine = %this.call(%processFunction, %line);
-
-                     if(%line !$= %outLine)
+                     %subclass = getWord(%inheritanceList, %classDepth);
+                     %processFunction = "process" @ %subclass @ "Line";
+                     if(%this.isMethod(%processFunction))
                      {
-                        %fileWasChanged = true;
-                        %line = %outLine;
+                        %outLine = %this.call(%processFunction, %line);
+
+                        if(%line !$= %outLine)
+                        {
+                           %fileWasChanged = true;
+                           %line = %outLine;
+                        }
                      }
                   }
                }
@@ -386,7 +401,8 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       if(!endsWith(%file, "cs") && 
          !endsWith(%file, "tscript") && 
          !endsWith(%file, "mis") && 
-         !endsWith(%file, "gui"))
+         !endsWith(%file, "gui") && 
+         !endsWith(%file, "prefab"))
       {
          %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.*" );
          continue;
@@ -447,12 +463,17 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                   
                   if(%objectClassStack.count() == 1)
                   {
-                     //we only process top-level objects directly
-                     %processFunction = "process" @ %currentObjClass @ "Object";
-                     if(%this.isMethod(%processFunction))
+                     //we only process top-level objects directly                     
+                     %inheritanceList = getClassHierarchy(%currentObjClass);
+                     for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                      {
-                        %this.call(%processFunction, %file, %objectName);
-                     } 
+                        %subclass = getWord(%inheritanceList, %classDepth);
+                        %processFunction = "process" @ %subclass @ "Object";
+                        if(%this.isMethod(%processFunction))
+                        {
+                           %this.call(%processFunction, %file, %objectName);
+                        }
+                     }
                   }
                }
                
@@ -515,11 +536,16 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                   if(%objectClassStack.count() == 1)
                   {
                      //we only process top-level objects directly
-                     %processFunction = "process" @ %currentObjClass @ "Object";
-                     if(%this.isMethod(%processFunction))
+                     %inheritanceList = getClassHierarchy(%currentObjClass);
+                     for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                      {
-                        %this.call(%processFunction, %file, %objectName);
-                     } 
+                        %subclass = getWord(%inheritanceList, %classDepth);
+                        %processFunction = "process" @ %subclass @ "Object";
+                        if(%this.isMethod(%processFunction))
+                        {
+                           %this.call(%processFunction, %file, %objectName);
+                        }
+                     }
                   }
                }
             }
@@ -551,11 +577,16 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                   if(%objectClassStack.count() == 1)
                   {
                      //we only process top-level objects directly
-                     %processFunction = "process" @ %currentObjClass @ "Object";
-                     if(%this.isMethod(%processFunction))
+                     %inheritanceList = getClassHierarchy(%currentObjClass);
+                     for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                      {
-                        %this.call(%processFunction, %file, %objectName);
-                     } 
+                        %subclass = getWord(%inheritanceList, %classDepth);
+                        %processFunction = "process" @ %subclass @ "Object";
+                        if(%this.isMethod(%processFunction))
+                        {
+                           %this.call(%processFunction, %file, %objectName);
+                        } 
+                     }
                   }
                }
             }
@@ -569,17 +600,22 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                if(%objectClassStack.count() != 0)
                {
                   %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
-                  
-                  %processFunction = "process" @ %currentObjClass @ "Line";
-                  if(%this.isMethod(%processFunction))
+                                     
+                  %inheritanceList = getClassHierarchy(%currentObjClass);
+                  for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                   {
-                     %outLine = %this.call(%processFunction, %line);
-
-                     if(%line !$= %outLine)
+                     %subclass = getWord(%inheritanceList, %classDepth);
+                     %processFunction = "process" @ %subclass @ "Line";
+                     if(%this.isMethod(%processFunction))
                      {
-                        %fileWasChanged = true;
-                        %line = %outLine;
-                     }
+                        %outLine = %this.call(%processFunction, %line);
+
+                        if(%line !$= %outLine)
+                        {
+                           %fileWasChanged = true;
+                           %line = %outLine;
+                        }
+                      }
                   }
                }
             }
@@ -699,176 +735,36 @@ function T3Dpre4ProjectImporter::process<ClassName>Line(%this, %line)
 //==============================================================================
 // Misc Object Classes
 //==============================================================================
-function T3Dpre4ProjectImporter::processBasicCloudsLine(%this, %line)
+function T3Dpre4ProjectImporter::genProcessor(%classType, %conversionMap)
 {
-   %outLine = processLegacyField(%line, "texture", "textureAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
+    %stryng = "function T3Dpre4ProjectImporter::process" @%classType@ "Line(%this, %line){\n";
+    %count = getWordCount(%conversionMap);
+    for (%i = 0; %i<%count; %i+=2)
+    {
+        %stryng = %stryng @ " %outLine = processLegacyField(%line,\""@ getWord(%conversionMap,%i)@ "\",\""@ getWord(%conversionMap,%i+1)@"\");\n";
+        %stryng = %stryng @ "  if(%outLine !$= %line) return %outLine;\n";
+    }
+    %stryng = %stryng @ " return %line;\n}";
+    eval(%stryng);
 }
 
-function T3Dpre4ProjectImporter::processCloudLayerLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "texture", "textureAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processDecalRoadLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processMeshRoadLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "topMaterial", "topMaterialAsset");
-   %outLine = processLegacyField(%line, "bottomMaterial", "bottomMaterialAsset");
-   %outLine = processLegacyField(%line, "sideMaterial", "sideMaterialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processScatterSkyLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "moonMat", "moonMatAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processSunLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "coronaMaterial", "coronaMaterialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processVolumetricFogLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "ShapeAsset");
-   %outLine = processLegacyField(%line, "texture", "textureAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processWaterPlaneLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "rippleTex", "rippleTexAsset");
-   %outLine = processLegacyField(%line, "foamTex", "foamTexAsset");
-   %outLine = processLegacyField(%line, "depthGradientTex", "depthGradientTexAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processWaterBlockLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "rippleTex", "rippleTexAsset");
-   %outLine = processLegacyField(%line, "foamTex", "foamTexAsset");
-   %outLine = processLegacyField(%line, "depthGradientTex", "depthGradientTexAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processConvexShapeLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processRenderMeshExampleLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processRenderShapeExampleLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGroundCoverLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-   %outLine = processLegacyField(%outLine, "shape", "shapeAsset");
-   %outLine = processLegacyField(%outLine, "shapeFilename", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGroundPlaneLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processLevelInfoLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "accuTexture", "accuTextureAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processTSStaticLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-   %outLine = processLegacyField(%outLine, "shapeName", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
+T3Dpre4ProjectImporter::genProcessor("BasicClouds", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("CloudLayer", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("DecalRoad", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("MeshRoad", "topMaterial topMaterialAsset bottomMaterial bottomMaterialAsset sideMaterial sideMaterialAsset");
+T3Dpre4ProjectImporter::genProcessor("ScatterSky", "moonMat moonMatAsset");
+T3Dpre4ProjectImporter::genProcessor("Sun", "coronaMaterial coronaMaterialAsset");
+T3Dpre4ProjectImporter::genProcessor("VolumetricFog", "shape ShapeAsset texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("WaterPlane", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
+T3Dpre4ProjectImporter::genProcessor("WaterBlock", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
+T3Dpre4ProjectImporter::genProcessor("ConvexShape", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("RenderMesh", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("RenderShape", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("GroundCover", "material materialAsset shape shapeAsset shapeFilename shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("GroundPlane", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset");
+T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset");
 //==============================================================================
 // Levels
 //==============================================================================
@@ -895,312 +791,74 @@ function T3Dpre4ProjectImporter::processLevelInfoLine(%this, %line)
 //==============================================================================
 // GUIs
 //==============================================================================
-
-function T3Dpre4ProjectImporter::processGuiIconButtonCtrlLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
-   %outLine = processLegacyField(%line, "iconBitmap", "bitmapAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiToolboxButtonCtrlLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "normalBitmap", "normalBitmapAsset");
-   %outLine = processLegacyField(%line, "loweredBitmap", "loweredBitmapAsset");
-   %outLine = processLegacyField(%line, "hoverBitmap", "hoverBitmapAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiBitmapCtrlLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiMaterialCtrlLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiCursorLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiChunkedBitmapCtrlLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiProgressBitmapLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiMissionAreaCtrlLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "handleBitmap", "handleBitmapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processWorldEditorLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "selectHandle", "selectHandleAsset");
-   %outLine = processLegacyField(%line, "defaultHandle", "defaultHandleAsset");
-   %outLine = processLegacyField(%line, "lockedHandle", "lockedHandleAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processGuiControlProfileLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "bitmap", "bitmapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
+T3Dpre4ProjectImporter::genProcessor("GuiIconButtonCtrl", "bitmap bitmapAsset iconBitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiToolboxButtonCtrl", "normalBitmap normalBitmapAsset loweredBitmap loweredBitmapAsset hoverBitmap hoverBitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiBitmapCtrl", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiMaterialCtrl", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiCursor", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiChunkedBitmapCtrl", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiProgressBitmap", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiMissionArea", "handleBitmap handleBitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("WorldEditor", "selectHandle selectHandleAsset defaultHandle defaultHandleAsset lockedHandle lockedHandleAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiControlProfile", "bitmap bitmapAsset");
 //==============================================================================
 // Datablocks
 //==============================================================================
-function T3Dpre4ProjectImporter::processForestItemDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processCubeMapDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "cubemapFace", "cubemapFaceAsset");
-   %outLine = processLegacyField(%line, "cubemap", "cubemapAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processDebrisDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processDecalDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "material", "materialAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processExplosionDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "explosionShape", "explosionShapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processParticleDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "texture", "textureAsset");
-   %outLine = processLegacyField(%outLine, "textureName", "textureAsset");
-   %outLine = processLegacyField(%outLine, "textureExt", "textureExtAsset");
-   %outLine = processLegacyField(%outLine, "textureExtName", "textureExtAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processPrecipitationDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "drop", "dropAsset");
-   %outLine = processLegacyField(%outLine, "dropTexture", "dropAsset");
-   %outLine = processLegacyField(%outLine, "splash", "splashAsset");
-   %outLine = processLegacyField(%outLine, "splashTexture", "splashAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processSplashDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "texture", "textureAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processLightFlareDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "flareTexture", "flareTextureAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processPhysicsDebrisDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-   %outLine = processLegacyField(%outLine, "shapeFile", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processPhysicsShapeDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processPlayerDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shapeFP", "shapeFPAsset");
-   %outLine = processLegacyField(%outLine, "shapeNameFP", "shapeFPAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processProjectileDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "projectileShape", "projectileShapeAsset");
-   %outLine = processLegacyField(%outLine, "projectileShapeName", "projectileShapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processShapeBaseDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-   %outLine = processLegacyField(%line, "debrisShape", "debrisShapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processShapeBaseImageDataLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-   %outLine = processLegacyField(%outLine, "shapeFP", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
-function T3Dpre4ProjectImporter::processWheeledVehicleTireLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "shape", "shapeAsset");
-  
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
-
+T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubemapFaceAsset cubemap cubemapAsset");
+T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ParticleData", "texture textureAsset textureName textureAsset textureExt textureExtAsset textureExtName textureExtAsset");
+T3Dpre4ProjectImporter::genProcessor("PrecipitationData", "drop dropAsset dropTexture dropAsset splash splashAsset splashTexture splashAsset");
+T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
+T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("PlayerData", "shapeFP shapeFPAsset shapeNameFP shapeFPAsset");
+T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset shapeFP shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("WheeledVehicleTire", "shape shapeAsset shapeFile shapeAsset");
 //==============================================================================
 // Materials
 //==============================================================================
+//long form of the result of T3Dpre4ProjectImporter::genProcessor since that would result in a rediculously long oneliner
 function T3Dpre4ProjectImporter::processMaterialLine(%this, %line)
 {
    %outLine = processLegacyField(%line, "baseTex", "diffuseMapAsset");
-   %outLine = processLegacyField(%outLine, "diffuseMap", "diffuseMapAsset");
-   %outLine = processLegacyField(%outLine, "lightMap", "lightMapAsset");
-   %outLine = processLegacyField(%outLine, "toneMap", "toneMapAsset");
-   %outLine = processLegacyField(%outLine, "detailTex", "detailMapAsset");
-   %outLine = processLegacyField(%outLine, "detailMap", "detailMapAsset");
-   %outLine = processLegacyField(%outLine, "overlayTex", "overlayMapAsset");
-   %outLine = processLegacyField(%outLine, "overlayMap", "overlayMapAsset");
-   %outLine = processLegacyField(%outLine, "bumpTex", "normalMapAsset");
-   %outLine = processLegacyField(%outLine, "normalMap", "normalMapAsset");
-   %outLine = processLegacyField(%outLine, "ormConfigMap", "ormConfigMapAsset");
-   %outLine = processLegacyField(%outLine, "roughMap", "roughMapAsset");
-   %outLine = processLegacyField(%outLine, "aoMap", "aoMapAsset");
-   %outLine = processLegacyField(%outLine, "metalMap", "metalMapAsset");
-   %outLine = processLegacyField(%outLine, "glowMap", "glowMapAsset");
-   %outLine = processLegacyField(%outLine, "detailNormalMap", "detailNormalMapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "diffuseMap", "diffuseMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "lightMap", "lightMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "toneMap", "toneMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "detailTex", "detailMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "detailMap", "detailMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "overlayTex", "overlayMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "overlayMap", "overlayMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "bumpTex", "normalMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "normalMap", "normalMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "ormConfigMap", "ormConfigMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "roughMap", "roughMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "aoMap", "aoMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "metalMap", "metalMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "glowMap", "glowMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "detailNormalMap", "detailNormalMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   return %line;
 }
 
 function T3Dpre4ProjectImporter::processMaterialObject(%this, %file, %objectName)
@@ -1247,15 +905,16 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %file, %objectName
 function T3Dpre4ProjectImporter::processTerrainMaterialLine(%this, %line)
 {
    %outLine = processLegacyField(%line, "diffuseMap", "diffuseMapAsset");
-   %outLine = processLegacyField(%outLine, "normalMap", "normalMapAsset");
-   %outLine = processLegacyField(%outLine, "detailMap", "detailMapAsset");
-   %outLine = processLegacyField(%outLine, "ORMConfigMap", "ORMConfigMapAsset");
-   %outLine = processLegacyField(%outLine, "macroMap", "macroMapAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "normalMap", "normalMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "detailMap", "detailMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "ORMConfigMap", "ORMConfigMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "macroMap", "macroMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   return %line;
 }
 
 function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %objectName)
@@ -1301,12 +960,4 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %obj
 //==============================================================================
 // PostEffects
 //==============================================================================
-function T3Dpre4ProjectImporter::processPostEffectLine(%this, %line)
-{
-   %outLine = processLegacyField(%line, "texture", "textureAsset");
-   
-   if(%outLine !$= %line)
-      return %outLine;
-   else
-      return %line;
-}
+T3Dpre4ProjectImporter::genProcessor("PostEffect", "texture textureAsset");

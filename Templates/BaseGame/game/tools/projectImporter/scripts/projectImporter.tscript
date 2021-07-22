@@ -433,6 +433,10 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
             %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/main/");
          }
       }
+      else if ((strpos(%value,"/") == -1)&&(strpos(%value,"\\") == -1))
+      {
+         %targetFilename = $ProjectImporter::currentFilePath @ "/" @ %value;         
+      }
       else if(!startsWith(%value, $ProjectImporter::modulePath @ "/"))
       {
          %targetFilename = $ProjectImporter::modulePath @ "/" @ %value;

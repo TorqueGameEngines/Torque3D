@@ -76,6 +76,7 @@ mAssetInitialized(false)
    mInternalName = StringTable->EmptyString();
    mClassName = StringTable->EmptyString();
    mSuperClassName = StringTable->EmptyString();
+   mLoadedState = AssetErrCode::NotLoaded;
 }
 
 //-----------------------------------------------------------------------------

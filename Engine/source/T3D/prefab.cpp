@@ -337,7 +337,7 @@ void Prefab::_loadFile( bool addFileNotify )
    if ( mFilename == StringTable->EmptyString())
       return;
 
-   if ( !Platform::isFile( mFilename ) )
+   if ( !Platform::isScriptFile( mFilename ) )
    {
       Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename );
       return;

@@ -165,6 +165,7 @@ ScatterSky::ScatterSky()
    mNightColor.set( 0.0196078f, 0.0117647f, 0.109804f, 1.0f );
    mNightFogColor = mNightColor;
    mUseNightCubemap = false;
+   mNightCubemapName = StringTable->EmptyString();
    mSunSize = 1.0f;
 
    INIT_MATERIALASSET(MoonMat);

@@ -211,7 +211,7 @@ public: \
          Material* tempMat = nullptr;\
          \
          if (!Sim::findObject(m##name##Asset->getMaterialDefinitionName(), tempMat))\
-            Con::errorf("classname::_set##name() - Material %s was not found.", m##name##Asset->getMaterialDefinitionName());\
+            Con::errorf("%s::_set%s() - Material %s was not found.", macroText(className), macroText(name), m##name##Asset->getMaterialDefinitionName());\
          m##name = tempMat;\
       }\
       else\

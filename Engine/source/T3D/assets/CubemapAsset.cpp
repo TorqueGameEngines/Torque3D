@@ -136,7 +136,7 @@ void CubemapAsset::initializeAsset()
 {
    mScriptFile = expandAssetFilePath(mScriptFile);
 
-   if(Platform::isFile(mScriptFile))
+   if(Platform::isScriptFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 
@@ -144,7 +144,7 @@ void CubemapAsset::onAssetRefresh()
 {
    mScriptFile = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
+   if (Platform::isScriptFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 

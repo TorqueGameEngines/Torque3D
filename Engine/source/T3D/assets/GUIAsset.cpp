@@ -119,12 +119,12 @@ void GUIAsset::initializeAsset()
 {
    mGUIPath = expandAssetFilePath(mGUIFile);
 
-   if (Platform::isFile(mGUIPath))
+   if (Platform::isScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Platform::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 
@@ -132,12 +132,12 @@ void GUIAsset::onAssetRefresh()
 {
    mGUIPath = expandAssetFilePath(mGUIFile);
 
-   if (Platform::isFile(mGUIPath))
+   if (Platform::isScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Platform::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 

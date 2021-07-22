@@ -166,7 +166,7 @@ void MaterialAsset::initializeAsset()
 
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isFile(mScriptPath))
+   if (Platform::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    loadMaterial();
@@ -176,7 +176,7 @@ void MaterialAsset::onAssetRefresh()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isFile(mScriptPath))
+   if (Platform::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    loadMaterial();

@@ -289,6 +289,7 @@ namespace Platform
    bool hasSubDirectory( const char *pPath );
    bool getFileTimes(const char *filePath, FileTime *createTime, FileTime *modifyTime);
    bool isFile(const char *pFilePath);
+   bool isScriptFile(const char* pFilePath);
    S32  getFileSize(const char *pFilePath);
    bool isDirectory(const char *pDirPath);
    bool isSubDirectory(const char *pParent, const char *pDir);

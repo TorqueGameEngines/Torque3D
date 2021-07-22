@@ -155,4 +155,14 @@ void Platform::setWebDeployment(bool v)
    gWebDeployment = v;
 }
 
-
+bool Platform::isScriptFile(const char* pFilePath)
+{
+   return (isFile(pFilePath)
+      || isFile(pFilePath + String(".dso"))
+      || isFile(pFilePath + String(".mis"))
+      || isFile(pFilePath + String(".mis.dso"))
+      || isFile(pFilePath + String(".gui"))
+      || isFile(pFilePath + String(".gui.dso"))
+      || isFile(pFilePath + String("." TORQUE_SCRIPT_EXTENSION))
+      || isFile(pFilePath + String("." TORQUE_SCRIPT_EXTENSION) + String(".dso")));
+}

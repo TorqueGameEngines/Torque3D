@@ -3185,6 +3185,31 @@ DefineEngineMethod( SimObject, getField, const char*, ( S32 index ),,
    return "";
 }
 
+DefineEngineFunction(getClassHierarchy, const char*, (const char* name), ,
+   "Returns the inheritance hierarchy for a given class.")
+{
+   AbstractClassRep* pRep = AbstractClassRep::findClassRep(name);
+   if (!pRep)
+   {
+      //Con::errorf("%s does not exist", name);
+      return StringTable->EmptyString();
+   }
+
+   StringBuilder buffer;
+
+   while (pRep != NULL)
+   {
+      StringTableEntry className = pRep->getClassName();
+      buffer.append(className);
+      buffer.append(" ");
+      pRep = pRep->getParentClass();
+   }
+
+   String result = buffer.end().trim();
+   //Con::printf("getClassHierarchy for %s=%s", name, result.c_str());
+   return Con::getReturnBuffer(result.c_str());
+
+}
 //-----------------------------------------------------------------------------
 
 #ifdef TORQUE_DEBUG

@@ -121,7 +121,7 @@ void TerrainMaterialAsset::initializeAsset()
 
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 
@@ -129,7 +129,7 @@ void TerrainMaterialAsset::onAssetRefresh()
 {
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    if (mMatDefinitionName != StringTable->EmptyString())

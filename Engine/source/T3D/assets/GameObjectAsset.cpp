@@ -192,7 +192,7 @@ void GameObjectAsset::setTAMLFile(const char* pTAMLFile)
 
 const char* GameObjectAsset::create()
 {
-   if (!Platform::isFile(mTAMLFile))
+   if (!Torque::FS::IsFile(mTAMLFile))
       return "";
 
    // Set the format mode.

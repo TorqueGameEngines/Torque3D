@@ -218,7 +218,7 @@ bool SoundAsset::loadSound()
 {
    if (mSoundPath)
    {
-      if (!Platform::isFile(mSoundPath))
+      if (!Torque::FS::IsFile(mSoundPath))
       {
          Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile);
          mLoadedState = BadFileReference;

@@ -190,7 +190,7 @@ void TerrainAsset::setTerrainFileName(const char* pScriptFile)
 
 bool TerrainAsset::loadTerrain()
 {
-   if (!Platform::isFile(mTerrainFilePath))
+   if (!Torque::FS::IsFile(mTerrainFilePath))
       return false;
 
    mTerrMaterialAssets.clear();

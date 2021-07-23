@@ -263,7 +263,7 @@ void ImageAsset::loadImage()
 {
    if (mImagePath)
    {
-      if (!Platform::isFile(mImagePath))
+      if (!Torque::FS::IsFile(mImagePath))
       {
          Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFileName);
          mLoadedState = BadFileReference;

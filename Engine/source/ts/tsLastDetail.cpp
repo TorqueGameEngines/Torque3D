@@ -175,12 +175,12 @@ void TSLastDetail::update( bool forceUpdate )
    // comparisons... this might be different if the DAEs have been 
    // deleted from the install.
    String shapeFile( mCachePath );
-   if ( !Platform::isFile( shapeFile ) )
+   if ( !Torque::FS::IsFile( shapeFile ) )
    {
       Torque::Path path(shapeFile);
       path.setExtension("cached.dts");
       shapeFile = path.getFullPath();
-      if ( !Platform::isFile( shapeFile ) )  
+      if ( !Torque::FS::IsFile( shapeFile ) )
       {
          Con::errorf( "TSLastDetail::update - '%s' could not be found!", mCachePath.c_str() );
          return;

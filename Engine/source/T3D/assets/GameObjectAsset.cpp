@@ -133,7 +133,7 @@ void GameObjectAsset::initializeAsset()
    //Ensure we have an expanded filepath
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isScriptFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    mTAMLPath = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLPath;
@@ -144,7 +144,7 @@ void GameObjectAsset::onAssetRefresh()
    //Ensure we have an expanded filepath
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Platform::isScriptFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    mTAMLPath = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLPath;

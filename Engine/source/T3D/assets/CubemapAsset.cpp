@@ -136,7 +136,7 @@ void CubemapAsset::initializeAsset()
 {
    mScriptFile = expandAssetFilePath(mScriptFile);
 
-   if(Platform::isScriptFile(mScriptFile))
+   if(Torque::FS::IsScriptFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 
@@ -144,7 +144,7 @@ void CubemapAsset::onAssetRefresh()
 {
    mScriptFile = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isScriptFile(mScriptFile))
+   if (Torque::FS::IsScriptFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 

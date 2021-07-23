@@ -337,7 +337,7 @@ void Prefab::_loadFile( bool addFileNotify )
    if ( mFilename == StringTable->EmptyString())
       return;
 
-   if ( !Platform::isScriptFile( mFilename ) )
+   if ( !Torque::FS::IsScriptFile( mFilename ) )
    {
       Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename );
       return;

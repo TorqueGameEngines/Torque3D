@@ -119,12 +119,12 @@ void GUIAsset::initializeAsset()
 {
    mGUIPath = expandAssetFilePath(mGUIFile);
 
-   if (Platform::isScriptFile(mGUIPath))
+   if (Torque::FS::IsScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isScriptFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 
@@ -132,12 +132,12 @@ void GUIAsset::onAssetRefresh()
 {
    mGUIPath = expandAssetFilePath(mGUIFile);
 
-   if (Platform::isScriptFile(mGUIPath))
+   if (Torque::FS::IsScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isScriptFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 

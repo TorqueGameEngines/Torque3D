@@ -2,5 +2,5 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="NoMaterial"
-    scriptFile="NoMaterial"
+    scriptFile="@assetFile=NoMaterial"
     materialDefinitionName="NoMaterial" />

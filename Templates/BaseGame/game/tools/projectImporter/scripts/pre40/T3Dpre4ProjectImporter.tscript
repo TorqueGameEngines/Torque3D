@@ -106,7 +106,7 @@ function T3Dpre4ProjectImporter::copyFiles(%this)
          DirectoryHandler::createFolder(0, %targetFolder);
       }
       
-      if(!pathCopy(%file, %targetFilePath))
+      if(!pathCopy(%file, %targetFilePath, false))
       {
          error("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
       }
@@ -183,7 +183,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
    %currentPage = ProjectImportWindow.getCurrentPage();
    
    //First, wipe out any files inside the folder first
-   %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.cs", true);
+   %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.*", true);
    
    %fileObj = new FileObject();
    %objectClassStack = new ArrayObject();
@@ -247,6 +247,13 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                      %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
                   }
                   
+                  if(strpos(%objectName, ",") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
+                  }
+                  
+                  %objectName = trim(%objectName);
+                  
                   if(%objectClassStack.count() == 1)
                   {
                      //we only process top-level objects directly                 
@@ -294,6 +301,13 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                   {
                      %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
                   }
+                  
+                  if(strpos(%objectName, ",") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
+                  }
+                  
+                  %objectName = trim(%objectName);
                   
                   if(%objectClassStack.count() == 1)
                   {
@@ -369,7 +383,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       %fileOutputLines.empty();
       %objectClassStack.empty();
       
-      %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.cs" );
+      %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.*" );
    }
    
    echo("Legacy Project Importer - Processing of imported code files done!");
@@ -415,9 +429,9 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       %fileExt = fileExt(%file);
       %filePath = filePath(%file);
       
-      if(%filename $= "materials.cs")
+      if(%filename $= "materials.cs" || %filename $= "materials.tscript" )
       {
-         //we already handled materials.cs files, so skip
+         //we already handled materials script files, so skip
          %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.*" );
          continue;
       }
@@ -460,6 +474,13 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                   {
                      %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
                   }
+                  
+                  if(strpos(%objectName, ",") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
+                  }
+                  
+                  %objectName = trim(%objectName);
                   
                   if(%objectClassStack.count() == 1)
                   {
@@ -533,6 +554,13 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                      %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
                   }
                   
+                  if(strpos(%objectName, ",") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
+                  }
+                  
+                  %objectName = trim(%objectName);
+                  
                   if(%objectClassStack.count() == 1)
                   {
                      //we only process top-level objects directly
@@ -574,6 +602,13 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                      %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
                   }
                   
+                  if(strpos(%objectName, ",") != -1)
+                  {
+                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
+                  }
+                  
+                  %objectName = trim(%objectName);
+                  
                   if(%objectClassStack.count() == 1)
                   {
                      //we only process top-level objects directly
@@ -594,6 +629,12 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
             {
                //hit the end of an object, pop our object stack
                %objectClassStack.pop_back();
+            }
+            else if(strIsMatchExpr("*exec(*.cs*)*", %line) || strIsMatchExpr("*exec(*.tscript*)*", %line))
+            {
+               %scriptExtRemovedLine = strReplace(%line, ".cs", "");
+               %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
+               %line = %scriptExtRemovedLine;
             }
             else
             {
@@ -805,7 +846,7 @@ T3Dpre4ProjectImporter::genProcessor("GuiControlProfile", "bitmap bitmapAsset");
 // Datablocks
 //==============================================================================
 T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubemapFaceAsset cubemap cubemapAsset");
+T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubeMapFaceAsset cubemap cubemapAsset");
 T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
@@ -865,7 +906,7 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %file, %objectName
 {
    %matAsset = MaterialAsset::getAssetIdByMaterialName(%objectName);
    
-   if(%matAsset $= "")
+   if(%matAsset $= "" || %matAsset $= "Core_Rendering:NoMaterial")
    {
       %assetName = %objectName;
    

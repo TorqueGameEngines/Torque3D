@@ -451,17 +451,19 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    else
       %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
    
-   %test = %assetDef.materialDefinitionName.diffuseMapAsset[0];
+   %previewData.previewImage = "ToolsModule:materialIcon_image";
    
-   if(isFile(%assetDef.materialDefinitionName.diffuseMap[0]))
-      %previewData.previewImage = %assetDef.materialDefinitionName.diffuseMap[0];
-   else if(%assetDef.materialDefinitionName.diffuseMapAsset[0] !$= "")
+   if(isObject(%assetDef.materialDefinitionName))
    {
-      %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.diffuseMapAsset[0]);
+      if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
+         %previewData.previewImage = %assetDef.materialDefinitionName.getDiffuseMap(0);
+      else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
+      {
+         %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.getDiffuseMapAsset(0));
       %previewData.previewImage = %imgAsset.getImagePath();
    }
-   else
-      %previewData.previewImage = "tools/assetBrowser/art/materialIcon_image";
+      //add cubemap preview here(for skybox materials)
+   }
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

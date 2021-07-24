@@ -373,9 +373,9 @@ function testFilenameExtensions(%filename)
 
 function processLegacyField(%line, %originalFieldName, %newFieldName)
 {
-   if(!strIsMatchExpr("*"@%originalFieldName@"=*\"*\";", %line) && 
-      !strIsMatchExpr("*"@%originalFieldName@"[*=*\"*\";", %line) &&
-      !strIsMatchExpr("*"@%originalFieldName@" *=*\"*\";", %line))
+   if(!strIsMatchExpr("*"@%originalFieldName@"=*\"*\";*", %line) && 
+      !strIsMatchExpr("*"@%originalFieldName@"[*=*\"*\";*", %line) &&
+      !strIsMatchExpr("*"@%originalFieldName@" *=*\"*\";*", %line))
       return %line;
       
    %outLine = strreplace(%line, %originalFieldName, %newFieldName);
@@ -435,7 +435,7 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       }
       else if ((strpos(%value,"/") == -1)&&(strpos(%value,"\\") == -1))
       {
-         %targetFilename = $ProjectImporter::currentFilePath @ "/" @ %value;         
+         %targetFilename = $ProjectImporter::currentFilePath @ %value;
       }
       else if(!startsWith(%value, $ProjectImporter::modulePath @ "/"))
       {
@@ -465,7 +465,10 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
      
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
       {
+         //if (%assetId.getStatusString() $= "Ok")
          %outLine = strReplace(%outLine, %value, %assetId);
+         //else
+         //   error("Asset assignment failure:", %assetId, getStatusString());
       }
    }
    
@@ -847,6 +850,8 @@ function beginLevelImport()
 
             %assetName = %fileBase;
             
+            %assetName = strreplace(%assetName, " ", "");
+            
             if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
             {
                warn("Legacy Project Importer - trying to process a level into an asset that already exists");
@@ -864,31 +869,42 @@ function beginLevelImport()
                levelName = %assetName;
             };
             
-            if(isFile(%filePath @ "/" @ %assetName @ ".decal"))
+            if(isFile(%filePath @ "/" @ %fileBase @ ".decal"))
             {
-               %asset.decalsFile = %assetName @ ".decal";
+               %asset.decalsFile = %fileBase @ ".decal";
             }
-            if(isFile(%filePath @ "/" @ %assetName @ ".forest"))
+            if(isFile(%filePath @ "/" @ %fileBase @ ".forest"))
             {
-               %asset.forestFile = %assetName @ ".forest";
+               %asset.forestFile = %fileBase @ ".forest";
             }
-            if(isFile(%filePath @ "/" @ %assetName @ ".nav"))
+            if(isFile(%filePath @ "/" @ %fileBase @ ".nav"))
             {
-               %asset.decalsFile = %assetName @ ".nav";
+               %asset.decalsFile = %fileBase @ ".nav";
             }
-            if(isFile(%filePath @ "/" @ %assetName @ ".postfx.preset"))
+            if(isFile(%filePath @ "/" @ %fileBase @ ".postfx.preset"))
             {
-               %asset.postFXPresetFile = %assetName @ ".postfx.preset";
+               %asset.postFXPresetFile = %fileBase @ ".postfx.preset";
             }
             
-            if(isFile(%filePath @ "/" @ %assetName @ ".png"))
+            if(isFile(%filePath @ "/" @ %fileBase @ ".png"))
             {
-               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %assetName @ ".png");
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".png");
                %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
             }
-            else if(isFile(%filePath @ "/" @ %assetName @ ".dds"))
+            else if(isFile(%filePath @ "/" @ %fileBase @ ".dds"))
             {
-               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %assetName @ ".dds");
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".dds");
+               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+            }
+            else if(isFile(%filePath @ "/" @ %fileBase @ ".jpg"))
+            {
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".jpg");
+               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+            }
+
+            else if(isFile(%filePath @ "/" @ %fileBase @ ".jpeg"))
+            {
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".jpeg");
                %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
             }
             
@@ -896,8 +912,6 @@ function beginLevelImport()
             
             %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
             %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
-            
-            %sdfg = true;
          }
       }
       

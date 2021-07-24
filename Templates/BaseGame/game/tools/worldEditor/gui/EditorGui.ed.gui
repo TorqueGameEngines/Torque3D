@@ -1238,7 +1238,7 @@ new GuiMouseEventCtrl(CameraSpeedDropdownCtrlContainer, EditorGuiGroup) {
       new GuiBitmapCtrl(){ // Fast
          position = "105 15";
          extent = "2 8";
-         bitmap = "tools/gui/images/separator-h.png";  
+         bitmapAsset = "ToolsModule:separator_h_image";  
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom"; 
@@ -1246,7 +1246,7 @@ new GuiMouseEventCtrl(CameraSpeedDropdownCtrlContainer, EditorGuiGroup) {
       new GuiBitmapCtrl(){ // normal
          position = "73 15";
          extent = "2 8";
-         bitmap = "tools/gui/images/separator-h.png";  
+         bitmapAsset = "ToolsModule:separator_h_image";  
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom"; 
@@ -1254,7 +1254,7 @@ new GuiMouseEventCtrl(CameraSpeedDropdownCtrlContainer, EditorGuiGroup) {
       new GuiBitmapCtrl(){ // slow
          position = "41 15";
          extent = "2 8";
-         bitmap = "tools/gui/images/separator-h.png";  
+         bitmapAsset = "ToolsModule:separator_h_image";  
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom"; 

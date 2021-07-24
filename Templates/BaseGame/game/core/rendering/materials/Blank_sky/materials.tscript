@@ -5,12 +5,12 @@
 
 singleton CubemapData( BlankSkyCubemap )
 {
-   cubeFaceAsset[0] = "Core_Rendering:BlankSkybox_image";
-   cubeFaceAsset[1] = "Core_Rendering:BlankSkybox_image";
-   cubeFaceAsset[2] = "Core_Rendering:BlankSkybox_image";
-   cubeFaceAsset[3] = "Core_Rendering:BlankSkybox_image";
-   cubeFaceAsset[4] = "Core_Rendering:BlankSkybox_image";
-   cubeFaceAsset[5] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[0] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[1] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[2] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[3] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[4] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[5] = "Core_Rendering:BlankSkybox_image";
 };
 
 singleton Material( BlankSkyMat )

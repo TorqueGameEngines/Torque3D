@@ -412,7 +412,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
          %this-->baseTexCtrl.setBitmap( %mat.diffuseMap ); 
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texBaseMap.setBitmap( %imgPath );
+      %this-->texBaseMap.setBitmapAsset( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -431,7 +431,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texNormalMap.setBitmap( %imgPath );
+      %this-->texNormalMap.setBitmapAsset( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -450,7 +450,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texORMConfigMap.setBitmap( %imgPath );
+      %this-->texORMConfigMap.setBitmapAsset( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -469,7 +469,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texDetailMap.setBitmap( %imgPath );
+      %this-->texDetailMap.setBitmapAsset( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -488,7 +488,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texMacroMap.setBitmap( %imgPath );
+      %this-->texMacroMap.setBitmapAsset( %imgPath );
 
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {

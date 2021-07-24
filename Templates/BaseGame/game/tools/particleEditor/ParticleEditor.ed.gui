@@ -447,7 +447,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -704,7 +704,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -1116,7 +1116,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -1625,7 +1625,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -2095,7 +2095,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         //visible = false;
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -2353,7 +2353,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -2656,7 +2656,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -3078,7 +3078,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -3463,7 +3463,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      

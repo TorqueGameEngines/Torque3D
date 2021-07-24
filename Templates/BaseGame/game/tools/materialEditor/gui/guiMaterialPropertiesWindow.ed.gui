@@ -406,7 +406,7 @@
                         position="6 75";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset = "ToolsModule:separator_v_image"; 
                      };
                      new GuiContainer(){ // Normal Map
                         profile="ToolsGuiDefaultProfile";
@@ -2088,7 +2088,7 @@
                         position="6 246";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      
                      new GuiContainer(){ // Detail Normal Map
@@ -2233,7 +2233,7 @@
                         position="6 189";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      
                      new GuiContainer(){ // Overlay Map
@@ -2360,7 +2360,7 @@
                         position="6 189";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      new GuiContainer(){ // light Map
                         profile="ToolsGuiDefaultProfile";
@@ -2486,7 +2486,7 @@
                         position="6 303";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      new GuiContainer(){ // tone Map
                         profile="ToolsGuiDefaultProfile";
@@ -4452,7 +4452,7 @@
                            position="2 2";
                            extent ="192 2";
                            HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                         // Reflection Properties Text
                         new GuiTextCtrl(matEd_reflectionPropertiesText) {
@@ -4530,7 +4530,7 @@
                            position="2 2";
                            extent ="192 2";
                            HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                         new GuiTextCtrl() {
                            text = "Effect Colors[0:1]";

@@ -157,7 +157,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapCtrl(){
-                  bitmap = "tools/gui/images/inactive-overlay"; 
+                  bitmapAsset = "ToolsModule:inactive_overlay_image"; 
                   position = "57 19";
                   Extent = "122 20";
                   tooltip = "Levels needs to be selected to enable the detail level slider";

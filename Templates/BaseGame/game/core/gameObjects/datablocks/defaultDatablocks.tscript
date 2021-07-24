@@ -127,19 +127,19 @@ datablock RibbonData(TexturedRibbon)
 datablock MissionMarkerData(WayPointMarker)
 {
    category = "Misc";
-   shapeFile = "core/gameObjects/shapes/octahedron.dts";
+   shapeAsset = "Core_GameObjects:octahedron";
 };
 
 datablock MissionMarkerData(SpawnSphereMarker)
 {
    category = "Misc";
-   shapeFile = "core/gameObjects/shapes/octahedron.dts";
+   shapeAsset = "Core_GameObjects:octahedron";
 };
 
 datablock MissionMarkerData(CameraBookmarkMarker)
 {
    category = "Misc";
-   shapeFile = "core/gameObjects/shapes/camera.dts";
+   shapeAsset = "Core_GameObjects:Camera";
 };
 
 datablock CameraData(Observer)

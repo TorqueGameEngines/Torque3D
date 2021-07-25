@@ -465,14 +465,11 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
      
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
       {
-         //if (%assetId.getStatusString() $= "Ok")
          %outLine = strReplace(%outLine, %value, %assetId);
-         //else
-         //   error("Asset assignment failure:", %assetId, getStatusString());
       }
    }
    
-   if(%outLine !$= %line)
+   if((%outLine !$= %line)&&(%assetId.getStatusString() !$= "BadFileReference")&&(%assetId.getStatusString() !$= "Failed"))
    {
       echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
       return %outLine;  

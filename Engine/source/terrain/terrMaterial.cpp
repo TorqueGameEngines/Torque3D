@@ -168,7 +168,7 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    {
       mat = new TerrainMaterial();
       mat->setInternalName( nameOrPath );
-      mat->mDiffuseMapName = nameOrPath;
+      mat->_setDiffuseMap(nameOrPath);
       mat->registerObject();
       Sim::getRootGroup()->addObject( mat );
       return mat;
@@ -183,11 +183,11 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       // fallback here just in case it gets "lost".
       mat = new TerrainMaterial();
       mat->setInternalName( "warning_material" );
-      mat->mDiffuseMapName = GFXTextureManager::getWarningTexturePath();
+      mat->_setDiffuseMap(GFXTextureManager::getWarningTexturePath());
       mat->mDiffuseSize = 500;
-      mat->mDiffuseMapName = GFXTextureManager::getWarningTexturePath();
+      mat->_setDetailMap(StringTable->EmptyString());
       mat->mDetailSize = 5;
-	   mat->mDiffuseMapName = GFXTextureManager::getWarningTexturePath();
+      mat->_setMacroMap(StringTable->EmptyString());
 	   mat->mMacroSize = 200;
       mat->registerObject();
       

@@ -1419,7 +1419,6 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       char buffer[256];
       stream->readString(buffer);
       bool validAsset = setTerrainAsset(StringTable->insert(buffer));
-      _updateBaseTexture(NONE);
    }
    if (baseTexSizeChanged && isProperlyAdded())
       _updateBaseTexture(NONE);

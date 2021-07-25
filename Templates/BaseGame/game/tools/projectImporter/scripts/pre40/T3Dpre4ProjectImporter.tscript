@@ -805,7 +805,9 @@ T3Dpre4ProjectImporter::genProcessor("GroundCover", "material materialAsset shap
 T3Dpre4ProjectImporter::genProcessor("GroundPlane", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset shapeName shapeAsset");
+//T3Dpre4ProjectImporter::genProcessor("TerrainBlock", "terrainFile terrainFileAsset");
+
 //==============================================================================
 // Levels
 //==============================================================================

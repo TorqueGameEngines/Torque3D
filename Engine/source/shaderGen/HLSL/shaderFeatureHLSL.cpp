@@ -2138,10 +2138,11 @@ RTLightingFeatHLSL::RTLightingFeatHLSL()
 void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList, 
                                        const MaterialFeatureData &fd )
 {
+   if (fd.features[MFT_ImposterVert]) return;
+
    MultiLine *meta = new MultiLine;   
 
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
-   getOutWorldToTangent(componentList, meta, fd);
 
    // Special case for lighting imposters. We dont have a vert normal and may not
    // have a normal map. Generate and pass the normal data the pixel shader needs.
@@ -2206,6 +2207,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
    }
 
    addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
+   getOutWorldToTangent(componentList, meta, fd);
 
    output = meta;
 }
@@ -3025,14 +3027,13 @@ void ReflectionProbeFeatHLSL::processVert(Vector<ShaderComponent*>& componentLis
    output = meta;
    // Also output the worldToTanget transform which
    // we use to create the world space normal.
-   getOutWorldToTangent(componentList, meta, fd);
+   //getOutWorldToTangent(componentList, meta, fd);
 }
 
 void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList,
    const MaterialFeatureData &fd)
 {
-   // Skip out on realtime lighting if we don't have a normal
-   // or we're doing some sort of baked lighting.
+   // Skip out on realtime lighting if we're doing some sort of baked lighting.
    //
    // TODO: We can totally detect for this in the material
    // feature setup... we should move it out of here!

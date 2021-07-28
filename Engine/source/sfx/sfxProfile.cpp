@@ -90,7 +90,7 @@ SFXProfile::SFXProfile()
 
 SFXProfile::SFXProfile( SFXDescription* desc, const String& filename, bool preload )
    : Parent( desc ),
-     mFilename( filename ),
+     mFilename( StringTable->insert(filename.c_str()) ),
      mPreload( preload )
 {
 }

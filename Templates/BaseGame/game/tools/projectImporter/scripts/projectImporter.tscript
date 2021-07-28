@@ -246,7 +246,10 @@ function ProjectImportWizardPage4::openPage(%this)
    ProjectImportWindow-->backButton.setHidden(true);
    ProjectImportWindow-->nextButton.setActive(false);
       
+   if(!$ProjectImporter::useExistingModule)
    $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
+      
+   $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
       
    if(!$ProjectImporter::useExistingModule)
       $ProjectImporter::importTool.setupModule();

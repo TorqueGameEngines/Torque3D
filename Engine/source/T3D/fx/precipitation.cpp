@@ -629,6 +629,8 @@ void Precipitation::initMaterials()
 
    if(pd->mDrop.isNull())
       Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getDrop());
+   else
+      mDropHandle = pd->mDrop;
 
    if ( dStrlen(pd->mDropShaderName) > 0 )
    {
@@ -650,6 +652,8 @@ void Precipitation::initMaterials()
 
    if (pd->mSplash.isNull())
       Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getSplash());
+   else
+      mSplashHandle = pd->mSplash;
 
    if ( dStrlen(pd->mSplashShaderName) > 0 )
    {

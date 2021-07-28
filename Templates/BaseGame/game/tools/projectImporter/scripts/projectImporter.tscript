@@ -7,6 +7,9 @@ function ProjectImporter::beginProjectImport()
 
 function ProjectImportWindow::onWake(%this)
 {
+   if(!isObject($ProjectImporter::fileObject))
+      $ProjectImporter::fileObject = new FileObject();
+      
    %this.importStepNumber = 0;
    %this-->stepsList.clear();
    %this-->stepsList.addRow(0, "Welcome");  
@@ -465,11 +468,14 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
      
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
       {
+         //if (%assetId.getStatusString() $= "Ok")
          %outLine = strReplace(%outLine, %value, %assetId);
+         //else
+         //   error("Asset assignment failure:", %assetId, getStatusString());
       }
    }
    
-   if((%outLine !$= %line)&&(%assetId.getStatusString() !$= "BadFileReference")&&(%assetId.getStatusString() !$= "Failed"))
+   if(%outLine !$= %line)
    {
       echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
       return %outLine;  
@@ -478,6 +484,98 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
    {
       return %line;  
    }
+}
+
+function findObjectClass(%line, %createWord)
+{
+   //we have a new object, add it to the stack
+   //substr to peel the class name
+   %start = strpos(%line, %createWord @ " ");
+   %end = strpos(%line, "(", %start);
+   %createLen = strlen(%createWord @ " ");
+   
+   if(%start != -1 && %end != -1)
+   {
+      %className = getSubStr(%line, %start + %createLen, %end-%start-%createLen);
+      
+      %className = trim(%className);
+      
+      return %className;
+   }
+   
+   return ""; 
+}
+
+function findObjectName(%line, %createWord)
+{
+   //we have a new object, add it to the stack
+   //substr to peel the class name
+   %start = strpos(%line, %createWord @ " ");
+   %end = strpos(%line, "(", %start);
+   
+   %nameEnd = strpos(%line, ")", %end);
+   
+   %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+   
+   if(%objectName !$= "")
+   {
+      if(strpos(%objectName, ":") != -1)
+      {
+         %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
+      }
+      
+      if(strpos(%objectName, ",") != -1)
+      {
+         %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
+      }
+      
+      %objectName = trim(%objectName);
+   }
+   
+   return %objectName; 
+}
+
+function findObjectField(%fieldName)
+{
+   %value = "";
+   %peekLineOffset = 0;
+   %peekLine = $ProjectImporter::fileObject.peekLine(%peekLineOffset);
+   while(!strIsMatchExpr("*};*", %peekLine) && 
+         !strIsMatchExpr("*singleton*(*)*", %peekLine) && 
+         !strIsMatchExpr("*new*(*)*", %peekLine) && 
+         !strIsMatchExpr("*datablock*(*)*", %peekLine)&& 
+         !strIsMatchExpr("\n", %peekLine) && 
+         !strIsMatchExpr("\r", %peekLine))
+   {
+      if(strpos(%peekLine, %fieldName) != -1)
+      {
+         %value = "";
+         %pos = strpos(%peekLine, "= \"");
+         if(%pos != -1)
+         {
+           %endPos = strpos(%peekLine, "\";", %pos); 
+           
+           %value = getSubStr(%peekLine, %pos+3, %endPos-%pos-3);
+           break;
+         }
+         else
+         {
+            %pos = strpos(%peekLine, "=\"");
+            if(%pos != -1)
+            {
+              %endPos = strpos(%peekLine, "\";", %pos); 
+              
+              %value = getSubStr(%peekLine, %pos+2, %endPos-%pos-2);
+              break;
+            }
+         }  
+      }
+      
+      %peekLineOffset++;
+      %peekLine = $ProjectImporter::fileObject.peekLine(%peekLineOffset);
+   }  
+   
+   return %value;
 }
 
 //==============================================================================
@@ -516,6 +614,7 @@ function beginShapeImport()
          
       if(isShapeFormat(%fileExt))
       {
+         $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
@@ -566,6 +665,7 @@ function beginImageImport()
       
       if(isImageFormat(%fileExt))
       {
+         $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
@@ -614,6 +714,7 @@ function beginTerrainImport()
       %filePath = filePath(%file);
       if(%fileExt $= ".ter")
       {
+         $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
@@ -685,18 +786,18 @@ function beginGUIImport()
       %filePath = filePath(%file);
       if(%fileExt $= ".gui")
       {
+         $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
             ProjectImportWizardPage5-->processingText.setText("Processing GUI Asset file: " @ %file);
             Canvas.repaint();
             
-            %fileObj = new FileObject();
-            if ( %fileObj.openForRead( %file ) ) 
+            if ( $ProjectImporter::fileObject.openForRead( %file ) ) 
             {
-               while ( !%fileObj.isEOF() ) 
+               while ( !$ProjectImporter::fileObject.isEOF() ) 
                {
-                  %line = %fileObj.readLine();
+                  %line = $ProjectImporter::fileObject.readLine();
                   
                   if(strIsMatchExpr("*new*(*)*", %line))
                   {
@@ -726,8 +827,7 @@ function beginGUIImport()
                }
             }
             
-            %fileObj.close();
-            %fileObj.delete();
+            $ProjectImporter::fileObject.close();
          }
       }
       
@@ -835,6 +935,9 @@ function beginLevelImport()
       
       if(%fileExt $= ".mis")
       {
+         %newAsset = false;
+         
+         $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)
          {
@@ -866,6 +969,16 @@ function beginLevelImport()
                levelName = %assetName;
             };
             
+            %newAsset = true;
+         }
+         else
+         {
+            %assetId = $ProjectImporter::assetQuery.getAsset(0);
+            %asset = AssetDatabase.acquireAsset(%assetId);
+            %tamlpath = AssetDatabase.getAssetFilePath(%assetId);
+         }
+
+         //Time to process the associated files 
             if(isFile(%filePath @ "/" @ %fileBase @ ".decal"))
             {
                %asset.decalsFile = %fileBase @ ".decal";
@@ -884,31 +997,37 @@ function beginLevelImport()
             }
             
             if(isFile(%filePath @ "/" @ %fileBase @ ".png"))
-            {
                %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".png");
-               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
-            }
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.png"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.png");
             else if(isFile(%filePath @ "/" @ %fileBase @ ".dds"))
-            {
                %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".dds");
-               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
-            }
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.dds"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.dds");
             else if(isFile(%filePath @ "/" @ %fileBase @ ".jpg"))
-            {
                %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".jpg");
-               %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
-            }
-
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.jpg"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.jpg");
             else if(isFile(%filePath @ "/" @ %fileBase @ ".jpeg"))
-            {
                %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".jpeg");
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.jpeg"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.jpeg");
+         
+         if(%previewImageAsset !$= "")
+         {
                %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
             }
             
             TamlWrite(%asset, %tamlpath);
             
+         if(%newAsset)
+         {
             %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
             %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+         }
+         else
+         {
+            %asset.refreshAsset();
          }
       }
       

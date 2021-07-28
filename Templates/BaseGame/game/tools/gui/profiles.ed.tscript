@@ -424,7 +424,7 @@ new GuiControlProfile( ToolsGuiCheckBoxProfile )
 	fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    fixedExtent = true;
    justify = "left";
-   bitmapAsset = "./images/checkbox";
+   bitmapAsset = "ToolsModule:checkbox_image";
    hasBitmapArray = true;
    category = "Tools";
 };

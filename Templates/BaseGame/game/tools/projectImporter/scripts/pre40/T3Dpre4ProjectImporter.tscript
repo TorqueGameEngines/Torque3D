@@ -185,7 +185,6 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
    //First, wipe out any files inside the folder first
    %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.*", true);
    
-   %fileObj = new FileObject();
    %objectClassStack = new ArrayObject();
    %fileOutputLines = new ArrayObject();
    
@@ -206,27 +205,25 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       %currentPage-->processingText.setText("Processing material script file: " @ %file);
       Canvas.repaint();
       
-      if ( %fileObj.openForRead( %file ) ) 
+      if(%file $= "data/FPSGameplay/art/terrains/materials.tscript")
+      {
+         %agafdgadfgsdfg = true;  
+      }
+      
+      if ( $ProjectImporter::fileObject.openForRead( %file ) ) 
       {
          echo("Legacy Project Importer - Beginning process of file: " @ %file);
          %lineNum = 0;
-         while ( !%fileObj.isEOF() ) 
+         while ( !$ProjectImporter::fileObject.isEOF() ) 
          {
-            %line = %fileObj.readLine();
+            %line = $ProjectImporter::fileObject.readLine();
             %trimmedLine = trim(%line);
             
             if(strIsMatchExpr("*new*(*)*", %line))
             {
-               //we have a new object, add it to the stack
-               //substr to peel the class name
-               %start = strpos(%line, "new ");
-               %end = strpos(%line, "(", %start);
+               %className = findObjectClass(%line, "new");
 
-               if(%start != -1 && %end != -1)
-               {
-                  %className = getSubStr(%line, %start + 4, %end-%start-4);
-                  
-                  if(%className !$= "Material" && %className !$= "CustomMaterial")
+               if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial")
                   {
                      %lineNum++;
                      %fileOutputLines.push_back(%line);
@@ -234,28 +231,30 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                   }
                   
                   %objectClassStack.push_back(%className);
-               }
                
-               %nameEnd = strpos(%line, ")", %end);
+               %objectName = findObjectName(%line, "new");
                
-               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
-               
-               if(%objectName !$= "")
+               if(%objectName $= "" && %className $= "TerrainMaterial")
+                  {
+                  %intName = findObjectField("internalName");
+                  %objectName = %intName @ "_terrainMat";
+                  %line = strReplace(%line, "()", "(" @ %intName @ ")");
+                  
+                  %fileWasChanged = true;
+                  }
+               else if(%objectName $= "" && %className $= "Material")
                {
-                  if(strpos(%objectName, ":") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
-                  }
+                  %mapToName = findObjectField("mapTo");
+                  %objectName = %mapToName @ "_mat";
+                  %line = strReplace(%line, "()", "(" @ %mapToName @ ")");
                   
-                  if(strpos(%objectName, ",") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
-                  }
-                  
-                  %objectName = trim(%objectName);
+                  %fileWasChanged = true;
+               }
                   
                   if(%objectClassStack.count() == 1)
                   {
+                  %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+                  
                      //we only process top-level objects directly                 
                      %inheritanceList = getClassHierarchy(%currentObjClass);
                      for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
@@ -269,19 +268,11 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                      }
                   }
                }
-            }
             else if(strIsMatchExpr("*singleton*(*)*", %line))
             {
-               //we have a new object, add it to the stack
-               //substr to peel the class name
-               %start = strpos(%line, "singleton ");
-               %end = strpos(%line, "(", %start);
+               %className = findObjectClass(%line, "singleton");
                
-               if(%start != -1 && %end != -1)
-               {
-                  %className = getSubStr(%line, %start + 10, %end-%start-10);
-                  
-                  if(%className !$= "Material" && %className !$= "CustomMaterial")
+               if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial")
                   {
                      %lineNum++;
                      %fileOutputLines.push_back(%line);
@@ -289,28 +280,13 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                   }
                   
                   %objectClassStack.push_back(%className);
-               }
                
-               %nameEnd = strpos(%line, ")", %end);
-               
-               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
-               
-               if(%objectName !$= "")
-               {
-                  if(strpos(%objectName, ":") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
-                  }
-                  
-                  if(strpos(%objectName, ",") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
-                  }
-                  
-                  %objectName = trim(%objectName);
+               %objectName = findObjectName(%line, "singleton");
                   
                   if(%objectClassStack.count() == 1)
                   {
+                  %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+                  
                      //we only process top-level objects directly                 
                      %inheritanceList = getClassHierarchy(%currentObjClass);
                      for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
@@ -324,7 +300,6 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
                      }
                   }
                }
-            }
             else if(strIsMatchExpr("*};*", %line))
             {
                //hit the end of an object, pop our object stack
@@ -359,7 +334,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
             %fileOutputLines.push_back(%line);
          }
          
-         %fileObj.close();
+         $ProjectImporter::fileObject.close();
       }
       else
       {
@@ -368,16 +343,16 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       
       if(%fileWasChanged)
       {
-         %fileObj.openForWrite(%file);
+         $ProjectImporter::fileObject.openForWrite(%file);
 
          for(%l = 0; %l < %fileOutputLines.count(); %l++)
          {
             %outLine = %fileOutputLines.getKey(%l);
             
-            %fileObj.writeline(%outLine);
+            $ProjectImporter::fileObject.writeline(%outLine);
          }
          
-         %fileObj.close();
+         $ProjectImporter::fileObject.close();
       }
       
       %fileOutputLines.empty();
@@ -390,7 +365,6 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
    
    %fileOutputLines.delete();
    %objectClassStack.delete();
-   %fileObj.delete();  
    
    //now exec the materials
    loadModuleMaterials("Game");
@@ -403,7 +377,6 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
    //First, wipe out any files inside the folder first
    %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*.*", true);
    
-   %fileObj = new FileObject();
    %objectClassStack = new ArrayObject();
    %fileOutputLines = new ArrayObject();
    
@@ -441,49 +414,26 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       %currentPage-->processingText.setText("Processing file: " @ %file);
       Canvas.repaint();
       
-      if ( %fileObj.openForRead( %file ) ) 
+      if ( $ProjectImporter::fileObject.openForRead( %file ) ) 
       {
          echo("Legacy Project Importer - Beginning process of file: " @ %file);
          %lineNum = 0;
-         while ( !%fileObj.isEOF() ) 
+         while ( !$ProjectImporter::fileObject.isEOF() ) 
          {
-            %line = %fileObj.readLine();
+            %line = $ProjectImporter::fileObject.readLine();
             %trimmedLine = trim(%line);
             
             if(strIsMatchExpr("*new*(*)*", %line))
             {
-               //we have a new object, add it to the stack
-               //substr to peel the class name
-               %start = strpos(%line, "new ");
-               %end = strpos(%line, "(", %start);
-
-               if(%start != -1 && %end != -1)
-               {
-                  %className = getSubStr(%line, %start + 4, %end-%start-4);
-                  
-                  %objectClassStack.push_back(%className);
-               }
-               
-               %nameEnd = strpos(%line, ")", %end);
-               
-               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               %className = findObjectClass(%line, "new");
+               %objectName = findObjectName(%line, "new");
                
                if(%objectName !$= "")
                {
-                  if(strpos(%objectName, ":") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
-                  }
-                  
-                  if(strpos(%objectName, ",") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
-                  }
-                  
-                  %objectName = trim(%objectName);
-                  
                   if(%objectClassStack.count() == 1)
                   {
+                     %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+                     
                      //we only process top-level objects directly                     
                      %inheritanceList = getClassHierarchy(%currentObjClass);
                      for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
@@ -531,38 +481,15 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
             }
             else if(strIsMatchExpr("*singleton*(*)*", %line))
             {
-               //we have a new object, add it to the stack
-               //substr to peel the class name
-               %start = strpos(%line, "singleton ");
-               %end = strpos(%line, "(", %start);
-               
-               if(%start != -1 && %end != -1)
-               {
-                  %className = getSubStr(%line, %start + 10, %end-%start-10);
-                  
-                  %objectClassStack.push_back(%className);
-               }
-               
-               %nameEnd = strpos(%line, ")", %end);
-               
-               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               %className = findObjectClass(%line, "singleton");
+               %objectName = findObjectName(%line, "singleton");
                
                if(%objectName !$= "")
                {
-                  if(strpos(%objectName, ":") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
-                  }
-                  
-                  if(strpos(%objectName, ",") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
-                  }
-                  
-                  %objectName = trim(%objectName);
-                  
                   if(%objectClassStack.count() == 1)
                   {
+                     %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+                     
                      //we only process top-level objects directly
                      %inheritanceList = getClassHierarchy(%currentObjClass);
                      for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
@@ -579,38 +506,15 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
             }
             else if(strIsMatchExpr("*datablock*(*)*", %line))
             {
-               //we have a new object, add it to the stack
-               //substr to peel the class name
-               %start = strpos(%line, "datablock ");
-               %end = strpos(%line, "(", %start);
-               
-               if(%start != -1 && %end != -1)
-               {
-                  %className = getSubStr(%line, %start + 10, %end-%start-10);
-                  
-                  %objectClassStack.push_back(%className);
-               }
-               
-               %nameEnd = strpos(%line, ")", %end);
-               
-               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               %className = findObjectClass(%line, "datablock");
+               %objectName = findObjectName(%line, "datablock");
                
                if(%objectName !$= "")
                {
-                  if(strpos(%objectName, ":") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ":"));
-                  }
-                  
-                  if(strpos(%objectName, ",") != -1)
-                  {
-                     %objectName = getSubStr(%objectName, 0, strpos(%objectName, ","));
-                  }
-                  
-                  %objectName = trim(%objectName);
-                  
                   if(%objectClassStack.count() == 1)
                   {
+                     %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
+                     
                      //we only process top-level objects directly
                      %inheritanceList = getClassHierarchy(%currentObjClass);
                      for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
@@ -631,6 +535,18 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                %objectClassStack.pop_back();
             }
             else if(strIsMatchExpr("*exec(*.cs*)*", %line) || strIsMatchExpr("*exec(*.tscript*)*", %line))
+            {
+               %scriptExtRemovedLine = strReplace(%line, ".cs", "");
+               %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
+               %line = %scriptExtRemovedLine;
+            }
+            else if(strIsMatchExpr("*queueexec(*.cs*)*", %line) || strIsMatchExpr("*queueexec(*.tscript*)*", %line))
+            {
+               %scriptExtRemovedLine = strReplace(%line, ".cs", "");
+               %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
+               %line = %scriptExtRemovedLine;
+            }
+            else if(strIsMatchExpr("*registerDatablock(*.cs*)*", %line) || strIsMatchExpr("*registerDatablock(*.tscript*)*", %line))
             {
                %scriptExtRemovedLine = strReplace(%line, ".cs", "");
                %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
@@ -665,7 +581,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
             %fileOutputLines.push_back(%line);
          }
          
-         %fileObj.close();
+         $ProjectImporter::fileObject.close();
       }
       else
       {
@@ -674,16 +590,16 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       
       if(%fileWasChanged)
       {
-         %fileObj.openForWrite(%file);
+         $ProjectImporter::fileObject.openForWrite(%file);
 
          for(%l = 0; %l < %fileOutputLines.count(); %l++)
          {
             %outLine = %fileOutputLines.getKey(%l);
             
-            %fileObj.writeline(%outLine);
+            $ProjectImporter::fileObject.writeline(%outLine);
          }
          
-         %fileObj.close();
+         $ProjectImporter::fileObject.close();
       }
       
       %fileOutputLines.empty();
@@ -703,7 +619,6 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
    
    %fileOutputLines.delete();
    %objectClassStack.delete();
-   %fileObj.delete();  
 }
 
 function T3Dpre4ProjectImporter::processScriptExtensions(%this)
@@ -789,6 +704,7 @@ function T3Dpre4ProjectImporter::genProcessor(%classType, %conversionMap)
     eval(%stryng);
 }
 
+T3Dpre4ProjectImporter::genProcessor("TSShapeConstructor", "baseShape baseShapeAsset shapeName shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("BasicClouds", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("CloudLayer", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("DecalRoad", "material materialAsset");
@@ -805,9 +721,7 @@ T3Dpre4ProjectImporter::genProcessor("GroundCover", "material materialAsset shap
 T3Dpre4ProjectImporter::genProcessor("GroundPlane", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset shapeName shapeAsset");
-//T3Dpre4ProjectImporter::genProcessor("TerrainBlock", "terrainFile terrainFileAsset");
-
+T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset");
 //==============================================================================
 // Levels
 //==============================================================================
@@ -964,7 +878,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %obj
 {
    %matAsset = TerrainMaterialAsset::getAssetIdByMaterialName(%objectName);
    
-   if(%matAsset $= "")
+   if(%matAsset $= "" || %matAsset $= "Core_Rendering:noMaterial")
    {
       %assetName = %objectName;
    
@@ -985,7 +899,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %obj
          AssetName = %assetName;
          versionId = 1;
          shaderData = "";
-         materialDefinitionName = %assetName;
+         materialDefinitionName = %objectName;
          scriptFile = fileName(%file);
       };
       

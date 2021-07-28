@@ -409,10 +409,10 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
 
       //
       %imgPath = %mat.getDiffuseMap();
-         %this-->baseTexCtrl.setBitmap( %mat.diffuseMap ); 
+      if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texBaseMap.setBitmapAsset( %imgPath );
+      %this-->texBaseMap.setBitmap( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -423,7 +423,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       }
       else
       {
-         %this-->normalMapAssetId.setText( "None" );  
+         %this-->diffuseMapAssetId.setText( "None" );  
       }
 
       //
@@ -431,7 +431,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texNormalMap.setBitmapAsset( %imgPath );
+      %this-->texNormalMap.setBitmap( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -450,7 +450,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texORMConfigMap.setBitmapAsset( %imgPath );
+      %this-->texORMConfigMap.setBitmap( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -461,7 +461,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       }
       else
       {
-         %this-->normalMapAssetId.setText( "None" );  
+         %this-->ORMMapAssetId.setText( "None" );  
       }
        
       //
@@ -469,7 +469,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texDetailMap.setBitmapAsset( %imgPath );
+      %this-->texDetailMap.setBitmap( %imgPath );
       
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -480,7 +480,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       }
       else
       {
-         %this-->normalMapAssetId.setText( "None" );  
+         %this-->detailMapAssetId.setText( "None" );  
       }
       
       //
@@ -488,7 +488,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       if(%imgPath $= "")
          %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
 
-      %this-->texMacroMap.setBitmapAsset( %imgPath );
+      %this-->texMacroMap.setBitmap( %imgPath );
 
       if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
       {
@@ -499,7 +499,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       }
       else
       {
-         %this-->normalMapAssetId.setText( "None" );  
+         %this-->macroMapAssetId.setText( "None" );  
       }      
       
       %this-->detSizeCtrl.setText( %mat.detailSize );

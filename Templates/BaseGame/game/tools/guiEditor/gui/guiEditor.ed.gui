@@ -135,6 +135,29 @@
                hovertime = "1000";
                canSaveDynamicFields = "0";
             };
+            new GuiBitmapButtonCtrl() {
+               canSaveDynamicFields = "0";
+               internalName = AssetBrowserBtn;
+               Enabled = "1";
+               isContainer = "0";
+               Profile = "ToolsGuiButtonProfile";
+               HorizSizing = "right";
+               VertSizing = "bottom";
+               position = "98 3";
+               Extent = "29 27";
+               MinExtent = "8 2";
+               canSave = "1";
+               Visible = "1";
+               Command = "AssetBrowser.ShowDialog();";
+               tooltipprofile = "ToolsGuiToolTipProfile";
+               ToolTip = "Asset Browser";
+               hovertime = "750";
+               bitmap = "tools/gui/images/stencilIcons/menuGrid";
+               bitmapMode = "Stretched";
+               buttonType = "PushButton";
+               groupNum = "0";
+               useMouseEvents = "0";
+            };
             new GuiBitmapCtrl() {
                bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
@@ -142,7 +165,7 @@
                profile = "ToolsGuiDefaultProfile";
                horizSizing = "right";
                vertSizing = "bottom";
-               position = "98 3";
+               position = "130 3";
                extent = "2 26";
                minExtent = "1 1";
                canSave = "1";
@@ -157,7 +180,7 @@
             profile = "ToolsGuiDefaultProfile";
             horizSizing = "width";
             vertSizing = "bottom";
-            position = "99 0";
+            position = "131 0";
             extent = "723 32";
             minExtent = "8 2";
             canSave = "1";

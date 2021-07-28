@@ -164,7 +164,7 @@
          canSaveDynamicFields = "0";
 
          new GuiBitmapCtrl() {
-            bitmap = "core/gui/images/separator-v";
+            bitmap = "ToolsModule:separator_v_image";
             color = "White";
             wrap = "0";
             position = "1 0";

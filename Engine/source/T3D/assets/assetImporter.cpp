@@ -132,7 +132,7 @@ void AssetImportConfig::initPersistFields()
    Parent::initPersistFields();
 
    addGroup("General");
-      addField("DuplicatAutoResolution", TypeRealString, Offset(DuplicatAutoResolution, AssetImportConfig), "Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename");
+      addField("DuplicatAutoResolution", TypeRealString, Offset(DuplicatAutoResolution, AssetImportConfig), "Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename, FolderPrefix");
       addField("WarningsAsErrors", TypeBool, Offset(WarningsAsErrors, AssetImportConfig), "Indicates if warnings should be treated as errors");
       addField("PreventImportWithErrors", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "Indicates if importing should be prevented from completing if any errors are detected at all");
       addField("AutomaticallyPromptMissingFiles", TypeBool, Offset(AutomaticallyPromptMissingFiles, AssetImportConfig), "Should the importer automatically prompt to find missing files if they are not detected automatically by the importer");
@@ -2378,6 +2378,27 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       else if (activeImportConfig->DuplicatAutoResolution == String("UseExisting"))
       {
 
+      }
+      else if (activeImportConfig->DuplicatAutoResolution == String("FolderPrefix"))
+      {
+         //Set trailing number
+         String renamedAssetName = assetItem->assetName;
+         String owningFolder = assetItem->filePath.getDirectory(assetItem->filePath.getDirectoryCount() - 1);
+
+         renamedAssetName = owningFolder + "_" + renamedAssetName;
+
+         //Log it's renaming
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was renamed due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());
+         activityLog.push_back(importLogBuffer);
+
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was renamed to %s", assetItem->assetName.c_str(), renamedAssetName.c_str());
+         activityLog.push_back(importLogBuffer);
+
+         assetItem->assetName = renamedAssetName;
+
+         //Whatever status we had prior is no longer relevent, so reset the status
+         resetAssetValidationStatus(assetItem);
+         importIssues = false;
       }
    }
    else if (assetItem->statusType == String("MissingFile"))

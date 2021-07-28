@@ -16,7 +16,7 @@ function gameUI::initClient(%this)
 {
    //guis
    %this.queueExec("./GUIs/playGui.gui");
-   %this.queueExec("./GUIs/playGui." @ $TorqueScriptFileExtension);
+   %this.queueExec("./GUIs/playGui");
 }
 
 function gameUI::onCreateClientConnection(%this){}

@@ -76,15 +76,6 @@ ConsoleDocClass( CubemapData,
 
 void CubemapData::initPersistFields()
 {
-   INITPERSISTFIELD_IMAGEASSET_ARRAY(CubeMapFace, 6, CubemapData, "@brief The 6 cubemap face textures for a static cubemap.\n\n"
-      "They are in the following order:\n"
-      "  - cubeFace[0] is -X\n"
-      "  - cubeFace[1] is +X\n"
-      "  - cubeFace[2] is -Z\n"
-      "  - cubeFace[3] is +Z\n"
-      "  - cubeFace[4] is -Y\n"
-      "  - cubeFace[5] is +Y\n");
-
    addProtectedField( "cubeFace", TypeStringFilename, Offset(mCubeMapFaceName, CubemapData), _setCubeMapFaceData, defaultProtectedGetFn, 6,
       "@brief The 6 cubemap face textures for a static cubemap.\n\n"
       "They are in the following order:\n"
@@ -94,6 +85,15 @@ void CubemapData::initPersistFields()
       "  - cubeFace[3] is +Z\n"
       "  - cubeFace[4] is -Y\n"
       "  - cubeFace[5] is +Y\n", AbstractClassRep::FIELD_HideInInspectors );
+
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(CubeMapFace, 6, CubemapData, "@brief The 6 cubemap face textures for a static cubemap.\n\n"
+      "They are in the following order:\n"
+      "  - cubeFace[0] is -X\n"
+      "  - cubeFace[1] is +X\n"
+      "  - cubeFace[2] is -Z\n"
+      "  - cubeFace[3] is +Z\n"
+      "  - cubeFace[4] is -Y\n"
+      "  - cubeFace[5] is +Y\n");
 
    INITPERSISTFIELD_IMAGEASSET(CubeMap, CubemapData, "@brief Cubemap dds Image Asset.\n\n");
 }

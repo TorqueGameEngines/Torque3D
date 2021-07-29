@@ -49,6 +49,7 @@
 #include "materials/matInstance.h"
 #include "renderInstance/renderDeferredMgr.h"
 #include "console/engineAPI.h"
+#include "T3D/assets/MaterialAsset.h"
 
 /// This is used for rendering ground cover billboards.
 GFXImplementVertexFormat( GCVertex )
@@ -856,8 +857,12 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
 void GroundCover::_initMaterial()
 {
-   if (!mMaterialInst)
-      return;
+   SAFE_DELETE(mMaterialInst);
+
+   if (mMaterialAsset.notNull() && mMaterialAsset->getStatus() == MaterialAsset::Ok)
+      mMaterialInst = mMaterial->createMatInstance();
+   else
+      mMaterialInst = MATMGR->createMatInstance("WarningMaterial");
    
    // Add our special feature that makes it all work...
    FeatureSet features = MATMGR->getDefaultFeatures();
@@ -962,10 +967,10 @@ void GroundCover::_initialize( U32 cellCount, U32 cellPlacementCount )
       if(mat)
       {
          GFXTexHandle tex;
-         if (mat->mDiffuseMapName[0] != StringTable->EmptyString())
-            tex = GFXTexHandle(mat->mDiffuseMapName[0], &GFXStaticTextureSRGBProfile, "GroundCover texture aspect ratio check");
-         else if (!mat->mDiffuseMapAsset[0].isNull())
-            tex = mat->mDiffuseMapAsset[0]->getTexture(&GFXStaticTextureSRGBProfile);
+         if (mat->getDiffuseMapResource(0))
+            tex = mat->getDiffuseMapResource(0);
+         else if (mat->getDiffuseMap(0) != StringTable->EmptyString())
+            tex = GFXTexHandle(mat->getDiffuseMap(0), &GFXStaticTextureSRGBProfile, "GroundCover texture aspect ratio check");
 
          if(tex.isValid())
          {

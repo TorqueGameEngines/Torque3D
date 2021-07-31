@@ -170,9 +170,9 @@ private:
 };
 
 //helper macro for stitching string and non string values togeather sans quotes
-#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
-#define macroText(x) std::string(std::string(#x)).c_str()
-#define assetDoc(x,suff) std::string(std::string("@brief") + std::string(#x) + std::string(#suff)).c_str()
+#define assetText(x,suff) #x#suff
+#define macroText(x) #x
+#define assetDoc(x,suff) "@brief "#x" "#suff
 
 #endif // _ASSET_BASE_H_
 

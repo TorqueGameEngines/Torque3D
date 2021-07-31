@@ -154,7 +154,7 @@ public:
    static void consoleInit();
 };
 
-#define assetText(x,suff) std::string(std::string(#x) + std::string(#suff)).c_str()
+#define assetText(x,suff) #x #suff
 
 #define initMapSlot(name) m##name##Filename = String::EmptyString; m##name##AssetId = StringTable->EmptyString(); m##name##Asset = NULL;
 #define bindMapSlot(name) if (m##name##AssetId != String::EmptyString) m##name##Asset = m##name##AssetId;

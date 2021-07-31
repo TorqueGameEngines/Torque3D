@@ -35,11 +35,10 @@
 #include "core/util/tVector.h"
 #endif // _TVECTOR_H_
 
-
-class fsTiXmlDocument;
-class fsTiXmlElement;
-class fsTiXmlAttribute;
-
+#ifndef TINYXML2_INCLUDED
+#include <tinyxml2.h>
+#endif // TINYXML2_INCLUDED
+#include "persistence/taml/fsTinyXml.h"
 
 class SimXMLDocument: public SimObject
 {
@@ -136,11 +135,11 @@ class SimXMLDocument: public SimObject
       
    private:
       // Document.
-      fsTiXmlDocument* m_qDocument;
+      VfsXMLDocument* m_qDocument;
       // Stack of nodes.
-      Vector<fsTiXmlElement*> m_paNode;
+      Vector<tinyxml2::XMLNode*> m_paNode;
      // The current attribute
-      fsTiXmlAttribute* m_CurrentAttribute;
+      const tinyxml2::XMLAttribute* m_CurrentAttribute;
 
    public:
       DECLARE_CONOBJECT(SimXMLDocument);

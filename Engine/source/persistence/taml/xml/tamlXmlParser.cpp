@@ -21,15 +21,19 @@
 //-----------------------------------------------------------------------------
 
 #include "persistence/taml/xml/tamlXmlParser.h"
-#include "persistence/taml/fsTinyXml.h"
 #include "persistence/taml/tamlVisitor.h"
 #include "console/console.h"
 
 // Debug Profiling.
+#include "persistence/taml/fsTinyXml.h"
 #include "platform/profiler.h"
 
 #ifndef _FILESTREAM_H_
 #include "core/stream/fileStream.h"
+#endif
+
+#ifndef TINYXML2_INCLUDED
+#include <tinyxml2.h>
 #endif
 
 //-----------------------------------------------------------------------------
@@ -68,7 +72,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     
      */
 
-    fsTiXmlDocument xmlDocument;
+    VfsXMLDocument xmlDocument;
 
     // Load document from stream.
     if ( !xmlDocument.LoadFile( filenameBuffer ) )
@@ -88,7 +92,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     mDocumentDirty = false;
 
     // Parse root element.
-    parseElement( (fsTiXmlElement*)xmlDocument.RootElement(), visitor );
+    parseElement( xmlDocument.RootElement(), visitor );
 
     // Reset parsing filename.
     setParsingFilename( StringTable->EmptyString() );
@@ -121,7 +125,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
 
 //-----------------------------------------------------------------------------
 
-inline bool TamlXmlParser::parseElement( fsTiXmlElement* pXmlElement, TamlVisitor& visitor )
+inline bool TamlXmlParser::parseElement( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlParser_ParseElement);
@@ -135,13 +139,13 @@ inline bool TamlXmlParser::parseElement( fsTiXmlElement* pXmlElement, TamlVisito
         return false;
 
     // Fetch any children.
-    TiXmlNode* pChildXmlNode = pXmlElement->FirstChild();
+    tinyxml2::XMLNode* pChildXmlNode = pXmlElement->FirstChild();
 
     // Do we have any element children?
-    if ( pChildXmlNode != NULL && pChildXmlNode->Type() == TiXmlNode::TINYXML_ELEMENT )
+    if ( pChildXmlNode != NULL && pChildXmlNode->ToElement() != NULL )
     {
         // Iterate children.
-        for ( fsTiXmlElement* pChildXmlElement = dynamic_cast<fsTiXmlElement*>( pChildXmlNode ); pChildXmlElement; pChildXmlElement = (fsTiXmlElement*)pChildXmlElement->NextSiblingElement() )
+        for ( tinyxml2::XMLElement* pChildXmlElement = pChildXmlNode->ToElement(); pChildXmlElement; pChildXmlElement = pChildXmlElement->NextSiblingElement() )
         {
             // Parse element (stop processing if instructed).
             if ( !parseElement( pChildXmlElement, visitor ) )
@@ -154,7 +158,7 @@ inline bool TamlXmlParser::parseElement( fsTiXmlElement* pXmlElement, TamlVisito
 
 //-----------------------------------------------------------------------------
 
-inline bool TamlXmlParser::parseAttributes( fsTiXmlElement* pXmlElement, TamlVisitor& visitor )
+inline bool TamlXmlParser::parseAttributes( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlParser_ParseAttribute);
@@ -167,7 +171,7 @@ inline bool TamlXmlParser::parseAttributes( fsTiXmlElement* pXmlElement, TamlVis
     propertyState.setObjectName( pXmlElement->Value(), isRoot );
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Configure property state.
         propertyState.setProperty( pAttribute->Name(), pAttribute->Value() );
@@ -179,7 +183,7 @@ inline bool TamlXmlParser::parseAttributes( fsTiXmlElement* pXmlElement, TamlVis
         if ( propertyState.getPropertyValueDirty() )
         {
             // Yes, so update the attribute.
-            pAttribute->SetValue( propertyState.getPropertyValue() );
+            const_cast<tinyxml2::XMLAttribute*>(pAttribute)->SetAttribute( propertyState.getPropertyValue() );
 
             // Flag the document as dirty.
             mDocumentDirty = true;

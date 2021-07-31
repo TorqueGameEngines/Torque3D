@@ -34,7 +34,7 @@ namespace VPersistence
     //-----------------------------------------------------------------------------
 
     template <>
-    bool write( TiXmlElement *pElement, VController *pObject )
+    bool write( tinyxml2::XMLElement *pElement, VController *pObject )
     {
         // Write Properties.
         if ( !writeProperties( pElement, pObject ) )
@@ -53,7 +53,7 @@ namespace VPersistence
     }
 
     template <>
-    bool read( TiXmlElement *pElement, VController *pObject )
+    bool read( tinyxml2::XMLElement *pElement, VController *pObject )
     {
         // Read Properties.
         if ( !readProperties( pElement, pObject ) )
@@ -87,10 +87,10 @@ namespace VPersistence
     //-----------------------------------------------------------------------------
 
     template <>
-    bool write( TiXmlElement *pElement, VObject *pObject )
+    bool write( tinyxml2::XMLElement *pElement, VObject *pObject )
     {
         // Create Element.
-        TiXmlElement *objectElement = new TiXmlElement( "VObject" );
+        tinyxml2::XMLElement *objectElement = pElement->GetDocument()->NewElement( "VObject" );
         pElement->LinkEndChild( objectElement );
 
         // Attributes.
@@ -107,7 +107,7 @@ namespace VPersistence
     }
 
     template <>
-    bool read( TiXmlElement *pElement, VObject *pObject )
+    bool read( tinyxml2::XMLElement *pElement, VObject *pObject )
     {
         // Read Properties.
         if ( !readProperties( pElement, pObject ) )

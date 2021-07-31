@@ -24,7 +24,7 @@
 #define _VT_VPERSISTENCE_H_
 
 #ifndef TINYXML_INCLUDED
-#include "tinyxml/tinyxml.h"
+#include "tinyxml/tinyxml2.h"
 #endif
 
 #ifndef _SIMOBJECT_H_
@@ -34,6 +34,7 @@
 #ifndef _VT_VOBJECT_H_
 #include "Verve/Core/VObject.h"
 #endif
+#include "persistence/taml/fsTinyXml.h"
 
 //-----------------------------------------------------------------------------
 
@@ -48,17 +49,17 @@ namespace VPersistence
 
     //-------------------------------------------------------------------------
 
-    template <class T> bool write( TiXmlElement *pElement, T *pObject );
+    template <class T> bool write( tinyxml2::XMLElement *pElement, T *pObject );
     
     template <class T> bool writeFile( const char* pFileName, T *pObject )
     {
         // Create Doc.
-        TiXmlDocument xmlDocument;
-        TiXmlDeclaration *xmlDeclaration = new TiXmlDeclaration( "1.0", "", "" );
+        VfsXMLDocument xmlDocument;
+        tinyxml2::XMLDeclaration *xmlDeclaration = xmlDocument.NewDeclaration();
         xmlDocument.LinkEndChild( xmlDeclaration );
 
         // Create Root.
-        TiXmlElement *xmlRoot = new TiXmlElement( "VerveControllerSequence" );
+        tinyxml2::XMLElement *xmlRoot = xmlDocument.NewElement( "VerveControllerSequence" );
         xmlDocument.LinkEndChild( xmlRoot );
 
         // Write Version.
@@ -76,13 +77,13 @@ namespace VPersistence
     };
 
     
-    template <class T> bool writeProperties( TiXmlElement *pElement, T *pObject )
+    template <class T> bool writeProperties( tinyxml2::XMLElement *pElement, T *pObject )
     {
         const AbstractClassRep::FieldList &fieldList = pObject->getFieldList();
         const AbstractClassRep::Field     *field     = NULL;
 
         // Create Property Root.
-        TiXmlElement *propertyRoot = new TiXmlElement( "Properties" );
+        tinyxml2::XMLElement *propertyRoot = pElement->GetDocument()->NewElement( "Properties" );
         pElement->LinkEndChild( propertyRoot );
 
         const S32 fieldCount = fieldList.size();
@@ -111,10 +112,10 @@ namespace VPersistence
             if ( fieldValue )
             {
                 // Create Element.
-                TiXmlElement *propertyElement = new TiXmlElement( fieldName );  
+                tinyxml2::XMLElement *propertyElement = pElement->GetDocument()->NewElement( fieldName );  
 
                 // Apply Value.
-                propertyElement->InsertEndChild( TiXmlText( fieldValue ) );
+                propertyElement->InsertNewText( fieldValue );
 
                 // Add.
                 propertyRoot->LinkEndChild( propertyElement );
@@ -125,7 +126,7 @@ namespace VPersistence
         return true;
     };
 
-    template <class T> bool writeObjects( TiXmlElement *pElement, T *pObject )
+    template <class T> bool writeObjects( tinyxml2::XMLElement *pElement, T *pObject )
     {
         for ( ITreeNode *node = pObject->mChildNode; node != NULL; node = node->mSiblingNextNode )
         {
@@ -143,18 +144,18 @@ namespace VPersistence
 
     //-------------------------------------------------------------------------
     
-    template <class T> bool read( TiXmlElement *pElement, T *pObject );
+    template <class T> bool read( tinyxml2::XMLElement *pElement, T *pObject );
     
     template <class T> bool readFile( const char* pFileName, T *pObject )
     {
-        TiXmlDocument xmlDocument;
+        VfsXMLDocument xmlDocument;
         if ( !xmlDocument.LoadFile( pFileName ) )
         {
             Con::errorf( "VPersistence::readFile() - Unable to load file '%s'.", pFileName );
             return false;
         }
 
-        TiXmlElement *rootElement = xmlDocument.RootElement();
+        tinyxml2::XMLElement *rootElement = xmlDocument.RootElement();
         if ( !rootElement )
         {
             Con::errorf( "VPersistence::readFile() - Invalid Document '%s'.", pFileName );
@@ -179,12 +180,12 @@ namespace VPersistence
         return true;
     };
 
-    template <class T> bool readProperties( TiXmlElement *pElement, T *pObject )
+    template <class T> bool readProperties( tinyxml2::XMLElement *pElement, T *pObject )
     {
-        TiXmlElement *propertyRoot = pElement->FirstChildElement( "Properties" );
+        tinyxml2::XMLElement *propertyRoot = pElement->FirstChildElement( "Properties" );
         if ( propertyRoot )
         {
-            for ( TiXmlElement *child = propertyRoot->FirstChildElement(); child != NULL; child = child->NextSiblingElement() )
+            for ( tinyxml2::XMLElement *child = propertyRoot->FirstChildElement(); child != NULL; child = child->NextSiblingElement() )
             {
                 // Get Field Data.
                 const char *fieldName  = child->Value();
@@ -211,9 +212,9 @@ namespace VPersistence
         return true;
     };
 
-    template <class T> bool readObjects( TiXmlElement *pElement, T *pObject )
+    template <class T> bool readObjects( tinyxml2::XMLElement *pElement, T *pObject )
     {
-        for ( TiXmlElement *child = pElement->FirstChildElement( "VObject" ); child != NULL; child = child->NextSiblingElement( "VObject" ) )
+        for ( tinyxml2::XMLElement *child = pElement->FirstChildElement( "VObject" ); child != NULL; child = child->NextSiblingElement( "VObject" ) )
         {
             // Get Object Type.
             const char *type = child->Attribute( "Type" );

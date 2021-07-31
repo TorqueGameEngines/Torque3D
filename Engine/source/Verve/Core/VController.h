@@ -198,11 +198,11 @@ public:
 
     // Saving.
 
-    bool            writeDataTable( TiXmlElement *pElement );
+    bool            writeDataTable( tinyxml2::XMLElement *pElement );
 
     // Reading.
 
-    bool            readDataTable( TiXmlElement *pElement );
+    bool            readDataTable( tinyxml2::XMLElement *pElement );
 
     // Console Declaration.
 

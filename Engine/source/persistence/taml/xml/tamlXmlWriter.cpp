@@ -34,10 +34,10 @@ bool TamlXmlWriter::write( FileStream& stream, const TamlWriteNode* pTamlWriteNo
     PROFILE_SCOPE(TamlXmlWriter_Write);
 
     // Create document.
-    fsTiXmlDocument xmlDocument;
+    VfsXMLDocument xmlDocument;
 
     // Compile the root element.
-    TiXmlElement* pRootElement = compileElement( pTamlWriteNode );
+    tinyxml2::XMLElement* pRootElement = compileElement( &xmlDocument, pTamlWriteNode );
 
     // Fetch any TAML Schema file reference.
     const char* pTamlSchemaFile = Con::getVariable( TAML_SCHEMA_VARIABLE );
@@ -77,7 +77,7 @@ bool TamlXmlWriter::write( FileStream& stream, const TamlWriteNode* pTamlWriteNo
 
 //-----------------------------------------------------------------------------
 
-TiXmlElement* TamlXmlWriter::compileElement( const TamlWriteNode* pTamlWriteNode )
+tinyxml2::XMLElement* TamlXmlWriter::compileElement( tinyxml2::XMLDocument* doc, const TamlWriteNode* pTamlWriteNode )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlWriter_CompileElement);
@@ -89,7 +89,7 @@ TiXmlElement* TamlXmlWriter::compileElement( const TamlWriteNode* pTamlWriteNode
     const char* pElementName = pSimObject->getClassName();
 
     // Create element.
-    TiXmlElement* pElement = new fsTiXmlElement( pElementName );
+    tinyxml2::XMLElement* pElement = doc->NewElement( pElementName );
 
     // Fetch reference Id.
     const U32 referenceId = pTamlWriteNode->mRefId;
@@ -140,7 +140,7 @@ TiXmlElement* TamlXmlWriter::compileElement( const TamlWriteNode* pTamlWriteNode
         for( Vector<TamlWriteNode*>::iterator itr = pChildren->begin(); itr != pChildren->end(); ++itr )
         {
             // Write child element.
-            pElement->LinkEndChild( compileElement( (*itr) ) );
+            pElement->LinkEndChild( compileElement( doc, (*itr) ) );
         }
     }
 
@@ -152,7 +152,7 @@ TiXmlElement* TamlXmlWriter::compileElement( const TamlWriteNode* pTamlWriteNode
 
 //-----------------------------------------------------------------------------
 
-void TamlXmlWriter::compileAttributes( TiXmlElement* pXmlElement, const TamlWriteNode* pTamlWriteNode )
+void TamlXmlWriter::compileAttributes( tinyxml2::XMLElement* pXmlElement, const TamlWriteNode* pTamlWriteNode )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlWriter_CompileAttributes);
@@ -177,7 +177,7 @@ void TamlXmlWriter::compileAttributes( TiXmlElement* pXmlElement, const TamlWrit
 
 //-----------------------------------------------------------------------------
 
-void TamlXmlWriter::compileCustomElements( TiXmlElement* pXmlElement, const TamlWriteNode* pTamlWriteNode )
+void TamlXmlWriter::compileCustomElements( tinyxml2::XMLElement* pXmlElement, const TamlWriteNode* pTamlWriteNode )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlWriter_CompileCustomElements);
@@ -189,7 +189,7 @@ void TamlXmlWriter::compileCustomElements( TiXmlElement* pXmlElement, const Taml
     const TamlCustomNodeVector& nodes = customNodes.getNodes();
 
     // Finish if no custom nodes to process.
-    if ( nodes.size() == 0 )
+    if (nodes.empty())
         return;
 
     // Iterate custom nodes.
@@ -204,7 +204,7 @@ void TamlXmlWriter::compileCustomElements( TiXmlElement* pXmlElement, const Taml
         StringTableEntry extendedElementName = StringTable->insert( extendedElementNameBuffer );
 
         // Create element.
-        TiXmlElement* pExtendedPropertyElement = new fsTiXmlElement( extendedElementName );
+        tinyxml2::XMLElement* pExtendedPropertyElement = pXmlElement->GetDocument()->NewElement( extendedElementName );
 
         // Fetch node children.
         const TamlCustomNodeVector& nodeChildren = pCustomNode->getChildren();
@@ -223,7 +223,7 @@ void TamlXmlWriter::compileCustomElements( TiXmlElement* pXmlElement, const Taml
         if ( pCustomNode->getIgnoreEmpty() && pExtendedPropertyElement->NoChildren() )
         {
             // Yes, so delete the extended element.
-            delete pExtendedPropertyElement;
+            pXmlElement->GetDocument()->DeleteNode(pExtendedPropertyElement);
             pExtendedPropertyElement = NULL;
         }
         else
@@ -236,7 +236,7 @@ void TamlXmlWriter::compileCustomElements( TiXmlElement* pXmlElement, const Taml
 
 //-----------------------------------------------------------------------------
 
-void TamlXmlWriter::compileCustomNode( TiXmlElement* pXmlElement, const TamlCustomNode* pCustomNode )
+void TamlXmlWriter::compileCustomNode(tinyxml2::XMLElement* pXmlElement, const TamlCustomNode* pCustomNode )
 {
     // Finish if the node is set to ignore if empty and it is empty.
     if ( pCustomNode->getIgnoreEmpty() && pCustomNode->isEmpty() )
@@ -246,18 +246,18 @@ void TamlXmlWriter::compileCustomNode( TiXmlElement* pXmlElement, const TamlCust
     if ( pCustomNode->isProxyObject() )
     {
         // Yes, so write the proxy object.
-        pXmlElement->LinkEndChild( compileElement( pCustomNode->getProxyWriteNode() ) );
+        pXmlElement->LinkEndChild( compileElement( pXmlElement->GetDocument(), pCustomNode->getProxyWriteNode() ) );
         return;
     }
 
     // Create element.
-    TiXmlElement* pNodeElement = new fsTiXmlElement( pCustomNode->getNodeName() );
+    tinyxml2::XMLElement* pNodeElement = pXmlElement->GetDocument()->NewElement( pCustomNode->getNodeName() );
 
     // Is there any node text?
     if ( !pCustomNode->getNodeTextField().isValueEmpty() )
     {
         // Yes, so add a text node.
-        pNodeElement->LinkEndChild( new TiXmlText( pCustomNode->getNodeTextField().getFieldValue() ) );
+        pNodeElement->LinkEndChild( pXmlElement->GetDocument()->NewText( pCustomNode->getNodeTextField().getFieldValue() ) );
     }
 
     // Fetch fields.
@@ -287,10 +287,10 @@ void TamlXmlWriter::compileCustomNode( TiXmlElement* pXmlElement, const TamlCust
     }
 
     // Finish if the node is set to ignore if empty and it is empty (including fields).
-    if ( pCustomNode->getIgnoreEmpty() && fields.size() == 0 && pNodeElement->NoChildren() )
+    if ( pCustomNode->getIgnoreEmpty() && fields.empty() && pNodeElement->NoChildren() )
     {
         // Yes, so delete the extended element.
-        delete pNodeElement;
+        pXmlElement->GetDocument()->DeleteNode(pNodeElement);
         pNodeElement = NULL;
     }
     else

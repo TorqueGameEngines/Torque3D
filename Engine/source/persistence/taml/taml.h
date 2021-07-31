@@ -67,8 +67,6 @@ extern StringTableEntry tamlNamedObjectName;
 #define TAML_SCHEMA_VARIABLE            "$pref::T2D::TAMLSchema"
 #define TAML_JSON_STRICT_VARIBLE        "$pref::T2D::JSONStrict"
 
-class TiXmlElement;
-
 //-----------------------------------------------------------------------------
 
 /// @ingroup tamlGroup
@@ -196,7 +194,7 @@ public:
     static bool generateTamlSchema();
 
     /// Write a unrestricted custom Taml schema.
-    static void WriteUnrestrictedCustomTamlSchema( const char* pCustomNodeName, const AbstractClassRep* pClassRep, TiXmlElement* pParentElement );
+    static void WriteUnrestrictedCustomTamlSchema( const char* pCustomNodeName, const AbstractClassRep* pClassRep, tinyxml2::XMLElement* pParentElement );
 
     /// Get format mode info.
     static TamlFormatMode getFormatModeEnum( const char* label );

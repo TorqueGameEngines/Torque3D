@@ -25,7 +25,7 @@
 
 
 #ifndef TINYXML_INCLUDED
-#include "tinyxml/tinyxml.h"
+#include "tinyxml/tinyxml2.h"
 #endif
 
 #include "platform/platform.h"
@@ -34,215 +34,97 @@
 #include "core/stream/fileStream.h"
 #endif
 
-class fsTiXmlNode
+class VfsXMLPrinter : public tinyxml2::XMLPrinter
 {
 public:
-   virtual void Print( FileStream& stream, int depth ) const = 0;
+   VfsXMLPrinter(FileStream& stream, bool compact = false, int depth = 0);
+   ~VfsXMLPrinter() override;
+
+   void Print(const char* format, ...) override;
+   void Write(const char* data, size_t size) override;
+   void Putc(char ch) override;
+   FileStream& m_Stream;
 };
 
-class fsTiXmlDocument : public TiXmlDocument, public fsTiXmlNode
+class VfsXMLDocument : public tinyxml2::XMLDocument
 {
 public:
-   bool LoadFile( FileStream &stream, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
-   bool SaveFile( FileStream &stream ) const;
-	/// Load a file using the given filename. Returns true if successful.
-	bool LoadFile( const char * filename, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
-	/// Save a file using the given filename. Returns true if successful.
-	bool SaveFile( const char * filename ) const;
-   virtual void Print( FileStream& stream, int depth ) const;
+   bool LoadFile(FileStream& stream);
+   bool SaveFile(FileStream& stream);
+   /// Load a file using the given filename. Returns true if successful.
+   bool LoadFile(const char* filename);
+   /// Save a file using the given filename. Returns true if successful.
+   bool SaveFile(const char* filename);
 
-   virtual TiXmlNode* Clone() const
+   /// Clears the error flags.
+   void ClearError();
+
+
+   tinyxml2::XMLError _errorID;
+   mutable tinyxml2::StrPair _errorStr;
+   int _errorLineNum;
+
+   // Create a parallel SetError implementation since it is private in tinyxml2
+   void SetError(tinyxml2::XMLError error, int lineNum, const char* format, ...);
+
+   /// Return true if there was an error parsing the document.
+   bool Error() const
    {
-	   TiXmlDocument* clone = new fsTiXmlDocument();
-	   if ( !clone )
-		   return 0;
-
-	   CopyTo( clone );
-	   return clone;
-   }
-   TiXmlNode* Identify( const char* p, TiXmlEncoding encoding );
-};
-
-class fsTiXmlAttribute : public TiXmlAttribute, public fsTiXmlNode
-{
-public:
-   virtual void Print( FileStream& stream, int depth, TIXML_STRING* str ) const;
-   virtual void Print( FileStream& stream, int depth) const
-   {
-      Print(stream, depth, 0);
-   }
-};
-
-class fsTiXmlDeclaration : public TiXmlDeclaration, public fsTiXmlNode
-{
-public:
-   fsTiXmlDeclaration(){};
-	fsTiXmlDeclaration(	const char* _version,
-						const char* _encoding,
-                  const char* _standalone ) : TiXmlDeclaration(_version, _encoding, _standalone) { }
-
-   virtual void Print( FileStream& stream, int depth, TIXML_STRING* str ) const;
-   virtual void Print( FileStream& stream, int depth) const
-   {
-      Print(stream, depth, 0);
+      return _errorID != tinyxml2::XML_SUCCESS || XMLDocument::Error();
    }
 
-   virtual TiXmlNode* Clone() const
+   /// Return the errorID.
+   tinyxml2::XMLError ErrorID() const
    {
-	   fsTiXmlDeclaration* clone = new fsTiXmlDeclaration();
-
-	   if ( !clone )
-		   return 0;
-
-	   CopyTo( clone );
-	   return clone;
-   }
-};
-
-class fsTiXmlElement : public TiXmlElement, public fsTiXmlNode
-{
-public:
-   fsTiXmlElement(const char* in_value) : TiXmlElement(in_value) { }
-
-   virtual void Print( FileStream& stream, int depth ) const;
-
-   virtual TiXmlNode* Clone() const
-   {
-	   TiXmlElement* clone = new fsTiXmlElement( Value() );
-	   if ( !clone )
-		   return 0;
-
-	   CopyTo( clone );
-	   return clone;
-   }
-
-   void SetAttribute( const char* name, const char * _value )
-   {
-      TiXmlAttribute* attrib = attributeSet.Find( name );
-      if(!attrib)
+      if (XMLDocument::Error())
       {
-         attrib = new fsTiXmlAttribute();
-		   attributeSet.Add( attrib );
-		   attrib->SetName( name );
+         return XMLDocument::ErrorID();
       }
-	   if ( attrib ) {
-		   attrib->SetValue( _value );
-	   }
-   }
-   void SetAttribute( const char * name, int _value)
-   {
-	   TiXmlAttribute* attrib = attributeSet.Find( name );
-      if(!attrib)
+      else
       {
-         attrib = new fsTiXmlAttribute();
-		   attributeSet.Add( attrib );
-		   attrib->SetName( name );
+         return _errorID;
       }
-	   if ( attrib ) {
-		   attrib->SetIntValue(_value);
-	   }
    }
-   TiXmlNode* Identify( const char* p, TiXmlEncoding encoding );
-   virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
-};
 
-class fsTiXmlComment : public TiXmlComment, public fsTiXmlNode
-{
-public:
-   virtual void Print( FileStream& stream, int depth ) const;
-
-   virtual TiXmlNode* Clone() const
+   const char* ErrorName() const
    {
-	   TiXmlComment* clone = new fsTiXmlComment();
-
-	   if ( !clone )
-		   return 0;
-
-	   CopyTo( clone );
-	   return clone;
+      if (XMLDocument::Error())
+      {
+         return XMLDocument::ErrorName();
+      }
+      else
+      {
+         return ErrorIDToName(_errorID);
+      }
    }
-};
 
-class fsTiXmlText : public TiXmlText, public fsTiXmlNode
-{
-public:
-   fsTiXmlText (const char * initValue ) : TiXmlText(initValue) { }
-   virtual void Print( FileStream& stream, int depth ) const;
-
-   virtual TiXmlNode* Clone() const
+   /** Returns a "long form" error description. A hopefully helpful
+       diagnostic with location, line number, and/or additional info.
+   */
+   const char* ErrorStr() const
    {
-	   TiXmlText* clone = 0;
-	   clone = new fsTiXmlText( "" );
-
-	   if ( !clone )
-		   return 0;
-
-	   CopyTo( clone );
-	   return clone;
+      if (XMLDocument::Error())
+      {
+         return XMLDocument::ErrorStr();
+      }
+      else
+      {
+         return _errorStr.Empty() ? "" : _errorStr.GetStr();
+      }
    }
-};
 
-class fsTiXmlUnknown : public TiXmlUnknown, public fsTiXmlNode
-{
-public:
-   virtual void Print( FileStream& stream, int depth ) const;
-
-   virtual TiXmlNode* Clone() const
+   /// Return the line where the error occurred, or zero if unknown.
+   int ErrorLineNum() const
    {
-	   TiXmlUnknown* clone = new fsTiXmlUnknown();
-
-	   if ( !clone )
-		   return 0;
-
-	   CopyTo( clone );
-	   return clone;
+      if (XMLDocument::Error())
+      {
+         return XMLDocument::ErrorLineNum();
+      }
+      else
+      {
+         return _errorLineNum;
+      }
    }
 };
 
-static bool AttemptPrintTiNode(class fsTiXmlDocument* node, FileStream& stream, int depth)
-{
-   fsTiXmlDocument* fsDoc = dynamic_cast<fsTiXmlDocument*>(node);
-   if(fsDoc != NULL)
-   {
-      fsDoc->Print(stream, depth);
-      return true;
-   }
-   fsTiXmlUnknown* fsUnk = dynamic_cast<fsTiXmlUnknown*>(node);
-   if(fsUnk != NULL)
-   {
-      fsUnk->Print(stream, depth);
-      return true;
-   }
-   fsTiXmlText* fsTxt = dynamic_cast<fsTiXmlText*>(node);
-   if(fsTxt != NULL)
-   {
-      fsTxt->Print(stream, depth);
-      return true;
-   }
-   fsTiXmlComment* fsCom = dynamic_cast<fsTiXmlComment*>(node);
-   if(fsCom != NULL)
-   {
-      fsCom->Print(stream, depth);
-      return true;
-   }
-   fsTiXmlElement* fsElm = dynamic_cast<fsTiXmlElement*>(node);
-   if(fsElm != NULL)
-   {
-      fsElm->Print(stream, depth);
-      return true;
-   }
-   fsTiXmlDeclaration* fsDec = dynamic_cast<fsTiXmlDeclaration*>(node);
-   if(fsDec != NULL)
-   {
-      fsDec->Print(stream, depth);
-      return true;
-   }
-   fsTiXmlAttribute* fsAtt = dynamic_cast<fsTiXmlAttribute*>(node);
-   if(fsAtt != NULL)
-   {
-      fsAtt->Print(stream, depth);
-      return true;
-   }
-   return false;
-}
 #endif //_FSTINYXML_H_

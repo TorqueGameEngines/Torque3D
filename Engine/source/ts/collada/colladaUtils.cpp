@@ -27,6 +27,7 @@
 #include "materials/matInstance.h"
 
 //special handling for export classes
+#include "persistence/taml/fsTinyXml.h"
 #include "T3D/convexShape.h"
 
 using namespace ColladaUtils;
@@ -938,25 +939,26 @@ Torque::Path ColladaUtils::findTexture(const Torque::Path& diffuseMap)
    return String::EmptyString;
 }
 
-void ColladaUtils::exportColladaHeader(TiXmlElement* rootNode)
+void ColladaUtils::exportColladaHeader(tinyxml2::XMLElement* rootNode)
 {
-   TiXmlElement* assetNode = new TiXmlElement("asset");
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+   tinyxml2::XMLElement* assetNode = doc->NewElement("asset");
    rootNode->LinkEndChild(assetNode);
 
-   TiXmlElement* contributorNode = new TiXmlElement("contributor");
+   tinyxml2::XMLElement* contributorNode = doc->NewElement("contributor");
    assetNode->LinkEndChild(contributorNode);
 
-   TiXmlElement* authorNode = new TiXmlElement("author");
+   tinyxml2::XMLElement* authorNode = doc->NewElement("author");
    contributorNode->LinkEndChild(authorNode);
-   TiXmlText* authorNodeText = new TiXmlText("Torque3D MIT User");
+   tinyxml2::XMLText* authorNodeText = doc->NewText("Torque3D MIT User");
    authorNode->LinkEndChild(authorNodeText);
 
-   TiXmlElement* authoringToolNode = new TiXmlElement("authoring_tool");
+   tinyxml2::XMLElement* authoringToolNode = doc->NewElement("authoring_tool");
    contributorNode->LinkEndChild(authoringToolNode);
-   TiXmlText* authorText = new TiXmlText(avar("%s %s Object Exporter", getEngineProductString(), getVersionString()));
+   tinyxml2::XMLText* authorText = doc->NewText(avar("%s %s Object Exporter", getEngineProductString(), getVersionString()));
    authoringToolNode->LinkEndChild(authorText);
 
-   //TiXmlElement* commentsNode = new TiXmlElement("comments");
+   //tinyxml2::XMLElement* commentsNode = doc->NewElement("comments");
    //contributorNode->LinkEndChild(commentsNode);
 
    // Get the current time
@@ -966,44 +968,46 @@ void ColladaUtils::exportColladaHeader(TiXmlElement* rootNode)
 
    localTime.replace('\t', ' ');
 
-   TiXmlElement* createdNode = new TiXmlElement("created");
+   tinyxml2::XMLElement* createdNode = doc->NewElement("created");
    assetNode->LinkEndChild(createdNode);
-   TiXmlText* createdText = new TiXmlText(avar("%s", localTime.c_str()));
+   tinyxml2::XMLText* createdText = doc->NewText(avar("%s", localTime.c_str()));
    createdNode->LinkEndChild(createdText);
 
-   TiXmlElement* modifiedNode = new TiXmlElement("modified");
+   tinyxml2::XMLElement* modifiedNode = doc->NewElement("modified");
    assetNode->LinkEndChild(modifiedNode);
-   TiXmlText* modifiedText = new TiXmlText(avar("%s", localTime.c_str()));
+   tinyxml2::XMLText* modifiedText = doc->NewText(avar("%s", localTime.c_str()));
    modifiedNode->LinkEndChild(modifiedText);
 
-   //TiXmlElement* revisionNode = new TiXmlElement("revision");
+   //tinyxml2::XMLElement* revisionNode = doc->NewElement("revision");
    //assetNode->LinkEndChild(revisionNode);
 
-   //TiXmlElement* titleNode = new TiXmlElement("title");
+   //tinyxml2::XMLElement* titleNode = doc->NewElement("title");
    //assetNode->LinkEndChild(titleNode);
 
-   //TiXmlElement* subjectNode = new TiXmlElement("subject");
+   //tinyxml2::XMLElement* subjectNode = doc->NewElement("subject");
    //assetNode->LinkEndChild(subjectNode);
 
-   //TiXmlElement* keywordsNode = new TiXmlElement("keywords");
+   //tinyxml2::XMLElement* keywordsNode = doc->NewElement("keywords");
    //assetNode->LinkEndChild(keywordsNode);
 
    // Torque uses Z_UP with 1 unit equal to 1 meter by default
-   TiXmlElement* unitNode = new TiXmlElement("unit");
+   tinyxml2::XMLElement* unitNode = doc->NewElement("unit");
    assetNode->LinkEndChild(unitNode);
    unitNode->SetAttribute("name", "meter");
    unitNode->SetAttribute("meter", "1");
 
-   TiXmlElement* axisNode = new TiXmlElement("up_axis");
+   tinyxml2::XMLElement* axisNode = doc->NewElement("up_axis");
    assetNode->LinkEndChild(axisNode);
-   TiXmlText* axisText = new TiXmlText("Z_UP");
+   tinyxml2::XMLText* axisText = doc->NewText("Z_UP");
    axisNode->LinkEndChild(axisText);
 }
 
-void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const OptimizedPolyList& mesh, Vector<String>& matNames, const Torque::Path& colladaFile)
+void ColladaUtils::exportColladaMaterials(tinyxml2::XMLElement* rootNode, const OptimizedPolyList& mesh, Vector<String>& matNames, const Torque::Path& colladaFile)
 {
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+
    // First the image library
-   TiXmlElement* imgLibNode = new TiXmlElement("library_images");
+   tinyxml2::XMLElement* imgLibNode = doc->NewElement("library_images");
    rootNode->LinkEndChild(imgLibNode);
 
    for (U32 i = 0; i < mesh.mMaterialList.size(); i++)
@@ -1048,20 +1052,20 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const Optimize
       if (diffusePath.getFullPath().isNotEmpty())
          diffuseMap = Torque::Path::MakeRelativePath(diffusePath, colladaFile);
 
-      TiXmlElement* imageNode = new TiXmlElement("image");
+      tinyxml2::XMLElement* imageNode = doc->NewElement("image");
       imgLibNode->LinkEndChild(imageNode);
       imageNode->SetAttribute("id", avar("%s", matNames.last().c_str()));
       imageNode->SetAttribute("name", avar("%s", matNames.last().c_str()));
 
-      TiXmlElement* initNode = new TiXmlElement("init_from");
+      tinyxml2::XMLElement* initNode = doc->NewElement("init_from");
       imageNode->LinkEndChild(initNode);
-	  TiXmlText* initText = new TiXmlText(avar("file://%s", diffuseMap.c_str())); // "the file://" is needed to load the texture in some old apps (ex: 3ds Max 2009)
+	  tinyxml2::XMLText* initText = doc->NewText(avar("file://%s", diffuseMap.c_str())); // "the file://" is needed to load the texture in some old apps (ex: 3ds Max 2009)
       initNode->LinkEndChild(initText);
 
    }
 
    // Next the effects library
-   TiXmlElement* effectLibNode = new TiXmlElement("library_effects");
+   tinyxml2::XMLElement* effectLibNode = doc->NewElement("library_effects");
    rootNode->LinkEndChild(effectLibNode);
 
    for (U32 i = 0; i < mesh.mMaterialList.size(); i++)
@@ -1072,194 +1076,194 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const Optimize
       if (!mat)
          continue;
 
-      TiXmlElement* effectNode = new TiXmlElement("effect");
+      tinyxml2::XMLElement* effectNode = doc->NewElement("effect");
       effectLibNode->LinkEndChild(effectNode);
       effectNode->SetAttribute("id", avar("%s-effect", matNames[i].c_str()));
       effectNode->SetAttribute("name", avar("%s-effect", matNames[i].c_str()));
 
-      TiXmlElement* profileNode = new TiXmlElement("profile_COMMON");
+      tinyxml2::XMLElement* profileNode = doc->NewElement("profile_COMMON");
       effectNode->LinkEndChild(profileNode);
 	  
 	  // ---------------------------
-      TiXmlElement* newParamNode = new TiXmlElement("newparam");
+      tinyxml2::XMLElement* newParamNode = doc->NewElement("newparam");
       profileNode->LinkEndChild(newParamNode);
       newParamNode->SetAttribute("sid", avar("%s-surface", matNames[i].c_str()));	  
 
-      TiXmlElement* surfaceNode = new TiXmlElement("surface");
+      tinyxml2::XMLElement* surfaceNode = doc->NewElement("surface");
       newParamNode->LinkEndChild(surfaceNode);
 	  surfaceNode->SetAttribute("type", "2D");
 
-      TiXmlElement* initNode2 = new TiXmlElement("init_from");
+      tinyxml2::XMLElement* initNode2 = doc->NewElement("init_from");
       surfaceNode->LinkEndChild(initNode2);
-      TiXmlText* init2Text = new TiXmlText(avar("%s", matNames[i].c_str()));
+      tinyxml2::XMLText* init2Text = doc->NewText(avar("%s", matNames[i].c_str()));
       initNode2->LinkEndChild(init2Text);
 
-      TiXmlElement* formatNode = new TiXmlElement("format");
+      tinyxml2::XMLElement* formatNode = doc->NewElement("format");
       surfaceNode->LinkEndChild(formatNode);
-      TiXmlText* formatText = new TiXmlText("A8R8G8B8");
+      tinyxml2::XMLText* formatText = doc->NewText("A8R8G8B8");
       formatNode->LinkEndChild(formatText);
 
 	  // ---------------------------
-      TiXmlElement* newParam2Node = new TiXmlElement("newparam");
+      tinyxml2::XMLElement* newParam2Node = doc->NewElement("newparam");
       profileNode->LinkEndChild(newParam2Node);
       newParam2Node->SetAttribute("sid", avar("%s-sampler", matNames[i].c_str()));	  
 
-      TiXmlElement* sampler2DNode = new TiXmlElement("sampler2D");
+      tinyxml2::XMLElement* sampler2DNode = doc->NewElement("sampler2D");
       newParam2Node->LinkEndChild(sampler2DNode);
 	  
-      TiXmlElement* sourceSampler2DNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* sourceSampler2DNode = doc->NewElement("source");
       sampler2DNode->LinkEndChild(sourceSampler2DNode);  
-      TiXmlText* sourceSampler2DText = new TiXmlText(avar("%s-surface", matNames[i].c_str()));
+      tinyxml2::XMLText* sourceSampler2DText = doc->NewText(avar("%s-surface", matNames[i].c_str()));
       sourceSampler2DNode->LinkEndChild(sourceSampler2DText);
 
 	  // ---------------------------
 
-      TiXmlElement* techniqueNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* techniqueNode = doc->NewElement("technique");
       profileNode->LinkEndChild(techniqueNode);
       techniqueNode->SetAttribute("sid", "common");
 
-      TiXmlElement* blinnNode = new TiXmlElement("blinn");
+      tinyxml2::XMLElement* blinnNode = doc->NewElement("blinn");
       techniqueNode->LinkEndChild(blinnNode);
 	  
 	  // ---------------------------
-	  TiXmlElement* emissionNode = new TiXmlElement("emission");
+	  tinyxml2::XMLElement* emissionNode = doc->NewElement("emission");
 	  blinnNode->LinkEndChild(emissionNode);
 
-      TiXmlElement* colorEmissionNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorEmissionNode = doc->NewElement("color");
       emissionNode->LinkEndChild(colorEmissionNode);
 	  colorEmissionNode->SetAttribute("sid", "emission"); 
 
-	  TiXmlText* colorEmissionNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+	  tinyxml2::XMLText* colorEmissionNodeText = doc->NewText("0.0 0.0 0.0 1.0");
 	  colorEmissionNode->LinkEndChild(colorEmissionNodeText);
 	  
 	  // ---------------------------
-	  TiXmlElement* ambientNode = new TiXmlElement("ambient");
+	  tinyxml2::XMLElement* ambientNode = doc->NewElement("ambient");
 	  blinnNode->LinkEndChild(ambientNode);
 
-      TiXmlElement* colorAmbientNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorAmbientNode = doc->NewElement("color");
       ambientNode->LinkEndChild(colorAmbientNode);
 	  colorAmbientNode->SetAttribute("sid", "ambient"); 
 
-	  TiXmlText* colorAmbientNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+	  tinyxml2::XMLText* colorAmbientNodeText = doc->NewText("0.0 0.0 0.0 1.0");
 	  colorAmbientNode->LinkEndChild(colorAmbientNodeText);	  
 	  
 	  // ---------------------------
-	  TiXmlElement* diffuseNode = new TiXmlElement("diffuse");
+	  tinyxml2::XMLElement* diffuseNode = doc->NewElement("diffuse");
       blinnNode->LinkEndChild(diffuseNode);
-	  TiXmlElement* textureDiffuseNode = new TiXmlElement("texture");
+	  tinyxml2::XMLElement* textureDiffuseNode = doc->NewElement("texture");
       diffuseNode->LinkEndChild(textureDiffuseNode);
 	  textureDiffuseNode->SetAttribute("texture", avar("%s-sampler", matNames[i].c_str()));
 	  textureDiffuseNode->SetAttribute("texcoord", "UVMap");
 	  
       // Extra info useful for getting the texture to show up correctly in MAYA and 3DS Max
-      TiXmlElement* extraNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extraNode = doc->NewElement("extra");
       textureDiffuseNode->LinkEndChild(extraNode);
 
-      TiXmlElement* extraTechNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extraTechNode = doc->NewElement("technique");
       extraNode->LinkEndChild(extraTechNode);
       extraTechNode->SetAttribute("profile", "MAYA");
 
-      TiXmlElement* extraWrapUNode = new TiXmlElement("wrapU");
+      tinyxml2::XMLElement* extraWrapUNode = doc->NewElement("wrapU");
       extraTechNode->LinkEndChild(extraWrapUNode);
       extraWrapUNode->SetAttribute("sid", "wrapU0");
 
-      TiXmlText* extraWrapUText = new TiXmlText("TRUE");
+      tinyxml2::XMLText* extraWrapUText = doc->NewText("TRUE");
       extraWrapUNode->LinkEndChild(extraWrapUText);
 
-      TiXmlElement* extraWrapVNode = new TiXmlElement("wrapV");
+      tinyxml2::XMLElement* extraWrapVNode = doc->NewElement("wrapV");
       extraTechNode->LinkEndChild(extraWrapVNode);
       extraWrapVNode->SetAttribute("sid", "wrapV0");
 
-      TiXmlText* extraWrapVText = new TiXmlText("TRUE");
+      tinyxml2::XMLText* extraWrapVText = doc->NewText("TRUE");
       extraWrapVNode->LinkEndChild(extraWrapVText);
 
-      TiXmlElement* extraBlendNode = new TiXmlElement("blend_mode");
+      tinyxml2::XMLElement* extraBlendNode = doc->NewElement("blend_mode");
       extraTechNode->LinkEndChild(extraBlendNode);
 
-      TiXmlText* extraBlendText = new TiXmlText("ADD");
+      tinyxml2::XMLText* extraBlendText = doc->NewText("ADD");
       extraBlendNode->LinkEndChild(extraBlendText);
 	  
 	  // ---------------------------
-      TiXmlElement* specularNode = new TiXmlElement("specular");
+      tinyxml2::XMLElement* specularNode = doc->NewElement("specular");
       blinnNode->LinkEndChild(specularNode);
 
-      TiXmlElement* colorSpecularNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorSpecularNode = doc->NewElement("color");
       specularNode->LinkEndChild(colorSpecularNode);
 	  colorSpecularNode->SetAttribute("sid", "specular");
 		  
-	  TiXmlText* colorSpecularNodeText = new TiXmlText("0.5 0.5 0.5 1.0");
+	  tinyxml2::XMLText* colorSpecularNodeText = doc->NewText("0.5 0.5 0.5 1.0");
 	  colorSpecularNode->LinkEndChild(colorSpecularNodeText);
 
 	  // ---------------------------	
-      TiXmlElement* shininessNode = new TiXmlElement("shininess");
+      tinyxml2::XMLElement* shininessNode = doc->NewElement("shininess");
       blinnNode->LinkEndChild(shininessNode);
 
-      TiXmlElement* colorShininessNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* colorShininessNode = doc->NewElement("float");
       shininessNode->LinkEndChild(colorShininessNode);
 	  colorShininessNode->SetAttribute("sid", "shininess");
 		  
-	  TiXmlText* colorShininessNodeText = new TiXmlText("1.0");
+	  tinyxml2::XMLText* colorShininessNodeText = doc->NewText("1.0");
 	  colorShininessNode->LinkEndChild(colorShininessNodeText);
 
 	  // ---------------------------	
-      TiXmlElement* reflectiveNode = new TiXmlElement("reflective");
+      tinyxml2::XMLElement* reflectiveNode = doc->NewElement("reflective");
       blinnNode->LinkEndChild(reflectiveNode);
 
-      TiXmlElement* colorReflectiveNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorReflectiveNode = doc->NewElement("color");
       reflectiveNode->LinkEndChild(colorReflectiveNode);
 	  colorReflectiveNode->SetAttribute("sid", "reflective");
 		  
-	  TiXmlText* colorReflectiveNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+	  tinyxml2::XMLText* colorReflectiveNodeText = doc->NewText("0.0 0.0 0.0 1.0");
 	  colorReflectiveNode->LinkEndChild(colorReflectiveNodeText);	  
 
 	  // ---------------------------	
-      TiXmlElement* reflectivityNode = new TiXmlElement("reflectivity");
+      tinyxml2::XMLElement* reflectivityNode = doc->NewElement("reflectivity");
       blinnNode->LinkEndChild(reflectivityNode);
 
-      TiXmlElement* floatReflectivityNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* floatReflectivityNode = doc->NewElement("float");
       reflectivityNode->LinkEndChild(floatReflectivityNode);
 	  floatReflectivityNode->SetAttribute("sid", "reflectivity");
 		  
-	  TiXmlText* floatReflectivityText = new TiXmlText("0.5");
+	  tinyxml2::XMLText* floatReflectivityText = doc->NewText("0.5");
 	  floatReflectivityNode->LinkEndChild(floatReflectivityText);	
 	  
 	  // ---------------------------	
-      TiXmlElement* transparentNode = new TiXmlElement("transparent");
+      tinyxml2::XMLElement* transparentNode = doc->NewElement("transparent");
       blinnNode->LinkEndChild(transparentNode);
 	  transparentNode->SetAttribute("opaque", "RGB_ZERO");
 
-      TiXmlElement* colorTransparentNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorTransparentNode = doc->NewElement("color");
       transparentNode->LinkEndChild(colorTransparentNode);
 	  colorTransparentNode->SetAttribute("sid", "transparent");
 		  
-	  TiXmlText* colorTransparentNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+	  tinyxml2::XMLText* colorTransparentNodeText = doc->NewText("0.0 0.0 0.0 1.0");
 	  colorTransparentNode->LinkEndChild(colorTransparentNodeText);	
 
 	  // ---------------------------	
-      TiXmlElement* transparencyNode = new TiXmlElement("transparency");
+      tinyxml2::XMLElement* transparencyNode = doc->NewElement("transparency");
       blinnNode->LinkEndChild(transparencyNode);
 
-      TiXmlElement* floatTransparencyNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* floatTransparencyNode = doc->NewElement("float");
       transparencyNode->LinkEndChild(floatTransparencyNode);
 	  floatTransparencyNode->SetAttribute("sid", "transparency");
 		  
-	  TiXmlText* floatTransparencyText = new TiXmlText("0.0");
+	  tinyxml2::XMLText* floatTransparencyText = doc->NewText("0.0");
 	  floatTransparencyNode->LinkEndChild(floatTransparencyText);	 
 	  
 	  // ---------------------------	  
-      TiXmlElement* refractionNode = new TiXmlElement("index_of_refraction");
+      tinyxml2::XMLElement* refractionNode = doc->NewElement("index_of_refraction");
       blinnNode->LinkEndChild(refractionNode);
 
-      TiXmlElement* colorRefractionNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* colorRefractionNode = doc->NewElement("float");
       refractionNode->LinkEndChild(colorRefractionNode);
 	  colorRefractionNode->SetAttribute("sid", "index_of_refraction");
 		  
-	  TiXmlText* colorRefractionNodeText = new TiXmlText("1");
+	  tinyxml2::XMLText* colorRefractionNodeText = doc->NewText("1");
 	  colorRefractionNode->LinkEndChild(colorRefractionNodeText); 
    }
 
    // Finally the material library
-   TiXmlElement* matLibNode = new TiXmlElement("library_materials");
+   tinyxml2::XMLElement* matLibNode = doc->NewElement("library_materials");
    rootNode->LinkEndChild(matLibNode);
 
    for (U32 i = 0; i < mesh.mMaterialList.size(); i++)
@@ -1270,22 +1274,24 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const Optimize
       if (!mat)
          continue;
 
-      TiXmlElement* materialNode = new TiXmlElement("material");
+      tinyxml2::XMLElement* materialNode = doc->NewElement("material");
       matLibNode->LinkEndChild(materialNode);
       materialNode->SetAttribute("id", avar("%s-material", matNames[i].c_str()));
       materialNode->SetAttribute("name", matNames[i].c_str());
 
-      TiXmlElement* instEffectNode = new TiXmlElement("instance_effect");
+      tinyxml2::XMLElement* instEffectNode = doc->NewElement("instance_effect");
       materialNode->LinkEndChild(instEffectNode);
       instEffectNode->SetAttribute("url", avar("#%s-effect", matNames[i].c_str()));
    }   
    
 }
 
-void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const ExportData& exportData, const Torque::Path& colladaFile)
+void ColladaUtils::exportColladaMaterials(tinyxml2::XMLElement* rootNode, const ExportData& exportData, const Torque::Path& colladaFile)
 {
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+
    // First the image library
-   TiXmlElement* imgLibNode = new TiXmlElement("library_images");
+   tinyxml2::XMLElement* imgLibNode = doc->NewElement("library_images");
    rootNode->LinkEndChild(imgLibNode);
 
    Vector<String> matNames;
@@ -1332,19 +1338,19 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const ExportDa
       if (diffusePath.getFullPath().isNotEmpty())
          diffuseMap = Torque::Path::MakeRelativePath(diffusePath, colladaFile);
 
-      TiXmlElement* imageNode = new TiXmlElement("image");
+      tinyxml2::XMLElement* imageNode = doc->NewElement("image");
       imgLibNode->LinkEndChild(imageNode);
       imageNode->SetAttribute("id", avar("%s", matNames.last().c_str()));
       imageNode->SetAttribute("name", avar("%s", matNames.last().c_str()));
 
-      TiXmlElement* initNode = new TiXmlElement("init_from");
+      tinyxml2::XMLElement* initNode = doc->NewElement("init_from");
       imageNode->LinkEndChild(initNode);
-      TiXmlText* initText = new TiXmlText(avar("file://%s", diffuseMap.c_str())); // "the file://" is needed to load the texture in some old apps (ex: 3ds Max 2009)
+      tinyxml2::XMLText* initText = doc->NewText(avar("file://%s", diffuseMap.c_str())); // "the file://" is needed to load the texture in some old apps (ex: 3ds Max 2009)
       initNode->LinkEndChild(initText);
    }
 
    // Next the effects library
-   TiXmlElement* effectLibNode = new TiXmlElement("library_effects");
+   tinyxml2::XMLElement* effectLibNode = doc->NewElement("library_effects");
    rootNode->LinkEndChild(effectLibNode);
 
    for (U32 i = 0; i < exportData.materials.size(); i++)
@@ -1355,194 +1361,194 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const ExportDa
       if (!mat)
          continue;
 
-      TiXmlElement* effectNode = new TiXmlElement("effect");
+      tinyxml2::XMLElement* effectNode = doc->NewElement("effect");
       effectLibNode->LinkEndChild(effectNode);
       effectNode->SetAttribute("id", avar("%s-effect", matNames[i].c_str()));
       effectNode->SetAttribute("name", avar("%s-effect", matNames[i].c_str()));
 
-      TiXmlElement* profileNode = new TiXmlElement("profile_COMMON");
+      tinyxml2::XMLElement* profileNode = doc->NewElement("profile_COMMON");
       effectNode->LinkEndChild(profileNode);
 
       // ---------------------------
-      TiXmlElement* newParamNode = new TiXmlElement("newparam");
+      tinyxml2::XMLElement* newParamNode = doc->NewElement("newparam");
       profileNode->LinkEndChild(newParamNode);
       newParamNode->SetAttribute("sid", avar("%s-surface", matNames[i].c_str()));
 
-      TiXmlElement* surfaceNode = new TiXmlElement("surface");
+      tinyxml2::XMLElement* surfaceNode = doc->NewElement("surface");
       newParamNode->LinkEndChild(surfaceNode);
       surfaceNode->SetAttribute("type", "2D");
 
-      TiXmlElement* initNode2 = new TiXmlElement("init_from");
+      tinyxml2::XMLElement* initNode2 = doc->NewElement("init_from");
       surfaceNode->LinkEndChild(initNode2);
-      TiXmlText* init2Text = new TiXmlText(avar("%s", matNames[i].c_str()));
+      tinyxml2::XMLText* init2Text = doc->NewText(avar("%s", matNames[i].c_str()));
       initNode2->LinkEndChild(init2Text);
 
-      TiXmlElement* formatNode = new TiXmlElement("format");
+      tinyxml2::XMLElement* formatNode = doc->NewElement("format");
       surfaceNode->LinkEndChild(formatNode);
-      TiXmlText* formatText = new TiXmlText("A8R8G8B8");
+      tinyxml2::XMLText* formatText = doc->NewText("A8R8G8B8");
       formatNode->LinkEndChild(formatText);
 
       // ---------------------------
-      TiXmlElement* newParam2Node = new TiXmlElement("newparam");
+      tinyxml2::XMLElement* newParam2Node = doc->NewElement("newparam");
       profileNode->LinkEndChild(newParam2Node);
       newParam2Node->SetAttribute("sid", avar("%s-sampler", matNames[i].c_str()));
 
-      TiXmlElement* sampler2DNode = new TiXmlElement("sampler2D");
+      tinyxml2::XMLElement* sampler2DNode = doc->NewElement("sampler2D");
       newParam2Node->LinkEndChild(sampler2DNode);
 
-      TiXmlElement* sourceSampler2DNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* sourceSampler2DNode = doc->NewElement("source");
       sampler2DNode->LinkEndChild(sourceSampler2DNode);
-      TiXmlText* sourceSampler2DText = new TiXmlText(avar("%s-surface", matNames[i].c_str()));
+      tinyxml2::XMLText* sourceSampler2DText = doc->NewText(avar("%s-surface", matNames[i].c_str()));
       sourceSampler2DNode->LinkEndChild(sourceSampler2DText);
 
       // ---------------------------
 
-      TiXmlElement* techniqueNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* techniqueNode = doc->NewElement("technique");
       profileNode->LinkEndChild(techniqueNode);
       techniqueNode->SetAttribute("sid", "common");
 
-      TiXmlElement* blinnNode = new TiXmlElement("blinn");
+      tinyxml2::XMLElement* blinnNode = doc->NewElement("blinn");
       techniqueNode->LinkEndChild(blinnNode);
 
       // ---------------------------
-      TiXmlElement* emissionNode = new TiXmlElement("emission");
+      tinyxml2::XMLElement* emissionNode = doc->NewElement("emission");
       blinnNode->LinkEndChild(emissionNode);
 
-      TiXmlElement* colorEmissionNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorEmissionNode = doc->NewElement("color");
       emissionNode->LinkEndChild(colorEmissionNode);
       colorEmissionNode->SetAttribute("sid", "emission");
 
-      TiXmlText* colorEmissionNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+      tinyxml2::XMLText* colorEmissionNodeText = doc->NewText("0.0 0.0 0.0 1.0");
       colorEmissionNode->LinkEndChild(colorEmissionNodeText);
 
       // ---------------------------
-      TiXmlElement* ambientNode = new TiXmlElement("ambient");
+      tinyxml2::XMLElement* ambientNode = doc->NewElement("ambient");
       blinnNode->LinkEndChild(ambientNode);
 
-      TiXmlElement* colorAmbientNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorAmbientNode = doc->NewElement("color");
       ambientNode->LinkEndChild(colorAmbientNode);
       colorAmbientNode->SetAttribute("sid", "ambient");
 
-      TiXmlText* colorAmbientNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+      tinyxml2::XMLText* colorAmbientNodeText = doc->NewText("0.0 0.0 0.0 1.0");
       colorAmbientNode->LinkEndChild(colorAmbientNodeText);
 
       // ---------------------------
-      TiXmlElement* diffuseNode = new TiXmlElement("diffuse");
+      tinyxml2::XMLElement* diffuseNode = doc->NewElement("diffuse");
       blinnNode->LinkEndChild(diffuseNode);
-      TiXmlElement* textureDiffuseNode = new TiXmlElement("texture");
+      tinyxml2::XMLElement* textureDiffuseNode = doc->NewElement("texture");
       diffuseNode->LinkEndChild(textureDiffuseNode);
       textureDiffuseNode->SetAttribute("texture", avar("%s-sampler", matNames[i].c_str()));
       textureDiffuseNode->SetAttribute("texcoord", "UVMap");
 
       // Extra info useful for getting the texture to show up correctly in MAYA and 3DS Max
-      TiXmlElement* extraNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extraNode = doc->NewElement("extra");
       textureDiffuseNode->LinkEndChild(extraNode);
 
-      TiXmlElement* extraTechNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extraTechNode = doc->NewElement("technique");
       extraNode->LinkEndChild(extraTechNode);
       extraTechNode->SetAttribute("profile", "MAYA");
 
-      TiXmlElement* extraWrapUNode = new TiXmlElement("wrapU");
+      tinyxml2::XMLElement* extraWrapUNode = doc->NewElement("wrapU");
       extraTechNode->LinkEndChild(extraWrapUNode);
       extraWrapUNode->SetAttribute("sid", "wrapU0");
 
-      TiXmlText* extraWrapUText = new TiXmlText("TRUE");
+      tinyxml2::XMLText* extraWrapUText = doc->NewText("TRUE");
       extraWrapUNode->LinkEndChild(extraWrapUText);
 
-      TiXmlElement* extraWrapVNode = new TiXmlElement("wrapV");
+      tinyxml2::XMLElement* extraWrapVNode = doc->NewElement("wrapV");
       extraTechNode->LinkEndChild(extraWrapVNode);
       extraWrapVNode->SetAttribute("sid", "wrapV0");
 
-      TiXmlText* extraWrapVText = new TiXmlText("TRUE");
+      tinyxml2::XMLText* extraWrapVText = doc->NewText("TRUE");
       extraWrapVNode->LinkEndChild(extraWrapVText);
 
-      TiXmlElement* extraBlendNode = new TiXmlElement("blend_mode");
+      tinyxml2::XMLElement* extraBlendNode = doc->NewElement("blend_mode");
       extraTechNode->LinkEndChild(extraBlendNode);
 
-      TiXmlText* extraBlendText = new TiXmlText("ADD");
+      tinyxml2::XMLText* extraBlendText = doc->NewText("ADD");
       extraBlendNode->LinkEndChild(extraBlendText);
 
       // ---------------------------
-      TiXmlElement* specularNode = new TiXmlElement("specular");
+      tinyxml2::XMLElement* specularNode = doc->NewElement("specular");
       blinnNode->LinkEndChild(specularNode);
 
-      TiXmlElement* colorSpecularNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorSpecularNode = doc->NewElement("color");
       specularNode->LinkEndChild(colorSpecularNode);
       colorSpecularNode->SetAttribute("sid", "specular");
 
-      TiXmlText* colorSpecularNodeText = new TiXmlText("0.5 0.5 0.5 1.0");
+      tinyxml2::XMLText* colorSpecularNodeText = doc->NewText("0.5 0.5 0.5 1.0");
       colorSpecularNode->LinkEndChild(colorSpecularNodeText);
 
       // ---------------------------	
-      TiXmlElement* shininessNode = new TiXmlElement("shininess");
+      tinyxml2::XMLElement* shininessNode = doc->NewElement("shininess");
       blinnNode->LinkEndChild(shininessNode);
 
-      TiXmlElement* colorShininessNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* colorShininessNode = doc->NewElement("float");
       shininessNode->LinkEndChild(colorShininessNode);
       colorShininessNode->SetAttribute("sid", "shininess");
 
-      TiXmlText* colorShininessNodeText = new TiXmlText("1.0");
+      tinyxml2::XMLText* colorShininessNodeText = doc->NewText("1.0");
       colorShininessNode->LinkEndChild(colorShininessNodeText);
 
       // ---------------------------	
-      TiXmlElement* reflectiveNode = new TiXmlElement("reflective");
+      tinyxml2::XMLElement* reflectiveNode = doc->NewElement("reflective");
       blinnNode->LinkEndChild(reflectiveNode);
 
-      TiXmlElement* colorReflectiveNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorReflectiveNode = doc->NewElement("color");
       reflectiveNode->LinkEndChild(colorReflectiveNode);
       colorReflectiveNode->SetAttribute("sid", "reflective");
 
-      TiXmlText* colorReflectiveNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+      tinyxml2::XMLText* colorReflectiveNodeText = doc->NewText("0.0 0.0 0.0 1.0");
       colorReflectiveNode->LinkEndChild(colorReflectiveNodeText);
 
       // ---------------------------	
-      TiXmlElement* reflectivityNode = new TiXmlElement("reflectivity");
+      tinyxml2::XMLElement* reflectivityNode = doc->NewElement("reflectivity");
       blinnNode->LinkEndChild(reflectivityNode);
 
-      TiXmlElement* floatReflectivityNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* floatReflectivityNode = doc->NewElement("float");
       reflectivityNode->LinkEndChild(floatReflectivityNode);
       floatReflectivityNode->SetAttribute("sid", "reflectivity");
 
-      TiXmlText* floatReflectivityText = new TiXmlText("0.5");
+      tinyxml2::XMLText* floatReflectivityText = doc->NewText("0.5");
       floatReflectivityNode->LinkEndChild(floatReflectivityText);
 
       // ---------------------------	
-      TiXmlElement* transparentNode = new TiXmlElement("transparent");
+      tinyxml2::XMLElement* transparentNode = doc->NewElement("transparent");
       blinnNode->LinkEndChild(transparentNode);
       transparentNode->SetAttribute("opaque", "RGB_ZERO");
 
-      TiXmlElement* colorTransparentNode = new TiXmlElement("color");
+      tinyxml2::XMLElement* colorTransparentNode = doc->NewElement("color");
       transparentNode->LinkEndChild(colorTransparentNode);
       colorTransparentNode->SetAttribute("sid", "transparent");
 
-      TiXmlText* colorTransparentNodeText = new TiXmlText("0.0 0.0 0.0 1.0");
+      tinyxml2::XMLText* colorTransparentNodeText = doc->NewText("0.0 0.0 0.0 1.0");
       colorTransparentNode->LinkEndChild(colorTransparentNodeText);
 
       // ---------------------------	
-      TiXmlElement* transparencyNode = new TiXmlElement("transparency");
+      tinyxml2::XMLElement* transparencyNode = doc->NewElement("transparency");
       blinnNode->LinkEndChild(transparencyNode);
 
-      TiXmlElement* floatTransparencyNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* floatTransparencyNode = doc->NewElement("float");
       transparencyNode->LinkEndChild(floatTransparencyNode);
       floatTransparencyNode->SetAttribute("sid", "transparency");
 
-      TiXmlText* floatTransparencyText = new TiXmlText("0.0");
+      tinyxml2::XMLText* floatTransparencyText = doc->NewText("0.0");
       floatTransparencyNode->LinkEndChild(floatTransparencyText);
 
       // ---------------------------	  
-      TiXmlElement* refractionNode = new TiXmlElement("index_of_refraction");
+      tinyxml2::XMLElement* refractionNode = doc->NewElement("index_of_refraction");
       blinnNode->LinkEndChild(refractionNode);
 
-      TiXmlElement* colorRefractionNode = new TiXmlElement("float");
+      tinyxml2::XMLElement* colorRefractionNode = doc->NewElement("float");
       refractionNode->LinkEndChild(colorRefractionNode);
       colorRefractionNode->SetAttribute("sid", "index_of_refraction");
 
-      TiXmlText* colorRefractionNodeText = new TiXmlText("1");
+      tinyxml2::XMLText* colorRefractionNodeText = doc->NewText("1");
       colorRefractionNode->LinkEndChild(colorRefractionNodeText);
    }
 
    // Finally the material library
-   TiXmlElement* matLibNode = new TiXmlElement("library_materials");
+   tinyxml2::XMLElement* matLibNode = doc->NewElement("library_materials");
    rootNode->LinkEndChild(matLibNode);
 
    for (U32 i = 0; i < exportData.materials.size(); i++)
@@ -1553,20 +1559,22 @@ void ColladaUtils::exportColladaMaterials(TiXmlElement* rootNode, const ExportDa
       if (!mat)
          continue;
 
-      TiXmlElement* materialNode = new TiXmlElement("material");
+      tinyxml2::XMLElement* materialNode = doc->NewElement("material");
       matLibNode->LinkEndChild(materialNode);
       materialNode->SetAttribute("id", avar("%s-material", matNames[i].c_str()));
       materialNode->SetAttribute("name", matNames[i].c_str());
 
-      TiXmlElement* instEffectNode = new TiXmlElement("instance_effect");
+      tinyxml2::XMLElement* instEffectNode = doc->NewElement("instance_effect");
       materialNode->LinkEndChild(instEffectNode);
       instEffectNode->SetAttribute("url", avar("#%s-effect", matNames[i].c_str()));
    }
 
 }
 
-void ColladaUtils::exportColladaTriangles(TiXmlElement* meshNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames)
+void ColladaUtils::exportColladaTriangles(tinyxml2::XMLElement* meshNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames)
 {
+   tinyxml2::XMLDocument* doc = meshNode->GetDocument();
+
    // Start at -1 so we will export polygons that do not have a material.
    for (S32 i = -1; i < matNames.size(); i++)
    {
@@ -1597,31 +1605,31 @@ void ColladaUtils::exportColladaTriangles(TiXmlElement* meshNode, const Optimize
       if (triangleCount == 0)
          continue;
 
-      TiXmlElement* trianglesNode = new TiXmlElement("triangles");
+      tinyxml2::XMLElement* trianglesNode = doc->NewElement("triangles");
       meshNode->LinkEndChild(trianglesNode);
       trianglesNode->SetAttribute("material", ( i > -1 ) ? avar("%s-material", matNames[i].c_str()) : "" );
       trianglesNode->SetAttribute("count", avar("%d", triangleCount));
 
-      TiXmlElement* trianglesVertInputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* trianglesVertInputNode = doc->NewElement("input");
       trianglesNode->LinkEndChild(trianglesVertInputNode);
       trianglesVertInputNode->SetAttribute("semantic", "VERTEX");
       trianglesVertInputNode->SetAttribute("source", avar("#%s-mesh-vertices", meshName.c_str()));
       trianglesVertInputNode->SetAttribute("offset", "0");
 
-      TiXmlElement* trianglesNormalInputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* trianglesNormalInputNode = doc->NewElement("input");
       trianglesNode->LinkEndChild(trianglesNormalInputNode);
       trianglesNormalInputNode->SetAttribute("semantic", "NORMAL");
       trianglesNormalInputNode->SetAttribute("source", avar("#%s-mesh-normals", meshName.c_str()));
       trianglesNormalInputNode->SetAttribute("offset", "1");
 
-      TiXmlElement* trianglesUV0InputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* trianglesUV0InputNode = doc->NewElement("input");
       trianglesNode->LinkEndChild(trianglesUV0InputNode);
       trianglesUV0InputNode->SetAttribute("semantic", "TEXCOORD");
       trianglesUV0InputNode->SetAttribute("source", avar("#%s-mesh-map-0", meshName.c_str()));
       trianglesUV0InputNode->SetAttribute("offset", "2");
       trianglesUV0InputNode->SetAttribute("set", "0");
 
-      TiXmlElement* polyNode = new TiXmlElement("p");
+      tinyxml2::XMLElement* polyNode = doc->NewElement("p");
       trianglesNode->LinkEndChild(polyNode);
 
       Vector<U32> tempIndices;
@@ -1677,15 +1685,17 @@ void ColladaUtils::exportColladaTriangles(TiXmlElement* meshNode, const Optimize
                                    secondVertIdx.vertIdx, secondVertIdx.normalIdx, secondVertIdx.uv0Idx,
                                    firstVertIdx.vertIdx, firstVertIdx.normalIdx, firstVertIdx.uv0Idx);
 
-            TiXmlText* triangleText = new TiXmlText(tri);
+            tinyxml2::XMLText* triangleText = doc->NewText(tri);
             polyNode->LinkEndChild(triangleText);
          }
       }
    }
 }
 
-void ColladaUtils::exportColladaTriangles(TiXmlElement* meshNode, const ExportData& exportData, const U32 detailLevel, const String& meshName)
+void ColladaUtils::exportColladaTriangles(tinyxml2::XMLElement* meshNode, const ExportData& exportData, const U32 detailLevel, const String& meshName)
 {
+   tinyxml2::XMLDocument* doc = meshNode->GetDocument();
+
    // Calculate the number of triangles that uses this Material
    U32 triangleCount = 0;
 
@@ -1730,31 +1740,31 @@ void ColladaUtils::exportColladaTriangles(TiXmlElement* meshNode, const ExportDa
       if (triangleCount == 0)
          continue;
 
-      TiXmlElement* trianglesNode = new TiXmlElement("triangles");
+      tinyxml2::XMLElement* trianglesNode = doc->NewElement("triangles");
       meshNode->LinkEndChild(trianglesNode);
       trianglesNode->SetAttribute("material", (i > -1) ? avar("%s-material", matName.c_str()) : "");
       trianglesNode->SetAttribute("count", avar("%d", triangleCount));
 
-      TiXmlElement* trianglesVertInputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* trianglesVertInputNode = doc->NewElement("input");
       trianglesNode->LinkEndChild(trianglesVertInputNode);
       trianglesVertInputNode->SetAttribute("semantic", "VERTEX");
       trianglesVertInputNode->SetAttribute("source", avar("#%s-mesh-vertices", meshName.c_str()));
       trianglesVertInputNode->SetAttribute("offset", "0");
 
-      TiXmlElement* trianglesNormalInputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* trianglesNormalInputNode = doc->NewElement("input");
       trianglesNode->LinkEndChild(trianglesNormalInputNode);
       trianglesNormalInputNode->SetAttribute("semantic", "NORMAL");
       trianglesNormalInputNode->SetAttribute("source", avar("#%s-mesh-normals", meshName.c_str()));
       trianglesNormalInputNode->SetAttribute("offset", "1");
 
-      TiXmlElement* trianglesUV0InputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* trianglesUV0InputNode = doc->NewElement("input");
       trianglesNode->LinkEndChild(trianglesUV0InputNode);
       trianglesUV0InputNode->SetAttribute("semantic", "TEXCOORD");
       trianglesUV0InputNode->SetAttribute("source", avar("#%s-mesh-map-0", meshName.c_str()));
       trianglesUV0InputNode->SetAttribute("offset", "2");
       trianglesUV0InputNode->SetAttribute("set", "0");
 
-      TiXmlElement* polyNode = new TiXmlElement("p");
+      tinyxml2::XMLElement* polyNode = doc->NewElement("p");
       trianglesNode->LinkEndChild(polyNode);
 
       Vector<U32> tempIndices;
@@ -1810,15 +1820,17 @@ void ColladaUtils::exportColladaTriangles(TiXmlElement* meshNode, const ExportDa
                secondVertIdx.vertIdx, secondVertIdx.normalIdx, secondVertIdx.uv0Idx,
                firstVertIdx.vertIdx, firstVertIdx.normalIdx, firstVertIdx.uv0Idx);
 
-            TiXmlText* triangleText = new TiXmlText(tri);
+            tinyxml2::XMLText* triangleText = doc->NewText(tri);
             polyNode->LinkEndChild(triangleText);
          }
       }
    }
 }
 
-void ColladaUtils::exportColladaCollisionTriangles(TiXmlElement* meshNode, const ExportData& exportData, const U32 collisionIdx)
+void ColladaUtils::exportColladaCollisionTriangles(tinyxml2::XMLElement* meshNode, const ExportData& exportData, const U32 collisionIdx)
 {
+   tinyxml2::XMLDocument* doc = meshNode->GetDocument();
+
    // Calculate the number of triangles that uses this Material
    U32 triangleCount = 0;
 
@@ -1847,31 +1859,31 @@ void ColladaUtils::exportColladaCollisionTriangles(TiXmlElement* meshNode, const
    if (triangleCount == 0)
       return;
 
-   TiXmlElement* trianglesNode = new TiXmlElement("triangles");
+   tinyxml2::XMLElement* trianglesNode = doc->NewElement("triangles");
    meshNode->LinkEndChild(trianglesNode);
    trianglesNode->SetAttribute("material", "");
    trianglesNode->SetAttribute("count", avar("%d", triangleCount));
 
-   TiXmlElement* trianglesVertInputNode = new TiXmlElement("input");
+   tinyxml2::XMLElement* trianglesVertInputNode = doc->NewElement("input");
    trianglesNode->LinkEndChild(trianglesVertInputNode);
    trianglesVertInputNode->SetAttribute("semantic", "VERTEX");
    trianglesVertInputNode->SetAttribute("source", avar("#%s-mesh-vertices", meshName.c_str()));
    trianglesVertInputNode->SetAttribute("offset", "0");
 
-   TiXmlElement* trianglesNormalInputNode = new TiXmlElement("input");
+   tinyxml2::XMLElement* trianglesNormalInputNode = doc->NewElement("input");
    trianglesNode->LinkEndChild(trianglesNormalInputNode);
    trianglesNormalInputNode->SetAttribute("semantic", "NORMAL");
    trianglesNormalInputNode->SetAttribute("source", avar("#%s-mesh-normals", meshName.c_str()));
    trianglesNormalInputNode->SetAttribute("offset", "1");
 
-   TiXmlElement* trianglesUV0InputNode = new TiXmlElement("input");
+   tinyxml2::XMLElement* trianglesUV0InputNode = doc->NewElement("input");
    trianglesNode->LinkEndChild(trianglesUV0InputNode);
    trianglesUV0InputNode->SetAttribute("semantic", "TEXCOORD");
    trianglesUV0InputNode->SetAttribute("source", avar("#%s-mesh-map-0", meshName.c_str()));
    trianglesUV0InputNode->SetAttribute("offset", "2");
    trianglesUV0InputNode->SetAttribute("set", "0");
 
-   TiXmlElement* polyNode = new TiXmlElement("p");
+   tinyxml2::XMLElement* polyNode = doc->NewElement("p");
    trianglesNode->LinkEndChild(polyNode);
 
    Vector<U32> tempIndices;
@@ -1924,31 +1936,33 @@ void ColladaUtils::exportColladaCollisionTriangles(TiXmlElement* meshNode, const
             secondVertIdx.vertIdx, secondVertIdx.normalIdx, secondVertIdx.uv0Idx,
             firstVertIdx.vertIdx, firstVertIdx.normalIdx, firstVertIdx.uv0Idx);
 
-         TiXmlText* triangleText = new TiXmlText(tri);
+         tinyxml2::XMLText* triangleText = doc->NewText(tri);
          polyNode->LinkEndChild(triangleText);
       }
    }
 }
 
-void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames)
+void ColladaUtils::exportColladaMesh(tinyxml2::XMLElement* rootNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames)
 {
-   TiXmlElement* libGeomsNode = new TiXmlElement("library_geometries");
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+
+   tinyxml2::XMLElement* libGeomsNode = doc->NewElement("library_geometries");
    rootNode->LinkEndChild(libGeomsNode);
 
-   TiXmlElement* geometryNode = new TiXmlElement("geometry");
+   tinyxml2::XMLElement* geometryNode = doc->NewElement("geometry");
    libGeomsNode->LinkEndChild(geometryNode);
    geometryNode->SetAttribute("id", avar("%s-mesh", meshName.c_str()));
    geometryNode->SetAttribute("name", avar("%s", meshName.c_str()));
 
-   TiXmlElement* meshNode = new TiXmlElement("mesh");
+   tinyxml2::XMLElement* meshNode = doc->NewElement("mesh");
    geometryNode->LinkEndChild(meshNode);
 
    // Save out the vertices
-   TiXmlElement* vertsSourceNode = new TiXmlElement("source");
+   tinyxml2::XMLElement* vertsSourceNode = doc->NewElement("source");
    meshNode->LinkEndChild(vertsSourceNode);
    vertsSourceNode->SetAttribute("id", avar("%s-mesh-positions", meshName.c_str()));
 
-   TiXmlElement* vertsNode = new TiXmlElement("float_array");
+   tinyxml2::XMLElement* vertsNode = doc->NewElement("float_array");
    vertsSourceNode->LinkEndChild(vertsNode);
    vertsNode->SetAttribute("id", avar("%s-mesh-positions-array", meshName.c_str()));
    vertsNode->SetAttribute("count", avar("%d", mesh.mPoints.size() * 3));
@@ -1957,41 +1971,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const OptimizedPoly
    {
       const Point3F& vert = mesh.mPoints[i];
 
-      TiXmlText* vertText = new TiXmlText(avar("%.4f %.4f %.4f ", vert.x, vert.y, vert.z));
+      tinyxml2::XMLText* vertText = doc->NewText(avar("%.4f %.4f %.4f ", vert.x, vert.y, vert.z));
       vertsNode->LinkEndChild(vertText);
    }
 
    // Save the vertex accessor
-   TiXmlElement* vertsTechNode = new TiXmlElement("technique_common");
+   tinyxml2::XMLElement* vertsTechNode = doc->NewElement("technique_common");
    vertsSourceNode->LinkEndChild(vertsTechNode);
 
-   TiXmlElement* vertsAccNode = new TiXmlElement("accessor");
+   tinyxml2::XMLElement* vertsAccNode = doc->NewElement("accessor");
    vertsTechNode->LinkEndChild(vertsAccNode);
    vertsAccNode->SetAttribute("source", avar("#%s-mesh-positions-array", meshName.c_str()));
    vertsAccNode->SetAttribute("count", avar("%d", mesh.mPoints.size()));
    vertsAccNode->SetAttribute("stride", "3");
 
-   TiXmlElement* vertsAccXNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* vertsAccXNode = doc->NewElement("param");
    vertsAccNode->LinkEndChild(vertsAccXNode);
    vertsAccXNode->SetAttribute("name", "X");
    vertsAccXNode->SetAttribute("type", "float");
 
-   TiXmlElement* vertsAccYNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* vertsAccYNode = doc->NewElement("param");
    vertsAccNode->LinkEndChild(vertsAccYNode);
    vertsAccYNode->SetAttribute("name", "Y");
    vertsAccYNode->SetAttribute("type", "float");
 
-   TiXmlElement* vertsAccZNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* vertsAccZNode = doc->NewElement("param");
    vertsAccNode->LinkEndChild(vertsAccZNode);
    vertsAccZNode->SetAttribute("name", "Z");
    vertsAccZNode->SetAttribute("type", "float");
 
    // Save out the normals
-   TiXmlElement* normalsSourceNode = new TiXmlElement("source");
+   tinyxml2::XMLElement* normalsSourceNode = doc->NewElement("source");
    meshNode->LinkEndChild(normalsSourceNode);
    normalsSourceNode->SetAttribute("id", avar("%s-mesh-normals", meshName.c_str()));
 
-   TiXmlElement* normalsNode = new TiXmlElement("float_array");
+   tinyxml2::XMLElement* normalsNode = doc->NewElement("float_array");
    normalsSourceNode->LinkEndChild(normalsNode);
    normalsNode->SetAttribute("id", avar("%s-mesh-normals-array", meshName.c_str()));
    normalsNode->SetAttribute("count", avar("%d", mesh.mNormals.size() * 3));
@@ -2000,41 +2014,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const OptimizedPoly
    {
       const Point3F& normal = mesh.mNormals[i];
 
-      TiXmlText* normalText = new TiXmlText(avar("%.4f %.4f %.4f ", normal.x, normal.y, normal.z));
+      tinyxml2::XMLText* normalText = doc->NewText(avar("%.4f %.4f %.4f ", normal.x, normal.y, normal.z));
       normalsNode->LinkEndChild(normalText);
    }
 
    // Save the normals accessor
-   TiXmlElement* normalsTechNode = new TiXmlElement("technique_common");
+   tinyxml2::XMLElement* normalsTechNode = doc->NewElement("technique_common");
    normalsSourceNode->LinkEndChild(normalsTechNode);
 
-   TiXmlElement* normalsAccNode = new TiXmlElement("accessor");
+   tinyxml2::XMLElement* normalsAccNode = doc->NewElement("accessor");
    normalsTechNode->LinkEndChild(normalsAccNode);
    normalsAccNode->SetAttribute("source", avar("#%s-mesh-normals-array", meshName.c_str()));
    normalsAccNode->SetAttribute("count", avar("%d", mesh.mNormals.size()));
    normalsAccNode->SetAttribute("stride", "3");
 
-   TiXmlElement* normalsAccXNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* normalsAccXNode = doc->NewElement("param");
    normalsAccNode->LinkEndChild(normalsAccXNode);
    normalsAccXNode->SetAttribute("name", "X");
    normalsAccXNode->SetAttribute("type", "float");
 
-   TiXmlElement* normalsAccYNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* normalsAccYNode = doc->NewElement("param");
    normalsAccNode->LinkEndChild(normalsAccYNode);
    normalsAccYNode->SetAttribute("name", "Y");
    normalsAccYNode->SetAttribute("type", "float");
 
-   TiXmlElement* normalsAccZNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* normalsAccZNode = doc->NewElement("param");
    normalsAccNode->LinkEndChild(normalsAccZNode);
    normalsAccZNode->SetAttribute("name", "Z");
    normalsAccZNode->SetAttribute("type", "float");
 
    // Save out the uvs
-   TiXmlElement* uv0SourceNode = new TiXmlElement("source");
+   tinyxml2::XMLElement* uv0SourceNode = doc->NewElement("source");
    meshNode->LinkEndChild(uv0SourceNode);
    uv0SourceNode->SetAttribute("id", avar("%s-mesh-map-0", meshName.c_str()));
 
-   TiXmlElement* uv0Node = new TiXmlElement("float_array");
+   tinyxml2::XMLElement* uv0Node = doc->NewElement("float_array");
    uv0SourceNode->LinkEndChild(uv0Node);
    uv0Node->SetAttribute("id", avar("%s-mesh-map-0-array", meshName.c_str()));
    uv0Node->SetAttribute("count", avar("%d", mesh.mUV0s.size() * 2));
@@ -2043,36 +2057,36 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const OptimizedPoly
    {
       const Point2F& uv0 = mesh.mUV0s[i];
 
-      TiXmlText* uv0Text = new TiXmlText(avar("%.4f %.4f ", uv0.x, 1.0f - uv0.y));   // COLLADA uvs are upside down compared to Torque
+      tinyxml2::XMLText* uv0Text = doc->NewText(avar("%.4f %.4f ", uv0.x, 1.0f - uv0.y));   // COLLADA uvs are upside down compared to Torque
       uv0Node->LinkEndChild(uv0Text);
    }
 
    // Save the uv0 accessor
-   TiXmlElement* uv0TechNode = new TiXmlElement("technique_common");
+   tinyxml2::XMLElement* uv0TechNode = doc->NewElement("technique_common");
    uv0SourceNode->LinkEndChild(uv0TechNode);
 
-   TiXmlElement* uv0AccNode = new TiXmlElement("accessor");
+   tinyxml2::XMLElement* uv0AccNode = doc->NewElement("accessor");
    uv0TechNode->LinkEndChild(uv0AccNode);
    uv0AccNode->SetAttribute("source", avar("#%s-mesh-map-0-array", meshName.c_str()));
    uv0AccNode->SetAttribute("count", avar("%d", mesh.mUV0s.size()));
    uv0AccNode->SetAttribute("stride", "2");
 
-   TiXmlElement* uv0AccSNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* uv0AccSNode = doc->NewElement("param");
    uv0AccNode->LinkEndChild(uv0AccSNode);
    uv0AccSNode->SetAttribute("name", "S");
    uv0AccSNode->SetAttribute("type", "float");
 
-   TiXmlElement* uv0AccTNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* uv0AccTNode = doc->NewElement("param");
    uv0AccNode->LinkEndChild(uv0AccTNode);
    uv0AccTNode->SetAttribute("name", "T");
    uv0AccTNode->SetAttribute("type", "float");
 
    // Define the vertices position array
-   TiXmlElement* verticesNode = new TiXmlElement("vertices");
+   tinyxml2::XMLElement* verticesNode = doc->NewElement("vertices");
    meshNode->LinkEndChild(verticesNode);
    verticesNode->SetAttribute("id", avar("%s-mesh-vertices", meshName.c_str()));
 
-   TiXmlElement* verticesInputNode = new TiXmlElement("input");
+   tinyxml2::XMLElement* verticesInputNode = doc->NewElement("input");
    verticesNode->LinkEndChild(verticesInputNode);
    verticesInputNode->SetAttribute("semantic", "POSITION");
    verticesInputNode->SetAttribute("source", avar("#%s-mesh-positions", meshName.c_str()));
@@ -2080,39 +2094,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const OptimizedPoly
    exportColladaTriangles(meshNode, mesh, meshName, matNames);
    
    // Extra info useful for COLLADAMaya importer (OpenCOLLADA)
-   TiXmlElement* extraGeoNode = new TiXmlElement("extra");
+   tinyxml2::XMLElement* extraGeoNode = doc->NewElement("extra");
    libGeomsNode->LinkEndChild(extraGeoNode);
 
-   TiXmlElement* extraGeoNodeTech = new TiXmlElement("technique");
+   tinyxml2::XMLElement* extraGeoNodeTech = doc->NewElement("technique");
    extraGeoNode->LinkEndChild(extraGeoNodeTech);
    extraGeoNodeTech->SetAttribute("profile", "OpenCOLLADAMaya");
 
-   TiXmlElement* mayaNode2Id = new TiXmlElement("originalMayaNodeId");
+   tinyxml2::XMLElement* mayaNode2Id = doc->NewElement("originalMayaNodeId");
    extraGeoNodeTech->LinkEndChild(mayaNode2Id);
    mayaNode2Id->SetAttribute("sid", "originalMayaNodeId");
-   TiXmlText* mayaIdMesh = new TiXmlText(avar("%s", meshName.c_str()));
+   tinyxml2::XMLText* mayaIdMesh = doc->NewText(avar("%s", meshName.c_str()));
    mayaNode2Id->LinkEndChild(mayaIdMesh);
 
-   TiXmlElement* doubleSidedId = new TiXmlElement("double_sided");
+   tinyxml2::XMLElement* doubleSidedId = doc->NewElement("double_sided");
    extraGeoNodeTech->LinkEndChild(doubleSidedId);
    doubleSidedId->SetAttribute("sid", "double_sided");
-   TiXmlText* doubleSideIdText = new TiXmlText("1");
+   tinyxml2::XMLText* doubleSideIdText = doc->NewText("1");
    doubleSidedId->LinkEndChild(doubleSideIdText);
    
-   TiXmlElement* paramExtraNode = new TiXmlElement("param");
+   tinyxml2::XMLElement* paramExtraNode = doc->NewElement("param");
    extraGeoNodeTech->LinkEndChild(paramExtraNode);
    paramExtraNode->SetAttribute("sid", "colladaId");
    paramExtraNode->SetAttribute("type", "string");
 
-   TiXmlText* mayaParamMesh = new TiXmlText(avar("%s-mesh", meshName.c_str()));
+   tinyxml2::XMLText* mayaParamMesh = doc->NewText(avar("%s-mesh", meshName.c_str()));
    paramExtraNode->LinkEndChild(mayaParamMesh);
    
 
 }
 
-void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& exportData, const String& meshName)
+void ColladaUtils::exportColladaMesh(tinyxml2::XMLElement* rootNode, const ExportData& exportData, const String& meshName)
 {
-   TiXmlElement* libGeomsNode = new TiXmlElement("library_geometries");
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+
+   tinyxml2::XMLElement* libGeomsNode = doc->NewElement("library_geometries");
    rootNode->LinkEndChild(libGeomsNode);
 
    for (U32 d = 0; d < exportData.detailLevels.size(); d++)
@@ -2123,20 +2139,20 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       char lodMeshID[256];
       dSprintf(lodMeshID, 256, "%s-mesh", lodMeshName);
 
-      TiXmlElement* geometryNode = new TiXmlElement("geometry");
+      tinyxml2::XMLElement* geometryNode = doc->NewElement("geometry");
       libGeomsNode->LinkEndChild(geometryNode);
       geometryNode->SetAttribute("id", lodMeshID);
       geometryNode->SetAttribute("name", lodMeshName);
 
-      TiXmlElement* meshNode = new TiXmlElement("mesh");
+      tinyxml2::XMLElement* meshNode = doc->NewElement("mesh");
       geometryNode->LinkEndChild(meshNode);
 
       // Save out the vertices
-      TiXmlElement* vertsSourceNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* vertsSourceNode = doc->NewElement("source");
       meshNode->LinkEndChild(vertsSourceNode);
       vertsSourceNode->SetAttribute("id", avar("%s-mesh-positions", lodMeshName));
 
-      TiXmlElement* vertsNode = new TiXmlElement("float_array");
+      tinyxml2::XMLElement* vertsNode = doc->NewElement("float_array");
       vertsSourceNode->LinkEndChild(vertsNode);
       vertsNode->SetAttribute("id", avar("%s-mesh-positions-array", lodMeshName));
       vertsNode->SetAttribute("count", avar("%d", exportData.detailLevels[d].mesh.mPoints.size() * 3));
@@ -2145,41 +2161,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       {
          const Point3F& vert = exportData.detailLevels[d].mesh.mPoints[i];
 
-         TiXmlText* vertText = new TiXmlText(avar("%.4f %.4f %.4f ", vert.x, vert.y, vert.z));
+         tinyxml2::XMLText* vertText = doc->NewText(avar("%.4f %.4f %.4f ", vert.x, vert.y, vert.z));
          vertsNode->LinkEndChild(vertText);
       }
 
       // Save the vertex accessor
-      TiXmlElement* vertsTechNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* vertsTechNode = doc->NewElement("technique_common");
       vertsSourceNode->LinkEndChild(vertsTechNode);
 
-      TiXmlElement* vertsAccNode = new TiXmlElement("accessor");
+      tinyxml2::XMLElement* vertsAccNode = doc->NewElement("accessor");
       vertsTechNode->LinkEndChild(vertsAccNode);
       vertsAccNode->SetAttribute("source", avar("#%s-mesh-positions-array", lodMeshName));
       vertsAccNode->SetAttribute("count", avar("%d", exportData.detailLevels[d].mesh.mPoints.size()));
       vertsAccNode->SetAttribute("stride", "3");
 
-      TiXmlElement* vertsAccXNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* vertsAccXNode = doc->NewElement("param");
       vertsAccNode->LinkEndChild(vertsAccXNode);
       vertsAccXNode->SetAttribute("name", "X");
       vertsAccXNode->SetAttribute("type", "float");
 
-      TiXmlElement* vertsAccYNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* vertsAccYNode = doc->NewElement("param");
       vertsAccNode->LinkEndChild(vertsAccYNode);
       vertsAccYNode->SetAttribute("name", "Y");
       vertsAccYNode->SetAttribute("type", "float");
 
-      TiXmlElement* vertsAccZNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* vertsAccZNode = doc->NewElement("param");
       vertsAccNode->LinkEndChild(vertsAccZNode);
       vertsAccZNode->SetAttribute("name", "Z");
       vertsAccZNode->SetAttribute("type", "float");
 
       // Save out the normals
-      TiXmlElement* normalsSourceNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* normalsSourceNode = doc->NewElement("source");
       meshNode->LinkEndChild(normalsSourceNode);
       normalsSourceNode->SetAttribute("id", avar("%s-mesh-normals", lodMeshName));
 
-      TiXmlElement* normalsNode = new TiXmlElement("float_array");
+      tinyxml2::XMLElement* normalsNode = doc->NewElement("float_array");
       normalsSourceNode->LinkEndChild(normalsNode);
       normalsNode->SetAttribute("id", avar("%s-mesh-normals-array", lodMeshName));
       normalsNode->SetAttribute("count", avar("%d", exportData.detailLevels[d].mesh.mNormals.size() * 3));
@@ -2188,41 +2204,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       {
          const Point3F& normal = exportData.detailLevels[d].mesh.mNormals[i];
 
-         TiXmlText* normalText = new TiXmlText(avar("%.4f %.4f %.4f ", normal.x, normal.y, normal.z));
+         tinyxml2::XMLText* normalText = doc->NewText(avar("%.4f %.4f %.4f ", normal.x, normal.y, normal.z));
          normalsNode->LinkEndChild(normalText);
       }
 
       // Save the normals accessor
-      TiXmlElement* normalsTechNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* normalsTechNode = doc->NewElement("technique_common");
       normalsSourceNode->LinkEndChild(normalsTechNode);
 
-      TiXmlElement* normalsAccNode = new TiXmlElement("accessor");
+      tinyxml2::XMLElement* normalsAccNode = doc->NewElement("accessor");
       normalsTechNode->LinkEndChild(normalsAccNode);
       normalsAccNode->SetAttribute("source", avar("#%s-mesh-normals-array", lodMeshName));
       normalsAccNode->SetAttribute("count", avar("%d", exportData.detailLevels[d].mesh.mNormals.size()));
       normalsAccNode->SetAttribute("stride", "3");
 
-      TiXmlElement* normalsAccXNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* normalsAccXNode = doc->NewElement("param");
       normalsAccNode->LinkEndChild(normalsAccXNode);
       normalsAccXNode->SetAttribute("name", "X");
       normalsAccXNode->SetAttribute("type", "float");
 
-      TiXmlElement* normalsAccYNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* normalsAccYNode = doc->NewElement("param");
       normalsAccNode->LinkEndChild(normalsAccYNode);
       normalsAccYNode->SetAttribute("name", "Y");
       normalsAccYNode->SetAttribute("type", "float");
 
-      TiXmlElement* normalsAccZNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* normalsAccZNode = doc->NewElement("param");
       normalsAccNode->LinkEndChild(normalsAccZNode);
       normalsAccZNode->SetAttribute("name", "Z");
       normalsAccZNode->SetAttribute("type", "float");
 
       // Save out the uvs
-      TiXmlElement* uv0SourceNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* uv0SourceNode = doc->NewElement("source");
       meshNode->LinkEndChild(uv0SourceNode);
       uv0SourceNode->SetAttribute("id", avar("%s-mesh-map-0", lodMeshName));
 
-      TiXmlElement* uv0Node = new TiXmlElement("float_array");
+      tinyxml2::XMLElement* uv0Node = doc->NewElement("float_array");
       uv0SourceNode->LinkEndChild(uv0Node);
       uv0Node->SetAttribute("id", avar("%s-mesh-map-0-array", lodMeshName));
       uv0Node->SetAttribute("count", avar("%d", exportData.detailLevels[d].mesh.mUV0s.size() * 2));
@@ -2231,36 +2247,36 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       {
          const Point2F& uv0 = exportData.detailLevels[d].mesh.mUV0s[i];
 
-         TiXmlText* uv0Text = new TiXmlText(avar("%.4f %.4f ", uv0.x, 1.0f - uv0.y));   // COLLADA uvs are upside down compared to Torque
+         tinyxml2::XMLText* uv0Text = doc->NewText(avar("%.4f %.4f ", uv0.x, 1.0f - uv0.y));   // COLLADA uvs are upside down compared to Torque
          uv0Node->LinkEndChild(uv0Text);
       }
 
       // Save the uv0 accessor
-      TiXmlElement* uv0TechNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* uv0TechNode = doc->NewElement("technique_common");
       uv0SourceNode->LinkEndChild(uv0TechNode);
 
-      TiXmlElement* uv0AccNode = new TiXmlElement("accessor");
+      tinyxml2::XMLElement* uv0AccNode = doc->NewElement("accessor");
       uv0TechNode->LinkEndChild(uv0AccNode);
       uv0AccNode->SetAttribute("source", avar("#%s-mesh-map-0-array", lodMeshName));
       uv0AccNode->SetAttribute("count", avar("%d", exportData.detailLevels[d].mesh.mUV0s.size()));
       uv0AccNode->SetAttribute("stride", "2");
 
-      TiXmlElement* uv0AccSNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* uv0AccSNode = doc->NewElement("param");
       uv0AccNode->LinkEndChild(uv0AccSNode);
       uv0AccSNode->SetAttribute("name", "S");
       uv0AccSNode->SetAttribute("type", "float");
 
-      TiXmlElement* uv0AccTNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* uv0AccTNode = doc->NewElement("param");
       uv0AccNode->LinkEndChild(uv0AccTNode);
       uv0AccTNode->SetAttribute("name", "T");
       uv0AccTNode->SetAttribute("type", "float");
 
       // Define the vertices position array
-      TiXmlElement* verticesNode = new TiXmlElement("vertices");
+      tinyxml2::XMLElement* verticesNode = doc->NewElement("vertices");
       meshNode->LinkEndChild(verticesNode);
       verticesNode->SetAttribute("id", avar("%s-mesh-vertices", lodMeshName));
 
-      TiXmlElement* verticesInputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* verticesInputNode = doc->NewElement("input");
       verticesNode->LinkEndChild(verticesInputNode);
       verticesInputNode->SetAttribute("semantic", "POSITION");
       verticesInputNode->SetAttribute("source", avar("#%s-mesh-positions", lodMeshName));
@@ -2271,31 +2287,31 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       exportColladaTriangles(meshNode, exportData, d, lodMeshName);
 
       // Extra info useful for COLLADAMaya importer (OpenCOLLADA)
-      TiXmlElement* extraGeoNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extraGeoNode = doc->NewElement("extra");
       libGeomsNode->LinkEndChild(extraGeoNode);
 
-      TiXmlElement* extraGeoNodeTech = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extraGeoNodeTech = doc->NewElement("technique");
       extraGeoNode->LinkEndChild(extraGeoNodeTech);
       extraGeoNodeTech->SetAttribute("profile", "OpenCOLLADAMaya");
 
-      TiXmlElement* mayaNode2Id = new TiXmlElement("originalMayaNodeId");
+      tinyxml2::XMLElement* mayaNode2Id = doc->NewElement("originalMayaNodeId");
       extraGeoNodeTech->LinkEndChild(mayaNode2Id);
       mayaNode2Id->SetAttribute("sid", "originalMayaNodeId");
-      TiXmlText* mayaIdMesh = new TiXmlText(avar("%s", lodMeshName));
+      tinyxml2::XMLText* mayaIdMesh = doc->NewText(avar("%s", lodMeshName));
       mayaNode2Id->LinkEndChild(mayaIdMesh);
 
-      TiXmlElement* doubleSidedId = new TiXmlElement("double_sided");
+      tinyxml2::XMLElement* doubleSidedId = doc->NewElement("double_sided");
       extraGeoNodeTech->LinkEndChild(doubleSidedId);
       doubleSidedId->SetAttribute("sid", "double_sided");
-      TiXmlText* doubleSideIdText = new TiXmlText("1");
+      tinyxml2::XMLText* doubleSideIdText = doc->NewText("1");
       doubleSidedId->LinkEndChild(doubleSideIdText);
 
-      TiXmlElement* paramExtraNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* paramExtraNode = doc->NewElement("param");
       extraGeoNodeTech->LinkEndChild(paramExtraNode);
       paramExtraNode->SetAttribute("sid", "colladaId");
       paramExtraNode->SetAttribute("type", "string");
 
-      TiXmlText* mayaParamMesh = new TiXmlText(avar("%s-mesh", lodMeshName));
+      tinyxml2::XMLText* mayaParamMesh = doc->NewText(avar("%s-mesh", lodMeshName));
       paramExtraNode->LinkEndChild(mayaParamMesh);
    }
 
@@ -2307,20 +2323,20 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       char colMeshId[256];
       dSprintf(colMeshId, 256, "%s-mesh", colMeshName);
 
-      TiXmlElement* geometryNode = new TiXmlElement("geometry");
+      tinyxml2::XMLElement* geometryNode = doc->NewElement("geometry");
       libGeomsNode->LinkEndChild(geometryNode);
       geometryNode->SetAttribute("id", colMeshId);
       geometryNode->SetAttribute("name", colMeshName);
 
-      TiXmlElement* meshNode = new TiXmlElement("mesh");
+      tinyxml2::XMLElement* meshNode = doc->NewElement("mesh");
       geometryNode->LinkEndChild(meshNode);
 
       // Save out the vertices
-      TiXmlElement* vertsSourceNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* vertsSourceNode = doc->NewElement("source");
       meshNode->LinkEndChild(vertsSourceNode);
       vertsSourceNode->SetAttribute("id", avar("%s-mesh-positions", colMeshName));
 
-      TiXmlElement* vertsNode = new TiXmlElement("float_array");
+      tinyxml2::XMLElement* vertsNode = doc->NewElement("float_array");
       vertsSourceNode->LinkEndChild(vertsNode);
       vertsNode->SetAttribute("id", avar("%s-mesh-positions-array", colMeshName));
       vertsNode->SetAttribute("count", avar("%d", exportData.colMeshes[d].mesh.mPoints.size() * 3));
@@ -2329,41 +2345,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       {
          const Point3F& vert = exportData.colMeshes[d].mesh.mPoints[i];
 
-         TiXmlText* vertText = new TiXmlText(avar("%.4f %.4f %.4f ", vert.x, vert.y, vert.z));
+         tinyxml2::XMLText* vertText = doc->NewText(avar("%.4f %.4f %.4f ", vert.x, vert.y, vert.z));
          vertsNode->LinkEndChild(vertText);
       }
 
       // Save the vertex accessor
-      TiXmlElement* vertsTechNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* vertsTechNode = doc->NewElement("technique_common");
       vertsSourceNode->LinkEndChild(vertsTechNode);
 
-      TiXmlElement* vertsAccNode = new TiXmlElement("accessor");
+      tinyxml2::XMLElement* vertsAccNode = doc->NewElement("accessor");
       vertsTechNode->LinkEndChild(vertsAccNode);
       vertsAccNode->SetAttribute("source", avar("#%s-mesh-positions-array", colMeshName));
       vertsAccNode->SetAttribute("count", avar("%d", exportData.colMeshes[d].mesh.mPoints.size()));
       vertsAccNode->SetAttribute("stride", "3");
 
-      TiXmlElement* vertsAccXNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* vertsAccXNode = doc->NewElement("param");
       vertsAccNode->LinkEndChild(vertsAccXNode);
       vertsAccXNode->SetAttribute("name", "X");
       vertsAccXNode->SetAttribute("type", "float");
 
-      TiXmlElement* vertsAccYNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* vertsAccYNode = doc->NewElement("param");
       vertsAccNode->LinkEndChild(vertsAccYNode);
       vertsAccYNode->SetAttribute("name", "Y");
       vertsAccYNode->SetAttribute("type", "float");
 
-      TiXmlElement* vertsAccZNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* vertsAccZNode = doc->NewElement("param");
       vertsAccNode->LinkEndChild(vertsAccZNode);
       vertsAccZNode->SetAttribute("name", "Z");
       vertsAccZNode->SetAttribute("type", "float");
 
       // Save out the normals
-      TiXmlElement* normalsSourceNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* normalsSourceNode = doc->NewElement("source");
       meshNode->LinkEndChild(normalsSourceNode);
       normalsSourceNode->SetAttribute("id", avar("%s-mesh-normals", colMeshName));
 
-      TiXmlElement* normalsNode = new TiXmlElement("float_array");
+      tinyxml2::XMLElement* normalsNode = doc->NewElement("float_array");
       normalsSourceNode->LinkEndChild(normalsNode);
       normalsNode->SetAttribute("id", avar("%s-mesh-normals-array", colMeshName));
       normalsNode->SetAttribute("count", avar("%d", exportData.colMeshes[d].mesh.mNormals.size() * 3));
@@ -2372,41 +2388,41 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       {
          const Point3F& normal = exportData.colMeshes[d].mesh.mNormals[i];
 
-         TiXmlText* normalText = new TiXmlText(avar("%.4f %.4f %.4f ", normal.x, normal.y, normal.z));
+         tinyxml2::XMLText* normalText = doc->NewText(avar("%.4f %.4f %.4f ", normal.x, normal.y, normal.z));
          normalsNode->LinkEndChild(normalText);
       }
 
       // Save the normals accessor
-      TiXmlElement* normalsTechNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* normalsTechNode = doc->NewElement("technique_common");
       normalsSourceNode->LinkEndChild(normalsTechNode);
 
-      TiXmlElement* normalsAccNode = new TiXmlElement("accessor");
+      tinyxml2::XMLElement* normalsAccNode = doc->NewElement("accessor");
       normalsTechNode->LinkEndChild(normalsAccNode);
       normalsAccNode->SetAttribute("source", avar("#%s-mesh-normals-array", colMeshName));
       normalsAccNode->SetAttribute("count", avar("%d", exportData.colMeshes[d].mesh.mNormals.size()));
       normalsAccNode->SetAttribute("stride", "3");
 
-      TiXmlElement* normalsAccXNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* normalsAccXNode = doc->NewElement("param");
       normalsAccNode->LinkEndChild(normalsAccXNode);
       normalsAccXNode->SetAttribute("name", "X");
       normalsAccXNode->SetAttribute("type", "float");
 
-      TiXmlElement* normalsAccYNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* normalsAccYNode = doc->NewElement("param");
       normalsAccNode->LinkEndChild(normalsAccYNode);
       normalsAccYNode->SetAttribute("name", "Y");
       normalsAccYNode->SetAttribute("type", "float");
 
-      TiXmlElement* normalsAccZNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* normalsAccZNode = doc->NewElement("param");
       normalsAccNode->LinkEndChild(normalsAccZNode);
       normalsAccZNode->SetAttribute("name", "Z");
       normalsAccZNode->SetAttribute("type", "float");
 
       // Save out the uvs
-      TiXmlElement* uv0SourceNode = new TiXmlElement("source");
+      tinyxml2::XMLElement* uv0SourceNode = doc->NewElement("source");
       meshNode->LinkEndChild(uv0SourceNode);
       uv0SourceNode->SetAttribute("id", avar("%s-mesh-map-0", colMeshName));
 
-      TiXmlElement* uv0Node = new TiXmlElement("float_array");
+      tinyxml2::XMLElement* uv0Node = doc->NewElement("float_array");
       uv0SourceNode->LinkEndChild(uv0Node);
       uv0Node->SetAttribute("id", avar("%s-mesh-map-0-array", colMeshName));
       uv0Node->SetAttribute("count", avar("%d", exportData.colMeshes[d].mesh.mUV0s.size() * 2));
@@ -2415,36 +2431,36 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       {
          const Point2F& uv0 = exportData.colMeshes[d].mesh.mUV0s[i];
 
-         TiXmlText* uv0Text = new TiXmlText(avar("%.4f %.4f ", uv0.x, 1.0f - uv0.y));   // COLLADA uvs are upside down compared to Torque
+         tinyxml2::XMLText* uv0Text = doc->NewText(avar("%.4f %.4f ", uv0.x, 1.0f - uv0.y));   // COLLADA uvs are upside down compared to Torque
          uv0Node->LinkEndChild(uv0Text);
       }
 
       // Save the uv0 accessor
-      TiXmlElement* uv0TechNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* uv0TechNode = doc->NewElement("technique_common");
       uv0SourceNode->LinkEndChild(uv0TechNode);
 
-      TiXmlElement* uv0AccNode = new TiXmlElement("accessor");
+      tinyxml2::XMLElement* uv0AccNode = doc->NewElement("accessor");
       uv0TechNode->LinkEndChild(uv0AccNode);
       uv0AccNode->SetAttribute("source", avar("#%s-mesh-map-0-array", colMeshName));
       uv0AccNode->SetAttribute("count", avar("%d", exportData.colMeshes[d].mesh.mUV0s.size()));
       uv0AccNode->SetAttribute("stride", "2");
 
-      TiXmlElement* uv0AccSNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* uv0AccSNode = doc->NewElement("param");
       uv0AccNode->LinkEndChild(uv0AccSNode);
       uv0AccSNode->SetAttribute("name", "S");
       uv0AccSNode->SetAttribute("type", "float");
 
-      TiXmlElement* uv0AccTNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* uv0AccTNode = doc->NewElement("param");
       uv0AccNode->LinkEndChild(uv0AccTNode);
       uv0AccTNode->SetAttribute("name", "T");
       uv0AccTNode->SetAttribute("type", "float");
 
       // Define the vertices position array
-      TiXmlElement* verticesNode = new TiXmlElement("vertices");
+      tinyxml2::XMLElement* verticesNode = doc->NewElement("vertices");
       meshNode->LinkEndChild(verticesNode);
       verticesNode->SetAttribute("id", avar("%s-mesh-vertices", colMeshName));
 
-      TiXmlElement* verticesInputNode = new TiXmlElement("input");
+      tinyxml2::XMLElement* verticesInputNode = doc->NewElement("input");
       verticesNode->LinkEndChild(verticesInputNode);
       verticesInputNode->SetAttribute("semantic", "POSITION");
       verticesInputNode->SetAttribute("source", avar("#%s-mesh-positions", colMeshName));
@@ -2455,70 +2471,72 @@ void ColladaUtils::exportColladaMesh(TiXmlElement* rootNode, const ExportData& e
       exportColladaCollisionTriangles(meshNode, exportData, d);
 
       // Extra info useful for COLLADAMaya importer (OpenCOLLADA)
-      TiXmlElement* extraGeoNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extraGeoNode = doc->NewElement("extra");
       libGeomsNode->LinkEndChild(extraGeoNode);
 
-      TiXmlElement* extraGeoNodeTech = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extraGeoNodeTech = doc->NewElement("technique");
       extraGeoNode->LinkEndChild(extraGeoNodeTech);
       extraGeoNodeTech->SetAttribute("profile", "OpenCOLLADAMaya");
 
-      TiXmlElement* mayaNode2Id = new TiXmlElement("originalMayaNodeId");
+      tinyxml2::XMLElement* mayaNode2Id = doc->NewElement("originalMayaNodeId");
       extraGeoNodeTech->LinkEndChild(mayaNode2Id);
       mayaNode2Id->SetAttribute("sid", "originalMayaNodeId");
-      TiXmlText* mayaIdMesh = new TiXmlText(avar("%s", colMeshName));
+      tinyxml2::XMLText* mayaIdMesh = doc->NewText(avar("%s", colMeshName));
       mayaNode2Id->LinkEndChild(mayaIdMesh);
 
-      TiXmlElement* doubleSidedId = new TiXmlElement("double_sided");
+      tinyxml2::XMLElement* doubleSidedId = doc->NewElement("double_sided");
       extraGeoNodeTech->LinkEndChild(doubleSidedId);
       doubleSidedId->SetAttribute("sid", "double_sided");
-      TiXmlText* doubleSideIdText = new TiXmlText("1");
+      tinyxml2::XMLText* doubleSideIdText = doc->NewText("1");
       doubleSidedId->LinkEndChild(doubleSideIdText);
 
-      TiXmlElement* paramExtraNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* paramExtraNode = doc->NewElement("param");
       extraGeoNodeTech->LinkEndChild(paramExtraNode);
       paramExtraNode->SetAttribute("sid", "colladaId");
       paramExtraNode->SetAttribute("type", "string");
 
-      TiXmlText* mayaParamMesh = new TiXmlText(avar("%s-mesh", colMeshName));
+      tinyxml2::XMLText* mayaParamMesh = doc->NewText(avar("%s-mesh", colMeshName));
       paramExtraNode->LinkEndChild(mayaParamMesh);
    }
 }
 
-void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const String& meshName, const Vector<String>& matNames)
+void ColladaUtils::exportColladaScene(tinyxml2::XMLElement* rootNode, const String& meshName, const Vector<String>& matNames)
 {
-   TiXmlElement* libSceneNode = new TiXmlElement("library_visual_scenes");
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+
+   tinyxml2::XMLElement* libSceneNode = doc->NewElement("library_visual_scenes");
    rootNode->LinkEndChild(libSceneNode);
 
-   TiXmlElement* visSceneNode = new TiXmlElement("visual_scene");
+   tinyxml2::XMLElement* visSceneNode = doc->NewElement("visual_scene");
    libSceneNode->LinkEndChild(visSceneNode);
    visSceneNode->SetAttribute("id", "RootNode");
    visSceneNode->SetAttribute("name", "RootNode");
 
-   TiXmlElement* nodeNode = new TiXmlElement("node");
+   tinyxml2::XMLElement* nodeNode = doc->NewElement("node");
    visSceneNode->LinkEndChild(nodeNode);
    nodeNode->SetAttribute("id", avar("%s", meshName.c_str()));
    nodeNode->SetAttribute("name", avar("%s", meshName.c_str()));
    nodeNode->SetAttribute("type", "NODE");
    
-   TiXmlElement* instanceGeomNode = new TiXmlElement("instance_geometry");
+   tinyxml2::XMLElement* instanceGeomNode = doc->NewElement("instance_geometry");
    nodeNode->LinkEndChild(instanceGeomNode);
    instanceGeomNode->SetAttribute("url", avar("#%s-mesh", meshName.c_str()));
    instanceGeomNode->SetAttribute("name", avar("%s", meshName.c_str()));
    
-   TiXmlElement* bindMatNode = new TiXmlElement("bind_material");
+   tinyxml2::XMLElement* bindMatNode = doc->NewElement("bind_material");
    instanceGeomNode->LinkEndChild(bindMatNode);
 
-   TiXmlElement* techniqueNode = new TiXmlElement("technique_common");
+   tinyxml2::XMLElement* techniqueNode = doc->NewElement("technique_common");
    bindMatNode->LinkEndChild(techniqueNode);
 
    // Bind the materials
    for (U32 i = 0; i < matNames.size(); i++)
    {
-      TiXmlElement* instMatNode = new TiXmlElement("instance_material");
+      tinyxml2::XMLElement* instMatNode = doc->NewElement("instance_material");
       techniqueNode->LinkEndChild(instMatNode);
       instMatNode->SetAttribute("symbol", avar("%s-material", matNames[i].c_str()));
       instMatNode->SetAttribute("target", avar("#%s-material", matNames[i].c_str()));
-      TiXmlElement* bindVertexNode = new TiXmlElement("bind_vertex_input");
+      tinyxml2::XMLElement* bindVertexNode = doc->NewElement("bind_vertex_input");
       instMatNode->LinkEndChild(bindVertexNode);
       //bindVertexNode->SetAttribute("semantic", avar("%s-mesh-map-0", meshName.c_str()));
       bindVertexNode->SetAttribute("semantic", "UVMap");
@@ -2527,88 +2545,90 @@ void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const String& mesh
     }
    
 	// Extra info useful for COLLADAMax importer (OpenCOLLADA)
-    TiXmlElement* extraInsGeoNode = new TiXmlElement("extra");
+    tinyxml2::XMLElement* extraInsGeoNode = doc->NewElement("extra");
     nodeNode->LinkEndChild(extraInsGeoNode);
 
-    TiXmlElement* extraInsGeoTechNode = new TiXmlElement("technique");
+    tinyxml2::XMLElement* extraInsGeoTechNode = doc->NewElement("technique");
     extraInsGeoNode->LinkEndChild(extraInsGeoTechNode);
     extraInsGeoTechNode->SetAttribute("profile", "OpenCOLLADA");
 
-    TiXmlElement* castShadowsNode = new TiXmlElement("cast_shadows");
+    tinyxml2::XMLElement* castShadowsNode = doc->NewElement("cast_shadows");
     extraInsGeoTechNode->LinkEndChild(castShadowsNode);
     castShadowsNode->SetAttribute("sid", "cast_shadows");
     castShadowsNode->SetAttribute("type", "bool");
 	
-	TiXmlText* castShadowsText = new TiXmlText("1");
+	tinyxml2::XMLText* castShadowsText = doc->NewText("1");
 	castShadowsNode->LinkEndChild(castShadowsText);
 	
 	//-----------------------------
-    TiXmlElement* receiveShadowsNode = new TiXmlElement("receive_shadows");
+    tinyxml2::XMLElement* receiveShadowsNode = doc->NewElement("receive_shadows");
     extraInsGeoTechNode->LinkEndChild(receiveShadowsNode);
     receiveShadowsNode->SetAttribute("sid", "receive_shadows");
     receiveShadowsNode->SetAttribute("type", "bool");
 	
-	TiXmlText* receiveShadowsText = new TiXmlText("1");
+	tinyxml2::XMLText* receiveShadowsText = doc->NewText("1");
 	receiveShadowsNode->LinkEndChild(receiveShadowsText);	
 	
 	//-----------------------------
-    TiXmlElement* primaryVisibiltyNode = new TiXmlElement("primary_visibility");
+    tinyxml2::XMLElement* primaryVisibiltyNode = doc->NewElement("primary_visibility");
     extraInsGeoTechNode->LinkEndChild(primaryVisibiltyNode);
     primaryVisibiltyNode->SetAttribute("sid", "primary_visibility");
     primaryVisibiltyNode->SetAttribute("type", "int");
 	
-	TiXmlText* primaryVisibiltyText = new TiXmlText("1");
+	tinyxml2::XMLText* primaryVisibiltyText = doc->NewText("1");
 	primaryVisibiltyNode->LinkEndChild(primaryVisibiltyText);
 
 	//-----------------------------
-    TiXmlElement* secondaryVisibilityNode = new TiXmlElement("secondary_visibility");
+    tinyxml2::XMLElement* secondaryVisibilityNode = doc->NewElement("secondary_visibility");
     extraInsGeoTechNode->LinkEndChild(secondaryVisibilityNode);
     secondaryVisibilityNode->SetAttribute("sid", "secondary_visibility");
     secondaryVisibilityNode->SetAttribute("type", "int");
 	
-	TiXmlText* secondaryVisibilityText = new TiXmlText("1");
+	tinyxml2::XMLText* secondaryVisibilityText = doc->NewText("1");
 	secondaryVisibilityNode->LinkEndChild(secondaryVisibilityText);	
 
 	// Extra info useful for COLLADAMaya importer (OpenCOLLADA)
-    TiXmlElement* extra2InsGeoNode = new TiXmlElement("extra");
+    tinyxml2::XMLElement* extra2InsGeoNode = doc->NewElement("extra");
     nodeNode->LinkEndChild(extra2InsGeoNode);
 
-    TiXmlElement* extra2InsGeoTechNode = new TiXmlElement("technique");
+    tinyxml2::XMLElement* extra2InsGeoTechNode = doc->NewElement("technique");
     extra2InsGeoNode->LinkEndChild(extra2InsGeoTechNode);
     extra2InsGeoTechNode->SetAttribute("profile", "OpenCOLLADAMaya");
 
-    TiXmlElement* mayaNodeId = new TiXmlElement("originalMayaNodeId");
+    tinyxml2::XMLElement* mayaNodeId = doc->NewElement("originalMayaNodeId");
     extra2InsGeoTechNode->LinkEndChild(mayaNodeId);
     mayaNodeId->SetAttribute("sid", "originalMayaNodeId");
     mayaNodeId->SetAttribute("type", "string");
 
-	TiXmlText* mayaNodeIdMesh = new TiXmlText(avar("%s", meshName.c_str()));
+	tinyxml2::XMLText* mayaNodeIdMesh = doc->NewText(avar("%s", meshName.c_str()));
 	mayaNodeId->LinkEndChild(mayaNodeIdMesh);	
 
-    TiXmlElement* paramExtraNode = new TiXmlElement("param");
+    tinyxml2::XMLElement* paramExtraNode = doc->NewElement("param");
     extra2InsGeoTechNode->LinkEndChild(paramExtraNode);
     paramExtraNode->SetAttribute("sid", "colladaId");
     paramExtraNode->SetAttribute("type", "string");	
 
-	TiXmlText* mayaParamMesh = new TiXmlText(avar("%s", meshName.c_str()));
+	tinyxml2::XMLText* mayaParamMesh = doc->NewText(avar("%s", meshName.c_str()));
 	paramExtraNode->LinkEndChild(mayaParamMesh);	
 	
 	//-----------------------------
 	
-   TiXmlElement* sceneNode = new TiXmlElement("scene");
+   tinyxml2::XMLElement* sceneNode = doc->NewElement("scene");
    rootNode->LinkEndChild(sceneNode);
 
-   TiXmlElement* instVisSceneNode = new TiXmlElement("instance_visual_scene");
+   tinyxml2::XMLElement* instVisSceneNode = doc->NewElement("instance_visual_scene");
    sceneNode->LinkEndChild(instVisSceneNode);
    instVisSceneNode->SetAttribute("url", "#RootNode");
 }
 
-void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const ExportData& exportData, const String& meshName)
+void ColladaUtils::exportColladaScene(tinyxml2::XMLElement* rootNode, const ExportData& exportData, const String& meshName)
 {
-   TiXmlElement* libSceneNode = new TiXmlElement("library_visual_scenes");
+   tinyxml2::XMLDocument* doc = rootNode->GetDocument();
+
+   tinyxml2::XMLElement* libSceneNode = doc->NewElement("library_visual_scenes");
    rootNode->LinkEndChild(libSceneNode);
 
-   TiXmlElement* visSceneNode = new TiXmlElement("visual_scene");
+   tinyxml2::XMLElement* visSceneNode = doc->NewElement("visual_scene");
    libSceneNode->LinkEndChild(visSceneNode);
    visSceneNode->SetAttribute("id", "RootNode");
    visSceneNode->SetAttribute("name", "RootNode");
@@ -2618,21 +2638,21 @@ void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const ExportData& 
       char lodMeshName[256];
       dSprintf(lodMeshName, 256, "%s%d", meshName.c_str(), exportData.detailLevels[d].size);
 
-      TiXmlElement* nodeNode = new TiXmlElement("node");
+      tinyxml2::XMLElement* nodeNode = doc->NewElement("node");
       visSceneNode->LinkEndChild(nodeNode);
       nodeNode->SetAttribute("id", lodMeshName);
       nodeNode->SetAttribute("name", lodMeshName);
       nodeNode->SetAttribute("type", "NODE");
 
-      TiXmlElement* instanceGeomNode = new TiXmlElement("instance_geometry");
+      tinyxml2::XMLElement* instanceGeomNode = doc->NewElement("instance_geometry");
       nodeNode->LinkEndChild(instanceGeomNode);
       instanceGeomNode->SetAttribute("url", avar("#%s%d-mesh", meshName.c_str(), exportData.detailLevels[d].size));
       instanceGeomNode->SetAttribute("name", lodMeshName);
 
-      TiXmlElement* bindMatNode = new TiXmlElement("bind_material");
+      tinyxml2::XMLElement* bindMatNode = doc->NewElement("bind_material");
       instanceGeomNode->LinkEndChild(bindMatNode);
 
-      TiXmlElement* techniqueNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* techniqueNode = doc->NewElement("technique_common");
       bindMatNode->LinkEndChild(techniqueNode);
 
       // Bind the materials
@@ -2651,11 +2671,11 @@ void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const ExportData& 
          if (mat->getName() && mat->getName()[0])
             matName = mat->mMapTo;
 
-         TiXmlElement* instMatNode = new TiXmlElement("instance_material");
+         tinyxml2::XMLElement* instMatNode = doc->NewElement("instance_material");
          techniqueNode->LinkEndChild(instMatNode);
          instMatNode->SetAttribute("symbol", avar("%s-material", matName.c_str()));
          instMatNode->SetAttribute("target", avar("#%s-material", matName.c_str()));
-         TiXmlElement* bindVertexNode = new TiXmlElement("bind_vertex_input");
+         tinyxml2::XMLElement* bindVertexNode = doc->NewElement("bind_vertex_input");
          instMatNode->LinkEndChild(bindVertexNode);
          //bindVertexNode->SetAttribute("semantic", avar("%s-mesh-map-0", meshName.c_str()));
          bindVertexNode->SetAttribute("semantic", "UVMap");
@@ -2664,70 +2684,70 @@ void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const ExportData& 
       }
 
       // Extra info useful for COLLADAMax importer (OpenCOLLADA)
-      TiXmlElement* extraInsGeoNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extraInsGeoNode = doc->NewElement("extra");
       nodeNode->LinkEndChild(extraInsGeoNode);
 
-      TiXmlElement* extraInsGeoTechNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extraInsGeoTechNode = doc->NewElement("technique");
       extraInsGeoNode->LinkEndChild(extraInsGeoTechNode);
       extraInsGeoTechNode->SetAttribute("profile", "OpenCOLLADA");
 
-      TiXmlElement* castShadowsNode = new TiXmlElement("cast_shadows");
+      tinyxml2::XMLElement* castShadowsNode = doc->NewElement("cast_shadows");
       extraInsGeoTechNode->LinkEndChild(castShadowsNode);
       castShadowsNode->SetAttribute("sid", "cast_shadows");
       castShadowsNode->SetAttribute("type", "bool");
 
-      TiXmlText* castShadowsText = new TiXmlText("1");
+      tinyxml2::XMLText* castShadowsText = doc->NewText("1");
       castShadowsNode->LinkEndChild(castShadowsText);
 
       //-----------------------------
-      TiXmlElement* receiveShadowsNode = new TiXmlElement("receive_shadows");
+      tinyxml2::XMLElement* receiveShadowsNode = doc->NewElement("receive_shadows");
       extraInsGeoTechNode->LinkEndChild(receiveShadowsNode);
       receiveShadowsNode->SetAttribute("sid", "receive_shadows");
       receiveShadowsNode->SetAttribute("type", "bool");
 
-      TiXmlText* receiveShadowsText = new TiXmlText("1");
+      tinyxml2::XMLText* receiveShadowsText = doc->NewText("1");
       receiveShadowsNode->LinkEndChild(receiveShadowsText);
 
       //-----------------------------
-      TiXmlElement* primaryVisibiltyNode = new TiXmlElement("primary_visibility");
+      tinyxml2::XMLElement* primaryVisibiltyNode = doc->NewElement("primary_visibility");
       extraInsGeoTechNode->LinkEndChild(primaryVisibiltyNode);
       primaryVisibiltyNode->SetAttribute("sid", "primary_visibility");
       primaryVisibiltyNode->SetAttribute("type", "int");
 
-      TiXmlText* primaryVisibiltyText = new TiXmlText("1");
+      tinyxml2::XMLText* primaryVisibiltyText = doc->NewText("1");
       primaryVisibiltyNode->LinkEndChild(primaryVisibiltyText);
 
       //-----------------------------
-      TiXmlElement* secondaryVisibilityNode = new TiXmlElement("secondary_visibility");
+      tinyxml2::XMLElement* secondaryVisibilityNode = doc->NewElement("secondary_visibility");
       extraInsGeoTechNode->LinkEndChild(secondaryVisibilityNode);
       secondaryVisibilityNode->SetAttribute("sid", "secondary_visibility");
       secondaryVisibilityNode->SetAttribute("type", "int");
 
-      TiXmlText* secondaryVisibilityText = new TiXmlText("1");
+      tinyxml2::XMLText* secondaryVisibilityText = doc->NewText("1");
       secondaryVisibilityNode->LinkEndChild(secondaryVisibilityText);
 
       // Extra info useful for COLLADAMaya importer (OpenCOLLADA)
-      TiXmlElement* extra2InsGeoNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extra2InsGeoNode = doc->NewElement("extra");
       nodeNode->LinkEndChild(extra2InsGeoNode);
 
-      TiXmlElement* extra2InsGeoTechNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extra2InsGeoTechNode = doc->NewElement("technique");
       extra2InsGeoNode->LinkEndChild(extra2InsGeoTechNode);
       extra2InsGeoTechNode->SetAttribute("profile", "OpenCOLLADAMaya");
 
-      TiXmlElement* mayaNodeId = new TiXmlElement("originalMayaNodeId");
+      tinyxml2::XMLElement* mayaNodeId = doc->NewElement("originalMayaNodeId");
       extra2InsGeoTechNode->LinkEndChild(mayaNodeId);
       mayaNodeId->SetAttribute("sid", "originalMayaNodeId");
       mayaNodeId->SetAttribute("type", "string");
 
-      TiXmlText* mayaNodeIdMesh = new TiXmlText(lodMeshName);
+      tinyxml2::XMLText* mayaNodeIdMesh = doc->NewText(lodMeshName);
       mayaNodeId->LinkEndChild(mayaNodeIdMesh);
 
-      TiXmlElement* paramExtraNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* paramExtraNode = doc->NewElement("param");
       extra2InsGeoTechNode->LinkEndChild(paramExtraNode);
       paramExtraNode->SetAttribute("sid", "colladaId");
       paramExtraNode->SetAttribute("type", "string");
 
-      TiXmlText* mayaParamMesh = new TiXmlText(lodMeshName);
+      tinyxml2::XMLText* mayaParamMesh = doc->NewText(lodMeshName);
       paramExtraNode->LinkEndChild(mayaParamMesh);
    }
 
@@ -2736,28 +2756,28 @@ void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const ExportData& 
    {
       const char* colMeshName = exportData.colMeshes[d].colMeshName;
 
-      TiXmlElement* nodeNode = new TiXmlElement("node");
+      tinyxml2::XMLElement* nodeNode = doc->NewElement("node");
       visSceneNode->LinkEndChild(nodeNode);
       nodeNode->SetAttribute("id", colMeshName);
       nodeNode->SetAttribute("name", colMeshName);
       nodeNode->SetAttribute("type", "NODE");
 
-      TiXmlElement* instanceGeomNode = new TiXmlElement("instance_geometry");
+      tinyxml2::XMLElement* instanceGeomNode = doc->NewElement("instance_geometry");
       nodeNode->LinkEndChild(instanceGeomNode);
       instanceGeomNode->SetAttribute("url", avar("#%s-mesh", colMeshName));
       instanceGeomNode->SetAttribute("name", colMeshName);
 
-      TiXmlElement* bindMatNode = new TiXmlElement("bind_material");
+      tinyxml2::XMLElement* bindMatNode = doc->NewElement("bind_material");
       instanceGeomNode->LinkEndChild(bindMatNode);
 
-      TiXmlElement* techniqueNode = new TiXmlElement("technique_common");
+      tinyxml2::XMLElement* techniqueNode = doc->NewElement("technique_common");
       bindMatNode->LinkEndChild(techniqueNode);
 
-      TiXmlElement* instMatNode = new TiXmlElement("instance_material");
+      tinyxml2::XMLElement* instMatNode = doc->NewElement("instance_material");
       techniqueNode->LinkEndChild(instMatNode);
       instMatNode->SetAttribute("symbol", avar("%s-material", colMeshName));
       instMatNode->SetAttribute("target", avar("#%s-material", colMeshName));
-      TiXmlElement* bindVertexNode = new TiXmlElement("bind_vertex_input");
+      tinyxml2::XMLElement* bindVertexNode = doc->NewElement("bind_vertex_input");
       instMatNode->LinkEndChild(bindVertexNode);
       //bindVertexNode->SetAttribute("semantic", avar("%s-mesh-map-0", meshName.c_str()));
       bindVertexNode->SetAttribute("semantic", "UVMap");
@@ -2765,78 +2785,78 @@ void ColladaUtils::exportColladaScene(TiXmlElement* rootNode, const ExportData& 
       bindVertexNode->SetAttribute("input_set", "0");
 
       // Extra info useful for COLLADAMax importer (OpenCOLLADA)
-      TiXmlElement* extraInsGeoNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extraInsGeoNode = doc->NewElement("extra");
       nodeNode->LinkEndChild(extraInsGeoNode);
 
-      TiXmlElement* extraInsGeoTechNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extraInsGeoTechNode = doc->NewElement("technique");
       extraInsGeoNode->LinkEndChild(extraInsGeoTechNode);
       extraInsGeoTechNode->SetAttribute("profile", "OpenCOLLADA");
 
-      TiXmlElement* castShadowsNode = new TiXmlElement("cast_shadows");
+      tinyxml2::XMLElement* castShadowsNode = doc->NewElement("cast_shadows");
       extraInsGeoTechNode->LinkEndChild(castShadowsNode);
       castShadowsNode->SetAttribute("sid", "cast_shadows");
       castShadowsNode->SetAttribute("type", "bool");
 
-      TiXmlText* castShadowsText = new TiXmlText("1");
+      tinyxml2::XMLText* castShadowsText = doc->NewText("1");
       castShadowsNode->LinkEndChild(castShadowsText);
 
       //-----------------------------
-      TiXmlElement* receiveShadowsNode = new TiXmlElement("receive_shadows");
+      tinyxml2::XMLElement* receiveShadowsNode = doc->NewElement("receive_shadows");
       extraInsGeoTechNode->LinkEndChild(receiveShadowsNode);
       receiveShadowsNode->SetAttribute("sid", "receive_shadows");
       receiveShadowsNode->SetAttribute("type", "bool");
 
-      TiXmlText* receiveShadowsText = new TiXmlText("1");
+      tinyxml2::XMLText* receiveShadowsText = doc->NewText("1");
       receiveShadowsNode->LinkEndChild(receiveShadowsText);
 
       //-----------------------------
-      TiXmlElement* primaryVisibiltyNode = new TiXmlElement("primary_visibility");
+      tinyxml2::XMLElement* primaryVisibiltyNode = doc->NewElement("primary_visibility");
       extraInsGeoTechNode->LinkEndChild(primaryVisibiltyNode);
       primaryVisibiltyNode->SetAttribute("sid", "primary_visibility");
       primaryVisibiltyNode->SetAttribute("type", "int");
 
-      TiXmlText* primaryVisibiltyText = new TiXmlText("1");
+      tinyxml2::XMLText* primaryVisibiltyText = doc->NewText("1");
       primaryVisibiltyNode->LinkEndChild(primaryVisibiltyText);
 
       //-----------------------------
-      TiXmlElement* secondaryVisibilityNode = new TiXmlElement("secondary_visibility");
+      tinyxml2::XMLElement* secondaryVisibilityNode = doc->NewElement("secondary_visibility");
       extraInsGeoTechNode->LinkEndChild(secondaryVisibilityNode);
       secondaryVisibilityNode->SetAttribute("sid", "secondary_visibility");
       secondaryVisibilityNode->SetAttribute("type", "int");
 
-      TiXmlText* secondaryVisibilityText = new TiXmlText("1");
+      tinyxml2::XMLText* secondaryVisibilityText = doc->NewText("1");
       secondaryVisibilityNode->LinkEndChild(secondaryVisibilityText);
 
       // Extra info useful for COLLADAMaya importer (OpenCOLLADA)
-      TiXmlElement* extra2InsGeoNode = new TiXmlElement("extra");
+      tinyxml2::XMLElement* extra2InsGeoNode = doc->NewElement("extra");
       nodeNode->LinkEndChild(extra2InsGeoNode);
 
-      TiXmlElement* extra2InsGeoTechNode = new TiXmlElement("technique");
+      tinyxml2::XMLElement* extra2InsGeoTechNode = doc->NewElement("technique");
       extra2InsGeoNode->LinkEndChild(extra2InsGeoTechNode);
       extra2InsGeoTechNode->SetAttribute("profile", "OpenCOLLADAMaya");
 
-      TiXmlElement* mayaNodeId = new TiXmlElement("originalMayaNodeId");
+      tinyxml2::XMLElement* mayaNodeId = doc->NewElement("originalMayaNodeId");
       extra2InsGeoTechNode->LinkEndChild(mayaNodeId);
       mayaNodeId->SetAttribute("sid", "originalMayaNodeId");
       mayaNodeId->SetAttribute("type", "string");
 
-      TiXmlText* mayaNodeIdMesh = new TiXmlText(colMeshName);
+      tinyxml2::XMLText* mayaNodeIdMesh = doc->NewText(colMeshName);
       mayaNodeId->LinkEndChild(mayaNodeIdMesh);
 
-      TiXmlElement* paramExtraNode = new TiXmlElement("param");
+      tinyxml2::XMLElement* paramExtraNode = doc->NewElement("param");
       extra2InsGeoTechNode->LinkEndChild(paramExtraNode);
       paramExtraNode->SetAttribute("sid", "colladaId");
       paramExtraNode->SetAttribute("type", "string");
 
-      TiXmlText* mayaParamMesh = new TiXmlText(colMeshName);
+      tinyxml2::XMLText* mayaParamMesh = doc->NewText(colMeshName);
       paramExtraNode->LinkEndChild(mayaParamMesh);
    }
    //-----------------------------
 
-   TiXmlElement* sceneNode = new TiXmlElement("scene");
+   tinyxml2::XMLElement* sceneNode = doc->NewElement("scene");
    rootNode->LinkEndChild(sceneNode);
 
-   TiXmlElement* instVisSceneNode = new TiXmlElement("instance_visual_scene");
+   tinyxml2::XMLElement* instVisSceneNode = doc->NewElement("instance_visual_scene");
    sceneNode->LinkEndChild(instVisSceneNode);
    instVisSceneNode->SetAttribute("url", "#RootNode");
 }
@@ -2850,14 +2870,14 @@ void ColladaUtils::exportToCollada(const Torque::Path& colladaFile, const Optimi
       outMeshName = colladaFile.getFileName();
 
    // The XML document that will hold all of our data
-   TiXmlDocument doc;
+   VfsXMLDocument doc;
 
    // Add a standard XML declaration to the top
-   TiXmlDeclaration* xmlDecl = new TiXmlDeclaration("1.0", "utf-8", "");
+   tinyxml2::XMLDeclaration* xmlDecl = doc.NewDeclaration();
    doc.LinkEndChild(xmlDecl);
 
    // Create our Collada root node and populate a couple standard attributes
-   TiXmlElement* rootNode = new TiXmlElement("COLLADA");
+   tinyxml2::XMLElement* rootNode = doc.NewElement("COLLADA");
    rootNode->SetAttribute("xmlns", "http://www.collada.org/2005/11/COLLADASchema");
    rootNode->SetAttribute("version", "1.4.1");
    //rootNode->SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"); //T3D Collada loader complaint about this.
@@ -2897,14 +2917,14 @@ void ColladaUtils::exportToCollada(const Torque::Path& colladaFile, const Export
    String outMeshName = colladaFile.getFileName();
 
    // The XML document that will hold all of our data
-   TiXmlDocument doc;
+   VfsXMLDocument doc;
 
    // Add a standard XML declaration to the top
-   TiXmlDeclaration* xmlDecl = new TiXmlDeclaration("1.0", "utf-8", "");
+   tinyxml2::XMLDeclaration* xmlDecl = doc.NewDeclaration();
    doc.LinkEndChild(xmlDecl);
 
    // Create our Collada root node and populate a couple standard attributes
-   TiXmlElement* rootNode = new TiXmlElement("COLLADA");
+   tinyxml2::XMLElement* rootNode = doc.NewElement("COLLADA");
    rootNode->SetAttribute("xmlns", "http://www.collada.org/2005/11/COLLADASchema");
    rootNode->SetAttribute("version", "1.4.1");
    //rootNode->SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"); //T3D Collada loader complaint about this.

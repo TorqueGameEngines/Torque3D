@@ -24,6 +24,8 @@
 
 // Debug Profiling.
 #include "platform/profiler.h"
+#include <tinyxml2.h>
+
 #include "persistence/taml/fsTinyXml.h"
 
 //-----------------------------------------------------------------------------
@@ -34,10 +36,10 @@ SimObject* TamlXmlReader::read( FileStream& stream )
     PROFILE_SCOPE(TamlXmlReader_Read);
 
     // Create document.
-    fsTiXmlDocument xmlDocument;
+    VfsXMLDocument xmlDocument;
 
     // Load document from stream.
-    if ( !xmlDocument.LoadFile( stream ) )
+    if ( !xmlDocument.LoadFile(stream) )
     {
         // Warn!
         Con::warnf("Taml: Could not load Taml XML file from stream.");
@@ -66,7 +68,7 @@ void TamlXmlReader::resetParse( void )
 
 //-----------------------------------------------------------------------------
 
-SimObject* TamlXmlReader::parseElement( TiXmlElement* pXmlElement )
+SimObject* TamlXmlReader::parseElement( tinyxml2::XMLElement* pXmlElement )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlReader_ParseElement);
@@ -103,7 +105,7 @@ SimObject* TamlXmlReader::parseElement( TiXmlElement* pXmlElement )
 #ifdef TORQUE_DEBUG
     // Format the type location.
     char typeLocationBuffer[64];
-    dSprintf( typeLocationBuffer, sizeof(typeLocationBuffer), "Taml [format='xml' row=%d column=%d]", pXmlElement->Row(), pXmlElement->Column() );    
+    dSprintf( typeLocationBuffer, sizeof(typeLocationBuffer), "Taml [format='xml' line=%d]", pXmlElement->GetLineNum() );    
 
     // Create type.
     pSimObject = Taml::createType( typeName, mpTaml, typeLocationBuffer );
@@ -165,7 +167,7 @@ SimObject* TamlXmlReader::parseElement( TiXmlElement* pXmlElement )
     }
 
     // Fetch any children.
-    TiXmlNode* pChildXmlNode = pXmlElement->FirstChild();
+    tinyxml2::XMLNode* pChildXmlNode = pXmlElement->FirstChild();
 
     TamlCustomNodes customProperties;
 
@@ -182,7 +184,7 @@ SimObject* TamlXmlReader::parseElement( TiXmlElement* pXmlElement )
         do
         {
             // Fetch element.
-            TiXmlElement* pChildXmlElement = dynamic_cast<TiXmlElement*>( pChildXmlNode );
+            tinyxml2::XMLElement* pChildXmlElement = pChildXmlNode->ToElement();
 
             // Move to next sibling.
             pChildXmlNode = pChildXmlNode->NextSibling();
@@ -271,7 +273,7 @@ SimObject* TamlXmlReader::parseElement( TiXmlElement* pXmlElement )
 
 //-----------------------------------------------------------------------------
 
-void TamlXmlReader::parseAttributes( TiXmlElement* pXmlElement, SimObject* pSimObject )
+void TamlXmlReader::parseAttributes( tinyxml2::XMLElement* pXmlElement, SimObject* pSimObject )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlReader_ParseAttributes);
@@ -280,7 +282,7 @@ void TamlXmlReader::parseAttributes( TiXmlElement* pXmlElement, SimObject* pSimO
     AssertFatal( pSimObject != NULL, "Taml: Cannot parse attributes on a NULL object." );
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Insert attribute name.
         StringTableEntry attributeName = StringTable->insert( pAttribute->Name() );
@@ -298,7 +300,7 @@ void TamlXmlReader::parseAttributes( TiXmlElement* pXmlElement, SimObject* pSimO
 
 //-----------------------------------------------------------------------------
 
-void TamlXmlReader::parseCustomElement( TiXmlElement* pXmlElement, TamlCustomNodes& customNodes )
+void TamlXmlReader::parseCustomElement( tinyxml2::XMLElement* pXmlElement, TamlCustomNodes& customNodes )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlReader_ParseCustomElement);
@@ -310,7 +312,7 @@ void TamlXmlReader::parseCustomElement( TiXmlElement* pXmlElement, TamlCustomNod
     AssertFatal( pPeriod != NULL, "Parsing extended element but no period character found." );
 
     // Fetch any custom XML node.
-    TiXmlNode* pCustomXmlNode = pXmlElement->FirstChild();
+    tinyxml2::XMLNode* pCustomXmlNode = pXmlElement->FirstChild();
 
     // Finish is no XML node exists.
     if ( pCustomXmlNode == NULL )
@@ -322,7 +324,7 @@ void TamlXmlReader::parseCustomElement( TiXmlElement* pXmlElement, TamlCustomNod
     do
     {
         // Fetch element.
-        TiXmlElement* pCustomXmlElement = dynamic_cast<TiXmlElement*>( pCustomXmlNode );
+        tinyxml2::XMLElement* pCustomXmlElement = pCustomXmlNode->ToElement();
 
         // Move to next sibling.
         pCustomXmlNode = pCustomXmlNode->NextSibling();
@@ -339,7 +341,7 @@ void TamlXmlReader::parseCustomElement( TiXmlElement* pXmlElement, TamlCustomNod
 
 //-----------------------------------------------------------------------------
 
-void TamlXmlReader::parseCustomNode( TiXmlElement* pXmlElement, TamlCustomNode* pCustomNode )
+void TamlXmlReader::parseCustomNode( tinyxml2::XMLElement* pXmlElement, TamlCustomNode* pCustomNode )
 {
     // Is the node a proxy object?
     if (  getTamlRefId( pXmlElement ) != 0 || getTamlRefToId( pXmlElement ) != 0 )
@@ -357,7 +359,7 @@ void TamlXmlReader::parseCustomNode( TiXmlElement* pXmlElement, TamlCustomNode* 
     TamlCustomNode* pChildNode = pCustomNode->addNode( pXmlElement->Value() );
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Insert attribute name.
         StringTableEntry attributeName = StringTable->insert( pAttribute->Name() );
@@ -381,7 +383,7 @@ void TamlXmlReader::parseCustomNode( TiXmlElement* pXmlElement, TamlCustomNode* 
     }
 
     // Fetch any children.
-    TiXmlNode* pChildXmlNode = pXmlElement->FirstChild();
+    tinyxml2::XMLNode* pChildXmlNode = pXmlElement->FirstChild();
 
     // Do we have any element children?
     if ( pChildXmlNode != NULL )
@@ -389,7 +391,7 @@ void TamlXmlReader::parseCustomNode( TiXmlElement* pXmlElement, TamlCustomNode* 
         do
         {
             // Yes, so fetch child element.
-            TiXmlElement* pChildXmlElement = dynamic_cast<TiXmlElement*>( pChildXmlNode );
+            tinyxml2::XMLElement* pChildXmlElement = pChildXmlNode->ToElement();
 
             // Move to next sibling.
             pChildXmlNode = pChildXmlNode->NextSibling();
@@ -407,13 +409,13 @@ void TamlXmlReader::parseCustomNode( TiXmlElement* pXmlElement, TamlCustomNode* 
 
 //-----------------------------------------------------------------------------
 
-U32 TamlXmlReader::getTamlRefId( TiXmlElement* pXmlElement )
+U32 TamlXmlReader::getTamlRefId( tinyxml2::XMLElement* pXmlElement )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlReader_GetTamlRefId);
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Insert attribute name.
         StringTableEntry attributeName = StringTable->insert( pAttribute->Name() );
@@ -432,13 +434,13 @@ U32 TamlXmlReader::getTamlRefId( TiXmlElement* pXmlElement )
 
 //-----------------------------------------------------------------------------
 
-U32 TamlXmlReader::getTamlRefToId( TiXmlElement* pXmlElement )
+U32 TamlXmlReader::getTamlRefToId( tinyxml2::XMLElement* pXmlElement )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlReader_GetTamlRefToId);
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Insert attribute name.
         StringTableEntry attributeName = StringTable->insert( pAttribute->Name() );
@@ -457,13 +459,13 @@ U32 TamlXmlReader::getTamlRefToId( TiXmlElement* pXmlElement )
 
 //-----------------------------------------------------------------------------
 
-const char* TamlXmlReader::getTamlObjectName( TiXmlElement* pXmlElement )
+const char* TamlXmlReader::getTamlObjectName( tinyxml2::XMLElement* pXmlElement )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlReader_GetTamlObjectName);
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Insert attribute name.
         StringTableEntry attributeName = StringTable->insert( pAttribute->Name() );

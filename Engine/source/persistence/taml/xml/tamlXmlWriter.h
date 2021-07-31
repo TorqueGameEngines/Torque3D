@@ -27,10 +27,6 @@
 #include "persistence/taml/taml.h"
 #endif
 
-#ifndef TINYXML_INCLUDED
-#include "tinyXML/tinyxml.h"
-#endif
-
 //-----------------------------------------------------------------------------
 
 /// @ingroup tamlGroup
@@ -50,10 +46,10 @@ private:
     Taml* mpTaml;
 
 private:
-    TiXmlElement* compileElement( const TamlWriteNode* pTamlWriteNode );
-    void compileAttributes( TiXmlElement* pXmlElement, const TamlWriteNode* pTamlWriteNode );
-    void compileCustomElements( TiXmlElement* pXmlElement, const TamlWriteNode* pTamlWriteNode );
-    void compileCustomNode( TiXmlElement* pXmlElement, const TamlCustomNode* pCustomNode );
+    tinyxml2::XMLElement* compileElement( tinyxml2::XMLDocument* doc, const TamlWriteNode* pTamlWriteNode );
+    void compileAttributes( tinyxml2::XMLElement* pXmlElement, const TamlWriteNode* pTamlWriteNode );
+    void compileCustomElements( tinyxml2::XMLElement* pXmlElement, const TamlWriteNode* pTamlWriteNode );
+    void compileCustomNode( tinyxml2::XMLElement* pXmlElement, const TamlCustomNode* pCustomNode );
 };
 
 #endif // _TAML_XMLWRITER_H_

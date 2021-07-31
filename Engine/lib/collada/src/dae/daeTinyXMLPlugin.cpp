@@ -24,7 +24,7 @@
 #endif
 
 #include <string>
-#include <tinyxml.h>
+#include <tinyxml2.h>
 #include <dae.h>
 #include <dom.h>
 #include <dae/daeMetaElement.h>
@@ -36,7 +36,7 @@
 using namespace std;
 
 namespace {
-	daeInt getCurrentLineNumber(TiXmlElement* element) {
+	daeInt getCurrentLineNumber(tinyxml2::XMLElement* element) {
 		return -1;
 	}
 }
@@ -65,7 +65,7 @@ daeElementRef daeTinyXMLPlugin::readFromFile(const daeURI& uri) {
 	string file = cdom::uriToNativePath(uri.str());
 	if (file.empty())
 		return NULL;
-	TiXmlDocument doc;
+	tinyxml2::XMLDocument doc;
 	doc.LoadFile(file.c_str());
 	if (!doc.RootElement()) {
 		daeErrorHandler::get()->handleError((std::string("Failed to open ") + uri.str() +
@@ -76,7 +76,7 @@ daeElementRef daeTinyXMLPlugin::readFromFile(const daeURI& uri) {
 }
 
 daeElementRef daeTinyXMLPlugin::readFromMemory(daeString buffer, const daeURI& baseUri) {
-	TiXmlDocument doc;
+   tinyxml2::XMLDocument doc;
 	doc.Parse(buffer);
 	if (!doc.RootElement()) {
 		daeErrorHandler::get()->handleError("Failed to open XML document from memory buffer in "
@@ -86,9 +86,9 @@ daeElementRef daeTinyXMLPlugin::readFromMemory(daeString buffer, const daeURI& b
 	return readElement(doc.RootElement(), NULL);
 }
 
-daeElementRef daeTinyXMLPlugin::readElement(TiXmlElement* tinyXmlElement, daeElement* parentElement) {
+daeElementRef daeTinyXMLPlugin::readElement(tinyxml2::XMLElement* tinyXmlElement, daeElement* parentElement) {
 	std::vector<attrPair> attributes;
-	for (TiXmlAttribute* attrib = tinyXmlElement->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+	for (const tinyxml2::XMLAttribute* attrib = tinyXmlElement->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 		attributes.push_back(attrPair(attrib->Name(), attrib->Value()));
 		
 	daeElementRef element = beginReadElement(parentElement, tinyXmlElement->Value(),
@@ -102,7 +102,7 @@ daeElementRef daeTinyXMLPlugin::readElement(TiXmlElement* tinyXmlElement, daeEle
 		readElementText(element, tinyXmlElement->GetText(), getCurrentLineNumber(tinyXmlElement));
   
   // Recurse children
-  for (TiXmlElement* child = tinyXmlElement->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+  for (tinyxml2::XMLElement* child = tinyXmlElement->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
     element->placeElement(readElement(child, element));
 
 	return element;
@@ -136,13 +136,11 @@ daeInt daeTinyXMLPlugin::write(const daeURI& name, daeDocument *document, daeBoo
 		fclose(tempfd);
 	}
 	
-  m_doc = new TiXmlDocument(name.getURI());
+  m_doc = new tinyxml2::XMLDocument();
   if (m_doc)
   {
-    m_doc->SetTabSize(4);
-
-   	TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "", "" );  
-	  m_doc->LinkEndChild( decl ); 
+    tinyxml2::XMLDeclaration* decl = m_doc->NewDeclaration("xml version=\"1.0\"");
+	 m_doc->LinkEndChild( decl ); 
 
     writeElement(document->getDomRoot());
 
@@ -158,12 +156,12 @@ void daeTinyXMLPlugin::writeElement( daeElement* element )
 	daeMetaElement* _meta = element->getMeta();
   if (!_meta->getIsTransparent() ) 
   {
-		TiXmlElement* tiElm = new TiXmlElement( element->getElementName() );  
+		tinyxml2::XMLElement* tiElm = m_doc->NewElement( element->getElementName() );  
         
 		if (m_elements.empty() == true) {
 				m_doc->LinkEndChild(tiElm);
 			} else {
-			TiXmlElement* first = m_elements.front();
+			tinyxml2::XMLElement* first = m_elements.front();
 			first->LinkEndChild(tiElm);
 		}
 		m_elements.push_front(tiElm);
@@ -200,7 +198,7 @@ void daeTinyXMLPlugin::writeValue( daeElement* element )
 		attr->memoryToString(element, buffer);
 		std::string s = buffer.str();
 		if (!s.empty())
-			m_elements.front()->LinkEndChild( new TiXmlText(buffer.str().c_str()) );
+			m_elements.front()->LinkEndChild( m_doc->NewText(buffer.str().c_str()) );
 	}
 }
 

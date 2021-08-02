@@ -67,7 +67,7 @@
             groupNum = "0";
             buttonType = "RadioButton";
             useMouseEvents = "0";
-            bitmap = "tools/worldEditor/images/circleBrush";
+            bitmapAsset = "ToolsModule:circleBrush_n_image";
          };
          new GuiBitmapButtonCtrl() {
             canSaveDynamicFields = "0";
@@ -89,7 +89,7 @@
             groupNum = "0";
             buttonType = "RadioButton";
             useMouseEvents = "0";
-            bitmap = "tools/worldEditor/images/boxBrush";
+            bitmapAsset = "ToolsModule:boxBrush_n_image";
          };
          
          /*
@@ -113,7 +113,7 @@
             groupNum = "0";
             buttonType = "RadioButton";
             useMouseEvents = "0";
-            bitmap = "tools/worldEditor/images/maskBrush";
+            bitmapAsset = "ToolsModule:maskBrush_n_image";
          };
          */
       };
@@ -203,7 +203,7 @@
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
       new GuiBitmapCtrl() {
@@ -290,7 +290,7 @@
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
       new GuiBitmapCtrl() {
@@ -377,7 +377,7 @@
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
 
@@ -400,7 +400,7 @@
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/worldEditor/images/softCurve";
+         bitmapAsset = "ToolsModule:softCurve_n_image";
       };
 
       new GuiBitmapCtrl() {
@@ -487,7 +487,7 @@
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
    };

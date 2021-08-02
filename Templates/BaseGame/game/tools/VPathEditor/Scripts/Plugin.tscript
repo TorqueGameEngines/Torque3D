@@ -40,7 +40,7 @@ function VPathEditorPlugin::onWorldEditorStartup( %this )
 
     // Add ourselves to the ToolsToolbar
     %tooltip = "Path Editor (" @ %accel @ ")";
-    EditorGui.addToToolsToolbar( "VPathEditorPlugin", "VPathEditorPalette", expandFilename( "tools/VPathEditor/GUI/Images/btn_Palette" ), %tooltip );
+    EditorGui.addToToolsToolbar( "VPathEditorPlugin", "VPathEditorPalette", "ToolsModule:btn_Palette_n_image", %tooltip );
 
     // Find and Store the Button.
     %this.ToolbarButton = ToolsToolbarArray.findObjectByInternalName( "VPathEditorPalette", false );

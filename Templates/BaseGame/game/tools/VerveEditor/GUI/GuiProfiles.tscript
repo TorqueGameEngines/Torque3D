@@ -170,7 +170,7 @@ singleton GuiControlProfile ( VEditorScrollProfile : VEditorDefaultProfile )
     border = false;
     
     hasBitmapArray = true;
-    bitmap         = "./Images/ScrollBar";
+    bitmapAsset         = "ToolsModule:Images_ScrollBar_image";
 };
 
 singleton GuiControlProfile ( VEditorCheckBoxProfile : GuiCheckBoxProfile )

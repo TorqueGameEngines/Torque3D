@@ -59,7 +59,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Select and Edit an Existing Material";
       hovertime = "1000";
-      bitmap = "tools/materialEditor/gui/materialSelectorIcon";
+      bitmapAsset = "ToolsModule:materialSelectorIcon_n_image";
       text = "";
       groupNum = "-1";
       buttonType = "PushButton";

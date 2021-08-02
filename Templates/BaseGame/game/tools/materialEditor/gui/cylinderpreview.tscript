@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(cylinderpreviewdts)
 {
-   baseShape = "./cylinderpreview.dts";
+   baseShapeAsset = "ToolsModule:cylinderpreview";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

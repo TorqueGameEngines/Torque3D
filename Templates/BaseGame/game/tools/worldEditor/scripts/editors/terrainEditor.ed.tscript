@@ -130,7 +130,7 @@ function EPainter::updateLayers( %this, %matIndex )
 
          new GuiBitmapButtonCtrl()
          {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             buttonType = "PushButton";
             HorizSizing = "left";
             VertSizing = "bottom";

@@ -63,7 +63,7 @@ new GuiControlProfile (GuiDefaultProfile)
    fontColorSEL= "255 255 255";
 
    // bitmap information
-   bitmap = "";
+   bitmapAsset = "";
    bitmapBase = "";
    textOffset = "0 0";
 

@@ -91,7 +91,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/new";
+            bitmapAsset = "ToolsModule:new_n_image";
             bitmapMode = "Stretched";
             autoFitExtents = "0";
             useModifiers = "0";
@@ -116,7 +116,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             bitmapMode = "Stretched";
             autoFitExtents = "0";
             useModifiers = "0";
@@ -317,7 +317,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+               bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -410,7 +410,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/delete";
+               bitmapAsset = "ToolsModule:delete_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -546,7 +546,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+               bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -639,7 +639,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/delete";
+               bitmapAsset = "ToolsModule:delete_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -902,7 +902,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+               bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -972,7 +972,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/delete";
+               bitmapAsset = "ToolsModule:delete_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -1281,7 +1281,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                  bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -1351,7 +1351,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/delete";
+                  bitmapAsset = "ToolsModule:delete_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -1475,7 +1475,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+               bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -1568,7 +1568,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/delete";
+               bitmapAsset = "ToolsModule:delete_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                useModifiers = "0";

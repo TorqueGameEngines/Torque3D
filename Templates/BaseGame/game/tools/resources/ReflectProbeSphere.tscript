@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(ReflectProbeSpheredae)
 {
-   baseShape = "./ReflectProbeSphere.dae";
+   baseShapeAsset = "ToolsModule:ReflectProbeSphere";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

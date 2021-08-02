@@ -536,10 +536,17 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
 }
 
 DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
-   "Creates a new script asset using the targetFilePath.\n"
-   "@return The bool result of calling exec")
+   "Gets the shape's file path\n"
+   "@return The filename of the shape file")
 {
    return object->getShapeFilePath();
+}
+
+DefineEngineMethod(ShapeAsset, getShapeConstructorFilePath, const char*, (), ,
+   "Gets the shape's constructor file.\n"
+   "@return The filename of the shape constructor file")
+{
+   return object->getShapeConstructorFilePath();
 }
 
 DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string")\

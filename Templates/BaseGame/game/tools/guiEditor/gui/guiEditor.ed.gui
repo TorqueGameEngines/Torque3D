@@ -71,7 +71,7 @@
             canSaveDynamicFields = "0";
 
             new GuiBitmapButtonCtrl(GHWorldEditor) {
-               bitmap = "tools/worldEditor/images/toolbar/world";
+               bitmapAsset = "ToolsModule:world_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                groupNum = "0";
@@ -93,7 +93,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl(GHGuiEditor) {
-               bitmap = "tools/worldEditor/images/toolbar/gui";
+               bitmapAsset = "ToolsModule:gui_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                groupNum = "0";
@@ -114,7 +114,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/worldEditor/images/toolbar/playbutton";
+               bitmapAsset = "ToolsModule:playbutton_n_image";
                bitmapMode = "Stretched";
                autoFitExtents = "0";
                groupNum = "0";
@@ -152,7 +152,7 @@
                tooltipprofile = "ToolsGuiToolTipProfile";
                ToolTip = "Asset Browser";
                hovertime = "750";
-               bitmap = "tools/gui/images/stencilIcons/menuGrid";
+               bitmapAsset = "ToolsModule:menuGrid_image";
                bitmapMode = "Stretched";
                buttonType = "PushButton";
                groupNum = "0";
@@ -272,7 +272,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl(GuiEditorSnapCheckBox) {
-                  bitmap = "tools/gui/images/GUI-editor/snap-grid";
+                  bitmapAsset = "ToolsModule:snap_grid_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -293,7 +293,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl(GuiEditorEdgeSnapping_btn) {
-                  bitmap = "tools/gui/images/GUI-editor/edgesnap";
+                  bitmapAsset = "ToolsModule:edgesnap_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -315,7 +315,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl(GuiEditorCenterSnapping_btn) {
-                  bitmap = "tools/gui/images/GUI-editor/centersnap";
+                  bitmapAsset = "ToolsModule:centersnap_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -368,7 +368,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/align-left";
+                  bitmapAsset = "ToolsModule:align_left_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -390,7 +390,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/vertical-center";
+                  bitmapAsset = "ToolsModule:vertical_center_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -412,7 +412,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/align-right";
+                  bitmapAsset = "ToolsModule:align_right_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -449,7 +449,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/align-top";
+                  bitmapAsset = "ToolsModule:align_top_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -471,7 +471,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/horizontal-center";
+                  bitmapAsset = "ToolsModule:horizontal_center_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -493,7 +493,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/align-bottom";
+                  bitmapAsset = "ToolsModule:align_bottom_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -562,7 +562,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/send-to-back";
+                  bitmapAsset = "ToolsModule:send_to_back_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -584,7 +584,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/bring-to-front";
+                  bitmapAsset = "ToolsModule:bring_to_front_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -621,7 +621,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/distribute-horizontal";
+                  bitmapAsset = "ToolsModule:distribute_horizontal_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -643,7 +643,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/GUI-editor/distribute-vertical";
+                  bitmapAsset = "ToolsModule:distribute_vertical_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   groupNum = "-1";
@@ -886,7 +886,7 @@
                      };
                      
                      new GuiBitmapButtonCtrl() {
-                        bitmap = "tools/gui/images/clear-icon";
+                        bitmapAsset = "ToolsModule:clear_icon_n_image";
                         groupNum = "-1";
                         buttonType = "PushButton";
                         useMouseEvents = "0";
@@ -1199,7 +1199,7 @@
                      };
                      
                      new GuiBitmapButtonCtrl() {
-                        bitmap = "tools/gui/images/clear-icon";
+                        bitmapAsset = "ToolsModule:clear_icon_n_image";
                         groupNum = "-1";
                         buttonType = "PushButton";
                         useMouseEvents = "0";
@@ -1322,7 +1322,7 @@
                         canSaveDynamicFields = "0";
                      };
                      new GuiBitmapButtonCtrl() {
-                        bitmap = "tools/gui/images/save-icon";
+                        bitmapAsset = "ToolsModule:save_icon_n_image";
                         groupNum = "-1";
                         buttonType = "PushButton";
                         useMouseEvents = "0";
@@ -1342,7 +1342,7 @@
                         canSaveDynamicFields = "0";
                      };
                      new GuiBitmapButtonCtrl() {
-                        bitmap = "tools/gui/images/save-as";
+                        bitmapAsset = "ToolsModule:save_as_n_image";
                         groupNum = "-1";
                         buttonType = "PushButton";
                         useMouseEvents = "0";
@@ -1439,7 +1439,7 @@
          };
 
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -1458,7 +1458,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -1477,7 +1477,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -1496,7 +1496,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";

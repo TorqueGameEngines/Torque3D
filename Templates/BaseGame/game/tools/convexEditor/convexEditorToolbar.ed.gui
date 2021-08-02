@@ -55,7 +55,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Create ConvexShape Box" NL "Use Alt + Click-Drag instead of this for more control of starting placement.";
       hovertime = "1000";
-      bitmap = "tools/convexEditor/images/convex-editor-btn";
+      bitmapAsset = "ToolsModule:convex_editor_btn_n_image";
       text = "";
       groupNum = "-1";
       buttonType = "pushButton";
@@ -76,7 +76,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Split selected face" NL "Use Ctrl + Rotate instead for more control.";
       hovertime = "1000";
-      bitmap = "tools/convexEditor/images/split-face-btn";
+      bitmapAsset = "ToolsModule:split_face_btn_n_image";
       text = "";
       groupNum = "-1";
       buttonType = "PushButton";
@@ -97,7 +97,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Delete selected face" NL "(Delete)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/delete-btn";
+      bitmapAsset = "ToolsModule:delete_btn_n_image";
       text = "";
       groupNum = "-1";
       buttonType = "PushButton";
@@ -145,7 +145,7 @@
          buttonType = "toggleButton";
          useMouseEvents = "0";
          groupNum = "-1";
-         bitmap = "tools/gui/images/menubar/snap-grid";
+         bitmapAsset = "ToolsModule:menubar_snap_grid_n_image";
          textMargin = "4";
       };
       new GuiTextCtrl() {

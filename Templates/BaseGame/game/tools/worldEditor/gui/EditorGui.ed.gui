@@ -50,7 +50,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Open the WorldEditor";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/world";
+         bitmapAsset = "ToolsModule:world_image";
          groupNum = "0";
          buttonType = "RadioButton";
          useMouseEvents = "0";
@@ -71,7 +71,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Open the GuiEditor";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/gui";
+         bitmapAsset = "ToolsModule:gui_image";
          groupNum = "0";
          buttonType = "RadioButton";
          useMouseEvents = "0";
@@ -92,7 +92,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Play Game";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/playbutton";
+         bitmapAsset = "ToolsModule:playbutton_n_image";
          groupNum = "0";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -123,7 +123,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Toggle Camera Modes";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/player";
+         bitmapAsset = "ToolsModule:player_n_image";
          groupNum = "-1";
          buttonType = "ToggleButton";
          useMouseEvents = "0";
@@ -212,7 +212,7 @@
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
       /*new GuiPopUpMenuCtrl(EWorldEditorCameraSpeed) {
@@ -257,7 +257,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Toggle Visibility Modes (ALT V)";
          hovertime = "1000";
-         bitmap = "tools/gui/images/menubar/visibility-toggle";
+         bitmapAsset = "ToolsModule:visibility_toggle_n_image";
          groupNum = "-1";
          buttonType = "ToggleButton";
          useMouseEvents = "0";

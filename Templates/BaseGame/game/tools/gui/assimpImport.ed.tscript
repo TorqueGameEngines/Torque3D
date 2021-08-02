@@ -284,7 +284,7 @@ function AssimpImportDlg::showDialog(%this, %shapePath, %cmd)
    if (isFile(%csPath))
       exec(%csPath);
 
-   %this.constructor = ShapeEditor.findConstructor(%this.path);
+   %this.constructor = findShapeConstructorByFilename(%this.path);
 
    // Only show the import dialog if required. Note that 'GetShapeInfo' will
    // fail if the source file is missing, or a cached.dts is available.

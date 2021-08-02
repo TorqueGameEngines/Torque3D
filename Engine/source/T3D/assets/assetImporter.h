@@ -22,7 +22,7 @@ public:
    /// <summary>
    /// Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename
    /// </summary>
-   String DuplicatAutoResolution;
+   String DuplicateAutoResolution;
 
    /// <summary>
    /// Indicates if warnings should be treated as errors.

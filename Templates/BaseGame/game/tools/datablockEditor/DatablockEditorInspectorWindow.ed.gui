@@ -166,7 +166,7 @@
          active = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/save-icon";
+         bitmapAsset = "ToolsModule:save_icon_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -186,7 +186,7 @@
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/save-as";
+         bitmapAsset = "ToolsModule:save_as_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

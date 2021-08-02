@@ -111,6 +111,7 @@ ReflectionProbe::ReflectionProbe()
 
    mUseHDRCaptures = true;
 
+   mCubemapName = StringTable->EmptyString();
    mStaticCubemap = NULL;
    mProbeUniqueID = "";
 
@@ -259,7 +260,7 @@ bool ReflectionProbe::_setReflectionMode(void *object, const char *index, const 
    {
       //Clear our cubemap if we changed it to be baked, just for cleanliness
       probe->mReflectionModeType = BakedCubemap;
-      probe->mCubemapName = "";
+      probe->mCubemapName = StringTable->EmptyString();
    }
 
    probe->setMaskBits(StaticDataMask);

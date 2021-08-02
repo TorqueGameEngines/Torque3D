@@ -75,7 +75,7 @@ function RoadEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Road Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "RoadEditorPlugin", "RoadEditorPalette", expandFilename("tools/worldEditor/images/toolbar/road-path-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "RoadEditorPlugin", "RoadEditorPalette", "ToolsModule:road_path_editor_n_image", %tooltip );
    
    //connect editor windows
    GuiWindowCtrl::attach( RoadEditorOptionsWindow, RoadEditorTreeWindow);

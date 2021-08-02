@@ -68,7 +68,7 @@ function ConvexEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Sketch Tool (" @ %accel @ ")";
-   EditorGui.addToToolsToolbar( "ConvexEditorPlugin", "ConvexEditorPalette", expandFilename("tools/convexEditor/images/convex-editor-btn"), %tooltip );
+   EditorGui.addToToolsToolbar( "ConvexEditorPlugin", "ConvexEditorPalette", "ToolsModule:convex_editor_btn_n_image", %tooltip );
    
    //connect editor windows
    GuiWindowCtrl::attach( ConvexEditorOptionsWindow, ConvexEditorTreeWindow);

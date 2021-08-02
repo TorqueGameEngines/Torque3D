@@ -469,7 +469,7 @@
                   command="AssetBrowserFolderSearchFilter.onEdited();";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/stencilIcons/zoom.png";
+                  bitmapAsset = "ToolsModule:zoom_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -631,7 +631,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl(AssetBrowser_NavigateBackBtn) {
-                  bitmap = "tools/gui/images/folderUp.png";
+                  bitmapAsset = "ToolsModule:folderUp_image";
                   bitmapMode = "Centered";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -657,7 +657,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl(AssetBrowser_NavigateForwardBtn) {
-                  bitmap = "tools/gui/images/folderDown.png";
+                  bitmapAsset = "ToolsModule:folderDown_image";
                   bitmapMode = "Centered";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -758,7 +758,7 @@
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl(AssetBrowser_VisibilityOptions) {
-                  bitmap = "tools/gui/images/visible";
+                  bitmapAsset = "ToolsModule:visible_n_image";
                   bitmapMode = "Centered";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -814,7 +814,7 @@
                   command="AssetBrowserSearchFilter.onEdited();";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/stencilIcons/zoom.png";
+                  bitmapAsset = "ToolsModule:zoom_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -840,7 +840,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/save-icon";
+                  bitmapAsset = "ToolsModule:save_icon_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -1034,7 +1034,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl(AssetBrowser_ToggleFolderPanel) {
-                  bitmap = "tools/gui/images/stencilIcons/previous.png";
+                  bitmapAsset = "ToolsModule:previous_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";

@@ -543,25 +543,38 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                %scriptExtRemovedLine = strReplace(%line, ".cs", "");
                %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
                %line = %scriptExtRemovedLine;
+               %fileWasChanged = true;
             }
             else if(strIsMatchExpr("*queueexec(*.cs*)*", %line) || strIsMatchExpr("*queueexec(*.tscript*)*", %line))
             {
                %scriptExtRemovedLine = strReplace(%line, ".cs", "");
                %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
                %line = %scriptExtRemovedLine;
+               %fileWasChanged = true;
             }
             else if(strIsMatchExpr("*registerDatablock(*.cs*)*", %line) || strIsMatchExpr("*registerDatablock(*.tscript*)*", %line))
             {
                %scriptExtRemovedLine = strReplace(%line, ".cs", "");
                %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
                %line = %scriptExtRemovedLine;
+               %fileWasChanged = true;
+               
+            }
+            else if(strIsMatchExpr("*%this.addSequence(\"*);", %line))
+            {
+               %outLine = processLegacyShapeConstructorField(%line);
+               if(%line !$= %outLine)
+               {
+                  %fileWasChanged = true;
+                  %line = %outLine;
+               }
             }
             else
             {
                if(%objectClassStack.count() != 0)
                {
                   %currentObjClass = %objectClassStack.getKey(%objectClassStack.count()-1);
-                                     
+                  
                   %inheritanceList = getClassHierarchy(%currentObjClass);
                   for (%classDepth =0; %classDepth<getWordCount(%inheritanceList); %classDepth++)
                   {
@@ -716,8 +729,7 @@ T3Dpre4ProjectImporter::genProcessor("MeshRoad", "topMaterial topMaterialAsset b
 T3Dpre4ProjectImporter::genProcessor("ScatterSky", "moonMat moonMatAsset");
 T3Dpre4ProjectImporter::genProcessor("Sun", "coronaMaterial coronaMaterialAsset");
 T3Dpre4ProjectImporter::genProcessor("VolumetricFog", "shape ShapeAsset texture textureAsset");
-T3Dpre4ProjectImporter::genProcessor("WaterPlane", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
-T3Dpre4ProjectImporter::genProcessor("WaterBlock", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
+T3Dpre4ProjectImporter::genProcessor("WaterObject", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
 T3Dpre4ProjectImporter::genProcessor("ConvexShape", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("RenderMesh", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("RenderShape", "shape shapeAsset");
@@ -762,12 +774,21 @@ T3Dpre4ProjectImporter::genProcessor("GuiProgressBitmap", "bitmap bitmapAsset");
 T3Dpre4ProjectImporter::genProcessor("GuiMissionArea", "handleBitmap handleBitmapAsset");
 T3Dpre4ProjectImporter::genProcessor("WorldEditor", "selectHandle selectHandleAsset defaultHandle defaultHandleAsset lockedHandle lockedHandleAsset");
 T3Dpre4ProjectImporter::genProcessor("GuiControlProfile", "bitmap bitmapAsset");
+
+function T3Dpre4ProjectImporter::processGuiBitmapButtonCtrlLine(%this, %line)
+{
+   %outLine = processGuiBitmapButtonCtrlField(%line, "bitmap", "bitmapAsset");
+   if(%outLine !$= %line) return %outLine;
+   
+   return %line;
+}
+
 //==============================================================================
 // Datablocks
 //==============================================================================
 T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubeMapFaceAsset cubemap cubemapAsset");
-T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ParticleData", "texture textureAsset textureName textureAsset textureExt textureExtAsset textureExtName textureExtAsset");
@@ -779,7 +800,7 @@ T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PlayerData", "shapeFP shapeFPAsset shapeNameFP shapeFPAsset");
 T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
-T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset shapeFP shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset shapeFP shapeFPAsset shapeFile shapeAsset shapeFileFP shapeFPAsset");
 T3Dpre4ProjectImporter::genProcessor("WheeledVehicleTire", "shape shapeAsset shapeFile shapeAsset");
 //==============================================================================
 // Materials
@@ -922,3 +943,135 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %obj
 // PostEffects
 //==============================================================================
 T3Dpre4ProjectImporter::genProcessor("PostEffect", "texture textureAsset");
+
+
+//==============================================================================
+// Misc Utility functions
+//==============================================================================
+//This is functionally identical to processLegacyField, but we have to special-snowflake our asset lookups
+//due to it using suffix-based indirections
+function processGuiBitmapButtonCtrlField(%line, %originalFieldName, %newFieldName)
+{
+   if(!strIsMatchExpr("*"@%originalFieldName@"=*\"*\";*", %line) && 
+      !strIsMatchExpr("*"@%originalFieldName@"[*=*\"*\";*", %line) &&
+      !strIsMatchExpr("*"@%originalFieldName@" *=*\"*\";*", %line))
+      return %line;
+      
+   %outLine = strreplace(%line, %originalFieldName, %newFieldName);
+   
+   //get the value
+   %value = "";
+   %pos = strpos(%outLine, "= \"");
+   if(%pos != -1)
+   {
+     %endPos = strpos(%outLine, "\";", %pos); 
+     
+     %value = getSubStr(%outLine, %pos+3, %endPos-%pos-3);
+   }
+   else
+   {
+      %pos = strpos(%outLine, "=\"");
+      if(%pos != -1)
+      {
+        %endPos = strpos(%outLine, "\";", %pos); 
+        
+        %value = getSubStr(%outLine, %pos+2, %endPos-%pos-2);
+      }
+   }
+   
+   if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
+   {
+      echo("Legacy Project Importer - processing legacy field line: " @ %line);
+      
+      if(startsWith(%value, "$") || startsWith(%value, "#"))
+      {
+         //These are going to be texture/render targets, and we can leave them alone
+         return %line;
+      }
+      //find any assets with that filename
+      else if(startsWith(%value, "./"))
+      {
+         %targetFilename = strReplace(%value, "./", $ProjectImporter::currentFilePath @ "/");
+      }
+      else if(startsWith(%value, "../"))
+      {
+         %slashPos = strposr($ProjectImporter::currentFilePath, "/");
+         if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
+         {
+            %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
+         }
+         
+         %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
+         %targetFilename = strReplace(%value, "../", %parentPath @ "/");
+      }
+      else if(startsWith(%value, "~"))
+      {
+         %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/");
+         if(!isFile(%targetFilename))
+         {
+            %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/main/");
+         }
+      }
+      else if ((strpos(%value,"/") == -1)&&(strpos(%value,"\\") == -1))
+      {
+         %targetFilename = $ProjectImporter::currentFilePath @ %value;
+      }
+      else if(!startsWith(%value, $ProjectImporter::modulePath @ "/"))
+      {
+         %targetFilename = $ProjectImporter::modulePath @ "/" @ %value;
+      }
+      else
+      {
+         %targetFilename = %value;
+      }
+      
+      %targetFilename = strReplace(%targetFilename, "//", "/");
+      %targetFilename = testFilenameExtensions(%targetFilename);
+      
+      if(!isFile(%targetFilename)) //if our presumed file target is bad, just bail out
+      {
+         //Now we test for a suffix
+         %targetPath = filePath(%targetFilename);
+         %targetName = fileBase(%targetFilename);
+         %targetExt = fileExt(%targetFilename);
+         
+         %targetFilename = %targetPath @ "/" @ %targetName @ "_n" @ %targetExt;
+         %targetFilename = strReplace(%targetFilename, "//", "/");
+         %targetFilename = testFilenameExtensions(%targetFilename);
+      }
+      
+      //If we still have nothing, then we fail it out
+      if(!isFile(%targetFilename))
+      {
+         error("Legacy Project Importer - file described in line could not be found/is not valid");
+         return %line;
+      }
+      
+      $ProjectImporter::assetQuery.clear();
+      %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+      if(%foundAssets != 0)
+      {
+         %assetId = $ProjectImporter::assetQuery.getAsset(0);
+         echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+      }
+     
+      if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
+      {
+         //if (%assetId.getStatusString() $= "Ok")
+         %outLine = strReplace(%outLine, %value, %assetId);
+         //else
+         //   error("Asset assignment failure:", %assetId, getStatusString());
+      }
+   }
+   
+   if(%outLine !$= %line)
+   {
+      echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      return %outLine;  
+   }
+   else
+   {
+      return %line;  
+   }
+}
+

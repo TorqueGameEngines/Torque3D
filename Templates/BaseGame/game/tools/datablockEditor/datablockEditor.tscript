@@ -46,7 +46,7 @@ function DatablockEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Datablock Editor (" @ %accel @ ")"; 
-   EditorGui.addToToolsToolbar( "DatablockEditorPlugin", "DatablockEditorPalette", expandFilename("tools/worldEditor/images/toolbar/datablock-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "DatablockEditorPlugin", "DatablockEditorPalette", "ToolsModule:datablock_editor_n_image", %tooltip );
 
    //connect editor windows
    GuiWindowCtrl::Attach( DatablockEditorInspectorWindow, DatablockEditorTreeWindow);

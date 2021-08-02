@@ -1007,10 +1007,10 @@ function ActionRemoveMesh::undo( %this )
 
 //------------------------------------------------------------------------------
 // Add meshes from file
-function ShapeEditor::doAddMeshFromFile( %this, %filename, %size )
+function ShapeEditor::doAddMeshFromFile( %this, %assetId, %size )
 {
    %action = %this.createAction( ActionAddMeshFromFile, "Add mesh from file" );
-   %action.filename = %filename;
+   %action.assetId = %assetId;
    %action.size = %size;
 
    %this.doAction( %action );
@@ -1018,7 +1018,7 @@ function ShapeEditor::doAddMeshFromFile( %this, %filename, %size )
 
 function ActionAddMeshFromFile::doit( %this )
 {
-   %this.meshList = ShapeEditor.addLODFromFile( ShapeEditor.shape, %this.filename, %this.size, 1 );
+   %this.meshList = ShapeEditor.addLODFromFile( ShapeEditor.shape, %this.assetId, %this.size, 1 );
    if ( %this.meshList !$= "" )
    {
       %count = getFieldCount( %this.meshList );

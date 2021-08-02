@@ -66,7 +66,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
       position = "7 4";
       extent = "64 64";
       buttonType = "PushButton";
-      bitmap = "";
+      bitmapAsset = "";
       Command = "";
       text = "Loading...";
       useStates = false;
@@ -80,7 +80,7 @@ function GuiInspectorGroup::buildMaterialField(%this, %fieldName, %fieldLabel, %
             extent = "64 64";
             Variable = "";
             buttonType = "toggleButton";
-            bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+            bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
             groupNum = "0";
             text = "";
 			tooltip = "Change material";

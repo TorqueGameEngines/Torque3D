@@ -247,7 +247,7 @@ function ProjectImportWizardPage4::openPage(%this)
    ProjectImportWindow-->nextButton.setActive(false);
       
    if(!$ProjectImporter::useExistingModule)
-   $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
+      $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
       
    $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
       
@@ -374,7 +374,7 @@ function testFilenameExtensions(%filename)
    else if(isFile(%filename @ ".dds"))
       return %filename @ ".dds";
       
-   return "";
+   return %filename;
 }
 
 function processLegacyField(%line, %originalFieldName, %newFieldName)
@@ -481,6 +481,95 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
    if(%outLine !$= %line)
    {
       echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      return %outLine;  
+   }
+   else
+   {
+      return %line;  
+   }
+}
+
+function processLegacyShapeConstructorField(%line)
+{
+   if(!strIsMatchExpr("*%this.addSequence(\"*);", %line))
+      return %line;
+      
+   %outLine = %line;
+      
+   %animSourceStart = strPos(%line, "%this.addSequence(\"") + 19;
+   %animSourceEnd = strPos(%line, "\",", %animSourceStart);
+   %animationSource = getSubstr(%line, %animSourceStart, %animSourceEnd-%animSourceStart);
+   %animSourcePath = getWord(%animationSource, 0);
+   %animSourceName = getWord(%animationSource, 1);
+   
+   //already uses an asset, so we'll skip
+   if(strPos(%animSourcePath, ":") != -1)
+      return %line;
+               
+   //otherwise, try and see if we've got an animation source file here
+   if(startsWith(%animSourcePath, "./"))
+   {
+      %targetFilename = strReplace(%animSourcePath, "./", $ProjectImporter::currentFilePath @ "/");
+   }
+   else if(startsWith(%animSourcePath, "../"))
+   {
+      %slashPos = strposr($ProjectImporter::currentFilePath, "/");
+      if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
+      {
+         %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
+      }
+      
+      %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
+      %targetFilename = strReplace(%animSourcePath, "../", %parentPath @ "/");
+   }
+   else if(startsWith(%animSourcePath, "~"))
+   {
+      %targetFilename = strReplace(%animSourcePath, "~", $ProjectImporter::modulePath @ "/");
+      if(!isFile(%targetFilename))
+      {
+         %targetFilename = strReplace(%animSourcePath, "~", $ProjectImporter::modulePath @ "/main/");
+      }
+   }
+   else if ((strpos(%animSourcePath,"/") == -1)&&(strpos(%animSourcePath,"\\") == -1))
+   {
+      %targetFilename = $ProjectImporter::currentFilePath @ %animSourcePath;
+   }
+   else if(!startsWith(%animSourcePath, $ProjectImporter::modulePath @ "/"))
+   {
+      %targetFilename = $ProjectImporter::modulePath @ "/" @ %animSourcePath;
+   }
+   else
+   {
+      %targetFilename = %animSourcePath;
+   }
+   
+   %targetFilename = strReplace(%targetFilename, "//", "/");
+   %targetFilename = testFilenameExtensions(%targetFilename);
+   
+   if(!isFile(%targetFilename))
+   {
+      return %line;
+   }
+   
+   $ProjectImporter::assetQuery.clear();
+   %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+   if(%foundAssets != 0)
+   {
+      %assetId = $ProjectImporter::assetQuery.getAsset(0);
+      echo("Legacy Project Importer - processing of legacy shape constructor addSequence line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+   }
+  
+   if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
+   {
+      //if (%assetId.getStatusString() $= "Ok")
+      %outLine = strReplace(%line, %animSourcePath, %assetId);
+      //else
+      //   error("Asset assignment failure:", %assetId, getStatusString());
+   }
+   
+   if(%outLine !$= %line)
+   {
+      echo("Legacy Project Importer - processing of legacy shape constructor addSequence line: " @ %line @ " has been updated to: " @ %outLine);
       return %outLine;  
    }
    else
@@ -668,6 +757,11 @@ function beginImageImport()
       
       if(isImageFormat(%fileExt))
       {
+         if(%filename $= "skybox_1.png")
+         {
+            %aefgadfg = true;
+         }
+         
          $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)

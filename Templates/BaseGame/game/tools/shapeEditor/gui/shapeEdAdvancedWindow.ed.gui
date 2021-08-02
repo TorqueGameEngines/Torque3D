@@ -846,7 +846,7 @@
                   profile = "ToolsGuiTextProfile";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/delete";
+                  bitmapAsset = "ToolsModule:delete_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -865,7 +865,7 @@
                   isContainer = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/new";
+                  bitmapAsset = "ToolsModule:new_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -989,7 +989,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/shapeEditor/images/playfwd_btn";
+                  bitmapAsset = "ToolsModule:playfwd_btn_n_image";
                   groupNum = "0";
                   buttonType = "ToggleButton";
                   useMouseEvents = "0";
@@ -1171,7 +1171,7 @@
                   };
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/delete";
+                  bitmapAsset = "ToolsModule:delete_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -1190,7 +1190,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/new";
+                  bitmapAsset = "ToolsModule:new_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -1229,7 +1229,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/shapeEditor/images/playbkwd_btn";
+               bitmapAsset = "ToolsModule:playbkwd_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
                useMouseEvents = "0";
@@ -1250,7 +1250,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/shapeEditor/images/pause_btn";
+               bitmapAsset = "ToolsModule:pause_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
                useMouseEvents = "0";
@@ -1271,7 +1271,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/shapeEditor/images/playfwd_btn";
+               bitmapAsset = "ToolsModule:playfwd_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
                useMouseEvents = "0";

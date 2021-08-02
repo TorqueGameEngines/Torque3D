@@ -31,7 +31,7 @@
       ToolTip = "View NavMesh (1).";
       DetailedDesc = "";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/visibility-toggle";
+      bitmapAsset = "ToolsModule:visibility_toggle_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -54,7 +54,7 @@
       ToolTip = "Create off-mesh links (2).";
       DetailedDesc = "Click to select/add. Shift-click to add multiple end points.";
       hovertime = "1000";
-      bitmap = "tools/navEditor/images/nav-link";
+      bitmapAsset = "ToolsModule:nav_link_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -77,7 +77,7 @@
       ToolTip = "Edit cover (3).";
       DetailedDesc = "";
       hovertime = "1000";
-      bitmap = "tools/navEditor/images/nav-cover";
+      bitmapAsset = "ToolsModule:nav_cover_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -100,7 +100,7 @@
       ToolTip = "View tiles (4).";
       DetailedDesc = "Click to select.";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/select-bounds";
+      bitmapAsset = "ToolsModule:select_bounds_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -123,7 +123,7 @@
       ToolTip = "Test pathfinding (5).";
       DetailedDesc = "Click to select/move character, CTRL-click to spawn, SHIFT-click to deselect.";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/toolbar/3rd-person-camera";
+      bitmapAsset = "ToolsModule:3rd_person_camera_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };

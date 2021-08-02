@@ -32,7 +32,7 @@ ConsoleDocClass(AssetImportConfig,
 IMPLEMENT_CONOBJECT(AssetImportConfig);
 
 AssetImportConfig::AssetImportConfig() :
-   DuplicatAutoResolution("AutoRename"),
+   DuplicateAutoResolution("AutoRename"),
    WarningsAsErrors(false),
    PreventImportWithErrors(true),
    AutomaticallyPromptMissingFiles(false),
@@ -132,7 +132,7 @@ void AssetImportConfig::initPersistFields()
    Parent::initPersistFields();
 
    addGroup("General");
-      addField("DuplicatAutoResolution", TypeRealString, Offset(DuplicatAutoResolution, AssetImportConfig), "Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename, FolderPrefix");
+      addField("DuplicateAutoResolution", TypeRealString, Offset(DuplicateAutoResolution, AssetImportConfig), "Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename, FolderPrefix");
       addField("WarningsAsErrors", TypeBool, Offset(WarningsAsErrors, AssetImportConfig), "Indicates if warnings should be treated as errors");
       addField("PreventImportWithErrors", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "Indicates if importing should be prevented from completing if any errors are detected at all");
       addField("AutomaticallyPromptMissingFiles", TypeBool, Offset(AutomaticallyPromptMissingFiles, AssetImportConfig), "Should the importer automatically prompt to find missing files if they are not detected automatically by the importer");
@@ -230,7 +230,7 @@ void AssetImportConfig::initPersistFields()
 void AssetImportConfig::loadImportConfig(Settings* configSettings, String configName)
 {
    //General
-   DuplicatAutoResolution = configSettings->value(String(configName + "/General/DuplicatAutoResolution").c_str());
+   DuplicateAutoResolution = configSettings->value(String(configName + "/General/DuplicateAutoResolution").c_str());
    WarningsAsErrors = dAtob(configSettings->value(String(configName + "/General/WarningsAsErrors").c_str()));
    PreventImportWithErrors = dAtob(configSettings->value(String(configName + "/General/PreventImportWithErrors").c_str()));
    AutomaticallyPromptMissingFiles = dAtob(configSettings->value(String(configName + "/General/AutomaticallyPromptMissingFiles").c_str()));
@@ -320,7 +320,7 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
 
 void AssetImportConfig::CopyTo(AssetImportConfig* target) const
 {
-   target->DuplicatAutoResolution = DuplicatAutoResolution;
+   target->DuplicateAutoResolution = DuplicateAutoResolution;
    target->WarningsAsErrors = WarningsAsErrors;
    target->PreventImportWithErrors = PreventImportWithErrors;
    target->AutomaticallyPromptMissingFiles = AutomaticallyPromptMissingFiles;
@@ -2345,7 +2345,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       String humanReadableReason = assetItem->statusType == String("DuplicateImportAsset") ? "Importing asset was duplicate of another importing asset" : "Importing asset was duplicate of an existing asset";
 
       //get the config value for duplicateAutoResolution
-      if (activeImportConfig->DuplicatAutoResolution == String("AutoPrune"))
+      if (activeImportConfig->DuplicateAutoResolution == String("AutoPrune"))
       {
          //delete the item
          deleteImportingAsset(assetItem);
@@ -2356,7 +2356,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
 
          importIssues = false;
       }
-      else if (activeImportConfig->DuplicatAutoResolution == String("AutoRename"))
+      else if (activeImportConfig->DuplicateAutoResolution == String("AutoRename"))
       {
          //Set trailing number
          String renamedAssetName = assetItem->assetName;
@@ -2375,11 +2375,11 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
          resetAssetValidationStatus(assetItem);
          importIssues = false;
       }
-      else if (activeImportConfig->DuplicatAutoResolution == String("UseExisting"))
+      else if (activeImportConfig->DuplicateAutoResolution == String("UseExisting"))
       {
 
       }
-      else if (activeImportConfig->DuplicatAutoResolution == String("FolderPrefix"))
+      else if (activeImportConfig->DuplicateAutoResolution == String("FolderPrefix"))
       {
          //Set trailing number
          String renamedAssetName = assetItem->assetName;
@@ -3150,7 +3150,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       activityLog.push_back(importLogBuffer);
 
       //find/create shape constructor
-      TSShapeConstructor* constructor = TSShapeConstructor::findShapeConstructor(Torque::Path(qualifiedToFile).getFullPath());
+      TSShapeConstructor* constructor = TSShapeConstructor::findShapeConstructorByFilename(Torque::Path(qualifiedToFile).getFullPath());
       if (constructor == nullptr)
       {
          constructor = new TSShapeConstructor(StringTable->insert(qualifiedToFile));

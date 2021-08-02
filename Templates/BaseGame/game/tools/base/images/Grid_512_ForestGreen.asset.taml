@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_ForestGreen"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="Grid_512_ForestGreen"
+    VersionId="1" />

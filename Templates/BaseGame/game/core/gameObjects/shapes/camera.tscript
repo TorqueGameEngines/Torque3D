@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(cameradts)
 {
-   baseShape = "./camera.dts";
+   baseShapeAsset = "Core_GameObjects:Camera";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

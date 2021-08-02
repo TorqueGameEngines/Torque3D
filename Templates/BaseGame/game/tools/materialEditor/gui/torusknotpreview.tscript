@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(torusknotpreviewdts)
 {
-   baseShape = "./torusknotpreview.dts";
+   baseShapeAsset = "ToolsModule:torusknotpreview";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

@@ -28,12 +28,12 @@ function MaterialEditorGui::establishMaterials(%this)
    //Cubemap used to preview other cubemaps in the editor.
    singleton CubemapData( matEdCubeMapPreviewMat )
    {
-      cubeFace[0] = "tools/materialEditor/gui/cube_xNeg";
-      cubeFace[1] = "tools/materialEditor/gui/cube_xPos";
-      cubeFace[2] = "tools/materialEditor/gui/cube_ZNeg";
-      cubeFace[3] = "tools/materialEditor/gui/cube_ZPos";
-      cubeFace[4] = "tools/materialEditor/gui/cube_YNeg";
-      cubeFace[5] = "tools/materialEditor/gui/cube_YPos";
+      cubeMapFaceAsset[0] = "ToolsModule:cube_xNeg_image";
+      cubeMapFaceAsset[1] = "ToolsModule:cube_xPos_image";
+      cubeMapFaceAsset[2] = "ToolsModule:cube_zNeg_image";
+      cubeMapFaceAsset[3] = "ToolsModule:cube_zPos_image";
+      cubeMapFaceAsset[4] = "ToolsModule:cube_yNeg_image";
+      cubeMapFaceAsset[5] = "ToolsModule:cube_yPos_image";
       parentGroup = "RootGroup";
    };
    
@@ -1690,12 +1690,12 @@ function MaterialEditorGui::createNewCubemap( %this, %cubemap )
    
    new CubemapData(%cubemap) 
    {
-      cubeFace[0] = "tools/materialEditor/gui/cube_xNeg";
-      cubeFace[1] = "tools/materialEditor/gui/cube_xPos";
-      cubeFace[2] = "tools/materialEditor/gui/cube_ZNeg";
-      cubeFace[3] = "tools/materialEditor/gui/cube_ZPos";
-      cubeFace[4] = "tools/materialEditor/gui/cube_YNeg";
-      cubeFace[5] = "tools/materialEditor/gui/cube_YPos";
+      cubeMapFaceAsset[0] = "ToolsModule:cube_xNeg_image";
+      cubeMapFaceAsset[1] = "ToolsModule:cube_xPos_image";
+      cubeMapFaceAsset[2] = "ToolsModule:cube_zNeg_image";
+      cubeMapFaceAsset[3] = "ToolsModule:cube_zPos_image";
+      cubeMapFaceAsset[4] = "ToolsModule:cube_yNeg_image";
+      cubeMapFaceAsset[5] = "ToolsModule:cube_yPos_image";
 
       parentGroup = RootGroup;
    };

@@ -118,7 +118,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -220,7 +220,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -322,7 +322,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";

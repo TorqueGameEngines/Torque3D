@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(unit_spheredts2)
 {
-   baseShape = "./unit_sphere.dts";
+   baseShapeAsset = "ToolsModule:unit_sphere";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

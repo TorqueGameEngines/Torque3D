@@ -310,7 +310,7 @@
          tooltip = "Save All";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/gui/images/save-icon";
+         bitmapAsset = "ToolsModule:save_icon_n_image";
       };
          
       new GuiBitmapButtonCtrl(RetargetDecalButton) {
@@ -329,7 +329,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          tooltip = "Retarget missing decals to an existing decal datablock";
-         bitmap = "tools/gui/images/retarget-btn";
+         bitmapAsset = "ToolsModule:retarget_btn_n_image";
          buttonType = "PushButton";
          useMouseEvents = "0";
       };
@@ -350,7 +350,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          tooltip = "Create New Decal Template";
-         bitmap = "tools/gui/images/new";
+         bitmapAsset = "ToolsModule:new_n_image";
          buttonType = "PushButton";
          useMouseEvents = "0";
       };
@@ -372,7 +372,7 @@
          hovertime = "1000";
          text = "";
          tooltip = "Delete Selected Decal Template";
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

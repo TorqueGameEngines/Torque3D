@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(unit_capsuledts)
 {
-   baseShape = "./unit_capsule.dts";
+   baseShapeAsset = "Core_GameObjects:unit_capsule";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

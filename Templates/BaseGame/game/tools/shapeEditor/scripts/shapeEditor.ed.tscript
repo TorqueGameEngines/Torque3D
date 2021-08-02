@@ -242,18 +242,22 @@ function ShapeEditor::findConstructor( %this, %path )
    return -1;
 }
 
-function ShapeEditor::createConstructor( %this, %path )
+function ShapeEditor::createConstructor( %this, %assetId )
 {
-   %name = strcapitalise( fileBase( %path ) ) @ strcapitalise( getSubStr( fileExt( %path ), 1, 3 ) );
-   %name = strreplace( %name, "-", "_" );
-   %name = strreplace( %name, ".", "_" );
+   %name = AssetDatabase.getAssetName(%assetId);
+   //%name = strcapitalise( fileBase( %path ) ) @ strcapitalise( getSubStr( fileExt( %path ), 1, 3 ) );
+   //%name = strreplace( %name, "-", "_" );
+   //%name = strreplace( %name, ".", "_" );
    %name = getUniqueName( %name );
-   return new TSShapeConstructor( %name ) { baseShape = %path; };
+   return new TSShapeConstructor( %name ) { baseShapeAsset = %assetId; };
 }
 
 function ShapeEditor::saveConstructor( %this, %constructor )
 {
-   %savepath = filePath( %constructor.baseShape ) @ "/" @ fileBase( %constructor.baseShape ) @ "." @ $TorqueScriptFileExtension;
+   %assetDef = AssetDatabase.acquireAsset(%constructor.baseShapeAsset);
+   %savepath = %assetDef.getShapeConstructorFilePath();
+   AssetDatabase.releaseAsset(%constructor.baseShapeAsset);
+   
    new PersistenceManager( shapeEd_perMan );
    shapeEd_perMan.setDirty( %constructor, %savepath );
    shapeEd_perMan.saveDirtyObject( %constructor );
@@ -276,7 +280,7 @@ function ShapeEdSelectWindow::onSelect( %this, %path )
    }
 }
 
-function ShapeEditor::selectShape( %this, %path, %saveOld )
+function ShapeEditor::selectShape( %this, %shapeAsset, %saveOld )
 {
    ShapeEdShapeView.setModel( "" );
 
@@ -288,7 +292,7 @@ function ShapeEditor::selectShape( %this, %path, %saveOld )
    else if ( ShapeEditor.isDirty() )
    {
       // Purge all unsaved changes
-      %oldPath = ShapeEditor.shape.baseShape;
+      %oldPath = ShapeEditor.shape.baseShapeAsset;
       ShapeEditor.shape.delete();
       ShapeEditor.shape = 0;
 
@@ -296,9 +300,9 @@ function ShapeEditor::selectShape( %this, %path, %saveOld )
    }
 
    // Initialise the shape preview window
-   if ( !ShapeEdShapeView.setModel( %path ) )
+   if ( !ShapeEdShapeView.setShapeAsset( %shapeAsset.getAssetId() ) )
    {
-      toolsMessageBoxOK( "Error", "Failed to load '" @ %path @ "'. Check the console for error messages." );
+      toolsMessageBoxOK( "Error", "Failed to load '" @ %shapeAsset.getAssetId() @ "'. Check the console for error messages." );
       return;
    }
    ShapeEdShapeView.fitToShape();
@@ -307,13 +311,13 @@ function ShapeEditor::selectShape( %this, %path, %saveOld )
    ShapeEditor.setDirty( false );
 
    // Get ( or create ) the TSShapeConstructor object for this shape
-   ShapeEditor.shape = ShapeEditor.findConstructor( %path );
+   ShapeEditor.shape = findShapeConstructorByAssetId( %shapeAsset.getAssetId() );
    if ( ShapeEditor.shape <= 0 )
    {
-      ShapeEditor.shape = %this.createConstructor( %path );
+      ShapeEditor.shape = %this.createConstructor( %shapeAsset );
       if ( ShapeEditor.shape <= 0 )
       {
-         error( "ShapeEditor: Error - could not select " @ %path );
+         error( "ShapeEditor: Error - could not select " @ %shapeAsset.getAssetId() );
          return;
       }
    }
@@ -330,7 +334,7 @@ function ShapeEditor::selectShape( %this, %path, %saveOld )
    ShapeEdSelectWindow.updateHints();
 
    // Update editor status bar
-   EditorGuiStatusBar.setSelection( %path );
+   EditorGuiStatusBar.setSelection( %shapeAsset.getAssetId() );
 }
 
 // Handle a selection in the MissionGroup shape selector
@@ -1761,7 +1765,8 @@ function ShapeEdSeqFromMenu::onSelect( %this, %id, %text )
       %this.setText( %seqFrom );
 
       // Allow the user to browse for an external source of animation data
-      getLoadFormatFilename( %this @ ".onBrowseSelect", %this.lastPath );
+      //getLoadFormatFilename( %this @ ".onBrowseSelect", %this.lastPath );
+      AssetBrowser.showDialog("ShapeAsset", %this @ ".onBrowseSelect");
    }
    else
    {
@@ -1769,12 +1774,17 @@ function ShapeEdSeqFromMenu::onSelect( %this, %id, %text )
    }
 }
 
-function ShapeEdSeqFromMenu::onBrowseSelect( %this, %path )
+function ShapeEdSeqFromMenu::onBrowseSelect( %this, %assetId )
 {
-   %path = makeRelativePath( %path, getMainDotCSDir() );
-   %this.lastPath = %path;
-   %this.setText( %path );
-   ShapeEdSequences.onEditSequenceSource( %path );
+   //%path = makeRelativePath( %path, getMainDotCSDir() );
+   //%this.lastPath = %path;
+   %this.setText( %assetId );
+   
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+   %shapePath = %assetDef.getShapeFile();
+   AssetDatabase.releaseAsset(%assetId);
+   
+   ShapeEdSequences.onEditSequenceSource( %shapePath );
 }
 
 //------------------------------------------------------------------------------
@@ -2342,7 +2352,7 @@ function ShapeEdMaterials::editSelectedMaterial( %this )
       // materials.
       pushInstantGroup();
       %this.tempShape = new TSStatic() {
-         shapeName = ShapeEditor.shape.baseShape;
+         shapeAsset = ShapeEditor.shape.baseShapeAsset;
          collisionType = "None";
       };
       popInstantGroup();
@@ -2886,16 +2896,16 @@ function ShapeEdDetails::onSetObjectNode( %this )
    }
 }
 
-function ShapeEdDetails::onAddMeshFromFile( %this, %path )
+function ShapeEdDetails::onAddMeshFromFile( %this, %assetId )
 {
-   if ( %path $= "" )
+   if ( %assetId $= "" )
    {
-      getLoadFormatFilename( %this @ ".onAddMeshFromFile", %this.lastPath );
+      AssetBrowser.showDialog("ShapeAsset", %this @ ".onAddMeshFromFile", "", "", "");
       return;
    }
 
-   %path = makeRelativePath( %path, getMainDotCSDir() );
-   %this.lastPath = %path;
+   //%path = makeRelativePath( %path, getMainDotCSDir() );
+   //%this.lastPath = %path;
 
    // Determine the detail level to use for the new geometry
    if ( %this-->addGeomTo.getText() $= "current detail" )
@@ -2904,8 +2914,8 @@ function ShapeEdDetails::onAddMeshFromFile( %this, %path )
    }
    else
    {
+      %base = AssetDatabase.getAssetName(%assetId);
       // Check if the file has an LODXXX hint at the end of it
-      %base = fileBase( %path );
       %pos = strstr( %base, "_LOD" );
       if ( %pos > 0 )
          %size = getSubStr( %base, %pos + 4, strlen( %base ) ) + 0;
@@ -2917,7 +2927,7 @@ function ShapeEdDetails::onAddMeshFromFile( %this, %path )
          %size++;
    }
 
-   ShapeEditor.doAddMeshFromFile( %path, %size );
+   ShapeEditor.doAddMeshFromFile( %assetId, %size );
 }
 
 function ShapeEdDetails::onDeleteMesh( %this )
@@ -2996,7 +3006,11 @@ function ShapeEditor::autoAddDetails( %this, %dest )
    //
    // Determine the base name of the input file (MyShape_LOD in the example above)
    // and use that to find any other shapes in the set.
-   %base = fileBase( %dest.baseShape );
+   %assetDef = AssetDatabase.acquireAsset(%dest.baseShapeAsset);
+   %shapeFile = %assetDef.getShapeFile();
+   AssetDatabase.releaseAsset(%dest.baseShapeAsset);
+   
+   %base = fileBase( %shapeFile );
    %pos = strstr( %base, "_LOD" );
    if ( %pos < 0 )
    {
@@ -3008,7 +3022,7 @@ function ShapeEditor::autoAddDetails( %this, %dest )
 
    echo( "Base is: " @ %base );
 
-   %filePatterns = filePath( %dest.baseShape ) @ "/" @ %base @ "*" @ fileExt( %dest.baseShape );
+   %filePatterns = filePath( %shapeFile ) @ "/" @ %base @ "*" @ fileExt( %shapeFile );
 
    echo( "Pattern is: " @ %filePatterns );
 
@@ -3017,7 +3031,7 @@ function ShapeEditor::autoAddDetails( %this, %dest )
    {
       %fullPath = makeRelativePath( %fullPath, getMainDotCSDir() );
 
-      if ( %fullPath !$= %dest.baseShape )
+      if ( %fullPath !$= %shapeFile )
       {
          echo( "Found LOD shape file: " @ %fullPath );
 
@@ -3037,15 +3051,19 @@ function ShapeEditor::autoAddDetails( %this, %dest )
    }
 }
 
-function ShapeEditor::addLODFromFile( %this, %dest, %filename, %size, %allowUnmatched )
+function ShapeEditor::addLODFromFile( %this, %dest, %assetId, %size, %allowUnmatched )
 {
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+   %csPath = %assetDef.getShapeConstructorFilePath();
+   %filename = %assetDef.getShapeFile();
+   AssetDatabase.releaseAsset(%assetId);
+   
    // Get (or create) a TSShapeConstructor object for the source shape. Need to
    // exec the script manually as the resource may not have been loaded yet
-   %csPath = filePath( %filename ) @ "/" @ fileBase( %filename ) @ "." @ $TorqueScriptFileExtension;
    if ( isFile( %csPath ) )
       exec( %csPath );
 
-   %source = ShapeEditor.findConstructor( %filename );
+   %source = findShapeConstructorByAssetId( %assetId );
    if ( %source == -1 )
       %source = ShapeEditor.createConstructor( %filename );
    %source.lodType = "SingleSize";
@@ -3053,7 +3071,7 @@ function ShapeEditor::addLODFromFile( %this, %dest, %filename, %size, %allowUnma
 
    // Create a temporary TSStatic to ensure the resource is loaded
    %temp = new TSStatic() {
-      shapeName = %filename;
+      shapeAsset = %assetId;
       collisionType = "None";
    };
 
@@ -3254,7 +3272,7 @@ function ShapeEdMountWindow::update_onMountSelectionChanged( %this )
       %this-->mountSeq.clear();
       %this-->mountSeq.add( "<rootpose>", 0 );
 
-      %tss = ShapeEditor.findConstructor( %shapePath );
+      %tss = findShapeConstructorByFilename( %shapePath );
       if ( !isObject( %tss ) )
          %tss = ShapeEditor.createConstructor( %shapePath );
       if ( isObject( %tss ) )

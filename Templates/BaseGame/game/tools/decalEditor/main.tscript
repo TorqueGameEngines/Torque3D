@@ -78,7 +78,7 @@ function DecalEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Decal Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "DecalEditorPlugin", "DecalEditorPalette", expandFilename("tools/decalEditor/decal-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "DecalEditorPlugin", "DecalEditorPalette", "ToolsModule:decal_editor_n_image", %tooltip );
 
    //connect editor windows   
    GuiWindowCtrl::attach( DecalPreviewWindow, DecalEditorWindow );

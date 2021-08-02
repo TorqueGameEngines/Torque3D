@@ -80,7 +80,7 @@ function ParticleEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Particle Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "ParticleEditorPlugin", "ParticleEditorPalette", expandFilename("tools/worldEditor/images/toolbar/particleeditor"), %tooltip );
+   EditorGui.addToToolsToolbar( "ParticleEditorPlugin", "ParticleEditorPalette", "ToolsModule:particleeditor_n_image", %tooltip );
 }
 
 //---------------------------------------------------------------------------------------------

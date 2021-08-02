@@ -398,6 +398,21 @@ DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    return Torque::FS::IsFile(givenPath);
 }
 
+DefineEngineFunction(isScriptFile, bool, (const char* fileName), ,
+   "@brief Determines if the specified file exists or not\n\n"
+
+   "@param fileName The path to the file.\n"
+   "@return Returns true if the file was found.\n"
+
+   "@ingroup FileSystem")
+{
+   String cleanfilename(Torque::Path::CleanSeparators(fileName));
+   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
+
+   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
+   return Torque::FS::IsScriptFile(givenPath.getFullPath());
+}
+
 DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,
    "@brief Determines if a specified directory exists or not\n\n"
 

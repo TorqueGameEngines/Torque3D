@@ -157,7 +157,7 @@ new GuiControl(MaterialSelectorOverlay, EditorGuiGroup) {
          Command = "MaterialSelector.showDeleteDialog();";
          hovertime = "1000";
          tooltip = "Delete Material";
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -894,7 +894,7 @@ function MaterialSelector::buildStaticFilters( %this )
             Command = "MaterialSelector_addFilterWindow.setVisible(1); MaterialSelectorOverlay.pushToBack(MaterialSelector_addFilterWindow);";
             hovertime = "1000";
             tooltip = "Create New Tag";
-            bitmap = "tools/gui/images/new";
+            bitmapAsset = "ToolsModule:new_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -914,7 +914,7 @@ function MaterialSelector::buildStaticFilters( %this )
             Command = "MaterialSelector.clearMaterialFilters();";
             hovertime = "1000";
             tooltip = "Clear Selected Tag";
-            bitmap = "tools/gui/images/clear-btn";
+            bitmapAsset = "ToolsModule:clear_btn_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -1226,7 +1226,7 @@ function MaterialSelector::buildPreviewArray( %this, %material )
       position = "7 4";
       extent = "64 64";
       buttonType = "PushButton";
-      bitmap = "";
+      bitmapAsset = "";
       Command = "";
       text = "Loading...";
       useStates = false;
@@ -1239,7 +1239,7 @@ function MaterialSelector::buildPreviewArray( %this, %material )
             extent = "64 64";
             Variable = "";
             buttonType = "toggleButton";
-            bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+            bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
             groupNum = "0";
             text = "";
          }; 
@@ -1662,7 +1662,7 @@ function MaterialSelector::createNewMaterial( %this )
             extent = "64 64";
             Variable = "";
             buttonType = "toggleButton";
-            bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+            bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
             groupNum = "0";
             text = "";
          }; 

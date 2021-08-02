@@ -84,15 +84,23 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       struct Textures
       {
          /// Texture for normal state.
+         StringTableEntry mTextureNormalAssetId;
+         AssetPtr<ImageAsset> mTextureNormalAsset;
          GFXTexHandle mTextureNormal;
          
          /// Texture for highlight state.
+         StringTableEntry mTextureHilightAssetId;
+         AssetPtr<ImageAsset> mTextureHilightAsset;
          GFXTexHandle mTextureHilight;
          
          /// Texture for depressed state.
+         StringTableEntry mTextureDepressedAssetId;
+         AssetPtr<ImageAsset> mTextureDepressedAsset;
          GFXTexHandle mTextureDepressed;
          
          /// Texture for inactive state.
+         StringTableEntry mTextureInactiveAssetId;
+         AssetPtr<ImageAsset> mTextureInactiveAsset;
          GFXTexHandle mTextureInactive;
       };
 
@@ -110,8 +118,8 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       ///
       BitmapMode mBitmapMode;
 
-      /// File name for bitmap.
-      StringTableEntry mBitmapName;
+      DECLARE_IMAGEASSET(GuiBitmapButtonCtrl, Bitmap, onBitmapChange, GFXDefaultGUIProfile);
+      DECLARE_IMAGEASSET_SETGET(GuiBitmapButtonCtrl, Bitmap);
       
       /// alpha masking
       bool mMasked;
@@ -122,7 +130,7 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       virtual void renderButton( GFXTexHandle &texture, const Point2I& offset, const RectI& updateRect );
       
       static bool _setAutoFitExtents( void *object, const char *index, const char *data );
-      static bool _setBitmap( void *object, const char *index, const char *data );
+      //static bool _setBitmap( void *object, const char *index, const char *data );
       
       State getState() const
       {
@@ -148,6 +156,8 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       DECLARE_CALLBACK( void, onShiftClick, () );
       
       /// @}
+
+      void onBitmapChange() {}
 
    public:
                            

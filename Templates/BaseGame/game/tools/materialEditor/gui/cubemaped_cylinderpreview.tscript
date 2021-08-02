@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(cubemaped_cylinderpreviewdts)
 {
-   baseShape = "./cubemaped_cylinderpreview.dts";
+   baseShapeAsset = "ToolsModule:cubemaped_cylinderpreview";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

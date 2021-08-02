@@ -35,6 +35,9 @@
 #include "gfx/gfxDrawUtil.h"
 #include "collision/concretePolyList.h"
 
+#include "T3D/assets/ShapeAsset.h"
+#include "T3D/assets/ShapeAnimationAsset.h"
+
 #ifdef TORQUE_COLLADA
    #include "collision/optimizedPolyList.h"
    #include "ts/collada/colladaUtils.h"
@@ -397,6 +400,35 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
    }
 
    return true;
+}
+
+bool GuiShapeEdPreview::setObjectShapeAsset(const char* assetId)
+{
+   SAFE_DELETE(mModel);
+   unmountAll();
+   mThreads.clear();
+   mActiveThread = -1;
+
+   StringTableEntry modelName = StringTable->EmptyString();
+   if (AssetDatabase.isDeclaredAsset(assetId))
+   {
+      StringTableEntry id = StringTable->insert(assetId);
+      StringTableEntry assetType = AssetDatabase.getAssetType(id);
+      if (assetType == StringTable->insert("ShapeAsset"))
+      {
+         ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(id);
+         modelName = asset->getShapeFilePath();
+         AssetDatabase.releaseAsset(id);
+      }
+      else if (assetType == StringTable->insert("ShapeAnimationAsset"))
+      {
+         ShapeAnimationAsset* asset = AssetDatabase.acquireAsset<ShapeAnimationAsset>(id);
+         modelName = asset->getAnimationPath();
+         AssetDatabase.releaseAsset(id);
+      }
+   }
+
+   return setObjectModel(modelName);
 }
 
 void GuiShapeEdPreview::_onResourceChanged(const Torque::Path& path)
@@ -1715,6 +1747,14 @@ DefineEngineMethod( GuiShapeEdPreview, setModel, bool, ( const char* shapePath )
    "@return True if the model was loaded successfully, false otherwise.\n" )
 {
    return object->setObjectModel( shapePath );
+}
+
+DefineEngineMethod(GuiShapeEdPreview, setShapeAsset, bool, (const char* shapeAsset), ,
+   "Sets the model to be displayed in this control\n\n"
+   "@param shapeName Name of the model to display.\n"
+   "@return True if the model was loaded successfully, false otherwise.\n")
+{
+   return object->setObjectShapeAsset(shapeAsset);
 }
 
 DefineEngineMethod( GuiShapeEdPreview, fitToShape, void, (),,

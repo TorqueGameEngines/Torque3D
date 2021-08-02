@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="menubar_show_wireframe_h_image"
+    imageFile="@assetFile=show-wireframe_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

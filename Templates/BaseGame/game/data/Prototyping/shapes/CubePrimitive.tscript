@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(CubePrimitive_fbx) {
-   baseShape = "./CubePrimitive.fbx";
+   baseShapeAsset = "Prototyping:CubePrimitive";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

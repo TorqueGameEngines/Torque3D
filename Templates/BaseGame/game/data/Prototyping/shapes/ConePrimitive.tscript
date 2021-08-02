@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(ConePrimitive_fbx) {
-   baseShape = "./ConePrimitive.fbx";
+   baseShapeAsset = "Prototyping:ConePrimitive";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

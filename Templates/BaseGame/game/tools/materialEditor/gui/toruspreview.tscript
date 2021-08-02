@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(toruspreviewdts)
 {
-   baseShape = "./toruspreview.dts";
+   baseShapeAsset = "ToolsModule:toruspreview";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

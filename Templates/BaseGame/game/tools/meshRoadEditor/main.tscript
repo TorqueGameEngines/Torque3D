@@ -76,7 +76,7 @@ function MeshRoadEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Mesh Road Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "MeshRoadEditorPlugin", "MeshRoadEditorPalette", expandFilename("tools/worldEditor/images/toolbar/mesh-road-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "MeshRoadEditorPlugin", "MeshRoadEditorPalette", "ToolsModule:mesh_road_editor_n_image", %tooltip );
 
    //connect editor windows
    GuiWindowCtrl::attach( MeshRoadEditorOptionsWindow, MeshRoadEditorTreeWindow);

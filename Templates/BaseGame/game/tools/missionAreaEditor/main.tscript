@@ -57,7 +57,7 @@ function MissionAreaEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Mission Area Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "MissionAreaEditorPlugin", "MissionAreaEditorPalette", expandFilename("tools/missionAreaEditor/images/mission-area"), %tooltip );
+   EditorGui.addToToolsToolbar( "MissionAreaEditorPlugin", "MissionAreaEditorPalette", "ToolsModule:mission_area_n_image", %tooltip );
 
    //connect editor windows   
    GuiWindowCtrl::attach( MissionAreaEditorPropertiesWindow, MissionAreaEditorTerrainWindow);

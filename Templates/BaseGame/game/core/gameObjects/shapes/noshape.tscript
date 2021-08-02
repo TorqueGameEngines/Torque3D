@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(noshapedts)
 {
-   baseShape = "./noshape.dts";
+   baseShapeAsset = "Core_GameObjects:noshape";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(unit_cubedts2)
 {
-   baseShape = "./unit_cube.dts";
+   baseShapeAsset = "ToolsModule:unit_cube";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

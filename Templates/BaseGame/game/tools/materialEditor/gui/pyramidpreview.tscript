@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(pyramidpreviewdts)
 {
-   baseShape = "./pyramidpreview.dts";
+   baseShapeAsset = "ToolsModule:pyramidpreview";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

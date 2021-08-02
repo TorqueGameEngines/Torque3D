@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(simpleconedts)
 {
-   baseShape = "./simplecone.dts";
+   baseShapeAsset = "Core_GameObjects:simplecone";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

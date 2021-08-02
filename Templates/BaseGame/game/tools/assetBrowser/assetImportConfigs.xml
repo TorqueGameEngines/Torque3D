@@ -187,7 +187,7 @@
             <Setting
                 name="AutomaticallyPromptMissingFiles">0</Setting>
             <Setting
-                name="DuplicatAutoResolution">AutoPrune</Setting>
+                name="DuplicateAutoResolution">FolderPrefix</Setting>
             <Setting
                 name="PreventImportWithErrors">1</Setting>
             <Setting

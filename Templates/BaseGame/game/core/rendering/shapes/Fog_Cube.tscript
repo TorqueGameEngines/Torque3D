@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(Fog_CubeDAE)
 {
-   baseShape = "./Fog_Cube.DAE";
+   baseShapeAsset = "Core_Rendering:Fog_Cube";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

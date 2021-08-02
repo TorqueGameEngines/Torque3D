@@ -112,7 +112,7 @@
                   Extent = "17 17";
                   HorizSizing = "left";
                   tooltip = "Swap material on the object with existing";
-                  bitmap = "tools/materialEditor/gui/change-material-btn";
+                  bitmapAsset = "ToolsModule:change_material_btn_n_image";
                   command = "materialSelector.showDialog(\"MaterialEditorGui.showMaterialChangeSaveDialog\");"; 
                };
                
@@ -299,7 +299,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -399,7 +399,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
@@ -473,7 +473,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -525,7 +525,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
 				   };
@@ -828,7 +828,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -880,7 +880,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
 				   new GuiBitmapCtrl() {
@@ -929,7 +929,7 @@
 					     maxLength = "1024";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/save-icon";
+						 bitmapAsset = "ToolsModule:save_icon_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1033,7 +1033,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1102,7 +1102,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1269,7 +1269,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1338,7 +1338,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1505,7 +1505,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1574,7 +1574,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1757,7 +1757,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1826,7 +1826,7 @@
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1989,7 +1989,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         
                         new GuiTextCtrl() { // Detailmap Scale text
@@ -2081,7 +2081,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
@@ -2134,7 +2134,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         
                         new GuiTextCtrl() { // Detail Normal Map Strength text
@@ -2226,7 +2226,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
@@ -2279,7 +2279,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -2353,7 +2353,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
@@ -2427,7 +2427,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -2479,7 +2479,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
@@ -2553,7 +2553,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -2605,7 +2605,7 @@
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                   };
@@ -3892,7 +3892,7 @@
                               buttonType = "RadioButton";
                               position = "1 0";
                               Extent = "13 13";
-                              bitmap = "tools/materialEditor/gui/wav-sine";
+                              bitmapAsset = "ToolsModule:wav_sine_n_image";
                               command = "MaterialEditorGui.updateWaveType();";
                               tooltip="Sine Wave";
                               hovertime = "1000";
@@ -3904,7 +3904,7 @@
                               buttonType = "RadioButton";
                               position = "17 0";
                               Extent = "13 13";
-                              bitmap = "tools/materialEditor/gui/wav-triangle";
+                              bitmapAsset = "ToolsModule:wav_triangle_n_image";
                               command = "MaterialEditorGui.updateWaveType();";
                               tooltip="Triangle Wave";
                               hovertime = "1000";
@@ -3916,7 +3916,7 @@
                               buttonType = "RadioButton";
                               position = "33 0";
                               Extent = "13 13";
-                              bitmap = "tools/materialEditor/gui/wav-square";
+                              bitmapAsset = "ToolsModule:wav_square_n_image";
                               command = "MaterialEditorGui.updateWaveType();";
                               tooltip="Square Wave";
                               hovertime = "1000";
@@ -4703,7 +4703,7 @@
             Visible = "0";
             //Command = "materialSelector.showDialog(\"MaterialEditorGui.switchMaterial\");"; 
             hovertime = "1000";
-            bitmap = "tools/gui/images/folderUp";
+            bitmapAsset = "ToolsModule:folderUp_image";
             tooltip = "Go back to previous editor";
             groupNum = "-1";
             buttonType = "PushButton";
@@ -4722,7 +4722,7 @@
             Visible = "1";
             Command = "AssetBrowser.showDialog(\"MaterialAsset\", \"MaterialEditorGui.selectMaterialAsset\");";
             hovertime = "1000";
-            bitmap = "tools/gui/images/open-file";
+            bitmapAsset = "ToolsModule:open_file_n_image";
             tooltip = "Open Existing Material";
             groupNum = "-1";
             buttonType = "PushButton";
@@ -4770,7 +4770,7 @@
             tooltip = "Save Material (ALT S)";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/save-icon";
+            bitmapAsset = "ToolsModule:save_icon_n_image";
          };
          new GuiBitmapButtonCtrl() {
             canSaveDynamicFields = "0";
@@ -4791,7 +4791,7 @@
             tooltip = "Lookup Material Instances";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/visible";
+            bitmapAsset = "ToolsModule:visible_n_image";
          };
          new GuiBitmapCtrl(){
             position = "147 1";
@@ -4818,7 +4818,7 @@
             hovertime = "1000";
             tooltip = "Revert Material to Saved";
             text = "";
-            bitmap = "tools/gui/images/reset-icon";
+            bitmapAsset = "ToolsModule:reset_icon_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -4840,7 +4840,7 @@
             hovertime = "1000";
             tooltip = "Clear All Material Properties";
             text = "";
-            bitmap = "tools/gui/images/clear-icon";
+            bitmapAsset = "ToolsModule:clear_icon_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -4862,7 +4862,7 @@
             hovertime = "1000";
             tooltip = "Delete Material from File";
             text = "";
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";

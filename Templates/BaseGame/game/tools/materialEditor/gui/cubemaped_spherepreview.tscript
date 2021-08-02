@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(cubemaped_spherepreviewdts)
 {
-   baseShape = "./cubemaped_spherepreview.dts";
+   baseShapeAsset = "ToolsModule:cubemaped_spherepreview";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

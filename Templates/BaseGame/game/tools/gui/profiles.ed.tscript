@@ -60,7 +60,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    fontColorSEL= EditorSettings.value("Theme/fieldTextSELColor");
 
    // bitmap information
-   bitmap = "";
+   bitmapAsset = "";
    bitmapBase = "";
    textOffset = "0 0";
 

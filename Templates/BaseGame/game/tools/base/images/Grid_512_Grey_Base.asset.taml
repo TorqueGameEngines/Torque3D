@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_Grey_Base"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="Grid_512_Grey_Base"
+    VersionId="1" />

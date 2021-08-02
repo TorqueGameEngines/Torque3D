@@ -114,7 +114,7 @@ function directoryHandler::navigateTo(%this, %address, %historyNav, %selectionNa
          %folderSpacerButton = new GuiBitmapButtonCtrl()
          {
             profile = ToolsGuiButtonProfile;
-            bitmap = "tools/gui/images/rightArrowWhite";
+            bitmapAsset = "ToolsModule:rightArrowWhite_image";
             bitmapMode = "Centered";
             extent = "25" SPC AssetBrowser_BreadcrumbBar.extent.y;
             //command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";

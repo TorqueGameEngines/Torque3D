@@ -208,45 +208,45 @@ public:
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DiffuseMap);
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
-   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, OverlayMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, LightMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ToneMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, NormalMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ORMConfigMap);
 
    bool     mIsSRGb[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
 
    bool     mInvertRoughness[MAX_STAGES];
    F32      mRoughnessChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, AOMap);
 
    F32      mAOChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, MetalMap);
 
    F32      mMetalChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, GlowMap);
 
    F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailNormalMap);
 
    /// The strength scalar for the detail normal map.

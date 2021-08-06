@@ -467,7 +467,7 @@ GuiControl* GuiInspectorTypeTerrainAssetPtr::constructEditControl()
 
    mShapeEdButton->setField("Command", "EditorGui.setEditor(TerrainEditorPlugin);");
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   char bitmapName[512] = "ToolsModule:TerrainBlock_image";
    mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");

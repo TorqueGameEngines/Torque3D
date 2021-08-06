@@ -492,6 +492,12 @@ function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)
          %obj.materialSlot0 = %assetDef.getAssetId();
          echo("MaterialSlot0 set to " @ %assetDef.getAssetId());
       }
+      else if(%obj.isField("materialAsset"))
+      {
+         %obj.materialAsset = %assetDef.getAssetId();
+         echo("materialAsset set to " @ %assetDef.getAssetId());
+      }
+      %obj.inspectPostApply();
    }
 
    EWorldEditor.isDirty = true;
@@ -512,9 +518,9 @@ function GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %p
    
    if(%assetType $= "MaterialAsset")
    {
-      //%assetDef = AssetDatabase.acquireAsset(%module @ ":" @ %assetName);
-      
-      %this.setMaterialAsset(%module @ ":" @ %assetName);
+      %cmd = %this @ ".apply(\""@ %module @ ":" @ %assetName @ "\");";
+      echo("Changing asset via the " @ %cmd @ " command");
+      eval(%cmd);
    }
    
    EWorldEditor.isDirty = true;

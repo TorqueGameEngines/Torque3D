@@ -508,7 +508,7 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
    mImageEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   char bitmapName[512] = "ToolsModule:GameTSCtrl_image";
    mImageEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mImageEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");

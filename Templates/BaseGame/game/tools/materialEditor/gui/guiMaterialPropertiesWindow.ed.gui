@@ -4748,7 +4748,7 @@
             tooltip = "Create New Material";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/new";
+            bitmap = "ToolsModule:new_n_image";
          };
          // Save Button
          new GuiBitmapButtonCtrl() {

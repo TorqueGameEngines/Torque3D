@@ -244,7 +244,7 @@ GuiControl* GuiInspectorTypeTerrainMaterialAssetPtr::constructEditControl()
 
    TerrainMaterial* materialDef = nullptr;
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   char bitmapName[512] = "ToolsModule:material_editor_n_image";
 
    /*if (!Sim::findObject(matAsset->getMaterialDefinitionName(), materialDef))
    {
@@ -271,7 +271,7 @@ GuiControl* GuiInspectorTypeTerrainMaterialAssetPtr::constructEditControl()
    StringBuilder strbld;
    strbld.append(matAsset->getMaterialDefinitionName());
    strbld.append("\n");
-   strbld.append("Open this file in the Material Editor");
+   strbld.append("Open this asset in the Material Editor");
 
    mMatPreviewButton->setDataField(StringTable->insert("tooltip"), NULL, strbld.data());
 

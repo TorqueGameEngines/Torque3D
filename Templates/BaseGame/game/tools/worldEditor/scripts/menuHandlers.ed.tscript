@@ -246,6 +246,27 @@ function EditorSaveAsDefaultLevel()
 function doEditorSaveAsDefaultLevel()
 {
    %success = getScene(0).save("tools/levels/DefaultEditorLevel.mis");
+   
+   if(ETerrainEditor.isDirty)
+   {
+      // Find all of the terrain files
+      initContainerTypeSearch($TypeMasks::TerrainObjectType);
+
+      while ((%terrainObject = containerSearchNext()) != 0)
+      {
+         if(%terrainObject.terrainAsset !$= "")
+         {
+            //we utilize a terrain asset, so we'll update our dependencies while we're at it
+            %terrainObject.saveAsset();
+         }
+         else
+         {
+            %terrainObject.save(%terrainObject.terrainFile);
+         }
+      }
+   }
+
+   ETerrainPersistMan.saveDirty();
 }
 
 function EditorResetDefaultLevel()

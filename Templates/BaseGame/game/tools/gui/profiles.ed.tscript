@@ -479,7 +479,7 @@ new GuiControlProfile( ToolsGuiScrollProfile )
 if( !isObject( ToolsGuiOverlayProfile ) )
 new GuiControlProfile( ToolsGuiOverlayProfile )
 {
-   opaque = true;
+   opaque = false;
    fillColor = EditorSettings.value("Theme/windowBackgroundColor");
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextGLColor");

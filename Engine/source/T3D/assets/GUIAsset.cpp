@@ -261,13 +261,13 @@ GuiControl* GuiInspectorTypeGUIAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "echo(\"Game Object Editor not implemented yet!\");", retCtrl->getId());
    mSMEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   char bitmapName[512] = "ToolsModule:GameTSCtrl_image";
    mSMEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mSMEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mSMEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mSMEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mSMEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the State Machine Editor");
+   mSMEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the GUI Editor");
 
    mSMEdButton->registerObject();
    addObject(mSMEdButton);

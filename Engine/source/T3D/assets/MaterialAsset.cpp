@@ -388,13 +388,13 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
    mEditButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/material-editor";
+   char bitmapName[512] = "ToolsModule:material_editor_n_image";
    mEditButton->setBitmap(StringTable->insert(bitmapName));
 
    mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Material Editor");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Material Editor");
 
    mEditButton->registerObject();
    addObject(mEditButton);

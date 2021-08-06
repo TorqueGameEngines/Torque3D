@@ -209,14 +209,14 @@ function ConvexEditorPlugin::onSaveMission( %this, %missionFile )
 function ConvexEditorPlugin::initSettings( %this )
 {
    EditorSettings.beginGroup( "ConvexEditor", true );
-   EditorSettings.setDefaultValue(  "MaterialName",         "Grid_512_Orange" );
+   EditorSettings.setDefaultValue(  "MaterialName",         "Prototyping:WallOrange" );
    EditorSettings.endGroup();
 }
 
 function ESettingsWindow::getConvexEditorSettings(%this)
 {
    SettingsInspector.startGroup("General");
-   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material Name", "string", "");
+   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material Asset Name", "TypeMaterialAssetId", "");
    SettingsInspector.endGroup();
 }
 

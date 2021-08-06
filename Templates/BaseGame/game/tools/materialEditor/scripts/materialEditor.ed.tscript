@@ -589,6 +589,14 @@ function MaterialEditorGui::searchForTexture(%this,%material, %texture)
 {   
    if( %texture !$= "" )
    {
+      if(AssetDatabase.isDeclaredAsset(%texture))
+      {
+         %assetDef = AssetDatabase.acquireAsset(%texture);
+         %imagePath = %assetDef.getImagePath();
+         AssetDatabase.releaseAsset(%texture);
+         
+         return %imagePath;
+      }
       // set the find signal as false to start out with 
       %isFile = false;
       // sete the formats we're going to be looping through if need be

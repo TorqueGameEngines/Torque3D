@@ -505,7 +505,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                   }
                }
             }
-            else if(strIsMatchExpr("*datablock*(*)*", %line))
+            else if(strIsMatchExpr("*datablock*(*)*", %line) && (strPos(%line, "registerDatablock") == -1))
             {
                %className = findObjectClass(%line, "datablock");
                

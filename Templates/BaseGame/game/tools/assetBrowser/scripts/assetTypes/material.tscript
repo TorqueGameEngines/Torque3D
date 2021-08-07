@@ -8,17 +8,20 @@ function AssetBrowser::createMaterialAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";   
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %sgfPath = %assetPath @ %assetName @ ".sgf";
+   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new MaterialAsset()
    {
       AssetName = %assetName;
       versionId = 1;
-      shaderData = "";
-      shaderGraph = %sgfPath;
+      materialDefinitionName = %assetName;
+      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
    };
    
    TamlWrite(%asset, %tamlpath);
+   
+   %mat = new Material(%assetName);
+   %mat.save(%scriptPath);
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
@@ -43,18 +46,6 @@ function AssetBrowser::editMaterialAsset(%this, %assetDef)
    MaterialEditorGui.setActiveMaterial( %assetDef.materialDefinitionName );
    
    AssetBrowser.hideDialog();
-   
-   //
-   //
-   /*%assetDef.materialDefinitionName.reload();
-   $Tools::materialEditorList = "";
-   EWorldEditor.clearSelection();
-   MaterialEditorGui.currentObject = 0;
-   MaterialEditorGui.currentMode = "asset";
-   MaterialEditorGui.currentMaterial = %assetDef.materialDefinitionName;
-   MaterialEditorGui.setActiveMaterial( %assetDef.materialDefinitionName);
-   EditorGui.setEditor(MaterialEditorPlugin);
-   AssetBrowser.hideDialog();*/
 }
 
 //Renames the asset

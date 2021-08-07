@@ -340,7 +340,7 @@ function MaterialEditorGui::prepareActiveObject( %this, %override )
       {
          %fieldName = %obj.getField(%i);
          
-         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" && %obj.getFieldType(%fieldName) !$= "TypeMaterialName")
+         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" /*&& %obj.getFieldType(%fieldName) !$= "TypeMaterialName"*/)
             continue;
       
          if( !%canSupportMaterial )

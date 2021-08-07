@@ -3127,19 +3127,47 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
          return "";
       }
 
-      if (!isInPlace && Platform::isFile(qualifiedFromCSFile))
+      if (!isInPlace)
       {
-         if(!dPathCopy(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
+         if (Platform::isFile(qualifiedFromCSFile))
          {
-            dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", qualifiedFromCSFile);
+            if (!dPathCopy(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
+            {
+               dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", qualifiedFromCSFile);
+               activityLog.push_back(importLogBuffer);
+            }
+            else
+            {
+               //We successfully copied the original constructor file, so no extra work required
+               makeNewConstructor = false;
+               dSprintf(importLogBuffer, sizeof(importLogBuffer), "Successfully copied original TSShape Constructor file %s", qualifiedFromCSFile);
+               activityLog.push_back(importLogBuffer);
+            }
+         }
+      }
+      else
+      {
+         //We're doing an in-place import, so double check we've already got a constructor file in the expected spot
+         if (Platform::isFile(qualifiedFromCSFile))
+         {
+            //Yup, found it, we're good to go
+            makeNewConstructor = false;
+            dSprintf(importLogBuffer, sizeof(importLogBuffer), "Existing TSShape Constructor file %s found", qualifiedFromCSFile);
             activityLog.push_back(importLogBuffer);
          }
          else
          {
-            //We successfully copied the original constructor file, so no extra work required
-            makeNewConstructor = false;
-            dSprintf(importLogBuffer, sizeof(importLogBuffer), "Successfully copied original TSShape Constructor file %s", qualifiedFromCSFile);
-            activityLog.push_back(importLogBuffer);
+            //Didn't work, but it's possible it's using the old .cs extension when our extension variable is set to something else, so check that one as well just to be sure
+            Torque::Path constrFilePath = qualifiedFromCSFile;
+            constrFilePath.setExtension("cs");
+
+            if (Platform::isFile(constrFilePath.getFullPath().c_str()))
+            {
+               //Yup, found it, we're good to go
+               makeNewConstructor = false;
+               dSprintf(importLogBuffer, sizeof(importLogBuffer), "Existing TSShape Constructor file %s found", constrFilePath.getFullPath().c_str());
+               activityLog.push_back(importLogBuffer);
+            }
          }
       }
    }

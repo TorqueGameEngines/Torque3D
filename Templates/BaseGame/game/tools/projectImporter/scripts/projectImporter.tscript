@@ -263,6 +263,23 @@ function ProjectImportWizardPage4::openPage(%this)
       $ProjectImporter::importTool.copyFiles();
    else
       ProjectImportWindow.nextStep();
+      
+   //if we gen'd a new module setup, double check we didn't copy over a module script file under a legacy extension
+   if(!$ProjectImporter::useExistingModule)
+   {
+      %newModuleName = $ProjectImporter::moduleName;
+      %moduleFilePath = "data/" @ %newModuleName;
+      
+      if($TorqueScriptFileExtension !$= "cs")
+      {
+         %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".cs";
+         if(isFile(%moduleScriptFilePath))
+         {
+            //yep, that exists, so we'll assume it was the file we wanted, so remove the generated one
+            fileDelete(%moduleFilePath @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension);
+         }
+      }
+   }
 }
 
 function ProjectImportWizardPage4::processPage(%this)

@@ -220,7 +220,7 @@ GuiControl* GuiInspectorTypeMaterialName::construct(const char* command)
 	mBrowseButton->setField( "Command", szBuffer );
 
 	//temporary static button name
-	char bitmapName[512] = "tools/materialEditor/gui/change-material-btn";
+	char bitmapName[512] = "ToolsModule:change_material_btn_n_image";
 	mBrowseButton->setBitmap( StringTable->insert(bitmapName) );
 
    mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
@@ -326,7 +326,7 @@ GuiControl* GuiInspectorTypeTerrainMaterialName::construct(const char* command)
 	mBrowseButton->setField( "Command", szBuffer );
 
 	//temporary static button name
-	char bitmapName[512] = "tools/gui/images/layers-btn";
+	char bitmapName[512] = "ToolsModule:tools/gui/images/layers_btn_n_image";
 	mBrowseButton->setBitmap(StringTable->insert(bitmapName) );
 
    mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
@@ -804,7 +804,7 @@ GuiControl* GuiInspectorTypeShapeFilename::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.open(%d.getText());", retCtrl->getId());
    mShapeEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
    mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
@@ -956,7 +956,7 @@ GuiControl* GuiInspectorTypeRectUV::constructEditControl()
 	mBrowseButton->setField( "Command", szBuffer );
 
 	//temporary static button name
-	char bitmapName[512] = "tools/gui/images/uv-editor-btn";
+	char bitmapName[512] = "ToolsModule:uv_editor_btn_n_image";
 	mBrowseButton->setBitmap(StringTable->insert(bitmapName) );
 
    mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
@@ -1544,7 +1544,7 @@ GuiControl* GuiInspectorTypeBitMask32Helper::constructEditControl()
    mButton->setField( "Command", szBuffer );
    mButton->setField( "buttonType", "ToggleButton" );
    mButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorButtonProfile" );
-   mButton->setBitmap(StringTable->insert("tools/gui/images/arrowBtn.png") );
+   mButton->setBitmap(StringTable->insert("ToolsModule:arrowBtn_image") );
    mButton->setStateOn( true );
    mButton->setExtent( 16, 16 );
    mButton->registerObject();

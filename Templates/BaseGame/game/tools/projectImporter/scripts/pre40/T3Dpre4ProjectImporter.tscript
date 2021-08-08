@@ -475,6 +475,32 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                         }
                      }
                   }
+                  else if(%className $= "Sky") 
+                  {
+                     if(%this.isMethod("processSkyLine"))
+                     {
+                        %outLine = %this.call("processSkyLine", %line);
+                        
+                        if(%line !$= %outLine)
+                        {
+                           %fileWasChanged = true;
+                           %line = %outLine;
+                        }
+                     }
+                  }
+                  else if(%className $= "Water") 
+                  {
+                     if(%this.isMethod("processWaterLine"))
+                     {
+                        %outLine = %this.call("processWaterLine", %line);
+                        
+                        if(%line !$= %outLine)
+                        {
+                           %fileWasChanged = true;
+                           %line = %outLine;
+                        }
+                     }
+                  }
                }
             }
             else if(strIsMatchExpr("*singleton*(*)*", %line))
@@ -754,6 +780,26 @@ function T3Dpre4ProjectImporter::processMissionGroupLine(%this, %line, %missionN
 function T3Dpre4ProjectImporter::processLevelInfoLine(%this, %line)
 {
    %outline = strreplace(%line, "ScriptObject(MissionInfo)", "LevelInfo(theLevelInfo)");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processSkyLine(%this, %line)
+{
+   %outline = strreplace(%line, "Sky", "Skybox");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processWaterLine(%this, %line)
+{
+   %outline = strreplace(%line, "Water", "WaterPlane");
    
    if(%outLine !$= %line)
       return %outLine;

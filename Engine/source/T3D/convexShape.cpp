@@ -2170,3 +2170,5 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
       faces.push_back( newFace );
    }
 }
+
+DEF_MATERIALASSET_BINDS(ConvexShape, Material);

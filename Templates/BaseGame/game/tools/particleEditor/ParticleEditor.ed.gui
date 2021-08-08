@@ -214,7 +214,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/new";
+                     bitmap = "ToolsModule:new_image";
                      tooltip = "Create New Emitter";
                   };
                   new GuiBitmapButtonCtrl() {

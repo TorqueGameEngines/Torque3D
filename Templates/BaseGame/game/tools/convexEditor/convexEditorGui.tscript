@@ -31,6 +31,13 @@ function ConvexEditorGui::onWake( %this )
 		
 		%mat = EditorSettings.Value("ConvexEditor/MaterialName");
 		
+		if(AssetDatabase.isDeclaredAsset(%mat))
+		{
+		   %matName = AssetDatabase.acquireAsset(%mat).materialDefinitionName;  
+		   AssetDatabase.releaseAsset(%mat);
+		   %mat = %matName;
+		}
+		
 		ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(%mat.getDiffuseMap(0));
 		
 		ConvexEditorOptionsWindow.activeMaterial = %mat;
@@ -68,7 +75,8 @@ function ConvexEditorGui::onSelectionChanged( %this, %shape, %face )
    ConvexEditorDeleteFaceBtn.setActive( true );
 
    ConvexEditorOptionsWindow-->defMatPreviewBtn.setText("");
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(%shape.material.getDiffuseMap(0));
+   %shapeMat = %shape.getMaterial();
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(%shapeMat.getDiffuseMap(0));
 
    ConvexEditorOptionsWindow.activeShape = %shape;
       
@@ -234,7 +242,7 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
 
    ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(%diffusemap);
 
-   ConvexEditorOptionsWindow.activeShape.material = %materialAsset.materialDefinitionName;
+   ConvexEditorOptionsWindow.activeShape.setMaterial(%name);
 
    ConvexEditorGui.updateShape();
 }

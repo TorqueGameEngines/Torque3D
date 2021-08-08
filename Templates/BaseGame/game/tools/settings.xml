@@ -83,7 +83,7 @@
     <Group
         name="ConvexEditor">
         <Setting
-            name="materialName">Grid_512_Orange</Setting>
+            name="materialName">Prototyping:WallOrange</Setting>
     </Group>
     <Group
         name="DatablockEditor">

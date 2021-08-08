@@ -282,7 +282,7 @@ DefineEngineMethod(className, get##name##Asset, const char*, (), , assetText(nam
 }\
 DefineEngineMethod(className, set##name, bool, (const char* mat), , assetText(name,assignment. first tries asset then material name.))\
 {\
-    return object->_set##name(StringTable->insert(map));\
+    return object->_set##name(StringTable->insert(mat));\
 }
 
 #define INIT_MATERIALASSET(name) \

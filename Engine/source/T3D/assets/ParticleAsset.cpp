@@ -160,7 +160,7 @@ GuiControl* GuiInspectorTypeParticleAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "echo(\"Game Object Editor not implemented yet!\");", retCtrl->getId());
    mSMEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
+   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
    mSMEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mSMEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");

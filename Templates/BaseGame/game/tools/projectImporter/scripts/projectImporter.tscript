@@ -1222,3 +1222,61 @@ function doDeleteAssetDefinitions()
    echo("Finished Deleting Asset Definitions");
    echo("===========================================");
 }
+
+function scanForDuplicateFiles(%toTestFile)
+{
+   echo("===========================================");
+   echo("Scanning for duplicate files!");
+   echo("===========================================");
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( "*/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      //We only really care about content files for this
+      if(!endsWith(%file, "dts") &&
+         !endsWith(%file, "dae") && 
+         !endsWith(%file, "fbx") &&
+         !endsWith(%file, "ter") &&
+         !endsWith(%file, "png") &&
+         !endsWith(%file, "jpg") &&
+         !endsWith(%file, "jpeg") &&
+         !endsWith(%file, "dds"))
+      {
+         %file = findNextFileMultiExpr( "*/*.*" );
+         continue;
+      }
+      
+      %filename = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      if(%toTestFile $= "")
+      {
+         scanForDuplicateFiles(%file);
+      }
+      else
+      {
+         %testFilename = fileName(%toTestFile);
+         %testFileExt = fileExt(%toTestFile);
+         %testFilePath = filePath(%toTestFile);
+         
+         if(%testFilename $= %filename && %testFileExt $= %fileExt)
+         {
+            //name matches, lets double check it'd actually cause a collision via the module it'd be in 
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId; 
+            %testModuleName = AssetBrowser.dirHandler.getModuleFromAddress(%testFilename).ModuleId;  
+            
+            if(%moduleName !$= "" && %testModuleName !$= "" && %moduleName $= %testModuleName)
+            {
+               //report the probable duplicate
+               error("Probable duplicate asset detected!");
+               error("Files: " @ %file @ " and " @ %toTestFile @ " have matching names and exist within the same module!");
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( "*/*.*" );
+   }
+}

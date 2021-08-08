@@ -586,8 +586,8 @@ S32 GuiTreeViewCtrl::Item::getDisplayTextWidth(GFont *font)
    if( bufLen == 0 )
       return 0;
 
-   // Add space for the string terminator
-   bufLen++;
+   // Add space for the string terminator and marker
+   bufLen += 2;
 
    char *buf = (char*)txtAlloc.alloc(bufLen);
    getDisplayText(bufLen, buf);

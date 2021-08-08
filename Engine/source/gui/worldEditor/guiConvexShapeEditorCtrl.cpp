@@ -529,7 +529,7 @@ void GuiConvexEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
          
          setupShape( newShape );
 
-         newShape->setField("material", mConvexSEL->getMaterialName());
+         newShape->_setMaterial(mConvexSEL->getMaterial());
 
          submitUndo( CreateShape, newShape );
 
@@ -1459,8 +1459,8 @@ bool GuiConvexEditorCtrl::isShapeValid( ConvexShape *shape )
 
 void GuiConvexEditorCtrl::setupShape( ConvexShape *shape )
 {
-   shape->setField( "materialAsset", mMaterialName );
    shape->registerObject();
+   shape->_setMaterial(mMaterialName);
    updateShape( shape );
 
    Scene* scene = Scene::getRootScene();
@@ -2284,9 +2284,10 @@ ConvexEditorTool::EventResult ConvexEditorCreateTool::on3DMouseDown( const Gui3D
 
       mNewConvex->setTransform( objMat );   
 		
-		mNewConvex->setField( "materialAsset", Parent::mEditor->mMaterialName );
-		
       mNewConvex->registerObject();
+
+      mNewConvex->_setMaterial(Parent::mEditor->mMaterialName);
+
       mPlaneSizes.set( 0.1f, 0.1f, 0.1f );
       mNewConvex->resizePlanes( mPlaneSizes );
       mEditor->updateShape( mNewConvex );
@@ -2509,7 +2510,7 @@ ConvexShape* ConvexEditorCreateTool::extrudeShapeFromFace( ConvexShape *inShape,
    }
 
 	//newShape->setField( "material", Parent::mEditor->mMaterialName );
-   newShape->setField("materialAsset", inShape->getMaterialName());
+   newShape->_setMaterial(inShape->getMaterial());
 
    newShape->registerObject();
    mEditor->updateShape( newShape );

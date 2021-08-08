@@ -1226,6 +1226,8 @@ function MaterialEditorGui::updateTextureMap( %this, %type, %action )
 {
    %layer = MaterialEditorGui.currentLayer;
 
+   %this.updatingTextureType = %type;
+
    %bitmapCtrl = MaterialEditorPropertiesWindow.findObjectByInternalName( %type @ "MapDisplayBitmap", true );
    %textCtrl = MaterialEditorPropertiesWindow.findObjectByInternalName( %type @ "MapNameText", true );
 
@@ -1263,7 +1265,7 @@ function MaterialEditorGui::doUpdateTextureMap( %this, %assetId )
       {         
          %bitmapCtrl.setBitmap(%texture);
       
-         %bitmap = %bitmapCtrl.bitmap;
+         %bitmap = %bitmapCtrl.getBitmap();
          %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
          %bitmapCtrl.setBitmap(%bitmap);
          %textCtrl.setText(%assetId);

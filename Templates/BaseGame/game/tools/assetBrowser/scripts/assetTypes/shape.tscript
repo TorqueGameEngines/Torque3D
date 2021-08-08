@@ -245,15 +245,24 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
 function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
 {
    %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getShapeFile())));
-   %previewPath = "tools/resources/shapePreviewCache/" @ %module.moduleId @ "/";
+   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
    
    if(!IsDirectory(%previewPath))
    {
       %this.dirHandler.createFolder(%previewPath);
    }
    
+   %generatePreview = false;
+   
    %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
-   if(!isFile(%previewFilePath))
+   if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getShapeFile(), %previewFilePath) == 1))
+   {
+      %generatePreview = true;
+   }
+   
+   %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
+   
+   if(%generatePreview)
    {
       displayEditorLoadingGui("Generating Shape Asset Preview...");
       
@@ -275,15 +284,15 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
       
       $TSLastDetail::dumpImposters = %oldImposterSetting;
       
-      %newAsset = new ImageAsset()
+      %previewAsset = new ImageAsset()
       {
-         assetName = %assetDef.assetName @ "_PreviewImage";
+         assetName = %previewAssetName;
          versionId = 1;
          imageFile = fileName(%previewFilePath);
       };
       
-      %previewImgAssetPath = %previewPath @ %newAsset.assetName @ ".asset.taml";
-      %assetImportSuccessful = TAMLWrite(%newAsset, %previewImgAssetPath); 
+      %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+      %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
       
       %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
          
@@ -294,12 +303,12 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    
    //Revalidate. If it didn't work, just use the default placeholder one
    if(!isFile(%previewFilePath))
-      %previewFilePath = "ToolsModule:genericAssetIcon_image";
+      %previewAssetName = "ToolsModule:genericAssetIcon_image";
    
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.fileName;
 
-   %previewData.previewImage = "ToolsModule:" @ %assetDef.assetName @ "_PreviewImage";//%assetDef.fileName;
+   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

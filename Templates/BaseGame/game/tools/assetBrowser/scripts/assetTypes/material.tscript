@@ -423,41 +423,77 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
 
 function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
 {
+   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getScriptPath())));
+   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
+
+   if(!IsDirectory(%previewPath))
+   {
+      %this.dirHandler.createFolder(%previewPath);
+   }
+
+   %generatePreview = false;
+
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
+   if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getImagePath(), %previewFilePath) == 1))
+   {
+      %generatePreview = true;
+   }
+
+   %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
+                                   
+   if(%generatePreview)
+   {
+      displayEditorLoadingGui("Generating Material Asset Preview...");
+   
+   if(isObject(%assetDef.materialDefinitionName))
+   {
+      if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
+         {
+            %difMap = %assetDef.materialDefinitionName.getDiffuseMap(0);
+         }
+      else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
+      {
+         %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.getDiffuseMapAsset(0));
+            %difMap = %imgAsset.getImagePath();
+   }
+      
+         //%success = saveScaledImage(%difMap, %previewFilePath);
+
+         %previewAsset = new ImageAsset()
+         {
+            assetName = %previewAssetName;
+            versionId = 1;
+            imageFile = fileName(%previewFilePath);
+         };
+         
+         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         
+         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            
+         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+      }
+      
+      hideEditorLoadingGui();
+   }
+   
+   //Revalidate. If it didn't work, just use the default placeholder one
+   if(!isFile(%previewFilePath))
+      %previewAssetName = "ToolsModule:genericAssetIcon_image";
+      
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
+   
+   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
 
-   //Lotta prepwork
-   /*%previewData.doubleClickCommand = %assetDef@".materialDefinitionName.reload(); "
-                                   @ "$Tools::materialEditorList = \"\";"
-                                   @ "EWorldEditor.clearSelection();"
-                                   @ "MaterialEditorGui.currentObject = 0;"
-                                   @ "MaterialEditorGui.currentMode = \"asset\";"
-                                   @ "MaterialEditorGui.currentMaterial = "@%assetDef@".materialDefinitionName;"
-                                   @ "MaterialEditorGui.setActiveMaterial( "@%assetDef@".materialDefinitionName );"
-                                   @ "EditorGui.setEditor(MaterialEditorPlugin); "
-                                   @ "AssetBrowser.hideDialog();";*/
-                                   
    if(%this.selectMode)
       %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
    else
       %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
    
-   %previewData.previewImage = "ToolsModule:materialIcon_image";
-   
-   if(isObject(%assetDef.materialDefinitionName))
-   {
-      if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
-         %previewData.previewImage = %assetDef.materialDefinitionName.getDiffuseMap(0);
-      else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
-      {
-         %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.getDiffuseMapAsset(0));
-      %previewData.previewImage = %imgAsset.getImagePath();
-   }
-      //add cubemap preview here(for skybox materials)
-   }
-   
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
                            "Asset Type: Material Asset\n" @  
                            "Asset Definition ID: " @  %assetDef;

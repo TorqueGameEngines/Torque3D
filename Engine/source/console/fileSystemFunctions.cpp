@@ -580,6 +580,27 @@ DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
    return buffer;
 }
 
+DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* fileB), ("", ""),
+   "@brief Compares 2 files' modified file times."
+
+   "@param fileName Name and path of first file to compare\n"
+   "@param fileName Name and path of second file to compare\n"
+   "@return S32. If value is 1, then fileA is newer. If value is -1, then fileB is newer. If value is 0, they are equal.\n"
+   "@ingroup FileSystem")
+{
+   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileA);
+
+   FileTime fileATime = { 0 };
+   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileATime);
+
+   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileB);
+
+   FileTime fileBTime = { 0 };
+   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileBTime);
+
+   return Platform::compareFileTimes(fileATime, fileBTime);
+}
+
 DefineEngineFunction(fileDelete, bool, ( const char* path ),,
    "@brief Delete a file from the hard drive\n\n"
 

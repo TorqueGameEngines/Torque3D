@@ -346,6 +346,13 @@ DefineEngineStaticMethod(MaterialAsset, getAssetIdByMaterialName, const char*, (
 {
    return MaterialAsset::getAssetIdByMaterialName(StringTable->insert(materialName));
 }
+
+DefineEngineMethod(MaterialAsset, getScriptPath, const char*, (), ,
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return object->getScriptPath();
+}
 #endif
 
 //-----------------------------------------------------------------------------

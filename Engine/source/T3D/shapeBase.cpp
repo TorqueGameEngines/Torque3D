@@ -347,6 +347,9 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    S32 i;
    if (ShapeAsset::getAssetErrCode(mShapeAsset) != ShapeAsset::Failed && ShapeAsset::getAssetErrCode(mShapeAsset) != ShapeAsset::BadFileReference)
    {
+      if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
+         shapeError = true;
+
       if(computeCRC)
       {
          Con::printf("Validation required for shape asset: %s", mShapeAsset.getAssetId());

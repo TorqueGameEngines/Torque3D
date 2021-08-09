@@ -285,6 +285,8 @@ bool DebrisData::preload(bool server, String &errorStr)
       {
          TSShapeInstance* pDummy = new TSShapeInstance(mShape, !server);
          delete pDummy;
+         if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
+            return false;
       }
    }
 

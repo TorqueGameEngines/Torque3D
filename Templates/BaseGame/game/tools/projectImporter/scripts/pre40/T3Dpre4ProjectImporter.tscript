@@ -218,7 +218,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
             {
                %className = findObjectClass(%line, "new");
 
-               if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial")
+               if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial" && %className !$= "CubemapData")
                   {
                      %lineNum++;
                      %fileOutputLines.push_back(%line);
@@ -267,7 +267,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
             {
                %className = findObjectClass(%line, "singleton");
                
-               if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial")
+               if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial" && %className !$= "CubemapData")
                   {
                      %lineNum++;
                      %fileOutputLines.push_back(%line);

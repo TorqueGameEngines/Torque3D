@@ -377,18 +377,22 @@ bool ProjectileData::preload(bool server, String &errorStr)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockid(lightDesc): %d", lightDescId);   
    }
 
-   if (!mProjectileShape)
+   if (mProjectileShapeAssetId != StringTable->EmptyString())
    {
-      errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", mProjectileShapeAssetId);
-      return false;
-   }
-   else
-   {
-      activateSeq = mProjectileShape->findSequence("activate");
-      maintainSeq = mProjectileShape->findSequence("maintain");
+      //If we've got a shapeAsset assigned for our projectile, but we failed to load the shape data itself, report the error
+      if (!mProjectileShape)
+      {
+         errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", mProjectileShapeAssetId);
+         return false;
+      }
+      else
+      {
+         activateSeq = mProjectileShape->findSequence("activate");
+         maintainSeq = mProjectileShape->findSequence("maintain");
 
-      TSShapeInstance* pDummy = new TSShapeInstance(mProjectileShape, !server);
-      delete pDummy;
+         TSShapeInstance* pDummy = new TSShapeInstance(mProjectileShape, !server);
+         delete pDummy;
+      }
    }
 
    return true;

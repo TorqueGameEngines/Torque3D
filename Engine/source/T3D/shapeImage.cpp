@@ -587,9 +587,9 @@ void ShapeBaseImageData::initPersistFields()
    addField( "emap", TypeBool, Offset(emap, ShapeBaseImageData),
       "@brief Whether to enable environment mapping on this Image.\n\n" );
 
-   INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, ShapeBaseImageData, "The shape asset to use for this image in the third person")
+   INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, MaxShapes, ShapeBaseImageData, "The shape asset to use for this image in the third person")
 
-   addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeName[1], ShapeBaseImageData), _setShapeData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset", AbstractClassRep::FIELD_HideInInspectors);
+   //addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeName[1], ShapeBaseImageData), _setShapeData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset", AbstractClassRep::FIELD_HideInInspectors);
 
    addField( "imageAnimPrefix", TypeCaseString, Offset(imageAnimPrefix, ShapeBaseImageData),
       "@brief Passed along to the mounting shape to modify animation sequences played in third person. [optional]\n\n" );

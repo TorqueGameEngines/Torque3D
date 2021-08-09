@@ -447,17 +447,17 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    
    if(isObject(%assetDef.materialDefinitionName))
    {
-      if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
+      	if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
          {
             %difMap = %assetDef.materialDefinitionName.getDiffuseMap(0);
          }
-      else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
-      {
+      	else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
+      	{
          %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.getDiffuseMapAsset(0));
             %difMap = %imgAsset.getImagePath();
-   }
+   		}
       
-         //%success = saveScaledImage(%difMap, %previewFilePath);
+         %success = saveScaledImage(%difMap, %previewFilePath);
 
          %previewAsset = new ImageAsset()
          {

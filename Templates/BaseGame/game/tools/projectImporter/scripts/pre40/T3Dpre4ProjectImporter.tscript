@@ -833,7 +833,7 @@ function T3Dpre4ProjectImporter::processGuiBitmapButtonCtrlLine(%this, %line)
 // Datablocks
 //==============================================================================
 T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubeMapFaceAsset cubemap cubemapAsset");
+T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubeMapFaceAsset cubemap cubemapAsset cubeFace cubeMapFaceAsset");
 T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
@@ -846,7 +846,7 @@ T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PlayerData", "shapeFP shapeFPAsset shapeNameFP shapeFPAsset");
 T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
-T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset shapeFP shapeFPAsset shapeFile shapeAsset shapeFileFP shapeFPAsset");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset[0] shapeFP shapeAsset[1] shapeFile shapeAsset[0] shapeFileFP shapeAsset[1]");
 T3Dpre4ProjectImporter::genProcessor("WheeledVehicleTire", "shape shapeAsset shapeFile shapeAsset");
 //==============================================================================
 // Materials

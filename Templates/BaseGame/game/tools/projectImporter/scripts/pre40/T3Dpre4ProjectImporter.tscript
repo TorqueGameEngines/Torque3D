@@ -915,7 +915,7 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %file, %objectName
          versionId = 1;
          shaderData = "";
          materialDefinitionName = %assetName;
-         scriptFile = fileName(%file);
+         scriptFile = fileBase(%file);
       };
       
       TamlWrite(%asset, %tamlpath);

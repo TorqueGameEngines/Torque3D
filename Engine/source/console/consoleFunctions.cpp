@@ -2801,3 +2801,11 @@ DefineEngineFunction( getMaxDynamicVerts, S32, (),,
 {
    return GFX_MAX_DYNAMIC_VERTS / 2;
 }
+
+DefineEngineFunction( getStringHash, S32, (const char* _inString, bool _sensitive), ("", true), "generate a hash from a string. foramt is (string, casesensitive). defaults to true")
+{
+   if (_sensitive)
+      return S32(String::String(_inString).getHashCaseSensitive());
+   else
+      return S32(String::String(_inString).getHashCaseInsensitive());
+}

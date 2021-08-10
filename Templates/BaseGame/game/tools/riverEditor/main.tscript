@@ -76,7 +76,7 @@ function RiverEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "River Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "RiverEditorPlugin", "RiverEditorPalette", expandFilename("tools/worldEditor/images/toolbar/river-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "RiverEditorPlugin", "RiverEditorPalette", "ToolsModule:river_editor_n_image", %tooltip );
 
    //connect editor windows   
    GuiWindowCtrl::attach( RiverEditorOptionsWindow, RiverEditorTreeWindow);

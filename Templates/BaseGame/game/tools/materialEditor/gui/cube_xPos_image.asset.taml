@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cube_xPos_image"
+    imageFile="@assetFile=cube_xPos.jpg"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

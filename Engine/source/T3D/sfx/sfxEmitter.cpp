@@ -721,12 +721,12 @@ void SFXEmitter::_update()
          mLocalProfile.mResource = NULL;
          mLocalProfile.mBuffer = NULL;
 
-         if( !mLocalProfile.mFilename.isEmpty() )
+         if( mLocalProfile.mFilename != StringTable->EmptyString() )
          {
             mSource = SFX->createSource( &mLocalProfile, &transform, &velocity );
             if( !mSource )
                Con::errorf( "SFXEmitter::_update() - failed to create sound for: %s",
-                  mLocalProfile.mFilename.c_str() );
+                  mLocalProfile.mFilename );
             
             prevState = mPlayOnAdd ? SFXStatusPlaying : prevState;
          }

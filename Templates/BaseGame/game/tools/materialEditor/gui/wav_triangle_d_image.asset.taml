@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wav_triangle_d_image"
+    imageFile="@assetFile=wav-triangle_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

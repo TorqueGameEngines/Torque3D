@@ -119,7 +119,7 @@
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/iconOpen.png";
+         bitmapAsset = "ToolsModule:iconOpen_image";
          bitmapMode = "Centered";
          autoFitExtents = "0";
          useModifiers = "0";

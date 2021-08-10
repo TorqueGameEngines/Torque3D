@@ -1360,3 +1360,55 @@ DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
                                           image->getBytesPerPixel(),
                                           image->getFormat());
 }
+
+DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 512),
+   "Returns image info in the following format: width TAB height TAB bytesPerPixel TAB format. "
+   "It will return an empty string if the file is not found.\n"
+   "@ingroup Rendering\n")
+{
+   Resource<GBitmap> image = GBitmap::load(bitmapSource);
+   if (!image)
+      return false;
+
+   Torque::Path sourcePath = Torque::Path(bitmapSource);
+
+   /*if (String("dds").equal(sourcePath.getExtension(), String::NoCase))
+   {
+      dds = DDSFile::load(correctPath, scalePower);
+      if (dds != NULL)
+      {
+         if (!dds->decompressToGBitmap(image))
+         {
+            delete image;
+            image = NULL;
+            return false;
+         }
+      }
+   }*/
+
+   image->extrudeMipLevels();
+
+   U32 mipCount = image->getNumMipLevels();
+   U32 targetMips = mFloor(mLog2((F32)resolutionSize)) + 1;
+
+   if (mipCount > targetMips)
+   {
+      image->chopTopMips(mipCount - targetMips);
+   }
+
+   // Open up the file on disk.
+   FileStream fs;
+   if (!fs.open(bitmapDest, Torque::FS::File::Write))
+   {
+      Con::errorf("saveScaledImage() - Failed to open output file '%s'!", bitmapDest);
+      return false;
+   }
+   else
+   {
+      image->writeBitmap("png", fs);
+
+      fs.close();
+   }
+
+   return true;
+}

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="datablockIcon_image"
+    imageFile="@assetFile=datablockIcon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wav_none_h_image"
+    imageFile="@assetFile=wav-none_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

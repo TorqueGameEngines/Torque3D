@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NavMesh_image"
+    imageFile="@assetFile=NavMesh.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CloudLayer_image"
+    imageFile="@assetFile=CloudLayer.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

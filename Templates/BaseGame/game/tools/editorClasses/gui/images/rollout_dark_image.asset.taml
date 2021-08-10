@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="rollout_dark_image"
+    imageFile="@assetFile=rollout_dark.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

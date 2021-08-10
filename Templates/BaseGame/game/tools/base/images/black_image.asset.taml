@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="black_image"
+    imageFile="@assetFile=black.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

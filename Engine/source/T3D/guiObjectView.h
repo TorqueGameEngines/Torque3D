@@ -30,6 +30,8 @@
    #include "ts/tsShapeInstance.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 
 class LightInfo;
 
@@ -68,7 +70,7 @@ class GuiObjectView : public GuiTSCtrl
       /// @{
       
       /// Name of the model loaded for display.
-      String mModelName;
+      StringTableEntry mModelName;
 
       /// Model being displayed in the view.
       TSShapeInstance* mModel;

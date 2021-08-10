@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="IrradianceShader"
+    scriptFile="@assetFile=advancedLighting_Shaders.tscript"
+    materialDefinitionName="IrradianceShader"
+    VersionId="1" />

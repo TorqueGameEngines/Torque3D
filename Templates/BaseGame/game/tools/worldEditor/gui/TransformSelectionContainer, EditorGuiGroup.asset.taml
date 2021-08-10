@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TransformSelectionContainer, EditorGuiGroup"
+    scriptFile="@assetFile=TransformSelectionWindow.ed.gui"
+    GUIFile="@assetFile=TransformSelectionWindow.ed.gui"
+    VersionId="1" />

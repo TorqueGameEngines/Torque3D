@@ -140,8 +140,8 @@ SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardwa
       ( _findDeviceInfo( deviceName) );
 
    // Do we find one to create?
-   if ( info )
-      return new SFXALDevice( this, mOpenAL, info->name, useHardware, maxBuffers );
+   if (info)
+      return new SFXALDevice(this, mOpenAL, info->name, useHardware, maxBuffers);
 
    return NULL;
 }

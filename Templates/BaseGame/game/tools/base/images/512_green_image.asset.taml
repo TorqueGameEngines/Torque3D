@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="512_green_image"
+    imageFile="@assetFile=512_green.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="UVEditorOverlay, EditorGuiGroup"
+    scriptFile="@assetFile=uvEditor.ed.gui"
+    GUIFile="@assetFile=uvEditor.ed.gui"
+    VersionId="1" />

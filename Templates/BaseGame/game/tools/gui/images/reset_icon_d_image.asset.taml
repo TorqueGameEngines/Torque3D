@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="reset_icon_d_image"
+    imageFile="@assetFile=reset-icon_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

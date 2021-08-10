@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="transition_slider_image"
+    imageFile="@assetFile=transition_slider.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

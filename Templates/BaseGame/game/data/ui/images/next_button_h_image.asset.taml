@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="next_button_h_image"
+    imageFile="@assetFile=next-button_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

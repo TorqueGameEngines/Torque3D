@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="align_left_h_image"
+    imageFile="@assetFile=align-left_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

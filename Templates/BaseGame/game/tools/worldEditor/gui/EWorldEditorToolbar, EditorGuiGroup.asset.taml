@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="EWorldEditorToolbar, EditorGuiGroup"
+    scriptFile="@assetFile=WorldEditorToolbar.ed.gui"
+    GUIFile="@assetFile=WorldEditorToolbar.ed.gui"
+    VersionId="1" />

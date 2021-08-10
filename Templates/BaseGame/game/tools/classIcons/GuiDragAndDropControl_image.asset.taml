@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiDragAndDropControl_image"
+    imageFile="@assetFile=GuiDragAndDropControl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

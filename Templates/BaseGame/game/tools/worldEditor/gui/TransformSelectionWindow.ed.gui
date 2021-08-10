@@ -265,7 +265,7 @@
                position = "0 0";
                Extent = "100 2";
                MinExtent = "1 1";
-               bitmap = "tools/gui/images/separator-v.png";
+               bitmapAsset = "ToolsModule:separator_v_image";
             };
 
             new GuiControl() {
@@ -459,7 +459,7 @@
                position = "0 0";
                Extent = "100 2";
                MinExtent = "1 1";
-               bitmap = "tools/gui/images/separator-v.png";
+               bitmapAsset = "ToolsModule:separator_v_image";
             };
 
             new GuiTabBookCtrl() {

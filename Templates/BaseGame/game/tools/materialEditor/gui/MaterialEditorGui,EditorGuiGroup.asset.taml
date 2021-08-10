@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MaterialEditorGui,EditorGuiGroup"
+    scriptFile="@assetFile=guiMaterialPropertiesWindow.ed.gui"
+    GUIFile="@assetFile=guiMaterialPropertiesWindow.ed.gui"
+    VersionId="1" />

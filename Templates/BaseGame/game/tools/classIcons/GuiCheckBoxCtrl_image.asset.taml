@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiCheckBoxCtrl_image"
+    imageFile="@assetFile=GuiCheckBoxCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

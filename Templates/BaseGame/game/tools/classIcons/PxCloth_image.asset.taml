@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PxCloth_image"
+    imageFile="@assetFile=PxCloth.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

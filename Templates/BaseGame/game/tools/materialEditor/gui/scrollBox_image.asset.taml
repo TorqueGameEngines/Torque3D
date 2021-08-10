@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="scrollBox_image"
+    imageFile="@assetFile=scrollBox.jpg"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

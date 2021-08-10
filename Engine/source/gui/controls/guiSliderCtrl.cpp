@@ -427,9 +427,9 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
       drawUtil->clearBitmapModulation();
 
       //left border
-      drawUtil->drawBitmapSR(mProfile->mTextureObject, Point2I(offset.x,offset.y), mBitmapBounds[SliderLineLeft]);
+      drawUtil->drawBitmapSR(mProfile->getBitmapResource(), Point2I(offset.x,offset.y), mBitmapBounds[SliderLineLeft]);
       //right border
-      drawUtil->drawBitmapSR(mProfile->mTextureObject, Point2I(offset.x + getWidth() - mBitmapBounds[SliderLineRight].extent.x, offset.y), mBitmapBounds[SliderLineRight]);
+      drawUtil->drawBitmapSR(mProfile->getBitmapResource(), Point2I(offset.x + getWidth() - mBitmapBounds[SliderLineRight].extent.x, offset.y), mBitmapBounds[SliderLineRight]);
 
 
       //draw our center piece to our slider control's border and stretch it
@@ -443,11 +443,11 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
       stretchRect = mBitmapBounds[SliderLineCenter];
       stretchRect.inset(1,0);
 
-      drawUtil->drawBitmapStretchSR(mProfile->mTextureObject, destRect, stretchRect);
+      drawUtil->drawBitmapStretchSR(mProfile->getBitmapResource(), destRect, stretchRect);
 
       //draw our control slider button	
       thumb.point += pos;
-      drawUtil->drawBitmapSR(mProfile->mTextureObject,Point2I(thumb.point.x,offset.y ),mBitmapBounds[index]);
+      drawUtil->drawBitmapSR(mProfile->getBitmapResource(),Point2I(thumb.point.x,offset.y ),mBitmapBounds[index]);
 
    }
    else if (getWidth() >= getHeight())

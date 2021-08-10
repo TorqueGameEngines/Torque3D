@@ -46,6 +46,8 @@
 /// For frame signal
 #include "gui/core/guiCanvas.h"
 
+#include "T3D/assets/LevelAsset.h"
+
 
 extern bool gEditingMission;
 
@@ -333,18 +335,23 @@ void Forest::createNewFile()
    mData = NULL;
 
    // We need to construct a default file name
-   String missionName( Con::getVariable( "$Client::MissionFile" ) );
-   String levelDirectory( Con::getVariable( "$pref::Directories::Level" ) );
-   if ( levelDirectory.isEmpty() )
-   {
-      levelDirectory = "levels";
-   }
-   missionName.replace( "tools/levels", levelDirectory );
-   missionName = Platform::makeRelativePathName(missionName, Platform::getMainDotCsDir());
+   String levelAssetId(Con::getVariable("$Client::LevelAsset"));
 
-   Torque::Path basePath( missionName );
+   LevelAsset* levelAsset;
+   if (!Sim::findObject(levelAssetId.c_str(), levelAsset))
+   {
+      Con::errorf("Forest::createNewFile() - Unable to find current level's LevelAsset. Unable to construct forest filePath");
+      return;
+   }
+
+   Torque::Path basePath(levelAsset->getForestPath() );
+
+   //If we didn't already define a forestfile to work with, just base it off our filename
+   if (basePath.isEmpty())
+      basePath = levelAsset->getLevelPath();
+
    String fileName = Torque::FS::MakeUniquePath( basePath.getPath(), basePath.getFileName(), "forest" );
-   mDataFileName = StringTable->insert( fileName );
+   mDataFileName = StringTable->insert( fileName.c_str() );
 
    ForestData *file = new ForestData;
    file->write( mDataFileName );

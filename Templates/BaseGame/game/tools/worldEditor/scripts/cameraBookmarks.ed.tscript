@@ -228,7 +228,7 @@ function EManageBookmarks::addBookmark( %this, %mark, %index )
 
       new GuiBitmapButtonCtrl() {
          class = "EManageBookmarksGoToButton";
-         bitmap = "tools/gui/images/camera-btn";
+         bitmapAsset = "ToolsModule:camera_btn_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -264,7 +264,7 @@ function EManageBookmarks::addBookmark( %this, %mark, %index )
 
       new GuiBitmapButtonCtrl() {
          class = "EManageBookmarksDeleteButton";
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

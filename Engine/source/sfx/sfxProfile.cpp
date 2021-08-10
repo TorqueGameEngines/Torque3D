@@ -90,7 +90,7 @@ SFXProfile::SFXProfile()
 
 SFXProfile::SFXProfile( SFXDescription* desc, const String& filename, bool preload )
    : Parent( desc ),
-     mFilename( filename ),
+     mFilename( StringTable->insert(filename.c_str()) ),
      mPreload( preload )
 {
 }
@@ -167,7 +167,7 @@ bool SFXProfile::preload( bool server, String &errorStr )
    // Validate the datablock... has nothing to do with mPreload.
    if(  !server &&
         NetConnection::filesWereDownloaded() &&
-        ( mFilename.isEmpty() || !SFXResource::exists( mFilename ) ) )
+        ( mFilename == StringTable->EmptyString() || !SFXResource::exists( mFilename ) ) )
       return false;
 
    return true;
@@ -180,10 +180,10 @@ void SFXProfile::packData(BitStream* stream)
    Parent::packData( stream );
 
    char buffer[256];
-   if ( mFilename.isEmpty() )
+   if ( mFilename == StringTable->EmptyString())
       buffer[0] = 0;
    else
-      dStrncpy( buffer, mFilename.c_str(), 256 );
+      dStrncpy( buffer, mFilename, 256 );
    stream->writeString( buffer );
 
    stream->writeFlag( mPreload );
@@ -263,7 +263,7 @@ void SFXProfile::_onResourceChanged( const Torque::Path& path )
    if( mPreload && !mDescription->mIsStreaming )
    {
       if( !_preloadBuffer() )
-         Con::errorf( "SFXProfile::_onResourceChanged() - failed to preload '%s'", mFilename.c_str() );
+         Con::errorf( "SFXProfile::_onResourceChanged() - failed to preload '%s'", mFilename );
    }
       
    mChangedSignal.trigger( this );
@@ -283,7 +283,7 @@ bool SFXProfile::_preloadBuffer()
 
 Resource<SFXResource>& SFXProfile::getResource()
 {
-   if( !mResource && !mFilename.isEmpty() )
+   if( !mResource && mFilename != StringTable->EmptyString())
       mResource = SFXResource::load( mFilename );
 
    return mResource;
@@ -317,7 +317,7 @@ SFXBuffer* SFXProfile::_createBuffer()
    
    // Try to create through SFXDevie.
    
-   if( !mFilename.isEmpty() && SFX )
+   if( mFilename != StringTable->EmptyString() && SFX )
    {
       buffer = SFX->_createBuffer( mFilename, mDescription );
       if( buffer )
@@ -325,7 +325,7 @@ SFXBuffer* SFXProfile::_createBuffer()
          #ifdef TORQUE_DEBUG
          const SFXFormat& format = buffer->getFormat();
          Con::printf( "%s SFX: %s (%i channels, %i kHz, %.02f sec, %i kb)",
-            mDescription->mIsStreaming ? "Streaming" : "Loaded", mFilename.c_str(),
+            mDescription->mIsStreaming ? "Streaming" : "Loaded", mFilename,
             format.getChannels(),
             format.getSamplesPerSecond() / 1000,
             F32( buffer->getDuration() ) / 1000.0f,

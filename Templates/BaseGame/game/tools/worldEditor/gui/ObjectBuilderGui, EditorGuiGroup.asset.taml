@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ObjectBuilderGui, EditorGuiGroup"
+    scriptFile="@assetFile=objectBuilderGui.ed.gui"
+    GUIFile="@assetFile=objectBuilderGui.ed.gui"
+    VersionId="1" />

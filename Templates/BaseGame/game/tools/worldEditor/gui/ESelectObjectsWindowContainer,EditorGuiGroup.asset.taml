@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ESelectObjectsWindowContainer,EditorGuiGroup"
+    scriptFile="@assetFile=SelectObjectsWindow.ed.gui"
+    GUIFile="@assetFile=SelectObjectsWindow.ed.gui"
+    VersionId="1" />

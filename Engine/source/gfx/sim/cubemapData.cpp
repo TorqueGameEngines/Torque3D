@@ -41,6 +41,13 @@ IMPLEMENT_CONOBJECT( CubemapData );
 CubemapData::CubemapData()
 {
    mCubemap = NULL;
+
+   for (U32 i = 0; i < 6; i++)
+   {
+      INIT_IMAGEASSET_ARRAY(CubeMapFace, i);
+   }
+
+   INIT_IMAGEASSET(CubeMap);
 }
 
 CubemapData::~CubemapData()
@@ -69,7 +76,7 @@ ConsoleDocClass( CubemapData,
 
 void CubemapData::initPersistFields()
 {
-   addField( "cubeFace", TypeStringFilename, Offset(mCubeFaceFile, CubemapData), 6,
+   addProtectedField( "cubeFace", TypeStringFilename, Offset(mCubeMapFaceName, CubemapData), _setCubeMapFaceData, defaultProtectedGetFn, 6,
       "@brief The 6 cubemap face textures for a static cubemap.\n\n"
       "They are in the following order:\n"
       "  - cubeFace[0] is -X\n"
@@ -77,11 +84,18 @@ void CubemapData::initPersistFields()
       "  - cubeFace[2] is -Z\n"
       "  - cubeFace[3] is +Z\n"
       "  - cubeFace[4] is -Y\n"
-      "  - cubeFace[5] is +Y\n" );
+      "  - cubeFace[5] is +Y\n", AbstractClassRep::FIELD_HideInInspectors );
 
-   addField("cubeMap", TypeStringFilename, Offset(mCubeMapFile, CubemapData),
-      "@brief Cubemap dds file.\n\n");
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(CubeMapFace, 6, CubemapData, "@brief The 6 cubemap face textures for a static cubemap.\n\n"
+      "They are in the following order:\n"
+      "  - cubeFace[0] is -X\n"
+      "  - cubeFace[1] is +X\n"
+      "  - cubeFace[2] is -Z\n"
+      "  - cubeFace[3] is +Z\n"
+      "  - cubeFace[4] is -Y\n"
+      "  - cubeFace[5] is +Y\n");
 
+   INITPERSISTFIELD_IMAGEASSET(CubeMap, CubemapData, "@brief Cubemap dds Image Asset.\n\n");
 }
 
 bool CubemapData::onAdd()
@@ -101,22 +115,19 @@ void CubemapData::createMap()
    {
        bool initSuccess = true;
        //check mCubeMapFile first
-       if (!mCubeMapFile.isEmpty())
+       if (getCubeMap() != StringTable->EmptyString())
        {
-          mCubemap = TEXMGR->createCubemap(mCubeMapFile);
+          mCubemap = TEXMGR->createCubemap(getCubeMap());
           return;
        }
        else
        {
           for (U32 i = 0; i < 6; i++)
           {
-             if (!mCubeFaceFile[i].isEmpty())
+             if (!_setCubeMapFace(getCubeMapFace(i), i))
              {
-                if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureSRGBProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
-                {
-                   Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeFaceFile[i].c_str());
-                   initSuccess = false;
-                }
+                Con::errorf("CubemapData::createMap - Failed to load texture '%s'", getCubeMapFace(i));
+                initSuccess = false;
              }
           }
        }
@@ -124,8 +135,9 @@ void CubemapData::createMap()
        if( initSuccess )
        {
            mCubemap = GFX->createCubemap();
-           if (mCubeFace == NULL || mCubeFace->isNull()) return;
-           mCubemap->initStatic( mCubeFace );
+           if (mCubeMapFace == NULL || mCubeMapFace->isNull())
+              return;
+           mCubemap->initStatic(mCubeMapFace);
        }
    }
 }
@@ -137,20 +149,17 @@ void CubemapData::updateFaces()
 	for( U32 i=0; i<6; i++ )
    {
       //check mCubeMapFile first
-      if (!mCubeMapFile.isEmpty())
+      if (getCubeMap() != StringTable->EmptyString())
       {
-         mCubemap = TEXMGR->createCubemap(mCubeMapFile);
+         mCubemap = TEXMGR->createCubemap(getCubeMap());
          return;
       }
       else
       {
-         if (!mCubeFaceFile[i].isEmpty())
+         if (!_setCubeMapFace(getCubeMapFace(i), i))
          {
-            if (!mCubeFace[i].set(mCubeFaceFile[i], &GFXStaticTextureSRGBProfile, avar("%s() - mCubeFace[%d] (line %d)", __FUNCTION__, i, __LINE__)))
-            {
-               initSuccess = false;
-               Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeFaceFile[i].c_str());
-            }
+            Con::errorf("CubemapData::createMap - Failed to load texture '%s'", getCubeMapFace(i));
+            initSuccess = false;
          }
       }
    }
@@ -160,13 +169,13 @@ void CubemapData::updateFaces()
 		mCubemap = NULL;
 		mCubemap = GFX->createCubemap();
 
-		mCubemap->initStatic( mCubeFace );
+		mCubemap->initStatic( mCubeMapFace );
 	}
 }
 
 void CubemapData::setCubemapFile(FileName newCubemapFile)
 {
-   mCubeMapFile = newCubemapFile;
+   mCubeMapName = newCubemapFile;
 }
 
 void CubemapData::setCubeFaceFile(U32 index, FileName newFaceFile)
@@ -174,7 +183,7 @@ void CubemapData::setCubeFaceFile(U32 index, FileName newFaceFile)
    if (index >= 6)
       return;
 
-   mCubeFaceFile[index] = newFaceFile;
+   mCubeMapFaceName[index] = newFaceFile;
 }
 
 void CubemapData::setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture)
@@ -182,7 +191,7 @@ void CubemapData::setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture)
    if (index >= 6)
       return;
 
-   mCubeFace[index] = newFaceTexture;
+   mCubeMapFace[index] = newFaceTexture;
 }
 
 DefineEngineMethod( CubemapData, updateFaces, void, (),,

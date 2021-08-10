@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="snap_objects_h_image"
+    imageFile="@assetFile=snap-objects_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

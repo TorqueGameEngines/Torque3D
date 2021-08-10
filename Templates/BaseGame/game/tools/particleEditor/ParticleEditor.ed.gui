@@ -214,7 +214,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/new";
+                     bitmap = "ToolsModule:new_image";
                      tooltip = "Create New Emitter";
                   };
                   new GuiBitmapButtonCtrl() {
@@ -234,7 +234,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/save-icon";
+                     bitmapAsset = "ToolsModule:save_icon_n_image";
                      command = "PE_EmitterEditor.saveEmitter( " @ PE_EmitterEditor.currEmitter @ " ); PE_ParticleEditor.saveParticle( PE_ParticleEditor.currParticle );";
                      tooltip = "Save Current Emitter";
                   };
@@ -255,7 +255,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/delete";
+                     bitmapAsset = "ToolsModule:delete_n_image";
                      tooltip = "Delete Current Emitter";
                   };
                };
@@ -447,7 +447,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -704,7 +704,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -862,7 +862,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Degrees ( Up )";
                         };
                         new GuiBitmapCtrl(){ // 90 Degrees
@@ -870,7 +870,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "90 Degrees ( Left )";
                         };
                         new GuiBitmapCtrl(){ // 180 Degrees
@@ -878,7 +878,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "180 Degrees ( Down )";
                         };
                         new GuiBitmapCtrl(){ // 270 Degrees
@@ -886,7 +886,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "270 Degrees ( Right )";
                         };
                         new GuiBitmapCtrl(){ // 360 Degrees
@@ -894,7 +894,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "360 Degrees ( Up )";
                         };
                         
@@ -949,7 +949,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Degrees ( Up )";
                         };
                         new GuiBitmapCtrl(){ // 90 Degrees
@@ -957,7 +957,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "90 Degrees ( Left )";
                         };
                         new GuiBitmapCtrl(){ // 180 Degrees
@@ -965,7 +965,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            minExtent = "0 0";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "180 Degrees ( Down )";
                         };
                         new GuiBitmapCtrl(){ // 270 Degrees
@@ -973,7 +973,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "270 Degrees ( Right )";
                         };
                         new GuiBitmapCtrl(){ // 360 Degrees
@@ -981,7 +981,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "360 Degrees ( Up )";
                         };
                         
@@ -1037,7 +1037,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Degrees ( Up )";
                         };
                         new GuiBitmapCtrl(){ // 90 Degrees
@@ -1045,7 +1045,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/4)+1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "45 Degrees";
                         };
                         new GuiBitmapCtrl(){ // 180 Degrees
@@ -1053,7 +1053,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            minExtent = "0 0";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "90 Degrees";
                         };
                         new GuiBitmapCtrl(){ // 270 Degrees
@@ -1061,7 +1061,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2+mCeil(getWord($PE_guielement_ext_slider,0)/4))-4 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "135 Degrees";
                         };
                         new GuiBitmapCtrl(){ // 360 Degrees
@@ -1069,7 +1069,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0))-5 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "180 Degrees";
                         };
                         
@@ -1116,7 +1116,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -1363,7 +1363,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            hovertime = "1000";
                            tooltip = "Clear Particle 2 from Emitter";
                            text = "";
-                           bitmap = "tools/gui/images/clear-icon";
+                           bitmapAsset = "ToolsModule:clear_icon_n_image";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
@@ -1411,7 +1411,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            hovertime = "1000";
                            tooltip = "Clear Particle 3 from Emitter";
                            text = "";
-                           bitmap = "tools/gui/images/clear-icon";
+                           bitmapAsset = "ToolsModule:clear_icon_n_image";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
@@ -1459,7 +1459,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            hovertime = "1000";
                            tooltip = "Clear Particle 4 from Emitter";
                            text = "";
-                           bitmap = "tools/gui/images/clear-icon";
+                           bitmapAsset = "ToolsModule:clear_icon_n_image";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
@@ -1625,7 +1625,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -1876,7 +1876,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/new";
+                     bitmapAsset = "ToolsModule:new_n_image";
                      tooltip = "Add New Particle To Current Emitter";
                      useModifiers = "1";
                   };
@@ -1896,7 +1896,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/save-icon";
+                     bitmapAsset = "ToolsModule:save_icon_n_image";
                      command = "PE_ParticleEditor.saveParticle( PE_ParticleEditor.currParticle );";
                      tooltip = "Save Current Particle";
                   };
@@ -1917,7 +1917,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "tools/gui/images/delete";
+                     bitmapAsset = "ToolsModule:delete_n_image";
                      tooltip = "Delete Current Particle";
                   };
                };
@@ -1976,7 +1976,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -2021,7 +2021,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiBitmapButtonCtrl() {
                            canSaveDynamicFields = "0";
@@ -2042,7 +2042,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                            Command = "PE_ParticleEditor.updateParticleTexture(1);";
                         };
                         new GuiCheckBoxCtrl() {
@@ -2095,7 +2095,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         //visible = false;
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -2353,7 +2353,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -2370,7 +2370,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "0 Gravity";
                         };
                         
@@ -2554,7 +2554,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "No Spin";
                         };
                         
@@ -2609,7 +2609,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                            position = getWord($PE_guielement_pos_slider,0)+mCeil(getWord($PE_guielement_ext_slider,0)/2)-1 SPC "0";
                            Extent = "2 18";
                            minExtent = "0 0";
-                           bitmap = "tools/gui/images/separator-h";
+                           bitmapAsset = "ToolsModule:separator_h_image";
                            tooltip = "No Spin";
                         };
                         
@@ -2656,7 +2656,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -3078,7 +3078,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -3463,7 +3463,7 @@ $PE_guielement_ext_colorpicker = "18 18";
                         isContainer = "1"; HorizSizing = "width"; Position = "0 0"; Extent = "194 8";
                         new GuiBitmapCtrl(){
                            position="0 3"; extent ="188 2"; HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                      };// end spacer ----------------------------------------
                      
@@ -3865,7 +3865,7 @@ $PE_guielement_ext_colorpicker = "18 18";
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Play Particle Effect from Start";
       hovertime = "1000";
-      bitmap = "tools/particleEditor/images/play_btn";
+      bitmapAsset = "ToolsModule:play_btn_n_image";
       buttonType = "PushButton";
       groupNum = "-1";
       text = "";
@@ -3888,7 +3888,7 @@ $PE_guielement_ext_colorpicker = "18 18";
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Drops Particle Effect in front of the Camera";
       hovertime = "1000";
-      bitmap = "tools/classIcons/camera";
+      bitmapAsset = "ToolsModule:camera_image";
       buttonType = "PushButton";
       groupNum = "-1";
       text = "";

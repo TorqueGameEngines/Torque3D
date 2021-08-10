@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="show_profile_n_image"
+    imageFile="@assetFile=show-profile_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

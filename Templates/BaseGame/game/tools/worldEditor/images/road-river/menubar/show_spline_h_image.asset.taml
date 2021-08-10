@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="show_spline_h_image"
+    imageFile="@assetFile=show-spline_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

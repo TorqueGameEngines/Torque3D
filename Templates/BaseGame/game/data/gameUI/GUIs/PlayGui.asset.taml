@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PlayGui"
+    scriptFile="@assetFile=playGui.gui"
+    GUIFile="@assetFile=playGui.gui"
+    VersionId="1" />

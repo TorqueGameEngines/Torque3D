@@ -100,7 +100,7 @@ function DecalEditorGui::syncNodeDetails( %this )
       return;
    
    %lookupName = DecalEditorGui.getDecalLookupName( %decalId );
-   DecalEditorGui.updateInstancePreview( %lookupName.material );   
+   DecalEditorGui.updateInstancePreview( %lookupName.materialAsset );   
    
    DecalEditorDetailContainer-->instanceId.setText(%decalId @ " " @ %lookupName);
    %transformData = DecalEditorGui.getDecalTransform(%decalId);
@@ -131,7 +131,7 @@ function DecalDataList::onSelect( %this, %id, %text )
    
    //Canvas.pushDialog( DecalEditDlg );
    DecalInspector.inspect( %data );
-   DecalEditorGui.updateDecalPreview( %data.material );
+   DecalEditorGui.updateDecalPreview( %data.materialAsset );
 }
 
 function RetargetDecalButton::onClick( %this )
@@ -158,6 +158,15 @@ function RetargetDecalButton::onClick( %this )
 
 function NewDecalButton::onClick( %this )
 {  
+   AssetBrowser_SelectModule.showDialog("DecalEditorGui.pickedNewDecalTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function DecalEditorGui::pickedNewDecalTargetModule(%this, %module)
+{
+   %moduleDef = ModuleDatabase.findModule(%module);
+   $decalDataFile = %moduleDef.ModulePath @ "/scripts/managedData/managedDecalData." @ $TorqueScriptFileExtension;
+   
    %name = getUniqueName( "NewDecalData" );
    
    %str = "datablock DecalData( " @ %name @ " ) { Material = \"WarningMaterial\"; };";            
@@ -286,7 +295,7 @@ function DecalEditorTreeView::addNodeTree(%this, %nodeName, %parentName)
 
 function DecalInspector::onInspectorFieldModified( %this, %object, %fieldName, %arrayIndex, %oldValue, %newValue )
 {
-   if( %fieldName $= "Material" )
+   if( %fieldName $= "Material" || %fieldName $= "MaterialAsset")
       DecalEditorGui.updateDecalPreview( %newValue );
       
    // Same work to do as for the regular WorldEditor Inspector.
@@ -313,17 +322,50 @@ function DecalInspector::removeDirty()
 function DecalEditorGui::updateDecalPreview( %this, %material )
 {
    if( isObject( %material ) )
-      DecalPreviewWindow-->decalPreview.setBitmap( MaterialEditorGui.searchForTexture( %material.getId(), %material.diffuseMap[0]) );
+   {
+      DecalPreviewWindow-->decalPreview.setBitmap( %material.getDiffuseMap(0) );
+   }
    else
-      DecalPreviewWindow-->decalPreview.setBitmap("tools/materialEditor/gui/unknownImage");
+   {
+      if(AssetDatabase.isDeclaredAsset(%material))
+      {
+         %assetDef = AssetDatabase.acquireAsset(%material);
+         %difMap = %assetDef.materialDefinitionName.getDiffuseMap(0);
+         AssetDatabase.acquireAsset(%material);
+         
+         if(%difMap !$= "" && %difMap !$= "Core_Rendering:missingTexture")
+         {
+            DecalPreviewWindow-->decalPreview.setBitmap( %difMap );
+            return;
+         }
+      }
+      DecalPreviewWindow-->decalPreview.setBitmap("ToolsModule:unknownImage_image");
+   }
 }
 
 function DecalEditorGui::updateInstancePreview( %this, %material )
 {
    if( isObject( %material ) )
-      DecalPreviewWindow-->instancePreview.setBitmap( MaterialEditorGui.searchForTexture( %material.getId(), %material.diffuseMap[0]) );      
+   {
+      DecalPreviewWindow-->instancePreview.setBitmap( %material.getDiffuseMap(0) );      
+   }
    else
-      DecalPreviewWindow-->instancePreview.setBitmap("tools/materialEditor/gui/unknownImage");   
+   {
+      if(AssetDatabase.isDeclaredAsset(%material))
+      {
+         %assetDef = AssetDatabase.acquireAsset(%material);
+         %difMap = %assetDef.materialDefinitionName.getDiffuseMap(0);
+         AssetDatabase.acquireAsset(%material);
+         
+         if(%difMap !$= "" && %difMap !$= "Core_Rendering:missingTexture")
+         {
+            DecalPreviewWindow-->instancePreview.setBitmap( %difMap );
+            return;
+         }
+      }
+      
+      DecalPreviewWindow-->instancePreview.setBitmap("ToolsModule:unknownImage_image");   
+}
 }
 
 function DecalEditorGui::rebuildInstanceTree( %this )

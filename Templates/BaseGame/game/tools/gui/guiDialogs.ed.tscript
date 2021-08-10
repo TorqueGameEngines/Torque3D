@@ -34,7 +34,6 @@ exec("./GuiEaseEditDlg.ed." @ $TorqueScriptFileExtension);
 exec("./guiObjectInspector.ed." @ $TorqueScriptFileExtension);
 exec("./uvEditor.ed.gui");
 exec("./objectSelection.ed." @ $TorqueScriptFileExtension);
-exec("./postFxManager.gui");
 exec("./assimpImport.ed.gui");
 
 exec("./fieldTypes/assetDependencies." @ $TorqueScriptFileExtension);

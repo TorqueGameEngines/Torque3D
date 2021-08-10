@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Forest_image"
+    imageFile="@assetFile=Forest.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,3 +1,9 @@
+function AssetBrowser_SelectModule::showDialog(%this, %callback)
+{
+   AssetBrowser_SelectModule.callback = %callback;
+   Canvas.pushDialog(AssetBrowser_SelectModule);
+}
+
 function AssetBrowser_SelectModule::onWake(%this)
 {
    AssetBrowser_SelectModuleWindow-->ModuleList.refresh();

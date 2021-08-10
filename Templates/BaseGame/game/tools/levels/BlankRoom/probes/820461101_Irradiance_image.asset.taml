@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="820461101_Irradiance_image"
+    imageFile="@assetFile=820461101_Irradiance.dds"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

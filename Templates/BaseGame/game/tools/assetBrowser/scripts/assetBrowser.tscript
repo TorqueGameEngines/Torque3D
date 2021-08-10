@@ -3,7 +3,6 @@ new SimGroup(AssetBrowserPreviewCache);
 //AssetBrowser.addToolbarButton
 function AssetBrowser::addToolbarButton(%this)
 {
-	%filename = expandFilename("tools/gui/images/stencilIcons/menuGrid");
 	%button = new GuiBitmapButtonCtrl() {
 		canSaveDynamicFields = "0";
 		internalName = AssetBrowserBtn;
@@ -21,7 +20,7 @@ function AssetBrowser::addToolbarButton(%this)
 		tooltipprofile = "ToolsGuiToolTipProfile";
 		ToolTip = "Asset Browser";
 		hovertime = "750";
-		bitmap = %filename;
+		bitmapAsset = "ToolsModule:menuGrid_n_image";
 		bitmapMode = "Stretched";
 		buttonType = "PushButton";
 		groupNum = "0";
@@ -453,15 +452,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    
    %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
    
-   /*if(%assetType $= "ShapeAsset")
-   {
-      %previewButton = AssetPreviewButtonsTemplate-->ShapeAssetPreviewButton.deepClone();
-   }
-   else
-   {
-      %previewButton = AssetPreviewButtonsTemplate-->GeneralAssetPreviewButton.deepClone();
-   }*/
-   
    %textBottomPad = 20;
    
    %previewButton = new GuiIconButtonCtrl()
@@ -517,7 +507,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %previewButton.moduleName = %moduleName;
    %previewButton.assetType = %assetType;
    
-   %previewButton.iconBitmap = %this.previewData.previewImage;
+   %previewButton.bitmapAsset = %this.previewData.previewImage;
    
    %previewButton.profile = "AssetBrowserPreview" @ %previewButton.assetType;
    %previewButton.tooltip = %this.previewData.tooltip;
@@ -2151,7 +2141,7 @@ function AssetBrowser::updateNavigationBreadcrumb(%this, %address)
          %folderSpacerButton = new GuiBitmapButtonCtrl()
          {
             profile = ToolsGuiButtonProfile;
-            bitmap = "tools/gui/images/rightArrowWhite";
+            bitmapAsset = "ToolsModule:rightArrowWhite_image";
             bitmapMode = "Centered";
             extent = "25" SPC AssetBrowser_BreadcrumbBar.extent.y;
             //command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";

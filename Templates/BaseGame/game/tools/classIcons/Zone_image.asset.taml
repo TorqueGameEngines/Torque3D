@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Zone_image"
+    imageFile="@assetFile=Zone.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

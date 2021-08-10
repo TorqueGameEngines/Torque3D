@@ -30,36 +30,36 @@ singleton GuiControlProfile (NavPanelProfile)
 
 singleton GuiControlProfile (NavPanel : NavPanelProfile) 
 {
-   bitmap = "./navPanel";
+   bitmapAsset = "ToolsModule:navPanel_image";
    category = "Editor";
 };
 
 singleton GuiControlProfile (NavPanelBlue : NavPanelProfile) 
 {
-   bitmap = "./navPanel_blue";
+   bitmapAsset = "ToolsModule:navPanel_blue_image";
    category = "Editor";
 };
 
 singleton GuiControlProfile (NavPanelGreen : NavPanelProfile) 
 {
-   bitmap = "./navPanel_green";
+   bitmapAsset = "ToolsModule:navPanel_green_image";
    category = "Editor";
 };
 
 singleton GuiControlProfile (NavPanelRed : NavPanelProfile) 
 {
-   bitmap = "./navPanel_red";
+   bitmapAsset = "ToolsModule:navPanel_red_image";
    category = "Editor";
 };
 
 singleton GuiControlProfile (NavPanelWhite : NavPanelProfile) 
 {
-   bitmap = "./navPanel_white";
+   bitmapAsset = "ToolsModule:navPanel_white_image";
    category = "Editor";
 };
 
 singleton GuiControlProfile (NavPanelYellow : NavPanelProfile) 
 {
-   bitmap = "./navPanel_yellow";
+   bitmapAsset = "ToolsModule:navPanel_yellow_image";
    category = "Editor";
 };

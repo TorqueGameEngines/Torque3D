@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="align_bottom_n_image"
+    imageFile="@assetFile=align-bottom_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -31,7 +31,7 @@ function setupImportConfigSettingsList()
    {
       new ArrayObject(ImportAssetConfigSettingsList);
       
-      ImportAssetConfigSettingsList.addNewConfigSetting("General/DuplicatAutoResolution", "Duplicate Asset Auto-Resolution Action", "list", "", "AutoPrune", "None,AutoPrune,AutoRename");
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/DuplicateAutoResolution", "Duplicate Asset Auto-Resolution Action", "list", "", "AutoRename", "None,AutoPrune,AutoRename,FolderPrefix");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/WarningsAsErrors", "Warnings As Errors", "bool", "", "0", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/PreventImportWithErrors", "Prevent Import With Errors", "bool", "", "1", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/AutomaticallyPromptMissingFiles", "Automatically Prompt Missing Files", "bool", "", "0", "", "");

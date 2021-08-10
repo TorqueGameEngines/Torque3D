@@ -32,8 +32,8 @@ function loadStartup()
    // A list of the splash screens and logos
    // to cycle through. Note that they have to
    // be in consecutive numerical order
-   StartupGui.bitmap[0]     = "data/ui/images/background-dark";
-   StartupGui.logo[0]       = "data/ui/images/Torque-3D-logo_alt";
+   StartupGui.bitmap[0]     = "UI:background_dark_image";
+   StartupGui.logo[0]       = "UI:Torque_3D_logo_alt_image";
    StartupGui.logoPos[0]    = "178 251";
    StartupGui.logoExtent[0] = "443 139";
 
@@ -63,7 +63,7 @@ function StartupGui::next(%this)
 {
    // Set us to a blank screen while we load the next one
    Canvas.setContent(BlankGui);
-
+   
    // Set our bitmap and reset the done variable
    %this.setBitmap(%this.bitmap[$StartupIdx]);
    %this.done = false;

@@ -99,7 +99,8 @@ void TSForestItemData::inspectPostApply()
 
 void TSForestItemData::_onResourceChanged( const Torque::Path &path )
 {
-   if ( path != Path( mShapeFile ) )
+   if (mShapeAsset.isNull()) return;
+   if ( path != Path(mShapeAsset->getShapeFilePath()) )
       return;
    
    SAFE_DELETE( mShapeInstance );
@@ -110,12 +111,15 @@ void TSForestItemData::_onResourceChanged( const Torque::Path &path )
 
 void TSForestItemData::_loadShape()
 {
-   mShape = ResourceManager::get().load(mShapeFile);
+   if (mShapeAsset.isNull()) return;
+
+   _setShape(mShapeAssetId);
+
    if ( !(bool)mShape )
       return;
 
    if ( mIsClientObject && 
-       !mShape->preloadMaterialList( mShapeFile ) )   
+       !mShape->preloadMaterialList(mShapeAsset->getShapeFilePath()) )
       return;
    
    // Lets add an autobillboard detail if don't have one.
@@ -153,13 +157,14 @@ TSShapeInstance* TSForestItemData::_getShapeInstance() const
 
 void TSForestItemData::_checkLastDetail()
 {
+   if (mShapeAsset.isNull()) return;
    const S32 dl = mShape->mSmallestVisibleDL;
    const TSDetail *detail = &mShape->details[dl];
 
    // TODO: Expose some real parameters to the datablock maybe?
    if ( detail->subShapeNum != -1 )
    {
-      mShape->addImposter( mShapeFile, 10, 4, 0, 0, 256, 0, 0 );
+      mShape->addImposter(mShapeAsset->getShapeFilePath(), 10, 4, 0, 0, 256, 0, 0 );
 
       // HACK: If i don't do this it crashes!
       while ( mShape->detailCollisionAccelerators.size() < mShape->details.size() )

@@ -64,8 +64,6 @@ function initializeAssetBrowser()
    exec("./guis/selectModule.gui");
    exec("./guis/selectPath.gui");
    exec("./guis/editModule.gui");
-   exec("./guis/importTemplateModules.gui");
-   exec("./guis/assetPreviewButtonsTemplate.gui");
    exec("./guis/newFolder.gui");
    exec("./guis/assetImportLog.gui");
    exec("./guis/looseFileAudit.gui");

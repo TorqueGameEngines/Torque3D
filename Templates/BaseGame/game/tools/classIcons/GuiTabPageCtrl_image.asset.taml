@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiTabPageCtrl_image"
+    imageFile="@assetFile=GuiTabPageCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

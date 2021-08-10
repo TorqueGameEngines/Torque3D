@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PS4_Triangle_image"
+    imageFile="@assetFile=PS4_Triangle.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

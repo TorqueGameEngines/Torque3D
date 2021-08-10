@@ -2067,6 +2067,7 @@ RTLightingFeatGLSL::RTLightingFeatGLSL()
 void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList, 
                                        const MaterialFeatureData &fd )
 {
+   if (fd.features[MFT_ImposterVert]) return;
 	MultiLine *meta = new MultiLine;
 	
 	ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );

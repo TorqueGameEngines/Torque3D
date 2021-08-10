@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DefaultDecalRoadMaterial"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="DefaultDecalRoadMaterial"
+    VersionId="1" />

@@ -227,9 +227,9 @@ bool ProcessedShaderMaterial::init( const FeatureSet &features,
       mInstancingState = new InstancingState();
       mInstancingState->setFormat( _getRPD( 0 )->shader->getInstancingFormat(), mVertexFormat );
    }
-   if (mMaterial && mMaterial->mDiffuseMapFilename[0].isNotEmpty() && mMaterial->mDiffuseMapFilename[0].substr(0, 1).equal("#"))
+   if (mMaterial && mMaterial->mDiffuseMapName[0] != StringTable->EmptyString() && String(mMaterial->mDiffuseMapName[0]).startsWith("#"))
    {
-      String texTargetBufferName = mMaterial->mDiffuseMapFilename[0].substr(1, mMaterial->mDiffuseMapFilename[0].length() - 1);
+      String texTargetBufferName = String(mMaterial->mDiffuseMapName[0]).substr(1, strlen(mMaterial->mDiffuseMapName[0]) - 1);
       NamedTexTarget *texTarget = NamedTexTarget::find(texTargetBufferName);
       RenderPassData* rpd = getPass(0);
 

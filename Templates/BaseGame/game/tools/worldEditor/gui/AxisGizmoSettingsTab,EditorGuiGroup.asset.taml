@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AxisGizmoSettingsTab,EditorGuiGroup"
+    scriptFile="@assetFile=AxisGizmoSettingsTab.ed.gui"
+    GUIFile="@assetFile=AxisGizmoSettingsTab.ed.gui"
+    VersionId="1" />

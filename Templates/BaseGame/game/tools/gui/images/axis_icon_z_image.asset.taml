@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="axis_icon_z_image"
+    imageFile="@assetFile=axis-icon_z.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

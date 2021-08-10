@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ForestBrushElement_image"
+    imageFile="@assetFile=ForestBrushElement.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

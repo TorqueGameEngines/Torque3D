@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="seq_bar_out_n_image"
+    imageFile="@assetFile=seq_bar-out_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

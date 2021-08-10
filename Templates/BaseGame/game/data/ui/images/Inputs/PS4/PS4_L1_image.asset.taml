@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PS4_L1_image"
+    imageFile="@assetFile=PS4_L1.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

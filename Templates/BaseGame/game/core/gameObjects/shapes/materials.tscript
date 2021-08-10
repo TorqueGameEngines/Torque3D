@@ -24,7 +24,7 @@ singleton Material(OctahedronMat)
 {
    mapTo = "green";
 
-   diffuseMap[0] = "core/gameObjects/images/camera";
+   diffuseMapAsset[0] = "Core_GameObjects:camera_image";
 
    translucent = "1";
    translucentBlendOp = "PreMul";
@@ -39,7 +39,7 @@ singleton Material(CameraMat)
 {
    mapTo = "pasted__phongE1";
 
-	diffuseMap[0] = "core/gameObjects/images/camera";
+	diffuseMapAsset[0] = "Core_GameObjects:camera_image";
 
 	diffuseColor[0] = "0 0.627451 1 1";
 	specular[0] = "1 1 1 1";
@@ -60,7 +60,7 @@ singleton Material(noshape_NoShape)
 {
    mapTo = "NoShape";
 
-	diffuseMap[0] = "";
+	diffuseMapAsset[0] = "";
 
 	diffuseColor[0] = "0.8 0.003067 0 .8";
 	emissive[0] = 0;
@@ -78,7 +78,7 @@ singleton Material(noshapetext_lambert1)
 {
    mapTo = "lambert1";
 
-	diffuseMap[0] = "";
+	diffuseMapAsset[0] = "";
 
 	diffuseColor[0] = "0.4 0.4 0.4 1";
 	specular[0] = "1 1 1 1";
@@ -95,7 +95,7 @@ singleton Material(noshapetext_noshape_mat)
 {
    mapTo = "noshape_mat";
 
-	diffuseMap[0] = "";
+	diffuseMapAsset[0] = "";
 
 	diffuseColor[0] = "0.4 0.3504 0.363784 0.33058";
 	specular[0] = "1 1 1 1";

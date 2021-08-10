@@ -33,6 +33,8 @@
 #include "renderInstance/renderPassManager.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class SFXTrack;
 class SFXSource;
 
@@ -45,9 +47,14 @@ class PrecipitationData : public GameBaseData
   public:
    SFXTrack*     soundProfile;
 
-   StringTableEntry mDropName;         ///< Texture filename for drop particles
+   DECLARE_IMAGEASSET(PrecipitationData, Drop, onDropChanged, GFXStaticTextureSRGBProfile); ///< Texture for drop particles
+   DECLARE_IMAGEASSET_SETGET(PrecipitationData, Drop);
+
    StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops
-   StringTableEntry mSplashName;       ///< Texture filename for splash particles
+
+   DECLARE_IMAGEASSET(PrecipitationData, Splash, onSplashChanged, GFXStaticTextureSRGBProfile); ///< Texture for splash particles
+   DECLARE_IMAGEASSET_SETGET(PrecipitationData, Splash);
+
    StringTableEntry mSplashShaderName; ///< The name of the shader used for raindrops
 
    S32  mDropsPerSide;     ///< How many drops are on a side of the raindrop texture.
@@ -59,6 +66,9 @@ class PrecipitationData : public GameBaseData
    static void  initPersistFields();
    virtual void packData(BitStream* stream);
    virtual void unpackData(BitStream* stream);
+
+   void onDropChanged() {}
+   void onSplashChanged() {}
 };
 
 struct Raindrop

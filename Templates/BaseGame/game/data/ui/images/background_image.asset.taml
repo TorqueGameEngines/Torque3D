@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="background_image"
+    imageFile="@assetFile=background.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

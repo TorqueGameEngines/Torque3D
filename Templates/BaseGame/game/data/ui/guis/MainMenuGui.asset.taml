@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MainMenuGui"
+    scriptFile="@assetFile=mainMenu.gui"
+    GUIFile="@assetFile=mainMenu.gui"
+    VersionId="1" />

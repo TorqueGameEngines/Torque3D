@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="bring_to_front_n_image"
+    imageFile="@assetFile=bring-to-front_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

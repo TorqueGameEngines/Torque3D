@@ -41,6 +41,8 @@
 #include "lighting/lightInfo.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 class ParticleEmitter;
 class ParticleEmitterData;
 class TSThread;
@@ -62,8 +64,6 @@ class ExplosionData : public GameBaseData {
    };
 
   public:
-   StringTableEntry dtsFileName;
-
    bool faceViewer;
 
    S32 particleDensity;
@@ -76,7 +76,9 @@ class ExplosionData : public GameBaseData {
    Point3F              explosionScale;
    F32                  playSpeed;
 
-   Resource<TSShape> explosionShape;
+   DECLARE_SHAPEASSET(ExplosionData, ExplosionShape, onShapeChanged);
+   DECLARE_SHAPEASSET_SETGET(ExplosionData, ExplosionShape);
+
    S32               explosionAnimation;
 
    ParticleEmitterData*    emitterList[EC_NUM_EMITTERS];
@@ -137,6 +139,8 @@ public:
    /*D*/          ~ExplosionData();
    ExplosionData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
    virtual bool   allowSubstitutions() const { return true; }
+
+   void onShapeChanged() {}
 };
 
 

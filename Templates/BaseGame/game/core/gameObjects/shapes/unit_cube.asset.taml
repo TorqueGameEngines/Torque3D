@@ -1,0 +1,6 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="unit_cube"
+    fileName="@assetFile=unit_cube.dts"
+    constuctorFileName="@assetFile=unit_cube.tscript" />

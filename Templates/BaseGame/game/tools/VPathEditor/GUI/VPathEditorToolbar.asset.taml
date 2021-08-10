@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="VPathEditorToolbar"
+    scriptFile="@assetFile=VPathEditorToolbar.gui"
+    GUIFile="@assetFile=VPathEditorToolbar.gui"
+    VersionId="1" />

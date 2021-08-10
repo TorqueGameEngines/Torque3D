@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="object_fit_bounds_h_image"
+    imageFile="@assetFile=object-fit-bounds_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

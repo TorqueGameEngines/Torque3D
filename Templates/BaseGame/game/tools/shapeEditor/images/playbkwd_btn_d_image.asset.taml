@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="playbkwd_btn_d_image"
+    imageFile="@assetFile=playbkwd_btn_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

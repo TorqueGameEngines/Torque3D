@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cube_zNeg_image"
+    imageFile="@assetFile=cube_zNeg.jpg"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

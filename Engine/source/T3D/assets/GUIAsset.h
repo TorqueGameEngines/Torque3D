@@ -60,6 +60,8 @@ public:
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
+   static StringTableEntry getAssetIdByGUIName(StringTableEntry guiName);
+
    /// Declare Console Object.
    DECLARE_CONOBJECT(GUIAsset);
 

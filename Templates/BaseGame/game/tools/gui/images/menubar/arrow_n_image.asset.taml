@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="arrow_n_image"
+    imageFile="@assetFile=arrow_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

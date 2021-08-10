@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="change_material_btn_n_image"
+    imageFile="@assetFile=change-material-btn_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

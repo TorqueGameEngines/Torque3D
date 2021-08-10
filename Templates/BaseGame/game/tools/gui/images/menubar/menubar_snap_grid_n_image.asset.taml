@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="menubar_snap_grid_n_image"
+    imageFile="@assetFile=snap-grid_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

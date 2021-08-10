@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cube_xNeg_image"
+    imageFile="@assetFile=cube_xNeg.jpg"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

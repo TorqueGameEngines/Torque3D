@@ -259,7 +259,7 @@ void TerrainFile::_initMaterialInstMapping()
    
    for( U32 i = 0; i < mMaterials.size(); ++ i )
    {
-      Torque::Path path( mMaterials[ i ]->getDiffuseMap() );
+      Torque::Path path( mMaterials[ i ]->getDiffuseMap());
       mMaterialInstMapping.push_back( path.getFileName() );
    }
    

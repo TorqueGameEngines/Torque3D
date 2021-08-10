@@ -1807,9 +1807,11 @@ WorldEditor::WorldEditor()
    mRenderPopupBackground = true;
    mPopupBackgroundColor.set(100,100,100);
    mPopupTextColor.set(255,255,0);
-   mSelectHandle = StringTable->insert("tools/worldEditor/images/SelectHandle");
-   mDefaultHandle = StringTable->insert("tools/worldEditor/images/DefaultHandle");
-   mLockedHandle = StringTable->insert("tools/worldEditor/images/LockedHandle");
+
+   mSelectHandleAssetId = StringTable->insert("ToolsModule:SelectHandle");
+   mDefaultHandleAssetId = StringTable->insert("ToolsModule:DefaultHandle");
+   mLockedHandleAssetId = StringTable->insert("ToolsModule:LockedHandle");
+
    mObjectTextColor.set(255,255,255);
    mObjectsUseBoxCenter = true;
    
@@ -1894,9 +1896,9 @@ bool WorldEditor::onAdd()
    // create the default class entry
    mDefaultClassEntry.mName = 0;
    mDefaultClassEntry.mIgnoreCollision = false;
-   mDefaultClassEntry.mDefaultHandle   = GFXTexHandle(mDefaultHandle,   &GFXStaticTextureSRGBProfile, avar("%s() - mDefaultClassEntry.mDefaultHandle (line %d)", __FUNCTION__, __LINE__));
-   mDefaultClassEntry.mSelectHandle    = GFXTexHandle(mSelectHandle,    &GFXStaticTextureSRGBProfile, avar("%s() - mDefaultClassEntry.mSelectHandle (line %d)", __FUNCTION__, __LINE__));
-   mDefaultClassEntry.mLockedHandle    = GFXTexHandle(mLockedHandle,    &GFXStaticTextureSRGBProfile, avar("%s() - mDefaultClassEntry.mLockedHandle (line %d)", __FUNCTION__, __LINE__));
+   mDefaultClassEntry.mDefaultHandle = mDefaultHandle;
+   mDefaultClassEntry.mSelectHandle = mSelectHandle;
+   mDefaultClassEntry.mLockedHandle = mLockedHandle;
 
    if(!(mDefaultClassEntry.mDefaultHandle && mDefaultClassEntry.mSelectHandle && mDefaultClassEntry.mLockedHandle))
       return false;
@@ -2826,9 +2828,10 @@ void WorldEditor::initPersistFields()
       addField( "renderObjText",          TypeBool,   Offset(mRenderObjText, WorldEditor) );
       addField( "renderObjHandle",        TypeBool,   Offset(mRenderObjHandle, WorldEditor) );
       addField( "renderSelectionBox",     TypeBool,   Offset(mRenderSelectionBox, WorldEditor) );
-      addField( "selectHandle",           TypeFilename, Offset(mSelectHandle, WorldEditor) );
-      addField( "defaultHandle",          TypeFilename, Offset(mDefaultHandle, WorldEditor) );
-      addField( "lockedHandle",           TypeFilename, Offset(mLockedHandle, WorldEditor) );
+
+      INITPERSISTFIELD_IMAGEASSET(SelectHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET(DefaultHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET(LockedHandle, WorldEditor, "");
    
    endGroup( "Rendering" );
    

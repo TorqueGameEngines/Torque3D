@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NESW_image"
+    imageFile="@assetFile=NESW.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

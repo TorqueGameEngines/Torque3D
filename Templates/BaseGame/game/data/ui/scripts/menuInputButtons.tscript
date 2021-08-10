@@ -92,81 +92,81 @@ function MenuInputButton::refresh(%this)
    {
       if(%this.gamepadButton !$= "")
       {
-         %path = "";
+         %assetId = "";
          if($activeControllerName $= "PS4 Controller")
          { 
-            %path = "data/ui/images/inputs/PS4/PS4_";
+            %assetId = "UI:PS4_";
             
             if(%this.gamepadButton $= "btn_a")
-               %path = %path @ "Cross";
+               %assetId = %assetId @ "Cross";
             else if(%this.gamepadButton $= "btn_b")
-               %path = %path @ "Circle";
+               %assetId = %assetId @ "Circle";
             else if(%this.gamepadButton $= "btn_x")
-               %path = %path @ "Square";
+               %assetId = %assetId @ "Square";
             else if(%this.gamepadButton $= "btn_y")
-               %path = %path @ "Triangle";
+               %assetId = %assetId @ "Triangle";
             else if(%this.gamepadButton $= "btn_l")
-               %path = %path @ "L1";
+               %assetId = %assetId @ "L1";
             else if(%this.gamepadButton $= "zaxis")
-               %path = %path @ "L2";
+               %assetId = %assetId @ "L2";
             else if(%this.gamepadButton $= "btn_r")
-               %path = %path @ "R1";
+               %assetId = %assetId @ "R1";
             else if(%this.gamepadButton $= "rzaxis")
-               %path = %path @ "R2";
+               %assetId = %assetId @ "R2";
             else if(%this.gamepadButton $= "btn_start")
-               %path = %path @ "Options";
+               %assetId = %assetId @ "Options";
             else if(%this.gamepadButton $= "btn_back")
-               %path = %path @ "Share";
+               %assetId = %assetId @ "Share";
          }
          else if($activeControllerName $= "Nintendo Switch Pro Controller")
          {
-            %path = "data/ui/images/inputs/Switch/Switch_";
+            %assetId = "UI:Switch_";
             
             if(%this.gamepadButton $= "btn_a")
-               %path = %path @ "B";
+               %assetId = %assetId @ "B";
             else if(%this.gamepadButton $= "btn_b")
-               %path = %path @ "A";
+               %assetId = %assetId @ "A";
             else if(%this.gamepadButton $= "btn_x")
-               %path = %path @ "Y";
+               %assetId = %assetId @ "Y";
             else if(%this.gamepadButton $= "btn_y")
-               %path = %path @ "X";
+               %assetId = %assetId @ "X";
             else if(%this.gamepadButton $= "btn_l")
-               %path = %path @ "LB";
+               %assetId = %assetId @ "LB";
             else if(%this.gamepadButton $= "zaxis")
-               %path = %path @ "LT";
+               %assetId = %assetId @ "LT";
             else if(%this.gamepadButton $= "btn_r")
-               %path = %path @ "RB";
+               %assetId = %assetId @ "RB";
             else if(%this.gamepadButton $= "rzaxis")
-               %path = %path @ "RT";
+               %assetId = %assetId @ "RT";
             else if(%this.gamepadButton $= "btn_start")
-               %path = %path @ "Plus";
+               %assetId = %assetId @ "Plus";
             else if(%this.gamepadButton $= "btn_back")
-               %path = %path @ "Minus";
+               %assetId = %assetId @ "Minus";
          }
          else if($activeControllerName !$= "")
          {
-            %path = "data/ui/images/inputs/Xbox/Xbox_";
+            %assetId = "UI:Xbox_";
             
             if(%this.gamepadButton $= "btn_a")
-               %path = %path @ "A";
+               %assetId = %assetId @ "A";
             else if(%this.gamepadButton $= "btn_b")
-               %path = %path @ "B";
+               %assetId = %assetId @ "B";
             else if(%this.gamepadButton $= "btn_x")
-               %path = %path @ "X";
+               %assetId = %assetId @ "X";
             else if(%this.gamepadButton $= "btn_y")
-               %path = %path @ "Y";
+               %assetId = %assetId @ "Y";
             else if(%this.gamepadButton $= "btn_l")
-               %path = %path @ "LB";
+               %assetId = %assetId @ "LB";
             else if(%this.gamepadButton $= "zaxis")
-               %path = %path @ "LT";
+               %assetId = %assetId @ "LT";
             else if(%this.gamepadButton $= "btn_r")
-               %path = %path @ "RB";
+               %assetId = %assetId @ "RB";
             else if(%this.gamepadButton $= "rzaxis")
-               %path = %path @ "RT";
+               %assetId = %assetId @ "RT";
             else if(%this.gamepadButton $= "btn_start")
-               %path = %path @ "Menu";
+               %assetId = %assetId @ "Menu";
             else if(%this.gamepadButton $= "btn_back")
-               %path = %path @ "Windows";
+               %assetId = %assetId @ "Windows";
          }
       } 
    }
@@ -174,11 +174,11 @@ function MenuInputButton::refresh(%this)
    {
       if(%this.keyboardButton !$= "")
       {
-         %path = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_" @ %this.keyboardButton;
+         %assetId = "UI:Keyboard_Black_" @ %this.keyboardButton;
       }
    }
    
-   %this.setBitmap(%path);
+   %this.setBitmap(%assetId @ "_image");
 
    return true;
 }

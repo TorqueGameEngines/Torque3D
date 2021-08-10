@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="macCursor_image"
+    imageFile="@assetFile=macCursor.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

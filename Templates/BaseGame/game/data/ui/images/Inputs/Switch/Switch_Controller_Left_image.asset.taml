@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Switch_Controller_Left_image"
+    imageFile="@assetFile=Switch_Controller_Left.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

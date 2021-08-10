@@ -195,8 +195,8 @@ GuiControl* GuiInspectorTypeStateMachineAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "StateMachineEditor.loadStateMachineAsset(%d.getText()); Canvas.pushDialog(StateMachineEditor);", retCtrl->getId());
    mSMEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-   mSMEdButton->setBitmap(bitmapName);
+   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
+   mSMEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mSMEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mSMEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");

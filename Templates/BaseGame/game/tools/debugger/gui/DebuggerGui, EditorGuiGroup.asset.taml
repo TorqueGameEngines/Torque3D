@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DebuggerGui, EditorGuiGroup"
+    scriptFile="@assetFile=debugger.ed.gui"
+    GUIFile="@assetFile=debugger.ed.gui"
+    VersionId="1" />

@@ -162,7 +162,7 @@ function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = "";
    %previewData.doubleClickCommand = "";
    
-   %previewData.previewImage = "tools/assetBrowser/art/gameObjectIcon";
+   %previewData.previewImage = "ToolsModule:gameObjectIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.gameObjectName;
    %previewData.assetDesc = %assetDef.description;

@@ -66,7 +66,7 @@ public:
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
-   void compileShader();
+   static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
 
    StringTableEntry getMaterialDefinitionName() { return mMatDefinitionName; }
 

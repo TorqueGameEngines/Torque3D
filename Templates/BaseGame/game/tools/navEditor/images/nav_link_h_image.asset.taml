@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="nav_link_h_image"
+    imageFile="@assetFile=nav-link_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

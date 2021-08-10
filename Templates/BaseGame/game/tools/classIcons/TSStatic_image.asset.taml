@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TSStatic_image"
+    imageFile="@assetFile=TSStatic.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

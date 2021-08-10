@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DefaultRoadMaterialOther"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="DefaultRoadMaterialOther"
+    VersionId="1" />

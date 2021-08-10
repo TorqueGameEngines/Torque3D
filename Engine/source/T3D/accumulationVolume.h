@@ -58,15 +58,15 @@ class AccumulationVolume : public ScenePolyhedralSpace
       
       mutable Vector< SceneObject* > mVolumeQueryList;
 
-      // Name (path) of the accumulation texture.
-      String mTextureName;
-      
       // SceneSpace.
       virtual void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
 
-   public:
+      DECLARE_IMAGEASSET(AccumulationVolume, Texture, onTextureChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_NET_SETGET(AccumulationVolume, Texture, -1);
 
-      GFXTexHandle mAccuTexture;
+      void onTextureChanged() {}
+
+   public:
 
       AccumulationVolume();
       ~AccumulationVolume();

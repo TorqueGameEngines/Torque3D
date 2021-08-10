@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="materialEd_previewMaterial"
+    scriptFile="@assetFile=materialEditor.ed.tscript"
+    materialDefinitionName="materialEd_previewMaterial"
+    VersionId="1" />

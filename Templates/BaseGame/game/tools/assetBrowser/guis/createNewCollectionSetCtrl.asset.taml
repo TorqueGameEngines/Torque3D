@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="createNewCollectionSetCtrl"
+    scriptFile="@assetFile=createNewCollectionSet.gui"
+    GUIFile="@assetFile=createNewCollectionSet.gui"
+    VersionId="1" />

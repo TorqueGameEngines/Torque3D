@@ -9,6 +9,10 @@ function Core_Rendering::onCreate(%this)
    $Core::DefaultPrefilterCubemap = "core/rendering/images/default_prefilter.dds";
    $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";
    
+   $Core::NoImageAssetFallback = "Core_Rendering:missingTexture_image";
+   $Core::NoMaterialAssetFallback = "Core_Rendering:noMaterial";
+   $Core::NoShapeAssetFallback = "Core_Rendering:noShape";
+   
    $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
    
    $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");
@@ -26,15 +30,7 @@ function Core_Rendering::onCreate(%this)
    $Terrain::OrmTextureFormat = ProjectSettings.value("Terrain/OrmTextureFormat", 12);
    
    exec("./scripts/graphicsOptions." @ $TorqueScriptFileExtension);
-   exec("./scripts/terrainSettings." @ $TorqueScriptFileExtension);
    exec("./scripts/renderManager." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/commonMaterialData." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/scatterSky." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/shaders." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/terrainBlock." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/water." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);
 }
 
 function Core_Rendering::onDestroy(%this)
@@ -46,6 +42,14 @@ function Core_Rendering::initClient(%this)
    // Start rendering and stuff.
    initRenderManager();
    initLightingSystems("Advanced Lighting"); 
+   
+   exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/commonMaterialData." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/scatterSky." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/shaders." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/terrainBlock." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/water." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);
 
    //load prefs
    exec("data/defaults." @ $TorqueScriptFileExtension);

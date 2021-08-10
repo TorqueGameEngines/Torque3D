@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiMLTextCtrl_image"
+    imageFile="@assetFile=GuiMLTextCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="menuSlider_image"
+    imageFile="@assetFile=menuSlider.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

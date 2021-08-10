@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="distribute_vertical_n_image"
+    imageFile="@assetFile=distribute-vertical_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

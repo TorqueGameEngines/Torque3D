@@ -44,6 +44,7 @@
 #include "lighting/lightInfo.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
 
 class ExplosionData;
 class SplashData;
@@ -69,9 +70,8 @@ protected:
    bool onAdd();
 
 public:
-   // variables set in datablock definition:
-   // Shape related
-   const char* projectileShapeName;
+   DECLARE_SHAPEASSET(ProjectileData, ProjectileShape, onShapeChanged);
+   DECLARE_SHAPEASSET_SETGET(ProjectileData, ProjectileShape);
 
    /// Set to true if it is a billboard and want it to always face the viewer, false otherwise
    bool faceViewer;
@@ -121,7 +121,6 @@ public:
    S32 lightDescId;   
 
    // variables set on preload:
-   Resource<TSShape> projectileShape;
    S32 activateSeq;
    S32 maintainSeq;
 
@@ -152,6 +151,8 @@ public:
 public:
    ProjectileData(const ProjectileData&, bool = false);
    virtual bool allowSubstitutions() const { return true; }
+
+   void onShapeChanged() {}
 };
 
 

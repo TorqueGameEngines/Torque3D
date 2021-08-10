@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="terrain_painter_border_new_h_image"
+    imageFile="@assetFile=terrain-painter-border-new_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

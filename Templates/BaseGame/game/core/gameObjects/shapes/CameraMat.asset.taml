@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CameraMat"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="CameraMat"
+    VersionId="1" />

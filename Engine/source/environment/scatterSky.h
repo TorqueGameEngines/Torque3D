@@ -51,6 +51,8 @@
 #include "math/util/tResponseCurve.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class LightInfo;
 class SphereMesh;
 class TimeOfDay;
@@ -208,13 +210,16 @@ protected:
    F32 mFlareScale;
 
    bool mMoonEnabled;
-   String mMoonMatName;
+
+   DECLARE_MATERIALASSET(ScatterSky, MoonMat);
+   DECLARE_MATERIALASSET_NET_SETGET(ScatterSky, MoonMat, UpdateMask);
+
    BaseMatInstance *mMoonMatInst;
    F32 mMoonScale;
    LinearColorF mMoonTint;
    VectorF mMoonLightDir;
    CubemapData *mNightCubemap;
-   String mNightCubemapName;
+   StringTableEntry mNightCubemapName;
    bool mUseNightCubemap;
    MatrixSet *mMatrixSet;
 

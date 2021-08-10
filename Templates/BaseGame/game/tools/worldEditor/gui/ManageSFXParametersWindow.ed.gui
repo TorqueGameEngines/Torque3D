@@ -112,7 +112,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/new";
+            bitmapAsset = "ToolsModule:new_n_image";
             autoFit = "0";
             text = "Create";
             groupNum = "-1";

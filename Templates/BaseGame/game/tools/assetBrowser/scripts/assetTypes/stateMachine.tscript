@@ -166,7 +166,7 @@ function AssetBrowser::buildStateMachineAssetPreview(%this, %assetDef, %previewD
    %previewData.assetPath = %assetDef.scriptFile;
    %previewData.doubleClickCommand = "AssetBrowser.editStateMachineAsset( "@%assetDef@" );";
    
-   %previewData.previewImage = "tools/assetBrowser/art/stateMachineIcon";
+   %previewData.previewImage = "ToolsModule:stateMachineIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.friendlyName;
    %previewData.assetDesc = %assetDef.description;

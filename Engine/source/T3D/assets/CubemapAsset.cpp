@@ -136,7 +136,7 @@ void CubemapAsset::initializeAsset()
 {
    mScriptFile = expandAssetFilePath(mScriptFile);
 
-   if(Platform::isFile(mScriptFile))
+   if(Torque::FS::IsScriptFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 
@@ -144,7 +144,7 @@ void CubemapAsset::onAssetRefresh()
 {
    mScriptFile = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptFile))
+   if (Torque::FS::IsScriptFile(mScriptFile))
       Con::executeFile(mScriptFile, false, false);
 }
 
@@ -207,8 +207,8 @@ GuiControl* GuiInspectorTypeCubemapAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "CubemapEditor.openCubemapAsset(%d.getText());", retCtrl->getId());
    mShapeEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-   mShapeEdButton->setBitmap(bitmapName);
+   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
+   mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");

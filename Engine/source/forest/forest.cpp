@@ -348,7 +348,7 @@ void Forest::createNewFile()
 
    //If we didn't already define a forestfile to work with, just base it off our filename
    if (basePath.isEmpty())
-      basePath = levelAsset->getLevelPath();
+      basePath = (Torque::Path)(levelAsset->getLevelPath());
 
    String fileName = Torque::FS::MakeUniquePath( basePath.getPath(), basePath.getFileName(), "forest" );
    mDataFileName = StringTable->insert( fileName.c_str() );

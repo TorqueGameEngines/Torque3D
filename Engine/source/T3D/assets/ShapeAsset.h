@@ -517,7 +517,7 @@ public: \
    Resource<TSShape> get##name##Resource(const U32& index) \
    {\
       if(index >= sm##name##Count || index < 0)\
-         return nullptr;\
+         return ResourceManager::get().load( "" );\
       return m##name[index];\
    }
 

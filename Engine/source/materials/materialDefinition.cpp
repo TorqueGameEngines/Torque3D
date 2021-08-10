@@ -37,7 +37,7 @@
 #include "core/util/safeDelete.h"
 #include "T3D/accumulationVolume.h"
 #include "gui/controls/guiTreeViewCtrl.h"
-#include <console\persistenceManager.h>
+#include <console/persistenceManager.h>
 
 IMPLEMENT_CONOBJECT(Material);
 

@@ -90,6 +90,13 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
         480,                               // height, in pixels
         SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN // flags - see below
     );
+   if (!tempWindow)
+   {
+      const char* err = SDL_GetError();
+      Con::printf(err);
+      AssertFatal(0, err);
+      return;
+   }
 
    SDL_ClearError();
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);

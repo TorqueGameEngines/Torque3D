@@ -248,7 +248,7 @@ public: \
    }\
    SimObjectPtr<Material> get##name##Resource() \
    {\
-      return m##name##;\
+      return m##name;\
    }
 
 #define DECLARE_MATERIALASSET_SETGET(className, name)\

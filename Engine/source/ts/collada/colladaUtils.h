@@ -43,8 +43,8 @@
 #ifndef _OPTIMIZEDPOLYLIST_H_
 #include "collision/optimizedPolyList.h"
 #endif
-#ifndef TINYXML_INCLUDED
-#include "tinyxml.h"
+#ifndef TINYXML2_INCLUDED
+#include "tinyxml2.h"
 #endif
 #ifndef _CONSOLE_H_
 #include "console/console.h"
@@ -299,17 +299,17 @@ namespace ColladaUtils
 
    // Collada export helper functions
    Torque::Path findTexture(const Torque::Path& diffuseMap);
-   void exportColladaHeader(TiXmlElement* rootNode);
-   void exportColladaMaterials(TiXmlElement* rootNode, const OptimizedPolyList& mesh, Vector<String>& matNames, const Torque::Path& colladaFile);
-   void exportColladaTriangles(TiXmlElement* meshNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames);
-   void exportColladaMesh(TiXmlElement* rootNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames);
-   void exportColladaScene(TiXmlElement* rootNode, const String& meshName, const Vector<String>& matNames);
+   void exportColladaHeader(tinyxml2::XMLElement* rootNode);
+   void exportColladaMaterials(tinyxml2::XMLElement* rootNode, const OptimizedPolyList& mesh, Vector<String>& matNames, const Torque::Path& colladaFile);
+   void exportColladaTriangles(tinyxml2::XMLElement* meshNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames);
+   void exportColladaMesh(tinyxml2::XMLElement* rootNode, const OptimizedPolyList& mesh, const String& meshName, const Vector<String>& matNames);
+   void exportColladaScene(tinyxml2::XMLElement* rootNode, const String& meshName, const Vector<String>& matNames);
 
-   void exportColladaMaterials(TiXmlElement* rootNode, const ExportData& exportData, const Torque::Path& colladaFile);
-   void exportColladaMesh(TiXmlElement* rootNode, const ExportData& exportData, const String& meshName);
-   void exportColladaCollisionTriangles(TiXmlElement* meshNode, const ExportData& exportData, const U32 collisionIdx);
-   void exportColladaTriangles(TiXmlElement* meshNode, const ExportData& exportData, const U32 detailLevel, const String& meshName);
-   void exportColladaScene(TiXmlElement* rootNode, const ExportData& exportData, const String& meshName);
+   void exportColladaMaterials(tinyxml2::XMLElement* rootNode, const ExportData& exportData, const Torque::Path& colladaFile);
+   void exportColladaMesh(tinyxml2::XMLElement* rootNode, const ExportData& exportData, const String& meshName);
+   void exportColladaCollisionTriangles(tinyxml2::XMLElement* meshNode, const ExportData& exportData, const U32 collisionIdx);
+   void exportColladaTriangles(tinyxml2::XMLElement* meshNode, const ExportData& exportData, const U32 detailLevel, const String& meshName);
+   void exportColladaScene(tinyxml2::XMLElement* rootNode, const ExportData& exportData, const String& meshName);
 
    // Export an OptimizedPolyList to a simple Collada file
    void exportToCollada(const Torque::Path& colladaFile, const OptimizedPolyList& mesh, const String& meshName = String::EmptyString);

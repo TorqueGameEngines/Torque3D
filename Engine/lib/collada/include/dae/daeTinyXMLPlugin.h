@@ -20,8 +20,9 @@
 #include <dae/daeURI.h>
 #include <dae/daeIOPluginCommon.h>
 
-class TiXmlDocument;
-class TiXmlElement;
+#ifndef TINYXML2_INCLUDED
+#include <tinyxml2.h>
+#endif
 
 class daeTinyXMLPlugin : public daeIOPluginCommon
 {
@@ -60,12 +61,12 @@ public:
 	virtual DLLSPEC daeString getOption( daeString option );
 	
 private:
-	TiXmlDocument*  m_doc;
-	std::list<TiXmlElement*>  m_elements;
+   tinyxml2::XMLDocument*  m_doc;
+	std::list<tinyxml2::XMLElement*>  m_elements;
 
 	virtual daeElementRef readFromFile(const daeURI& uri);
 	virtual daeElementRef readFromMemory(daeString buffer, const daeURI& baseUri);
-	daeElementRef readElement(TiXmlElement* tinyXmlElement, daeElement* parentElement);
+	daeElementRef readElement(tinyxml2::XMLElement* tinyXmlElement, daeElement* parentElement);
 
 	void writeElement( daeElement* element ); 
 	void writeAttribute( daeMetaAttribute* attr, daeElement* element );

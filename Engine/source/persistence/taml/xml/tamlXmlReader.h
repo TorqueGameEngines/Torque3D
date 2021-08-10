@@ -31,10 +31,6 @@
 #include "persistence/taml/taml.h"
 #endif
 
-#ifndef TINYXML_INCLUDED
-#include "tinyXML/tinyxml.h"
-#endif
-
 //-----------------------------------------------------------------------------
 
 /// @ingroup tamlGroup
@@ -60,14 +56,14 @@ private:
 private:
     void resetParse( void );
 
-    SimObject* parseElement( TiXmlElement* pXmlElement );
-    void parseAttributes( TiXmlElement* pXmlElement, SimObject* pSimObject );
-    void parseCustomElement( TiXmlElement* pXmlElement, TamlCustomNodes& pCustomNode );
-    void parseCustomNode( TiXmlElement* pXmlElement, TamlCustomNode* pCustomNode );
+    SimObject* parseElement( tinyxml2::XMLElement* pXmlElement );
+    void parseAttributes( tinyxml2::XMLElement* pXmlElement, SimObject* pSimObject );
+    void parseCustomElement( tinyxml2::XMLElement* pXmlElement, TamlCustomNodes& pCustomNode );
+    void parseCustomNode( tinyxml2::XMLElement* pXmlElement, TamlCustomNode* pCustomNode );
 
-    U32 getTamlRefId( TiXmlElement* pXmlElement );
-    U32 getTamlRefToId( TiXmlElement* pXmlElement );
-    const char* getTamlObjectName( TiXmlElement* pXmlElement );   
+    U32 getTamlRefId( tinyxml2::XMLElement* pXmlElement );
+    U32 getTamlRefToId( tinyxml2::XMLElement* pXmlElement );
+    const char* getTamlObjectName( tinyxml2::XMLElement* pXmlElement );   
 };
 
 #endif // _TAML_XMLREADER_H_

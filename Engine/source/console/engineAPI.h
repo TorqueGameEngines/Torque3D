@@ -292,7 +292,7 @@ struct EngineUnmarshallData< void >
 template<>
 struct EngineUnmarshallData< ConsoleValue >
 {
-   ConsoleValue operator()( ConsoleValue &ref ) const
+   ConsoleValue operator()( ConsoleValue ref ) const
    {
       return std::move(ref);
    }

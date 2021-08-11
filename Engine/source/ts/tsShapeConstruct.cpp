@@ -417,7 +417,7 @@ TSShapeConstructor* TSShapeConstructor::findShapeConstructorByFilename(const Fil
       for (S32 i = 0; i < group->size(); i++)
       {
          TSShapeConstructor* tss = dynamic_cast<TSShapeConstructor*>(group->at(i));
-         FileName shapePath = tss->getShapePath();
+         FileName shapePath = (FileName)(tss->getShapePath());
 
          char buf[1024];
          FileName fullShapePath = String(Platform::makeFullPathName(shapePath, buf, sizeof(buf)));

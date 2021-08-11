@@ -1671,7 +1671,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       if(mat)
       {
          //We found a match, so just modify our asset item's info to point against it. This will create the asset definition, but otherwise leave the material definition as-is.
-         assetItem->filePath = mat->getFilename();
+         assetItem->filePath = (Torque::Path)(mat->getFilename());
       }
    }
    else

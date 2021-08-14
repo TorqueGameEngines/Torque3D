@@ -1284,7 +1284,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
 
  bool Platform::dumpDirectories(const char *path, Vector<StringTableEntry> &directoryVector, S32 depth, bool noBasePath)
  {
-   bool retVal = recurseDumpDirectories(path, "", directoryVector, 0, depth, noBasePath);
+   bool retVal = recurseDumpDirectories(path, "", directoryVector, -1, depth, noBasePath);
    clearExcludedDirectories();
    return retVal;
  }

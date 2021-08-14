@@ -1773,8 +1773,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          //if this is called from inside a function, append the ip and codeptr
          if (!gEvalState.stack.empty())
          {
-            gEvalState.stack.last()->code = this;
-            gEvalState.stack.last()->ip = ip - 1;
+            gEvalState.getCurrentFrame().code = this;
+            gEvalState.getCurrentFrame().ip = ip - 1;
          }
 
          ip += 5;
@@ -2070,8 +2070,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       {
          //append the ip and codeptr before managing the breakpoint!
          AssertFatal(!gEvalState.stack.empty(), "Empty eval stack on break!");
-         gEvalState.stack.last()->code = this;
-         gEvalState.stack.last()->ip = ip - 1;
+         gEvalState.getCurrentFrame().code = this;
+         gEvalState.getCurrentFrame().ip = ip - 1;
 
          U32 breakLine;
          findBreakLine(ip - 1, breakLine, instruction);

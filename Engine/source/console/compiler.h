@@ -44,6 +44,8 @@ class DataChunker;
 #include "core/util/tVector.h"
 #endif
 
+//------------------------------------------------------------
+
 namespace Compiler
 {
    /// The opcodes for the TorqueScript VM.
@@ -252,6 +254,7 @@ namespace Compiler
    CompilerStringTable *getCurrentStringTable();
    CompilerStringTable &getGlobalStringTable();
    CompilerStringTable &getFunctionStringTable();
+   CompilerLocalVariableToRegisterMappingTable& getFunctionVariableMappingTable();
 
    void setCurrentStringTable(CompilerStringTable* cst);
 

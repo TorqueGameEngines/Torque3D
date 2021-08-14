@@ -640,6 +640,8 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    globalFloats = getGlobalFloatTable().build();
    functionFloats = getFunctionFloatTable().build();
 
+   variableRegisterTable = getFunctionVariableMappingTable().copy();
+
    codeStream.emit(OP_RETURN_VOID);
    codeStream.emitCodeStream(&codeSize, &code, &lineBreakPairs);
 

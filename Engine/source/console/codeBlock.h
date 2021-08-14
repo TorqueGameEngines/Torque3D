@@ -23,6 +23,24 @@
 #ifndef _CODEBLOCK_H_
 #define _CODEBLOCK_H_
 
+#include <unordered_map>
+
+struct CompilerLocalVariableToRegisterMappingTable
+{
+   // First key: function name
+   struct RemappingTable
+   {
+      std::unordered_map<StringTableEntry, S32> table;
+   };
+
+   std::unordered_map<StringTableEntry, RemappingTable> localVarToRegister;
+
+   void add(StringTableEntry functionName, StringTableEntry varName, S32 reg);
+   S32 lookup(StringTableEntry functionName, StringTableEntry varName);
+   CompilerLocalVariableToRegisterMappingTable copy();
+   void reset();
+};
+
 #include "console/compiler.h"
 #include "console/consoleParser.h"
 
@@ -34,7 +52,6 @@ class ConsoleValue;
 /// This class represents a block of code, usually mapped directly to a file.
 class CodeBlock
 {
-   friend class CodeInterpreter;
 private:
    static CodeBlock* smCodeBlockList;
    static CodeBlock* smCurrentCodeBlock;
@@ -76,6 +93,8 @@ public:
 
    U32 codeSize;
    U32 *code;
+
+   CompilerLocalVariableToRegisterMappingTable variableRegisterTable;
 
    U32 refCount;
    U32 lineBreakPairCount;

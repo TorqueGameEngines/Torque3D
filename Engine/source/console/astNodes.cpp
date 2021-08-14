@@ -62,6 +62,7 @@ class FuncVars
    {
       S32 reg;
       TypeReq currentType;
+      StringTableEntry name;
       bool isConstant;
    };
 
@@ -76,7 +77,9 @@ public:
       }
 
       S32 id = counter++;
-      vars[var] = { id, currentType, isConstant };
+      vars[var] = { id, currentType, var, isConstant };
+      variableNameMap[id] = var;
+
       return id;
    }
 
@@ -96,6 +99,8 @@ public:
    }
 
    inline S32 count() { return counter; }
+
+   std::unordered_map<S32, StringTableEntry> variableNameMap;
 
 private:
    std::unordered_map<StringTableEntry, Var> vars;
@@ -1604,6 +1609,14 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 
    setCurrentStringTable(&getGlobalStringTable());
    setCurrentFloatTable(&getGlobalFloatTable());
+
+   // map local variables to registers for this function.
+   CompilerLocalVariableToRegisterMappingTable* tbl = &getFunctionVariableMappingTable();
+   for (const auto& pair : gFuncVars->variableNameMap)
+   {
+      tbl->add(fnName, pair.second, pair.first);
+   }
+
    gFuncVars = NULL;
 
    return ip;

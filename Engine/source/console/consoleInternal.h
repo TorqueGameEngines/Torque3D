@@ -644,6 +644,11 @@ public:
       return *(stack[mStackDepth - 1]);
    }
 
+   Dictionary& getFrameAt(S32 depth)
+   {
+      return *(stack[depth]);
+   }
+
    /// @}
 
    /// Run integrity checks for debugging.

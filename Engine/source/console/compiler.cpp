@@ -60,6 +60,7 @@ namespace Compiler
    CompilerFloatTable  *gCurrentFloatTable, gGlobalFloatTable, gFunctionFloatTable;
    DataChunker          gConsoleAllocator;
    CompilerIdentTable   gIdentTable;
+   CompilerLocalVariableToRegisterMappingTable gFunctionVariableMappingTable;
 
    //------------------------------------------------------------
 
@@ -92,6 +93,8 @@ namespace Compiler
    CompilerStringTable &getGlobalStringTable() { return gGlobalStringTable; }
    CompilerStringTable &getFunctionStringTable() { return gFunctionStringTable; }
 
+   CompilerLocalVariableToRegisterMappingTable& getFunctionVariableMappingTable() { return gFunctionVariableMappingTable; }
+
    void setCurrentStringTable(CompilerStringTable* cst) { gCurrentStringTable = cst; }
 
    CompilerFloatTable *getCurrentFloatTable() { return gCurrentFloatTable; }
@@ -117,6 +120,7 @@ namespace Compiler
       getFunctionFloatTable().reset();
       getFunctionStringTable().reset();
       getIdentTable().reset();
+      getFunctionVariableMappingTable().reset();
    }
 
    void *consoleAlloc(U32 size) { return gConsoleAllocator.alloc(size); }
@@ -204,6 +208,43 @@ void CompilerStringTable::write(Stream &st)
    st.write(totalLen);
    for (Entry *walk = list; walk; walk = walk->next)
       st.write(walk->len, walk->string);
+}
+
+//------------------------------------------------------------
+
+void CompilerLocalVariableToRegisterMappingTable::add(StringTableEntry functionName, StringTableEntry varName, S32 reg)
+{
+   localVarToRegister[functionName].table[varName] = reg;
+}
+
+S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry functionName, StringTableEntry varName)
+{
+   auto functionPosition = localVarToRegister.find(functionName);
+   if (functionPosition != localVarToRegister.end())
+   {
+      const auto& table = localVarToRegister[functionName].table;
+      auto varPosition = table.find(varName);
+      if (varPosition != table.end())
+      {
+         return varPosition->second;
+      }
+   }
+
+   Con::errorf("Unable to find local variable %s in function name %s", varName, functionName);
+   return -1;
+}
+
+CompilerLocalVariableToRegisterMappingTable CompilerLocalVariableToRegisterMappingTable::copy()
+{
+   // Trivilly copyable as its all plain old data and using STL containers... (We want a deep copy though!)
+   CompilerLocalVariableToRegisterMappingTable table;
+   table.localVarToRegister = localVarToRegister;
+   return std::move(table);
+}
+
+void CompilerLocalVariableToRegisterMappingTable::reset()
+{
+   localVarToRegister.clear();
 }
 
 //------------------------------------------------------------

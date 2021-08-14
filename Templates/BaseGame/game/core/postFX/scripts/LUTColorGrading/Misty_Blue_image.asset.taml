@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Misty_Blue_image"
+    imageFile="@assetFile=Misty_Blue.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

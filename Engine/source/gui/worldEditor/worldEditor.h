@@ -327,9 +327,14 @@ class WorldEditor : public EditTSCtrl
       bool              mRenderPopupBackground;
       ColorI            mPopupBackgroundColor;
       ColorI            mPopupTextColor;
-      StringTableEntry  mSelectHandle;
-      StringTableEntry  mDefaultHandle;
-      StringTableEntry  mLockedHandle;
+
+      DECLARE_IMAGEASSET(WorldEditor, SelectHandle, onSelectHandleChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_SETGET(WorldEditor, SelectHandle);
+      DECLARE_IMAGEASSET(WorldEditor, DefaultHandle, onDefaultHandleChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_SETGET(WorldEditor, DefaultHandle);
+      DECLARE_IMAGEASSET(WorldEditor, LockedHandle, onLockedHandleChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_IMAGEASSET_SETGET(WorldEditor, LockedHandle);
+
       ColorI            mObjectTextColor;
       bool              mObjectsUseBoxCenter;
       ColorI            mObjSelectColor;
@@ -420,6 +425,10 @@ class WorldEditor : public EditTSCtrl
 
       void setEditorTool(EditorTool*);
       EditorTool* getActiveEditorTool() { return mActiveEditorTool; }
+
+      void onSelectHandleChanged() {}
+      void onDefaultHandleChanged() {}
+      void onLockedHandleChanged() {}
 };
 
 typedef WorldEditor::DropType WorldEditorDropType;

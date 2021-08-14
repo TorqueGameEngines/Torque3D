@@ -131,7 +131,9 @@ LightFlareData::LightFlareData()
    dMemset( mElementUseLightColor, 0, sizeof( bool ) * MAX_ELEMENTS );   
 
    for ( U32 i = 0; i < MAX_ELEMENTS; i++ )   
-      mElementDist[i] = -1.0f;   
+      mElementDist[i] = -1.0f;
+
+   INIT_IMAGEASSET(FlareTexture);
 }
 
 LightFlareData::~LightFlareData()
@@ -158,8 +160,7 @@ void LightFlareData::initPersistFields()
       addField( "flareEnabled", TypeBool, Offset( mFlareEnabled, LightFlareData ),
          "Allows the user to disable this flare globally for any lights referencing it." );
 
-      addField( "flareTexture", TypeImageFilename, Offset( mFlareTextureName, LightFlareData ),
-         "The texture / sprite sheet for this flare." );
+      INITPERSISTFIELD_IMAGEASSET(FlareTexture, LightFlareData, "The texture / sprite sheet for this flare.");
 
       addArray( "Elements", MAX_ELEMENTS );
 
@@ -217,7 +218,9 @@ void LightFlareData::packData( BitStream *stream )
    Parent::packData( stream );
 
    stream->writeFlag( mFlareEnabled );
-   stream->write( mFlareTextureName );   
+
+   PACKDATA_IMAGEASSET(FlareTexture);
+
    stream->write( mScale );
    stream->write( mOcclusionRadius );
    stream->writeFlag( mRenderReflectPass );
@@ -240,7 +243,9 @@ void LightFlareData::unpackData( BitStream *stream )
    Parent::unpackData( stream );
 
    mFlareEnabled = stream->readFlag();
-   stream->read( &mFlareTextureName );   
+
+   UNPACKDATA_IMAGEASSET(FlareTexture);
+
    stream->read( &mScale );
    stream->read( &mOcclusionRadius );
    mRenderReflectPass = stream->readFlag();
@@ -630,12 +635,6 @@ bool LightFlareData::_preload( bool server, String &errorStr )
 
    if ( mElementCount > 0 )
       _makePrimBuffer( &mFlarePrimBuffer, mElementCount );
-
-   if ( !server )
-   {
-      if ( mFlareTextureName.isNotEmpty() )      
-         mFlareTexture.set( mFlareTextureName, &GFXStaticTextureSRGBProfile, "FlareTexture" );
-   }
 
    return true;
 }

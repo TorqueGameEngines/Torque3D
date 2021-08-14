@@ -542,6 +542,7 @@ ShadowMapParams::ShadowMapParams( LightInfo *light )
    fadeStartDist = 75.0f;
    lastSplitTerrainOnly = false;
    mQuery = GFX->createOcclusionQuery();
+   cookie = StringTable->EmptyString();;
 
    _validate();
 }
@@ -585,7 +586,7 @@ void ShadowMapParams::_validate()
    // We apply the hardware specific limits during 
    // shadow rendering.
    //
-   U32 maxTexSize = 4096;
+   U32 maxTexSize = 8192;
 
    if ( mLight->getType() == LightInfo::Vector )
    {
@@ -595,15 +596,16 @@ void ShadowMapParams::_validate()
       // based on the split count to keep the total
       // shadow texture size within 4096.
       if ( numSplits == 2 || numSplits == 4 )
-         maxTexSize = 4096;
+         maxTexSize = 8192;
       if ( numSplits == 3 )
-         maxTexSize = 2048;
+         maxTexSize = 4096;
    }
    else
       numSplits = 1;
 
    // Keep it in a valid range... less than 32 is dumb.
    texSize = mClamp( texSize, 32, maxTexSize );
+   shadowDistance = mClamp(shadowDistance, 25.0f, 10000.0f);
 }
 
 LightShadowMap* ShadowMapParams::getOrCreateShadowMap()
@@ -646,15 +648,15 @@ LightShadowMap* ShadowMapParams::getOrCreateShadowMap()
 
 GFXTextureObject* ShadowMapParams::getCookieTex()
 {
-   if (  cookie.isNotEmpty() &&
+   if ( hasCookieTex() &&
          (  mCookieTex.isNull() || 
-            cookie != mCookieTex->getPath() ) )
+            cookie != StringTable->insert(mCookieTex->getPath().c_str()) ) )
    {
       mCookieTex.set(   cookie, 
                         &GFXStaticTextureSRGBProfile, 
                         "ShadowMapParams::getCookieTex()" );
    }
-   else if ( cookie.isEmpty() )
+   else if (!hasCookieTex())
       mCookieTex = NULL;
 
    return mCookieTex.getPointer();
@@ -662,13 +664,13 @@ GFXTextureObject* ShadowMapParams::getCookieTex()
 
 GFXCubemap* ShadowMapParams::getCookieCubeTex()
 {
-   if (  cookie.isNotEmpty() &&
+   if (  hasCookieTex() &&
          (  mCookieCubeTex.isNull() || 
-            cookie != mCookieCubeTex->getPath() ) )
+            cookie != StringTable->insert(mCookieTex->getPath().c_str())) )
    {
       mCookieCubeTex.set( cookie );
    }
-   else if ( cookie.isEmpty() )
+   else if (!hasCookieTex())
       mCookieCubeTex = NULL;
 
    return mCookieCubeTex.getPointer();
@@ -692,7 +694,7 @@ void ShadowMapParams::packUpdate( BitStream *stream ) const
    
    stream->write( texSize );
 
-   stream->write( cookie );
+   stream->writeString( cookie );
 
    stream->write( numSplits );
    stream->write( logWeight );
@@ -722,7 +724,7 @@ void ShadowMapParams::unpackUpdate( BitStream *stream )
 
    stream->read( &texSize );
 
-   stream->read( &cookie );
+   cookie = stream->readSTString();
 
    stream->read( &numSplits );
    stream->read( &logWeight );

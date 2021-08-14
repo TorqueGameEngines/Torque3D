@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TerrainPainterPalette,EditorGuiGroup"
+    scriptFile="@assetFile=TerrainPainterPalette.ed.gui"
+    GUIFile="@assetFile=TerrainPainterPalette.ed.gui"
+    VersionId="1" />

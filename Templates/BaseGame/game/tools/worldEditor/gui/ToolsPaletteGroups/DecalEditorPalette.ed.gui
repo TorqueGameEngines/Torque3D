@@ -29,7 +29,7 @@ $paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Select Decal (1)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/arrow";
+      bitmapAsset = "ToolsModule:arrow_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -51,7 +51,7 @@ $paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Move Decal (2)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/move-point";
+      bitmapAsset = "ToolsModule:move_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -72,7 +72,7 @@ $paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Rotate Decal (3)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/rotate-point";
+      bitmapAsset = "ToolsModule:rotate_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -93,7 +93,7 @@ $paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Scale Decal (4)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/scale-point";
+      bitmapAsset = "ToolsModule:scale_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -114,7 +114,7 @@ $paletteId = new GuiControl(DecalEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Add Decal (5)";
       hovertime = "1000";
-      bitmap = "tools/decalEditor/add-decal";
+      bitmapAsset = "ToolsModule:add_decal_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };

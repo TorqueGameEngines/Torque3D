@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ObjectSnapOptionsContainer, EditorGuiGroup"
+    scriptFile="@assetFile=ObjectSnapOptionsWindow.ed.gui"
+    GUIFile="@assetFile=ObjectSnapOptionsWindow.ed.gui"
+    VersionId="1" />

@@ -32,7 +32,7 @@ class SimXMLDocument;
 class Settings : public SimObject
 {
 private:
-   FileName         mFile;
+   StringTableEntry mFile;
    Vector<String>   mGroupStack;
 	S32              mSearchPos;
 	Vector<String>   mSearchResults;

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="btn_AddR_image"
+    imageFile="@assetFile=btn_AddR.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

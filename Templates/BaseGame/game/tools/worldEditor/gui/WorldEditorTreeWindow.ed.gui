@@ -102,7 +102,7 @@ $guiContent = new GuiControl() {
             };
             
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/clear-icon";
+               bitmapAsset = "ToolsModule:clear_icon_n_image";
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
@@ -351,7 +351,7 @@ $guiContent = new GuiControl() {
                   groupNum = "0";
                   buttonType = "PushButton";
                   
-                  Bitmap = "tools/gui/images/folderUp";
+                  Bitmap = "ToolsModule:folderUp_image";
                   autoSize = "0";
                };
                new GuiPopUpMenuCtrl(CreatorPopupMenu) {
@@ -519,7 +519,7 @@ $guiContent = new GuiControl() {
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Lock Selection";
          hovertime = "1000";
-         bitmap = "tools/gui/images/lock";
+         bitmapAsset = "ToolsModule:lock_n_image";
          buttonType = "ToggleButton";
          groupNum = "-1";
          text = "";
@@ -542,7 +542,7 @@ $guiContent = new GuiControl() {
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Add Sim Group";
          hovertime = "1000";
-         bitmap = "tools/gui/images/add-simgroup-btn";
+         bitmapAsset = "ToolsModule:add_simgroup_btn_n_image";
          buttonType = "PushButton";
          groupNum = "-1";
          text = "";
@@ -567,7 +567,7 @@ $guiContent = new GuiControl() {
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Delete Selection";
          hovertime = "1000";
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          buttonType = "PushButton";
          groupNum = "-1";
          text = "";

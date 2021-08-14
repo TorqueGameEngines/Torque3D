@@ -171,13 +171,15 @@ function ForestEditorGui::deleteBrushOrElement( %this )
 
 function ForestEditorGui::newMesh( %this )
 {
-   SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, "createNewForestMesh", "Select Forest Mesh Datablock Path");
-   SelectAssetPathWindow.selectWindow();
+   AssetBrowser_SelectModule.showDialog("ForestEditorGui.pickedNewMeshTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
 }
 
-function createNewForestMesh(%newPath)
+function ForestEditorGui::pickedNewMeshTargetModule(%this, %module)
 {
-   ForestEditorGui.newMeshPath = %newPath;
+   %moduleDef = ModuleDatabase.findModule(%module);
+    
+   ForestEditorGui.forestItemDataPath = %moduleDef.ModulePath @ "/scripts/managedData/managedForestItemData." @ $TorqueScriptFileExtension;
    AssetBrowser.showDialog("ShapeAsset", "selectNewForestMesh", "", "", "");
 }
 
@@ -212,10 +214,10 @@ function selectNewForestMesh(%selectedShapeAssetId)
    //%str = "datablock TSForestItemData( " @ %name @ " ) { shapeFile = \"" @ %fullPath @ "\"; };";            
    //eval( %str );
    
-   %fullPath = AssetDatabase.acquireAsset(%selectedShapeAssetId).getShapeFile();
+   //%fullPath = AssetDatabase.acquireAsset(%selectedShapeAssetId).getShapeFile();
    
    new TSForestItemData(%name) {
-      shapeFile = %fullPath;
+      shapeAsset = %selectedShapeAssetId;
    };
    
    %isrl = isObject( %name );
@@ -228,7 +230,7 @@ function selectNewForestMesh(%selectedShapeAssetId)
       ForestEditMeshTree.scrollVisible( %item );
       ForestEditMeshTree.addSelection( %item );
       
-      ForestDataManager.setDirty( %name, ForestEditorGui.newMeshPath @ "/managedForestItemData." @ $TorqueScriptFileExtension );  
+      ForestDataManager.setDirty( %name, ForestEditorGui.forestItemDataPath );  
       
       %element = new ForestBrushElement()
       {

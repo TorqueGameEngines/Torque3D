@@ -13,7 +13,7 @@ $guiContent = new GuiChunkedBitmapCtrl(EditorChooseGUI, EditorGuiGroup) {
    Visible = "1";
    tooltipprofile = "ToolsGuiToolTipProfile";
    hovertime = "1000";
-   bitmap = "art/gui/background";
+   bitmap = "data/ui/images/background.png";
    useVariable = "0";
    tile = "0";
 

@@ -95,7 +95,7 @@ $guiContent = new GuiControl(AssetImportCtrl) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/iconOpen.png";
+         bitmapAsset = "ToolsModule:iconOpen_image";
          bitmapMode = "Centered";
          autoFitExtents = "0";
          useModifiers = "0";
@@ -221,7 +221,7 @@ $guiContent = new GuiControl(AssetImportCtrl) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/save-as";
+         bitmapAsset = "ToolsModule:save_as_n_image";
          bitmapMode = "Centered";
          autoFitExtents = "0";
          useModifiers = "0";
@@ -504,7 +504,7 @@ $guiContent = new GuiControl(AssetImportCtrl) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl(ImportLogButton) {
-         bitmap = "tools/gui/images/iconInformation.png";
+         bitmapAsset = "ToolsModule:iconInformation_image";
          bitmapMode = "Centered";
          autoFitExtents = "0";
          useModifiers = "0";

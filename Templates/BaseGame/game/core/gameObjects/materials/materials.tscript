@@ -58,7 +58,7 @@ singleton CustomMaterial( TexturedRibbonMat )
 
 singleton Material(DefaultDecalRoadMaterial)
 {
-   diffuseMap[0] = "core/gameObjects/images/defaultRoadTextureTop.png";
+   diffuseMapAsset[0] = "Core_GameObjects:defaultRoadTextureTop_image";
    mapTo = "unmapped_mat";
    materialTag0 = "RoadAndPath";
 };
@@ -66,13 +66,13 @@ singleton Material(DefaultDecalRoadMaterial)
 singleton Material(DefaultRoadMaterialTop)
 {
    mapTo = "unmapped_mat";
-   diffuseMap[0] = "core/gameObjects/images/defaultRoadTextureTop.png";
+   diffuseMapAsset[0] = "Core_GameObjects:defaultRoadTextureTop_image";
    materialTag0 = "RoadAndPath";
 };
 
 singleton Material(DefaultRoadMaterialOther)
 {
    mapTo = "unmapped_mat";
-   diffuseMap[0] = "core/gameObjects/images/defaultRoadTextureOther.png";
+   diffuseMapAsset[0] = "Core_GameObjects:defaultRoadTextureOther_image";
    materialTag0 = "RoadAndPath";
 };

@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Grid_512_Black"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="Grid_512_Black"
+    VersionId="1" />

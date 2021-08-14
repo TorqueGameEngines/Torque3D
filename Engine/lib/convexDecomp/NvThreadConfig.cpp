@@ -129,17 +129,21 @@ void   tc_sleep(NxU32 ms)
 
 void tc_spinloop()
 {
-   #ifdef __linux__
-      asm ( "pause" );
-   #elif defined( _XBOX )
-      // Pause would do nothing on the Xbox. Threads are not scheduled.
-   #elif defined( _WIN64 )
-      YieldProcessor( );
-   #elif (defined( __arm64__ ) && defined( __APPLE__ )) || defined( __arch64__ )
-      pthread_yield_np();
+#if defined( _XBOX )
+   // Pause would do nothing on the Xbox. Threads are not scheduled.
+#elif defined( _WIN64 )
+   YieldProcessor( );
+#elif defined( __APPLE__ )
+   pthread_yield_np();
+#elif defined(__linux__)
+   #if defined(_POSIX_PRIORITY_SCHEDULING)
+      sched_yield();
    #else
-      __asm { pause };
+      asm("pause");
    #endif
+#elif
+   __asm { pause };
+#endif
 }
 
 void tc_interlockedExchange(void *dest, const int64_t exchange)

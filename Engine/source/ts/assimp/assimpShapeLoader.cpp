@@ -805,7 +805,7 @@ TSShape* assimpLoadShape(const Torque::Path &path)
 
    // Allow TSShapeConstructor object to override properties
    ColladaUtils::getOptions().reset();
-   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructor(path.getFullPath());
+   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructorByFilename(path.getFullPath());
    if (tscon)
    {
       ColladaUtils::getOptions() = tscon->mOptions;

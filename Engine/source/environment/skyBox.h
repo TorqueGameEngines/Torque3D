@@ -47,6 +47,8 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 
 GFXDeclareVertexFormat( GFXSkyVertex )
 {
@@ -98,13 +100,13 @@ public:
 
 protected:
 
-   // Material 
-   String mMatName;
+   // Material
+   DECLARE_MATERIALASSET(SkyBox, Material);
+   DECLARE_MATERIALASSET_NET_SETGET(SkyBox, Material, -1);
+
    BaseMatInstance *mMatInstance;
    SkyMatParams mMatParamHandle;
 
-   SimObjectPtr<Material> mMaterial;
-   
    GFXVertexBufferHandle<GFXVertexPNT> mVB;
 
    GFXVertexBufferHandle<GFXVertexPC> mFogBandVB;

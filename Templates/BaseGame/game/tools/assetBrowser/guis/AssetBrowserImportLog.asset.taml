@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssetBrowserImportLog"
+    scriptFile="@assetFile=assetImportLog.gui"
+    GUIFile="@assetFile=assetImportLog.gui"
+    VersionId="1" />

@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DecalEditorPalette,EditorGuiGroup"
+    scriptFile="@assetFile=DecalEditorPalette.ed.gui"
+    GUIFile="@assetFile=DecalEditorPalette.ed.gui"
+    VersionId="1" />

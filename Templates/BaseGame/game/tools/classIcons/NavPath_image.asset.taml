@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NavPath_image"
+    imageFile="@assetFile=NavPath.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

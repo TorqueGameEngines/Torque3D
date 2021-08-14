@@ -96,7 +96,7 @@ $guiContent = new GuiControl(ChooseLevelDlg) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapCtrl() {
-         bitmap = "data/ui/images/no-preview";
+         bitmapAsset = "UI:no_preview_image";
          color = "255 255 255 255";
          wrap = "0";
          position = "513 71";

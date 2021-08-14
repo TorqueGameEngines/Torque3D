@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
-   bitmap = "data/ui/images/background-dark.png";
+   bitmapAsset = "UI:background_dark_image";
    useVariable = "0";
    tile = "0";
    position = "0 0";
@@ -36,7 +36,7 @@ $guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
       canSaveDynamicFields = "0";
 
       new GuiBitmapCtrl() {
-         bitmap = "data/ui/images/panel.png";
+         bitmapAsset = "UI:panel_image";
          color = "255 255 255 255";
          wrap = "0";
          position = "0 0";
@@ -54,7 +54,7 @@ $guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapCtrl(LoadingLogo) {
-         bitmap = "data/ui/images/Torque-3D-logo_alt.png";
+         bitmapAsset = "UI:Torque_3D_logo_alt_image";
          color = "255 255 255 255";
          wrap = "0";
          position = "27 6";

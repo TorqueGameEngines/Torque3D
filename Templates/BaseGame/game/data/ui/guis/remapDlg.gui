@@ -53,7 +53,7 @@ $guiContent = new GuiControl(RemapDlg) {
          canSaveDynamicFields = "0";
       };
       new GuiChunkedBitmapCtrl() {
-         bitmap = "data/ui/images/hudfill.png";
+         bitmapAsset = "UI:hudfill_image";
          useVariable = "0";
          tile = "0";
          position = "0 0";

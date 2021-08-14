@@ -295,7 +295,7 @@ $guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
          canSaveDynamicFields = "0";
 
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/forestEditor/images/new-mesh";
+            bitmapAsset = "ToolsModule:new_mesh_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -315,7 +315,7 @@ $guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -358,7 +358,7 @@ $guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
          canSaveDynamicFields = "0";
 
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/forestEditor/images/new-brush";
+            bitmapAsset = "ToolsModule:new_brush_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -378,7 +378,7 @@ $guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/forestEditor/images/new-element";
+            bitmapAsset = "ToolsModule:new_element_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -398,7 +398,7 @@ $guiContent = new ForestEditorCtrl(ForestEditorGui,EditorGuiGroup) {
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";

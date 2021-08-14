@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MissionAreaEditorGui, EditorGuiGroup"
+    scriptFile="@assetFile=missionAreaEditorGui.ed.gui"
+    GUIFile="@assetFile=missionAreaEditorGui.ed.gui"
+    VersionId="1" />

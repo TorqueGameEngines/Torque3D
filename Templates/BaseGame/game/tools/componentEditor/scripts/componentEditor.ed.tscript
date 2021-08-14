@@ -65,7 +65,7 @@ function GuiInspectorEntityGroup::createAddComponentList(%this)
       buttonMargin = "4 4";
       iconLocation = "Left";
       sizeIconToButton = "0";
-      iconBitmap = "tools/gui/images/iconAdd.png";
+      bitmapAsset = "ToolsModule:iconAdd_image";
       hovertime = "100";
       tooltip = "Add the selected component to the object";
       tooltipProfile = "EditorToolTipProfile";

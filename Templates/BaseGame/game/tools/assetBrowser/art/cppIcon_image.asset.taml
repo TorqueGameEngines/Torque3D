@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cppIcon_image"
+    imageFile="@assetFile=cppIcon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

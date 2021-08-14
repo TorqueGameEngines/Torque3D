@@ -41,7 +41,6 @@ SimSet* ForestItemData::smSet = NULL;
 
 ForestItemData::ForestItemData()
    :  mNeedPreload( true ),
-      mShapeFile( NULL ),
       mRadius( 1 ),
       mCollidable( true ),
       mWindScale( 0.0f ),
@@ -54,6 +53,7 @@ ForestItemData::ForestItemData()
       mTightnessCoefficient( 0.4f ),
       mDampingCoefficient( 0.7f )      
 {
+   INIT_SHAPEASSET(Shape);
 }
 
 void ForestItemData::initPersistFields()
@@ -61,9 +61,11 @@ void ForestItemData::initPersistFields()
    Parent::initPersistFields();
 
    addGroup( "Media" );
+
+      INITPERSISTFIELD_SHAPEASSET(Shape, ForestItemData, "Shape asset for this item type");
       
-      addField( "shapeFile",  TypeShapeFilename, Offset( mShapeFile, ForestItemData ),
-         "Shape file for this item type" );
+      addProtectedField( "shapeFile",  TypeShapeFilename, Offset( mShapeName, ForestItemData ), &_setShapeData, &defaultProtectedGetFn,
+         "Shape file for this item type", AbstractClassRep::FIELD_HideInInspectors );
 
       addField( "collidable",   TypeBool, Offset( mCollidable, ForestItemData ),
          "Can other objects or spacial queries hit items of this type." );
@@ -162,7 +164,7 @@ void ForestItemData::packData(BitStream* stream)
 
    stream->write( localName );
 
-   stream->writeString(mShapeFile);
+   PACKDATA_SHAPEASSET(Shape);
    
    stream->writeFlag( mCollidable );
 
@@ -190,8 +192,7 @@ void ForestItemData::unpackData(BitStream* stream)
 
    char readBuffer[1024];
 
-   stream->readString(readBuffer);
-   mShapeFile = StringTable->insert(readBuffer);
+   UNPACKDATA_SHAPEASSET(Shape);
    
    mCollidable = stream->readFlag();
 

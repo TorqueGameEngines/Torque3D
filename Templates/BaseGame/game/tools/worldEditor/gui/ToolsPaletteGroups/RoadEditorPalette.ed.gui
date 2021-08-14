@@ -29,7 +29,7 @@ $paletteId = new GuiControl(RoadEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Select Road (1)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/arrow";
+      bitmapAsset = "ToolsModule:arrow_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    }; 
@@ -51,7 +51,7 @@ $paletteId = new GuiControl(RoadEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Move Point (2)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/move-point";
+      bitmapAsset = "ToolsModule:move_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -73,7 +73,7 @@ $paletteId = new GuiControl(RoadEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Scale Point (4)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/scale-point";
+      bitmapAsset = "ToolsModule:scale_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -94,7 +94,7 @@ $paletteId = new GuiControl(RoadEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Create Road (5)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/add-road-path";
+      bitmapAsset = "ToolsModule:add_road_path_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -115,7 +115,7 @@ $paletteId = new GuiControl(RoadEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Insert Point (+)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/add-point";
+      bitmapAsset = "ToolsModule:add_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -137,7 +137,7 @@ $paletteId = new GuiControl(RoadEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Remove Point (-)";
       hovertime = "1000";
-      bitmap = "tools/worldEditor/images/road-river/subtract-point";
+      bitmapAsset = "ToolsModule:subtract_point_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };

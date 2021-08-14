@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="textEditSliderBox_image"
+    imageFile="@assetFile=textEditSliderBox.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

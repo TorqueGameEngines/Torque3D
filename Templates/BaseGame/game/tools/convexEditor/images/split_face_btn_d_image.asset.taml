@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="split_face_btn_d_image"
+    imageFile="@assetFile=split-face-btn_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

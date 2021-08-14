@@ -45,7 +45,7 @@ function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef;
    %previewData.assetPath = "";
    
-   %previewData.previewImage = "tools/assetBrowser/art/datablockIcon";
+   %previewData.previewImage = "ToolsModule:datablockIcon_image";
    
    //Lets see if we have a icon for specifically for this datablock type
    %dataClass = %assetDef.getClassName();

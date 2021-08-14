@@ -212,7 +212,7 @@ bool guiAnimBitmapCtrl::ptSetFrameRanges(void *object, const char *index, const 
 
 void guiAnimBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
 {
-   if (mTextureObject)
+   if (mBitmap)
    {
       if (mFrameTime->getElapsedMs() > 1000 / mFramesPerSec) //fps to msfp conversion
       {
@@ -271,7 +271,7 @@ void guiAnimBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
       GFX->getDrawUtil()->clearBitmapModulation();
       GFX->getDrawUtil()->setBitmapModulation(mColor);
 
-      GFXTextureObject* texture = mTextureObject;
+      GFXTextureObject* texture = mBitmap;
 
       Point2I modifiedSRC = Point2I(texture->mBitmapSize.x / mAnimTexTiling.x, texture->mBitmapSize.y / mAnimTexTiling.y);
       RectI srcRegion;
@@ -285,7 +285,7 @@ void guiAnimBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
       GFX->getDrawUtil()->drawBitmapStretchSR(texture, updateRect, srcRegion, GFXBitmapFlip_None, GFXTextureFilterLinear, false);
    }
 
-   if (mProfile->mBorder || !mTextureObject)
+   if (mProfile->mBorder || !mBitmap)
    {
       RectI rect(offset, getExtent());
       GFX->getDrawUtil()->drawRect(rect, mProfile->mBorderColor);

@@ -29,7 +29,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Select Item (1)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/arrow";
+      bitmapAsset = "ToolsModule:arrow_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };    
@@ -50,7 +50,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Move Item (2)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/translate";
+      bitmapAsset = "ToolsModule:translate_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -71,7 +71,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Rotate Item (3)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/rotate";
+      bitmapAsset = "ToolsModule:rotate_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -92,7 +92,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Scale Item (4)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/scale";
+      bitmapAsset = "ToolsModule:scale_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -113,7 +113,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Paint (5)";
       hovertime = "1000";
-      bitmap = "tools/forestEditor/images/paint-forest-btn";
+      bitmapAsset = "ToolsModule:paint_forest_btn_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -134,7 +134,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Erase (6)";
       hovertime = "1000";
-      bitmap = "tools/forestEditor/images/erase-all-btn";
+      bitmapAsset = "ToolsModule:erase_all_btn_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -156,7 +156,7 @@ $paletteId = new GuiControl(ForestEditorPalette,EditorGuiGroup) {
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Erase Selected (7)";
       hovertime = "1000";
-      bitmap = "tools/forestEditor/images/erase-element-btn";
+      bitmapAsset = "ToolsModule:erase_element_btn_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };

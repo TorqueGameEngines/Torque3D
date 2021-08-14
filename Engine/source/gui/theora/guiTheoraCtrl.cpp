@@ -129,7 +129,7 @@ void GuiTheoraCtrl::setFile( const String& filename )
 
 void GuiTheoraCtrl::play()
 {
-   if( mFilename.isEmpty() )
+   if( mFilename == StringTable->EmptyString() )
       return;
    
    if( !mTheoraTexture.isPlaying() )

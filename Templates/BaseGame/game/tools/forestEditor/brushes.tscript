@@ -23,3 +23,4 @@
 $forestBrushesGroup = new SimGroup( ForestBrushGroup )
 {
 };
+//--- OBJECT WRITE END ---

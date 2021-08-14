@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DebuggerEditWatchDlg, EditorGuiGroup"
+    scriptFile="@assetFile=editWatchDlg.ed.gui"
+    GUIFile="@assetFile=editWatchDlg.ed.gui"
+    VersionId="1" />

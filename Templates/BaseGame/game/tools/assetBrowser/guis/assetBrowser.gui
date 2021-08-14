@@ -197,7 +197,7 @@ $guiContent = new GuiControl(AssetBrowser) {
 
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/phone.png";
+            bitmapAsset = "ToolsModule:phone_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -225,7 +225,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/plus.png";
+            bitmapAsset = "ToolsModule:plus_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -253,7 +253,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/import.png";
+            bitmapAsset = "ToolsModule:import_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -281,7 +281,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/filter.png";
+            bitmapAsset = "ToolsModule:filter_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -310,7 +310,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/gear.png";
+            bitmapAsset = "ToolsModule:gear_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -339,7 +339,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          };
          new GuiIconButtonCtrl() {
             buttonMargin = "4 4";
-            iconBitmap = "tools/gui/images/stencilIcons/warning.png";
+            bitmapAsset = "ToolsModule:warning_image";
             iconLocation = "Left";
             sizeIconToButton = "1";
             makeIconSquare = "1";
@@ -469,7 +469,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                   command="AssetBrowserFolderSearchFilter.onEdited();";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/stencilIcons/zoom.png";
+                  bitmapAsset = "ToolsModule:zoom_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -631,7 +631,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl(AssetBrowser_NavigateBackBtn) {
-                  bitmap = "tools/gui/images/folderUp.png";
+                  bitmapAsset = "ToolsModule:folderUp_image";
                   bitmapMode = "Centered";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -657,7 +657,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl(AssetBrowser_NavigateForwardBtn) {
-                  bitmap = "tools/gui/images/folderDown.png";
+                  bitmapAsset = "ToolsModule:folderDown_image";
                   bitmapMode = "Centered";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -758,7 +758,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                canSaveDynamicFields = "0";
 
                new GuiBitmapButtonCtrl(AssetBrowser_VisibilityOptions) {
-                  bitmap = "tools/gui/images/visible";
+                  bitmapAsset = "ToolsModule:visible_n_image";
                   bitmapMode = "Centered";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -814,7 +814,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                   command="AssetBrowserSearchFilter.onEdited();";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/stencilIcons/zoom.png";
+                  bitmapAsset = "ToolsModule:zoom_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -840,7 +840,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/save-icon";
+                  bitmapAsset = "ToolsModule:save_icon_n_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";
@@ -1034,7 +1034,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl(AssetBrowser_ToggleFolderPanel) {
-                  bitmap = "tools/gui/images/stencilIcons/previous.png";
+                  bitmapAsset = "ToolsModule:previous_image";
                   bitmapMode = "Stretched";
                   autoFitExtents = "0";
                   useModifiers = "0";

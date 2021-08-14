@@ -25,10 +25,15 @@
 #include "console/console.h"
 
 // Debug Profiling.
+#include "persistence/taml/fsTinyXml.h"
 #include "platform/profiler.h"
 
 #ifndef _FILESTREAM_H_
 #include "core/stream/fileStream.h"
+#endif
+
+#ifndef TINYXML2_INCLUDED
+#include <tinyxml2.h>
 #endif
 
 //-----------------------------------------------------------------------------
@@ -45,7 +50,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     char filenameBuffer[1024];
     // TODO: Make sure this is a proper substitute for
     // Con::expandPath (T2D)
-    Con::expandToolScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
+    Con::expandScriptFilename( filenameBuffer, sizeof(filenameBuffer), pFilename );
     /** T2D uses a custom version of TinyXML that supports FileStream.
       * We don't so we can't do this
       *
@@ -67,7 +72,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
     
      */
 
-    TiXmlDocument xmlDocument;
+    VfsXMLDocument xmlDocument;
 
     // Load document from stream.
     if ( !xmlDocument.LoadFile( filenameBuffer ) )
@@ -120,7 +125,7 @@ bool TamlXmlParser::accept( const char* pFilename, TamlVisitor& visitor )
 
 //-----------------------------------------------------------------------------
 
-inline bool TamlXmlParser::parseElement( TiXmlElement* pXmlElement, TamlVisitor& visitor )
+inline bool TamlXmlParser::parseElement( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlParser_ParseElement);
@@ -134,13 +139,13 @@ inline bool TamlXmlParser::parseElement( TiXmlElement* pXmlElement, TamlVisitor&
         return false;
 
     // Fetch any children.
-    TiXmlNode* pChildXmlNode = pXmlElement->FirstChild();
+    tinyxml2::XMLNode* pChildXmlNode = pXmlElement->FirstChild();
 
     // Do we have any element children?
-    if ( pChildXmlNode != NULL && pChildXmlNode->Type() == TiXmlNode::TINYXML_ELEMENT )
+    if ( pChildXmlNode != NULL && pChildXmlNode->ToElement() != NULL )
     {
         // Iterate children.
-        for ( TiXmlElement* pChildXmlElement = dynamic_cast<TiXmlElement*>( pChildXmlNode ); pChildXmlElement; pChildXmlElement = pChildXmlElement->NextSiblingElement() )
+        for ( tinyxml2::XMLElement* pChildXmlElement = pChildXmlNode->ToElement(); pChildXmlElement; pChildXmlElement = pChildXmlElement->NextSiblingElement() )
         {
             // Parse element (stop processing if instructed).
             if ( !parseElement( pChildXmlElement, visitor ) )
@@ -153,7 +158,7 @@ inline bool TamlXmlParser::parseElement( TiXmlElement* pXmlElement, TamlVisitor&
 
 //-----------------------------------------------------------------------------
 
-inline bool TamlXmlParser::parseAttributes( TiXmlElement* pXmlElement, TamlVisitor& visitor )
+inline bool TamlXmlParser::parseAttributes( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor )
 {
     // Debug Profiling.
     PROFILE_SCOPE(TamlXmlParser_ParseAttribute);
@@ -166,7 +171,7 @@ inline bool TamlXmlParser::parseAttributes( TiXmlElement* pXmlElement, TamlVisit
     propertyState.setObjectName( pXmlElement->Value(), isRoot );
 
     // Iterate attributes.
-    for ( TiXmlAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
+    for ( const tinyxml2::XMLAttribute* pAttribute = pXmlElement->FirstAttribute(); pAttribute; pAttribute = pAttribute->Next() )
     {
         // Configure property state.
         propertyState.setProperty( pAttribute->Name(), pAttribute->Value() );
@@ -178,7 +183,7 @@ inline bool TamlXmlParser::parseAttributes( TiXmlElement* pXmlElement, TamlVisit
         if ( propertyState.getPropertyValueDirty() )
         {
             // Yes, so update the attribute.
-            pAttribute->SetValue( propertyState.getPropertyValue() );
+            const_cast<tinyxml2::XMLAttribute*>(pAttribute)->SetAttribute( propertyState.getPropertyValue() );
 
             // Flag the document as dirty.
             mDocumentDirty = true;

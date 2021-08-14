@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gui_image"
+    imageFile="@assetFile=gui.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

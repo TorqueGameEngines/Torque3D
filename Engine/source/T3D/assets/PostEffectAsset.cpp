@@ -136,7 +136,7 @@ void PostEffectAsset::initializeAsset()
    mHLSLShaderPath = expandAssetFilePath(mHLSLShaderFile);
    mGLSLShaderPath = expandAssetFilePath(mGLSLShaderFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 
@@ -146,7 +146,7 @@ void PostEffectAsset::onAssetRefresh()
    mHLSLShaderPath = expandAssetFilePath(mHLSLShaderFile);
    mGLSLShaderPath = expandAssetFilePath(mGLSLShaderFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 

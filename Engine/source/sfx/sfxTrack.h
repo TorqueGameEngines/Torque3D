@@ -73,6 +73,7 @@ class SFXTrack : public SimDataBlock
       
       /// Returns the description object for this sound profile.
       SFXDescription* getDescription() const { return mDescription; }
+      void setDescription(SFXDescription* desc) { mDescription = desc; }
 
       ///
       StringTableEntry getParameter( U32 index ) const

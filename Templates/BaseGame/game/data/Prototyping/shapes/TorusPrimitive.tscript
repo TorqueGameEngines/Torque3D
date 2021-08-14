@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(TorusPrimitive_fbx) {
-   baseShape = "./TorusPrimitive.fbx";
+   baseShapeAsset = "Prototyping:TorusPrimitive";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

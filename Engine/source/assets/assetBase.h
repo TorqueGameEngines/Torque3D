@@ -66,6 +66,7 @@ protected:
    bool                    mAssetInitialized;
    AssetDefinition*        mpAssetDefinition;
    U32                     mAcquireReferenceCount;
+   U32                     mLoadedState;
 
 public:
    enum AssetErrCode
@@ -87,7 +88,7 @@ public:
       if (errCode > AssetErrCode::Extended) return "undefined error";
       return mErrCodeStrings[errCode];
    };
-
+   U32 getStatus() { return mLoadedState; };
    AssetBase();
    virtual ~AssetBase();
 
@@ -124,6 +125,7 @@ public:
    void                    refreshAsset(void);
 
    S32 getAssetDependencyFieldCount(const char* pFieldName);
+   StringTableEntry getAssetDependencyField(const char* pFieldName, S32 index = 0);
    void clearAssetDependencyFields(const char* pFieldName);
    void addAssetDependencyField(const char* pFieldName, const char* pAssetId);
 
@@ -166,6 +168,11 @@ private:
    /// Set asset manager ownership.
    void                    setOwned(AssetManager* pAssetManager, AssetDefinition* pAssetDefinition);
 };
+
+//helper macro for stitching string and non string values togeather sans quotes
+#define assetText(x,suff) #x#suff
+#define macroText(x) #x
+#define assetDoc(x,suff) "@brief "#x" "#suff
 
 #endif // _ASSET_BASE_H_
 

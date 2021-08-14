@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AL_ShadowVisualizeMaterial"
+    scriptFile="@assetFile=shadowViz.tscript"
+    materialDefinitionName="AL_ShadowVisualizeMaterial"
+    VersionId="1" />

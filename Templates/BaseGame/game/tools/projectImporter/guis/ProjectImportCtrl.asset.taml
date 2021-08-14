@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ProjectImportCtrl"
+    scriptFile="@assetFile=projectImporter.gui"
+    GUIFile="@assetFile=projectImporter.gui"
+    VersionId="1" />

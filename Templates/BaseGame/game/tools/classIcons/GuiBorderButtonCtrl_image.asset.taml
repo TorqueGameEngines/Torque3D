@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiBorderButtonCtrl_image"
+    imageFile="@assetFile=GuiBorderButtonCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

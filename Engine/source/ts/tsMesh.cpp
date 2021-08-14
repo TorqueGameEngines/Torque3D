@@ -264,7 +264,7 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
       // If we don't have a material instance after the overload then
       // there is nothing to render... skip this primitive.
       matInst = state->getOverrideMaterial( matInst );
-      if ( !matInst || !matInst->isValid())
+      if ( !matInst || !matInst->isValid() || !matInst->getMaterial())
          continue;
 
       // If the material needs lights then gather them

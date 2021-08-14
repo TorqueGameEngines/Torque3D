@@ -32,7 +32,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/brushAdjustHeight";
+      bitmapAsset = "ToolsModule:brushAdjustHeight_n_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -54,7 +54,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/raiseHeight";
+      bitmapAsset = "ToolsModule:raiseHeight_n_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -76,7 +76,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/lowerHeight";
+      bitmapAsset = "ToolsModule:lowerHeight_n_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -98,7 +98,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/smoothHeight";
+      bitmapAsset = "ToolsModule:smoothHeight_n_image";
    };
    new GuiBitmapButtonCtrl() {  
       canSaveDynamicFields = "0";  
@@ -120,7 +120,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";  
       buttonType = "RadioButton";  
       useMouseEvents = "0";  
-      bitmap = "tools/worldEditor/images/softCurve";  
+      bitmapAsset = "ToolsModule:softCurve_n_image";  
    };  
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -142,7 +142,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/brushPaintNoise";
+      bitmapAsset = "ToolsModule:brushPaintNoise_n_image";
    };   
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -164,7 +164,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/flattenHeight";
+      bitmapAsset = "ToolsModule:flattenHeight_n_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -186,7 +186,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/setHeight";
+      bitmapAsset = "ToolsModule:setHeight_n_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -208,7 +208,7 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/setEmpty";
+      bitmapAsset = "ToolsModule:setEmpty_n_image";
    };
    new GuiBitmapButtonCtrl() {
       canSaveDynamicFields = "0";
@@ -230,6 +230,6 @@ $paletteId = new GuiControl(TerrainEditorPalette,EditorGuiGroup) {
       text = "Button";
       buttonType = "RadioButton";
       useMouseEvents = "0";
-      bitmap = "tools/worldEditor/images/clearEmpty";
+      bitmapAsset = "ToolsModule:clearEmpty_n_image";
    };
 };

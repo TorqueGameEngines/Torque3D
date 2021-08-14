@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssetImportCtrl"
+    scriptFile="@assetFile=assetImport.gui"
+    GUIFile="@assetFile=assetImport.gui"
+    VersionId="1" />

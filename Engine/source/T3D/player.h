@@ -75,10 +75,11 @@ struct PlayerData: public ShapeBaseData {
                                                                   ///  that we don't create a TSThread on the player if we don't
                                                                   ///  need to.
 
-   StringTableEntry  shapeNameFP[ShapeBase::MaxMountedImages];    ///< Used to render with mounted images in first person [optional]
+   DECLARE_SHAPEASSET_ARRAY(PlayerData, ShapeFP, ShapeBase::MaxMountedImages); ///< Used to render with mounted images in first person [optional]
+   DECLARE_SHAPEASSET_ARRAY_SETGET(PlayerData, ShapeFP);
+
    StringTableEntry  imageAnimPrefixFP;                           ///< Passed along to mounted images to modify
                                                                   ///  animation sequences played in first person. [optional]
-   Resource<TSShape> mShapeFP[ShapeBase::MaxMountedImages];       ///< First person mounted image shape resources [optional]
    U32               mCRCFP[ShapeBase::MaxMountedImages];         ///< Computed CRC values for the first person mounted image shapes
                                                                   ///  Depends on the ShapeBaseData computeCRC field.
    bool              mValidShapeFP[ShapeBase::MaxMountedImages];  ///< Indicates that there is a valid first person mounted image shape

@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssimpImportDlg,EditorGuiGroup"
+    scriptFile="@assetFile=assimpImport.ed.gui"
+    GUIFile="@assetFile=assimpImport.ed.gui"
+    VersionId="1" />

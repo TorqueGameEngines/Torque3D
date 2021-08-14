@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconLight_image"
+    imageFile="@assetFile=iconLight.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -143,7 +143,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_xPosTxt) {
@@ -170,7 +170,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+         bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
       };
       // ------------------------------ X Negitive ------------------------------------
       new GuiBitmapCtrl(matEd_cubemapEd_XNeg) {
@@ -186,7 +186,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_xNegTxt) {
@@ -213,7 +213,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+         bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
       };
       // ------------------------------ Y Positive ------------------------------------
       new GuiBitmapCtrl(matEd_cubemapEd_YPos) {
@@ -229,7 +229,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_yPosTxt) {
@@ -256,7 +256,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+         bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
       };
       // ------------------------------ Y Negitive ------------------------------------
       new GuiBitmapCtrl(matEd_cubemapEd_YNeG) {
@@ -272,7 +272,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_yNegTxt) {
@@ -299,7 +299,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+         bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
       };
       // ------------------------------ Z Positive ------------------------------------
       new GuiBitmapCtrl(matEd_cubemapEd_ZPos) {
@@ -315,7 +315,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_zPosTxt) {
@@ -342,7 +342,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+         bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
       };
       // ------------------------------ Z Negitive ------------------------------------
       new GuiBitmapCtrl(matEd_cubemapEd_ZNeg) {
@@ -358,7 +358,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         bitmap = "tools/materialEditor/gui/unknownImage";
+         bitmapAsset = "ToolsModule:unknownImage_image";
          wrap = "0";
       };
       new GuiTextCtrl(matEd_cubeMapEd_zNegTxt) {
@@ -385,7 +385,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+         bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
       };
 
        // Create New Cubemap
@@ -404,7 +404,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          Command = "matEd_addCubemapWindow.setVisible(1);"; // -------------- Needs Hookup Create New Cubemap
          hovertime = "1000";
          tooltip = "Create New Cubemap";
-         bitmap = "tools/gui/images/new";
+         bitmapAsset = "ToolsModule:new_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -424,7 +424,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          Command = "MaterialEditorGui.showDeleteCubemapDialog();"; // -------------- Needs Hookup Delete Cubemap
          hovertime = "1000";
          tooltip = "Delete Cubemap";
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -445,7 +445,7 @@ $guiContent = new GuiControl(CubemapEditor) {
          Command = "MaterialEditorGui.showSaveCubemapDialog();"; // -------------- Needs Hookup Save Cubemap
          hovertime = "1000";
          tooltip = "Save Cubemap";
-         bitmap = "tools/gui/images/save-icon";
+         bitmapAsset = "ToolsModule:save_icon_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

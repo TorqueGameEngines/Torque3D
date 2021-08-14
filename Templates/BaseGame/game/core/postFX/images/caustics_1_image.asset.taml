@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="caustics_1_image"
+    imageFile="@assetFile=caustics_1.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

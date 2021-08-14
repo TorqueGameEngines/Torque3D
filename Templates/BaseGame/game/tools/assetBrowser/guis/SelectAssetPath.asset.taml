@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SelectAssetPath"
+    scriptFile="@assetFile=selectPath.gui"
+    GUIFile="@assetFile=selectPath.gui"
+    VersionId="1" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiControl_image"
+    imageFile="@assetFile=GuiControl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

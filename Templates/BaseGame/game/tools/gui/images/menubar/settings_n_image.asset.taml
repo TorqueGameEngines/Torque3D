@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="settings_n_image"
+    imageFile="@assetFile=settings_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

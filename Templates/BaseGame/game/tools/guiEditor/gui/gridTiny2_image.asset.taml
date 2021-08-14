@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gridTiny2_image"
+    imageFile="@assetFile=gridTiny2.PNG"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

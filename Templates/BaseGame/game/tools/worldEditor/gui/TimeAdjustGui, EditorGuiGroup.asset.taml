@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TimeAdjustGui, EditorGuiGroup"
+    scriptFile="@assetFile=TimeAdjustGui.ed.gui"
+    GUIFile="@assetFile=TimeAdjustGui.ed.gui"
+    VersionId="1" />

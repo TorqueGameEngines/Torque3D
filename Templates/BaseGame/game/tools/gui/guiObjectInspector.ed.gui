@@ -94,7 +94,7 @@ $guiContent = new GuiWindowCollapseCtrl() {
          };
          
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/clear-icon";
+            bitmapAsset = "ToolsModule:clear_icon_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";

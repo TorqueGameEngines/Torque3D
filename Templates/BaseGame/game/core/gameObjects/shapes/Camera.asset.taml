@@ -1,0 +1,6 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Camera"
+    fileName="@assetFile=camera.dts"
+    constuctorFileName="@assetFile=camera.tscript" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="new_element_n_image"
+    imageFile="@assetFile=new-element_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

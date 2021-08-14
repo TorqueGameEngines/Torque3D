@@ -207,7 +207,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                groupNum = "0";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "tools/shapeEditor/images/back_btn";
+               bitmapAsset = "ToolsModule:back_btn_n_image";
             };
             new GuiBitmapButtonCtrl() {
                canSaveDynamicFields = "0";
@@ -227,7 +227,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                groupNum = "0";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "tools/shapeEditor/images/stepback_btn";
+               bitmapAsset = "ToolsModule:stepback_btn_n_image";
                internalName = "stepBkwdBtn";
             };
             new GuiControl() {
@@ -263,7 +263,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                   groupNum = "0";
                   buttonType = "RadioButton";
                   useMouseEvents = "0";
-                  bitmap = "tools/shapeEditor/images/playbkwd_btn";
+                  bitmapAsset = "ToolsModule:playbkwd_btn_n_image";
                };
                new GuiBitmapButtonCtrl() {
                   internalName = "pauseBtn";
@@ -284,7 +284,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                   groupNum = "0";
                   buttonType = "RadioButton";
                   useMouseEvents = "0";
-                  bitmap = "tools/shapeEditor/images/pause_btn";
+                  bitmapAsset = "ToolsModule:pause_btn_n_image";
                };
                new GuiBitmapButtonCtrl() {
                   internalName = "playFwdBtn";
@@ -305,7 +305,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                   groupNum = "0";
                   buttonType = "RadioButton";
                   useMouseEvents = "0";
-                  bitmap = "tools/shapeEditor/images/playfwd_btn";
+                  bitmapAsset = "ToolsModule:playfwd_btn_n_image";
                };
             };
             new GuiBitmapButtonCtrl() {
@@ -326,7 +326,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                groupNum = "0";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "tools/shapeEditor/images/stepfwd_btn";
+               bitmapAsset = "ToolsModule:stepfwd_btn_n_image";
                internalName = "stepFwdBtn";
             };
             new GuiBitmapButtonCtrl() {
@@ -347,7 +347,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                groupNum = "0";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "tools/shapeEditor/images/fwd_btn";
+               bitmapAsset = "ToolsModule:fwd_btn_n_image";
             };
             new GuiButtonCtrl() {
                canSaveDynamicFields = "0";
@@ -388,7 +388,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
                groupNum = "0";
                buttonType = "ToggleButton";
                useMouseEvents = "0";
-               bitmap = "tools/shapeEditor/images/pingpong_btn";
+               bitmapAsset = "ToolsModule:pingpong_btn_n_image";
             };
             new GuiTextEditCtrl() {
                internalName = "timeScale";
@@ -417,7 +417,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
          position = "39 0";
          Extent = "8 13";
          MinExtent = "1 1";
-         bitmap = "tools/shapeEditor/images/seq_bar-in";
+         bitmapAsset = "ToolsModule:seq_bar_in_n_image";
          ToolTip = "Set the In Point to the Current Frame";
          Command = "ShapeEdSequences.onEditSeqInOut(\"in\", ShapeEdSeqSlider.getValue());";
       };
@@ -429,7 +429,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
          position = "765 0";
          Extent = "8 13";
          MinExtent = "1 1";
-         bitmap = "tools/shapeEditor/images/seq_bar-out";
+         bitmapAsset = "ToolsModule:seq_bar_out_n_image";
          ToolTip = "Set the Out Point to the Current Frame";
          Command = "ShapeEdSequences.onEditSeqInOut(\"out\", ShapeEdSeqSlider.getValue());";
       };      

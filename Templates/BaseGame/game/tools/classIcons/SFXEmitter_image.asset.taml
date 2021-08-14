@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SFXEmitter_image"
+    imageFile="@assetFile=SFXEmitter.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

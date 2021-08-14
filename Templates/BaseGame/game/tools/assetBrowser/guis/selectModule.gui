@@ -75,7 +75,7 @@ $guiContent = new GuiControl(AssetBrowser_SelectModule) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/iconAdd.png";
+         bitmapAsset = "ToolsModule:iconAdd_image";
          bitmapMode = "Centered";
          autoFitExtents = "0";
          useModifiers = "0";

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="smoothHeight_h_image"
+    imageFile="@assetFile=smoothHeight_h.PNG"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

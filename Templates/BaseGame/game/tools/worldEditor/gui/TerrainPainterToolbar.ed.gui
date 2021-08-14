@@ -67,7 +67,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             groupNum = "0";
             buttonType = "RadioButton";
             useMouseEvents = "0";
-            bitmap = "tools/worldEditor/images/circleBrush";
+            bitmapAsset = "ToolsModule:circleBrush_n_image";
          };
          new GuiBitmapButtonCtrl() {
             canSaveDynamicFields = "0";
@@ -89,7 +89,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             groupNum = "0";
             buttonType = "RadioButton";
             useMouseEvents = "0";
-            bitmap = "tools/worldEditor/images/boxBrush";
+            bitmapAsset = "ToolsModule:boxBrush_n_image";
          };
          
          /*
@@ -113,7 +113,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             groupNum = "0";
             buttonType = "RadioButton";
             useMouseEvents = "0";
-            bitmap = "tools/worldEditor/images/maskBrush";
+            bitmapAsset = "ToolsModule:maskBrush_n_image";
          };
          */
       };
@@ -124,7 +124,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
       position = "152 3";
       Extent = "2 26";
       MinExtent = "1 1";
-      bitmap = "tools/gui/images/separator-h.png";
+      bitmapAsset = "ToolsModule:separator_h_image";
    };
       
       new GuiControl(PaintBrushSizeTextEditContainer) {
@@ -203,7 +203,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };  
 
@@ -213,7 +213,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          position = "230 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
                 
 	   new GuiControl(PaintBrushSlopeControl) {
@@ -301,7 +301,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
             Command = "Canvas.pushDialog(PaintBrushSlopeMinContainer);";
          };
          new GuiTextCtrl() {
@@ -362,7 +362,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             tooltip = "Max terrain angle that will be paintable";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
             Command = "Canvas.pushDialog(PaintBrushSlopeMaxContainer);";
          };
       };
@@ -373,7 +373,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          position = "445 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
 
       new GuiControl(PaintBrushPressureTextEditContainer,EditorGuiGroup) {
@@ -451,7 +451,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          }; 
       };
 
@@ -461,7 +461,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          position = "618 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
 
       new GuiControl(TerrainTextureSettingsButtonContainer,EditorGuiGroup) {

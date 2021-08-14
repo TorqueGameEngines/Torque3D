@@ -223,7 +223,7 @@ function EditorGui::init(%this)
 
    %this.setMenuDefaultState();
    
-   EWorldEditorToggleCamera.setBitmap("tools/worldEditor/images/toolbar/player");
+   EWorldEditorToggleCamera.setBitmap("ToolsModule:player_n_image");
    
    /*
    EWorldEditorCameraSpeed.clear();
@@ -366,7 +366,7 @@ function EditorGui::addToEditorsMenu( %this, %displayName, %accel, %newPlugin )
    return %accel;
 }
 
-function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %bitmap, %tooltip )
+function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %imageAsset, %tooltip )
 {   
    %count = ToolsToolbarArray.getCount();      
    
@@ -401,7 +401,7 @@ function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %bitma
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "";// %tooltip;
          hovertime = "750";
-         bitmap = %bitmap;
+         bitmapAsset = %imageAsset;
          buttonType = "RadioButton";
          groupNum = "0";
          useMouseEvents = "0";
@@ -800,14 +800,14 @@ function EditorGui::syncCameraGui( %this )
          if(LocalClientConnection.camera.newtonRotation == true)
          {
             EditorGui-->NewtonianRotationCamera.setStateOn(true);
-            EWorldEditorToggleCamera.setBitmap("tools/gui/images/menubar/smooth-cam-rot");
+            EWorldEditorToggleCamera.setBitmap("ToolsModule:smooth_cam_rot_n_image");
             %flyModeRadioItem = 4;
             EditorGuiStatusBar.setCamera("Smooth Rot Camera");
          }
          else
          {
             EditorGui-->NewtonianCamera.setStateOn(true);
-            EWorldEditorToggleCamera.setBitmap("tools/gui/images/menubar/smooth-cam");
+            EWorldEditorToggleCamera.setBitmap("ToolsModule:smooth_cam_n_image");
             %flyModeRadioItem = 3;
             EditorGuiStatusBar.setCamera("Smooth Camera");
          }
@@ -815,14 +815,14 @@ function EditorGui::syncCameraGui( %this )
       else if(%mode $= "EditOrbit")
       {
          EditorGui-->OrbitCamera.setStateOn(true);
-         EWorldEditorToggleCamera.setBitmap("tools/gui/images/menubar/orbit-cam");
+         EWorldEditorToggleCamera.setBitmap("ToolsModule:orbit_cam_n_image");
          %flyModeRadioItem = 1;
          EditorGuiStatusBar.setCamera("Orbit Camera");
       }
 		else // default camera mode
       {
          EditorGui-->StandardCamera.setStateOn(true);
-         EWorldEditorToggleCamera.setBitmap("tools/worldEditor/images/toolbar/camera");
+         EWorldEditorToggleCamera.setBitmap("ToolsModule:camera_n_image");
          %flyModeRadioItem = 0;
          EditorGuiStatusBar.setCamera("Standard Camera");
       }
@@ -835,7 +835,7 @@ function EditorGui::syncCameraGui( %this )
    else if (!$isFirstPersonVar) // if 3rd person
    {
       EditorGui-->trdPersonCamera.setStateOn(true);
-      EWorldEditorToggleCamera.setBitmap("tools/worldEditor/images/toolbar/3rd-person-camera");
+      EWorldEditorToggleCamera.setBitmap("ToolsModule:3rd_person_camera_n_image");
       %flyModeRadioItem = 1;
       //quick way select menu bar options
       %this.findMenu( "Camera" ).checkRadioItem( 0, 1, 1 );
@@ -845,7 +845,7 @@ function EditorGui::syncCameraGui( %this )
    else if ($isFirstPersonVar) // if 1st Person
    {
       EditorGui-->PlayerCamera.setStateOn(true);
-      EWorldEditorToggleCamera.setBitmap("tools/worldEditor/images/toolbar/player");
+      EWorldEditorToggleCamera.setBitmap("ToolsModule:player_n_image");
       %flyModeRadioItem = 0;
       //quick way select menu bar options
       %this.findMenu( "Camera" ).checkRadioItem( 0, 1, 1 );
@@ -918,7 +918,7 @@ function WorldEditorInspectorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Object Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "WorldEditorInspectorPlugin", "WorldEditorInspectorPalette", expandFilename("tools/worldEditor/images/toolbar/transform-objects"), %tooltip );
+   EditorGui.addToToolsToolbar( "WorldEditorInspectorPlugin", "WorldEditorInspectorPalette", "ToolsModule:transform_objects_n_image", %tooltip );
    
    //connect editor windows
    GuiWindowCtrl::attach( EWInspectorWindow, EWTreeWindow);
@@ -1026,7 +1026,7 @@ function TerrainEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Terrain Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar( "TerrainEditorPlugin", "TerrainEditorPalette", expandFilename("tools/worldEditor/images/toolbar/sculpt-terrain"), %tooltip );
+   EditorGui.addToToolsToolbar( "TerrainEditorPlugin", "TerrainEditorPalette", "ToolsModule:sculpt_terrain_n_image", %tooltip );
    
    %map = new ActionMap();   
    %map.bindCmd( keyboard, "1", "ToolsPaletteArray->brushAdjustHeight.performClick();", "" );    //Grab Terrain
@@ -1175,7 +1175,7 @@ function TerrainPainterPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Terrain Painter (" @ %accel @ ")"; 
-   EditorGui.addToToolsToolbar( "TerrainPainterPlugin", "TerrainPainterPalette", expandFilename("tools/worldEditor/images/toolbar/paint-terrain"), %tooltip );
+   EditorGui.addToToolsToolbar( "TerrainPainterPlugin", "TerrainPainterPalette", "ToolsModule:paint_terrain_n_image", %tooltip );
 
    %map = new ActionMap();   
    %map.bindCmd( keyboard, "v", "EWTerrainPainterToolbarBrushType->ellipse.performClick();", "" );// Circle Brush
@@ -1390,12 +1390,12 @@ function EWorldEditor::areAllSelectedObjectsOfType( %this, %className )
 //-----------------------------------------------------------------------------
 function EWorldEditorToggleCamera::toggleBitmap(%this)
 {
-   %currentImage = %this.bitmap;
+   %currentImage = %this.getBitmapAsset();
 
-   if ( %currentImage $= "tools/worldEditor/images/toolbar/player" )
-      %image = "tools/worldEditor/images/toolbar/camera";
+   if ( %currentImage $= "ToolsModule:player_n_image" )
+      %image = "ToolsModule:camera_n_image";
    else
-      %image = "tools/worldEditor/images/toolbar/player";
+      %image = "ToolsModule:player_n_image";
 
    %this.setBitmap( %image );
 }
@@ -2043,24 +2043,24 @@ function EWorldEditor::syncGui( %this )
       
    if( EWorldEditor.objectsUseBoxCenter )
    {
-      EWorldEditorToolbar-->centerObject.setBitmap("tools/gui/images/menubar/bounds-center");
+      EWorldEditorToolbar-->centerObject.setBitmap("ToolsModule:bounds_center_n_image");
       objectCenterDropdown-->objectBoundsBtn.setStateOn( 1 );
    }
    else
    {
-      EWorldEditorToolbar-->centerObject.setBitmap("tools/gui/images/menubar/object-center");
+      EWorldEditorToolbar-->centerObject.setBitmap("ToolsModule:object_center_n_image");
       objectCenterDropdown-->objectBoxBtn.setStateOn( 1 );
    }
    
    if( GlobalGizmoProfile.getFieldValue(alignment) $= "Object" )
    {
-      EWorldEditorToolbar-->objectTransform.setBitmap("tools/gui/images/menubar/object-transform");
+      EWorldEditorToolbar-->objectTransform.setBitmap("ToolsModule:object_transform_n_image");
       objectTransformDropdown-->objectTransformBtn.setStateOn( 1 );
       
    }
    else
    {
-      EWorldEditorToolbar-->objectTransform.setBitmap("tools/gui/images/menubar/world-transform");
+      EWorldEditorToolbar-->objectTransform.setBitmap("ToolsModule:world_transform_n_image");
       objectTransformDropdown-->worldTransformBtn.setStateOn( 1 );
    }
    
@@ -2446,7 +2446,7 @@ function EWToolsToolbar::reset( %this )
    EWToolsToolbarDecoy.setVisible(false);
    EWToolsToolbarDecoy.setExtent((29 + 4) * %count + 4, 31);
 
-  %this-->resizeArrow.setBitmap( "tools/gui/images/collapse-toolbar" );
+  %this-->resizeArrow.setBitmap( "ToolsModule:collapse_toolbar_n_image" );
 }
 
 function EWToolsToolbar::toggleSize( %this, %useDynamics )
@@ -2457,7 +2457,7 @@ function EWToolsToolbar::toggleSize( %this, %useDynamics )
 
    if ( %this.isClosed == 0 )
    {
-      %image = "tools/gui/images/expand-toolbar";
+      %image = "ToolsModule:expand_toolbar_n_image";
       
       for( %i = 0 ; %i < ToolsToolbarArray.getCount(); %i++ )
       {
@@ -2478,7 +2478,7 @@ function EWToolsToolbar::toggleSize( %this, %useDynamics )
    }
    else
    {
-      %image = "tools/gui/images/collapse-toolbar";
+      %image = "ToolsModule:collapse_toolbar_n_image";
 
       %count = ToolsToolbarArray.getCount();
       for( %i = 0 ; %i < %count; %i++ )

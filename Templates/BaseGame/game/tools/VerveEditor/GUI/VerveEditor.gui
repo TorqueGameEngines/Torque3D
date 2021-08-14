@@ -307,7 +307,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                 groupNum = "-1";
                 buttonType = "PushButton";
                 useMouseEvents = "0";
-                bitmap = "./Images/btn_AddGroup";
+                bitmapAsset = "ToolsModule:btn_AddGroup_image";
              };
              new GuiBitmapButtonCtrl(VerveEditorAddTrackButton) {
                 canSaveDynamicFields = "0";
@@ -330,7 +330,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                 groupNum = "-1";
                 buttonType = "PushButton";
                 useMouseEvents = "0";
-                bitmap = "./Images/btn_AddTrack";
+                bitmapAsset = "ToolsModule:btn_AddTrack_image";
              };
              new GuiBitmapButtonCtrl(VerveEditorAddEventButton) {
                 canSaveDynamicFields = "0";
@@ -352,7 +352,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                 groupNum = "-1";
                 buttonType = "PushButton";
                 useMouseEvents = "0";
-                bitmap = "./Images/btn_AddEvent";
+                bitmapAsset = "ToolsModule:btn_AddEvent_image";
              };
              new GuiBitmapButtonCtrl() {
                 canSaveDynamicFields = "0";
@@ -374,7 +374,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                 groupNum = "-1";
                 buttonType = "PushButton";
                 useMouseEvents = "0";
-                bitmap = "./Images/btn_Delete";
+                bitmapAsset = "ToolsModule:btn_Delete_image";
              };
          };
       };
@@ -623,7 +623,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "./Images/btn_Rewind";
+               bitmapAsset = "ToolsModule:btn_Rewind_image";
             };
             new GuiBitmapButtonCtrl() {
                canSaveDynamicFields = "0";
@@ -645,7 +645,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "./Images/btn_StepB";
+               bitmapAsset = "ToolsModule:btn_StepB_image";
             };
             new GuiBitmapButtonCtrl(VerveEditorPlayButton) {
                canSaveDynamicFields = "0";
@@ -667,7 +667,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "./Images/btn_Play";
+               bitmapAsset = "ToolsModule:btn_Play_image";
             };
             new GuiBitmapButtonCtrl() {
                canSaveDynamicFields = "0";
@@ -689,7 +689,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "./Images/btn_StepF";
+               bitmapAsset = "ToolsModule:btn_StepF_image";
             };
             new GuiBitmapButtonCtrl() {
                canSaveDynamicFields = "0";
@@ -711,7 +711,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "./Images/btn_Forward";
+               bitmapAsset = "ToolsModule:btn_Forward_image";
             };
          };
          new GuiBitmapButtonCtrl() {
@@ -734,7 +734,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "./Images/btn_AddL";
+            bitmapAsset = "ToolsModule:btn_AddL_image";
          };
          new GuiBitmapButtonCtrl() {
             canSaveDynamicFields = "0";
@@ -756,7 +756,7 @@ $guiContent = new GuiControl(VerveEditorGui) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "./Images/btn_AddR";
+            bitmapAsset = "ToolsModule:btn_AddR_image";
          };
       };
    };

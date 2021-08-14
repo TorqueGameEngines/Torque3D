@@ -22,7 +22,7 @@ public:
    /// <summary>
    /// Duplicate Asset Auto-Resolution Action. Options are None, AutoPrune, AutoRename
    /// </summary>
-   String DuplicatAutoResolution;
+   String DuplicateAutoResolution;
 
    /// <summary>
    /// Indicates if warnings should be treated as errors.
@@ -40,6 +40,11 @@ public:
    bool AutomaticallyPromptMissingFiles;
    //
 
+   /// <summary>
+   /// Should the importer add the folder name as a prefix to the assetName. Helps prevent name collisions.
+   /// </summary>
+   bool AddDirectoryPrefixToAssetName;
+   //
    //
    //Mesh Settings
    /// <summary>
@@ -531,6 +536,13 @@ public:
    /// </summary>
    GuiTreeViewCtrl* shapeInfo;
 
+   //
+   /// <summary>
+   /// A string that can hold a hint string to help the auto-import ensure the correct asset subtype is assigned.
+   /// e.g. "GUI" would inform an image asset being imported that it should be flagged as a GUI image type
+   /// </summary>
+   String typeHint;
+
 public:
    AssetImportObject();
    virtual ~AssetImportObject();
@@ -820,9 +832,10 @@ public:
    /// <summary>
    /// Runs the import process on a single file in-place. Intended primarily for autoimporting a loose file that's in the game directory.
    /// <para>@param filePath, The filePath of the file to be imported in as an asset</para>
+   /// <para>@param typeHint, Optional. A string that provides a hint of the intended asset type. Such as an image being intended for GUI use.</para>
    /// <para>@return AssetId of the asset that was imported. If import failed, it will be empty.</para>
    /// </summary>
-   StringTableEntry autoImportFile(Torque::Path filePath);
+   StringTableEntry autoImportFile(Torque::Path filePath, String typeHint);
 
    /// <summary>
    /// Runs the import process in the current session

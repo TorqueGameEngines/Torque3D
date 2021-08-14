@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="levelIcon_image"
+    imageFile="@assetFile=levelIcon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

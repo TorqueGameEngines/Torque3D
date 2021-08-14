@@ -13,7 +13,7 @@ $guiContent = new GuiFadeinBitmapCtrl(StartupGui) {
    Visible = "1";
    tooltipprofile = "GuiToolTipProfile";
    hovertime = "1000";
-   bitmap = "";
+   bitmapAsset = "";
    wrap = "0";
    fadeinTime = "1000";
    waitTime = "4000";
@@ -70,7 +70,7 @@ new GuiFadeinBitmapCtrl(BlankGui) {
    minExtent = "8 8";
    visible = "1";
    helpTag = "0";
-   bitmap = "";
+   bitmapAsset = "";
    wrap = "0";
    fadeinTime = "100";
    waitTime   = "2000";

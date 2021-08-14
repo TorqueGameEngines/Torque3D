@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ProceduralTerrainPainterGui"
+    scriptFile="@assetFile=ProceduralTerrainPainterGui.gui"
+    GUIFile="@assetFile=ProceduralTerrainPainterGui.gui"
+    VersionId="1" />

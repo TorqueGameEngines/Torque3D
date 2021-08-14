@@ -398,6 +398,21 @@ DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    return Torque::FS::IsFile(givenPath);
 }
 
+DefineEngineFunction(isScriptFile, bool, (const char* fileName), ,
+   "@brief Determines if the specified file exists or not\n\n"
+
+   "@param fileName The path to the file.\n"
+   "@return Returns true if the file was found.\n"
+
+   "@ingroup FileSystem")
+{
+   String cleanfilename(Torque::Path::CleanSeparators(fileName));
+   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
+
+   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
+   return Torque::FS::IsScriptFile(givenPath.getFullPath());
+}
+
 DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,
    "@brief Determines if a specified directory exists or not\n\n"
 
@@ -563,6 +578,27 @@ DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
    dStrcpy( buffer, fileStr, fileStr.size() );
 
    return buffer;
+}
+
+DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* fileB), ("", ""),
+   "@brief Compares 2 files' modified file times."
+
+   "@param fileName Name and path of first file to compare\n"
+   "@param fileName Name and path of second file to compare\n"
+   "@return S32. If value is 1, then fileA is newer. If value is -1, then fileB is newer. If value is 0, they are equal.\n"
+   "@ingroup FileSystem")
+{
+   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileA);
+
+   FileTime fileATime = { 0 };
+   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileATime);
+
+   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileB);
+
+   FileTime fileBTime = { 0 };
+   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileBTime);
+
+   return Platform::compareFileTimes(fileATime, fileBTime);
 }
 
 DefineEngineFunction(fileDelete, bool, ( const char* path ),,

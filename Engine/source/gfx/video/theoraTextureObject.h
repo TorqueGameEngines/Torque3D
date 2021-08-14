@@ -54,7 +54,7 @@ protected:
    bool mLoop;
 
    /// The Theora file we should play.
-   String mFilename;
+   StringTableEntry mFilename;
 
    /// Name for the NamedTexTarget.
    String mTexTargetName;

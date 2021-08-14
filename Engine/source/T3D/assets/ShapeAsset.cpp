@@ -50,6 +50,8 @@
 #include "ts/tsLastDetail.h"
 #endif
 
+StringTableEntry ShapeAsset::smNoShapeAssetFallback(StringTable->insert(Con::getVariable("$Core::NoShapeAssetFallback")));
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ShapeAsset);
@@ -86,7 +88,7 @@ ConsoleSetType(TypeShapeAssetPtr)
 
 //-----------------------------------------------------------------------------
 
-ConsoleType(assetIdString, TypeShapeAssetId, String, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeShapeAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeShapeAssetId)
 {
@@ -100,13 +102,7 @@ ConsoleSetType(TypeShapeAssetId)
    if (argc == 1)
    {
       // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
-
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
    }
@@ -143,6 +139,17 @@ ShapeAsset::~ShapeAsset()
 
 //-----------------------------------------------------------------------------
 
+void ShapeAsset::consoleInit()
+{
+   Parent::consoleInit();
+
+   Con::addVariable("$Core::NoShapeAssetFallback", TypeString, &smNoShapeAssetFallback,
+      "The assetId of the shape to display when the requested shape asset is missing.\n"
+      "@ingroup GFX\n");
+}
+
+//-----------------------------------------------------------------------------
+
 void ShapeAsset::initPersistFields()
 {
    // Call parent.
@@ -154,7 +161,7 @@ void ShapeAsset::initPersistFields()
       &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
 }
 
-void ShapeAsset::setDataField(StringTableEntry slotName, const char *array, const char *value)
+void ShapeAsset::setDataField(StringTableEntry slotName, StringTableEntry array, StringTableEntry value)
 {
    Parent::setDataField(slotName, array, value);
 
@@ -344,49 +351,39 @@ bool ShapeAsset::loadShape()
 
 //------------------------------------------------------------------------------
 //Utility function to 'fill out' bindings and resources with a matching asset if one exists
-bool ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset)
+U32 ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset)
 {
    AssetQuery query;
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
    if (foundAssetcount == 0)
    {
-      //Didn't find any assets
-      //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
-      Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
-#endif
-
-      AssetImporter* autoAssetImporter;
-      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-      {
-         autoAssetImporter = new AssetImporter();
-         autoAssetImporter->registerObject("autoAssetImporter");
-      }
-
-      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
-
-      if (resultingAssetId != StringTable->EmptyString())
-      {
-         shapeAsset->setAssetId(resultingAssetId);
-
-         if (!shapeAsset->isNull())
-            return true;
-      }
-
       //Didn't work, so have us fall back to a placeholder asset
-      shapeAsset->setAssetId(StringTable->insert("Core_Rendering:noshape"));
+      shapeAsset->setAssetId(ShapeAsset::smNoShapeAssetFallback);
 
-      if (!shapeAsset->isNull())
-         return true;
+      if (shapeAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("ShapeAsset::getAssetByFilename - Finding of asset associated with file %s failed with no fallback asset", fileName);
+         return AssetErrCode::Failed;
+      }
 
-      //That didn't work, so fail out
-      return false;
+      //handle noshape not being loaded itself
+      if ((*shapeAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("ShapeAsset::getAssetByFilename - Finding of associated with file %s failed, and fallback asset reported error of Bad File Reference.", fileName);
+         return AssetErrCode::BadFileReference;
+      }
+
+      Con::warnf("ShapeAsset::getAssetByFilename - Finding of associated with file %s failed, utilizing fallback asset", fileName);
+
+      (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
    }
    else
    {
       //acquire and bind the asset, and return it out
       shapeAsset->setAssetId(query.mAssetList[0]);
-      return true;
+      return (*shapeAsset)->mLoadedState;
    }
 }
 
@@ -395,37 +392,11 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    if (fileName == StringTable->EmptyString())
       return StringTable->EmptyString();
 
-   StringTableEntry shapeAssetId = StringTable->EmptyString();
+   StringTableEntry shapeAssetId = ShapeAsset::smNoShapeAssetFallback;
 
    AssetQuery query;
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
-   if (foundAssetcount == 0)
-   {
-      //Didn't find any assets
-      //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
-      Con::warnf("ShapeAsset::getAssetByFilename - Attempted to in-place import a shapefile(%s) that had no associated asset", fileName);
-#endif
-
-      AssetImporter* autoAssetImporter;
-      if (!Sim::findObject("autoAssetImporter", autoAssetImporter))
-      {
-         autoAssetImporter = new AssetImporter();
-         autoAssetImporter->registerObject("autoAssetImporter");
-      }
-
-      StringTableEntry resultingAssetId = autoAssetImporter->autoImportFile(fileName);
-
-      if (resultingAssetId != StringTable->EmptyString())
-      {
-         shapeAssetId = resultingAssetId;
-         return shapeAssetId;
-      }
-
-      //Didn't work, so have us fall back to a placeholder asset
-      shapeAssetId = StringTable->insert("Core_Rendering:noshape");
-   }
-   else
+   if (foundAssetcount != 0)
    {
       //acquire and bind the asset, and return it out
       shapeAssetId = query.mAssetList[0];
@@ -438,24 +409,34 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 {
    (*shapeAsset) = assetId;
 
-   if ((*shapeAsset))
-      return (*shapeAsset)->mLoadedState;
-
    if (shapeAsset->notNull())
    {
+      return (*shapeAsset)->mLoadedState;
+   }
+   else
+   {
       //Didn't work, so have us fall back to a placeholder asset
-      StringTableEntry noShapeId = StringTable->insert("Core_Rendering:noshape");
-      shapeAsset->setAssetId(noShapeId);
+      shapeAsset->setAssetId(ShapeAsset::smNoShapeAssetFallback);
+
+      if (shapeAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+         return AssetErrCode::Failed;
+      }
 
       //handle noshape not being loaded itself
       if ((*shapeAsset)->mLoadedState == BadFileReference)
-         return AssetErrCode::Failed;
+      {
+         Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
+         return AssetErrCode::BadFileReference;
+      }
+
+      Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed, utilizing fallback asset", assetId);
 
       (*shapeAsset)->mLoadedState = AssetErrCode::UsingFallback;
       return AssetErrCode::UsingFallback;
    }
-
-   return AssetErrCode::Failed;
 }
 //------------------------------------------------------------------------------
 
@@ -555,16 +536,36 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
 }
 
 DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
-   "Creates a new script asset using the targetFilePath.\n"
-   "@return The bool result of calling exec")
+   "Gets the shape's file path\n"
+   "@return The filename of the shape file")
 {
    return object->getShapeFilePath();
 }
+
+DefineEngineMethod(ShapeAsset, getShapeConstructorFilePath, const char*, (), ,
+   "Gets the shape's constructor file.\n"
+   "@return The filename of the shape constructor file")
+{
+   return object->getShapeConstructorFilePath();
+}
+
+DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string")\
+{
+   return ShapeAsset::getAssetErrstrn(object->getStatus());
+}
+
 
 #ifdef TORQUE_TOOLS
 DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution), (256), "")
 {
    return object->generateCachedPreviewImage(resolution);
+}
+
+DefineEngineStaticMethod(ShapeAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided file path.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return ShapeAsset::getAssetIdByFilename(StringTable->insert(filePath));
 }
 #endif
 
@@ -611,8 +612,8 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
    mShapeEdButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-   mShapeEdButton->setBitmap(bitmapName);
+   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
+   mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
 
    mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");

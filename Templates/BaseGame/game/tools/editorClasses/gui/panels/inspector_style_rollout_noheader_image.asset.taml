@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="inspector_style_rollout_noheader_image"
+    imageFile="@assetFile=inspector-style-rollout-noheader.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiMusicPlayer"
+    scriptFile="@assetFile=guiMusicPlayer.gui"
+    GUIFile="@assetFile=guiMusicPlayer.gui"
+    VersionId="1" />

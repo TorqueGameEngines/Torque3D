@@ -213,7 +213,7 @@ $guiContent = new GuiControl() {
                groupNum = "0";
                buttonType = "PushButton";
                useMouseEvents = "0";
-               bitmap = "tools/gui/images/folderUp";
+               bitmapAsset = "ToolsModule:folderUp_image";
             };
             new GuiPopUpMenuCtrl(ShapeEdSelectMenu) {
                canSaveDynamicFields = "0";

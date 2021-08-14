@@ -83,7 +83,7 @@ function NavEditorPlugin::onWorldEditorStartup(%this)
 
    // Add ourselves to the ToolsToolbar.
    %tooltip = "Navigation Editor (" @ %accel @ ")";   
-   EditorGui.addToToolsToolbar("NavEditorPlugin", "NavEditorPalette", expandFilename("tools/navEditor/images/nav-editor"), %tooltip);
+   EditorGui.addToToolsToolbar("NavEditorPlugin", "NavEditorPalette", "ToolsModule:nav_editor_n_image", %tooltip);
 
    GuiWindowCtrl::attach(NavEditorOptionsWindow, NavEditorTreeWindow);
 

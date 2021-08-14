@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CameraSettingsTab,EditorGuiGroup"
+    scriptFile="@assetFile=CameraSettingsTab.ed.gui"
+    GUIFile="@assetFile=CameraSettingsTab.ed.gui"
+    VersionId="1" />

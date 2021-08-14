@@ -112,7 +112,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                   Extent = "17 17";
                   HorizSizing = "left";
                   tooltip = "Swap material on the object with existing";
-                  bitmap = "tools/materialEditor/gui/change-material-btn";
+                  bitmapAsset = "ToolsModule:change_material_btn_n_image";
                   command = "materialSelector.showDialog(\"MaterialEditorGui.showMaterialChangeSaveDialog\");"; 
                };
                
@@ -275,7 +275,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -297,7 +297,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -397,14 +397,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
                         position="6 75";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset = "ToolsModule:separator_v_image"; 
                      };
                      new GuiContainer(){ // Normal Map
                         profile="ToolsGuiDefaultProfile";
@@ -427,7 +427,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -471,7 +471,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -523,7 +523,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
 				   };
@@ -742,7 +742,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         };
 					 };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -779,7 +779,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -816,14 +816,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateORMConfigMap(1);";
+                           Command = "MaterialEditorGui.updateTextureMap(\"ORMConfig\",1);";
                            tooltipprofile = "ToolsGuiDefaultProfile";
                            ToolTip = "Change the packed spec map for this layer. \n Roughness (R), Ambient Occlusion (G), and Metalness(B))";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -856,7 +856,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            position = "134 34";
                            Extent = "40 16";
                            buttonType = "PushButton";
-                           command="MaterialEditorGui.updateORMConfigMap(1);";
+                           Command = "MaterialEditorGui.updateTextureMap(\"ORMConfig\",1);";
                         };
                         new GuiBitmapButtonCtrl() {
                            canSaveDynamicFields = "0";
@@ -870,16 +870,16 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateORMConfigMap(0);";
+                           Command = "MaterialEditorGui.updateTextureMap(\"ORMConfig\",0);";
                            hovertime = "1000";
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -924,7 +924,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					     maxLength = "1024";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/save-icon";
+						 bitmapAsset = "ToolsModule:save_icon_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -949,7 +949,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  };
 				   };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -987,7 +987,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  canSaveDynamicFields = "0";
 
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1028,7 +1028,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1044,7 +1044,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateroughMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"rough\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the Roughness map for this layer.";
 						 hovertime = "1000";
@@ -1089,7 +1089,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateroughMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"rough\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1097,7 +1097,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1113,7 +1113,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateroughMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"rough\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1223,7 +1223,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  canSaveDynamicFields = "0";
 
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1264,7 +1264,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1280,7 +1280,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateaoMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"ao\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the AO map for this layer.";
 						 hovertime = "1000";
@@ -1325,7 +1325,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateaoMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"ao\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1333,7 +1333,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1349,7 +1349,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateaoMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"ao\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1459,7 +1459,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  canSaveDynamicFields = "0";
 
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1500,7 +1500,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1516,7 +1516,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updatemetalMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"metal\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the Metalness Map for this layer.";
 						 hovertime = "1000";
@@ -1561,7 +1561,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updatemetalMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"metal\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1569,7 +1569,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1585,7 +1585,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updatemetalMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"metal\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1674,7 +1674,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  };
 				    };
 				   new GuiBitmapCtrl() {
-					  bitmap = "tools/gui/images/separator-v";
+					  bitmapAsset = "ToolsModule:separator_v_image";
 					  wrap = "0";
 					  position = "6 75";
 					  extent = "175 2";
@@ -1711,7 +1711,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
 					  new GuiBitmapCtrl() {
-						 bitmap = "tools/materialeditor/gui/unknownImage";
+						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
 						 position = "1 1";
 						 extent = "48 48";
@@ -1752,7 +1752,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+						 bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1768,7 +1768,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateglowMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"glow\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 tooltip = "Change the glowness Map for this layer.";
 						 hovertime = "1000";
@@ -1813,7 +1813,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateglowMap(1);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"glow\",1);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1821,7 +1821,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 canSaveDynamicFields = "0";
 					  };
 					  new GuiBitmapButtonCtrl() {
-						 bitmap = "tools/gui/images/delete";
+						 bitmapAsset = "ToolsModule:delete_n_image";
 						 bitmapMode = "Stretched";
 						 autoFitExtents = "0";
 						 useModifiers = "0";
@@ -1837,7 +1837,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 						 profile = "ToolsGuiButtonProfile";
 						 visible = "1";
 						 active = "1";
-						 command = "MaterialEditorGui.updateglowMap(0);";
+						 Command = "MaterialEditorGui.updateTextureMap(\"glow\",0);";
 						 tooltipProfile = "GuiToolTipProfile";
 						 hovertime = "1000";
 						 isContainer = "0";
@@ -1960,7 +1960,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -1982,7 +1982,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         
                         new GuiTextCtrl() { // Detailmap Scale text
@@ -2074,14 +2074,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
                         position="6 246";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      
                      new GuiContainer(){ // Detail Normal Map
@@ -2105,7 +2105,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -2127,7 +2127,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         
                         new GuiTextCtrl() { // Detail Normal Map Strength text
@@ -2219,14 +2219,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
                         position="6 189";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      
                      new GuiContainer(){ // Overlay Map
@@ -2250,7 +2250,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiBitmapButtonCtrl() {
@@ -2272,7 +2272,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -2346,14 +2346,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
                         position="6 189";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      new GuiContainer(){ // light Map
                         profile="ToolsGuiDefaultProfile";
@@ -2376,7 +2376,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -2420,7 +2420,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -2472,14 +2472,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                      new GuiBitmapCtrl(){
                         position="6 303";
                         extent ="175 2";
                         HorizSizing = "width";
-                        bitmap ="tools/gui/images/separator-v"; 
+                        bitmapAsset ="ToolsModule:separator_v_image"; 
                      };
                      new GuiContainer(){ // tone Map
                         profile="ToolsGuiDefaultProfile";
@@ -2502,7 +2502,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            canSave = "1";
                            Visible = "1";
                            hovertime = "1000";
-                           bitmap = "tools/materialEditor/gui/unknownImage";
+                           bitmapAsset = "ToolsModule:unknownImage_image";
                            wrap = "0";
                         };
                         new GuiTextCtrl() {
@@ -2546,7 +2546,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+                           bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
                         };
                         new GuiTextCtrl() {
                            canSaveDynamicFields = "0";
@@ -2598,7 +2598,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            groupNum = "-1";
                            buttonType = "PushButton";
                            useMouseEvents = "0";
-                           bitmap = "tools/gui/images/delete";
+                           bitmapAsset = "ToolsModule:delete_n_image";
                         };
                      };
                   };
@@ -3512,14 +3512,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            position = "136 20";
                            Extent = "48 48";
                            isContainer = true;
-                           bitmap="";
+                           bitmapAsset="";
                            
                            new GuiBitmapCtrl(){
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "0 0";
                               Extent = "48 48";
-                              bitmap="tools/materialEditor/gui/cubemapBtnBorder_n";
+                              bitmapAsset="ToolsModule:cubemapBtnBorder_n_image";
                            };
                            
                            new GuiBitmapCtrl(){ //horizontal bar
@@ -3529,7 +3529,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                               position = "20 20";
                               Extent = "7 7";
                               MinExtent = "0 0";
-                              bitmap="tools/gui/images/crosshair_blue";
+                              bitmapAsset="ToolsModule:crosshair_blue_image";
                            };
                         };
                         
@@ -3729,14 +3729,14 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            position = "136 20";
                            Extent = "48 48";
                            isContainer = true;
-                           bitmap="";
+                           bitmapAsset="";
                            
                            new GuiBitmapCtrl(){
                               HorizSizing = "right";
                               VertSizing = "bottom";
                               position = "0 0";
                               Extent = "48 48";
-                              bitmap="tools/materialEditor/gui/cubemapBtnBorder_n";
+                              bitmapAsset="ToolsModule:cubemapBtnBorder_n_image";
                            };
                            new GuiBitmapCtrl(){ //vertical bar
                               HorizSizing = "right";
@@ -3744,7 +3744,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                               position = "20 20";
                               Extent = "7 7";
                               MinExtent = "7 7";
-                              bitmap="tools/gui/images/crosshair";
+                              bitmapAsset="ToolsModule:crosshair_image";
                            };
                            new GuiBitmapCtrl(){ //horizontal bar
                               internalName = "ScrollCrosshair";
@@ -3753,7 +3753,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                               position = "20 20";
                               Extent = "7 7";
                               MinExtent = "0 0";
-                              bitmap="tools/gui/images/crosshair_blue";
+                              bitmapAsset="ToolsModule:crosshair_blue_image";
                            };
                         };
                         
@@ -3879,7 +3879,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                               buttonType = "RadioButton";
                               position = "1 0";
                               Extent = "13 13";
-                              bitmap = "tools/materialEditor/gui/wav-sine";
+                              bitmapAsset = "ToolsModule:wav_sine_n_image";
                               command = "MaterialEditorGui.updateWaveType();";
                               tooltip="Sine Wave";
                               hovertime = "1000";
@@ -3891,7 +3891,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                               buttonType = "RadioButton";
                               position = "17 0";
                               Extent = "13 13";
-                              bitmap = "tools/materialEditor/gui/wav-triangle";
+                              bitmapAsset = "ToolsModule:wav_triangle_n_image";
                               command = "MaterialEditorGui.updateWaveType();";
                               tooltip="Triangle Wave";
                               hovertime = "1000";
@@ -3903,7 +3903,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                               buttonType = "RadioButton";
                               position = "33 0";
                               Extent = "13 13";
-                              bitmap = "tools/materialEditor/gui/wav-square";
+                              bitmapAsset = "ToolsModule:wav_square_n_image";
                               command = "MaterialEditorGui.updateWaveType();";
                               tooltip="Square Wave";
                               hovertime = "1000";
@@ -4437,7 +4437,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            position="2 2";
                            extent ="192 2";
                            HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                         // Reflection Properties Text
                         new GuiTextCtrl(matEd_reflectionPropertiesText) {
@@ -4515,7 +4515,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            position="2 2";
                            extent ="192 2";
                            HorizSizing = "width";
-                           bitmap ="tools/gui/images/separator-v"; 
+                           bitmapAsset ="ToolsModule:separator_v_image"; 
                         };
                         new GuiTextCtrl() {
                            text = "Effect Colors[0:1]";
@@ -4688,7 +4688,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             Visible = "0";
             //Command = "materialSelector.showDialog(\"MaterialEditorGui.switchMaterial\");"; 
             hovertime = "1000";
-            bitmap = "tools/gui/images/folderUp";
+            bitmapAsset = "ToolsModule:folderUp_image";
             tooltip = "Go back to previous editor";
             groupNum = "-1";
             buttonType = "PushButton";
@@ -4705,9 +4705,9 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             MinExtent = "8 2";
             canSave = "1";
             Visible = "1";
-            Command = "materialSelector.showDialog(\"MaterialEditorGui.switchMaterial\");"; 
+            Command = "AssetBrowser.showDialog(\"MaterialAsset\", \"MaterialEditorGui.selectMaterialAsset\");";
             hovertime = "1000";
-            bitmap = "tools/gui/images/open-file";
+            bitmapAsset = "ToolsModule:open_file_n_image";
             tooltip = "Open Existing Material";
             groupNum = "-1";
             buttonType = "PushButton";
@@ -4733,7 +4733,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             tooltip = "Create New Material";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/new";
+            bitmap = "ToolsModule:new_n_image";
          };
          // Save Button
          new GuiBitmapButtonCtrl() {
@@ -4755,7 +4755,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             tooltip = "Save Material (ALT S)";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/save-icon";
+            bitmapAsset = "ToolsModule:save_icon_n_image";
          };
          new GuiBitmapButtonCtrl() {
             canSaveDynamicFields = "0";
@@ -4776,7 +4776,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             tooltip = "Lookup Material Instances";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/visible";
+            bitmapAsset = "ToolsModule:visible_n_image";
          };
          new GuiBitmapCtrl(){
             position = "147 1";
@@ -4784,7 +4784,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             minExtent = "2 16";
             HorizSizing = "left";
             VertSizing = "bottom";
-            bitmap = "tools/gui/images/separator-h";
+            bitmapAsset = "ToolsModule:separator_h_image";
          };
          // Revert Material
          new GuiBitmapButtonCtrl() {
@@ -4803,7 +4803,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             hovertime = "1000";
             tooltip = "Revert Material to Saved";
             text = "";
-            bitmap = "tools/gui/images/reset-icon";
+            bitmapAsset = "ToolsModule:reset_icon_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -4825,7 +4825,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             hovertime = "1000";
             tooltip = "Clear All Material Properties";
             text = "";
-            bitmap = "tools/gui/images/clear-icon";
+            bitmapAsset = "ToolsModule:clear_icon_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
@@ -4847,7 +4847,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             hovertime = "1000";
             tooltip = "Delete Material from File";
             text = "";
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";

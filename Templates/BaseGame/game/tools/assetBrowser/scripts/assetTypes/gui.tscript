@@ -171,7 +171,7 @@ function AssetBrowser::buildGUIAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = %assetDef.GUIFilePath;
    %previewData.doubleClickCommand = "";
    
-   %previewData.previewImage = "tools/assetBrowser/art/guiIcon";
+   %previewData.previewImage = "ToolsModule:guiIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

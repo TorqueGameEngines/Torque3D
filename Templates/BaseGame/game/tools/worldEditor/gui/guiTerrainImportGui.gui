@@ -246,7 +246,7 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
          Visible = "1";
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
-         bitmap = "tools/gui/images/separator-v";
+         bitmapAsset = "ToolsModule:separator_v_image";
          wrap = "0";
       };
       new GuiTextCtrl() {

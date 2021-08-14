@@ -54,7 +54,7 @@ $guiContent = new GuiContainer(EWToolsToolbar) {
       hovertime = "750";
       buttonType = "PushButton";
       useMouseEvents = "0";
-      bitmap = "tools/gui/images/collapse-toolbar";
+      bitmapAsset = "ToolsModule:collapse_toolbar_n_image";
    };
    new GuiDecoyCtrl(EWToolsToolbarDecoy) {
       profile = "ToolsGuiDefaultProfile";

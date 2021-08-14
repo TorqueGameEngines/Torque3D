@@ -75,7 +75,7 @@ $guiContent = new GuiControl(MaterialInstanceViewCtrl) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl(MaterialInstanceFilterBtn) {
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          bitmapMode = "Stretched";
          autoFitExtents = "0";
          useModifiers = "0";

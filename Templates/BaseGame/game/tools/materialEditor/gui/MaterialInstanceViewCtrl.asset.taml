@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MaterialInstanceViewCtrl"
+    scriptFile="@assetFile=materialInstancesView.ed.gui"
+    GUIFile="@assetFile=materialInstancesView.ed.gui"
+    VersionId="1" />

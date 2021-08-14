@@ -146,7 +146,7 @@ void afxParticlePool::pool_renderObject_Normal(RenderPassManager *renderManager,
   if (main_emitter_data->textureHandle)
     ri->diffuseTex = &*(main_emitter_data->textureHandle);
   else
-    ri->diffuseTex = &*(main_emitter_data->particleDataBlocks[0]->textureHandle);
+    ri->diffuseTex = &*(main_emitter_data->particleDataBlocks[0]->getTextureResource());
 
   ri->softnessDistance = main_emitter_data->softnessDistance;
 
@@ -277,7 +277,7 @@ void afxParticlePool::pool_renderObject_TwoPass(RenderPassManager *renderManager
   //if (main_emitter_data->textureHandle)
   //  ri->diffuseTex = &*(main_emitter_data->textureHandle);
   //else
-    ri->diffuseTex = &*(main_emitter_data->particleDataBlocks[0]->textureExtHandle);
+    ri->diffuseTex = &*(main_emitter_data->particleDataBlocks[0]->getTextureExtResource());
 
   F32 save_sort_dist = ri->sortDistSq;
 
@@ -481,7 +481,7 @@ void afxParticlePool::pool_renderObject_TwoPass(RenderPassManager *renderManager
   if (main_emitter_data->textureHandle)
     ri->diffuseTex = &*(main_emitter_data->textureHandle);
   else
-    ri->diffuseTex = &*(main_emitter_data->particleDataBlocks[0]->textureHandle);
+    ri->diffuseTex = &*(main_emitter_data->particleDataBlocks[0]->getTextureResource());
 
   ri->softnessDistance = main_emitter_data->softnessDistance;
 

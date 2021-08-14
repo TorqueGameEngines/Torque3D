@@ -28,7 +28,7 @@ function AssetBrowser::editAsset(%this, %assetDef)
          }
       }
    }
-   else if(!isObject(%assetDef) && strchrpos(%assetDef, ":") != -1)
+   else if(AssetDatabase.isDeclaredAsset(%assetDef))
    {
       //Turns out we were passed an assetid, not an asset definition. 
       //Grab the asset def from that  

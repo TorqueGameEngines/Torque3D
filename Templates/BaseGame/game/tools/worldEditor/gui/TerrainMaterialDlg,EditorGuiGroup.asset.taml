@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TerrainMaterialDlg,EditorGuiGroup"
+    scriptFile="@assetFile=guiTerrainMaterialDlg.ed.gui"
+    GUIFile="@assetFile=guiTerrainMaterialDlg.ed.gui"
+    VersionId="1" />

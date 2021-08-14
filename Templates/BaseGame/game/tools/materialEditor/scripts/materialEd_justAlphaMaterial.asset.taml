@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="materialEd_justAlphaMaterial"
+    scriptFile="@assetFile=materialEditor.ed.tscript"
+    materialDefinitionName="materialEd_justAlphaMaterial"
+    VersionId="1" />

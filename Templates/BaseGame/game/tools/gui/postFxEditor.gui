@@ -96,7 +96,7 @@ $guiContent = new GuiControl(postFXEditor) {
             canSaveDynamicFields = "0";
 
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/iconAdd.png";
+               bitmapAsset = "ToolsModule:iconAdd_image";
                bitmapMode = "Centered";
                autoFitExtents = "0";
                useModifiers = "0";
@@ -122,7 +122,7 @@ $guiContent = new GuiControl(postFXEditor) {
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/iconDelete.png";
+               bitmapAsset = "ToolsModule:iconDelete_image";
                bitmapMode = "Centered";
                autoFitExtents = "0";
                useModifiers = "0";

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="visibility_toggle_d_image"
+    imageFile="@assetFile=visibility-toggle_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

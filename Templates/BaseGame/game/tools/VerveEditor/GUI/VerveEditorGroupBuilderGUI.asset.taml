@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="VerveEditorGroupBuilderGUI"
+    scriptFile="@assetFile=VerveEditorGroupBuilder.gui"
+    GUIFile="@assetFile=VerveEditorGroupBuilder.gui"
+    VersionId="1" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="uv_editor_btn_n_image"
+    imageFile="@assetFile=uv-editor-btn_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

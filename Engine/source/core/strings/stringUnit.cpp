@@ -42,7 +42,7 @@ namespace StringUnit
          
       buffer[0] = 0;
       
-      U32 sz;
+      dsize_t sz;
       while(index--)
       {
          if(!*string)
@@ -71,7 +71,7 @@ namespace StringUnit
       if( startIndex > endIndex )
          return "";
 
-      S32 sz;
+      dsize_t sz;
       S32 index = startIndex;
       while(index--)
       {
@@ -89,7 +89,7 @@ namespace StringUnit
          sz = dStrcspn(string, set);
          string += sz;
 
-         if( i < endIndex )
+         if( i < endIndex && *string )
             string ++;
       }
       

@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
 #ifndef _GFXTEXTUREPROFILE_H_
 #define _GFXTEXTUREPROFILE_H_

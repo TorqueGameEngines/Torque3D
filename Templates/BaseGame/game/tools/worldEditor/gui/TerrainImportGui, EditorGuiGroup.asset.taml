@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TerrainImportGui, EditorGuiGroup"
+    scriptFile="@assetFile=guiTerrainImportGui.gui"
+    GUIFile="@assetFile=guiTerrainImportGui.gui"
+    VersionId="1" />

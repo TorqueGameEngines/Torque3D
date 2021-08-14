@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DefaultEditorLevel_preview_image"
+    imageFile="@assetFile=DefaultEditorLevel_preview.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

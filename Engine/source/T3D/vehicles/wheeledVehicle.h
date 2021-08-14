@@ -31,6 +31,8 @@
 #include "collision/clippedPolyList.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 class ParticleEmitter;
 class ParticleEmitterData;
 
@@ -41,8 +43,8 @@ struct WheeledVehicleTire: public SimDataBlock
 {
    typedef SimDataBlock Parent;
 
-   //
-   StringTableEntry shapeName;// Max shape to render
+   DECLARE_SHAPEASSET(WheeledVehicleTire, Shape, onShapeChanged);
+   DECLARE_SHAPEASSET_SETGET(WheeledVehicleTire, Shape);
 
    // Physical properties
    F32 mass;                  // Mass of the whole wheel
@@ -62,7 +64,6 @@ struct WheeledVehicleTire: public SimDataBlock
    F32 longitudinalRelaxation;
 
    // Shape information initialized in the preload
-   Resource<TSShape> shape;   // The loaded shape
    F32 radius;                // Tire radius
 
    //
@@ -72,6 +73,8 @@ struct WheeledVehicleTire: public SimDataBlock
    bool preload(bool, String &errorStr);
    virtual void packData(BitStream* stream);
    virtual void unpackData(BitStream* stream);
+
+   void onShapeChanged() {}
 };
 
 

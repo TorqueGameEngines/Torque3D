@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="send_to_back_d_image"
+    imageFile="@assetFile=send-to-back_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="edgesnap_d_image"
+    imageFile="@assetFile=edgesnap_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

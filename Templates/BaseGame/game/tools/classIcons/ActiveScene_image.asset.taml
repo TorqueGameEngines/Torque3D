@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ActiveScene_image"
+    imageFile="@assetFile=ActiveScene.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

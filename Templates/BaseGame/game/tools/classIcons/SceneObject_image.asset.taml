@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SceneObject_image"
+    imageFile="@assetFile=SceneObject.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

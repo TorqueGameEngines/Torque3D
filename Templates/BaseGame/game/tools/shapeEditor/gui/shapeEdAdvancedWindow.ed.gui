@@ -157,7 +157,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapCtrl(){
-                  bitmap = "tools/gui/images/inactive-overlay"; 
+                  bitmapAsset = "ToolsModule:inactive_overlay_image"; 
                   position = "57 19";
                   Extent = "122 20";
                   tooltip = "Levels needs to be selected to enable the detail level slider";
@@ -690,7 +690,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapCtrl(){
-                  bitmap = "tools/gui/images/inactive-overlay";
+                  bitmapAsset = "ToolsModule:inactive_overlay_image";
                   position = "4 18";
                   Extent = "193 64";
                   tooltip = "Imposters must be enabled, and an imposter detail level selected to edit these properties";
@@ -846,7 +846,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   profile = "ToolsGuiTextProfile";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/delete";
+                  bitmapAsset = "ToolsModule:delete_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -865,7 +865,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   isContainer = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/new";
+                  bitmapAsset = "ToolsModule:new_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -989,7 +989,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/shapeEditor/images/playfwd_btn";
+                  bitmapAsset = "ToolsModule:playfwd_btn_n_image";
                   groupNum = "0";
                   buttonType = "ToggleButton";
                   useMouseEvents = "0";
@@ -1171,7 +1171,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   };
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/delete";
+                  bitmapAsset = "ToolsModule:delete_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -1190,7 +1190,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   canSaveDynamicFields = "0";
                };
                new GuiBitmapButtonCtrl() {
-                  bitmap = "tools/gui/images/new";
+                  bitmapAsset = "ToolsModule:new_n_image";
                   groupNum = "-1";
                   buttonType = "PushButton";
                   useMouseEvents = "0";
@@ -1229,7 +1229,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/shapeEditor/images/playbkwd_btn";
+               bitmapAsset = "ToolsModule:playbkwd_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
                useMouseEvents = "0";
@@ -1250,7 +1250,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/shapeEditor/images/pause_btn";
+               bitmapAsset = "ToolsModule:pause_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
                useMouseEvents = "0";
@@ -1271,7 +1271,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/shapeEditor/images/playfwd_btn";
+               bitmapAsset = "ToolsModule:playfwd_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
                useMouseEvents = "0";
@@ -1747,7 +1747,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
-               bitmap = "tools/gui/images/inactive-overlay";
+               bitmapAsset = "ToolsModule:inactive_overlay_image";
                position = "0 47";
                extent = "199 175";
                horizSizing = "right";

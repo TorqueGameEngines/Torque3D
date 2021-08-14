@@ -52,7 +52,7 @@ $guiContent = new GuiControl(RoadEditorToolbar) {
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          toolTip = "Show Spline";
-         bitmap = "tools/worldEditor/images/road-river/menubar/show-spline";
+         bitmapAsset = "ToolsModule:show_spline_n_image";
          groupNum = "7";
          buttonType = "ToggleButton";
          useMouseEvents = "0";
@@ -75,7 +75,7 @@ $guiContent = new GuiControl(RoadEditorToolbar) {
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          toolTip = "Show Wireframe";
-         bitmap = "tools/worldEditor/images/road-river/menubar/show-wireframe";
+         bitmapAsset = "ToolsModule:menubar_show_wireframe_n_image";
          groupNum = "-1";
          buttonType = "ToggleButton";
          useMouseEvents = "0";
@@ -98,7 +98,7 @@ $guiContent = new GuiControl(RoadEditorToolbar) {
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          toolTip = "Show Road Texture";
-         bitmap = "tools/worldEditor/images/road-river/menubar/show-texture";
+         bitmapAsset = "ToolsModule:show_texture_n_image";
          groupNum = "-1";
          buttonType = "ToggleButton";
          useMouseEvents = "0";
@@ -180,7 +180,7 @@ $guiContent = new GuiControl(RoadEditorToolbar) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
       /*new GuiTextEditSliderCtrl(RoadEditorDefaultWidthSlider) {

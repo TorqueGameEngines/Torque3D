@@ -147,7 +147,7 @@ bool GuiScrollCtrl::onWake()
    if (! Parent::onWake())
       return false;
 
-   mTextureObject = mProfile->mTextureObject;
+   mTextureObject = mProfile->getBitmapResource();
    if (mTextureObject && (mProfile->constructBitmapArray() >= BmpStates * BmpCount))
    {
       mBitmapBounds = mProfile->mBitmapArrayRects.address();

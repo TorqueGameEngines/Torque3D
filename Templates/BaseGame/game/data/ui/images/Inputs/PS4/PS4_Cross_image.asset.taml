@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PS4_Cross_image"
+    imageFile="@assetFile=PS4_Cross.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

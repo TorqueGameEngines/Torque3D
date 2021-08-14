@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GroupBackground_image"
+    imageFile="@assetFile=GroupBackground.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(kork_chanShape_fbx) {
-   baseShape = "./kork_chanShape.fbx";
+   baseShapeAsset = "Prototyping:kork_chanShape";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

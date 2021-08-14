@@ -103,7 +103,7 @@ $guiContent = new GuiControl() {
             };
             
             new GuiBitmapButtonCtrl() {
-               bitmap = "tools/gui/images/clear-icon";
+               bitmapAsset = "ToolsModule:clear_icon_n_image";
                groupNum = "-1";
                buttonType = "PushButton";
                useMouseEvents = "0";
@@ -265,7 +265,7 @@ $guiContent = new GuiControl() {
          };
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -286,7 +286,7 @@ $guiContent = new GuiControl() {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/new";
+         bitmapAsset = "ToolsModule:new_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

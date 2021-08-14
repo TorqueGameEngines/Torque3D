@@ -2,7 +2,7 @@ exec( "tools/gui/profiles.ed.tscript" );
 
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
-   bitmap = "data/ui/images/background-dark.png";
+   bitmapAsset = "UI:background_dark_image";
    useVariable = "0";
    tile = "0";
    position = "0 0";
@@ -23,7 +23,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
       navigationIndex = "-1";
       
    new GuiBitmapCtrl(MainMenuAppLogo) {
-      bitmap = "data/ui/images/Torque-3D-logo_alt.png";
+      bitmapAsset = "UI:Torque_3D_logo_alt_image";
       bitmapMode = "Stretched";
       autoFitExtents = "0";
       useModifiers = "0";

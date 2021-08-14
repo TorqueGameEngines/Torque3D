@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssetBrowser_SelectPackage"
+    scriptFile="@assetFile=selectPackage.gui"
+    GUIFile="@assetFile=selectPackage.gui"
+    VersionId="1" />

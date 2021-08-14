@@ -124,7 +124,7 @@ void ScriptAsset::initializeAsset()
 {
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
    {
       //We're initialized properly, so we'll go ahead and kick along any dependencies we may have as well
       AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
@@ -152,7 +152,7 @@ void ScriptAsset::onAssetRefresh()
 {
    mScriptPath = expandAssetFilePath(mScriptFile);
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
    {
       //Refresh any dependencies we may have
       for (U32 i = 0; i < mScriptAssets.size(); i++)
@@ -192,7 +192,7 @@ bool ScriptAsset::execScript()
 
    return false;
 
-   if (Platform::isFile(mScriptPath))
+   if (Torque::FS::IsScriptFile(mScriptPath))
    {
       return Con::executeFile(mScriptPath, false, false);
    }

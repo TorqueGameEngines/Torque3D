@@ -689,7 +689,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
       };
       new GuiIconButtonCtrl() {
          buttonMargin = "4 4";
-         iconBitmap = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_R";
+         bitmapAsset = "UI:Keyboard_Black_R_image";
          iconLocation = "Left";
          sizeIconToButton = "1";
          makeIconSquare = "1";

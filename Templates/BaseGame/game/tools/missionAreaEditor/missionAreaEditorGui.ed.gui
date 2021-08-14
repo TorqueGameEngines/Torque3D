@@ -104,7 +104,7 @@ $guiContent = new GuiMissionAreaEditorCtrl(MissionAreaEditorGui, EditorGuiGroup)
             squareBitmap = "1";
             enableEditing = "0";
             renderCamera = "1";
-            handleBitmap = "tools/missionAreaEditor/images/DefaultHandle.png";
+            handleBitmapAsset = "ToolsModule:DefaultHandle_image";
          };
       };
    };

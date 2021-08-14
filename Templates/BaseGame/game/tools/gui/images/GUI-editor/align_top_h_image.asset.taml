@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="align_top_h_image"
+    imageFile="@assetFile=align-top_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

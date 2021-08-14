@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SuperTooltipDlg"
+    scriptFile="@assetFile=superToolTipDlg.ed.gui"
+    GUIFile="@assetFile=superToolTipDlg.ed.gui"
+    VersionId="1" />

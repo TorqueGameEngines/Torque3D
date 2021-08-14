@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Keyboard_Black_G_image"
+    imageFile="@assetFile=Keyboard_Black_G.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

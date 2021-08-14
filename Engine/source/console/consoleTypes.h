@@ -73,7 +73,7 @@ DefineConsoleType( TypeCaseString, const char * )
 DefineConsoleType( TypeRealString, String )
 DefineConsoleType( TypeCommand, String )
 DefineConsoleType( TypeFilename, const char * )
-DefineConsoleType( TypeStringFilename, String )
+DefineConsoleType( TypeStringFilename, const char*)
 
 DefineConsoleType(TypeRotationF, RotationF)
 
@@ -87,22 +87,27 @@ DefineUnmappedConsoleType( TypePID, SimPersistID* );
 /// TypeImageFilename is equivalent to TypeStringFilename in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a custom
 /// InspectorField for this type that can display a texture preview.
-DefineConsoleType( TypeImageFilename, String )
+DefineConsoleType( TypeImageFilename, const char* )
 
 /// TypePrefabFilename is equivalent to TypeStringFilename in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
 /// custom InspectorField for this type.
-DefineConsoleType( TypePrefabFilename, String )
+DefineConsoleType( TypePrefabFilename, const char*)
 
 /// TypeShapeFilename is equivalent to TypeStringFilename in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
 /// custom InspectorField for this type.
-DefineConsoleType( TypeShapeFilename, String )
+DefineConsoleType( TypeShapeFilename, const char* )
+
+/// TypeSoundFilename is exactly the same as TypeShapeFilename 
+/// it exists for the benefit of GuiInspector, which will provide a 
+/// custom InspectorField for this type.
+DefineConsoleType(TypeSoundFilename, const char*)
 
 /// TypeMaterialName is equivalent to TypeRealString in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
 /// custom InspectorField for this type.
-DefineConsoleType( TypeMaterialName, String )
+DefineConsoleType( TypeMaterialName, const char*)
 
 /// TypeTerrainMaterialIndex is equivalent to TypeS32 in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
@@ -116,7 +121,7 @@ DefineConsoleType( TypeTerrainMaterialName, const char * )
 
 /// TypeCubemapName is equivalent to TypeRealString in its usage,
 /// but the Inspector will provide a drop-down list of CubemapData objects.
-DefineConsoleType( TypeCubemapName, String )
+DefineConsoleType( TypeCubemapName, const char*)
 
 DefineConsoleType( TypeParticleParameterString, const char * )
 

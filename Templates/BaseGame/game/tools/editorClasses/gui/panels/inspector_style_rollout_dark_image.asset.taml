@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="inspector_style_rollout_dark_image"
+    imageFile="@assetFile=inspector-style-rollout-dark.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -142,7 +142,7 @@ function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
    if(isFile(%levelPreviewImage))
       %previewData.previewImage = %levelPreviewImage;
    else
-      %previewData.previewImage = "tools/assetBrowser/art/levelIcon";
+      %previewData.previewImage = "ToolsModule:levelIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

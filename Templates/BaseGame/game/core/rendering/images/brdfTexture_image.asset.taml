@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="brdfTexture_image"
+    imageFile="@assetFile=brdfTexture.dds"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

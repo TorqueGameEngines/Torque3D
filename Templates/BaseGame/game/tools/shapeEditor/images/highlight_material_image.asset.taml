@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="highlight_material_image"
+    imageFile="@assetFile=highlight_material.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

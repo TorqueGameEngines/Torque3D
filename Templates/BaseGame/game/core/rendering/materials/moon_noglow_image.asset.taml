@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="moon_noglow_image"
+    imageFile="@assetFile=moon_noglow.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

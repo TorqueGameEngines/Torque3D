@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="lock_d_image"
+    imageFile="@assetFile=lock_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PS4_Dpad_Right_image"
+    imageFile="@assetFile=PS4_Dpad_Right.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

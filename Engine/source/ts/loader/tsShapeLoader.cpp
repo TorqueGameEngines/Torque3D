@@ -125,7 +125,8 @@ void TSShapeLoader::updateProgress(S32 major, const char* msg, S32 numMinor, S32
       progressMsg = avar("%s (%d of %d)", msg, minor + 1, numMinor);
    }
 
-   Con::executef("updateTSShapeLoadProgress", Con::getFloatArg(progress), progressMsg);
+   if(Con::isFunction("updateTSShapeLoadProgress"))
+      Con::executef("updateTSShapeLoadProgress", Con::getFloatArg(progress), progressMsg);
 }
 
 //-----------------------------------------------------------------------------

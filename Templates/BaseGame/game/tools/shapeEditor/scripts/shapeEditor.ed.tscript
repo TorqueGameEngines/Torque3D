@@ -3367,7 +3367,7 @@ function ShapeEdMountWindow::mountShape( %this, %slot )
    %type = %this-->mountType.getText();
 
    if ( %model $= "Browse..." )
-      %model = "core/shapes/octahedron.dts";
+      %model = "core/gameObjects/shapes/octahedron.dts";
 
    if ( ShapeEdShapeView.mountShape( %model, %node, %type, %slot ) )
    {

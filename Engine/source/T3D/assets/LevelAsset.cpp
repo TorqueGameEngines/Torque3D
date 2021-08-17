@@ -172,9 +172,7 @@ void LevelAsset::loadAsset()
    if (previewImageAssetId != StringTable->EmptyString())
    {
       mPreviewImageAssetId = previewImageAssetId;
-
-      AssetPtr<ImageAsset> previewImgAsset = mPreviewImageAssetId;
-      mPreviewImageAsset = previewImgAsset;
+      mPreviewImageAsset = mPreviewImageAssetId;
    }
 }
 

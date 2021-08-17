@@ -7,7 +7,7 @@ body {
  */
 
 .table.borderless > tbody > tr > td {
-  padding-top: 1em;
+  padding-top: 1em;box-shadow: 5px 10px 18px #888888;
 }
 
 .table.borderless > tbody > tr,
@@ -19,6 +19,7 @@ body {
 .table.borderless > tbody > tr:last-child,
 .table.borderless > tbody > tr:last-child > td {
   border: none;
+  box-shadow: 5px 10px 18px #888888;
 }
 
 .contact td:first-child {
@@ -32,6 +33,7 @@ body {
 
 .site .navbar-default {
   background-color: white;
+  box-shadow: 5px 10px 18px #888888;
 }
 
 .site p {
@@ -103,6 +105,8 @@ span.date {
 h4 a,
 h4 a:hover {
   color: rgb(51, 51, 51);
+  transform:scale(1.0);
+  box-shadow: 5px 10px 18px #888888;
 }
 
 a.media-subheading,

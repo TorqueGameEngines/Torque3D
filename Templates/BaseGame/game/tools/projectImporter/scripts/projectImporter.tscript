@@ -220,10 +220,7 @@ function ProjectImportWizardPage3::openPage(%this)
          %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-2);
          
       //clean up invalid characters and stuff
-      %topFolder = strReplace(%topFolder, " ", "");
-      %topFolder = strReplace(%topFolder, "!", "");
-      %topFolder = strReplace(%topFolder, "-", "");
-      %topFolder = strReplace(%topFolder, ".", "");
+      %topFolder = sanitizeString(%topFolder);
      
       $ProjectImporter::useExistingModule = false;
       $ProjectImporter::moduleName = %topFolder; //preseed the module name
@@ -366,6 +363,91 @@ function beginProjectImport()
    AssetBrowser.refresh(); //update the AB just in case
 }
 
+function sanitizeFilename(%file)
+{
+   if(startsWith(%file, "./"))
+   {
+      %targetFilename = strReplace(%file, "./", $ProjectImporter::currentFilePath @ "/");
+   }
+   else if(startsWith(%file, "../"))
+   {
+      %slashPos = strposr($ProjectImporter::currentFilePath, "/");
+      if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
+      {
+         %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
+      }
+      
+      %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
+      %targetFilename = strReplace(%file, "../", %parentPath @ "/");
+   }
+   else if(startsWith(%file, "~"))
+   {
+      %targetFilename = strReplace(%file, "~", $ProjectImporter::modulePath @ "/");
+      if(!isFile(%targetFilename))
+      {
+         %targetFilename = strReplace(%file, "~", $ProjectImporter::modulePath @ "/main/");
+      }
+   }
+   else if ((strpos(%file,"/") == -1)&&(strpos(%file,"\\") == -1))
+   {
+      %targetFilename = $ProjectImporter::currentFilePath @ %file;
+   }
+   else if(!startsWith(%file, $ProjectImporter::modulePath @ "/"))
+   {
+      %targetFilename = $ProjectImporter::modulePath @ "/" @ %file;
+   }
+   else
+   {
+      %targetFilename = %file;
+   }
+   
+   //Now we test for a suffix
+   %flName = fileName(%targetFilename);
+   %targetPath = filePath(%targetFilename);
+   %targetName = fileBase(%targetFilename);
+   %targetExt = fileExt(%targetFilename);
+   
+   if(endsWith(%flName, ".asset.taml"))
+   {
+      %targetName = strreplace(%targetName, ".asset", "");
+      %targetExt = ".asset.taml";
+   }
+   
+   %sanitizedName = sanitizeString(%targetName);
+   if(startsWith(%sanitizedName, "_"))
+   {
+      %sanitizedName = substr(%sanitizedName, 1, -1);
+   }
+   if(%sanitizedName !$= %targetName)
+   {
+      %targetName = %sanitizedName;
+      %targetFilename = %targetPath @ "/" @ %targetName @ %targetExt;
+   }
+   
+   if(!isFile(%targetFilename))
+   {
+      %bitmapFile = %targetPath @ "/" @ %targetName @ "_n" @ %targetExt;
+      if(isFile(%bitmapFile))
+         %targetFilename = %bitmapFile;
+   }
+   
+   if(!isFile(%targetFilename))
+   {
+      %targetFilename = testFilenameExtensions(%targetFilename);
+   }
+   
+   %targetFilename = strReplace(%targetFilename, "//", "/");
+   
+   if(!isFile(%targetFilename)) //if our presumed file target is bad, just bail out
+   {
+      return %file;
+   }
+   else
+   {
+      return %targetFilename;
+   }
+}
+
 function testFilenameExtensions(%filename)
 {
    %ext = fileExt(%filename);  
@@ -432,47 +514,17 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
          //These are going to be texture/render targets, and we can leave them alone
          return %line;
       }
-      //find any assets with that filename
-      else if(startsWith(%value, "./"))
-      {
-         %targetFilename = strReplace(%value, "./", $ProjectImporter::currentFilePath @ "/");
-      }
-      else if(startsWith(%value, "../"))
-      {
-         %slashPos = strposr($ProjectImporter::currentFilePath, "/");
-         if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
-         {
-            %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
-         }
          
-         %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
-         %targetFilename = strReplace(%value, "../", %parentPath @ "/");
-      }
-      else if(startsWith(%value, "~"))
-      {
-         %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/");
-         if(!isFile(%targetFilename))
+      %targetFilename = sanitizeFilename(%value);
+      
+      if(isObject(%targetFilename))
          {
-            %targetFilename = strReplace(%value, "~", $ProjectImporter::modulePath @ "/main/");
-         }
-      }
-      else if ((strpos(%value,"/") == -1)&&(strpos(%value,"\\") == -1))
-      {
-         %targetFilename = $ProjectImporter::currentFilePath @ %value;
-      }
-      else if(!startsWith(%value, $ProjectImporter::modulePath @ "/"))
-      {
-         %targetFilename = $ProjectImporter::modulePath @ "/" @ %value;
+         //likely a material name, so handle it that way
+         %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
       }
       else
       {
-         %targetFilename = %value;
-      }
-      
-      %targetFilename = strReplace(%targetFilename, "//", "/");
-      %targetFilename = testFilenameExtensions(%targetFilename);
-      
-      if(!isFile(%targetFilename)) //if our presumed file target is bad, just bail out
+         if(!isFile(%targetFilename))
       {
          error("Legacy Project Importer - file described in line could not be found/is not valid");
          return %line;
@@ -483,11 +535,12 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       if(%foundAssets != 0)
       {
          %assetId = $ProjectImporter::assetQuery.getAsset(0);
-         echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+         }
       }
      
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
       {
+         echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
          //if (%assetId.getStatusString() $= "Ok")
          %outLine = strReplace(%outLine, %value, %assetId);
          //else
@@ -523,45 +576,7 @@ function processLegacyShapeConstructorField(%line)
    if(strPos(%animSourcePath, ":") != -1)
       return %line;
                
-   //otherwise, try and see if we've got an animation source file here
-   if(startsWith(%animSourcePath, "./"))
-   {
-      %targetFilename = strReplace(%animSourcePath, "./", $ProjectImporter::currentFilePath @ "/");
-   }
-   else if(startsWith(%animSourcePath, "../"))
-   {
-      %slashPos = strposr($ProjectImporter::currentFilePath, "/");
-      if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
-      {
-         %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
-      }
-      
-      %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
-      %targetFilename = strReplace(%animSourcePath, "../", %parentPath @ "/");
-   }
-   else if(startsWith(%animSourcePath, "~"))
-   {
-      %targetFilename = strReplace(%animSourcePath, "~", $ProjectImporter::modulePath @ "/");
-      if(!isFile(%targetFilename))
-      {
-         %targetFilename = strReplace(%animSourcePath, "~", $ProjectImporter::modulePath @ "/main/");
-      }
-   }
-   else if ((strpos(%animSourcePath,"/") == -1)&&(strpos(%animSourcePath,"\\") == -1))
-   {
-      %targetFilename = $ProjectImporter::currentFilePath @ %animSourcePath;
-   }
-   else if(!startsWith(%animSourcePath, $ProjectImporter::modulePath @ "/"))
-   {
-      %targetFilename = $ProjectImporter::modulePath @ "/" @ %animSourcePath;
-   }
-   else
-   {
-      %targetFilename = %animSourcePath;
-   }
-   
-   %targetFilename = strReplace(%targetFilename, "//", "/");
-   %targetFilename = testFilenameExtensions(%targetFilename);
+   %targetFilename = sanitizeFilename(%animSourcePath);
    
    if(!isFile(%targetFilename))
    {
@@ -828,6 +843,14 @@ function beginTerrainImport()
       %filePath = filePath(%file);
       if(%fileExt $= ".ter")
       {
+         %sanitizedFile = sanitizeFilename(%file);
+         if(%sanitizedFile !$= %file)
+         {
+            %file = %sanitizedFile;
+            %fileName = fileName(%file); 
+            %filePath = filePath(%file);
+         }
+            
          $ProjectImporter::assetQuery.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %file);
          if(%assetsFound == 0)

@@ -575,6 +575,40 @@ DefineEngineFunction( stripChars, const char*, ( const char* str, const char* ch
 }
 
 //-----------------------------------------------------------------------------
+DefineEngineFunction(sanitizeString, const char*, (const char* str), ,
+   "Sanitizes a string of common name issues, such as:\n"
+   "Starting with numbers, replacing spaces with _, and removing any name un-compliant characters such as .,- etc\n"
+   "@param str The string to sanitize.\n"
+   "@return A version of @a str with all occurrences of invalid characters removed.\n\n"
+   "@tsexample\n"
+   "cleanString( \"123 .-_abc\"); // Returns \"__abc\"."
+   "@endtsexample\n"
+   "@ingroup Strings")
+{
+   String processedString = str;
+
+   U32 start;
+   U32 end;
+   String firstNumber = String::GetFirstNumber(processedString, start, end);
+   if (!firstNumber.isEmpty() && processedString.startsWith(firstNumber.c_str()))
+      processedString = processedString.replace(firstNumber, "");
+
+   processedString = processedString.replace(" ", "_");
+
+   U32 len = processedString.length() + 1;
+   char* ret = Con::getReturnBuffer(len);
+   dStrcpy(ret, processedString.c_str(), len);
+
+   U32 pos = dStrcspn(ret, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
+   while (pos < dStrlen(ret))
+   {
+      dStrcpy(ret + pos, ret + pos + 1, len - pos);
+      pos = dStrcspn(ret, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
+   }
+   return(ret);
+}
+
+//-----------------------------------------------------------------------------
 
 DefineEngineFunction( strlwr, const char*, ( const char* str ),,
    "Return an all lower-case version of the given string.\n"

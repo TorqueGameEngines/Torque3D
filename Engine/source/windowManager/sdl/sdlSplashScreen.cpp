@@ -96,6 +96,13 @@ bool Platform::displaySplashWindow( String path )
       SDL_RenderCopy(gSplashRenderer, gSplashTexture, NULL, NULL);
 
       SDL_RenderPresent(gSplashRenderer);
+
+      SDL_DestroyTexture(gSplashTexture);
+      gSplashTexture = nullptr;
+
+      SDL_DestroyRenderer(gSplashRenderer);
+      gSplashRenderer = nullptr;
+
    }
 
    return true;

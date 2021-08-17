@@ -2381,11 +2381,25 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       }
       else if (activeImportConfig->DuplicateAutoResolution == String("FolderPrefix"))
       {
-         //Set trailing number
          String renamedAssetName = assetItem->assetName;
-         String owningFolder = assetItem->filePath.getDirectory(assetItem->filePath.getDirectoryCount() - 1);
 
-         renamedAssetName = owningFolder + "_" + renamedAssetName;
+         //Set trailing number
+         S32 dirIndex = assetItem->filePath.getDirectoryCount() - 1;
+         while (dirIndex > -1)
+         {
+            renamedAssetName = assetItem->assetName;
+            String owningFolder = assetItem->filePath.getDirectory(dirIndex);
+
+            renamedAssetName = owningFolder + "_" + renamedAssetName;
+
+            if (AssetDatabase.isDeclaredAsset(renamedAssetName))
+            {
+               dirIndex--;
+               continue;
+            }
+
+            break;
+         }
 
          //Log it's renaming
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was renamed due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());

@@ -543,7 +543,7 @@ function AssetBrowser::doRefresh(%this)
       %this.navigateTo(%this.dirHandler.currentAddress);  
       
       //Forces a clean collapse of the tree for any not-really-exposed items
-      %dataItem = AssetBrowser-->filterTree.findItemByName("Data");
+      %dataItem = AssetBrowser-->filterTree.findItemByName("data");
 
       AssetBrowser-->filterTree.expandItem(%dataItem, false);
       AssetBrowser-->filterTree.expandItem(%dataItem);
@@ -580,11 +580,11 @@ function AssetBrowser::loadDirectories( %this )
    
    AssetBrowser-->filterTree.modulesIdx = AssetBrowser-->filterTree.insertItem(1, "Modules");
    
-   %dataItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "Data");
+   %dataItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "data");
    AssetBrowser-->filterTree.tagsIdx = AssetBrowser-->filterTree.insertItem(1, "Tags");
    AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
    
-   %this.dirHandler.loadFolders("Data", %dataItem);
+   %this.dirHandler.loadFolders("data", %dataItem);
    
    %this.loadCollectionSets();
    
@@ -595,15 +595,15 @@ function AssetBrowser::loadDirectories( %this )
    //If set to, show core
    if(EditorSettings.value("Assets/Browser/showCoreModule", false) == 1)
    {
-      %coreItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "Core");
-      %this.dirHandler.loadFolders("Core", %coreItem);
+      %coreItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "core");
+      %this.dirHandler.loadFolders("core", %coreItem);
    }
    
    //If set to, show tools
    if(EditorSettings.value("Assets/Browser/showToolsModule", false) == 1)
    {
-      %toolsItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "Tools");
-      %this.dirHandler.loadFolders("Tools", %toolsItem);
+      %toolsItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "tools");
+      %this.dirHandler.loadFolders("tools", %toolsItem);
    }
    
    //Add Non-Asset Scripted Objects. Datablock, etc based
@@ -676,7 +676,7 @@ function AssetBrowser::loadDirectories( %this )
       AssetBrowser.newModuleId = ""; 
    }
    
-   //%dataItem = AssetBrowser-->filterTree.findItemByName("Data");
+   //%dataItem = AssetBrowser-->filterTree.findItemByName("data");
    //AssetBrowser-->filterTree.expandItem(%dataItem);
    
    AssetBrowser.dirHandler.expandTreeToAddress(AssetBrowser.dirHandler.currentAddress);
@@ -1219,14 +1219,14 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
    }
    else
    {
-      if( %this.getSelectedItemsCount() > 0 && (%itemText !$= "Data" && %itemText !$= "Core" && %itemText !$= "Tools"))
+      if( %this.getSelectedItemsCount() > 0 && (%itemText !$= "data" && %itemText !$="core" && %itemText !$= "tools"))
       {
          //AddNewAssetPopup.showPopup(Canvas);  
          
          //We have something clicked, so figure out if it's a sub-filter or a module filter, then push the correct
          //popup menu
          %parentItem = %this.getParentItem(%itemId);
-         if(%this.getItemText(%parentItem) $= "Data") //if it's a data module, continue
+         if(%this.getItemText(%parentItem) $= "data") //if it's a data module, continue
          {
             //find out if it's a folder or a module!
             if(ModuleDatabase.findModule(%itemText))
@@ -1248,11 +1248,11 @@ function AssetBrowserFilterTree::onRightMouseDown(%this, %itemId)
             EditFolderPopup.assetType = "Folder";  
          }
       }
-      else if(%itemText $= "Data")
+      else if(%itemText $= "data")
       {
          AddNewModulePopup.showPopup(Canvas);
       }
-      else if(%itemText $= "Tools")
+      else if(%itemText $= "tools")
       {
          AddNewToolPopup.showPopup(Canvas);
       }

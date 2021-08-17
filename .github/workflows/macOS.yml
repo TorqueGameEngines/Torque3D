@@ -1,0 +1,41 @@
+name: MacOSX
+
+# Controls when the action will run.
+on:
+    # Triggers the workflow on push or pull request events but only for the develop branch
+    push:
+        branches: [Preview4_0]
+    pull_request:
+        branches: [Preview4_0]
+
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+    # This workflow contains a single job called "build"
+    build:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ macos-11, macos-10.15 ]
+
+        # The type of runner that the job will run on
+        runs-on: ${{ matrix.os }}
+
+        # Set job name
+        name: OS ${{ matrix.os }}
+
+        # Steps represent a sequence of tasks that will be executed as part of the job
+        steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+            - uses: actions/checkout@v2
+
+            - uses: lukka/get-cmake@latest
+
+            - name: Configure and Build
+              uses: lukka/run-cmake@v3
+              with:
+                  cmakeAppendedArgs: -DTORQUE_APP_NAME=CI
+                  buildWithCMakeArgs: -j8
+                  cmakeListsOrSettingsJson: CMakeListsTxtAdvanced

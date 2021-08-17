@@ -471,6 +471,17 @@ TEST(Script, Basic_SimObject)
 
    ASSERT_STREQ(parentFn.getString(), "FooBar");
 
+   ConsoleValue simpleFieldTest = RunScript(R"(
+         function a()
+         {
+            FudgeCollector.field = "A";
+            return FudgeCollector.field;
+         }
+         return a();
+   )");
+
+   ASSERT_STREQ(simpleFieldTest.getString(), "A");
+
    ConsoleValue grp = RunScript(R"(
          new SimGroup(FudgeCollectorGroup)
          {
@@ -586,5 +597,55 @@ TEST(Script, Basic_Package)
 
    ASSERT_EQ(deactivatedValue.getInt(), 3);
 }
+
+TEST(Script, Sugar_Syntax)
+{
+   ConsoleValue value = RunScript(R"(
+         function a()
+         {
+            %vector = "1 2 3";
+            return %vector.y;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(value.getInt(), 2);
+
+   ConsoleValue setValue = RunScript(R"(
+         function a()
+         {
+            %vector = "1 2 3";
+            %vector.y = 4;
+            return %vector.y;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(setValue.getInt(), 4);
+
+   ConsoleValue valueArray = RunScript(R"(
+         function a()
+         {
+            %vector[0] = "1 2 3";
+            return %vector[0].y;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(valueArray.getInt(), 2);
+
+   ConsoleValue valueSetArray = RunScript(R"(
+         function a()
+         {
+            %vector[0] = "1 2 3";
+            %vector[0].z = 5;
+            return %vector[0].z;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(valueSetArray.getInt(), 5);
+}
+
 
 #endif

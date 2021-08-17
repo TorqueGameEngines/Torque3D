@@ -1262,8 +1262,9 @@ U32 SlotAccessNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    codeStream.emit(OP_SETCUROBJECT);
 
    codeStream.emit(OP_SETCURFIELD);
-
    codeStream.emitSTE(slotName);
+
+   codeStream.emit(OP_POP_STK);
 
    if (arrayExpr)
    {
@@ -1307,6 +1308,8 @@ U32 InternalSlotAccessNode::compile(CodeStream& codeStream, U32 ip, TypeReq type
    codeStream.emit(OP_SETCUROBJECT_INTERNAL);
    codeStream.emit(recurse);
 
+   codeStream.emit(OP_POP_STK);
+
    return codeStream.tell();
 }
 
@@ -1319,34 +1322,6 @@ TypeReq InternalSlotAccessNode::getPreferredType()
 
 U32 SlotAssignNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {
-   // first eval the expression TypeReqString
-
-   // if it's an array:
-
-   // if OP_ADVANCE_STR 1
-   // eval array
-
-   // OP_ADVANCE_STR 1
-   // evaluate object expr
-   // OP_SETCUROBJECT 1
-   // OP_SETCURFIELD 1
-   // fieldName 1
-   // OP_TERMINATE_REWIND_STR 1
-
-   // OP_SETCURFIELDARRAY 1
-   // OP_TERMINATE_REWIND_STR 1
-
-   // else
-   // OP_ADVANCE_STR
-   // evaluate object expr
-   // OP_SETCUROBJECT
-   // OP_SETCURFIELD
-   // fieldName
-   // OP_TERMINATE_REWIND_STR
-
-   // OP_SAVEFIELD
-   // convert to return type if necessary.
-
    precompileIdent(slotName);
 
    ip = valueExpr->compile(codeStream, ip, TypeReqString);
@@ -1363,6 +1338,13 @@ U32 SlotAssignNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       codeStream.emit(OP_SETCUROBJECT_NEW);
    codeStream.emit(OP_SETCURFIELD);
    codeStream.emitSTE(slotName);
+
+   if (objectExpr)
+   {
+      // Don't pop unless we are assigning a field to an object
+      // (For initializer fields, we don't wanna pop)
+      codeStream.emit(OP_POP_STK);
+   }
 
    if (arrayExpr)
    {
@@ -1428,6 +1410,8 @@ U32 SlotAssignOpNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    codeStream.emit(OP_SETCUROBJECT);
    codeStream.emit(OP_SETCURFIELD);
    codeStream.emitSTE(slotName);
+
+   codeStream.emit(OP_POP_STK);
 
    if (arrayExpr)
    {

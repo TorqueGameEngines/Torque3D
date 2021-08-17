@@ -166,18 +166,17 @@ namespace Con
 
 // Gets a component of an object's field value or a variable and returns it
 // in val.
-static void getFieldComponent(SimObject* object, StringTableEntry field, const char* array, StringTableEntry subField, char val[])
+static void getFieldComponent(SimObject* object, StringTableEntry field, const char* array, StringTableEntry subField, char val[], S32 currentLocalRegister)
 {
    const char* prevVal = NULL;
 
    // Grab value from object.
    if (object && field)
       prevVal = object->getDataField(field, array);
-
-   // Otherwise, grab from the string stack. The value coming in will always
-   // be a string because that is how multicomponent variables are handled.
-   else
-      prevVal = stack[_STK].getString();
+   else if (currentLocalRegister != -1)
+      prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
+   else if (gEvalState.currentVariable)
+      prevVal = gEvalState.getStringVariable();
 
    // Make sure we got a value.
    if (prevVal && *prevVal)
@@ -198,15 +197,22 @@ static void getFieldComponent(SimObject* object, StringTableEntry field, const c
          StringTable->insert("a")
       };
 
+      static const StringTableEntry uvw[] =
+      {
+         StringTable->insert("u"),
+         StringTable->insert("v"),
+         StringTable->insert("w")
+      };
+
       // Translate xyzw and rgba into the indexed component 
       // of the variable or field.
-      if (subField == xyzw[0] || subField == rgba[0])
+      if (subField == xyzw[0] || subField == rgba[0] || subField == uvw[0])
          dStrcpy(val, StringUnit::getUnit(prevVal, 0, " \t\n"), 128);
 
-      else if (subField == xyzw[1] || subField == rgba[1])
+      else if (subField == xyzw[1] || subField == rgba[1] || subField == uvw[1])
          dStrcpy(val, StringUnit::getUnit(prevVal, 1, " \t\n"), 128);
 
-      else if (subField == xyzw[2] || subField == rgba[2])
+      else if (subField == xyzw[2] || subField == rgba[2] || subField == uvw[2])
          dStrcpy(val, StringUnit::getUnit(prevVal, 2, " \t\n"), 128);
 
       else if (subField == xyzw[3] || subField == rgba[3])
@@ -221,7 +227,7 @@ static void getFieldComponent(SimObject* object, StringTableEntry field, const c
 
 // Sets a component of an object's field value based on the sub field. 'x' will
 // set the first field, 'y' the second, and 'z' the third.
-static void setFieldComponent(SimObject* object, StringTableEntry field, const char* array, StringTableEntry subField)
+static void setFieldComponent(SimObject* object, StringTableEntry field, const char* array, StringTableEntry subField, S32 currentLocalRegister)
 {
    // Copy the current string value
    char strValue[1024];
@@ -233,7 +239,8 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
    // Set the value on an object field.
    if (object && field)
       prevVal = object->getDataField(field, array);
-
+   else if (currentLocalRegister != -1)
+      prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
    // Set the value on a variable.
    else if (gEvalState.currentVariable)
       prevVal = gEvalState.getStringVariable();
@@ -277,6 +284,8 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
       // Update the field or variable.
       if (object && field)
          object->setDataField(field, 0, val);
+      else if (currentLocalRegister != -1)
+         gEvalState.setLocalStringVariable(currentLocalRegister, val, dStrlen(val));
       else if (gEvalState.currentVariable)
          gEvalState.setStringVariable(val);
    }
@@ -758,6 +767,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    }
    const char* val;
    S32 reg;
+   S32 currentRegister = -1;
 
    // The frame temp is used by the variable accessor ops (OP_SAVEFIELD_* and
    // OP_LOADFIELD_*) to store temporary values for the fields.
@@ -1427,6 +1437,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
+         // Used for local variable caching of what is active...when we
+         // set a global, we aren't active
+         currentRegister = -1;
+
          gEvalState.setCurVarName(var);
 
          // In order to let docblocks work properly with variables, we have
@@ -1445,6 +1459,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
+         // Used for local variable caching of what is active...when we
+         // set a global, we aren't active
+         currentRegister = -1;
+
          gEvalState.setCurVarNameCreate(var);
 
          // See OP_SETCURVAR for why we do this.
@@ -1459,6 +1477,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevField = NULL;
          prevObject = NULL;
          curObject = NULL;
+
+         // Used for local variable caching of what is active...when we
+         // set a global, we aren't active
+         currentRegister = -1;
 
          gEvalState.setCurVarName(var);
 
@@ -1475,6 +1497,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
+         // Used for local variable caching of what is active...when we
+         // set a global, we aren't active
+         currentRegister = -1;
+
          gEvalState.setCurVarNameCreate(var);
 
          // See OP_SETCURVAR for why we do this.
@@ -1483,16 +1509,19 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_LOADVAR_UINT:
+         currentRegister = -1;
          stack[_STK + 1].setInt(gEvalState.getIntVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_FLT:
+         currentRegister = -1;
          stack[_STK + 1].setFloat(gEvalState.getFloatVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_STR:
+         currentRegister = -1;
          stack[_STK + 1].setString(gEvalState.getStringVariable());
          _STK++;
          break;
@@ -1511,18 +1540,21 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_LOAD_LOCAL_VAR_UINT:
          reg = code[ip++];
+         currentRegister = reg;
          stack[_STK + 1].setInt(gEvalState.getLocalIntVariable(reg));
          _STK++;
          break;
 
       case OP_LOAD_LOCAL_VAR_FLT:
          reg = code[ip++];
+         currentRegister = reg;
          stack[_STK + 1].setFloat(gEvalState.getLocalFloatVariable(reg));
          _STK++;
          break;
 
       case OP_LOAD_LOCAL_VAR_STR:
          reg = code[ip++];
+         currentRegister = reg;
          val = gEvalState.getLocalStringVariable(reg);
          stack[_STK + 1].setString(val);
          _STK++;
@@ -1548,7 +1580,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // Save the previous object for parsing vector fields.
          prevObject = curObject;
          val = stack[_STK].getString();
-         _STK--;
+         //_STK--;
 
          // Sim::findObject will sometimes find valid objects from
          // multi-component strings. This makes sure that doesn't
@@ -1616,7 +1648,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // a special accessor?
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
-            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
+            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff, currentRegister);
             stack[_STK + 1].setInt(dAtol(buff));
          }
          _STK++;
@@ -1631,7 +1663,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // a special accessor?
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
-            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
+            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff, currentRegister);
             stack[_STK + 1].setFloat(dAtod(buff));
          }
          _STK++;
@@ -1649,7 +1681,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // a special accessor?
             char buff[FieldBufferSizeString];
             memset(buff, 0, sizeof(buff));
-            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff);
+            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff, currentRegister);
             stack[_STK + 1].setString(buff);
          }
          _STK++;
@@ -1662,7 +1694,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             // The field is not being set on an object. Maybe it's
             // a special accessor?
-            setFieldComponent( prevObject, prevField, prevFieldArray, curField );
+            setFieldComponent( prevObject, prevField, prevFieldArray, curField, currentRegister );
             prevObject = NULL;
          }
          break;
@@ -1674,7 +1706,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             // The field is not being set on an object. Maybe it's
             // a special accessor?
-            setFieldComponent( prevObject, prevField, prevFieldArray, curField );
+            setFieldComponent( prevObject, prevField, prevFieldArray, curField, currentRegister );
             prevObject = NULL;
          }
          break;
@@ -1686,7 +1718,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             // The field is not being set on an object. Maybe it's
             // a special accessor?
-            setFieldComponent( prevObject, prevField, prevFieldArray, curField );
+            setFieldComponent( prevObject, prevField, prevFieldArray, curField, currentRegister );
             prevObject = NULL;
          }
          break;

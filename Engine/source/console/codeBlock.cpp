@@ -1114,7 +1114,7 @@ void CodeBlock::dumpInstructions(U32 startIp, bool upToReturn)
 
       case OP_SETCUROBJECT:
       {
-         Con::printf("%i: OP_SETCUROBJECT stk=-1", ip - 1);
+         Con::printf("%i: OP_SETCUROBJECT stk=0", ip - 1);
          break;
       }
 

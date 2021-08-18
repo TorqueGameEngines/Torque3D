@@ -544,7 +544,7 @@ TEST(Script, Basic_SimObject)
 TEST(Script, Internal_Name)
 {
    ConsoleValue value = RunScript(R"(
-         function SimObject::_internalCall(%this)
+         function TheFirstInner::_internalCall(%this)
          {
             return 5;
          }
@@ -552,7 +552,7 @@ TEST(Script, Internal_Name)
          function a()
          {
             %grp = new SimGroup();
-            %obj = new SimObject()
+            %obj = new SimObject(TheFirstInner)
             {
                internalName = "Yay";
             };
@@ -568,6 +568,43 @@ TEST(Script, Internal_Name)
    )");
 
    ASSERT_EQ(value.getInt(), 5);
+
+   ConsoleValue recursiveValue = RunScript(R"(
+         function SimGroup::doTheInternalCall(%this)
+         {
+            return %this-->Yeah._internalCall2();
+         }
+
+         function TheAnotherObject::_internalCall2(%this)
+         {
+            return %this.property;
+         }
+
+         function a()
+         {
+            %grp = new SimGroup();
+            %obj = new SimGroup()
+            {
+               internalName = "Yay2";
+
+               new SimObject(TheAnotherObject)
+               {
+                  internalName = "Yeah";
+                  property = 12;
+               };
+            };
+            %grp.add(%obj);
+
+            %val = %grp.doTheInternalCall();
+
+            %grp.delete();
+
+            return %val;
+         }
+         return a();      
+   )");
+
+   ASSERT_EQ(recursiveValue.getInt(), 12);
 }
 
 TEST(Script, Basic_Package)

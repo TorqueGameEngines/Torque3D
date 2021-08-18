@@ -1304,11 +1304,12 @@ U32 InternalSlotAccessNode::compile(CodeStream& codeStream, U32 ip, TypeReq type
    ip = objectExpr->compile(codeStream, ip, TypeReqString);
    codeStream.emit(OP_SETCUROBJECT);
 
+   // we pop the stack as we will override the current object with the internal object
+   codeStream.emit(OP_POP_STK);
+
    ip = slotExpr->compile(codeStream, ip, TypeReqString);
    codeStream.emit(OP_SETCUROBJECT_INTERNAL);
    codeStream.emit(recurse);
-
-   codeStream.emit(OP_POP_STK);
 
    return codeStream.tell();
 }

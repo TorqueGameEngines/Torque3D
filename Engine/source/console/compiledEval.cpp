@@ -1614,6 +1614,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                stack[_STK].setInt(0);
             }
          }
+         else
+         {
+            Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use ->, but the group object wasn't found.", getFileLine(ip - 2));
+            stack[_STK].setInt(0);
+         }
          break;
 
       case OP_SETCUROBJECT_NEW:

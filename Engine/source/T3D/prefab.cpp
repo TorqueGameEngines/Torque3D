@@ -71,6 +71,8 @@ Prefab::Prefab()
    mNetFlags.clear(Ghostable);
 
    mTypeMask |= StaticObjectType;
+
+   mFilename = StringTable->EmptyString();
 }
 
 Prefab::~Prefab()
@@ -558,6 +560,7 @@ bool Prefab::buildExportPolyList(ColladaUtils::ExportData* exportData, const Box
 
 void Prefab::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
+   if (!mChildGroup) return;
    Vector<SceneObject*> foundObjects;
    mChildGroup->findObjectByType(foundObjects);
 

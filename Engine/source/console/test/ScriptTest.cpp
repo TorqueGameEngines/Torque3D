@@ -647,5 +647,58 @@ TEST(Script, Sugar_Syntax)
    ASSERT_EQ(valueSetArray.getInt(), 5);
 }
 
+TEST(Script, InnerObjectTests)
+{
+   ConsoleValue theObject = RunScript(R"(
+      function a()
+      {
+         %obj = new SimObject(TheOuterObject)
+         {
+            innerObject = new SimObject(TheInnerObject)
+            {
+               testField = 123;
+               position = "1 2 3";
+            };
+         };
+         return %obj;
+      }
+      return a();
+   )");
+
+   SimObject* outerObject = Sim::findObject("TheOuterObject");
+   ASSERT_NE(outerObject, (SimObject*)NULL);
+   if (outerObject)
+   {
+      ASSERT_EQ(theObject.getInt(), Sim::findObject("TheOuterObject")->getId());
+   }
+   ASSERT_NE(Sim::findObject("TheInnerObject"), (SimObject*)NULL);
+
+   ConsoleValue positionValue = RunScript(R"(
+      function TheOuterObject::getInnerPosition(%this)
+      {
+         return %this.innerObject.position;
+      }
+
+      function a()
+      {
+         %position = TheOuterObject.getInnerPosition();
+         return %position.y;
+      }
+      return a();
+   )");
+
+   ASSERT_EQ(positionValue.getInt(), 2);
+
+   ConsoleValue nestedFuncCall = RunScript(R"(
+      function TheInnerObject::test(%this)
+      {
+         return %this.testField;
+      }
+
+      return TheOuterObject.innerObject.test();
+   )");
+
+   ASSERT_EQ(nestedFuncCall.getInt(), 123);
+}
 
 #endif

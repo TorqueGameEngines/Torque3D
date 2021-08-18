@@ -70,7 +70,7 @@ function ProjectImportWindow::selectOGFolder(%this)
    %dlg = new OpenFolderDialog()
    {
       Title = "Select Export Folder";
-      Filters = %filter;
+      Filters = "";
       DefaultFile = "data/";
       ChangePath = false;
       MustExist = true;
@@ -588,7 +588,7 @@ function processLegacyShapeConstructorField(%line)
    if(%foundAssets != 0)
    {
       %assetId = $ProjectImporter::assetQuery.getAsset(0);
-      echo("Legacy Project Importer - processing of legacy shape constructor addSequence line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+      echo("Legacy Project Importer - processing of legacy shape constructor addSequence line's value: " @ %animSourcePath @ " has found a matching AssetId: " @ %assetId);
    }
   
    if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
@@ -981,6 +981,7 @@ function processGUIntoAsset(%guiName, %file)
    warn("Processing GUI into asset: " @ %guiName @ ", file: " @ %file);
    
    %filePath = filePath(%file);
+   %fileName = fileBase(%file);
    %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(%file);
    %moduleName = %moduleDef.ModuleId;
    %modulePath = %moduleDef.ModulePath;
@@ -1182,7 +1183,7 @@ function deleteAssetDefinitions()
    %dlg = new OpenFolderDialog()
    {
       Title = "Select Folder";
-      Filters = %filter;
+      Filters = "";
       DefaultFile = "data/";
       ChangePath = false;
       MustExist = true;

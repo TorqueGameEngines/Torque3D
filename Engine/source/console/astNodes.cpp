@@ -1599,7 +1599,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    CompilerLocalVariableToRegisterMappingTable* tbl = &getFunctionVariableMappingTable();
    for (const auto& pair : gFuncVars->variableNameMap)
    {
-      tbl->add(fnName, pair.second, pair.first);
+      tbl->add(fnName, nameSpace, pair.second, pair.first);
    }
 
    gFuncVars = NULL;

@@ -870,11 +870,21 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
    bool isEvaluatingLocalVariable = evalBufferLen > 0 && evalBuffer[0] == '%';
    if (isEvaluatingLocalVariable)
    {
+      // See calculation of current frame in pushing a reference frame for console exec, we need access
+      // to the proper scope.
+      //frame = gEvalState.getTopOfStack() - frame - 1;
+      S32 stackIndex = gEvalState.getTopOfStack() - frame - 1;
+
       const char* format = "EVALOUT %s %s\r\n";
 
-      Dictionary &stackFrame = gEvalState.getFrameAt(frame);
+      gEvalState.pushDebugFrame(stackIndex);
+
+      Dictionary& stackFrame = gEvalState.getCurrentFrame();
       StringTableEntry functionName = stackFrame.scopeName;
-      S32 registerId = stackFrame.code->variableRegisterTable.lookup(functionName, StringTable->insert(evalBuffer));
+      StringTableEntry namespaceName = stackFrame.scopeNamespace->mName;
+      StringTableEntry varToLookup = StringTable->insert(evalBuffer);
+
+      S32 registerId = stackFrame.code->variableRegisterTable.lookup(namespaceName, functionName, varToLookup);
 
       if (registerId == -1)
       {
@@ -884,6 +894,8 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
       }
 
       const char* varResult = gEvalState.getLocalStringVariable(registerId);
+
+      gEvalState.popFrame();
 
       S32 len = dStrlen(format) + dStrlen(tag) + dStrlen(varResult);
       char* buffer = new char[len];

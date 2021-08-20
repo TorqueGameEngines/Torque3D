@@ -634,6 +634,8 @@ public:
    /// on the top of the stack.
    void pushFrameRef(S32 stackIndex);
 
+   void pushDebugFrame(S32 stackIndex);
+
    U32 getStackDepth() const
    {
       return mStackDepth;

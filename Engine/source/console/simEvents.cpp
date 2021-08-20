@@ -33,7 +33,7 @@ SimConsoleEvent::SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject)
    mOnObject = onObject;
    mArgc = argc;
 
-   mArgv = new ConsoleValue[argc];
+   mArgv = new ConsoleValue[argc]();
    for (int i=0; i<argc; i++)
    {
       if (argv)

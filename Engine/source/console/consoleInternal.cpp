@@ -710,7 +710,7 @@ void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 reg
 
    AssertFatal(!newFrame.getCount(), "ExprEvalState::pushFrame - Dictionary not empty!");
 
-   ConsoleValue* consoleValArray = new ConsoleValue[registerCount];
+   ConsoleValue* consoleValArray = new ConsoleValue[registerCount]();
    localStack.push_back(ConsoleValueFrame(consoleValArray, false));
    currentRegisterArray = &localStack.last();
 
@@ -785,6 +785,19 @@ void ExprEvalState::pushFrameRef(S32 stackIndex)
 #ifdef DEBUG_SPEW
    validate();
 #endif
+}
+
+void ExprEvalState::pushDebugFrame(S32 stackIndex)
+{
+   pushFrameRef(stackIndex);
+
+   Dictionary& newFrame = *(stack[mStackDepth - 1]);
+
+   // debugger needs to know this info...
+   newFrame.scopeName = stack[stackIndex]->scopeName;
+   newFrame.scopeNamespace = stack[stackIndex]->scopeNamespace;
+   newFrame.code = stack[stackIndex]->code;
+   newFrame.ip = stack[stackIndex]->ip;
 }
 
 ExprEvalState::ExprEvalState()

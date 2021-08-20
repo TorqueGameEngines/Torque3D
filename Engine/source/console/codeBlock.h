@@ -35,8 +35,8 @@ struct CompilerLocalVariableToRegisterMappingTable
 
    std::unordered_map<StringTableEntry, RemappingTable> localVarToRegister;
 
-   void add(StringTableEntry functionName, StringTableEntry varName, S32 reg);
-   S32 lookup(StringTableEntry functionName, StringTableEntry varName);
+   void add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName, S32 reg);
+   S32 lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName);
    CompilerLocalVariableToRegisterMappingTable copy();
    void reset();
 };

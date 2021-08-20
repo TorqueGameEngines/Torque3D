@@ -212,17 +212,21 @@ void CompilerStringTable::write(Stream &st)
 
 //------------------------------------------------------------
 
-void CompilerLocalVariableToRegisterMappingTable::add(StringTableEntry functionName, StringTableEntry varName, S32 reg)
+void CompilerLocalVariableToRegisterMappingTable::add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName, S32 reg)
 {
-   localVarToRegister[functionName].table[varName] = reg;
+   StringTableEntry funcLookupTableName = StringTable->insert(avar("%s::%s", namespaceName, functionName));
+
+   localVarToRegister[funcLookupTableName].table[varName] = reg;
 }
 
-S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry functionName, StringTableEntry varName)
+S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName)
 {
-   auto functionPosition = localVarToRegister.find(functionName);
+   StringTableEntry funcLookupTableName = StringTable->insert(avar("%s::%s", namespaceName, functionName));
+
+   auto functionPosition = localVarToRegister.find(funcLookupTableName);
    if (functionPosition != localVarToRegister.end())
    {
-      const auto& table = localVarToRegister[functionName].table;
+      const auto& table = localVarToRegister[funcLookupTableName].table;
       auto varPosition = table.find(varName);
       if (varPosition != table.end())
       {
@@ -230,7 +234,7 @@ S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry functio
       }
    }
 
-   Con::errorf("Unable to find local variable %s in function name %s", varName, functionName);
+   Con::errorf("Unable to find local variable %s in function name %s", varName, funcLookupTableName);
    return -1;
 }
 

@@ -133,7 +133,6 @@ struct ConsoleValueConsoleType
    EnumTable* enumTable;
 };
 
-// TODO: replace malloc/free with custom allocator...
 class ConsoleValue
 {
    union

@@ -1921,9 +1921,8 @@ StringTableEntry getModNameFromPath(const char *path)
 
 void postConsoleInput( RawData data )
 {
-   // TODO(JTH): Mem leak
    // Schedule this to happen at the next time event.
-   ConsoleValue* argv = new ConsoleValue[2]();
+   ConsoleValue argv[2];
    argv[0].setString("eval");
    argv[1].setString(reinterpret_cast<const char*>(data.data));
 

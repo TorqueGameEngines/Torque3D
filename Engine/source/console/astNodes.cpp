@@ -382,7 +382,7 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    TypeReq varType = isStringIter ? TypeReqString : TypeReqUInt;
 
    const U32 startIp = ip;
-   containerExpr->compile(codeStream, startIp, TypeReqString); // todo: figure out better way to codegen this so we don't rely on STR
+   containerExpr->compile(codeStream, startIp, TypeReqString);
 
    codeStream.emit(isStringIter ? OP_ITER_BEGIN_STR : OP_ITER_BEGIN);
    codeStream.emit(isGlobal);
@@ -544,8 +544,6 @@ void IntBinaryExprNode::getSubTypeOperand()
 
 U32 IntBinaryExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {
-   // TODO: What if we do other optimizations and this doesn't work for it..this
-   // so far only works for simple MOD optimizations...
    if (optimize())
       right = optimizedNode;
 

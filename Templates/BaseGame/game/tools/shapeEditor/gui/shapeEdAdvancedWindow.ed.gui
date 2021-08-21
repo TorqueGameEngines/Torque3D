@@ -311,7 +311,7 @@
                   canSaveDynamicFields = "0";
                };
                new GuiTextCtrl() {
-                  text = "Materials";
+                  text = "materials";
                   position = "20 80";
                   extent = "43 16";
                   MinExtent = "8 2";

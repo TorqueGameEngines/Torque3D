@@ -90,7 +90,7 @@ function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
    }
 
    %matCount = %assetItem.shapeInfo._materialCount;
-   %matItem = %assetItem.shapeInfo.findItemByName("Materials");
+   %matItem = %assetItem.shapeInfo.findItemByName("materials");
    
    ImportActivityLog.add("   Shape Info: Mesh Count: " @ %shapeCount @ " | Material Count: " @ %matCount @ " | Anim Count: " @ %animCount);
    

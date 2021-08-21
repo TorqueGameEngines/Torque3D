@@ -174,7 +174,7 @@ DefineEngineFunction( enumColladaForImport, bool, (const char * shapePath, const
    // Initialize tree
    tree->removeItem(0);
    S32 nodesID = tree->insertItem(0, "Shape", "", "", 0, 0);
-   S32 matsID = tree->insertItem(0, "Materials", "", "", 0, 0);
+   S32 matsID = tree->insertItem(0, "materials", "", "", 0, 0);
    S32 animsID = tree->insertItem(0, "Animations", "", "", 0, 0);
 
    SceneStats stats;

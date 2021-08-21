@@ -37,7 +37,7 @@ function AssetImportConfigList::onSelect( %this, %id, %text )
    
    %this.populateConfigListByGroup("General");
    %this.populateConfigListByGroup("Meshes");
-   %this.populateConfigListByGroup("Materials");
+   %this.populateConfigListByGroup("materials");
    %this.populateConfigListByGroup("Animations");
    %this.populateConfigListByGroup("Images");
    %this.populateConfigListByGroup("Collision");
@@ -150,7 +150,7 @@ function AssetImportConfigEditor::createNewImportConfig(%this)
    
    AssetImportConfigEditorInspector.setDefaultValuesByGroup("General");
    AssetImportConfigEditorInspector.setDefaultValuesByGroup("Meshes");
-   AssetImportConfigEditorInspector.setDefaultValuesByGroup("Materials");
+   AssetImportConfigEditorInspector.setDefaultValuesByGroup("materials");
    AssetImportConfigEditorInspector.setDefaultValuesByGroup("Animations");
    AssetImportConfigEditorInspector.setDefaultValuesByGroup("Collision");
    AssetImportConfigEditorInspector.setDefaultValuesByGroup("Images");
@@ -177,7 +177,7 @@ function AssetImportConfigEditor::onDeleteConfig(%this)
    
    AssetImportConfigEditorInspector.removeSettingsByGroup("General");
    AssetImportConfigEditorInspector.removeSettingsByGroup("Meshes");
-   AssetImportConfigEditorInspector.removeSettingsByGroup("Materials");
+   AssetImportConfigEditorInspector.removeSettingsByGroup("materials");
    AssetImportConfigEditorInspector.removeSettingsByGroup("Animations");
    AssetImportConfigEditorInspector.removeSettingsByGroup("Collision");
    AssetImportConfigEditorInspector.removeSettingsByGroup("Images");

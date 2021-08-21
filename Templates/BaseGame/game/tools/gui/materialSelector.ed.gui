@@ -118,7 +118,7 @@ new GuiControl(MaterialSelectorOverlay, EditorGuiGroup) {
          VertSizing = "bottom";
          position = "133 23";
          extent = "53 16";
-         text = "Materials";
+         text = "materials";
       };
       // Create New Material
       new GuiBitmapButtonCtrl() {

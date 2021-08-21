@@ -170,7 +170,7 @@ void AssetImportConfig::initPersistFields()
       addField("invertNormals", TypeBool, Offset(invertNormals, AssetImportConfig), "Should the normals on the model be inverted");
    endGroup("Meshes");
 
-   addGroup("Materials");
+   addGroup("materials");
       addField("ImportMaterials", TypeBool, Offset(ImportMaterials, AssetImportConfig), "Does this config allow for importing of materials");
       addField("AlwaysAddMaterialSuffix", TypeBool, Offset(AlwaysAddMaterialSuffix, AssetImportConfig), "When importing a material, this indicates if it should automatically add a standard suffix onto the name");
       addField("AddedMaterialSuffix", TypeString, Offset(AddedMaterialSuffix, AssetImportConfig), " If AlwaysAddMaterialSuffix is on, this is the suffix to be added");
@@ -179,7 +179,7 @@ void AssetImportConfig::initPersistFields()
       addField("UseExistingMaterials", TypeBool, Offset(UseExistingMaterials, AssetImportConfig), "Should the importer try and use existing material assets in the game directory if at all possible. (Not currently utilized)");
       addField("IgnoreMaterials", TypeRealString, Offset(IgnoreMaterials, AssetImportConfig), "A list of material names that should not be imported. Separated by either , or ;");
       addField("PopulateMaterialMaps", TypeBool, Offset(PopulateMaterialMaps, AssetImportConfig), "When processing a material asset, should the importer attempt to populate the various material maps on it by looking up common naming conventions for potentially relevent image files.\n e.g. If MyCoolStuff_Diffuse.png is imported, generating MyCoolStuff material, it would also find MyCoolStuff_Normal and MyCoolStuff_PBR images and map them to the normal and ORMConfig maps respectively automatically");
-   endGroup("Materials");
+   endGroup("materials");
 
    addGroup("Animation");
       addField("ImportAnimations", TypeBool, Offset(ImportAnimations, AssetImportConfig), "Does this config allow for importing Shape Animations");
@@ -1089,7 +1089,7 @@ static bool enumColladaForImport(const char* shapePath, GuiTreeViewCtrl* tree, b
    // Initialize tree
    tree->removeItem(0);
    S32 nodesID = tree->insertItem(0, "Shape", "", "", 0, 0);
-   S32 matsID = tree->insertItem(0, "Materials", "", "", 0, 0);
+   S32 matsID = tree->insertItem(0, "materials", "", "", 0, 0);
    S32 animsID = tree->insertItem(0, "Animations", "", "", 0, 0);
 
    SceneStats stats;
@@ -1217,7 +1217,7 @@ static bool enumDTSForImport(const char* shapePath, GuiTreeViewCtrl* tree)
    // Initialize tree
    tree->removeItem(0);
    S32 nodesID = tree->insertItem(0, "Shape", "", "", 0, 0);
-   S32 matsID = tree->insertItem(0, "Materials", "", "", 0, 0);
+   S32 matsID = tree->insertItem(0, "materials", "", "", 0, 0);
    S32 animsID = tree->insertItem(0, "Animations", "", "", 0, 0);
 
    SceneStats stats;
@@ -1898,7 +1898,7 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
    S32 animItem = assetItem->shapeInfo->findItemByName("Animations");
 
    S32 materialCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_materialCount"), nullptr));
-   S32 matItem = assetItem->shapeInfo->findItemByName("Materials");
+   S32 matItem = assetItem->shapeInfo->findItemByName("materials");
 
    dSprintf(importLogBuffer, sizeof(importLogBuffer), "   Shape Info: Mesh Count: %i | Material Count: %i | Anim Count: %i", meshCount, animCount, materialCount);
    activityLog.push_back(importLogBuffer);

@@ -320,7 +320,7 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
    // Initialize tree
    tree->removeItem(0);
    S32 meshItem = tree->insertItem(0, "Meshes", String::ToString("%i", shapeScene->mNumMeshes));
-   S32 matItem = tree->insertItem(0, "Materials", String::ToString("%i", shapeScene->mNumMaterials));
+   S32 matItem = tree->insertItem(0, "materials", String::ToString("%i", shapeScene->mNumMaterials));
    S32 animItem = tree->insertItem(0, "Animations", String::ToString("%i", shapeScene->mNumAnimations));
    //S32 lightsItem = tree->insertItem(0, "Lights", String::ToString("%i", shapeScene->mNumLights));
    //S32 texturesItem = tree->insertItem(0, "Textures", String::ToString("%i", shapeScene->mNumTextures));

@@ -29,7 +29,7 @@ function AssetBrowser::createMaterialAsset(%this)
 	AssetBrowser.loadFilters();
 	
 	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "Materials");
+	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "materials");
 	
 	AssetBrowserFilterTree.onSelect(%smItem);
    

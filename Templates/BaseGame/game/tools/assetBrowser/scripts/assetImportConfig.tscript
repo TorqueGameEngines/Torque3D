@@ -152,7 +152,7 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
       //Get the shape info, so we know what we're doing with the mesh
       %shapeInfo = GetShapeInfo(%filePath);
       %meshItem = %shapeInfo.findItemByName("Meshes");
-      %matItem = %shapeInfo.findItemByName("Materials");
+      %matItem = %shapeInfo.findItemByName("materials");
       
       %meshCount = %shapeInfo.getItemValue(%meshItem);
       %matCount = %shapeInfo.getItemValue(%matItem);
@@ -267,7 +267,7 @@ function ImportAssetConfigEditorWindow::populateConfigList(%this, %configName)
    
    %this.populateConfigListByGroup("General");
    %this.populateConfigListByGroup("Meshes");
-   %this.populateConfigListByGroup("Materials");
+   %this.populateConfigListByGroup("materials");
    %this.populateConfigListByGroup("Animations");
    %this.populateConfigListByGroup("Images");
    %this.populateConfigListByGroup("Collision");
@@ -432,7 +432,7 @@ function ImportAssetConfigEditorWindow::createNewImportConfig(%this)
    
    %this.setDefaultValuesByGroup("General");
    %this.setDefaultValuesByGroup("Meshes");
-   %this.setDefaultValuesByGroup("Materials");
+   %this.setDefaultValuesByGroup("materials");
    %this.setDefaultValuesByGroup("Animations");
    %this.setDefaultValuesByGroup("Collision");
    %this.setDefaultValuesByGroup("Images");

@@ -285,7 +285,7 @@
                canSaveDynamicFields = "0";
             };
             new GuiTextCtrl() {
-               text = "Materials";
+               text = "materials";
                maxLength = "1024";
                Margin = "0 0 0 0";
                Padding = "0 0 0 0";
@@ -326,7 +326,7 @@
                Visible = "1";
                tooltipprofile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
-               internalName = "Materials";
+               internalName = "materials";
                canSaveDynamicFields = "0";
             };
             new GuiTextCtrl() {

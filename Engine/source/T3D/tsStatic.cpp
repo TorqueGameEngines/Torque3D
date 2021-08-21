@@ -190,7 +190,7 @@ void TSStatic::initPersistFields()
 
    endGroup("Shape");
 
-   addGroup("Materials");
+   addGroup("materials");
    addProtectedField("skin", TypeRealString, Offset(mAppliedSkinName, TSStatic), &_setFieldSkin, &_getFieldSkin,
       "@brief The skin applied to the shape.\n\n"
 
@@ -216,7 +216,7 @@ void TSStatic::initPersistFields()
       "Material targets are only renamed if an existing Material maps to that "
       "name, or if there is a diffuse texture in the model folder with the same "
       "name as the new target.\n\n");
-   endGroup("Materials");
+   endGroup("materials");
 
    addGroup("Rendering");
 
@@ -1640,7 +1640,7 @@ void TSStatic::onInspect(GuiInspector* inspector)
       return;
 
    //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
-   GuiInspectorGroup* materialGroup = inspector->findExistentGroup(StringTable->insert("Materials"));
+   GuiInspectorGroup* materialGroup = inspector->findExistentGroup(StringTable->insert("materials"));
    if (!materialGroup)
       return;
 

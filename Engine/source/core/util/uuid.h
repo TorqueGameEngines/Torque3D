@@ -28,11 +28,27 @@
 #endif
 #include "console/engineTypeInfo.h"
 
+typedef unsigned int    unsigned32;
+typedef unsigned short  unsigned16;
+typedef unsigned char   unsigned8;
+
+class xuuid_t
+{
+public:
+    unsigned32	time_low;
+    unsigned16	time_mid;
+    unsigned16	time_hi_and_version;
+    unsigned8	clock_seq_hi_and_reserved;
+    unsigned8	clock_seq_low;
+    unsigned8	node[6];
+};
 
 namespace Torque
 {
+
+
    /// A universally unique identifier.
-   class UUID
+   class UUID : public xuuid_t
    {
       friend class UUIDEngineExport;
       public:

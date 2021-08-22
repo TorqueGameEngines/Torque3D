@@ -831,6 +831,11 @@ T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset"
 T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("TerrainBlock", "terrainFile terrainAsset");
+T3Dpre4ProjectImporter::genProcessor("afxMagicMissileData", "projectileShapeName projectileShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("afxBillboardData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("afxModelData", "shapeName shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("afxZodiacPlaneData", "texture textureAsset");
 //==============================================================================
 // Levels
 //==============================================================================

@@ -47,8 +47,9 @@ public:
    };
 
 public:
-  StringTableEntry  txr_name;
-  GFXTexHandle      txr;
+   DECLARE_IMAGEASSET(afxBillboardData, Texture, onChangeTexture, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(afxBillboardData, Texture);
+
 
   LinearColorF            color;
   Point2F           texCoords[4];
@@ -69,6 +70,8 @@ public:
   virtual bool      allowSubstitutions() const { return true; }
 
   static void       initPersistFields();
+
+  void onChangeTexture() {}
 
   DECLARE_CONOBJECT(afxBillboardData);
   DECLARE_CATEGORY("AFX");

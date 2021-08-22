@@ -188,7 +188,7 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Update.
    mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;

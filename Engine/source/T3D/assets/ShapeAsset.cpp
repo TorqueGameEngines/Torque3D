@@ -186,10 +186,9 @@ void ShapeAsset::initializeAsset()
    ResourceManager::get().getChangedSignal().notify(this, &ShapeAsset::_onResourceChanged);
 
    //Ensure our path is expando'd if it isn't already
-   if (!Platform::isFullPath(mFilePath))
-      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
+   mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
 
-   mConstructorFilePath = expandAssetFilePath(mConstructorFilePath);
+   mConstructorFilePath = getOwned() ? expandAssetFilePath(mConstructorFilePath) : mConstructorFilePath;
 
    loadShape();
 }
@@ -200,13 +199,13 @@ void ShapeAsset::setShapeFile(const char* pShapeFile)
    AssertFatal(pShapeFile != NULL, "Cannot use a NULL shape file.");
 
    // Fetch image file.
-   pShapeFile = StringTable->insert(pShapeFile);
+   pShapeFile = StringTable->insert(pShapeFile, true);
 
    // Ignore no change,
    if (pShapeFile == mFileName)
       return;
 
-   mFileName = pShapeFile;
+   mFileName = getOwned() ? expandAssetFilePath(pShapeFile) : pShapeFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -218,13 +217,13 @@ void ShapeAsset::setShapeConstructorFile(const char* pShapeConstructorFile)
    AssertFatal(pShapeConstructorFile != NULL, "Cannot use a NULL shape constructor file.");
 
    // Fetch image file.
-   pShapeConstructorFile = StringTable->insert(pShapeConstructorFile);
+   pShapeConstructorFile = StringTable->insert(pShapeConstructorFile, true);
 
    // Ignore no change,
    if (pShapeConstructorFile == mConstructorFileName)
       return;
 
-   mConstructorFileName = pShapeConstructorFile;
+   mConstructorFileName = getOwned() ? expandAssetFilePath(pShapeConstructorFile) : pShapeConstructorFile;
 
    // Refresh the asset.
    refreshAsset();

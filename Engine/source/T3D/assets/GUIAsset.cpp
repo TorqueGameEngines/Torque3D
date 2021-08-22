@@ -117,12 +117,12 @@ void GUIAsset::copyTo(SimObject* object)
 
 void GUIAsset::initializeAsset()
 {
-   mGUIPath = expandAssetFilePath(mGUIFile);
+   mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
 
    if (Torque::FS::IsScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 
-   mScriptPath = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
@@ -130,12 +130,12 @@ void GUIAsset::initializeAsset()
 
 void GUIAsset::onAssetRefresh()
 {
-   mGUIPath = expandAssetFilePath(mGUIFile);
+   mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
 
    if (Torque::FS::IsScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 
-   mScriptPath = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
@@ -147,14 +147,14 @@ void GUIAsset::setGUIFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL gui file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Ignore no change,
    if (pScriptFile == mGUIFile)
       return;
 
    // Update.
-   mGUIFile = StringTable->insert(pScriptFile);
+   mGUIFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -166,14 +166,14 @@ void GUIAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Ignore no change,
    if (pScriptFile == mScriptFile)
       return;
 
    // Update.
-   mScriptFile = StringTable->insert(pScriptFile);
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

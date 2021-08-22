@@ -132,9 +132,9 @@ void PostEffectAsset::copyTo(SimObject* object)
 
 void PostEffectAsset::initializeAsset()
 {
-   mScriptPath = expandAssetFilePath(mScriptFile);
-   mHLSLShaderPath = expandAssetFilePath(mHLSLShaderFile);
-   mGLSLShaderPath = expandAssetFilePath(mGLSLShaderFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
+   mHLSLShaderPath = getOwned() ? expandAssetFilePath(mHLSLShaderFile) : mHLSLShaderPath;
+   mGLSLShaderPath = getOwned() ? expandAssetFilePath(mGLSLShaderFile) : mGLSLShaderPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
@@ -142,9 +142,9 @@ void PostEffectAsset::initializeAsset()
 
 void PostEffectAsset::onAssetRefresh()
 {
-   mScriptPath = expandAssetFilePath(mScriptFile);
-   mHLSLShaderPath = expandAssetFilePath(mHLSLShaderFile);
-   mGLSLShaderPath = expandAssetFilePath(mGLSLShaderFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
+   mHLSLShaderPath = getOwned() ? expandAssetFilePath(mHLSLShaderFile) : mHLSLShaderPath;
+   mGLSLShaderPath = getOwned() ? expandAssetFilePath(mGLSLShaderFile) : mGLSLShaderPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
@@ -156,14 +156,14 @@ void PostEffectAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Ignore no change,
    if (pScriptFile == mScriptFile)
       return;
 
    // Update.
-   mScriptFile = pScriptFile;
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -175,14 +175,14 @@ void PostEffectAsset::setHLSLShaderFile(const char* pShaderFile)
    AssertFatal(pShaderFile != NULL, "Cannot use a NULL shader file.");
 
    // Fetch image file.
-   pShaderFile = StringTable->insert(pShaderFile);
+   pShaderFile = StringTable->insert(pShaderFile, true);
 
    // Ignore no change,
    if (pShaderFile == mHLSLShaderFile)
       return;
 
    // Update.
-   mHLSLShaderFile = pShaderFile;
+   mHLSLShaderFile = getOwned() ? expandAssetFilePath(pShaderFile) : pShaderFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -194,14 +194,14 @@ void PostEffectAsset::setGLSLShaderFile(const char* pShaderFile)
    AssertFatal(pShaderFile != NULL, "Cannot use a NULL shader file.");
 
    // Fetch image file.
-   pShaderFile = StringTable->insert(pShaderFile);
+   pShaderFile = StringTable->insert(pShaderFile, true);
 
    // Ignore no change,
    if (pShaderFile == mGLSLShaderFile)
       return;
 
    // Update.
-   mGLSLShaderFile = pShaderFile;
+   mGLSLShaderFile = getOwned() ? expandAssetFilePath(pShaderFile) : pShaderFile;
 
    // Refresh the asset.
    refreshAsset();

@@ -184,8 +184,7 @@ void SoundAsset::initializeAsset(void)
    //ResourceManager::get().getChangedSignal.notify(this, &SoundAsset::_onResourceChanged);
 
    //Ensure our path is expando'd if it isn't already
-   if (!Platform::isFullPath(mSoundPath))
-      mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
+   mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
 
    mSoundPath = expandAssetFilePath(mSoundPath);
 
@@ -208,8 +207,7 @@ void SoundAsset::onAssetRefresh(void)
       return;
 
    //Update
-   if (!Platform::isFullPath(mSoundFile))
-      mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
+   mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
 
    loadSound();
 }
@@ -243,14 +241,14 @@ void SoundAsset::setSoundFile(const char* pSoundFile)
    AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
 
    // Fetch sound file.
-   pSoundFile = StringTable->insert(pSoundFile);
+   pSoundFile = StringTable->insert(pSoundFile, true);
 
    // Ignore no change,
    if (pSoundFile == mSoundFile)
       return;
 
    // Update.
-   mSoundFile = pSoundFile;
+   mSoundFile = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
 
    // Refresh the asset.
    refreshAsset();

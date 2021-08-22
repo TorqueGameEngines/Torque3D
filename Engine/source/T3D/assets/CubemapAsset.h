@@ -53,6 +53,7 @@ class CubemapAsset : public AssetBase
    StringTableEntry mDescription;
 
    StringTableEntry mScriptFile;
+   StringTableEntry mScriptPath;
 
 public:
    CubemapAsset();

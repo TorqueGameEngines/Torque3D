@@ -161,14 +161,14 @@ void TerrainAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   mTerrainFilePath = expandAssetFilePath(mTerrainFileName);
+   mTerrainFilePath = getOwned() ? expandAssetFilePath(mTerrainFileName) : mTerrainFilePath;
 
    loadTerrain();
 }
 
 void TerrainAsset::onAssetRefresh()
 {
-   mTerrainFilePath = expandAssetFilePath(mTerrainFileName);
+   mTerrainFilePath = getOwned() ? expandAssetFilePath(mTerrainFileName) : mTerrainFilePath;
 
    loadTerrain();
 }
@@ -176,13 +176,16 @@ void TerrainAsset::onAssetRefresh()
 void TerrainAsset::setTerrainFileName(const char* pScriptFile)
 {
    // Sanity!
-   AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
+   AssertFatal(pScriptFile != NULL, "Cannot use a NULL terrain file.");
 
-   // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
+
+   // Ignore no change,
+   if (pScriptFile == mTerrainFileName)
+      return;
 
    // Update.
-   mTerrainFileName = pScriptFile;
+   mTerrainFileName = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

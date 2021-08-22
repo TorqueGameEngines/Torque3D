@@ -50,7 +50,7 @@
 #include "ts/tsLastDetail.h"
 #endif
 
-StringTableEntry ShapeAsset::smNoShapeAssetFallback(StringTable->insert(Con::getVariable("$Core::NoShapeAssetFallback")));
+StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -146,6 +146,8 @@ void ShapeAsset::consoleInit()
    Con::addVariable("$Core::NoShapeAssetFallback", TypeString, &smNoShapeAssetFallback,
       "The assetId of the shape to display when the requested shape asset is missing.\n"
       "@ingroup GFX\n");
+   
+   smNoShapeAssetFallback = StringTable->insert(Con::getVariable("$Core::NoShapeAssetFallback"));
 }
 
 //-----------------------------------------------------------------------------

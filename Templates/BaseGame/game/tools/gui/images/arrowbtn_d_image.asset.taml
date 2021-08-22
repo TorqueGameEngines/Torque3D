@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="arrowbtn_d_image"
+    imageFile="@assetFile=arrowbtn_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

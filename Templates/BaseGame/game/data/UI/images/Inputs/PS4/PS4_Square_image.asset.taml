@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PS4_Square_image"
+    imageFile="@assetFile=PS4_Square.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

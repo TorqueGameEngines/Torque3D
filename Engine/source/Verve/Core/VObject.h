@@ -45,10 +45,6 @@
 #include "Verve/Core/VTreeNode.h"
 #endif
 
-#ifndef TINYXML_INCLUDED
-#include "tinyxml/tinyxml.h"
-#endif
-
 //-----------------------------------------------------------------------------
 class VController;
 //-----------------------------------------------------------------------------

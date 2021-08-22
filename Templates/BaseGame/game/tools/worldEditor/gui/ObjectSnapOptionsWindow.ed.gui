@@ -213,7 +213,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         text = "- X Axis";
-                        iconBitmap = "tools/gui/images/axis-icon_-x";
+                        bitmapAsset = "ToolsModule:axis_icon__x_image";
                         textMargin = "24";
                         groupNum = "1";
                         buttonType = "RadioButton";
@@ -238,7 +238,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         text = "+ X Axis";
-                        iconBitmap = "tools/gui/images/axis-icon_x";
+                        bitmapAsset = "ToolsModule:axis_icon_x_image";
                         textMargin = "24";
                         groupNum = "1";
                         buttonType = "RadioButton";
@@ -263,7 +263,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         text = "- Y Axis";
-                        iconBitmap = "tools/gui/images/axis-icon_-y";
+                        bitmapAsset = "ToolsModule:axis_icon__y_image";
                         textMargin = "24";
                         groupNum = "1";
                         buttonType = "RadioButton";
@@ -288,7 +288,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         text = "+ Y Axis";
-                        iconBitmap = "tools/gui/images/axis-icon_y";
+                        bitmapAsset = "ToolsModule:axis_icon_y_image";
                         textMargin = "24";
                         groupNum = "1";
                         buttonType = "RadioButton";
@@ -313,7 +313,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         text = "- Z Axis";
-                        iconBitmap = "tools/gui/images/axis-icon_-z";
+                        bitmapAsset = "ToolsModule:axis_icon__z_image";
                         textMargin = "24";
                         groupNum = "1";
                         buttonType = "RadioButton";
@@ -338,7 +338,7 @@
                         tooltipprofile = "ToolsGuiToolTipProfile";
                         hovertime = "1000";
                         text = "+ Z Axis";
-                        iconBitmap = "tools/gui/images/axis-icon_z";
+                        bitmapAsset = "ToolsModule:axis_icon_z_image";
                         textMargin = "24";
                         groupNum = "1";
                         buttonType = "RadioButton";
@@ -573,7 +573,7 @@
                            tooltipprofile = "ToolsGuiToolTipProfile";
                            hovertime = "1000";
                            text = "- X Axis";
-                           iconBitmap = "tools/gui/images/axis-icon_-x";
+                           bitmapAsset = "ToolsModule:axis_icon__x_image";
                            textMargin = "24";
                            groupNum = "1";
                            buttonType = "RadioButton";
@@ -598,7 +598,7 @@
                            tooltipprofile = "ToolsGuiToolTipProfile";
                            hovertime = "1000";
                            text = "+ X Axis";
-                           iconBitmap = "tools/gui/images/axis-icon_x";
+                           bitmapAsset = "ToolsModule:axis_icon_x_image";
                            textMargin = "24";
                            groupNum = "1";
                            buttonType = "RadioButton";
@@ -623,7 +623,7 @@
                            tooltipprofile = "ToolsGuiToolTipProfile";
                            hovertime = "1000";
                            text = "- Y Axis";
-                           iconBitmap = "tools/gui/images/axis-icon_-y";
+                           bitmapAsset = "ToolsModule:axis_icon__y_image";
                            textMargin = "24";
                            groupNum = "1";
                            buttonType = "RadioButton";
@@ -648,7 +648,7 @@
                            tooltipprofile = "ToolsGuiToolTipProfile";
                            hovertime = "1000";
                            text = "+ Y Axis";
-                           iconBitmap = "tools/gui/images/axis-icon_y";
+                           bitmapAsset = "ToolsModule:axis_icon_y_image";
                            textMargin = "24";
                            groupNum = "1";
                            buttonType = "RadioButton";
@@ -673,7 +673,7 @@
                            tooltipprofile = "ToolsGuiToolTipProfile";
                            hovertime = "1000";
                            text = "- Z Axis";
-                           iconBitmap = "tools/gui/images/axis-icon_-z";
+                           bitmapAsset = "ToolsModule:axis_icon__z_image";
                            textMargin = "24";
                            groupNum = "1";
                            buttonType = "RadioButton";
@@ -698,7 +698,7 @@
                            tooltipprofile = "ToolsGuiToolTipProfile";
                            hovertime = "1000";
                            text = "+ Z Axis";
-                           iconBitmap = "tools/gui/images/axis-icon_z";
+                           bitmapAsset = "ToolsModule:axis_icon_z_image";
                            textMargin = "24";
                            groupNum = "1";
                            buttonType = "RadioButton";

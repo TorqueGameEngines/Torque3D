@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MeshRoadEditorPalette,EditorGuiGroup"
+    scriptFile="@assetFile=MeshRoadEditorPalette.ed.gui"
+    GUIFile="@assetFile=MeshRoadEditorPalette.ed.gui"
+    VersionId="1" />

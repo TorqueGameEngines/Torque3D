@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="import_image"
+    imageFile="@assetFile=import.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

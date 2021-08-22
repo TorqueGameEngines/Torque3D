@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="StartupGui"
+    scriptFile="@assetFile=startupGui.gui"
+    GUIFile="@assetFile=startupGui.gui"
+    VersionId="1" />

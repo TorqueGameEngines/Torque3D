@@ -730,7 +730,7 @@ S32 MountSystem::findByPattern( const Path &inBasePath, const String &inFilePatt
    else
    {
       // use specified filesystem to open directory
-      FileNodeRef fNode = mFindByPatternOverrideFS->resolve(inBasePath);
+      FileNodeRef fNode = mFindByPatternOverrideFS->resolveLoose(inBasePath);
       if (fNode && (dir = dynamic_cast<Directory*>(fNode.getPointer())) != NULL)
          dir->open();
    }
@@ -1072,6 +1072,18 @@ S32 FindByPattern( const Path &inBasePath, const String &inFilePattern, bool inR
 bool IsFile(const Path &path)
 {
    return sgMountSystem.isFile(path);
+}
+
+bool IsScriptFile(const char* pFilePath)
+{
+   return (sgMountSystem.isFile(pFilePath)
+      || sgMountSystem.isFile(pFilePath + String(".dso"))
+      || sgMountSystem.isFile(pFilePath + String(".mis"))
+      || sgMountSystem.isFile(pFilePath + String(".mis.dso"))
+      || sgMountSystem.isFile(pFilePath + String(".gui"))
+      || sgMountSystem.isFile(pFilePath + String(".gui.dso"))
+      || sgMountSystem.isFile(pFilePath + String("." TORQUE_SCRIPT_EXTENSION))
+      || sgMountSystem.isFile(pFilePath + String("." TORQUE_SCRIPT_EXTENSION) + String(".dso")));
 }
 
 bool IsDirectory(const Path &path)

@@ -21,13 +21,13 @@
 //-----------------------------------------------------------------------------
 
 //Scripts
-exec("./scripts/componentEditor.ed." @ $TorqueScriptFileExtension);
-exec("./scripts/stateMachineEditor.ed." @ $TorqueScriptFileExtension);
+//exec("./scripts/componentEditor.ed." @ $TorqueScriptFileExtension);
+//exec("./scripts/stateMachineEditor.ed." @ $TorqueScriptFileExtension);
 exec("./scripts/superToolTipDlg.ed." @ $TorqueScriptFileExtension);
 
 //gui
 exec("./gui/superToolTipDlg.ed.gui");
-exec("./gui/stateMachineDlg.ed.gui");
+//exec("./gui/stateMachineDlg.ed.gui");
 
 //field types
 exec("./interface/materialFieldType." @ $TorqueScriptFileExtension);

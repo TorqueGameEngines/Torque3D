@@ -68,7 +68,7 @@ function ConvexEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Sketch Tool (" @ %accel @ ")";
-   EditorGui.addToToolsToolbar( "ConvexEditorPlugin", "ConvexEditorPalette", expandFilename("tools/convexEditor/images/convex-editor-btn"), %tooltip );
+   EditorGui.addToToolsToolbar( "ConvexEditorPlugin", "ConvexEditorPalette", "ToolsModule:convex_editor_btn_n_image", %tooltip );
    
    //connect editor windows
    GuiWindowCtrl::attach( ConvexEditorOptionsWindow, ConvexEditorTreeWindow);
@@ -209,14 +209,14 @@ function ConvexEditorPlugin::onSaveMission( %this, %missionFile )
 function ConvexEditorPlugin::initSettings( %this )
 {
    EditorSettings.beginGroup( "ConvexEditor", true );
-   EditorSettings.setDefaultValue(  "MaterialName",         "Grid_512_Orange" );
+   EditorSettings.setDefaultValue(  "MaterialName",         "Prototyping:WallOrange" );
    EditorSettings.endGroup();
 }
 
 function ESettingsWindow::getConvexEditorSettings(%this)
 {
    SettingsInspector.startGroup("General");
-   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material Name", "string", "");
+   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material Asset Name", "TypeMaterialAssetId", "");
    SettingsInspector.endGroup();
 }
 

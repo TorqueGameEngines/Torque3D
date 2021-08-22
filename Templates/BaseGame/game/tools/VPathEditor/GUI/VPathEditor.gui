@@ -141,7 +141,7 @@ new VPathEditor(EVPathEditor) {
          };
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "tools/gui/images/delete";
+         bitmapAsset = "ToolsModule:delete_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";

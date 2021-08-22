@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="previous_button_d_image"
+    imageFile="@assetFile=previous-button_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

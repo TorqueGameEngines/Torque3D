@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ColladaImportDlg,EditorGuiGroup"
+    scriptFile="@assetFile=colladaImport.ed.gui"
+    GUIFile="@assetFile=colladaImport.ed.gui"
+    VersionId="1" />

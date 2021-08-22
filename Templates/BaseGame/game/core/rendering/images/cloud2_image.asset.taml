@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cloud2_image"
+    imageFile="@assetFile=cloud2.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

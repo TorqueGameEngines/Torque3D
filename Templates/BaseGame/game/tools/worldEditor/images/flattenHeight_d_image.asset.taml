@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="flattenHeight_d_image"
+    imageFile="@assetFile=flattenHeight_d.PNG"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

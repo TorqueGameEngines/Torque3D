@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="river_editor_d_image"
+    imageFile="@assetFile=river-editor_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Spacer_image"
+    imageFile="@assetFile=Spacer.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

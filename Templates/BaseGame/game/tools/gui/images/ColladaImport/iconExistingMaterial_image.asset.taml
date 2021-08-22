@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconExistingMaterial_image"
+    imageFile="@assetFile=iconExistingMaterial.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

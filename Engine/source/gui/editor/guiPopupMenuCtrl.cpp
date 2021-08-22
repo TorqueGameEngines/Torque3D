@@ -142,7 +142,7 @@ void GuiPopupMenuTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool s
          Point2I bitPos = Point2I(offset.x + mCellSize.y / 2, offset.y + mCellSize.y / 2);
 
          GFX->getDrawUtil()->clearBitmapModulation();
-         GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject, bitPos + off, rect);
+         GFX->getDrawUtil()->drawBitmapSR(mProfile->getBitmapResource(), bitPos + off, rect);
       }
    }
 

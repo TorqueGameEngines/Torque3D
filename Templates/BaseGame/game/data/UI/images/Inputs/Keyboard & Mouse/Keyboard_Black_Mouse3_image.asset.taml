@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Keyboard_Black_Mouse3_image"
+    imageFile="@assetFile=Keyboard_Black_Mouse3.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

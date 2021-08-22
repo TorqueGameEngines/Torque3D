@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DebuggerBreakConditionDlg, EditorGuiGroup"
+    scriptFile="@assetFile=breakConditionDlg.ed.gui"
+    GUIFile="@assetFile=breakConditionDlg.ed.gui"
+    VersionId="1" />

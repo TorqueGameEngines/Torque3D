@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DecalEditorGui"
+    scriptFile="@assetFile=decalEditorGui.gui"
+    GUIFile="@assetFile=decalEditorGui.gui"
+    VersionId="1" />

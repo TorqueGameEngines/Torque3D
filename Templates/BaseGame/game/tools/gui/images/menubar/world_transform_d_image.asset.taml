@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="world_transform_d_image"
+    imageFile="@assetFile=world-transform_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

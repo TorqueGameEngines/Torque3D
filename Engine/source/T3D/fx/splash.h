@@ -33,6 +33,8 @@
 
 #include "gfx/gfxTextureHandle.h"
 
+#include "T3D/assets/ImageAsset.h"
+
 class ParticleEmitter;
 class ParticleEmitterData;
 class AudioProfile;
@@ -116,8 +118,8 @@ public:
    F32               times[ NUM_TIME_KEYS ];
    LinearColorF            colors[ NUM_TIME_KEYS ];
 
-   StringTableEntry  textureName[NUM_TEX];
-   GFXTexHandle      textureHandle[NUM_TEX];
+   DECLARE_IMAGEASSET_ARRAY(SplashData, Texture, GFXStaticTextureSRGBProfile, NUM_TEX);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(SplashData, Texture)
 
    ExplosionData*    explosion;
    S32               explosionId;

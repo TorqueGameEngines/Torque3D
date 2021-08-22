@@ -52,7 +52,7 @@
    #include "console/simObjectRef.h"
 #endif
 #ifndef TINYXML_INCLUDED
-   #include "tinyxml.h"
+   #include "tinyxml2.h"
 #endif
 
 /// @file
@@ -208,7 +208,7 @@ public:
    typedef ConsoleBaseType Parent;
 
    /// Allows the writing of a custom TAML schema.
-   typedef void(*WriteCustomTamlSchema)(const AbstractClassRep* pClassRep, TiXmlElement* pParentElement);
+   typedef void(*WriteCustomTamlSchema)(const AbstractClassRep* pClassRep, tinyxml2::XMLElement* pParentElement);
 
    /// @name 'Tructors
    /// @{

@@ -96,7 +96,7 @@
             canSaveDynamicFields = "0";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/clear-icon";
+            bitmapAsset = "ToolsModule:clear_icon_n_image";
             bitmapMode = "Centered";
             autoFitExtents = "0";
             useModifiers = "0";

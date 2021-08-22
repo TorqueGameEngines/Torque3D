@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="seq_bar_in_d_image"
+    imageFile="@assetFile=seq_bar-in_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

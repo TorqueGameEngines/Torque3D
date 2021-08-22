@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiButtonCtrl_image"
+    imageFile="@assetFile=GuiButtonCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

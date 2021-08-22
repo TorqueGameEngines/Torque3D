@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="OctahedronMat"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="OctahedronMat"
+    VersionId="1" />

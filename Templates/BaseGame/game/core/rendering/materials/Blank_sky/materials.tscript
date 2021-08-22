@@ -1,0 +1,19 @@
+//-----------------------------------------------------------------------------
+// Torque
+// Copyright GarageGames, LLC 2011
+//-----------------------------------------------------------------------------
+
+singleton CubemapData( BlankSkyCubemap )
+{
+   cubeMapFaceAsset[0] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[1] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[2] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[3] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[4] = "Core_Rendering:BlankSkybox_image";
+   cubeMapFaceAsset[5] = "Core_Rendering:BlankSkybox_image";
+};
+
+singleton Material( BlankSkyMat )
+{
+   cubemap = BlankSkyCubemap;
+};

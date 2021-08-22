@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TerrainBlock_image"
+    imageFile="@assetFile=TerrainBlock.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="unsavedWarn_image"
+    imageFile="@assetFile=unsavedWarn.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

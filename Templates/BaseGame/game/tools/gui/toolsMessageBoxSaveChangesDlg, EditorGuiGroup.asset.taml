@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="toolsMessageBoxSaveChangesDlg, EditorGuiGroup"
+    scriptFile="@assetFile=saveChangesMBDlg.ed.gui"
+    GUIFile="@assetFile=saveChangesMBDlg.ed.gui"
+    VersionId="1" />

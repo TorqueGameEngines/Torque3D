@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="RenderTargetVisualizer"
+    scriptFile="@assetFile=renderTargetVisualizer.ed.gui"
+    GUIFile="@assetFile=renderTargetVisualizer.ed.gui"
+    VersionId="1" />

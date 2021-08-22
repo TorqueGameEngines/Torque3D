@@ -58,7 +58,7 @@ function AssetBrowser::buildFolderPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.dirPath;
    
-   %previewData.previewImage = "tools/assetBrowser/art/folderIcon";
+   %previewData.previewImage = "ToolsModule:FolderIcon_image";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

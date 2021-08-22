@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="subtract_point_n_image"
+    imageFile="@assetFile=subtract-point_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

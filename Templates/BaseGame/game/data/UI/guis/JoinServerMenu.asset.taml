@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="JoinServerMenu"
+    scriptFile="@assetFile=joinServerMenu.gui"
+    GUIFile="@assetFile=joinServerMenu.gui"
+    VersionId="1" />

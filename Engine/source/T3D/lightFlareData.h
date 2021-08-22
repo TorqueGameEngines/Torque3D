@@ -45,6 +45,8 @@
 #include "gfx/gfxOcclusionQuery.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class LightInfo;
 struct ObjectRenderInst;
 class SceneRenderState;
@@ -104,6 +106,8 @@ protected:
    void _makePrimBuffer( GFXPrimitiveBufferHandle *pb, U32 count );
    void _renderCorona( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
+   void onImageChanged() {}
+
 protected:
    
    static const U32 LosMask;
@@ -115,8 +119,10 @@ protected:
 
    F32 mScale;
    bool mFlareEnabled;
-   String mFlareTextureName;
-   GFXTexHandle mFlareTexture;
+
+   DECLARE_IMAGEASSET(LightFlareData, FlareTexture, onImageChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(LightFlareData, FlareTexture);
+
    F32 mOcclusionRadius;
    bool mRenderReflectPass;
 

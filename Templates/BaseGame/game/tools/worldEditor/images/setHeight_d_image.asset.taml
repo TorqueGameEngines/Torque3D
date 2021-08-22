@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="setHeight_d_image"
+    imageFile="@assetFile=setHeight_d.PNG"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

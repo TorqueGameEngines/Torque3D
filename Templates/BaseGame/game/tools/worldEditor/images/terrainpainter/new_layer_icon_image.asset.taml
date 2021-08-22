@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="new_layer_icon_image"
+    imageFile="@assetFile=new_layer_icon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

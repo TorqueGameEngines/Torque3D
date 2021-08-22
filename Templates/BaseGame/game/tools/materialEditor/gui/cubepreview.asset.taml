@@ -1,0 +1,6 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cubepreview"
+    fileName="@assetFile=cubepreview.dts"
+    constuctorFileName="@assetFile=cubepreview.tscript" />

@@ -159,13 +159,14 @@ class GuiMeshRoadEditorCtrl : public EditTSCtrl
       bool mHasCopied;
 	public:
 
-      StringTableEntry mTopMaterialAssetId;
-      StringTableEntry mBottomMaterialAssetId;
-      StringTableEntry mSideMaterialAssetId;
+      DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, TopMaterial);
+      DECLARE_MATERIALASSET_SETGET(GuiMeshRoadEditorCtrl, TopMaterial);
 
-      AssetPtr<MaterialAsset> mTopMaterialAsset;
-      AssetPtr<MaterialAsset> mBottomMaterialAsset;
-      AssetPtr<MaterialAsset> mSideMaterialAsset;
+      DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, BottomMaterial);
+      DECLARE_MATERIALASSET_SETGET(GuiMeshRoadEditorCtrl, BottomMaterial);
+
+      DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, SideMaterial);
+      DECLARE_MATERIALASSET_SETGET(GuiMeshRoadEditorCtrl, SideMaterial);
 };
 
 class GuiMeshRoadEditorUndoAction : public UndoAction

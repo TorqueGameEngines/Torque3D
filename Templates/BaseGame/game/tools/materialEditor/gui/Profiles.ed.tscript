@@ -50,7 +50,7 @@ singleton GuiControlProfile(GuiMatEdPopUpMenuProfile)
    /*borderThickness = 1;*/
    fixedExtent = true;
    //bitmap = "./images/scrollbar";
-   bitmap = "tools/editorClasses/gui/images/scroll";
+   bitmapAsset = "ToolsModule:scroll_image";
    hasBitmapArray = true;
    profileForChildren = GuiControlListPopupProfile;
    fillColor = "255 0 0 255";

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GroundPlane_image"
+    imageFile="@assetFile=GroundPlane.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

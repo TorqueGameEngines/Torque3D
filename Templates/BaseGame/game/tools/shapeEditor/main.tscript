@@ -117,7 +117,7 @@ function ShapeEditorPlugin::onWorldEditorStartup(%this)
 
    // Add ourselves to the ToolsToolbar
    %tooltip = "Shape Editor (" @ %accel @ ")";
-   EditorGui.addToToolsToolbar( "ShapeEditorPlugin", "ShapeEditorPalette", expandFilename("tools/worldEditor/images/toolbar/shape-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "ShapeEditorPlugin", "ShapeEditorPalette", "ToolsModule:shape_editor_n_image", %tooltip );
 
    // Add ourselves to the Editor Settings window
    exec( "./gui/ShapeEditorSettingsTab.gui" );
@@ -148,17 +148,17 @@ function ShapeEditorPlugin::onWorldEditorStartup(%this)
 function ShapeEditorPlugin::openShapeAsset(%this, %assetDef)
 {
    %this.selectedAssetDef = %assetDef;
-   %this.open(makeRelativePath(%this.selectedAssetDef.getShapeFile()));
+   %this.open(%this.selectedAssetDef);
 }
 
 function ShapeEditorPlugin::openShapeAssetId(%this, %assetId)
 {
    %this.selectedAssetDef = AssetDatabase.acquireAsset(%assetId);
    //%this.selectedAssetDef = %assetDef;
-   %this.open(makeRelativePath(%this.selectedAssetDef.getShapeFile()));
+   %this.open(%this.selectedAssetDef);
 }
 
-function ShapeEditorPlugin::open(%this, %filename)
+function ShapeEditorPlugin::open(%this, %shapeAsset)
 {
    if ( !%this.isActivated )
    {
@@ -210,14 +210,14 @@ function ShapeEditorPlugin::open(%this, %filename)
    }
 
    // Select the new shape
-   if (isObject(ShapeEditor.shape) && (ShapeEditor.shape.baseShape $= %filename))
+   if (isObject(ShapeEditor.shape) && (ShapeEditor.shape.baseShapeAsset $= %shapeAsset))
    {
       // Shape is already selected => re-highlight the selected material if necessary
       ShapeEdMaterials.updateSelectedMaterial(ShapeEdMaterials-->highlightMaterial.getValue());
    }
-   else if (%filename !$= "")
+   else if (%shapeAsset !$= "")
    {
-      ShapeEditor.selectShape(%filename, ShapeEditor.isDirty());
+      ShapeEditor.selectShape(%shapeAsset, ShapeEditor.isDirty());
 
       // 'fitToShape' only works after the GUI has been rendered, so force a repaint first
       Canvas.repaint();

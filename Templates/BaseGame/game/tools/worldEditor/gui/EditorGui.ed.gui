@@ -50,7 +50,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Open the WorldEditor";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/world";
+         bitmapAsset = "ToolsModule:world_image";
          groupNum = "0";
          buttonType = "RadioButton";
          useMouseEvents = "0";
@@ -71,7 +71,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Open the GuiEditor";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/gui";
+         bitmapAsset = "ToolsModule:gui_image";
          groupNum = "0";
          buttonType = "RadioButton";
          useMouseEvents = "0";
@@ -92,7 +92,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Play Game";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/playbutton";
+         bitmapAsset = "ToolsModule:playbutton_n_image";
          groupNum = "0";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -104,7 +104,7 @@
       position = "98 3";
       Extent = "2 26";
       MinExtent = "1 1";
-      bitmap = "tools/gui/images/separator-h.png";
+      bitmapAsset = "ToolsModule:separator_h_image";
       };
       
       new GuiBitmapButtonCtrl(EWorldEditorToggleCamera) {
@@ -123,7 +123,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Toggle Camera Modes";
          hovertime = "1000";
-         bitmap = "tools/worldEditor/images/toolbar/player";
+         bitmapAsset = "ToolsModule:player_n_image";
          groupNum = "-1";
          buttonType = "ToggleButton";
          useMouseEvents = "0";
@@ -134,7 +134,7 @@
             Position = getWord(EWorldEditorToggleCamera.extent, 0)-6 SPC getWord(EWorldEditorToggleCamera.extent, 1)-6;
             Extent = "4 4";
             MinExtent = "4 4";
-            bitmap = "tools/gui/images/dropdown-button-arrow";
+            bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
          };
       };
       new GuiControl(CameraSpeedDropdownContainer, EditorGuiGroup) {
@@ -212,7 +212,7 @@
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "tools/gui/images/dropslider";
+            bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
       /*new GuiPopUpMenuCtrl(EWorldEditorCameraSpeed) {
@@ -257,7 +257,7 @@
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Toggle Visibility Modes (ALT V)";
          hovertime = "1000";
-         bitmap = "tools/gui/images/menubar/visibility-toggle";
+         bitmapAsset = "ToolsModule:visibility_toggle_n_image";
          groupNum = "-1";
          buttonType = "ToggleButton";
          useMouseEvents = "0";
@@ -268,7 +268,7 @@
             Position = getWord(visibilityToggleBtn.extent, 0)-6 SPC getWord(visibilityToggleBtn.extent, 1)-6;
             Extent = "4 4";
             MinExtent = "4 4";
-            bitmap = "tools/gui/images/dropdown-button-arrow";
+            bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
          };
       };
       
@@ -278,7 +278,7 @@
          position = "303 3";
          Extent = "2 26";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
             
       new GuiPopUpMenuCtrl(EWorldEditorAlignPopup) {
@@ -353,7 +353,7 @@
          position = "465 8";
          Extent = "2 18";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       
       new GuiTextCtrl(EWorldEditorStatusBarSelection) {
@@ -387,7 +387,7 @@
          position = "645 8";
          Extent = "2 18";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
       
       new GuiPopUpMenuCtrl(EWorldEditorStatusBarCamera) {
@@ -419,7 +419,7 @@
          position = "800 2";
          Extent = "2 18";
          MinExtent = "1 1";
-         bitmap = "tools/gui/images/separator-h.png";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
    };
    
@@ -481,9 +481,9 @@
       selectionBoxColor = "255 255 0 255";
       selectionLocked = "0";
       toggleIgnoreList = "0";
-      selectHandle = "tools/worldEditor/images/SelectHandle.png";
-      defaultHandle = "tools/worldEditor/images/DefaultHandle.png";
-      lockedHandle = "tools/worldEditor/images/LockedHandle.png";
+      selectHandle = "ToolsModule:SelectHandle_image";
+      defaultHandle = "ToolsModule:DefaultHandle_image";
+      lockedHandleAsset = "ToolsModule:LockedHandle_image";
    };
    new TerrainEditor(ETerrainEditor) {
       canSaveDynamicFields = "0";
@@ -889,7 +889,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Free Camera";
             hovertime = "1000";
-            iconBitmap = "tools/worldEditor/images/toolbar/camera_n";
+            bitmapAsset = "ToolsModule:camera_n_image";
             groupNum = "0";
             text="Free Camera";
             buttonMargin = "0 4";
@@ -915,7 +915,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Toggle Orbit Cam";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/orbit-cam_n";
+            bitmapAsset = "ToolsModule:orbit_cam_n_image";
             groupNum = "0";
             text="Orbit Camera";
             buttonMargin = "0 4";
@@ -942,7 +942,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Player Camera";
             hovertime = "1000";
-            iconBitmap = "tools/worldEditor/images/toolbar/player_n";
+            bitmapAsset = "ToolsModule:player_n_image";
             groupNum = "0";
             text="Player Camera";
             buttonMargin = "0 4";
@@ -968,7 +968,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "3rd Person Camera";
             hovertime = "1000";
-            iconBitmap = "tools/worldEditor/images/toolbar/3rd-person-camera_n";
+            bitmapAsset = "ToolsModule:3rd_person_camera_n_image";
             groupNum = "0";
             text="3rd Person Cam";
             buttonMargin = "0 4";
@@ -994,7 +994,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Toggle Newtonian Cam";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/smooth-cam_n";
+            bitmapAsset = "ToolsModule:smooth_cam_n_image";
             groupNum = "0";
             text="Smooth Camera";
             buttonMargin = "0 4";
@@ -1020,7 +1020,7 @@
             tooltipprofile = "ToolsGuiToolTipProfile";
             ToolTip = "Toggle Smooth Camera with Smooth Rotation";
             hovertime = "1000";
-            iconBitmap = "tools/gui/images/menubar/smooth-cam-rot_n";
+            bitmapAsset = "ToolsModule:smooth_cam_rot_n_image";
             groupNum = "0";
             text="Smooth Rotate";
             buttonMargin = "0 4";
@@ -1238,7 +1238,7 @@ new GuiMouseEventCtrl(CameraSpeedDropdownCtrlContainer, EditorGuiGroup) {
       new GuiBitmapCtrl(){ // Fast
          position = "105 15";
          extent = "2 8";
-         bitmap = "tools/gui/images/separator-h.png";  
+         bitmapAsset = "ToolsModule:separator_h_image";  
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom"; 
@@ -1246,7 +1246,7 @@ new GuiMouseEventCtrl(CameraSpeedDropdownCtrlContainer, EditorGuiGroup) {
       new GuiBitmapCtrl(){ // normal
          position = "73 15";
          extent = "2 8";
-         bitmap = "tools/gui/images/separator-h.png";  
+         bitmapAsset = "ToolsModule:separator_h_image";  
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom"; 
@@ -1254,7 +1254,7 @@ new GuiMouseEventCtrl(CameraSpeedDropdownCtrlContainer, EditorGuiGroup) {
       new GuiBitmapCtrl(){ // slow
          position = "41 15";
          extent = "2 8";
-         bitmap = "tools/gui/images/separator-h.png";  
+         bitmapAsset = "ToolsModule:separator_h_image";  
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom"; 

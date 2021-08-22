@@ -54,7 +54,7 @@ singleton PostEffect( Viz_TexelDensityPFX )
 {   
    shader = Viz_TexelDensity;
    stateBlock = AL_DefaultVisualizeState;
-   texture[0] = "tools/resources/checkerboard";
+   textureAsset[0] = "ToolsModule:checkerboard_image";
    target = "$backBuffer";
    renderPriority = 9999;
 };

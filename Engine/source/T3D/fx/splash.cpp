@@ -93,9 +93,10 @@ SplashData::SplashData()
    explosion = NULL;
    explosionId = 0;
 
-   dMemset( textureName, 0, sizeof( textureName ) );
-
    U32 i;
+   for (i = 0; i < NUM_TEX; i++)
+      INIT_IMAGEASSET_ARRAY(Texture, i);
+
    for( i=0; i<NUM_TIME_KEYS; i++ )
       times[i] = 1.0;
 
@@ -125,7 +126,9 @@ SplashData::SplashData()
    addField("acceleration",      TypeF32,                      Offset(acceleration,       SplashData), "Constant acceleration value to place upon the splash effect.\n");
    addField("times",             TypeF32,                      Offset(times,              SplashData), NUM_TIME_KEYS, "Times to transition through the splash effect. Up to 4 allowed. Values are 0.0 - 1.0, and corrispond to the life of the particle where 0 is first created and 1 is end of lifespace.\n" );
    addField("colors",            TypeColorF,                   Offset(colors,             SplashData), NUM_TIME_KEYS, "Color values to set the splash effect, rgba. Up to 4 allowed. Will transition through colors based on values set in the times value. Example: colors[0] = \"0.6 1.0 1.0 0.5\".\n" );
-   addField("texture",           TypeFilename,                 Offset(textureName,        SplashData), NUM_TEX, "Imagemap file to use as the texture for the splash effect.\n");
+
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
+
    addField("texWrap",           TypeF32,                      Offset(texWrap,            SplashData), "Amount to wrap the texture around the splash ring, 0.0f - 1.0f.\n");
    addField("texFactor",         TypeF32,                      Offset(texFactor,          SplashData), "Factor in which to apply the texture to the splash ring, 0.0f - 1.0f.\n");
    addField("ejectionFreq",      TypeF32,                      Offset(ejectionFreq,       SplashData), "Frequency in which to emit splash rings.\n");
@@ -198,7 +201,7 @@ void SplashData::packData(BitStream* stream)
 
    for( i=0; i<NUM_TEX; i++ )
    {
-      stream->writeString(textureName[i]);
+      PACKDATA_IMAGEASSET_ARRAY(Texture, i);
    }
 }
 
@@ -252,7 +255,7 @@ void SplashData::unpackData(BitStream* stream)
 
    for( i=0; i<NUM_TEX; i++ )
    {
-      textureName[i] = stream->readSTString();
+      UNPACKDATA_IMAGEASSET_ARRAY(Texture, i);
    }
 }
 
@@ -280,9 +283,9 @@ bool SplashData::preload(bool server, String &errorStr)
 
       for( i=0; i<NUM_TEX; i++ )
       {
-         if (textureName[i] && textureName[i][0])
+         if (mTexture[i].isNull())
          {
-            textureHandle[i] = GFXTexHandle(textureName[i], &GFXStaticTextureSRGBProfile, avar("%s() - textureHandle[%d] (line %d)", __FUNCTION__, i, __LINE__) );
+            _setTexture(getTexture(i), i);
          }
       }
    }

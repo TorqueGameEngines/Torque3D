@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gameObjectCreator"
+    scriptFile="@assetFile=gameObjectCreator.gui"
+    GUIFile="@assetFile=gameObjectCreator.gui"
+    VersionId="1" />

@@ -53,7 +53,7 @@ DefineNewEngineMethod(SimObject, InspectPreApply, void, (), , "")
    object->inspectPreApply();
 }
 
-DefineNewEngineMethod(SimObject, InspectPostApply, void, (), , "")
+DefineEngineMethod(SimObject, InspectPostApply, void, (), , "")
 {
    object->inspectPostApply();
 }

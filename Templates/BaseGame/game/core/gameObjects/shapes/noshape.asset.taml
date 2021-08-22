@@ -1,0 +1,6 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="noshape"
+    fileName="@assetFile=noshape.dts"
+    constuctorFileName="@assetFile=noshape.tscript" />

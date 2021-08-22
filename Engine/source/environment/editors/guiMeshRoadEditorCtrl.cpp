@@ -97,6 +97,10 @@ GuiMeshRoadEditorCtrl::GuiMeshRoadEditorCtrl()
     mHoverNodeColor( 255,255,255,255 ),
 	 mHasCopied( false )
 {
+   INIT_MATERIALASSET(TopMaterial);
+   INIT_MATERIALASSET(BottomMaterial);
+   INIT_MATERIALASSET(SideMaterial);
+
    mTopMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultTopMaterialAsset");
    mBottomMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultBottomMaterialAsset");
    mSideMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultSideMaterialAsset");
@@ -205,10 +209,6 @@ bool GuiMeshRoadEditorCtrl::onAdd()
    desc.zEnable = true;
    mZEnableSB = GFX->createStateBlock(desc);
 
-   bindMaterialAsset(TopMaterial);
-   bindMaterialAsset(BottomMaterial);
-   bindMaterialAsset(SideMaterial);
-
    return true;
 }
 
@@ -222,9 +222,9 @@ void GuiMeshRoadEditorCtrl::initPersistFields()
    addField( "HoverNodeColor",      TypeColorI, Offset( mHoverNodeColor, GuiMeshRoadEditorCtrl ) );
    addField( "isDirty",             TypeBool,   Offset( mIsDirty, GuiMeshRoadEditorCtrl ) );
 
-   addField("topMaterial", TypeMaterialAssetId, Offset(mTopMaterialAssetId, GuiMeshRoadEditorCtrl), "Default Material used by the Mesh Road Editor on upper surface road creation.");
-   addField("bottomMaterial", TypeMaterialAssetId, Offset(mBottomMaterialAssetId, GuiMeshRoadEditorCtrl), "Default Material used by the Mesh Road Editor on bottom surface road creation.");
-   addField("sideMaterial", TypeMaterialAssetId, Offset(mSideMaterialAssetId, GuiMeshRoadEditorCtrl), "Default Material used by the Mesh Road Editor on side surface road creation.");
+   INITPERSISTFIELD_MATERIALASSET(TopMaterial, GuiMeshRoadEditorCtrl, "Default Material used by the Mesh Road Editor on upper surface road creation.");
+   INITPERSISTFIELD_MATERIALASSET(BottomMaterial, GuiMeshRoadEditorCtrl, "Default Material used by the Mesh Road Editor on bottom surface road creation.");
+   INITPERSISTFIELD_MATERIALASSET(SideMaterial, GuiMeshRoadEditorCtrl, "Default Material used by the Mesh Road Editor on side surface road creation.");
 
    //addField( "MoveNodeCursor", TYPEID< SimObject >(), Offset( mMoveNodeCursor, GuiMeshRoadEditorCtrl) );
    //addField( "AddNodeCursor", TYPEID< SimObject >(), Offset( mAddNodeCursor, GuiMeshRoadEditorCtrl) );
@@ -627,11 +627,11 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 		MeshRoad *newRoad = new MeshRoad;  
 
       if(mTopMaterialAsset.notNull())
-		   newRoad->setTopMaterialAssetId(mTopMaterialAssetId);
+		   newRoad->_setTopMaterial(mTopMaterialAssetId);
       if (mBottomMaterialAsset.notNull())
-		   newRoad->setBottomMaterialAssetId(mBottomMaterialAssetId);
+		   newRoad->_setBottomMaterial(mBottomMaterialAssetId);
       if (mSideMaterialAsset.notNull())
-		   newRoad->setSideMaterialAssetId(mSideMaterialAssetId);
+		   newRoad->_setSideMaterial(mSideMaterialAssetId);
 			
       newRoad->registerObject();
 

@@ -45,7 +45,7 @@
 #include "shaderGen/shaderFeature.h"
 #endif
 
-#include "T3D/assets/MaterialAsset.h"
+#include "T3D/assets/ShapeAsset.h"
 
 class TerrainBlock;
 class GroundCoverCell;
@@ -266,9 +266,10 @@ protected:
    static F32 smDensityScale;   
    static F32 smFadeScale;
 
-   DECLARE_NET_MATERIALASSET(GroundCover, Material, InitialUpdateMask);
-   Material* mMaterial;
-   BaseMatInstance *mMatInst;
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(GroundCover, Material);
+   DECLARE_MATERIALASSET_NET_SETGET(GroundCover, Material, InitialUpdateMask);
 
    GroundCoverShaderConstData mShaderConstData;
 
@@ -339,7 +340,8 @@ protected:
    RectF mBillboardRects[MAX_COVERTYPES];
 
    /// The cover shape filenames.
-   StringTableEntry mShapeFilenames[MAX_COVERTYPES];
+   DECLARE_SHAPEASSET_ARRAY(GroundCover, Shape, MAX_COVERTYPES);
+   DECLARE_SHAPEASSET_ARRAY_NET_SETGET(GroundCover, Shape, -1);
 
    /// The cover shape instances.
    TSShapeInstance* mShapeInstances[MAX_COVERTYPES];

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Switch_B_image"
+    imageFile="@assetFile=Switch_B.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

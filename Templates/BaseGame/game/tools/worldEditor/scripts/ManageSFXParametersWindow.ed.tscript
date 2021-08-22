@@ -503,7 +503,7 @@ function EManageSFXParameters::addParameter( %this, %parameter )
             altCommand = %parameter @ ".value = $thisControl.getValue();";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/reset-icon";
+            bitmapAsset = "ToolsModule:reset_icon_n_image";
             autoFit = "0";
             groupNum = "-1";
             buttonType = "PushButton";
@@ -524,7 +524,7 @@ function EManageSFXParameters::addParameter( %this, %parameter )
             command = %parameter @ ".reset();";
          };
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/gui/images/delete";
+            bitmapAsset = "ToolsModule:delete_n_image";
             autoFit = "0";
             groupNum = "-1";
             buttonType = "PushButton";

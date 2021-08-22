@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="snap_terrain_h_image"
+    imageFile="@assetFile=snap-terrain_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

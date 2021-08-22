@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DebuggerFindDlg, EditorGuiGroup"
+    scriptFile="@assetFile=findDlg.ed.gui"
+    GUIFile="@assetFile=findDlg.ed.gui"
+    VersionId="1" />

@@ -58,7 +58,7 @@ singleton PostEffect( CausticsPFX )
    shader = PFX_CausticsShader;
    stateBlock = PFX_CausticsStateBlock;
    texture[0] = "#deferred";
-   texture[1] = "core/postFX/images/caustics_1";
-   texture[2] = "core/postFX/images/caustics_2";
+   textureAsset[1] = "Core_PostFX:caustics_1_image";
+   textureAsset[2] = "Core_PostFX:caustics_2_image";
    target = "$backBuffer";
 };

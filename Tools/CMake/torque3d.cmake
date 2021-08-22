@@ -33,8 +33,8 @@ if(UNIX)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
     else()
     # default compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors -no-pie ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$$ORIGIN'")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$$ORIGIN'")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors -no-pie ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
 
    endif()    
 
@@ -57,6 +57,8 @@ mark_as_advanced(TORQUE_BASIC_LIGHTING)
 option(TORQUE_SFX_DirectX "DirectX Sound" OFF)
 mark_as_advanced(TORQUE_SFX_DirectX)
 option(TORQUE_SFX_OPENAL "OpenAL Sound" ON)
+mark_as_advanced(TORQUE_APP_PASSWORD)
+set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
 #windows uses openal-soft
 if(WIN32)
     #disable a few things that are not required
@@ -169,6 +171,12 @@ mark_as_advanced(TORQUE_DISABLE_MEMORY_MANAGER)
 option(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM "Disable virtual mount system" OFF)
 mark_as_advanced(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM)
 
+option(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP "Disable reading root path from zip. Zips will be mounted in-place with file name as directory name." ON)
+mark_as_advanced(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP)
+
+option(TORQUE_ZIP_DISK_LAYOUT "All zips must be placed in the executable directory and contain full paths to the files." OFF)
+mark_as_advanced(TORQUE_ZIP_DISK_LAYOUT)
+
 option(TORQUE_PLAYER "Playback only?" OFF)
 mark_as_advanced(TORQUE_PLAYER)
 
@@ -207,6 +215,9 @@ mark_as_advanced(TORQUE_SCRIPT_EXTENSION)
 
 option(TORQUE_USE_ZENITY "use the Zenity backend for NFD" OFF)
 mark_as_advanced(TORQUE_USE_ZENITY)
+
+option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
+mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
 
 if(WIN32)
     # warning C4800: 'XXX' : forcing value to bool 'true' or 'false' (performance warning)
@@ -648,8 +659,12 @@ endif()
 if(NOT EXISTS "${projectOutDir}/${PROJECT_NAME}.torsion")
     CONFIGURE_FILE("${cmakeDir}/template.torsion.in" "${projectOutDir}/${PROJECT_NAME}.torsion")
 endif()
-if(EXISTS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.${TORQUE_SCRIPT_EXTENSION}.in")
-    CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.${TORQUE_SCRIPT_EXTENSION}.in" "${projectOutDir}/main.${TORQUE_SCRIPT_EXTENSION}")
+if(EXISTS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.tscript.in")
+    CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.tscript.in" "${projectOutDir}/main.${TORQUE_SCRIPT_EXTENSION}")
+else()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.${TORQUE_SCRIPT_EXTENSION}.in")
+        CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.${TORQUE_SCRIPT_EXTENSION}.in" "${projectOutDir}/main.${TORQUE_SCRIPT_EXTENSION}")
+    endif()
 endif()
 if(WIN32)
     if(NOT EXISTS "${projectSrcDir}/torque.rc")
@@ -919,11 +934,14 @@ if(TORQUE_TEMPLATE)
     IF( NOT TORQUE_D3D11)
         list(REMOVE_ITEM INSTALL_FILES_AND_DIRS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/D3DCompiler_47.dll")
     ENDIF()
+    list(REMOVE_ITEM INSTALL_FILES_AND_DIRS "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/game/main.tscript.in")
 
     foreach(ITEM ${INSTALL_FILES_AND_DIRS})
         get_filename_component( dir ${ITEM} DIRECTORY )
+        get_filename_component( scriptName ${ITEM} NAME )
         STRING(REGEX REPLACE "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/" "${TORQUE_APP_DIR}/" INSTALL_DIR ${dir})
-        install( FILES ${ITEM} DESTINATION ${INSTALL_DIR} )
+        STRING(REGEX REPLACE ".tscript" ".${TORQUE_SCRIPT_EXTENSION}" newScriptName ${scriptName})
+        install( FILES ${ITEM} DESTINATION ${INSTALL_DIR} RENAME ${newScriptName} )
     endforeach()
 
     if(WIN32)

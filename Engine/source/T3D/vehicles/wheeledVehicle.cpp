@@ -75,8 +75,8 @@ ConsoleDocClass( WheeledVehicleTire,
 
 WheeledVehicleTire::WheeledVehicleTire()
 {
-   shape = 0;
-   shapeName = "";
+   INIT_SHAPEASSET(Shape);
+
    staticFriction = 1;
    kineticFriction = 0.5f;
    restitution = 1;
@@ -94,21 +94,17 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 {
    // Load up the tire shape.  ShapeBase has an option to force a
    // CRC check, this is left out here, but could be easily added.
-   if (shapeName && shapeName[0]) 
+   if (!mShape)
    {
-
-      // Load up the shape resource
-      shape = ResourceManager::get().load(shapeName);
-      if (!bool(shape)) 
-      {
-         errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"",shapeName);
-         return false;
-      }
-
+      errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"", mShapeAssetId);
+      return false;
+   }
+   else
+   {
       // Determinw wheel radius from the shape's bounding box.
       // The tire should be built with it's hub axis along the
       // object's Y axis.
-      radius = shape->mBounds.len_z() / 2;
+      radius = mShape->mBounds.len_z() / 2;
    }
 
    return true;
@@ -116,8 +112,8 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 
 void WheeledVehicleTire::initPersistFields()
 {
-   addField( "shapeFile",TypeShapeFilename,Offset(shapeName,WheeledVehicleTire),
-      "The path to the shape to use for the wheel." );
+   INITPERSISTFIELD_SHAPEASSET(Shape, WheeledVehicleTire, "The shape to use for the wheel.");
+
    addField( "mass", TypeF32, Offset(mass, WheeledVehicleTire),
       "The mass of the wheel.\nCurrently unused." );
    addField( "radius", TypeF32, Offset(radius, WheeledVehicleTire),
@@ -181,7 +177,8 @@ void WheeledVehicleTire::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   stream->writeString(shapeName);
+   PACKDATA_SHAPEASSET(Shape);
+
    stream->write(mass);
    stream->write(staticFriction);
    stream->write(kineticFriction);
@@ -199,7 +196,8 @@ void WheeledVehicleTire::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   shapeName = stream->readSTString();
+   UNPACKDATA_SHAPEASSET(Shape);
+
    stream->read(&mass);
    stream->read(&staticFriction);
    stream->read(&kineticFriction);
@@ -1542,8 +1540,8 @@ void WheeledVehicle::unpackUpdate(NetConnection *con, BitStream *stream)
 
             // Create an instance of the tire for rendering
             delete wheel->shapeInstance;
-            wheel->shapeInstance = (wheel->tire->shape == NULL) ? 0:
-               new TSShapeInstance(wheel->tire->shape);
+            wheel->shapeInstance = (wheel->tire->mShape == NULL) ? 0:
+               new TSShapeInstance(wheel->tire->mShape);
          }
       }
    }

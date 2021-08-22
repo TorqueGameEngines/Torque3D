@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CUR_hand_image"
+    imageFile="@assetFile=CUR_hand.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

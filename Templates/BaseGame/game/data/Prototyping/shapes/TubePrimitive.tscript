@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(TubePrimitive_fbx) {
-   baseShape = "./TubePrimitive.fbx";
+   baseShapeAsset = "Prototyping:TubePrimitive";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

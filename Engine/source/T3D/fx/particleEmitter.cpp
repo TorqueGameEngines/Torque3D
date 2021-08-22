@@ -741,11 +741,11 @@ bool ParticleEmitterData::preload(bool server, String &errorStr)
      // otherwise, check that all particles refer to the same texture
      else if (particleDataBlocks.size() > 1)
      {
-       StringTableEntry txr_name = particleDataBlocks[0]->textureName;
+       StringTableEntry txr_name = particleDataBlocks[0]->getTexture();
        for (S32 i = 1; i < particleDataBlocks.size(); i++)
        {
          // warn if particle textures are inconsistent
-         if (particleDataBlocks[i]->textureName != txr_name)
+         if (particleDataBlocks[i]->getTexture() != txr_name)
          {
            Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) particles reference different textures.", getName());
            break;
@@ -1225,7 +1225,7 @@ void ParticleEmitter::prepRenderImage(SceneRenderState* state)
    if (mDataBlock->textureHandle)
      ri->diffuseTex = &*(mDataBlock->textureHandle);
    else
-     ri->diffuseTex = &*(part_list_head.next->dataBlock->textureHandle);
+     ri->diffuseTex = &*(part_list_head.next->dataBlock->getTextureResource());
 
    ri->softnessDistance = mDataBlock->softnessDistance; 
 
@@ -1551,9 +1551,13 @@ void ParticleEmitter::updateBBox()
 
    for (Particle* part = part_list_head.next; part != NULL; part = part->next)
    {
-      Point3F particleSize(part->size * 0.5f, 0.0f, part->size * 0.5f);
-      minPt.setMin( part->pos - particleSize );
-      maxPt.setMax( part->pos + particleSize );
+      for (Particle* part = part_list_head.next; part != NULL; part = part->next)
+      {
+         Point3F particleSize(part->size * 0.5f);
+         F32 motion = getMax((part->vel.len() * part->totalLifetime / 1000.0f), 1.0f);
+         minPt.setMin(part->pos - particleSize - Point3F(motion));
+         maxPt.setMax(part->pos + particleSize + Point3F(motion));
+      }
    }
    
    mObjBox = Box3F(minPt, maxPt);

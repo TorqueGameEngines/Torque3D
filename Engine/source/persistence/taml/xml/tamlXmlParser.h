@@ -27,11 +27,12 @@
 #include "persistence/taml/tamlParser.h"
 #endif
 
-#ifndef TINYXML_INCLUDED
-#include "tinyxml/tinyxml.h"
+#ifndef TINYXML2_INCLUDED
+#include <tinyxml2.h>
 #endif
 
 //-----------------------------------------------------------------------------
+class fsTiXmlElement;
 
 /// @ingroup tamlGroup
 /// @see tamlGroup
@@ -48,8 +49,8 @@ public:
     virtual bool accept( const char* pFilename, TamlVisitor& visitor );
 
 private:
-    inline bool parseElement( TiXmlElement* pXmlElement, TamlVisitor& visitor );
-    inline bool parseAttributes( TiXmlElement* pXmlElement, TamlVisitor& visitor );
+    inline bool parseElement( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor );
+    inline bool parseAttributes( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor );
 
     bool mDocumentDirty;
 };

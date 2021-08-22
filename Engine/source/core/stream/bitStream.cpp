@@ -228,10 +228,10 @@ void BitStream::writeBits(S32 bitCount, const void *bitPtr)
    if(!bitCount)
       return;
 
-   if(bitCount + bitNum > maxWriteBitNum)
+   if((bitCount + bitNum) > maxWriteBitNum)
    {
       error = true;
-      AssertFatal(false, "Out of range write");
+      AssertFatal(false, avar("BitStream::writeBits - Out of range write [(%i+%i)/%i]", bitCount, bitNum, maxWriteBitNum));
       return;
    }
 
@@ -264,10 +264,10 @@ bool BitStream::testBit(S32 bitCount)
 
 bool BitStream::writeFlag(bool val)
 {
-   if(bitNum + 1 > maxWriteBitNum)
+   if((bitNum + 1) > maxWriteBitNum)
    {
       error = true;
-      AssertFatal(false, "Out of range write");
+      AssertFatal(false, avar("BitStream::writeFlag - Out of range write [%i/%i]", bitNum+1, maxWriteBitNum));
       return false;
    }
    if(val)
@@ -344,22 +344,52 @@ void BitStream::writeInt(S32 val, S32 bitCount)
 
 void BitStream::writeFloat(F32 f, S32 bitCount)
 {
-   writeInt((S32)(f * ((1 << bitCount) - 1)), bitCount);
+   auto maxInt = (1U << bitCount) - 1;
+   U32 i;
+   if (f < POINT_EPSILON)
+   {
+      // Special case: <= 0 serializes to 0
+      i = 0.0f;
+   }
+   else if (f == 0.5)
+   {
+      // Special case: 0.5 serializes to maxInt / 2 + 1
+      i = maxInt / 2 + 1;
+   }
+   else if (f > (1.0f- POINT_EPSILON))
+   {
+      // Special case: >= 1 serializes to maxInt
+      i = maxInt;
+   }
+   else
+   {
+      // Serialize normally but round the number
+      i = static_cast<U32>(roundf(f * maxInt));
+   }
+   writeInt(i, bitCount);
 }
 
 F32 BitStream::readFloat(S32 bitCount)
 {
-   return readInt(bitCount) / F32((1 << bitCount) - 1);
+   auto maxInt = (1U << bitCount) - 1;
+   auto i = static_cast<U32>(readInt(bitCount));
+   if (i == 0)
+      return 0;
+   if (i == maxInt / 2 + 1)
+      return 0.5;
+   if (i == maxInt)
+      return 1;
+   return i / static_cast<F32>(maxInt);
 }
 
 void BitStream::writeSignedFloat(F32 f, S32 bitCount)
 {
-   writeInt((S32)(((f + 1) * .5) * ((1 << bitCount) - 1)), bitCount);
+   writeFloat((f + 1) / 2, bitCount);
 }
 
 F32 BitStream::readSignedFloat(S32 bitCount)
 {
-   return readInt(bitCount) * 2 / F32((1 << bitCount) - 1) - 1.0f;
+   return readFloat(bitCount) * 2 - 1;
 }
 
 void BitStream::writeSignedInt(S32 value, S32 bitCount)

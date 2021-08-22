@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="treeView_image"
+    imageFile="@assetFile=treeView.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

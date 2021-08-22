@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GroundCover_image"
+    imageFile="@assetFile=GroundCover.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

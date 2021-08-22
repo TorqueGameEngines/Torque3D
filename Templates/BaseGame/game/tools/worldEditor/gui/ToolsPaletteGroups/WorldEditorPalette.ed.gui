@@ -28,7 +28,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Select Arrow (1)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/arrow";
+      bitmapAsset = "ToolsModule:arrow_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -49,7 +49,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Move Selection (2)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/translate";
+      bitmapAsset = "ToolsModule:translate_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -70,7 +70,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Rotate Selection (3)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/rotate";
+      bitmapAsset = "ToolsModule:rotate_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };
@@ -91,7 +91,7 @@
       tooltipprofile = "ToolsGuiToolTipProfile";
       ToolTip = "Scale Selection (4)";
       hovertime = "1000";
-      bitmap = "tools/gui/images/menubar/scale";
+      bitmapAsset = "ToolsModule:scale_n_image";
       buttonType = "RadioButton";
       useMouseEvents = "0";
    };

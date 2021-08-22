@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="brushThermalErosion_h_image"
+    imageFile="@assetFile=brushThermalErosion_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

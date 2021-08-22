@@ -252,7 +252,7 @@ bool Settings::write()
    node->clear();
    delete node;
 
-   bool saved = document->saveFile(mFile.c_str());
+   bool saved = document->saveFile(mFile);
    document->deleteObject();
 
    if(saved)
@@ -267,7 +267,7 @@ bool Settings::read()
    document->registerObject();
 
    bool success = true;
-   if(document->loadFile(mFile.c_str()))
+   if(document->loadFile(mFile))
    {
       clearAllFields();
 

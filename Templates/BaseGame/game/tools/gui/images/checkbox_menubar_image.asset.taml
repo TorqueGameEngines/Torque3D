@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="checkbox_menubar_image"
+    imageFile="@assetFile=checkbox-menubar.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

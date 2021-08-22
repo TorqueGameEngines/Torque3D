@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Controller_Disconnected_image"
+    imageFile="@assetFile=Controller_Disconnected.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

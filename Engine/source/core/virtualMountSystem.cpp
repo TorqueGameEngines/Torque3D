@@ -39,7 +39,9 @@ bool VirtualMountSystem::mount(String root, FileSystemRef fs)
    if (!ok)
       return false;
 
+#ifdef TORQUE_LOWER_ZIPCASE
    root = String::ToLower(root);
+#endif
 
    mRootMap[root].push_back(fs);
 
@@ -263,13 +265,17 @@ FileSystemRef VirtualMountSystem::_removeMountFromList(String root)
 
 FileSystemRef VirtualMountSystem::_getFileSystemFromList(const Path& fullpath) const 
 {
-   String root = String::ToLower(fullpath.getRoot());
+   String root = fullpath.getRoot();
    String path = fullpath.getFullPathWithoutRoot();
    // eat leading slash
    if (path[(String::SizeType)0] == '/')
       path = path.substr(1);
-   // lowercase it
+
+#ifdef TORQUE_LOWER_ZIPCASE
+   // lowercase the root and path
+   root = String::ToLower(root);
    path = String::ToLower(path);
+#endif
 
    // find the dictionary for root
 //    PathFSMap* rootDict = NULL;

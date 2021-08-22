@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="VolumetricFog_image"
+    imageFile="@assetFile=VolumetricFog.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

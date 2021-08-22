@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ForestEditorGui,EditorGuiGroup"
+    scriptFile="@assetFile=forestEditorGui.gui"
+    GUIFile="@assetFile=forestEditorGui.gui"
+    VersionId="1" />

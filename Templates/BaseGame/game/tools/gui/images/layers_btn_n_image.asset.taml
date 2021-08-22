@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="layers_btn_n_image"
+    imageFile="@assetFile=layers-btn_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

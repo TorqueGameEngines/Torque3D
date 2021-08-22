@@ -206,8 +206,8 @@ bool DecalDataFile::read( Stream &stream )
 				data->lookupName = name;
 				data->registerObject(name);
 				Sim::getRootGroup()->addObject( data );
-				data->materialName = "WarningMaterial";
-				data->material = dynamic_cast<Material*>(Sim::findObject("WarningMaterial"));
+				data->mMaterialName = "WarningMaterial";
+				data->mMaterial = dynamic_cast<Material*>(Sim::findObject("WarningMaterial"));
 			
 				Con::errorf( "DecalDataFile::read() - DecalData %s does not exist! Temporarily created %s_missing.", lookupName.c_str(), lookupName.c_str());
 			}

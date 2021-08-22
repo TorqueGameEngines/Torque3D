@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="visible_d_image"
+    imageFile="@assetFile=visible_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

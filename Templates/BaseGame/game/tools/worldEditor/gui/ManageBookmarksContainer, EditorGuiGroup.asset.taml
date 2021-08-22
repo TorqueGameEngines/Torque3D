@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ManageBookmarksContainer, EditorGuiGroup"
+    scriptFile="@assetFile=ManageBookmarksWindow.ed.gui"
+    GUIFile="@assetFile=ManageBookmarksWindow.ed.gui"
+    VersionId="1" />

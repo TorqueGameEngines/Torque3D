@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="new_mesh_n_image"
+    imageFile="@assetFile=new-mesh_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

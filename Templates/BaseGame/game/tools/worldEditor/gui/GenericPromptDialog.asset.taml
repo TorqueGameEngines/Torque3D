@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GenericPromptDialog"
+    scriptFile="@assetFile=GenericPromptDialog.ed.gui"
+    GUIFile="@assetFile=GenericPromptDialog.ed.gui"
+    VersionId="1" />

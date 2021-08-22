@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="mesh_selector_btn_d_image"
+    imageFile="@assetFile=mesh-selector-btn_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

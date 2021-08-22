@@ -207,7 +207,6 @@ void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
          SDL_MaximizeWindow(mWindowHandle);
    }
 
-   getScreenResChangeSignal().trigger(this, true);
    mSuppressReset = false;
 }
 

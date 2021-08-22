@@ -97,9 +97,9 @@ function AssetBrowser::buildTScriptPreview(%this, %assetDef, %previewData)
    %previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
    
    if(%assetDef.isServerSide)
-      %previewData.previewImage = "tools/assetBrowser/art/serverScriptIcon";
+      %previewData.previewImage = "ToolsModule:serverScriptIcon_image";
    else
-      %previewData.previewImage = "tools/assetBrowser/art/clien" @ $TorqueScriptFileExtension @ "Icon";
+      %previewData.previewImage = "ToolsModule:clientScriptIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

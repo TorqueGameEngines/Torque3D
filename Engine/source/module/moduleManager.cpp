@@ -198,84 +198,32 @@ bool ModuleManager::scanModules( const char* pPath, const bool rootOnly )
     // Sanity!
     AssertFatal( pPath != NULL, "Cannot scan module with NULL path." );
 
-    // Expand module location.
-    char pathBuffer[1024];
-    Con::expandPath( pathBuffer, sizeof(pathBuffer), pPath );
-
+    String relBasePath = Platform::makeRelativePathName(pPath, NULL);
     // Info.
     if ( mEchoInfo )
     {
         Con::printSeparator();
-        Con::printf( "Module Manager: Started scanning '%s'...", pathBuffer );
+        Con::printf("Module Manager: Started scanning '%s'...", relBasePath.c_str());
     }
 
-    Vector<StringTableEntry> directories;
+    String pattern = "*.";
+    pattern += mModuleExtension;
 
-    // Find directories.
-    if ( !Platform::dumpDirectories( pathBuffer, directories, rootOnly ? 1 : -1 ) )
-    {
-        // Failed so warn.
-        Con::warnf( "Module Manager: Failed to scan module directories in path '%s'.", pathBuffer );
-        return false;
-    }
+    Torque::Path scanPath = Torque::FS::GetCwd();
+    scanPath.setPath(relBasePath);
 
-    // Fetch extension length.
-    const U32 extensionLength = dStrlen( mModuleExtension );
-
-    Vector<Platform::FileInfo> files;
-
-    // Iterate directories.
-    for( Vector<StringTableEntry>::iterator basePathItr = directories.begin(); basePathItr != directories.end(); ++basePathItr )
-    {
-        // Fetch base path.
-        StringTableEntry basePath = *basePathItr;
-
-        // Skip if we're only processing the root and this is not the root.
-        if ( rootOnly && basePathItr != directories.begin() )
-            continue;
-
-        // Find files.
-        files.clear();
-        if ( !Platform::dumpPath( basePath, files, 0 ) )
+    Vector<String> fileList;
+    S32 numModules = Torque::FS::FindByPattern(scanPath, pattern, !rootOnly, fileList, true);
+    for (S32 i = 0; i < numModules; ++i)
         {
-            // Failed so warn.
-            Con::warnf( "Module Manager: Failed to scan modules files in directory '%s'.", basePath );
-            return false;
-        }
-
-        // Iterate files.
-        for ( Vector<Platform::FileInfo>::iterator fileItr = files.begin(); fileItr != files.end(); ++fileItr )
-        {
-            // Fetch file info.
-            Platform::FileInfo* pFileInfo = fileItr;
-
-            // Fetch filename.
-            const char* pFilename = pFileInfo->pFileName;
-
-            // Find filename length.
-            const U32 filenameLength = dStrlen( pFilename );
-
-            // Skip if extension is longer than filename.
-            if ( extensionLength > filenameLength )
-                continue;
-
-            // Skip if extension not found.
-            if ( dStricmp( pFilename + filenameLength - extensionLength, mModuleExtension ) != 0 )
-                continue;
-
-            // Register module.
-            registerModule( basePath, pFileInfo->pFileName );
-        }
-
-        // Stop processing if we're only processing the root.
-        if ( rootOnly )
-            break;
+       Torque::Path modulePath = fileList[i];
+       registerModule(modulePath.getPath(), modulePath.getFullFileName());
     }
 
     // Info.
     if ( mEchoInfo )
     {
-        Con::printf( "Module Manager: Finished scanning '%s'.", pathBuffer );
+        Con::printf("Module Manager: Finished scanning '%s'.", relBasePath.c_str());
     }
 
     return true;
@@ -1065,7 +1013,6 @@ ModuleDefinition* ModuleManager::findModuleByFilePath(StringTableEntry filePath)
 
    String desiredPath = filePath;
    StringTableEntry coreModuleId = StringTable->insert("CoreModule");
-   StringTableEntry toolsModuleId = StringTable->insert("ToolsModule");
 
    for (typeModuleIdDatabaseHash::iterator moduleIdItr = mModuleIdDatabase.begin(); moduleIdItr != mModuleIdDatabase.end(); ++moduleIdItr)
    {
@@ -2073,12 +2020,6 @@ bool ModuleManager::registerModule( const char* pModulePath, const char* pModule
     // Sanity!
     AssertFatal( pModulePath != NULL, "Cannot scan module with NULL module path." );
     AssertFatal( pModuleFile != NULL, "Cannot scan module with NULL module file." );
-
-    // Make the module path a full-path.
-    char fullPathBuffer[1024];
-    Platform::makeFullPathName( pModulePath, fullPathBuffer, sizeof(fullPathBuffer) );
-    pModulePath = fullPathBuffer;
-
 
     char formatBuffer[1024];
 

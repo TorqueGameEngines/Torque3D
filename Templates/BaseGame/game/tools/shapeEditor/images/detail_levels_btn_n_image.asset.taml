@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="detail_levels_btn_n_image"
+    imageFile="@assetFile=detail-levels_btn_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

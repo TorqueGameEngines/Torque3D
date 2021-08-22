@@ -254,7 +254,7 @@ ImplementEnumType(_TamlFormatMode,
       AssertFatal(pFilename != NULL, "Cannot read from a NULL filename.");
 
       // Expand the file-name into the file-path buffer.
-      Con::expandToolScriptFilename(mFilePathBuffer, sizeof(mFilePathBuffer), pFilename);
+      Con::expandScriptFilename(mFilePathBuffer, sizeof(mFilePathBuffer), pFilename);
 
       FileStream stream;
 
@@ -1056,14 +1056,14 @@ ImplementEnumType(_TamlFormatMode,
       }*/
 
       // Create document.
-      TiXmlDocument schemaDocument;
+      tinyxml2::XMLDocument schemaDocument;
 
       // Add declaration.
-      TiXmlDeclaration schemaDeclaration("1.0", "iso-8859-1", "no");
+      tinyxml2::XMLDeclaration* schemaDeclaration = schemaDocument.NewDeclaration("xml version=\"1.0\" encoding=\"iso-8859-1\" standalone =\"no\"");
       schemaDocument.InsertEndChild(schemaDeclaration);
 
       // Add schema element.
-      TiXmlElement* pSchemaElement = new TiXmlElement("xs:schema");
+      tinyxml2::XMLElement* pSchemaElement = schemaDocument.NewElement("xs:schema");
       pSchemaElement->SetAttribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
       schemaDocument.LinkEndChild(pSchemaElement);
 
@@ -1084,156 +1084,156 @@ ImplementEnumType(_TamlFormatMode,
       // *************************************************************
 
       // Vector2.
-      TiXmlComment* pVector2Comment = new TiXmlComment("Vector2 Console Type");
+      tinyxml2::XMLComment* pVector2Comment = schemaDocument.NewComment("Vector2 Console Type");
       pSchemaElement->LinkEndChild(pVector2Comment);
-      TiXmlElement* pVector2TypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pVector2TypeElement = schemaDocument.NewElement("xs:simpleType");
       pVector2TypeElement->SetAttribute("name", "Vector2_ConsoleType");
       pSchemaElement->LinkEndChild(pVector2TypeElement);
-      TiXmlElement* pVector2ElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pVector2ElementA = schemaDocument.NewElement("xs:restriction");
       pVector2ElementA->SetAttribute("base", "xs:string");
       pVector2TypeElement->LinkEndChild(pVector2ElementA);
-      TiXmlElement* pVector2ElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pVector2ElementB = schemaDocument.NewElement("xs:pattern");
       pVector2ElementB->SetAttribute("value", "([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b");
       pVector2ElementA->LinkEndChild(pVector2ElementB);
 
       // Point2F.
-      TiXmlComment* pPoint2FComment = new TiXmlComment("Point2F Console Type");
+      tinyxml2::XMLComment* pPoint2FComment = schemaDocument.NewComment("Point2F Console Type");
       pSchemaElement->LinkEndChild(pPoint2FComment);
-      TiXmlElement* pPoint2FTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pPoint2FTypeElement = schemaDocument.NewElement("xs:simpleType");
       pPoint2FTypeElement->SetAttribute("name", "Point2F_ConsoleType");
       pSchemaElement->LinkEndChild(pPoint2FTypeElement);
-      TiXmlElement* pPoint2FElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pPoint2FElementA = schemaDocument.NewElement("xs:restriction");
       pPoint2FElementA->SetAttribute("base", "xs:string");
       pPoint2FTypeElement->LinkEndChild(pPoint2FElementA);
-      TiXmlElement* pPoint2FElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pPoint2FElementB = schemaDocument.NewElement("xs:pattern");
       pPoint2FElementB->SetAttribute("value", "([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b");
       pPoint2FElementA->LinkEndChild(pPoint2FElementB);
 
       // Point2I.
-      TiXmlComment* pPoint2IComment = new TiXmlComment("Point2I Console Type");
+      tinyxml2::XMLComment* pPoint2IComment = schemaDocument.NewComment("Point2I Console Type");
       pSchemaElement->LinkEndChild(pPoint2IComment);
-      TiXmlElement* pPoint2ITypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pPoint2ITypeElement = schemaDocument.NewElement("xs:simpleType");
       pPoint2ITypeElement->SetAttribute("name", "Point2I_ConsoleType");
       pSchemaElement->LinkEndChild(pPoint2ITypeElement);
-      TiXmlElement* pPoint2IElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pPoint2IElementA = schemaDocument.NewElement("xs:restriction");
       pPoint2IElementA->SetAttribute("base", "xs:string");
       pPoint2ITypeElement->LinkEndChild(pPoint2IElementA);
-      TiXmlElement* pPoint2IElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pPoint2IElementB = schemaDocument.NewElement("xs:pattern");
       pPoint2IElementB->SetAttribute("value", "[-]?[0-9]* [-]?[0-9]*");
       pPoint2IElementA->LinkEndChild(pPoint2IElementB);
 
       // b2AABB.
-      TiXmlComment* pb2AABBComment = new TiXmlComment("b2AABB Console Type");
+      tinyxml2::XMLComment* pb2AABBComment = schemaDocument.NewComment("b2AABB Console Type");
       pSchemaElement->LinkEndChild(pb2AABBComment);
-      TiXmlElement* pb2AABBTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pb2AABBTypeElement = schemaDocument.NewElement("xs:simpleType");
       pb2AABBTypeElement->SetAttribute("name", "b2AABB_ConsoleType");
       pSchemaElement->LinkEndChild(pb2AABBTypeElement);
-      TiXmlElement* pb2AABBElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pb2AABBElementA = schemaDocument.NewElement("xs:restriction");
       pb2AABBElementA->SetAttribute("base", "xs:string");
       pb2AABBTypeElement->LinkEndChild(pb2AABBElementA);
-      TiXmlElement* pb2AABBElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pb2AABBElementB = schemaDocument.NewElement("xs:pattern");
       pb2AABBElementB->SetAttribute("value", "([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b");
       pb2AABBElementA->LinkEndChild(pb2AABBElementB);
 
       // RectI.
-      TiXmlComment* pRectIComment = new TiXmlComment("RectI Console Type");
+      tinyxml2::XMLComment* pRectIComment = schemaDocument.NewComment("RectI Console Type");
       pSchemaElement->LinkEndChild(pRectIComment);
-      TiXmlElement* pRectITypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pRectITypeElement = schemaDocument.NewElement("xs:simpleType");
       pRectITypeElement->SetAttribute("name", "RectI_ConsoleType");
       pSchemaElement->LinkEndChild(pRectITypeElement);
-      TiXmlElement* pRectIElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pRectIElementA = schemaDocument.NewElement("xs:restriction");
       pRectIElementA->SetAttribute("base", "xs:string");
       pRectITypeElement->LinkEndChild(pRectIElementA);
-      TiXmlElement* pRectIElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pRectIElementB = schemaDocument.NewElement("xs:pattern");
       pRectIElementB->SetAttribute("value", "[-]?[0-9]* [-]?[0-9]* [-]?[0-9]* [-]?[0-9]*");
       pRectIElementA->LinkEndChild(pRectIElementB);
 
       // RectF.
-      TiXmlComment* pRectFComment = new TiXmlComment("RectF Console Type");
+      tinyxml2::XMLComment* pRectFComment = schemaDocument.NewComment("RectF Console Type");
       pSchemaElement->LinkEndChild(pRectFComment);
-      TiXmlElement* pRectFTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pRectFTypeElement = schemaDocument.NewElement("xs:simpleType");
       pRectFTypeElement->SetAttribute("name", "RectF_ConsoleType");
       pSchemaElement->LinkEndChild(pRectFTypeElement);
-      TiXmlElement* pRectFElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pRectFElementA = schemaDocument.NewElement("xs:restriction");
       pRectFElementA->SetAttribute("base", "xs:string");
       pRectFTypeElement->LinkEndChild(pRectFElementA);
-      TiXmlElement* pRectFElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pRectFElementB = schemaDocument.NewElement("xs:pattern");
       pRectFElementB->SetAttribute("value", "(\\b[-]?(b[0-9]+)?\\.)?[0-9]+\\b");
       pRectFElementA->LinkEndChild(pRectFElementB);
 
       // AssetId.
-      TiXmlComment* pAssetIdComment = new TiXmlComment("AssetId Console Type");
+      tinyxml2::XMLComment* pAssetIdComment = schemaDocument.NewComment("AssetId Console Type");
       pSchemaElement->LinkEndChild(pAssetIdComment);
-      TiXmlElement* pAssetIdTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pAssetIdTypeElement = schemaDocument.NewElement("xs:simpleType");
       pAssetIdTypeElement->SetAttribute("name", "AssetId_ConsoleType");
       pSchemaElement->LinkEndChild(pAssetIdTypeElement);
-      TiXmlElement* pAssetIdElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pAssetIdElementA = schemaDocument.NewElement("xs:restriction");
       pAssetIdElementA->SetAttribute("base", "xs:string");
       pAssetIdTypeElement->LinkEndChild(pAssetIdElementA);
-      TiXmlElement* pAssetIdElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pAssetIdElementB = schemaDocument.NewElement("xs:pattern");
       dSprintf(buffer, sizeof(buffer), "(%s)?\\b[a-zA-Z0-9]+\\b%s\\b[a-zA-Z0-9]+\\b", ASSET_ID_FIELD_PREFIX, ASSET_SCOPE_TOKEN);
       pAssetIdElementB->SetAttribute("value", buffer);
       pAssetIdElementA->LinkEndChild(pAssetIdElementB);
 
       // Color Enums.
-      TiXmlComment* pColorEnumsComment = new TiXmlComment("Color Enums");
+      tinyxml2::XMLComment* pColorEnumsComment = schemaDocument.NewComment("Color Enums");
       pSchemaElement->LinkEndChild(pColorEnumsComment);
-      TiXmlElement* pColorEnumsTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pColorEnumsTypeElement = schemaDocument.NewElement("xs:simpleType");
       pColorEnumsTypeElement->SetAttribute("name", "Color_Enums");
       pSchemaElement->LinkEndChild(pColorEnumsTypeElement);
-      TiXmlElement* pColorEnumsRestrictionElement = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pColorEnumsRestrictionElement = schemaDocument.NewElement("xs:restriction");
       pColorEnumsRestrictionElement->SetAttribute("base", "xs:string");
       pColorEnumsTypeElement->LinkEndChild(pColorEnumsRestrictionElement);
       const S32 ColorEnumsCount = StockColor::getCount();
       for (S32 index = 0; index < ColorEnumsCount; ++index)
       {
          // Add enumeration element.
-         TiXmlElement* pColorEnumsAttributeEnumerationElement = new TiXmlElement("xs:enumeration");
+         tinyxml2::XMLElement* pColorEnumsAttributeEnumerationElement = schemaDocument.NewElement("xs:enumeration");
          pColorEnumsAttributeEnumerationElement->SetAttribute("value", StockColor::getColorItem(index)->getColorName());
          pColorEnumsRestrictionElement->LinkEndChild(pColorEnumsAttributeEnumerationElement);
       }
 
       // LinearColorF.
-      TiXmlComment* pColorFValuesComment = new TiXmlComment("LinearColorF Values");
+      tinyxml2::XMLComment* pColorFValuesComment = schemaDocument.NewComment("LinearColorF Values");
       pSchemaElement->LinkEndChild(pColorFValuesComment);
-      TiXmlElement* pColorFValuesTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pColorFValuesTypeElement = schemaDocument.NewElement("xs:simpleType");
       pColorFValuesTypeElement->SetAttribute("name", "ColorF_Values");
       pSchemaElement->LinkEndChild(pColorFValuesTypeElement);
-      TiXmlElement* pColorFValuesElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pColorFValuesElementA = schemaDocument.NewElement("xs:restriction");
       pColorFValuesElementA->SetAttribute("base", "xs:string");
       pColorFValuesTypeElement->LinkEndChild(pColorFValuesElementA);
-      TiXmlElement* pColorFValuesElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pColorFValuesElementB = schemaDocument.NewElement("xs:pattern");
       pColorFValuesElementB->SetAttribute("value", "([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b ([-]?(\\b[0-9]+)?\\.)?[0-9]+\\b");
       pColorFValuesElementA->LinkEndChild(pColorFValuesElementB);
 
-      TiXmlComment* pColorFComment = new TiXmlComment("LinearColorF Console Type");
+      tinyxml2::XMLComment* pColorFComment = schemaDocument.NewComment("LinearColorF Console Type");
       pSchemaElement->LinkEndChild(pColorFComment);
-      TiXmlElement* pColorFTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pColorFTypeElement = schemaDocument.NewElement("xs:simpleType");
       pColorFTypeElement->SetAttribute("name", "ColorF_ConsoleType");
       pSchemaElement->LinkEndChild(pColorFTypeElement);
-      TiXmlElement* pColorFUnionElement = new TiXmlElement("xs:union");
+      tinyxml2::XMLElement* pColorFUnionElement = schemaDocument.NewElement("xs:union");
       pColorFUnionElement->SetAttribute("memberTypes", "ColorF_Values Color_Enums");
       pColorFTypeElement->LinkEndChild(pColorFUnionElement);
 
       // ColorI.
-      TiXmlComment* pColorIValuesComment = new TiXmlComment("ColorI Values");
+      tinyxml2::XMLComment* pColorIValuesComment = schemaDocument.NewComment("ColorI Values");
       pSchemaElement->LinkEndChild(pColorIValuesComment);
-      TiXmlElement* pColorIValuesTypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pColorIValuesTypeElement = schemaDocument.NewElement("xs:simpleType");
       pColorIValuesTypeElement->SetAttribute("name", "ColorI_Values");
       pSchemaElement->LinkEndChild(pColorIValuesTypeElement);
-      TiXmlElement* pColorIValuesElementA = new TiXmlElement("xs:restriction");
+      tinyxml2::XMLElement* pColorIValuesElementA = schemaDocument.NewElement("xs:restriction");
       pColorIValuesElementA->SetAttribute("base", "xs:string");
       pColorIValuesTypeElement->LinkEndChild(pColorIValuesElementA);
-      TiXmlElement* pColorIValuesElementB = new TiXmlElement("xs:pattern");
+      tinyxml2::XMLElement* pColorIValuesElementB = schemaDocument.NewElement("xs:pattern");
       pColorIValuesElementB->SetAttribute("value", "[-]?[0-9]* [-]?[0-9]* [-]?[0-9]* [-]?[0-9]*");
       pColorIValuesElementA->LinkEndChild(pColorIValuesElementB);
 
-      TiXmlComment* pColorIComment = new TiXmlComment("ColorI Console Type");
+      tinyxml2::XMLComment* pColorIComment = schemaDocument.NewComment("ColorI Console Type");
       pSchemaElement->LinkEndChild(pColorIComment);
-      TiXmlElement* pColorITypeElement = new TiXmlElement("xs:simpleType");
+      tinyxml2::XMLElement* pColorITypeElement = schemaDocument.NewElement("xs:simpleType");
       pColorITypeElement->SetAttribute("name", "ColorI_ConsoleType");
       pSchemaElement->LinkEndChild(pColorITypeElement);
-      TiXmlElement* pColorIUnionElement = new TiXmlElement("xs:union");
+      tinyxml2::XMLElement* pColorIUnionElement = schemaDocument.NewElement("xs:union");
       pColorIUnionElement->SetAttribute("memberTypes", "ColorI_Values Color_Enums");
       pColorITypeElement->LinkEndChild(pColorIUnionElement);
 
@@ -1242,12 +1242,12 @@ ImplementEnumType(_TamlFormatMode,
       // *************************************************************
 
       // Generate the engine type elements.
-      TiXmlComment* tComment = new TiXmlComment("Type Elements");
+      tinyxml2::XMLComment* tComment = schemaDocument.NewComment("Type Elements");
       pSchemaElement->LinkEndChild(tComment);
       for (AbstractClassRep* pType = pRootType; pType != NULL; pType = pType->getNextClass())
       {
          // Add type.
-         TiXmlElement* pTypeElement = new TiXmlElement("xs:element");
+         tinyxml2::XMLElement* pTypeElement = schemaDocument.NewElement("xs:element");
          pTypeElement->SetAttribute("name", pType->getClassName());
          dSprintf(buffer, sizeof(buffer), "%s_Type", pType->getClassName());
          pTypeElement->SetAttribute("type", buffer);
@@ -1261,17 +1261,17 @@ ImplementEnumType(_TamlFormatMode,
       {
          // Add complex type comment.
          dSprintf(buffer, sizeof(buffer), " %s Type ", pType->getClassName());
-         TiXmlComment* ctComment = new TiXmlComment(buffer);
+         tinyxml2::XMLComment* ctComment = schemaDocument.NewComment(buffer);
          pSchemaElement->LinkEndChild(ctComment);
 
          // Add complex type.
-         TiXmlElement* pComplexTypeElement = new TiXmlElement("xs:complexType");
+         tinyxml2::XMLElement* pComplexTypeElement = schemaDocument.NewElement("xs:complexType");
          dSprintf(buffer, sizeof(buffer), "%s_Type", pType->getClassName());
          pComplexTypeElement->SetAttribute("name", buffer);
          pSchemaElement->LinkEndChild(pComplexTypeElement);
 
          // Add sequence.
-         TiXmlElement* pSequenceElement = new TiXmlElement("xs:sequence");
+         tinyxml2::XMLElement* pSequenceElement = schemaDocument.NewElement("xs:sequence");
          pComplexTypeElement->LinkEndChild(pSequenceElement);
 
          // Fetch container child class.
@@ -1281,7 +1281,7 @@ ImplementEnumType(_TamlFormatMode,
          if (pContainerChildClass != NULL)
          {
             // Yes, so add choice element.
-            TiXmlElement* pChoiceElement = new TiXmlElement("xs:choice");
+            tinyxml2::XMLElement* pChoiceElement = schemaDocument.NewElement("xs:choice");
             pChoiceElement->SetAttribute("minOccurs", 0);
             pChoiceElement->SetAttribute("maxOccurs", "unbounded");
             pSequenceElement->LinkEndChild(pChoiceElement);
@@ -1299,12 +1299,12 @@ ImplementEnumType(_TamlFormatMode,
                childGroupItr = childGroups.insertUnique(pContainerChildClass, StringTable->insert(buffer));
 
                // Add the group.
-               TiXmlElement* pChildrenGroupElement = new TiXmlElement("xs:group");
+               tinyxml2::XMLElement* pChildrenGroupElement = schemaDocument.NewElement("xs:group");
                pChildrenGroupElement->SetAttribute("name", buffer);
                pSchemaElement->LinkEndChild(pChildrenGroupElement);
 
                // Add choice element.
-               TiXmlElement* pChildreGroupChoiceElement = new TiXmlElement("xs:choice");
+               tinyxml2::XMLElement* pChildreGroupChoiceElement = schemaDocument.NewElement("xs:choice");
                pChildrenGroupElement->LinkEndChild(pChildreGroupChoiceElement);
 
                // Add choice members.
@@ -1315,7 +1315,7 @@ ImplementEnumType(_TamlFormatMode,
                      continue;
 
                   // Add choice member.
-                  TiXmlElement* pChildrenMemberElement = new TiXmlElement("xs:element");
+                  tinyxml2::XMLElement* pChildrenMemberElement = schemaDocument.NewElement("xs:element");
                   pChildrenMemberElement->SetAttribute("name", pChoiceType->getClassName());
                   dSprintf(buffer, sizeof(buffer), "%s_Type", pChoiceType->getClassName());
                   pChildrenMemberElement->SetAttribute("type", buffer);
@@ -1325,7 +1325,7 @@ ImplementEnumType(_TamlFormatMode,
             }
 
             // Reference the child group.
-            TiXmlElement* pChoiceGroupReferenceElement = new TiXmlElement("xs:group");
+            tinyxml2::XMLElement* pChoiceGroupReferenceElement = schemaDocument.NewElement("xs:group");
             pChoiceGroupReferenceElement->SetAttribute("ref", childGroupItr->value);
             pChoiceGroupReferenceElement->SetAttribute("minOccurs", 0);
             pChoiceElement->LinkEndChild(pChoiceGroupReferenceElement);
@@ -1346,7 +1346,7 @@ ImplementEnumType(_TamlFormatMode,
          }
 
          // Generate field attribute group.
-         TiXmlElement* pFieldAttributeGroupElement = new TiXmlElement("xs:attributeGroup");
+         tinyxml2::XMLElement* pFieldAttributeGroupElement = schemaDocument.NewElement("xs:attributeGroup");
          dSprintf(buffer, sizeof(buffer), "%s_Fields", pType->getClassName());
          pFieldAttributeGroupElement->SetAttribute("name", buffer);
          pSchemaElement->LinkEndChild(pFieldAttributeGroupElement);
@@ -1374,7 +1374,7 @@ ImplementEnumType(_TamlFormatMode,
                continue;
 
             // Add attribute element.
-            TiXmlElement* pAttributeElement = new TiXmlElement("xs:attribute");
+            tinyxml2::XMLElement* pAttributeElement = schemaDocument.NewElement("xs:attribute");
             pAttributeElement->SetAttribute("name", field.pFieldname);
 
             // Handle the console type appropriately.
@@ -1385,11 +1385,11 @@ ImplementEnumType(_TamlFormatMode,
             if ( fieldType == TypeEnum )
             {
             // Yes, so add attribute type.
-            TiXmlElement* pAttributeSimpleTypeElement = new TiXmlElement( "xs:simpleType" );
+            tinyxml2::XMLElement* pAttributeSimpleTypeElement = schemaDocument.NewElement( "xs:simpleType" );
             pAttributeElement->LinkEndChild( pAttributeSimpleTypeElement );
 
             // Add restriction element.
-            TiXmlElement* pAttributeRestrictionElement = new TiXmlElement( "xs:restriction" );
+            tinyxml2::XMLElement* pAttributeRestrictionElement = schemaDocument.NewElement( "xs:restriction" );
             pAttributeRestrictionElement->SetAttribute( "base", "xs:string" );
             pAttributeSimpleTypeElement->LinkEndChild( pAttributeRestrictionElement );
 
@@ -1400,7 +1400,7 @@ ImplementEnumType(_TamlFormatMode,
             for( S32 index = 0; index < enumCount; ++index )
             {
             // Add enumeration element.
-            TiXmlElement* pAttributeEnumerationElement = new TiXmlElement( "xs:enumeration" );
+            tinyxml2::XMLElement* pAttributeEnumerationElement = schemaDocument.NewElement( "xs:enumeration" );
             pAttributeEnumerationElement->SetAttribute( "value", field.table->table[index].label );
             pAttributeRestrictionElement->LinkEndChild( pAttributeEnumerationElement );
             }
@@ -1469,19 +1469,19 @@ ImplementEnumType(_TamlFormatMode,
             // Yes, so add reserved Taml field attributes here...
 
             // Add Taml "Name" attribute element.
-            TiXmlElement* pNameAttributeElement = new TiXmlElement("xs:attribute");
+            tinyxml2::XMLElement* pNameAttributeElement = schemaDocument.NewElement("xs:attribute");
             pNameAttributeElement->SetAttribute("name", tamlNamedObjectName);
             pNameAttributeElement->SetAttribute("type", "xs:normalizedString");
             pFieldAttributeGroupElement->LinkEndChild(pNameAttributeElement);
 
             // Add Taml "TamlId" attribute element.
-            TiXmlElement* pTamlIdAttributeElement = new TiXmlElement("xs:attribute");
+            tinyxml2::XMLElement* pTamlIdAttributeElement = schemaDocument.NewElement("xs:attribute");
             pTamlIdAttributeElement->SetAttribute("name", tamlRefIdName);
             pTamlIdAttributeElement->SetAttribute("type", "xs:nonNegativeInteger");
             pFieldAttributeGroupElement->LinkEndChild(pTamlIdAttributeElement);
 
             // Add Taml "TamlRefId" attribute element.
-            TiXmlElement* pTamlRefIdAttributeElement = new TiXmlElement("xs:attribute");
+            tinyxml2::XMLElement* pTamlRefIdAttributeElement = schemaDocument.NewElement("xs:attribute");
             pTamlRefIdAttributeElement->SetAttribute("name", tamlRefToIdName);
             pTamlRefIdAttributeElement->SetAttribute("type", "xs:nonNegativeInteger");
             pFieldAttributeGroupElement->LinkEndChild(pTamlRefIdAttributeElement);
@@ -1490,14 +1490,14 @@ ImplementEnumType(_TamlFormatMode,
          // Add attribute group types.
          for (AbstractClassRep* pAttributeGroupsType = pType; pAttributeGroupsType != NULL; pAttributeGroupsType = pAttributeGroupsType->getParentClass())
          {
-            TiXmlElement* pFieldAttributeGroupRefElement = new TiXmlElement("xs:attributeGroup");
+            tinyxml2::XMLElement* pFieldAttributeGroupRefElement = schemaDocument.NewElement("xs:attributeGroup");
             dSprintf(buffer, sizeof(buffer), "%s_Fields", pAttributeGroupsType->getClassName());
             pFieldAttributeGroupRefElement->SetAttribute("ref", buffer);
             pComplexTypeElement->LinkEndChild(pFieldAttributeGroupRefElement);
          }
 
          // Add "any" attribute element (dynamic fields).
-         TiXmlElement* pAnyAttributeElement = new TiXmlElement("xs:anyAttribute");
+         tinyxml2::XMLElement* pAnyAttributeElement = schemaDocument.NewElement("xs:anyAttribute");
          pAnyAttributeElement->SetAttribute("processContents", "skip");
          pComplexTypeElement->LinkEndChild(pAnyAttributeElement);
       }
@@ -1513,17 +1513,19 @@ ImplementEnumType(_TamlFormatMode,
 
    //-----------------------------------------------------------------------------
 
-   void Taml::WriteUnrestrictedCustomTamlSchema(const char* pCustomNodeName, const AbstractClassRep* pClassRep, TiXmlElement* pParentElement)
+   void Taml::WriteUnrestrictedCustomTamlSchema(const char* pCustomNodeName, const AbstractClassRep* pClassRep, tinyxml2::XMLElement* pParentElement)
    {
       // Sanity!
       AssertFatal(pCustomNodeName != NULL, "Taml::WriteDefaultCustomTamlSchema() - Node name cannot be NULL.");
       AssertFatal(pClassRep != NULL, "Taml::WriteDefaultCustomTamlSchema() - ClassRep cannot be NULL.");
       AssertFatal(pParentElement != NULL, "Taml::WriteDefaultCustomTamlSchema() - Parent Element cannot be NULL.");
 
+      tinyxml2::XMLDocument* doc = pParentElement->GetDocument();
+
       char buffer[1024];
 
       // Add custom type element.
-      TiXmlElement* pCustomElement = new TiXmlElement("xs:element");
+      tinyxml2::XMLElement* pCustomElement = doc->NewElement("xs:element");
       dSprintf(buffer, sizeof(buffer), "%s.%s", pClassRep->getClassName(), pCustomNodeName);
       pCustomElement->SetAttribute("name", buffer);
       pCustomElement->SetAttribute("minOccurs", 0);
@@ -1531,21 +1533,21 @@ ImplementEnumType(_TamlFormatMode,
       pParentElement->LinkEndChild(pCustomElement);
 
       // Add complex type element.
-      TiXmlElement* pComplexTypeElement = new TiXmlElement("xs:complexType");
+      tinyxml2::XMLElement* pComplexTypeElement = doc->NewElement("xs:complexType");
       pCustomElement->LinkEndChild(pComplexTypeElement);
 
       // Add choice element.
-      TiXmlElement* pChoiceElement = new TiXmlElement("xs:choice");
+      tinyxml2::XMLElement* pChoiceElement = doc->NewElement("xs:choice");
       pChoiceElement->SetAttribute("minOccurs", 0);
       pChoiceElement->SetAttribute("maxOccurs", "unbounded");
       pComplexTypeElement->LinkEndChild(pChoiceElement);
 
       // Add sequence element.
-      TiXmlElement* pSequenceElement = new TiXmlElement("xs:sequence");
+      tinyxml2::XMLElement* pSequenceElement = doc->NewElement("xs:sequence");
       pChoiceElement->LinkEndChild(pSequenceElement);
 
       // Add "any" element.
-      TiXmlElement* pAnyElement = new TiXmlElement("xs:any");
+      tinyxml2::XMLElement* pAnyElement = doc->NewElement("xs:any");
       pAnyElement->SetAttribute("processContents", "skip");
       pSequenceElement->LinkEndChild(pAnyElement);
    }

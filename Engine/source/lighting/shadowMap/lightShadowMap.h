@@ -288,7 +288,7 @@ public:
 
    LightShadowMap* getOrCreateShadowMap();
 
-   bool hasCookieTex() const { return cookie.isNotEmpty(); }
+   bool hasCookieTex() const { return cookie != StringTable->EmptyString(); }
 
    GFXOcclusionQuery* getOcclusionQuery() const { return mQuery; }
 
@@ -325,7 +325,7 @@ public:
    U32 texSize;
 
    /// 
-   FileName cookie;
+   StringTableEntry cookie;
 
    /// @}
 

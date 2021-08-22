@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="WorldEditorInspectorPalette, EditorGuiGroup"
+    scriptFile="@assetFile=WorldEditorPalette.ed.gui"
+    GUIFile="@assetFile=WorldEditorPalette.ed.gui"
+    VersionId="1" />

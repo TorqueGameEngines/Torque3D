@@ -25,7 +25,7 @@ singleton Material( Empty )
 };
 
 singleton Material(WarningMaterial) {
-   detailMap[0] = "missingTexture";
+   detailMapAsset[0] = "Core_PostFX:missingTexture_image";
    diffuseColor[0] = "25 16 0";
    emissive[0] = false;
    translucent = false;

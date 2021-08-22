@@ -97,7 +97,7 @@ const char* Platform::getUserDataDirectory()
 //-----------------------------------------------------------------------------
 const char* Platform::getUserHomeDirectory() 
 {
-   return StringTable->insert([[@"~/" stringByStandardizingPath] UTF8String]);
+   return StringTable->insert([[@"~/Documents" stringByStandardizingPath] UTF8String]);
 }
 
 //-----------------------------------------------------------------------------

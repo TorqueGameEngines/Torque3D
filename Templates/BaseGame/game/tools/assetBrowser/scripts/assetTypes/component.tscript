@@ -140,7 +140,7 @@ function AssetBrowser::buildComponentAssetPreview(%this, %assetDef, %previewData
    %previewData.assetPath = %assetDef.scriptFile;
    %previewData.doubleClickCommand = "EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
    
-   %previewData.previewImage = "tools/assetBrowser/art/componentIcon";
+   %previewData.previewImage = "ToolsModule:componentIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.friendlyName;
    %previewData.assetDesc = %assetDef.description;

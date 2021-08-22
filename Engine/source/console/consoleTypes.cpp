@@ -159,7 +159,7 @@ ConsoleProcessData( TypeFilename )
 //-----------------------------------------------------------------------------
 // TypeStringFilename
 //-----------------------------------------------------------------------------
-ConsolePrepType( filename, TypeStringFilename, String )
+ConsolePrepType( filename, TypeStringFilename, const char* )
 
 ConsoleSetType( TypeStringFilename )
 {
@@ -177,7 +177,7 @@ ConsoleSetType( TypeStringFilename )
          return;
       }
 
-      *((String*)dptr) = String(buffer);
+      *((const char**)dptr) = StringTable->insert(buffer);
    }
    else
       Con::printf("(TypeStringFilename) Cannot set multiple args to a single filename.");
@@ -185,7 +185,7 @@ ConsoleSetType( TypeStringFilename )
 
 ConsoleGetType( TypeStringFilename )
 {
-   return *((String*)dptr);
+   return *((const char**)(dptr));
 }
 
 ConsoleProcessData( TypeStringFilename )
@@ -204,7 +204,7 @@ ConsoleProcessData( TypeStringFilename )
 //-----------------------------------------------------------------------------
 // TypePrefabFilename
 //-----------------------------------------------------------------------------
-ConsolePrepType( filename, TypePrefabFilename, String )
+ConsolePrepType( filename, TypePrefabFilename, const char* )
 
 ConsoleSetType( TypePrefabFilename )
 {
@@ -213,7 +213,7 @@ ConsoleSetType( TypePrefabFilename )
 
 ConsoleGetType( TypePrefabFilename )
 {
-   return *((String*)dptr);
+   return *((const char**)(dptr));
 }
 
 ConsoleProcessData( TypePrefabFilename )
@@ -232,16 +232,16 @@ ConsoleProcessData( TypePrefabFilename )
 //-----------------------------------------------------------------------------
 // TypeImageFilename
 //-----------------------------------------------------------------------------
-ConsolePrepType( filename, TypeImageFilename, String )
+ConsolePrepType( filename, TypeImageFilename, const char* )
 
 ConsoleSetType( TypeImageFilename )
 {
-   Con::setData(TypeStringFilename, dptr, 0, argc, argv, tbl, flag);
+   Con::setData(TypeFilename, dptr, 0, argc, argv, tbl, flag);
 }
 
 ConsoleGetType( TypeImageFilename )
 {
-   return *((String*)dptr);
+   return *((const char**)(dptr));
 }
 
 ConsoleProcessData( TypeImageFilename )
@@ -280,6 +280,33 @@ ConsoleProcessData( TypeShapeFilename )
       return data;
    }
 }
+
+//-----------------------------------------------------------------------------
+// TypeSoundFilename
+//-----------------------------------------------------------------------------
+ConsolePrepType(filename, TypeSoundFilename, const char*)
+
+ConsoleSetType(TypeSoundFilename)
+{
+   Con::setData(TypeFilename, dptr, 0, argc, argv, tbl, flag);
+}
+
+ConsoleGetType(TypeSoundFilename)
+{
+   return *((const char **)(dptr));
+}
+
+ConsoleProcessData(TypeSoundFilename)
+{
+   if (Con::expandScriptFilename(buffer, bufferSz, data))
+      return buffer;
+   else
+   {
+      Con::warnf("(TypeSoundFilename) illegal filename detected: %s", data);
+      return data;
+   }
+}
+
 
 //-----------------------------------------------------------------------------
 // TypeS8
@@ -797,20 +824,17 @@ ConsoleSetType( TypeParticleParameterString )
 // TypeMaterialName
 //-----------------------------------------------------------------------------
 
-ConsoleType(string, TypeMaterialName, String, "")
+ConsoleType(string, TypeMaterialName, const char*, "")
 
 ConsoleGetType( TypeMaterialName )
 {
-   const String *theString = static_cast<const String*>(dptr);
-   return theString->c_str();
+   return* ((const char**)(dptr));
 }
 
 ConsoleSetType( TypeMaterialName )
 {
-   String *theString = static_cast<String*>(dptr);
-
    if(argc == 1)
-      *theString = argv[0];
+      *((const char**)dptr) = StringTable->insert(argv[0]);
    else
       Con::printf("(TypeMaterialName) Cannot set multiple args to a single string.");
 }
@@ -860,20 +884,17 @@ ConsoleSetType( TypeTerrainMaterialName )
 // TypeCubemapName
 //-----------------------------------------------------------------------------
 
-ConsoleType(string, TypeCubemapName, String, "")
+ConsoleType(string, TypeCubemapName, const char*, "")
 
 ConsoleGetType( TypeCubemapName )
 {
-   const String *theString = static_cast<const String*>(dptr);
-   return theString->c_str();
+   return*((const char**)(dptr));
 }
 
 ConsoleSetType( TypeCubemapName )
 {
-   String *theString = static_cast<String*>(dptr);
-
    if(argc == 1)
-      *theString = argv[0];
+      *((const char**)dptr) = StringTable->insert(argv[0]);
    else
       Con::printf("(TypeCubemapName) Cannot set multiple args to a single string.");
 }
@@ -954,13 +975,16 @@ ConsoleSetType( TypePID )
       else
       {
          Torque::UUID uuid;
-         if( !uuid.fromString( argv[ 0 ] ) )
-         {
+
+        if( !uuid.fromString( argv[ 0 ] ) )
+        {
             Con::errorf( "Error parsing UUID in PID: '%s'", argv[ 0 ] );
             *pid = NULL;
-         }
-         else
-            *pid = SimPersistID::findOrCreate( uuid );
+        }
+        else
+        {
+            *pid = SimPersistID::findOrCreate(uuid);
+        }
       }
    }
    else

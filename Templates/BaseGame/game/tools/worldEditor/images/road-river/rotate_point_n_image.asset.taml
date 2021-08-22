@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="rotate_point_n_image"
+    imageFile="@assetFile=rotate-point_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

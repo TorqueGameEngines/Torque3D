@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="brushAdjustHeight_n_image"
+    imageFile="@assetFile=brushAdjustHeight_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

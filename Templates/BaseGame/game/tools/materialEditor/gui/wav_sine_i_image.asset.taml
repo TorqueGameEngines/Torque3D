@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="wav_sine_i_image"
+    imageFile="@assetFile=wav-sine_i.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

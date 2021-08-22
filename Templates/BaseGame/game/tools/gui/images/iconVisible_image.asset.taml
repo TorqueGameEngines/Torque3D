@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconVisible_image"
+    imageFile="@assetFile=iconVisible.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="btn_Rewind_image"
+    imageFile="@assetFile=btn_Rewind.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

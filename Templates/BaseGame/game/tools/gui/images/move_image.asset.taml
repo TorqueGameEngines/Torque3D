@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="move_image"
+    imageFile="@assetFile=move.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

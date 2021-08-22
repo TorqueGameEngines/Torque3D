@@ -84,7 +84,7 @@ GuiConvexEditorCtrl::GuiConvexEditorCtrl()
    mCtrlDown( false ),
    mGridSnap(false)
 {   
-	mMaterialName = StringTable->insert("Grid512_OrangeLines_Mat");
+	mMaterialName = StringTable->insert("Prototyping:WallOrange");
 }
 
 GuiConvexEditorCtrl::~GuiConvexEditorCtrl()
@@ -115,7 +115,7 @@ void GuiConvexEditorCtrl::onRemove()
 void GuiConvexEditorCtrl::initPersistFields()
 {   
    addField( "isDirty", TypeBool, Offset( mIsDirty, GuiConvexEditorCtrl ) );
-	addField( "materialName", TypeString, Offset(mMaterialName, GuiConvexEditorCtrl) );
+	addField( "materialName", TypeMaterialAssetId, Offset(mMaterialName, GuiConvexEditorCtrl) );
 
    Parent::initPersistFields();
 }
@@ -249,13 +249,13 @@ void GuiConvexEditorCtrl::setVisible( bool val )
 
                   //Set the texture to a representatory one so we know what's what
                   if (isTrigger)
-                     proxyShape->mMaterialName = "TriggerProxyMaterial";
+                     proxyShape->mMaterialName = "ToolsModule:TriggerProxyMaterial";
                   else if (isPortal)
-                     proxyShape->mMaterialName = "PortalProxyMaterial";
+                     proxyShape->mMaterialName = "ToolsModule:PortalProxyMaterial";
                   else if (isZone)
-                     proxyShape->mMaterialName = "ZoneProxyMaterial";
+                     proxyShape->mMaterialName = "ToolsModule:ZoneProxyMaterial";
                   else if (isOccluder)
-                     proxyShape->mMaterialName = "OccluderProxyMaterial";
+                     proxyShape->mMaterialName = "ToolsModule:OccluderProxyMaterial";
 
                   proxyShape->_updateMaterial();
 
@@ -529,7 +529,7 @@ void GuiConvexEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
          
          setupShape( newShape );
 
-         newShape->setField("material", mConvexSEL->getMaterialName());
+         newShape->_setMaterial(mConvexSEL->getMaterial());
 
          submitUndo( CreateShape, newShape );
 
@@ -1459,8 +1459,8 @@ bool GuiConvexEditorCtrl::isShapeValid( ConvexShape *shape )
 
 void GuiConvexEditorCtrl::setupShape( ConvexShape *shape )
 {
-   shape->setField( "material", mMaterialName );
    shape->registerObject();
+   shape->_setMaterial(mMaterialName);
    updateShape( shape );
 
    Scene* scene = Scene::getRootScene();
@@ -1910,11 +1910,11 @@ const char* GuiConvexEditorCtrl::getSelectedFaceMaterial()
 
    if (mConvexSEL->mSurfaceUVs[mFaceSEL].matID == 0)
    {
-      return mConvexSEL->mMaterialName;
+      return mConvexSEL->getMaterial();
    }
    else
    {
-      return mConvexSEL->mSurfaceTextures[mConvexSEL->mSurfaceUVs[mFaceSEL].matID - 1].materialName;
+      return mConvexSEL->mSurfaceTextures[mConvexSEL->mSurfaceUVs[mFaceSEL].matID - 1].getMaterial();
    }
 }
 
@@ -1978,7 +1978,7 @@ void GuiConvexEditorCtrl::setSelectedFaceMaterial(const char* materialName)
    {
       for (U32 i = 0; i < mConvexSEL->mSurfaceTextures.size(); i++)
       {
-         if (!String::compare(mConvexSEL->mSurfaceTextures[i].materialName, materialName))
+         if (!String::compare(mConvexSEL->mSurfaceTextures[i].getMaterial(), materialName))
          {
             //found a match
             mConvexSEL->mSurfaceUVs[mFaceSEL].matID = i + 1;
@@ -1990,7 +1990,7 @@ void GuiConvexEditorCtrl::setSelectedFaceMaterial(const char* materialName)
       {
          //add a new one
          ConvexShape::surfaceMaterial newMat;
-         newMat.materialName = materialName;
+         newMat._setMaterial(materialName);
 
          mConvexSEL->mSurfaceTextures.push_back(newMat);
 
@@ -2284,9 +2284,10 @@ ConvexEditorTool::EventResult ConvexEditorCreateTool::on3DMouseDown( const Gui3D
 
       mNewConvex->setTransform( objMat );   
 		
-		mNewConvex->setField( "material", Parent::mEditor->mMaterialName );
-		
       mNewConvex->registerObject();
+
+      mNewConvex->_setMaterial(Parent::mEditor->mMaterialName);
+
       mPlaneSizes.set( 0.1f, 0.1f, 0.1f );
       mNewConvex->resizePlanes( mPlaneSizes );
       mEditor->updateShape( mNewConvex );
@@ -2509,7 +2510,7 @@ ConvexShape* ConvexEditorCreateTool::extrudeShapeFromFace( ConvexShape *inShape,
    }
 
 	//newShape->setField( "material", Parent::mEditor->mMaterialName );
-   newShape->setField("material", inShape->getMaterialName());
+   newShape->_setMaterial(inShape->getMaterial());
 
    newShape->registerObject();
    mEditor->updateShape( newShape );

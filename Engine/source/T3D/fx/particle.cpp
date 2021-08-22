@@ -121,10 +121,10 @@ ParticleData::ParticleData()
    animTexTiling.set(0,0);      // tiling dimensions 
    animTexFramesString = NULL;  // string of animation frame indices
    animTexUVs = NULL;           // array of tile vertex UVs
-   textureName = NULL;          // texture filename
-   textureHandle = NULL;        // loaded texture handle
-   textureExtName = NULL;
-   textureExtHandle = NULL;
+
+   INIT_IMAGEASSET(Texture);
+   INIT_IMAGEASSET(TextureExt);
+
    constrain_pos = false;
    start_angle = 0.0f;
    angle_variance = 0.0f;
@@ -203,11 +203,13 @@ void ParticleData::initPersistFields()
       "animTexFrames = \"0-16 20 19 18 17 31-21\";\n"
       "@endtsexample\n" );
 
-   addField( "textureName", TYPEID< StringTableEntry >(), Offset(textureName, ParticleData),
-      "Texture file to use for this particle." );
-   addField( "animTexName", TYPEID< StringTableEntry >(), Offset(textureName, ParticleData),
+   addProtectedField( "textureName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData), _setTextureData, defaultProtectedGetFn,
+      "Texture file to use for this particle.", AbstractClassRep::FIELD_HideInInspectors );
+   addField( "animTexName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData),
       "@brief Texture file to use for this particle if animateTexture is true.\n\n"
-      "Deprecated. Use textureName instead." );
+      "Deprecated. Use textureName instead.", AbstractClassRep::FIELD_HideInInspectors);
+   INITPERSISTFIELD_IMAGEASSET(Texture, ParticleData, "Texture to use for this particle.");
+   
 
    // Interpolation variables
    addField( "colors", TYPEID< LinearColorF >(), Offset(colors, ParticleData), PDC_NUM_KEYS,
@@ -224,8 +226,9 @@ void ParticleData::initPersistFields()
       "@brief Time keys used with the colors and sizes keyframes.\n\n"
       "Values are from 0.0 (particle creation) to 1.0 (end of lifespace)." );
 
-   addGroup("AFX"); 
-   addField("textureExtName",       TypeFilename, Offset(textureExtName,     ParticleData));
+   addGroup("AFX");
+   addProtectedField("textureExtName", TypeFilename, Offset(mTextureExtName,     ParticleData), _setTextureExtData, &defaultProtectedGetFn, "", AbstractClassRep::FIELD_HideInInspectors);
+   INITPERSISTFIELD_IMAGEASSET(TextureExt, ParticleData, "");
    addField("constrainPos",         TypeBool,     Offset(constrain_pos,      ParticleData));
    addField("angle",                TypeF32,      Offset(start_angle,        ParticleData));
    addField("angleVariance",        TypeF32,      Offset(angle_variance,     ParticleData));
@@ -290,8 +293,8 @@ void ParticleData::packData(BitStream* stream)
       stream->writeFloat( times[i], 8);
    }
 
-   if (stream->writeFlag(textureName && textureName[0]))
-     stream->writeString(textureName);
+   //PACKDATA_IMAGEASSET(Texture);
+
    for (i = 0; i < 4; i++)
       mathWrite(*stream, texCoords[i]);
    if (stream->writeFlag(animateTexture))
@@ -303,8 +306,9 @@ void ParticleData::packData(BitStream* stream)
       mathWrite(*stream, animTexTiling);
       stream->writeInt(framesPerSec, 8);
    }
-   if (stream->writeFlag(textureExtName && textureExtName[0]))
-     stream->writeString(textureExtName);
+
+   //PACKDATA_IMAGEASSET(TextureExt);
+
    stream->writeFlag(constrain_pos);
    stream->writeFloat(start_angle/360.0f, 11);
    stream->writeFloat(angle_variance/180.0f, 10);
@@ -373,7 +377,9 @@ void ParticleData::unpackData(BitStream* stream)
       sizes[i] = stream->readFloat(16) * MaxParticleSize;
       times[i] = stream->readFloat(8);
    }
-   textureName = (stream->readFlag()) ? stream->readSTString() : 0;
+
+   //UNPACKDATA_IMAGEASSET(Texture);
+
    for (i = 0; i < 4; i++)
       mathRead(*stream, &texCoords[i]);
    
@@ -384,7 +390,9 @@ void ParticleData::unpackData(BitStream* stream)
      mathRead(*stream, &animTexTiling);
      framesPerSec = stream->readInt(8);
    }
-   textureExtName = (stream->readFlag()) ? stream->readSTString() : 0;
+
+   //UNPACKDATA_IMAGEASSET(Texture);
+
    constrain_pos = stream->readFlag();
    start_angle = 360.0f*stream->readFloat(11);
    angle_variance = 180.0f*stream->readFloat(10);
@@ -556,27 +564,6 @@ bool ParticleData::preload(bool server, String &errorStr)
    bool error = false;
    if(!server)
    {
-      // Here we attempt to load the particle's texture if specified. An undefined
-      // texture is *not* an error since the emitter may provide one.
-      if (textureName && textureName[0])
-      {
-        textureHandle = GFXTexHandle(textureName, &GFXStaticTextureSRGBProfile, avar("%s() - textureHandle (line %d)", __FUNCTION__, __LINE__));
-        if (!textureHandle)
-        {
-          errorStr = String::ToString("Missing particle texture: %s", textureName);
-          error = true;
-        }
-      }
-      if (textureExtName && textureExtName[0])
-      {
-         textureExtHandle = GFXTexHandle(textureExtName, &GFXStaticTextureSRGBProfile, avar("%s() - textureExtHandle (line %d)", __FUNCTION__, __LINE__));
-         if (!textureExtHandle)
-         {
-            errorStr = String::ToString("Missing particle texture: %s", textureName);
-            error = true;
-         }
-      }
-
       if (animateTexture) 
       {
         // Here we parse animTexFramesString into byte-size frame numbers in animTexFrames.
@@ -698,15 +685,14 @@ void ParticleData::initializeParticle(Particle* init, const Point3F& inheritVelo
 bool ParticleData::reload(char errorBuffer[256])
 {
    bool error = false;
-	if (textureName && textureName[0])
+
+   StringTableEntry particleTex = getTexture();
+
+   if (!_setTexture(particleTex))
    {
-        textureHandle = GFXTexHandle(textureName, &GFXStaticTextureSRGBProfile, avar("%s() - textureHandle (line %d)", __FUNCTION__, __LINE__));
-        if (!textureHandle)
-        {
-				dSprintf(errorBuffer, 256, "Missing particle texture: %s", textureName);
-				error = true;
-		  }
-	}
+      dSprintf(errorBuffer, 256, "Missing particle texture: %s", particleTex);
+   }
+
    /*
    numFrames = 0;
    for( S32 i=0; i<PDC_MAX_TEX; i++ )
@@ -776,12 +762,14 @@ ParticleData::ParticleData(const ParticleData& other, bool temp_clone) : SimData
   animTexTiling = other.animTexTiling;
   animTexFramesString = other.animTexFramesString;
   animTexFrames = other.animTexFrames; // -- parsed from animTexFramesString
-  textureName = other.textureName;
-  textureHandle = other.textureHandle;
+
+  CLONE_IMAGEASSET(Texture);
+  
   spinBias = other.spinBias;
   randomizeSpinDir = other.randomizeSpinDir;
-  textureExtName = other.textureExtName;
-  textureExtHandle = other.textureExtHandle;
+
+  CLONE_IMAGEASSET(TextureExt);
+
   constrain_pos = other.constrain_pos;
   start_angle = other.start_angle;
   angle_variance = other.angle_variance;
@@ -815,3 +803,5 @@ void ParticleData::onPerformSubstitutions()
   char errorBuffer[256];
   reload(errorBuffer);
 }
+
+DEF_IMAGEASSET_BINDS(ParticleData, Texture);

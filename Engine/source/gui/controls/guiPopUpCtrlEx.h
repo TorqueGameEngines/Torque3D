@@ -38,6 +38,8 @@
 class GuiPopUpMenuCtrlEx;
 class GuiPopupTextListCtrlEx;
 
+#include "T3D/assets/ImageAsset.h"
+
 class GuiPopUpBackgroundCtrlEx : public GuiControl
 {
 protected:
@@ -116,14 +118,26 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    bool mRenderScrollInNA; //  Added
    bool mReverseTextList;	//  Added - Should we reverse the text list if we display up?
    bool mHotTrackItems;
-   StringTableEntry mBitmapName; //  Added
+
+   enum BitmapModes
+   {
+      Normal,
+      Depressed,
+
+      NumBitmapModes = 2
+   };
+
+   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrlEx, Bitmap, GFXDefaultGUIProfile, NumBitmapModes);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(GuiPopUpMenuCtrlEx, Bitmap);
+
    Point2I mBitmapBounds; //  Added
-   GFXTexHandle mTextureNormal; //  Added
-   GFXTexHandle mTextureDepressed; //  Added
+
 	S32 mIdMax;
 
    virtual void addChildren();
    virtual void repositionPopup();
+
+   static bool _setBitmaps(void* obj, const char* index, const char* data);
 
   public:
    GuiPopUpMenuCtrlEx(void);

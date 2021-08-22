@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="postFXEditor"
+    scriptFile="@assetFile=postFxEditor.gui"
+    GUIFile="@assetFile=postFxEditor.gui"
+    VersionId="1" />

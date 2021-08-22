@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="UnderWaterShader"
+    scriptFile="@assetFile=water.tscript"
+    materialDefinitionName="UnderWaterShader"
+    VersionId="1" />

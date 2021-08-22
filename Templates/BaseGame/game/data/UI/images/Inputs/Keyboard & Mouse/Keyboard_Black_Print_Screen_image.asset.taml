@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Keyboard_Black_Print_Screen_image"
+    imageFile="@assetFile=Keyboard_Black_Print_Screen.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="optionsMenuSliderBitmapArray_image"
+    imageFile="@assetFile=optionsMenuSliderBitmapArray.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

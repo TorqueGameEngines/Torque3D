@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="player_n_image"
+    imageFile="@assetFile=player_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

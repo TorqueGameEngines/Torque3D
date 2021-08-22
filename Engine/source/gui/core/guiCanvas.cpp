@@ -1760,7 +1760,11 @@ void GuiCanvas::renderFrame(bool preRenderOnly, bool bufferSwap /* = true */)
       const char *pref = Con::getVariable( "$pref::Video::mode" );
       mode.parseFromString( pref );
       mode.antialiasLevel = 0;
+      Point2I winPos = mPlatformWindow->getPosition(); // Save position so we can put window back.
       mPlatformWindow->setVideoMode(mode);
+      // setVideoMode (above) will center the window on the display device. If the window had been positioned
+      // by the user or from script, put it back where it was before the light manager change.
+      mPlatformWindow->setPosition(winPos);
 
       Con::printf( "AntiAliasing has been disabled; it is not compatible with AdvancedLighting." );
    }
@@ -1772,7 +1776,11 @@ void GuiCanvas::renderFrame(bool preRenderOnly, bool bufferSwap /* = true */)
       if ( prefAA != mode.antialiasLevel )
       {
          mode.parseFromString( pref );
+         Point2I winPos = mPlatformWindow->getPosition(); // Save position so we can put window back.
          mPlatformWindow->setVideoMode(mode);
+         // setVideoMode (above) will center the window on the display device. If the window had been positioned
+         // by the user or from script, put it back where it was before the light manager change.
+         mPlatformWindow->setPosition(winPos);
 
          Con::printf( "AntiAliasing has been enabled while running BasicLighting." );
       }

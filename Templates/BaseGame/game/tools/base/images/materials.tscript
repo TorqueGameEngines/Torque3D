@@ -3,69 +3,54 @@
 // Copyright GarageGames, LLC 2011
 //-----------------------------------------------------------------------------
 
-singleton CubemapData( BlankSkyCubemap )
-{
-   cubeFace[0] = "./skybox_1";
-   cubeFace[1] = "./skybox_2";
-   cubeFace[2] = "./skybox_3";
-   cubeFace[3] = "./skybox_4";
-   cubeFace[4] = "./skybox_5";
-   cubeFace[5] = "./skybox_6";
-};
-
-singleton Material( BlankSkyMat )
-{
-   cubemap = BlankSkyCubemap;
-};
-
 singleton Material(White)
 {
-   diffuseMap[0] = "./white.png";
+   diffuseMapAsset[0] = "ToolsModule:white_image";
 };
 
 singleton Material(Gray)
 {
-   diffuseMap[0] = "./gray.png";
+   diffuseMapAsset[0] = "ToolsModule:gray_image";
 };
 
 singleton Material(Black)
 {
-   diffuseMap[0] = "./black.png";
+   diffuseMapAsset[0] = "ToolsModule:black_image";
 };
 
 singleton Material(Grid_512_Black)
 {
-   diffuseMap[0] = "./512_black.png";
+   diffuseMapAsset[0] = "ToolsModule:512_black_image";
 };
 
 singleton Material(Grid_512_ForestGreen)
 {
-   diffuseMap[0] = "./512_forestgreen.png";
+   diffuseMapAsset[0] = "ToolsModule:512_forestgreen_image";
 };
 
 singleton Material(Grid_512_ForestGreen_Lines)
 {
-   diffuseMap[0] = "./512_forestgreen_lines.png";
+   diffuseMapAsset[0] = "ToolsModule:512_forestgreen_lines_image";
 };
 
 singleton Material(Grid_512_Green)
 {
-   diffuseMap[0] = "./512_green.png";
+   diffuseMapAsset[0] = "ToolsModule:512_green_image";
 };
 
 singleton Material(Grid_512_Grey)
 {
-   diffuseMap[0] = "./512_grey.png";
+   diffuseMapAsset[0] = "ToolsModule:512_grey_image";
 };
 
 singleton Material(Grid_512_Grey_Base)
 {
-   diffuseMap[0] = "./512_grey_base.png";
+   diffuseMapAsset[0] = "ToolsModule:512_grey_base_image";
 };
 
 singleton Material(Grid_512_Orange)
 {
-   diffuseMap[0] = "tools/base/images/512_orange.png";
+   diffuseMapAsset[0] = "ToolsModule:512_orange_image";
    translucent = "0";
    translucentBlendOp = "PreMul";
    mapTo = "512_orange.png";
@@ -73,10 +58,10 @@ singleton Material(Grid_512_Orange)
 
 singleton Material(Grid_512_Orange_Lines)
 {
-   diffuseMap[0] = "./512_orange_lines.png";
+   diffuseMapAsset[0] = "ToolsModule:512_orange_lines_image";
 };
 
 singleton Material(Grid_512_Red)
 {
-   diffuseMap[0] = "./512_red.png";
+   diffuseMapAsset[0] = "ToolsModule:512_red_image";
 };

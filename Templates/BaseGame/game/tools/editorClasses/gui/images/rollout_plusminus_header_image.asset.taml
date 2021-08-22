@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="rollout_plusminus_header_image"
+    imageFile="@assetFile=rollout_plusminus_header.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

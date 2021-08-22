@@ -4,7 +4,7 @@ function AssetBrowser::buildLooseFilePreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %fullPath;
    
-   %previewData.previewImage = "tools/assetBrowser/art/looseFileIcon";
+   %previewData.previewImage = "ToolsModule:looseFileIcon_image";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

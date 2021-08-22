@@ -108,6 +108,9 @@
 
       // de-tag the command name
 
+      if (mArgc < 1 || mArgv[1][0] != StringTagPrefixByte)
+         return;
+
       for(S32 i = mArgc - 1; i >= 0; i--)
       {
          char *arg = mArgv[i+1];

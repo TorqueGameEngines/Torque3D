@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gear_image"
+    imageFile="@assetFile=gear.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

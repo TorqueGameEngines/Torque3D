@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ConsoleDlg"
+    scriptFile="@assetFile=console.gui"
+    GUIFile="@assetFile=console.gui"
+    VersionId="1" />

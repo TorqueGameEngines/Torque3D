@@ -270,7 +270,7 @@ singleton PostEffect( SSAOPostFx )
    stateBlock = SSAOStateBlock;
          
    texture[0] = "#deferred";         
-   texture[1] = "core/postFX/images/noise.png";
+   textureAsset[1] = "Core_PostFX:noise_image";
    texture[2] = "#ssao_pow_table";
    
    target = "$outTex";

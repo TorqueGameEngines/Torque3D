@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DebuggerConnectDlg, EditorGuiGroup"
+    scriptFile="@assetFile=connectDlg.ed.gui"
+    GUIFile="@assetFile=connectDlg.ed.gui"
+    VersionId="1" />

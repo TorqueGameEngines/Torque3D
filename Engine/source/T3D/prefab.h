@@ -122,7 +122,7 @@ protected:
 protected:
 
    /// Prefab file which defines our children objects.
-   String mFilename;
+   StringTableEntry mFilename;
 
    /// Group which holds all children objects.
    SimObjectPtr<SimGroup> mChildGroup;

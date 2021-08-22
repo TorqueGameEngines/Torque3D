@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DatablockEditorCreatePrompt,EditorGuiGroup"
+    scriptFile="@assetFile=DatablockEditorCreatePrompt.ed.gui"
+    GUIFile="@assetFile=DatablockEditorCreatePrompt.ed.gui"
+    VersionId="1" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="moon_wglow_image"
+    imageFile="@assetFile=moon_wglow.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

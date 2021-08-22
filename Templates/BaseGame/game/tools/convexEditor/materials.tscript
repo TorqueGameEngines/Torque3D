@@ -1,7 +1,7 @@
 singleton Material( ZoneProxyMaterial )
 {
    mapTo = "ZoneProxyMaterial";
-   diffuseMap[0] = "tools/convexEditor/images/zoneProxyImage";
+   diffuseMapAsset[0] = "ToolsModule:zoneProxyImage_image";
    materialTag0 = "TestMaterial";
    translucent = true;
    translucentBlendOp = "LerpAlpha";
@@ -11,7 +11,7 @@ singleton Material( ZoneProxyMaterial )
 singleton Material( TriggerProxyMaterial )
 {
    mapTo = "TriggerProxyMaterial";
-   diffuseMap[0] = "./images/triggerProxyImage";
+   diffuseMapAsset[0] = "ToolsModule:triggerProxyImage_image";
    materialTag0 = "TestMaterial";
    translucent = true;
    translucentBlendOp = "PreMul";
@@ -21,7 +21,7 @@ singleton Material( TriggerProxyMaterial )
 singleton Material( PortalProxyMaterial )
 {
    mapTo = "PortalProxyMaterial";
-   diffuseMap[0] = "./images/portalProxyImage";
+   diffuseMapAsset[0] = "ToolsModule:portalProxyImage_image";
    materialTag0 = "TestMaterial";
    translucent = true;
    translucentBlendOp = "PreMul";
@@ -31,7 +31,7 @@ singleton Material( PortalProxyMaterial )
 singleton Material( OccluderProxyMaterial )
 {
    mapTo = "OccluderProxyMaterial";
-   diffuseMap[0] = "./images/occluderProxyImage";
+   diffuseMapAsset[0] = "ToolsModule:occluderProxyImage_image";
    materialTag0 = "TestMaterial";
    translucent = true;
    translucentBlendOp = "PreMul";

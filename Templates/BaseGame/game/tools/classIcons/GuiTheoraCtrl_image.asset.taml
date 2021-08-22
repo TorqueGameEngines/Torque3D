@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiTheoraCtrl_image"
+    imageFile="@assetFile=GuiTheoraCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,11 @@
+
+singleton TSShapeConstructor(Fog_CubeDAE)
+{
+   baseShapeAsset = "Core_Rendering:Fog_Cube";
+   singleDetailSize = "0";
+   flipUVCoords = "0";
+   JoinIdenticalVerts = "0";
+   reverseWindingOrder = "0";
+   removeRedundantMats = "0";
+   animFPS = "2";
+};

@@ -71,6 +71,8 @@ Prefab::Prefab()
    mNetFlags.clear(Ghostable);
 
    mTypeMask |= StaticObjectType;
+
+   mFilename = StringTable->EmptyString();
 }
 
 Prefab::~Prefab()
@@ -196,7 +198,7 @@ U32 Prefab::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & FileMask ) )
    {
-      stream->write( mFilename );
+      stream->writeString( mFilename );
    }
 
    if ( stream->writeFlag( mask & TransformMask ) )
@@ -218,7 +220,7 @@ void Prefab::unpackUpdate(NetConnection *conn, BitStream *stream)
    // FileMask
    if ( stream->readFlag() ) 
    {
-      stream->read( &mFilename );
+      mFilename = stream->readSTString();
    }
 
    // TransformMask
@@ -235,9 +237,7 @@ bool Prefab::protectedSetFile( void *object, const char *index, const char *data
 {
    Prefab *prefab = static_cast<Prefab*>(object);
    
-   String file = String( Platform::makeRelativePathName(data, Platform::getMainDotCsDir()) );
-
-   prefab->setFile( file );
+   prefab->setFile( StringTable->insert(Platform::makeRelativePathName(data, Platform::getMainDotCsDir())));
 
    return false;
 }
@@ -336,12 +336,12 @@ void Prefab::_loadFile( bool addFileNotify )
 {
    AssertFatal( isServerObject(), "Prefab-bad" );
 
-   if ( mFilename.isEmpty() )
+   if ( mFilename == StringTable->EmptyString())
       return;
 
-   if ( !Platform::isFile( mFilename ) )
+   if ( !Torque::FS::IsScriptFile( mFilename ) )
    {
-      Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename.c_str() );
+      Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename );
       return;
    }
 
@@ -349,19 +349,19 @@ void Prefab::_loadFile( bool addFileNotify )
    {
       Con::errorf( 
          "Prefab::_loadFile - failed loading prefab file (%s). \n"
-         "File was referenced recursively by both a Parent and Child prefab.", mFilename.c_str() );
+         "File was referenced recursively by both a Parent and Child prefab.", mFilename );
       return;
    }
 
    sPrefabFileStack.push_back(mFilename);
 
-   String command = String::ToString( "exec( \"%s\" );", mFilename.c_str() );
+   String command = String::ToString( "exec( \"%s\" );", mFilename );
    Con::evaluate( command );
 
    SimGroup *group;
    if ( !Sim::findObject( Con::getVariable( "$ThisPrefab" ), group ) )
    {
-      Con::errorf( "Prefab::_loadFile() - file %s did not create $ThisPrefab.", mFilename.c_str() );
+      Con::errorf( "Prefab::_loadFile() - file %s did not create $ThisPrefab.", mFilename );
       return;
    }
 
@@ -560,6 +560,7 @@ bool Prefab::buildExportPolyList(ColladaUtils::ExportData* exportData, const Box
 
 void Prefab::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
+   if (!mChildGroup) return;
    Vector<SceneObject*> foundObjects;
    mChildGroup->findObjectByType(foundObjects);
 

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="retarget_btn_n_image"
+    imageFile="@assetFile=retarget-btn_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

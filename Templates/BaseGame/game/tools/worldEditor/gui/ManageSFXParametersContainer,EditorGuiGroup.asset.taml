@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ManageSFXParametersContainer,EditorGuiGroup"
+    scriptFile="@assetFile=ManageSFXParametersWindow.ed.gui"
+    GUIFile="@assetFile=ManageSFXParametersWindow.ed.gui"
+    VersionId="1" />

@@ -35,6 +35,8 @@
 #include "gfx/gfxTextureHandle.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 #define MaxParticleSize 50.0
 
 struct Particle;
@@ -83,13 +85,16 @@ class ParticleData : public SimDataBlock
    Point2I           animTexTiling;
    StringTableEntry  animTexFramesString;
    Vector<U8>        animTexFrames;
-   StringTableEntry  textureName;
-   GFXTexHandle      textureHandle;
 
-   static bool protectedSetSizes( void *object, const char *index, const char *data );
-   static bool protectedSetTimes( void *object, const char *index, const char *data );
+   DECLARE_IMAGEASSET(ParticleData, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(ParticleData, Texture);
 
-  public:
+   static bool protectedSetSizes(void* object, const char* index, const char* data);
+   static bool protectedSetTimes(void* object, const char* index, const char* data);
+
+   void onImageChanged() {}
+
+public:
    ParticleData();
    ~ParticleData();
 
@@ -111,9 +116,10 @@ class ParticleData : public SimDataBlock
   protected:
    F32   spinBias;
    bool  randomizeSpinDir;
-   StringTableEntry  textureExtName;
   public:
-   GFXTexHandle      textureExtHandle;
+   DECLARE_IMAGEASSET(ParticleData, TextureExt, onImageChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET_SETGET(ParticleData, TextureExt);
+
    bool   constrain_pos;
    F32    start_angle;
    F32    angle_variance;

@@ -161,7 +161,9 @@ public:
 
    void setObjectField( const char *fieldName, const char *data );
 
-   static GuiInspector* findByObject( SimObject *obj );   
+   static GuiInspector* findByObject( SimObject *obj );
+
+   void refresh();
 
 protected:
       
@@ -181,8 +183,6 @@ protected:
    SimObjectPtr<GuiInspectorField> mHLField;
    String mGroupFilters;   
    bool mShowCustomFields;
-   
-   void refresh();
 };
 
 #endif

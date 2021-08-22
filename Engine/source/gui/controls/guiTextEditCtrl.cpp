@@ -151,6 +151,8 @@ GuiTextEditCtrl::GuiTextEditCtrl()
    mPasswordMask = StringTable->insert( "*" );
 #endif
    Sim::findObject( "InputDeniedSound", mDeniedSound );
+
+   mValidateCommand = "";
 }
 
 GuiTextEditCtrl::~GuiTextEditCtrl()

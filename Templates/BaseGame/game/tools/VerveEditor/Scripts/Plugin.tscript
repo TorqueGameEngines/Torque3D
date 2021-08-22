@@ -26,7 +26,7 @@ function VerveEditorPlugin::onWorldEditorStartup( %this )
     %tooltip = "Verve Editor (" @ %accel @ ")";
    
     // Add ourselves to the ToolsToolbar
-    EditorGui.addToToolsToolbar( "VerveEditorPlugin", "VerveEditorPluginPalette", expandFilename( "tools/VerveEditor/GUI/Images/btn_Palette" ), %tooltip );
+    EditorGui.addToToolsToolbar( "VerveEditorPlugin", "VerveEditorPluginPalette", "ToolsModule:btn_Palette_n_image", %tooltip );
 
     // Find and Store the Button.
     %this.ToolbarButton = ToolsToolbarArray.findObjectByInternalName( "VerveEditorPluginPalette", false );

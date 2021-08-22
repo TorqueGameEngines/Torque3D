@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="hudfill_image"
+    imageFile="@assetFile=hudfill.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

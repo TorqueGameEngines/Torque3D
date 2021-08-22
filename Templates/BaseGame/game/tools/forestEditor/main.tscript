@@ -119,7 +119,7 @@ function ForestEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the tools menu.
    %tooltip = "Forest Editor (" @ %accel @ ")";  
-   EditorGui.addToToolsToolbar( "ForestEditorPlugin", "ForestEditorPalette", expandFilename("tools/forestEditor/images/forest-editor-btn"), %tooltip );   
+   EditorGui.addToToolsToolbar( "ForestEditorPlugin", "ForestEditorPalette", "ToolsModule:forest_editor_btn_n_image", %tooltip );   
    
    //connect editor windows
    GuiWindowCtrl::attach( ForestEditorPropertiesWindow, ForestEditorPalleteWindow );

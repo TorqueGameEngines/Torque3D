@@ -497,8 +497,13 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
       {
          Material *mat = dynamic_cast<Material*>( persistMgr.getDirtyList()[iMat].getObject() );
 
-         copySketchupTexture(path, mat->mDiffuseMapFilename[0]);
-         copySketchupTexture(path, mat->mNormalMapFilename[0]);
+         String difMapName;
+         copySketchupTexture(path, difMapName);
+         mat->mDiffuseMapName[0] = difMapName;
+
+         String normMapName;
+         copySketchupTexture(path, normMapName);
+         mat->mNormalMapName[0] = normMapName;
       }
    }
 
@@ -688,7 +693,7 @@ TSShape* loadColladaShape(const Torque::Path &path)
 
    // Allow TSShapeConstructor object to override properties
    ColladaUtils::getOptions().reset();
-   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructor(path.getFullPath());
+   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructorByFilename(path.getFullPath());
    if (tscon)
    {
       ColladaUtils::getOptions() = tscon->mOptions;

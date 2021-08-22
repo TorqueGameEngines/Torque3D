@@ -23,22 +23,22 @@
 #define _MATERIALDEFINITION_H_
 
 #ifndef _BASEMATERIALDEFINITION_H_
-   #include "materials/baseMaterialDefinition.h"
+#include "materials/baseMaterialDefinition.h"
 #endif
 #ifndef _TDICTIONARY_H_
-   #include "core/util/tDictionary.h"
+#include "core/util/tDictionary.h"
 #endif
 #ifndef _GFXTEXTUREHANDLE_H_
-   #include "gfx/gfxTextureHandle.h"
+#include "gfx/gfxTextureHandle.h"
 #endif
 #ifndef _GFXSTRUCTS_H_
-   #include "gfx/gfxStructs.h"
+#include "gfx/gfxStructs.h"
 #endif
 #ifndef _GFXCUBEMAP_H_
-   #include "gfx/gfxCubemap.h"
+#include "gfx/gfxCubemap.h"
 #endif
 #ifndef _DYNAMIC_CONSOLETYPES_H_
-   #include "console/dynamicTypes.h"
+#include "console/dynamicTypes.h"
 #endif
 
 #ifndef IMAGE_ASSET_H
@@ -61,7 +61,7 @@ class Material : public BaseMaterialDefinition
 {
    typedef BaseMaterialDefinition Parent;
 public:
-   static GFXCubemap *GetNormalizeCube();
+   static GFXCubemap* GetNormalizeCube();
 
    //-----------------------------------------------------------------------
    // Enums
@@ -113,8 +113,8 @@ public:
    {
       Scroll = 1,
       Rotate = 2,
-      Wave   = 4,
-      Scale  = 8,
+      Wave = 4,
+      Scale = 8,
       Sequence = 16,
    };
 
@@ -130,7 +130,7 @@ public:
    protected:
 
       ///
-      typedef HashTable<const FeatureType*,GFXTexHandle> TextureTable;
+      typedef HashTable<const FeatureType*, GFXTexHandle> TextureTable;
 
       /// The sparse table of textures by feature index.
       /// @see getTex
@@ -138,39 +138,39 @@ public:
       TextureTable mTextures;
 
       /// The cubemap for this stage.
-      GFXCubemap *mCubemap;
+      GFXCubemap* mCubemap;
 
    public:
 
       StageData()
-         : mCubemap( NULL )
+         : mCubemap(NULL)
       {
       }
 
       /// Returns the texture object or NULL if there is no
       /// texture entry for that feature type in the table.
-      inline GFXTextureObject* getTex( const FeatureType &type ) const
+      inline GFXTextureObject* getTex(const FeatureType& type) const
       {
-         TextureTable::ConstIterator iter = mTextures.find( &type );
-         if ( iter == mTextures.end() )
+         TextureTable::ConstIterator iter = mTextures.find(&type);
+         if (iter == mTextures.end())
             return NULL;
 
          return iter->value.getPointer();
       }
 
       /// Assigns a texture object by feature type.
-      inline void setTex( const FeatureType &type, GFXTextureObject *tex )
+      inline void setTex(const FeatureType& type, GFXTextureObject* tex)
       {
-         if ( !tex )
+         if (!tex)
          {
-            TextureTable::Iterator iter = mTextures.find( &type );
-            if ( iter != mTextures.end() )
-               mTextures.erase( iter );
+            TextureTable::Iterator iter = mTextures.find(&type);
+            if (iter != mTextures.end())
+               mTextures.erase(iter);
 
             return;
          }
 
-         TextureTable::Iterator iter = mTextures.findOrInsert( &type );
+         TextureTable::Iterator iter = mTextures.findOrInsert(&type);
          iter->value = tex;
       }
 
@@ -181,7 +181,7 @@ public:
          TextureTable::ConstIterator iter = mTextures.begin();
          for (; iter != mTextures.end(); ++iter)
          {
-            if ( iter->value.isValid() )
+            if (iter->value.isValid())
                return true;
          }
 
@@ -189,13 +189,13 @@ public:
       }
 
       /// Returns the active texture features.
-      void getFeatureSet( FeatureSet *outFeatures ) const;
+      void getFeatureSet(FeatureSet* outFeatures) const;
 
       /// Returns the stage cubemap.
       GFXCubemap* getCubemap() const { return mCubemap; }
 
       /// Set the stage cubemap.
-      void setCubemap( GFXCubemap *cubemap ) { mCubemap = cubemap; }
+      void setCubemap(GFXCubemap* cubemap) { mCubemap = cubemap; }
 
    };
 
@@ -204,27 +204,51 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_TEXTUREARRAY(Material, DiffuseMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DiffuseMap);
+
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
-   DECLARE_TEXTUREARRAY(Material, OverlayMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(Material, LightMap, MAX_STAGES);;
-   DECLARE_TEXTUREARRAY(Material, ToneMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(Material, DetailMap, MAX_STAGES);;
-   DECLARE_TEXTUREARRAY(Material, NormalMap, MAX_STAGES);
-   DECLARE_TEXTUREARRAY(Material, ORMConfigMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, OverlayMap);
+
+   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, LightMap);
+
+   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ToneMap);
+
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailMap);
+
+   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, NormalMap);
+
+   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ORMConfigMap);
+
    bool     mIsSRGb[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, RoughMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
+
    bool     mInvertRoughness[MAX_STAGES];
    F32      mRoughnessChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, AOMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, AOMap);
+
    F32      mAOChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, MetalMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, MetalMap);
+
    F32      mMetalChan[MAX_STAGES];
-   DECLARE_TEXTUREARRAY(Material, GlowMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, GlowMap);
+
    F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
-   DECLARE_TEXTUREARRAY(Material, DetailNormalMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailNormalMap);
+
    /// The strength scalar for the detail normal map.
    F32 mDetailNormalMapStrength[MAX_STAGES];
 
@@ -239,18 +263,18 @@ public:
    /// or if it has a texture it is multiplied against 
    /// the diffuse texture color.
    LinearColorF mDiffuse[MAX_STAGES];
-   
+
    F32 mRoughness[MAX_STAGES];
    F32 mMetalness[MAX_STAGES];
-   
+
    bool mVertLit[MAX_STAGES];
-   
+
    /// If true for a stage, vertex colors are multiplied
    /// against diffuse colors.
-   bool mVertColor[ MAX_STAGES ];
+   bool mVertColor[MAX_STAGES];
 
-   F32 mParallaxScale[MAX_STAGES];   
-  
+   F32 mParallaxScale[MAX_STAGES];
+
    F32 mMinnaertConstant[MAX_STAGES];
    bool mSubSurface[MAX_STAGES];
    LinearColorF mSubSurfaceColor[MAX_STAGES];
@@ -268,15 +292,15 @@ public:
    F32 mRotSpeed[MAX_STAGES];
    Point2F mRotPivotOffset[MAX_STAGES];
    F32 mRotPos[MAX_STAGES];
-   
+
    F32 mWavePos[MAX_STAGES];
    F32 mWaveFreq[MAX_STAGES];
    F32 mWaveAmp[MAX_STAGES];
    U32 mWaveType[MAX_STAGES];
-   
+
    F32 mSeqFramePerSec[MAX_STAGES];
    F32 mSeqSegSize[MAX_STAGES];
-   
+
    bool mGlow[MAX_STAGES];          // entire stage glows
    bool mEmissive[MAX_STAGES];
 
@@ -305,7 +329,7 @@ public:
 
    // Deferred Shading
    F32 mMatInfoFlags[MAX_STAGES];
-   bool mTranslucent;   
+   bool mTranslucent;
    BlendOp mTranslucentBlendOp;
    bool mTranslucentZWrite;
 
@@ -329,7 +353,7 @@ public:
    bool mShowDust;                  ///< If true, show dust emitters (footpuffs, hover trails, etc) when on surface with this material.  Defaults to false.
 
    /// Color to use for particle effects and such when located on this material.
-   LinearColorF mEffectColor[ NUM_EFFECT_COLOR_STAGES ];
+   LinearColorF mEffectColor[NUM_EFFECT_COLOR_STAGES];
 
    /// Footstep sound to play when walking on surface with this material.
    /// Numeric ID of footstep sound defined on player datablock (0 == soft,
@@ -352,7 +376,7 @@ public:
    F32 mReverbSoundOcclusion;       ///< Amount of volume occlusion on reverb sounds.
 
    ///@}
-   
+
    String mMapTo; // map Material to this texture name
   
    ///
@@ -362,7 +386,7 @@ public:
 
    /// Allocates and returns a BaseMatInstance for this material.  Caller is responsible
    /// for freeing the instance
-   virtual BaseMatInstance* createMatInstance();      
+   virtual BaseMatInstance* createMatInstance();
    virtual bool isTranslucent() const { return mTranslucent && mTranslucentBlendOp != Material::None; }
    virtual bool isAlphatest() const { return mAlphaTest; }
    virtual bool isDoubleSided() const { return mDoubleSided; }
@@ -370,7 +394,7 @@ public:
    virtual void setAutoGenerated(bool isAutoGenerated) { mAutoGenerated = isAutoGenerated; }
    virtual bool isLightmapped() const;
    virtual bool castsShadows() const { return mCastShadows; }
-   const String &getPath() const { return mPath; }
+   const String& getPath() const { return mPath; }
 
    void flush();
 
@@ -386,7 +410,7 @@ public:
    virtual bool onAdd();
    virtual void onRemove();
    virtual void inspectPostApply();
-   virtual bool writeField( StringTableEntry fieldname, const char *value );
+   virtual bool writeField(StringTableEntry fieldname, const char* value);
 
    //
    // ConsoleObject interface
@@ -394,7 +418,7 @@ public:
    static void initPersistFields();
 
    // Accumulation
-   static bool _setAccuEnabled( void *object, const char *index, const char *data );
+   static bool _setAccuEnabled(void* object, const char* index, const char* data);
 
    DECLARE_CONOBJECT(Material);
 protected:
@@ -420,8 +444,8 @@ typedef Material::AnimType MaterialAnimType;
 typedef Material::BlendOp MaterialBlendOp;
 typedef Material::WaveType MaterialWaveType;
 
-DefineBitfieldType( MaterialAnimType );
-DefineEnumType( MaterialBlendOp );
-DefineEnumType( MaterialWaveType );
+DefineBitfieldType(MaterialAnimType);
+DefineEnumType(MaterialBlendOp);
+DefineEnumType(MaterialWaveType);
 
 #endif // _MATERIALDEFINITION_H_

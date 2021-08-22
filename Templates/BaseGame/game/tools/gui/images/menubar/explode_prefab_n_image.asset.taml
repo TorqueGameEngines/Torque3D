@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="explode_prefab_n_image"
+    imageFile="@assetFile=explode-prefab_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

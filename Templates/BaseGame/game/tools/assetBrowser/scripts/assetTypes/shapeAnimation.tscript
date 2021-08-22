@@ -47,7 +47,7 @@ function AssetBrowser::buildShapeAnimationAssetPreview(%this, %assetDef, %previe
                                    @ "EditorGui.setEditor(MaterialEditorPlugin); "
                                    @ "AssetBrowser.hideDialog();";*/
    
-   %previewData.previewImage = "tools/assetBrowser/art/animationIcon";
+   %previewData.previewImage = "ToolsModule:animationIcon_image";
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

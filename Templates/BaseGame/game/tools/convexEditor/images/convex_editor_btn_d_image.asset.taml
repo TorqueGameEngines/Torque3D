@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="convex_editor_btn_d_image"
+    imageFile="@assetFile=convex-editor-btn_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

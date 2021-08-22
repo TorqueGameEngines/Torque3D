@@ -46,7 +46,7 @@ function DatablockEditorPlugin::onWorldEditorStartup( %this )
    
    // Add ourselves to the ToolsToolbar
    %tooltip = "Datablock Editor (" @ %accel @ ")"; 
-   EditorGui.addToToolsToolbar( "DatablockEditorPlugin", "DatablockEditorPalette", expandFilename("tools/worldEditor/images/toolbar/datablock-editor"), %tooltip );
+   EditorGui.addToToolsToolbar( "DatablockEditorPlugin", "DatablockEditorPalette", "ToolsModule:datablock_editor_n_image", %tooltip );
 
    //connect editor windows
    GuiWindowCtrl::Attach( DatablockEditorInspectorWindow, DatablockEditorTreeWindow);
@@ -676,13 +676,16 @@ function DatablockEditorPlugin::createDatablock(%this)
 //---------------------------------------------------------------------------------------------
 function DatablockEditorPlugin::pickDatablockPath(%this)
 {
-   SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, "DatablockEditorPlugin.pickedNewDBPath", "Select New Datablock Path");
-   SelectAssetPathWindow.selectWindow();   
+   AssetBrowser_SelectModule.showDialog("DatablockEditorPlugin.pickedNewDBTargetModule");
+   //SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, "DatablockEditorPlugin.pickedNewDBPath", "Select New Datablock Path");
+   AssetBrowser_SelectModuleWindow.selectWindow();   
 }
 
-function DatablockEditorPlugin::pickedNewDBPath(%this, %path)
+function DatablockEditorPlugin::pickedNewDBTargetModule(%this, %module)
 {
-   $DATABLOCK_EDITOR_DEFAULT_FILENAME = %path @ "/managedDatablocks." @ $TorqueScriptFileExtension;
+   %moduleDef = ModuleDatabase.findModule(%module);
+   
+   $DATABLOCK_EDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedDatablocks." @ $TorqueScriptFileExtension;
    DatablockEditorPlugin.createDatablock();
 }
 

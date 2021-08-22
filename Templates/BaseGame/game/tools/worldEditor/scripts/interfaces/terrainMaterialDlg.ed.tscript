@@ -20,6 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+$TerrainMaterialEditor::emptyMaterialImage = "ToolsModule:unknownImage_image";
 
 //-----------------------------------------------------------------------------
 
@@ -34,6 +35,7 @@ function TerrainMaterialDlg::show( %this, %matIndex, %terrMat, %onApplyCallback 
    %item = %matLibTree.findItemByObjectId( %terrMat );
    if ( %item != -1 )
    {
+      %matLibTree.selectItem( %item, false );
       %matLibTree.selectItem( %item );
       %matLibTree.scrollVisible( %item );
    }
@@ -164,11 +166,26 @@ function TerrainMaterialDlg::dialogApply( %this )
    Canvas.popDialog( TerrainMaterialDlg ); 
                             
    call( %this.onApplyCallback, %this.activeMat, %this.matIndex );
+   
+   TerrainMaterialDlg.matDirty = false;
 }
 
 //-----------------------------------------------------------------------------
 
 function TerrainMaterialDlg::dialogCancel( %this )
+{
+   if(TerrainMaterialDlg.matDirty)
+   {
+      toolsMessageBoxYesNo("Save Dirty Material?", "The current material has been modified. Do you wish save your changes?", 
+                           "TerrainMaterialDlg.saveDirtyMaterial(" @ %this-->matLibTree.getSelectedItem() @ ");TerrainMaterialDlg.closeDialog();", "TerrainMaterialDlg.closeDialog();");
+   }
+   else
+   {
+      %this.closeDialog();
+   }
+}
+
+function TerrainMaterialDlg::closeDialog( %this )
 {
    // Restore material properties we have changed.
    
@@ -213,118 +230,67 @@ function TerrainMaterialDlg::setMaterialName( %this, %newName )
       {
          %mat.setInternalName( %newName );
          %this-->matLibTree.buildVisibleTree( false );
+         
+         TerrainMaterialDlg.matDirty = true;
       }
    }
 }
 
 //-----------------------------------------------------------------------------
 
-function TerrainMaterialDlg::changeBase( %this )
+function TerrainMaterialDlg::clearTextureMap(%this, %mapName)
 {   
-   %ctrl = %this-->baseTexCtrl;
-   %file = %ctrl.bitmap;
-   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
-      %file = "";
+   %targetMapName = "tex" @ %mapName;
+   %targetMap = %this.findObjectByInternalName(%targetMapName, true);
       
-   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );      
-   if( %file $= "" )
+   %targetMap.setBitmap($TerrainMaterialEditor::emptyMaterialImage);
+   %targetMap.asset = "";
+
+   TerrainMaterialDlg.matDirty = true;
+
+   if(%mapName $= "DetailMap")
    {
-      if( %ctrl.bitmap !$= "" )
-         %file = %ctrl.bitmap;
-      else
-         %file = "tools/materialEditor/gui/unknownImage";
+      //hide the supplemental maps
+      NormalMapContainer.callOnChildren("setActive", false);  
+      ORMMapContainer.callOnChildren("setActive", false);
+      MacroMapContainer.callOnChildren("setActive", false);
    }
-   
-   %file = makeRelativePath( %file, getMainDotCsDir() );
-   %ctrl.setBitmap( %file );  
 }
 
-//-----------------------------------------------------------------------------
-
-function TerrainMaterialDlg::changeDetail( %this )
+function TerrainMaterialDlg::updateTextureMap(%this, %mapName)
 {
-   %ctrl = %this-->detailTexCtrl;
-   %file = %ctrl.bitmap;
-   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
-      %file = "";
-
-   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );  
-   if( %file $= "" )
-   {
-      if( %ctrl.bitmap !$= "" )
-         %file = %ctrl.bitmap;
-      else
-         %file = "tools/materialEditor/gui/unknownImage";
-   }
+   %this.updateTargetMap = %mapName;
    
-   %file = makeRelativePath( %file, getMainDotCsDir() );
-   %ctrl.setBitmap( %file );  
+   AssetBrowser.showDialog("ImageAsset", %this@".changeTerrainMatMapAsset", "", "");
 }
 
-//----------------------------------------------------------------------------
-
-function TerrainMaterialDlg::changeMacro( %this )
+function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
 {
-   %ctrl = %this-->macroTexCtrl;
-   %file = %ctrl.bitmap;
-   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
-      %file = "";
+   %targetMapName = "tex" @ %this.updateTargetMap;
+   %targetMap = %this.findObjectByInternalName(%targetMapName, true);
 
-   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );  
-   if( %file $= "" )
-   {
-      if( %ctrl.bitmap !$= "" )
-         %file = %ctrl.bitmap;
-      else
-         %file = "tools/materialEditor/gui/unknownImage";
-   }
-   
-   %file = makeRelativePath( %file, getMainDotCsDir() );
-   %ctrl.setBitmap( %file );  
-}
-
-
-//-----------------------------------------------------------------------------
-
-function TerrainMaterialDlg::changeNormal( %this )
+   %imgAsset = AssetBrowser.selectedAsset;
+   if(%imgAsset !$= "")
 {   
-   %ctrl = %this-->normTexCtrl;
-   %file = %ctrl.bitmap;
-   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
-      %file = "";
+      %targetMap.asset = %imgAsset;
+      %image = %imgAsset;
 
-   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );  
-   if( %file $= "" )
+      if(%this.updateTargetMap $= "DetailMap")
    {
-      if( %ctrl.bitmap !$= "" )
-         %file = %ctrl.bitmap;
-      else
-         %file = "tools/materialEditor/gui/unknownImage";
+         //show the supplemental maps
+         NormalMapContainer.callOnChildren("setActive", true);  
+         ORMMapContainer.callOnChildren("setActive", true);
+         MacroMapContainer.callOnChildren("setActive", true);
    }
-
-   %file = makeRelativePath( %file, getMainDotCsDir() );
-   %ctrl.setBitmap( %file );   
 }
-
-//-----------------------------------------------------------------------------
-function TerrainMaterialDlg::changeormConfig( %this )
-{   
-   %ctrl = %this-->ormConfigTexCtrl;
-   %file = %ctrl.bitmap;
-   if( getSubStr( %file, 0 , 6 ) $= "tools/" )
-      %file = "";
-
-   %file = TerrainMaterialDlg._selectTextureFileDialog( %file );  
-   if( %file $= "" )
-   {
-      if( %ctrl.bitmap !$= "" )
-         %file = %ctrl.bitmap;
       else
-         %file = "tools/materialEditor/gui/unknownImage";
+   {
+      %image = $TerrainMaterialEditor::emptyMaterialImage;
    }
 
-   %file = makeRelativePath( %file, getMainDotCsDir() );
-   %ctrl.setBitmap( %file );   
+   %targetMap.setBitmap( %image );  
+
+   TerrainMaterialDlg.matDirty = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -384,22 +350,49 @@ function TerrainMaterialDlg::activateMaterialCtrls( %this, %active )
    %parent = %this-->matSettingsParent;
    %count = %parent.getCount();
    for ( %i = 0; %i < %count; %i++ )
+   {
+      %ctrl = %parent.getObject( %i );
+      %ctrlnm = %ctrl.getName();
+      %ictrlnm = %ctrl.getInternalName();
       %parent.getObject( %i ).setActive( %active );      
+}
+
+   %detailz = %this-->texDetailMap.getBitmap();
+   if(%this-->texDetailMap.getBitmap() $= "" || %this-->texDetailMap.getBitmap() $= $TerrainMaterialEditor::emptyMaterialImage)
+   {
+      NormalMapContainer.callOnChildren("setActive", false);  
+      ORMMapContainer.callOnChildren("setActive", false);
+      MacroMapContainer.callOnChildren("setActive", false);
+   }
+   else
+   {
+      NormalMapContainer.callOnChildren("setActive", true);  
+      ORMMapContainer.callOnChildren("setActive", true);
+      MacroMapContainer.callOnChildren("setActive", true); 
+   }
 }
 
 //-----------------------------------------------------------------------------
 
 function TerrainMaterialTreeCtrl::onSelect( %this, %item )
 {
+   if(TerrainMaterialDlg.matDirty)
+   {
+      toolsMessageBoxYesNo("Save Dirty Material?", "The current material has been modified. Do you wish save your changes?", 
+                           "TerrainMaterialDlg.saveDirtyMaterial(" @ TerrainMaterialDlg.previousMat @ ");TerrainMaterialDlg.setActiveMaterial(" @ %item @ ");", 
+                           "TerrainMaterialDlg.setActiveMaterial(" @ %item @ ");");
+   }
+   else
+   {
    TerrainMaterialDlg.setActiveMaterial( %item );
+}
 }
 
 //-----------------------------------------------------------------------------
 
 function TerrainMaterialTreeCtrl::onUnSelect( %this, %item )
 {
-   TerrainMaterialDlg.saveDirtyMaterial( %item );   
-   TerrainMaterialDlg.setActiveMaterial( 0 );   
+   TerrainMaterialDlg.previousMat = %item;
 }
 
 //-----------------------------------------------------------------------------
@@ -410,33 +403,105 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
          %mat.isMemberOfClass( TerrainMaterial ) )
    {
       %this.activeMat = %mat;
+      %this.matDirty = false;
       
       %this-->matNameCtrl.setText( %mat.internalName );
-      if (%mat.diffuseMap $= ""){
-         %this-->baseTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
-      }else{
-         %this-->baseTexCtrl.setBitmap( %mat.diffuseMap ); 
+
+      //
+      %imgPath = %mat.getDiffuseMap();
+      if(%imgPath $= "")
+         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
+
+      %this-->texBaseMap.setBitmap( %imgPath );
+      
+      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
+      {
+         %imgAsset = %mat.getDiffuseMapAsset();
+         if(%imgAsset $= "")
+            %imgAsset = %imgPath;
+         %this-->diffuseMapAssetId.setText( %imgAsset );
       }
-      if (%mat.ormConfigMap $= ""){
-         %this-->ormConfigTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
-      }else{
-         %this-->ormConfigTexCtrl.setBitmap( %mat.ormConfigMap );
+      else
+      {
+         %this-->diffuseMapAssetId.setText( "None" );  
       }
-      if (%mat.detailMap $= ""){
-         %this-->detailTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
-      }else{
-         %this-->detailTexCtrl.setBitmap( %mat.detailMap );
+
+      //
+      %imgPath = %mat.getNormalMap();
+      if(%imgPath $= "")
+         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
+
+      %this-->texNormalMap.setBitmap( %imgPath );
+      
+      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
+      {
+         %imgAsset = %mat.getNormalMapAsset();
+         if(%imgAsset $= "")
+            %imgAsset = %imgPath;
+         %this-->normalMapAssetId.setText( %imgAsset );
       }
-      if (%mat.macroMap $= ""){
-         %this-->macroTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
-      }else{
-         %this-->macroTexCtrl.setBitmap( %mat.macroMap );
+      else
+      {
+         %this-->normalMapAssetId.setText( "None" );  
+      }
+
+      //
+      %imgPath = %mat.getORMConfigMap();
+      if(%imgPath $= "")
+         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
+
+      %this-->texORMConfigMap.setBitmap( %imgPath );
+      
+      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
+      {
+         %imgAsset = %mat.getORMConfigMapAsset();
+         if(%imgAsset $= "")
+            %imgAsset = %imgPath;
+         %this-->ORMMapAssetId.setText( %imgAsset );
+      }
+      else
+      {
+         %this-->ORMMapAssetId.setText( "None" );  
+      }
+       
+      //
+      %imgPath = %mat.getDetailMap();
+      if(%imgPath $= "")
+         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
+
+      %this-->texDetailMap.setBitmap( %imgPath );
+      
+      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
+      {
+         %imgAsset = %mat.getDetailMapAsset();
+         if(%imgAsset $= "")
+            %imgAsset = %imgPath;
+         %this-->detailMapAssetId.setText( %imgAsset );
+      }
+      else
+      {
+         %this-->detailMapAssetId.setText( "None" );  
+      }
+      
+      //
+      %imgPath = %mat.getMacroMap();
+      if(%imgPath $= "")
+         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
+
+      %this-->texMacroMap.setBitmap( %imgPath );
+
+      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
+      {
+         %imgAsset = %mat.getMacroMapAsset();
+         if(%imgAsset $= "")
+            %imgAsset = %imgPath;
+         %this-->macroMapAssetId.setText( %imgAsset );
+      }
+      else
+      {
+         %this-->macroMapAssetId.setText( "None" );  
       }      
-      if (%mat.normalMap $= ""){
-         %this-->normTexCtrl.setBitmap( "tools/materialEditor/gui/unknownImage" );
-      }else{
-         %this-->normTexCtrl.setBitmap( %mat.normalMap ); 
-      }
+      
       %this-->detSizeCtrl.setText( %mat.detailSize );
       %this-->baseSizeCtrl.setText( %mat.diffuseSize );
       %this-->detStrengthCtrl.setText( %mat.detailStrength );
@@ -481,31 +546,31 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    
    %newName = %this-->matNameCtrl.getText(); 
    
-   if (%this-->baseTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+   //---
+   %newDiffuse = %this-->texBaseMap.getBitmap();
+   if(%newDiffuse $= $TerrainMaterialEditor::emptyMaterialImage)
       %newDiffuse = "";
-   }else{
-      %newDiffuse = %this-->baseTexCtrl.bitmap;  
-   }
-   if (%this-->normTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+   
+   //---
+   %newNormal = %this-->texNormalMap.getBitmap();
+   if(%newNormal $= $TerrainMaterialEditor::emptyMaterialImage)
       %newNormal = "";
-   }else{
-      %newNormal = %this-->normTexCtrl.bitmap;  
-   }
-   if (%this-->ormConfigTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+   
+   //---
+   %newormConfig = %this-->texORMConfigMap.getBitmap();
+   if(%newormConfig $= $TerrainMaterialEditor::emptyMaterialImage)
       %newormConfig = "";
-   }else{
-      %newormConfig = %this-->ormConfigTexCtrl.bitmap;  
-   }
-   if (%this-->detailTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+   
+   //---
+   %newDetail = %this-->texDetailMap.getBitmap();
+   if(%newDetail $= $TerrainMaterialEditor::emptyMaterialImage)
       %newDetail = "";
-   }else{
-      %newDetail = %this-->detailTexCtrl.bitmap;  
-   }
-   if (%this-->macroTexCtrl.bitmap $= "tools/materialEditor/gui/unknownImage"){
+   
+   //---
+   %newMacro = %this-->texMacroMap.getBitmap();
+   if(%newMacro $= $TerrainMaterialEditor::emptyMaterialImage)
       %newMacro = "";
-   }else{
-      %newMacro = %this-->macroTexCtrl.bitmap;  
-   }
+   
    %detailSize = %this-->detSizeCtrl.getText();      
    %diffuseSize = %this-->baseSizeCtrl.getText();     
    %detailStrength = %this-->detStrengthCtrl.getText();
@@ -526,11 +591,11 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    // return.
 
    if (  %mat.internalName $= %newName &&
-         %mat.diffuseMap $= %newDiffuse &&
-         %mat.normalMap $= %newNormal &&
-         %mat.detailMap $= %newDetail &&
-         %mat.ormConfigMap $= %newormConfig &&
-         %mat.macroMap $= %newMacro &&
+         %mat.getDiffuseMap() $= %newDiffuse &&
+         %mat.getNormalMap() $= %newNormal &&
+         %mat.getDetailMap() $= %newDetail &&
+         %mat.getORMConfigMap() $= %newormConfig &&
+         %mat.getMacroMap() $= %newMacro &&
          %mat.detailSize == %detailSize &&
          %mat.diffuseSize == %diffuseSize &&
          %mat.detailStrength == %detailStrength &&
@@ -564,12 +629,12 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
          %mat.setInternalName( %newName );    
    }
    
-   %mat.diffuseMap = %newDiffuse;    
-   %mat.diffuseMapAsset = "";    
-   %mat.normalMap = %newNormal;   
-   %mat.ormConfigMap = %newormConfig; 
-   %mat.detailMap = %newDetail;    
-   %mat.macroMap = %newMacro;
+   %mat.setDiffuseMap(%newDiffuse);
+   %mat.setNormalMap(%newNormal);
+   %mat.setORMConfigMap(%newormConfig);
+   %mat.setDetailMap(%newDetail);
+   %mat.setMacroMap(%newMacro);
+   
    %mat.detailSize = %detailSize;  
    %mat.diffuseSize = %diffuseSize;
    %mat.detailStrength = %detailStrength;    
@@ -619,11 +684,11 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          parentGroup = %group;
          material = %mat;
          internalName = %mat.internalName;
-         diffuseMap = %mat.diffuseMap;
-         normalMap = %mat.normalMap;
-         ormConfigMap = %mat.ormConfigMap;
-         detailMap = %mat.detailMap;
-         macroMap = %mat.macroMap;
+         diffuseMap = %mat.getDiffuseMap();
+         normalMap = %mat.getNormalMap();
+         ormConfigMap = %mat.getORMConfigMap();
+         detailMap = %mat.getDetailMap();
+         macroMap = %mat.getMacroMap();
          detailSize = %mat.detailSize;
          diffuseSize = %mat.diffuseSize;
          detailStrength = %mat.detailStrength;
@@ -638,6 +703,7 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          isSRGB = %mat.isSRGB;
          invertRoughness = %mat.invertRoughness;
       };
+      
    }
 }
 
@@ -658,11 +724,11 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat = %obj.material;
 
       %mat.setInternalName( %obj.internalName );
-      %mat.diffuseMap = %obj.diffuseMap;
-      %mat.normalMap = %obj.normalMap;
-      %mat.ormConfigMap = %obj.ormConfigMap;
-      %mat.detailMap = %obj.detailMap;
-      %mat.macroMap = %obj.macroMap;
+      %mat.setDiffuseMap(%obj.diffuseMap);
+      %mat.setNormalMap(%obj.normalMap);
+      %mat.setORMConfigMap(%obj.ORMConfigMap);
+      %mat.setDetailMap(%obj.detailMap);
+      %mat. setMacroMap(%obj.macroMap);
       %mat.detailSize = %obj.detailSize;
       %mat.diffuseSize = %obj.diffuseSize;
       %mat.detailStrength = %obj.detailStrength;
@@ -717,6 +783,7 @@ function TerrainMaterialDlgBlendHeightBaseSlider::onMouseDragged(%this)
    %value = mFloor(%this.value * 1000)/1000;
    TerrainMaterialDlgBlendHeightBaseTextEdit.setText(%value);
    TerrainMaterialDlg.activeMat.blendHeightBase = %this.value;
+   TerrainMaterialDlg.matDirty = true;
 
 }
 
@@ -724,6 +791,7 @@ function TerrainMaterialDlgBlendHeightBaseTextEdit::onValidate(%this)
 {
    TerrainMaterialDlgBlendHeightBaseSlider.setValue(%this.getText());
    TerrainMaterialDlg.activeMat.blendHeightBase = %this.getText();
+   TerrainMaterialDlg.matDirty = true;
 }
 
 function TerrainMaterialDlgBlendHeightContrastSlider::onMouseDragged(%this)
@@ -731,6 +799,7 @@ function TerrainMaterialDlgBlendHeightContrastSlider::onMouseDragged(%this)
    %value = mFloor(%this.value * 1000)/1000;
    TerrainMaterialDlgBlendHeightContrastTextEdit.setText(%value);
    TerrainMaterialDlg.activeMat.blendHeightContrast = %this.value;
+   TerrainMaterialDlg.matDirty = true;
 
 }
 
@@ -738,4 +807,5 @@ function TerrainMaterialDlgBlendHeightContrastTextEdit::onValidate(%this)
 {
    TerrainMaterialDlgBlendHeightContrastSlider.setValue(%this.getText());
    TerrainMaterialDlg.activeMat.blendHeightContrast = %this.getText();
+   TerrainMaterialDlg.matDirty = true;
 }

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="snap_bounds_d_image"
+    imageFile="@assetFile=snap-bounds_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

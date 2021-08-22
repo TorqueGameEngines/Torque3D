@@ -227,6 +227,8 @@ BaseMatInstance  * MaterialManager::createWarningMatInstance()
       warnMatInstance->init(  getDefaultFeatures(), 
                               getGFXVertexFormat<GFXVertexPNTTB>() );
    }
+   else
+      Con::errorf("WarningMaterial Not Found!");
 
    return warnMatInstance;
 }

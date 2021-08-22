@@ -50,6 +50,15 @@ DefineEngineMethod(AssetBase, getAssetDependencyFieldCount, S32, (const char* pF
    return object->getAssetDependencyFieldCount(pFieldName);
 }
 
+DefineEngineMethod(AssetBase, getAssetDependencyField, const char*, (const char* pFieldName, S32 index), ("", 0),
+   "Gets an asset dependency field to the asset definition at a given index.\n"
+   "@param fieldName The name of the field.\n"
+   "@param index The index of the field to look up in the event there are multiple dependency fields. Defaults to 0"
+   "@return The assetID assigned to the given dependency field.\n")
+{
+   return object->getAssetDependencyField(pFieldName, index);
+}
+
 DefineEngineMethod(AssetBase, clearAssetDependencyFields, void, (const char* pFieldName), (""),
    "Clears any asset dependency fields matching the name provided.\n"
    "@param fieldName The name of the fields to be cleared")
@@ -70,4 +79,16 @@ DefineEngineMethod(AssetBase, saveAsset, bool, (), ,
    "@return Whether the save was successful.\n")
 {
    return object->saveAsset();
+}
+
+DefineEngineMethod(AssetBase, getStatus, S32, (), , "get status")\
+{
+   return object->getStatus();
+}
+
+DefineEngineMethod(AssetBase, getStatusString, const char*, (), ,
+   "Returns the load status of the asset.\n"
+   "@return What status code the asset had after being loaded.\n")
+{
+   return object->getAssetErrstrn(object->getStatus());
 }

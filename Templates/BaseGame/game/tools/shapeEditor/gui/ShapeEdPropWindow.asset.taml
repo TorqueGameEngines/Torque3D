@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ShapeEdPropWindow"
+    scriptFile="@assetFile=shapeEdPropWindow.ed.gui"
+    GUIFile="@assetFile=shapeEdPropWindow.ed.gui"
+    VersionId="1" />

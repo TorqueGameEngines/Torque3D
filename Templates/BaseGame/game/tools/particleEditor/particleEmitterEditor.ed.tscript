@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-$PE_EMITTEREDITOR_DEFAULT_FILENAME = "art/particles/managedParticleEmitterData." @ $TorqueScriptFileExtension;
+$PE_EMITTEREDITOR_DEFAULT_FILENAME = "data/managedParticleEmitterData." @ $TorqueScriptFileExtension;
 
 
 //=============================================================================================
@@ -499,8 +499,10 @@ function PE_EmitterEditor::setEmitterDirty( %this )
    PE_EmitterEditor.dirty = true;
    
    %emitter = PE_EmitterEditor.currEmitter;
+   %filename = %emitter.getFilename();
+   %editorFilename = "tools/particleEditor/particleEmitterEditor.ed." @ $TorqueScriptFileExtension;
    
-   if( %emitter.getFilename() $= "" || %emitter.getFilename() $= "tools/particleEditor/particleEmitterEditor.ed." @ $TorqueScriptFileExtension )
+   if( %filename $= "" || %filename $= %editorFilename )
       PE_EmitterSaver.setDirty( %emitter, $PE_EMITTEREDITOR_DEFAULT_FILENAME );
    else
       PE_EmitterSaver.setDirty( %emitter );
@@ -551,6 +553,16 @@ function PE_EmitterEditor::showNewDialog( %this )
 
 function PE_EmitterEditor::createEmitter( %this )
 {
+   AssetBrowser_SelectModule.showDialog("PE_EmitterEditor.pickedNewEmitterTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function PE_EmitterEditor::pickedNewEmitterTargetModule( %this, %module )
+{
+   %moduleDef = ModuleDatabase.findModule(%module);
+   PE_EmitterEditor.targetModule = %module;
+   $PE_EMITTEREDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedParticleEmitterData." @ $TorqueScriptFileExtension;
+   
    // Create a new emitter.
    %emitter = getUniqueName( "newEmitter" );
    datablock ParticleEmitterData( %emitter : DefaultEmitter )

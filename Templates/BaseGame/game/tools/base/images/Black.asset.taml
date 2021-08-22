@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Black"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="Black"
+    VersionId="1" />

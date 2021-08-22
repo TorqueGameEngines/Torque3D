@@ -52,7 +52,7 @@
 
 //-----------------------------------------------------------------------------
 
-StringTableEntry ImageAsset::smNoImageAssetFallback(StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback")));
+StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -147,6 +147,8 @@ void ImageAsset::consoleInit()
    Con::addVariable("$Core::NoImageAssetFallback", TypeString, &smNoImageAssetFallback,
       "The assetId of the texture to display when the requested image asset is missing.\n"
       "@ingroup GFX\n");
+   
+   smNoImageAssetFallback = StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback"));
 }
 
 //-----------------------------------------------------------------------------

@@ -103,7 +103,7 @@ function AssetBrowser::buildTScriptPreview(%this, %assetDef, %previewData)
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
 }
 
 function GuiInspectorTypeScriptAssetPtr::onClick( %this, %fieldName )

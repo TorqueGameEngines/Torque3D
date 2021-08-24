@@ -51,7 +51,8 @@ ConsoleDocClass( afxZodiacPlaneData,
 
 afxZodiacPlaneData::afxZodiacPlaneData()
 {
-  txr_name = ST_NULLSTRING;
+   INIT_IMAGEASSET(Texture);
+
   radius_xy = 1;
   start_ang = 0;
   ang_per_sec = 0;
@@ -70,8 +71,8 @@ afxZodiacPlaneData::afxZodiacPlaneData()
 afxZodiacPlaneData::afxZodiacPlaneData(const afxZodiacPlaneData& other, bool temp_clone)
   : GameBaseData(other, temp_clone)
 {
-  txr_name = other.txr_name;
-  txr = other.txr;
+   CLONE_IMAGEASSET(Texture);
+
   radius_xy = other.radius_xy;
   start_ang = other.start_ang;
   ang_per_sec = other.ang_per_sec;
@@ -110,8 +111,8 @@ EndImplementEnumType;
 
 void afxZodiacPlaneData::initPersistFields()
 {
-  addField("texture",         TypeFilename,   myOffset(txr_name),
-    "An image to use as the zodiac's texture.");
+   INITPERSISTFIELD_IMAGEASSET(Texture, afxZodiacPlaneData, "An image to use as the zodiac's texture.");
+
   addField("radius",          TypeF32,        myOffset(radius_xy),
     "The zodiac's radius in scene units.");
   addField("startAngle",      TypeF32,        myOffset(start_ang),
@@ -164,7 +165,8 @@ void afxZodiacPlaneData::packData(BitStream* stream)
 
   merge_zflags();
 
-  stream->writeString(txr_name);
+  PACKDATA_IMAGEASSET(Texture);
+
   stream->write(radius_xy);
   stream->write(start_ang);
   stream->write(ang_per_sec);
@@ -182,8 +184,8 @@ void afxZodiacPlaneData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  txr_name = stream->readSTString();
-  txr = GFXTexHandle();
+  UNPACKDATA_IMAGEASSET(Texture);
+
   stream->read(&radius_xy);
   stream->read(&start_ang);
   stream->read(&ang_per_sec);
@@ -203,14 +205,6 @@ bool afxZodiacPlaneData::preload(bool server, String &errorStr)
 {
   if (!Parent::preload(server, errorStr))
     return false;
-
-  if (!server)
-  {
-    if (txr_name && txr_name[0] != '\0')
-    {
-      txr.set(txr_name, &AFX_GFXZodiacTextureProfile, "Zodiac Texture");
-    }
-  }
 
   return true;
 }

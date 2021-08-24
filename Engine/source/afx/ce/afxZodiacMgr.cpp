@@ -61,7 +61,7 @@ void afxZodiacMgr::addTerrainZodiac(Point3F& pos, F32 radius, LinearColorF& colo
   z.color = color.toColorI();
   z.angle = mDegToRad(angle);
   z.zflags = zode->zflags;
-  z.txr = &zode->txr;
+  z.txr = &zode->mTexture;
 
   z.distance_max = zode->distance_max*zode->distance_max;
   z.distance_falloff = zode->distance_falloff*zode->distance_falloff;
@@ -84,7 +84,7 @@ void afxZodiacMgr::addInteriorZodiac(Point3F& pos, F32 radius, Point2F& vert_ran
   z.color = color.toColorI();
   z.angle = mDegToRad(angle);
   z.zflags = zode->zflags;
-  z.txr = &zode->txr;
+  z.txr = &zode->mTexture;
 
   z.distance_max = zode->distance_max*zode->distance_max;
   z.distance_falloff = zode->distance_falloff*zode->distance_falloff;

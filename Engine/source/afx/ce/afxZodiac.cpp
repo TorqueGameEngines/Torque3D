@@ -78,7 +78,8 @@ bool afxZodiacData::sPreferDestinationGradients = false;
 
 afxZodiacData::afxZodiacData()
 {
-  txr_name = ST_NULLSTRING;
+   INIT_IMAGEASSET(Texture);
+
   radius_xy = 1;
   vert_range.set(0.0f, 0.0f);
   start_ang = 0;
@@ -119,8 +120,8 @@ afxZodiacData::afxZodiacData()
 
 afxZodiacData::afxZodiacData(const afxZodiacData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-  txr_name = other.txr_name;
-  txr = other.txr;
+   CLONE_IMAGEASSET(Texture);
+
   radius_xy = other.radius_xy;
   vert_range = other.vert_range;
   start_ang = other.start_ang;
@@ -155,8 +156,7 @@ EndImplementEnumType;
 
 void afxZodiacData::initPersistFields()
 {
-  addField("texture",               TypeFilename,   Offset(txr_name,          afxZodiacData),
-    "An image to use as the zodiac's texture.");
+   INITPERSISTFIELD_IMAGEASSET(Texture, afxZodiacData, "An image to use as the zodiac's texture.");
   addField("radius",                TypeF32,        Offset(radius_xy,         afxZodiacData),
     "The zodiac's radius in scene units.");
   addField("verticalRange",         TypePoint2F,    Offset(vert_range,        afxZodiacData),
@@ -269,7 +269,7 @@ void afxZodiacData::packData(BitStream* stream)
 
   merge_zflags();
 
-  stream->writeString(txr_name);
+  PACKDATA_IMAGEASSET(Texture);
   stream->write(radius_xy);
   stream->write(vert_range.x);
   stream->write(vert_range.y);
@@ -294,8 +294,7 @@ void afxZodiacData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  txr_name = stream->readSTString();
-  txr = GFXTexHandle();
+  UNPACKDATA_IMAGEASSET(Texture);
   stream->read(&radius_xy);
   stream->read(&vert_range.x);
   stream->read(&vert_range.y);
@@ -323,14 +322,6 @@ bool afxZodiacData::preload(bool server, String &errorStr)
   if (!Parent::preload(server, errorStr))
     return false;
 
-  if (!server)
-  {
-    if (txr_name && txr_name[0] != '\0')
-    {
-      txr.set(txr_name, &AFX_GFXZodiacTextureProfile, "Zodiac Texture");
-    }
-  }
-
   if (vert_range.x == 0.0f && vert_range.y == 0.0f)
     vert_range.x = vert_range.y = radius_xy;
 
@@ -349,11 +340,23 @@ void afxZodiacData::onStaticModified(const char* slot, const char* newValue)
 }
 
 void afxZodiacData::onPerformSubstitutions() 
-{ 
-    if (txr_name && txr_name[0] != '\0')
-    {
-      txr.set(txr_name, &AFX_GFXZodiacTextureProfile, "Zodiac Texture");
-    }
+{
+   if (mTextureAssetId != StringTable->EmptyString())
+   {
+      mTextureAsset = mTextureAssetId;
+      if (mTextureAsset.notNull())
+      {
+         if (getTexture() != StringTable->EmptyString() && mTextureName != StringTable->insert("texhandle"))
+         {
+            if (mTextureAsset.notNull())
+            {
+               mTextureAsset->getChangedSignal().notify(this, &afxZodiacData::onImageChanged);
+            }
+               
+            mTexture.set(getTexture(), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+         }
+      }
+   }
 }
 
 F32 afxZodiacData::calcRotationAngle(F32 elapsed, F32 rate_factor)

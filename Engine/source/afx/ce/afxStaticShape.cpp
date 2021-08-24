@@ -70,7 +70,7 @@ afxStaticShapeData::afxStaticShapeData(const afxStaticShapeData& other, bool tem
 
 void afxStaticShapeData::initPersistFields()
 {
-  addField("sequence",              TypeFilename, myOffset(sequence),
+  addField("sequence",              TypeString, myOffset(sequence),
     "An animation sequence in the StaticShape to play.");
   addField("ignoreSceneAmbient",    TypeBool,     myOffset(ignore_scene_amb),
     "...");

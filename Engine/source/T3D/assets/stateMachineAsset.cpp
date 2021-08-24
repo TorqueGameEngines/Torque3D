@@ -126,15 +126,14 @@ void StateMachineAsset::setStateMachineFile(const char* pStateMachineFile)
    // Sanity!
    AssertFatal(pStateMachineFile != NULL, "Cannot use a NULL state machine file.");
 
-   // Fetch image file.
-   pStateMachineFile = StringTable->insert(pStateMachineFile);
+   pStateMachineFile = StringTable->insert(pStateMachineFile, true);
 
    // Ignore no change,
    if (pStateMachineFile == mStateMachineFile)
       return;
 
    // Update.
-   mStateMachineFile = StringTable->insert(pStateMachineFile);
+   mStateMachineFile = getOwned() ? expandAssetFilePath(pStateMachineFile) : pStateMachineFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -142,12 +141,12 @@ void StateMachineAsset::setStateMachineFile(const char* pStateMachineFile)
 
 void StateMachineAsset::initializeAsset()
 {
-   mStateMachinePath = expandAssetFilePath(mStateMachineFile);
+   mStateMachinePath = getOwned() ? expandAssetFilePath(mStateMachineFile) : mStateMachinePath;
 }
 
 void StateMachineAsset::onAssetRefresh()
 {
-   mStateMachinePath = expandAssetFilePath(mStateMachineFile);
+   mStateMachinePath = getOwned() ? expandAssetFilePath(mStateMachineFile) : mStateMachinePath;
 }
 
 

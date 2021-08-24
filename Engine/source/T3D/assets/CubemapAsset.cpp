@@ -134,18 +134,21 @@ void CubemapAsset::copyTo(SimObject* object)
 
 void CubemapAsset::initializeAsset()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   // Call parent.
+   Parent::initializeAsset();
 
-   if(Torque::FS::IsScriptFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
+
+   if (Torque::FS::IsScriptFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void CubemapAsset::onAssetRefresh()
 {
-   mScriptFile = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptFile))
-      Con::executeFile(mScriptFile, false, false);
+   if (Torque::FS::IsScriptFile(mScriptPath))
+      Con::executeFile(mScriptPath, false, false);
 }
 
 void CubemapAsset::setScriptFile(const char* pScriptFile)
@@ -154,14 +157,14 @@ void CubemapAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Ignore no change,
    if (pScriptFile == mScriptFile)
       return;
 
    // Update.
-   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : StringTable->insert(pScriptFile);
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

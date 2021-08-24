@@ -132,14 +132,14 @@ void CppAsset::setCppFile(const char* pCppFile)
    AssertFatal(pCppFile != NULL, "Cannot use a NULL code file.");
 
    // Fetch image file.
-   pCppFile = StringTable->insert(pCppFile);
+   pCppFile = StringTable->insert(pCppFile, true);
 
    // Ignore no change,
    if (pCppFile == mCodeFile)
       return;
 
    // Update.
-   mCodeFile = /*getOwned() ? expandAssetFilePath(pCppFile) : */StringTable->insert(pCppFile);
+   mCodeFile = getOwned() ? expandAssetFilePath(pCppFile) : pCppFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -158,7 +158,7 @@ void CppAsset::setHeaderFile(const char* pHeaderFile)
       return;
 
    // Update.
-   mHeaderFile = /*getOwned() ? expandAssetFilePath(pHeaderFile) :*/ StringTable->insert(pHeaderFile);
+   mHeaderFile = getOwned() ? expandAssetFilePath(pHeaderFile) : pHeaderFile;
 
    // Refresh the asset.
    refreshAsset();

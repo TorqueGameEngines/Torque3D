@@ -119,7 +119,7 @@ void TerrainMaterialAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   mScriptPath = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
@@ -127,7 +127,7 @@ void TerrainMaterialAsset::initializeAsset()
 
 void TerrainMaterialAsset::onAssetRefresh()
 {
-   mScriptPath = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
@@ -150,11 +150,14 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
    // Sanity!
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
-   // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
+
+   // Ignore no change,
+   if (pScriptFile == mScriptFile)
+      return;
 
    // Update.
-   mScriptFile = pScriptFile;
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

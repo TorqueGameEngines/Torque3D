@@ -72,7 +72,7 @@ ConsoleSetType( TypeAssetLooseFilePath )
         StringTableEntry* assetLooseFilePath = (StringTableEntry*)(dptr);
 
         // Update asset loose file-path value.
-        *assetLooseFilePath = StringTable->insert(pFieldValue);
+        *assetLooseFilePath = StringTable->insert(pFieldValue, true);
 
         return;
     }

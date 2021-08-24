@@ -147,7 +147,7 @@ void ShapeAnimationAsset::initializeAsset(void)
    if (!mIsEmbedded)
    {
       //If we're not embedded, we need to load in our initial shape and do some prepwork
-      mFilePath = expandAssetFilePath(mFileName);
+      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
 
       mSourceShape = ResourceManager::get().load(mFilePath);
 
@@ -177,14 +177,14 @@ void ShapeAnimationAsset::setAnimationFile(const char* pAnimationFile)
    AssertFatal(pAnimationFile != NULL, "Cannot use a NULL animation file.");
 
    // Fetch image file.
-   pAnimationFile = StringTable->insert(pAnimationFile);
+   pAnimationFile = StringTable->insert(pAnimationFile, true);
 
    // Ignore no change,
    if (pAnimationFile == mFileName)
       return;
 
    // Update.
-   mFileName = StringTable->insert(pAnimationFile);
+   mFileName = getOwned() ? expandAssetFilePath(pAnimationFile) : pAnimationFile;
 
    // Refresh the asset.
    refreshAsset();

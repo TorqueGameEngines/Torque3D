@@ -59,8 +59,9 @@ function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef;
-   %previewData.tooltip =  "Datablock Name: " @ %assetDef @ "\n" @ 
-                           "Datablock Type: " @ %assetDef.getClassName();
+   %previewData.tooltip =  "\nDatablock Name: " @ %assetDef @ 
+                           "\nDatablock Type: " @ %assetDef.getClassName() @
+                           "\nDefinition Path: " @ %assetDef.getFilename();
                            
    %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"spawnDatablockObject\",\""@ %assetDef @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
 }

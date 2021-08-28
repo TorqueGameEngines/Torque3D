@@ -148,6 +148,11 @@ function AssetBrowser::dragAndDropTerrainAsset(%this, %assetDef, %dropTarget)
       return;
 }
 
+function AssetBrowser::onTerrainAssetEditorDropped(%this, %assetDef, %position)
+{
+   createTerrainBlock(%assetDef.getAssetId());
+}
+
 function AssetBrowser::renameTerrainAsset(%this, %assetDef, %newAssetId, %originalName, %newName)
 {
 }
@@ -160,7 +165,6 @@ function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = "";
-   %previewData.doubleClickCommand = "";
    
    %previewData.previewImage = "ToolsModule:gameObjectIcon_image";
    
@@ -170,6 +174,18 @@ function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)
       "\nAsset Type: Terrain Asset" @ 
       "\nAsset Definition ID: " @ %assetDef @
       "\nDefinition Path: " @ %assetPath @ %assetDef.getTerrainFilePath(); 
+      
+   if(%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+         %previewData.doubleClickCommand = "";
+      else
+         %previewData.doubleClickCommand = "createTerrainBlock(\""@%assetDef.getAssetId()@"\");";
+   }
 }
 
 function GuiInspectorTypeTerrainAssetPtr::onClick( %this, %fieldName )

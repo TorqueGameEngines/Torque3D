@@ -686,6 +686,12 @@ function DatablockEditorPlugin::pickedNewDBTargetModule(%this, %module)
    %moduleDef = ModuleDatabase.findModule(%module);
    
    $DATABLOCK_EDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedDatablocks." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($DATABLOCK_EDITOR_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($DATABLOCK_EDITOR_DEFAULT_FILENAME));
+   }
+   
    DatablockEditorPlugin.createDatablock();
 }
 

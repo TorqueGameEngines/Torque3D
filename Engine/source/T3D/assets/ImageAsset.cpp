@@ -438,15 +438,15 @@ ImageAsset::ImageTypes ImageAsset::getImageTypeFromName(const char* name)
 }
 
 DefineEngineMethod(ImageAsset, getImagePath, const char*, (), ,
-   "Creates an instance of the given GameObject given the asset definition.\n"
-   "@return The GameObject entity created from the asset.")
+   "Gets the image filepath of this asset.\n"
+   "@return File path of the image file.")
 {
    return object->getImagePath();
 }
 
 DefineEngineMethod(ImageAsset, getImageInfo, const char*, (), ,
-   "Creates an instance of the given GameObject given the asset definition.\n"
-   "@return The GameObject entity created from the asset.")
+   "Gets the info and properties of the image.\n"
+   "@return The info/properties of the image.")
 {
    return object->getImageInfo();
 }

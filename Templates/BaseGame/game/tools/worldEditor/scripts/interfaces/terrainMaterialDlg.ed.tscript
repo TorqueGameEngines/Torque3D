@@ -246,14 +246,22 @@ function TerrainMaterialDlg::clearTextureMap(%this, %mapName)
    %targetMap.setBitmap($TerrainMaterialEditor::emptyMaterialImage);
    %targetMap.asset = "";
 
+   %targetMapName = %this.findObjectByInternalName(%mapName @ "AssetId", true);
+   %targetMapName.setText("None");
+
    TerrainMaterialDlg.matDirty = true;
 
    if(%mapName $= "DetailMap")
    {
       //hide the supplemental maps
       NormalMapContainer.callOnChildren("setActive", false);  
+      %this.clearTextureMap("NormalMap");
+      
       ORMMapContainer.callOnChildren("setActive", false);
+      %this.clearTextureMap("ORMMap");
+      
       MacroMapContainer.callOnChildren("setActive", false);
+      %this.clearTextureMap("MacroMap");
    }
 }
 
@@ -289,6 +297,9 @@ function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
    }
 
    %targetMap.setBitmap( %image );  
+
+   %targetMapName = %mapName @ "AssetId";
+   %targetMapName.setText(%imgAsset);
 
    TerrainMaterialDlg.matDirty = true;
 }
@@ -546,29 +557,32 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    
    %newName = %this-->matNameCtrl.getText(); 
    
+   %blankBitmap = AssetDatabase.acquireAsset($TerrainMaterialEditor::emptyMaterialImage).getImagePath();
+   
+   
    //---
    %newDiffuse = %this-->texBaseMap.getBitmap();
-   if(%newDiffuse $= $TerrainMaterialEditor::emptyMaterialImage)
+   if(%newDiffuse $= $TerrainMaterialEditor::emptyMaterialImage || %newDiffuse $= %blankBitmap)
       %newDiffuse = "";
    
    //---
    %newNormal = %this-->texNormalMap.getBitmap();
-   if(%newNormal $= $TerrainMaterialEditor::emptyMaterialImage)
+   if(%newNormal $= $TerrainMaterialEditor::emptyMaterialImage || %newNormal $= %blankBitmap)
       %newNormal = "";
    
    //---
    %newormConfig = %this-->texORMConfigMap.getBitmap();
-   if(%newormConfig $= $TerrainMaterialEditor::emptyMaterialImage)
+   if(%newormConfig $= $TerrainMaterialEditor::emptyMaterialImage || %newormConfig $= %blankBitmap)
       %newormConfig = "";
    
    //---
    %newDetail = %this-->texDetailMap.getBitmap();
-   if(%newDetail $= $TerrainMaterialEditor::emptyMaterialImage)
+   if(%newDetail $= $TerrainMaterialEditor::emptyMaterialImage || %newDetail $= %blankBitmap)
       %newDetail = "";
    
    //---
    %newMacro = %this-->texMacroMap.getBitmap();
-   if(%newMacro $= $TerrainMaterialEditor::emptyMaterialImage)
+   if(%newMacro $= $TerrainMaterialEditor::emptyMaterialImage || %newMacro $= %blankBitmap)
       %newMacro = "";
    
    %detailSize = %this-->detSizeCtrl.getText();      

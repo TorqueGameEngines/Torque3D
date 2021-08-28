@@ -2044,13 +2044,17 @@ function MaterialEditorGui::pickedNewMaterialTargetModule( %this, %module )
    PE_EmitterEditor.targetModule = %module;
    MaterialEditorGui.defaultMaterialFile = %moduleDef.ModulePath @ "/scripts/managedData/materials." @ $TorqueScriptFileExtension;
 
+   if(!isDirectory(filePath(MaterialEditorGui.defaultMaterialFile)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath(MaterialEditorGui.defaultMaterialFile));
+   }
+
    %action = %this.createUndo(ActionCreateNewMaterial, "Create New Material");
    %action.object = "";
    
    %material = getUniqueName( "newMaterial" );
    new Material(%material) 
    {
-      diffuseMap[0] = "core/rendering/images/warnmat";
       mapTo = "unmapped_mat";
       parentGroup = RootGroup;
    };

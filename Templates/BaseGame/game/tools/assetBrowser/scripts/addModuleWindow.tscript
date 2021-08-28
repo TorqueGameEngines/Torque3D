@@ -32,7 +32,7 @@ function AssetBrowser_addModuleWindow::onGainFirstResponder(%this)
 function AssetBrowser_addModuleWindow::close()
 {
    Canvas.popDialog(AssetBrowser_addModule);  
-   eval(AssetBrowser_addModuleWindow.callbackFunction);
+   //eval(AssetBrowser_addModuleWindow.callbackFunction);
 }
 
 function AssetBrowser_addModuleWindow::CreateNewModule(%this)
@@ -127,4 +127,9 @@ function AssetBrowserModuleList::refresh(%this)
       %moduleName = getWord(%moduleList, %i);
       %this.add(%moduleName.ModuleId, %i);  
    }
+}
+
+function AssetBrowserSelModuleAddBtn::onClick(%this)
+{
+   AssetBrowser.CreateNewModule("AssetBrowser_selectModule.newModuleAdded();");
 }

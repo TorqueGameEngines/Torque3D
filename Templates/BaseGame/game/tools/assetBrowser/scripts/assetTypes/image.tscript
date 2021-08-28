@@ -196,6 +196,8 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
       
       %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath);
       
+      if(%success)
+      {
       %previewAsset = new ImageAsset()
       {
          assetName = %previewAssetName;
@@ -203,14 +205,25 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
          imageFile = fileName(%previewFilePath);
       };
       
+         %previewAssetName = "ToolsModule:" @ %previewAssetName;
       %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
       %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
       
       %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
          
       %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+      }
+      else
+      {
+         %previewFilePath = %assetDef.getImagePath();
+         %previewAssetName = %module.moduleId @ ":" @ %assetDef.assetName;  
+      }
       
       hideEditorLoadingGui();
+   }
+   else
+   {
+      %previewAssetName = "ToolsModule:" @ %previewAssetName;
    }
    
    //Revalidate. If it didn't work, just use the default placeholder one
@@ -220,7 +233,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
    
-   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
+   %previewData.previewImage = %previewAssetName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

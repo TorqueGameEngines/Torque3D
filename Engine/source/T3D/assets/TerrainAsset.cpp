@@ -429,6 +429,13 @@ void TerrainAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
+DefineEngineMethod(TerrainAsset, getTerrainFilePath, const char*, (), ,
+   "Gets the terrain filepath of this asset.\n"
+   "@return File path of the terrain file.")
+{
+   return object->getTerrainFilePath();
+}
+
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------

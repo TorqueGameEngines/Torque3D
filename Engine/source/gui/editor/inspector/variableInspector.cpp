@@ -150,7 +150,7 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
 {
    VariableField newField;
    newField.mFieldName = StringTable->insert(name);
-   newField.mFieldLabel = StringTable->insert(label);
+   newField.mFieldLabel = StringTable->insert(label, true);
    newField.mFieldTypeName = StringTable->insert(typeName);
    newField.mFieldDescription = StringTable->insert(description);
    newField.mDefaultValue = StringTable->insert(defaultValue);

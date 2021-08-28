@@ -180,6 +180,12 @@ function ForestEditorGui::pickedNewMeshTargetModule(%this, %module)
    %moduleDef = ModuleDatabase.findModule(%module);
     
    ForestEditorGui.forestItemDataPath = %moduleDef.ModulePath @ "/scripts/managedData/managedForestItemData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath(ForestEditorGui.forestItemDataPath)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath(ForestEditorGui.forestItemDataPath));
+   }
+   
    AssetBrowser.showDialog("ShapeAsset", "selectNewForestMesh", "", "", "");
 }
 

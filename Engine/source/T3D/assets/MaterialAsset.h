@@ -168,7 +168,7 @@ public: \
    {\
       if(m##name##AssetId != _in || m##name##Name != _in)\
       {\
-         if (_in == StringTable->EmptyString())\
+         if (_in == NULL || _in == StringTable->EmptyString())\
          {\
             m##name##Name = StringTable->EmptyString();\
             m##name##AssetId = StringTable->EmptyString();\

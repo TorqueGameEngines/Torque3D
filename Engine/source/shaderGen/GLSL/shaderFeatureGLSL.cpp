@@ -1181,13 +1181,13 @@ void DiffuseFeatureGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    diffuseMaterialColor->constSortPos = cspPotentialPrimitive;
 
    MultiLine* meta = new MultiLine;
-   Var *col = (Var*)LangElement::find("col");
+   Var *col = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    ShaderFeature::OutputTarget targ = ShaderFeature::DefaultTarget;
    if (fd.features[MFT_isDeferred])
    {
       targ = ShaderFeature::RenderTarget1;
 
-      col = (Var*)LangElement::find("col1");
+      col = (Var*)LangElement::find(getOutputTargetVarName(targ));
       meta = new MultiLine;
       if (!col)
       {
@@ -1196,7 +1196,7 @@ void DiffuseFeatureGLSL::processPix(   Vector<ShaderComponent*> &componentList,
          col->setType("vec4");
          col->setName(getOutputTargetVarName(targ));
          col->setStructName("OUT");
-         meta->addStatement(new GenOp("   @ = vec4(1.0);\r\n", col));
+         meta->addStatement(new GenOp("   @ = vec4(1.0,1.0,1.0,1.0);\r\n", col));
       }
    }
 
@@ -2334,7 +2334,7 @@ void FogFeatGLSL::processPix( Vector<ShaderComponent*> &componentList,
    fogColor->constSortPos = cspPass;
 	
    // Get the out color.
-   Var *color = (Var*) LangElement::find( "col" );
+   Var *color = (Var*) LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    if ( !color )
    {
       color = new Var;
@@ -2466,7 +2466,7 @@ void VisibilityFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    // Translucent objects do a simple alpha fade.
    if ( fd.features[ MFT_IsTranslucent ] )
    {
-      Var *color = (Var*) LangElement::find( "col" );
+      Var *color = (Var*) LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
       meta->addStatement( new GenOp( "   @.a *= @;\r\n", color, visibility ) );
       return;
       }
@@ -2507,9 +2507,9 @@ void AlphaTestGLSL::processPix(  Vector<ShaderComponent*> &componentList,
    }
 
    // If we don't have a color var then we cannot do an alpha test.
-   Var *color = (Var*)LangElement::find( "col1" );
+   Var *color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1) );
    if ( !color )
-	   color = (Var*)LangElement::find("col");
+	   color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    if ( !color )
    {
       output = NULL;
@@ -2542,7 +2542,7 @@ void GlowMaskGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    //
    // The shader compiler will optimize out all the other
    // code above that doesn't contribute to the alpha mask.
-   Var *color = (Var*)LangElement::find( "col" );
+   Var *color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    if ( color )
       output = new GenOp( "   @.rgb = vec3(0);\r\n", color );
 }
@@ -2574,7 +2574,7 @@ void HDROutGLSL::processPix(  Vector<ShaderComponent*> &componentList,
 									 const MaterialFeatureData &fd )
 {
    // Let the helper function do the work.
-   Var *color = (Var*)LangElement::find( "col" );
+   Var *color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    if ( color )
       output = new GenOp( "   @ = hdrEncode( @ );\r\n", color, color );
 }

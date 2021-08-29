@@ -299,7 +299,7 @@ public: \
          Con::errorf("%s(%s)::_set%s() - shape asset failure \"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, ShapeAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
-      else if (bool(m##name) == NULL)\
+      else if (m##name)\
       {\
          Con::errorf("%s(%s)::_set%s() - Couldn't load shape \"%s\"", macroText(className), getName(), macroText(name), _in);\
          return false;\

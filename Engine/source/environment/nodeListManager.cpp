@@ -79,7 +79,8 @@ void NodeListEvent::unpack(NetConnection* conn, BitStream* stream)
    stream->read(&mTotalNodes);
    stream->read(&mLocalListStart);
 
-   mNodeList->mId = mId;
+   if (mNodeList)
+      mNodeList->mId = mId;
 
    // NOTE: Child class needs to populate the local node list
 }

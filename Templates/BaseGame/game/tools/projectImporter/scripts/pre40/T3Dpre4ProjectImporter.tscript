@@ -235,6 +235,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
             if(strIsMatchExpr("*new*(*)*", %line) && strpos(%line, "::") == -1)
             {
                %className = findObjectClass(%line, "new");
+               if (%className $= "") continue;
 
                if(%className !$= "Material" && %className !$= "CustomMaterial" && %className !$= "TerrainMaterial" && %className !$= "CubemapData")
                   {
@@ -463,6 +464,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
             if(strIsMatchExpr("*new*(*)*", %line) && strpos(%line, "::") == -1)
             {
                %className = findObjectClass(%line, "new");
+               if (%className $= "") continue;
                
                %objectClassStack.push_back(%className);
                

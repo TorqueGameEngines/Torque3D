@@ -137,9 +137,9 @@ bool Thread::isAlive()
    return ( !mData->mDead );
 }
 
-U32 Thread::getId()
+dsize_t Thread::getId()
 {
-   return (U32)mData->mThreadID;
+   return (dsize_t)mData->mThreadID;
 }
 
 void Thread::_setName( const char* )
@@ -148,12 +148,12 @@ void Thread::_setName( const char* )
    // that one thread you are looking for is just so much fun.
 }
 
-U32 ThreadManager::getCurrentThreadId()
+dsize_t ThreadManager::getCurrentThreadId()
 {
-   return (U32)pthread_self();
+   return (dsize_t)pthread_self();
 }
 
-bool ThreadManager::compare(U32 threadId_1, U32 threadId_2)
+bool ThreadManager::compare(dsize_t threadId_1, dsize_t threadId_2)
 {
    return pthread_equal((pthread_t)threadId_1, (pthread_t)threadId_2);
 }

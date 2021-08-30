@@ -184,7 +184,7 @@ public: \
    {\
       if(m##name##AssetId != _in || m##name##Name != _in)\
       {\
-         if (_in == StringTable->EmptyString())\
+         if (_in == NULL || _in == StringTable->EmptyString())\
          {\
             m##name##Name = StringTable->EmptyString();\
             m##name##AssetId = StringTable->EmptyString();\
@@ -237,7 +237,7 @@ public: \
          Con::errorf("%s(%s)::_set%s() - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, ShapeAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
-      else if (bool(m##name) == NULL)\
+      else if (m##name)\
       {\
          Con::errorf("%s(%s)::_set%s() - Couldn't load sound \"%s\"", macroText(className), getName(), macroText(name), _in);\
          return false;\

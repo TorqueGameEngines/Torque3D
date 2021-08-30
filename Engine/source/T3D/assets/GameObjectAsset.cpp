@@ -156,10 +156,10 @@ void GameObjectAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Ignore no change,
-   if (pScriptFile == mScriptFile)
+   if (pScriptFile == mTAMLFile)
       return;
 
    // Update.
@@ -176,7 +176,7 @@ void GameObjectAsset::setTAMLFile(const char* pTAMLFile)
    AssertFatal(pTAMLFile != NULL, "Cannot use a NULL TAML file.");
 
    // Fetch image file.
-   pTAMLFile = StringTable->insert(pTAMLFile);
+   pTAMLFile = StringTable->insert(pTAMLFile, true);
 
    // Ignore no change,
    if (pTAMLFile == mTAMLFile)

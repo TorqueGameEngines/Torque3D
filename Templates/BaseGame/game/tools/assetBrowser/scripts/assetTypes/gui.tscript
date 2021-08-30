@@ -175,5 +175,5 @@ function AssetBrowser::buildGUIAssetPreview(%this, %assetDef, %previewData)
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.assetName;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getScriptPath();
 }

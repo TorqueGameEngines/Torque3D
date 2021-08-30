@@ -43,7 +43,7 @@
 
 #include "T3D/assets/assetImporter.h"
 
-StringTableEntry MaterialAsset::smNoMaterialAssetFallback(StringTable->insert(Con::getVariable("$Core::NoMaterialAssetFallback")));
+StringTableEntry MaterialAsset::smNoMaterialAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -145,6 +145,8 @@ void MaterialAsset::consoleInit()
    Con::addVariable("$Core::NoMaterialAssetFallback", TypeString, &smNoMaterialAssetFallback,
       "The assetId of the material to display when the requested material asset is missing.\n"
       "@ingroup GFX\n");
+   
+   smNoMaterialAssetFallback = StringTable->insert(Con::getVariable("$Core::NoMaterialAssetFallback"));
 }
 
 void MaterialAsset::initPersistFields()
@@ -188,7 +190,7 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Update.
    mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;

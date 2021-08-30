@@ -452,7 +452,7 @@ void NormalsOutFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    }
 	
    LangElement *normalOut;
-   Var *outColor = (Var*)LangElement::find( "col" );
+   Var *outColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
    if ( outColor && !fd.features[MFT_AlphaTest] )
       normalOut = new GenOp( "float4( ( -@ + 1 ) * 0.5, @.a )", wsNormal, outColor );
    else

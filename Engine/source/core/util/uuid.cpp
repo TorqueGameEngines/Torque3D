@@ -68,31 +68,14 @@
 #include <ctype.h>
 
 #include "core/util/md5.h"
+#include "core/util/uuid.h"
 #include "console/enginePrimitives.h"
-
-#if defined (TORQUE_OS_MAC) && (defined(TORQUE_CPU_X64) || defined(TORQUE_CPU_ARM64))
-typedef unsigned int    unsigned32;
-#else
-typedef unsigned long   unsigned32;
-#endif
-typedef unsigned short  unsigned16;
-typedef unsigned char   unsigned8;
 
 typedef struct {
     char nodeID[6];
 } uuid_node_t;
 
 #undef xuuid_t
-
-typedef struct _uuid_t
-{
-    unsigned32	time_low;
-    unsigned16	time_mid;
-    unsigned16	time_hi_and_version;
-    unsigned8	clock_seq_hi_and_reserved;
-    unsigned8	clock_seq_low;
-    unsigned8	node[6];
-} xuuid_t;
 
 /* data type for UUID generator persistent state */
 	

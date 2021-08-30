@@ -65,11 +65,15 @@ protected:
 
 public:
   enum { MaxLifetimeTicks = 4095 };
+
+  void onShapeChanged() {}
   
 public:
    // variables set in datablock definition:
    // Shape related
-  StringTableEntry      projectileShapeName;
+   DECLARE_SHAPEASSET(afxMagicMissileData, ProjectileShape, onShapeChanged);
+   DECLARE_SHAPEASSET_SETGET(afxMagicMissileData, ProjectileShape);
+  //StringTableEntry      projectileShapeName;
 
   //bool                  hasLight;
   //F32                   lightRadius;

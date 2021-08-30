@@ -98,23 +98,23 @@ public:
 
    /// Asset configuration.
    inline void             setAssetName(const char* pAssetName)              { if (mpOwningAssetManager == NULL) mpAssetDefinition->mAssetName = StringTable->insert(pAssetName); }
-   inline StringTableEntry getAssetName(void) const                          { return mpAssetDefinition->mAssetName; }
+   inline StringTableEntry getAssetName(void) const                          { return mpAssetDefinition ? mpAssetDefinition->mAssetName : StringTable->EmptyString(); }
    void                    setAssetDescription(const char* pAssetDescription);
-   inline StringTableEntry getAssetDescription(void) const                   { return mpAssetDefinition->mAssetDescription; }
+   inline StringTableEntry getAssetDescription(void) const                   { return mpAssetDefinition ? mpAssetDefinition->mAssetDescription : StringTable->EmptyString(); }
    void                    setAssetCategory(const char* pAssetCategory);
-   inline StringTableEntry getAssetCategory(void) const                      { return mpAssetDefinition->mAssetCategory; }
+   inline StringTableEntry getAssetCategory(void) const                      { return mpAssetDefinition ? mpAssetDefinition->mAssetCategory : StringTable->EmptyString(); }
    void                    setAssetAutoUnload(const bool autoUnload);
    inline bool             getAssetAutoUnload(void) const                    { return mpAssetDefinition->mAssetAutoUnload; }
    void                    setAssetInternal(const bool assetInternal);
    inline bool             getAssetInternal(void) const                      { return mpAssetDefinition->mAssetInternal; }
    inline bool             getAssetPrivate(void) const                       { return mpAssetDefinition->mAssetPrivate; }
-   inline StringTableEntry getAssetType(void) const                          { return mpAssetDefinition->mAssetType; }
+   inline StringTableEntry getAssetType(void) const                          { return mpAssetDefinition ? mpAssetDefinition->mAssetType: StringTable->EmptyString(); }
 
    inline S32              getAcquiredReferenceCount(void) const             { return mAcquireReferenceCount; }
    inline bool             getOwned(void) const                              { return mpOwningAssetManager != NULL; }
 
    // Asset Id is only available once registered with the asset manager.
-   inline StringTableEntry getAssetId(void) const                            { return mpAssetDefinition->mAssetId; }
+   inline StringTableEntry getAssetId(void) const { return mpAssetDefinition ? mpAssetDefinition->mAssetId : StringTable->EmptyString(); }
 
    /// Expanding/Collapsing asset paths is only available once registered with the asset manager.
    StringTableEntry        expandAssetFilePath(const char* pAssetFilePath) const;

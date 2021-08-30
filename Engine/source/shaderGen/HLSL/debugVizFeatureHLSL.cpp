@@ -24,7 +24,7 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
 {
    MultiLine* meta = new MultiLine;
    Var* surface = (Var*)LangElement::find("surface");
-   Var* color = (Var*)LangElement::find("col");
+   Var* color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
    if (!surface)
       return;

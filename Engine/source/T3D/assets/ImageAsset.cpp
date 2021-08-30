@@ -52,7 +52,7 @@
 
 //-----------------------------------------------------------------------------
 
-StringTableEntry ImageAsset::smNoImageAssetFallback(StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback")));
+StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -147,6 +147,8 @@ void ImageAsset::consoleInit()
    Con::addVariable("$Core::NoImageAssetFallback", TypeString, &smNoImageAssetFallback,
       "The assetId of the texture to display when the requested image asset is missing.\n"
       "@ingroup GFX\n");
+   
+   smNoImageAssetFallback = StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback"));
 }
 
 //-----------------------------------------------------------------------------
@@ -296,21 +298,15 @@ void ImageAsset::loadImage()
 
 void ImageAsset::initializeAsset()
 {
-   if (mImageFileName == StringTable->insert("z.png"))
-   {
-      Con::printf("Loaded z");
-   }
-
    ResourceManager::get().getChangedSignal().notify(this, &ImageAsset::_onResourceChanged);
 
-   mImagePath = expandAssetFilePath(mImageFileName);
+   mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
    loadImage();
 }
 
 void ImageAsset::onAssetRefresh()
 {
-   mImagePath = expandAssetFilePath(mImageFileName);
-
+   mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
    loadImage();
 }
 
@@ -321,7 +317,7 @@ void ImageAsset::_onResourceChanged(const Torque::Path& path)
 
    refreshAsset();
 
-   loadImage();
+   //loadImage();
 }
 
 void ImageAsset::setImageFileName(const char* pScriptFile)
@@ -330,7 +326,10 @@ void ImageAsset::setImageFileName(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL image file.");
 
    // Update.
-   mImageFileName = StringTable->insert(pScriptFile);
+   mImageFileName = StringTable->insert(pScriptFile, true);
+
+   // Refresh the asset.
+   refreshAsset();
 }
 
 const GBitmap& ImageAsset::getImage()

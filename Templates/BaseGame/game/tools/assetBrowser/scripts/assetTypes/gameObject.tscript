@@ -269,7 +269,7 @@ function AssetBrowser::buildGameObjectAssetPreview(%this, %assetDef, %previewDat
    
    %previewData.assetFriendlyName = %assetDef.gameObjectName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.gameObjectName;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.gameObjectName @ "\nDefinition Path: " @ %assetDef.getFilename();
 }
 
 function GuiInspectorTypeGameObjectAssetPtr::onClick( %this, %fieldName )

@@ -207,7 +207,7 @@ void afxZodiacPlane::_renderZodiacPlane(ObjectRenderInst *ri, SceneRenderState* 
   GFXTransformSaver saver;
   GFX->multWorld(getRenderTransform());
 
-  GFX->setTexture(0, mDataBlock->txr);
+  GFX->setTexture(0, mDataBlock->mTexture);
 
   PrimBuild::begin(GFXTriangleStrip, 4);
   {

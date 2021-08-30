@@ -975,13 +975,16 @@ ConsoleSetType( TypePID )
       else
       {
          Torque::UUID uuid;
-         if( !uuid.fromString( argv[ 0 ] ) )
-         {
+
+        if( !uuid.fromString( argv[ 0 ] ) )
+        {
             Con::errorf( "Error parsing UUID in PID: '%s'", argv[ 0 ] );
             *pid = NULL;
-         }
-         else
-            *pid = SimPersistID::findOrCreate( uuid );
+        }
+        else
+        {
+            *pid = SimPersistID::findOrCreate(uuid);
+        }
       }
    }
    else

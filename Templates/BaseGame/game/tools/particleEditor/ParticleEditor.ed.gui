@@ -214,7 +214,7 @@ $guiContent = new GuiWindowCollapseCtrl(PE_Window) {
                      groupNum = "-1";
                      buttonType = "PushButton";
                      useMouseEvents = "0";
-                     bitmap = "ToolsModule:new_image";
+                     bitmapAsset = "ToolsModule:new_image";
                      tooltip = "Create New Emitter";
                   };
                   new GuiBitmapButtonCtrl() {

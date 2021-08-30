@@ -30,7 +30,7 @@ void DebugVizGLSL::processPix(Vector<ShaderComponent*>& componentList,
 
    if (surface && (vizDisplayMode == 0 || vizDisplayMode == 1))
    {
-      Var* color = (Var*)LangElement::find("col");
+      Var* color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
       if (color)
       {
          Var* specularColor = (Var*)LangElement::find("specularColor");

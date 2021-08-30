@@ -122,7 +122,7 @@ void ScriptAsset::copyTo(SimObject* object)
 
 void ScriptAsset::initializeAsset()
 {
-   mScriptPath = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
    {
@@ -150,7 +150,7 @@ void ScriptAsset::initializeAsset()
 
 void ScriptAsset::onAssetRefresh()
 {
-   mScriptPath = expandAssetFilePath(mScriptFile);
+   mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
    {
@@ -170,14 +170,14 @@ void ScriptAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    // Fetch image file.
-   pScriptFile = StringTable->insert(pScriptFile);
+   pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Ignore no change,
    if (pScriptFile == mScriptFile)
       return;
 
    // Update.
-   mScriptFile = StringTable->insert(pScriptFile);
+   mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
 
    // Refresh the asset.
    refreshAsset();

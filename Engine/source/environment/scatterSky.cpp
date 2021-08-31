@@ -258,7 +258,7 @@ void ScatterSky::_conformLights()
       lightDirection = -mMoonLightDir;
 
    mLight->setDirection( -lightDirection );
-   mLight->setBrightness( brightness * mBrightness );
+   mLight->setBrightness( brightness * mBrightness *2 );
    mLightDir = lightDirection;
 
    // Have to do interpolation

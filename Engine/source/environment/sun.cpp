@@ -428,7 +428,7 @@ void Sun::_conformLights()
    MathUtils::getVectorFromAngles(lightDirection, yaw, pitch);
    lightDirection.normalize();
    mLight->setDirection( -lightDirection );
-   mLight->setBrightness( mBrightness );
+   mLight->setBrightness(mBrightness * 2);
 
    // Now make sure the colors are within range.
    mLightColor.clamp();

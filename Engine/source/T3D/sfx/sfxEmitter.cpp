@@ -94,21 +94,22 @@ ColorI SFXEmitter::smRenderColorRangeSphere( 200, 0, 0, 90 );
 SFXEmitter::SFXEmitter()
    :  SceneObject(),
       mSource( NULL ),
-      mTrack( NULL ),
       mUseTrackDescriptionOnly( false ),
-      mLocalProfile( &mDescription ),
       mPlayOnAdd( true )
 {
    mTypeMask |= MarkerObjectType;
    mNetFlags.set( Ghostable | ScopeAlways );
-
+   
    mDescription.mIs3D = true;
    mDescription.mIsLooping = true;
    mDescription.mIsStreaming = false;
    mDescription.mFadeInTime = -1.f;
    mDescription.mFadeOutTime = -1.f;
-   
+
+   mLocalProfile.mFilename = StringTable->EmptyString();
    mLocalProfile._registerSignals();
+
+   INIT_SOUNDASSET(Sound);
 
    mObjBox.minExtents.set( -1.f, -1.f, -1.f );
    mObjBox.maxExtents.set( 1.f, 1.f, 1.f );
@@ -174,15 +175,17 @@ void SFXEmitter::consoleInit()
 void SFXEmitter::initPersistFields()
 {
    addGroup( "Media" );
-   
-      addField( "track",               TypeSFXTrackName,          Offset( mTrack, SFXEmitter),
+
+   INITPERSISTFIELD_SOUNDASSET(Sound, SFXEmitter, "");
+
+      /*addField("track", TypeSFXTrackName, Offset(mTrack, SFXEmitter),
          "The track which the emitter should play.\n"
          "@note If assigned, this field will take precedence over a #fileName that may also be assigned to the "
             "emitter." );
       addField( "fileName",            TypeStringFilename,        Offset( mLocalProfile.mFilename, SFXEmitter),
          "The sound file to play.\n"
          "Use @b either this property @b or #track.  If both are assigned, #track takes precendence.  The primary purpose of this "
-         "field is to avoid the need for the user to define SFXTrack datablocks for all sounds used in a level." );
+         "field is to avoid the need for the user to define SFXTrack datablocks for all sounds used in a level." );*/
    
    endGroup( "Media");
 
@@ -287,12 +290,13 @@ U32 SFXEmitter::packUpdate( NetConnection *con, U32 mask, BitStream *stream )
       stream->writeAffineTransform( mObjToWorld );
 
    // track
-   if( stream->writeFlag( mDirty.test( Track ) ) )
-      sfxWrite( stream, mTrack );
+   PACK_SOUNDASSET(con, Sound);
+   //if (stream->writeFlag(mDirty.test(Track)))
+   //   sfxWrite( stream, mTrack );
 
    // filename
-   if( stream->writeFlag( mDirty.test( Filename ) ) )
-      stream->writeString( mLocalProfile.mFilename );
+   //if( stream->writeFlag( mDirty.test( Filename ) ) )
+   //   stream->writeString( mLocalProfile.mFilename );
 
    // volume
    if( stream->writeFlag( mDirty.test( Volume ) ) )
@@ -397,7 +401,8 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
    }
 
    // track
-   if ( _readDirtyFlag( stream, Track ) )
+   UNPACK_SOUNDASSET(conn, Sound);
+   /*if (_readDirtyFlag(stream, Track))
    {
       String errorStr;
       if( !sfxReadAndResolve( stream, &mTrack, errorStr ) )
@@ -406,7 +411,7 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    // filename
    if ( _readDirtyFlag( stream, Filename ) )
-      mLocalProfile.mFilename = stream->readSTString();
+      mLocalProfile.mFilename = stream->readSTString();*/
 
    // volume
    if ( _readDirtyFlag( stream, Volume ) )
@@ -586,8 +591,8 @@ void SFXEmitter::inspectPostApply()
    // Parent will call setScale so sync up scale with distance.
    
    F32 maxDistance = mDescription.mMaxDistance;
-   if( mUseTrackDescriptionOnly && mTrack )
-      maxDistance = mTrack->getDescription()->mMaxDistance;
+   if( mUseTrackDescriptionOnly && mSoundAsset )
+      maxDistance = mSoundAsset->getSfxDescription()->mMaxDistance;
       
    mObjScale.set( maxDistance, maxDistance, maxDistance );
    
@@ -608,8 +613,8 @@ bool SFXEmitter::onAdd()
       mDescription.validate();
       
       // Read an old 'profile' field for backwards-compatibility.
-      
-      if( !mTrack )
+      /*
+      if(mSoundAsset.isNull() || !mSoundAsset->getSfxProfile())
       {
          static const char* sProfile = StringTable->insert( "profile" );
          const char* profileName = getDataField( sProfile, NULL );
@@ -643,7 +648,7 @@ bool SFXEmitter::onAdd()
             // Remove the old 'channel' field.
             setDataField( sChannel, NULL, "" );
          }
-      }
+      }*/
    }
    else
    {
@@ -683,6 +688,12 @@ void SFXEmitter::_update()
    // we can restore it.
    SFXStatus prevState = mSource ? mSource->getStatus() : SFXStatusNull;
 
+   if (mSoundAsset.notNull() )
+   {
+      mLocalProfile = *mSoundAsset->getSfxProfile();
+      mDescription = *mSoundAsset->getSfxDescription();
+   }
+
    // Make sure all the settings are valid.
    mDescription.validate();
 
@@ -695,12 +706,12 @@ void SFXEmitter::_update()
       SFX_DELETE( mSource );
 
       // Do we have a track?
-      if( mTrack )
+      if( mSoundAsset && mSoundAsset->getSfxProfile() )
       {
-         mSource = SFX->createSource( mTrack, &transform, &velocity );
+         mSource = SFX->createSource(mSoundAsset->getSfxProfile(), &transform, &velocity );
          if( !mSource )
             Con::errorf( "SFXEmitter::_update() - failed to create sound for track %i (%s)",
-               mTrack->getId(), mTrack->getName() );
+               mSoundAsset->getSfxProfile()->getId(), mSoundAsset->getSfxProfile()->getName() );
 
          // If we're supposed to play when the emitter is 
          // added to the scene then also restart playback 
@@ -739,12 +750,12 @@ void SFXEmitter::_update()
    // is toggled on a local profile sound.  It makes the
    // editor feel responsive and that things are working.
    if(  gEditingMission &&
-        !mTrack && 
+        (mSoundAsset.isNull() || !mSoundAsset->getSfxProfile()) &&
         mPlayOnAdd && 
         mDirty.test( IsLooping ) )
       prevState = SFXStatusPlaying;
       
-   bool useTrackDescriptionOnly = ( mUseTrackDescriptionOnly && mTrack );
+   bool useTrackDescriptionOnly = ( mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile());
 
    // The rest only applies if we have a source.
    if( mSource )
@@ -1087,8 +1098,8 @@ SFXStatus SFXEmitter::_getPlaybackStatus() const
 
 bool SFXEmitter::is3D() const
 {
-   if( mTrack != NULL )
-      return mTrack->getDescription()->mIs3D;
+   if( mSoundAsset.notNull() && mSoundAsset->getSfxProfile() != NULL )
+      return mSoundAsset->getSfxProfile()->getDescription()->mIs3D;
    else
       return mDescription.mIs3D;
 }
@@ -1124,8 +1135,8 @@ void SFXEmitter::setScale( const VectorF &scale )
 {
    F32 maxDistance;
    
-   if( mUseTrackDescriptionOnly && mTrack )
-      maxDistance = mTrack->getDescription()->mMaxDistance;
+   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile())
+      maxDistance = mSoundAsset->getSfxProfile()->getDescription()->mMaxDistance;
    else
    {
       // Use the average of the three coords.

@@ -31,12 +31,10 @@ function initializeRoadEditor()
    
    // Add ourselves to EditorGui, where all the other tools reside
    RoadEditorGui.setVisible( false ); 
-   RoadEditorToolbar.setVisible( false );
    RoadEditorOptionsWindow.setVisible( false );
    RoadEditorTreeWindow.setVisible( false );
    
    EditorGui.add( RoadEditorGui );
-   EditorGui.add( RoadEditorToolbar );
    EditorGui.add( RoadEditorOptionsWindow );
    EditorGui.add( RoadEditorTreeWindow );
    
@@ -94,7 +92,8 @@ function RoadEditorPlugin::onActivated( %this )
    
    RoadEditorGui.setVisible( true );
    RoadEditorGui.makeFirstResponder( true );
-   RoadEditorToolbar.setVisible( true );   
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   EditorGuiToolbarStack.add( RoadEditorToolbar );
    
    RoadEditorOptionsWindow.setVisible( true );
    RoadEditorTreeWindow.setVisible( true );
@@ -115,7 +114,10 @@ function RoadEditorPlugin::onDeactivated( %this )
    %this.writeSettings();
    
    RoadEditorGui.setVisible( false );
-   RoadEditorToolbar.setVisible( false );   
+   
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   EditorGuiToolbarStack.remove( RoadEditorToolbar );
+
    RoadEditorOptionsWindow.setVisible( false );
    RoadEditorTreeWindow.setVisible( false );
    %this.map.pop();

@@ -42,13 +42,11 @@ function initializeNavEditor()
 
    // Add ourselves to EditorGui, where all the other tools reside
    NavEditorGui.setVisible(false);  
-   NavEditorToolbar.setVisible(false); 
    NavEditorOptionsWindow.setVisible(false);
    NavEditorTreeWindow.setVisible(false);
    NavEditorConsoleDlg.setVisible(false);
 
    EditorGui.add(NavEditorGui);
-   EditorGui.add(NavEditorToolbar);
    EditorGui.add(NavEditorOptionsWindow);
    EditorGui.add(NavEditorTreeWindow);
    EditorGui.add(NavEditorConsoleDlg);
@@ -123,7 +121,8 @@ function NavEditorPlugin::onActivated(%this)
 
    NavEditorGui.setVisible(true);
    NavEditorGui.makeFirstResponder(true);
-   NavEditorToolbar.setVisible(true);
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   EditorGuiToolbarStack.add( NavEditorToolbar );
 
    NavEditorOptionsWindow.setVisible(true);
    NavEditorTreeWindow.setVisible(true);
@@ -167,7 +166,10 @@ function NavEditorPlugin::onDeactivated(%this)
    $Nav::EditorOpen = false;   
 
    NavEditorGui.setVisible(false);
-   NavEditorToolbar.setVisible(false);
+
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   EditorGuiToolbarStack.remove( NavEditorToolbar );
+
    NavEditorOptionsWindow.setVisible(false);
    NavEditorTreeWindow.setVisible(false);
    %this.map.pop();

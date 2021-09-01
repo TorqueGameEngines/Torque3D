@@ -78,3 +78,5 @@ GlobalActionMap.bind(keyboard, "ctrl F3", doProfile);
 GlobalActionMap.bind(keyboard, "tilde", toggleConsole);
 
 EditorMap.bind( mouse, "alt zaxis", editorWheelFadeScroll );
+
+EditorMap.bindCmd( keyboard, space, "", "AssetBrowser.toggleDialog();" );

@@ -516,6 +516,8 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
+   
+   SettingsInspector.addSettingsField("AssetManagement/Assets/closeBrowserOnDragAction", "Close Browser on Drag Action", "bool", "If on, the Asset Browser will automatically close after dragging an asset from it to the editor interface.");
    SettingsInspector.endGroup();
 }
 

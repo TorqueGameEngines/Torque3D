@@ -1,5 +1,3 @@
-new SimGroup(AssetBrowserPreviewCache);
-
 //AssetBrowser.addToolbarButton
 function AssetBrowser::addToolbarButton(%this)
 {
@@ -30,11 +28,8 @@ function AssetBrowser::addToolbarButton(%this)
 	EWToolsToolbar.setExtent((25 + 8) * (ToolsToolbarArray.getCount()) + 12 SPC "33");
 }
 //
-function AssetBrowser::onAdd(%this)
-{
-}
 
-function AssetBrowser::onWake(%this)
+function AssetBrowser::initialize(%this)
 {
    // manage preview array
    if(!isObject(AssetPreviewArray))
@@ -63,6 +58,30 @@ function AssetBrowser::onWake(%this)
    AssetBrowser-->previewSlider.setValue(EditorSettings.value("Assets/Browser/previewTileSize", "1.0"));
    
    AssetBrowser-->filterAssetsButton.setActive(true); 
+}
+
+function AssetBrowser::onAdd(%this)
+{
+}
+
+function AssetBrowser::onWake(%this)
+{
+   %this.initialize();
+}
+
+function AssetBrowser::onDialogPop(%this)
+{
+   %lastPosExt = AssetBrowserWindow.position SPC AssetBrowserWindow.extent;
+   EditorSettings.setValue("Assets/Browser/LastPosExt", %lastPosExt); 
+}
+
+function AssetBrowser::restoreLastPosExt(%this)
+{
+   %lastPosExt = EditorSettings.value("Assets/Browser/LastPosExt", ""); 
+   if(%lastPosExt !$= "")
+   {
+      AssetBrowserWindow.resize(getWord(%lastPosExt, 0), getWord(%lastPosExt, 1), getWord(%lastPosExt, 2), getWord(%lastPosExt, 3));
+   }    
 }
 
 function contentTreeTabBook::onTabSelected(%this, %tabText, %tabIndex)
@@ -271,6 +290,7 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
 
    Canvas.popDialog(AssetBrowser);
    Canvas.pushDialog(AssetBrowser);
+   
    AssetBrowser.setVisible(1);
    AssetBrowserWindow.setVisible(1);
    AssetBrowserWindow.selectWindow();
@@ -299,6 +319,8 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    }
 
    AssetBrowser.loadDirectories();
+   
+   AssetBrowser.restoreLastPosExt();
 }
 
 function AssetBrowser::hideDialog( %this )
@@ -309,6 +331,18 @@ function AssetBrowser::hideDialog( %this )
    Canvas.popDialog(ImportAssetWindow);
    
    Canvas.popDialog(AssetBrowser);
+}
+
+function AssetBrowser::toggleDialog( %this )
+{
+   if(AssetBrowser.isAwake())
+   {
+      AssetBrowser.hideDialog();
+   }
+   else
+   {
+      AssetBrowser.showDialog();
+   }
 }
 
 function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
@@ -2402,6 +2436,11 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
          %buildCommand = AssetBrowser @ ".on" @ %assetType @ "EditorDropped(" @ %assetDef @ ",\"" @ %position @ "\");";
       }
       eval(%buildCommand);
+      
+      if(EditorSettings.value("AssetManagement/Assets/closeBrowserOnDragAction", false))
+      {
+         AssetBrowser.hideDialog();  
+      }
    }
    
    EWorldEditor.isDirty = true;

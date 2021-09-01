@@ -34,12 +34,10 @@ function initializeForestEditor()
    ForestEditorGui.setVisible( false );   
    ForestEditorPalleteWindow.setVisible( false );
    ForestEditorPropertiesWindow.setVisible( false );
-   ForestEditToolbar.setVisible( false );
    
    EditorGui.add( ForestEditorGui );
    EditorGui.add( ForestEditorPalleteWindow );
    EditorGui.add( ForestEditorPropertiesWindow );
-   EditorGui.add( ForestEditToolbar );
             
    new ScriptObject( ForestEditorPlugin )
    {
@@ -141,7 +139,9 @@ function ForestEditorPlugin::onActivated( %this )
    ForestEditorPalleteWindow.setVisible( true );
    ForestEditorPropertiesWindow.setVisible( true );
    ForestEditorGui.makeFirstResponder( true );
-   //ForestEditToolbar.setVisible( true );
+   
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   EditorGuiToolbarStack.add( ForestEditToolbar );
 
    //Get our existing forest object in our current mission if we have one
    %forestObject = trim(parseMissionGroupForIds("Forest", ""));
@@ -210,7 +210,11 @@ function ForestEditorPlugin::onActivated( %this )
 
 function ForestEditorPlugin::onDeactivated( %this )
 {  
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   EditorGuiToolbarStack.remove( ForestEditToolbar );
+   
    ForestEditorGui.setVisible( false );
+   
    ForestEditorPalleteWindow.setVisible( false );
    ForestEditorPropertiesWindow.setVisible( false );
    

@@ -91,10 +91,10 @@ function EditorGui::init(%this)
    {
       // Load Creator/Inspector GUI
       exec("~/worldEditor/gui/WorldEditorToolbar.ed.gui");
-      if( isObject( EWorldEditorToolbar ) )
+      if( isObject( EditorGuiToolbarStack ) )
       {
-         %this.add( EWorldEditorToolbar );
-         EWorldEditorToolbar.setVisible( false );
+         EditorGuiToolbarStack.add( EWorldEditorToolbar );
+         //EWorldEditorToolbar.setVisible( false );
       }
    }  
    
@@ -102,11 +102,11 @@ function EditorGui::init(%this)
    {
       // Load Terrain Edit GUI
       exec("~/worldEditor/gui/TerrainEditToolbar.ed.gui");
-      if( isObject( EWTerrainEditToolbar ) )
+      /*if( isObject( EWTerrainEditToolbar ) )
       {
          %this.add( EWTerrainEditToolbar );
          EWTerrainEditToolbar.setVisible( false );
-      }
+      }*/
    }
    
    if( !isObject( %this-->TerrainPainter ) )
@@ -126,11 +126,11 @@ function EditorGui::init(%this)
    {
       // Load Terrain Edit GUI
       exec("~/worldEditor/gui/TerrainPainterToolbar.ed.gui");
-      if( isObject( EWTerrainPainterToolbar ) )
+      /*if( isObject( EWTerrainPainterToolbar ) )
       {
          %this.add( EWTerrainPainterToolbar );
          EWTerrainPainterToolbar.setVisible( false );
-      }
+      }*/
    }
 
    if( !isObject( %this-->ToolsToolbar ) )
@@ -1082,7 +1082,9 @@ function TerrainEditorPlugin::onActivated( %this )
    ETerrainEditor.attachTerrain();
    ETerrainEditor.makeFirstResponder( true );
         
-   EWTerrainEditToolbar.setVisible( true );
+   EditorGuiToolbarStack.add(EWTerrainEditToolbar);
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   //EWTerrainEditToolbar.setVisible( true );
    ETerrainEditor.onBrushChanged();
    ETerrainEditor.setup();
    TerrainEditorPlugin.syncBrushInfo();
@@ -1098,7 +1100,9 @@ function TerrainEditorPlugin::onDeactivated( %this )
    endToolTime("TerrainEditor");
    EditorGui.writeTerrainEditorSettings();
 
-   EWTerrainEditToolbar.setVisible( false );
+   EditorGuiToolbarStack.remove(EWTerrainEditToolbar);
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   //EWTerrainEditToolbar.setVisible( false );
    ETerrainEditor.setVisible( false );
 
    EditorGui.menuBar.remove( %this.terrainMenu );
@@ -1216,7 +1220,10 @@ function TerrainPainterPlugin::onActivated( %this )
 
    EditorGui-->TerrainPainter.setVisible(true);
    EditorGui-->TerrainPainterPreview.setVisible(true);
-   EWTerrainPainterToolbar.setVisible(true);
+   
+   EditorGuiToolbarStack.add(EWTerrainPainterToolbar);
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   //EWTerrainPainterToolbar.setVisible(true);
    ETerrainEditor.onBrushChanged();
    EPainter.setup();
    TerrainPainterPlugin.syncBrushInfo();
@@ -1233,7 +1240,9 @@ function TerrainPainterPlugin::onDeactivated( %this )
    %this.map.pop();
    EditorGui-->TerrainPainter.setVisible(false);
    EditorGui-->TerrainPainterPreview.setVisible(false);
-   EWTerrainPainterToolbar.setVisible(false);
+   EditorGuiToolbarStack.remove(EWTerrainPainterToolbar);
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   //EWTerrainPainterToolbar.setVisible(false);
    ETerrainEditor.setVisible( false );
 }
 

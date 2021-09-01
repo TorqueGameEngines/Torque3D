@@ -31,12 +31,10 @@ function initializeRiverEditor()
    
    // Add ourselves to EditorGui, where all the other tools reside
    RiverEditorGui.setVisible( false );  
-   RiverEditorToolbar.setVisible(false); 
    RiverEditorOptionsWindow.setVisible( false );
    RiverEditorTreeWindow.setVisible( false );
    
    EditorGui.add( RiverEditorGui );
-   EditorGui.add( RiverEditorToolbar );
    EditorGui.add( RiverEditorOptionsWindow );
    EditorGui.add( RiverEditorTreeWindow );
    
@@ -97,7 +95,9 @@ function RiverEditorPlugin::onActivated( %this )
    
    RiverEditorGui.setVisible(true);
    RiverEditorGui.makeFirstResponder( true );
-   RiverEditorToolbar.setVisible(true);
+   
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   EditorGuiToolbarStack.add( RiverEditorToolbar );
    
    RiverEditorOptionsWindow.setVisible( true );
    RiverEditorTreeWindow.setVisible( true );
@@ -130,7 +130,10 @@ function RiverEditorPlugin::onDeactivated( %this )
    $River::EditorOpen = false;   
    
    RiverEditorGui.setVisible(false);
-   RiverEditorToolbar.setVisible(false);
+   
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   EditorGuiToolbarStack.remove( RiverEditorToolbar );
+
    RiverEditorOptionsWindow.setVisible( false );
    RiverEditorTreeWindow.setVisible( false );
    %this.map.pop();

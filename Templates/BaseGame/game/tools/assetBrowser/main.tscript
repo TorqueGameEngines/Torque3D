@@ -156,14 +156,11 @@ function initializeAssetBrowser()
    AssetBrowser.buildPopupMenus();
    
    //Force everything to initialize if other things need to reference it's behavior before we're displayed(usually other tools)
-   AssetBrowser.showDialog();
-   AssetBrowser.hideDialog();
+   AssetBrowser.initialize();
 }
 
 function AssetBrowserPlugin::onWorldEditorStartup( %this )
 { 
-   // Add ourselves to the toolbar.
-   AssetBrowser.addToolbarButton();
 }
 
 function AssetBrowserPlugin::initSettings( %this )

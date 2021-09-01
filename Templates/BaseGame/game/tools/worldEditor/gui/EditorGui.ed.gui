@@ -33,6 +33,29 @@
       Visible = "1";
       hovertime = "1000";
       
+      new GuiStackControl(EditorGuiToolbarStack) {
+         stackingType = "Horizontal";
+         horizStacking = "Left to Right";
+         vertStacking = "Top to Bottom";
+         padding = "0";
+         dynamicSize = "1";
+         dynamicNonStackExtent = "0";
+         dynamicPos = "0";
+         changeChildSizeToFit = "0";
+         changeChildPosition = "1";
+         position = "0 0";
+         extent = "885 32";
+         minExtent = "16 16";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "GuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         canSave = "1";
+         canSaveDynamicFields = "0";
         
       new GuiBitmapButtonCtrl(EHWorldEditor) {
          canSaveDynamicFields = "0";
@@ -107,6 +130,76 @@
       bitmapAsset = "ToolsModule:separator_h_image";
       };
       
+         new GuiBitmapButtonCtrl() {
+            BitmapAsset = "ToolsModule:settings_n_image";
+            bitmapMode = "Stretched";
+            autoFitExtents = "0";
+            useModifiers = "0";
+            useStates = "1";
+            masked = "0";
+            groupNum = "-1";
+            buttonType = "PushButton";
+            useMouseEvents = "0";
+            position = "572 0";
+            extent = "29 27";
+            minExtent = "8 8";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            profile = "ToolsGuiButtonProfile";
+            visible = "1";
+            active = "1";
+            command = "ESettingsWindow.toggleEditorSettings();";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+            tooltip = "Open Editor Settings";
+            hovertime = "1000";
+            isContainer = "0";
+            internalName = "editorSettingsBtn";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "98 3";
+            Extent = "2 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_h_image";
+         };
+         
+         new GuiBitmapButtonCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = AssetBrowserBtn;
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiButtonProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "180 0";
+            Extent = "29 27";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "AssetBrowser.toggleDialog();";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Asset Browser";
+            hovertime = "750";
+            bitmapAsset = "ToolsModule:menuGrid_n_image";
+            bitmapMode = "Stretched";
+            buttonType = "PushButton";
+            groupNum = "0";
+            useMouseEvents = "0";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "98 3";
+            Extent = "2 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_h_image";
+         };
+         
       new GuiBitmapButtonCtrl(EWorldEditorToggleCamera) {
          canSaveDynamicFields = "0";
          Enabled = "1";
@@ -306,6 +399,7 @@
          sbUsesNAColor = "0";
          reverseTextList = "0";
          bitmapBounds = "16 16";
+         };
       };
    };
    

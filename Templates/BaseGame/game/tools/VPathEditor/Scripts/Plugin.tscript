@@ -61,7 +61,8 @@ function VPathEditorPlugin::onWorldEditorStartup( %this )
     }
     
     // Add Toolbar.
-    EditorGuiToolbar.add( VPathEditorToolbar );
+    //EditorGuiToolbar.add( VPathEditorToolbar );
+
     
     // Populate Type Menu.
     VPathEditorToolbarPathTypeMenu.clear();
@@ -119,7 +120,9 @@ function VPathEditorPlugin::onActivated( %this )
     EVPathEditor.setVisible( true );
     EVPathEditor.makeFirstResponder( true );
     EditorGui.bringToFront( EVPathEditor );
-    VPathEditorToolbar.setVisible( true );
+    EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+    EditorGuiToolbarStack.add( VPathEditorToolbar );
+
     VPathTreeView.open( GetServerPathSet(), true );
     
     // Sync Gizmo.
@@ -147,7 +150,9 @@ function VPathEditorPlugin::onDeactivated( %this )
 {
     // Hide Editor.
     EVPathEditor.setVisible( false );
-    VPathEditorToolbar.setVisible( false );
+
+    EditorGuiToolbarStack.add( EWorldEditorToolbar );
+    EditorGuiToolbarStack.remove( VPathEditorToolbar );
     
     // Disable Map.
     %this.EditorMap.pop();

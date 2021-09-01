@@ -353,13 +353,17 @@ new GuiControlProfile( ToolsGuiButtonProfile )
 {
    opaque = true;
    border = true;
+   fillColor = EditorSettings.value("Theme/tabsColor");
+   fillColorHL = EditorSettings.value("Theme/tabsGLColor");
+   fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
+   fillColorNA = EditorSettings.value("Theme/tabsSELColor");
+   
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-	bitmapAsset = "ToolsModule:button_image";
    hasBitmapArray = false;
    category = "Tools";
 };

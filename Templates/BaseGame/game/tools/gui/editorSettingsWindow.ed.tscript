@@ -493,6 +493,28 @@ function ESettingsWindow::getAssetEditingSettings(%this)
 {
    ImportAssetWindow::reloadImportOptionConfigs();
    
+   //First, get our list of modules
+   %moduleList = ModuleDatabase.findModules();
+   %formattedModuleList = "";
+   
+   %count = getWordCount(%moduleList);
+   for(%i=0; %i < %count; %i++)
+   {
+      %module = getWord(%moduleList, %i);
+      if(%module.group !$= "Tools" && %module.group !$= "Core")
+      {
+         if(%formattedModuleList $= "")
+            %formattedModuleList = %module.moduleId;
+         else
+            %formattedModuleList = %formattedModuleList @ "," @ %module.moduleId;  
+      }
+   }
+   
+   SettingsInspector.startGroup("Asset Creation");
+   SettingsInspector.addSettingsField("Assets/New/defaultModule", "Default Module", "list", "Default Module for new assets to be created into", %formattedModuleList); 
+   SettingsInspector.addSettingsField("Assets/New/alwaysPromptModuleTarget", "Always Prompt Target Module", "bool", "If off, use the default module"); 
+   SettingsInspector.endGroup();
+   
    for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
    {
       %configName = ImportAssetWindow.importConfigsList.getKey(%i);
@@ -506,6 +528,7 @@ function ESettingsWindow::getAssetEditingSettings(%this)
                                                                                                                         "will attempt to automatically import any inbound assets"@
                                                                                                                         "using the default config, without prompting the import window."@
                                                                                                                         "The window will still display if any issues are detected", ""); 
+   SettingsInspector.addSettingsField("Assets/AutoImportLooseFiles", "Automatically Import Loose Files", "bool", "If on, will automatically import unassociated loose files in assets when navigating the Asset Browser.", ""); 
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Asset Browser");
@@ -516,7 +539,7 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
    SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
-   
+   SettingsInspector.addSettingsField("Assets/Browser/doubleClickAction", "Double Click Action", "list", "Dictates what sort of action double clicking on an asset in the Browser will invoke", "Edit Asset,Spawn Asset");
    SettingsInspector.addSettingsField("AssetManagement/Assets/closeBrowserOnDragAction", "Close Browser on Drag Action", "bool", "If on, the Asset Browser will automatically close after dragging an asset from it to the editor interface.");
    SettingsInspector.endGroup();
 }

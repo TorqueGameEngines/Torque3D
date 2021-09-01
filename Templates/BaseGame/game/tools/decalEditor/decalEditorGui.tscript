@@ -167,6 +167,11 @@ function DecalEditorGui::pickedNewDecalTargetModule(%this, %module)
    %moduleDef = ModuleDatabase.findModule(%module);
    $decalDataFile = %moduleDef.ModulePath @ "/scripts/managedData/managedDecalData." @ $TorqueScriptFileExtension;
    
+   if(!isDirectory(filePath($decalDataFile)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($decalDataFile));
+   }
+   
    %name = getUniqueName( "NewDecalData" );
    
    %str = "datablock DecalData( " @ %name @ " ) { Material = \"WarningMaterial\"; };";            

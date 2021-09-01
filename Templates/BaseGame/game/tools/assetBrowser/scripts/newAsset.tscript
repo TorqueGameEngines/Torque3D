@@ -26,9 +26,22 @@ function CreateAssetButton::onClick(%this)
 
 function AssetBrowser_newAsset::onWake(%this)
 {
-   NewAssetTargetAddress.text = AssetBrowser.dirHandler.currentAddress;
-   NewAssetTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
 
+   if(%targetModule $= "")
+      %targetModule = EditorSettings.value("Assets/New/defaultModule", "");
+      
+   NewAssetTargetModule.setText(%targetModule);
+   
+   %moduleDef = ModuleDatabase.findModule(%targetModule);
+   
+   %targetPath = AssetBrowser.dirHandler.currentAddress;
+   if(!startsWith(%targetPath, %moduleDef.ModulePath))
+   {
+      %targetPath = %moduleDef.ModulePath;
+   }
+   
+   NewAssetTargetAddress.text = %targetPath;
 }
 
 function AssetBrowser_newAssetWindow::onClose(%this)
@@ -107,34 +120,6 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
       %command = %this @ ".setupCreateNew"@%assetType @"();";
       eval(%command);
    }
-   /*if(%assetType $= "ComponentAsset")
-   {
-      NewAssetPropertiesInspector.startGroup("Components");
-      NewAssetPropertiesInspector.addField("parentClass", "New Asset Parent Class", "String",  "Name of the new asset's parent class", "Component", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.addField("componentGroup", "Component Group", "String",  "Name of the group of components this component asset belongs to", "", "", %this.newAssetSettings);
-      //NewAssetPropertiesInspector.addField("componentName", "Component Name", "String",  "Name of the new component", "", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.endGroup();
-   }*/
-   //Special case, we only do this via internal means like baking
-   /*else if(%assetType $= "ShapeAsset")
-   {
-      NewAssetPropertiesInspector.startGroup("Shape");
-      NewAssetPropertiesInspector.addField("isServerScript", "Is Server Script", "bool",  "Is this script used on the server?", "1", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.endGroup();
-   }*/
-   /*else if(%assetType $= "ShapeAnimationAsset")
-   {
-      NewAssetPropertiesInspector.startGroup("Animation");
-      NewAssetPropertiesInspector.addField("sourceFile", "Source File", "filename",  "Source file this animation will pull from", "", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.addField("animationName", "Animation Name", "string",  "Name of the animation clip when used in a shape", "", "", %this.newAssetSettings);
-      
-      NewAssetPropertiesInspector.addField("startFrame", "Starting Frame", "int",  "Source file this animation will pull from", "", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.addField("endFrame", "Ending Frame", "int",  "Source file this animation will pull from", "", "", %this.newAssetSettings);
-      
-      NewAssetPropertiesInspector.addField("padRotation", "Pad Rotations", "bool",  "Source file this animation will pull from", "0", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.addField("padTransforms", "Pad Transforms", "bool",  "Source file this animation will pull from", "0", "", %this.newAssetSettings);
-      NewAssetPropertiesInspector.endGroup();
-   }*/
 }
 
 function NewAssetPropertiesInspector::updateNewAssetField(%this)

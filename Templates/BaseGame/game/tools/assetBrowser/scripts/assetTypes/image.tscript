@@ -196,21 +196,34 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
       
       %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath);
       
-      %previewAsset = new ImageAsset()
+      if(%success)
       {
-         assetName = %previewAssetName;
-         versionId = 1;
-         imageFile = fileName(%previewFilePath);
-      };
+         %previewAsset = new ImageAsset()
+         {
+            assetName = %previewAssetName;
+            versionId = 1;
+            imageFile = fileName(%previewFilePath);
+         };
       
-      %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-      %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         %previewAssetName = "ToolsModule:" @ %previewAssetName;
+         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
       
-      %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
          
-      %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+      }
+      else
+      {
+         %previewFilePath = %assetDef.getImagePath();
+         %previewAssetName = %module.moduleId @ ":" @ %assetDef.assetName;  
+      }
       
       hideEditorLoadingGui();
+   }
+   else
+   {
+      %previewAssetName = "ToolsModule:" @ %previewAssetName;
    }
    
    //Revalidate. If it didn't work, just use the default placeholder one
@@ -220,7 +233,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
    
-   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
+   %previewData.previewImage = %previewAssetName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

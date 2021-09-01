@@ -36,7 +36,10 @@ function AssetBrowser::initialize(%this)
       new ArrayObject(AssetPreviewArray);
       
    if(!isObject(%this.dirHandler))
+   {
       %this.dirHandler = makedirectoryHandler(AssetBrowser-->filterTree, "cache,shaderCache", ""); 
+      %this.dirHandler.currentAddress = "data/";
+   }
       
    AssetBrowser-->filterTree.buildIconTable( ":tools/classIcons/Prefab:tools/classIcons/Prefab" @
                                              ":tools/classIcons/SimSet:tools/classIcons/SimSet");
@@ -2090,7 +2093,14 @@ function AssetBrowser::navigateTo(%this, %address, %historyNav)
       
       if(%this.hasLooseFilesInDir())
       {
+         if(EditorSettings.value("Assets/AutoImportLooseFiles", false) && EditorSettings.value("Assets/AutoImport", false))
+         {
+            AssetBrowser.autoImportSimpleLooseFiles();
+         }
+         else
+         {
          %this-->AutoImportAssetButton.visible = true;
+         }
       }
       else
       {

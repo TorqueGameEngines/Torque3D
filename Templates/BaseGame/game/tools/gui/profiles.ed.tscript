@@ -364,7 +364,6 @@ new GuiControlProfile( ToolsGuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-	//bitmapAsset = "ToolsModule:button_image";
    hasBitmapArray = false;
    category = "Tools";
 };

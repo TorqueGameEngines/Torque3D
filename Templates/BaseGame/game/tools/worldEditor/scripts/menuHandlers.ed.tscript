@@ -1059,7 +1059,7 @@ function EditorDropTypeMenu::onSelectItem(%this, %id, %text)
    // a drop type is selected in the menu.
    EWorldEditor.dropType = getField(%this.item[%id], 2);
    
-   for(%i=0; %i < %this.getItemCount() + 1; %i++)
+   for(%i=0; %i < %this.getItemCount(); %i++)
    {
       %this.checkItem(%i, false);  
    }

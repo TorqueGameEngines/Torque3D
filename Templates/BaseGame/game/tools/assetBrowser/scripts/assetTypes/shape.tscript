@@ -324,9 +324,13 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    else
    {
       if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
-      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      {
+         %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      }
       else
+      {
          %previewData.doubleClickCommand = "AssetBrowser.onShapeAssetEditorDropped( "@%assetDef@" );";
+      }
    }
 }
 

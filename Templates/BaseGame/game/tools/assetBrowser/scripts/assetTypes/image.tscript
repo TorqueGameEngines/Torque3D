@@ -198,20 +198,20 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
       
       if(%success)
       {
-      %previewAsset = new ImageAsset()
-      {
-         assetName = %previewAssetName;
-         versionId = 1;
-         imageFile = fileName(%previewFilePath);
-      };
+         %previewAsset = new ImageAsset()
+         {
+            assetName = %previewAssetName;
+            versionId = 1;
+            imageFile = fileName(%previewFilePath);
+         };
       
          %previewAssetName = "ToolsModule:" @ %previewAssetName;
-      %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-      %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
       
-      %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
          
-      %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
       }
       else
       {

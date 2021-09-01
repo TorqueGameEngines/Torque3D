@@ -51,7 +51,6 @@ function initializeShapeEditor()
    EditorGui.add(ShapeEdAnimWindow);
    EditorGui.add(ShapeEdAdvancedWindow);
 
-   EditorGui.add(ShapeEditorToolbar);
    EditorGui.add(ShapeEdSelectWindow);
    EditorGui.add(ShapeEdPropWindow);
 
@@ -187,7 +186,6 @@ function ShapeEditorPlugin::open(%this, %shapeAsset)
       ShapeEdPropWindow.setVisible(true);
       ShapeEdAnimWindow.setVisible(true);
       ShapeEdAdvancedWindow.setVisible(ShapeEditorToolbar-->showAdvanced.getValue());
-      ShapeEditorToolbar.setVisible(true);
       EditorGui.bringToFront(ShapeEdPreviewGui);
 
       ToolsPaletteArray->WorldEditorMove.performClick();

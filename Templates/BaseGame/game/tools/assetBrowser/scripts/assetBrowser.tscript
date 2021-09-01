@@ -479,13 +479,12 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    {
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
-      %previewButton.extent = "120 20";
+      %previewButton.setextent(120,20);
    }
    else
    {
       %size = %previewSize.x * %previewScaleSize;
-      %previewButton.extent.x = %size;
-      %previewButton.extent.y = %size + %textBottomPad;
+      %previewButton.setextent(%size,%size + %textBottomPad);
    }
    
    //%previewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
@@ -1402,10 +1401,10 @@ function AssetBrowser::doRebuildAssetArray(%this)
    AssetBrowser-->assetList.deleteAllObjects();
    AssetPreviewArray.empty();
 
-   if(isObject(%assetArray))
-      %assetArray.delete();
+   if(isObject($AssetBrowser::AssetArray))
+      $AssetBrowser::AssetArray.delete();
       
-   %assetArray = new ArrayObject();
+   $AssetBrowser::AssetArray = new ArrayObject();
    
    //First, Query for our assets
    %assetQuery = new AssetQuery();
@@ -1486,7 +1485,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
          {
             if(matchesSearch(%assetName, %assetType))
             {
-               %assetArray.add( %moduleName, %assetId);
+               $AssetBrowser::AssetArray.add( %moduleName, %assetId);
                   
                if(%assetType !$= "Folder")
                   %finalAssetCount++;
@@ -1500,7 +1499,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
             {
                if(AssetBrowser.assetTypeFilter $= %assetType)
                {
-                  %assetArray.add( %moduleName, %assetId );
+                  $AssetBrowser::AssetArray.add( %moduleName, %assetId );
                   
                   if(%assetType !$= "Folder")
                      %finalAssetCount++;
@@ -1509,7 +1508,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
             else
             {
                //got it.	
-               %assetArray.add( %moduleName, %assetId );
+               $AssetBrowser::AssetArray.add( %moduleName, %assetId );
                
                if(%assetType !$= "Folder")
                   %finalAssetCount++;
@@ -1531,7 +1530,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
          {
             if(matchesSearch(%folderName, "Folder", ""))
             {
-               %assetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+               $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
                continue;
             }
          }
@@ -1547,7 +1546,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
             if(!%this.toolsModulesFilter && %folderName $= "tools" && %breadcrumbPath $= "")
                continue;
                
-            %assetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+            $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
          }
       }
    }
@@ -1577,14 +1576,14 @@ function AssetBrowser::doRebuildAssetArray(%this)
                %dbName = %obj.getName();
                if(matchesSearch(%dbName, "Datablock"))
                {
-                  %assetArray.add( %dbFilename, "Datablock" TAB %dbName );
+                  $AssetBrowser::AssetArray.add( %dbFilename, "Datablock" TAB %dbName );
                }  
             }
          }
          else if(%dbFilePath $= %breadcrumbPath)
          {
             %dbName = %obj.getName();
-            %assetArray.add( %dbFilename, "Datablock" TAB %dbName );
+            $AssetBrowser::AssetArray.add( %dbFilename, "Datablock" TAB %dbName );
             
             /*%catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
             
@@ -1609,7 +1608,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
          %looseFileName = fileName(%looseFileFullPath);
          %looseFileExt = fileExt(%looseFileFullPath);
          
-         %assetArray.add( %looseFilePath, "LooseFile" TAB %looseFileName );
+         $AssetBrowser::AssetArray.add( %looseFilePath, "LooseFile" TAB %looseFileName );
       }
          
       //Prefabs
@@ -1628,13 +1627,13 @@ function AssetBrowser::doRebuildAssetArray(%this)
             {
                if(matchesSearch(%prefabName, "Prefab"))
                {
-                  %assetArray.add( %prefabPath, "Prefab" TAB %prefabName );
+                  $AssetBrowser::AssetArray.add( %prefabPath, "Prefab" TAB %prefabName );
                }  
             }
          }
          else if(%prefabPath $= %breadcrumbPath)
          {
-            %assetArray.add( %prefabPath, "Prefab" TAB %prefabName );
+            $AssetBrowser::AssetArray.add( %prefabPath, "Prefab" TAB %prefabName );
          }
 
          %fullPrefabPath = findNextFile( %breadcrumbPath @ "/" @ %expr );
@@ -1654,13 +1653,13 @@ function AssetBrowser::doRebuildAssetArray(%this)
             {
                if(matchesSearch(%cppName, "Cpp"))
                {
-                  %assetArray.add( %cppPath, "Cpp" TAB %cppName );
+                  $AssetBrowser::AssetArray.add( %cppPath, "Cpp" TAB %cppName );
                }  
             }
          }
          else if(%cppPath $= %breadcrumbPath)
          {
-            %assetArray.add( %cppPath, "Cpp" TAB %cppName );
+            $AssetBrowser::AssetArray.add( %cppPath, "Cpp" TAB %cppName );
          }
       }
       
@@ -1678,13 +1677,13 @@ function AssetBrowser::doRebuildAssetArray(%this)
             {
                if(matchesSearch(%cppName, "Cpp"))
                {
-                  %assetArray.add( %cppPath, "Cpp" TAB %cppName );
+                  $AssetBrowser::AssetArray.add( %cppPath, "Cpp" TAB %cppName );
                }  
             }
          }
          else if(%cppPath $= %breadcrumbPath)
          {
-            %assetArray.add( %cppPath, "Cpp" TAB %cppName );
+            $AssetBrowser::AssetArray.add( %cppPath, "Cpp" TAB %cppName );
          }
       }
       
@@ -1726,13 +1725,13 @@ function AssetBrowser::doRebuildAssetArray(%this)
             {
                if(matchesSearch(%tscriptName, "tscript"))
                {
-                  %assetArray.add( %tscriptPath, "tscript" TAB %tscriptName );
+                  $AssetBrowser::AssetArray.add( %tscriptPath, "tscript" TAB %tscriptName );
                }  
             }
          }
          else if(%tscriptPath $= %breadcrumbPath)
          {
-            %assetArray.add( %tscriptPath, "tscript" TAB %tscriptName );
+            $AssetBrowser::AssetArray.add( %tscriptPath, "tscript" TAB %tscriptName );
          }
       }
    }
@@ -1754,13 +1753,13 @@ function AssetBrowser::doRebuildAssetArray(%this)
             %name = %creatorObj.val[1];
             %func = %creatorObj.val[2];
             
-            %assetArray.add( %name, "Creator" TAB %creatorObj );
+            $AssetBrowser::AssetArray.add( %name, "Creator" TAB %creatorObj );
          }               
       }   
 	}
 	
-   for(%i=0; %i < %assetArray.count(); %i++)
-		AssetBrowser.buildAssetPreview( %assetArray.getValue(%i), %assetArray.getKey(%i) );  
+   for(%i=0; %i < $AssetBrowser::AssetArray.count(); %i++)
+		AssetBrowser.buildAssetPreview( $AssetBrowser::AssetArray.getValue(%i), $AssetBrowser::AssetArray.getKey(%i) );  
 		
    AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";
    

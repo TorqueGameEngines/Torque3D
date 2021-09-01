@@ -169,7 +169,7 @@ function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @
       "\nAsset Type: Terrain Asset" @ 
       "\nAsset Definition ID: " @ %assetDef @
-      "\nDefinition Path: " @ %assetPath @ %assetDef.getTerrainFilePath(); 
+      "\nDefinition Path: " @ %assetDef.getTerrainFilePath(); 
 }
 
 function GuiInspectorTypeTerrainAssetPtr::onClick( %this, %fieldName )

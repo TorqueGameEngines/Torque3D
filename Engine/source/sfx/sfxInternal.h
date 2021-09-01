@@ -442,7 +442,7 @@ inline bool isSFXThread()
 {
    ThreadSafeRef< SFXUpdateThread > sfxThread = UPDATE_THREAD();
 
-   U32 threadId;
+   dsize_t threadId;
    if( sfxThread != NULL )
       threadId = sfxThread->getId();
    else

@@ -110,7 +110,7 @@ public:
    bool isAlive();
 
    /// Returns the platform specific thread id for this thread.
-   U32 getId();
+   dsize_t getId();
 };
 
 
@@ -122,12 +122,12 @@ class ThreadManager
 
    struct MainThreadId
    {
-      U32 mId;
+      dsize_t mId;
       MainThreadId()
       {
          mId = ThreadManager::getCurrentThreadId();
       }
-      U32 get()
+      dsize_t get()
       {
          // Okay, this is a bit soso.  The main thread ID may get queried during
          // global ctor phase before MainThreadId's ctor ran.  Since global
@@ -152,21 +152,21 @@ public:
    static bool isMainThread();
 
    /// Returns true if threadId is the same as the calling thread's id.
-   static bool isCurrentThread(U32 threadId);
+   static bool isCurrentThread(dsize_t threadId);
 
    /// Returns true if the 2 thread ids represent the same thread. Some thread
    /// APIs return an opaque object as a thread id, so the == operator cannot
    /// reliably compare thread ids.
    // this comparator is needed by pthreads and ThreadManager.
-   static bool compare(U32 threadId_1, U32 threadId_2);
+   static bool compare(dsize_t threadId_1, dsize_t threadId_2);
       
    /// Returns the platform specific thread id of the calling thread. Some 
    /// platforms do not guarantee that this ID stays the same over the life of 
    /// the thread, so use ThreadManager::compare() to compare thread ids.
-   static U32 getCurrentThreadId();
+   static dsize_t getCurrentThreadId();
 
    /// Returns the platform specific thread id ot the main thread.
-   static U32 getMainThreadId() { return smMainThreadId.get(); }
+   static dsize_t getMainThreadId() { return smMainThreadId.get(); }
    
    /// Each thread should add itself to the thread pool the first time it runs.
    static void addThread(Thread* thread)
@@ -184,7 +184,7 @@ public:
       ThreadManager &manager = *ManagedSingleton< ThreadManager >::instance();
       manager.poolLock.lock();
       
-      U32 threadID = thread->getId();
+      dsize_t threadID = thread->getId();
       for(U32 i = 0;i < manager.threadPool.size();++i)
       {
          if( compare( manager.threadPool[i]->getId(), threadID ) )
@@ -199,7 +199,7 @@ public:
    
    /// Searches the pool of known threads for a thread whose id is equivalent to
    /// the given threadid. Compares thread ids with ThreadManager::compare().
-   static Thread* getThreadById(U32 threadid)
+   static Thread* getThreadById(dsize_t threadid)
    {
       AssertFatal(threadid != 0, "ThreadManager::getThreadById() Searching for a bad thread id.");
       Thread* ret = NULL;
@@ -236,9 +236,9 @@ inline bool ThreadManager::isMainThread()
    return compare( ThreadManager::getCurrentThreadId(), smMainThreadId.get() );
 }
 
-inline bool ThreadManager::isCurrentThread(U32 threadId)
+inline bool ThreadManager::isCurrentThread(dsize_t threadId)
 {
-   U32 current = getCurrentThreadId();
+   dsize_t current = getCurrentThreadId();
    return compare(current, threadId);
 }
 

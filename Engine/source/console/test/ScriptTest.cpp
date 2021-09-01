@@ -405,6 +405,124 @@ TEST(Script, ForEachLoop)
    )");
 
    ASSERT_EQ(forEach4.getInt(), 5);
+
+   ConsoleValue forEach5 = RunScript(R"(
+      function SimObject::ret1(%this)
+      {
+         return 1;
+      }
+
+      function SimSet::doForeach5(%this)
+      {
+         %count = 0;
+         foreach (%obj in %this)
+         {
+            %count += %obj.ret1();
+         }
+         return %count;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         return %set.doForeach5();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEach5.getInt(), 3);
+
+   ConsoleValue forEachContinue = RunScript(R"(
+      function SimSet::foreach6(%this)
+      {
+         %count = 0;
+         foreach (%obj in %this)
+         {
+            if (%obj.getName() $= "A")
+               continue;
+
+             %count++;
+         }
+         return %count;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject(A));
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         return %set.foreach6();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEachContinue.getInt(), 2);
+
+   ConsoleValue forEachReturn = RunScript(R"(
+      function SimSet::findA(%this)
+      {
+         foreach (%obj in %this)
+         {
+            if (%obj.getName() $= "A")
+               return 76;
+         }
+         return 0;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject(A));
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         return %set.findA();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEachReturn.getInt(), 76);
+
+   ConsoleValue forEachNestedReturn = RunScript(R"(
+      function SimSet::findA(%this)
+      {
+         foreach (%obj in %this)
+         {
+            foreach (%innerObj in %this)
+            {
+               if (%innerObj.getName() $= "A")
+                  return 42;
+            }
+         }
+         return 0;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject(A));
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         %group = new SimGroup();
+         %group.add(%set);
+
+         return %set.findA();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEachNestedReturn.getInt(), 42);
 }
 
 TEST(Script, TorqueScript_Array_Testing)
@@ -682,6 +800,21 @@ TEST(Script, Sugar_Syntax)
    )");
 
    ASSERT_EQ(valueSetArray.getInt(), 5);
+
+   ConsoleValue valueStoreCalculated = RunScript(R"(
+      function a()
+      {
+         %extent = 10 SPC 20;
+         %scaling = 1;
+         %size = %extent.x * %scaling;
+         echo("%size = " @ %size @ " calculated = " @ (%extent.x * %scaling)); 
+         return %size;
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(valueStoreCalculated.getInt(), 10);
 }
 
 TEST(Script, InnerObjectTests)

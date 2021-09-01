@@ -1257,9 +1257,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             {
                iterStack[--_ITER].mIsStringIter = false;
                --iterDepth;
-            }
 
-            _STK--; // this is a pop from foreach()
+               _STK--; // this is a pop from foreach()
+            }
          }
 
          returnValue.setEmptyString();
@@ -1269,60 +1269,47 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_RETURN:
       {
-         if (iterDepth > 0)
-         {
-            // Clear iterator state.
-            while (iterDepth > 0)
-            {
-               iterStack[--_ITER].mIsStringIter = false;
-               --iterDepth;
-            }
-
-            
-            const char* retVal = stack[_STK].getString();
-            _STK--;
-            _STK--;
-            stack[_STK + 1].setString(retVal);
-            _STK++; // Not nice but works.
-         }
-
          returnValue = std::move(stack[_STK]);
          _STK--;
+
+         // Clear iterator state.
+         while (iterDepth > 0)
+         {
+            iterStack[--_ITER].mIsStringIter = false;
+            --iterDepth;
+
+            _STK--;
+         }
 
          goto execFinished;
       }
       case OP_RETURN_FLT:
-
-         if (iterDepth > 0)
-         {
-            // Clear iterator state.
-            while (iterDepth > 0)
-            {
-               iterStack[--_ITER].mIsStringIter = false;
-               --iterDepth;
-            }
-
-         }
-
          returnValue.setFloat(stack[_STK].getFloat());
          _STK--;
+
+         // Clear iterator state.
+         while (iterDepth > 0)
+         {
+            iterStack[--_ITER].mIsStringIter = false;
+            --iterDepth;
+
+            _STK--;
+         }
 
          goto execFinished;
 
       case OP_RETURN_UINT:
-
-         if (iterDepth > 0)
-         {
-            // Clear iterator state.
-            while (iterDepth > 0)
-            {
-               iterStack[--_ITER].mIsStringIter = false;
-               --iterDepth;
-            }
-         }
-
          returnValue.setInt(stack[_STK].getInt());
          _STK--;
+
+         // Clear iterator state.
+         while (iterDepth > 0)
+         {
+            iterStack[--_ITER].mIsStringIter = false;
+            --iterDepth;
+
+            _STK--;
+         }
 
          goto execFinished;
 

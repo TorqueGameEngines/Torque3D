@@ -498,6 +498,11 @@ function PE_ParticleEditor::pickedNewParticleTargetModule(%this, %module)
    %moduleDef = ModuleDatabase.findModule(%module);
    $PE_PARTICLEEDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedParticleData." @ $TorqueScriptFileExtension;
    
+   if(!isDirectory(filePath($PE_PARTICLEEDITOR_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_PARTICLEEDITOR_DEFAULT_FILENAME));
+   }
+   
    // Create the particle datablock and add to the emitter.
    
    %newParticle = getUniqueName( "newParticle" );

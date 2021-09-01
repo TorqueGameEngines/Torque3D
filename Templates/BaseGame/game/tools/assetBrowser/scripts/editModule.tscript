@@ -10,12 +10,13 @@ function AssetBrowser::ConvertFolderIntoModule(%this, %folderName)
    AssetBrowser_addModuleWindow.CreateNewModule();
 }
 
-function AssetBrowser::CreateNewModule(%this)
+function AssetBrowser::CreateNewModule(%this, %callback)
 {
    Canvas.pushDialog(AssetBrowser_AddModule); 
    AssetBrowser_addModuleWindow.selectWindow();  
    
    AssetBrowser_addModuleWindow.callbackFunction = "AssetBrowser.promptNewModuleFolders();";
+   AssetBrowser_addModuleWindow.callbackFallthrough = %callback;
 }
 
 function AssetBrowser::promptNewModuleFolders(%this)
@@ -24,6 +25,9 @@ function AssetBrowser::promptNewModuleFolders(%this)
          "Do you want to create some common folders for organization of your new Module?", 
          "AssetBrowser.makeModuleFolders();",  //if yes, make the foldesr
          "AssetBrowser.loadDirectories();");  //if no, just refresh
+         
+   if(AssetBrowser_addModuleWindow.callbackFallthrough !$= "")
+      eval(AssetBrowser_addModuleWindow.callbackFallthrough);
 }
 
 function AssetBrowser::makeModuleFolders(%this)

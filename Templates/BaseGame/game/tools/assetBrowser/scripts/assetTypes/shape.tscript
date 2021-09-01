@@ -318,30 +318,20 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
                            "Shape File path: " @ %assetDef.getShapeFile();
                            
    if(%this.selectMode)
+   {
       %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
    else
+   {
+      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
       %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      else
+         %previewData.doubleClickCommand = "AssetBrowser.onShapeAssetEditorDropped( "@%assetDef@" );";
+   }
 }
 
 function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
 {
-   //echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
-
-   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
-   %camPos = LocalClientConnection.camera.getPosition();
-   %rayResult = containerRayCast(%camPos, %targetPosition, -1);
-   
-   %pos = EWCreatorWindow.getCreateObjectPosition();
-
-   if(%rayResult != 0)
-   {
-      %pos = getWords(%rayResult, 1, 3);
-   }
-   else
-   {
-      %pos = "0 0 0";  
-   }
-   
    %assetId = %assetDef.getAssetId();
    
    %newStatic = new TSStatic()
@@ -354,6 +344,8 @@ function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
    
    EWorldEditor.clearSelection();
    EWorldEditor.selectObject(%newStatic);
+   
+   EWorldEditor.dropSelection();
       
    EWorldEditor.isDirty = true;
    

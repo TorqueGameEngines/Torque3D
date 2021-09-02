@@ -104,6 +104,8 @@ typedef unsigned _int64 U64;
 // see msdn.microsoft.com "Compiler Warning (level 1) C4291" for more details
 #pragma warning(disable: 4291) 
 
+// Set MSVC noline attribute
+#define TORQUE_NOINLINE __declspec(noinline)
 
 #endif // INCLUDED_TYPES_VISUALC_H
 

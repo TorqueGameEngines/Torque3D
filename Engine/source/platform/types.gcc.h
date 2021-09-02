@@ -165,5 +165,8 @@ typedef unsigned long  U64;
 #endif
 #endif
 
+// Set GCC noinline
+#define TORQUE_NOINLINE __attribute__ ((noinline))
+
 #endif // INCLUDED_TYPES_GCC_H
 

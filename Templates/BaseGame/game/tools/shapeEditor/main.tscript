@@ -44,8 +44,6 @@ function initializeShapeEditor()
    // Add windows to editor gui
    ShapeEdPreviewGui.setVisible(false);
    ShapeEdAnimWindow.setVisible(false);
-
-   ShapeEditorToolbar.setVisible(false);
    ShapeEdSelectWindow.setVisible(false);
    ShapeEdPropWindow.setVisible(false);
 
@@ -53,7 +51,6 @@ function initializeShapeEditor()
    EditorGui.add(ShapeEdAnimWindow);
    EditorGui.add(ShapeEdAdvancedWindow);
 
-   EditorGui.add(ShapeEditorToolbar);
    EditorGui.add(ShapeEdSelectWindow);
    EditorGui.add(ShapeEdPropWindow);
 
@@ -189,7 +186,6 @@ function ShapeEditorPlugin::open(%this, %shapeAsset)
       ShapeEdPropWindow.setVisible(true);
       ShapeEdAnimWindow.setVisible(true);
       ShapeEdAdvancedWindow.setVisible(ShapeEditorToolbar-->showAdvanced.getValue());
-      ShapeEditorToolbar.setVisible(true);
       EditorGui.bringToFront(ShapeEdPreviewGui);
 
       ToolsPaletteArray->WorldEditorMove.performClick();
@@ -256,6 +252,9 @@ function ShapeEditorPlugin::onActivated(%this)
          %this.openShapeAssetId(%shapeFile);
       }
    }
+   
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   EditorGuiToolbarStack.add( ShapeEditorToolbar );
 }
 
 function ShapeEditorPlugin::initStatusBar(%this)
@@ -275,7 +274,9 @@ function ShapeEditorPlugin::onDeactivated(%this)
    $gfx::wireframe = $wasInWireFrameMode;
 
    ShapeEdMaterials.updateSelectedMaterial(false);
-   ShapeEditorToolbar.setVisible(false);
+   
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   EditorGuiToolbarStack.remove( ShapeEditorToolbar );
 
    ShapeEdPreviewGui.setVisible(false);
    ShapeEdSelectWindow.setVisible(false);

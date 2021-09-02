@@ -31,12 +31,10 @@ function initializeMeshRoadEditor()
    
    MeshRoadEditorGui.setVisible( false );  
    MeshRoadEditorOptionsWindow.setVisible( false );  
-   MeshRoadEditorToolbar.setVisible( false ); 
    MeshRoadEditorTreeWindow.setVisible( false ); 
    
    EditorGui.add( MeshRoadEditorGui );
    EditorGui.add( MeshRoadEditorOptionsWindow );
-   EditorGui.add( MeshRoadEditorToolbar );
    EditorGui.add( MeshRoadEditorTreeWindow );
       
    new ScriptObject( MeshRoadEditorPlugin )
@@ -95,7 +93,10 @@ function MeshRoadEditorPlugin::onActivated( %this )
    MeshRoadEditorGui.setVisible( true );
    MeshRoadEditorGui.makeFirstResponder( true );
    MeshRoadEditorOptionsWindow.setVisible( true );
-   MeshRoadEditorToolbar.setVisible( true );  
+   
+   EditorGuiToolbarStack.remove( EWorldEditorToolbar );
+   EditorGuiToolbarStack.add( MeshRoadEditorToolbar );
+
    MeshRoadEditorTreeWindow.setVisible( true );
    MeshRoadTreeView.open(ServerMeshRoadSet,true);
    %this.map.push();
@@ -121,7 +122,10 @@ function MeshRoadEditorPlugin::onDeactivated( %this )
    
    MeshRoadEditorGui.setVisible( false );
    MeshRoadEditorOptionsWindow.setVisible( false );
-   MeshRoadEditorToolbar.setVisible( false );  
+   
+   EditorGuiToolbarStack.add( EWorldEditorToolbar );
+   EditorGuiToolbarStack.remove( MeshRoadEditorToolbar );
+     
    MeshRoadEditorTreeWindow.setVisible( false );
    %this.map.pop();
    

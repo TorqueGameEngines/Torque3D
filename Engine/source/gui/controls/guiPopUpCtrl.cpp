@@ -881,6 +881,12 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       // Do we render a bitmap border or lines?
       if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
       {
+         if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
+         {
+            //if our bitmap is smaller than the height of our ctrl, we'll nudge it towards the center
+            U32 nudge = (baseRect.extent.y - mProfile->mBitmapArrayRects[0].extent.y) / 2;
+            baseRect.point.y += nudge;
+         }
          // Render the fixed, filled in border
          renderFixedBitmapBordersFilled(baseRect, 3, mProfile );
 
@@ -926,6 +932,12 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          // Do we render a bitmap border or lines?
          if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
          {
+            if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
+            {
+               //if our bitmap is smaller than the height of our ctrl, we'll nudge it towards the center
+               U32 nudge = (baseRect.extent.y - mProfile->mBitmapArrayRects[0].extent.y) / 2;
+               baseRect.point.y += nudge;
+            }
             // Render the fixed, filled in border
             renderFixedBitmapBordersFilled(baseRect, 2, mProfile );
 
@@ -957,6 +969,12 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          // Do we render a bitmap border or lines?
          if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
          {
+            if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
+            {
+               //if our bitmap is smaller than the height of our ctrl, we'll nudge it towards the center
+               U32 nudge = (baseRect.extent.y - mProfile->mBitmapArrayRects[0].extent.y) / 2;
+               baseRect.point.y += nudge;
+            }
             // Render the fixed, filled in border
             renderFixedBitmapBordersFilled(baseRect, 1, mProfile );
          } 
@@ -976,6 +994,12 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          // Do we render a bitmap border or lines?
          if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
          {
+            if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
+            {
+               //if our bitmap is smaller than the height of our ctrl, we'll nudge it towards the center
+               U32 nudge = (baseRect.extent.y - mProfile->mBitmapArrayRects[0].extent.y) / 2;
+               baseRect.point.y += nudge;
+            }
             drawUtil->drawRect( baseRect, mProfile->mBorderColorNA );
          }
       }
@@ -1095,6 +1119,13 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       // If we're rendering a bitmap border, then it will take care of the arrow.
       if ( !(mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size()) )
       {
+         if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
+         {
+            //if our bitmap is smaller than the height of our ctrl, we'll nudge it towards the center
+            U32 nudge = (baseRect.extent.y - mProfile->mBitmapArrayRects[0].extent.y) / 2;
+            baseRect.point.y += nudge;
+         }
+
          //  Draw a triangle (down arrow)
          S32 left = baseRect.point.x + baseRect.extent.x - 12;
          S32 right = left + 8;

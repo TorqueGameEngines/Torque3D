@@ -563,6 +563,11 @@ function PE_EmitterEditor::pickedNewEmitterTargetModule( %this, %module )
    PE_EmitterEditor.targetModule = %module;
    $PE_EMITTEREDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedParticleEmitterData." @ $TorqueScriptFileExtension;
    
+   if(!isDirectory(filePath($PE_EMITTEREDITOR_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_EMITTEREDITOR_DEFAULT_FILENAME));
+   }
+   
    // Create a new emitter.
    %emitter = getUniqueName( "newEmitter" );
    datablock ParticleEmitterData( %emitter : DefaultEmitter )

@@ -7,6 +7,14 @@ function AssetBrowser_SelectModule::showDialog(%this, %callback)
 function AssetBrowser_SelectModule::onWake(%this)
 {
    AssetBrowser_SelectModuleWindow-->ModuleList.refresh();
+   
+   %defaultModule = EditorSettings.value("Assets/New/defaultModule", "");
+   if(%defaultModule !$= "" && 
+      EditorSettings.value("Assets/New/alwaysPromptModuleTarget", false) == false)
+   {
+      Canvas.popDialog(AssetBrowser_SelectModule);
+      eval(%this.callback @ "(" @ %defaultModule @ ");");
+   }
 }
 
 function AssetBrowser_SelectModule::moduleSelected(%this)
@@ -24,10 +32,7 @@ function AssetBrowser_SelectModule::moduleSelected(%this)
 
 function SelectModule_NewAssetModuleBtn::onClick(%this)
 {
-   Canvas.pushDialog(AssetBrowser_AddModule);
-   AssetBrowser_addModuleWindow.selectWindow();
-   
-   AssetBrowser_AddModule.callback = "AssetBrowser_selectModule.newModuleAdded();";
+   AssetBrowser.CreateNewModule("AssetBrowser_selectModule.newModuleAdded();");
 }
 
 function AssetBrowser_selectModule::newModuleAdded(%this)

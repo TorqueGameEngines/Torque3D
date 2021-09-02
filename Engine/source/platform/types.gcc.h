@@ -46,6 +46,7 @@ typedef unsigned long  U64;
 #define TORQUE_FORCEINLINE __attribute__((always_inline))
 #define TORQUE_CASE_FALLTHROUGH __attribute__((fallthrough))
 #define TORQUE_NOINLINE __attribute__ ((noinline))
+#define TORQUE_UNLIKELY
 
 //--------------------------------------
 // Identify the compiler string

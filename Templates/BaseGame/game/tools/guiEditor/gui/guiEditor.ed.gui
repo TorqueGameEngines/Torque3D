@@ -22,8 +22,8 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
       Profile = "ToolsGuiFrameSetProfile";
       HorizSizing = "width";
       VertSizing = "height";
-      Position = "0 0";
-      Extent = "800 583";
+      Position = "-1 -1";
+      Extent = "801 584";
       MinExtent = "8 2";
       canSave = "1";
       Visible = "1";
@@ -50,24 +50,28 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
          Visible = "1";
          hovertime = "1000";
 
-         new GuiContainer(GHToolBar) {
-            margin = "0 0 0 0";
-            padding = "0 0 0 0";
-            anchorTop = "1";
-            anchorBottom = "0";
-            anchorLeft = "1";
-            anchorRight = "0";
-            isContainer = "1";
-            profile = "ToolsMenubarProfile";
+         new GuiStackControl(GuiEditorToolbarStack) {
+            stackingType = "Horizontal";
+            horizStacking = "Left to Right";
+            vertStacking = "Top to Bottom";
+            padding = "0";
+            dynamicSize = "1";
+            dynamicNonStackExtent = "0";
+            dynamicPos = "0";
+            changeChildSizeToFit = "0";
+            changeChildPosition = "1";
+            position = "0 0";
+            extent = "885 32";
+            minExtent = "16 16";
             horizSizing = "right";
             vertSizing = "bottom";
-            position = "0 0";
-            extent = "16000 32";
-            minExtent = "8 2";
-            canSave = "1";
+            profile = "ToolsGuiDefaultProfile";
             visible = "1";
-            tooltipProfile = "ToolsGuiToolTipProfile";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
             hovertime = "1000";
+            isContainer = "1";
+            canSave = "1";
             canSaveDynamicFields = "0";
 
             new GuiBitmapButtonCtrl(GHWorldEditor) {
@@ -136,27 +140,31 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                canSaveDynamicFields = "0";
             };
             new GuiBitmapButtonCtrl() {
-               canSaveDynamicFields = "0";
-               internalName = AssetBrowserBtn;
-               Enabled = "1";
-               isContainer = "0";
-               Profile = "ToolsGuiButtonProfile";
-               HorizSizing = "right";
-               VertSizing = "bottom";
-               position = "98 3";
-               Extent = "29 27";
-               MinExtent = "8 2";
-               canSave = "1";
-               Visible = "1";
-               Command = "AssetBrowser.ShowDialog();";
-               tooltipprofile = "ToolsGuiToolTipProfile";
-               ToolTip = "Asset Browser";
-               hovertime = "750";
-               bitmapAsset = "ToolsModule:menuGrid_image";
+               BitmapAsset = "ToolsModule:settings_n_image";
                bitmapMode = "Stretched";
+               autoFitExtents = "0";
+               useModifiers = "0";
+               useStates = "1";
+               masked = "0";
+               groupNum = "-1";
                buttonType = "PushButton";
-               groupNum = "0";
                useMouseEvents = "0";
+               position = "150 0";
+               extent = "29 27";
+               minExtent = "8 8";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiButtonProfile";
+               visible = "1";
+               active = "1";
+               command = "ESettingsWindow.toggleEditorSettings();";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               tooltip = "Open Editor Settings";
+               hovertime = "1000";
+               isContainer = "0";
+               internalName = "editorSettingsBtn";
+               canSave = "1";
+               canSaveDynamicFields = "0";
             };
             new GuiBitmapCtrl() {
                bitmapAsset = "ToolsModule:separator_h_image";
@@ -174,21 +182,37 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                hovertime = "1000";
                canSaveDynamicFields = "0";
             };
-         };
-         new GuiControl() {
-            isContainer = "1";
-            profile = "ToolsGuiDefaultProfile";
-            horizSizing = "width";
-            vertSizing = "bottom";
-            position = "131 0";
-            extent = "723 32";
-            minExtent = "8 2";
-            canSave = "1";
-            visible = "1";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-            hovertime = "1000";
-            canSaveDynamicFields = "0";
-
+            new GuiBitmapButtonCtrl() {
+               canSaveDynamicFields = "0";
+               internalName = AssetBrowserBtn;
+               Enabled = "1";
+               isContainer = "0";
+               Profile = "ToolsGuiButtonProfile";
+               HorizSizing = "right";
+               VertSizing = "bottom";
+               position = "98 3";
+               Extent = "29 27";
+               MinExtent = "8 2";
+               canSave = "1";
+               Visible = "1";
+               Command = "AssetBrowser.toggleDialog();";
+               tooltipprofile = "ToolsGuiToolTipProfile";
+               ToolTip = "Asset Browser";
+               hovertime = "750";
+               bitmapAsset = "ToolsModule:menuGrid_image";
+               bitmapMode = "Stretched";
+               buttonType = "PushButton";
+               groupNum = "0";
+               useMouseEvents = "0";
+            };
+            new GuiBitmapCtrl() {
+               Enabled = "1";
+               Profile = "ToolsGuiDefaultProfile";
+               position = "160 3";
+               Extent = "2 26";
+               MinExtent = "1 1";
+               bitmapAsset = "ToolsModule:separator_h_image";
+            };
             new GuiPopUpMenuCtrl(GuiEditorContentList) {
                maxPopupHeight = "200";
                sbUsesNAColor = "0";
@@ -205,9 +229,9 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                isContainer = "0";
                profile = "ToolsGuiPopUpMenuProfile";
                horizSizing = "right";
-               vertSizing = "bottom";
-               position = "8 7";
-               extent = "145 18";
+               vertSizing = "center";
+               position = "8 0";
+               extent = "145 27";
                minExtent = "8 2";
                canSave = "1";
                visible = "1";
@@ -231,9 +255,9 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                isContainer = "0";
                profile = "ToolsGuiPopUpMenuProfile";
                horizSizing = "right";
-               vertSizing = "bottom";
-               position = "161 7";
-               extent = "136 18";
+               vertSizing = "center";
+               position = "161 0";
+               extent = "136 27";
                minExtent = "8 2";
                canSave = "1";
                visible = "1";
@@ -247,7 +271,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                isContainer = "0";
                profile = "ToolsGuiDefaultProfile";
                horizSizing = "right";
-               vertSizing = "bottom";
+               vertSizing = "center";
                position = "307 3";
                extent = "2 26";
                minExtent = "1 1";
@@ -257,20 +281,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                hovertime = "1000";
                canSaveDynamicFields = "0";
             };
-            new GuiControl() {
-               isContainer = "1";
-               profile = "ToolsGuiDefaultProfile";
-               horizSizing = "right";
-               vertSizing = "bottom";
-               position = "312 3";
-               extent = "95 27";
-               minExtent = "8 2";
-               canSave = "1";
-               visible = "1";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               canSaveDynamicFields = "0";
-
                new GuiBitmapButtonCtrl(GuiEditorSnapCheckBox) {
                   bitmapAsset = "ToolsModule:snap_grid_n_image";
                   bitmapMode = "Stretched";
@@ -302,10 +312,10 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   isContainer = "0";
                   profile = "ToolsGuiButtonProfile";
                   horizSizing = "right";
-                  vertSizing = "bottom";
+               vertSizing = "center";
                   position = "31 0";
                   extent = "29 27";
-                  minExtent = "120 21";
+               minExtent = "21 21";
                   canSave = "1";
                   visible = "1";
                   command = "GuiEditor.toggleEdgeSnap();";
@@ -324,10 +334,10 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   isContainer = "0";
                   profile = "ToolsGuiButtonProfile";
                   horizSizing = "right";
-                  vertSizing = "bottom";
+               vertSizing = "center";
                   position = "62 0";
                   extent = "29 27";
-                  minExtent = "120 21";
+               minExtent = "21 21";
                   canSave = "1";
                   visible = "1";
                   command = "GuiEditor.toggleCenterSnap();";
@@ -336,7 +346,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
                };
-            };
             new GuiBitmapCtrl() {
                bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
@@ -353,20 +362,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                hovertime = "1000";
                canSaveDynamicFields = "0";
             };
-            new GuiControl() {
-               isContainer = "1";
-               profile = "ToolsGuiDefaultProfile";
-               horizSizing = "right";
-               vertSizing = "bottom";
-               position = "422 3";
-               extent = "95 27";
-               minExtent = "8 2";
-               canSave = "1";
-               visible = "1";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               canSaveDynamicFields = "0";
-
                new GuiBitmapButtonCtrl() {
                   bitmapAsset = "ToolsModule:align_left_n_image";
                   bitmapMode = "Stretched";
@@ -380,7 +375,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   vertSizing = "bottom";
                   position = "0 0";
                   extent = "29 27";
-                  minExtent = "120 21";
+               minExtent = "21 21";
                   canSave = "1";
                   visible = "1";
                   command = "GuiEditor.Justify(0);";
@@ -433,21 +428,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
                };
-            };
-            new GuiControl() {
-               isContainer = "1";
-               profile = "ToolsGuiDefaultProfile";
-               horizSizing = "right";
-               vertSizing = "bottom";
-               position = "498 3";
-               extent = "95 27";
-               minExtent = "8 2";
-               canSave = "1";
-               visible = "1";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               canSaveDynamicFields = "0";
-
                new GuiBitmapButtonCtrl() {
                   bitmapAsset = "ToolsModule:align_top_n_image";
                   bitmapMode = "Stretched";
@@ -461,7 +441,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   vertSizing = "bottom";
                   position = "0 0";
                   extent = "29 27";
-                  minExtent = "120 21";
+               minExtent = "21 21";
                   canSave = "1";
                   visible = "1";
                   command = "GuiEditor.Justify(3);";
@@ -514,7 +494,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
                };
-            };
             new GuiBitmapCtrl() {
                bitmapAsset = "ToolsModule:separator_h_image";
                wrap = "0";
@@ -547,20 +526,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                hovertime = "1000";
                canSaveDynamicFields = "0";
             };
-            new GuiControl() {
-               isContainer = "1";
-               profile = "ToolsGuiDefaultProfile";
-               horizSizing = "right";
-               vertSizing = "bottom";
-               position = "615 3";
-               extent = "117 27";
-               minExtent = "8 2";
-               canSave = "1";
-               visible = "1";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               canSaveDynamicFields = "0";
-
                new GuiBitmapButtonCtrl() {
                   bitmapAsset = "ToolsModule:send_to_back_n_image";
                   bitmapMode = "Stretched";
@@ -605,21 +570,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
                };
-            };
-            new GuiControl() {
-               isContainer = "1";
-               profile = "ToolsGuiDefaultProfile";
-               horizSizing = "right";
-               vertSizing = "bottom";
-               position = "583 3";
-               extent = "60 27";
-               minExtent = "8 2";
-               canSave = "1";
-               visible = "1";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               canSaveDynamicFields = "0";
-
                new GuiBitmapButtonCtrl() {
                   bitmapAsset = "ToolsModule:distribute_horizontal_n_image";
                   bitmapMode = "Stretched";
@@ -663,7 +613,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                   ToolTip = "Distribute Vertically";
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
-               };
             };
          };
          //---------------------

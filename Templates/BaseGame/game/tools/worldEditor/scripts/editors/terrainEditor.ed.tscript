@@ -159,7 +159,7 @@ function EPainter::updateLayers( %this, %matIndex )
    %ctrl = new GuiIconButtonCtrl()
    {
       profile = "GuiCreatorIconButtonProfile";
-      iconBitmap = "~/worldEditor/images/terrainpainter/new_layer_icon";
+      iconBitmapAsset = "ToolsModule:new_layer_icon_image";
       iconLocation = "Left";
       textLocation = "Right";
       extent = %listWidth SPC "46";

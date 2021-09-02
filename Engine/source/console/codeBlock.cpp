@@ -405,6 +405,30 @@ bool CodeBlock::read(StringTableEntry fileName, Stream &st)
       for (i = 0; i < size; i++)
          st.read(&functionFloats[i]);
    }
+
+   // Variable register mapping table
+   st.read(&size);
+   if (size)
+   {
+      for (i = 0; i < size; i++)
+      {
+         char functionNameBuffer[256];
+         st.readString(functionNameBuffer);
+         StringTableEntry fnName = StringTable->insert(functionNameBuffer);
+
+         U32 count;
+         st.read(&count);
+         for (U32 j = 0; j < count; j++)
+         {
+            char varNameBuffer[256];
+            st.readString(varNameBuffer);
+            StringTableEntry varName = StringTable->insert(varNameBuffer);
+
+            variableRegisterTable.localVarToRegister[fnName].varList.push_back(varName);
+         }
+      }
+   }
+
    U32 codeLength;
    st.read(&codeLength);
    st.read(&lineBreakPairCount);
@@ -533,6 +557,9 @@ bool CodeBlock::compile(const char *codeFileName, StringTableEntry fileName, con
    getGlobalFloatTable().write(st);
    getFunctionFloatTable().write(st);
 
+   // write variable mapping table
+   getFunctionVariableMappingTable().write(st);
+
    if (lastIp != codeSize)
       Con::errorf(ConsoleLogEntry::General, "CodeBlock::compile - precompile size mismatch, a precompile/compile function pair is probably mismatched.");
 
@@ -645,9 +672,6 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    codeStream.emit(OP_RETURN_VOID);
    codeStream.emitCodeStream(&codeSize, &code, &lineBreakPairs);
 
-   //if (Con::getBoolVariable("dump"))
-   //dumpInstructions(0, false);
-
    consoleAllocReset();
 
    if (lineBreakPairCount && fileName)
@@ -679,10 +703,14 @@ String CodeBlock::getFunctionArgs(U32 ip)
 {
    StringBuilder str;
 
+   StringTableEntry fnName = CodeToSTE(code, ip);
+   StringTableEntry fnNamespace = CodeToSTE(code, ip + 2);
+   StringTableEntry fnNsName = StringTable->insert(avar("%s::%s", fnNamespace, fnName));
+
    U32 fnArgc = code[ip + 8];
    for (U32 i = 0; i < fnArgc; ++i)
    {
-      StringTableEntry var = CodeToSTE(code, ip + (i * 2) + 9);
+      StringTableEntry var = variableRegisterTable.localVarToRegister[fnNsName].varList[i];
 
       if (i != 0)
          str.append(", ");

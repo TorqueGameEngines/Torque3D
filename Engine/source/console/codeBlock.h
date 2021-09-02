@@ -27,18 +27,18 @@
 
 struct CompilerLocalVariableToRegisterMappingTable
 {
-   // First key: function name
    struct RemappingTable
    {
-      std::unordered_map<StringTableEntry, S32> table;
+      std::vector<StringTableEntry> varList;
    };
 
    std::unordered_map<StringTableEntry, RemappingTable> localVarToRegister;
 
-   void add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName, S32 reg);
+   void add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName);
    S32 lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName);
    CompilerLocalVariableToRegisterMappingTable copy();
    void reset();
+   void write(Stream& stream);
 };
 
 #include "console/compiler.h"

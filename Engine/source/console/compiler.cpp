@@ -212,11 +212,11 @@ void CompilerStringTable::write(Stream &st)
 
 //------------------------------------------------------------
 
-void CompilerLocalVariableToRegisterMappingTable::add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName, S32 reg)
+void CompilerLocalVariableToRegisterMappingTable::add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName)
 {
    StringTableEntry funcLookupTableName = StringTable->insert(avar("%s::%s", namespaceName, functionName));
 
-   localVarToRegister[funcLookupTableName].table[varName] = reg;
+   localVarToRegister[funcLookupTableName].varList.push_back(varName);;
 }
 
 S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName)
@@ -226,11 +226,11 @@ S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry namespa
    auto functionPosition = localVarToRegister.find(funcLookupTableName);
    if (functionPosition != localVarToRegister.end())
    {
-      const auto& table = localVarToRegister[funcLookupTableName].table;
-      auto varPosition = table.find(varName);
+      const auto& table = localVarToRegister[funcLookupTableName].varList;
+      auto varPosition = std::find(table.begin(), table.end(), varName);
       if (varPosition != table.end())
       {
-         return varPosition->second;
+         return std::distance(table.begin(), varPosition);
       }
    }
 
@@ -243,12 +243,27 @@ CompilerLocalVariableToRegisterMappingTable CompilerLocalVariableToRegisterMappi
    // Trivilly copyable as its all plain old data and using STL containers... (We want a deep copy though!)
    CompilerLocalVariableToRegisterMappingTable table;
    table.localVarToRegister = localVarToRegister;
-   return std::move(table);
+   return table;
 }
 
 void CompilerLocalVariableToRegisterMappingTable::reset()
 {
    localVarToRegister.clear();
+}
+
+void CompilerLocalVariableToRegisterMappingTable::write(Stream& stream)
+{
+   stream.write(localVarToRegister.size());
+   for (const auto& pair : localVarToRegister)
+   {
+      StringTableEntry functionName = pair.first;
+      stream.writeString(functionName);
+
+      const auto& localVariableTableForFunction = localVarToRegister[functionName].varList;
+      stream.write(localVariableTableForFunction.size());
+      for (const StringTableEntry& varName : localVariableTableForFunction)
+         stream.writeString(varName);
+   }
 }
 
 //------------------------------------------------------------

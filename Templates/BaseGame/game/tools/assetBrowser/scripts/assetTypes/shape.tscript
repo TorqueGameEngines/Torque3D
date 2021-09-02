@@ -340,7 +340,7 @@ function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
    
    %newStatic = new TSStatic()
    {
-      position = %pos;
+      position = %position;
       shapeAsset = %assetId;
    };
    

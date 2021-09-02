@@ -515,6 +515,7 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/New/alwaysPromptModuleTarget", "Always Prompt Target Module", "bool", "If off, use the default module"); 
    SettingsInspector.endGroup();
    
+   %formattedConfigList = "";
    for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
    {
       %configName = ImportAssetWindow.importConfigsList.getKey(%i);

@@ -284,8 +284,8 @@ class String::StringData : protected StringDataImpl
             delete [] mUTF16;
       }
 
-      void* TORQUE_NOINLINE operator new(size_t size, U32 len);
-      void* TORQUE_NOINLINE operator new( size_t size, U32 len, DataChunker& chunker );
+      TORQUE_NOINLINE void* operator new(size_t size, U32 len);
+      TORQUE_NOINLINE void* operator new( size_t size, U32 len, DataChunker& chunker );
       void operator delete(void *);
 
       bool isShared() const

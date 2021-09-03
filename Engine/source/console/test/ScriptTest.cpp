@@ -807,7 +807,6 @@ TEST(Script, Sugar_Syntax)
          %extent = 10 SPC 20;
          %scaling = 1;
          %size = %extent.x * %scaling;
-         echo("%size = " @ %size @ " calculated = " @ (%extent.x * %scaling)); 
          return %size;
       }
 
@@ -815,6 +814,25 @@ TEST(Script, Sugar_Syntax)
    )");
 
    ASSERT_EQ(valueStoreCalculated.getInt(), 10);
+
+   ConsoleValue globalValueGet = RunScript(R"(
+      new SimObject(AAAA);
+      AAAA.doSomething = false;
+      $vec = "1 2 3";
+      return $vec.x * 4;
+   )");
+
+   ASSERT_EQ(globalValueGet.getFloat(), 4);
+
+   ConsoleValue globalValueSet = RunScript(R"(
+      new SimObject(AAAAB);
+      AAAAB.doSomething = false;
+      $vec2 = "1 2 3";
+      $vec2.x *= 4;
+      return $vec2.x;
+   )");
+
+   ASSERT_EQ(globalValueSet.getFloat(), 4);
 }
 
 TEST(Script, InnerObjectTests)
@@ -869,6 +887,28 @@ TEST(Script, InnerObjectTests)
    )");
 
    ASSERT_EQ(nestedFuncCall.getInt(), 123);
+}
+
+TEST(Script, MiscRegressions)
+{
+   ConsoleValue regression1 = RunScript(R"(
+      new SimObject(TheRegressionObject);
+
+      function doTest()
+      {
+          TheRegressionObject.hidden = false;
+
+          %previewSize = 100 SPC 100;
+          %previewScaleSize = 2;
+          %size = %previewSize.x * %previewScaleSize;
+
+          return %size;
+      }
+
+      return doTest();
+   )");
+
+   ASSERT_EQ(regression1.getInt(), 200);
 }
 
 #endif

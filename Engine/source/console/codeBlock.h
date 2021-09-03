@@ -23,6 +23,7 @@
 #ifndef _CODEBLOCK_H_
 #define _CODEBLOCK_H_
 
+#include <vector>
 #include <unordered_map>
 
 struct CompilerLocalVariableToRegisterMappingTable

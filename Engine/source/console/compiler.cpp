@@ -253,16 +253,20 @@ void CompilerLocalVariableToRegisterMappingTable::reset()
 
 void CompilerLocalVariableToRegisterMappingTable::write(Stream& stream)
 {
-   stream.write(localVarToRegister.size());
+   stream.write((U32)localVarToRegister.size());
+
    for (const auto& pair : localVarToRegister)
    {
       StringTableEntry functionName = pair.first;
       stream.writeString(functionName);
 
       const auto& localVariableTableForFunction = localVarToRegister[functionName].varList;
-      stream.write(localVariableTableForFunction.size());
+      stream.write((U32)localVariableTableForFunction.size());
+
       for (const StringTableEntry& varName : localVariableTableForFunction)
+      {
          stream.writeString(varName);
+      }
    }
 }
 

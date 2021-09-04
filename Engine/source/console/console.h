@@ -496,7 +496,8 @@ namespace Con
       /// 10/14/14 - jamesu - 47->48 Added opcodes to reduce reliance on strings in function calls
       /// 10/07/17 - JTH - 48->49 Added opcode for function pointers and revamp of interpreter 
       ///                         from switch to function calls.
-      DSOVersion = 49,
+      /// 09/04/21 - JTH - 49->50 Rewrite of interpreter
+      DSOVersion = 50,
 
       MaxLineLength = 512,  ///< Maximum length of a line of console input.
       MaxDataTypes = 256    ///< Maximum number of registered data types.

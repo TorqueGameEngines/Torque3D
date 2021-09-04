@@ -412,17 +412,13 @@ bool CodeBlock::read(StringTableEntry fileName, Stream &st)
    {
       for (i = 0; i < size; i++)
       {
-         char functionNameBuffer[256];
-         st.readString(functionNameBuffer);
-         StringTableEntry fnName = StringTable->insert(functionNameBuffer);
+         StringTableEntry fnName = st.readSTString();
 
          U32 count;
          st.read(&count);
          for (U32 j = 0; j < count; j++)
          {
-            char varNameBuffer[256];
-            st.readString(varNameBuffer);
-            StringTableEntry varName = StringTable->insert(varNameBuffer);
+            StringTableEntry varName = st.readSTString();
 
             variableRegisterTable.localVarToRegister[fnName].varList.push_back(varName);
          }

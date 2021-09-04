@@ -674,6 +674,13 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
 
    consoleAllocReset();
 
+#ifndef TORQUE_SHIPPING
+   if (Con::getBoolVariable("$Debug::DumpByteCode"))
+   {
+      dumpInstructions();
+   }
+#endif
+
    if (lineBreakPairCount && fileName)
       calcBreakList();
 

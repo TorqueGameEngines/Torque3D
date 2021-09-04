@@ -909,6 +909,24 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_EQ(regression1.getInt(), 200);
+
+   ConsoleValue regression2 = RunScript(R"(
+      new SimObject(TheRegressionObject2) 
+      {
+         extent = "100 200";
+      };
+
+      function doTest()
+      {
+          %scale = 2;
+          %position = TheRegressionObject2.extent.x SPC TheRegressionObject2.extent.y * %scale;
+          return %position.y;
+      }
+
+      return doTest();
+   )");
+
+   ASSERT_EQ(regression2.getInt(), 400);
 }
 
 #endif

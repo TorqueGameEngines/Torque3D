@@ -164,11 +164,13 @@ namespace Con
    }
 }
 
-static void getFieldComponent(StringTableEntry subField, char val[], S32 currentLocalRegister)
+static void getFieldComponent(SimObject* object, StringTableEntry field, const char* array, StringTableEntry subField, char val[], S32 currentLocalRegister)
 {
    const char* prevVal = NULL;
 
-   if (currentLocalRegister != -1)
+   if (object && field)
+      prevVal = object->getDataField(field, array);
+   else if (currentLocalRegister != -1)
       prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
    else if (gEvalState.currentVariable)
       prevVal = gEvalState.getStringVariable();
@@ -213,7 +215,7 @@ static void getFieldComponent(StringTableEntry subField, char val[], S32 current
       val[0] = 0;
 }
 
-static void setFieldComponent(StringTableEntry subField, S32 currentLocalRegister)
+static void setFieldComponent(SimObject* object, StringTableEntry field, const char* array, StringTableEntry subField, S32 currentLocalRegister)
 {
    // Copy the current string value
    char strValue[1024];
@@ -222,6 +224,8 @@ static void setFieldComponent(StringTableEntry subField, S32 currentLocalRegiste
    char val[1024] = "";
    const char* prevVal = NULL;
 
+   if (object && field)
+      prevVal = object->getDataField(field, array);
    if (currentLocalRegister != -1)
       prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
    // Set the value on a variable.
@@ -265,7 +269,9 @@ static void setFieldComponent(StringTableEntry subField, S32 currentLocalRegiste
    if (val[0] != 0)
    {
       // Update the field or variable.
-      if (currentLocalRegister != -1)
+      if (object && field)
+         object->setDataField(field, 0, val);
+      else if (currentLocalRegister != -1)
          gEvalState.setLocalStringVariable(currentLocalRegister, val, dStrlen(val));
       else if (gEvalState.currentVariable)
          gEvalState.setStringVariable(val);
@@ -721,7 +727,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    } objectCreationStack[objectCreationStackSize];
 
    SimObject* currentNewObject = 0;
+   StringTableEntry prevField = NULL;
    StringTableEntry curField = NULL;
+   SimObject* prevObject = NULL;
    SimObject* curObject = NULL;
    SimObject* saveObject = NULL;
    Namespace::Entry* nsEntry;
@@ -1400,6 +1408,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // If a variable is set, then these must be NULL. It is necessary
          // to set this here so that the vector parser can appropriately
          // identify whether it's dealing with a vector.
+         prevField = NULL;
+         prevObject = NULL;
          curObject = NULL;
 
          // Used for local variable caching of what is active...when we
@@ -1420,6 +1430,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ip += 2;
 
          // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
          curObject = NULL;
 
          // Used for local variable caching of what is active...when we
@@ -1437,6 +1449,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          var = StringTable->insert(stack[_STK].getString());
 
          // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
          curObject = NULL;
 
          // Used for local variable caching of what is active...when we
@@ -1454,6 +1468,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          var = StringTable->insert(stack[_STK].getString());
 
          // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
          curObject = NULL;
 
          // Used for local variable caching of what is active...when we
@@ -1500,6 +1516,12 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_LOAD_LOCAL_VAR_UINT:
          reg = code[ip++];
          currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
          stack[_STK + 1].setInt(gEvalState.getLocalIntVariable(reg));
          _STK++;
          break;
@@ -1507,6 +1529,12 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_LOAD_LOCAL_VAR_FLT:
          reg = code[ip++];
          currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
          stack[_STK + 1].setFloat(gEvalState.getLocalFloatVariable(reg));
          _STK++;
          break;
@@ -1514,6 +1542,12 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_LOAD_LOCAL_VAR_STR:
          reg = code[ip++];
          currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
          val = gEvalState.getLocalStringVariable(reg);
          stack[_STK + 1].setString(val);
          _STK++;
@@ -1522,12 +1556,24 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_SAVE_LOCAL_VAR_UINT:
          reg = code[ip++];
          currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
          gEvalState.setLocalIntVariable(reg, stack[_STK].getInt());
          break;
 
       case OP_SAVE_LOCAL_VAR_FLT:
          reg = code[ip++];
          currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
          gEvalState.setLocalFloatVariable(reg, stack[_STK].getFloat());
          break;
 
@@ -1535,10 +1581,18 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          reg = code[ip++];
          val = stack[_STK].getString();
          currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
          gEvalState.setLocalStringVariable(reg, val, (S32)dStrlen(val));
          break;
 
       case OP_SETCUROBJECT:
+         // Save the previous object for parsing vector fields.
+         prevObject = curObject;
          val = stack[_STK].getString();
 
          // Sim::findObject will sometimes find valid objects from
@@ -1585,6 +1639,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_SETCURFIELD:
+         // Save the previous field for parsing vector fields.
+         prevField = curField;
          dStrcpy(prevFieldArray, curFieldArray, 256);
          curField = CodeToSTE(code, ip);
          curFieldArray[0] = 0;
@@ -1610,7 +1666,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // a special accessor?
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
-            getFieldComponent(curField, buff, currentRegister);
+            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff, currentRegister);
             stack[_STK + 1].setInt(dAtol(buff));
          }
          _STK++;
@@ -1625,7 +1681,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // a special accessor?
             char buff[FieldBufferSizeNumeric];
             memset(buff, 0, sizeof(buff));
-            getFieldComponent(curField, buff, currentRegister);
+            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff, currentRegister);
             stack[_STK + 1].setFloat(dAtod(buff));
          }
          _STK++;
@@ -1643,7 +1699,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             // a special accessor?
             char buff[FieldBufferSizeString];
             memset(buff, 0, sizeof(buff));
-            getFieldComponent(curField, buff, currentRegister);
+            getFieldComponent(prevObject, prevField, prevFieldArray, curField, buff, currentRegister);
             stack[_STK + 1].setString(buff);
          }
          _STK++;
@@ -1653,21 +1709,33 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          if (curObject)
             curObject->setDataField(curField, curFieldArray, stack[_STK].getString());
          else
-            setFieldComponent( curField, currentRegister );
+         {
+            // The field is not being set on an object. Maybe it's a special accessor?
+            setFieldComponent(prevObject, prevField, prevFieldArray, curField, currentRegister);
+            prevObject = NULL;
+         }
          break;
 
       case OP_SAVEFIELD_FLT:
          if (curObject)
             curObject->setDataField(curField, curFieldArray, stack[_STK].getString());
          else
-            setFieldComponent( curField, currentRegister );
+         {
+            // The field is not being set on an object. Maybe it's a special accessor?
+            setFieldComponent(prevObject, prevField, prevFieldArray, curField, currentRegister);
+            prevObject = NULL;
+         }
          break;
 
       case OP_SAVEFIELD_STR:
          if (curObject)
             curObject->setDataField(curField, curFieldArray, stack[_STK].getString());
          else
-            setFieldComponent( curField, currentRegister );
+         {
+            // The field is not being set on an object. Maybe it's a special accessor?
+            setFieldComponent(prevObject, prevField, prevFieldArray, curField, currentRegister);
+            prevObject = NULL;
+         }
          break;
 
       case OP_POP_STK:

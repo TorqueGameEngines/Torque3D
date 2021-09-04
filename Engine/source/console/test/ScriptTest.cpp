@@ -927,6 +927,29 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_EQ(regression2.getInt(), 400);
+
+   ConsoleValue regression3 = RunScript(R"(
+      function doTest()
+      {
+          %button = new GuiIconButtonCtrl()
+          {
+              active = true;
+          };
+
+          %button.setExtent(120, 20);
+
+          %button.setExtent("120 20");
+
+          %button.extent = "120 20";
+
+          %button.extent.x = 120;
+          %button.extent.y = 20;
+          return %button.extent;
+      }
+      return doTest();
+   )");
+
+   ASSERT_STREQ(regression3.getString(), "120 20");
 }
 
 #endif

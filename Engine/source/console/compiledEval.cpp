@@ -226,7 +226,7 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
 
    if (object && field)
       prevVal = object->getDataField(field, array);
-   if (currentLocalRegister != -1)
+   else if (currentLocalRegister != -1)
       prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
    // Set the value on a variable.
    else if (gEvalState.currentVariable)

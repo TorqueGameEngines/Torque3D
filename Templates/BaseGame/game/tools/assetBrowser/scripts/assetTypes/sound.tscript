@@ -38,7 +38,7 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
    %newSFXEmitter = new SFXEmitter()
    {
       position = %pos;
-      fileName = %assetDef.getSoundPath();
+      soundAsset = %assetDef.getAssetId();
       pitch = %assetDef.pitchAdjust;
       volume = %assetDef.volumeAdjust;
    };
@@ -50,4 +50,9 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
       
    EWorldEditor.isDirty = true;
    
+}
+
+function AssetBrowser::editSoundAsset(%this, %assetDef)
+{
+   %soundSource = %assetDef.playSound();
 }

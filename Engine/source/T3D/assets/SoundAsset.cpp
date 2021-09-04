@@ -40,6 +40,10 @@
 #include "assets/assetPtr.h"
 #endif
 
+#ifndef _SFXSOURCE_H_
+#include "sfx/sfxSource.h"
+#endif
+
 // Debug Profiling.
 #include "platform/profiler.h"
 #include "sfx/sfxTypes.h"
@@ -159,7 +163,7 @@ void SoundAsset::initPersistFields()
    addField("maxDistance", TypeF32, Offset(mProfileDesc.mMaxDistance, SoundAsset), "Max distance for sound.");
    addField("coneInsideAngle", TypeS32, Offset(mProfileDesc.mConeInsideAngle, SoundAsset), "Cone inside angle.");
    addField("coneOutsideAngle", TypeS32, Offset(mProfileDesc.mConeOutsideAngle, SoundAsset), "Cone outside angle.");
-   addField("coneOutsideVolume", TypeS32, Offset(mProfileDesc.mConeOutsideVolume, SoundAsset), "Cone outside volume.");
+   addField("coneOutsideVolume", TypeF32, Offset(mProfileDesc.mConeOutsideVolume, SoundAsset), "Cone outside volume.");
    addField("rolloffFactor", TypeF32, Offset(mProfileDesc.mRolloffFactor, SoundAsset), "Rolloff factor.");
    addField("scatterDistance", TypePoint3F, Offset(mProfileDesc.mScatterDistance, SoundAsset), "Randomization to the spacial position of the sound.");
    addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
@@ -181,13 +185,7 @@ void SoundAsset::initializeAsset(void)
    if (mSoundFile == StringTable->EmptyString())
       return;
 
-   //ResourceManager::get().getChangedSignal.notify(this, &SoundAsset::_onResourceChanged);
-
-   //Ensure our path is expando'd if it isn't already
    mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-
-   mSoundPath = expandAssetFilePath(mSoundPath);
-
    loadSound();
 }
 
@@ -208,7 +206,6 @@ void SoundAsset::onAssetRefresh(void)
 
    //Update
    mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-
    loadSound();
 }
 
@@ -225,7 +222,7 @@ bool SoundAsset::loadSound()
       else
       {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
          mSFXProfile.setDescription(&mProfileDesc);
-         mSFXProfile.setSoundFileName(mSoundFile);
+         mSFXProfile.setSoundFileName(mSoundPath);
          mSFXProfile.setPreload(mPreload);
       }
 
@@ -254,9 +251,96 @@ void SoundAsset::setSoundFile(const char* pSoundFile)
    refreshAsset();
 }
 
+StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
+{
+   if (fileName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry materialAssetId = "";
+
+   AssetQuery query;
+   U32 foundCount = AssetDatabase.findAssetType(&query, "SoundAsset");
+   if (foundCount != 0)
+   {
+      for (U32 i = 0; i < foundCount; i++)
+      {
+         SoundAsset* soundAsset = AssetDatabase.acquireAsset<SoundAsset>(query.mAssetList[i]);
+         if (soundAsset && soundAsset->getSoundPath() == fileName)
+         {
+            materialAssetId = soundAsset->getAssetId();
+            AssetDatabase.releaseAsset(query.mAssetList[i]);
+            break;
+         }
+         AssetDatabase.releaseAsset(query.mAssetList[i]);
+      }
+   }
+
+   return materialAssetId;
+}
+
+U32 SoundAsset::getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset)
+{
+   (*materialAsset) = assetId;
+
+   if (materialAsset->notNull())
+   {
+      return (*materialAsset)->mLoadedState;
+   }
+   else
+   {
+      //Well that's bad, loading the fallback failed.
+      Con::warnf("MaterialAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+      return AssetErrCode::Failed;
+   }
+}
+
+U32 SoundAsset::getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsset>* soundAsset)
+{
+   AssetQuery query;
+   U32 foundAssetcount = AssetDatabase.findAssetType(&query, "SoundAsset");
+   if (foundAssetcount == 0)
+   {
+      //Well that's bad, loading the fallback failed.
+      Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of asset associated with filename %s failed with no fallback asset", fileName);
+      return AssetErrCode::Failed;
+   }
+   else
+   {
+      for (U32 i = 0; i < foundAssetcount; i++)
+      {
+         SoundAsset* tSoundAsset = AssetDatabase.acquireAsset<SoundAsset>(query.mAssetList[i]);
+         if (tSoundAsset && tSoundAsset->getSoundPath() == fileName)
+         {
+            soundAsset->setAssetId(query.mAssetList[i]);
+            AssetDatabase.releaseAsset(query.mAssetList[i]);
+            return (*soundAsset)->mLoadedState;
+         }
+         AssetDatabase.releaseAsset(query.mAssetList[i]); //cleanup if that's not the one we needed
+      }
+   }
+
+   //No good match
+   return AssetErrCode::Failed;
+}
+
 DefineEngineMethod(SoundAsset, getSoundPath, const char*, (), , "")
 {
    return object->getSoundPath();
+}
+
+DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zero),
+   "Gets the number of materials for this shape asset.\n"
+   "@return Material count.\n")
+{
+   if (object->getSfxProfile())
+   {
+      MatrixF transform;
+      transform.setPosition(position);
+      SFXSource* source = SFX->playOnce(object->getSfxProfile(), &transform, NULL, -1);
+      return source->getId();
+   }
+   else
+      return 0;
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
@@ -276,12 +360,63 @@ void GuiInspectorTypeSoundAssetPtr::consoleInit()
 
 GuiControl * GuiInspectorTypeSoundAssetPtr::constructEditControl()
 {
-   return nullptr;
+   // Create base filename edit controls
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   // Change filespec
+   char szBuffer[512];
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"SoundAsset\", \"AssetBrowser.changeAsset\", %s, \"\");",
+      getIdString());
+   mBrowseButton->setField("Command", szBuffer);
+
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+   // Create "Open in Editor" button
+   mEditButton = new GuiBitmapButtonCtrl();
+
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
+   mEditButton->setField("Command", szBuffer);
+
+   char bitmapName[512] = "ToolsModule:SFXEmitter_image";
+   mEditButton->setBitmap(StringTable->insert(bitmapName));
+
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Test play this sound");
+
+   mEditButton->registerObject();
+   addObject(mEditButton);
+
+   return retCtrl;
 }
 
 bool GuiInspectorTypeSoundAssetPtr::updateRects()
 {
-   return false;
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
+   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
+
+   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+   if (mBrowseButton != NULL)
+   {
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
+   }
+
+   if (mEditButton != NULL)
+   {
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mEditButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   return resized;
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetId);

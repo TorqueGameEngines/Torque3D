@@ -122,6 +122,9 @@ public:
    bool isLoop() { return mProfileDesc.mIsLooping; }
    bool is3D() { return mProfileDesc.mIs3D; }
 
+   static StringTableEntry getAssetIdByFileName(StringTableEntry fileName);
+   static U32 getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset);
+   static U32 getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
 
 protected:
    virtual void            initializeAsset(void);
@@ -143,7 +146,7 @@ class GuiInspectorTypeSoundAssetPtr : public GuiInspectorTypeFileName
    typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiBitmapButtonCtrl* mSoundButton;
+   GuiBitmapButtonCtrl* mEditButton;
 
    DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
    static void consoleInit();
@@ -168,14 +171,14 @@ public:
 /// Declares a sound asset
 /// This establishes the assetId, asset and legacy filepath fields, along with supplemental getter and setter functions
 /// </Summary>
-#define DECLARE_SOUNDASSET(className, name, profile) public: \
+#define DECLARE_SOUNDASSET(className, name) public: \
    Resource<SFXResource> m##name;\
    StringTableEntry m##name##Name; \
    StringTableEntry m##name##AssetId;\
    AssetPtr<SoundAsset> m##name##Asset = NULL;\
-   SFXProfile* m##name##Profile = &profile;\
+   SFXProfile* m##name##Profile = NULL;\
 public: \
-   const StringTableEntry get##name##File() const { return m##name##Name); }\
+   const StringTableEntry get##name##File() const { return m##name##Name; }\
    void set##name##File(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\
    const AssetPtr<SoundAsset> & get##name##Asset() const { return m##name##Asset; }\
    void set##name##Asset(const AssetPtr<SoundAsset> &_in) { m##name##Asset = _in;}\
@@ -206,7 +209,7 @@ public: \
          }\
          else\
          {\
-            StringTableEntry assetId = SoundAsset::getAssetIdByFilename(_in);\
+            StringTableEntry assetId = SoundAsset::getAssetIdByFileName(_in);\
             if (assetId != StringTable->EmptyString())\
             {\
                m##name##AssetId = assetId;\
@@ -232,9 +235,9 @@ public: \
          m##name = NULL;\
       }\
       \
-      if (m##name##Asset.notNull() && m##name##Asset->getStatus() != ShapeAsset::Ok)\
+      if (m##name##Asset.notNull() && m##name##Asset->getStatus() != SoundAsset::Ok)\
       {\
-         Con::errorf("%s(%s)::_set%s() - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, ShapeAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
+         Con::errorf("%s(%s)::_set%s() - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, SoundAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
       else if (m##name)\

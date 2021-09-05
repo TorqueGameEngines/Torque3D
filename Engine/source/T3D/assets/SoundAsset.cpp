@@ -343,6 +343,14 @@ DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zer
       return 0;
 }
 
+#ifdef TORQUE_TOOLS
+DefineEngineStaticMethod(SoundAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),
+   "Queries the Asset Database to see if any asset exists that is associated with the provided file path.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return SoundAsset::getAssetIdByFileName(StringTable->insert(filePath));
+}
+#endif
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeSoundAssetPtr,

@@ -6,6 +6,11 @@ function AssetBrowser_editAsset::saveAsset(%this)
    AssetBrowser.reloadAsset(%this.editedAssetId);
 
    AssetBrowser.refresh();
+   
+   %assetType = AssetDatabase.getAssetType(%this.editedAssetId);
+   %assetDef = AssetDatabase.acquireAsset(%this.editedAssetId);
+   AssetBrowser.call("on" @ %assetType @ "Changed", %assetDef);
+   AssetDatabase.releaseAsset(%this.editedAssetId);
 
    Canvas.popDialog(AssetBrowser_editAsset);
 }

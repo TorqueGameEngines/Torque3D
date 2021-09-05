@@ -791,6 +791,9 @@ void SFXSource::_setStatus( SFXStatus status )
 
 void SFXSource::_updateVolume( const MatrixF& listener )
 {
+   if (!mDescription)
+      return;
+
    // Handle fades (compute mFadedVolume).
       
    mFadedVolume = mPreFadeVolume;
@@ -919,13 +922,19 @@ void SFXSource::_updateVolume( const MatrixF& listener )
 
 void SFXSource::_updatePitch()
 {
+   if (!mDescription)
+      return;
+
    mEffectivePitch = mModulativePitch * mPitch;
 }
 
 //-----------------------------------------------------------------------------
 
 void SFXSource::_updatePriority()
-{      
+{
+   if (!mDescription)
+      return;
+
    mEffectivePriority = mPriority * mModulativePriority;
 
    SFXSource* group = getSourceGroup();

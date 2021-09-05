@@ -5,6 +5,12 @@ function AssetBrowser::editSoundAsset(%this, %assetDef)
    $PreviewSoundSource = %assetDef.playSound();
 }
 
+function AssetBrowser::onSoundAssetChanged(%this, %assetDef)
+{
+   if (isObject($PreviewSoundSource))
+        sfxStop($PreviewSoundSource);
+}
+
 function AssetBrowser::buildSoundAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;

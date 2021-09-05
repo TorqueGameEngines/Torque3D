@@ -416,7 +416,7 @@ function sanitizeFilename(%file)
    %sanitizedName = sanitizeString(%targetName);
    if(startsWith(%sanitizedName, "_"))
    {
-      %sanitizedName = substr(%sanitizedName, 1, -1);
+      %sanitizedName = getSubStr(%sanitizedName, 1, -1);
    }
    if(%sanitizedName !$= %targetName)
    {
@@ -471,6 +471,12 @@ function testFilenameExtensions(%filename)
    else if(isFile(%filename @ ".dae"))
       return %filename @ ".dae";
    else if(isFile(%filename @ ".dds"))
+      return %filename @ ".dds";
+   else if(isFile(%filename @ ".ogg"))
+      return %filename @ ".ogg";
+   else if(isFile(%filename @ ".wav"))
+      return %filename @ ".wav";
+   else if(isFile(%filename @ ".mp3"))
       return %filename @ ".dds";
       
    return %filename;
@@ -659,11 +665,14 @@ function findObjectName(%line, %createWord)
    return %objectName; 
 }
 
-function findObjectField(%fieldName)
+function findObjectField(%fieldName, %fileObj)
 {
+   if(%fileObj $= "")
+      %fileObj = $ProjectImporter::fileObject;
+      
    %value = "";
    %peekLineOffset = 0;
-   %peekLine = $ProjectImporter::fileObject.peekLine(%peekLineOffset);
+   %peekLine = %fileObj.peekLine(%peekLineOffset);
    while(!strIsMatchExpr("*};*", %peekLine) && 
          !strIsMatchExpr("*singleton*(*)*", %peekLine) && 
          !strIsMatchExpr("*new*(*)*", %peekLine) && 
@@ -671,7 +680,7 @@ function findObjectField(%fieldName)
          !strIsMatchExpr("\n", %peekLine) && 
          !strIsMatchExpr("\r", %peekLine))
    {
-      if(strpos(%peekLine, %fieldName) != -1)
+      if(strpos(strlwr(%peekLine), strlwr(%fieldName)) != -1)
       {
          %value = "";
          %pos = strpos(%peekLine, "= \"");
@@ -682,8 +691,7 @@ function findObjectField(%fieldName)
            %value = getSubStr(%peekLine, %pos+3, %endPos-%pos-3);
            break;
          }
-         else
-         {
+         
             %pos = strpos(%peekLine, "=\"");
             if(%pos != -1)
             {
@@ -692,16 +700,109 @@ function findObjectField(%fieldName)
               %value = getSubStr(%peekLine, %pos+2, %endPos-%pos-2);
               break;
             }
+         
+         %pos = strpos(%peekLine, "= ");
+         if(%pos != -1)
+         {
+           %endPos = strpos(%peekLine, ";", %pos); 
+           
+           %value = getSubStr(%peekLine, %pos+2, %endPos-%pos-2);
+           break;
+         }
+
+         %pos = strpos(%peekLine, "=");
+         if(%pos != -1)
+         {
+           %endPos = strpos(%peekLine, ";", %pos); 
+           
+           %value = getSubStr(%peekLine, %pos+2, %endPos-%pos-2);
+           break;
          }  
       }
       
       %peekLineOffset++;
-      %peekLine = $ProjectImporter::fileObject.peekLine(%peekLineOffset);
+      %peekLine = %fileObj.peekLine(%peekLineOffset);
    }  
    
    return %value;
 }
 
+function findObjectInFiles(%objectName)
+{
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( "*.*", true);
+   
+   %fileObj = new FileObject();
+   
+   while( %file !$= "" )
+   {      
+      %filename = fileName(%file);
+      %fileBase = fileBase(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      if ( %fileObj.openForRead( %file ) ) 
+      {
+         %lineNum = 0;
+         while ( !%fileObj.isEOF() ) 
+         {
+            %line = %fileObj.readLine();
+            %trimmedLine = trim(%line);
+            
+            if(strIsMatchExpr("*new*(*)*", %line) && strpos(%line, "::") == -1)
+            {
+               %className = findObjectClass(%line, "new");
+               if (%className $= "") continue;
+
+               %objName = findObjectName(%line, "new");
+               
+               if(%objectName $= %objName)
+               {
+                  return %fileObj;
+               }
+            }
+            else if(strIsMatchExpr("*datablock*(*)*", %line) && strpos(%line, "::") == -1)
+            {
+               %className = findObjectClass(%line, "datablock");
+               if (%className $= "") continue;
+
+               %objName = findObjectName(%line, "datablock");
+               
+               if(%objectName $= %objName)
+               {
+                  return %fileObj;
+               }
+            }
+            else if(strIsMatchExpr("*singleton*(*)*", %line) && strpos(%line, "::") == -1)
+            {
+               %className = findObjectClass(%line, "singleton");
+               if (%className $= "") continue;
+
+               %objName = findObjectName(%line, "singleton");
+               
+               if(%objectName $= %objName)
+               {
+                  return %fileObj;
+               }
+            }
+            
+            %lineNum++;
+         }
+         
+         %fileObj.close();
+      }
+      else
+      {
+         error("findObjectInFiles() - File not able to be opened: " @ %file);  
+      }
+      
+      %file = findNextFileMultiExpr( "*.*" );
+   }
+
+   %fileObj.delete();
+   
+   return "";
+}
 //==============================================================================
 //Shape Importing
 //==============================================================================

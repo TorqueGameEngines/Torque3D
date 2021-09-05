@@ -2002,7 +2002,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                      break;
                   }
 
-                  stack[_STK + 1].setInt(result);
+                  stack[_STK + 1].setFloat(result);
                   _STK++;
                   break;
                }
@@ -2139,7 +2139,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       {
          bool isGlobal = code[ip];
 
-         U32 failIp = code[ip + isGlobal ? 3 : 2];
+         U32 failIp = code[ip + (isGlobal ? 3 : 2)];
 
          IterStackRecord& iter = iterStack[_ITER];
          iter.mIsGlobalVariable = isGlobal;

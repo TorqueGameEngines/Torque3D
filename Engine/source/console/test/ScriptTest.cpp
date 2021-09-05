@@ -950,6 +950,24 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_STREQ(regression3.getString(), "120 20");
+   
+   ConsoleValue regression4 = RunScript(R"(
+    function doTest()
+    {
+        %slider = new GuiSliderCtrl()
+        {
+            range = "0 2";
+            ticks = 5;
+            active = true;
+        };
+
+        %slider.setValue(0.5);
+        return %slider.getValue();
+    }
+    return doTest();
+   )");
+   
+   ASSERT_EQ(regression4.getFloat(), 0.5);
 }
 
 #endif

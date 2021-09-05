@@ -633,6 +633,7 @@ bool StandardMainLoop::doMainLoop()
 
       ThreadPool::processMainThreadWorkItems();
       Sampler::endFrame();
+      ConsoleValue::resetConversionBuffer();
       PROFILE_END_NAMED(MainLoop);
    }
    

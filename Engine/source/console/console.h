@@ -148,10 +148,15 @@ class ConsoleValue
 
    enum Constants
    {
-      ConversionBufferSize = 32
+      ConversionBufferStride = 32
    };
 
-   static char sConversionBuffer[ConversionBufferSize];
+   struct ConversionBuffer
+   {
+      char buffer[ConversionBufferStride];
+   };
+   
+   static Vector<ConversionBuffer> sConversionBuffer;
 
    char* convertToBuffer() const;
 
@@ -387,6 +392,7 @@ public:
    }
 
    static void init();
+   static void resetConversionBuffer();
 };
 
 // Transparently converts ConsoleValue[] to const char**

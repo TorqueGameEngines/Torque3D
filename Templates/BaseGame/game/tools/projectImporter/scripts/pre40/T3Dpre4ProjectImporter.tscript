@@ -1089,13 +1089,10 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
    //Throw a warn that this file's already been claimed and move on
    if(%soundAsset !$= "")
    {
-      error("T3Dpre4ProjectImporter::processSFXProfileObject() - attempting to process SFXProfile " @ %objectName 
-               @ " but its filename is already associated to another sound asset.");
-      return false;
+      warn("T3Dpre4ProjectImporter::processSFXProfileObject() - attempting to process SFXProfile " @ %objectName 
+               @ " but its filename is already associated to another sound asset. Continuing, but be aware.");
    }  
-   //Otherwise, process it into an asset
-   else
-   {
+
       %assetName = %objectName;
    
       %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%soundFilename).ModuleId;
@@ -1143,28 +1140,45 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
          }
          else
          {
+         %objFileFinder = "";
+         //first check our cache
+         if(isObject($ProjectImporter::SFXDescriptionCache) && 
+            $ProjectImporter::SFXDescriptionCache.getIndexFromKey(%descriptionName) !$= "")
+         {
+            %key = $ProjectImporter::SFXDescriptionCache.getIndexFromKey(%descriptionName);
+            %objFileFinder = $ProjectImporter::SFXDescriptionCache.getValue(%key);
+         }
+         else
+         {
             %objFileFinder = findObjectInFiles(%descriptionName);
+         }
+         
             if(%objFileFinder !$= "")
             {
                %valueArray = new ArrayObject();
                
-               %valueArray.add("sourceGroup" SPC findObjectField("sourceGroup", %objFileFinder));
-               %valueArray.add("volume" SPC findObjectField("volume", %objFileFinder));
-               %valueArray.add("pitch" SPC findObjectField("pitch", %objFileFinder));
-               %valueArray.add("isLooping" SPC findObjectField("isLooping", %objFileFinder));
-               %valueArray.add("priority" SPC findObjectField("priority", %objFileFinder));
-               %valueArray.add("useHardware" SPC findObjectField("useHardware", %objFileFinder));
-               %valueArray.add("is3D" SPC findObjectField("is3D", %objFileFinder));
-               %valueArray.add("minDistance" SPC findObjectField("minDistance", %objFileFinder));
-               %valueArray.add("maxDistance" SPC findObjectField("maxDistance", %objFileFinder));
-               %valueArray.add("scatterDistance" SPC findObjectField("scatterDistance", %objFileFinder));
-               %valueArray.add("coneInsideAngle" SPC findObjectField("coneInsideAngle", %objFileFinder));
-               %valueArray.add("coneOutsideAngle" SPC findObjectField("coneOutsideAngle", %objFileFinder));
-               %valueArray.add("coneOutsideVolume" SPC findObjectField("coneOutsideVolume", %objFileFinder));
-               %valueArray.add("rolloffFactor" SPC findObjectField("rolloffFactor", %objFileFinder));
-               %valueArray.add("isStreaming" SPC findObjectField("isStreaming", %objFileFinder));
+            %fileObj = getField(%objFileFinder, 0);
                
-               %objFileFinder.delete();
+            %valueArray.add("sourceGroup" SPC findObjectField("sourceGroup", %fileObj));
+            %valueArray.add("volume" SPC findObjectField("volume", %fileObj));
+            %valueArray.add("pitch" SPC findObjectField("pitch", %fileObj));
+            %valueArray.add("isLooping" SPC findObjectField("isLooping", %fileObj));
+            %valueArray.add("priority" SPC findObjectField("priority", %fileObj));
+            %valueArray.add("useHardware" SPC findObjectField("useHardware", %fileObj));
+            %valueArray.add("is3D" SPC findObjectField("is3D", %fileObj));
+            %valueArray.add("minDistance" SPC findObjectField("minDistance", %fileObj));
+            %valueArray.add("maxDistance" SPC findObjectField("maxDistance", %fileObj));
+            %valueArray.add("scatterDistance" SPC findObjectField("scatterDistance", %fileObj));
+            %valueArray.add("coneInsideAngle" SPC findObjectField("coneInsideAngle", %fileObj));
+            %valueArray.add("coneOutsideAngle" SPC findObjectField("coneOutsideAngle", %fileObj));
+            %valueArray.add("coneOutsideVolume" SPC findObjectField("coneOutsideVolume", %fileObj));
+            %valueArray.add("rolloffFactor" SPC findObjectField("rolloffFactor", %fileObj));
+            %valueArray.add("isStreaming" SPC findObjectField("isStreaming", %fileObj));
+            
+            if(isObject($ProjectImporter::SFXDescriptionCache))
+            {
+               $ProjectImporter::SFXDescriptionCache.add(%descriptionName, %objFileFinder);
+            }
                
                for(%v=0; %v < %valueArray.Count(); %v++)
                {
@@ -1175,6 +1189,8 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
                   if(%varVal !$= "")
                      %asset.setFieldValue(%var, %varVal);
                }
+            
+            %valueArray.delete();
             }
          }
       }
@@ -1186,51 +1202,31 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
       
       if(!%success)
          return false;
-   }
    
    //Now mark the original SFXProfile for removal from the file as it's redundant
    //now that we have the asset def
-   
-   /*if(%matAsset $= "" || %matAsset $= "Core_Rendering:NoMaterial")
-   {
-      %assetName = %objectName;
-   
-      %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
-      
-      %assetPath = filePath(%file) @ "/";   
-      
-      %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-      
-      if(isFile(%tamlpath))
-      {
-         error("T3Dpre4ProjectImporter::processMaterialObject() - Failed to create as taml file already exists: " @ %file);
-         return false;
-      }
-      
-      %asset = new MaterialAsset()
-      {
-         AssetName = %assetName;
-         versionId = 1;
-         shaderData = "";
-         materialDefinitionName = %assetName;
-         scriptFile = fileBase(%file);
-      };
-      
-      TamlWrite(%asset, %tamlpath);
-      
-      %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
-      %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
-      
-      if(!%success)
-         return false;
-   }*/
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
    
    return true;
 }
 
 function T3Dpre4ProjectImporter::processAudioProfileObject(%this, %file, %objectName)
-{
+   {
    return %this.processSFXProfileObject(%file, %objectName);
+      }
+      
+function T3Dpre4ProjectImporter::processSFXDescriptionObject(%this, %file, %objectName)
+      {
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
+}
+
+function T3Dpre4ProjectImporter::processAudioDescriptionObject(%this, %file, %objectName)
+{
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
 }
 
 //==============================================================================

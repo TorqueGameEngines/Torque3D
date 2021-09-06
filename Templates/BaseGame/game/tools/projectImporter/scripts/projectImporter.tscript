@@ -166,6 +166,16 @@ function ProjectImportWizardPage2::openPage(%this)
       $ProjectImporter::importTool.delete();
       
    $ProjectImporter::importTool = new ScriptObject($ProjectImporter::versionMode @ "Importer");
+   
+   if(isObject($ProjectImporter::SFXDescriptionCache))
+      $ProjectImporter::SFXDescriptionCache.delete();
+      
+   $ProjectImporter::SFXDescriptionCache = new ArrayObject();
+   
+   if(isObject($ProjectImporter::ToRemoveObjectList))
+      $ProjectImporter::ToRemoveObjectList.delete();
+      
+   $ProjectImporter::ToRemoveObjectList = new ArrayObject();
 }
 
 function ProjectImportWizardPage2::processPage(%this)
@@ -311,6 +321,28 @@ function ProjectImportWizardPage6::openPage(%this)
    else
    {
       $ProjectImporter::importTool.processScriptExtensions();
+   }
+   
+   //All good? now go through and wipe any objects flagged in our files for deletion
+   %objRemovePM = new PersistenceManager();
+   
+   for(%o = 0; %o < $ProjectImporter::ToRemoveObjectList.count(); %o++)
+   {
+      %name = $ProjectImporter::ToRemoveObjectList.getKey(%o);
+      %file = getField($ProjectImporter::ToRemoveObjectList.getValue(%o),0);
+      
+      if(%name !$= "" && isFile(%file))
+      {
+         if(!isObject(%name))
+         {
+            //spoof it
+            %tmpObj = new SimObject(%name); 
+            %objRemovePM.setDirty(%name, %file);
+         }
+         %objRemovePM.removeObjectFromFile(%name, %file);
+         
+         %tmpObj.delete();
+      }      
    }
 }
 
@@ -758,7 +790,7 @@ function findObjectInFiles(%objectName)
                
                if(%objectName $= %objName)
                {
-                  return %fileObj;
+                  return %fileObj TAB %file TAB %lineNum;
                }
             }
             else if(strIsMatchExpr("*datablock*(*)*", %line) && strpos(%line, "::") == -1)
@@ -770,7 +802,7 @@ function findObjectInFiles(%objectName)
                
                if(%objectName $= %objName)
                {
-                  return %fileObj;
+                  return %fileObj TAB %file TAB %lineNum;
                }
             }
             else if(strIsMatchExpr("*singleton*(*)*", %line) && strpos(%line, "::") == -1)
@@ -782,7 +814,7 @@ function findObjectInFiles(%objectName)
                
                if(%objectName $= %objName)
                {
-                  return %fileObj;
+                  return %fileObj TAB %file TAB %lineNum;
                }
             }
             

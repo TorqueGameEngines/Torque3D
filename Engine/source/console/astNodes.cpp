@@ -1083,7 +1083,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    bool oldVariables = arrayIndex || varName[0] == '$';
 
-   if (op == opPLUSPLUS && !oldVariables)
+   if (op == opPLUSPLUS && !oldVariables && type == TypeReqNone)
    {
       const S32 varIdx = getFuncVars(dbgLineNumber)->assign(varName, TypeReqFloat, dbgLineNumber);
 

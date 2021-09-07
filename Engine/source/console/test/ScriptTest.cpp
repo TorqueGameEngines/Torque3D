@@ -968,6 +968,20 @@ TEST(Script, MiscRegressions)
    )");
    
    ASSERT_EQ(regression4.getFloat(), 0.5);
+
+   Con::setBoolVariable("$Debug::DumpByteCode", true);
+
+   ConsoleValue regression5 = RunScript(R"(
+      function noOpInc()
+      {
+         %count = 0;
+         %var[%count++] = 2;
+         return %var[1];
+      }
+      return noOpInc();
+   )");
+
+   ASSERT_EQ(regression5.getInt(), 2);
 }
 
 #endif

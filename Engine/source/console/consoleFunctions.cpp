@@ -2286,7 +2286,8 @@ DefineEngineStringlyVariadicFunction( call, const char *, 2, 0, "( string functi
    "@endtsexample\n\n"
    "@ingroup Scripting" )
 {
-   return Con::execute( argc - 1, argv + 1 );
+   ConsoleValue returnValue = Con::execute(argc - 1, argv + 1);
+   return Con::getReturnBuffer(returnValue.getString());
 }
 
 //-----------------------------------------------------------------------------

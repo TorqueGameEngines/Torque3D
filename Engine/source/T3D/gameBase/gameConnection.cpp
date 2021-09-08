@@ -512,10 +512,13 @@ bool GameConnection::readConnectRequest(BitStream *stream, const char **errorStr
    connectArgv[2].setString(buffer);
 
    // NOTE: Cannot convert over to IMPLEMENT_CALLBACK as it has variable args.
-   const char *ret = Con::execute(this, mConnectArgc + 3, connectArgv);
-   if(ret[0])
+   ConsoleValue returnValue = Con::execute(this, mConnectArgc + 3, connectArgv);
+
+   StringTableEntry returnStr = StringTable->insert(returnValue.getString());
+
+   if(returnStr[0])
    {
-      *errorString = ret;
+      *errorString = returnStr;
       return false;
    }
    return true;

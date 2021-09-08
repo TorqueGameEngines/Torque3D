@@ -2972,7 +2972,8 @@ DefineEngineStringlyVariadicMethod( SimObject, call, const char*, 3, 0, "( strin
    "@return The result of the method call." )
 {
    argv[1].setString(argv[2]);
-   return Con::execute( object, argc - 1, argv + 1 );
+   ConsoleValue returnValue = Con::execute(object, argc - 1, argv + 1);
+   return Con::getReturnBuffer(returnValue.getString());
 }
 
 //-----------------------------------------------------------------------------

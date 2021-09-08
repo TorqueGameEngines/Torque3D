@@ -42,6 +42,10 @@ function AssetBrowser::editShapeAsset(%this, %assetDef)
    ShapeEditorPlugin.openShapeAsset(%assetDef);    
 }
 
+function AssetBrowser::onShapeAssetChanged(%this, %assetDef)
+{
+}
+
 function AssetBrowser::deleteShapeAsset(%this, %assetDef)
 {
    

@@ -1178,7 +1178,7 @@ function AssetBrowserPreviewButton::onRightClick(%this)
    EditAssetPopup.enableItem(7, true);
    
    //Is it an editable type?
-   if(%assetType $= "ImageAsset" /*|| %assetType $= "GameObjectAsset"*/ || %assetType $= "CppAsset" || %assetType $= "SoundAsset")
+   if(%assetType $= "ImageAsset" /*|| %assetType $= "GameObjectAsset"*/ || %assetType $= "CppAsset")
    {
       EditAssetPopup.enableItem(0, false);
    }

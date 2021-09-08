@@ -36,6 +36,7 @@
    #include "gfx/gfxStateBlock.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
 
 class SFXSource;
 class SFXTrack;
@@ -103,13 +104,11 @@ class SFXEmitter : public SceneObject
       /// The current dirty flags.
       BitSet32 mDirty;
 
+      DECLARE_SOUNDASSET(SFXEmitter, Sound);
+      DECLARE_SOUNDASSET_NET_SETGET(SFXEmitter, Sound, DirtyUpdateMask);
+
       /// The sound source for the emitter.
       SFXSource *mSource;
-
-      /// The selected track or null if the local
-      /// profile should be used.
-      SFXTrack *mTrack;
-      
       /// Whether to leave sound setup exclusively to the assigned mTrack and not
       /// override part of the track's description with emitter properties.
       bool mUseTrackDescriptionOnly;

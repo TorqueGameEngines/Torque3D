@@ -34,7 +34,7 @@ singleton shaderData( AL_ShadowVisualizeShader )
    pixVersion = 2.0;
 };
 
-new CustomMaterial( AL_ShadowVisualizeMaterial )
+singleton CustomMaterial( AL_ShadowVisualizeMaterial )
 {
    shader = AL_ShadowVisualizeShader;
    stateBlock = AL_DepthVisualizeState;

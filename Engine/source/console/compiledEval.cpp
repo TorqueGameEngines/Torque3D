@@ -1087,6 +1087,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                // This error is usually caused by failing to call Parent::initPersistFields in the class' initPersistFields().
                Con::warnf(ConsoleLogEntry::General, "%s: Register object failed for object %s of class %s.", getFileLine(ip - 2), currentNewObject->getName(), currentNewObject->getClassName());
                delete currentNewObject;
+               currentNewObject = NULL;
                ip = failJump;
                break;
             }

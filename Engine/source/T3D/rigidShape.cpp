@@ -263,6 +263,7 @@ RigidShapeData::RigidShapeData()
 
    dustTrailEmitter = NULL;
    dustTrailID = 0;
+   _setShape(ShapeAsset::smNoShapeAssetFallback);
 }
 
 RigidShapeData::~RigidShapeData()

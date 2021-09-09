@@ -299,7 +299,7 @@ public: \
          Con::errorf("%s(%s)::_set%s() - shape asset failure \"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, ShapeAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
-      else if (m##name)\
+      else if (!m##name)\
       {\
          Con::errorf("%s(%s)::_set%s() - Couldn't load shape \"%s\"", macroText(className), getName(), macroText(name), _in);\
          return false;\
@@ -495,7 +495,7 @@ public: \
          Con::errorf("%s(%s)::_set%s(%i) - shape asset failure \"%s\" due to [%s]", macroText(className), getName(), macroText(name), index, _in, ShapeAsset::getAssetErrstrn(m##name##Asset[index]->getStatus()).c_str());\
          return false; \
       }\
-      else if (bool(m##name[index]) == NULL)\
+      else if (!m##name[index])\
       {\
          Con::errorf("%s(%s)::_set%s(%i) - Couldn't load shape \"%s\"", macroText(className), getName(), macroText(name), index, _in);\
          return false; \

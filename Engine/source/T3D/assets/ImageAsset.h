@@ -248,7 +248,7 @@ public: \
          Con::errorf("%s(%s)::_set%s() - image asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, ImageAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
-      else if (m##name)\
+      else if (!m##name)\
       {\
          Con::errorf("%s(%s)::_set%s() - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), _in);\
          return false;\
@@ -467,7 +467,7 @@ public: \
          Con::errorf("%s(%s)::_set%s(%i) - image asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), index, _in, ImageAsset::getAssetErrstrn(m##name##Asset[index]->getStatus()).c_str());\
          return false; \
       }\
-      else if (bool(m##name[index]) == NULL)\
+      else if (!m##name[index])\
       {\
          Con::errorf("%s(%s)::_set%s(%i) - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), index, _in);\
          return false; \

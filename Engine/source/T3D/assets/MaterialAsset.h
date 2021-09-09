@@ -231,7 +231,7 @@ public: \
          Con::errorf("%s::_set%s() - material asset failure\"%s\" due to [%s]", macroText(className), macroText(name), _in, MaterialAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
-      else if (m##name)\
+      else if (!m##name)\
       {\
          Con::errorf("%s::_set%s() - Couldn't load material \"%s\"", macroText(className), macroText(name), _in);\
          return false;\

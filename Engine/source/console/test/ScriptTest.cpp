@@ -969,8 +969,6 @@ TEST(Script, MiscRegressions)
    
    ASSERT_EQ(regression4.getFloat(), 0.5);
 
-   Con::setBoolVariable("$Debug::DumpByteCode", true);
-
    ConsoleValue regression5 = RunScript(R"(
       function noOpInc()
       {
@@ -982,6 +980,33 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_EQ(regression5.getInt(), 2);
+
+   ConsoleValue regression6 = RunScript(R"(
+      function SimObject::crashMe(%this, %line)
+      {
+         return %line @ "1";
+      }
+
+      function doTest()
+      {
+         %obj = new SimObject();
+         for (%i = 0; %i < 99999; %i++)
+         {
+            %function = "crashMe";
+            if (%obj.isMethod(%function))
+            {
+               %line = "abcdefg";
+               %output = %obj.call(%function, %line); 
+            }
+         }
+
+         return true;
+      }
+
+      return doTest();
+   )");
+
+   ASSERT_EQ(regression6.getBool(), true);
 }
 
 #endif

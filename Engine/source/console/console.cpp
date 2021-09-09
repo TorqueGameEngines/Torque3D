@@ -1643,13 +1643,13 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
    {
       ConsoleValue val;
       val.setString(methodRes);
-      return std::move(val);
+      return val;
    }
 
    if(object->getNamespace())
    {
       U32 ident = object->getId();
-      const char* oldIdent = argv[1].getString();
+      const char* oldIdent = dStrdup(argv[1].getString());
       
       Namespace::Entry *ent = object->getNamespace()->lookup(funcName);
 
@@ -1671,8 +1671,9 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
 
       // Twiddle it back
       argv[1].setString(oldIdent);
+      dFree(oldIdent);
 
-      return std::move(ret);
+      return ret;
    }
 
    warnf(ConsoleLogEntry::Script, "Con::execute - %d has no namespace: %s", object->getId(), funcName);

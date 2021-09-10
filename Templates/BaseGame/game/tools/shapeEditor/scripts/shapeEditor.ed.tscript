@@ -315,7 +315,7 @@ function ShapeEditor::selectShape( %this, %shapeAsset, %saveOld )
    ShapeEditor.shape = findShapeConstructorByAssetId( %shapeAsset.getAssetId() );
    if ( ShapeEditor.shape <= 0 )
    {
-      ShapeEditor.shape = %this.createConstructor( %shapeAsset );
+      ShapeEditor.shape = %this.createConstructor( %shapeAsset.getAssetId() );
       if ( ShapeEditor.shape <= 0 )
       {
          error( "ShapeEditor: Error - could not select " @ %shapeAsset.getAssetId() );
@@ -2336,7 +2336,7 @@ function ShapeEdMaterials::updateSelectedMaterial( %this, %highlight )
    %this.savedMap = %this.selectedMaterial.diffuseMap[1];
    if ( %highlight && isObject( %this.selectedMaterial ) )
    {
-      %this.selectedMaterial.diffuseMap[1] = "tools/shapeEditor/images/highlight_material";
+      %this.selectedMaterial.setDiffuseMap("ToolsModule:highlight_material_image", 1);
       %this.selectedMaterial.reload();
    }
 }
@@ -3066,7 +3066,7 @@ function ShapeEditor::addLODFromFile( %this, %dest, %assetId, %size, %allowUnmat
 
    %source = findShapeConstructorByAssetId( %assetId );
    if ( %source == -1 )
-      %source = ShapeEditor.createConstructor( %filename );
+      %source = ShapeEditor.createConstructor( %assetId  );
    %source.lodType = "SingleSize";
    %source.singleDetailSize = %size;
 

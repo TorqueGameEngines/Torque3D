@@ -353,6 +353,7 @@ function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
       
    EWorldEditor.isDirty = true;
    
+   MECreateUndoAction::submit(%newStatic );
 }
 
 function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )
@@ -367,15 +368,15 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
    
    if(%assetType $= "ShapeAsset")
    {
-      //echo("DROPPED A SHAPE ON A SHAPE ASSET COMPONENT FIELD!");  
-      
       %module = %payload.moduleName;
       %asset = %payload.assetName;
       
-      %targetComponent = %this.targetObject;
-      %targetComponent.shapeAsset = %module @ ":" @ %asset;
+      %oldValue = %targetObject.shapeAsset;
+      %arrayIndex = "";
       
-      //Inspector.refresh();
+      %targetObject = %this.targetObject;
+      %targetObject.shapeAsset = %module @ ":" @ %asset;
+
    }
    
    EWorldEditor.isDirty = true;

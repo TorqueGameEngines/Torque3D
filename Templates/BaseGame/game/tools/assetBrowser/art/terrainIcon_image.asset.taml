@@ -1,8 +1,8 @@
 <ImageAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="tab_border_image"
-    imageFile="@assetFile=tab_border.png"
+    AssetName="terrainMaterialIcon_image"
+    imageFile="@assetFile=terrainMaterialIcon.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

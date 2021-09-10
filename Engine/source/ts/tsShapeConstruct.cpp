@@ -557,6 +557,24 @@ void TSShapeConstructor::_onUnload()
 }
 
 //-----------------------------------------------------------------------------
+void TSShapeConstructor::setShapeAssetId(StringTableEntry assetId)
+{
+   mShapeAssetId = assetId;
+   mShapeAsset = mShapeAssetId;
+   if (mShapeAsset.notNull())
+   {
+      Resource<TSShape> shape = mShapeAsset->getShapeResource();
+
+      if (shape)
+         _onLoad(shape);
+   }
+
+   if (mShape && mShape->needsReinit())
+   {
+      mShape->init();
+   }
+}
+//-----------------------------------------------------------------------------
 // Storage
 
 bool TSShapeConstructor::writeField(StringTableEntry fieldname, const char* value)

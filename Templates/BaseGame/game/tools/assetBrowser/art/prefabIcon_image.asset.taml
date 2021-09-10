@@ -1,8 +1,8 @@
 <ImageAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="tab_border_image"
-    imageFile="@assetFile=tab_border.png"
+    AssetName="prefabIcon_image"
+    imageFile="@assetFile=prefabIcon.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

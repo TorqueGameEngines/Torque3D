@@ -289,6 +289,11 @@ function ESettingsWindow::getAxisSettings(%this)
 
 function ESettingsWindow::getGeneralSettings(%this)
 {
+   SettingsInspector.startGroup("Level Load");
+   SettingsInspector.addSettingsField("WorldEditor/LevelLoad/LoadMode", "Editor Startup Scene", "list", "When the editor loads, this setting dictates what scene is loaded first", 
+                                                                              "Last Edited Level,Editor Default Scene");
+   SettingsInspector.endGroup();
+   
    SettingsInspector.startGroup("Autosave");
    SettingsInspector.addSettingsField("WorldEditor/AutosaveInterval", "Autosave Interval(in minutes)", "int", "");
    SettingsInspector.endGroup();

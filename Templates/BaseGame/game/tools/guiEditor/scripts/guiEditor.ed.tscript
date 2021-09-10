@@ -670,16 +670,21 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
 {  
    // Make sure we have the right kind of D&D.
    
-   if( !%payload.parentGroup.isInNamespaceHierarchy( "GuiDragAndDropControlType_GuiControl" ) )
+   if( !%payload.parentGroup.isInNamespaceHierarchy( "GuiDragAndDropControlType_GuiControl" ) &&
+         !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ))
       return;
 
    %pos = %payload.getGlobalPosition();
    %x = getWord(%pos, 0);
    %y = getWord(%pos, 1);
 
-   %this.addNewCtrl(%payload);
+   %asset = %payload.assetName;
+   %cmd = "return new " @ %asset @ "();";
+   %ctrl = eval( %cmd );
+
+   %this.addNewCtrl(%ctrl);
    
-   %payload.setPositionGlobal(%x, %y);
+   %ctrl.setPositionGlobal(%x, %y);
    %this.setFirstResponder();
 }
 
@@ -844,6 +849,8 @@ function GuiEditorTabBook::onWake( %this )
          item[ 0 ] = "Alphabetical View" TAB "" TAB "GuiEditorToolbox.setViewType( \"Alphabetical\" );";
          item[ 1 ] = "Categorized View" TAB "" TAB "GuiEditorToolbox.setViewType( \"Categorized\" );";
       };
+      
+   GlobalActionMap.bindCmd( keyboard, space, "", "AssetBrowser.toggleDialog();" );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -1008,6 +1015,8 @@ function GuiEditorGui::onWake( %this )
 
 function GuiEditorGui::onSleep( %this)
 {
+   GlobalActionMap.unbind( keyboard, space );
+   
    // If we are editing a control, store its guide state.
    
    %content = GuiEditor.getContentControl();

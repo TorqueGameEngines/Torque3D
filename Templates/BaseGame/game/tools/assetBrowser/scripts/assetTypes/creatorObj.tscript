@@ -9,6 +9,14 @@ function AssetBrowser::buildCreatorPreview(%this, %assetDef, %previewData)
    
    %previewData.previewImage = "ToolsModule:" @ %class @ "_image";
    
+   if(!AssetDatabase.isDeclaredAsset(%previewData.previewImage))
+   {
+      if(EditorIsActive())
+         %previewData.previewImage = "ToolsModule:SceneObject_image";
+      else if(GuiEditorIsActive())
+         %previewData.previewImage = "ToolsModule:GuiControl_image";
+   }
+   
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef;
    %previewData.tooltip = "This creates a new object of the class " @ %class;
@@ -22,6 +30,8 @@ function AssetBrowser::onFinishCreateObject(%this, %objId)
 
 function AssetBrowser::onCreatorEditorDropped(%this, %assetDef, %position)
 {
+   if(EditorIsActive())
+   {
    %targetPosition = EWorldEditor.unproject(%position SPC 1000);
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
@@ -41,4 +51,9 @@ function AssetBrowser::onCreatorEditorDropped(%this, %assetDef, %position)
    
    %this.createdObjectPos = %pos;
    %newObj = eval(%func);
+   }
+   else if(GuiEditorIsActive())
+   {
+      %placeholderVar = "";
+   }
 }

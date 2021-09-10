@@ -512,7 +512,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       AssetBrowser-->previewSlider.setValue(1);
    }
    
-   if(%previewScaleSize == 0)
+   if(%previewScaleSize == 0 || startsWith(AssetBrowser.dirHandler.currentAddress, "Creator"))
    {
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
@@ -830,137 +830,6 @@ function AssetBrowser::setTagActive(%this, %tag)
    %this.rebuildAssetArray();
 }
 
-function AssetBrowser::loadCreatorClasses(%this)
-{
-   // Just so we can recall this method for testing changes
-   // without restarting.
-   if ( isObject( %this.creatorClassArray ) )
-      %this.creatorClassArray.delete();
-      
-   %this.creatorClassArray = new ArrayObject();
-   %this.creatorClassArray.caseSensitive = true; 
-   //%this.setListView( true );
-   
-   %this.beginCreatorGroup( "Environment" );
-   
-      // Removed Prefab as there doesn't really seem to be a point in creating a blank one
-      //%this.addCreatorClass( "Prefab",              "Prefab" );
-      %this.addCreatorClass( "SkyBox",              "Sky Box" );
-      %this.addCreatorClass( "CloudLayer",          "Cloud Layer" );
-      %this.addCreatorClass( "BasicClouds",         "Basic Clouds" );
-      %this.addCreatorClass( "ScatterSky",          "Scatter Sky" );
-      %this.addCreatorClass( "Sun",                 "Basic Sun" );
-      %this.addCreatorClass( "Lightning" );
-      %this.addCreatorClass( "WaterBlock",          "Water Block" );
-      %this.addCreatorClass( "SFXEmitter",          "Sound Emitter" );
-      %this.addCreatorClass( "Precipitation" );
-      %this.addCreatorClass( "ParticleEmitterNode", "Particle Emitter" );
-      
-      // Legacy features. Users should use Ground Cover and the Forest Editor.   
-      //%this.addCreatorClass( "fxShapeReplicator",   "Shape Replicator" );
-      //%this.addCreatorClass( "fxFoliageReplicator", "Foliage Replicator" );
-      
-      %this.addCreatorClass( "PointLight",          "Point Light" );
-      %this.addCreatorClass( "SpotLight",           "Spot Light" );
-      %this.addCreatorClass( "GroundCover",         "Ground Cover" );
-      %this.addCreatorClass( "TerrainBlock",        "Terrain Block" );
-      %this.addCreatorClass( "GroundPlane",         "Ground Plane" );
-      %this.addCreatorClass( "WaterPlane",          "Water Plane" );
-      %this.addCreatorClass( "PxCloth",             "Cloth" );
-      %this.addCreatorClass( "ForestWindEmitter",   "Wind Emitter" );
-               
-      %this.addCreatorClass( "DustEmitter", "Dust Emitter" );
-      %this.addCreatorClass( "DustSimulation", "Dust Simulation" );
-      %this.addCreatorClass( "DustEffecter", "Dust Effecter" );
-      
-   %this.endCreatorGroup();
-
-   %this.beginCreatorGroup( "Level" );
-   
-      %this.addCreatorClass("MissionArea",  "Mission Area" );
-      %this.addCreatorClass("Path" );
-      %this.addCreatorClass("Marker",       "Path Node" );
-      %this.addCreatorClass("Trigger" );
-      %this.addCreatorClass("PhysicalZone", "Physical Zone" );
-      %this.addCreatorClass("Camera" );
-      %this.addCreatorClass( "LevelInfo",    "Level Info" );
-      %this.addCreatorClass( "TimeOfDay",    "Time of Day" );
-      %this.addCreatorClass( "Zone",         "Zone" );
-      %this.addCreatorClass( "Portal",       "Zone Portal" );
-      %this.addCreatorClass( "SpawnSphere",  "Player Spawn Sphere"/*, "PlayerDropPoint"*/ );
-      %this.addCreatorClass( "SpawnSphere",  "Observer Spawn Sphere"/*, "ObserverDropPoint"*/ );
-      %this.addCreatorClass( "SFXSpace",      "Sound Space" );
-      %this.addCreatorClass( "OcclusionVolume", "Occlusion Volume" );
-      
-   %this.endCreatorGroup();
-   
-   %this.beginCreatorGroup( "System" );
-   
-      %this.addCreatorClass( "SimGroup" );
-      %this.addCreatorClass( "AIPathGroup" );
-      
-   %this.endCreatorGroup();  
-
-   %this.beginCreatorGroup( "ExampleObjects" );
-   
-      %this.addCreatorClass( "RenderObjectExample" );
-      %this.addCreatorClass( "RenderMeshExample" );
-      %this.addCreatorClass( "RenderShapeExample" );
-      
-   %this.endCreatorGroup(); 
-   
-   %this.creatorClassArray.sortk();
-}
-
-function AssetBrowser::beginCreatorGroup(%this, %group)
-{
-   AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.creatorIdx, %group);
-   %this.currentCreatorGroup = %group;
-}
-
-function AssetBrowser::endCreatorGroup(%this, %group)
-{
-   %this.currentCreatorGroup = "";
-}
-
-function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
-{
-   if( !isClass(%class) )
-      return;
-      
-   if ( %name $= "" )
-      %name = %class;
-      
-   if ( %this.currentCreatorGroup !$= "" && %group $= "" )
-      %group = %this.currentCreatorGroup;
-   
-   if ( %class $= "" || %group $= "" )
-   {
-      warn( "AssetBrowser::addCreatorClass, invalid parameters!" );
-      return;  
-   }
-   
-   if(%buildfunc $= "")
-   {
-      %method = "build" @ %buildfunc;
-      if( !ObjectBuilderGui.isMethod( %method ) )
-         %method = "build" @ %class;
-
-      if( !ObjectBuilderGui.isMethod( %method ) )
-         %cmd = "return new " @ %class @ "();";
-      else
-         %cmd = "ObjectBuilderGui." @ %method @ "();";
-
-      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
-   }
-
-   %args = new ScriptObject();
-   %args.val[0] = %class;
-   %args.val[1] = %name;
-   %args.val[2] = %buildfunc;
-   
-   %this.creatorClassArray.push_back( %group, %args );
-}
 //
 //needs to be deleted with the persistence manager and needs to be blanked out of the matmanager
 //also need to update instances... i guess which is the tricky part....
@@ -1474,47 +1343,6 @@ function AssetBrowser::doRebuildAssetArray(%this)
 			   %assetType = AssetDatabase.getAssetType(%assetId);
 			}
 			
-			/*%validType = false;
-         
-         if(AssetBrowser.assetTypeFilter $= "")
-         {
-            if(AssetTypeListPopup.isItemChecked(0))
-            {
-               %validType = true;
-            }
-            else
-            {
-               for(%f=1; %f < AssetFilterTypeList.Count(); %f++)
-               {
-                  %isChecked = AssetTypeListPopup.isItemChecked(%f+1);  
-                  
-                  if(%isChecked)
-                  {
-                     %filterTypeName = AssetFilterTypeList.getKey(%f);
-                     
-                     if(%activeTypeFilterList $= "")
-                        %activeTypeFilterList = %filterTypeName;
-                     else
-                        %activeTypeFilterList = %activeTypeFilterList @ ", " @ %filterTypeName;
-                        
-                     if(%filterTypeName @ "Asset" $= %assetType)
-                     {
-                        %validType = true;
-                        break;  
-                     }
-                  }
-               }
-            }
-            
-            if(!%validType)
-               continue;
-         }
-         else
-         {
-            if(%assetType !$= AssetBrowser.assetTypeFilter)
-               continue;  
-         }*/
-			
          //stop adding after previewsPerPage is hit
          %assetName = AssetDatabase.getAssetName(%assetId);
 
@@ -1589,7 +1417,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
    }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && !startsWith(%breadcrumbPath, "Creator/"))
+   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";
@@ -1779,11 +1607,28 @@ function AssetBrowser::doRebuildAssetArray(%this)
       //One of the creator folders was selected
       %creatorGroup = AssetBrowserFilterTree.getItemText(AssetBrowserFilterTree.getSelectedItem(0));
             
+      if(%creatorGroup $= "Creator")
+      {
+         //add folders for the groups
+         %placeholderVar = "";
+      }
+      else
+      {
       for ( %i = 0; %i < AssetBrowser.creatorClassArray.count(); %i++ )
       {
          %group = AssetBrowser.creatorClassArray.getKey( %i );
 
-         if ( %group $= %creatorGroup )
+            //Do some filter logic do skip out of groups if we're in the wrong editor mode for it
+            %creatorEditorFilter = "WorldEditor";
+            if(GuiEditorIsActive())
+            {
+               %creatorEditorFilter = "GuiEditor";
+            }
+            
+            %creatorGroupIndex = AssetBrowserCreatorGroupsList.getIndexFromValue(%group);
+            %creatorGroupKey = AssetBrowserCreatorGroupsList.getKey(%creatorGroupIndex);
+            
+            if ( %group $= %creatorGroup && %creatorGroupKey $= %creatorEditorFilter )
          {
             %creatorObj = AssetBrowser.creatorClassArray.getValue( %i );
             %class = %creatorObj.val[0];
@@ -1793,6 +1638,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
             $AssetBrowser::AssetArray.add( %name, "Creator" TAB %creatorObj );
          }               
       }   
+	}
 	}
 	
    for(%i=0; %i < $AssetBrowser::AssetArray.count(); %i++)
@@ -2519,6 +2365,9 @@ function AssetBrowserFilterTree::onDragDropped( %this )
 
 function AssetBrowser::hasLooseFilesInDir(%this)
 {
+   if(!isDirectory(%this.dirHandler.currentAddress))
+      return false;
+   
    //First, wipe out any files inside the folder first
    %file = findFirstFileMultiExpr( %this.dirHandler.currentAddress @ "/*.*", false);
    

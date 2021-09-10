@@ -631,12 +631,13 @@ void SceneObject::setHidden( bool hidden )
 
 void SceneObject::initPersistFields()
 {
-   addGroup("GameObject");
+   //Disabled temporarily
+   /*addGroup("GameObject");
    addField("GameObject", TypeGameObjectAssetPtr, Offset(mGameObjectAsset, SceneObject), "The asset Id used for the game object this entity is based on.");
 
    addField("dirtyGameObject", TypeBool, Offset(mDirtyGameObject, SceneObject), "If this entity is a GameObject, it flags if this instance delinates from the template.",
       AbstractClassRep::FieldFlags::FIELD_HideInInspectors);
-   endGroup("GameObject");
+   endGroup("GameObject");*/
 
    addGroup( "Transform" );
 

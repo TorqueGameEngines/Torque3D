@@ -2433,8 +2433,6 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
 
             if (!refreshSuccess)
             {
-               const char* importReturnVal = Con::executef(this, processCommand.c_str(), childItem).getString();
-               assetPath = Torque::Path(importReturnVal);
                dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to refresh reimporting asset %s.", item->assetName.c_str());
                activityLog.push_back(importLogBuffer);
             }

@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(TerrainBrushSoftnessCurveDlg, EditorGuiGroup) {
+$guiContent = new GuiControl(TerrainBrushSoftnessCurveDlg, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

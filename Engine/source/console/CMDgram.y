@@ -456,6 +456,8 @@ expr
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, NULL); }
    | VAR '[' aidx_expr ']'
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, $3 ); }
+   ;
+/*
    | rwDEFINE '(' var_list_decl ')' '{' statement_list '}'
       {
          const U32 bufLen = 64;
@@ -471,7 +473,7 @@ expr
 
          $$ = StrConstNode::alloc( $1.lineNumber, (UTF8*)fName, false );
       }
-   ;
+*/
 
 slot_acc
    : expr '.' IDENT
@@ -551,9 +553,12 @@ funcall_expr
      { $$ = FuncCallExprNode::alloc( $1.lineNumber, $3.value, $1.value, $5, false); }
    | expr '.' IDENT '(' expr_list_decl ')'
       { $1->append($5); $$ = FuncCallExprNode::alloc( $1->dbgLineNumber, $3.value, NULL, $1, true); }
+   ;
+/*
    | expr '(' expr_list_decl ')'
       { $$ = FuncPointerCallExprNode::alloc( $1->dbgLineNumber, $1, $3); }
    ;
+*/
 
 assert_expr
    : rwASSERT '(' expr ')'

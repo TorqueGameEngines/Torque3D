@@ -1382,32 +1382,32 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
       if (item->assetName != item->cleanAssetName)
          item->assetName = item->cleanAssetName;
 
-      //handle special pre-processing here for any types that need it
-
-      //process the asset items
-      if (item->assetType == String("ImageAsset"))
-      {
-         processImageAsset(item);
-      }
-      else if (item->assetType == String("ShapeAsset"))
-      {
-         processShapeAsset(item);
-      }
-      /*else if (item->assetType == String("SoundAsset"))
-         SoundAsset::prepareAssetForImport(this, item);*/
-      else if (item->assetType == String("MaterialAsset"))
-      {
-         processMaterialAsset(item);
-      }
-      /*else if (item->assetType == String("ShapeAnimationAsset"))
-         ShapeAnimationAsset::prepareAssetForImport(this, item);*/
-      else
-      {
-         String processCommand = "process";
-         processCommand += item->assetType;
-         if(isMethod(processCommand.c_str()))
-            Con::executef(this, processCommand.c_str(), item);
-      }
+		//process the asset items
+		if (item->assetType == String("ImageAsset"))
+		{
+		   processImageAsset(item);
+		}
+		else if (item->assetType == String("ShapeAsset"))
+		{
+		   processShapeAsset(item);
+		}
+		else if (item->assetType == String("SoundAsset"))
+		{
+		   processSoundAsset(item);
+		}
+		else if (item->assetType == String("MaterialAsset"))
+		{
+		   processMaterialAsset(item);
+		}
+		/*else if (item->assetType == String("ShapeAnimationAsset"))
+		   ShapeAnimationAsset::prepareAssetForImport(this, item);*/
+		else
+		{
+		   String processCommand = "process";
+		   processCommand += item->assetType;
+		   if(isMethod(processCommand.c_str()))
+		      Con::executef(this, processCommand.c_str(), item);
+		}
 
       item->importStatus == AssetImportObject::Processed;
 
@@ -1975,93 +1975,12 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
 
 void AssetImporter::processSoundAsset(AssetImportObject* assetItem)
 {
-   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Image for Import: %s", assetItem->assetName.c_str());
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Sound for Import: %s", assetItem->assetName.c_str());
    activityLog.push_back(importLogBuffer);
-
-   if ((activeImportConfig->GenerateMaterialOnImport && assetItem->parentAssetItem == nullptr)/* || assetItem->parentAssetItem != nullptr*/)
-   {
-      //find our suffix match, if any
-      String noSuffixName = assetItem->assetName;
-      String suffixType;
-      String suffix = parseImageSuffixes(assetItem->assetName, &suffixType);
-      if (suffix.isNotEmpty())
-      {
-         assetItem->imageSuffixType = suffixType;
-         S32 suffixPos = assetItem->assetName.find(suffix, 0, String::NoCase | String::Left);
-         noSuffixName = assetItem->assetName.substr(0, suffixPos);
-      }
-
-      //We try to automatically populate materials under the naming convention: materialName: Rock, image maps: Rock_Albedo, Rock_Normal, etc
-
-      AssetImportObject* materialAsset = findImportingAssetByName(noSuffixName);
-      if (materialAsset != nullptr && materialAsset->assetType != String("MaterialAsset"))
-      {
-         //We may have a situation where an asset matches the no-suffix name, but it's not a material asset. Ignore this
-         //asset item for now
-
-         materialAsset = nullptr;
-      }
-
-      //If we didn't find a matching material asset in our current items, we'll make one now
-      if (materialAsset == nullptr)
-      {
-         if (!assetItem->filePath.isEmpty())
-         {
-            materialAsset = addImportingAsset("MaterialAsset", assetItem->filePath, nullptr, noSuffixName);
-         }
-      }
-
-      //Not that, one way or another, we have the generated material asset, lets move on to associating our image with it
-      if (materialAsset != nullptr && materialAsset != assetItem->parentAssetItem)
-      {
-         if (assetItem->parentAssetItem != nullptr)
-         {
-            //If the image had an existing parent, it gets removed from that parent's child item list
-            assetItem->parentAssetItem->childAssetItems.remove(assetItem);
-         }
-         else
-         {
-            //If it didn't have one, we're going to pull it from the importingAssets list
-            importingAssets.remove(assetItem);
-         }
-
-         //Now we can add it to the correct material asset
-         materialAsset->childAssetItems.push_back(assetItem);
-         assetItem->parentAssetItem = materialAsset;
-
-         assetHeirarchyChanged = true;
-      }
-
-      //Now to do some cleverness. If we're generating a material, we can parse like assets being imported(similar filenames) but different suffixes
-      //If we find these, we'll just populate into the original's material
-
-      //if we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
-      if (suffixType.isEmpty())
-      {
-         if (activeImportConfig->UseDiffuseSuffixOnOriginImage)
-         {
-            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;\t");
-            assetItem->assetName = assetItem->assetName + diffuseToken;
-            assetItem->cleanAssetName = assetItem->assetName;
-         }
-         else
-         {
-            //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
-            //we'll give it a generic one
-            if ((materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0) || activeImportConfig->AlwaysAddImageSuffix)
-            {
-               assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
-               assetItem->cleanAssetName = assetItem->assetName;
-            }
-         }
-
-         //Assume for abledo if it has no suffix matches
-         assetItem->imageSuffixType = "Albedo";
-      }
-   }
 
    assetItem->importStatus = AssetImportObject::Processed;
 }
+
 //
 // Validation
 //
@@ -2514,6 +2433,8 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
 
             if (!refreshSuccess)
             {
+               const char* importReturnVal = Con::executef(this, processCommand.c_str(), childItem).getString();
+               assetPath = Torque::Path(importReturnVal);
                dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to refresh reimporting asset %s.", item->assetName.c_str());
                activityLog.push_back(importLogBuffer);
             }

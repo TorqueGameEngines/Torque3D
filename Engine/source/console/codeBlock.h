@@ -23,19 +23,36 @@
 #ifndef _CODEBLOCK_H_
 #define _CODEBLOCK_H_
 
+#include <vector>
+#include <unordered_map>
+
+struct CompilerLocalVariableToRegisterMappingTable
+{
+   struct RemappingTable
+   {
+      std::vector<StringTableEntry> varList;
+   };
+
+   std::unordered_map<StringTableEntry, RemappingTable> localVarToRegister;
+
+   void add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName);
+   S32 lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName);
+   CompilerLocalVariableToRegisterMappingTable copy();
+   void reset();
+   void write(Stream& stream);
+};
+
 #include "console/compiler.h"
 #include "console/consoleParser.h"
 
 class Stream;
 class ConsoleValue;
-class ConsoleValueRef;
 
 /// Core TorqueScript code management class.
 ///
 /// This class represents a block of code, usually mapped directly to a file.
 class CodeBlock
 {
-   friend class CodeInterpreter;
 private:
    static CodeBlock* smCodeBlockList;
    static CodeBlock* smCurrentCodeBlock;
@@ -77,6 +94,8 @@ public:
 
    U32 codeSize;
    U32 *code;
+
+   CompilerLocalVariableToRegisterMappingTable variableRegisterTable;
 
    U32 refCount;
    U32 lineBreakPairCount;
@@ -130,7 +149,7 @@ public:
    /// with, zero being the top of the stack. If the the index is
    /// -1 a new frame is created. If the index is out of range the
    /// top stack frame is used.
-   ConsoleValueRef compileExec(StringTableEntry fileName, const char *script,
+   ConsoleValue compileExec(StringTableEntry fileName, const char *script,
       bool noCalls, S32 setFrame = -1);
 
    /// Executes the existing code in the CodeBlock. The return string is any 
@@ -148,8 +167,8 @@ public:
    /// -1 a new frame is created. If the index is out of range the
    /// top stack frame is used.
    /// @param packageName The code package name or null.
-   ConsoleValueRef exec(U32 offset, const char *fnName, Namespace *ns, U32 argc,
-      ConsoleValueRef *argv, bool noCalls, StringTableEntry packageName,
+   ConsoleValue exec(U32 offset, const char *fnName, Namespace *ns, U32 argc,
+      ConsoleValue *argv, bool noCalls, StringTableEntry packageName,
       S32 setFrame = -1);
 };
 

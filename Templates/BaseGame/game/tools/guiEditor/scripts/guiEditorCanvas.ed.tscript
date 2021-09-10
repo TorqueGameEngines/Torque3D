@@ -281,7 +281,7 @@ function GuiEditCanvas::load( %this, %filename )
    
    // The GUI file should have contained a GUIControl which should now be in the instant
    // group. And, it should be the only thing in the group.
-   if( !isObject( %guiContent ) )
+   if( !isObject( $guiContent ) )
    {
       toolsMessageBox( getEngineName(),
          "You have loaded a Gui file that was created before this version.  It has been loaded but you must open it manually from the content list dropdown",
@@ -289,7 +289,7 @@ function GuiEditCanvas::load( %this, %filename )
       return 0;
    }
 
-   GuiEditor.openForEditing( %guiContent );
+   GuiEditor.openForEditing( $guiContent );
    
    GuiEditorStatusBar.print( "Loaded '" @ %filename @ "'" );
 }
@@ -449,7 +449,7 @@ function GuiEditCanvas::save( %this, %selectedOnly, %noPrompt )
          %fo.writeLine( %beforeNewFileLines[ %i ] );
          
       %fo.writeLine("//--- OBJECT WRITE BEGIN ---");
-      %fo.writeObject(%currentObject, "%guiContent = ");
+      %fo.writeObject(%currentObject, "$guiContent = ");
       %fo.writeLine("//--- OBJECT WRITE END ---");
       
       // Write out captured TorqueScript below Gui object
@@ -488,19 +488,19 @@ function GuiEditCanvas::append( %this )
    
    // Find guiContent.
    
-   if( !isObject( %guiContent ) )
+   if( !isObject( $guiContent ) )
    {
       toolsMessageBox( "Error loading GUI file", "The GUI content controls could not be found.  This function can only be used with files saved by the GUI editor.", "Ok", "Error" );
       return;
    }
    
    if( !GuiEditorContent.getCount() )
-      GuiEditor.openForEditing( %guiContent );
+      GuiEditor.openForEditing( $guiContent );
    else
    {
-      GuiEditor.getCurrentAddSet().add( %guiContent );
-      GuiEditor.readGuides( %guiContent );
-      GuiEditor.onAddNewCtrl( %guiContent );
+      GuiEditor.getCurrentAddSet().add( $guiContent );
+      GuiEditor.readGuides( $guiContent );
+      GuiEditor.onAddNewCtrl( $guiContent );
       GuiEditor.onHierarchyChanged();
    }
    

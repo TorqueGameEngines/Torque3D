@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
+$guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "MatEdPropertiesWindowContainer";
    Enabled = "1";
@@ -233,8 +233,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -543,9 +541,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -1923,8 +1918,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -2623,8 +2616,6 @@
                   Margin = "-1 0 0 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -3100,8 +3091,6 @@
                   Margin = "-1 0 0 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -3373,8 +3362,6 @@
                   Margin = "-1 0 0 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -4191,8 +4178,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                            
                   new GuiStackControl() {
                      StackingType = "Vertical";

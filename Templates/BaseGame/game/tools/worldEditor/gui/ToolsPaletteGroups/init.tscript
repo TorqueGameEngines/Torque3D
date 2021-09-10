@@ -30,6 +30,9 @@ function EWToolsPaletteWindow::loadToolsPalettes()
       exec( %file );
       %paletteGroup = 0;      
       
+      // TODO
+      %paletteId = 0;
+
       %i = %paletteId.getCount();
       for( ; %i != 0; %i--)
       {
@@ -49,6 +52,9 @@ function EWToolsPaletteWindow::loadToolsPalettes()
       exec( %file );
       %paletteGroup = 0;      
       
+      // TODO
+      %paletteId = 0;
+
       %i = %paletteId.getCount();
       for( ; %i != 0; %i--)
       {

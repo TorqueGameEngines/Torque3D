@@ -236,13 +236,13 @@ TCPObject::~TCPObject()
    }
 }
 
-bool TCPObject::processArguments(S32 argc, ConsoleValueRef *argv)
+bool TCPObject::processArguments(S32 argc, ConsoleValue *argv)
 {
    if(argc == 0)
       return true;
    else if(argc == 1)
    {
-      addToTable(NetSocket::fromHandle(dAtoi(argv[0])));
+      addToTable(NetSocket::fromHandle(argv[0].getInt()));
       return true;
    }
    return false;

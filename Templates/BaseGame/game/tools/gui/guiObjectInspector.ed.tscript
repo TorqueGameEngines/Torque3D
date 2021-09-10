@@ -37,7 +37,7 @@ function inspectObject( %object )
    // Create a new object inspector window.
    exec( "./guiObjectInspector.ed.gui" );
    
-   if( !isObject( %guiContent) )
+   if( !isObject( $guiContent) )
    {
       error( "InspectObject: failed to create GUI from 'guiObjectInspector.ed.gui'" );
       return;
@@ -45,9 +45,9 @@ function inspectObject( %object )
    
    // Initialize the inspector.
    
-   %guiContent.init( %object );
+   $guiContent.init( %object );
       
-   Canvas.getContent().add( %guiContent );
+   Canvas.getContent().add( $guiContent );
 }
 
 //=============================================================================================

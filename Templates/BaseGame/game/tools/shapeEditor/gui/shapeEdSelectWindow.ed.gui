@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl() {
+$guiContent = new GuiControl() {
    canSaveDynamicFields = "0";
    isContainer = "1";
    Profile = "ToolsGuiDefaultProfile";

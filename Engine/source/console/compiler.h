@@ -44,6 +44,8 @@ class DataChunker;
 #include "core/util/tVector.h"
 #endif
 
+//------------------------------------------------------------
+
 namespace Compiler
 {
    /// The opcodes for the TorqueScript VM.
@@ -69,6 +71,7 @@ namespace Compiler
       OP_RETURN_FLT,
       OP_RETURN_UINT,
 
+
       OP_CMPEQ,
       OP_CMPGR,
       OP_CMPGE,
@@ -93,26 +96,28 @@ namespace Compiler
       OP_MUL,
       OP_DIV,
       OP_NEG,
-
       OP_INC,
-      OP_DEC,
 
       OP_SETCURVAR,
       OP_SETCURVAR_CREATE,
       OP_SETCURVAR_ARRAY,
-      OP_SETCURVAR_ARRAY_VARLOOKUP,
       OP_SETCURVAR_ARRAY_CREATE,
-      OP_SETCURVAR_ARRAY_CREATE_VARLOOKUP,
 
       OP_LOADVAR_UINT,// 40
       OP_LOADVAR_FLT,
       OP_LOADVAR_STR,
-      OP_LOADVAR_VAR,
 
       OP_SAVEVAR_UINT,
       OP_SAVEVAR_FLT,
       OP_SAVEVAR_STR,
-      OP_SAVEVAR_VAR,
+
+      OP_LOAD_LOCAL_VAR_UINT,
+      OP_LOAD_LOCAL_VAR_FLT,
+      OP_LOAD_LOCAL_VAR_STR,
+
+      OP_SAVE_LOCAL_VAR_UINT,
+      OP_SAVE_LOCAL_VAR_FLT,
+      OP_SAVE_LOCAL_VAR_STR,
 
       OP_SETCUROBJECT,
       OP_SETCUROBJECT_NEW,
@@ -121,8 +126,6 @@ namespace Compiler
       OP_SETCURFIELD,
       OP_SETCURFIELD_ARRAY, // 50
       OP_SETCURFIELD_TYPE,
-      OP_SETCURFIELD_ARRAY_VAR,
-      OP_SETCURFIELD_THIS,
 
       OP_LOADFIELD_UINT,
       OP_LOADFIELD_FLT,
@@ -132,43 +135,25 @@ namespace Compiler
       OP_SAVEFIELD_FLT,
       OP_SAVEFIELD_STR,
 
-      OP_STR_TO_UINT,
-      OP_STR_TO_FLT,
-      OP_STR_TO_NONE,  // 60
-      OP_FLT_TO_UINT,
-      OP_FLT_TO_STR,
-      OP_FLT_TO_NONE,
-      OP_UINT_TO_FLT,
-      OP_UINT_TO_STR,
-      OP_UINT_TO_NONE,
-      OP_COPYVAR_TO_NONE,
+      OP_POP_STK,
 
       OP_LOADIMMED_UINT,
       OP_LOADIMMED_FLT,
       OP_TAG_TO_STR,
       OP_LOADIMMED_STR, // 70
-      OP_DOCBLOCK_STR,
+      OP_DOCBLOCK_STR,  // 76
       OP_LOADIMMED_IDENT,
 
-      OP_CALLFUNC_RESOLVE,
       OP_CALLFUNC,
-      OP_CALLFUNC_POINTER,
-      OP_CALLFUNC_THIS,
 
-      OP_ADVANCE_STR,
       OP_ADVANCE_STR_APPENDCHAR,
-      OP_ADVANCE_STR_COMMA,
-      OP_ADVANCE_STR_NUL,
       OP_REWIND_STR,
-      OP_TERMINATE_REWIND_STR,  // 80
+      OP_TERMINATE_REWIND_STR,
+
       OP_COMPARE_STR,
 
-      OP_PUSH,          // String
-      OP_PUSH_UINT,     // Integer
-      OP_PUSH_FLT,      // Float
-      OP_PUSH_VAR,      // Variable
-      OP_PUSH_THIS,     // This pointer
-      OP_PUSH_FRAME,    // Frame
+      OP_PUSH,
+      OP_PUSH_FRAME,
 
       OP_ASSERT,
       OP_BREAK,
@@ -269,6 +254,7 @@ namespace Compiler
    CompilerStringTable *getCurrentStringTable();
    CompilerStringTable &getGlobalStringTable();
    CompilerStringTable &getFunctionStringTable();
+   CompilerLocalVariableToRegisterMappingTable& getFunctionVariableMappingTable();
 
    void setCurrentStringTable(CompilerStringTable* cst);
 

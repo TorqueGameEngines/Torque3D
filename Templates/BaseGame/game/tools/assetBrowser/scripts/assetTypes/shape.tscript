@@ -42,6 +42,10 @@ function AssetBrowser::editShapeAsset(%this, %assetDef)
    ShapeEditorPlugin.openShapeAsset(%assetDef);    
 }
 
+function AssetBrowser::onShapeAssetChanged(%this, %assetDef)
+{
+}
+
 function AssetBrowser::deleteShapeAsset(%this, %assetDef)
 {
    
@@ -340,7 +344,7 @@ function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)
    
    %newStatic = new TSStatic()
    {
-      position = %pos;
+      position = %position;
       shapeAsset = %assetId;
    };
    

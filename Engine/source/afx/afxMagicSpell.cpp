@@ -2638,23 +2638,25 @@ DefineEngineStringlyVariadicMethod(afxMagicSpell, setTimeFactor, void, 3, 4, "(F
    "@ingroup AFX")
 {
    if (argc == 3)
-      object->setTimeFactor(dAtof(argv[2]));
+      object->setTimeFactor(argv[2].getFloat());
    else
    {
+      F32 value = argv[3].getFloat();
+
       if (dStricmp(argv[2], "overall") == 0)
          object->setTimeFactor(dAtof(argv[3]));
       else if (dStricmp(argv[2], "casting") == 0)
-         object->setTimeFactor(afxMagicSpell::CASTING_PHRASE, dAtof(argv[3]));
+         object->setTimeFactor(afxMagicSpell::CASTING_PHRASE, value);
       else if (dStricmp(argv[2], "launch") == 0)
-         object->setTimeFactor(afxMagicSpell::LAUNCH_PHRASE, dAtof(argv[3]));
+         object->setTimeFactor(afxMagicSpell::LAUNCH_PHRASE, value);
       else if (dStricmp(argv[2], "delivery") == 0)
-         object->setTimeFactor(afxMagicSpell::DELIVERY_PHRASE, dAtof(argv[3]));
+         object->setTimeFactor(afxMagicSpell::DELIVERY_PHRASE, value);
       else if (dStricmp(argv[2], "impact") == 0)
-         object->setTimeFactor(afxMagicSpell::IMPACT_PHRASE, dAtof(argv[3]));
+         object->setTimeFactor(afxMagicSpell::IMPACT_PHRASE, value);
       else if (dStricmp(argv[2], "linger") == 0)
-         object->setTimeFactor(afxMagicSpell::LINGER_PHRASE, dAtof(argv[3]));
+         object->setTimeFactor(afxMagicSpell::LINGER_PHRASE, value);
       else
-         Con::errorf("afxMagicSpell::setTimeFactor() -- unknown spell phrase [%s].", argv[2].getStringValue());
+         Con::errorf("afxMagicSpell::setTimeFactor() -- unknown spell phrase [%s].", argv[2].getString());
    }
 }
 

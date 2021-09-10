@@ -193,6 +193,9 @@ function resetMission()
    
    clearServerPaths();
    
+   // TODO: Is this right?
+   %client = ClientGroup.getObject(0);
+
    // Inform the game code we're resetting.
    %hasGameMode = callGamemodeFunction("onMissionReset", %client);
 }

@@ -2080,7 +2080,7 @@ static ConsoleDocFragment _ActionMapbind2(
 DefineEngineStringlyVariadicMethod( ActionMap, bind, bool, 5, 10, "actionMap.bind( device, action, [modifier, spec, mod...], command )"
            "@hide")
 {
-   StringStackWrapper args(argc - 2, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 2, argv + 2);
    return object->processBind( args.count(), args, NULL );
 }
 
@@ -2136,7 +2136,7 @@ DefineEngineStringlyVariadicMethod( ActionMap, bindObj, bool, 6, 11, "(device, a
       return false;
    }
 
-   StringStackWrapper args(argc - 3, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 3, argv + 2);
    return object->processBind( args.count(), args, simObject );
 }
 

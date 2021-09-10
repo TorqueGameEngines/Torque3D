@@ -142,6 +142,7 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
    %filePath = %assetItem.filePath;
    %assetName = %assetItem.assetName;
    %assetConfigObj = %assetItem.importConfig;
+   %optionsObj = %assetItem.optionsObj; // TODO IS THIS RIGHT
    
    ImportOptionsList.startGroup("Asset");
    ImportOptionsList.addField("AssetName", "Asset Name", "string", "", "NewAsset", "", %assetItem);
@@ -405,6 +406,7 @@ function ImportAssetConfigEditorWindow::editConfig(%this)
 
 function ImportAssetConfigEditorWindow::deleteConfig(%this)
 {
+   %configList = ImportAssetConfigSettingsList;
    for(%i=0; %i < %configList.count(); %i++)
    {
       

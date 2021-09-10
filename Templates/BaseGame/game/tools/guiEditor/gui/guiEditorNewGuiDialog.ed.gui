@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(GuiEditorNewGuiDialog,EditorGuiGroup) {
+$guiContent = new GuiControl(GuiEditorNewGuiDialog,EditorGuiGroup) {
    isContainer = "1";
    profile = "ToolsGuiOverlayProfile";
    horizSizing = "right";

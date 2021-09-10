@@ -138,7 +138,7 @@ function RoadEditorGui::editNodeDetails( %this )
 
 function RoadEditorGui::onBrowseClicked( %this )
 {
-   //%filename = RETextureFileCtrl.getText();
+   %filename = RETextureFileCtrl.getText();
          
    %dlg = new OpenFileDialog()
    {

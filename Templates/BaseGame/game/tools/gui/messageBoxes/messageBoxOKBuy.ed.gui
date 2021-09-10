@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(toolsMessageBoxOKBuyDlg) {
+$guiContent = new GuiControl(toolsMessageBoxOKBuyDlg) {
 	profile = "ToolsGuiDefaultProfile";
 	horizSizing = "width";
 	vertSizing = "height";

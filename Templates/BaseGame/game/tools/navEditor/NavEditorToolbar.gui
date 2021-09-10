@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(NavEditorToolbar,EditorGuiGroup) {
+$guiContent = new GuiControl(NavEditorToolbar,EditorGuiGroup) {
    position = "306 0";
    extent = "800 32";
    minExtent = "8 2";

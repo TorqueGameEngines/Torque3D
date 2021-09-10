@@ -113,9 +113,9 @@ function EditorGui::init(%this)
    {
       // Load Terrain Painter GUI
       exec("~/worldEditor/gui/TerrainPainterWindow.ed.gui");
-      if( isObject( %guiContent ) ){
-         %this.add( %guiContent->TerrainPainter );
-         %this.add( %guiContent->TerrainPainterPreview );
+      if( isObject( $guiContent ) ){
+         %this.add( $guiContent->TerrainPainter );
+         %this.add( $guiContent->TerrainPainterPreview );
       }
          
       exec("~/worldEditor/gui/guiTerrainMaterialDlg.ed.gui"); 
@@ -399,7 +399,7 @@ function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %image
          Visible = "1";
          Command = "EditorGui.setEditor(" @ %pluginName @ ");";
          tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = %tooltip;
+         ToolTip = "";// %tooltip;
          hovertime = "750";
          bitmapAsset = %imageAsset;
          buttonType = "RadioButton";

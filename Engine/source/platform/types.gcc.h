@@ -43,6 +43,10 @@ typedef unsigned long  U64;
 // Compiler Version
 #define TORQUE_COMPILER_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
+#define TORQUE_FORCEINLINE __attribute__((always_inline))
+#define TORQUE_CASE_FALLTHROUGH __attribute__((fallthrough))
+#define TORQUE_NOINLINE __attribute__ ((noinline))
+#define TORQUE_UNLIKELY
 
 //--------------------------------------
 // Identify the compiler string
@@ -164,9 +168,6 @@ typedef unsigned long  U64;
 
 #endif
 #endif
-
-// Set GCC noinline
-#define TORQUE_NOINLINE __attribute__ ((noinline))
 
 #endif // INCLUDED_TYPES_GCC_H
 

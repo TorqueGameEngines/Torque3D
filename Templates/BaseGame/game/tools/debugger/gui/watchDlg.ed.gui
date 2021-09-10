@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(DebuggerWatchDlg, EditorGuiGroup) {
+$guiContent = new GuiControl(DebuggerWatchDlg, EditorGuiGroup) {
    profile = "ToolsGuiDefaultProfile";
    horizSizing = "right";
    vertSizing = "bottom";

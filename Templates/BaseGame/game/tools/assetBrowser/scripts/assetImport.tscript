@@ -277,6 +277,9 @@ function AssetBrowser::onDropFolder(%this, %filePath)
       //First, we wanna scan to see if we have modules to contend with. If we do, we'll just plunk them in wholesale
       //and not process their contents.
       
+      // TODO
+      %fileExt = "";
+
       //If not modules, it's likely an art pack or other mixed files, so we'll import them as normal
       if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") )
          %this.importAssetListArray.add("ImageAsset", %filePath);

@@ -1,3 +1,5 @@
+#if 0
+
 #ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
@@ -252,4 +254,5 @@ TEST(Con, execute)
 	STR.popFrame();
 }
 
+#endif
 #endif

@@ -1,4 +1,4 @@
-%guiContent = new GuiControl(CubemapEditor) {
+$guiContent = new GuiControl(CubemapEditor) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

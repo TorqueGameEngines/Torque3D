@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiWindowCollapseCtrl() {
+$guiContent = new GuiWindowCollapseCtrl() {
    collapseGroup = "-1";
    collapseGroupNum = "-1";
    resizeWidth = "1";

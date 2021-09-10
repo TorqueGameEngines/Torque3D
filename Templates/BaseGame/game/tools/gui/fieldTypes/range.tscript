@@ -76,7 +76,7 @@ function GuiInspectorVariableGroup::buildRangeField(%this, %fieldName, %fieldLab
       Visible = "1";
       Command = "$thisControl.onDragComplete();";
       tooltipprofile = "GuiToolTipProfile";
-      tooltip = %tooltip;
+      tooltip = ""; //%tooltip;
       hovertime = "1000";
       canSaveDynamicFields = "0";
       ownerObject = %ownerObj;

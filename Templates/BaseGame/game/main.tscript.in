@@ -37,9 +37,8 @@ else
    //If nothing else set a main menu, try to do so now
    if(!isObject(Canvas.getContent()))
    {
-      %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
-      if (isObject( %mainMenuGUI ))
-         Canvas.setContent( %mainMenuGUI );
+      if (isObject( ProjectSettings.value("UI/mainMenuName") ))
+         Canvas.setContent( ProjectSettings.value("UI/mainMenuName") );
    }
 }
 

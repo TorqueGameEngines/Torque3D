@@ -36,6 +36,7 @@
 
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"
+#include "core/stringTable.h"
 
 class SimObject;
 class Namespace;
@@ -117,188 +118,313 @@ struct ConsoleLogEntry
 typedef const char *StringTableEntry;
 extern char *typeValueEmpty;
 
+enum ConsoleValueType
+{
+   cvInteger = -4,
+   cvFloat = -3,
+   cvString = -2,
+   cvSTEntry = -1,
+   cvConsoleValueType = 0
+};
+
+struct ConsoleValueConsoleType
+{
+   void* dataPtr;
+   EnumTable* enumTable;
+};
+
 class ConsoleValue
 {
-public:
-
-   enum
+   union
    {
-      TypeInternalInt = -5,
-      TypeInternalFloat = -4,
-      TypeInternalStringStackPtr = -3,
-      TypeInternalStackString = -2,
-      TypeInternalString = -1,
+      F64   f;
+      S64   i;
+      char* s;
+      void* data;
+      ConsoleValueConsoleType* ct;
    };
 
    S32 type;
 
-public:
-
-   // NOTE: This is protected to ensure no one outside
-   // of this structure is messing with it.
-
-#pragma warning( push )
-#pragma warning( disable : 4201 ) // warning C4201: nonstandard extension used : nameless struct/union
-
-   // An variable is either a real dynamic type or
-   // its one exposed from C++ using a data pointer.
-   //
-   // We use this nameless union and struct setup
-   // to optimize the memory usage.
-   union
+   enum Constants
    {
-      struct
-      {
-         char *sval;
-         U32 ival;  // doubles as strlen when type is TypeInternalString
-         F32 fval;
-         U32 bufferLen;
-      };
-
-      struct
-      {
-         /// The real data pointer.
-         void *dataPtr;
-
-         /// The enum lookup table for enumerated types.
-         const EnumTable *enumTable;
-      };
+      ConversionBufferStride = 32
    };
 
-   U32 getIntValue();
-   S32 getSignedIntValue();
-   F32 getFloatValue();
-   const char *getStringValue();
-   StringStackPtr getStringStackPtr();
-   bool getBoolValue();
-
-   void setIntValue(U32 val);
-   void setIntValue(S32 val);
-   void setFloatValue(F32 val);
-   void setStringValue(const char *value);
-   void setStackStringValue(const char *value);
-   void setStringStackPtrValue(StringStackPtr ptr);
-   void setBoolValue(bool val);
-
-   void init()
+   struct ConversionBuffer
    {
-      ival = 0;
-      fval = 0;
-      sval = typeValueEmpty;
-      bufferLen = 0;
-      type = TypeInternalString;
+      char buffer[ConversionBufferStride];
+   };
+   
+   static Vector<ConversionBuffer> sConversionBuffer;
+
+   char* convertToBuffer() const;
+
+   TORQUE_FORCEINLINE bool hasAllocatedData() const
+   {
+      return (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
    }
 
-   void cleanup()
+   const char* getConsoleData() const;
+
+   TORQUE_FORCEINLINE void cleanupData()
    {
-      if ((type <= TypeInternalString) && (bufferLen > 0))
+      if (hasAllocatedData())
       {
-         dFree(sval);
-         bufferLen = 0;
+         dFree(data);
+         data = NULL;
       }
-      sval = typeValueEmpty;
-      type = ConsoleValue::TypeInternalString;
-      ival = 0;
-      fval = 0;
    }
-   ConsoleValue() { init(); };
-   ~ConsoleValue() { cleanup(); };
-};
 
-// Proxy class for console variables
-// Can point to existing console variables,
-// or act like a free floating value.
-class ConsoleValueRef
-{
+   TORQUE_FORCEINLINE void _move(ConsoleValue&& ref) noexcept
+   {
+      type = ref.type;
+
+      switch (ref.type)
+      {
+      case cvInteger:
+         i = ref.i;
+         break;
+      case cvFloat:
+         f = ref.f;
+         break;
+      case cvSTEntry:
+         TORQUE_CASE_FALLTHROUGH;
+      case cvString:
+         s = ref.s;
+         break;
+      default:
+         data = ref.data;
+         break;
+      }
+
+      ref.data = NULL;
+      ref.setEmptyString();
+   }
+
 public:
-   ConsoleValue *value;
+   ConsoleValue()
+   {
+      type = ConsoleValueType::cvSTEntry;
+      s = const_cast<char*>(StringTable->EmptyString());
+   }
 
-   ConsoleValueRef() : value(0) { ; }
-   ~ConsoleValueRef() { ; }
+   ConsoleValue(ConsoleValue&& ref) noexcept
+   {
+      _move(std::move(ref));
+   }
 
-   ConsoleValueRef(const ConsoleValueRef &ref);
+   TORQUE_FORCEINLINE ConsoleValue& operator=(ConsoleValue&& ref) noexcept
+   {
+      _move(std::move(ref));
+      return *this;
+   }
 
-   static ConsoleValueRef fromValue(ConsoleValue *value) { ConsoleValueRef ref; ref.value = value; return ref; }
+   ConsoleValue(const ConsoleValue&) = delete;
+   ConsoleValue& operator=(const ConsoleValue&) = delete;
 
-   const char *getStringValue() { return value ? value->getStringValue() : ""; }
-   StringStackPtr getStringStackPtrValue() { return value ? value->getStringStackPtr() : 0; }
+   TORQUE_FORCEINLINE ~ConsoleValue()
+   {
+      cleanupData();
+   }
 
-   inline U32 getIntValue() { return value ? value->getIntValue() : 0; }
-   inline S32 getSignedIntValue() { return value ? value->getSignedIntValue() : 0; }
-   inline F32 getFloatValue() { return value ? value->getFloatValue() : 0.0f; }
-   inline bool getBoolValue() { return value ? value->getBoolValue() : false; }
+   TORQUE_FORCEINLINE void reset()
+   {
+      setEmptyString();
+   }
 
-   inline operator const char*() { return getStringValue(); }
-   inline operator String() { return String(getStringValue()); }
-   inline operator U32() { return getIntValue(); }
-   inline operator S32() { return getSignedIntValue(); }
-   inline operator F32() { return getFloatValue(); }
-   inline operator bool() { return getBoolValue(); }
+   TORQUE_FORCEINLINE F64 getFloat() const
+   {
+      if (type == ConsoleValueType::cvFloat)
+         return f;
+      if (type == ConsoleValueType::cvInteger)
+         return i;
+      if (isStringType())
+         return dAtof(s);
+      return dAtof(getConsoleData());
+   }
 
-   inline bool isStringStackPtr() { return value ? value->type == ConsoleValue::TypeInternalStringStackPtr : false; }
-   inline bool isString() { return value ? value->type >= ConsoleValue::TypeInternalStringStackPtr : true; }
-   inline bool isInt() { return value ? value->type == ConsoleValue::TypeInternalInt : false; }
-   inline bool isFloat() { return value ? value->type == ConsoleValue::TypeInternalFloat : false; }
-   inline S32 getType() { return value ? value->type : -1; }
+   TORQUE_FORCEINLINE S64 getInt() const
+   {
+      if (type == ConsoleValueType::cvInteger)
+         return i;
+      if (type == ConsoleValueType::cvFloat)
+         return f;
+      if (isStringType())
+         return dAtoi(s);
+      return dAtoi(getConsoleData());
+   }
 
-   // Note: operators replace value
-   ConsoleValueRef& operator=(const ConsoleValueRef &other);
-   ConsoleValueRef& operator=(const char *newValue);
-   ConsoleValueRef& operator=(U32 newValue);
-   ConsoleValueRef& operator=(S32 newValue);
-   ConsoleValueRef& operator=(F32 newValue);
-   ConsoleValueRef& operator=(F64 newValue);
+   TORQUE_FORCEINLINE const char* getString() const
+   {
+      if (isStringType())
+         return s;
+      if (isNumberType())
+         return convertToBuffer();
+      return getConsoleData();
+   }
+
+   TORQUE_FORCEINLINE operator const char* () const
+   {
+      return getString();
+   }
+
+   TORQUE_FORCEINLINE bool getBool() const
+   {
+      if (type == ConsoleValueType::cvInteger)
+         return (bool)i;
+      if (type == ConsoleValueType::cvFloat)
+         return (bool)f;
+      if (isStringType())
+         return dAtob(s);
+      return dAtob(getConsoleData());
+   }
+
+   TORQUE_FORCEINLINE void setFloat(const F64 val)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvFloat;
+      f = val;
+   }
+
+   TORQUE_FORCEINLINE void setInt(const S64 val)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvInteger;
+      i = val;
+   }
+
+   TORQUE_FORCEINLINE void setString(const char* val)
+   {
+      setString(val, val != NULL ? dStrlen(val) : 0);
+   }
+
+   TORQUE_FORCEINLINE void setString(const char* val, S32 len)
+   {
+      if (len == 0)
+      {
+         setEmptyString();
+         return;
+      }
+
+      cleanupData();
+
+      type = ConsoleValueType::cvString;
+
+      s = (char*)dMalloc(static_cast<dsize_t>(len) + 1);
+      s[len] = '\0';
+      dStrcpy(s, val, static_cast<dsize_t>(len) + 1);
+   }
+
+   TORQUE_FORCEINLINE void setStringRef(const char* ref, S32 len)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvString;
+      s = const_cast<char*>(ref);
+   }
+
+   TORQUE_FORCEINLINE void setBool(const bool val)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvInteger;
+      i = (int)val;
+   }
+
+   TORQUE_FORCEINLINE void setStringTableEntry(StringTableEntry val)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvSTEntry;
+      s = const_cast<char*>(val);
+   }
+
+   TORQUE_FORCEINLINE void setEmptyString()
+   {
+      setStringTableEntry(StringTable->EmptyString());
+   }
+
+   TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvSTEntry;
+      ct = new ConsoleValueConsoleType{ dataPtr, const_cast<EnumTable*>(enumTable) };
+   }
+
+   TORQUE_FORCEINLINE S32 getType() const
+   {
+      return type;
+   }
+
+   TORQUE_FORCEINLINE bool isStringType() const
+   {
+      return type == ConsoleValueType::cvString || type == ConsoleValueType::cvSTEntry;
+   }
+
+   TORQUE_FORCEINLINE bool isNumberType() const
+   {
+      return type == ConsoleValueType::cvFloat || type == ConsoleValueType::cvInteger;
+   }
+
+   TORQUE_FORCEINLINE bool isConsoleType() const
+   {
+      return type >= ConsoleValueType::cvConsoleValueType;
+   }
+
+   TORQUE_FORCEINLINE void setFastFloat(F64 flt)
+   {
+      type = ConsoleValueType::cvFloat;
+      f = flt;
+   }
+
+   TORQUE_FORCEINLINE F64 getFastFloat() const
+   {
+      return f;
+   }
+
+   TORQUE_FORCEINLINE void setFastInt(S64 flt)
+   {
+      type = ConsoleValueType::cvInteger;
+      i = flt;
+   }
+
+   TORQUE_FORCEINLINE S64 getFastInt() const
+   {
+      return i;
+   }
+
+   static void init();
+   static void resetConversionBuffer();
 };
-
-// Overrides to allow ConsoleValueRefs to be directly converted to S32&F32
-
-inline S32 dAtoi(ConsoleValueRef &ref)
-{
-   return ref.getSignedIntValue();
-}
-
-inline F32 dAtof(ConsoleValueRef &ref)
-{
-   return ref.getFloatValue();
-}
-
-inline bool dAtob(ConsoleValue &ref)
-{
-   return ref.getBoolValue();
-}
-
 
 // Transparently converts ConsoleValue[] to const char**
-class StringStackWrapper
+class ConsoleValueToStringArrayWrapper
 {
 public:
    const char **argv;
-   int argc;
+   S32 argc;
 
-   StringStackWrapper(int targc, ConsoleValueRef targv[]);
-   ~StringStackWrapper();
+   ConsoleValueToStringArrayWrapper(int targc, ConsoleValue* targv);
+   ~ConsoleValueToStringArrayWrapper();
 
-   const char* operator[](int idx) { return argv[idx]; }
+   const char* operator[](S32 idx) { return argv[idx]; }
    operator const char**() { return argv; }
 
-   int count() { return argc; }
+   S32 count() { return argc; }
 };
 
 // Transparently converts const char** to ConsoleValue
-class StringStackConsoleWrapper
+class StringArrayToConsoleValueWrapper
 {
 public:
-   ConsoleValue *argvValue;
-   ConsoleValueRef *argv;
-   int argc;
+   ConsoleValue *argv;
+   S32 argc;
 
-   StringStackConsoleWrapper(int targc, const char **targv);
-   ~StringStackConsoleWrapper();
+   StringArrayToConsoleValueWrapper(int targc, const char **targv);
+   ~StringArrayToConsoleValueWrapper();
 
-   ConsoleValueRef& operator[](int idx) { return argv[idx]; }
-   operator ConsoleValueRef*() { return argv; }
+   ConsoleValue& operator[](int idx) { return argv[idx]; }
+   operator ConsoleValue*() { return argv; }
 
-   int count() { return argc; }
+   S32 count() { return argc; }
 };
 
 /// @defgroup console_callbacks Scripting Engine Callbacks
@@ -319,11 +445,11 @@ public:
 /// @{
 
 ///
-typedef const char * (*StringCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
-typedef S32(*IntCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
-typedef F32(*FloatCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
-typedef void(*VoidCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]); // We have it return a value so things don't break..
-typedef bool(*BoolCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
+typedef const char * (*StringCallback)(SimObject *obj, S32 argc, ConsoleValue argv[]);
+typedef S32(*IntCallback)(SimObject *obj, S32 argc, ConsoleValue argv[]);
+typedef F32(*FloatCallback)(SimObject *obj, S32 argc, ConsoleValue argv[]);
+typedef void(*VoidCallback)(SimObject *obj, S32 argc, ConsoleValue argv[]); // We have it return a value so things don't break..
+typedef bool(*BoolCallback)(SimObject *obj, S32 argc, ConsoleValue argv[]);
 
 typedef void(*ConsumerCallback)(U32 level, const char *consoleLine);
 /// @}
@@ -376,7 +502,8 @@ namespace Con
       /// 10/14/14 - jamesu - 47->48 Added opcodes to reduce reliance on strings in function calls
       /// 10/07/17 - JTH - 48->49 Added opcode for function pointers and revamp of interpreter 
       ///                         from switch to function calls.
-      DSOVersion = 49,
+      /// 09/04/21 - JTH - 49->50 Rewrite of interpreter
+      DSOVersion = 50,
 
       MaxLineLength = 512,  ///< Maximum length of a line of console input.
       MaxDataTypes = 256    ///< Maximum number of registered data types.
@@ -786,8 +913,8 @@ namespace Con
    /// char* result = execute(2, argv);
    /// @endcode
    /// NOTE: this function restores the console stack on return.
-   ConsoleValueRef execute(S32 argc, const char* argv[]);
-   ConsoleValueRef execute(S32 argc, ConsoleValueRef argv[]);
+   ConsoleValue execute(S32 argc, const char* argv[]);
+   ConsoleValue execute(S32 argc, ConsoleValue argv[]);
 
    /// Call a Torque Script member function of a SimObject from C/C++ code.
    /// @param object    Object on which to execute the method call.
@@ -802,8 +929,8 @@ namespace Con
    /// char* result = execute(mysimobject, 3, argv);
    /// @endcode
    /// NOTE: this function restores the console stack on return.
-   ConsoleValueRef execute(SimObject *object, S32 argc, const char* argv[], bool thisCallOnly = false);
-   ConsoleValueRef execute(SimObject *object, S32 argc, ConsoleValueRef argv[], bool thisCallOnly = false);
+   ConsoleValue execute(SimObject *object, S32 argc, const char* argv[], bool thisCallOnly = false);
+   ConsoleValue execute(SimObject *object, S32 argc, ConsoleValue argv[], bool thisCallOnly = false);
 
    /// Executes a script file and compiles it for use in script.
    ///
@@ -821,13 +948,13 @@ namespace Con
    /// @param  echo     Should we echo the string to the console?
    /// @param  fileName Indicate what file this code is coming from; used in error reporting and such.
    /// NOTE: This function restores the console stack on return.
-   ConsoleValueRef evaluate(const char* string, bool echo = false, const char *fileName = NULL);
+   ConsoleValue evaluate(const char* string, bool echo = false, const char *fileName = NULL);
 
    /// Evaluate an arbitrary line of script.
    ///
    /// This wraps dVsprintf(), so you can substitute parameters into the code being executed.
    /// NOTE: This function restores the console stack on return.
-   ConsoleValueRef evaluatef(const char* string, ...);
+   ConsoleValue evaluatef(const char* string, ...);
 
    /// @}
 
@@ -915,10 +1042,10 @@ namespace Con
    /// @see _EngineConsoleExecCallbackHelper
    ///
    template<typename R, typename ...ArgTs>
-   ConsoleValueRef executef(R r, ArgTs ...argTs)
+   ConsoleValue executef(R r, ArgTs ...argTs)
    {
       _EngineConsoleExecCallbackHelper<R> callback(r);
-      return callback.template call<ConsoleValueRef>(argTs...);
+      return std::move(callback.template call<ConsoleValue>(argTs...));
    }
    /// }
 };
@@ -1192,9 +1319,9 @@ public:
       static ConsoleConstructor cfg_ConsoleFunctionGroup_##groupName##_GroupBegin(NULL,#groupName,usage)
 
 #  define ConsoleToolFunction(name,returnType,minArgs,maxArgs,usage1) \
-   returnType ctf_##name(SimObject *, S32, ConsoleValueRef *argv); \
+   returnType ctf_##name(SimObject *, S32, ConsoleValue *argv); \
    ConsoleConstructor cc_##name##_obj(NULL,#name,ctf_##name,usage1,minArgs,maxArgs, true); \
-   returnType ctf_##name(SimObject *, S32 argc, ConsoleValueRef *argv)
+   returnType ctf_##name(SimObject *, S32 argc, ConsoleValue *argv)
 
 #  define ConsoleFunctionGroupEnd(groupName) \
       static ConsoleConstructor cfg_##groupName##_GroupEnd(NULL,#groupName,NULL)
@@ -1227,23 +1354,23 @@ public:
 
 // These are identical to what's above, we just want to null out the usage strings.
 #  define ConsoleFunction(name,returnType,minArgs,maxArgs,usage1)                   \
-      static returnType c##name(SimObject *, S32, ConsoleValueRef*);                   \
+      static returnType c##name(SimObject *, S32, ConsoleValue*);                   \
       static ConsoleConstructor g##name##obj(NULL,#name,c##name,"",minArgs,maxArgs);\
-      static returnType c##name(SimObject *, S32 argc, ConsoleValueRef *argv)
+      static returnType c##name(SimObject *, S32 argc, ConsoleValue *argv)
 
 #  define ConsoleToolFunction(name,returnType,minArgs,maxArgs,usage1)                   \
-   static returnType c##name(SimObject *, S32, ConsoleValueRef*);                   \
+   static returnType c##name(SimObject *, S32, ConsoleValue*);                   \
    static ConsoleConstructor g##name##obj(NULL,#name,c##name,"",minArgs,maxArgs, true);\
-   static returnType c##name(SimObject *, S32 argc, ConsoleValueRef *argv)
+   static returnType c##name(SimObject *, S32 argc, ConsoleValue *argv)
 
 #  define ConsoleMethod(className,name,returnType,minArgs,maxArgs,usage1)                             \
-      static inline returnType c##className##name(className *, S32, ConsoleValueRef *argv);               \
-      static returnType c##className##name##caster(SimObject *object, S32 argc, ConsoleValueRef *argv) {  \
+      static inline returnType c##className##name(className *, S32, ConsoleValue *argv);               \
+      static returnType c##className##name##caster(SimObject *object, S32 argc, ConsoleValue *argv) {  \
          conmethod_return_##returnType ) c##className##name(static_cast<className*>(object),argc,argv);              \
       };                                                                                              \
       static ConsoleConstructor                                                                       \
          className##name##obj(#className,#name,c##className##name##caster,"",minArgs,maxArgs);        \
-      static inline returnType c##className##name(className *object, S32 argc, ConsoleValueRef *argv)
+      static inline returnType c##className##name(className *object, S32 argc, ConsoleValue *argv)
 
 #define ConsoleDoc( text )
 

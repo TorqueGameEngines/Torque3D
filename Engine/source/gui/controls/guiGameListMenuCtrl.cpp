@@ -361,10 +361,8 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
    // calculate text to be at the center between the arrows
    GFont* font = profile->mFont;
 
-   ConsoleValue val;
-   val.setFloatValue(row->mValue);
-
-   const char* stringVal = val.getStringValue();
+   char stringVal[32];
+   dSprintf(stringVal, 32, "%f", row->mValue);
 
    S32 textWidth = font->getStrWidth(stringVal);
    S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;

@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContnt = new GuiControl(ConvexEditorOptions)
+$guiContnt = new GuiControl(ConvexEditorOptions)
 {
    position = "0 0";
    extent = "800 600";

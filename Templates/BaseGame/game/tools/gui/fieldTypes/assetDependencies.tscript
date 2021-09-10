@@ -34,7 +34,7 @@ function GuiInspectorVariableGroup::buildAssetDependenciesField(%this, %fieldNam
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
-      tooltip = %tooltip;
+      tooltip = "";// %tooltip;
       text = %fieldDefaultVal;
       hovertime = "1000";
       ownerObject = %ownerObj;

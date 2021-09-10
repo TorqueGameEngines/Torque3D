@@ -1,3 +1,4 @@
+#if 0
 #ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
@@ -147,4 +148,5 @@ TEST(EngineAPI, _EngineConsoleExecCallbackHelper)
 		"All values should be printed in the correct order";
 }
 
+#endif
 #endif

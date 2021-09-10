@@ -838,6 +838,7 @@ T3Dpre4ProjectImporter::genProcessor("afxBillboardData", "texture textureAsset")
 T3Dpre4ProjectImporter::genProcessor("afxModelData", "shapeName shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("afxZodiacPlaneData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("sfxEmitter", "track soundAsset filename soundAsset");
 //==============================================================================
 // Levels
 //==============================================================================
@@ -1064,6 +1065,169 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %obj
 //==============================================================================
 T3Dpre4ProjectImporter::genProcessor("PostEffect", "texture textureAsset");
 
+//==============================================================================
+// Sounds
+// Sounds are a little weird because there's so much data tied up in a given sound
+// source. So our approach is find old SFXProfiles and process those into sound assets
+// by cross-referencing the filename for existing asset definitions.
+// Using existing SFXProfiles allows us to also injest the descriptions, giving us
+// our meta-properties on the sound asset itself.
+//==============================================================================
+function T3Dpre4ProjectImporter::processSFXProfileLine(%this, %line)
+{
+   return %line;
+}
+
+function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectName)
+{
+   %soundFilename = findObjectField("filename");
+   
+   %soundFilename = sanitizeFilename(%soundFilename);
+
+   %soundAsset = SoundAsset::getAssetIdByFilename(%soundFilename);
+   
+   //Throw a warn that this file's already been claimed and move on
+   if(%soundAsset !$= "")
+   {
+      warn("T3Dpre4ProjectImporter::processSFXProfileObject() - attempting to process SFXProfile " @ %objectName 
+               @ " but its filename is already associated to another sound asset. Continuing, but be aware.");
+   }  
+
+      %assetName = %objectName;
+   
+      %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%soundFilename).ModuleId;
+      
+      %assetPath = filePath(%soundFilename) @ "/";   
+      
+      %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+      
+      if(isFile(%tamlpath))
+      {
+         error("T3Dpre4ProjectImporter::processSFXProfileObject() - Failed to create as taml file already exists: " @ %soundFilename);
+         return false;
+      }
+      
+      %asset = new SoundAsset()
+      {
+         AssetName = %assetName;
+         versionId = 1;
+         shaderData = "";
+         soundFile = fileBase(%soundFilename) @ fileExt(%soundFilename);
+      };
+      
+      %descriptionName = findObjectField("description");
+      
+      if(%descriptionName !$= "")
+      {
+         //Optimization, see if we already have this description by happenstance
+         if(isObject(%descriptionName))
+         {
+            %asset.sourceGroup = %descriptionName.sourceGroup;
+            %asset.volume = %descriptionName.volume;
+            %asset.pitch = %descriptionName.pitch;
+            %asset.isLooping = %descriptionName.isLooping;
+            %asset.priority = %descriptionName.priority;
+            %asset.useHardware = %descriptionName.useHardware;
+            %asset.is3D = %descriptionName.is3D;
+            %asset.minDistance = %descriptionName.minDistance;
+            %asset.maxDistance = %descriptionName.maxDistance;
+            %asset.scatterDistance = %descriptionName.scatterDistance;
+            %asset.coneInsideAngle = %descriptionName.coneInsideAngle;            
+            %asset.coneOutsideAngle = %descriptionName.coneOutsideAngle;         
+            %asset.coneOutsideVolume = %descriptionName.coneOutsideVolume;
+            %asset.rolloffFactor = %descriptionName.rolloffFactor;
+            %asset.isStreaming = %descriptionName.isStreaming;
+         }
+         else
+         {
+         %objFileFinder = "";
+         //first check our cache
+         if(isObject($ProjectImporter::SFXDescriptionCache) && 
+            $ProjectImporter::SFXDescriptionCache.getIndexFromKey(%descriptionName) !$= "")
+         {
+            %key = $ProjectImporter::SFXDescriptionCache.getIndexFromKey(%descriptionName);
+            %objFileFinder = $ProjectImporter::SFXDescriptionCache.getValue(%key);
+         }
+         else
+         {
+            %objFileFinder = findObjectInFiles(%descriptionName);
+         }
+         
+            if(%objFileFinder !$= "")
+            {
+               %valueArray = new ArrayObject();
+               
+            %fileObj = getField(%objFileFinder, 0);
+               
+            %valueArray.add("sourceGroup" SPC findObjectField("sourceGroup", %fileObj));
+            %valueArray.add("volume" SPC findObjectField("volume", %fileObj));
+            %valueArray.add("pitch" SPC findObjectField("pitch", %fileObj));
+            %valueArray.add("isLooping" SPC findObjectField("isLooping", %fileObj));
+            %valueArray.add("priority" SPC findObjectField("priority", %fileObj));
+            %valueArray.add("useHardware" SPC findObjectField("useHardware", %fileObj));
+            %valueArray.add("is3D" SPC findObjectField("is3D", %fileObj));
+            %valueArray.add("minDistance" SPC findObjectField("minDistance", %fileObj));
+            %valueArray.add("maxDistance" SPC findObjectField("maxDistance", %fileObj));
+            %valueArray.add("scatterDistance" SPC findObjectField("scatterDistance", %fileObj));
+            %valueArray.add("coneInsideAngle" SPC findObjectField("coneInsideAngle", %fileObj));
+            %valueArray.add("coneOutsideAngle" SPC findObjectField("coneOutsideAngle", %fileObj));
+            %valueArray.add("coneOutsideVolume" SPC findObjectField("coneOutsideVolume", %fileObj));
+            %valueArray.add("rolloffFactor" SPC findObjectField("rolloffFactor", %fileObj));
+            %valueArray.add("isStreaming" SPC findObjectField("isStreaming", %fileObj));
+            
+            if(isObject($ProjectImporter::SFXDescriptionCache))
+            {
+               $ProjectImporter::SFXDescriptionCache.add(%descriptionName, %objFileFinder);
+            }
+               
+               for(%v=0; %v < %valueArray.Count(); %v++)
+               {
+                  %varSet = %valueArray.getKey(%v);
+                  %var = getWord(%varSet, 0);
+                  %varVal = getWord(%varSet, 1);
+
+                  if(%varVal !$= "")
+                     %asset.setFieldValue(%var, %varVal);
+               }
+            
+            %valueArray.delete();
+            }
+         }
+      }
+      
+      TamlWrite(%asset, %tamlpath);
+      
+      %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+      %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+      
+      if(!%success)
+         return false;
+   
+   //Now mark the original SFXProfile for removal from the file as it's redundant
+   //now that we have the asset def
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
+}
+
+function T3Dpre4ProjectImporter::processAudioProfileObject(%this, %file, %objectName)
+   {
+   return %this.processSFXProfileObject(%file, %objectName);
+      }
+      
+function T3Dpre4ProjectImporter::processSFXDescriptionObject(%this, %file, %objectName)
+      {
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
+}
+
+function T3Dpre4ProjectImporter::processAudioDescriptionObject(%this, %file, %objectName)
+{
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
+}
 
 //==============================================================================
 // Misc Utility functions

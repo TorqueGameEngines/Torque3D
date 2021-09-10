@@ -233,7 +233,7 @@ function GuiInspectorVariableGroup::buildOptionsSettingField(%this, %fieldName, 
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
-      tooltip = %tooltip;
+      tooltip = "";//%tooltip;
       text = %fieldDefaultVal;
       hovertime = "1000";
       ownerObject = %ownerObj;
@@ -520,6 +520,7 @@ function ESettingsWindow::getAssetEditingSettings(%this)
    SettingsInspector.addSettingsField("Assets/New/alwaysPromptModuleTarget", "Always Prompt Target Module", "bool", "If off, use the default module"); 
    SettingsInspector.endGroup();
    
+   %formattedConfigList = "";
    for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
    {
       %configName = ImportAssetWindow.importConfigsList.getKey(%i);

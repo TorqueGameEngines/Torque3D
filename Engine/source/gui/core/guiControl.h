@@ -341,7 +341,7 @@ class GuiControl : public SimGroup
       
       GuiControl();
       virtual ~GuiControl();
-      virtual bool processArguments(S32 argc, ConsoleValueRef *argv);
+      virtual bool processArguments(S32 argc, ConsoleValue *argv);
       
       static void initPersistFields();
       static void consoleInit();

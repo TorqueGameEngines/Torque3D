@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
+$guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

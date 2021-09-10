@@ -1,0 +1,1 @@
+<SoundAsset canSave="true" canSaveDynamicFields="true" AssetName="buttonHover" soundFile="@assetFile=buttonHover.wav" PitchAdjust="1" VolumeAdjust="1" is3D="false" isLooping="false" isStreaming="false" useHardware="true" minDistance="1" maxDistance="120" coneInsideAngle="360" coneOutsideAngle="360" coneOutsideVolume="1" rolloffFactor="-1" scatterDistance="0 0 0"/>

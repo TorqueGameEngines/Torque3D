@@ -2286,7 +2286,8 @@ DefineEngineStringlyVariadicFunction( call, const char *, 2, 0, "( string functi
    "@endtsexample\n\n"
    "@ingroup Scripting" )
 {
-   return Con::execute( argc - 1, argv + 1 );
+   ConsoleValue returnValue = Con::execute(argc - 1, argv + 1);
+   return Con::getReturnBuffer(returnValue.getString());
 }
 
 //-----------------------------------------------------------------------------
@@ -2410,7 +2411,9 @@ DefineEngineFunction( exec, bool, ( const char* fileName, bool noCalls, bool jou
 
 DefineEngineFunction( eval, const char*, ( const char* consoleString ), , "eval(consoleString)" )
 {
-   return Con::evaluate(consoleString, false, NULL);
+   ConsoleValue returnValue = Con::evaluate(consoleString, false, NULL);
+
+   return Con::getReturnBuffer(returnValue.getString());
 }
 
 DefineEngineFunction( getVariable, const char*, ( const char* varName ), , "(string varName)\n" 

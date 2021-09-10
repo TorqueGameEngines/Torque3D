@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
+$guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
    bitmapAsset = "UI:background_dark_image";
    useVariable = "0";
    tile = "0";

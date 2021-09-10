@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiTabPageCtrl(ENavEditorSettingsPage) {
+$guiContent = new GuiTabPageCtrl(ENavEditorSettingsPage) {
    fitBook = "1";
    text = "Navigation Editor";
    maxLength = "1024";

@@ -328,11 +328,6 @@ SimObject* findObject(const char* fileName, S32 declarationLine)
    return gRootGroup->findObjectByLineNumber(fileName, declarationLine, true);
 }
 
-SimObject* findObject(ConsoleValueRef &ref)
-{
-   return findObject((const char*)ref);
-}
-
 SimObject* findObject(const char* name)
 {
    PROFILE_SCOPE(SimFindObject);
@@ -389,6 +384,20 @@ SimObject* findObject(const char* name)
    if(!obj)
       return NULL;
    return obj->findObject(name + len + 1);
+}
+
+SimObject* findObject(const ConsoleValue &val)
+{
+   if (val.getType() == ConsoleValueType::cvInteger)
+      return findObject((SimObjectId)val.getFastInt());
+   return findObject(val.getString());
+}
+
+SimObject* findObject(ConsoleValue* val)
+{
+   if (val->getType() == ConsoleValueType::cvInteger)
+      return findObject((SimObjectId)val->getFastInt());
+   return findObject(val->getString());
 }
 
 SimObject* findObject(SimObjectId id)

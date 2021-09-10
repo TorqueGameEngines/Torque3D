@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(toolsMessageBoxOKCancelDlg) {
+$guiContent = new GuiControl(toolsMessageBoxOKCancelDlg) {
    profile = "GuiOverlayProfile";
    horizSizing = "width";
    vertSizing = "height";

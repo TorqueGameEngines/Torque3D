@@ -59,7 +59,7 @@ function PostFXManager::loadPresetFile()
 {
    //Show the dialog and set the flag
    getLoadFilename($PostFXManager::fileFilter, "PostFXManager::loadPresetHandler");
-   $PostFXManager::currentPreset = $Tools::FileDialogs::LastFilePath();
+   $PostFXManager::currentPreset = $Tools::FileDialogs::LastFilePath;
 }
 
 function PostFXManager::loadPresetHandler( %filename )

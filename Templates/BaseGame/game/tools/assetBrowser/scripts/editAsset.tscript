@@ -3,7 +3,14 @@ function AssetBrowser_editAsset::saveAsset(%this)
    %file = AssetDatabase.getAssetFilePath(%this.editedAssetId);
    %success = TamlWrite(AssetBrowser_editAsset.editedAsset, %file);
    
-   AssetBrowser.loadFilters();
+   AssetBrowser.reloadAsset(%this.editedAssetId);
+
+   AssetBrowser.refresh();
+   
+   %assetType = AssetDatabase.getAssetType(%this.editedAssetId);
+   %assetDef = AssetDatabase.acquireAsset(%this.editedAssetId);
+   AssetBrowser.call("on" @ %assetType @ "Changed", %assetDef);
+   AssetDatabase.releaseAsset(%this.editedAssetId);
 
    Canvas.popDialog(AssetBrowser_editAsset);
 }
@@ -79,6 +86,17 @@ function AssetBrowser::editAssetInfo(%this)
 }
 
 //------------------------------------------------------------
+function AssetBrowser::reloadAsset(%this, %assetId)
+{
+   %moduleName = getToken(%assetId, ":", 0);
+   %moduleDef = ModuleDatabase.findModule(%moduleName);
+   
+   %assetName = getToken(%assetId, ":", 1);
+   %assetFilePath = AssetDatabase.getAssetFilePath(%assetId);
+   
+   AssetDatabase.removeDeclaredAsset(%assetId);
+   AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);  
+}
 
 function AssetBrowser::refreshAsset(%this, %assetId)
 {
@@ -143,6 +161,10 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    //Update the selection to immediately jump to the new asset
    AssetBrowser-->filterTree.clearSelection();
    %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
+
+   // TODO is this correct?
+   %assetType = %ModuleItem.getClassName();
+
    %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
    
    AssetBrowser-->filterTree.selectItem(%assetTypeId);
@@ -236,9 +258,9 @@ function moveAssetFile(%assetDef, %destinationPath)
    %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
    %assetFilename = fileName(%assetPath);
    
-   %newAssetPath = %destination @ "/" @ %assetFilename;
+   %newAssetPath = %destinationPath @ "/" @ %assetFilename;
    
-   %copiedSuccess = pathCopy(%assetPath, %destination @ "/" @ %assetFilename);
+   %copiedSuccess = pathCopy(%assetPath, %destinationPath @ "/" @ %assetFilename);
    
    if(!%copiedSuccess)
       return "";

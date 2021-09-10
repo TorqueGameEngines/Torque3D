@@ -1,13 +1,36 @@
+function AssetBrowser::editSoundAsset(%this, %assetDef)
+{
+   if (isObject($PreviewSoundSource))
+        sfxStop($PreviewSoundSource);
+   $PreviewSoundSource = %assetDef.playSound();
+}
+
+function AssetBrowser::onSoundAssetChanged(%this, %assetDef)
+{
+   if (isObject($PreviewSoundSource))
+        sfxStop($PreviewSoundSource);
+}
+
 function AssetBrowser::buildSoundAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.soundFilePath;
-   //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
    
    if(%this.selectMode)
+   {
       %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
    else
+   {
+      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+      {
       %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      }
+      else
+      {
+         %previewData.doubleClickCommand = "AssetBrowser.onSoundAssetEditorDropped( "@%assetDef@" );";
+      }
+   }
    
    %previewData.previewImage = "ToolsModule:soundIcon_image";   
    
@@ -38,7 +61,7 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
    %newSFXEmitter = new SFXEmitter()
    {
       position = %pos;
-      fileName = %assetDef.getSoundPath();
+      soundAsset = %assetDef.getAssetId();
       pitch = %assetDef.pitchAdjust;
       volume = %assetDef.volumeAdjust;
    };
@@ -50,4 +73,28 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
       
    EWorldEditor.isDirty = true;
    
+}
+
+function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )
+{
+   Canvas.popDialog(EditorDragAndDropLayer);
+   
+   // Make sure this is a color swatch drag operation.
+   if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
+      return;
+
+   %assetType = %payload.assetType;
+   
+   if(%assetType $= "SoundAsset")
+{
+      %module = %payload.moduleName;
+      %asset = %payload.assetName;
+      
+      %targetComponent = %this.targetObject;
+      %targetComponent.soundAsset = %module @ ":" @ %asset;
+      
+      //Inspector.refresh();
+   }
+   
+   EWorldEditor.isDirty = true;
 }

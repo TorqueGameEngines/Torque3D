@@ -33,7 +33,7 @@ function GuiInspectorVariableGroup::buildButtonField(%this, %fieldName, %fieldLa
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
-      tooltip = %tooltip;
+      tooltip = "";// %tooltip;
       text = %fieldName;
       hovertime = "1000";
       command = %fieldDataVals;

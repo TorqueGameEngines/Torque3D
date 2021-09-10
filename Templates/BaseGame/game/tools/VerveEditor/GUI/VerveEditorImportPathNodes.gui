@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(VerveEditorImportPathNodesGUI) {
+$guiContent = new GuiControl(VerveEditorImportPathNodesGUI) {
    isContainer = "1";
    Profile = "GuiDefaultProfile";
    HorizSizing = "right";

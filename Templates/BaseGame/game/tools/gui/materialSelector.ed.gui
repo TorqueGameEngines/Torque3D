@@ -778,6 +778,8 @@ function MaterialSelector::buildStaticFilters( %this )
    // if you want to add any more containers to staticFilterObjects, here's
    // where to do it
    
+   %filterArray = MaterialSelector-->filterArray;
+
    %staticFilterContainer = new GuiControl (){
       new GuiContainer(){
          profile = "ToolsGuiDefaultProfile";
@@ -1366,7 +1368,7 @@ function MaterialSelector::loadMaterialFilters( %this )
 // create category and update current material if there is one
 function MaterialSelector::createFilter( %this, %filter )
 {
-   if( %filter $= %existingFilters )
+   if( %filter $= "" )
    {
       toolsMessageBoxOK( "Error", "Can not create blank filter.");
       return;

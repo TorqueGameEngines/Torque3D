@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(convexEditorToolbar, EditorGuiGroup) {
+$guiContent = new GuiControl(convexEditorToolbar, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "";
    isContainer = "1";

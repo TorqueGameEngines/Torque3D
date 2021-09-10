@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ObjectSnapOptionsContainer, EditorGuiGroup) {
+$guiContent = new GuiControl(ObjectSnapOptionsContainer, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";
@@ -843,7 +843,7 @@
          password = "0";
          tabComplete = "0";
          sinkAllKeyEvents = "0";
-         passwordMask = "•";
+         passwordMask = "ï¿½";
          text = "2.0";
          maxLength = "6";
          margin = "0 0 0 0";

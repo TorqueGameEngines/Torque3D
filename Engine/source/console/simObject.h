@@ -587,7 +587,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       
       virtual ~SimObject();
 
-      virtual bool processArguments(S32 argc, ConsoleValueRef *argv);  ///< Process constructor options. (ie, new SimObject(1,2,3))
+      virtual bool processArguments(S32 argc, ConsoleValue *argv);  ///< Process constructor options. (ie, new SimObject(1,2,3))
 
       /// @}
 

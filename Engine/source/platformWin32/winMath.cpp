@@ -55,31 +55,36 @@ DefineEngineStringlyVariadicFunction( mathInit, void, 1, 10, "( ... )"
    }
    for (argc--, argv++; argc; argc--, argv++)
    {
-      if (dStricmp(*argv, "DETECT") == 0) {
+      const char* str = (*argv).getString();
+      if (dStricmp(str, "DETECT") == 0) {
          Math::init(0);
          return;
       }
-      if (dStricmp(*argv, "C") == 0) {
+      if (dStricmp(str, "C") == 0) {
          properties |= CPU_PROP_C;
          continue;
       }
-      if (dStricmp(*argv, "FPU") == 0) {
+      if (dStricmp(str, "FPU") == 0) {
          properties |= CPU_PROP_FPU;
          continue;
       }
-      if (dStricmp(*argv, "MMX") == 0) {
+      if (dStricmp(str, "MMX") == 0) {
          properties |= CPU_PROP_MMX;
          continue;
       }
-      if (dStricmp(*argv, "3DNOW") == 0) {
+      if (dStricmp(str, "3DNOW") == 0) {
          properties |= CPU_PROP_3DNOW;
          continue;
       }
-      if (dStricmp(*argv, "SSE") == 0) {
+      if (dStricmp(str, "SSE") == 0) {
          properties |= CPU_PROP_SSE;
          continue;
       }
-      Con::printf("Error: MathInit(): ignoring unknown math extension '%s'", argv->getStringValue());
+      if (dStricmp(str, "SSE2") == 0) {
+         properties |= CPU_PROP_SSE2;
+         continue;
+      }
+      Con::printf("Error: MathInit(): ignoring unknown math extension '%s'", str);
    }
    Math::init(properties);
 }

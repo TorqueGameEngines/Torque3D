@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
+$guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "right";

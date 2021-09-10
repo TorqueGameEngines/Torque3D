@@ -255,8 +255,7 @@ function FileDialogOkButton::onClick( %this )
 
    // Callback      
    eval( %this.parent.SuccessCallback @ "(\"" @ %fullPath @"\");" );
-   
-   %parent.SuccessCallback = 0;
+   %this.parent.SuccessCallback = 0;
    
    //error("Ok");
    

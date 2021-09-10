@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ConvexEditorSettingsTab,EditorGuiGroup) {
+$guiContent = new GuiControl(ConvexEditorSettingsTab,EditorGuiGroup) {
    isContainer = "1";
    Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "right";

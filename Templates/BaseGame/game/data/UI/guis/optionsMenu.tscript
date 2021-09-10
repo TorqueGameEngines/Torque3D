@@ -276,11 +276,8 @@ function OptionsMenu::applyDisplaySettings(%this)
    // Change the device.
    if ( %newDevice !$= $pref::Video::displayDevice )
    {
-      if ( %testNeedApply )
-         return true;
-         
       $pref::Video::displayDevice = %newDevice;
-      if( %newAdapter !$= getDisplayDeviceInformation() )
+      if( %newDevice !$= getDisplayDeviceInformation() )
          MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
          
       $changingDisplayDevice = %newDevice;
@@ -368,10 +365,7 @@ function OptionsMenu::applyGraphicsSettings(%this)
    // Check the anisotropic filtering.   
    %level = OptionsMenuSettingsList.getCurrentOption(10);
    if ( %level != $pref::Video::defaultAnisotropy )
-   {
-      if ( %testNeedApply )
-         return true;
-                                 
+   {                     
       $pref::Video::defaultAnisotropy = %level;
    }
 
@@ -418,9 +412,6 @@ function updateDisplaySettings()
    if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
          %newVsync != $pref::Video::disableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
    {
-      if ( %testNeedApply )
-         return true;
-
       //****Edge Case Hack
       // If we're in fullscreen mode and switching to a different monitor at the
       // same resolution and maintaining fullscreen, GFX...WindowTarget::resetMode()
@@ -433,7 +424,7 @@ function updateDisplaySettings()
          $pref::Video::deviceId = %newDeviceID;
          $pref::Video::deviceMode = $Video::ModeBorderless;
          %tmpModeStr = Canvas.getMonitorMode(%newDeviceID, 0);
-         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %aa);
+         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %newFSAA);
       }
 
       $pref::Video::mode = %newMode;
@@ -459,6 +450,8 @@ function OptionsMenu::populateAudioSettingsList(%this)
    %buffer = sfxGetAvailableDevices();
    %count = getRecordCount( %buffer );  
    %audioDriverList = "";
+   %audioProviderList = "";
+   %audioDeviceList = "";
     
    $currentAudioProvider = $currentAudioProvider $= "" ? $pref::SFX::provider : $currentAudioProvider;
    

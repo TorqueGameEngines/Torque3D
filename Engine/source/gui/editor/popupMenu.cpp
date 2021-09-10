@@ -120,12 +120,14 @@ void PopupMenu::handleSelectEvent(U32 popID, U32 command)
 //-----------------------------------------------------------------------------
 bool PopupMenu::onMessageReceived(StringTableEntry queue, const char* event, const char* data)
 {
-   return Con::executef(this, "onMessageReceived", queue, event, data);
+   ConsoleValue returnValue = Con::executef(this, "onMessageReceived", queue, event, data);
+   return returnValue.getBool();
 }
 
 bool PopupMenu::onMessageObjectReceived(StringTableEntry queue, Message *msg )
 {
-   return Con::executef(this, "onMessageReceived", queue, Con::getIntArg(msg->getId()));
+   ConsoleValue returnValue = Con::executef(this, "onMessageReceived", queue, Con::getIntArg(msg->getId()));
+   return returnValue.getBool();
 }
 
 //////////////////////////////////////////////////////////////////////////

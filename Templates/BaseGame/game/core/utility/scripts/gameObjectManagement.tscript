@@ -15,7 +15,7 @@ function findGameObject(%name)
 	   
 	   //%assetName = AssetDatabase.getAssetName(%assetId);
       
-        if(%assetId $= %name)
+      if(%assetId $= %name)
 		{
 		   %gameObjectAsset = AssetDatabase.acquireAsset(%assetId);
 
@@ -47,7 +47,7 @@ function spawnGameObject(%name, %addToScene)
          %go.setHidden(false);
          %go.setScopeAlways();
          
-         if(%addToMissionGroup == true) //save instance when saving level
+         if(%addToScene == true) //save instance when saving level
             getScene(0).add(%go);
          else // clear instance on level exit
             MissionCleanup.add(%go);

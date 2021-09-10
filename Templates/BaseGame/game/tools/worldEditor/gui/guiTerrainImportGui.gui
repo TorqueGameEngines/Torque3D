@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
+$guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";
@@ -508,6 +508,8 @@ function TerrainImportGui::acceptSettings( %this )
    
    AssetBrowser.newAssetSettings.opacityList = %this-->OpacityLayerTextList;
    
+   %opacityList = %this-->OpacityLayerTextList;
+
    for( %i = 0; %i < %opacityList.rowCount(); %i++ )
    {
       %itemText = %opacityList.getRowTextById( %i );
@@ -535,6 +537,9 @@ function TerrainImportGui::cancel( %this )
 
 function TerrainImportGui::doOpenDialog( %this, %filter, %callback )
 {
+   // TODO
+   %currentFile = "";
+
    %dlg = new OpenFileDialog()
    {
       Filters = %filter;

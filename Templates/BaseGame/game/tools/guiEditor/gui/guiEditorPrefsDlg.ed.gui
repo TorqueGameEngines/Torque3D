@@ -1,4 +1,4 @@
-%guiContent = new GuiControl(GuiEditorPrefsDlg, EditorGuiGroup) {
+$guiContent = new GuiControl(GuiEditorPrefsDlg, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "right";

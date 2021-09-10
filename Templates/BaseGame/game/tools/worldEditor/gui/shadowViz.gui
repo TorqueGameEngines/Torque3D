@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------------------------
 
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(AL_ShadowVizOverlayCtrl) {
+$guiContent = new GuiControl(AL_ShadowVizOverlayCtrl) {
    canSaveDynamicFields = "0";
    isContainer = "1";
    Profile = "GuiModelessDialogProfile";

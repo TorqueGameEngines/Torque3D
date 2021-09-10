@@ -874,7 +874,7 @@ DefineEngineStringlyVariadicFunction(echoThru, const char*, 2, 0, "(string passt
    for (i = 2; i < argc; i++)
       dStrcat(ret, argv[i], len + 1);
 
-   Con::printf("%s -- [%s]", ret, argv[1].getStringValue());
+   Con::printf("%s -- [%s]", ret, argv[1].getString());
    ret[0] = 0;
 
    return argv[1];
@@ -894,7 +894,7 @@ DefineEngineStringlyVariadicFunction(warnThru, const char*, 2, 0, "(string passt
    for(i = 2; i < argc; i++)
       dStrcat(ret, argv[i], len + 1);
 
-   Con::warnf("%s -- [%s]", ret, argv[1].getStringValue());
+   Con::warnf("%s -- [%s]", ret, argv[1].getString());
    ret[0] = 0;
 
    return argv[1];
@@ -914,7 +914,7 @@ DefineEngineStringlyVariadicFunction(errorThru, const char*, 2, 0, "(string pass
    for(i = 2; i < argc; i++)
       dStrcat(ret, argv[i], len + 1);
 
-   Con::errorf("%s -- [%s]", ret, argv[1].getStringValue());
+   Con::errorf("%s -- [%s]", ret, argv[1].getString());
    ret[0] = 0;
 
    return argv[1];

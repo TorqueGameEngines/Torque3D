@@ -428,7 +428,7 @@ S32 dStrlcpy(char *dst, const char *src, dsize_t dstSize)
    S32 copyLen = srcLen;
 
    //Check for buffer overflow and don't allow it. Warn on debug so we can fix it
-   AssertWarn(copyLen < dstSize, "Buffer too small in call to dStrlcpy!");
+   AssertFatal(copyLen < dstSize, "Buffer too small in call to dStrlcpy!");
    if (srcLen + 1 > dstSize)
    {
       copyLen = dstSize - 1;

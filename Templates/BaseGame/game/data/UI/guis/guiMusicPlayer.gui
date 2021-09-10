@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(GuiMusicPlayer) {
+$guiContent = new GuiControl(GuiMusicPlayer) {
    isContainer = "1";
    Profile = "GuiWindowProfile";
    HorizSizing = "right";

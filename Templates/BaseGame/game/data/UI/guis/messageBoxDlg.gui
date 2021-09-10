@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessageBoxDlg) {
+$guiContent = new GuiControl(MessageBoxDlg) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 8";

@@ -183,13 +183,13 @@ void Dictionary::exportVariables(const char *varString, const char *fileName, bo
 
    for (s = sortList.begin(); s != sortList.end(); s++)
    {
-      switch ((*s)->value.type)
+      switch ((*s)->type)
       {
-         case ConsoleValue::TypeInternalInt:
-            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->value.ival, cat);
+         case Entry::TypeInternalInt:
+            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->ival, cat);
             break;
-         case ConsoleValue::TypeInternalFloat:
-            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->value.fval, cat);
+         case Entry::TypeInternalFloat:
+            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->fval, cat);
             break;
          default:
             expandEscape(expandBuffer, (*s)->getStringValue());
@@ -243,13 +243,11 @@ void Dictionary::exportVariables(const char *varString, Vector<String> *names, V
 
       if (values)
       {
-         switch ((*s)->value.type)
+         switch ((*s)->type)
          {
-            case ConsoleValue::TypeInternalInt:
-               values->push_back(String::ToString((*s)->value.ival));
-               break;
-            case ConsoleValue::TypeInternalFloat:
-               values->push_back(String::ToString((*s)->value.fval));
+            case ConsoleValueType::cvInteger:
+            case ConsoleValueType::cvFloat:
+               values->push_back(String((*s)->getStringValue()));
                break;
             default:
                expandEscape(expandBuffer, (*s)->getStringValue());
@@ -470,23 +468,92 @@ char *typeValueEmpty = "";
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
-   value.type = ConsoleValue::TypeInternalString;
+   type = TypeInternalString;
    notify = NULL;
    nextEntry = NULL;
    mUsage = NULL;
    mIsConstant = false;
    mNext = NULL;
-   // NOTE: This is data inside a nameless
-   // union, so we don't need to init the rest.
-   value.init();
+
+   ival = 0;
+   fval = 0;
+   sval = typeValueEmpty;
+   bufferLen = 0;
 }
 
 Dictionary::Entry::~Entry()
 {
-   value.cleanup();
+   reset();
+}
 
+void Dictionary::Entry::reset()
+{
+   name = NULL;
+   if (type <= TypeInternalString && sval != typeValueEmpty)
+      dFree(sval);
    if (notify)
       delete notify;
+}
+
+void Dictionary::Entry::setStringValue(const char* value)
+{
+   if (mIsConstant)
+   {
+      Con::errorf("Cannot assign value to constant '%s'.", name);
+      return;
+   }
+
+   if (type <= TypeInternalString)
+   {
+      // Let's not remove empty-string-valued global vars from the dict.
+      // If we remove them, then they won't be exported, and sometimes
+      // it could be necessary to export such a global.  There are very
+      // few empty-string global vars so there's no performance-related
+      // need to remove them from the dict.
+      /*
+       if(!value[0] && name[0] == '$')
+       {
+       gEvalState.globalVars.remove(this);
+       return;
+       }
+       */
+
+      U32 stringLen = dStrlen(value);
+
+      // If it's longer than 256 bytes, it's certainly not a number.
+      //
+      // (This decision may come back to haunt you. Shame on you if it
+      // does.)
+      if (stringLen < 256)
+      {
+         fval = dAtof(value);
+         ival = dAtoi(value);
+      }
+      else
+      {
+         fval = 0.f;
+         ival = 0;
+      }
+
+      type = TypeInternalString;
+
+      // may as well pad to the next cache line
+      U32 newLen = ((stringLen + 1) + 15) & ~15;
+
+      if (sval == typeValueEmpty)
+         sval = (char*)dMalloc(newLen);
+      else if (newLen > bufferLen)
+         sval = (char*)dRealloc(sval, newLen);
+
+      bufferLen = newLen;
+      dStrcpy(sval, value, newLen);
+   }
+   else
+      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
+
+   // Fire off the notification if we have one.
+   if (notify)
+      notify->trigger();
 }
 
 const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
@@ -506,150 +573,6 @@ const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
       Con::warnf(" *** Accessed undefined variable '%s'", name);
 
    return "";
-}
-
-void ConsoleValue::setStringValue(const char * value)
-{
-   if (value == NULL) value = typeValueEmpty;
-
-   if (type <= ConsoleValue::TypeInternalString)
-   {
-      // Let's not remove empty-string-valued global vars from the dict.
-      // If we remove them, then they won't be exported, and sometimes
-      // it could be necessary to export such a global.  There are very
-      // few empty-string global vars so there's no performance-related
-      // need to remove them from the dict.
-      /*
-      if(!value[0] && name[0] == '$')
-      {
-      gEvalState.globalVars.remove(this);
-      return;
-      }
-      */
-      if (value == typeValueEmpty)
-      {
-         if (bufferLen > 0)
-         {
-            dFree(sval);
-            bufferLen = 0;
-         }
-
-         sval = typeValueEmpty;
-         fval = 0.f;
-         ival = 0;
-         type = TypeInternalString;
-         return;
-      }
-
-      U32 stringLen = dStrlen(value);
-
-      // If it's longer than 256 bytes, it's certainly not a number.
-      //
-      // (This decision may come back to haunt you. Shame on you if it
-      // does.)
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      // may as well pad to the next cache line
-      U32 newLen = ((stringLen + 1) + 15) & ~15;
-
-      if (bufferLen == 0)
-         sval = (char *)dMalloc(newLen);
-      else if (newLen > bufferLen)
-         sval = (char *)dRealloc(sval, newLen);
-
-      type = TypeInternalString;
-
-      bufferLen = newLen;
-      dStrcpy(sval, value, newLen);
-   }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-}
-
-
-void ConsoleValue::setStackStringValue(const char *value)
-{
-   if (value == NULL) value = typeValueEmpty;
-
-   if (type <= ConsoleValue::TypeInternalString)
-   {
-      // sval might still be temporarily present so we need to check and free it
-      if (bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-
-      if (value == typeValueEmpty)
-      {
-         sval = typeValueEmpty;
-         fval = 0.f;
-         ival = 0;
-         type = TypeInternalString;
-         return;
-      }
-
-      U32 stringLen = dStrlen(value);
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalStackString;
-      sval = (char*)value;
-      bufferLen = 0;
-   }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-}
-
-void ConsoleValue::setStringStackPtrValue(StringStackPtr ptrValue)
-{
-   if (type <= ConsoleValue::TypeInternalString)
-   {
-      const char *value = StringStackPtrRef(ptrValue).getPtr(&STR);
-      if (bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-
-      U32 stringLen = dStrlen(value);
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalStringStackPtr;
-      sval = (char*)(value - STR.mBuffer);
-      bufferLen = 0;
-   }
-   else
-   {
-      const char *value = StringStackPtrRef(ptrValue).getPtr(&STR);
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-   }
 }
 
 S32 Dictionary::getIntVariable(StringTableEntry name, bool *entValid)
@@ -708,19 +631,17 @@ Dictionary::Entry* Dictionary::addVariable(const char *name,
 
    Entry *ent = add(StringTable->insert(name));
 
-   if (ent->value.type <= ConsoleValue::TypeInternalString &&
-      ent->value.bufferLen > 0)
-      dFree(ent->value.sval);
+   if (ent->type <= Entry::TypeInternalString && ent->sval != typeValueEmpty)
+      dFree(ent->sval);
 
-   ent->value.type = type;
-   ent->value.dataPtr = dataPtr;
    ent->mUsage = usage;
+   ent->type = type;
+   ent->dataPtr = dataPtr;
 
    // Fetch enum table, if any.
-
    ConsoleBaseType* conType = ConsoleBaseType::getType(type);
    AssertFatal(conType, "Dictionary::addVariable - invalid console type");
-   ent->value.enumTable = conType->getEnumTable();
+   ent->enumTable = conType->getEnumTable();
 
    return ent;
 }
@@ -760,7 +681,7 @@ void Dictionary::validate()
       "Dictionary::validate() - Dictionary not owner of own hashtable!");
 }
 
-void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns)
+void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 registerCount)
 {
 #ifdef DEBUG_SPEW
    validate();
@@ -789,6 +710,12 @@ void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns)
 
    AssertFatal(!newFrame.getCount(), "ExprEvalState::pushFrame - Dictionary not empty!");
 
+   ConsoleValue* consoleValArray = new ConsoleValue[registerCount]();
+   localStack.push_back(ConsoleValueFrame(consoleValArray, false));
+   currentRegisterArray = &localStack.last();
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
 #ifdef DEBUG_SPEW
    validate();
 #endif
@@ -809,6 +736,15 @@ void ExprEvalState::popFrame()
    stack[mStackDepth]->reset();
    currentVariable = NULL;
 
+   const ConsoleValueFrame& frame = localStack.last();
+   localStack.pop_back();
+   if (!frame.isReference)
+      delete[] frame.values;
+
+   currentRegisterArray = localStack.size() ? &localStack.last() : NULL;
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
 #ifdef DEBUG_SPEW
    validate();
 #endif
@@ -816,7 +752,7 @@ void ExprEvalState::popFrame()
 
 void ExprEvalState::pushFrameRef(S32 stackIndex)
 {
-   AssertFatal(stackIndex >= 0 && stackIndex < stack.size(), "You must be asking for a valid frame!");
+   AssertFatal(stackIndex >= 0 && stackIndex < mStackDepth, "You must be asking for a valid frame!");
 
 #ifdef DEBUG_SPEW
    validate();
@@ -840,9 +776,28 @@ void ExprEvalState::pushFrameRef(S32 stackIndex)
    mStackDepth++;
    currentVariable = NULL;
 
+   ConsoleValue* values = localStack[stackIndex].values;
+   localStack.push_back(ConsoleValueFrame(values, true));
+   currentRegisterArray = &localStack.last();
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
 #ifdef DEBUG_SPEW
    validate();
 #endif
+}
+
+void ExprEvalState::pushDebugFrame(S32 stackIndex)
+{
+   pushFrameRef(stackIndex);
+
+   Dictionary& newFrame = *(stack[mStackDepth - 1]);
+
+   // debugger needs to know this info...
+   newFrame.scopeName = stack[stackIndex]->scopeName;
+   newFrame.scopeNamespace = stack[stackIndex]->scopeNamespace;
+   newFrame.code = stack[stackIndex]->code;
+   newFrame.ip = stack[stackIndex]->ip;
 }
 
 ExprEvalState::ExprEvalState()
@@ -1413,7 +1368,7 @@ void Namespace::markGroup(const char* name, const char* usage)
 
 extern S32 executeBlock(StmtNode *block, ExprEvalState *state);
 
-ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprEvalState *state)
+ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalState *state)
 {
    STR.clearFunctionOffset();
 
@@ -1421,11 +1376,11 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
    {
       if (mFunctionOffset)
       {
-         return mCode->exec(mFunctionOffset, argv[0], mNamespace, argc, argv, false, mPackage);
+         return std::move(mCode->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage));
       }
       else
       {
-         return ConsoleValueRef();
+         return std::move(ConsoleValue());
       }
    }
 
@@ -1435,7 +1390,7 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
    if (mToolOnly && !Con::isCurrentScriptToolScript())
    {
       Con::errorf(ConsoleLogEntry::Script, "%s::%s - attempting to call tools only function from outside of tools", mNamespace->mName, mFunctionName);
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
 #endif
 
@@ -1443,25 +1398,33 @@ ConsoleValueRef Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprE
    {
       Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments.", mNamespace->mName, mFunctionName);
       Con::warnf(ConsoleLogEntry::Script, "usage: %s", mUsage);
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
 
+   ConsoleValue result;
    switch (mType)
    {
       case StringCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushStackString(cb.mStringCallbackFunc(state->thisObject, argc, argv)));
+      {
+         const char* str = cb.mStringCallbackFunc(state->thisObject, argc, argv);
+         result.setString(str);
+         break;
+      }
       case IntCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushUINT((U32)cb.mIntCallbackFunc(state->thisObject, argc, argv)));
+         result.setInt(cb.mIntCallbackFunc(state->thisObject, argc, argv));
+         break;
       case FloatCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushFLT((U32)cb.mFloatCallbackFunc(state->thisObject, argc, argv)));
+         result.setFloat(cb.mFloatCallbackFunc(state->thisObject, argc, argv));
+         break;
       case VoidCallbackType:
          cb.mVoidCallbackFunc(state->thisObject, argc, argv);
-         return ConsoleValueRef();
+         break;
       case BoolCallbackType:
-         return ConsoleValueRef::fromValue(CSTK.pushUINT((U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv)));
+         result.setBool(cb.mBoolCallbackFunc(state->thisObject, argc, argv));
+         break;
    }
 
-   return ConsoleValueRef();
+   return std::move(result);
 }
 
 //-----------------------------------------------------------------------------

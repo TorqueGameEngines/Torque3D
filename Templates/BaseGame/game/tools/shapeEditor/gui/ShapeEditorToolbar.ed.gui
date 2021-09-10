@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ShapeEditorToolbar, EditorGuiGroup) {
+$guiContent = new GuiControl(ShapeEditorToolbar, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "";
    isContainer = "1";

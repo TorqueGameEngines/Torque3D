@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(IODropdownDlg) {
+$guiContent = new GuiControl(IODropdownDlg) {
 	profile = "GuiDefaultProfile";
 	horizSizing = "width";
 	vertSizing = "height";

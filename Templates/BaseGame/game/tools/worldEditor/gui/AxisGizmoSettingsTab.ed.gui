@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(AxisGizmoSettingsTab,EditorGuiGroup) {
+$guiContent = new GuiControl(AxisGizmoSettingsTab,EditorGuiGroup) {
    isContainer = "1";
    profile = "ToolsGuiDefaultProfile";
    horizSizing = "right";

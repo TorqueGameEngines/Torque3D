@@ -1,8 +1,5 @@
 function callGamemodeFunction(%gameModeFuncName, %arg0, %arg1, %arg2, %arg3, %arg4, %arg5, %arg6)
 {
-   if(%data !$= "")
-      %data = "\""@%data@"\"";
-      
    %activeSceneCount = getSceneCount();
       
    %hasGameMode = 0;

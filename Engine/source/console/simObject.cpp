@@ -141,7 +141,7 @@ SimObject::~SimObject()
 
 //-----------------------------------------------------------------------------
 
-bool SimObject::processArguments(S32 argc, ConsoleValueRef *argv)
+bool SimObject::processArguments(S32 argc, ConsoleValue *argv)
 {
    return argc == 0;
 }
@@ -2971,8 +2971,10 @@ DefineEngineStringlyVariadicMethod( SimObject, call, const char*, 3, 0, "( strin
    "@param args Zero or more arguments for the method.\n"
    "@return The result of the method call." )
 {
-   argv[1] = argv[2];
-   return Con::execute( object, argc - 1, argv + 1 );
+   argv[1].setString(argv[2].getString());
+
+   ConsoleValue returnValue = Con::execute(object, argc - 1, argv + 1);
+   return Con::getReturnBuffer(returnValue.getString());
 }
 
 //-----------------------------------------------------------------------------
@@ -3074,9 +3076,9 @@ DefineEngineStringlyVariadicMethod( SimObject,schedule, S32, 4, 0, "( float time
    "@param args The arguments with which to call the method.\n"
    "@return The numeric ID of the created schedule.  Can be used to cancel the call.\n" )
 {
-   U32 timeDelta = U32(dAtof(argv[2]));
-   argv[2] = argv[3];
-   argv[3] = argv[1];
+   U32 timeDelta = U32(argv[2].getFloat());
+   argv[2].setString(argv[3].getString());
+   argv[3].setString(argv[1].getString());
    SimConsoleEvent *evt = new SimConsoleEvent(argc - 2, argv + 2, true);
    S32 ret = Sim::postEvent(object, evt, Sim::getCurrentTime() + timeDelta);
    // #ifdef DEBUG

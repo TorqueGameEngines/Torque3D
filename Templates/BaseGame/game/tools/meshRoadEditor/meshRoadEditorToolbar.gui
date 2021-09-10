@@ -1,4 +1,4 @@
-%guiContent = new GuiControl(MeshRoadEditorToolbar,EditorGuiGroup) {
+$guiContent = new GuiControl(MeshRoadEditorToolbar,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "MeshRoadEditorToolbar";
    Enabled = "1";

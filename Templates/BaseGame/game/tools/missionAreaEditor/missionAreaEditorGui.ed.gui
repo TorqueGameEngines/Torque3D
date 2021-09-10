@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiMissionAreaEditorCtrl(MissionAreaEditorGui, EditorGuiGroup) {
+$guiContent = new GuiMissionAreaEditorCtrl(MissionAreaEditorGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

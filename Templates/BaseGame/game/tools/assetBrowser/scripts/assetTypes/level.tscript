@@ -137,7 +137,7 @@ function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
    %previewData.assetPath = %assetDef.getLevelPath();
    %previewData.doubleClickCommand = "schedule( 1, 0, \"EditorOpenMission\", "@%assetDef@");";
    
-   %levelPreviewImage = %assetDesc.PreviewImage;
+   %levelPreviewImage = %assetDef.PreviewImage;
          
    if(isFile(%levelPreviewImage))
       %previewData.previewImage = %levelPreviewImage;

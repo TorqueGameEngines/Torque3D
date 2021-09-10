@@ -102,10 +102,18 @@ typedef unsigned _int64 U64;
 
 // disable warning caused by memory layer
 // see msdn.microsoft.com "Compiler Warning (level 1) C4291" for more details
-#pragma warning(disable: 4291) 
+#pragma warning(disable: 4291)
 
-// Set MSVC noline attribute
+#define TORQUE_FORCEINLINE __forceinline
 #define TORQUE_NOINLINE __declspec(noinline)
+
+#if __cplusplus >= 201703L
+#define TORQUE_CASE_FALLTHROUGH [[fallthrough]];
+#define TORQUE_UNLIKELY [[unlikely]]
+#else
+#define TORQUE_CASE_FALLTHROUGH __fallthrough
+#define TORQUE_UNLIKELY
+#endif
 
 #endif // INCLUDED_TYPES_VISUALC_H
 

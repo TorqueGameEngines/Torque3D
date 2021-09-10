@@ -30,139 +30,153 @@
 #include "math/mMath.h"
 #include "console/stringStack.h"
 
-template<typename T>
-inline T Convert(ConsoleValueRef);
-
-template<>
-inline U32 Convert(ConsoleValueRef val)
+inline ConsoleValue RunScript(const char* str)
 {
-   return val.getIntValue();
-}
-
-template<>
-inline S32 Convert(ConsoleValueRef val)
-{
-   return val.getSignedIntValue();
-}
-
-template<>
-inline bool Convert(ConsoleValueRef val)
-{
-   return val.getBoolValue();
-}
-
-template<>
-inline F32 Convert(ConsoleValueRef val)
-{
-   return val.getFloatValue();
-}
-
-template<>
-inline const char* Convert(ConsoleValueRef val)
-{
-   return val.getStringValue();
-}
-
-template<>
-inline SimObject* Convert(ConsoleValueRef val)
-{
-   return Sim::findObject(val);
-}
-
-template<typename T>
-inline T RunScript(const char* str)
-{
-   return Convert<T>(Con::evaluate(str, false, NULL));
+   return std::move(Con::evaluate(str, false, NULL));
 }
 
 TEST(Script, Basic_Arithmetic)
 {
-   S32 add = RunScript<S32>(R"(
+   ConsoleValue add = RunScript(R"(
          return 1.0 + 1;
    )");
 
-   EXPECT_EQ(add, 2);
+   ASSERT_EQ(add.getInt(), 2);
 
-   S32 sub = RunScript<S32>(R"(
+   ConsoleValue sub = RunScript(R"(
          return 10 - 1.0;
    )");
 
-   EXPECT_EQ(sub, 9);
+   ASSERT_EQ(sub.getInt(), 9);
 
-   S32 mult = RunScript<S32>(R"(
+   ConsoleValue mult = RunScript(R"(
          return 10 * 2.5;
    )");
 
-   EXPECT_EQ(mult, 25);
+   ASSERT_EQ(mult.getInt(), 25);
 
-   S32 div = RunScript<S32>(R"(
+   ConsoleValue div = RunScript(R"(
          return 10.0 / 2;
    )");
 
-   EXPECT_EQ(div, 5);
+   ASSERT_EQ(div.getInt(), 5);
+
+   ConsoleValue mod = RunScript(R"(
+         return 4 % 5;
+   )");
+
+   ASSERT_EQ(mod.getInt(), 4);
+
+   ConsoleValue add2 = RunScript(R"(
+         $a = 0;
+         $a += 2;
+         return $a;
+   )");
+
+   ASSERT_EQ(add2.getInt(), 2);
+
+   ConsoleValue sub2 = RunScript(R"(
+         $a = 0;
+         $a -= 2;
+         return $a;
+   )");
+
+   ASSERT_EQ(sub2.getInt(), -2);
+
+   ConsoleValue mult2 = RunScript(R"(
+         $a = 2;
+         $a *= 3;
+         return $a;
+   )");
+
+   ASSERT_EQ(mult2.getInt(), 6);
+
+   ConsoleValue div2 = RunScript(R"(
+         $a = 10;
+         $a /= 2;
+         return $a;
+   )");
+
+   ASSERT_EQ(div2.getInt(), 5);
+
+   ConsoleValue pp = RunScript(R"(
+         $a = 0;
+         $a++;
+         return $a;
+   )");
+
+   ASSERT_EQ(pp.getInt(), 1);
+
+   ConsoleValue mm = RunScript(R"(
+         $a = 2;
+         $a--;
+         return $a;
+   )");
+
+   ASSERT_EQ(mm.getInt(), 1);
 }
 
 TEST(Script, Complex_Arithmetic)
 {
-   S32 result = RunScript<S32>(R"(
+   ConsoleValue result = RunScript(R"(
          return 1 * 2 - (0.5 * 2);
    )");
 
-   EXPECT_EQ(result, 1);
+   ASSERT_EQ(result.getInt(), 1);
 
-   S32 result2 = RunScript<S32>(R"(
+   ConsoleValue result2 = RunScript(R"(
          return 1 * 2 * 3 % 2;
    )");
 
-   EXPECT_EQ(result2, 0);
+   ASSERT_EQ(result2.getInt(), 0);
 }
 
 TEST(Script, Basic_Concatination)
 {
-   const char* result1 = RunScript<const char*>(R"(
+   ConsoleValue result1 = RunScript(R"(
          return "a" @ "b";
    )");
 
-   EXPECT_STREQ(result1, "ab");
+   ASSERT_STREQ(result1.getString(), "ab");
 
-   const char* result2 = RunScript<const char*>(R"(
+   ConsoleValue result2 = RunScript(R"(
          return "a" SPC "b";
    )");
 
-   EXPECT_STREQ(result2, "a b");
+   ASSERT_STREQ(result2.getString(), "a b");
 
-   const char* result3 = RunScript<const char*>(R"(
+   ConsoleValue result3 = RunScript(R"(
          return "a" TAB "b";
    )");
 
-   EXPECT_STREQ(result3, "a\tb");
+   ASSERT_STREQ(result3.getString(), "a\tb");
 
-   const char* result4 = RunScript<const char*>(R"(
+   ConsoleValue result4 = RunScript(R"(
          return "a" NL "b";
    )");
 
-   EXPECT_STREQ(result4, "a\nb");
+   ASSERT_STREQ(result4.getString(), "a\nb");
 
-   const char* complex = RunScript<const char*>(R"(
+   ConsoleValue complex = RunScript(R"(
          return "a" @ "b" @ "c" @ "d";
    )");
 
-   EXPECT_STREQ(complex, "abcd");
+   ASSERT_STREQ(complex.getString(), "abcd");
 }
 
 TEST(Script, Basic_Global_Variable_Tests)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          $a = 1;
          return $a;
    )");
 
-   EXPECT_EQ(value, 1);
+   ASSERT_EQ(value.getInt(), 1);
 }
 
 TEST(Script, Variable_Chaining_And_Usage)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function t() 
          {
             %a = %b = 2;
@@ -171,9 +185,9 @@ TEST(Script, Variable_Chaining_And_Usage)
          return t();
    )");
 
-   EXPECT_EQ(value, 2);
+   ASSERT_EQ(value.getInt(), 2);
 
-   S32 valueGlobal = RunScript<S32>(R"(
+   ConsoleValue valueGlobal = RunScript(R"(
          function t() 
          {
             $a = %b = 2;
@@ -182,9 +196,9 @@ TEST(Script, Variable_Chaining_And_Usage)
          return $a;
    )");
 
-   EXPECT_EQ(valueGlobal, 2);
+   ASSERT_EQ(valueGlobal.getInt(), 2);
 
-   S32 value2 = RunScript<S32>(R"(
+   ConsoleValue value2 = RunScript(R"(
          function t(%a) 
          {
             if ((%b = 2 * %a) != 5)
@@ -195,26 +209,26 @@ TEST(Script, Variable_Chaining_And_Usage)
          return t(2);
    )");
 
-   EXPECT_EQ(value2, 4);
+   ASSERT_EQ(value2.getInt(), 4);
 }
 
 TEST(Script, Basic_Function_Call_And_Local_Variable_Testing)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function t() { %a = 2; return %a; }
          return t();
    )");
 
-   EXPECT_EQ(value, 2);
+   ASSERT_EQ(value.getInt(), 2);
 
-   S32 value2 = RunScript<S32>(R"(
+   ConsoleValue value2 = RunScript(R"(
          function add(%a, %b) { return %a + %b; }
          return add(2, 4);
    )");
 
-   EXPECT_EQ(value2, 6);
+   ASSERT_EQ(value2.getInt(), 6);
 
-   S32 value3 = RunScript<S32>(R"(
+   ConsoleValue value3 = RunScript(R"(
          function fib(%a) {
             if (%a == 0)
                return 0;
@@ -225,48 +239,48 @@ TEST(Script, Basic_Function_Call_And_Local_Variable_Testing)
          return fib(15);
    )");
 
-   EXPECT_EQ(value3, 610);
+   ASSERT_EQ(value3.getInt(), 610);
 
-   S32 staticCall = RunScript<S32>(R"(
+   ConsoleValue staticCall = RunScript(R"(
          function SimObject::bar(%a, %b) {
             return %a + %b;
          }
          return SimObject::bar(1, 2);
    )");
 
-   EXPECT_EQ(staticCall, 3);
+   ASSERT_EQ(staticCall.getInt(), 3);
 }
 
 TEST(Script, Basic_Conditional_Statements)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          $a = "hello";
          if ($a $= "hello")
             return 1;
          return 2;
    )");
 
-   EXPECT_EQ(value, 1);
+   ASSERT_EQ(value.getInt(), 1);
 
-   const char* ternaryValue = RunScript<const char*>(R"(
+   ConsoleValue ternaryValue = RunScript(R"(
          return $a $= "hello" ? "World" : "No U";
    )");
 
-   EXPECT_STREQ(ternaryValue, "World");
+   ASSERT_STREQ(ternaryValue.getString(), "World");
 }
 
 TEST(Script, Basic_Loop_Statements)
 {
-   S32 whileValue = RunScript<S32>(R"(
+   ConsoleValue whileValue = RunScript(R"(
          $count = 0;
          while ($count < 5)
             $count++;
          return $count;
    )");
 
-   EXPECT_EQ(whileValue, 5);
+   ASSERT_EQ(whileValue.getInt(), 5);
 
-   const char* forValue = RunScript<const char*>(R"(
+   ConsoleValue forValue = RunScript(R"(
          function t(%times) 
          { 
             %result = "";
@@ -278,12 +292,28 @@ TEST(Script, Basic_Loop_Statements)
          return t(3);
    )");
 
-   EXPECT_STREQ(forValue, "aaa");
+   ASSERT_STREQ(forValue.getString(), "aaa");
 
-   const char* forIfValue = RunScript<const char*>(R"(
-         function t() {
+   ConsoleValue forReverseLoop = RunScript(R"(
+         function t(%times) 
+         { 
+            %result = "";
+            for (%i = %times - 1; %i >= 0; %i--)
+               %result = %result @ "b";
+            return %result;
+         }
+
+         return t(3);
+   )");
+
+   ASSERT_STREQ(forReverseLoop.getString(), "bbb");
+
+   ConsoleValue forIfValue = RunScript(R"(
+         function t()
+         {
             %str = "";
-            for (%i = 0; %i < 5; %i++) {
+            for (%i = 0; %i < 5; %i++)
+            {
 
                %loopValue = %i;
 
@@ -298,43 +328,238 @@ TEST(Script, Basic_Loop_Statements)
          return t();
    )");
 
-   EXPECT_STREQ(forIfValue, "0, 1, 2, 3, 4");
+   ASSERT_STREQ(forIfValue.getString(), "0, 1, 2, 3, 4");
+}
+
+TEST(Script, ForEachLoop)
+{
+   ConsoleValue forEach1 = RunScript(R"(
+         $theSimSet = new SimSet();
+         $theSimSet.add(new SimObject());
+         $theSimSet.add(new SimObject());
+
+         $counter = 0;
+         foreach ($obj in $theSimSet)
+         {
+            $counter++;
+         }
+
+         $theSimSet.delete();
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEach1.getInt(), 2);
+
+   ConsoleValue forEach2 = RunScript(R"(
+         $counter = 0;
+         foreach$ ($word in "a b c d")
+         {
+            $counter++;
+         }
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEach2.getInt(), 4);
+
+   ConsoleValue forEach3 = RunScript(R"(
+         function SimObject::addOne(%this)
+         {
+            return 1;
+         }
+
+         function test()
+         {
+            %set = new SimSet();
+            %set.add(new SimObject());
+            %set.add(new SimObject());
+
+            %count = 0;
+            foreach (%obj in %set)
+               %count += %obj.addOne();
+
+            %set.delete();
+
+            return %count;
+         }
+
+         return test();
+   )");
+
+   ASSERT_EQ(forEach3.getInt(), 2);
+
+   ConsoleValue forEach4 = RunScript(R"(
+         function test()
+         {
+            %string = "a b c d e";
+
+            %count = 0;
+            foreach$ (%word in %string)
+               %count++;
+
+            return %count;
+         }
+
+         return test();
+   )");
+
+   ASSERT_EQ(forEach4.getInt(), 5);
+
+   ConsoleValue forEach5 = RunScript(R"(
+      function SimObject::ret1(%this)
+      {
+         return 1;
+      }
+
+      function SimSet::doForeach5(%this)
+      {
+         %count = 0;
+         foreach (%obj in %this)
+         {
+            %count += %obj.ret1();
+         }
+         return %count;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         return %set.doForeach5();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEach5.getInt(), 3);
+
+   ConsoleValue forEachContinue = RunScript(R"(
+      function SimSet::foreach6(%this)
+      {
+         %count = 0;
+         foreach (%obj in %this)
+         {
+            if (%obj.getName() $= "A")
+               continue;
+
+             %count++;
+         }
+         return %count;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject(A));
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         return %set.foreach6();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEachContinue.getInt(), 2);
+
+   ConsoleValue forEachReturn = RunScript(R"(
+      function SimSet::findA(%this)
+      {
+         foreach (%obj in %this)
+         {
+            if (%obj.getName() $= "A")
+               return 76;
+         }
+         return 0;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject(A));
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         return %set.findA();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEachReturn.getInt(), 76);
+
+   ConsoleValue forEachNestedReturn = RunScript(R"(
+      function SimSet::findA(%this)
+      {
+         foreach (%obj in %this)
+         {
+            foreach (%innerObj in %this)
+            {
+               if (%innerObj.getName() $= "A")
+                  return 42;
+            }
+         }
+         return 0;
+      }
+
+      function a()
+      {
+         %set = new SimSet();
+         %set.add(new SimObject(A));
+         %set.add(new SimObject());
+         %set.add(new SimObject());
+
+         %group = new SimGroup();
+         %group.add(%set);
+
+         return %set.findA();
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(forEachNestedReturn.getInt(), 42);
 }
 
 TEST(Script, TorqueScript_Array_Testing)
 {
-   S32 value = RunScript<S32>(R"(
-         function t(%idx) { %a[idx] = 2; return %a[idx]; }
+   ConsoleValue value = RunScript(R"(
+         function t(%idx) { %a[%idx] = 2; return %a[%idx]; }
          return t(5);
    )");
 
-   EXPECT_EQ(value, 2);
+   ASSERT_EQ(value.getInt(), 2);
 
-   S32 value2 = RunScript<S32>(R"(
-         function t(%idx) { %a[idx, 0] = 2; return %a[idx, 0]; }
+   ConsoleValue value2 = RunScript(R"(
+         function t(%idx) { %a[%idx, 0] = 2; return %a[%idx, 0]; }
          return t(5);
    )");
 
-   EXPECT_EQ(value2, 2);
+   ASSERT_EQ(value2.getInt(), 2);
 }
 
 TEST(Script, Basic_SimObject)
 {
-   SimObject* object = RunScript<SimObject*>(R"(
-         return new SimObject(FudgeCollector) {
+   ConsoleValue object = RunScript(R"(
+         return new SimObject(FudgeCollector)
+         {
             fudge = "Chocolate"; 
          };
    )");
 
-   EXPECT_NE(object, (SimObject*)NULL);
+   ASSERT_NE(Sim::findObject(object), (SimObject*)NULL);
 
-   const char* propertyValue = RunScript<const char*>(R"(
+   ConsoleValue propertyValue = RunScript(R"(
          return FudgeCollector.fudge;
    )");
 
-   EXPECT_STREQ(propertyValue, "Chocolate");
+   ASSERT_STREQ(propertyValue.getString(), "Chocolate");
 
-   const char* funcReturn = RunScript<const char*>(R"(
+   ConsoleValue funcReturn = RunScript(R"(
          function SimObject::fooFunc(%this)
          {
             return "Bar";
@@ -343,9 +568,9 @@ TEST(Script, Basic_SimObject)
          return FudgeCollector.fooFunc();
    )");
 
-   EXPECT_STREQ(funcReturn, "Bar");
+   ASSERT_STREQ(funcReturn.getString(), "Bar");
 
-   const char* parentFn = RunScript<const char*>(R"(
+   ConsoleValue parentFn = RunScript(R"(
          new SimObject(Hello);
 
          function SimObject::fooFunc2(%this)
@@ -362,34 +587,426 @@ TEST(Script, Basic_SimObject)
          return Hello.fooFunc2();
    )");
 
-   EXPECT_STREQ(parentFn, "FooBar");
+   ASSERT_STREQ(parentFn.getString(), "FooBar");
+
+   ConsoleValue simpleFieldTest = RunScript(R"(
+         function a()
+         {
+            FudgeCollector.field = "A";
+            return FudgeCollector.field;
+         }
+         return a();
+   )");
+
+   ASSERT_STREQ(simpleFieldTest.getString(), "A");
+
+   ConsoleValue grp = RunScript(R"(
+         new SimGroup(FudgeCollectorGroup)
+         {
+            theName = "fudge";
+
+            new SimObject(ChocolateFudge)
+            {
+               type = "Chocolate";
+            };
+            new SimObject(PeanutButterFudge)
+            {
+               type = "Peanut Butter";
+
+               field["a"] = "Yes";
+            };
+         };
+
+         return FudgeCollectorGroup.getId();
+   )");
+
+   SimGroup* simGroup = dynamic_cast<SimGroup*>(Sim::findObject(grp));
+   ASSERT_NE(simGroup, (SimGroup*)NULL);
+   ASSERT_EQ(simGroup->size(), 2);
+
+   simGroup->deleteObject();
+
+   ConsoleValue fieldTest = RunScript(R"(
+         function a()
+         {
+            %obj = new SimObject();
+            %obj.field = "A";
+            %obj.val[%obj.field] = "B";
+
+            %value = %obj.val["A"];
+            %obj.delete();
+            return %value;
+         }
+         return a();
+   )");
+
+   ASSERT_STREQ(fieldTest.getString(), "B");
+
+   ConsoleValue fieldOpTest = RunScript(R"(
+         function a()
+         {
+            %obj = new SimObject();
+            %obj.field = 1;
+            %obj.field += 2;
+
+            %value = %obj.field;
+            %obj.delete();
+            return %value;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(fieldOpTest.getInt(), 3);
+}
+
+TEST(Script, Internal_Name)
+{
+   ConsoleValue value = RunScript(R"(
+         function TheFirstInner::_internalCall(%this)
+         {
+            return 5;
+         }
+
+         function a()
+         {
+            %grp = new SimGroup();
+            %obj = new SimObject(TheFirstInner)
+            {
+               internalName = "Yay";
+            };
+            %grp.add(%obj);
+
+            %val = %grp->Yay._internalCall();
+
+            %grp.delete();
+
+            return %val;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(value.getInt(), 5);
+
+   ConsoleValue recursiveValue = RunScript(R"(
+         function SimGroup::doTheInternalCall(%this)
+         {
+            return %this-->Yeah._internalCall2();
+         }
+
+         function TheAnotherObject::_internalCall2(%this)
+         {
+            return %this.property;
+         }
+
+         function a()
+         {
+            %grp = new SimGroup();
+            %obj = new SimGroup()
+            {
+               internalName = "Yay2";
+
+               new SimObject(TheAnotherObject)
+               {
+                  internalName = "Yeah";
+                  property = 12;
+               };
+            };
+            %grp.add(%obj);
+
+            %val = %grp.doTheInternalCall();
+
+            %grp.delete();
+
+            return %val;
+         }
+         return a();      
+   )");
+
+   ASSERT_EQ(recursiveValue.getInt(), 12);
 }
 
 TEST(Script, Basic_Package)
 {
-   S32 value = RunScript<S32>(R"(
+   ConsoleValue value = RunScript(R"(
          function a() { return 3; }
-         package overrides {
+         package overrides
+         {
             function a() { return 5; }
          };
          return a();
    )");
 
-   EXPECT_EQ(value, 3);
+   ASSERT_EQ(value.getInt(), 3);
 
-   S32 overrideValue = RunScript<S32>(R"(
+   ConsoleValue overrideValue = RunScript(R"(
          activatePackage(overrides);
          return a();
    )");
 
-   EXPECT_EQ(overrideValue, 5);
+   ASSERT_EQ(overrideValue.getInt(), 5);
 
-   S32 deactivatedValue = RunScript<S32>(R"(
+   ConsoleValue deactivatedValue = RunScript(R"(
          deactivatePackage(overrides);
          return a();
    )");
 
-   EXPECT_EQ(deactivatedValue, 3);
+   ASSERT_EQ(deactivatedValue.getInt(), 3);
+}
+
+TEST(Script, Sugar_Syntax)
+{
+   ConsoleValue value = RunScript(R"(
+         function a()
+         {
+            %vector = "1 2 3";
+            return %vector.y;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(value.getInt(), 2);
+
+   ConsoleValue setValue = RunScript(R"(
+         function a()
+         {
+            %vector = "1 2 3";
+            %vector.y = 4;
+            return %vector.y;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(setValue.getInt(), 4);
+
+   ConsoleValue valueArray = RunScript(R"(
+         function a()
+         {
+            %vector[0] = "1 2 3";
+            return %vector[0].y;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(valueArray.getInt(), 2);
+
+   ConsoleValue valueSetArray = RunScript(R"(
+         function a()
+         {
+            %vector[0] = "1 2 3";
+            %vector[0].z = 5;
+            return %vector[0].z;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(valueSetArray.getInt(), 5);
+
+   ConsoleValue valueStoreCalculated = RunScript(R"(
+      function a()
+      {
+         %extent = 10 SPC 20;
+         %scaling = 1;
+         %size = %extent.x * %scaling;
+         return %size;
+      }
+
+      return a();
+   )");
+
+   ASSERT_EQ(valueStoreCalculated.getInt(), 10);
+
+   ConsoleValue globalValueGet = RunScript(R"(
+      new SimObject(AAAA);
+      AAAA.doSomething = false;
+      $vec = "1 2 3";
+      return $vec.x * 4;
+   )");
+
+   ASSERT_EQ(globalValueGet.getFloat(), 4);
+
+   ConsoleValue globalValueSet = RunScript(R"(
+      new SimObject(AAAAB);
+      AAAAB.doSomething = false;
+      $vec2 = "1 2 3";
+      $vec2.x *= 4;
+      return $vec2.x;
+   )");
+
+   ASSERT_EQ(globalValueSet.getFloat(), 4);
+}
+
+TEST(Script, InnerObjectTests)
+{
+   ConsoleValue theObject = RunScript(R"(
+      function a()
+      {
+         %obj = new SimObject(TheOuterObject)
+         {
+            innerObject = new SimObject(TheInnerObject)
+            {
+               testField = 123;
+               position = "1 2 3";
+            };
+         };
+         return %obj;
+      }
+      return a();
+   )");
+
+   SimObject* outerObject = Sim::findObject("TheOuterObject");
+   ASSERT_NE(outerObject, (SimObject*)NULL);
+   if (outerObject)
+   {
+      ASSERT_EQ(theObject.getInt(), Sim::findObject("TheOuterObject")->getId());
+   }
+   ASSERT_NE(Sim::findObject("TheInnerObject"), (SimObject*)NULL);
+
+   ConsoleValue positionValue = RunScript(R"(
+      function TheOuterObject::getInnerPosition(%this)
+      {
+         return %this.innerObject.position;
+      }
+
+      function a()
+      {
+         %position = TheOuterObject.getInnerPosition();
+         return %position.y;
+      }
+      return a();
+   )");
+
+   ASSERT_EQ(positionValue.getInt(), 2);
+
+   ConsoleValue nestedFuncCall = RunScript(R"(
+      function TheInnerObject::test(%this)
+      {
+         return %this.testField;
+      }
+
+      return TheOuterObject.innerObject.test();
+   )");
+
+   ASSERT_EQ(nestedFuncCall.getInt(), 123);
+}
+
+TEST(Script, MiscRegressions)
+{
+   ConsoleValue regression1 = RunScript(R"(
+      new SimObject(TheRegressionObject);
+
+      function doTest()
+      {
+          TheRegressionObject.hidden = false;
+
+          %previewSize = 100 SPC 100;
+          %previewScaleSize = 2;
+          %size = %previewSize.x * %previewScaleSize;
+
+          return %size;
+      }
+
+      return doTest();
+   )");
+
+   ASSERT_EQ(regression1.getInt(), 200);
+
+   ConsoleValue regression2 = RunScript(R"(
+      new SimObject(TheRegressionObject2) 
+      {
+         extent = "100 200";
+      };
+
+      function doTest()
+      {
+          %scale = 2;
+          %position = TheRegressionObject2.extent.x SPC TheRegressionObject2.extent.y * %scale;
+          return %position.y;
+      }
+
+      return doTest();
+   )");
+
+   ASSERT_EQ(regression2.getInt(), 400);
+
+   ConsoleValue regression3 = RunScript(R"(
+      function doTest()
+      {
+          %button = new GuiIconButtonCtrl()
+          {
+              active = true;
+          };
+
+          %button.setExtent(120, 20);
+
+          %button.setExtent("120 20");
+
+          %button.extent = "120 20";
+
+          %button.extent.x = 120;
+          %button.extent.y = 20;
+          return %button.extent;
+      }
+      return doTest();
+   )");
+
+   ASSERT_STREQ(regression3.getString(), "120 20");
+   
+   ConsoleValue regression4 = RunScript(R"(
+    function doTest()
+    {
+        %slider = new GuiSliderCtrl()
+        {
+            range = "0 2";
+            ticks = 5;
+            active = true;
+        };
+
+        %slider.setValue(0.5);
+        return %slider.getValue();
+    }
+    return doTest();
+   )");
+   
+   ASSERT_EQ(regression4.getFloat(), 0.5);
+
+   ConsoleValue regression5 = RunScript(R"(
+      function noOpInc()
+      {
+         %count = 0;
+         %var[%count++] = 2;
+         return %var[1];
+      }
+      return noOpInc();
+   )");
+
+   ASSERT_EQ(regression5.getInt(), 2);
+
+   ConsoleValue regression6 = RunScript(R"(
+      function SimObject::crashMe(%this, %line)
+      {
+         return %line @ "1";
+      }
+
+      function doTest()
+      {
+         %obj = new SimObject();
+         for (%i = 0; %i < 99999; %i++)
+         {
+            %function = "crashMe";
+            if (%obj.isMethod(%function))
+            {
+               %line = "abcdefg";
+               %output = %obj.call(%function, %line); 
+            }
+         }
+
+         return true;
+      }
+
+      return doTest();
+   )");
+
+   ASSERT_EQ(regression6.getBool(), true);
 }
 
 #endif

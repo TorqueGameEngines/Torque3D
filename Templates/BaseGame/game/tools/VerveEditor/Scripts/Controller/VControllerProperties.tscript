@@ -59,6 +59,7 @@ function VControllerPropertyList::InspectObject( %this, %object )
     }
     
     %dataFieldCount = %object.getDataFieldCount();
+    %dataFieldList = "";
     for ( %i = 0; %i < %dataFieldCount; %i++ )
     {
         // Add To List.

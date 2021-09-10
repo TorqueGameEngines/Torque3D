@@ -55,7 +55,7 @@ bool CInterface::_isMethod(const char* className, const char* methodName) const
    if (mIsMethodCallback)
       return mIsMethodCallback(className, methodName);
 
-   return NULL;
+   return false;
 }
 
 const char* CInterface::_CallFunction(const char* nameSpace, const char* name, const char **argv, int argc, bool *result) const

@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ExampleGUI) 
+$guiContent = new GuiControl(ExampleGUI) 
 {
     position = "0 0";
 	extent = "100 100";

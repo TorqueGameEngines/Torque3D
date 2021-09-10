@@ -524,7 +524,9 @@ function loadDir(%dir)
 
 function loadDirs(%dirPath)
 {
-   %dirPath = nextToken(%dirPath, token, ";");
+   %dirPath = nextToken(%dirPath, "$token", ";");
+   %token = $token;
+
    if (%dirPath !$= "")
       loadDirs(%dirPath);
 

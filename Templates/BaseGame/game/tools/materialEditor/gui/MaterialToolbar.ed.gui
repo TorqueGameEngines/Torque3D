@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MaterialEditorToolbar) {
+$guiContent = new GuiControl(MaterialEditorToolbar) {
    canSaveDynamicFields = "0";
    internalName = "ShapeEditorToolbar";
    Enabled = "1";

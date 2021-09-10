@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiWindowCtrl(NavEditorConsoleDlg) {
+$guiContent = new GuiWindowCtrl(NavEditorConsoleDlg) {
    text = "Nav Console";
    resizeWidth = "1";
    resizeHeight = "1";

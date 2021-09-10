@@ -49,8 +49,7 @@ function AssetBrowser::importScriptAsset(%this, %assetId)
 
 function AssetBrowser::onScriptAssetEditorDropped(%this, %assetDef, %position)
 {
-   if(!isObject(%dropTarget))
-      return;
+
 }
 
 //Renames the asset

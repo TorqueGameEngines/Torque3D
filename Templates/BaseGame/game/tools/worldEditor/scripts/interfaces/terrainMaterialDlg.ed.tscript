@@ -298,7 +298,7 @@ function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
 
    %targetMap.setBitmap( %image );  
 
-   %targetMapName = %mapName @ "AssetId";
+   %targetMapName = %targetMap @ "AssetId";
    %targetMapName.setText(%imgAsset);
 
    TerrainMaterialDlg.matDirty = true;

@@ -62,7 +62,7 @@ function ConsoleEntry::eval()
        && !startsWith(%text, "for(")
        && !startsWith(%text, "switch(")
        && !startsWith(%text, "switch$("))
-      eval("%result = " @ %text);
+      %result = eval("return" SPC %text);
    else
       eval(%text);
    $Con::warnVoidAssignment = %oldWarnVoidAssignment;

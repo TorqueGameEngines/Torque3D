@@ -1,4 +1,4 @@
-%paletteId = new GuiControl(MeshRoadEditorPalette,EditorGuiGroup) {
+$paletteId = new GuiControl(MeshRoadEditorPalette,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

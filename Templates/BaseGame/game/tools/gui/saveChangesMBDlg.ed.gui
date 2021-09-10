@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(toolsMessageBoxSaveChangesDlg, EditorGuiGroup) {
+$guiContent = new GuiControl(toolsMessageBoxSaveChangesDlg, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "width";

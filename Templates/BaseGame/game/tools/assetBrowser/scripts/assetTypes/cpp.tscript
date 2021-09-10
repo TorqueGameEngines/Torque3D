@@ -37,6 +37,8 @@ function AssetBrowser::createCpp(%this)
    
    TamlWrite(%asset, %tamlpath);*/
    
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 

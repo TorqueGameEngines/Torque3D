@@ -1385,8 +1385,8 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
          }
       }
    }*/
-
-   image->extrudeMipLevels();
+   if (isPow2(image->getWidth())&& isPow2(image->getHeight()))
+      image->extrudeMipLevels();
 
    U32 mipCount = image->getNumMipLevels();
    U32 targetMips = mFloor(mLog2((F32)resolutionSize)) + 1;

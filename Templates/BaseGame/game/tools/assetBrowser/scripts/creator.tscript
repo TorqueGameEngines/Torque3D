@@ -104,7 +104,6 @@ function AssetBrowser::loadCreatorClasses(%this)
       %guiClasses.add(%category, %className);
    }
    
-   %guiCats.sortk(true);
    %guiClasses.sortk(true);
    
    %guiClasses.echo();
@@ -162,8 +161,7 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
    if ( %name $= "" )
       %name = %class;
       
-   if ( %this.currentCreatorGroup !$= "" && %group $= "" )
-      %group = %this.currentCreatorGroup;
+   %group = %this.currentCreatorGroup;
    
    if ( %class $= "" || %group $= "" )
    {

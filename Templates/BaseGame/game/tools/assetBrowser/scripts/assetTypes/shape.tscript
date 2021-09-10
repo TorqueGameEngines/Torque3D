@@ -375,7 +375,7 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
       %module = %payload.moduleName;
       %asset = %payload.assetName;
       
-      %oldValue = %targetObject.shapeAsset;
+      %oldValue = %this.targetObject.shapeAsset;
       %arrayIndex = "";
       
       %targetObject = %this.targetObject;

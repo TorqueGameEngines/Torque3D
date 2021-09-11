@@ -917,7 +917,7 @@ T3Dpre4ProjectImporter::genProcessor("PrecipitationData", "drop dropAsset dropTe
 T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset shapeName shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PlayerData", "shapeFP shapeFPAsset shapeNameFP shapeFPAsset");
 T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");

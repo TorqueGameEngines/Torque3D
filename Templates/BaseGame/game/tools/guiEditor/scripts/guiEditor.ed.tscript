@@ -121,6 +121,8 @@ function GuiEditor::close(%this)
    if(Canvas.getContent() != GuiEditorGui.getId())
       return;
 
+   $InGuiEditor = false;
+
    GuiGroup.add(GuiEditorGui);
    
    Canvas.setContent(GuiEditor.lastContent);

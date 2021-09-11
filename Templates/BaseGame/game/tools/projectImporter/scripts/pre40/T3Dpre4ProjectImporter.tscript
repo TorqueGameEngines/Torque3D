@@ -470,6 +470,12 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
                
                %objectName = findObjectName(%line, "new");
                
+               if(strIsMatchExpr("*%guiContent*=*new*", %line))
+               {
+                  %line = strReplace(%line, "%guiContent", "$guiContent");
+                  %fileWasChanged = true;
+               }
+               
                if(%objectName !$= "")
                {
                   %sanitizedName = sanitizeString(%objectName);

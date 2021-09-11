@@ -1103,6 +1103,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             Con::errorf(ConsoleLogEntry::General, "%s: preload failed for %s: %s.", getFileLine(ip - 2),
                currentNewObject->getName(), errorStr.c_str());
             dataBlock->deleteObject();
+            currentNewObject = NULL;
             ip = failJump;
             break;
          }

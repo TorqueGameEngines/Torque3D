@@ -1120,8 +1120,7 @@ function MaterialEditorGui::updateActiveMaterial(%this, %propertyField, %value, 
       %action.isSlider = %isSlider;
       %action.onMouseUp = %onMouseUp;
       %action.newValue = %value;
-      eval( "%action.oldValue = " @ MaterialEditorGui.currentMaterial @ "." @ %propertyField @ ";");
-      %action.oldValue = "\"" @ %action.oldValue @ "\"";
+      %action.oldValue = "\"" @ MaterialEditorGui.currentMaterial.getFieldValue(%propertyField) @ "\"";
       MaterialEditorGui.submitUndo( %action );
    }
    

@@ -9,11 +9,15 @@ function Prototyping::onDestroy(%this)
 //This is called when the server is initially set up by the game application
 function Prototyping::initServer(%this)
 {
+   %this.queueExec("./scripts/car");
 }
 
 //This is called when the server is created for an actual game/map to be played
 function Prototyping::onCreateGameServer(%this)
 {
+   %this.registerDatablock("./datablocks/hoverboat.tscript");
+   %this.registerDatablock("./datablocks/car.tscript");
+   %this.registerDatablock("./datablocks/flier.tscript");
 }
 
 //This is called when the server is shut down due to the game/map being exited

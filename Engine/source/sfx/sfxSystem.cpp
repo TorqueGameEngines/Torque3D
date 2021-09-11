@@ -158,8 +158,6 @@ ImplementEnumType( SFXChannel,
       "- 3: Pause\n\n" },
    { SFXChannelUser0,              "User0",
       "Channel available for custom use.  By default ignored by sources.\n\n"
-      "@note For FMOD Designer event sources (SFXFMODEventSource), this channel is used for event parameters "
-         "defined in FMOD Designer and should not be used otherwise.\n\n"
       "@see SFXSource::onParameterValueChange" },
    { SFXChannelUser1,              "User1",
       "Channel available for custom use.  By default ignored by sources.\n\n"
@@ -179,7 +177,6 @@ static const U32 sDeviceCapsVoiceManagement = SFXDevice::CAPS_VoiceManagement;
 static const U32 sDeviceCapsOcclusion = SFXDevice::CAPS_Occlusion;
 static const U32 sDeviceCapsDSPEffects = SFXDevice::CAPS_DSPEffects;
 static const U32 sDeviceCapsMultiListener = SFXDevice::CAPS_MultiListener;
-static const U32 sDeviceCapsFMODDesigner = SFXDevice::CAPS_FMODDesigner;
 
 static const U32 sDeviceInfoProvider = 0;
 static const U32 sDeviceInfoName = 1;
@@ -253,7 +250,6 @@ SFXSystem::SFXSystem()
    
    Con::addConstant( "$SFX::DEVICE_CAPS_REVERB", TypeS32, &sDeviceCapsReverb,
       "Sound device capability flag indicating that the sound device supports reverb.\n\n"
-      "@note Currently only FMOD implements this.\n\n"
       "@see sfxGetDeviceInfo\n\n"
       "@ref SFX_reverb\n\n"
       "@ingroup SFX" );
@@ -261,7 +257,6 @@ SFXSystem::SFXSystem()
       "Sound device capability flag indicating that the sound device implements its own voice virtualization.\n\n"
       "For these devices, the sound system will deactivate its own voice management and leave voice "
          "virtualization entirely to the device.\n\n"
-      "@note Currently only FMOD implements this.\n\n"
       "@see sfxGetDeviceInfo\n\n"
       "@ref SFXSound_virtualization\n\n"
       "@ingroup SFX" );
@@ -278,15 +273,7 @@ SFXSystem::SFXSystem()
       "@ingroup SFX" );
    Con::addConstant( "$SFX::DEVICE_CAPS_MULTILISTENER", TypeS32, &sDeviceCapsMultiListener,
       "Sound device capability flag indicating that the sound device supports multiple concurrent listeners.\n\n"
-      "@note Currently only FMOD implements this.\n\n"
       "@see sfxGetDeviceInfo\n\n"
-      "@ingroup SFX" );
-   Con::addConstant( "$SFX::DEVICE_CAPS_FMODDESIGNER", TypeS32, &sDeviceCapsFMODDesigner,
-      "Sound device capability flag indicating that the sound device supports FMOD Designer audio projects.\n\n"
-      "@note This is exclusive to FMOD.  If the FMOD Event DLLs are in place and could be successfully loaded, this "
-         "flag will be set after initializating an FMOD audio device.\n\n"
-      "@see sfxGetDeviceInfo\n\n"
-      "@ref FMOD_designer\n\n"
       "@ingroup SFX" );
       
    Con::addConstant( "$SFX::DEVICE_INFO_PROVIDER", TypeS32, &sDeviceInfoProvider,
@@ -1241,7 +1228,7 @@ DefineEngineFunction( sfxGetAvailableDevices, const char*, (),,
    "@verbatim\n"
       "provider TAB device TAB hasHardware TAB numMaxBuffers\n"
    "@endverbatim\n"
-   "- provider: The name of the device provider (e.g. \"FMOD\").\n"
+   "- provider: The name of the device provider (e.g. \"OpenAL\").\n"
    "- device: The name of the device as returned by the device layer.\n"
    "- hasHardware: Whether the device supports hardware mixing or not.\n"
    "- numMaxBuffers: The maximum number of concurrent voices supported by the device's mixer.  If this limit "
@@ -1336,7 +1323,7 @@ DefineEngineFunction( sfxGetDeviceInfo, const char*, (),,
    "@verbatim\n"
       "provider TAB device TAB hasHardware TAB numMaxBuffers TAB caps\n"
    "@endverbatim\n"
-   "- provider: The name of the device provider (e.g. \"FMOD\").\n"
+   "- provider: The name of the device provider (e.g. \"OpenALD\").\n"
    "- device: The name of the device as returned by the device layer.\n"
    "- hasHardware: Whether the device supports hardware mixing or not.\n"
    "- numMaxBuffers: The maximum number of concurrent voices supported by the device's mixer.  If this limit "
@@ -1357,7 +1344,6 @@ DefineEngineFunction( sfxGetDeviceInfo, const char*, (),,
    "@see $SFX::DEVICE_CAPS_OCCLUSION\n\n"
    "@see $SFX::DEVICE_CAPS_DSPEFFECTS\n\n"
    "@see $SFX::DEVICE_CAPS_MULTILISTENER\n\n"
-   "@see $SFX::DEVICE_CAPS_FMODDESIGNER\n\n"
    "@ref SFX_devices\n"
    "@ingroup SFX" )
 {
@@ -1379,7 +1365,7 @@ static ConsoleDocFragment _sfxCreateSource1(
    "@param track The track the source should play.\n"
    "@return A new SFXSource for playback of the given track or 0 if no source could be created from the given track.\n\n"
    "@note Trying to create a source for a device-specific track type will fail if the currently selected device "
-      "does not support the type.  Example: trying to create a source for an FMOD Designer event when not running FMOD.\n\n"
+      "does not support the type. \n\n"
    "@tsexample\n"
    "// Create and play a source from a pre-existing profile:\n"
    "%source = sfxCreateSource( SoundFileProfile );\n"
@@ -1400,7 +1386,7 @@ static ConsoleDocFragment _sfxCreateSource2(
    "@param z The Z coordinate of the 3D sound position.\n"
    "@return A new SFXSource for playback of the given track or 0 if no source could be created from the given track.\n\n"
    "@note Trying to create a source for a device-specific track type will fail if the currently selected device "
-      "does not support the type.  Example: trying to create a source for an FMOD Designer event when not running FMOD.\n\n"
+      "does not support the type. \n\n"
    "@tsexample\n"
    "// Create and play a source from a pre-existing profile and position it at (100, 200, 300):\n"
    "%source = sfxCreateSource( SoundFileProfile, 100, 200, 300 );\n"

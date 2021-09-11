@@ -1,7 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="AddFMODProjectDlg,EditorGuiGroup"
-    scriptFile="@assetFile=AddFMODProjectDlg.ed.gui"
-    GUIFile="@assetFile=AddFMODProjectDlg.ed.gui"
-    VersionId="1" />

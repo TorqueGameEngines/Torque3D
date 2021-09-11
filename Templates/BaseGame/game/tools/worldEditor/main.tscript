@@ -40,7 +40,6 @@ function initializeWorldEditor()
    exec("./gui/ManageBookmarksWindow.ed.gui");
    exec("./gui/ManageSFXParametersWindow.ed.gui" );
    exec("./gui/TimeAdjustGui.ed.gui");
-   exec("./gui/AddFMODProjectDlg.ed.gui");
    exec("./gui/SelectObjectsWindow.ed.gui");
    exec("./gui/ProceduralTerrainPainterGui.gui" );
    exec("tools/gui/renderTargetVisualizer.ed.gui");
@@ -65,7 +64,6 @@ function initializeWorldEditor()
    exec("./scripts/EditorChooseLevelGui.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/cameraBookmarks.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/ManageSFXParametersWindow.ed." @ $TorqueScriptFileExtension);
-   exec("./scripts/AddFMODProjectDlg.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/SelectObjectsWindow.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/cameraCommands.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/probeBake.ed." @ $TorqueScriptFileExtension);

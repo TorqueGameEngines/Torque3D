@@ -89,6 +89,22 @@ function AssetBrowser::moveScriptAsset(%this, %assetDef, %destination)
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }
 
+function AssetBrowser::buildScriptAssetPreview(%this, %assetDef, %previewData)
+{
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.scriptFile;
+   %previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
+   
+   if(%assetDef.isServerSide)
+      %previewData.previewImage = "ToolsModule:serverScriptIcon_image";
+   else
+      %previewData.previewImage = "ToolsModule:clientScriptIcon_image";
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
+}
+
 function AssetBrowser::buildTScriptPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;

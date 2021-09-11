@@ -84,6 +84,7 @@ function initializeAssetBrowser()
    exec("./scripts/directoryHandling." @ $TorqueScriptFileExtension);
    exec("./scripts/selectPath." @ $TorqueScriptFileExtension);
    exec("./scripts/looseFileAudit." @ $TorqueScriptFileExtension);
+   exec("./scripts/creator." @ $TorqueScriptFileExtension);
    
    //Processing for the different asset types
    exec("./scripts/assetTypes/component." @ $TorqueScriptFileExtension); 
@@ -152,6 +153,9 @@ function initializeAssetBrowser()
    ImportAssetWindow.importingFilesArray = new ArrayObject();
       
    ImportAssetWindow.importer = new AssetImporter();
+   
+   if(!isObject(AssetBrowserCreatorGroupsList))
+      new ArrayObject(AssetBrowserCreatorGroupsList);
       
    AssetBrowser.buildPopupMenus();
    

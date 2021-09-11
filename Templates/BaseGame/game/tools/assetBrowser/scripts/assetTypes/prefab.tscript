@@ -21,7 +21,7 @@ function AssetBrowser::buildPrefabPreview(%this, %assetDef, %previewData)
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %fullPath;
    
-   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewImage = "ToolsModule:prefabIcon_image";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

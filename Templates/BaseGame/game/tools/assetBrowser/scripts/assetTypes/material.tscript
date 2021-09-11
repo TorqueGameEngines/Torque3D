@@ -434,9 +434,19 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    %generatePreview = false;
 
    %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
-   if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getImagePath(), %previewFilePath) == 1))
+   if(!isFile(%previewFilePath))
    {
       %generatePreview = true;
+   }
+   else
+   {
+      if(isObject(%assetDef.materialDefinitionName))
+      {
+         if(compareFileTimes(%assetDef.materialDefinitionName.getDiffuseMap(0), %previewFilePath) == 1 ||
+            compareFileTimes(%assetDef.materialDefinitionName.getFilename(), %previewFilePath) == 1)
+      %generatePreview = true;
+         
+      }
    }
 
    %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
@@ -479,7 +489,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    
    //Revalidate. If it didn't work, just use the default placeholder one
    if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:genericAssetIcon_image";
+      %previewAssetName = "ToolsModule:materialIcon_image";
       
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;

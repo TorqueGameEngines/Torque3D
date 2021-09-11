@@ -222,6 +222,8 @@ public:
 
    void notifyShapeChanged();
 
+   void setShapeAssetId(StringTableEntry assetId);
+
    /// @name Shape paths for MeshFit
    ///@{
    static const String& getCapsuleShapePath() { return smCapsuleShapePath; }

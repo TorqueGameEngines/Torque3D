@@ -25,3 +25,66 @@ singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfi
    borderColor   = "0 0 200 255";
    borderColorNA = "0 0 200 255";
 };
+
+singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "0 0 200 255";
+   borderColorNA = "0 0 200 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "75 101 135 255";
+   borderColorNA = "75 101 135 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "200 198 198 255";
+   borderColorNA = "200 198 198 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "200 198 198 255";
+   borderColorNA = "200 198 198 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "0 76 135 255";
+   borderColorNA = "0 76 135 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "17 5 44 255";
+   borderColorNA = "17 5 44 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : ToolsGuiDefaultProfile)
+{
+   fillColor = "128 128 128 255"; //hovered/selected
+   
+   border = true;
+   borderColor   = "0 208 186 255";
+   borderColorNA = "0 208 186 255";
+};

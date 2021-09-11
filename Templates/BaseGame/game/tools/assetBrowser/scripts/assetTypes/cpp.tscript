@@ -11,6 +11,19 @@ function AssetBrowser::buildCppPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = %assetDef.assetName;
 }
 
+function AssetBrowser::buildCppAssetPreview(%this, %assetDef, %previewData)
+{
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.codeFilePath;
+   %previewData.doubleClickCommand = "echo(\"Not yet implemented to edit C++ files from the editor\");";//"EditorOpenFileInTorsion( "@%previewData.assetPath@", 0 );";
+   
+   %previewData.previewImage = "ToolsModule:cppIcon_image";
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   %previewData.tooltip = %assetDef.assetName;
+}
+
 function AssetBrowser::createCpp(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;

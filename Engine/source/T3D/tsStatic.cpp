@@ -1015,7 +1015,7 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
          con->packNetStringHandleU(stream, matNameStr);
       }
 
-      mChangingMaterials.clear();
+      //mChangingMaterials.clear();
    }
 
    return retMask;
@@ -1670,53 +1670,49 @@ void TSStatic::onInspect(GuiInspector* inspector)
       {
          StringTableEntry materialname = StringTable->insert(mShapeAsset->getShape()->materialList->getMaterialName(i).c_str());
 
-         //Iterate through our assetList to find the compliant entry in our matList
-         for (U32 m = 0; m < mShapeAsset->getMaterialCount(); m++)
+         AssetPtr<MaterialAsset> matAsset;
+         if(MaterialAsset::getAssetByMaterialName(materialname, &matAsset) == MaterialAsset::Ok)
          {
-            AssetPtr<MaterialAsset> matAsset = mShapeAsset->getMaterialAsset(m);
+            dSprintf(matFieldName, 128, "MaterialSlot%d", i);
 
-            if (matAsset->getMaterialDefinitionName() == materialname)
+            //addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
+            //Con::executef(this, "onConstructComponentField", mTargetComponent, field->mFieldName);
+            Con::printf("Added material field for MaterialSlot %d", i);
+
+            GuiInspectorField* fieldGui = materialGroup->constructField(TypeMaterialAssetPtr);
+            fieldGui->init(inspector, materialGroup);
+
+            fieldGui->setSpecialEditField(true);
+            fieldGui->setTargetObject(this);
+
+            StringTableEntry fldnm = StringTable->insert(matFieldName);
+
+            fieldGui->setSpecialEditVariableName(fldnm);
+
+            fieldGui->setInspectorField(NULL, fldnm);
+            fieldGui->setDocs("");
+
+            if (fieldGui->registerObject())
             {
-               dSprintf(matFieldName, 128, "MaterialSlot%d", i);
+               StringTableEntry fieldValue = matAsset->getAssetId();
 
-               //addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
-               //Con::executef(this, "onConstructComponentField", mTargetComponent, field->mFieldName);
-               Con::printf("Added material field for MaterialSlot %d", i);
-
-               GuiInspectorField* fieldGui = materialGroup->constructField(TypeMaterialAssetPtr);
-               fieldGui->init(inspector, materialGroup);
-
-               fieldGui->setSpecialEditField(true);
-               fieldGui->setTargetObject(this);
-
-               StringTableEntry fldnm = StringTable->insert(matFieldName);
-
-               fieldGui->setSpecialEditVariableName(fldnm);
-
-               fieldGui->setInspectorField(NULL, fldnm);
-               fieldGui->setDocs("");
-
-               if (fieldGui->registerObject())
+               //Check if we'd already actually changed it, and display the modified value
+               for (U32 c = 0; c < mChangingMaterials.size(); c++)
                {
-                  fieldGui->setValue(materialname);
-
-                  stack->addObject(fieldGui);
-               }
-               else
-               {
-                  SAFE_DELETE(fieldGui);
+                  if (mChangingMaterials[c].slot == i)
+                  {
+                     fieldValue = StringTable->insert(mChangingMaterials[i].assetId.c_str());
+                     break;
+                  }
                }
 
-               /*if (materialGroup->isMethod("onConstructField"))
-               {
-                  //ensure our stack variable is bound if we need it
-                  //Con::evaluatef("%d.stack = %d;", materialGroup->getId(), materialGroup->at(0)->getId());
+               fieldGui->setValue(fieldValue);
 
-                  Con::executef(materialGroup, "onConstructField", matFieldName,
-                     matFieldName, "material", matFieldName,
-                     materialname, "", "", this);
-               }*/
-               break;
+               stack->addObject(fieldGui);
+            }
+            else
+            {
+               SAFE_DELETE(fieldGui);
             }
          }
       }

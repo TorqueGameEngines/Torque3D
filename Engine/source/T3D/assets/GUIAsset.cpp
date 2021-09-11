@@ -221,6 +221,13 @@ DefineEngineStaticMethod(GUIAsset, getAssetIdByGUIName, const char*, (const char
 {
    return GUIAsset::getAssetIdByGUIName(StringTable->insert(guiName));
 }
+
+DefineEngineMethod(GUIAsset, getScriptPath, const char*, (), ,
+   "Gets the script file path associated to this asset.\n"
+   "@return The full script file path.")
+{
+   return object->getScriptPath();
+}
 #endif
 
 //-----------------------------------------------------------------------------

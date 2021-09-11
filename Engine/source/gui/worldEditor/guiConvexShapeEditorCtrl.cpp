@@ -236,7 +236,7 @@ void GuiConvexEditorCtrl::setVisible( bool val )
                bool isPortal = (scene->at(c)->getClassName() == StringTable->insert("Portal"));
                bool isOccluder = (scene->at(c)->getClassName() == StringTable->insert("OcclusionVolume"));
 
-               if (isZone || isPortal || isOccluder)
+               if (isTrigger || isZone || isPortal || isOccluder)
                {
                   SceneObject* sceneObj = static_cast<SceneObject*>(scene->at(c));
                   if (!sceneObj)
@@ -247,15 +247,18 @@ void GuiConvexEditorCtrl::setVisible( bool val )
 
                   ConvexShape* proxyShape = createConvexShapeFrom(sceneObj);
 
+                  if (proxyShape == NULL)
+                     continue;
+
                   //Set the texture to a representatory one so we know what's what
                   if (isTrigger)
-                     proxyShape->mMaterialName = "ToolsModule:TriggerProxyMaterial";
+                     proxyShape->_setMaterial(StringTable->insert("ToolsModule:TriggerProxyMaterial"));
                   else if (isPortal)
-                     proxyShape->mMaterialName = "ToolsModule:PortalProxyMaterial";
+                     proxyShape->_setMaterial(StringTable->insert("ToolsModule:PortalProxyMaterial"));
                   else if (isZone)
-                     proxyShape->mMaterialName = "ToolsModule:ZoneProxyMaterial";
+                     proxyShape->_setMaterial(StringTable->insert("ToolsModule:ZoneProxyMaterial"));
                   else if (isOccluder)
-                     proxyShape->mMaterialName = "ToolsModule:OccluderProxyMaterial";
+                     proxyShape->_setMaterial(StringTable->insert("ToolsModule:OccluderProxyMaterial"));
 
                   proxyShape->_updateMaterial();
 
@@ -706,8 +709,6 @@ void GuiConvexEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
                EulerF newSufRot = surfMat.toEuler();
 
                float zRot = mRadToDeg(newSufRot.z - curSufRot.z);
-
-               float curZRot = mConvexSEL->mSurfaceUVs[mFaceSEL].zRot;
 
                mConvexSEL->mSurfaceUVs[mFaceSEL].zRot += zRot;
             }
@@ -2005,8 +2006,6 @@ void GuiConvexEditorCtrl::setSelectedFaceMaterial(const char* materialName)
    //run through and find out if there are any other faces still using the old mat texture
    if (oldmatID != 0)
    {
-      S32 curMatCount = mConvexSEL->mSurfaceTextures.size();
-
       bool used = false;
       for (U32 i = 0; i < mConvexSEL->mSurfaceUVs.size(); i++)
       {

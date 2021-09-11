@@ -492,15 +492,20 @@ public:
    /// </summary>
    bool dirty;
 
+   enum
+   {
+      NotProcessed=0,
+      Processed,
+      Skipped,
+      UseForDependencies,
+      Error,
+      Imported
+   };
+
    /// <summary>
    /// Is this asset item marked to be skipped. If it is, it's usually due to being marked as deleted
    /// </summary>
-   bool skip;
-
-   /// <summary>
-   /// Has the asset item been processed
-   /// </summary>
-   bool processed;
+   U32 importStatus;
 
    /// <summary>
    /// Is this specific asset item generated as part of the import process of another item
@@ -563,6 +568,10 @@ public:
    bool operator == (const AssetImportObject& o) const
    {
       return o.getId() == this->getId();
+   }
+
+   bool canImport() {
+      return (importStatus == AssetImportObject::Processed);
    }
 };
 

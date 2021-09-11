@@ -1,0 +1,19 @@
+function Flier::onDamage(%this, %obj, %delta)
+{
+	Parent::onDamage(%this, %obj);
+	%currentDamage = %obj.getDamageLevel();
+	if(%currentDamage > %obj.destroyedLevel)
+	{
+		if(%obj.getDamageState() !$= "Destroyed")
+		{
+			if(%obj.respawnTime !$= "")
+				%obj.marker.schedule = %obj.marker.data.schedule(%obj.respawnTime, "respawn", %obj.marker); 
+			%obj.setDamageState(Destroyed);
+		}
+	}
+	else
+	{
+		if(%obj.getDamageState() !$= "Enabled")
+			%obj.setDamageState(Enabled);
+	}
+}

@@ -192,8 +192,7 @@ function sfxMetricsCallback()
 {
    return "  | SFX |" @
           "  Sounds: " @ $SFX::numSounds @
-          "  Lists: " @ ( $SFX::numSources - $SFX::numSounds - $SFX::Device::fmodNumEventSource ) @
-          "  Events: " @ $SFX::fmodNumEventSources @
+          "  Lists: " @ ( $SFX::numSources - $SFX::numSounds ) @
           "  Playing: " @ $SFX::numPlaying @
           "  Culled: " @ $SFX::numCulled @
           "  Voices: " @ $SFX::numVoices @

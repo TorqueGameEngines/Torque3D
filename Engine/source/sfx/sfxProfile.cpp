@@ -49,7 +49,7 @@ ConsoleDocClass( SFXProfile,
    "for it to be created.  However, several of the SFX functions (sfxPlayOnce(), sfxCreateSource()) perform "
    "this creation internally for convenience using temporary profile objects.\n\n"
    
-   "Sound files can be in either OGG or WAV format.  However, extended format support is available when using FMOD. "
+   "Sound files can be in either OGG or WAV format. "
    "See @ref SFX_formats.\n\n"
 
    "@section SFXProfile_loading Profile Loading\n\n"

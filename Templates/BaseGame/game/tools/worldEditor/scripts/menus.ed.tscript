@@ -167,10 +167,7 @@ function EditorGui::buildMenus(%this)
       //item[6] = "Import Texture Data..." TAB "" TAB "Texture::import();";
       //item[7] = "-";
       //item[8] = "Export Terraform Data..." TAB "" TAB "Heightfield::saveBitmap(\"\");";
-   
-   %fileMenu.appendItem( "-" );
-   %fileMenu.appendItem( "Add FMOD Designer Audio..." TAB "" TAB "AddFMODProjectDlg.show();" );
-   
+  
    %fileMenu.appendItem("-");
    %fileMenu.appendItem("Play Level" TAB "F11" TAB "Editor.close(ProjectSettings.value(\"UI/playGUIName\"));");
       

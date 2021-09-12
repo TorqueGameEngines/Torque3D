@@ -247,7 +247,6 @@ void SFXDescription::initPersistFields()
          "If true, the sound system will try to allocate the voice for the sound directly "
          "on the sound hardware for mixing by the hardware mixer.  Be aware that a hardware mixer "
          "may not provide all features available to sounds mixed in software.\n\n"
-         "@note This flag currently only takes effect when using FMOD.\n\n"
          "@note Generally, it is preferable to let sounds be mixed in software.\n\n" );
       addField( "parameters",          TypeSFXParameterName, Offset( mParameters, SFXDescription ), MaxNumParameters,
          "Names of the parameters to which sources using this description will automatically be linked.\n\n"
@@ -355,7 +354,7 @@ void SFXDescription::initPersistFields()
          "@ref SFXSource_cones" );
       addField( "rolloffFactor",       TypeF32,    Offset( mRolloffFactor, SFXDescription ),
          "Scale factor to apply to logarithmic distance attenuation curve.  If -1, the global rolloff setting is used.\n\n"
-         "@note Per-sound rolloff is only supported on OpenAL and FMOD at the moment.  With other divices, the global rolloff setting "
+         "@note Per-sound rolloff is only supported on OpenAL at the moment.  With other divices, the global rolloff setting "
             "is used for all sounds.\n"
          "@see LevelInfo::soundDistanceModel" );
       
@@ -373,7 +372,6 @@ void SFXDescription::initPersistFields()
          "of sample data determined by this field.  The greater its value, the more sample data each "
          "packet contains, the more work is done per packet.\n\n"
          "@note This field only takes effect when Torque's own sound system performs the streaming. "
-            "When FMOD is used, this field is ignored and streaming is performed by FMOD.\n\n"
          "@ref SFX_streaming" );
       addField( "streamReadAhead",     TypeS32,    Offset( mStreamReadAhead, SFXDescription ),
          "Number of sample packets to read and buffer in advance.\n"
@@ -382,7 +380,6 @@ void SFXDescription::initPersistFields()
          "device before the playback queue is running dry.  Greater values thus allow for more lag "
          "in the streaming pipeline.\n\n"
          "@note This field only takes effect when Torque's own sound system performs the streaming. "
-            "When FMOD is used, this field is ignored and streaming is performed by FMOD.\n\n"
          "@ref SFX_streaming" );
          
    endGroup( "Streaming" );

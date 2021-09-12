@@ -216,26 +216,18 @@ function sfxCompareProvider( %providerA, %providerB )
       
    switch$( %providerA )
    {
-      // Always prefer FMOD over anything else.
-      case "FMOD":
-         return 1;
-         
-      // Prefer OpenAL over anything but FMOD.
       case "OpenAL":
-         if( %providerB $= "FMOD" )
-            return -1;
-         else
             return 1;
       
       // choose XAudio over DirectSound
       case "XAudio":
-         if( %providerB $= "FMOD" || %providerB $= "OpenAL" )
+         if( %providerB $= "OpenAL" )
             return -1;
          else
             return 0;
             
       case "DirectSound":
-         if( %providerB !$= "FMOD" && %providerB !$= "OpenAL" && %providerB !$= "XAudio" )
+         if( %providerB !$= "OpenAL" && %providerB !$= "XAudio" )
             return 1;
          else
             return -1;

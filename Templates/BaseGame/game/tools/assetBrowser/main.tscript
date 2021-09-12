@@ -69,6 +69,7 @@ function initializeAssetBrowser()
    exec("./guis/looseFileAudit.gui");
    exec("./guis/assetNameEdit.gui");
    exec("./guis/createNewCollectionSet.gui");
+   exec("./guis/setAssetTarget.gui");
 
    exec("./scripts/assetBrowser." @ $TorqueScriptFileExtension);
    exec("./scripts/popupMenus." @ $TorqueScriptFileExtension);
@@ -85,6 +86,7 @@ function initializeAssetBrowser()
    exec("./scripts/selectPath." @ $TorqueScriptFileExtension);
    exec("./scripts/looseFileAudit." @ $TorqueScriptFileExtension);
    exec("./scripts/creator." @ $TorqueScriptFileExtension);
+   exec("./scripts/setAssetTarget." @ $TorqueScriptFileExtension);
    
    //Processing for the different asset types
    exec("./scripts/assetTypes/component." @ $TorqueScriptFileExtension); 

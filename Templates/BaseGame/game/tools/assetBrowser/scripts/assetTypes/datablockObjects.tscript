@@ -63,7 +63,22 @@ function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
                            "\nDatablock Type: " @ %assetDef.getClassName() @
                            "\nDefinition Path: " @ %assetDef.getFilename();
                            
-   %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"spawnDatablockObject\",\""@ %assetDef @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
+   
+   if(%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+      {
+         %previewData.doubleClickCommand = "DatablockEditorPlugin.openDatablock( "@%assetDef@" );";
+      }
+      else
+      {
+         %previewData.doubleClickCommand = "AssetBrowser.onDatablockEditorDropped( "@%assetDef@" );";
+      }
+   }
 }
 
 function spawnDatablockObject(%datablock)

@@ -666,6 +666,7 @@ function DatablockEditorPlugin::createDatablock(%this)
       // Show the dialog.
       
       canvas.pushDialog( DatablockEditorCreatePrompt, 0, true );
+      DatablockEditorCreatePrompt-->promptWindow.text = "Create New Datablock in module: " @ DatablockEditorPlugin.targetCreationModule;
    }
 }
 
@@ -679,6 +680,7 @@ function DatablockEditorPlugin::pickDatablockPath(%this)
 
 function DatablockEditorPlugin::pickedNewDBTargetModule(%this, %module)
 {
+   DatablockEditorPlugin.targetCreationModule = %module;
    %moduleDef = ModuleDatabase.findModule(%module);
    
    $DATABLOCK_EDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedDatablocks." @ $TorqueScriptFileExtension;

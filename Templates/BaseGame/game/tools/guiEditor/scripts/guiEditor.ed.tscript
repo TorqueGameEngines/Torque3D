@@ -722,6 +722,64 @@ function GuiEditor::onMouseModeChange( %this )
    GuiEditorStatusBar.setText( GuiEditorStatusBar.getMouseModeHelp() );
 }
 
+//
+function GuiEditor::onBeginDropFiles( %this )
+{   
+   if(!%this.isVisible())
+      return;
+      
+   AssetBrowser_setAssetTarget.showDialog("EWorldEditor.doFileDropProcessing();");
+   
+   if(!isObject($EditorImportFileList))
+      $EditorImportFileList = new ArrayObject();
+      
+   $EditorImportFileList.empty();
+}
+
+function GuiEditor::onDropFile( %this, %filePath )
+{
+   if(!%this.isVisible())
+      return;
+      
+   $EditorImportFileList.add(%filePath);
+}
+
+function GuiEditor::onDropZipFile(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function GuiEditor::onDropFolder(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function GuiEditor::onEndDropFiles( %this )
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function GuiEditor::doFileDropProcessing(%this)
+{
+   if(!ImportAssetWindow.isAwake())
+      ImportAssetWindow.showDialog();
+   
+   for(%i=0; %i < $EditorImportFileList.Count(); %i++)
+   {
+      %file = $EditorImportFileList.getKey(%i);
+      ImportAssetWindow.importer.addImportingFile(%file);
+   }
+   
+   $EditorImportFileList.empty();
+   
+   ImportAssetWindow.refresh();
+}
+
+//
+
 //=============================================================================================
 //    Resolution List.
 //=============================================================================================

@@ -62,13 +62,13 @@ function ActionUpdateActiveMaterial::redo(%this)
          MaterialEditorGui.setActiveMaterial(%this.material);
       }
       */
-      eval("materialEd_previewMaterial." @ %this.field @ " = " @ %this.newValue @ ";");
+      materialEd_previewMaterial.setFieldValue(%this.field, %this.newValue);
       materialEd_previewMaterial.flush();
       materialEd_previewMaterial.reload();
       
       if (MaterialEditorGui.livePreview == true)
       {
-         eval("%this.material." @ %this.field @ " = " @ %this.newValue @ ";");
+         %this.material.setFieldValue(%this.field, %this.newValue);
          MaterialEditorGui.currentMaterial.flush();
          MaterialEditorGui.currentMaterial.reload();
       }      
@@ -80,7 +80,7 @@ function ActionUpdateActiveMaterial::redo(%this)
    }
    else
    {
-      eval("%this.material." @ %this.field @ " = " @ %this.newValue @ ";");
+      %this.material.setFieldValue(%this.field, %this.newValue);
       %this.material.flush();
       %this.material.reload();
    }
@@ -100,13 +100,13 @@ function ActionUpdateActiveMaterial::undo(%this)
       }
       */
       
-      eval("materialEd_previewMaterial." @ %this.field @ " = " @ %this.oldValue @ ";");
+      materialEd_previewMaterial.setFieldValue(%this.field, %this.oldValue);
       materialEd_previewMaterial.flush();
       materialEd_previewMaterial.reload();
       
       if (MaterialEditorGui.livePreview == true)
       {
-         eval("%this.material." @ %this.field @ " = " @ %this.oldValue @ ";");
+         %this.material.setFieldValue(%this.field, %this.oldValue);
          MaterialEditorGui.currentMaterial.flush();
          MaterialEditorGui.currentMaterial.reload();
       }
@@ -115,7 +115,7 @@ function ActionUpdateActiveMaterial::undo(%this)
    }
    else
    {
-      eval("%this.material." @ %this.field @ " = " @ %this.oldValue @ ";");
+      %this.material.setFieldValue(%this.field, %this.oldValue);
       %this.material.flush();
       %this.material.reload();
    }
@@ -138,13 +138,13 @@ function ActionUpdateActiveMaterialAnimationFlags::redo(%this)
       }
       */
       
-      eval("materialEd_previewMaterial.animFlags[" @ %this.layer @ "] = " @ %this.newValue @ ";");
+      materialEd_previewMaterial.animFlags[%this.layer] = %this.newValue;
       materialEd_previewMaterial.flush();
       materialEd_previewMaterial.reload();
       
       if (MaterialEditorGui.livePreview == true)
       {
-         eval("%this.material.animFlags[" @ %this.layer @ "] = " @ %this.newValue @ ";");
+         %this.material.animFlags[%this.layer] = %this.newValue;
          MaterialEditorGui.currentMaterial.flush();
          MaterialEditorGui.currentMaterial.reload();
       }
@@ -153,7 +153,7 @@ function ActionUpdateActiveMaterialAnimationFlags::redo(%this)
    }
    else
    {
-      eval("%this.material.animFlags[" @ %this.layer @ "] = " @ %this.newValue @ ";");
+      %this.material.animFlags[%this.layer] = %this.newValue;
       %this.material.flush();
       %this.material.reload();
    }
@@ -162,14 +162,14 @@ function ActionUpdateActiveMaterialAnimationFlags::redo(%this)
 function ActionUpdateActiveMaterialAnimationFlags::undo(%this)
 {
    if( MaterialEditorPreviewWindow.isVisible() && MaterialEditorGui.currentMaterial == %this.material )
-   {      
-      eval("materialEd_previewMaterial.animFlags[" @ %this.layer @ "] = " @ %this.oldValue @ ";");
+   {  
+      materialEd_previewMaterial.animFlags[%this.layer] = %this.oldValue;
       materialEd_previewMaterial.flush();
       materialEd_previewMaterial.reload();
       
       if (MaterialEditorGui.livePreview == true)
       {
-         eval("%this.material.animFlags[" @ %this.layer @ "] = " @ %this.oldValue @ ";");
+         %this.material.animFlags[%this.layer] = %this.oldValue;
          MaterialEditorGui.currentMaterial.flush();
          MaterialEditorGui.currentMaterial.reload();
       }
@@ -178,7 +178,7 @@ function ActionUpdateActiveMaterialAnimationFlags::undo(%this)
    }
    else
    {
-      eval("%this.material.animFlags[" @ %this.layer @ "] = " @ %this.oldValue @ ";");
+      %this.material.animFlags[%this.layer] = %this.oldValue;
       %this.material.flush();
       %this.material.reload();
    }
@@ -340,7 +340,7 @@ function ActionChangeMaterial::redo(%this)
    }
    else
    {
-      eval("%this.object." @ %this.materialTarget @ " = " @ %this.toMaterial.getName() @ ";");
+      %this.object.setFieldValue(%this.materialTarget, %this.toMaterial.getName());
       MaterialEditorGui.currentObject.postApply();
    }
    
@@ -372,7 +372,7 @@ function ActionChangeMaterial::undo(%this)
    }
    else
    {
-      eval("%this.object." @ %this.materialTarget @ " = " @ %this.fromMaterial.getName() @ ";");
+      %this.object.setFieldValue(%this.materialTarget, %this.fromMaterial.getName());
       MaterialEditorGui.currentObject.postApply();
    }
    

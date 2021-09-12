@@ -262,7 +262,7 @@ function NavEditorGui::findCover(%this)
       %pos = LocalClientConnection.getControlObject().getPosition();
       %text = NavEditorOptionsWindow-->TestProperties->CoverPosition.getText();
       if(%text !$= "")
-         %pos = eval(%text);
+         %pos = eval("return " @ %text);
       %this.getPlayer().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
    }
 }
@@ -275,7 +275,7 @@ function NavEditorGui::followObject(%this)
       %text = NavEditorOptionsWindow-->TestProperties->FollowObject.getText();
       if(%text !$= "")
       {
-         eval("%obj = " @ %text);
+         %obj = eval("return " @ %text);
          if(!isObject(%obj))
             toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
       }

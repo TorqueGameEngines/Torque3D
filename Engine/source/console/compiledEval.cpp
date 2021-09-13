@@ -142,6 +142,7 @@ namespace Con
    // console variables.
    extern StringTableEntry gCurrentFile;
    extern StringTableEntry gCurrentRoot;
+   extern S32 gObjectCopyFailures;
 }
 
 namespace Con
@@ -972,7 +973,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
                else
                {
-                  Con::errorf(ConsoleLogEntry::General, "%s: Unable to find parent object %s for %s.", getFileLine(ip - 1), objParent, callArgv[1].getString());
+                  if (Con::gObjectCopyFailures == -1)
+                     Con::errorf(ConsoleLogEntry::General, "%s: Unable to find parent object %s for %s.", getFileLine(ip - 1), objParent, callArgv[1].getString());
+                  else
+                     ++Con::gObjectCopyFailures;
+
                   delete object;
                   currentNewObject = NULL;
                   ip = failJump;

@@ -123,7 +123,7 @@ function VerveEditor::CreateField( %targetStack, %fieldName, %fieldType )
     if ( isMethod( "VerveEditor", "Create" @ %fieldType @ "Field" ) )
     {
         // Create the Input Control.
-        eval( "%fieldInput = VerveEditor::Create" @ %fieldType @ "Field( %fieldContainer, %fieldName );" );
+        %fieldInput = eval( "return VerveEditor::Create" @ %fieldType @ "Field( %fieldContainer, %fieldName );" );
     }
     else
     {

@@ -1124,13 +1124,13 @@ function MaterialEditorGui::updateActiveMaterial(%this, %propertyField, %value, 
       MaterialEditorGui.submitUndo( %action );
    }
    
-   eval("materialEd_previewMaterial." @ %propertyField @ " = " @ %value @ ";");
+   materialEd_previewMaterial.setFieldValue(%propertyField, %value);
    materialEd_previewMaterial.flush();
    materialEd_previewMaterial.reload();
    
    if (MaterialEditorGui.livePreview == true)
    {
-      eval("MaterialEditorGui.currentMaterial." @ %propertyField @ " = " @ %value @ ";");
+      MaterialEditorGui.setFieldValue(%propertyField, %value);
       MaterialEditorGui.currentMaterial.flush();
       MaterialEditorGui.currentMaterial.reload();
    }
@@ -1173,7 +1173,7 @@ function MaterialEditorGui::updateMaterialReferences( %this, %obj, %oldName, %ne
          %fieldName = %obj.getField( %i );
          if ( ( %obj.getFieldType( %fieldName ) $= "TypeMaterialName" ) && ( %obj.getFieldValue( %fieldName ) $= %oldName ) )
          {
-            eval( %obj @ "." @ %fieldName @ " = " @ %newName @ ";" );
+            %obj.setFieldValue(%fieldName, %newName);
             %objChanged = true;
          }
       }
@@ -1431,13 +1431,13 @@ function MaterialEditorGui::updateAnimationFlags(%this)
    %action.oldValue = %oldFlags;
    MaterialEditorGui.submitUndo( %action );
    
-   eval("materialEd_previewMaterial.animFlags[" @ MaterialEditorGui.currentLayer @ "] = " @ %flags @ ";");
+   materialEd_previewMaterial.animFlags[MaterialEditorGui.currentLayer] = %flags;
    materialEd_previewMaterial.flush();
    materialEd_previewMaterial.reload();
    
    if (MaterialEditorGui.livePreview == true)
    {
-      eval("MaterialEditorGui.currentMaterial.animFlags[" @ MaterialEditorGui.currentLayer @ "] = " @ %flags @ ";");
+      MaterialEditorGui.currentMaterial.animFlags[MaterialEditorGui.currentLayer] = %flags;
       MaterialEditorGui.currentMaterial.flush();
       MaterialEditorGui.currentMaterial.reload();
    }
@@ -2324,7 +2324,7 @@ function MaterialEditorGui::changeMaterial(%this, %fromMaterial, %toMaterial)
    {
       %action.mode = "editorShapes";
 
-      eval("MaterialEditorGui.currentObject." @ SubMaterialSelector.getText() @ " = " @ %toMaterial.getName() @ ";");
+      MaterialEditorGui.currentObject.setFieldValue(SubMaterialSelector.getText(), %toMaterial.getName());
       if( MaterialEditorGui.currentObject.isMethod("postApply") )
          MaterialEditorGui.currentObject.postApply();
       

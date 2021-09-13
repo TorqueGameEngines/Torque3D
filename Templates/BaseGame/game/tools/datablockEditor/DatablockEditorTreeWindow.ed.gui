@@ -259,7 +259,7 @@ $guiContent = new GuiControl() {
                   tooltipprofile = "ToolsGuiToolTipProfile";
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
-                  altCommand = "DatablockEditorPlugin.createDatablock();";
+                  altCommand = "DatablockEditorPlugin.pickDatablockPath();";
                };
             };
          };

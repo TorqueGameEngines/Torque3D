@@ -1,0 +1,43 @@
+function AssetBrowser_setAssetTarget::showDialog(%this, %callback)
+{
+   AssetBrowser_setAssetTarget.callback = %callback;
+   Canvas.pushDialog(AssetBrowser_setAssetTarget);
+}
+
+function AssetBrowser_setAssetTarget::onWake(%this)
+{
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
+
+   if(%targetModule $= "")
+      %targetModule = EditorSettings.value("Assets/New/defaultModule", "");
+      
+   AssetBrowser_setAssetTarget-->moduleList.setText(%targetModule);
+   
+   %moduleDef = ModuleDatabase.findModule(%targetModule);
+   
+   %targetPath = AssetBrowser.dirHandler.currentAddress;
+   if(!startsWith(%targetPath, %moduleDef.ModulePath))
+   {
+      %targetPath = %moduleDef.ModulePath;
+   }
+   
+   AssetBrowser_setAssetTarget-->targetPath.text = %targetPath;
+}
+
+function AssetBrowser_setAssetTargetWindow::onClose(%this)
+{
+   Canvas.popDialog(AssetBrowser_setAssetTarget);
+}
+
+function setAssetTargetUpdatePath(%targetPath)
+{
+   AssetBrowser_setAssetTarget-->targetPath.text = %targetPath;
+}
+
+function setAssetTarget()
+{
+   AssetBrowser.dirHandler.currentAddress = AssetBrowser_setAssetTarget-->targetPath.text;
+   eval(AssetBrowser_setAssetTarget.callback);
+   
+   Canvas.popDialog(AssetBrowser_setAssetTarget);
+}

@@ -375,7 +375,7 @@ function ObjectBuilderGui::createImageAssetType(%this, %index)
       modal = "1";
       command = %this @ ".getImageAsset(" @ %index @ ");";
    };
-   %button.setBitmap("tools/materialEditor/gui/change-material-btn");
+   %button.setBitmap("ToolsModule:change_material_btn_n_image");
    %this.controls[%this.numControls].addGuiControl(%button);
 
    %this.numControls++;
@@ -466,7 +466,7 @@ function ObjectBuilderGui::createMaterialNameType(%this, %index)
       modal = "1";
       command = %this @ ".getMaterialName(" @ %index @ ");";
    };
-   %button.setBitmap("tools/materialEditor/gui/change-material-btn");
+   %button.setBitmap("ToolsModule:change_material_btn_n_image");
    %this.controls[%this.numControls].addGuiControl(%button);
 
    //%val = %this.field[%index, value];
@@ -869,7 +869,6 @@ function ObjectBuilderGui::buildCloudLayer(%this)
    OBObjectName.setValue( "" );      
    %this.objectClassName = "CloudLayer";
    %this.addField( "textureAsset", "TypeImageAsset", "Image", "Core_Rendering:clouds_normal_displacement_image" ); 
-   //%this.addField( "textureFile", "TypeImageFilename", "Texture", "core/rendering/images/clouds_normal_displacement" );   
 	%this.process();
 }
 
@@ -881,9 +880,10 @@ function ObjectBuilderGui::buildBasicClouds(%this)
 	
    // This is a trick... any fields added after process won't show
    // up as controls, but will be applied to the created object.
-   %this.addField( "texture[0]", "TypeImageFilename", "Texture", "core/rendering/images/cloud1" );   
-   %this.addField( "texture[1]", "TypeImageFilename", "Texture", "core/rendering/images/cloud2" );   
-   %this.addField( "texture[2]", "TypeImageFilename", "Texture", "core/rendering/images/cloud3" );   	   
+   %this.addField( "textureAsset[0]", "TypeImageAssetId", "TextureAsset", "Core_Rendering:cloud1_image" );   
+   %this.addField( "textureAsset[1]", "TypeImageAssetId", "TextureAsset", "Core_Rendering:cloud2_image" ); 
+   %this.addField( "textureAsset[2]", "TypeImageAssetId", "TextureAsset", "Core_Rendering:cloud3_image" ); 
+
 }
 
 function ObjectBuilderGui::checkExists( %this, %classname )
@@ -994,9 +994,9 @@ function ObjectBuilderGui::addWaterObjectFields(%this)
    %this.addField("waveSpeed[2]", "TypeFloat", "Wave Speed", "1");
    %this.addField("overallWaveMagnitude", "TypeFloat", "Overall Wave Magnitude", "1.0");
    
-   %this.addField("rippleTex", "TypeImageFilename", "Ripple Texture", "core/rendering/images/ripple" );
-   %this.addField("depthGradientTex", "TypeImageFilename", "Depth Gradient Texture", "core/rendering/images/depthcolor_ramp" );
-   %this.addField("foamTex", "TypeImageFilename", "Foam Texture", "core/rendering/images/foam" );
+   %this.addField("rippleTexAsset", "TypeImageAssetId", "Ripple Texture", "Core_Rendering:ripple_image" );
+   %this.addField("depthGradientTexAsset", "TypeImageAssetId", "Depth Gradient Texture", "Core_Rendering:depthcolor_ramp_imag" );
+   %this.addField("foamTexAsset", "TypeImageAssetId", "Foam Texture", "Core_Rendering:foam_image" );
 }
 
 function ObjectBuilderGui::buildWaterBlock(%this)
@@ -1408,6 +1408,17 @@ function PrecipitationData::create(%datablock)
    {
       dataBlock = %datablock;
       parentGroup = EWCreatorWindow.objectGroup;
+   };
+   return %obj;
+}
+
+function TriggerData::create(%datablock)
+{
+   %obj = new Trigger()
+   {
+      dataBlock = %datablock;
+      parentGroup = EWCreatorWindow.objectGroup;
+      polyhedron = "-0.5 0.5 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.0 0.0 1.0";
    };
    return %obj;
 }

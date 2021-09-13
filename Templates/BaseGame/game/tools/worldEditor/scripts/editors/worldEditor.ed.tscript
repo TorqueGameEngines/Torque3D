@@ -321,6 +321,64 @@ function WorldEditor::onWorldEditorUndo( %this )
    Inspector.refresh();
 }
 
+//
+function WorldEditor::onBeginDropFiles( %this )
+{   
+   if(!%this.isVisible())
+      return;
+      
+   AssetBrowser_setAssetTarget.showDialog("EWorldEditor.doFileDropProcessing();");
+   
+   if(!isObject($EditorImportFileList))
+      $EditorImportFileList = new ArrayObject();
+   
+   $EditorImportFileList.empty();
+}
+
+function WorldEditor::onDropFile( %this, %filePath )
+{
+   if(!%this.isVisible())
+      return;
+      
+   $EditorImportFileList.add(%filePath);
+}
+
+function WorldEditor::onDropZipFile(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function WorldEditor::onDropFolder(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function WorldEditor::onEndDropFiles( %this )
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function WorldEditor::doFileDropProcessing(%this)
+{
+   if(!ImportAssetWindow.isAwake())
+      ImportAssetWindow.showDialog();
+   
+   for(%i=0; %i < $EditorImportFileList.Count(); %i++)
+   {
+      %file = $EditorImportFileList.getKey(%i);
+      ImportAssetWindow.importer.addImportingFile(%file);
+   }
+   
+   $EditorImportFileList.empty();
+   
+   ImportAssetWindow.refresh();
+}
+
+//
+
 function Inspector::onInspectorFieldModified( %this, %object, %fieldName, %arrayIndex, %oldValue, %newValue )
 {
    // The instant group will try to add our

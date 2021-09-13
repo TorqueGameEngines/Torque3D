@@ -106,8 +106,6 @@ function AssetBrowser::loadCreatorClasses(%this)
    
    %guiClasses.sortk(true);
    
-   %guiClasses.echo();
-   
    %currentCat = "";
    for(%i=0; %i < %guiClasses.count(); %i++)
    {

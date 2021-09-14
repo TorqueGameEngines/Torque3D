@@ -25,6 +25,7 @@
 #include "core/strings/stringFunctions.h"
 #include "core/util/hashFunction.h"
 #include "console/consoleTypes.h"
+#include "app/net/httpObject.h"
 
 // jamesu - debug DNS
 //#define TORQUE_DEBUG_LOOKUPS
@@ -558,6 +559,7 @@ bool Net::init()
    smConnectionReceive = new ConnectionReceiveEvent();
    smPacketReceive = new PacketReceiveEvent();
 
+   HTTPObject::init();
 
    Process::notify(&Net::process, PROCESS_NET_ORDER);
 
@@ -567,6 +569,8 @@ bool Net::init()
 void Net::shutdown()
 {
    Process::remove(&Net::process);
+
+   HTTPObject::shutdown();
 
    while (gPolledSockets.size() > 0)
    {
@@ -1098,6 +1102,9 @@ void Net::process()
    // Process listening sockets
    processListenSocket(PlatformNetState::udpSocket);
    processListenSocket(PlatformNetState::udp6Socket);
+
+   // process HTTPObject
+   HTTPObject::process();
 
    // process the polled sockets.  This blob of code performs functions
    // similar to WinsockProc in winNet.cc

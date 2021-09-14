@@ -293,7 +293,13 @@ addPath("${srcDir}/platform/async/test")
 addPath("${srcDir}/platform/input")
 addPath("${srcDir}/platform/output")
 addPath("${srcDir}/app")
+
+if (NOT TORQUE_NET_CURL)
+    set(BLACKLIST "httpObject.h httpObject.cpp")
+endif()
 addPath("${srcDir}/app/net")
+set(BLACKLIST "")
+
 addPath("${srcDir}/util/messaging")
 addPath("${srcDir}/gfx/Null")
 addPath("${srcDir}/gfx/test")

@@ -300,6 +300,7 @@ Con::ConsoleInputEvent smConsoleInput;
 ///
 StringTableEntry gCurrentFile;
 StringTableEntry gCurrentRoot;
+S32 gObjectCopyFailures = -1;
 /// @}
 
 bool alwaysUseDebugOutput = true;
@@ -372,6 +373,9 @@ void init()
    addVariable("Con::warnUndefinedVariables", TypeBool, &gWarnUndefinedScriptVariables, "If true, a warning will be displayed in the console whenever a undefined variable is used in script.\n"
       "@ingroup Console\n");
    addVariable( "instantGroup", TypeRealString, &gInstantGroup, "The group that objects will be added to when they are created.\n"
+      "@ingroup Console\n");
+   addVariable("Con::objectCopyFailures", TypeS32, &gObjectCopyFailures, "If greater than zero then it counts the number of object creation "
+      "failures based on a missing copy object and does not report an error..\n"
       "@ingroup Console\n");
 
    // Current script file name and root

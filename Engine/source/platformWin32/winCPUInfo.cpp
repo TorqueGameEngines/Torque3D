@@ -30,7 +30,7 @@
 Platform::SystemInfo_struct Platform::SystemInfo;
 extern void PlatformBlitInit();
 extern void SetProcessorInfo(Platform::SystemInfo_struct::Processor& pInfo,
-   char* vendor, U32 processor, U32 properties, U32 properties2); // platform/platformCPU.cc
+   char* vendor, char* brand, U32 processor, U32 properties, U32 properties2); // platform/platformCPU.cc
 
 void Processor::init()
 {
@@ -45,7 +45,7 @@ void Processor::init()
    Platform::SystemInfo.processor.type = CPU_X86Compatible;
    Platform::SystemInfo.processor.name = StringTable->insert("Unknown x86 Compatible");
    Platform::SystemInfo.processor.mhz  = 0;
-   Platform::SystemInfo.processor.properties = CPU_PROP_C | CPU_PROP_LE;
+   Platform::SystemInfo.processor.properties = CPU_PROP_C;
 
    char  vendor[0x20];
    dMemset(vendor, 0, sizeof(vendor));
@@ -65,7 +65,31 @@ void Processor::init()
    properties = cpuInfo[3];  // edx
    properties2 = cpuInfo[2]; // ecx
 
-   SetProcessorInfo(Platform::SystemInfo.processor, vendor, processor, properties, properties2);
+   char brand[0x40];
+   dMemset(brand, 0, sizeof(brand));
+   S32 extendedInfo[4];
+   __cpuid(extendedInfo, 0x80000000);
+   S32 numberExtendedIds = extendedInfo[0];
+
+   // Sets brand
+   if (numberExtendedIds >= 0x80000004)
+   {
+      int offset = 0;
+      for (int i = 0; i < 3; ++i)
+      {
+         S32 brandInfo[4];
+         __cpuidex(brandInfo, 0x80000002 + i, 0);
+
+         *reinterpret_cast<int*>(brand + offset + 0) = brandInfo[0];
+         *reinterpret_cast<int*>(brand + offset + 4) = brandInfo[1];
+         *reinterpret_cast<int*>(brand + offset + 8) = brandInfo[2];
+         *reinterpret_cast<int*>(brand + offset + 12) = brandInfo[3];
+
+         offset += sizeof(S32) * 4;
+      }
+   }
+
+   SetProcessorInfo(Platform::SystemInfo.processor, vendor, brand, processor, properties, properties2);
 
 // now calculate speed of processor...
    U32 nearmhz = 0; // nearest rounded mhz
@@ -126,6 +150,14 @@ void Processor::init()
       Con::printf( "   SSE detected" );
    if( Platform::SystemInfo.processor.properties & CPU_PROP_SSE2 )
       Con::printf( "   SSE2 detected" );
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE3)
+      Con::printf( "   SSE3 detected" );
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE3xt)
+      Con::printf( "   SSE3ex detected ");
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE4_1)
+      Con::printf( "   SSE4.1 detected" );
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE4_2)
+      Con::printf( "   SSE4.2 detected" );
    if( Platform::SystemInfo.processor.isHyperThreaded )
       Con::printf( "   HT detected" );
    if( Platform::SystemInfo.processor.properties & CPU_PROP_MP )

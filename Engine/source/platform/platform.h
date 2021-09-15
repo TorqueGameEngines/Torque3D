@@ -55,50 +55,11 @@
 /// @note These enums must be globally scoped so that they work with the inline assembly
 enum ProcessorType
 {
-   // x86
    CPU_X86Compatible,
-   CPU_Intel_Unknown,
-   CPU_Intel_486,
-   CPU_Intel_Pentium,
-   CPU_Intel_PentiumMMX,
-   CPU_Intel_PentiumPro,
-   CPU_Intel_PentiumII,
-   CPU_Intel_PentiumCeleron,
-   CPU_Intel_PentiumIII,
-   CPU_Intel_Pentium4,
-   CPU_Intel_PentiumM,
-   CPU_Intel_Core,
-   CPU_Intel_Core2,
-   CPU_Intel_Corei7Xeon, // Core i7 or Xeon
-   CPU_AMD_K6,
-   CPU_AMD_K6_2,
-   CPU_AMD_K6_3,
-   CPU_AMD_Athlon,
-   CPU_AMD_Phenom,
-   CPU_AMD_PhenomII,
-   CPU_AMD_Bulldozer,
-   CPU_AMD_Unknown,
-   CPU_Cyrix_6x86,
-   CPU_Cyrix_MediaGX,
-   CPU_Cyrix_6x86MX,
-   CPU_Cyrix_GXm,          ///< Media GX w/ MMX
-   CPU_Cyrix_Unknown,
-
-   // PowerPC
-   CPU_PowerPC_Unknown,
-   CPU_PowerPC_601,
-   CPU_PowerPC_603,
-   CPU_PowerPC_603e,
-   CPU_PowerPC_603ev,
-   CPU_PowerPC_604,
-   CPU_PowerPC_604e,
-   CPU_PowerPC_604ev,
-   CPU_PowerPC_G3,
-   CPU_PowerPC_G4,
-   CPU_PowerPC_G4_7450,
-   CPU_PowerPC_G4_7455,
-   CPU_PowerPC_G4_7447, 
-   CPU_PowerPC_G5,
+   CPU_ArmCompatible,
+   CPU_Intel,
+   CPU_AMD,
+   CPU_Apple
 };
 
 /// Properties for CPU.

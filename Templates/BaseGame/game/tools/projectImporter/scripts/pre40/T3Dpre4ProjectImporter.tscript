@@ -919,7 +919,7 @@ T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset shapeFile s
 T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ParticleData", "texture textureAsset textureName textureAsset textureExt textureExtAsset textureExtName textureExtAsset");
-T3Dpre4ProjectImporter::genProcessor("PrecipitationData", "drop dropAsset dropTexture dropAsset splash splashAsset splashTexture splashAsset");
+T3Dpre4ProjectImporter::genProcessor("PrecipitationData", "drop dropAsset dropTexture dropAsset splash splashAsset splashTexture splashAsset soundProfile soundAsset");
 T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");

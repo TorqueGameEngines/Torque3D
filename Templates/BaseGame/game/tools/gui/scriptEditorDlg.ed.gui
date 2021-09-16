@@ -204,8 +204,8 @@ function _TextPadOnOk()
 {
    if(ScriptEditorDlg.callback !$= "")
    {
-      %text = ScriptEditorDlg-->textpad.getText();
-      %command  = ScriptEditorDlg.callback @ "(\"" @ expandEscape(%text) @ "\");";
+      $textpadText = ScriptEditorDlg-->textpad.getText();
+      %command  = ScriptEditorDlg.callback @ "(\"" @ expandEscape($textpadText) @ "\");";
       eval(%command);
    }
    ScriptEditorDlg.callback = "";

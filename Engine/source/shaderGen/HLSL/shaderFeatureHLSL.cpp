@@ -453,12 +453,12 @@ Var* ShaderFeatureHLSL::addOutVpos( MultiLine *meta,
       outVpos = connectComp->getElement( RT_TEXCOORD );
       outVpos->setName( "outVpos" );
       outVpos->setStructName( "OUT" );
-      outVpos->setType( "float4" );
+      outVpos->setType( "float3" );
 
       Var *outPosition = (Var*) LangElement::find( "hpos" );
       AssertFatal( outPosition, "ShaderFeatureHLSL::addOutVpos - Didn't find the output position." );
 
-      meta->addStatement( new GenOp( "   @ = @;\r\n", outVpos, outPosition ) );
+      meta->addStatement( new GenOp( "   @ = @.xyz;\r\n", outVpos, outPosition ) );
    }
 
    return outVpos;
@@ -2686,7 +2686,7 @@ void FoliageFeatureHLSL::processVert( Vector<ShaderComponent*> &componentList,
    tangent->setType( "float3" );
    tangent->setName( "T" );
    LangElement *tangentDec = new DecOp( tangent );
-   meta->addStatement( new GenOp( "   @;\n", tangentDec ) );         
+   meta->addStatement( new GenOp( "   @ = float3(1.0,0,0);\n", tangentDec ) );         
 
    // We add a float foliageFade to the OUT structure.
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );

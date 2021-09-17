@@ -455,12 +455,12 @@ Var* ShaderFeatureGLSL::addOutVpos( MultiLine *meta,
       outVpos = connectComp->getElement( RT_TEXCOORD );
       outVpos->setName( "outVpos" );
       outVpos->setStructName( "OUT" );
-      outVpos->setType( "vec4" );
+      outVpos->setType( "vec3" );
 
       Var *outPosition = (Var*) LangElement::find( "gl_Position" );
       AssertFatal( outPosition, "ShaderFeatureGLSL::addOutVpos - Didn't find the output position." );
 
-      meta->addStatement( new GenOp( "   @ = @;\r\n", outVpos, outPosition ) );
+      meta->addStatement( new GenOp( "   @ = @.xyz;\r\n", outVpos, outPosition ) );
    }
 
    return outVpos;
@@ -474,25 +474,11 @@ Var* ShaderFeatureGLSL::getInVpos(  MultiLine *meta,
       return inVpos;
 
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector*>( componentList[C_CONNECTOR] );
-   /*
-   if ( GFX->getPixelShaderVersion() >= 3.0f )
-   {
-      inVpos = connectComp->getElement( RT_VPOS );
-      inVpos->setName( "vpos" );
-      inVpos->setStructName( "IN" );
-      inVpos->setType( "vec2" );
-      return inVpos;
-   }
-   */
    inVpos = connectComp->getElement( RT_TEXCOORD );
    inVpos->setName( "inVpos" );
    inVpos->setStructName( "IN" );
    inVpos->setType( "vec4" );
-
-   Var *vpos = new Var( "vpos", "vec2" );
-   meta->addStatement( new GenOp( "   @ = @.xy / @.w;\r\n", new DecOp( vpos ), inVpos, inVpos ) );
-
-   return vpos;
+   return inVpos;
 }
 
 Var* ShaderFeatureGLSL::getInWorldToTangent( Vector<ShaderComponent*> &componentList )
@@ -2473,7 +2459,7 @@ void VisibilityFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    // Everything else does a fizzle.
    Var *vPos = getInVpos( meta, componentList );
-   meta->addStatement( new GenOp( "   fizzle( @, @ );\r\n", vPos, visibility ) );
+   meta->addStatement( new GenOp( "   fizzle( @.xy, @ );\r\n", vPos, visibility ) );
 }
 
 ShaderFeature::Resources VisibilityFeatGLSL::getResources( const MaterialFeatureData &fd )
@@ -2616,7 +2602,7 @@ void FoliageFeatureGLSL::processVert( Vector<ShaderComponent*> &componentList,
    tangent->setType( "vec3" );
    tangent->setName( "T" );
    LangElement *tangentDec = new DecOp( tangent );
-   meta->addStatement( new GenOp( "   @;\n", tangentDec ) );         
+   meta->addStatement( new GenOp( "   @ = vec3(1.0,0,0);\n", tangentDec ) );         
 	
 	// We add a float foliageFade to the OUT structure.
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );

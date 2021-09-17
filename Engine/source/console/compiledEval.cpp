@@ -734,7 +734,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    SimObject* curObject = NULL;
    SimObject* saveObject = NULL;
    Namespace::Entry* nsEntry;
-   Namespace* ns;
+   Namespace* ns = NULL;
    const char* curFNDocBlock = NULL;
    const char* curNSDocBlock = NULL;
    const S32 nsDocLength = 128;

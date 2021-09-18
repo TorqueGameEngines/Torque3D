@@ -556,7 +556,7 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       %targetFilename = sanitizeFilename(%value);
       
       if(isObject(%targetFilename))
-         {
+      {
          if(%originalFieldName $= "soundProfile")
          {
             $ProjectImporter::assetQuery.clear();
@@ -568,14 +568,14 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
          }
          else
          {
-         //likely a material name, so handle it that way
-         %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
-      }
+            //likely a material name, so handle it that way
+            %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
+         }
       }
       else
       {
          if(!isFile(%targetFilename))
-      {
+         {
             if(%originalFieldName $= "soundProfile")
             {
                $ProjectImporter::assetQuery.clear();
@@ -587,17 +587,17 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
             }
             else
             {
-         error("Legacy Project Importer - file described in line could not be found/is not valid");
-         return %line;
-      }
+               error("Legacy Project Importer - file described in line could not be found/is not valid");
+               return %line;
+            }
          }
          else
          {
-      $ProjectImporter::assetQuery.clear();
-      %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
-      if(%foundAssets != 0)
-      {
-         %assetId = $ProjectImporter::assetQuery.getAsset(0);
+            $ProjectImporter::assetQuery.clear();
+            %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+            if(%foundAssets != 0)
+            {
+               %assetId = $ProjectImporter::assetQuery.getAsset(0);
             }
          }
       }

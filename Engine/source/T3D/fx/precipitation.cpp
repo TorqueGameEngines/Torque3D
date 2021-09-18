@@ -189,7 +189,7 @@ bool PrecipitationData::preload( bool server, String &errorStr )
    if( Parent::preload( server, errorStr) == false)
       return false;
 
-   if (!server && (mSoundAsset.isNull() || !mSoundAsset->getSfxProfile()))
+   if (!server && !getSFXProfile())
       return false;
 
    return true;
@@ -200,7 +200,6 @@ void PrecipitationData::packData(BitStream* stream)
    Parent::packData(stream);
 
    PACKDATA_SOUNDASSET(Sound);
-   //sfxWrite( stream, soundProfile );
 
    PACKDATA_IMAGEASSET(Drop);
 
@@ -218,7 +217,6 @@ void PrecipitationData::unpackData(BitStream* stream)
    Parent::unpackData(stream);
 
    UNPACKDATA_SOUNDASSET(Sound);
-   //sfxRead( stream, &soundProfile );
 
    UNPACKDATA_IMAGEASSET(Drop);
 
@@ -599,9 +597,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->mSoundAsset && mDataBlock->mSoundAsset->getSfxProfile() )
+      if ( mDataBlock->getSFXProfile())
       {
-         mAmbientSound = SFX->createSource(mDataBlock->mSoundAsset->getSfxProfile(), &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getSFXProfile(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

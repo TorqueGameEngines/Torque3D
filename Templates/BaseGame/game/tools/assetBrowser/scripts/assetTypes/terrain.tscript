@@ -79,7 +79,7 @@ function AssetBrowser::createTerrainAsset(%this)
       }
       else
       {
-         toolsMessageBox( "Import Terrain", 
+         MessageBox( "Import Terrain", 
             "Terrain import failed! Check console for error messages.", 
             "Ok", "Error" );
       }

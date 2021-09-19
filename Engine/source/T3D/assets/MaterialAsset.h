@@ -70,6 +70,12 @@ class MaterialAsset : public AssetBase
 public:
    static StringTableEntry smNoMaterialAssetFallback;
 
+   enum MaterialAssetErrCode
+   {
+      ScriptLoaded = AssetErrCode::Extended,
+      Extended
+   };
+
 public:
    MaterialAsset();
    virtual ~MaterialAsset();

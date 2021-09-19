@@ -90,7 +90,7 @@ public:
    void render( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
    ///
-   void setFile( String file );
+   void setFile(StringTableEntry file );
 
    /// Removes all children from this Prefab and puts them into a SimGroup
    /// which is added to the Scene and returned to the caller.

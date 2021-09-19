@@ -242,7 +242,7 @@ bool Prefab::protectedSetFile( void *object, const char *index, const char *data
    return false;
 }
 
-void Prefab::setFile( String file )
+void Prefab::setFile( StringTableEntry file )
 {  
    AssertFatal( isServerObject(), "Prefab-bad" );
 
@@ -257,7 +257,7 @@ void Prefab::setFile( String file )
    // be called for the client-side prefab but maybe the user did so accidentally.
    if ( isClientObject() )
    {
-      Con::errorf( "Prefab::setFile( %s ) - Should not be called on a client-side Prefab.", file.c_str() );
+      Con::errorf( "Prefab::setFile( %s ) - Should not be called on a client-side Prefab.", file );
       return;
    }
 

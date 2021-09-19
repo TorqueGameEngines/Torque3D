@@ -556,23 +556,49 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       %targetFilename = sanitizeFilename(%value);
       
       if(isObject(%targetFilename))
+      {
+         if(%originalFieldName $= "soundProfile")
          {
-         //likely a material name, so handle it that way
-         %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
+            $ProjectImporter::assetQuery.clear();
+            %foundAssets = AssetDatabase.findAssetName($ProjectImporter::assetQuery, %targetFilename);
+            if(%foundAssets != 0)
+            {
+               %assetId = $ProjectImporter::assetQuery.getAsset(0);  
+            }
+         }
+         else
+         {
+            //likely a material name, so handle it that way
+            %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
+         }
       }
       else
       {
          if(!isFile(%targetFilename))
-      {
-         error("Legacy Project Importer - file described in line could not be found/is not valid");
-         return %line;
-      }
-      
-      $ProjectImporter::assetQuery.clear();
-      %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
-      if(%foundAssets != 0)
-      {
-         %assetId = $ProjectImporter::assetQuery.getAsset(0);
+         {
+            if(%originalFieldName $= "soundProfile")
+            {
+               $ProjectImporter::assetQuery.clear();
+               %foundAssets = AssetDatabase.findAssetName($ProjectImporter::assetQuery, %targetFilename);
+               if(%foundAssets != 0)
+               {
+                  %assetId = $ProjectImporter::assetQuery.getAsset(0);  
+               }
+            }
+            else
+            {
+               error("Legacy Project Importer - file described in line could not be found/is not valid");
+               return %line;
+            }
+         }
+         else
+         {
+            $ProjectImporter::assetQuery.clear();
+            %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+            if(%foundAssets != 0)
+            {
+               %assetId = $ProjectImporter::assetQuery.getAsset(0);
+            }
          }
       }
      

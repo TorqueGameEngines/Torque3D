@@ -318,7 +318,7 @@ function EditorSaveMission()
             %terrFile = %file;
          }
          
-         if (!isWriteableFileName(%terrFile) && %bypass $= "")
+         if (!isWriteableFileName(%terrFile))
          {
             if (MessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
                continue;

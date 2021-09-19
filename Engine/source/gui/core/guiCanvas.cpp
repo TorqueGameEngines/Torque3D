@@ -258,17 +258,19 @@ bool GuiCanvas::onAdd()
    // Make sure we're able to render.
    newDevice->setAllowRender( true );
 
-   if(mDisplayWindow)
+   // NULL device returns a nullptr for getPlatformWindow
+   PlatformWindow* window = getPlatformWindow();
+   if (mDisplayWindow && window)
    {
-      getPlatformWindow()->show();
+      window->show();
       WindowManager->setDisplayWindow(true);
-      getPlatformWindow()->setDisplayWindow(true);
+      window->setDisplayWindow(true);
    }
-   else
+   else if (window)
    {
-      getPlatformWindow()->hide();
+      window->hide();
       WindowManager->setDisplayWindow(false);
-      getPlatformWindow()->setDisplayWindow(false);
+      window->setDisplayWindow(false);
    }
 
    // Propagate add to parents.

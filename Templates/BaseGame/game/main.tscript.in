@@ -1,10 +1,6 @@
 $Core::windowIcon = "data/icon.png";
 $Core::splashWindowImage = "data/splash.png";
 
-// Display a splash window immediately to improve app responsiveness before
-// engine is initialized and main window created.
-displaySplashWindow($Core::splashWindowImage);
-
 // Console does something.
 setLogMode(6);
 
@@ -20,6 +16,13 @@ ModuleDatabase.setModuleExtension("module");
 ModuleDatabase.scanModules( "core", false );
 ModuleDatabase.LoadExplicit( "CoreModule" );
 
+// Display a splash window immediately to improve app responsiveness before
+// engine is initialized and main window created.
+if ($Server::Dedicated == false)
+    displaySplashWindow($Core::splashWindowImage);
+else
+    $Video::forceDisplayAdapter = -1;
+    
 //-----------------------------------------------------------------------------
 // Load any gameplay modules
 ModuleDatabase.scanModules( "data", false );
@@ -42,6 +45,7 @@ else
    }
 }
 
-closeSplashWindow();
+if ($Server::Dedicated == false)
+    closeSplashWindow();
 
 echo("Engine initialized...");

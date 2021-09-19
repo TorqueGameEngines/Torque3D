@@ -933,7 +933,7 @@ void GFXGLDevice::setupGenericShaders( GenericShaderType type )
 }
 GFXShader* GFXGLDevice::createShader()
 {
-   GFXGLShader* shader = new GFXGLShader();
+   GFXGLShader* shader = new GFXGLShader(this);
    shader->registerResourceWithDevice( this );
    return shader;
 }

@@ -382,10 +382,11 @@ void GFXGLShaderConstBuffer::onShaderReload( GFXGLShader *shader )
    mWasLost = true;
 }
 
-GFXGLShader::GFXGLShader() :
+GFXGLShader::GFXGLShader(GFXGLDevice* device) :
    mVertexShader(0),
    mPixelShader(0),
    mProgram(0),
+   mDevice(device),
    mConstBufferSize(0),
    mConstBuffer(NULL)
 {
@@ -706,7 +707,8 @@ void GFXGLShader::initHandles()
    dMemset(mConstBuffer, 0, mConstBufferSize);
    
    // Set our program so uniforms are assigned properly.
-   glUseProgram(mProgram);
+   mDevice->setShader(this, false);
+
    // Iterate through uniforms to set sampler numbers.
    for (HandleMap::Iterator iter = mHandles.begin(); iter != mHandles.end(); ++iter)
    {
@@ -723,7 +725,6 @@ void GFXGLShader::initHandles()
          dMemcpy(mConstBuffer + handle->mOffset, &handle->mSamplerNum, handle->getSize());
       }
    }
-   glUseProgram(0);
 
    //instancing
    if (!mInstancingFormat)
@@ -830,6 +831,7 @@ void GFXGLShader::setConstantsFromBuffer(GFXGLShaderConstBuffer* buffer)
          
       // Copy new value into our const buffer and set in GL.
       dMemcpy(mConstBuffer + handle->mOffset, buffer->mBuffer + handle->mOffset, handle->getSize());
+
       switch(handle->mDesc.constType)
       {
          case GFXSCT_Float:

@@ -459,9 +459,11 @@ function EditorGui::buildMenus(%this)
          Item[18] = "Explode Selected Prefab" TAB "" TAB "EditorExplodePrefab();";
          Item[19] = "-";
          Item[20] = "Take control of entity" TAB "" TAB "EditorTakeControlOfEntity();";
-         Item[21] = "-";
-         Item[22] = "Mount Selection A to B" TAB "" TAB "EditorMount();";
-         Item[23] = "Unmount Selected Object" TAB "" TAB "EditorUnmount();";
+         Item[21] = "Release control of entity" TAB "" TAB "EditorReleaseControlOfEntity();";
+
+         Item[22] = "-";
+         Item[23] = "Mount Selection A to B" TAB "" TAB "EditorMount();";
+         Item[24] = "Unmount Selected Object" TAB "" TAB "EditorUnmount();";
       };
    }
 }

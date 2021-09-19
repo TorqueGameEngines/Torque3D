@@ -169,7 +169,13 @@ void MaterialAsset::initializeAsset()
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
-      Con::executeFile(mScriptPath, false, false);
+   {
+      if (!Sim::findObject(mMatDefinitionName))
+         if (Con::executeFile(mScriptPath, false, false))
+            mLoadedState = ScriptLoaded;
+         else
+            mLoadedState = Failed;
+   }
 
    loadMaterial();
 }
@@ -179,7 +185,22 @@ void MaterialAsset::onAssetRefresh()
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
-      Con::executeFile(mScriptPath, false, false);
+   {
+      //Since we're refreshing, we can assume that the file we're executing WILL have an existing definition.
+      //But that definition, whatever it is, is the 'correct' one, so we enable the Replace Existing behavior
+      //when the engine encounters a named object conflict.
+      String redefineBehaviorPrev = Con::getVariable("$Con::redefineBehavior");
+      Con::setVariable("$Con::redefineBehavior", "replaceExisting");
+
+      if (Con::executeFile(mScriptPath, false, false))
+         mLoadedState = ScriptLoaded;
+      else
+         mLoadedState = Failed;
+
+      //And now that we've executed, switch back to the prior behavior
+      Con::setVariable("$Con::redefineBehavior", redefineBehaviorPrev.c_str());
+      
+   }
 
    loadMaterial();
 }
@@ -206,7 +227,7 @@ void MaterialAsset::loadMaterial()
    if (mMaterialDefinition)
       SAFE_DELETE(mMaterialDefinition);
 
-   if (mMatDefinitionName != StringTable->EmptyString())
+   if (mLoadedState == ScriptLoaded && mMatDefinitionName != StringTable->EmptyString())
    {
       Material* matDef;
       if (!Sim::findObject(mMatDefinitionName, matDef))

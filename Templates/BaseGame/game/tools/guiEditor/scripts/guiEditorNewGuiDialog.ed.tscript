@@ -81,7 +81,7 @@ function GuiEditorNewGuiDialog::onOK( %this )
 
    if( isObject( %name ) && %name.isMemberOfClass( "GuiControl" ) )
    {
-      if( toolsMessageBox( "Warning", "Replace the existing control '" @ %name @ "'?", "OkCancel", "Question" ) == $MROk )
+      if( MessageBox( "Warning", "Replace the existing control '" @ %name @ "'?", "OkCancel", "Question" ) == $MROk )
          %name.delete();
       else
          return;

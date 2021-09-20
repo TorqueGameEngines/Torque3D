@@ -453,12 +453,12 @@ Var* ShaderFeatureHLSL::addOutVpos( MultiLine *meta,
       outVpos = connectComp->getElement( RT_TEXCOORD );
       outVpos->setName( "outVpos" );
       outVpos->setStructName( "OUT" );
-      outVpos->setType( "float3" );
+      outVpos->setType( "float4" );
 
       Var *outPosition = (Var*) LangElement::find( "hpos" );
       AssertFatal( outPosition, "ShaderFeatureHLSL::addOutVpos - Didn't find the output position." );
 
-      meta->addStatement( new GenOp( "   @ = @.xyz;\r\n", outVpos, outPosition ) );
+      meta->addStatement( new GenOp( "   @ = @;\r\n", outVpos, outPosition ) );
    }
 
    return outVpos;

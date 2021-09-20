@@ -455,12 +455,12 @@ Var* ShaderFeatureGLSL::addOutVpos( MultiLine *meta,
       outVpos = connectComp->getElement( RT_TEXCOORD );
       outVpos->setName( "outVpos" );
       outVpos->setStructName( "OUT" );
-      outVpos->setType( "vec3" );
+      outVpos->setType( "vec4" );
 
       Var *outPosition = (Var*) LangElement::find( "gl_Position" );
       AssertFatal( outPosition, "ShaderFeatureGLSL::addOutVpos - Didn't find the output position." );
 
-      meta->addStatement( new GenOp( "   @ = @.xyz;\r\n", outVpos, outPosition ) );
+      meta->addStatement( new GenOp( "   @ = @;\r\n", outVpos, outPosition ) );
    }
 
    return outVpos;

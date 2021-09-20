@@ -67,8 +67,10 @@ ConsoleDocClass( Splash,
 //--------------------------------------------------------------------------
 SplashData::SplashData()
 {
-   soundProfile      = NULL;
-   soundProfileId    = 0;
+   //soundProfile      = NULL;
+   //soundProfileId    = 0;
+
+   INIT_SOUNDASSET(Sound);
 
    scale.set(1, 1, 1);
 
@@ -112,7 +114,8 @@ SplashData::SplashData()
 //--------------------------------------------------------------------------
    void SplashData::initPersistFields()
 {
-   addField("soundProfile",      TYPEID< SFXProfile >(),       Offset(soundProfile,       SplashData), "SFXProfile effect to play.\n");
+   INITPERSISTFIELD_SOUNDASSET(Sound, SplashData, "Sound to play when splash, splashes.");
+
    addField("scale",             TypePoint3F,                  Offset(scale,              SplashData), "The scale of this splashing effect, defined as the F32 points X, Y, Z.\n");
    addField("emitter",           TYPEID< ParticleEmitterData >(),   Offset(emitterList,        SplashData), NUM_EMITTERS, "List of particle emitters to create at the point of this Splash effect.\n");
    addField("delayMS",           TypeS32,                      Offset(delayMS,            SplashData), "Time to delay, in milliseconds, before actually starting this effect.\n");
@@ -157,6 +160,8 @@ bool SplashData::onAdd()
 void SplashData::packData(BitStream* stream)
 {
    Parent::packData(stream);
+
+   PACKDATA_SOUNDASSET(Sound);
 
    mathWrite(*stream, scale);
    stream->write(delayMS);
@@ -212,6 +217,8 @@ void SplashData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
+   UNPACKDATA_SOUNDASSET(Sound);
+
    mathRead(*stream, &scale);
    stream->read(&delayMS);
    stream->read(&delayVariance);
@@ -265,6 +272,9 @@ void SplashData::unpackData(BitStream* stream)
 bool SplashData::preload(bool server, String &errorStr)
 {
    if (Parent::preload(server, errorStr) == false)
+      return false;
+
+   if (!server && !getSFXProfile())
       return false;
 
    if (!server)
@@ -666,6 +676,14 @@ void Splash::updateRing( SplashRing& ring, F32 dt )
 void Splash::spawnExplosion()
 {
    if( !mDataBlock->explosion ) return;
+
+   /// could just play the explosion one, but explosion could be weapon specific,
+   /// splash sound could be liquid specific. food for thought.
+   SFXProfile* sound_prof = dynamic_cast<SFXProfile*>(mDataBlock->getSFXProfile());
+   if (sound_prof)
+   {
+      SFX->playOnce(sound_prof, &getTransform());
+   }
 
    Explosion* pExplosion = new Explosion;
    pExplosion->onNewDataBlock(mDataBlock->explosion, false);

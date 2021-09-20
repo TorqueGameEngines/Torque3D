@@ -34,6 +34,7 @@
 #include "gfx/gfxTextureHandle.h"
 
 #include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/SoundAsset.h"
 
 class ParticleEmitter;
 class ParticleEmitterData;
@@ -91,8 +92,19 @@ class SplashData : public GameBaseData
    };
 
 public:
-   AudioProfile*           soundProfile;
-   S32                     soundProfileId;
+   //AudioProfile*           soundProfile;
+   //S32                     soundProfileId;
+
+   DECLARE_SOUNDASSET(SplashData, Sound);
+   DECLARE_SOUNDASSET_SETGET(SplashData, Sound);
+
+   /// this should probably be added as a function higher up to stop repeats.
+   SFXProfile* getSFXProfile() {
+      if (mSoundAsset.notNull())
+         return mSoundAsset->getSfxProfile();
+      else
+         return NULL;
+   }
 
    ParticleEmitterData*    emitterList[NUM_EMITTERS];
    S32                     emitterIDList[NUM_EMITTERS];

@@ -238,7 +238,7 @@ void LightningStrikeEvent::process(NetConnection*)
 //
 LightningData::LightningData()
 {
-   strikeSound = NULL;
+   INIT_SOUNDASSET(StrikeSound);
 
    for (S32 i = 0; i < MaxThunders; i++)
       thunderSounds[i] = NULL;
@@ -260,8 +260,9 @@ LightningData::~LightningData()
 //--------------------------------------------------------------------------
 void LightningData::initPersistFields()
 {
-   addField( "strikeSound", TYPEID< SFXTrack >(), Offset(strikeSound, LightningData),
-      "Sound profile to play when a lightning strike occurs." );
+
+   INITPERSISTFIELD_SOUNDASSET(StrikeSound, LightningData, "Sound to play when lightning STRIKES!");
+
    addField( "thunderSounds", TYPEID< SFXTrack >(), Offset(thunderSounds, LightningData), MaxThunders,
       "@brief List of thunder sound effects to play.\n\n"
       "A random one of these sounds will be played shortly after each strike "
@@ -302,8 +303,8 @@ bool LightningData::preload(bool server, String &errorStr)
             Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid packet: %s", sfxErrorStr.c_str());
       }
 
-      if( !sfxResolve( &strikeSound, sfxErrorStr ) )
-         Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid packet: %s", sfxErrorStr.c_str());
+      if(!getSFXProfile())
+         Con::errorf(ConsoleLogEntry::General, "LightningData::preload: can't get sfxProfile from asset");
 
       mNumStrikeTextures = 0;
       for (U32 i = 0; i < MaxTextures; i++) 
@@ -338,7 +339,7 @@ void LightningData::packData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       stream->writeString(strikeTextureNames[i]);
 
-   sfxWrite( stream, strikeSound );
+   PACKDATA_SOUNDASSET(StrikeSound);
 }
 
 void LightningData::unpackData(BitStream* stream)
@@ -359,7 +360,7 @@ void LightningData::unpackData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       strikeTextureNames[i] = stream->readSTString();
 
-   sfxRead( stream, &strikeSound );
+   UNPACKDATA_SOUNDASSET(StrikeSound);
 }
 
 
@@ -735,9 +736,9 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
       MatrixF trans(true);
       trans.setPosition( strikePoint );
 
-      if (mDataBlock->strikeSound)
+      if (mDataBlock->getSFXProfile())
       {
-         SFX->playOnce(mDataBlock->strikeSound, &trans );
+         SFX->playOnce(mDataBlock->getSFXProfile(), &trans );
       }
 
 }

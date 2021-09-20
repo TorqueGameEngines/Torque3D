@@ -300,10 +300,21 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
+      {
          if (mBodySounds[i])
          {
             _setBodySounds(getBodySounds(i), i);
          }
+      }
+
+      for (S32 j = 0; j < Sounds::MaxSounds; j++)
+      {
+         if (mWaterSounds[j])
+         {
+            _setWaterSounds(getWaterSounds(j), j);
+         }
+      }
+
    }
 
    if( !dustEmitter && dustID != 0 )

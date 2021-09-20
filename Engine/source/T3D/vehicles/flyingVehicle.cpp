@@ -131,11 +131,12 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
+      {
          if (mFlyingSounds[i])
          {
             _setFlyingSounds(getFlyingSounds(i), i);
          }
-
+      }
       for (S32 j = 0; j < MaxJetEmitters; j++)
          if (jetEmitter[j])
             Sim::findObject(SimObjectId((uintptr_t)jetEmitter[j]),jetEmitter[j]);

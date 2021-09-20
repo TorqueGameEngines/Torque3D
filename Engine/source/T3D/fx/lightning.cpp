@@ -289,18 +289,18 @@ bool LightningData::preload(bool server, String &errorStr)
 
    //dQsort(thunderSounds, MaxThunders, sizeof(SFXTrack*), cmpSounds);
 
-   for (S32 i = 0; i < MaxThunders; i++) {
-      if (mThunderSound[i])
-      {
-         _setThunderSound(getThunderSound(i), i);
-      }
-   }
-
+   
    if (server == false) 
    {
-      String sfxErrorStr;
-      for (U32 i = 0; i < MaxThunders; i++) {
-         if (!getThunderProfile(i))
+      for (S32 i = 0; i < MaxThunders; i++) {
+         if (mThunderSound[i])
+         {
+            _setThunderSound(getThunderSound(i), i);
+         }
+      }
+
+      for (U32 j = 0; j < MaxThunders; j++) {
+         if (!getThunderProfile(j))
             Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Cant get an sfxProfile for thunder.");
       }
 
@@ -308,11 +308,11 @@ bool LightningData::preload(bool server, String &errorStr)
          Con::errorf(ConsoleLogEntry::General, "LightningData::preload: can't get sfxProfile from asset");
 
       mNumStrikeTextures = 0;
-      for (U32 i = 0; i < MaxTextures; i++) 
+      for (U32 k = 0; k < MaxTextures; k++) 
       {
-         if (strikeTextureNames[i][0])
+         if (strikeTextureNames[k][0])
          {
-            strikeTextures[i] = GFXTexHandle(strikeTextureNames[i], &GFXStaticTextureProfile, avar("%s() - strikeTextures[%d] (line %d)", __FUNCTION__, i, __LINE__));
+            strikeTextures[k] = GFXTexHandle(strikeTextureNames[i], &GFXStaticTextureProfile, avar("%s() - strikeTextures[%d] (line %d)", __FUNCTION__, k, __LINE__));
             mNumStrikeTextures++;
          }
       }

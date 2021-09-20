@@ -305,6 +305,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
    // Resolve objects transmitted from server
    if (!server) {
+
       for (S32 i = 0; i < MaxSounds; i++)
          if (mHoverSounds[i])
          {

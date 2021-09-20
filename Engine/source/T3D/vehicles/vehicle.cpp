@@ -218,10 +218,20 @@ bool VehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
+      {
          if (mVehicleBodySounds[i])
          {
             _setVehicleBodySounds(getVehicleBodySounds(i), i);
          }
+      }
+
+      for (S32 j = 0; j < Sounds::MaxSounds; j++)
+      {
+         if (mVehicleWaterSounds[j])
+         {
+            _setVehicleWaterSounds(getVehicleWaterSounds(j), j);
+         }
+      }
    }
 
    if( !dustEmitter && dustID != 0 )

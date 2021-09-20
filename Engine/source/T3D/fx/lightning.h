@@ -63,7 +63,10 @@ class LightningData : public GameBaseData
 
    //-------------------------------------- Console set variables
   public:
-   SFXTrack*          thunderSounds[MaxThunders];
+   //SFXTrack*          thunderSounds[MaxThunders];
+
+   DECLARE_SOUNDASSET_ARRAY(LightningData, ThunderSound, MaxThunders);
+   DECLARE_SOUNDASSET_ARRAY_SETGET(LightningData, ThunderSound);
 
    DECLARE_SOUNDASSET(LightningData, StrikeSound);
    DECLARE_SOUNDASSET_SETGET(LightningData, StrikeSound);
@@ -90,6 +93,14 @@ class LightningData : public GameBaseData
 
    DECLARE_CONOBJECT(LightningData);
    static void initPersistFields();
+
+   SFXProfile* getThunderProfile(U32 id)
+   {
+      if (mThunderSoundAsset[id] != NULL)
+         return mThunderSoundAsset[id]->getSfxProfile();
+      else
+         return NULL;
+   }
 
    SFXProfile* getSFXProfile() {
       if (mStrikeSoundAsset.notNull())

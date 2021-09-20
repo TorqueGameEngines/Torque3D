@@ -107,6 +107,7 @@ ConsoleSetType(TypeSoundAssetId)
 //-----------------------------------------------------------------------------
 
 SoundAsset::SoundAsset()
+   : AssetBase()
 {
    mSoundFile = StringTable->EmptyString();
    mSoundPath = StringTable->EmptyString();

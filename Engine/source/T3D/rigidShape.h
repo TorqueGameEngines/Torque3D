@@ -70,8 +70,8 @@ class RigidShapeData : public ShapeBaseData
    {
       if (mBodySoundsAsset[id] != NULL)
          return mBodySoundsAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    enum RigidShapeConsts
@@ -98,8 +98,8 @@ class RigidShapeData : public ShapeBaseData
    {
       if (mWaterSoundsAsset[id] != NULL)
          return mWaterSoundsAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    F32 exitSplashSoundVel;

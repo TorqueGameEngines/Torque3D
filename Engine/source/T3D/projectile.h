@@ -118,11 +118,12 @@ public:
 
    DECLARE_SOUNDASSET(ProjectileData, ProjectileSound);
    DECLARE_SOUNDASSET_SETGET(ProjectileData, ProjectileSound);
+
    SFXProfile* getSFXProfile() {
       if (mProjectileSoundAsset.notNull())
          return mProjectileSoundAsset->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
    
    LightDescription *lightDesc;

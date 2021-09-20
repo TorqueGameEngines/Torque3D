@@ -52,8 +52,8 @@ class HoverVehicleData : public VehicleData
    {
       if (mHoverSoundsAsset[id] != NULL)
          return mHoverSoundsAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    enum Jets {

@@ -125,8 +125,8 @@ struct WheeledVehicleData: public VehicleData
    {
       if (mWheeledVehicleSoundsAsset[id] != NULL)
          return mWheeledVehicleSoundsAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
 

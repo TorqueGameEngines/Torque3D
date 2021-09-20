@@ -97,7 +97,9 @@ SplashData::SplashData()
 
    U32 i;
    for (i = 0; i < NUM_TEX; i++)
+   {
       INIT_IMAGEASSET_ARRAY(Texture, i);
+   }
 
    for( i=0; i<NUM_TIME_KEYS; i++ )
       times[i] = 1.0;
@@ -679,7 +681,7 @@ void Splash::spawnExplosion()
 
    /// could just play the explosion one, but explosion could be weapon specific,
    /// splash sound could be liquid specific. food for thought.
-   SFXProfile* sound_prof = dynamic_cast<SFXProfile*>(mDataBlock->getSFXProfile());
+   SFXProfile* sound_prof = mDataBlock->getSFXProfile();
    if (sound_prof)
    {
       SFX->playOnce(sound_prof, &getTransform());

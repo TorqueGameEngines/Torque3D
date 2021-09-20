@@ -75,8 +75,8 @@ class PrecipitationData : public GameBaseData
       SFXProfile* getSFXProfile() {
          if (mSoundAsset.notNull())
             return mSoundAsset->getSfxProfile();
-         else
-            return NULL;
+
+         return NULL;
       }
 };
 

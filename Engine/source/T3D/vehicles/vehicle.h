@@ -56,8 +56,8 @@ struct VehicleData : public RigidShapeData
    {
       if (mVehicleBodySoundsAsset[id] != NULL)
          return mVehicleBodySoundsAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
 
@@ -88,8 +88,8 @@ struct VehicleData : public RigidShapeData
   {
      if (mVehicleWaterSoundsAsset[id] != NULL)
         return mVehicleWaterSoundsAsset[id]->getSfxProfile();
-     else
-        return NULL;
+
+     return NULL;
   }
 
    F32 exitSplashSoundVel;

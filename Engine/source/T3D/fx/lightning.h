@@ -97,15 +97,15 @@ class LightningData : public GameBaseData
    {
       if (mThunderSoundAsset[id] != NULL)
          return mThunderSoundAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    SFXProfile* getSFXProfile() {
       if (mStrikeSoundAsset.notNull())
          return mStrikeSoundAsset->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
 };

@@ -241,7 +241,9 @@ LightningData::LightningData()
    INIT_SOUNDASSET(StrikeSound);
 
    for (S32 i = 0; i < MaxThunders; i++)
+   {
       INIT_SOUNDASSET_ARRAY(ThunderSound, MaxThunders);
+   }
 
    for (S32 i = 0; i < MaxTextures; i++)
    {

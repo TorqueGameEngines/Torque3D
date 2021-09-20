@@ -102,8 +102,8 @@ public:
    SFXProfile* getSFXProfile() {
       if (mSoundAsset.notNull())
          return mSoundAsset->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    ParticleEmitterData*    emitterList[NUM_EMITTERS];

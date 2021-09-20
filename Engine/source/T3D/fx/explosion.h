@@ -76,8 +76,8 @@ class ExplosionData : public GameBaseData {
    SFXProfile* getSFXProfile() {
       if (mSoundAsset.notNull())
          return mSoundAsset->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    ParticleEmitterData* particleEmitter;

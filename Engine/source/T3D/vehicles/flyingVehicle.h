@@ -51,8 +51,8 @@ struct FlyingVehicleData: public VehicleData {
    {
       if (mFlyingSoundsAsset[id] != NULL)
          return mFlyingSoundsAsset[id]->getSfxProfile();
-      else
-         return NULL;
+
+      return NULL;
    }
 
    enum Jets {

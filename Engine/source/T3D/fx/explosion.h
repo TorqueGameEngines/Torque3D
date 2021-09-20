@@ -70,7 +70,6 @@ class ExplosionData : public GameBaseData {
    S32 particleDensity;
    F32 particleRadius;
 
-   //SFXTrack*        soundProfile;
    DECLARE_SOUNDASSET(ExplosionData, Sound);
    DECLARE_SOUNDASSET_SETGET(ExplosionData, Sound);
 

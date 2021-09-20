@@ -118,7 +118,17 @@ struct WheeledVehicleData: public VehicleData
       WheelImpactSound,
       MaxSounds,
    };
-   SFXTrack* sound[MaxSounds];
+   DECLARE_SOUNDASSET_ARRAY(WheeledVehicleData, WheeledVehicleSounds, Sounds::MaxSounds);
+   DECLARE_SOUNDASSET_ARRAY_SETGET(WheeledVehicleData, WheeledVehicleSounds);
+
+   SFXProfile* getWheeledVehicleSound(U32 id)
+   {
+      if (mWheeledVehicleSoundsAsset[id] != NULL)
+         return mWheeledVehicleSoundsAsset[id]->getSfxProfile();
+      else
+         return NULL;
+   }
+
 
    ParticleEmitterData* tireEmitter;
 

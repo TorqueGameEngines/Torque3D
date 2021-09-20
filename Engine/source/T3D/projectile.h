@@ -44,6 +44,7 @@
 #include "lighting/lightInfo.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
 #include "T3D/assets/ShapeAsset.h"
 
 class ExplosionData;
@@ -115,7 +116,14 @@ public:
    DecalData *decal;                   // (impact) Decal Datablock
    S32 decalId;                        // (impact) Decal ID
 
-   SFXTrack* sound;                    // Projectile Sound
+   DECLARE_SOUNDASSET(ProjectileData, ProjectileSound);
+   DECLARE_SOUNDASSET_SETGET(ProjectileData, ProjectileSound);
+   SFXProfile* getSFXProfile() {
+      if (mProjectileSoundAsset.notNull())
+         return mProjectileSoundAsset->getSfxProfile();
+      else
+         return NULL;
+   }
    
    LightDescription *lightDesc;
    S32 lightDescId;   

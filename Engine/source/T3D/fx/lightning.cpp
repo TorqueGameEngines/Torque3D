@@ -290,7 +290,7 @@ bool LightningData::preload(bool server, String &errorStr)
    //dQsort(thunderSounds, MaxThunders, sizeof(SFXTrack*), cmpSounds);
 
    for (S32 i = 0; i < MaxThunders; i++) {
-      if (mThunderSound[i] == NULL)
+      if (mThunderSound[i])
       {
          _setThunderSound(getThunderSound(i), i);
       }

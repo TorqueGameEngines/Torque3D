@@ -63,7 +63,6 @@ class LightningData : public GameBaseData
 
    //-------------------------------------- Console set variables
   public:
-   //SFXTrack*          thunderSounds[MaxThunders];
 
    DECLARE_SOUNDASSET_ARRAY(LightningData, ThunderSound, MaxThunders);
    DECLARE_SOUNDASSET_ARRAY_SETGET(LightningData, ThunderSound);

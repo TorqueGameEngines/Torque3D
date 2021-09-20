@@ -46,7 +46,6 @@ class PrecipitationData : public GameBaseData
    typedef GameBaseData Parent;
 
   public:
-   //SFXTrack*     soundProfile;
      DECLARE_SOUNDASSET(PrecipitationData, Sound);
      DECLARE_SOUNDASSET_SETGET(PrecipitationData, Sound);
 

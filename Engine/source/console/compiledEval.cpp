@@ -693,7 +693,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       // Do we want this code to execute using a new stack frame?
       if (setFrame < 0)
       {
-         gEvalState.pushFrame(NULL, NULL, 0);
+         // argc is the local count for eval
+         gEvalState.pushFrame(NULL, NULL, argc);
          gCallStack.pushFrame(0);
          popFrame = true;
       }

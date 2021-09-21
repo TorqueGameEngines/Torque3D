@@ -276,6 +276,35 @@ namespace Compiler
    void consoleAllocReset();
 
    extern bool gSyntaxError;
+   extern bool gIsEvalCompile;
+};
+
+class FuncVars
+{
+   struct Var
+   {
+      S32 reg;
+      TypeReq currentType;
+      StringTableEntry name;
+      bool isConstant;
+   };
+
+public:
+   S32 assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant = false);
+
+   S32 lookup(StringTableEntry var, S32 lineNumber);
+
+   TypeReq lookupType(StringTableEntry var, S32 lineNumber);
+   
+   inline S32 count() { return counter; }
+
+   std::unordered_map<S32, StringTableEntry> variableNameMap;
+
+   void clear();
+   
+private:
+   std::unordered_map<StringTableEntry, Var> vars;
+   S32 counter = 0;
 };
 
 /// Utility class to emit and patch bytecode

@@ -56,57 +56,7 @@ namespace Compiler
 
 using namespace Compiler;
 
-class FuncVars
-{
-   struct Var
-   {
-      S32 reg;
-      TypeReq currentType;
-      StringTableEntry name;
-      bool isConstant;
-   };
-
-public:
-   S32 assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant = false)
-   {
-      std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
-      if (found != vars.end())
-      {
-         AssertISV(!found->second.isConstant, avar("Reassigning variable %s when it is a constant. File: %s Line : %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
-         return found->second.reg;
-      }
-
-      S32 id = counter++;
-      vars[var] = { id, currentType, var, isConstant };
-      variableNameMap[id] = var;
-
-      return id;
-   }
-
-   S32 lookup(StringTableEntry var, S32 lineNumber)
-   {
-      std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
-      AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
-      return found->second.reg;
-   }
-
-   TypeReq lookupType(StringTableEntry var, S32 lineNumber)
-   {
-      std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
-
-      AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
-      return found->second.currentType;
-   }
-
-   inline S32 count() { return counter; }
-
-   std::unordered_map<S32, StringTableEntry> variableNameMap;
-
-private:
-   std::unordered_map<StringTableEntry, Var> vars;
-   S32 counter = 0;
-};
-
+FuncVars gEvalFuncVars;
 FuncVars* gFuncVars = NULL;
 
 inline FuncVars* getFuncVars(S32 lineNumber)
@@ -1602,7 +1552,8 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
       tbl->add(fnName, nameSpace, varName);
    }
 
-   gFuncVars = NULL;
+   // In eval mode, global func vars are allowed.
+   gFuncVars = gIsEvalCompile ? &gEvalFuncVars : NULL;
 
    return ip;
 }

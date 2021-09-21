@@ -34,6 +34,8 @@
 
 #include "console/simBase.h"
 
+extern FuncVars gEvalFuncVars;
+
 namespace Compiler
 {
 
@@ -86,6 +88,7 @@ namespace Compiler
    //------------------------------------------------------------
 
    bool gSyntaxError = false;
+   bool gIsEvalCompile = false;
 
    //------------------------------------------------------------
 
@@ -121,6 +124,7 @@ namespace Compiler
       getFunctionStringTable().reset();
       getIdentTable().reset();
       getFunctionVariableMappingTable().reset();
+      gEvalFuncVars.clear();
    }
 
    void *consoleAlloc(U32 size) { return gConsoleAllocator.alloc(size); }
@@ -131,6 +135,44 @@ namespace Compiler
 //-------------------------------------------------------------------------
 
 using namespace Compiler;
+
+S32 FuncVars::assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+   if (found != vars.end())
+   {
+      AssertISV(!found->second.isConstant, avar("Reassigning variable %s when it is a constant. File: %s Line : %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
+      return found->second.reg;
+   }
+
+   S32 id = counter++;
+   vars[var] = { id, currentType, var, isConstant };
+   variableNameMap[id] = var;
+
+   return id;
+}
+
+S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+   AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
+   return found->second.reg;
+}
+
+TypeReq FuncVars::lookupType(StringTableEntry var, S32 lineNumber)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+
+   AssertISV(found != vars.end(), avar("Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
+   return found->second.currentType;
+}
+
+void FuncVars::clear()
+{
+   vars.clear();
+   variableNameMap.clear();
+   counter = 0;
+}
 
 //-------------------------------------------------------------------------
 

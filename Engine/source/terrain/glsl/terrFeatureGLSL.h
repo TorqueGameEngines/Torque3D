@@ -174,7 +174,6 @@ public:
    virtual void processPix(Vector<ShaderComponent*> &componentList,
       const MaterialFeatureData &fd);
 
-   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
    virtual String getName() { return "Blank Matinfo map"; }
 };
 

@@ -304,29 +304,28 @@ void TerrainBaseMapFeatGLSL::processPix(  Vector<ShaderComponent*> &componentLis
    baseColor->setName( "baseColor" );
    meta->addStatement( new GenOp( "   @ = tex2D( @, @.xy );\r\n", new DecOp( baseColor ), diffuseMap, texCoord ) );
 
-  ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;
+   ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
+   meta->addStatement(new GenOp("   @;\r\n", assignColor(baseColor, Material::Mul, NULL, target)));
 
-   if(fd.features.hasFeature(MFT_isDeferred))
-   {
-      target= ShaderFeature::RenderTarget1;
-   }
-   meta->addStatement( new GenOp( "   @;\r\n", assignColor( baseColor, Material::Mul,NULL,target ) ) );
-
-   // Set base ORM info
    Var* ormConfig;
-   OutputTarget targ = RenderTarget1;
-   if (fd.features[MFT_isDeferred])
+   if ((fd.features[MFT_isDeferred]))
    {
-      targ = RenderTarget2;
+      // Set base ORM info
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(RenderTarget2));
+
+      if (!ormConfig)
+      {
+         // create color var
+         ormConfig = new Var;
+         ormConfig->setType("fragout");
+         ormConfig->setName(getOutputTargetVarName(RenderTarget2));
+         ormConfig->setStructName("OUT");
+      }
    }
-   ormConfig = (Var*)LangElement::find(getOutputTargetVarName(targ));
-   if (!ormConfig)
+   else
    {
-      // create color var
-      ormConfig = new Var;
-      ormConfig->setType("fragout");
-      ormConfig->setName(getOutputTargetVarName(targ));
-      ormConfig->setStructName("OUT");
+      ormConfig = new Var("ORMConfig", "float4");
+      meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
    }
 
    meta->addStatement(new GenOp("   @ = float4(0.0, 1.0, 1.0, 0.0);\r\n", ormConfig));
@@ -347,7 +346,7 @@ ShaderFeature::Resources TerrainBaseMapFeatGLSL::getResources( const MaterialFea
 
 U32 TerrainBaseMapFeatGLSL::getOutputTargets( const MaterialFeatureData &fd ) const
 {
-   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget1 | ShaderFeature::RenderTarget2 : ShaderFeature::DefaultTarget | ShaderFeature::RenderTarget1;
+   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 | ShaderFeature::RenderTarget1 : ShaderFeature::DefaultTarget;
 }
 
 TerrainDetailMapFeatGLSL::TerrainDetailMapFeatGLSL()
@@ -1167,35 +1166,42 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
 	else
 		texOp = new GenOp("tex2D(@, vec3(@.xy, @.x))", ormConfigMap, inDet, new IndexOp(detailInfo, compositeIndex));
 
-	// search for material var
-	Var * ormConfig;
-	OutputTarget targ = RenderTarget1;
-	if (fd.features[MFT_isDeferred])
-	{
-		targ = RenderTarget2;
-	}
-   ormConfig = (Var*)LangElement::find(getOutputTargetVarName(targ));
+   MultiLine* meta = new MultiLine;
+   // search for material var
+   Var* ormConfig;
+   if ((fd.features[MFT_isDeferred]))
+   {
+      // Set base ORM info
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(RenderTarget2));
 
-	MultiLine * meta = new MultiLine;
-	if (!ormConfig)
-	{
-		// create color var
-      ormConfig = new Var;
-      ormConfig->setType("fragout");
-      ormConfig->setName(getOutputTargetVarName(targ));
-      ormConfig->setStructName("OUT");
-	}
+      if (!ormConfig)
+      {
+         // create color var
+         ormConfig = new Var;
+         ormConfig->setType("fragout");
+         ormConfig->setName(getOutputTargetVarName(RenderTarget2));
+         ormConfig->setStructName("OUT");
+      }
+   }
+   else
+   {
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig)
+      {
+         ormConfig = new Var("ORMConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
+      }
+   }
+   if (compositeIndex == 0)
+   {
+      meta->addStatement(new GenOp("   @ = vec4(0.0, 0.0, 0.0, 0.0);\r\n", ormConfig));
+   }
 
 	Var *detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));
 	AssertFatal(detailBlend, "The detail blend is missing!");
 
 	String matinfoName(String::ToString("matinfoCol%d", compositeIndex));
 	Var *matinfoCol = new Var(matinfoName, "vec3");
-
-   if (compositeIndex == 0)
-   {
-      meta->addStatement(new GenOp("   @ = vec4(0.0, 0.0, 0.0, 0.0);\r\n", ormConfig));
-   }
 
    meta->addStatement(new GenOp("   @ = @.rgb;\r\n", new DecOp(matinfoCol), texOp));
 
@@ -1236,40 +1242,40 @@ ShaderFeature::Resources TerrainORMMapFeatGLSL::getResources(const MaterialFeatu
    return res;
 }
 
-
-U32 TerrainBlankInfoMapFeatGLSL::getOutputTargets(const MaterialFeatureData &fd) const
-{
-   return fd.features[MFT_isDeferred] ? ShaderFeature::RenderTarget2 : ShaderFeature::RenderTarget1;
-}
-
 // reminder, the matinfo buffer is flags, smooth, ao, metal
 void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
    const MaterialFeatureData &fd)
 {
    S32 compositeIndex = getProcessIndex();
 
-   // search for material var
-   Var *material;
-   OutputTarget targ = DefaultTarget;
-   if (fd.features[MFT_isDeferred])
+   MultiLine* meta = new MultiLine;   Var* ormConfig;
+   if ((fd.features[MFT_isDeferred]))
    {
-      targ = RenderTarget2;
-   }
-   material = (Var*)LangElement::find(getOutputTargetVarName(targ));
+      // Set base ORM info
+      ormConfig = (Var*)LangElement::find(getOutputTargetVarName(RenderTarget2));
 
-   MultiLine * meta = new MultiLine;
-   if (!material)
+      if (!ormConfig)
+      {
+         // create color var
+         ormConfig = new Var;
+         ormConfig->setType("fragout");
+         ormConfig->setName(getOutputTargetVarName(RenderTarget2));
+         ormConfig->setStructName("OUT");
+      }
+   }
+   else
    {
-      // create color var
-      material = new Var;
-      material->setType("vec4");
-      material->setName(getOutputTargetVarName(targ));
-      material->setStructName("OUT");
+      ormConfig = (Var*)LangElement::find("ORMConfig");
+      if (!ormConfig)
+      {
+         ormConfig = new Var("ORMConfig", "vec4");
+         meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
+      }
    }
 
    if (compositeIndex == 0)
    {
-      meta->addStatement(new GenOp("   @ = vec4(0.0, 0.0, 0.0, 0.0);\r\n", material));
+      meta->addStatement(new GenOp("   @ = float4(0.0, 0.0, 0.0, 0.0);\r\n", ormConfig));
    }
 
    Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));
@@ -1277,7 +1283,7 @@ void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
 
    String matinfoName(String::ToString("matinfoCol%d", compositeIndex));
 
-   meta->addStatement(new GenOp("   @.gba += vec3(@, @, 0.0);\r\n", material, detailBlend, detailBlend));
+   meta->addStatement(new GenOp("   @.gba += vec3(@, @, 0.0);\r\n", ormConfig, detailBlend, detailBlend));
 
    output = meta;
 }

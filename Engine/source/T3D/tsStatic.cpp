@@ -1675,10 +1675,6 @@ void TSStatic::onInspect(GuiInspector* inspector)
          {
             dSprintf(matFieldName, 128, "MaterialSlot%d", i);
 
-            //addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
-            //Con::executef(this, "onConstructComponentField", mTargetComponent, field->mFieldName);
-            Con::printf("Added material field for MaterialSlot %d", i);
-
             GuiInspectorField* fieldGui = materialGroup->constructField(TypeMaterialAssetPtr);
             fieldGui->init(inspector, materialGroup);
 

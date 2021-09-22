@@ -1826,7 +1826,10 @@ function EditorTree::update( %this )
 // Tooltip for TSStatic
 function EditorTree::GetTooltipTSStatic( %this, %obj )
 {
-   return "Shape: " @ %obj.shapeName;
+   %shapeName = %obj.shapeAsset;
+   if(%shapeName $= "")
+      %shapeName = %obj.getShape();
+   return "Shape: " @ %shapeName;
 }
 
 // Tooltip for ShapeBase
@@ -1862,7 +1865,10 @@ function EditorTree::GetTooltipPrefab( %this, %obj )
 // Tooltip for GroundCover
 function EditorTree::GetTooltipGroundCover( %this, %obj )
 {
-   %text = "Material: " @ %obj.material;
+   %matName = %obj.materialAsset;
+   if(%matName $= "")
+      %matName = %obj.getMaterial();
+   %text = "Material: " @ %matName;
    for(%i=0; %i<8; %i++)
    {
       if(%obj.probability[%i] > 0 && %obj.shapeFilename[%i] !$= "")

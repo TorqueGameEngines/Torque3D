@@ -618,7 +618,9 @@ function AssetBrowser::loadDirectories( %this )
    
    %dataItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "data");
    AssetBrowser-->filterTree.tagsIdx = AssetBrowser-->filterTree.insertItem(1, "Tags");
-   AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
+   
+   if(!%this.selectMode)
+      AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
    
    %this.dirHandler.loadFolders("data", %dataItem);
    

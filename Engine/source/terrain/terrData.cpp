@@ -1613,3 +1613,15 @@ void TerrainBlock::deleteZodiacPrimitiveBuffer()
    }
 }
 
+DefineEngineMethod(TerrainBlock, getTerrain, String, (), , "Returns the terrain file used for this terrain block, either via the asset or the filename assigned, which ever is valid")
+{
+   return object->getTerrain(); 
+}
+DefineEngineMethod(TerrainBlock, getTerrainAsset, String, (), , "Returns the assetId used for this terrain block")
+{
+   return object->getTerrainAssetId();
+}
+DefineEngineMethod(TerrainBlock, setTerrain, bool, (const char* terrain), , "Terrain assignment.first tries asset then flat file.")
+{
+   return object->_setTerrain(StringTable->insert(terrain));
+}

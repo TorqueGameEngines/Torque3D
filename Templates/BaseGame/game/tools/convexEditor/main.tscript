@@ -145,7 +145,6 @@ function ConvexEditorPlugin::onDeactivated( %this )
 
    ConvexEditorTreeWindow.setVisible( false );
    ConvexEditorOptionsWindow.setVisible( false );
-   ConvexEditorToolbar.setVisible( false );
    %this.map.pop();
    
    // Remove our menu.

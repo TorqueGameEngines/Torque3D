@@ -79,4 +79,4 @@ GlobalActionMap.bind(keyboard, "tilde", toggleConsole);
 
 EditorMap.bind( mouse, "alt zaxis", editorWheelFadeScroll );
 
-EditorMap.bindCmd( keyboard, space, "", "AssetBrowser.toggleDialog();" );
+EditorMap.bindCmd( keyboard, "shift space", "", "AssetBrowser.toggleDialog();" );

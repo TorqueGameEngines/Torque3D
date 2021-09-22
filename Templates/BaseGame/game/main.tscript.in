@@ -19,9 +19,14 @@ ModuleDatabase.LoadExplicit( "CoreModule" );
 // Display a splash window immediately to improve app responsiveness before
 // engine is initialized and main window created.
 if ($Server::Dedicated == false)
-    displaySplashWindow($Core::splashWindowImage);
+{
+    if ($platform $= "windows")
+       displaySplashWindow($Core::splashWindowImage);
+}
 else
+{
     $Video::forceDisplayAdapter = -1;
+}
     
 //-----------------------------------------------------------------------------
 // Load any gameplay modules
@@ -45,7 +50,7 @@ else
    }
 }
 
-if ($Server::Dedicated == false)
+if ( ($Server::Dedicated == false) && ($platform $= "windows") )
     closeSplashWindow();
 
 echo("Engine initialized...");

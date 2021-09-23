@@ -2090,12 +2090,15 @@ void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
 		
       return;
    }
-		
+	
+   addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
+   getOutWorldToTangent(componentList, meta, fd);
+   
+   output = meta;
+   
    // Find the incoming vertex normal.
    Var *inNormal = (Var*)LangElement::find( "normal" );   
-	
-   // Skip out on realtime lighting if we don't have a normal
-   // or we're doing some sort of baked lighting.
+
    if (  !inNormal || 
          fd.features[MFT_LightMap] || 
          fd.features[MFT_ToneMap] || 
@@ -2119,11 +2122,6 @@ void RTLightingFeatGLSL::processVert(  Vector<ShaderComponent*> &componentList,
       meta->addStatement( new GenOp( "   @ = tMul( @, vec4( normalize( @ ), 0.0 ) ).xyz;\r\n", outNormal, objTrans, inNormal ) );
    }*/
 
-	addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
-
-   getOutWorldToTangent(componentList, meta, fd);
-	
-   output = meta;
 }
 
 void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList, 

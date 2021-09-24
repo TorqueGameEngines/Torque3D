@@ -786,6 +786,8 @@ bool Projectile::onAdd()
       // If we're on the server, we need to inherit some of our parent's velocity
       //
       mCurrTick = 0;
+
+      scriptOnAdd();
    }
    else
    {

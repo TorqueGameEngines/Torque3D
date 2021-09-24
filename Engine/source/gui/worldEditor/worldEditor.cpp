@@ -461,7 +461,9 @@ bool WorldEditor::pasteSelection( bool dropSel )
    SimGroup *targetGroup = NULL;   
    if( isMethod( "getNewObjectGroup" ) )
    {
-      const char* targetGroupName = Con::executef( this, "getNewObjectGroup" );
+      ConsoleValue cValue = Con::executef( this, "getNewObjectGroup" );
+      const char* targetGroupName = cValue.getString();
+
       if( targetGroupName && targetGroupName[ 0 ] && !Sim::findObject( targetGroupName, targetGroup) )
          Con::errorf( "WorldEditor::pasteSelection() - no SimGroup called '%s'", targetGroupName );
    }

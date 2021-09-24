@@ -227,7 +227,7 @@ function EWCreatorWindow::createObject( %this, %cmd )
       %this.setNewObjectGroup( getScene(0) );
 
    pushInstantGroup();
-   %objId = eval(%cmd);
+   %objId = eval("return " @ %cmd);
    popInstantGroup();
    
    if( isObject( %objId ) )

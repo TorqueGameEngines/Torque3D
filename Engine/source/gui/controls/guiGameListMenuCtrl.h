@@ -37,6 +37,18 @@ public:
    typedef GuiGameListMenuProfile Profile;
 
 protected:
+
+   /// \struct OptionEntry
+   /// Display text and ID key for each entry in an option row.
+   struct OptionEntry
+   {
+      StringTableEntry mDisplayText;   ///< The text that is displayed for the option
+      StringTableEntry mKeyString;     ///< Key value that is associated with this option
+      OptionEntry() : mDisplayText(StringTable->EmptyString()), mKeyString(StringTable->EmptyString()) {}
+      virtual ~OptionEntry() {}
+   };
+
+
    /// \struct Row
    /// Internal data representation of a single row in the control.
    struct Row
@@ -60,7 +72,7 @@ protected:
       Mode mMode;
 
       //List options
-      Vector<StringTableEntry>   mOptions;         ///< Collection of options available to display
+      Vector<OptionEntry>        mOptions;         ///< Collection of options available to display
       S32                        mSelectedOption;  ///< Index into mOptions pointing at the selected option
       bool                       mWrapOptions;     ///< Determines if options should "wrap around" at the ends
 
@@ -174,19 +186,57 @@ public:
    /// string is returned.
    StringTableEntry getCurrentOption(S32 rowIndex) const;
 
+   /// Gets the key string for the currently selected option of the given row
+   ///
+   /// \param rowIndex Index of the row to get the option from.
+   /// \return The key (or id) that was assigned to the selected option on the
+   ///  given row. If there is no selected option then the empty string is returned.
+   StringTableEntry getCurrentOptionKey(S32 rowIndex) const;
+
+   /// Gets the index into the option list for the currently selected option of the given row.
+   ///
+   /// \param rowIndex Index of the row to get the option from.
+   /// \return The index of the selected option on the given row. If there is no
+   /// selected option then -1 is returned.
+   S32 getCurrentOptionIndex(S32 rowIndex) const;
+
    /// Attempts to set the given row to the specified selected option. The option
    /// will only be set if the option exists in the control.
    ///
    /// \param rowIndex Index of the row to set an option on.
    /// \param option The option to be made active.
    /// \return True if the row contained the option and was set, false otherwise.
-   bool selectOption(S32 rowIndex, StringTableEntry option);
+   bool selectOption(S32 rowIndex, const char* option);
+
+   /// Attempts to set the given row to the option with the specified key. The
+   /// option will only be set if the key exists in the control.
+   ///
+   /// \param rowIndex Index of the row to set an option on.
+   /// \param optionKey The key string that was assigned to the option to be made active.
+   /// \return True if the row contained the key and the option and was set, false otherwise.
+   bool selectOptionByKey(S32 rowIndex, const char* optionKey);
+
+   /// Attempts to set the given row to the option at the specified index. The option
+   /// will only be set if the index is valid.
+   ///
+   /// \param rowIndex Index of the row to set an option on.
+   /// \param optionIndex The index of the option to be made active.
+   /// \return True if the index was valid and the option and was set, false otherwise.
+   bool selectOptionByIndex(S32 rowIndex, S32 optionIndex);
 
    /// Sets the list of options on the given row.
    ///
    /// \param rowIndex Index of the row to set options on.
    /// \param optionsList A tab separated list of options for the control.
    void setOptions(S32 rowIndex, const char* optionsList);
+
+   /// Adds an option to the list of options on the given row.
+   ///
+   /// \param rowIndex Index of the row to set options on.
+   /// \param displayText The text to display for this option.
+   /// \param keyText The id string to associate with this value. If NULL the
+   ///  id will be the same as the display text.
+   void addOption(S32 rowIndex, const char* displayText, const char* keyText);
 
    /// Activates the current row. The script callback of  the current row will
    /// be called (if it has one).

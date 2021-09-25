@@ -121,7 +121,6 @@ IMPLEMENT_CALLBACK( ScriptMsgListener, onMessageReceived, bool, ( const char* qu
 bool ScriptMsgListener::onMessageReceived(StringTableEntry queue, const char* event, const char* data)
 {
 	return onMessageReceived_callback(queue, event, data);
-   //return dAtob(Con::executef(this, "onMessageReceived", queue, event, data));
 }
 
 IMPLEMENT_CALLBACK( ScriptMsgListener, onMessageObjectReceived, bool, ( const char* queue, Message *msg ), ( queue, msg ),
@@ -135,7 +134,6 @@ IMPLEMENT_CALLBACK( ScriptMsgListener, onMessageObjectReceived, bool, ( const ch
 bool ScriptMsgListener::onMessageObjectReceived(StringTableEntry queue, Message *msg)
 {
 	return onMessageObjectReceived_callback(queue, msg);
-   //return dAtob(Con::executef(this, "onMessageObjectReceived", queue, Con::getIntArg(msg->getId())));
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +148,6 @@ IMPLEMENT_CALLBACK( ScriptMsgListener, onAddToQueue, void, ( const char* queue),
 
 void ScriptMsgListener::onAddToQueue(StringTableEntry queue)
 {
-   //Con::executef(this, "onAddToQueue", queue);
    onAddToQueue_callback(queue);
    IMLParent::onAddToQueue(queue);
 }
@@ -176,7 +173,6 @@ IMPLEMENT_CALLBACK( ScriptMsgListener, onRemoveFromQueue, void, ( const char* qu
 
 void ScriptMsgListener::onRemoveFromQueue(StringTableEntry queue)
 {
-   //Con::executef(this, "onRemoveFromQueue", queue);
    onRemoveFromQueue_callback(queue);
    IMLParent::onRemoveFromQueue(queue);
 }

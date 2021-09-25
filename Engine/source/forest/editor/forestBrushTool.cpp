@@ -588,7 +588,8 @@ void ForestBrushTool::_collectElements()
    if ( !Sim::findObject( "ForestEditBrushTree", brushTree ) )
       return;
       
-   const char* objectIdList = Con::executef( brushTree, "getSelectedObjectList" );
+   ConsoleValue cValue = Con::executef( brushTree, "getSelectedObjectList" );
+   const char* objectIdList = cValue.getString();
 
    // Collect those objects in a vector and mark them as selected.
 

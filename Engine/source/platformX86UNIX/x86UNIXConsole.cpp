@@ -41,7 +41,10 @@ StdConsole *stdConsole = NULL;
 DefineEngineFunction(enableWinConsole, void, (bool _enable),, "enableWinConsole(bool);")
 {
    if (stdConsole)
-      stdConsole->enable(_enable);
+   {
+       stdConsole->enable(_enable);
+       stdConsole->enableInput(_enable);
+   }
 }
 
 void StdConsole::create()
@@ -141,6 +144,9 @@ StdConsole::StdConsole()
    stdIn  = dup(0);
    stdErr = dup(2);
 
+   // Ensure in buffer is null terminated after allocation
+   inbuf[0] = 0x00;
+
    iCmdIndex = 0;
    stdConsoleEnabled = false;
    stdConsoleInputEnabled = false;
@@ -195,11 +201,14 @@ void StdConsole::processConsoleLine(const char *consoleLine)
 {
    if(stdConsoleEnabled)
    {
-      inbuf[inpos] = 0;
       if(lineOutput)
          printf("%s\n", consoleLine);
       else
-         printf("%c%s\n%s%s", '\r', consoleLine, Con::getVariable("Con::Prompt"), inbuf);
+      {
+          // Clear current line before outputting the console line. This prevents prompt text from overflowing onto normal output.
+          printf("%c[2K", 27);
+          printf("%c%s\n%s%s", '\r', consoleLine, Con::getVariable("Con::Prompt"), inbuf);
+      }
    }
 }
 
@@ -323,6 +332,7 @@ void StdConsole::process()
 
                   printf("%s", Con::getVariable("Con::Prompt"));
                   inpos = outpos = 0;
+                  inbuf[0] = 0x00; // Ensure inbuf is NULL terminated after sending out command
                   break;
             case 27:
                // JMQTODO: are these magic numbers keyboard map specific?

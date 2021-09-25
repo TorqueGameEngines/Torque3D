@@ -4,6 +4,11 @@
 
 function inputTest::create( %this )
 {
+   // If addToMainMenu is true, a button to display the input monitor will be
+   // added to the MainMenu gui. If false, you will need to call
+   // "$GameCanvas.pushDialog(InputMonitorDlg);" from the console or add a
+   // shortcut somewhere else to access the Input Event Monitor.
+   %this.addToMainMenu = true;
 }
 
 function inputTest::destroy( %this )
@@ -13,12 +18,12 @@ function inputTest::destroy( %this )
 
 function inputTest::initClient( %this )
 {
-   %this.queueExec("/scripts/customProfiles." @ $TorqueScriptFileExtension);
-   %this.queueExec("/scripts/inputMonitor." @ $TorqueScriptFileExtension);
-   %this.queueExec("/scripts/gui/inputMonitor.gui");
-   %this.queueExec("/scripts/joystickSettings." @ $TorqueScriptFileExtension);
-   %this.queueExec("/scripts/gui/joystickSettings.gui");
-   %this.queueExec("/scripts/menuButtons." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/customProfiles." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/inputMonitor." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/gui/inputMonitor.gui");
+   %this.queueExec("./scripts/joystickSettings." @ $TorqueScriptFileExtension);
+   %this.queueExec("./scripts/gui/joystickSettings.gui");
+   %this.queueExec("./scripts/menuButtons." @ $TorqueScriptFileExtension);
 }
 
 function onSDLDeviceConnected(%sdlIndex, %deviceName, %deviceType)

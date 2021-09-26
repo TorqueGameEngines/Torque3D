@@ -242,7 +242,7 @@ LightningData::LightningData()
 
    for (S32 i = 0; i < MaxThunders; i++)
    {
-      INIT_SOUNDASSET_ARRAY(ThunderSound, MaxThunders);
+      INIT_SOUNDASSET_ARRAY(ThunderSound, i);
    }
 
    for (S32 i = 0; i < MaxTextures; i++)
@@ -295,7 +295,7 @@ bool LightningData::preload(bool server, String &errorStr)
    if (server == false) 
    {
       for (S32 i = 0; i < MaxThunders; i++) {
-         if (mThunderSound[i])
+         if (getThunderSound(i))
          {
             _setThunderSound(getThunderSound(i), i);
          }
@@ -314,7 +314,7 @@ bool LightningData::preload(bool server, String &errorStr)
       {
          if (strikeTextureNames[k][0])
          {
-            strikeTextures[k] = GFXTexHandle(strikeTextureNames[i], &GFXStaticTextureProfile, avar("%s() - strikeTextures[%d] (line %d)", __FUNCTION__, k, __LINE__));
+            strikeTextures[k] = GFXTexHandle(strikeTextureNames[k], &GFXStaticTextureProfile, avar("%s() - strikeTextures[%d] (line %d)", __FUNCTION__, k, __LINE__));
             mNumStrikeTextures++;
          }
       }

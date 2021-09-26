@@ -845,6 +845,7 @@ T3Dpre4ProjectImporter::genProcessor("afxModelData", "shapeName shapeAsset shape
 T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("afxZodiacPlaneData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("sfxEmitter", "track soundAsset filename soundAsset");
+T3Dpre4ProjectImporter::genProcessor("LightningData", "thunderSounds ThunderSoundAsset strikeSound StrikeSoundAsset");
 //==============================================================================
 // Levels
 //==============================================================================

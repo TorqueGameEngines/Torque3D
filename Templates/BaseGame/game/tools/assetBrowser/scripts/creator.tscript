@@ -47,7 +47,7 @@ function AssetBrowser::loadCreatorClasses(%this)
       %this.addCreatorClass("LevelInfo",    "Level Info" );
       %this.addCreatorClass("Marker",       "Path Node" );
       %this.addCreatorClass("MissionArea",  "Mission Area" );
-      %this.addCreatorClass("Note",         "Note" );
+      %this.addCreatorClass("NotesObject",         "Note" );
       %this.addCreatorClass("Path" );
       %this.addCreatorClass("SpawnSphere",  "General Spawn Sphere" );
       %this.addCreatorClass("SpawnSphere",  "Player Spawn Sphere"/*, "PlayerDropPoint"*/ );

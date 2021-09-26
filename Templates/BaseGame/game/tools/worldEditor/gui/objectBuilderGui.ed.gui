@@ -313,30 +313,6 @@ function ObjectBuilderGui::createImageAssetType(%this, %index)
    else
       %name = %this.field[%index, text];
 
-   // 
-   /*%this.textControls[%this.numControls] = new GuiTextCtrl() {
-      profile = "ToolsGuiTextRightProfile";
-      internalName = "assetText";
-      text = %name;
-      extent = %this.fieldNameExtent;
-      position = %this.curXPos @ " " @ %this.curYPos;
-      modal = "1";
-   };
-
-   // 
-   %this.controls[%this.numControls] = new GuiButtonCtrl() {
-      HorizSizing = "width";
-      profile = "ToolsGuiButtonProfile";
-      internalName = "assetButton";
-      extent = %this.fileButtonExtent;
-      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
-      modal = "1";
-      command = %this @ ".getImageAsset(" @ %index @ ");";
-   };
-
-   %val = %this.field[%index, value];
-   %this.controls[%this.numControls].setText(fileBase(%val) @ fileExt(%val));*/
-   
    %this.textControls[%this.numControls] = new GuiTextCtrl() {
       profile = "ToolsGuiTextRightProfile";
       text = %name;
@@ -375,7 +351,7 @@ function ObjectBuilderGui::createImageAssetType(%this, %index)
       modal = "1";
       command = %this @ ".getImageAsset(" @ %index @ ");";
    };
-   %button.setBitmap("ToolsModule:change_material_btn_n_image");
+   %button.setBitmap("ToolsModule:GameTSCtrl_image");
    %this.controls[%this.numControls].addGuiControl(%button);
 
    %this.numControls++;
@@ -401,6 +377,279 @@ function ObjectBuilderGui::getImageAsset(%this, %index)
 }
 
 function ObjectBuilderGui::gotImageAsset(%this, %name)
+{
+   %index = %this.currentControl;
+   
+   %this.field[%index, value] = %name;
+   %this.controls[%this.currentControl]-->assetText.setText(%name);
+   
+   %this.lastPath = %name;
+   
+   // This doesn't work for button controls as getValue returns their state!
+   //%this.controls[%this.currentControl].setValue(%name);
+}
+
+//------------------------------------------------------------------------------
+function ObjectBuilderGui::createMaterialAssetType(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::createMaterialAssetType: invalid field");
+      return;
+   }
+
+   //
+   if(%this.field[%index, text] $= "")
+      %name = %this.field[%index, name];
+   else
+      %name = %this.field[%index, text];
+   
+   %this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+
+   // 
+   %this.controls[%this.numControls] = new GuiControl() {
+      HorizSizing = "width";
+      profile = "ToolsGuiDefaultProfile";
+      extent = %this.textEditExtent;
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+   };
+   
+   %text = new GuiTextEditCtrl() {
+      class = ObjectBuilderGuiTextEditCtrl;
+      internalName = "assetText";
+      HorizSizing = "width";
+      profile = "ToolsGuiTextEditProfile";
+      extent = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) - 2 @ " " @ getWord(%this.textEditExtent,1);
+      text = %this.field[%index, value];
+      position = "0 0";
+      modal = "1";
+   };
+   %this.controls[%this.numControls].addGuiControl(%text);
+   
+   %button = new GuiBitmapButtonCtrl() {
+      internalName = "assetButton";
+      HorizSizing = "left";
+      profile = "ToolsGuiButtonProfile";
+      extent = %this.matButtonExtent;
+      position = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) @ " 0";
+      modal = "1";
+      command = %this @ ".getMaterialAsset(" @ %index @ ");";
+   };
+   %button.setBitmap("ToolsModule:change_material_btn_n_image");
+   %this.controls[%this.numControls].addGuiControl(%button);
+
+   %this.numControls++;
+   %this.curYPos += %this.defaultFieldStep;
+}
+
+function ObjectBuilderGui::getMaterialAsset(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::getMaterialAsset: invalid field");
+      return;
+   }
+   
+   %val = %this.field[%index, ext];
+
+   //%path = filePath(%val);
+   //%ext = fileExt(%val);
+
+   %this.currentControl = %index;
+   AssetBrowser.showDialog("MaterialAsset", %this @ ".gotMaterialAsset", "", "", "");
+   //getLoadFilename( %val @ "|" @ %val, %this @ ".gotFileName", %this.lastPath );
+}
+
+function ObjectBuilderGui::gotMaterialAsset(%this, %name)
+{
+   %index = %this.currentControl;
+   
+   %this.field[%index, value] = %name;
+   %this.controls[%this.currentControl]-->assetText.setText(%name);
+   
+   %this.lastPath = %name;
+   
+   // This doesn't work for button controls as getValue returns their state!
+   //%this.controls[%this.currentControl].setValue(%name);
+}
+
+//------------------------------------------------------------------------------
+function ObjectBuilderGui::createShapeAssetType(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::createShapeAssetType: invalid field");
+      return;
+   }
+
+   //
+   if(%this.field[%index, text] $= "")
+      %name = %this.field[%index, name];
+   else
+      %name = %this.field[%index, text];
+   
+   %this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+
+   // 
+   %this.controls[%this.numControls] = new GuiControl() {
+      HorizSizing = "width";
+      profile = "ToolsGuiDefaultProfile";
+      extent = %this.textEditExtent;
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+   };
+   
+   %text = new GuiTextEditCtrl() {
+      class = ObjectBuilderGuiTextEditCtrl;
+      internalName = "assetText";
+      HorizSizing = "width";
+      profile = "ToolsGuiTextEditProfile";
+      extent = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) - 2 @ " " @ getWord(%this.textEditExtent,1);
+      text = %this.field[%index, value];
+      position = "0 0";
+      modal = "1";
+   };
+   %this.controls[%this.numControls].addGuiControl(%text);
+   
+   %button = new GuiBitmapButtonCtrl() {
+      internalName = "assetButton";
+      HorizSizing = "left";
+      profile = "ToolsGuiButtonProfile";
+      extent = %this.matButtonExtent;
+      position = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) @ " 0";
+      modal = "1";
+      command = %this @ ".getShapeAsset(" @ %index @ ");";
+   };
+   %button.setBitmap("ToolsModule:shape_editor_n_image");
+   %this.controls[%this.numControls].addGuiControl(%button);
+
+   %this.numControls++;
+   %this.curYPos += %this.defaultFieldStep;
+}
+
+function ObjectBuilderGui::getShapeAsset(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::getShapeAsset: invalid field");
+      return;
+   }
+   
+   %val = %this.field[%index, ext];
+
+   //%path = filePath(%val);
+   //%ext = fileExt(%val);
+
+   %this.currentControl = %index;
+   AssetBrowser.showDialog("ShapeAsset", %this @ ".gotShapeAsset", "", "", "");
+   //getLoadFilename( %val @ "|" @ %val, %this @ ".gotFileName", %this.lastPath );
+}
+
+function ObjectBuilderGui::gotShapeAsset(%this, %name)
+{
+   %index = %this.currentControl;
+   
+   %this.field[%index, value] = %name;
+   %this.controls[%this.currentControl]-->assetText.setText(%name);
+   
+   %this.lastPath = %name;
+   
+   // This doesn't work for button controls as getValue returns their state!
+   //%this.controls[%this.currentControl].setValue(%name);
+}
+
+//------------------------------------------------------------------------------
+function ObjectBuilderGui::createSoundAssetType(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::createSoundAssetType: invalid field");
+      return;
+   }
+
+   //
+   if(%this.field[%index, text] $= "")
+      %name = %this.field[%index, name];
+   else
+      %name = %this.field[%index, text];
+   
+   %this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+
+   // 
+   %this.controls[%this.numControls] = new GuiControl() {
+      HorizSizing = "width";
+      profile = "ToolsGuiDefaultProfile";
+      extent = %this.textEditExtent;
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+   };
+   
+   %text = new GuiTextEditCtrl() {
+      class = ObjectBuilderGuiTextEditCtrl;
+      internalName = "assetText";
+      HorizSizing = "width";
+      profile = "ToolsGuiTextEditProfile";
+      extent = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) - 2 @ " " @ getWord(%this.textEditExtent,1);
+      text = %this.field[%index, value];
+      position = "0 0";
+      modal = "1";
+   };
+   %this.controls[%this.numControls].addGuiControl(%text);
+   
+   %button = new GuiBitmapButtonCtrl() {
+      internalName = "assetButton";
+      HorizSizing = "left";
+      profile = "ToolsGuiButtonProfile";
+      extent = %this.matButtonExtent;
+      position = getWord(%this.textEditExtent,0) - getWord(%this.matButtonExtent,0) @ " 0";
+      modal = "1";
+      command = %this @ ".getSoundAsset(" @ %index @ ");";
+   };
+   %button.setBitmap("ToolsModule:SFXEmitter_image");
+   %this.controls[%this.numControls].addGuiControl(%button);
+
+   %this.numControls++;
+   %this.curYPos += %this.defaultFieldStep;
+}
+
+function ObjectBuilderGui::getSoundAsset(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::getSoundAsset: invalid field");
+      return;
+   }
+   
+   %val = %this.field[%index, ext];
+
+   //%path = filePath(%val);
+   //%ext = fileExt(%val);
+
+   %this.currentControl = %index;
+   AssetBrowser.showDialog("SoundAsset", %this @ ".gotSoundAsset", "", "", "");
+   //getLoadFilename( %val @ "|" @ %val, %this @ ".gotFileName", %this.lastPath );
+}
+
+function ObjectBuilderGui::gotSoundAsset(%this, %name)
 {
    %index = %this.currentControl;
    
@@ -680,6 +929,15 @@ function ObjectBuilderGui::process(%this)
          case "TypeImageAsset":
             %this.createImageAssetType(%i);
 
+         case "TypeMaterialAsset":
+            %this.createMaterialAssetType(%i);
+            
+         case "TypeShapeAsset":
+            %this.createShapeAssetType(%i);
+            
+         case "TypeSoundAsset":
+            %this.createSoundAssetType(%i);
+
          case "TypeMaterialName":
             %this.createMaterialNameType(%i);
 
@@ -753,7 +1011,10 @@ function ObjectBuilderGui::onOK(%this)
          continue;
       }
       if (%this.field[%i, type] $= "TypeImageAsset" || 
-      %this.field[%i, type] $= "TypeTerrainAsset")
+      %this.field[%i, type] $= "TypeTerrainAsset" || 
+      %this.field[%i, type] $= "TypeMaterialAsset" ||
+      %this.field[%i, type] $= "TypeShapeAsset"
+      )
       {
          %this.field[%i, value] = %this.controls[%i]-->assetText.getText();
          continue;
@@ -861,7 +1122,6 @@ function ObjectBuilderGui::buildScatterSky( %this, %dontWarnAboutSun )
    %this.addField( "moonMatAsset", "TypeMaterialAsset", "Moon Material", "Core_Rendering:moon_wglow" );
    %this.addField( "nightCubemap", "TypeCubemapName", "Night Cubemap", "NightCubemap" );
    %this.addField( "useNightCubemap", "TypeBool", "Use Night Cubemap", "true" );
-   
 }
 
 function ObjectBuilderGui::buildCloudLayer(%this)
@@ -954,7 +1214,7 @@ function ObjectBuilderGui::buildSun( %this, %dontWarnAboutScatterSky )
    
    // This is a trick... any fields added after process won't show
    // up as controls, but will be applied to the created object.
-   %this.addField( "coronaMaterial", "TypeMaterialName", "Corona Material", "Corona_Mat" );
+   %this.addField( "coronaMaterial", "TypeMaterialAsset", "Corona Material", "Core_Rendering:Corona_Mat" );
    %this.addField( "flareType", "TypeLightFlareDataPtr", "Flare", "SunFlareExample" );
 }
 
@@ -994,9 +1254,9 @@ function ObjectBuilderGui::addWaterObjectFields(%this)
    %this.addField("waveSpeed[2]", "TypeFloat", "Wave Speed", "1");
    %this.addField("overallWaveMagnitude", "TypeFloat", "Overall Wave Magnitude", "1.0");
    
-   %this.addField("rippleTexAsset", "TypeImageAssetId", "Ripple Texture", "Core_Rendering:ripple_image" );
-   %this.addField("depthGradientTexAsset", "TypeImageAssetId", "Depth Gradient Texture", "Core_Rendering:depthcolor_ramp_imag" );
-   %this.addField("foamTexAsset", "TypeImageAssetId", "Foam Texture", "Core_Rendering:foam_image" );
+   %this.addField("rippleTex", "TypeImageAsset", "Ripple Texture", "Core_Rendering:ripple_image" );
+   %this.addField("depthGradientTex", "TypeImageAsset", "Depth Gradient Texture", "Core_Rendering:depthcolor_ramp_image" );
+   %this.addField("foamTex", "TypeImageAsset", "Foam Texture", "Core_Rendering:foam_image" );
 }
 
 function ObjectBuilderGui::buildWaterBlock(%this)
@@ -1038,8 +1298,8 @@ function ObjectBuilderGui::buildTerrainBlock(%this)
 function ObjectBuilderGui::buildGroundCover( %this )
 {
    %this.objectClassName = "GroundCover";
-   %this.addField( "material", "TypeMaterialName", "Material Name", "" );
-   %this.addField( "shapeFilename[0]", "TypeFile", "Shape File [Optional]", "", "*.*");
+   %this.addField( "materialAsset", "TypeMaterialAsset", "Material Asset", "" );
+   %this.addField( "shapeAsset[0]", "TypeShapeAsset", "Shape Asset [Optional]", "", "");
    %this.process();
    
    // This is a trick... any fields added after process won't show
@@ -1212,6 +1472,9 @@ function ObjectBuilderGui::buildGeneralDropPoint(%this)
 function ObjectBuilderGui::buildNotesObject(%this)
 {
    %this.objectClassName = "NotesObject";
+   %this.addField("note",           "TypeString",     "Note Text", "");
+   %this.addField("showArrow",      "TypeBool",       "Show Arrow", "");
+   %this.addField("arrowColor",     "TypeColorI",     "Arrow Color", "255 0 0 255");
    %this.process();
 }
 //------------------------------------------------------------------------------
@@ -1221,11 +1484,11 @@ function ObjectBuilderGui::buildVolumetricFog(%this)
 {
 	// Change this if you want to default to another Folder
 	// Otherwise every time you want to add a Fog you will go this.
-	%defShape = "core/rendering/shapes/Fog_Cube.DAE";
+	%defShape = "Core_Rendering:Fog_Cube";
 	%this.lastPath=getMainDotCsDir() @ %defShape;
 	OBObjectName.setValue( "" );
 	%this.objectClassName = "VolumetricFog";
-	%this.addField( "shapeName", "TypeFile", "Shape (Fog volume)", "", "*.dts;*.dae");
+	%this.addField( "shapeAsset", "TypeShapeAsset", "Shape (Fog volume)", "", "");
 	%this.addField("Scale", "TypePoint3", "Scale", "1 1 1");
 	%this.addField("FogColor", "TypeColorI", "FogColor", "200 200 200 255");
 	%this.process();

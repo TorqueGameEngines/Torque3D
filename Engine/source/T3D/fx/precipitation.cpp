@@ -127,7 +127,7 @@ ConsoleDocClass( PrecipitationData,
 //----------------------------------------------------------
 PrecipitationData::PrecipitationData()
 {
-   soundProfile      = NULL;
+   INIT_SOUNDASSET(Sound);
 
    INIT_IMAGEASSET(Drop);
 
@@ -143,8 +143,7 @@ PrecipitationData::PrecipitationData()
 
 void PrecipitationData::initPersistFields()
 {
-   addField( "soundProfile", TYPEID< SFXTrack >(), Offset(soundProfile, PrecipitationData),
-      "Looping SFXProfile effect to play while Precipitation is active." );
+   INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
 
    addProtectedField( "dropTexture", TypeFilename, Offset(mDropName, PrecipitationData), &_setDropData, &defaultProtectedGetFn,
       "@brief Texture filename for drop particles.\n\n"
@@ -190,7 +189,7 @@ bool PrecipitationData::preload( bool server, String &errorStr )
    if( Parent::preload( server, errorStr) == false)
       return false;
 
-   if( !server && !sfxResolve( &soundProfile, errorStr ) )
+   if (!server && !getSFXProfile())
       return false;
 
    return true;
@@ -200,7 +199,7 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   sfxWrite( stream, soundProfile );
+   PACKDATA_SOUNDASSET(Sound);
 
    PACKDATA_IMAGEASSET(Drop);
 
@@ -217,7 +216,7 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   sfxRead( stream, &soundProfile );
+   UNPACKDATA_SOUNDASSET(Sound);
 
    UNPACKDATA_IMAGEASSET(Drop);
 
@@ -598,9 +597,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->soundProfile )
+      if ( mDataBlock->getSFXProfile())
       {
-         mAmbientSound = SFX->createSource( mDataBlock->soundProfile, &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getSFXProfile(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

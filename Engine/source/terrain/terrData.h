@@ -488,6 +488,39 @@ public:
    void inspectPostApply();
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+
+   const StringTableEntry getTerrain() const
+   {
+      if (mTerrainAsset && (mTerrainAsset->getTerrainFilePath() != StringTable->EmptyString()))
+         return mTerrainAsset->getTerrainFilePath(); 
+      else if (mTerrainAssetId != StringTable->EmptyString())
+         return mTerrainAssetId; 
+      else if (mTerrFileName != StringTable->EmptyString())
+         return mTerrFileName; 
+      else
+         return StringTable->EmptyString(); 
+   }
+
+   const StringTableEntry getTerrainAssetId() const
+   {
+      if (mTerrainAssetId != StringTable->EmptyString())
+         return mTerrainAssetId;
+      else
+         return StringTable->EmptyString();
+   }
+
+   bool _setTerrain(StringTableEntry terrain)
+   {
+      if (terrain == StringTable->EmptyString())
+         return false;
+
+      if (AssetDatabase.isDeclaredAsset(terrain))
+         setTerrainAsset(terrain);
+      else
+         mTerrFileName = terrain;
+
+      return true;
+   }
  
 protected:
    bool mUpdateBasetex;

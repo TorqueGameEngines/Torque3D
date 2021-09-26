@@ -1097,9 +1097,6 @@ function MaterialEditorGui::updateActiveMaterial(%this, %propertyField, %value, 
 {
    MaterialEditorGui.setMaterialDirty();
 
-   if(%value $= "")
-      %value = "\"\"";
-   
    // Here is where we handle undo actions with slider controls. We want to be able to
    // undo every onMouseUp; so we overrite the same undo action when necessary in order
    // to achieve this desired effect.
@@ -1130,7 +1127,7 @@ function MaterialEditorGui::updateActiveMaterial(%this, %propertyField, %value, 
    
    if (MaterialEditorGui.livePreview == true)
    {
-      MaterialEditorGui.setFieldValue(%propertyField, %value);
+      MaterialEditorGui.currentMaterial.setFieldValue(%propertyField, %value);
       MaterialEditorGui.currentMaterial.flush();
       MaterialEditorGui.currentMaterial.reload();
    }
@@ -1263,8 +1260,8 @@ function MaterialEditorGui::doUpdateTextureMap( %this, %assetId )
          %bitmap = strreplace(%bitmap,"tools/materialEditor/scripts/","");
          %bitmapCtrl.setBitmap(%bitmap);
          %textCtrl.setText(%assetId);
-         MaterialEditorGui.updateActiveMaterial(%type @ "Map[" @ %layer @ "]","\"\"");
-         MaterialEditorGui.updateActiveMaterial(%type @ "MapAsset[" @ %layer @ "]","\"" @ %assetId @ "\"");	
+         MaterialEditorGui.updateActiveMaterial(%type @ "Map[" @ %layer @ "]","");
+         MaterialEditorGui.updateActiveMaterial(%type @ "MapAsset[" @ %layer @ "]", %assetId);	
       }
    }
    
@@ -1276,7 +1273,7 @@ function MaterialEditorGui::updateDetailScale(%this,%newScale)
 {
    %layer = MaterialEditorGui.currentLayer;
    
-   %detailScale = "\"" @ %newScale SPC %newScale @ "\"";
+   %detailScale = %newScale SPC %newScale;
    MaterialEditorGui.updateActiveMaterial("detailScale[" @ %layer @ "]", %detailScale);
    }
    
@@ -1284,7 +1281,7 @@ function MaterialEditorGui::updateDetailNormalStrength(%this,%newStrength)
 {
    %layer = MaterialEditorGui.currentLayer;
    
-   %detailStrength = "\"" @ %newStrength @ "\"";
+   %detailStrength = %newStrength;
    MaterialEditorGui.updateActiveMaterial("detailNormalMapStrength[" @ %layer @ "]", %detailStrength);
 }
 
@@ -1295,7 +1292,7 @@ function MaterialEditorGui::updateRotationOffset(%this, %isSlider, %onMouseUp)
 	%Y = MaterialEditorPropertiesWindow-->RotationTextEditV.getText();
 	MaterialEditorPropertiesWindow-->RotationCrosshair.setPosition(45*mAbs(%X)-2, 45*mAbs(%Y)-2);
 	
-	MaterialEditorGui.updateActiveMaterial("rotPivotOffset[" @ %layer @ "]","\"" @ %X SPC %Y @ "\"",%isSlider,%onMouseUp);
+	MaterialEditorGui.updateActiveMaterial("rotPivotOffset[" @ %layer @ "]", %X SPC %Y,%isSlider,%onMouseUp);
 }
 
 function MaterialEditorGui::updateRotationSpeed(%this, %isSlider, %onMouseUp)
@@ -1457,7 +1454,7 @@ function MaterialEditorGui::syncGuiColor(%this, %guiCtrl, %propname, %color)
    %a = getWord(%color,3);
 
    %colorSwatch = (%r SPC %g SPC %b SPC %a);
-   %color = "\"" @ %r SPC %g SPC %b SPC %a @ "\"";
+   %color = %r SPC %g SPC %b SPC %a;
 
    %guiCtrl.color = %colorSwatch;
 	MaterialEditorGui.updateActiveMaterial(%propName, %color);

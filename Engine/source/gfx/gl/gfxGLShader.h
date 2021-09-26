@@ -32,14 +32,15 @@
 class GFXGLShaderConstHandle;
 class FileStream;
 class GFXGLShaderConstBuffer;
+class GFXGLDevice;
 
 class GFXGLShader : public GFXShader
 {
    typedef Map<String, GFXGLShaderConstHandle*> HandleMap;
 public:
-   GFXGLShader();
+   GFXGLShader(GFXGLDevice* device);
    virtual ~GFXGLShader();
-   
+
    /// @name GFXShader interface
    /// @{
    virtual GFXShaderConstHandle* getShaderConstHandle(const String& name);
@@ -99,6 +100,7 @@ protected:
    U32 mConstBufferSize;
    U8* mConstBuffer;
    HandleMap mHandles;
+   GFXGLDevice* mDevice;
    Vector<GFXGLShaderConstHandle*> mValidHandles;
 };
 

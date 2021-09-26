@@ -910,7 +910,7 @@ function GuiEditorTabBook::onWake( %this )
          item[ 1 ] = "Categorized View" TAB "" TAB "GuiEditorToolbox.setViewType( \"Categorized\" );";
       };
       
-   GlobalActionMap.bindCmd( keyboard, space, "", "AssetBrowser.toggleDialog();" );
+   GlobalActionMap.bindCmd( keyboard, "shift space", "", "AssetBrowser.toggleDialog();" );
 }
 
 //---------------------------------------------------------------------------------------------

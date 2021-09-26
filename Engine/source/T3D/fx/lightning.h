@@ -92,22 +92,6 @@ class LightningData : public GameBaseData
 
    DECLARE_CONOBJECT(LightningData);
    static void initPersistFields();
-
-   SFXProfile* getThunderProfile(U32 id)
-   {
-      if (mThunderSoundAsset[id] != NULL)
-         return mThunderSoundAsset[id]->getSfxProfile();
-
-      return NULL;
-   }
-
-   SFXProfile* getSFXProfile() {
-      if (mStrikeSoundAsset.notNull())
-         return mStrikeSoundAsset->getSfxProfile();
-
-      return NULL;
-   }
-
 };
 
 

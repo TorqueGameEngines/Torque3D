@@ -262,6 +262,12 @@ public: \
    Resource<SFXResource> get##name##Resource() \
    {\
       return m##name;\
+   }\
+   SFXProfile* get##name##Profile()\
+   {\
+      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
+         return m##name##Asset->getSfxProfile();\
+      return NULL;\
    }
 
 #define DECLARE_SOUNDASSET_SETGET(className, name)\
@@ -436,6 +442,8 @@ public: \
       {\
          m##name[index] = NULL;\
       }\
+      if(get##name(index) == StringTable->EmptyString())\
+         return true;\
       \
       if (m##name##Asset[index].notNull() && m##name##Asset[index]->getStatus() != SoundAsset::Ok)\
       {\
@@ -466,6 +474,12 @@ public: \
       if(id >= sm##name##Count || id < 0)\
          return ResourceManager::get().load( "" );\
       return m##name[id];\
+   }\
+   SFXProfile* get##name##Profile(const U32& id)\
+   {\
+      if (get##name(id) != StringTable->EmptyString() && m##name##Asset[id].notNull())\
+         return m##name##Asset[id]->getSfxProfile();\
+      return NULL;\
    }
 
 #define DECLARE_SOUNDASSET_ARRAY_SETGET(className, name)\
@@ -517,6 +531,7 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
    m##name##Name[index] = StringTable->EmptyString(); \
    m##name##AssetId[index] = StringTable->EmptyString(); \
    m##name##Asset[index] = NULL;\
+   m##name[index] = NULL;\
 }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS

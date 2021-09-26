@@ -302,11 +302,11 @@ bool LightningData::preload(bool server, String &errorStr)
       }
 
       for (U32 j = 0; j < MaxThunders; j++) {
-         if (!getThunderProfile(j))
+         if (!getThunderSoundProfile(j))
             Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Cant get an sfxProfile for thunder.");
       }
 
-      if(!getSFXProfile())
+      if(!getStrikeSoundProfile())
          Con::errorf(ConsoleLogEntry::General, "LightningData::preload: can't get sfxProfile from asset");
 
       mNumStrikeTextures = 0;
@@ -584,7 +584,7 @@ void Lightning::scheduleThunder(Strike* newStrike)
          if (t <= 0.03f) {
             // If it's really close, just play it...
             U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-            SFX->playOnce(mDataBlock->getThunderProfile(thunder));
+            SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
          } else {
             Thunder* pThunder = new Thunder;
             pThunder->tRemaining = t;
@@ -651,7 +651,7 @@ void Lightning::advanceTime(F32 dt)
 
          // Play the sound...
          U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-         SFX->playOnce(mDataBlock->getThunderProfile(thunder));
+         SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
       } else {
          pThunderWalker = &((*pThunderWalker)->next);
       }
@@ -735,9 +735,9 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
       MatrixF trans(true);
       trans.setPosition( strikePoint );
 
-      if (mDataBlock->getSFXProfile())
+      if (mDataBlock->getStrikeSoundProfile())
       {
-         SFX->playOnce(mDataBlock->getSFXProfile(), &trans );
+         SFX->playOnce(mDataBlock->getStrikeSoundProfile(), &trans );
       }
 
 }

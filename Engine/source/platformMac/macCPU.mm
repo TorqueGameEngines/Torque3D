@@ -81,6 +81,7 @@ int _getSysCTLvalue(const char key[], T * dest) {
 Platform::SystemInfo_struct Platform::SystemInfo;
 
 #define BASE_MHZ_SPEED 1000
+#define BASE_APPLE_SILICON_MHZ_SPEED 3200
 
 static void detectCpuFeatures(U32 &procflags)
 {
@@ -126,8 +127,10 @@ static void detectCpuFeatures(U32 &procflags)
       procflags |= CPU_PROP_AVX;
    
 #elif defined(TORQUE_CPU_ARM64)
-   // All Apple Cpus have Neon
-   procflags |= CPU_PROP_NEON;
+   
+   err = _getSysCTLvalue<U32>("hw.optional.neon", &lraw);
+   if ((err==0)&&(lraw==1))
+      procflags |= CPU_PROP_NEON;
    
 #endif
 
@@ -170,11 +173,15 @@ void Processor::init()
    if (err)
       vendor[0] = '\0';
    
-	// The Gestalt version was known to have issues with some Processor Upgrade cards
-	// but it is uncertain whether this version has similar issues.
+   // Note: hw.cpufrequency seems to be missing on the M1. For Apple Silicon,
+   // we will assume the base frequency of the M1 which is 3.2ghz
 	err = _getSysCTLvalue<U64>("hw.cpufrequency", &llraw);
 	if (err) {
+#if defined(TORQUE_CPU_ARM64)
+      llraw = BASE_APPLE_SILICON_MHZ_SPEED;
+#else
 		llraw = BASE_MHZ_SPEED;
+#endif
 	} else {
 		llraw /= 1000000;
 	}

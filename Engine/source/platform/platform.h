@@ -73,9 +73,10 @@ enum ProcessorProperties
    CPU_PROP_RDTSC     = (1<<5),  ///< Supports Read Time Stamp Counter op.
    CPU_PROP_SSE2      = (1<<6),  ///< Supports SSE2 instruction set extension.
    CPU_PROP_SSE3      = (1<<7),  ///< Supports SSE3 instruction set extension.  
-   CPU_PROP_SSE3xt    = (1<<8),  ///< Supports extended SSE3 instruction set  
+   CPU_PROP_SSE3ex    = (1<<8),  ///< Supports extended SSE3 instruction set  
    CPU_PROP_SSE4_1    = (1<<9),  ///< Supports SSE4_1 instruction set extension.  
-   CPU_PROP_SSE4_2    = (1<<10), ///< Supports SSE4_2 instruction set extension.  
+   CPU_PROP_SSE4_2    = (1<<10), ///< Supports SSE4_2 instruction set extension.
+   CPU_PROP_AVX       = (1<<11), ///< Supports AVX256 instruction set extension.
    CPU_PROP_MP        = (1<<11), ///< This is a multi-processor system.
    CPU_PROP_LE        = (1<<12), ///< This processor is LITTLE ENDIAN.  
    CPU_PROP_64bit     = (1<<13), ///< This processor is 64-bit capable
@@ -297,7 +298,6 @@ namespace Platform
             bool           isHyperThreaded;
             U32            numLogicalProcessors;
             U32            numPhysicalProcessors;
-            U32            numAvailableCores;
             U32            properties;      // CPU type specific enum
          } processor;
    };

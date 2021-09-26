@@ -94,6 +94,11 @@ static void detectCpuFeatures(U32 &procflags)
    int err;
    U32 lraw;
    
+   // All Cpus have fpu
+   procflags = CPU_PROP_FPU;
+   
+#if defined(TORQUE_CPU_X86) || defined(TORQUE_CPU_X64)
+   
    // List of chip-specific features
    err = _getSysCTLvalue<U32>("hw.optional.mmx", &lraw);
    if ((err==0)&&(lraw==1))
@@ -119,6 +124,12 @@ static void detectCpuFeatures(U32 &procflags)
    err = _getSysCTLvalue<U32>("hw.optional.avx1_0", &lraw);
    if ((err==0)&&(lraw==1))
       procflags |= CPU_PROP_AVX;
+   
+#elif defined(TORQUE_CPU_ARM64)
+   // All Apple Cpus have Neon
+   procflags |= CPU_PROP_NEON;
+   
+#endif
 
    err = _getSysCTLvalue<U32>("hw.ncpu", &lraw);
    if ((err==0)&&(lraw>1))
@@ -129,12 +140,11 @@ static void detectCpuFeatures(U32 &procflags)
    err = _getSysCTLvalue<U32>("hw.byteorder", &lraw);
    if ((err==0)&&(lraw==1234))
       procflags |= CPU_PROP_LE;
-   
 }
 
 void Processor::init()
 {
-	U32 procflags;
+	U32 procflags = 0;
 	int err, cpufam, cputype, cpusub;
 	char buf[255];
 	U32 lraw;
@@ -170,7 +180,6 @@ void Processor::init()
 	}
 	Platform::SystemInfo.processor.mhz = (unsigned int)llraw;
 	
-   procflags = CPU_PROP_FPU;
    detectCpuFeatures(procflags);
    
    Platform::SystemInfo.processor.properties = procflags;
@@ -197,7 +206,9 @@ void Processor::init()
 		Con::printf("      SSE4.2 detected");
    if (Platform::SystemInfo.processor.properties & CPU_PROP_AVX)
       Con::printf("      AVX detected");
-	
+	if (Platform::SystemInfo.processor.properties & CPU_PROP_NEON)
+      Con::printf("      Neon detected");
+   
 	Con::printf( "" );
    
    // Trigger the signal

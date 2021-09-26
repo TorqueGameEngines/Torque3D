@@ -80,6 +80,7 @@ enum ProcessorProperties
    CPU_PROP_MP        = (1<<11), ///< This is a multi-processor system.
    CPU_PROP_LE        = (1<<12), ///< This processor is LITTLE ENDIAN.  
    CPU_PROP_64bit     = (1<<13), ///< This processor is 64-bit capable
+   CPU_PROP_NEON      = (1<<14), ///< Supports the Arm Neon instruction set extension.
 };
 
 /// Processor info manager. 

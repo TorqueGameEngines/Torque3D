@@ -226,7 +226,9 @@ void GuiPopupMenuTextListCtrl::onMouseUp(const GuiEvent &event)
       if (item)
       {
          if (item->mEnabled)
-            dAtob(Con::executef(mPopup, "onSelectItem", Con::getIntArg(getSelectedCell().y), item->mText.isNotEmpty() ? item->mText : ""));
+         {
+            Con::executef(mPopup, "onSelectItem", Con::getIntArg(getSelectedCell().y), item->mText.isNotEmpty() ? item->mText : "");
+         }
       }
    }
 

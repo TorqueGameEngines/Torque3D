@@ -37,6 +37,9 @@ CodeBlock *    CodeBlock::smCodeBlockList = NULL;
 CodeBlock *    CodeBlock::smCurrentCodeBlock = NULL;
 ConsoleParser *CodeBlock::smCurrentParser = NULL;
 
+extern FuncVars gEvalFuncVars;
+extern FuncVars* gFuncVars;
+
 //-------------------------------------------------------------------------
 
 CodeBlock::CodeBlock()
@@ -491,6 +494,8 @@ bool CodeBlock::compile(const char *codeFileName, StringTableEntry fileName, con
    chompUTF8BOM(inScript, &script);
 
    gSyntaxError = false;
+   gIsEvalCompile = false;
+   gFuncVars = NULL;
 
    consoleAllocReset();
 
@@ -629,6 +634,11 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
       addToCodeList();
 
    gStatementList = NULL;
+   
+   // we are an eval compile if we don't have a file name associated (no exec)
+   gIsEvalCompile = fileName == NULL;
+   // In eval mode, global func vars are allowed.
+   gFuncVars = gIsEvalCompile ? &gEvalFuncVars : NULL;
 
    // Set up the parser.
    smCurrentParser = getParserForFile(fileName);
@@ -667,6 +677,8 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
 
    codeStream.emit(OP_RETURN_VOID);
    codeStream.emitCodeStream(&codeSize, &code, &lineBreakPairs);
+   
+   S32 localRegisterCount = gIsEvalCompile ? gEvalFuncVars.count() : 0;
 
    consoleAllocReset();
 
@@ -683,7 +695,8 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    if (lastIp + 1 != codeSize)
       Con::warnf(ConsoleLogEntry::General, "precompile size mismatch, precompile: %d compile: %d", codeSize, lastIp);
 
-   return std::move(exec(0, fileName, NULL, 0, 0, noCalls, NULL, setFrame));
+   // repurpose argc as local register counter for global state
+   return std::move(exec(0, fileName, NULL, localRegisterCount, 0, noCalls, NULL, setFrame));
 }
 
 //-------------------------------------------------------------------------

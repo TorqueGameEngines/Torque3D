@@ -859,7 +859,7 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   if (!server && !getSFXProfile())
+   if (!server && !getSoundProfile())
       return false;
 
    if( !server )
@@ -1382,7 +1382,7 @@ bool Explosion::explode()
       resetWorldBox();
    }
 
-   SFXProfile* sound_prof = mDataBlock->getSFXProfile();
+   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
    if (sound_prof)
    {
       soundProfile_clone = sound_prof->cloneAndPerformSubstitutions(ss_object, ss_index);

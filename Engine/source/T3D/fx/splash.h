@@ -98,14 +98,6 @@ public:
    DECLARE_SOUNDASSET(SplashData, Sound);
    DECLARE_SOUNDASSET_SETGET(SplashData, Sound);
 
-   /// this should probably be added as a function higher up to stop repeats.
-   SFXProfile* getSFXProfile() {
-      if (mSoundAsset.notNull())
-         return mSoundAsset->getSfxProfile();
-
-      return NULL;
-   }
-
    ParticleEmitterData*    emitterList[NUM_EMITTERS];
    S32                     emitterIDList[NUM_EMITTERS];
 

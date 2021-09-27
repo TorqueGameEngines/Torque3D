@@ -189,7 +189,7 @@ bool PrecipitationData::preload( bool server, String &errorStr )
    if( Parent::preload( server, errorStr) == false)
       return false;
 
-   if (!server && !getSFXProfile())
+   if (!server && !getSoundProfile())
       return false;
 
    return true;
@@ -597,9 +597,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->getSFXProfile())
+      if ( mDataBlock->getSoundProfile())
       {
-         mAmbientSound = SFX->createSource(mDataBlock->getSFXProfile(), &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getSoundProfile(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

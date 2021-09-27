@@ -882,7 +882,7 @@ bool Projectile::onNewDataBlock( GameBaseData *dptr, bool reload )
       SFX_DELETE( mSound );
 
       if ( mDataBlock->getProjectileSound() )
-         mSound = SFX->createSource( mDataBlock->getSFXProfile() );
+         mSound = SFX->createSource( mDataBlock->getProjectileSoundProfile() );
    }
 
    return true;

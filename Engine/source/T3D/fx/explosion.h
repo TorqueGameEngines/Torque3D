@@ -73,13 +73,6 @@ class ExplosionData : public GameBaseData {
    DECLARE_SOUNDASSET(ExplosionData, Sound);
    DECLARE_SOUNDASSET_SETGET(ExplosionData, Sound);
 
-   SFXProfile* getSFXProfile() {
-      if (mSoundAsset.notNull())
-         return mSoundAsset->getSfxProfile();
-
-      return NULL;
-   }
-
    ParticleEmitterData* particleEmitter;
    S32                  particleEmitterId;
 

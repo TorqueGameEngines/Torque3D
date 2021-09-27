@@ -71,13 +71,6 @@ class PrecipitationData : public GameBaseData
 
       void onDropChanged() {}
       void onSplashChanged() {}
-
-      SFXProfile* getSFXProfile() {
-         if (mSoundAsset.notNull())
-            return mSoundAsset->getSfxProfile();
-
-         return NULL;
-      }
 };
 
 struct Raindrop

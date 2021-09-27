@@ -276,7 +276,7 @@ bool SplashData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   if (!server && !getSFXProfile())
+   if (!server && !getSoundProfile())
       return false;
 
    if (!server)
@@ -681,7 +681,7 @@ void Splash::spawnExplosion()
 
    /// could just play the explosion one, but explosion could be weapon specific,
    /// splash sound could be liquid specific. food for thought.
-   SFXProfile* sound_prof = mDataBlock->getSFXProfile();
+   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
    if (sound_prof)
    {
       SFX->playOnce(sound_prof, &getTransform());

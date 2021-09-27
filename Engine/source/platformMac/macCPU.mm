@@ -96,7 +96,7 @@ static void detectCpuFeatures(U32 &procflags)
    U32 lraw;
    
    // All Cpus have fpu
-   procflags = CPU_PROP_FPU;
+   procflags = CPU_PROP_C | CPU_PROP_FPU;
    
 #if defined(TORQUE_CPU_X86) || defined(TORQUE_CPU_X64)
    
@@ -215,6 +215,9 @@ void Processor::init()
       Con::printf("      AVX detected");
 	if (Platform::SystemInfo.processor.properties & CPU_PROP_NEON)
       Con::printf("      Neon detected");
+
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_MP)
+      Con::printf("   MultiCore CPU detected [%i cores, %i logical]", Platform::SystemInfo.processor.numPhysicalProcessors, Platform::SystemInfo.processor.numLogicalProcessors);
    
 	Con::printf( "" );
    

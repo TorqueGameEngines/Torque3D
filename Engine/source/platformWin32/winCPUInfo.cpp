@@ -24,49 +24,15 @@
 #include "platformWin32/platformWin32.h"
 #include "console/console.h"
 #include "core/stringTable.h"
+#include "platform/platformCPUCount.h"
 #include <math.h>
 #include <intrin.h>
 
 Platform::SystemInfo_struct Platform::SystemInfo;
 extern void PlatformBlitInit();
-extern void SetProcessorInfo(Platform::SystemInfo_struct::Processor& pInfo,
-   char* vendor, char* brand, U32 processor, U32 properties, U32 properties2); // platform/platformCPU.cc
 
-void Processor::init()
+static void getBrand(char* brand)
 {
-   // Reference:
-   //    www.cyrix.com
-   //    www.amd.com
-   //    www.intel.com
-   //       http://developer.intel.com/design/PentiumII/manuals/24512701.pdf
-
-   Con::printf("Processor Init:");
-
-   Platform::SystemInfo.processor.type = CPU_X86Compatible;
-   Platform::SystemInfo.processor.name = StringTable->insert("Unknown x86 Compatible");
-   Platform::SystemInfo.processor.mhz  = 0;
-   Platform::SystemInfo.processor.properties = CPU_PROP_C;
-
-   char  vendor[0x20];
-   dMemset(vendor, 0, sizeof(vendor));
-   U32   properties = 0;
-   U32   processor  = 0;
-   U32   properties2 = 0;
-
-   S32 vendorInfo[4];
-   __cpuid(vendorInfo, 0);
-   *reinterpret_cast<int*>(vendor) = vendorInfo[1];     // ebx
-   *reinterpret_cast<int*>(vendor + 4) = vendorInfo[3]; // edx
-   *reinterpret_cast<int*>(vendor + 8) = vendorInfo[2]; // ecx
-
-   S32 cpuInfo[4];
-   __cpuid(cpuInfo, 1);
-   processor = cpuInfo[0];   // eax
-   properties = cpuInfo[3];  // edx
-   properties2 = cpuInfo[2]; // ecx
-
-   char brand[0x40];
-   dMemset(brand, 0, sizeof(brand));
    S32 extendedInfo[4];
    __cpuid(extendedInfo, 0x80000000);
    S32 numberExtendedIds = extendedInfo[0];
@@ -88,12 +54,93 @@ void Processor::init()
          offset += sizeof(S32) * 4;
       }
    }
+}
 
-   SetProcessorInfo(Platform::SystemInfo.processor, vendor, brand, processor, properties, properties2);
+enum CpuFlags
+{
+   // EDX Register flags
+   BIT_MMX = BIT(23),
+   BIT_SSE = BIT(25),
+   BIT_SSE2 = BIT(26),
+   BIT_3DNOW = BIT(31), // only available for amd cpus in x86
 
-// now calculate speed of processor...
-   U32 nearmhz = 0; // nearest rounded mhz
-   U32 mhz = 0; // calculated value.
+   // These use a different value for comparison than the above flags (ECX Register)
+   BIT_SSE3 = BIT(0),
+   BIT_SSE3ex = BIT(9),
+   BIT_SSE4_1 = BIT(19),
+   BIT_SSE4_2 = BIT(20),
+
+   BIT_XSAVE_RESTORE = BIT(27),
+   BIT_AVX = BIT(28),
+};
+
+static void detectCpuFeatures(Platform::SystemInfo_struct::Processor &processor)
+{
+   S32 cpuInfo[4];
+   __cpuid(cpuInfo, 1);
+   U32 eax = cpuInfo[0];   // eax
+   U32 edx = cpuInfo[3];  // edx
+   U32 ecx = cpuInfo[2]; // ecx
+
+   if (processor.type == ProcessorType::CPU_AMD)
+      processor.properties |= (edx & BIT_3DNOW) ? CPU_PROP_3DNOW : 0;
+
+   processor.properties |= (edx & BIT_MMX) ? CPU_PROP_MMX : 0;
+   processor.properties |= (edx & BIT_SSE) ? CPU_PROP_SSE : 0;
+   processor.properties |= (edx & BIT_SSE2) ? CPU_PROP_SSE2 : 0;
+   processor.properties |= (ecx & BIT_SSE3) ? CPU_PROP_SSE3 : 0;
+   processor.properties |= (ecx & BIT_SSE3ex) ? CPU_PROP_SSE3ex : 0;
+   processor.properties |= (ecx & BIT_SSE4_1) ? CPU_PROP_SSE4_1 : 0;
+   processor.properties |= (ecx & BIT_SSE4_2) ? CPU_PROP_SSE4_2 : 0;
+
+   // AVX detection requires that xsaverestore is supported
+   if (ecx & BIT_XSAVE_RESTORE && ecx & BIT_AVX)
+   {
+      bool supportsAVX = _xgetbv(_XCR_XFEATURE_ENABLED_MASK) & 0x6;
+      if (supportsAVX)
+      {
+         processor.properties |= CPU_PROP_AVX;
+      }
+   }
+
+   if (processor.isMultiCore)
+      processor.properties |= CPU_PROP_MP;
+
+#ifdef TORQUE_CPU_X64
+   processor.properties |= CPU_PROP_64bit;
+#endif
+}
+
+void Processor::init()
+{
+   // Reference:
+   //    www.cyrix.com
+   //    www.amd.com
+   //    www.intel.com
+   //       http://developer.intel.com/design/PentiumII/manuals/24512701.pdf
+
+   Platform::SystemInfo.processor.type = CPU_X86Compatible;
+   Platform::SystemInfo.processor.name = StringTable->insert("Unknown x86 Compatible");
+   Platform::SystemInfo.processor.mhz  = 0;
+   Platform::SystemInfo.processor.properties = CPU_PROP_C | CPU_PROP_FPU | CPU_PROP_LE;
+
+   char  vendor[0x20];
+   dMemset(vendor, 0, sizeof(vendor));
+
+   S32 vendorInfo[4];
+   __cpuid(vendorInfo, 0);
+   *reinterpret_cast<int*>(vendor) = vendorInfo[1];     // ebx
+   *reinterpret_cast<int*>(vendor + 4) = vendorInfo[3]; // edx
+   *reinterpret_cast<int*>(vendor + 8) = vendorInfo[2]; // ecx
+
+   char brand[0x40];
+   dMemset(brand, 0, sizeof(brand));
+   getBrand(brand);
+
+   SetProcessoInfo(Platform::SystemInfo.processor, vendor, brand);
+   detectCpuFeatures(Platform::SystemInfo.processor);
+
+   U32 mhz = 1000; // default if it can't be found
 
    LONG result;
    DWORD data = 0;
@@ -107,64 +154,37 @@ void Processor::init()
       result = ::RegQueryValueExA (hKey, "~MHz",NULL, NULL,(LPBYTE)&data, &dataSize);
 
       if (result == ERROR_SUCCESS)
-         nearmhz = mhz = data;
+         mhz = data;
 
       ::RegCloseKey(hKey);
    }
 
    Platform::SystemInfo.processor.mhz = mhz;
 
-   if (mhz==0)
-   {
-      Con::printf("   %s, (Unknown) Mhz", Platform::SystemInfo.processor.name);
-      // stick SOMETHING in so it isn't ZERO.
-      Platform::SystemInfo.processor.mhz = 200; // seems a decent value.
-   }
-   else
-   {
-      if (nearmhz >= 1000)
-         Con::printf("   %s, ~%.2f Ghz", Platform::SystemInfo.processor.name, ((float)nearmhz)/1000.0f);
-      else
-         Con::printf("   %s, ~%d Mhz", Platform::SystemInfo.processor.name, nearmhz);
-      if (nearmhz != mhz)
-      {
-         if (mhz >= 1000)
-            Con::printf("     (timed at roughly %.2f Ghz)", ((float)mhz)/1000.0f);
-         else
-            Con::printf("     (timed at roughly %d Mhz)", mhz);
-      }
-   }
-
-   if( Platform::SystemInfo.processor.numAvailableCores > 0
-       || Platform::SystemInfo.processor.numPhysicalProcessors > 0
-       || Platform::SystemInfo.processor.isHyperThreaded )
-      Platform::SystemInfo.processor.properties |= CPU_PROP_MP;
-
-   if (Platform::SystemInfo.processor.properties & CPU_PROP_FPU)
-      Con::printf( "   FPU detected" );
+   Con::printf("Processor Init:");
+   Con::printf("   Processor: %s", Platform::SystemInfo.processor.name);
    if (Platform::SystemInfo.processor.properties & CPU_PROP_MMX)
-      Con::printf( "   MMX detected" );
+      Con::printf("      MMX detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_3DNOW)
-      Con::printf( "   3DNow detected" );
+      Con::printf("      3DNow detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE)
-      Con::printf( "   SSE detected" );
-   if( Platform::SystemInfo.processor.properties & CPU_PROP_SSE2 )
-      Con::printf( "   SSE2 detected" );
+      Con::printf("      SSE detected" );
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE2)
+      Con::printf("      SSE2 detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE3)
-      Con::printf( "   SSE3 detected" );
-   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE3xt)
-      Con::printf( "   SSE3ex detected ");
+      Con::printf("      SSE3 detected" );
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE3ex)
+      Con::printf("      SSE3ex detected ");
    if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE4_1)
-      Con::printf( "   SSE4.1 detected" );
+      Con::printf("      SSE4.1 detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE4_2)
-      Con::printf( "   SSE4.2 detected" );
-   if( Platform::SystemInfo.processor.isHyperThreaded )
-      Con::printf( "   HT detected" );
-   if( Platform::SystemInfo.processor.properties & CPU_PROP_MP )
-      Con::printf( "   MP detected [%i cores, %i logical, %i physical]",
-         Platform::SystemInfo.processor.numAvailableCores,
-         Platform::SystemInfo.processor.numLogicalProcessors,
-         Platform::SystemInfo.processor.numPhysicalProcessors );
+      Con::printf("      SSE4.2 detected" );
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_AVX)
+      Con::printf("      AVX detected");
+
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_MP)
+      Con::printf("   MultiCore CPU detected [%i cores, %i logical]", Platform::SystemInfo.processor.numPhysicalProcessors, Platform::SystemInfo.processor.numLogicalProcessors);
+
    Con::printf(" ");
    
    PlatformBlitInit();

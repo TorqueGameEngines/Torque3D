@@ -516,31 +516,24 @@ function testFilenameExtensions(%filename)
 
 function processLegacyField(%line, %originalFieldName, %newFieldName)
 {
-   if(!strIsMatchExpr("*"@%originalFieldName@"=*\"*\";*", %line) && 
-      !strIsMatchExpr("*"@%originalFieldName@"[*=*\"*\";*", %line) &&
-      !strIsMatchExpr("*"@%originalFieldName@" *=*\"*\";*", %line))
+   if(!strIsMatchExpr("*"@%originalFieldName@"=*;*", %line) && 
+      !strIsMatchExpr("*"@%originalFieldName@"[*=*;*", %line) &&
+      !strIsMatchExpr("*"@%originalFieldName@" *=*;*", %line))
       return %line;
       
    %outLine = strreplace(%line, %originalFieldName, %newFieldName);
    
    //get the value
    %value = "";
-   %pos = strpos(%outLine, "= \"");
+   %pos = strpos(%outLine, "=");
    if(%pos != -1)
    {
-     %endPos = strpos(%outLine, "\";", %pos); 
+     %endPos = strpos(%outLine, ";", %pos); 
+     %value = getSubStr(%outLine, %pos+1, %endPos-%pos-1);
      
-     %value = getSubStr(%outLine, %pos+3, %endPos-%pos-3);
-   }
-   else
-   {
-      %pos = strpos(%outLine, "=\"");
-      if(%pos != -1)
-      {
-        %endPos = strpos(%outLine, "\";", %pos); 
-        
-        %value = getSubStr(%outLine, %pos+2, %endPos-%pos-2);
-      }
+     %originalValue = %value;
+     %value = trim(%value);
+     %value = strreplace(%value, "\"", "");
    }
    
    if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
@@ -557,19 +550,19 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       
       if(isObject(%targetFilename))
       {
-         if(%originalFieldName $= "soundProfile")
+         //likely a material name, so handle it that way
+         %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
+           
+         if(%assetId $= "" || %assetId $= "Core_Rendering:NoMaterial")
          {
+            //if not, just do a lookup directly to see if it was another asset by that name
+            //e.g. sound profiles when converted will match names
             $ProjectImporter::assetQuery.clear();
             %foundAssets = AssetDatabase.findAssetName($ProjectImporter::assetQuery, %targetFilename);
             if(%foundAssets != 0)
             {
                %assetId = $ProjectImporter::assetQuery.getAsset(0);  
             }
-         }
-         else
-         {
-            //likely a material name, so handle it that way
-            %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
          }
       }
       else
@@ -605,6 +598,11 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
       {
          echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+         
+         //double check if this already had the quotes around the value or not
+         if(!strIsMatchExpr("*\"*\"*", %originalValue))
+            %assetId = "\"" @ %assetId @ "\"";
+         
          //if (%assetId.getStatusString() $= "Ok")
          %outLine = strReplace(%outLine, %value, %assetId);
          //else

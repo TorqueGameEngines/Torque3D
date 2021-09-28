@@ -68,6 +68,16 @@ ConsoleDocClass( HoverVehicle,
    "@ingroup Vehicles\n"
 );
 
+typedef HoverVehicleData::Sounds hoverSoundsEnum;
+DefineEnumType(hoverSoundsEnum);
+
+ImplementEnumType(hoverSoundsEnum, "enum types.\n"
+   "@ingroup HoverVehicleData\n\n")
+   { HoverVehicleData::JetSound,       "JetSound", "..." },
+   { HoverVehicleData::EngineSound,    "EngineSound", "..." },
+   { HoverVehicleData::FloatSound,     "FloatSound", "..." },
+EndImplementEnumType;
+
 namespace {
 
 const U32 sCollisionMoveMask = (TerrainObjectType     | PlayerObjectType  | 
@@ -232,7 +242,7 @@ void HoverVehicleData::initPersistFields()
    addField( "pitchForce", TypeF32, Offset(pitchForce, HoverVehicleData),
       "Pitch (rotation about the X-axis) force applied when steering in the y-axis direction." );
 
-   INITPERSISTFIELD_SOUNDASSET_ARRAY(HoverSounds, Sounds::MaxSounds, HoverVehicleData, "Sounds for hover vehicle.");
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(HoverSounds, hoverSoundsEnum, Sounds::MaxSounds, HoverVehicleData, "Sounds for hover vehicle.");
    
    addField( "dustTrailEmitter", TYPEID< ParticleEmitterData >(), Offset(dustTrailEmitter, HoverVehicleData),
       "Emitter to generate particles for the vehicle's dust trail.\nThe trail "
@@ -307,7 +317,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
    if (!server) {
 
       for (S32 i = 0; i < MaxSounds; i++)
-         if (mHoverSounds[i])
+         if (getHoverSounds(i) != StringTable->EmptyString())
          {
             _setHoverSounds(getHoverSounds(i), i);
          }

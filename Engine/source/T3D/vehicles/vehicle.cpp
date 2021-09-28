@@ -80,6 +80,28 @@ static U32 sTriggerMask = ItemObjectType     |
 
 IMPLEMENT_CONOBJECT(VehicleData);
 
+typedef VehicleData::Body::Sounds bodySounds;
+DefineEnumType(bodySounds);
+
+ImplementEnumType(bodySounds, "enum types.\n"
+   "@ingroup VehicleData\n\n")
+   { VehicleData::Body::SoftImpactSound,  "SoftImpactSound", "..." },
+   { VehicleData::Body::HardImpactSound,  "HardImpactSound", "..." },
+EndImplementEnumType;
+
+
+typedef VehicleData::Sounds vehSoundsEnum;
+DefineEnumType(vehSoundsEnum);
+
+ImplementEnumType(vehSoundsEnum, "enum types.\n"
+   "@ingroup VehicleData\n\n")
+   { VehicleData::ExitWater,     "ExitWater", "..." },
+   { VehicleData::ImpactSoft,    "ImpactSoft", "..." },
+   { VehicleData::ImpactMedium,  "ImpactMedium", "..." },
+   { VehicleData::ImpactHard,    "ImpactHard", "..." },
+   { VehicleData::Wake,          "Wake", "..." },
+EndImplementEnumType;
+
 ConsoleDocClass( VehicleData,
    "@brief Base properties shared by all Vehicles (FlyingVehicle, HoverVehicle, "
    "WheeledVehicle).\n\n"
@@ -219,7 +241,7 @@ bool VehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
       {
-         if (mVehicleBodySounds[i])
+         if (getVehicleBodySounds(i) != StringTable->EmptyString() )
          {
             _setVehicleBodySounds(getVehicleBodySounds(i), i);
          }
@@ -227,7 +249,7 @@ bool VehicleData::preload(bool server, String &errorStr)
 
       for (S32 j = 0; j < Sounds::MaxSounds; j++)
       {
-         if (mVehicleWaterSounds[j])
+         if (getVehicleWaterSounds(j) != StringTable->EmptyString()) 
          {
             _setVehicleWaterSounds(getVehicleWaterSounds(j), j);
          }
@@ -503,7 +525,7 @@ void VehicleData::initPersistFields()
       "Collision friction coefficient.\nHow well this object will slide against "
       "objects it collides with." );
 
-   INITPERSISTFIELD_SOUNDASSET_ARRAY(VehicleBodySounds, Body::Sounds::MaxSounds, VehicleData, "Sounds for vehicle body impacts.");
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(VehicleBodySounds, bodySounds, Body::Sounds::MaxSounds, VehicleData, "Sounds for vehicle body impacts.");
 
    addField( "minImpactSpeed", TypeF32, Offset(minImpactSpeed, VehicleData),
       "Minimum collision speed for the onImpact callback to be invoked." );
@@ -601,7 +623,7 @@ void VehicleData::initPersistFields()
       "Minimum velocity when entering the water for the imapactWaterHard sound "
       "to play.\n\n@see impactWaterHard" );
 
-   INITPERSISTFIELD_SOUNDASSET_ARRAY(WaterSounds, Sounds::MaxSounds, VehicleData, "Sounds for interacting with water.");
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(WaterSounds, vehSoundsEnum, VehicleData::Sounds::MaxSounds, VehicleData, "Sounds for interacting with water.");
 
    addField( "collDamageThresholdVel", TypeF32, Offset(collDamageThresholdVel, VehicleData),
       "Minimum collision velocity to cause damage to this vehicle.\nCurrently unused." );

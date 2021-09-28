@@ -118,6 +118,7 @@ struct WheeledVehicleData: public VehicleData
       WheelImpactSound,
       MaxSounds,
    };
+
    DECLARE_SOUNDASSET_ARRAY(WheeledVehicleData, WheeledVehicleSounds, Sounds::MaxSounds);
    DECLARE_SOUNDASSET_ARRAY_SETGET(WheeledVehicleData, WheeledVehicleSounds);
 

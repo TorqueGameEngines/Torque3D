@@ -371,6 +371,16 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
 
 #pragma endregion
 
+#define assetEnumNameConcat(x,suff,ForT)(new std::string(std::string(#x) + suff + std::string(#ForT)))->c_str()
+
+#define INITPERSISTFIELD_SOUNDASSET_ENUMED(name, enumType, maxValue, consoleClass, docs) \
+   for (U32 i = 0; i <= maxValue; i++)\
+   {\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
+      addProtectedField(assetEnumNameConcat(name,enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField(assetEnumNameConcat(name,enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));\
+   }\
+
 #pragma region Arrayed Asset Macros
 
 #define DECLARE_SOUNDASSET_ARRAY(className,name,max) public: \

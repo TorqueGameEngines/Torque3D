@@ -270,7 +270,8 @@ public: \
    GFXTexHandle get##name##Resource() \
    {\
       return m##name;\
-   }
+   }\
+   bool name##Valid() { (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok) ? true : false; }
 
 #define DECLARE_IMAGEASSET_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\
@@ -494,7 +495,8 @@ public: \
       if(index >= sm##name##Count || index < 0)\
          return nullptr;\
       return m##name[index];\
-   }
+   }\
+   bool name##Valid(const U32& id) { (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok) ? true : false; }
 
 #define DECLARE_IMAGEASSET_ARRAY_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\

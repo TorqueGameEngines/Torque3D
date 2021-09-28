@@ -270,7 +270,8 @@ public: \
       if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
          return m##name##Asset->getSfxProfile();\
       return NULL;\
-   }
+   }\
+   bool is##name##Valid() { (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok) ? true : false; }
 
 #define DECLARE_SOUNDASSET_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\
@@ -485,7 +486,8 @@ public: \
       if (get##name(id) != StringTable->EmptyString() && m##name##Asset[id].notNull())\
          return m##name##Asset[id]->getSfxProfile();\
       return NULL;\
-   }
+   }\
+   bool is##name##Valid(const U32& id) { (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok) ? true : false; }
 
 #define DECLARE_SOUNDASSET_ARRAY_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\

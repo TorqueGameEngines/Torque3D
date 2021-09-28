@@ -296,7 +296,7 @@ bool LightningData::preload(bool server, String &errorStr)
    {
       for (S32 i = 0; i < MaxThunders; i++)
       {
-         if (getThunderSound(i))
+         if (isThunderSoundValid(i))
          {
             _setThunderSound(getThunderSound(i), i);
             if (!getThunderSoundProfile(i))
@@ -304,7 +304,7 @@ bool LightningData::preload(bool server, String &errorStr)
          }
       }
 
-      if(getStrikeSound() && !getStrikeSoundProfile())
+      if(isStrikeSoundValid() && !getStrikeSoundProfile())
          Con::errorf(ConsoleLogEntry::General, "LightningData::preload: can't get sfxProfile from asset");
 
       mNumStrikeTextures = 0;

@@ -259,7 +259,8 @@ public: \
    SimObjectPtr<Material> get##name##Resource() \
    {\
       return m##name;\
-   }
+   }\
+   bool is##name##Valid() { (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok) ? true : false; }
 
 #define DECLARE_MATERIALASSET_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\

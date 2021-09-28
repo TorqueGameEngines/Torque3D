@@ -234,6 +234,8 @@ public: \
       {\
          m##name = NULL;\
       }\
+      if(get##name() == StringTable->EmptyString())\
+         return true;\
       \
       if (m##name##Asset.notNull() && m##name##Asset->getStatus() != SoundAsset::Ok)\
       {\

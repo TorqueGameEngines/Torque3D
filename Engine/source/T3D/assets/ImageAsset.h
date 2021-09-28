@@ -271,7 +271,7 @@ public: \
    {\
       return m##name;\
    }\
-   bool name##Valid() { (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok) ? true : false; }
+   bool name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 
 #define DECLARE_IMAGEASSET_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\
@@ -496,7 +496,7 @@ public: \
          return nullptr;\
       return m##name[index];\
    }\
-   bool name##Valid(const U32& id) { (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok) ? true : false; }
+   bool name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
 #define DECLARE_IMAGEASSET_ARRAY_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\

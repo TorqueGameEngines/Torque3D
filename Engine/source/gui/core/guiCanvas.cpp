@@ -107,16 +107,16 @@ ConsoleDocClass( GuiCanvas,
 
    IMPLEMENT_CALLBACK(GuiCanvas, onSetKeyboardTranslationEnabled, bool, (bool enable), (enable),
       "Called when the canvas receives an enableKeyboardTranslation request. This is usually the "
-      "result of a GuitTextInputCtrl gaining or losing focus. Return false to allow the request "
-      "to be passed to the platform window. Return true to override the request and handle it in script.\n\n"
+      "result of a GuitTextInputCtrl gaining or losing focus. Return true to allow the request "
+      "to be passed to the platform window. Return false to override the request and handle it in script.\n\n"
       "@note This callback is only issued if keyTranslationMode is set to \"Callback\" for this canvas.\n"
       "@param enable Requested keyboard translation state.\n"
       "@see KeyboardTranslationMode\n");
 
    IMPLEMENT_CALLBACK(GuiCanvas, onSetNativeAcceleratorsEnabled, bool, (bool enable), (enable),
       "Called when the canvas receives a setNativeAcceleratorsEnabled request. This is usually the "
-      "result of a GuitTextInputCtrl gaining or losing focus. Return false to allow the request to "
-      "be passed to the platform window. Return true to override the request and handle it in script.\n\n"
+      "result of a GuitTextInputCtrl gaining or losing focus. Return true to allow the request to "
+      "be passed to the platform window. Return false to override the request and handle it in script.\n\n"
       "@note This callback is only issued if nativeAcceleratorMode is set to \"Callback\" for this canvas.\n"
       "@param enable Requested accelerator state.\n"
       "@see KeyboardTranslationMode\n");

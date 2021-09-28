@@ -265,7 +265,9 @@ void LightningData::initPersistFields()
 
    INITPERSISTFIELD_SOUNDASSET(StrikeSound, LightningData, "Sound to play when lightning STRIKES!");
 
+   addArray("Thunders", MaxThunders);
    INITPERSISTFIELD_SOUNDASSET_ARRAY(ThunderSound, MaxThunders, LightningData, "Sounds for thunder.");
+   endArray("Thunders");
 
    addField( "strikeTextures", TypeString, Offset(strikeTextureNames, LightningData), MaxTextures,
       "List of textures to use to render lightning strikes." );
@@ -299,9 +301,13 @@ bool LightningData::preload(bool server, String &errorStr)
          if (getThunderSound(i))
          {
             _setThunderSound(getThunderSound(i), i);
+            Con::printf("Thunder sound: %d %s", i, getThunderSound(i));
+
             if (!getThunderSoundProfile(i))
                Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Cant get an sfxProfile for thunder.");
+
          }
+
       }
 
       if(getStrikeSound() && !getStrikeSoundProfile())

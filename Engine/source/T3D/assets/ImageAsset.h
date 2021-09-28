@@ -345,7 +345,6 @@ if (m##name##AssetId != StringTable->EmptyString())\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
       stream->writeString(m##name##Asset.getAssetId());\
-      _set##name(m##name##AssetId);\
    }\
    else\
       stream->writeString(m##name##Name);
@@ -354,9 +353,13 @@ if (m##name##AssetId != StringTable->EmptyString())\
    if (stream->readFlag())\
    {\
       m##name##AssetId = stream->readSTString();\
+      _set##name(m##name##AssetId);\
    }\
    else\
-      m##name##Name = stream->readSTString();
+   {\
+      m##name##Name = stream->readSTString();\
+      _set##name(m##name##Name);\
+   }\
 
 #define PACK_IMAGEASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
@@ -591,7 +594,10 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       _set##name(m##name##AssetId[index], index);\
    }\
    else\
-      m##name##Name[index] = stream->readSTString();
+   {\
+      m##name##Name[index] = stream->readSTString();\
+      _set##name(m##name##Name[index], index);\
+   }\
 
 #define PACK_IMAGEASSET_ARRAY(netconn, name, index)\
    if (stream->writeFlag(m##name##Asset[index].notNull()))\

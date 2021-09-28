@@ -346,7 +346,10 @@ if (m##name##AssetId != StringTable->EmptyString())\
       _set##name(m##name##AssetId);\
    }\
    else\
-      m##name##Name = stream->readSTString();
+   {\
+      m##name##Name = stream->readSTString();\
+      _set##name(m##name##Name);\
+   }\
 
 #define PACK_MATERIALASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\

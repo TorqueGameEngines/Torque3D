@@ -344,7 +344,10 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
       _set##name(m##name##AssetId);\
    }\
    else\
-      m##name##Name = stream->readSTString();
+   {\
+      m##name##Name = stream->readSTString();\
+      _set##name(m##name##Name);\
+   }
 
 #define PACK_SOUNDASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\

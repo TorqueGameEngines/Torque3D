@@ -397,7 +397,10 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
       _set##name(m##name##AssetId);\
    }\
    else\
-      m##name##Name = stream->readSTString();
+   {\
+      m##name##Name = stream->readSTString();\
+      _set##name(m##name##Name);\
+   }
 
 #define PACK_SHAPEASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
@@ -609,7 +612,10 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), 
       _set##name(m##name##AssetId[index], index);\
    }\
    else\
-      m##name##Name[index] = stream->readSTString();
+   {\
+      m##name##Name[index] = stream->readSTString();\
+      _set##name(m##name##Name[index], index);\
+   }
 
 #define PACK_SHAPEASSET_ARRAY(netconn, name, index)\
    if (stream->writeFlag(m##name##Asset[index].notNull()))\

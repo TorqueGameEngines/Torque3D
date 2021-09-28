@@ -864,7 +864,15 @@ bool ExplosionData::preload(bool server, String &errorStr)
 
    if( !server )
    {
-      String sfxErrorStr;
+
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
+
+         if (!getSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
+
       if (!particleEmitter && particleEmitterId != 0)
          if (Sim::findObject(particleEmitterId, particleEmitter) == false)
             Con::errorf(ConsoleLogEntry::General, "Error, unable to load particle emitter for explosion datablock");

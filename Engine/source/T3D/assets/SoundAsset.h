@@ -235,6 +235,8 @@ public: \
          m##name = NULL;\
       }\
       \
+      if(get##name() == StringTable->EmptyString())\
+         return true;\
       if (m##name##Asset.notNull() && m##name##Asset->getStatus() != SoundAsset::Ok)\
       {\
          Con::errorf("%s(%s)::_set%s() - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, SoundAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\

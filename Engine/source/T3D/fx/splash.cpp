@@ -276,11 +276,17 @@ bool SplashData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   if (!server && !getSoundProfile())
-      return false;
-
    if (!server)
    {
+
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
+
+         if(!getSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
+
       S32 i;
       for( i=0; i<NUM_EMITTERS; i++ )
       {

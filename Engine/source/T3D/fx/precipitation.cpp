@@ -188,9 +188,16 @@ bool PrecipitationData::preload( bool server, String &errorStr )
 {
    if( Parent::preload( server, errorStr) == false)
       return false;
+   if (!server)
+   {
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
 
-   if (!server && !getSoundProfile())
-      return false;
+         if (!getSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
+   }
 
    return true;
 }

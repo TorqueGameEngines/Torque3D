@@ -321,7 +321,8 @@ public: \
    Resource<TSShape> get##name##Resource() \
    {\
       return m##name;\
-   }
+   }\
+   bool is##name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 
 #define DECLARE_SHAPEASSET_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\
@@ -522,7 +523,8 @@ public: \
       if(index >= sm##name##Count || index < 0)\
          return ResourceManager::get().load( "" );\
       return m##name[index];\
-   }
+   }\
+   bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
 #define DECLARE_SHAPEASSET_ARRAY_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\

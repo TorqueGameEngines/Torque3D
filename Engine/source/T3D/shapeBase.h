@@ -264,7 +264,7 @@ struct ShapeBaseImageData: public GameBaseData {
       //SFXTrack* sound;
       F32 emitterTime;              ///<
       S32 emitterNode[MaxShapes];   ///< Node ID on the shape to emit from
-      //DECLARE_SOUNDASSET(StateData, Sound);
+      SoundAsset* sound;
    };
    /// @name State Data
    /// Individual state data used to initialize struct array
@@ -1075,8 +1075,6 @@ protected:
    /// @param   imageSlot   Image slot id
    /// @param   state       State id
    /// @param   force       Force image to state or let it finish then change
-
-   U32 prevState = 0;
    void setImageState(U32 imageSlot, U32 state, bool force = false);
 
    void updateAnimThread(U32 imageSlot, S32 imageShapeIndex, ShapeBaseImageData::StateData* lastState=NULL);

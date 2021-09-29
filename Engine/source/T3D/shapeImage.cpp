@@ -132,7 +132,7 @@ ShapeBaseImageData::StateData::StateData()
    loaded = IgnoreLoaded;
    spin = IgnoreSpin;
    recoil = NoRecoil;
-   //sound = 0;
+   sound = NULL;
    emitter = NULL;
    shapeSequence = NULL;
    shapeSequenceScale = true;
@@ -156,6 +156,7 @@ ShapeBaseImageData::StateData::StateData()
       flashSequence[i] = false;
       emitterNode[i] = -1;
    }
+
 }
 
 static ShapeBaseImageData::StateData gDefaultStateData;
@@ -369,7 +370,8 @@ bool ShapeBaseImageData::onAdd()
          s.shapeSequence = stateShapeSequence[i];
          s.shapeSequenceScale = stateScaleShapeSequence[i];
 
-         _setstateSound(getstateSound(i),i);
+         //_setstateSound(getstateSound(i),i);
+         s.sound = getstateSoundAsset(i);
          s.script = stateScript[i];
          s.emitter = stateEmitter[i];
          s.emitterTime = stateEmitterTime[i];
@@ -2761,7 +2763,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // Delete any loooping sounds that were in the previous state.
    // this is the crazy bit =/ needs to know prev state in order to stop sounds.
    // lastState does not return an id for the prev state so we keep track of it.
-   if (image.dataBlock->getstateSound(prevState) && image.dataBlock->getstateSoundProfile(prevState)->getDescription()->mIsLooping)
+   if (lastState->sound && lastState->sound->getSfxProfile()->getDescription()->mIsLooping)
    {  
       for(Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)      
          SFX_DELETE((*i));    
@@ -2770,14 +2772,11 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    }  
 
    // Play sound
-   if( image.dataBlock->getstateSound(newState) && isGhost() )
+   if( stateData.sound && isGhost() )
    {
       const Point3F& velocity         = getVelocity();
-      image.addSoundSource(SFX->createSource(image.dataBlock->getstateSoundProfile(newState), &getRenderTransform(), &velocity ));
+      image.addSoundSource(SFX->createSource(stateData.sound->getSfxProfile(), &getRenderTransform(), &velocity ));
    }
-
-   /// update our prevState.
-   prevState = newState;
 
    // Play animation
    updateAnimThread(imageSlot, imageShapeIndex, lastState);

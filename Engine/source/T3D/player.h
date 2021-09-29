@@ -35,6 +35,7 @@
 #include "collision/boxConvex.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
 #include "T3D/gameBase/gameProcess.h"
 
 class Material;
@@ -218,7 +219,9 @@ struct PlayerData: public ShapeBaseData {
       ExitWater,
       MaxSounds
    };
-   SFXTrack* sound[MaxSounds];
+
+   DECLARE_SOUNDASSET_ARRAY(PlayerData, PlayerSound, Sounds::MaxSounds);
+   DECLARE_SOUNDASSET_ARRAY_SETGET(PlayerData, PlayerSound);
 
    Point3F boxSize;           ///< Width, depth, height
    Point3F crouchBoxSize;

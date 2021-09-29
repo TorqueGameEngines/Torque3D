@@ -132,7 +132,7 @@ ShapeBaseImageData::StateData::StateData()
    loaded = IgnoreLoaded;
    spin = IgnoreSpin;
    recoil = NoRecoil;
-   sound = 0;
+   //sound = 0;
    emitter = NULL;
    shapeSequence = NULL;
    shapeSequenceScale = true;
@@ -256,7 +256,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       stateShapeSequence[i] = 0;
       stateScaleShapeSequence[i] = false;
 
-      stateSound[i] = 0;
+      INIT_SOUNDASSET_ARRAY(stateSound, i);
       stateScript[i] = 0;
       stateEmitter[i] = 0;
       stateEmitterTime[i] = 0;
@@ -303,6 +303,7 @@ ShapeBaseImageData::ShapeBaseImageData()
    camShakeDuration = 1.5f;
    camShakeRadius = 3.0f;
    camShakeFalloff = 10.0f;
+   
 }
 
 ShapeBaseImageData::~ShapeBaseImageData()
@@ -368,7 +369,7 @@ bool ShapeBaseImageData::onAdd()
          s.shapeSequence = stateShapeSequence[i];
          s.shapeSequenceScale = stateScaleShapeSequence[i];
 
-         s.sound = stateSound[i];
+         _setstateSound(getstateSound(i),i);
          s.script = stateScript[i];
          s.emitter = stateEmitter[i];
          s.emitterTime = stateEmitterTime[i];
@@ -419,10 +420,14 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          if (state[i].emitter)
             if (!Sim::findObject(SimObjectId((uintptr_t)state[i].emitter), state[i].emitter))
                Con::errorf(ConsoleLogEntry::General, "Error, unable to load emitter for image datablock");
-               
-         String str;
-         if( !sfxResolve( &state[ i ].sound, str ) )
-            Con::errorf( ConsoleLogEntry::General, str.c_str() );
+
+         if (getstateSound(i) != StringTable->EmptyString())
+         {
+            _setstateSound(getstateSound(i), i);
+            if (!getstateSoundProfile(i))
+               Con::errorf("ShapeBaseImageData::preload() - Could not find profile for asset %s on state %d", getstateSound(i), i);
+         }
+
       }
    }
 
@@ -922,8 +927,8 @@ void ShapeBaseImageData::initPersistFields()
       addField( "stateScaleShapeSequence", TypeBool, Offset(stateScaleShapeSequence, ShapeBaseImageData), MaxStates,
          "Indicates if the sequence to be played on the mounting shape should be scaled to the length of the state." );
 
-      addField( "stateSound", TypeSFXTrackName, Offset(stateSound, ShapeBaseImageData), MaxStates,
-         "Sound to play on entry to this state." );
+      INITPERSISTFIELD_SOUNDASSET_ARRAY(stateSound, MaxStates, ShapeBaseImageData, "State sound.");
+
       addField( "stateScript", TypeCaseString, Offset(stateScript, ShapeBaseImageData), MaxStates,
          "@brief Method to execute on entering this state.\n\n"
          "Scoped to this image class name, then ShapeBaseImageData. The script "
@@ -1140,7 +1145,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
             }
          }
 
-         sfxWrite( stream, s.sound );
+         PACKDATA_SOUNDASSET_ARRAY(stateSound, i);
       }
    stream->write(maxConcurrentSounds);
    stream->writeFlag(useRemainderDT);
@@ -1345,7 +1350,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
          else
             s.emitter = 0;
             
-         sfxRead( stream, &s.sound );
+         UNPACKDATA_SOUNDASSET_ARRAY(stateSound, i);
       }
    }
    
@@ -2753,9 +2758,10 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    {
       onImageStateAnimation(imageSlot, stateData.shapeSequence, stateData.direction, stateData.shapeSequenceScale, stateData.timeoutValue);
    }
-
    // Delete any loooping sounds that were in the previous state.
-   if (lastState->sound && lastState->sound->getDescription()->mIsLooping)  
+   // this is the crazy bit =/ needs to know prev state in order to stop sounds.
+   // lastState does not return an id for the prev state so we keep track of it.
+   if (image.dataBlock->getstateSound(prevState) && image.dataBlock->getstateSoundProfile(prevState)->getDescription()->mIsLooping)
    {  
       for(Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)      
          SFX_DELETE((*i));    
@@ -2764,11 +2770,14 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    }  
 
    // Play sound
-   if( stateData.sound && isGhost() )
+   if( image.dataBlock->getstateSound(newState) && isGhost() )
    {
       const Point3F& velocity         = getVelocity();
-      image.addSoundSource(SFX->createSource( stateData.sound, &getRenderTransform(), &velocity )); 
+      image.addSoundSource(SFX->createSource(image.dataBlock->getstateSoundProfile(newState), &getRenderTransform(), &velocity ));
    }
+
+   /// update our prevState.
+   prevState = newState;
 
    // Play animation
    updateAnimThread(imageSlot, imageShapeIndex, lastState);

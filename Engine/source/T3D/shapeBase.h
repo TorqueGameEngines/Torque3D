@@ -73,6 +73,7 @@
 
 // Need full definition visible for SimObjectPtr<ParticleEmitter>
 #include "T3D/fx/particleEmitter.h"
+#include "T3D/assets/SoundAsset.h"
 
 class GFXCubemap;
 class TSShapeInstance;
@@ -259,11 +260,12 @@ struct ShapeBaseImageData: public GameBaseData {
                                     ///  the imageSlot.
       ParticleEmitterData* emitter; ///< A particle emitter; this emitter will emit as long as the gun is in this
                                     ///  this state.
-      SFXTrack* sound;
+      
+      //SFXTrack* sound;
       F32 emitterTime;              ///<
       S32 emitterNode[MaxShapes];   ///< Node ID on the shape to emit from
+      //DECLARE_SOUNDASSET(StateData, Sound);
    };
-
    /// @name State Data
    /// Individual state data used to initialize struct array
    /// @{
@@ -321,7 +323,10 @@ struct ShapeBaseImageData: public GameBaseData {
 
    bool                    stateIgnoreLoadedForReady  [MaxStates];
 
-   SFXTrack*               stateSound                 [MaxStates];
+   DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates);
+   DECLARE_SOUNDASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
+
+   //SFXTrack*               stateSound                 [MaxStates];
    const char*             stateScript                [MaxStates];
 
    ParticleEmitterData*    stateEmitter               [MaxStates];
@@ -662,7 +667,7 @@ public:
    DECLARE_CALLBACK( void, onCollision, ( ShapeBase* obj, SceneObject* collObj, VectorF vec, F32 len ) );
    DECLARE_CALLBACK( void, onDamage, ( ShapeBase* obj, F32 delta ) );
    DECLARE_CALLBACK( void, onTrigger, ( ShapeBase* obj, S32 index, bool state ) );
-   DECLARE_CALLBACK(void, onEndSequence, (ShapeBase* obj, S32 slot, const char* name));
+   DECLARE_CALLBACK( void, onEndSequence, (ShapeBase* obj, S32 slot, const char* name));
    DECLARE_CALLBACK( void, onForceUncloak, ( ShapeBase* obj, const char* reason ) );
    /// @}
    struct TextureTagRemapping
@@ -1070,6 +1075,8 @@ protected:
    /// @param   imageSlot   Image slot id
    /// @param   state       State id
    /// @param   force       Force image to state or let it finish then change
+
+   U32 prevState = 0;
    void setImageState(U32 imageSlot, U32 state, bool force = false);
 
    void updateAnimThread(U32 imageSlot, S32 imageShapeIndex, ShapeBaseImageData::StateData* lastState=NULL);

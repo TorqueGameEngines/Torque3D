@@ -380,10 +380,12 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    for (U32 i = 0; i < maxValue; i++)\
    {\
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
-      addProtectedField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-      addProtectedField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));\
-   }\
-
+      if (enumString && enumString[0])\
+      {\
+         addProtectedField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+         addProtectedField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));\
+      }\
+   }
 #pragma region Arrayed Asset Macros
 
 #define DECLARE_SOUNDASSET_ARRAY(className,name,max) public: \

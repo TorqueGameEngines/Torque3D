@@ -204,7 +204,7 @@ ImplementEnumType(playerSoundsEnum, "enum types.\n"
    {PlayerData::Sounds::FootBubbles,         "FootBubbles","..." },
    {PlayerData::Sounds::MoveBubbles,         "MoveBubbles","..." },
    {PlayerData::Sounds::WaterBreath,         "WaterBreath","..." },
-   {PlayerData::Sounds::ImpactStart,         "ImpactStart","..." },
+   {PlayerData::Sounds::ImpactSoft,          "ImpactSoft","..." },
    {PlayerData::Sounds::ImpactHard,          "ImpactHard","..." },
    {PlayerData::Sounds::ImpactMetal,         "ImpactMetal","..." },
    {PlayerData::Sounds::ImpactSnow,          "ImpactSnow","..." },

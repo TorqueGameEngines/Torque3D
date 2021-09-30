@@ -925,10 +925,10 @@ T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset soundPr
 T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset shapeName shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("PlayerData", "shapeFP shapeFPAsset shapeNameFP shapeFPAsset");
 T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound soundAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
-T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset[0] shapeFP shapeAsset[1] shapeFile shapeAsset[0] shapeFileFP shapeAsset[1]");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset[0] shapeFP shapeAsset[1] shapeFile shapeAsset[0] shapeFileFP shapeAsset[1] stateSound stateSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("ProximityMineData","armingSound ArmSoundAsset TriggerSound TriggerSoundAsset");
 T3Dpre4ProjectImporter::genProcessor("WheeledVehicleTire", "shape shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("WheeledVehicleData", "engineSound engineSoundAsset squealSound squealSoundAsset");
 T3Dpre4ProjectImporter::genProcessor("FlyingVehicleData", "engineSound engineSoundAsset jetSound jetSoundAsset");
@@ -938,13 +938,25 @@ T3Dpre4ProjectImporter::genProcessor("HoverVehicleData", "engineSound engineSoun
 // Datablocks - Long Lists
 //==============================================================================
 
-$rigidSoundList = "softImpactSound softImpactSoundAsset hardImpactSound hardImpactSoundAsset";
-$rigidSoundList = $rigidSoundList SPC "exitingWater exitingWaterAsset impactWaterEasy impactWaterEasyAsset";
-$rigidSoundList = $rigidSoundList SPC "impactWaterMedium impactWaterMediumAsset impactWaterHard impactWaterHardAsset";
-$rigidSoundList = $rigidSoundList SPC "waterWakeSound waterWakeSoundAsset";
-T3Dpre4ProjectImporter::genProcessor("RigidShapeData",$rigidSoundList);
+$rigidEntriesList = "softImpactSound softImpactSoundAsset hardImpactSound hardImpactSoundAsset";
+$rigidEntriesList = $rigidEntriesList SPC "exitingWater exitingWaterAsset impactWaterEasy impactWaterEasyAsset";
+$rigidEntriesList = $rigidEntriesList SPC "impactWaterMedium impactWaterMediumAsset impactWaterHard impactWaterHardAsset";
+$rigidEntriesList = $rigidEntriesList SPC "waterWakeSound waterWakeSoundAsset";
+T3Dpre4ProjectImporter::genProcessor("RigidShapeData",$rigidEntriesList);
+
+$PlayerEntriesList = "shapeFP shapeFPAsset shapeNameFP shapeFPAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootSoftSound FootSoftAsset FootHardSound FootHardAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootSnowSound FootSnowAsset FootShallowSound FootShallowSplashAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootWadingSound FootWadingAsset FootUnderwaterSound FootUnderWaterAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootBubblesSound FootBubblesAsset movingBubblesSound MoveBubblesAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "waterBreathSound WaterBreathAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "impactSoftSound ImpactSoftAsset impactHardSound impactHardAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "impactMetalSound ImpactMetalAsset impactSnowSound impactSnowAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "impactWaterEasy impactWaterEasyAsset impactWaterMedium impactWaterMediumAsset impactWaterHard impactWaterHardAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "exitingWater ExitWaterAsset";
 
 
+T3Dpre4ProjectImporter::genProcessor("PlayerData", $PlayerEntriesList);
 //==============================================================================
 // Materials
 //==============================================================================

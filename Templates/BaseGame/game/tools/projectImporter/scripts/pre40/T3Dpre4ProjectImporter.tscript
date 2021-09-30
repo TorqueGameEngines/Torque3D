@@ -839,7 +839,7 @@ T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset"
 T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("TerrainBlock", "terrainFile terrainAsset");
-T3Dpre4ProjectImporter::genProcessor("afxMagicMissileData", "projectileShapeName projectileShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("afxMagicMissileData", "projectileShapeName projectileShapeAsset sound soundAsset");
 T3Dpre4ProjectImporter::genProcessor("afxBillboardData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("afxModelData", "shapeName shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
@@ -921,15 +921,30 @@ T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ParticleData", "texture textureAsset textureName textureAsset textureExt textureExtAsset textureExtName textureExtAsset");
 T3Dpre4ProjectImporter::genProcessor("PrecipitationData", "drop dropAsset dropTexture dropAsset splash splashAsset splashTexture splashAsset soundProfile soundAsset");
-T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset soundProfile SoundAsset");
 T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset shapeName shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PlayerData", "shapeFP shapeFPAsset shapeNameFP shapeFPAsset");
-T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound soundAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset[0] shapeFP shapeAsset[1] shapeFile shapeAsset[0] shapeFileFP shapeAsset[1]");
 T3Dpre4ProjectImporter::genProcessor("WheeledVehicleTire", "shape shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("WheeledVehicleData", "engineSound engineSoundAsset squealSound squealSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("FlyingVehicleData", "engineSound engineSoundAsset jetSound jetSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("HoverVehicleData", "engineSound engineSoundAsset jetSound jetSoundAsset floatSound floatSoundAsset");
+
+//==============================================================================
+// Datablocks - Long Lists
+//==============================================================================
+
+$rigidSoundList = "softImpactSound softImpactSoundAsset hardImpactSound hardImpactSoundAsset";
+$rigidSoundList = $rigidSoundList SPC "exitingWater exitingWaterAsset impactWaterEasy impactWaterEasyAsset";
+$rigidSoundList = $rigidSoundList SPC "impactWaterMedium impactWaterMediumAsset impactWaterHard impactWaterHardAsset";
+$rigidSoundList = $rigidSoundList SPC "waterWakeSound waterWakeSoundAsset";
+T3Dpre4ProjectImporter::genProcessor("RigidShapeData",$rigidSoundList);
+
+
 //==============================================================================
 // Materials
 //==============================================================================

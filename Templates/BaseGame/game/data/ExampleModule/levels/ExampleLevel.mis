@@ -36,7 +36,7 @@ new Scene(EditorTemplateLevel) {
       squareSize = "128";
       scaleU = "25";
       scaleV = "25";
-      MaterialFile = "FloorGray";
+      MaterialAsset = "Prototyping:FloorGray";
       canSave = "1";
       canSaveDynamicFields = "1";
          Enabled = "1";

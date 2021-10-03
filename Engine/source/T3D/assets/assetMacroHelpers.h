@@ -34,6 +34,18 @@
    m##name##Asset = NULL;\
    m##name = NULL;
 
+//load asset into memory by looking up the ID, spew a warning if anything goes wrong
+#define LOAD_ASSET(name, assetClass)\
+if (m##name##AssetId != StringTable->EmptyString())\
+{\
+   S32 assetState = assetClass::getAssetById(m##name##AssetId, &m##name##Asset);\
+   if (assetState == assetClass::Ok )\
+   {\
+      m##name##Name = StringTable->EmptyString();\
+   }\
+   else Con::warnf("Warning: %s::LOAD_ASSET(%s)-%s", mClassName, m##name##AssetId, assetClass::getAssetErrstrn(assetState).c_str());\
+}
+
 // copy constructor 
 #define CLONE_ASSET(name) \
    m##name##Name = other.m##name##Name;\
@@ -132,6 +144,18 @@ DefineEngineMethod(className, set##name, bool, (const char* assetName), , assetT
    m##name##AssetId[index] = StringTable->EmptyString(); \
    m##name##Asset[index] = NULL;\
    m##name[index] = NULL;\
+}
+
+//load asset into memory by looking up the ID, spew a warning if anything goes wrong
+#define LOAD_ASSET_ARRAY(name, index, assetClass)\
+if (m##name##AssetId[index] != StringTable->EmptyString())\
+{\
+   S32 assetState = assetClass::getAssetById(m##name##AssetId[index], &m##name##Asset[index]);\
+   if (assetState == assetClass::Ok )\
+   {\
+      m##name##Name[index] = StringTable->EmptyString();\
+   }\
+   else Con::warnf("Warning: %s::LOAD_ASSET(%s[%d])-%s", mClassName, m##name##AssetId[index],index, assetClass::getAssetErrstrn(assetState).c_str());\
 }
 
 // copy constructor 

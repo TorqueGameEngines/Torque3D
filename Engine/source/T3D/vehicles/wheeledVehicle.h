@@ -120,7 +120,6 @@ struct WheeledVehicleData: public VehicleData
    };
 
    DECLARE_SOUNDASSET_ARRAY(WheeledVehicleData, WheeledVehicleSounds, Sounds::MaxSounds);
-   DECLARE_ASSET_ARRAY_SETGET(WheeledVehicleData, WheeledVehicleSounds);
 
    SFXProfile* getWheeledVehicleSound(U32 id)
    {

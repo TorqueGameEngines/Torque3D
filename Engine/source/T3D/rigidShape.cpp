@@ -238,7 +238,7 @@ RigidShapeData::RigidShapeData()
    density = 4;
 
    for (S32 i = 0; i < Body::MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(BodySounds, i);
+      INIT_ASSET_ARRAY(BodySounds, i);
 
    dustEmitter = NULL;
    dustID = 0;
@@ -257,7 +257,7 @@ RigidShapeData::RigidShapeData()
    enablePhysicsRep = true;
 
    for (S32 i = 0; i < Sounds::MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(WaterSounds, i);
+      INIT_ASSET_ARRAY(WaterSounds, i);
 
    dragForce            = 0;
    vertFactor           = 0.25;
@@ -371,7 +371,7 @@ void RigidShapeData::packData(BitStream* stream)
    stream->write(body.friction);
    for (U32 i = 0; i < Body::MaxSounds; ++i)
    {
-      PACKDATA_SOUNDASSET_ARRAY(BodySounds, i);
+      PACKDATA_ASSET_ARRAY(BodySounds, i);
    }
 
    stream->write(minImpactSpeed);
@@ -403,7 +403,7 @@ void RigidShapeData::packData(BitStream* stream)
    // write the water sound profiles
    for (U32 i = 0; i < Sounds::MaxSounds; ++i)
    {
-      PACKDATA_SOUNDASSET_ARRAY(WaterSounds, i);
+      PACKDATA_ASSET_ARRAY(WaterSounds, i);
    }
 
    if (stream->writeFlag( dustEmitter ))
@@ -434,7 +434,7 @@ void RigidShapeData::unpackData(BitStream* stream)
 
    for (U32 i = 0; i < Body::Sounds::MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(BodySounds, i);
+      UNPACKDATA_ASSET_ARRAY(BodySounds, i);
    }
 
    stream->read(&minImpactSpeed);
@@ -466,7 +466,7 @@ void RigidShapeData::unpackData(BitStream* stream)
    // write the water sound profiles
    for (U32 i = 0; i < Sounds::MaxSounds; ++i)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(WaterSounds, i);
+      UNPACKDATA_ASSET_ARRAY(WaterSounds, i);
    }
 
    if( stream->readFlag() )

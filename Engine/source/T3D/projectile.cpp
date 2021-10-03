@@ -144,9 +144,9 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 ProjectileData::ProjectileData()
 {
-   INIT_SHAPEASSET(ProjectileShape);
+   INIT_ASSET(ProjectileShape);
 
-   INIT_SOUNDASSET(ProjectileSound);
+   INIT_ASSET(ProjectileSound);
 
    explosion = NULL;
    explosionId = 0;
@@ -217,10 +217,10 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
    splashId = other.splashId; // -- for pack/unpack of splash ptr
    decal = other.decal;
    decalId = other.decalId; // -- for pack/unpack of decal ptr
-   CLONE_SOUNDASSET(ProjectileSound);
+   CLONE_ASSET(ProjectileSound);
    lightDesc = other.lightDesc;
    lightDescId = other.lightDescId; // -- for pack/unpack of lightDesc ptr
-   CLONE_SHAPEASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
+   CLONE_ASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
    activateSeq = other.activateSeq; // -- from projectileShape sequence "activate"
    maintainSeq = other.maintainSeq; // -- from projectileShape sequence "maintain"
    particleEmitter = other.particleEmitter;
@@ -406,7 +406,7 @@ void ProjectileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SHAPEASSET(ProjectileShape);
+   PACKDATA_ASSET(ProjectileShape);
 
    stream->writeFlag(faceViewer);
    if(stream->writeFlag(scale.x != 1 || scale.y != 1 || scale.z != 1))
@@ -439,7 +439,7 @@ void ProjectileData::packData(BitStream* stream)
    if (stream->writeFlag(decal != NULL))
       stream->writeRangedU32(decal->getId(), DataBlockObjectIdFirst,
                                               DataBlockObjectIdLast);
-   PACKDATA_SOUNDASSET(ProjectileSound);
+   PACKDATA_ASSET(ProjectileSound);
 
    if ( stream->writeFlag(lightDesc != NULL))
       stream->writeRangedU32(lightDesc->getId(), DataBlockObjectIdFirst,
@@ -470,7 +470,7 @@ void ProjectileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_SHAPEASSET(ProjectileShape);
+   UNPACKDATA_ASSET(ProjectileShape);
 
    faceViewer = stream->readFlag();
    if(stream->readFlag())
@@ -500,7 +500,7 @@ void ProjectileData::unpackData(BitStream* stream)
    if (stream->readFlag())
       decalId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
 
-   UNPACKDATA_SOUNDASSET(ProjectileSound);
+   UNPACKDATA_ASSET(ProjectileSound);
 
    if (stream->readFlag())
       lightDescId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);

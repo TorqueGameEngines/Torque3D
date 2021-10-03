@@ -60,7 +60,7 @@ public:
 
 public:
    DECLARE_IMAGEASSET(afxZodiacData, Texture, onImageChanged, AFX_GFXZodiacTextureProfile);
-   DECLARE_IMAGEASSET_SETGET(afxZodiacData, Texture);
+   DECLARE_ASSET_SETGET(afxZodiacData, Texture);
 
   F32               radius_xy;
   Point2F           vert_range;

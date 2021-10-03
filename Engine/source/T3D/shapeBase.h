@@ -324,7 +324,7 @@ struct ShapeBaseImageData: public GameBaseData {
    bool                    stateIgnoreLoadedForReady  [MaxStates];
 
    DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates);
-   DECLARE_SOUNDASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
+   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
 
    //SFXTrack*               stateSound                 [MaxStates];
    const char*             stateScript                [MaxStates];
@@ -379,10 +379,10 @@ struct ShapeBaseImageData: public GameBaseData {
                                     ///< when the script prefix has changed.
 
    DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes);  ///< Name of shape to render.
-   DECLARE_SHAPEASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
+   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
 
    //DECLARE_SHAPEASSET(ShapeBaseImageData, ShapeFP);  ///< Name of shape to render in first person (optional).
-   //DECLARE_SHAPEASSET_SETGET(ShapeBaseImageData, ShapeFP);
+   //DECLARE_ASSET_SETGET(ShapeBaseImageData, ShapeFP);
 
    StringTableEntry  imageAnimPrefix;     ///< Passed along to the mounting shape to modify
                                           ///  animation sequences played in 3rd person. [optional]
@@ -546,7 +546,7 @@ public:
    F32 shadowSphereAdjust;
 
    DECLARE_SHAPEASSET(ShapeBaseData, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, Shape);
+   DECLARE_ASSET_SETGET(ShapeBaseData, Shape);
 
    StringTableEntry  cloakTexName;
 
@@ -562,7 +562,7 @@ public:
    S32               debrisID;
 
    DECLARE_SHAPEASSET(ShapeBaseData, DebrisShape, onDebrisChanged);
-   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, DebrisShape);
+   DECLARE_ASSET_SETGET(ShapeBaseData, DebrisShape);
 
    ExplosionData*    explosion;
    S32               explosionID;

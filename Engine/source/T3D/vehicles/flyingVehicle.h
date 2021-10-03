@@ -46,7 +46,7 @@ struct FlyingVehicleData: public VehicleData {
       MaxSounds,
    };
    DECLARE_SOUNDASSET_ARRAY(FlyingVehicleData, FlyingSounds, Sounds::MaxSounds);
-   DECLARE_SOUNDASSET_ARRAY_SETGET(FlyingVehicleData, FlyingSounds);
+   DECLARE_ASSET_ARRAY_SETGET(FlyingVehicleData, FlyingSounds);
    SFXProfile* getFlyingSoundProfile(U32 id)
    {
       if (mFlyingSoundsAsset[id] != NULL)

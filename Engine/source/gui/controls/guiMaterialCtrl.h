@@ -41,7 +41,7 @@ private:
 protected:
 
    DECLARE_MATERIALASSET(GuiMaterialCtrl, Material);
-   DECLARE_MATERIALASSET_SETGET(GuiMaterialCtrl, Material);
+   DECLARE_ASSET_SETGET(GuiMaterialCtrl, Material);
 
    BaseMatInstance *mMaterialInst;
 

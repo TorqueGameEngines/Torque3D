@@ -187,7 +187,6 @@ PlayerData::ActionAnimationDef PlayerData::ActionAnimationList[NumTableActionAni
 
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 
 typedef PlayerData::Sounds playerSoundsEnum;
 DefineEnumType(playerSoundsEnum);
@@ -213,6 +212,8 @@ ImplementEnumType(playerSoundsEnum, "enum types.\n"
    { playerSoundsEnum::ImpactWaterHard,     "ImpactWaterHard","..." },
    { playerSoundsEnum::ExitWater,           "ExitWater","..." },
 EndImplementEnumType;
+
+//----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 
@@ -297,7 +298,7 @@ PlayerData::PlayerData()
    imageAnimPrefixFP = StringTable->EmptyString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      INIT_SHAPEASSET_ARRAY(ShapeFP, i);
+      INIT_ASSET_ARRAY(ShapeFP, i);
       mCRCFP[i] = 0;
       mValidShapeFP[i] = false;
    }
@@ -422,7 +423,7 @@ PlayerData::PlayerData()
    boxHeadFrontPercentage = 1;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(PlayerSound, i);
+      INIT_ASSET_ARRAY(PlayerSound, i);
 
    footPuffEmitter = NULL;
    footPuffID = 0;
@@ -1048,9 +1049,7 @@ void PlayerData::initPersistFields()
    endGroup( "Interaction: Footsteps" );
 
    addGroup( "Interaction: Sounds" );
-
    INITPERSISTFIELD_SOUNDASSET_ENUMED(PlayerSound, playerSoundsEnum, PlayerData::Sounds::MaxSounds, PlayerData, "Sounds related to player interaction.");
-
    endGroup( "Interaction: Sounds" );
 
    addGroup( "Interaction: Splashes" );
@@ -1275,7 +1274,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      PACKDATA_SOUNDASSET_ARRAY_ENUMED(PlayerSound, PlayerData::Sounds, i);
+      PACKDATA_ASSET_ARRAY(PlayerSound, i);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1343,7 +1342,7 @@ void PlayerData::packData(BitStream* stream)
    stream->writeString(imageAnimPrefixFP);
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      PACKDATA_SHAPEASSET_ARRAY(ShapeFP, i);
+      PACKDATA_ASSET_ARRAY(ShapeFP, i);
 
       // computeCRC is handled in ShapeBaseData
       if (computeCRC)
@@ -1456,7 +1455,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      UNPACKDATA_SOUNDASSET_ARRAY_ENUMED(PlayerSound, PlayerData::Sounds, i);
+      UNPACKDATA_ASSET_ARRAY(PlayerSound, i);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);
@@ -1523,7 +1522,7 @@ void PlayerData::unpackData(BitStream* stream)
    imageAnimPrefixFP = stream->readSTString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      UNPACKDATA_SHAPEASSET_ARRAY(ShapeFP, i);
+      UNPACKDATA_ASSET_ARRAY(ShapeFP, i);
 
       // computeCRC is handled in ShapeBaseData
       if (computeCRC)

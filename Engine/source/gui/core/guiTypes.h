@@ -345,7 +345,7 @@ private:
    typedef SimObject Parent;
 
    DECLARE_IMAGEASSET(GuiCursor, Bitmap, onImageChanged, GFXGuiCursorProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiCursor, Bitmap);
+   DECLARE_ASSET_SETGET(GuiCursor, Bitmap);
 
    Point2I mHotSpot;
    Point2F mRenderOffset;
@@ -555,7 +555,7 @@ public:
    {
       return mBitmap;
    }
-   DECLARE_IMAGEASSET_SETGET(GuiControlProfile, Bitmap);
+   DECLARE_ASSET_SETGET(GuiControlProfile, Bitmap);
 
    void onBitmapChanged() {}
 

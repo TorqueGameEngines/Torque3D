@@ -82,8 +82,8 @@ ProximityMineData::ProximityMineData()
    triggerSequence( -1 ),
    explosionOffset( 0.05f )
 {
-   INIT_SOUNDASSET(ArmSound);
-   INIT_SOUNDASSET(TriggerSound);
+   INIT_ASSET(ArmSound);
+   INIT_ASSET(TriggerSound);
 }
 
 void ProximityMineData::initPersistFields()
@@ -156,14 +156,14 @@ void ProximityMineData::packData( BitStream* stream )
    Parent::packData( stream );
 
    stream->write( armingDelay );
-   PACKDATA_SOUNDASSET(ArmSound);
+   PACKDATA_ASSET(ArmSound);
 
    stream->write( autoTriggerDelay );
    stream->writeFlag( triggerOnOwner );
    stream->write( triggerRadius );
    stream->write( triggerSpeed );
    stream->write( triggerDelay );
-   PACKDATA_SOUNDASSET(TriggerSound);
+   PACKDATA_ASSET(TriggerSound);
 }
 
 void ProximityMineData::unpackData( BitStream* stream )
@@ -171,14 +171,14 @@ void ProximityMineData::unpackData( BitStream* stream )
    Parent::unpackData(stream);
 
    stream->read( &armingDelay );
-   UNPACKDATA_SOUNDASSET(ArmSound);
+   UNPACKDATA_ASSET(ArmSound);
 
    stream->read( &autoTriggerDelay );
    triggerOnOwner = stream->readFlag();
    stream->read( &triggerRadius );
    stream->read( &triggerSpeed );
    stream->read( &triggerDelay );
-   UNPACKDATA_SOUNDASSET(TriggerSound);
+   UNPACKDATA_ASSET(TriggerSound);
 }
 
 //----------------------------------------------------------------------------

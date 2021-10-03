@@ -70,7 +70,7 @@ SplashData::SplashData()
    //soundProfile      = NULL;
    //soundProfileId    = 0;
 
-   INIT_SOUNDASSET(Sound);
+   INIT_ASSET(Sound);
 
    scale.set(1, 1, 1);
 
@@ -98,7 +98,7 @@ SplashData::SplashData()
    U32 i;
    for (i = 0; i < NUM_TEX; i++)
    {
-      INIT_IMAGEASSET_ARRAY(Texture, i);
+      INIT_ASSET_ARRAY(Texture, i);
    }
 
    for( i=0; i<NUM_TIME_KEYS; i++ )
@@ -163,7 +163,7 @@ void SplashData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SOUNDASSET(Sound);
+   PACKDATA_ASSET(Sound);
 
    mathWrite(*stream, scale);
    stream->write(delayMS);
@@ -208,7 +208,7 @@ void SplashData::packData(BitStream* stream)
 
    for( i=0; i<NUM_TEX; i++ )
    {
-      PACKDATA_IMAGEASSET_ARRAY(Texture, i);
+      PACKDATA_ASSET_ARRAY(Texture, i);
    }
 }
 
@@ -219,7 +219,7 @@ void SplashData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_SOUNDASSET(Sound);
+   UNPACKDATA_ASSET(Sound);
 
    mathRead(*stream, &scale);
    stream->read(&delayMS);
@@ -264,7 +264,7 @@ void SplashData::unpackData(BitStream* stream)
 
    for( i=0; i<NUM_TEX; i++ )
    {
-      UNPACKDATA_IMAGEASSET_ARRAY(Texture, i);
+      UNPACKDATA_ASSET_ARRAY(Texture, i);
    }
 }
 

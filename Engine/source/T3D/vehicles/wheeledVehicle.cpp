@@ -75,7 +75,7 @@ ConsoleDocClass( WheeledVehicleTire,
 
 WheeledVehicleTire::WheeledVehicleTire()
 {
-   INIT_SHAPEASSET(Shape);
+   INIT_ASSET(Shape);
 
    staticFriction = 1;
    kineticFriction = 0.5f;
@@ -177,7 +177,7 @@ void WheeledVehicleTire::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SHAPEASSET(Shape);
+   PACKDATA_ASSET(Shape);
 
    stream->write(mass);
    stream->write(staticFriction);
@@ -196,7 +196,7 @@ void WheeledVehicleTire::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_SHAPEASSET(Shape);
+   UNPACKDATA_ASSET(Shape);
 
    stream->read(&mass);
    stream->read(&staticFriction);
@@ -312,7 +312,7 @@ WheeledVehicleData::WheeledVehicleData()
    wheelCount = 0;
    dMemset(&wheel, 0, sizeof(wheel));
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+      INIT_ASSET_ARRAY(WheeledVehicleSounds, i);
 }
 
 
@@ -483,7 +483,7 @@ void WheeledVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+      PACKDATA_ASSET_ARRAY(WheeledVehicleSounds, i);
    }
 
    stream->write(maxWheelSpeed);
@@ -502,7 +502,7 @@ void WheeledVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+      UNPACKDATA_ASSET_ARRAY(WheeledVehicleSounds, i);
    }
 
    stream->read(&maxWheelSpeed);

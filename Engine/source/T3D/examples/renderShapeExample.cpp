@@ -145,7 +145,7 @@ U32 RenderShapeExample::packUpdate( NetConnection *conn, U32 mask, BitStream *st
    // Write out any of the updated editable properties
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      PACK_SHAPEASSET(conn, Shape);
+      PACK_ASSET(conn, Shape);
 
       // Allow the server object a chance to handle a new shape
       createShape();
@@ -169,7 +169,7 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      UNPACK_SHAPEASSET(conn, Shape);
+      UNPACK_ASSET(conn, Shape);
 
       if ( isProperlyAdded() )
          createShape();

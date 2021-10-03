@@ -73,11 +73,11 @@ TerrainMaterial::TerrainMaterial()
       mIsSRGB(false),
       mInvertRoughness(false)
 {
-   INIT_IMAGEASSET(DiffuseMap);
-   INIT_IMAGEASSET(NormalMap);
-   INIT_IMAGEASSET(DetailMap);
-   INIT_IMAGEASSET(ORMConfigMap);
-   INIT_IMAGEASSET(MacroMap);
+   INIT_ASSET(DiffuseMap);
+   INIT_ASSET(NormalMap);
+   INIT_ASSET(DetailMap);
+   INIT_ASSET(ORMConfigMap);
+   INIT_ASSET(MacroMap);
 }
 
 TerrainMaterial::~TerrainMaterial()
@@ -203,8 +203,8 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
 //material.getDiffuseMap(); //returns the raw file referenced
 //material.getDiffuseMapAsset(); //returns the asset id
 //material.setDiffuseMap(%texture); //tries to set the asset and failing that attempts a flat file reference
-DEF_IMAGEASSET_BINDS(TerrainMaterial, DiffuseMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, NormalMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, DetailMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, ORMConfigMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, MacroMap);
+DEF_ASSET_BINDS(TerrainMaterial, DiffuseMap);
+DEF_ASSET_BINDS(TerrainMaterial, NormalMap);
+DEF_ASSET_BINDS(TerrainMaterial, DetailMap);
+DEF_ASSET_BINDS(TerrainMaterial, ORMConfigMap);
+DEF_ASSET_BINDS(TerrainMaterial, MacroMap);

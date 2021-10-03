@@ -77,7 +77,7 @@ struct PlayerData: public ShapeBaseData {
                                                                   ///  need to.
 
    DECLARE_SHAPEASSET_ARRAY(PlayerData, ShapeFP, ShapeBase::MaxMountedImages); ///< Used to render with mounted images in first person [optional]
-   DECLARE_SHAPEASSET_ARRAY_SETGET(PlayerData, ShapeFP);
+   DECLARE_ASSET_ARRAY_SETGET(PlayerData, ShapeFP);
 
    StringTableEntry  imageAnimPrefixFP;                           ///< Passed along to mounted images to modify
                                                                   ///  animation sequences played in first person. [optional]
@@ -202,14 +202,14 @@ struct PlayerData: public ShapeBaseData {
       FootMetal,
       FootSnow,
       WaterStart,
-      FootShallowSplash = WaterStart,
+      FootShallowSplash,
       FootWading,
       FootUnderWater,
       FootBubbles,
       MoveBubbles,
       WaterBreath,
       ImpactStart,
-      ImpactSoft = ImpactStart,
+      ImpactSoft,
       ImpactHard,
       ImpactMetal,
       ImpactSnow,
@@ -879,5 +879,4 @@ public:
 typedef Player::Pose PlayerPose;
 
 DefineEnumType( PlayerPose );
-
 #endif

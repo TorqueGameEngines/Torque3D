@@ -71,7 +71,7 @@ class ExplosionData : public GameBaseData {
    F32 particleRadius;
 
    DECLARE_SOUNDASSET(ExplosionData, Sound);
-   DECLARE_SOUNDASSET_SETGET(ExplosionData, Sound);
+   DECLARE_ASSET_SETGET(ExplosionData, Sound);
 
    ParticleEmitterData* particleEmitter;
    S32                  particleEmitterId;
@@ -80,7 +80,7 @@ class ExplosionData : public GameBaseData {
    F32                  playSpeed;
 
    DECLARE_SHAPEASSET(ExplosionData, ExplosionShape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(ExplosionData, ExplosionShape);
+   DECLARE_ASSET_SETGET(ExplosionData, ExplosionShape);
 
    S32               explosionAnimation;
 

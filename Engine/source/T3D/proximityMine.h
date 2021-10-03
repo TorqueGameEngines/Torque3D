@@ -46,7 +46,7 @@ public:
    F32               armingDelay;
    S32               armingSequence;
    DECLARE_SOUNDASSET(ProximityMineData, ArmSound);
-   DECLARE_SOUNDASSET_SETGET(ProximityMineData, ArmSound);
+   DECLARE_ASSET_SETGET(ProximityMineData, ArmSound);
 
    F32               autoTriggerDelay;
    bool              triggerOnOwner;
@@ -55,7 +55,7 @@ public:
    F32               triggerDelay;
    S32               triggerSequence;
    DECLARE_SOUNDASSET(ProximityMineData, TriggerSound);
-   DECLARE_SOUNDASSET_SETGET(ProximityMineData, TriggerSound);
+   DECLARE_ASSET_SETGET(ProximityMineData, TriggerSound);
 
    F32               explosionOffset;
 

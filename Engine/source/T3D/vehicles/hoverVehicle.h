@@ -47,7 +47,7 @@ class HoverVehicleData : public VehicleData
       MaxSounds
    };
    DECLARE_SOUNDASSET_ARRAY(HoverVehicleData, HoverSounds, Sounds::MaxSounds);
-   DECLARE_SOUNDASSET_ARRAY_SETGET(HoverVehicleData, HoverSounds);
+   DECLARE_ASSET_ARRAY_SETGET(HoverVehicleData, HoverSounds);
    SFXProfile* getHoverSoundProfile(U32 id)
    {
       if (mHoverSoundsAsset[id] != NULL)

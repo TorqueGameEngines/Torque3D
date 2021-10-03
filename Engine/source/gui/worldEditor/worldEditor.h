@@ -329,11 +329,11 @@ class WorldEditor : public EditTSCtrl
       ColorI            mPopupTextColor;
 
       DECLARE_IMAGEASSET(WorldEditor, SelectHandle, onSelectHandleChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_IMAGEASSET_SETGET(WorldEditor, SelectHandle);
+      DECLARE_ASSET_SETGET(WorldEditor, SelectHandle);
       DECLARE_IMAGEASSET(WorldEditor, DefaultHandle, onDefaultHandleChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_IMAGEASSET_SETGET(WorldEditor, DefaultHandle);
+      DECLARE_ASSET_SETGET(WorldEditor, DefaultHandle);
       DECLARE_IMAGEASSET(WorldEditor, LockedHandle, onLockedHandleChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_IMAGEASSET_SETGET(WorldEditor, LockedHandle);
+      DECLARE_ASSET_SETGET(WorldEditor, LockedHandle);
 
       ColorI            mObjectTextColor;
       bool              mObjectsUseBoxCenter;

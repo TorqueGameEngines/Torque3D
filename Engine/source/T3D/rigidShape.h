@@ -64,7 +64,7 @@ class RigidShapeData : public ShapeBaseData
    } body;
 
    DECLARE_SOUNDASSET_ARRAY(RigidShapeData, BodySounds, Body::Sounds::MaxSounds)
-   DECLARE_SOUNDASSET_ARRAY_SETGET(RigidShapeData, BodySounds);
+   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, BodySounds);
 
    SFXProfile* getBodySoundProfile(U32 id)
    {
@@ -92,7 +92,7 @@ class RigidShapeData : public ShapeBaseData
       MaxSounds
    };
    DECLARE_SOUNDASSET_ARRAY(RigidShapeData, WaterSounds, Sounds::MaxSounds)
-   DECLARE_SOUNDASSET_ARRAY_SETGET(RigidShapeData, WaterSounds);
+   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, WaterSounds);
 
    SFXProfile* getWaterSoundProfile(U32 id)
    {

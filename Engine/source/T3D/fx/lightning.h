@@ -65,10 +65,10 @@ class LightningData : public GameBaseData
   public:
 
    DECLARE_SOUNDASSET_ARRAY(LightningData, ThunderSound, MaxThunders);
-   DECLARE_SOUNDASSET_ARRAY_SETGET(LightningData, ThunderSound);
+   DECLARE_ASSET_ARRAY_SETGET(LightningData, ThunderSound);
 
    DECLARE_SOUNDASSET(LightningData, StrikeSound);
-   DECLARE_SOUNDASSET_SETGET(LightningData, StrikeSound);
+   DECLARE_ASSET_SETGET(LightningData, StrikeSound);
 
    StringTableEntry  strikeTextureNames[MaxTextures];
 

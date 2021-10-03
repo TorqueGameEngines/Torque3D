@@ -57,6 +57,7 @@
 #include "sfx/sfxProfile.h"
 #endif // !_SFXPROFILE_H_
 
+#include "assetMacroHelpers.h"
 class SFXResource;
 
 //-----------------------------------------------------------------------------
@@ -275,46 +276,6 @@ public: \
    }\
    bool is##name##Valid() { return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 
-#define DECLARE_SOUNDASSET_SETGET(className, name)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      return ret;\
-   }
-
-#define DECLARE_SOUNDASSET_NET_SETGET(className, name, bitmask)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      if(ret)\
-         object->setMaskBits(bitmask);\
-      return ret;\
-   }
-
-#define DEF_SOUNDASSET_BINDS(className,name)\
-DefineEngineMethod(className, get##name, String, (), , "get name")\
-{\
-   return object->get##name(); \
-}\
-DefineEngineMethod(className, get##name##Asset, String, (), , assetText(name, asset reference))\
-{\
-   return object->m##name##AssetId; \
-}\
-DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText(name,assignment. first tries asset then flat file.))\
-{\
-   return object->_set##name(StringTable->insert(shape));\
-}
-
-#define INIT_SOUNDASSET(name) \
-   m##name##Name = StringTable->EmptyString(); \
-   m##name##AssetId = StringTable->EmptyString(); \
-   m##name##Asset = NULL; \
-   m##name = NULL;\
-
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
 #define INITPERSISTFIELD_SOUNDASSET(name, consoleClass, docs) \
@@ -328,49 +289,6 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    addProtectedField(assetText(name, Asset), TypeSoundAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
 
 #endif // TORQUE_SHOW_LEGACY_FILE_FIELDS
-
-#define CLONE_SOUNDASSET(name) \
-   m##name##Name = other.m##name##Name;\
-   m##name##AssetId = other.m##name##AssetId;\
-   m##name##Asset = other.m##name##Asset;\
-
-#define PACKDATA_SOUNDASSET(name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      stream->writeString(m##name##Asset.getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACKDATA_SOUNDASSET(name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = stream->readSTString();\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-   {\
-      m##name##Name = stream->readSTString();\
-      _set##name(m##name##Name);\
-   }
-
-#define PACK_SOUNDASSET(netconn, name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACK_SOUNDASSET(netconn, name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
 
 #pragma endregion
 
@@ -491,57 +409,6 @@ public: \
    }\
    bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
-#define DECLARE_SOUNDASSET_ARRAY_SETGET(className, name)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      if(!index) return false;\
-      U32 idx = dAtoi(index);\
-      if (idx >= sm##name##Count)\
-         return false;\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data), idx);\
-      return ret;\
-   }
-
-#define DECLARE_SOUNDASSET_ARRAY_NET_SETGET(className, name, bitmask)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      if (!index) return false;\
-      U32 idx = dAtoi(index);\
-      if (idx >= sm##name##Count)\
-         return false;\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data, idx));\
-      if(ret)\
-         object->setMaskBits(bitmask);\
-      return ret;\
-   }
-
-#define DEF_SOUNDASSET_ARRAY_BINDS(className,name)\
-DefineEngineMethod(className, get##name, const char*, (S32 index), , "get name")\
-{\
-   return object->get##name(index); \
-}\
-DefineEngineMethod(className, get##name##Asset, const char*, (S32 index), , assetText(name, asset reference))\
-{\
-   if(index >= className::sm##name##Count || index < 0)\
-      return "";\
-   return object->m##name##AssetId[index]; \
-}\
-DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , assetText(name,assignment. first tries asset then flat file.))\
-{\
-    return object->_set##name(StringTable->insert(map), index);\
-}
-
-#define INIT_SOUNDASSET_ARRAY(name, index) \
-{\
-   m##name##Name[index] = StringTable->EmptyString(); \
-   m##name##AssetId[index] = StringTable->EmptyString(); \
-   m##name##Asset[index] = NULL;\
-   m##name[index] = NULL;\
-}
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -557,14 +424,6 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
 
 #endif
 
-#define CLONE_SOUNDASSET_ARRAY(name, index) \
-{\
-   m##name##Name[index] = other.m##name##Name[index];\
-   m##name##AssetId[index] = other.m##name##AssetId[index];\
-   m##name##Asset[index] = other.m##name##Asset[index];\
-   m##name[index] = = other.m##name[index];\
-}
-
 #define LOAD_SOUNDASSET_ARRAY(name, index)\
 if (m##name##AssetId[index] != StringTable->EmptyString())\
 {\
@@ -576,75 +435,6 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId[index], ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
 
-#define PACKDATA_SOUNDASSET_ARRAY(name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      stream->writeString(m##name##Asset[index].getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
-
-#define UNPACKDATA_SOUNDASSET_ARRAY(name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-   {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }
-
-#define PACK_SOUNDASSET_ARRAY(netconn, name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset[index].getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
-
-#define UNPACK_SOUNDASSET_ARRAY(netconn, name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-   {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }
-
-#define PACKDATA_SOUNDASSET_ARRAY_ENUMED(name, enumType, index )\
-{\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      stream->writeString(m##name##Asset[index].getAssetId());\
-      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
-      Con::printf("pack: %s = %s",enumString, m##name##AssetId[index]);\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);\
-}
-
-#define UNPACKDATA_SOUNDASSET_ARRAY_ENUMED(name, enumType, index )\
-{\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
-      Con::printf("unpack: %s = %s",enumString, m##name##AssetId[index]);\
-   }\
-   else\
-   {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-}
-
 #define assetEnumNameConcat(x,suff)(new std::string( x + std::string(#suff)))->c_str()
 
 #define INITPERSISTFIELD_SOUNDASSET_ENUMED(name, enumType, maxValue, consoleClass, docs) \
@@ -652,7 +442,7 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    {\
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
       if (enumString && enumString[0])\
-      { Con::printf("%s", enumString);\
+      {\
          addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
          addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), assetText(name, asset reference.));\
       }\

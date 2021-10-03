@@ -72,7 +72,7 @@ protected:
 
 public:
    DECLARE_SHAPEASSET(ProjectileData, ProjectileShape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(ProjectileData, ProjectileShape);
+   DECLARE_ASSET_SETGET(ProjectileData, ProjectileShape);
 
    /// Set to true if it is a billboard and want it to always face the viewer, false otherwise
    bool faceViewer;
@@ -117,7 +117,7 @@ public:
    S32 decalId;                        // (impact) Decal ID
 
    DECLARE_SOUNDASSET(ProjectileData, ProjectileSound);
-   DECLARE_SOUNDASSET_SETGET(ProjectileData, ProjectileSound);
+   DECLARE_ASSET_SETGET(ProjectileData, ProjectileSound);
    
    LightDescription *lightDesc;
    S32 lightDescId;   

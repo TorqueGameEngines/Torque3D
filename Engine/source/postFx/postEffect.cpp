@@ -508,7 +508,7 @@ PostEffect::PostEffect()
 
    for (U32 i = 0; i < NumTextures; i++)
    {
-      INIT_IMAGEASSET_ARRAY(Texture, i);
+      INIT_ASSET_ARRAY(Texture, i);
    }
 }
 

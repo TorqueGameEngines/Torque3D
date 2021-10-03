@@ -142,18 +142,18 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_IMAGEASSET_ARRAY(DiffuseMap, i);
-      INIT_IMAGEASSET_ARRAY(OverlayMap, i);
-      INIT_IMAGEASSET_ARRAY(LightMap, i);
-      INIT_IMAGEASSET_ARRAY(ToneMap, i);
-      INIT_IMAGEASSET_ARRAY(DetailMap, i);
-      INIT_IMAGEASSET_ARRAY(NormalMap, i);
-      INIT_IMAGEASSET_ARRAY(ORMConfigMap, i);
-      INIT_IMAGEASSET_ARRAY(RoughMap, i);
-      INIT_IMAGEASSET_ARRAY(AOMap, i);
-      INIT_IMAGEASSET_ARRAY(MetalMap, i);
-      INIT_IMAGEASSET_ARRAY(GlowMap, i);
-      INIT_IMAGEASSET_ARRAY(DetailNormalMap, i);
+      INIT_ASSET_ARRAY(DiffuseMap, i);
+      INIT_ASSET_ARRAY(OverlayMap, i);
+      INIT_ASSET_ARRAY(LightMap, i);
+      INIT_ASSET_ARRAY(ToneMap, i);
+      INIT_ASSET_ARRAY(DetailMap, i);
+      INIT_ASSET_ARRAY(NormalMap, i);
+      INIT_ASSET_ARRAY(ORMConfigMap, i);
+      INIT_ASSET_ARRAY(RoughMap, i);
+      INIT_ASSET_ARRAY(AOMap, i);
+      INIT_ASSET_ARRAY(MetalMap, i);
+      INIT_ASSET_ARRAY(GlowMap, i);
+      INIT_ASSET_ARRAY(DetailNormalMap, i);
 
       mParallaxScale[i] = 0.0f;
 

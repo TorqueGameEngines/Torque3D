@@ -149,7 +149,7 @@ TSStatic::TSStatic()
    mAnimOffset = 0.0f;
    mAnimSpeed = 1.0f;
 
-   INIT_SHAPEASSET(Shape);
+   INIT_ASSET(Shape);
 }
 
 TSStatic::~TSStatic()
@@ -958,7 +958,7 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    if (stream->writeFlag(mask & AdvancedStaticOptionsMask))
    {
-      PACK_SHAPEASSET(con, Shape);
+      PACK_ASSET(con, Shape);
 
       stream->write((U32)mDecalType);
 
@@ -1073,7 +1073,7 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
 
    if (stream->readFlag()) // AdvancedStaticOptionsMask
    {
-      UNPACK_SHAPEASSET(con, Shape);
+      UNPACK_ASSET(con, Shape);
 
       stream->read((U32*)&mDecalType);
 

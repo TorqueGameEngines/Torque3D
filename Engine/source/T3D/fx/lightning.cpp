@@ -238,11 +238,11 @@ void LightningStrikeEvent::process(NetConnection*)
 //
 LightningData::LightningData()
 {
-   INIT_SOUNDASSET(StrikeSound);
+   INIT_ASSET(StrikeSound);
 
    for (S32 i = 0; i < MaxThunders; i++)
    {
-      INIT_SOUNDASSET_ARRAY(ThunderSound, i);
+      INIT_ASSET_ARRAY(ThunderSound, i);
    }
 
    for (S32 i = 0; i < MaxTextures; i++)
@@ -335,7 +335,7 @@ void LightningData::packData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
+      PACKDATA_ASSET_ARRAY(ThunderSound, i);
    }
 
    stream->writeInt(mNumStrikeTextures, 4);
@@ -343,7 +343,7 @@ void LightningData::packData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       stream->writeString(strikeTextureNames[i]);
 
-   PACKDATA_SOUNDASSET(StrikeSound);
+   PACKDATA_ASSET(StrikeSound);
 }
 
 void LightningData::unpackData(BitStream* stream)
@@ -353,7 +353,7 @@ void LightningData::unpackData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
+      UNPACKDATA_ASSET_ARRAY(ThunderSound, i);
    }
 
    mNumStrikeTextures = stream->readInt(4);
@@ -361,7 +361,7 @@ void LightningData::unpackData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       strikeTextureNames[i] = stream->readSTString();
 
-   UNPACKDATA_SOUNDASSET(StrikeSound);
+   UNPACKDATA_ASSET(StrikeSound);
 }
 
 

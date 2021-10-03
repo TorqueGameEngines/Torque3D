@@ -2898,7 +2898,7 @@ static ConsoleDocFragment _sGuiControlSetExtent2(
    "GuiControl", // The class to place the method in; use NULL for functions.
    "void setExtent( Point2I p );" ); // The definition string.
 
-DefineEngineMethod( GuiControl, setExtent, void, ( const char* extOrX, const char* y ), (""),
+DefineEngineMethod( GuiControl, setExtent, void, ( const char* extOrX, const char* y ), ("", nullAsType<const char*>()),
    "( Point2I p | int x, int y ) Set the width and height of the control.\n\n"
    "@hide" )
 {

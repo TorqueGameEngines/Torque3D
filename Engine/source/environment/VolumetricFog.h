@@ -85,7 +85,7 @@ class VolumetricFog : public SceneObject
    };
 
    DECLARE_SHAPEASSET(VolumetricFog, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_NET_SETGET(VolumetricFog, Shape, FogShapeMask);
+   DECLARE_ASSET_NET_SETGET(VolumetricFog, Shape, FogShapeMask);
    
    protected:
       // Rendertargets;
@@ -163,7 +163,7 @@ class VolumetricFog : public SceneObject
    
       // Fog Modulation data
       DECLARE_IMAGEASSET(VolumetricFog, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_IMAGEASSET_NET_SETGET(VolumetricFog, Texture, FogModulationMask);
+      DECLARE_ASSET_NET_SETGET(VolumetricFog, Texture, FogModulationMask);
 
       bool mIsTextured;
       F32 mTexTiles;

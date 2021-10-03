@@ -116,7 +116,7 @@ DebrisData::DebrisData()
    terminalVelocity = 0.0f;
    ignoreWater = true;
 
-   INIT_SHAPEASSET(Shape);
+   INIT_ASSET(Shape);
 }
 
 //#define TRACK_DEBRIS_DATA_CLONES
@@ -152,7 +152,7 @@ DebrisData::DebrisData(const DebrisData& other, bool temp_clone) : GameBaseData(
    terminalVelocity = other.terminalVelocity;
    ignoreWater = other.ignoreWater;
 
-   CLONE_SHAPEASSET(Shape);
+   CLONE_ASSET(Shape);
 
    textureName = other.textureName;
    explosionId = other.explosionId; // -- for pack/unpack of explosion ptr
@@ -382,7 +382,7 @@ void DebrisData::packData(BitStream* stream)
 
    stream->writeString( textureName );
 
-   PACKDATA_SHAPEASSET(Shape);
+   PACKDATA_ASSET(Shape);
 
    for( S32 i=0; i<DDC_NUM_EMITTERS; i++ )
    {
@@ -426,7 +426,7 @@ void DebrisData::unpackData(BitStream* stream)
 
    textureName = stream->readSTString();
 
-   UNPACKDATA_SHAPEASSET(Shape);
+   UNPACKDATA_ASSET(Shape);
 
    for( S32 i=0; i<DDC_NUM_EMITTERS; i++ )
    {

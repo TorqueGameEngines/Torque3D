@@ -105,7 +105,7 @@ class LevelInfo : public NetObject
    protected:
 
       DECLARE_IMAGEASSET(LevelInfo, AccuTexture, onAccuTextureChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_IMAGEASSET_SETGET(LevelInfo, AccuTexture);
+      DECLARE_ASSET_SETGET(LevelInfo, AccuTexture);
 
       void onAccuTextureChanged() {}
 

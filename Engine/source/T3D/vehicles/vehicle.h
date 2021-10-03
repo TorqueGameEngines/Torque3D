@@ -50,7 +50,7 @@ struct VehicleData : public RigidShapeData
    } body;
 
    DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleBodySounds, Body::Sounds::MaxSounds)
-   DECLARE_SOUNDASSET_ARRAY_SETGET(VehicleData, VehicleBodySounds);
+   DECLARE_ASSET_ARRAY_SETGET(VehicleData, VehicleBodySounds);
 
    SFXProfile* getVehicleBodySoundProfile(U32 id)
    {
@@ -82,7 +82,7 @@ struct VehicleData : public RigidShapeData
    };
 
   DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleWaterSounds, Sounds::MaxSounds)
-  DECLARE_SOUNDASSET_ARRAY_SETGET(VehicleData, VehicleWaterSounds);
+  DECLARE_ASSET_ARRAY_SETGET(VehicleData, VehicleWaterSounds);
 
   SFXProfile* getVehicleWaterSoundProfile(U32 id)
   {

@@ -257,7 +257,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       stateShapeSequence[i] = 0;
       stateScaleShapeSequence[i] = false;
 
-      INIT_SOUNDASSET_ARRAY(stateSound, i);
+      INIT_ASSET_ARRAY(stateSound, i);
       stateScript[i] = 0;
       stateEmitter[i] = 0;
       stateEmitterTime[i] = 0;
@@ -295,7 +295,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       hasFlash[i] = false;
       shapeIsValid[i] = false;
 
-      INIT_SHAPEASSET_ARRAY(Shape, i);
+      INIT_ASSET_ARRAY(Shape, i);
    }
 
    shakeCamera = false;
@@ -983,7 +983,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
 
    for (U32 j = 0; j < MaxShapes; ++j)
    {
-      PACKDATA_SHAPEASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+      PACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
    }
 
    stream->writeString(imageAnimPrefix);
@@ -1147,7 +1147,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
             }
          }
 
-         PACKDATA_SOUNDASSET_ARRAY(stateSound, i);
+         PACKDATA_ASSET_ARRAY(stateSound, i);
       }
    stream->write(maxConcurrentSounds);
    stream->writeFlag(useRemainderDT);
@@ -1167,7 +1167,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
 
    for (U32 j = 0; j < MaxShapes; ++j)
    {
-      UNPACKDATA_SHAPEASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+      UNPACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
    }
 
    imageAnimPrefix = stream->readSTString();
@@ -1352,7 +1352,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
          else
             s.emitter = 0;
             
-         UNPACKDATA_SOUNDASSET_ARRAY(stateSound, i);
+         UNPACKDATA_ASSET_ARRAY(stateSound, i);
       }
    }
    

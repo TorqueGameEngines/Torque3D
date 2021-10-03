@@ -920,9 +920,9 @@ MeshRoad::MeshRoad()
       mTriangleCount[i] = 0;
    }
 
-   INIT_MATERIALASSET(TopMaterial);
-   INIT_MATERIALASSET(BottomMaterial);
-   INIT_MATERIALASSET(SideMaterial);
+   INIT_ASSET(TopMaterial);
+   INIT_ASSET(BottomMaterial);
+   INIT_ASSET(SideMaterial);
 
    mSideProfile.mRoad = this;
 }
@@ -1416,9 +1416,9 @@ U32 MeshRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
       stream->writeAffineTransform( mObjToWorld );
 
       // Write Materials
-      PACK_MATERIALASSET(con, TopMaterial);
-      PACK_MATERIALASSET(con, BottomMaterial);
-      PACK_MATERIALASSET(con, SideMaterial);
+      PACK_ASSET(con, TopMaterial);
+      PACK_ASSET(con, BottomMaterial);
+      PACK_ASSET(con, SideMaterial);
 
       stream->write( mTextureLength );      
       stream->write( mBreakAngle );
@@ -1515,9 +1515,9 @@ void MeshRoad::unpackUpdate(NetConnection * con, BitStream * stream)
       stream->readAffineTransform(&ObjectMatrix);
       Parent::setTransform(ObjectMatrix);
 
-      UNPACK_MATERIALASSET(con, TopMaterial);
-      UNPACK_MATERIALASSET(con, BottomMaterial);
-      UNPACK_MATERIALASSET(con, SideMaterial);
+      UNPACK_ASSET(con, TopMaterial);
+      UNPACK_ASSET(con, BottomMaterial);
+      UNPACK_ASSET(con, SideMaterial);
 
       if ( isProperlyAdded() )
          _initMaterial(); 

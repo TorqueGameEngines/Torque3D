@@ -197,8 +197,8 @@ ShapeBaseData::ShapeBaseData()
    renderWhenDestroyed( true ),
    inheritEnergyFromMount( false )
 {
-   INIT_SHAPEASSET(Shape);
-   INIT_SHAPEASSET(DebrisShape);
+   INIT_ASSET(Shape);
+   INIT_ASSET(DebrisShape);
 
    dMemset( mountPointNode, -1, sizeof( S32 ) * SceneObject::NumMountPoints );
    remap_txr_tags = NULL;
@@ -214,13 +214,13 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    shadowProjectionDistance = other.shadowProjectionDistance;
    shadowSphereAdjust = other.shadowSphereAdjust;
    cloakTexName = other.cloakTexName;
-   CLONE_SHAPEASSET(Shape);
+   CLONE_ASSET(Shape);
    cubeDescName = other.cubeDescName;
    cubeDescId = other.cubeDescId;
    reflectorDesc = other.reflectorDesc;
    debris = other.debris;
    debrisID = other.debrisID; // -- for pack/unpack of debris ptr
-   CLONE_SHAPEASSET(DebrisShape);
+   CLONE_ASSET(DebrisShape);
    explosion = other.explosion;
    explosionID = other.explosionID; // -- for pack/unpack of explosion ptr
    underwaterExplosion = other.underwaterExplosion;
@@ -757,8 +757,8 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowProjectionDistance);
    stream->write(shadowSphereAdjust);
 
-   PACKDATA_SHAPEASSET(Shape);
-   PACKDATA_SHAPEASSET(DebrisShape);
+   PACKDATA_ASSET(Shape);
+   PACKDATA_ASSET(DebrisShape);
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -835,8 +835,8 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowProjectionDistance);
    stream->read(&shadowSphereAdjust);
 
-   UNPACKDATA_SHAPEASSET(Shape);
-   UNPACKDATA_SHAPEASSET(DebrisShape);
+   UNPACKDATA_ASSET(Shape);
+   UNPACKDATA_ASSET(DebrisShape);
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())

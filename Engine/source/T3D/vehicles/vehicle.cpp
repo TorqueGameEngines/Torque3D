@@ -189,7 +189,7 @@ VehicleData::VehicleData()
 
    for (S32 i = 0; i < Body::MaxSounds; i++)
    {
-      INIT_SOUNDASSET_ARRAY(VehicleBodySounds, i);
+      INIT_ASSET_ARRAY(VehicleBodySounds, i);
    }
 
    dustEmitter = NULL;
@@ -214,7 +214,7 @@ VehicleData::VehicleData()
    hardSplashSoundVel = 3.0;
 
    for (S32 i = 0; i < Sounds::MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(VehicleWaterSounds, i);
+      INIT_ASSET_ARRAY(VehicleWaterSounds, i);
 
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;
@@ -302,7 +302,7 @@ void VehicleData::packData(BitStream* stream)
    stream->write(body.friction);
    for (i = 0; i < Body::MaxSounds; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(VehicleBodySounds, i);
+      PACKDATA_ASSET_ARRAY(VehicleBodySounds, i);
    }
 
    stream->write(minImpactSpeed);
@@ -346,7 +346,7 @@ void VehicleData::packData(BitStream* stream)
    // write the water sound profiles
    for (i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(VehicleWaterSounds, i);
+      PACKDATA_ASSET_ARRAY(VehicleWaterSounds, i);
    }
 
    if (stream->writeFlag( dustEmitter ))
@@ -398,7 +398,7 @@ void VehicleData::unpackData(BitStream* stream)
    S32 i;
    for (i = 0; i < Body::MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(VehicleBodySounds, i);
+      UNPACKDATA_ASSET_ARRAY(VehicleBodySounds, i);
    }
 
    stream->read(&minImpactSpeed);
@@ -442,7 +442,7 @@ void VehicleData::unpackData(BitStream* stream)
    // write the water sound profiles
    for (i = 0; i < Sounds::MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(VehicleWaterSounds, i);
+      UNPACKDATA_ASSET_ARRAY(VehicleWaterSounds, i);
    }
 
    if( stream->readFlag() )

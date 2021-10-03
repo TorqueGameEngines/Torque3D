@@ -230,7 +230,7 @@ ExplosionData::ExplosionData()
 
    faceViewer   = false;
 
-   INIT_SOUNDASSET(Sound);
+   INIT_ASSET(Sound);
 
    //soundProfile      = NULL;
    particleEmitter   = NULL;
@@ -239,7 +239,7 @@ ExplosionData::ExplosionData()
    explosionScale.set(1.0f, 1.0f, 1.0f);
    playSpeed = 1.0f;
 
-   INIT_SHAPEASSET(ExplosionShape);
+   INIT_ASSET(ExplosionShape);
 
    explosionAnimation = -1;
 
@@ -310,12 +310,12 @@ ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : Game
    faceViewer = other.faceViewer;
    particleDensity = other.particleDensity;
    particleRadius = other.particleRadius;
-   CLONE_SOUNDASSET(Sound);
+   CLONE_ASSET(Sound);
    particleEmitter = other.particleEmitter;
    particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
    explosionScale = other.explosionScale;
    playSpeed = other.playSpeed;
-   CLONE_SHAPEASSET(ExplosionShape);
+   CLONE_ASSET(ExplosionShape);
    explosionAnimation = other.explosionAnimation; // -- from explosionShape sequence "ambient"
    dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
    dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
@@ -650,9 +650,9 @@ void ExplosionData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SHAPEASSET(ExplosionShape);
+   PACKDATA_ASSET(ExplosionShape);
 
-   PACKDATA_SOUNDASSET(Sound);
+   PACKDATA_ASSET(Sound);
 
    if (stream->writeFlag(particleEmitter))
       stream->writeRangedU32(particleEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
@@ -754,9 +754,9 @@ void ExplosionData::unpackData(BitStream* stream)
 {
 	Parent::unpackData(stream);
 
-   UNPACKDATA_SHAPEASSET(ExplosionShape);
+   UNPACKDATA_ASSET(ExplosionShape);
 
-   UNPACKDATA_SOUNDASSET(Sound);
+   UNPACKDATA_ASSET(Sound);
 
    if (stream->readFlag())
       particleEmitterId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);

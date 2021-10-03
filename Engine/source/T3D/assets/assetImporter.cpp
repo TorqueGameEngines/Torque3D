@@ -1409,7 +1409,7 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
 		      Con::executef(this, processCommand.c_str(), item);
 		}
 
-      item->importStatus == AssetImportObject::Processed;
+      item->importStatus = AssetImportObject::Processed;
 
       //try recusing on the children(if any)
       processImportAssets(item);
@@ -2018,7 +2018,7 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
       AssetQuery aQuery;
       U32 numAssetsFound = AssetDatabase.findAllAssets(&aQuery);
 
-      bool hasCollision = false;
+      hasCollision = false;
       for (U32 i = 0; i < numAssetsFound; i++)
       {
          StringTableEntry assetId = aQuery.mAssetList[i];

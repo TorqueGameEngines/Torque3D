@@ -221,7 +221,6 @@ struct PlayerData: public ShapeBaseData {
    };
 
    DECLARE_SOUNDASSET_ARRAY(PlayerData, PlayerSound, Sounds::MaxSounds);
-   DECLARE_SOUNDASSET_ARRAY_SETGET(PlayerData, PlayerSound);
 
    Point3F boxSize;           ///< Width, depth, height
    Point3F crouchBoxSize;

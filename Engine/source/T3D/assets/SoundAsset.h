@@ -374,25 +374,6 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
 
 #pragma endregion
 
-#define assetEnumNameConcat(x,suff)(new std::string( x + std::string(#suff)))->c_str()
-
-#define INITPERSISTFIELD_SOUNDASSET_ENUMED(name, enumType, maxValue, consoleClass, docs) \
-   for (U32 i = 0; i < maxValue; i++)\
-   {\
-      const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
-      if (enumString && enumString[0])\
-      { Con::printf("%s", enumString);\
-         addProtectedField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-         addProtectedField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));\
-      }\
-   }
-
-#define INITPERSISTFIELD_SOUNDASSET_ENUM(enumString, name, enumVal, consoleClass, docs) \
-      {\
-         addProtectedField(assetText(enumString, File), TypeSoundFilename, Offset(m##name##Name[enumVal], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name[enumVal], docs), AbstractClassRep::FIELD_HideInInspectors); \
-         addProtectedField(assetText(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[enumVal], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name[enumVal], asset reference.));\
-      }\
-
 #pragma region Arrayed Asset Macros
 
 #define DECLARE_SOUNDASSET_ARRAY(className,name,max) public: \
@@ -663,6 +644,19 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       _set##name(m##name##AssetId[index], index);\
    }\
 }
+
+#define assetEnumNameConcat(x,suff)(new std::string( x + std::string(#suff)))->c_str()
+
+#define INITPERSISTFIELD_SOUNDASSET_ENUMED(name, enumType, maxValue, consoleClass, docs) \
+   for (U32 i = 0; i < maxValue; i++)\
+   {\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
+      if (enumString && enumString[0])\
+      { Con::printf("%s", enumString);\
+         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), assetText(name, asset reference.));\
+      }\
+   }
 #pragma endregion
 
 #endif // _ASSET_BASE_H_

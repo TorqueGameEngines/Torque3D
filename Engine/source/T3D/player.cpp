@@ -194,24 +194,24 @@ DefineEnumType(playerSoundsEnum);
 
 ImplementEnumType(playerSoundsEnum, "enum types.\n"
    "@ingroup PlayerData\n\n")
-   {PlayerData::Sounds::FootSoft,            "FootSoft","..." },
-   {PlayerData::Sounds::FootHard,            "FootHard","..." },
-   {PlayerData::Sounds::FootMetal,           "FootMetal","..." },
-   {PlayerData::Sounds::FootSnow,            "FootSnow","..." },
-   {PlayerData::Sounds::FootShallowSplash,   "FootShallowSplash","..." },
-   {PlayerData::Sounds::FootWading,          "FootWading","..." },
-   {PlayerData::Sounds::FootUnderWater,      "FootUnderWater","..." },
-   {PlayerData::Sounds::FootBubbles,         "FootBubbles","..." },
-   {PlayerData::Sounds::MoveBubbles,         "MoveBubbles","..." },
-   {PlayerData::Sounds::WaterBreath,         "WaterBreath","..." },
-   {PlayerData::Sounds::ImpactSoft,          "ImpactSoft","..." },
-   {PlayerData::Sounds::ImpactHard,          "ImpactHard","..." },
-   {PlayerData::Sounds::ImpactMetal,         "ImpactMetal","..." },
-   {PlayerData::Sounds::ImpactSnow,          "ImpactSnow","..." },
-   {PlayerData::Sounds::ImpactWaterEasy,     "ImpactWaterEasy","..." },
-   {PlayerData::Sounds::ImpactWaterMedium,   "ImpactWaterMedium","..." },
-   {PlayerData::Sounds::ImpactWaterHard,     "ImpactWaterHard","..." },
-   {PlayerData::Sounds::ExitWater,           "ExitWater","..." },
+   { playerSoundsEnum::FootSoft,            "FootSoft", "..." },
+   { playerSoundsEnum::FootHard,            "FootHard","..." },
+   { playerSoundsEnum::FootMetal,           "FootMetal","..." },
+   { playerSoundsEnum::FootSnow,            "FootSnow","..." },
+   { playerSoundsEnum::FootShallowSplash,   "FootShallowSplash","..." },
+   { playerSoundsEnum::FootWading,          "FootWading","..." },
+   { playerSoundsEnum::FootUnderWater,      "FootUnderWater","..." },
+   { playerSoundsEnum::FootBubbles,         "FootBubbles","..." },
+   { playerSoundsEnum::MoveBubbles,         "MoveBubbles","..." },
+   { playerSoundsEnum::WaterBreath,         "WaterBreath","..." },
+   { playerSoundsEnum::ImpactSoft,          "ImpactSoft","..." },
+   { playerSoundsEnum::ImpactHard,          "ImpactHard","..." },
+   { playerSoundsEnum::ImpactMetal,         "ImpactMetal","..." },
+   { playerSoundsEnum::ImpactSnow,          "ImpactSnow","..." },
+   { playerSoundsEnum::ImpactWaterEasy,     "ImpactWaterEasy","..." },
+   { playerSoundsEnum::ImpactWaterMedium,   "ImpactWaterMedium","..." },
+   { playerSoundsEnum::ImpactWaterHard,     "ImpactWaterHard","..." },
+   { playerSoundsEnum::ExitWater,           "ExitWater","..." },
 EndImplementEnumType;
 
 //----------------------------------------------------------------------------
@@ -469,18 +469,16 @@ bool PlayerData::preload(bool server, String &errorStr)
    if(!Parent::preload(server, errorStr))
       return false;
 
-   // Resolve objects transmitted from server
-   if( !server )
+   for (U32 i = 0; i < MaxSounds; ++i)
    {
-      for( U32 i = 0; i < MaxSounds; ++ i )
+      _setPlayerSound(getPlayerSound(i), i);
+      if (getPlayerSound(i) != StringTable->EmptyString())
       {
-         if (getPlayerSound(i) != StringTable->EmptyString())
-         {
-            _setPlayerSound(getPlayerSound(i), i);
-         }
-
          if (!getPlayerSoundProfile(i))
-            Con::errorf("PlayerData::Preload() - unable to find sfxProfile for asset %d %s", i, getPlayerSound(i));
+            Con::errorf("PlayerData::Preload() - unable to find sfxProfile for asset %d %s", i, mPlayerSoundAssetId[i]);
+
+         const char* enumString = castConsoleTypeToString(static_cast<Sounds>(i));
+            Con::printf("preload: %s = %s", enumString, mPlayerSoundAssetId[i]);
       }
    }
 
@@ -1051,7 +1049,7 @@ void PlayerData::initPersistFields()
 
    addGroup( "Interaction: Sounds" );
 
-      INITPERSISTFIELD_SOUNDASSET_ENUMED(PlayerSound, playerSoundsEnum, PlayerData::Sounds::MaxSounds, PlayerData, "Sounds related to player interaction.");
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(PlayerSound, playerSoundsEnum, PlayerData::Sounds::MaxSounds, PlayerData, "Sounds related to player interaction.");
 
    endGroup( "Interaction: Sounds" );
 
@@ -1277,7 +1275,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      PACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
+      PACKDATA_SOUNDASSET_ARRAY_ENUMED(PlayerSound, PlayerData::Sounds, i);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1458,7 +1456,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      UNPACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
+      UNPACKDATA_SOUNDASSET_ARRAY_ENUMED(PlayerSound, PlayerData::Sounds, i);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);
@@ -7059,7 +7057,7 @@ void Player::playFootstepSound( bool triggeredLeft, Material* contactMaterial, S
       // Play default sound.
 
       S32 sound = -1;
-      if (contactMaterial && (contactMaterial->mFootstepSoundId>-1 && contactMaterial->mFootstepSoundId<PlayerData::MaxSoundOffsets))
+      if (contactMaterial && (contactMaterial->mFootstepSoundId > -1 && contactMaterial->mFootstepSoundId < PlayerData::WaterStart))
          sound = contactMaterial->mFootstepSoundId;
       else if( contactObject && contactObject->getTypeMask() & VehicleObjectType )
          sound = 2;
@@ -7090,13 +7088,13 @@ void Player:: playImpactSound()
          else
          {
             S32 sound = -1;
-            if (material && (material->mImpactSoundId>-1 && material->mImpactSoundId<PlayerData::MaxSoundOffsets))
+            if (material && (material->mImpactSoundId > -1 && material->mImpactSoundId < PlayerData::WaterStart))
                sound = material->mImpactSoundId;
             else if( rInfo.object->getTypeMask() & VehicleObjectType )
                sound = 2; // Play metal;
 
             if (sound >= 0)
-               SFX->playOnce(mDataBlock->getPlayerSoundProfile(PlayerData::ImpactStart + sound), &getTransform());
+               SFX->playOnce(mDataBlock->getPlayerSoundProfile(PlayerData::ImpactSoft + sound), &getTransform());
          }
       }
    }

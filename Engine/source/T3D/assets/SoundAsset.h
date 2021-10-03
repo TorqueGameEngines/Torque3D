@@ -381,11 +381,18 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    {\
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
       if (enumString && enumString[0])\
-      {\
+      { Con::printf("%s", enumString);\
          addProtectedField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
          addProtectedField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));\
       }\
    }
+
+#define INITPERSISTFIELD_SOUNDASSET_ENUM(enumString, name, enumVal, consoleClass, docs) \
+      {\
+         addProtectedField(assetText(enumString, File), TypeSoundFilename, Offset(m##name##Name[enumVal], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name[enumVal], docs), AbstractClassRep::FIELD_HideInInspectors); \
+         addProtectedField(assetText(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[enumVal], consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name[enumVal], asset reference.));\
+      }\
+
 #pragma region Arrayed Asset Macros
 
 #define DECLARE_SOUNDASSET_ARRAY(className,name,max) public: \
@@ -574,6 +581,7 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
    m##name##Name[index] = other.m##name##Name[index];\
    m##name##AssetId[index] = other.m##name##AssetId[index];\
    m##name##Asset[index] = other.m##name##Asset[index];\
+   m##name[index] = = other.m##name[index];\
 }
 
 #define LOAD_SOUNDASSET_ARRAY(name, index)\
@@ -602,7 +610,10 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       _set##name(m##name##AssetId[index], index);\
    }\
    else\
-      m##name##Name[index] = stream->readSTString();
+   {\
+      m##name##Name[index] = stream->readSTString();\
+      _set##name(m##name##AssetId[index], index);\
+   }
 
 #define PACK_SOUNDASSET_ARRAY(netconn, name, index)\
    if (stream->writeFlag(m##name##Asset[index].notNull()))\
@@ -620,8 +631,38 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       _set##name(m##name##AssetId[index], index);\
    }\
    else\
-      m##name##Name[index] = stream->readSTString();
+   {\
+      m##name##Name[index] = stream->readSTString();\
+      _set##name(m##name##AssetId[index], index);\
+   }
 
+#define PACKDATA_SOUNDASSET_ARRAY_ENUMED(name, enumType, index )\
+{\
+   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   {\
+      stream->writeString(m##name##Asset[index].getAssetId());\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
+      Con::printf("pack: %s = %s",enumString, m##name##AssetId[index]);\
+   }\
+   else\
+      stream->writeString(m##name##Name[index]);\
+}
+
+#define UNPACKDATA_SOUNDASSET_ARRAY_ENUMED(name, enumType, index )\
+{\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId[index] = stream->readSTString();\
+      _set##name(m##name##AssetId[index], index);\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
+      Con::printf("unpack: %s = %s",enumString, m##name##AssetId[index]);\
+   }\
+   else\
+   {\
+      m##name##Name[index] = stream->readSTString();\
+      _set##name(m##name##AssetId[index], index);\
+   }\
+}
 #pragma endregion
 
 #endif // _ASSET_BASE_H_

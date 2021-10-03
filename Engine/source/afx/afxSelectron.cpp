@@ -1068,9 +1068,11 @@ afxSelectron::start_selectron(SceneObject* picked, U8 subcode, SimObject* extra)
   }
 
   // CALL SCRIPT afxSelectronData::onPreactivate(%params, %extra)
-  const char* result = Con::executef(datablock, "onPreactivate",
+  ConsoleValue cValue = Con::executef(datablock, "onPreactivate",
                                      Con::getIntArg(param_holder->getId()),
-                                     (extra) ? Con::getIntArg(extra->getId()) : "").getString();
+                                     (extra) ? Con::getIntArg(extra->getId()) : "");
+
+  const char* result = cValue.getString();
   if (result && result[0] != '\0' && !dAtob(result))
   {
 #if defined(TORQUE_DEBUG)

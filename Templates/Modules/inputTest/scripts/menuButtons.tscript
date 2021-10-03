@@ -2,6 +2,8 @@
 // Add buttons to the MainMenu after all other scripts have been exec'ed.
 //-----------------------------------------------------------------------------
 
+function inputTest::addMenuButton( %this )
+{
    if (isObject(MainMenuGui))
    {
       %testBtn = new GuiButtonCtrl() {
@@ -57,3 +59,7 @@
 
       MMTestContainer.add(%testBtn);
    }
+}
+
+if (inputTest.addToMainMenu)
+   inputTest.addMenuButton();

@@ -1802,7 +1802,7 @@ function matchesSearch(%assetName, %assetType)
          }
          else
          {
-            if(%assetName.tags !$= %word)
+            if(strstr(strlwr(%assetName.tags), strlwr(%word)) != -1)
                %matchTags = true;
          }
       }

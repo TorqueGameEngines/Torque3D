@@ -637,7 +637,9 @@ void GuiTreeViewCtrl::Item::getTooltipText(U32 bufLen, char *buf)
          method += pClassName;
          if(mParentControl->isMethod(method.c_str()))
          {
-            const char* tooltip = Con::executef( mParentControl, method.c_str(), pObject->getIdString() );
+            ConsoleValue cValue = Con::executef( mParentControl, method.c_str(), pObject->getIdString() );
+            const char* tooltip = cValue.getString();
+
             dsize_t len = dStrlen(buf);
             S32 newBufLen = bufLen-len;
             if(dStrlen(tooltip) > 0 && newBufLen > 0)

@@ -438,7 +438,8 @@ void GuiRiverEditorCtrl::_process3DMouseDown( const Gui3DMouseEvent& event )
          return;
       }
 
-      const char *res = Con::executef( this, "createRiver" );
+      ConsoleValue cValue = Con::executef( this, "createRiver" );
+      const char* res = cValue.getString();
 
       River *newRiver;
       if ( !Sim::findObject( res, newRiver ) )

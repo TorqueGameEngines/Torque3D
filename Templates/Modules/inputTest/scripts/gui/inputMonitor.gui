@@ -55,7 +55,7 @@ $guiContent = new GuiControl(InputMonitorDlg) {
          canSaveDynamicFields = "0";
       };
       new GuiChunkedBitmapCtrl() {
-         bitmap = "data/ui/art/hudfill.png";
+         bitmap = "data/ui/images/hudfill.png";
          useVariable = "0";
          tile = "0";
          position = "0 0";

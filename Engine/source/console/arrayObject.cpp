@@ -103,7 +103,8 @@ S32 QSORT_CALLBACK ArrayObject::_keyFunctionCompare( const void* a, const void* 
    ArrayObject::Element* ea = ( ArrayObject::Element* )( a );
    ArrayObject::Element* eb = ( ArrayObject::Element* )( b );
    
-   S32 result = dAtoi(Con::executef((const char*)smCompareFunction, ea->key, eb->key));
+   ConsoleValue cValue = Con::executef((const char*)smCompareFunction, ea->key, eb->key);
+   S32 result = cValue.getInt();
    S32 res = result < 0 ? -1 : ( result > 0 ? 1 : 0 );
    return ( smDecreasing ? -res : res );
 }
@@ -113,7 +114,8 @@ S32 QSORT_CALLBACK ArrayObject::_valueFunctionCompare( const void* a, const void
    ArrayObject::Element* ea = ( ArrayObject::Element* )( a );
    ArrayObject::Element* eb = ( ArrayObject::Element* )( b );
    
-   S32 result = dAtoi( Con::executef( (const char*)smCompareFunction, ea->value, eb->value ) );
+   ConsoleValue cValue = Con::executef( (const char*)smCompareFunction, ea->value, eb->value );
+   S32 result = cValue.getInt();
    S32 res = result < 0 ? -1 : ( result > 0 ? 1 : 0 );
    return ( smDecreasing ? -res : res );
 }

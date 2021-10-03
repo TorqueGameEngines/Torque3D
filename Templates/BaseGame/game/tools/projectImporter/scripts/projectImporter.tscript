@@ -515,7 +515,7 @@ function testFilenameExtensions(%filename)
 }
 
 function processLegacyField(%line, %originalFieldName, %newFieldName)
-{
+{ 
    if(!strIsMatchExpr("*"@%originalFieldName@"=*;*", %line) && 
       !strIsMatchExpr("*"@%originalFieldName@"[*=*;*", %line) &&
       !strIsMatchExpr("*"@%originalFieldName@" *=*;*", %line))
@@ -603,10 +603,10 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
          if(!strIsMatchExpr("*\"*\"*", %originalValue))
             %assetId = "\"" @ %assetId @ "\"";
          
-         //if (%assetId.getStatusString() $= "Ok")
-         %outLine = strReplace(%outLine, %value, %assetId);
-         //else
-         //   error("Asset assignment failure:", %assetId, getStatusString());
+         %firstPart = getToken(%outLine, "=", 0);
+         %secondPart = getToken(%outLine, "=", 1);
+         %secondPart = strReplace(%secondPart, %value, %assetId);
+         %outLine = %firstPart @ "=" @ %secondPart;
       }
    }
    

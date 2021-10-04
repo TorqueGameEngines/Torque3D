@@ -879,12 +879,10 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
 
       Var* wsNormal = (Var*)LangElement::find("wsNormal");
-
       if (!fd.features[MFT_NormalMap])
       {
          if (!wsNormal)
             wsNormal = getInWorldNormal(componentList);
-
          meta->addStatement(new GenOp("  @ = normalize( @ );\r\n\n", normal, wsNormal));
       }
       else
@@ -2227,10 +2225,9 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    MultiLine *meta = new MultiLine;
 
    // Now the wsPosition and wsView.
-   Var* worldToTangent = getInWorldToTangent(componentList);
-   Var* wsNormal = getInWorldNormal(componentList);
    Var *wsPosition = getInWsPosition( componentList );
-   
+   Var* worldToTangent = getInWorldToTangent(componentList);
+   Var* wsNormal = getInWorldNormal(componentList);   
    Var *wsView = getWsView( wsPosition, meta );
    
    // Look for a light mask generated from a previous

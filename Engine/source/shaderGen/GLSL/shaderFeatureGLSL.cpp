@@ -765,6 +765,21 @@ Var* ShaderFeatureGLSL::getWsView( Var *wsPosition, MultiLine *meta )
    return wsView;
 }
 
+Var* ShaderFeatureGLSL::getInWorldNormal(Vector<ShaderComponent*>& componentList)
+{
+   Var* wsNormal = (Var*)LangElement::find("wsNormal");
+   if (!wsNormal)
+   {
+      ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+      wsNormal = connectComp->getElement(RT_TEXCOORD);
+      wsNormal->setName("wsNormal");
+      wsNormal->setStructName("IN");
+      wsNormal->setType("float3");
+   }
+
+   return wsNormal;
+}
+
 Var* ShaderFeatureGLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &componentList, 
 															MultiLine *meta,
 															bool useTexAnim,
@@ -851,21 +866,23 @@ Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, roughness, metalness)); //reconstruct ormConfig, no ao darkening
    }
 
-   Var* wsNormal = (Var*)LangElement::find("wsNormal");
    Var* normal = (Var*)LangElement::find("normal");
    if (!normal)
    {
       normal = new Var("normal", "vec3");
       meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
+
+      Var* wsNormal = (Var*)LangElement::find("wsNormal");
       if (!fd.features[MFT_NormalMap])
       {
-         Var* worldToTangent = getInWorldToTangent(componentList);
-         meta->addStatement(new GenOp("  @ = normalize(tMul(@,vec3(0,0,1.0f)));\r\n\n", normal, worldToTangent));
+         if (!wsNormal)
+            wsNormal = getInWorldNormal(componentList);
+         meta->addStatement(new GenOp("  @ = normalize( @ );\r\n\n", normal, wsNormal));
       }
       else
       {
-         meta->addStatement(new GenOp("   @ = normalize( half3( @ ) );\r\n", normal, wsNormal));
-      }      
+         meta->addStatement(new GenOp("   @ = normalize(  @ );\r\n", normal, wsNormal));
+      }
    }
 
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
@@ -2142,13 +2159,9 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
 	// Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition( componentList );
+   Var* worldToTangent = getInWorldToTangent(componentList);
+   Var* wsNormal = getInWorldNormal(componentList);
    Var *wsView = getWsView( wsPosition, meta );
-
-   // Create temporaries to hold results of lighting.
-   Var *rtShading = new Var( "rtShading", "vec4" );
-   Var *specular = new Var( "specular", "vec4" );
-   meta->addStatement( new GenOp( "   @; @;\r\n", 
-      new DecOp( rtShading ), new DecOp( specular ) ) );   
 
    // Look for a light mask generated from a previous
    // feature (this is done for BL terrain lightmaps).

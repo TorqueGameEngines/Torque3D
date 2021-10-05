@@ -931,15 +931,6 @@ public:
       return imagePath;
    }
 
-   static inline const char* makeFullPath(const String& path)
-   {
-      char qualifiedFilePath[2048];
-
-      Platform::makeFullPathName(path.c_str(), qualifiedFilePath, sizeof(qualifiedFilePath));
-
-      return qualifiedFilePath;
-   }
-
    //
    void setTargetModuleId(const String& moduleId) { targetModuleId = moduleId; }
    const String& getTargetModuleId() { return targetModuleId; }

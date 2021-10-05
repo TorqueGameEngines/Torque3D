@@ -1409,7 +1409,7 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
 		      Con::executef(this, processCommand.c_str(), item);
 		}
 
-      item->importStatus == AssetImportObject::Processed;
+      item->importStatus = AssetImportObject::Processed;
 
       //try recusing on the children(if any)
       processImportAssets(item);

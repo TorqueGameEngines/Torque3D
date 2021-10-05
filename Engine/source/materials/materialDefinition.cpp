@@ -218,7 +218,7 @@ Material::Material()
    mPlanarReflection = false;
 
    mCubemapData = NULL;
-   mDynamicCubemap = NULL;
+   mDynamicCubemap = false;
 
    mLastUpdateTime = 0;
 

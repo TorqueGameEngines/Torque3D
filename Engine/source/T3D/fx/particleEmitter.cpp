@@ -1914,7 +1914,11 @@ void ParticleEmitter::copyToVB( const Point3F &camPos, const LinearColorF &ambie
          {
             SortParticle* partPtr = orderedVector.address();
             for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr -= 4)
-               setupRibbon(partPtr->p, partPtr++->p, partPtr--->p, camPos, ambientColor, buffPtr);
+            {
+                SortParticle* part = partPtr;
+                partPtr++;
+                setupRibbon(part->p, partPtr->p, partPtr->p, camPos, ambientColor, buffPtr);
+            }
          }
          // do unsorted-oriented particles
          else
@@ -1933,7 +1937,11 @@ void ParticleEmitter::copyToVB( const Point3F &camPos, const LinearColorF &ambie
          {
             SortParticle* partPtr = orderedVector.address();
             for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr += 4)
-               setupRibbon(partPtr->p, partPtr++->p, partPtr--->p, camPos, ambientColor, buffPtr);
+            {
+                SortParticle* part = partPtr;
+                partPtr++;
+                setupRibbon(part->p, partPtr->p, partPtr->p, camPos, ambientColor, buffPtr);
+            }
          }
          // do unsorted-oriented particles
          else

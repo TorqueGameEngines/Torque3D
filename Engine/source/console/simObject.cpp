@@ -179,10 +179,10 @@ void SimObject::initPersistFields()
    
    addGroup( "Editing" );
    
-      addProtectedField( "hidden", TypeBool, NULL,
+      addProtectedField( "hidden", TypeBool, 0,
          &_setHidden, &_getHidden,
          "Whether the object is visible." );
-      addProtectedField( "locked", TypeBool, NULL,
+      addProtectedField( "locked", TypeBool, 0,
          &_setLocked, &_getLocked,
          "Whether the object can be edited." );
    

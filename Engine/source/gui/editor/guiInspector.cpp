@@ -908,12 +908,12 @@ DefineEngineMethod( GuiInspector, findByObject, S32, (SimObject* obj), ,
 	"@return id of an awake inspector that is inspecting the passed object if one exists, else NULL or 0.")
 {
    if ( !obj)
-      return NULL;
+      return 0;
 
    SimObject *inspector = GuiInspector::findByObject(obj);
 
    if ( !inspector )
-      return NULL;
+      return 0;
 
    return inspector->getId();
 }

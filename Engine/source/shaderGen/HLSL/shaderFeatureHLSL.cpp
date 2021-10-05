@@ -2136,8 +2136,6 @@ RTLightingFeatHLSL::RTLightingFeatHLSL()
 void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList, 
                                        const MaterialFeatureData &fd )
 {
-   if (fd.features[MFT_ImposterVert]) return;
-
    MultiLine *meta = new MultiLine;   
 
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
@@ -2192,7 +2190,6 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
 
    // If there isn't a normal map then we need to pass
    // the world space normal to the pixel shader ourselves.
-   //Temporarily disabled while we figure out how to better handle normals without a normal map
    if ( !fd.features[MFT_NormalMap] )
    {
       Var *outNormal = connectComp->getElement( RT_TEXCOORD );

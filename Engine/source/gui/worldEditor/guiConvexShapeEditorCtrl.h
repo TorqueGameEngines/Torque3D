@@ -248,7 +248,7 @@ class GuiConvexEditorUndoAction : public UndoAction
    friend class GuiConvexEditorCtrl;
 public:
 
-   GuiConvexEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName ), mEditor(NULL), mObjId(NULL)
+   GuiConvexEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName ), mEditor(NULL), mObjId(0)
    {
    }
 

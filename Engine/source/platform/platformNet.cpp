@@ -241,7 +241,7 @@ namespace PlatformNetState
 
    struct addrinfo* pickAddressByProtocol(struct addrinfo* addr, int protocol)
    {
-      for (addr; addr != NULL; addr = addr->ai_next)
+      for (; addr != NULL; addr = addr->ai_next)
       {
          if (addr->ai_family == protocol)
             return addr;

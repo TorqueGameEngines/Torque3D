@@ -1962,7 +1962,7 @@ void ContextAction::processTick()
    if (mActive)
    {
       F32 currTime = Sim::getCurrentTime();
-      static const char *argv[2];
+      static const char *argv[3];
 
       //see if this key even is still active  
       if (!mBreakEvent)

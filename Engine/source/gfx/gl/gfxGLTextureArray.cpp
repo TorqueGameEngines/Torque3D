@@ -6,7 +6,7 @@
 
 GFXGLTextureArray::GFXGLTextureArray()
 {
-   mTextureArray = NULL;
+   mTextureArray = 0;
 }
 
 void GFXGLTextureArray::init()

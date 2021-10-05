@@ -87,7 +87,7 @@ class OptimizedPolyList : public AbstractPolyList
 
       Poly()
          : plane( -1 ),
-           material( NULL ),
+           material( 0 ),
            vertexStart(0),
            vertexCount( 0 ),
            surfaceKey(0),

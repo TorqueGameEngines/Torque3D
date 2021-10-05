@@ -335,7 +335,7 @@ ImplementEnumType(_TamlFormatMode,
 
          // Write.
          //return writer.write( stream, pRootNode );
-         return NULL;
+         return false;
       }
 
       /// Invalid.

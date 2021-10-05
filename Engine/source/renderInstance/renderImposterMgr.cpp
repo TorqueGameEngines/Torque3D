@@ -152,7 +152,7 @@ void RenderImposterMgr::_innerRender( const SceneRenderState *state, RenderDefer
       // Setup a static index buffer for rendering.
       mIB.set( GFX, smImposterBatchSize * 6, 0, GFXBufferTypeStatic );
       U16 *idxBuff;
-      mIB.lock(&idxBuff, NULL, NULL, NULL);
+      mIB.lock(&idxBuff, NULL, 0, 0);
       for ( U32 i=0; i < smImposterBatchSize; i++ )
       {
          //

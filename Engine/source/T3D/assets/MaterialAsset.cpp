@@ -19,7 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#pragma once
 
 #ifndef MATERIALASSET_H
 #include "MaterialAsset.h"
@@ -171,10 +170,16 @@ void MaterialAsset::initializeAsset()
    if (Torque::FS::IsScriptFile(mScriptPath))
    {
       if (!Sim::findObject(mMatDefinitionName))
-         if (Con::executeFile(mScriptPath, false, false))
-            mLoadedState = ScriptLoaded;
-         else
-            mLoadedState = Failed;
+      {
+          if (Con::executeFile(mScriptPath, false, false))
+          {
+              mLoadedState = ScriptLoaded;
+          }
+          else
+          {
+              mLoadedState = Failed;
+          }
+      }
    }
 
    loadMaterial();

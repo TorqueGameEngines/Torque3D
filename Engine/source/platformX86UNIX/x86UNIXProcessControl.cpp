@@ -24,6 +24,8 @@
 #include "platformX86UNIX/x86UNIXState.h"
 #include "platformX86UNIX/x86UNIXStdConsole.h"
 #include "platform/platformInput.h"
+#include "windowManager/platformWindow.h"
+#include "windowManager/platformWindowMgr.h"
 #include "console/console.h"
 
 #include <stdlib.h>
@@ -165,6 +167,15 @@ void Platform::debugBreak()
    Con::errorf(ConsoleLogEntry::General, 
       "Platform::debugBreak: triggering SIGSEGV for core dump");
    //kill(getpid(), SIGSEGV);
+
+   // On Linux, the mouse cursor will remain trapped when the SIGTRAP below triggers so we ensure the mouse
+   // locked state is disabled prior to dropping to debug
+   PlatformWindow* firstWindow = WindowManager->getFirstWindow();
+   if (firstWindow)
+   {
+       firstWindow->setMouseLocked(false);
+   }
+
    kill(getpid(), SIGTRAP);
 }
 

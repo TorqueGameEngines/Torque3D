@@ -190,6 +190,11 @@ bool ScriptAsset::execScript()
    if (handle)
       return true;
 
+   if (Torque::FS::IsScriptFile(mScriptPath))
+   {
+      return Con::executeFile(mScriptPath, false, false);
+   }
+   Con::errorf("ScriptAsset:execScript() - Script asset must have a valid file to exec");
    return false;
 }
 

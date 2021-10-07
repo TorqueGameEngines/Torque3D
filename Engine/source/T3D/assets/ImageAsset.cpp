@@ -147,7 +147,7 @@ void ImageAsset::consoleInit()
    Con::addVariable("$Core::NoImageAssetFallback", TypeString, &smNoImageAssetFallback,
       "The assetId of the texture to display when the requested image asset is missing.\n"
       "@ingroup GFX\n");
-   
+
    smNoImageAssetFallback = StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback"));
 }
 
@@ -274,6 +274,7 @@ void ImageAsset::loadImage()
 
       mLoadedState = Ok;
       mIsValidImage = true;
+      mChangeSignal.trigger();
       return;
    }
    mLoadedState = BadFileReference;
@@ -552,7 +553,7 @@ bool GuiInspectorTypeImageAssetPtr::renderTooltip(const Point2I& hoverPos, const
    if (texture.isNull())
       return false;
 
-   // Render image at a reasonable screen size while 
+   // Render image at a reasonable screen size while
    // keeping its aspect ratio...
    Point2I screensize = getRoot()->getWindowSize();
    Point2I offset = hoverPos;

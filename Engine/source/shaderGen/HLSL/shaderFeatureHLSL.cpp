@@ -892,6 +892,14 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    }
 
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+
+   if (!wsEyePos)
+   {
+      wsEyePos = new Var("eyePosWorld", "float3");
+      wsEyePos->uniform = true;
+      wsEyePos->constSortPos = cspPass;
+   }
+
    Var* wsPosition = getInWsPosition(componentList);
    Var* wsView = getWsView(wsPosition, meta);
 

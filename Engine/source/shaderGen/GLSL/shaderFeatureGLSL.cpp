@@ -1982,6 +1982,7 @@ void ReflectCubeFeatGLSL::processPix(  Vector<ShaderComponent*> &componentList,
          Var *envColor = new Var("envColor", "vec3");
          meta->addStatement(new GenOp("   @ = @.rgb - (@.rgb * @);\r\n", new DecOp(dColor), targ, targ, metalness));
          meta->addStatement(new GenOp("   @ = @.rgb*(@).rgb;\r\n", new DecOp(envColor), targ, texCube));
+         meta->addStatement(new GenOp("   @.rgb = @+@;\r\n", targ, dColor, envColor));
       }
       else if (lerpVal)
          meta->addStatement(new GenOp("   @ *= vec4(@.rgb*@.a, @.a);\r\n", targ, texCube, lerpVal, targ));

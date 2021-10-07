@@ -1044,9 +1044,9 @@ PhysicsCollision* TSShape::_buildColShapes( bool useVisibleMesh, const Point3F &
          // We need the default mesh transform.
          MatrixF localXfm;
          getNodeWorldTransform( object.nodeIndex, &localXfm );
-         Point3F t = localXfm.getPosition();
-         t.convolve(scale);
-         localXfm.setPosition(t);
+         Point3F nodeWorldPosition = localXfm.getPosition();
+         nodeWorldPosition.convolve(scale);
+         localXfm.setPosition(nodeWorldPosition);
 
          // We have some sort of collision shape... so allocate it.
          if ( !colShape )
@@ -1061,9 +1061,9 @@ PhysicsCollision* TSShape::_buildColShapes( bool useVisibleMesh, const Point3F &
             // Add the offset to the center of the bounds 
             // into the local space transform.
             MatrixF centerXfm( true );
-            Point3F t = mesh->getBounds().getCenter();
-            t.convolve(scale);
-            centerXfm.setPosition(t);
+            Point3F meshBoundsCenter = mesh->getBounds().getCenter();
+            meshBoundsCenter.convolve(scale);
+            centerXfm.setPosition(meshBoundsCenter);
             localXfm.mul( centerXfm );
 
             colShape->addBox( halfWidth, localXfm );
@@ -1077,9 +1077,9 @@ PhysicsCollision* TSShape::_buildColShapes( bool useVisibleMesh, const Point3F &
             // Add the offset to the center of the bounds
             // into the local space transform.
             MatrixF primXfm( true );
-            Point3F t = mesh->getBounds().getCenter();
-            t.convolve(scale);
-            primXfm.setPosition(t);
+            Point3F meshBoundsCenter = mesh->getBounds().getCenter();
+            meshBoundsCenter.convolve(scale);
+            primXfm.setPosition(meshBoundsCenter);
             localXfm.mul( primXfm );
 
             colShape->addSphere( radius, localXfm );
@@ -1092,9 +1092,9 @@ PhysicsCollision* TSShape::_buildColShapes( bool useVisibleMesh, const Point3F &
 
             // We need to center the capsule and align it to the Y axis.
             MatrixF primXfm( true );
-            Point3F t = mesh->getBounds().getCenter();
-            t.convolve(scale);
-            primXfm.setPosition(t);
+            Point3F meshBoundsCenter = mesh->getBounds().getCenter();
+            meshBoundsCenter.convolve(scale);
+            primXfm.setPosition(meshBoundsCenter);
 
             // Use the longest axis as the capsule height.
             F32 height = -radius * 2.0f;

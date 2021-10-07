@@ -2896,7 +2896,6 @@ void MeshRoad::_generateVerts()
 
    // Make Primitive Buffers   
    U32 p00, p01, p11, p10;
-   U32 pb00, pb01, pb11, pb10;
    U32 offset = 0;
    U16 *pIdx = NULL;   
    U32 curIdx = 0; 

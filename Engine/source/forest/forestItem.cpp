@@ -190,8 +190,6 @@ void ForestItemData::unpackData(BitStream* stream)
    stream->read( &localName );
    setInternalName( localName );
 
-   char readBuffer[1024];
-
    UNPACKDATA_SHAPEASSET(Shape);
    
    mCollidable = stream->readFlag();

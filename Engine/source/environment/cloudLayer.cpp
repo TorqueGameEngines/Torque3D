@@ -278,7 +278,6 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    stream->read( &mBaseColor );
 
-   F32 oldCoverage = mCoverage;
    stream->read( &mCoverage );
    stream->read( &mExposure );
 

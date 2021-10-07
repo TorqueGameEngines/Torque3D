@@ -275,21 +275,6 @@ void ImageAsset::loadImage()
       mLoadedState = Ok;
       mIsValidImage = true;
       return;
-
-      //GFXTexHandle texture = getTexture(&GFXStaticTextureSRGBProfile);
-
-      //mTexture.set(mImagePath, &GFXStaticTextureSRGBProfile, avar("%s() - mImage (line %d)", __FUNCTION__, __LINE__));
-
-      /*if (texture.isValid())
-      {
-         mIsValidImage = true;
-
-         //mBitmap = texture.getBitmap();
-
-         return;
-      }*/
-
-      mChangeSignal.trigger();
    }
    mLoadedState = BadFileReference;
 
@@ -496,8 +481,6 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
       mInspector->getInspectObject()->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
-
-   const char* id = mInspector->getInspectObject()->getIdString();
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 

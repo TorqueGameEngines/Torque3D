@@ -281,6 +281,8 @@ void TerrainBaseMapFeatGLSL::processVert( Vector<ShaderComponent*> &componentLis
    Var *squareSize = _getUniformVar( "squareSize", "float", cspPass );
    meta->addStatement( new GenOp( "   @ = normalize( vec3( @, 0, @ ) );\r\n", 
       new DecOp( inTanget ), squareSize, inTangentZ ) );
+
+   getOutViewToTangent(componentList, meta, fd);
 }
 
 void TerrainBaseMapFeatGLSL::processPix(  Vector<ShaderComponent*> &componentList, 
@@ -331,6 +333,8 @@ void TerrainBaseMapFeatGLSL::processPix(  Vector<ShaderComponent*> &componentLis
    meta->addStatement(new GenOp("   @ = float4(0.0, 1.0, 1.0, 0.0);\r\n", ormConfig));
 
    output = meta;
+
+   Var* viewToTangent = getInViewToTangent(componentList);
 }
 
 ShaderFeature::Resources TerrainBaseMapFeatGLSL::getResources( const MaterialFeatureData &fd )
@@ -781,6 +785,22 @@ void TerrainMacroMapFeatGLSL::processPix(   Vector<ShaderComponent*> &componentL
    meta->addStatement( new GenOp( "   @ = calcBlend( @.x, @.xy, @, @ );\r\n", 
                                     new DecOp( detailBlend ), detailInfo, inTex, layerSize, layerSample ) );
 
+   // Check to see if we have a gbuffer normal.
+   Var* gbNormal = (Var*)LangElement::find("gbNormal");
+
+   // If we have a gbuffer normal and we don't have a
+   // normal map feature then we need to lerp in a 
+   // default normal else the normals below this layer
+   // will show thru.
+   if (gbNormal &&
+      !fd.features.hasFeature(MFT_TerrainNormalMap, detailIndex))
+   {
+      Var* viewToTangent = getInViewToTangent(componentList);
+
+      meta->addStatement(new GenOp("   @ = lerp( @, @[2], min( @, @.w ) );\r\n",
+         gbNormal, gbNormal, viewToTangent, detailBlend, inDet));
+   }
+
    Var *detailColor = (Var*)LangElement::find( "macroColor" ); 
    if ( !detailColor )
    {
@@ -1224,21 +1244,7 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
 ShaderFeature::Resources TerrainORMMapFeatGLSL::getResources(const MaterialFeatureData &fd)
 {
    Resources res;
-
-   S32 featureIndex = 0, firstOrmMapIndex = 0;
-   for (int idx = 0; idx < fd.features.getCount(); ++idx) {
-      const FeatureType& type = fd.features.getAt(idx, &featureIndex);
-      if (type == MFT_TerrainORMMap) {
-         firstOrmMapIndex = getMin(firstOrmMapIndex, featureIndex);
-      }
-   }
-
-   // We only need to process normals during the deferred.
-   if (getProcessIndex() == firstOrmMapIndex)
-   {
-      res.numTexReg = 1;
-      res.numTex = 1;
-   }
+   res.numTex = 1;
    return res;
 }
 
@@ -1283,7 +1289,10 @@ void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
 
    String matinfoName(String::ToString("matinfoCol%d", compositeIndex));
 
-   meta->addStatement(new GenOp("   @.gba += vec3(@, @, 0.0);\r\n", ormConfig, detailBlend, detailBlend));
+   if (!fd.features.hasFeature(MFT_TerrainHeightBlend))
+   {
+      meta->addStatement(new GenOp("   @.gba += vec3(@, @, 0.0);\r\n", ormConfig, detailBlend, detailBlend));
+   }
 
    output = meta;
 }

@@ -23,6 +23,7 @@
 #ifndef INCLUDED_TYPES_VISUALC_H
 #define INCLUDED_TYPES_VISUALC_H
 
+#include <stdlib.h>
 
 // For more information on VisualC++ predefined macros
 // http://support.microsoft.com/default.aspx?scid=kb;EN-US;q65472

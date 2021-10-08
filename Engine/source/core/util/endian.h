@@ -48,8 +48,12 @@ Convert the byte ordering on the U16 to and from big/little endian format.
 
 inline U16 endianSwap(const U16 in_swap)
 {
+#ifdef TORQUE_U16_ENDIANSWAP_BUILTIN
+    return TORQUE_U16_ENDIANSWAP_BUILTIN(in_swap);
+#else
    return U16(((in_swap >> 8) & 0x00ff) |
       ((in_swap << 8) & 0xff00));
+#endif
 }
 
 inline S16 endianSwap(const S16 in_swap)
@@ -64,10 +68,14 @@ Convert the byte ordering on the U32 to and from big/little endian format.
 */
 inline U32 endianSwap(const U32 in_swap)
 {
+#ifdef TORQUE_U32_ENDIANSWAP_BUILTIN
+    return TORQUE_U32_ENDIANSWAP_BUILTIN(in_swap);
+#else
    return U32(((in_swap >> 24) & 0x000000ff) |
       ((in_swap >>  8) & 0x0000ff00) |
       ((in_swap <<  8) & 0x00ff0000) |
       ((in_swap << 24) & 0xff000000));
+#endif
 }
 
 inline S32 endianSwap(const S32 in_swap)
@@ -77,12 +85,16 @@ inline S32 endianSwap(const S32 in_swap)
 
 inline U64 endianSwap(const U64 in_swap)
 {
+#ifdef TORQUE_U64_ENDIANSWAP_BUILTIN
+    return TORQUE_U64_ENDIANSWAP_BUILTIN(in_swap);
+#else
    U32 *inp = (U32 *) &in_swap;
    U64 ret;
    U32 *outp = (U32 *) &ret;
    outp[0] = endianSwap(inp[1]);
    outp[1] = endianSwap(inp[0]);
    return ret;
+#endif
 }
 
 inline S64 endianSwap(const S64 in_swap)
@@ -138,4 +150,3 @@ TORQUE_DECLARE_TEMPLATIZED_ENDIAN_CONV(F32)
 TORQUE_DECLARE_TEMPLATIZED_ENDIAN_CONV(F64)
 
 #endif
-

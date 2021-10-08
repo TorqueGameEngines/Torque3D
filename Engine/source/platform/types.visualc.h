@@ -69,7 +69,7 @@ typedef unsigned _int64 U64;
 #  define TORQUE_OS_WIN
 #  define TORQUE_OS_WIN64
 #  include "platform/types.win.h"
-#else 
+#else
 #  error "VC: Unsupported Operating System"
 #endif
 
@@ -115,5 +115,8 @@ typedef unsigned _int64 U64;
 #define TORQUE_UNLIKELY
 #endif
 
-#endif // INCLUDED_TYPES_VISUALC_H
+#define TORQUE_U16_ENDIANSWAP_BUILTIN _byteswap_ushort
+#define TORQUE_U32_ENDIANSWAP_BUILTIN _byteswap_ulong
+#define TORQUE_U64_ENDIANSWAP_BUILTIN _byteswap_uint64
 
+#endif // INCLUDED_TYPES_VISUALC_H

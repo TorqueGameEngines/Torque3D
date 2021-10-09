@@ -889,6 +889,40 @@ TEST(Script, InnerObjectTests)
    ASSERT_EQ(nestedFuncCall.getInt(), 123);
 }
 
+TEST(Script, MiscTesting)
+{
+   ConsoleValue test1 = RunScript(R"(
+      function testNotPassedInParameters(%a, %b, %c, %d)
+      {
+         if (%d $= "")
+            return true;
+         return false;
+      }
+
+      return testNotPassedInParameters(1, 2); // skip passing in %c and %d
+   )");
+
+   ASSERT_EQ(test1.getBool(), true);
+
+   ConsoleValue test2 = RunScript(R"(
+      function SimObject::concatNameTest(%this)
+      {
+         return true;
+      }
+
+      new SimObject(WeirdTestObject1);
+
+      function testObjectNameConcatination(%i)
+      {
+         return (WeirdTestObject @ %i).concatNameTest();
+      }
+
+      return testObjectNameConcatination(1);
+   )");
+
+   ASSERT_EQ(test2.getBool(), true);
+}
+
 TEST(Script, MiscRegressions)
 {
    ConsoleValue regression1 = RunScript(R"(

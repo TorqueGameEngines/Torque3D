@@ -70,7 +70,7 @@ protected:
    GFXStateBlockRef mLitState[NUM_LIT_STATES][2];
 
 public:
-   LightMatInstance(Material &mat) : Parent(mat), mLightMapParamsSC(NULL), mInternalPass(false),  mSpecialLight(NULL) {}
+   LightMatInstance(Material &mat) : Parent(mat), mLightMapParamsSC(NULL), mInternalPass(false),  mSpecialLight(false) {}
 
    virtual bool init( const FeatureSet &features, const GFXVertexFormat *vertexFormat );
    virtual bool setupPass( SceneRenderState *state, const SceneData &sgData );

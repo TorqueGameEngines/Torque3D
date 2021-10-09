@@ -74,7 +74,7 @@ TSShape::TSShape()
    mRadius = 0;
    mFlags = 0;
    tubeRadius = 0;
-   data = NULL;
+   data = 0;
    materialList = NULL;
    mReadVersion = -1; // -1 means constructed from scratch (e.g., in exporter or no read yet)
    mSequencesConstructed = false;
@@ -225,11 +225,7 @@ const String& TSShape::getTargetName( S32 mapToNameIndex ) const
 
 S32 TSShape::getTargetCount() const
 {
-	if(!this)
-		return -1;
-
 	return materialList->getMaterialNameList().size();
-
 }
 
 S32 TSShape::findNode(S32 nameIndex) const

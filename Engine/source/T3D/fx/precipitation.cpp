@@ -996,7 +996,7 @@ void Precipitation::initRenderObjects()
    // entire or a partially filled vb.
    mRainIB.set(GFX, mMaxVBDrops * 6, 0, GFXBufferTypeStatic);
    U16 *idxBuff;
-   mRainIB.lock(&idxBuff, NULL, NULL, NULL);
+   mRainIB.lock(&idxBuff, NULL, 0, 0);
    for( U32 i=0; i < mMaxVBDrops; i++ )
    {
       //

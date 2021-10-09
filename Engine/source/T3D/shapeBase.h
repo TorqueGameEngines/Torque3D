@@ -116,7 +116,7 @@ class ShapeBaseConvex : public Convex
    Box3F       box;
 
   public:
-   ShapeBaseConvex() :pShapeBase(NULL), transform(NULL), hullId(NULL), nodeTransform(0) { mType = ShapeBaseConvexType; }
+   ShapeBaseConvex() :pShapeBase(NULL), transform(NULL), hullId(0), nodeTransform(0) { mType = ShapeBaseConvexType; }
    ShapeBaseConvex(const ShapeBaseConvex& cv) {
       mObject    = cv.mObject;
       pShapeBase = cv.pShapeBase;

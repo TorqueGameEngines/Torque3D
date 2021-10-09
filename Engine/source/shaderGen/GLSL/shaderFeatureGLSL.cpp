@@ -2974,6 +2974,8 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
 
    // Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition(componentList);
+   Var *worldToTangent = getInWorldToTangent(componentList);
+   Var *wsNormal = getInWorldNormal(componentList);
    Var *wsView = getWsView(wsPosition, meta);
    
    //Reflection Probe WIP

@@ -149,18 +149,95 @@ PosixFileSystem::~PosixFileSystem()
 {
 }
 
+static void MungeCase(char* pathName, S32 pathNameSize)
+{
+    const int MaxPath = PATH_MAX;
+
+    char tempBuf[MaxPath];
+    dStrncpy(tempBuf, pathName, pathNameSize);
+
+    AssertFatal(pathName[0] == '/', "PATH must be absolute");
+
+    struct stat filestat;
+    const int MaxPathEl = 200;
+    char *currChar = pathName;
+    char testPath[MaxPath];
+    char pathEl[MaxPathEl];
+    bool done = false;
+
+    dStrncpy(tempBuf, "/", MaxPath);
+    currChar++;
+
+    while (!done)
+    {
+        char* termChar = dStrchr(currChar, '/');
+        if (termChar == NULL)
+            termChar = dStrchr(currChar, '\0');
+        AssertFatal(termChar, "Can't find / or NULL terminator");
+
+        S32 pathElLen = (termChar - currChar);
+        dStrncpy(pathEl, currChar, pathElLen);
+        pathEl[pathElLen] = '\0';
+        dStrncpy(testPath, tempBuf, MaxPath);
+        dStrcat(testPath, pathEl, MaxPath);
+        if (stat(testPath, &filestat) != -1)
+        {
+            dStrncpy(tempBuf, testPath, MaxPath);
+        }
+        else
+        {
+            DIR *dir = opendir(tempBuf);
+            struct dirent* ent;
+            bool foundMatch = false;
+            while (dir != NULL && (ent = readdir(dir)) != NULL)
+            {
+                if (dStricmp(pathEl, ent->d_name) == 0)
+                {
+                    foundMatch = true;
+                    dStrcat(tempBuf, ent->d_name, MaxPath);
+                    break;
+                }
+            }
+
+            if (!foundMatch)
+                dStrncpy(tempBuf, testPath, MaxPath);
+            if (dir)
+                closedir(dir);
+        }
+        if (*termChar == '/')
+        {
+            dStrcat(tempBuf, "/", MaxPath);
+            termChar++;
+            currChar = termChar;
+        }
+        else
+            done = true;
+    }
+
+    dStrncpy(pathName, tempBuf, pathNameSize);
+}
+
+//  static void MungeCase(char* pathName, S32 pathNameSize)
 FileNodeRef PosixFileSystem::resolve(const Path& path)
 {
    String file = buildFileName(_volume,path);
    struct stat info;
-   if (stat(file.c_str(),&info) == 0)
+
+   UTF8 testPath[1024];
+   dMemcpy(testPath, file.c_str(), file.length());
+   testPath[file.length()] = 0x00;
+   MungeCase(testPath, file.length());
+
+   String realFile(testPath);
+
+   if (stat(realFile.c_str(),&info) == 0)
    {
       // Construct the appropriate object
       if (S_ISREG(info.st_mode))
-         return new PosixFile(path,file);
+         return new PosixFile(path,realFile);
          
       if (S_ISDIR(info.st_mode))
-         return new PosixDirectory(path,file);
+         return new PosixDirectory(path,realFile);
    }
    
    return 0;

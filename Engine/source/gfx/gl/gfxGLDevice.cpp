@@ -53,6 +53,8 @@
 
 #if defined(TORQUE_OS_WIN)
 #include "gfx/gl/tGL/tWGL.h"
+#elif defined(TORQUE_OS_LINUX)
+#include "gfx/gl/tGL/tXGL.h"
 #endif
 
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance); 
@@ -1097,10 +1099,10 @@ U32 GFXGLDevice::getTotalVideoMemory_GL_EXT()
 #endif
 
 #if defined(TORQUE_OS_LINUX)
-   else if ( (gglHasXExtension(MESA_query_renderer)) )
+   else if ( (gglHasXExtension(NULL, NULL, MESA_query_renderer)) )
    {
       // memory size is in mb
-      S32 memorySize;
+      U32 memorySize;
       glXQueryCurrentRendererIntegerMESA(GLX_RENDERER_VIDEO_MEMORY_MESA, &memorySize);
       return memorySize;
    }

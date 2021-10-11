@@ -1286,7 +1286,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
  {
 #ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
    dsize_t pathLength = dStrlen(path);
-   char caseSensitivePath[pathLength + 1];
+   char* caseSensitivePath = new char[pathLength + 1];
 
    // Load path into temporary buffer
    dMemcpy(caseSensitivePath, path, pathLength);
@@ -1298,6 +1298,10 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
 
    bool retVal = recurseDumpDirectories(caseSensitivePath, "", directoryVector, -1, depth, noBasePath);
    clearExcludedDirectories();
+
+#ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
+   delete[] caseSensitivePath;
+#endif
    return retVal;
  }
 

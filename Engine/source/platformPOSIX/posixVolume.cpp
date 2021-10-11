@@ -157,7 +157,7 @@ FileNodeRef PosixFileSystem::resolve(const Path& path)
 #ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
    // Resolve the case sensitive filepath
    String::SizeType fileLength = file.length();
-   UTF8 caseSensitivePath[fileLength + 1];
+   UTF8* caseSensitivePath = new UTF8[fileLength + 1];
    dMemcpy(caseSensitivePath, file.c_str(), fileLength);
    caseSensitivePath[fileLength] = 0x00;
    ResolvePathCaseInsensitive(caseSensitivePath, fileLength);
@@ -167,17 +167,21 @@ FileNodeRef PosixFileSystem::resolve(const Path& path)
    String caseSensitiveFile = file;
 #endif
 
+   FileNodeRef result = 0;
    if (stat(caseSensitiveFile.c_str(),&info) == 0)
    {
       // Construct the appropriate object
       if (S_ISREG(info.st_mode))
-         return new PosixFile(path,caseSensitiveFile);
+         result = new PosixFile(path,caseSensitiveFile);
          
       if (S_ISDIR(info.st_mode))
-         return new PosixDirectory(path,caseSensitiveFile);
+         result = new PosixDirectory(path,caseSensitiveFile);
    }
-   
-   return 0;
+
+#ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
+   delete[] caseSensitivePath;
+#endif
+   return result;
 }
 
 FileNodeRef PosixFileSystem::create(const Path& path, FileNode::Mode mode)

@@ -1908,50 +1908,21 @@ void ParticleEmitter::copyToVB( const Point3F &camPos, const LinearColorF &ambie
 
       if (mDataBlock->reverseOrder)
       {
-         buffPtr += 4 * (n_parts - 1);
-         // do sorted-oriented particles
-         if (mDataBlock->sortParticles)
-         {
-            SortParticle* partPtr = orderedVector.address();
-            for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr -= 4)
-            {
-                SortParticle* part = partPtr;
-                partPtr++;
-                setupRibbon(part->p, partPtr->p, partPtr->p, camPos, ambientColor, buffPtr);
-            }
-         }
-         // do unsorted-oriented particles
-         else
-         {
             Particle* oldPtr = NULL;
-            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr -= 4) {
+            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr -= 4)
+            {
                setupRibbon(partPtr, partPtr->next, oldPtr, camPos, ambientColor, buffPtr);
                oldPtr = partPtr;
             }
-         }
       }
       else
       {
-         // do sorted-oriented particles
-         if (mDataBlock->sortParticles)
-         {
-            SortParticle* partPtr = orderedVector.address();
-            for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr += 4)
-            {
-                SortParticle* part = partPtr;
-                partPtr++;
-                setupRibbon(part->p, partPtr->p, partPtr->p, camPos, ambientColor, buffPtr);
-            }
-         }
-         // do unsorted-oriented particles
-         else
-         {
             Particle* oldPtr = NULL;
-            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr += 4) {
+            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr += 4)
+            {
                setupRibbon(partPtr, partPtr->next, oldPtr, camPos, ambientColor, buffPtr);
                oldPtr = partPtr;
             }
-         }
       }
       PROFILE_END();
    }

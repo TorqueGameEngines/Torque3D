@@ -22,7 +22,7 @@ function SelectAssetPath::showDialog(%this, %startingPath, %callback, %promptTex
    %this.callback = %callback;
    
    %dataItem = SelectAssetPath-->folderTree.insertItem(0, "Data");
-   %this.dirHandler.loadFolders("Data", %dataItem);
+   %this.dirHandler.loadFolders("data", %dataItem);
    
    %this.dirHandler.expandTreeToAddress(%startingPath);
    %id = %this.dirHandler.getFolderTreeItemFromAddress(%startingPath);

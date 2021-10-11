@@ -49,7 +49,8 @@ namespace GL
          AssertFatal(false, "Unable to load WGL in GLAD. Make sure your OpenGL drivers are up to date!");
       }
 #elif defined(TORQUE_OS_LINUX)
-      if (!gladLoadGLX())
+
+      if (!gladLoadGLX(NULL, 0))
       {
          AssertFatal(false, "Unable to load GLX in GLAD. Make sure your OpenGL drivers are up to date!");
       }

@@ -432,7 +432,7 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    {\
       m##name##Name[index] = StringTable->EmptyString();\
    }\
-   else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId[index], ImageAsset::getAssetErrstrn(assetState).c_str());\
+   else Con::warnf("Warning: %s::LOAD_SOUNDASSET_ARRAY(%s[%i])-%s", mClassName, m##name##AssetId[index], index, ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
 
 #define assetEnumNameConcat(x,suff)(new std::string( x + std::string(#suff)))->c_str()
@@ -440,11 +440,12 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
 #define INITPERSISTFIELD_SOUNDASSET_ENUMED(name, enumType, maxValue, consoleClass, docs) \
    for (U32 i = 0; i < maxValue; i++)\
    {\
-      const char* enumString = castConsoleTypeToString(static_cast<enumType>(i));\
+      const enumType itter = static_cast<enumType>(i);\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(itter));\
       if (enumString && enumString[0])\
       {\
-         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), assetText(name, asset reference.));\
+         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[itter], consoleClass), assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[itter], consoleClass), assetText(name, asset reference.));\
       }\
    }
 #pragma endregion

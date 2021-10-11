@@ -163,6 +163,9 @@ endif()
 option(TORQUE_MULTITHREAD "Multi Threading" ON)
 mark_as_advanced(TORQUE_MULTITHREAD)
 
+option(TORQUE_POSIX_PATH_CASE_INSENSITIVE ON)
+mark_as_advanced(TORQUE_POSIX_PATH_CASE_INSENSITIVE)
+
 option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
 mark_as_advanced(TORQUE_DISABLE_MEMORY_MANAGER)
 

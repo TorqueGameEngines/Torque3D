@@ -216,7 +216,7 @@ function directoryHandler::getFolderTreeItemFromAddress(%this, %address)
    //break down the address
    %folderCount = getTokenCount(%address, "/");
 
-   if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
+   if(startsWith(%address, "data/") || startsWith(%address, "tools/") || startsWith(%address, "core/"))
    {
       %curItem = %this.treeCtrl.findChildItemByName(1, "Modules");
    }
@@ -242,7 +242,7 @@ function directoryHandler::expandTreeToAddress(%this, %address)
    %rootId = AssetBrowser-->filterTree.findItemByName("Content");
    %this.treeCtrl.expandItem(%rootId);
 
-   if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
+   if(startsWith(%address, "data/") || startsWith(%address, "tools/") || startsWith(%address, "core/"))
    {
       %curItem = %this.treeCtrl.findChildItemByName(1, "Modules");
    }

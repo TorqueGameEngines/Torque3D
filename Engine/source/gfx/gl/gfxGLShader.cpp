@@ -562,6 +562,7 @@ void GFXGLShader::initConstantDescs()
 
    if(!maxNameLength)
       return;
+   maxNameLength++;
 
    FrameTemp<GLchar> uniformName(maxNameLength);
    

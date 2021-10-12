@@ -187,6 +187,9 @@ void GFXGLDevice::initGLState()
 
    //enable sRGB
    glEnable(GL_FRAMEBUFFER_SRGB);
+
+   //enable seamless cubemapping
+   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void GFXGLDevice::vsyncCallback()

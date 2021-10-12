@@ -300,7 +300,6 @@ macro(finishLibrary)
     # more paths?
     if(${ARGC} GREATER 0)
         foreach(dir ${ARGV0})
-            MESSAGE(STATUS "TEST: ${dir}")
             addPath("${dir}")
         endforeach()
     endif()

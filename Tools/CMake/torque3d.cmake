@@ -163,10 +163,10 @@ endif()
 option(TORQUE_MULTITHREAD "Multi Threading" ON)
 mark_as_advanced(TORQUE_MULTITHREAD)
 
-option(TORQUE_POSIX_PATH_CASE_INSENSITIVE ON)
+option(TORQUE_POSIX_PATH_CASE_INSENSITIVE "POSIX Pathing Case Insensitivity" ON)
 mark_as_advanced(TORQUE_POSIX_PATH_CASE_INSENSITIVE)
 
-option(TORQUE_ZIP_PATH_CASE_INSENSITIVE ON)
+option(TORQUE_ZIP_PATH_CASE_INSENSITIVE "ZIP Pathing Case Insensitivity" ON)
 mark_as_advanced(TORQUE_ZIP_PATH_CASE_INSENSITIVE)
 
 option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)

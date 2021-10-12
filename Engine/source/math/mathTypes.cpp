@@ -620,8 +620,16 @@ ConsoleGetType(TypeRotationF)
    static const U32 bufSize = 256;
    char* returnBuffer = Con::getReturnBuffer(bufSize);
 
-   EulerF out = pt->asEulerF(RotationF::Degrees);
-   dSprintf(returnBuffer, bufSize, "%g %g %g", out.x, out.y, out.z);
+   if (pt->mRotationType == RotationF::Euler)
+   {
+      EulerF out = pt->asEulerF(RotationF::Degrees);
+      dSprintf(returnBuffer, bufSize, "%g %g %g", out.x, out.y, out.z);
+   }
+   else if (pt->mRotationType == RotationF::AxisAngle)
+   {
+      AngAxisF out = pt->asAxisAngle(RotationF::Degrees);
+      dSprintf(returnBuffer, bufSize, "%g %g %g %g", out.axis.x, out.axis.y, out.axis.z, out.angle);
+   }
 
    return returnBuffer;
 }

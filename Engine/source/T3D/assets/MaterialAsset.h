@@ -74,6 +74,7 @@ public:
    enum MaterialAssetErrCode
    {
       ScriptLoaded = AssetErrCode::Extended,
+      DefinitionAlreadyExists,
       Extended
    };
 

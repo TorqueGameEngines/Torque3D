@@ -954,10 +954,10 @@ void MeshRoad::initPersistFields()
 
    addGroup( "Internal" );
 
-      addProtectedField( "Node", TypeString, NULL, &addNodeFromField, &emptyStringProtectedGetFn, 
+      addProtectedField( "Node", TypeString, 0, &addNodeFromField, &emptyStringProtectedGetFn,
          "Do not modify, for internal use." );
 
-      addProtectedField( "ProfileNode", TypeString, NULL, &addProfileNodeFromField, &emptyStringProtectedGetFn,
+      addProtectedField( "ProfileNode", TypeString, 0, &addProfileNodeFromField, &emptyStringProtectedGetFn,
          "Do not modify, for internal use." );
 
    endGroup( "Internal" );
@@ -2896,7 +2896,6 @@ void MeshRoad::_generateVerts()
 
    // Make Primitive Buffers   
    U32 p00, p01, p11, p10;
-   U32 pb00, pb01, pb11, pb10;
    U32 offset = 0;
    U16 *pIdx = NULL;   
    U32 curIdx = 0; 

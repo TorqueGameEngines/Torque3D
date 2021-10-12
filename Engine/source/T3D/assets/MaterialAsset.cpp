@@ -19,7 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#pragma once
 
 #ifndef MATERIALASSET_H
 #include "MaterialAsset.h"
@@ -168,13 +167,29 @@ void MaterialAsset::initializeAsset()
 
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
+   if (mMatDefinitionName == StringTable->EmptyString())
+   {
+      mLoadedState = Failed;
+      return;
+   }
+
    if (Torque::FS::IsScriptFile(mScriptPath))
    {
       if (!Sim::findObject(mMatDefinitionName))
-         if (Con::executeFile(mScriptPath, false, false))
-            mLoadedState = ScriptLoaded;
-         else
-            mLoadedState = Failed;
+      {
+          if (Con::executeFile(mScriptPath, false, false))
+          {
+              mLoadedState = ScriptLoaded;
+          }
+          else
+          {
+              mLoadedState = Failed;
+          }
+      }
+      else
+      {
+         mLoadedState = DefinitionAlreadyExists;
+      }
    }
 
    loadMaterial();
@@ -183,6 +198,12 @@ void MaterialAsset::initializeAsset()
 void MaterialAsset::onAssetRefresh()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
+
+   if (mMatDefinitionName == StringTable->EmptyString())
+   {
+      mLoadedState = Failed;
+      return;
+   }
 
    if (Torque::FS::IsScriptFile(mScriptPath))
    {
@@ -199,7 +220,6 @@ void MaterialAsset::onAssetRefresh()
 
       //And now that we've executed, switch back to the prior behavior
       Con::setVariable("$Con::redefineBehavior", redefineBehaviorPrev.c_str());
-      
    }
 
    loadMaterial();
@@ -227,7 +247,7 @@ void MaterialAsset::loadMaterial()
    if (mMaterialDefinition)
       SAFE_DELETE(mMaterialDefinition);
 
-   if (mLoadedState == ScriptLoaded && mMatDefinitionName != StringTable->EmptyString())
+   if ((mLoadedState == ScriptLoaded || mLoadedState == DefinitionAlreadyExists) && mMatDefinitionName != StringTable->EmptyString())
    {
       Material* matDef;
       if (!Sim::findObject(mMatDefinitionName, matDef))

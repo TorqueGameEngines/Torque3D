@@ -550,7 +550,7 @@ void PlatformWindowSDL::_triggerTextNotify(const SDL_Event& evt)
    }
    else // get a wchar string
    {
-      const U32 len = strlen(evt.text.text);
+      const dsize_t len = strlen(evt.text.text);
       U16 wchar[16] = {};
       dMemcpy(wchar, evt.text.text, sizeof(char)*len);
 

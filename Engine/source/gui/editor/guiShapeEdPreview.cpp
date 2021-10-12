@@ -160,11 +160,11 @@ void GuiShapeEdPreview::initPersistFields()
    addGroup( "Animation" );
    addField( "activeThread",              TypeS32,    Offset( mActiveThread, GuiShapeEdPreview ),
       "Index of the active thread, or -1 if none" );
-   addProtectedField( "threadPos",        TypeF32,    NULL, &setFieldThreadPos, &getFieldThreadPos,
+   addProtectedField( "threadPos",        TypeF32,    0, &setFieldThreadPos, &getFieldThreadPos,
       "Current position of the active thread (0-1)" );
-   addProtectedField( "threadDirection",  TypeS32,    NULL, &setFieldThreadDir, &getFieldThreadDir,
+   addProtectedField( "threadDirection",  TypeS32,    0, &setFieldThreadDir, &getFieldThreadDir,
       "Playback direction of the active thread" );
-   addProtectedField( "threadPingPong",   TypeBool,   NULL, &setFieldThreadPingPong, &getFieldThreadPingPong,
+   addProtectedField( "threadPingPong",   TypeBool,   0, &setFieldThreadPingPong, &getFieldThreadPingPong,
       "'PingPong' mode of the active thread" );
    endGroup( "Animation" );
 

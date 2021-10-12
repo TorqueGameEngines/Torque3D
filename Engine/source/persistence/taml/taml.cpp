@@ -335,7 +335,7 @@ ImplementEnumType(_TamlFormatMode,
 
          // Write.
          //return writer.write( stream, pRootNode );
-         return NULL;
+         return false;
       }
 
       /// Invalid.
@@ -640,7 +640,7 @@ ImplementEnumType(_TamlFormatMode,
 
       // Iterate fields.
       U8 arrayDepth = 0;
-      TamlCustomNode* currentArrayNode;
+      TamlCustomNode* currentArrayNode = NULL;
       for (U32 index = 0; index < fieldCount; ++index)
       {
          // Fetch field.

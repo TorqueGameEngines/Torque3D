@@ -1097,7 +1097,7 @@ DefineEngineMethod( GuiRoadEditorCtrl, getSelectedRoad, S32, (), , "" )
    if ( road )
       return road->getId();
    
-   return NULL;
+   return 0;
 }
 
 DefineEngineMethod( GuiRoadEditorCtrl, getSelectedNode, S32, (), , "" )

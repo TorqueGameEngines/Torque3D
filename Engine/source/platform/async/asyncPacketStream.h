@@ -282,7 +282,7 @@ void AsyncPacketBufferedInputStream< Stream, Packet >::_requestNext()
       if( resettable )
       {
          IPositionable< U32 >* positionable = dynamic_cast< IPositionable< U32 >* >( &Deref( stream ) );
-         U32 pos;
+         U32 pos = 0;
          if(positionable)
             pos = positionable->getPosition();
          

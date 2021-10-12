@@ -145,7 +145,7 @@ class GuiMissionAreaUndoAction : public UndoAction
 {
    public:
 
-      GuiMissionAreaUndoAction( const UTF8* actionName ) : UndoAction( actionName ), mMissionAreaEditor(NULL), mObjId(NULL)
+      GuiMissionAreaUndoAction( const UTF8* actionName ) : UndoAction( actionName ), mMissionAreaEditor(NULL), mObjId(0)
       {
       }
 

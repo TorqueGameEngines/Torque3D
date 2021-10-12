@@ -30,9 +30,9 @@
 namespace Torque
 {
 
-extern U32 hash(register const U8 *k, register U32 length, register U32 initval);
+extern U32 hash(const U8 *k, U32 length, U32 initval);
 
-extern U64 hash64(register const U8 *k, register U32 length, register U64 initval);
+extern U64 hash64(const U8 *k, U32 length, U64 initval);
 
 }
 

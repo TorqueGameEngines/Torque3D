@@ -410,7 +410,6 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
 {
    if (!Parent::preload(server, errorStr))
       return false;
-   bool shapeError = false;
 
    // Resolve objects transmitted from server
    if (!server) {

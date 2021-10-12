@@ -143,7 +143,7 @@ static bool sReadPNG(Stream &stream, GBitmap *bitmap)
    stream.read(cs_headerBytesChecked, header);
 
    bool isPng = png_check_sig(header, cs_headerBytesChecked) != 0;
-   if (isPng == false) 
+   if (!isPng)
    {
       AssertWarn(false, "GBitmap::readPNG: stream doesn't contain a PNG");
       return false;

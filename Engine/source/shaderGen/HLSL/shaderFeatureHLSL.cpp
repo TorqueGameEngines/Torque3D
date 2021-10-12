@@ -879,12 +879,10 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
       meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
 
       Var* wsNormal = (Var*)LangElement::find("wsNormal");
-
       if (!fd.features[MFT_NormalMap])
       {
          if (!wsNormal)
             wsNormal = getInWorldNormal(componentList);
-
          meta->addStatement(new GenOp("  @ = normalize( @ );\r\n\n", normal, wsNormal));
       }
       else
@@ -894,6 +892,14 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    }
 
    Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+
+   if (!wsEyePos)
+   {
+      wsEyePos = new Var("eyePosWorld", "float3");
+      wsEyePos->uniform = true;
+      wsEyePos->constSortPos = cspPass;
+   }
+
    Var* wsPosition = getInWsPosition(componentList);
    Var* wsView = getWsView(wsPosition, meta);
 
@@ -2138,8 +2144,6 @@ RTLightingFeatHLSL::RTLightingFeatHLSL()
 void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList, 
                                        const MaterialFeatureData &fd )
 {
-   if (fd.features[MFT_ImposterVert]) return;
-
    MultiLine *meta = new MultiLine;   
 
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
@@ -2178,11 +2182,14 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
       return;
    }
 
+   addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
+   getOutWorldToTangent(componentList, meta, fd);
+   output = meta;
+
+
    // Find the incoming vertex normal.
    Var *inNormal = (Var*)LangElement::find( "normal" );   
 
-   // Skip out on realtime lighting if we don't have a normal
-   // or we're doing some sort of baked lighting.
    if (  !inNormal || 
          fd.features[MFT_LightMap] || 
          fd.features[MFT_ToneMap] || 
@@ -2191,7 +2198,6 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
 
    // If there isn't a normal map then we need to pass
    // the world space normal to the pixel shader ourselves.
-   //Temporarily disabled while we figure out how to better handle normals without a normal map
    if ( !fd.features[MFT_NormalMap] )
    {
       Var *outNormal = connectComp->getElement( RT_TEXCOORD );
@@ -2205,11 +2211,6 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
       // Transform the normal to world space.
       meta->addStatement( new GenOp( "   @ = mul( @, float4( normalize( @ ), 0.0 ) ).xyz;\r\n", outNormal, objTrans, inNormal ) );
    }
-
-   addOutWsPosition( componentList, fd.features[MFT_UseInstancing], meta );
-   getOutWorldToTangent(componentList, meta, fd);
-
-   output = meta;
 }
 
 void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList, 
@@ -2229,10 +2230,9 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    MultiLine *meta = new MultiLine;
 
    // Now the wsPosition and wsView.
-   Var* worldToTangent = getInWorldToTangent(componentList);
-   Var* wsNormal = getInWorldNormal(componentList);
    Var *wsPosition = getInWsPosition( componentList );
-   
+   Var* worldToTangent = getInWorldToTangent(componentList);
+   Var* wsNormal = getInWorldNormal(componentList);   
    Var *wsView = getWsView( wsPosition, meta );
    
    // Look for a light mask generated from a previous
@@ -2686,7 +2686,7 @@ void FoliageFeatureHLSL::processVert( Vector<ShaderComponent*> &componentList,
    tangent->setType( "float3" );
    tangent->setName( "T" );
    LangElement *tangentDec = new DecOp( tangent );
-   meta->addStatement( new GenOp( "   @;\n", tangentDec ) );         
+   meta->addStatement( new GenOp( "   @ = float3(1.0,0,0);\n", tangentDec ) );         
 
    // We add a float foliageFade to the OUT structure.
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );

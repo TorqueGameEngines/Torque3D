@@ -1472,7 +1472,7 @@ DefineEngineMethod( GuiRiverEditorCtrl, getSelectedRiver, S32, (), , "" )
 {
    River *river = object->getSelectedRiver();
    if ( !river )
-      return NULL;
+      return 0;
 
    return river->getId();
 }

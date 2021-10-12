@@ -1199,7 +1199,7 @@ bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
    if ( regInfo == NULL )
    {
       Con::errorf( "[GBitmap::readBitmap] unable to find registration for extension [%s]", bmType.c_str() );
-      return NULL;
+      return false;
    }
 
    return regInfo->readFunc( ioStream, this );
@@ -1212,7 +1212,7 @@ bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compress
    if ( regInfo == NULL )
    {
       Con::errorf( "[GBitmap::writeBitmap] unable to find registration for extension [%s]", bmType.c_str() );
-      return NULL;
+      return false;
    }
 
    return regInfo->writeFunc( this, ioStream, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );

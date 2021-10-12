@@ -1821,10 +1821,8 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
    }
 
    S32 meshCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_meshCount"), nullptr));
-   S32 shapeItem = assetItem->shapeInfo->findItemByName("Meshes");
 
    S32 animCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_animCount"), nullptr));
-   S32 animItem = assetItem->shapeInfo->findItemByName("Animations");
 
    S32 materialCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_materialCount"), nullptr));
    S32 matItem = assetItem->shapeInfo->findItemByName("Materials");
@@ -2005,9 +2003,7 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
    if (assetItem->importStatus == AssetImportObject::Skipped || assetItem->importStatus == AssetImportObject::NotProcessed)
       return;
 
-   bool hasCollision = checkAssetForCollision(assetItem);
-
-   if (hasCollision)
+   if (checkAssetForCollision(assetItem))
    {
       importIssues = true;
       return;
@@ -2018,7 +2014,6 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
       AssetQuery aQuery;
       U32 numAssetsFound = AssetDatabase.findAllAssets(&aQuery);
 
-      hasCollision = false;
       for (U32 i = 0; i < numAssetsFound; i++)
       {
          StringTableEntry assetId = aQuery.mAssetList[i];
@@ -2032,7 +2027,6 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
 
          if (assetName == StringTable->insert(assetItem->assetName.c_str()))
          {
-            hasCollision = true;
             assetItem->status = "Error";
             assetItem->statusType = "DuplicateAsset";
             assetItem->statusInfo = "Duplicate asset names found within the target module!\nAsset \"" + assetItem->assetName + "\" of type \"" + assetItem->assetType + "\" has a matching name.\nPlease rename it and try again!";
@@ -2241,7 +2235,6 @@ void AssetImporter::resetImportConfig()
       activeImportConfig->registerObject();
    }
 
-   bool foundConfig = false;
    Settings* editorSettings;
    //See if we can get our editor settings
    if (Sim::findObject("EditorSettings", editorSettings))

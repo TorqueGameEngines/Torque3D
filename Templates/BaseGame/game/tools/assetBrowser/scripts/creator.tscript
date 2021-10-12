@@ -174,7 +174,7 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
          %method = "build" @ %class;
 
       if( !ObjectBuilderGui.isMethod( %method ) )
-         %cmd = "return new " @ %class @ "();";
+         %cmd = "new " @ %class @ "();";
       else
          %cmd = "ObjectBuilderGui." @ %method @ "();";
 

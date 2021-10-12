@@ -46,7 +46,7 @@ GFXGLTextureObject::GFXGLTextureObject(GFXDevice * aDevice, GFXTextureProfile *p
 {
 
 #if TORQUE_DEBUG
-   mFrameAllocatorMarkGuard == FrameAllocator::getWaterMark();
+   mFrameAllocatorMarkGuard = FrameAllocator::getWaterMark();
 #endif
 
    dMemset(&mLockedRect, 0, sizeof(mLockedRect));

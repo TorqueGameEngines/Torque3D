@@ -141,7 +141,7 @@ GFXTextureObject* PostEffectManager::getBackBufferTex()
 
       mBackBufferCopyTex.set( targetSize.x, targetSize.y, 
                               targetFormat, 
-                              &PostFxTargetProfile, "mBackBufferCopyTex" );
+                              &PostFxTextureSRGBProfile, "mBackBufferCopyTex" );
 
       target->resolveTo( mBackBufferCopyTex );
       mLastBackBufferTarget = target;

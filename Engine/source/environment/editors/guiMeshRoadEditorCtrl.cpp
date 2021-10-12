@@ -1757,7 +1757,7 @@ DefineEngineMethod( GuiMeshRoadEditorCtrl, getSelectedRoad, S32, (), , "" )
 {
    MeshRoad *road = object->getSelectedRoad();
    if ( !road )
-      return NULL;
+      return 0;
 
    return road->getId();
 }

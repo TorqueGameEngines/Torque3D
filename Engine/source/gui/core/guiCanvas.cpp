@@ -94,6 +94,33 @@ ConsoleDocClass( GuiCanvas,
 
    "@ingroup GuiCore\n");
 
+   ImplementEnumType(KeyboardTranslationMode,
+      "Modes for handling keyboard translation or native accelerator requests.\n\n")
+      { GuiCanvas::TranslationMode_Platform, "Platform",
+         "Requests will be passed to the platform window for handling." },
+      { GuiCanvas::TranslationMode_Callback, "Callback",
+         "Script callbacks will be issued to notify and allow override of these events." },
+      { GuiCanvas::TranslationMode_Ignore, "Ignore",
+         "Requsts to enable/disable keyboard translations or native accelerators will be ignored "
+         "with no callback triggered." },
+   EndImplementEnumType;
+
+   IMPLEMENT_CALLBACK(GuiCanvas, onSetKeyboardTranslationEnabled, bool, (bool enable), (enable),
+      "Called when the canvas receives an enableKeyboardTranslation request. This is usually the "
+      "result of a GuitTextInputCtrl gaining or losing focus. Return true to allow the request "
+      "to be passed to the platform window. Return false to override the request and handle it in script.\n\n"
+      "@note This callback is only issued if keyTranslationMode is set to \"Callback\" for this canvas.\n"
+      "@param enable Requested keyboard translation state.\n"
+      "@see KeyboardTranslationMode\n");
+
+   IMPLEMENT_CALLBACK(GuiCanvas, onSetNativeAcceleratorsEnabled, bool, (bool enable), (enable),
+      "Called when the canvas receives a setNativeAcceleratorsEnabled request. This is usually the "
+      "result of a GuitTextInputCtrl gaining or losing focus. Return true to allow the request to "
+      "be passed to the platform window. Return false to override the request and handle it in script.\n\n"
+      "@note This callback is only issued if nativeAcceleratorMode is set to \"Callback\" for this canvas.\n"
+      "@param enable Requested accelerator state.\n"
+      "@see KeyboardTranslationMode\n");
+
 ColorI gCanvasClearColor( 255, 0, 255 ); ///< For GFX->clear
 
 extern InputModifiers convertModifierBits(const U32 in);
@@ -127,6 +154,8 @@ GuiCanvas::GuiCanvas(): GuiControl(),
                         mHoverPositionSet(false),
                         mLeftMouseLast(false),
                         mHoverLeftControlTime(0),
+                        mKeyTranslationMode(TranslationMode_Platform),
+                        mNativeAcceleratorMode(TranslationMode_Platform),
                         mMiddleMouseLast(false),
                         mRightMouseLast(false),
                         mMouseDownPoint(0.0f,0.0f),
@@ -182,6 +211,13 @@ void GuiCanvas::initPersistFields()
 
    addField("displayWindow", TypeBool, Offset(mDisplayWindow, GuiCanvas), "Controls if the canvas window is rendered or not." );
    endGroup("Canvas Rendering");
+
+   addGroup("KeyboardMode Callbacks");
+   addField("keyTranslationMode", TYPEID< KeyTranslationMode >(), Offset(mKeyTranslationMode, GuiCanvas),
+      "How to handle enable/disable keyboard translation requests. \"Platform\", \"Callback\" or \"Ignore\".\n");
+   addField("nativeAcceleratorMode", TYPEID< KeyTranslationMode >(), Offset(mNativeAcceleratorMode, GuiCanvas),
+      "How to handle enable/disable native accelerator requests. \"Platform\", \"Callback\" or \"Ignore\".\n");
+   endGroup("KeyboardMode Callbacks");
 
    Parent::initPersistFields();
 }
@@ -442,20 +478,32 @@ Point2I GuiCanvas::getWindowSize()
 
 void GuiCanvas::enableKeyboardTranslation()
 {
-   AssertISV(mPlatformWindow, "GuiCanvas::enableKeyboardTranslation - no window present!");
-   mPlatformWindow->setKeyboardTranslation(true);
+   if ((mKeyTranslationMode == TranslationMode_Platform) ||
+      ((mKeyTranslationMode == TranslationMode_Callback) && onSetKeyboardTranslationEnabled_callback(true)))
+   {
+      AssertISV(mPlatformWindow, "GuiCanvas::enableKeyboardTranslation - no window present!");
+      mPlatformWindow->setKeyboardTranslation(true);
+   }
 }
 
 void GuiCanvas::disableKeyboardTranslation()
 {
-   AssertISV(mPlatformWindow, "GuiCanvas::disableKeyboardTranslation - no window present!");
-   mPlatformWindow->setKeyboardTranslation(false);
+   if ((mKeyTranslationMode == TranslationMode_Platform) ||
+      ((mKeyTranslationMode == TranslationMode_Callback) && onSetKeyboardTranslationEnabled_callback(false)))
+   {
+      AssertISV(mPlatformWindow, "GuiCanvas::disableKeyboardTranslation - no window present!");
+      mPlatformWindow->setKeyboardTranslation(false);
+   }
 }
 
 void GuiCanvas::setNativeAcceleratorsEnabled( bool enabled )
 {
-   AssertISV(mPlatformWindow, "GuiCanvas::setNativeAcceleratorsEnabled - no window present!");
-   mPlatformWindow->setAcceleratorsEnabled( enabled );
+   if ((mNativeAcceleratorMode == TranslationMode_Platform) ||
+      ((mNativeAcceleratorMode == TranslationMode_Callback) && onSetNativeAcceleratorsEnabled_callback(enabled)))
+   {
+      AssertISV(mPlatformWindow, "GuiCanvas::setNativeAcceleratorsEnabled - no window present!");
+      mPlatformWindow->setAcceleratorsEnabled(enabled);
+   }
 }
 
 void GuiCanvas::setForceMouseToGUI(bool onOff)
@@ -2390,7 +2438,7 @@ DefineEngineMethod( GuiCanvas, getMouseControl, S32, (),,
    if (control)
       return control->getId();
    
-   return NULL;
+   return 0;
 }
 
 DefineEngineFunction(excludeOtherInstance, bool, (const char* appIdentifer),,

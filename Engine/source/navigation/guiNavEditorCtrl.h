@@ -168,7 +168,7 @@ protected:
 class GuiNavEditorUndoAction : public UndoAction
 {
 public:
-   GuiNavEditorUndoAction(const UTF8* actionName) : UndoAction(actionName), mNavEditor(NULL), mObjId(NULL)
+   GuiNavEditorUndoAction(const UTF8* actionName) : UndoAction(actionName), mNavEditor(NULL), mObjId(0)
    {
    }
 

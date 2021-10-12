@@ -31,8 +31,14 @@ add_definitions(-DPNG_ARM_NEON_OPT=0)
 
 # Enables SSE for libpng - also takes care of compiler warnings.
 # If we don't want SSE, we should set it to off/0.
-set(PNG_INTEL_SSE on CACHE STRING "")
-add_definitions(-DPNG_INTEL_SSE_OPT=1)
+if ( TORQUE_CPU_X32 OR TORQUE_CPU_X64 )
+    set(PNG_INTEL_SSE on CACHE STRING "")
+    add_definitions(-DPNG_INTEL_SSE_OPT=1)
+    addPath("${libDir}/lpng/intel")
+else()
+    set(PNG_INTEL_SSE off CACHE STRING "")
+    add_definitions(-DPNG_INTEL_SSE_OPT=0)
+endif()
 
 addInclude(${libDir}/zlib)
 

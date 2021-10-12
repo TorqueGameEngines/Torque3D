@@ -144,7 +144,6 @@ void RenderTranslucentMgr::render( SceneRenderState *state )
    GFXTextureObject *lastLM = NULL;
    GFXCubemap *lastCubemap = NULL;
    GFXTextureObject *lastReflectTex = NULL;
-   GFXTextureObject *lastMiscTex = NULL;
    GFXTextureObject *lastAccuTex = NULL;
 
    // Find the particle render manager (if we don't have it)

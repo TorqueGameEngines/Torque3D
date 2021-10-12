@@ -365,7 +365,6 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
 
 bool GuiPopUpMenuCtrlEx::_setBitmaps(void* obj, const char* index, const char* data)
 {
-   bool ret = false;
    GuiPopUpMenuCtrlEx* object = static_cast<GuiPopUpMenuCtrlEx*>(obj);
 
    object->setBitmap(data);

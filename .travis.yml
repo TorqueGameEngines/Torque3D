@@ -10,6 +10,10 @@ matrix:
     - os: osx
       osx_image: xcode12.5
       name: MacOS Big Sur
+    # MacOS Mojave
+    - os: osx
+      osx_image: xcode11.3
+      name: MacOS Mojave
     # Ubuntu (Bionic 18.04)
     - os: linux
       compiler: gcc
@@ -54,6 +58,7 @@ addons:
       - libxss-dev
       - libglu1-mesa-dev
       - libgtk-3-dev
+
 
 script:
   - mkdir -p My\ Projects/TestProject/buildFiles/travis/

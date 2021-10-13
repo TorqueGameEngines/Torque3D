@@ -1,16 +1,29 @@
 language: cpp
 
-dist: xenial
-
 matrix:
   include:
+    # MacOS Catalina
     - os: osx
-      compiler: clang
-      env: if CXXFLAGS="-fgnu-inline-asm -fasm-blocks"
+      osx_image: xcode12.2
+    # MacOS Big Sur
+    - os: osx
+      osx_image: xcode12.5
+    # Ubuntu (Bionic 18.04)
     - os: linux
       compiler: gcc
+      dist: bionic
     - os: linux
       compiler: clang
+      dist: bionic
+    # Ubuntu (Focal 20.04)
+    - os: linux
+      compiler: gcc
+      dist: focal
+    - os: linux
+      compiler: clang
+      dist: focal
+    # Windows
+    - os: windows
 
 addons:
   apt:
@@ -34,9 +47,8 @@ addons:
 script:
   - mkdir -p My\ Projects/TestProject/buildFiles/travis/
   - cd My\ Projects/TestProject/buildFiles/travis/
-  - cmake ../../../.. -DTORQUE_APP_NAME=TestProject -DCMAKE_BUILD_TYPE=Debug
-  - make 2>/dev/null # Do the actual build, but ignore all the warnings
-  - make # build again. This time all output is printed but the warnings that happened earlier do not happen again
+  - cmake ../../../.. -DTORQUE_APP_NAME=TestProject -DCMAKE_BUILD_TYPE=Debug -DTORQUE_TESTING=ON
+  - make -j2
   - make install
   - cd ../../game/
   - ls

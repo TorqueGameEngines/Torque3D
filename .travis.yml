@@ -5,25 +5,36 @@ matrix:
     # MacOS Catalina
     - os: osx
       osx_image: xcode12.2
+      name: MacOS Catalina
     # MacOS Big Sur
     - os: osx
       osx_image: xcode12.5
+      name: MacOS Big Sur
     # Ubuntu (Bionic 18.04)
     - os: linux
       compiler: gcc
       dist: bionic
+      name: Ubuntu 18.04 Bionic GCC
     - os: linux
       compiler: clang
       dist: bionic
+      name: Ubuntu 18.04 Bionic Clang
     # Ubuntu (Focal 20.04)
     - os: linux
       compiler: gcc
       dist: focal
+      name: Ubuntu 20.04 Focal GCC
     - os: linux
       compiler: clang
       dist: focal
+      name: Ubuntu 20.04 Focal Clang
     # Windows
     - os: windows
+      name: Windows Server 1809
+      env:
+        - MSBUILD_PATH="c:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin"
+      install:
+        - choco install visualstudio2017buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
 
 addons:
   apt:
@@ -48,7 +59,9 @@ script:
   - mkdir -p My\ Projects/TestProject/buildFiles/travis/
   - cd My\ Projects/TestProject/buildFiles/travis/
   - cmake ../../../.. -DTORQUE_APP_NAME=TestProject -DCMAKE_BUILD_TYPE=Debug -DTORQUE_TESTING=ON
-  - make -j2
-  - make install
+  # On Windows we use msbuild
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export PATH=$MSBUILD_PATH:$PATH && msbuild.exe TestProject.sln //t:build //p:Configuration=Debug ; fi
+  # On everything else, make should be present
+  - if [[ "$TRAVIS_OS_NAME" = "linux" || "$TRAVIS_OS_NAME" = "osx" ]]; then make -j2 && make install ; fi
   - cd ../../game/
   - ls

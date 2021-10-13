@@ -33,7 +33,7 @@
     directory.  Files are never created or modified in the game directory.
 
     For case-sensitivity, the MungePath code will test whether a given path
-    specified by the engine exists.  If not, it will use the MungeCase function
+    specified by the engine exists.  If not, it will use the ResolvePathCaseInsensitive function
     which will try to determine if an actual filesystem path matches the
     specified path case insensitive.  If one is found, the actual path
     transparently (we hope) replaces the one requested by the engine.
@@ -183,7 +183,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
  // munge the case of the specified pathName.  This means try to find the actual
  // filename in with case-insensitive matching on the specified pathName, and
  // store the actual found name.
- static void MungeCase(char* pathName, S32 pathNameSize)
+ void ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize)
  {
     char tempBuf[MaxPath];
     dStrncpy(tempBuf, pathName, pathNameSize);
@@ -296,7 +296,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
        return;
 
     // otherwise munge the case of the path
-    MungeCase(dest, destSize);
+     ResolvePathCaseInsensitive(dest, destSize);
  }
 
  //-----------------------------------------------------------------------------
@@ -1284,8 +1284,24 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
 
  bool Platform::dumpDirectories(const char *path, Vector<StringTableEntry> &directoryVector, S32 depth, bool noBasePath)
  {
-   bool retVal = recurseDumpDirectories(path, "", directoryVector, -1, depth, noBasePath);
+#ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
+   dsize_t pathLength = dStrlen(path);
+   char* caseSensitivePath = new char[pathLength + 1];
+
+   // Load path into temporary buffer
+   dMemcpy(caseSensitivePath, path, pathLength);
+   caseSensitivePath[pathLength] = 0x00;
+   ResolvePathCaseInsensitive(caseSensitivePath, pathLength);
+#else
+   const char* caseSensitivePath = path;
+#endif
+
+   bool retVal = recurseDumpDirectories(caseSensitivePath, "", directoryVector, -1, depth, noBasePath);
    clearExcludedDirectories();
+
+#ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
+   delete[] caseSensitivePath;
+#endif
    return retVal;
  }
 

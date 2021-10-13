@@ -129,7 +129,7 @@ GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
    setExtent( 140, 30 );
    mMasked = false;
 
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
 }
 
 //-----------------------------------------------------------------------------
@@ -668,4 +668,4 @@ bool GuiBitmapButtonCtrl::pointInControl(const Point2I& parentCoordPoint)
       return Parent::pointInControl(parentCoordPoint);
 }
 
-DEF_IMAGEASSET_BINDS(GuiBitmapButtonCtrl, Bitmap);
+DEF_ASSET_BINDS(GuiBitmapButtonCtrl, Bitmap);

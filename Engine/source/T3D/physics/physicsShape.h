@@ -75,7 +75,7 @@ public:
 public:
 
    DECLARE_SHAPEASSET(PhysicsShapeData, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(PhysicsShapeData, Shape);
+   DECLARE_ASSET_SETGET(PhysicsShapeData, Shape);
 
    /// The shared unscaled collision shape.
    PhysicsCollisionRef colShape;

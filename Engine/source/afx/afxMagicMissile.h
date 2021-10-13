@@ -72,7 +72,7 @@ public:
    // variables set in datablock definition:
    // Shape related
    DECLARE_SHAPEASSET(afxMagicMissileData, ProjectileShape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(afxMagicMissileData, ProjectileShape);
+   DECLARE_ASSET_SETGET(afxMagicMissileData, ProjectileShape);
   //StringTableEntry      projectileShapeName;
 
   //bool                  hasLight;

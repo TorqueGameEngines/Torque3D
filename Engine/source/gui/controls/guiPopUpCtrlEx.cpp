@@ -329,8 +329,8 @@ GuiPopUpMenuCtrlEx::GuiPopUpMenuCtrlEx(void)
    mBackgroundCancel = false; //  Added
    mReverseTextList = false; //  Added - Don't reverse text list if displaying up
 
-   INIT_IMAGEASSET_ARRAY(Bitmap, Normal);
-   INIT_IMAGEASSET_ARRAY(Bitmap, Depressed);
+   INIT_ASSET_ARRAY(Bitmap, Normal);
+   INIT_ASSET_ARRAY(Bitmap, Depressed);
 
    mBitmapBounds.set(16, 16); //  Added
    mHotTrackItems = false;

@@ -138,14 +138,14 @@ public:
       // The name of the Material we will use for rendering
       DECLARE_MATERIALASSET(surfaceMaterial, Material);
       
-      DECLARE_MATERIALASSET_SETGET(surfaceMaterial, Material);
+      DECLARE_ASSET_SETGET(surfaceMaterial, Material);
 
       // The actual Material instance
       BaseMatInstance*  materialInst;
 
       surfaceMaterial()
       {
-         INIT_MATERIALASSET(Material);
+         INIT_ASSET(Material);
 
          materialInst = NULL;
       }
@@ -264,7 +264,7 @@ protected:
 protected:
    
    DECLARE_MATERIALASSET(ConvexShape, Material);
-   DECLARE_MATERIALASSET_SETGET(ConvexShape, Material);
+   DECLARE_ASSET_SETGET(ConvexShape, Material);
 
    // The actual Material instance
    BaseMatInstance*  mMaterialInst;

@@ -121,7 +121,7 @@ protected:
    bool mFlareEnabled;
 
    DECLARE_IMAGEASSET(LightFlareData, FlareTexture, onImageChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(LightFlareData, FlareTexture);
+   DECLARE_ASSET_SETGET(LightFlareData, FlareTexture);
 
    F32 mOcclusionRadius;
    bool mRenderReflectPass;

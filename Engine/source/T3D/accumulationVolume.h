@@ -62,7 +62,7 @@ class AccumulationVolume : public ScenePolyhedralSpace
       virtual void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
 
       DECLARE_IMAGEASSET(AccumulationVolume, Texture, onTextureChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_IMAGEASSET_NET_SETGET(AccumulationVolume, Texture, -1);
+      DECLARE_ASSET_NET_SETGET(AccumulationVolume, Texture, -1);
 
       void onTextureChanged() {}
 

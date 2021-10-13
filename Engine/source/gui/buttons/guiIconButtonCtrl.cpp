@@ -85,7 +85,7 @@ ConsoleDocClass( GuiIconButtonCtrl,
 
 GuiIconButtonCtrl::GuiIconButtonCtrl()
 {
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
    mTextLocation = TextLocLeft;
    mIconLocation = IconLocLeft;
    mTextMargin = 4;
@@ -412,4 +412,4 @@ void GuiIconButtonCtrl::renderBitmapArray(RectI &bounds, S32 state)
    }
 }
 
-DEF_IMAGEASSET_BINDS(GuiIconButtonCtrl, Bitmap);
+DEF_ASSET_BINDS(GuiIconButtonCtrl, Bitmap);

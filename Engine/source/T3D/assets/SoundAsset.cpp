@@ -107,6 +107,7 @@ ConsoleSetType(TypeSoundAssetId)
 //-----------------------------------------------------------------------------
 
 SoundAsset::SoundAsset()
+   : AssetBase()
 {
    mSoundFile = StringTable->EmptyString();
    mSoundPath = StringTable->EmptyString();
@@ -278,18 +279,18 @@ StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
    return materialAssetId;
 }
 
-U32 SoundAsset::getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset)
+U32 SoundAsset::getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* soundAsset)
 {
-   (*materialAsset) = assetId;
+   (*soundAsset) = assetId;
 
-   if (materialAsset->notNull())
+   if (soundAsset->notNull())
    {
-      return (*materialAsset)->mLoadedState;
+      return (*soundAsset)->mLoadedState;
    }
    else
    {
       //Well that's bad, loading the fallback failed.
-      Con::warnf("MaterialAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+      Con::warnf("SoundAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
       return AssetErrCode::Failed;
    }
 }

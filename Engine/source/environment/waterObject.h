@@ -273,11 +273,11 @@ protected:
 
    // Other textures
    DECLARE_IMAGEASSET(WaterObject, RippleTex, onRippleTexChanged, GFXStaticTextureProfile);
-   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, RippleTex, TextureMask);
+   DECLARE_ASSET_NET_SETGET(WaterObject, RippleTex, TextureMask);
    DECLARE_IMAGEASSET(WaterObject, FoamTex, onFoamTexChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, FoamTex, TextureMask);
+   DECLARE_ASSET_NET_SETGET(WaterObject, FoamTex, TextureMask);
    DECLARE_IMAGEASSET(WaterObject, DepthGradientTex, onDepthGradientTexChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_IMAGEASSET_NET_SETGET(WaterObject, DepthGradientTex, TextureMask);
+   DECLARE_ASSET_NET_SETGET(WaterObject, DepthGradientTex, TextureMask);
 
    StringTableEntry mCubemapName;
 

@@ -168,7 +168,7 @@ ScatterSky::ScatterSky()
    mNightCubemapName = StringTable->EmptyString();
    mSunSize = 1.0f;
 
-   INIT_MATERIALASSET(MoonMat);
+   INIT_ASSET(MoonMat);
 
    mMoonMatInst = NULL;
 
@@ -503,7 +503,7 @@ U32 ScatterSky::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
       stream->writeFlag( mMoonEnabled );
 
-      PACK_MATERIALASSET(con, MoonMat);
+      PACK_ASSET(con, MoonMat);
       
       stream->write( mMoonScale );
       stream->write( mMoonTint );
@@ -617,7 +617,7 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
 
       mMoonEnabled = stream->readFlag();
 
-      UNPACK_MATERIALASSET(con, MoonMat);
+      UNPACK_ASSET(con, MoonMat);
 
       stream->read( &mMoonScale );
       stream->read( &mMoonTint );

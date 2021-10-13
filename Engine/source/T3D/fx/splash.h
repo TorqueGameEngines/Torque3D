@@ -34,6 +34,7 @@
 #include "gfx/gfxTextureHandle.h"
 
 #include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/SoundAsset.h"
 
 class ParticleEmitter;
 class ParticleEmitterData;
@@ -91,8 +92,11 @@ class SplashData : public GameBaseData
    };
 
 public:
-   AudioProfile*           soundProfile;
-   S32                     soundProfileId;
+   //AudioProfile*           soundProfile;
+   //S32                     soundProfileId;
+
+   DECLARE_SOUNDASSET(SplashData, Sound);
+   DECLARE_ASSET_SETGET(SplashData, Sound);
 
    ParticleEmitterData*    emitterList[NUM_EMITTERS];
    S32                     emitterIDList[NUM_EMITTERS];

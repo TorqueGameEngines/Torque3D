@@ -215,7 +215,7 @@ U32 BasicClouds::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
    {
       stream->writeFlag( mLayerEnabled[i] );
 
-      PACK_IMAGEASSET_ARRAY(conn, Texture, i);
+      PACK_ASSET_ARRAY(conn, Texture, i);
 
       stream->write( mTexScale[i] );
       mathWrite( *stream, mTexDirection[i] );
@@ -236,7 +236,7 @@ void BasicClouds::unpackUpdate( NetConnection *conn, BitStream *stream )
    {
       mLayerEnabled[i] = stream->readFlag();
 
-      UNPACK_IMAGEASSET_ARRAY(conn, Texture, i);
+      UNPACK_ASSET_ARRAY(conn, Texture, i);
       
       stream->read( &mTexScale[i] );      
       mathRead( *stream, &mTexDirection[i] );

@@ -87,7 +87,7 @@ public:
    bool castShadows;
 
    DECLARE_SHAPEASSET(PhysicsDebrisData, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(PhysicsDebrisData, Shape);
+   DECLARE_ASSET_SETGET(PhysicsDebrisData, Shape);
 
    PhysicsDebrisData();
 

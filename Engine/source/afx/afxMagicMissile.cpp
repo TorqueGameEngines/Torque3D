@@ -141,7 +141,7 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 afxMagicMissileData::afxMagicMissileData()
 {
-   INIT_SHAPEASSET(ProjectileShape);
+   INIT_ASSET(ProjectileShape);
 
    sound = NULL;
 
@@ -246,7 +246,7 @@ afxMagicMissileData::afxMagicMissileData()
 
 afxMagicMissileData::afxMagicMissileData(const afxMagicMissileData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_SHAPEASSET(ProjectileShape);
+   CLONE_ASSET(ProjectileShape);
   projectileShape = other.projectileShape; // -- TSShape loads using projectileShapeName
   sound = other.sound;
   splash = other.splash;
@@ -599,7 +599,7 @@ void afxMagicMissileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SHAPEASSET(ProjectileShape);
+   PACKDATA_ASSET(ProjectileShape);
 
    /* From stock Projectile code...
    stream->writeFlag(faceViewer);
@@ -710,7 +710,7 @@ void afxMagicMissileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_SHAPEASSET(ProjectileShape);
+   UNPACKDATA_ASSET(ProjectileShape);
    /* From stock Projectile code...
    faceViewer = stream->readFlag();
    */

@@ -137,8 +137,8 @@ VolumetricFog::VolumetricFog()
    mSpeed1.set(0.5f, 0.0f);
    mSpeed2.set(0.1f, 0.1f);
 
-   INIT_SHAPEASSET(Shape);
-   INIT_IMAGEASSET(Texture);
+   INIT_ASSET(Shape);
+   INIT_ASSET(Texture);
 }
 
 VolumetricFog::~VolumetricFog()
@@ -543,7 +543,7 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->write(mFogDensity);
    if (stream->writeFlag(mask & FogModulationMask))
    {
-      PACK_IMAGEASSET(con, Texture);
+      PACK_ASSET(con, Texture);
       mTexTiles = mFabs(mTexTiles);
       stream->write(mTexTiles);
       stream->write(mStrength);
@@ -567,7 +567,7 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    }
    if (stream->writeFlag(mask & FogShapeMask))
    {
-      PACK_SHAPEASSET(con, Shape);
+      PACK_ASSET(con, Shape);
       mathWrite(*stream, getTransform());
       mathWrite(*stream, getScale());
 
@@ -613,7 +613,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())// Fog Modulation
    {
-      UNPACK_IMAGEASSET(con, Texture);
+      UNPACK_ASSET(con, Texture);
       stream->read(&mTexTiles);
       mTexTiles = mFabs(mTexTiles);
       stream->read(&mStrength);
@@ -667,7 +667,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())//Fog shape
    {
-      UNPACK_SHAPEASSET(con, Shape);
+      UNPACK_ASSET(con, Shape);
 
       mathRead(*stream, &mat);
       mathRead(*stream, &scale);

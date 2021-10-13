@@ -116,7 +116,7 @@ FlyingVehicleData::FlyingVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = 0;
+      INIT_ASSET_ARRAY(FlyingSounds, i);
 
    vertThrustMultiple = 1.0;
 }
@@ -131,9 +131,12 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
-         if (sound[i])
-            Sim::findObject(SimObjectId((uintptr_t)sound[i]),sound[i]);
-
+      {
+         if (mFlyingSounds[i])
+         {
+            _setFlyingSounds(getFlyingSounds(i), i);
+         }
+      }
       for (S32 j = 0; j < MaxJetEmitters; j++)
          if (jetEmitter[j])
             Sim::findObject(SimObjectId((uintptr_t)jetEmitter[j]),jetEmitter[j]);
@@ -163,10 +166,8 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
 
 void FlyingVehicleData::initPersistFields()
 {
-   addField( "jetSound", TYPEID< SFXProfile >(), Offset(sound[JetSound], FlyingVehicleData),
-      "Looping sound to play while the vehicle is jetting." );
-   addField( "engineSound", TYPEID< SFXProfile >(), Offset(sound[EngineSound], FlyingVehicleData),
-      "Looping engine sound." );
+
+   INITPERSISTFIELD_SOUNDASSET_ARRAY(FlyingSounds, Sounds::MaxSounds, FlyingVehicleData, "Sounds for flying vehicle");
 
    addField( "maneuveringForce", TypeF32, Offset(maneuveringForce, FlyingVehicleData),
       "@brief Maximum X and Y (horizontal plane) maneuvering force.\n\n"
@@ -240,11 +241,7 @@ void FlyingVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      if (stream->writeFlag(sound[i]))
-      {
-         SimObjectId writtenId = mPacked ? SimObjectId((uintptr_t)sound[i]) : sound[i]->getId();
-         stream->writeRangedU32(writtenId, DataBlockObjectIdFirst, DataBlockObjectIdLast);
-      }
+      PACKDATA_ASSET_ARRAY(FlyingSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
@@ -277,11 +274,9 @@ void FlyingVehicleData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   for (S32 i = 0; i < MaxSounds; i++) {
-      sound[i] = NULL;
-      if (stream->readFlag())
-         sound[i] = (SFXProfile*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
-                                                         DataBlockObjectIdLast);
+   for (S32 i = 0; i < MaxSounds; i++)
+   {
+      UNPACKDATA_ASSET_ARRAY(FlyingSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
@@ -374,11 +369,11 @@ bool FlyingVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mJetSound );
       SFX_DELETE( mEngineSound );
 
-      if ( mDataBlock->sound[FlyingVehicleData::EngineSound] )
-         mEngineSound = SFX->createSource( mDataBlock->sound[FlyingVehicleData::EngineSound], &getTransform() );
+      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundProfile(FlyingVehicleData::EngineSound), &getTransform() );
 
-      if ( mDataBlock->sound[FlyingVehicleData::JetSound] )
-         mJetSound = SFX->createSource( mDataBlock->sound[FlyingVehicleData::JetSound], &getTransform() );
+      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::JetSound))
+         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundProfile(FlyingVehicleData::JetSound), &getTransform() );
    }
 
    // Jet Sequences

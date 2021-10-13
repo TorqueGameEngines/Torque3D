@@ -459,7 +459,7 @@ GroundCover::GroundCover()
 
    mRandomSeed = 1;
 
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
    mMaterialInst = NULL;
 
    mMatParams = NULL;
@@ -520,7 +520,7 @@ GroundCover::GroundCover()
       mBillboardRects[i].point.set( 0.0f, 0.0f );
       mBillboardRects[i].extent.set( 1.0f, 1.0f );
 
-      INIT_SHAPEASSET_ARRAY(Shape, i);
+      INIT_ASSET_ARRAY(Shape, i);
 
       mShapeInstances[i] = NULL;
 
@@ -713,7 +713,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
       // TODO: We could probably optimize a few of these
       // based on reasonable units at some point.
 
-      PACK_MATERIALASSET(connection, Material);
+      PACK_ASSET(connection, Material);
 
       stream->write( mRadius );
       stream->write( mZOffset );
@@ -766,7 +766,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          stream->write( mBillboardRects[i].extent.x );
          stream->write( mBillboardRects[i].extent.y );
 
-         PACK_SHAPEASSET_ARRAY(connection, Shape, i);
+         PACK_ASSET_ARRAY(connection, Shape, i);
       }
 
       stream->writeFlag( mDebugRenderCells );
@@ -784,7 +784,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
    if (stream->readFlag())
    {
-      UNPACK_MATERIALASSET(connection, Material);
+      UNPACK_ASSET(connection, Material);
 
       stream->read( &mRadius );
       stream->read( &mZOffset );
@@ -837,7 +837,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          stream->read( &mBillboardRects[i].extent.x );
          stream->read( &mBillboardRects[i].extent.y );
 
-         UNPACK_SHAPEASSET_ARRAY(connection, Shape, i);
+         UNPACK_ASSET_ARRAY(connection, Shape, i);
       }
 
       mDebugRenderCells    = stream->readFlag();

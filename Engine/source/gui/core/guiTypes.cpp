@@ -79,7 +79,7 @@ GuiCursor::GuiCursor()
    mRenderOffset.set(0.0f,0.0f);
    mExtent.set(1,1);
 
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
 }
 
 GuiCursor::~GuiCursor()
@@ -324,7 +324,7 @@ GuiControlProfile::GuiControlProfile(void) :
    mMouseOverSelected = false;
    
    // bitmap members
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
    mUseBitmapArray = false;
 
    mChildrenProfileName = NULL;

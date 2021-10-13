@@ -60,7 +60,7 @@ GuiBitmapCtrl::GuiBitmapCtrl(void)
    mColor(ColorI::WHITE),
    mWrap( false )
 {
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
 }
 
 bool GuiBitmapCtrl::setBitmapName( void *object, const char *index, const char *data )

@@ -87,7 +87,7 @@ class ParticleData : public SimDataBlock
    Vector<U8>        animTexFrames;
 
    DECLARE_IMAGEASSET(ParticleData, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(ParticleData, Texture);
+   DECLARE_ASSET_SETGET(ParticleData, Texture);
 
    static bool protectedSetSizes(void* object, const char* index, const char* data);
    static bool protectedSetTimes(void* object, const char* index, const char* data);
@@ -118,7 +118,7 @@ public:
    bool  randomizeSpinDir;
   public:
    DECLARE_IMAGEASSET(ParticleData, TextureExt, onImageChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(ParticleData, TextureExt);
+   DECLARE_ASSET_SETGET(ParticleData, TextureExt);
 
    bool   constrain_pos;
    F32    start_angle;

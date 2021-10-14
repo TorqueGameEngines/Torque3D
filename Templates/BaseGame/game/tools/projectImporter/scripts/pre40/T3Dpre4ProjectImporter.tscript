@@ -839,7 +839,7 @@ T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset"
 T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("TerrainBlock", "terrainFile terrainAsset");
-T3Dpre4ProjectImporter::genProcessor("afxMagicMissileData", "projectileShapeName projectileShapeAsset sound soundAsset");
+T3Dpre4ProjectImporter::genProcessor("afxMagicMissileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound projectileSoundAsset");
 T3Dpre4ProjectImporter::genProcessor("afxBillboardData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("afxModelData", "shapeName shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
@@ -902,6 +902,7 @@ T3Dpre4ProjectImporter::genProcessor("GuiProgressBitmap", "bitmap bitmapAsset");
 T3Dpre4ProjectImporter::genProcessor("GuiMissionArea", "handleBitmap handleBitmapAsset");
 T3Dpre4ProjectImporter::genProcessor("WorldEditor", "selectHandle selectHandleAsset defaultHandle defaultHandleAsset lockedHandle lockedHandleAsset");
 T3Dpre4ProjectImporter::genProcessor("GuiControlProfile", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiMLTextCtrl", "deniedSound deniedSoundAsset");
 
 function T3Dpre4ProjectImporter::processGuiBitmapButtonCtrlLine(%this, %line)
 {
@@ -925,7 +926,7 @@ T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset soundPr
 T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset shapeName shapeAsset");
-T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound soundAsset");
+T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound projectileSoundAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset[0] shapeFP shapeAsset[1] shapeFile shapeAsset[0] shapeFileFP shapeAsset[1] stateSound stateSoundAsset");
 T3Dpre4ProjectImporter::genProcessor("ProximityMineData","armingSound ArmSoundAsset TriggerSound TriggerSoundAsset");

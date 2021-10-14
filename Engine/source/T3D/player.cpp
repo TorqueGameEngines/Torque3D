@@ -477,9 +477,6 @@ bool PlayerData::preload(bool server, String &errorStr)
       {
          if (!getPlayerSoundProfile(i))
             Con::errorf("PlayerData::Preload() - unable to find sfxProfile for asset %d %s", i, mPlayerSoundAssetId[i]);
-
-         const char* enumString = castConsoleTypeToString(static_cast<Sounds>(i));
-            Con::printf("preload: %s = %s", enumString, mPlayerSoundAssetId[i]);
       }
    }
 

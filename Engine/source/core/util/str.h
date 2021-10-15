@@ -361,7 +361,9 @@ class StringBuilder
       {
          va_list args;
          va_start(args, fmt);
-         return mFormat.formatAppend(fmt, args);
+         const S32 result = mFormat.formatAppend(fmt, args);
+         va_end(args);
+         return result;
       }
 };
 

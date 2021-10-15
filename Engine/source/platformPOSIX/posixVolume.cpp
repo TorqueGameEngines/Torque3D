@@ -42,7 +42,7 @@
 
 
 //#define DEBUG_SPEW
-extern void ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize);
+extern bool ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize, bool requiredAbsolute);
 
 namespace Torque
 {
@@ -160,8 +160,7 @@ FileNodeRef PosixFileSystem::resolve(const Path& path)
    UTF8* caseSensitivePath = new UTF8[fileLength + 1];
    dMemcpy(caseSensitivePath, file.c_str(), fileLength);
    caseSensitivePath[fileLength] = 0x00;
-   ResolvePathCaseInsensitive(caseSensitivePath, fileLength);
-
+   ResolvePathCaseInsensitive(caseSensitivePath, fileLength, false);
    String caseSensitiveFile(caseSensitivePath);
 #else
    String caseSensitiveFile = file;
@@ -181,6 +180,7 @@ FileNodeRef PosixFileSystem::resolve(const Path& path)
 #ifdef TORQUE_POSIX_PATH_CASE_INSENSITIVE
    delete[] caseSensitivePath;
 #endif
+
    return result;
 }
 

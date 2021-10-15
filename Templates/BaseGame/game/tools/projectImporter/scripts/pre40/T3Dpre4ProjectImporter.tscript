@@ -1079,6 +1079,7 @@ T3Dpre4ProjectImporter::genProcessor("PostEffect", "texture textureAsset");
 // Using existing SFXProfiles allows us to also injest the descriptions, giving us
 // our meta-properties on the sound asset itself.
 //==============================================================================
+T3Dpre4ProjectImporter::genProcessor("SFXAmbience", "soundTrack soundTrackAsset");
 function T3Dpre4ProjectImporter::processSFXProfileLine(%this, %line)
 {
    return %line;

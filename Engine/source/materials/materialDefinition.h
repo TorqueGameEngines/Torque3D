@@ -47,6 +47,9 @@
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif
+#ifndef SOUND_ASSET_H
+#include "T3D/assets/SoundAsset.h"
+#endif
 
 class CubemapData;
 class SFXTrack;
@@ -367,8 +370,10 @@ public:
    /// Sound effect to play when walking on surface with this material.
    /// If defined, overrides mFootstepSoundId.
    /// @see mFootstepSoundId
-   SFXTrack* mFootstepSoundCustom;
-   SFXTrack* mImpactSoundCustom;
+   DECLARE_SOUNDASSET(Material, CustomFootstepSound);
+   DECLARE_ASSET_SETGET(Material, CustomFootstepSound);
+   DECLARE_SOUNDASSET(Material, CustomImpactSound);
+   DECLARE_ASSET_SETGET(Material, CustomImpactSound);
 
    F32 mFriction;                   ///< Friction coefficient when moving along surface.
 

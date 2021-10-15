@@ -7042,11 +7042,11 @@ void Player::playFootstepSound( bool triggeredLeft, Material* contactMaterial, S
          }
       }
    }
-   else if( contactMaterial && contactMaterial->mFootstepSoundCustom )
+   else if( contactMaterial && contactMaterial->getCustomFootstepSoundProfile())
    {
       // Footstep sound defined on material.
 
-      SFX->playOnce( contactMaterial->mFootstepSoundCustom, &footMat );
+      SFX->playOnce( contactMaterial->getCustomFootstepSoundProfile(), &footMat );
    }
    else
    {
@@ -7079,8 +7079,8 @@ void Player:: playImpactSound()
       {
          Material* material = ( rInfo.material ? dynamic_cast< Material* >( rInfo.material->getMaterial() ) : 0 );
 
-         if( material && material->mImpactSoundCustom )
-            SFX->playOnce( material->mImpactSoundCustom, &getTransform() );
+         if( material && material->getCustomImpactSoundProfile() )
+            SFX->playOnce( material->getCustomImpactSoundProfile(), &getTransform() );
          else
          {
             S32 sound = -1;

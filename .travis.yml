@@ -65,6 +65,6 @@ script:
   - mkdir -p My\ Projects/TestProject/buildFiles/travis/
   - cd My\ Projects/TestProject/buildFiles/travis/
   - cmake ../../../.. -DTORQUE_APP_NAME=TestProject -DCMAKE_BUILD_TYPE=Debug -DTORQUE_TESTING=ON
-  - cmake --build ../../../.. --config Debug --parallel 2
+  - cmake --build . --config Debug --parallel 2
   - cd ../../game/
   - ls

@@ -95,11 +95,15 @@ function MaterialEditorGui::open(%this)
 
    %sounds = "<None>" TAB "<Soft>" TAB "<Hard>" TAB "<Metal>" TAB "<Snow>";    // Default sounds
 
-   // Get custom sound datablocks
-   foreach (%db in DataBlockSet)
+   %assetQuery = new AssetQuery();
+   AssetDatabase.findAssetType(%assetQuery, "SoundAsset");
+   
+   %count = %assetQuery.getCount();   
+   // Get custom sound assets
+   for(%i=0; %i < %count; %i++)
    {
-      if (%db.isMemberOfClass("SFXTrack"))
-         %sounds = %sounds TAB %db.getName();
+	   %assetId = %assetQuery.getAsset(%i);
+       %sounds = %sounds TAB %assetId;
    }
 
    %count = getFieldCount(%sounds);
@@ -1504,7 +1508,7 @@ function MaterialEditorGui::updateBehaviorSound(%this, %type, %sound)
    }
 
    %this.updateActiveMaterial(%type @ "SoundId", %defaultId);
-   %this.updateActiveMaterial("custom" @ %type @ "Sound", %customName);
+   %this.updateActiveMaterial("custom" @ %type @ "SoundAsset", %customName);
 }
 
 function MaterialEditorGui::updateSoundPopup(%this, %type, %defaultId, %customName)

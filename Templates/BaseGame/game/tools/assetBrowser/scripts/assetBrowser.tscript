@@ -628,7 +628,8 @@ function AssetBrowser::loadDirectories( %this )
    
    %this.loadTags();
    
-   %this.loadCreatorClasses();
+   if (!%this.selectMode)
+      %this.loadCreatorClasses();
    
    //If set to, show core
    if(EditorSettings.value("Assets/Browser/showCoreModule", false) == 1)

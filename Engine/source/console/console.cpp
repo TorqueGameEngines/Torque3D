@@ -861,12 +861,6 @@ void setVariable(const char *name, const char *value)
    }
 }
 
-void setLocalVariable(const char *name, const char *value)
-{
-   name = prependPercent(name);
-   gEvalState.getCurrentFrame().setVariable(StringTable->insert(name), value);
-}
-
 void setBoolVariable(const char *varName, bool value)
 {
    SimObject *obj = NULL;

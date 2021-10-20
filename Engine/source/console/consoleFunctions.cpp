@@ -1703,12 +1703,7 @@ DefineEngineFunction( nextToken, const char*, ( const char* str1, const char* to
       if (*str)
          *str++ = 0;
 
-      // set local variable if inside a function
-      if (gEvalState.getStackDepth() > 0 && 
-         gEvalState.getCurrentFrame().scopeName)
-         Con::setLocalVariable(token,tmp);
-      else
-         Con::setVariable(token,tmp);
+      Con::setVariable(token,tmp);
 
       // advance str past the 'delim space'
       while (isInSet(*str, delim))

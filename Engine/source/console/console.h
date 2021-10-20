@@ -720,15 +720,6 @@ namespace Con
    ///
    void removeVariableNotify(const char *name, const NotifyDelegate &callback);
 
-   /// Assign a string value to a locally scoped console variable
-   ///
-   /// @note The context of the variable is determined by gEvalState; that is,
-   ///       by the currently executing code.
-   ///
-   /// @param name   Local console variable name to set
-   /// @param value  String value to assign to name
-   void setLocalVariable(const char *name, const char *value);
-
    /// Retrieve the string value to a locally scoped console variable
    ///
    /// @note The context of the variable is determined by gEvalState; that is,

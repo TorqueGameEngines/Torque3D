@@ -183,12 +183,17 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
  // munge the case of the specified pathName.  This means try to find the actual
  // filename in with case-insensitive matching on the specified pathName, and
  // store the actual found name.
- void ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize)
+ bool ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize, bool requiredAbsolute)
  {
     char tempBuf[MaxPath];
     dStrncpy(tempBuf, pathName, pathNameSize);
 
-    AssertFatal(pathName[0] == '/', "PATH must be absolute");
+    // Check if we're an absolute path
+    if (pathName[0] != '/')
+    {
+        AssertFatal(!requiredAbsolute, "PATH must be absolute");
+        return false;
+    }
 
     struct stat filestat;
     const int MaxPathEl = 200;
@@ -196,6 +201,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
     char testPath[MaxPath];
     char pathEl[MaxPathEl];
     bool done = false;
+    bool foundMatch = false;
 
     dStrncpy(tempBuf, "/", MaxPath);
     currChar++;
@@ -220,7 +226,6 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
        {
           DIR *dir = opendir(tempBuf);
           struct dirent* ent;
-          bool foundMatch = false;
           while (dir != NULL && (ent = readdir(dir)) != NULL)
           {
              if (dStricmp(pathEl, ent->d_name) == 0)
@@ -247,6 +252,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
     }
 
     dStrncpy(pathName, tempBuf, pathNameSize);
+    return foundMatch;
  }
 
  //-----------------------------------------------------------------------------
@@ -296,7 +302,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
        return;
 
     // otherwise munge the case of the path
-     ResolvePathCaseInsensitive(dest, destSize);
+     ResolvePathCaseInsensitive(dest, destSize, true);
  }
 
  //-----------------------------------------------------------------------------
@@ -1291,7 +1297,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
    // Load path into temporary buffer
    dMemcpy(caseSensitivePath, path, pathLength);
    caseSensitivePath[pathLength] = 0x00;
-   ResolvePathCaseInsensitive(caseSensitivePath, pathLength);
+   ResolvePathCaseInsensitive(caseSensitivePath, pathLength, false);
 #else
    const char* caseSensitivePath = path;
 #endif

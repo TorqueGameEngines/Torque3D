@@ -31,6 +31,10 @@
 #include "core/stringBuffer.h"
 #endif
 
+#ifndef SOUND_ASSET_H
+#include "T3D/assets/SoundAsset.h"
+#endif
+
 class GFont;
 class SFXTrack;
 
@@ -258,8 +262,8 @@ class GuiMLTextCtrl : public GuiControl
    bool mUseURLMouseCursor;
 
    // Too many chars sound:
-   SFXTrack*  mDeniedSound;
-
+   DECLARE_SOUNDASSET(GuiMLTextCtrl, DeniedSound);
+   DECLARE_ASSET_SETGET(GuiMLTextCtrl, DeniedSound);
    //-------------------------------------- Protected interface
   protected:
    // Inserting and deleting character blocks...

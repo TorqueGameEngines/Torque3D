@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -45,13 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *    to get rid of the boost::format dependency. Much slinker,
  *    basically just extends stringstream.
  */
-#pragma once
 #ifndef INCLUDED_TINY_FORMATTER_H
 #define INCLUDED_TINY_FORMATTER_H
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
 
 #include <sstream>
 
@@ -70,15 +65,24 @@ namespace Formatter {
  *  @endcode */
 template < typename T,
     typename CharTraits = std::char_traits<T>,
-    typename Allocator  = std::allocator<T> >
-class basic_formatter {
-public:
-    typedef class std::basic_string<T,CharTraits,Allocator> string;
-    typedef class std::basic_ostringstream<T,CharTraits,Allocator> stringstream;
+    typename Allocator  = std::allocator<T>
+>
+class basic_formatter
+{
 
-    basic_formatter() {
-        // empty
-    }
+public:
+
+    typedef class std::basic_string<
+        T,CharTraits,Allocator
+    > string;
+
+    typedef class std::basic_ostringstream<
+        T,CharTraits,Allocator
+    > stringstream;
+
+public:
+
+    basic_formatter() {}
 
     /* Allow basic_formatter<T>'s to be used almost interchangeably
      * with std::(w)string or const (w)char* arguments because the
@@ -100,9 +104,13 @@ public:
     }
 #endif
 
+
+public:
+
     operator string () const {
         return underlying.str();
     }
+
 
     /* note - this is declared const because binding temporaries does only
      * work for const references, so many function prototypes will

@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -53,8 +53,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/material.h>
 #include <assimp/Importer.hpp>
 #include <cstdlib>
-#include <memory>
-#include <utility>
 
 namespace Assimp {
 
@@ -73,16 +71,16 @@ ObjFileParser::ObjFileParser()
 
 ObjFileParser::ObjFileParser( IOStreamBuffer<char> &streamBuffer, const std::string &modelName,
                               IOSystem *io, ProgressHandler* progress,
-                              std::string originalObjFileName) :
+                              const std::string &originalObjFileName) :
     m_DataIt(),
     m_DataItEnd(),
     m_pModel(nullptr),
     m_uiLine(0),
-    m_pIO(io),
+    m_pIO( io ),
     m_progress(progress),
-    m_originalObjFileName(std::move(originalObjFileName))
+    m_originalObjFileName(originalObjFileName)
 {
-    std::fill_n(m_buffer, Buffersize,0);
+    std::fill_n(m_buffer,Buffersize,0);
 
     // Create the model instance to store all the data
     m_pModel.reset(new ObjFile::Model());
@@ -98,8 +96,7 @@ ObjFileParser::ObjFileParser( IOStreamBuffer<char> &streamBuffer, const std::str
     parseFile( streamBuffer );
 }
 
-ObjFileParser::~ObjFileParser()
-{
+ObjFileParser::~ObjFileParser() {
 }
 
 void ObjFileParser::setBuffer( std::vector<char> &buffer ) {
@@ -131,7 +128,7 @@ void ObjFileParser::parseFile( IOStreamBuffer<char> &streamBuffer ) {
             processed = static_cast<unsigned int>(filePos);
             lastFilePos = filePos;
             progressCounter++;
-            m_progress->UpdateFileRead(processed, progressTotal);
+            m_progress->UpdateFileRead( processed, progressTotal );
         }
 
         // parse line
@@ -185,7 +182,7 @@ void ObjFileParser::parseFile( IOStreamBuffer<char> &streamBuffer ) {
 
                 getNameNoSpace(m_DataIt, m_DataItEnd, name);
 
-                size_t nextSpace = name.find(' ');
+                size_t nextSpace = name.find(" ");
                 if (nextSpace != std::string::npos)
                     name = name.substr(0, nextSpace);
 
@@ -202,7 +199,7 @@ void ObjFileParser::parseFile( IOStreamBuffer<char> &streamBuffer ) {
 
                 getNameNoSpace(m_DataIt, m_DataItEnd, name);
 
-                size_t nextSpace = name.find(' ');
+                size_t nextSpace = name.find(" ");
                 if (nextSpace != std::string::npos)
                     name = name.substr(0, nextSpace);
 
@@ -277,8 +274,13 @@ static bool isDataDefinitionEnd( const char *tmp ) {
 
 static bool isNanOrInf(const char * in) {
     // Look for "nan" or "inf", case insensitive
-	return ((in[0] == 'N' || in[0] == 'n') && ASSIMP_strincmp(in, "nan", 3) == 0) ||
-	       ((in[0] == 'I' || in[0] == 'i') && ASSIMP_strincmp(in, "inf", 3) == 0);
+    if ((in[0] == 'N' || in[0] == 'n') && ASSIMP_strincmp(in, "nan", 3) == 0) {
+        return true;
+    }
+    else if ((in[0] == 'I' || in[0] == 'i') && ASSIMP_strincmp(in, "inf", 3) == 0) {
+        return true;
+    }
+    return false;
 }
 
 size_t ObjFileParser::getNumComponentsInDataDefinition() {
@@ -339,7 +341,7 @@ size_t ObjFileParser::getTexCoordVector( std::vector<aiVector3D> &point3d_array 
     if (!std::isfinite(z))
         z = 0;
 
-    point3d_array.emplace_back( x, y, z );
+    point3d_array.push_back( aiVector3D( x, y, z ) );
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
     return numComponents;
 }
@@ -355,7 +357,7 @@ void ObjFileParser::getVector3( std::vector<aiVector3D> &point3d_array ) {
     copyNextWord( m_buffer, Buffersize );
     z = ( ai_real ) fast_atof( m_buffer );
 
-    point3d_array.emplace_back( x, y, z );
+    point3d_array.push_back( aiVector3D( x, y, z ) );
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
 }
 
@@ -376,7 +378,7 @@ void ObjFileParser::getHomogeneousVector3( std::vector<aiVector3D> &point3d_arra
     if (w == 0)
       throw DeadlyImportError("OBJ: Invalid component in homogeneous vector (Division by zero)");
 
-    point3d_array.emplace_back( x/w, y/w, z/w );
+    point3d_array.push_back( aiVector3D( x/w, y/w, z/w ) );
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
 }
 
@@ -391,7 +393,7 @@ void ObjFileParser::getTwoVectors3( std::vector<aiVector3D> &point3d_array_a, st
     copyNextWord( m_buffer, Buffersize );
     z = ( ai_real ) fast_atof( m_buffer );
 
-    point3d_array_a.emplace_back( x, y, z );
+    point3d_array_a.push_back( aiVector3D( x, y, z ) );
 
     copyNextWord(m_buffer, Buffersize);
     x = (ai_real) fast_atof(m_buffer);
@@ -402,7 +404,7 @@ void ObjFileParser::getTwoVectors3( std::vector<aiVector3D> &point3d_array_a, st
     copyNextWord( m_buffer, Buffersize );
     z = ( ai_real ) fast_atof( m_buffer );
 
-    point3d_array_b.emplace_back( x, y, z );
+    point3d_array_b.push_back( aiVector3D( x, y, z ) );
 
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
 }
@@ -415,7 +417,7 @@ void ObjFileParser::getVector2( std::vector<aiVector2D> &point2d_array ) {
     copyNextWord(m_buffer, Buffersize);
     y = (ai_real) fast_atof(m_buffer);
 
-    point2d_array.emplace_back(x, y);
+    point2d_array.push_back(aiVector2D(x, y));
 
     m_DataIt = skipLine<DataArrayIt>( m_DataIt, m_DataItEnd, m_uiLine );
 }
@@ -437,9 +439,9 @@ void ObjFileParser::getFace( aiPrimitiveType type ) {
 
     const bool vt = (!m_pModel->m_TextureCoord.empty());
     const bool vn = (!m_pModel->m_Normals.empty());
-    int iPos = 0;
+    int iStep = 0, iPos = 0;
     while ( m_DataIt != m_DataItEnd ) {
-        int iStep = 1;
+        iStep = 1;
 
         if ( IsLineEnd( *m_DataIt ) ) {
             break;
@@ -843,7 +845,7 @@ void ObjFileParser::createMesh( const std::string &meshName )
 bool ObjFileParser::needsNewMesh( const std::string &materialName )
 {
     // If no mesh data yet
-    if (m_pModel->m_pCurrentMesh == nullptr)
+    if(m_pModel->m_pCurrentMesh == 0)
     {
         return true;
     }
@@ -854,7 +856,7 @@ bool ObjFileParser::needsNewMesh( const std::string &materialName )
         && curMatIdx != matIdx
         // no need create a new mesh if no faces in current
         // lets say 'usemtl' goes straight after 'g'
-        && !m_pModel->m_pCurrentMesh->m_Faces.empty() )
+        && m_pModel->m_pCurrentMesh->m_Faces.size() > 0 )
     {
         // New material -> only one material per mesh, so we need to create a new
         // material

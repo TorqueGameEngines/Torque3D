@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -48,13 +48,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_LINE_SPLITTER_H
 #define INCLUDED_LINE_SPLITTER_H
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
 #include <stdexcept>
-#include <assimp/StreamReader.h>
-#include <assimp/ParsingUtils.h>
+#include "StreamReader.h"
+#include "ParsingUtils.h"
 
 namespace Assimp {
 
@@ -72,7 +68,7 @@ for(LineSplitter splitter(stream);splitter;++splitter) {
        if (strtol(splitter[2]) > 5) { .. }
     }
 
-    ASSIMP_LOG_DEBUG_F("Current line is: ", splitter.get_index());
+    std::cout << "Current line is: " << splitter.get_index() << std::endl;
 }
 @endcode
 */
@@ -144,7 +140,7 @@ private:
     bool mSwallow, mSkip_empty_lines, mTrim;
 };
 
-AI_FORCE_INLINE
+inline
 LineSplitter::LineSplitter(StreamReaderLE& stream, bool skip_empty_lines, bool trim )
 : mIdx(0)
 , mCur()
@@ -157,12 +153,12 @@ LineSplitter::LineSplitter(StreamReaderLE& stream, bool skip_empty_lines, bool t
     mIdx = 0;
 }
 
-AI_FORCE_INLINE
+inline
 LineSplitter::~LineSplitter() {
     // empty
 }
 
-AI_FORCE_INLINE
+inline
 LineSplitter& LineSplitter::operator++() {
     if (mSwallow) {
         mSwallow = false;
@@ -203,12 +199,12 @@ LineSplitter& LineSplitter::operator++() {
     return *this;
 }
 
-AI_FORCE_INLINE
+inline
 LineSplitter &LineSplitter::operator++(int) {
     return ++(*this);
 }
 
-AI_FORCE_INLINE
+inline
 const char *LineSplitter::operator[] (size_t idx) const {
     const char* s = operator->()->c_str();
 
@@ -226,7 +222,7 @@ const char *LineSplitter::operator[] (size_t idx) const {
 }
 
 template <size_t N>
-AI_FORCE_INLINE
+inline
 void LineSplitter::get_tokens(const char* (&tokens)[N]) const {
     const char* s = operator->()->c_str();
 
@@ -242,44 +238,44 @@ void LineSplitter::get_tokens(const char* (&tokens)[N]) const {
     }
 }
 
-AI_FORCE_INLINE
+inline
 const std::string* LineSplitter::operator -> () const {
     return &mCur;
 }
 
-AI_FORCE_INLINE
+inline
 std::string LineSplitter::operator* () const {
     return mCur;
 }
 
-AI_FORCE_INLINE
+inline
 LineSplitter::operator bool() const {
     return mStream.GetRemainingSize() > 0;
 }
 
-AI_FORCE_INLINE
+inline
 LineSplitter::operator line_idx() const {
     return mIdx;
 }
 
-AI_FORCE_INLINE
+inline
 LineSplitter::line_idx LineSplitter::get_index() const {
     return mIdx;
 }
 
-AI_FORCE_INLINE
+inline
 StreamReaderLE &LineSplitter::get_stream() {
     return mStream;
 }
 
-AI_FORCE_INLINE
+inline
 bool LineSplitter::match_start(const char* check) {
     const size_t len = ::strlen(check);
 
     return len <= mCur.length() && std::equal(check, check + len, mCur.begin());
 }
 
-AI_FORCE_INLINE
+inline
 void LineSplitter::swallow_next_increment() {
     mSwallow = true;
 }

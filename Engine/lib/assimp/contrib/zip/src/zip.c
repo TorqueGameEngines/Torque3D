@@ -24,6 +24,7 @@
   ((((P)[0] >= 'A' && (P)[0] <= 'Z') || ((P)[0] >= 'a' && (P)[0] <= 'z')) &&   \
    (P)[1] == ':')
 #define FILESYSTEM_PREFIX_LEN(P) (HAS_DEVICE(P) ? 2 : 0)
+#define ISSLASH(C) ((C) == '/' || (C) == '\\')
 
 #else
 
@@ -47,7 +48,7 @@ int symlink(const char *target, const char *linkpath); // needed on Linux
 #endif
 
 #ifndef ISSLASH
-#define ISSLASH(C) ((C) == '/' || (C) == '\\')
+#define ISSLASH(C) ((C) == '/')
 #endif
 
 #define CLEANUP(ptr)                                                           \
@@ -77,34 +78,26 @@ static const char *base_name(const char *name) {
   return base;
 }
 
-static int mkpath(char *path) {
-  char *p;
+static int mkpath(const char *path) {
+  char const *p;
   char npath[MAX_PATH + 1];
   int len = 0;
   int has_device = HAS_DEVICE(path);
 
   memset(npath, 0, MAX_PATH + 1);
-  if (has_device) {
-    // only on windows
-    npath[0] = path[0];
-    npath[1] = path[1];
-    len = 2;
-  }
+
+#ifdef _WIN32
+  // only on windows fix the path
+  npath[0] = path[0];
+  npath[1] = path[1];
+  len = 2;
+#endif // _WIN32
+    
   for (p = path + len; *p && len < MAX_PATH; p++) {
     if (ISSLASH(*p) && ((!has_device && len > 0) || (has_device && len > 2))) {
-#if defined(_WIN32) || defined(__WIN32__) || defined(_MSC_VER) ||              \
-    defined(__MINGW32__)
-#else
-      if ('\\' == *p) {
-        *p = '/';
-      }
-#endif
-
-      if (MKDIR(npath) == -1) {
-        if (errno != EEXIST) {
+      if (MKDIR(npath) == -1)
+        if (errno != EEXIST)
           return -1;
-        }
-      }
     }
     npath[len++] = *p;
   }
@@ -222,20 +215,6 @@ void zip_close(struct zip_t *zip) {
   }
 }
 
-int zip_is64(struct zip_t *zip) {
-  if (!zip) {
-    // zip_t handler is not initialized
-    return -1;
-  }
-
-  if (!zip->archive.m_pState) {
-    // zip state is not initialized
-    return -1;
-  }
-
-  return (int)zip->archive.m_pState->m_zip64;
-}
-
 int zip_entry_open(struct zip_t *zip, const char *entryname) {
   size_t entrylen = 0;
   mz_zip_archive *pzip = NULL;
@@ -300,14 +279,7 @@ int zip_entry_open(struct zip_t *zip, const char *entryname) {
   zip->entry.header_offset = zip->archive.m_archive_size;
   memset(zip->entry.header, 0, MZ_ZIP_LOCAL_DIR_HEADER_SIZE * sizeof(mz_uint8));
   zip->entry.method = 0;
-
-  // UNIX or APPLE
-#if MZ_PLATFORM == 3 || MZ_PLATFORM == 19
-  // regular file with rw-r--r-- persmissions
-  zip->entry.external_attr = (mz_uint32)(0100644) << 16;
-#else
   zip->entry.external_attr = 0;
-#endif
 
   num_alignment_padding_bytes =
       mz_zip_writer_compute_padding_needed_for_file_alignment(pzip);
@@ -688,7 +660,7 @@ ssize_t zip_entry_noallocread(struct zip_t *zip, void *buf, size_t bufsize) {
   }
 
   if (!mz_zip_reader_extract_to_mem_no_alloc(pzip, (mz_uint)zip->entry.index,
-                                             buf, bufsize, 0, NULL, 0)) {
+  buf, bufsize, 0, NULL,  0)) {
     return -1;
   }
 
@@ -698,7 +670,10 @@ ssize_t zip_entry_noallocread(struct zip_t *zip, void *buf, size_t bufsize) {
 int zip_entry_fread(struct zip_t *zip, const char *filename) {
   mz_zip_archive *pzip = NULL;
   mz_uint idx;
+#if defined(_MSC_VER)
+#else
   mz_uint32 xattr = 0;
+#endif
   mz_zip_archive_file_stat info;
 
   if (!zip) {
@@ -808,8 +783,7 @@ int zip_create(const char *zipname, const char *filenames[], size_t len) {
 
     if (MZ_FILE_STAT(name, &file_stat) != 0) {
       // problem getting information - check errno
-      status = -1;
-      break;
+      return -1;
     }
 
     if ((file_stat.st_mode & 0200) == 0) {
@@ -901,19 +875,12 @@ int zip_extract(const char *zipname, const char *dir,
       goto out;
     }
 
-    if ((((info.m_version_made_by >> 8) == 3) ||
-         ((info.m_version_made_by >> 8) ==
-          19)) // if zip is produced on Unix or macOS (3 and 19 from
-               // section 4.4.2.2 of zip standard)
-        && info.m_external_attr &
-               (0x20 << 24)) { // and has sym link attribute (0x80 is file, 0x40
-                               // is directory)
+    if ((((info.m_version_made_by >> 8) == 3) || ((info.m_version_made_by >> 8) == 19)) // if zip is produced on Unix or macOS (3 and 19 from section 4.4.2.2 of zip standard)
+        && info.m_external_attr & (0x20 << 24)) { // and has sym link attribute (0x80 is file, 0x40 is directory)
 #if defined(_WIN32) || defined(__WIN32__) || defined(_MSC_VER) ||              \
     defined(__MINGW32__)
-#else
-      if (info.m_uncomp_size > MAX_PATH ||
-          !mz_zip_reader_extract_to_mem_no_alloc(&zip_archive, i, symlink_to,
-                                                 MAX_PATH, 0, NULL, 0)) {
+#else      
+      if (info.m_uncomp_size > MAX_PATH || !mz_zip_reader_extract_to_mem_no_alloc(&zip_archive, i, symlink_to, MAX_PATH, 0, NULL, 0)) {
         goto out;
       }
       symlink_to[info.m_uncomp_size] = '\0';

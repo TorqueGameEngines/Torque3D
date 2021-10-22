@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -197,9 +197,6 @@ corresponding preprocessor flag to selectively disable formats.
 #ifndef ASSIMP_BUILD_NO_MMD_IMPORTER
 #   include "MMD/MMDImporter.h"
 #endif
-#ifndef ASSIMP_BUILD_NO_M3D_IMPORTER
-#   include "M3D/M3DImporter.h"
-#endif
 #ifndef ASSIMP_BUILD_NO_STEP_IMPORTER
 #   include "Importer/StepFile/StepFileImporter.h"
 #endif
@@ -225,9 +222,6 @@ void GetImporterInstanceList(std::vector< BaseImporter* >& out)
 #endif
 #if (!defined ASSIMP_BUILD_NO_3DS_IMPORTER)
     out.push_back( new Discreet3DSImporter());
-#endif
-#if (!defined ASSIMP_BUILD_NO_M3D_IMPORTER)
-    out.push_back( new M3DImporter());
 #endif
 #if (!defined ASSIMP_BUILD_NO_MD3_IMPORTER)
     out.push_back( new MD3Importer());

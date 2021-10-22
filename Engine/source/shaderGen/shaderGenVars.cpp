@@ -66,7 +66,7 @@ const String ShaderGenVars::lightDiffuse("$inLightColor");
 const String ShaderGenVars::lightAmbient("$ambient");
 const String ShaderGenVars::lightConfigData("$inLightConfigData");
 const String ShaderGenVars::lightSpotDir("$inLightSpotDir");
-const String ShaderGenVars::lightSpotParams("$lightSpotParams");
+const String ShaderGenVars::lightSpotParams("$inlightSpotParams");
 
 const String ShaderGenVars::hasVectorLight("$hasVectorLight");
 const String ShaderGenVars::vectorLightDirection("$vectorLightDirection");

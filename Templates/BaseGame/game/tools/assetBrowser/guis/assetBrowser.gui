@@ -518,9 +518,9 @@ $guiContent = new GuiControl(AssetBrowser) {
 
                new GuiScrollCtrl() {
                   willFirstRespond = "1";
-                  hScrollBar = "alwaysOff";
+                  hScrollBar = "dynamic";
                   vScrollBar = "dynamic";
-                  lockHorizScroll = "1";
+                  lockHorizScroll = "0";
                   lockVertScroll = "0";
                   constantThumbHeight = "0";
                   childMargin = "0 0";

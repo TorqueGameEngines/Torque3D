@@ -30,8 +30,8 @@ uniform sampler2D ssaoMask;
 uniform vec4 rtParams6;
 #endif
 
-uniform vec4    inProbePosArray[MAX_PROBES];
-uniform vec4    inRefPosArray[MAX_PROBES];
+uniform vec4    probePosArray[MAX_PROBES];
+uniform vec4    refPosArray[MAX_PROBES];
 uniform mat4    worldToObjArray[MAX_PROBES];
 uniform vec4    refScaleArray[MAX_PROBES];
 uniform vec4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
@@ -92,7 +92,7 @@ void main()
          }
          else if (probeConfigData[i].r == 1) //sphere
          {
-            contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
+            contribution[i] = defineSphereSpaceInfluence(surface.P, probePosArray[i].xyz, probeConfigData[i].g);
             if (contribution[i]>0.0)
                probehits++;
          }
@@ -179,7 +179,7 @@ void main()
       if (contrib > 0.0f)
       {
          float cubemapIdx = probeConfigData[i].a;
-         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
+         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, refPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
          specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;

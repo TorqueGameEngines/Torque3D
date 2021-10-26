@@ -755,6 +755,30 @@ DefineEngineMethod(Material, getAnimFlags, const char*, (U32 id), , "")
    return animFlags;
 }
 
+DefineEngineMethod(Material, setAnimFlags, void, (S32 id, const char *flags), (0, ""), "setAnimFlags")
+{
+   object->mAnimFlags[id] = 0;
+
+   if (String(flags).find("$Scroll") != String::NPos)
+      object->mAnimFlags[id] |= Material::Scroll;
+
+   if (String(flags).find("$Rotate") != String::NPos)
+      object->mAnimFlags[id] |= Material::Rotate;
+
+   if (String(flags).find("$Wave") != String::NPos)
+      object->mAnimFlags[id] |= Material::Wave;
+
+   if (String(flags).find("$Scale") != String::NPos)
+      object->mAnimFlags[id] |= Material::Scale;
+
+   if (String(flags).find("$Sequence") != String::NPos)
+      object->mAnimFlags[id] |= Material::Sequence;
+
+   //if we're still unset, see if they tried assigning a number
+   if (object->mAnimFlags[id] == 0)
+      object->mAnimFlags[id] = dAtoi(flags);
+}
+
 DefineEngineMethod(Material, getFilename, const char*, (), , "Get filename of material")
 {
    SimObject* material = static_cast<SimObject*>(object);

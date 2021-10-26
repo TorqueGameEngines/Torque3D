@@ -196,7 +196,7 @@ FileNodeRef PosixFileSystem::create(const Path& path, FileNode::Mode mode)
    {
       String file = buildFileName(_volume,path);
       
-      if (mkdir(file.c_str(),S_IRWXU | S_IRWXG | S_IRWXO))
+      if (mkdir(file.c_str(),S_IRWXU | S_IRWXG | S_IRWXO) == 0)
          return new PosixDirectory(path,file);
    }
    

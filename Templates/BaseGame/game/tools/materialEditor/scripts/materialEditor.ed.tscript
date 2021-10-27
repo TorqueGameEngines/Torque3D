@@ -1432,13 +1432,13 @@ function MaterialEditorGui::updateAnimationFlags(%this)
    %action.oldValue = %oldFlags;
    MaterialEditorGui.submitUndo( %action );
    
-   materialEd_previewMaterial.animFlags[MaterialEditorGui.currentLayer] = %flags;
+   materialEd_previewMaterial.setAnimFlags(MaterialEditorGui.currentLayer, %flags);
    materialEd_previewMaterial.flush();
    materialEd_previewMaterial.reload();
    
    if (MaterialEditorGui.livePreview == true)
    {
-      MaterialEditorGui.currentMaterial.animFlags[MaterialEditorGui.currentLayer] = %flags;
+      MaterialEditorGui.currentMaterial.setAnimFlags(MaterialEditorGui.currentLayer, %flags);
       MaterialEditorGui.currentMaterial.flush();
       MaterialEditorGui.currentMaterial.reload();
    }

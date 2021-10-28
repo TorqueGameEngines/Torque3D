@@ -13,13 +13,9 @@
 //     to ensure long numbers are handled correctly
 // ------------------------------------------------------------------------------------
 
-#pragma once
+
 #ifndef FAST_A_TO_F_H_INCLUDED
 #define FAST_A_TO_F_H_INCLUDED
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
 
 #include <cmath>
 #include <limits>

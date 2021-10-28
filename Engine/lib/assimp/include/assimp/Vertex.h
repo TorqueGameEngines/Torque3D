@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -47,18 +47,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   that are not currently well-defined (and would cause compile errors
   due to missing operators in the math library), are commented.
   */
-#pragma once
 #ifndef AI_VERTEX_H_INC
 #define AI_VERTEX_H_INC
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
 
 #include <assimp/vector3.h>
 #include <assimp/mesh.h>
 #include <assimp/ai_assert.h>
-
 #include <functional>
 
 namespace Assimp    {
@@ -97,14 +91,23 @@ namespace Assimp    {
  *  to *all* vertex components equally. This is useful for stuff like interpolation
  *  or subdivision, but won't work if special handling is required for some vertex components. */
 // ------------------------------------------------------------------------------------------------
-class Vertex {
+class Vertex
+{
     friend Vertex operator + (const Vertex&,const Vertex&);
     friend Vertex operator - (const Vertex&,const Vertex&);
+
+//  friend Vertex operator + (const Vertex&,ai_real);
+//  friend Vertex operator - (const Vertex&,ai_real);
     friend Vertex operator * (const Vertex&,ai_real);
     friend Vertex operator / (const Vertex&,ai_real);
+
+//  friend Vertex operator + (ai_real, const Vertex&);
+//  friend Vertex operator - (ai_real, const Vertex&);
     friend Vertex operator * (ai_real, const Vertex&);
+//  friend Vertex operator / (ai_real, const Vertex&);
 
 public:
+
     Vertex() {}
 
     // ----------------------------------------------------------------------------
@@ -155,6 +158,8 @@ public:
         }
     }
 
+public:
+
     Vertex& operator += (const Vertex& v) {
         *this = *this+v;
         return *this;
@@ -165,6 +170,18 @@ public:
         return *this;
     }
 
+
+/*
+    Vertex& operator += (ai_real v) {
+        *this = *this+v;
+        return *this;
+    }
+
+    Vertex& operator -= (ai_real v) {
+        *this = *this-v;
+        return *this;
+    }
+*/
     Vertex& operator *= (ai_real v) {
         *this = *this*v;
         return *this;
@@ -175,9 +192,12 @@ public:
         return *this;
     }
 
+public:
+
     // ----------------------------------------------------------------------------
     /** Convert back to non-interleaved storage */
     void SortBack(aiMesh* out, unsigned int idx) const {
+
         ai_assert(idx<out->mNumVertices);
         out->mVertices[idx] = position;
 
@@ -271,6 +291,8 @@ public:
     aiColor4D colors[AI_MAX_NUMBER_OF_COLOR_SETS];
 };
 
+
+
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE Vertex operator + (const Vertex& v0,const Vertex& v1) {
     return Vertex::BinaryOp<std::plus>(v0,v1);
@@ -280,6 +302,19 @@ AI_FORCE_INLINE Vertex operator - (const Vertex& v0,const Vertex& v1) {
     return Vertex::BinaryOp<std::minus>(v0,v1);
 }
 
+
+// ------------------------------------------------------------------------------------------------
+/*
+AI_FORCE_INLINE Vertex operator + (const Vertex& v0,ai_real f) {
+    return Vertex::BinaryOp<Intern::plus>(v0,f);
+}
+
+AI_FORCE_INLINE Vertex operator - (const Vertex& v0,ai_real f) {
+    return Vertex::BinaryOp<Intern::minus>(v0,f);
+}
+
+*/
+
 AI_FORCE_INLINE Vertex operator * (const Vertex& v0,ai_real f) {
     return Vertex::BinaryOp<Intern::multiplies>(v0,f);
 }
@@ -288,10 +323,26 @@ AI_FORCE_INLINE Vertex operator / (const Vertex& v0,ai_real f) {
     return Vertex::BinaryOp<Intern::multiplies>(v0,1.f/f);
 }
 
+// ------------------------------------------------------------------------------------------------
+/*
+AI_FORCE_INLINE Vertex operator + (ai_real f,const Vertex& v0) {
+    return Vertex::BinaryOp<Intern::plus>(f,v0);
+}
+
+AI_FORCE_INLINE Vertex operator - (ai_real f,const Vertex& v0) {
+    return Vertex::BinaryOp<Intern::minus>(f,v0);
+}
+*/
+
 AI_FORCE_INLINE Vertex operator * (ai_real f,const Vertex& v0) {
     return Vertex::BinaryOp<Intern::multiplies>(f,v0);
 }
 
+/*
+AI_FORCE_INLINE Vertex operator / (ai_real f,const Vertex& v0) {
+    return Vertex::BinaryOp<Intern::divides>(f,v0);
 }
+*/
 
-#endif // AI_VERTEX_H_INC
+}
+#endif

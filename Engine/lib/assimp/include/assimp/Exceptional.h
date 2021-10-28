@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2008, assimp team
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
@@ -38,17 +38,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ----------------------------------------------------------------------
 */
 
-#pragma once
-#ifndef AI_INCLUDED_EXCEPTIONAL_H
-#define AI_INCLUDED_EXCEPTIONAL_H
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
+#ifndef INCLUDED_EXCEPTIONAL_H
+#define INCLUDED_EXCEPTIONAL_H
 
 #include <stdexcept>
 #include <assimp/DefaultIOStream.h>
-
 using std::runtime_error;
 
 #ifdef _MSC_VER
@@ -59,14 +53,17 @@ using std::runtime_error;
 /** FOR IMPORTER PLUGINS ONLY: Simple exception class to be thrown if an
  *  unrecoverable error occurs while importing. Loading APIs return
  *  NULL instead of a valid aiScene then.  */
-class DeadlyImportError : public runtime_error {
+class DeadlyImportError
+    : public runtime_error
+{
 public:
     /** Constructor with arguments */
     explicit DeadlyImportError( const std::string& errorText)
-    : runtime_error(errorText) {
-        // empty
+        : runtime_error(errorText)
+    {
     }
 
+private:
 };
 
 typedef DeadlyImportError DeadlyExportError;
@@ -87,7 +84,7 @@ struct ExceptionSwallower   {
 template <typename T>
 struct ExceptionSwallower<T*>   {
     T* operator ()() const {
-        return nullptr;
+        return NULL;
     }
 };
 
@@ -119,20 +116,10 @@ struct ExceptionSwallower<void> {
 {\
     try {
 
-#define ASSIMP_END_EXCEPTION_REGION_WITH_ERROR_STRING(type, ASSIMP_END_EXCEPTION_REGION_errorString)\
-    } catch(const DeadlyImportError& e) {\
-        ASSIMP_END_EXCEPTION_REGION_errorString = e.what();\
-        return ExceptionSwallower<type>()();\
-    } catch(...) {\
-        ASSIMP_END_EXCEPTION_REGION_errorString = "Unknown exception";\
-        return ExceptionSwallower<type>()();\
-    }\
-}
-
 #define ASSIMP_END_EXCEPTION_REGION(type)\
     } catch(...) {\
         return ExceptionSwallower<type>()();\
     }\
 }
 
-#endif // AI_INCLUDED_EXCEPTIONAL_H
+#endif // INCLUDED_EXCEPTIONAL_H

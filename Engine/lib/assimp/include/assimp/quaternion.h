@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -49,11 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef __cplusplus
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
-#include <assimp/defs.h>
+#include "defs.h"
 
 template <typename TReal> class aiVector3t;
 template <typename TReal> class aiMatrix3x3t;

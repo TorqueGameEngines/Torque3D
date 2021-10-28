@@ -1,8 +1,10 @@
 ### A portable (OSX/Linux/Windows), simple zip library written in C
 This is done by hacking awesome [miniz](https://code.google.com/p/miniz) library and layering functions on top of the miniz v1.15 API.
 
-[![Build](https://github.com/kuba--/zip/workflows/build/badge.svg)](https://github.com/kuba--/zip/actions?query=workflow%3Abuild)
+[![Windows](https://ci.appveyor.com/api/projects/status/bph8dr3jacgmjv32/branch/master?svg=true&label=windows)](https://ci.appveyor.com/project/kuba--/zip)
+[![Linux](https://travis-ci.org/kuba--/zip.svg?branch=master&label=linux%2fosx)](https://travis-ci.org/kuba--/zip)
 [![Version](https://badge.fury.io/gh/kuba--%2Fzip.svg)](https://github.com/kuba--/zip/releases)
+[![Codecov](https://codecov.io/gh/kuba--/zip/branch/master/graph/badge.svg)](https://codecov.io/gh/kuba--/zip)
 
 
 # The Idea
@@ -69,7 +71,7 @@ int arg = 2;
 zip_extract("foo.zip", "/tmp", on_extract_entry, &arg);
 ```
 
-* Extract a zip entry into memory.
+*   Extract a zip entry into memory.
 ```c
 void *buf = NULL;
 size_t bufsize;
@@ -87,7 +89,7 @@ zip_close(zip);
 free(buf);
 ```
 
-* Extract a zip entry into memory (no internal allocation).
+*   Extract a zip entry into memory (no internal allocation).
 ```c
 unsigned char *buf;
 size_t bufsize;
@@ -108,7 +110,7 @@ zip_close(zip);
 free(buf);
 ```
 
-* Extract a zip entry into memory using callback.
+*   Extract a zip entry into memory using callback.
 ```c
 struct buffer_t {
     char *data;
@@ -142,7 +144,7 @@ free(buf.data);
 ```
 
 
-* Extract a zip entry into a file.
+*   Extract a zip entry into a file.
 ```c
 struct zip_t *zip = zip_open("foo.zip", 0, 'r');
 {
@@ -155,7 +157,7 @@ struct zip_t *zip = zip_open("foo.zip", 0, 'r');
 zip_close(zip);
 ```
 
-* List of all zip entries
+*   List of all zip entries
 ```c
 struct zip_t *zip = zip_open("foo.zip", 0, 'r');
 int i, n = zip_total_entries(zip);
@@ -172,7 +174,7 @@ for (i = 0; i < n; ++i) {
 zip_close(zip);
 ```
 
-# Bindings
+## Bindings
 Compile zip library as a dynamic library.
 ```shell
 $ mkdir build
@@ -208,53 +210,6 @@ func main() {
 	C.zip_entry_close(zip)
 
 	C.zip_close(zip)
-}
-```
-
-### Rust (ffi)
-```rust
-extern crate libc;
-use std::ffi::CString;
-
-#[repr(C)]
-pub struct Zip {
-    _private: [u8; 0],
-}
-
-#[link(name = "zip")]
-extern "C" {
-    fn zip_open(path: *const libc::c_char, level: libc::c_int, mode: libc::c_char) -> *mut Zip;
-    fn zip_close(zip: *mut Zip) -> libc::c_void;
-
-    fn zip_entry_open(zip: *mut Zip, entryname: *const libc::c_char) -> libc::c_int;
-    fn zip_entry_close(zip: *mut Zip) -> libc::c_int;
-    fn zip_entry_write(
-        zip: *mut Zip,
-        buf: *const libc::c_void,
-        bufsize: libc::size_t,
-    ) -> libc::c_int;
-}
-
-fn main() {
-    let path = CString::new("/tmp/test.zip").unwrap();
-    let mode: libc::c_char = 'w' as libc::c_char;
-
-    let entryname = CString::new("test.txt").unwrap();
-    let content = "test content\0";
-
-    unsafe {
-        let zip: *mut Zip = zip_open(path.as_ptr(), 5, mode);
-        {
-            zip_entry_open(zip, entryname.as_ptr());
-            {
-                let buf = content.as_ptr() as *const libc::c_void;
-                let bufsize = content.len() as libc::size_t;
-                zip_entry_write(zip, buf, bufsize);
-            }
-            zip_entry_close(zip);
-        }
-        zip_close(zip);
-    }
 }
 ```
 

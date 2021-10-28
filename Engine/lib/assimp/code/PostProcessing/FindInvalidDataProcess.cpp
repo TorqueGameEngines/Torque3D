@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -52,6 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FindInvalidDataProcess.h"
 #include "ProcessHelper.h"
 
+#include <assimp/Macros.h>
 #include <assimp/Exceptional.h>
 #include <assimp/qnan.h>
 

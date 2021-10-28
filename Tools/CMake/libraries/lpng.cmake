@@ -24,13 +24,17 @@ project(lpng)
 
 # addDef(PNG_NO_ASSEMBLER_CODE)
 
-# Issues with Neon at the moment (Arm support)
-# https://sourceforge.net/p/libpng/bugs/281/
-set(PNG_ARM_NEON off CACHE STRING "")
-add_definitions(-DPNG_ARM_NEON_OPT=0)
+# Enables NEON for libpng
+if ( TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64 )
+    set(PNG_INTEL_NEON on CACHE STRING "")
+    add_definitions(-DPNG_ARM_NEON_OPT=1)
+    addPath("${libDir}/lpng/arm")
+else()
+    set(PNG_ARM_NEON off CACHE STRING "")
+    add_definitions(-DPNG_ARM_NEON_OPT=0)
+endif()
 
 # Enables SSE for libpng - also takes care of compiler warnings.
-# If we don't want SSE, we should set it to off/0.
 if ( TORQUE_CPU_X32 OR TORQUE_CPU_X64 )
     set(PNG_INTEL_SSE on CACHE STRING "")
     add_definitions(-DPNG_INTEL_SSE_OPT=1)

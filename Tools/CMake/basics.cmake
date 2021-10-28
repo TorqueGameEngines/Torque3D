@@ -22,10 +22,19 @@
 
 project("Torque3DEngine")
 
-if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )
-    set( TORQUE_CPU_X64 ON )
-elseif( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 4 )
-    set( TORQUE_CPU_X32 ON )
+# Detect 32bit and 64bit x86/ARM
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )
+        set( TORQUE_CPU_ARM64 ON )
+    elseif( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 4 )
+        set( TORQUE_CPU_ARM32 ON )
+    endif()
+else()
+    if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )
+        set( TORQUE_CPU_X64 ON )
+    elseif( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 4 )
+        set( TORQUE_CPU_X32 ON )
+    endif()
 endif()
 
 if(NOT TORQUE_TEMPLATE)

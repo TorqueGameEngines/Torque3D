@@ -843,7 +843,11 @@ bool GuiControl::onWake()
 
    //increment the profile
    mProfile->incLoadCount();
-   mTooltipProfile->incLoadCount();
+
+   if (mTooltipProfile)
+   {
+       mTooltipProfile->incLoadCount();
+   }
 
    // Only invoke script callbacks if we have a namespace in which to do so
    // This will suppress warnings
@@ -869,7 +873,11 @@ void GuiControl::onSleep()
 
    //decrement the profile reference
    mProfile->decLoadCount();
-   mTooltipProfile->decLoadCount();
+
+   if (mTooltipProfile)
+   {
+       mTooltipProfile->decLoadCount();
+   }
 
    // Set Flag
    mAwake = false;

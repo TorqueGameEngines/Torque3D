@@ -3054,7 +3054,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 
-   Var *numProbes = new Var("numProbes", "int");
+   Var *numProbes = new Var("inNumProbes", "int");
    numProbes->uniform = true;
    numProbes->constSortPos = cspPotentialPrimitive;
 
@@ -3062,7 +3062,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    cubeMips->uniform = true;
    cubeMips->constSortPos = cspPotentialPrimitive;
 
-   Var * skylightCubemapIdx = new Var("skylightCubemapIdx", "float");
+   Var * skylightCubemapIdx = new Var("inSkylightCubemapIdx", "float");
    skylightCubemapIdx->uniform = true;
    skylightCubemapIdx->constSortPos = cspPotentialPrimitive;
 
@@ -3081,12 +3081,12 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    refScaleArray->uniform = true;
    refScaleArray->constSortPos = cspPotentialPrimitive;
 
-   Var *probeConfigData = new Var("probeConfigData", "float4");
+   Var *probeConfigData = new Var("inProbeConfigData", "float4");
    probeConfigData->arraySize = MAX_FORWARD_PROBES;
    probeConfigData->uniform = true;
    probeConfigData->constSortPos = cspPotentialPrimitive;
 
-   Var *worldToObjArray = new Var("worldToObjArray", "float4x4");
+   Var *worldToObjArray = new Var("inWorldToObjArray", "float4x4");
    worldToObjArray->arraySize = MAX_FORWARD_PROBES;
    worldToObjArray->uniform = true;
    worldToObjArray->constSortPos = cspPotentialPrimitive;
@@ -3101,22 +3101,22 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    BRDFTextureTex->texture = true;
    BRDFTextureTex->constNum = BRDFTexture->constNum;
 
-   Var *specularCubemapAR = new Var("specularCubemapAR", "SamplerState");
+   Var *specularCubemapAR = new Var("inSpecularCubemapAR", "SamplerState");
    specularCubemapAR->uniform = true;
    specularCubemapAR->sampler = true;
    specularCubemapAR->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *specularCubemapARTex = new Var("texture_specularCubemapAR", "TextureCubeArray");
+   Var *specularCubemapARTex = new Var("texture_inSpecularCubemapAR", "TextureCubeArray");
    specularCubemapARTex->uniform = true;
    specularCubemapARTex->texture = true;
    specularCubemapARTex->constNum = specularCubemapAR->constNum;
 
-   Var *irradianceCubemapAR = new Var("irradianceCubemapAR", "SamplerState");
+   Var *irradianceCubemapAR = new Var("inIrradianceCubemapAR", "SamplerState");
    irradianceCubemapAR->uniform = true;
    irradianceCubemapAR->sampler = true;
    irradianceCubemapAR->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *irradianceCubemapARTex = new Var("texture_irradianceCubemapAR", "TextureCubeArray");
+   Var *irradianceCubemapARTex = new Var("texture_inIrradianceCubemapAR", "TextureCubeArray");
    irradianceCubemapARTex->uniform = true;
    irradianceCubemapARTex->texture = true;
    irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
@@ -3171,9 +3171,9 @@ void ReflectionProbeFeatHLSL::setTexData(Material::StageData &stageDat,
       passData.mSamplerNames[texIndex] = "BRDFTexture";
       passData.mTexType[texIndex++] = Material::Standard;
       // assuming here that it is a scenegraph cubemap
-      passData.mSamplerNames[texIndex] = "specularCubemapAR";
+      passData.mSamplerNames[texIndex] = "inSpecularCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
-      passData.mSamplerNames[texIndex] = "irradianceCubemapAR";
+      passData.mSamplerNames[texIndex] = "inIrradianceCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
    }
 }

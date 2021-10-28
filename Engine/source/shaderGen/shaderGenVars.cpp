@@ -78,20 +78,21 @@ const String ShaderGenVars::roughness("$roughness");
 const String ShaderGenVars::metalness("$metalness");
 const String ShaderGenVars::glowMul("$glowMul");
 
-//Reflection Probes
+//Reflection Probes - Forward lit. not to be confused with the deferred handwritten vars
+//change to parity once we've got the same arrays used for both routes
 const String ShaderGenVars::probePosition("$inProbePosArray");
 const String ShaderGenVars::probeRefPos("$inRefPosArray");
 const String ShaderGenVars::refScale("$inRefScale");
-const String ShaderGenVars::worldToObjArray("$worldToObjArray");
-const String ShaderGenVars::probeConfigData("$probeConfigData");
-const String ShaderGenVars::specularCubemapAR("$specularCubemapAR");
-const String ShaderGenVars::irradianceCubemapAR("$irradianceCubemapAR");
-const String ShaderGenVars::probeCount("$numProbes");
+const String ShaderGenVars::worldToObjArray("$inWorldToObjArray");
+const String ShaderGenVars::probeConfigData("$inProbeConfigData");
+const String ShaderGenVars::specularCubemapAR("$inSpecularCubemapAR");
+const String ShaderGenVars::irradianceCubemapAR("$inIrradianceCubemapAR");
+const String ShaderGenVars::probeCount("$inNumProbes");
 
 const String ShaderGenVars::BRDFTextureMap("$BRDFTexture");
 
 //Skylight
-const String ShaderGenVars::skylightCubemapIdx("$skylightCubemapIdx");
+const String ShaderGenVars::skylightCubemapIdx("$inSkylightCubemapIdx");
 
 // These are ignored by the D3D layers.
 const String ShaderGenVars::fogMap("$fogMap");

@@ -27,8 +27,8 @@ TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 6);
 uniform float4 rtParams6;
 #endif
 
-uniform float4    inProbePosArray[MAX_PROBES];
-uniform float4    inRefPosArray[MAX_PROBES];
+uniform float4    probePosArray[MAX_PROBES];
+uniform float4    refPosArray[MAX_PROBES];
 uniform float4x4  worldToObjArray[MAX_PROBES];
 uniform float4    refScaleArray[MAX_PROBES];
 uniform float4    probeConfigData[MAX_PROBES];   //r,g,b/mode,radius,atten
@@ -86,7 +86,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          }
          else if (probeConfigData[i].r == 1) //sphere
          {
-            contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
+            contribution[i] = defineSphereSpaceInfluence(surface.P, probePosArray[i].xyz, probeConfigData[i].g);
             if (contribution[i]>0.0)
                probehits++;
          }
@@ -171,7 +171,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       if (contrib > 0.0f)
       {
          int cubemapIdx = probeConfigData[i].a;
-         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
+         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, refPosArray[i].xyz);
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;

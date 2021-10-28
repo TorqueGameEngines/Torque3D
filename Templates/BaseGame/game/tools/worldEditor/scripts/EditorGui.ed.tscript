@@ -1678,7 +1678,7 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
          %popup.item[ 1 ] = "Delete" TAB "" TAB "EWorldEditor.deleteMissionObject(" @ %popup.object @ ");";
          %popup.item[ 2 ] = "Inspect" TAB "" TAB "inspectObject(" @ %popup.object @ ");";
          %popup.item[ 3 ] = "-";
-         %popup.item[ 4 ] = "Locked" TAB "" TAB "%this.object.setLocked( !" @ %popup.object @ ".locked ); EWorldEditor.syncGui();";
+         %popup.item[ 4 ] = "Locked" TAB "" TAB %popup.object @ ".setLocked( !" @ %popup.object @ ".locked ); EWorldEditor.syncGui();";
          %popup.item[ 5 ] = "Hidden" TAB "" TAB "EWorldEditor.hideObject( " @ %popup.object @ ", !" @ %popup.object @ ".hidden ); EWorldEditor.syncGui();";
          %popup.item[ 6 ] = "-";
          %popup.item[ 7 ] = "Group" TAB "" TAB "EWorldEditor.addSimGroup( true );";

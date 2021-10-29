@@ -1883,10 +1883,16 @@ function EditorTree::GetTooltipGroundCover( %this, %obj )
 // Tooltip for SFXEmitter
 function EditorTree::GetTooltipSFXEmitter( %this, %obj )
 {
+   %soundName = %obj.soundAsset;
+   if(%soundName $= "")
+   {
    if(%obj.fileName $= "")
-      return "Track: " @ %obj.track;
+         %soundName = "Track: " @ %obj.track;
    else
-      return "File: " @ %obj.fileName;
+         %soundName = "File: " @ %obj.fileName;
+   }
+
+   return "Sound: " @ %soundName;
 }
 
 // Tooltip for ParticleEmitterNode

@@ -409,6 +409,15 @@ public:
    /// </summary>
    bool SoundsCompressed;
 
+   /// When importing an image, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddSoundSuffix;
+
+   /// <summary>
+   /// If AlwaysAddSoundSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedSoundSuffix;
+
 public:
    AssetImportConfig();
    virtual ~AssetImportConfig();
@@ -934,4 +943,27 @@ public:
    //
    void setTargetModuleId(const String& moduleId) { targetModuleId = moduleId; }
    const String& getTargetModuleId() { return targetModuleId; }
+
+   String getFolderPrefixedName(AssetImportObject* assetItem)
+   {
+      String renamedAssetName = assetItem->assetName;
+      S32 dirIndex = assetItem->filePath.getDirectoryCount() - 1;
+      while (dirIndex > -1)
+      {
+         renamedAssetName = assetItem->assetName;
+         String owningFolder = assetItem->filePath.getDirectory(dirIndex);
+
+         renamedAssetName = owningFolder + "_" + renamedAssetName;
+
+         if (AssetDatabase.isDeclaredAsset(renamedAssetName))
+         {
+            dirIndex--;
+            continue;
+         }
+
+         break;
+      }
+
+      return renamedAssetName;
+   }
 };

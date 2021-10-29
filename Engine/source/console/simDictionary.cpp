@@ -53,7 +53,7 @@ void SimNameDictionary::insert(SimObject* obj)
    SimObject* checkForDup = find(obj->getName());
 
    if (checkForDup)
-      Con::warnf("Warning! You have a duplicate datablock name of %s. This can cause problems. You should rename one of them.", obj->getName());
+      Con::warnf("Warning! You have a duplicate object name of %s. This can cause problems. You should rename one of them.", obj->getName());
 
    Mutex::lockMutex(mutex);
 #ifndef USE_NEW_SIMDICTIONARY

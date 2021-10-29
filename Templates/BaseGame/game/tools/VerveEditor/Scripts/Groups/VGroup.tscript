@@ -188,13 +188,13 @@ function VGroup::DisplayContextMenu( %this, %x, %y )
             
             Item[1] = "" TAB "";
              
-            Item[2] = "Cu&t"     TAB "" TAB "VerveEditor::CutSelection();";
-            Item[3] = "&Copy"    TAB "" TAB "VerveEditor::CopySelection();";
-            Item[4] = "&Paste"   TAB "" TAB "VerveEditor::Paste();";
+            Item[2] = "Cut"     TAB "" TAB "VerveEditor::CutSelection();";
+            Item[3] = "Copy"    TAB "" TAB "VerveEditor::CopySelection();";
+            Item[4] = "Paste"   TAB "" TAB "VerveEditor::Paste();";
             
             Item[5] = "" TAB "";
             
-            Item[6] = "&Delete"  TAB "" TAB "VerveEditor::DeleteSelection();";
+            Item[6] = "Delete"  TAB "" TAB "VerveEditor::DeleteSelection();";
             
             AddIndex   = 0;
             PasteIndex = 4;
@@ -283,7 +283,7 @@ function VerveEditor::CreateGroupControl( %object )
         Class       = "VEditorSelectableGroup";
         Profile     = "VEditorGroupHeaderProfile";
         
-        Bitmap      = "~/VerveEditor/GUI/Images/GroupBackground";
+        bitmapAsset      = "ToolsModule:GroupBackground_image";
         
         HorizSizing = "width";
         VertSizing  = "bottom";
@@ -322,7 +322,7 @@ function VerveEditor::CreateGroupControl( %object )
         Class       = "VEditorSelectableGroup";
         Profile     = "VEditorGroupTrackProfile";
         
-        Bitmap      = "~/VerveEditor/GUI/Images/GroupBackground";
+        bitmapAsset      = "ToolsModule:GroupBackground_image";
         
         HorizSizing = "width";
         VertSizing  = "bottom";

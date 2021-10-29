@@ -35,6 +35,7 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("General/WarningsAsErrors", "Warnings As Errors", "bool", "", "0", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/PreventImportWithErrors", "Prevent Import With Errors", "bool", "", "1", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/AutomaticallyPromptMissingFiles", "Automatically Prompt Missing Files", "bool", "", "0", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/AddDirectoryPrefixToAssetName", "Adds the name of the folder to importing asset name", "bool", "", "0", "", "");
    
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysAddShapeSuffix", "Always Add Shape Suffix", "bool", "", "0", "");
@@ -117,6 +118,8 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/VolumeAdjust", "Volume Adjustment", "float", "", "1.0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/PitchAdjust", "Pitch Adjustment", "float", "", "1.0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/Compressed", "Is Compressed", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/AlwaysAddSoundSuffix", "Always Add Sound Suffix", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/AddedSoundSuffix", "Added Sound Suffix", "string", "", "_sound", "");
    }
 }
 
@@ -272,7 +275,7 @@ function ImportAssetConfigEditorWindow::populateConfigList(%this, %configName)
    %this.populateConfigListByGroup("Animations");
    %this.populateConfigListByGroup("Images");
    %this.populateConfigListByGroup("Collision");
-   %this.populateConfigListByGroup("Sound");
+   %this.populateConfigListByGroup("Sounds");
    
    ImportOptionsConfigList.update();
 }
@@ -373,6 +376,8 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Sounds/VolumeAdjust", "1.0");
    AssetImportSettings.setValue("Sounds/PitchAdjust", "1.0");
    AssetImportSettings.setValue("Sounds/Compressed", "0");
+   AssetImportSettings.setValue("Sounds/AlwaysAddSoundSuffix", "1");
+   AssetImportSettings.setValue("Sounds/AddedSoundSuffix", "_sound");
    
    AssetImportSettings.endGroup();
    

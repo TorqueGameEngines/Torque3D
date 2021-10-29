@@ -465,6 +465,9 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    MaterialEditorGui.lastMaterial = %material;
    
    // we create or recreate a material to hold in a pristine state
+   if(isObject(notDirtyMaterial))
+      notDirtyMaterial.delete();
+      
    singleton Material(notDirtyMaterial)
    {
       mapTo = "matEd_mappedMat";
@@ -1949,8 +1952,8 @@ function MaterialEditorGui::showMaterialChangeSaveDialog( %this, %toMaterial )
    
    toolsMessageBoxYesNoCancel("Save Material?", 
       "The material " @ %fromMaterial.getName() @ " has unsaved changes. <br>Do you want to save before changing the material?", 
-      "MaterialEditorGui.saveDialogSave(" @ %toMaterial @ "); MaterialEditorGui.changeMaterial(" @ %fromMaterial @ ", " @ %toMaterial @ ");", 
-      "MaterialEditorGui.saveDialogDontSave(" @ %toMaterial @ "); MaterialEditorGui.changeMaterial(" @ %fromMaterial @ ", " @ %toMaterial @ ");", 
+      "MaterialEditorGui.saveDialogSave(\"" @ %toMaterial @ "\"); MaterialEditorGui.changeMaterial(" @ %fromMaterial @ ", \"" @ %toMaterial @ "\");", 
+      "MaterialEditorGui.saveDialogDontSave(\"" @ %toMaterial @ "\"); MaterialEditorGui.changeMaterial(" @ %fromMaterial @ ", \"" @ %toMaterial @ "\");", 
       "MaterialEditorGui.saveDialogCancel();" );
 }
 
@@ -1986,11 +1989,21 @@ function MaterialEditorGui::saveDialogDontSave( %this, %material )
    
    MaterialEditorGui.setMaterialNotDirty();
    
+   if(AssetDatabase.isDeclaredAsset(%material))
+   {
+      %material = AssetDatabase.acquireAsset(%material).materialDefinitionName;
+   }
+   
    MaterialEditorGui.setActiveMaterial( %material );
 }
 
 function MaterialEditorGui::saveDialogSave( %this, %material )
 {
+   if(AssetDatabase.isDeclaredAsset(%material))
+   {
+      %material = AssetDatabase.acquireAsset(%material).materialDefinitionName;
+   }
+      
    MaterialEditorGui.save();
    MaterialEditorGui.setActiveMaterial( %material );
 }
@@ -2277,16 +2290,34 @@ function MaterialEditorGui::changeMaterial(%this, %fromMaterial, %toMaterial)
    %materialTarget = SubMaterialSelector.text;
    %action.materialTarget = %materialTarget;   
    
+   %toMaterialDefinition = %toMaterial;
+   
+   %isMatAsset = false;
+   if(AssetDatabase.isDeclaredAsset(%toMaterial))
+   {
+      %isMatAsset = true;
+      %assetDef = AssetDatabase.acquireAsset(%toMaterial);
+      %toMaterialDefinition = %assetDef.materialDefinitionName;
+      %filename = %assetDef.getScriptPath();
+   }
+   
    %action.fromMaterial = %fromMaterial;    
    %action.toMaterial = %toMaterial;   
-   %action.toMaterialOldFname = %toMaterial.getFilename();
+   %action.toMaterialOldFname = %toMaterialDefinition.getFilename();
    %action.object =  MaterialEditorGui.currentObject;
 
    if( MaterialEditorGui.currentMeshMode $= "Model" ) // Models
    {
       %action.mode = "model";      
       
-      MaterialEditorGui.currentObject.changeMaterial( %materialTarget, %fromMaterial.getName(), %toMaterial.getName() );
+      if(!%isMatAsset)
+      {
+         MaterialEditorGui.currentObject.changeMaterial( %materialTarget, %fromMaterial.getName(), %toMaterialDefinition.getName() );
+      }
+      else
+      {
+         eval("MaterialEditorGui.currentObject." @ %materialTarget @ " = " @ %toMaterial);
+      }
       
       if( MaterialEditorGui.currentObject.shapeName !$= "" ) 
          %sourcePath = MaterialEditorGui.currentObject.shapeName;
@@ -2296,6 +2327,8 @@ function MaterialEditorGui::changeMaterial(%this, %fromMaterial, %toMaterial)
             %sourcePath = MaterialEditorGui.currentObject.getDatablock().shapeFile;
       }
       
+      if(!%isMatAsset)
+      {
       // Creating "to" path
       %k = 0;
       while( strpos( %sourcePath, "/", %k ) != -1 )
@@ -2308,28 +2341,33 @@ function MaterialEditorGui::changeMaterial(%this, %fromMaterial, %toMaterial)
       
       %action.toMaterialNewFname = %fileName;
       
-      MaterialEditorGui.prepareActiveMaterial( %toMaterial, true );
-      if( !MaterialEditorGui.isMatEditorMaterial( %toMaterial ) )
+         MaterialEditorGui.prepareActiveMaterial( %toMaterialDefinition, true );
+         if( !MaterialEditorGui.isMatEditorMaterial( %toMaterialDefinition ) )
       {
-         matEd_PersistMan.removeObjectFromFile(%toMaterial);
+            matEd_PersistMan.removeObjectFromFile(%toMaterialDefinition);
+         }
       }
       
       matEd_PersistMan.setDirty(%fromMaterial);
-      matEd_PersistMan.setDirty(%toMaterial, %fileName);
+      matEd_PersistMan.setDirty(%toMaterialDefinition, %fileName);
       matEd_PersistMan.saveDirty();
       
       matEd_PersistMan.removeDirty(%fromMaterial);
-      matEd_PersistMan.removeDirty(%toMaterial);
+      matEd_PersistMan.removeDirty(%toMaterialDefinition);
    }
    else // EditorShapes
    {
       %action.mode = "editorShapes";
 
-      MaterialEditorGui.currentObject.setFieldValue(SubMaterialSelector.getText(), %toMaterial.getName());
+      if(!%isMatAsset)
+         MaterialEditorGui.currentObject.setFieldValue(SubMaterialSelector.getText(), %toMaterialDefinition.getName());
+      else
+         MaterialEditorGui.currentObject.setFieldValue(SubMaterialSelector.getText(), %toMaterial);
+         
       if( MaterialEditorGui.currentObject.isMethod("postApply") )
          MaterialEditorGui.currentObject.postApply();
       
-      MaterialEditorGui.prepareActiveMaterial( %toMaterial, true );
+      MaterialEditorGui.prepareActiveMaterial( %toMaterialDefinition, true );
    }
    
    MaterialEditorGui.submitUndo( %action );
@@ -2457,4 +2495,13 @@ function MaterialEditorGui::saveCompositeMap(%this)
     error("Storing: \"" @ %aoMap @"\" \""@ %roughMap @"\" \""@ %metalMap @"\" \""@ %channelKey @"\" \""@ %saveAs @"\"");
     saveCompositeTexture(%aoMap,%roughMap,%metalMap,"",%channelKey, %saveAs);
     %dlg.delete();
+}
+
+function MaterialEditorGui::swapMaterial(%this)
+{
+   AssetBrowser.showDialog("MaterialAsset", %this @ ".doSwapMaterial", "", "", "");
+}
+function MaterialEditorGui::doSwapMaterial(%this, %materialAsset)
+{
+   MaterialEditorGui.showMaterialChangeSaveDialog(%materialAsset);
 }

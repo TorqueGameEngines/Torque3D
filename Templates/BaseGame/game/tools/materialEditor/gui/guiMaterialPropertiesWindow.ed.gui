@@ -113,7 +113,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                   HorizSizing = "left";
                   tooltip = "Swap material on the object with existing";
                   bitmapAsset = "ToolsModule:change_material_btn_n_image";
-                  command = "materialSelector.showDialog(\"MaterialEditorGui.showMaterialChangeSaveDialog\");"; 
+                  command = "MaterialEditorGui.swapMaterial();"; 
                };
                
                new GuiTextEditCtrl(){ 

@@ -5,7 +5,7 @@
 
 function InitializeVerveEditor()
 {
-   $Verve::UseSeparateWindow = true;
+   $Verve::UseSeparateWindow = ($pref::Video::deviceMode == 0); //can't do separate window atm if you're in fullscreen or borderless full
    
     // Preferences.
     exec( "./DefaultPrefs." @ $TorqueScriptFileExtension );
@@ -59,7 +59,7 @@ function DestroyVerveEditor()
 
 function ToggleVerveEditor( %value )
 {
-    if ( %value && $Verve::UseSeparateWindow )
+    if ( %value)
     {
         if ( !isObject( VerveEditorWindow ) )
         {
@@ -97,7 +97,6 @@ function VerveEditor::LaunchEditor()
     VerveEditor::ClearHistory();
     
     // Update Window Title.
-    if($Verve::UseSeparateWindow)
       VerveEditorWindow.UpdateWindowTitle();
     
     // Update Selection.

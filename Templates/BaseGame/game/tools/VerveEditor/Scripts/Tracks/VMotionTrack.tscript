@@ -105,21 +105,21 @@ function VMotionTrack::GetContextMenu( %this )
             Label    = "VTrackContextMenu";
             Position = 0;
             
-            Item[0] = "&Add Event" TAB "" TAB "VEditorSelectableTrack::AddEvent();";
+            Item[0] = "Add Event" TAB "" TAB "VEditorSelectableTrack::AddEvent();";
             
             Item[1] = "" TAB "";
             
-            Item[2] = "&Import Path Nodes" TAB "" TAB "VMotionTrack::ImportPathNodes();";
+            Item[2] = "Import Path Nodes" TAB "" TAB "VMotionTrack::ImportPathNodes();";
             
             Item[3] = "" TAB "";
              
-            Item[4] = "Cu&t"    TAB "" TAB "VerveEditor::CutSelection();";
-            Item[5] = "&Copy"   TAB "" TAB "VerveEditor::CopySelection();";
-            Item[6] = "&Paste"  TAB "" TAB "VEditorSelectableTrack::PasteEvent();";
+            Item[4] = "Cut"    TAB "" TAB "VerveEditor::CutSelection();";
+            Item[5] = "Copy"   TAB "" TAB "VerveEditor::CopySelection();";
+            Item[6] = "Paste"  TAB "" TAB "VEditorSelectableTrack::PasteEvent();";
             
             Item[7] = "" TAB "";
             
-            Item[8] = "&Delete" TAB "" TAB "VerveEditor::DeleteSelection();";
+            Item[8] = "Delete" TAB "" TAB "VerveEditor::DeleteSelection();";
             
             AddIndex   = 0;
             PasteIndex = 4;

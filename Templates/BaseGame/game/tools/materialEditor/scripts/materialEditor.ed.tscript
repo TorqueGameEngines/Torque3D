@@ -1316,7 +1316,7 @@ function MaterialEditorGui::updateScrollOffset(%this, %isSlider, %onMouseUp)
 	%Y = MaterialEditorPropertiesWindow-->ScrollTextEditV.getText();
 	MaterialEditorPropertiesWindow-->ScrollCrosshair.setPosition( -(23 * %X)+20, -(23 * %Y)+20);
 	
-	MaterialEditorGui.updateActiveMaterial("scrollDir[" @ %layer @ "]","\"" @ %X SPC %Y @ "\"",%isSlider,%onMouseUp);	
+	MaterialEditorGui.updateActiveMaterial("scrollDir[" @ %layer @ "]",%X SPC %Y,%isSlider,%onMouseUp);	
 }
 
 function MaterialEditorGui::updateScrollSpeed(%this, %isSlider, %onMouseUp)

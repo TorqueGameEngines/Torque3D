@@ -20,7 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platform/types.h"
+#include "platform/platformMemory.h"
 #include "core/volume.h"
 
 #include <sys/types.h>

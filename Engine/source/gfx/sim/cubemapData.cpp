@@ -44,7 +44,7 @@ CubemapData::CubemapData()
 
    for (U32 i = 0; i < 6; i++)
    {
-      INIT_ASSET_ARRAY(CubeMapFace, i);
+      INIT_IMAGEASSET_ARRAY(CubeMapFace, GFXStaticTextureSRGBProfile, i);
    }
 
    INIT_ASSET(CubeMap);

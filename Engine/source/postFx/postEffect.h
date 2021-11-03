@@ -90,7 +90,7 @@ public:
 
 protected:
 
-   DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, PostFxTextureProfile, NumTextures);
+   DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, NumTextures);
    DECLARE_IMAGEASSET_ARRAY_SETGET(PostEffect, Texture);
 
    bool mTexSRGB[NumTextures];

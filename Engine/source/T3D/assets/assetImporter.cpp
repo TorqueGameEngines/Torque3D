@@ -18,6 +18,7 @@
 #include "materials/materialManager.h"
 
 #include "console/persistenceManager.h"
+#include "core/util/timeClass.h"
 
 ConsoleDocClass(AssetImportConfig,
    "@brief Defines properties for an AssetImprotConfig object.\n"
@@ -506,7 +507,8 @@ AssetImporter::AssetImporter() :
    isReimport(false),
    assetHeirarchyChanged(false),
    importLogBuffer(""),
-   activeImportConfig(nullptr)
+   activeImportConfig(nullptr),
+   mDumpLogs(true)
 {
 }
 
@@ -534,6 +536,7 @@ void AssetImporter::initPersistFields()
    addField("targetModuleId", TypeRealString, Offset(targetModuleId, AssetImporter), "The Id of the module the assets are to be imported into");
    addField("finalImportedAssetPath", TypeRealString, Offset(finalImportedAssetPath, AssetImporter), "The Id of the module the assets are to be imported into");
    addField("targetPath", TypeRealString, Offset(targetPath, AssetImporter), "The path any imported assets are placed in as their destination");
+   addField("dumpLogs", TypeBool, Offset(mDumpLogs, AssetImporter), "Indicates if the importer always dumps its logs or not");
 }
 
 //
@@ -924,9 +927,41 @@ String AssetImporter::getActivityLogLine(U32 line)
 
 void AssetImporter::dumpActivityLog()
 {
-   for (U32 i = 0; i < activityLog.size(); i++)
+   if (!mDumpLogs)
+      return;
+
+   FileObject logFile;
+
+   //If there's nothing logged, don't bother
+   if (activityLog.size() == 0)
+      return;
+
+   Torque::Time::DateTime curTime;
+   Torque::Time::getCurrentDateTime(curTime);
+
+   String logName = String("tools/logs/AssetImportLog_") + String::ToString(curTime.year + 1900) + "-" +
+      String::ToString(curTime.month + 1) + "-" + String::ToString(curTime.day) + "_" +
+      String::ToString(curTime.hour) + "-" + String::ToString(curTime.minute) + "-" + String::ToString(curTime.second)
+      + "-" + String::ToString(curTime.microsecond) + ".log";
+
+   if (logFile.openForWrite(logName.c_str()))
    {
-      Con::printf(activityLog[i].c_str());
+      for (U32 i = 0; i < activityLog.size(); i++)
+      {
+         logFile.writeLine((const U8*)activityLog[i].c_str());
+      }
+
+      logFile.close();
+
+      Con::warnf("Asset Import log file dumped to: %s", logName.c_str());
+   }
+   else
+   {
+      Con::errorf("Error: Failed to open log file for writing! Dumping log results to console!");
+      for (U32 i = 0; i < activityLog.size(); i++)
+      {
+         Con::printf(activityLog[i].c_str());
+      }
    }
 }
 
@@ -2383,6 +2418,7 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
    {
       dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Unable to find moduleId %s", targetModuleId.c_str());
       activityLog.push_back(importLogBuffer);
+      dumpActivityLog();
       return;
    }
 
@@ -2483,6 +2519,8 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
       //recurse if needed
       importAssets(item);
    }
+
+   dumpActivityLog();
 }
 
 //

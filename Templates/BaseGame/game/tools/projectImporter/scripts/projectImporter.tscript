@@ -10,6 +10,11 @@ function ProjectImportWindow::onWake(%this)
    if(!isObject($ProjectImporter::fileObject))
       $ProjectImporter::fileObject = new FileObject();
       
+   if(!isObject($ProjectImporter::log))
+      $ProjectImporter::log = new ArrayObject();
+   else
+      $ProjectImporter::log.empty();
+      
    %this.importStepNumber = 0;
    %this-->stepsList.clear();
    %this-->stepsList.addRow(0, "Welcome");  
@@ -352,16 +357,33 @@ function ProjectImportWizardPage6::processPage(%this)
 
 function ProjectImportWizardPage7::openPage(%this)
 {
+   //writing console log
+   %logFileObj = new FileObject();
+   
+   %logFileName = "tools/logs/LegacyProjectImport_" @ getTimestamp() @ ".log";
+   
+   if(%logFileObj.openForWrite(%logFileName))
+   {
+      for(%i=0; %i < $ProjectImporter::log.count(); %i++)
+      {
+         %logFileObj.writeLine($ProjectImporter::log.getKey(%i));
+      }
+      
+      %logFileObj.close();
+   }
+   
+   %logFileObj.delete();
 }
 
 function beginProjectImport()
 {
-   echo("===========================================");
-   echo("Beginning Project Import");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Beginning Project Import");
+   $ProjectImporter::log.add("===========================================");
    
    $ProjectImporter::assetQuery = new AssetQuery();
    $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::importer.dumpLogs = false; //we handle the log dump outselves here
    $ProjectImporter::persistMgr = new PersistenceManager();
    
    //beginMaterialImport();
@@ -388,9 +410,9 @@ function beginProjectImport()
    $ProjectImporter::importer.delete();
    $ProjectImporter::persistMgr.delete();
    
-   echo("===========================================");
-   echo("Finished Project Import");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Project Import");
+   $ProjectImporter::log.add("===========================================");
    
    AssetBrowser.refresh(); //update the AB just in case
 }
@@ -538,7 +560,7 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
    
    if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
    {
-      echo("Legacy Project Importer - processing legacy field line: " @ %line);
+      $ProjectImporter::log.add("Legacy Project Importer - processing legacy field line: " @ %line);
       
       if(startsWith(%value, "$") || startsWith(%value, "#"))
       {
@@ -580,7 +602,7 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
             }
             else
             {
-               error("Legacy Project Importer - file described in line could not be found/is not valid");
+               $ProjectImporter::log.add("Legacy Project Importer - file described in line could not be found/is not valid");
                return %line;
             }
          }
@@ -597,7 +619,7 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
      
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
       {
-         echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+         $ProjectImporter::log.add("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
          
          //double check if this already had the quotes around the value or not
          if(!strIsMatchExpr("*\"*\"*", %originalValue))
@@ -612,7 +634,7 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
    
    if(%outLine !$= %line)
    {
-      echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      $ProjectImporter::log.add("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
       return %outLine;  
    }
    else
@@ -650,7 +672,7 @@ function processLegacyShapeConstructorField(%line)
    if(%foundAssets != 0)
    {
       %assetId = $ProjectImporter::assetQuery.getAsset(0);
-      echo("Legacy Project Importer - processing of legacy shape constructor addSequence line's value: " @ %animSourcePath @ " has found a matching AssetId: " @ %assetId);
+      $ProjectImporter::log.add("Legacy Project Importer - processing of legacy shape constructor addSequence line's value: " @ %animSourcePath @ " has found a matching AssetId: " @ %assetId);
    }
   
    if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
@@ -663,7 +685,7 @@ function processLegacyShapeConstructorField(%line)
    
    if(%outLine !$= %line)
    {
-      echo("Legacy Project Importer - processing of legacy shape constructor addSequence line: " @ %line @ " has been updated to: " @ %outLine);
+      $ProjectImporter::log.add("Legacy Project Importer - processing of legacy shape constructor addSequence line: " @ %line @ " has been updated to: " @ %outLine);
       return %outLine;  
    }
    else
@@ -849,7 +871,7 @@ function findObjectInFiles(%objectName)
       }
       else
       {
-         error("findObjectInFiles() - File not able to be opened: " @ %file);  
+         $ProjectImporter::log.add("findObjectInFiles() - File not able to be opened: " @ %file);  
       }
       
       %file = findNextFileMultiExpr( "*.*" );
@@ -864,9 +886,9 @@ function findObjectInFiles(%objectName)
 //==============================================================================
 function beginShapeImport()
 {
-   echo("===========================================");
-   echo("Importing 3D Shape files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Importing 3D Shape files");
+   $ProjectImporter::log.add("===========================================");
    //First, we need to go through and process all loose shape files. This will
    //get us shape assets, material assets image, assets and animation assets.
    %currentAddress = $ProjectImporter::modulePath;
@@ -904,12 +926,14 @@ function beginShapeImport()
             
             //No asset found associated to this fileas far as we can determine, so time to import it
             
-            warn("Importing 3D Shape file: " @ %file);
+            $ProjectImporter::log.add("Importing 3D Shape file: " @ %file);
             %assetId = $ProjectImporter::importer.autoImportFile(%file);  
+            getImporterLogs();
             
             if(%assetId !$= "")
             {
-               warn("Finished importing 3D Shape file, resulting in asset with an id of: " @ %assetId);
+               $ProjectImporter::log.add("Finished importing 3D Shape file, resulting in asset with an id of: " @ %assetId);
+               $ProjectImporter::log.add("");
             }
          }
       }
@@ -917,9 +941,9 @@ function beginShapeImport()
       %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
    }
    
-   echo("===========================================");
-   echo("Finished Importing 3D Shape files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Importing 3D Shape files");
+   $ProjectImporter::log.add("===========================================");
 }
 //==============================================================================
 
@@ -928,9 +952,9 @@ function beginShapeImport()
 //==============================================================================
 function beginImageImport()
 {
-   echo("===========================================");
-   echo("Importing Image files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Importing Image files");
+   $ProjectImporter::log.add("===========================================");
    //First, we need to go through and process all loose image files. This will
    //get us image assets, and if the import config deigns, material assets.
    %currentAddress = $ProjectImporter::modulePath;
@@ -960,12 +984,14 @@ function beginImageImport()
       
             //No asset found associated to this fileas far as we can determine, so time to import it
             
-            warn("Importing Image file: " @ %file);
+            $ProjectImporter::log.add("Importing Image file: " @ %file);
             %assetId = $ProjectImporter::importer.autoImportFile(%file);  
+            getImporterLogs();
             
             if(%assetId !$= "")
             {
-               warn("Finished importing Image file, resulting in asset with an id of: " @ %assetId);
+               $ProjectImporter::log.add("Finished importing Image file, resulting in asset with an id of: " @ %assetId);
+               $ProjectImporter::log.add("");
             }
          }
       }
@@ -973,9 +999,9 @@ function beginImageImport()
       %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
    }
    
-   echo("===========================================");
-   echo("Finished Importing Image files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Importing Image files");
+   $ProjectImporter::log.add("===========================================");
 }
 //==============================================================================
 
@@ -984,9 +1010,9 @@ function beginImageImport()
 //==============================================================================
 function beginTerrainImport()
 {
-   echo("===========================================");
-   echo("Importing Terrain files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Importing Terrain files");
+   $ProjectImporter::log.add("===========================================");
 
    %currentAddress = $ProjectImporter::modulePath;
    
@@ -1015,7 +1041,7 @@ function beginTerrainImport()
             ProjectImportWizardPage5-->processingText.setText("Processing Terrain Asset file: " @ %file);
             Canvas.repaint();
             
-            warn("Importing Terrain file: " @ %file);
+            $ProjectImporter::log.add("Importing Terrain file: " @ %file);
             
             %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(%file);
             %moduleName = %moduleDef.ModuleID;
@@ -1039,7 +1065,8 @@ function beginTerrainImport()
             {
                AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
                
-               warn("Finished importing Terrain file, resulting in asset with an id of: " @ %moduleName @ ":" @ %assetName);
+               $ProjectImporter::log.add("Finished importing Terrain file, resulting in asset with an id of: " @ %moduleName @ ":" @ %assetName);
+               $ProjectImporter::log.add("");
             }
          }
       }
@@ -1047,9 +1074,9 @@ function beginTerrainImport()
       %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
    }
    
-   echo("===========================================");
-   echo("Finished Importing Terrain files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Importing Terrain files");
+   $ProjectImporter::log.add("===========================================");
 }
 //==============================================================================
 
@@ -1064,9 +1091,9 @@ function beginTerrainImport()
 //==============================================================================
 function beginGUIImport()
 {
-   echo("===========================================");
-   echo("Importing GUIs");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Importing GUIs");
+   $ProjectImporter::log.add("===========================================");
    
    %currentAddress = $ProjectImporter::modulePath;
    
@@ -1128,14 +1155,14 @@ function beginGUIImport()
       %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
    }
 
-   echo("===========================================");
-   echo("Finished Importing GUIs");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Importing GUIs");
+   $ProjectImporter::log.add("===========================================");
 }
 
 function processGUIntoAsset(%guiName, %file)
 {
-   warn("Processing GUI into asset: " @ %guiName @ ", file: " @ %file);
+   $ProjectImporter::log.add("Processing GUI into asset: " @ %guiName @ ", file: " @ %file);
    
    %filePath = filePath(%file);
    %fileName = fileBase(%file);
@@ -1182,9 +1209,9 @@ function processGUIntoAsset(%guiName, %file)
 //==============================================================================
 function beginPostFXImport()
 {
-   echo("===========================================");
-   echo("Importing PostFXs");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Importing PostFXs");
+   $ProjectImporter::log.add("===========================================");
    
    %count = PostFXManager.Count();
    for(%i=0; %i < %count; %i++)
@@ -1193,7 +1220,7 @@ function beginPostFXImport()
       
       if(isObject(%postEffect))
       {     
-         echo("Processing import of PostFX: " @ %postEffect.getName());
+         $ProjectImporter::log.add("Processing import of PostFX: " @ %postEffect.getName());
          
          //$ProjectImporter::persistMgr.setDirty(%gui);
       }
@@ -1201,9 +1228,9 @@ function beginPostFXImport()
    
    //$ProjectImporter::persistMgr.saveDirty();
 
-   echo("===========================================");
-   echo("Finished Importing PostFXs");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Importing PostFXs");
+   $ProjectImporter::log.add("===========================================");
 }
 //==============================================================================
 
@@ -1212,9 +1239,9 @@ function beginPostFXImport()
 //==============================================================================
 function beginLevelImport()
 {
-   echo("===========================================");
-   echo("Importing Level files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Importing Level files");
+   $ProjectImporter::log.add("===========================================");
 
    %currentAddress = $ProjectImporter::modulePath;
    
@@ -1239,7 +1266,7 @@ function beginLevelImport()
             ProjectImportWizardPage5-->processingText.setText("Processing Level Asset file: " @ %file);
             Canvas.repaint();
             
-            warn("Importing Level file: " @ %file);
+            $ProjectImporter::log.add("Importing Level file: " @ %file);
             
             %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
 
@@ -1249,7 +1276,7 @@ function beginLevelImport()
             
             if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
             {
-               warn("Legacy Project Importer - trying to process a level into an asset that already exists");
+               $ProjectImporter::log.add("Legacy Project Importer - trying to process a level into an asset that already exists");
                return false;  
             }
             
@@ -1329,9 +1356,9 @@ function beginLevelImport()
       %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
    }
    
-   echo("===========================================");
-   echo("Finished Importing Level files");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Importing Level files");
+   $ProjectImporter::log.add("===========================================");
 }
 //==============================================================================
 
@@ -1370,9 +1397,9 @@ function ProjectImporter::deleteAssetDefinitions(%targetFolder)
 
 function doDeleteAssetDefinitions()
 {
-   echo("===========================================");
-   echo("Deleting Asset Definitions");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Deleting Asset Definitions");
+   $ProjectImporter::log.add("===========================================");
    
    %currentAddress = $deleteAssetDefsTargetFolder;
    
@@ -1388,27 +1415,27 @@ function doDeleteAssetDefinitions()
       {
          if(fileDelete(%file))
          {
-            echo("File: " @ %file @ " deleted successfully.");  
+            $ProjectImporter::log.add("File: " @ %file @ " deleted successfully.");  
          }
          else
          {
-            error("File: " @ %file @ " failed to delete.");  
+            $ProjectImporter::log.add("File: " @ %file @ " failed to delete.");  
          }
       }
       
       %file = findNextFileMultiExpr( %currentAddress @ "/*.asset.taml" );
    }
 
-   echo("===========================================");
-   echo("Finished Deleting Asset Definitions");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Finished Deleting Asset Definitions");
+   $ProjectImporter::log.add("===========================================");
 }
 
 function scanForDuplicateFiles(%toTestFile)
 {
-   echo("===========================================");
-   echo("Scanning for duplicate files!");
-   echo("===========================================");
+   $ProjectImporter::log.add("===========================================");
+   $ProjectImporter::log.add("Scanning for duplicate files!");
+   $ProjectImporter::log.add("===========================================");
    
    //First, wipe out any files inside the folder first
    %file = findFirstFileMultiExpr( "*/*.*", true);
@@ -1452,12 +1479,21 @@ function scanForDuplicateFiles(%toTestFile)
             if(%moduleName !$= "" && %testModuleName !$= "" && %moduleName $= %testModuleName)
             {
                //report the probable duplicate
-               error("Probable duplicate asset detected!");
-               error("Files: " @ %file @ " and " @ %toTestFile @ " have matching names and exist within the same module!");
+               $ProjectImporter::log.add("Probable duplicate asset detected!");
+               $ProjectImporter::log.add("Files: " @ %file @ " and " @ %toTestFile @ " have matching names and exist within the same module!");
             }
          }
       }
       
       %file = findNextFileMultiExpr( "*/*.*" );
+   }
+}
+
+function getImporterLogs()
+{
+   %lineCount = $ProjectImporter::importer.getActivityLogLineCount();
+   for(%i=0; %i < %lineCount; %i++)
+   {
+      $ProjectImporter::log.add($ProjectImporter::importer.getActivityLogLine(%i));
    }
 }

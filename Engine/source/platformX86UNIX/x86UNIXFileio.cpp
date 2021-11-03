@@ -76,6 +76,7 @@
  extern int x86UNIXClose(int fd);
  extern ssize_t x86UNIXRead(int fd, void *buf, size_t nbytes);
  extern ssize_t x86UNIXWrite(int fd, const void *buf, size_t nbytes);
+ extern bool ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize, bool requiredAbsolute);
 
  const int MaxPath = PATH_MAX;
 

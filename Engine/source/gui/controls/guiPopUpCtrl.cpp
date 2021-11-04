@@ -278,8 +278,8 @@ GuiPopUpMenuCtrl::GuiPopUpMenuCtrl(void)
    mBackgroundCancel = false; //  Added
    mReverseTextList = false; //  Added - Don't reverse text list if displaying up
 
-   INIT_ASSET_ARRAY(Bitmap, 0);
-   INIT_ASSET_ARRAY(Bitmap, 1);
+   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, 0);
+   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, 1);
 
    mBitmapBounds.set(16, 16); //  Added
    mIdMax = -1;

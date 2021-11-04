@@ -98,7 +98,7 @@ SplashData::SplashData()
    U32 i;
    for (i = 0; i < NUM_TEX; i++)
    {
-      INIT_ASSET_ARRAY(Texture, i);
+      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
    }
 
    for( i=0; i<NUM_TIME_KEYS; i++ )

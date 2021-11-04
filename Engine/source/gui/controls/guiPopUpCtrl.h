@@ -126,7 +126,7 @@ protected:
       NumBitmapModes = 2
    };
 
-   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrl, Bitmap, GFXDefaultGUIProfile, NumBitmapModes);
+   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrl, Bitmap, NumBitmapModes);
    DECLARE_IMAGEASSET_ARRAY_SETGET(GuiPopUpMenuCtrl, Bitmap);
 
    Point2I mBitmapBounds; //  Added

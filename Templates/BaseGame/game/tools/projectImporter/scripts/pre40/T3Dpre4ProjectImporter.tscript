@@ -2,7 +2,7 @@ function T3Dpre4ProjectImporter::setupModule(%this)
 {
    %newModuleName = $ProjectImporter::moduleName;
       
-   echo("Creating a new Module named: " @ %newModuleName);
+   $ProjectImporter::log.add("Creating a new Module named: " @ %newModuleName);
    
    %moduleFilePath = "data/" @ %newModuleName;
    %moduleDefinitionFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".module";
@@ -40,7 +40,7 @@ function T3Dpre4ProjectImporter::setupModule(%this)
          %line = strreplace( %line, "@@", %newModuleName );
          
          %file.writeline(%line);
-         echo(%line);
+         //$ProjectImporter::log.add(%line);
       }
       
       %file.close();
@@ -51,7 +51,7 @@ function T3Dpre4ProjectImporter::setupModule(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreateNewModule - Something went wrong and we couldn't write the script file!");
+      $ProjectImporter::log.add("CreateNewModule - Something went wrong and we couldn't write the script file!");
    }
    
    //force a refresh of our modules list
@@ -126,7 +126,7 @@ function T3Dpre4ProjectImporter::copyFiles(%this)
       
       if(!pathCopy(%file, %targetFilePath, false))
       {
-         error("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
+         $ProjectImporter::log.add("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
       }
       
       %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
@@ -206,7 +206,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
    %objectClassStack = new ArrayObject();
    %fileOutputLines = new ArrayObject();
    
-   echo("Legacy Project Importer - Beginning processing of imported code files");
+   $ProjectImporter::log.add("Legacy Project Importer - Beginning processing of imported code files");
    
    //Walk through and process all code files to update references
    while( %file !$= "" )
@@ -225,7 +225,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       
       if ( $ProjectImporter::fileObject.openForRead( %file ) ) 
       {
-         echo("Legacy Project Importer - Beginning process of file: " @ %file);
+         $ProjectImporter::log.add("Legacy Project Importer - Beginning process of file: " @ %file);
          %lineNum = 0;
          while ( !$ProjectImporter::fileObject.isEOF() ) 
          {
@@ -376,7 +376,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       }
       else
       {
-         error("Legacy Project Importer - File not able to be opened: " @ %file);  
+         $ProjectImporter::log.add("Legacy Project Importer - File not able to be opened: " @ %file);  
       }
       
       if(%fileWasChanged)
@@ -399,7 +399,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*/materials.*" );
    }
    
-   echo("Legacy Project Importer - Processing of imported code files done!");
+   $ProjectImporter::log.add("Legacy Project Importer - Processing of imported code files done!");
    
    %fileOutputLines.delete();
    %objectClassStack.delete();
@@ -418,7 +418,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
    %objectClassStack = new ArrayObject();
    %fileOutputLines = new ArrayObject();
    
-   echo("Legacy Project Importer - Beginning processing of imported code files");
+   $ProjectImporter::log.add("Legacy Project Importer - Beginning processing of imported code files");
    
    //Walk through and process all code files to update references
    while( %file !$= "" )
@@ -454,7 +454,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       
       if ( $ProjectImporter::fileObject.openForRead( %file ) ) 
       {
-         echo("Legacy Project Importer - Beginning process of file: " @ %file);
+         $ProjectImporter::log.add("Legacy Project Importer - Beginning process of file: " @ %file);
          %lineNum = 0;
          while ( !$ProjectImporter::fileObject.isEOF() ) 
          {
@@ -702,7 +702,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       }
       else
       {
-         error("Legacy Project Importer - File not able to be opened: " @ %file);  
+         $ProjectImporter::log.add("Legacy Project Importer - File not able to be opened: " @ %file);  
       }
       
       if(%fileWasChanged)
@@ -725,7 +725,7 @@ function T3Dpre4ProjectImporter::beginCodeFilesImport(%this)
       %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.*" );
    }
    
-   echo("Legacy Project Importer - Processing of imported code files done!");
+   $ProjectImporter::log.add("Legacy Project Importer - Processing of imported code files done!");
    
    //exec common loader files, process the remainder into assets
    
@@ -747,7 +747,7 @@ function T3Dpre4ProjectImporter::processScriptExtensions(%this)
    else
       %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*/*.tscript", true);
    
-   echo("Legacy Project Importer - Beginning processing of script files that utilize extensions other than: " @ $TorqueScriptFileExtension);
+   $ProjectImporter::log.add("Legacy Project Importer - Beginning processing of script files that utilize extensions other than: " @ $TorqueScriptFileExtension);
    
    //Walk through and process all code files to update references
    while( %file !$= "" )
@@ -767,13 +767,13 @@ function T3Dpre4ProjectImporter::processScriptExtensions(%this)
       %targetFilePath = %filePath @ "/" @ %fileBase @ "." @ $TorqueScriptFileExtension;
       if(!pathCopy(%file, %targetFilePath))
       {
-         error("T3Dpre4ProjectImporter::processScriptExtensions() - Failed to create renamed script file for file: " @ %file);
+         $ProjectImporter::log.add("T3Dpre4ProjectImporter::processScriptExtensions() - Failed to create renamed script file for file: " @ %file);
       }
       else
       {
          if(!fileDelete(%file))
          {
-            error("T3Dpre4ProjectImporter::processScriptExtensions() - Failed to remove old script file for rename: " @ %file);
+            $ProjectImporter::log.add("T3Dpre4ProjectImporter::processScriptExtensions() - Failed to remove old script file for rename: " @ %file);
          }         
       }
       
@@ -789,7 +789,7 @@ function T3Dpre4ProjectImporter::processScriptExtensions(%this)
    ProjectImportWindow-->nextButton.setActive(true);
    Canvas.repaint();
    
-   echo("Legacy Project Importer - Beginning processing of script files extensions complete");
+   $ProjectImporter::log.add("Legacy Project Importer - Beginning processing of script files extensions complete");
 }
 
 //To implement a custom class to have it's fields processed, just utilize this template function
@@ -986,7 +986,7 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %file, %objectName
       
       if(isFile(%tamlpath))
       {
-         error("T3Dpre4ProjectImporter::processMaterialObject() - Failed to create as taml file already exists: " @ %file);
+         $ProjectImporter::log.add("T3Dpre4ProjectImporter::processMaterialObject() - Failed to create as taml file already exists: " @ %file);
          return false;
       }
       
@@ -1042,7 +1042,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %file, %obj
       
       if(isFile(%tamlpath))
       {
-         error("T3Dpre4ProjectImporter::processTerrainMaterialObject() - Failed to create as taml file already exists: " @ %file);
+         $ProjectImporter::log.add("T3Dpre4ProjectImporter::processTerrainMaterialObject() - Failed to create as taml file already exists: " @ %file);
          return false;
       }
       
@@ -1098,7 +1098,7 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
    //Throw a warn that this file's already been claimed and move on
    if(%soundAsset !$= "")
    {
-      warn("T3Dpre4ProjectImporter::processSFXProfileObject() - attempting to process SFXProfile " @ %objectName 
+      $ProjectImporter::log.add("T3Dpre4ProjectImporter::processSFXProfileObject() - attempting to process SFXProfile " @ %objectName 
                @ " but its filename is already associated to another sound asset. Continuing, but be aware.");
    }  
 
@@ -1112,7 +1112,7 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
       
       if(isFile(%tamlpath))
       {
-         error("T3Dpre4ProjectImporter::processSFXProfileObject() - Failed to create as taml file already exists: " @ %soundFilename);
+         $ProjectImporter::log.add("T3Dpre4ProjectImporter::processSFXProfileObject() - Failed to create as taml file already exists: " @ %soundFilename);
          return false;
       }
       
@@ -1274,7 +1274,7 @@ function processGuiBitmapButtonCtrlField(%line, %originalFieldName, %newFieldNam
    
    if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
    {
-      echo("Legacy Project Importer - processing legacy field line: " @ %line);
+      $ProjectImporter::log.add("Legacy Project Importer - processing legacy field line: " @ %line);
       
       if(startsWith(%value, "$") || startsWith(%value, "#"))
       {
@@ -1287,7 +1287,7 @@ function processGuiBitmapButtonCtrlField(%line, %originalFieldName, %newFieldNam
       //If we still have nothing, then we fail it out
       if(!isFile(%targetFilename))
       {
-         error("Legacy Project Importer - file described in line could not be found/is not valid");
+         $ProjectImporter::log.add("Legacy Project Importer - file described in line could not be found/is not valid");
          return %line;
       }
       
@@ -1296,7 +1296,7 @@ function processGuiBitmapButtonCtrlField(%line, %originalFieldName, %newFieldNam
       if(%foundAssets != 0)
       {
          %assetId = $ProjectImporter::assetQuery.getAsset(0);
-         echo("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+         $ProjectImporter::log.add("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
       }
      
       if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
@@ -1310,7 +1310,7 @@ function processGuiBitmapButtonCtrlField(%line, %originalFieldName, %newFieldNam
    
    if(%outLine !$= %line)
    {
-      echo("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      $ProjectImporter::log.add("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
       return %outLine;  
    }
    else

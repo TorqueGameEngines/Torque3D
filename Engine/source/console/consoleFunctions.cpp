@@ -2841,3 +2841,21 @@ DefineEngineFunction( getStringHash, S32, (const char* _inString, bool _sensitiv
    else
       return S32(String(_inString).getHashCaseInsensitive());
 }
+
+//-----------------------------------------------------------------------------
+
+DefineEngineFunction(getTimestamp, const char*, (), ,
+   "Gets datetime string.\n\n"
+   "@return YYYY-mm-DD_hh-MM-ss formatted date time string.")
+{
+   Torque::Time::DateTime curTime;
+   Torque::Time::getCurrentDateTime(curTime);
+
+   String timestampStr = String::ToString(curTime.year + 1900) + "-" +
+      String::ToString(curTime.month + 1) + "-" + String::ToString(curTime.day) + "_" +
+      String::ToString(curTime.hour) + "-" + String::ToString(curTime.minute) + "-" + String::ToString(curTime.second);
+
+   const char* returnBuffer = Con::getReturnBuffer(timestampStr);
+
+   return returnBuffer;
+}

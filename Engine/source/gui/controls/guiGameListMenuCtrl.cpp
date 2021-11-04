@@ -543,7 +543,8 @@ Point2I  GuiGameListMenuCtrl::getMinExtent() const
 {
    Point2I parentMin = Parent::getMinExtent();
 
-   GuiGameListMenuProfile * profile = (GuiGameListMenuProfile *) mProfile;
+   GuiGameListMenuProfile * profile = dynamic_cast<GuiGameListMenuProfile*>(mProfile);
+   AssertFatal(profile, "Invalid profile for GuiGameListMenuCtrl!");
 
    S32 minHeight = 0;
    S32 rowHeight = profile->getRowHeight();
@@ -632,10 +633,13 @@ void GuiGameListMenuCtrl::enforceConstraints()
 
 void GuiGameListMenuCtrl::updateHeight()
 {
-   S32 minHeight = getMinExtent().y;
-   if (getHeight() < minHeight)
+   if (hasValidProfile())
    {
-      setHeight(minHeight);
+       S32 minHeight = getMinExtent().y;
+       if (getHeight() < minHeight)
+       {
+           setHeight(minHeight);
+       }
    }
 }
 

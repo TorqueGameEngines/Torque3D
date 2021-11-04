@@ -276,6 +276,7 @@ public:
    void updateMaterials();
 
    bool isAnimated() { return mPlayAmbient; }
+   void getNodeTransform(const char *nodeName, const MatrixF &xfm, MatrixF *outMat);
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 

@@ -405,7 +405,12 @@ public: \
       else if (m##name##AssetId[index] != StringTable->EmptyString())\
          return m##name##AssetId[index];\
       else if (m##name##Name[index] != StringTable->EmptyString())\
-         return StringTable->insert(Platform::makeRelativePathName(m##name##Name[index], Platform::getMainDotCsDir()));\
+      {\
+         if (String(m##name##Name[index]).startsWith("#") || String(m##name##Name[index]).startsWith("$"))\
+            return StringTable->insert(m##name##Name[index]);\
+         else\
+            return StringTable->insert(Platform::makeRelativePathName(m##name##Name[index], Platform::getMainDotCsDir()));\
+      }\
       else\
          return StringTable->EmptyString();\
    }\

@@ -1158,12 +1158,76 @@ static bool enumColladaForImport(const char* shapePath, GuiTreeViewCtrl* tree, b
       {
          domImage* img = libraryImages->getImage_array()[j];
 
-         S32 materialID = tree->findItemByName(_GetNameOrId(img));
+         String imageName = _GetNameOrId(img);
+
+         S32 materialID = tree->findItemByName(imageName.c_str());
 
          if (materialID == 0)
-            continue;
+         {
+            bool materialFound = false;
+            String matName = "";
 
-         tree->setItemValue(materialID, img->getInit_from()->getValue().str().c_str());
+            //If we don't have an immediate name match, we'll have to actually go look it up
+            for (S32 e = 0; e < root->getLibrary_effects_array().getCount(); e++)
+            {
+               const domLibrary_effects* libraryEffects = root->getLibrary_effects_array()[e];
+
+               for (S32 f = 0; f < libraryEffects->getEffect_array().getCount(); f++)
+               {
+                  domEffect* efct = libraryEffects->getEffect_array()[f];
+
+                  String effectName = efct->getID();
+
+                  for (S32 p = 0; p < efct->getFx_profile_abstract_array().getCount(); p++)
+                  {
+                     domProfile_COMMON* profile = daeSafeCast<domProfile_COMMON>(efct->getFx_profile_abstract_array()[p]);
+
+                     for (S32 n = 0; n < profile->getNewparam_array().getCount(); n++)
+                     {
+                        domCommon_newparam_typeRef param = profile->getNewparam_array()[n];
+                        String paramName = param->getSid();
+                        if (paramName.endsWith("-surface"))
+                        {
+                           //ok it's surface data, parse out the name
+                           String surfaceName = paramName.substr(0, paramName.length() - 8);
+                           if (surfaceName == imageName)
+                           {
+                              //got a match!
+                              matName = effectName;
+                              if (matName.endsWith("-effect"))
+                              {
+                                 matName = matName.substr(0, matName.length() - 7);
+                                 materialFound = true;
+                                 break;
+                              }
+                           }
+                        }
+                     }
+
+                     if (materialFound)
+                        break;
+                  }
+
+                  if (materialFound)
+                  {
+                     materialID = tree->findItemByName(matName.c_str());
+                  }
+
+                  if (materialID != 0)
+                     break;
+               }
+            }
+
+            //if we STILL haven't found a match, then yes, we've failed
+            if (materialID == 0)
+               continue;
+         }
+
+         String imagePath = img->getInit_from()->getValue().str().c_str();
+         if (imagePath.startsWith("/"))
+            imagePath = imagePath.substr(1, imagePath.length() - 1);
+
+         tree->setItemValue(materialID, StringTable->insert(imagePath.c_str()));
       }
    }
 

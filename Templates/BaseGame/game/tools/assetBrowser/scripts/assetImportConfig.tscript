@@ -3,12 +3,6 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
    //Apply our settings to the assets
    echo("Changed our import config!");
    
-   if(ImportActivityLog.count() != 0)
-      ImportActivityLog.add("");
-      
-   ImportActivityLog.add("Asset Import Configs set to " @ %text);
-   ImportActivityLog.add("");
-   
    ImportAssetWindow.activeImportConfigIndex = %id;
    //ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
    
@@ -235,12 +229,6 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
 function ImportAssetOptionsWindow::saveAssetOptions(%this)
 {
    %success = AssetImportSettings.write();
-   
-   if(ImportActivityLog.count() != 0)
-      ImportActivityLog.add("");
-      
-   ImportActivityLog.add("Asset Import Configs saved, refreshing Import session");
-   ImportActivityLog.add("");
    
    ImportAssetWindow.refresh();
    ImportAssetOptionsWindow.setVisible(0);   

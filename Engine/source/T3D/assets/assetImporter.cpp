@@ -1617,6 +1617,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       }
    }
 
+   bool foundExistingMaterial = false;
    if (activeImportConfig->UseExistingMaterials)
    {
       //So if the material already exists, we should just use that. So first, let's find out if it already exists
@@ -1651,9 +1652,11 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       {
          //We found a match, so just modify our asset item's info to point against it. This will create the asset definition, but otherwise leave the material definition as-is.
          assetItem->filePath = (Torque::Path)(mat->getFilename());
+         foundExistingMaterial = true;
       }
    }
-   else
+
+   if(!foundExistingMaterial)
    {
       if (activeImportConfig->AlwaysAddMaterialSuffix) //we only opt to force on the suffix if we're not obligating using the original material defs
       {
@@ -1811,19 +1814,6 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                }
             }
          }
-
-         /*for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-         {
-            AssetImportObject* childAssetItem = assetItem->childAssetItems[i];
-
-            if (childAssetItem->skip || childAssetItem->processed || childAssetItem->assetType != String("ImageAsset"))
-               continue;
-
-            if (childAssetItem->imageSuffixType == String("Albedo"))
-            {
-               assetItem->diffuseImageAsset = % childAssetItem;
-            }
-         }*/
       }
    }
    
@@ -1963,7 +1953,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
    else
    {
       Torque::Path filePath = materialItemValue;
-      String fullFilePath = filePath.getFullFileName().c_str();
+      String fullFilePath = filePath.getFullPath().c_str();
       String shapePathBase = assetItem->filePath.getRootAndPath();
 
       if (fullFilePath.isNotEmpty())
@@ -1977,24 +1967,26 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
             fullFilePath = fullFilePath.replace(" (Not Found)", "");
             fullFilePath = fullFilePath.replace(" (not found)", "");
 
-            String testFileName = shapePathBase + "/" + fullFilePath;
-            if (Platform::isFile(testFileName.c_str()))
+            if(filePath.getPath().isEmpty())
+               fullFilePath = shapePathBase + "/" + fullFilePath;
+ 
+            if (Platform::isFile(fullFilePath.c_str()))
             {
-               filePath = testFileName;
+               filePath = Torque::Path(fullFilePath);
             }
             else
             {
                //Hmm, didn't find it. It could be that the in-model filename could be different by virtue of
                //image extension. Some files have source content files like psd's, but the mesh was exported to use
                //a dds or png, etc
-               Torque::Path testFilePath = testFileName;
+               Torque::Path testFilePath = fullFilePath;
                String imgFileName = AssetImporter::findImagePath(testFilePath.getPath() + "/" + testFilePath.getFileName());
                if (imgFileName.isNotEmpty())
                   filePath = imgFileName;
             }
          }
  
-         matAssetItem = addImportingAsset("MaterialAsset", shapePathBase + "/", assetItem, matName);
+         matAssetItem = addImportingAsset("MaterialAsset", shapePathBase + "/" + matName, assetItem, matName);
          AssetImportObject* imageAssetItem = addImportingAsset("ImageAsset", filePath, matAssetItem, "");
 
          String suffixType;
@@ -2831,7 +2823,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          }
 
          assetFieldName = mapFieldName + "Asset";
-         mapFieldName += "[0]";
+         assetFieldName += "[0]";
 
          //String path = childItem->filePath.getFullFileName();
          //dSprintf(lineBuffer, 1024, "   %s = \"%s\";", mapFieldName.c_str(), path.c_str());

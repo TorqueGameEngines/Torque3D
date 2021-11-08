@@ -142,18 +142,18 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_ASSET_ARRAY(DiffuseMap, i);
-      INIT_ASSET_ARRAY(OverlayMap, i);
-      INIT_ASSET_ARRAY(LightMap, i);
-      INIT_ASSET_ARRAY(ToneMap, i);
-      INIT_ASSET_ARRAY(DetailMap, i);
-      INIT_ASSET_ARRAY(NormalMap, i);
-      INIT_ASSET_ARRAY(ORMConfigMap, i);
-      INIT_ASSET_ARRAY(RoughMap, i);
-      INIT_ASSET_ARRAY(AOMap, i);
-      INIT_ASSET_ARRAY(MetalMap, i);
-      INIT_ASSET_ARRAY(GlowMap, i);
-      INIT_ASSET_ARRAY(DetailNormalMap, i);
+      INIT_IMAGEASSET_ARRAY(DiffuseMap, GFXStaticTextureSRGBProfile, i);
+      INIT_IMAGEASSET_ARRAY(OverlayMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(LightMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(ToneMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(DetailMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(NormalMap, GFXNormalMapProfile, i);
+      INIT_IMAGEASSET_ARRAY(ORMConfigMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(RoughMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(AOMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(MetalMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(GlowMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(DetailNormalMap, GFXNormalMapProfile, i);
 
       mParallaxScale[i] = 0.0f;
 

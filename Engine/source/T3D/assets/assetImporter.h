@@ -647,6 +647,8 @@ class AssetImporter : public SimObject
    /// </summary>
    String finalImportedAssetPath;
 
+   bool mDumpLogs;
+
 public:
    AssetImporter();
    virtual ~AssetImporter();

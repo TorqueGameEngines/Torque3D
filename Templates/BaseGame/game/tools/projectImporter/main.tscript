@@ -41,6 +41,7 @@ function initializeProjectImporter()
    //Input::GetEventManager().subscribe( ProjectImportCtrl, "EndDropFiles" );
    
    $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::importer.dumpLogs = false; //we'll handle the log files ourselves
    
    %importConfig = new AssetImportConfig();
    %importConfig.loadImportConfig(AssetImportSettings, "LegacyProjectImport");

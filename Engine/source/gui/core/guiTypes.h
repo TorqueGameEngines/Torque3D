@@ -455,7 +455,7 @@ public:
    StringTableEntry mBitmapName; 
    StringTableEntry mBitmapAssetId; 
    AssetPtr<ImageAsset>  mBitmapAsset; 
-   GFXTextureProfile* mBitmapProfile = &GFXTexturePersistentSRGBProfile; 
+   GFXTextureProfile* mBitmapProfile = &GFXDefaultGUIProfile;
 public: 
    const StringTableEntry getBitmapFile() const { return mBitmapName; }
    void setBitmapFile(const FileName& _in) { mBitmapName = StringTable->insert(_in.c_str()); }

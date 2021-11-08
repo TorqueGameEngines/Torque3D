@@ -35,7 +35,7 @@ void TamlWriteNode::resetNode( void )
     // Clear fields.
     for( Vector<TamlWriteNode::FieldValuePair*>::iterator itr = mFields.begin(); itr != mFields.end(); ++itr )
     {
-        delete (*itr)->mpValue;
+        delete[] (*itr)->mpValue;
     }
     mFields.clear();
 

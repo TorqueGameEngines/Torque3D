@@ -98,6 +98,9 @@ BasicClouds::BasicClouds()
    mTexOffset[0].set( 0.5f, 0.5f );
    mTexOffset[1].set( 0.5f, 0.5f );
    mTexOffset[2].set( 0.5f, 0.5f );
+
+   for (U32 i=0; i< TEX_COUNT;i++)
+      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
 }
 
 IMPLEMENT_CO_NETOBJECT_V1( BasicClouds );

@@ -485,6 +485,13 @@ U32 tabComplete(char* inputBuffer, U32 cursorPos, U32 maxResultLength, bool forw
       }
       completionBaseStart = p;
       completionBaseLen = cursorPos - p;
+
+      // Bail if we end up at start of string
+      if (p == 0)
+      {
+          return cursorPos;
+      }
+
       // Is this function being invoked on an object?
       if (inputBuffer[p - 1] == '.') 
       {

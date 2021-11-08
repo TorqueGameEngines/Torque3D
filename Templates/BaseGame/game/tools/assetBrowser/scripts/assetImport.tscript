@@ -85,8 +85,6 @@ function ImportAssetWindow::onWake(%this)
    %this.importer.targetPath = AssetImportTargetAddress.getText();
    %this.importer.targetModuleId = AssetImportTargetModule.getText();
    
-   ImportActivityLog.empty();
-   
    %this.refresh();
 }
 
@@ -519,7 +517,8 @@ function ImportAssetWindow::doRefresh(%this)
    if(ImportAssetWindow.importConfigsList.count() != 0 
       && EditorSettings.value("Assets/AssetImporDefaultConfig") !$= "" 
       && EditorSettings.value("Assets/AutoImport", false) == true
-      && ImportAssetWindow.hasImportIssues == false
+      && ImportAssetWindow.hasImportIssues() == false
+      && AssetBrowser.isAssetReImport == false
       && ImportAssetWindow.allowAutoImport)
    {
       AssetImportCtrl.setHidden(true);
@@ -722,11 +721,7 @@ function NewAssetsPanelInputs::onRightMouseDown(%this)
 //
 function ImportAssetWindow::removeImportingAsset(%this)
 {
-   ImportActivityLog.add("Removing Asset from Import");
-   
    %this.importer.deleteImportingAsset(ImportAssetActions.assetItem);
-   
-   //ImportAssetWindow.refresh();
 }
 
 function ImportAssetWindow::addNewImportingAsset(%this, %filterType)
@@ -924,9 +919,9 @@ function ImportAssetWindow::toggleLogWindow()
    }
       
    ImportLogTextList.clear();
-   for(%i=0; %i < ImportActivityLog.count(); %i++)
+   for(%i=0; %i < ImportAssetWindow.importer.getActivityLogLineCount(); %i++)
    {
-      ImportLogTextList.addRow(%i, ImportActivityLog.getKey(%i));
+      ImportLogTextList.addRow(%i,ImportAssetWindow.importer.getActivityLogLine(%i));
    }
 }
 //

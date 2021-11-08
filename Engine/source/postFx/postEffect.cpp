@@ -1122,7 +1122,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
 
 void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *inTexViewport )
 {
-   const String &texFilename = mTextureName[ stage ];
+   const String &texFilename = getTexture( stage );
 
    GFXTexHandle theTex;
    NamedTexTarget *namedTarget = NULL;

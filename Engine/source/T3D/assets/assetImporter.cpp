@@ -721,27 +721,27 @@ String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)
       {
          case 0:
             suffixList = activeImportConfig->DiffuseTypeSuffixes;
-            suffixType->insert(0, "Albedo", 10);
+            suffixType->insert(0, "Albedo", 6);
             break;
          case 1:
             suffixList = activeImportConfig->NormalTypeSuffixes;
-            suffixType->insert(0, "Normal", 10);
+            suffixType->insert(0, "Normal", 6);
             break;
          case 2:
             suffixList = activeImportConfig->RoughnessTypeSuffixes;
-            suffixType->insert(0, "Roughness", 10);
+            suffixType->insert(0, "Roughness", 9);
             break;
          case 3:
             suffixList = activeImportConfig->AOTypeSuffixes;
-            suffixType->insert(0, "AO", 10);
+            suffixType->insert(0, "AO", 2);
             break;
          case 4:
             suffixList = activeImportConfig->MetalnessTypeSuffixes;
-            suffixType->insert(0, "Metalness", 10);
+            suffixType->insert(0, "Metalness", 9);
             break;
          case 5:
             suffixList = activeImportConfig->PBRTypeSuffixes;
-            suffixType->insert(0, "ORMConfig", 10);
+            suffixType->insert(0, "ORMConfig", 9);
             break;
          default:
             suffixList = "";

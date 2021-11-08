@@ -109,7 +109,10 @@ void Tokenizer::setBuffer(const char* buffer, U32 bufferSize)
 void Tokenizer::setSingleTokens(const char* singleTokens)
 {
    if (mSingleTokens)
-      SAFE_DELETE(mSingleTokens);
+   {
+      free(mSingleTokens);
+      mSingleTokens = NULL;
+   }
 
    if (singleTokens)
       mSingleTokens = dStrdup(singleTokens);

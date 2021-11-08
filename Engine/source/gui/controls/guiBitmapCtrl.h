@@ -44,7 +44,7 @@ class GuiBitmapCtrl : public GuiControl
             
       Point2I mStartPoint;
       ColorI   mColor;
-      F32     mRotation;
+      F32     mAngle;
 
       /// If true, bitmap tiles inside control.  Otherwise stretches.
       bool mWrap;

@@ -58,7 +58,7 @@ ConsoleDocClass( GuiBitmapCtrl,
 GuiBitmapCtrl::GuiBitmapCtrl(void)
  : mStartPoint( 0, 0 ),
    mColor(ColorI::WHITE),
-   mRotation(0),
+   mAngle(0),
    mWrap( false )
 {
    INIT_ASSET(Bitmap);
@@ -85,7 +85,7 @@ void GuiBitmapCtrl::initPersistFields()
       addField( "wrap",   TypeBool,     Offset( mWrap, GuiBitmapCtrl ),
          "If true, the bitmap is tiled inside the control rather than stretched to fit." );
 
-      addField("rotation", TypeF32, Offset(mRotation, GuiBitmapCtrl), "rotation");
+      addField("angle", TypeF32, Offset(mAngle, GuiBitmapCtrl), "rotation");
       
    endGroup( "Bitmap" );
 
@@ -190,14 +190,14 @@ void GuiBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
 								      ((texture->mBitmapSize.y*y)+offset.y)-yshift,
 								      texture->mBitmapSize.x,
 								      texture->mBitmapSize.y);
-               GFX->getDrawUtil()->drawBitmapStretchSR(texture, dstRegion, srcRegion, GFXBitmapFlip_None, GFXTextureFilterLinear, mRotation);
+               GFX->getDrawUtil()->drawBitmapStretchSR(texture, dstRegion, srcRegion, GFXBitmapFlip_None, GFXTextureFilterLinear, mAngle);
 				}
 
 		}
 		else
       {
          RectI rect(offset, getExtent());
-         GFX->getDrawUtil()->drawBitmapStretch(mBitmap, rect, GFXBitmapFlip_None, GFXTextureFilterLinear, false, mRotation);
+         GFX->getDrawUtil()->drawBitmapStretch(mBitmap, rect, GFXBitmapFlip_None, GFXTextureFilterLinear, false, mAngle);
       }
    }
 

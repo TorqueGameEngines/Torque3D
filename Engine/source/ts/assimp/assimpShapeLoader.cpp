@@ -177,11 +177,11 @@ void AssimpShapeLoader::enumerateScene()
 
       // Setup default units for shape format
       String importFormat;
-      if (getMetaString("SourceAsset_Format", importFormat))
+
+      const aiImporterDesc* importerDescription = aiGetImporterDesc(shapePath.getExtension().c_str());
+      if (importerDescription->mName == "Autodesk FBX Importer")
       {
-         // FBX uses cm as standard unit, so convert to meters
-         if (importFormat.equal("Autodesk FBX Importer", String::NoCase))
-            ColladaUtils::getOptions().formatScaleFactor = 0.01f;
+         ColladaUtils::getOptions().formatScaleFactor = 0.01f;
       }
 
       // Set import options (if they are not set to override)

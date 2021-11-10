@@ -303,54 +303,54 @@ U32 GFXDrawUtil::drawTextN( GFont *font, const Point2F &ptDraw, const UTF16 *in_
 //-----------------------------------------------------------------------------
 // Draw Bitmaps
 //-----------------------------------------------------------------------------
-void GFXDrawUtil::drawBitmap( GFXTextureObject* texture, const Point2I &in_rAt, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmap( GFXTextureObject* texture, const Point2I &in_rAt, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
-   drawBitmap(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),in_flip,filter,in_wrap);
+   drawBitmap(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretch( GFXTextureObject* texture, const RectI &dstRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapStretch( GFXTextureObject* texture, const RectI &dstRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
-   drawBitmapStretch(texture,RectF((F32)dstRect.point.x,(F32)dstRect.point.y,(F32)dstRect.extent.x,(F32)dstRect.extent.y),in_flip,filter,in_wrap);
+   drawBitmapStretch(texture,RectF((F32)dstRect.point.x,(F32)dstRect.point.y,(F32)dstRect.extent.x,(F32)dstRect.extent.y),in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapSR( GFXTextureObject* texture, const Point2I &in_rAt, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapSR( GFXTextureObject* texture, const Point2I &in_rAt, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
-   drawBitmapSR(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),RectF((F32)srcRect.point.x,(F32)srcRect.point.y,(F32)srcRect.extent.x,(F32)srcRect.extent.y),in_flip,filter,in_wrap);
+   drawBitmapSR(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),RectF((F32)srcRect.point.x,(F32)srcRect.point.y,(F32)srcRect.extent.x,(F32)srcRect.extent.y),in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject *texture, const RectI &dstRect, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ ) 
+void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject *texture, const RectI &dstRect, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
    RectF dstRectF = RectF((F32)dstRect.point.x,(F32)dstRect.point.y,(F32)dstRect.extent.x,(F32)dstRect.extent.y);
    RectF srcRectF = RectF((F32)srcRect.point.x,(F32)srcRect.point.y,(F32)srcRect.extent.x,(F32)srcRect.extent.y);
-   drawBitmapStretchSR(texture,dstRectF,srcRectF,in_flip,filter,in_wrap);
+   drawBitmapStretchSR(texture,dstRectF,srcRectF,in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    AssertFatal( texture != 0, "No texture specified for drawBitmap()" );
 
    RectI subRegion( 0, 0, texture->mBitmapSize.x, texture->mBitmapSize.y );
    RectI stretch( in_rAt.x, in_rAt.y, texture->mBitmapSize.x, texture->mBitmapSize.y );
-   drawBitmapStretchSR( texture, stretch, subRegion, in_flip, filter, in_wrap );
+   drawBitmapStretchSR( texture, stretch, subRegion, in_flip, filter, in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    AssertFatal( texture != 0, "No texture specified for drawBitmapStretch()" );
 
    RectF subRegion( 0.f, 0.f, (F32)texture->mBitmapSize.x, (F32)texture->mBitmapSize.y );
-   drawBitmapStretchSR( texture, dstRect, subRegion, in_flip, filter, in_wrap );
+   drawBitmapStretchSR( texture, dstRect, subRegion, in_flip, filter, in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    AssertFatal( texture != 0, "No texture specified for drawBitmapSR()" );
 
    RectF stretch( in_rAt.x, in_rAt.y, srcRect.len_x(), srcRect.len_y() );
-   drawBitmapStretchSR( texture, stretch, srcRect, in_flip, filter, in_wrap );
+   drawBitmapStretchSR( texture, stretch, srcRect, in_flip, filter, in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &dstRect, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &dstRect, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    // Sanity if no texture is specified.
    if(!texture)
@@ -394,6 +394,30 @@ void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &d
    verts[1].texCoord.set( texRight, texTop );
    verts[2].texCoord.set( texLeft,  texBottom );
    verts[3].texCoord.set( texRight, texBottom );
+
+   if (angle != 0.0f)
+   {
+      U32 i = 0;
+      Point3F points[4];
+
+      points[0] = Point3F(-dstRect.extent.x / 2.0f, -dstRect.extent.y / 2.0f, 0.0);
+      points[1] = Point3F(dstRect.extent.x / 2.0f, -dstRect.extent.y / 2.0f, 0.0);
+      points[2] = Point3F(-dstRect.extent.x / 2.0f, dstRect.extent.y / 2.0f, 0.0);
+      points[3] = Point3F(dstRect.extent.x / 2.0f, dstRect.extent.y / 2.0f, 0.0);
+
+      //calc center by taking position+extent/2
+      Point3F offset(dstRect.point.x + dstRect.extent.x / 2.0f,
+         dstRect.point.y + dstRect.extent.y / 2.0f, 0.0);
+
+      //rotate points by mulitplying by a rotation matrix
+      MatrixF rotMatrix(EulerF(0.0, 0.0, mDegToRad(angle)));
+      for (i = 0; i < 4; i++)
+      {
+         rotMatrix.mulP(points[i]);
+         points[i] += offset;
+         verts[i].point = points[i];
+      }
+   }
 
    verts.unlock();
 

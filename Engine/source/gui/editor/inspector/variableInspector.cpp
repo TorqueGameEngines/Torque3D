@@ -32,6 +32,7 @@ GuiVariableInspector::GuiVariableInspector() : mAutoUpdate(true)
 
 GuiVariableInspector::~GuiVariableInspector()
 {
+
 }
 
 IMPLEMENT_CONOBJECT(GuiVariableInspector);
@@ -75,7 +76,7 @@ void GuiVariableInspector::update()
 
       for (U32 g = 0; g < mGroups.size(); g++)
       {
-         if (mGroups[g]->getCaption().equal(mFields[i].mGroup))
+         if (mGroups[g]->getCaption().equal(mFields[i]->mGroup))
          {
             group = static_cast<GuiInspectorVariableGroup*>(mGroups[g]);
             break;
@@ -89,14 +90,14 @@ void GuiVariableInspector::update()
          group->setHeaderHidden(false);
          group->setCanCollapse(true);
          group->mParent = this;
-         group->setCaption(mFields[i].mGroup);
+         group->setCaption(mFields[i]->mGroup);
 
          group->registerObject();
          mGroups.push_back(group);
          addObject(group);
       }
-      
-      group->addField(&mFields[i]);
+
+      group->addField(mFields[i]);
    }
 
    //And now, cue our update for the groups themselves
@@ -148,26 +149,26 @@ void GuiVariableInspector::setGroupsExpanded(bool isExpanded)
 void GuiVariableInspector::addField(const char* name, const char* label, const char* typeName, const char* description, 
    const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj)
 {
-   VariableField newField;
-   newField.mFieldName = StringTable->insert(name);
-   newField.mFieldLabel = StringTable->insert(label, true);
-   newField.mFieldTypeName = StringTable->insert(typeName);
-   newField.mFieldDescription = StringTable->insert(description);
-   newField.mDefaultValue = StringTable->insert(defaultValue);
-   newField.mDataValues = String(dataValues);
-   newField.mGroup = mCurrentGroup;
-   newField.mSetCallbackName = StringTable->insert(callbackName);
-   newField.mEnabled = true;
+   VariableField* newField = new VariableField;
+   newField->mFieldName = StringTable->insert(name);
+   newField->mFieldLabel = StringTable->insert(label, true);
+   newField->mFieldTypeName = StringTable->insert(typeName);
+   newField->mFieldDescription = StringTable->insert(description);
+   newField->mDefaultValue = StringTable->insert(defaultValue);
+   newField->mDataValues = String(dataValues);
+   newField->mGroup = mCurrentGroup;
+   newField->mSetCallbackName = StringTable->insert(callbackName);
+   newField->mEnabled = true;
 
-   newField.mOwnerObject = ownerObj;
+   newField->mOwnerObject = ownerObj;
 
    //establish the field on the ownerObject(if we have one)
    //This way, we can let the field hook into the object's field and modify it when changed
-   if (newField.mOwnerObject != nullptr)
+   if (newField->mOwnerObject != nullptr)
    {
-      if (!newField.mOwnerObject->isField(newField.mFieldName))
+      if (!newField->mOwnerObject->isField(newField->mFieldName))
       {
-         newField.mOwnerObject->setDataField(newField.mFieldName, NULL, newField.mDefaultValue);
+         newField->mOwnerObject->setDataField(newField->mFieldName, NULL, newField->mDefaultValue);
       }
    }
 
@@ -175,40 +176,40 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
    //find the field type
    S32 fieldTypeMask = -1;
 
-   if (newField.mFieldTypeName == StringTable->insert("int"))
+   if (newField->mFieldTypeName == StringTable->insert("int"))
       fieldTypeMask = TypeS32;
-   else if (newField.mFieldTypeName == StringTable->insert("float"))
+   else if (newField->mFieldTypeName == StringTable->insert("float"))
       fieldTypeMask = TypeF32;
-   else if (newField.mFieldTypeName == StringTable->insert("vector"))
+   else if (newField->mFieldTypeName == StringTable->insert("vector"))
       fieldTypeMask = TypePoint3F;
-   else if (newField.mFieldTypeName == StringTable->insert("vector2"))
+   else if (newField->mFieldTypeName == StringTable->insert("vector2"))
       fieldTypeMask = TypePoint2F;
-   else if (newField.mFieldTypeName == StringTable->insert("material"))
+   else if (newField->mFieldTypeName == StringTable->insert("material"))
       fieldTypeMask = TypeMaterialAssetId;
-   else if (newField.mFieldTypeName == StringTable->insert("image"))
+   else if (newField->mFieldTypeName == StringTable->insert("image"))
       fieldTypeMask = TypeImageAssetId;
-   else if (newField.mFieldTypeName == StringTable->insert("shape"))
+   else if (newField->mFieldTypeName == StringTable->insert("shape"))
       fieldTypeMask = TypeShapeAssetId;
-   else if (newField.mFieldTypeName == StringTable->insert("bool"))
+   else if (newField->mFieldTypeName == StringTable->insert("bool"))
       fieldTypeMask = TypeBool;
-   else if (newField.mFieldTypeName == StringTable->insert("object"))
+   else if (newField->mFieldTypeName == StringTable->insert("object"))
       fieldTypeMask = TypeSimObjectPtr;
-   else if (newField.mFieldTypeName == StringTable->insert("string"))
+   else if (newField->mFieldTypeName == StringTable->insert("string"))
       fieldTypeMask = TypeString;
-   else if (newField.mFieldTypeName == StringTable->insert("colorI"))
+   else if (newField->mFieldTypeName == StringTable->insert("colorI"))
       fieldTypeMask = TypeColorI;
-   else if (newField.mFieldTypeName == StringTable->insert("colorF"))
+   else if (newField->mFieldTypeName == StringTable->insert("colorF"))
       fieldTypeMask = TypeColorF;
-   else if (newField.mFieldTypeName == StringTable->insert("ease"))
+   else if (newField->mFieldTypeName == StringTable->insert("ease"))
       fieldTypeMask = TypeEaseF;
-   else if (newField.mFieldTypeName == StringTable->insert("command"))
+   else if (newField->mFieldTypeName == StringTable->insert("command"))
       fieldTypeMask = TypeCommand;
-   else if (newField.mFieldTypeName == StringTable->insert("filename"))
+   else if (newField->mFieldTypeName == StringTable->insert("filename"))
       fieldTypeMask = TypeStringFilename;
    else
       fieldTypeMask = -1;
 
-   newField.mFieldType = fieldTypeMask;
+   newField->mFieldType = fieldTypeMask;
    //
 
    mFields.push_back(newField);
@@ -226,6 +227,13 @@ void GuiVariableInspector::addCallbackField(const char* name, const char* label,
 void GuiVariableInspector::clearFields()
 {
    mGroups.clear();
+
+   // Before clearing the fields, dealloc the memory first
+   for (U32 iteration = 0; iteration < mFields.size(); ++iteration)
+   {
+       delete mFields[iteration];
+   }
+
    mFields.clear();
    clear();
    
@@ -237,9 +245,9 @@ void GuiVariableInspector::setFieldEnabled(const char* name, bool enabled)
    String fieldName = name;
    for (U32 i = 0; i < mFields.size(); i++)
    {
-      if (fieldName.equal(mFields[i].mFieldName, String::NoCase))
+      if (fieldName.equal(mFields[i]->mFieldName, String::NoCase))
       {
-         mFields[i].mEnabled = enabled;
+         mFields[i]->mEnabled = enabled;
          update();
          return;
       }

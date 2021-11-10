@@ -65,7 +65,7 @@ public:
 
 protected:
    
-   Vector<VariableField> mFields;
+   Vector<VariableField*> mFields;
 
    String mCurrentGroup;
 

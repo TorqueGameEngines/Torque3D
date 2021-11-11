@@ -565,8 +565,6 @@ bool WheeledVehicle::onAdd()
       return false;
 
    addToScene();
-   if (isServerObject())
-      scriptOnAdd();
    return true;
 }
 
@@ -588,7 +586,6 @@ void WheeledVehicle::onRemove()
    SFX_DELETE( mSquealSound );
 
    //
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }

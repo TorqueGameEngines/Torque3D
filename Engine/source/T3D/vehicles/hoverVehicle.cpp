@@ -512,10 +512,6 @@ bool HoverVehicle::onAdd()
       }
    }
 
-
-   if (isServerObject())
-      scriptOnAdd();
-
    return true;
 }
 
@@ -526,7 +522,6 @@ void HoverVehicle::onRemove()
    SFX_DELETE( mEngineSound );
    SFX_DELETE( mFloatSound );
 
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }

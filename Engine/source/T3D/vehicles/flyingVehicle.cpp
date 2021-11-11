@@ -348,9 +348,6 @@ bool FlyingVehicle::onAdd()
       return false;
 
    addToScene();
-
-   if (isServerObject())
-      scriptOnAdd();
    return true;
 }
 
@@ -400,7 +397,6 @@ void FlyingVehicle::onRemove()
    SFX_DELETE( mJetSound );
    SFX_DELETE( mEngineSound );
 
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }

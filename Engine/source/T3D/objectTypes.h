@@ -167,6 +167,10 @@ enum SceneObjectTypes
    PathShapeObjectType = BIT( 28 ),
    // PATHSHAPE END
 
+   /// A turret object.
+   /// @see TurretShape
+   TurretObjectType = BIT(29),
+
    /// @}
 };
 

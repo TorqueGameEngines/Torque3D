@@ -542,7 +542,7 @@ TEST(Script, TorqueScript_Array_Testing)
    ASSERT_EQ(value2.getInt(), 2);
 }
 
-TEST(Script, Basic_SimObject)
+TEST(Script, SimObject_Tests)
 {
    ConsoleValue object = RunScript(R"(
          return new SimObject(FudgeCollector)
@@ -657,6 +657,44 @@ TEST(Script, Basic_SimObject)
    )");
 
    ASSERT_EQ(fieldOpTest.getInt(), 3);
+
+   ConsoleValue inheritedObjectTest = RunScript(R"(
+      function SimObject::testClass(%this)
+      {
+         return 4;
+      }
+
+      function SuperFooBar::doSuperTest(%this)
+      {
+         return 5;
+      }
+
+      function FooBar::test(%this)
+      {
+         return 2;
+      }
+
+      new SimObject(GrandFooBar)
+      {
+         superClass = "SuperFooBar";
+      };
+
+      new SimObject(Foo : GrandFooBar)
+      {
+         class = "FooBar";
+      };
+
+      new SimObject(Bar : Foo);
+
+      function Bar::doTheAddition(%this)
+      {
+         return %this.testClass() + %this.test() + %this.doSuperTest(); 
+      }
+
+      return Bar.doTheAddition();
+   )");
+
+   ASSERT_EQ(inheritedObjectTest.getInt(), 11);
 }
 
 TEST(Script, Internal_Name)

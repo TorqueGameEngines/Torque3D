@@ -202,14 +202,13 @@ void main()
    return;
 #endif
 
-
+   
    //energy conservation
    vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
    vec3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
-   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
+   vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 

@@ -105,10 +105,9 @@ struct Surface
 
 	inline void Update()
 	{
-		NdotV = abs(dot(N, V)) + 1e-5f; // avoid artifact
-   
-      linearRoughness = roughness * roughness;
-      linearRoughnessSq = linearRoughness * linearRoughness;
+		NdotV = clamp( dot(N, V), 0.0009765625f,0.9990234375f); // avoid artifact
+        linearRoughness = roughness * roughness;
+        linearRoughnessSq = linearRoughness * linearRoughness;
 
 		albedo = baseColor.rgb * (1.0f - metalness);
 		f0 = lerp(0.04f, baseColor.rgb, metalness);
@@ -654,8 +653,7 @@ float4 debugVizForwardProbes(Surface surface,
    float3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
-   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 

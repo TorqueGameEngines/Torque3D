@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "math/mPoint2.h"
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 //#include "platformX86UNIX/platformGL.h"
 #include "core/strings/stringFunctions.h"
 

@@ -2381,6 +2381,9 @@ void AssetImporter::resetImportConfig()
       Settings* importConfigs;
       if (Sim::findObject("AssetImportSettings", importConfigs))
       {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Loading import config: %s!", defaultImportConfig.c_str());
+         activityLog.push_back(importLogBuffer);
+
          //Now load the editor setting-deigned config!
          activeImportConfig->loadImportConfig(importConfigs, defaultImportConfig.c_str());
       }
@@ -2798,7 +2801,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
                }
                else if (imageType == ImageAsset::ImageTypes::Metalness)
                {
-                  mapFieldName = "MetalnessMap";
+                  mapFieldName = "MetalMap";
                }
                else if (imageType == ImageAsset::ImageTypes::AO)
                {
@@ -2806,7 +2809,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
                }
                else if (imageType == ImageAsset::ImageTypes::Roughness)
                {
-                  mapFieldName = "RoughnessMap";
+                  mapFieldName = "RoughMap";
                }
 
                assetFieldName = mapFieldName + "Asset[0]";
@@ -2874,7 +2877,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {
-            mapFieldName = "MetalnessMap";
+            mapFieldName = "MetalMap";
          }
          else if (imageType == ImageAsset::ImageTypes::AO)
          {
@@ -2882,7 +2885,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          }
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
-            mapFieldName = "RoughnessMap";
+            mapFieldName = "RoughMap";
             hasRoughness = true;
          }
 

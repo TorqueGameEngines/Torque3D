@@ -32,7 +32,7 @@
 #include <stdlib.h>
 
 #include "platformX86UNIX/platformX86UNIX.h"
-#include "platformX86UNIX/x86UNIXUtils.h"
+#include "platformPOSIX/POSIXUtils.h"
 
 UnixUtils *UUtils = NULL;
 UnixUtils utils; 

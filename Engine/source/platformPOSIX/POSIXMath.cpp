@@ -20,6 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#ifndef __APPLE__
+
 #include "platform/platform.h"
 #include "console/console.h"
 #include "math/mMath.h"
@@ -97,8 +99,10 @@ void Math::init(U32 properties)
    Con::printf("   Installing Standard C extensions");
    mInstallLibrary_C();
 
+#if defined(TORQUE_CPU_X32) || defined(TORQUE_CPU_X64)
    Con::printf("   Installing Assembly extensions");
    mInstallLibrary_ASM();
+#endif
 
    if (properties & CPU_PROP_FPU)
    {
@@ -173,5 +177,6 @@ void Platform::setMathControlStateKnown()
 {
 }
 
+#endif
 #endif
 

@@ -26,8 +26,8 @@
 #include "console/console.h"
 #include "core/strings/unicode.h"
 #include "core/stringTable.h"
-#include "platformX86UNIX/platformX86UNIX.h"
-#include "platformX86UNIX/x86UNIXFont.h"
+#include "platformPOSIX/platformPOSIX.h"
+#include "platformX11/X11Font.h"
 
 // Needed by createFont
 #include <X11/Xlib.h>

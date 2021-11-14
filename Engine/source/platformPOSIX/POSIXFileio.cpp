@@ -151,15 +151,13 @@ bool ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize, bool requiredA
 #undef Status
 #endif
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 
 extern int x86UNIXOpen(const char *path, int oflag);
 extern int x86UNIXClose(int fd);
 extern ssize_t x86UNIXRead(int fd, void *buf, size_t nbytes);
 extern ssize_t x86UNIXWrite(int fd, const void *buf, size_t nbytes);
 extern bool ResolvePathCaseInsensitive(char* pathName, S32 pathNameSize, bool requiredAbsolute);
-
-const int MaxPath = PATH_MAX;
 
 namespace
 {

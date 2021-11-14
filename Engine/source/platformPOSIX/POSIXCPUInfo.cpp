@@ -23,7 +23,7 @@
 #ifndef __APPLE__
 
 #include "platform/platform.h"
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 #include "console/console.h"
 #include "core/stringTable.h"
 #include "core/strings/stringFunctions.h"

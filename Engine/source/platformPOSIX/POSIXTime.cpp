@@ -22,7 +22,7 @@
 
 #ifndef __APPLE__
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 #include "platform/platformTimer.h"
 #include "time.h"
 #include <errno.h>

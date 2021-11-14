@@ -26,7 +26,7 @@
 #include "platform/platformInput.h"
 #include "console/console.h"
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 #include "platformPOSIX/POSIXStdConsole.h"
 #include "platformPOSIX/POSIXState.h"
 

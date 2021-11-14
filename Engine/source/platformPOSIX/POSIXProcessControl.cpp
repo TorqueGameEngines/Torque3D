@@ -22,7 +22,7 @@
 
 #ifndef __APPLE__
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 #include "platformPOSIX/POSIXState.h"
 #include "platformPOSIX/POSIXStdConsole.h"
 #include "platform/platformInput.h"

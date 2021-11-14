@@ -80,7 +80,7 @@ if(WIN32)
     set(ALSOFT_INSTALL_HRTF_DATA OFF CACHE BOOL "Install HRTF definition files" FORCE)
     set(ALSOFT_INSTALL_AMBDEC_PRESETS OFF CACHE BOOL "Install AmbDec presets" FORCE)
     set(ALSOFT_EMBED_HRTF_DATA OFF CACHE BOOL "Embed the HRTF data (increases library footprint)" FORCE)
-    
+
     add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
 endif()
 
@@ -241,7 +241,7 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4018")
     # warning C4244: 'initializing' : conversion from 'XXX' to 'XXX', possible loss of data
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4244")
-	if(TORQUE_SFX_DirectX) 
+	if(TORQUE_SFX_DirectX)
 		if( TORQUE_CPU_X64 )
 			link_directories($ENV{DXSDK_DIR}/Lib/x64)
 		else()
@@ -599,11 +599,15 @@ if(APPLE)
     addPath("${srcDir}/platformPOSIX")
 endif()
 
+if (UNIX AND NOT APPLE)
+    addPath("${srcDir}/platformX11")
+endif()
+
 if(UNIX AND NOT APPLE)
     # linux_dedicated
     if(TORQUE_DEDICATED)
 		addPath("${srcDir}/windowManager/dedicated")
-		# ${srcDir}/platformX86UNIX/*.client.* files are not needed
+		# ${srcDir}/UNIX/*.client.* files are not needed
 		# @todo: move to separate file
 		file( GLOB tmp_files
              ${srcDir}/platformX86UNIX/*.cpp

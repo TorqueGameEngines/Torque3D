@@ -179,7 +179,7 @@ void AssimpShapeLoader::enumerateScene()
       String importFormat;
 
       const aiImporterDesc* importerDescription = aiGetImporterDesc(shapePath.getExtension().c_str());
-      if (importerDescription->mName == "Autodesk FBX Importer")
+      if (StringTable->insert(importerDescription->mName) == StringTable->insert("Autodesk FBX Importer"))
       {
          ColladaUtils::getOptions().formatScaleFactor = 0.01f;
       }

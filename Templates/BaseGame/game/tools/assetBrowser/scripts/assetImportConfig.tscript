@@ -66,7 +66,7 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/ImportMaterials", "Import Materials", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AlwaysAddMaterialSuffix", "Always Add Material Suffix", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AddedMaterialSuffix", "Added Material Suffix", "string", "", "_mat", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/CreateComposites", "Create Composites", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/CreateORMConfig", "Create ORM Map", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseDiffuseSuffixOnOriginImage", "Use Diffuse Suffix for Origin Image", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseExistingMaterials", "Use Existing Materials", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/IgnoreMaterials", "Ignore Materials", "command", "", "", "");
@@ -185,7 +185,7 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
    else if(%assetType $= "MaterialAsset")
    {
       ImportOptionsList.startGroup("Material");
-      ImportOptionsList.addField("CreateComposites", "Create Composite Textures", "bool", "", "1", "", %assetConfigObj);
+      ImportOptionsList.addField("CreateORMConfig", "Create ORM Map", "bool", "", "1", "", %assetConfigObj);
       ImportOptionsList.endGroup();
    }
    else if(%assetType $= "ImageAsset")

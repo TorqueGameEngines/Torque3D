@@ -86,6 +86,8 @@ function ImportAssetWindow::onWake(%this)
    %this.importer.targetModuleId = AssetImportTargetModule.getText();
    
    %this.refresh();
+   
+   toggleImportWindowVizBtn.setStateOn(EditorSettings.value("Assets/AutoImport"));
 }
 
 //
@@ -469,9 +471,7 @@ function ImportAssetWindow::doRefresh(%this)
    ImportAssetWindow.importer.processImportingAssets();
    //%this.processImportAssets();
    
-   //ImportAssetWindow.hasImportIssues = %this.validateAssets();
-   
-   ImportAssetWindow.importer.validateImportingAssets();
+   ImportAssetWindow.hasImportIssues = ImportAssetWindow.importer.hasImportIssues();
    
    AssetImportCtrl-->NewAssetsTree.clear();
    AssetImportCtrl-->NewAssetsTree.insertItem(0, "Importing Assets");
@@ -945,5 +945,14 @@ function ImportAssetModuleList::refresh(%this)
       %moduleName = getWord(%moduleList, %i);
       %this.add(%moduleName.ModuleId, %i);  
    }
+}
+//
+
+//
+function toggleImportWindowViz()
+{
+   %value = EditorSettings.value("Assets/AutoImport");
+   EditorSettings.setValue("Assets/AutoImport", !%value);
+  
 }
 //

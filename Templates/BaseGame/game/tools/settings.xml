@@ -35,7 +35,7 @@
         <Setting
             name="AssetImporDefaultConfig">DefaultImportConfig</Setting>
         <Setting
-            name="AutoImport">1</Setting>
+            name="AutoImport">0</Setting>
         <Group
             name="Browser">
             <Setting

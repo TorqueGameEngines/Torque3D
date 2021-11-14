@@ -105,10 +105,9 @@ struct Surface
 
 	inline void Update()
 	{
-		NdotV = abs(dot(N, V)) + 1e-5f; // avoid artifact
-   
-      linearRoughness = roughness * roughness;
-      linearRoughnessSq = linearRoughness * linearRoughness;
+		NdotV = clamp( dot(N, V), 0.0009765625f,0.9990234375f); // avoid artifact
+        linearRoughness = roughness * roughness;
+        linearRoughnessSq = linearRoughness * linearRoughness;
 
 		albedo = baseColor.rgb * (1.0f - metalness);
 		f0 = lerp(0.04f, baseColor.rgb, metalness);

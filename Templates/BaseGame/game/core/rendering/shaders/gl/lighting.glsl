@@ -106,7 +106,7 @@ struct Surface
 
 void updateSurface(inout Surface surface)
 {
-	surface.NdotV = abs(dot(surface.N, surface.V)) + 1e-5f; // avoid artifact
+	surface.NdotV = clamp( dot(surface.N, surface.V), 0.0009765625f,0.9990234375f);  //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
 
     surface.linearRoughness = surface.roughness * surface.roughness;
     surface.linearRoughnessSq = surface.linearRoughness * surface.linearRoughness;

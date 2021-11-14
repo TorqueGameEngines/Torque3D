@@ -290,7 +290,7 @@ bool RenderProbeMgr::onAdd()
    }
 
    String brdfTexturePath = GFXTextureManager::getBRDFTexturePath();
-   if (!mBRDFTexture.set(brdfTexturePath, &GFXTexturePersistentSRGBProfile, "BRDFTexture"))
+   if (!mBRDFTexture.set(brdfTexturePath, &GFXTexturePersistentProfile, "BRDFTexture"))
    {
       Con::errorf("RenderProbeMgr::onAdd: Failed to load BRDF Texture");
       return false;

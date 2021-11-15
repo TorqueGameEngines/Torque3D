@@ -57,24 +57,11 @@ function PE_ParticleEditor::guiSync( %this )
    %popup.sort();
    %popup.setSelected( %data );
          
-   %bitmap = %data.getTexture();//MaterialEditorGui.searchForTexture( %data.getName(), %data.getTexture() );
-   if( %bitmap !$= "" )
-   {
-      PE_ParticleEditor-->PEP_previewImage.setBitmap( %bitmap );
-      
-      %text = %data.getTextureAsset();
-      if(%text $= "")
-         %text = %bitmap;
-         
-      PE_ParticleEditor-->PEP_previewImageName.setText( %text );
-      PE_ParticleEditor-->PEP_previewImageName.tooltip = %bitmap;
-   }
-   else
-   {
-      PE_ParticleEditor-->PEP_previewImage.setBitmap( "" );
-      PE_ParticleEditor-->PEP_previewImageName.setText( "None" );
-      PE_ParticleEditor-->PEP_previewImageName.tooltip = "None";
-   }
+   %bitmap = %data.getTexture();
+   %bitmapText = %bitmap !$= "" && %bitmap !$= $MaterialEditor::emptyMaterialImage ? %data.getTextureAsset() : "None";
+   PE_ParticleEditor-->PEP_previewImageName.setText( %bitmapText );    
+   PE_ParticleEditor-->PEP_previewImageName.tooltip = %bitmapText;  
+   PE_ParticleEditor-->PEP_previewImage.setBitmap( getAssetPreviewImage(%bitmap) );
    
    PE_ParticleEditor-->PEP_inverseAlpha.setValue( %data.useInvAlpha );
    
@@ -395,6 +382,9 @@ function PE_ParticleEditor::loadNewParticle( %this, %particle )
       %particle = %particle.getId();
    else
       %particle = PEP_ParticleSelector.getSelected();
+      
+   if( !isObject( %particle ) )
+      return;
       
    PE_ParticleEditor.currParticle = %particle;
    

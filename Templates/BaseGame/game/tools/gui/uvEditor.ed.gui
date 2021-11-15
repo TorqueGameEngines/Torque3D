@@ -512,7 +512,8 @@ function UVEditor::showDialog( %this, %applyCallback, %obj, %uv)
       else if( %material.cubemap.cubeFace[0] !$= "" )
          %previewImage = %material.cubemap.cubeFace[0];
          }
-   UVEditor-->bitmapPreview.setBitmap(%previewImage);
+   
+   UVEditor-->bitmapPreview.setBitmap(getAssetPreviewImage(%previewImage));
    
    // Set up the color popup
    %popup = UVEditor-->colorPopup;

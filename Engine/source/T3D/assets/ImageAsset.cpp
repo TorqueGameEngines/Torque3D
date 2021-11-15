@@ -549,7 +549,20 @@ bool GuiInspectorTypeImageAssetPtr::renderTooltip(const Point2I& hoverPos, const
    if (!filename || !filename[0])
       return false;
 
-   GFXTexHandle texture(filename, &GFXStaticTextureSRGBProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__));
+   StringTableEntry previewFilename = filename;
+   if (Con::isFunction("getAssetPreviewImage"))
+   {
+      ConsoleValue consoleRet = Con::executef("getAssetPreviewImage", filename);
+      previewFilename = StringTable->insert(consoleRet.getString());
+
+      if (AssetDatabase.isDeclaredAsset(previewFilename))
+      {
+         ImageAsset* previewAsset = AssetDatabase.acquireAsset<ImageAsset>(previewFilename);
+         previewFilename = previewAsset->getImagePath();
+      }
+   }
+
+   GFXTexHandle texture(previewFilename, &GFXStaticTextureSRGBProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__));
    if (texture.isNull())
       return false;
 

@@ -1644,7 +1644,7 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
 void PostEffect::setTexture(U32 index, const GFXTexHandle& texHandle)
 {
    // Set the new texture name.
-   mTextureName[index] = "";
+   mTextureName[index] = StringTable->EmptyString();
    mTexture[index].free();
 
    // Skip empty stages or ones with variable or target names.

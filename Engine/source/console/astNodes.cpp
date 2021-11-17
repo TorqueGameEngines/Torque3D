@@ -57,11 +57,16 @@ namespace Compiler
 using namespace Compiler;
 
 FuncVars gEvalFuncVars;
+FuncVars gGlobalScopeFuncVars;
 FuncVars* gFuncVars = NULL;
 
 inline FuncVars* getFuncVars(S32 lineNumber)
 {
-   AssertISV(gFuncVars, avar("Attemping to use local variable in global scope. File: %s Line: %d", CodeBlock::smCurrentParser->getCurrentFile(), lineNumber));
+   if (gFuncVars == &gGlobalScopeFuncVars)
+   {
+      const char* str = avar("Attemping to use local variable in global scope. File: %s Line: %d", CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
+      scriptErrorHandler(str);
+   }
    return gFuncVars;
 }
 
@@ -1552,8 +1557,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
       tbl->add(fnName, nameSpace, varName);
    }
 
-   // In eval mode, global func vars are allowed.
-   gFuncVars = gIsEvalCompile ? &gEvalFuncVars : NULL;
+   gFuncVars = gIsEvalCompile ? &gEvalFuncVars : &gGlobalScopeFuncVars;
 
    return ip;
 }

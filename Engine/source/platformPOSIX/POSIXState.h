@@ -33,12 +33,8 @@
 
 typedef void (*LockFunc_t)(void);
 
-class DisplayPtrManager;
-
 class x86UNIXPlatformState
 {
-      friend class DisplayPtrManager;
-
    private:
       Point2I              mDesktopSize;
       Point2I              mWindowSize;
@@ -171,91 +167,3 @@ class x86UNIXPlatformState
 };
 
 extern x86UNIXPlatformState  * x86UNIXState;
-
-class DisplayPtrManager
-{
-      // static interface
-   private:
-      static bool sgDisplayLocked;
-      static LockFunc_t sgLockFunc;
-      static LockFunc_t sgUnlockFunc;
-
-      static bool lockDisplay() 
-      { 
-         if (!sgDisplayLocked && sgLockFunc) 
-         {
-            sgLockFunc(); 
-            sgDisplayLocked = true;
-            return true;
-         }
-         else 
-            return false;
-      }
-      static void unlockDisplay() 
-      {
-         if (sgDisplayLocked && sgUnlockFunc) 
-         {
-            sgUnlockFunc();
-            sgDisplayLocked = false;
-         }
-      }
-
-      //friend Display* x86UNIXPlatformState::getDisplayPointer();
-     
-   public:
-      static void setDisplayLockFunction(LockFunc_t lockFunc) 
-          { sgLockFunc = lockFunc; }
-      static void setDisplayUnlockFunction(LockFunc_t unlockFunc) 
-          { sgUnlockFunc = unlockFunc; }
-
-      // nonstatic interface
-   private:
-      bool mAcquiredLock; // true if this instance acquired the display lock
-      // (multiple instances of DisplayPtrManager can coexist, but only 
-      // the first to access the display pointer will be responsible for 
-      // acquiring and releasing the lock)
-      bool mOpenedDisplay; // true if this instance created a display pointer
-      // because the one in platform state was null.
-      Display* mDisplay;
-
-   private:
-      Display* openDisplay()
-      {
-         return mDisplay;
-      }
-
-      void closeDisplay()
-      {
-         if (mOpenedDisplay)
-         {
-
-         }
-      }
-   public:
-      DisplayPtrManager() 
-      {
-         mAcquiredLock = false;
-         mOpenedDisplay = false;
-         mDisplay = NULL;
-      }
-
-      ~DisplayPtrManager()
-      {
-         if (mAcquiredLock)
-         {
-            DisplayPtrManager::unlockDisplay();
-            mAcquiredLock = false;
-         }
-         closeDisplay();
-      }
-
-      Display* getDisplayPointer()
-      {
-         Display* display = x86UNIXState->getDisplayPointer();
-         if (display == NULL)
-            return openDisplay();
-
-         mAcquiredLock = DisplayPtrManager::lockDisplay();
-         return display;
-      }
-};

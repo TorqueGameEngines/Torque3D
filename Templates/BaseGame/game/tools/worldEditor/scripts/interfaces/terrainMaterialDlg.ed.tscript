@@ -296,7 +296,7 @@ function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
       %image = $TerrainMaterialEditor::emptyMaterialImage;
    }
 
-   %targetMap.setBitmap( %image );  
+   %targetMap.setBitmap( getAssetPreviewImage(%image) );  
 
    %targetMapName = %targetMap @ "AssetId";
    %targetMapName.setText(%imgAsset);
@@ -420,99 +420,35 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
 
       //
       %imgPath = %mat.getDiffuseMap();
-      if(%imgPath $= "")
-         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
-
-      %this-->texBaseMap.setBitmap( %imgPath );
-      
-      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
-      {
-         %imgAsset = %mat.getDiffuseMapAsset();
-         if(%imgAsset $= "")
-            %imgAsset = %imgPath;
-         %this-->diffuseMapAssetId.setText( %imgAsset );
-      }
-      else
-      {
-         %this-->diffuseMapAssetId.setText( "None" );  
-      }
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDiffuseMapAsset() : "None";
+      %this-->diffuseMapAssetId.setText( %imgPathText );
+      %this-->texBaseMap.setBitmap( getAssetPreviewImage(%imgPath) );
 
       //
       %imgPath = %mat.getNormalMap();
-      if(%imgPath $= "")
-         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
-
-      %this-->texNormalMap.setBitmap( %imgPath );
-      
-      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
-      {
-         %imgAsset = %mat.getNormalMapAsset();
-         if(%imgAsset $= "")
-            %imgAsset = %imgPath;
-         %this-->normalMapAssetId.setText( %imgAsset );
-      }
-      else
-      {
-         %this-->normalMapAssetId.setText( "None" );  
-      }
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getNormalMapAsset() : "None";
+      %this-->normalMapAssetId.setText( %imgPathText );
+      %this-->texNormalMap.setBitmap( getAssetPreviewImage(%imgPath) );
 
       //
       %imgPath = %mat.getORMConfigMap();
-      if(%imgPath $= "")
-         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
-
-      %this-->texORMConfigMap.setBitmap( %imgPath );
-      
-      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
-      {
-         %imgAsset = %mat.getORMConfigMapAsset();
-         if(%imgAsset $= "")
-            %imgAsset = %imgPath;
-         %this-->ORMMapAssetId.setText( %imgAsset );
-      }
-      else
-      {
-         %this-->ORMMapAssetId.setText( "None" );  
-      }
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getORMConfigMapAsset() : "None";
+      %this-->ORMMapAssetId.setText( %imgPathText );
+      %this-->texORMConfigMap.setBitmap( getAssetPreviewImage(%imgPath) );
        
       //
       %imgPath = %mat.getDetailMap();
-      if(%imgPath $= "")
-         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
-
-      %this-->texDetailMap.setBitmap( %imgPath );
-      
-      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
-      {
-         %imgAsset = %mat.getDetailMapAsset();
-         if(%imgAsset $= "")
-            %imgAsset = %imgPath;
-         %this-->detailMapAssetId.setText( %imgAsset );
-      }
-      else
-      {
-         %this-->detailMapAssetId.setText( "None" );  
-      }
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDetailMapAsset() : "None";
+      %this-->detailMapAssetId.setText( %imgPathText );
+      %this-->texDetailMap.setBitmap( getAssetPreviewImage(%imgPath) );
       
       //
       %imgPath = %mat.getMacroMap();
-      if(%imgPath $= "")
-         %imgPath = $TerrainMaterialEditor::emptyMaterialImage;
-
-      %this-->texMacroMap.setBitmap( %imgPath );
-
-      if(%imgPath !$= $TerrainMaterialEditor::emptyMaterialImage)
-      {
-         %imgAsset = %mat.getMacroMapAsset();
-         if(%imgAsset $= "")
-            %imgAsset = %imgPath;
-         %this-->macroMapAssetId.setText( %imgAsset );
-      }
-      else
-      {
-         %this-->macroMapAssetId.setText( "None" );  
-      }      
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getMacroMapAsset() : "None";
+      %this-->macroMapAssetId.setText( %imgPathText );
+      %this-->texMacroMap.setBitmap( getAssetPreviewImage(%imgPath) );
       
+      //
       %this-->detSizeCtrl.setText( %mat.detailSize );
       %this-->baseSizeCtrl.setText( %mat.diffuseSize );
       %this-->detStrengthCtrl.setText( %mat.detailStrength );

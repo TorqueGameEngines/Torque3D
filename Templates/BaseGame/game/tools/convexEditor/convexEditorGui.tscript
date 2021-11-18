@@ -38,7 +38,7 @@ function ConvexEditorGui::onWake( %this )
 		   %mat = %matName;
 		}
 		
-		ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(%mat.getDiffuseMap(0));
+		ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap( getAssetPreviewImage(%mat.getDiffuseMap(0)));
 		
 		ConvexEditorOptionsWindow.activeMaterial = %mat;
 	}
@@ -76,7 +76,7 @@ function ConvexEditorGui::onSelectionChanged( %this, %shape, %face )
 
    ConvexEditorOptionsWindow-->defMatPreviewBtn.setText("");
    %shapeMat = %shape.getMaterial();
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(%shapeMat.getDiffuseMap(0));
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(getAssetPreviewImage(%shapeMat.getDiffuseMap(0)));
 
    ConvexEditorOptionsWindow.activeShape = %shape;
       
@@ -175,7 +175,7 @@ function ConvexEditorMaterialBtn::gotMaterialName(%this, %name)
       }
    }
 
-   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(%diffusemap);
+   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%diffusemap));
 
    ConvexEditorOptionsWindow.activeMaterial = %materialAsset.materialDefinitionName;
 }
@@ -191,7 +191,7 @@ function ConvexEditorMaterialLiftBtn::onClick(%this)
 {
    %mat = ConvexEditorGui.getSelectedFaceMaterial();
    ConvexEditorOptionsWindow.activeMaterial = %mat;
-   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(%mat.getDiffuseMap(0));
+   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%mat.getDiffuseMap(0)));
 }
 
 function ConvexEditorMaterialResetBtn::onClick(%this)
@@ -240,7 +240,7 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
       }
    }
 
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(%diffusemap);
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(getAssetPreviewImage(%diffusemap));
 
    ConvexEditorOptionsWindow.activeShape.setMaterial(%name);
 

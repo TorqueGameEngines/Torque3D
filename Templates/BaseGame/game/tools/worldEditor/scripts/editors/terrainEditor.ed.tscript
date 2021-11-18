@@ -62,7 +62,7 @@ function TerrainEditor::setPaintMaterial( %this, %matIndex, %terrainMat )
    ETerrainMaterialSelected.selectedMatIndex = %matIndex;
    ETerrainMaterialSelected.selectedMat = %terrainMat;
    
-   ETerrainMaterialSelected.setBitmap(%terrainMat.getDiffuseMap());
+   ETerrainMaterialSelected.setBitmap(getAssetPreviewImage(%terrainMat.getDiffuseMap()));
 
    ETerrainMaterialSelectedEdit.Visible = isObject(%terrainMat);
    TerrainTextureText.text = %terrainMat.getInternalName();
@@ -141,7 +141,7 @@ function EPainter::updateLayers( %this, %matIndex )
       };
 
       %ctrl.setText( %matInternalName );
-      %ctrl.setBitmap( %mat.getDiffuseMap() );
+      %ctrl.setBitmap( getAssetPreviewImage(%mat.getDiffuseMap()) );
 
       %tooltip = %matInternalName;
       if(%i < 9)

@@ -25,7 +25,7 @@ function AssetBrowser::buildPopupMenus(%this)
 
          item[ 0 ] = "Edit Asset" TAB "" TAB "AssetBrowser.editAsset();";
          item[ 1 ] = "Rename Asset" TAB "" TAB "AssetBrowser.renameAsset();";
-         item[ 2 ] = "Refresh Asset" TAB "" TAB "AssetBrowser.refreshAsset();";
+         item[ 2 ] = "Reload Asset" TAB "" TAB "AssetBrowser.refreshAsset();";
          item[ 3 ] = "Asset Properties" TAB "" TAB "AssetBrowser.editAssetInfo();";
          item[ 4 ] = "-";
          Item[ 5 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
@@ -50,7 +50,7 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 0 ] = "Edit Level" TAB "" TAB "AssetBrowser.editAsset();";
          item[ 1 ] = "Append as Sublevel" TAB "" TAB "AssetBrowser.appendSublevel();";
          item[ 2 ] = "Rename Asset" TAB "" TAB "AssetBrowser.renameAsset();";
-         item[ 3 ] = "Refresh Asset" TAB "" TAB "AssetBrowser.refreshAsset();";
+         item[ 3 ] = "Reload Asset" TAB "" TAB "AssetBrowser.refreshAsset();";
          item[ 4 ] = "Asset Properties" TAB "" TAB "AssetBrowser.editAssetInfo();";
          item[ 5 ] = "-";
          Item[ 6 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";

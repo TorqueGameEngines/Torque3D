@@ -274,6 +274,7 @@ static Vector< String > sInstantGroupStack( __FILE__, __LINE__ );
 static DataChunker consoleLogChunker;
 static Vector<ConsoleLogEntry> consoleLog(__FILE__, __LINE__);
 static bool consoleLogLocked;
+bool scriptWarningsAsAsserts = true;
 static bool logBufferEnabled=true;
 static S32 printLevel = 10;
 static FileStream consoleLogFile;
@@ -353,7 +354,7 @@ void init()
    ConsoleConstructor::setup();
 
    // Set up the parser(s)
-   CON_ADD_PARSER(CMD, TORQUE_SCRIPT_EXTENSION,   true);   // TorqueScript
+   CON_ADD_PARSER(CMD, (char*)TORQUE_SCRIPT_EXTENSION, true);   // TorqueScript
 
    // Setup the console types.
    ConsoleBaseType::initialize();
@@ -377,6 +378,7 @@ void init()
    addVariable("Con::objectCopyFailures", TypeS32, &gObjectCopyFailures, "If greater than zero then it counts the number of object creation "
       "failures based on a missing copy object and does not report an error..\n"
       "@ingroup Console\n");
+   addVariable("Con::scriptWarningsAsAsserts", TypeBool, &scriptWarningsAsAsserts, "If true, script warnings (outside of syntax errors) will be treated as fatal asserts.");
 
    // Current script file name and root
    addVariable( "Con::File", TypeString, &gCurrentFile, "The currently executing script file.\n"

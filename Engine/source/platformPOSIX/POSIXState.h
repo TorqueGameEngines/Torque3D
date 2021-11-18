@@ -54,13 +54,7 @@ class x86UNIXPlatformState
       bool                 mCDAudioEnabled;
       bool                 mDSleep;
       bool                 mUseRedirect;
-
-      // Access to the display* needs to be controlled because the SDL event
-      // loop runs in a separate thread.  If you need the display pointer,
-      // use the DisplayPtrManager class.  See the clipboard functions in 
-      // x86unixinput.cc for an example.
-      //Display *getDisplayPointer() { return mDisplay; }
-
+      
    public:
       U32      currentTime;
 

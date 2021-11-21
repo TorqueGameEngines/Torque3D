@@ -1628,9 +1628,9 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
       ICallMethod *com = dynamic_cast<ICallMethod *>(object);
       if(com)
       {
-         gCallStack.pushFrame(0);
+         ConsoleStackFrameSaver saver;
+         saver.save();
          com->callMethodArgList(argc, argv, false);
-         gCallStack.popFrame();
       }
    }
 

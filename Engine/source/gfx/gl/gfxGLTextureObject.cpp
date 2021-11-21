@@ -162,8 +162,8 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB)
 	   return false;
 
-   AssertFatal(bmp->getWidth() == getWidth(), "GFXGLTextureObject::copyToBmp - invalid size");
-   AssertFatal(bmp->getHeight() == getHeight(), "GFXGLTextureObject::copyToBmp - invalid size");
+   AssertFatal(bmp->getWidth() == getWidth(), avar("GFXGLTextureObject::copyToBmp - Width mismatch: %i vs %i", bmp->getWidth(), getWidth()));
+   AssertFatal(bmp->getHeight() == getHeight(), avar("GFXGLTextureObject::copyToBmp - Height mismatch: %i vs %i", bmp->getHeight(), getHeight()));
 
    PROFILE_SCOPE(GFXGLTextureObject_copyToBmp);
 

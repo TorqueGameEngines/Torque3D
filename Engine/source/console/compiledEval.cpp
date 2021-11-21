@@ -696,7 +696,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       {
          // argc is the local count for eval
          gEvalState.pushFrame(NULL, NULL, argc);
-         gCallStack.pushFrame(0);
          popFrame = true;
       }
       else

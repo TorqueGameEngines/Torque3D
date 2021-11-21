@@ -20,8 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef _PLATFORMX86UNIX_H_
-#define _PLATFORMX86UNIX_H_
+#pragma once
 
 #ifndef _PLATFORM_H_
 #include "platform/platform.h"
@@ -66,4 +65,3 @@ extern "C"
    // x86UNIX doesn't have a way to automatically get the executable file name
    void setExePathName(const char* exePathName);
 }
-#endif

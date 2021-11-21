@@ -20,9 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "platformX86UNIX/platformX86UNIX.h"
-#include "platformX86UNIX/x86UNIXState.h"
-#include "platformX86UNIX/x86UNIXStdConsole.h"
+#ifndef __APPLE__
+
+#include "platformPOSIX/platformPOSIX.h"
+#include "platformPOSIX/POSIXState.h"
+#include "platformPOSIX/POSIXStdConsole.h"
 #include "platform/platformInput.h"
 #include "windowManager/platformWindow.h"
 #include "windowManager/platformWindowMgr.h"
@@ -130,7 +132,7 @@ void ProcessControlInit()
 
    // we're not interested in the exit status of child processes, so this 
    // prevents zombies from accumulating.
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__APPLE__)
    signal(SIGCHLD, SIG_IGN);
 #else
    signal(SIGCLD, SIG_IGN);
@@ -232,3 +234,4 @@ void Platform::restartInstance()
 */
    exit(0);
 }
+#endif

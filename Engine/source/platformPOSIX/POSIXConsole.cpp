@@ -20,9 +20,9 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "platformX86UNIX/platformX86UNIX.h"
-#include "platformX86UNIX/x86UNIXStdConsole.h"
-#include "platformX86UNIX/x86UNIXUtils.h"
+#include "platformPOSIX/platformPOSIX.h"
+#include "platformPOSIX/POSIXStdConsole.h"
+#include "platformPOSIX/POSIXUtils.h"
 #include "platform/input/event.h"
 #include "platform/platform.h"
 #include "core/util/rawData.h"

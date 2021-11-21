@@ -20,13 +20,15 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#ifndef __APPLE__
+
 #include "platform/platform.h"
 #include "platform/platformInput.h"
 #include "console/console.h"
 
-#include "platformX86UNIX/platformX86UNIX.h"
-#include "platformX86UNIX/x86UNIXStdConsole.h"
-#include "platformX86UNIX/x86UNIXState.h"
+#include "platformPOSIX/platformPOSIX.h"
+#include "platformPOSIX/POSIXStdConsole.h"
+#include "platformPOSIX/POSIXState.h"
 
 extern void InitWindowingSystem();
 
@@ -101,4 +103,5 @@ int main(int argc, const char **argv)
 {
    return TorqueMain(argc, argv);
 }
+#endif
 #endif

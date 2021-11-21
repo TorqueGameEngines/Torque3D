@@ -20,39 +20,32 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef _X86UNIXOGLVIDEO_H_
-#define _X86UNIXOGLVIDEO_H_
+#ifndef __APPLE__
 
-#ifndef _PLATFORMVIDEO_H_
-#include "platform/platformVideo.h"
-#endif
+#include "platform/platform.h"
+#include "platformPOSIX/platformPOSIX.h"
+#include "console/console.h"
+#include "core/stringTable.h"
+#include "core/strings/stringFunctions.h"
+#include <math.h>
 
-class OpenGLDevice : public DisplayDevice
+#include "platform/platformCPUCount.h"
+#include <unistd.h>
+
+Platform::SystemInfo_struct Platform::SystemInfo;
+
+void Processor::init() {}
+
+// TODO LINUX CPUInfo::CPUCount better support
+namespace CPUInfo
 {
-      static bool smCanSwitchBitDepth;
+    EConfig CPUCount(U32& TotAvailLogical, U32& TotAvailCore, U32& PhysicalNum)
+    {
+        PhysicalNum = TotAvailCore = 0;
+        TotAvailLogical = (int)sysconf(_SC_NPROCESSORS_ONLN);
 
-      bool mRestoreGamma;
-      U16  mOriginalRamp[256*3];
+       return CONFIG_SingleCoreHTDisabled;
+    }
+}; // namespace CPUInfo 
 
-      void addResolution(S32 width, S32 height, bool check=true);
-
-   public:
-      OpenGLDevice();
-      virtual ~OpenGLDevice();
-
-      void initDevice();
-      bool activate( U32 width, U32 height, U32 bpp, bool fullScreen );
-      void shutdown();
-      void destroy();
-      bool setScreenMode( U32 width, U32 height, U32 bpp, bool fullScreen, bool forceIt = false, bool repaint = true );
-      void swapBuffers();
-      const char* getDriverInfo();
-      bool getGammaCorrection(F32 &g);
-      bool setGammaCorrection(F32 g);
-      bool setVerticalSync( bool on );
-      void loadResolutions();
-
-      static DisplayDevice* create();
-};
-
-#endif // _H_X86UNIXOGLVIDEO
+#endif

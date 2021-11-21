@@ -20,7 +20,9 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#ifndef __APPLE__
+
+#include "platformPOSIX/platformPOSIX.h"
 #include "platform/platformTimer.h"
 #include "time.h"
 #include <errno.h>
@@ -158,4 +160,4 @@ void Platform::sleep(U32 ms)
 	// note: this will overflow if you want to sleep for more than 49 days. just so ye know.
 	usleep( ms * 1000 );
 }
-	    
+#endif

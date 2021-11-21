@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "platformX86UNIX/platformX86UNIX.h"
+#include "platformPOSIX/platformPOSIX.h"
 #include <stdlib.h>
 #include <mm_malloc.h>
 

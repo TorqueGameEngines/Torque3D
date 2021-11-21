@@ -20,28 +20,51 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "platform/platform.h"
-#include "platformX86UNIX/platformX86UNIX.h"
-#include "console/console.h"
-#include "core/stringTable.h"
+#include "platformPOSIX/platformPOSIX.h"
 #include "core/strings/stringFunctions.h"
-#include <math.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <stdlib.h>
 
-#include "platform/platformCPUCount.h"
-#include <unistd.h>
 
-Platform::SystemInfo_struct Platform::SystemInfo;
-
-void Processor::init() {}
-
-// TODO LINUX CPUInfo::CPUCount better support
-namespace CPUInfo
+const char *stristr(const char *szStringToBeSearched, const char *szSubstringToSearchFor)
 {
-    EConfig CPUCount(U32& TotAvailLogical, U32& TotAvailCore, U32& PhysicalNum)
-    {
-        PhysicalNum = TotAvailCore = 0;
-        TotAvailLogical = (int)sysconf(_SC_NPROCESSORS_ONLN);
+   const char *pPos = NULL;
+   char *szCopy1 = NULL;
+   char *szCopy2 = NULL;
 
-       return CONFIG_SingleCoreHTDisabled;
-    }
-}; // namespace CPUInfo 
+   // verify parameters
+   if ( szStringToBeSearched == NULL ||
+        szSubstringToSearchFor == NULL )
+   {
+      return szStringToBeSearched;
+   }
+
+   // empty substring - return input (consistent with strstr)
+   if (strlen(szSubstringToSearchFor) == 0 ) {
+      return szStringToBeSearched;
+   }
+
+   szCopy1 = dStrlwr(strdup(szStringToBeSearched));
+   szCopy2 = dStrlwr(strdup(szSubstringToSearchFor));
+
+   if ( szCopy1 == NULL || szCopy2 == NULL  ) {
+      // another option is to raise an exception here
+      free((void*)szCopy1);
+      free((void*)szCopy2);
+      return NULL;
+   }
+
+   pPos = strstr((const char*)szCopy1, (const char*)szCopy2);
+
+   if ( pPos != NULL ) {
+      // map to the original string
+      pPos = szStringToBeSearched + (pPos - szCopy1);
+   }
+
+   free((void*)szCopy1);
+   free((void*)szCopy2);
+
+   return pPos;
+} // stristr(...)
+

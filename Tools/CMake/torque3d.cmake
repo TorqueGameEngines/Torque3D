@@ -969,3 +969,20 @@ if(TORQUE_TEMPLATE)
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeletePrefs.bat"      DESTINATION "${TORQUE_APP_DIR}")
     endif()
 endif()
+
+###############################################################################
+# Properties folder
+###############################################################################
+# we only need to add libs that we add via add_subdirectory command, basics.cmake
+# will take care of the other source libs added via addLib 
+
+if(TORQUE_SFX_OPENAL AND WIN32)
+    set_target_properties(OpenAL PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+     #why is openal adding these two?
+    set_target_properties(common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    set_target_properties(ex-common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+endif()
+
+if(TORQUE_SDL)
+    set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+endif()

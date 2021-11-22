@@ -340,6 +340,9 @@ macro(finishLibrary)
     #endforeach()
 
     _postTargetProcess()
+
+    #set the folder property name
+    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
 endmacro()
 
 # macro to add an executable

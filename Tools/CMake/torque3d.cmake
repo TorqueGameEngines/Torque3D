@@ -984,5 +984,11 @@ if(TORQUE_SFX_OPENAL AND WIN32)
 endif()
 
 if(TORQUE_SDL)
-    set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    # Apple config has slightly different target names
+    if (APPLE)
+        set_target_properties(SDL2main PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+        set_target_properties(SDL2-static PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    else()
+        set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    endif()
 endif()

@@ -47,7 +47,6 @@ namespace
       FEATUREMGR->registerFeature( MFT_TerrainNormalMap, new TerrainNormalMapFeatGLSL );
       FEATUREMGR->registerFeature( MFT_TerrainMacroMap, new NamedFeatureGLSL("TerrainMacroMap Deprecated")); // new TerrainMacroMapFeatGLSL);
       FEATUREMGR->registerFeature( MFT_TerrainLightMap, new TerrainLightMapFeatGLSL );
-      FEATUREMGR->registerFeature( MFT_TerrainSideProject, new NamedFeatureGLSL( "Terrain Side Projection" ) );
       FEATUREMGR->registerFeature(MFT_TerrainHeightBlend, new TerrainHeightMapBlendGLSL);
       FEATUREMGR->registerFeature( MFT_TerrainORMMap, new TerrainORMMapFeatGLSL );
       FEATUREMGR->registerFeature( MFT_DeferredTerrainBlankInfoMap, new TerrainBlankInfoMapFeatGLSL );
@@ -256,18 +255,7 @@ void TerrainBaseMapFeatGLSL::processVert( Vector<ShaderComponent*> &componentLis
    outTex->setType( "vec3" );
    meta->addStatement( new GenOp( "   @.xy = @.xy;\r\n", outTex, inTex ) );
 
-   // If this shader has a side projected layer then we 
-   // pass the dot product between the +Y and the normal
-   // thru outTexCoord.z for use in blending the textures.
-   if ( fd.features.hasFeature( MFT_TerrainSideProject ) )
-   {
-      Var *inNormal = (Var*)LangElement::find( "normal" );
-      meta->addStatement( 
-         new GenOp( "   @.z = pow( abs( dot( normalize( vec3( @.x, @.y, 0 ) ), vec3( 0, 1, 0 ) ) ), 10.0 );\r\n", 
-            outTex, inNormal, inNormal ) );
-   }
-   else
-      meta->addStatement( new GenOp( "   @.z = 0;\r\n", outTex ) );
+   meta->addStatement( new GenOp( "   @.z = 0;\r\n", outTex ) );
 
    // HACK: This is sort of lazy... we generate the tanget
    // vector here so that we're sure it exists in the parallax
@@ -558,18 +546,8 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
    // Get the detail texture.
    Var *detailMap = _getDetailMapSampler();
 
-   // If we had a parallax feature... then factor in the parallax
-  // amount so that it fades out with the layer blending.
-   if (fd.features.hasFeature(MFT_TerrainSideProject, detailIndex))
-   {
-	   meta->addStatement(new GenOp("   @ = ( lerp( tex2D( @, vec3(@.yz, @.x) ), tex2D( @, vec3(@.xz, @.x) ), @.z ) * 2.0 ) - 1.0;\r\n",
-		   detailColor, detailMap, inDet, new IndexOp(detailInfo, detailIndex), detailMap, inDet, new IndexOp(detailInfo, detailIndex), inTex));
-   }
-   else
-   {
-	   meta->addStatement(new GenOp("   @ = ( tex2D( @, vec3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
+   meta->addStatement(new GenOp("   @ = ( tex2D( @, vec3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
 		   detailColor, detailMap, inDet, new IndexOp(detailInfo, detailIndex)));
-   }
 
    meta->addStatement(new GenOp("   @ *= @.y * @.w;\r\n",
       detailColor, new IndexOp(detailInfo, detailIndex), inDet));
@@ -825,23 +803,8 @@ void TerrainMacroMapFeatGLSL::processPix(   Vector<ShaderComponent*> &componentL
 
    meta->addStatement( new GenOp( "   {\r\n" ) );
 
-   // Note that we're doing the standard greyscale detail 
-   // map technique here which can darken and lighten the 
-   // diffuse texture.
-   //
-   // We take two color samples and lerp between them for
-   // side projection layers... else a single sample.
-   //
-   if ( fd.features.hasFeature( MFT_TerrainSideProject, detailIndex ) )
-   {
-      meta->addStatement( new GenOp( "      @ = ( lerp( tex2D( @, @.yz ), tex2D( @, @.xz ), @.z ) * 2.0 ) - 1.0;\r\n", 
-                                                detailColor, detailMap, inDet, detailMap, inDet, inTex ) );
-   }
-   else
-   {
-      meta->addStatement( new GenOp( "      @ = ( tex2D( @, @.xy ) * 2.0 ) - 1.0;\r\n", 
+   meta->addStatement( new GenOp( "      @ = ( tex2D( @, @.xy ) * 2.0 ) - 1.0;\r\n", 
                                        detailColor, detailMap, inDet ) );
-   }
 
    meta->addStatement( new GenOp( "      @ *= @.y * @.w;\r\n",
                                     detailColor, detailInfo, inDet ) );
@@ -933,18 +896,7 @@ void TerrainNormalMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
    Var *inTex = getVertTexCoord( "texCoord" );
    Var* detailInfo = _getDetailIdStrengthParallax();
 
-   // Sample the normal map.
-   //
-   // We take two normal samples and lerp between them for
-   // side projection layers... else a single sample.
-   LangElement *texOp;
-   if ( fd.features.hasFeature( MFT_TerrainSideProject, normalIndex ) )
-   {
-      texOp = new GenOp( "lerp( tex2D( @, vec3(@.yz, @.x) ), tex2D( @, vec3(@.xz, @.x) ), @.z )",
-         normalMap, inDet, new IndexOp(detailInfo, normalIndex), normalMap, inDet, inTex, new IndexOp(detailInfo, normalIndex));
-   }
-   else
-      texOp = new GenOp( String::ToString("tex2D(@, vec3(@.xy, @.x))", normalIndex), normalMap, inDet, new IndexOp(detailInfo, normalIndex));
+   LangElement *texOp;texOp = new GenOp( String::ToString("tex2D(@, vec3(@.xy, @.x))", normalIndex), normalMap, inDet, new IndexOp(detailInfo, normalIndex));
 
    // create bump normal
    Var *bumpNorm = new Var;
@@ -1173,18 +1125,8 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
 	const S32 compositeIndex = getProcessIndex();
 	Var *ormConfigMap = _getOrmMapSampler();
 	// Sample the normal map.
-	//
-	// We take two normal samples and lerp between them for
-	// side projection layers... else a single sample.
 	LangElement *texOp;
-	
-	if (fd.features.hasFeature(MFT_TerrainSideProject, compositeIndex))
-	{
-		texOp = new GenOp("lerp( tex2D( @, vec3(@.yz, @.x) ), tex2D( @, vec3(@.xz, @.x) ), @.z )",
-			ormConfigMap, inDet, new IndexOp(detailInfo, compositeIndex), ormConfigMap, inDet, new IndexOp(detailInfo, compositeIndex), inTex);
-	}
-	else
-		texOp = new GenOp("tex2D(@, vec3(@.xy, @.x))", ormConfigMap, inDet, new IndexOp(detailInfo, compositeIndex));
+   texOp = new GenOp("tex2D(@, vec3(@.xy, @.x))", ormConfigMap, inDet, new IndexOp(detailInfo, compositeIndex));
 
    MultiLine* meta = new MultiLine;
    // search for material var

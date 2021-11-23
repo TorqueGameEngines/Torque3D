@@ -75,12 +75,6 @@ protected:
    bool mIsSRGB;
    bool mInvertRoughness;
 
-   /// Normally the detail is projected on to the xy 
-   /// coordinates of the terrain.  If this flag is true
-   /// then this detail is projected along the xz and yz
-   /// planes.
-   bool mSideProjection;
-
    DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, onMacroMapChanged, GFXStaticTextureProfile);
    DECLARE_ASSET_SETGET(TerrainMaterial, MacroMap);
    F32 mMacroSize;
@@ -129,8 +123,6 @@ public:
    F32 getMacroDistance() const { return mMacroDistance; }
 
    F32 getMacroStrength() const { return mMacroStrength; }
-
-   bool useSideProjection() const { return mSideProjection; }
 
    F32 getParallaxScale() const { return mParallaxScale; }
 

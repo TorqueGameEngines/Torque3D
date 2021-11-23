@@ -423,14 +423,10 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
             // Do we need and can we do parallax mapping?
             if (!disableParallaxMaps &&
-               mat->getParallaxScale() > 0.0f &&
-               !mat->useSideProjection())
+               mat->getParallaxScale() > 0.0f)
                features.addFeature(MFT_TerrainParallaxMap, featureIndex);
          }
 
-         // Is this layer got side projection?
-         if (mat->useSideProjection())
-            features.addFeature(MFT_TerrainSideProject, featureIndex);
 
          featureIndex++;
       }

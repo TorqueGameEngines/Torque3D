@@ -48,7 +48,6 @@ namespace
       FEATUREMGR->registerFeature( MFT_TerrainNormalMap, new TerrainNormalMapFeatHLSL );
       FEATUREMGR->registerFeature( MFT_TerrainMacroMap, new NamedFeatureHLSL("TerrainMacroMap Deprecated")); // new TerrainMacroMapFeatHLSL);
       FEATUREMGR->registerFeature( MFT_TerrainLightMap, new TerrainLightMapFeatHLSL );
-      FEATUREMGR->registerFeature( MFT_TerrainSideProject, new NamedFeatureHLSL( "Terrain Side Projection" ) );
       FEATUREMGR->registerFeature( MFT_TerrainHeightBlend, new TerrainHeightMapBlendHLSL );
       FEATUREMGR->registerFeature( MFT_TerrainORMMap, new TerrainORMMapFeatHLSL );
       FEATUREMGR->registerFeature( MFT_DeferredTerrainBlankInfoMap, new TerrainBlankInfoMapFeatHLSL );
@@ -310,18 +309,7 @@ void TerrainBaseMapFeatHLSL::processVert( Vector<ShaderComponent*> &componentLis
    outTex->setType( "float3" );
    meta->addStatement( new GenOp( "   @.xy = @.xy;\r\n", outTex, inTex ) );
 
-   // If this shader has a side projected layer then we 
-   // pass the dot product between the +Y and the normal
-   // thru outTexCoord.z for use in blending the textures.
-   if ( fd.features.hasFeature( MFT_TerrainSideProject ) )
-   {
-      Var *inNormal = (Var*)LangElement::find( "normal" );
-      meta->addStatement( 
-         new GenOp( "   @.z = pow( abs( dot( normalize( float3( @.x, @.y, 0 ) ), float3( 0, 1, 0 ) ) ), 10.0 );\r\n", 
-            outTex, inNormal, inNormal ) );
-   }
-   else
-      meta->addStatement( new GenOp( "   @.z = 0;\r\n", outTex ) );
+   meta->addStatement( new GenOp( "   @.z = 0;\r\n", outTex ) );
 
    // HACK: This is sort of lazy... we generate the tanget
    // vector here so that we're sure it exists in the parallax
@@ -621,16 +609,8 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    Var* detailMapArray = _getDetailMapArray();
    Var* detailMapSampler = _getDetailMapSampler();
 
-   if (fd.features.hasFeature(MFT_TerrainSideProject, detailIndex))
-   {
-      meta->addStatement(new GenOp("   @ = ( lerp( @.Sample( @, float3(@.yz, @.x) ), @.Sample( @, float3(@.xz, @.x) ), @.z ) * 2.0 ) - 1.0;\r\n",
-         detailColor, detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex), detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex), inTex));
-   }
-   else
-   {
-      meta->addStatement(new GenOp("   @ = ( @.Sample( @, float3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
+   meta->addStatement(new GenOp("   @ = ( @.Sample( @, float3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
          detailColor, detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex)));
-   }
 
    meta->addStatement(new GenOp("   @ *= @.y * @.w;\r\n",
       detailColor, new IndexOp(detailInfo, detailIndex), inDet));
@@ -896,20 +876,8 @@ void TerrainMacroMapFeatHLSL::processPix(   Vector<ShaderComponent*> &componentL
    // Note that we're doing the standard greyscale detail 
    // map technique here which can darken and lighten the 
    // diffuse texture.
-   //
-   // We take two color samples and lerp between them for
-   // side projection layers... else a single sample.
-   //
-   if (fd.features.hasFeature(MFT_TerrainSideProject, detailIndex))
-   {
-      meta->addStatement(new GenOp("   @ = ( lerp( @.Sample( @, float3(@.yz, @.x) ), @.Sample( @, float3(@.xz, @.x) ), @.z ) * 2.0 ) - 1.0;\r\n",
-         detailColor, detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex), detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex), inTex));
-   }
-   else
-   {
-      meta->addStatement(new GenOp("   @ = ( @.Sample( @, float3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
+   meta->addStatement(new GenOp("   @ = ( @.Sample( @, float3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
          detailColor, detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex)));
-   }
 
    meta->addStatement( new GenOp( "   @ *= @.y * @.w;\r\n",
                                     detailColor, new IndexOp(detailInfo, detailIndex), inDet ) );
@@ -1005,13 +973,7 @@ void TerrainNormalMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    Var* normalMapSampler = _getNormalMapSampler();
    Var* normalMapArray = _getNormalMapArray();
 
-   if (fd.features.hasFeature(MFT_TerrainSideProject, normalIndex))
-   {
-      texOp = new GenOp("lerp( @.Sample( @, float3(@.yz, @.x) ), @.Sample( @, float3(@.xz, @.x) ), @.z )",
-         normalMapArray, normalMapSampler, inDet, new IndexOp(detailInfo, normalIndex), normalMapArray, normalMapSampler, inDet, new IndexOp(detailInfo, normalIndex), inTex);
-   }
-   else
-      texOp = new GenOp("@.Sample(@, float3(@.xy, @.x))", normalMapArray, normalMapSampler, inDet, new IndexOp(detailInfo, normalIndex));
+   texOp = new GenOp("@.Sample(@, float3(@.xy, @.x))", normalMapArray, normalMapSampler, inDet, new IndexOp(detailInfo, normalIndex));
 
    // create bump normal
    Var* bumpNorm = new Var;
@@ -1249,13 +1211,7 @@ void TerrainORMMapFeatHLSL::processPix(Vector<ShaderComponent*> &componentList,
 
    Var* ormMapArray = _getOrmMapArray();
    Var* ormMapSampler = _getOrmMapSampler();
-   if (fd.features.hasFeature(MFT_TerrainSideProject, compositeIndex))
-   {
-      texOp = new GenOp("lerp( @.Sample( @, float3(@.yz, @.x) ), @.Sample( @, float3(@.xz, @.x) ), @.z )",
-         ormMapArray, ormMapSampler, inDet, new IndexOp(detailInfo, compositeIndex), ormMapArray, ormMapSampler, inDet, new IndexOp(detailInfo, compositeIndex), inTex);
-   }
-   else
-      texOp = new GenOp("@.Sample(@, float3(@.xy, @.x))", ormMapArray, ormMapSampler, inDet, new IndexOp(detailInfo, compositeIndex));
+   texOp = new GenOp("@.Sample(@, float3(@.xy, @.x))", ormMapArray, ormMapSampler, inDet, new IndexOp(detailInfo, compositeIndex));
 
    MultiLine* meta = new MultiLine;
    // search for material var

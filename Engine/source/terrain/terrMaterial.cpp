@@ -63,7 +63,6 @@ TerrainMaterial::TerrainMaterial()
       mDetailSize( 5.0f ),
       mDetailStrength( 1.0f ),
       mDetailDistance( 50.0f ),
-      mSideProjection( false ),
       mMacroSize( 200.0f ),
       mMacroStrength( 0.7f ),
       mMacroDistance( 500.0f ),
@@ -103,9 +102,6 @@ void TerrainMaterial::initPersistFields()
    addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );
    addField( "detailStrength", TypeF32, Offset( mDetailStrength, TerrainMaterial ), "Exponentially sharpens or lightens the detail map rendering on the material" );
    addField( "detailDistance", TypeF32, Offset( mDetailDistance, TerrainMaterial ), "Changes how far camera can see the detail map rendering on the material" );
-
-   addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
-	   "slopes instead of projected downwards");
 
    INITPERSISTFIELD_IMAGEASSET(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
    addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");

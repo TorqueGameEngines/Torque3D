@@ -454,7 +454,8 @@ bool SFXDescription::onAdd()
    const char* channelValue = getDataField( sChannel, NULL );
    if( channelValue && channelValue[ 0 ] )
    {
-      const char* group = Con::evaluatef( "return sfxOldChannelToGroup( %s );", channelValue );
+      ConsoleValue result = Con::evaluatef( "return sfxOldChannelToGroup( %s );", channelValue );
+      const char* group = result.getString();
       if( !Sim::findObject( group, mSourceGroup ) )
          Con::errorf( "SFXDescription::onAdd - could not resolve channel '%s' to SFXSource", channelValue );
    }

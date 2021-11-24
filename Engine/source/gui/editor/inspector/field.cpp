@@ -318,7 +318,8 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          {
             char buffer[ 2048 ];
             expandEscape( buffer, newValue );
-            newValue = (const char*)Con::evaluatef( "$f = \"%s\"; return ( %s );", oldValue.c_str(), buffer );
+            ConsoleValue result = Con::evaluatef("$f = \"%s\"; return ( %s );", oldValue.c_str(), buffer);
+            newValue = result.getString();
             Con::evaluatef("$f=0;");
          }
          else if(    type == TypeS32Vector
@@ -354,13 +355,13 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
                char buffer[ 2048 ];
                expandEscape( buffer, newComponentExpr );
 
-               const char* newComponentVal = Con::evaluatef( "$f = \"%s\"; $v = \"%s\"; return ( %s );",
-                  oldComponentVal, oldValue.c_str(), buffer );
+               ConsoleValue result = Con::evaluatef("$f = \"%s\"; $v = \"%s\"; return ( %s );",
+                  oldComponentVal, oldValue.c_str(), buffer);
                Con::evaluatef("$f=0;$v=0;");
 
                if( !isFirst )
                   strNew.append( ' ' );
-               strNew.append( newComponentVal );
+               strNew.append( result.getString() );
                
                isFirst = false;
             }

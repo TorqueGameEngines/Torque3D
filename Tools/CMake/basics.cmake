@@ -496,3 +496,26 @@ if(MSVC)
         SET("CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONF}" "${projectOutDir}")
     ENDFOREACH()
 endif()
+
+###############################################################################
+# Properties folder
+###############################################################################
+# we only need to add libs that we add via add_subdirectory command, basics.cmake
+# will take care of the other source libs added via addLib 
+
+if(TORQUE_SFX_OPENAL AND WIN32)
+    set_target_properties(OpenAL PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+     #why is openal adding these two?
+    set_target_properties(common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    set_target_properties(ex-common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+endif()
+
+if(TORQUE_SDL)
+    # Apple config has slightly different target names
+    if (APPLE)
+        set_target_properties(SDL2main PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+        set_target_properties(SDL2-static PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    else()
+        set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    endif()
+endif()

@@ -80,7 +80,7 @@ if(WIN32)
     set(ALSOFT_INSTALL_HRTF_DATA OFF CACHE BOOL "Install HRTF definition files" FORCE)
     set(ALSOFT_INSTALL_AMBDEC_PRESETS OFF CACHE BOOL "Install AmbDec presets" FORCE)
     set(ALSOFT_EMBED_HRTF_DATA OFF CACHE BOOL "Embed the HRTF data (increases library footprint)" FORCE)
-
+    
     add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
 endif()
 
@@ -241,7 +241,7 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4018")
     # warning C4244: 'initializing' : conversion from 'XXX' to 'XXX', possible loss of data
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4244")
-	if(TORQUE_SFX_DirectX)
+	if(TORQUE_SFX_DirectX) 
 		if( TORQUE_CPU_X64 )
 			link_directories($ENV{DXSDK_DIR}/Lib/x64)
 		else()
@@ -384,10 +384,20 @@ addPathRec("${projectSrcDir}")
 # Load module-based files
 if(EXISTS ${TORQUE_APP_DIR}/game/data)
     message("Reading modules in ${TORQUE_APP_DIR}/game/data path...")
-
-    addInclude("${TORQUE_APP_DIR}/game/data")
-    addPathRec("${TORQUE_APP_DIR}/game/data")
+	
+	subDirCmake(MODULEDIRS ${TORQUE_APP_DIR}/game/data)
+	foreach(modDir ${MODULEDIRS})
+		addInclude("${modDir}/source")
+		addPathRec("${modDir}/source")
+		file(GLOB modules "${modDir}/lib/*.cmake")
+		foreach(module ${modules})
+			set(moduleLibDir "${modDir}/lib")
+			include(${module})
+		endforeach()
+		
+	endforeach()
 endif()
+
 if(EXISTS ${TORQUE_APP_DIR}/game/tools)
     message("Reading modules in ${TORQUE_APP_DIR}/game/tools path...")
 
@@ -967,28 +977,5 @@ if(TORQUE_TEMPLATE)
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeleteCachedDTSs.bat" DESTINATION "${TORQUE_APP_DIR}")
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeleteDSOs.bat"       DESTINATION "${TORQUE_APP_DIR}")
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeletePrefs.bat"      DESTINATION "${TORQUE_APP_DIR}")
-    endif()
-endif()
-
-###############################################################################
-# Properties folder
-###############################################################################
-# we only need to add libs that we add via add_subdirectory command, basics.cmake
-# will take care of the other source libs added via addLib 
-
-if(TORQUE_SFX_OPENAL AND WIN32)
-    set_target_properties(OpenAL PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
-     #why is openal adding these two?
-    set_target_properties(common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
-    set_target_properties(ex-common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
-endif()
-
-if(TORQUE_SDL)
-    # Apple config has slightly different target names
-    if (APPLE)
-        set_target_properties(SDL2main PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
-        set_target_properties(SDL2-static PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
-    else()
-        set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
     endif()
 endif()

@@ -105,6 +105,20 @@ macro(addPathRec dir)
 endmacro()
 
 ###############################################################################
+###  Gameplay Modules Lib Check
+###############################################################################
+macro(subDirCmake result curdir)
+	file(GLOB children RELATIVE ${curdir} ${curdir}/*)
+	set(dirList "")
+	foreach(child ${children})
+		if(IS_DIRECTORY ${curdir}/${child})
+			LIST(APPEND dirList ${curdir}/${child})
+		endif()
+	endforeach()
+	set(${result} ${dirList})
+endmacro()
+
+###############################################################################
 ### Definition Handling
 ###############################################################################
 macro(__addDef def config)

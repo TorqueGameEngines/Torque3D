@@ -157,7 +157,10 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       
       /// @}
 
-      void onBitmapChange() {}
+      void onBitmapChange()
+      {
+         setBitmap(getBitmap());
+      }
 
    public:
                            

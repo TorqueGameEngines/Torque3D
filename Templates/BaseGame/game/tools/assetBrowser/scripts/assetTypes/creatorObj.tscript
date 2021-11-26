@@ -6,6 +6,7 @@ function AssetBrowser::buildCreatorPreview(%this, %assetDef, %previewData)
             
    %previewData.assetName = %name;
    %previewData.assetPath = "";
+   %previewData.moduleName = "";
    
    %previewData.previewImage = "ToolsModule:" @ %class @ "_image";
    

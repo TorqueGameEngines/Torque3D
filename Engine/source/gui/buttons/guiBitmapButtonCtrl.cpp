@@ -232,32 +232,7 @@ void GuiBitmapButtonCtrl::inspectPostApply()
 {
    Parent::inspectPostApply();
 
-   Torque::Path path( mBitmapName );
-   const String& fileName = path.getFileName();
-   
-   if( mUseStates )
-   {
-      // If the filename points to a single state, automatically
-      // cut off the state part.  Makes it easy to select files in
-      // the editor without having to go in and manually cut off the
-      // state parts all the time.
-      
-      static String s_n = "_n";
-      static String s_d = "_d";
-      static String s_h = "_h";
-      static String s_i = "_i";
-      
-      if(    fileName.endsWith( s_n )
-          || fileName.endsWith( s_d )
-          || fileName.endsWith( s_h )
-          || fileName.endsWith( s_i ) )
-      {
-         path.setFileName( fileName.substr( 0, fileName.length() - 2 ) );
-         path.setExtension( String::EmptyString );
-      }
-   }
-   
-   setBitmap( StringTable->insert(path.getFullPath().c_str()) );
+   setBitmap(getBitmap());
 
    // if the extent is set to (0,0) in the gui editor and appy hit, this control will
    // set it's extent to be exactly the size of the normal bitmap (if present)

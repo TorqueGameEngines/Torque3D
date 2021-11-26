@@ -1820,6 +1820,32 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                   }
                   else
                   {
+                     //Check to see if our target module has a matching assetId for this slot already
+                     String testAssetId = targetModuleId + ":" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
+                     bool localAssetFound = false;
+
+                     if (AssetDatabase.isDeclaredAsset(testAssetId.c_str()))
+                        localAssetFound = true;
+
+                     if (localAssetFound == false)
+                        //Didn't work, try checking the common default type suffix
+                        testAssetId = targetModuleId + ":" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;\t") + activeImportConfig->AddedImageSuffix;
+
+                     if (localAssetFound)
+                     {
+                        //got a match!
+                        ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
+                        imagePath = foundImageAsset->getImagePath();
+
+                        AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
+
+                        newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
+                        newImageAssetObj->importStatus = AssetImportObject::UseForDependencies; //we aren't going to actually IMPORT an already imported asset,
+                                                                                                //so mark it as dependency use only
+                        matchedImageTypes[t] = newImageAssetObj;
+                        break;
+                     }
+
                      if (materialImageNoSuffix.isNotEmpty())
                      {
                         testPath = assetItem->filePath.getRootAndPath();
@@ -1834,6 +1860,32 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
                            newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
 
+                           matchedImageTypes[t] = newImageAssetObj;
+                           break;
+                        }
+
+                        //Check to see if our target module has a matching assetId for this slot already based on our trimmed mat name
+                        testAssetId = targetModuleId + ":" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
+                        bool localAssetFound = false;
+
+                        if (AssetDatabase.isDeclaredAsset(testAssetId.c_str()))
+                           localAssetFound = true;
+
+                        if (localAssetFound == false)
+                           //Didn't work, try checking the common default type suffix
+                           testAssetId = targetModuleId + ":" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;\t") + activeImportConfig->AddedImageSuffix;
+
+                        if (localAssetFound)
+                        {
+                           //got a match!
+                           ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
+                           imagePath = foundImageAsset->getImagePath();
+
+                           AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
+
+                           newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
+                           newImageAssetObj->importStatus = AssetImportObject::UseForDependencies; //we aren't going to actually IMPORT an already imported asset,
+                                                                                                   //so mark it as dependency use only
                            matchedImageTypes[t] = newImageAssetObj;
                            break;
                         }
@@ -2538,6 +2590,9 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
          {
             bool registerSuccess = AssetDatabase.addDeclaredAsset(moduleDef, assetPath.getFullPath().c_str());
 
+            String assetIdStr = item->moduleName + ":" + item->assetName;
+            StringTableEntry assetId = StringTable->insert(assetIdStr.c_str());
+
             if (!registerSuccess)
             {
                dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to successfully register new asset at path %s to moduleId %s", assetPath.getFullPath().c_str(), targetModuleId.c_str());
@@ -2548,9 +2603,6 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
                //Any special-case post-reg stuff here
                if (item->assetType == String("ShapeAsset"))
                {
-                  String assetIdStr = item->moduleName + ":" + item->assetName;
-                  StringTableEntry assetId = StringTable->insert(assetIdStr.c_str());
-
                   //forcefully update it's shape constructor
                   TSShapeConstructor* tss = TSShapeConstructor::findShapeConstructorByAssetId(assetId);
 
@@ -2558,6 +2610,10 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
                      tss->setShapeAssetId(assetId);
                }
             }
+
+            //Go ahead and force the asset to load now just to kick it for immediate use
+            AssetBase* assetDef = AssetDatabase.acquireAsset<AssetBase>(assetId);
+            AssetDatabase.releaseAsset(assetId);
          }
          else
          {

@@ -1,6 +1,9 @@
 function AssetImportConfigEditor::onWake(%this)
 {
    %this.refresh();
+   
+   %index = AssetImportConfigList.findTextIndex(EditorSettings.value("Assets/AssetImporDefaultConfig", ""));
+   AssetImportConfigList.setSelectedRow(%index);
 }
 
 function AssetImportConfigEditor::refresh(%this)
@@ -41,7 +44,7 @@ function AssetImportConfigList::onSelect( %this, %id, %text )
    %this.populateConfigListByGroup("Images");
    %this.populateConfigListByGroup("Sounds");
    %this.populateConfigListByGroup("Animations");
-   %this.populateConfigListByGroup("Collision");
+   //%this.populateConfigListByGroup("Collision");
    
    ImportOptionsConfigList.update();  
 }

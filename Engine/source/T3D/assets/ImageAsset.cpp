@@ -480,7 +480,7 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getInspectObject()->getIdString(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
@@ -488,11 +488,9 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    // Create "Open in ShapeEditor" button
    mImageEdButton = new GuiBitmapButtonCtrl();
 
-   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
-   mImageEdButton->setField("Command", szBuffer);
-
    char bitmapName[512] = "ToolsModule:GameTSCtrl_image";
    mImageEdButton->setBitmap(StringTable->insert(bitmapName));
+   mImageEdButton->setHidden(true);
 
    mImageEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mImageEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");

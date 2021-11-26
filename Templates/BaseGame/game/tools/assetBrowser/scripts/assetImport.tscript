@@ -181,6 +181,20 @@ function AssetBrowser::onBeginDropFiles( %this )
 
 function AssetBrowser::onDropFile( %this, %filePath )
 {
+   if(fileExt(%filePath) $= "")
+   {
+      //we're dealing with a folder, so we gotta parse through it  
+      
+      %file = findFirstFile( %filePath @ "/*" );
+      while( %file !$= "" )
+      {      
+         %this.onDropFile(%file);
+         %file = findNextFile( %filePath @ "/*" );
+      }
+      
+      return;
+   }
+   
    if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
    {
       if(GuiEditorIsActive())
@@ -501,7 +515,7 @@ function ImportAssetWindow::doRefresh(%this)
    }
    if(%this.autoRenamedAssets != 0)
    {
-      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Auto Renamed|";
+      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Automatically Renamed|";
    }
    
    if(%ImportActionSummary !$= "")

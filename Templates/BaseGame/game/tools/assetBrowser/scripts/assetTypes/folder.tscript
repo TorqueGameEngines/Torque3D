@@ -1,7 +1,9 @@
 function AssetBrowser::createNewFolder(%this)
 {
    AssetBrowser_newFolderNameTxt.text = "NewFolder";
-   Canvas.pushDialog(AssetBrowser_newFolder);
+   Canvas.pushDialog(AssetBrowser_newFolder, 99, true);
+
+   AssetBrowser_newFolderNameTxt.selectAllText();
 }
 
 function AssetBrowser::doCreateNewFolder(%this)

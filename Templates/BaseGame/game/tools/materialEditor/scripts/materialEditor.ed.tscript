@@ -816,9 +816,9 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->normalMapDisplayBitmap.setBitmap( getAssetPreviewImage(%normalMap) );
    
    //ORM Config
-   %ormMap = (%material).getNormalMap(%layer);
+   %ormMap = (%material).getORMConfigMap(%layer);
    %hasOrmMap = (%ormMap !$= "" && %ormMap !$=$MaterialEditor::emptyMaterialImage);
-   %ormMapText = %hasOrmMap ? (%material).getNormalMapAsset(%layer) : "None";
+   %ormMapText = %hasOrmMap ? (%material).getORMConfigMapAsset(%layer) : "None";
    MaterialEditorPropertiesWindow-->ORMConfigMapNameText.setText(%ormMapText );      
    MaterialEditorPropertiesWindow-->ORMConfigMapDisplayBitmap.setBitmap( getAssetPreviewImage(%ormMap) );
 

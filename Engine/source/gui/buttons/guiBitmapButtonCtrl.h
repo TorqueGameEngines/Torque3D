@@ -126,6 +126,7 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       
       ///
       Textures mTextures[ NumModifiers ];
+      ColorI   mColor;
       
       virtual void renderButton( GFXTexHandle &texture, const Point2I& offset, const RectI& updateRect );
       

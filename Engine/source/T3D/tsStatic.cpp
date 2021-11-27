@@ -1587,7 +1587,7 @@ U32 TSStatic::getNumDetails()
 
 void TSStatic::updateMaterials()
 {
-   if (mChangingMaterials.empty() || !mShape)
+   if (mChangingMaterials.empty() || !mShapeInstance)
       return;
 
    TSMaterialList* pMatList = mShapeInstance->getMaterialList();

@@ -893,7 +893,7 @@ bool Vehicle::onNewDataBlock(GameBaseData* dptr,bool reload)
       SFX_DELETE( mWakeSound );
 
       if ( mDataBlock->getVehicleWaterSounds(VehicleData::Wake) != NULL )
-         mWakeSound = SFX->createSource( mDataBlock->getVehicleWaterSoundProfile(VehicleData::Wake), &getTransform() );
+         mWakeSound = SFX->createSource( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::Wake), &getTransform() );
    }
 
    return true;
@@ -1156,27 +1156,27 @@ void Vehicle::updatePos(F32 dt)
             if (collSpeed >= mDataBlock->softImpactSpeed)
                impactSound = VehicleData::Body::SoftImpactSound;
 
-         if (impactSound != -1 && mDataBlock->getVehicleBodySounds(impactSound) != NULL)
-            SFX->playOnce( mDataBlock->getVehicleBodySoundProfile(impactSound), &getTransform() );
+         if (impactSound != -1 && mDataBlock->getVehicleBodySoundsProfile(impactSound) != NULL)
+            SFX->playOnce( mDataBlock->getVehicleBodySoundsProfile(impactSound), &getTransform() );
       }
 
       // Water volume sounds
       F32 vSpeed = getVelocity().len();
       if (!inLiquid && mWaterCoverage >= 0.8f) {
          if (vSpeed >= mDataBlock->hardSplashSoundVel)
-            SFX->playOnce( mDataBlock->getVehicleWaterSoundProfile(VehicleData::ImpactHard), &getTransform() );
+            SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ImpactHard), &getTransform() );
          else
             if (vSpeed >= mDataBlock->medSplashSoundVel)
-               SFX->playOnce( mDataBlock->getVehicleWaterSoundProfile(VehicleData::ImpactMedium), &getTransform() );
+               SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ImpactMedium), &getTransform() );
          else
             if (vSpeed >= mDataBlock->softSplashSoundVel)
-               SFX->playOnce( mDataBlock->getVehicleWaterSoundProfile(VehicleData::ImpactSoft), &getTransform() );
+               SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ImpactSoft), &getTransform() );
          inLiquid = true;
       }
       else
          if(inLiquid && mWaterCoverage < 0.8f) {
             if (vSpeed >= mDataBlock->exitSplashSoundVel)
-               SFX->playOnce( mDataBlock->getVehicleWaterSoundProfile(VehicleData::ExitWater), &getTransform() );
+               SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ExitWater), &getTransform() );
          inLiquid = false;
       }
    }

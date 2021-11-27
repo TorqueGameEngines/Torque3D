@@ -686,13 +686,13 @@ bool WheeledVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mJetSound );
 
       if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getWheeledVehicleSound(WheeledVehicleData::EngineSound), &getTransform() );
+         mEngineSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::EngineSound), &getTransform() );
 
       if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::SquealSound) )
-         mSquealSound = SFX->createSource( mDataBlock->getWheeledVehicleSound(WheeledVehicleData::SquealSound), &getTransform() );
+         mSquealSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::SquealSound), &getTransform() );
 
       if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::JetSound) )
-         mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSound(WheeledVehicleData::JetSound), &getTransform() );
+         mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::JetSound), &getTransform() );
    }
 
    scriptOnNewDataBlock();

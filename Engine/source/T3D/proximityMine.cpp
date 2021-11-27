@@ -426,8 +426,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->armingSequence, 0.0f );
                }
-               if ( mDataBlock->getArmSound() )
-                  SFX->playOnce( mDataBlock->getArmSoundAsset()->getSfxProfile(), &getRenderTransform() );
+               if ( mDataBlock->getArmSoundProfile() )
+                  SFX->playOnce( mDataBlock->getArmSoundProfile(), &getRenderTransform() );
             }
             break;
 
@@ -467,8 +467,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->triggerSequence, 0.0f );
                }
-               if ( mDataBlock->getTriggerSound() )
-                  SFX->playOnce( mDataBlock->getTriggerSoundAsset()->getSfxProfile(), &getRenderTransform() );
+               if ( mDataBlock->getTriggerSoundProfile() )
+                  SFX->playOnce( mDataBlock->getTriggerSoundProfile(), &getRenderTransform() );
 
                if ( isServerObject() )
                   mDataBlock->onTriggered_callback( this, sql.mList[0] );

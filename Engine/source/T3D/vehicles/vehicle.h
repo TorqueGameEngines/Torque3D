@@ -51,15 +51,6 @@ struct VehicleData : public RigidShapeData
 
    DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleBodySounds, Body::Sounds::MaxSounds)
 
-   SFXProfile* getVehicleBodySoundProfile(U32 id)
-   {
-      if (mVehicleBodySoundsAsset[id] != NULL)
-         return mVehicleBodySoundsAsset[id]->getSfxProfile();
-
-      return NULL;
-   }
-
-
    enum VehicleConsts
    {
       VC_NUM_DUST_EMITTERS = 1,
@@ -81,14 +72,6 @@ struct VehicleData : public RigidShapeData
    };
 
   DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleWaterSounds, Sounds::MaxSounds)
-
-  SFXProfile* getVehicleWaterSoundProfile(U32 id)
-  {
-     if (mVehicleWaterSoundsAsset[id] != NULL)
-        return mVehicleWaterSoundsAsset[id]->getSfxProfile();
-
-     return NULL;
-  }
 
    F32 exitSplashSoundVel;
    F32 softSplashSoundVel;

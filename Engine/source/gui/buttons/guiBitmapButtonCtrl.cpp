@@ -128,7 +128,7 @@ GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
    mUseStates = true;
    setExtent( 140, 30 );
    mMasked = false;
-
+   mColor = ColorI::WHITE;
    INIT_ASSET(Bitmap);
 }
 
@@ -142,6 +142,7 @@ void GuiBitmapButtonCtrl::initPersistFields()
          "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
          "specify the default texture name to which the various state and modifier suffixes are appended "
          "to find the per-state and per-modifier (if enabled) textures.");
+      addField("color", TypeColorI, Offset(mColor, GuiBitmapButtonCtrl), "color mul");
 
       addField( "bitmapMode", TYPEID< BitmapMode >(), Offset( mBitmapMode, GuiBitmapButtonCtrl ),
          "Behavior for fitting the bitmap to the control extents.\n"
@@ -545,7 +546,8 @@ void GuiBitmapButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
 void GuiBitmapButtonCtrl::renderButton( GFXTexHandle &texture, const Point2I &offset, const RectI& updateRect )
 {
    GFX->getDrawUtil()->clearBitmapModulation();
-   
+   GFX->getDrawUtil()->setBitmapModulation(mColor);
+
    switch( mBitmapMode )
    {
       case BitmapStretched:

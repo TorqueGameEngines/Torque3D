@@ -543,13 +543,13 @@ bool HoverVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mJetSound );
 
       if ( mDataBlock->getHoverSounds(HoverVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundProfile(HoverVehicleData::EngineSound), &getTransform() );
+         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::EngineSound), &getTransform() );
 
       if ( !mDataBlock->getHoverSounds(HoverVehicleData::FloatSound) )
-         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundProfile(HoverVehicleData::FloatSound), &getTransform() );
+         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::FloatSound), &getTransform() );
 
       if ( mDataBlock->getHoverSounds(HoverVehicleData::JetSound) )
-         mJetSound = SFX->createSource( mDataBlock->getHoverSoundProfile(HoverVehicleData::JetSound), &getTransform() );
+         mJetSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::JetSound), &getTransform() );
    }
 
    // Todo: Uncomment if this is a "leaf" class

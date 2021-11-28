@@ -121,15 +121,6 @@ struct WheeledVehicleData: public VehicleData
 
    DECLARE_SOUNDASSET_ARRAY(WheeledVehicleData, WheeledVehicleSounds, Sounds::MaxSounds);
 
-   SFXProfile* getWheeledVehicleSound(U32 id)
-   {
-      if (mWheeledVehicleSoundsAsset[id] != NULL)
-         return mWheeledVehicleSoundsAsset[id]->getSfxProfile();
-
-      return NULL;
-   }
-
-
    ParticleEmitterData* tireEmitter;
 
    F32 maxWheelSpeed;            // Engine torque is scale based on wheel speed

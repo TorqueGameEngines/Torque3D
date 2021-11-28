@@ -66,14 +66,6 @@ class RigidShapeData : public ShapeBaseData
    DECLARE_SOUNDASSET_ARRAY(RigidShapeData, BodySounds, Body::Sounds::MaxSounds)
    DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, BodySounds);
 
-   SFXProfile* getBodySoundProfile(U32 id)
-   {
-      if (mBodySoundsAsset[id] != NULL)
-         return mBodySoundsAsset[id]->getSfxProfile();
-
-      return NULL;
-   }
-
    enum RigidShapeConsts
    {
       VC_NUM_DUST_EMITTERS = 1,
@@ -93,14 +85,6 @@ class RigidShapeData : public ShapeBaseData
    };
    DECLARE_SOUNDASSET_ARRAY(RigidShapeData, WaterSounds, Sounds::MaxSounds)
    DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, WaterSounds);
-
-   SFXProfile* getWaterSoundProfile(U32 id)
-   {
-      if (mWaterSoundsAsset[id] != NULL)
-         return mWaterSoundsAsset[id]->getSfxProfile();
-
-      return NULL;
-   }
 
    F32 exitSplashSoundVel;
    F32 softSplashSoundVel;

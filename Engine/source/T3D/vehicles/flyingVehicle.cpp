@@ -367,10 +367,10 @@ bool FlyingVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mEngineSound );
 
       if ( mDataBlock->getFlyingSounds(FlyingVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundProfile(FlyingVehicleData::EngineSound), &getTransform() );
+         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::EngineSound), &getTransform() );
 
       if ( mDataBlock->getFlyingSounds(FlyingVehicleData::JetSound))
-         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundProfile(FlyingVehicleData::JetSound), &getTransform() );
+         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::JetSound), &getTransform() );
    }
 
    // Jet Sequences

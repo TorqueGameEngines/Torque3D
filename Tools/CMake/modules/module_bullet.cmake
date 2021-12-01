@@ -27,7 +27,10 @@ option(TORQUE_PHYSICS_BULLET "Use Bullet physics" OFF)
 if( NOT TORQUE_PHYSICS_BULLET )
     return()
 endif()
-	           
+if(TORQUE_VCPKG_ENABLED)
+    find_package(bullet3)
+endif()
+
 addDef( "TORQUE_PHYSICS_BULLET" )
 addDef( "TORQUE_PHYSICS_ENABLED" )
 

@@ -946,7 +946,7 @@ $rigidEntriesList = $rigidEntriesList SPC "waterWakeSound waterWakeSoundAsset";
 T3Dpre4ProjectImporter::genProcessor("RigidShapeData",$rigidEntriesList);
 // - PlayerData
 $PlayerEntriesList = "shapeFP shapeFPAsset shapeNameFP shapeFPAsset";
-$PlayerEntriesList = $PlayerEntriesList SPC "FootSoftSound FootSoftAsset FootHardSound FootHardAsset FootMetalSound FootMetal";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootSoftSound FootSoftAsset FootHardSound FootHardAsset FootMetalSound FootMetalAsset";
 $PlayerEntriesList = $PlayerEntriesList SPC "FootSnowSound FootSnowAsset FootShallowSound FootShallowSplashAsset";
 $PlayerEntriesList = $PlayerEntriesList SPC "FootWadingSound FootWadingAsset FootUnderwaterSound FootUnderWaterAsset";
 $PlayerEntriesList = $PlayerEntriesList SPC "FootBubblesSound FootBubblesAsset movingBubblesSound MoveBubblesAsset";

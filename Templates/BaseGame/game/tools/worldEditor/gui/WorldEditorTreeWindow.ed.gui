@@ -175,7 +175,7 @@ $guiContent = new GuiControl() {
                   showClassNameForUnnamedObjects = "1";
                };
             };
-         };
+         };/*
          new GuiTabPageCtrl(EWCreatorWindow) {
             canSaveDynamicFields = "0";
             internalName = "CreatorWindow";
@@ -500,7 +500,7 @@ $guiContent = new GuiControl() {
                   };
                };
             };
-         };
+         };*/
       };
       new GuiBitmapButtonCtrl() {
          canSaveDynamicFields = "0";

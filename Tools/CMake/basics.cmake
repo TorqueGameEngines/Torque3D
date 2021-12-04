@@ -348,6 +348,8 @@ macro(finishLibrary)
         add_library("${PROJECT_NAME}" SHARED ${${PROJECT_NAME}_files})
     endif()
 
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
+
     # omg - only use the first folder ... otherwise we get lots of header name collisions
     #foreach(dir ${${PROJECT_NAME}_paths})
     addInclude("${firstDir}")
@@ -384,6 +386,10 @@ macro(finishExecutable)
     else()
         add_executable("${PROJECT_NAME}" WIN32 ${${PROJECT_NAME}_files})
     endif()
+
+    # Torque requires c++17
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
     addInclude("${firstDir}")
 
     _postTargetProcess()

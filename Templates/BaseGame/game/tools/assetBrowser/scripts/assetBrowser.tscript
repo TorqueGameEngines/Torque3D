@@ -35,6 +35,9 @@ function AssetBrowser::initialize(%this)
    if(!isObject(AssetPreviewArray))
       new ArrayObject(AssetPreviewArray);
       
+   if(!isObject(ObjectCreator))
+      new ScriptObject(ObjectCreator);
+      
    if(!isObject(%this.dirHandler))
    {
       %this.dirHandler = makedirectoryHandler(AssetBrowser-->filterTree, "cache,shaderCache", ""); 
@@ -2301,7 +2304,7 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
 
    %assetType = %payload.assetType;
    
-   %pos = EWCreatorWindow.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
+   %pos = ObjectCreator.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
    %module = %payload.moduleName;
    %asset = %payload.assetName;
    

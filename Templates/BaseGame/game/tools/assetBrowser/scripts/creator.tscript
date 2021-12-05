@@ -178,7 +178,7 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
       else
          %cmd = "ObjectBuilderGui." @ %method @ "();";
 
-      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
+      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
    }
    
    %args = new ScriptObject();

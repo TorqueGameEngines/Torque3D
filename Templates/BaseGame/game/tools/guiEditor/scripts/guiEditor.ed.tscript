@@ -1023,11 +1023,6 @@ function GuiEditorGui::onWake( %this )
 
    %this.initSettings();
    %this.readSettings();
-   
-   // Initialize toolbox.
-
-   if( !GuiEditorToolbox.isInitialized )
-      GuiEditorToolbox.initialize();
 
    // Set up initial menu toggle states.
    

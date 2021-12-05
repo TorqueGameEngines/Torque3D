@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 
-function EWCreatorWindow::init( %this )
+function ObjectCreator::init( %this )
 {
    // Just so we can recall this method for testing changes
    // without restarting.
@@ -113,23 +113,23 @@ function EWCreatorWindow::init( %this )
    %this.endGroup(); 
 }
 
-function EWCreatorWindow::onWake( %this )
+function ObjectCreator::onWake( %this )
 {
    CreatorTabBook.selectPage( 0 );
    CreatorTabBook.onTabSelected( "Scripted" );
 }
 
-function EWCreatorWindow::beginGroup( %this, %group )
+function ObjectCreator::beginGroup( %this, %group )
 {
    %this.currentGroup = %group;   
 }
 
-function EWCreatorWindow::endGroup( %this, %group )
+function ObjectCreator::endGroup( %this, %group )
 {
    %this.currentGroup = "";
 }
 
-function EWCreatorWindow::getCreateObjectPosition()
+function ObjectCreator::getCreateObjectPosition()
 {
    %focusPoint = LocalClientConnection.getControlObject().getLookAtPoint();
    if( %focusPoint $= "" )
@@ -138,7 +138,7 @@ function EWCreatorWindow::getCreateObjectPosition()
       return getWord( %focusPoint, 1 ) SPC getWord( %focusPoint, 2 ) SPC getWord( %focusPoint, 3 );
 }
 
-function EWCreatorWindow::registerMissionObject( %this, %class, %name, %buildfunc, %group )
+function ObjectCreator::registerMissionObject( %this, %class, %name, %buildfunc, %group )
 {
    if( !isClass(%class) )
       return;
@@ -150,7 +150,7 @@ function EWCreatorWindow::registerMissionObject( %this, %class, %name, %buildfun
    
    if ( %class $= "" || %group $= "" )
    {
-      warn( "EWCreatorWindow::registerMissionObject, invalid parameters!" );
+      warn( "ObjectCreator::registerMissionObject, invalid parameters!" );
       return;  
    }
 
@@ -162,12 +162,12 @@ function EWCreatorWindow::registerMissionObject( %this, %class, %name, %buildfun
    %this.array.push_back( %group, %args );
 }
 
-function EWCreatorWindow::getNewObjectGroup( %this )
+function ObjectCreator::getNewObjectGroup( %this )
 {
    return %this.objectGroup;
 }
 
-function EWCreatorWindow::setNewObjectGroup( %this, %group )
+function ObjectCreator::setNewObjectGroup( %this, %group )
 {
    if( %this.objectGroup )
    {
@@ -182,7 +182,7 @@ function EWCreatorWindow::setNewObjectGroup( %this, %group )
    EditorTree.markItem( %itemId );
 }
 
-function EWCreatorWindow::createStatic( %this, %file )
+function ObjectCreator::createStatic( %this, %file )
 {
    if ( !$missionRunning )
       return;
@@ -200,7 +200,7 @@ function EWCreatorWindow::createStatic( %this, %file )
    %this.onObjectCreated( %objId );
 }
 
-function EWCreatorWindow::createPrefab( %this, %file )
+function ObjectCreator::createPrefab( %this, %file )
 {
    if ( !$missionRunning )
       return;
@@ -218,7 +218,7 @@ function EWCreatorWindow::createPrefab( %this, %file )
    %this.onObjectCreated( %objId );
 }
 
-function EWCreatorWindow::createObject( %this, %cmd )
+function ObjectCreator::createObject( %this, %cmd )
 {
    if ( !$missionRunning )
       return;
@@ -236,7 +236,7 @@ function EWCreatorWindow::createObject( %this, %cmd )
    return %objId;
 }
 
-function EWCreatorWindow::onFinishCreateObject( %this, %objId )
+function ObjectCreator::onFinishCreateObject( %this, %objId )
 {
    %this.objectGroup.add( %objId );
 
@@ -251,7 +251,7 @@ function EWCreatorWindow::onFinishCreateObject( %this, %objId )
    %this.onObjectCreated( %objId );
 }
 
-function EWCreatorWindow::onObjectCreated( %this, %objId )
+function ObjectCreator::onObjectCreated( %this, %objId )
 {
    // Can we submit an undo action?
    if ( isObject( %objId ) )
@@ -270,12 +270,12 @@ function CreatorTabBook::onTabSelected( %this, %text, %idx )
 {
    if ( %this.isAwake() )
    {
-      EWCreatorWindow.tab = %text;      
-      EWCreatorWindow.navigate( "" );
+      ObjectCreator.tab = %text;      
+      ObjectCreator.navigate( "" );
    }
 }
 
-function EWCreatorWindow::navigate( %this, %address )
+function ObjectCreator::navigate( %this, %address )
 {
    CreatorIconArray.frozen = true;
    CreatorIconArray.clear();  
@@ -535,7 +535,7 @@ function EWCreatorWindow::navigate( %this, %address )
    CreatorPopupMenu.tooltip = %str;
 }
 
-function EWCreatorWindow::navigateDown( %this, %folder )
+function ObjectCreator::navigateDown( %this, %folder )
 {
    if ( %this.address $= "" )
       %address = %folder;
@@ -548,7 +548,7 @@ function EWCreatorWindow::navigateDown( %this, %folder )
    %this.schedule( 1, "navigate", %address );
 }
 
-function EWCreatorWindow::navigateUp( %this )
+function ObjectCreator::navigateUp( %this )
 {
    %count = getWordCount( %this.address );
    
@@ -563,7 +563,7 @@ function EWCreatorWindow::navigateUp( %this )
    %this.navigate( %address );
 }
 
-function EWCreatorWindow::setListView( %this, %noupdate )
+function ObjectCreator::setListView( %this, %noupdate )
 {
    //CreatorIconArray.clear();
    //CreatorIconArray.setVisible( false );
@@ -576,7 +576,7 @@ function EWCreatorWindow::setListView( %this, %noupdate )
       %this.navigate( %this.address );
 }
 
-//function EWCreatorWindow::setIconView( %this )
+//function ObjectCreator::setIconView( %this )
 //{
    //echo( "setIconView" );
    //
@@ -590,7 +590,7 @@ function EWCreatorWindow::setListView( %this, %noupdate )
    //%this.navigate( %this.address );
 //}
 
-function EWCreatorWindow::findIconCtrl( %this, %name )
+function ObjectCreator::findIconCtrl( %this, %name )
 {
    for ( %i = 0; %i < %this.contentCtrl.getCount(); %i++ )
    {
@@ -602,7 +602,7 @@ function EWCreatorWindow::findIconCtrl( %this, %name )
    return -1;
 }
 
-function EWCreatorWindow::createIcon( %this )
+function ObjectCreator::createIcon( %this )
 {
    %ctrl = new GuiIconButtonCtrl()
    {            
@@ -630,11 +630,11 @@ function EWCreatorWindow::createIcon( %this )
    return %ctrl;
 }
 
-function EWCreatorWindow::addFolderIcon( %this, %text )
+function ObjectCreator::addFolderIcon( %this, %text )
 {
    %ctrl = %this.createIcon();
       
-   %ctrl.altCommand = "EWCreatorWindow.navigateDown(\"" @ %text @ "\");";
+   %ctrl.altCommand = "ObjectCreator.navigateDown(\"" @ %text @ "\");";
    %ctrl.iconBitmap = "tools/gui/images/folder.png";   
    %ctrl.text = %text;
    %ctrl.tooltip = %text;     
@@ -646,7 +646,7 @@ function EWCreatorWindow::addFolderIcon( %this, %text )
    %this.contentCtrl.addGuiControl( %ctrl );   
 }
 
-function EWCreatorWindow::addMissionObjectIcon( %this, %class, %name, %buildfunc )
+function ObjectCreator::addMissionObjectIcon( %this, %class, %name, %buildfunc )
 {
    %ctrl = %this.createIcon();      
 
@@ -661,7 +661,7 @@ function EWCreatorWindow::addMissionObjectIcon( %this, %class, %name, %buildfunc
    else
       %cmd = "ObjectBuilderGui." @ %method @ "();";
 
-   %ctrl.altCommand = "ObjectBuilderGui.newObjectCallback = \"EWCreatorWindow.onFinishCreateObject\"; EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
+   %ctrl.altCommand = "ObjectBuilderGui.newObjectCallback = \"ObjectCreator.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
    %ctrl.text = %name;
    %ctrl.class = "CreatorMissionObjectIconBtn";   
@@ -673,7 +673,7 @@ function EWCreatorWindow::addMissionObjectIcon( %this, %class, %name, %buildfunc
    %this.contentCtrl.addGuiControl( %ctrl );
 }
 
-function EWCreatorWindow::addShapeIcon( %this, %datablock )
+function ObjectCreator::addShapeIcon( %this, %datablock )
 {
    %ctrl = %this.createIcon();
    
@@ -683,7 +683,7 @@ function EWCreatorWindow::addShapeIcon( %this, %datablock )
       
    %shapePath = ( %datablock.shapeFile !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
    
-   %createCmd = "EWCreatorWindow.createObject( \\\"" @ %cmd @ "\\\" );";
+   %createCmd = "ObjectCreator.createObject( \\\"" @ %cmd @ "\\\" );";
    %ctrl.altCommand = "showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );";
 
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
@@ -697,7 +697,7 @@ function EWCreatorWindow::addShapeIcon( %this, %datablock )
    %this.contentCtrl.addGuiControl( %ctrl );   
 }
 
-function EWCreatorWindow::addStaticIcon( %this, %fullPath )
+function ObjectCreator::addStaticIcon( %this, %fullPath )
 {
    %ctrl = %this.createIcon();
    
@@ -709,7 +709,7 @@ function EWCreatorWindow::addStaticIcon( %this, %fullPath )
           "Date Created: " @ fileCreatedTime( %fullPath ) NL
           "Last Modified: " @ fileModifiedTime( %fullPath );
 
-   %createCmd = "EWCreatorWindow.createStatic( \\\"" @ %fullPath @ "\\\" );";
+   %createCmd = "ObjectCreator.createStatic( \\\"" @ %fullPath @ "\\\" );";
    %ctrl.altCommand = "showImportDialog( \"" @ %fullPath @ "\", \"" @ %createCmd @ "\" );";
 
    %ctrl.iconBitmap = ( ( %ext $= ".dts" ) ? EditorIconRegistry::findIconByClassName( "TSStatic" ) : "tools/gui/images/iconCollada" );
@@ -723,7 +723,7 @@ function EWCreatorWindow::addStaticIcon( %this, %fullPath )
    %this.contentCtrl.addGuiControl( %ctrl );   
 }
 
-function EWCreatorWindow::addPrefabIcon( %this, %fullPath )
+function ObjectCreator::addPrefabIcon( %this, %fullPath )
 {
    %ctrl = %this.createIcon();
    
@@ -735,7 +735,7 @@ function EWCreatorWindow::addPrefabIcon( %this, %fullPath )
           "Date Created: " @ fileCreatedTime( %fullPath ) NL
           "Last Modified: " @ fileModifiedTime( %fullPath );
 
-   %ctrl.altCommand = "EWCreatorWindow.createPrefab( \"" @ %fullPath @ "\" );";
+   %ctrl.altCommand = "ObjectCreator.createPrefab( \"" @ %fullPath @ "\" );";
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( "Prefab" );
    %ctrl.text = %file;
    %ctrl.class = "CreatorPrefabIconBtn";
@@ -750,7 +750,7 @@ function EWCreatorWindow::addPrefabIcon( %this, %fullPath )
 function CreatorPopupMenu::onSelect( %this, %id, %text )
 {   
    %split = strreplace( %text, "/", " " );
-   EWCreatorWindow.navigate( %split );  
+   ObjectCreator.navigate( %split );  
 }
 
 function alphaIconCompare( %a, %b )
@@ -779,7 +779,7 @@ function genericCreateObject( %class )
    
    %cmd = "return new " @ %class @ "();";
    
-   %obj = EWCreatorWindow.createObject( %cmd );   
+   %obj = ObjectCreator.createObject( %cmd );   
    
    // In case the caller wants it.
    return %obj;   

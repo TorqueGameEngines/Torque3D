@@ -1251,7 +1251,7 @@ function ColladaImportDlg::showDialog(%this, %shapePath, %cmd)
    %this.cmd = %cmd;
 
    // Only allow loading lights if creating a new scene object
-   %canLoadLights = (strstr(%this.cmd, "EWCreatorWindow.create") != -1);
+   %canLoadLights = (strstr(%this.cmd, "ObjectCreator.create") != -1);
 
    // Check for an existing TSShapeConstructor object. Need to exec the script
    // manually as the DAE resource may not have been loaded yet

@@ -109,7 +109,7 @@ function AssetBrowser::dragAndDropGameObjectAsset(%this, %assetDef, %dropTarget)
          
          getScene(0).add(%gameObject);
          
-         %pos = EWCreatorWindow.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
+         %pos = ObjectCreator.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
       
          %gameObject.position = %pos;
          
@@ -131,7 +131,7 @@ function AssetBrowser::onGameObjectAssetEditorDropped(%this, %assetDef, %positio
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    
-   %pos = EWCreatorWindow.getCreateObjectPosition();
+   %pos = ObjectCreator.getCreateObjectPosition();
 
    if(%rayResult != 0)
    {

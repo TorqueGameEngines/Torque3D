@@ -136,7 +136,7 @@ function VPathTreeView::DeleteSelectedPaths( %this )
 function VPathTreeView::CreatePath( %this )
 {
     // Create Path Object.
-    EWCreatorWindow.createObject( "ObjectBuilderGui.buildObject( \"VPath\" );" );
+    ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"VPath\" );" );
 }
 
 //-----------------------------------------------------------------------------

@@ -59,11 +59,11 @@ function Core_Rendering::initClient(%this)
    
    configureCanvas();
    
+   postFXInit();
+   
    //Autodetect settings if it's our first time
    if($pref::Video::autoDetect)
       AutodetectGraphics();
-
-   postFXInit();
    
    closeSplashWindow();
    

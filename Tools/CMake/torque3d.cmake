@@ -48,8 +48,6 @@ if(UNIX)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
         endif()
     endif()
-
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 ###############################################################################
@@ -659,7 +657,7 @@ finishExecutable()
 ###############################################################################
 
 # Set Visual Studio startup project
-if((${CMAKE_VERSION} VERSION_EQUAL 3.6.0) OR (${CMAKE_VERSION} VERSION_GREATER 3.6.0) AND MSVC)
+if(MSVC)
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
 endif()
 

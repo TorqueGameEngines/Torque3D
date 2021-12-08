@@ -145,7 +145,7 @@ Surface createForwardSurface(vec4 baseColor, vec3 normal, vec4 pbrProperties, in
 
    surface.depth = 0;
    surface.P = wsPosition;
-   surface.N = normal;
+   surface.N = abs(normal);
    surface.V = normalize(wsEyePos - surface.P);
    surface.baseColor = baseColor;
    surface.roughness = clamp(pbrProperties.b, 0.01f, 1.0f);

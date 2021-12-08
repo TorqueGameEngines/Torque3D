@@ -145,7 +145,7 @@ inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrP
 
    surface.depth = 0;
    surface.P = wsPosition;
-   surface.N = normal;
+   surface.N = abs(normal);
    surface.V = normalize(wsEyePos - surface.P);
    surface.baseColor = baseColor;
    surface.roughness = clamp(pbrProperties.b, 0.01f, 1.0f);

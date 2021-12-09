@@ -2022,7 +2022,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                      break;
                   }
 
-                  Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
+                  if (Con::getBoolVariable("$Con::warnVoidAssignment", true))
+                  {
+                     Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
+                  }
+                  
                   stack[_STK + 1].setEmptyString();
                   _STK++;
 

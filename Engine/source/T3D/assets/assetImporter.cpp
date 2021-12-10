@@ -3062,6 +3062,15 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       }
    }
 
+   if (Con::getBoolVariable("$TSLastDetail::dumpImposters", false))
+   {
+      String imposterPath = assetItem->assetName + "_imposter.png";
+      String normalsPath = assetItem->assetName + "_imposter_normals.png";
+
+      newAsset->setDiffuseImposterFile(imposterPath.c_str());
+      newAsset->setNormalImposterFile(normalsPath.c_str());
+   }
+
    Taml tamlWriter;
    bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
 

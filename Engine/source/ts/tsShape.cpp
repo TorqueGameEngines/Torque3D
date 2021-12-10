@@ -969,6 +969,39 @@ void TSShape::setupBillboardDetails( const String &cachePath )
    }
 }
 
+void TSShape::setupBillboardDetails(const String& cachePath, const String& diffsePath, const String& normalPath)
+{
+   // set up billboard details -- only do this once, meaning that
+   // if we add a sequence to the shape we don't redo the billboard
+   // details...
+   if (!billboardDetails.empty())
+      return;
+
+   for (U32 i = 0; i < details.size(); i++)
+   {
+      const Detail& det = details[i];
+
+      if (det.subShapeNum >= 0)
+         continue; // not a billboard detail
+
+      while (billboardDetails.size() <= i)
+         billboardDetails.push_back(NULL);
+
+      billboardDetails[i] = new TSLastDetail(this,
+         cachePath,
+         diffsePath,
+         normalPath,
+         det.bbEquatorSteps,
+         det.bbPolarSteps,
+         det.bbPolarAngle,
+         det.bbIncludePoles,
+         det.bbDetailLevel,
+         det.bbDimension);
+
+      billboardDetails[i]->update();
+   }
+}
+
 void TSShape::initMaterialList()
 {
    S32 numSubShapes = subShapeFirstObject.size();

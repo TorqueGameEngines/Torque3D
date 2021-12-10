@@ -73,6 +73,12 @@ protected:
    StringTableEntry   mConstructorFilePath;
    Resource<TSShape>	 mShape;
 
+   StringTableEntry   mDiffuseImposterFileName;
+   StringTableEntry   mDiffuseImposterPath;
+
+   StringTableEntry   mNormalImposterFileName;
+   StringTableEntry   mNormalImposterPath;
+
    //Material assets we're dependent on and use
    Vector<StringTableEntry> mMaterialAssetIds;
    Vector<AssetPtr<MaterialAsset>> mMaterialAssets;
@@ -170,6 +176,15 @@ public:
    inline StringTableEntry getShapeFilePath(void) const { return mFilePath; };
    inline StringTableEntry getShapeConstructorFilePath(void) const { return mConstructorFilePath; };
 
+   //Imposter images
+   void                    setDiffuseImposterFile(const char* pImageFile);
+   inline StringTableEntry getDiffuseImposterFile(void) const { return mDiffuseImposterFileName; };
+   inline StringTableEntry getDiffuseImposterFilePath(void) const { return mDiffuseImposterPath; };
+
+   void                    setNormalImposterFile(const char* pImageFile);
+   inline StringTableEntry getNormalImposterFile(void) const { return mNormalImposterFileName; };
+   inline StringTableEntry getNormalImposterFilePath(void) const { return mNormalImposterPath; };
+
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
 
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
@@ -188,6 +203,10 @@ protected:
    static bool setShapeConstructorFile(void* obj, const char* index, const char* data) { static_cast<ShapeAsset*>(obj)->setShapeConstructorFile(data); return false; }
    static const char* getShapeConstructorFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getShapeConstructorFile(); }
 
+   static bool setDiffuseImposterFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setDiffuseImposterFile(data); return false; }
+   static const char* getDiffuseImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getDiffuseImposterFile(); }
+   static bool setNormalImposterFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setNormalImposterFile(data); return false; }
+   static const char* getNormalImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getNormalImposterFile(); }
 };
 
 #ifdef TORQUE_TOOLS

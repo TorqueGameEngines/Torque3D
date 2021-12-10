@@ -92,6 +92,9 @@ protected:
    /// where we'll be storing our cache for rendered imposters.
    String mCachePath;
 
+   String mDiffusePath;
+   String mNormalPath;
+
    /// The shape detail level to capture into
    /// the imposters.
    S32 mDl;
@@ -148,10 +151,10 @@ protected:
    void _validateDim();
 
    /// Helper which returns the imposter diffuse map path.
-   String _getDiffuseMapPath() const { return mCachePath + ".imposter.dds"; }
+   String _getDiffuseMapPath() const { return mDiffusePath; }
 
    /// Helper which returns the imposter normal map path.
-   String _getNormalMapPath() const { return mCachePath + ".imposter_normals.dds"; }
+   String _getNormalMapPath() const { return mNormalPath; }
 
 public:
 
@@ -163,6 +166,16 @@ public:
                   bool includePoles, 
                   S32 dl, 
                   S32 dim );
+
+   TSLastDetail(TSShape* shape,
+                  const String& cachePath,
+                  const String& diffusePath,
+                  const String& normalPath,
+                  U32 numEquatorSteps,
+                  U32 numPolarSteps,
+                  F32 polarAngle,
+                  bool includePoles,
+                  S32 dl, S32 dim);
 
    ~TSLastDetail();
 

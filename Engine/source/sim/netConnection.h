@@ -692,6 +692,7 @@ public:
 
       PacketNotify *nextPacket;  ///< Next packet sent.
       PacketNotify();
+      virtual ~PacketNotify() = default;
    };
    virtual PacketNotify *allocNotify();
    PacketNotify *mNotifyQueueHead;  ///< Head of packet notify list.

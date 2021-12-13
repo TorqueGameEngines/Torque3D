@@ -26,6 +26,10 @@
 #include "gfx/gfxTextureManager.h"
 #include "gfx/bitmap/gBitmap.h"
 
+#ifdef TORQUE_TOOLS
+#include "console\persistenceManager.h"
+#endif
+
 #include <string>
 
 

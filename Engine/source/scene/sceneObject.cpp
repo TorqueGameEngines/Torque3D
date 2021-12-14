@@ -433,6 +433,9 @@ void SceneObject::setTransform( const MatrixF& mat )
    if( mSceneManager != NULL )
       mSceneManager->notifyObjectDirty( this );
 
+   if (isMounted()) //try to ensure mounts stay synced
+      setMaskBits(MountedMask);
+
    setRenderTransform( mat );
 }
 

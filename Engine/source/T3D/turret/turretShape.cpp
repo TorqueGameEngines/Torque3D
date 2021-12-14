@@ -629,6 +629,9 @@ void TurretShape::processTick(const Move* move)
    if (!isGhost())
       updateAnimation(TickSec);
 
+   if (isMounted()) { // this sets PositionMask at the Item level, forcing a network update and fixing scoping/de-ghosting
+      setVelocity(mMount.object->getVelocity());
+   }
    updateMove(move);
 }
 

@@ -386,7 +386,7 @@ macro(finishExecutable)
     else()
         add_executable("${PROJECT_NAME}" WIN32 ${${PROJECT_NAME}_files})
     endif()
-    
+
     # Torque requires c++17
     target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
@@ -483,8 +483,8 @@ if(UNIX)
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${projectOutDir}")
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
-    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
+	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
 endif()
 
 # fix the debug/release subfolders on windows

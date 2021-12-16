@@ -478,18 +478,13 @@ else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS}")
 endif()
 
-if(UNIX AND NOT APPLE)
+if(UNIX)
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${projectOutDir}")
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${projectOutDir}")
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
-endif()
-
-if(APPLE)
-  SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
-  SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
+	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
 endif()
 
 # fix the debug/release subfolders on windows

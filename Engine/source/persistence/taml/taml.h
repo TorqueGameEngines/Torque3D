@@ -64,8 +64,8 @@ extern StringTableEntry tamlNamedObjectName;
 //-----------------------------------------------------------------------------
 
 #define TAML_SIGNATURE                  "Taml"
-#define TAML_SCHEMA_VARIABLE            "$pref::T2D::TAMLSchema"
-#define TAML_JSON_STRICT_VARIBLE        "$pref::T2D::JSONStrict"
+#define TAML_SCHEMA_VARIABLE            "$pref::T3D::TAMLSchema"
+#define TAML_JSON_STRICT_VARIBLE        "$pref::T3D::JSONStrict"
 
 //-----------------------------------------------------------------------------
 

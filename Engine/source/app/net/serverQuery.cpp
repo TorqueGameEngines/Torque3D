@@ -106,7 +106,6 @@
 #include "sim/netConnection.h"
 #include "sim/netInterface.h"
 
-// cafTODO: breaks T2D
 #include "T3D/gameBase/gameConnection.h"
 
 // This is basically the server query protocol version now:

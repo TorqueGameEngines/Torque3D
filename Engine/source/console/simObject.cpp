@@ -2206,7 +2206,7 @@ const char* SimObject::_getCanSave( void* object, const char* data )
 
 //---------------------------------------------------------------------------
 
-// Copy SimObject to another SimObject (Originally designed for T2D).
+// Copy SimObject to another SimObject.
 void SimObject::copyTo( SimObject* object  )
 {
    object->mClassName = mClassName;

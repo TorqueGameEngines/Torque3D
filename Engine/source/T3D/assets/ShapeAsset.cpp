@@ -167,7 +167,7 @@ void ShapeAsset::initPersistFields()
 
    addProtectedField("fileName", TypeAssetLooseFilePath, Offset(mFileName, ShapeAsset),
       &setShapeFile, &getShapeFile, "Path to the shape file we want to render");
-   addProtectedField("constuctorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
+   addProtectedField("constructorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
       &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
 
    addProtectedField("diffuseImposterFileName", TypeAssetLooseFilePath, Offset(mDiffuseImposterFileName, ShapeAsset),

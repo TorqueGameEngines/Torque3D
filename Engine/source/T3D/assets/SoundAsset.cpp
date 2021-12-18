@@ -330,8 +330,8 @@ DefineEngineMethod(SoundAsset, getSoundPath, const char*, (), , "")
 }
 
 DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zero),
-   "Gets the number of materials for this shape asset.\n"
-   "@return Material count.\n")
+   "Plays the sound for this asset.\n"
+   "@return (sound plays).\n")
 {
    if (object->getSfxProfile())
    {

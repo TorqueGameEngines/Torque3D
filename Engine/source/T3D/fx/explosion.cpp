@@ -230,7 +230,7 @@ ExplosionData::ExplosionData()
 
    faceViewer   = false;
 
-   INIT_ASSET(ExplosionSound);
+   INIT_ASSET(Sound);
 
    //soundProfile      = NULL;
    particleEmitter   = NULL;
@@ -310,7 +310,7 @@ ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : Game
    faceViewer = other.faceViewer;
    particleDensity = other.particleDensity;
    particleRadius = other.particleRadius;
-   CLONE_ASSET(ExplosionSound);
+   CLONE_ASSET(Sound);
    particleEmitter = other.particleEmitter;
    particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
    explosionScale = other.explosionScale;
@@ -396,7 +396,7 @@ void ExplosionData::initPersistFields()
    addField( "playSpeed", TypeF32, Offset(playSpeed, ExplosionData),
       "Time scale at which to play the explosionShape <i>ambient</i> sequence." );
 
-   INITPERSISTFIELD_SOUNDASSET(ExplosionSound, ExplosionData, "Sound to play when this explosion explodes.");
+   INITPERSISTFIELD_SOUNDASSET(Sound, ExplosionData, "Sound to play when this explosion explodes.");
 
    addField( "faceViewer", TypeBool, Offset(faceViewer, ExplosionData),
       "Controls whether the visual effects of the explosion always face the camera." );
@@ -652,7 +652,7 @@ void ExplosionData::packData(BitStream* stream)
 
    PACKDATA_ASSET(ExplosionShape);
 
-   PACKDATA_ASSET(ExplosionSound);
+   PACKDATA_ASSET(Sound);
 
    if (stream->writeFlag(particleEmitter))
       stream->writeRangedU32(particleEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
@@ -756,7 +756,7 @@ void ExplosionData::unpackData(BitStream* stream)
 
    UNPACKDATA_ASSET(ExplosionShape);
 
-   UNPACKDATA_ASSET(ExplosionSound);
+   UNPACKDATA_ASSET(Sound);
 
    if (stream->readFlag())
       particleEmitterId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -859,17 +859,17 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   if (!server && !getExplosionSoundProfile())
+   if (!server && !getSoundProfile())
       return false;
 
    if( !server )
    {
 
-      if (getExplosionSound() != StringTable->EmptyString())
+      if (getSound() != StringTable->EmptyString())
       {
-         _setExplosionSound(getExplosionSound());
+         _setSound(getSound());
 
-         if (!getExplosionSoundProfile())
+         if (!getSoundProfile())
             Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
       }
 
@@ -1390,7 +1390,7 @@ bool Explosion::explode()
       resetWorldBox();
    }
 
-   SFXProfile* sound_prof = mDataBlock->getExplosionSoundProfile();
+   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
    if (sound_prof)
    {
       soundProfile_clone = sound_prof->cloneAndPerformSubstitutions(ss_object, ss_index);

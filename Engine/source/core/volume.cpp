@@ -273,6 +273,18 @@ Time   FileNode::getModifiedTime()
    return attrs.mtime;
 }
 
+Time  FileNode::getCreatedTime()
+{
+   Attributes attrs;
+
+   bool success = getAttributes(&attrs);
+
+   if (!success)
+      return Time();
+
+   return attrs.ctime;
+}
+
 U64    FileNode::getSize()
 {
    Attributes attrs;

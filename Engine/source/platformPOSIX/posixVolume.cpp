@@ -135,6 +135,7 @@ static void copyStatAttributes(const struct stat& info, FileNode::Attributes* at
    attr->size = info.st_size;
    attr->mtime = UnixTimeToTime(info.st_mtime);
    attr->atime = UnixTimeToTime(info.st_atime);
+   attr->ctime = UnixTimeToTime(info.st_ctime);
 }
 
 

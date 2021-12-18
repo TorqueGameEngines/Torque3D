@@ -86,6 +86,7 @@ public:
       // use the mod time for both mod and access time, since we only have mod time in the CD
       attr->mtime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->atime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
+      attr->ctime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->size = mZipEntry->mCD.mUncompressedSize;
 
       return true; 
@@ -197,6 +198,7 @@ public:
       // use the mod time for both mod and access time, since we only have mod time in the CD
       attr->mtime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->atime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
+      attr->ctime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->size = mZipEntry->mCD.mUncompressedSize;
 
       return true; 
@@ -291,6 +293,7 @@ public:
       ZipArchive::ZipEntry* zipEntry = mArchive->getRoot();
       attr->mtime = ZipArchive::DOSTimeToTime(zipEntry->mCD.mModTime, zipEntry->mCD.mModDate);
       attr->atime = ZipArchive::DOSTimeToTime(zipEntry->mCD.mModTime, zipEntry->mCD.mModDate);
+      attr->ctime = ZipArchive::DOSTimeToTime(zipEntry->mCD.mModTime, zipEntry->mCD.mModDate);
       attr->size = zipEntry->mCD.mUncompressedSize;
 
       return true; 

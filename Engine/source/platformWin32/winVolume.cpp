@@ -143,6 +143,10 @@ static void _CopyStatAttributes(const WIN32_FIND_DATAW& info, FileNode::Attribut
    attr->atime = Win32FileTimeToTime(
       info.ftLastAccessTime.dwLowDateTime,
       info.ftLastAccessTime.dwHighDateTime);
+
+   attr->ctime = Win32FileTimeToTime(
+      info.ftCreationTime.dwLowDateTime,
+      info.ftCreationTime.dwHighDateTime);
 }
 
 

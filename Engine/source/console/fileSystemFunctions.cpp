@@ -530,8 +530,12 @@ DefineEngineFunction(fileSize, S32, ( const char* fileName ),,
 
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileName);
-   return Platform::getFileSize( sgScriptFilenameBuffer );
+   StrongRefPtr<Torque::FS::FileNode> node = Torque::FS::GetFileNode(fileName);
+   if (node.isValid())
+   {
+      return node->getSize();
+   }
+   return -1;
 }
 
 DefineEngineFunction( fileModifiedTime, String, ( const char* fileName ),,
@@ -609,13 +613,7 @@ DefineEngineFunction(fileDelete, bool, ( const char* path ),,
    "@return True if file was successfully deleted\n"
    "@ingroup FileSystem")
 {
-   static char fileName[1024];
-   static char sandboxFileName[1024];
-
-   Con::expandScriptFilename( fileName, sizeof( fileName ), path );
-   Platform::makeFullPathName(fileName, sandboxFileName, sizeof(sandboxFileName));
-
-   return dFileDelete(sandboxFileName);
+   return Torque::FS::Remove(path);
 }
 
 
@@ -830,13 +828,7 @@ DefineEngineFunction( pathCopy, bool, ( const char* fromFile, const char* toFile
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem")
 {
-   char qualifiedFromFile[ 2048 ];
-   char qualifiedToFile[ 2048 ];
-   
-   Platform::makeFullPathName( fromFile, qualifiedFromFile, sizeof( qualifiedFromFile ) );
-   Platform::makeFullPathName( toFile, qualifiedToFile, sizeof( qualifiedToFile ) );
-
-   return dPathCopy( qualifiedFromFile, qualifiedToFile, noOverwrite );
+   return Torque::FS::CopyFile(fromFile, toFile, noOverwrite);
 }
 
 //-----------------------------------------------------------------------------
@@ -876,11 +868,7 @@ DefineEngineFunction( createPath, bool, ( const char* path ),,
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem" )
 {
-   static char pathName[1024];
-
-   Con::expandScriptFilename( pathName, sizeof( pathName ), path );
-
-   return Platform::createPath( pathName );
+   return Torque::FS::CreatePath(path);
 }
 
 #endif // TORQUE_TOOLS

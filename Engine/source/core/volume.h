@@ -114,6 +114,7 @@ public:
       String   name;    ///< File/Directory name
       Time     mtime;   ///< Last modified time
       Time     atime;   ///< Last access time
+      Time     ctime;   ///< Creation Time
       U64      size;
    };
 
@@ -128,6 +129,7 @@ public:
 
    // Convenience routines - may be overridden for optimal access
    virtual Time   getModifiedTime();   ///< @note This will return Time() on failure
+   virtual Time   getCreatedTime();      ///< @note This will return Time() on failure
    virtual U64    getSize();           ///< @note This will return 0 on failure
    virtual U32    getChecksum();       ///< @note This will return 0 on failure
 

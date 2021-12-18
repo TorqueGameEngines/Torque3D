@@ -27,6 +27,7 @@
 #include "gfx/gfxStructs.h"
 #include "windowManager/sdl/sdlWindow.h"
 #include "core/util/tVector.h"
+#include "core/volume.h"
 
 struct SDL_Window;
 class FileDialog; // TODO SDL REMOVE
@@ -56,6 +57,18 @@ public:
       TEXT_INPUT = 1, /// < We want to change to text based events & raw input.
       RAW_INPUT = 2   /// < We only want raw input.
    };
+
+#ifdef TORQUE_SECURE_VFS
+   struct DragAndDropFSInfo
+   {
+      String mRootName;
+      Torque::FS::FileSystemRef mDragAndDropFS;
+
+      DragAndDropFSInfo();
+      DragAndDropFSInfo(String rootName, Torque::FS::FileSystemRef fileSystem);
+      ~DragAndDropFSInfo();
+   };
+#endif
 
 protected:
    friend class PlatformWindowSDL;
@@ -96,6 +109,11 @@ protected:
    /// The input state that will change whenever SDL needs notified.
    /// After it is handled, it will return to state NONE.
    KeyboardInputState mInputState;
+
+#ifdef TORQUE_SECURE_VFS
+   HashMap<String, DragAndDropFSInfo> mActiveDragAndDropByRoot;
+   HashMap<Torque::Path, DragAndDropFSInfo> mActiveDragAndDropFSByPath;
+#endif
 
 public:
    PlatformWindowManagerSDL();

@@ -20,6 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include "console/console.h"
 #include "platform/platform.h"
 
 #if defined(TORQUE_OS_WIN)
@@ -30,6 +31,7 @@
 
 #include "platform/platformVolume.h"
 #include "core/util/zip/zipVolume.h"
+#include "core/memVolume.h"
 
 using namespace Torque;
 using namespace Torque::FS;
@@ -47,6 +49,34 @@ bool  MountDefaults()
 
    if ( !mounted )
       return false;
+
+#ifdef TORQUE_SECURE_VFS
+   // Set working directory to where the executable is
+   StringTableEntry executablePath = Platform::getExecutablePath();
+   SetCwd(executablePath);
+
+   // FIXME: Should we use the asset path here as well?
+   mounted = Mount("/", createNativeFS(executablePath));
+   if (!mounted)
+   {
+      return false;
+   }
+#endif
+
+   // Always mount the data dir so scripts work in either configuration. This is used for eg. preferences storage.
+   Path dataDirectory = Platform::getUserDataDirectory();
+   Path appDataDirectory;
+   appDataDirectory.setPath(dataDirectory.getFileName());
+   dataDirectory.appendPath(appDataDirectory);
+
+   dataDirectory.setFileName(TORQUE_APP_NAME);
+
+   Con::errorf("RAW DATA: %s", dataDirectory.getFullPath().c_str());
+   mounted = Mount("data", Platform::FS::createNativeFS(dataDirectory.getFullPath()));
+   if (!mounted)
+   {
+      return false;
+   }
 
 #ifndef TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM
    // Note that the VirtualMountSystem must be enabled in volume.cpp for zip support to work.

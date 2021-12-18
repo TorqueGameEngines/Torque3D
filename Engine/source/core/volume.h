@@ -335,6 +335,7 @@ public:
    virtual ~MountSystem() {}
 
    FileRef createFile(const Path& path);
+   bool copyFile(const Path& source, const Path& destination, bool noOverwrite);
    DirectoryRef createDirectory(const Path& path, FileSystemRef fs = NULL);
    virtual bool createPath(const Path& path);
 
@@ -537,6 +538,9 @@ DirectoryRef OpenDirectory(const Path &file);
 /// The file object is returned in a closed state.
 ///@ingroup VolumeSystem
 FileRef CreateFile(const Path &file);
+
+/// Copy a file from one location to another.
+bool CopyFile(const Path& source, const Path& destination, bool noOverride);
 
 /// Create a directory.
 /// The directory object is returned in a closed state.

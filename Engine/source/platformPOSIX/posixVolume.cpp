@@ -595,6 +595,7 @@ String   Platform::FS::getAssetDir()
 /// file systems.
 bool Platform::FS::InstallFileSystems()
 {
+#ifndef TORQUE_SECURE_VFS
    Platform::FS::Mount( "/", Platform::FS::createNativeFS( String() ) );
 
    // Setup the current working dir.
@@ -611,6 +612,7 @@ bool Platform::FS::InstallFileSystems()
    // Mount the home directory
    if (char* home = getenv("HOME"))
       Platform::FS::Mount( "home", Platform::FS::createNativeFS(home) );
+#endif
 
    return true;
 }

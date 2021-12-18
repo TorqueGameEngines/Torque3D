@@ -500,6 +500,28 @@ Path MountSystem::_normalize(const Path& path)
    return po;
 }
 
+bool MountSystem::copyFile(const Path& source, const Path& destination, bool noOverwrite)
+{
+   // Exit out early if we're not overriding
+   if (isFile(destination) && noOverwrite)
+   {
+      return true;
+   }
+
+   FileRef sourceFile = openFile(source, FS::File::AccessMode::Read);
+   const U64 sourceFileSize = sourceFile->getSize();
+
+   void* writeBuffer = dMalloc(sourceFileSize);
+   sourceFile->read(writeBuffer, sourceFileSize);
+
+   FileRef destinationFile = openFile(destination, FS::File::AccessMode::Write);
+   const bool success = destinationFile->write(writeBuffer, sourceFileSize) == sourceFileSize;
+
+   dFree(writeBuffer);
+
+   return success;
+}
+
 FileRef MountSystem::createFile(const Path& path)
 {
    Path np = _normalize(path);
@@ -907,6 +929,11 @@ namespace FS
 FileRef CreateFile(const Path &path)
 {
    return sgMountSystem.createFile(path);
+}
+
+bool CopyFile(const Path& source, const Path& destination, bool noOverwrite)
+{
+   return sgMountSystem.copyFile(source, destination, noOverwrite);
 }
 
 DirectoryRef CreateDirectory(const Path &path)

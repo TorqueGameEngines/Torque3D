@@ -2660,8 +2660,16 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+#else
+   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
+   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
+
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
+   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+#endif
    
    newAsset->setAssetName(assetName);
    newAsset->setImageFileName(imageFileName.c_str());
@@ -2697,7 +2705,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
          activityLog.push_back(importLogBuffer);
@@ -2725,7 +2733,12 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
    char qualifiedFromFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
+#else
+   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setScriptFile(scriptName.c_str());
@@ -3000,11 +3013,22 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    char qualifiedFromCSFile[2048];
    char qualifiedToCSFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
-
    Platform::makeFullPathName(originalConstructorPath.c_str(), qualifiedFromCSFile, sizeof(qualifiedFromCSFile));
    Platform::makeFullPathName(constructorPath.c_str(), qualifiedToCSFile, sizeof(qualifiedToCSFile));
+#else
+   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
+   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
+   dMemset(qualifiedFromCSFile, 0x00, sizeof(qualifiedFromCSFile));
+   dMemset(qualifiedToCSFile, 0x00, sizeof(qualifiedToCSFile));
+
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
+   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+   dMemcpy(qualifiedFromCSFile, originalConstructorPath.c_str(), originalConstructorPath.size());
+   dMemcpy(qualifiedToCSFile, constructorPath.c_str(), constructorPath.size());
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setShapeFile(shapeFileName.c_str());
@@ -3086,7 +3110,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", qualifiedFromFile);
          activityLog.push_back(importLogBuffer);
@@ -3097,7 +3121,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       {
          if (Platform::isFile(qualifiedFromCSFile))
          {
-            if (!dPathCopy(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
+            if (!Torque::FS::CopyFile(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
             {
                dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", qualifiedFromCSFile);
                activityLog.push_back(importLogBuffer);
@@ -3289,8 +3313,16 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+#else
+   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
+   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
+
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
+   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setSoundFile(imageFileName.c_str());
@@ -3316,7 +3348,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
          activityLog.push_back(importLogBuffer);
@@ -3345,8 +3377,16 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+#else
+   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
+   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
+
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
+   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setAnimationFile(imageFileName.c_str());
@@ -3372,7 +3412,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
          activityLog.push_back(importLogBuffer);

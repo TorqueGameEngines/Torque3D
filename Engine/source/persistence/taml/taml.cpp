@@ -212,8 +212,13 @@ ImplementEnumType(_TamlFormatMode,
       AssertFatal(pSimObject != NULL, "Cannot write a NULL object.");
       AssertFatal(pFilename != NULL, "Cannot write to a NULL filename.");
 
-      // Expand the file-name into the file-path buffer.
+      // Expand the file-name into the file-path buffer unless we're a secure VFS
+#ifndef TORQUE_SECURE_VFS
       Con::expandToolScriptFilename(mFilePathBuffer, sizeof(mFilePathBuffer), pFilename);
+#else
+      dMemset(mFilePathBuffer, 0x00, sizeof(mFilePathBuffer));
+      dMemcpy(mFilePathBuffer, pFilename, dStrlen(pFilename));
+#endif
 
       FileStream stream;
 

@@ -169,6 +169,9 @@ if(NOT MSVC AND NOT APPLE) # handle single-configuration generator
     mark_as_advanced(TORQUE_ADDITIONAL_LINKER_FLAGS)
 endif()
 
+option(TORQUE_SECURE_VFS "Secure VFS configuration. Arbitrary script access to file system will be heavily restricted." OFF)
+mark_as_advanced(TORQUE_SECURE_VFS)
+
 option(TORQUE_MULTITHREAD "Multi Threading" ON)
 mark_as_advanced(TORQUE_MULTITHREAD)
 

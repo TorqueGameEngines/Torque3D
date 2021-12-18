@@ -127,7 +127,7 @@ ConsoleDocClass( PrecipitationData,
 //----------------------------------------------------------
 PrecipitationData::PrecipitationData()
 {
-   INIT_ASSET(Sound);
+   INIT_ASSET(PrecipitationSound);
 
    INIT_ASSET(Drop);
 
@@ -143,7 +143,7 @@ PrecipitationData::PrecipitationData()
 
 void PrecipitationData::initPersistFields()
 {
-   INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
+   INITPERSISTFIELD_SOUNDASSET(PrecipitationSound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
 
    addProtectedField( "dropTexture", TypeFilename, Offset(mDropName, PrecipitationData), &_setDropData, &defaultProtectedGetFn,
       "@brief Texture filename for drop particles.\n\n"
@@ -190,11 +190,11 @@ bool PrecipitationData::preload( bool server, String &errorStr )
       return false;
    if (!server)
    {
-      if (getSound() != StringTable->EmptyString())
+      if (getPrecipitationSound() != StringTable->EmptyString())
       {
-         _setSound(getSound());
+         _setPrecipitationSound(getPrecipitationSound());
 
-         if (!getSoundProfile())
+         if (!getPrecipitationSoundProfile())
             Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
       }
    }
@@ -206,7 +206,7 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
+   PACKDATA_ASSET(PrecipitationSound);
 
    PACKDATA_ASSET(Drop);
 
@@ -223,7 +223,7 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   UNPACKDATA_ASSET(PrecipitationSound);
 
    UNPACKDATA_ASSET(Drop);
 
@@ -604,9 +604,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->getSoundProfile())
+      if ( mDataBlock->getPrecipitationSoundProfile())
       {
-         mAmbientSound = SFX->createSource(mDataBlock->getSoundProfile(), &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getPrecipitationSoundProfile(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

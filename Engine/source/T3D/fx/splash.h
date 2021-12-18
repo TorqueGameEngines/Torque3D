@@ -95,8 +95,8 @@ public:
    //AudioProfile*           soundProfile;
    //S32                     soundProfileId;
 
-   DECLARE_SOUNDASSET(SplashData, Sound);
-   DECLARE_ASSET_SETGET(SplashData, Sound);
+   DECLARE_SOUNDASSET(SplashData, SplashSound);
+   DECLARE_ASSET_SETGET(SplashData, SplashSound);
 
    ParticleEmitterData*    emitterList[NUM_EMITTERS];
    S32                     emitterIDList[NUM_EMITTERS];

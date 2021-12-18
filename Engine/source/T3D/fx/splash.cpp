@@ -70,7 +70,7 @@ SplashData::SplashData()
    //soundProfile      = NULL;
    //soundProfileId    = 0;
 
-   INIT_ASSET(Sound);
+   INIT_ASSET(SplashSound);
 
    scale.set(1, 1, 1);
 
@@ -116,7 +116,7 @@ SplashData::SplashData()
 //--------------------------------------------------------------------------
    void SplashData::initPersistFields()
 {
-   INITPERSISTFIELD_SOUNDASSET(Sound, SplashData, "Sound to play when splash, splashes.");
+   INITPERSISTFIELD_SOUNDASSET(SplashSound, SplashData, "Sound to play when splash, splashes.");
 
    addField("scale",             TypePoint3F,                  Offset(scale,              SplashData), "The scale of this splashing effect, defined as the F32 points X, Y, Z.\n");
    addField("emitter",           TYPEID< ParticleEmitterData >(),   Offset(emitterList,        SplashData), NUM_EMITTERS, "List of particle emitters to create at the point of this Splash effect.\n");
@@ -163,7 +163,7 @@ void SplashData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
+   PACKDATA_ASSET(SplashSound);
 
    mathWrite(*stream, scale);
    stream->write(delayMS);
@@ -219,7 +219,7 @@ void SplashData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   UNPACKDATA_ASSET(SplashSound);
 
    mathRead(*stream, &scale);
    stream->read(&delayMS);
@@ -279,11 +279,11 @@ bool SplashData::preload(bool server, String &errorStr)
    if (!server)
    {
 
-      if (getSound() != StringTable->EmptyString())
+      if (getSplashSound() != StringTable->EmptyString())
       {
-         _setSound(getSound());
+         _setSplashSound(getSplashSound());
 
-         if(!getSoundProfile())
+         if(!getSplashSoundProfile())
             Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
       }
 
@@ -687,7 +687,7 @@ void Splash::spawnExplosion()
 
    /// could just play the explosion one, but explosion could be weapon specific,
    /// splash sound could be liquid specific. food for thought.
-   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
+   SFXProfile* sound_prof = mDataBlock->getSplashSoundProfile();
    if (sound_prof)
    {
       SFX->playOnce(sound_prof, &getTransform());

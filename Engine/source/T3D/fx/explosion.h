@@ -70,8 +70,8 @@ class ExplosionData : public GameBaseData {
    S32 particleDensity;
    F32 particleRadius;
 
-   DECLARE_SOUNDASSET(ExplosionData, Sound);
-   DECLARE_ASSET_SETGET(ExplosionData, Sound);
+   DECLARE_SOUNDASSET(ExplosionData, ExplosionSound);
+   DECLARE_ASSET_SETGET(ExplosionData, ExplosionSound);
 
    ParticleEmitterData* particleEmitter;
    S32                  particleEmitterId;

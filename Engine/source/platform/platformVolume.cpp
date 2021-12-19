@@ -31,7 +31,6 @@
 
 #include "platform/platformVolume.h"
 #include "core/util/zip/zipVolume.h"
-#include "core/memVolume.h"
 
 using namespace Torque;
 using namespace Torque::FS;
@@ -71,7 +70,6 @@ bool  MountDefaults()
 
    dataDirectory.setFileName(TORQUE_APP_NAME);
 
-   Con::errorf("RAW DATA: %s", dataDirectory.getFullPath().c_str());
    mounted = Mount("data", Platform::FS::createNativeFS(dataDirectory.getFullPath()));
    if (!mounted)
    {

@@ -608,9 +608,13 @@ bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEnt
       if (noBasePath)
       {
          Path newDirectoryPath;
-         for (U32 iteration = basePath.getDirectoryCount() + 1; iteration < directoryPath.getDirectoryCount(); ++iteration)
+         for (U32 iteration = basePath.getDirectoryCount(); iteration < directoryPath.getDirectoryCount(); ++iteration)
          {
-            newDirectoryPath.appendPath(directoryPath.getDirectory(iteration));
+            if (iteration > basePath.getDirectoryCount())
+            {
+               newDirectoryPath.setPath(newDirectoryPath.getPath() + "/");
+            }
+            newDirectoryPath.setPath(newDirectoryPath.getPath() + directoryPath.getDirectory(iteration));
          }
 
          newDirectoryPath.setFileName(directoryPath.getFileName());
@@ -621,7 +625,9 @@ bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEnt
       directories.push_back(StringTable->insert(directoryPathString, true));
       if (currentDepth <= depth)
       {
-         DirectoryRef nextDirectory = OpenDirectory(directoryPaths[iteration]);
+         const String subdirectoryPath = directoryPath.getFullPath() + "/";
+
+         DirectoryRef nextDirectory = OpenDirectory(subdirectoryPath);
          _dumpDirectories(nextDirectory, directories, depth, noBasePath, currentDepth + 1, basePath);
       }
    }
@@ -637,7 +643,7 @@ bool MountSystem::dumpDirectories(const Path& path, Vector<StringTableEntry>& di
    }
 
    DirectoryRef sourceDirectory = openDirectory(path);
-   return _dumpDirectories(sourceDirectory, directories, depth, noBasePath, 0, path);
+   return _dumpDirectories(sourceDirectory, directories, depth, noBasePath, 1, path);
 }
 
 FileRef MountSystem::createFile(const Path& path)

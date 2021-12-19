@@ -1400,7 +1400,7 @@ void AssetImportConfig::loadSISFile(Torque::Path filePath)
    String settingsFile = settingsFilePath + "/" + fileExtension + ".sis";
 
    FileObject* fileObj = new FileObject();
-   if (Platform::isFile(settingsFile))
+   if (Torque::FS::IsFile(settingsFile))
    {
       if (!fileObj->readMemory(settingsFile.c_str()))
       {
@@ -2074,7 +2074,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
 
       if (fullFilePath.isNotEmpty())
       {
-         if (!Platform::isFile(fullFilePath.c_str()))
+         if (!Torque::FS::IsFile(fullFilePath.c_str()))
          {
             //could be a stale path reference, such as if it was downloaded elsewhere. Trim to just the filename and see
             //if we can find it there
@@ -2086,7 +2086,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
             if(filePath.getPath().isEmpty())
                fullFilePath = shapePathBase + "/" + fullFilePath;
  
-            if (Platform::isFile(fullFilePath.c_str()))
+            if (Torque::FS::IsFile(fullFilePath.c_str()))
             {
                filePath = Torque::Path(fullFilePath);
             }
@@ -2203,7 +2203,7 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
       }
    }
 
-   if (!assetItem->filePath.isEmpty() && !assetItem->generatedAsset && !Platform::isFile(assetItem->filePath.getFullPath().c_str()))
+   if (!assetItem->filePath.isEmpty() && !assetItem->generatedAsset && !Torque::FS::IsFile(assetItem->filePath.getFullPath().c_str()))
    {
       assetItem->status = "Error";
       assetItem->statusType = "MissingFile";
@@ -2667,8 +2667,8 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
    dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
 
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
-   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
+   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
 #endif
    
    newAsset->setAssetName(assetName);
@@ -2737,7 +2737,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
 #else
    dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
 #endif
 
    newAsset->setAssetName(assetName);
@@ -2817,7 +2817,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    FileObject* file = new FileObject();
    file->registerObject();
 
-   if (activeImportConfig->UseExistingMaterials && Platform::isFile(qualifiedFromFile))
+   if (activeImportConfig->UseExistingMaterials && Torque::FS::IsFile(qualifiedFromFile))
    {
       //Now write the script file containing our material out
       //There's 2 ways to do this. If we're in-place importing an existing asset, we can see if the definition existed already, like in an old
@@ -3024,10 +3024,10 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    dMemset(qualifiedFromCSFile, 0x00, sizeof(qualifiedFromCSFile));
    dMemset(qualifiedToCSFile, 0x00, sizeof(qualifiedToCSFile));
 
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
-   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
-   dMemcpy(qualifiedFromCSFile, originalConstructorPath.c_str(), originalConstructorPath.size());
-   dMemcpy(qualifiedToCSFile, constructorPath.c_str(), constructorPath.size());
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
+   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
+   dMemcpy(qualifiedFromCSFile, originalConstructorPath.c_str(), std::min<dsize_t>(originalConstructorPath.size(), sizeof(qualifiedFromCSFile)));
+   dMemcpy(qualifiedToCSFile, constructorPath.c_str(), std::min<dsize_t>(constructorPath.size(), sizeof(qualifiedToCSFile)));
 #endif
 
    newAsset->setAssetName(assetName);
@@ -3119,7 +3119,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
       if (!isInPlace)
       {
-         if (Platform::isFile(qualifiedFromCSFile))
+         if (Torque::FS::IsFile(qualifiedFromCSFile))
          {
             if (!Torque::FS::CopyFile(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
             {
@@ -3138,7 +3138,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       else
       {
          //We're doing an in-place import, so double check we've already got a constructor file in the expected spot
-         if (Platform::isFile(qualifiedFromCSFile))
+         if (Torque::FS::IsFile(qualifiedFromCSFile))
          {
             //Yup, found it, we're good to go
             makeNewConstructor = false;
@@ -3151,7 +3151,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
             Torque::Path constrFilePath = qualifiedFromCSFile;
             constrFilePath.setExtension("cs");
 
-            if (Platform::isFile(constrFilePath.getFullPath().c_str()))
+            if (Torque::FS::IsFile(constrFilePath.getFullPath().c_str()))
             {
                //Yup, found it, we're good to go
                makeNewConstructor = false;
@@ -3320,8 +3320,8 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
    dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
    dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
 
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
-   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
+   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
 #endif
 
    newAsset->setAssetName(assetName);
@@ -3384,8 +3384,8 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
    dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
    dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
 
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), originalPath.size());
-   dMemcpy(qualifiedToFile, assetPath.c_str(), assetPath.size());
+   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
+   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
 #endif
 
    newAsset->setAssetName(assetName);

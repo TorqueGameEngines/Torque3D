@@ -455,7 +455,13 @@ DefineEngineFunction(getDirectoryList, String, ( const char* path, S32 depth ), 
 {
    // Grab the full path.
    char fullpath[1024];
+
+#ifdef TORQUE_SECURE_VFS
+   dMemset(fullpath, 0x00, sizeof(fullpath));
+   dMemcpy(fullpath, path, dStrlen(path));
+#else
    Platform::makeFullPathName(String::compare(path, "/") == 0 ? "" : path, fullpath, sizeof(fullpath));
+#endif
 
    //dSprintf(fullpath, 511, "%s/%s", Platform::getWorkingDirectory(), path);
 
@@ -469,7 +475,11 @@ DefineEngineFunction(getDirectoryList, String, ( const char* path, S32 depth ), 
 
    // Dump the directories.
    Vector<StringTableEntry> directories;
+#ifdef TORQUE_SECURE_VFS
+   Torque::FS::DumpDirectories(fullpath, directories, depth, true);
+#else
    Platform::dumpDirectories(fullpath, directories, depth, true);
+#endif
 
    if( directories.empty() )
       return "";

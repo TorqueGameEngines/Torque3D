@@ -744,13 +744,13 @@ protected:
 
    /// @name Scripted Sound
    /// @{
-   struct Sound {
+   struct SoundThread {
       bool play;                    ///< Are we playing this sound?
       SimTime timeout;              ///< Time until we stop playing this sound.
-      SFXTrack* profile;            ///< Profile on server
+      AssetPtr<SoundAsset> asset; ///< Asset on server
       SFXSource* sound;             ///< Sound on client
    };
-   Sound mSoundThread[MaxSoundThreads];
+   SoundThread mSoundThread[MaxSoundThreads];
    /// @}
 
    /// @name Scripted Animation Threads
@@ -1114,7 +1114,7 @@ protected:
 
    /// Updates the audio state of the supplied sound
    /// @param   st   Sound
-   void updateAudioState(Sound& st);
+   void updateAudioState(SoundThread& st);
 
    /// Recalculates the spacial sound based on the current position of the object
    /// emitting the sound.
@@ -1328,9 +1328,7 @@ public:
 
    /// Plays an audio sound from a mounted object
    /// @param   slot    Mount slot ID
-   /// @param   track   Audio track to play
-   void playAudio(U32 slot,SFXTrack* track);
-   void playAudio( U32 slot, SFXProfile* profile ) { playAudio( slot, ( SFXTrack* ) profile ); }
+   void playAudio(U32 slot, StringTableEntry assetId);
 
    /// Stops audio from a mounted object
    /// @param   slot   Mount slot ID

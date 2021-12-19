@@ -203,7 +203,11 @@ public:
    // Functions
    virtual bool open() = 0;
    virtual bool close() = 0;
-   virtual bool read(Attributes*) = 0;   
+   virtual bool read(Attributes*) = 0;
+
+   bool dump(Vector<Path>& out);
+   bool dumpFiles(Vector<Path>& out);
+   bool dumpDirectories(Vector<Path>& out);
 };
 
 typedef WeakRefPtr<Directory> DirectoryPtr;
@@ -338,6 +342,8 @@ public:
 
    FileRef createFile(const Path& path);
    bool copyFile(const Path& source, const Path& destination, bool noOverwrite);
+   bool dumpDirectories(const Path& path, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath);
+
    DirectoryRef createDirectory(const Path& path, FileSystemRef fs = NULL);
    virtual bool createPath(const Path& path);
 
@@ -377,6 +383,8 @@ public:
    void  startFileChangeNotifications();
    void  stopFileChangeNotifications();
 
+private:
+   bool _dumpDirectories(DirectoryRef directory, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath, S32 currentDepth, const Path& basePath);
 protected:
    virtual void _log(const String& msg);
 
@@ -543,6 +551,9 @@ FileRef CreateFile(const Path &file);
 
 /// Copy a file from one location to another.
 bool CopyFile(const Path& source, const Path& destination, bool noOverride);
+
+/// Retrieve list of directories in the specified directory.
+bool DumpDirectories(const Path& path, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath);
 
 /// Create a directory.
 /// The directory object is returned in a closed state.

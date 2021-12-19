@@ -255,6 +255,64 @@ File::~File() {}
 Directory::Directory() {}
 Directory::~Directory() {}
 
+bool Directory::dump(Vector<Path>& out)
+{
+   const Path sourcePath = getName();
+
+   FileNode::Attributes currentAttributes;
+   while (read(&currentAttributes))
+   {
+      Path currentPath = sourcePath;
+      currentPath.appendPath(currentPath.getFileName());
+      currentPath.setFileName(currentAttributes.name);
+
+      out.push_back(currentPath);
+   }
+
+   return true;
+}
+
+bool Directory::dumpFiles(Vector<Path>& out)
+{
+   const Path sourcePath = getName();
+
+   FileNode::Attributes currentAttributes;
+   while (read(&currentAttributes))
+   {
+      Path currentPath = sourcePath;
+      currentPath.appendPath(currentPath.getFileName());
+      currentPath.setFileName(currentAttributes.name);
+
+      if (IsFile(currentPath))
+      {
+         out.push_back(currentPath);
+      }
+   }
+
+   return true;
+}
+
+bool Directory::dumpDirectories(Vector<Path>& out)
+{
+   const Path sourcePath = getName();
+
+   FileNode::Attributes currentAttributes;
+   while (read(&currentAttributes))
+   {
+      Path currentPath = sourcePath;
+      currentPath.appendPath(currentPath.getFileName());
+      currentPath.setFileName(currentAttributes.name);
+
+      const bool result = IsDirectory(currentPath);
+      if (result)
+      {
+         out.push_back(currentPath);
+      }
+   }
+
+   return true;
+}
+
 
 FileNode::FileNode()
 :  mChecksum(0)
@@ -532,6 +590,39 @@ bool MountSystem::copyFile(const Path& source, const Path& destination, bool noO
    dFree(writeBuffer);
 
    return success;
+}
+
+bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath, S32 currentDepth, const Path& basePath)
+{
+   Vector<Torque::Path> directoryPaths;
+   if (!directory->dumpDirectories(directoryPaths))
+   {
+      return false;
+   }
+
+   for (U32 iteration = 0; iteration < directoryPaths.size(); ++iteration)
+   {
+      directories.push_back(StringTable->insert(directoryPaths[iteration].getFullPath().c_str(), true));
+
+      if (currentDepth <= depth)
+      {
+         DirectoryRef nextDirectory = OpenDirectory(directoryPaths[iteration]);
+         _dumpDirectories(nextDirectory, directories, depth, noBasePath, currentDepth + 1, basePath);
+      }
+   }
+
+   return true;
+}
+
+bool MountSystem::dumpDirectories(const Path& path, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath)
+{
+   if (!isDirectory(path))
+   {
+      return false;
+   }
+
+   DirectoryRef sourceDirectory = openDirectory(path);
+   return _dumpDirectories(sourceDirectory, directories, depth, noBasePath, 0, path);
 }
 
 FileRef MountSystem::createFile(const Path& path)
@@ -830,22 +921,19 @@ bool MountSystem::isDirectory(const Path& path, FileSystemRef fsRef)
 {
    FileNode::Attributes attr;
 
+   bool result = false;
    if (fsRef.isNull())
    {
-      if (getFileAttributes(path,&attr))
-         return attr.flags & FileNode::Directory;
-      return false;
+      if (getFileAttributes(path, &attr))
+         result = (attr.flags & FileNode::Directory) != 0;
    }
    else
    {
       FileNodeRef fnRef = fsRef->resolve(path);
-      if (fnRef.isNull())
-         return false;
-
-      if (fnRef->getAttributes(&attr))
-         return attr.flags & FileNode::Directory;
-      return false;
+      if (!fnRef.isNull() && fnRef->getAttributes(&attr))
+         result = (attr.flags & FileNode::Directory) != 0;
    }
+   return result;
 }
 
 bool MountSystem::isReadOnly(const Path& path)
@@ -946,6 +1034,11 @@ FileRef CreateFile(const Path &path)
 bool CopyFile(const Path& source, const Path& destination, bool noOverwrite)
 {
    return sgMountSystem.copyFile(source, destination, noOverwrite);
+}
+
+bool DumpDirectories(const Path& path, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath)
+{
+   return sgMountSystem.dumpDirectories(path, directories, depth, noBasePath);
 }
 
 DirectoryRef CreateDirectory(const Path &path)

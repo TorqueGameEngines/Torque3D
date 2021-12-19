@@ -368,15 +368,11 @@ DefineEngineFunction(getFileCRC, S32, ( const char* fileName ),,
    
    "@ingroup FileSystem")
 {
-   String cleanfilename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   Torque::FS::FileNodeRef fileRef = Torque::FS::GetFileNode( givenPath );
+   Torque::FS::FileNodeRef fileRef = Torque::FS::GetFileNode( fileName );
 
    if ( fileRef == NULL )
    {
-      Con::errorf("getFileCRC() - could not access file: [%s]", givenPath.getFullPath().c_str() );
+      Con::errorf("getFileCRC() - could not access file: [%s]", fileName );
       return -1;
    }
 
@@ -391,11 +387,7 @@ DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    
    "@ingroup FileSystem")
 {
-   String cleanfilename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   return Torque::FS::IsFile(givenPath);
+   return Torque::FS::IsFile(fileName);
 }
 
 DefineEngineFunction(isScriptFile, bool, (const char* fileName), ,
@@ -406,11 +398,7 @@ DefineEngineFunction(isScriptFile, bool, (const char* fileName), ,
 
    "@ingroup FileSystem")
 {
-   String cleanfilename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   return Torque::FS::IsScriptFile(givenPath.getFullPath());
+   return Torque::FS::IsScriptFile(fileName);
 }
 
 DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,
@@ -423,11 +411,7 @@ DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,
 
    "@ingroup FileSystem")
 {
-   String dir(Torque::Path::CleanSeparators(directory));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), dir.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   return Torque::FS::IsDirectory( givenPath );
+   return Torque::FS::IsDirectory( directory );
 }
 
 DefineEngineFunction(isWriteableFileName, bool, ( const char* fileName ),,
@@ -438,14 +422,7 @@ DefineEngineFunction(isWriteableFileName, bool, ( const char* fileName ),,
 
    "@ingroup FileSystem")
 {
-   String filename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), filename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   Torque::FS::FileSystemRef fs = Torque::FS::GetFileSystem(givenPath);
-   Torque::Path path = fs->mapTo(givenPath);
-
-   return !Torque::FS::IsReadOnly(path);
+   return !Torque::FS::IsReadOnly(fileName);
 }
 
 DefineEngineFunction(startFileChangeNotifications, void, (),,
@@ -840,7 +817,11 @@ DefineEngineFunction( getCurrentDirectory, String, (),,
    "@see getWorkingDirectory()"
    "@ingroup FileSystem")
 {
+#ifdef TORQUE_SECURE_VFS
+   return Torque::FS::GetCwd();
+#else
    return Platform::getCurrentDirectory();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -853,8 +834,11 @@ DefineEngineFunction( setCurrentDirectory, bool, ( const char* path ),,
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem")
 {
+#ifdef TORQUE_SECURE_VFS
+   return Torque::FS::SetCwd(path);
+#else
    return Platform::setCurrentDirectory( StringTable->insert( path ) );
-
+#endif
 }
 
 //-----------------------------------------------------------------------------

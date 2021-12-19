@@ -2307,7 +2307,8 @@ void ShapeBase::updateAudioState(SoundThread& st)
    {
       // st.sound was not stopped before. If this causes issues remove.
       st.play = false;
-      st.sound->stop();
+      if (st.sound)
+         st.sound->stop();
    }
 }
 

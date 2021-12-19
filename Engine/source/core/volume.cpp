@@ -602,8 +602,23 @@ bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEnt
 
    for (U32 iteration = 0; iteration < directoryPaths.size(); ++iteration)
    {
-      directories.push_back(StringTable->insert(directoryPaths[iteration].getFullPath().c_str(), true));
+      const Path& directoryPath = directoryPaths[iteration];
 
+      String directoryPathString = directoryPath.getFullPath().c_str();
+      if (noBasePath)
+      {
+         Path newDirectoryPath;
+         for (U32 iteration = basePath.getDirectoryCount() + 1; iteration < directoryPath.getDirectoryCount(); ++iteration)
+         {
+            newDirectoryPath.appendPath(directoryPath.getDirectory(iteration));
+         }
+
+         newDirectoryPath.setFileName(directoryPath.getFileName());
+         newDirectoryPath.setExtension(directoryPath.getExtension());
+         directoryPathString = newDirectoryPath.getFullPathWithoutRoot();
+      }
+
+      directories.push_back(StringTable->insert(directoryPathString, true));
       if (currentDepth <= depth)
       {
          DirectoryRef nextDirectory = OpenDirectory(directoryPaths[iteration]);

@@ -3137,7 +3137,10 @@ U32 ShapeBase::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
          SoundThread& st = mSoundThread[i];
          if (stream->writeFlag(mask & (SoundMaskN << i)))
             if (stream->writeFlag(st.play))
-               stream->writeString(st.asset->getAssetId());
+            {
+               NetStringHandle assetIdStr = st.asset->getAssetId();
+               con->packNetStringHandleU(stream, assetIdStr);
+            }
       }
    }
 
@@ -3257,7 +3260,14 @@ void ShapeBase::unpackUpdate(NetConnection *con, BitStream *stream)
             st.play = stream->readFlag();
             if ( st.play ) 
             {
-               st.asset = StringTable->insert(con->unpackNetStringHandleU(stream).getString());
+               StringTableEntry temp = StringTable->insert(con->unpackNetStringHandleU(stream).getString());
+               if (AssetDatabase.isDeclaredAsset(temp))
+               {
+                  AssetPtr<SoundAsset> tempSoundAsset;
+                  tempSoundAsset = temp;
+
+                  st.asset = temp;
+               }
             }
 
             if ( isProperlyAdded() )

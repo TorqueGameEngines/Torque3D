@@ -308,7 +308,8 @@ SimSoundAssetEvent::SimSoundAssetEvent(AssetPtr<SoundAsset> asset, const MatrixF
 
 void SimSoundAssetEvent::pack(NetConnection* con, BitStream* stream)
 {
-   stream->writeString(mAsset->getAssetId());
+   NetStringHandle assetIdStr = mAsset->getAssetId();
+   con->packNetStringHandleU(stream, assetIdStr);
 
    // only stream if this is a 3d sound asset.
    if (mAsset->is3D())
@@ -345,7 +346,15 @@ void SimSoundAssetEvent::write(NetConnection* con, BitStream* stream)
 
 void SimSoundAssetEvent::unpack(NetConnection* con, BitStream* stream)
 {
-   mAsset = StringTable->insert(con->unpackNetStringHandleU(stream).getString());
+
+   StringTableEntry temp = StringTable->insert(con->unpackNetStringHandleU(stream).getString());
+   if (AssetDatabase.isDeclaredAsset(temp))
+   {
+      AssetPtr<SoundAsset> tempSoundAsset;
+      tempSoundAsset = temp;
+
+      mAsset = temp;
+   }
 
    if (mAsset->is3D())
    {

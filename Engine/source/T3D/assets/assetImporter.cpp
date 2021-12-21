@@ -2664,11 +2664,8 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
 #else
-   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
-   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
-
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
-   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
 #endif
    
    newAsset->setAssetName(assetName);
@@ -2736,8 +2733,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 #ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
 #else
-   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
 #endif
 
    newAsset->setAssetName(assetName);
@@ -3019,15 +3015,10 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalConstructorPath.c_str(), qualifiedFromCSFile, sizeof(qualifiedFromCSFile));
    Platform::makeFullPathName(constructorPath.c_str(), qualifiedToCSFile, sizeof(qualifiedToCSFile));
 #else
-   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
-   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
-   dMemset(qualifiedFromCSFile, 0x00, sizeof(qualifiedFromCSFile));
-   dMemset(qualifiedToCSFile, 0x00, sizeof(qualifiedToCSFile));
-
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
-   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
-   dMemcpy(qualifiedFromCSFile, originalConstructorPath.c_str(), std::min<dsize_t>(originalConstructorPath.size(), sizeof(qualifiedFromCSFile)));
-   dMemcpy(qualifiedToCSFile, constructorPath.c_str(), std::min<dsize_t>(constructorPath.size(), sizeof(qualifiedToCSFile)));
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
+   dStrcpy(qualifiedFromCSFile, originalConstructorPath.c_str(), sizeof(qualifiedFromCSFile));
+   dStrcpy(qualifiedToCSFile, constructorPath.c_str(), sizeof(qualifiedToCSFile));
 #endif
 
    newAsset->setAssetName(assetName);
@@ -3317,11 +3308,8 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
 #else
-   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
-   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
-
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
-   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
 #endif
 
    newAsset->setAssetName(assetName);
@@ -3381,11 +3369,8 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
 #else
-   dMemset(qualifiedFromFile, 0x00, sizeof(qualifiedFromFile));
-   dMemset(qualifiedToFile, 0x00, sizeof(qualifiedToFile));
-
-   dMemcpy(qualifiedFromFile, originalPath.c_str(), std::min<dsize_t>(originalPath.size(), sizeof(qualifiedFromFile)));
-   dMemcpy(qualifiedToFile, assetPath.c_str(), std::min<dsize_t>(assetPath.size(), sizeof(qualifiedToFile)));
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
 #endif
 
    newAsset->setAssetName(assetName);

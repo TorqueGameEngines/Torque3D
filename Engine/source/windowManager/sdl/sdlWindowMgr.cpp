@@ -52,8 +52,7 @@ PlatformWindowManagerSDL::DragAndDropFSInfo::DragAndDropFSInfo(String rootName, 
 
 PlatformWindowManagerSDL::DragAndDropFSInfo::~DragAndDropFSInfo()
 {
-// FIXME: Cleanup - we can't simply do this unmount due to the way the hash mapping works
-//   Torque::FS::Unmount(mDragAndDropFS);
+
 }
 #endif
 
@@ -88,6 +87,15 @@ PlatformWindowManagerSDL::PlatformWindowManagerSDL()
 
 PlatformWindowManagerSDL::~PlatformWindowManagerSDL()
 {
+   // Unmount all drag and drop FS mounts
+   for (auto iteration = mActiveDragAndDropFSByPath.begin(); iteration != mActiveDragAndDropFSByPath.end(); ++iteration)
+   {
+      auto&& mapping = *iteration;
+      Torque::FS::Unmount(mapping.value.mDragAndDropFS);
+   }
+   mActiveDragAndDropByRoot.clear();
+   mActiveDragAndDropFSByPath.clear();
+
    // Kill all our windows first.
    while(mWindowListHead)
       // The destructors update the list, so this works just fine.
@@ -473,7 +481,7 @@ void PlatformWindowManagerSDL::_process()
                while (search != mActiveDragAndDropByRoot.end())
                {
                   char buffer[32];
-                  dSprintf(buffer, 32, "%u", rootCounter);
+                  dSprintf(buffer, sizeof(buffer), "%u", rootCounter);
                   chosenRootName = directoryName + buffer;
 
                   search = mActiveDragAndDropByRoot.find(chosenRootName);

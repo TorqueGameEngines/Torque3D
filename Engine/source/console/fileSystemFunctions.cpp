@@ -532,20 +532,20 @@ DefineEngineFunction( fileModifiedTime, String, ( const char* fileName ),,
    "@return Formatted string (OS specific) containing modified time, \"9/3/2010 12:33:47 PM\" for example\n"
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileName);
+   Torque::FS::FileNodeRef node = Torque::FS::GetFileNode(fileName);
 
-   FileTime ft = {0};
-   Platform::getFileTimes( sgScriptFilenameBuffer, NULL, &ft );
+   if (node)
+   {
+      Platform::LocalTime lt = node->getModifiedTime().toLocalTime();
 
-   Platform::LocalTime lt = {0};
-   Platform::fileToLocalTime( ft, &lt );   
-   
-   String fileStr = Platform::localTimeToString( lt );
-   
-   char *buffer = Con::getReturnBuffer( fileStr.size() );
-   dStrcpy( buffer, fileStr, fileStr.size() );
-   
-   return buffer;
+      String fileStr = Platform::localTimeToString(lt);
+
+      char *buffer = Con::getReturnBuffer(fileStr.size());
+      dStrcpy(buffer, fileStr, fileStr.size());
+
+      return buffer;
+   }
+   return "";
 }
 
 DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
@@ -555,20 +555,20 @@ DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
    "@return Formatted string (OS specific) containing created time, \"9/3/2010 12:33:47 PM\" for example\n"
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename( sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileName );
+   Torque::FS::FileNodeRef node = Torque::FS::GetFileNode(fileName);
 
-   FileTime ft = {0};
-   Platform::getFileTimes( sgScriptFilenameBuffer, &ft, NULL );
+   if (node)
+   {
+      Platform::LocalTime lt = node->getCreatedTime().toLocalTime();
 
-   Platform::LocalTime lt = {0};
-   Platform::fileToLocalTime( ft, &lt );   
+      String fileStr = Platform::localTimeToString(lt);
 
-   String fileStr = Platform::localTimeToString( lt );
+      char *buffer = Con::getReturnBuffer(fileStr.size());
+      dStrcpy(buffer, fileStr, fileStr.size());
 
-   char *buffer = Con::getReturnBuffer( fileStr.size() );
-   dStrcpy( buffer, fileStr, fileStr.size() );
-
-   return buffer;
+      return buffer;
+   }
+   return "";
 }
 
 DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* fileB), ("", ""),

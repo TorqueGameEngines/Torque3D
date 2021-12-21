@@ -50,12 +50,7 @@ bool  MountDefaults()
       return false;
 
 #ifdef TORQUE_SECURE_VFS
-   // Set working directory to where the executable is
-   StringTableEntry executablePath = Platform::getExecutablePath();
-   SetCwd(executablePath);
-
-   // FIXME: Should we use the asset path here as well?
-   mounted = Mount("/", createNativeFS(executablePath));
+   mounted = Mount("/", createNativeFS(path));
    if (!mounted)
    {
       return false;

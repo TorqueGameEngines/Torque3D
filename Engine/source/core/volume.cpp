@@ -600,17 +600,24 @@ bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEnt
       return false;
    }
 
+   // Queries against / will return a directory count of 1, but the code relies on actual directory entries (Eg. /data) so we handle that special case
+   const U32 basePathDirectoryCount = String::compare(basePath.getFullPathWithoutRoot(), "/") == 0 ? basePath.getDirectoryCount() - 1 : basePath.getDirectoryCount();
+
    for (U32 iteration = 0; iteration < directoryPaths.size(); ++iteration)
    {
       const Path& directoryPath = directoryPaths[iteration];
 
+      // Load the full path to the directory unless we're not supposed to include base paths
       String directoryPathString = directoryPath.getFullPath().c_str();
       if (noBasePath)
       {
+         // Build a path representing the directory tree *after* the base path query but excluding the base
+         // So if we queried for data/ and are currently processing data/ExampleModule/datablocks we want to output
+         // ExampleModule/datablocks
          Path newDirectoryPath;
-         for (U32 iteration = basePath.getDirectoryCount(); iteration < directoryPath.getDirectoryCount(); ++iteration)
+         for (U32 iteration = basePathDirectoryCount; iteration < directoryPath.getDirectoryCount(); ++iteration)
          {
-            if (iteration > basePath.getDirectoryCount())
+            if (iteration > basePathDirectoryCount)
             {
                newDirectoryPath.setPath(newDirectoryPath.getPath() + "/");
             }
@@ -622,6 +629,7 @@ bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEnt
          directoryPathString = newDirectoryPath.getFullPathWithoutRoot();
       }
 
+      // Output result and enumerate subdirectories if we're not too deep according to the depth parameter
       directories.push_back(StringTable->insert(directoryPathString, true));
       if (currentDepth <= depth)
       {

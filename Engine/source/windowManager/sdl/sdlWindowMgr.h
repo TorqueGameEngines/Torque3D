@@ -111,7 +111,10 @@ protected:
    KeyboardInputState mInputState;
 
 #ifdef TORQUE_SECURE_VFS
+   /// Used to check if a root is already used when generating root names.
    HashMap<String, DragAndDropFSInfo> mActiveDragAndDropByRoot;
+
+   /// Used to keep track of what mounts are handling a given path.
    HashMap<Torque::Path, DragAndDropFSInfo> mActiveDragAndDropFSByPath;
 #endif
 

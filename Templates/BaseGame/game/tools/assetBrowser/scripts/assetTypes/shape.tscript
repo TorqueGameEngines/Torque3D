@@ -258,7 +258,7 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    
    %generatePreview = false;
    
-   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.dds";
    if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getShapeFile(), %previewFilePath) == 1))
    {
       %generatePreview = true;
@@ -272,21 +272,11 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
       
       //This is slightly hacky, but we're going to utilize the imposter/last detail system
       //to generate our previews for us and then clean up the unneeded bits
-      %oldImposterSetting = $TSLastDetail::dumpImposters;
-      $TSLastDetail::dumpImposters = true;
       
       %filePath = %assetDef.generateCachedPreviewImage();
       
-      %imposterPath = %filePath @ ".imposter.png";
-      pathCopy(%imposterPath, %previewFilePath);
-      
-      //cleanup
-      fileDelete(%imposterPath);
-      fileDelete(%filePath @ ".imposter.dds");
-      fileDelete(%filePath @ ".imposter_normals.png");
-      fileDelete(%filePath @ ".imposter_normals.dds");
-      
-      $TSLastDetail::dumpImposters = %oldImposterSetting;
+      pathCopy(%filePath, %previewFilePath);
+      fileDelete(%filePath); //cleanup
       
       %previewAsset = new ImageAsset()
       {

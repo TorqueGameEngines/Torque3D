@@ -191,7 +191,7 @@ public:
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset);
 
 #ifdef TORQUE_TOOLS
-   const char* generateCachedPreviewImage(S32 resolution);
+   const char* generateCachedPreviewImage(S32 resolution, String overrideMaterial = "");
 #endif
 
 protected:

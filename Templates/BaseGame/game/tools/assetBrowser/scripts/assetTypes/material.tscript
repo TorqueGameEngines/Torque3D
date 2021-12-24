@@ -433,7 +433,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
 
    %generatePreview = false;
 
-   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.dds";
    if(!isFile(%previewFilePath))
    {
       %generatePreview = true;
@@ -457,17 +457,11 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    
    if(isObject(%assetDef.materialDefinitionName))
    {
-      	if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
-         {
-            %difMap = %assetDef.materialDefinitionName.getDiffuseMap(0);
-         }
-      	else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
-      	{
-         %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.getDiffuseMapAsset(0));
-            %difMap = %imgAsset.getImagePath();
-   		}
+         %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
+         %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, %assetDef.materialDefinitionName);
       
-         %success = saveScaledImage(%difMap, %previewFilePath);
+         pathCopy(%generatedFilePath, %previewFilePath);
+         fileDelete(%generatedFilePath);
 
          %previewAsset = new ImageAsset()
          {

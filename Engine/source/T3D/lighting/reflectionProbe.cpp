@@ -798,7 +798,7 @@ void ReflectionProbe::createEditorResources()
 
    mEditorShape = NULL;
 
-   String shapeFile = "tools/resources/ReflectProbeSphere.dae";
+   String shapeFile = "tools/resources/previewSphereShape.dae";
 
    // Attempt to get the resource from the ResourceManager
    mEditorShape = ResourceManager::get().load(shapeFile);

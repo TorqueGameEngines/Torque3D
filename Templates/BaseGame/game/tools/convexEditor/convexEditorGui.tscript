@@ -51,6 +51,8 @@ function ConvexEditorGui::onSleep( %this )
 function ConvexEditorGui::createConvexBox( %this )
 {
    %obj = genericCreateObject( "ConvexShape" );
+   %obj.setMaterial(%this.materialName); //set whatever the editor has as it's default material to the new one
+   
    %this.handleDeselect();
    %this.selectConvex( %obj );
    %this.dropSelectionAtScreenCenter();

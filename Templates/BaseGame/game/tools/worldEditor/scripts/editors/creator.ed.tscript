@@ -227,6 +227,10 @@ function ObjectCreator::createObject( %this, %cmd )
       %this.setNewObjectGroup( getScene(0) );
 
    pushInstantGroup();
+   
+   if(startsWith(%cmd, "return "))
+      %objId = eval(%cmd);
+   else
    %objId = eval("return " @ %cmd);
    popInstantGroup();
    

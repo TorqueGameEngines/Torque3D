@@ -2252,14 +2252,17 @@ public:
         The element must be closed with CloseElement()
     */
     void OpenElement( const char* name, bool compactMode=false );
+
+    // T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+    //         compactMode added as a parameter to all compactMode functions
     /// If streaming, add an attribute to an open element.
-    void PushAttribute( const char* name, const char* value );
-    void PushAttribute( const char* name, int value );
-    void PushAttribute( const char* name, unsigned value );
-	void PushAttribute( const char* name, int64_t value );
-	void PushAttribute( const char* name, uint64_t value );
-	void PushAttribute( const char* name, bool value );
-    void PushAttribute( const char* name, double value );
+    void PushAttribute( const char* name, const char* value, bool compactMode = false);
+    void PushAttribute( const char* name, int value, bool compactMode = false);
+    void PushAttribute( const char* name, unsigned value, bool compactMode = false);
+	void PushAttribute( const char* name, int64_t value, bool compactMode = false);
+	void PushAttribute( const char* name, uint64_t value, bool compactMode = false);
+	void PushAttribute( const char* name, bool value, bool compactMode = false);
+    void PushAttribute( const char* name, double value, bool compactMode = false);
     /// If streaming, close the Element.
     virtual void CloseElement( bool compactMode=false );
 

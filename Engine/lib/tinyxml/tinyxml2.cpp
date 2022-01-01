@@ -2725,10 +2725,16 @@ void XMLPrinter::OpenElement( const char* name, bool compactMode )
 }
 
 
-void XMLPrinter::PushAttribute( const char* name, const char* value )
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, const char* value, bool compactMode )
 {
     TIXMLASSERT( _elementJustOpened );
-    Putc ( ' ' );
+    if (compactMode) {
+       Putc(' ');
+    } else {
+       Putc('\n');
+       PrintSpace(_depth);
+    }
     Write( name );
     Write( "=\"" );
     PrintString( value, false );
@@ -2736,51 +2742,57 @@ void XMLPrinter::PushAttribute( const char* name, const char* value )
 }
 
 
-void XMLPrinter::PushAttribute( const char* name, int v )
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, int v, bool compactMode )
 {
     char buf[BUF_SIZE];
     XMLUtil::ToStr( v, buf, BUF_SIZE );
-    PushAttribute( name, buf );
+    PushAttribute( name, buf, compactMode );
 }
 
 
-void XMLPrinter::PushAttribute( const char* name, unsigned v )
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, unsigned v, bool compactMode )
 {
     char buf[BUF_SIZE];
     XMLUtil::ToStr( v, buf, BUF_SIZE );
-    PushAttribute( name, buf );
+    PushAttribute( name, buf, compactMode );
 }
 
 
-void XMLPrinter::PushAttribute(const char* name, int64_t v)
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, int64_t v, bool compactMode )
 {
 	char buf[BUF_SIZE];
 	XMLUtil::ToStr(v, buf, BUF_SIZE);
-	PushAttribute(name, buf);
+	PushAttribute(name, buf, compactMode);
 }
 
 
-void XMLPrinter::PushAttribute(const char* name, uint64_t v)
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, uint64_t v, bool compactMode )
 {
 	char buf[BUF_SIZE];
 	XMLUtil::ToStr(v, buf, BUF_SIZE);
-	PushAttribute(name, buf);
+	PushAttribute(name, buf, compactMode);
 }
 
 
-void XMLPrinter::PushAttribute( const char* name, bool v )
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, bool v, bool compactMode )
 {
     char buf[BUF_SIZE];
     XMLUtil::ToStr( v, buf, BUF_SIZE );
-    PushAttribute( name, buf );
+    PushAttribute( name, buf, compactMode );
 }
 
 
-void XMLPrinter::PushAttribute( const char* name, double v )
+// T3DMOD: if we are not in compactMode, we will add a newline before attributes, this is more human-readable for our use-case
+void XMLPrinter::PushAttribute( const char* name, double v, bool compactMode )
 {
     char buf[BUF_SIZE];
     XMLUtil::ToStr( v, buf, BUF_SIZE );
-    PushAttribute( name, buf );
+    PushAttribute( name, buf, compactMode );
 }
 
 
@@ -2943,7 +2955,8 @@ bool XMLPrinter::VisitEnter( const XMLElement& element, const XMLAttribute* attr
     const bool compactMode = parentElem ? CompactMode( *parentElem ) : _compactMode;
     OpenElement( element.Name(), compactMode );
     while ( attribute ) {
-        PushAttribute( attribute->Name(), attribute->Value() );
+       // T3DMOD: we added compactMode to the PushAttribute function
+        PushAttribute( attribute->Name(), attribute->Value(), compactMode );
         attribute = attribute->Next();
     }
     return true;

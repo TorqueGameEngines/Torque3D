@@ -40,10 +40,35 @@ public:
    VfsXMLPrinter(FileStream& stream, bool compact = false, int depth = 0);
    ~VfsXMLPrinter() override;
 
+   // Re-implement private functionality in TinyXML2 library, this is just a copy-paste job
+   void PrintString(const char*, bool restrictedEntitySet);	// prints out, after detecting entities.
+
+   virtual bool VisitEnter(const tinyxml2::XMLDocument& /*doc*/);
+   virtual bool VisitExit(const tinyxml2::XMLElement& element);
+
+   // Add VFS friendly implementations of output functions
    void Print(const char* format, ...) override;
    void Write(const char* data, size_t size) override;
+   inline void Write(const char* data) { Write(data, strlen(data)); }
    void Putc(char ch) override;
+
+   // Overwrite Visitation of elements to add newlines before attributes
+   virtual bool VisitEnter(const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute* attribute);
+   void PushAttribute(const char* name, const char* value, bool compactMode);
+
+   // Accept a virtual FileStream instead of a FILE pointer
    FileStream& m_Stream;
+
+   // Track private fields that are necessary for private functionality in TinyXML2
+   int _depth;
+   bool _processEntities;
+
+   enum {
+      ENTITY_RANGE = 64,
+      BUF_SIZE = 200
+   };
+   bool _entityFlag[ENTITY_RANGE];
+   bool _restrictedEntityFlag[ENTITY_RANGE];
 };
 
 class VfsXMLDocument : public tinyxml2::XMLDocument

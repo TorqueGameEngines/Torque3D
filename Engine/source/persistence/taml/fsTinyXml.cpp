@@ -266,21 +266,21 @@ void VfsXMLDocument::SetError(tinyxml2::XMLError error, int lineNum, const char*
 // Overwrite Visitation of elements to add newlines before attributes
 PrettyXMLPrinter::PrettyXMLPrinter(VfsXMLPrinter& innerPrinter, int depth)
    : mInnerPrinter(innerPrinter),
-   _depth(depth)
+   mDepth(depth)
 {
    for (int i = 0; i < ENTITY_RANGE; ++i) {
-      _entityFlag[i] = false;
-      _restrictedEntityFlag[i] = false;
+      mEntityFlag[i] = false;
+      mRestrictedEntityFlag[i] = false;
    }
    for (int i = 0; i < NUM_ENTITIES; ++i) {
       const char entityValue = entities[i].value;
       const unsigned char flagIndex = static_cast<unsigned char>(entityValue);
       TIXMLASSERT(flagIndex < ENTITY_RANGE);
-      _entityFlag[flagIndex] = true;
+      mEntityFlag[flagIndex] = true;
    }
-   _restrictedEntityFlag[static_cast<unsigned char>('&')] = true;
-   _restrictedEntityFlag[static_cast<unsigned char>('<')] = true;
-   _restrictedEntityFlag[static_cast<unsigned char>('>')] = true;	// not required, but consistency is nice
+   mRestrictedEntityFlag[static_cast<unsigned char>('&')] = true;
+   mRestrictedEntityFlag[static_cast<unsigned char>('<')] = true;
+   mRestrictedEntityFlag[static_cast<unsigned char>('>')] = true;	// not required, but consistency is nice
 }
 
 void PrettyXMLPrinter::PrintString(const char* p, bool restricted)
@@ -288,8 +288,8 @@ void PrettyXMLPrinter::PrintString(const char* p, bool restricted)
    // Look for runs of bytes between entities to print.
    const char* q = p;
 
-   if (_processEntities) {
-      const bool* flag = restricted ? _restrictedEntityFlag : _entityFlag;
+   if (mProcessEntities) {
+      const bool* flag = restricted ? mRestrictedEntityFlag : mEntityFlag;
       while (*q) {
          TIXMLASSERT(p <= q);
          // Remember, char is sometimes signed. (How many times has that bitten me?)
@@ -345,7 +345,7 @@ bool PrettyXMLPrinter::VisitEnter(const tinyxml2::XMLElement& element, const tin
    }
    const bool compactMode = parentElem ? mInnerPrinter.CompactMode(*parentElem) : mInnerPrinter.CompactMode(element);
    mInnerPrinter.OpenElement(element.Name(), compactMode);
-   _depth++;
+   mDepth++;
    while (attribute) {
       PushAttribute(attribute->Name(), attribute->Value(), compactMode);
       attribute = attribute->Next();
@@ -362,7 +362,7 @@ void PrettyXMLPrinter::PushAttribute(const char* name, const char* value, bool c
    else
    {
       mInnerPrinter.Putc('\n');
-      mInnerPrinter.PrintSpace(_depth);
+      mInnerPrinter.PrintSpace(mDepth);
    }
    mInnerPrinter.Write(name);
    mInnerPrinter.Write("=\"");

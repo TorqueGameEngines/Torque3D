@@ -26,121 +26,16 @@
 
 #include "console/console.h"
 
-
-// Re-implement private functionality in TinyXML2
-
-static const char LINE_FEED = static_cast<char>(0x0a);			// all line endings are normalized to LF
-static const char LF = LINE_FEED;
-static const char CARRIAGE_RETURN = static_cast<char>(0x0d);			// CR gets filtered out
-static const char CR = CARRIAGE_RETURN;
-static const char SINGLE_QUOTE = '\'';
-static const char DOUBLE_QUOTE = '\"';
-
-struct Entity {
-   const char* pattern;
-   int length;
-   char value;
-};
-
-static const int NUM_ENTITIES = 5;
-static const Entity entities[NUM_ENTITIES] = {
-    { "quot", 4,	DOUBLE_QUOTE },
-    { "amp", 3,		'&'  },
-    { "apos", 4,	SINGLE_QUOTE },
-    { "lt",	2, 		'<'	 },
-    { "gt",	2,		'>'	 }
-};
-
 VfsXMLPrinter::VfsXMLPrinter(FileStream& stream, bool compact, int depth)
    : XMLPrinter(NULL, compact, depth),
-     m_Stream(stream),
-     _depth(depth)
+     m_Stream(stream)
 {
-   for (int i = 0; i < ENTITY_RANGE; ++i) {
-      _entityFlag[i] = false;
-      _restrictedEntityFlag[i] = false;
-   }
-   for (int i = 0; i < NUM_ENTITIES; ++i) {
-      const char entityValue = entities[i].value;
-      const unsigned char flagIndex = static_cast<unsigned char>(entityValue);
-      TIXMLASSERT(flagIndex < ENTITY_RANGE);
-      _entityFlag[flagIndex] = true;
-   }
-   _restrictedEntityFlag[static_cast<unsigned char>('&')] = true;
-   _restrictedEntityFlag[static_cast<unsigned char>('<')] = true;
-   _restrictedEntityFlag[static_cast<unsigned char>('>')] = true;	// not required, but consistency is nice
 }
 
 VfsXMLPrinter::~VfsXMLPrinter()
 {
    m_Stream.flush();
    m_Stream.close();
-}
-
-void VfsXMLPrinter::PrintString(const char* p, bool restricted)
-{
-   // Look for runs of bytes between entities to print.
-   const char* q = p;
-
-   if (_processEntities) {
-      const bool* flag = restricted ? _restrictedEntityFlag : _entityFlag;
-      while (*q) {
-         TIXMLASSERT(p <= q);
-         // Remember, char is sometimes signed. (How many times has that bitten me?)
-         if (*q > 0 && *q < ENTITY_RANGE) {
-            // Check for entities. If one is found, flush
-            // the stream up until the entity, write the
-            // entity, and keep looking.
-            if (flag[static_cast<unsigned char>(*q)]) {
-               while (p < q) {
-                  const size_t delta = q - p;
-                  const int toPrint = (INT_MAX < delta) ? INT_MAX : static_cast<int>(delta);
-                  Write(p, toPrint);
-                  p += toPrint;
-               }
-               bool entityPatternPrinted = false;
-               for (int i = 0; i < NUM_ENTITIES; ++i) {
-                  if (entities[i].value == *q) {
-                     Putc('&');
-                     Write(entities[i].pattern, entities[i].length);
-                     Putc(';');
-                     entityPatternPrinted = true;
-                     break;
-                  }
-               }
-               if (!entityPatternPrinted) {
-                  // TIXMLASSERT( entityPatternPrinted ) causes gcc -Wunused-but-set-variable in release
-                  TIXMLASSERT(false);
-               }
-               ++p;
-            }
-         }
-         ++q;
-         TIXMLASSERT(p <= q);
-      }
-      // Flush the remaining string. This will be the entire
-      // string if an entity wasn't found.
-      if (p < q) {
-         const size_t delta = q - p;
-         const int toPrint = (INT_MAX < delta) ? INT_MAX : static_cast<int>(delta);
-         Write(p, toPrint);
-      }
-   }
-   else {
-      Write(p);
-   }
-}
-
-bool VfsXMLPrinter::VisitEnter(const tinyxml2::XMLDocument& doc)
-{
-   _processEntities = doc.ProcessEntities();
-   return XMLPrinter::VisitEnter(doc);
-}
-
-bool VfsXMLPrinter::VisitExit(const tinyxml2::XMLElement& element)
-{
-   _depth--;
-   return XMLPrinter::VisitExit(element);
 }
 
 
@@ -164,42 +59,6 @@ void VfsXMLPrinter::Write(const char* data, size_t size)
 void VfsXMLPrinter::Putc(char ch)
 {
    m_Stream.write(static_cast<U8>(ch));
-}
-
-// Overwrite Visitation of elements to add newlines before attributes
-
-bool VfsXMLPrinter::VisitEnter(const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute* attribute)
-{
-   const tinyxml2::XMLElement* parentElem = 0;
-   if (element.Parent()) {
-      parentElem = element.Parent()->ToElement();
-   }
-   const bool compactMode = parentElem ? CompactMode(*parentElem) : CompactMode(element);
-   OpenElement(element.Name(), compactMode);
-   _depth++;
-   while (attribute) {
-      PushAttribute(attribute->Name(), attribute->Value(), compactMode);
-      attribute = attribute->Next();
-   }
-   return true;
-}
-
-void VfsXMLPrinter::PushAttribute(const char* name, const char* value, bool compactMode)
-{
-   TIXMLASSERT(_elementJustOpened);
-   if (compactMode)
-   {
-      Putc(' ');
-   }
-   else
-   {
-      Putc('\n');
-      PrintSpace(_depth);
-   }
-   Write(name);
-   Write("=\"");
-   PrintString(value, false);
-   Putc('\"');
 }
 
 bool VfsXMLDocument::LoadFile(const char* pFilename)
@@ -340,7 +199,8 @@ bool VfsXMLDocument::SaveFile(FileStream& stream)
    // for *this* call.
    ClearError();
    VfsXMLPrinter printer(stream, false, 0);
-   Print(&printer);
+   PrettyXMLPrinter prettyPrinter(printer);
+   Print(&prettyPrinter);
    return !Error();
 }
 
@@ -400,4 +260,112 @@ void VfsXMLDocument::SetError(tinyxml2::XMLError error, int lineNum, const char*
    }
    _errorStr.SetStr(buffer);
    delete[] buffer;
+}
+
+
+// Overwrite Visitation of elements to add newlines before attributes
+PrettyXMLPrinter::PrettyXMLPrinter(VfsXMLPrinter& innerPrinter, int depth)
+   : mInnerPrinter(innerPrinter),
+   _depth(depth)
+{
+   for (int i = 0; i < ENTITY_RANGE; ++i) {
+      _entityFlag[i] = false;
+      _restrictedEntityFlag[i] = false;
+   }
+   for (int i = 0; i < NUM_ENTITIES; ++i) {
+      const char entityValue = entities[i].value;
+      const unsigned char flagIndex = static_cast<unsigned char>(entityValue);
+      TIXMLASSERT(flagIndex < ENTITY_RANGE);
+      _entityFlag[flagIndex] = true;
+   }
+   _restrictedEntityFlag[static_cast<unsigned char>('&')] = true;
+   _restrictedEntityFlag[static_cast<unsigned char>('<')] = true;
+   _restrictedEntityFlag[static_cast<unsigned char>('>')] = true;	// not required, but consistency is nice
+}
+
+void PrettyXMLPrinter::PrintString(const char* p, bool restricted)
+{
+   // Look for runs of bytes between entities to print.
+   const char* q = p;
+
+   if (_processEntities) {
+      const bool* flag = restricted ? _restrictedEntityFlag : _entityFlag;
+      while (*q) {
+         TIXMLASSERT(p <= q);
+         // Remember, char is sometimes signed. (How many times has that bitten me?)
+         if (*q > 0 && *q < ENTITY_RANGE) {
+            // Check for entities. If one is found, flush
+            // the stream up until the entity, write the
+            // entity, and keep looking.
+            if (flag[static_cast<unsigned char>(*q)]) {
+               while (p < q) {
+                  const size_t delta = q - p;
+                  const int toPrint = (INT_MAX < delta) ? INT_MAX : static_cast<int>(delta);
+                  mInnerPrinter.Write(p, toPrint);
+                  p += toPrint;
+               }
+               bool entityPatternPrinted = false;
+               for (int i = 0; i < NUM_ENTITIES; ++i) {
+                  if (entities[i].value == *q) {
+                     mInnerPrinter.Putc('&');
+                     mInnerPrinter.Write(entities[i].pattern, entities[i].length);
+                     mInnerPrinter.Putc(';');
+                     entityPatternPrinted = true;
+                     break;
+                  }
+               }
+               if (!entityPatternPrinted) {
+                  // TIXMLASSERT( entityPatternPrinted ) causes gcc -Wunused-but-set-variable in release
+                  TIXMLASSERT(false);
+               }
+               ++p;
+            }
+         }
+         ++q;
+         TIXMLASSERT(p <= q);
+      }
+      // Flush the remaining string. This will be the entire
+      // string if an entity wasn't found.
+      if (p < q) {
+         const size_t delta = q - p;
+         const int toPrint = (INT_MAX < delta) ? INT_MAX : static_cast<int>(delta);
+         mInnerPrinter.Write(p, toPrint);
+      }
+   }
+   else {
+      mInnerPrinter.Write(p);
+   }
+}
+
+bool PrettyXMLPrinter::VisitEnter(const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute* attribute)
+{
+   const tinyxml2::XMLElement* parentElem = 0;
+   if (element.Parent()) {
+      parentElem = element.Parent()->ToElement();
+   }
+   const bool compactMode = parentElem ? mInnerPrinter.CompactMode(*parentElem) : mInnerPrinter.CompactMode(element);
+   mInnerPrinter.OpenElement(element.Name(), compactMode);
+   _depth++;
+   while (attribute) {
+      PushAttribute(attribute->Name(), attribute->Value(), compactMode);
+      attribute = attribute->Next();
+   }
+   return true;
+}
+
+void PrettyXMLPrinter::PushAttribute(const char* name, const char* value, bool compactMode)
+{
+   if (compactMode)
+   {
+      mInnerPrinter.Putc(' ');
+   }
+   else
+   {
+      mInnerPrinter.Putc('\n');
+      mInnerPrinter.PrintSpace(_depth);
+   }
+   mInnerPrinter.Write(name);
+   mInnerPrinter.Write("=\"");
+   PrintString(value, false);
+   mInnerPrinter.Putc('\"');
 }

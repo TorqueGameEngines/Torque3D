@@ -1581,133 +1581,70 @@ DefineEngineFunction( sfxPlay, S32, ( const char * trackName, const char * point
 //-----------------------------------------------------------------------------
 
 static ConsoleDocFragment _sPlayOnce1(
-   "@brief Create a play-once source for the given @a track.\n\n"
+   "@brief Create a play-once source for the given @a asset.\n\n"
    "Once playback has finished, the source will be automatically deleted in the next sound system update.\n"
    "@param track The sound datablock.\n"
    "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
    "@ref SFXSource_playonce\n\n"
    "@ingroup SFX",
    NULL,
-   "SFXSource sfxPlayOnce( SFXTrack track );"
+   "SFXSource sfxPlayOnce( StringTableEntry assetID );"
 );
 static ConsoleDocFragment _sPlayOnce2(
-   "@brief Create a play-once source for the given given @a track and position the source's 3D sound at the given coordinates "
-      "only if the track's description is set up for 3D sound).\n\n"
+   "@brief Create a play-once source for the given given @a asset and position the source's 3D sound at the given coordinates "
+      "only if the asset is set up for 3D sound).\n\n"
    "Once playback has finished, the source will be automatically deleted in the next sound system update.\n"
-   "@param track The sound datablock.\n"
+   "@param assetId The sound asset.\n"
    "@param x The X coordinate of the 3D sound position.\n"
    "@param y The Y coordinate of the 3D sound position.\n"
    "@param z The Z coordinate of the 3D sound position.\n"
-   "@param fadeInTime If >=0, this overrides the SFXDescription::fadeInTime value on the track's description.\n"
+   "@param fadeInTime If >=0, this overrides the SFXDescription::fadeInTime value on the asset's definition.\n"
    "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
    "@tsexample\n"
-      "// Immediately start playing the given track.  Fade it in to full volume over 5 seconds.\n"
-      "sfxPlayOnce( MusicTrack, 0, 0, 0, 5.f );\n"
+      "// Immediately start playing the given asset.  Fade it in to full volume over 5 seconds.\n"
+      "sfxPlayOnce( ExampleModule:MusicTrack, 0, 0, 0, 5.f );\n"
    "@endtsexample\n\n"
    "@ref SFXSource_playonce\n\n"
    "@ingroup SFX",
    NULL,
-   "SFXSource sfxPlayOnce( SFXTrack track, float x, float y, float z, float fadeInTime=-1 );"
-);
-static ConsoleDocFragment _sPlayOnce3(
-   "@brief Create a new temporary SFXProfile from the given @a description and @a filename, then create a play-once source "
-      "for it and start playback.\n\n"
-   "Once playback has finished, the source will be automatically deleted in the next sound system update.  If not referenced "
-      "otherwise by then, the temporary SFXProfile will also be deleted.\n"
-   "@param description The description to use for playback.\n"
-   "@param filename Path to the sound file to play.\n"
-   "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
-   "@tsexample\n"
-   "// Play a sound effect file once.\n"
-   "sfxPlayOnce( AudioEffects, \"art/sound/weapons/Weapon_pickup\" );\n"
-   "@endtsexample\n\n"
-   "@ref SFXSource_playonce\n\n"
-   "@ingroup SFX",
-   NULL,
-   "SFXSource sfxPlayOnce( SFXDescription description, string filename );"
-);
-static ConsoleDocFragment _sPlayOnce4(
-   "@brief Create a new temporary SFXProfile from the given @a description and @a filename, then create a play-once source "
-      "for it and start playback.  Position the source's 3D sound at the given coordinates (only if the description "
-      "is set up for 3D sound).\n\n"
-   "Once playback has finished, the source will be automatically deleted in the next sound system update.  If not referenced "
-      "otherwise by then, the temporary SFXProfile will also be deleted.\n"
-   "@param description The description to use for playback.\n"
-   "@param filename Path to the sound file to play.\n"
-   "@param x The X coordinate of the 3D sound position.\n"
-   "@param y The Y coordinate of the 3D sound position.\n"
-   "@param z The Z coordinate of the 3D sound position.\n"
-   "@param fadeInTime If >=0, this overrides the SFXDescription::fadeInTime value on the track's description.\n"
-   "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
-   "@tsexample\n"
-   "// Play a sound effect file once using a 3D sound with a default falloff placed at the origin.\n"
-   "sfxPlayOnce( AudioDefault3D, \"art/sound/weapons/Weapon_pickup\", 0, 0, 0 );\n"
-   "@endtsexample\n\n"
-   "@ref SFXSource_playonce\n\n"
-   "@ingroup SFX",
-   NULL,
-   "SFXSource sfxPlayOnce( SFXDescription description, string filename, float x, float y, float z, float fadeInTime=-1 );"
+   "SFXSource sfxPlayOnce( StringTableEntry assetID, float x, float y, float z, float fadeInTime=-1 );"
 );
 
-DefineEngineFunction( sfxPlayOnce, S32, ( const char * sfxType, const char * arg0, const char * arg1, const char * arg2, const char * arg3, const char* arg4 ), ("", "", "", "", "-1.0f"),
+DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* arg0, const char * arg1, const char * arg2, const char * arg3 ), (StringTable->EmptyString(), "", "", "", "-1.0f"),
    "SFXSource sfxPlayOnce( ( SFXTrack track | SFXDescription description, string filename ) [, float x, float y, float z, float fadeInTime=-1 ] ) "
    "Create a new play-once source for the given profile or description+filename and start playback of the source.\n"
    "@hide" )
 {
    SFXDescription* description = NULL;
-   SFXTrack* track = dynamic_cast< SFXTrack* >( Sim::findObject( sfxType ) );
-   if( !track )
-   {
-      description = dynamic_cast< SFXDescription* >( Sim::findObject( sfxType ) );
-      if( !description )
+   if (assetId == StringTable->EmptyString())
       {
-         Con::errorf( "sfxPlayOnce - Unable to locate sound track/description '%s'", sfxType );
+         Con::errorf( "sfxPlayOnce - Must Define a sound asset");
          return 0;
       }
-   }
 
    SFXSource* source = NULL;
-   if( track )
+
+   if (AssetDatabase.isDeclaredAsset(assetId))
    {
-      // In this overloaded use, arg0..arg2 are x, y, z, and arg3 is the fadeInTime.
-      if (String::isEmpty(arg0))
+
+      AssetPtr<SoundAsset> tempSoundAsset;
+      tempSoundAsset = assetId;
+
+      if (String::isEmpty(arg0) || !tempSoundAsset->is3D())
       {
-         source = SFX->playOnce( track );
+         source = SFX->playOnce(tempSoundAsset->getSfxProfile());
       }
       else
       {
          MatrixF transform;
-         transform.set( EulerF( 0, 0, 0 ), Point3F( dAtof( arg0 ), dAtof( arg1 ),dAtof( arg2 ) ) );
-         source = SFX->playOnce( track, &transform, NULL, dAtof( arg3 ) );
-      }
+         transform.set(EulerF(0, 0, 0), Point3F(dAtof(arg0), dAtof(arg1), dAtof(arg2)));
+         source = SFX->playOnce(tempSoundAsset->getSfxProfile(), &transform, NULL, dAtof(arg3));
    }
-   else if( description )
-   {
-      // In this overload, arg0 is the filename, arg1..arg3 are x, y, z, and arg4 is fadeInTime.
-      SFXProfile* tempProfile = new SFXProfile( description, StringTable->insert( arg0 ), true );
-      if( !tempProfile->registerObject() )
-      {
-         Con::errorf( "sfxPlayOnce - unable to create profile" );
-         delete tempProfile;
       }
       else
       {
-         if (String::isEmpty(arg1))
-            source = SFX->playOnce( tempProfile );
-         else
-         {
-            MatrixF transform;
-            transform.set( EulerF( 0, 0, 0 ), Point3F( dAtof( arg1 ), dAtof( arg2 ),dAtof( arg3 ) ) );
-            source = SFX->playOnce( tempProfile, &transform, NULL, dAtof( arg4 ) );
-         }
-         
-         // Set profile to auto-delete when SFXSource releases its reference.
-         // Also add to root group so the profile will get deleted when the
-         // Sim system is shut down before the SFXSource has played out.
-
-         tempProfile->setAutoDelete( true );
-         Sim::getRootGroup()->addObject( tempProfile );
-      }
+      Con::errorf("sfxPlayOnce - Could not locate assetId '%s'", assetId);
+      return 0;
    }
 
    if( !source )

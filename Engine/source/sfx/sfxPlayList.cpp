@@ -352,15 +352,19 @@ bool SFXPlayList::preload( bool server, String& errorStr )
    {
       for( U32 i = 0; i < NUM_SLOTS; ++ i )
       {
-         _setTrack(getTrack(i),i);
+         StringTableEntry track = getTrack(i);
+         if (track != StringTable->EmptyString())
+         {
+            _setTrack(getTrack(i), i);
          if (!getTrackProfile(i))
          {
             Con::errorf("SFXPlayList::Preload() - unable to find sfxProfile for asset %s", mTrackAssetId[i]);
             return false;
          }
             
-         if( !sfxResolve( &mSlots.mState[ i ], errorStr ) )
+            if (!sfxResolve(&mSlots.mState[i], errorStr))
             return false;
+         }
       }
    }
       

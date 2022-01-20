@@ -623,8 +623,8 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
 
    String dumpPath = String(mFilePath) + "_Preview.dds";
 
-   char* returnBuffer = Con::getReturnBuffer(dumpPath.length());
-   dSprintf(returnBuffer, dumpPath.length(), "%s", dumpPath.c_str());
+   char* returnBuffer = Con::getReturnBuffer(128);
+   dSprintf(returnBuffer, 128, "%s", dumpPath.c_str());
 
    /*FileStream stream;
    if (stream.open(dumpPath, Torque::FS::File::Write))

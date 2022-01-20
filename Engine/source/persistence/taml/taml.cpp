@@ -217,6 +217,11 @@ ImplementEnumType(_TamlFormatMode,
 
       FileStream stream;
 
+      if (StringTable->insert("c://.asset.taml") == StringTable->insert(mFilePathBuffer))
+      {
+         bool asdfasdf = true;
+      }
+
       // File opened?
       if (!stream.open(mFilePathBuffer, Torque::FS::File::Write))
       {

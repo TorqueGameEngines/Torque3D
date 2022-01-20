@@ -2099,22 +2099,28 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
                String imgFileName = AssetImporter::findImagePath(testFilePath.getPath() + "/" + testFilePath.getFileName());
                if (imgFileName.isNotEmpty())
                   filePath = imgFileName;
+               else
+                  filePath = ""; //no luck, so we just won't try importing in the image
             }
          }
  
          matAssetItem = addImportingAsset("MaterialAsset", shapePathBase + "/" + matName, assetItem, matName);
-         AssetImportObject* imageAssetItem = addImportingAsset("ImageAsset", filePath, matAssetItem, "");
 
-         String suffixType;
-         String suffix = parseImageSuffixes(imageAssetItem->assetName, &suffixType);
-         if (suffix.isNotEmpty())
+         if (!filePath.isEmpty())
          {
-            imageAssetItem->imageSuffixType = suffixType;
-         }
-         else
-         {
-            //we'll assume it's albedo
-            imageAssetItem->imageSuffixType = "Albedo";
+            AssetImportObject* imageAssetItem = addImportingAsset("ImageAsset", filePath, matAssetItem, "");
+
+            String suffixType;
+            String suffix = parseImageSuffixes(imageAssetItem->assetName, &suffixType);
+            if (suffix.isNotEmpty())
+            {
+               imageAssetItem->imageSuffixType = suffixType;
+            }
+            else
+            {
+               //we'll assume it's albedo
+               imageAssetItem->imageSuffixType = "Albedo";
+            }
          }
       }
       else

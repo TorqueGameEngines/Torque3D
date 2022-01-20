@@ -102,7 +102,7 @@ void GUIAsset::initPersistFields()
       &setScriptFile, &getScriptFile, "Path to the script file for the gui");
 
    addProtectedField("GUIFile", TypeAssetLooseFilePath, Offset(mGUIFile, GUIAsset),
-      &setScriptFile, &getScriptFile, "Path to the gui file");
+      &setGUIFile, &getGUIFile, "Path to the gui file");
 }
 
 //------------------------------------------------------------------------------

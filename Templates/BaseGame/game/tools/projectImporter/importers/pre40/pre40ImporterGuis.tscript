@@ -1,3 +1,7 @@
+//==============================================================================
+// We first copy over binary files(images, shapes, sounds, etc) to the destination
+// module, then run the processing/import on them to generate the assets
+//==============================================================================
 function Pre40ImporterPage0::openPage(%this)
 {
    ProjectImportWindow-->nextButton.setActive(false);
@@ -75,6 +79,9 @@ function Pre40ImporterPage0::openPage(%this)
    Canvas.repaint();
 }
 
+//==============================================================================
+// This page actually invokes the processing of the script-based files and objects
+//==============================================================================
 function Pre40ImporterPage1::openPage(%this)
 {
    ProjectImportWindow-->nextButton.setActive(false);

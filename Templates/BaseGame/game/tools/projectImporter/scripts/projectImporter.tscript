@@ -7,8 +7,24 @@ function ProjectImporter::beginProjectImport()
    Canvas.pushDialog(ProjectImportCtrl);
 }
 
+//==============================================================================
+// Wake-up and initial setup
+//==============================================================================
 function ProjectImportWindow::onWake(%this)
 {
+   if(isObject($ProjectImporter::assetQuery))
+      $ProjectImporter::assetQuery.delete();
+   $ProjectImporter::assetQuery = new AssetQuery();
+      
+   if(isObject($ProjectImporter::importer))
+      $ProjectImporter::importer.delete();
+   $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::importer.dumpLogs = false; //we handle the log dump outselves here
+   
+   if(isObject($ProjectImporter::persistMgr))
+      $ProjectImporter::persistMgr.delete();
+   $ProjectImporter::persistMgr = new PersistenceManager();
+   
    if(!isObject($ProjectImporter::fileObject))
       $ProjectImporter::fileObject = new FileObject();
       
@@ -49,6 +65,9 @@ function ProjectImportWindow::onWake(%this)
    }
 }
 
+//==============================================================================
+// Page Navigation
+//==============================================================================
 function ProjectImportWindow::previousStep(%this)
 {
    if(%this.importStepNumber == 0)
@@ -63,7 +82,7 @@ function ProjectImportWindow::previousStep(%this)
 
 function ProjectImportWindow::nextStep(%this)
 {
-   if(%this.importStepNumber == $ProjectImporter::importerPageList.count())
+   if(%this.importStepNumber == $ProjectImporter::importerPageList.count()-1)
    {
       Canvas.popDialog(ProjectImportCtrl);
       return;  
@@ -157,11 +176,17 @@ function ProjectImportWindow::getCurrentPage(%this)
    return $ProjectImporter::importerPageList.getKey(%this.importStepNumber);
 }
 
+//==============================================================================
+// Welcome page
+//==============================================================================
 function ProjectImportWizardPage0::openPage(%this)
 {
    ProjectImportWindow-->backButton.setHidden(true);
 }
 
+//==============================================================================
+// Select the specific version importer
+//==============================================================================
 function ProjectImportWizardPage1::openPage(%this)
 {
    ProjectImportWindow-->backButton.setHidden(false);
@@ -174,7 +199,9 @@ function ProjectImportWizardPage1::openPage(%this)
    }
 }
 
-//Select destination folder
+//==============================================================================
+// Set Source Folder
+//==============================================================================
 function ProjectImportWizardPage2::openPage(%this)
 {
    %version = ProjectImportWizardPage1-->previousContentVersionPopup.getSelected();
@@ -197,24 +224,21 @@ function ProjectImportWizardPage2::openPage(%this)
       
    $ProjectImporter::importTool = $ProjectImporter::importerList.getValue(%version);
    
-   //if(isObject($ProjectImporter::SFXDescriptionCache))
-   //   $ProjectImporter::SFXDescriptionCache.delete();
-      
-   //$ProjectImporter::SFXDescriptionCache = new ArrayObject();
-   
-   //if(isObject($ProjectImporter::ToRemoveObjectList))
-   //   $ProjectImporter::ToRemoveObjectList.delete();
-      
-   //$ProjectImporter::ToRemoveObjectList = new ArrayObject();
-   
    $ProjectImporter::importTool.setupPages(); //Have the importer register it's pages
    
    //And then add our final page 
    $ProjectImporter::importerPageList.add(ProjectImportWizardFinalPage);
 }
 
+//==============================================================================
+// Prepwork for import and getting the target module name
+//==============================================================================
 function ProjectImportWizardPage3::openPage(%this)
 {
+   projectImporterLog("===========================================");
+   projectImporterLog("Beginning Project Import");
+   projectImporterLog("===========================================");
+   
    %dataFullPath = makeFullPath("data/");
    %coreFullPath = makeFullPath("core/");
    %toolsFullPath = makeFullPath("tools/");
@@ -251,67 +275,108 @@ function ProjectImportWizardPage3::openPage(%this)
       
       ProjectImportWizardPage3-->newModuleName.setText($ProjectImporter::moduleName);
    }
-   /*if(ProjectImportWizardPage2-->internalFolderBtn.isStateOn())
-   {
-      $ProjectImporter::importMode = "InternalFolder";
-   }
-   else if(ProjectImportWizardPage2-->externalFolderBtn.isStateOn())
-   {
-      $ProjectImporter::importMode = "ExternalFolder";
-   }
-   else if(ProjectImportWizardPage2-->coreAndToolsBtn.isStateOn())
-   {
-      $ProjectImporter::importMode = "CoreAndTools";
-   }
-   else
-   {
-      ProjectImportWindow.previousStep();
-      toolsMessageBoxOK("Folder Type Required", "You must indicate if the folder is an internal or external folder.");
-      return;
-   }
-   
-   if($ProjectImporter::sourceContentFolder $= "" && $ProjectImporter::importMode !$= "CoreAndTools")
-   {
-      ProjectImportWindow.previousStep();
-      toolsMessageBoxOK("Source Folder Required", "You must select the original folder to import files from.");
-      return;
-   }
-      
-   if($ProjectImporter::importMode $= "InternalFolder")
-   {
-      %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath($ProjectImporter::sourceContentFolder));
-      if(isObject(%moduleDef))
-      {
-         //already a valid module in place so just skip this step  
-         $ProjectImporter::useExistingModule = true;
-         $ProjectImporter::moduleName = %moduleDef.moduleId;
-         $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
-         ProjectImportWindow.setStep(4);
-      }
-   }
-   else if($ProjectImporter::importMode $= "ExternalFolder")
-   {
-      %slashCount = getTokenCount($ProjectImporter::sourceContentFolder, "/");
-      %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-1);
-      if(%topFolder $= "")
-         %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-2);
-         
-      //clean up invalid characters and stuff
-      %topFolder = sanitizeString(%topFolder);
-     
-      $ProjectImporter::useExistingModule = false;
-      $ProjectImporter::moduleName = %topFolder; //preseed the module name
-      $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
-      
-      ProjectImportWizardPage3-->newModuleName.setText($ProjectImporter::moduleName);
-   }
-   else if($ProjectImporter::importMode $= "CoreAndTools")
-   {
-      ProjectImportWindow.setStep(5);
-   }*/
 }
 
-//
+//==============================================================================
+// Run the preprocessing of all incoming files
+//==============================================================================
+function ProjectImportWizardPage4::openPage(%this)
+{
+   ProjectImportWindow-->preprocessCompleteText.setHidden(true);
+   
+   Canvas.repaint();
+   
+   ProjectImportWindow-->backButton.setHidden(true);
+   ProjectImportWindow-->nextButton.setActive(false);
+      
+   if(!$ProjectImporter::useExistingModule)
+      $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
+      
+   $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+      
+   if(!$ProjectImporter::useExistingModule)
+      $ProjectImporter::importTool.setupModule();
+      
+   //Do some sanity checking here to sidestep the copy if we're already in-place
+   %sourcePath = $ProjectImporter::sourceContentFolder;
+   %targetPath = makeFullPath($ProjectImporter::modulePath);
+   
+   preprocessImportingFiles();
+      
+   //if we gen'd a new module setup, double check we didn't copy over a module script file under a legacy extension
+   /*if(!$ProjectImporter::useExistingModule)
+   {
+      %newModuleName = $ProjectImporter::moduleName;
+      %moduleFilePath = "data/" @ %newModuleName;
+      
+      if($TorqueScriptFileExtension !$= "cs")
+   {
+         %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".cs";
+         if(isFile(%moduleScriptFilePath))
+   {
+            //yep, that exists, so we'll assume it was the file we wanted, so remove the generated one
+            fileDelete(%moduleFilePath @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension);
+   }
+   }
+   }*/
+   
+   ProjectImportWindow-->nextButton.setActive(true);
+   ProjectImportWindow-->preprocessCompleteText.setHidden(false);
+   
+   Canvas.repaint();
+}
+
+//==============================================================================
+// Write out the logs and clean up
+//==============================================================================
+function ProjectImportWizardFinalPage::openPage(%this)
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Project Import");
+   projectImporterLog("===========================================");
+   
+   //writing console log
+   %logFileObj = new FileObject();
+   
+   %logFileName = "tools/logs/LegacyProjectImport_" @ getTimestamp() @ ".log";
+      
+   if(%logFileObj.openForWrite(%logFileName))
+   {
+      for(%i=0; %i < $ProjectImporter::log.count(); %i++)
+      {
+         %logFileObj.writeLine($ProjectImporter::log.getKey(%i));
+      }
+      
+      %logFileObj.close();
+   }
+         
+   %logFileObj.delete();
+   
+   $ProjectImporter::assetQuery.delete();
+   $ProjectImporter::importer.delete();
+   $ProjectImporter::persistMgr.delete();
+     
+   AssetBrowser.refresh(); //update the AB just in case
+}
+      
+//==============================================================================
+// Registers a version importer's page for display in the wizard
+//==============================================================================
+function ProjectImportWindow::addImporterPage(%this, %page)
+{
+   ProejctImportPageContainer.add(%page);
+   $ProjectImporter::importerPageList.add(%page);
+}
+
+//==============================================================================
+// Utility functions needed for processing and importing files. These are common
+// functions that'll pretty much be used regardless of version being targeted
+//==============================================================================
+//==============================================================================
+// Runs through the files in the source directory and preprocessing them.
+// All valid files are added to a list, and script-based files are pre-parsed 
+// so the importer can easily process their contents later
+//==============================================================================
 function preprocessImportingFiles()
 {
    //========================================================
@@ -667,173 +732,11 @@ function preprocessImportingFiles()
       $ProjectImporter::fileObject.close();
    }
 }
-//
+   
 
-function ProjectImportWizardPage4::openPage(%this)
-{
-   ProjectImportWindow-->preprocessCompleteText.setHidden(true);
-   
-   Canvas.repaint();
-   
-   ProjectImportWindow-->backButton.setHidden(true);
-   ProjectImportWindow-->nextButton.setActive(false);
-      
-   if(!$ProjectImporter::useExistingModule)
-      $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
-      
-   $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
-      
-   if(!$ProjectImporter::useExistingModule)
-      $ProjectImporter::importTool.setupModule();
-      
-   //Do some sanity checking here to sidestep the copy if we're already in-place
-   %sourcePath = $ProjectImporter::sourceContentFolder;
-   %targetPath = makeFullPath($ProjectImporter::modulePath);
-   
-   preprocessImportingFiles();
-      
-   //if we gen'd a new module setup, double check we didn't copy over a module script file under a legacy extension
-   /*if(!$ProjectImporter::useExistingModule)
-   {
-      %newModuleName = $ProjectImporter::moduleName;
-      %moduleFilePath = "data/" @ %newModuleName;
-      
-      if($TorqueScriptFileExtension !$= "cs")
-      {
-         %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".cs";
-         if(isFile(%moduleScriptFilePath))
-         {
-            //yep, that exists, so we'll assume it was the file we wanted, so remove the generated one
-            fileDelete(%moduleFilePath @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension);
-         }
-      }
-   }*/
-
-   ProjectImportWindow-->nextButton.setActive(true);
-   ProjectImportWindow-->preprocessCompleteText.setHidden(false);
-   
-   Canvas.repaint();
-}
-
-function ProjectImportWizardPage5::openPage(%this)
-{
-   ProjectImportWindow-->nextButton.setActive(false);
-   Canvas.repaint();
-   
-   $ProjectImporter::importTool.processImportedFiles();
-}
-
-function ProjectImportWizardPage6::openPage(%this)
-{
-   ProjectImportWindow-->nextButton.setActive(false);
-   Canvas.repaint();
-   
-   if($ProjectImporter::importMode $= "CoreAndTools")
-   {
-      $ProjectImporter::modulePath = "Core";
-      $ProjectImporter::importTool.processScriptExtensions();
-      
-      $ProjectImporter::modulePath = "Tools";
-      $ProjectImporter::importTool.processScriptExtensions();
-   }
-   else
-   {
-      $ProjectImporter::importTool.processScriptExtensions();
-   }
-   
-   //All good? now go through and wipe any objects flagged in our files for deletion
-   %objRemovePM = new PersistenceManager();
-   
-   for(%o = 0; %o < $ProjectImporter::ToRemoveObjectList.count(); %o++)
-   {
-      %name = $ProjectImporter::ToRemoveObjectList.getKey(%o);
-      %file = getField($ProjectImporter::ToRemoveObjectList.getValue(%o),0);
-      
-      if(%name !$= "" && isFile(%file))
-      {
-         if(!isObject(%name))
-         {
-            //spoof it
-            %tmpObj = new SimObject(%name); 
-            %objRemovePM.setDirty(%name, %file);
-         }
-         %objRemovePM.removeObjectFromFile(%name, %file);
-         
-         %tmpObj.delete();
-      }      
-   }
-}
-
-function ProjectImportWizardFinalPage::openPage(%this)
-{
-   //writing console log
-   %logFileObj = new FileObject();
-   
-   %logFileName = "tools/logs/LegacyProjectImport_" @ getTimestamp() @ ".log";
-   
-   if(%logFileObj.openForWrite(%logFileName))
-   {
-      for(%i=0; %i < $ProjectImporter::log.count(); %i++)
-      {
-         %logFileObj.writeLine($ProjectImporter::log.getKey(%i));
-      }
-      
-      %logFileObj.close();
-   }
-   
-   %logFileObj.delete();
-}
-
-//
-function ProjectImportWindow::addImporterPage(%this, %page)
-{
-   ProejctImportPageContainer.add(%page);
-   $ProjectImporter::importerPageList.add(%page);
-}
-//
-
-function beginProjectImport()
-{
-   projectImporterLog("===========================================");
-   projectImporterLog("Beginning Project Import");
-   projectImporterLog("===========================================");
-   
-   $ProjectImporter::assetQuery = new AssetQuery();
-   $ProjectImporter::importer = new AssetImporter();
-   $ProjectImporter::importer.dumpLogs = false; //we handle the log dump outselves here
-   $ProjectImporter::persistMgr = new PersistenceManager();
-   
-   //beginMaterialImport();
-   
-   //beginTerrainMaterialImport();
-   
-   //beginShapeImport();
-   
-   beginImageImport();
-   
-   beginDatablockImport();
-   
-   beginGUIImport();
-   
-   beginTerrainImport();
-   
-   //postFX imports'll need to look up render target names and ensure assets for those exist
-   //otherwise they need to be generated
-   beginPostFXImport();
-   
-   beginMiscObjectImport();
-   
-   $ProjectImporter::assetQuery.delete();
-   $ProjectImporter::importer.delete();
-   $ProjectImporter::persistMgr.delete();
-   
-   projectImporterLog("===========================================");
-   projectImporterLog("Finished Project Import");
-   projectImporterLog("===========================================");
-   
-   AssetBrowser.refresh(); //update the AB just in case
-}
-
+//==============================================================================
+// Sanitized a filename so that it doesn't contain any invalid formatting/characters
+//==============================================================================
 function sanitizeFilename(%file)
 {
    if(startsWith(%file, "./"))
@@ -919,6 +822,9 @@ function sanitizeFilename(%file)
    //}
 }
 
+//==============================================================================
+// Checks if the file in question is part of our pre-scanned list of importing files
+//==============================================================================
 function isImportingFile(%checkFile)
 {
    for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
@@ -932,6 +838,10 @@ function isImportingFile(%checkFile)
    return false;
 }
 
+//==============================================================================
+// Takes a filename lacking an extension and then checks common file extensions
+// to see if we can find the actual file in question
+//==============================================================================
 function testFilenameExtensions(%filename)
 {
    %ext = fileExt(%filename);  
@@ -966,6 +876,9 @@ function testFilenameExtensions(%filename)
    return %filename;
 }
 
+//==============================================================================
+// Parses a line from a script to replace the original field name with the new one
+//==============================================================================
 function processLegacyField(%line, %originalFieldName, %newFieldName)
 { 
    if(!strIsMatchExpr("*"@%originalFieldName@"=*;*", %line) && 
@@ -1078,6 +991,9 @@ function processLegacyField(%line, %originalFieldName, %newFieldName)
    }
 }
 
+//==============================================================================
+// Parses a line from a shape constructor file to asset-ify addSequence() calls
+//==============================================================================
 function processLegacyShapeConstructorField(%line)
 {
    if(!strIsMatchExpr("*%this.addSequence(\"*);", %line))
@@ -1129,6 +1045,9 @@ function processLegacyShapeConstructorField(%line)
    }
 }
 
+//==============================================================================
+// Replaces the name of the object in the declaration line
+//==============================================================================
 function renameObjectName(%object, %newName)
 {
    for(%e=0; %e < %object.count(); %e++)
@@ -1153,6 +1072,9 @@ function renameObjectName(%object, %newName)
    }
 }
 
+//==============================================================================
+// Find the value of an object's field
+//==============================================================================
 function findObjectField(%object, %fieldName)
 {
    %return = "";
@@ -1213,6 +1135,9 @@ function findObjectField(%object, %fieldName)
    return %return;
 }
 
+//==============================================================================
+// Sets the value of an object's field
+//==============================================================================
 function setObjectField(%object, %fieldName, %newValue)
 {
    for(%e=0; %e < %object.count(); %e++)
@@ -1278,6 +1203,10 @@ function setObjectField(%object, %fieldName, %newValue)
    }
 }
 
+//==============================================================================
+// Takes a string and adds it to the importer's log. Optionally can print the line
+// directly to console for debugging purposes
+//==============================================================================
 function projectImporterLog(%line)
 {
    if($ProjectImporter::writeToConsole)
@@ -1702,12 +1631,6 @@ function processGUIntoAsset(%guiName, %file)
 //==============================================================================
 
 //==============================================================================
-//Misc Object Type Converion
-//==============================================================================
-
-//==============================================================================
-
-//==============================================================================
 //PostFX conversion
 //==============================================================================
 function beginPostFXImport()
@@ -1885,6 +1808,10 @@ function beginLevelImport()
 }
 //==============================================================================
 
+//==============================================================================
+// Cleas out existing *.asset.taml files from a target. Only really used for
+// testing purposes currently.
+//==============================================================================
 function deleteAssetDefinitions()
 {
    %dlg = new OpenFolderDialog()
@@ -1954,6 +1881,10 @@ function doDeleteAssetDefinitions()
    projectImporterLog("===========================================");
 }
 
+//==============================================================================
+// Tests a file in the game dir to see if there's a possible duplicate file that
+// may cause an asset collision
+//==============================================================================
 function scanForDuplicateFiles(%toTestFile)
 {
    projectImporterLog("===========================================");
@@ -2012,6 +1943,10 @@ function scanForDuplicateFiles(%toTestFile)
    }
 }
 
+//==============================================================================
+// Pulls the logs from the asset importer and adds it to the project importer's 
+// logs
+//==============================================================================
 function getImporterLogs()
 {
    %lineCount = $ProjectImporter::importer.getActivityLogLineCount();

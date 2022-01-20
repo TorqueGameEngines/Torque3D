@@ -1,3 +1,7 @@
+//==============================================================================
+// Initialization function that registers this importer to the main Project Importer
+// allowing it to be selected/invoked in the main Project Importer wizard
+//==============================================================================
 function T3Dpre4ProjectImporter::init()
 {
    //register this importer option to the project importer listing
@@ -14,6 +18,10 @@ function T3Dpre4ProjectImporter::init()
 
 T3Dpre4ProjectImporter::init(); //kick off the setup
 
+//==============================================================================
+// Sets up and registers the pages for this particular version importer
+// to the Project Importer for navigating through with the import process
+//==============================================================================
 function T3Dpre4ProjectImporter::setupPages(%this)
 {
    ProjectImportWindow.addImporterPage(Pre40ImporterPage0);
@@ -22,8 +30,9 @@ function T3Dpre4ProjectImporter::setupPages(%this)
    ProjectImportWindow.refreshPage();
 }
 
-//
-//
+//==============================================================================
+// Sets up the target module
+//==============================================================================
 function T3Dpre4ProjectImporter::setupModule(%this)
 {
    %newModuleName = $ProjectImporter::moduleName;
@@ -98,117 +107,9 @@ function T3Dpre4ProjectImporter::setupModule(%this)
    AssetBrowser.refresh();
 }
 
-/*function T3Dpre4ProjectImporter::copyFiles(%this)
-{
-   %currentPage = ProjectImportWindow.getCurrentPage();
-   
-   %currentPage-->fileCopyText.setText("Beginning copy of files to new module folder now. This may take a few minutes...");
-   Canvas.repaint();
-   
-   %file = findFirstFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*", true);
-   
-   while( %file !$= "" )
-   {
-      %filePath = filePath(%file);
-      %fileName = fileName(%file);
-      %fileBase = fileBase(%file);
-      %fileExt = fileExt(%file);
-      
-      if(endsWith(%fileName, ".asset.taml"))
-      {
-         %fileBase = strreplace(%fileBase, ".asset", "");
-         %fileExt = ".asset.taml";
-      }
-      
-      if(%fileExt $= ".dll" || %fileExt $= ".log" || %fileExt $= ".exe" || %fileExt $= ".manifest"|| %fileExt $= ".h" ||
-         %fileExt $= ".cpp" || %fileExt $= ".so" || %fileExt $= ".do" || %fileExt $= ".lib" ||%fileExt $= ".exp")
-      {
-         %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
-         continue;
-      }
-      
-      //filter out some unneeded folders
-      %slashCount = getTokenCount(%filePath, "/");
-      %topFolder = getToken(%filePath, "/", %slashCount-1);
-      if(%topFolder $= "")
-         %topFolder = getToken(%filePath, "/", %slashCount-2);
-         
-      if(%topFolder $= "creator" || %topFolder $= "tools" || %topFolder $= "web")
-      {
-         %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
-         continue;
-      }
-      
-      %targetFilePath = strReplace(%file, $ProjectImporter::sourceContentFolder, $ProjectImporter::modulePath);
-      
-      %sanitizedFilename = sanitizeString(%fileBase);
-      if(startsWith(%sanitizedFilename, "_"))
-      {
-         %sanitizedFilename = substr(%sanitizedFilename, 1, -1);
-      }
-      if(%sanitizedFilename !$= %fileBase)
-      {
-         %targetFilePath = filePath(%targetFilePath) @ "/" @ %sanitizedFilename @ %fileExt;
-      }
-      
-      %targetFolder = filePath(%targetFilePath);
-      
-      if(!isDirectory(%targetFolder))
-      {
-         DirectoryHandler::createFolder(0, %targetFolder);
-      }
-      
-      if(!pathCopy(%file, %targetFilePath, false))
-      {
-         projectImporterLog("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
-      }
-      
-      %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
-   }
-   
-   //
-   //Now that we've done that, we'll load and scan the module for asset defs
-   %file = findFirstFileMultiExpr( $ProjectImporter::modulePath @ "/*.asset.taml", true);
-   
-   while( %file !$= "" )
-   {
-      %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId;
-      %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
-      
-      AssetDatabase.addDeclaredAsset(%moduleDef, %file);
-      
-      %file = findNextFileMultiExpr( $ProjectImporter::modulePath @ "/*.asset.taml" );
-   }
-   //
-   
-   %currentPage-->fileCopyText.setValue("File copy done! Press Next to continue.");
-   
-   ProjectImportWindow-->nextButton.setActive(true);
-   Canvas.repaint();
-}
-
-function T3Dpre4ProjectImporter::processImportedFiles(%this)
-{
-   if($ProjectImporter::importMode $= "CoreAndTools")
-   {
-      $ProjectImporter::modulePath = "Core";
-      %this.doImport();
-      
-      $ProjectImporter::modulePath = "Tools";
-      %this.doImport();
-   }
-   else
-   {
-      %this.doImport();
-   }
-   
-   %currentPage = ProjectImportWindow.getCurrentPage();
-   
-   %currentPage-->processingText.setText("Processing of files done! Press Next to continue.");
-   ProjectImportWindow-->nextButton.setActive(true);
-   Canvas.repaint();
-}*/
-
+//==============================================================================
+// Import content file types such as images, sounds, materials, etc
+//==============================================================================
 function T3Dpre4ProjectImporter::doContentImport(%this)
 {
    //Store off the current default import config
@@ -226,6 +127,9 @@ function T3Dpre4ProjectImporter::doContentImport(%this)
    %this.beginSoundProfilesImport();
 }
 
+//==============================================================================
+// Import script-based files like guis, levels and scripts
+//==============================================================================
 function T3Dpre4ProjectImporter::doScriptImport(%this)
 {
    beginLevelImport();
@@ -240,6 +144,9 @@ function T3Dpre4ProjectImporter::doScriptImport(%this)
    EditorSettings.setValue("Assets/AssetImporDefaultConfig", %this.defaultConfig);
 }
 
+//==============================================================================
+// Writes out the importing file to the new destination
+//==============================================================================
 function T3Dpre4ProjectImporter::writeImportingObject(%this, %arrayObj)
 {
    if(!isObject(%arrayObj) || %arrayObj.skip)
@@ -301,7 +208,10 @@ function T3Dpre4ProjectImporter::writeImportingFiles(%this)
    }
 }
 
-//
+//==============================================================================
+// Processes through the importing files for material definitions and generates
+// the new assets into the destination module
+//==============================================================================
 function T3Dpre4ProjectImporter::processMaterialObjects(%this, %arrayObj)
 {
    if(!isObject(%arrayObj))
@@ -456,7 +366,10 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
    projectImporterLog("===========================================");
 }
 
-//
+//==============================================================================
+// Processes through the importing files for SFXProfile definitions and
+// generates the new assest into the destination module
+//==============================================================================
 function T3Dpre4ProjectImporter::processSoundProfileObjects(%this, %arrayObj)
 {
    if(!isObject(%arrayObj))
@@ -558,7 +471,11 @@ function T3Dpre4ProjectImporter::beginSoundProfilesImport(%this)
    projectImporterLog("===========================================");
 }
 
-//
+//==============================================================================
+// Processes through the importing files for scripted object definitions and
+// updates their names and fields to be asset-compliant, converting filepaths
+// to assetIds where valid
+//==============================================================================
 function T3Dpre4ProjectImporter::processScripts(%this, %arrayObj)
 {
    if(!isObject(%arrayObj))
@@ -716,13 +633,14 @@ function T3Dpre4ProjectImporter::beginScriptFilesImport(%this)
    projectImporterLog("Legacy Project Importer - Processing of imported code files done!");
 }
 
-//
+//==============================================================================
+// Processes through the importing files for module and asset definitions and
+// updates them to be compliant
+//==============================================================================
 function T3Dpre4ProjectImporter::processModuleFile(%this, %moduleObj)
 {
    if(!isObject(%moduleObj))
       return;
-      
-   %moduleObj.echo();
       
    //really, we only care here about ensuring the file extensions are cleaned up
    for(%l=0; %l < %moduleObj.count(); %l++)

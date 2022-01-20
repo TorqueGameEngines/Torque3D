@@ -133,6 +133,7 @@ ShapeBaseImageData::StateData::StateData()
    spin = IgnoreSpin;
    recoil = NoRecoil;
    sound = NULL;
+   soundTrack = NULL;
    emitter = NULL;
    shapeSequence = NULL;
    shapeSequenceScale = true;
@@ -372,6 +373,19 @@ bool ShapeBaseImageData::onAdd()
 
          //_setstateSound(getstateSound(i),i);
          s.sound = getstateSoundAsset(i);
+         if (s.sound == NULL && mstateSoundName[i] != StringTable->EmptyString())
+         {
+            //ok, so we've got some sort of special-case here like a fallback or SFXPlaylist. So do the hook-up now
+            SFXTrack* sndTrack;
+            if (!Sim::findObject(mstateSoundName[i], sndTrack))
+            {
+               Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %s but failed!", mstateSoundName[i]);
+            }
+            else
+            {
+               s.soundTrack = sndTrack;
+            }
+         }
          s.script = stateScript[i];
          s.emitter = stateEmitter[i];
          s.emitterTime = stateEmitterTime[i];
@@ -2580,7 +2594,7 @@ bool ShapeBase::hasImageState(U32 imageSlot, const char* state)
    return false;
 }
 
-void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
+void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
 {
    if (!mMountedImageList[imageSlot].dataBlock)
       return;
@@ -2611,12 +2625,12 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // Eject shell casing on every state change (client side only)
    ShapeBaseImageData::StateData& nextStateData = image.dataBlock->state[newState];
    if (isGhost() && nextStateData.ejectShell) {
-      ejectShellCasing( imageSlot );
+      ejectShellCasing(imageSlot);
    }
 
    // Shake camera on client.
    if (isGhost() && nextStateData.fire && image.dataBlock->shakeCamera) {
-      shakeCamera( imageSlot );
+      shakeCamera(imageSlot);
    }
 
    // Server must animate the shape if it is a firestate...
@@ -2632,12 +2646,12 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    if (!force && image.state == &image.dataBlock->state[newState]) {
       image.delayTime = image.state->timeoutValue;
       if (image.state->script && !isGhost())
-         scriptCallback(imageSlot,image.state->script);
+         scriptCallback(imageSlot, image.state->script);
 
       // If this is a flash sequence, we need to select a new position for the
       //  animation if we're returning to that state...
       F32 randomPos = Platform::getRandom();
-      for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
+      for (U32 i = 0; i < ShapeBaseImageData::MaxShapes; ++i)
       {
          if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
             continue;
@@ -2665,7 +2679,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
 
    // Mount pending images
    if (image.nextImage != InvalidImagePtr && stateData.allowImageChange) {
-      setImage(imageSlot,image.nextImage,image.nextSkinNameHandle,image.nextLoaded);
+      setImage(imageSlot, image.nextImage, image.nextSkinNameHandle, image.nextLoaded);
       return;
    }
 
@@ -2673,16 +2687,16 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // (the first key frame should be it's off state).
    // We need to do this across all image shapes to make sure we have no hold overs when switching
    // rendering shapes while in the middle of a state change.
-   for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
+   for (U32 i = 0; i < ShapeBaseImageData::MaxShapes; ++i)
    {
       // If we are to do a sequence transition then we need to keep the previous animThread active
       if (image.animThread[i] && image.animThread[i]->getSequence()->isCyclic() && (stateData.sequenceNeverTransition || !(stateData.sequenceTransitionIn || lastState->sequenceTransitionOut))) {
-         image.shapeInstance[i]->setPos(image.animThread[i],0);
-         image.shapeInstance[i]->setTimeScale(image.animThread[i],0);
+         image.shapeInstance[i]->setPos(image.animThread[i], 0);
+         image.shapeInstance[i]->setTimeScale(image.animThread[i], 0);
       }
       if (image.flashThread[i]) {
-         image.shapeInstance[i]->setPos(image.flashThread[i],0);
-         image.shapeInstance[i]->setTimeScale(image.flashThread[i],0);
+         image.shapeInstance[i]->setPos(image.flashThread[i], 0);
+         image.shapeInstance[i]->setTimeScale(image.flashThread[i], 0);
       }
    }
 
@@ -2695,10 +2709,10 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    if (image.delayTime <= 0 || !stateData.waitForTimeout) 
    {
       if ((ns = stateData.transition.loaded[image.loaded]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
-      for (U32 i=0; i<ShapeBaseImageData::MaxGenericTriggers; ++i)
+      for (U32 i = 0; i < ShapeBaseImageData::MaxGenericTriggers; ++i)
       {
          if ((ns = stateData.transition.genericTrigger[i][image.genericTrigger[i]]) != -1) {
             setImageState(imageSlot, ns);
@@ -2707,7 +2721,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
       }
       //if (!imageData.usesEnergy)
          if ((ns = stateData.transition.ammo[image.ammo]) != -1) {
-            setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
             return;
          }
       if ((ns = stateData.transition.target[image.target]) != -1) {
@@ -2723,11 +2737,11 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
          return;
       }
       if ((ns = stateData.transition.trigger[image.triggerDown]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
       if ((ns = stateData.transition.altTrigger[image.altTriggerDown]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
    }
@@ -2752,7 +2766,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
 
    // Apply recoil
    if (stateData.recoil != ShapeBaseImageData::StateData::NoRecoil)
-      onImageRecoil(imageSlot,stateData.recoil);
+      onImageRecoil(imageSlot, stateData.recoil);
 
    // Apply image state animation on mounting shape
    if (stateData.shapeSequence && stateData.shapeSequence[0])
@@ -2764,17 +2778,25 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // lastState does not return an id for the prev state so we keep track of it.
    if (lastState->sound && lastState->sound->getSfxProfile()->getDescription()->mIsLooping)
    {  
-      for(Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)      
+      for (Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)
          SFX_DELETE((*i));    
 
       image.mSoundSources.clear();  
    }  
 
    // Play sound
-   if( stateData.sound && isGhost() )
+   if (isGhost())
+   {
+      if (stateData.sound)
    {
       const Point3F& velocity         = getVelocity();
-      image.addSoundSource(SFX->createSource(stateData.sound->getSfxProfile(), &getRenderTransform(), &velocity ));
+         image.addSoundSource(SFX->createSource(stateData.sound->getSfxProfile(), &getRenderTransform(), &velocity));
+      }
+      if (stateData.soundTrack)
+      {
+         const Point3F& velocity = getVelocity();
+         image.addSoundSource(SFX->createSource(stateData.soundTrack, &getRenderTransform(), &velocity));
+      }
    }
 
    // Play animation

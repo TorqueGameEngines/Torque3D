@@ -352,8 +352,8 @@ public:
    /// @name Sound
    /// @{
 
-   void play2D(SFXProfile *profile);
-   void play3D(SFXProfile *profile, const MatrixF *transform);
+   void play2D(StringTableEntry assetId);
+   void play3D(StringTableEntry assetId, const MatrixF *transform);
    /// @}
 
    /// @name Misc.

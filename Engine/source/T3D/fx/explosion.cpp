@@ -859,9 +859,6 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   if (!server && !getSoundProfile())
-      return false;
-
    if( !server )
    {
 
@@ -870,12 +867,18 @@ bool ExplosionData::preload(bool server, String &errorStr)
          _setSound(getSound());
 
          if (!getSoundProfile())
+         {
             Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+            return false;
+         }
       }
 
       if (!particleEmitter && particleEmitterId != 0)
          if (Sim::findObject(particleEmitterId, particleEmitter) == false)
+         {
             Con::errorf(ConsoleLogEntry::General, "Error, unable to load particle emitter for explosion datablock");
+            return false;
+         }
    }
 
    if (mExplosionShapeAsset.notNull()) {

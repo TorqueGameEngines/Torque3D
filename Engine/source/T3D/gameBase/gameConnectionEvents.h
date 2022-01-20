@@ -39,6 +39,9 @@
 #include "core/stream/bitStream.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
+
+
 
 class QuitEvent : public SimEvent
 {
@@ -100,6 +103,23 @@ class SimDataBlockEvent : public NetEvent
       
       DECLARE_CONOBJECT( SimDataBlockEvent );
       DECLARE_CATEGORY( "Game Networking" );
+};
+
+class SimSoundAssetEvent : public NetEvent
+{
+private:
+   AssetPtr<SoundAsset> mAsset;
+   MatrixF mTransform;
+
+public:
+   typedef NetEvent Parent;
+   
+   SimSoundAssetEvent(AssetPtr<SoundAsset> asset = NULL, const MatrixF* mat = NULL);
+   void pack(NetConnection*, BitStream* bstream);
+   void write(NetConnection*, BitStream* bstream);
+   void unpack(NetConnection*, BitStream* bstream);
+   void process(NetConnection*);
+   DECLARE_CONOBJECT(SimSoundAssetEvent);
 };
 
 class Sim2DAudioEvent: public NetEvent

@@ -35,6 +35,7 @@
 #include "core/stream/bitStream.h"
 #include "core/resourceManager.h"
 #include "console/engineAPI.h"
+#include "core/stream/fileStream.h"
 
 using namespace Torque;
 
@@ -283,8 +284,13 @@ bool SFXProfile::_preloadBuffer()
 
 Resource<SFXResource>& SFXProfile::getResource()
 {
-   if( !mResource && mFilename != StringTable->EmptyString())
-      mResource = SFXResource::load( mFilename );
+   char buf[1024];
+   FileName fullFilename = String(Platform::makeFullPathName(mFilename, buf, sizeof(buf)));
+
+   if (!mResource && SFXResource::exists(fullFilename))
+      mResource = SFXResource::load(mFilename);
+   else
+      mResource = NULL;
 
    return mResource;
 }

@@ -2100,7 +2100,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
                if (imgFileName.isNotEmpty())
                   filePath = imgFileName;
                else
-                  filePath = ""; //no luck, so we just won't try importing in the image
+                  filePath = Torque::Path(""); //no luck, so we just won't try importing in the image
             }
          }
  

@@ -299,6 +299,8 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       SimObject*       nextManagerNameObject;
       SimObject*       nextIdObject;
 
+      StringTableEntry mInheritFrom;
+
       /// SimGroup we're contained in, if any.
       SimGroup*   mGroup;
       
@@ -379,6 +381,9 @@ class SimObject: public ConsoleObject, public TamlCallbacks
 
       // Object name protected set method
       static bool setProtectedName(void *object, const char *index, const char *data);
+
+      // Sets object to inherit default values from
+      static bool setInheritFrom(void* object, const char* index, const char* data);
 
    public:
       inline void setProgenitorFile(const char* pFile) { mProgenitorFile = StringTable->insert(pFile); }

@@ -242,7 +242,7 @@ function ProjectImportWizardPage3::openPage(%this)
    %dataFullPath = makeFullPath("data/");
    %coreFullPath = makeFullPath("core/");
    %toolsFullPath = makeFullPath("tools/");
-   if(startsWith(makeFullPath("data/"), $ProjectImporter::sourceContentFolder))
+   if(startsWith($ProjectImporter::sourceContentFolder, makeFullPath("data/")))
    {
       %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath($ProjectImporter::sourceContentFolder));
       if(isObject(%moduleDef))
@@ -254,8 +254,8 @@ function ProjectImportWizardPage3::openPage(%this)
          ProjectImportWindow.setStep(4);
       }
    }
-   else if(startsWith(makeFullPath("core/"), $ProjectImporter::sourceContentFolder) ||
-            startsWith(makeFullPath("tools/"), $ProjectImporter::sourceContentFolder))
+   else if(startsWith($ProjectImporter::sourceContentFolder, makeFullPath("core/")) ||
+            startsWith($ProjectImporter::sourceContentFolder, makeFullPath("tools/")))
    {
       ProjectImportWindow.setStep(5);
    }
@@ -490,9 +490,11 @@ function preprocessImportingFiles()
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
                
+               %parentName = "";
                %inheritanceSplit = strpos(%objectName, ":");
                if(%inheritanceSplit != -1)
                {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
                
@@ -502,6 +504,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.elementType = "object";
                %currentFileSectionObject.classType = %className;
                %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
                %currentFileSectionObject.fileName = %file;
                %currentFileSectionObject.skip = false;
                %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
@@ -510,6 +513,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
 
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                //Now for a sanity check, see if we kill the object on the same line as we make it
                //sometimes people try and be 'efficient' with their code linecount wise
@@ -540,9 +544,11 @@ function preprocessImportingFiles()
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
                
+               %parentName = "";
                %inheritanceSplit = strpos(%objectName, ":");
                if(%inheritanceSplit != -1)
                {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
                
@@ -552,6 +558,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.elementType = "object";
                %currentFileSectionObject.classType = %className;
                %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
                %currentFileSectionObject.fileName = %file;
                %currentFileSectionObject.skip = false;
                %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
@@ -560,6 +567,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
 
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                //Now for a sanity check, see if we kill the object on the same line as we make it
                //sometimes people try and be 'efficient' with their code linecount wise
@@ -590,9 +598,11 @@ function preprocessImportingFiles()
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
                
+               %parentName = "";
                %inheritanceSplit = strpos(%objectName, ":");
                if(%inheritanceSplit != -1)
                {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
 
@@ -602,6 +612,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.elementType = "object";
                %currentFileSectionObject.classType = %className;
                %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
                %currentFileSectionObject.fileName = %file;
                %currentFileSectionObject.skip = false;
                %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
@@ -610,6 +621,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
 
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                //Now for a sanity check, see if we kill the object on the same line as we make it
                //sometimes people try and be 'efficient' with their code linecount wise
@@ -650,6 +662,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
                
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                if(strIsMatchExpr("*{*", %line))
                {
@@ -836,6 +849,48 @@ function isImportingFile(%checkFile)
    }
    
    return false;
+}
+
+//==============================================================================
+// Returns the file object of the file in question is part of our pre-scanned list of importing files
+//==============================================================================
+function findFileInImporting(%checkFile)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      
+      if(%file $= %checkFile)
+         return $ProjectImporter::FileList.getValue(%i);
+   }
+   
+   return "";
+}
+
+//==============================================================================
+// Checks if the object in question is defined in any of our pre-scanned list of importing files
+//==============================================================================
+function findObjectInFiles(%objectName, %arrayObj)
+{
+   if(%arrayObj $= "")
+      %arrayObj = $ProjectImporter::FileList;
+      
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.objectName $= %objectName)
+            return %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         %result = findObjectInFiles(%objectName, %objectLine);
+         if(%result !$= "")
+            return %result;
+      }
+   }
+   
+   return "";
 }
 
 //==============================================================================
@@ -1213,6 +1268,32 @@ function projectImporterLog(%line)
       echo(%line);
       
    $ProjectImporter::log.add(%line);
+}
+
+//==============================================================================
+// Traverses the object delcaration stack backwards to find the root file object
+//==============================================================================
+function getParentFileObjectFromObject(%object)
+{
+   while(%object.parentElement !$= "")
+   {
+      %object = %object.parentElement;
+   }
+   
+   return %object;
+}
+
+//==============================================================================
+// Traverses the object delcaration stack backwards to find the root file object
+//==============================================================================
+function getParentFileObjectFromObject(%object)
+{
+   while(%object.parentElement !$= "")
+   {
+      %object = %object.parentElement;
+   }
+   
+   return %object;
 }
 
 //==============================================================================

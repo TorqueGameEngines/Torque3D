@@ -2444,7 +2444,6 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
 
 function AssetBrowserFilterTree::onDragDropped( %this )
 {
-   %asdgadfhg =true;
 }
 
 function AssetBrowser::hasLooseFilesInDir(%this)

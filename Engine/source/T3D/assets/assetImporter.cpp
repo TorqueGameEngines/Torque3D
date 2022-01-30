@@ -609,14 +609,32 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    assetImportObj->registerObject();
 
    //sanitize
-   assetName.replace(' ', '_');
-   assetName.replace('~', '_');
-   assetName.replace('`', '_');
-   assetName.replace('-', '_');
-   assetName.replace('*', '_');
-   assetName.replace('-', '_');
-   assetName.replace('+', '_');
-   assetName.replace('&', '_');
+   String processedString = assetName;
+
+   U32 start;
+   U32 end;
+   String firstNumber = String::GetFirstNumber(processedString, start, end);
+   if (!firstNumber.isEmpty() && processedString.startsWith(firstNumber.c_str()))
+      processedString = processedString.replace(firstNumber, "");
+
+   processedString = processedString.replace(" ", "_");
+
+   U32 len = processedString.length() + 1;
+   char* sanitizedStr = Con::getReturnBuffer(len);
+   dStrcpy(sanitizedStr, processedString.c_str(), len);
+
+   U32 pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
+   while (pos < dStrlen(sanitizedStr))
+   {
+      dStrcpy(sanitizedStr + pos, sanitizedStr + pos + 1, len - pos);
+      pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
+   }
+
+   //If we did, indeed, modify the name, update it now
+   if (String(sanitizedStr) != assetName)
+   {
+      assetName = sanitizedStr;
+   }
 
    assetImportObj->assetType = assetType;
    assetImportObj->filePath = filePath;
@@ -2725,8 +2743,6 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
-   String scriptName = assetItem->assetName + "." TORQUE_SCRIPT_EXTENSION;
-   String scriptPath = targetPath + "/" + scriptName;
    String originalPath = assetItem->filePath.getFullPath().c_str();
 
    char qualifiedFromFile[2048];
@@ -2734,10 +2750,8 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
 
    newAsset->setAssetName(assetName);
-   newAsset->setScriptFile(scriptName.c_str());
    newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    newAsset->setDataField(StringTable->insert("materialDefinitionName"), nullptr, assetName);
-   
 
    //iterate through and write out the material maps dependencies
    S32 dependencySlotId = 0;
@@ -2757,16 +2771,6 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
       newAsset->setDataField(StringTable->insert(dependencyFieldName), nullptr, dependencyFieldDef);
 
       dependencySlotId++;
-   }
-
-   Taml tamlWriter;
-   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
-
-   if (!importSuccessful)
-   {
-      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
-      activityLog.push_back(importLogBuffer);
-      return "";
    }
 
    //build the ORMConfig file if we're flagged to and have valid image maps
@@ -2807,109 +2811,12 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
       }
    }
 
-   FileObject* file = new FileObject();
-   file->registerObject();
-
-   if (activeImportConfig->UseExistingMaterials && Platform::isFile(qualifiedFromFile))
+   //If we're not using existing materials, or the material in question doesn't actually already exist, spool it up
+   if (!activeImportConfig->UseExistingMaterials || !Sim::findObject(assetName))
    {
-      //Now write the script file containing our material out
-      //There's 2 ways to do this. If we're in-place importing an existing asset, we can see if the definition existed already, like in an old
-      //materials.tscript file. if it does, we can just find the object by name, and save it out to our new file
-      //If not, we'll just generate one
-      Material* existingMat = MATMGR->getMaterialDefinitionByName(assetName);
-
-      //It's also possible that, for legacy models, the material hooks in via the material's mapTo field, and the material name is something completely different
-      //So we'll check for that as well if we didn't find it by name up above
-      if (existingMat == nullptr)
-         existingMat = MATMGR->getMaterialDefinitionByMapTo(assetName);
-
-      if (existingMat == nullptr && assetItem->assetName != assetItem->cleanAssetName)
-      {
-         existingMat = MATMGR->getMaterialDefinitionByName(assetItem->cleanAssetName);
-         if (existingMat == nullptr)
-            existingMat = MATMGR->getMaterialDefinitionByMapTo(assetItem->cleanAssetName);
-      }
-
-      if (existingMat)
-      {
-         PersistenceManager* persistMgr;
-         if (Sim::findObject("ImageAssetValidator", persistMgr))
-         {
-            for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-            {
-               AssetImportObject* childItem = assetItem->childAssetItems[i];
-
-               if (childItem->canImport() || childItem->assetType.compare("ImageAsset") != 0)
-                  continue;
-
-               String path = childItem->filePath.getFullFileName();
-
-               String mapFieldName = "";
-               String assetFieldName = "";
-
-               ImageAsset::ImageTypes imageType = ImageAsset::getImageTypeFromName(childItem->imageSuffixType);
-
-               if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
-               {
-                  mapFieldName = "DiffuseMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::Normal)
-               {
-                  mapFieldName = "NormalMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::ORMConfig)
-               {
-                  mapFieldName = "ORMConfig";
-               }
-               else if (imageType == ImageAsset::ImageTypes::Metalness)
-               {
-                  mapFieldName = "MetalMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::AO)
-               {
-                  mapFieldName = "AOMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::Roughness)
-               {
-                  mapFieldName = "RoughMap";
-               }
-
-               assetFieldName = mapFieldName + "Asset[0]";
-               mapFieldName += "[0]";
-
-               //If there's already an existing image map file on the material definition in this slot, don't override it
-               if (!path.isEmpty())
-                  existingMat->writeField(mapFieldName.c_str(), path.c_str());
-
-               String targetAsset = targetModuleId + ":" + childItem->assetName;
-
-               existingMat->writeField(assetFieldName.c_str(), targetAsset.c_str());
-            }
-
-            persistMgr->setDirty(existingMat);
-         }
-         else
-         {
-            Con::errorf("ImageAssetValidator not found!");
-         }
-      }
-      else
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Failed to find original material definition %s!", assetName);
-         activityLog.push_back(importLogBuffer);
-         return tamlPath;
-      }
-   }
-   else if (file->openForWrite(scriptPath.c_str()))
-   {
-      file->writeLine((U8*)"//--- OBJECT WRITE BEGIN ---");
-
-      char lineBuffer[1024];
-      dSprintf(lineBuffer, 1024, "singleton Material(%s) {", assetName);
-      file->writeLine((U8*)lineBuffer);
-
-      dSprintf(lineBuffer, 1024, "   mapTo=\"%s\";", assetName);
-      file->writeLine((U8*)lineBuffer);
+      Material* newMat = new Material();
+      newMat->registerObject(assetName);
+      newMat->mMapTo = assetName;
 
       bool hasRoughness = false;
       for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
@@ -2919,63 +2826,58 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          if ((!childItem->canImport() && childItem->importStatus != AssetImportObject::UseForDependencies) || childItem->assetType.compare("ImageAsset") != 0)
             continue;
 
-         String mapFieldName = "";
-
-         String assetFieldName = "";
-
          ImageAsset::ImageTypes imageType = ImageAsset::getImageTypeFromName(childItem->imageSuffixType);
+
+         String assetMapFillIn = targetModuleId + ":" + childItem->assetName;
+         StringTableEntry assetMapFillInStr = StringTable->insert(assetMapFillIn.c_str());
 
          if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
          {
-            mapFieldName = "DiffuseMap";
+            newMat->mDiffuseMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::Normal)
          {
-            mapFieldName = "NormalMap";
+            newMat->mNormalMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::ORMConfig)
          {
-            mapFieldName = "ORMConfigMap";
+            newMat->mORMConfigMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {
-            mapFieldName = "MetalMap";
+            newMat->mMetalMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::AO)
          {
-            mapFieldName = "AOMap";
+            newMat->mAOMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
-            mapFieldName = "RoughMap";
+            newMat->mRoughMapAssetId[0] = assetMapFillInStr;
             hasRoughness = true;
          }
-
-         assetFieldName = mapFieldName + "Asset";
-         assetFieldName += "[0]";
-
-         //String path = childItem->filePath.getFullFileName();
-         //dSprintf(lineBuffer, 1024, "   %s = \"%s\";", mapFieldName.c_str(), path.c_str());
-         //file->writeLine((U8*)lineBuffer);
-
-         dSprintf(lineBuffer, 1024, "   %s = \"%s:%s\";", assetFieldName.c_str(), targetModuleId.c_str(), childItem->assetName.c_str());
-         file->writeLine((U8*)lineBuffer);
       }
 
       if (hasRoughness)
       {
-         file->writeLine((U8*)"   invertSmoothness = true;");
-         
+         newMat->mInvertRoughness[0] = true;
       }
 
-      file->writeLine((U8*)"};");
-      file->writeLine((U8*)"//--- OBJECT WRITE END ---");
-
-      file->close();
+      newAsset->addObject(newMat);
    }
-   else
+   else 
    {
-      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset script file %s", scriptPath.c_str());
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Set to use an existing material, so avoiding writing a material definition to new asset definition for material: %s", assetName);
+      activityLog.push_back(importLogBuffer);
+      return "";
+   }
+
+   Taml tamlWriter;
+   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
+
+   if (!importSuccessful)
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
       activityLog.push_back(importLogBuffer);
       return "";
    }

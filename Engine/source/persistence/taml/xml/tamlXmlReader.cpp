@@ -293,8 +293,22 @@ void TamlXmlReader::parseAttributes( tinyxml2::XMLElement* pXmlElement, SimObjec
                 attributeName == tamlNamedObjectName )
             continue;
 
-        // Set the field.
-        pSimObject->setPrefixedDataField(attributeName, NULL, pAttribute->Value());
+        //See if we have any sort of array index
+        S32 suffixNum;
+        String trimmedName = String::GetTrailingNumber(attributeName, suffixNum);
+        if (!trimmedName.equal(attributeName))
+        {
+           char arrayIndexStr[32];
+           dItoa(suffixNum, arrayIndexStr);
+
+           // Set the field.
+           pSimObject->setPrefixedDataField(StringTable->insert(trimmedName.c_str()), arrayIndexStr, pAttribute->Value());
+        }
+        else
+        {
+           // Set the field.
+           pSimObject->setPrefixedDataField(attributeName, NULL, pAttribute->Value());
+        }
     }
 }
 

@@ -47,7 +47,7 @@
             <Setting name="AlwaysAddMaterialSuffix">0</Setting>
             <Setting name="CreateComposites">1</Setting>
             <Setting name="CreateORMConfig">1</Setting>
-            <Setting name="IgnoreMaterials">DefaultMaterial</Setting>
+            <Setting name="IgnoreMaterials">DefaultMaterial,ColorEffect*</Setting>
             <Setting name="ImportMaterials">1</Setting>
             <Setting name="PopulateMaterialMaps">1</Setting>
             <Setting name="UseDiffuseSuffixOnOriginImage">1</Setting>
@@ -130,6 +130,7 @@
             <Setting name="AlwaysAddMaterialSuffix">1</Setting>
             <Setting name="CreateComposites">1</Setting>
             <Setting name="ImportMaterials">1</Setting>
+            <Setting name="IgnoreMaterials">DefaultMaterial,ColorEffect*</Setting>
             <Setting name="PopulateMaterialMaps">1</Setting>
             <Setting name="UseDiffuseSuffixOnOriginImage">1</Setting>
             <Setting name="UseExistingMaterials">1</Setting>

@@ -200,7 +200,7 @@ function T3Dpre4ProjectImporter::writeImportingFiles(%this)
       if($ProjectImporter::useExistingModule)
       {
          //clean up legact files if they've been renamed or whatnot
-         if(%file !$= %rootFileSectionObject.fileDestination)
+         if(makeRelativePath(%file) !$= %rootFileSectionObject.fileDestination)
          {
             fileDelete(%file);  
          }
@@ -659,8 +659,6 @@ function T3Dpre4ProjectImporter::processAssetFile(%this, %assetObj)
    if(!isObject(%assetObj))
       return;
       
-   %assetObj.echo();
-      
    //really, we only care here about ensuring the file extensions are cleaned up
    for(%l=0; %l < %assetObj.count(); %l++)
    {
@@ -691,6 +689,9 @@ function T3Dpre4ProjectImporter::beginAssetAndModuleImport(%this)
       
       if(%fileExt $= ".module")
       {
+         if(%rootFileSectionObject.skip)
+            continue;
+            
          projectImporterLog("T3Dpre4ProjectImporter::beginAssetAndModuleImport() - processing file: " @ %file);
          $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
          %this.processModuleFile(%rootFileSectionObject);
@@ -698,6 +699,9 @@ function T3Dpre4ProjectImporter::beginAssetAndModuleImport(%this)
       }
       else if(%fileExt $= ".asset.taml")
       {
+         if(%rootFileSectionObject.skip)
+            continue;
+            
          projectImporterLog("T3Dpre4ProjectImporter::beginAssetAndModuleImport() - processing file: " @ %file);
          $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
          %this.processAssetFile(%rootFileSectionObject);
@@ -913,12 +917,11 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %fileObject, %obje
          versionId = 1;
          shaderData = "";
          materialDefinitionName = %assetName;
-         scriptFile = fileBase(%scriptPath);
       };
       
       //Now we make our scripted definition "real", and append it to our asset
       //so it is serialized.
-      /*%objectDefinition = "";
+      %objectDefinition = "";
       for(%l=0; %l < %fileObject.count(); %l++)
       {
          %objectLine = %fileObject.getKey(%l);  
@@ -932,8 +935,14 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %fileObject, %obje
       
       if(isObject(%objectName))
       {
+         //if we created it successfully, set up inheritance for serialization if needed
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+               
          %asset.add(%objectName);
-      }*/
+      }
       
       if(!isDirectory(%assetPath))
       {
@@ -943,26 +952,6 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %fileObject, %obje
       %success = false;
       if(TamlWrite(%asset, %tamlpath))
       {
-         //now write the script file
-         if ( $ProjectImporter::fileObject.openForWrite( %scriptPath ) ) 
-         {
-            for(%i=0; %i < %fileObject.count(); %i++)
-            {
-               %objectLine = %fileObject.getKey(%i);
-               if(isObject(%objectLine))
-               {
-                  %defineLine = %fileObject.getKey(0);
-                  $ProjectImporter::fileObject.writeLine(%defineLine);
-               }
-               else
-               {
-                  $ProjectImporter::fileObject.writeLine(%objectLine);
-               }
-            }
-            
-            $ProjectImporter::fileObject.close();
-         }
-         
          %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
                   
          %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
@@ -970,6 +959,43 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %fileObject, %obje
          
       if(!%success)
          return false;
+   }
+   else
+   {
+      //process an existing material asset, if needbe
+      %assetDef = AssetDatabase.acquireAsset(%matAsset);
+      
+      %assetScriptPath = %assetDef.getScriptPath();
+      
+      if(isFile(%assetScriptPath) && isObject(%objectName))
+      {
+         //Regular material in a companion file, so we'll want to write it to the
+         //asset def file instead of the loose file
+         %assetDef.scriptFile = ""; //clear the old script path reference
+         %assetDef.add(%objectName); //child the definition to the asset def
+
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+         
+         if(%assetDef.saveAsset())
+         {
+            %fileObject.processed = true;
+            %fileObject.skip = true; //don't write the def back out to script, it's not needed now
+            
+            %assetFileObj = findFileInImporting(makeFullPath(AssetDatabase.getAssetFilePath(%matAsset)));
+            
+            echo(%assetFileObj.fileDestination);
+            %assetFileObj.processed = true;
+            %assetFileObj.skip = true; //this asset definition has been processed
+                                       //so nothing else need be done
+         }
+         else
+         {
+            projectImporterLog("T3Dpre4ProjectImporter::processMaterialObject() - failed to save out modified material asset for: " @ %matAsset);  
+         }
+      }
    }
    
    return false;
@@ -1017,8 +1043,35 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
          versionId = 1;
          shaderData = "";
          materialDefinitionName = %objectName;
-         scriptFile = fileName(%scriptPath);
       };
+      
+      //Now we make our scripted definition "real", and append it to our asset
+      //so it is serialized.
+      %objectDefinition = "";
+      for(%l=0; %l < %fileObject.count(); %l++)
+      {
+         %objectLine = %fileObject.getKey(%l);  
+         if(!isObject(%objectLine))
+         {
+            %objectDefinition = %objectDefinition @ %objectLine;
+         }
+      }
+      
+      //Shift to object name, internal name will be used for assetID store
+      %objectDefinition.name = findObjectField(%fileObject, "internalName");
+      
+      eval(%objectDefinition);
+      
+      if(isObject(%objectName))
+      {
+         //if we created it successfully, set up inheritance for serialization if needed
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+               
+         %asset.add(%objectName);
+      }
       
       %success = false;
       if(TamlWrite(%asset, %tamlpath))
@@ -1030,6 +1083,43 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
       
       if(!%success)
          return false;
+   }
+   else
+   {
+      //process an existing material asset, if needbe
+      %assetDef = AssetDatabase.acquireAsset(%matAsset);
+      
+      %assetScriptPath = %assetDef.getScriptPath();
+      
+      if(isFile(%assetScriptPath) && isObject(%objectName))
+      {
+         //Regular material in a companion file, so we'll want to write it to the
+         //asset def file instead of the loose file
+         %assetDef.scriptFile = ""; //clear the old script path reference
+         %assetDef.add(%objectName); //child the definition to the asset def
+
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+         
+         if(%assetDef.saveAsset())
+         {
+            %fileObject.processed = true;
+            %fileObject.skip = true; //don't write the def back out to script, it's not needed now
+            
+            %assetFileObj = findFileInImporting(makeFullPath(AssetDatabase.getAssetFilePath(%matAsset)));
+            
+            echo(%assetFileObj.fileDestination);
+            %assetFileObj.processed = true;
+            %assetFileObj.skip = true; //this asset definition has been processed
+                                       //so nothing else need be done
+         }
+         else
+         {
+            projectImporterLog("T3Dpre4ProjectImporter::processTerrainMaterialObject() - failed to save out modified material asset for: " @ %matAsset);  
+         }
+      }
    }
    
    return false;
@@ -1122,24 +1212,11 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
       }
       else
       {
-         %objFileFinder = "";
-         //first check our cache
-         if(isObject($ProjectImporter::SFXDescriptionCache) && 
-            $ProjectImporter::SFXDescriptionCache.getIndexFromKey(%descriptionName) !$= "")
-         {
-            %key = $ProjectImporter::SFXDescriptionCache.getIndexFromKey(%descriptionName);
-            %objFileFinder = $ProjectImporter::SFXDescriptionCache.getValue(%key);
-         }
-         else
-         {
-            %objFileFinder = findObjectInFiles(%descriptionName);
-         }
+         %fileObj = findObjectInFiles(%descriptionName);
          
-         if(%objFileFinder !$= "")
+         if(%fileObj !$= "")
          {
             %valueArray = new ArrayObject();
-               
-            %fileObj = getField(%objFileFinder, 0);
                
             %valueArray.add("sourceGroup" SPC findObjectField(%fileObj, "sourceGroup"));
             %valueArray.add("volume" SPC findObjectField(%fileObj, "volume"));
@@ -1157,10 +1234,7 @@ function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectNa
             %valueArray.add("rolloffFactor" SPC findObjectField(%fileObj, "rolloffFactor"));
             %valueArray.add("isStreaming" SPC findObjectField(%fileObj, "isStreaming"));
             
-            if(isObject($ProjectImporter::SFXDescriptionCache))
-            {
-               $ProjectImporter::SFXDescriptionCache.add(%descriptionName, %objFileFinder);
-            }
+            %fileObj.skip = true;
             
             for(%v=0; %v < %valueArray.Count(); %v++)
             {

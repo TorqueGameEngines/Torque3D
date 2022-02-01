@@ -304,6 +304,10 @@ bool SimObject::writeField(StringTableEntry fieldname, const char* value)
 void SimObject::writeFields(Stream &stream, U32 tabStop)
 {
    // Write static fields.
+
+   // Create a default object of the same type
+   ConsoleObject* defaultConObject = ConsoleObject::create(getClassName());
+   SimObject* defaultObject = dynamic_cast<SimObject*>(defaultConObject);
    
    const AbstractClassRep::FieldList &list = getFieldList();
 
@@ -330,6 +334,11 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
          dStrcpy( (char *)valCopy, val, nBufferSize );
 
          if (!writeField(f->pFieldname, valCopy))
+            continue;
+
+         //If the field hasn't been changed from the default value, then don't bother writing it out
+         const char* defaultValueCheck = defaultObject->getDataField(f->pFieldname, array);
+         if (dStricmp(defaultValueCheck, valCopy) == 0)
             continue;
 
          val = valCopy;
@@ -366,6 +375,9 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
    
    if(mFieldDictionary && mCanSaveFieldDictionary)
       mFieldDictionary->writeFields(this, stream, tabStop);
+
+   // Cleanup our created default object
+   delete defaultConObject;
 }
 
 //-----------------------------------------------------------------------------

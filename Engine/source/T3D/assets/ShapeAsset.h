@@ -60,7 +60,11 @@
 #ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
 #endif
+
 #include "assetMacroHelpers.h"
+
+class TSShapeConstructor;
+
 //-----------------------------------------------------------------------------
 class ShapeAsset : public AssetBase
 {
@@ -72,6 +76,8 @@ protected:
    StringTableEntry   mFilePath;
    StringTableEntry   mConstructorFilePath;
    Resource<TSShape>	 mShape;
+
+   SimObjectPtr<TSShapeConstructor> mShapeConstructor;
 
    StringTableEntry   mDiffuseImposterFileName;
    StringTableEntry   mDiffuseImposterPath;

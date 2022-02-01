@@ -54,6 +54,8 @@
 #include "ts/tsShapeInstance.h"
 #include "gfx/bitmap/imageUtils.h"
 
+#include "ts/tsShapeConstruct.h"
+
 StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
@@ -92,7 +94,7 @@ ConsoleSetType(TypeShapeAssetPtr)
 
 //-----------------------------------------------------------------------------
 
-ConsoleType(assetIdString, TypeShapeAssetId, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeShapeAssetId, const char*, "")
 
 ConsoleGetType(TypeShapeAssetId)
 {
@@ -170,8 +172,8 @@ void ShapeAsset::initPersistFields()
 
    addProtectedField("fileName", TypeAssetLooseFilePath, Offset(mFileName, ShapeAsset),
       &setShapeFile, &getShapeFile, "Path to the shape file we want to render");
-   addProtectedField("constuctorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
-      &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
+   addField("constuctorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
+      "Path to the shape file we want to render");
 
    addProtectedField("diffuseImposterFileName", TypeAssetLooseFilePath, Offset(mDiffuseImposterFileName, ShapeAsset),
       &setDiffuseImposterFile, &getDiffuseImposterFile, "Path to the diffuse imposter file we want to render");
@@ -349,6 +351,41 @@ bool ShapeAsset::loadShape()
       }
    }
 
+   //Attempt to load embedded shape constructors
+   if (size() != 0)
+   {
+      for (U32 i = 0; i < size(); i++)
+      {
+         mShapeConstructor = dynamic_cast<TSShapeConstructor*>(getObject(i));
+         if (mShapeConstructor && !mShapeConstructor->isProperlyAdded())
+         {
+            //This isn't expressly required for the shape to load, so we'll continue, but log the error
+            Con::errorf("ShapeAsset::loadShape() - failed to load embedded shape constructor definition for asset: %s", getAssetId());
+         }
+      }
+   }
+
+   //Next, try and load the companion script for onLoad functions or other supplemental scripted elements, if applicable
+   if (Torque::FS::IsScriptFile(mConstructorFilePath))
+   {
+      //Since we're refreshing, we can assume that the file we're executing WILL have an existing definition.
+      //But that definition, whatever it is, is the 'correct' one, so we enable the Replace Existing behavior
+      //when the engine encounters a named object conflict.
+      String redefineBehaviorPrev = Con::getVariable("$Con::redefineBehavior");
+      Con::setVariable("$Con::redefineBehavior", "replaceExisting");
+
+      if (!Con::executeFile(mConstructorFilePath, false, false))
+      {
+         //This isn't expressly required for the shape to load, so we'll continue, but log the error
+         Con::errorf("ShapeAsset::loadShape() - failed to associated shape constructor script for asset: %s file: %s",
+            getAssetId(), mConstructorFilePath);
+      }
+
+      //And now that we've executed, switch back to the prior behavior
+      Con::setVariable("$Con::redefineBehavior", redefineBehaviorPrev.c_str());
+   }
+
+   //Now that prepwork is done, we load the shape proper
    mShape = ResourceManager::get().load(mFilePath);
 
    if (!mShape)

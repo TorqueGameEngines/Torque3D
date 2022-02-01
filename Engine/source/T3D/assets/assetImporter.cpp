@@ -2979,16 +2979,6 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       newAsset->setNormalImposterFile(normalsPath.c_str());
    }
 
-   Taml tamlWriter;
-   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
-
-   if (!importSuccessful)
-   {
-      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
-      activityLog.push_back(importLogBuffer);
-      return "";
-   }
-
    bool makeNewConstructor = true;
    if (!isReimport)
    {
@@ -3046,13 +3036,14 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       }
    }
 
+   TSShapeConstructor* constructor = nullptr;
    if (makeNewConstructor)
    {
       dSprintf(importLogBuffer, sizeof(importLogBuffer), "Beginning creation of new TSShapeConstructor file: %s", qualifiedToCSFile);
       activityLog.push_back(importLogBuffer);
 
       //find/create shape constructor
-      TSShapeConstructor* constructor = TSShapeConstructor::findShapeConstructorByFilename(Torque::Path(qualifiedToFile).getFullPath());
+      constructor = TSShapeConstructor::findShapeConstructorByFilename(Torque::Path(qualifiedToFile).getFullPath());
       if (constructor == nullptr)
       {
          String fullAssetName = assetItem->moduleName + ":" + assetItem->assetName;
@@ -3154,22 +3145,17 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
       constructor->mOptions.neverImportMat = neverImportMats;
 
-      PersistenceManager* constructorPersist = new PersistenceManager();
-      constructorPersist->registerObject();
-      constructorPersist->setDirty(constructor, qualifiedToCSFile);
+      newAsset->addObject(constructor);
+   }
 
-      if (!constructorPersist->saveDirtyObject(constructor))
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Failed to save shape constructor file to %s", constructorPath.c_str());
-         activityLog.push_back(importLogBuffer);
-      }
-      else
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Finished creating shape constructor file to %s", constructorPath.c_str());
-         activityLog.push_back(importLogBuffer);
-      }
+   Taml tamlWriter;
+   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
 
-      constructorPersist->destroySelf();
+   if (!importSuccessful)
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
+      activityLog.push_back(importLogBuffer);
+      return "";
    }
 
    //restore the cached version just in case we loaded a sis file

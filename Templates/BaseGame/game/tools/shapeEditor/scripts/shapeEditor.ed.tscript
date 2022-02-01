@@ -255,13 +255,9 @@ function ShapeEditor::createConstructor( %this, %assetId )
 function ShapeEditor::saveConstructor( %this, %constructor )
 {
    %assetDef = AssetDatabase.acquireAsset(%constructor.baseShapeAsset);
-   %savepath = %assetDef.getShapeConstructorFilePath();
    AssetDatabase.releaseAsset(%constructor.baseShapeAsset);
    
-   new PersistenceManager( shapeEd_perMan );
-   shapeEd_perMan.setDirty( %constructor, %savepath );
-   shapeEd_perMan.saveDirtyObject( %constructor );
-   shapeEd_perMan.delete();
+   %assetDef.saveAsset();
 }
 
 // Handle a selection in the shape selector list

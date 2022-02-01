@@ -741,7 +741,7 @@ function T3Dpre4ProjectImporter::genProcessor(%classType, %conversionMap)
     eval(%stryng);
 }
 
-T3Dpre4ProjectImporter::genProcessor("TSShapeConstructor", "baseShape baseShapeAsset shapeName shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("TSShapeConstructor", "baseShape baseShapeAsset shapeName baseShapeAsset");
 T3Dpre4ProjectImporter::genProcessor("BasicClouds", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("CloudLayer", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("DecalRoad", "material materialAsset");
@@ -766,6 +766,79 @@ T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("afxZodiacPlaneData", "texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("sfxEmitter", "track soundAsset filename soundAsset");
 T3Dpre4ProjectImporter::genProcessor("LightningData", "thunderSounds ThunderSoundAsset strikeSound StrikeSoundAsset");
+
+//==============================================================================
+// Shape Constructors
+//==============================================================================
+function T3Dpre4ProjectImporter::processTSShapeConstructorObject(%this, %fileObject, %objectName)
+{
+   %targetShape = findObjectField(%fileObject, "baseShape");
+   if(%targetShape $= "")
+      %targetShape = findObjectField(%fileObject, "shapeName");
+      
+   if(isFile(%targetShape))
+      %shapeAsset = ShapeAsset::getAssetIdByFilename(%targetShape);
+   else if(AssetDatabase.isDeclaredAsset(%targetShape))
+      %shapeAsset = %targetShape;
+   
+   if(%shapeAsset $= "" || %shapeAsset $= "Core_Rendering:NoShape")
+   {
+      //If we're a shape constructor with no shape asset, then something went wrong
+      //and we shouldn't continue with processing this further
+      return false;
+   }
+   else
+   {
+      //process an existing material asset, if needbe
+      %assetDef = AssetDatabase.acquireAsset(%shapeAsset);
+      
+      //If this constructor doesn't explicitly exist yet for whatever reason
+      //we'll process this one and then bind it  
+      if(!isObject(%objectName))
+      {
+         //Now we make our scripted definition "real", and append it to our asset
+         //so it is serialized.
+         %objectDefinition = "";
+         for(%l=0; %l < %fileObject.count(); %l++)
+         {
+            %objectLine = %fileObject.getKey(%l);  
+            if(!isObject(%objectLine))
+            {
+               %objectDefinition = %objectDefinition @ %objectLine;
+            }
+         }
+         
+         eval(%objectDefinition);  
+      }
+
+      //Final sanity check we're working with good data, then roll!
+      if(isObject(%objectName))
+      {
+         %assetScriptPath = %assetDef.getShapeConstructorFilePath();
+         if(isFile(%assetScriptPath))
+            %assetDef.constuctorFileName = ""; //clear the old script path reference if applicable
+            
+         %assetDef.add(%objectName); //child the definition to the asset def
+         
+         if(%assetDef.saveAsset())
+         {
+            %fileObject.processed = true;
+            %fileObject.skip = true; //don't write the def back out to script, it's not needed now
+         }
+         else
+         {
+            projectImporterLog("T3Dpre4ProjectImporter::processTSShapeConstructorObject() - failed to save out modified shape constructor for asset: " @ %shapeAsset);  
+         }
+      }
+      else
+      {
+         projectImporterLog("T3Dpre4ProjectImporter::processTSShapeConstructorObject() - failed to find or build shape constructor object from script data for asset: " @ %shapeAsset);  
+      }
+   }
+   
+   return false;
+}
+
 //==============================================================================
 // Levels
 //==============================================================================

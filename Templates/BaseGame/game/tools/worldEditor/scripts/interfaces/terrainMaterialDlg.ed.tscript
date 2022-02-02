@@ -77,9 +77,6 @@ function TerrainMaterialDlg::showByObjectId( %this, %matObjectId, %onApplyCallba
 
 function TerrainMaterialDlg::onWake( %this )
 {
-   if( !isObject( ETerrainMaterialPersistMan ) )
-      new PersistenceManager( ETerrainMaterialPersistMan );
-      
    if( !isObject( TerrainMaterialDlgNewGroup ) )
       new SimGroup( TerrainMaterialDlgNewGroup );
    if( !isObject( TerrainMaterialDlgDeleteGroup ) )
@@ -156,9 +153,6 @@ function TerrainMaterialDlg::dialogApply( %this )
    // Make sure we save any changes to the current selection.
    %this.saveDirtyMaterial( %this.activeMat );
    
-   // Save all changes.
-   ETerrainMaterialPersistMan.saveDirty();
-   
    // Delete the snapshot.
    TerrainMaterialDlgSnapshot.delete();
 
@@ -190,10 +184,6 @@ function TerrainMaterialDlg::closeDialog( %this )
    // Restore material properties we have changed.
    
    %this.restoreMaterials();
-   
-   // Clear the persistence manager state.
-   
-   ETerrainMaterialPersistMan.clearAll();
    
    // Delete all new object we have created.
    
@@ -599,17 +589,9 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    %mat.isSRGB = %isSRGB;
    %mat.invertRoughness = %invertRoughness;
    
-   // Mark the material as dirty and needing saving.
-   
-   %fileName = %mat.getFileName();
-   if( %fileName $= "" )
-   {
-      error("TerrainMaterialDlg::saveDirtyMaterial() - terrain material doesn't have a fileName set to save to.");
-      return;
-      //%fileName = "data/terrains/materials." @ $TorqueScriptFileExtension;
-   }
-      
-   ETerrainMaterialPersistMan.setDirty( %mat, %fileName ); 
+   //Save the material asset
+   %assetDef = AssetDatabase.acquireAsset(%mat.internalName);
+   %assetDef.saveAsset();
 }
 
 //-----------------------------------------------------------------------------

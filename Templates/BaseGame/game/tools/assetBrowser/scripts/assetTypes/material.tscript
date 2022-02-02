@@ -8,7 +8,6 @@ function AssetBrowser::createMaterialAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";   
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new MaterialAsset()
    {
@@ -16,12 +15,12 @@ function AssetBrowser::createMaterialAsset(%this)
       versionId = 1;
       materialDefinitionName = %assetName;
       scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
+      
+      new Material(%assetName) {
+      };
    };
    
    TamlWrite(%asset, %tamlpath);
-   
-   %mat = new Material(%assetName);
-   %mat.save(%scriptPath);
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
@@ -42,6 +41,7 @@ function AssetBrowser::editMaterialAsset(%this, %assetDef)
    
    EditorGui.setEditor(MaterialEditorPlugin);
    
+   MaterialEditorGui.currentMaterialAsset = %assetDef.getAssetId();
    MaterialEditorGui.currentMaterial = %assetDef.materialDefinitionName;
    MaterialEditorGui.setActiveMaterial( %assetDef.materialDefinitionName );
    

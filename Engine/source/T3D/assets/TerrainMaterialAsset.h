@@ -47,7 +47,13 @@
 #include "gui/editor/guiInspectorTypes.h"
 #endif
 
+#ifndef _TERRMATERIAL_H_
 #include "terrain/terrMaterial.h"
+#endif
+
+#ifndef _MATERIALDEFINITION_H_
+#include "materials/materialDefinition.h"
+#endif
 
 //-----------------------------------------------------------------------------
 class TerrainMaterialAsset : public AssetBase
@@ -58,22 +64,52 @@ class TerrainMaterialAsset : public AssetBase
    StringTableEntry        mScriptPath;
    StringTableEntry        mMatDefinitionName;
 
+   SimObjectPtr<TerrainMaterial>  mMaterialDefinition;
+
+   SimObjectPtr<Material>  mFXMaterialDefinition;
+
+public:
+   static StringTableEntry smNoTerrainMaterialAssetFallback;
+   
+   enum TerrainMaterialAssetErrCode
+   {
+      ScriptLoaded = AssetErrCode::Extended,
+      DefinitionAlreadyExists,
+      EmbeddedDefinition,
+      Extended
+   };
+
 public:
    TerrainMaterialAsset();
    virtual ~TerrainMaterialAsset();
+   /// Set up some global script interface stuff.
+   static void consoleInit();
 
    /// Engine.
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
-   static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
+   void loadMaterial();
 
    StringTableEntry getMaterialDefinitionName() { return mMatDefinitionName; }
+   SimObjectPtr<TerrainMaterial> getMaterialDefinition() { return mMaterialDefinition; }
 
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
 
    inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
+
+   /// <summary>
+   /// Looks for any assets that uses the provided Material Definition name.
+   /// If none are found, attempts to auto-import the material definition if the
+   /// material definition exists.
+   /// </summary>
+   /// <param name="matName">Material Definition name to look for</param>
+   /// <returns>AssetId of matching asset.</returns>
+   static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
+   static U32 getAssetById(StringTableEntry assetId, AssetPtr<TerrainMaterialAsset>* materialAsset);
+   static SimObjectPtr<TerrainMaterial> findMaterialDefinitionByAssetId(StringTableEntry assetId);
+   static U32 getAssetByMaterialName(StringTableEntry matName, AssetPtr<TerrainMaterialAsset>* matAsset);
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(TerrainMaterialAsset);
@@ -82,11 +118,16 @@ protected:
    virtual void initializeAsset();
    virtual void onAssetRefresh(void);
 
-   static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<TerrainMaterialAsset*>(obj)->setScriptFile(data); return false; }
+   static bool setScriptFile(void *obj, const char *index, const char *data) 
+   { 
+	   static_cast<TerrainMaterialAsset*>(obj)->setScriptFile(data); 
+	   return false; 
+   }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<TerrainMaterialAsset*>(obj)->getScriptFile(); }
 };
 
 DefineConsoleType(TypeTerrainMaterialAssetPtr, TerrainMaterialAsset)
+DefineConsoleType(TypeMaterialAssetId, String)
 
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
@@ -106,6 +147,14 @@ public:
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
    void setMaterialAsset(String assetId);
+};
+class GuiInspectorTypeTerrainMaterialAssetId : public GuiInspectorTypeTerrainMaterialAssetPtr
+{
+   typedef GuiInspectorTypeTerrainMaterialAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetId);
+   static void consoleInit();
 };
 
 #endif // _ASSET_BASE_H_

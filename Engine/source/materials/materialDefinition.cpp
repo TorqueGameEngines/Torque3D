@@ -516,7 +516,8 @@ bool Material::writeField(StringTableEntry fieldname, const char* value)
       fieldname == StringTable->insert("overlayTex") ||
       fieldname == StringTable->insert("bumpTex") ||
       fieldname == StringTable->insert("envTex") ||
-      fieldname == StringTable->insert("colorMultiply"))
+      fieldname == StringTable->insert("colorMultiply") ||
+      fieldname == StringTable->insert("internalName"))
       return false;
 
    return Parent::writeField(fieldname, value);

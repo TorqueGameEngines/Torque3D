@@ -40,6 +40,10 @@
 #include "assets/assetPtr.h"
 #endif
 
+#include "T3D/assets/assetImporter.h"
+
+StringTableEntry TerrainMaterialAsset::smNoTerrainMaterialAssetFallback = NULL;
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(TerrainMaterialAsset);
@@ -85,6 +89,35 @@ ConsoleSetType(TypeTerrainMaterialAssetPtr)
    Con::warnf("(TypeTerrainMaterialAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
+
+ConsoleType(assetIdString, TypeTerrainMaterialAssetId, const char*, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeTerrainMaterialAssetId)
+{
+   // Fetch asset Id.
+   return *((const char**)(dptr));
+}
+
+ConsoleSetType(TypeTerrainMaterialAssetId)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset Id.
+      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+
+      // Update asset value.
+      *assetId = StringTable->insert(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeTerrainMaterialAssetId) - Cannot set multiple args to a single asset.");
+}
 //-----------------------------------------------------------------------------
 
 TerrainMaterialAsset::TerrainMaterialAsset()
@@ -92,15 +125,31 @@ TerrainMaterialAsset::TerrainMaterialAsset()
    mScriptFile = StringTable->EmptyString();
    mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
+   mMaterialDefinition = nullptr;
+   mFXMaterialDefinition = nullptr;
 }
 
 //-----------------------------------------------------------------------------
 
 TerrainMaterialAsset::~TerrainMaterialAsset()
 {
+   if (mMaterialDefinition)
+      mMaterialDefinition->safeDeleteObject();
+   if (mFXMaterialDefinition)
+      mFXMaterialDefinition->safeDeleteObject();
 }
 
 //-----------------------------------------------------------------------------
+
+void TerrainMaterialAsset::consoleInit()
+{
+   Parent::consoleInit();
+   Con::addVariable("$Core::NoTerrainMaterialAssetFallback", TypeString, &smNoTerrainMaterialAssetFallback,
+      "The assetId of the material to display when the requested material asset is missing.\n"
+      "@ingroup GFX\n");
+   
+   smNoTerrainMaterialAssetFallback = StringTable->insert(Con::getVariable("$Core::NoTerrainMaterialAssetFallback"));
+}
 
 void TerrainMaterialAsset::initPersistFields()
 {
@@ -108,8 +157,9 @@ void TerrainMaterialAsset::initPersistFields()
    Parent::initPersistFields();
 
    //addField("shaderGraph", TypeRealString, Offset(mShaderGraphFile, TerrainMaterialAsset), "");
-   addProtectedField("scriptFile", TypeAssetLooseFilePath, Offset(mScriptFile, TerrainMaterialAsset),
-      &setScriptFile, &getScriptFile, "Path to the file containing the material definition.");
+   //addProtectedField("scriptFile", TypeAssetLooseFilePath, Offset(mScriptFile, TerrainMaterialAsset),
+   //   &setScriptFile, &getScriptFile, "Path to the file containing the material definition.");
+   addField("scriptFile", TypeAssetLooseFilePath, Offset(mScriptFile, TerrainMaterialAsset), "");
 
    addField("materialDefinitionName", TypeString, Offset(mMatDefinitionName, TerrainMaterialAsset), "Name of the material definition this asset is for.");
 }
@@ -121,28 +171,71 @@ void TerrainMaterialAsset::initializeAsset()
 
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
-      Con::executeFile(mScriptPath, false, false);
+   if (mMatDefinitionName == StringTable->EmptyString())
+   {
+      mLoadedState = Failed;
+      return;
+   }
+
+   if (mMatDefinitionName == StringTable->insert("DetailBlue"))
+   {
+      bool asdfsd = true;
+   }
+
+   if (size() != 0 && mScriptPath == StringTable->EmptyString())
+   {
+      mLoadedState = EmbeddedDefinition;
+   }
+   else if (Torque::FS::IsScriptFile(mScriptPath))
+   {
+      if (!Sim::findObject(mMatDefinitionName))
+      {
+          if (Con::executeFile(mScriptPath, false, false))
+          {
+              mLoadedState = ScriptLoaded;
+          }
+          else
+          {
+              mLoadedState = Failed;
+          }
+      }
+      else
+      {
+         mLoadedState = DefinitionAlreadyExists;
+      }
+   }
+
+   loadMaterial();
 }
 
 void TerrainMaterialAsset::onAssetRefresh()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
-      Con::executeFile(mScriptPath, false, false);
-
-   if (mMatDefinitionName != StringTable->EmptyString())
+   if (mMatDefinitionName == StringTable->EmptyString())
    {
-      TerrainMaterial* matDef;
-      if (!Sim::findObject(mMatDefinitionName, matDef))
-      {
-         Con::errorf("TerrainMaterialAsset: Unable to find the Material %s", mMatDefinitionName);
+      mLoadedState = Failed;
          return;
       }
 
-      //matDef->reload();
+   if (Torque::FS::IsScriptFile(mScriptPath))
+   {
+      //Since we're refreshing, we can assume that the file we're executing WILL have an existing definition.
+      //But that definition, whatever it is, is the 'correct' one, so we enable the Replace Existing behavior
+      //when the engine encounters a named object conflict.
+      String redefineBehaviorPrev = Con::getVariable("$Con::redefineBehavior");
+      Con::setVariable("$Con::redefineBehavior", "replaceExisting");
+
+      if (Con::executeFile(mScriptPath, false, false))
+         mLoadedState = ScriptLoaded;
+      else
+         mLoadedState = Failed;
+
+      //And now that we've executed, switch back to the prior behavior
+      Con::setVariable("$Con::redefineBehavior", redefineBehaviorPrev.c_str());
    }
+
+   loadMaterial();
 }
 
 void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
@@ -151,10 +244,6 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
    pScriptFile = StringTable->insert(pScriptFile, true);
-
-   // Ignore no change,
-   if (pScriptFile == mScriptFile)
-      return;
 
    // Update.
    mScriptFile = getOwned() ? expandAssetFilePath(pScriptFile) : pScriptFile;
@@ -165,39 +254,183 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
+void TerrainMaterialAsset::loadMaterial()
+{
+   if (mMaterialDefinition)
+      mMaterialDefinition->safeDeleteObject();
+   if (mFXMaterialDefinition)
+      mFXMaterialDefinition->safeDeleteObject();
+
+   if (mLoadedState == EmbeddedDefinition)
+   {
+      if (size() != 0)
+      {
+         for (U32 i = 0; i < size(); i++)
+         {
+            mMaterialDefinition = dynamic_cast<TerrainMaterial*>(getObject(i));
+            if (mMaterialDefinition)
+            {
+               mLoadedState = Ok;
+               mMaterialDefinition->setInternalName(getAssetId());
+               continue;
+            }
+
+            //Otherwise, check if it's our FX material
+            mFXMaterialDefinition = dynamic_cast<Material*>(getObject(i));
+            if (mFXMaterialDefinition)
+            {
+               //mMaterialDefinition->setInternalName(getAssetId());
+               mFXMaterialDefinition->reload();
+               continue;
+            }
+
+         }
+      }
+   }
+   else if ((mLoadedState == ScriptLoaded || mLoadedState == DefinitionAlreadyExists) && mMatDefinitionName != StringTable->EmptyString())
+   {
+      TerrainMaterial* matDef;
+      if (!Sim::findObject(mMatDefinitionName, matDef))
+      {
+         Con::errorf("TerrainMaterialAsset: Unable to find the Material %s", mMatDefinitionName);
+         mLoadedState = BadFileReference;
+         return;
+      }
+
+      mMaterialDefinition = matDef;
+
+      mLoadedState = Ok;
+      mMaterialDefinition->setInternalName(getAssetId());
+      return;
+   }
+
+   mLoadedState = Failed;
+}
+
+//------------------------------------------------------------------------------
+
 void TerrainMaterialAsset::copyTo(SimObject* object)
 {
    // Call to parent.
    Parent::copyTo(object);
 }
 
-StringTableEntry TerrainMaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
+//------------------------------------------------------------------------------
+U32 TerrainMaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<TerrainMaterialAsset>* matAsset)
 {
-   StringTableEntry materialAssetId = StringTable->EmptyString();
-
-   AssetQuery* query = new AssetQuery();
-   U32 foundCount = AssetDatabase.findAssetType(query, "TerrainMaterialAsset");
-   if (foundCount == 0)
+   AssetQuery query;
+   U32 foundAssetcount = AssetDatabase.findAssetType(&query, "TerrainMaterialAsset");
+   if (foundAssetcount == 0)
    {
       //Didn't work, so have us fall back to a placeholder asset
-      materialAssetId = StringTable->insert("Core_Rendering:noMaterial");
+      matAsset->setAssetId(TerrainMaterialAsset::smNoTerrainMaterialAssetFallback);
+
+      if (matAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("TerrainMaterialAsset::getAssetByMaterialName - Finding of asset associated with material name %s failed with no fallback asset", matName);
+         return AssetErrCode::Failed;
+      }
+
+      //handle noshape not being loaded itself
+      if ((*matAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("TerrainMaterialAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, and fallback asset reported error of Bad File Reference.", matName);
+         return AssetErrCode::BadFileReference;
+      }
+
+      Con::warnf("TerrainMaterialAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, utilizing fallback asset", matName);
+
+      (*matAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
    }
    else
    {
+      for (U32 i = 0; i < foundAssetcount; i++)
+      {
+         TerrainMaterialAsset* tMatAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query.mAssetList[i]);
+         if (tMatAsset && tMatAsset->getMaterialDefinitionName() == matName)
+         {
+            matAsset->setAssetId(query.mAssetList[i]);
+            AssetDatabase.releaseAsset(query.mAssetList[i]);
+            return (*matAsset)->mLoadedState;
+         }
+         AssetDatabase.releaseAsset(query.mAssetList[i]); //cleanup if that's not the one we needed
+      }
+   }
+
+   //Somehow we failed to bind an asset, so just use the fallback and mark the failure
+   matAsset->setAssetId(TerrainMaterialAsset::smNoTerrainMaterialAssetFallback);
+   (*matAsset)->mLoadedState = AssetErrCode::UsingFallback;
+   return AssetErrCode::UsingFallback;
+
+}
+
+StringTableEntry TerrainMaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)
+{
+   if (matName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry materialAssetId = TerrainMaterialAsset::smNoTerrainMaterialAssetFallback;
+
+   AssetQuery query;
+   U32 foundCount = AssetDatabase.findAssetType(&query, "TerrainMaterialAsset");
+   if (foundCount != 0)
+   {
       for (U32 i = 0; i < foundCount; i++)
       {
-         TerrainMaterialAsset* matAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query->mAssetList[i]);
+         TerrainMaterialAsset* matAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query.mAssetList[i]);
          if (matAsset && matAsset->getMaterialDefinitionName() == matName)
          {
             materialAssetId = matAsset->getAssetId();
-            AssetDatabase.releaseAsset(query->mAssetList[i]);
+            AssetDatabase.releaseAsset(query.mAssetList[i]);
             break;
          }
-         AssetDatabase.releaseAsset(query->mAssetList[i]);
+         AssetDatabase.releaseAsset(query.mAssetList[i]);
       }
    }
 
    return materialAssetId;
+}
+
+U32 TerrainMaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<TerrainMaterialAsset>* materialAsset)
+{
+   (*materialAsset) = assetId;
+   if (materialAsset->notNull())
+   {
+      return (*materialAsset)->mLoadedState;
+   }
+   else
+   {
+      //Didn't work, so have us fall back to a placeholder asset
+      materialAsset->setAssetId(TerrainMaterialAsset::smNoTerrainMaterialAssetFallback);
+      if (materialAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("TerrainMaterialAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+         return AssetErrCode::Failed;
+      }
+      //handle noshape not being loaded itself
+      if ((*materialAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("TerrainMaterialAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
+         return AssetErrCode::BadFileReference;
+      }
+      Con::warnf("TerrainMaterialAsset::getAssetById - Finding of asset with id %s failed, utilizing fallback asset", assetId);
+      (*materialAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
+}
+SimObjectPtr<TerrainMaterial> TerrainMaterialAsset::findMaterialDefinitionByAssetId(StringTableEntry assetId)
+{
+   SimSet* terrainMatSet;
+   if (!Sim::findObject("TerrainMaterialSet", terrainMatSet))
+   {
+      return nullptr;
+   }
+
+   SimObjectPtr<TerrainMaterial> matDef = dynamic_cast<TerrainMaterial*>(terrainMatSet->findObjectByInternalName(assetId));
+   return matDef;
 }
 
 #ifdef TORQUE_TOOLS
@@ -206,6 +439,26 @@ DefineEngineStaticMethod(TerrainMaterialAsset, getAssetIdByMaterialName, const c
    "@return The AssetId of the associated asset, if any.")
 {
    return TerrainMaterialAsset::getAssetIdByMaterialName(StringTable->insert(materialName));
+}
+
+//MaterialAsset::findMaterialDefinitionByAssetId("Prototyping:Detail")
+DefineEngineStaticMethod(TerrainMaterialAsset, findMaterialDefinitionByAssetId, S32, (const char* assetId), (""),
+   "Queries the MaterialSet to see if any MaterialDefinition exists that is associated to the provided assetId.\n"
+   "@return The MaterialDefinition Id associated to the assetId, if any")
+{
+   SimObjectPtr<TerrainMaterial> matDef = TerrainMaterialAsset::findMaterialDefinitionByAssetId(StringTable->insert(assetId));
+   if (matDef.isNull())
+      return SimObjectId(0);
+   else
+      return matDef->getId();
+}
+
+
+DefineEngineMethod(TerrainMaterialAsset, getScriptPath, const char*, (), ,
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   return object->getScriptPath();
 }
 #endif
 //-----------------------------------------------------------------------------
@@ -342,4 +595,19 @@ DefineEngineMethod(GuiInspectorTypeTerrainMaterialAssetPtr, setMaterialAsset, vo
       return;
 
    return object->setMaterialAsset(assetId);
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetId);
+
+ConsoleDocClass(GuiInspectorTypeTerrainMaterialAssetId,
+   "@brief Inspector field type for Terrain Material Assets\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeTerrainMaterialAssetId::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeTerrainMaterialAssetId)->setInspectorFieldType("GuiInspectorTypeTerrainMaterialAssetId");
 }

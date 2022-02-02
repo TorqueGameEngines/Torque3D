@@ -58,7 +58,7 @@ StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
 
 IMPLEMENT_CONOBJECT(ImageAsset);
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, "")
 
 //-----------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ ConsoleSetType(TypeImageAssetPtr)
    Con::warnf("(TypeImageAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
-ConsoleType(assetIdString, TypeImageAssetId, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeImageAssetId, const char*, "")
 
 ConsoleGetType(TypeImageAssetId)
 {

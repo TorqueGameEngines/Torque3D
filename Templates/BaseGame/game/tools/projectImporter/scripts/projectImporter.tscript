@@ -242,7 +242,7 @@ function ProjectImportWizardPage3::openPage(%this)
    %dataFullPath = makeFullPath("data/");
    %coreFullPath = makeFullPath("core/");
    %toolsFullPath = makeFullPath("tools/");
-   if(startsWith(makeFullPath("data/"), $ProjectImporter::sourceContentFolder))
+   if(startsWith($ProjectImporter::sourceContentFolder, makeFullPath("data/")))
    {
       %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath($ProjectImporter::sourceContentFolder));
       if(isObject(%moduleDef))
@@ -254,8 +254,8 @@ function ProjectImportWizardPage3::openPage(%this)
          ProjectImportWindow.setStep(4);
       }
    }
-   else if(startsWith(makeFullPath("core/"), $ProjectImporter::sourceContentFolder) ||
-            startsWith(makeFullPath("tools/"), $ProjectImporter::sourceContentFolder))
+   else if(startsWith($ProjectImporter::sourceContentFolder, makeFullPath("core/")) ||
+            startsWith($ProjectImporter::sourceContentFolder, makeFullPath("tools/")))
    {
       ProjectImportWindow.setStep(5);
    }
@@ -476,7 +476,7 @@ function preprocessImportingFiles()
          {
             %line = $ProjectImporter::fileObject.readLine();
             
-            if(strIsMatchExpr("*new*(*)*", %line) && !strIsMatchExpr("*\"*new*(*)*\"*", %line))
+            if(strIsMatchExpr("* new*(*)*", %line))
             {
                %start = strpos(%line, "new ");
                %end = strpos(%line, "(", %start);
@@ -490,9 +490,11 @@ function preprocessImportingFiles()
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
                
+               %parentName = "";
                %inheritanceSplit = strpos(%objectName, ":");
                if(%inheritanceSplit != -1)
                {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
                
@@ -502,6 +504,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.elementType = "object";
                %currentFileSectionObject.classType = %className;
                %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
                %currentFileSectionObject.fileName = %file;
                %currentFileSectionObject.skip = false;
                %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
@@ -510,6 +513,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
 
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                //Now for a sanity check, see if we kill the object on the same line as we make it
                //sometimes people try and be 'efficient' with their code linecount wise
@@ -526,7 +530,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("*datablock*(*)*", %line))
+            else if(strIsMatchExpr("* datablock*(*)*", %line))
             {
                %start = strpos(%line, "datablock ");
                %end = strpos(%line, "(", %start);
@@ -540,9 +544,11 @@ function preprocessImportingFiles()
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
                
+               %parentName = "";
                %inheritanceSplit = strpos(%objectName, ":");
                if(%inheritanceSplit != -1)
                {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
                
@@ -552,6 +558,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.elementType = "object";
                %currentFileSectionObject.classType = %className;
                %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
                %currentFileSectionObject.fileName = %file;
                %currentFileSectionObject.skip = false;
                %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
@@ -560,6 +567,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
 
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                //Now for a sanity check, see if we kill the object on the same line as we make it
                //sometimes people try and be 'efficient' with their code linecount wise
@@ -576,7 +584,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("*singleton*(*)*", %line))
+            else if(strIsMatchExpr("* singleton*(*)*", %line))
             {
                %start = strpos(%line, "singleton ");
                %end = strpos(%line, "(", %start);
@@ -590,9 +598,11 @@ function preprocessImportingFiles()
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
                
+               %parentName = "";
                %inheritanceSplit = strpos(%objectName, ":");
                if(%inheritanceSplit != -1)
                {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
 
@@ -602,6 +612,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.elementType = "object";
                %currentFileSectionObject.classType = %className;
                %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
                %currentFileSectionObject.fileName = %file;
                %currentFileSectionObject.skip = false;
                %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
@@ -610,6 +621,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
 
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                //Now for a sanity check, see if we kill the object on the same line as we make it
                //sometimes people try and be 'efficient' with their code linecount wise
@@ -650,6 +662,7 @@ function preprocessImportingFiles()
                %currentFileSectionObject.add(%line);
                
                %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
                
                if(strIsMatchExpr("*{*", %line))
                {
@@ -836,6 +849,104 @@ function isImportingFile(%checkFile)
    }
    
    return false;
+}
+
+//==============================================================================
+// Returns the file object of the file in question is part of our pre-scanned list of importing files
+//==============================================================================
+function findFileInImporting(%checkFile)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      
+      if(%file $= %checkFile)
+         return $ProjectImporter::FileList.getValue(%i);
+   }
+   
+   return "";
+}
+
+//==============================================================================
+// Checks if the object in question is defined in any of our pre-scanned list of importing files
+//==============================================================================
+function findObjectInFilesRecurse(%objectName, %arrayObj)
+{
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.objectName $= %objectName)
+            return %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         %result = findObjectInFilesRecurse(%objectName, %objectLine);
+         if(%result !$= "")
+            return %result;
+      }
+   }
+   
+   return "";
+}
+
+function findObjectInFiles(%objectName)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %objectLine = $ProjectImporter::FileList.getValue(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.objectName $= %objectName)
+            return %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         %result = findObjectInFilesRecurse(%objectName, %objectLine);
+         if(%result !$= "")
+            return %result;
+      }
+   }
+   
+   return "";
+}
+
+//==============================================================================
+// Checks if the object in question is defined in any of our pre-scanned list of importing files
+//==============================================================================
+function getObjectsInFilesByClassRecurse(%className, %arrayObj)
+{
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.classType $= %className)
+            $ProjectImporter::queryList = $ProjectImporter::queryList TAB %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         getObjectsInFilesByClassRecurse(%className, %objectLine);
+      }
+   }
+}
+
+function getObjectsInFilesByClass(%className)
+{
+   $ProjectImporter::queryList = "";
+      
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %objectLine = $ProjectImporter::FileList.getValue(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.classType $= %className)
+            $ProjectImporter::queryList = $ProjectImporter::queryList TAB %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         getObjectsInFilesByClassRecurse(%className, %objectLine);
+      }
+   }
+   
+   return ltrim($ProjectImporter::queryList);
 }
 
 //==============================================================================
@@ -1055,18 +1166,30 @@ function renameObjectName(%object, %newName)
       %objectLine = %object.getKey(%e);
       if(!isObject(%objectLine))
       {
-         if(strIsMatchExpr("*singleton*(*)*", %objectLine) && 
-            strIsMatchExpr("*new*(*)*", %objectLine) && 
+         if(strIsMatchExpr("*singleton*(*)*", %objectLine) || 
+            strIsMatchExpr("*new*(*)*", %objectLine) || 
             strIsMatchExpr("*datablock*(*)*", %objectLine))
          {
-            %newLine = strreplace(%object.objectName, %newName);
-            
-            echo("renameObjectName() - lines changed from:");
-            echo(%objectLine);
-            echo("to:");
-            echo(%newLine);
+            if(%object.objectName $= "")
+            {
+               %start = strpos(%objectLine, "(");
+               %end = strpos(%objectLine, ")", %start);
+               
+               %preString = getSubStr(%objectLine, 0, %start+1);
+               %postString = getSubStr(%objectLine, %end);
+               
+               %renamedString = %preString @ %newName @ %postString;
+               
+               %newLine = %renamedString;
+            }
+            else
+            {
+               %newLine = strreplace(%objectLine, %object.objectName, %newName);
+            }
             
             %object.setKey(%newLine, %e);
+            
+            %object.objectName = %newName;
          }  
       }
    }
@@ -1204,6 +1327,28 @@ function setObjectField(%object, %fieldName, %newValue)
 }
 
 //==============================================================================
+// Inserts a new field to an object's block in the preprocessed data
+//==============================================================================
+function insertObjectLine(%object, %newLine)
+{
+   for(%e=0; %e < %object.count(); %e++)
+   {
+      %objectLine = %object.getKey(%e);
+      
+      if(strIsMatchExpr("*{*", %objectLine) || 
+            strIsMatchExpr("*singleton*(*)*", %objectLine) || 
+            strIsMatchExpr("*new*(*)*", %objectLine) || 
+            strIsMatchExpr("*datablock*(*)*", %objectLine))
+      {
+         continue;
+      }
+      
+      %object.insert(%newLine, "", %e);
+      return;
+   }
+}
+
+//==============================================================================
 // Takes a string and adds it to the importer's log. Optionally can print the line
 // directly to console for debugging purposes
 //==============================================================================
@@ -1213,6 +1358,32 @@ function projectImporterLog(%line)
       echo(%line);
       
    $ProjectImporter::log.add(%line);
+}
+
+//==============================================================================
+// Traverses the object delcaration stack backwards to find the root file object
+//==============================================================================
+function getParentFileObjectFromObject(%object)
+{
+   while(%object.parentElement !$= "")
+   {
+      %object = %object.parentElement;
+   }
+   
+   return %object;
+}
+
+//==============================================================================
+// Traverses the object delcaration stack backwards to find the root file object
+//==============================================================================
+function getParentFileObjectFromObject(%object)
+{
+   while(%object.parentElement !$= "")
+   {
+      %object = %object.parentElement;
+   }
+   
+   return %object;
 }
 
 //==============================================================================

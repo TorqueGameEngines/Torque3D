@@ -870,11 +870,8 @@ function findFileInImporting(%checkFile)
 //==============================================================================
 // Checks if the object in question is defined in any of our pre-scanned list of importing files
 //==============================================================================
-function findObjectInFiles(%objectName, %arrayObj)
+function findObjectInFilesRecurse(%objectName, %arrayObj)
 {
-   if(%arrayObj $= "")
-      %arrayObj = $ProjectImporter::FileList;
-      
    for(%i=0; %i < %arrayObj.count(); %i++)
    {
       %objectLine = %arrayObj.getKey(%i);
@@ -884,13 +881,72 @@ function findObjectInFiles(%objectName, %arrayObj)
             return %objectLine;
             
          //If this object isn't it, try recursing any children
-         %result = findObjectInFiles(%objectName, %objectLine);
+         %result = findObjectInFilesRecurse(%objectName, %objectLine);
          if(%result !$= "")
             return %result;
       }
    }
    
    return "";
+}
+
+function findObjectInFiles(%objectName)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %objectLine = $ProjectImporter::FileList.getValue(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.objectName $= %objectName)
+            return %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         %result = findObjectInFilesRecurse(%objectName, %objectLine);
+         if(%result !$= "")
+            return %result;
+      }
+   }
+   
+   return "";
+}
+
+//==============================================================================
+// Checks if the object in question is defined in any of our pre-scanned list of importing files
+//==============================================================================
+function getObjectsInFilesByClassRecurse(%className, %arrayObj)
+{
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.classType $= %className)
+            $ProjectImporter::queryList = $ProjectImporter::queryList TAB %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         getObjectsInFilesByClassRecurse(%className, %objectLine);
+      }
+   }
+}
+
+function getObjectsInFilesByClass(%className)
+{
+   $ProjectImporter::queryList = "";
+      
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %objectLine = $ProjectImporter::FileList.getValue(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.classType $= %className)
+            $ProjectImporter::queryList = $ProjectImporter::queryList TAB %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         getObjectsInFilesByClassRecurse(%className, %objectLine);
+      }
+   }
+   
+   return ltrim($ProjectImporter::queryList);
 }
 
 //==============================================================================
@@ -1110,18 +1166,30 @@ function renameObjectName(%object, %newName)
       %objectLine = %object.getKey(%e);
       if(!isObject(%objectLine))
       {
-         if(strIsMatchExpr("*singleton*(*)*", %objectLine) && 
-            strIsMatchExpr("*new*(*)*", %objectLine) && 
+         if(strIsMatchExpr("*singleton*(*)*", %objectLine) || 
+            strIsMatchExpr("*new*(*)*", %objectLine) || 
             strIsMatchExpr("*datablock*(*)*", %objectLine))
          {
-            %newLine = strreplace(%object.objectName, %newName);
-            
-            echo("renameObjectName() - lines changed from:");
-            echo(%objectLine);
-            echo("to:");
-            echo(%newLine);
+            if(%object.objectName $= "")
+            {
+               %start = strpos(%objectLine, "(");
+               %end = strpos(%objectLine, ")", %start);
+               
+               %preString = getSubStr(%objectLine, 0, %start+1);
+               %postString = getSubStr(%objectLine, %end);
+               
+               %renamedString = %preString @ %newName @ %postString;
+               
+               %newLine = %renamedString;
+            }
+            else
+            {
+               %newLine = strreplace(%objectLine, %object.objectName, %newName);
+            }
             
             %object.setKey(%newLine, %e);
+            
+            %object.objectName = %newName;
          }  
       }
    }
@@ -1255,6 +1323,28 @@ function setObjectField(%object, %fieldName, %newValue)
             }
          }  
       }
+   }
+}
+
+//==============================================================================
+// Inserts a new field to an object's block in the preprocessed data
+//==============================================================================
+function insertObjectLine(%object, %newLine)
+{
+   for(%e=0; %e < %object.count(); %e++)
+   {
+      %objectLine = %object.getKey(%e);
+      
+      if(strIsMatchExpr("*{*", %objectLine) || 
+            strIsMatchExpr("*singleton*(*)*", %objectLine) || 
+            strIsMatchExpr("*new*(*)*", %objectLine) || 
+            strIsMatchExpr("*datablock*(*)*", %objectLine))
+      {
+         continue;
+      }
+      
+      %object.insert(%newLine, "", %e);
+      return;
    }
 }
 

@@ -728,7 +728,8 @@ ImplementEnumType(_TamlFormatMode,
             if (!getWriteDefaults())
             {
                //If the field hasn't been changed from the default value, then don't bother writing it out
-               if (dStricmp(defaultObject->getDataField(fieldName, indexBuffer), pFieldValue) == 0)
+               const char* fieldData = defaultObject->getDataField(fieldName, indexBuffer);
+               if (fieldData != '\0' && dStricmp(fieldData, pFieldValue) == 0)
                   continue;
             }
 

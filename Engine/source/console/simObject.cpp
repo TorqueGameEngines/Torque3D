@@ -338,7 +338,7 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
 
          //If the field hasn't been changed from the default value, then don't bother writing it out
          const char* defaultValueCheck = defaultObject->getDataField(f->pFieldname, array);
-         if (dStricmp(defaultValueCheck, valCopy) == 0)
+         if (defaultValueCheck != '\0' && dStricmp(defaultValueCheck, valCopy) == 0)
             continue;
 
          val = valCopy;

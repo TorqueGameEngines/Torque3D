@@ -77,7 +77,7 @@ ConsoleDocClass(SphereEnvironmentProbe,
 SphereEnvironmentProbe::SphereEnvironmentProbe() : ReflectionProbe()
 {
    mCaptureMask = REFLECTION_PROBE_CAPTURE_TYPEMASK;
-   mProbeShapeType = ProbeRenderInst::Sphere;
+   mProbeShapeType = ProbeInfo::Sphere;
 }
 
 SphereEnvironmentProbe::~SphereEnvironmentProbe()
@@ -144,81 +144,8 @@ void SphereEnvironmentProbe::unpackUpdate(NetConnection *conn, BitStream *stream
 
 void SphereEnvironmentProbe::updateProbeParams()
 {
-   mProbeShapeType = ProbeRenderInst::Sphere;
+   mProbeShapeType = ProbeInfo::Sphere;
    Parent::updateProbeParams();
-}
-
-void SphereEnvironmentProbe::prepRenderImage(SceneRenderState *state)
-{
-   if (!mEnabled || !ReflectionProbe::smRenderPreviewProbes)
-      return;
-
-#ifdef TORQUE_TOOLS
-   if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
-   {
-      GFXTransformSaver saver;
-
-      // Calculate the distance of this object from the camera
-      Point3F cameraOffset;
-      getRenderTransform().getColumn(3, &cameraOffset);
-      cameraOffset -= state->getDiffuseCameraPosition();
-      F32 dist = cameraOffset.len();
-      if (dist < 0.01f)
-         dist = 0.01f;
-
-      // Set up the LOD for the shape
-      F32 invScale = (1.0f / getMax(getMax(mObjScale.x, mObjScale.y), mObjScale.z));
-
-      mEditorShapeInst->setDetailFromDistance(state, dist * invScale);
-
-      // Make sure we have a valid level of detail
-      if (mEditorShapeInst->getCurrentDetail() < 0)
-         return;
-
-      BaseMatInstance* probePrevMat = mEditorShapeInst->getMaterialList()->getMaterialInst(0);
-
-      setPreviewMatParameters(state, probePrevMat);
-
-      // GFXTransformSaver is a handy helper class that restores
-      // the current GFX matrices to their original values when
-      // it goes out of scope at the end of the function
-
-      // Set up our TS render state      
-      TSRenderState rdata;
-      rdata.setSceneState(state);
-      rdata.setFadeOverride(1.0f);
-
-      // We might have some forward lit materials
-      // so pass down a query to gather lights.
-      LightQuery query;
-      query.init(getWorldSphere());
-      rdata.setLightQuery(&query);
-
-      // Set the world matrix to the objects render transform
-      MatrixF mat = getRenderTransform();
-      mat.scale(Point3F(1, 1, 1));
-      GFX->setWorldMatrix(mat);
-
-      // Animate the the shape
-      mEditorShapeInst->animate();
-
-      // Allow the shape to submit the RenderInst(s) for itself
-      mEditorShapeInst->render(rdata);
-
-      saver.restore();
-   }
-
-   // If the light is selected or light visualization
-   // is enabled then register the callback.
-   const bool isSelectedInEditor = (gEditingMission && isSelected());
-   if (isSelectedInEditor)
-   {
-      ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
-      ri->renderDelegate.bind(this, &ReflectionProbe::_onRenderViz);
-      ri->type = RenderPassManager::RIT_Editor;
-      state->getRenderPass()->addInst(ri);
-   }
-#endif
 }
 
 void SphereEnvironmentProbe::setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat)

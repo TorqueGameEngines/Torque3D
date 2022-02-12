@@ -157,7 +157,7 @@ void main()
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         float cubemapIdx = probeConfigData[i].a;
+         int cubemapIdx = int(probeConfigData[i].a);
          vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, refPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;

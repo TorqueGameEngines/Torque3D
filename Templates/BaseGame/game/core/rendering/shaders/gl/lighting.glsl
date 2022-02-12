@@ -462,7 +462,7 @@ vec4 computeForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         float cubemapIdx = int(inProbeConfigData[i].a);
+         int cubemapIdx = int(inProbeConfigData[i].a);
          vec3 dir = boxProject(surface.P, surface.R, inWorldToObjArray[i], inRefScaleArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;

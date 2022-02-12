@@ -2960,9 +2960,9 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    MultiLine * meta = new MultiLine;
 
    // Now the wsPosition and wsView.
-   Var *wsPosition = getInWsPosition(componentList);
    Var *worldToTangent = getInWorldToTangent(componentList);
    Var *wsNormal = getInWorldNormal(componentList);
+   Var *wsPosition = getInWsPosition(componentList);
    Var *wsView = getWsView(wsPosition, meta);
    
    //Reflection Probe WIP
@@ -3038,7 +3038,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
       eyePos->setType("vec3");
       eyePos->setName("eyePosWorld");
       eyePos->uniform = true;
-      eyePos->constSortPos = cspPotentialPrimitive;
+      eyePos->constSortPos = cspPass;
    }
 
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));

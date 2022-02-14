@@ -328,7 +328,7 @@ void RenderProbeMgr::getBestProbes(const Point3F& objPosition, ProbeDataSet* pro
       MatrixF p2A = curEntry.mProbeInfo->mTransform;
       probeDataSet->probeWorldToObjArray[i] = p2A;
       p2A.inverse();
-      probeDataSet->refScaleArray[i] = curEntry.mProbeInfo->mProbeRefScale / p2A.getScale();
+      probeDataSet->refScaleArray[i] = curEntry.mProbeInfo->mProbeRefScale / (p2A.getScale()*2);
 
       Point3F probePos = curEntry.mProbeInfo->mObject->getPosition();
       Point3F refPos = probePos + curEntry.mProbeInfo->mProbeRefOffset * probeDataSet->refScaleArray[i].asPoint3F();

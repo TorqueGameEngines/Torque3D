@@ -229,7 +229,7 @@ enum SceneObjectTypeMasks : U32
                                  EnvironmentObjectType ),
 
    SKYLIGHT_CAPTURE_TYPEMASK = (EnvironmentObjectType),
-   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType)
+   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType | LightObjectType)
 };
 
 #endif

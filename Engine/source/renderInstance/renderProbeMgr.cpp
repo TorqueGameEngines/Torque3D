@@ -477,6 +477,8 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
    Con::warnf("RenderProbeMgr::bakeProbe() - Beginning bake!");
    U32 startMSTime = Platform::getRealMilliseconds();
 
+   Con::setVariable("$Probes::Capturing", "1");
+
    String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
    U32 resolution = Con::getIntVariable("$pref::ReflectionProbes::BakeResolution", 64);
    U32 prefilterMipLevels = mLog2(F32(resolution)) + 1;
@@ -595,6 +597,8 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
 
    if (!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = probeRenderState;
+
+   Con::setVariable("$Probes::Capturing", "0");
 
    cubeRefl.unregisterReflector();
 
@@ -907,7 +911,5 @@ DefineEngineMethod(RenderProbeMgr, bakeProbe, void, (ReflectionProbe* probe), (n
 
 DefineEngineMethod(RenderProbeMgr, bakeProbes, void, (),, "@brief Iterates over all reflection probes in the scene and bakes their cubemaps\n\n.")
 {
-   Con::setVariable("$Probes::Capturing", "1");
    object->bakeProbes();
-   Con::setVariable("$Probes::Capturing", "0");
 }

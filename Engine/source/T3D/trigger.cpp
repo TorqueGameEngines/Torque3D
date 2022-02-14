@@ -173,6 +173,13 @@ Trigger::Trigger()
    mTripOnce = false;
    mTrippedBy = 0xFFFFFFFF;
    mTripCondition = "";
+
+   //Default up a basic square
+   Point3F vecs[3] = { Point3F(1.0, 0.0, 0.0),
+      Point3F(0.0, -1.0, 0.0),
+      Point3F(0.0, 0.0, 1.0) };
+
+   mTriggerPolyhedron = Polyhedron(Point3F(-0.5, 0.5, 0.0), vecs);
 }
 
 Trigger::~Trigger()

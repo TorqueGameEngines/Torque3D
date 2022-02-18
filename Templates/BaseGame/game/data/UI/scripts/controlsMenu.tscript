@@ -176,7 +176,7 @@ function fillRemapList()
       OptionsMenuSettingsList.addKeybindRow(getField(%keyMap, 0), getButtonBitmap(%device, getField(%keyMap, 1)), "doKeyRemap", -1, -15, true, %description);
    }
 
-   OptionsMenuSettingsList.refresh();
+   //OptionsMenuSettingsList.refresh();
       //OptionsMenu.addRow( %i, %this.buildFullMapString( %i ) );
 }
 

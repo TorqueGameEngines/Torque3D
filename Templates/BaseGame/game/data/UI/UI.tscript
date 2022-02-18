@@ -36,7 +36,7 @@ function UI::initClient(%this)
    %this.queueExec("./scripts/profiles");
    
    //Now gui files
-   %this.queueExec("./scripts/menuInputButtons");
+   %this.queueExec("./scripts/menuInputHandling");
    
    %this.queueExec("./guis/mainMenu");
    %this.queueExec("./guis/mainMenu.gui");

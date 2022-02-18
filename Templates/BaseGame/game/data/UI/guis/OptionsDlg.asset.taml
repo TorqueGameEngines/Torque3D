@@ -1,7 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="OptionsDlg"
-    scriptFile="@assetFile=optionsDlg.gui"
-    GUIFile="@assetFile=optionsDlg.gui"
-    VersionId="1" />

@@ -54,20 +54,22 @@ function OptionsMenu::onWake(%this)
 {
    MainMenuButtonList.hidden = true;
    
-   %this.pageTabIndex = 0;
-   %tab = %this.getTab();
-   %tab.performClick();
+   OptionsMenuCategoryList.setAsActiveMenuList();
    
    OptionsButtonHolder.setActive();
+   
+   OptionsMenuInputHandler.setFirstResponder();
 }
 
 function OptionsButtonHolder::onWake(%this)
 {
-   %this-->prevTabButton.set("btn_l", "", "Prev Tab", "OptionsMenu.prevTab();", true);
-   %this-->nextTabButton.set("btn_r", "", "Next Tab", "OptionsMenu.nextTab();", true);
+   //%this-->prevTabButton.set("btn_l", "", "Prev Tab", "OptionsMenu.prevTab();", true);
+   %this-->nextTabButton.set("btn_a", "", "Select", "OptionsMenuList.activate();", true);
    %this-->resetButton.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
    %this-->applyButton.set("btn_start", "Return", "Apply", "OptionsMenu.apply();");
    %this-->backButton.set("btn_b", "Escape", "Back", "OptionsMenu.backOut();");
+   
+   //OptionsMenuCategoryList.getObject(0).performClick();
 }
 
 function OptionsMenu::apply(%this)
@@ -78,7 +80,7 @@ function OptionsMenu::apply(%this)
    }
    else if(%this.pageTabIndex == 1)
    {
-      %this.applyGraphicsSettings();
+      %this.applyGraphicsSettings(); 
    }
    else if(%this.pageTabIndex == 2)
    {
@@ -130,26 +132,24 @@ function OptionsMenuSettingsList::onChange(%this)
    
    if(%currentRowText $= "Display")
    {
-      OptionsMenuList.populateDisplaySettingsList();
+      populateDisplaySettingsList();
    }
    else if(%currentRowText $= "Graphics")
    {
-      OptionsMenuList.populateGraphicsSettingsList();
+      populateGraphicsSettingsList();
    }
    else if(%currentRowText $= "Audio")
    {
-      OptionsMenuList.populateAudioSettingsList();
+      populateAudioSettingsList();
    }
    else if(%currentRowText $= "Keyboard + Mouse")
    {
-      OptionsMenuList.populateKeyboardMouseSettingsList();
+      populateKeyboardMouseSettingsList();
    }
    else if(%currentRowText $= "Gamepad")
    {
-      OptionsMenuList.populateGamepadSettingsList();
+      populateGamepadSettingsList();
    }
-   
-   
 }
 
 function OptionsMenu::prevTab(%this)
@@ -188,10 +188,9 @@ function OptionsMenu::getTab(%this)
       return %this-->DisplayButton;
 }
 
-function OptionsMenu::populateDisplaySettingsList(%this)
+function populateDisplaySettingsList()
 {
-   %this.pageTabIndex = 0;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -221,7 +220,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    
    trim(%apiList);
    
-   OptionsMenuSettingsList.addOptionRow("Display API", %apiList, false, "", -1, -30, true, "The display API used for rendering.", %displayDevice);
+   OptionsMenuSettingsList.addOptionRow("Display API", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
    
    %numDevices = Canvas.getMonitorCount();
    %devicesList = "";
@@ -235,7 +234,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    }
    
    %selectedDevice = getField(%devicesList, $pref::Video::deviceId);
-   OptionsMenuSettingsList.addOptionRow("Display Device", %devicesList, false, "onDisplayModeChange", -1, -30, true, "The display devices the window should be on.", %selectedDevice);
+   OptionsMenuSettingsList.addOptionRow("Display Device", %devicesList, false, "onDisplayModeChange",  true, "The display devices the window should be on.", %selectedDevice);
       
    if (%numDevices > 1)
       OptionsMenuSettingsList.setRowEnabled(1, true);
@@ -243,10 +242,10 @@ function OptionsMenu::populateDisplaySettingsList(%this)
       OptionsMenuSettingsList.setRowEnabled(1, false);
    
    %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
-   OptionsMenuSettingsList.addOptionRow("Window Mode", $Video::ModeTags, false, "onDisplayModeChange", -1, -30, true, "", %mode);
+   OptionsMenuSettingsList.addOptionRow("Window Mode", $Video::ModeTags, false, "onDisplayModeChange",  true, "", %mode);
    
    %resolutionList = getScreenResolutionList($pref::Video::deviceId, $pref::Video::deviceMode);
-   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "onDisplayResChange", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
+   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "onDisplayResChange",  true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
    
    //If they're doing borderless, the window resolution must match the display resolution
    if(%mode !$= "Borderless")
@@ -254,19 +253,17 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    else
       OptionsMenuSettingsList.setRowEnabled(3, false);
    
-   OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
+   OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "",  true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
 
 
    %refreshList = getScreenRefreshList($pref::Video::mode);
-   OptionsMenuSettingsList.addOptionRow("Refresh Rate", %refreshList, false, "", -1, -30, true, "", $pref::Video::RefreshRate);
+   OptionsMenuSettingsList.addOptionRow("Refresh Rate", %refreshList, false, "",  true, "", $pref::Video::RefreshRate);
    
    //move to gameplay tab
-   OptionsMenuSettingsList.addSliderRow("Field of View", 75, 5, "65 100", "", -1, -30);
+   OptionsMenuSettingsList.addSliderRow("Field of View", 75, 5, "65 100", "");
    
-   OptionsMenuSettingsList.addSliderRow("Brightness", 0.5, 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("Contrast", 0.5, 0.1, "0 1", "", -1, -30);
-   
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.addSliderRow("Brightness", 0.5, 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("Contrast", 0.5, 0.1, "0 1", "");
 }
 
 function OptionsMenu::applyDisplaySettings(%this)
@@ -290,10 +287,9 @@ function OptionsMenu::applyDisplaySettings(%this)
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
 }
 
-function OptionsMenu::populateGraphicsSettingsList(%this)
+function populateGraphicsSettingsList(%this)
 {
-   %this.pageTabIndex = 1;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -303,26 +299,24 @@ function OptionsMenu::populateGraphicsSettingsList(%this)
    %highMedLow = "Low\tMedium\tHigh";
    %anisoFilter = "Off\t4\t8\t16";
    %aaFilter = "Off\t1\t2\t4";
-   OptionsMenuSettingsList.addOptionRow("Lighting Quality", getQualityLevels(LightingQualityList), false, "", -1, -30, true, "Amount and drawdistance of local lights", getCurrentQualityLevel(LightingQualityList));
-   OptionsMenuSettingsList.addOptionRow("Shadow Quality", getQualityLevels(ShadowQualityList), false, "", -1, -30, true, "Shadow revolution quality", getCurrentQualityLevel(ShadowQualityList));
-   OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", getQualityLevels(SoftShadowList), false, "", -1, -30, true, "Amount of softening applied to shadowmaps", getCurrentQualityLevel(SoftShadowList));
-   OptionsMenuSettingsList.addOptionRow("Mesh Quality", getQualityLevels(MeshQualityGroup), false, "", -1, -30, true, "Fidelity of rendering of mesh objects", getCurrentQualityLevel(MeshQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Object Draw Distance", getQualityLevels(MeshDrawDistQualityGroup), false, "", -1, -30, true, "Dictates if and when static objects fade out in the distance", getCurrentQualityLevel(MeshDrawDistQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Texture Quality", getQualityLevels(TextureQualityGroup), false, "", -1, -30, true, "Fidelity of textures", getCurrentQualityLevel(TextureQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Terrain Quality", getQualityLevels(TerrainQualityGroup), false, "", -1, -30, true, "Quality level of terrain objects", getCurrentQualityLevel(TerrainQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Decal Lifetime", getQualityLevels(DecalLifetimeGroup), false, "", -1, -30, true, "How long decals are rendered", getCurrentQualityLevel(DecalLifetimeGroup));
-   OptionsMenuSettingsList.addOptionRow("Ground Cover Density", getQualityLevels(GroundCoverDensityGroup), false, "", -1, -30, true, "Density of ground cover items, such as grass", getCurrentQualityLevel(GroundCoverDensityGroup));
-   OptionsMenuSettingsList.addOptionRow("Shader Quality", getQualityLevels(ShaderQualityGroup), false, "", -1, -30, true, "Dictates the overall shader quality level, adjusting what features are enabled.", getCurrentQualityLevel(ShaderQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", %anisoFilter, false, "", -1, -30, true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance", $pref::Video::defaultAnisotropy);
-   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", %aaFilter, false, "", -1, -30, true, "Amount of Post-Processing Anti-Aliasing applied to rendering", $pref::Video::AA);
-   OptionsMenuSettingsList.addOptionRow("Parallax", %onOffList, false, "", -1, -30, true, "Whether the surface parallax shader effect is enabled", convertBoolToOnOff(!$pref::Video::disableParallaxMapping));
-   OptionsMenuSettingsList.addOptionRow("Water Reflections", %onOffList, false, "", -1, -30, true, "Whether water reflections are enabled", convertBoolToOnOff(!$pref::Water::disableTrueReflections));
-   OptionsMenuSettingsList.addOptionRow("SSAO", %onOffList, false, "", -1, -30, true, "Whether Screen-Space Ambient Occlusion is enabled", convertBoolToOnOff($pref::PostFX::EnableSSAO));
-   OptionsMenuSettingsList.addOptionRow("Depth of Field", %onOffList, false, "", -1, -30, true, "Whether the Depth of Field effect is enabled", convertBoolToOnOff($pref::PostFX::EnableDOF));
-   OptionsMenuSettingsList.addOptionRow("Vignette", %onOffList, false, "", -1, -30, true, "Whether the vignette effect is enabled", convertBoolToOnOff($pref::PostFX::EnableVignette));
-   OptionsMenuSettingsList.addOptionRow("Light Rays", %onOffList, false, "", -1, -30, true, "Whether the light rays effect is enabled", convertBoolToOnOff($pref::PostFX::EnableLightRays));
-   
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.addOptionRow("Lighting Quality", getQualityLevels(LightingQualityList), false, "",  true, "Amount and drawdistance of local lights", getCurrentQualityLevel(LightingQualityList));
+   OptionsMenuSettingsList.addOptionRow("Shadow Quality", getQualityLevels(ShadowQualityList), false, "",  true, "Shadow revolution quality", getCurrentQualityLevel(ShadowQualityList));
+   OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", getQualityLevels(SoftShadowList), false, "",  true, "Amount of softening applied to shadowmaps", getCurrentQualityLevel(SoftShadowList));
+   OptionsMenuSettingsList.addOptionRow("Mesh Quality", getQualityLevels(MeshQualityGroup), false, "",  true, "Fidelity of rendering of mesh objects", getCurrentQualityLevel(MeshQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Object Draw Distance", getQualityLevels(MeshDrawDistQualityGroup), false, "",  true, "Dictates if and when static objects fade out in the distance", getCurrentQualityLevel(MeshDrawDistQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Texture Quality", getQualityLevels(TextureQualityGroup), false, "",  true, "Fidelity of textures", getCurrentQualityLevel(TextureQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Terrain Quality", getQualityLevels(TerrainQualityGroup), false, "",  true, "Quality level of terrain objects", getCurrentQualityLevel(TerrainQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Decal Lifetime", getQualityLevels(DecalLifetimeGroup), false, "",  true, "How long decals are rendered", getCurrentQualityLevel(DecalLifetimeGroup));
+   OptionsMenuSettingsList.addOptionRow("Ground Cover Density", getQualityLevels(GroundCoverDensityGroup), false, "",  true, "Density of ground cover items, such as grass", getCurrentQualityLevel(GroundCoverDensityGroup));
+   OptionsMenuSettingsList.addOptionRow("Shader Quality", getQualityLevels(ShaderQualityGroup), false, "",  true, "Dictates the overall shader quality level, adjusting what features are enabled.", getCurrentQualityLevel(ShaderQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", %anisoFilter, false, "",  true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance", $pref::Video::defaultAnisotropy);
+   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", %aaFilter, false, "",  true, "Amount of Post-Processing Anti-Aliasing applied to rendering", $pref::Video::AA);
+   OptionsMenuSettingsList.addOptionRow("Parallax", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", convertBoolToOnOff(!$pref::Video::disableParallaxMapping));
+   OptionsMenuSettingsList.addOptionRow("Water Reflections", %onOffList, false, "",  true, "Whether water reflections are enabled", convertBoolToOnOff(!$pref::Water::disableTrueReflections));
+   OptionsMenuSettingsList.addOptionRow("SSAO", %onOffList, false, "",  true, "Whether Screen-Space Ambient Occlusion is enabled", convertBoolToOnOff($pref::PostFX::EnableSSAO));
+   OptionsMenuSettingsList.addOptionRow("Depth of Field", %onOffList, false, "",  true, "Whether the Depth of Field effect is enabled", convertBoolToOnOff($pref::PostFX::EnableDOF));
+   OptionsMenuSettingsList.addOptionRow("Vignette", %onOffList, false, "",  true, "Whether the vignette effect is enabled", convertBoolToOnOff($pref::PostFX::EnableVignette));
+   OptionsMenuSettingsList.addOptionRow("Light Rays", %onOffList, false, "",  true, "Whether the light rays effect is enabled", convertBoolToOnOff($pref::PostFX::EnableLightRays));
 }
 
 function OptionsMenu::applyGraphicsSettings(%this)
@@ -439,10 +433,9 @@ function updateDisplaySettings()
    }
 }
 
-function OptionsMenu::populateAudioSettingsList(%this)
+function populateAudioSettingsList(%this)
 {
-   %this.pageTabIndex = 2;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -477,18 +470,15 @@ function OptionsMenu::populateAudioSettingsList(%this)
          else 
             %audioDeviceList = %audioDeviceList @ "\t" @ %device;  
       }
-         
    }
    
-   OptionsMenuSettingsList.addOptionRow("Audio Provider", %audioProviderList, false, "audioProviderChanged", -1, -15, true, "", $currentAudioProvider);
-   OptionsMenuSettingsList.addOptionRow("Audio Device", %audioDeviceList, false, "", -1, -15, true, $pref::SFX::device);
+   OptionsMenuSettingsList.addOptionRow("Audio Provider", %audioProviderList, false, "audioProviderChanged", true, "", $currentAudioProvider);
+   OptionsMenuSettingsList.addOptionRow("Audio Device", %audioDeviceList, false, "", true, $pref::SFX::device);
    
-   OptionsMenuSettingsList.addSliderRow("Master Volume", $pref::SFX::masterVolume, 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("GUI Volume", $pref::SFX::channelVolume[ $GuiAudioType], 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("Effects Volume", $pref::SFX::channelVolume[ $SimAudioType ], 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("Music Volume", $pref::SFX::channelVolume[ $MusicAudioType ], 0.1, "0 1", "", -1, -30);
-   
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.addSliderRow("Master Volume", $pref::SFX::masterVolume, 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("GUI Volume", $pref::SFX::channelVolume[ $GuiAudioType], 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("Effects Volume", $pref::SFX::channelVolume[ $SimAudioType ], 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("Music Volume", $pref::SFX::channelVolume[ $MusicAudioType ], 0.1, "0 1", "");
 }
 
 function audioProviderChanged()
@@ -498,7 +488,7 @@ function audioProviderChanged()
    $currentAudioProvider = %provider;
    
    //And now refresh the list to get the correct devices
-   OptionsMenu.populateAudioSettingsList();
+   populateAudioSettingsList();
 }
 
 function OptionsMenu::applyAudioSettings(%this)
@@ -531,10 +521,9 @@ function OptionsMenu::applyAudioSettings(%this)
    }
 }
 
-function OptionsMenu::populateKeyboardMouseSettingsList(%this)
+function populateKeyboardMouseSettingsList(%this)
 {
-   %this.pageTabIndex = 3;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -542,13 +531,12 @@ function OptionsMenu::populateKeyboardMouseSettingsList(%this)
    $remapListDevice = "keyboard";
    fillRemapList();
    
-   OptionsMenuSettingsList.refresh();
+   //OptionsMenuSettingsList.refresh();
 }
 
-function OptionsMenu::populateGamepadSettingsList(%this)
+function populateGamepadSettingsList(%this)
 {
-   %this.pageTabIndex = 4;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -584,6 +572,69 @@ function OptionsMenu::backOut(%this)
       AudioMenu.hidden = true;
       ScreenBrightnessMenu.hidden = true;
    }
+}
+
+function OptionsMenuSettingsList::setRowEnabled(%this, %row, %status)
+{
+   %option = %this.getObject(%row);
+   if(isObject(%option))
+   {
+      %option.setEnabled(%status);
+   }
+}
+
+function OptionsMenuSettingsList::addOptionRow(%this, %label, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue)
+{
+   if(%enabled $= "")
+      %enabled = true;
+      
+   %optionsRowSize = 30;
+   %optionColumnWidth = %this.extent.x - 450;//todo, calculate off longest option text?
+      
+   %option = new GuiGameSettingsCtrl() { 
+      class = "MenuOptionsButton";
+      profile = "GuiMenuButtonProfile";
+      horizSizing = "width";
+      vertSizing = "bottom";
+      position = "0 0";
+      extent = %this.extent.x SPC %optionsRowSize;
+      columnSplit = %optionColumnWidth;
+      useMouseEvents = true;
+   };
+   
+   %option.setListSetting(%label, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue);
+
+   %this.add(%option);
+}
+
+function OptionsMenuSettingsList::addSliderRow(%this, %label, %defaultValue, %increment, %range, %callback, %enabled, %description)
+{
+   if(%enabled $= "")
+      %enabled = true;
+      
+   %optionsRowSize = 30;
+   %optionColumnWidth = %this.extent.x - 450;//todo, calculate off longest option text?
+      
+   %option = new GuiGameSettingsCtrl() { 
+      class = "MenuOptionsButton";
+      profile = "GuiMenuButtonProfile";
+      horizSizing = "width";
+      vertSizing = "bottom";
+      position = "0 0";
+      extent = %this.extent.x SPC %optionsRowSize;
+      columnSplit = %optionColumnWidth;
+      useMouseEvents = true;
+   };
+   
+   %option.setSliderSetting(%label, %defaultValue, %increment, %range, %callback, %enabled, %description);
+
+   %this.add(%option);
+}
+
+//
+function OptionsMenuCategoryList::onNavigate(%this, %index)
+{
+   %this.getObject(%index).performClick();
 }
 
 function convertOptionToBool(%val)
@@ -685,4 +736,16 @@ function onDisplayResChange(%val)
 
    OptionsMenuSettingsList.setOptions(5, %refreshList);
    OptionsMenuSettingsList.selectOption(5, %newRate);
+}
+
+function MenuOptionsButton::onMouseEnter(%this)
+{
+   OptionName.setText(%this.getLabel());
+   OptionDescription.setText(%this.getToolTip());
+}
+
+function MenuOptionsButton::onMouseLeave(%this)
+{
+   OptionName.setText("");
+   OptionDescription.setText("");
 }

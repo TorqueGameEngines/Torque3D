@@ -79,7 +79,7 @@ void GuiBorderButtonCtrl::onRender(Point2I offset, const RectI &updateRect)
          }
       }
 
-      if ( mMouseOver )
+      if ( mHighlighted )
       {
          RectI bounds( offset, getExtent() );
          for ( S32 i=0; i < mProfile->mBorderThickness; i++ )

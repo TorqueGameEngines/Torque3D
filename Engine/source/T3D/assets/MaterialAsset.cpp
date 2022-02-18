@@ -319,6 +319,12 @@ U32 MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<Mat
          AssetDatabase.releaseAsset(query.mAssetList[i]); //cleanup if that's not the one we needed
       }
    }
+
+   //Somehow we failed to bind an asset, so just use the fallback and mark the failure
+   matAsset->setAssetId(MaterialAsset::smNoMaterialAssetFallback);
+   (*matAsset)->mLoadedState = AssetErrCode::UsingFallback;
+   return AssetErrCode::UsingFallback;
+
 }
 
 StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matName)

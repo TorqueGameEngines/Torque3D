@@ -706,6 +706,9 @@ bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
       if (mCursorEnabled || mForceMouseToGUI || 
          (mAlwaysHandleMouseButtons && inputEvent.objType == SI_BUTTON) )
       {
+         if (inputEvent.objType != SI_AXIS && inputEvent.action == SI_MAKE)
+            bool asdfasdf = true;
+
          return processMouseEvent(inputEvent);
       }
       break;

@@ -36,6 +36,7 @@ protected:
    bool mSendAxisEvents;
    bool mSendBreakEvents;
    bool mSendModifierEvents;
+   bool mIgnoreMouseEvents;
 
 public:
 

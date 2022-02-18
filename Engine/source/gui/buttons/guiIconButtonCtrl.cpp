@@ -218,7 +218,7 @@ void GuiIconButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
 
 void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
 {
-   bool highlight = mMouseOver;
+   bool highlight = mHighlighted;
    bool depressed = mDepressed;
    
    ColorI fontColor   = mActive ? (highlight ? mProfile->mFontColorHL : mProfile->mFontColor) : mProfile->mFontColorNA;
@@ -236,7 +236,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       else
          renderSlightlyLoweredBox(boundsRect, mProfile);
    }
-   else if(mMouseOver && mActive)
+   else if(mHighlighted && mActive)
    {
       // If there is a bitmap array then render using it.  
       // Otherwise use a standard fill.

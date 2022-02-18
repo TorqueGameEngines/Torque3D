@@ -102,7 +102,7 @@ void GUIAsset::initPersistFields()
       &setScriptFile, &getScriptFile, "Path to the script file for the gui");
 
    addProtectedField("GUIFile", TypeAssetLooseFilePath, Offset(mGUIFile, GUIAsset),
-      &setScriptFile, &getScriptFile, "Path to the gui file");
+      &setGUIFile, &getGUIFile, "Path to the gui file");
 }
 
 //------------------------------------------------------------------------------
@@ -257,7 +257,7 @@ GuiControl* GuiInspectorTypeGUIAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"GUIAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getComponentGroupTargetId(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    // Create "Open in ShapeEditor" button

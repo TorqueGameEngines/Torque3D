@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -41,13 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /** Small helper classes to optimise finding vertizes close to a given location */
-#pragma once
 #ifndef AI_SPATIALSORT_H_INC
 #define AI_SPATIALSORT_H_INC
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
 
 #include <vector>
 #include <assimp/types.h>

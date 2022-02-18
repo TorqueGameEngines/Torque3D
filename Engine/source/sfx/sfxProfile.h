@@ -154,7 +154,7 @@ class SFXProfile : public SFXTrack
       void unpackData( BitStream* stream );
 
       /// Returns the sound filename.
-      const String& getSoundFileName() const { return mFilename; }
+      const String getSoundFileName() const { return mFilename; }
       void setSoundFileName(StringTableEntry filename) { mFilename = filename; }
 
       bool getPreload() const { return mPreload; }

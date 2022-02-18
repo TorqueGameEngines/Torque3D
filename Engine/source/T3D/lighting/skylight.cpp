@@ -148,7 +148,7 @@ void Skylight::unpackUpdate(NetConnection *conn, BitStream *stream)
 
 void Skylight::updateProbeParams()
 {
-   mProbeShapeType = ProbeRenderInst::Skylight;
+   mProbeShapeType = ProbeInfo::Skylight;
    Parent::updateProbeParams();
 }
 
@@ -167,7 +167,7 @@ void Skylight::prepRenderImage(SceneRenderState *state)
    // Get a handy pointer to our RenderPassmanager
    //RenderPassManager *renderPass = state->getRenderPass();
 
-   PROBEMGR->submitProbe(mProbeInfo);
+   PROBEMGR->submitProbe(&mProbeInfo);
 
 #ifdef TORQUE_TOOLS
    if (Skylight::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)

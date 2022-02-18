@@ -199,7 +199,7 @@ GuiControl* GuiInspectorTypeCubemapAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"CubemapAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getInspectObject(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    setDataField(StringTable->insert("object"), NULL, String::ToString(mInspector->getInspectObject()).c_str());

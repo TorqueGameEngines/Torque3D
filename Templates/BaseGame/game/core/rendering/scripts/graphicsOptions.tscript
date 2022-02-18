@@ -811,7 +811,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
    PostFXManager.settingsEffectSetEnabled(HDRPostFX, $pref::PostFX::EnableHDR);
    PostFXManager.settingsEffectSetEnabled(DepthOfFieldPostFX, $pref::PostFX::EnableDOF);
    PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled(VignettePostEffect, $pref::PostFX::EnableVignette);
+   PostFXManager.settingsEffectSetEnabled(VignettePostFX, $pref::PostFX::EnableVignette);
    
    echo("Graphics quality settings have been auto detected.");
 }

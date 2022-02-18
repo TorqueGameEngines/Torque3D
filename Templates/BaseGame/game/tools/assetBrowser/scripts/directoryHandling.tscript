@@ -277,27 +277,46 @@ function directoryHandler::deleteFolder(%this, %folderPath)
    %fullPath = makeFullPath(%folderPath);
    
    //First, wipe out any files inside the folder first
-   %file = findFirstFileMultiExpr( %fullPath @ "/*.*", true);
+   %file = findFirstFileMultiExpr( %fullPath @ "/*", true);
 
    while( %file !$= "" )
    {      
-      %success = fileDelete( %file );
-      
-      if(!%success)
+      if (isFile(%file))
       {
-         error("doDeleteFolder - unable to delete file " @ %file);
-         return;         
-      }
+         %success = fileDelete( %file );
       
-      %file = findNextFileMultiExpr( %fullPath @ "/*.*" );
+         if(!%success)
+         {
+            error("doDeleteFolder - unable to delete file " @ %file);
+            return;         
+         }
+      }
+      %file = findNextFileMultiExpr( %fullPath @ "/*" );
    }
    
    //next, walk through and delete any subfolders that may be remaining
+   %finalDeleteAttempt = false;
    while(IsDirectory(%fullPath) && fileDelete(%fullPath) == 0)
    {
       //We couldn't delete the folder, so get a directory list and recurse through it, deleteing them as we go
       %paths = getDirectoryList(%fullPath);
-      for(%i=0; %i < getFieldCount(%paths); %i++)
+
+      // If nothing is in this directory, let the loop run once more and if that fails we're not going
+      // to delete the folder. This prevents an infinite loop if for some reason the directory cannot
+      // be deleted.
+      %pathCount = getFieldCount(%paths);
+      if (%pathCount == 0)
+      {
+         if (%finalDeleteattempt)
+         {
+            error("doDeleteFolder - unable to delete directory " @ %fullPath);
+            return;
+         }
+         %finalDeleteAttempt = true;
+         continue;
+      }
+
+      for(%i=0; %i < %pathCount; %i++)
       {
          %childPath = getField(%paths, %i);
          %this.deleteFolder(%fullPath @ "/" @ %childPath);

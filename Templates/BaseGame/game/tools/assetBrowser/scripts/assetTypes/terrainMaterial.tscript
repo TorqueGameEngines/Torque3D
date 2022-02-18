@@ -15,9 +15,36 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
       materialDefinitionName = %assetName;
    };
+   
+   %matDef = new TerrainMaterial(%assetName)
+   {
+      internalName = %moduleName @ ":" @ %assetName;
+      diffuseMap = "";
+      detailMap = "";
+      detailSize = "10";
+      isManaged = "1";
+      detailBrightness = "1";
+      Enabled = "1";
+      diffuseSize = "200";
+   };
+   
+   %fxMatDef = new Material("TerrainFX_" @ %assetName)
+   {
+      mapTo = %assetName;
+      footstepSoundId = 0;
+      terrainMaterials = "1";
+      ShowDust = "1";
+      showFootprints = "1";
+      materialTag0 = "Terrain";
+      effectColor[0] = "0.42 0.42 0 1";
+      effectColor[1] = "0.42 0.42 0 1";
+      impactSoundId = "0";
+   };
+   
+   %asset.add(%matDef);
+   %asset.add(%fxMatDef);
    
    TamlWrite(%asset, %tamlpath);
    
@@ -28,35 +55,6 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	//AssetBrowserFilterTree.onSelect(%smItem);
-	
-	%file = new FileObject();
-	%templateFile = new FileObject();
-	
-	%templateFilePath = %this.templateFilesPath @ "terrainMaterial." @ $TorqueScriptFileExtension @ ".template";
-   
-   if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateFilePath))
-   {
-      while( !%templateFile.isEOF() )
-      {
-         %line = %templateFile.readline();
-         %line = strreplace( %line, "@", %assetName );
-         
-         %file.writeline(%line);
-         //echo(%line);
-      }
-      
-      %file.close();
-      %templateFile.close();
-   }
-   else
-   {
-      %file.close();
-      %templateFile.close();
-      
-      warnf("CreateNewTerrainMaterialAsset - Something went wrong and we couldn't write thescript file!");
-   }
-   
    //If we've got the terrain mat editor open, go ahead and update it all
    TerrainMaterialDlg.onWake();
    

@@ -77,6 +77,7 @@ SimObject::SimObject()
    mObjectName = NULL;
    mOriginalName         = NULL;
    mInternalName         = NULL;
+   mInheritFrom          = NULL;
    nextNameObject        = nullptr;
    nextManagerNameObject = nullptr;
    nextIdObject          = NULL;
@@ -154,6 +155,9 @@ void SimObject::initPersistFields()
 
       addProtectedField( "name", TypeName, Offset(mObjectName, SimObject), &setProtectedName, &defaultProtectedGetFn,
          "Optional global name of this object." );
+
+      addProtectedField("inheritFrom", TypeString, Offset(mInheritFrom, SimObject), &setInheritFrom, &defaultProtectedGetFn,
+         "Optional Name of object to inherit from as a parent.");
                   
    endGroup( "Ungrouped" );
 
@@ -300,6 +304,10 @@ bool SimObject::writeField(StringTableEntry fieldname, const char* value)
 void SimObject::writeFields(Stream &stream, U32 tabStop)
 {
    // Write static fields.
+
+   // Create a default object of the same type
+   ConsoleObject* defaultConObject = ConsoleObject::create(getClassName());
+   SimObject* defaultObject = dynamic_cast<SimObject*>(defaultConObject);
    
    const AbstractClassRep::FieldList &list = getFieldList();
 
@@ -326,6 +334,11 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
          dStrcpy( (char *)valCopy, val, nBufferSize );
 
          if (!writeField(f->pFieldname, valCopy))
+            continue;
+
+         //If the field hasn't been changed from the default value, then don't bother writing it out
+         const char* defaultValueCheck = defaultObject->getDataField(f->pFieldname, array);
+         if (defaultValueCheck && defaultValueCheck[0] != '\0' && dStricmp(defaultValueCheck, valCopy) == 0)
             continue;
 
          val = valCopy;
@@ -362,6 +375,9 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
    
    if(mFieldDictionary && mCanSaveFieldDictionary)
       mFieldDictionary->writeFields(this, stream, tabStop);
+
+   // Cleanup our created default object
+   delete defaultConObject;
 }
 
 //-----------------------------------------------------------------------------
@@ -1133,7 +1149,7 @@ const char *SimObject::getPrefixedDataField(StringTableEntry fieldName, const ch
 
 //-----------------------------------------------------------------------------
 
-void SimObject::setPrefixedDataField(StringTableEntry fieldName, const char *array, const char *value)
+void SimObject::setPrefixedDataField(StringTableEntry fieldName, const char *_array, const char *value)
 {
    // Sanity!
    AssertFatal(fieldName != NULL, "Cannot set object field value with NULL field name.");
@@ -1142,7 +1158,7 @@ void SimObject::setPrefixedDataField(StringTableEntry fieldName, const char *arr
    // Set value without prefix if there's no value.
    if (*value == 0)
    {
-      setDataField(fieldName, NULL, value);
+      setDataField(fieldName, _array, value);
       return;
    }
 
@@ -1156,7 +1172,7 @@ void SimObject::setPrefixedDataField(StringTableEntry fieldName, const char *arr
    if (fieldPrefix == StringTable->EmptyString())
    {
       // No, so set the data field in the usual way.
-      setDataField(fieldName, NULL, value);
+      setDataField(fieldName, _array, value);
       return;
    }
 
@@ -1167,23 +1183,23 @@ void SimObject::setPrefixedDataField(StringTableEntry fieldName, const char *arr
    if (dStrnicmp(value, fieldPrefix, fieldPrefixLength) != 0)
    {
       // No, so set the data field in the usual way.
-      setDataField(fieldName, NULL, value);
+      setDataField(fieldName, _array, value);
       return;
    }
 
    // Yes, so set the data excluding the prefix.
-   setDataField(fieldName, NULL, value + fieldPrefixLength);
+   setDataField(fieldName, _array, value + fieldPrefixLength);
 }
 
 //-----------------------------------------------------------------------------
 
-const char *SimObject::getPrefixedDynamicDataField(StringTableEntry fieldName, const char *array, const S32 fieldType)
+const char *SimObject::getPrefixedDynamicDataField(StringTableEntry fieldName, const char *_array, const S32 fieldType)
 {
    // Sanity!
    AssertFatal(fieldName != NULL, "Cannot get field value with NULL field name.");
 
    // Fetch field value.
-   const char* pFieldValue = getDataField(fieldName, array);
+   const char* pFieldValue = getDataField(fieldName, _array);
 
    // Sanity.
    AssertFatal(pFieldValue != NULL, "Field value cannot be NULL.");
@@ -2235,13 +2251,38 @@ bool SimObject::setProtectedName(void *obj, const char *index, const char *data)
 {   
    if (preventNameChanging)
       return false;
-   SimObject *object = static_cast<SimObject*>(obj);
-   
-   if ( object->isProperlyAdded() )
-      object->assignName( data );   
+   SimObject* object = static_cast<SimObject*>(obj);
+
+   if (object->isProperlyAdded())
+      object->assignName(data);
 
    // always return false because we assign the name here
    return false;
+}
+
+//-----------------------------------------------------------------------------
+
+bool SimObject::setInheritFrom(void* obj, const char* index, const char* data)
+{
+   SimObject* object = static_cast<SimObject*>(obj);
+
+   SimObject* parent;
+   if (Sim::findObject(data, parent))
+   {
+      object->setCopySource(parent);
+      object->assignFieldsFrom(parent);
+
+      // copy any substitution statements
+      SimDataBlock* parent_db = dynamic_cast<SimDataBlock*>(parent);
+      if (parent_db)
+      {
+         SimDataBlock* currentNewObject_db = dynamic_cast<SimDataBlock*>(object);
+         if (currentNewObject_db)
+            currentNewObject_db->copySubstitutionsFrom(parent_db);
+      }
+   }
+
+   return true;
 }
 
 //-----------------------------------------------------------------------------

@@ -29,16 +29,25 @@ if(UNIX)
     #set(CXX_FLAG32 "-m32") #uncomment for build x32 on OSx64
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
+
+        # Only use SSE on x86 devices
+        if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
+        endif()
     else()
-    # default compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors -no-pie ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -msse -pipe -Wfatal-errors ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
+        # default compiler flags
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors -no-pie ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
 
-   endif()    
-
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+        # Only use SSE on x86 devices
+        if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
+        endif()
+    endif()
 endif()
 
 ###############################################################################
@@ -162,6 +171,12 @@ endif()
 
 option(TORQUE_MULTITHREAD "Multi Threading" ON)
 mark_as_advanced(TORQUE_MULTITHREAD)
+
+option(TORQUE_POSIX_PATH_CASE_INSENSITIVE "POSIX Pathing Case Insensitivity" ON)
+mark_as_advanced(TORQUE_POSIX_PATH_CASE_INSENSITIVE)
+
+option(TORQUE_ZIP_PATH_CASE_INSENSITIVE "ZIP Pathing Case Insensitivity" ON)
+mark_as_advanced(TORQUE_ZIP_PATH_CASE_INSENSITIVE)
 
 option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
 mark_as_advanced(TORQUE_DISABLE_MEMORY_MANAGER)
@@ -367,10 +382,20 @@ addPathRec("${projectSrcDir}")
 # Load module-based files
 if(EXISTS ${TORQUE_APP_DIR}/game/data)
     message("Reading modules in ${TORQUE_APP_DIR}/game/data path...")
-
-    addInclude("${TORQUE_APP_DIR}/game/data")
-    addPathRec("${TORQUE_APP_DIR}/game/data")
+	
+	subDirCmake(MODULEDIRS ${TORQUE_APP_DIR}/game/data)
+	foreach(modDir ${MODULEDIRS})
+		addInclude("${modDir}/source")
+		addPathRec("${modDir}/source")
+		file(GLOB modules "${modDir}/lib/*.cmake")
+		foreach(module ${modules})
+			set(moduleLibDir "${modDir}/lib")
+			include(${module})
+		endforeach()
+		
+	endforeach()
 endif()
+
 if(EXISTS ${TORQUE_APP_DIR}/game/tools)
     message("Reading modules in ${TORQUE_APP_DIR}/game/tools path...")
 
@@ -582,11 +607,15 @@ if(APPLE)
     addPath("${srcDir}/platformPOSIX")
 endif()
 
+if (UNIX AND NOT APPLE)
+    addPath("${srcDir}/platformX11")
+endif()
+
 if(UNIX AND NOT APPLE)
     # linux_dedicated
     if(TORQUE_DEDICATED)
 		addPath("${srcDir}/windowManager/dedicated")
-		# ${srcDir}/platformX86UNIX/*.client.* files are not needed
+		# ${srcDir}/UNIX/*.client.* files are not needed
 		# @todo: move to separate file
 		file( GLOB tmp_files
              ${srcDir}/platformX86UNIX/*.cpp
@@ -628,7 +657,7 @@ finishExecutable()
 ###############################################################################
 
 # Set Visual Studio startup project
-if((${CMAKE_VERSION} VERSION_EQUAL 3.6.0) OR (${CMAKE_VERSION} VERSION_GREATER 3.6.0) AND MSVC)
+if(MSVC)
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
 endif()
 
@@ -728,14 +757,13 @@ if (APPLE AND NOT IOS)
     set(ARCHITECTURE_STRING_APPLE "x86_64;arm64")
     set(DEPLOYMENT_TARGET_APPLE "10.13")
   else()
-    check_c_compiler_flag("-arch arm64" armSupportedApple)
-    if(armSupportedApple)
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
       set(ARCHITECTURE_STRING_APPLE "arm64")
       set(DEPLOYMENT_TARGET_APPLE "11.0")
     else()
       set(ARCHITECTURE_STRING_APPLE "x86_64")
       set(DEPLOYMENT_TARGET_APPLE "10.9")
-    endif() 
+    endif()
   endif()
 
   set(CMAKE_OSX_ARCHITECTURES ${ARCHITECTURE_STRING_APPLE} CACHE STRING "OSX Architecture" FORCE)
@@ -947,5 +975,28 @@ if(TORQUE_TEMPLATE)
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeleteCachedDTSs.bat" DESTINATION "${TORQUE_APP_DIR}")
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeleteDSOs.bat"       DESTINATION "${TORQUE_APP_DIR}")
         INSTALL(FILES "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/DeletePrefs.bat"      DESTINATION "${TORQUE_APP_DIR}")
+    endif()
+endif()
+
+###############################################################################
+# Properties folder
+###############################################################################
+# we only need to add libs that we add via add_subdirectory command, basics.cmake
+# will take care of the other source libs added via addLib 
+
+if(TORQUE_SFX_OPENAL AND WIN32)
+    set_target_properties(OpenAL PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+     #why is openal adding these two?
+    set_target_properties(common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    set_target_properties(ex-common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+endif()
+
+if(TORQUE_SDL)
+    # Apple config has slightly different target names
+    if (APPLE)
+        set_target_properties(SDL2main PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+        set_target_properties(SDL2-static PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+    else()
+        set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
     endif()
 endif()

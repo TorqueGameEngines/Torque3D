@@ -638,6 +638,19 @@ ImplementEnumType(_TamlFormatMode,
       // Fetch field count.
       const U32 fieldCount = fieldList.size();
 
+      ConsoleObject* defaultConObject;
+      SimObject* defaultObject;
+      if (!getWriteDefaults())
+      {
+         // Create a default object of the same type
+         defaultConObject = ConsoleObject::create(pSimObject->getClassName());
+         defaultObject = dynamic_cast<SimObject*>(defaultConObject);
+      
+         // ***Really*** shouldn't happen
+         if (!defaultObject)
+            return;
+      }
+
       // Iterate fields.
       U8 arrayDepth = 0;
       TamlCustomNode* currentArrayNode = NULL;
@@ -704,9 +717,6 @@ ImplementEnumType(_TamlFormatMode,
             if (!pFieldValue)
                pFieldValue = StringTable->EmptyString();
 
-            if (pField->type == TypeBool)
-               pFieldValue = dAtob(pFieldValue) ? "true" : "false";
-
             U32 nBufferSize = dStrlen(pFieldValue) + 1;
             FrameTemp<char> valueCopy(nBufferSize);
             dStrcpy((char *)valueCopy, pFieldValue, nBufferSize);
@@ -715,8 +725,19 @@ ImplementEnumType(_TamlFormatMode,
             if (!pSimObject->writeField(fieldName, valueCopy))
                continue;
 
+            if (!getWriteDefaults())
+            {
+               //If the field hasn't been changed from the default value, then don't bother writing it out
+               const char* fieldData = defaultObject->getDataField(fieldName, indexBuffer);
+               if (fieldData && fieldData[0] != '\0' && dStricmp(fieldData, pFieldValue) == 0)
+                  continue;
+            }
+
             // Reassign field value.
             pFieldValue = valueCopy;
+
+            if (pField->type == TypeBool)
+               pFieldValue = dAtob(pFieldValue) ? "true" : "false";
 
             // Detect and collapse relative path information
             char fnBuf[1024];
@@ -735,6 +756,12 @@ ImplementEnumType(_TamlFormatMode,
                pTamlWriteNode->mFields.push_back(pFieldValuePair);
             }
          }
+      }
+
+      if (!getWriteDefaults())
+      {
+         // Cleanup our created default object
+         delete defaultConObject;
       }
    }
 

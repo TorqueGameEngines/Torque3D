@@ -1,6 +1,9 @@
 function AssetImportConfigEditor::onWake(%this)
 {
    %this.refresh();
+   
+   %index = AssetImportConfigList.findTextIndex(EditorSettings.value("Assets/AssetImporDefaultConfig", ""));
+   AssetImportConfigList.setSelectedRow(%index);
 }
 
 function AssetImportConfigEditor::refresh(%this)
@@ -38,10 +41,10 @@ function AssetImportConfigList::onSelect( %this, %id, %text )
    %this.populateConfigListByGroup("General");
    %this.populateConfigListByGroup("Meshes");
    %this.populateConfigListByGroup("Materials");
-   %this.populateConfigListByGroup("Animations");
    %this.populateConfigListByGroup("Images");
-   %this.populateConfigListByGroup("Collision");
-   %this.populateConfigListByGroup("Sound");
+   %this.populateConfigListByGroup("Sounds");
+   %this.populateConfigListByGroup("Animations");
+   //%this.populateConfigListByGroup("Collision");
    
    ImportOptionsConfigList.update();  
 }

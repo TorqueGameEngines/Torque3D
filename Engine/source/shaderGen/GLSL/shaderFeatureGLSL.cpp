@@ -758,7 +758,7 @@ Var* ShaderFeatureGLSL::getWsView( Var *wsPosition, MultiLine *meta )
          eyePos->constSortPos = cspPass;
       }
 		
-      meta->addStatement( new GenOp( "   @ = normalize( @ - @ );\r\n", 
+      meta->addStatement( new GenOp( "   @ = @ - @;\r\n", 
 												new DecOp( wsView ), eyePos, wsPosition ) );
    }
 	
@@ -838,79 +838,66 @@ Var* ShaderFeatureGLSL::addOutDetailTexCoord(   Vector<ShaderComponent*> &compon
 
 Var* ShaderFeatureGLSL::getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta, const MaterialFeatureData& fd)
 {
-   ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
-
-   Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
-
-   Var* ormConfig = (Var*)LangElement::find("ORMConfig");
-   if (!ormConfig)
-   {
-      Var* metalness = (Var*)LangElement::find("metalness");
-      if (!metalness)
-      {
-         metalness = new Var("metalness", "float");
-         metalness->uniform = true;
-         metalness->constSortPos = cspPotentialPrimitive;
-      }
-
-      Var* roughness = (Var*)LangElement::find("roughness");
-      if (!roughness)
-      {
-         roughness = new Var("roughness", "float");
-         roughness->uniform = true;
-         roughness->constSortPos = cspPotentialPrimitive;
-      }
-
-      ormConfig = new Var("ORMConfig", "vec4");
-      LangElement* colorDecl = new DecOp(ormConfig);
-      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, roughness, metalness)); //reconstruct ormConfig, no ao darkening
-   }
-
-   Var* normal = (Var*)LangElement::find("normal");
-   if (!normal)
-   {
-      normal = new Var("normal", "vec3");
-      meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
-
-      Var* wsNormal = (Var*)LangElement::find("wsNormal");
-      if (!fd.features[MFT_NormalMap])
-      {
-         if (!wsNormal)
-            wsNormal = getInWorldNormal(componentList);
-         meta->addStatement(new GenOp("  @ = normalize( @ );\r\n\n", normal, wsNormal));
-      }
-      else
-      {
-         meta->addStatement(new GenOp("   @ = normalize(  @ );\r\n", normal, wsNormal));
-      }
-   }
-
-   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
-
-   if (!wsEyePos)
-   {
-      wsEyePos = new Var("eyePosWorld", "vec3");
-      wsEyePos->uniform = true;
-      wsEyePos->constSortPos = cspPass;
-   }
-
-   Var* wsPosition = getInWsPosition(componentList);
-   Var* wsView = getWsView(wsPosition, meta);
-
-   Var* surface = (Var*)LangElement::find("surface");
+   Var *surface = (Var *)LangElement::find("surface");
 
    if (!surface)
    {
+	   Var* diffuseColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+	
+	   Var* ormConfig = (Var*)LangElement::find("ORMConfig");
+	   if (!ormConfig)
+	   {
+	      Var* metalness = (Var*)LangElement::find("metalness");
+	      if (!metalness)
+	      {
+	         metalness = new Var("metalness", "float");
+	         metalness->uniform = true;
+	         metalness->constSortPos = cspPotentialPrimitive;
+	      }
+	
+	      Var* roughness = (Var*)LangElement::find("roughness");
+	      if (!roughness)
+	      {
+	         roughness = new Var("roughness", "float");
+	         roughness->uniform = true;
+	         roughness->constSortPos = cspPotentialPrimitive;
+	      }
+	
+	      ormConfig = new Var("ORMConfig", "vec4");
+	      LangElement* colorDecl = new DecOp(ormConfig);
+	      meta->addStatement(new GenOp("   @ = vec4(0.0,1.0,@,@);\r\n", colorDecl, roughness, metalness)); //reconstruct ormConfig, no ao darkening
+	   }
+	
+	   Var* normal = (Var*)LangElement::find("normal");
+	   if (!normal)
+	   {
+	      normal = new Var("normal", "vec3");
+	      meta->addStatement(new GenOp("  @;\r\n\n", new DecOp(normal)));
+	
+         Var *wsNormal = (Var *)LangElement::find("wsNormal");
+	         if (!wsNormal)
+	            wsNormal = getInWorldNormal(componentList);
+
+	         meta->addStatement(new GenOp("   @ = normalize(  @ );\r\n", normal, wsNormal));
+	      }
+	
+	   Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
+	
+	   if (!wsEyePos)
+	   {
+	      wsEyePos = new Var("eyePosWorld", "vec3");
+	      wsEyePos->uniform = true;
+	      wsEyePos->constSortPos = cspPass;
+	   }
+	
+	   Var* wsPosition = getInWsPosition(componentList);
+	   Var* wsView = getWsView(wsPosition, meta);
+
       surface = new Var("surface", "Surface");
-      meta->addStatement(new GenOp("  @ = createForwardSurface(@,@,@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, ormConfig,
+      meta->addStatement(new GenOp("  @ = createForwardSurface(@,normalize(@),@,@,@,@);\r\n\n", new DecOp(surface), diffuseColor, normal, ormConfig,
          wsPosition, wsEyePos, wsView));
    }
 
-   /*Var* surface = (Var*)LangElement::find("surface");
-   if (!surface)
-   {
-      surface = new Var("surface", "float");
-   }*/
    return surface;
 }
 //****************************************************************************
@@ -2189,7 +2176,7 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    inLightSpotDir->arraySize = 4;
    inLightSpotDir->constSortPos = cspPotentialPrimitive;
 
-   Var * lightSpotParams = new Var( "lightSpotParams", "vec2" );
+   Var * lightSpotParams = new Var( "inlightSpotParams", "vec2" );
    lightSpotParams->uniform = true;
    lightSpotParams->arraySize = 4;
    lightSpotParams->constSortPos = cspPotentialPrimitive;
@@ -2981,7 +2968,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 
-   Var * numProbes = new Var("numProbes", "int");
+   Var * numProbes = new Var("inNumProbes", "int");
    numProbes->uniform = true;
    numProbes->constSortPos = cspPotentialPrimitive;
 
@@ -2989,7 +2976,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    cubeMips->uniform = true;
    cubeMips->constSortPos = cspPotentialPrimitive;
 
-   Var * skylightCubemapIdx = new Var("skylightCubemapIdx", "float");
+   Var * skylightCubemapIdx = new Var("inSkylightCubemapIdx", "float");
    skylightCubemapIdx->uniform = true;
    skylightCubemapIdx->constSortPos = cspPotentialPrimitive;
 
@@ -3003,17 +2990,17 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    inRefPosArray->uniform = true;
    inRefPosArray->constSortPos = cspPotentialPrimitive;
 
-   Var * refScaleArray = new Var("inRefScale", "vec4");
+   Var * refScaleArray = new Var("inRefScaleArray", "vec4");
    refScaleArray->arraySize = MAX_FORWARD_PROBES;
    refScaleArray->uniform = true;
    refScaleArray->constSortPos = cspPotentialPrimitive;
 
-   Var * probeConfigData = new Var("probeConfigData", "vec4");
+   Var * probeConfigData = new Var("inProbeConfigDataArray", "vec4");
    probeConfigData->arraySize = MAX_FORWARD_PROBES;
    probeConfigData->uniform = true;
    probeConfigData->constSortPos = cspPotentialPrimitive;
 
-   Var * worldToObjArray = new Var("worldToObjArray", "mat4");
+   Var * worldToObjArray = new Var("inWorldToObjArray", "mat4");
    worldToObjArray->arraySize = MAX_FORWARD_PROBES;
    worldToObjArray->uniform = true;
    worldToObjArray->constSortPos = cspPotentialPrimitive;
@@ -3026,12 +3013,12 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    BRDFTexture->sampler = true;
    BRDFTexture->constNum = Var::getTexUnitNum();     // used as texture unit num here
    
-   Var * specularCubemapAR = new Var("specularCubemapAR", "samplerCubeArray");
+   Var * specularCubemapAR = new Var("SpecularCubemapAR", "samplerCubeArray");
    specularCubemapAR->uniform = true;
    specularCubemapAR->sampler = true;
    specularCubemapAR->constNum = Var::getTexUnitNum();
 
-   Var * irradianceCubemapAR = new Var("irradianceCubemapAR", "samplerCubeArray");
+   Var * irradianceCubemapAR = new Var("IrradianceCubemapAR", "samplerCubeArray");
    irradianceCubemapAR->uniform = true;
    irradianceCubemapAR->sampler = true;
    irradianceCubemapAR->constNum = Var::getTexUnitNum();
@@ -3044,14 +3031,24 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
       return;
    }
 
+   Var* eyePos = (Var*)LangElement::find("eyePosWorld");
+   if (!eyePos)
+   {
+      eyePos = new Var;
+      eyePos->setType("vec3");
+      eyePos->setName("eyePosWorld");
+      eyePos->uniform = true;
+      eyePos->constSortPos = cspPass;
+   }
+
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
       
    //Reflection vec
-   String computeForwardProbes = String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,\r\n\t\t");
+   String computeForwardProbes = String("   @.rgb = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String("@,@,\r\n\t\t");
    computeForwardProbes += String("@,@).rgb; \r\n");
 
-   meta->addStatement(new GenOp(computeForwardProbes.c_str(), curColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray,
+   meta->addStatement(new GenOp(computeForwardProbes.c_str(), curColor, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray, eyePos,
       skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
 
@@ -3078,9 +3075,9 @@ void ReflectionProbeFeatGLSL::setTexData(Material::StageData& stageDat,
       passData.mSamplerNames[texIndex] = "BRDFTexture";
       passData.mTexType[texIndex++] = Material::Standard;
       // assuming here that it is a scenegraph cubemap
-      passData.mSamplerNames[texIndex] = "specularCubemapAR";
+      passData.mSamplerNames[texIndex] = "SpecularCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
-      passData.mSamplerNames[texIndex] = "irradianceCubemapAR";
+      passData.mSamplerNames[texIndex] = "IrradianceCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
    }
 }

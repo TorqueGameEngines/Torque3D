@@ -73,6 +73,7 @@
 
 // Need full definition visible for SimObjectPtr<ParticleEmitter>
 #include "T3D/fx/particleEmitter.h"
+#include "T3D/assets/SoundAsset.h"
 
 class GFXCubemap;
 class TSShapeInstance;
@@ -259,11 +260,13 @@ struct ShapeBaseImageData: public GameBaseData {
                                     ///  the imageSlot.
       ParticleEmitterData* emitter; ///< A particle emitter; this emitter will emit as long as the gun is in this
                                     ///  this state.
-      SFXTrack* sound;
+      
+      //SFXTrack* sound;
       F32 emitterTime;              ///<
       S32 emitterNode[MaxShapes];   ///< Node ID on the shape to emit from
+      SoundAsset* sound;
+      SFXTrack* soundTrack;         ///<Holdover for special, non-asset cases like SFXPlaylists
    };
-
    /// @name State Data
    /// Individual state data used to initialize struct array
    /// @{
@@ -321,7 +324,10 @@ struct ShapeBaseImageData: public GameBaseData {
 
    bool                    stateIgnoreLoadedForReady  [MaxStates];
 
-   SFXTrack*               stateSound                 [MaxStates];
+   DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates);
+   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
+
+   //SFXTrack*               stateSound                 [MaxStates];
    const char*             stateScript                [MaxStates];
 
    ParticleEmitterData*    stateEmitter               [MaxStates];
@@ -374,10 +380,10 @@ struct ShapeBaseImageData: public GameBaseData {
                                     ///< when the script prefix has changed.
 
    DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes);  ///< Name of shape to render.
-   DECLARE_SHAPEASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
+   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
 
    //DECLARE_SHAPEASSET(ShapeBaseImageData, ShapeFP);  ///< Name of shape to render in first person (optional).
-   //DECLARE_SHAPEASSET_SETGET(ShapeBaseImageData, ShapeFP);
+   //DECLARE_ASSET_SETGET(ShapeBaseImageData, ShapeFP);
 
    StringTableEntry  imageAnimPrefix;     ///< Passed along to the mounting shape to modify
                                           ///  animation sequences played in 3rd person. [optional]
@@ -541,7 +547,7 @@ public:
    F32 shadowSphereAdjust;
 
    DECLARE_SHAPEASSET(ShapeBaseData, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, Shape);
+   DECLARE_ASSET_SETGET(ShapeBaseData, Shape);
 
    StringTableEntry  cloakTexName;
 
@@ -557,7 +563,7 @@ public:
    S32               debrisID;
 
    DECLARE_SHAPEASSET(ShapeBaseData, DebrisShape, onDebrisChanged);
-   DECLARE_SHAPEASSET_SETGET(ShapeBaseData, DebrisShape);
+   DECLARE_ASSET_SETGET(ShapeBaseData, DebrisShape);
 
    ExplosionData*    explosion;
    S32               explosionID;
@@ -662,7 +668,7 @@ public:
    DECLARE_CALLBACK( void, onCollision, ( ShapeBase* obj, SceneObject* collObj, VectorF vec, F32 len ) );
    DECLARE_CALLBACK( void, onDamage, ( ShapeBase* obj, F32 delta ) );
    DECLARE_CALLBACK( void, onTrigger, ( ShapeBase* obj, S32 index, bool state ) );
-   DECLARE_CALLBACK(void, onEndSequence, (ShapeBase* obj, S32 slot, const char* name));
+   DECLARE_CALLBACK( void, onEndSequence, (ShapeBase* obj, S32 slot, const char* name));
    DECLARE_CALLBACK( void, onForceUncloak, ( ShapeBase* obj, const char* reason ) );
    /// @}
    struct TextureTagRemapping
@@ -739,13 +745,13 @@ protected:
 
    /// @name Scripted Sound
    /// @{
-   struct Sound {
+   struct SoundThread {
       bool play;                    ///< Are we playing this sound?
       SimTime timeout;              ///< Time until we stop playing this sound.
-      SFXTrack* profile;            ///< Profile on server
+      AssetPtr<SoundAsset> asset; ///< Asset on server
       SFXSource* sound;             ///< Sound on client
    };
-   Sound mSoundThread[MaxSoundThreads];
+   SoundThread mSoundThread[MaxSoundThreads];
    /// @}
 
    /// @name Scripted Animation Threads
@@ -1109,7 +1115,7 @@ protected:
 
    /// Updates the audio state of the supplied sound
    /// @param   st   Sound
-   void updateAudioState(Sound& st);
+   void updateAudioState(SoundThread& st);
 
    /// Recalculates the spacial sound based on the current position of the object
    /// emitting the sound.
@@ -1323,9 +1329,7 @@ public:
 
    /// Plays an audio sound from a mounted object
    /// @param   slot    Mount slot ID
-   /// @param   track   Audio track to play
-   void playAudio(U32 slot,SFXTrack* track);
-   void playAudio( U32 slot, SFXProfile* profile ) { playAudio( slot, ( SFXTrack* ) profile ); }
+   void playAudio(U32 slot, StringTableEntry assetId);
 
    /// Stops audio from a mounted object
    /// @param   slot   Mount slot ID

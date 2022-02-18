@@ -4,7 +4,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -47,7 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <map>
 #include <vector>
-#include <set>
 #include <stdint.h>
 #include <assimp/light.h>
 #include <assimp/mesh.h>
@@ -105,17 +104,6 @@ enum MorphMethod
     Relative
 };
 
-/** Common metadata keys as <Collada, Assimp> */
-typedef std::pair<std::string, std::string> MetaKeyPair;
-typedef std::vector<MetaKeyPair> MetaKeyPairVector;
-
-// Collada as lower_case (native)
-const MetaKeyPairVector &GetColladaAssimpMetaKeys();
-// Collada as CamelCase (used by Assimp for consistency)
-const MetaKeyPairVector &GetColladaAssimpMetaKeysCamelCase();
-
-/** Convert underscore_separated to CamelCase "authoring_tool" becomes "AuthoringTool" */
-void ToCamelCase(std::string &text);
 
 /** Contains all data for one of the different transformation types */
 struct Transform
@@ -595,7 +583,7 @@ struct Image
     /** Embedded image data */
     std::vector<uint8_t> mImageData;
 
-    /** File format hint of embedded image data */
+    /** File format hint ofembedded image data */
     std::string mEmbeddedFormat;
 };
 
@@ -659,37 +647,23 @@ struct Animation
 
 	void CombineSingleChannelAnimationsRecursively(Animation *pParent)
 	{
-		std::set<std::string> childrenTargets;
-		bool childrenAnimationsHaveDifferentChannels = true;
-
 		for (std::vector<Animation*>::iterator it = pParent->mSubAnims.begin(); it != pParent->mSubAnims.end();)
 		{
 			Animation *anim = *it;
+
 			CombineSingleChannelAnimationsRecursively(anim);
 
-			if (childrenAnimationsHaveDifferentChannels && anim->mChannels.size() == 1 &&
-				childrenTargets.find(anim->mChannels[0].mTarget) == childrenTargets.end()) {
-				childrenTargets.insert(anim->mChannels[0].mTarget);
-			} else {
-				childrenAnimationsHaveDifferentChannels = false;
-			}
-
-			++it;
-		}
-
-		// We only want to combine animations if they have different channels
-		if (childrenAnimationsHaveDifferentChannels)
-		{
-			for (std::vector<Animation*>::iterator it = pParent->mSubAnims.begin(); it != pParent->mSubAnims.end();)
+			if (anim->mChannels.size() == 1)
 			{
-				Animation *anim = *it;
-
 				pParent->mChannels.push_back(anim->mChannels[0]);
 
 				it = pParent->mSubAnims.erase(it);
 
 				delete anim;
-				continue;
+			}
+			else
+			{
+				++it;
 			}
 		}
 	}

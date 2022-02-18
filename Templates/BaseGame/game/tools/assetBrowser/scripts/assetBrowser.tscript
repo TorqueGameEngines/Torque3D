@@ -35,6 +35,9 @@ function AssetBrowser::initialize(%this)
    if(!isObject(AssetPreviewArray))
       new ArrayObject(AssetPreviewArray);
       
+   if(!isObject(ObjectCreator))
+      new ScriptObject(ObjectCreator);
+      
    if(!isObject(%this.dirHandler))
    {
       %this.dirHandler = makedirectoryHandler(AssetBrowser-->filterTree, "cache,shaderCache", ""); 
@@ -279,6 +282,7 @@ function AssetBrowser::selectAsset( %this, %asset )
       %this.changeAsset();
    }
    
+   if(isObject(Inspector))
    Inspector.refresh();
    
    AssetBrowser.hideDialog();
@@ -628,7 +632,8 @@ function AssetBrowser::loadDirectories( %this )
    
    %this.loadTags();
    
-   %this.loadCreatorClasses();
+   if (!%this.selectMode)
+      %this.loadCreatorClasses();
    
    //If set to, show core
    if(EditorSettings.value("Assets/Browser/showCoreModule", false) == 1)
@@ -984,13 +989,30 @@ function AssetBrowser::toggleTagFilterPopup(%this)
 
 function AssetBrowser::changeAsset(%this)
 {
+   %targetObject = %this.fieldTargetObject;
+   %inspectorObject = "";
+   
+   if(%this.fieldTargetObject.isInNamespaceHierarchy("GuiInspector"))
+   {
+      %inspectorObject = %this.fieldTargetObject;
+      %targetObject = %inspectorObject.getInspectObject();
+   }
+   
    //alright, we've selectd an asset for a field, so time to set it!
    if(%this.fieldTargetName $= "")
-      %cmd = %this.fieldTargetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
+      %cmd = %targetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
    else
-      %cmd = %this.fieldTargetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
-   echo("Changing asset via the " @ %cmd @ " command");
+      %cmd = %targetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
+   //echo("Changing asset via the " @ %cmd @ " command");
    eval(%cmd);
+   
+   //Force update our object with the field change
+   %targetObject.inspectPostApply();
+   
+   if(isObject(%inspectorObject))
+   {
+      %inspectorObject.refresh();
+   }
    
    //Flag us as dirty for editing purposes
    EWorldEditor.setSceneAsDirty();
@@ -2282,7 +2304,7 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
 
    %assetType = %payload.assetType;
    
-   %pos = EWCreatorWindow.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
+   %pos = ObjectCreator.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
    %module = %payload.moduleName;
    %asset = %payload.assetName;
    
@@ -2314,6 +2336,53 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
    }
    
    EWorldEditor.isDirty = true;
+}
+
+function GuiEditor::onControlDropped(%this, %payload, %position)
+{  
+   Canvas.popDialog(EditorDragAndDropLayer);
+   // Make sure we have the right kind of D&D.
+   
+   if( !%payload.parentGroup.isInNamespaceHierarchy( "GuiDragAndDropControlType_GuiControl" ) &&
+         !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ))
+      return;
+      
+   if( %payload.dragSourceControl == %this )
+      return;
+
+   %pos = %payload.getGlobalPosition();
+   %x = getWord(%pos, 0);
+   %y = getWord(%pos, 1);
+   
+   if(%payload.assetType !$= "Creator")
+   {
+      //dealing with an actual asset, so build the assetName
+      %assetId = %payload.moduleName @ ":" @ %payload.assetName;
+      %assetType = AssetDatabase.getAssetType(%assetId);
+      
+      if(%assetType $= "ImageAsset")
+      {
+         %cmd = "return new guiBitmapCtrl();";
+         %ctrl = eval( %cmd ); 
+         %ctrl.bitmap = %assetId;
+      }
+   }
+   else
+   {
+      %className = %payload.assetName;
+      %cmd = "return new " @ %className @ "();";
+      %ctrl = eval( %cmd );
+   }
+
+   %this.addNewCtrl(%ctrl);
+   
+   %ctrl.setPositionGlobal(%x, %y);
+   %this.setFirstResponder();
+   
+   if(EditorSettings.value("AssetManagement/Assets/closeBrowserOnDragAction", false))
+   {
+      AssetBrowser.hideDialog();  
+   }
 }
 
 function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
@@ -2375,7 +2444,6 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
 
 function AssetBrowserFilterTree::onDragDropped( %this )
 {
-   %asdgadfhg =true;
 }
 
 function AssetBrowser::hasLooseFilesInDir(%this)
@@ -2486,4 +2554,51 @@ function AssetBrowser::importLooseFiles(%this)
 {
    echo("Adding loose files at directory " @ %this.dirHandler.currentAddress);
    LooseFileAuditWindow.showDialog(%this.dirHandler.currentAddress);  
+}
+
+//
+function getAssetPreviewImage(%asset)
+{
+   if(isFile(%asset))
+   {
+      %aq = new AssetQuery();
+      %assetsFound = AssetDatabase.findAssetLooseFile(%aq, %asset);
+      if(%assetsFound != 0)
+      {
+         %asset = %aq.getAsset(0);
+      }
+      else
+      {
+         %previewPath = %asset;
+      }
+      
+      %aq.delete();
+   }
+   
+   if(AssetDatabase.isDeclaredAsset(%asset))
+   {
+      %moduleName = AssetDatabase.getAssetModule(%asset).ModuleId;
+      %assetName = AssetDatabase.getAssetName(%asset);
+      %previewAssetName = "ToolsModule:" @ %moduleName @ "_" @ %assetName @ "_PreviewImage";
+      
+      if(AssetDatabase.isDeclaredAsset(%previewAssetName))
+      {
+         %previewDef = AssetDatabase.acquireAsset(%previewAssetName);  
+         %previewPath = %previewDef.getImagePath();
+         AssetDatabase.releaseAsset(%previewAssetName);
+      }
+      else
+      {
+         %previewPath = %asset;  
+      }
+   }
+   else
+   {
+      %previewPath = %asset;
+   }
+   
+   if(%previewPath $= "")
+      %previewPath = "ToolsModule:unknownImage_image";
+   
+   return %previewPath;
 }

@@ -122,6 +122,41 @@ void main()
       lightCol *= max(cookie.r, max(cookie.g, cookie.b));
    #endif
 
+   #ifdef DIFFUSE_LIGHT_VIZ
+      float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
+      vec3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+
+      vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
+      vec3 final = max(0.0f, diffuse) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+      
+      OUT_col = vec4(final, 0);
+      return;
+   #endif
+
+   #ifdef SPECULAR_LIGHT_VIZ
+   float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
+      float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+
+      vec3 diffuse = BRDF_GetDebugSpecular(surface,surfaceToLight) * factor;
+      vec3 final = max(0.0f, diffuse) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+      
+      OUT_col = vec4(final, 0);
+      return;
+   #endif
+
+   #ifdef DETAIL_LIGHTING_VIZ
+      float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
+      vec3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+
+      vec3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+      vec3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+
+      vec3 final = max(vec3(0.0f), diffuse + spec * surface.F) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+      
+      OUT_col = vec4(final, 0);
+      return;
+   #endif
+
       //get Punctual light contribution   
       lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
       //get spot angle attenuation

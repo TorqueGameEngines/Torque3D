@@ -6,6 +6,7 @@ function AssetBrowser::buildCreatorPreview(%this, %assetDef, %previewData)
             
    %previewData.assetName = %name;
    %previewData.assetPath = "";
+   %previewData.moduleName = "";
    
    %previewData.previewImage = "ToolsModule:" @ %class @ "_image";
    
@@ -36,7 +37,7 @@ function AssetBrowser::onCreatorEditorDropped(%this, %assetDef, %position)
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    
-   %pos = EWCreatorWindow.getCreateObjectPosition();
+   %pos = ObjectCreator.getCreateObjectPosition();
 
    if(%rayResult != 0)
    {

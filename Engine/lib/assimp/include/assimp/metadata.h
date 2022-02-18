@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -47,10 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #ifndef AI_METADATA_H_INC
 #define AI_METADATA_H_INC
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1500)
 #  include "Compiler/pstdint.h"
@@ -286,8 +282,8 @@ struct aiMetadata {
 			new_values[i] = mValues[i];
 		}
 
-		delete[] mKeys;
-		delete[] mValues;
+		delete mKeys;
+		delete mValues;
 
 		mKeys = new_keys;
 		mValues = new_values;
@@ -376,23 +372,6 @@ struct aiMetadata {
 
 		return true;
 	}
-
-    /// Check whether there is a metadata entry for the given key.
-    /// \param [in] Key - the key value value to check for.
-    inline
-    bool HasKey(const char* key) {
-        if ( nullptr == key ) {
-            return false;
-        }
-        
-        // Search for the given key
-        for (unsigned int i = 0; i < mNumProperties; ++i) {
-            if ( 0 == strncmp(mKeys[i].C_Str(), key, mKeys[i].length ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
 
 #endif // __cplusplus
 

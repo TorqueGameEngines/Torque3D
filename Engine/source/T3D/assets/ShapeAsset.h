@@ -60,6 +60,7 @@
 #ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
 #endif
+#include "assetMacroHelpers.h"
 //-----------------------------------------------------------------------------
 class ShapeAsset : public AssetBase
 {
@@ -71,6 +72,12 @@ protected:
    StringTableEntry   mFilePath;
    StringTableEntry   mConstructorFilePath;
    Resource<TSShape>	 mShape;
+
+   StringTableEntry   mDiffuseImposterFileName;
+   StringTableEntry   mDiffuseImposterPath;
+
+   StringTableEntry   mNormalImposterFileName;
+   StringTableEntry   mNormalImposterPath;
 
    //Material assets we're dependent on and use
    Vector<StringTableEntry> mMaterialAssetIds;
@@ -169,13 +176,22 @@ public:
    inline StringTableEntry getShapeFilePath(void) const { return mFilePath; };
    inline StringTableEntry getShapeConstructorFilePath(void) const { return mConstructorFilePath; };
 
+   //Imposter images
+   void                    setDiffuseImposterFile(const char* pImageFile);
+   inline StringTableEntry getDiffuseImposterFile(void) const { return mDiffuseImposterFileName; };
+   inline StringTableEntry getDiffuseImposterFilePath(void) const { return mDiffuseImposterPath; };
+
+   void                    setNormalImposterFile(const char* pImageFile);
+   inline StringTableEntry getNormalImposterFile(void) const { return mNormalImposterFileName; };
+   inline StringTableEntry getNormalImposterFilePath(void) const { return mNormalImposterPath; };
+
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
 
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset);
 
 #ifdef TORQUE_TOOLS
-   const char* generateCachedPreviewImage(S32 resolution);
+   const char* generateCachedPreviewImage(S32 resolution, String overrideMaterial = "");
 #endif
 
 protected:
@@ -187,6 +203,10 @@ protected:
    static bool setShapeConstructorFile(void* obj, const char* index, const char* data) { static_cast<ShapeAsset*>(obj)->setShapeConstructorFile(data); return false; }
    static const char* getShapeConstructorFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getShapeConstructorFile(); }
 
+   static bool setDiffuseImposterFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setDiffuseImposterFile(data); return false; }
+   static const char* getDiffuseImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getDiffuseImposterFile(); }
+   static bool setNormalImposterFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setNormalImposterFile(data); return false; }
+   static const char* getNormalImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getNormalImposterFile(); }
 };
 
 #ifdef TORQUE_TOOLS
@@ -321,47 +341,8 @@ public: \
    Resource<TSShape> get##name##Resource() \
    {\
       return m##name;\
-   }
-
-#define DECLARE_SHAPEASSET_SETGET(className, name)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      return ret;\
-   }
-
-#define DECLARE_SHAPEASSET_NET_SETGET(className, name, bitmask)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      if(ret)\
-         object->setMaskBits(bitmask);\
-      return ret;\
-   }
-
-#define DEF_SHAPEASSET_BINDS(className,name)\
-DefineEngineMethod(className, get##name, String, (), , "get name")\
-{\
-   return object->get##name(); \
-}\
-DefineEngineMethod(className, get##name##Asset, String, (), , assetText(name, asset reference))\
-{\
-   return object->m##name##AssetId; \
-}\
-DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText(name,assignment. first tries asset then flat file.))\
-{\
-   return object->_set##name(StringTable->insert(shape));\
-}
-
-#define INIT_SHAPEASSET(name) \
-   m##name##Name = StringTable->EmptyString(); \
-   m##name##AssetId = StringTable->EmptyString(); \
-   m##name##Asset = NULL; \
-   m##name = NULL;
+   }\
+   bool is##name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -376,46 +357,6 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape), , assetText
    addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
 
 #endif // SHOW_LEGACY_FILE_FIELDS
-
-#define CLONE_SHAPEASSET(name) \
-   m##name##Name = other.m##name##Name;\
-   m##name##AssetId = other.m##name##AssetId;\
-   m##name##Asset = other.m##name##Asset;\
-
-#define PACKDATA_SHAPEASSET(name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      stream->writeString(m##name##Asset.getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACKDATA_SHAPEASSET(name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = stream->readSTString();\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
-
-#define PACK_SHAPEASSET(netconn, name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACK_SHAPEASSET(netconn, name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
 
 #pragma endregion
 
@@ -519,59 +460,8 @@ public: \
       if(index >= sm##name##Count || index < 0)\
          return ResourceManager::get().load( "" );\
       return m##name[index];\
-   }
-
-#define DECLARE_SHAPEASSET_ARRAY_SETGET(className, name)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      if (!index) return false;\
-      U32 idx = dAtoi(index);\
-      if (idx >= sm##name##Count)\
-         return false;\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data), idx);\
-      return ret;\
-   }
-
-#define DECLARE_SHAPEASSET_ARRAY_NET_SETGET(className, name, bitmask)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      if (!index) return false;\
-      U32 idx = dAtoi(index);\
-      if (idx >= sm##name##Count)\
-         return false;\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data), idx);\
-      if(ret)\
-         object->setMaskBits(bitmask);\
-      return ret;\
-   }
-
-#define DEF_SHAPEASSET_ARRAY_BINDS(className,name)\
-DefineEngineMethod(className, get##name, String, (S32 index), , "get name")\
-{\
-   return object->get##name(index); \
-}\
-DefineEngineMethod(className, get##name##Asset, String, (S32 index), , assetText(name, asset reference))\
-{\
-   if(index >= className::sm##name##Count || index < 0)\
-      return "";\
-   return object->m##name##AssetId[index]; \
-}\
-DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), , assetText(name,assignment. first tries asset then flat file.))\
-{\
-   return object->_set##name(StringTable->insert(shape), index);\
-}
-
-#define INIT_SHAPEASSET_ARRAY(name, index) \
-{\
-   m##name##Name[index] = StringTable->EmptyString(); \
-   m##name##AssetId[index] = StringTable->EmptyString(); \
-   m##name##Asset[index] = NULL; \
-   m##name[index] = NULL;\
-}
+   }\
+   bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -586,48 +476,6 @@ DefineEngineMethod(className, set##name, bool, (const char*  shape, S32 index), 
    addProtectedField(assetText(name, Asset), TypeShapeAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, arraySize,assetText(name, asset reference.));
 
 #endif // SHOW_LEGACY_FILE_FIELDS
-
-#define CLONE_SHAPEASSET_ARRAY(name, index) \
-{\
-   m##name##Name[index] = other.m##name##Name[index];\
-   m##name##AssetId[index] = other.m##name##AssetId[index];\
-   m##name##Asset[index] = other.m##name##Asset[index];\
-}
-
-#define PACKDATA_SHAPEASSET_ARRAY(name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      stream->writeString(m##name##Asset[index].getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
-
-#define UNPACKDATA_SHAPEASSET_ARRAY(name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-      m##name##Name[index] = stream->readSTString();
-
-#define PACK_SHAPEASSET_ARRAY(netconn, name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset[index].getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
-
-#define UNPACK_SHAPEASSET_ARRAY(netconn, name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-      m##name##Name[index] = stream->readSTString();
 
 #pragma endregion
 

@@ -127,13 +127,13 @@ ConsoleDocClass( PrecipitationData,
 //----------------------------------------------------------
 PrecipitationData::PrecipitationData()
 {
-   INIT_SOUNDASSET(Sound);
+   INIT_ASSET(Sound);
 
-   INIT_IMAGEASSET(Drop);
+   INIT_ASSET(Drop);
 
    mDropShaderName   = StringTable->EmptyString();
 
-   INIT_IMAGEASSET(Splash);
+   INIT_ASSET(Splash);
 
    mSplashShaderName = StringTable->EmptyString();
 
@@ -188,9 +188,16 @@ bool PrecipitationData::preload( bool server, String &errorStr )
 {
    if( Parent::preload( server, errorStr) == false)
       return false;
+   if (!server)
+   {
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
 
-   if (!server && !getSFXProfile())
-      return false;
+         if (!getSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
+   }
 
    return true;
 }
@@ -199,13 +206,13 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SOUNDASSET(Sound);
+   PACKDATA_ASSET(Sound);
 
-   PACKDATA_IMAGEASSET(Drop);
+   PACKDATA_ASSET(Drop);
 
    stream->writeString(mDropShaderName);
 
-   PACKDATA_IMAGEASSET(Splash);
+   PACKDATA_ASSET(Splash);
 
    stream->writeString(mSplashShaderName);
    stream->write(mDropsPerSide);
@@ -216,13 +223,13 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_SOUNDASSET(Sound);
+   UNPACKDATA_ASSET(Sound);
 
-   UNPACKDATA_IMAGEASSET(Drop);
+   UNPACKDATA_ASSET(Drop);
 
    mDropShaderName = stream->readSTString();
 
-   UNPACKDATA_IMAGEASSET(Splash);
+   UNPACKDATA_ASSET(Splash);
 
    mSplashShaderName = stream->readSTString();
    stream->read(&mDropsPerSide);
@@ -597,9 +604,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->getSFXProfile())
+      if ( mDataBlock->getSoundProfile())
       {
-         mAmbientSound = SFX->createSource(mDataBlock->getSFXProfile(), &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getSoundProfile(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

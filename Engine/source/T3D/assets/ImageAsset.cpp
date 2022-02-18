@@ -58,7 +58,7 @@ StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
 
 IMPLEMENT_CONOBJECT(ImageAsset);
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, "")
 
 //-----------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ ConsoleSetType(TypeImageAssetPtr)
    Con::warnf("(TypeImageAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
-ConsoleType(assetIdString, TypeImageAssetId, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeImageAssetId, const char*, "")
 
 ConsoleGetType(TypeImageAssetId)
 {
@@ -480,7 +480,7 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getInspectObject()->getIdString(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
@@ -488,11 +488,9 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    // Create "Open in ShapeEditor" button
    mImageEdButton = new GuiBitmapButtonCtrl();
 
-   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
-   mImageEdButton->setField("Command", szBuffer);
-
    char bitmapName[512] = "ToolsModule:GameTSCtrl_image";
    mImageEdButton->setBitmap(StringTable->insert(bitmapName));
+   mImageEdButton->setHidden(true);
 
    mImageEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mImageEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
@@ -549,7 +547,20 @@ bool GuiInspectorTypeImageAssetPtr::renderTooltip(const Point2I& hoverPos, const
    if (!filename || !filename[0])
       return false;
 
-   GFXTexHandle texture(filename, &GFXStaticTextureSRGBProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__));
+   StringTableEntry previewFilename = filename;
+   if (Con::isFunction("getAssetPreviewImage"))
+   {
+      ConsoleValue consoleRet = Con::executef("getAssetPreviewImage", filename);
+      previewFilename = StringTable->insert(consoleRet.getString());
+
+      if (AssetDatabase.isDeclaredAsset(previewFilename))
+      {
+         ImageAsset* previewAsset = AssetDatabase.acquireAsset<ImageAsset>(previewFilename);
+         previewFilename = previewAsset->getImagePath();
+      }
+   }
+
+   GFXTexHandle texture(previewFilename, &GFXStaticTextureSRGBProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__));
    if (texture.isNull())
       return false;
 

@@ -175,17 +175,17 @@ function VTrack::GetContextMenu( %this )
             Label    = "VTrackContextMenu";
             Position = 0;
             
-            Item[0] = "&Add Event" TAB "" TAB "VEditorSelectableTrack::AddEvent();";
+            Item[0] = "Add Event" TAB "" TAB "VEditorSelectableTrack::AddEvent();";
             
             Item[1] = "" TAB "";
              
-            Item[2] = "Cu&t"    TAB "" TAB "VerveEditor::CutSelection();";
-            Item[3] = "&Copy"   TAB "" TAB "VerveEditor::CopySelection();";
-            Item[4] = "&Paste"  TAB "" TAB "VEditorSelectableTrack::PasteEvent();";
+            Item[2] = "Cut"    TAB "" TAB "VerveEditor::CutSelection();";
+            Item[3] = "Copy"   TAB "" TAB "VerveEditor::CopySelection();";
+            Item[4] = "Paste"  TAB "" TAB "VEditorSelectableTrack::PasteEvent();";
             
             Item[5] = "" TAB "";
             
-            Item[6] = "&Delete" TAB "" TAB "VerveEditor::DeleteSelection();";
+            Item[6] = "Delete" TAB "" TAB "VerveEditor::DeleteSelection();";
             
             AddIndex   = 0;
             PasteIndex = 4;

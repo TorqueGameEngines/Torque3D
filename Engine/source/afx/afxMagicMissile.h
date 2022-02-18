@@ -72,7 +72,7 @@ public:
    // variables set in datablock definition:
    // Shape related
    DECLARE_SHAPEASSET(afxMagicMissileData, ProjectileShape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(afxMagicMissileData, ProjectileShape);
+   DECLARE_ASSET_SETGET(afxMagicMissileData, ProjectileShape);
   //StringTableEntry      projectileShapeName;
 
   //bool                  hasLight;
@@ -126,7 +126,8 @@ public:
   SplashData* splash;                 // Water Splash Datablock
   S32 splashId;                       // Water splash ID
 
-  SFXTrack* sound;                    // Projectile Sound
+  DECLARE_SOUNDASSET(afxMagicMissileData, ProjectileSound);
+  DECLARE_ASSET_SETGET(afxMagicMissileData, ProjectileSound);
 
   LightDescription *lightDesc;
   S32 lightDescId;   

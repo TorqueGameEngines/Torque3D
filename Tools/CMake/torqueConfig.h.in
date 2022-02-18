@@ -44,6 +44,12 @@
 /// Define me if you want to enable Arcane FX support.
 #cmakedefine TORQUE_AFX_ENABLED
 
+/// Define me if you want path case insensitivity support on POSIX systems. Does nothing on Windows.
+#cmakedefine TORQUE_POSIX_PATH_CASE_INSENSITIVE
+
+/// Define me if you want path case insensitivity support in ZIP files.
+#cmakedefine TORQUE_ZIP_PATH_CASE_INSENSITIVE
+
 /// Define me if you want to enable multithreading support.
 #cmakedefine TORQUE_MULTITHREAD
 

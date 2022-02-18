@@ -15,9 +15,6 @@
 #include <cstdint>
 //using namespace Assimp;
 
-// For locale independent number conversion
-#include <sstream>
-#include <locale>
 
 #ifdef _DEBUG
 #define IRR_DEBUGPRINT(x) printf((x));
@@ -181,11 +178,8 @@ public:
 			return 0;
 
 		core::stringc c = attrvalue;
-		std::istringstream sstr(c.c_str());
-		sstr.imbue(std::locale("C")); // Locale free number convert
-		float fNum;
-		sstr >> fNum;
-		return fNum;
+        return static_cast<float>(atof(c.c_str()));
+		//return fast_atof(c.c_str());
 	}
 
 

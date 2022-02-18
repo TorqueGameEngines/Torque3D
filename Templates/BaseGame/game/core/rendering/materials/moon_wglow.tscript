@@ -1,0 +1,9 @@
+//--- OBJECT WRITE BEGIN ---
+singleton Material(moon_wglow) {
+   mapTo="moon_wglow";
+   DiffuseMapAsset = "Core_Rendering:moon_wglow_image";
+   emissive = true;
+   translucent = true;
+   vertColor[ 0 ] = true;
+};
+//--- OBJECT WRITE END ---

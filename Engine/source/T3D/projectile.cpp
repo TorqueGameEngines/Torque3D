@@ -144,9 +144,9 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 ProjectileData::ProjectileData()
 {
-   INIT_SHAPEASSET(ProjectileShape);
+   INIT_ASSET(ProjectileShape);
 
-   sound = NULL;
+   INIT_ASSET(ProjectileSound);
 
    explosion = NULL;
    explosionId = 0;
@@ -217,10 +217,10 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
    splashId = other.splashId; // -- for pack/unpack of splash ptr
    decal = other.decal;
    decalId = other.decalId; // -- for pack/unpack of decal ptr
-   sound = other.sound;
+   CLONE_ASSET(ProjectileSound);
    lightDesc = other.lightDesc;
    lightDescId = other.lightDescId; // -- for pack/unpack of lightDesc ptr
-   CLONE_SHAPEASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
+   CLONE_ASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
    activateSeq = other.activateSeq; // -- from projectileShape sequence "activate"
    maintainSeq = other.maintainSeq; // -- from projectileShape sequence "maintain"
    particleEmitter = other.particleEmitter;
@@ -252,8 +252,7 @@ void ProjectileData::initPersistFields()
       "@brief Scale to apply to the projectile's size.\n\n"
       "@note This is applied after SceneObject::scale\n");
 
-   addField("sound", TypeSFXTrackName, Offset(sound, ProjectileData),
-      "@brief SFXTrack datablock used to play sounds while in flight.\n\n");
+   INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
 
    addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
       "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
@@ -368,9 +367,12 @@ bool ProjectileData::preload(bool server, String &errorStr)
          if (Sim::findObject(decalId, decal) == false)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
 
-      String sfxErrorStr;
-      if( !sfxResolve( &sound, sfxErrorStr ) )
-         Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet: %s", sfxErrorStr.c_str());
+      _setProjectileSound(getProjectileSound());
+      if (getProjectileSound() != StringTable->EmptyString())
+      {
+         if (!getProjectileSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
 
       if (!lightDesc && lightDescId != 0)
          if (Sim::findObject(lightDescId, lightDesc) == false)
@@ -403,7 +405,7 @@ void ProjectileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_SHAPEASSET(ProjectileShape);
+   PACKDATA_ASSET(ProjectileShape);
 
    stream->writeFlag(faceViewer);
    if(stream->writeFlag(scale.x != 1 || scale.y != 1 || scale.z != 1))
@@ -436,8 +438,7 @@ void ProjectileData::packData(BitStream* stream)
    if (stream->writeFlag(decal != NULL))
       stream->writeRangedU32(decal->getId(), DataBlockObjectIdFirst,
                                               DataBlockObjectIdLast);
-
-   sfxWrite( stream, sound );
+   PACKDATA_ASSET(ProjectileSound);
 
    if ( stream->writeFlag(lightDesc != NULL))
       stream->writeRangedU32(lightDesc->getId(), DataBlockObjectIdFirst,
@@ -468,7 +469,7 @@ void ProjectileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_SHAPEASSET(ProjectileShape);
+   UNPACKDATA_ASSET(ProjectileShape);
 
    faceViewer = stream->readFlag();
    if(stream->readFlag())
@@ -497,8 +498,8 @@ void ProjectileData::unpackData(BitStream* stream)
 
    if (stream->readFlag())
       decalId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
-   
-   sfxRead( stream, &sound );
+
+   UNPACKDATA_ASSET(ProjectileSound);
 
    if (stream->readFlag())
       lightDescId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -884,8 +885,8 @@ bool Projectile::onNewDataBlock( GameBaseData *dptr, bool reload )
 
       SFX_DELETE( mSound );
 
-      if ( mDataBlock->sound )
-         mSound = SFX->createSource( mDataBlock->sound );
+      if ( mDataBlock->getProjectileSound() )
+         mSound = SFX->createSource( mDataBlock->getProjectileSoundProfile() );
    }
 
    return true;
@@ -1099,7 +1100,7 @@ void Projectile::explode( const Point3F &p, const Point3F &n, const U32 collideT
 
 void Projectile::updateSound()
 {
-   if (!mDataBlock->sound)
+   if (!mDataBlock->isProjectileSoundValid())
       return;
 
    if ( mSound )

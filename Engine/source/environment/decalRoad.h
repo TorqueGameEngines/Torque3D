@@ -243,7 +243,7 @@ protected:
    BaseMatInstance* mMaterialInst;
 
    DECLARE_MATERIALASSET(DecalRoad, Material);
-   DECLARE_MATERIALASSET_NET_SETGET(DecalRoad, Material, DecalRoadMask);
+   DECLARE_ASSET_NET_SETGET(DecalRoad, Material, DecalRoadMask);
 
    U32 mRenderPriority;
 

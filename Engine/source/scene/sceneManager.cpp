@@ -49,7 +49,7 @@ extern bool gEditingMission;
 MODULE_BEGIN( Scene )
 
    MODULE_INIT_AFTER( Sim )   
-   MODULE_SHUTDOWN_BEFORE( Sim )
+   MODULE_SHUTDOWN_AFTER( Sim )
    
    MODULE_INIT
    {

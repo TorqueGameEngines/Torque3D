@@ -247,7 +247,6 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
       mActiveTextureType[i] = GL_ZERO;
 
    mNumVertexStream = 2;
-   mSupportsAnisotropic = false;
 
    for(int i = 0; i < GS_COUNT; ++i)
       mModelViewProjSC[i] = NULL;

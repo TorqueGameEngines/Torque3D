@@ -119,13 +119,14 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       BitmapMode mBitmapMode;
 
       DECLARE_IMAGEASSET(GuiBitmapButtonCtrl, Bitmap, onBitmapChange, GFXDefaultGUIProfile);
-      DECLARE_IMAGEASSET_SETGET(GuiBitmapButtonCtrl, Bitmap);
+      DECLARE_ASSET_SETGET(GuiBitmapButtonCtrl, Bitmap);
       
       /// alpha masking
       bool mMasked;
       
       ///
       Textures mTextures[ NumModifiers ];
+      ColorI   mColor;
       
       virtual void renderButton( GFXTexHandle &texture, const Point2I& offset, const RectI& updateRect );
       
@@ -157,7 +158,10 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       
       /// @}
 
-      void onBitmapChange() {}
+      void onBitmapChange()
+      {
+         setBitmap(getBitmap());
+      }
 
    public:
                            

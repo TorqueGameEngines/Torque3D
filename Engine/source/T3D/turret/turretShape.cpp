@@ -257,7 +257,7 @@ ConsoleDocClass( TurretShape,
 
 TurretShape::TurretShape()
 {
-   mTypeMask |= VehicleObjectType | DynamicShapeObjectType;
+   mTypeMask |= VehicleObjectType | DynamicShapeObjectType | TurretObjectType;
    mDataBlock = 0;
 
    allowManualRotation = true;

@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -47,17 +47,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_VECTOR3D_H_INC
 #define AI_VECTOR3D_H_INC
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 #   include <cmath>
 #else
 #   include <math.h>
 #endif
 
-#include <assimp/defs.h>
+#include "defs.h"
 
 #ifdef __cplusplus
 
@@ -67,12 +63,15 @@ template<typename TReal> class aiMatrix4x4t;
 // ---------------------------------------------------------------------------
 /** Represents a three-dimensional vector. */
 template <typename TReal>
-class aiVector3t {
+class aiVector3t
+{
 public:
     aiVector3t() AI_NO_EXCEPT : x(), y(), z() {}
     aiVector3t(TReal _x, TReal _y, TReal _z) : x(_x), y(_y), z(_z) {}
     explicit aiVector3t (TReal _xyz ) : x(_xyz), y(_xyz), z(_xyz) {}
     aiVector3t( const aiVector3t& o ) = default;
+
+public:
 
     // combined operators
     const aiVector3t& operator += (const aiVector3t& o);
@@ -98,6 +97,7 @@ public:
     template <typename TOther>
     operator aiVector3t<TOther> () const;
 
+public:
     /** @brief Set the components of a vector
      *  @param pX X component
      *  @param pY Y component

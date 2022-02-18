@@ -465,7 +465,7 @@ GuiControl* GuiInspectorTypeTerrainAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getInspectObject()->getIdString(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());

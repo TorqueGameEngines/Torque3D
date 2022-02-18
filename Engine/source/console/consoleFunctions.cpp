@@ -1703,12 +1703,7 @@ DefineEngineFunction( nextToken, const char*, ( const char* str1, const char* to
       if (*str)
          *str++ = 0;
 
-      // set local variable if inside a function
-      if (gEvalState.getStackDepth() > 0 && 
-         gEvalState.getCurrentFrame().scopeName)
-         Con::setLocalVariable(token,tmp);
-      else
-         Con::setVariable(token,tmp);
+      Con::setVariable(token,tmp);
 
       // advance str past the 'delim space'
       while (isInSet(*str, delim))
@@ -2845,4 +2840,22 @@ DefineEngineFunction( getStringHash, S32, (const char* _inString, bool _sensitiv
       return S32(String(_inString).getHashCaseSensitive());
    else
       return S32(String(_inString).getHashCaseInsensitive());
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineFunction(getTimestamp, const char*, (), ,
+   "Gets datetime string.\n\n"
+   "@return YYYY-mm-DD_hh-MM-ss formatted date time string.")
+{
+   Torque::Time::DateTime curTime;
+   Torque::Time::getCurrentDateTime(curTime);
+
+   String timestampStr = String::ToString(curTime.year + 1900) + "-" +
+      String::ToString(curTime.month + 1) + "-" + String::ToString(curTime.day) + "_" +
+      String::ToString(curTime.hour) + "-" + String::ToString(curTime.minute) + "-" + String::ToString(curTime.second);
+
+   const char* returnBuffer = Con::getReturnBuffer(timestampStr);
+
+   return returnBuffer;
 }

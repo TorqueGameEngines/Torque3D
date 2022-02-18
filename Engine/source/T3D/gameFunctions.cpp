@@ -46,7 +46,7 @@ MODULE_BEGIN( 3D )
    
    MODULE_SHUTDOWN_BEFORE( Process )
    MODULE_SHUTDOWN_BEFORE( Sim )
-   MODULE_SHUTDOWN_AFTER( Scene )
+   MODULE_SHUTDOWN_BEFORE( Scene )
    
    MODULE_INIT
    {
@@ -668,6 +668,7 @@ static void RegisterGameFunctions()
 // PATHSHAPE
    Con::setIntVariable("$TypeMasks::PathShapeObjectType",     PathShapeObjectType);
 // PATHSHAPE END
+   Con::setIntVariable("$TypeMasks::TurretObjectType", TurretObjectType);
 
    Con::addVariable("Ease::InOut", TypeS32, &gEaseInOut, 
       "InOut ease for curve movement.\n"

@@ -63,8 +63,8 @@ protected:
    GFXStateBlockRef  mBlendStateBlock;
    GFXStateBlockRef  mSolidStateBlock;
 
-   DECLARE_IMAGEASSET(GuiMissionAreaCtrl, HandleBitmap, onHandleBitmapChanged, GFXTexturePersistentSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiMissionAreaCtrl, HandleBitmap);
+   DECLARE_IMAGEASSET(GuiMissionAreaCtrl, HandleBitmap, onHandleBitmapChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiMissionAreaCtrl, HandleBitmap);
 
    Point2I           mHandleTextureSize;
    Point2F           mHandleTextureHalfSize;

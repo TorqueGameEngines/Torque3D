@@ -20,21 +20,21 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-singleton ShaderData( PFX_PassthruShader )
-{   
-   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/passthruP.hlsl";
-         
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/gl/passthruP.glsl";
-      
-   samplerNames[0] = "$inputTex";
-   
-   pixVersion = 2.0;
-};
-
 function postFXInit()
 {
+   singleton ShaderData( PFX_PassthruShader )
+   {   
+      DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+      DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/passthruP.hlsl";
+            
+      OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+      OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/gl/passthruP.glsl";
+         
+      samplerNames[0] = "$inputTex";
+      
+      pixVersion = 2.0;
+   };
+
    //Load the core postFX files themselves
    if (!$Server::Dedicated)
    {

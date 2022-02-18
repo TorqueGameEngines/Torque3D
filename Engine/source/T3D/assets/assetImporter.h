@@ -647,6 +647,8 @@ class AssetImporter : public SimObject
    /// </summary>
    String finalImportedAssetPath;
 
+   bool mDumpLogs;
+
 public:
    AssetImporter();
    virtual ~AssetImporter();
@@ -903,9 +905,15 @@ public:
    /// </summary>
    AssetImportConfig* getImportConfig() { return activeImportConfig; }
 
-   void setImportConfig(AssetImportConfig* importConfig) {
-      if(importConfig != nullptr)
+   void setImportConfig(AssetImportConfig* importConfig)
+   {
+      if (importConfig != nullptr)
+      {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Loading import config: %s!", importConfig->getName());
+         activityLog.push_back(importLogBuffer);
+
          activeImportConfig = importConfig;
+      }
    }
 
    /// <summary>

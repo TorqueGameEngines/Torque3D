@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // internal headers
 #include "PlyLoader.h"
 #include <assimp/IOStreamBuffer.h>
+#include <assimp/Macros.h>
 #include <memory>
 #include <assimp/IOSystem.hpp>
 #include <assimp/scene.h>

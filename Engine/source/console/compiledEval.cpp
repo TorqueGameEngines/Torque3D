@@ -691,11 +691,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          setFrame = -1;
 
       // Do we want this code to execute using a new stack frame?
-      if (setFrame < 0)
+      // compiling a file will force setFrame to 0, forcing us to get a new frame.
+      if (setFrame <= 0)
       {
          // argc is the local count for eval
          gEvalState.pushFrame(NULL, NULL, argc);
-         gCallStack.pushFrame(0);
          popFrame = true;
       }
       else
@@ -1620,17 +1620,17 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ++ip; // To skip the recurse flag if the object wasnt found
          if (curObject)
          {
-            SimGroup* group = dynamic_cast<SimGroup*>(curObject);
-            if (group)
+            SimSet* set = dynamic_cast<SimSet*>(curObject);
+            if (set)
             {
                StringTableEntry intName = StringTable->insert(stack[_STK].getString());
                bool recurse = code[ip - 1];
-               SimObject* obj = group->findObjectByInternalName(intName, recurse);
+               SimObject* obj = set->findObjectByInternalName(intName, recurse);
                stack[_STK].setInt(obj ? obj->getId() : 0);
             }
             else
             {
-               Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use -> on non-group %s of class %s.", getFileLine(ip - 2), curObject->getName(), curObject->getClassName());
+               Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use -> on non-set %s of class %s.", getFileLine(ip - 2), curObject->getName(), curObject->getClassName());
                stack[_STK].setInt(0);
             }
          }
@@ -2022,7 +2022,11 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                      break;
                   }
 
-                  Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
+                  if (Con::getBoolVariable("$Con::warnVoidAssignment", true))
+                  {
+                     Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
+                  }
+                  
                   stack[_STK + 1].setEmptyString();
                   _STK++;
 

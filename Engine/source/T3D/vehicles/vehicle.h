@@ -45,10 +45,11 @@ struct VehicleData : public RigidShapeData
          HardImpactSound,
          MaxSounds,
       };
-      SFXProfile* sound[MaxSounds];
       F32 restitution;
       F32 friction;
    } body;
+
+   DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleBodySounds, Body::Sounds::MaxSounds)
 
    enum VehicleConsts
    {
@@ -69,7 +70,9 @@ struct VehicleData : public RigidShapeData
       Wake,
       MaxSounds
    };
-   SFXProfile* waterSound[MaxSounds];
+
+  DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleWaterSounds, Sounds::MaxSounds)
+
    F32 exitSplashSoundVel;
    F32 softSplashSoundVel;
    F32 medSplashSoundVel;

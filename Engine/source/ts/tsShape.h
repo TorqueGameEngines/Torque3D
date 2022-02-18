@@ -429,6 +429,8 @@ class TSShape
 
    void setupBillboardDetails( const String &cachePath );
 
+   void setupBillboardDetails(const String& cachePath, const String& diffsePath, const String& normalPath);
+
    /// Inits object list (no geometry buffers)
    void initObjects();
 

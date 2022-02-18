@@ -287,7 +287,7 @@ DecalRoad::DecalRoad()
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
    mNetFlags.set(Ghostable);
 
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
 
    mMaterialInst = nullptr;
 }
@@ -491,7 +491,7 @@ U32 DecalRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
    if ( stream->writeFlag( mask & DecalRoadMask ) )
    {
       // Write Texture Name.
-      PACK_MATERIALASSET(con, Material);
+      PACK_ASSET(con, Material);
 
       stream->write( mBreakAngle );      
 
@@ -580,7 +580,7 @@ void DecalRoad::unpackUpdate( NetConnection *con, BitStream *stream )
    // DecalRoadMask
    if ( stream->readFlag() )
    {
-      UNPACK_MATERIALASSET(con, Material);
+      UNPACK_ASSET(con, Material);
 
       if (isProperlyAdded())
          _initMaterial();

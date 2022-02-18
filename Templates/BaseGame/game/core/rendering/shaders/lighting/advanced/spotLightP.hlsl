@@ -67,7 +67,6 @@ uniform float4x4 worldToLightProj;
 uniform float4 lightParams;
 
 uniform float shadowSoftness;
-uniform float3 eyePosWorld;
 
 uniform float4x4 cameraToWorld;
 uniform float4x4 worldToCamera;
@@ -147,12 +146,12 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
    #ifdef DETAIL_LIGHTING_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-      vec3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+      float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
 
-      vec3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-      vec3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+      float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+      float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-      vec3 final = max(vec3(0.0f), diffuse + spec * surface.F) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+      vec3 final = max(float3(0.0f), diffuse + spec * surface.F) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
       return final;
    #endif
 

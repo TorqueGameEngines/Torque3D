@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -46,7 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/scene.h>
 #include "ScenePrivate.h"
 
-#include "revision.h"
+static const unsigned int MajorVersion = 5;
+static const unsigned int MinorVersion = 0;
 
 // --------------------------------------------------------------------------------
 // Legal information string - don't remove this.
@@ -55,9 +56,9 @@ static const char* LEGAL_INFORMATION =
 "Open Asset Import Library (Assimp).\n"
 "A free C/C++ library to import various 3D file formats into applications\n\n"
 
-"(c) 2006-2020, assimp team\n"
+"(c) 2008-2020, assimp team\n"
 "License under the terms and conditions of the 3-clause BSD license\n"
-"http://assimp.org\n"
+"https://github.com/assimp/assimp\n"
 ;
 
 // ------------------------------------------------------------------------------------------------
@@ -67,21 +68,15 @@ ASSIMP_API const char*  aiGetLegalString  ()    {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Get Assimp patch version
-ASSIMP_API unsigned int aiGetVersionPatch() {
-	return VER_PATCH;
-}
-
-// ------------------------------------------------------------------------------------------------
 // Get Assimp minor version
 ASSIMP_API unsigned int aiGetVersionMinor ()    {
-    return VER_MINOR;
+    return MinorVersion;
 }
 
 // ------------------------------------------------------------------------------------------------
 // Get Assimp major version
 ASSIMP_API unsigned int aiGetVersionMajor ()    {
-    return VER_MAJOR;
+    return MajorVersion;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -108,6 +103,9 @@ ASSIMP_API unsigned int aiGetCompileFlags ()    {
 
     return flags;
 }
+
+// include current build revision, which is even updated from time to time -- :-)
+#include "revision.h"
 
 // ------------------------------------------------------------------------------------------------
 ASSIMP_API unsigned int aiGetVersionRevision() {

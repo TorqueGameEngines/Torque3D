@@ -345,7 +345,7 @@ private:
    typedef SimObject Parent;
 
    DECLARE_IMAGEASSET(GuiCursor, Bitmap, onImageChanged, GFXGuiCursorProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiCursor, Bitmap);
+   DECLARE_ASSET_SETGET(GuiCursor, Bitmap);
 
    Point2I mHotSpot;
    Point2F mRenderOffset;
@@ -455,7 +455,7 @@ public:
    StringTableEntry mBitmapName; 
    StringTableEntry mBitmapAssetId; 
    AssetPtr<ImageAsset>  mBitmapAsset; 
-   GFXTextureProfile* mBitmapProfile = &GFXTexturePersistentSRGBProfile; 
+   GFXTextureProfile* mBitmapProfile = &GFXDefaultGUIProfile;
 public: 
    const StringTableEntry getBitmapFile() const { return mBitmapName; }
    void setBitmapFile(const FileName& _in) { mBitmapName = StringTable->insert(_in.c_str()); }
@@ -555,7 +555,7 @@ public:
    {
       return mBitmap;
    }
-   DECLARE_IMAGEASSET_SETGET(GuiControlProfile, Bitmap);
+   DECLARE_ASSET_SETGET(GuiControlProfile, Bitmap);
 
    void onBitmapChanged() {}
 

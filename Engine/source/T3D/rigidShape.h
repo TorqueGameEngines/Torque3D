@@ -35,6 +35,8 @@
 #include "T3D/physics/physicsBody.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
+
 class ParticleEmitter;
 class ParticleEmitterData;
 class ClippedPolyList;
@@ -57,10 +59,12 @@ class RigidShapeData : public ShapeBaseData
          HardImpactSound,
          MaxSounds,
       };
-      SFXTrack* sound[MaxSounds];
       F32 restitution;
       F32 friction;
    } body;
+
+   DECLARE_SOUNDASSET_ARRAY(RigidShapeData, BodySounds, Body::Sounds::MaxSounds)
+   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, BodySounds);
 
    enum RigidShapeConsts
    {
@@ -79,7 +83,8 @@ class RigidShapeData : public ShapeBaseData
       Wake,
       MaxSounds
    };
-   SFXTrack* waterSound[MaxSounds];
+   DECLARE_SOUNDASSET_ARRAY(RigidShapeData, WaterSounds, Sounds::MaxSounds)
+   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, WaterSounds);
 
    F32 exitSplashSoundVel;
    F32 softSplashSoundVel;

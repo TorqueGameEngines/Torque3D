@@ -289,7 +289,7 @@ ConvexShape::ConvexShape()
    mSurfaceUVs.clear();
    mSurfaceTextures.clear();
 
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
 }
 
 ConvexShape::~ConvexShape()
@@ -527,7 +527,7 @@ U32 ConvexShape::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      PACK_MATERIALASSET(conn, Material);
+      PACK_ASSET(conn, Material);
       
       U32 surfCount = mSurfaces.size();
       stream->writeInt( surfCount, 32 );
@@ -583,7 +583,7 @@ void ConvexShape::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    if ( stream->readFlag() ) // UpdateMask
    {
-      UNPACK_MATERIALASSET(conn, Material);
+      UNPACK_ASSET(conn, Material);
 
       mSurfaces.clear();
       mSurfaceUVs.clear();
@@ -2154,4 +2154,4 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
    }
 }
 
-DEF_MATERIALASSET_BINDS(ConvexShape, Material);
+DEF_ASSET_BINDS(ConvexShape, Material);

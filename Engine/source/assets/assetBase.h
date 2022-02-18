@@ -55,11 +55,11 @@ extern StringTableEntry assetAutoUnloadField;
 //#define ASSET_BASE_AUTOUNLOAD_FIELD        "AssetAutoUnload"
 
 //-----------------------------------------------------------------------------
-class AssetBase : public SimObject
+class AssetBase : public SimGroup
 {
    friend class AssetManager;
 
-   typedef SimObject Parent;
+   typedef SimGroup Parent;
 
 protected:
    AssetManager*           mpOwningAssetManager;
@@ -173,6 +173,5 @@ private:
 #define assetText(x,suff) #x#suff
 #define macroText(x) #x
 #define assetDoc(x,suff) "@brief "#x" "#suff
-
 #endif // _ASSET_BASE_H_
 

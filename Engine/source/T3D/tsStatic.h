@@ -192,7 +192,7 @@ protected:
    Convex* mConvexList;
 
    DECLARE_SHAPEASSET(TSStatic, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_NET_SETGET(TSStatic, Shape, AdvancedStaticOptionsMask);
+   DECLARE_ASSET_NET_SETGET(TSStatic, Shape, AdvancedStaticOptionsMask);
 
    U32               mShapeHash;
    Vector<S32> mCollisionDetails;
@@ -276,6 +276,7 @@ public:
    void updateMaterials();
 
    bool isAnimated() { return mPlayAmbient; }
+   void getNodeTransform(const char *nodeName, const MatrixF &xfm, MatrixF *outMat);
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 

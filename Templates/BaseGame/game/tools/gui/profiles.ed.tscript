@@ -163,7 +163,8 @@ new GuiControlProfile (ToolsGuiWindowProfile)
    opaque = false;
    border = 1;
    fillColor = EditorSettings.value("Theme/tabsColor");
-   fillColorHL = EditorSettings.value("Theme/tabsColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
+   fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
    fillColorNA = EditorSettings.value("Theme/tabsColor");
    fontColor = EditorSettings.value("Theme/headerTextColor");
    fontColorHL = EditorSettings.value("Theme/headerTextColor");

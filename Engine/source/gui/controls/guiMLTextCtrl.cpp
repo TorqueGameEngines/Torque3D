@@ -268,7 +268,7 @@ GuiMLTextCtrl::GuiMLTextCtrl()
 {   
    mActive = true;
    //mInitialText = StringTable->EmptyString();
-   Sim::findObject("InputDeniedSound", mDeniedSound);
+   INIT_ASSET(DeniedSound);
 }
 
 //--------------------------------------------------------------------------
@@ -290,7 +290,7 @@ void GuiMLTextCtrl::initPersistFields()
       addField("lineSpacing",       TypeS32,    Offset(mLineSpacingPixels, GuiMLTextCtrl), "The number of blank pixels to place between each line.\n");
       addField("allowColorChars",   TypeBool,   Offset(mAllowColorChars,   GuiMLTextCtrl), "If true, the control will allow characters to have unique colors.");
       addField("maxChars",          TypeS32,    Offset(mMaxBufferSize,     GuiMLTextCtrl), "Maximum number of characters that the control will display.");
-      addField("deniedSound",       TypeSFXTrackName, Offset(mDeniedSound, GuiMLTextCtrl), "If the text will not fit in the control, the deniedSound is played.");
+      INITPERSISTFIELD_SOUNDASSET(DeniedSound, GuiMLTextCtrl, "If the text will not fit in the control, the deniedSound is played.");
       addField("text",              TypeCaseString,  Offset( mInitialText, GuiMLTextCtrl ), "Text to display in this control.");
       addField("useURLMouseCursor", TypeBool,   Offset(mUseURLMouseCursor,   GuiMLTextCtrl), "If true, the mouse cursor will turn into a hand cursor while over a link in the text.\n"
                                                                       "This is dependant on the markup language used by the GuiMLTextCtrl\n");
@@ -323,6 +323,9 @@ bool GuiMLTextCtrl::onAdd()
 
    if (!mTextBuffer.length() && mInitialText[0] != 0)
       setText(mInitialText, dStrlen(mInitialText)+1);
+
+   _setDeniedSound(getDeniedSound());
+
    return true;
 }
 
@@ -917,8 +920,8 @@ void GuiMLTextCtrl::insertChars(const char* inputChars,
    if (numCharsToInsert <= 0)
    {
       // Play the "Denied" sound:
-      if ( numInputChars > 0 && mDeniedSound )
-         SFX->playOnce(mDeniedSound);
+      if ( numInputChars > 0 && getDeniedSoundProfile())
+         SFX->playOnce(getDeniedSoundProfile());
 
       return;
    }

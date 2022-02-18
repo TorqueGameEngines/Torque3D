@@ -44,6 +44,9 @@ function loadModuleMaterials(%moduleGroup)
          if(%module.group !$= %moduleGroup)
             continue;  
       }
+
+      if(%module.ModuleId $= "CoreModule") //the core container module is a special case that has some path complications
+         continue;                  //so we'll skip it so it doesn't complicate the other core modules' path tests
       
       %modulePath = %module.ModulePath;
       

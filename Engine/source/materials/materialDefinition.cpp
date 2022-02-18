@@ -142,18 +142,18 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_IMAGEASSET_ARRAY(DiffuseMap, i);
-      INIT_IMAGEASSET_ARRAY(OverlayMap, i);
-      INIT_IMAGEASSET_ARRAY(LightMap, i);
-      INIT_IMAGEASSET_ARRAY(ToneMap, i);
-      INIT_IMAGEASSET_ARRAY(DetailMap, i);
-      INIT_IMAGEASSET_ARRAY(NormalMap, i);
-      INIT_IMAGEASSET_ARRAY(ORMConfigMap, i);
-      INIT_IMAGEASSET_ARRAY(RoughMap, i);
-      INIT_IMAGEASSET_ARRAY(AOMap, i);
-      INIT_IMAGEASSET_ARRAY(MetalMap, i);
-      INIT_IMAGEASSET_ARRAY(GlowMap, i);
-      INIT_IMAGEASSET_ARRAY(DetailNormalMap, i);
+      INIT_IMAGEASSET_ARRAY(DiffuseMap, GFXStaticTextureSRGBProfile, i);
+      INIT_IMAGEASSET_ARRAY(OverlayMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(LightMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(ToneMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(DetailMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(NormalMap, GFXNormalMapProfile, i);
+      INIT_IMAGEASSET_ARRAY(ORMConfigMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(RoughMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(AOMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(MetalMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(GlowMap, GFXStaticTextureProfile, i);
+      INIT_IMAGEASSET_ARRAY(DetailNormalMap, GFXNormalMapProfile, i);
 
       mParallaxScale[i] = 0.0f;
 
@@ -231,7 +231,8 @@ Material::Material()
 
    mFootstepSoundId = -1;     mImpactSoundId = -1;
    mImpactFXIndex = -1;
-   mFootstepSoundCustom = 0;  mImpactSoundCustom = 0;
+   INIT_ASSET(CustomFootstepSound);
+   INIT_ASSET(CustomImpactSound);
    mFriction = 0.0;
 
    mDirectSoundOcclusion = 1.f;
@@ -476,7 +477,7 @@ void Material::initPersistFields()
       "- 16: PlayerData::impactWaterHard\n"
       "- 17: PlayerData::exitingWater\n");
 
-   addField("customFootstepSound", TypeSFXTrackName, Offset(mFootstepSoundCustom, Material),
+   INITPERSISTFIELD_SOUNDASSET(CustomFootstepSound, Material,
       "The sound to play when the player walks over the material.  If this is set, it overrides #footstepSoundId.  This field is "
       "useful for directly assigning custom footstep sounds to materials without having to rely on the PlayerData sound assignment.\n\n"
       "@warn Be aware that materials are client-side objects.  This means that the SFXTracks assigned to materials must be client-side, too.");
@@ -488,7 +489,7 @@ void Material::initPersistFields()
       "What FX to play from the PlayerData sound list when the player impacts on the surface with a velocity equal or greater "
       "than PlayerData::groundImpactMinSpeed.\n\n"
       "For a list of IDs, see #impactFXId");
-   addField("customImpactSound", TypeSFXTrackName, Offset(mImpactSoundCustom, Material),
+   INITPERSISTFIELD_SOUNDASSET(CustomImpactSound, Material,
       "The sound to play when the player impacts on the surface with a velocity equal or greater than PlayerData::groundImpactMinSpeed.  "
       "If this is set, it overrides #impactSoundId.  This field is useful for directly assigning custom impact sounds to materials "
       "without having to rely on the PlayerData sound assignment.\n\n"
@@ -515,7 +516,8 @@ bool Material::writeField(StringTableEntry fieldname, const char* value)
       fieldname == StringTable->insert("overlayTex") ||
       fieldname == StringTable->insert("bumpTex") ||
       fieldname == StringTable->insert("envTex") ||
-      fieldname == StringTable->insert("colorMultiply"))
+      fieldname == StringTable->insert("colorMultiply") ||
+      fieldname == StringTable->insert("internalName"))
       return false;
 
    return Parent::writeField(fieldname, value);
@@ -752,6 +754,30 @@ DefineEngineMethod(Material, getAnimFlags, const char*, (U32 id), , "")
    }
 
    return animFlags;
+}
+
+DefineEngineMethod(Material, setAnimFlags, void, (S32 id, const char *flags), (0, ""), "setAnimFlags")
+{
+   object->mAnimFlags[id] = 0;
+
+   if (String(flags).find("$Scroll") != String::NPos)
+      object->mAnimFlags[id] |= Material::Scroll;
+
+   if (String(flags).find("$Rotate") != String::NPos)
+      object->mAnimFlags[id] |= Material::Rotate;
+
+   if (String(flags).find("$Wave") != String::NPos)
+      object->mAnimFlags[id] |= Material::Wave;
+
+   if (String(flags).find("$Scale") != String::NPos)
+      object->mAnimFlags[id] |= Material::Scale;
+
+   if (String(flags).find("$Sequence") != String::NPos)
+      object->mAnimFlags[id] |= Material::Sequence;
+
+   //if we're still unset, see if they tried assigning a number
+   if (object->mAnimFlags[id] == 0)
+      object->mAnimFlags[id] = dAtoi(flags);
 }
 
 DefineEngineMethod(Material, getFilename, const char*, (), , "Get filename of material")

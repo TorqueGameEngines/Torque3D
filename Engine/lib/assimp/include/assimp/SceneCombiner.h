@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -43,22 +43,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /** @file Declares a helper class, "SceneCombiner" providing various
  *  utilities to merge scenes.
  */
-#pragma once
 #ifndef AI_SCENE_COMBINER_H_INC
 #define AI_SCENE_COMBINER_H_INC
-
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
 
 #include <assimp/ai_assert.h>
 #include <assimp/types.h>
 #include <assimp/Defines.h>
-
 #include <stddef.h>
 #include <set>
 #include <list>
 #include <stdint.h>
+
 #include <vector>
 
 struct aiScene;
@@ -73,7 +68,6 @@ struct aiMesh;
 struct aiAnimMesh;
 struct aiAnimation;
 struct aiNodeAnim;
-struct aiMeshMorphAnim;
 
 namespace Assimp    {
 
@@ -378,7 +372,6 @@ public:
     static void Copy  (aiBone** dest, const aiBone* src);
     static void Copy  (aiLight** dest, const aiLight* src);
     static void Copy  (aiNodeAnim** dest, const aiNodeAnim* src);
-    static void Copy  (aiMeshMorphAnim** dest, const aiMeshMorphAnim* src);
     static void Copy  (aiMetadata** dest, const aiMetadata* src);
 
     // recursive, of course

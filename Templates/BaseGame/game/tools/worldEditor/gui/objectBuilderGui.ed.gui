@@ -973,7 +973,7 @@ function ObjectBuilderGui::processNewObject(%this, %obj)
    if( %this.objectGroup !$= "" )
       %this.objectGroup.add( %obj );
    else
-      EWCreatorWindow.objectGroup.add( %obj );
+      ObjectCreator.objectGroup.add( %obj );
       
    // If we were given a callback to call after the
    // object has been created, do so now.  Also clear
@@ -1148,9 +1148,9 @@ function ObjectBuilderGui::buildBasicClouds(%this)
 
 function ObjectBuilderGui::checkExists( %this, %classname )
 {
-   for ( %i = 0; %i < EWCreatorWindow.objectGroup.getCount(); %i++ )
+   for ( %i = 0; %i < ObjectCreator.objectGroup.getCount(); %i++ )
    {                                                   
-      %obj = EWCreatorWindow.objectGroup.getObject( %i );
+      %obj = ObjectCreator.objectGroup.getObject( %i );
       if ( %obj.getClassName() $= %classname ) 
          return true;
    } 
@@ -1425,7 +1425,7 @@ function ObjectBuilderGui::buildPlayerDropPoint(%this)
    %this.addField("spawnClass",     "TypeString",    "Spawn Class", "Player");
    %this.addField("spawnDatablock", "TypeDataBlock", "Spawn Data", "PlayerData DefaultPlayerData");
 
-   if( EWCreatorWindow.objectGroup.getID() == getScene(0).getID() )
+   if( ObjectCreator.objectGroup.getID() == getScene(0).getID() )
    {
       if( !isObject("PlayerDropPoints") )
          getScene(0).add( new SimGroup("PlayerDropPoints") );
@@ -1445,7 +1445,7 @@ function ObjectBuilderGui::buildObserverDropPoint(%this)
    %this.addField("spawnClass",     "TypeString",    "Spawn Class", "Camera");
    %this.addField("spawnDatablock", "TypeDataBlock", "Spawn Data", "CameraData Observer");
 
-   if( EWCreatorWindow.objectGroup.getID() == getScene(0).getID() )
+   if( ObjectCreator.objectGroup.getID() == getScene(0).getID() )
    {
       if( !isObject("ObserverDropPoints") )
          getScene(0).add( new SimGroup("ObserverDropPoints") );
@@ -1508,7 +1508,7 @@ function PhysicsEntityData::create(%data)
 {
    %obj = new PhysicsEntity() {
       dataBlock = %data;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1517,7 +1517,7 @@ function StaticShapeData::create(%data)
 {
    %obj = new StaticShape() {
       dataBlock = %data;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1529,13 +1529,13 @@ function MissionMarkerData::create(%block)
       case "WayPointMarker":
          %obj = new WayPoint() {
             dataBlock = %block;
-            parentGroup = EWCreatorWindow.objectGroup;
+            parentGroup = ObjectCreator.objectGroup;
          };
          return(%obj);
       case "SpawnSphereMarker":
          %obj = new SpawnSphere() {
             datablock = %block;
-            parentGroup = EWCreatorWindow.objectGroup;
+            parentGroup = ObjectCreator.objectGroup;
          };
          return(%obj);
    }
@@ -1548,7 +1548,7 @@ function ItemData::create(%data)
    %obj = new Item()
    {
       dataBlock = %data;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
       static = true;
       rotate = true;
    };
@@ -1561,7 +1561,7 @@ function TurretShapeData::create(%block)
       dataBlock = %block;
       static = true;
       respawn = true;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1572,7 +1572,7 @@ function AITurretShapeData::create(%block)
       dataBlock = %block;
       static = true;
       respawn = true;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1581,7 +1581,7 @@ function WheeledVehicleData::create(%block)
 {
    %obj = new WheeledVehicle() {
       dataBlock = %block;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1591,7 +1591,7 @@ function FlyingVehicleData::create(%block)
    %obj = new FlyingVehicle()
    {
       dataBlock = %block;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return(%obj);
 }
@@ -1601,7 +1601,7 @@ function HoverVehicleData::create(%block)
    %obj = new HoverVehicle()
    {
       dataBlock = %block;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return(%obj);
 }
@@ -1610,7 +1610,7 @@ function RigidShapeData::create(%data)
 {
    %obj = new RigidShape() {
       dataBlock = %data;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1620,7 +1620,7 @@ function PhysicsShapeData::create( %datablock )
    %obj = new PhysicsShape()
    {
 		dataBlock = %datablock;
-		parentGroup = EWCreatorWindow.objectGroup;
+		parentGroup = ObjectCreator.objectGroup;
 		
       invulnerable = false;
       damageRadius = 0;
@@ -1637,7 +1637,7 @@ function ProximityMineData::create( %datablock )
    %obj = new ProximityMine()
    {
       dataBlock = %dataBlock;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
       static = true;    // mines created by the editor are static, and armed immediately
    };
 
@@ -1660,7 +1660,7 @@ function ParticleEmitterData::create( %datablock )
    %obj = new ParticleEmitter()
    {
       dataBlock = %datablock;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1670,7 +1670,7 @@ function PrecipitationData::create(%datablock)
    %obj = new Precipitation()
    {
       dataBlock = %datablock;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }
@@ -1680,7 +1680,7 @@ function TriggerData::create(%datablock)
    %obj = new Trigger()
    {
       dataBlock = %datablock;
-      parentGroup = EWCreatorWindow.objectGroup;
+      parentGroup = ObjectCreator.objectGroup;
       polyhedron = "-0.5 0.5 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.0 0.0 1.0";
    };
    return %obj;

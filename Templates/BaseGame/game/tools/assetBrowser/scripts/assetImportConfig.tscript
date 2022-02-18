@@ -3,12 +3,6 @@ function ImportAssetConfigList::onSelect( %this, %id, %text )
    //Apply our settings to the assets
    echo("Changed our import config!");
    
-   if(ImportActivityLog.count() != 0)
-      ImportActivityLog.add("");
-      
-   ImportActivityLog.add("Asset Import Configs set to " @ %text);
-   ImportActivityLog.add("");
-   
    ImportAssetWindow.activeImportConfigIndex = %id;
    //ImportAssetWindow.activeImportConfig = ImportAssetWindow.importConfigsList.getKey(%id);
    
@@ -35,6 +29,7 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("General/WarningsAsErrors", "Warnings As Errors", "bool", "", "0", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/PreventImportWithErrors", "Prevent Import With Errors", "bool", "", "1", "", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("General/AutomaticallyPromptMissingFiles", "Automatically Prompt Missing Files", "bool", "", "0", "", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("General/AddDirectoryPrefixToAssetName", "Adds the name of the folder to importing asset name", "bool", "", "0", "", "");
    
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/ImportMesh", "Import Mesh", "bool", "", "1", "", "ToggleImportMesh");
       ImportAssetConfigSettingsList.addNewConfigSetting("Meshes/AlwaysAddShapeSuffix", "Always Add Shape Suffix", "bool", "", "0", "");
@@ -71,7 +66,7 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/ImportMaterials", "Import Materials", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AlwaysAddMaterialSuffix", "Always Add Material Suffix", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/AddedMaterialSuffix", "Added Material Suffix", "string", "", "_mat", "");
-      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/CreateComposites", "Create Composites", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Materials/CreateORMConfig", "Create ORM Map", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseDiffuseSuffixOnOriginImage", "Use Diffuse Suffix for Origin Image", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/UseExistingMaterials", "Use Existing Materials", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Materials/IgnoreMaterials", "Ignore Materials", "command", "", "", "");
@@ -114,9 +109,12 @@ function setupImportConfigSettingsList()
       ImportAssetConfigSettingsList.addNewConfigSetting("Images/GenerateMaterialOnImport", "Generate Material On Import", "bool", "", "1", "");
 
       //Sounds
+      ImportAssetConfigSettingsList.addNewConfigSetting("Images/ImportSounds", "Import Sounds", "bool", "", "1", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/VolumeAdjust", "Volume Adjustment", "float", "", "1.0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/PitchAdjust", "Pitch Adjustment", "float", "", "1.0", "");
       ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/Compressed", "Is Compressed", "bool", "", "0", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/AlwaysAddSoundSuffix", "Always Add Sound Suffix", "bool", "", "1", "");
+      ImportAssetConfigSettingsList.addNewConfigSetting("Sounds/AddedSoundSuffix", "Added Sound Suffix", "string", "", "_sound", "");
    }
 }
 
@@ -188,7 +186,7 @@ function ImportAssetOptionsWindow::editImportSettings(%this, %assetItem)
    else if(%assetType $= "MaterialAsset")
    {
       ImportOptionsList.startGroup("Material");
-      ImportOptionsList.addField("CreateComposites", "Create Composite Textures", "bool", "", "1", "", %assetConfigObj);
+      ImportOptionsList.addField("CreateORMConfig", "Create ORM Map", "bool", "", "1", "", %assetConfigObj);
       ImportOptionsList.endGroup();
    }
    else if(%assetType $= "ImageAsset")
@@ -233,12 +231,6 @@ function ImportAssetOptionsWindow::saveAssetOptions(%this)
 {
    %success = AssetImportSettings.write();
    
-   if(ImportActivityLog.count() != 0)
-      ImportActivityLog.add("");
-      
-   ImportActivityLog.add("Asset Import Configs saved, refreshing Import session");
-   ImportActivityLog.add("");
-   
    ImportAssetWindow.refresh();
    ImportAssetOptionsWindow.setVisible(0);   
 }
@@ -272,7 +264,7 @@ function ImportAssetConfigEditorWindow::populateConfigList(%this, %configName)
    %this.populateConfigListByGroup("Animations");
    %this.populateConfigListByGroup("Images");
    %this.populateConfigListByGroup("Collision");
-   %this.populateConfigListByGroup("Sound");
+   %this.populateConfigListByGroup("Sounds");
    
    ImportOptionsConfigList.update();
 }
@@ -373,6 +365,8 @@ function ImportAssetConfigEditorWindow::addNewConfig(%this)
    AssetImportSettings.setValue("Sounds/VolumeAdjust", "1.0");
    AssetImportSettings.setValue("Sounds/PitchAdjust", "1.0");
    AssetImportSettings.setValue("Sounds/Compressed", "0");
+   AssetImportSettings.setValue("Sounds/AlwaysAddSoundSuffix", "1");
+   AssetImportSettings.setValue("Sounds/AddedSoundSuffix", "_sound");
    
    AssetImportSettings.endGroup();
    

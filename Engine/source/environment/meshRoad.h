@@ -622,13 +622,13 @@ protected:
    GFXPrimitiveBufferHandle mPB[SurfaceCount];      
 
    DECLARE_MATERIALASSET(MeshRoad, TopMaterial);
-   DECLARE_MATERIALASSET_NET_SETGET(MeshRoad, TopMaterial, MeshRoadMask);
+   DECLARE_ASSET_NET_SETGET(MeshRoad, TopMaterial, MeshRoadMask);
 
    DECLARE_MATERIALASSET(MeshRoad, BottomMaterial);
-   DECLARE_MATERIALASSET_NET_SETGET(MeshRoad, BottomMaterial, MeshRoadMask);
+   DECLARE_ASSET_NET_SETGET(MeshRoad, BottomMaterial, MeshRoadMask);
 
    DECLARE_MATERIALASSET(MeshRoad, SideMaterial);
-   DECLARE_MATERIALASSET_NET_SETGET(MeshRoad, SideMaterial, MeshRoadMask);
+   DECLARE_ASSET_NET_SETGET(MeshRoad, SideMaterial, MeshRoadMask);
 
    //String mMaterialName[SurfaceCount];   
    SimObjectPtr<Material> mMaterial[SurfaceCount];

@@ -97,9 +97,9 @@ GuiMeshRoadEditorCtrl::GuiMeshRoadEditorCtrl()
     mHoverNodeColor( 255,255,255,255 ),
 	 mHasCopied( false )
 {
-   INIT_MATERIALASSET(TopMaterial);
-   INIT_MATERIALASSET(BottomMaterial);
-   INIT_MATERIALASSET(SideMaterial);
+   INIT_ASSET(TopMaterial);
+   INIT_ASSET(BottomMaterial);
+   INIT_ASSET(SideMaterial);
 
    mTopMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultTopMaterialAsset");
    mBottomMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultBottomMaterialAsset");

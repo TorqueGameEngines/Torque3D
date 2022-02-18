@@ -46,7 +46,7 @@ class HoverVehicleData : public VehicleData
       FloatSound,
       MaxSounds
    };
-   SFXProfile* sound[MaxSounds];
+   DECLARE_SOUNDASSET_ARRAY(HoverVehicleData, HoverSounds, Sounds::MaxSounds);
 
    enum Jets {
       // These enums index into a static name list.

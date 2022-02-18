@@ -80,6 +80,28 @@ static U32 sTriggerMask = ItemObjectType     |
 
 IMPLEMENT_CONOBJECT(VehicleData);
 
+typedef VehicleData::Body::Sounds bodySounds;
+DefineEnumType(bodySounds);
+
+ImplementEnumType(bodySounds, "enum types.\n"
+   "@ingroup VehicleData\n\n")
+   { VehicleData::Body::SoftImpactSound,  "SoftImpactSound", "..." },
+   { VehicleData::Body::HardImpactSound,  "HardImpactSound", "..." },
+EndImplementEnumType;
+
+
+typedef VehicleData::Sounds vehSoundsEnum;
+DefineEnumType(vehSoundsEnum);
+
+ImplementEnumType(vehSoundsEnum, "enum types.\n"
+   "@ingroup VehicleData\n\n")
+   { VehicleData::ExitWater,     "ExitWater", "..." },
+   { VehicleData::ImpactSoft,    "ImpactSoft", "..." },
+   { VehicleData::ImpactMedium,  "ImpactMedium", "..." },
+   { VehicleData::ImpactHard,    "ImpactHard", "..." },
+   { VehicleData::Wake,          "Wake", "..." },
+EndImplementEnumType;
+
 ConsoleDocClass( VehicleData,
    "@brief Base properties shared by all Vehicles (FlyingVehicle, HoverVehicle, "
    "WheeledVehicle).\n\n"
@@ -166,7 +188,9 @@ VehicleData::VehicleData()
    powerSteering = false;
 
    for (S32 i = 0; i < Body::MaxSounds; i++)
-      body.sound[i] = 0;
+   {
+      INIT_ASSET_ARRAY(VehicleBodySounds, i);
+   }
 
    dustEmitter = NULL;
    dustID = 0;
@@ -189,7 +213,8 @@ VehicleData::VehicleData()
    medSplashSoundVel = 2.0;
    hardSplashSoundVel = 3.0;
 
-   dMemset(waterSound, 0, sizeof(waterSound));
+   for (S32 i = 0; i < Sounds::MaxSounds; i++)
+      INIT_ASSET_ARRAY(VehicleWaterSounds, i);
 
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;
@@ -215,8 +240,20 @@ bool VehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
-         if (body.sound[i])
-            Sim::findObject(SimObjectId((uintptr_t)body.sound[i]),body.sound[i]);
+      {
+         if (getVehicleBodySounds(i) != StringTable->EmptyString() )
+         {
+            _setVehicleBodySounds(getVehicleBodySounds(i), i);
+         }
+      }
+
+      for (S32 j = 0; j < Sounds::MaxSounds; j++)
+      {
+         if (getVehicleWaterSounds(j) != StringTable->EmptyString()) 
+         {
+            _setVehicleWaterSounds(getVehicleWaterSounds(j), j);
+         }
+      }
    }
 
    if( !dustEmitter && dustID != 0 )
@@ -264,10 +301,9 @@ void VehicleData::packData(BitStream* stream)
    stream->write(body.restitution);
    stream->write(body.friction);
    for (i = 0; i < Body::MaxSounds; i++)
-      if (stream->writeFlag(body.sound[i]))
-         stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)body.sound[i]):
-                                body.sound[i]->getId(),DataBlockObjectIdFirst,
-                                DataBlockObjectIdLast);
+   {
+      PACKDATA_ASSET_ARRAY(VehicleBodySounds, i);
+   }
 
    stream->write(minImpactSpeed);
    stream->write(softImpactSpeed);
@@ -308,9 +344,10 @@ void VehicleData::packData(BitStream* stream)
    stream->write(enablePhysicsRep);
 
    // write the water sound profiles
-   for(i = 0; i < MaxSounds; i++)
-      if(stream->writeFlag(waterSound[i]))
-         stream->writeRangedU32(waterSound[i]->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast);
+   for (i = 0; i < MaxSounds; i++)
+   {
+      PACKDATA_ASSET_ARRAY(VehicleWaterSounds, i);
+   }
 
    if (stream->writeFlag( dustEmitter ))
    {
@@ -359,11 +396,9 @@ void VehicleData::unpackData(BitStream* stream)
    stream->read(&body.restitution);
    stream->read(&body.friction);
    S32 i;
-   for (i = 0; i < Body::MaxSounds; i++) {
-      body.sound[i] = NULL;
-      if (stream->readFlag())
-         body.sound[i] = (SFXProfile*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
-                                                              DataBlockObjectIdLast);
+   for (i = 0; i < Body::MaxSounds; i++)
+   {
+      UNPACKDATA_ASSET_ARRAY(VehicleBodySounds, i);
    }
 
    stream->read(&minImpactSpeed);
@@ -405,12 +440,10 @@ void VehicleData::unpackData(BitStream* stream)
    stream->read(&enablePhysicsRep);
 
    // write the water sound profiles
-   for(i = 0; i < MaxSounds; i++)
-      if(stream->readFlag())
-      {
-         U32 id = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
-         waterSound[i] = dynamic_cast<SFXProfile*>( Sim::findObject(id) );
-      }
+   for (i = 0; i < Sounds::MaxSounds; i++)
+   {
+      UNPACKDATA_ASSET_ARRAY(VehicleWaterSounds, i);
+   }
 
    if( stream->readFlag() )
    {
@@ -491,15 +524,8 @@ void VehicleData::initPersistFields()
    addField( "bodyFriction", TypeF32, Offset(body.friction, VehicleData),
       "Collision friction coefficient.\nHow well this object will slide against "
       "objects it collides with." );
-   addField( "softImpactSound", TYPEID< SFXProfile >(), Offset(body.sound[Body::SoftImpactSound], VehicleData),
-      "@brief Sound to play on a 'soft' impact.\n\n"
-      "This sound is played if the impact speed is < hardImpactSpeed and >= "
-      "softImpactSpeed.\n\n"
-      "@see softImpactSpeed" );
-   addField( "hardImpactSound", TYPEID< SFXProfile >(), Offset(body.sound[Body::HardImpactSound], VehicleData),
-      "@brief Sound to play on a 'hard' impact.\n\n"
-      "This sound is played if the impact speed >= hardImpactSpeed.\n\n"
-      "@see hardImpactSpeed" );
+
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(VehicleBodySounds, bodySounds, Body::Sounds::MaxSounds, VehicleData, "Sounds for vehicle body impacts.");
 
    addField( "minImpactSpeed", TypeF32, Offset(minImpactSpeed, VehicleData),
       "Minimum collision speed for the onImpact callback to be invoked." );
@@ -596,18 +622,8 @@ void VehicleData::initPersistFields()
    addField( "hardSplashSoundVelocity", TypeF32, Offset(hardSplashSoundVel, VehicleData),
       "Minimum velocity when entering the water for the imapactWaterHard sound "
       "to play.\n\n@see impactWaterHard" );
-   addField( "exitingWater", TYPEID< SFXProfile >(), Offset(waterSound[ExitWater], VehicleData),
-      "Sound to play when exiting the water." );
-   addField( "impactWaterEasy", TYPEID< SFXProfile >(), Offset(waterSound[ImpactSoft], VehicleData),
-      "Sound to play when entering the water with speed >= softSplashSoundVelocity "
-      "and < mediumSplashSoundVelocity." );
-   addField( "impactWaterMedium", TYPEID< SFXProfile >(), Offset(waterSound[ImpactMedium], VehicleData),
-      "Sound to play when entering the water with speed >= mediumSplashSoundVelocity "
-      "and < hardSplashSoundVelocity." );
-   addField( "impactWaterHard", TYPEID< SFXProfile >(), Offset(waterSound[ImpactHard], VehicleData),
-      "Sound to play when entering the water with speed >= hardSplashSoundVelocity." );
-   addField( "waterWakeSound", TYPEID< SFXProfile >(), Offset(waterSound[Wake], VehicleData),
-      "Looping sound to play while moving through the water." );
+
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(WaterSounds, vehSoundsEnum, VehicleData::Sounds::MaxSounds, VehicleData, "Sounds for interacting with water.");
 
    addField( "collDamageThresholdVel", TypeF32, Offset(collDamageThresholdVel, VehicleData),
       "Minimum collision velocity to cause damage to this vehicle.\nCurrently unused." );
@@ -876,8 +892,8 @@ bool Vehicle::onNewDataBlock(GameBaseData* dptr,bool reload)
       // costs and makes the system easier to understand.
       SFX_DELETE( mWakeSound );
 
-      if ( mDataBlock->waterSound[VehicleData::Wake] )
-         mWakeSound = SFX->createSource( mDataBlock->waterSound[VehicleData::Wake], &getTransform() );
+      if ( mDataBlock->getVehicleWaterSounds(VehicleData::Wake) != NULL )
+         mWakeSound = SFX->createSource( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::Wake), &getTransform() );
    }
 
    return true;
@@ -1140,27 +1156,27 @@ void Vehicle::updatePos(F32 dt)
             if (collSpeed >= mDataBlock->softImpactSpeed)
                impactSound = VehicleData::Body::SoftImpactSound;
 
-         if (impactSound != -1 && mDataBlock->body.sound[impactSound] != NULL)
-            SFX->playOnce( mDataBlock->body.sound[impactSound], &getTransform() );
+         if (impactSound != -1 && mDataBlock->getVehicleBodySoundsProfile(impactSound) != NULL)
+            SFX->playOnce( mDataBlock->getVehicleBodySoundsProfile(impactSound), &getTransform() );
       }
 
       // Water volume sounds
       F32 vSpeed = getVelocity().len();
       if (!inLiquid && mWaterCoverage >= 0.8f) {
          if (vSpeed >= mDataBlock->hardSplashSoundVel)
-            SFX->playOnce( mDataBlock->waterSound[VehicleData::ImpactHard], &getTransform() );
+            SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ImpactHard), &getTransform() );
          else
             if (vSpeed >= mDataBlock->medSplashSoundVel)
-               SFX->playOnce( mDataBlock->waterSound[VehicleData::ImpactMedium], &getTransform() );
+               SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ImpactMedium), &getTransform() );
          else
             if (vSpeed >= mDataBlock->softSplashSoundVel)
-               SFX->playOnce( mDataBlock->waterSound[VehicleData::ImpactSoft], &getTransform() );
+               SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ImpactSoft), &getTransform() );
          inLiquid = true;
       }
       else
          if(inLiquid && mWaterCoverage < 0.8f) {
             if (vSpeed >= mDataBlock->exitSplashSoundVel)
-               SFX->playOnce( mDataBlock->waterSound[VehicleData::ExitWater], &getTransform() );
+               SFX->playOnce( mDataBlock->getVehicleWaterSoundsProfile(VehicleData::ExitWater), &getTransform() );
          inLiquid = false;
       }
    }

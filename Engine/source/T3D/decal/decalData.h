@@ -78,7 +78,7 @@ class DecalData : public SimDataBlock
       F32 fadeEndPixelSize;
 
       DECLARE_MATERIALASSET(DecalData, Material);
-      DECLARE_MATERIALASSET_SETGET(DecalData, Material);
+      DECLARE_ASSET_SETGET(DecalData, Material);
       
       /// Material instance for decal.
       BaseMatInstance *matInst;

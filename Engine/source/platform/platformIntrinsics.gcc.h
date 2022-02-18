@@ -79,7 +79,7 @@ inline bool dCompareAndSwap( volatile U64& ref, U64 oldVal, U64 newVal )
 inline U32 dAtomicRead( volatile U32 &ref )
 {
    #if !defined(TORQUE_OS_MAC)
-      return __sync_fetch_and_add( ( volatile long* ) &ref, 0 );
+      return __sync_fetch_and_add( &ref, 0 );
    #else
       return OSAtomicAdd32( 0, (int32_t* ) &ref);
    #endif

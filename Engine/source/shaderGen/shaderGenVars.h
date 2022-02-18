@@ -91,16 +91,18 @@ struct ShaderGenVars
    const static String glowMul;
 
    //Reflection Probes
-   const static String probePosition;
-   const static String probeRefPos;
-   const static String refScale;
+   const static String probePositionArray;
+   const static String probeRefPosArray;
+   const static String refScaleArray;
    const static String worldToObjArray;
-   const static String probeConfigData;
+   const static String probeConfigDataArray;
    const static String specularCubemapAR;
    const static String irradianceCubemapAR;
    const static String probeCount;
 
    const static String BRDFTextureMap;
+
+   const static String maxProbeDrawDistance;
 
    //Skylight
    const static String skylightCubemapIdx;

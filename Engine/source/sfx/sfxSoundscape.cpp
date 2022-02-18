@@ -150,7 +150,7 @@ void SFXSoundscapeManager::update()
          
          if( !soundscape->_isOverridden() )
          {
-            SFXTrack* track = ambience->getSoundTrack();
+            SFXTrack* track = ambience->getSoundTrackProfile();
             if( !soundscape->mSource || soundscape->mSource->getTrack() != track )
             {
                if( soundscape->mSource != NULL )

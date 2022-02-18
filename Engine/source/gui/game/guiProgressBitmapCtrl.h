@@ -48,7 +48,7 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
       F32 mProgress;
 
       DECLARE_IMAGEASSET(GuiProgressBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-      DECLARE_IMAGEASSET_SETGET(GuiProgressBitmapCtrl, Bitmap);
+      DECLARE_ASSET_SETGET(GuiProgressBitmapCtrl, Bitmap);
 
       bool mUseVariable;
       bool mTile;

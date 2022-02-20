@@ -188,8 +188,8 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
 #if CAPTURING == 1
-    return float4(lerp(surface.baseColor.rgb,(irradiance + specular) * horizon,surface.metalness/2),0);
+    return float4(lerp(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
 #else
-   return float4((irradiance + specular) * horizon, 0);//alpha writes disabled
+   return result = float4((irradiance + specular* horizon) , 0);//alpha writes disabled   
 #endif
 }

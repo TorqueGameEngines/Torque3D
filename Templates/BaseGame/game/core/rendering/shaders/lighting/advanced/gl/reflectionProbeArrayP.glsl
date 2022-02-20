@@ -200,8 +200,8 @@ void main()
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
 #if CAPTURING == 1
-   OUT_col = vec4(mix(surface.baseColor.rgb,(irradiance + specular) * horizon,surface.metalness/2),0);
+   OUT_col = vec4(mix(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
 #else
-   OUT_col = vec4((irradiance + specular) * horizon, 0);//alpha writes disabled
+   OUT_col = vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
 #endif
 }

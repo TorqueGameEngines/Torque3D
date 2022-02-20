@@ -313,45 +313,45 @@ struct PolyhedronImpl : public Base
          // edges with CCW instead of CW order for face[0] and that it b) lets plane
          // normals face outwards rather than inwards.
 
-         mPointList.setSize(8);
-         mPointList[0] = origin;
-         mPointList[1] = origin + vecs[0];
-         mPointList[2] = origin + vecs[1];
-         mPointList[3] = origin + vecs[2];
-         mPointList[4] = origin + vecs[0] + vecs[1];
-         mPointList[5] = origin + vecs[0] + vecs[2];
-         mPointList[6] = origin + vecs[1] + vecs[2];
-         mPointList[7] = origin + vecs[0] + vecs[1] + vecs[2];
+         this->mPointList.setSize(8);
+         this->mPointList[0] = origin;
+         this->mPointList[1] = origin + vecs[0];
+         this->mPointList[2] = origin + vecs[1];
+         this->mPointList[3] = origin + vecs[2];
+         this->mPointList[4] = origin + vecs[0] + vecs[1];
+         this->mPointList[5] = origin + vecs[0] + vecs[2];
+         this->mPointList[6] = origin + vecs[1] + vecs[2];
+         this->mPointList[7] = origin + vecs[0] + vecs[1] + vecs[2];
 
          Point3F normal;
-         mPlaneList.setSize(6);
+         this->mPlaneList.setSize(6);
 
          mCross(vecs[2], vecs[0], &normal);
-         mPlaneList[0].set(origin, normal);
+         this->mPlaneList[0].set(origin, normal);
          mCross(vecs[0], vecs[1], &normal);
-         mPlaneList[1].set(origin, normal);
+         this->mPlaneList[1].set(origin, normal);
          mCross(vecs[1], vecs[2], &normal);
-         mPlaneList[2].set(origin, normal);
+         this->mPlaneList[2].set(origin, normal);
          mCross(vecs[1], vecs[0], &normal);
-         mPlaneList[3].set(mPointList[7], normal);
+         this->mPlaneList[3].set(this->mPointList[7], normal);
          mCross(vecs[2], vecs[1], &normal);
-         mPlaneList[4].set(mPointList[7], normal);
+         this->mPlaneList[4].set(this->mPointList[7], normal);
          mCross(vecs[0], vecs[2], &normal);
-         mPlaneList[5].set(mPointList[7], normal);
+         this->mPlaneList[5].set(this->mPointList[7], normal);
 
-         mEdgeList.setSize(12);
-         mEdgeList[0].vertex[0] = 0;  mEdgeList[0].vertex[1] = 1;  mEdgeList[0].face[0] = 0;  mEdgeList[0].face[1] = 1;
-         mEdgeList[1].vertex[0] = 1;  mEdgeList[1].vertex[1] = 5;  mEdgeList[1].face[0] = 0;  mEdgeList[1].face[1] = 4;
-         mEdgeList[2].vertex[0] = 5;  mEdgeList[2].vertex[1] = 3;  mEdgeList[2].face[0] = 0;  mEdgeList[2].face[1] = 3;
-         mEdgeList[3].vertex[0] = 3;  mEdgeList[3].vertex[1] = 0;  mEdgeList[3].face[0] = 0;  mEdgeList[3].face[1] = 2;
-         mEdgeList[4].vertex[0] = 3;  mEdgeList[4].vertex[1] = 6;  mEdgeList[4].face[0] = 3;  mEdgeList[4].face[1] = 2;
-         mEdgeList[5].vertex[0] = 6;  mEdgeList[5].vertex[1] = 2;  mEdgeList[5].face[0] = 2;  mEdgeList[5].face[1] = 5;
-         mEdgeList[6].vertex[0] = 2;  mEdgeList[6].vertex[1] = 0;  mEdgeList[6].face[0] = 2;  mEdgeList[6].face[1] = 1;
-         mEdgeList[7].vertex[0] = 1;  mEdgeList[7].vertex[1] = 4;  mEdgeList[7].face[0] = 4;  mEdgeList[7].face[1] = 1;
-         mEdgeList[8].vertex[0] = 4;  mEdgeList[8].vertex[1] = 2;  mEdgeList[8].face[0] = 1;  mEdgeList[8].face[1] = 5;
-         mEdgeList[9].vertex[0] = 4;  mEdgeList[9].vertex[1] = 7;  mEdgeList[9].face[0] = 4;  mEdgeList[9].face[1] = 5;
-         mEdgeList[10].vertex[0] = 5; mEdgeList[10].vertex[1] = 7; mEdgeList[10].face[0] = 3; mEdgeList[10].face[1] = 4;
-         mEdgeList[11].vertex[0] = 7; mEdgeList[11].vertex[1] = 6; mEdgeList[11].face[0] = 3; mEdgeList[11].face[1] = 5;
+         this->mEdgeList.setSize(12);
+         this->mEdgeList[0].vertex[0] = 0;  this->mEdgeList[0].vertex[1] = 1;  this->mEdgeList[0].face[0] = 0;  this->mEdgeList[0].face[1] = 1;
+         this->mEdgeList[1].vertex[0] = 1;  this->mEdgeList[1].vertex[1] = 5;  this->mEdgeList[1].face[0] = 0;  this->mEdgeList[1].face[1] = 4;
+         this->mEdgeList[2].vertex[0] = 5;  this->mEdgeList[2].vertex[1] = 3;  this->mEdgeList[2].face[0] = 0;  this->mEdgeList[2].face[1] = 3;
+         this->mEdgeList[3].vertex[0] = 3;  this->mEdgeList[3].vertex[1] = 0;  this->mEdgeList[3].face[0] = 0;  this->mEdgeList[3].face[1] = 2;
+         this->mEdgeList[4].vertex[0] = 3;  this->mEdgeList[4].vertex[1] = 6;  this->mEdgeList[4].face[0] = 3;  this->mEdgeList[4].face[1] = 2;
+         this->mEdgeList[5].vertex[0] = 6;  this->mEdgeList[5].vertex[1] = 2;  this->mEdgeList[5].face[0] = 2;  this->mEdgeList[5].face[1] = 5;
+         this->mEdgeList[6].vertex[0] = 2;  this->mEdgeList[6].vertex[1] = 0;  this->mEdgeList[6].face[0] = 2;  this->mEdgeList[6].face[1] = 1;
+         this->mEdgeList[7].vertex[0] = 1;  this->mEdgeList[7].vertex[1] = 4;  this->mEdgeList[7].face[0] = 4;  this->mEdgeList[7].face[1] = 1;
+         this->mEdgeList[8].vertex[0] = 4;  this->mEdgeList[8].vertex[1] = 2;  this->mEdgeList[8].face[0] = 1;  this->mEdgeList[8].face[1] = 5;
+         this->mEdgeList[9].vertex[0] = 4;  this->mEdgeList[9].vertex[1] = 7;  this->mEdgeList[9].face[0] = 4;  this->mEdgeList[9].face[1] = 5;
+         this->mEdgeList[10].vertex[0] = 5; this->mEdgeList[10].vertex[1] = 7; this->mEdgeList[10].face[0] = 3; this->mEdgeList[10].face[1] = 4;
+         this->mEdgeList[11].vertex[0] = 7; this->mEdgeList[11].vertex[1] = 6; this->mEdgeList[11].face[0] = 3; this->mEdgeList[11].face[1] = 5;
       }
 
       /// Return the AABB around the polyhedron.

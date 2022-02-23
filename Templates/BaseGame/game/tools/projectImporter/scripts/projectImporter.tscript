@@ -1743,7 +1743,9 @@ function beginGUIImport()
                DirectoryHandler::createFolder(0, filePath(%destinationPath));  
             }
 
-            if(!pathCopy(%file, %destinationPath, false))
+            //Check if we need to even copy in the first place. If we do, ensure
+            //the copy actually worked
+            if((makeRelativePath(%file) !$= %destinationPath) && !pathCopy(%file, %destinationPath, false))
             {
                projectImporterLog("ProjectImporter::beginGUIImport() - failed to copy GUI: " @ %file @
                   " to destination: " @ %destinationPath);
@@ -1779,9 +1781,9 @@ function processGUIntoAsset(%guiName, %file)
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    
    %scriptFile = "";
-   if(isImportingFile(%filePath @ "/" @ %fileName @ ".tscript"))
+   if(isImportingFile(makeFullPath(%filePath @ "/" @ %fileName @ "." @ $TorqueScriptFileExtension)))
    {
-      %scriptFile = %fileName @ ".tscript";
+      %scriptFile = %fileName;
    }
    
    %asset = new GUIAsset()

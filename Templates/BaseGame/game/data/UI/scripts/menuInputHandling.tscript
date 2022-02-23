@@ -339,3 +339,172 @@ function onSDLDeviceDisconnected(%sdlIndex)
       GamepadButtonsGui.hidden = true;
    }*/   
 }
+
+//==============================================================================
+// Menu Input processing
+// These functions manage the Menu input processing in general
+// Whenever a MenuInputHandler consumes an input event, it'll process them here
+// This'll let the active menu list be navigated, as well as buttons be processed
+// and ultimately handled by the Input Buttons above
+//==============================================================================
+function MenuInputHandler::onAxisEvent(%this, %device, %action, %value)
+{
+   //this is to force a refresh of the menu
+   if(%value == 1 || %value == -1)
+      $activeMenuButtonContainer.processInputs(%device, %action);
+      
+   if(startsWith(%device, "mouse"))
+      return;   
+   
+   if((%action $= "upov" && %value > 0) || (%action $= "yaxis" && %value == -1))
+   {
+      $activeMenuList.navigateUp();
+   }
+   
+   if((%action $= "dpov" && %value > 0) || (%action $= "yaxis" && %value == 1))
+   {
+      $activeMenuList.navigateDown();
+   }
+   
+   //How we deal with the left and right navigation is dependant on the mode of the
+   //menu list
+   if($activeMenuListMode $= "Settings")
+   {
+      if((%action $= "lpov" && %value > 0) || (%action $= "xaxis" && %value == -1))
+      {
+         echo("Options menu nudged left!");
+         //$activeMenuList.navigateLeft();
+      }
+      
+      if((%action $= "rpov" && %value > 0) || (%action $= "xaxis" && %value == -1))
+      {
+         echo("Options menu nudged right!");
+         //$activeMenuList.navigateRight();
+      }
+   }
+   else
+   {
+      if((%action $= "lpov" && %value > 0) || (%action $= "xaxis" && %value == -1))
+      {
+         $activeMenuList.navigateLeft();
+      }
+      
+      if((%action $= "rpov" && %value > 0) || (%action $= "xaxis" && %value == -1))
+      {
+         $activeMenuList.navigateRight();
+      }
+   } 
+}
+
+function MenuInputHandler::onInputEvent(%this, %device, %action, %state)
+{
+   if(%action $= "upov" || %action $= "dpov" || %action $= "lpov" || %action $= "rpov")
+   {
+      %this.onAxisEvent(%device, %action, %state);
+      return;      
+   }
+   
+   if(%state)
+      $activeMenuButtonContainer.processInputs(%device, %action);
+}
+
+//==============================================================================
+// Menu List processing
+// These functions manage the navigation and activation of the Menu Lists
+//==============================================================================
+
+function MenuList::setAsActiveMenuList(%this, %startPosition, %menuMode)
+{
+   if(%startPosition $= "")
+      %startPosition = "0 0";
+      
+   if(%menuMode $= "")
+      %menuMode = "Menu";
+         
+   $activeMenuList = %this;
+   $activeMenuList.hidden = false; 
+   $activeMenuListPosition = %startPosition;
+   $activeMenuListMode = %menuMode;
+   
+   %this.refresh();
+}
+
+
+function MenuList::activate(%this)
+{
+   //check for a highlighted element
+   if($activeMenuListPosition.y > -1 && $activeMenuListPosition < $activeMenuList.getCount())
+   {
+      %btn = $activeMenuList.getObject($activeMenuListPosition.y);
+      %btn.performClick();
+   }
+}
+
+function MenuList::refresh(%this)
+{
+   %selectedObject = 0;
+   for(%i=0; %i < $activeMenuList.getCount(); %i++)
+   {
+      %btn = $activeMenuList.getObject(%i);
+      
+      %isSelected = %i == $activeMenuListPosition.y;
+      
+      %btn.setHighlighted(%isSelected);
+      
+      if(%isSelected)
+         %selectedObject = %i;
+   }
+   
+   if($activeMenuList.isMethod("onNavigate"))
+      $activeMenuList.onNavigate($activeMenuListPosition.y);
+   
+   %parent = $activeMenuList.getParent();
+   if(%parent.getClassName() $= "GuiScrollCtrl")
+   {
+      %parent.scrollToObject(%selectedObject);
+   }
+}
+
+function MenuList::navigateUp(%this)
+{
+   $activeMenuListPosition.y -= 1;
+   if($activeMenuListPosition.y < 0)
+      $activeMenuListPosition.y = 0;
+      
+   %this.refresh();
+}
+
+function MenuList::navigateDown(%this)
+{
+   $activeMenuListPosition.y += 1;
+   if($activeMenuListPosition.y >= $activeMenuList.getCount())
+      $activeMenuListPosition.y = $activeMenuList.getCount()-1;
+      
+   %this.refresh();
+}
+
+function MenuList::navigateLeft()
+{
+   echo("Menu list navigated left!"); 
+   
+   //Atm, we're only handling specific control types, namely options entries, but
+   //this could readily be expanded upon to handle grids like for inventory screens
+   //or the like
+    
+   %btn = $activeMenuList.getObject($activeMenuListPosition.y);
+   if(%btn.getClassName() $= "GuiGameSettingsCtrl" && %btn.isEnabled())
+   {
+      warnf("MenuList::navigateLeft() - actioned the option" @ %btn @ " to the left");
+   }
+}
+
+function MenuList::navigateRight()
+{
+   echo("Menu list navigated right!");  
+   
+   %btn = $activeMenuList.getObject($activeMenuListPosition.y);
+   if(%btn.getClassName() $= "GuiGameSettingsCtrl" && %btn.isEnabled())
+   {
+      warnf("MenuList::navigateLeft() - actioned the option" @ %btn @ " to the left");
+   }
+}

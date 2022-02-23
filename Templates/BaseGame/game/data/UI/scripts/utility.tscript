@@ -10,117 +10,123 @@ function getButtonBitmap(%device, %button)
          %device = "Xbox";
    }
    
-   %path = "";
+   %assetId = "";
    if(%device $= "PS4")
    { 
-      %path = "data/ui/images/inputs/PS4/PS4_";
+      %assetId = "UI:PS4_";
       
       if(%button $= "A" || %button $= "btn_a")
-         %path = %path @ "Cross";
+         %assetId = %assetId @ "Cross";
       else if(%button $= "B" || %button $= "btn_b")
-         %path = %path @ "Circle";
+         %assetId = %assetId @ "Circle";
       else if(%button $= "X" || %button $= "btn_x")
-         %path = %path @ "Square";
+         %assetId = %assetId @ "Square";
       else if(%button $= "Y" || %button $= "btn_y")
-         %path = %path @ "Triangle";
+         %assetId = %assetId @ "Triangle";
       else if(%button $= "LB")
-         %path = %path @ "L1";
+         %assetId = %assetId @ "L1";
       else if(%button $= "LT")
-         %path = %path @ "L2";
+         %assetId = %assetId @ "L2";
       else if(%button $= "RB")
-         %path = %path @ "R1";
+         %assetId = %assetId @ "R1";
       else if(%button $= "RT")
-         %path = %path @ "R2";
+         %assetId = %assetId @ "R2";
       else if(%button $= "thumbrx" || %button $= "thumbry")
-         %path = %path @ "Right_Stick";
+         %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")
-         %path = %path @ "Left_Stick";
+         %assetId = %assetId @ "Left_Stick";
       else if(%button $= "start")
-         %path = %path @ "Options";
+         %assetId = %assetId @ "Options";
       else if(%button $= "back")
-         %path = %path @ "Share";   
+         %assetId = %assetId @ "Share";   
       else if(%button $= "dpadu")
-         %path = %path @ "Dpad_Up";  
+         %assetId = %assetId @ "Dpad_Up";  
       else if(%button $= "dpadd")
-         %path = %path @ "Dpad_Down";  
+         %assetId = %assetId @ "Dpad_Down";  
       else if(%button $= "dpadl")
-         %path = %path @ "Dpad_Left";  
+         %assetId = %assetId @ "Dpad_Left";  
       else if(%button $= "dpadr")
-         %path = %path @ "Dpad_Right";  
+         %assetId = %assetId @ "Dpad_Right";  
+      
+      %assetId = %assetId @ "_image";
    }
    else if(%device $= "Switch")
    {
-      %path = "data/ui/images/inputs/Switch/Switch_";
+      %assetId = "UI:Switch_";
       
       if(%button $= "A" || %button $= "btn_a")
-         %path = %path @ "B";
+         %assetId = %assetId @ "B";
       else if(%button $= "B" || %button $= "btn_b")
-         %path = %path @ "A";
+         %assetId = %assetId @ "A";
       else if(%button $= "X" || %button $= "btn_x")
-         %path = %path @ "Y";
+         %assetId = %assetId @ "Y";
       else if(%button $= "Y" || %button $= "btn_y")
-         %path = %path @ "X";
+         %assetId = %assetId @ "X";
       else if(%button $= "LB")
-         %path = %path @ "LB";
+         %assetId = %assetId @ "LB";
       else if(%button $= "LT")
-         %path = %path @ "LT";
+         %assetId = %assetId @ "LT";
       else if(%button $= "RB")
-         %path = %path @ "RB";
+         %assetId = %assetId @ "RB";
       else if(%button $= "RT")
-         %path = %path @ "RT";
+         %assetId = %assetId @ "RT";
       else if(%button $= "thumbrx" || %button $= "thumbry")
-         %path = %path @ "Right_Stick";
+         %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")
-         %path = %path @ "Left_Stick";
+         %assetId = %assetId @ "Left_Stick";
       else if(%button $= "start")
-         %path = %path @ "Plus";
+         %assetId = %assetId @ "Plus";
       else if(%button $= "back")
-         %path = %path @ "Minus";   
+         %assetId = %assetId @ "Minus";   
       else if(%button $= "dpadu")
-         %path = %path @ "Dpad_Up";  
+         %assetId = %assetId @ "Dpad_Up";  
       else if(%button $= "dpadd")
-         %path = %path @ "Dpad_Down";  
+         %assetId = %assetId @ "Dpad_Down";  
       else if(%button $= "dpadl")
-         %path = %path @ "Dpad_Left";  
+         %assetId = %assetId @ "Dpad_Left";  
       else if(%button $= "dpadr")
-         %path = %path @ "Dpad_Right"; 
+         %assetId = %assetId @ "Dpad_Right"; 
+         
+      %assetId = %assetId @ "_image";
    }
    else if(%device $= "Keyboard" || %device $= "Mouse")
    {
-      %pathBase = "data/ui/images/Inputs/Keyboard & Mouse/Keyboard_Black_";
-      %path = %pathBase @ %button @ ".png";
-      if(!isFile(%path))
-         %path = %pathBase @ "Blank";
+      %assetId = "UI:Keyboard_Black_" @ %button @ "_image";
    }
    else if(%device !$= "")
    {
-      %path = "data/ui/images/inputs/Xbox/Xbox_";
+      %assetId = "UI:Xbox_";
       
       if(%button $= "btn_a")
-         %path = %path @ "B";
+         %assetId = %assetId @ "B";
       else if(%button $= "btn_b")
-         %path = %path @ "A";
+         %assetId = %assetId @ "A";
       else if(%button $= "btn_x")
-         %path = %path @ "Y";
+         %assetId = %assetId @ "Y";
       else if(%button $= "btn_y")
-         %path = %path @ "X";
+         %assetId = %assetId @ "X";
       else if(%button $= "thumbrx" || %button $= "thumbry")
-         %path = %path @ "Right_Stick";
+         %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")
-         %path = %path @ "Left_Stick";
+         %assetId = %assetId @ "Left_Stick";
       else if(%button $= "start")
-         %path = %path @ "Menu";
+         %assetId = %assetId @ "Menu";
       else if(%button $= "back")
-         %path = %path @ "Windows";   
+         %assetId = %assetId @ "Windows";   
       else if(%button $= "dpadu")
-         %path = %path @ "Dpad_Up";  
+         %assetId = %assetId @ "Dpad_Up";  
       else if(%button $= "dpadd")
-         %path = %path @ "Dpad_Down";  
+         %assetId = %assetId @ "Dpad_Down";  
       else if(%button $= "dpadl")
-         %path = %path @ "Dpad_Left";  
+         %assetId = %assetId @ "Dpad_Left";  
       else if(%button $= "dpadr")
-         %path = %path @ "Dpad_Right"; 
+         %assetId = %assetId @ "Dpad_Right"; 
+         
+      %assetId = %assetId @ "_image";
    }
    
-   return %path;
+   if(!AssetDatabase.isDeclaredAsset(%assetId))
+      %assetId = "UI:Keyboard_Black_Blank_image";
+   
+   return %assetId;
 }

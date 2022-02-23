@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="Torque_3D_logo_alt_image"
-    imageFile="@assetFile=Torque-3D-logo_alt.png"
+    imageFile="@assetFile=Torque_3D_logo_alt.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

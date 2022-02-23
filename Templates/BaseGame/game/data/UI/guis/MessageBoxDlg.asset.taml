@@ -1,7 +1,4 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="MessageBoxDlg"
-    scriptFile="@assetFile=messageBoxDlg.gui"
     GUIFile="@assetFile=messageBoxDlg.gui"
-    VersionId="1" />
+    VersionId="1"/>

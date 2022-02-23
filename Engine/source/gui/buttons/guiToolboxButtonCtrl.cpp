@@ -144,7 +144,7 @@ void GuiToolboxButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
       RectI r(offset, getExtent());
       if ( mDepressed  || mStateOn )
          renderStateRect( mLoweredBitmap , r );
-      else if ( mMouseOver )
+      else if ( mHighlighted )
          renderStateRect( mHoverBitmap , r );
    }
 

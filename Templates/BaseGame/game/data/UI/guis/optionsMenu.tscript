@@ -46,45 +46,164 @@
 //headbob
 //FOV
 
+function OptionsMenu::onAdd(%this)
+{
+   if(!isObject(%this.optionsCategories))
+   {
+      %this.optionsCategories = new ArrayObject();
+   }  
+   
+   if(!isObject(%this.unappliedChanges))
+   {
+      %this.unappliedChanges = new ArrayObject();
+   }  
+   
+   addOptionsMenuCategory("Display", "populateDisplaySettingsList();");
+   addOptionsMenuCategory("Graphics", "populateGraphicsSettingsList();");
+   addOptionsMenuCategory("Audio", "populateAudioSettingsList();");
+   addOptionsMenuCategory("Keyboard & Mouse", "populateKeyboardMouseSettingsList();");
+   addOptionsMenuCategory("Gamepad", "populateGamepadSettingsList();");
+}
+
 function OptionsMenuSettingsList::onAdd(%this)
 {
 }
 
+function OptionsMenuSettingsList::getOptionsList(%this, %index)
+{
+     
+}
+
 function OptionsMenu::onWake(%this)
 {
+   OptionsMenuCategoryList.clear(); 
+   
+   for(%i=0; %i < %this.optionsCategories.count(); %i++)
+   {
+      %catName = %this.optionsCategories.getKey(%i);
+      %callback = %this.optionsCategories.getValue(%i);
+      
+      %newCatButton = new GuiButtonCtrl() {
+         text = %catName;
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+         position = "0 180";
+         extent = "248 35";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = "GuiMenuButtonProfile";
+         visible = "1";
+         active = "1";
+         command = %callback;
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
+      
+      OptionsMenuCategoryList.add(%newCatButton);
+   }
+   
+   %this.unappliedChanges.empty();
+   
    MainMenuButtonList.hidden = true;
    
-   %this.pageTabIndex = 0;
-   %tab = %this.getTab();
-   %tab.performClick();
+   OptionsMenuCategoryList.setAsActiveMenuList();
    
    OptionsButtonHolder.setActive();
+   
+   OptionsMenuInputHandler.setFirstResponder();
 }
 
 function OptionsButtonHolder::onWake(%this)
 {
-   %this-->prevTabButton.set("btn_l", "", "Prev Tab", "OptionsMenu.prevTab();", true);
-   %this-->nextTabButton.set("btn_r", "", "Next Tab", "OptionsMenu.nextTab();", true);
    %this-->resetButton.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
    %this-->applyButton.set("btn_start", "Return", "Apply", "OptionsMenu.apply();");
    %this-->backButton.set("btn_b", "Escape", "Back", "OptionsMenu.backOut();");
+   
+   //OptionsMenuCategoryList.getObject(0).performClick();
 }
 
 function OptionsMenu::apply(%this)
 {
-   if(%this.pageTabIndex == 0)
+   //Now we run through our list of unapplied changes and... apply them.
+   %hasKeybindChanges = false;
+   %hasVideoChanges = false;
+   %hasPostFXChanges = false;
+   %hasAudioChanges = false;
+   for(%i=0; %i < %this.unappliedChanges.count(); %i++)
    {
-      %this.applyDisplaySettings();
+      %targetVar = %this.unappliedChanges.getKey(%i);
+      %newValue = %this.unappliedChanges.getValue(%i);
+      
+      //First, lets just check through our action map names, see if any match
+      %wasKeybind = false;
+      for(%am=0; %am < ActionMapGroup.getCount(); %am++)
+      {
+         %actionMap = ActionMapGroup.getObject(%am);
+   
+         if(%actionMap == GlobalActionMap.getId())
+            continue;
+         
+         %actionMapName = %actionMap.humanReadableName $= "" ? %actionMap.getName() : %actionMap.humanReadableName;
+         if(%actionMapName $= %targetVar)
+         {
+            %hasKeybindChanges = true;
+            %wasKeybind = true;
+            break;
+         }
+      }
+      
+      if(!%wasKeybind)
+      {
+         %currentValue = getVariable(%targetVar);
+         if(%currentValue !$= %newValue)
+         {
+            setVariable(%targetVar, %newValue);
+            
+            //now, lets check for special cases that need additional handling
+            //for updates
+            if ( %targetVar $= "$pref::Video::displayDevice" )
+            {
+               MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
+            }
+            else if(startsWith(%targetVar, "$pref::Graphics::"))
+            {
+               //isolate the quality group name, like $pref::Graphics::LightingQuality
+               //we grab LightingQuality
+               %qualityGroupName = getSubStr(%targetVar, 17);
+               if(isObject(%qualityGroupName @ "List"))
+               {
+                  //yep, it's a quality group, so apply it 
+                  (%qualityGroupName @ "List").applySetting(%newValue); 
+               }
+               
+               if(%qualityGroupName $= "TextureQuality")
+               {
+                  reloadTextures();  
+               }
+            }
+            else if(startsWith(%targetVar, "$pref::PostFX::"))
+            {
+               %hasPostFXChanges = true;
+            }
+            else if(startsWith(%targetVar, "$pref::Video::"))
+            {
+               %hasVideoChanges = true;
+            }
+            else if(startsWith(%targetVar, "$pref::SFX::"))
+            {
+               %hasAudioChanges = true;
+            }
+         }
+      }
    }
-   else if(%this.pageTabIndex == 1)
-   {
-      %this.applyGraphicsSettings();
-   }
-   else if(%this.pageTabIndex == 2)
-   {
-      %this.applyAudioSettings();
-   }
-   else if(%this.pageTabIndex == 3 || %this.pageTabIndex == 4)
+   
+   //If we had keybind changes, go ahead and save those out
+   if(%hasKeybindChanges)
    {
       %prefPath = getPrefpath();
       
@@ -106,8 +225,26 @@ function OptionsMenu::apply(%this)
       }
    }
    
+   if(%hasPostFXChanges)
+   {
+      updatePostFXSettings();  
+   }
+   
+   if(%hasVideoChanges)
+   {
+      updateDisplaySettings();
+   }
+   
+   if(%hasAudioChanges)
+   {
+      updateAudioSettings();
+   }
+   
+   //Finally, write our prefs to file
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
+   
+   OptionsMenu.unappliedChanges.empty();
 }
 
 function OptionsMenu::resetToDefaults(%this)
@@ -115,83 +252,12 @@ function OptionsMenu::resetToDefaults(%this)
    MessageBoxOKCancel("", "This will set the graphical settings back to the auto-detected defaults. Do you wish to continue?", "AutodetectGraphics();", "");
 }
 
-function OptionsMenuSettingsList::onChange(%this)
+//
+//
+//
+function populateDisplaySettingsList()
 {
-   %optionName = %this.getRowLabel(%this.getSelectedRow());
-   %tooltipText = %this.getTooltip(%this.getSelectedRow());
-   
-   OptionName.setText(%optionName);
-   OptionDescription.setText(%tooltipText);
-   return;
-   
-   OptionsMenuSettingsList.clearOptions();
-
-   %currentRowText = %this.getRowLabel(%this.getSelectedRow());
-   
-   if(%currentRowText $= "Display")
-   {
-      OptionsMenuList.populateDisplaySettingsList();
-   }
-   else if(%currentRowText $= "Graphics")
-   {
-      OptionsMenuList.populateGraphicsSettingsList();
-   }
-   else if(%currentRowText $= "Audio")
-   {
-      OptionsMenuList.populateAudioSettingsList();
-   }
-   else if(%currentRowText $= "Keyboard + Mouse")
-   {
-      OptionsMenuList.populateKeyboardMouseSettingsList();
-   }
-   else if(%currentRowText $= "Gamepad")
-   {
-      OptionsMenuList.populateGamepadSettingsList();
-   }
-   
-   
-}
-
-function OptionsMenu::prevTab(%this)
-{
-   %this.pageTabIndex--;
-   if(%this.pageTabIndex < 0)
-      %this.pageTabIndex = 4;
-      
-   %tabBtn = %this.getTab();
-   %tabBtn.performClick();
-}
-
-function OptionsMenu::nextTab(%this)
-{
-   %this.pageTabIndex++;
-   if(%this.pageTabIndex > 4)
-      %this.pageTabIndex = 0;
-      
-   %tabBtn = %this.getTab();
-   %tabBtn.performClick();
-}
-
-function OptionsMenu::getTab(%this)
-{
-   if(%this.pageTabIndex == 0)
-      return %this-->DisplayButton;
-   else if(%this.pageTabIndex == 1)
-      return %this-->GraphicsButton;
-   else if(%this.pageTabIndex == 2)
-      return %this-->AudioButton;
-   else if(%this.pageTabIndex == 3)
-      return %this-->KBMButton;
-   else if(%this.pageTabIndex == 4)
-      return %this-->GamepadButton;
-   else 
-      return %this-->DisplayButton;
-}
-
-function OptionsMenu::populateDisplaySettingsList(%this)
-{
-   %this.pageTabIndex = 0;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -221,7 +287,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    
    trim(%apiList);
    
-   OptionsMenuSettingsList.addOptionRow("Display API", %apiList, false, "", -1, -30, true, "The display API used for rendering.", %displayDevice);
+   OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::DisplayAPI", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
    
    %numDevices = Canvas.getMonitorCount();
    %devicesList = "";
@@ -235,7 +301,7 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    }
    
    %selectedDevice = getField(%devicesList, $pref::Video::deviceId);
-   OptionsMenuSettingsList.addOptionRow("Display Device", %devicesList, false, "onDisplayModeChange", -1, -30, true, "The display devices the window should be on.", %selectedDevice);
+   OptionsMenuSettingsList.addOptionRow("Display Device", "$pref::Video::deviceId", %devicesList, false, "", true, "The display devices the window should be on.", %selectedDevice);
       
    if (%numDevices > 1)
       OptionsMenuSettingsList.setRowEnabled(1, true);
@@ -243,10 +309,10 @@ function OptionsMenu::populateDisplaySettingsList(%this)
       OptionsMenuSettingsList.setRowEnabled(1, false);
    
    %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
-   OptionsMenuSettingsList.addOptionRow("Window Mode", $Video::ModeTags, false, "onDisplayModeChange", -1, -30, true, "", %mode);
+   OptionsMenuSettingsList.addOptionRow("Window Mode", "$pref::Video::deviceMode", $Video::ModeTags, false, "", true, "", %mode);
    
    %resolutionList = getScreenResolutionList($pref::Video::deviceId, $pref::Video::deviceMode);
-   OptionsMenuSettingsList.addOptionRow("Resolution", %resolutionList, false, "onDisplayResChange", -1, -30, true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
+   OptionsMenuSettingsList.addOptionRow("Resolution", "$pref::Video::Resolution", %resolutionList, false, "onDisplayResChange",  true, "Resolution of the game window", _makePrettyResString( $pref::Video::mode ));
    
    //If they're doing borderless, the window resolution must match the display resolution
    if(%mode !$= "Borderless")
@@ -254,22 +320,20 @@ function OptionsMenu::populateDisplaySettingsList(%this)
    else
       OptionsMenuSettingsList.setRowEnabled(3, false);
    
-   OptionsMenuSettingsList.addOptionRow("VSync", "No\tYes", false, "", -1, -30, true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
+   OptionsMenuSettingsList.addOptionRow("VSync", "$pref::Video::disableVerticalSync", "No\tYes", false, "",  true, "", convertBoolToYesNo(!$pref::Video::disableVerticalSync));
 
 
    %refreshList = getScreenRefreshList($pref::Video::mode);
-   OptionsMenuSettingsList.addOptionRow("Refresh Rate", %refreshList, false, "", -1, -30, true, "", $pref::Video::RefreshRate);
+   OptionsMenuSettingsList.addOptionRow("Refresh Rate", "$pref::Video::RefreshRate", %refreshList, false, "",  true, "", $pref::Video::RefreshRate);
    
    //move to gameplay tab
-   OptionsMenuSettingsList.addSliderRow("Field of View", 75, 5, "65 100", "", -1, -30);
+   OptionsMenuSettingsList.addSliderRow("Field of View", "", 75, 5, "65 100", "");
    
-   OptionsMenuSettingsList.addSliderRow("Brightness", 0.5, 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("Contrast", 0.5, 0.1, "0 1", "", -1, -30);
-   
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.addSliderRow("Brightness", "", 0.5, 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("Contrast", "", 0.5, 0.1, "0 1", "");
 }
 
-function OptionsMenu::applyDisplaySettings(%this)
+/*function OptionsMenu::applyDisplaySettings(%this)
 {
 	%newDevice = OptionsMenuSettingsList.getCurrentOption(0);
 							
@@ -288,12 +352,14 @@ function OptionsMenu::applyDisplaySettings(%this)
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
-}
+}*/
 
-function OptionsMenu::populateGraphicsSettingsList(%this)
+//
+//
+//
+function populateGraphicsSettingsList()
 {
-   %this.pageTabIndex = 1;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -303,92 +369,32 @@ function OptionsMenu::populateGraphicsSettingsList(%this)
    %highMedLow = "Low\tMedium\tHigh";
    %anisoFilter = "Off\t4\t8\t16";
    %aaFilter = "Off\t1\t2\t4";
-   OptionsMenuSettingsList.addOptionRow("Lighting Quality", getQualityLevels(LightingQualityList), false, "", -1, -30, true, "Amount and drawdistance of local lights", getCurrentQualityLevel(LightingQualityList));
-   OptionsMenuSettingsList.addOptionRow("Shadow Quality", getQualityLevels(ShadowQualityList), false, "", -1, -30, true, "Shadow revolution quality", getCurrentQualityLevel(ShadowQualityList));
-   OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", getQualityLevels(SoftShadowList), false, "", -1, -30, true, "Amount of softening applied to shadowmaps", getCurrentQualityLevel(SoftShadowList));
-   OptionsMenuSettingsList.addOptionRow("Mesh Quality", getQualityLevels(MeshQualityGroup), false, "", -1, -30, true, "Fidelity of rendering of mesh objects", getCurrentQualityLevel(MeshQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Object Draw Distance", getQualityLevels(MeshDrawDistQualityGroup), false, "", -1, -30, true, "Dictates if and when static objects fade out in the distance", getCurrentQualityLevel(MeshDrawDistQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Texture Quality", getQualityLevels(TextureQualityGroup), false, "", -1, -30, true, "Fidelity of textures", getCurrentQualityLevel(TextureQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Terrain Quality", getQualityLevels(TerrainQualityGroup), false, "", -1, -30, true, "Quality level of terrain objects", getCurrentQualityLevel(TerrainQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Decal Lifetime", getQualityLevels(DecalLifetimeGroup), false, "", -1, -30, true, "How long decals are rendered", getCurrentQualityLevel(DecalLifetimeGroup));
-   OptionsMenuSettingsList.addOptionRow("Ground Cover Density", getQualityLevels(GroundCoverDensityGroup), false, "", -1, -30, true, "Density of ground cover items, such as grass", getCurrentQualityLevel(GroundCoverDensityGroup));
-   OptionsMenuSettingsList.addOptionRow("Shader Quality", getQualityLevels(ShaderQualityGroup), false, "", -1, -30, true, "Dictates the overall shader quality level, adjusting what features are enabled.", getCurrentQualityLevel(ShaderQualityGroup));
-   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", %anisoFilter, false, "", -1, -30, true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance", $pref::Video::defaultAnisotropy);
-   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", %aaFilter, false, "", -1, -30, true, "Amount of Post-Processing Anti-Aliasing applied to rendering", $pref::Video::AA);
-   OptionsMenuSettingsList.addOptionRow("Parallax", %onOffList, false, "", -1, -30, true, "Whether the surface parallax shader effect is enabled", convertBoolToOnOff(!$pref::Video::disableParallaxMapping));
-   OptionsMenuSettingsList.addOptionRow("Water Reflections", %onOffList, false, "", -1, -30, true, "Whether water reflections are enabled", convertBoolToOnOff(!$pref::Water::disableTrueReflections));
-   OptionsMenuSettingsList.addOptionRow("SSAO", %onOffList, false, "", -1, -30, true, "Whether Screen-Space Ambient Occlusion is enabled", convertBoolToOnOff($pref::PostFX::EnableSSAO));
-   OptionsMenuSettingsList.addOptionRow("Depth of Field", %onOffList, false, "", -1, -30, true, "Whether the Depth of Field effect is enabled", convertBoolToOnOff($pref::PostFX::EnableDOF));
-   OptionsMenuSettingsList.addOptionRow("Vignette", %onOffList, false, "", -1, -30, true, "Whether the vignette effect is enabled", convertBoolToOnOff($pref::PostFX::EnableVignette));
-   OptionsMenuSettingsList.addOptionRow("Light Rays", %onOffList, false, "", -1, -30, true, "Whether the light rays effect is enabled", convertBoolToOnOff($pref::PostFX::EnableLightRays));
-   
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.addOptionRow("Lighting Quality", "$pref::Graphics::LightingQuality", getQualityLevels(LightingQualityList), false, "",  true, "Amount and drawdistance of local lights", getCurrentQualityLevel(LightingQualityList));
+   OptionsMenuSettingsList.addOptionRow("Shadow Quality", "$pref::Graphics::ShadowQuality", getQualityLevels(ShadowQualityList), false, "",  true, "Shadow revolution quality", getCurrentQualityLevel(ShadowQualityList));
+   OptionsMenuSettingsList.addOptionRow("Soft Shadow Quality", "$pref::Graphics::SoftShadowQuality", getQualityLevels(SoftShadowList), false, "",  true, "Amount of softening applied to shadowmaps", getCurrentQualityLevel(SoftShadowList));
+   OptionsMenuSettingsList.addOptionRow("Mesh Quality", "$pref::Graphics::MeshQuality", getQualityLevels(MeshQualityGroup), false, "",  true, "Fidelity of rendering of mesh objects", getCurrentQualityLevel(MeshQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Object Draw Distance", "$pref::Graphics::ObjectDrawDistance", getQualityLevels(MeshDrawDistQualityGroup), false, "",  true, "Dictates if and when static objects fade out in the distance", getCurrentQualityLevel(MeshDrawDistQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Texture Quality", "$pref::Graphics::TextureQuality", getQualityLevels(TextureQualityGroup), false, "",  true, "Fidelity of textures", getCurrentQualityLevel(TextureQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Terrain Quality", "$pref::Graphics::TerrainQuality", getQualityLevels(TerrainQualityGroup), false, "",  true, "Quality level of terrain objects", getCurrentQualityLevel(TerrainQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Decal Lifetime", "$pref::Graphics::DecalLifetime", getQualityLevels(DecalLifetimeGroup), false, "",  true, "How long decals are rendered", getCurrentQualityLevel(DecalLifetimeGroup));
+   OptionsMenuSettingsList.addOptionRow("Ground Cover Density", "$pref::Graphics::GroundCoverDensity", getQualityLevels(GroundCoverDensityGroup), false, "",  true, "Density of ground cover items, such as grass", getCurrentQualityLevel(GroundCoverDensityGroup));
+   OptionsMenuSettingsList.addOptionRow("Shader Quality", "$pref::Graphics::ShaderQuality", getQualityLevels(ShaderQualityGroup), false, "",  true, "Dictates the overall shader quality level, adjusting what features are enabled.", getCurrentQualityLevel(ShaderQualityGroup));
+   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", "$pref::Video::defaultAnisotropy", %anisoFilter, false, "",  true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance", $pref::Video::defaultAnisotropy);
+   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "$pref::Video::AA", %aaFilter, false, "",  true, "Amount of Post-Processing Anti-Aliasing applied to rendering", $pref::Video::AA);
+   OptionsMenuSettingsList.addOptionRow("Parallax", "$pref::Video::disableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", convertBoolToOnOff(!$pref::Video::disableParallaxMapping));
+   OptionsMenuSettingsList.addOptionRow("Water Reflections", "$pref::Water::disableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled", convertBoolToOnOff(!$pref::Water::disableTrueReflections));
+   OptionsMenuSettingsList.addOptionRow("SSAO", "$pref::PostFX::EnableSSAO", %onOffList, false, "",  true, "Whether Screen-Space Ambient Occlusion is enabled", convertBoolToOnOff($pref::PostFX::EnableSSAO));
+   OptionsMenuSettingsList.addOptionRow("Depth of Field", "$pref::PostFX::EnableDOF", %onOffList, false, "",  true, "Whether the Depth of Field effect is enabled", convertBoolToOnOff($pref::PostFX::EnableDOF));
+   OptionsMenuSettingsList.addOptionRow("Vignette", "$pref::PostFX::EnableVignette", %onOffList, false, "",  true, "Whether the vignette effect is enabled", convertBoolToOnOff($pref::PostFX::EnableVignette));
+   OptionsMenuSettingsList.addOptionRow("Light Rays", "$pref::PostFX::EnableLightRays", %onOffList, false, "",  true, "Whether the light rays effect is enabled", convertBoolToOnOff($pref::PostFX::EnableLightRays));
 }
-
-function OptionsMenu::applyGraphicsSettings(%this)
-{
-   LightingQualityList.applySetting(OptionsMenuSettingsList.getCurrentOption(0));
-   ShadowQualityList.applySetting(OptionsMenuSettingsList.getCurrentOption(1));
-   SoftShadowList.applySetting(OptionsMenuSettingsList.getCurrentOption(2));
-   
-   MeshQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(3));
-   MeshDrawDistQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(4));
-   TextureQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(5));
-   TerrainQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(6));
-   DecalLifetimeGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(7));
-   GroundCoverDensityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(8));
-   ShaderQualityGroup.applySetting(OptionsMenuSettingsList.getCurrentOption(9));
-   
-   //Update Textures
-   reloadTextures();
-
-   //Update lighting
-   // Set the light manager.  This should do nothing 
-   // if its already set or if its not compatible.   
-   //setLightManager( $pref::lightManager );   
-   
-   $pref::PostFX::EnableSSAO = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(14));
-   $pref::PostFX::EnableDOF = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(15));
-   $pref::PostFX::EnableVignette = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(16));
-   $pref::PostFX::EnableLightRays = convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(17));
-   
-   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
-   PostFXManager.settingsEffectSetEnabled(DOFPostEffect, $pref::PostFX::EnableDOF);
-   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled(vignettePostFX, $pref::PostFX::EnableVignette);
-   
-   $pref::Video::disableParallaxMapping = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(12));
-   
-   //water reflections
-   $pref::Water::disableTrueReflections = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(13));
-   
-   // Check the anisotropic filtering.   
-   %level = OptionsMenuSettingsList.getCurrentOption(10);
-   if ( %level != $pref::Video::defaultAnisotropy )
-   {                     
-      $pref::Video::defaultAnisotropy = %level;
-   }
-
-   %newFSAA = OptionsMenuSettingsList.getCurrentOption(11);
-   if (%newFSAA $= "off")
-      %newFSAA = 0;
-   if (%newFSAA !$= $pref::Video::AA)
-   {
-      $pref::Video::AA = %newFSAA;
-      configureCanvas();
-   }
-
-   echo("Exporting client prefs");
-   %prefPath = getPrefpath();
-   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
-}   
 
 function updateDisplaySettings()
 {
    //Update the display settings now
-   %deviceName = OptionsMenuSettingsList.getCurrentOption(1);
+   %deviceName = getDisplayDeviceName();
    %newDeviceID = getWord(%deviceName, 0) - 1;
-   %deviceModeName = OptionsMenuSettingsList.getCurrentOption(2);
+   %deviceModeName = getField($Video::ModeTags, $pref::Video::deviceMode);
    %newDeviceMode = 0;
    foreach$(%modeName in $Video::ModeTags)
    {
@@ -398,15 +404,15 @@ function updateDisplaySettings()
          %newDeviceMode++;
    }
 
-   %newRes = getWord(OptionsMenuSettingsList.getCurrentOption(3), 0) SPC getWord(OptionsMenuSettingsList.getCurrentOption(3), 2);
+   %newRes = $pref::Video::Resolution;
    %newBpp = 32; // ... its not 1997 anymore.
 	%newFullScreen = %deviceModeName $= "Fullscreen" ? true : false;
-	%newRefresh    = OptionsMenuSettingsList.getCurrentOption(5);
-	%newVsync = !convertOptionToBool(OptionsMenuSettingsList.getCurrentOption(4));	
+	%newRefresh    = $pref::Video::RefreshRate;
+	%newVsync = !$pref::Video::disableVerticalSync;	
 	%newFSAA = $pref::Video::AA;
 	
    // Build the final mode string.
-	%newMode = %newRes SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newFSAA;
+	%newMode = $pref::Video::Resolution SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newFSAA;
 	
    // Change the video mode.   
    if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
@@ -439,10 +445,20 @@ function updateDisplaySettings()
    }
 }
 
-function OptionsMenu::populateAudioSettingsList(%this)
+function updatePostFXSettings()
 {
-   %this.pageTabIndex = 2;
-   OptionsMenuSettingsList.clearRows();
+   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
+   PostFXManager.settingsEffectSetEnabled(DOFPostEffect, $pref::PostFX::EnableDOF);
+   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
+   PostFXManager.settingsEffectSetEnabled(vignettePostFX, $pref::PostFX::EnableVignette);
+}
+
+//
+//
+//
+function populateAudioSettingsList()
+{
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -477,18 +493,15 @@ function OptionsMenu::populateAudioSettingsList(%this)
          else 
             %audioDeviceList = %audioDeviceList @ "\t" @ %device;  
       }
-         
    }
    
-   OptionsMenuSettingsList.addOptionRow("Audio Provider", %audioProviderList, false, "audioProviderChanged", -1, -15, true, "", $currentAudioProvider);
-   OptionsMenuSettingsList.addOptionRow("Audio Device", %audioDeviceList, false, "", -1, -15, true, $pref::SFX::device);
+   OptionsMenuSettingsList.addOptionRow("Audio Provider", "$pref::SFX::AudioProvider", %audioProviderList, false, "audioProviderChanged", true, "", $currentAudioProvider);
+   OptionsMenuSettingsList.addOptionRow("Audio Device", "$pref::SFX::device", %audioDeviceList, false, "", true, $pref::SFX::device);
    
-   OptionsMenuSettingsList.addSliderRow("Master Volume", $pref::SFX::masterVolume, 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("GUI Volume", $pref::SFX::channelVolume[ $GuiAudioType], 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("Effects Volume", $pref::SFX::channelVolume[ $SimAudioType ], 0.1, "0 1", "", -1, -30);
-   OptionsMenuSettingsList.addSliderRow("Music Volume", $pref::SFX::channelVolume[ $MusicAudioType ], 0.1, "0 1", "", -1, -30);
-   
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.addSliderRow("Master Volume", "$pref::SFX::masterVolume", $pref::SFX::masterVolume, 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("GUI Volume", "$pref::SFX::channelVolume[ $GuiAudioType]", $pref::SFX::channelVolume[ $GuiAudioType], 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("Effects Volume", "$pref::SFX::channelVolume[ $SimAudioType ]", $pref::SFX::channelVolume[ $SimAudioType ], 0.1, "0 1", "");
+   OptionsMenuSettingsList.addSliderRow("Music Volume", "$pref::SFX::channelVolume[ $MusicAudioType ]", $pref::SFX::channelVolume[ $MusicAudioType ], 0.1, "0 1", "");
 }
 
 function audioProviderChanged()
@@ -498,24 +511,24 @@ function audioProviderChanged()
    $currentAudioProvider = %provider;
    
    //And now refresh the list to get the correct devices
-   OptionsMenu.populateAudioSettingsList();
+   populateAudioSettingsList();
 }
 
-function OptionsMenu::applyAudioSettings(%this)
+function updateAudioSettings()
 {
-   $pref::SFX::masterVolume = OptionsMenuSettingsList.getValue(2);
+   //$pref::SFX::masterVolume = OptionsMenuSettingsList.getValue(2);
    sfxSetMasterVolume( $pref::SFX::masterVolume );
    
-   $pref::SFX::channelVolume[ $GuiAudioType ] = OptionsMenuSettingsList.getValue(3);
-   $pref::SFX::channelVolume[ $SimAudioType ] = OptionsMenuSettingsList.getValue(4);
-   $pref::SFX::channelVolume[ $MusicAudioType ] = OptionsMenuSettingsList.getValue(5);
+   //$pref::SFX::channelVolume[ $GuiAudioType ] = OptionsMenuSettingsList.getValue(3);
+   //$pref::SFX::channelVolume[ $SimAudioType ] = OptionsMenuSettingsList.getValue(4);
+   //$pref::SFX::channelVolume[ $MusicAudioType ] = OptionsMenuSettingsList.getValue(5);
    
    sfxSetChannelVolume( $GuiAudioType, $pref::SFX::channelVolume[ $GuiAudioType ] );
    sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
    sfxSetChannelVolume( $MusicAudioType, $pref::SFX::channelVolume[ $MusicAudioType ] );
    
-   $pref::SFX::provider = OptionsMenuSettingsList.getCurrentOption(0);
-   $pref::SFX::device = OptionsMenuSettingsList.getCurrentOption(1);
+   //$pref::SFX::provider = OptionsMenuSettingsList.getCurrentOption(0);
+   //$pref::SFX::device = OptionsMenuSettingsList.getCurrentOption(1);
    
    if ( !sfxCreateDevice(  $pref::SFX::provider, 
                            $pref::SFX::device, 
@@ -531,10 +544,12 @@ function OptionsMenu::applyAudioSettings(%this)
    }
 }
 
-function OptionsMenu::populateKeyboardMouseSettingsList(%this)
+//
+//
+//
+function populateKeyboardMouseSettingsList()
 {
-   %this.pageTabIndex = 3;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -542,13 +557,12 @@ function OptionsMenu::populateKeyboardMouseSettingsList(%this)
    $remapListDevice = "keyboard";
    fillRemapList();
    
-   OptionsMenuSettingsList.refresh();
+   //OptionsMenuSettingsList.refresh();
 }
 
-function OptionsMenu::populateGamepadSettingsList(%this)
+function populateGamepadSettingsList()
 {
-   %this.pageTabIndex = 4;
-   OptionsMenuSettingsList.clearRows();
+   OptionsMenuSettingsList.clear();
    
    OptionName.setText("");
    OptionDescription.setText("");
@@ -556,15 +570,30 @@ function OptionsMenu::populateGamepadSettingsList(%this)
    $remapListDevice = "gamepad";
    fillRemapList();
    
-   OptionsMenuSettingsList.refresh();
+   OptionsMenuSettingsList.updateStack();
 }
 
+//
+//
+//
 function OptionsMenuList::activateRow(%this)
 {
    OptionsMenuSettingsList.setFirstResponder();
 }
 
 function OptionsMenu::backOut(%this)
+{
+   if(%this.unappliedChanges.count() != 0)
+   {
+      MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to continue?", "OptionsMenu.doOptionsMenuBackOut();", "");
+   }
+   else
+   {
+      %this.doOptionsMenuBackOut();
+   }
+}
+
+function OptionsMenu::doOptionsMenuBackOut(%this)
 {
    //save the settings and then back out
    if(OptionsMain.hidden == false)
@@ -584,6 +613,117 @@ function OptionsMenu::backOut(%this)
       AudioMenu.hidden = true;
       ScreenBrightnessMenu.hidden = true;
    }
+}
+
+function OptionsMenuSettingsList::setRowEnabled(%this, %row, %status)
+{
+   %option = %this.getObject(%row);
+   if(isObject(%option))
+   {
+      %option.setEnabled(%status);
+   }
+}
+
+function OptionsMenuSettingsList::addOptionRow(%this, %label, %targetPrefVar, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue)
+{
+   if(%enabled $= "")
+      %enabled = true;
+      
+   %optionsRowSize = 30;
+   %optionColumnWidth = %this.extent.x - 450;//todo, calculate off longest option text?
+      
+   %option = new GuiGameSettingsCtrl() { 
+      class = "MenuOptionsButton";
+      profile = "GuiMenuButtonProfile";
+      horizSizing = "width";
+      vertSizing = "bottom";
+      position = "0 0";
+      extent = %this.extent.x SPC %optionsRowSize;
+      columnSplit = %optionColumnWidth;
+      useMouseEvents = true;
+      previousBitmapAsset = "UI:previousOption_n_image";
+      nextBitmapAsset = "UI:nextOption_n_image";
+   };
+   
+   %option.targetPrefVar = %targetPrefVar; //create a var-option association
+   
+   //now some override trickery, if we have a value cached for unapplied changes, swapsies the defaultValue out
+   //with the unapplied, allowing us to change options categories without losing changes
+   %unappliedPrefIndex = OptionsMenu.unappliedChanges.getIndexFromValue(%targetPrefVar);
+   if(%unappliedPrefIndex != -1)
+   {
+      %unappliedValue = OptionsMenu.unappliedChanges.getValue(%unappliedPrefIndex);
+      %defaultValue = %unappliedValue;
+   }
+   
+   %option.setListSetting(%label, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue);
+
+   %this.add(%option);
+}
+
+function OptionsMenuSettingsList::addSliderRow(%this, %label, %targetPrefVar, %defaultValue, %increment, %range, %callback, %enabled, %description)
+{
+   if(%enabled $= "")
+      %enabled = true;
+      
+   %optionsRowSize = 30;
+   %optionColumnWidth = %this.extent.x - 450;//todo, calculate off longest option text?
+      
+   %option = new GuiGameSettingsCtrl() { 
+      class = "MenuOptionsButton";
+      profile = "GuiMenuButtonProfile";
+      horizSizing = "width";
+      vertSizing = "bottom";
+      position = "0 0";
+      extent = %this.extent.x SPC %optionsRowSize;
+      columnSplit = %optionColumnWidth;
+      useMouseEvents = true;
+   };
+   
+   %option.targetPrefVar = %targetPrefVar; //create a var-option association
+   
+   //now some override trickery, if we have a value cached for unapplied changes, swapsies the defaultValue out
+   //with the unapplied, allowing us to change options categories without losing changes
+   %unappliedPrefIndex = OptionsMenu.unappliedChanges.getIndexFromValue(%targetPrefVar);
+   if(%unappliedPrefIndex != -1)
+   {
+      %unappliedValue = OptionsMenu.unappliedChanges.getValue(%unappliedPrefIndex);
+      %defaultValue = %unappliedValue;
+   }
+   
+   %option.setSliderSetting(%label, %defaultValue, %increment, %range, %callback, %enabled, %description);
+
+   %this.add(%option);
+}
+
+function OptionsMenuSettingsList::addKeybindRow(%this, %label, %bitmapName, %callback, %enabled, %description)
+{
+   if(%enabled $= "")
+      %enabled = true;
+      
+   %optionsRowSize = 40;
+   %optionColumnWidth = %this.extent.x - 450;
+      
+   %option = new GuiGameSettingsCtrl() { 
+      class = "MenuOptionsButton";
+      profile = "GuiMenuButtonProfile";
+      horizSizing = "width";
+      vertSizing = "bottom";
+      position = "0 0";
+      extent = %this.extent.x SPC %optionsRowSize;
+      columnSplit = %optionColumnWidth;
+      useMouseEvents = true;
+   };
+   
+   %option.setKeybindSetting(%label, %bitmapName, %callback, %enabled, %description);
+
+   %this.add(%option);
+}
+
+//
+function OptionsMenuCategoryList::onNavigate(%this, %index)
+{
+   %this.getObject(%index).performClick();
 }
 
 function convertOptionToBool(%val)
@@ -685,4 +825,114 @@ function onDisplayResChange(%val)
 
    OptionsMenuSettingsList.setOptions(5, %refreshList);
    OptionsMenuSettingsList.selectOption(5, %newRate);
+}
+
+function getDisplayDeviceName()
+{
+   %numDevices = Canvas.getMonitorCount();
+   %devicesList = "";
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      if(%i==0)
+         %devicesList = %device;
+      else
+         %devicesList = %devicesList @ "\t" @ %device;
+   }
+   
+   return getField(%devicesList, $pref::Video::deviceId);  
+}
+//
+//
+//
+function MenuOptionsButton::onMouseEnter(%this)
+{
+   OptionName.setText(%this.getLabel());
+   OptionDescription.setText(%this.getToolTip());
+}
+
+function MenuOptionsButton::onMouseLeave(%this)
+{
+   OptionName.setText("");
+   OptionDescription.setText("");
+}
+
+function MenuOptionsButton::onChange(%this)
+{
+   %optionMode = %this.getMode();
+   %optionName = %this.getLabel();
+   %tooltipText = %this.getTooltip();
+   
+   %targetVar = %this.targetPrefVar;
+   
+   OptionName.setText(%optionName);
+   OptionDescription.setText(%tooltipText);
+   
+   %currentValue = %this.getCurrentOption();
+   if(%currentValue !$= "")
+   {
+      if(%currentValue $= "yes" || %currentValue $= "on")
+         %saveReadyValue = 1;
+      else if(%currentValue $= "no" || %currentValue $= "off")
+         %saveReadyValue = 0;
+      else 
+         %saveReadyValue = %currentValue;
+      
+      %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
+      if(%prefIndex == -1)
+         OptionsMenu.unappliedChanges.add(%targetVar, %saveReadyValue);
+      else
+         OptionsMenu.unappliedChanges.setValue(%saveReadyValue, %prefIndex);
+   }
+}
+
+function OptionsMenu::onKeybindChanged(%this, %actionMap, %keybind)
+{
+   %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%actionMap);
+   if(%prefIndex == -1)
+      OptionsMenu.unappliedChanges.add(%actionMap, %keybind);
+   else
+      OptionsMenu.unappliedChanges.setValue(%keybind, %prefIndex);
+}
+
+//
+// Indicates what category the options item should be added into
+//
+function addOptionsMenuCategory(%categoryName, %selectCallback)
+{
+   OptionsMenu.optionsCategories.add(%categoryName, %selectCallback);
+}
+
+function removeOptionsMenuCategory(%categoryName)
+{
+   %index = OptionsMenu.optionsCategories.getIndexFromKey(%categoryName);
+   if(%index != -1)
+      OptionsMenu.optionsCategories.erase(%index);
+}
+
+function addListOption(%label, %description, %targetPrefVar, %optionsList, %wrapOptions, %callback, %enabled)
+{
+   if(%wrapOptions $= "")
+      %wrapOptions = false;
+      
+   if(%enabled $= "")
+      %enabled = true;
+
+   OptionsMenuSettingsList.addOptionRow(%label, %targetPrefVar, %optionsList, %wrapOptions, %callback, %enabled, %description, %targetPrefVar);
+}
+
+function addSliderOption(%label, %description, %targetPrefVar, %defaultValue, %increment, %range, %callback, %enabled)
+{
+   if(%enabled $= "")
+      %enabled = true;
+
+   OptionsMenuSettingsList.addSliderRow(%label, %targetPrefVar, %defaultValue, %increment, %range, %callback, %enabled, %description);
+}
+
+function addKeybindOption(%label, %description, %bitmapName, %callback, %enabled)
+{
+   if(%enabled $= "")
+      %enabled = true;
+
+   OptionsMenuSettingsList.addSliderRow(%label, %bitmapName, %callback, %enabled, %description);
 }

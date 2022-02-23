@@ -1,0 +1,4 @@
+<GUIAsset
+    AssetName="NetGraphGui"
+    GUIFile="@assetFile=netGraphGui.gui"
+    VersionId="1"/>

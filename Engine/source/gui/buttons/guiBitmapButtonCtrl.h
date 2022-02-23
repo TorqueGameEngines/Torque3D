@@ -138,7 +138,7 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
          if( mActive )
          {
 				if( mDepressed || mStateOn ) return DEPRESSED;
-            if( mMouseOver ) return HILIGHT;
+            if( mHighlighted ) return HILIGHT;
             return NORMAL;
          }
          else

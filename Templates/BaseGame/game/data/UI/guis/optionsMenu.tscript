@@ -76,6 +76,8 @@ function OptionsMenuSettingsList::getOptionsList(%this, %index)
 
 function OptionsMenu::onWake(%this)
 {
+   OptionsMenuCategoryList.clear(); 
+   
    for(%i=0; %i < %this.optionsCategories.count(); %i++)
    {
       %catName = %this.optionsCategories.getKey(%i);

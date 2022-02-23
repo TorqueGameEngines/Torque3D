@@ -1,10 +1,6 @@
 
-function JoinServerMenu::onWake()
+function JoinServerMenu::onWake(%this)
 {
-   // Double check the status. Tried setting this the control
-   // inactive to start with, but that didn't seem to work.
-   JoinServerJoinBtn.setActive(JoinServerList.getCount() > 0);
-   
    JoinServerButtonHolder.setActive();
    
    JoinServerList.setAsActiveMenuList();
@@ -128,7 +124,7 @@ function JoinServerMenu::update(%this)
       JoinServerList.add(%serverBtn);
    }
 
-   JoinServerJoinBtn.setActive(JoinServerList.getCount() > 0);
+   JoinServerButtonHolder-->joinButton.setActive(JoinServerList.getCount() > 0);
 } 
 
 //----------------------------------------

@@ -81,6 +81,7 @@ function ExampleModule::initClient(%this)
       exec(%prefPath @ "/keybinds." @ $TorqueScriptFileExtension);
       
    %this.queueExec("./scripts/inputCommands");
+   addOptionsMenuCategory("Example Options", "testExampleOptions();");
 }
 
 //This is called when a game session client successfuly connects to a game server. 
@@ -105,4 +106,9 @@ function ExampleModule::onDestroyClientConnection(%this)
 {
    //This will pop the keybind, cleaning it up from the input stack, as it no longer applies
    ExampleMoveMap.pop();
+}
+
+function testExampleOptions()
+{
+   addListOption("Test Option", "This is a test option", $testOptionValue, "OptionA\tOptionB");  
 }

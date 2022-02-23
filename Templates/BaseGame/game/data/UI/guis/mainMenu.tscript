@@ -66,4 +66,5 @@ function MainMenuGui::onReturnTo(%this)
    MainMenuButtonList.hidden = false;
    MainMenuButtonList.setFirstResponder();
    MainMenuButtonHolder.setActive();
+   MainMenuButtonList.setAsActiveMenuList();
 }

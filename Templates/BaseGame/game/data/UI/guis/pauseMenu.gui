@@ -49,25 +49,31 @@ $guiContent = new GuiControl(PauseMenu) {
       isContainer = "1";
       canSave = "1";
       canSaveDynamicFields = "0";
-
-      new GuiGameListMenuCtrl(PauseMenuList) {
-         debugRender = "0";
-         callbackOnInputs = "1";
-         consumeKeyInputEvents = "1";
+      
+      new GuiStackControl(PauseMenuList) {
+         stackingType = "Vertical";
+         horizStacking = "Left to Right";
+         vertStacking = "Top to Bottom";
+         padding = "15";
+         dynamicSize = "0";
+         dynamicNonStackExtent = "0";
+         dynamicPos = "0";
+         changeChildSizeToFit = "1";
+         changeChildPosition = "1";
          position = "0 0";
          extent = "700 320";
-         minExtent = "8 2";
-         horizSizing = "width";
-         vertSizing = "bottom";
-         profile = "DefaultListMenuProfile";
+         minExtent = "16 16";
+         horizSizing = "center";
+         vertSizing = "center";
+         profile = "GuiDefaultProfile";
          visible = "1";
          active = "1";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
-         isContainer = "0";
-         class = "UIMenuButtonList";
+         isContainer = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
+         class = "MenuList";
       };
    };
    new GuiControl(PauseButtonHolder) {
@@ -146,6 +152,27 @@ $guiContent = new GuiControl(PauseMenu) {
          canSave = "1";
          canSaveDynamicFields = "0";
       };
+   };
+   new GuiInputCtrl(PauseMenuInputHandler) {
+      class = "MenuInputHandler";
+      sendAxisEvents = "1";
+      sendBreakEvents = "1";
+      sendModifierEvents = "0";
+      ignoreMouseEvents = "1";
+      lockMouse = "0";
+      position = "-50 0";
+      extent = "10 10";
+      minExtent = "8 2";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "0";
+      canSave = "1";
+      canSaveDynamicFields = "0";
    };
 };
 //--- OBJECT WRITE END ---

@@ -1,8 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="background_dark_image"
-    imageFile="@assetFile=background-dark.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />

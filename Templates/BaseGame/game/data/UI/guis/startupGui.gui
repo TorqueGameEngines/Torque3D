@@ -35,7 +35,7 @@ $guiContent = new GuiFadeinBitmapCtrl(StartupGui) {
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
       hovertime = "1000";
-      bitmap = "";
+      bitmapAsset = "";
       wrap = "0";
       command = "StartupGui.click();";
    };
@@ -54,7 +54,7 @@ $guiContent = new GuiFadeinBitmapCtrl(StartupGui) {
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
       hovertime = "1000";
-      bitmap = "";
+      bitmapAsset = "";
       wrap = "0";
       command = "StartupGui.click();";
    };

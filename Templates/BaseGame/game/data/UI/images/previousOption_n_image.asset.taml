@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="previousOption_n_image"
+    imageFile="@assetFile=previousOption_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="GUI" />

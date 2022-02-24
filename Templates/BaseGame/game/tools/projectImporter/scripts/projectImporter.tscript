@@ -476,7 +476,7 @@ function preprocessImportingFiles()
          {
             %line = $ProjectImporter::fileObject.readLine();
             
-            if(strIsMatchExpr("* new*(*)*", %line))
+            if(strIsMatchExpr("*new *(*)*", %line))
             {
                %start = strpos(%line, "new ");
                %end = strpos(%line, "(", %start);
@@ -484,6 +484,14 @@ function preprocessImportingFiles()
                if(%start != -1 && %end != -1)
                {
                   %className = getSubStr(%line, %start + 4, %end-%start-4);
+               }
+               
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a progromattic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
                }
                
                %nameEnd = strpos(%line, ")", %end);
@@ -530,7 +538,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("* datablock*(*)*", %line))
+            else if(strIsMatchExpr("*datablock *(*)*", %line))
             {
                %start = strpos(%line, "datablock ");
                %end = strpos(%line, "(", %start);
@@ -584,7 +592,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("* singleton*(*)*", %line))
+            else if(strIsMatchExpr("*singleton *(*)*", %line))
             {
                %start = strpos(%line, "singleton ");
                %end = strpos(%line, "(", %start);
@@ -638,7 +646,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("*function*(*)*", %line))
+            else if(strIsMatchExpr("*function *(*)*", %line))
             {
                %start = strpos(%line, "function ");
                %end = strpos(%line, "(", %start);

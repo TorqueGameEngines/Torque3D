@@ -476,7 +476,7 @@ function preprocessImportingFiles()
          {
             %line = $ProjectImporter::fileObject.readLine();
             
-            if(strIsMatchExpr("* new*(*)*", %line))
+            if(strIsMatchExpr("*new *(*)*", %line))
             {
                %start = strpos(%line, "new ");
                %end = strpos(%line, "(", %start);
@@ -486,6 +486,14 @@ function preprocessImportingFiles()
                   %className = getSubStr(%line, %start + 4, %end-%start-4);
                }
                
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
                %nameEnd = strpos(%line, ")", %end);
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
@@ -497,6 +505,8 @@ function preprocessImportingFiles()
                   %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
+               
+               %objectName = trim(%objectName);
                
                %parentFileSectionObject = %currentFileSectionObject;
                
@@ -530,7 +540,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("* datablock*(*)*", %line))
+            else if(strIsMatchExpr("*datablock *(*)*", %line))
             {
                %start = strpos(%line, "datablock ");
                %end = strpos(%line, "(", %start);
@@ -540,6 +550,14 @@ function preprocessImportingFiles()
                   %className = getSubStr(%line, %start + 10, %end-%start-10);
                }
                
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
                %nameEnd = strpos(%line, ")", %end);
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
@@ -551,6 +569,8 @@ function preprocessImportingFiles()
                   %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
+               
+               %objectName = trim(%objectName);
                
                %parentFileSectionObject = %currentFileSectionObject;
                
@@ -584,7 +604,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("* singleton*(*)*", %line))
+            else if(strIsMatchExpr("*singleton *(*)*", %line))
             {
                %start = strpos(%line, "singleton ");
                %end = strpos(%line, "(", %start);
@@ -594,6 +614,14 @@ function preprocessImportingFiles()
                   %className = getSubStr(%line, %start + 10, %end-%start-10);
                }
                
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
                %nameEnd = strpos(%line, ")", %end);
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
@@ -605,6 +633,8 @@ function preprocessImportingFiles()
                   %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
+
+               %objectName = trim(%objectName);
 
                %parentFileSectionObject = %currentFileSectionObject;
                
@@ -638,7 +668,7 @@ function preprocessImportingFiles()
                      %insideObjectBlock = true;
                }
             }
-            else if(strIsMatchExpr("*function*(*)*", %line))
+            else if(strIsMatchExpr("*function *(*)*", %line))
             {
                %start = strpos(%line, "function ");
                %end = strpos(%line, "(", %start);

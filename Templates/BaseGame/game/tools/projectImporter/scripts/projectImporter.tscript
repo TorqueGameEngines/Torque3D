@@ -488,7 +488,7 @@ function preprocessImportingFiles()
                
                if(%className $= "")
                {
-                  //we clearly have some unusual formatting, potentially a progromattic 
+                  //we clearly have some unusual formatting, potentially a programmatic 
                   //object block creation going on here. so we'll just skip it and move on  
                   %currentFileSectionObject.add(%line);
                   continue;
@@ -505,6 +505,8 @@ function preprocessImportingFiles()
                   %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
+               
+               %objectName = trim(%objectName);
                
                %parentFileSectionObject = %currentFileSectionObject;
                
@@ -548,6 +550,14 @@ function preprocessImportingFiles()
                   %className = getSubStr(%line, %start + 10, %end-%start-10);
                }
                
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
                %nameEnd = strpos(%line, ")", %end);
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
@@ -559,6 +569,8 @@ function preprocessImportingFiles()
                   %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
+               
+               %objectName = trim(%objectName);
                
                %parentFileSectionObject = %currentFileSectionObject;
                
@@ -602,6 +614,14 @@ function preprocessImportingFiles()
                   %className = getSubStr(%line, %start + 10, %end-%start-10);
                }
                
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
                %nameEnd = strpos(%line, ")", %end);
                
                %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
@@ -613,6 +633,8 @@ function preprocessImportingFiles()
                   %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
                   %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
                }
+
+               %objectName = trim(%objectName);
 
                %parentFileSectionObject = %currentFileSectionObject;
                

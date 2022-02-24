@@ -1038,6 +1038,12 @@ function T3Dpre4ProjectImporter::processMaterialObject(%this, %fileObject, %obje
       
       %assetScriptPath = %assetDef.getScriptPath();
       
+      if(fileExt(%assetScriptPath) $= "")
+      {
+         //try the default extension
+         %assetScriptPath = %assetScriptPath @ "." @ $TorqueScriptFileExtension;  
+      }
+      
       if(isFile(%assetScriptPath) && isObject(%objectName))
       {
          //Regular material in a companion file, so we'll want to write it to the

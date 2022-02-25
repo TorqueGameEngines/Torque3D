@@ -33,8 +33,8 @@ function AssetImportConfigEditor::apply(%this)
 
 function AssetImportConfigList::onSelect( %this, %id, %text )
 {
-   ImportOptionsConfigList.clearFields();
-   ImportOptionsConfigList.setAutoUpdate(false); //we don't want to be updating every time we add a field in here
+   AssetImportConfigEditorInspector.clearFields();
+   AssetImportConfigEditorInspector.setAutoUpdate(false); //we don't want to be updating every time we add a field in here
    
    %this.currentConfig = %text;
    
@@ -46,7 +46,7 @@ function AssetImportConfigList::onSelect( %this, %id, %text )
    %this.populateConfigListByGroup("Animations");
    //%this.populateConfigListByGroup("Collision");
    
-   ImportOptionsConfigList.update();  
+   AssetImportConfigEditorInspector.update();  
 }
 
 function AssetImportConfigList::populateConfigListByGroup(%this, %groupName)

@@ -46,12 +46,7 @@ function Pre40ImporterPage0::openPage(%this)
          
          %targetFolder = filePath(%targetFilePath);
          
-         if(!isDirectory(%targetFolder))
-         {
-            DirectoryHandler::createFolder(0, %targetFolder);
-         }
-         
-         if(!pathCopy(%file, %targetFilePath, false))
+         if(!copyFileToDestination(%file, %targetFilePath))
          {
             $ProjectImporter::log.add("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
             continue;

@@ -373,6 +373,28 @@ function ProjectImportWindow::addImporterPage(%this, %page)
 // functions that'll pretty much be used regardless of version being targeted
 //==============================================================================
 //==============================================================================
+// Takes a source file and attempts to copy it to the destination path.
+// If the paths are the same, we just exit out with a success indicator
+//==============================================================================
+function copyFileToDestination(%sourceFile, %destinationFile)
+{
+   %fullSourcePath = makeFullPath(%sourceFile); 
+   %fullDestPath = makeFullPath(%destinationFile); 
+   
+   if(!IsDirectory(filePath(%fullDestPath)))
+   {
+      DirectoryHandler::createFolder(0, filePath(%fullDestPath));  
+   }
+   
+   if(%fullSourcePath $= %fullDestPath)
+      return true; //no need to copy, we're already here!
+      
+   if(!pathCopy(%fullSourcePath, %fullDestPath, false))
+      return false;
+      
+   return true;
+}
+//==============================================================================
 // Runs through the files in the source directory and preprocessing them.
 // All valid files are added to a list, and script-based files are pre-parsed 
 // so the importer can easily process their contents later
@@ -1436,12 +1458,7 @@ function beginShapeImport()
       %destinationPath = %rootFileSectionObject.fileDestination;
       if(isFile(%file) && %rootFileSectionObject.isShapeFile == true && %rootFileSectionObject.imported == false)
       {    
-         if(!IsDirectory(filePath(%destinationPath)))
-         {
-            DirectoryHandler::createFolder(0, filePath(%destinationPath));  
-         }
-         
-         if(!pathCopy(%file, %destinationPath, false))
+         if(!copyFileToDestination(%file, %destinationPath))
          {
             projectImporterLog("ProjectImporter::beginShapeImport() - failed to copy shape: " @ %file @
                                     " to destination: " @ %destinationPath);
@@ -1502,12 +1519,7 @@ function beginImageImport()
       %destinationPath = %rootFileSectionObject.fileDestination;
       if(isFile(%file) && %rootFileSectionObject.isImageFile == true && %rootFileSectionObject.imported == false)
       {    
-         if(!IsDirectory(filePath(%destinationPath)))
-         {
-            DirectoryHandler::createFolder(0, filePath(%destinationPath));  
-         }
-         
-         if(!pathCopy(%file, %destinationPath, false))
+         if(!copyFileToDestination(%file, %destinationPath))
          {
             projectImporterLog("ProjectImporter::beginImageImport() - failed to copy image: " @ %file @
                                     " to destination: " @ %destinationPath);
@@ -1577,12 +1589,8 @@ function beginTerrainImport()
             %fileName = fileName(%file); 
             %filePath = filePath(%file);
          }*/
-         if(!IsDirectory(filePath(%destinationPath)))
-         {
-            DirectoryHandler::createFolder(0, filePath(%destinationPath));  
-         }
          
-         if(!pathCopy(%file, %destinationPath, false))
+         if(!copyFileToDestination(%file, %destinationPath))
          {
             projectImporterLog("ProjectImporter::beginTerrainImport() - failed to copy terrain: " @ %file @
                                     " to destination: " @ %destinationPath);
@@ -1666,12 +1674,8 @@ function beginSoundImport()
             %fileName = fileName(%file); 
             %filePath = filePath(%file);
          }*/
-         if(!IsDirectory(filePath(%destinationPath)))
-         {
-            DirectoryHandler::createFolder(0, filePath(%destinationPath));  
-         }
          
-         if(!pathCopy(%file, %destinationPath, false))
+         if(!copyFileToDestination(%file, %destinationPath))
          {
             projectImporterLog("ProjectImporter::beginSoundImport() - failed to copy sound: " @ %file @
                                     " to destination: " @ %destinationPath);
@@ -1775,7 +1779,7 @@ function beginGUIImport()
 
             //Check if we need to even copy in the first place. If we do, ensure
             //the copy actually worked
-            if((makeRelativePath(%file) !$= %destinationPath) && !pathCopy(%file, %destinationPath, false))
+            if(!copyFileToDestination(%file, %destinationPath))
             {
                projectImporterLog("ProjectImporter::beginGUIImport() - failed to copy GUI: " @ %file @
                   " to destination: " @ %destinationPath);
@@ -1888,12 +1892,7 @@ function beginLevelImport()
          %fileBase = fileBase(%destinationPath);
          %filePath = filePath(%destinationPath);
          
-         if(!IsDirectory(filePath(%destinationPath)))
-         {
-            DirectoryHandler::createFolder(0, filePath(%destinationPath));  
-         }
-         
-         if(!pathCopy(%file, %destinationPath, false))
+         if(!copyFileToDestination(%file, %destinationPath))
          {
             projectImporterLog("ProjectImporter::beginLevelImport() - failed to copy level: " @ %file @
                                     " to destination: " @ %destinationPath);

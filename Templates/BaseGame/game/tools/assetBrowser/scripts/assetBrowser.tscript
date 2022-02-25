@@ -2491,8 +2491,10 @@ function AssetBrowser::autoImportSimpleLooseFiles(%this)
 
    while( %file !$= "" )
    {      
-      if(!strIsMatchExpr("*.asset.taml", %file) && !strIsMatchExpr("*.taml", %file) && !strIsMatchExpr("*.cached.dts", %file))
+      if(!strIsMatchExpr("*.asset.taml", %file) && !strIsMatchExpr("*.taml", %file) && !strIsMatchExpr("*.cached.dts", %file) 
+         && !strIsMatchExpr("*.cs", %file) && !strIsMatchExpr("*.tscript", %file) && !strIsMatchExpr("*.module", %file))
       {
+         %aq.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile(%aq, %file);
          
          if(%assetsFound == 0)

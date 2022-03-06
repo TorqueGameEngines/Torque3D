@@ -190,6 +190,6 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 #if CAPTURING == 1
     return float4(lerp(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
 #else
-   return result = float4((irradiance + specular* horizon) , 0);//alpha writes disabled   
+   return float4((irradiance + specular* horizon) , 0);//alpha writes disabled   
 #endif
 }

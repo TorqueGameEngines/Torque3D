@@ -1368,6 +1368,11 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
 {
    bool isDDS = false;
 
+   if (bitmapSource == 0 || bitmapSource[0] == '\0' || bitmapDest == 0 || bitmapDest[0] == '\0')
+   {
+      return false;
+   }
+
    //First, gotta check the extension, as we have some extra work to do if it's
    //a DDS file
    const char* ret = dStrrchr(bitmapSource, '.');
@@ -1381,7 +1386,7 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
       return false; //no extension? bail out
    }
 
-   GBitmap* image;
+   GBitmap* image = NULL;
    if (isDDS)
    {
       Resource<DDSFile> dds = DDSFile::load(bitmapSource, 0);
@@ -1397,7 +1402,8 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    }
    else
    {
-      image = GBitmap::load(bitmapSource);
+      Resource<GBitmap> resImage = GBitmap::load(bitmapSource);
+      image = new GBitmap(*resImage);
    }
 
    if (!image)

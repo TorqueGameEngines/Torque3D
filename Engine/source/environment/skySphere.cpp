@@ -182,7 +182,7 @@ void SkySphere::prepRenderImage(SceneRenderState* state)
    ObjectRenderInst* ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
    ri->renderDelegate.bind(this, &SkySphere::_renderObject);
    ri->type = RenderPassManager::RIT_Sky;
-   ri->defaultKey = 10;
+   ri->defaultKey = 9;
    ri->defaultKey2 = 0;
    state->getRenderPass()->addInst(ri);
 }

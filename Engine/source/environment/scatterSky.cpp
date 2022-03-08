@@ -651,7 +651,7 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
    ObjectRenderInst *ri = renderPass->allocInst<ObjectRenderInst>();
    ri->renderDelegate.bind( this, &ScatterSky::_render );
    ri->type = RenderPassManager::RIT_Sky;
-   ri->defaultKey = 10;
+   ri->defaultKey = 15;
    ri->defaultKey2 = 0;
    renderPass->addInst(ri);
 
@@ -700,7 +700,7 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
 	  moonRI->renderDelegate.bind( this, &ScatterSky::_renderMoon );
 	  moonRI->type = RenderPassManager::RIT_Sky;
       // Render after sky objects and before CloudLayer!
-	  moonRI->defaultKey = 5;
+	  moonRI->defaultKey = 10;
 	  moonRI->defaultKey2 = 0;
       renderPass->addInst(moonRI);
    }

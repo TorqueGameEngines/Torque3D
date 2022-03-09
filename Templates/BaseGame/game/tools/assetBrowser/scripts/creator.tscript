@@ -26,6 +26,7 @@ function AssetBrowser::loadCreatorClasses(%this)
       %this.addCreatorClass( "RibbonNode",         "Ribbon Emitter" );
       %this.addCreatorClass( "ScatterSky",         "Scatter Sky" );
       %this.addCreatorClass( "SkyBox",             "Sky Box" );
+      %this.addCreatorClass( "SkySphere",          "Sky Sphere" );
       %this.addCreatorClass( "SFXEmitter",         "Sound Emitter" );
       %this.addCreatorClass( "TerrainBlock",       "Terrain Block" );
       %this.addCreatorClass( "VolumetricFog",      "Volumetric Fog" );

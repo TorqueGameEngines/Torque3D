@@ -2318,6 +2318,8 @@ void FogFeatGLSL::processPix( Vector<ShaderComponent*> &componentList,
 	
    // Get the out color.
    Var *color = (Var*) LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
+   if (fd.features[MFT_isDeferred])
+      color = (Var *)LangElement::find(getOutputTargetVarName(ShaderFeature::RenderTarget1));
    if ( !color )
    {
       color = new Var;

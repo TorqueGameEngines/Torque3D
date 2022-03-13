@@ -61,6 +61,8 @@ void GLSLCrossShader::checkMainLine(String& line, bool isVert)
    line.replace("float4x4", "mat4");
    line.replace("float4x3", "mat4x3");
    line.replace("lerp", "mix");
+   line.replace("frac", "fract");
+   line.replace("fmod", "mod");
 
    U32 pos = line.find("mul");
    if (pos)
@@ -93,17 +95,6 @@ void GLSLCrossShader::checkMainLine(String& line, bool isVert)
 
 void GLSLCrossShader::checkName(char* name)
 {
-   // check names for known vars and set our shader.
-   // these are used for the source side output.
-   if (!String::compare(name, "model"))
-      mUseModelMat = true;
-
-   if (!String::compare(name, "modelView"))
-      mUseModelViewMat = true;
-
-   if (!String::compare(name, "modelViewProj"))
-      mUseModelViewProjMat = true;
-
    // this one should probably always be true.
    if (!String::compare(name, "vPosition") || !String::compare(name, "vPos"))
       mUseGLPosition = true;
@@ -476,18 +467,6 @@ GLSLCrossShader::GLSLCrossShader()
 
    mUseMulDef = false;
    mUseGLPosition = false;
-   // matrix inputs model
-   mUseModelMat = false;
-   mUseModelViewMat = false;
-   mUseModelViewProjMat = false;
-   // matrix inputs view
-   mUseViewMat = false;
-   mUseViewProjMat = false;
-   // matrix inputs proj
-   mUseProjMat = false;
-   // time
-   mUseTime = false;
-
 }
 
 //------------------------------------------------------------

@@ -8,6 +8,9 @@
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 
+const char* newLine = "\r\n";
+const char* classClose = "}\r\n\r\n";
+
 void HLSLCrossShader::checkMainLine(String& line, bool isVert)
 {
    if (!isVert)
@@ -59,6 +62,30 @@ void HLSLCrossShader::generateShader(char* shaderName)
       return;
    }
    _printPixelShader(*s);
+   delete s;
+
+}
+
+void HLSLCrossShader::generateSource(char* shaderName)
+{
+   shaderObjName = shaderName;
+   char sourceFile[256];
+   dSprintf(sourceFile, sizeof(sourceFile), "%s.cpp", shaderName);
+   char headerFile[256];
+   dSprintf(headerFile, sizeof(headerFile), "%s.h", shaderName);
+
+   // build constant.
+   _buildSourceInfo();
+
+   // create the source file.
+   FileStream* s = new FileStream();
+   if (!s->open(sourceFile, Torque::FS::File::Write))
+   {
+      AssertFatal(false, "Failed to open Vertex shader stream");
+      return;
+   }
+
+   _printSourceFile(*s);
    delete s;
 
 }
@@ -266,30 +293,59 @@ void HLSLCrossShader::HLSLCrossShaderUniformVertList::print(Stream& stream)
    {
       char output[512];
       HLSLInfo info = mUniformVertList[i];
-      if (!String::compare(info.type, "Texture2D"))
-      {
-         info.name = dStrncat(info.name, "Tex", dStrlen(info.name));
-      }
-
       if(i == mUniformVertList.size()-1)
       {
-         dSprintf(
-            output,
-            sizeof(output),
-            "\t\t\tuniform %s\t\t%s\t\t: register(%s)\r\n",
-            info.type,
-            info.name,
-            info.regNum.c_str());
+         if (!String::compare(info.type, "Texture2D"))
+         {
+            U32 size = dStrlen(info.name);
+            char tex[128];
+            dStrncpy(tex, info.name, size)[size] = '\0';
+            dStrncat(tex, "Tex", dStrlen(tex));
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s)\r\n",
+               info.type,
+               tex,
+               info.regNum.c_str());
+         }
+         else
+         {
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s)\r\n",
+               info.type,
+               info.name,
+               info.regNum.c_str());
+         }
       }
       else
       {
-         dSprintf(
-            output,
-            sizeof(output),
-            "\t\t\tuniform %s\t\t%s\t\t: register(%s),\r\n",
-            info.type,
-            info.name,
-            info.regNum.c_str());
+         if (!String::compare(info.type, "Texture2D"))
+         {
+            U32 size = dStrlen(info.name);
+            char tex[128];
+            dStrncpy(tex, info.name, size)[size] = '\0';
+            dStrncat(tex, "Tex", dStrlen(tex));
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s),\r\n",
+               info.type,
+               tex,
+               info.regNum.c_str());
+         }
+         else
+         {
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s),\r\n",
+               info.type,
+               info.name,
+               info.regNum.c_str());
+         }
       }
       stream.write(dStrlen((char*)output), output);
    }
@@ -407,31 +463,60 @@ void HLSLCrossShader::HLSLCrossShaderUniformPixList::print(Stream& stream)
    for (U32 i = 0; i < mUniformPixList.size(); i++)
    {
       HLSLInfo info = mUniformPixList[i];
-      if (!String::compare(info.type, "Texture2D"))
-      {
-         info.name = dStrncat(info.name, "Tex", dStrlen(info.name));
-      }
-
       char output[512];
       if (i == mUniformPixList.size() - 1)
       {
-         dSprintf(
-            output,
-            sizeof(output),
-            "\t\t\tuniform %s\t\t%s\t\t: register(%s)\r\n",
-            info.type,
-            info.name,
-            info.regNum.c_str());
+         if (!String::compare(info.type, "Texture2D"))
+         {
+            U32 size = dStrlen(info.name);
+            char tex[128];
+            dStrncpy(tex, info.name, size)[size] = '\0';
+            dStrncat(tex, "Tex", dStrlen(tex));
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s)\r\n",
+               info.type,
+               tex,
+               info.regNum.c_str());
+         }
+         else
+         {
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s)\r\n",
+               info.type,
+               info.name,
+               info.regNum.c_str());
+         }
       }
       else
       {
-         dSprintf(
-            output,
-            sizeof(output),
-            "\t\t\tuniform %s \t\t%s\t\t: register(%s),\r\n",
-            info.type,
-            info.name,
-            info.regNum.c_str());
+         if (!String::compare(info.type, "Texture2D"))
+         {
+            U32 size = dStrlen(info.name);
+            char tex[128];
+            dStrncpy(tex, info.name, size)[size] = '\0';
+            dStrncat(tex, "Tex", dStrlen(tex));
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s),\r\n",
+               info.type,
+               tex,
+               info.regNum.c_str());
+         }
+         else
+         {
+            dSprintf(
+               output,
+               sizeof(output),
+               "\t\t\tuniform %s\t\t%s\t\t: register(%s),\r\n",
+               info.type,
+               info.name,
+               info.regNum.c_str());
+         }
       }
 
       stream.write(dStrlen((char*)output), output);
@@ -584,19 +669,10 @@ HLSLCrossShader::HLSLCrossShader()
    mHLSLPixOut = new HLSLCrossShaderPixOutputs(this);
    mHLSLVertMain = new HLSLCrossShaderVertMain(this);
    mHLSLPixMain = new HLSLCrossShaderPixMain(this);
-
-   // matrix inputs model
-   mUseModelMat = false;
-   mUseModelViewMat = false;
-   mUseModelViewProjMat = false;
-   // matrix inputs view
-   mUseViewMat = false;
-   mUseViewProjMat = false;
-   // matrix inputs proj
-   mUseProjMat = false;
-   // time
-   mUseTime = false;
-
+   samplersDefined = false;
+   samplers = 0;
+   isMat = false;
+   matID = 0;
 }
 
 //------------------------------------------------------------
@@ -699,4 +775,406 @@ void HLSLCrossShader::_printPixelShader(Stream& stream)
    mHLSLUniPixList->print(stream);
    mHLSLPixMain->print(stream);
 
+}
+
+void HLSLCrossShader::_printSourceFile(Stream& stream)
+{
+   const char* head = "//------------------------------------------\r\n";
+   const char* head1 = "// SHADER SOURCE FROM CROSS API (0.3b)\r\n";
+   const char* head2 = "// this will not build, copy to your class.\r\n";
+   const char* head3 = "//-----------------------------------------\r\n\r\n";
+
+   stream.write(dStrlen(head), head);
+   stream.write(dStrlen(head1), head1);
+   stream.write(dStrlen(head2), head2);
+   stream.write(dStrlen(head3), head3);
+
+   _printIncludesSource(stream);
+
+   const char* classOpen = "Class::Class()\r\n{\r\n";
+   //default inits.
+   stream.write(dStrlen(classOpen), classOpen);
+   for (U32 i = 0; i < mSourceList.size(); i++)
+   {
+      SourceInfo info = mSourceList[i];
+      // do this now and keep it for renderObject block
+      if (info.ModelMat || info.ModelViewMat || info.ModelViewProjMat ||
+         info.ViewMat || info.ViewProjMat || info.ProjMat)
+      {
+         isMat = true;
+         matID = i;
+      }
+      U32 size = dStrlen(info.name);
+      char tex[128];
+      dStrncpy(tex, info.name, size)[size] = '\0';
+      tex[0] = dToupper(tex[0]);
+      char output[512];
+      dSprintf(output, sizeof(output), "\tm%sSC = NULL;\r\n",tex);
+
+      stream.write(dStrlen((char*)output), output);
+   }
+
+   stream.write(dStrlen(classClose), classClose);
+
+   _printOnAdd(stream);
+
+   _printRenderObject(stream);
+
+}
+
+void HLSLCrossShader::_printOnAdd(Stream& stream)
+{
+   const char* classOpen = "void Class::onAdd()\r\n{\r\n";
+   stream.write(dStrlen(classOpen), classOpen);
+
+   const char* isCl = "\tif ( isClientObject() ) \r\n\t{\r\n";
+   stream.write(dStrlen(isCl), isCl);
+
+   const char* shaderData = "\t\tShaderData *shaderData;\r\n";
+   stream.write(dStrlen(shaderData), shaderData);
+
+   char output[512];
+   dSprintf(output, sizeof(output), "\t\tmShader = Sim::findObject( \"%s\", shaderData ) ? shaderData->getShader() : NULL;\r\n", shaderObjName);
+   stream.write(dStrlen((char*)output), output);
+   const char* ifNot = "\t\tif ( !mShader )\r\n";
+   const char* ifNot2 = "\t\t{\r\n";
+   char errOut[512];
+   dSprintf(errOut, sizeof(errOut), "\t\t\tCon::errorf( \"Class::onAdd - could not find %s\" );\r\n", shaderObjName);
+   const char* ifNot3 = "\t\t\treturn false;\r\n";
+   const char* ifNot4 = "\t\t}\r\n\r\n";
+
+   stream.write(dStrlen(ifNot), ifNot);
+   stream.write(dStrlen(ifNot2), ifNot2);
+   stream.write(dStrlen(errOut), errOut);
+   stream.write(dStrlen(ifNot3), ifNot3);
+   stream.write(dStrlen(ifNot4), ifNot4);
+
+   const char* shaderComment = "\t\t// Create ShaderConstBuffer and Handles\r\n";
+   const char* shaderCosntInit = "\t\tmShaderConsts = mShader->allocConstBuffer();\r\n";
+   stream.write(dStrlen(shaderComment), shaderComment);
+   stream.write(dStrlen(shaderCosntInit), shaderCosntInit);
+
+   for (U32 i = 0; i < mSourceList.size(); i++)
+   {
+      
+      SourceInfo info = mSourceList[i];
+      if (info.sampler)
+      {
+         samplersDefined = true;
+         samplers++;
+      }
+
+      U32 size = dStrlen(info.name);
+      char tex[128];
+      dStrncpy(tex, info.name, size)[size] = '\0';
+      tex[0] = dToupper(tex[0]);
+      char output[512];
+      dSprintf(output, sizeof(output), "\t\tm%sSC = mShader->getShaderConstHandle( \"$%s\" );\r\n", tex, info.name);
+      stream.write(dStrlen((char*)output), output);
+   }
+   
+   stream.write(dStrlen(newLine), newLine);
+
+   _printStateBlock(stream);
+
+   const char* clossIf = "\t}\r\n";
+   stream.write(dStrlen(clossIf), clossIf);
+   stream.write(dStrlen(classClose), classClose);
+
+}
+
+void HLSLCrossShader::_printStateBlock(Stream& stream)
+{
+   // Create StateBlocks
+   const char* line = "\t\tGFXStateBlockDesc desc;\r\n";
+   const char* line2 = "\t\tdesc.setCullMode(GFXCullNone);\r\n";
+   const char* line3 = "\t\tdesc.setBlend(true);\r\n";
+   const char* line4 = "\t\tdesc.setZReadWrite(true, false);\r\n";
+   stream.write(dStrlen(line), line);
+   stream.write(dStrlen(line2), line2);
+   stream.write(dStrlen(line3), line3);
+   stream.write(dStrlen(line4), line4);
+   if (samplersDefined)
+   {
+      const char* samp = "\t\tdesc.samplersDefined = true;\r\n";
+      stream.write(dStrlen(samp), samp);
+      for (U32 i = 0; i < samplers-1; i++)
+      {
+         char output[512];
+         dSprintf(output, sizeof(output), "\t\tdesc.samplers[%d].addressModeU = GFXAddressWrap;\r\n", i);
+         stream.write(dStrlen((char*)output), output);
+         dSprintf(output, sizeof(output), "\t\tdesc.samplers[%d].addressModeV = GFXAddressWrap;\r\n", i);
+         stream.write(dStrlen((char*)output), output);
+         dSprintf(output, sizeof(output), "\t\tdesc.samplers[%d].addressModeW = GFXAddressWrap;\r\n", i);
+         stream.write(dStrlen((char*)output), output);
+         dSprintf(output, sizeof(output), "\t\tdesc.samplers[%d].magFilter = GFXTextureFilterLinear;\r\n", i);
+         stream.write(dStrlen((char*)output), output);
+         dSprintf(output, sizeof(output), "\t\tdesc.samplers[%d].minFilter = GFXTextureFilterLinear;\r\n", i);
+         stream.write(dStrlen((char*)output), output);
+         dSprintf(output, sizeof(output), "\t\tdesc.samplers[%d].mipFilter = GFXTextureFilterLinear;\r\n\r\n", i);
+         stream.write(dStrlen((char*)output), output);
+      }
+   }
+   else
+   {
+      const char* samp = "\t\tdesc.samplersDefined = false;\r\n\r\n";
+      stream.write(dStrlen(samp), samp);
+   }
+
+   const char* fin = "\t\tmStateblock = GFX->createStateBlock(desc);\r\n";
+   stream.write(dStrlen(fin), fin);
+
+}
+
+void HLSLCrossShader::_printRenderObject(Stream& stream)
+{
+   const char* classOpen = "void Class::renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *mi )\r\n{\r\n";
+   stream.write(dStrlen(classOpen), classOpen);
+
+   const char* renderLine = "\tGFX->setShader( mShader );\r\n";
+   const char* renderLine1 = "\tGFX->setShaderConstBuffer(mShaderConsts);\r\n";
+   const char* renderLine2 = "\tGFX->setStateBlock(mStateblock);\r\n\r\n";
+   stream.write(dStrlen(renderLine), renderLine);
+   stream.write(dStrlen(renderLine1), renderLine1);
+   stream.write(dStrlen(renderLine2), renderLine2);
+
+   for (U32 i = 0; i < mSourceList.size(); i++)
+   {
+      SourceInfo info = mSourceList[i];
+      char output[512];
+      U32 size = dStrlen(info.name);
+      char tex[128];
+      dStrncpy(tex, info.name, size)[size] = '\0';
+      tex[0] = dToupper(tex[0]);
+
+      if (info.sampler)
+      {
+         dSprintf(output, sizeof(output), "\tGFX->setTexture( m%sSC->getSamplerRegister(), texture );\r\n", tex);
+         stream.write(dStrlen((char*)output), output);
+         continue;
+      }
+      dSprintf(output, sizeof(output), "\tmShaderConsts->setSafe( m%sSC, %s );\r\n", tex, info.type);
+      stream.write(dStrlen((char*)output), output);
+   }
+   
+   stream.write(dStrlen(classClose), classClose);
+}
+
+void HLSLCrossShader::_printIncludesSource(Stream& stream)
+{
+   // generally required headers.
+   const char* inc1 = "#include \"gfx/gfxTransformSaver.h\"\r\n";
+   const char* inc2 = "#include \"gfx/gfxTextureManager.h\"\r\n";
+   const char* inc3 = "#include \"scene/sceneRenderState.h\"\r\n";
+   const char* inc4 = "#include \"renderInstance/renderPassManager.h\"\r\n";
+   const char* inc5 = "#include \"materials/shaderData.h\"\r\n";
+   const char* inc6 = "#include \"math/mathIO.h\"\r\n\r\n";
+   stream.write(dStrlen(inc1), inc1);
+   stream.write(dStrlen(inc2), inc2);
+   stream.write(dStrlen(inc3), inc3);
+   stream.write(dStrlen(inc4), inc4);
+   stream.write(dStrlen(inc5), inc5);
+   stream.write(dStrlen(inc6), inc6);
+}
+
+void HLSLCrossShader::_printHeaderFile(Stream& stream)
+{
+}
+
+void HLSLCrossShader::_buildSourceInfo()
+{
+   // do vert first
+   for (U32 i = 0; i < mHLSLUniVertList->mUniformVertList.size(); i++)
+   {
+      HLSLInfo info = mHLSLUniVertList->mUniformVertList[i];
+      SourceInfo in;
+
+      if (!String::compare(info.type, "SamplerState"))
+      {
+         in.name = info.name;
+         in.type = "texture";
+         // upper case first letter.
+         in.sampler = true;
+         mSourceList.push_back(in);
+         samplers++;
+         continue;
+      }
+
+      // skip texture2d handled by samplerstates
+      if (!String::compare(info.type, "Texture2D"))
+      {
+         continue;
+      }
+
+      if (!String::compare(info.name, "model"))
+      {
+         in.name = info.name;
+         in.type = "modelMatrix";
+         // upper case first letter.
+         in.ModelMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "modelView"))
+      {
+         in.name = info.name;
+         in.type = "modelViewMatrix";
+         // upper case first letter.
+         in.ModelViewMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "modelViewProj"))
+      {
+         in.name = info.name;
+         in.type = "modelViewProjMatrix";
+         // upper case first letter.
+         in.ModelViewProjMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "view"))
+      {
+         in.name = info.name;
+         in.type = "viewMatrix";
+         // upper case first letter.
+         in.ViewMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "viewProj"))
+      {
+         in.name = info.name;
+         in.type = "viewProjMatrix";
+         // upper case first letter.
+         in.ViewProjMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "proj"))
+      {
+         in.name = info.name;
+         in.type = "projMatrix";
+         // upper case first letter.
+         in.ProjMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "accumTime"))
+      {
+         in.name = info.name;
+         in.type = "time";
+         // upper case first letter.
+         in.Time = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      // else just default.
+      in.name = info.name;
+      in.type = info.type;
+      // upper case first letter.
+      in.ProjMat = true;
+      mSourceList.push_back(in);
+
+   }
+
+   // now do pixel
+   for (U32 i = 0; i < mHLSLUniPixList->mUniformPixList.size(); i++)
+   {
+      HLSLInfo info = mHLSLUniPixList->mUniformPixList[i];
+      SourceInfo in;
+
+      if (!String::compare(info.type, "SamplerState"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.sampler = true;
+         mSourceList.push_back(in);
+         samplers++;
+         continue;
+      }
+
+      // skip texture2d handled by samplerstates
+      if (!String::compare((char*)info.type, "Texture2D"))
+      {
+         continue;
+      }
+
+      if (!String::compare((char*)info.name, "model"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.ModelMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "modelView"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.ModelViewMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "modelViewProj"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.ModelViewProjMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "view"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.ViewMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "viewProj"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.ViewProjMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "proj"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.ProjMat = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      if (!String::compare(info.name, "accumTime"))
+      {
+         in.name = info.name;
+         // upper case first letter.
+         in.Time = true;
+         mSourceList.push_back(in);
+         continue;
+      }
+
+      // else just default.
+      in.name = info.name;
+      // upper case first letter.
+      in.ProjMat = true;
+      mSourceList.push_back(in);
+
+   }
 }

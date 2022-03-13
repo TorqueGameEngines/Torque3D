@@ -246,7 +246,9 @@ void CrossShaderData::readBlueprint(const Torque::Path& filePath)
    }
    Con::printf("Shader blueprint successful!");
    mGLSLShader->generateShader((char*)this->getName());
+
    mHLSLShader->generateShader((char*)this->getName());
+   mHLSLShader->generateSource((char*)this->getName());
 }
 
 char* CrossShaderData::StripChars(const char* buffer)

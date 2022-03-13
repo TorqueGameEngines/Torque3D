@@ -126,19 +126,6 @@ protected:
    // vertex inputs
    bool mUseGLPosition;
 
-   // matrix inputs model
-   bool mUseModelMat;
-   bool mUseModelViewMat;
-   bool mUseModelViewProjMat;
-   // matrix inputs view
-   bool mUseViewMat;
-   bool mUseViewProjMat;
-   // matrix inputs proj
-   bool mUseProjMat;
-
-   // time
-   bool mUseTime;
-
    void _printVertexShader(Stream& stream);
    void _printPixelShader(Stream& stream);
 

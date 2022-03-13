@@ -22,6 +22,20 @@ struct HLSLInfo
    U32 arraySize = 0;
 };
 
+struct SourceInfo
+{
+   char* name;
+   char* type;
+   bool sampler = false;
+   bool ModelMat = false;
+   bool ModelViewMat = false;
+   bool ModelViewProjMat = false;
+   bool ViewMat = false;
+   bool ViewProjMat = false;
+   bool ProjMat = false;
+   bool Time = false;
+};
+
 class HLSLCrossShader
 {
 public:
@@ -58,14 +72,16 @@ public:
       U32 cReg = 0;
       U32 sReg = 0;
       U32 tReg = 0;
-      Vector <HLSLInfo> mUniformVertList;
+
    public:
+      Vector <HLSLInfo> mUniformVertList;
       HLSLCrossShaderUniformVertList(HLSLCrossShader* shader) : shader(shader) {}
       ~HLSLCrossShaderUniformVertList() {}
 
       void checkUniform(HLSLInfo& info);
       void addVertUniform(char* type, char* name);
       void print(Stream& stream);
+      
    };
 
    class HLSLCrossShaderUniformPixList
@@ -134,22 +150,29 @@ protected:
    HLSLCrossShaderPixOutputs* mHLSLPixOut;
    HLSLCrossShaderVertMain* mHLSLVertMain;
    HLSLCrossShaderPixMain* mHLSLPixMain;
+   //
+   bool samplersDefined;
+   U32 samplers;
+   bool isMat;
+   U32 matID;
 
-   // matrix inputs model
-   bool mUseModelMat;
-   bool mUseModelViewMat;
-   bool mUseModelViewProjMat;
-   // matrix inputs view
-   bool mUseViewMat;
-   bool mUseViewProjMat;
-   // matrix inputs proj
-   bool mUseProjMat;
-   // time
-   bool mUseTime;
-
+   //shader printers
+   char* shaderObjName;
    void _printVertexShader(Stream& stream);
    void _printPixelShader(Stream& stream);
 
+   // source file printers
+   void _buildSourceInfo();
+   void _printSourceFile(Stream& stream);
+   void _printOnAdd(Stream& stream);
+   void _printStateBlock(Stream& stream);
+   void _printRenderObject(Stream& stream);
+   void _printIncludesSource(Stream& stream);
+
+   // header file printers
+   void _printHeaderFile(Stream& stream);
+   
+   Vector <SourceInfo> mSourceList;
 public:
    HLSLCrossShader();
    ~HLSLCrossShader();
@@ -163,12 +186,15 @@ public:
    void processPixelMainLine(const char* pLine);
 
    void checkMainLine(String& line, bool isVert);
-   // should be hlsl already are these needed?
-   //char* checkType(char* type);
-   //void checkName(char* name);
-
-   // finally process shader:
+   // process shader:
    void generateShader(char* shaderName);
+
+   // print out source side helper.
+   void generateSource(char* shaderName);
+
+   // print out script side helper.
+   void genereateScript(char* shaderName);
+
 
 };
 

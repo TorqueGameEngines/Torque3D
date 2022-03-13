@@ -116,7 +116,7 @@ void HLSLCrossShader::HLSLCrossShaderInputList::print(Stream& stream)
 
    const char* structName = "struct VertData\r\n";
    const char* open = "{\r\n";
-   const char* closer = "}\r\n";
+   const char* closer = "};\r\n";
 
    stream.write(dStrlen(structName), structName);
    stream.write(dStrlen(open), open);
@@ -131,7 +131,6 @@ void HLSLCrossShader::HLSLCrossShaderInputList::print(Stream& stream)
 
    stream.write(dStrlen(closer), closer);
    // clean new line afterwards.
-   const char* newLine = "\r\n";
    stream.write(dStrlen((char*)newLine), newLine);
 
 }
@@ -163,7 +162,7 @@ void HLSLCrossShader::HLSLCrossShaderConnectList::print(Stream& stream)
 
    const char* structName = "struct ConnectData\r\n";
    const char* open = "{\r\n";
-   const char* closer = "}\r\n";
+   const char* closer = "};\r\n";
 
    stream.write(dStrlen(structName), structName);
    stream.write(dStrlen(open), open);
@@ -178,7 +177,6 @@ void HLSLCrossShader::HLSLCrossShaderConnectList::print(Stream& stream)
 
    stream.write(dStrlen(closer), closer);
    // clean new line afterwards.
-   const char* newLine = "\r\n";
    stream.write(dStrlen((char*)newLine), newLine);
 
 }
@@ -552,7 +550,7 @@ void HLSLCrossShader::HLSLCrossShaderPixOutputs::print(Stream& stream)
 
    const char* structName = "struct PixelOut\r\n";
    const char* open = "{\r\n";
-   const char* closer = "}\r\n";
+   const char* closer = "};\r\n";
 
    stream.write(dStrlen(structName), structName);
    stream.write(dStrlen(open), open);
@@ -567,7 +565,6 @@ void HLSLCrossShader::HLSLCrossShaderPixOutputs::print(Stream& stream)
 
    stream.write(dStrlen(closer), closer);
    // clean new line afterwards.
-   const char* newLine = "\r\n";
    stream.write(dStrlen((char*)newLine), newLine);
 
 }
@@ -610,6 +607,9 @@ void HLSLCrossShader::HLSLCrossShaderVertMain::print(Stream& stream)
 
       stream.write(dStrlen((char*)output), output);
    }
+
+   const char* retOut = "\treturn OUT;\r\n";
+   stream.write(dStrlen((char*)retOut), retOut);
    stream.write(dStrlen((char*)closer), closer);
 }
 
@@ -651,6 +651,9 @@ void HLSLCrossShader::HLSLCrossShaderPixMain::print(Stream& stream)
 
       stream.write(dStrlen((char*)output), output);
    }
+
+   const char* retOut = "\treturn OUT;\r\n";
+   stream.write(dStrlen((char*)retOut), retOut);
    stream.write(dStrlen((char*)closer), closer);
 }
 
@@ -725,18 +728,18 @@ void HLSLCrossShader::processPixOutputs(const char* pixOut)
 
 void HLSLCrossShader::processVertMainLine(const char* vLine)
 {
-   String newLine = vLine;
+   String newMainLine = vLine;
 
-   mHLSLVertMain->addLine(newLine);
+   mHLSLVertMain->addLine(newMainLine);
 }
 
 void HLSLCrossShader::processPixelMainLine(const char* pLine)
 {
-   String newLine = pLine;
+   String newMainLine = pLine;
 
-   checkMainLine(newLine, false);
+   checkMainLine(newMainLine, false);
 
-   mHLSLPixMain->addLine(newLine);
+   mHLSLPixMain->addLine(newMainLine);
 }
 
 void HLSLCrossShader::_printVertexShader(Stream& stream)
@@ -833,9 +836,9 @@ void HLSLCrossShader::_printOnAdd(Stream& stream)
    const char* shaderData = "\t\tShaderData *shaderData;\r\n";
    stream.write(dStrlen(shaderData), shaderData);
 
-   char output[512];
-   dSprintf(output, sizeof(output), "\t\tmShader = Sim::findObject( \"%s\", shaderData ) ? shaderData->getShader() : NULL;\r\n", shaderObjName);
-   stream.write(dStrlen((char*)output), output);
+   char findShad[512];
+   dSprintf(findShad, sizeof(findShad), "\t\tmShader = Sim::findObject( \"%s\", shaderData ) ? shaderData->getShader() : NULL;\r\n", shaderObjName);
+   stream.write(dStrlen((char*)findShad), findShad);
    const char* ifNot = "\t\tif ( !mShader )\r\n";
    const char* ifNot2 = "\t\t{\r\n";
    char errOut[512];

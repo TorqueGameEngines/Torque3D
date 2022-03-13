@@ -105,6 +105,7 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
 
    mLastVertShader = NULL;
    mLastPixShader = NULL;
+   mLastCompShader = NULL;
 
    mCanCurrentlyRender = false;
    mTextureManager = NULL;
@@ -115,8 +116,9 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
 
    mFeatureLevel = D3D_FEATURE_LEVEL_9_1; //lowest listed. should be overridden by init
 
-   mVertexShaderTarget = String::EmptyString;
-   mPixelShaderTarget = String::EmptyString;
+   mVertexShaderTarget  = String::EmptyString;
+   mPixelShaderTarget   = String::EmptyString;
+   mComputeShaderTarget = String::EmptyString;
    mShaderModel = String::EmptyString;
 
    mDrawInstancesCount = 0;
@@ -517,12 +519,14 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    case D3D_FEATURE_LEVEL_11_0:
       mVertexShaderTarget = "vs_5_0";
       mPixelShaderTarget = "ps_5_0";
+      mComputeShaderTarget = "cs_5_0";
       mPixVersion = 5.0f;
       mShaderModel = "50";
       break;
    case D3D_FEATURE_LEVEL_10_1:
       mVertexShaderTarget = "vs_4_1";
       mPixelShaderTarget = "ps_4_1";
+      mComputeShaderTarget = "cs_4_1";
       mPixVersion = 4.1f;
       mShaderModel = "41";
       break;
@@ -676,6 +680,7 @@ void GFXD3D11Device::endReset(GFXD3D11WindowTarget* windowTarget)
    reacquireDefaultPoolResources();
    mD3DDeviceContext->PSSetShader(mLastPixShader, NULL, 0);
    mD3DDeviceContext->VSSetShader(mLastVertShader, NULL, 0);
+   mD3DDeviceContext->CSSetShader(mLastCompShader, NULL, 0);
    mInitialized = true;
    // Mark everything dirty and flush to card, for sanity.
    updateStates(true);
@@ -1241,7 +1246,7 @@ void GFXD3D11Device::setShader(GFXShader *shader, bool force)
       {
         mD3DDeviceContext->VSSetShader( d3dShader->mVertShader, NULL, 0);
         mLastVertShader = d3dShader->mVertShader;
-      }     
+      }
    }
    else
    {

@@ -1,43 +1,37 @@
 input {
-	float3 pos : POSITION;
-	float2 uv0 : TEXCOORD0;
+	float4 vPosition POSITION
+	float2 texCoord0 TEXCOORD0
 }
 connect {
-	float4 hpos : SV_Position;
-	float2 texCoord : TEXCOORD0;
+	float4 vPosition SV_Position
+	float2 texCoord0 TEXCOORD0
 }
 vertex {
 	uniform {
-		float4x4 modelview;
-		float2 texDirection;
-		float2 texOffset;
-		float accumTime;
-		float texScale;
+		float4x4 	modelViewProj
+		float2 		texDirection
+		float2 		texOffset
+		float 		accumTime
+		float 		texScale
 	}
 	main {
-		ConnectData OUT;
-		OUT.hpos = mul(modelview, float4(IN.pos,1.0));
-		OUT.hpos.z = OUT.hpos.w;
-		float2 uv = IN.uv0;
-		uv += texOffset;
-		uv *= texScale;
-		uv += accumTime * texDirection;
-		OUT.texCoord = uv;
-		return OUT;
+		OUT.vPosition = mul(modelViewProj, float4(IN.vPosition.xyz,1.0))
+		OUT.vPosition.z = OUT.vPosition.w
+		float2 uv = IN.texCoord0
+		uv += texOffset
+		uv *= texScale
+		uv += accumTime * texDirection
+		OUT.texCoord0 = uv
 	}
 }
 pixel {
 	uniform {
-		Texture2D diffuseMap : register(T0);
-		SamplerState diffuseMap : register(S0);
-	}
-	target{
-		SV_Target0;
+		Texture2D diffuseMap
 	}
 	output {
-		float4 col;
+		float4 col SV_Target0
 	}
 	main {
-		float 4 col = diffuseMap.Sample(diffuseMap, IN.texCoord);
+		OUT.col = diffuseMap(diffuseMap, IN.texCoord0)
 	}
 }

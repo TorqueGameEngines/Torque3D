@@ -953,6 +953,12 @@ void HLSLCrossShader::_printRenderObject(Stream& stream)
          stream.write(dStrlen((char*)output), output);
          continue;
       }
+      if (!String::compare(info.type, "time"))
+      {
+         dSprintf(output, sizeof(output), "\tmShaderConsts->setSafe( m%sSC, (F32)Sim::getCurrentTime() / 1000.0f  );\r\n", tex);
+         stream.write(dStrlen((char*)output), output);
+         continue;
+      }
       dSprintf(output, sizeof(output), "\tmShaderConsts->setSafe( m%sSC, %s );\r\n", tex, info.type);
       stream.write(dStrlen((char*)output), output);
    }
@@ -1094,6 +1100,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.type, "SamplerState"))
       {
          in.name = info.name;
+         in.type = "texture";
          // upper case first letter.
          in.sampler = true;
          mSourceList.push_back(in);
@@ -1102,14 +1109,15 @@ void HLSLCrossShader::_buildSourceInfo()
       }
 
       // skip texture2d handled by samplerstates
-      if (!String::compare((char*)info.type, "Texture2D"))
+      if (!String::compare(info.type, "Texture2D"))
       {
          continue;
       }
 
-      if (!String::compare((char*)info.name, "model"))
+      if (!String::compare(info.name, "model"))
       {
          in.name = info.name;
+         in.type = "modelMatrix";
          // upper case first letter.
          in.ModelMat = true;
          mSourceList.push_back(in);
@@ -1119,6 +1127,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.name, "modelView"))
       {
          in.name = info.name;
+         in.type = "modelViewMatrix";
          // upper case first letter.
          in.ModelViewMat = true;
          mSourceList.push_back(in);
@@ -1128,6 +1137,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.name, "modelViewProj"))
       {
          in.name = info.name;
+         in.type = "modelViewProjMatrix";
          // upper case first letter.
          in.ModelViewProjMat = true;
          mSourceList.push_back(in);
@@ -1137,6 +1147,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.name, "view"))
       {
          in.name = info.name;
+         in.type = "viewMatrix";
          // upper case first letter.
          in.ViewMat = true;
          mSourceList.push_back(in);
@@ -1146,6 +1157,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.name, "viewProj"))
       {
          in.name = info.name;
+         in.type = "viewProjMatrix";
          // upper case first letter.
          in.ViewProjMat = true;
          mSourceList.push_back(in);
@@ -1155,6 +1167,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.name, "proj"))
       {
          in.name = info.name;
+         in.type = "projMatrix";
          // upper case first letter.
          in.ProjMat = true;
          mSourceList.push_back(in);
@@ -1164,6 +1177,7 @@ void HLSLCrossShader::_buildSourceInfo()
       if (!String::compare(info.name, "accumTime"))
       {
          in.name = info.name;
+         in.type = "time";
          // upper case first letter.
          in.Time = true;
          mSourceList.push_back(in);
@@ -1172,6 +1186,7 @@ void HLSLCrossShader::_buildSourceInfo()
 
       // else just default.
       in.name = info.name;
+      in.type = info.type;
       // upper case first letter.
       in.ProjMat = true;
       mSourceList.push_back(in);

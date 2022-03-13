@@ -153,5 +153,5 @@ singleton ShaderData( CubemapSaveShader )
 
 new CrossShaderData( basicCloudsCross )
 {
-	ShaderBlueprint = "scripts/gfxData/testShader.csg";
+	ShaderBlueprint = "./testShader.csg";
 };

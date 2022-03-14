@@ -32,6 +32,6 @@ pixel {
 		float4 col SV_Target0
 	}
 	main {
-		OUT.col = diffuseMap(diffuseMap, IN.texCoord0)
+		OUT.col = diffuseMap.Sample(diffuseMap, IN.texCoord0)
 	}
 }

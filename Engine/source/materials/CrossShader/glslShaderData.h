@@ -45,7 +45,7 @@ public:
       GLSLCrossShaderConnectList(GLSLCrossShader* shader) : shader(shader) {}
       ~GLSLCrossShaderConnectList() {}
 
-      void addConnect(char* type, char* name);
+      void addConnect(char* type, char* name, char* target);
       void print(Stream& stream, bool isVShader);
    };
 

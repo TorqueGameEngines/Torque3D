@@ -50,6 +50,13 @@ void GLSLCrossShader::checkMainLine(String& line, bool isVert)
          line.replace("OUT.vPosition", "gl_Position");
       }
    }
+   else
+   {
+      if (mUseGLPosition)
+      {
+         line.replace("IN.vPosition", "gl_FragCoord");
+      }
+   }
 
    line.replace("IN.", "IN_");
    line.replace("OUT.", "OUT_");
@@ -75,19 +82,41 @@ void GLSLCrossShader::checkMainLine(String& line, bool isVert)
       for (U32 i = 0; i < mGLSLUniPixList->mUniformPixList.size(); i++)
       {
          GLSLInfo info = mGLSLUniPixList->mUniformPixList[i];
-         char* pch = dStrstr(line, info.name);
+         U32 size = dStrlen(info.name);
+         char tex[128];
+         dStrncpy(tex, info.name, size)[size] = '\0';
+         dStrncat(tex, ".Sample", dStrlen(tex));
+         char* pch = dStrstr(line, tex);
          if (pch != NULL)
          {
             if (!String::compare(info.type, "sampler2D"))
             {
                String remove(pch);
-               remove.erase(0, dStrlen(info.name));
+               remove.erase(0, dStrlen(tex));
                remove.insert(0, "texture");
                // copy and add null termination.
                dStrncpy(pch, remove.c_str(), (remove.length()))[remove.length()] = '\0';
                break;
             }
          }
+
+         char tex2[128];
+         dStrncpy(tex2, info.name, size)[size] = '\0';
+         dStrncat(tex2, ".SampleLevel", dStrlen(tex2));
+         char* pch2 = dStrstr(line, tex2);
+         if (pch2 != NULL)
+         {
+            if (!String::compare(info.type, "sampler2D"))
+            {
+               String remove(pch2);
+               remove.erase(0, dStrlen(tex2));
+               remove.insert(0, "textureLod");
+               // copy and add null termination.
+               dStrncpy(pch2, remove.c_str(), (remove.length()))[remove.length()] = '\0';
+               break;
+            }
+         }
+
       }
    }
 
@@ -96,7 +125,7 @@ void GLSLCrossShader::checkMainLine(String& line, bool isVert)
 void GLSLCrossShader::checkName(char* name)
 {
    // this one should probably always be true.
-   if (!String::compare(name, "vPosition") || !String::compare(name, "vPos"))
+   if (!String::compare(name, "SV_Position"))
       mUseGLPosition = true;
 
 }
@@ -183,10 +212,10 @@ void GLSLCrossShader::GLSLCrossShaderInputList::print(Stream& stream)
 // GLSLCrossShaderConnList
 //-----------------------------------------------------------
 
-void GLSLCrossShader::GLSLCrossShaderConnectList::addConnect(char* type, char* name)
+void GLSLCrossShader::GLSLCrossShaderConnectList::addConnect(char* type, char* name, char* target)
 {
    // gl_Position is used in glsl instead no need to write this out.
-   if (!String::compare(name, "vPos") || !String::compare(name, "vPosition"))
+   if (!String::compare(target, "SV_Position"))
    {
       // send it to shader to check and set gl_Position to true.
       shader->checkName(name);
@@ -486,8 +515,9 @@ void GLSLCrossShader::processConnect(const char* connBuff)
 {
    char* type = Con::getReturnBuffer(StringUnit::getUnit(connBuff, 0, " \t\n"));
    char* name = Con::getReturnBuffer(StringUnit::getUnit(connBuff, 1, " \t\n"));
+   char* target = Con::getReturnBuffer(StringUnit::getUnit(connBuff, 2, " \t\n"));
 
-   mGLSLConnList->addConnect(type, name);
+   mGLSLConnList->addConnect(type, name, target);
 }
 
 void GLSLCrossShader::processVertUniforms(const char* vertUni)

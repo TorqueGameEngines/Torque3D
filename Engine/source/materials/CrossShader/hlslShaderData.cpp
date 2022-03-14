@@ -26,7 +26,7 @@ void HLSLCrossShader::checkMainLine(String& line, bool isVert)
                String remove(pch);
                remove.erase(0, dStrlen(info.name));
                char out[256];
-               dSprintf(out, sizeof(out), "%sTex.Sample", info.name);
+               dSprintf(out, sizeof(out), "%sTex", info.name);
                remove.insert(0, out);
                // copy and add null termination.
                dStrncpy(pch, remove.c_str(), (remove.length()))[remove.length()] = '\0';

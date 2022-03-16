@@ -395,6 +395,15 @@ DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
 
    Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
+
+   if (givenPath.getFileName().isEmpty() && givenPath.getExtension().isNotEmpty())
+   {
+      //specially named or hidden files, like .gitignore parse incorrectly due to having
+      //"no" filename, so we adjust that
+      givenPath.setFileName(String(".") + givenPath.getExtension());
+      givenPath.setExtension("");
+   }
+
    return Torque::FS::IsFile(givenPath);
 }
 

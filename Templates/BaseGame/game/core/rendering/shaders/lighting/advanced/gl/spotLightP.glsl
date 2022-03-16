@@ -96,6 +96,8 @@ void main()
 	if(dist < lightRange)
    {
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
+      vec3 lightCol = lightColor.rgb;
+      
       #ifdef NO_SHADOW   
          float shadowed = 1.0;      	
       #else
@@ -107,20 +109,18 @@ void main()
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
          float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         #ifdef USE_COOKIE_TEX
+            // Lookup the cookie sample.
+            vec4 cookie = texture(cookieMap, shadowCoord);
+            // Multiply the light with the cookie tex.
+            lightCol *= cookie.rgb;
+            // Use a maximum channel luminance to attenuate 
+            // the lighting else we get specular in the dark
+            // regions of the cookie texture.
+            lightCol *= max(cookie.r, max(cookie.g, cookie.b));
+         #endif
       #endif      
    
-      vec3 lightCol = lightColor.rgb;
-   #ifdef USE_COOKIE_TEX
-
-      // Lookup the cookie sample.
-      vec4 cookie = texture(cookieMap, tMul(worldToLightProj, -surfaceToLight.L));
-      // Multiply the light with the cookie tex.
-      lightCol *= cookie.rgb;
-      // Use a maximum channel luminance to attenuate 
-      // the lighting else we get specular in the dark
-      // regions of the cookie texture.
-      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
-   #endif
 
    #ifdef DIFFUSE_LIGHT_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);

@@ -910,10 +910,18 @@ function EditorMenuEditPaste()
 
 function EditorToolsMenu::onSelectItem(%this, %id)
 {
-   %toolName = getField( %this.item[%id], 2 );  
+   %tool = getField( %this.item[%id], 2 ); 
 
-   %paletteName = "";
-   EditorGui.setEditor(%toolName, %paletteName  );
+   if(isObject(%tool)) 
+   {
+      %paletteName = "";
+      EditorGui.setEditor(%tool, %paletteName  );
+   }
+   else
+   {
+      //it's an embedded command, so we'll just execute it
+      eval(%tool);  
+   }
    
    %this.checkRadioItem(0, %this.getItemCount(), %id);
    return true;

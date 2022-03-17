@@ -14,7 +14,6 @@ function AssetBrowser::createMaterialAsset(%this)
       AssetName = %assetName;
       versionId = 1;
       materialDefinitionName = %assetName;
-      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
       
       new Material(%assetName) {
       };

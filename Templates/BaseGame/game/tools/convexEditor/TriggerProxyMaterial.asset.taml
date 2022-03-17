@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="TriggerProxyMaterial"
-    scriptFile="@assetFile=materials.tscript"
-    materialDefinitionName="TriggerProxyMaterial"
-    VersionId="1" />

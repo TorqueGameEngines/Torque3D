@@ -1,6 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    scriptFile="@assetFile=DatablockEditorTreeWindow.ed.gui"
-    GUIFile="@assetFile=DatablockEditorTreeWindow.ed.gui"
-    VersionId="1" />

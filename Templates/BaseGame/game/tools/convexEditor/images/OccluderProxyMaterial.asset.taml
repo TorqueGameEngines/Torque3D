@@ -1,14 +1,14 @@
 <MaterialAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="White"
-    materialDefinitionName="White"
+    AssetName="OccluderProxyMaterial"
+    materialDefinitionName="OccluderProxyMaterial"
     VersionId="1">
     <Material
-        Name="White">
+        Name="OccluderProxyMaterial">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="ToolsModule:white_image"/>
+                DiffuseMapAsset="ToolsModule:occluderProxyImage_image"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

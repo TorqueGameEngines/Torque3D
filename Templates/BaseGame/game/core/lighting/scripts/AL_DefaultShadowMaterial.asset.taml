@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="AL_DefaultShadowMaterial"
-    scriptFile="@assetFile=advancedLighting_Shaders.tscript"
-    materialDefinitionName="AL_DefaultShadowMaterial"
-    VersionId="1" />

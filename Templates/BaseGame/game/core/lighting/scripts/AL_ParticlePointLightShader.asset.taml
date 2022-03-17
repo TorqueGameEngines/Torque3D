@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="AL_ParticlePointLightShader"
-    scriptFile="@assetFile=advancedLighting_Shaders.tscript"
-    materialDefinitionName="AL_ParticlePointLightShader"
-    VersionId="1" />

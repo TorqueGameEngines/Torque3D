@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="PortalProxyMaterial"
-    scriptFile="@assetFile=materials.tscript"
-    materialDefinitionName="PortalProxyMaterial"
-    VersionId="1" />

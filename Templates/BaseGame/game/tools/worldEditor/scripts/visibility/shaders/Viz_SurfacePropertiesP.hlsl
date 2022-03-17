@@ -33,7 +33,6 @@ TORQUE_UNIFORM_SAMPLER2D(backbufferTex, 4);
 TORQUE_UNIFORM_SAMPLER2D(glowBuffer, 5);
 
 uniform float mode;
-uniform float3 eyePosWorld;
 uniform float4x4 cameraToWorld;
 
 float4 main( PFXVertToPix IN ) : TORQUE_TARGET0

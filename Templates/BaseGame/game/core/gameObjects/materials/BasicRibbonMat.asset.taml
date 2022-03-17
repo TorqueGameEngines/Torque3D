@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="BasicRibbonMat"
+    scriptFile="@assetFile=BasicRibbonMat.tscript"
+    materialDefinitionName="BasicRibbonMat"
+    VersionId="1" />

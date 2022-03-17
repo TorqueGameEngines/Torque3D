@@ -1,6 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    scriptFile="@assetFile=WorldEditorTreeWindow.ed.gui"
-    GUIFile="@assetFile=WorldEditorTreeWindow.ed.gui"
-    VersionId="1" />

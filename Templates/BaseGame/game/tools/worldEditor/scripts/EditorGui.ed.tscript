@@ -216,7 +216,7 @@ function EditorGui::init(%this)
    ETerrainEditor.init();
 
    //Creator.init();
-   ObjectCreator.init();
+   //ObjectCreator.init();
    ObjectBuilderGui.init();
 
    %this.setMenuDefaultState();

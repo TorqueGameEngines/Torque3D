@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="ZoneProxyMaterial"
-    scriptFile="@assetFile=materials.tscript"
-    materialDefinitionName="ZoneProxyMaterial"
-    VersionId="1" />

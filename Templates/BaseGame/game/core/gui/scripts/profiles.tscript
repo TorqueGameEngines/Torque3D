@@ -245,3 +245,11 @@ new GuiControlProfile( GuiSliderProfile )
    bitmapAsset = "Core_GUI:slider_image";
    category = "Core";
 };
+
+//
+if(!isObject(GuiScrollProfile))
+new GuiControlProfile(GuiScrollProfile)
+{
+	bitmapAsset = "Core_GUI:scrollBar_image";
+   category = "Core";
+};

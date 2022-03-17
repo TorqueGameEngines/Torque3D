@@ -2,6 +2,18 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="OctahedronMat"
-    scriptFile="@assetFile=materials.tscript"
     materialDefinitionName="OctahedronMat"
-    VersionId="1" />
+    VersionId="1">
+    <Material
+        Name="OctahedronMat"
+        mapTo="green"
+        translucent="1"
+        translucentBlendOp="PreMul"
+        castShadows="0">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_GameObjects:camera_image"
+                diffuseColor="0 1 0 1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

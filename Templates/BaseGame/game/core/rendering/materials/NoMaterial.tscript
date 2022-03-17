@@ -1,6 +1,0 @@
-//--- OBJECT WRITE BEGIN ---
-singleton Material(NoMaterial) {
-   mapTo="NoMaterial";
-   DiffuseMapAsset[0] = "Core_Rendering:warnMat_image";
-};
-//--- OBJECT WRITE END ---

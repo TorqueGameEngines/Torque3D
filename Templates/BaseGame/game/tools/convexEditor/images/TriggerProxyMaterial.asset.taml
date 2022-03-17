@@ -1,14 +1,14 @@
 <MaterialAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="DefaultRoadMaterialTop"
-    materialDefinitionName="DefaultRoadMaterialTop"
+    AssetName="TriggerProxyMaterial"
+    materialDefinitionName="TriggerProxyMaterial"
     VersionId="1">
     <Material
-        Name="DefaultRoadMaterialTop">
+        Name="TriggerProxyMaterial">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="Core_GameObjects:defaultRoadTextureTop_image"/>
+                DiffuseMapAsset="ToolsModule:triggerProxyImage_image"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

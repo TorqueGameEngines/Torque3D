@@ -1,0 +1,29 @@
+singleton ShaderData( TexturedRibbonShader )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/ribbons/texRibbonShaderV.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/ribbons/texRibbonShaderP.hlsl";
+   
+   OGLVertexShaderFile   = $Core::CommonShaderPath @ "/ribbons/gl/texRibbonShaderV.glsl";
+   OGLPixelShaderFile    = $Core::CommonShaderPath @ "/ribbons/gl/texRibbonShaderP.glsl";
+   
+   samplerNames[0] = "$ribTex";
+   
+   pixVersion = 2.0;
+};
+ 
+singleton CustomMaterial( TexturedRibbonMat )
+{
+   shader = TexturedRibbonShader;
+   version = 2.0;
+   
+   emissive[0] = true;
+   
+   doubleSided = true;
+   translucent = true;
+   BlendOp = AddAlpha;
+   translucentBlendOp = AddAlpha;
+
+   sampler["ribTex"] = "core/gameObjects/images/ribTex.png";
+   
+   preload = true;
+};

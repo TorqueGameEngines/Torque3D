@@ -2,6 +2,6 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="TexturedRibbonMat"
-    scriptFile="@assetFile=materials.tscript"
+    scriptFile="@assetFile=TexturedRibbonMat.tscript"
     materialDefinitionName="TexturedRibbonMat"
     VersionId="1" />

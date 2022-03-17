@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="Green"
-    scriptFile="@assetFile=green"
-    materialDefinitionName="Green"
-    originalFilePath="D:/Gamedev/Projects/Catographer/GameBuild/Templates/BaseGame/game/core/gameObjects/shapes/green" />

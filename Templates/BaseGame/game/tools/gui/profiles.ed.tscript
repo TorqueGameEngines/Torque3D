@@ -698,22 +698,6 @@ new GuiControlProfile( ToolsGuiFormProfile : ToolsGuiTextProfile )
 
 // ----------------------------------------------------------------------------
 
-singleton GuiControlProfile( GuiEditorClassProfile )
-{
-   opaque = true;
-   fillColor = "232 232 232";
-   border = 1;
-   borderColor   = "42 42 42 140";
-   borderColorHL = "127 127 127";
-   fontColor = "215 215 215";
-   fontColorHL = "50 50 50";
-   fixedExtent = true;
-   justify = "center";
-   bitmapAsset = "ToolsModule:scrollBar_image";
-   hasBitmapArray = true;
-   category = "Editor";
-};
-
 singleton GuiControlProfile( GuiBackFillProfile )
 {
    opaque = true;
@@ -1245,4 +1229,12 @@ singleton GuiControlProfile (IconDropdownProfile)
    //bitmap = "./icon-dropdownbar";
    
    fillColor = EditorSettings.value("Theme/headerColor");
+};
+
+//
+singleton GuiControlProfile (GuiSimpleBorderProfile)
+{
+   opaque = false;   
+   border = 1;   
+   category = "Editor";
 };

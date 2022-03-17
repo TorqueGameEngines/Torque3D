@@ -1971,39 +1971,15 @@ function MaterialEditorGui::save( %this )
 
 function MaterialEditorGui::createNewMaterial( %this )
 {
-   AssetBrowser_SelectModule.showDialog("MaterialEditorGui.pickedNewMaterialTargetModule");
-   AssetBrowser_SelectModuleWindow.selectWindow();
+   AssetBrowser.setupCreateNewAsset("MaterialAsset", AssetBrowser.selectedModule, "MaterialEditorGui.onCreateNewMaterialAsset");
 }
 
-function MaterialEditorGui::pickedNewMaterialTargetModule( %this, %module )
+function MaterialEditorGui::onCreateNewMaterialAsset(%this, %newAssetId)
 {
-   %moduleDef = ModuleDatabase.findModule(%module);
-   PE_EmitterEditor.targetModule = %module;
-   MaterialEditorGui.defaultMaterialFile = %moduleDef.ModulePath @ "/scripts/managedData/materials." @ $TorqueScriptFileExtension;
-
-   if(!isDirectory(filePath(MaterialEditorGui.defaultMaterialFile)))
-   {
-      AssetBrowser.dirHandler.createFolder(filePath(MaterialEditorGui.defaultMaterialFile));
-   }
-
-   %action = %this.createUndo(ActionCreateNewMaterial, "Create New Material");
-   %action.object = "";
-   
-   %material = getUniqueName( "newMaterial" );
-   new Material(%material) 
-   {
-      mapTo = "unmapped_mat";
-      parentGroup = RootGroup;
-   };
-   
-   %action.newMaterial = %material.getId();
-   %action.oldMaterial = MaterialEditorGui.currentMaterial;
-   
-   MaterialEditorGui.submitUndo( %action );
-   
-   MaterialEditorGui.currentObject = "";
-   MaterialEditorGui.setMode();
-   MaterialEditorGui.prepareActiveMaterial( %material.getId(), true );
+   //get the new asset definition
+   %assetDef = AssetDatabase.acquireAsset(%newAssetId);
+   if(isObject(%assetDef))
+      AssetBrowser.editMaterialAsset(%assetDef);
 }
 
 function MaterialEditorGui::deleteMaterial( %this )

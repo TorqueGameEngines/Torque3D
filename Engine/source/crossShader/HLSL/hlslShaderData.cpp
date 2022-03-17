@@ -1,6 +1,6 @@
 #include "hlslShaderData.h"
 #include "platform/platform.h"
-#include "materials/crossShaderData.h"
+#include "crossShader/crossShaderData.h"
 #include "core/volume.h"
 #include "console/consoleTypes.h"
 #include "core/strings/stringUnit.h"

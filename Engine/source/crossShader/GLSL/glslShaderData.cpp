@@ -1,6 +1,6 @@
 #include "glslShaderData.h"
 #include "platform/platform.h"
-#include "materials/crossShaderData.h"
+#include "crossShader/crossShaderData.h"
 #include "core/volume.h"
 #include "console/consoleTypes.h"
 #include "core/strings/stringUnit.h"
@@ -8,37 +8,35 @@
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 
-char* GLSLCrossShader::checkType(char* type)
+typedef GLSLCrossShader::GLSLDataType GLSLCrossShader_DataType;
+DefineEnumType(GLSLCrossShader_DataType);
+
+ImplementEnumType(GLSLCrossShader_DataType,
+   "Description\n"
+   "@ingroup ?\n\n")
+   {GLSLCrossShader::float1,     "float",       "A 1d float."    },
+   {GLSLCrossShader::vec2,       "float2",      "A 2d float."  },
+   {GLSLCrossShader::vec3,       "float3",      "A 3d float." },
+   {GLSLCrossShader::vec4,       "float4",      "A 4d float."    },
+   {GLSLCrossShader::mat2,       "float2x2",    "A 2x2 matrix."  },
+   {GLSLCrossShader::mat3,       "float3x3",    "A 3x3 matrix."  },
+   {GLSLCrossShader::mat4x3,     "float4x3",    "A 4x3 matrix."  },
+   {GLSLCrossShader::mat4,       "float4x4",    "A 4x4 matrix."  },
+   {GLSLCrossShader::sampler2D,  "Texture2D",   "A 2d texture." },
+EndImplementEnumType;
+
+static char* dataTypeString[] =
 {
-   if (!String::compare(type, "float"))
-      return type;
-
-   if (!String::compare(type, "float2"))
-      return "vec2";
-
-   if (!String::compare(type, "float3"))
-      return "vec3";
-
-   if (!String::compare(type, "float4"))
-      return "vec4";
-
-   if (!String::compare(type, "float2x2"))
-      return "mat2";
-
-   if (!String::compare(type, "float3x3"))
-      return "mat3";
-
-   if (!String::compare(type, "float4x3"))
-      return "mat4x3";
-
-   if (!String::compare(type, "float4x4"))
-      return "mat4";
-
-   if (!String::compare(type, "Texture2D"))
-      return "sampler2D";
-
-   return "UKNOWN TYPE";
-}
+   "float",
+   "vec2",
+   "vec3",
+   "vec4",
+   "mat2",
+   "mat3",
+   "mat4x3",
+   "mat4",
+   "sampler2D"
+};
 
 void GLSLCrossShader::checkMainLine(String& line, bool isVert)
 {
@@ -122,10 +120,10 @@ void GLSLCrossShader::checkMainLine(String& line, bool isVert)
 
 }
 
-void GLSLCrossShader::checkName(char* name)
+void GLSLCrossShader::checkName(char* target)
 {
    // this one should probably always be true.
-   if (!String::compare(name, "SV_Position"))
+   if (!String::compare(target, "SV_Position"))
       mUseGLPosition = true;
 
 }
@@ -166,11 +164,9 @@ void GLSLCrossShader::generateShader(char* shaderName)
 void GLSLCrossShader::GLSLCrossShaderInputList::addInput(char* type, char* name)
 {
    GLSLInfo in;
-   char* glType = shader->checkType(type);
-
-   in.type = glType;
+   in.type = type;
    in.name = name;
-
+   
    mInputList.push_back(in);
 }
 
@@ -218,14 +214,13 @@ void GLSLCrossShader::GLSLCrossShaderConnectList::addConnect(char* type, char* n
    if (!String::compare(target, "SV_Position"))
    {
       // send it to shader to check and set gl_Position to true.
-      shader->checkName(name);
+      shader->checkName(target);
       return;
    }
 
    GLSLInfo in;
-   char* glType = shader->checkType(type);
 
-   in.type = glType;
+   in.type = type;
    in.name = name;
 
    mConnectList.push_back(in);
@@ -294,10 +289,9 @@ void GLSLCrossShader::GLSLCrossShaderConnectList::print(Stream& stream, bool isV
 void GLSLCrossShader::GLSLCrossShaderUniformVertList::addVertUniform(char* type, char* name)
 {
    GLSLInfo in;
-   char* glType = shader->checkType(type);
    shader->checkName(name);
 
-   in.type = glType;
+   in.type = type;
    in.name = name;
    Con::printf("uniform %s %s", in.type, in.name);
 
@@ -334,10 +328,9 @@ void GLSLCrossShader::GLSLCrossShaderUniformVertList::print(Stream& stream)
 void GLSLCrossShader::GLSLCrossShaderUniformPixList::addPixUniform(char* type, char* name)
 {
    GLSLInfo in;
-   char* glType = shader->checkType(type);
    shader->checkName(name);
 
-   in.type = glType;
+   in.type = type;
    in.name = name;
 
    mUniformPixList.push_back(in);
@@ -373,9 +366,8 @@ void GLSLCrossShader::GLSLCrossShaderUniformPixList::print(Stream& stream)
 void GLSLCrossShader::GLSLCrossShaderPixOutputs::addPixOutput(char* type, char* name)
 {
    GLSLInfo in;
-   char* glType = shader->checkType(type);
 
-   in.type = glType;
+   in.type = type;
    in.name = name;
 
    mPixOutputList.push_back(in);
@@ -507,6 +499,14 @@ void GLSLCrossShader::processInput(const char* inputBuff)
    char* type = Con::getReturnBuffer(StringUnit::getUnit(inputBuff, 0, " \t\n"));
    char* name = Con::getReturnBuffer(StringUnit::getUnit(inputBuff, 1, " \t\n"));
 
+   for (U32 i = 0; i < _GLSLCrossShader_DataType::_sEnumTable.getNumValues(); i++)
+   {
+      if (dStricmp(_GLSLCrossShader_DataType::_sEnumTable[i].mName, type) == 0)
+      {
+         type = dataTypeString[i];
+      }
+   }
+
    mGLSLInList->addInput(type, name);
 
 }
@@ -517,6 +517,14 @@ void GLSLCrossShader::processConnect(const char* connBuff)
    char* name = Con::getReturnBuffer(StringUnit::getUnit(connBuff, 1, " \t\n"));
    char* target = Con::getReturnBuffer(StringUnit::getUnit(connBuff, 2, " \t\n"));
 
+   for (U32 i = 0; i < _GLSLCrossShader_DataType::_sEnumTable.getNumValues(); i++)
+   {
+      if (dStricmp(_GLSLCrossShader_DataType::_sEnumTable[i].mName, type) == 0)
+      {
+         type = dataTypeString[i];
+      }
+   }
+
    mGLSLConnList->addConnect(type, name, target);
 }
 
@@ -524,6 +532,14 @@ void GLSLCrossShader::processVertUniforms(const char* vertUni)
 {
    char* type = Con::getReturnBuffer(StringUnit::getUnit(vertUni, 0, " \t\n"));
    char* name = Con::getReturnBuffer(StringUnit::getUnit(vertUni, 1, " \t\n"));
+
+   for (U32 i = 0; i < _GLSLCrossShader_DataType::_sEnumTable.getNumValues(); i++)
+   {
+      if (dStricmp(_GLSLCrossShader_DataType::_sEnumTable[i].mName, type) == 0)
+      {
+         type = dataTypeString[i];
+      }
+   }
 
    mGLSLUniVertList->addVertUniform(type, name);
 }
@@ -533,6 +549,14 @@ void GLSLCrossShader::processPixUniforms(const char* pixUni)
    char* type = Con::getReturnBuffer(StringUnit::getUnit(pixUni, 0, " \t\n"));
    char* name = Con::getReturnBuffer(StringUnit::getUnit(pixUni, 1, " \t\n"));
 
+   for (U32 i = 0; i < _GLSLCrossShader_DataType::_sEnumTable.getNumValues(); i++)
+   {
+      if (dStricmp(_GLSLCrossShader_DataType::_sEnumTable[i].mName, type) == 0)
+      {
+         type = dataTypeString[i];
+      }
+   }
+
    mGLSLUniPixList->addPixUniform(type, name);
 }
 
@@ -540,6 +564,14 @@ void GLSLCrossShader::processPixOutputs(const char* pixOut)
 {
    char* type = Con::getReturnBuffer(StringUnit::getUnit(pixOut, 0, " \t\n"));
    char* name = Con::getReturnBuffer(StringUnit::getUnit(pixOut, 1, " \t\n"));
+
+   for (U32 i = 0; i < _GLSLCrossShader_DataType::_sEnumTable.getNumValues(); i++)
+   {
+      if (dStricmp(_GLSLCrossShader_DataType::_sEnumTable[i].mName, type) == 0)
+      {
+         type = dataTypeString[i];
+      }
+   }
 
    mGLSLPixOut->addPixOutput(type, name);
 }

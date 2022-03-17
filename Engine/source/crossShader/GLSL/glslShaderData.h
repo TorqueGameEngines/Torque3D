@@ -20,9 +20,24 @@ struct GLSLInfo
    U32 arraySize = 0;
 };
 
+
 class GLSLCrossShader
 {
 public:
+
+   enum GLSLDataType
+   {
+      float1,
+      vec2,
+      vec3,
+      vec4,
+      mat2,
+      mat3,
+      mat4x3,
+      mat4,
+      sampler2D
+   };
+
    class GLSLCrossShaderInputList
    {
       GLSLCrossShader* shader;
@@ -130,6 +145,7 @@ protected:
    void _printPixelShader(Stream& stream);
 
 public:
+
    GLSLCrossShader();
    ~GLSLCrossShader();
 
@@ -150,6 +166,5 @@ public:
    void generateShader(char* shaderName);
 
 };
-
 
 #endif

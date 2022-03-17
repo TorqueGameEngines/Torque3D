@@ -12,11 +12,11 @@
 #endif
 
 #ifndef _GLSLSHADERTDATA_H_
-#include "CrossShader/glslShaderData.h"
+#include "CrossShader/glsl/glslShaderData.h"
 #endif
 
 #ifndef _HLSLSHADERTDATA_H_
-#include "CrossShader/hlslShaderData.h"
+#include "CrossShader/hlsl/hlslShaderData.h"
 #endif
 
 #include "core/util/path.h"

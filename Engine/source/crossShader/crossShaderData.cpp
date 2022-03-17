@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "platform/platform.h"
-#include "materials/crossShaderData.h"
+#include "crossShaderData.h"
 #include "core/volume.h"
 #include "console/consoleTypes.h"
 #include "core/strings/stringUnit.h"
@@ -30,10 +30,10 @@
 #include "core/fileObject.h"
 
 // opengl glsl
-#include "CrossShader/glslShaderData.h"
+#include "CrossShader/GLSL/glslShaderData.h"
 
 // directx hlsl
-#include "CrossShader/hlslShaderData.h"
+#include "CrossShader/HLSL/hlslShaderData.h"
 
 IMPLEMENT_CONOBJECT(CrossShaderData);
 
@@ -94,40 +94,16 @@ void CrossShaderData::readBlueprint(const Torque::Path& filePath)
    const char *buffer;
    while (!file.isEOF())
    {
-      buffer = (const char*)file.readLine();
-      buffer = StripChars(buffer);
-      if (!String::compare(buffer, "input {"))
-      {
-         Con::printf("processing inputs");
-         buffer = (const char*)file.readLine();
-         buffer = StripChars(buffer);
-         while (String::compare(buffer, "}"))
-         {
-            mGLSLShader->processInput(buffer);
-            mHLSLShader->processInput(buffer);
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
-         }
-      }
-      else
-      {
-         Con::errorf("CrossShaderDat - no input in file %s", filePath.getFullPath().c_str());
-         return;
-      }
-
-      buffer = (const char*)file.readLine();
-      buffer = StripChars(buffer);
+      buffer = StripChars((const char*)file.readLine());
       if (!String::compare(buffer, "connect {"))
       {
          Con::printf("processing connections");
-         buffer = (const char*)file.readLine();
-         buffer = StripChars(buffer);
+         buffer = StripChars((const char*)file.readLine());
          while (String::compare(buffer, "}"))
          {
             mGLSLShader->processConnect(buffer);
             mHLSLShader->processConnect(buffer);
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
          }
       }
       else
@@ -136,110 +112,109 @@ void CrossShaderData::readBlueprint(const Torque::Path& filePath)
          return;
       }
 
-      buffer = (const char*)file.readLine();
-      buffer = StripChars(buffer);
+      buffer = StripChars((const char*)file.readLine());
       if (!String::compare(buffer, "vertex {"))
       {
          // if not vertex shader out.
          Con::printf("processing vertex");
          while (String::compare(buffer, "}"))
          {
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
+            if (!String::compare(buffer, "input {"))
+            {
+               Con::printf("processing inputs");
+               buffer = StripChars((const char*)file.readLine());
+               while (String::compare(buffer, "}"))
+               {
+                  mGLSLShader->processInput(buffer);
+                  mHLSLShader->processInput(buffer);
+                  buffer = StripChars((const char*)file.readLine());
+               }
+            }
+            else
+            {
+               Con::errorf("CrossShaderDat - no input in file %s", filePath.getFullPath().c_str());
+               return;
+            }
+
+            buffer = StripChars((const char*)file.readLine());
             if (!String::compare(buffer, "uniform {"))
             {
                Con::printf("processing vertex uniforms");
-               buffer = (const char*)file.readLine();
-               buffer = StripChars(buffer);
+               buffer = StripChars((const char*)file.readLine());
                // if not uniform out.
                while (String::compare(buffer, "}"))
                {
                   mGLSLShader->processVertUniforms(buffer);
                   mHLSLShader->processVertUniforms(buffer);
-                  buffer = (const char*)file.readLine();
-                  buffer = StripChars(buffer);
+                  buffer = StripChars((const char*)file.readLine());
                }
             }
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
             if (!String::compare(buffer, "main {"))
             {
                Con::printf("processing vertex main");
                // if not main out.
-               buffer = (const char*)file.readLine();
-               buffer = StripChars(buffer);
+               buffer = StripChars((const char*)file.readLine());
                while (String::compare(buffer, "}"))
                {
                   mGLSLShader->processVertMainLine(buffer);
                   mHLSLShader->processVertMainLine(buffer);
-                  buffer = (const char*)file.readLine();
-                  buffer = StripChars(buffer);
+                  buffer = StripChars((const char*)file.readLine());
                }
             }
 
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
          }
       }
 
-      buffer = (const char*)file.readLine();
-      buffer = StripChars(buffer);
+      buffer = StripChars((const char*)file.readLine());
       if (!String::compare(buffer, "pixel {"))
       {
          // if not vertex shader out.
          Con::printf("processing pixel");
          while (String::compare(buffer, "}"))
          {
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
             if (!String::compare(buffer, "uniform {"))
             {
                Con::printf("processing pixel uniforms");
-               buffer = (const char*)file.readLine();
-               buffer = StripChars(buffer);
+               buffer = StripChars((const char*)file.readLine());
                // if not uniform out.
                while (String::compare(buffer, "}"))
                {
                   mGLSLShader->processPixUniforms(buffer);
                   mHLSLShader->processPixUniforms(buffer);
-                  buffer = (const char*)file.readLine();
-                  buffer = StripChars(buffer);
+                  buffer = StripChars((const char*)file.readLine());
                }
             }
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
             if (!String::compare(buffer, "output {"))
             {
                Con::printf("processing pixel outputs");
-               buffer = (const char*)file.readLine();
-               buffer = StripChars(buffer);
+               buffer = StripChars((const char*)file.readLine());
                // if not uniform out.
                while (String::compare(buffer, "}"))
                {
                   mGLSLShader->processPixOutputs(buffer);
                   mHLSLShader->processPixOutputs(buffer);
-                  buffer = (const char*)file.readLine();
-                  buffer = StripChars(buffer);
+                  buffer = StripChars((const char*)file.readLine());
                }
             }
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
             if (!String::compare(buffer, "main {"))
             {
                Con::printf("processing pixel main");
                // if not main out.
-               buffer = (const char*)file.readLine();
-               buffer = StripChars(buffer);
+               buffer = StripChars((const char*)file.readLine());
                while (String::compare(buffer, "}"))
                {
                   mGLSLShader->processPixelMainLine(buffer);
                   mHLSLShader->processPixelMainLine(buffer);
-                  buffer = (const char*)file.readLine();
-                  buffer = StripChars(buffer);
+                  buffer = StripChars((const char*)file.readLine());
                }
             }
-            buffer = (const char*)file.readLine();
-            buffer = StripChars(buffer);
+            buffer = StripChars((const char*)file.readLine());
          }
       }
 

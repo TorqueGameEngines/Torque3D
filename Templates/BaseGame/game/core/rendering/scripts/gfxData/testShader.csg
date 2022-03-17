@@ -1,12 +1,12 @@
-input {
-	float4 vPosition POSITION
-	float2 texCoord0 TEXCOORD0
-}
 connect {
 	float4 vPosition SV_Position
 	float2 texCoord0 TEXCOORD0
 }
 vertex {
+	input {
+		float4 vPosition POSITION
+		float2 texCoord0 TEXCOORD0
+	}
 	uniform {
 		float4x4 	modelViewProj
 		float2 		texDirection

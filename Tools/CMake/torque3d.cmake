@@ -486,6 +486,7 @@ if(TORQUE_TOOLS)
     addPath("${srcDir}/forest/editor")
     addPath("${srcDir}/gui/editor")
     addPath("${srcDir}/gui/editor/inspector")
+	addPath("${srcDir}/gui/shaderEditor")
     set(BLACKLIST "" )
 endif()
 

@@ -540,7 +540,6 @@ void GuiNodeGraphCtrl::findHitNodes(const RectI& rect, Vector< GraphNode* >& out
          }
       }
 
-      i--;
    }
 }
 

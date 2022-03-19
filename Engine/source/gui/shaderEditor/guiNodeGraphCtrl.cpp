@@ -26,11 +26,15 @@
 #include "core/frameAllocator.h"
 #include "core/stream/fileStream.h"
 #include "core/stream/memStream.h"
+#include "console/console.h"
 #include "console/consoleTypes.h"
+#include "console/engineAPI.h"
 #include "gui/core/guiCanvas.h"
 #include "gui/containers/guiScrollCtrl.h"
 #include "core/strings/stringUnit.h"
 #include "console/engineAPI.h"
+#include "gfx/gfxDevice.h"
+#include "gfx/primBuilder.h"
 
 IMPLEMENT_CONOBJECT(GuiNodeGraphCtrl);
 
@@ -146,11 +150,86 @@ void GuiNodeGraphCtrl::onRemove()
    mSelectedSet = NULL;
 }
 
+void GuiNodeGraphCtrl::renderNode(GuiNodeCtrl* node, Point2I offset, const RectI& updateRect)
+{
+   // Save the current clip rect 
+   // so we can restore it at the end of this method.
+   RectI savedClipRect = GFX->getClipRect();
+
+   // offset is the upper-left corner of this control in screen coordinates
+   // updateRect is the intersection rectangle in screen coords of the control
+   // hierarchy.  This can be set as the clip rectangle in most cases.
+   RectI clipRect = updateRect;
+
+   if (node->isVisible())
+   {
+      Point2I childPosition = offset + node->getPosition();
+      RectI childClip(childPosition, node->getExtent() + Point2I(1, 1));
+
+      if (childClip.intersect(clipRect))
+      {
+         GFX->setClipRect(childClip);
+         GFX->setStateBlock(mDefaultGuiSB);
+         node->onRender(childPosition, childClip);
+      }
+   }
+
+   // Restore the clip rect to what it was at the start
+   // of this method.
+   GFX->setClipRect(savedClipRect);
+}
+
+void GuiNodeGraphCtrl::drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness = 2, ColorI col1 = ColorI(255,255,255), ColorI col2 = ColorI(255, 255, 255))
+{
+   Point2F dir = Point2F(pt2.x - pt1.x, pt2.y - pt1.y);
+   Point2F unitDir = dir / mSqrt(dir.x * dir.x + dir.y * dir.y);
+   Point2F unitPerp(-unitDir.y, unitDir.x);
+   Point2F offset = (thickness / 2.0f) * unitPerp;
+
+   GFX->setStateBlock(mStateBlock);
+
+   Point2F lT = Point2F(pt1.x,pt1.y) + offset;
+   Point2F lB = Point2F(pt1.x, pt1.y) - offset;
+   Point2F rT = Point2F(pt2.x, pt2.y) + offset;
+   Point2F rB = Point2F(pt2.x, pt2.y) - offset;
+   
+
+   PrimBuild::begin(GFXTriangleStrip, 4);
+
+   // top left.
+   PrimBuild::color(col1);
+   PrimBuild::vertex2f(lT.x,lT.y);
+
+   // bottom left.
+   PrimBuild::color(col1);
+   PrimBuild::vertex2f(lB.x, lB.y);
+
+   // top right.
+   PrimBuild::color(col2);
+   PrimBuild::vertex2f(rT.x, rT.y);
+
+   // bottom right.
+   PrimBuild::color(col2);
+   PrimBuild::vertex2f(rB.x, rB.y);
+
+   PrimBuild::end();
+}
+
 void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
 {
    Point2I ctOffset;
    Point2I cext;
    bool keyFocused = isFirstResponder();
+
+   if (mStateBlock.isNull())
+   {
+      GFXStateBlockDesc desc;
+      desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
+      desc.setZReadWrite(false);
+      desc.zWriteEnable = false;
+      desc.setCullMode(GFXCullNone);
+      mStateBlock = GFX->createStateBlock(desc);
+   }
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
@@ -169,7 +248,7 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
       }
    }
 
-   renderChildControls(offset, updateRect);
+   //renderChildControls(offset, updateRect);
 
    // Draw selection rectangle.
    if (mActive && mMouseDownMode == DragSelecting)
@@ -186,17 +265,13 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
       drawer->drawRectFill(b, ColorI(150, 150, 150, 128));
    }
 
-   // draw connections.
-   for (U32 i = 0; i < mLinks.size(); i++)
-   {
-      Point2I start = getSlotCenter(mLinks[i].startSocket);
-      Point2I end = getSlotCenter(mLinks[i].endSocket);
-      drawer->drawLine(start += offset, end += offset, ColorI(255, 255, 255));
-   }
-
    // draw our sockets.
    for (U32 i = 0; i < mGraphNodes.size(); i++)
    {
+      // render node in this loop so they can be drawn over the top of sockets.
+      renderNode(mGraphNodes[i]->mNode, offset, updateRect);
+
+      // render slots here so they can be drawn outside node space if needed.
       for (U32 j = 0; j < mGraphNodes[i]->mInSlots.size(); j++)
       {
          RectI s = mGraphNodes[i]->mInSlots[j]->bounds;
@@ -216,11 +291,19 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
       }
    }
 
+   // draw connections.
+   for (U32 i = 0; i < mLinks.size(); i++)
+   {
+      Point2I start = getSlotCenter(mLinks[i].startSocket);
+      Point2I end = getSlotCenter(mLinks[i].endSocket);
+      drawThickLine(start += offset, end += offset, 2, mLinks[i].startSocket->col, mLinks[i].endSocket->col);
+   }
+
    // draw new connections on top of sockets.
    if (mMouseDownMode == DragConnection)
    {
       Point2I start = getSlotCenter(mDragStartSlot);
-      drawer->drawLine(start += offset, mLastMousePos, ColorI(255, 255, 255));
+      drawThickLine(start += offset, mLastMousePos, 2, mDragStartSlot->col);
    }
 
    // draw snapping dots.
@@ -363,7 +446,7 @@ void GuiNodeGraphCtrl::moveSelection(const Point2I& delta, bool callback)
 
 void GuiNodeGraphCtrl::cloneSelection()
 {
-   Vector< GuiNodeCtrl* > newSelection;
+   Vector< GraphNode* > newSelection;
 
    // Clone the controls in the current selection.
 
@@ -375,16 +458,26 @@ void GuiNodeGraphCtrl::cloneSelection()
 
       GuiNodeCtrl* clone = dynamic_cast<GuiNodeCtrl*>(ctrl->mNode->deepClone());
       if (clone)
-         newSelection.push_back(clone);
+      {
+         // create a new graph node.
+         GraphNode* gNode = new GraphNode();
+         // set the clone.
+         gNode->mNode = clone;
+         // create their slots.
+         addNodeSlots(gNode);
+         // push back to the main vector.
+         mGraphNodes.push_back(gNode);
+         // add the graph node.
+         newSelection.push_back(gNode);
+      }
    }
 
    // Exchange the selection set.
-
    clearSelection();
    const U32 numNewControls = newSelection.size();
    for (U32 i = 0; i < numNewControls; ++i)
    {
-      addNewNode(newSelection[i]);
+      addSelection(newSelection[i]);
    }
 
 }
@@ -719,6 +812,7 @@ void GuiNodeGraphCtrl::onMouseUp(const GuiEvent& event)
          // if we have reached here both have a connection.
          mDragStartSlot->conn = true;
          slot->conn = true;
+         mLinks.push_back(conn);
       }
    }
 
@@ -863,7 +957,7 @@ void GuiNodeGraphCtrl::addNodeSlots(GraphNode* node)
    for (U32 i = 0; i < node->mNode->mInputs.size(); i++)
    {
       // put our rect on the left edge.
-      Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(guiNode->getPosition().x, guiNode->mInputs[i].pos.y)));
+      Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(0, guiNode->mInputs[i].pos.y)));
       Slot* inSlot = new Slot();
       inSlot->ownerNode = guiNode;
       // convert coords to global.

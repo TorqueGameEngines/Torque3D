@@ -29,7 +29,6 @@
 #include "gfx/gfxDevice.h"
 #include "gui/core/guiCanvas.h"
 #include "gui/core/guiDefaultControlRender.h"
-#include "gfx/gfxDevice.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gui/containers/guiRolloutCtrl.h"
 #include "gfx/primBuilder.h"
@@ -50,7 +49,6 @@ GuiNodeCtrl::GuiNodeCtrl()
    VECTOR_SET_ASSOCIATION(mOutputs);
 
    mIsContainer = true;
-   mHasConnections = false;
    mTitleHeight = 24;
    mText = "Default Node";
    mChildPadding = 5;
@@ -59,6 +57,7 @@ GuiNodeCtrl::GuiNodeCtrl()
    // minimum width and height due to header
    setMinExtent(Point2I(200, mTitleHeight));
 
+   addInput("IN");
    addOutput("X");
    addOutput("Y");
    addOutput("Z");

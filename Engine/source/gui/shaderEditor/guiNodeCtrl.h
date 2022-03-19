@@ -68,7 +68,6 @@ protected:
 public:
 
    // needs to be public for nodeGraphAccess.
-   bool mHasConnections;
    Vector<Input> mInputs;
    Vector<Output> mOutputs;
 
@@ -86,7 +85,7 @@ public:
 
    virtual void onRender(Point2I offset, const RectI& updateRect);
 
-   // interaction only when its in a graphc.
+   // interaction only when its in a graph.
    bool inTitleBar(const GuiEvent& event);
    void onMouseDownGraph(const GuiEvent& event);
 
@@ -95,7 +94,6 @@ public:
    void addOutput(String text, ColorI col = ColorI(0, 255, 0), bool allowMultiple = false);
 
    // accessors.
-   bool hasConnections() { return mHasConnections; }
    void childResized(GuiControl* child);
    bool resize(const Point2I& newPosition, const Point2I& newExtent);
 

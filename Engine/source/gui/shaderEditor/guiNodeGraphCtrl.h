@@ -98,7 +98,7 @@ protected:
    bool                 mDragAddSelection;
    bool                 mDragMoveUndo;
    mouseModes           mMouseDownMode;
-
+   GFXStateBlockRef     mStateBlock;
    // snapping is always on.
 
    // Undo
@@ -127,6 +127,8 @@ public:
    virtual void      onRemove();
 
    // rendering
+   void              renderNode(GuiNodeCtrl* node, Point2I offset, const RectI& updateRect);
+   void              drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness, ColorI col1, ColorI col2);
    void              getDragRect(RectI& box);
    //void              onPreRender();
    void              onRender(Point2I offset, const RectI& updateRect);
